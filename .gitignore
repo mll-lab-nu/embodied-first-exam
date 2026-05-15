@@ -1,0 +1,26 @@
+# Virtual environment & caches
+.venv/
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environment files
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

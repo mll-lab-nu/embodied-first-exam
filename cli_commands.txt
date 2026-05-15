@@ -1,0 +1,12 @@
+# Enter the repo and activate the project environment.
+cd /projects/bfuo/jlyu3/topogym
+source .venv/bin/activate
+
+# Minimal Genesis hello-world room in headless mode.
+python prototypes/hello_genesis_room.py
+
+# Same prototype with viewer, only on a node with graphical display / X forwarding.
+python prototypes/hello_genesis_room.py --viewer
+
+# TopoGym module-A common room demo (build room + read two cameras).
+python -m topogym.examples.common_room_demo

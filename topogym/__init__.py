@@ -1,0 +1,2 @@
+"""TopoGym package bootstrap."""
+
