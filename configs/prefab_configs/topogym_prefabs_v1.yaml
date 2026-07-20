@@ -1,0 +1,73 @@
+# TopoGym 共享 prefab 参数单源（loader 挂到根键 prefabs，任务 yaml 用
+# ${prefabs.<prefab>.<field>} 逐字段引用；代码层 prefab 见 topogym/world/rope.py）。
+#
+# rope_pbd：PBD 弹性管绳的物理参数组，来源 = untangle 打磨稳定的值
+# （2026-07-11 connector Phase B + kink 第 1 步之后的状态）。适用于所有 rope
+# 任务；网格分辨率（mesh.segment_length / radial_segments）**不在此**——那是
+# 各任务的视觉/离散化选择，留在任务 yaml 里显式指定。
+# rope_endpoint_connector：绳端工业插头（销+法兰+环槽柱+圆帽，origin=柱心，
+# 灰塑料）。untangle 插孔洞、cable_routing 插 port 底座，共用同一几何/颜色。
+# 生成器：topogym/world/rope.py connector_mesh / connector_obj_path。
+rope_endpoint_connector:
+  pin_depth: 0.010
+  pin_radius: 0.0055
+  flange_radius: 0.011
+  flange_height: 0.005
+  column_radius: 0.0075   # Ø15mm 抓取柱；grasp_qpos 应取 =column_radius
+  column_height: 0.014    # 两轮压低后的定值（历史 0.035→0.020→0.014）
+  grip_rings: 2
+  radial_segments: 16
+  color: [0.62, 0.63, 0.65]
+
+# rope_fixed_terminal：固定端子（底板+壳体+出线颈 gland），线缆的不可动端从
+# 颈顶垂直引出。生成器：topogym/world/rope.py fixed_terminal_mesh。
+rope_fixed_terminal:
+  base_radius: 0.016
+  base_height: 0.004
+  body_radius: 0.012
+  body_height: 0.014
+  gland_radius: 0.006
+  gland_height: 0.006
+  radial_segments: 16
+  color: [0.45, 0.46, 0.48]   # 比插头深一档的工业灰
+
+# rope_routing_post：理线柱（喇叭基座+直杆，凸体=碰撞即视觉；顶帽另加装饰件）。
+# 基座喇叭把"柱底×桌面 90° 楔角"变钝坡，消灭贴桌拖拽的 PBD 弹射（iter-3 诊断）。
+# 生成器：topogym/world/rope.py routing_post_mesh。
+rope_routing_post:
+  base_radius: 0.016
+  base_height: 0.010
+  post_radial_segments: 24
+
+# rope_flush_port：平嵌端口（边框环+凹陷孔，均无碰撞、低于绳径——不挡绳、
+# 不可见穿模；2026-07-13 取代凸台插孔座成为 cable 端口定档形制）。
+rope_flush_port:
+  rim_radius: 0.016
+  rim_height: 0.002
+  recess_radius: 0.0067   # 销 0.0055 + 间隙
+  ring_color: [0.60, 0.61, 0.63]
+
+rope_pbd:
+  # 绳中心线是否用 Catmull-Rom 样条磨平手写 waypoint 硬角（默认关=untangle 原样，
+  # 折线本就少；cable 因手写 9 点折线开启，见 cable_routing_element_design_zh.md）。
+  centerline_spline: false
+  radius: 0.004
+  particle_size: 0.004
+  # 四面体化密度（tet 上限体积）。untangle 值；cable_routing 曾用 5.0e-8
+  # （flyout 实验 #1 调软值，后证实非真修复），2026-07-12 收敛到这里。
+  maxvolume: 0.000000025
+  pbd:
+    # kink 平滑第 1 步后的迭代数（stretch 10→16、bending 6→12，2026-07-11）。
+    max_stretch_solver_iterations: 16
+    max_bending_solver_iterations: 12
+    max_volume_solver_iterations: 6
+  elastic:
+    rho: 650.0
+    static_friction: 0.35
+    kinetic_friction: 0.25
+    stretch_compliance: 0.0012
+    bending_compliance: 0.0030
+    volume_compliance: 0.00012
+    stretch_relaxation: 0.35
+    bending_relaxation: 0.2
+    volume_relaxation: 0.2

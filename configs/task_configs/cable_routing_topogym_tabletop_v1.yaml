@@ -1,0 +1,335 @@
+# Cable Routing layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+
+task:
+  id: cable_routing
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: cable_routing_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+fixtures:
+  S:
+    type: start
+    # 2026-07-12 起点视觉改为"源端口插头 + port 底座"（cable_start_connector，
+    # 见 cable_routing_element_design_zh.md），绿桩关闭留档；pos 仍是路径起点参考。
+    enabled: false
+    pos: [-0.130, 0.020, 0.019]
+    radius: 0.014
+    height: 0.032
+    color: [0.02, 0.85, 0.12]
+    collision: false
+  C:
+    type: connector
+    # 终点向 P2 外侧后方移动，给绳子和夹爪留出更长缓冲距离；
+    # 避免绕过 P2 后立刻短距离急转到原终点导致绳子反拉。
+    pos: [0.220, -0.095, 0.019]
+    size: [0.026, 0.040, 0.034]
+    # 红白配色：终点本体用红，配合表面的红白同心方环靶心，去掉原来的蓝色。
+    color: [0.85, 0.05, 0.05]
+    collision: false
+    # 终点 = 平嵌端口（历史留档见 docs/cable_routing_element_design_zh.md：
+    # 凸台 socket_housing / socket 墙 / port_base 均已废弃并从代码删除）。
+    flush_port: true
+  # 2026-07-12 iter-3：柱高 0.090→0.070（用户直觉 + 前臂净空 +2cm；wrap 高度 ≤~0.05
+  # 不受影响），pos.z 同步 0.041→0.031；柱体改为"喇叭基座+杆"凸 mesh 作碰撞体
+  # （消柱底楔角弹射），顶帽仍为无碰撞装饰。留档：height 0.090 / pos.z 0.041 /
+  # 光圆柱 + 纯装饰法兰。
+  P1:
+    type: peg
+    pos: [-0.020, 0.110, 0.031]
+    radius: 0.012
+    height: 0.070
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [1.00, 0.48, 0.00]
+    collision: false
+    routing_post_dress: true
+  P2:
+    type: peg
+    pos: [0.060, -0.120, 0.031]
+    radius: 0.012
+    height: 0.070
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [1.00, 0.48, 0.00]
+    collision: false
+    routing_post_dress: true
+
+routing:
+  # smooth_route=true 时，把下面手写的 endpoint_oracle_waypoints 用向心 Catmull-Rom
+  # 样条重采样成平滑匀速曲线（去尖点、匀速），但**保留手写路径的形状**——因为它已
+  # 验证过是机械臂安全的（大低回环，前臂从 P2 南侧掠过，不横穿 pole）。
+  # 从零画圆那套（clearance/entry_deg）对机械臂本体体积不友好，已弃用。
+  # 设为 false 可一键回退到原始手写点做 A/B 对照。
+  smooth_route: true
+  smooth_arc_points: 8           # 每段手写 waypoint 之间的样条采样点数
+  smooth_speed: 0.0005           # m/步，均匀速度（去掉手写路径的爬行式停顿）
+  side_clearance: 0.055
+  endpoint_side_clearance: 0.150
+  wrap_clearance: 0.032
+  wrap_arc_points: 12
+  wrap_overshoot_degrees: 130
+  wrap_steps_per_point: 36
+  front_axis: [0.77, -0.64]
+  peg_front_pull_distance: 0.900
+  peg_front_pull_fixtures: [P1]
+  peg_front_pull_targets:
+    P1: [0.260, -0.210, 0.009]
+  peg_departure_extension: 0.160
+  connector_approach_extension: 0.145
+  peg_approach_scale: 1.50
+  wrap_contact_tolerance: 0.010
+  wrap_near_tolerance: 0.036
+  wrap_height_tolerance: 0.008
+  endpoint_oracle_waypoints:
+    - {phase: green_lift_start, pos: [0.050, 0.165, 0.009], steps: 24, lifted: true}
+    - {phase: green_P1_upper_right, pos: [0.070, 0.035, 0.009], steps: 40, lifted: true}
+    - {phase: green_P1_top, pos: [-0.035, -0.035, 0.009], steps: 42, lifted: true}
+    - {phase: green_between_pegs, pos: [0.030, -0.020, 0.009], steps: 42, lifted: true}
+    # Split the long pull toward P2 into quasi-static approach segments. The
+    # rope was previously lagging here while still grasped, so short targets
+    # give the PBD cable time to slide and settle before the actual wrap.
+    - {phase: green_P2_approach_mid, pos: [0.000, -0.065, 0.009], steps: 42, lifted: true}
+    - {phase: green_P2_left_entry, pos: [-0.040, -0.145, 0.009], steps: 46, lifted: true}
+    # P2 route uses a wider right-side arc. In this coordinate frame, the
+    # robot faces +x, so "right" is -y. The wider arc gives the gripper body
+    # and the PBD rope more clearance around the second peg.
+    - {phase: green_P2_lower_left, pos: [-0.050, -0.215, 0.009], steps: 54, lifted: true}
+    - {phase: green_P2_bottom_entry, pos: [0.010, -0.270, 0.009], steps: 52, lifted: true}
+    - {phase: green_P2_bottom, pos: [0.065, -0.300, 0.009], steps: 60, lifted: true}
+    - {phase: green_P2_right_outer, pos: [0.150, -0.286, 0.009], steps: 56, lifted: true}
+    - {phase: green_P2_lower_right, pos: [0.205, -0.240, 0.009], steps: 60, lifted: true}
+    # Exit tangentially after P2. This unloads the wrapped contact before
+    # pulling toward the connector, reducing PBD/collision spikes.
+    - {phase: green_exit_unload, pos: [0.230, -0.185, 0.009], steps: 58, lifted: true}
+    # Approach the socket in small low-tension steps. The cable tends to lag
+    # behind the gripper after P2, so avoid cutting diagonally toward C too
+    # early. After the first exit step, switch to low entry: no wrap_z_lift
+    # near C, which prevents the final segment from pulling the rope upward.
+    - {phase: green_exit_mid, pos: [0.220, -0.140, 0.009], steps: 52, lifted: true}
+    - {phase: green_exit_tangent, pos: [0.222, -0.122, 0.009], steps: 44, lifted: false}
+    - {phase: green_exit_above_C, pos: [0.222, -0.110, 0.009], steps: 44, lifted: false}
+    - {phase: green_exit_pre_C, pos: [0.221, -0.102, 0.009], steps: 44, lifted: false}
+    - {phase: green_exit_socket_approach, pos: [0.220, -0.098, 0.009], steps: 44, lifted: false}
+    - {phase: green_exit_to_C, pos: [0.220, -0.095, 0.009], steps: 42, lifted: false}
+
+target_signature:
+  - {fixture: P1, relation: left}
+  - {fixture: P2, relation: right}
+  - {fixture: C, relation: endpoint}
+
+routes:
+  # Medium slack arc: shorter than the previous large loop, while still longer
+  # than the final desired route. This reduces extra bends that can snag while
+  # the gripper pulls around pegs.
+  initial:
+    - {fixture: S, relation: center}
+    - {pos: [-0.200, 0.070, 0.009]}
+    - {pos: [-0.215, 0.170, 0.009]}
+    - {pos: [-0.160, 0.270, 0.009]}
+    - {pos: [-0.060, 0.320, 0.009]}
+    - {pos: [0.055, 0.300, 0.009]}
+    - {pos: [0.125, 0.240, 0.009]}
+    - {pos: [0.105, 0.195, 0.009]}
+    - {pos: [0.050, 0.165, 0.009]}
+  goal:
+    - {fixture: S, relation: center}
+    - {fixture: P1, relation: left}
+    - {fixture: P2, relation: right}
+    - {fixture: C, relation: endpoint}
+
+rope:
+  name: cable
+  model: pbd_elastic_tube
+  color: [0.00, 0.90, 0.78]
+  anchor_start: true
+  anchor_end: false
+  anchor_radius: 0.009
+  radius: ${prefabs.rope_pbd.radius}
+  # 手写 9 点路由折线 → 样条磨平（消 spawn 硬折角，A 类；实测 73°→8.5°）。
+  centerline_spline: true
+  z: 0.009
+  endpoint_handle:
+    enabled: true
+    name: cable_free_end_handle
+    # 2026-07-12 自由端改用共享工业插头 prefab（cable_routing_element_design_zh.md：
+    # 线缆插头语义，与 untangle 同一 mesh/颜色/生命周期）。旧蓝色小方块留档：
+    # shape: box / size: [0.022, 0.022, 0.032] / grip_width: 0.022
+    # color: [0.00, 0.35, 1.00] / z_offset: 0.015
+    # 下面 shape/size 等字段仅在 connector.enabled=false 的回退分支使用。
+    shape: box
+    size: [0.022, 0.022, 0.032]
+    grip_width: 0.022
+    radius: 0.011
+    height: 0.032
+    z_offset: 0.015
+    color: ${prefabs.rope_endpoint_connector.color}
+    attachment_mode: none
+    fixed: true
+    collision: false
+    exclude_pbd_collision: false
+    connector:
+      enabled: true
+      pin_depth: ${prefabs.rope_endpoint_connector.pin_depth}
+      pin_radius: ${prefabs.rope_endpoint_connector.pin_radius}
+      flange_radius: ${prefabs.rope_endpoint_connector.flange_radius}
+      flange_height: ${prefabs.rope_endpoint_connector.flange_height}
+      column_radius: ${prefabs.rope_endpoint_connector.column_radius}
+      column_height: ${prefabs.rope_endpoint_connector.column_height}
+      grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
+      radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
+      output_dir: .cache/topogym/meshes/cable_routing
+    # 自由端插头初始"坐"在这个 staging 插孔座里 → 任务视觉 = 拔出、绕桩、
+    # 插入 C 目标座（2026-07-12 迭代 2）。C 目标座复用同一组尺寸（红色）。
+    # 平嵌 staging 端口（2026-07-13 定档）：凸台座体会挡绳（有碰撞）或被穿模
+    # （无碰撞），平嵌边框+凹陷孔低于绳径，两个问题同根消灭；插头销没入板下
+    # 保住"插进去"读感。凸台座体方案留档：spawn_socket(base/body/bore/裙)。
+    spawn_port:
+      enabled: true
+      rim_radius: ${prefabs.rope_flush_port.rim_radius}
+      rim_height: ${prefabs.rope_flush_port.rim_height}
+      recess_radius: ${prefabs.rope_flush_port.recess_radius}
+      color: ${prefabs.rope_flush_port.ring_color}
+  # S 固定端：工业端子（线缆不可动端从 gland 顶垂直引出），替换"起点插头+垫圈"。
+  fixed_terminal:
+    enabled: true
+    base_radius: ${prefabs.rope_fixed_terminal.base_radius}
+    base_height: ${prefabs.rope_fixed_terminal.base_height}
+    body_radius: ${prefabs.rope_fixed_terminal.body_radius}
+    body_height: ${prefabs.rope_fixed_terminal.body_height}
+    gland_radius: ${prefabs.rope_fixed_terminal.gland_radius}
+    gland_height: ${prefabs.rope_fixed_terminal.gland_height}
+    radial_segments: ${prefabs.rope_fixed_terminal.radial_segments}
+    color: ${prefabs.rope_fixed_terminal.color}
+    output_dir: .cache/topogym/meshes/cable_routing
+  # 2026-07-12 物理参数收敛到 prefab 单源（prefabs.rope_pbd = untangle 打磨值，
+  # 用户决策"物理统一、网格分辨率各留"）。
+  # iter-3 修订：volume 三件套（maxvolume / volume 迭代 / volume_compliance）
+  # 回调为任务级 fork——门 A 实锤：绕桩高接触压力态（p2_contact=101）在落座
+  # snap 冲量下弹射，需要 flyout 实验 #1 的抗弹射软 volume；缠桩场景为 cable
+  # 特有，untangle 无此工况。stretch/bending/摩擦/密度仍吃 prefab 单源。
+  # 其余旧值留档：
+  # particle_size: 0.0035
+  # mesh.maxvolume: 0.000000050   # [flyout experiment #1] was 1.2e-8
+  # pbd: stretch 12 / bending 8 / volume 16  # [flyout experiment #1] volume was 8
+  # elastic: stretch_compliance 0.0040 / bending_compliance 0.0100
+  #          volume_compliance 0.00200  # [flyout experiment #1] was 0.00040
+  #          relaxations 0.30/0.18/0.18
+  particle_size: ${prefabs.rope_pbd.particle_size}
+  mesh:
+    # 网格分辨率按任务自留：cable 细管（更圆、桩接触点更多），不进 prefab。
+    segment_length: 0.0055
+    radial_segments: 12
+    # maxvolume：粗 tet=折线主因之一。**B-TEST T1（2026-07-13）实测**：细 tet
+    # 2.5e-8 全程稳定（138/138、max_spread 0.276、两次绕桩+垂直C插入零弹射）
+    # 且折线显著减轻——推翻了"粗tet承重"旧误判（那次弹射实为已淘汰的水平C-snap）。
+    # 现回滚至基线 5.0e-8;采纳细tet待用户拍板（下一版落地）。
+    maxvolume: 0.000000050
+    output_dir: .cache/topogym/meshes/cable_routing
+  pbd:
+    max_stretch_solver_iterations: ${prefabs.rope_pbd.pbd.max_stretch_solver_iterations}
+    max_bending_solver_iterations: ${prefabs.rope_pbd.pbd.max_bending_solver_iterations}
+    # iter-3 任务级 fork（统一值 6 留档）：
+    max_volume_solver_iterations: 16
+  elastic:
+    rho: ${prefabs.rope_pbd.elastic.rho}
+    static_friction: ${prefabs.rope_pbd.elastic.static_friction}
+    kinetic_friction: ${prefabs.rope_pbd.elastic.kinetic_friction}
+    stretch_compliance: ${prefabs.rope_pbd.elastic.stretch_compliance}
+    # "折线感"缓解 Stage 1（2026-07-12）：参数统一让 cable 弯曲刚度比历史值硬
+    # 3.3 倍（0.0100→0.0030），张紧绕桩下呈接触硬折角/直弦=刚体观感；任务级
+    # fork 回软（历史 0.0100 与统一 0.0030 的折中）。留档：统一值 0.0030
+    # （${prefabs.rope_pbd.elastic.bending_compliance}）。
+    # Stage 1 打满到历史全值（0.0080 中间档观感=折角弱化但仍在）。
+    bending_compliance: 0.0100
+    # iter-3 任务级 fork（统一值 0.00012 留档）：
+    volume_compliance: 0.00200
+    stretch_relaxation: ${prefabs.rope_pbd.elastic.stretch_relaxation}
+    bending_relaxation: ${prefabs.rope_pbd.elastic.bending_relaxation}
+    volume_relaxation: ${prefabs.rope_pbd.elastic.volume_relaxation}
+
+physical_handle:
+  # 搬运/落座 z = route_z + z_offset。2026-07-13 平嵌端口：origin = 板 +
+  # 边框 0.002 + 柱心 0.012 = 0.014 → z_offset = 0.005。
+  # 留档链：box 0.015 → 平放插头 0.003 → 凸台座 0.019 → 平嵌端口 0.005。
+  z_offset: 0.005
+  rho: 700.0
+  finger_links: [left_finger, right_finger]
+  finger_friction: 4.5
+  handle_friction: 4.5
+  # 插头抓取柱半径 0.0075（=untangle grasp_qpos 同值；assisted grasp 下手指
+  # 视觉贴柱面）。旧 box 模式留档（grip 0.022 → 12.4mm 过盈）：grasp_qpos: 0.0048
+  grasp_qpos: 0.0075
+  grasp_yaw: 1.57079632679
+  # Topology benchmark grasp mode: after the gripper physically reaches and
+  # passes the lift check, attach the rigid endpoint handle to the gripper for
+  # transport. The PBD rope is still solved by Genesis; only the small handle
+  # is stabilized so cable routing does not fail because of gripper slip.
+  runtime_gripper_attachment: true
+  runtime_attachment_handoff_steps: 12
+  motion_profile: linear
+  approach_z: 0.250
+  lift_delta: 0.024
+  # iter-3：绕桩段抬高（绳-柱接触点上移到杆段、远离柱底楔角区；前臂净空更大）。
+  # 留档：wrap_z_lift: 0.024
+  wrap_z_lift: 0.040
+  move_steps: 240
+  gripper_steps: 90
+  close_hold_steps: 60
+  motion_settle_steps: 0
+  min_lift_delta: 0.006
+  max_handle_error: 0.050
+  max_segment_follow_error: 0.045
+  max_segment_target_error: 0.070
+  target_error_abort_fraction: 0.90
+  # The final socket behaves like a capture fixture: once the handle is inside
+  # this tolerance, stop pulling deeper and let C latch it before release.
+  early_complete_segments: [green_exit_to_C]
+  early_complete_target_error: 0.010
+  max_downward_follow_error_z: 0.047
+  safety_fixtures: [P2]
+  safety_min_gap: -0.0015
+  safety_max_contact_particles: 150
+  segment_steps:
+    green_lift_start: 120
+    green_P1_upper_right: 200
+    green_P1_top: 220
+    green_between_pegs: 220
+    green_P2_approach_mid: 320
+    green_P2_left_entry: 380
+    green_P2_lower_left: 460
+    green_P2_bottom_entry: 560
+    green_P2_bottom: 680
+    green_P2_right_outer: 600
+    green_P2_lower_right: 660
+    green_exit_unload: 520
+    green_exit_mid: 420
+    green_exit_tangent: 380
+    green_exit_above_C: 380
+    green_exit_pre_C: 360
+    green_exit_socket_approach: 360
+    green_exit_to_C: 260
+  release_hold_steps: 20
+  route_settle_steps: 40
+  connector_tolerance_xy: 0.018
+  # Avoid snapping the handle into the socket while the gripper is still
+  # moving through the final approach; premature sync can destabilize the PBD
+  # rope + rigid handle constraints. The demo still attempts latch explicitly
+  # after the final waypoint, before release.
+  latch_auto_capture: false
+  latch_capture_tolerance_xy: 0.014
+  latch_capture_tolerance_z: 0.014
+  latch_capture_max_tilt_deg: 45.0
+
+oracle:
+  route_mode: goal
+  settle_steps: 10

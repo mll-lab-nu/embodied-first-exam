@@ -1,0 +1,130 @@
+# TopoGym tabletop V1 的 Genesis 世界几何。
+#
+# 这里的所有 pos/size 都是 Genesis world 坐标，单位米：
+# - Box.pos 是中心点；
+# - Box.size 是完整长宽高；
+# - world +z 向上，gravity 沿 -z；
+# - task frame 原点设为桌面中心 [0, 0, 0.9196429]。
+#
+# 桌子 x 深度和高度来自 RoboMME/ManiSkill TableSceneBuilder 的 AABB。
+# 原始 y 方向 2.418 m 过宽，TopoGym V1 压缩为 1.200 m。
+
+preset:
+  id: topogym_tabletop_v1
+  version: 1.3   # 1.2 -> 1.3: 桌面加大到 [1.5,1.4]（全 task 共用基线变更）
+  builder: standard_tabletop
+  source: RoboMME/ManiSkill@07be6fbc66350ddca200abfb0a11b692f078f7fd
+  locked: true
+
+genesis:
+  backend: cpu
+  precision: "32"
+  logging_level: warning
+
+sim:
+  n_envs: 0
+  dt: 0.01
+  substeps: 4
+  gravity: [0.0, 0.0, -9.81]
+
+renderer:
+  type: rasterizer
+  show_viewer: false
+
+viewer:
+  camera_pos: [1.20, -1.15, 1.65]
+  camera_lookat: [-0.08, 0.00, 0.98]
+  camera_fov: 50
+  max_fps: 60
+
+frames:
+  # table_surface.origin 是桌面表面的世界坐标。
+  # task.origin 与 table_surface 重合，因此 task z=0 就是桌面表面。
+  table_surface:
+    origin: [0.0, 0.0, 0.9196429]
+  task:
+    origin: [0.0, 0.0, 0.9196429]
+
+world:
+  plane:
+    enabled: true
+  table:
+    # 桌子固定刚体。pos 是桌子中心，size 是完整 AABB。
+    # 顶面高度 = pos.z + size.z / 2 = 0.9196429。
+    # Compact AABB:
+    # x=[-0.7402168, 0.4688596], y=[-0.6000, 0.6000],
+    # z=[0.0, 0.9196429]. The original RoboMME y span was about 2.418 m.
+    pos: [-0.1356786, 0.0, 0.45982145]
+    size: [1.5, 1.4, 0.9196429]
+    color: [0.78, 0.80, 0.82]
+    # roughness 收编进 topogym/world/materials.py 的角色表（"table"=0.9，数值不变）。
+    # roughness: 0.9
+    surface_tolerance: 0.000001
+  stage:
+    enabled: false
+    # 共享操作底板。底面 = pos.z - size.z / 2 = 桌面高度。
+    pos: [0.0, 0.0, 0.9206429]
+    size: [0.70, 0.80, 0.002]
+    color: [0.92, 0.92, 0.94]
+    # roughness 收编进 topogym/world/materials.py 的角色表（"stage"=0.95，数值不变）。
+    # roughness: 0.95
+
+robot_mount:
+  name: ${common.robot_setup.mount.name}
+  mobility: ${common.robot_setup.mount.mobility}
+  # Franka MJCF 原点是安装面；z 必须严格等于桌面高度。
+  pos: [-0.570, 0.0, 0.9196429]
+  euler: ${common.robot_setup.mount.euler}
+  footprint_min: ${common.robot_setup.mount.footprint_min}
+  footprint_max: ${common.robot_setup.mount.footprint_max}
+  edge_margin: ${common.robot_setup.mount.edge_margin}
+  surface_tolerance: 0.000001
+
+cameras:
+  # 策略固定相机。pos/lookat 都是 world 坐标；FOV 单位是 degree。
+  base_camera:
+    res: [256, 256]
+    pos: [0.30, 0.00, 1.3196429]
+    lookat: [0.00, 0.00, 0.7196429]
+    up: [0.0, 0.0, 1.0]
+    fov: 90
+  # 人类录制和调试视角，不作为 policy observation。
+  oblique:
+    res: [512, 512]
+    pos: [1.00, -0.80, 1.42]
+    lookat: [-0.08, 0.00, 0.98]
+    up: [0.0, 0.0, 1.0]
+    fov: 57.2958
+  topdown:
+    res: [512, 512]
+    pos: [0.00, 0.00, 1.82]
+    lookat: [0.00, 0.00, 0.9196429]
+    up: [1.0, 0.0, 0.0]
+    fov: 50
+  # RoboMME-style fixed front view for human inspection and policy-like videos.
+  front:
+    res: [512, 512]
+    pos: [0.42, 0.00, 1.30]
+    lookat: [0.05, 0.00, 0.88]
+    up: [0.0, 0.0, 1.0]
+    fov: 78
+    near: 0.01
+    far: 10.0
+  # Wrist/first-person camera mounted on the Franka hand link. The offset is
+  # expressed in the hand-link local frame and refreshed before each recording
+  # render, so it follows the gripper during manipulation.
+  wrist:
+    res: [256, 256]
+    pos: [0.50, 0.00, 1.18]
+    lookat: [0.62, 0.00, 0.95]
+    up: [0.0, 0.0, 1.0]
+    fov: 90
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: hand
+      offset_pos: [0.040, 0.000, 0.030]
+      offset_lookat: [0.160, 0.000, -0.090]
+      offset_up: [0.0, 0.0, 1.0]

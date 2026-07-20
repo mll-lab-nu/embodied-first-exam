@@ -13,7 +13,7 @@
 #       flash-attn / bitsandbytes 等)。等具体选定 OpenVLA / RT-2 / π₀ / GPT-4V 哪个 policy
 #       子类要做 baseline 时再用 `uv pip install -e ".[vla,vlm]"` 增量补上。
 #
-# 完整依赖说明见  docs/develop/env.md
+# 完整依赖说明见  docs/develop/framework/env.md
 # ============================================================================
 
 set -euo pipefail
@@ -179,7 +179,7 @@ print(f"[ok] pydantic  {pydantic.VERSION}")
 
 print("")
 print("[done] §0-§2 baseline ready.")
-print("       VLA / VLM extras are intentionally deferred (see docs/develop/env.md §3).")
+print("       VLA / VLM extras are intentionally deferred (see docs/develop/framework/env.md §3).")
 PY
 
 # ----------------------------------------------------------------------------

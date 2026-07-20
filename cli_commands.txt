@@ -1,12 +1,179 @@
 # Enter the repo and activate the project environment.
 cd /projects/bfuo/jlyu3/topogym
-source .venv/bin/activate
+source .venv-gs110/bin/activate
+export LD_LIBRARY_PATH=/usr/lib/wsl/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
-# Minimal Genesis hello-world room in headless mode.
-python prototypes/hello_genesis_room.py
+# Frozen tabletop V1 baseline: RoboMME-derived table AABB, deterministic Panda
+# home pose, fixed camera rig, task-frame Swap layout, and strict robot-base
+# footprint validation. The command prints the table/base bounds before holding
+# the viewer open.
+python -m prototypes.swap_tabletop_baseline_demo --viewer --keep-open --verbose
+python -m prototypes.onestroke_tabletop_baseline_demo --viewer --keep-open --verbose
+python -m prototypes.maze_wall_removal_tabletop_baseline_demo --seed 11 --viewer --keep-open --verbose
+# Cable Routing defaults to a lighter PBD mesh for quick layout inspection.
+# Add --full-pbd when checking the production rope discretization.
+python -m prototypes.cable_routing_tabletop_baseline_demo --route-mode initial --viewer --keep-open --verbose
+# Untangle also defaults to a lighter PBD mesh; add --full-pbd for the
+# production rope discretization.
+python -m prototypes.untangle_tabletop_baseline_demo --viewer --keep-open --verbose
 
-# Same prototype with viewer, only on a node with graphical display / X forwarding.
-python prototypes/hello_genesis_room.py --viewer
+# Shared environment sizing: inspect the common board, candidate workspace,
+# Franka home pose, 10 cm grid, and grasp-size reference objects.
+python -m prototypes.basic_env_demo --viewer --keep-open --verbose
+python -m prototypes.basic_env_demo --viewer --keep-open --no-robot --board-size 0.70 0.80 --workspace-x 0.32 0.86 --workspace-y -0.30 0.30 --verbose
+python -m prototypes.basic_env_demo --no-robot --hold-steps 120 --record-video runs/demo_basic_env.mp4 --record-fps 30 --record-camera oblique --record-res 960 960 --verbose
 
-# TopoGym module-A common room demo (build room + read two cameras).
-python -m topogym.examples.common_room_demo
+# Shared-board task integration: build each official task on the common
+# 0.70m x 0.80m board, reset Franka to the shared home pose, and run no oracle.
+python -m prototypes.common_task_demo --task swap --viewer --keep-open --verbose
+python -m prototypes.common_task_demo --task onestroke --viewer --keep-open --verbose
+python -m prototypes.common_task_demo --task maze_wall_removal --viewer --keep-open --seed 11 --verbose
+python -m prototypes.common_task_demo --task cable_routing --route-mode initial --lite --viewer --keep-open --verbose
+python -m prototypes.common_task_demo --task peeling --viewer --keep-open --verbose
+python -m prototypes.common_task_demo --task stacked_plate --viewer --keep-open --verbose
+python -m prototypes.common_task_demo --task untangle --lite --viewer --keep-open --verbose
+
+# Official demo 1: Swap, solve from a random initial state to the canonical target.
+python -m prototypes.swap_empty_slot_demo --seed 7 --record-video runs/demo_swap_random_solve.mp4 --record-fps 60 --record-res 1280 1280 --record-aa --verbose
+python -m prototypes.swap_empty_slot_demo --seed 7 --viewer --keep-open --verbose
+
+# Swap physical full workflow: the current task reaches its terminal state
+# with one canonical move from slot 4 to the empty slot 3. No attachment or
+# block teleport is used after scene construction.
+python -m prototypes.swap_physical_grasp_demo --viewer --keep-open --verbose
+python -m prototypes.swap_physical_grasp_demo --record-video runs/demo_swap_physical_full.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
+
+# Official demo 2: OneStroke, solve the separating-wall task with multiple wall blocks.
+python -m prototypes.onestroke_wall_place_demo --record-video runs/demo_onestroke_solve.mp4 --record-fps 60 --record-res 640 640 --verbose
+python -m prototypes.onestroke_wall_place_demo --viewer --keep-open --verbose
+
+# OneStroke physical contact: first validate one long-axis end grasp, then run
+# the complete separator plan without attachments or execution-time teleports.
+python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --viewer --keep-open --verbose
+python -m prototypes.onestroke_physical_wall_demo --viewer --keep-open --verbose
+# Gravity-in-gap variant: remove the invisible slot floor. First smoke one
+# placement, then run the full separator plan with the same setting.
+python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --no-edge-support --viewer --keep-open --verbose
+python -m prototypes.onestroke_physical_wall_demo --no-edge-support --viewer --keep-open --verbose
+# Diagnostic only: continue the visual sequence even if an intermediate wall is
+# judged failed; final il_ready remains False when any move fails.
+python -m prototypes.onestroke_physical_wall_demo --no-edge-support --continue-on-failure --viewer --keep-open --verbose
+# Genesis keeps captured frames in memory until MP4 encoding. For this long
+# four-wall run, subsample at 1/4 and use 640px to avoid WSL OOM termination.
+python -m prototypes.onestroke_physical_wall_demo --record-video runs/demo_onestroke_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+python -m prototypes.onestroke_physical_wall_demo --no-edge-support --record-video runs/demo_onestroke_physical_no_edge_support_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+
+# Official demo 3: Maze Wall Removal, inspect the generated maze and optionally remove the optimal wall set.
+python -m prototypes.maze_wall_removal_demo --viewer --keep-open --seed 11 --verbose
+python -m prototypes.maze_wall_removal_demo --solve-oracle --record-video runs/demo_maze_wall_removal_solve.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
+
+# Maze physical contact / collider-based IL: pull each optimal wall vertically
+# out of the maze and release it in the discard region using the real Franka
+# gripper, rigid collision, and friction. No attachment or execution-time wall
+# teleport is used; scene-construction placement is the only set_pos/set_quat
+# path.
+# With --viewer, the finished scene remains open until Ctrl+C. Add
+# --close-on-finish when an automated smoke should exit immediately.
+python -m prototypes.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --verbose
+python -m prototypes.maze_wall_removal_physical_demo --seed 11 --viewer --verbose
+python -m prototypes.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --close-on-finish --verbose
+python -m prototypes.maze_wall_removal_physical_demo --seed 11 --record-video runs/demo_maze_wall_removal_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+
+# Official demo 4: Cable Routing, inspect the four-fixture routing scene and record endpoint-physics robot routing.
+python -m prototypes.cable_routing_oracle_demo --viewer --keep-open --route-mode initial --verbose
+python -m prototypes.cable_routing_oracle_demo --viewer --keep-open --route-mode goal --verbose
+python -m prototypes.cable_routing_oracle_demo --viewer --keep-open --keep-open-no-step --run-oracle --lite --settle-steps 8 --oracle-steps 90 --hold-steps 140 --endpoint-drag-substeps 12 --wrap-z-lift 0.040 --verbose --debug-print-oracle-steps
+# The verbose viewer auto-draws non-colliding red-line oracle waypoint markers. Use --hide-oracle-waypoints if they obscure contact.
+# The verbose oracle prints cable_routing_phase_verify/cable_routing_verify lines for endpoint routing vs. physical rope wrapping.
+python -m prototypes.cable_routing_oracle_demo --run-oracle --lite --settle-steps 8 --oracle-steps 90 --hold-steps 140 --endpoint-drag-substeps 12 --wrap-z-lift 0.040 --record-video runs/demo_cable_routing_robot_oracle.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 960 960 --verbose --show-oracle-waypoints
+# Cable-only oracle, useful when isolating PBD rope/fixture modeling.
+python -m prototypes.cable_routing_oracle_demo --run-oracle --oracle-mode kinematic --no-robot --lite --settle-steps 8 --oracle-steps 90 --hold-steps 50 --record-video runs/demo_cable_routing_oracle.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
+# Crash diagnostic only: --oracle-physics-step deliberately re-enters the unstable Genesis PBD scene.step path.
+
+# Cable physical contact: first smoke one waypoint, then keep one continuous
+# physical grasp through the complete P1 -> P2 -> C route. The full run checks
+# handle-follow error after every waypoint and PBD wrap retention at the end.
+# At C, the pole must enter the low socket before the connector latch engages.
+python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --max-waypoints 1 --verbose
+python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --verbose
+python -m prototypes.cable_routing_physical_handle_demo --lite --record-video runs/demo_cable_routing_physical.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 960 960 --verbose
+
+# Official demo 5: Peeling Level 1, semantic peel zones plus ordered film separation.
+python -m prototypes.peeling_oracle_demo --viewer --keep-open --run-oracle --settle-steps 20 --verbose
+python -m prototypes.peeling_oracle_demo --run-oracle --settle-steps 20 --record-video runs/demo_peeling_level1_oracle.mp4 --record-fps 30 --record-camera oblique --record-res 960 960 --verbose --hide-peel-zones
+
+# Peeling physical single-film trial on tabletop V1. Franka physically grasps
+# a rigid tab connected to PBD cloth; substrate adhesion is approximated by
+# particle columns released progressively along the pull trajectory.
+python -m prototypes.peeling_physical_single_demo --viewer --keep-open --verbose
+python -m prototypes.peeling_physical_single_demo --record-video runs/demo_peeling_physical_single.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 640 640 --verbose
+
+# Peeling scheme 2: square varied-size rigid patches + suction-like attachment
+# on the frozen tabletop V1 baseline. Default v13b starts from a stable source
+# pile: largest patch at the bottom, smaller patches above it, then unstacked
+# top-down into a row target.
+python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-layout stack --target-layout row --stack-gap 0.000 --place-clearance 0.002 --viewer --keep-open --verbose
+# Experimental comparison: enable Genesis rigid collision for physical stack
+# solving, and let the initial source pile settle from collision instead of
+# using exact precomputed layer heights. If this hangs at solver build or
+# settle, use the default above.
+python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-layout stack --source-stack-mode collision-settle --target-layout row --stack-gap 0.000 --place-clearance 0.002 --patch-collision --viewer --keep-open --verbose
+# Viewer diagnostic if the default Genesis threaded viewer hangs at Viewer.build().
+python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-layout stack --target-layout row --stack-gap 0.000 --place-clearance 0.002 --viewer --viewer-main-thread --keep-open --verbose
+# Viewer diagnostic: force a specific PyOpenGL platform when Genesis' automatic
+# native -> egl -> glx -> osmesa order hangs before fallback.
+python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-layout stack --target-layout row --stack-gap 0.000 --place-clearance 0.002 --viewer --viewer-platform glx --keep-open --verbose
+python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-layout stack --target-layout row --stack-gap 0.000 --place-clearance 0.002 --record-video runs/demo_peeling_rigid_patch_suction.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
+
+# Stacked-Plate sector alignment on the frozen tabletop V1 baseline. Each disk is a
+# fixed-base revolute mechanism; the gripper pinches a disk's rim and rolls it down,
+# driving the joint purely through finger-contact friction. No attachment or
+# execution-time joint/pose teleport is used.
+python -m prototypes.stacked_plate_physical_rotate_demo --viewer --verbose
+python -m prototypes.stacked_plate_physical_rotate_demo --record-video runs/demo_stacked_plate_contact.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 640 640 --verbose
+
+# Collision-based IL smoke set. Each command prints `il_contract` and a final
+# `il_ready=True/False`; only `il_ready=True` runs should be accepted into an IL
+# dataset. These four tasks are the rigid-contact baseline group.
+python -m prototypes.swap_physical_grasp_demo --verbose
+python -m prototypes.onestroke_physical_wall_demo --verbose
+python -m prototypes.maze_wall_removal_physical_demo --seed 11 --verbose
+python -m prototypes.stacked_plate_physical_rotate_demo --verbose
+
+# Official demo 7: Untangle robot drag, move the under-rope endpoint with Franka and let PBD rope contact evolve.
+python -m prototypes.untangle_robot_drag_demo --lite --settle-steps 10 --drag-steps 380 --endpoint-lift 0.014 --hold-steps 120 --record-video runs/demo_untangle_robot_wrap.mp4 --record-fps 30 --record-res 960 960 --record-every-n-steps 2 --verbose
+python -m prototypes.untangle_robot_drag_demo --viewer --lite --keep-open --settle-steps 10 --drag-steps 320 --endpoint-lift 0.014 --hold-steps 90 --verbose
+
+# Untangle/knots physical contact: first smoke one move, then let the planner
+# continue until terminal. A topology action is committed only after the
+# released handle physically settles inside the target-hole tolerance.
+python -m prototypes.untangle_physical_handle_demo --viewer --lite --max-moves 1 --verbose
+python -m prototypes.untangle_physical_handle_demo --viewer --lite --verbose
+python -m prototypes.untangle_physical_handle_demo --lite --record-video runs/demo_untangle_physical.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 960 960 --verbose
+
+# Untangle manual fallback: same rope-side disturbance without Franka.
+python -m prototypes.untangle_rope_drag_demo --mode manual --demo-goal disturb --disturb-preset wrap --motion-model physics --lite --settle-steps 10 --drag-steps 380 --endpoint-lift 0.014 --hold-steps 120 --record-video runs/demo_untangle_physics_wrap.mp4 --record-fps 60 --record-res 1280 1280 --record-aa --verbose
+
+# PBD rope visual probes: generate controlled knot/crossing layouts and inspect in Genesis viewer.
+python -m prototypes.knot_pbd_viewer_probe --case cross --viewer --keep-open --settle-steps 180 --hold-steps 240 --verbose
+python -m prototypes.knot_pbd_viewer_probe --case overhand --complexity 1 --viewer --keep-open --settle-steps 180 --hold-steps 360 --verbose
+python -m prototypes.knot_pbd_viewer_probe --case figure8 --complexity 1 --viewer --keep-open --settle-steps 180 --hold-steps 360 --verbose
+python -m prototypes.knot_pbd_viewer_probe --case weave --rope-count 4 --complexity 3 --viewer --keep-open --settle-steps 180 --hold-steps 240 --verbose
+python -m prototypes.knot_pbd_viewer_probe --case torus --complexity 1 --viewer --keep-open --settle-steps 180 --hold-steps 240 --verbose
+python -m prototypes.knot_pbd_viewer_probe --case torus --complexity 2 --lite --viewer --keep-open --settle-steps 120 --hold-steps 240 --verbose
+
+# Optional VLA stack in a separate OpenPI uv environment.
+bash env_setup_vla_openpi.sh
+
+# --- swap H5 -> pi0.5 (OpenPI) 数据加载冒烟 (详见 docs/develop/il_adaptation/swap_to_pi05_smoke_zh.md) ---
+# 0. 装完 OpenPI 后自检 (从 repo 根跑; 每条末尾 cd 回根)
+cd .external/openpi && uv run python -c "from openpi.training import config; print('ok')"; cd - >/dev/null
+# 1. 产一条 swap H5 (topogym 的 Genesis venv 里; 帧数太少就 EVERY=5 前缀)
+bash bash_scripts/tests/verify_dataset_recording.sh swap
+# 2. H5 -> LeRobot 数据集 (在 OpenPI 的 uv 环境里; 把 <ts> 换成上一步实际时间戳目录)
+cd .external/openpi && uv run python ../../scripts/export_swap_lerobot.py ../../runs/dataset_tests/<ts>/swap_seed0.h5 --repo-id topogym/swap_smoke; cd - >/dev/null
+# 3. 手动改动: 把 pi05_topogym_swap TrainConfig 加进 .external/openpi/src/openpi/training/config.py (diff 见文档第 3 节)
+# 4. 归一化统计 (第一个硬门, 不加载模型, 最能暴露格式错)
+cd .external/openpi && uv run scripts/compute_norm_stats.py pi05_topogym_swap; cd - >/dev/null
+# 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)
+cd .external/openpi && uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null

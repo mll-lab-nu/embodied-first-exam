@@ -1,0 +1,6 @@
+enabled: true
+path: runs/recording.mp4
+camera: oblique
+fps: 60
+res: null
+antialiasing: false

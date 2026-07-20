@@ -1,6 +1,8 @@
 # Virtual environment & caches
 .venv/
+.venv-gs110/
 .cache/
+.external/
 
 # Python
 __pycache__/
@@ -24,3 +26,10 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
+# Run outputs & recordings (videos, frames, datasets, logs)
+runs/
+bash_scripts/recordings/
+
+# TetGen scratch files (dumped into repo root during soft-body meshing)
+tetgen-tmpfile*

@@ -1,0 +1,53 @@
+# Franka Panda controller using joint position control plus EE-pose IK.
+
+robot:
+  name: franka_panda
+  asset: xml/franka_emika_panda/panda.xml
+  joint_names:
+    - joint1
+    - joint2
+    - joint3
+    - joint4
+    - joint5
+    - joint6
+    - joint7
+    - finger_joint1
+    - finger_joint2
+  arm_joint_count: 7
+  gripper_joint_count: 2
+  ee_link: hand
+
+home:
+  qpos: ${common.robot_setup.home.qpos}
+  settle_steps: ${common.robot_setup.home.settle_steps}
+
+controller:
+  type: position
+  kp: [4500, 4500, 3500, 3500, 2000, 2000, 2000, 100, 100]
+  kv: [450, 450, 350, 350, 200, 200, 200, 10, 10]
+  force_lower: [-87, -87, -87, -87, -12, -12, -12, -100, -100]
+  force_upper: [87, 87, 87, 87, 12, 12, 12, 100, 100]
+
+ik:
+  enabled: true
+  default_ee_quat: [0.0, 1.0, 0.0, 0.0]
+
+gripper:
+  open_qpos: 0.04
+  closed_qpos: 0.00
+
+action_protocol:
+  mode: ee_delta
+  dims: [dx, dy, dz, dyaw, gripper]
+  max_delta_xyz: 0.03
+  max_delta_yaw: 0.20
+  workspace:
+    x: ${common.manipulation_space.workspace.x}
+    y: ${common.manipulation_space.workspace.y}
+    z: ${common.manipulation_space.workspace.z}
+
+control_loop:
+  steps_per_action: 20
+  interpolation: linear
+  use_plan_path: false
+  plan_waypoints: 80

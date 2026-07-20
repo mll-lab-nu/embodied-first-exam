@@ -1,22 +1,19 @@
 """Genesis-grounded scene presets for TopoGym module A."""
 
-from .common_room import (
-    BlockSpec,
-    BuiltRoom,
-    CameraSpec,
-    CommonRoomSpec,
-    build_common_room,
-    default_common_room_spec,
-    init_genesis_once,
+from . import materials, rope
+from .tabletop import (
+    RobotFootprintCheck,
+    StandardTabletopSceneBuilder,
+    TabletopBaseScene,
+    TabletopFrames,
+    tabletop_frames_from_config,
 )
 
 __all__ = [
-    "BlockSpec",
-    "BuiltRoom",
-    "CameraSpec",
-    "CommonRoomSpec",
-    "build_common_room",
-    "default_common_room_spec",
-    "init_genesis_once",
+    "materials",
+    "RobotFootprintCheck",
+    "StandardTabletopSceneBuilder",
+    "TabletopBaseScene",
+    "TabletopFrames",
+    "tabletop_frames_from_config",
 ]
-

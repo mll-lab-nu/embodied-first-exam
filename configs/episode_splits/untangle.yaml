@@ -1,0 +1,10 @@
+# Committed train/val/test seed lists for the Untangle task.
+#
+# Like swap, the current tabletop untangle layout is deterministic -- the
+# generator does not yet randomize by seed, so these seeds pin episode IDENTITY
+# only, not scene layout (see robomme_pipeline_roadmap_zh.md "排除项").
+task_id: untangle
+splits:
+  train: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  val: [100, 101, 102, 103, 104]
+  test: [200, 201, 202, 203, 204]

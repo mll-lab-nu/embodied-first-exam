@@ -10,19 +10,22 @@
   - `build_common_room(...)`
 - `topogym/examples/common_room_demo.py`
   - 用 TopoGym 这一层构建公共试验场地并读两路相机
-- `prototypes/hello_genesis_room.py`
-  - 直接贴官方 Genesis 用法的 8 行原型
+- `cli_commands.txt`
+  - 当前保留的三个正式 demo 入口
 
 ## 当前公共场景内容
 
 - 地面 `Plane`
-- 一张浅灰 lab bench 风格桌子
-- 一块 40cm x 40cm 的操作区薄板
+- 一张 `1.30m x 1.00m` 的浅灰 lab bench 风格桌子
+- 一块 `0.70m x 0.80m` 的操作区薄板
 - 一台 Franka Panda（先用 Genesis 内置 MJCF 资产）
 - 4 个彩色 cube
 - 两个静态相机
   - `oblique`
   - `topdown`
+
+Franka 的 MJCF 安装面位于 `z=0.75m`，与桌面顶面齐平。任务棋盘保持在桌面
+上方，不再通过抬高机器人来匹配棋盘高度，因此底座视觉上和碰撞上都由桌面承托。
 
 ## 这里严格依赖的官方 Genesis 接口
 
@@ -57,7 +60,7 @@ cd /projects/bfuo/jlyu3/topogym
 直接看最小原型：
 
 ```bash
-python prototypes/hello_genesis_room.py
+cat cli_commands.txt
 ```
 
 跑 TopoGym 这一层的公共场景 demo：

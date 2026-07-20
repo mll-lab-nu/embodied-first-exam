@@ -1,0 +1,184 @@
+# Untangle layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+
+task:
+  id: untangle
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: untangle_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+holes:
+  rows: 4
+  cols: 4
+  # 孔距放大 ~40%（0.078/0.072→0.105/0.100），孔径/绳径/端头不变：平直段拉长后
+  # 端头出线弧的"凹"占比下降、余量压缩更缓、空孔留白更易分辨（用户提议 2026-07-11）。
+  # 格网 extent 0.315x0.300，重新居中后仍在 workspace x[-0.25,0.25]/y[-0.30,0.30] 内。
+  top_left_pos: [-0.157, 0.150, 0.001]
+  spacing: [0.105, 0.100]
+  radius: 0.007
+  height: 0.001
+  color: [0.02, 0.06, 0.10]
+  collision: false
+  source: [0, 1]
+  target: [3, 0]
+  target_color: [0.70, 0.20, 1.00]
+
+peg:
+  enabled: false
+  pegs: []
+
+rope:
+  model: pbd_elastic_tube
+  anchor_endpoints: true
+  # 端点固定的粒子选取半径。放大到 ~0.012 让 fix_particles_to_link 固定"一带"
+  # (2~3 圈)粒子而不是单圈，分散刚体↔PBD 耦合、消掉接缝硬 hinge（减少端头乱甩/
+  # 第一段打折）。segment_length≈0.009，0.012 约含 2 圈。
+  anchor_radius: 0.012
+  # 物理参数单源 = configs/prefab_configs/topogym_prefabs_v1.yaml（prefabs.rope_pbd，
+  # 值即本任务打磨出的原值，2026-07-12 抽取，行为零变化）。kink 迭代留档、compliance
+  # 注释等历史见 prefab 文件。网格分辨率(segment_length/radial_segments)按任务自留。
+  radius: ${prefabs.rope_pbd.radius}
+  z: 0.007
+  layer_height: 0.006
+  particle_size: ${prefabs.rope_pbd.particle_size}
+  mesh:
+    segment_length: 0.009
+    radial_segments: 8
+    maxvolume: ${prefabs.rope_pbd.maxvolume}
+    output_dir: .cache/topogym/meshes/untangle
+  pbd:
+    max_stretch_solver_iterations: ${prefabs.rope_pbd.pbd.max_stretch_solver_iterations}
+    max_bending_solver_iterations: ${prefabs.rope_pbd.pbd.max_bending_solver_iterations}
+    max_volume_solver_iterations: ${prefabs.rope_pbd.pbd.max_volume_solver_iterations}
+  elastic:
+    rho: ${prefabs.rope_pbd.elastic.rho}
+    # 低但非零的 PBD 粒子间摩擦（原值 0.35/0.25，单源自 prefabs.rope_pbd，被
+    # cable_routing 共用，故在本任务就地覆写、不动 prefab）。交叉"粘连感"的真正病根是
+    # 初始几何穿模（见 strands.rope_green 的 z_offset 注释），已由抬高 z_offset 修复；
+    # 摩擦本身只是次要因素。此处保留一点摩擦让绿绳落到红绳上后静置更自然、不打滑，
+    # 又远低于原值以免重现"拖着走"。若仍有残余拖拽，可继续下探直至 0.0 做隔离验证。
+    static_friction: 0.05
+    kinetic_friction: 0.02
+    stretch_compliance: ${prefabs.rope_pbd.elastic.stretch_compliance}
+    bending_compliance: ${prefabs.rope_pbd.elastic.bending_compliance}
+    volume_compliance: ${prefabs.rope_pbd.elastic.volume_compliance}
+    stretch_relaxation: ${prefabs.rope_pbd.elastic.stretch_relaxation}
+    bending_relaxation: ${prefabs.rope_pbd.elastic.bending_relaxation}
+    volume_relaxation: ${prefabs.rope_pbd.elastic.volume_relaxation}
+  anchor_pins:
+    enabled: true
+    placement: endpoints
+    attachment_mode: fixed_particles
+    radius: 0.0035
+    height: 0.014
+    z: 0.007
+    # 端头颜色/几何 2026-07-12 起单源于 prefabs.rope_endpoint_connector
+    # （历史留档：深色柱 [0.02,0.06,0.10] → 灰塑料；柱高 0.035→0.020→0.014，
+    # 详见 prefab 文件注释）。
+    color: ${prefabs.rope_endpoint_connector.color}
+    fixed: true
+    collision: false
+    exclude_pbd_collision: false
+    # Industrial plug connector replacing the bare cylinder handle (redesign Phase A,
+    # untangle_redesign_plan_zh.md §1): mesh flange sits on the board (reads "plugged in"),
+    # pin drops into the hole, Ø15mm grip-ring column gives the gripper ~4x graspable volume.
+    # Mesh-only visual; physical anchoring/grasp is code-driven (Phase B two-state weld:
+    # the physical-handle demo runs socket ConnectorLatch + assisted grasp attachment).
+    connector:
+      enabled: true
+      pin_depth: ${prefabs.rope_endpoint_connector.pin_depth}
+      pin_radius: ${prefabs.rope_endpoint_connector.pin_radius}    # < hole radius 0.007
+      flange_radius: ${prefabs.rope_endpoint_connector.flange_radius}  # > hole radius
+      flange_height: ${prefabs.rope_endpoint_connector.flange_height}
+      column_radius: ${prefabs.rope_endpoint_connector.column_radius}
+      column_height: ${prefabs.rope_endpoint_connector.column_height}
+      grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
+      radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
+      output_dir: .cache/topogym/meshes/untangle
+  strands:
+    - name: rope_red
+      color: [1.00, 0.06, 0.03]
+      points:
+        - [0, 1]
+        - [1, 1]
+        - [2, 1]
+        - [3, 1]
+    - name: rope_green
+      color: [0.02, 0.85, 0.12]
+      points:
+        - [1, 0]
+        # z_offset 只用来声明"绿压红"的拓扑（untangle_mdp.py 按 layer+z_offset 比大小
+        # 定 over/under），不需要精确指定静止高度。原值 0.006 < 绳直径 0.008，导致两绳
+        # 初始就穿模 2mm，被持有绳横扫时靠法向"推土机"效应把红绳拖着走（摩擦=0 也去不掉）。
+        # 抬到 0.012（> 直径 + particle_size 的碰撞包络）让绿绳一开始干净悬在红绳上方，
+        # 再靠 settle-steps 的重力自然落到红绳上，接触高度/垂坠由物理决定、零穿模。
+        - {hole: [1, 1], z_offset: 0.012}
+        - [1, 2]
+    - name: rope_blue
+      color: [0.02, 0.20, 1.00]
+      points:
+        - [0, 3]
+        - [1, 3]
+        - [2, 3]
+
+physical_handle:
+  # endpoint handle 是机械臂实际夹住的刚体小圆柱；rope 端点 PBD particles
+  # 通过 fix_particles_to_link 跟随这个 handle。
+  radius: 0.0085
+  # 加长端头(0.024→0.032)给夹爪更大落脚区、更好抓、拖拽时不易打滑（Fable 建议：
+  # graspability 主要靠长度不是直径）。z_offset 同步调整让 handle 底仍贴桌面。
+  height: 0.032
+  z_offset: 0.009
+  rho: 700.0
+  finger_links: [left_finger, right_finger]
+  finger_friction: 1.6
+  handle_friction: 1.6
+  # Panda 每根 finger 的目标 qpos，数值越小夹得越紧。
+  # handle 直径约 2*radius=0.017 m；太小会产生很硬的接触力，
+  # 容易让 PBD rope + rigid handle 的 native solver 崩溃。
+  grasp_qpos: 0.0075
+  # hand link 接近 handle 前的安全高度。tabletop V1 版本使用 task-frame z；
+  # z=0 是桌面，最终会自动加到桌面世界高度上。
+  approach_z: 0.250
+  # 抓住 handle 后先向上抬高多少米，再开始平移到目标 hole。
+  # 值越大越容易跨过绳子/障碍，但也会更猛烈地拉伸 PBD rope。
+  # 0.028→0.100：先高抬再平移，让被拖绳的垂坠段从俯视交叉的其他绳上方
+  # 安全跨越，而不是贴地横扫穿模（用户反馈 2026-07-11）。
+  lift_delta: 0.100
+  # 每段末端运动的插值步数；值越大，机械臂移动越慢、PBD rope 受力越平滑。
+  # physical demo 中搬运到目标上方会使用 2*move_steps，下降放置用约 0.5*move_steps。
+  move_steps: 300
+  # 55→180：实测 55 步闭合只到 26mm，远未夹到 grasp_qpos 7.5mm，导致"手指还在
+  # 合、插头就被 attach 抬起"（起早）。加够步数让手指先夹到位再进 hold/peel（2026-07-13）。
+  gripper_steps: 180
+  # 抓取更稳的编排（2026-07-13）：闭合后多停一会（100 步）让"夹稳"可见，再用
+  # 缓速 peel_out 把插头从孔里慢慢剥出（25mm / 140 步，很慢），最后才进搬运抬升，
+  # 消除"插头先蹿出、手臂顺势抓"的观感。
+  close_hold_steps: 100
+  # 缓速剥出（先夹稳→慢慢拔出→再搬运）；0=其他任务不受影响。
+  pre_lift_delta: 0.025
+  pre_lift_steps: 140
+  motion_settle_steps: 20
+  # lift test 中 handle 至少需要实际升高这么多，才认为夹爪真的抓住了 handle。
+  min_lift_delta: 0.014
+  max_handle_error: 0.035
+  release_hold_steps: 35
+  placement_tolerance_xy: 0.030
+  between_moves_settle_steps: 50
+  # Stable-generation 默认不做同一步失败后的补救重抓；调试时可用 CLI 覆盖为 2。
+  max_grasp_attempts: 1
+
+oracle:
+  source_hole: [0, 1]
+  target_hole: [3, 0]
+  above_z: 0.300
+  grasp_z: 0.116
+  pull_z: 0.300
+  insert_z: 0.116

@@ -1,0 +1,108 @@
+# Maze Wall Removal layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+
+task:
+  id: maze_wall_removal
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: maze_wall_removal_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+grid:
+  rows: 4
+  cols: 4
+  # Larger cells and wider gaps leave physical clearance for one gripper finger
+  # to descend near the selected wall without disturbing neighboring walls.
+  top_left_cell_pos: [-0.100, 0.165, 0.007]
+  cell_size: [0.070, 0.070, 0.014]
+  cell_gap: 0.040
+  colors:
+    - [0.72, 0.74, 0.76]
+    - [0.82, 0.84, 0.86]
+
+maze:
+  wall_density: 0.38
+  min_manhattan_distance: 4
+  max_manhattan_distance: 6
+  min_required_removals: 1
+  max_required_removals: 2
+  turn_bias: 0.68
+  max_straight_run: 2
+  max_resample_attempts: 800
+
+markers:
+  a_cell_color: [1.00, 0.16, 0.10]
+  b_cell_color: [0.00, 0.55, 1.00]
+
+edge_slots:
+  width: 0.016
+  length_padding: 0.0
+  height: 0.004
+  z: 0.001
+  color: [0.02, 0.06, 0.10]
+  visualization: false
+  collision: false
+
+wall_block:
+  # Keep the 56 mm long axis for the existing long-axis grasp. The 16 mm thin
+  # side plus a 40 mm cell gap gives about 12 mm side clearance per side.
+  size: [0.056, 0.016, 0.026]
+  z: 0.027
+  color: [0.02, 0.06, 0.10]
+  jitter_xy: 0.0
+  jitter_yaw: 0.0
+
+discard:
+  name: maze_discard_tray
+  # Logical discard strip only: do not render a visible tray/region.
+  # Robot-view direction: -y is the board's right side. The strip spans the
+  # same x length as the shared board and sits inside the board footprint.
+  visible: false
+  pos: [0.000, -0.340, 0.003]
+  size: [0.700, 0.120, 0.006]
+  color: [0.02, 0.06, 0.10]
+  columns: 8
+  spacing_x: 0.080
+  spacing_y: 0.060
+
+oracle:
+  carry_z: 0.300
+  remove_z: 0.151
+  place_z: 0.131
+
+physical:
+  finger_links: [left_finger, right_finger]
+  finger_friction: 2.0
+  wall_friction: 1.0
+  noslip_iterations: 8
+  settle_steps: 50
+  motion_steps: 240
+  motion_settle_steps: 30
+  gripper_steps: 50
+  grasp_qpos: 0.0240
+  close_hold_steps: 70
+  release_hold_steps: 45
+  lift_check_delta: 0.05
+  min_lift_delta: 0.020
+  max_grasp_xy_error: 0.025
+  lift_hold_steps: 50
+  max_lift_drift: 0.006
+  place_tolerance_xy: 0.040
+  place_tolerance_z: 0.060
+  grasp_yaw_offset: 1.57079632679
+
+mdp:
+  max_episode_steps: 24
+  reward:
+    success: 10.0
+    progress: 2.0
+    remove: 0.25
+    excess: 2.0
+    invalid: 1.0
+    step: 0.03
