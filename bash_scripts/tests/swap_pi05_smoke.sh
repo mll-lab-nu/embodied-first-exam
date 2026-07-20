@@ -52,6 +52,17 @@ mkdir -p "$SMOKE_DIR"
 # topogym venv 干扰（uv 会用 .external/openpi 的项目环境）。
 openpi_run() { ( unset VIRTUAL_ENV; cd "$OPENPI_DIR" && uv run "$@" ); }
 
+# uv 常被 env_setup_vla_openpi.sh 装到 ~/.local/bin 或 ~/.cargo/bin，而那次 PATH 改动
+# 只在它自己那次运行里生效——非交互 shell 跑本脚本时可能找不到 uv。这里补进 PATH。
+ensure_uv() {
+  command -v uv >/dev/null 2>&1 && return 0
+  local d
+  for d in "$HOME/.local/bin" "$HOME/.cargo/bin"; do
+    [ -x "$d/uv" ] && { PATH="$d:$PATH"; export PATH; }
+  done
+  command -v uv >/dev/null 2>&1
+}
+
 want() { [ "$1" -ge "$FROM_STAGE" ] && [ "$1" -le "$TO_STAGE" ]; }
 
 declare -A RESULT
@@ -72,10 +83,15 @@ finish() {
 
 echo "[smoke] stages ${FROM_STAGE}..${TO_STAGE} | seed=$SEED backend=$BACKEND config=$CONFIG_NAME"
 
-# 需要 OpenPI 的阶段先确认它装了
+# 需要 OpenPI 的阶段先确认它装了、且 uv 找得到
 if want 0 || want 2 || want 3 || want 4 || want 5; then
   if [[ ! -d "$OPENPI_DIR" ]]; then
     echo "[error] 找不到 OpenPI: $OPENPI_DIR —— 先跑 bash env_setup_vla_openpi.sh" >&2
+    exit 1
+  fi
+  if ! ensure_uv; then
+    echo "[error] 找不到 uv（openpi 步骤需要）。它一般被 env_setup_vla_openpi.sh 装在 ~/.local/bin。" >&2
+    echo "        执行： export PATH=\"\$HOME/.local/bin:\$HOME/.cargo/bin:\$PATH\"（或 source ~/.bashrc / 开新终端）后重跑。" >&2
     exit 1
   fi
 fi
