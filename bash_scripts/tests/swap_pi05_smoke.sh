@@ -23,6 +23,7 @@
 #   SEED=0 EVERY=10 BACKEND=gpu    录制参数（透传给 verify_dataset_recording.sh）
 #   CONFIG_NAME=pi05_topogym_swap  REPO_ID=topogym/swap_smoke  EXP_NAME=swap_smoke
 #   AUTO_CONFIG=1                  stage 3 自动追加 config（幂等）；=0 则改回手动粘 diff
+#   WANDB_MODE=disabled            冒烟默认关 wandb；想上传设 online 并先 wandb login
 #   SMOKE_DIR=runs/pi05_smoke      固定产物目录（H5 落这里，跨段/续跑可复用）
 #   OPENPI_DIR=.external/openpi    OpenPI 安装目录
 #   TOPOGYM_VENV=.venv             录制用的 topogym venv（未激活时 verify 脚本自动 source）
@@ -45,6 +46,10 @@ SMOKE_DIR="${SMOKE_DIR:-runs/pi05_smoke}"
 OPENPI_DIR="${OPENPI_DIR:-$REPO/.external/openpi}"
 AUTO_CONFIG="${AUTO_CONFIG:-1}"       # stage 3：1=自动注册 config，0=保持手动
 H5="$SMOKE_DIR/swap_seed${SEED}.h5"   # verify_dataset_recording.sh 的命名约定
+
+# 冒烟不上传 wandb —— train.py 默认开 wandb，无 TTY/无 api_key 时会在训练前报错退出。
+# disabled 让 wandb.init 变成 no-op（想上传就设 WANDB_MODE=online 并先 wandb login）。
+export WANDB_MODE="${WANDB_MODE:-disabled}"
 
 mkdir -p "$SMOKE_DIR"
 

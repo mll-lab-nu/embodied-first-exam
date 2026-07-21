@@ -176,4 +176,4 @@ cd .external/openpi && uv run python ../../scripts/export_swap_lerobot.py ../../
 # 4. 归一化统计 (第一个硬门, 不加载模型, 最能暴露格式错)
 cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_topogym_swap; cd - >/dev/null
 # 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)
-cd .external/openpi && uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null
+cd .external/openpi && WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null

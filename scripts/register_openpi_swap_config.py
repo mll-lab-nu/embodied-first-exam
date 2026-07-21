@@ -47,6 +47,7 @@ _CONFIGS.append(
         batch_size=4,
         num_workers=0,
         num_train_steps=5,
+        wandb_enabled=False,
         lr_schedule=_optimizer.CosineDecaySchedule(
             warmup_steps=1, peak_lr=5e-5, decay_steps=100, decay_lr=5e-5,
         ),

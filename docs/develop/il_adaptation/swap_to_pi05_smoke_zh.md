@@ -68,7 +68,8 @@ uv run scripts/compute_norm_stats.py --config-name pi05_topogym_swap
 #   通过 = 无 shape/dtype/字段异常，assets 目录里写出 norm_stats.json
 
 # ---- 5. 跑几个 train step（最终验收；首次会拉 π0.5 基座 checkpoint 数 GB + 需 GPU）----
-uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite
+WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite
+#   WANDB_MODE=disabled 关掉 wandb（否则无 TTY/api_key 时训练前就报错）；config 里也已 wandb_enabled=False。
 #   config 里已把 num_train_steps 设成 5；通过 = 打印出 step 0..4 的 loss，无 shape/格式异常
 ```
 
@@ -99,6 +100,7 @@ uv run --project .external/openpi python scripts/register_openpi_swap_config.py
         batch_size=4,                            # 小数据集：norm_stats 的 num_batches=len//batch_size，别设大
         num_workers=0,                           # 冒烟规避多进程 dataloader 边角情况
         num_train_steps=5,                       # 只求跑通几步
+        wandb_enabled=False,                     # 冒烟不上传 wandb（否则无 TTY/api_key 时训练前报错）
         lr_schedule=_optimizer.CosineDecaySchedule(
             warmup_steps=1, peak_lr=5e-5, decay_steps=100, decay_lr=5e-5,
         ),
