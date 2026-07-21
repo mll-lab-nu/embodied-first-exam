@@ -167,7 +167,7 @@ fi
 # ---------------- Stage 4: compute_norm_stats（数据格式硬门）----------------
 if want 4; then
   echo; echo "==================== stage 4: compute_norm_stats（数据格式硬门）===================="
-  openpi_run scripts/compute_norm_stats.py "$CONFIG_NAME" 2>&1 | tee "$SMOKE_DIR/stage4.log"
+  openpi_run scripts/compute_norm_stats.py --config-name "$CONFIG_NAME" 2>&1 | tee "$SMOKE_DIR/stage4.log"
   code=${PIPESTATUS[0]}
   if [[ $code -eq 0 ]]; then
     ns="$(find "$OPENPI_DIR/assets/$CONFIG_NAME" -name 'norm_stats.json' 2>/dev/null | head -1)"

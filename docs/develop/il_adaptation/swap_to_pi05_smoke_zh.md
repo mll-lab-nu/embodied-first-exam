@@ -63,7 +63,8 @@ uv run --project "$TOPOGYM/.external/openpi" python scripts/register_openpi_swap
 
 # ---- 4. 归一化统计（第一个硬门：完整跑数据加载+transform，不加载模型）----
 cd "$TOPOGYM/.external/openpi"
-uv run scripts/compute_norm_stats.py pi05_topogym_swap
+uv run scripts/compute_norm_stats.py --config-name pi05_topogym_swap
+#   注意 config 名是 --config-name 旗标（不是位置参数）；train.py 才是位置子命令。
 #   通过 = 无 shape/dtype/字段异常，assets 目录里写出 norm_stats.json
 
 # ---- 5. 跑几个 train step（最终验收；首次会拉 π0.5 基座 checkpoint 数 GB + 需 GPU）----
