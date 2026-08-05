@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from topogym.tasks import SwapPuzzleEvaluator
+from topogym.verification import SwapPuzzleEvaluator
 
 try:
     import gymnasium as gym

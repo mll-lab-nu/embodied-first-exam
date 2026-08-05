@@ -21,7 +21,8 @@ from topogym.primitives import (
     validate_rigid_friction,
 )
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
-from topogym.tasks import MazeWallRemovalPuzzleEvaluator, MazeWallRemovalSceneBuilder
+from topogym.tasks import MazeWallRemovalSceneBuilder
+from topogym.verification import MazeWallRemovalPuzzleEvaluator
 from topogym.utils import (
     add_recording_args,
     initialize_franka_controller,

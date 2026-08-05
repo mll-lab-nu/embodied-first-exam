@@ -273,6 +273,133 @@ def endpoint_particle_indices(rope_entity, endpoint_centers, *, radius: float) -
     return sorted(indices)
 
 
+class TabletopParticleFriction:
+    """Coulomb friction between PBD particles and a horizontal surface.
+
+    Genesis does not provide this. Its deformable-vs-rigid friction
+    (``legacy_coupler._func_collide_in_rigid_geom``) scales the tangential
+    reduction by the *normal velocity* and only runs while a particle is moving
+    into the surface, so a rope already resting on a table gets essentially no
+    friction no matter how high ``coup_friction`` is set. ``PBD.Elastic`` has no
+    damping term either (its ``*_relaxation`` fields are constraint relaxation).
+    The result is that nothing stops a disturbed rope: it slides and swings
+    indefinitely. See ``docs/develop/physics/pbd_tabletop_friction_zh.md``.
+
+    This supplies the missing dissipation with the textbook model instead: a
+    particle held against the surface feels ``N = m*g``, so it decelerates at
+    ``mu * g`` regardless of how fast it is going.
+
+    **Velocity only, never position.** A PBD substep ends with
+    ``vel = (pos - ipos) / dt``, so any externally written position jump is
+    reconstructed as a huge velocity -- that is the mechanism behind this repo's
+    ropes getting flung to the solver domain corner. Writing velocity is safe: it
+    just seeds the next substep's prediction, which is exactly where a friction
+    impulse belongs.
+
+    Segments lifted clear of the surface fall outside ``contact_band`` and are
+    left completely alone, so a rope being carried by the gripper is unaffected
+    without needing to know which rope that is.
+    """
+
+    def __init__(
+        self,
+        scene: Any,
+        entities,
+        *,
+        surface_z: float,
+        contact_band: float,
+        static_mu: float,
+        kinetic_mu: float,
+        dt: float,
+        gravity: float,
+        max_load_factor: float = 3.0,
+    ) -> None:
+        self.scene = scene
+        self.entities = list(entities)
+        self.surface_z = float(surface_z)
+        self.contact_band = float(contact_band)
+        self.static_mu = float(static_mu)
+        self.kinetic_mu = float(kinetic_mu)
+        self.dt = float(dt)
+        self.gravity = abs(float(gravity))
+        self.max_load_factor = float(max_load_factor)
+        self._orig_step = None
+
+    def apply(self) -> None:
+        """Apply one step's worth of friction to whatever is touching the surface."""
+
+        for entity in self.entities:
+            positions = tensor_to_numpy(entity.get_particles_pos())
+            if positions.ndim == 3:
+                positions = positions[0]
+            contact = np.flatnonzero(
+                positions[:, 2] <= self.surface_z + self.contact_band
+            )
+            if contact.size == 0:
+                continue
+
+            # The whole rope's weight presses through only the particles that
+            # actually touch -- an octagonal cross-section rests on 2-3 of its 8
+            # vertices. Charging each contact particle only its own m*g would
+            # dilute the rope's deceleration by that ratio; this restores the
+            # textbook mu*g for the rope as a whole.
+            #
+            # The cap matters and its direction is easy to get backwards. A rope
+            # mostly held by the gripper has few contacts, so the raw ratio
+            # *grows* -- but its weight is on the gripper, not the table, so the
+            # normal load there is small. Capping near the geometric ratio of a
+            # resting rope (~8/3) keeps a resting rope correct while stopping a
+            # lifted one from being over-damped through its last few contacts.
+            load_factor = min(
+                float(len(positions)) / float(contact.size), self.max_load_factor
+            )
+            stop_speed = self.static_mu * self.gravity * self.dt * load_factor
+            delta_v = self.kinetic_mu * self.gravity * self.dt * load_factor
+
+            velocities = tensor_to_numpy(entity.get_particles_vel())
+            if velocities.ndim == 3:
+                velocities = velocities[0]
+            velocities = np.array(velocities, dtype=float)
+
+            planar = velocities[contact, :2]
+            speed = np.linalg.norm(planar, axis=1)
+            # Below the static threshold the particle stops dead rather than
+            # reversing, which is what a naive `v -= delta` would do.
+            moving = speed > stop_speed
+            scale = np.zeros_like(speed)
+            np.divide(
+                np.maximum(speed - delta_v, 0.0),
+                speed,
+                out=scale,
+                where=moving,
+            )
+            velocities[contact, :2] = planar * scale[:, None]
+            # Vertical velocity is gravity's and the contact solver's business.
+            entity.set_particles_vel(
+                velocities[contact], particles_idx_local=contact.tolist()
+            )
+
+    def install(self) -> TabletopParticleFriction:
+        """Wrap ``scene.step`` so friction is applied after every step."""
+
+        if self._orig_step is not None:
+            return self
+        self._orig_step = self.scene.step
+
+        def wrapped_step(*args, **kwargs):
+            result = self._orig_step(*args, **kwargs)
+            self.apply()
+            return result
+
+        self.scene.step = wrapped_step
+        return self
+
+    def uninstall(self) -> None:
+        if self._orig_step is not None:
+            self.scene.step = self._orig_step
+            self._orig_step = None
+
+
 def pbd_options(rope_cfg) -> gs.options.PBDOptions:
     """Scene-level PBD solver options from a task's ``rope:`` (or film) block."""
 

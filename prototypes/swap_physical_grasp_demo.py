@@ -21,7 +21,8 @@ from topogym.primitives import (
     print_collision_il_contract,
     validate_rigid_friction,
 )
-from topogym.tasks import SwapPuzzleEvaluator, SwapSceneBuilder
+from topogym.tasks import SwapSceneBuilder
+from topogym.verification import SwapPuzzleEvaluator
 from topogym.utils import (
     add_recording_args,
     initialize_franka_controller,

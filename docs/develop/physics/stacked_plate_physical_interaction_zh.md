@@ -12,7 +12,7 @@
 
 - 每个圆盘是一个固定基座 URDF：`disk_base` 固定在共享 tabletop 的 task frame 中，
   `rotating_disk` 通过绕世界 Y 轴的 continuous joint 与基座连接（见
-  `topogym/tasks/stacked_plate.py:_write_disk_urdf`）；
+  `topogym/tasks/connectivity/stacked_plate.py:_write_disk_urdf`）；
 - **碰撞和质量是均匀完整圆柱**，质心在轴上——没有重力力矩，圆盘在任意角度都是中性
   稳定的。这正是纯接触驱动可行的关键：夹爪只需克服关节 damping/friction/armature 和
   转动惯量，而不必对抗重力；

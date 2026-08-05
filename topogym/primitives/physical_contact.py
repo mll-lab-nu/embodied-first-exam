@@ -38,6 +38,15 @@ def entity_pos(entity) -> np.ndarray:
     return np.asarray(value).reshape(-1, 3)[0].astype(float)
 
 
+def entity_quat(entity) -> np.ndarray:
+    """An entity's world orientation as (w, x, y, z)."""
+
+    value = entity.get_quat()
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value).reshape(-1, 4)[0].astype(float)
+
+
 def ee_quat_for_yaw(default_ee_quat, yaw: float) -> np.ndarray:
     default = np.asarray(default_ee_quat, dtype=float)
     half = 0.5 * float(yaw)
@@ -87,7 +96,9 @@ def configure_finger_contact_friction(
         robot.get_link(str(link_name)).set_friction(finger_friction)
 
 
-def _quat_mul(a, b) -> np.ndarray:
+def quat_mul(a, b) -> np.ndarray:
+    """Hamilton product of two (w, x, y, z) quaternions."""
+
     aw, ax, ay, az = np.asarray(a, dtype=float)
     bw, bx, by, bz = np.asarray(b, dtype=float)
     return np.array(
@@ -99,3 +110,21 @@ def _quat_mul(a, b) -> np.ndarray:
         ],
         dtype=float,
     )
+
+
+_quat_mul = quat_mul
+
+
+def quat_about_axis(axis, angle: float) -> np.ndarray:
+    """Rotation of ``angle`` radians about a world axis, as (w, x, y, z).
+
+    Left-multiply an entity's current orientation by this to turn it in world
+    axes: ``quat_mul(quat_about_axis(u, theta), entity_quat(e))``.
+    """
+
+    axis = np.asarray(axis, dtype=float)
+    norm = float(np.linalg.norm(axis))
+    if norm < 1e-12:
+        raise ValueError("quat_about_axis needs a non-degenerate axis.")
+    half = 0.5 * float(angle)
+    return np.concatenate(([np.cos(half)], np.sin(half) * axis / norm))

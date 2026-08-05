@@ -58,7 +58,7 @@ Cable Routing 覆盖了更宽的 `oblique` 相机，以便把 robot base、手�
 
 ## 当前落地文件
 
-- `topogym/tasks/cable_routing.py`
+- `topogym/tasks/routing/cable_routing.py`
   - `CableRoutingLayout`
   - `CableRoutingSignature`
   - `CableRoutingScene`
@@ -68,7 +68,7 @@ Cable Routing 覆盖了更宽的 `oblique` 相机，以便把 robot base、手�
 
 ## 复用路径
 
-当前 rope mesh 和 PBD 逻辑复用 `topogym.tasks.untangle` 里的能力：
+当前 rope mesh 和 PBD 逻辑复用 `topogym.tasks.entangle.untangle` 里的能力：
 
 - `_sample_polyline`
 - `_make_elastic_tube_mesh`

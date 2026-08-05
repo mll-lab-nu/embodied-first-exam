@@ -1,13 +1,24 @@
 """Reusable scripted manipulation primitives."""
 
-from .attachment import AttachmentManager, RigidAttachment, parent_pos_for_child, rotate_z, yaw_quat
+from .attachment import (
+    AttachmentManager,
+    ParticleAttachment,
+    RigidAttachment,
+    parent_pos_for_child,
+    rotate_z,
+    yaw_quat,
+)
+from .axial_insert import AxialInsertPrimitive, AxialInsertResult
 from .connector_latch import ConnectorLatch
 from .physical_contact import (
     configure_finger_contact_friction,
     configure_gripper_contact_friction,
     ee_quat_for_yaw,
     entity_pos,
+    entity_quat,
     print_collision_il_contract,
+    quat_about_axis,
+    quat_mul,
     validate_rigid_friction,
 )
 from .pbd_particle_pinch import (
@@ -29,6 +40,7 @@ from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, R
 
 __all__ = [
     "AttachmentManager",
+    "ParticleAttachment",
     "ConnectorLatch",
     "EndpointAttachment",
     "EndpointAttachmentManager",
@@ -40,7 +52,10 @@ __all__ = [
     "configure_finger_contact_friction",
     "ee_quat_for_yaw",
     "entity_pos",
+    "entity_quat",
     "print_collision_il_contract",
+    "quat_about_axis",
+    "quat_mul",
     "validate_rigid_friction",
     "PickPlacePrimitive",
     "PickPlaceResult",

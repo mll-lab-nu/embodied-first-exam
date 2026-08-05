@@ -23,6 +23,7 @@ from topogym.primitives import (
 )
 from topogym.tasks import CableRoutingSceneBuilder
 from topogym.supervision import (
+    StepProbe,
     peg_signature_items,
     polyline_length,
     print_phase_routing_metrics,
@@ -89,6 +90,16 @@ def parse_args() -> argparse.Namespace:
         "--variant-id",
         default="default",
         help="Stable variant label for manifests and result lines.",
+    )
+    parser.add_argument(
+        "--randomize-layout",
+        action="store_true",
+        help="Apply seeded bounded peg-position randomization (assumes routing.smooth_route=true).",
+    )
+    parser.add_argument(
+        "--difficulty",
+        default="default",
+        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
     )
     parser.add_argument("--close-on-finish", action="store_true")
     parser.add_argument("--lite", action="store_true", help="Use a lower-resolution PBD cable.")
@@ -292,8 +303,10 @@ def _validate_physical_handle_contract(cfg, cable_scene) -> tuple[str, ...]:
     return (str(getattr(handle_cfg, "name", "cable_free_end_handle")),)
 
 
-class CableRoutingProbe:
+class CableRoutingProbe(StepProbe):
     """Per-scene-step diagnostic for the pause (#2) and placement flyout (#4).
+
+    Machinery from `supervision.StepProbe`; the fields below are cable-specific.
 
     Wraps ``scene.step`` and samples every ``every`` physics steps:
     - ``hand_v``: actual hand displacement per step (m/step). Near 0 = a genuine
@@ -311,25 +324,14 @@ class CableRoutingProbe:
     FLYOUT_JUMP = 0.02
 
     def __init__(self, scene, controller, cable_scene, handle, status, *, every, surface_z):
-        self.scene = scene
+        super().__init__(scene, every=every)
         self.controller = controller
         self.cable_scene = cable_scene
         self.handle = handle
         self.status = status
-        self.every = max(1, int(every))
         self.surface_z = float(surface_z)
-        self.count = 0
         self._last_hand = np.asarray(controller.hand_pos(), dtype=float)
         self._last_particles = rope_particles(cable_scene)
-        self._orig_step = scene.step
-        scene.step = self._wrapped_step
-
-    def _wrapped_step(self, *args, **kwargs):
-        result = self._orig_step(*args, **kwargs)
-        self.count += 1
-        if self.count % self.every == 0:
-            self._sample()
-        return result
 
     def _sample(self) -> None:
         hand = np.asarray(self.controller.hand_pos(), dtype=float)
@@ -363,10 +365,6 @@ class CableRoutingProbe:
             f"rope_jump={jump:.4f} p2_gap={p2_gap:+.4f} p2_contact={p2_contact}{flags}",
             flush=True,
         )
-
-    def uninstall(self) -> None:
-        if self.scene.step is self._wrapped_step:
-            self.scene.step = self._orig_step
 
 
 def _print_probe_plan(target_labels, targets, target_steps) -> None:
@@ -970,6 +968,24 @@ def main() -> None:
     if float(args.slow_factor) <= 0.0:
         raise SystemExit("--slow-factor must be positive.")
     cfg = load_configs(args)
+    if args.randomize_layout:
+        from topogym.generation.layout_randomization import randomize_task_cfg
+
+        if not bool(cfg.task.routing.get("smooth_route", False)):
+            print(
+                "cable_routing_physical_handle_demo WARNING randomize-layout assumes "
+                "routing.smooth_route=true; peg jitter will desync the hand-authored "
+                "endpoint_oracle_waypoints.",
+                flush=True,
+            )
+        cfg = randomize_task_cfg(
+            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+        )
+        print(
+            f"cable_routing_physical_handle_demo randomize_layout=on seed={args.seed} "
+            f"difficulty={args.difficulty}",
+            flush=True,
+        )
     episode_spec = build_cable_routing_episode_spec(
         cfg,
         seed=args.seed,

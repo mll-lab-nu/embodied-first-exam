@@ -24,7 +24,8 @@ from topogym.primitives import (
     validate_rigid_friction,
 )
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
-from topogym.tasks import OneStrokePuzzleEvaluator, OneStrokeSceneBuilder
+from topogym.tasks import OneStrokeSceneBuilder
+from topogym.verification import OneStrokePuzzleEvaluator
 from topogym.utils import (
     add_recording_args,
     initialize_franka_controller,

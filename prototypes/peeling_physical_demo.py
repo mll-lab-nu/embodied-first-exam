@@ -10,10 +10,10 @@ from omegaconf import OmegaConf
 from topogym.core import add_common_config_arg, load_topogym_configs
 from topogym.primitives import AttachmentManager, parent_pos_for_child, rotate_z, yaw_quat
 from topogym.tasks import (
-    PeelingPuzzleEvaluator,
     PeelingSceneBuilder,
     apply_peel_zone_markers,
 )
+from topogym.verification import PeelingPuzzleEvaluator
 from topogym.utils import (
     add_recording_args,
     initialize_franka_controller,
@@ -41,6 +41,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--keep-open", action="store_true", help="Keep the viewer alive after the demo.")
     parser.add_argument("--keep-open-no-step", action="store_true", help="Keep the Python process alive without stepping.")
     parser.add_argument("--run-oracle", action="store_true", help="Run the scripted Level 1 peeling oracle.")
+    parser.add_argument("--seed", type=int, default=0, help="Stable episode seed (drives layout randomization).")
+    parser.add_argument(
+        "--randomize-layout",
+        action="store_true",
+        help="Apply seeded bounded layout randomization (default off = deterministic).",
+    )
+    parser.add_argument(
+        "--difficulty",
+        default="default",
+        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
+    )
     parser.add_argument("--hide-peel-zones", action="store_true", help="Hide semantic peel-zone markers.")
     parser.add_argument("--settle-steps", type=int, default=None)
     parser.add_argument("--move-steps", type=int, default=None)
@@ -343,6 +354,17 @@ def run_oracle(
 def main() -> None:
     args = parse_args()
     cfg = load_configs(args)
+    if args.randomize_layout:
+        from topogym.generation.layout_randomization import randomize_task_cfg
+
+        cfg = randomize_task_cfg(
+            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+        )
+        print(
+            f"peeling_physical_demo randomize_layout=on seed={args.seed} "
+            f"difficulty={args.difficulty}",
+            flush=True,
+        )
     has_display = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
     if args.viewer and not has_display:
         raise SystemExit(

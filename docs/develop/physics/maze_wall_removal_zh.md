@@ -12,7 +12,7 @@
 
 ## 当前落地文件
 
-- `topogym/tasks/maze_wall_removal.py`
+- `topogym/tasks/legacy/maze_wall_removal.py`
   - `MazeWallRemovalLayout`
   - `MazeGraphSolver`
   - `MazeWallGenerator`

@@ -21,8 +21,24 @@
 
 ## 4. 后续阶梯（均未立项）
 
-- 灯光组/背景（`VisOptions` 接线,~半天）——用户当前裁掉；
+- 灯光组/背景（`VisOptions` 接线,~半天）——**已落地，见 §5**；
 - 程序生成/CC0 diffuse 贴图（木纹桌面）——用户当前裁掉（"有点 advance"）；
 - GLB PBR 资产做连接件金属感——依赖资产管线；
 - BatchRenderer（Madrona 可用性未验证）/ LuisaRender 编译评估——重；
 - 物理真实性 metrics 实装（M8/M9/M12 与通用 probe）——见 guidelines 文档 §3，待批准。
+
+## 5. 灯光组落地：共用光影模块（2026-07-24）
+
+用户新反馈："光影+材质再做得舒服一点，特别是加光影（应是通用模块）"。范围裁定：**只做光影**（贴图仍缓），基调走**中性浅灰影棚**。
+
+现状根因：`StandardTabletopSceneBuilder.create()` 之前**不传** `vis_options` 给 `gs.Scene(...)` → 全场景吃 Genesis 默认（单一硬 key 方向光 `dir=(-1,-1,-1) intensity=5`、`ambient_light=(0.1,0.1,0.1)` 近黑、深蓝背景），故观感又硬又暗。
+
+落地（与 `materials.py` 同构：一个模块统一"工艺"，config 可覆盖）：
+
+- 新增 `topogym/world/lighting.py`：`vis_options(env_cfg=None) -> gs.options.VisOptions`。默认 rig = 主 key 方向光 `(-0.6,-0.5,-1.0)` + 反向 fill 方向光 `(0.6,0.4,-0.7)` + 抬高 `ambient_light=(0.35,0.35,0.38)` + 浅灰背景 `(0.55,0.58,0.62)` + `shadow=True`、`plane_reflection=False`。读可选 `env.vis` 覆盖块；缺省即模块默认。
+- `StandardTabletopSceneBuilder.create()` 构建时传 `vis_options=lighting.vis_options(self.env_cfg)` → 所有 task/demo 免改自动继承（真·通用）。
+- `world/__init__.py` 导出 `lighting`；`env_configs/world_tabletop_v1.yaml` 加注释版 `vis:` 覆盖块（默认留在模块，缺省不改行为）。
+
+Genesis 版本注：本轮基于已装 **1.10**（`genesis/options/vis.py`）核对 API（§2 老结论基于 1.2.1）——光栅化仍只认 `VisOptions` 的 lights/ambient/background/shadow/plane_reflection，**不认 surface roughness**，故 `materials.py` 数值本轮不动（改了也无视觉效果），材质"变舒服"完全靠新光照让既有 diffuse 色读出 key/fill 梯度。
+
+附带核实（stacked_plate 桌框问题）：桌面边框由共用 `_add_table_frame` 生成，stacked_plate 与其它 task 走**同一** builder + 同一 `world_tabletop_v1.yaml`（无 per-task `frame` 覆盖），几何逐字节相同。边框代码 2026-07-21 落地（commit `6b71709`）——观感差异应为旧渲染截图早于该 commit，或高盘阵视角把远端桌沿裁出画面，非 config 不一致。以现代码重渲即可确认。

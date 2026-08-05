@@ -9,7 +9,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
-from topogym.world import materials
+from topogym.world import lighting, materials
 
 
 _V1_TABLE_POS = (-0.1356786, 0.0, 0.45982145)
@@ -134,7 +134,19 @@ class StandardTabletopSceneBuilder:
         show_viewer: bool = False,
         include_robot: bool = True,
         robot_material=None,
+        table_material=None,
     ) -> TabletopBaseScene:
+        """Build the shared tabletop scene.
+
+        ``table_material`` overrides the table's rigid material. The one property
+        tasks reach for is ``coup_friction`` -- how much a deformable body grips
+        the table. It defaults to 0.1 in Genesis, which is slippery enough that a
+        PBD rope slides around under its own residual motion, and it is a
+        *separate* knob from the PBD material's own ``static/kinetic_friction``
+        (those govern particle-to-particle contact, i.e. rope-on-rope). The
+        coupler reads ``geoms_info.coup_friction`` of the rigid geom for
+        deformable-vs-rigid contact, so the two can be tuned independently.
+        """
         self._debug("validate_begin")
         self._validate_locked_preset()
         frames = self._frames()
@@ -163,6 +175,7 @@ class StandardTabletopSceneBuilder:
                 gravity=tuple(self.env_cfg.sim.gravity),
             ),
             viewer_options=gs.options.ViewerOptions(**viewer_kwargs),
+            vis_options=lighting.vis_options(self.env_cfg),
             show_viewer=show_viewer,
             **scene_kwargs,
         )
@@ -176,6 +189,7 @@ class StandardTabletopSceneBuilder:
 
         table_cfg = self.env_cfg.world.table
         self._debug("table_add_begin")
+        table_kwargs = {} if table_material is None else {"material": table_material}
         manifest.add(
             "table",
             scene.add_entity(
@@ -186,6 +200,7 @@ class StandardTabletopSceneBuilder:
                 ),
                 surface=materials.plastic("table", table_cfg.color),
                 name="table",
+                **table_kwargs,
             ),
         )
         self._debug("table_add_done")
@@ -294,15 +309,17 @@ class StandardTabletopSceneBuilder:
         min_y = float(table_pos[1]) - 0.5 * size_y
         max_y = float(table_pos[1]) + 0.5 * size_y
         z_center = surface_z + 0.5 * height
-        inner_len_y = size_y - 2.0 * band_width
+        # x-side bars run the full depth (size_y) and own the corners; y-side bars
+        # run along x and fill the span *between* those corner bars, so their length
+        # must come from size_x (not size_y) or they fall short when the table is not
+        # square and leave a gap at each corner.
+        inner_len_x = size_x - 2.0 * band_width
 
-        # x-side bars span the full depth (they own the corners); y-side bars
-        # fill the remaining inner span so the four bars read as one picture frame.
         bars = [
             ("x_min", (min_x + 0.5 * band_width, float(table_pos[1]), z_center), (band_width, size_y, height)),
             ("x_max", (max_x - 0.5 * band_width, float(table_pos[1]), z_center), (band_width, size_y, height)),
-            ("y_min", (float(table_pos[0]), min_y + 0.5 * band_width, z_center), (inner_len_y, band_width, height)),
-            ("y_max", (float(table_pos[0]), max_y - 0.5 * band_width, z_center), (inner_len_y, band_width, height)),
+            ("y_min", (float(table_pos[0]), min_y + 0.5 * band_width, z_center), (inner_len_x, band_width, height)),
+            ("y_max", (float(table_pos[0]), max_y - 0.5 * band_width, z_center), (inner_len_x, band_width, height)),
         ]
 
         # Same-colored panels wrapping the four vertical side faces (table apron).

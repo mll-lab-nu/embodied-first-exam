@@ -5,14 +5,14 @@ from typing import Any
 
 import numpy as np
 
-from topogym.tasks.maze_wall_removal import (
+from topogym.tasks.legacy.maze_wall_removal import (
     EdgeKey,
     MazeGraphSolver,
     MazeWallGenerator,
     MazeWallRemovalInstance,
     MazeWallRemovalLayout,
-    MazeWallRemovalPuzzleState,
 )
+from topogym.verification import MazeWallRemovalPuzzleState
 
 try:
     import gymnasium as gym

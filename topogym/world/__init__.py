@@ -1,6 +1,6 @@
 """Genesis-grounded scene presets for TopoGym module A."""
 
-from . import materials, rope
+from . import lighting, materials, rope
 from .tabletop import (
     RobotFootprintCheck,
     StandardTabletopSceneBuilder,
@@ -10,6 +10,7 @@ from .tabletop import (
 )
 
 __all__ = [
+    "lighting",
     "materials",
     "RobotFootprintCheck",
     "StandardTabletopSceneBuilder",

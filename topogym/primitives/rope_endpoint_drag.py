@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 import numpy as np
 
-from .attachment import AttachmentManager, parent_pos_for_child
+from .attachment import AttachmentManager, ParticleAttachment, parent_pos_for_child
 
 HAND_TO_ENDPOINT_Z: float = 0.1029
 DEFAULT_ENDPOINT_OFFSET = (0.0, 0.0, -HAND_TO_ENDPOINT_Z)
@@ -77,8 +77,14 @@ def sync_endpoint_pin(
     pin.set_pos(tuple(np.asarray(center, dtype=float)), zero_velocity=True)
 
 
-class EndpointAttachment:
-    """Attach selected PBD rope endpoint particles to a moving parent."""
+class EndpointAttachment(ParticleAttachment):
+    """``ParticleAttachment`` specialized to a rope endpoint, plus its visible pin.
+
+    The welding mechanics live in the base class so the endpoint path and the
+    mid-rope path cannot drift apart; this adds only the two endpoint-specific
+    pieces -- resolving "start"/"end" to particle indices, and dragging the
+    endpoint's visible pin along.
+    """
 
     def __init__(
         self,
@@ -90,41 +96,21 @@ class EndpointAttachment:
         sync_pin: bool = False,
         set_particles_vel: bool = False,
     ) -> None:
+        super().__init__(
+            handle.entity,
+            _endpoint_indices(handle, endpoint),
+            parent_pos_fn,
+            offset=offset,
+            zero_velocity=set_particles_vel,
+        )
         self.handle = handle
         self.endpoint = endpoint
-        self.parent_pos_fn = parent_pos_fn
-        self.offset = np.asarray(offset, dtype=float)
-        self.indices = _endpoint_indices(handle, endpoint)
-        self.particle_offsets = None
         self.sync_pin = bool(sync_pin)
-        self.set_particles_vel = bool(set_particles_vel)
-        self.active = False
 
-    def attach(self) -> None:
-        center = current_endpoint_center(self.handle, self.endpoint)
-        particles = _as_numpy(self.handle.entity.get_particles_pos())
-        if particles.ndim == 3:
-            particles = particles[0]
-        self.particle_offsets = np.asarray(particles[self.indices], dtype=float) - center
-        self.active = True
-        self.sync()
-
-    def sync(self) -> None:
-        if not self.active:
-            return
-        parent_pos = np.asarray(self.parent_pos_fn(), dtype=float)
-        center = parent_pos + self.offset
-        offsets = self.particle_offsets
-        if offsets is None:
-            offsets = np.zeros((len(self.indices), 3), dtype=float)
-        self.handle.entity.set_particles_pos(center[None, :] + offsets, particles_idx_local=self.indices)
-        if self.set_particles_vel:
-            self.handle.entity.set_particles_vel(np.zeros_like(offsets), particles_idx_local=self.indices)
-        sync_endpoint_pin(self.handle, self.endpoint, center, enabled=self.sync_pin)
-
-    def release(self) -> None:
-        self.sync()
-        self.active = False
+    def drive_to(self, center) -> None:
+        super().drive_to(center)
+        if self.active:
+            sync_endpoint_pin(self.handle, self.endpoint, center, enabled=self.sync_pin)
 
 
 class EndpointAttachmentManager:

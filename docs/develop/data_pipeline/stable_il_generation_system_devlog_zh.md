@@ -418,10 +418,10 @@ TopoGym Environment Generator =
 
 现有基础：
 
-- `topogym/tasks/cable_routing.py`
-- `topogym/tasks/untangle.py`
-- `topogym/tasks/onestroke.py`
-- `topogym/tasks/maze_wall_removal.py`
+- `topogym/tasks/routing/cable_routing.py`
+- `topogym/tasks/entangle/untangle.py`
+- `topogym/tasks/legacy/onestroke.py`
+- `topogym/tasks/legacy/maze_wall_removal.py`
 
 下一步：
 

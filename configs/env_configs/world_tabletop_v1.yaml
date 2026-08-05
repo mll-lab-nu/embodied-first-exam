@@ -37,6 +37,21 @@ viewer:
   camera_fov: 50
   max_fps: 60
 
+# 场景光影（所有 task 共用）。默认值在 topogym/world/lighting.py，缺省即用模块默认；
+# 下面任一键取消注释即可覆盖单项（key/fill 方向光 + 环境光 + 背景 + 阴影/平面反射）。
+# 光栅化只认这些 VisOptions 项（不认 surface 的 roughness），故这里是画面观感的主要旋钮。
+# vis:
+#   key_dir: [-0.6, -0.5, -1.0]
+#   key_color: [1.0, 0.98, 0.95]
+#   key_intensity: 4.0
+#   fill_dir: [0.6, 0.4, -0.7]
+#   fill_color: [0.90, 0.93, 1.0]
+#   fill_intensity: 1.5
+#   ambient_light: [0.35, 0.35, 0.38]
+#   background_color: [0.55, 0.58, 0.62]
+#   shadow: true
+#   plane_reflection: false
+
 frames:
   # table_surface.origin 是桌面表面的世界坐标。
   # task.origin 与 table_surface 重合，因此 task z=0 就是桌面表面。

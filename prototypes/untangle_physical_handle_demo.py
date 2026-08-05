@@ -23,6 +23,7 @@ from topogym.primitives import (
     entity_pos,
     print_collision_il_contract,
 )
+from topogym.supervision import StepProbe, probe_particles
 from topogym.tasks import UntangleSceneBuilder
 from topogym.utils import (
     add_recording_args,
@@ -58,6 +59,16 @@ def parse_args() -> argparse.Namespace:
         "--variant-id",
         default="default",
         help="Stable variant label for manifests and result lines.",
+    )
+    parser.add_argument(
+        "--randomize-layout",
+        action="store_true",
+        help="Apply seeded bounded layout randomization (default off = deterministic).",
+    )
+    parser.add_argument(
+        "--difficulty",
+        default="default",
+        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
     )
     parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
     parser.add_argument("--viewer", action="store_true")
@@ -203,8 +214,8 @@ def _validate_physical_handle_contract(cfg, untangle_scene) -> tuple[str, ...]:
     return _physical_handle_names(untangle_scene)
 
 
-class UntangleProbe:
-    """Per-scene-step flyout diagnostic (CableRoutingProbe precedent).
+class UntangleProbe(StepProbe):
+    """Per-scene-step flyout diagnostic. Machinery from `supervision.StepProbe`.
 
     Wraps ``scene.step`` and samples every ``every`` physics steps:
     - per rope: ``parked`` count (particles pinned at the PBD domain corner
@@ -216,18 +227,14 @@ class UntangleProbe:
     particle's spawn position. See untangle_connector_flyout_debug_zh.md §4.
     """
 
-    DOMAIN_CORNER = np.array([100.0, 100.0, 100.0])
-
     def __init__(self, scene, controller, rope_handles, status, *, finger_links, every):
-        self.scene = scene
+        super().__init__(scene, every=every)
         self.controller = controller
         self.rope_handles = rope_handles
         self.status = status
         self.finger_links = [
             controller.robot.get_link(str(name)) for name in finger_links
         ]
-        self.every = max(1, int(every))
-        self.count = 0
         self.moved = None
         self._spawn = {
             name: self._particles(handle.entity)
@@ -235,21 +242,11 @@ class UntangleProbe:
         }
         self._last = dict(self._spawn)
         self._flyout_reported: set[str] = set()
-        self._orig_step = scene.step
-        scene.step = self._wrapped_step
 
     def set_move(self, rope_handle) -> None:
         self.moved = rope_handle
 
-    @staticmethod
-    def _particles(entity) -> np.ndarray:
-        particles = entity.get_particles_pos()
-        if hasattr(particles, "detach"):
-            particles = particles.detach().cpu().numpy()
-        particles = np.asarray(particles, dtype=float)
-        if particles.ndim == 3:
-            particles = particles[0]
-        return particles
+    _particles = staticmethod(probe_particles)
 
     @staticmethod
     def _link_pos(link) -> np.ndarray:
@@ -257,13 +254,6 @@ class UntangleProbe:
         if hasattr(pos, "detach"):
             pos = pos.detach().cpu().numpy()
         return np.asarray(pos, dtype=float).reshape(-1, 3)[0]
-
-    def _wrapped_step(self, *args, **kwargs):
-        result = self._orig_step(*args, **kwargs)
-        self.count += 1
-        if self.count % self.every == 0:
-            self._sample()
-        return result
 
     def _sample(self) -> None:
         fields = [
@@ -317,10 +307,6 @@ class UntangleProbe:
         print(" ".join(fields), flush=True)
         for line in flyout_lines:
             print(line, flush=True)
-
-    def uninstall(self) -> None:
-        if self.scene.step is self._wrapped_step:
-            self.scene.step = self._orig_step
 
 
 def _hud(topology_env: UntangleHighLevelEnv, status: dict):
@@ -739,6 +725,17 @@ def main() -> None:
     ):
         raise SystemExit("--between-moves-settle-steps must be nonnegative.")
     cfg = load_configs(args)
+    if args.randomize_layout:
+        from topogym.generation.layout_randomization import randomize_task_cfg
+
+        cfg = randomize_task_cfg(
+            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+        )
+        print(
+            f"untangle_physical_handle_demo randomize_layout=on seed={args.seed} "
+            f"difficulty={args.difficulty}",
+            flush=True,
+        )
     episode_spec = build_untangle_episode_spec(
         cfg,
         seed=args.seed,

@@ -42,6 +42,7 @@ TASK="${1:-untangle}"
 declare -A TASKS=(
   [swap]="prototypes.swap_physical_grasp_demo"
   [untangle]="prototypes.untangle_physical_handle_demo"
+  [untangle_continuous]="prototypes.untangle_continuous_physical_pinch_demo"
   [cable_routing]="prototypes.cable_routing_physical_handle_demo --allow-target-lag"
 )
 spec="${TASKS[$TASK]:-}"

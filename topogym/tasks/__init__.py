@@ -1,109 +1,116 @@
-"""Task-specific layout, scene, oracle, and success helpers."""
+"""Task assets and scene construction: what this episode looks like.
 
-from .cable_routing import CableRoutingLayout, CableRoutingScene, CableRoutingSceneBuilder, CableRoutingSignature
-from .onestroke import (
+Layout -> Scene -> SceneBuilder only. Judging "is it done" lives in
+`topogym/verification/`; see `docs/develop/framework/module_boundaries_zh.md`.
+
+Task modules sit in a subpackage named after their capability category
+(`deformation` / `routing` / `entangle` / `connectivity`), so the path is the
+classification -- there is no separate table to keep in sync. Tasks predating
+the taxonomy live in `legacy/` (see its README). The category axis exists only
+here; `verification/`, `planning/`, `generation/`, `supervision/` and `envs/`
+stay flat. See `docs/develop/framework/task_taxonomy_zh.md`.
+
+This module re-exports every task's public names flat, so importers say
+`from topogym.tasks import StackedPlateSceneBuilder` and are unaffected when a
+task is reclassified into a different category directory.
+"""
+
+from .routing.bar_through_hole import (
+    BarThroughHoleLayout,
+    BarThroughHoleScene,
+    BarThroughHoleSceneBuilder,
+)
+from .routing.cable_routing import CableRoutingLayout, CableRoutingScene, CableRoutingSceneBuilder, CableRoutingSignature
+from .legacy.onestroke import (
     OneStrokeLayout,
-    OneStrokePuzzleEvaluator,
-    OneStrokePuzzleState,
     OneStrokeScene,
     OneStrokeSceneBuilder,
 )
-from .maze_wall_removal import (
+from .legacy.maze_wall_removal import (
     MazeGraphSolver,
     MazeWallGenerator,
     MazeWallRemovalInstance,
     MazeWallRemovalLayout,
-    MazeWallRemovalPuzzleEvaluator,
-    MazeWallRemovalPuzzleState,
     MazeWallRemovalScene,
     MazeWallRemovalSceneBuilder,
 )
-from .peeling import (
+from .legacy.peeling import (
     PeelingLayout,
-    PeelingPuzzleEvaluator,
-    PeelingPuzzleState,
     PeelingScene,
     PeelingSceneBuilder,
     apply_peel_zone_markers,
 )
-from .peeling_physical import (
+from .legacy.peeling_physical import (
     PeelingKinematicSheetDriver,
-    PeelingPhysicalEvaluator,
     PeelingPhysicalLayout,
     PeelingPhysicalScene,
     PeelingPhysicalSceneBuilder,
-    PeelingPhysicalState,
     release_all_peeling_groups,
     release_peeling_groups,
 )
-from .stacked_plate import (
+from .connectivity.stacked_plate import (
     StackedPlateLayout,
-    StackedPlatePuzzleEvaluator,
-    StackedPlatePuzzleState,
     StackedPlateScene,
     StackedPlateSceneBuilder,
     apply_stacked_plate_visuals,
     sync_stacked_plate_physics,
 )
-from .swap import (
+from .legacy.swap import (
     SwapLayout,
     SwapOraclePlan,
-    SwapPuzzleEvaluator,
-    SwapPuzzleState,
     SwapScene,
     SwapSceneBuilder,
-    SwapSuccessChecker,
 )
-from .untangle import RopeEndpointHandle, UntangleLayout, UntangleScene, UntangleSceneBuilder
+from .entangle.untangle import RopeEndpointHandle, UntangleLayout, UntangleScene, UntangleSceneBuilder
+from .entangle.untangle_continuous import (
+    UntangleContinuousLayout,
+    UntangleContinuousScene,
+    UntangleContinuousSceneBuilder,
+    settle_scene,
+)
 
 __all__ = [
+    "BarThroughHoleLayout",
+    "BarThroughHoleScene",
+    "BarThroughHoleSceneBuilder",
     "CableRoutingLayout",
     "CableRoutingScene",
     "CableRoutingSceneBuilder",
     "CableRoutingSignature",
     "OneStrokeLayout",
-    "OneStrokePuzzleEvaluator",
-    "OneStrokePuzzleState",
     "OneStrokeScene",
     "OneStrokeSceneBuilder",
     "MazeGraphSolver",
     "MazeWallGenerator",
     "MazeWallRemovalInstance",
     "MazeWallRemovalLayout",
-    "MazeWallRemovalPuzzleEvaluator",
-    "MazeWallRemovalPuzzleState",
     "MazeWallRemovalScene",
     "MazeWallRemovalSceneBuilder",
     "PeelingLayout",
-    "PeelingPuzzleEvaluator",
-    "PeelingPuzzleState",
     "PeelingScene",
     "PeelingSceneBuilder",
     "apply_peel_zone_markers",
     "PeelingKinematicSheetDriver",
-    "PeelingPhysicalEvaluator",
     "PeelingPhysicalLayout",
     "PeelingPhysicalScene",
     "PeelingPhysicalSceneBuilder",
-    "PeelingPhysicalState",
     "release_all_peeling_groups",
     "release_peeling_groups",
     "StackedPlateLayout",
-    "StackedPlatePuzzleEvaluator",
-    "StackedPlatePuzzleState",
     "StackedPlateScene",
     "StackedPlateSceneBuilder",
     "apply_stacked_plate_visuals",
     "sync_stacked_plate_physics",
     "SwapLayout",
     "SwapOraclePlan",
-    "SwapPuzzleEvaluator",
-    "SwapPuzzleState",
     "SwapScene",
     "SwapSceneBuilder",
-    "SwapSuccessChecker",
     "RopeEndpointHandle",
     "UntangleLayout",
     "UntangleScene",
     "UntangleSceneBuilder",
+    "UntangleContinuousLayout",
+    "UntangleContinuousScene",
+    "UntangleContinuousSceneBuilder",
+    "settle_scene",
 ]

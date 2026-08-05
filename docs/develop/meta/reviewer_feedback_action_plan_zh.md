@@ -64,7 +64,7 @@
 1. **形状**：把端头从平头圆柱改成**圆柱 + 半球头（capsule 感）**，free end 磨圆。Genesis 里可用 capsule morph，或圆柱上叠一个半球。
 2. **与绳重叠**：端头往绳侧**多伸 ~10mm 盖住绳管末端**，视觉上绳"插进"端头，不再像外挂圆饼。
 3. **颜色匹配**：端头颜色改成**跟该 strand 的绳色一致（或略深）**，而不是现在统一的深色 `[0.02,0.06,0.10]`——按 `rope.strands.*.color` 给每根绳的 handle 上色。
-4. **固定粒子带**：`fix_particles_to_link` 改成固定**末端 2~~3 圈粒子（跨 ~8~~12mm）**而不是单圈，分散耦合、消掉接缝硬 hinge（顺带缓解第一段打折）。落点在 `topogym/tasks/untangle.py` 建 handle + `fix_particles_to_link` 的地方。
+4. **固定粒子带**：`fix_particles_to_link` 改成固定**末端 2~~3 圈粒子（跨 ~8~~12mm）**而不是单圈，分散耦合、消掉接缝硬 hinge（顺带缓解第一段打折）。落点在 `topogym/tasks/entangle/untangle.py` 建 handle + `fix_particles_to_link` 的地方。
 5. （可选）绳侧加 1mm 小凸缘 collar，像热缩套 + 防轴向滑脱。
 
 

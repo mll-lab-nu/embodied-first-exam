@@ -16,7 +16,7 @@
 
 关键代码：
 
-- `topogym.tasks.peeling_physical.PeelingKinematicSheetDriver`
+- `topogym.tasks.legacy.peeling_physical.PeelingKinematicSheetDriver`
 - `topogym.primitives.pbd_particle_pinch.PBDParticleAttachmentDragPrimitive`
 - `prototypes.peeling_physical_single_demo`
 - `configs/task_configs/peeling_physical_single_topogym_tabletop_v1.yaml`

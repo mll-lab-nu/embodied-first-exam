@@ -140,8 +140,9 @@ def _setup_swap(backend):
 
     from topogym.core import load_topogym_configs
     from topogym.primitives import configure_gripper_contact_friction
-    from topogym.tasks import SwapPuzzleEvaluator, SwapSceneBuilder
+    from topogym.tasks import SwapSceneBuilder
     from topogym.utils import initialize_franka_controller
+    from topogym.verification import SwapPuzzleEvaluator
 
     task_config = CONFIG_ROOT / "task_configs" / "swap_topogym_tabletop_v1.yaml"
     cfg = load_topogym_configs(

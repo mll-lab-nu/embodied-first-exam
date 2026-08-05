@@ -1,8 +1,12 @@
 """Convert a TopoGym episode H5 into a LeRobot dataset OpenPI (pi0.5) can train on.
 
-This is the swap-first smoke path for the RoboMME pipeline: prove a recorded H5
+This is the smoke path for the RoboMME pipeline: prove a recorded H5
 (see ``topogym/data/h5_schema.py`` / ``EpisodeDatasetWriter``) can enter the
 pi0.5 training loop without shape/format errors -- NOT to train a real baseline.
+
+Task-agnostic: it reads only the keys ``h5_schema`` defines, and shapes are
+inferred from the file, so any task that records through ``EpisodeDatasetWriter``
+converts with the same code path. ``swap`` is just the task it was first run on.
 
 It deliberately mirrors OpenPI's own converter,
 ``examples/libero/convert_libero_data_to_lerobot.py``, so the emitted feature
@@ -23,11 +27,13 @@ Runs inside OpenPI's uv env (it needs ``lerobot``); it does NOT import topogym,
 so the tiny H5 read is inlined rather than reusing ``topogym.data.replay``.
 
 Usage (from the openpi checkout, so lerobot is importable):
-    uv run --project ../../ python ../../scripts/export_swap_lerobot.py \
-        <path/to/swap_seed0.h5> --repo-id topogym/swap_smoke
+    uv run --project ../../ python ../../scripts/export_h5_lerobot.py \
+        <path/to/swap_seed0.h5>
 
-The dataset is written to ``$HF_LEROBOT_HOME/<repo-id>`` (LeRobot's convention);
-the OpenPI train config's ``repo_id`` must equal ``--repo-id``.
+``--repo-id`` defaults to ``topogym/<task_id>_smoke``, reading ``task_id`` from
+the H5's own ``setup`` attrs, so the caller does not restate the task. The
+dataset is written to ``$HF_LEROBOT_HOME/<repo-id>`` (LeRobot's convention); the
+OpenPI train config's ``repo_id`` must equal it.
 
 KNOWN SCHEMA GAP (expected, not fixed here): ``actions`` is a 7-dim ABSOLUTE
 pose whose last 4 dims are a quaternion. pi0.5 conventionally uses joint/ee
@@ -50,11 +56,12 @@ def _decode(value) -> str:
     return value.decode() if isinstance(value, bytes) else str(value)
 
 
-def _read_episode(h5_path: Path) -> tuple[list[dict], str]:
-    """Read one episode's per-frame frames + its task prompt from a TopoGym H5."""
+def _read_episode(h5_path: Path) -> tuple[list[dict], str, str]:
+    """Read one episode's per-frame frames, task prompt, and task id from a TopoGym H5."""
     with h5py.File(h5_path, "r") as f:
         ep = f["episode_0"]
         task_goal = _decode(ep["setup"].attrs["task_goal"])
+        task_id = _decode(ep["setup"].attrs["task_id"])
         ts_keys = sorted(
             (k for k in ep if k.startswith("timestep_")),
             key=lambda x: int(x.split("_")[1]),
@@ -81,36 +88,39 @@ def _read_episode(h5_path: Path) -> tuple[list[dict], str]:
             frames.append(
                 {"image": front, "wrist_image": wrist, "state": state, "actions": action}
             )
-    return frames, task_goal
+    return frames, task_goal, task_id
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("h5_path", type=Path, help="Path to a recorded swap episode .h5")
+    parser.add_argument("h5_path", type=Path, help="Path to a recorded episode .h5")
     parser.add_argument(
         "--repo-id",
-        default="topogym/swap_smoke",
-        help="Output LeRobot dataset id; must match the OpenPI config's repo_id.",
+        default=None,
+        help="Output LeRobot dataset id; must match the OpenPI config's repo_id. "
+        "Defaults to topogym/<task_id>_smoke using the task_id recorded in the H5.",
     )
     parser.add_argument("--fps", type=int, default=10, help="Metadata fps (matches Libero).")
     args = parser.parse_args()
 
-    frames, task_goal = _read_episode(args.h5_path)
+    frames, task_goal, task_id = _read_episode(args.h5_path)
+    repo_id = args.repo_id or f"topogym/{task_id}_smoke"
     img_shape = tuple(int(x) for x in frames[0]["image"].shape)
     wrist_shape = tuple(int(x) for x in frames[0]["wrist_image"].shape)
     state_dim = int(frames[0]["state"].shape[0])
     action_dim = int(frames[0]["actions"].shape[0])
     print(
-        f"read {len(frames)} frames from {args.h5_path} | image={img_shape} "
+        f"read {len(frames)} frames from {args.h5_path} | task_id={task_id} "
+        f"repo_id={repo_id} | image={img_shape} "
         f"wrist={wrist_shape} state={state_dim} actions={action_dim} | task={task_goal!r}"
     )
 
-    output_path = HF_LEROBOT_HOME / args.repo_id
+    output_path = HF_LEROBOT_HOME / repo_id
     if output_path.exists():
         shutil.rmtree(output_path)
 
     dataset = LeRobotDataset.create(
-        repo_id=args.repo_id,
+        repo_id=repo_id,
         robot_type="panda",
         fps=args.fps,
         features={

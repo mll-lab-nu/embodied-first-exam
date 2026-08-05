@@ -21,8 +21,13 @@ workspace:
 # 水平横杆（沿 Y），穿过三盘中心；固定、纯视觉。真实转轴是各盘的 revolute joint。
 # collision=false：细杆在盘的实心碰撞圆柱内部，若开碰撞会与盘 collider 重叠、施力矩时爆 NaN。
 # center.y=0、length=0.74：横杆与两端支腿关于机械臂中线(y=0)轴对称（从正面看对称）；
-# 三盘偏在 +Y 一侧（0.085/0.195/0.305）不对称地挂在杆上。支腿由 _add_support 放在杆两端
-# center.y ± (0.5·length - end_margin) = ±0.35，正好框住并越过最右盘(0.305)。
+# 三盘也关于 y=0 对称挂在杆上（-0.11/0/0.11）。支腿由 _add_support 放在杆两端
+# center.y ± (0.5·length - end_margin) = ±0.35，对称框住整组盘。
+# center.x=0.020 保持最佳 reach 位、不前移。中间盘坐在 y=0 会与共用 home 手指重叠，
+# 但盘是竖直大圆(R=0.115)、在 X 上摊得很宽，靠前移让位需推到 reach 外——不可行；
+# 改用 stacked_plate 专用抬高 home（robot_control_configs/
+# franka_panda_position_ik_stacked_plate_raised_home.yaml）把夹爪停到盘顶之上，
+# 靠 z 分离避免 reset_home 瞬移那帧互穿。
 rod:
   enabled: true
   axis: y
@@ -36,25 +41,26 @@ rod:
 # init_angle_deg 各不同（初始未对齐）。缺口楔角见 sector.sector_deg。
 # 盘半径 0.115（约 1.5×）便于夹爪从两侧捏盘面旋转；盘心 z=0.130：底缘≈0.015 不刃桌、
 # 顶缘≈0.245（正上方接近时指尖越顶手部≈0.38 < 可达上限 0.40，home(0.273) 在盘顶之上）。
-# 盘阵整体偏到 +Y（y=[0.085,0.195,0.305]），让共用 home 手部(y=0) 落在盘阵之外、不再穿模；
-# 间距加大到 0.11（> 夹爪张开宽 0.08），工作时夹爪不蹭邻盘。半径只在 XZ 展开，不会沿 Y 撞邻盘。
+# 盘阵关于 y=0 对称（y=[-0.110,0.000,0.110]），x=0.020 保持最佳 reach。中间盘坐在 y=0
+# 会与共用 home 手指冲突，靠 stacked_plate 专用抬高 home 从 z 上让开（见 rod 注释），盘不前移。
+# 间距 0.11（> 夹爪张开宽 0.08），工作时夹爪不蹭邻盘。半径只在 XZ 展开，不会沿 Y 撞邻盘。
 disks:
   D1:
-    center: [0.020, 0.085, 0.130]
+    center: [0.020, -0.110, 0.130]
     radius: 0.115
     thickness: 0.020
     init_angle_deg: 35.0
     color: [0.02, 0.20, 1.00]
     collision: true
   D2:
-    center: [0.020, 0.195, 0.130]
+    center: [0.020, 0.000, 0.130]
     radius: 0.115
     thickness: 0.020
     init_angle_deg: 45.0
     color: [1.00, 0.48, 0.00]
     collision: true
   D3:
-    center: [0.020, 0.305, 0.130]
+    center: [0.020, 0.110, 0.130]
     radius: 0.115
     thickness: 0.020
     init_angle_deg: 70.0

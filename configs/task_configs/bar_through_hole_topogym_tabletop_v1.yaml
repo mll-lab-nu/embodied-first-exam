@@ -1,0 +1,154 @@
+# Bar Through Hole layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# docx 2.3：刚性圆轴水平穿过隔板上的孔。防捷径 = 面板矮到可以把轴从上方绕过去放到
+# 远侧，终点位置相近但两端同侧，判失败。因此面板高度是任务设计的一部分，不是随手取值。
+#
+# 全部数值为首版，等 in-sim 调参后再定稿。
+
+task:
+  id: bar_through_hole
+  difficulty: smoke
+
+coordinate_frame: task
+
+# ---------------------------------------------------------------- 面板（隔板）
+# 由 4 个凸 Box 拼出矩形孔（左右立柱 + 下槛 + 上楣），不用带孔 mesh：
+# gs.morphs.Mesh(convexify=True) 会把孔填实，凸块组合是仓库既有解法
+# （见 tasks/routing/cable_routing.py 的 _add_routing_post docstring）。
+panel:
+  enabled: true
+  # 面板中平面的 x。EE 全程停在 x < panel.x 一侧，前臂不越过面板——
+  # cable_routing 的教训是绕到障碍物 +x 侧会让前臂横扫过去（净空只剩 14mm）。
+  x: 0.120
+  # 厚度 30mm：轴穿过后仅靠这一段承重时，重心必须落在 ±15mm 内。
+  # 单独不够稳，所以另配远端托座（见 cradles.far）。
+  thickness: 0.030
+  width: 0.240
+  # 顶面 150mm。上限由 home pose 决定：默认 home 指尖在 task z≈0.1608，
+  # 高于 0.1608 就会像 stacked_plate 那样在 reset 时扎进结构 → 求解器 NaN。
+  # 留 11mm 余量，因此不需要 fork robot config。
+  top_z: 0.150
+  color: [0.42, 0.45, 0.48]
+
+aperture:
+  # 孔中心高度。轴半径 12mm，孔高 36mm → 上下各 6mm 余量。
+  center_z: 0.078
+  width: 0.040
+  height: 0.036
+
+# ------------------------------------------------------------------------ 轴
+bar:
+  radius: 0.012
+  length: 0.180
+  # 铝的量级。assisted attachment 运动学承载，质量不与夹爪较劲，
+  # 因此按 physical_realism_guidelines_zh.md P7「密度用真实材料量级」取值。
+  rho: 2700.0
+  color: [0.72, 0.74, 0.77]
+  # 起始静置位姿（轴心）。z = 托座底面顶(0.012) + 轴半径(0.012)。
+  rest_pos: [-0.055, 0.000, 0.024]
+  # 抓点到轴心的 x 距离。由插入终态反推：轴心要到 panel.x 才跨骑，
+  # 而手部半深≈25mm + 面板半厚 15mm + 余量 → 65mm。
+  grasp_offset: 0.065
+
+# -------------------------------------------------------------------- 托座
+# U 形托座（底板 + 两侧挡块）。圆轴放在平面上绕自身轴是中性平衡，任何数值不对称
+# 都会让它侧向漂移；挡块把漂移限住。两个托座在 x 上都避开抓取点，手指下降处轴是裸露的。
+cradles:
+  near_a:
+    enabled: true
+    # 抓点在 x=-0.120；本托座在 -0.075，间距 45mm > 指垫半长 11mm + 托座半长 12mm。
+    x: -0.075
+    base_size: [0.024, 0.050, 0.012]
+    base_top_z: 0.012
+    chock_size: [0.024, 0.006, 0.020]
+    # 内侧面间距 28mm，轴直径 24mm → 单侧 2mm 余量。
+    chock_gap: 0.028
+    color: [0.32, 0.34, 0.36]
+  near_b:
+    enabled: true
+    # 与 near_a 一起把轴心(-0.055)夹在两托座之间 → 静置不倾覆。
+    x: 0.015
+    base_size: [0.024, 0.050, 0.012]
+    base_top_z: 0.012
+    chock_size: [0.024, 0.006, 0.020]
+    chock_gap: 0.028
+    color: [0.32, 0.34, 0.36]
+  far:
+    enabled: true
+    # 终态轴端在 x=0.210，本托座接住远端。
+    x: 0.190
+    base_size: [0.030, 0.050, 0.060]
+    # 顶面与孔下沿(0.060)齐平：轴变成「孔 + 托座」两点支撑，消除单点刀刃平衡。
+    base_top_z: 0.060
+    chock_size: [0.030, 0.006, 0.020]
+    chock_gap: 0.028
+    color: [0.32, 0.34, 0.36]
+
+# ---------------------------------------------------------------- 工业风装饰
+# 一律 collision=False，逐项可关；关掉任何一项都不会改变物理。
+# 配方同 stacked_plate（docs/develop/visual/stacked_plate_visual_upgrade_zh.md）。
+visual_details:
+  flange:
+    enabled: true
+    band: 0.010
+    depth: 0.004
+    color: [0.55, 0.57, 0.60]
+  bolts:
+    enabled: true
+    radius: 0.004
+    height: 0.004
+    inset: 0.018
+    color: [0.24, 0.25, 0.27]
+
+oracle:
+  mode: insert          # insert | bypass（bypass = 防捷径对照：从上方绕过去）
+  # 绕行对照与正常插入用**完全相同的起止 xy**，只有搬运高度不同——docx 要求的
+  # contrast pair 正是「终点位置几乎相同，唯一差别是轨迹同伦类」。
+  # 轴会落到面板顶上而不是穿过孔，交点落在孔矩形之外 → threading_count = 0。
+  # 不把轴送到面板远侧：那需要手越过面板平面，正是 cable_routing 记录过的前臂扫掠风险。
+  # 抬升高度（hand z）：轴底 0.183 > 面板顶 0.150，净空 33mm。
+  bypass_lift_z: 0.300
+
+# Heights are relative to the task-frame table surface, and are hand-link z
+# (the pads sit HAND_TO_PAD_Z = 0.1029 below).
+primitive:
+  approach_z: 0.210
+  # 指垫 0.0261 落在轴 z 跨度 [0.012, 0.036] 内；指尖 0.0166 离桌面。
+  grasp_z: 0.129
+  # 轴抬升 0.045 ≫ min_lift_delta 0.025。
+  lift_z: 0.174
+  # 指垫 0.0801 → 轴心 0.078 = 孔中心。
+  insert_z: 0.183
+  # 轴心 0.073，轴底 0.061，离孔下沿 1mm：释放时不是砸下去。
+  seat_z: 0.178
+  clear_z: 0.235
+  steps_per_phase: 90
+  # 插入放慢：单步位移越小，卡住时的冲击越小。
+  insert_steps: 140
+  gripper_steps: 30
+
+physical:
+  finger_links: [left_finger, right_finger]
+  finger_friction: 2.0
+  bar_friction: 0.8
+  # 轴半径 12mm，每指留 2mm 压量（P7：不怼到 0）。真正承载的是 assisted attachment，
+  # 指面只需要看起来夹住——与 cable_routing / untangle 抓同一类刚体件的做法一致。
+  grasp_qpos: 0.010
+  close_hold_steps: 30
+  insert_settle_steps: 30
+  # 预载释放会踢一下，给足静置步数（onestroke 用 100）。
+  release_hold_steps: 100
+  settle_steps: 40
+  min_lift_delta: 0.025
+  # 下垂预算：孔上下各 6mm 余量、半长 90mm → 允许俯仰约 3.8°，取 2° 作为门。
+  max_grasp_tilt_deg: 2.0
+  max_grasp_xy_error: 0.025
+  # 释放后再步进这么多步做物理复核（释放测试）。
+  release_check_steps: 200
+  release_max_drift: 0.005
+
+success:
+  tilt_tolerance_deg: 10.0
+  seated_z_tolerance: 0.015
+  min_end_clearance: 0.030

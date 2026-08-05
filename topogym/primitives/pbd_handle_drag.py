@@ -131,6 +131,7 @@ class PBDHandleDragPrimitive:
         on_segment_start=None,
         on_segment_complete=None,
         on_close=None,
+        on_lift=None,
         before_release=None,
         ee_quat=None,
         trace: list[np.ndarray] | None = None,
@@ -205,6 +206,12 @@ class PBDHandleDragPrimitive:
 
         lift_hand = grasp_hand.copy()
         lift_hand[2] += float(self.lift_delta)
+        if on_lift is not None:
+            # Fires as the handle is about to leave the table, and the lift itself
+            # is the window it gets to act over. A caller that wants to reorient
+            # what it is holding has to wait for this: doing it on `on_close`
+            # would swing the part into the tabletop it is still resting on.
+            on_lift(max(1, self.move_steps // 2))
         self._move_hand(controller, lift_hand, steps=max(1, self.move_steps // 2), quat=ee_quat)
         completed.append("lift_test")
         lifted_pos = _entity_pos(handle)

@@ -5,7 +5,8 @@ from typing import Any
 
 import numpy as np
 
-from topogym.tasks import OneStrokeLayout, OneStrokePuzzleState
+from topogym.tasks import OneStrokeLayout
+from topogym.verification import OneStrokePuzzleState
 
 try:
     import gymnasium as gym

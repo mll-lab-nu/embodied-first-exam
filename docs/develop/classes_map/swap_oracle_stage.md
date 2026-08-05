@@ -67,7 +67,7 @@ contact and friction. No teleport/set_pos shortcuts.
 
 ### `SwapLayout`
 
-File: `topogym/tasks/swap.py`
+File: `topogym/tasks/legacy/swap.py`
 
 Reads slot and block coordinates from `configs/task_configs/swap.yaml`.
 It answers questions such as:
@@ -78,7 +78,7 @@ It answers questions such as:
 
 ### `SwapSceneBuilder`
 
-File: `topogym/tasks/swap.py`
+File: `topogym/tasks/legacy/swap.py`
 
 Builds the table, stage, robot, slot markers, and colored blocks. It returns a
 `SwapScene` containing:
@@ -91,14 +91,14 @@ layout
 
 ### `SwapOraclePlan`
 
-File: `topogym/tasks/swap.py`
+File: `topogym/tasks/legacy/swap.py`
 
 The standard answer for the smoke task. It moves `block_red` from source slot 0
 to target slot 3 using `PickPlacePrimitive`, then returns the robot home.
 
 ### `SwapSuccessChecker`
 
-File: `topogym/tasks/swap.py`
+File: `topogym/tasks/legacy/swap.py`
 
 First simple success check: the moved block center must be close to the target
 slot center in x/y.

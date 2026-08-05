@@ -84,7 +84,7 @@ assisted grasp + 代码 attachment，把连接器生命周期做成**只有两�
 ## 六、和当前代码/架构的对接（落点）
 
 现状：
-- `topogym/tasks/untangle.py`——scene（board / holes / pegs / anchor_pins / endpoint pins / rope 建 mesh + `fix_particles_to_link`）。
+- `topogym/tasks/entangle/untangle.py`——scene（board / holes / pegs / anchor_pins / endpoint pins / rope 建 mesh + `fix_particles_to_link`）。
 - `topogym/planning/untangle_planner.py`——动态：每次按当前拓扑选下一次 endpoint relocation（`plan_next_untangle_move`）。
 - `prototypes/untangle_physical_handle_demo.py`——现用 `PBDHandleDragPrimitive` 做物理抓取 + 拖拽。
 - `topogym/envs/untangle_mdp.py`——RL 壳。
@@ -92,7 +92,7 @@ assisted grasp + 代码 attachment，把连接器生命周期做成**只有两�
 本方案落点：
 | 模块 | 改动 |
 | --- | --- |
-| 连接器建模 | `tasks/untangle.py` 的 endpoint handle 构建：插销(mesh-only,无 collision) + 法兰 + grip ring + grommet；绳端焊 2~3 粒子沿引出轴（**已起步：anchor_radius→0.012**）。可能需要生成 connector mesh OBJ（Genesis 无 Capsule morph，只有 Cylinder/Box/Sphere，复杂形状走 `gs.morphs.Mesh`，和绳管 OBJ 一个套路）。 |
+| 连接器建模 | `tasks/entangle/untangle.py` 的 endpoint handle 构建：插销(mesh-only,无 collision) + 法兰 + grip ring + grommet；绳端焊 2~3 粒子沿引出轴（**已起步：anchor_radius→0.012**）。可能需要生成 connector mesh OBJ（Genesis 无 Capsule morph，只有 Cylinder/Box/Sphere，复杂形状走 `gs.morphs.Mesh`，和绳管 OBJ 一个套路）。 |
 | 双态 weld 状态机 | 新的 connector 生命周期逻辑（kinematic 刚体 + 每 substep 钉粒子 + 捕获域/落座判定），**替代/包装**现有 `PBDHandleDragPrimitive` 物理抓拖；与 `untangle_planner` 的 endpoint move 对接（落座=拓扑事件时刻）。 |
 | 绳身三层 | init 样条铺粒子（scene/generation 层）；求解参数（`untangle_topogym_tabletop_v1.yaml`：particle_size/bending/iters/damping/self-collision，substeps 需 preset 例外）；**渲染样条 + crossing 判定同源**（渲染/评测层）。 |
 

@@ -17,7 +17,8 @@ python -m prototypes.cable_routing_tabletop_baseline_demo --route-mode initial -
 # production rope discretization.
 python -m prototypes.untangle_tabletop_baseline_demo --viewer --keep-open --verbose
 
-# Shared environment sizing: inspect the common board, candidate workspace,
+# Shared 
+environment sizing: inspect the common board, candidate workspace,
 # Franka home pose, 10 cm grid, and grasp-size reference objects.
 python -m prototypes.basic_env_demo --viewer --keep-open --verbose
 python -m prototypes.basic_env_demo --viewer --keep-open --no-robot --board-size 0.70 0.80 --workspace-x 0.32 0.86 --workspace-y -0.30 0.30 --verbose
@@ -165,14 +166,19 @@ python -m prototypes.knot_pbd_viewer_probe --case torus --complexity 2 --lite --
 # Optional VLA stack in a separate OpenPI uv environment.
 bash env_setup_vla_openpi.sh
 
-# --- swap H5 -> pi0.5 (OpenPI) 数据加载冒烟 (详见 docs/develop/il_adaptation/swap_to_pi05_smoke_zh.md) ---
+# --- TopoGym H5 -> pi0.5 (OpenPI) 数据加载冒烟 (详见 docs/develop/il_adaptation/pi05_smoke_zh.md) ---
+# 一键版 (任务名可换成 verify_dataset_recording.sh TASKS 表里的任意键; 不给则默认 swap)
+bash bash_scripts/tests/pi05_smoke.sh swap
+# 下面是等价的手动分解 (以 swap 为例)
 # 0. 装完 OpenPI 后自检 (从 repo 根跑; 每条末尾 cd 回根)
 cd .external/openpi && uv run python -c "from openpi.training import config; print('ok')"; cd - >/dev/null
-# 1. 产一条 swap H5 (topogym 的 Genesis venv 里; 帧数太少就 EVERY=5 前缀)
+# 1. 产一条 H5 (topogym 的 Genesis venv 里; 帧数太少就 EVERY=5 前缀)
 bash bash_scripts/tests/verify_dataset_recording.sh swap
 # 2. H5 -> LeRobot 数据集 (在 OpenPI 的 uv 环境里; 把 <ts> 换成上一步实际时间戳目录)
-cd .external/openpi && uv run python ../../scripts/export_swap_lerobot.py ../../runs/dataset_tests/<ts>/swap_seed0.h5 --repo-id topogym/swap_smoke; cd - >/dev/null
-# 3. 手动改动: 把 pi05_topogym_swap TrainConfig 加进 .external/openpi/src/openpi/training/config.py (diff 见文档第 3 节)
+#    --repo-id 不给时默认 topogym/<task_id>_smoke, task_id 读自 H5
+cd .external/openpi && uv run python ../../scripts/export_h5_lerobot.py ../../runs/dataset_tests/<ts>/swap_seed0.h5; cd - >/dev/null
+# 3. 注册 TrainConfig 进 .external/openpi/src/openpi/training/config.py (幂等; 多任务 block 共存)
+uv run --project .external/openpi python scripts/register_openpi_config.py --task swap
 # 4. 归一化统计 (第一个硬门, 不加载模型, 最能暴露格式错)
 cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_topogym_swap; cd - >/dev/null
 # 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)

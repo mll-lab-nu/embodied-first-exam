@@ -28,7 +28,7 @@ Segmentation fault (core dumped)
   - 构建 tabletop V1 Peeling 场景；
   - `flat_hold` 后调用 `PBDCornerLiftPrimitive.run()`；
   - 起角成功后进入 `PBDParticlePinchDragPrimitive` 做夹持、揭开、搬运和放置。
-- `topogym/tasks/peeling_physical.py`
+- `topogym/tasks/legacy/peeling_physical.py`
   - 创建单个 PBD Cloth 贴片；
   - 贴片初始完全平整，`grasp.initial_lift=0.0`；
   - 角部粒子自由，其余粒子分成 13 个胶黏组并 `fix_particles()`；

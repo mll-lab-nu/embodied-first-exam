@@ -227,6 +227,13 @@ class PBDParticleAttachmentDragPrimitive:
     move_steps: int
     gripper_steps: int
     attach_tolerance: float
+    # Optional cosmetic close: with None (the Peeling default) the gripper stays
+    # open the whole time, which is honest for a suction approximation but reads
+    # as "the hand never touched it" when the held thing is a rope. Set it to
+    # slightly more than half the rope's diameter and the fingers bracket the
+    # rope without squeezing it -- the hold stays kinematic, so finger contact
+    # never fights the weld.
+    grasp_qpos: float | None = None
     motion_settle_steps: int = 20
     max_follow_error: float = 0.045
     max_segment_follow_error: float | None = None
@@ -349,6 +356,19 @@ class PBDParticleAttachmentDragPrimitive:
                 grasp_point(),
                 dtype=float,
             )
+        if self.grasp_qpos is not None:
+            controller.set_gripper(float(self.grasp_qpos), steps=self.gripper_steps)
+            completed.append("close")
+        # Weld where the material actually IS, not where the hand is. The drive
+        # below commands the group centre to the hand's pad position; without
+        # this offset the group is teleported by the whole attach error on the
+        # first sync -- a 13 mm jump in one 10 ms step is 1.3 m/s handed to a
+        # short band whose neighbours are at rest, which is enough to blow up a
+        # stiff PBD body. Carrying the offset makes the group follow the hand's
+        # *motion* while keeping its own position.
+        attach_offset = np.asarray(grasp_point(), dtype=float) - self._grasp_for_hand(
+            controller.hand_pos()
+        )
         if on_attach is not None:
             on_attach()
         completed.append("attach")
@@ -364,6 +384,7 @@ class PBDParticleAttachmentDragPrimitive:
             particle_offsets=particle_offsets,
             set_grasp_particles=set_grasp_particles,
             set_attached_sheet=set_attached_sheet,
+            attach_offset=attach_offset,
         )
         completed.append("lift_test")
         lifted_pos = np.asarray(grasp_point(), dtype=float)
@@ -427,6 +448,7 @@ class PBDParticleAttachmentDragPrimitive:
                 particle_offsets=particle_offsets,
                 set_grasp_particles=set_grasp_particles,
                 set_attached_sheet=set_attached_sheet,
+                attach_offset=attach_offset,
             )
             grasp_pos = np.asarray(grasp_point(), dtype=float)
             follow_error = self._follow_error(controller, grasp_pos)
@@ -517,6 +539,14 @@ class PBDParticleAttachmentDragPrimitive:
             [0.0, 0.0, HAND_TO_PAD_Z + float(self.touch_clearance)]
         )
 
+    def _attached_center(self, controller, attach_offset) -> np.ndarray:
+        """Where the welded group's centre should be for the hand's current pose."""
+
+        center = self._grasp_for_hand(controller.hand_pos())
+        if attach_offset is None:
+            return center
+        return center + np.asarray(attach_offset, dtype=float)
+
     def _follow_error(self, controller, grasp_pos: np.ndarray) -> float:
         return float(
             np.linalg.norm(
@@ -547,6 +577,7 @@ class PBDParticleAttachmentDragPrimitive:
         particle_offsets=None,
         set_grasp_particles=None,
         set_attached_sheet=None,
+        attach_offset=None,
     ) -> None:
         start = controller.hand_pos()
         target = np.asarray(target, dtype=float)
@@ -565,7 +596,7 @@ class PBDParticleAttachmentDragPrimitive:
                 continuous_ik=True,
             )
             if attached:
-                center = self._grasp_for_hand(controller.hand_pos())
+                center = self._attached_center(controller, attach_offset)
                 self._sync_attachment(
                     center,
                     particle_offsets=particle_offsets,
@@ -573,7 +604,7 @@ class PBDParticleAttachmentDragPrimitive:
                     set_attached_sheet=set_attached_sheet,
                 )
         if attached:
-            center = self._grasp_for_hand(controller.hand_pos())
+            center = self._attached_center(controller, attach_offset)
             self._sync_attachment(
                 center,
                 particle_offsets=particle_offsets,
@@ -581,7 +612,7 @@ class PBDParticleAttachmentDragPrimitive:
                 set_attached_sheet=set_attached_sheet,
             )
             for _ in range(max(0, int(self.motion_settle_steps))):
-                center = self._grasp_for_hand(controller.hand_pos())
+                center = self._attached_center(controller, attach_offset)
                 self._sync_attachment(
                     center,
                     particle_offsets=particle_offsets,
@@ -589,7 +620,7 @@ class PBDParticleAttachmentDragPrimitive:
                     set_attached_sheet=set_attached_sheet,
                 )
                 controller.scene.step()
-            center = self._grasp_for_hand(controller.hand_pos())
+            center = self._attached_center(controller, attach_offset)
             self._sync_attachment(
                 center,
                 particle_offsets=particle_offsets,

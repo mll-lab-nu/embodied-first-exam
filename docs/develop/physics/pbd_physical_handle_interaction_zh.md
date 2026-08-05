@@ -17,8 +17,8 @@ Cable 到达终点并通过插入检查后是一个例外：connector 自身的 
 相关文件：
 
 - `topogym/primitives/pbd_handle_drag.py`
-- `topogym/tasks/untangle.py`
-- `topogym/tasks/cable_routing.py`
+- `topogym/tasks/entangle/untangle.py`
+- `topogym/tasks/routing/cable_routing.py`
 - `prototypes/untangle_physical_handle_demo.py`
 - `prototypes/cable_routing_physical_handle_demo.py`
 

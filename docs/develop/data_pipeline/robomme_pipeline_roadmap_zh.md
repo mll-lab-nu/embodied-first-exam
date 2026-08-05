@@ -69,7 +69,7 @@ W6  (P2, 合约文档, schema 定死后可与 W3/W4 并行)
 | 项 | 内容 | 落点 | 状态 |
 | --- | --- | --- | --- |
 | **W5** | `dataset_replay` 式自校验：读 H5 → 从 seed 重建环境 → 开环回放存下的 action → **eef 轨迹跟踪为硬门** + 成功率报告（`--require-success` 可选硬门） | `topogym/data/replay.py` + `bash_scripts/tests/replay_dataset.sh` | ✅ 完成（swap；不渲染，快） |
-| **W6** | 成文对外合约：`env_format_zh.md`（obs/action/status/坐标系）+ `h5_data_format_zh.md`（镜像 RoboMME schema，含"与 RoboMME 差异"专节）。理想上 schema 文档先于代码定死 | `docs/develop/` | ⬜ 待办 |
+| **W6** | 成文对外合约：`env_format_zh.md`（obs/action/status/坐标系）+ `h5_data_format_zh.md`（镜像 RoboMME schema，含"与 RoboMME 差异"专节）。理想上 schema 文档先于代码定死 | `framework/env_format_zh.md` + `data_pipeline/h5_data_format_zh.md` | ✅ 完成（2026-07-22；含 π0.5 下游消费的实测形状） |
 
 ---
 

@@ -93,7 +93,7 @@ prototypes  CLI/viewer/录制入口，只做"门牌号"，不塞主逻辑
 `topogym/world/tabletop.py` 加了 `_add_table_frame`：在桌面四周加一圈**无碰撞**的木色边框（默认开，`env.world.table.frame` 可调/可关）。所有走 `StandardTabletopSceneBuilder` 的任务都生效（symbolic peeling 和 common_room 走的是自己的建表路径，暂未覆盖）。
 
 ### 6.4 终点靶心 ✅
-`topogym/tasks/cable_routing.py` 加了 `_add_connector_target_marker`：在终点 C 画一个**红白同心方环**的无碰撞地贴，更显眼（`task.connector_target` 可调）。
+`topogym/tasks/routing/cable_routing.py` 加了 `_add_connector_target_marker`：在终点 C 画一个**红白同心方环**的无碰撞地贴，更显眼（`task.connector_target` 可调）。
 
 ---
 
@@ -143,7 +143,7 @@ python -m prototypes.cable_routing_physical_handle_demo --backend gpu --viewer -
 ## 这一轮加了什么
 
 1. **桌面边框**（`topogym/world/tabletop.py` 的 `_add_table_frame`）：桌面四周一圈无碰撞木色边框，默认开，`env.world.table.frame` 可调/可关。所有走 `StandardTabletopSceneBuilder` 的任务生效。
-2. **终点靶心**（`topogym/tasks/cable_routing.py` 的 `_add_connector_target_marker`）：终点 C 处红白同心方环无碰撞地贴，`task.connector_target` 可调。
+2. **终点靶心**（`topogym/tasks/routing/cable_routing.py` 的 `_add_connector_target_marker`）：终点 C 处红白同心方环无碰撞地贴，`task.connector_target` 可调。
 3. **诊断探针 `--probe`**（`cable_routing_physical_handle_demo.py`）：包住 `scene.step`，每 `--probe-every` 步采样一次，专门回答两个问题——停顿是"卡住"还是"本身慢"，以及放置飞出到底是哪种原因。
 
 ## 探针打印什么

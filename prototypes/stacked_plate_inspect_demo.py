@@ -17,7 +17,8 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import load_topogym_configs
-from topogym.tasks import StackedPlateSceneBuilder, StackedPlatePuzzleEvaluator
+from topogym.tasks import StackedPlateSceneBuilder
+from topogym.verification import StackedPlatePuzzleEvaluator
 
 CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
 
@@ -38,7 +39,8 @@ def main() -> None:
     cfg = load_topogym_configs(
         common_config=CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml",
         env_config=CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml",
-        robot_config=CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml",
+        # 与正式 demo 一致的 stacked_plate 专用抬高 home，避免 base home 在对称盘阵里穿模。
+        robot_config=CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik_stacked_plate_raised_home.yaml",
         task_config=CONFIG_ROOT / "task_configs" / "stacked_plate_topogym_tabletop_v1.yaml",
     )
     cfg = OmegaConf.merge(cfg, {"env": {"genesis": {"backend": args.backend}}})

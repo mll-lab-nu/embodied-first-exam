@@ -25,10 +25,8 @@ from topogym.primitives import (
     configure_gripper_contact_friction,
     print_collision_il_contract,
 )
-from topogym.tasks import (
-    StackedPlatePuzzleEvaluator,
-    StackedPlateSceneBuilder,
-)
+from topogym.tasks import StackedPlateSceneBuilder
+from topogym.verification import StackedPlatePuzzleEvaluator
 from topogym.utils import (
     add_recording_args,
     initialize_franka_controller,
@@ -41,7 +39,11 @@ from topogym.utils import (
 CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
 DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
 DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
+# stacked_plate 专用抬高 home：避开竖直大圆盘的 reset_home 互穿（见该文件抬头）。
+# 只有 home.qpos 与 base 不同；其余与 franka_panda_position_ik.yaml 一致。
+DEFAULT_ROBOT_CONFIG = (
+    CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik_stacked_plate_raised_home.yaml"
+)
 DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "stacked_plate_topogym_tabletop_v1.yaml"
 
 
@@ -57,6 +59,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--viewer", action="store_true")
     parser.add_argument("--seed", type=int, default=0, help="Stable episode seed / variant id.")
     parser.add_argument("--variant-id", default="default")
+    parser.add_argument(
+        "--randomize-layout",
+        action="store_true",
+        help="Apply seeded bounded layout randomization (default off = deterministic).",
+    )
+    parser.add_argument(
+        "--difficulty",
+        default="default",
+        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
+    )
     parser.add_argument("--keep-open", action="store_true")
     parser.add_argument("--close-on-finish", action="store_true")
     parser.add_argument("--settle-steps", type=int, default=None)
@@ -236,6 +248,17 @@ def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episod
 def main() -> None:
     args = parse_args()
     cfg = load_configs(args)
+    if args.randomize_layout:
+        from topogym.generation.layout_randomization import randomize_task_cfg
+
+        cfg = randomize_task_cfg(
+            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+        )
+        print(
+            f"stacked_plate_physical_rotate_demo randomize_layout=on seed={args.seed} "
+            f"difficulty={args.difficulty}",
+            flush=True,
+        )
     episode_spec = build_stacked_plate_episode_spec(
         cfg,
         seed=args.seed,

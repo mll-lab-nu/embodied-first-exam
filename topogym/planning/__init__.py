@@ -19,6 +19,10 @@ from .stacked_plate_planner import (
 from .subgoal import PlannedSubgoal
 from .swap_planner import SwapMoveCommand, plan_swap_move
 from .untangle_planner import UntangleEndpointMoveCommand, plan_next_untangle_move
+from .untangle_continuous_planner import (
+    UntangleContinuousMoveCommand,
+    plan_next_untangle_continuous_move,
+)
 from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget
 
 __all__ = [
@@ -30,6 +34,7 @@ __all__ = [
     "PlannedSubgoal",
     "StackedPlateRotateCommand",
     "SwapMoveCommand",
+    "UntangleContinuousMoveCommand",
     "UntangleEndpointMoveCommand",
     "WaypointPlan",
     "WaypointTarget",
@@ -41,5 +46,6 @@ __all__ = [
     "plan_peeling_single_lift",
     "plan_stacked_plate_rotation",
     "plan_swap_move",
+    "plan_next_untangle_continuous_move",
     "plan_next_untangle_move",
 ]

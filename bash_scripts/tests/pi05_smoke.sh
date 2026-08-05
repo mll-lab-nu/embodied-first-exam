@@ -1,30 +1,34 @@
 #!/usr/bin/env bash
 # ============================================================================
-# swap H5 -> pi0.5 (OpenPI) 数据加载冒烟：一次跑完，分阶段逐段检验是否跑通。
-# 目标 = 证明一条 swap H5 能进 OpenPI 的数据加载 + 训练循环，不报 shape/格式错。
+# TopoGym H5 -> pi0.5 (OpenPI) 数据加载冒烟：一次跑完，分阶段逐段检验是否跑通。
+# 目标 = 证明一条 H5 能进 OpenPI 的数据加载 + 训练循环，不报 shape/格式错。
 # 不是训 baseline。完整说明 + 手动 config diff（stage 3）见：
-#   docs/develop/il_adaptation/swap_to_pi05_smoke_zh.md
+#   docs/develop/il_adaptation/pi05_smoke_zh.md
+#
+# 任务由第一个位置参数指定，默认 swap（首个跑通的任务；纯刚体，物理不污染结论）。
+# 可选任务 = verify_dataset_recording.sh 的 TASKS 表里的键。
 #
 # 阶段（每段独立日志 <SMOKE_DIR>/stage<N>.log + PASS/FAIL）：
 #   0 openpi 可导入自检              (OpenPI uv env)
-#   1 录一条 swap H5                 (topogym Genesis venv；复用 verify_dataset_recording.sh)
+#   1 录一条 <task> H5               (topogym Genesis venv；复用 verify_dataset_recording.sh)
 #   2 H5 -> LeRobot 数据集           (OpenPI uv env)
-#   3 确保 pi05_topogym_swap 已注册进 config.py       (默认自动追加；AUTO_CONFIG=0 则改手动)
+#   3 确保 <CONFIG_NAME> 已注册进 config.py           (默认自动追加；AUTO_CONFIG=0 则改手动)
 #   4 compute_norm_stats            (第一个硬门，不加载模型，最能暴露格式错)
 #   5 train 几个 step               (首次拉 pi05_base checkpoint 数 GB + 需 GPU)
 #
 # 用法：
-#   bash bash_scripts/tests/swap_pi05_smoke.sh               # 一条命令跑 0..5（stage 3 自动注册 config）
-#   TO_STAGE=4 bash bash_scripts/tests/swap_pi05_smoke.sh    # 只到便宜的数据门，不 train
-#   FROM_STAGE=4 bash bash_scripts/tests/swap_pi05_smoke.sh  # 只重跑 norm_stats + train
+#   bash bash_scripts/tests/pi05_smoke.sh                    # 默认任务 swap，跑 0..5
+#   bash bash_scripts/tests/pi05_smoke.sh cable_routing      # 换任务
+#   TO_STAGE=4 bash bash_scripts/tests/pi05_smoke.sh         # 只到便宜的数据门，不 train
+#   FROM_STAGE=4 bash bash_scripts/tests/pi05_smoke.sh       # 只重跑 norm_stats + train
 #
 # 可调环境变量（都有默认值）：
 #   FROM_STAGE=0 TO_STAGE=5        跑哪几段（闭区间）
 #   SEED=0 EVERY=10 BACKEND=gpu    录制参数（透传给 verify_dataset_recording.sh）
-#   CONFIG_NAME=pi05_topogym_swap  REPO_ID=topogym/swap_smoke  EXP_NAME=swap_smoke
+#   CONFIG_NAME=pi05_topogym_<task>  REPO_ID=topogym/<task>_smoke  EXP_NAME=<task>_smoke
 #   AUTO_CONFIG=1                  stage 3 自动追加 config（幂等）；=0 则改回手动粘 diff
 #   WANDB_MODE=disabled            冒烟默认关 wandb；想上传设 online 并先 wandb login
-#   SMOKE_DIR=runs/pi05_smoke      固定产物目录（H5 落这里，跨段/续跑可复用）
+#   SMOKE_DIR=runs/pi05_smoke/<task>  产物目录（H5 落这里，跨段/续跑可复用）
 #   OPENPI_DIR=.external/openpi    OpenPI 安装目录
 #   TOPOGYM_VENV=.venv             录制用的 topogym venv（未激活时 verify 脚本自动 source）
 # ============================================================================
@@ -34,18 +38,30 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO"
 
+TASK="${1:-swap}"
+VERIFY_SCRIPT="$REPO/bash_scripts/tests/verify_dataset_recording.sh"
+
 FROM_STAGE="${FROM_STAGE:-0}"
 TO_STAGE="${TO_STAGE:-5}"
 SEED="${SEED:-0}"
 EVERY="${EVERY:-10}"
 BACKEND="${BACKEND:-gpu}"
-CONFIG_NAME="${CONFIG_NAME:-pi05_topogym_swap}"
-REPO_ID="${REPO_ID:-topogym/swap_smoke}"
-EXP_NAME="${EXP_NAME:-swap_smoke}"
-SMOKE_DIR="${SMOKE_DIR:-runs/pi05_smoke}"
+CONFIG_NAME="${CONFIG_NAME:-pi05_topogym_${TASK}}"
+REPO_ID="${REPO_ID:-topogym/${TASK}_smoke}"
+EXP_NAME="${EXP_NAME:-${TASK}_smoke}"
+# 按任务分目录：否则换任务重跑会覆盖上一个任务的 H5 与 stage 日志。
+SMOKE_DIR="${SMOKE_DIR:-runs/pi05_smoke/$TASK}"
 OPENPI_DIR="${OPENPI_DIR:-$REPO/.external/openpi}"
 AUTO_CONFIG="${AUTO_CONFIG:-1}"       # stage 3：1=自动注册 config，0=保持手动
-H5="$SMOKE_DIR/swap_seed${SEED}.h5"   # verify_dataset_recording.sh 的命名约定
+H5="$SMOKE_DIR/${TASK}_seed${SEED}.h5"   # verify_dataset_recording.sh 的命名约定
+
+# 任务名必须是 verify_dataset_recording.sh TASKS 表里的键；否则 stage 1 会在
+# 录制脚本里报 "unknown task" 而不是在这里，排查要多绕一层。
+if ! grep -q "^  \[$TASK\]=" "$VERIFY_SCRIPT"; then
+  echo "[error] 未知 task: $TASK。可选项见 $VERIFY_SCRIPT 的 TASKS 表：" >&2
+  grep -o "^  \[[a-z_]*\]=" "$VERIFY_SCRIPT" | tr -d ' []=' | sed 's/^/  - /' >&2
+  exit 1
+fi
 
 # 冒烟不上传 wandb —— train.py 默认开 wandb，无 TTY/无 api_key 时会在训练前报错退出。
 # disabled 让 wandb.init 变成 no-op（想上传就设 WANDB_MODE=online 并先 wandb login）。
@@ -112,11 +128,11 @@ if want 0; then
   fi
 fi
 
-# ---------------- Stage 1: 录 swap H5 ----------------
+# ---------------- Stage 1: 录 H5 ----------------
 if want 1; then
-  echo; echo "==================== stage 1: 录 swap H5 ===================="
+  echo; echo "==================== stage 1: 录 $TASK H5 ===================="
   OUTDIR="$SMOKE_DIR" SEED="$SEED" EVERY="$EVERY" BACKEND="$BACKEND" \
-    bash "$REPO/bash_scripts/tests/verify_dataset_recording.sh" swap 2>&1 | tee "$SMOKE_DIR/stage1.log"
+    bash "$VERIFY_SCRIPT" "$TASK" 2>&1 | tee "$SMOKE_DIR/stage1.log"
   code=${PIPESTATUS[0]}
   if [[ $code -eq 0 && -s "$H5" ]]; then
     echo "[ok] H5 -> $H5"; RESULT[1]="ok"
@@ -131,7 +147,7 @@ if want 2; then
   if [[ ! -s "$H5" ]]; then
     echo "[fail] 找不到 H5：$H5（先跑 stage 1，或对齐 SEED/SMOKE_DIR）"; RESULT[2]="FAIL(no h5)"; finish
   fi
-  openpi_run python "$REPO/scripts/export_swap_lerobot.py" "$REPO/$H5" --repo-id "$REPO_ID" \
+  openpi_run python "$REPO/scripts/export_h5_lerobot.py" "$REPO/$H5" --repo-id "$REPO_ID" \
     2>&1 | tee "$SMOKE_DIR/stage2.log"
   code=${PIPESTATUS[0]}
   ds_dir="$(grep -oE 'wrote LeRobot dataset -> .*' "$SMOKE_DIR/stage2.log" | tail -1 | sed 's/wrote LeRobot dataset -> //')"
@@ -147,24 +163,25 @@ config_registered() {
   openpi_run python -c "import openpi.training.config as c; c.get_config('$CONFIG_NAME')" >/dev/null 2>&1
 }
 if want 3; then
-  echo; echo "==================== stage 3: 检查 $CONFIG_NAME 是否已注册 ===================="
-  if config_registered; then
-    echo "[ok] $CONFIG_NAME 已注册"; RESULT[3]="ok"
-  elif [[ "$AUTO_CONFIG" != "0" ]]; then
-    echo "[auto] 未注册 -> 追加 TrainConfig 到 openpi config.py（幂等，AUTO_CONFIG=0 可关）"
-    openpi_run python "$REPO/scripts/register_openpi_swap_config.py" \
+  echo; echo "==================== stage 3: 确保 $CONFIG_NAME 已注册（当前模板）===================="
+  if [[ "$AUTO_CONFIG" != "0" ]]; then
+    # 每次都跑 installer（幂等）：无则追加、旧则更新（如全参→LoRA）。AUTO_CONFIG=0 可关。
+    echo "[auto] 同步 TrainConfig 到 openpi config.py（幂等：无则追加，旧则更新）"
+    openpi_run python "$REPO/scripts/register_openpi_config.py" \
       --openpi-dir "$OPENPI_DIR" --config-name "$CONFIG_NAME" --repo-id "$REPO_ID" \
       2>&1 | tee "$SMOKE_DIR/stage3.log"
     if config_registered; then
-      echo "[ok] 已自动注册 $CONFIG_NAME"; RESULT[3]="ok(auto)"
+      echo "[ok] $CONFIG_NAME 已注册（当前模板）"; RESULT[3]="ok(auto)"
     else
       echo "[fail] 自动注册后仍读不到 $CONFIG_NAME（见 stage3.log）"; RESULT[3]="FAIL(auto-register)"; finish
     fi
+  elif config_registered; then
+    echo "[ok] $CONFIG_NAME 已注册"; RESULT[3]="ok"
   else
     echo "[NEEDS-MANUAL] $CONFIG_NAME 未注册（AUTO_CONFIG=0）。把 TrainConfig 粘进"
-    echo "  $OPENPI_DIR/src/openpi/training/config.py 的 _CONFIGS（diff 见文档第 3 节），"
+    echo "  $OPENPI_DIR/src/openpi/training/config.py 的 _CONFIGS（block 见文档第 3 节），"
     echo "  或去掉 AUTO_CONFIG=0 让脚本自动注册；改完 FROM_STAGE=3 续跑："
-    echo "    docs/develop/il_adaptation/swap_to_pi05_smoke_zh.md"
+    echo "    docs/develop/il_adaptation/pi05_smoke_zh.md"
     RESULT[3]="NEEDS-MANUAL(config)"; finish
   fi
 fi
