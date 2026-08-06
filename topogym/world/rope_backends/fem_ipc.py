@@ -122,6 +122,30 @@ class FemIpcRopeBackend:
             friction_mu=_fem_value(self.rope_cfg, "friction_mu"),
         )
 
+    def static_rigid_material(self):
+        """Fixed rigids must be 'ipc_only' under the IPC coupler.
+
+        The coupler's auto-select sees their base joint, picks
+        'external_articulation', and then rejects it; the spike hit this on the
+        ground plane first (rope_backend_migration doc).
+        """
+
+        import genesis as gs
+
+        return gs.materials.Rigid(coup_type="ipc_only")
+
+    def decoration_rigid_material(self):
+        """Collision-free fixtures leave IPC entirely.
+
+        With no collision geometry they cannot satisfy any coupling type (the
+        coupler's external_articulation path raises on them), and having no
+        contact is exactly their current behavior.
+        """
+
+        import genesis as gs
+
+        return gs.materials.Rigid(needs_coup=False)
+
     # -- pre-build declarations ------------------------------------------------
 
     def declare_anchor(self, entity, centers, radius: float) -> None:

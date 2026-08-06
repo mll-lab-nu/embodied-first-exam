@@ -141,6 +141,8 @@ class StandardTabletopSceneBuilder:
         include_robot: bool = True,
         robot_material=None,
         table_material=None,
+        static_material=None,
+        decoration_material=None,
     ) -> TabletopBaseScene:
         """Build the shared tabletop scene.
 
@@ -190,9 +192,25 @@ class StandardTabletopSceneBuilder:
         self._debug("scene_construct_done")
         manifest = EntityManifest()
 
+        # ``static_material`` covers the fixed rigids the builder creates itself
+        # (ground plane, stage). Under the IPC coupler these must be declared
+        # coup_type='ipc_only' -- the auto-select trips over their base joint --
+        # while under the legacy coupler None keeps the Genesis default.
+        static_kwargs = {} if static_material is None else {"material": static_material}
+        # Collision-free fixtures (the table frame rim) get their own material:
+        # under IPC they must be needs_coup=False -- no collision geometry can
+        # satisfy any coupling type -- which is also behaviorally identical to
+        # what they already are.
+        self._decoration_kwargs = (
+            {} if decoration_material is None else {"material": decoration_material}
+        )
+
         if bool(self.env_cfg.world.plane.enabled):
             self._debug("ground_add_begin")
-            manifest.add("ground", scene.add_entity(gs.morphs.Plane(), name="ground"))
+            manifest.add(
+                "ground",
+                scene.add_entity(gs.morphs.Plane(), name="ground", **static_kwargs),
+            )
             self._debug("ground_add_done")
 
         table_cfg = self.env_cfg.world.table
@@ -227,6 +245,7 @@ class StandardTabletopSceneBuilder:
                     ),
                     surface=materials.plastic("stage", stage_cfg.color),
                     name="stage",
+                    **static_kwargs,
                 ),
             )
             self._debug("stage_add_done")
@@ -348,6 +367,7 @@ class StandardTabletopSceneBuilder:
                     ]
                 )
         surface = materials.plastic("frame", color)
+        decoration_kwargs = getattr(self, "_decoration_kwargs", {})
         for label, pos, size in bars:
             name = f"table_frame_{label}"
             manifest.add(
@@ -356,6 +376,7 @@ class StandardTabletopSceneBuilder:
                     gs.morphs.Box(pos=pos, size=size, fixed=True, collision=False),
                     surface=surface,
                     name=name,
+                    **decoration_kwargs,
                 ),
             )
 
@@ -409,12 +430,21 @@ class StandardTabletopSceneBuilder:
         if preset_cfg is None or not bool(getattr(preset_cfg, "locked", False)):
             return
         preset_id = str(getattr(preset_cfg, "id", ""))
-        if preset_id != "topogym_tabletop_v1":
+        # Geometry is shared between the two baselines; only the solver timing
+        # differs (the IPC coupler advances once per substep with the full
+        # sim.dt, i.e. it is built for substeps=1 -- see the rope backend
+        # migration doc).
+        expected = {
+            "topogym_tabletop_v1": {"version": "1.3", "substeps": 4},
+            "topogym_tabletop_fem_v1": {"version": "1.0", "substeps": 1},
+        }.get(preset_id)
+        if expected is None:
             raise ValueError(f"Unknown locked tabletop preset {preset_id!r}.")
-        if str(getattr(preset_cfg, "version", "")) != "1.3":
+        if str(getattr(preset_cfg, "version", "")) != expected["version"]:
             raise ValueError(
-                "Locked topogym_tabletop_v1 requires preset.version=1.3."
+                f"Locked {preset_id} requires preset.version={expected['version']}."
             )
+        self._expected_substeps = int(expected["substeps"])
 
         self._require_close(
             self.env_cfg.world.table.pos,
@@ -458,8 +488,10 @@ class StandardTabletopSceneBuilder:
         self._require_close(self.env_cfg.sim.gravity, (0.0, 0.0, -9.81), "sim.gravity")
         if abs(float(self.env_cfg.sim.dt) - 0.01) > 1e-12:
             raise ValueError("Locked topogym_tabletop_v1 requires sim.dt=0.01.")
-        if int(self.env_cfg.sim.substeps) != 4:
-            raise ValueError("Locked topogym_tabletop_v1 requires sim.substeps=4.")
+        if int(self.env_cfg.sim.substeps) != self._expected_substeps:
+            raise ValueError(
+                f"Locked preset requires sim.substeps={self._expected_substeps}."
+            )
 
         base_camera = self.env_cfg.cameras.base_camera
         if tuple(int(value) for value in base_camera.res) != (256, 256):

@@ -165,7 +165,7 @@ class UntangleContinuousLayout:
                 "Raise braid.base_z."
             )
         model = str(self.cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported UntangleContinuous rope model: {model!r}.")
         vertices, faces = _make_elastic_tube_mesh(
             centerline,
@@ -358,6 +358,8 @@ class UntangleContinuousSceneBuilder:
             include_robot=include_robot,
             robot_material=self._robot_material(),
             table_material=self._table_material(),
+            static_material=backend.static_rigid_material(),
+            decoration_material=backend.decoration_rigid_material(),
         )
         scene = tabletop.scene
         manifest = tabletop.manifest
@@ -511,9 +513,26 @@ class UntangleContinuousSceneBuilder:
         0.1 default is the slippery end of that.
         """
 
+        if self._rope_backend.name != "pbd":
+            # Under IPC the table is a static 'ipc_only' body; rope<->table
+            # friction comes from the FEM material's friction_mu and IPC's
+            # variational friction, not from coup_friction (a legacy-coupler
+            # knob). Calibrate there if the ropes skate.
+            return gs.materials.Rigid(coup_type="ipc_only")
         return gs.materials.Rigid(
             coup_friction=float(self.task_cfg.rope.table_friction),
         )
+
+    def _static_kwargs(self) -> dict:
+        """Material kwargs for the task's own fixed rigids (board, power strip).
+
+        None from the PBD backend keeps the Genesis default (current behavior);
+        the FEM backend supplies coup_type='ipc_only' so the IPC coupler accepts
+        them as static contact bodies.
+        """
+
+        material = self._rope_backend.static_rigid_material()
+        return {} if material is None else {"material": material}
 
     def _add_board(self, scene, manifest: EntityManifest, layout) -> None:
         if not box_entity_enabled(self.task_cfg.board):
@@ -528,11 +547,21 @@ class UntangleContinuousSceneBuilder:
                 ),
                 surface=materials.plastic("board", self.task_cfg.board.color),
                 name=self.task_cfg.board.name,
+                **self._static_kwargs(),
             ),
         )
 
     def _add_power_strip(self, scene, manifest: EntityManifest, layout) -> None:
         strip = self.task_cfg.power_strip
+        has_collision = bool(getattr(strip, "collision", False))
+        # A collision-free strip must be a decoration under IPC (needs_coup=False);
+        # with collision on it is a static contact body (ipc_only).
+        material = (
+            self._rope_backend.static_rigid_material()
+            if has_collision
+            else self._rope_backend.decoration_rigid_material()
+        )
+        material_kwargs = {} if material is None else {"material": material}
         manifest.add(
             strip.name,
             scene.add_entity(
@@ -540,10 +569,11 @@ class UntangleContinuousSceneBuilder:
                     pos=tuple(layout.position_to_world(strip.pos)),
                     size=tuple(_list(strip.size)),
                     fixed=True,
-                    collision=bool(getattr(strip, "collision", False)),
+                    collision=has_collision,
                 ),
                 surface=materials.plastic("fixture", strip.color),
                 name=strip.name,
+                **material_kwargs,
             ),
         )
 
@@ -633,7 +663,7 @@ class UntangleContinuousSceneBuilder:
         braid: BraidSpec,
     ) -> list[tuple[str, Any, tuple[np.ndarray, np.ndarray], np.ndarray]]:
         model = str(self.task_cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported UntangleContinuous rope model: {model!r}.")
 
         rope_specs: list[tuple[str, Any, tuple[np.ndarray, np.ndarray], np.ndarray]] = []
@@ -643,7 +673,7 @@ class UntangleContinuousSceneBuilder:
             name = layout.strand_name(strand_index)
             rope_entity = scene.add_entity(
                 rope_prefab.tube_morph(mesh.path, self.task_cfg.rope),
-                material=rope_prefab.elastic_material(self.task_cfg.rope),
+                material=self._rope_backend.material(),
                 surface=materials.plastic(
                     "deformable",
                     layout.strand_color(strand_index),

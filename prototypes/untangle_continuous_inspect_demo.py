@@ -116,6 +116,15 @@ def parse_args() -> argparse.Namespace:
             "which is why two ropes settle 2.5mm apart instead of 12mm."
         ),
     )
+    parser.add_argument(
+        "--rope-model",
+        choices=("pbd_elastic_tube", "fem_ipc_tube"),
+        default=None,
+        help=(
+            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
+            "pair it with --env-config world_tabletop_fem_v1.yaml (substeps=1)."
+        ),
+    )
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
@@ -172,6 +181,8 @@ def main() -> None:
         cfg = OmegaConf.merge(
             cfg, {"task": {"rope": {"mesh": {"segment_length": args.segment_length}}}}
         )
+    if args.rope_model is not None:
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
 
     seeds = _seed_range(args.seeds) if args.seeds else range(args.seed, args.seed + 1)
     # Materialize the list so every seed prints its line, rather than `all`

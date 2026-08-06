@@ -39,6 +39,16 @@ class PBDRopeBackend:
     def material(self):
         return elastic_material(self.rope_cfg)
 
+    def static_rigid_material(self):
+        """None -> keep the Genesis default for fixed rigids (current behavior)."""
+
+        return None
+
+    def decoration_rigid_material(self):
+        """None -> keep the Genesis default for collision-free fixtures."""
+
+        return None
+
     # -- pre-build declarations ------------------------------------------------
 
     def declare_anchor(self, entity, centers, radius: float) -> None:
