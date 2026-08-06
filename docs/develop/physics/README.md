@@ -9,6 +9,7 @@
 | `rigid_physical_interaction_zh.md` | 刚体任务（swap / onestroke / maze）真实接触抓取，替代 AttachmentManager |
 | `pbd_physical_handle_interaction_zh.md` | PBD 绳索任务从脚本 attachment 改成机械臂物理夹持 |
 | `pbd_tabletop_friction_zh.md` | 绳↔桌面摩擦为什么在 Genesis 里失效（速度式 vs 位置式），以及只改速度的库仑摩擦补丁 |
+| `rope_backend_migration_zh.md` | 绳索求解器从 PBD 迁到 FEM + IPC：回滚锚点、判据表、各阶段进度 |
 | `stacked_plate_physical_interaction_zh.md` | stacked_plate 夹爪-盘缘刚体接触旋转 |
 | `maze_wall_removal_zh.md` | maze wall removal（连通性恢复）任务语义与开发记录 |
 
