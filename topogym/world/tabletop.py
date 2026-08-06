@@ -116,12 +116,18 @@ class StandardTabletopSceneBuilder:
         *,
         rigid_options=None,
         pbd_options=None,
+        scene_options: dict | None = None,
         debug_label: str | None = None,
     ) -> None:
         self.env_cfg = env_cfg
         self.robot_cfg = robot_cfg
         self.rigid_options = rigid_options
         self.pbd_options = pbd_options
+        # Extra gs.Scene kwargs from a rope backend (rope_backends protocol):
+        # {"pbd_options": ...} for PBD, {"coupler_options"/"fem_options": ...}
+        # for FEM+IPC. Supersedes the pbd_options parameter for callers that
+        # have moved to the backend seam.
+        self.scene_options = scene_options
         self.debug_label = debug_label
 
     def _debug(self, stage: str) -> None:
@@ -157,6 +163,8 @@ class StandardTabletopSceneBuilder:
             scene_kwargs["rigid_options"] = self.rigid_options
         if self.pbd_options is not None:
             scene_kwargs["pbd_options"] = self.pbd_options
+        if self.scene_options:
+            scene_kwargs.update(self.scene_options)
         viewer_kwargs = {
             "camera_pos": tuple(self.env_cfg.viewer.camera_pos),
             "camera_lookat": tuple(self.env_cfg.viewer.camera_lookat),

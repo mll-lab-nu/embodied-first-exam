@@ -15,7 +15,6 @@ from topogym.world.rope import (
     RopeEndpointHandle,
     RopeMesh,
     catmull_rom_centerline as _catmull_rom_centerline,
-    endpoint_particle_indices as _endpoint_particle_indices,
     make_elastic_tube_mesh as _make_elastic_tube_mesh,
     resolve_mesh_dir as _resolve_mesh_dir,
     safe_asset_name as _safe_asset_name,
@@ -30,6 +29,7 @@ from topogym.world import (
     TabletopBaseScene,
     tabletop_frames_from_config,
 )
+from topogym.world.rope_backends import rope_backend as _make_rope_backend
 
 
 def _list(value):
@@ -203,6 +203,9 @@ class UntangleContinuousScene:
     # `scene.step`). Genesis supplies nothing that works at rest -- see
     # `TabletopParticleFriction`. Kept here so it can be inspected or uninstalled.
     table_friction: Any | None = None
+    # Solver backend (rope_backends protocol). All node access below goes through
+    # it, so nothing downstream branches on the solver.
+    rope_backend: Any | None = None
 
     @property
     def strand_entities(self) -> dict[int, Any]:
@@ -244,13 +247,13 @@ class UntangleContinuousScene:
         return np.stack(points, axis=0)
 
     def strand_particles(self, strand_index: int) -> np.ndarray:
-        """Current ``(P, 3)`` PBD particle positions for one strand.
+        """Current ``(P, 3)`` rope node positions for one strand.
 
         Unordered -- pair with ``particle_arclength[strand_index]`` to recover a
         curve.
         """
 
-        return _particles(self.strand_entities[int(strand_index)])
+        return _particles(self.rope_backend, self.strand_entities[int(strand_index)])
 
     def grasp_band_indices(self, strand_index: int, arclength: float, *, half_width: float):
         """Particle indices of ``strand_index`` within ``half_width`` of ``arclength``.
@@ -341,14 +344,14 @@ class UntangleContinuousSceneBuilder:
     ) -> UntangleContinuousScene:
         braid = self.layout.braid_spec()
 
-        pbd_options = None
-        if str(self.task_cfg.rope.model).startswith("pbd_"):
-            pbd_options = rope_prefab.pbd_options(self.task_cfg.rope)
+        backend = _make_rope_backend(self.task_cfg.rope)
+        self._rope_backend = backend
+        backend.pre_scene()
 
         tabletop_builder = StandardTabletopSceneBuilder(
             self.env_cfg,
             self.robot_cfg,
-            pbd_options=pbd_options,
+            scene_options=backend.scene_options(),
         )
         tabletop = tabletop_builder.create(
             show_viewer=show_viewer,
@@ -364,46 +367,44 @@ class UntangleContinuousSceneBuilder:
         self._add_power_strip(scene, manifest, layout)
         rope_specs = self._add_ropes(scene, manifest, layout, braid)
         connectors = self._add_free_end_connectors(scene, manifest, layout, rope_specs)
-        tabletop_builder.finalize(tabletop)
 
+        # End-constraint *capacity* is declared before finalize (= scene.build):
+        # the FEM backend's coupler reads it during build; PBD just buffers.
         anchor_radius = float(self.task_cfg.rope.anchor_radius)
+        for strand_index, (_rope_name, rope_entity, endpoint_centers, _cl) in enumerate(
+            rope_specs
+        ):
+            backend.declare_anchor(rope_entity, (endpoint_centers[0],), anchor_radius)
+            if strand_index in connectors:
+                backend.declare_follow(rope_entity, endpoint_centers[1], anchor_radius)
+
+        tabletop_builder.finalize(tabletop)
         rope_handles: dict[str, RopeEndpointHandle] = {}
         particle_arclength: dict[int, np.ndarray] = {}
         for strand_index, (rope_name, rope_entity, endpoint_centers, centerline) in enumerate(
             rope_specs
         ):
-            particle_arclength[strand_index] = _particle_arclength(rope_entity, centerline)
+            particle_arclength[strand_index] = _particle_arclength(
+                backend, rope_entity, centerline
+            )
             # Single-end anchor (design doc decision 2): only the -x end is welded
             # into the power strip; the +x end stays free so it can be grasped and
             # lifted by the lift-test.
-            start_indices = tuple(
-                _endpoint_particle_indices(
-                    rope_entity,
-                    (endpoint_centers[0],),
-                    radius=anchor_radius,
-                )
-            )
-            end_indices = tuple(
-                _endpoint_particle_indices(
-                    rope_entity,
-                    (endpoint_centers[1],),
-                    radius=anchor_radius,
-                )
-            )
-            rope_entity.fix_particles(particles_idx_local=list(start_indices))
+            start_indices = tuple(backend.anchor(rope_entity))
             connector = connectors.get(strand_index)
             if connector is not None:
-                # Genesis' native particle-to-link attachment, the same mechanism
-                # the discrete Untangle and cable_routing use for their handles.
-                # It stores each particle's pose *relative to the link* and lets
-                # the solver carry them, which is the crucial difference from the
-                # hand-rolled weld this task used before: the band follows the
-                # link's ROTATION, and no position is ever written from outside,
-                # so PBD's `vel = (pos - ipos)/dt` reconstruction never sees a
-                # jump. See the blow-up debug log for what the old weld did.
-                rope_entity.fix_particles_to_link(
-                    connector.base_link_idx,
-                    particles_idx_local=list(end_indices),
+                # The link-carried attachment (PBD: fix_particles_to_link; FEM:
+                # constraint targets synced from the link's pose every step).
+                # Either way the band follows the link's ROTATION and no position
+                # is ever written into the solver -- the crucial difference from
+                # the hand-rolled world-axis weld this task used before. See the
+                # blow-up debug log for what that weld did.
+                end_indices = tuple(backend.follow_link(rope_entity, connector.base_link))
+            else:
+                end_indices = tuple(
+                    backend.resolve_indices(
+                        rope_entity, (endpoint_centers[1],), anchor_radius
+                    )
                 )
             rope_handles[rope_name] = RopeEndpointHandle(
                 name=rope_name,
@@ -424,6 +425,7 @@ class UntangleContinuousSceneBuilder:
             tabletop=tabletop,
             particle_arclength=particle_arclength,
             free_end_connectors=connectors,
+            rope_backend=backend,
         )
         rope_scene.table_friction = self._install_table_friction(rope_scene)
         return rope_scene
@@ -438,6 +440,11 @@ class UntangleContinuousSceneBuilder:
 
         friction_cfg = getattr(self.task_cfg.rope, "tabletop_friction", None)
         if friction_cfg is None or not bool(getattr(friction_cfg, "enabled", False)):
+            return None
+        if self._rope_backend.name != "pbd":
+            # The shim patches a PBD-specific failure (velocity-impulse tabletop
+            # friction, useless at rest). FEM materials carry friction_mu and IPC
+            # friction is variational -- the problem does not exist there.
             return None
         sim = self.env_cfg.sim
         return rope_prefab.TabletopParticleFriction(
@@ -686,7 +693,8 @@ def settle_scene(
         ]
 
     previous = _shapes()
-    previous_particles = [_particles(entity) for entity in entities]
+    backend = rope_scene.rope_backend
+    previous_particles = [_particles(backend, entity) for entity in entities]
     taken = 0
     busy = float("inf")
     peak = float("inf")
@@ -708,7 +716,7 @@ def settle_scene(
             float(np.linalg.norm(now - before, axis=1).max())
             for now, before in zip(current, previous)
         )
-        current_particles = [_particles(entity) for entity in entities]
+        current_particles = [_particles(backend, entity) for entity in entities]
         # Reported only, never gated on: useful for telling "the rope is moving"
         # apart from "one particle is exploding".
         peak = max(
@@ -727,7 +735,7 @@ def settle_scene(
             rebound = busy
             just_damped = False
         if damp_every and taken % damp_every == 0:
-            _damp_velocities(entities)
+            _damp_velocities(backend, entities)
             just_damped = True
         if trace_every and taken % trace_every == 0:
             print(
@@ -755,14 +763,11 @@ def settle_scene(
     return taken, busy
 
 
-def _particles(rope_entity) -> np.ndarray:
-    particles = _tensor_to_numpy(rope_entity.get_particles_pos())
-    if particles.ndim == 3:
-        particles = particles[0]
-    return np.asarray(particles, dtype=float)
+def _particles(backend, rope_entity) -> np.ndarray:
+    return np.asarray(backend.nodes(rope_entity), dtype=float)
 
 
-def _damp_velocities(entities) -> None:
+def _damp_velocities(backend, entities) -> None:
     """Bleed kinetic energy out of the ropes by zeroing particle velocities.
 
     Genesis' PBD elastic material exposes no velocity damping -- ``rho``,
@@ -779,14 +784,10 @@ def _damp_velocities(entities) -> None:
     """
 
     for entity in entities:
-        count = len(_particles(entity))
-        entity.set_particles_vel(
-            np.zeros((count, 3), dtype=float),
-            particles_idx_local=list(range(count)),
-        )
+        backend.zero_node_velocities(entity)
 
 
-def _particle_arclength(rope_entity, centerline: np.ndarray) -> np.ndarray:
+def _particle_arclength(backend, rope_entity, centerline: np.ndarray) -> np.ndarray:
     """Give every PBD particle its normalized position along the rope (0..1).
 
     The tube is tetrahedralized (``tube_morph`` uses ``force_retet=True``), so the
@@ -801,7 +802,7 @@ def _particle_arclength(rope_entity, centerline: np.ndarray) -> np.ndarray:
     deform arbitrarily and the mapping stays valid.
     """
 
-    particles = _particles(rope_entity)
+    particles = _particles(backend, rope_entity)
     centerline = np.asarray(centerline, dtype=float)
     segment = np.linalg.norm(np.diff(centerline, axis=0), axis=1)
     cumulative = np.concatenate([[0.0], np.cumsum(segment)])

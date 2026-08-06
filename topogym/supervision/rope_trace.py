@@ -255,9 +255,17 @@ class RopeTrace(StepProbe):
             except Exception:
                 continue
 
+        # Node access goes through the scene's rope backend when it has one
+        # (rope_backends protocol); scenes that have not been migrated keep the
+        # direct PBD probe.
+        backend = getattr(self.rope_scene, "rope_backend", None)
         for strand in sorted(self.rope_scene.strand_entities):
             entity = self.rope_scene.strand_entities[strand]
-            positions = probe_particles(entity)
+            positions = (
+                np.asarray(backend.nodes(entity), dtype=float)
+                if backend is not None
+                else probe_particles(entity)
+            )
             parked = int(
                 (np.linalg.norm(positions - DOMAIN_CORNER, axis=1) < 1.0).sum()
             )
@@ -270,7 +278,12 @@ class RopeTrace(StepProbe):
             self._previous[strand] = positions
 
             try:
-                max_v = float(np.linalg.norm(probe_velocities(entity), axis=1).max())
+                velocities = (
+                    backend.node_velocities(entity)
+                    if backend is not None
+                    else probe_velocities(entity)
+                )
+                max_v = float(np.linalg.norm(velocities, axis=1).max())
             except Exception as error:
                 # Say so once, in the file. Run #8 has `max_v` as `nan` for all
                 # 2453 lines and nobody noticed until the column was needed --

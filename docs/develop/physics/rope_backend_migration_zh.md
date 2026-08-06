@@ -145,6 +145,13 @@ time python -m prototypes.untangle_continuous_physical_pinch_demo \
 刚体↔刚体接触变软。本 demo 中刚体接触仅剩臂的自碰撞（大半已被中立位过滤排除），无实际影响；
 并回正式任务时刚体接触参数需按 substep_dt 重新核对。
 
+部署阶段 1（后端接缝）2026-08-07 完成：`rope_backends/{__init__,pbd,fem_ipc}.py` 协议落地；
+untangle_continuous 生产路径全部调用点改走协议（untangle / cable_routing 留待各自迁移轮，
+避免超出 1176 回归的覆盖面）；回归通过——清扫后仍在 step 1176 翻转（gap 1.70mm，
+落在同代码三次运行 1.58/1.72/2.13mm 的散布内），step 1 各列逐位相同。
+原计划的"FEM 拖拽原语"取消：pinch demo 的 oracle 用 `PBDHandleDragPrimitive` 拖刚体插头
+（零求解器调用，grep 验证），绳经 `follow_link` 跟随——该操作已在协议内。
+
 执行顺序 2026-08-06 起改为垂直切片（用户决定）：先用最少代码钉死三个未知数
 （pyuipc 可装性、顶点约束接线、吞吐），切片期间不改任何现有文件。原 18 步计划的
 阶段 1（后端接缝）后移。切片场景用 `dt=0.01, substeps=1`：stock IPC coupler 每子步
