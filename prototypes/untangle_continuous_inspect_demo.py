@@ -125,6 +125,22 @@ def parse_args() -> argparse.Namespace:
             "pair it with --env-config world_tabletop_fem_v1.yaml (substeps=1)."
         ),
     )
+    parser.add_argument(
+        "--fem-e",
+        type=float,
+        default=None,
+        help=(
+            "Override rope.fem.E (Pa). Spike default 1e5 holds the braid's rest "
+            "shape but springs the spawn S-bend back over long settles, walking "
+            "the free ends toward each other; lower it to reduce stored energy."
+        ),
+    )
+    parser.add_argument(
+        "--fem-friction-mu",
+        type=float,
+        default=None,
+        help="Override rope.fem.friction_mu (default 0.3): rope<->table IPC friction.",
+    )
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args()
 
@@ -183,6 +199,12 @@ def main() -> None:
         )
     if args.rope_model is not None:
         cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
+    if args.fem_e is not None:
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {"E": args.fem_e}}}})
+    if args.fem_friction_mu is not None:
+        cfg = OmegaConf.merge(
+            cfg, {"task": {"rope": {"fem": {"friction_mu": args.fem_friction_mu}}}}
+        )
 
     seeds = _seed_range(args.seeds) if args.seeds else range(args.seed, args.seed + 1)
     # Materialize the list so every seed prints its line, rather than `all`

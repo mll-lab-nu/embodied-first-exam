@@ -230,6 +230,27 @@ class StandardTabletopSceneBuilder:
             ),
         )
         self._debug("table_add_done")
+        if static_material is not None:
+            # Rigid shadow of the table, for FEM/IPC scenes. The visible table is
+            # coup_type='ipc_only' so the ropes rest on it through IPC -- but the
+            # rigid collider skips every pair involving an ipc_only link
+            # (collider.py:401), so rigid-only bodies (the free-end connectors,
+            # needs_coup=False) would fall straight through it: measured 291m of
+            # free fall over one 800-step settle. This invisible twin restores
+            # the rigid-solver contact exactly; IPC never sees it.
+            manifest.add(
+                "table_rigid_shadow",
+                scene.add_entity(
+                    gs.morphs.Box(
+                        pos=tuple(table_cfg.pos),
+                        size=tuple(table_cfg.size),
+                        fixed=True,
+                        visualization=False,
+                    ),
+                    material=gs.materials.Rigid(needs_coup=False),
+                    name="table_rigid_shadow",
+                ),
+            )
         self._add_table_frame(scene, manifest, table_cfg, frames)
 
         stage_cfg = getattr(self.env_cfg.world, "stage", None)
@@ -436,7 +457,12 @@ class StandardTabletopSceneBuilder:
         # migration doc).
         expected = {
             "topogym_tabletop_v1": {"version": "1.3", "substeps": 4},
-            "topogym_tabletop_fem_v1": {"version": "1.0", "substeps": 1},
+            # 1.0 ran substeps=1 (the stock IPC coupler's design point); the
+            # rigid solver's 10ms substeps let the free-end plugs walk ~21mm
+            # per settle. 1.1 returns to substeps=4, with the substep-aware IPC
+            # dt patch in genesis_ipc_vertex_constraints keeping IPC on the
+            # same clock.
+            "topogym_tabletop_fem_v1": {"version": "1.1", "substeps": 4},
         }.get(preset_id)
         if expected is None:
             raise ValueError(f"Unknown locked tabletop preset {preset_id!r}.")

@@ -135,6 +135,19 @@ def plan_next_untangle_continuous_move(
     grasp_s = 1.0
     grasp_index = len(polyline) - 1
     grasp_xy = (float(polyline[grasp_index, 0]), float(polyline[grasp_index, 1]))
+    # When a rigid fitting is welded to the free end, grasp *its* measured pose,
+    # not the centerline's last bin. The bin centroid inherits whatever the tail
+    # did during settling -- measured 9.5mm of drift toward the other lane on the
+    # FEM backend, which walked the hand in between the two plugs: the weld then
+    # succeeded anyway (assist masks placement error) while the fingers visibly
+    # closed on nothing. The rigid pose is exact on both backends.
+    connector = getattr(rope_scene, "free_end_connectors", {}).get(over)
+    if connector is not None:
+        raw = connector.get_pos()
+        if hasattr(raw, "detach"):
+            raw = raw.detach().cpu().numpy()
+        connector_pos = np.asarray(raw, dtype=float).reshape(-1)[:2]
+        grasp_xy = (float(connector_pos[0]), float(connector_pos[1]))
 
     # Lift height is set by whichever hangs lowest: the grasp point itself, or the
     # far end of the rope dangling below it.

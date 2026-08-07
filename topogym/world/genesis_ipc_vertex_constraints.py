@@ -193,7 +193,25 @@ def install() -> None:
         return
 
     import genesis.engine.simulator as simulator_module
+    from genesis.engine.couplers.ipc_coupler import coupler as coupler_module
     from genesis.engine.couplers.ipc_coupler.coupler import IPCCoupler
+
+    # Substep-consistent IPC time step. Stock genesis 1.2.1 hands the IPC scene
+    # the FULL sim.dt (utils.py:93) while couple() advances it once per substep
+    # (simulator.py:321) -- correct only at substeps=1. But substeps=1 gives the
+    # RIGID solver 10ms substeps, which destabilizes marginally-resting free
+    # bodies: the connector plugs walked ~21mm during one arm-home settle
+    # (probe 2026-08-07; 3mm for PBD at substeps=1, ~0 at substeps=4). Dividing
+    # the IPC dt by substeps makes both solvers advance the same clock at any
+    # substep count, so the FEM preset can run the baseline substeps=4.
+    _stock_build_cfg = coupler_module.build_ipc_scene_config
+
+    def _substep_aware_build_cfg(options, sim_options):
+        config = _stock_build_cfg(options, sim_options)
+        config["dt"] = float(sim_options.dt) / max(1, int(sim_options.substeps))
+        return config
+
+    coupler_module.build_ipc_scene_config = _substep_aware_build_cfg
 
     import uipc
     from uipc.constitution import (

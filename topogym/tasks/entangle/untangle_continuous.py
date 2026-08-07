@@ -370,6 +370,32 @@ class UntangleContinuousSceneBuilder:
         rope_specs = self._add_ropes(scene, manifest, layout, braid)
         connectors = self._add_free_end_connectors(scene, manifest, layout, rope_specs)
 
+        # Free-end clearance rule (2026-08-07, from viewer observation): two
+        # plugs close enough that both sit inside the gripper's span make the
+        # closing fingers ambiguous, and the weld assist would hide it. Enforce
+        # a minimum spawn separation between free-end connectors; the threshold
+        # is one finger half-span (40mm) + plug column radius + margin, so the
+        # neighbouring plug stays clear of the closing gripper.
+        if len(connectors) >= 2:
+            min_clearance = float(
+                getattr(self.task_cfg.rope.free_end_connector, "min_clearance", 0.07)
+            )
+            free_ends = {
+                strand: np.asarray(rope_specs[strand][2][1], dtype=float)
+                for strand in connectors
+            }
+            strands = sorted(free_ends)
+            for a_index, a in enumerate(strands):
+                for b in strands[a_index + 1 :]:
+                    separation = float(np.linalg.norm(free_ends[a][:2] - free_ends[b][:2]))
+                    if separation < min_clearance:
+                        raise ValueError(
+                            f"free-end connectors of strands {a} and {b} spawn "
+                            f"{separation * 1000:.0f}mm apart, below the "
+                            f"{min_clearance * 1000:.0f}mm clearance the gripper needs "
+                            "(rope.free_end_connector.min_clearance)."
+                        )
+
         # End-constraint *capacity* is declared before finalize (= scene.build):
         # the FEM backend's coupler reads it during build; PBD just buffers.
         anchor_radius = float(self.task_cfg.rope.anchor_radius)
@@ -377,7 +403,9 @@ class UntangleContinuousSceneBuilder:
             rope_specs
         ):
             backend.declare_anchor(rope_entity, (endpoint_centers[0],), anchor_radius)
-            if strand_index in connectors:
+            if strand_index in connectors and bool(
+                getattr(self.task_cfg.rope.free_end_connector, "follow_enabled", True)
+            ):
                 backend.declare_follow(rope_entity, endpoint_centers[1], anchor_radius)
 
         tabletop_builder.finalize(tabletop)
@@ -394,6 +422,13 @@ class UntangleContinuousSceneBuilder:
             # lifted by the lift-test.
             start_indices = tuple(backend.anchor(rope_entity))
             connector = connectors.get(strand_index)
+            if not bool(
+                getattr(self.task_cfg.rope.free_end_connector, "follow_enabled", True)
+            ):
+                # Diagnostic gate (rope.free_end_connector.follow_enabled=false):
+                # leave the rope end unattached so plug motion and rope motion can
+                # be attributed separately. Not a task configuration.
+                connector = None
             if connector is not None:
                 # The link-carried attachment (PBD: fix_particles_to_link; FEM:
                 # constraint targets synced from the link's pose every step).

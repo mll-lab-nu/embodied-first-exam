@@ -169,6 +169,41 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--viewer", action="store_true")
     parser.add_argument("--keep-open", action="store_true", help="Step forever when finished.")
+    parser.add_argument(
+        "--connector-probe-steps",
+        type=int,
+        default=0,
+        help=(
+            "DIAGNOSTIC: replace the arm's home settle with N manually-stepped "
+            "steps, printing plug positions every 10 -- the drift curve's shape "
+            "identifies the mechanism."
+        ),
+    )
+    parser.add_argument(
+        "--no-follow",
+        action="store_true",
+        help=(
+            "DIAGNOSTIC: leave the rope ends unattached to their plugs "
+            "(rope.free_end_connector.follow_enabled=false), to attribute plug "
+            "motion and rope motion separately. Grasping will not carry the rope."
+        ),
+    )
+    parser.add_argument(
+        "--fem-e",
+        type=float,
+        default=None,
+        help=(
+            "Override rope.fem.E (Pa). Spike default 1e5 holds the braid's rest "
+            "shape but springs the spawn S-bend back over long settles, walking "
+            "the free ends toward each other; lower it to reduce stored energy."
+        ),
+    )
+    parser.add_argument(
+        "--fem-friction-mu",
+        type=float,
+        default=None,
+        help="Override rope.fem.friction_mu (default 0.3): rope<->table IPC friction.",
+    )
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument(
         "--trace",
@@ -210,6 +245,20 @@ def _hud(status: dict):
     return render
 
 
+def _connector_report(rope_scene, tag: str) -> None:
+    """Where each free-end plug actually is. Spawn lanes are y=+-42.5mm; a plug
+    that has wandered off its lane drags the rope's follow band with it, so
+    localizing WHEN the wander happens is the whole diagnosis."""
+
+    for strand, connector in sorted(rope_scene.free_end_connectors.items()):
+        pos = np.asarray(entity_pos(connector), dtype=float)
+        print(
+            f"connector_probe [{tag}] s{strand}: "
+            f"xy=({pos[0] * 1000:+.1f},{pos[1] * 1000:+.1f})mm z={pos[2] * 1000:.1f}mm",
+            flush=True,
+        )
+
+
 def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
     rope_scene = UntangleContinuousSceneBuilder(
         cfg.env,
@@ -217,11 +266,57 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
         cfg.robot_control,
         seed=args.seed,
     ).build(show_viewer=args.viewer)
-    controller = initialize_franka_controller(
-        scene=rope_scene.scene,
-        manifest=rope_scene.manifest,
-        robot_cfg=cfg.robot_control,
-    )
+    _connector_report(rope_scene, "post_build")
+    # Park each plug at its spawn pose until the gripper takes it. Lying on its
+    # flange rim the plug is a wheel -- in the FEM scene it rolls ~20mm inward
+    # during the first ~90 steps (probe 2026-08-07; mechanism unidentified, ruled
+    # out: rope pull, follow band, substeps, IPC contact -- the plug is in none
+    # of them). The task's design wants the plug graspable where it spawned; the
+    # park is the same kind of assist as the grasp weld itself.
+    parked: dict[int, tuple] = {
+        strand: (
+            connector,
+            np.asarray(entity_pos(connector), dtype=float).copy(),
+            np.asarray(entity_quat(connector), dtype=float).copy(),
+        )
+        for strand, connector in rope_scene.free_end_connectors.items()
+    }
+
+    _original_step = rope_scene.scene.step
+
+    def _step_with_parked_plugs(*step_args, **step_kwargs):
+        for _strand, (connector, pos, quat) in parked.items():
+            connector.set_pos(tuple(pos), zero_velocity=True)
+            connector.set_quat(tuple(quat), zero_velocity=True)
+        return _original_step(*step_args, **step_kwargs)
+
+    rope_scene.scene.step = _step_with_parked_plugs
+
+    def unpark_connector(strand: int) -> None:
+        parked.pop(int(strand), None)
+
+    if args.connector_probe_steps:
+        # Diagnostic: place the arm at home without the usual settle, then step
+        # manually and sample the plug positions -- the drift CURVE (constant
+        # velocity vs diffusion vs single hop) discriminates mechanism classes
+        # in a way the endpoint numbers cannot.
+        controller = initialize_franka_controller(
+            scene=rope_scene.scene,
+            manifest=rope_scene.manifest,
+            robot_cfg=cfg.robot_control,
+            settle_steps=0,
+        )
+        for probe_step in range(1, int(args.connector_probe_steps) + 1):
+            rope_scene.scene.step()
+            if probe_step % 10 == 0 or probe_step == 1:
+                _connector_report(rope_scene, f"home_step{probe_step:03d}")
+    else:
+        controller = initialize_franka_controller(
+            scene=rope_scene.scene,
+            manifest=rope_scene.manifest,
+            robot_cfg=cfg.robot_control,
+        )
+    _connector_report(rope_scene, "post_home_settle")
 
     pinch_cfg = cfg.task.pinch
     evaluator = UntangleContinuousPuzzleEvaluator.from_config(cfg.task)
@@ -252,6 +347,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
         print(line)
 
     settle_steps, moved = settle_scene(rope_scene)
+    _connector_report(rope_scene, "post_settle")
     state = evaluator.classify(rope_scene)
     gt_ok, gt_detail = evaluator.matches_braid_ground_truth(rope_scene)
     braid_crossings = len(rope_scene.braid.crossings)
@@ -341,6 +437,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
         hud=_hud(status),
     ), AttachmentManager(rope_scene.scene) as attachment_manager:
         while moves < budget:
+            _connector_report(rope_scene, f"pre_plan_move{moves + 1}")
             polylines = strand_polylines(rope_scene, samples=evaluator.samples)
             planned = plan_next_untangle_continuous_move(
                 rope_scene,
@@ -429,6 +526,24 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
             flat_quat: list = []
 
             def engage_grasp_attachment(_connector=connector):
+                # Weld honesty check: the attachment succeeds no matter where the
+                # hand actually is (assist masks placement error by design), so
+                # verify the plug really is between the pads before welding.
+                # Measured failure mode: a 9.5mm planner drift walked the hand in
+                # between the two plugs, the fingers closed on air, and the weld
+                # carried the rope anyway.
+                hand_xy = np.asarray(controller.hand_pos(), dtype=float)[:2]
+                plug_xy = np.asarray(entity_pos(_connector), dtype=float)[:2]
+                attach_error = float(np.linalg.norm(hand_xy - plug_xy))
+                attach_tolerance = float(getattr(pinch_cfg, "attach_tolerance", 0.02))
+                if attach_error > attach_tolerance:
+                    raise RuntimeError(
+                        f"grasp attach check failed: hand is {attach_error * 1000:.1f}mm "
+                        f"from the plug in xy (tolerance {attach_tolerance * 1000:.0f}mm); "
+                        "refusing to weld a grasp the fingers did not make."
+                    )
+                # The hand has it now; stop holding it at its spawn pose.
+                unpark_connector(command.strand_index)
                 # Hand over the plug's *actual* orientation. Without this the
                 # attachment holds a yaw-only pose, which for a plug lying flat
                 # means snapping it upright in one step -- and the rope particles
@@ -609,6 +724,16 @@ def main() -> None:
         )
     if args.rope_model is not None:
         cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
+    if args.no_follow:
+        cfg = OmegaConf.merge(
+            cfg, {"task": {"rope": {"free_end_connector": {"follow_enabled": False}}}}
+        )
+    if args.fem_e is not None:
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {"E": args.fem_e}}}})
+    if args.fem_friction_mu is not None:
+        cfg = OmegaConf.merge(
+            cfg, {"task": {"rope": {"fem": {"friction_mu": args.fem_friction_mu}}}}
+        )
     if args.rope_static_friction is not None:
         cfg = OmegaConf.merge(
             cfg, {"task": {"rope": {"elastic": {"static_friction": args.rope_static_friction}}}}
