@@ -149,7 +149,13 @@ routes:
 
 rope:
   name: cable
-  model: pbd_elastic_tube
+  # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
+  # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
+  model: fem_ipc_tube
+  fem:
+    # routing post 是刻意重叠的静态复合碰撞体（shaft+喇叭底座，iter-3 楔形修复），
+    # libuipc 的零相交初始态检查对它必然报错；静态体互嵌无自由度，豁免安全。
+    sanity_check_enable: false
   color: [0.00, 0.90, 0.78]
   anchor_start: true
   anchor_end: false

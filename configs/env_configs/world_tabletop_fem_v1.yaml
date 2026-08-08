@@ -22,7 +22,7 @@ preset:
   locked: true
 
 genesis:
-  backend: cpu
+  backend: gpu   # libuipc 仅支持 CUDA；PBD 回退时可改 cpu
   precision: "32"
   logging_level: warning
 

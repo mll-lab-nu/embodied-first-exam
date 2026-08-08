@@ -95,9 +95,12 @@ python -m prototypes.cable_routing_oracle_demo --run-oracle --oracle-mode kinema
 # physical grasp through the complete P1 -> P2 -> C route. The full run checks
 # handle-follow error after every waypoint and PBD wrap retention at the end.
 # At C, the pole must enter the low socket before the connector latch engages.
-python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --max-waypoints 1 --verbose
-python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --verbose
-python -m prototypes.cable_routing_physical_handle_demo --lite --record-video runs/demo_cable_routing_physical.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 960 960 --verbose
+# 2026-08-08 起默认后端 = FEM+IPC（rope.model=fem_ipc_tube + world_tabletop_fem_v1，需 GPU）。
+python -m prototypes.cable_routing_physical_handle_demo --viewer --max-waypoints 1 --verbose
+python -m prototypes.cable_routing_physical_handle_demo --probe --verbose
+python -m prototypes.cable_routing_physical_handle_demo --probe --record-video runs/demo_cable_routing_fem.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 960 720 --verbose
+# PBD 回退（--lite 是 PBD 分辨率旋钮，只在回退时使用）：
+python -m prototypes.cable_routing_physical_handle_demo --rope-model pbd_elastic_tube --env-config configs/env_configs/world_tabletop_v1.yaml --lite --probe --verbose
 
 # Official demo 5: Peeling Level 1, semantic peel zones plus ordered film separation.
 python -m prototypes.peeling_oracle_demo --viewer --keep-open --run-oracle --settle-steps 20 --verbose
@@ -148,9 +151,12 @@ python -m prototypes.untangle_robot_drag_demo --viewer --lite --keep-open --sett
 # Untangle/knots physical contact: first smoke one move, then let the planner
 # continue until terminal. A topology action is committed only after the
 # released handle physically settles inside the target-hole tolerance.
-python -m prototypes.untangle_physical_handle_demo --viewer --lite --max-moves 1 --verbose
-python -m prototypes.untangle_physical_handle_demo --viewer --lite --verbose
-python -m prototypes.untangle_physical_handle_demo --lite --record-video runs/demo_untangle_physical.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 960 960 --verbose
+# 2026-08-08 起默认后端 = FEM+IPC（需 GPU）。--grasp-rope 0 = 接触测试（抓下方红绳，诚实失败）。
+python -m prototypes.untangle_physical_handle_demo --viewer --max-moves 1 --verbose
+python -m prototypes.untangle_physical_handle_demo --verbose
+python -m prototypes.untangle_physical_handle_demo --record-video runs/demo_untangle_fem.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 960 720 --verbose
+# PBD 回退：
+python -m prototypes.untangle_physical_handle_demo --rope-model pbd_elastic_tube --env-config configs/env_configs/world_tabletop_v1.yaml --lite --max-moves 1 --verbose
 
 # Untangle manual fallback: same rope-side disturbance without Franka.
 python -m prototypes.untangle_rope_drag_demo --mode manual --demo-goal disturb --disturb-preset wrap --motion-model physics --lite --settle-steps 10 --drag-steps 380 --endpoint-lift 0.014 --hold-steps 120 --record-video runs/demo_untangle_physics_wrap.mp4 --record-fps 60 --record-res 1280 1280 --record-aa --verbose

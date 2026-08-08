@@ -1,5 +1,10 @@
 """FEM + IPC rope spike: can Genesis' IPC coupler hold two braided ropes apart?
 
+DIAGNOSTIC TOOL, not a production demo. Kept for backend debugging (its
+micro-tests isolate constraint layers the full task cannot); the production
+path is the physical-handle / pinch demos, which run FEM by default since
+2026-08-08.
+
 Step 1 of the FEM+IPC vertical slice (docs/develop/physics/rope_backend_migration_zh.md).
 Standalone scene -- a ground plane and the seed-0 braid's ropes as FEM entities
 under the IPC coupler. No table preset, no robot, no changes to any existing

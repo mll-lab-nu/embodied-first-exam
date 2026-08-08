@@ -98,7 +98,9 @@ braid:
     - [0.02, 0.20, 1.00]
 
 rope:
-  model: pbd_elastic_tube
+  # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
+  # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
+  model: fem_ipc_tube
   # 绳↔桌面摩擦。**和下面 elastic.*_friction 是两个独立的旋钮**：
   #   elastic.*_friction   -> 绳↔绳（PBD 粒子间）
   #   table_friction       -> 绳↔桌面（写进桌子刚体 geom 的 coup_friction）

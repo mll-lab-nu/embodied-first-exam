@@ -1,5 +1,10 @@
 """Armless untangle_continuous on FEM + IPC ropes -- step 3 of the vertical slice.
 
+DIAGNOSTIC TOOL, not a production demo. Kept for backend debugging (its
+micro-tests isolate constraint layers the full task cannot); the production
+path is the physical-handle / pinch demos, which run FEM by default since
+2026-08-08.
+
 Same braid, same tube meshes, same crossing detector as the PBD task; the rope
 solver is FEM under Genesis' IPC coupler, the arm is replaced by driving the
 grasp band directly along the same phase sequence the pinch demo uses

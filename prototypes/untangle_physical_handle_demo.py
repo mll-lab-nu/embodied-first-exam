@@ -36,7 +36,7 @@ from topogym.utils import (
 
 CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
 DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
+DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_fem_v1.yaml"
 DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
 DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "untangle_topogym_tabletop_v1.yaml"
 

@@ -35,7 +35,9 @@ peg:
   pegs: []
 
 rope:
-  model: pbd_elastic_tube
+  # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
+  # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
+  model: fem_ipc_tube
   anchor_endpoints: true
   # 端点固定的粒子选取半径。放大到 ~0.012 让 fix_particles_to_link 固定"一带"
   # (2~3 圈)粒子而不是单圈，分散刚体↔PBD 耦合、消掉接缝硬 hinge（减少端头乱甩/

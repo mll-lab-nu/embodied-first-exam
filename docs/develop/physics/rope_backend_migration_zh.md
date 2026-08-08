@@ -19,7 +19,7 @@
 | 基线提交 | `0e9d320` |
 | tag | `pbd-baseline` |
 | 迁移分支 | `fem-ipc-migration` |
-| 配置级回滚 | 任务配置的 `rope.model` 改回 `pbd_elastic_tube` |
+| 配置级回滚 | **2026-08-08 起 FEM 为三任务默认**。回退 PBD：任务配置 `rope.model` 改回 `pbd_elastic_tube`，env 指回 `world_tabletop_v1.yaml`（或 demo 传 `--rope-model pbd_elastic_tube --env-config .../world_tabletop_v1.yaml`） |
 
 阶段 1 之后 PBD 与 FEM 两条代码路径分离，配置级回滚不需要改代码。
 
@@ -138,7 +138,11 @@ time python -m prototypes.untangle_continuous_physical_pinch_demo \
 | 切片 2 FEM attachment | `is_fixed` + animator 接线，三项验收 | **已完成** 2026-08-06。anchor 漂移 0.000mm；follow 抬 60mm 滞后 ≤0.18mm；**contact 抬 80mm 无翻转**（dz 全程 +8.2~+8.7mm，min_dist ≥2.0mm）。log 归档 `untangle/debug-log/run15{a,b,c}_2026-08-06_fem_ipc_*.log` |
 | 切片 3 无臂 demo | 接触测试 + 解题运行 + 背靠背墙钟 | **已完成** 2026-08-06。接触测试 PASS（run17：pair_gap 全程 9.4~9.5mm，无翻转，交叉存活）；解题运行 PASS（run18：crossings 1→0，终态间距 36.6mm，0 次翻转，terminal=True）；背靠背墙钟见 §3.3（端到端 +4.7%，单步 ≈3.7×） |
 | 机械臂接入（`--arm`） | 臂 `needs_coup=False` 留在 IPC 之外（符合 §3.5 抓取设计），IK 每步驱动，带跟随指令手位 | **已完成** 2026-08-06。接触测试 + solve 均 PASS（run19/run20），端到端 1.50× PBD（§3.3）。external_articulation 路线未启用，留作真实夹持力学的将来项 |
-| 推迟 | 后端接缝（48 处调用点）、锁定 preset 适配、另两个任务迁移、改名 | 切片验收后再排 |
+| untangle（离散）迁移 | 多带跟随 + 21 处清扫 + `--grasp-rope` 接触测试 | **已完成** 2026-08-08（提交 3133d2d）。FEM 冒烟 ✓、PBD 回归 ✓、fail/success 视频 ✓ |
+| cable_routing 迁移 | 四模式端约束 + 十件夹具分拣 + 探针路由 | **已完成** 2026-08-08（提交 eb901a2）。**对等验收**：与 PBD 同型结果、同一失败条款（见下）；FLYOUT 0 次；绕柱弧反超 PBD |
+| 遗留立案 | **P1:left endpoint_route_ok 两后端同败**（134.6°/134.7°，指标只吃 oracle 端头轨迹，与求解器无关，先于迁移存在，疑与孔距放大后阈值未跟有关）；绳材质联合标定（E/nu，悬空段偏硬）；substeps 回 1 的吞吐优化（停驻机制已使其可行） | 未排期 |
+| 阶段 5 收尾 | 三任务默认切 FEM、demo 默认 env 切 fem preset（backend gpu）、cable 配置带 sanity 豁免、cli_commands 更新、spike/无臂 demo 标注为诊断工具 | **已完成** 2026-08-08 |
+| 推迟 | 批量生产前的 stability sweep + 数据链冒烟（FEM 已是默认，跑法即标准命令） | |
 
 锁定 preset 适配的已知点（2026-08-06 带臂运行发现）：`substeps=1` 下 substep_dt=10ms，
 刚体接触的 `timeconst` 被 Genesis 从 MJCF 的 0.005 自动抬到 0.02（要求 ≥ 2×substep_dt），
