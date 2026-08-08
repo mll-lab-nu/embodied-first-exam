@@ -93,7 +93,10 @@ for task in "${SELECTED[@]}"; do
       if [[ "$RANDOMIZE" != "0" ]]; then rflags=(--randomize-layout --difficulty "$diff"); fi
       log="$OUTDIR/${task}_seed${seed}_${diff}.log"
       start=$(date +%s)
-      timeout "${TIMEOUT_S}s" python -m "$module" "${extra[@]}" \
+      # EXTRA_ARGS：附加到每次运行的 CLI 参数（如 FEM 后端：
+      #   EXTRA_ARGS="--env-config configs/env_configs/world_tabletop_fem_v1.yaml --rope-model fem_ipc_tube"）
+      read -ra extra_env <<< "${EXTRA_ARGS:-}"
+      timeout "${TIMEOUT_S}s" python -m "$module" "${extra[@]}" "${extra_env[@]}" \
         --seed "$seed" --backend "$BACKEND" "${rflags[@]}" >"$log" 2>&1
       code=$?
       dur=$(( $(date +%s) - start ))

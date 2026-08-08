@@ -169,7 +169,9 @@ for name in "${SELECTED[@]}"; do
   echo
   echo "==================== verify: $name ===================="
   start=$(date +%s)
-  python -m "$mod" "${extra[@]}" \
+  # EXTRA_ARGS：附加 CLI 参数（如 FEM 后端的 --env-config/--rope-model）。
+  read -ra extra_env <<< "${EXTRA_ARGS:-}"
+  python -m "$mod" "${extra[@]}" "${extra_env[@]}" \
     --seed "$SEED" \
     --backend "$BACKEND" \
     --record-dataset "$h5" \

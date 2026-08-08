@@ -90,7 +90,7 @@ class FemIpcRopeBackend:
 
     def __init__(self, rope_cfg) -> None:
         self.rope_cfg = rope_cfg
-        self._follow_handles: dict[str, vc.FollowHandle] = {}
+        self._follow_handles: dict[str, list[vc.FollowHandle]] = {}
         self._follow_sync = _FollowSync()
 
     # -- scene-level -----------------------------------------------------------
@@ -98,6 +98,18 @@ class FemIpcRopeBackend:
     def pre_scene(self) -> None:
         """Install the coupler patch; must run before gs.Scene()."""
 
+        import genesis as gs
+
+        # libuipc is CUDA-only. On a CPU genesis backend it dies inside muda
+        # with an unreadable C++ abort (cudaErrorInvalidDevice) -- fail here
+        # with a message instead. Bitten by the discrete untangle demo, whose
+        # default backend is cpu unlike the continuous demos.
+        backend_name = str(getattr(gs, "backend", "")).lower()
+        if "cpu" in backend_name:
+            raise RuntimeError(
+                "rope.model=fem_ipc_tube requires a CUDA backend (libuipc is "
+                "GPU-only); run with --backend gpu."
+            )
         vc.reset()
         vc.install()
 
@@ -151,13 +163,19 @@ class FemIpcRopeBackend:
     def declare_anchor(self, entity, centers, radius: float) -> None:
         vc.pin_near(entity, np.atleast_2d(np.asarray(centers, dtype=float)), radius)
 
-    def declare_follow(self, entity, center, radius: float) -> None:
-        self._follow_handles[str(entity.uid)] = vc.follow_near(
-            entity,
-            center,
-            radius,
-            strength=_fem_value(self.rope_cfg, "follow_strength"),
+    def declare_follow(self, entity, center, radius: float) -> int:
+        """Declare one follow band; returns its token (index)."""
+
+        handles = self._follow_handles.setdefault(str(entity.uid), [])
+        handles.append(
+            vc.follow_near(
+                entity,
+                center,
+                radius,
+                strength=_fem_value(self.rope_cfg, "follow_strength"),
+            )
         )
+        return len(handles) - 1
 
     # -- post-build ------------------------------------------------------------
 
@@ -172,7 +190,9 @@ class FemIpcRopeBackend:
             indices.update(int(i) for i in near)
         return sorted(indices)
 
-    def anchor(self, entity) -> list[int]:
+    def anchor(self, entity, indices=None) -> list[int]:
+        # ``indices`` is a PBD-parity affordance; FEM pins are declared by
+        # selector pre-build, so the resolved set is authoritative here.
         pins = vc.resolved_pins(entity)
         if pins is None or len(pins) == 0:
             raise RuntimeError(
@@ -181,10 +201,16 @@ class FemIpcRopeBackend:
             )
         return [int(i) for i in pins]
 
-    def follow_link(self, entity, link) -> list[int]:
-        handle = self._follow_handles.get(str(entity.uid))
-        if handle is None:
+    def follow_link(self, entity, link, band: int | None = None, indices=None) -> list[int]:
+        # ``indices`` is a PBD-parity affordance; the FEM band is the declared one.
+        handles = self._follow_handles.get(str(entity.uid))
+        if not handles:
             raise RuntimeError("declare_follow() was not called for this entity.")
+        if band is None:
+            if len(handles) != 1:
+                raise ValueError("multiple follow bands declared; pass band=token.")
+            band = 0
+        handle = handles[int(band)]
         indices = handle.verts
         positions = self.nodes(entity)[indices]
         link_pos = np.asarray(tensor_to_numpy(link.get_pos()), dtype=float).reshape(3)

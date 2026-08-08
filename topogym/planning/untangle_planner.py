@@ -36,23 +36,33 @@ def _hole_xy(layout, hole: tuple[int, int]) -> tuple[float, float]:
     return (float(pos[0]), float(pos[1]))
 
 
-def plan_next_untangle_move(topology_env, layout) -> tuple[UntangleEndpointMoveCommand, EpisodePlan] | None:
+def plan_next_untangle_move(
+    topology_env, layout, *, grasp_rope: int | None = None
+) -> tuple[UntangleEndpointMoveCommand, EpisodePlan] | None:
     """Choose the next endpoint move that best reduces the high-level topology.
 
     This mirrors the original prototype oracle: prefer moving the rope that is
     on top of an active crossing, then choose the valid target hole that lowers
     the conflict count with the shortest endpoint travel.
+
+    ``grasp_rope`` forces the choice onto one rope and also waives the
+    ``wrong_rope`` veto -- the contact-test override, mirroring the continuous
+    variant's ``--grasp-strand``: deliberately move the UNDER rope and let the
+    physics show why that cannot undo the crossing.
     """
 
     state = topology_env.topology_state()
     if state.is_terminal:
         return None
 
-    preferred = [crossing[2] for crossing in state.crossings]
-    rope_order: list[int] = []
-    for rope_index in preferred + list(range(topology_env.rope_count)):
-        if rope_index not in rope_order:
-            rope_order.append(rope_index)
+    if grasp_rope is not None:
+        rope_order = [int(grasp_rope)]
+    else:
+        preferred = [crossing[2] for crossing in state.crossings]
+        rope_order = []
+        for rope_index in preferred + list(range(topology_env.rope_count)):
+            if rope_index not in rope_order:
+                rope_order.append(rope_index)
 
     best_action = None
     best_score = (float("inf"), float("inf"))
@@ -71,7 +81,7 @@ def plan_next_untangle_move(topology_env, layout) -> tuple[UntangleEndpointMoveC
                         endpoint_index,
                         target_hole,
                     )
-                    if invalid or wrong_rope:
+                    if invalid or (wrong_rope and grasp_rope is None):
                         continue
                     score = (
                         float(preview.conflict_count),

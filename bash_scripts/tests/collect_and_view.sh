@@ -65,7 +65,9 @@ H5="$OUTDIR/${TASK}_seed${SEED}.h5"
 
 echo "==================== 1/2 采集: $TASK ===================="
 echo "[collect] backend=$BACKEND seed=$SEED every=$EVERY -> $H5"
-python -m "$module" "${extra[@]}" \
+# EXTRA_ARGS：附加 CLI 参数（如 FEM 后端的 --env-config/--rope-model）。
+read -ra extra_env <<< "${EXTRA_ARGS:-}"
+python -m "$module" "${extra[@]}" "${extra_env[@]}" \
   --seed "$SEED" \
   --backend "$BACKEND" \
   --record-dataset "$H5" \

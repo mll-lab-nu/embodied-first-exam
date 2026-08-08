@@ -16,7 +16,6 @@ from topogym.world.rope import (
     connector_anchor_indices as _connector_anchor_indices,
     connector_cap_top as _connector_cap_top,
     connector_grasp_height as _connector_grasp_height,
-    endpoint_particle_indices as _endpoint_particle_indices,
     make_elastic_tube_mesh as _make_elastic_tube_mesh,
     resolve_mesh_dir as _resolve_mesh_dir,
     safe_asset_name as _safe_asset_name,
@@ -31,6 +30,7 @@ from topogym.world import (
     TabletopBaseScene,
     tabletop_frames_from_config,
 )
+from topogym.world.rope_backends import rope_backend as _make_rope_backend
 
 
 def _list(value):
@@ -145,7 +145,7 @@ class UntangleLayout:
             max_segment_length=float(self.cfg.rope.mesh.segment_length),
         )
         model = str(self.cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported Untangle rope model: {model!r}.")
         vertices, faces = _make_elastic_tube_mesh(
             centerline,
@@ -179,6 +179,8 @@ class UntangleScene:
     cameras: dict = field(default_factory=dict)
     rope_handles: dict[str, RopeEndpointHandle] = field(default_factory=dict)
     tabletop: TabletopBaseScene | None = None
+    # Solver backend (rope_backends protocol); node access goes through it.
+    rope_backend: Any | None = None
 
 
 class UntangleSceneBuilder:
@@ -195,9 +197,9 @@ class UntangleSceneBuilder:
         )
 
     def build(self, *, show_viewer: bool = False, include_robot: bool = True) -> UntangleScene:
-        pbd_options = None
-        if str(self.task_cfg.rope.model).startswith("pbd_"):
-            pbd_options = rope_prefab.pbd_options(self.task_cfg.rope)
+        backend = _make_rope_backend(self.task_cfg.rope)
+        self._rope_backend = backend
+        backend.pre_scene()
 
         connector_cfg = getattr(self.task_cfg.rope.anchor_pins, "connector", None)
         connector_enabled = bool(
@@ -206,16 +208,28 @@ class UntangleSceneBuilder:
         tabletop_builder = StandardTabletopSceneBuilder(
             self.env_cfg,
             self.robot_cfg,
-            pbd_options=pbd_options,
+            scene_options=backend.scene_options(),
         )
         tabletop = tabletop_builder.create(
             show_viewer=show_viewer,
             include_robot=include_robot,
-            # Rope<->robot PBD contact stays ON (physical realism). If a finger pad
-            # hooks the exit drape on retreat and tears the rope again (see redesign
-            # plan §8 bullet 4), the fallback is
-            # robot_material=gs.materials.Rigid(needs_coup=False) here; the current
-            # experiment instead relies on the lower connector + high lift path.
+            # PBD: rope<->robot contact stays ON (physical realism experiment; if a
+            # finger pad hooks the exit drape on retreat and tears the rope again,
+            # see redesign plan §8 bullet 4, the fallback is needs_coup=False).
+            # FEM: needs_coup=False is mandatory -- finger<->rope contact would
+            # need the external_articulation IPC path this migration deliberately
+            # avoids, and the grasp is a weld anyway (design doc §3.5).
+            robot_material=(
+                gs.materials.Rigid(needs_coup=False) if backend.name != "pbd" else None
+            ),
+            # The table too: with the Genesis default material the IPC coupler's
+            # auto-select saw a fixed base with a joint and registered the TABLE
+            # as an external articulation, which died in libuipc's first-frame
+            # contact assembly (debug run 2026-08-07). None under PBD keeps the
+            # default, exactly as before.
+            table_material=backend.static_rigid_material(),
+            static_material=backend.static_rigid_material(),
+            decoration_material=backend.decoration_rigid_material(),
         )
         scene = tabletop.scene
         manifest = tabletop.manifest
@@ -226,8 +240,25 @@ class UntangleSceneBuilder:
         self._add_static_anchor_pins(scene, manifest, layout)
         endpoint_pins = self._add_endpoint_anchor_pins(scene, manifest, layout)
         rope_specs = self._add_ropes(scene, manifest, layout, endpoint_pins)
-        tabletop_builder.finalize(tabletop)
+
+        # End-constraint capacity is declared before finalize (= scene.build):
+        # the FEM backend's coupler reads it during build; PBD just buffers.
         anchor_radius = float(self.task_cfg.rope.anchor_radius)
+        attachment_mode = str(
+            getattr(self.task_cfg.rope.anchor_pins, "attachment_mode", "fixed_particles")
+        )
+        follow_tokens: dict[str, tuple[int, int]] = {}
+        if bool(self.task_cfg.rope.anchor_endpoints):
+            for rope_name, rope_entity, endpoint_centers, _pins in rope_specs:
+                if attachment_mode == "rigid_handles":
+                    follow_tokens[rope_name] = (
+                        backend.declare_follow(rope_entity, endpoint_centers[0], anchor_radius),
+                        backend.declare_follow(rope_entity, endpoint_centers[1], anchor_radius),
+                    )
+                else:
+                    backend.declare_anchor(rope_entity, tuple(endpoint_centers), anchor_radius)
+
+        tabletop_builder.finalize(tabletop)
         rope_handles: dict[str, RopeEndpointHandle] = {}
         for rope_name, rope_entity, endpoint_centers, endpoint_pins in rope_specs:
             if connector_enabled:
@@ -236,12 +267,14 @@ class UntangleSceneBuilder:
                 # The +margin must match exit_z in _with_connector_entries.
                 anchor_z_top = layout.world_z(0.0) + _connector_cap_top(connector_cfg) + 0.003
                 anchor_axis_radius = float(self.task_cfg.rope.radius) + 0.003
+                node_positions = backend.nodes(rope_entity)
                 start_indices = tuple(
                     _connector_anchor_indices(
                         rope_entity,
                         endpoint_centers[0],
                         axis_radius=anchor_axis_radius,
                         z_top=anchor_z_top,
+                        positions=node_positions,
                     )
                 )
                 end_indices = tuple(
@@ -250,36 +283,43 @@ class UntangleSceneBuilder:
                         endpoint_centers[1],
                         axis_radius=anchor_axis_radius,
                         z_top=anchor_z_top,
+                        positions=node_positions,
                     )
                 )
             else:
                 start_indices = tuple(
-                    _endpoint_particle_indices(rope_entity, (endpoint_centers[0],), radius=anchor_radius)
+                    backend.resolve_indices(rope_entity, (endpoint_centers[0],), anchor_radius)
                 )
                 end_indices = tuple(
-                    _endpoint_particle_indices(rope_entity, (endpoint_centers[1],), radius=anchor_radius)
+                    backend.resolve_indices(rope_entity, (endpoint_centers[1],), anchor_radius)
                 )
             if bool(self.task_cfg.rope.anchor_endpoints):
-                attachment_mode = str(
-                    getattr(self.task_cfg.rope.anchor_pins, "attachment_mode", "fixed_particles")
-                )
                 if attachment_mode == "rigid_handles":
                     start_pin, end_pin = endpoint_pins
                     if start_pin is None or end_pin is None:
                         raise RuntimeError(
                             "rope.anchor_pins.attachment_mode=rigid_handles requires endpoint pins."
                         )
-                    rope_entity.fix_particles_to_link(
-                        start_pin.base_link_idx,
-                        particles_idx_local=list(start_indices),
+                    tokens = follow_tokens[rope_name]
+                    start_indices = tuple(
+                        backend.follow_link(
+                            rope_entity,
+                            start_pin.base_link,
+                            band=tokens[0],
+                            indices=start_indices,
+                        )
                     )
-                    rope_entity.fix_particles_to_link(
-                        end_pin.base_link_idx,
-                        particles_idx_local=list(end_indices),
+                    end_indices = tuple(
+                        backend.follow_link(
+                            rope_entity,
+                            end_pin.base_link,
+                            band=tokens[1],
+                            indices=end_indices,
+                        )
                     )
                 elif attachment_mode == "fixed_particles":
-                    rope_entity.fix_particles(
-                        particles_idx_local=sorted(set(start_indices + end_indices))
+                    backend.anchor(
+                        rope_entity, indices=sorted(set(start_indices + end_indices))
                     )
                 else:
                     raise ValueError(
@@ -303,6 +343,7 @@ class UntangleSceneBuilder:
             cameras=tabletop.cameras,
             rope_handles=rope_handles,
             tabletop=tabletop,
+            rope_backend=backend,
         )
 
     def _add_board(
@@ -323,8 +364,25 @@ class UntangleSceneBuilder:
                 ),
                 surface=materials.plastic("board", self.task_cfg.board.color),
                 name=self.task_cfg.board.name,
+                **self._fixture_kwargs(collision=True),
             ),
         )
+
+    def _fixture_kwargs(self, *, collision: bool) -> dict:
+        """Material kwargs for the task's fixed rigids, backend-appropriate.
+
+        PBD keeps the Genesis default (None -> no kwargs, current behavior).
+        Under IPC a collision fixture must be 'ipc_only' and a collision-free
+        one must be needs_coup=False -- the coupler's auto-select rejects both
+        otherwise (see rope_backend_migration doc).
+        """
+
+        material = (
+            self._rope_backend.static_rigid_material()
+            if collision
+            else self._rope_backend.decoration_rigid_material()
+        )
+        return {} if material is None else {"material": material}
 
     def _add_holes(self, scene, manifest: EntityManifest, layout: UntangleLayout) -> None:
         target = tuple(_list(self.task_cfg.holes.target))
@@ -346,6 +404,9 @@ class UntangleSceneBuilder:
                         ),
                         surface=materials.plastic("marker", color),
                         name=name,
+                        **self._fixture_kwargs(
+                            collision=bool(getattr(self.task_cfg.holes, "collision", False))
+                        ),
                     ),
                 )
 
@@ -354,6 +415,13 @@ class UntangleSceneBuilder:
             return
         collision = bool(getattr(self.task_cfg.peg, "collision", True))
         for peg in self.task_cfg.peg.pegs:
+            if bool(peg.movable) and self._rope_backend.name != "pbd":
+                # A movable peg the rope pushes needs two-way rigid<->IPC
+                # coupling, which this migration has not wired. Fail loudly
+                # rather than simulate a peg the rope cannot touch.
+                raise NotImplementedError(
+                    "movable pegs are not supported on the FEM+IPC backend yet."
+                )
             color = tuple(self.task_cfg.peg.colors[peg.color])
             manifest.add(
                 peg.name,
@@ -367,6 +435,7 @@ class UntangleSceneBuilder:
                     ),
                     surface=materials.plastic("fixture", color),
                     name=peg.name,
+                    **self._fixture_kwargs(collision=collision),
                 ),
             )
 
@@ -396,6 +465,7 @@ class UntangleSceneBuilder:
                     ),
                     surface=materials.plastic("fixture", pin_cfg.color),
                     name=name,
+                    **self._fixture_kwargs(collision=bool(pin_cfg.collision)),
                 ),
             )
 
@@ -407,7 +477,7 @@ class UntangleSceneBuilder:
         endpoint_pins: dict[str, tuple[Any | None, Any | None]],
     ) -> list[tuple[str, Any, tuple[np.ndarray, np.ndarray], tuple[Any | None, Any | None]]]:
         model = str(self.task_cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported Untangle rope model: {model!r}.")
 
         rope_specs = []
@@ -416,7 +486,7 @@ class UntangleSceneBuilder:
             _write_obj(mesh.path, mesh.vertices, mesh.faces)
             rope_entity = scene.add_entity(
                 rope_prefab.tube_morph(mesh.path, self.task_cfg.rope),
-                material=rope_prefab.elastic_material(self.task_cfg.rope),
+                material=self._rope_backend.material(),
                 surface=materials.plastic("deformable", strand.color, vis_mode="visual"),
                 name=strand.name,
             )
@@ -457,7 +527,14 @@ class UntangleSceneBuilder:
                 material = gs.materials.Rigid(
                     rho=float(getattr(pin_cfg, "rho", 700.0)),
                     friction=float(getattr(pin_cfg, "friction", 2.0)),
-                    needs_coup=not bool(getattr(pin_cfg, "exclude_pbd_collision", False)),
+                    # PBD: per the exclude_pbd_collision experiment flag. FEM: the
+                    # rope end lives INSIDE this fitting by design, so it must stay
+                    # out of IPC or the barrier would eject the rope from it.
+                    needs_coup=(
+                        False
+                        if self._rope_backend.name != "pbd"
+                        else not bool(getattr(pin_cfg, "exclude_pbd_collision", False))
+                    ),
                 )
                 if connector_path is not None:
                     # Industrial plug connector: the flange base sits on the board, the

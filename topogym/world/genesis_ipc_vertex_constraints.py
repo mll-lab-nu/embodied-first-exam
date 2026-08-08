@@ -51,22 +51,24 @@ class _EntitySpec:
     """Declared constraint capacity for one FEM entity (single env only)."""
 
     pin_selectors: list[tuple[np.ndarray, float]] = field(default_factory=list)
-    follow_selector: tuple[np.ndarray, float] | None = None
-    strength: float = 100.0
-    # Resolved at build time by the patched coupler.
+    # One entry per follow band: (center, radius, strength). A rope can carry
+    # several -- the discrete untangle welds BOTH ends to rigid handles.
+    follow_selectors: list[tuple[np.ndarray, float, float]] = field(default_factory=list)
+    # Resolved at build time by the patched coupler (one array per band).
     pin_verts: np.ndarray | None = None
-    follow_verts: np.ndarray | None = None
-    # Runtime state, mutated through FollowHandle. `targets` is (n_follow, 3)
-    # world positions; `engaged` gates is_constrained so release is instant.
-    targets: np.ndarray | None = None
-    engaged: bool = False
+    follow_verts: list[np.ndarray] | None = None
+    # Runtime state per band, mutated through FollowHandle. Each targets entry is
+    # (n_band, 3) world positions; `engaged` gates is_constrained per band.
+    targets: list = field(default_factory=list)
+    engaged: list = field(default_factory=list)
 
 
 @dataclass
 class FollowHandle:
-    """Runtime control over a follow band declared pre-build."""
+    """Runtime control over one follow band declared pre-build."""
 
     _uid: str
+    band: int
 
     @property
     def _spec(self) -> _EntitySpec:
@@ -74,26 +76,26 @@ class FollowHandle:
 
     @property
     def verts(self) -> np.ndarray:
-        verts = self._spec.follow_verts
-        if verts is None:
+        bands = self._spec.follow_verts
+        if bands is None:
             raise RuntimeError(
-                "follow band not resolved yet -- scene.build() has not run "
+                "follow bands not resolved yet -- scene.build() has not run "
                 "(or install() was not called before gs.Scene)."
             )
-        return verts
+        return bands[self.band]
 
     def engage(self, targets: np.ndarray) -> None:
         self.update_targets(targets)
-        self._spec.engaged = True
+        self._spec.engaged[self.band] = True
 
     def update_targets(self, targets: np.ndarray) -> None:
         targets = np.asarray(targets, dtype=np.float64)
         if targets.shape != (len(self.verts), 3):
             raise ValueError(f"targets shape {targets.shape} != ({len(self.verts)}, 3)")
-        self._spec.targets = targets
+        self._spec.targets[self.band] = targets
 
     def release(self) -> None:
-        self._spec.engaged = False
+        self._spec.engaged[self.band] = False
 
 
 def pin_near(entity, centers, radius: float) -> None:
@@ -105,14 +107,19 @@ def pin_near(entity, centers, radius: float) -> None:
 
 
 def follow_near(entity, center, radius: float, *, strength: float = 100.0) -> FollowHandle:
-    """Declare a driveable band around ``center``. Declare pre-build."""
+    """Declare a driveable band around ``center``. Declare pre-build.
+
+    May be called several times per entity (one band per call); each call
+    returns the handle for its own band.
+    """
 
     spec = _SPECS.setdefault(str(entity.uid), _EntitySpec())
-    if spec.follow_selector is not None:
-        raise ValueError("one follow band per entity is supported")
-    spec.follow_selector = (np.asarray(center, dtype=float).copy(), float(radius))
-    spec.strength = float(strength)
-    return FollowHandle(str(entity.uid))
+    spec.follow_selectors.append(
+        (np.asarray(center, dtype=float).copy(), float(radius), float(strength))
+    )
+    spec.targets.append(None)
+    spec.engaged.append(False)
+    return FollowHandle(str(entity.uid), len(spec.follow_selectors) - 1)
 
 
 def resolved_pins(entity) -> np.ndarray | None:
@@ -147,17 +154,19 @@ def _resolve_spec(spec: _EntitySpec, positions: np.ndarray) -> None:
         for center, radius in spec.pin_selectors:
             indices.update(int(i) for i in _select(positions, center, radius))
         spec.pin_verts = np.asarray(sorted(indices), dtype=np.int64)
-    if spec.follow_selector is not None and spec.follow_verts is None:
-        center, radius = spec.follow_selector
-        follow = np.asarray(sorted(_select(positions, center, radius)), dtype=np.int64)
-        if spec.pin_verts is not None:
-            overlap = np.intersect1d(follow, spec.pin_verts)
-            if len(overlap):
-                raise ValueError(
-                    f"follow band and pinned band overlap on {len(overlap)} vertices -- "
-                    "is_fixed and SoftPositionConstraint would fight over them."
-                )
-        spec.follow_verts = follow
+    if spec.follow_selectors and spec.follow_verts is None:
+        bands: list[np.ndarray] = []
+        for center, radius, _strength in spec.follow_selectors:
+            follow = np.asarray(sorted(_select(positions, center, radius)), dtype=np.int64)
+            if spec.pin_verts is not None:
+                overlap = np.intersect1d(follow, spec.pin_verts)
+                if len(overlap):
+                    raise ValueError(
+                        f"follow band and pinned band overlap on {len(overlap)} vertices -- "
+                        "is_fixed and SoftPositionConstraint would fight over them."
+                    )
+            bands.append(follow)
+        spec.follow_verts = bands
 
 
 def _animate_fem_follow(coupler_ref, uid: str, env_idx: int, info) -> None:
@@ -178,11 +187,13 @@ def _animate_fem_follow(coupler_ref, uid: str, env_idx: int, info) -> None:
     aim_position = geom.vertices().find(uipc.builtin.aim_position)
     assert is_constrained and aim_position
     constrained_view = uipc.view(is_constrained)
-    if spec.engaged and spec.targets is not None:
-        constrained_view.reshape(-1)[spec.follow_verts] = 1
-        uipc.view(aim_position).reshape(-1, 3)[spec.follow_verts] = spec.targets
-    else:
-        constrained_view.reshape(-1)[spec.follow_verts] = 0
+    aim_view = uipc.view(aim_position)
+    for band, verts in enumerate(spec.follow_verts):
+        if spec.engaged[band] and spec.targets[band] is not None:
+            constrained_view.reshape(-1)[verts] = 1
+            aim_view.reshape(-1, 3)[verts] = spec.targets[band]
+        else:
+            constrained_view.reshape(-1)[verts] = 0
 
 
 def install() -> None:
@@ -301,16 +312,27 @@ def install() -> None:
                     spec = _SPECS.get(str(entity.uid))
                     if spec is not None and not is_cloth:
                         _resolve_spec(spec, tensor_to_array(entity.init_positions))
+                        # Always materialize is_fixed on a constrained mesh, even
+                        # when nothing is pinned. Every scene validated before the
+                        # discrete untangle happened to have anchor pins creating
+                        # it as a side effect; a follow-only mesh (no attribute at
+                        # all) died inside libuipc's CUDA kernels with an
+                        # unattributable cudaErrorInvalidDevice.
+                        is_fixed = mesh.vertices().find(uipc.builtin.is_fixed)
+                        if not is_fixed:
+                            is_fixed = mesh.vertices().create(uipc.builtin.is_fixed, 0)
                         if spec.pin_verts is not None and len(spec.pin_verts):
-                            is_fixed = mesh.vertices().find(uipc.builtin.is_fixed)
-                            if not is_fixed:
-                                is_fixed = mesh.vertices().create(uipc.builtin.is_fixed, 0)
                             uipc.view(is_fixed).reshape(-1)[spec.pin_verts] = 1
                         if spec.follow_verts is not None and len(spec.follow_verts):
                             if spc is None:
                                 spc = SoftPositionConstraint()
                                 self._ipc_constitution_tabular.insert(spc)
-                            spc.apply_to(mesh, spec.strength)
+                            # One constitution per mesh; the strength rate
+                            # is mesh-wide, so take the strongest band.
+                            spc.apply_to(
+                                mesh,
+                                max(s for _c, _r, s in spec.follow_selectors),
+                            )
                             self._ipc_animator.insert(
                                 fem_obj,
                                 partial(

@@ -593,7 +593,7 @@ def connector_obj_path(connector_cfg, *, default_output_dir) -> Path:
 
 
 def connector_anchor_indices(
-    rope_entity, tip_center, *, axis_radius: float, z_top: float
+    rope_entity, tip_center, *, axis_radius: float, z_top: float, positions=None
 ) -> list[int]:
     """Particles of the in-connector vertical rope run: an axis-aligned cylinder
     from the rope tip up to the exit arc.
@@ -605,7 +605,12 @@ def connector_anchor_indices(
     the solver-domain corner).
     """
 
-    particles = tensor_to_numpy(rope_entity.get_particles_pos())
+    if positions is None:
+        particles = tensor_to_numpy(rope_entity.get_particles_pos())
+    else:
+        # Solver-agnostic path (rope_backends): the caller supplies node
+        # positions, the selection itself is pure geometry.
+        particles = np.asarray(positions, dtype=float)
     if particles.ndim == 3:
         particles = particles[0]
     tip = np.asarray(tip_center, dtype=float)

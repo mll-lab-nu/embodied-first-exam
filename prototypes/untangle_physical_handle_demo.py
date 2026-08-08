@@ -71,6 +71,63 @@ def parse_args() -> argparse.Namespace:
         help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
     )
     parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
+    parser.add_argument(
+        "--grasp-rope",
+        type=int,
+        default=None,
+        help=(
+            "Force the planner onto this rope (0=red, 1=green, 2=blue; strand "
+            "order in the task config) and waive the wrong-rope veto. The "
+            "contact test: green lies over red, so --grasp-rope 0 drags the "
+            "UNDER rope -- a move that cannot undo the crossing; the honest "
+            "outcome is a blocked rope and a surviving crossing."
+        ),
+    )
+    parser.add_argument(
+        "--fem-e",
+        type=float,
+        default=None,
+        help=(
+            "Override rope.fem.E (Pa). Default 1e5 was calibrated on the "
+            "continuous task's on-table ropes; suspended spans here read stiff "
+            "at that value."
+        ),
+    )
+    parser.add_argument(
+        "--fem-nu",
+        type=float,
+        default=None,
+        help=(
+            "Override rope.fem.nu. Default 0.45 is near-incompressible, which "
+            "locks linear-tet bending (rope reads rigid); try 0.3."
+        ),
+    )
+    parser.add_argument(
+        "--fem-friction-mu",
+        type=float,
+        default=None,
+        help="Override rope.fem.friction_mu (default 0.3).",
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=("debug", "info", "warning"),
+        default=None,
+        help=(
+            "Override env.genesis.logging_level. 'debug' additionally turns on "
+            "libuipc's own logging (the IPC coupler only enables it at that "
+            "level), which is the visibility needed for CUDA-side crashes."
+        ),
+    )
+    parser.add_argument(
+        "--rope-model",
+        choices=("pbd_elastic_tube", "fem_ipc_tube"),
+        default=None,
+        help=(
+            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
+            "pair it with --env-config world_tabletop_fem_v1.yaml. "
+            "--lite is a PBD-resolution knob and does not apply there."
+        ),
+    )
     parser.add_argument("--viewer", action="store_true")
     parser.add_argument("--close-on-finish", action="store_true")
     parser.add_argument("--lite", action="store_true", help="Use a lower-resolution PBD rope.")
@@ -136,6 +193,19 @@ def load_configs(args: argparse.Namespace):
     if args.backend is not None:
         overrides["env"] = {"genesis": {"backend": args.backend}}
     cfg = OmegaConf.merge(cfg, overrides)
+    if args.rope_model is not None:
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
+    if args.log_level is not None:
+        cfg = OmegaConf.merge(
+            cfg, {"env": {"genesis": {"logging_level": args.log_level}}}
+        )
+    for key, value in (
+        ("E", args.fem_e),
+        ("nu", args.fem_nu),
+        ("friction_mu", args.fem_friction_mu),
+    ):
+        if value is not None:
+            cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {key: value}}}})
     if args.lite:
         cfg = OmegaConf.merge(
             cfg,
@@ -227,11 +297,16 @@ class UntangleProbe(StepProbe):
     particle's spawn position. See untangle_connector_flyout_debug_zh.md §4.
     """
 
-    def __init__(self, scene, controller, rope_handles, status, *, finger_links, every):
+    def __init__(
+        self, scene, controller, rope_handles, status, *, finger_links, every, rope_backend=None
+    ):
         super().__init__(scene, every=every)
         self.controller = controller
         self.rope_handles = rope_handles
         self.status = status
+        # Node access goes through the scene's rope backend when present
+        # (solver-agnostic); the direct PBD probe is the fallback.
+        self._rope_backend = rope_backend
         self.finger_links = [
             controller.robot.get_link(str(name)) for name in finger_links
         ]
@@ -246,7 +321,10 @@ class UntangleProbe(StepProbe):
     def set_move(self, rope_handle) -> None:
         self.moved = rope_handle
 
-    _particles = staticmethod(probe_particles)
+    def _particles(self, entity) -> np.ndarray:
+        if self._rope_backend is not None:
+            return np.asarray(self._rope_backend.nodes(entity), dtype=float)
+        return probe_particles(entity)
 
     @staticmethod
     def _link_pos(link) -> np.ndarray:
@@ -451,6 +529,7 @@ def run_demo(
             status,
             finger_links=physical.finger_links,
             every=args.probe_every,
+            rope_backend=untangle_scene.rope_backend,
         )
         if args.probe
         else None
@@ -473,7 +552,9 @@ def run_demo(
             flush=True,
         )
         for move_index in range(max(1, int(args.max_moves))):
-            planned_move = plan_next_untangle_move(topology_env, untangle_scene.layout)
+            planned_move = plan_next_untangle_move(
+                topology_env, untangle_scene.layout, grasp_rope=args.grasp_rope
+            )
             if planned_move is None:
                 if not topology_env.topology_state().is_terminal:
                     failure_reason = "planner_exhausted"
