@@ -76,6 +76,53 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
     add_common_config_arg(parser, default=DEFAULT_COMMON_CONFIG)
     parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
+    parser.add_argument(
+        "--rope-model",
+        choices=("pbd_elastic_tube", "fem_ipc_tube"),
+        default=None,
+        help=(
+            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
+            "pair it with --env-config world_tabletop_fem_v1.yaml and "
+            "--backend gpu (libuipc is CUDA-only)."
+        ),
+    )
+    parser.add_argument(
+        "--fem-e",
+        type=float,
+        default=None,
+        help="Override rope.fem.E (Pa). Default 1e5; the stiff rope cuts the corner around P1.",
+    )
+    parser.add_argument(
+        "--fem-nu",
+        type=float,
+        default=None,
+        help="Override rope.fem.nu. Default 0.45 locks linear-tet bending; try 0.3.",
+    )
+    parser.add_argument(
+        "--fem-friction-mu",
+        type=float,
+        default=None,
+        help="Override rope.fem.friction_mu (default 0.3).",
+    )
+    parser.add_argument(
+        "--fem-no-sanity-check",
+        action="store_true",
+        help=(
+            "Waive libuipc's intersection-free initial-state check "
+            "(rope.fem.sanity_check_enable=false). This scene's static compound "
+            "fixtures (post shaft + flared base, flush parts on the table) "
+            "overlap by design and fail the check despite carrying no DOFs."
+        ),
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=("debug", "info", "warning"),
+        default=None,
+        help=(
+            "Override env.genesis.logging_level. 'debug' additionally enables "
+            "libuipc's own logging."
+        ),
+    )
     parser.add_argument("--viewer", action="store_true")
     parser.add_argument(
         "--seed",
@@ -227,6 +274,23 @@ def load_configs(args: argparse.Namespace):
     if args.backend is not None:
         overrides["env"] = {"genesis": {"backend": args.backend}}
     cfg = OmegaConf.merge(cfg, overrides)
+    if args.rope_model is not None:
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
+    if args.log_level is not None:
+        cfg = OmegaConf.merge(
+            cfg, {"env": {"genesis": {"logging_level": args.log_level}}}
+        )
+    if args.fem_no_sanity_check:
+        cfg = OmegaConf.merge(
+            cfg, {"task": {"rope": {"fem": {"sanity_check_enable": False}}}}
+        )
+    for key, value in (
+        ("E", args.fem_e),
+        ("nu", args.fem_nu),
+        ("friction_mu", args.fem_friction_mu),
+    ):
+        if value is not None:
+            cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {key: value}}}})
     if args.lite:
         cfg = OmegaConf.merge(
             cfg,

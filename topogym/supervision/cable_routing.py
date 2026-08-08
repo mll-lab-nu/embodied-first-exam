@@ -47,8 +47,15 @@ def peg_signature_items(layout) -> list[dict[str, str]]:
 
 
 def rope_particles(cable_scene) -> np.ndarray:
-    """Return PBD rope particle positions as an ``(N, 3)`` NumPy array."""
+    """Return rope node positions as an ``(N, 3)`` NumPy array.
 
+    Goes through the scene's rope backend when present (rope_backends
+    protocol); the direct PBD read is the fallback for unmigrated scenes.
+    """
+
+    backend = getattr(cable_scene, "rope_backend", None)
+    if backend is not None:
+        return np.asarray(backend.nodes(cable_scene.rope_handle.entity), dtype=float)
     particles = tensor_to_numpy(cable_scene.rope_handle.entity.get_particles_pos())
     if particles.ndim == 3:
         particles = particles[0]

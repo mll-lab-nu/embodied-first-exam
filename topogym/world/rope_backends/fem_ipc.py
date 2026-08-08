@@ -116,10 +116,29 @@ class FemIpcRopeBackend:
     def scene_options(self) -> dict:
         import genesis as gs
 
+        coupler_kwargs = {
+            "contact_d_hat": _fem_value(self.rope_cfg, "contact_d_hat"),
+            # Every rigid this backend puts into IPC is a STATIC ('ipc_only')
+            # contact body for the rope; rigid<->rigid dynamics belong to the
+            # rigid solver. Genesis defaults these to True, and cable_routing's
+            # deliberately overlapping static compounds (post shaft + flared
+            # base) then feed the barrier an interpenetrating ABD pair --
+            # infinite energy in the first line search.
+            "enable_rigid_rigid_contact": False,
+            "enable_rigid_ground_contact": False,
+        }
+        fem_cfg = getattr(self.rope_cfg, "fem", None)
+        sanity = getattr(fem_cfg, "sanity_check_enable", None) if fem_cfg is not None else None
+        if sanity is not None:
+            # libuipc's sanity checker demands an intersection-free initial
+            # state. Scenes with deliberately overlapping STATIC compounds
+            # (cable_routing's post shaft + flared base, flush fixtures on the
+            # table) fail it even though fixed-fixed overlap carries no degrees
+            # of freedom; rope.fem.sanity_check_enable=false waives the check
+            # for those scenes.
+            coupler_kwargs["sanity_check_enable"] = bool(sanity)
         return {
-            "coupler_options": gs.options.IPCCouplerOptions(
-                contact_d_hat=_fem_value(self.rope_cfg, "contact_d_hat")
-            ),
+            "coupler_options": gs.options.IPCCouplerOptions(**coupler_kwargs),
             "fem_options": gs.options.FEMOptions(),
         }
 

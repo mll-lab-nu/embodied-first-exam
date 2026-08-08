@@ -12,7 +12,6 @@ from topogym.core import EntityManifest
 from topogym.world.rope import (
     RopeEndpointHandle,
     RopeMesh,
-    endpoint_particle_indices as _endpoint_particle_indices,
     make_elastic_tube_mesh as _make_elastic_tube_mesh,
     resolve_mesh_dir as _resolve_mesh_dir,
     safe_asset_name as _safe_asset_name,
@@ -27,6 +26,7 @@ from topogym.world import (
     TabletopBaseScene,
     tabletop_frames_from_config,
 )
+from topogym.world.rope_backends import rope_backend as _make_rope_backend
 
 
 def _list(value):
@@ -211,7 +211,7 @@ class CableRoutingLayout:
             max_segment_length=float(self.cfg.rope.mesh.segment_length),
         )
         model = str(self.cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported CableRouting rope model: {model!r}.")
         vertices, faces = _make_elastic_tube_mesh(
             centerline,
@@ -238,6 +238,8 @@ class CableRoutingScene:
     rope_handle: RopeEndpointHandle
     cameras: dict = field(default_factory=dict)
     tabletop: TabletopBaseScene | None = None
+    # Solver backend (rope_backends protocol); node access goes through it.
+    rope_backend: Any | None = None
 
 
 class CableRoutingSceneBuilder:
@@ -255,18 +257,29 @@ class CableRoutingSceneBuilder:
         )
 
     def build(self, *, show_viewer: bool = False, include_robot: bool = True) -> CableRoutingScene:
-        pbd_options = None
-        if str(self.task_cfg.rope.model).startswith("pbd_"):
-            pbd_options = rope_prefab.pbd_options(self.task_cfg.rope)
+        backend = _make_rope_backend(self.task_cfg.rope)
+        self._rope_backend = backend
+        backend.pre_scene()
 
         tabletop_builder = StandardTabletopSceneBuilder(
             self.env_cfg,
             self.robot_cfg,
-            pbd_options=pbd_options,
+            scene_options=backend.scene_options(),
         )
         tabletop = tabletop_builder.create(
             show_viewer=show_viewer,
             include_robot=include_robot,
+            # FEM: the robot must stay outside IPC (needs_coup=False; the grasp
+            # is a weld, finger contact carries no signal) and the table must be
+            # an ipc_only static or the coupler auto-registers it as an external
+            # articulation (the discrete untangle's first-frame crash). PBD:
+            # None everywhere keeps the Genesis defaults, exactly as before.
+            robot_material=(
+                gs.materials.Rigid(needs_coup=False) if backend.name != "pbd" else None
+            ),
+            table_material=backend.static_rigid_material(),
+            static_material=backend.static_rigid_material(),
+            decoration_material=backend.decoration_rigid_material(),
         )
         scene = tabletop.scene
         manifest = tabletop.manifest
@@ -319,6 +332,28 @@ class CableRoutingSceneBuilder:
                     port_cfg=spawn_port_cfg,
                     ring_color=getattr(spawn_port_cfg, "color", [0.60, 0.61, 0.63]),
                 )
+        # End-constraint capacity is declared before finalize (= scene.build):
+        # the FEM backend's coupler reads it during build; PBD just buffers.
+        anchor_radius = float(self.task_cfg.rope.anchor_radius)
+        attachment_mode = (
+            str(getattr(handle_cfg, "attachment_mode", "none"))
+            if handle_cfg is not None
+            else "none"
+        )
+        start_token = end_token = None
+        if start_plug is not None:
+            start_token = backend.declare_follow(
+                rope_entity, mesh.endpoint_centers[0], anchor_radius
+            )
+        elif bool(self.task_cfg.rope.anchor_start):
+            backend.declare_anchor(rope_entity, (mesh.endpoint_centers[0],), anchor_radius)
+        if attachment_mode == "rigid_handle":
+            end_token = backend.declare_follow(
+                rope_entity, mesh.endpoint_centers[1], anchor_radius
+            )
+        elif bool(getattr(self.task_cfg.rope, "anchor_end", False)):
+            backend.declare_anchor(rope_entity, (mesh.endpoint_centers[1],), anchor_radius)
+
         tabletop_builder.finalize(tabletop)
         if connector_enabled:
             # Cylindrical in-fixture anchor bands; tops must match the per-end
@@ -335,12 +370,14 @@ class CableRoutingSceneBuilder:
                 else 0.0
             )
             end_z_top = end_base + rope_prefab.connector_cap_top(connector_cfg) + 0.003
+            node_positions = backend.nodes(rope_entity)
             start_indices = tuple(
                 rope_prefab.connector_anchor_indices(
                     rope_entity,
                     mesh.endpoint_centers[0],
                     axis_radius=anchor_axis_radius,
                     z_top=start_z_top,
+                    positions=node_positions,
                 )
             )
             end_indices = tuple(
@@ -349,46 +386,46 @@ class CableRoutingSceneBuilder:
                     mesh.endpoint_centers[1],
                     axis_radius=anchor_axis_radius,
                     z_top=end_z_top,
+                    positions=node_positions,
                 )
             )
         else:
             start_indices = tuple(
-                _endpoint_particle_indices(
-                    rope_entity,
-                    (mesh.endpoint_centers[0],),
-                    radius=float(self.task_cfg.rope.anchor_radius),
+                backend.resolve_indices(
+                    rope_entity, (mesh.endpoint_centers[0],), anchor_radius
                 )
             )
             end_indices = tuple(
-                _endpoint_particle_indices(
-                    rope_entity,
-                    (mesh.endpoint_centers[1],),
-                    radius=float(self.task_cfg.rope.anchor_radius),
+                backend.resolve_indices(
+                    rope_entity, (mesh.endpoint_centers[1],), anchor_radius
                 )
             )
         if start_plug is not None:
-            rope_entity.fix_particles_to_link(
-                start_plug.base_link_idx,
-                particles_idx_local=list(start_indices),
+            start_indices = tuple(
+                backend.follow_link(
+                    rope_entity,
+                    start_plug.base_link,
+                    band=start_token,
+                    indices=start_indices,
+                )
             )
         elif bool(self.task_cfg.rope.anchor_start):
-            rope_entity.fix_particles(particles_idx_local=list(start_indices))
-        attachment_mode = (
-            str(getattr(handle_cfg, "attachment_mode", "none"))
-            if handle_cfg is not None
-            else "none"
-        )
+            backend.anchor(rope_entity, indices=list(start_indices))
         if attachment_mode == "rigid_handle":
             if end_pin is None:
                 raise RuntimeError(
                     "rope.endpoint_handle.attachment_mode=rigid_handle requires an endpoint handle."
                 )
-            rope_entity.fix_particles_to_link(
-                end_pin.base_link_idx,
-                particles_idx_local=list(end_indices),
+            end_indices = tuple(
+                backend.follow_link(
+                    rope_entity,
+                    end_pin.base_link,
+                    band=end_token,
+                    indices=end_indices,
+                )
             )
         elif bool(getattr(self.task_cfg.rope, "anchor_end", False)):
-            rope_entity.fix_particles(particles_idx_local=list(end_indices))
+            backend.anchor(rope_entity, indices=list(end_indices))
 
         rope_handle = RopeEndpointHandle(
             name=str(self.task_cfg.rope.name),
@@ -408,7 +445,20 @@ class CableRoutingSceneBuilder:
             rope_handle=rope_handle,
             cameras=tabletop.cameras,
             tabletop=tabletop,
+            rope_backend=backend,
         )
+
+    def _fixture_kwargs(self, *, collision: bool) -> dict:
+        """Material kwargs for fixed rigids, backend-appropriate. PBD keeps the
+        Genesis default; under IPC a collision fixture must be 'ipc_only' and a
+        collision-free one needs_coup=False (auto-select rejects both)."""
+
+        material = (
+            self._rope_backend.static_rigid_material()
+            if collision
+            else self._rope_backend.decoration_rigid_material()
+        )
+        return {} if material is None else {"material": material}
 
     def _add_board(self, scene, manifest: EntityManifest) -> None:
         if not box_entity_enabled(self.task_cfg.board):
@@ -423,6 +473,7 @@ class CableRoutingSceneBuilder:
                 ),
                 surface=materials.plastic("board", self.task_cfg.board.color),
                 name=self.task_cfg.board.name,
+                **self._fixture_kwargs(collision=True),
             ),
         )
 
@@ -457,6 +508,7 @@ class CableRoutingSceneBuilder:
                             ),
                             surface=surface,
                             name=entity_name,
+                            **self._fixture_kwargs(collision=bool(fixture.collision)),
                         ),
                     )
             elif fixture_type == "connector":
@@ -503,6 +555,7 @@ class CableRoutingSceneBuilder:
                         ),
                         surface=surface,
                         name=entity_name,
+                        **self._fixture_kwargs(collision=bool(fixture.collision)),
                     ),
                 )
             else:
@@ -561,6 +614,7 @@ class CableRoutingSceneBuilder:
                     ),
                     surface=materials.plastic("deformable", color),
                     name=name,
+                    **self._fixture_kwargs(collision=False),
                 ),
             )
 
@@ -597,6 +651,7 @@ class CableRoutingSceneBuilder:
                         fixed=True,
                         collision=False,
                     ),
+                    **self._fixture_kwargs(collision=False),
                     surface=materials.plastic("deformable", color),
                     name=name,
                 ),
@@ -604,14 +659,14 @@ class CableRoutingSceneBuilder:
 
     def _add_rope(self, scene, manifest: EntityManifest) -> tuple[Any, RopeMesh]:
         model = str(self.task_cfg.rope.model)
-        if model != "pbd_elastic_tube":
+        if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported CableRouting rope model: {model!r}.")
 
         mesh = self.layout.rope_mesh(self.route_mode)
         _write_obj(Path(mesh.path), mesh.vertices, mesh.faces)
         rope_entity = scene.add_entity(
             rope_prefab.tube_morph(mesh.path, self.task_cfg.rope),
-            material=rope_prefab.elastic_material(self.task_cfg.rope),
+            material=self._rope_backend.material(),
             surface=materials.plastic(
                 "deformable", self.task_cfg.rope.color, vis_mode="visual"
             ),
@@ -691,7 +746,13 @@ class CableRoutingSceneBuilder:
             material=gs.materials.Rigid(
                 rho=float(getattr(handle_cfg, "rho", 700.0)),
                 friction=float(getattr(handle_cfg, "friction", 2.0)),
-                needs_coup=not bool(getattr(handle_cfg, "exclude_pbd_collision", False)),
+                # FEM: the rope end lives INSIDE this fitting; it must stay out
+                # of IPC or the barrier would eject the rope from it.
+                needs_coup=(
+                    False
+                    if self._rope_backend.name != "pbd"
+                    else not bool(getattr(handle_cfg, "exclude_pbd_collision", False))
+                ),
             ),
             surface=materials.plastic("connector", handle_cfg.color),
             name=name,
@@ -792,6 +853,7 @@ class CableRoutingSceneBuilder:
             ),
             surface=materials.plastic("marker", ring_color),
             name=base_name,
+            **self._fixture_kwargs(collision=False),
         )
         manifest.add(base_name, ring)
         recess = scene.add_entity(
@@ -804,6 +866,7 @@ class CableRoutingSceneBuilder:
             ),
             surface=materials.plastic("marker", [0.05, 0.06, 0.08]),
             name=f"{base_name}_recess",
+            **self._fixture_kwargs(collision=False),
         )
         manifest.add(f"{base_name}_recess", recess)
 
@@ -829,6 +892,7 @@ class CableRoutingSceneBuilder:
             ),
             surface=surface,
             name=name,
+            **self._fixture_kwargs(collision=bool(fixture.collision)),
         )
         manifest.add(name, shaft)
         base_path = rope_prefab.routing_post_base_obj_path(
@@ -847,7 +911,11 @@ class CableRoutingSceneBuilder:
                 collision=bool(fixture.collision),
                 file_meshes_are_zup=True,
             ),
-            material=gs.materials.Rigid(rho=700.0, needs_coup=True),
+            material=(
+                gs.materials.Rigid(rho=700.0, coup_type="ipc_only")
+                if self._rope_backend.name != "pbd"
+                else gs.materials.Rigid(rho=700.0, needs_coup=True)
+            ),
             surface=surface,
             name=f"{name}_base",
         )
@@ -862,6 +930,7 @@ class CableRoutingSceneBuilder:
             ),
             surface=surface,
             name=f"{name}_cap",
+            **self._fixture_kwargs(collision=False),
         )
         manifest.add(f"{name}_cap", cap)
 
