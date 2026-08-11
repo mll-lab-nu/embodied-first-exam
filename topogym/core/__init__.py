@@ -1,11 +1,15 @@
 """Small shared runtime helpers."""
 
-from .config import DEFAULT_COMMON_CONFIG, add_common_config_arg, load_topogym_configs
+from .config import (
+    CONFIG_ROOT,
+    hydra_config_sources,
+    save_resolved_config,
+)
 from .manifest import EntityManifest
 
 __all__ = [
-    "DEFAULT_COMMON_CONFIG",
+    "CONFIG_ROOT",
     "EntityManifest",
-    "add_common_config_arg",
-    "load_topogym_configs",
+    "hydra_config_sources",
+    "save_resolved_config",
 ]

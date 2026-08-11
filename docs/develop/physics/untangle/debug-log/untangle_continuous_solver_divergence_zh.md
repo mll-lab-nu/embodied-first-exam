@@ -96,7 +96,7 @@ run #8 中 `bend_r` 在 4.6~4.9mm 维持 380 步未发散（§12.4），说明�
 cd /projects/bfuo/jlyu3/topogym
 source .venv-gs110/bin/activate
 export LD_LIBRARY_PATH=/usr/lib/wsl/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --viewer --keep-open --max-moves 1 --verbose --strands 2 --trace
 ```
 
@@ -396,7 +396,7 @@ primitive 的 `lift_test` 未通过，走了 `recovery_open` 退出。
 因此只有在 `on_close` 中装上的 attachment 能通过该检查。连续版两者都没有，
 相当于用零预紧接触的摩擦力完成抬升。
 
-改动：`prototypes/untangle_continuous_physical_pinch_demo.py` 加入
+改动：`demos/entangle/untangle_continuous_physical_pinch_demo.py` 加入
 `AttachmentManager`、`on_close=engage_grasp_attachment`、`before_release=`，
 以及 `ee_quat=ee_quat_for_yaw(default, 插头轴向)`（转腕理由同离散版：
 避免指垫压在线缆下垂的方向上）。
@@ -460,7 +460,7 @@ demo 不再从 `grasp_xy/place_xy/lift_z` 重建路点（重建会撤销该限�
 ### 改动文件
 
 - `topogym/planning/untangle_continuous_planner.py`：`crossing_arc` 与 `within_reach()`；command 新增 `crossing_arc` / `carry` / `cross` / `settle`
-- `prototypes/untangle_continuous_physical_pinch_demo.py`：改用 `command.carry/cross/settle`；日志加 `crossing_arc` / `pulled_back`
+- `demos/entangle/untangle_continuous_physical_pinch_demo.py`：改用 `command.carry/cross/settle`；日志加 `crossing_arc` / `pulled_back`
 - `configs/task_configs/untangle_continuous_topogym_tabletop_v1.yaml`：新增 `pinch.max_taut_ratio: 0.90`
 
 ---
@@ -512,7 +512,7 @@ self.entity.set_quat(yaw_quat(self.yaw + self.child_yaw_offset), ...)   # 仅 ya
 - `topogym/primitives/attachment.py`：`RigidAttachment.quat`、`sync()` 分支、`AttachmentManager.create(quat=)`
 - `topogym/primitives/physical_contact.py`：新增 `entity_quat()`
 - `topogym/primitives/__init__.py`：导出 `entity_quat`
-- `prototypes/untangle_continuous_physical_pinch_demo.py`：`quat=entity_quat(_connector)`
+- `demos/entangle/untangle_continuous_physical_pinch_demo.py`：`quat=entity_quat(_connector)`
 
 ### 未处理：抬升后绳在接头处仍需转约 90 度（H9）
 
@@ -655,7 +655,7 @@ H9 的依据是：松弛的绳从支点垂下时出线方向接近垂直，插�
 
 ```bash
 export LD_LIBRARY_PATH=/usr/lib/wsl/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --viewer --keep-open --max-moves 1 --verbose --strands 2 --trace
 ```
 
@@ -693,7 +693,7 @@ python -m prototypes.untangle_continuous_physical_pinch_demo \
 | 文件 | 改动 |
 |---|---|
 | `topogym/supervision/rope_trace.py` | header 增加 `bend_r → 转角` 换算行（每根绳的 centerline 采样数、中位采样间距 L、直角对应的 bend_r）；`get_particles_vel()` 的异常首次写入文件（`# NOTE`）；新增 `_check_tightening` 检查；新增 `bend_free` 列 |
-| `prototypes/untangle_continuous_physical_pinch_demo.py` | `--trace` 默认路径带时间戳；`on_close` / lift 前 / 释放三处调用 `trace.note` |
+| `demos/entangle/untangle_continuous_physical_pinch_demo.py` | `--trace` 默认路径带时间戳；`on_close` / lift 前 / 释放三处调用 `trace.note` |
 
 `_check_tightening` 的判据：`bend_r` 低于 8mm（`WARN_BEND_R`）且相对最近 40 个样本
 （`WARN_WINDOW`）的最大值下降超过 5%（`WARN_DROP`）时写入一行 `# WARN`。
@@ -793,7 +793,7 @@ s1（未被抓取）：无输出
 export LD_LIBRARY_PATH=/usr/lib/wsl/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
 # 运行 1：carry_pitch_deg = 0（默认），仅含 §11 的 quat 修复
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --viewer --keep-open --max-moves 1 --verbose --strands 2 --trace
 
 # 运行 2：将 carry_pitch_deg 改为 90，命令相同

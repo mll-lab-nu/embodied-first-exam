@@ -1,0 +1,14 @@
+# bar_through_hole_physical_insert_demo 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 只建场景、在 home 位静置，不跑动作。
+# 先用它：home 位与几何互相穿透的问题在这一步就会暴露 —— stacked_plate 当初
+# 就是在这里出的求解器 NaN，后来才有了抬高 home 的机器人配置。
+inspect_only: false
+
+# 覆盖 task.oracle.mode：insert = 穿过去；bypass = 从面板上方绕过（反捷径用例，
+# 预期判失败）。null = 用 task 配置里的值。
+oracle_mode: null

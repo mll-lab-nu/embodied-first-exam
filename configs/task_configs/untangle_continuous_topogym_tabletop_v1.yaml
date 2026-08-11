@@ -101,6 +101,19 @@ rope:
   # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
   # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
   model: fem_ipc_tube
+  # FEM + IPC 后端的材料与接触参数。单源 = prefabs.rope_fem
+  # （2026-08-10 从 rope_backends/fem_ipc.py 的 _DEFAULTS 搬来，见该处注释）。
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    rest_shape: ${prefabs.rope_fem.rest_shape}
+    sanity_check_enable: ${prefabs.rope_fem.sanity_check_enable}
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
   # 绳↔桌面摩擦。**和下面 elastic.*_friction 是两个独立的旋钮**：
   #   elastic.*_friction   -> 绳↔绳（PBD 粒子间）
   #   table_friction       -> 绳↔桌面（写进桌子刚体 geom 的 coup_friction）
@@ -340,7 +353,7 @@ pinch:
   # = rope.free_end_connector.column_radius（放大后的本任务值，不是 prefab 值）。
   # 手指闭到柱面、零预紧 —— 承力的是 on_close 装上的 assisted attachment，不是摩擦。
   grasp_qpos_handle: 0.010
-  # PBDHandleDragPrimitive 的抓取校验：抬升测试至少要把接头抬起这么多，
+  # HandleDragPrimitive 的抓取校验：抬升测试至少要把接头抬起这么多，
   # 且接头相对手的跟随误差不超过 max_handle_error，否则判定没抓住。
   min_lift_delta: 0.014
   max_handle_error: 0.035

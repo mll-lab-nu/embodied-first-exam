@@ -51,6 +51,11 @@ class PBDRopeBackend:
 
     # -- pre-build declarations ------------------------------------------------
 
+    def declare_rest_straight(self, entity, centerline) -> None:
+        """No-op: PBD rest lengths/bends always come from the spawn mesh, and
+        its bending compliance is soft enough that rest-shape memory never
+        expresses (the property the FEM straight-rest option restores)."""
+
     def declare_anchor(self, entity, centers, radius: float) -> None:
         store = self._anchors.setdefault(str(entity.uid), [])
         for center in np.atleast_2d(np.asarray(centers, dtype=float)):

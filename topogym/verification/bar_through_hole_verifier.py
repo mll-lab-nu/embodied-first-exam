@@ -37,21 +37,40 @@ def _entity_quat(entity) -> np.ndarray:
     return np.asarray(value).reshape(-1, 4)[0]
 
 
-def cylinder_axis(quat) -> np.ndarray:
-    """World direction of a `gs.morphs.Cylinder`'s local +z axis.
+def prism_axis(quat) -> np.ndarray:
+    """World direction of the shaft's local +x axis.
 
-    Cylinder morphs are built about local z (stacked_plate turns one onto world
-    y with `euler=(90,0,0)`), so this is the shaft's own direction. Note a Box's
-    long side would be local x instead -- the two are easy to confuse.
+    `hex_prism_mesh` extrudes along local x, so this is the shaft's own
+    direction. Worth stating because the convention is not uniform: a
+    `gs.morphs.Cylinder` is built about local *z* (stacked_plate turns one onto
+    world y with `euler=(90,0,0)`), and reading the wrong column here yields a
+    plausible-looking unit vector that is silently 90 degrees off.
     """
 
     w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
     axis = np.array(
-        [2.0 * (x * z + w * y), 2.0 * (y * z - w * x), 1.0 - 2.0 * (x * x + y * y)],
+        [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y + w * z), 2.0 * (x * z - w * y)],
         dtype=float,
     )
     norm = float(np.linalg.norm(axis))
     return axis / norm if norm > 1e-12 else np.array([1.0, 0.0, 0.0], dtype=float)
+
+
+def hexagon_contains(point_yz, center_yz, across_flats: float) -> bool:
+    """Is a (y, z) point inside a regular flat-side-down hexagon?
+
+    A regular hexagon is the intersection of three slabs, one per pair of
+    opposite edges, each of half-width equal to the inradius. Edge normals for
+    the flat-side-down orientation sit at 30, 90 and 150 degrees.
+    """
+
+    offset = np.asarray(point_yz, dtype=float) - np.asarray(center_yz, dtype=float)
+    inradius = 0.5 * float(across_flats)
+    for angle_deg in (30.0, 90.0, 150.0):
+        angle = np.deg2rad(angle_deg)
+        if abs(float(offset[0] * np.cos(angle) + offset[1] * np.sin(angle))) > inradius:
+            return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -64,7 +83,8 @@ class BarThroughHolePuzzleState:
     plane_point_x: float  # world x of the panel mid-plane (the reference surface)
     axis_alignment: float  # |axis . plane normal|
     crossing_yz: tuple[float, float] | None  # where the shaft axis pierces the plane
-    aperture_rect: tuple[tuple[float, float], tuple[float, float]]
+    aperture_center_yz: tuple[float, float]
+    aperture_across_flats: float
     tilt_rad: float
     tilt_tolerance: float
     seated_z: float
@@ -84,13 +104,20 @@ class BarThroughHolePuzzleState:
 
         A shaft laid across the top edge of the panel also puts its two ends on
         opposite sides of the plane. Only this test rejects it.
+
+        Only the shaft's *axis* crossing is tested, not its whole cross-section.
+        Collision already keeps the section inside the bore, and the exact
+        section test would be the bore hexagon eroded by the shaft hexagon --
+        which for the correctly seated pose (shaft face resting on the bore's
+        lower face) evaluates exactly on the boundary, so it would turn genuine
+        successes into float-precision coin flips.
         """
 
         if self.crossing_yz is None:
             return False
-        (y_min, y_max), (z_min, z_max) = self.aperture_rect
-        y, z = self.crossing_yz
-        return bool(y_min <= y <= y_max and z_min <= z <= z_max)
+        return hexagon_contains(
+            self.crossing_yz, self.aperture_center_yz, self.aperture_across_flats
+        )
 
     @property
     def threading_count(self) -> int:
@@ -126,7 +153,6 @@ class BarThroughHolePuzzleState:
         return bool(self.geometry_ok and self.release_stable)
 
     def to_info(self) -> dict[str, Any]:
-        (y_min, y_max), (z_min, z_max) = self.aperture_rect
         return {
             # --- the category invariant -------------------------------------
             "invariant": INVARIANT_NAME,
@@ -139,7 +165,12 @@ class BarThroughHolePuzzleState:
             # --- declarations Section 4.2 requires --------------------------
             "reference_plane": {"point_x": float(self.plane_point_x), "normal": [1.0, 0.0, 0.0]},
             "gateway": "panel_aperture",
-            "aperture_rect": {"y": [y_min, y_max], "z": [z_min, z_max]},
+            "aperture": {
+                "shape": "regular_hexagon",
+                "orientation": "flat_side_down",
+                "center_yz": [float(v) for v in self.aperture_center_yz],
+                "across_flats": float(self.aperture_across_flats),
+            },
             # --- geometry readings ------------------------------------------
             "end_offsets": [float(v) for v in self.end_offsets],
             "straddles": bool(self.straddles),
@@ -175,7 +206,7 @@ class BarThroughHolePuzzleEvaluator:
         layout = bar_scene.layout
         entity = bar_scene.bar_entity()
         center = _entity_pos(entity)
-        axis = cylinder_axis(_entity_quat(entity))
+        axis = prism_axis(_entity_quat(entity))
         half = 0.5 * layout.bar_length
         end_low = center - half * axis
         end_high = center + half * axis
@@ -195,7 +226,10 @@ class BarThroughHolePuzzleEvaluator:
             crossing = (float(pierce[1]), float(pierce[2]))
 
         tilt = float(np.arccos(np.clip(alignment, -1.0, 1.0)))
-        seated_z = layout.sill_top_z() + layout.bar_radius
+        # The shaft seats on a flat face, so its axis sits one inradius (half the
+        # across-flats size) above the aperture's lower edge.
+        seated_z = layout.sill_top_z() + layout.bar_inradius
+        aperture_center = layout.aperture_center()
 
         return BarThroughHolePuzzleState(
             ends=(tuple(float(v) for v in end_low), tuple(float(v) for v in end_high)),
@@ -204,7 +238,8 @@ class BarThroughHolePuzzleEvaluator:
             plane_point_x=float(plane_point[0]),
             axis_alignment=alignment,
             crossing_yz=crossing,
-            aperture_rect=layout.aperture_rect(),
+            aperture_center_yz=(float(aperture_center[1]), float(aperture_center[2])),
+            aperture_across_flats=float(layout.aperture_across_flats),
             tilt_rad=tilt,
             tilt_tolerance=float(self.tilt_tolerance),
             seated_z=float(seated_z),

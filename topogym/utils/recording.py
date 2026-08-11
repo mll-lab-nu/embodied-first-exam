@@ -20,89 +20,6 @@ DEFAULT_RECORDING_CONFIG = {
 }
 
 
-def _default_recording_config(*, default_fps: int, default_camera: str) -> dict:
-    config = dict(DEFAULT_RECORDING_CONFIG)
-    config["fps"] = int(default_fps)
-    config["camera"] = str(default_camera)
-    return config
-
-
-def add_recording_args(parser, *, default_fps: int = 30, default_camera: str = "oblique") -> None:
-    """Add legacy argparse flags that map cleanly onto ``cfg.recording``."""
-    parser.set_defaults(_recording_default_fps=default_fps, _recording_default_camera=default_camera)
-    group = parser.add_argument_group("recording")
-    group.add_argument("--record-video", type=Path, default=None, help="Save an offscreen mp4 to this path.")
-    group.add_argument("--record-fps", type=int, default=None, help="Playback FPS for the saved video.")
-    group.add_argument(
-        "--record-camera",
-        default=None,
-        help="Camera name from env.cameras. Use comma-separated names or 'all' for multi-view recording.",
-    )
-    group.add_argument(
-        "--record-every-n-steps",
-        type=int,
-        default=None,
-        help="Capture one video frame every N scene.step() calls.",
-    )
-    group.add_argument(
-        "--record-res",
-        type=int,
-        nargs=2,
-        metavar=("WIDTH", "HEIGHT"),
-        default=None,
-        help="Override the selected recording camera resolution.",
-    )
-    group.add_argument(
-        "--record-aa",
-        action="store_true",
-        default=None,
-        help="Enable antialiasing for recorded frames.",
-    )
-
-
-def recording_config_from_args(args) -> dict:
-    """Translate current argparse recording flags into a Hydra-friendly config section."""
-    updates = {}
-    path = getattr(args, "record_video", None)
-    if path is not None:
-        updates["enabled"] = True
-        updates["path"] = str(path)
-
-    camera = getattr(args, "record_camera", None)
-    if camera is not None:
-        updates["camera"] = str(camera)
-
-    fps = getattr(args, "record_fps", None)
-    if fps is not None:
-        updates["fps"] = int(fps)
-
-    every_n_steps = getattr(args, "record_every_n_steps", None)
-    if every_n_steps is not None:
-        updates["every_n_steps"] = int(every_n_steps)
-
-    res = getattr(args, "record_res", None)
-    if res is not None:
-        updates["res"] = [int(res[0]), int(res[1])]
-
-    antialiasing = getattr(args, "record_aa", None)
-    if antialiasing is not None:
-        updates["antialiasing"] = bool(antialiasing)
-    return updates
-
-
-def merge_recording_config(cfg, args):
-    """Merge argparse recording flags into ``cfg.recording`` and apply camera overrides."""
-    defaults = _default_recording_config(
-        default_fps=getattr(args, "_recording_default_fps", DEFAULT_RECORDING_CONFIG["fps"]),
-        default_camera=getattr(args, "_recording_default_camera", DEFAULT_RECORDING_CONFIG["camera"]),
-    )
-    cfg = OmegaConf.merge({"recording": defaults}, cfg)
-    updates = recording_config_from_args(args)
-    if updates:
-        cfg = OmegaConf.merge(cfg, {"recording": updates})
-    return apply_recording_camera_overrides(cfg)
-
-
 def apply_recording_camera_overrides(cfg):
     """Apply ``cfg.recording.res`` to selected env cameras before scene build."""
     if cfg.recording.res is None:
@@ -123,12 +40,25 @@ def apply_recording_camera_overrides(cfg):
 
 
 def _recording_camera_names(cameras: dict, camera_spec) -> list[str]:
-    camera = str(camera_spec)
-    available_names = sorted(str(name) for name in cameras.keys())
-    if camera == "all":
-        return available_names
+    """Resolve ``recording.camera`` to camera names.
 
-    selected = [name.strip() for name in camera.split(",") if name.strip()]
+    Accepts a list as well as the comma-separated string, because Hydra rejects
+    a bare `recording.camera=oblique,topdown` as ambiguous and the first fix it
+    suggests is the list form `[oblique,topdown]`. Taking only the string would
+    send anyone who follows that advice into an "unknown camera ['oblique'"
+    error instead.
+    """
+
+    available_names = sorted(str(name) for name in cameras.keys())
+    if OmegaConf.is_config(camera_spec):
+        camera_spec = OmegaConf.to_container(camera_spec, resolve=True)
+    if isinstance(camera_spec, (list, tuple)):
+        selected = [str(name).strip() for name in camera_spec if str(name).strip()]
+    else:
+        camera = str(camera_spec)
+        if camera == "all":
+            return available_names
+        selected = [name.strip() for name in camera.split(",") if name.strip()]
     if not selected:
         raise SystemExit("recording.camera must name at least one camera.")
 

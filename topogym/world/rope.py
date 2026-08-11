@@ -162,18 +162,19 @@ def reserve_endpoint_footprint(polyline: np.ndarray, reach: float) -> np.ndarray
     return out
 
 
-def make_elastic_tube_mesh(
+def parallel_transport_frames(
     centerline: np.ndarray,
-    *,
-    radius: float,
-    radial_segments: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    if radius <= 0.0:
-        raise ValueError("rope.radius must be positive.")
-    if radial_segments < 4:
-        raise ValueError("rope.mesh.radial_segments must be at least 4.")
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Per-sample (tangent, normal, binormal) frames along a centerline.
+
+    Tangents are central differences at interior samples. The normal is
+    parallel-transported (minimal rotation between successive tangents), i.e. a
+    Bishop frame: zero twist about the tangent by construction -- the property
+    both the tube skin and the FEM straight-rest mapping rely on.
+    """
+
     if len(centerline) < 2:
-        raise ValueError("A tube mesh needs at least two centerline points.")
+        raise ValueError("parallel_transport_frames needs >= 2 centerline points.")
 
     def _unit(vec: np.ndarray) -> np.ndarray:
         norm = float(np.linalg.norm(vec))
@@ -181,11 +182,6 @@ def make_elastic_tube_mesh(
             raise ValueError("Degenerate rope centerline segment.")
         return vec / norm
 
-    # Per-vertex 3D tangents (central differences at interior vertices). The ring
-    # frame is parallel-transported along the centerline so the tube stays valid on
-    # vertical runs (connector top exit); a fixed world-z binormal would fold the
-    # rings flat on vertical segments and self-intersect the mesh. For flat
-    # board-level ropes this frame reduces to the pre-parallel-transport one.
     tangents = []
     for index in range(len(centerline)):
         if index == 0:
@@ -201,8 +197,9 @@ def make_elastic_tube_mesh(
         normal = np.cross(np.array([1.0, 0.0, 0.0]), tangents[0])
     normal = _unit(normal)
 
-    vertices = []
-    for index, point in enumerate(centerline):
+    normals = []
+    binormals = []
+    for index in range(len(centerline)):
         if index > 0:
             axis = np.cross(tangents[index - 1], tangents[index])
             sin_angle = float(np.linalg.norm(axis))
@@ -221,7 +218,107 @@ def make_elastic_tube_mesh(
             normal = _unit(
                 normal - float(np.dot(normal, tangents[index])) * tangents[index]
             )
-        binormal = np.cross(tangents[index], normal)
+        normals.append(normal)
+        binormals.append(np.cross(tangents[index], normal))
+    return (
+        np.asarray(tangents, dtype=float),
+        np.asarray(normals, dtype=float),
+        np.asarray(binormals, dtype=float),
+    )
+
+
+def tube_material_coords(vertices: np.ndarray, centerline: np.ndarray) -> np.ndarray:
+    """Material coordinates of tube vertices: ``(arc_length, n_offset, b_offset)``.
+
+    Every vertex (surface rings AND tetgen's interior Steiner points) is
+    projected onto the centerline polyline, giving its arc length ``s`` plus its
+    cross-section offsets in the same parallel-transported (Bishop) frames the
+    skin was built with. Two consumers:
+
+    - the FEM straight-rest mapping (`genesis_ipc_vertex_constraints`), which
+      lays these out along +x to get a stress-free straight tube;
+    - rope-state supervision, which bins nodes by ``s`` to recover an ordered
+      centerline from an unordered tet mesh (tetgen does not preserve order).
+
+    ``vertices`` must be the SPAWN positions -- the ones the centerline
+    describes.
+
+    The arc length carries the vertex's TANGENTIAL residual, not just its
+    foot point's arc length. Without it the map collapses at sharp centerline
+    corners (the connector exit arcs): every vertex in the wedge around a
+    corner projects onto the same point, so they would all be handed the same
+    arc length, flattening that wedge to zero thickness and inverting the tets
+    inside it. libuipc rejects the rest mesh outright when that happens
+    ("determinant of the tetrahedron is non-positive"). For a foot strictly
+    inside a segment the residual is zero by construction, so this changes
+    nothing away from corners.
+    """
+
+    pts = np.asarray(centerline, dtype=float)
+    verts = np.asarray(vertices, dtype=np.float64)
+    if len(pts) < 2:
+        raise ValueError("tube_material_coords needs >= 2 centerline points.")
+    seg = np.diff(pts, axis=0)
+    seg_len = np.linalg.norm(seg, axis=1)
+    s_acc = np.concatenate([[0.0], np.cumsum(seg_len)])
+    tangents, normals, binormals = parallel_transport_frames(pts)
+    del binormals  # rebuilt per vertex from the interpolated frame below
+
+    # Point-to-segment projection against every segment, keeping the closest.
+    # Chunked because the intermediates are (chunk x n_seg x 3): a production
+    # rope is ~1e4-1e5 tet nodes against ~1e2 segments, which is gigabytes in
+    # one shot and a few MB per chunk.
+    out = np.empty((len(verts), 3), dtype=float)
+    for start in range(0, len(verts), 4096):
+        block = verts[start : start + 4096]
+        diff = block[:, None, :] - pts[None, :-1, :]
+        t = np.einsum("vsk,sk->vs", diff, seg) / np.maximum(seg_len**2, 1e-18)[None, :]
+        t = np.clip(t, 0.0, 1.0)
+        foot = pts[None, :-1, :] + t[:, :, None] * seg[None, :, :]
+        dist2 = np.sum((block[:, None, :] - foot) ** 2, axis=2)
+        j = np.argmin(dist2, axis=1)
+        rows = np.arange(len(block))
+        t_best = t[rows, j]
+        foot_best = foot[rows, j]
+        # Frames interpolated between the segment's end samples (they vary slowly).
+        tangent = tangents[j] * (1.0 - t_best)[:, None] + tangents[j + 1] * t_best[:, None]
+        tangent /= np.maximum(np.linalg.norm(tangent, axis=1, keepdims=True), 1e-12)
+        normal = normals[j] * (1.0 - t_best)[:, None] + normals[j + 1] * t_best[:, None]
+        normal -= tangent * np.einsum("vk,vk->v", normal, tangent)[:, None]
+        normal /= np.maximum(np.linalg.norm(normal, axis=1, keepdims=True), 1e-12)
+        binormal = np.cross(tangent, normal)
+        rel = block - foot_best
+        out[start : start + len(block), 0] = (
+            s_acc[j] + t_best * seg_len[j] + np.einsum("vk,vk->v", rel, tangent)
+        )
+        out[start : start + len(block), 1] = np.einsum("vk,vk->v", rel, normal)
+        out[start : start + len(block), 2] = np.einsum("vk,vk->v", rel, binormal)
+    return out
+
+
+def make_elastic_tube_mesh(
+    centerline: np.ndarray,
+    *,
+    radius: float,
+    radial_segments: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    if radius <= 0.0:
+        raise ValueError("rope.radius must be positive.")
+    if radial_segments < 4:
+        raise ValueError("rope.mesh.radial_segments must be at least 4.")
+    if len(centerline) < 2:
+        raise ValueError("A tube mesh needs at least two centerline points.")
+
+    # Ring frames are parallel-transported along the centerline so the tube stays
+    # valid on vertical runs (connector top exit); a fixed world-z binormal would
+    # fold the rings flat on vertical segments and self-intersect the mesh. For
+    # flat board-level ropes this frame reduces to the pre-parallel-transport one.
+    _tangents, normals, binormals = parallel_transport_frames(centerline)
+
+    vertices = []
+    for index, point in enumerate(centerline):
+        normal = normals[index]
+        binormal = binormals[index]
         for ring_index in range(radial_segments):
             theta = 2.0 * np.pi * ring_index / radial_segments
             offset = radius * (np.cos(theta) * normal + np.sin(theta) * binormal)

@@ -169,7 +169,7 @@ episode_<N>/
 | 6 | 数据带 oracle 结构标注 | `PlannedSubgoal`（subgoal_id/kind/target/label）+ `EpisodePlan.subgoals` 已存在 | `planning/subgoal.py`、`planning/waypoint.py` | 🟡 结构是**天然优势**且已在内存里生成，但因为第 5 层缺失，**没有逐帧落盘进数据集**，`is_subgoal_boundary` / `is_completed` 这类帧级 flag 也还没有 |
 | 7 | 评测协议固定且可续跑 | 无 | 无 `evaluation.py` / `progress.json` / policy server | ❌ |
 | 8 | 有基线成绩和上界参照 | 无 | — | ❌ |
-| 9 | 外人可低成本复跑 | 有 `configs/` + `bash_scripts/` + prototype 入口，但无 Docker、无"一条命令出 rollout"的最小入口文档 | `configs/`、`bash_scripts/`、`prototypes/` | 🟡 |
+| 9 | 外人可低成本复跑 | 有 `configs/` + `bash_scripts/` + prototype 入口，但无 Docker、无"一条命令出 rollout"的最小入口文档 | `configs/`、`bash_scripts/`、`demos/` | 🟡 |
 | 10 | 语言指令是环境输出 | `task_goal` 存在于 spec 侧参数，但不由 `env.step()` 的 `info` 稳定输出 | `swap_generator.py`（variant.parameters 里有 goal/oracle），`swap_mdp._build_info` 的 info 里**没有 task_goal** | 🟡 |
 
 ### 相对第 3 节需要修正的两点

@@ -38,6 +38,31 @@ rope:
   # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
   # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
   model: fem_ipc_tube
+  # 低分辨率档：run.lite=true 时套用，用于快速看动作是否正确。
+  # 2026-08-10 从 untangle_physical_handle_demo 的 Python 字面量搬来。
+  lite:
+    particle_size: 0.006
+    mesh:
+      segment_length: 0.014
+      radial_segments: 6
+      maxvolume: 0.00000012
+    pbd:
+      max_stretch_solver_iterations: 6
+      max_bending_solver_iterations: 3
+      max_volume_solver_iterations: 3
+  # FEM + IPC 后端的材料与接触参数。单源 = prefabs.rope_fem
+  # （2026-08-10 从 rope_backends/fem_ipc.py 的 _DEFAULTS 搬来，见该处注释）。
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    rest_shape: ${prefabs.rope_fem.rest_shape}
+    sanity_check_enable: ${prefabs.rope_fem.sanity_check_enable}
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
   anchor_endpoints: true
   # 端点固定的粒子选取半径。放大到 ~0.012 让 fix_particles_to_link 固定"一带"
   # (2~3 圈)粒子而不是单圈，分散刚体↔PBD 耦合、消掉接缝硬 hinge（减少端头乱甩/
@@ -88,6 +113,13 @@ rope:
     fixed: true
     collision: false
     exclude_pbd_collision: false
+    # 抓取相关的物理量单源在 physical_handle：机械臂夹的就是这个端头，
+    # 两处各写一份会在只改一处时静默分叉。
+    # 2026-08-10 从 untangle_physical_handle_demo 的 OmegaConf.merge 搬来 ——
+    # 此前这三个键不在配置里，靠运行时现加，Hydra 的 struct 模式会拒绝。
+    z_offset: ${task.physical_handle.z_offset}
+    friction: ${task.physical_handle.handle_friction}
+    rho: ${task.physical_handle.rho}
     # Industrial plug connector replacing the bare cylinder handle (redesign Phase A,
     # untangle_redesign_plan_zh.md §1): mesh flange sits on the board (reads "plugged in"),
     # pin drops into the hole, Ø15mm grip-ring column gives the gripper ~4x graspable volume.

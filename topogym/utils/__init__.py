@@ -3,8 +3,7 @@
 from .franka import initialize_franka_controller
 from .hud import draw_hud_overlay, hud_lines
 from .recording import (
-    add_recording_args,
-    merge_recording_config,
+    apply_recording_camera_overrides,
     print_recording_saved,
     recording_session,
     recording_session_from_config,
@@ -18,8 +17,7 @@ __all__ = [
     "initialize_franka_controller",
     "draw_hud_overlay",
     "hud_lines",
-    "add_recording_args",
-    "merge_recording_config",
+    "apply_recording_camera_overrides",
     "print_recording_saved",
     "recording_session",
     "recording_session_from_config",

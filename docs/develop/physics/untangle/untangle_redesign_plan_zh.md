@@ -86,7 +86,7 @@ assisted grasp + 代码 attachment，把连接器生命周期做成**只有两�
 现状：
 - `topogym/tasks/entangle/untangle.py`——scene（board / holes / pegs / anchor_pins / endpoint pins / rope 建 mesh + `fix_particles_to_link`）。
 - `topogym/planning/untangle_planner.py`——动态：每次按当前拓扑选下一次 endpoint relocation（`plan_next_untangle_move`）。
-- `prototypes/untangle_physical_handle_demo.py`——现用 `PBDHandleDragPrimitive` 做物理抓取 + 拖拽。
+- `demos/entangle/untangle_physical_handle_demo.py`——现用 `PBDHandleDragPrimitive` 做物理抓取 + 拖拽。
 - `topogym/envs/untangle_mdp.py`——RL 壳。
 
 本方案落点：

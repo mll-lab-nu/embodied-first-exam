@@ -13,7 +13,7 @@
 `TopoGym_tasks.docx` 把任务按「机器人动作前必须理解的空间关系」分成四类，并对每个任务规定了状态
 变化、成功判定与防捷径。本文写作时，仓库里没有任何位置记录这个分类：
 
-- `topogym/tasks/`、`configs/task_configs/`、`prototypes/` 均按 task_id 平铺，无类别信息。
+- `topogym/tasks/`、`configs/task_configs/`、`demos/` 均按 task_id 平铺，无类别信息。
 - 四个 bash 注册表（`stability_sweep.sh` / `verify_dataset_recording.sh` / `record_all_tasks.sh` /
   `collect_and_view.sh`）各自维护一份 task 列表，列表内容互不一致，也不含类别。
 - H5 `setup` attrs 只写 `task_id`（`topogym/data/episode_dataset_writer.py:202`），下游无法按类别聚合。
@@ -51,7 +51,7 @@
 topogym/tasks/<category>/<task>.py
 ```
 
-其余各层——`verification/` `planning/` `generation/` `supervision/` `envs/` `prototypes/`——
+其余各层——`verification/` `planning/` `generation/` `supervision/` `envs/` `demos/`——
 **保持平铺**，与类别无关。
 
 本文初稿主张完全不建目录，理由是「4 类 × 5 层 = 20 个目录，每格只有 1–2 个文件」。该理由只在
@@ -105,7 +105,7 @@ YAML 字段、H5 attrs、bash 变量、文档表头）统一使用同一组字�
 ```python
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "deformation": (),
-    "routing": ("cable_routing",),
+    "routing": ("bar_through_hole", "cable_routing", "rope_winding"),
     "entangle": ("untangle", "untangle_continuous"),
     "connectivity": ("stacked_plate",),
 }
@@ -213,13 +213,14 @@ def invariant_value(self) -> int | tuple[int, ...] | dict[str, float]:
 
 ## 5. 现有任务的归类结论
 
-### 5.1 已归类（4 个）
+### 5.1 已归类（5 个）
 
 只有判据形态与该类判定契约（§4）方向一致的任务进入类别目录。
 
 | task_id | 类别目录 | 依据 | 缺口 |
 |---|---|---|---|
-| `cable_routing` | `routing/` | 绳绕柱，对应 docx 2.4 | 无 verifier 文件；判定散在 `supervision/cable_routing.py` |
+| `rope_winding` | `routing/` | 绳绕柱 0 → 2 圈 + 放置，对应 docx 2.4 | 尚未跑过 GPU 验收（判据与 oracle 已有离线 gate：`tests/check_rope_winding_geometry.py`） |
+| `cable_routing` | `routing/` | 线缆绕过多个障碍桩布线，接近 docx 2.2 变体（**不是 2.4** —— 2.4 的「绕了几圈」由 `rope_winding` 实现，2026-08-11 起） | 无 verifier 文件；判定散在 `supervision/cable_routing.py`；判据是「在桩的哪一侧」签名而非 winding number |
 | `untangle` | `entangle/` | 离散版交叉任务，对应 docx 3.1 | 无 verifier 文件 |
 | `untangle_continuous` | `entangle/` | 连续绳交叉消除，对应 docx 3.1 | 缺物理层分拉复核 |
 | `stacked_plate` | `connectivity/` | 缺口相位门控杆的下落通道，对应 docx 4.2 | 判据为位置阈值，未表达 C_free 连通性 |
@@ -249,8 +250,12 @@ def invariant_value(self) -> int | tuple[int, ...] | dict[str, float]:
 
 ### 5.3 尚未实现的任务
 
-docx 共 20 个任务小节，已实现 3 个（2.4 → `cable_routing`、3.1 → `untangle` + `untangle_continuous`、
+docx 共 20 个任务小节，已实现 3 个（2.4 → `rope_winding`、3.1 → `untangle` + `untangle_continuous`、
 4.2 → `stacked_plate`），**尚未实现 17 个**：1.1–1.5、2.1–2.3、2.5–2.7、3.2–3.4、4.1、4.3、4.4。
+（`cable_routing` 是 2.2 的变体但不完全对应，暂不计入已实现小节；`bar_through_hole` 同理对 2.3。）
+
+其中 **2.5「从柱子上解下一圈绳」是 `rope_winding` 的镜像**：柱、端子、插头、端口、
+winding number 判据全部可复用，改的是 oracle 的起止圈数（1 → 0）与出生时绳已绕柱一圈。
 
 按类别分布（括号内为该类已实现数）：
 
@@ -285,8 +290,27 @@ topogym/tasks/
 
 `module_boundaries_zh.md` §5 的依赖方向不变。类别目录只加在 `tasks/` 内部，不改变层间关系。
 
-**`prototypes/` 保持平铺。** 分类会改掉全部已文档化的 `python -m prototypes.X` 命令、四个 bash
-注册表与 `cli_commands.txt`，且 demo 是用户入口而非能力载体。
+**~~`prototypes/` 保持平铺~~ —— 2026-08-10 推翻。** 原理由是「分类会改掉全部已文档化的
+`python -m prototypes.X` 命令、四个 bash 注册表与 `cli_commands.txt`，且 demo 是用户入口而非
+能力载体」。
+
+改判的原因：那份代价确实付了（105 处引用、26 个文件），但 demo 平铺到 14 个文件之后，
+「这个 demo 属于哪个任务、是不是主线」只能靠文件名猜。目录现在是 `demos/`，
+分类与 `tasks/` 对齐：
+
+```
+demos/
+├── routing/          # cable_routing, rope_winding, bar_through_hole
+├── entangle/         # untangle, untangle_continuous
+├── connectivity/     # stacked_plate
+└── legacy/           # maze_wall_removal, onestroke, peeling, swap
+```
+
+`tasks/deformation/` 现在是空的，`demos/` 里不建对应目录。
+非 demo 的两个文件移出：`fem_ipc_rope_spike.py` 进 `scripts/`（它自称诊断工具），
+`record_physical_demos.py` 进 `demos/legacy/`（注册表里只有 legacy 三个任务）。
+2026-08-11 修正：`scripts/` 只留产出工件的工具，检查与测量类移入新建的 `tests/`，
+`fem_ipc_rope_spike.py` 随之进 `tests/`。`record_physical_demos.py` 已随 legacy demo 删除。
 
 **新增类别目录时**同步在 `topogym/core/taxonomy.py` 的 `CATEGORIES` 登记，并跑
 `python topogym/core/taxonomy.py` 确认表与目录一致。

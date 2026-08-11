@@ -68,13 +68,13 @@
 ## 运行
 
 ```bash
-python -m prototypes.stacked_plate_physical_rotate_demo --viewer --verbose
+python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true run.verbose=true
 ```
 
 录制视频：
 
 ```bash
-python -m prototypes.stacked_plate_physical_rotate_demo \
+python -m demos.connectivity.stacked_plate_physical_rotate_demo \
   --record-video runs/demo_stacked_plate_contact.mp4 \
   --record-fps 30 --record-every-n-steps 2 \
   --record-camera oblique --record-res 640 640 --verbose

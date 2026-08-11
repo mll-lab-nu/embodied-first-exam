@@ -17,12 +17,16 @@ each task layout's `world_z()` (`world_z = task_z + 0.9196429`).
   frames, cameras, robot mount). World coordinates.
 - `robot_control_configs/` — robot assets, joints, home pose, controllers, IK, gripper.
 - `task_configs/<task>_topogym_tabletop_v1.yaml` — per-task layout, objects, oracle,
-  physical, mdp. One per task: swap / onestroke / maze_wall_removal / stacked_plate /
-  untangle / cable_routing / peeling.
+  physical, mdp. Mainline: untangle / untangle_continuous / stacked_plate /
+  cable_routing / bar_through_hole. The swap / onestroke / maze_wall_removal / peeling
+  configs stay for the RL env shells in `topogym/envs/`, though their demos were deleted.
 - `prefab_configs/topogym_prefabs_v1.yaml` — shared modeling props (rope family:
   PBD params, endpoint connector, fixed terminal, routing post, flush port). Referenced
   from task configs via `${prefabs.*}`. Loads as `cfg.prefabs`.
 - `recording/` — recording presets (`off`, `default`, `hq`).
+- `run_configs/` — per-run parameters (seed, viewer, diagnostics). Loads as `cfg.run`.
+- `hydra/` — Hydra behaviour presets (`job_logging/quiet`).
+- `<demo>.yaml` — one primary config per demo, composed from `config.yaml`.
 
 The tabletop V1 table depth/height follow the AABB from RoboMME's pinned ManiSkill
 `TableSceneBuilder` (oversized 2.418 m side reduced to 1.200 m); the Panda is moved
@@ -30,23 +34,41 @@ The tabletop V1 table depth/height follow the AABB from RoboMME's pinned ManiSki
 The shared builder validates the mount plane is on the tabletop and the footprint stays
 inside the table. See `docs/develop/framework/tabletop_baseline_v1_zh.md`.
 
+## Hydra composition
+
+`config.yaml` is the Hydra base config: it names one option from each group above and
+maps it onto the package the reading code expects (`cfg.env`, `cfg.task`, `cfg.prefabs`,
+...). Each migrated demo has its own primary config `configs/<demo>.yaml` that starts
+from `config.yaml` and overrides only the groups it needs. `run_configs/` holds the
+"how to run this once" parameters (seed, viewer, diagnostics); `configs/hydra/` holds
+logging presets. See `configs/config.yaml` for the override syntax and
+`docs/develop/framework/demo_cli_and_config_zh.md` for why Hydra was introduced.
+
 ## Demos
 
-The current demos are the seven formal physical demos (assisted-contact tier), one per
-task, each loading its task-frame V1 config:
+Every demo takes Hydra overrides. The argparse config path was deleted on 2026-08-10
+along with `demos/legacy/`, so there is only one syntax:
 
 ```bash
-python -m prototypes.swap_physical_grasp_demo --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --viewer --keep-open --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --viewer --keep-open --verbose
-python -m prototypes.stacked_plate_physical_rotate_demo --viewer --keep-open --verbose
-python -m prototypes.untangle_physical_handle_demo --viewer --keep-open --verbose
-python -m prototypes.cable_routing_physical_handle_demo --viewer --keep-open --verbose
-python -m prototypes.peeling_physical_demo --run-oracle --viewer --keep-open --verbose
+python -m demos.entangle.untangle_continuous_physical_pinch_demo run.viewer=true run.keep_open=true
+python -m demos.entangle.untangle_physical_handle_demo run.viewer=true run.keep_open=true run.verbose=true
+python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true run.keep_open=true
+python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.allow_target_lag=true
+python -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true
 ```
 
-Record all seven (multi-camera) via `bash bash_scripts/record_all_tasks.sh` or
-`python -m prototypes.record_physical_demos`.
+Full list and per-demo primary configs: `demos/README.md`.
+Record every task (multi-camera) via `bash bash_scripts/recordings/record_all_tasks.sh`.
+
+## Checks
+
+```bash
+python tests/check_configs_compose.py   # every config composes, every ${...} resolves
+python tests/check_demo_configs.py      # demo-side wiring; stdlib + PyYAML only
+```
+
+All checks live in `tests/`; `scripts/` holds only the tools that produce an
+artifact. See `tests/README.md`.
 
 ## References
 

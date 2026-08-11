@@ -21,6 +21,10 @@
 #   bash bash_scripts/tests/rope_contact_sweep.sh
 #   SEGMENTS="0.004 0.009" RADIALS="6 8" SEEDS="0 1" bash bash_scripts/tests/rope_contact_sweep.sh
 #
+# demo 已迁 Hydra，这里的三重循环也可以直接用 multirun 代替：
+#   python -m demos.entangle.untangle_continuous_inspect_demo -m #     task.rope.mesh.segment_length=0.004,0.005,0.006,0.009 #     task.rope.mesh.radial_segments=6,8 run.seed=0,1,2,3
+# 保留本脚本是因为它还负责从 stdout 抓那四个指标并排版成表。
+#
 # 可调环境变量：
 #   SEGMENTS="0.004 0.005 0.006 0.009"   扫哪些 segment_length（米）
 #   RADIALS="6 8"                        扫哪些 radial_segments
@@ -88,13 +92,15 @@ for radial in $RADIALS; do
     for seed in $SEEDS; do
       tag="n${radial}_s${segment}_seed${seed}"
       log="$OUTDIR/$tag.log"
-      timeout "${TIMEOUT_S}s" python -m prototypes.untangle_continuous_inspect_demo \
-        --backend "$BACKEND" \
-        --seed "$seed" \
-        --strands "$STRANDS" \
-        --radial-segments "$radial" \
-        --segment-length "$segment" \
-        --verbose \
+      # Hydra 覆盖语法（demo 于 2026-08-10 迁移）。物理参数走 task. 路径，
+      # 运行模式走 run.，后端是 env.genesis.backend —— 它本来就是配置键。
+      timeout "${TIMEOUT_S}s" python -m demos.entangle.untangle_continuous_inspect_demo \
+        env.genesis.backend="$BACKEND" \
+        run.seed="$seed" \
+        run.verbose=true \
+        task.braid.n_strands="$STRANDS" \
+        task.rope.mesh.radial_segments="$radial" \
+        task.rope.mesh.segment_length="$segment" \
         >"$log" 2>&1
       code=$?
       printf '%-24s %s\n' "$tag" "$(summarize "$code" "$log")"

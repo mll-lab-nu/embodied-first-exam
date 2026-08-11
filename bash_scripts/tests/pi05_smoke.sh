@@ -5,7 +5,9 @@
 # 不是训 baseline。完整说明 + 手动 config diff（stage 3）见：
 #   docs/develop/il_adaptation/pi05_smoke_zh.md
 #
-# 任务由第一个位置参数指定，默认 swap（首个跑通的任务；纯刚体，物理不污染结论）。
+# 任务由第一个位置参数指定，默认 untangle。
+# 2026-08-10 之前默认是 swap（首个端到端跑通的任务，纯刚体），该任务的 demo 已随
+# demos/legacy/ 删除，因此改为主线里同样已接数据集录制的 untangle。
 # 可选任务 = verify_dataset_recording.sh 的 TASKS 表里的键。
 #
 # 阶段（每段独立日志 <SMOKE_DIR>/stage<N>.log + PASS/FAIL）：
@@ -17,7 +19,7 @@
 #   5 train 几个 step               (首次拉 pi05_base checkpoint 数 GB + 需 GPU)
 #
 # 用法：
-#   bash bash_scripts/tests/pi05_smoke.sh                    # 默认任务 swap，跑 0..5
+#   bash bash_scripts/tests/pi05_smoke.sh                    # 默认任务 untangle，跑 0..5
 #   bash bash_scripts/tests/pi05_smoke.sh cable_routing      # 换任务
 #   TO_STAGE=4 bash bash_scripts/tests/pi05_smoke.sh         # 只到便宜的数据门，不 train
 #   FROM_STAGE=4 bash bash_scripts/tests/pi05_smoke.sh       # 只重跑 norm_stats + train
@@ -38,7 +40,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO"
 
-TASK="${1:-swap}"
+TASK="${1:-untangle}"
 VERIFY_SCRIPT="$REPO/bash_scripts/tests/verify_dataset_recording.sh"
 
 FROM_STAGE="${FROM_STAGE:-0}"

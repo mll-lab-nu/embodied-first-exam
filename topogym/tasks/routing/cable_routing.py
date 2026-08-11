@@ -269,14 +269,7 @@ class CableRoutingSceneBuilder:
         tabletop = tabletop_builder.create(
             show_viewer=show_viewer,
             include_robot=include_robot,
-            # FEM: the robot must stay outside IPC (needs_coup=False; the grasp
-            # is a weld, finger contact carries no signal) and the table must be
-            # an ipc_only static or the coupler auto-registers it as an external
-            # articulation (the discrete untangle's first-frame crash). PBD:
-            # None everywhere keeps the Genesis defaults, exactly as before.
-            robot_material=(
-                gs.materials.Rigid(needs_coup=False) if backend.name != "pbd" else None
-            ),
+            robot_material=self._robot_material(backend),
             table_material=backend.static_rigid_material(),
             static_material=backend.static_rigid_material(),
             decoration_material=backend.decoration_rigid_material(),
@@ -353,6 +346,20 @@ class CableRoutingSceneBuilder:
             )
         elif bool(getattr(self.task_cfg.rope, "anchor_end", False)):
             backend.declare_anchor(rope_entity, (mesh.endpoint_centers[1],), anchor_radius)
+        # rest_shape=straight: the rope's stress-free configuration is a straight
+        # tube; the spawn route becomes genuine bending pre-stress (Kirchhoff-rod
+        # helix fix -- a curved rest shape under end constraints is the phone-cord
+        # recipe). "spawn" keeps rest = spawn mesh (PBD-parity default).
+        rest_shape = str(
+            getattr(getattr(self.task_cfg.rope, "fem", None), "rest_shape", None)
+            or "spawn"
+        )
+        if rest_shape == "straight":
+            backend.declare_rest_straight(rope_entity, mesh.centerline)
+        elif rest_shape != "spawn":
+            raise ValueError(
+                f"rope.fem.rest_shape must be 'spawn' or 'straight', got {rest_shape!r}."
+            )
 
         tabletop_builder.finalize(tabletop)
         if connector_enabled:
@@ -446,6 +453,70 @@ class CableRoutingSceneBuilder:
             cameras=tabletop.cameras,
             tabletop=tabletop,
             rope_backend=backend,
+        )
+
+    def _robot_material(self, backend):
+        """Robot material, i.e. whether the rope can see the gripper at all.
+
+        `physical_handle.robot_rope_contact` selects:
+
+        - ``off`` (default) -- ``needs_coup=False``, which the IPC coupler reads
+          as "skip this entity entirely" (`coupler.py:207`). The rope has no
+          contact pair with the arm, so it passes straight through the fingers.
+          This is what every task shipped with: the grasp is a kinematic weld
+          (design doc §3.5), so finger contact carried no signal, and the PBD
+          era had it tearing ropes apart -- a weld writing particle positions
+          while rigid fingers pushed the same particles.
+        - ``fingers`` -- only the finger links join IPC, as ABD bodies pinned
+          each step to the pose Genesis' IK gives them. The rope then collides
+          with the pads for real. The rest of the arm stays with the rigid
+          solver, so IK keeps full control; that is the point of `coup_links`,
+          which is an INCLUDE list for `two_way_soft_constraint`
+          (`coupler.py:388-392`).
+
+        Registering the WHOLE arm is the other Genesis path
+        (`external_articulation`), and it is rejected here: it hands `qpos` to
+        IPC and bans `set_qpos` (`rigid_entity.py:3764`), which is exactly the
+        controller this repo drives the arm with.
+
+        Known side effect of ``fingers``: the fingers stop colliding with any
+        `ipc_only` static (the routing post). The rigid collider drops a pair
+        once both geoms are IPC-delegated (`collider.py:405`), and this backend
+        turns off `enable_rigid_rigid_contact` for the post's deliberately
+        overlapping compound. The winding orbit keeps the pads clear of the post
+        by geometry, but it is a visual check, not a guarantee.
+        """
+
+        if backend.name == "pbd":
+            # Genesis defaults, exactly as before the FEM backend existed.
+            return None
+        physical = getattr(self.task_cfg, "physical_handle", None)
+        mode = str(getattr(physical, "robot_rope_contact", "off") or "off")
+        if mode == "off":
+            return gs.materials.Rigid(needs_coup=False)
+        if mode != "fingers":
+            raise ValueError(
+                "physical_handle.robot_rope_contact must be 'off' or 'fingers', "
+                f"got {mode!r}."
+            )
+        finger_links = tuple(str(name) for name in (_list(physical.finger_links) or []))
+        if not finger_links:
+            raise ValueError(
+                "physical_handle.robot_rope_contact='fingers' needs "
+                "physical_handle.finger_links."
+            )
+        # IPC friction is per pair, combined as the geometric mean of the two
+        # materials (`ipc_coupler/coupler.py:681`): the rope brings
+        # `rope.fem.friction_mu`, the fingers bring this `coup_friction`. It is
+        # therefore the one knob for how much the rope grips the pads, and it
+        # touches nothing else -- `enable_rigid_rigid_contact=False` leaves the
+        # fingers with no other IPC pair, and the rigid-solver friction that
+        # actually holds the plug is set separately by
+        # `configure_gripper_contact_friction`.
+        return gs.materials.Rigid(
+            coup_type="two_way_soft_constraint",
+            coup_links=finger_links,
+            coup_friction=float(getattr(physical, "robot_rope_friction", 0.1)),
         )
 
     def _fixture_kwargs(self, *, collision: bool) -> dict:

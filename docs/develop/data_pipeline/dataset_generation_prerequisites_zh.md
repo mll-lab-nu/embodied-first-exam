@@ -28,7 +28,7 @@ RoboMME 的 demo 是**脚本化 oracle planner 在环境里跑出来录的**（�
 | 1 | 生成器（seed→EpisodeSpec） | `topogym/generation/<task>_generator.py` | 迁移过的 7 个任务都有 |
 | 2 | oracle planner（EpisodePlan：subgoals+waypoints） | `topogym/planning/<task>_planner.py` | 迁移过的 7 个都有；这就是 RoboMME 花力气造的 grounded subgoal |
 | 3 | SceneBuilder | `topogym/tasks/<task>.py` | 7 个都有 |
-| 4 | 物理 demo（跑 plan、产 EpisodeResult） | `prototypes/<task>_physical_*_demo.py` | oracle rollout，= RoboMME 的脚本化采集范式 |
+| 4 | 物理 demo（跑 plan、产 EpisodeResult） | `demos/<类别>/<task>_physical_*_demo.py` | oracle rollout，= RoboMME 的脚本化采集范式 |
 | 5 | 成功/status 判定 | `*PuzzleEvaluator` 或 supervision/demo 级检查 | **不统一**：部分是 Evaluator 类，部分在 demo/supervision 里 |
 | 6 | 相机（front/wrist rgb） | `configs/env_configs/world_tabletop_v1.yaml` 的 `cameras` | env 层共享：`base_camera(256)`、`oblique(512)`、`topdown`、`front`、`wrist` —— 全任务共用 |
 | 7 | split 登记（点名寻址） | `configs/episode_splits/<task>.yaml` + `episode_index.py` 路由表 | **目前只有 swap**（W1） |

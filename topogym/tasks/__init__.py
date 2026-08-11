@@ -21,6 +21,11 @@ from .routing.bar_through_hole import (
     BarThroughHoleSceneBuilder,
 )
 from .routing.cable_routing import CableRoutingLayout, CableRoutingScene, CableRoutingSceneBuilder, CableRoutingSignature
+from .routing.rope_winding import (
+    RopeWindingLayout,
+    RopeWindingScene,
+    RopeWindingSceneBuilder,
+)
 from .legacy.onestroke import (
     OneStrokeLayout,
     OneStrokeScene,
@@ -77,6 +82,9 @@ __all__ = [
     "CableRoutingScene",
     "CableRoutingSceneBuilder",
     "CableRoutingSignature",
+    "RopeWindingLayout",
+    "RopeWindingScene",
+    "RopeWindingSceneBuilder",
     "OneStrokeLayout",
     "OneStrokeScene",
     "OneStrokeSceneBuilder",

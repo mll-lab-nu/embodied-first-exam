@@ -35,7 +35,7 @@ from .rim_rotate import (
     rim_point_world,
     signed_rotation,
 )
-from .pbd_handle_drag import PBDHandleDragPrimitive, PBDHandleDragResult
+from .handle_drag import HandleDragPrimitive, HandleDragResult
 from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, RopeEndpointDragPrimitive
 
 __all__ = [
@@ -63,8 +63,8 @@ __all__ = [
     "RimRotateResult",
     "rim_point_world",
     "signed_rotation",
-    "PBDHandleDragPrimitive",
-    "PBDHandleDragResult",
+    "HandleDragPrimitive",
+    "HandleDragResult",
     "PBDCornerLiftPrimitive",
     "PBDCornerLiftResult",
     "PBDParticleAttachmentDragPrimitive",

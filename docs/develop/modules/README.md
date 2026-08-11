@@ -11,7 +11,7 @@
 | `module_robot.md` | `topogym/robot` |
 | `module_utils.md` | `topogym/utils` |
 | `module_envs.md` | `topogym/envs` |
-| `module_prototypes.md` | `prototypes/`（含各任务迁移状态） |
+| `module_demos.md` | `demos/`（含各任务迁移状态） |
 
 推荐阅读顺序：
 
@@ -28,4 +28,4 @@
 
 - `swap`、`onestroke`、`maze_wall_removal`、`stacked_plate`、`untangle`、`peeling`（`peeling_physical_single_demo.py`）、`cable_routing`（`cable_routing_physical_handle_demo.py`）
 
-`cable_routing` 和 `peeling` 涉及 PBD 绳/布，是 `overall_module_dict_zh.md` 迁移顺序里排最后、风险最高的一档；两个任务各自的主力物理 demo 现在都已完成第一轮迁移，但同任务下的其它 demo（oracle / tabletop baseline / 其它交互手法）还没跟上，见 `module_prototypes.md`。另外 `topogym/envs` 下的 RL 环境壳目前只覆盖 `swap`/`onestroke`/`maze_wall_removal`/`untangle`，`stacked_plate`/`cable_routing`/`peeling` 还没有对应的 `*_mdp.py`，细节见 `module_envs.md`。
+`cable_routing` 和 `peeling` 涉及 PBD 绳/布，是 `overall_module_dict_zh.md` 迁移顺序里排最后、风险最高的一档；两个任务各自的主力物理 demo 现在都已完成第一轮迁移，但同任务下的其它 demo（oracle / tabletop baseline / 其它交互手法）还没跟上，见 `module_demos.md`。另外 `topogym/envs` 下的 RL 环境壳目前只覆盖 `swap`/`onestroke`/`maze_wall_removal`/`untangle`，`stacked_plate`/`cable_routing`/`peeling` 还没有对应的 `*_mdp.py`，细节见 `module_envs.md`。

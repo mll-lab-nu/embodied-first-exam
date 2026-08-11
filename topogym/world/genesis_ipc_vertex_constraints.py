@@ -61,6 +61,11 @@ class _EntitySpec:
     # (n_band, 3) world positions; `engaged` gates is_constrained per band.
     targets: list = field(default_factory=list)
     engaged: list = field(default_factory=list)
+    # When set, the entity registers with an explicit STRAIGHT rest geometry
+    # (libuipc `geometries().create(mesh, rest_mesh)`): the spawn shape becomes a
+    # genuinely deformed state of a straight rope instead of the stress-free one.
+    # Holds the spawn centerline the tube was meshed along.
+    rest_centerline: np.ndarray | None = None
 
 
 @dataclass
@@ -122,11 +127,59 @@ def follow_near(entity, center, radius: float, *, strength: float = 100.0) -> Fo
     return FollowHandle(str(entity.uid), len(spec.follow_selectors) - 1)
 
 
+def rest_shape_straight(entity, centerline) -> None:
+    """Declare a straight rest configuration for a tube entity. Declare pre-build.
+
+    ``centerline`` is the spawn centerline the tube mesh was built along. At IPC
+    registration the tet vertices are unrolled onto a straight tube of the same
+    arc length (`_straighten_positions`) and passed to libuipc as the explicit
+    rest geometry: bending energy is then measured against a STRAIGHT rope, so
+    a curved spawn route is pre-stress, not shape memory.
+    """
+
+    spec = _SPECS.setdefault(str(entity.uid), _EntitySpec())
+    spec.rest_centerline = np.asarray(centerline, dtype=float).copy()
+
+
 def resolved_pins(entity) -> np.ndarray | None:
     """Pin indices for this entity, once the scene is built."""
 
     spec = _SPECS.get(str(entity.uid))
     return None if spec is None else spec.pin_verts
+
+
+def _inverted_tets(rest: np.ndarray, spawn: np.ndarray, elems: np.ndarray) -> np.ndarray:
+    """Tets whose rest orientation disagrees with the spawn mesh's.
+
+    libuipc reads Dm (the rest edge matrix) per tet and refuses a non-positive
+    determinant outright, from C++, naming only the first offender. Checking
+    here means a rest map that folds somewhere is reported as a count and a
+    location instead of an assertion stack.
+    """
+
+    elems = np.asarray(elems, dtype=np.int64)
+
+    def signed(points: np.ndarray) -> np.ndarray:
+        corners = np.asarray(points, dtype=float)[elems]
+        return np.linalg.det(corners[:, 1:, :] - corners[:, :1, :])
+
+    rest_det = signed(rest)
+    spawn_det = signed(spawn)
+    return np.flatnonzero(rest_det * np.sign(spawn_det) <= 0.0)
+
+
+def _straighten_positions(verts: np.ndarray, centerline: np.ndarray) -> np.ndarray:
+    """Unroll tube-mesh vertices onto a straight axis of equal arc length.
+
+    The material coordinates ``(s, n_offset, b_offset)`` ARE the straight pose:
+    laying them out along +x preserves arc length and cross-section shape, and
+    the parallel-transported frames inject zero twist. The rest pose's absolute
+    placement is irrelevant to FEM (only Dm / rest_volume are read from it).
+    """
+
+    from topogym.world.rope import tube_material_coords
+
+    return tube_material_coords(verts, centerline)
 
 
 def reset() -> None:
@@ -308,6 +361,49 @@ def install() -> None:
                         moduli = ElasticModuli.youngs_poisson(entity.material.E, entity.material.nu)
                         self._ipc_stk.apply_to(mesh, moduli, mass_density=entity.material.rho)
 
+                    # --- topogym addition: explicit straight rest geometry ---
+                    rest_mesh = None
+                    rest_verts = None
+                    rest_spec = _SPECS.get(str(entity.uid))
+                    if (
+                        rest_spec is not None
+                        and not is_cloth
+                        and rest_spec.rest_centerline is not None
+                    ):
+                        spawn_verts = tensor_to_array(entity.init_positions)
+                        rest_verts = _straighten_positions(
+                            spawn_verts, rest_spec.rest_centerline
+                        )
+                        bad = _inverted_tets(rest_verts, spawn_verts, entity.elems)
+                        if len(bad):
+                            # Keep the run alive on the spawn rest shape rather
+                            # than dying in libuipc: for these ropes the spawn
+                            # route is gentle enough that its rest curvature is
+                            # a second-order effect, and the log says so plainly.
+                            arc = rest_verts[:, 0]
+                            span = arc[np.unique(entity.elems[bad])]
+                            print(
+                                "genesis_ipc_vertex_constraints rest_shape=straight "
+                                f"REJECTED for entity {entity.uid}: {len(bad)} of "
+                                f"{len(entity.elems)} tets invert under the straight "
+                                f"map, at arc length {span.min():.4f}..{span.max():.4f} m "
+                                f"of {arc.max():.4f} m (sharp centerline bends relative "
+                                "to the tube radius). Falling back to rest_shape=spawn.",
+                                flush=True,
+                            )
+                            rest_verts = None
+                    if rest_verts is not None:
+                        # Mirror the sim mesh's construction (surface labels,
+                        # contact model, constitution) so the rest slot differs
+                        # from the auto-generated clone only in positions.
+                        rest_mesh = uipc.geometry.tetmesh(rest_verts, entity.elems)
+                        uipc.geometry.label_surface(rest_mesh)
+                        self._ipc_fem_contacts[entity].apply_to(rest_mesh)
+                        self._ipc_stk.apply_to(
+                            rest_mesh, moduli, mass_density=entity.material.rho
+                        )
+                    # --- end addition ---
+
                     # --- topogym addition: vertex pin + follow ---
                     spec = _SPECS.get(str(entity.uid))
                     if spec is not None and not is_cloth:
@@ -349,7 +445,12 @@ def install() -> None:
                     meta_attrs.create("entity_idx", str(i_e))
                     meta_attrs.create("env_idx", str(env_idx))
 
-                    fem_obj.geometries().create(mesh)
+                    # --- topogym addition: register with explicit rest shape ---
+                    if rest_mesh is not None:
+                        fem_obj.geometries().create(mesh, rest_mesh)
+                    else:
+                        fem_obj.geometries().create(mesh)
+                    # --- end addition ---
 
     simulator_module.IPCCoupler = VertexConstraintIPCCoupler
     _INSTALLED = True

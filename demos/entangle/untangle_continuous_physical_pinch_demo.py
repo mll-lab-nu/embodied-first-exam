@@ -4,232 +4,56 @@ The scene spawns a braid (topogym/generation/braid.py), settles it, then loops
 plan -> grasp -> lift -> place -> re-measure until the geometric proxy says the
 ropes are untangled and separated, or the move budget runs out.
 
-Grasping is a kinematic weld of a band of PBD particles to the hand
-(`PBDParticleAttachmentDragPrimitive`), not a friction pinch -- see the `pinch:`
-block in the task config for why.
+The gripper closes on a rigid fitting welded to each rope's free end; the rope
+follows the fitting through the backend's own link attachment. See the `pinch:`
+block in the task config for why it is not a friction pinch.
+
+Configuration is Hydra (`configs/untangle_continuous_pinch.yaml`): every scene and
+physics value is a config path, and `run.*` carries the run-mode switches.
 
     # one move, to watch a single crossing come undone
-    python -m prototypes.untangle_continuous_physical_pinch_demo --viewer --keep-open --max-moves 1 --verbose
+    python -m demos.entangle.untangle_continuous_physical_pinch_demo run.viewer=true run.keep_open=true run.max_moves=1 run.verbose=true
 
-    # the whole thing
-    python -m prototypes.untangle_continuous_physical_pinch_demo --viewer --keep-open --verbose
+    # the contact test: drag the LOWER strand, watch the trace's over_z sign
+    python -m demos.entangle.untangle_continuous_physical_pinch_demo run.grasp_strand=1 run.max_moves=1 run.trace=auto
+
+    # print the resolved config and exit
+    python -m demos.entangle.untangle_continuous_physical_pinch_demo --cfg job
 """
 
 from __future__ import annotations
 
-import argparse
 from datetime import datetime
 from pathlib import Path
 
 import genesis as gs
+import hydra
 import numpy as np
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
 
-from topogym.core import add_common_config_arg, load_topogym_configs
+from topogym.core import save_resolved_config
 from topogym.planning import plan_next_untangle_continuous_move
 from topogym.primitives import (
     AttachmentManager,
-    PBDHandleDragPrimitive,
+    HandleDragPrimitive,
     ee_quat_for_yaw,
     entity_pos,
     entity_quat,
     quat_about_axis,
     quat_mul,
 )
-from topogym.supervision import RopeTrace, rope_blow_ups
+from topogym.supervision import RopeTrace, rope_blow_ups, stop_before_physics
 from topogym.supervision.untangle_continuous import crossing_lines, rope_health_lines
 from topogym.tasks import UntangleContinuousSceneBuilder, settle_scene
 from topogym.utils import (
-    add_recording_args,
+    apply_recording_camera_overrides,
     initialize_franka_controller,
-    merge_recording_config,
     print_recording_saved,
     recording_session_from_config,
 )
 from topogym.verification import UntangleContinuousPuzzleEvaluator, strand_polylines
 
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_fem_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "untangle_continuous_topogym_tabletop_v1.yaml"
-
-# braid.length per difficulty bucket. `easy` is 1 because that is what the
-# config baseline is (braid.length: 1) -- a bucket that silently disagreed
-# with the config is how a run asked for one crossing and got three.
-# Passing no --difficulty uses the config value; the other two buckets are
-# deliberately harder scenes, kept for the benchmark difficulty axis.
-_DIFFICULTY_LENGTH = {"easy": 1, "default": 3, "hard": 5}
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Solve the continuous Untangle braid by physically grasping rope bodies."
-    )
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    add_common_config_arg(parser, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default="gpu")
-    parser.add_argument("--seed", type=int, default=0, help="Braid layout seed.")
-    parser.add_argument(
-        "--difficulty",
-        choices=tuple(_DIFFICULTY_LENGTH),
-        default=None,
-        help=(
-            "Override braid.length: easy=1 (the config baseline), default=3, hard=5. "
-            "Omit it to use the config value."
-        ),
-    )
-    parser.add_argument(
-        "--strands",
-        type=int,
-        default=None,
-        help=(
-            "Override braid.n_strands. Two ropes is now the config default -- one "
-            "crossing needs exactly two strands, so a third adds particles and debug "
-            "variables without adding task semantics. `--strands 3` gets it back."
-        ),
-    )
-    parser.add_argument(
-        "--max-moves",
-        type=int,
-        default=None,
-        help="Stop after this many grasps (default: oracle.max_moves_per_crossing x crossings).",
-    )
-    parser.add_argument(
-        "--segment-length",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.mesh.segment_length (metres), the ring spacing along the "
-            "rope. The contact sweep measured the settled centreline gap between two "
-            "crossing ropes at 2.4mm with the 9mm default and 8.7mm at 4mm; 8mm is "
-            "where the two tubes stop overlapping. Here so the two can be compared "
-            "without editing the config."
-        ),
-    )
-    parser.add_argument(
-        "--rope-static-friction",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.elastic.static_friction, the rope-to-rope tangential "
-            "coefficient in the PBD contact solve. This task sets 0.05 against the "
-            "prefab's 0.35, on the grounds that a higher value drags the strand "
-            "underneath along. That reasoning predates the interpenetration fix -- "
-            "the dragging was attributed to geometric interlock at 5.5mm of overlap, "
-            "which no longer exists. Decides whether the upper rope is carried by the "
-            "lower one or slides off it."
-        ),
-    )
-    parser.add_argument(
-        "--rope-kinetic-friction",
-        type=float,
-        default=None,
-        help="Override rope.elastic.kinetic_friction. Prefab value is 0.25, this task uses 0.02.",
-    )
-    parser.add_argument(
-        "--substeps",
-        type=int,
-        default=None,
-        help=(
-            "Override sim.substeps (default 4). Contact is solved once per substep and "
-            "has no iteration count of its own, while stretch/bending/volume run 16/12/6 "
-            "times per substep ahead of it. Raising this gives contact more passes per "
-            "unit of gripper displacement; cost is proportional wall-clock time. "
-            "DIAGNOSTIC ONLY: the frozen tabletop_v1 baseline pins substeps to 4, so "
-            "this also sets env.preset.locked=false, which disables every other baseline "
-            "check as well. Data recorded from such a run is off-baseline."
-        ),
-    )
-    parser.add_argument(
-        "--grasp-strand",
-        type=int,
-        default=None,
-        help=(
-            "Grasp this strand instead of whichever one the planner picks. Set it to "
-            "the strand that is UNDERNEATH to run the contact test: dragging the lower "
-            "rope cannot undo the crossing, so the one on top must stay on top for the "
-            "whole move. Watch the over_z column -- its sign is the over/under "
-            "relationship, and a sign flip means the ropes passed through each other. "
-            "Strand order follows braid.strand_colors: 0=red, 1=green."
-        ),
-    )
-    parser.add_argument(
-        "--rope-model",
-        choices=("pbd_elastic_tube", "fem_ipc_tube"),
-        default=None,
-        help=(
-            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
-            "pair it with --env-config world_tabletop_fem_v1.yaml (substeps=1). "
-            "The PBD-specific overrides above (--rope-static-friction, "
-            "--substeps) do not apply to that backend."
-        ),
-    )
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument("--keep-open", action="store_true", help="Step forever when finished.")
-    parser.add_argument(
-        "--connector-probe-steps",
-        type=int,
-        default=0,
-        help=(
-            "DIAGNOSTIC: replace the arm's home settle with N manually-stepped "
-            "steps, printing plug positions every 10 -- the drift curve's shape "
-            "identifies the mechanism."
-        ),
-    )
-    parser.add_argument(
-        "--no-follow",
-        action="store_true",
-        help=(
-            "DIAGNOSTIC: leave the rope ends unattached to their plugs "
-            "(rope.free_end_connector.follow_enabled=false), to attribute plug "
-            "motion and rope motion separately. Grasping will not carry the rope."
-        ),
-    )
-    parser.add_argument(
-        "--fem-e",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.fem.E (Pa). Spike default 1e5 holds the braid's rest "
-            "shape but springs the spawn S-bend back over long settles, walking "
-            "the free ends toward each other; lower it to reduce stored energy."
-        ),
-    )
-    parser.add_argument(
-        "--fem-friction-mu",
-        type=float,
-        default=None,
-        help="Override rope.fem.friction_mu (default 0.3): rope<->table IPC friction.",
-    )
-    parser.add_argument("--verbose", action="store_true")
-    parser.add_argument(
-        "--trace",
-        type=Path,
-        nargs="?",
-        # Stamped, not a fixed name: `RopeTrace` opens with "w", so a fixed name
-        # means every run destroys the previous one's evidence. The trace that
-        # finally located this task's blow-up survived only by being copied out
-        # by hand minutes before the next run would have overwritten it.
-        const=Path(f"runs/untangle_continuous_trace_{datetime.now():%Y%m%d-%H%M%S}.log"),
-        default=None,
-        help=(
-            "Stream per-step rope health to a file (default "
-            "runs/untangle_continuous_trace_<timestamp>.log). Written flushed, so a solver "
-            "crash still leaves the history; the lines before the EVENT marker are what "
-            "identify a blow-up's cause."
-        ),
-    )
-    parser.add_argument(
-        "--trace-every",
-        type=int,
-        default=1,
-        help="Sample the trace every N physics steps (1 = every step).",
-    )
-    add_recording_args(parser)
-    return parser.parse_args()
+CONFIG_ROOT = Path(__file__).resolve().parents[2] / "configs"
 
 
 def _hud(status: dict):
@@ -259,13 +83,13 @@ def _connector_report(rope_scene, tag: str) -> None:
         )
 
 
-def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
+def run_demo(cfg: DictConfig) -> tuple[bool, object]:
     rope_scene = UntangleContinuousSceneBuilder(
         cfg.env,
         cfg.task,
         cfg.robot_control,
-        seed=args.seed,
-    ).build(show_viewer=args.viewer)
+        seed=cfg.run.seed,
+    ).build(show_viewer=cfg.run.viewer)
     _connector_report(rope_scene, "post_build")
     # Park each plug at its spawn pose until the gripper takes it. Lying on its
     # flange rim the plug is a wheel -- in the FEM scene it rolls ~20mm inward
@@ -295,7 +119,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
     def unpark_connector(strand: int) -> None:
         parked.pop(int(strand), None)
 
-    if args.connector_probe_steps:
+    if cfg.run.connector_probe_steps:
         # Diagnostic: place the arm at home without the usual settle, then step
         # manually and sample the plug positions -- the drift CURVE (constant
         # velocity vs diffusion vs single hop) discriminates mechanism classes
@@ -306,7 +130,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
             robot_cfg=cfg.robot_control,
             settle_steps=0,
         )
-        for probe_step in range(1, int(args.connector_probe_steps) + 1):
+        for probe_step in range(1, int(cfg.run.connector_probe_steps) + 1):
             rope_scene.scene.step()
             if probe_step % 10 == 0 or probe_step == 1:
                 _connector_report(rope_scene, f"home_step{probe_step:03d}")
@@ -326,7 +150,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
     # particle-to-link attachment. Replaces this task's hand-rolled particle weld,
     # which held its band at fixed world-axis offsets and kinked the rope at the
     # band edge on every lift.
-    primitive = PBDHandleDragPrimitive(
+    primitive = HandleDragPrimitive(
         approach_z=float(rope_scene.layout.world_z(float(pinch_cfg.approach_z))),
         lift_delta=float(pinch_cfg.lift_delta),
         move_steps=int(pinch_cfg.move_steps),
@@ -337,7 +161,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
         min_lift_delta=float(pinch_cfg.min_lift_delta),
         max_handle_error=float(pinch_cfg.max_handle_error),
         release_hold_steps=int(pinch_cfg.release_hold_steps),
-        verbose=args.verbose,
+        verbose=cfg.run.verbose,
     )
 
     # Before anything moves: can the ropes satisfy PBD self-collision at all?
@@ -352,8 +176,8 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
     gt_ok, gt_detail = evaluator.matches_braid_ground_truth(rope_scene)
     braid_crossings = len(rope_scene.braid.crossings)
     budget = (
-        int(args.max_moves)
-        if args.max_moves is not None
+        int(cfg.run.max_moves)
+        if cfg.run.max_moves is not None
         else int(cfg.task.oracle.max_moves_per_crossing) * max(1, braid_crossings)
     )
     status = {
@@ -365,11 +189,19 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
         "terminal": state.is_terminal,
     }
     trace = None
-    if args.trace is not None:
+    if cfg.run.trace is not None:
+        # "auto" produces a stamped name. A fixed name would be worse than no
+        # trace: `RopeTrace` opens with "w", so every run would destroy the
+        # previous one's evidence.
+        trace_path = (
+            Path(f"runs/untangle_continuous_trace_{datetime.now():%Y%m%d-%H%M%S}.log")
+            if str(cfg.run.trace) == "auto"
+            else Path(str(cfg.run.trace))
+        )
         trace = RopeTrace(
             rope_scene,
-            args.trace,
-            every=int(args.trace_every),
+            trace_path,
+            every=int(cfg.run.trace_every),
             offset_tolerance=float(pinch_cfg.blow_up_tolerance),
             # Both ends are held over this radius: the anchored end by
             # `fix_particles`, the free end by `fix_particles_to_link`. Tells the
@@ -382,7 +214,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
             # culprit at least once, so a trace without them is ambiguous.
             notes="\n".join(
                 (
-                    f"seed={args.seed} word={rope_scene.braid.word}",
+                    f"seed={cfg.run.seed} word={rope_scene.braid.word}",
                     f"segment_length={float(cfg.task.rope.mesh.segment_length)} "
                     f"radial_segments={int(cfg.task.rope.mesh.radial_segments)} "
                     f"particle_size={float(cfg.task.rope.particle_size)} "
@@ -396,6 +228,13 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
                     f"rope_kinetic_friction={float(cfg.task.rope.elastic.kinetic_friction)} "
                     f"substeps={int(cfg.env.sim.substeps)} "
                     f"preset_locked={bool(cfg.env.preset.locked)}",
+                    # FEM 后端的材料与接触参数（2026-08-10 从 Python 常量搬进配置）。
+                    f"rope_model={str(cfg.task.rope.model)} "
+                    + " ".join(
+                        f"fem.{key}={float(cfg.task.rope.fem[key])}"
+                        for key in ("E", "nu", "rho", "friction_mu",
+                                    "contact_d_hat", "follow_strength")
+                    ),
                     # Which strand the detector says is on top, and whether that
                     # agrees with the braid the scene was generated from. The
                     # detector reads centreline z at the crossing, so with tubes
@@ -414,14 +253,14 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
                 )
             ),
         )
-        print(f"untangle_continuous_trace -> {args.trace}")
+        print(f"untangle_continuous_trace -> {trace_path}")
 
     print(
-        f"untangle_continuous_start seed={args.seed} word={rope_scene.braid.word} "
+        f"untangle_continuous_start seed={cfg.run.seed} word={rope_scene.braid.word} "
         f"settle_steps={settle_steps} max_particle_step={moved:.6f} "
         f"crossings={state.crossing_count} gt_match={gt_ok} {gt_detail} budget={budget}"
     )
-    if args.verbose:
+    if cfg.run.verbose:
         for line in crossing_lines(
                 state,
                 rope_radius=float(cfg.task.rope.radius),
@@ -430,6 +269,9 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
             print(line)
 
     moves = 0
+    if stop_before_physics(cfg, rope_scene.scene, "untangle_continuous_physical_pinch_demo"):
+        raise SystemExit(0)
+
     with recording_session_from_config(
         rope_scene.scene,
         rope_scene.cameras,
@@ -449,7 +291,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
                 tail_clearance=float(pinch_cfg.tail_clearance),
                 max_taut_ratio=float(pinch_cfg.max_taut_ratio),
                 lane_overshoot=float(pinch_cfg.lane_overshoot),
-                grasp_strand=args.grasp_strand,
+                grasp_strand=cfg.run.grasp_strand,
             )
             if planned is None:
                 break
@@ -595,7 +437,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
                 held[0].ramp_to(flat_quat[0], pitch_steps)
 
             def release_grasp_attachment(_pre_release_pos=None, _final_target=None):
-                # `PBDHandleDragPrimitive` calls this as
+                # `HandleDragPrimitive` calls this as
                 # `before_release(pre_release_pos, final_target)` and reads the
                 # return value as "did something else take the handle over".
                 # Nothing does here -- the plug is simply handed back to the
@@ -673,7 +515,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
             # it to be guessed from a viewer full of stretched triangles. s near
             # the grasp arclength means the weld band is the culprit; s near 0
             # means the anchor.
-            if args.verbose:
+            if cfg.run.verbose:
                 for line in crossing_lines(
                 state,
                 rope_radius=float(cfg.task.rope.radius),
@@ -690,7 +532,7 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
 
     efficiency = (moves / braid_crossings) if braid_crossings else float("nan")
     print(
-        f"untangle_continuous_result seed={args.seed} terminal={state.is_terminal} "
+        f"untangle_continuous_result seed={cfg.run.seed} terminal={state.is_terminal} "
         f"moves={moves} braid_crossings={braid_crossings} "
         f"moves_per_crossing={efficiency:.2f} "
         f"final_crossings={state.crossing_count} "
@@ -701,69 +543,50 @@ def run_demo(args: argparse.Namespace, cfg) -> tuple[bool, object]:
     print_recording_saved(cfg.recording)
     return bool(state.is_terminal), rope_scene
 
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="untangle_continuous_pinch")
+def main(cfg: DictConfig) -> None:
+    # Every override this demo used to spell out as a flag is now a config path.
+    # The eleven hand-written `OmegaConf.merge` blocks that used to live here are
+    # gone; Hydra applies `key=value` from the command line, and writes both the
+    # resolved config and the overrides into the run's output directory, so
+    # "did that flag take effect" stops being unanswerable after the fact.
+    #
+    #   task.rope.mesh.segment_length=0.004
+    #   task.rope.fem.E=200000.0
+    #   task.rope.elastic.static_friction=0.35
+    #   task.rope.model=fem_ipc_tube
+    #   task.rope.free_end_connector.follow_enabled=false
+    #   task.braid.n_strands=2   task.braid.length=3
+    #   env.genesis.backend=cpu
+    #   run.viewer=true   run.grasp_strand=1   run.trace=auto
 
-def main() -> None:
-    args = parse_args()
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    if args.difficulty is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"braid": {"length": _DIFFICULTY_LENGTH[args.difficulty]}}}
-        )
-    if args.strands is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"braid": {"n_strands": args.strands}}}
-        )
-    if args.segment_length is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"mesh": {"segment_length": args.segment_length}}}}
-        )
-    if args.rope_model is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
-    if args.no_follow:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"free_end_connector": {"follow_enabled": False}}}}
-        )
-    if args.fem_e is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {"E": args.fem_e}}}})
-    if args.fem_friction_mu is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"fem": {"friction_mu": args.fem_friction_mu}}}}
-        )
-    if args.rope_static_friction is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"elastic": {"static_friction": args.rope_static_friction}}}}
-        )
-    if args.rope_kinetic_friction is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"elastic": {"kinetic_friction": args.rope_kinetic_friction}}}}
-        )
-    if args.substeps is not None:
-        # `_validate_locked_preset` pins substeps to 4 for topogym_tabletop_v1, and it
-        # only runs when preset.locked is set, so unlocking is the only way through.
-        # That switches off the table AABB, robot home pose and camera checks too.
+    # `recording.res` resizes cameras, so it has to be applied before the build.
+    cfg = apply_recording_camera_overrides(cfg)
+
+    # Alongside Hydra's own snapshot, one with the interpolations expanded -- see
+    # `save_resolved_config` for why the reference-preserving form is not enough.
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"untangle_continuous_config -> {resolved}", flush=True)
+
+    # The frozen baseline pins sim.substeps to 4 and only checks when
+    # env.preset.locked is set, so raising substeps needs both overrides. Say which
+    # one rather than leaving the validator's message as the whole explanation.
+    if int(cfg.env.sim.substeps) != 4 and bool(cfg.env.preset.locked):
         print(
-            f"untangle_continuous WARNING: sim.substeps={args.substeps} requires "
-            "env.preset.locked=false, which disables the whole frozen-baseline check. "
-            "Diagnostic run only; do not record a dataset from it.",
+            f"untangle_continuous: env.sim.substeps={int(cfg.env.sim.substeps)} is pinned "
+            "to 4 by the frozen topogym_tabletop_v1 baseline. Add env.preset.locked=false "
+            "to get past it -- that disables every other baseline check as well, so the "
+            "run is off-baseline and must not be recorded as a dataset.",
             flush=True,
         )
-        cfg = OmegaConf.merge(
-            cfg,
-            {"env": {"sim": {"substeps": args.substeps}, "preset": {"locked": False}}},
-        )
-    cfg = merge_recording_config(cfg, args)
-    cfg = OmegaConf.merge(cfg, {"env": {"genesis": {"backend": args.backend}}})
+
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
-    gs.init(backend=backends[cfg.env.genesis.backend])
+    gs.init(backend=backends[str(cfg.env.genesis.backend)])
 
-    solved, rope_scene = run_demo(args, cfg)
+    solved, rope_scene = run_demo(cfg)
 
-    if args.keep_open or args.viewer:
+    if cfg.run.keep_open or cfg.run.viewer:
         print("untangle_continuous holding the viewer open; Ctrl+C to exit.")
         while True:
             rope_scene.scene.step()

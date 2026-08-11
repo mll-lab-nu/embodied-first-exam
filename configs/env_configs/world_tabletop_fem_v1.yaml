@@ -8,6 +8,14 @@
 # 补丁让 IPC 按 substep_dt 前进，两个求解器共用同一时钟。版本史：1.0 曾用
 # substeps=1，插头走位后于 1.1 回到 4。
 #
+# 计算代价（2026-08-11 实测）：couple() 每 substep 调一次 _ipc_world.advance()
+# （coupler.py:818），所以 substeps=4 意味着每个 scene.step() 求解四次 IPC。
+# untangle 三绳场景实测 1.57 秒/步，一次单 move 的完整跑约 46 分钟。
+# 时间基准已由上面的补丁修正，这里剩下的纯粹是算力，不要再用降 substeps 提速——
+# 那正是 1.0 被推翻的取值。可用的旋钮：run.lite（降网格分辨率）、
+# task.rope.fem.newton_max_iterations / newton_tolerance（IPC 求解预算，
+# 默认 null = libuipc 的 1024 / 0.05）。只验管线不跑物理用 run.build_only=true。
+#
 # coupler / FEM 选项不在本文件：它们由 rope 后端按 rope.model 提供
 # （topogym/world/rope_backends/fem_ipc.py，取值 = 切片标定，可被任务配置的
 # rope.fem 块覆盖），经 SceneBuilder 的 scene_options 进入 gs.Scene。

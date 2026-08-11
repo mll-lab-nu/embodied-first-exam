@@ -56,7 +56,7 @@ def _ease(alpha: float) -> float:
 
 
 @dataclass(frozen=True)
-class PBDHandleDragResult:
+class HandleDragResult:
     success: bool
     grasped: bool
     released: bool
@@ -70,8 +70,16 @@ class PBDHandleDragResult:
 
 
 @dataclass(frozen=True)
-class PBDHandleDragPrimitive:
-    """Physically grasp a rigid handle whose PBD endpoint is link-attached."""
+class HandleDragPrimitive:
+    """Physically grasp a RIGID handle and carry it through waypoints.
+
+    Solver-agnostic by construction: it commands the arm and reads the handle's
+    rigid pose, and never touches the deformable the handle is attached to --
+    how that body is solved (PBD particles, FEM+IPC nodes) is the backend's
+    problem. It was called ``PBDHandleDragPrimitive`` until 2026-08-12, which
+    outlived the PBD era and misled a reader into thinking the rope material
+    needed changing.
+    """
 
     NOMINAL_PHASES: ClassVar[tuple[str, ...]] = (
         "open",
@@ -136,10 +144,10 @@ class PBDHandleDragPrimitive:
         ee_quat=None,
         trace: list[np.ndarray] | None = None,
         attachment_manager=None,
-    ) -> PBDHandleDragResult:
+    ) -> HandleDragResult:
         targets = [np.asarray(target, dtype=float) for target in target_centers]
         if not targets:
-            raise ValueError("PBDHandleDragPrimitive requires at least one target center.")
+            raise ValueError("HandleDragPrimitive requires at least one target center.")
         if target_steps is None:
             steps = [int(self.move_steps)] * len(targets)
         else:
@@ -228,7 +236,7 @@ class PBDHandleDragPrimitive:
             self._move_hand(controller, approach_hand, steps=max(1, self.move_steps // 2), quat=ee_quat)
             completed.append("recovery_retreat")
             final_pos = _entity_pos(handle)
-            return PBDHandleDragResult(
+            return HandleDragResult(
                 success=False,
                 grasped=False,
                 released=True,
@@ -378,7 +386,7 @@ class PBDHandleDragPrimitive:
                 else:
                     completed.append("safe_abort_no_recovery_step")
                 final_pos = _entity_pos(handle)
-                return PBDHandleDragResult(
+                return HandleDragResult(
                     success=False,
                     grasped=True,
                     released=released,
@@ -431,7 +439,7 @@ class PBDHandleDragPrimitive:
         completed.append("retreat")
         final_pos = _entity_pos(handle)
         success = target_error <= float(self.max_handle_error)
-        return PBDHandleDragResult(
+        return HandleDragResult(
             success=success,
             grasped=True,
             released=True,
@@ -521,7 +529,7 @@ class PBDHandleDragPrimitive:
                 if follow_error > float(abort_follow_error):
                     if self.verbose:
                         print(
-                            f"[pbd_handle abort {int(progress_index or 0):02d}/"
+                            f"[handle_drag abort {int(progress_index or 0):02d}/"
                             f"{int(progress_total or 0):02d}]"
                             f" label={progress_label}"
                             f" step={step:03d}/{steps:03d}"
@@ -537,7 +545,7 @@ class PBDHandleDragPrimitive:
                 ):
                     if self.verbose:
                         print(
-                            f"[pbd_handle abort {int(progress_index or 0):02d}/"
+                            f"[handle_drag abort {int(progress_index or 0):02d}/"
                             f"{int(progress_total or 0):02d}]"
                             f" label={progress_label}"
                             f" step={step:03d}/{steps:03d}"
@@ -554,7 +562,7 @@ class PBDHandleDragPrimitive:
                     if target_error > float(abort_target_error):
                         if self.verbose:
                             print(
-                                f"[pbd_handle abort {int(progress_index or 0):02d}/"
+                                f"[handle_drag abort {int(progress_index or 0):02d}/"
                                 f"{int(progress_total or 0):02d}]"
                                 f" label={progress_label}"
                                 f" step={step:03d}/{steps:03d}"
@@ -570,7 +578,7 @@ class PBDHandleDragPrimitive:
                 if target_error <= float(early_complete_target_error):
                     if self.verbose:
                         print(
-                            f"[pbd_handle early_complete "
+                            f"[handle_drag early_complete "
                             f"{int(progress_index or 0):02d}/"
                             f"{int(progress_total or 0):02d}]"
                             f" label={progress_label}"
@@ -593,7 +601,7 @@ class PBDHandleDragPrimitive:
         hand_yaw_text = _yaw_text(_quat_yaw(controller.hand_quat()))
         handle_yaw_text = _yaw_text(_entity_yaw(handle))
         print(
-            f"[pbd_handle {label:<16}]"
+            f"[handle_drag {label:<16}]"
             f" hand=({hand[0]:+.3f},{hand[1]:+.3f},{hand[2]:+.3f})"
             f" handle=({handle_pos[0]:+.3f},{handle_pos[1]:+.3f},{handle_pos[2]:+.3f})"
             f" finger_q=({finger_q[0]:.4f},{finger_q[1]:.4f})",
@@ -623,7 +631,7 @@ class PBDHandleDragPrimitive:
         hand_yaw_text = _yaw_text(_quat_yaw(controller.hand_quat()))
         handle_yaw_text = _yaw_text(_entity_yaw(handle))
         print(
-            f"[pbd_handle segment {index:02d}/{total:02d}]"
+            f"[handle_drag segment {index:02d}/{total:02d}]"
             f" label={label}"
             f" handle=({handle_pos[0]:+.3f},{handle_pos[1]:+.3f},{handle_pos[2]:+.3f})"
             f" finger_q=({finger_q[0]:.4f},{finger_q[1]:.4f})"
@@ -654,7 +662,7 @@ class PBDHandleDragPrimitive:
         target_delta = handle_pos - target
         target_error = float(np.linalg.norm(handle_pos - target))
         print(
-            f"[pbd_handle progress {index:02d}/{total:02d}]"
+            f"[handle_drag progress {index:02d}/{total:02d}]"
             f" label={label}"
             f" step={step:03d}/{steps:03d}"
             f" handle=({handle_pos[0]:+.3f},{handle_pos[1]:+.3f},{handle_pos[2]:+.3f})"

@@ -42,7 +42,7 @@ S 端插头 SOCKETED 常驻(fixed);自由端插头:**spawn latch 托住**(mesh-o
 
 ## 五、验证
 
-每阶段:untangle 回归门(参数等值断言+网格哈希,GPU viewer 应零变化)+ `python -m prototypes.cable_routing_physical_handle_demo --viewer --probe --verbose`(看:S 端子出线、插头从 spawn 座拔出、绕桩张力、插入 C 座、全程无 flyout/不中断)。
+每阶段:untangle 回归门(参数等值断言+网格哈希,GPU viewer 应零变化)+ `python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.probe=true run.verbose=true`(看:S 端子出线、插头从 spawn 座拔出、绕桩张力、插入 C 座、全程无 flyout/不中断)。
 
 ## 附录:迭代 2 的"脱手断流程"诊断(2026-07-12)
 

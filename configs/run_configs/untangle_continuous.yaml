@@ -1,0 +1,43 @@
+# untangle_continuous_physical_pinch_demo 的运行模式参数。
+#
+# 继承 run_configs/default.yaml 的通用字段，再加本 demo 自己的诊断开关。
+# 判据同 default.yaml：同一份 task / env 配置配上不同的 run.*，物理结果应当相同 ——
+# 因此绳子材料、网格、抓取步数不在这里，它们在 task 配置里，
+# 用点路径覆盖，例如 `task.rope.mesh.segment_length=0.004`。
+
+defaults:
+  - default
+  - _self_
+
+# --- trace ---------------------------------------------------------------
+# 每步把绳的状态写进一个文本文件。null = 关闭；"auto" = 自动生成带时间戳的
+# 文件名；其他字符串按路径用。
+#
+# 带时间戳而非固定名：RopeTrace 以 "w" 打开，固定名意味着每次运行都销毁上一次的
+# 记录。定位到本任务求解发散的那份 trace，是在下一次运行覆盖它的几分钟前手工拷出来的。
+trace: null
+trace_every: 1
+
+# --- 任务控制 ------------------------------------------------------------
+# 抓取次数上限。null = 用 oracle.max_moves_per_crossing × 交叉数。
+max_moves: null
+
+# 难度不在这里：task.difficulty 已经是任务配置里的元数据字段，
+# 而交叉数直接写 `task.braid.length=3` 即可，不需要第二套档位映射。
+# 此前 demo 里的 _DIFFICULTY_LENGTH 与配置值不一致，正是「要一处交叉
+# 跑出三处」那次事故的原因。
+
+# --- 诊断 ----------------------------------------------------------------
+# 强制抓指定的绳，而不是 planner 选的那根。设成**下面**那根就是接触测试：
+# 拖动下面的绳解不开交叉，所以上面那根必须全程保持在上面。
+# 看 trace 的 over_z 列，符号翻转即两根绳互相穿过。
+# 绳序按 braid.strand_colors：0=红，1=绿。null = 用 planner 的选择。
+grasp_strand: null
+
+# 把机械臂 home 位的静置换成 N 步手动步进，每 10 步打印插头位置。
+# 漂移曲线的形状用来判别机制。0 = 关闭。
+connector_probe_steps: 0
+
+# 绳端是否挂到插头上不在这里：它有对应的配置键，
+# 用 `task.rope.free_end_connector.follow_enabled=false` 关闭。
+# 关闭后抓取不会带动绳子，用于把插头的运动和绳的运动分开归因。

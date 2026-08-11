@@ -77,7 +77,7 @@ topogym/tasks/entangle/untangle_continuous.py        # 连续版场景构建（�
 topogym/planning/untangle_continuous_planner.py  # oracle = 逆 braid word
 topogym/generation/untangle_continuous_generator.py  # episode spec 契约
 configs/task_configs/untangle_continuous_topogym_tabletop_v1.yaml
-prototypes/untangle_continuous_inspect_demo.py   # 无机器人：看初始态 + 校验 GT
+demos/entangle/untangle_continuous_inspect_demo.py   # 无机器人：看初始态 + 校验 GT
 prototypes/untangle_continuous_solve_demo.py     # 机械臂跑 oracle 解缠
 tests/test_braid.py                          # braid 生成器纯单测（不依赖 Genesis）
 tests/test_rope_topology.py                  # 几何交叉检测单测（合成 polyline）

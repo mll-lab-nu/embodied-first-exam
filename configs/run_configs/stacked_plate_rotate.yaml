@@ -1,0 +1,18 @@
+# stacked_plate_physical_rotate_demo 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 任务结束后立刻关窗（与 keep_open 相反的一面）。此前是 --close-on-finish，
+# 各 demo 极性不一致（maze 用的是 store_false）；现在统一由 keep_open 表达，
+# 这一项只作为兼容保留，默认 false 时行为等同于原来的「不传 --close-on-finish」。
+close_on_finish: false
+
+# --- 数据生成相关（本轮不重新设计，原样保留）-----------------------------
+# 按 seed 做有界的布局随机化。默认关 = 确定性布局。
+randomize_layout: false
+# 随机化幅度档位（easy / default / hard），仅在 randomize_layout=true 时生效。
+difficulty: default
+# 写进 episode 元数据的变体标识。
+variant_id: default

@@ -5,4 +5,4 @@
 | 文件 | 说明 |
 | --- | --- |
 | `collision_based_il_contract_zh.md` | collision / contact-based 四个刚体任务的 IL demo 合约 |
-| `pi05_smoke_zh.md` | TopoGym H5 → π0.5 (OpenPI) 数据加载冒烟：compute_norm_stats + train 几步不报错。任务参数化，默认 swap |
+| `pi05_smoke_zh.md` | TopoGym H5 → π0.5 (OpenPI) 数据加载冒烟：compute_norm_stats + train 几步不报错。任务参数化，默认 untangle（2026-08-10 前是 swap，该 demo 已删除） |

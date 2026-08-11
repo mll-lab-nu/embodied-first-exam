@@ -12,6 +12,13 @@ from .onestroke_wall_planner import (
     plan_onestroke_separator,
 )
 from .peeling_planner import PeelingLiftCommand, plan_peeling_single_lift
+from .rope_winding_planner import (
+    RopeWindingRouteCommand,
+    WindingSpec,
+    plan_rope_winding_route,
+    post_center,
+    post_top_z,
+)
 from .stacked_plate_planner import (
     StackedPlateRotateCommand,
     plan_stacked_plate_rotation,
@@ -32,18 +39,23 @@ __all__ = [
     "OneStrokeWallCommand",
     "PeelingLiftCommand",
     "PlannedSubgoal",
+    "RopeWindingRouteCommand",
     "StackedPlateRotateCommand",
     "SwapMoveCommand",
     "UntangleContinuousMoveCommand",
     "UntangleEndpointMoveCommand",
     "WaypointPlan",
     "WaypointTarget",
+    "WindingSpec",
+    "post_center",
+    "post_top_z",
     "edge_name",
     "maze_edge_name",
     "plan_cable_routing_endpoint_route",
     "plan_maze_wall_removals",
     "plan_onestroke_separator",
     "plan_peeling_single_lift",
+    "plan_rope_winding_route",
     "plan_stacked_plate_rotation",
     "plan_swap_move",
     "plan_next_untangle_continuous_move",

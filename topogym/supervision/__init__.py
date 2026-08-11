@@ -15,6 +15,7 @@ from .pbd_probe import (
     probe_particles,
     probe_velocities,
 )
+from .step_bench import stop_before_physics
 from .rope_trace import RopeTrace, min_bend_radius
 from .rope_stability import (
     ParticleSpacingReport,
@@ -30,12 +31,23 @@ from .cable_routing import (
     rope_wrap_metrics,
     signature_text,
 )
+from .rope_winding import (
+    material_bins,
+    material_coords,
+    post_contact,
+    print_winding_verification,
+    rope_twist_turns,
+    winding_centerline,
+    winding_metrics,
+    winding_number,
+)
 
 __all__ = [
     "RopeTrace",
     "min_bend_radius",
     "DOMAIN_CORNER",
     "StepProbe",
+    "stop_before_physics",
     "ejected_mask",
     "max_particle_jump",
     "probe_particles",
@@ -55,4 +67,12 @@ __all__ = [
     "print_routing_verification",
     "rope_wrap_metrics",
     "signature_text",
+    "material_bins",
+    "material_coords",
+    "post_contact",
+    "print_winding_verification",
+    "rope_twist_turns",
+    "winding_centerline",
+    "winding_metrics",
+    "winding_number",
 ]

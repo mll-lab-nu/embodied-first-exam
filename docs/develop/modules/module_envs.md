@@ -11,4 +11,4 @@
 
 **现状/缺口**：`cable_routing`、`peeling`、`stacked_plate` 目前没有对应的 `*_mdp.py`，也就是说这三个任务还没有 RL 环境壳。已有的几个 `*_mdp.py` 里，obs 拼装、reward 计算、action 执行都写在同一个类里（例如 `SwapMdpEnv._build_obs` / `_compute_reward` / `step`），这是当前"能跑起来"的实用写法，和 `overall_module_dict_zh.md` 里 `generation`/`planning` 那套分层还没有打通——这是下一步要做的整合，而不是已经完成的架构。
 
-**不负责**：demo 专用调参和长脚本（`prototypes`）。
+**不负责**：demo 专用调参和长脚本（`demos`）。

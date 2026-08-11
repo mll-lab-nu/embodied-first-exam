@@ -1,0 +1,48 @@
+# 运行模式参数：描述「这一次怎么跑」，不描述「场景是什么」。
+#
+# 判据：同一份 task / env 配置，配上不同的 run.*，物理结果应当相同。
+# 因此相机、绳子材料、抓取步数这类量不属于这里，它们在 task / env / prefabs 里。
+#
+# 这一组的存在是为了消掉此前的重复：--backend / --seed / --viewer / --verbose /
+# --keep-open 这五个参数，在 12 个 demo 里各写了一遍，且 --seed 的默认值不一致
+# （maze_wall_removal 是 11，其余是 0）。详见
+# docs/develop/framework/demo_cli_and_config_zh.md。
+#
+# 每个 demo 特有的诊断开关不放这里，放同组的 run_configs/<demo>.yaml。
+
+# 计算后端不放这里：`env.genesis.backend` 本来就是配置键，
+# 再加一个 run.backend 就是重新制造这次要消灭的那种重复定义。
+# 用法：env.genesis.backend=cpu
+
+# 场景随机种子。属于「场景定义」，但每次运行都要换，所以给在这里作为默认值。
+# 它没有对应的配置键：现在是 SceneBuilder 的构造参数，不从配置读。
+seed: 0
+
+# 打开 Genesis viewer 窗口。
+viewer: false
+
+# 任务结束后继续步进，保持窗口不关。
+#
+# 统一为这一个正极性开关。此前有三套并存：--keep-open（10 个 demo）、
+# --close-on-finish（4 个，且 maze_wall_removal 用的是 store_false，与另外三个反义）、
+# --keep-open-no-step（2 个）。
+keep_open: false
+
+# 结束后保持窗口但不再步进（物理冻结，只能转视角）。
+keep_open_no_step: false
+
+# 逐步打印 primitive 的进度行。
+verbose: false
+
+# 只验管线，不跑物理：配置解析、场景构建、契约校验、primitive 构造完成后就退出。
+#
+# 一次完整的 untangle 物理跑是 46 分钟（2026-08-11 实测：1755 步 × 1.57 秒/步，
+# FEM+IPC 后端），而配置或迁移类改动要验的东西在前 90 秒就全部执行完了。
+# 判据：改动只涉及参数怎么传、场景怎么搭，用它；改动涉及物体怎么动，跑完整的。
+build_only: false
+
+# 建完场景后空跑 N 步并报每步耗时，然后退出。0 = 不做。
+# 场景静止、机械臂不动，量到的是一步的地板价：IPC 求解加上装着的每步钩子
+# （attachment manager、每个端点一个 connector latch、FEM 的 follow band 同步）。
+# 与真实运动时的速率对比可以分开两件事，判据见 topogym/supervision/step_bench.py。
+bench_steps: 0

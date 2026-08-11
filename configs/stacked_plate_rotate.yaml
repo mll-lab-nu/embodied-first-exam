@@ -1,0 +1,12 @@
+# stacked_plate_physical_rotate_demo 的主配置。
+
+defaults:
+  - config
+  - override task_configs@task: stacked_plate_topogym_tabletop_v1
+  # 纯刚体任务，不需要 FEM 那份 env。
+  - override env_configs@env: world_tabletop_v1
+  # stacked_plate 专用的抬高 home：base home 会在对称盘阵里穿模，
+  # 当初就是它导致过求解器 NaN。
+  - override robot_control_configs@robot_control: franka_panda_position_ik_stacked_plate_raised_home
+  - override run_configs@run: stacked_plate_rotate
+  - _self_

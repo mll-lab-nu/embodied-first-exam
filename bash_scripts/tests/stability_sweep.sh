@@ -6,7 +6,7 @@
 #
 # 现在就能对**确定性 layout** 跑（基线：单一场景在重复/难度下稳不稳）。
 # 等 layout_randomization 落地后，设 RANDOMIZE=1 才真正"跨种子"有意义
-# （demo 需已接 --randomize-layout / --difficulty；没接时本脚本自动不传这俩）。
+# （demo 需已接 randomize_layout / difficulty；没接时本脚本自动不传这俩）。
 #
 # 用法：
 #   bash bash_scripts/tests/stability_sweep.sh                 # 全部任务，默认 seeds
@@ -15,8 +15,8 @@
 #
 # 可调环境变量（都有默认值）：
 #   SEEDS="0 1 2 3 4"            扫哪些 seed
-#   DIFFICULTIES="default"       扫哪些难度（仅 RANDOMIZE=1 时生效并传 --difficulty）
-#   RANDOMIZE=0                  1=传 --randomize-layout（需 demo 已支持）；0=确定性基线
+#   DIFFICULTIES="default"       扫哪些难度（仅 RANDOMIZE=1 时生效）
+#   RANDOMIZE=0                  1=开 randomize_layout（需 demo 已支持）；0=确定性基线
 #   BACKEND=gpu                  计算后端
 #   TIMEOUT_S=1200               单格墙钟超时（秒）；超时算 TIMEOUT
 #   OUTDIR=runs/stability/<时间戳>
@@ -42,15 +42,15 @@ OUTDIR="${OUTDIR:-runs/stability/$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$OUTDIR"
 
 # task -> demo 模块 + 该任务 headless 稳定跑所需的额外参数（沿用 record_all_tasks.sh 的已知可跑法；
-# untangle/cable 加 --probe 以便捕捉"进程没崩但绳子飞出"的物理 blowup）。
+# cable_routing 开 probe 以便捕捉"进程没崩但绳子飞出"的物理 blowup）。
+# 参数一律是 Hydra 配置点路径（2026-08-10 起全部 demo 都用 Hydra）。
 declare -A TASKS=(
-  [untangle]="prototypes.untangle_physical_handle_demo"
-  [untangle_continuous]="prototypes.untangle_continuous_physical_pinch_demo"
-  [cable_routing]="prototypes.cable_routing_physical_handle_demo --allow-target-lag --probe"
-  [stacked_plate]="prototypes.stacked_plate_physical_rotate_demo"
-  [peeling]="prototypes.peeling_physical_demo --run-oracle"
+  [untangle]="demos.entangle.untangle_physical_handle_demo"
+  [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
+  [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true run.probe=true"
+  [stacked_plate]="demos.connectivity.stacked_plate_physical_rotate_demo"
 )
-ORDER=(untangle untangle_continuous cable_routing stacked_plate peeling)
+ORDER=(untangle untangle_continuous cable_routing stacked_plate)
 SELECTED=( "$@" ); [[ ${#SELECTED[@]} -eq 0 ]] && SELECTED=( "${ORDER[@]}" )
 
 if ! python -c "import topogym" 2>/dev/null; then
@@ -58,7 +58,7 @@ if ! python -c "import topogym" 2>/dev/null; then
   exit 1
 fi
 
-# RANDOMIZE=0 时难度无意义（demo 不吃 --difficulty），只跑一格 "(det)"。
+# RANDOMIZE=0 时难度无意义，只跑一格 "(det)"。
 if [[ "$RANDOMIZE" == "0" ]]; then DIFF_LIST=("(det)"); else read -ra DIFF_LIST <<< "$DIFFICULTIES"; fi
 
 # 分类：参数 = 退出码 + 日志路径。回显一个类别词。头条关注 CRASH*。
@@ -89,15 +89,15 @@ for task in "${SELECTED[@]}"; do
   read -ra parts <<< "$spec"; module="${parts[0]}"; extra=("${parts[@]:1}")
   for seed in $SEEDS; do
     for diff in "${DIFF_LIST[@]}"; do
-      rflags=()
-      if [[ "$RANDOMIZE" != "0" ]]; then rflags=(--randomize-layout --difficulty "$diff"); fi
+      rkv=()
+      if [[ "$RANDOMIZE" != "0" ]]; then rkv=(run.randomize_layout=true "run.difficulty=$diff"); fi
       log="$OUTDIR/${task}_seed${seed}_${diff}.log"
       start=$(date +%s)
-      # EXTRA_ARGS：附加到每次运行的 CLI 参数（如 FEM 后端：
-      #   EXTRA_ARGS="--env-config configs/env_configs/world_tabletop_fem_v1.yaml --rope-model fem_ipc_tube"）
+      # EXTRA_ARGS：附加到每次运行的 Hydra 覆盖，例如
+      #   EXTRA_ARGS="env_configs@env=world_tabletop_fem_v1 task.rope.model=fem_ipc_tube"
       read -ra extra_env <<< "${EXTRA_ARGS:-}"
       timeout "${TIMEOUT_S}s" python -m "$module" "${extra[@]}" "${extra_env[@]}" \
-        --seed "$seed" --backend "$BACKEND" "${rflags[@]}" >"$log" 2>&1
+        "run.seed=$seed" "env.genesis.backend=$BACKEND" "${rkv[@]}" >"$log" 2>&1
       code=$?
       dur=$(( $(date +%s) - start ))
       cls="$(classify "$code" "$log")"

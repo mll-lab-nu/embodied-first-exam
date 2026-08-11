@@ -71,3 +71,42 @@ rope_pbd:
     stretch_relaxation: 0.35
     bending_relaxation: 0.2
     volume_relaxation: 0.2
+
+# FEM + IPC 绳索后端的材料与接触参数。
+#
+# 2026-08-10 从 topogym/world/rope_backends/fem_ipc.py 的 `_DEFAULTS` 字典搬来。
+# 留在 Python 里的后果：contact_d_hat 与 follow_strength 只能改代码才能调，
+# 而且不会出现在任何运行记录里 —— 一次运行用的是什么材料参数，事后无从查证。
+#
+# 取值来自 spike 标定（tests/fem_ipc_rope_spike.py，run15）。
+# 写成十进制而非 1.0e5：PyYAML 的隐式解析把 `1.0e5` 当**字符串**，
+# 只有带正负号的 `1.0e+5` 才是浮点。
+rope_fem:
+  # 杨氏模量（Pa）。
+  E: 100000.0
+  # 泊松比。
+  nu: 0.45
+  # 密度（kg/m^3）。
+  rho: 650.0
+  # 绳↔绳的库仑摩擦系数。
+  friction_mu: 0.3
+  # IPC 接触势垒的作用距离（米）。**刻意取到 4mm 绳半径以下** ——
+  # libuipc 的 10mm 默认值会把两根叠放的绳撑开约 10mm。
+  # 该取值下实测静止交叉间距 9.66mm，目标 10mm。
+  contact_d_hat: 0.002
+  # 跟随带（被夹爪带动的那一段）软位置约束的强度。
+  follow_strength: 100.0
+  # 绳的无应力构型：spawn = 出生时的形状，straight = 拉直。
+  # cable_routing 的说明见 tasks/routing/cable_routing.py 的 rest_shape 分支。
+  rest_shape: spawn
+  # libuipc 的零相交初始态检查。null = 不传这个参数，用耦合器自身的默认值。
+  # cable_routing 覆写为 false：它的 routing post 是刻意重叠的静态复合碰撞体，
+  # 静态体互嵌没有自由度，豁免安全。
+  sanity_check_enable: null
+  # libuipc Newton 求解器的迭代上限与速度收敛容差。null = 用 libuipc 默认
+  # （1024 次 / 0.05），即与 2026-08-11 之前的行为完全相同。
+  # 暴露出来是因为运行时间的主要成本在 IPC 求解：一次 untangle 物理跑实测
+  # 1.57 秒/步，而这两项此前从未被设过，上限一直是 1024。
+  # 调小相当于允许接触求解提前收敛，属于精度换速度，需实测确认物理结论不变。
+  newton_max_iterations: null
+  newton_tolerance: null

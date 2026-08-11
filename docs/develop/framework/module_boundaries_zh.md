@@ -77,7 +77,7 @@ supervision/<task>.py                  # 监控指标 + HUD 行
 envs/<task>_mdp.py                     # Gym 环境
 generation/<task>_generator.py         # seed -> EpisodeSpec
 planning/<task>_planner.py             # plan / subgoal / waypoint
-prototypes/<task>_physical_<机构>_demo.py   # CLI 展示入口
+demos/<类别>/<task>_physical_<机构>_demo.py   # CLI 展示入口
 ```
 
 ---
@@ -112,8 +112,8 @@ world  ──►  tasks  ──►  verification  ──►  envs
 5. `planning/<task>_planner.py`（若有 oracle）。
 6. `supervision/<task>.py`（若有专属指标或 HUD 行）。
 7. `envs/<task>_mdp.py`（若要 RL 面）—— 终态转调 verification。
-8. `prototypes/<task>_physical_<机构>_demo.py`。
+8. `demos/<类别>/<task>_physical_<机构>_demo.py`。
 9. 四个 bash 注册表：`stability_sweep.sh` / `verify_dataset_recording.sh` /
    `record_all_tasks.sh` / `collect_and_view.sh`。
 10. 文档：`configs/README.md`、`configs/GEOMETRY_PARAMETERS_zh.md`、
-    `docs/develop/modules/module_tasks.md`、`module_prototypes.md`。
+    `docs/develop/modules/module_tasks.md`、`module_demos.md`。

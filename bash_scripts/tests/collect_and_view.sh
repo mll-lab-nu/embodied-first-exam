@@ -6,7 +6,7 @@
 # 用法：
 #   bash bash_scripts/tests/collect_and_view.sh              # 默认 untangle
 #   bash bash_scripts/tests/collect_and_view.sh untangle
-#   bash bash_scripts/tests/collect_and_view.sh swap
+#   bash bash_scripts/tests/collect_and_view.sh cable_routing
 #
 # 可调环境变量：
 #   BACKEND=gpu   SEED=0   EVERY=10   FPS=10   TOPOGYM_VENV=.venv
@@ -38,12 +38,11 @@ EVERY="${EVERY:-10}"
 FPS="${FPS:-10}"
 TASK="${1:-untangle}"
 
-# task -> demo 模块（+ 额外参数）。与 verify_dataset_recording.sh 保持一致。
+# task -> demo 模块（+ 额外的 Hydra 覆盖）。与 verify_dataset_recording.sh 保持一致。
 declare -A TASKS=(
-  [swap]="prototypes.swap_physical_grasp_demo"
-  [untangle]="prototypes.untangle_physical_handle_demo"
-  [untangle_continuous]="prototypes.untangle_continuous_physical_pinch_demo"
-  [cable_routing]="prototypes.cable_routing_physical_handle_demo --allow-target-lag"
+  [untangle]="demos.entangle.untangle_physical_handle_demo"
+  [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
+  [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true"
 )
 spec="${TASKS[$TASK]:-}"
 if [[ -z "$spec" ]]; then
@@ -65,13 +64,14 @@ H5="$OUTDIR/${TASK}_seed${SEED}.h5"
 
 echo "==================== 1/2 采集: $TASK ===================="
 echo "[collect] backend=$BACKEND seed=$SEED every=$EVERY -> $H5"
-# EXTRA_ARGS：附加 CLI 参数（如 FEM 后端的 --env-config/--rope-model）。
+# EXTRA_ARGS：附加的 Hydra 覆盖，例如
+#   EXTRA_ARGS="env_configs@env=world_tabletop_fem_v1 task.rope.model=fem_ipc_tube"
 read -ra extra_env <<< "${EXTRA_ARGS:-}"
 python -m "$module" "${extra[@]}" "${extra_env[@]}" \
-  --seed "$SEED" \
-  --backend "$BACKEND" \
-  --record-dataset "$H5" \
-  --dataset-every-n-steps "$EVERY" \
+  "run.seed=$SEED" \
+  "env.genesis.backend=$BACKEND" \
+  "run.record_dataset=$H5" \
+  "run.dataset_every_n_steps=$EVERY" \
   2>&1 | tee "$OUTDIR/$TASK.log"
 code=${PIPESTATUS[0]}
 if [[ $code -ne 0 ]]; then

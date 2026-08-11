@@ -184,7 +184,7 @@ configs/task_configs/<task>_topogym_tabletop_v1.yaml
 两处登记：topogym/core/taxonomy.py 的 CATEGORIES + topogym/tasks/__init__.py 的 re-export
 ```
 
-要能录数据还需 `prototypes/<task>_physical_<机构>_demo.py` 与四个 bash 注册表各一行
+要能录数据还需 `demos/<类别>/<task>_physical_<机构>_demo.py` 与四个 bash 注册表各一行
 （`record_all_tasks.sh` / `collect_and_view.sh` / `stability_sweep.sh` / `verify_dataset_recording.sh`
 只接受 demo 模块路径，跳过 demo 等于跳过全部四项）。
 
@@ -207,7 +207,7 @@ configs/task_configs/<task>_topogym_tabletop_v1.yaml
 | `tasks/<category>/<task>.py` | 269–816 | 下界 `legacy/swap.py`，上界 `entangle/untangle_continuous.py`；其中约 35 行是每个任务都逐字重复的坐标系转换块 |
 | `verification/<task>_verifier.py` | 48–237 | 下界 `stacked_plate_verifier.py`（仅委托给 layout），上界 `untangle_continuous_verifier.py`（含约 105 行交叉检测几何） |
 | `configs/task_configs/<task>_*.yaml` | 106–419 | 上界的 419 行中仅约 115 行为实际配置，其余为 PBD 调参记录 |
-| `prototypes/<task>_*_demo.py` | 329–658 | 其中约 150 行为各 demo 间重复的 CLI/bootstrap |
+| `demos/<类别>/<task>_*_demo.py` | 329–658 | 其中约 150 行为各 demo 间重复的 CLI/bootstrap |
 | `generation/<task>_generator.py` | 121–125 | 约 82% 为逐字重复的样板（前 36 行在 7 个 generator 中完全相同） |
 
 `untangle_continuous` 作为最近一个完整落地的任务，含两个 demo 的总量为 2692 行。

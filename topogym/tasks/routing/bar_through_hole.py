@@ -1,13 +1,25 @@
 """Bar Through Hole (docx 2.3): push a rigid shaft through a bulkhead aperture.
 
-Scene: a vertical bulkhead panel standing on the table with a rectangular
-aperture, a round shaft resting in a near cradle, and a far cradle whose top is
+Scene: a vertical bulkhead panel standing on the table with a **hexagonal**
+aperture, a hex shaft resting on two open cradles, and a far cradle whose top is
 level with the aperture sill so the threaded shaft lands on two supports.
 
-The panel's aperture is built from four separate convex boxes (posts, sill,
-lintel) rather than a mesh with a hole: `gs.morphs.Mesh(convexify=True)` fills
-holes in, so the repo's standing answer for a non-convex fixture is a compound
-of convex parts -- see `_add_routing_post` in `../routing/cable_routing.py`.
+Both the shaft and the bore are regular hexagonal prisms, sized by their
+across-flats dimension -- the way hex stock and hex broaches are actually
+specified. The profile is oriented flat-side-down, which is why the cradles are
+plain open blocks: a hex bar rests on a face and cannot roll, so the anti-roll
+chocks an earlier round shaft needed are gone.
+
+The panel's aperture is a compound of convex boxes rather than a mesh with a
+hole: `gs.morphs.Mesh(convexify=True)` fills holes in, so the repo's standing
+answer for a non-convex fixture is a compound of convex parts -- see
+`_add_routing_post` in `./cable_routing.py`. Four boxes give a rectangular
+opening at the hexagon's bounding box, and four more, each rotated onto one
+slanted hex edge, cut the remaining corner triangles away.
+
+The shaft itself IS convex, so it is a generated mesh loaded with
+`convexify=True`: the convex hull of a hex prism is the prism, i.e. collision is
+exact rather than approximated.
 
 The panel is deliberately short (top 0.150) so two things hold at once: the
 default home pose's fingertips (task z 0.1608) clear it without a task-local
@@ -34,12 +46,57 @@ from omegaconf import OmegaConf
 from topogym.core import EntityManifest
 from topogym.tasks._visuals import box_entity_enabled
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
+from topogym.world.rope import resolve_mesh_dir, write_obj
 
 
 def _list(value):
     if OmegaConf.is_config(value):
         value = OmegaConf.to_container(value, resolve=True)
     return value
+
+
+def hexagon_vertices(across_flats: float) -> np.ndarray:
+    """The 6 corners of a regular hexagon in the (y, z) plane, flat side down.
+
+    Vertices sit at 0, 60, ... 300 degrees, which puts a horizontal edge at the
+    bottom and another at the top and leaves the left/right extremes as corners.
+    Flat-side-down is the orientation that lets the shaft rest without rolling
+    and lets it seat on the aperture's lower edge.
+
+    ``across_flats`` is the inscribed diameter (2 * inradius) -- the dimension
+    hex stock is sold by. The circumradius is ``across_flats / sqrt(3)``.
+    """
+
+    inradius = 0.5 * float(across_flats)
+    circumradius = inradius * 2.0 / np.sqrt(3.0)
+    angles = np.deg2rad(np.arange(6) * 60.0)
+    return np.stack([circumradius * np.cos(angles), circumradius * np.sin(angles)], axis=1)
+
+
+def hex_prism_mesh(across_flats: float, length: float) -> tuple[np.ndarray, np.ndarray]:
+    """A regular hexagonal prism with its axis along local +X.
+
+    Local frame: cross-section in the YZ plane (flat side down, see
+    `hexagon_vertices`), extruded along X and centred on the origin. Axis-along-X
+    is chosen so the entity needs no spawn rotation and the verifier can read the
+    shaft direction as ``R @ (1, 0, 0)``.
+
+    Faces are 0-indexed triangles for `topogym.world.rope.write_obj`.
+    """
+
+    half = 0.5 * float(length)
+    corners = hexagon_vertices(across_flats)
+    verts = [[-half, y, z] for y, z in corners] + [[half, y, z] for y, z in corners]
+    faces: list[list[int]] = []
+    for i in range(6):
+        j = (i + 1) % 6
+        # side quad, split into two triangles, wound outward
+        faces.append([i, j, j + 6])
+        faces.append([i, j + 6, i + 6])
+    for k in range(1, 5):  # fan each cap from its first corner
+        faces.append([0, k + 1, k])
+        faces.append([6, 6 + k, 6 + k + 1])
+    return np.asarray(verts, dtype=float), np.asarray(faces, dtype=int)
 
 
 @dataclass(frozen=True)
@@ -100,21 +157,37 @@ class BarThroughHoleLayout:
     def aperture_center(self) -> np.ndarray:
         return self.position_to_world((self.panel_x, 0.0, float(self.cfg.aperture.center_z)))
 
-    def aperture_rect(self) -> tuple[tuple[float, float], tuple[float, float]]:
-        """Aperture bounds as ((y_min, y_max), (z_min, z_max)) in world coordinates."""
+    @property
+    def aperture_across_flats(self) -> float:
+        return float(self.cfg.aperture.across_flats)
 
-        half_y = 0.5 * float(self.cfg.aperture.width)
-        half_z = 0.5 * float(self.cfg.aperture.height)
+    @property
+    def aperture_inradius(self) -> float:
+        return 0.5 * self.aperture_across_flats
+
+    @property
+    def aperture_circumradius(self) -> float:
+        return self.aperture_inradius * 2.0 / np.sqrt(3.0)
+
+    def aperture_bbox(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        """The hexagon's bounding box as ((y_min, y_max), (z_min, z_max)), world.
+
+        This is the rectangular opening the four frame boxes leave; the four
+        corner boxes then trim it down to the hexagon itself.
+        """
+
         center = self.aperture_center()
+        half_y = self.aperture_circumradius
+        half_z = self.aperture_inradius
         return (
             (float(center[1] - half_y), float(center[1] + half_y)),
             (float(center[2] - half_z), float(center[2] + half_z)),
         )
 
     def sill_top_z(self) -> float:
-        """World z of the aperture's lower edge -- what a threaded shaft rests on."""
+        """World z of the aperture's flat lower edge -- what a threaded shaft rests on."""
 
-        return float(self.aperture_rect()[1][0])
+        return float(self.aperture_center()[2] - self.aperture_inradius)
 
     # ----- shaft ------------------------------------------------------------
 
@@ -123,8 +196,18 @@ class BarThroughHoleLayout:
         return float(self.cfg.bar.length)
 
     @property
-    def bar_radius(self) -> float:
-        return float(self.cfg.bar.radius)
+    def bar_across_flats(self) -> float:
+        return float(self.cfg.bar.across_flats)
+
+    @property
+    def bar_inradius(self) -> float:
+        """Half the across-flats size: how far the flat bottom sits below the axis."""
+
+        return 0.5 * self.bar_across_flats
+
+    @property
+    def bar_circumradius(self) -> float:
+        return self.bar_inradius * 2.0 / np.sqrt(3.0)
 
     def bar_rest_center(self) -> np.ndarray:
         return self.position_to_world(self.cfg.bar.rest_pos)
@@ -215,10 +298,15 @@ class BarThroughHoleSceneBuilder:
     # ------------------------------------------------------------------ panel
 
     def _add_panel(self, scene, manifest: EntityManifest, layout: BarThroughHoleLayout) -> None:
-        """Four convex boxes whose union is a wall with a rectangular aperture.
+        """Convex boxes whose union is a wall with a hexagonal aperture.
 
-        Faces are tiled edge-to-edge, never overlapped: coincident faces on two
-        boxes z-fight in the rasterizer.
+        Two groups. The frame (posts, sill, lintel) leaves a rectangular opening
+        at the hexagon's bounding box; its faces are tiled edge-to-edge, never
+        overlapped, because coincident faces z-fight in the rasterizer. The four
+        corner pieces then each lie along one slanted hex edge and cut away the
+        triangle between that edge and the rectangle's corner. Those DO overlap
+        the frame -- volumetric overlap is fine, it is only coplanar faces that
+        z-fight.
         """
 
         panel = self.task_cfg.panel
@@ -230,13 +318,13 @@ class BarThroughHoleSceneBuilder:
         width = float(panel.width)
         top = float(panel.top_z)
         # Lay the parts out in task-frame numbers straight from the config and
-        # convert only the finished centres, rather than round-tripping the
-        # aperture through world coordinates and back.
-        ap_y_max = 0.5 * float(self.task_cfg.aperture.width)
-        ap_y_min = -ap_y_max
-        ap_half_h = 0.5 * float(self.task_cfg.aperture.height)
-        ap_z_min = float(self.task_cfg.aperture.center_z) - ap_half_h
-        ap_z_max = float(self.task_cfg.aperture.center_z) + ap_half_h
+        # convert only the finished centres.
+        across_flats = float(self.task_cfg.aperture.across_flats)
+        inradius = 0.5 * across_flats
+        circumradius = inradius * 2.0 / np.sqrt(3.0)
+        center_z = float(self.task_cfg.aperture.center_z)
+        ap_y_max, ap_y_min = circumradius, -circumradius
+        ap_z_min, ap_z_max = center_z - inradius, center_z + inradius
 
         post_width = 0.5 * (width - (ap_y_max - ap_y_min))
         if post_width <= 0.0:
@@ -244,13 +332,11 @@ class BarThroughHoleSceneBuilder:
                 f"Panel width {width} is not wider than the aperture {(ap_y_max - ap_y_min)}."
             )
         if ap_z_max >= top:
-            raise ValueError(
-                f"Aperture top {ap_z_max} must sit below the panel top {top}."
-            )
+            raise ValueError(f"Aperture top {ap_z_max} must sit below the panel top {top}.")
         # Inner face flush with the aperture edge -- overlapping the two would
         # silently narrow the opening.
         post_center_y = ap_y_max + 0.5 * post_width
-        parts = (
+        frame = (
             # name, task-frame centre, full size
             ("panel_post_left", (layout.panel_x, +post_center_y, 0.5 * ap_z_max), (thickness, post_width, ap_z_max)),
             ("panel_post_right", (layout.panel_x, -post_center_y, 0.5 * ap_z_max), (thickness, post_width, ap_z_max)),
@@ -265,7 +351,7 @@ class BarThroughHoleSceneBuilder:
                 (thickness, width, top - ap_z_max),
             ),
         )
-        for name, center, size in parts:
+        for name, center, size in frame:
             manifest.add(
                 name,
                 scene.add_entity(
@@ -278,16 +364,63 @@ class BarThroughHoleSceneBuilder:
                     name=name,
                 ),
             )
+        self._add_aperture_corners(scene, manifest, layout, thickness, color)
+
+    def _add_aperture_corners(self, scene, manifest, layout, thickness, color) -> None:
+        """One box per slanted hex edge, trimming the rectangle down to a hexagon."""
+
+        across_flats = float(self.task_cfg.aperture.across_flats)
+        inradius = 0.5 * across_flats
+        center_z = float(self.task_cfg.aperture.center_z)
+        corners = hexagon_vertices(across_flats)
+        # Each corner triangle's depth measured perpendicular to its slant edge is
+        # inradius/2; overlapping past that just buries the piece in the frame.
+        depth = 0.5 * inradius + float(getattr(self.task_cfg.aperture, "corner_overlap", 0.004))
+        edge_len = float(np.linalg.norm(corners[1] - corners[0]))
+        length = edge_len + 2.0 * float(getattr(self.task_cfg.aperture, "corner_overlap", 0.004))
+
+        index = 0
+        for k in range(6):
+            p, q = corners[k], corners[(k + 1) % 6]
+            delta = q - p
+            if abs(delta[1]) < 1e-12:
+                continue  # the horizontal top/bottom edges are the lintel and sill
+            mid = 0.5 * (p + q)
+            outward = np.array([delta[1], -delta[0]], dtype=float)
+            outward /= np.linalg.norm(outward)
+            if float(np.dot(outward, mid)) < 0.0:
+                outward = -outward
+            seat = mid + outward * (0.5 * depth)
+            name = f"panel_chamfer_{index}"
+            index += 1
+            manifest.add(
+                name,
+                scene.add_entity(
+                    gs.morphs.Box(
+                        pos=tuple(
+                            layout.position_to_world(
+                                (layout.panel_x, float(seat[0]), center_z + float(seat[1]))
+                            )
+                        ),
+                        size=(thickness, length, depth),
+                        # A rotation about x turns the box within the YZ plane; the
+                        # box's length axis is y, so this lays it along the edge.
+                        euler=(float(np.degrees(np.arctan2(delta[1], delta[0]))), 0.0, 0.0),
+                        fixed=True,
+                    ),
+                    surface=materials.plastic("board", color),
+                    name=name,
+                ),
+            )
 
     # ---------------------------------------------------------------- cradles
 
     def _add_cradles(self, scene, manifest: EntityManifest, layout: BarThroughHoleLayout) -> None:
-        """U-shaped shaft rests: a base plus two side chocks.
+        """Open flat-top blocks the shaft rests across.
 
-        A round shaft on a flat surface is in neutral equilibrium about its own
-        axis, so it drifts sideways under any numerical asymmetry. The chocks
-        bound that drift. They are placed away from the grasp x so the fingers
-        close on bare shaft.
+        No side chocks: a hexagonal shaft lies on one of its faces and cannot
+        roll, which is what the earlier round shaft's chocks existed to prevent.
+        Blocks sit away from the grasp x so the fingers close on bare shaft.
         """
 
         for name, spec in layout.cradle_specs():
@@ -311,49 +444,37 @@ class BarThroughHoleSceneBuilder:
                     name=f"{name}_base",
                 ),
             )
-            chock = tuple(float(v) for v in _list(spec.chock_size))
-            chock_gap = float(spec.chock_gap)
-            for sign, tag in ((1.0, "l"), (-1.0, "r")):
-                manifest.add(
-                    f"{name}_chock_{tag}",
-                    scene.add_entity(
-                        gs.morphs.Box(
-                            pos=tuple(
-                                layout.position_to_world(
-                                    (
-                                        center_x,
-                                        sign * (0.5 * chock_gap + 0.5 * chock[1]),
-                                        base_top + 0.5 * chock[2],
-                                    )
-                                )
-                            ),
-                            size=chock,
-                            fixed=True,
-                        ),
-                        surface=materials.plastic("fixture", color),
-                        name=f"{name}_chock_{tag}",
-                    ),
-                )
 
     # -------------------------------------------------------------------- bar
 
     def _add_bar(self, scene, manifest: EntityManifest, layout: BarThroughHoleLayout) -> None:
-        """The shaft: a free rigid cylinder with its axis along +x.
+        """The shaft: a free rigid hexagonal prism with its axis along +x.
 
-        `gs.morphs.Cylinder`'s local axis is z (see `_write_disk_urdf`'s
-        `euler=(90,0,0)` for a y axis in stacked_plate), so a +90 degree turn
-        about y points it along x.
+        Genesis has no hex primitive, so the prism is generated and loaded as a
+        mesh. `convexify=True` is exact here rather than an approximation: a
+        prism is convex, so its convex hull is itself. `hex_prism_mesh` already
+        builds it axis-along-X, so no spawn rotation is needed and the verifier
+        reads the shaft direction as ``R @ (1, 0, 0)``.
         """
 
         bar = self.task_cfg.bar
+        verts, faces = hex_prism_mesh(float(bar.across_flats), float(bar.length))
+        mesh_dir = resolve_mesh_dir(
+            getattr(bar, "mesh_output_dir", "runs/generated_meshes/bar_through_hole")
+        )
+        mesh_path = mesh_dir / "bar_hex_prism.obj"
+        write_obj(mesh_path, verts, faces)
         manifest.add(
             "bar",
             scene.add_entity(
-                gs.morphs.Cylinder(
+                gs.morphs.Mesh(
+                    file=str(mesh_path.resolve()).replace("\\", "/"),
                     pos=tuple(layout.bar_rest_center()),
-                    radius=float(bar.radius),
-                    height=float(bar.length),
-                    euler=(0.0, 90.0, 0.0),
+                    scale=1.0,
+                    decimate=False,
+                    convexify=True,
+                    fixed=False,
+                    file_meshes_are_zup=False,
                 ),
                 material=gs.materials.Rigid(rho=float(getattr(bar, "rho", 2700.0))),
                 surface=materials.plastic("object", _list(bar.color)),
@@ -387,31 +508,42 @@ class BarThroughHoleSceneBuilder:
             self._add_bolts(scene, manifest, layout, bolts)
 
     def _add_flange(self, scene, manifest, layout, flange) -> None:
-        """A bolted border framing the aperture on the panel's near face."""
+        """A hexagonal bolted collar around the bore, on the panel's near face.
+
+        Six segments, one per hex edge, each seated just outside its edge so the
+        collar traces the bore rather than covering it. Collision-free, so the
+        overlap at the corners is cosmetic only.
+        """
 
         band = float(flange.band)
         depth = float(flange.depth)
         color = _list(flange.color)
         face_x = layout.panel_x - 0.5 * layout.panel_thickness - 0.5 * depth
-        ay1 = 0.5 * float(self.task_cfg.aperture.width)
-        ay0 = -ay1
-        ap_half_h = 0.5 * float(self.task_cfg.aperture.height)
-        az0 = float(self.task_cfg.aperture.center_z) - ap_half_h
-        az1 = float(self.task_cfg.aperture.center_z) + ap_half_h
-        outer_width = (ay1 - ay0) + 2.0 * band
-        parts = (
-            ("flange_top", (face_x, 0.0, az1 + 0.5 * band), (depth, outer_width, band)),
-            ("flange_bottom", (face_x, 0.0, az0 - 0.5 * band), (depth, outer_width, band)),
-            ("flange_left", (face_x, ay1 + 0.5 * band, 0.5 * (az0 + az1)), (depth, band, az1 - az0)),
-            ("flange_right", (face_x, ay0 - 0.5 * band, 0.5 * (az0 + az1)), (depth, band, az1 - az0)),
-        )
-        for name, center, size in parts:
+        across_flats = float(self.task_cfg.aperture.across_flats)
+        center_z = float(self.task_cfg.aperture.center_z)
+        corners = hexagon_vertices(across_flats)
+        edge_len = float(np.linalg.norm(corners[1] - corners[0]))
+        for k in range(6):
+            p, q = corners[k], corners[(k + 1) % 6]
+            delta = q - p
+            mid = 0.5 * (p + q)
+            outward = np.array([delta[1], -delta[0]], dtype=float)
+            outward /= np.linalg.norm(outward)
+            if float(np.dot(outward, mid)) < 0.0:
+                outward = -outward
+            seat = mid + outward * (0.5 * band)
+            name = f"flange_{k}"
             manifest.add(
                 name,
                 scene.add_entity(
                     gs.morphs.Box(
-                        pos=tuple(layout.position_to_world(center)),
-                        size=tuple(float(v) for v in size),
+                        pos=tuple(
+                            layout.position_to_world(
+                                (face_x, float(seat[0]), center_z + float(seat[1]))
+                            )
+                        ),
+                        size=(depth, edge_len + band, band),
+                        euler=(float(np.degrees(np.arctan2(delta[1], delta[0]))), 0.0, 0.0),
                         fixed=True,
                         collision=False,
                     ),

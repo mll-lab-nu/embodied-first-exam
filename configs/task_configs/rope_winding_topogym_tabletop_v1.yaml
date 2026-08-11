@@ -1,0 +1,347 @@
+# Rope Winding layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# 任务书 §2.4「绳子绕柱（0 -> 2 圈）」：柱底固定、柱顶是改变 winding 的唯一
+# gateway；绳一端由固定端子锚定，夹爪持自由端插头，一次连续环绕轨迹绕
+# winding.turns 圈后把插头放进目标平嵌端口。winding number 方向敏感：
+# 绕反方向计为负值，与目标严格区分（覆盖 winding.direction=cw 即失败对照例）。
+#
+# 线圈化的构造性规避（2026-08-11，根因链见 rope_backend_migration_zh.md 螺旋章）：
+#   1. 出生路线是单段 R=0.20m 的缓弧（166 度）——静止曲率 kappa_0 均匀且极小，
+#      无任何紧钩形；spawn 与 straight 两种静止形语义在此几乎重合；
+#   2. rope.fem.rest_shape=straight 显式声明（保险带：绳的无应力构型 = 直杆）；
+#   3. 富余最小化：绳长 0.580m = oracle 全程最大需求 0.537m x 1.08
+#      （几何预算脚本：scratchpad/winding_geometry.py，会话产物）；
+#   4. 自由跨距短：锚点/柱/目标口彼此靠近，富余无处成圈。
+#
+# 资产与 cable_routing 同源共享（routing post / fixed terminal / 工业插头 /
+# 平嵌端口 prefab），场景由通用的 CableRoutingSceneBuilder 构建
+# （tasks/routing/rope_winding.py 是薄继承，见该文件 docstring）。
+
+task:
+  id: rope_winding
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: rope_winding_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+fixtures:
+  # 绳的锚定端参考点。视觉由 rope.fixed_terminal 承担（同 cable_routing），
+  # 这里的桩体关闭，只提供 routes/target_signature 要用的坐标。
+  S:
+    type: start
+    enabled: false
+    pos: [-0.150, 0.100, 0.019]
+    radius: 0.014
+    height: 0.032
+    color: [0.02, 0.85, 0.12]
+    collision: false
+  # 绕线柱。布局（winding_geometry.py 预算）：柱在工作区中心附近，机械臂绕柱
+  # 720 度的轨迹全程远离工作区边界。
+  POST:
+    type: peg
+    pos: [0.020, 0.020, 0.031]
+    radius: 0.012
+    height: 0.070
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [1.00, 0.48, 0.00]
+    # 柱必须是实体：绳缠在它上面，接触就是任务本身
+    # （cable_routing 在配置里留 false、由 demo 覆写，是因为它另有一个不碰撞的
+    #  oracle demo；本任务只有物理 demo，所以直接写最终值）。
+    collision: true
+    routing_post_dress: true
+  # 目标端口：绕完 turns 圈后插头的放置点，「距离不远」（离柱 0.164m）。
+  C:
+    type: connector
+    pos: [0.150, 0.120, 0.019]
+    size: [0.026, 0.040, 0.034]
+    color: [0.85, 0.05, 0.05]
+    collision: false
+    flush_port: true
+
+# 缠绕 oracle 的几何参数（planning/rope_winding_planner.py 读取）。
+winding:
+  post: POST
+  # 目标圈数。带号：direction=ccw 时目标 winding number = +turns。
+  turns: 2
+  # ccw = 俯视逆时针（+z 右手系）。cw 是方向反转的失败对照例
+  # （任务书要求的 contrast pair：同样的抓取位形，镜像轨迹，winding = -turns）。
+  direction: ccw
+  # 夹爪绕柱轨道半径。下限由夹爪体积定：指垫+插头法兰在柱杆外需要 ~0.04；
+  # 0.050 另留 1cm 余量。绳在张力下自行收落到柱面（半径 0.016），不需要
+  # 轨道贴柱。
+  wind_radius: 0.050
+  # 第一圈的轨道高度（task z）。柱高 0.070：起点离桌面 3cm，绳垂到桌面以上
+  # 的柱杆段接触。
+  wind_z_start: 0.030
+  # 每圈爬升。1.5 x 绳径（8mm）：上一圈的绳让开下一圈，圈间由 IPC 的
+  # d_hat=2mm 势垒定自然间距。2 圈终点 z = 0.054 < 柱顶 0.070（gateway 语义：
+  # 全程低于柱顶，不越顶）。
+  climb_per_turn: 0.012
+  # 每圈的路点数。45 度/点，弧段 ~39mm；折线相对真圆的最大偏差 3.8mm，
+  # 小于绳径，绳自己会贴成圆。12 点（30 度）也可以，只是更慢。
+  arc_points_per_turn: 8
+  # 出绕后沿切向延伸多远再转向目标口（卸载缠绕接触，同 cable 的
+  # peg_departure_extension 思路）。
+  exit_extension: 0.060
+  # 2026-08-12 撤销：这里曾有一个 `swivel` 开关，让插头随轨道角原地自转来抵消扭转。
+  # 实测反而让绳与夹爪缠得更厉害——绳端焊在插头上，转插头等于把绳贴着静止的指垫拧。
+  # 扭转改由绳端在插头内自转来释放，见 rope.fem.follow_swivel。
+  # ---- 速度（米/步）。步数由「段长 ÷ 速度」算出来，所以整条路线匀速 ----
+  # 这是本任务唯一的耗时旋钮：一步 FEM+IPC 约 0.66 秒（2026-08-11 实测，
+  # 见 docs/develop/physics/fem_ipc_step_cost_zh.md），总时长 ≈ 路径长 ÷ 速度
+  # × 0.66 秒。tests/check_rope_winding_geometry.py 会把预算打出来。
+  #
+  # 缠绕段：绳正被拖上柱子，快了绳跟不上、贴不住柱面。
+  # 0.0009 是 cable 缠桩节奏（0.0005）的 1.8 倍；再快要盯 PROBE 的 winding
+  # 曲线是否还每圈涨 1。
+  wind_speed: 0.0009
+  # 自由段（提起 / 拉向柱 / 出绕 / 去目标口 / 插入）：绳只是跟着走，
+  # 没有新的接触要建立，可以快一档。
+  travel_speed: 0.0020
+  # 段步数下限，防止极短段（插入只有 35mm）被算成几步的猛冲。
+  min_segment_steps: 40
+
+# 语义目标（episode 溯源与标记用；winding 的地面真值由
+# supervision/rope_winding.py 的 winding number 计算，不走签名判定）。
+target_signature:
+  - {fixture: POST, relation: through}
+  - {fixture: C, relation: endpoint}
+
+# CableRoutingSceneBuilder.route_point 与 rope_wrap_metrics 读取的通用旋钮。
+# 本任务没有 cable 的多桩布线 oracle，smooth_route 相关键不存在即不启用。
+routing:
+  side_clearance: 0.055
+  wrap_clearance: 0.032
+  wrap_contact_tolerance: 0.010
+  wrap_near_tolerance: 0.036
+  # 缠绕圈带跨 z 0.030~0.054，高度带放宽到覆盖整个爬升区间。
+  wrap_height_tolerance: 0.040
+
+routes:
+  # 出生路线 = 静止形（rest_shape=straight 下它是初始预应力的来源）。
+  # 单段 R=0.20m 圆弧（圆心 (0.003, -0.029)，180 度），弧长 0.628m：
+  #   - 均匀 kappa_0 = 5/m，无孤立紧钩（cable 螺旋事故的模板是 0.027m 的钩）；
+  #   - 从柱南侧绕过，spawn 时不环绕柱（winding number 出生为 0，离线校验过）；
+  #   - 离柱最近 0.188m、离 C 最近 0.277m，插头出生点离柱 0.224m、离 C 0.277m；
+  #   - 富余：oracle 绷紧路径最紧时刻在 C 上方 hover（约 0.553m），留 ~0.075m
+  #     （12%）。cable_routing 出事时是 0.119m/19%，untangle 出生即 82% 伸展。
+  # 由 winding_geometry.py 生成；改布局必须重跑该脚本再改这里。
+  initial:
+    - {fixture: S, relation: center}
+    - {pos: [-0.188, 0.032, 0.009]}
+    - {pos: [-0.196, -0.046, 0.009]}
+    - {pos: [-0.174, -0.121, 0.009]}
+    - {pos: [-0.125, -0.182, 0.009]}
+    - {pos: [-0.057, -0.219, 0.009]}
+    - {pos: [0.021, -0.228, 0.009]}
+    - {pos: [0.095, -0.206, 0.009]}
+    - {pos: [0.156, -0.157, 0.009]}
+  # 参考终态（slack 报告用，不驱动 oracle）：S -> 柱 -> C。
+  goal:
+    - {fixture: S, relation: center}
+    - {fixture: POST, relation: through}
+    - {fixture: C, relation: endpoint}
+
+rope:
+  name: winding_cable
+  model: fem_ipc_tube
+  # 低分辨率档：run.lite=true 时套用（与 cable 同结构）。
+  lite:
+    particle_size: 0.006
+    mesh:
+      segment_length: 0.014
+      radial_segments: 6
+      maxvolume: 0.00000012
+    pbd:
+      max_stretch_solver_iterations: 6
+      max_bending_solver_iterations: 3
+      max_volume_solver_iterations: 3
+  # FEM + IPC 材料单源 = prefabs.rope_fem（与 untangle / cable_routing 同源）。
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    # 本任务覆写（prefab 默认 spawn）：无应力构型 = 直杆。出生缓弧成为真实的
+    # 弯曲预应力（真实电缆被摆成弧形的状态），缠绕产生的形变以直杆为基准度量。
+    rest_shape: straight
+    # 两端的跟随带当作**转环**：仍然定住绳端沿轴和横截面上的位置，但不再约束它绕轴的转角。
+    #
+    # 关掉的话两端都是扭转夹具，绕柱每圈往绳里灌一整圈扭转、无处可去，绳最后是拧着的，
+    # 而且会顺着扭转缠上指垫。打开后扭转从两端自行泄掉。
+    # 实现见 world/rope_backends/fem_ipc.py 的 _FollowSync._spun()。
+    follow_swivel: true
+    # routing post 是刻意重叠的静态复合碰撞体（shaft + 喇叭底座），libuipc 的
+    # 零相交初始态检查必然报错；静态体互嵌无自由度，豁免安全（同 cable）。
+    sanity_check_enable: false
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
+  color: [0.00, 0.90, 0.78]
+  anchor_start: true
+  anchor_end: false
+  anchor_radius: 0.009
+  radius: ${prefabs.rope_pbd.radius}
+  centerline_spline: true
+  z: 0.009
+  endpoint_handle:
+    enabled: true
+    name: winding_free_end_handle
+    # box 回退分支的字段（connector.enabled=false 时才生效），同 cable 留档值。
+    shape: box
+    size: [0.022, 0.022, 0.032]
+    grip_width: 0.022
+    radius: 0.011
+    height: 0.032
+    # 搬运/落座 z = route_z + z_offset，单源在 physical_handle（机械臂夹的就是
+    # 这个插头，两处各写一份会在只改一处时静默分叉）。
+    z_offset: ${task.physical_handle.z_offset}
+    color: ${prefabs.rope_endpoint_connector.color}
+    # 抓取契约的最终值直接写在这里（cable_routing 由 demo 的 derive_config 覆写，
+    # 是因为它的场景要同时服务不抓插头的 oracle demo）：
+    #   rigid_handle = 绳端跟随插头刚体；fixed=false = 插头是动态体；
+    #   collision=false = 插头只有网格（spawn latch / 抓取 attachment 驱动它）；
+    #   exclude_pbd_collision=true = 绳端粒子不与自己的插头碰撞。
+    attachment_mode: rigid_handle
+    fixed: false
+    collision: false
+    exclude_pbd_collision: true
+    friction: ${task.physical_handle.handle_friction}
+    rho: ${task.physical_handle.rho}
+    connector:
+      enabled: true
+      pin_depth: ${prefabs.rope_endpoint_connector.pin_depth}
+      pin_radius: ${prefabs.rope_endpoint_connector.pin_radius}
+      flange_radius: ${prefabs.rope_endpoint_connector.flange_radius}
+      flange_height: ${prefabs.rope_endpoint_connector.flange_height}
+      column_radius: ${prefabs.rope_endpoint_connector.column_radius}
+      column_height: ${prefabs.rope_endpoint_connector.column_height}
+      grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
+      radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
+      output_dir: .cache/topogym/meshes/rope_winding
+    spawn_port:
+      enabled: true
+      rim_radius: ${prefabs.rope_flush_port.rim_radius}
+      rim_height: ${prefabs.rope_flush_port.rim_height}
+      recess_radius: ${prefabs.rope_flush_port.recess_radius}
+      color: ${prefabs.rope_flush_port.ring_color}
+  # S 固定端：工业端子（绳的不可动端从 gland 顶垂直引出），同 cable prefab。
+  fixed_terminal:
+    enabled: true
+    base_radius: ${prefabs.rope_fixed_terminal.base_radius}
+    base_height: ${prefabs.rope_fixed_terminal.base_height}
+    body_radius: ${prefabs.rope_fixed_terminal.body_radius}
+    body_height: ${prefabs.rope_fixed_terminal.body_height}
+    gland_radius: ${prefabs.rope_fixed_terminal.gland_radius}
+    gland_height: ${prefabs.rope_fixed_terminal.gland_height}
+    radial_segments: ${prefabs.rope_fixed_terminal.radial_segments}
+    color: ${prefabs.rope_fixed_terminal.color}
+    output_dir: .cache/topogym/meshes/rope_winding
+  particle_size: ${prefabs.rope_pbd.particle_size}
+  mesh:
+    # 网格分辨率沿用 cable 的细管档（更圆、柱接触点更多）。
+    segment_length: 0.0055
+    radial_segments: 12
+    maxvolume: 0.000000050
+    output_dir: .cache/topogym/meshes/rope_winding
+  pbd:
+    max_stretch_solver_iterations: ${prefabs.rope_pbd.pbd.max_stretch_solver_iterations}
+    max_bending_solver_iterations: ${prefabs.rope_pbd.pbd.max_bending_solver_iterations}
+    max_volume_solver_iterations: 16
+  elastic:
+    rho: ${prefabs.rope_pbd.elastic.rho}
+    static_friction: ${prefabs.rope_pbd.elastic.static_friction}
+    kinetic_friction: ${prefabs.rope_pbd.elastic.kinetic_friction}
+    stretch_compliance: ${prefabs.rope_pbd.elastic.stretch_compliance}
+    bending_compliance: 0.0100
+    volume_compliance: 0.00200
+    stretch_relaxation: ${prefabs.rope_pbd.elastic.stretch_relaxation}
+    bending_relaxation: ${prefabs.rope_pbd.elastic.bending_relaxation}
+    volume_relaxation: ${prefabs.rope_pbd.elastic.volume_relaxation}
+
+# S 锚定端子在 routes.initial 的第一个点上；fixtures 里保留一个 disabled 的
+# 参考桩（route_point 需要 fixture 坐标），视觉由 fixed_terminal 承担（同 cable）。
+# 注意：S 的 pos 就是出生弧的起点。
+
+physical_handle:
+  # 与 cable 同源的抓取/搬运参数（插头、latch、attachment 全部同一套机制）。
+  z_offset: 0.005
+  rho: 700.0
+  finger_links: [left_finger, right_finger]
+  # 绳能不能看见夹爪。off = 机械臂整体不进 IPC（其余任务的现状，绳直接穿过指垫）；
+  # fingers = 只把上面两根 finger link 注册进 IPC，绳与指垫产生真实接触，其余臂体
+  # 仍归刚体求解器、IK 保持完全控制。
+  # 选型与副作用见 tasks/routing/cable_routing.py 的 _robot_material() docstring
+  # 与 docs/develop/physics/rope_winding/rope_winding_zh.md「绳↔夹爪接触」。
+  robot_rope_contact: fingers
+  # 绳↔指垫的 IPC 摩擦（只在 robot_rope_contact=fingers 时有意义）。
+  # 实际接触摩擦 = sqrt(rope.fem.friction_mu × 这个值) = sqrt(0.3 × 0.004) ≈ 0.035，
+  # 而 Genesis 默认的 coup_friction=0.1 会给到 0.17。
+  # 为什么要低：夹爪只是搬运工具，任务的物理内容是绳与柱的交互；指垫上有摩擦时绳会顺着
+  # 扭转爬上指垫并缠住。低摩擦让绳蹭过去而不是挂住。
+  # 它不影响夹持——握住插头的是刚体求解器的摩擦（configure_gripper_contact_friction），
+  # 与这个耦合摩擦是两套。
+  robot_rope_friction: 0.004
+  finger_friction: 4.5
+  handle_friction: 4.5
+  grasp_qpos: 0.0075
+  grasp_yaw: 1.57079632679
+  runtime_gripper_attachment: true
+  runtime_attachment_handoff_steps: 12
+  motion_profile: linear
+  approach_z: 0.250
+  lift_delta: 0.024
+  insert_hover_lift: 0.035
+  # 下面三个键在本任务里**只**喂给 HandleDragPrimitive 的抓取前置序列
+  # （开爪 → 接近 → 下降 → 闭合 → 保持 → 试提），不影响缠绕：每个路点的步数
+  # 由 planner 按「段长 ÷ winding.*_speed」算。这一段全程空载自由移动
+  # （插头与出生端口都是 collision=false，夹爪一路无接触），所以不需要爬。
+  #   接近 0.194 m / 120 步 = 1.6 mm/步；下降与试提各取 move_steps 的一半。
+  # 2026-08-12 从 240/90/60 降下来：那组值让固定开销达到 720 步 ≈ 8 分钟，
+  # 占一次完整 run 的 40%，而它与任务语义无关。现为 400 步。
+  move_steps: 120
+  gripper_steps: 60
+  close_hold_steps: 40
+  motion_settle_steps: 0
+  min_lift_delta: 0.006
+  max_handle_error: 0.050
+  max_segment_follow_error: 0.045
+  max_segment_target_error: 0.070
+  target_error_abort_fraction: 0.90
+  early_complete_segments: [insert_at_C]
+  early_complete_target_error: 0.010
+  max_downward_follow_error_z: 0.047
+  # 缠绕接触的发散兜底（supervision/rope_winding.py 的 post_contact）：
+  #   safety_min_gap        绳节点到柱面的最小间隙，负值 = 扎进柱子；
+  #   safety_max_contact_nodes  贴柱节点数上限 —— 两圈缠满本来就比 cable 单圈
+  #                             路过多得多，所以给得宽，只拦「整根绳堆到柱上」。
+  safety_min_gap: -0.0015
+  safety_max_contact_nodes: 3000
+  release_hold_steps: 20
+  route_settle_steps: 40
+  connector_tolerance_xy: 0.018
+  latch_auto_capture: false
+  latch_capture_tolerance_xy: 0.014
+  latch_capture_tolerance_z: 0.014
+  latch_capture_max_tilt_deg: 45.0
+
+# winding 成功判定（supervision/rope_winding.py）。
+success:
+  # winding number 与目标（direction 符号 x turns）的容差（圈）。canonical
+  # closure 的闭合角贡献 < 0.25 圈（两端都远离柱），取整判定在此容差内稳定。
+  winding_tolerance: 0.25
+  # 绕段高度上限 = 柱顶（gateway 语义：全程不越顶）。判定读柱轴 0.04m 内的
+  # 绳节点 z。
+  wound_max_z: 0.070
+  # 中心线分箱数（winding 方位角展开用）。绳长 0.58m -> ~4mm/箱，比绳径细。
+  centerline_bins: 150

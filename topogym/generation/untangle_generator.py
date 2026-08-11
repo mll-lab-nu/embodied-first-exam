@@ -100,6 +100,10 @@ def build_untangle_episode_spec(
     )
     execution_profile = ExecutionProfile(
         profile_id=str(execution_profile_id),
+        # Recorded provenance string, not a code identifier: it is written into
+        # episode specs and H5 datasets, so renaming it would desync existing
+        # data. It names the primitive now called `HandleDragPrimitive`
+        # (topogym/primitives/handle_drag.py, renamed 2026-08-12).
         safety_profile="pbd_handle_drag",
         parameters={
             "physical_handle": _plain(_get(task_cfg, "physical_handle", {})),

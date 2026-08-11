@@ -1,21 +1,36 @@
+"""Route a PBD/FEM cable by physically grasping the rigid plug on its free end.
+
+The gripper never touches the deformable body: it grasps the plug, and the rope
+follows through the endpoint constraint. The plug starts seated in a spawn latch
+(it is mesh-only, so it would otherwise fall through the board) and is handed to
+the grasp attachment at gripper close.
+
+Configuration is Hydra (`configs/cable_routing.yaml`).
+
+    python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.verbose=true
+    python -m demos.routing.cable_routing_physical_handle_demo run.max_waypoints=4 run.viewer=true
+    python -m demos.routing.cable_routing_physical_handle_demo run.probe=true run.slow_factor=2.0
+    python -m demos.routing.cable_routing_physical_handle_demo recording=default recording.path=runs/cable.mp4
+    python -m demos.routing.cable_routing_physical_handle_demo --cfg job
+"""
+
 from __future__ import annotations
 
-import argparse
 import os
-from pathlib import Path
 
 import genesis as gs
+import hydra
 import numpy as np
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
-from topogym.core import add_common_config_arg, load_topogym_configs
+from topogym.core import hydra_config_sources, save_resolved_config
 from topogym.data import dataset_writer_or_null
 from topogym.generation import EpisodeResult, build_cable_routing_episode_spec
 from topogym.planning import CableRoutingRouteCommand, plan_cable_routing_endpoint_route
 from topogym.primitives import (
     AttachmentManager,
     ConnectorLatch,
-    PBDHandleDragPrimitive,
+    HandleDragPrimitive,
     configure_gripper_contact_friction,
     ee_quat_for_yaw,
     entity_pos,
@@ -29,22 +44,15 @@ from topogym.supervision import (
     print_phase_routing_metrics,
     print_routing_verification,
     rope_wrap_metrics,
+    stop_before_physics,
 )
 from topogym.supervision.cable_routing import rope_particles
 from topogym.utils import (
-    add_recording_args,
+    apply_recording_camera_overrides,
     initialize_franka_controller,
-    merge_recording_config,
     print_recording_saved,
     recording_session_from_config,
 )
-
-
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_fem_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "cable_routing_topogym_tabletop_v1.yaml"
 
 
 def _list(value):
@@ -67,252 +75,58 @@ def _scaled_steps(
     return max(int(minimum), int(round(value_i / speedup_f)))
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Route a PBD cable by physically grasping its rigid free-end handle."
-    )
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    add_common_config_arg(parser, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
-    parser.add_argument(
-        "--rope-model",
-        choices=("pbd_elastic_tube", "fem_ipc_tube"),
-        default=None,
-        help=(
-            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
-            "pair it with --env-config world_tabletop_fem_v1.yaml and "
-            "--backend gpu (libuipc is CUDA-only)."
-        ),
-    )
-    parser.add_argument(
-        "--fem-e",
-        type=float,
-        default=None,
-        help="Override rope.fem.E (Pa). Default 1e5; the stiff rope cuts the corner around P1.",
-    )
-    parser.add_argument(
-        "--fem-nu",
-        type=float,
-        default=None,
-        help="Override rope.fem.nu. Default 0.45 locks linear-tet bending; try 0.3.",
-    )
-    parser.add_argument(
-        "--fem-friction-mu",
-        type=float,
-        default=None,
-        help="Override rope.fem.friction_mu (default 0.3).",
-    )
-    parser.add_argument(
-        "--fem-no-sanity-check",
-        action="store_true",
-        help=(
-            "Waive libuipc's intersection-free initial-state check "
-            "(rope.fem.sanity_check_enable=false). This scene's static compound "
-            "fixtures (post shaft + flared base, flush parts on the table) "
-            "overlap by design and fail the check despite carrying no DOFs."
-        ),
-    )
-    parser.add_argument(
-        "--log-level",
-        choices=("debug", "info", "warning"),
-        default=None,
-        help=(
-            "Override env.genesis.logging_level. 'debug' additionally enables "
-            "libuipc's own logging."
-        ),
-    )
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=0,
-        help=(
-            "Stable episode seed. Current Cable Routing layout is deterministic; "
-            "this identifies the variant."
-        ),
-    )
-    parser.add_argument(
-        "--variant-id",
-        default="default",
-        help="Stable variant label for manifests and result lines.",
-    )
-    parser.add_argument(
-        "--randomize-layout",
-        action="store_true",
-        help="Apply seeded bounded peg-position randomization (assumes routing.smooth_route=true).",
-    )
-    parser.add_argument(
-        "--difficulty",
-        default="default",
-        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
-    )
-    parser.add_argument("--close-on-finish", action="store_true")
-    parser.add_argument("--lite", action="store_true", help="Use a lower-resolution PBD cable.")
-    parser.add_argument(
-        "--max-waypoints",
-        type=int,
-        default=None,
-        help="Run only the first N endpoint waypoints for physical-grasp smoke tests.",
-    )
-    parser.add_argument("--settle-steps", type=int, default=60)
-    parser.add_argument(
-        "--viewer-speedup",
-        type=float,
-        default=1.0,
-        help=(
-            "Scale down motion step counts for faster visual debugging. "
-            "Use 1.0 for normal physics; values like 2-4 are for viewer checks."
-        ),
-    )
-    parser.add_argument(
-        "--slow-factor",
-        type=float,
-        default=1.0,
-        help=(
-            "Scale up motion step counts for slower, smoother physical debugging. "
-            "Use with --viewer-speedup 1.0 when diagnosing rope dynamics."
-        ),
-    )
-    parser.add_argument(
-        "--allow-target-lag",
-        action="store_true",
-        help=(
-            "Do not abort mid-segment only because the handle lags behind the "
-            "planned target point. Follow-error and rope-contact safety checks "
-            "remain active."
-        ),
-    )
-    parser.add_argument(
-        "--grasp-yaw",
-        type=float,
-        default=None,
-        help=(
-            "Top-down gripper yaw in radians. Defaults to "
-            "task.physical_handle.grasp_yaw."
-        ),
-    )
-    parser.add_argument(
-        "--probe",
-        action="store_true",
-        help=(
-            "Log a per-step diagnostic (PROBE lines): actual hand speed (pause "
-            "vs slow), lowest rope particle vs table, rope spread/jump (flyout), "
-            "and P2 wrap penetration."
-        ),
-    )
-    parser.add_argument(
-        "--probe-every",
-        type=int,
-        default=15,
-        help="Sample the --probe diagnostic every N physics steps.",
-    )
-    add_recording_args(parser, default_fps=60, default_camera="oblique")
-    parser.add_argument(
-        "--record-dataset",
-        type=Path,
-        default=None,
-        help="Write a RoboMME-structural HDF5 dataset for this episode to this path.",
-    )
-    parser.add_argument(
-        "--dataset-every-n-steps",
-        type=int,
-        default=10,
-        help="Capture one dataset frame every N scene.step() calls (action granularity).",
-    )
-    parser.add_argument("--verbose", action="store_true")
-    return parser.parse_args()
+def derive_config(cfg):
+    """Config transforms this demo needs that are computed, not chosen.
 
+    What stays here is the demo's contract: the three fixture-collision overrides
+    (see the comment on C) and the endpoint handle's attachment mode. The handle
+    z-offset it also overrides comes from `task.physical_handle`, so it would
+    duplicate a value written a few lines away if left as a literal. Values that
+    are plain settings live in the task config instead:
+    `rope.endpoint_handle.friction` / `.rho` interpolate `physical_handle`, and
+    `run.lite` selects the `rope.lite` block.
+    """
 
-def load_configs(args: argparse.Namespace):
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    if "cameras" in cfg.task:
-        cfg = OmegaConf.merge(cfg, {"env": {"cameras": cfg.task.cameras}})
     physical = cfg.task.physical_handle
     handle_connector_enabled = bool(
         getattr(getattr(cfg.task.rope.endpoint_handle, "connector", None), "enabled", False)
     )
-    if args.grasp_yaw is not None:
-        cfg = OmegaConf.merge(
-            cfg,
-            {"task": {"physical_handle": {"grasp_yaw": float(args.grasp_yaw)}}},
-        )
-    overrides = {
-        "task": {
-            "fixtures": {
-                "P1": {"collision": True},
-                "P2": {"collision": True},
-                # Probe finding (2026-07-08): the flyout was the rope endpoint
-                # deep-penetrating the raised socket walls at green_exit_pre_C
-                # (rope_jump=17m, p2_contact=0). The connector is the target we
-                # place the cable INTO, so it must not violently reject the rope:
-                # keep the socket visible but non-colliding (latch capture is
-                # geometric, so it still works). Revert collision->True to A/B test.
-                "C": {"collision": False},
-            },
-            "rope": {
-                "endpoint_handle": {
-                    "z_offset": float(physical.z_offset),
-                    "attachment_mode": "rigid_handle",
-                    "fixed": False,
-                    # Plug-connector mode: mesh-only (spawn latch / grasp
-                    # attachment drives it); box fallback keeps friction contact.
-                    "collision": not handle_connector_enabled,
-                    "friction": float(physical.handle_friction),
-                    "rho": float(physical.rho),
-                    "exclude_pbd_collision": True,
-                }
-            },
-        }
-    }
-    if args.backend is not None:
-        overrides["env"] = {"genesis": {"backend": args.backend}}
-    cfg = OmegaConf.merge(cfg, overrides)
-    if args.rope_model is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
-    if args.log_level is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"env": {"genesis": {"logging_level": args.log_level}}}
-        )
-    if args.fem_no_sanity_check:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"fem": {"sanity_check_enable": False}}}}
-        )
-    for key, value in (
-        ("E", args.fem_e),
-        ("nu", args.fem_nu),
-        ("friction_mu", args.fem_friction_mu),
-    ):
-        if value is not None:
-            cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {key: value}}}})
-    if args.lite:
-        cfg = OmegaConf.merge(
-            cfg,
-            {
-                "task": {
-                    "rope": {
-                        "particle_size": 0.006,
-                        "mesh": {
-                            "segment_length": 0.014,
-                            "radial_segments": 6,
-                            "maxvolume": 0.00000012,
-                        },
-                        "pbd": {
-                            "max_stretch_solver_iterations": 6,
-                            "max_bending_solver_iterations": 3,
-                            "max_volume_solver_iterations": 3,
-                        },
+    cfg = OmegaConf.merge(
+        cfg,
+        {
+            "task": {
+                "fixtures": {
+                    "P1": {"collision": True},
+                    "P2": {"collision": True},
+                    # Probe finding (2026-07-08): the flyout was the rope endpoint
+                    # deep-penetrating the raised socket walls at green_exit_pre_C
+                    # (rope_jump=17m, p2_contact=0). The connector is the target we
+                    # place the cable INTO, so it must not violently reject the rope:
+                    # keep the socket visible but non-colliding (latch capture is
+                    # geometric, so it still works). Override task.fixtures.C.collision=true
+                    # to A/B test.
+                    "C": {"collision": False},
+                },
+                "rope": {
+                    "endpoint_handle": {
+                        "z_offset": float(physical.z_offset),
+                        "attachment_mode": "rigid_handle",
+                        "fixed": False,
+                        # Plug-connector mode: mesh-only (spawn latch / grasp
+                        # attachment drives it); box fallback keeps friction contact.
+                        "collision": not handle_connector_enabled,
+                        "exclude_pbd_collision": True,
                     }
-                }
-            },
-        )
-    return merge_recording_config(cfg, args)
+                },
+            }
+        },
+    )
+    if "cameras" in cfg.task:
+        cfg = OmegaConf.merge(cfg, {"env": {"cameras": cfg.task.cameras}})
+    if cfg.run.lite:
+        lite = OmegaConf.to_container(cfg.task.rope.lite, resolve=True)
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": lite}})
+    return cfg
 
 
 def _hud(status: dict):
@@ -444,8 +258,102 @@ def _print_probe_plan(target_labels, targets, target_steps) -> None:
         )
 
 
+def _run_release_end_probe(cable_scene, controller, steps, *, sample_every) -> None:
+    """Kirchhoff-rod discriminator: free the plug-side band, watch the coils.
+
+    With both ends orientation-clamped and IPC forbidding self-penetration,
+    Lk = Tw + Wr is conserved: any twist stored at spawn or injected during
+    transport can only live as internal twist or convert into coils (writhe).
+    Freeing one end opens the topology. Coils unwinding while the freed cross
+    section spins (cumulative |spin| well past 360 deg) = the coils were
+    twist-fed; shape persisting = rest-configuration / stiffness driven.
+    """
+
+    backend = cable_scene.rope_backend
+    rope_entity = cable_scene.rope_handle.entity
+    handles = getattr(backend, "_follow_handles", {}).get(str(rope_entity.uid))
+    if not handles or len(handles) < 2:
+        print("RELEASE_PROBE skipped reason=no_fem_end_follow_band", flush=True)
+        return
+
+    def _rodrigues(vec, axis, angle):
+        return (
+            vec * np.cos(angle)
+            + np.cross(axis, vec) * np.sin(angle)
+            + axis * float(np.dot(axis, vec)) * (1.0 - np.cos(angle))
+        )
+
+    end_band = handles[-1]  # bands are declared start-terminal first, plug last
+    band = np.asarray(end_band.verts, dtype=int)
+
+    def _frame(prev=None):
+        # In-plane reference is parallel-transported between samples (same
+        # minimal-rotation trick as the tube mesher) so axis drift does not
+        # read as spin.
+        nodes = backend.nodes(rope_entity)
+        pts = nodes[band]
+        center = pts.mean(axis=0)
+        dist = np.linalg.norm(nodes - center[None, :], axis=1)
+        shell = np.flatnonzero((dist > 0.012) & (dist < 0.045))
+        inward = (
+            nodes[shell].mean(axis=0)
+            if len(shell)
+            else center - np.array([0.0, 0.0, 1e-6])
+        )
+        axis = center - inward
+        axis = axis / max(float(np.linalg.norm(axis)), 1e-9)
+        if prev is None:
+            u = np.cross(axis, np.array([0.0, 0.0, 1.0]))
+            if np.linalg.norm(u) < 1e-6:
+                u = np.cross(axis, np.array([1.0, 0.0, 0.0]))
+        else:
+            prev_axis, prev_u = prev
+            pivot = np.cross(prev_axis, axis)
+            sin = float(np.linalg.norm(pivot))
+            cos = float(np.clip(np.dot(prev_axis, axis), -1.0, 1.0))
+            u = (
+                _rodrigues(prev_u, pivot / sin, np.arctan2(sin, cos))
+                if sin > 1e-9
+                else prev_u
+            )
+        u = u - axis * float(np.dot(u, axis))
+        u = u / max(float(np.linalg.norm(u)), 1e-9)
+        binormal = np.cross(axis, u)
+        rel = pts - center[None, :]
+        return axis, u, np.arctan2(rel @ binormal, rel @ u), center
+
+    axis, u, angles, center = _frame()
+    end_band.release()
+    print(
+        f"RELEASE_PROBE released plug-side band verts={len(band)} "
+        f"center={np.round(center, 4).tolist()} steps={steps}",
+        flush=True,
+    )
+    spin_deg = 0.0
+    done = 0
+    while done < steps:
+        chunk = min(int(sample_every), steps - done)
+        controller.step(chunk)
+        done += chunk
+        axis, u, new_angles, center = _frame((axis, u))
+        delta = np.angle(np.mean(np.exp(1j * (new_angles - angles))))
+        angles = new_angles
+        spin_deg += float(np.degrees(delta))
+        print(
+            f"RELEASE_PROBE step={done:05d} spin_deg={spin_deg:+.1f} "
+            f"band_center={np.round(center, 4).tolist()}",
+            flush=True,
+        )
+    turns = spin_deg / 360.0
+    print(
+        f"RELEASE_PROBE done cumulative_spin_deg={spin_deg:+.1f} "
+        f"(~{turns:+.2f} turns) verdict_hint="
+        f"{'TWIST_FED' if abs(turns) >= 1.0 else 'REST_SHAPE_OR_STIFFNESS'}",
+        flush=True,
+    )
+
+
 def run_demo(
-    args,
     cfg,
     cable_scene,
     controller,
@@ -481,8 +389,8 @@ def run_demo(
         ),
     )
     print(
-        "cable_routing_physical_handle_demo pbd_contract "
-        "rope_model=pbd_elastic_tube endpoint_constraint=fix_particles_to_link "
+        "cable_routing_physical_handle_demo rope_contract "
+        f"rope_model={cfg.task.rope.model} endpoint_constraint=fix_particles_to_link "
         "start_anchor=fixed_particles runtime_set_particles_pos=False "
         "handle_collision=True handle_needs_coup=False "
         "connector_latch=environment_socket_after_capture "
@@ -533,17 +441,17 @@ def run_demo(
             )
         )
         target_labels.append(label)
-    if args.max_waypoints is not None:
-        targets = targets[: int(args.max_waypoints)]
-        target_steps = target_steps[: int(args.max_waypoints)]
-        target_labels = target_labels[: int(args.max_waypoints)]
-    speedup = max(1.0, float(args.viewer_speedup))
-    slow_factor = max(1.0, float(args.slow_factor))
+    if cfg.run.max_waypoints is not None:
+        targets = targets[: int(cfg.run.max_waypoints)]
+        target_steps = target_steps[: int(cfg.run.max_waypoints)]
+        target_labels = target_labels[: int(cfg.run.max_waypoints)]
+    speedup = max(1.0, float(cfg.run.viewer_speedup))
+    slow_factor = max(1.0, float(cfg.run.slow_factor))
     target_steps = [
         _scaled_steps(steps, speedup, minimum=24, slow_factor=slow_factor)
         for steps in target_steps
     ]
-    full_route = args.max_waypoints is None
+    full_route = cfg.run.max_waypoints is None
     if handle_connector_enabled and full_route and targets:
         # Elevated final approach + vertical insertion: with the flush-port
         # z_offset the raw route would slide the plug at near-board height to
@@ -588,7 +496,7 @@ def run_demo(
         # 2026-07-12: abort at smooth_005 with target_error=0.0716 while
         # handle_follow_error=0.007). Success gates stay: C latch + final
         # connector_error_xy.
-        if args.allow_target_lag
+        if cfg.run.allow_target_lag
         or handle_connector_enabled
         or getattr(physical, "max_segment_target_error", None) is None
         else float(physical.max_segment_target_error)
@@ -624,7 +532,7 @@ def run_demo(
         if not spawn_latch.try_engage():
             raise RuntimeError("Cable free-end plug failed to seat at spawn.")
 
-    primitive = PBDHandleDragPrimitive(
+    primitive = HandleDragPrimitive(
         approach_z=cable_scene.layout.world_z(physical.approach_z),
         lift_delta=float(physical.lift_delta),
         move_steps=_scaled_steps(
@@ -688,7 +596,7 @@ def run_demo(
         # Plug mode: command-space anchoring kills the per-waypoint
         # dip-and-recover hand bobbing on dense segments (2026-07-13 diag).
         command_space_segments=handle_connector_enabled,
-        verbose=args.verbose,
+        verbose=cfg.run.verbose,
     )
     grasp_yaw = float(getattr(physical, "grasp_yaw", 0.0))
     ee_quat = ee_quat_for_yaw(controller.default_ee_quat, grasp_yaw)
@@ -735,7 +643,7 @@ def run_demo(
         f"motion_profile={str(getattr(physical, 'motion_profile', 'ease'))} "
         f"viewer_speedup={speedup:.2f} "
         f"slow_factor={slow_factor:.2f} "
-        f"allow_target_lag={bool(args.allow_target_lag)} "
+        f"allow_target_lag={bool(cfg.run.allow_target_lag)} "
         f"segment_steps={target_steps} "
         f"max_segment_follow_error={float(physical.max_segment_follow_error):.4f} "
         f"max_segment_target_error={max_segment_target_error} "
@@ -869,9 +777,12 @@ def run_demo(
         attachment.release(sync=False)
         attachment_manager.attachments.remove(attachment)
 
-    if args.probe:
+    if cfg.run.probe:
         _print_probe_plan(target_labels, targets, target_steps)
     probe = None
+    if stop_before_physics(cfg, cable_scene.scene, "cable_routing_physical_handle_demo"):
+        raise SystemExit(0)
+
     with recording_session_from_config(
         cable_scene.scene,
         cable_scene.cameras,
@@ -883,7 +794,7 @@ def run_demo(
                 max(
                     0,
                     _scaled_steps(
-                        args.settle_steps,
+                        cfg.run.settle_steps,
                         speedup,
                         minimum=5,
                         slow_factor=slow_factor,
@@ -891,14 +802,14 @@ def run_demo(
                 )
             )
             status["phase"] = "physical_route"
-            if args.probe:
+            if cfg.run.probe:
                 probe = CableRoutingProbe(
                     cable_scene.scene,
                     controller,
                     cable_scene,
                     handle,
                     status,
-                    every=args.probe_every,
+                    every=cfg.run.probe_every,
                     surface_z=cable_scene.layout.world_z(0.0),
                 )
             result = primitive.run(
@@ -957,6 +868,13 @@ def run_demo(
                     flush=True,
                 )
             settled_handle_pos = entity_pos(handle)
+            if cfg.run.release_end_steps > 0:
+                _run_release_end_probe(
+                    cable_scene,
+                    controller,
+                    int(cfg.run.release_end_steps),
+                    sample_every=max(1, int(cfg.run.probe_every)),
+                )
             if probe is not None:
                 probe.uninstall()
 
@@ -1023,16 +941,20 @@ def run_demo(
     return episode_result
 
 
-def main() -> None:
-    args = parse_args()
-    if args.max_waypoints is not None and args.max_waypoints <= 0:
-        raise SystemExit("--max-waypoints must be positive.")
-    if float(args.viewer_speedup) <= 0.0:
-        raise SystemExit("--viewer-speedup must be positive.")
-    if float(args.slow_factor) <= 0.0:
-        raise SystemExit("--slow-factor must be positive.")
-    cfg = load_configs(args)
-    if args.randomize_layout:
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="cable_routing")
+def main(cfg: DictConfig) -> None:
+    if cfg.run.max_waypoints is not None and cfg.run.max_waypoints <= 0:
+        raise SystemExit("run.max_waypoints must be positive.")
+    if float(cfg.run.viewer_speedup) <= 0.0:
+        raise SystemExit("run.viewer_speedup must be positive.")
+    if float(cfg.run.slow_factor) <= 0.0:
+        raise SystemExit("run.slow_factor must be positive.")
+    cfg = derive_config(cfg)
+    cfg = apply_recording_camera_overrides(cfg)
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"cable_routing_config -> {resolved}", flush=True)
+    if cfg.run.randomize_layout:
         from topogym.generation.layout_randomization import randomize_task_cfg
 
         if not bool(cfg.task.routing.get("smooth_route", False)):
@@ -1043,27 +965,29 @@ def main() -> None:
                 flush=True,
             )
         cfg = randomize_task_cfg(
-            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+            cfg, str(cfg.task.task.id), cfg.run.seed, difficulty=cfg.run.difficulty
         )
         print(
-            f"cable_routing_physical_handle_demo randomize_layout=on seed={args.seed} "
-            f"difficulty={args.difficulty}",
+            f"cable_routing_physical_handle_demo randomize_layout=on seed={cfg.run.seed} "
+            f"difficulty={cfg.run.difficulty}",
             flush=True,
         )
+    # 每个配置组解析到了哪个文件，作为 episode 溯源信息记录。
+    _sources = hydra_config_sources()
     episode_spec = build_cable_routing_episode_spec(
         cfg,
-        seed=args.seed,
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-        variant_id=args.variant_id,
+        seed=cfg.run.seed,
+        common_config=_sources.get("common"),
+        env_config=_sources.get("env"),
+        robot_config=_sources.get("robot_control"),
+        task_config=_sources.get("task"),
+        variant_id=cfg.run.variant_id,
         route_mode="initial",
     )
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
-    if args.viewer and not has_display:
+    if cfg.run.viewer and not has_display:
         raise SystemExit("No graphical display detected.")
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
     gs.init(
@@ -1073,10 +997,10 @@ def main() -> None:
     )
     print(
         "cable_routing_physical_handle_demo building_scene "
-        f"backend={cfg.env.genesis.backend} viewer={args.viewer} "
-        f"lite={args.lite} viewer_speedup={float(args.viewer_speedup):.2f} "
-        f"slow_factor={float(args.slow_factor):.2f} "
-        f"allow_target_lag={bool(args.allow_target_lag)}",
+        f"backend={cfg.env.genesis.backend} viewer={cfg.run.viewer} "
+        f"lite={cfg.run.lite} viewer_speedup={float(cfg.run.viewer_speedup):.2f} "
+        f"slow_factor={float(cfg.run.slow_factor):.2f} "
+        f"allow_target_lag={bool(cfg.run.allow_target_lag)}",
         flush=True,
     )
     scene = CableRoutingSceneBuilder(
@@ -1084,7 +1008,7 @@ def main() -> None:
         cfg.task,
         cfg.robot_control,
         route_mode="initial",
-    ).build(show_viewer=args.viewer, include_robot=True)
+    ).build(show_viewer=cfg.run.viewer, include_robot=True)
     route_command, episode_plan = plan_cable_routing_endpoint_route(scene.layout)
     print("cable_routing_physical_handle_demo scene_ready", flush=True)
     controller = initialize_franka_controller(
@@ -1102,19 +1026,18 @@ def main() -> None:
     # subgoal labels can read the live phase during the run.
     status: dict = {}
     dataset_writer_cm = dataset_writer_or_null(
-        args.record_dataset,
+        cfg.run.record_dataset,
         scene=scene.scene,
         cameras=scene.cameras,
         controller=controller,
         spec=episode_spec,
         plan=episode_plan,
         task_goal="Route the cable end through the pegs into the connector.",
-        every_n_steps=args.dataset_every_n_steps,
+        every_n_steps=cfg.run.dataset_every_n_steps,
         subgoal_label_fn=lambda: str(status.get("phase", "setup")),
     )
     with dataset_writer_cm as dataset_writer:
         episode_result = run_demo(
-            args,
             cfg,
             scene,
             controller,
@@ -1126,9 +1049,9 @@ def main() -> None:
         )
         if dataset_writer is not None:
             dataset_writer.finalize(episode_result)
-            print(f"saved dataset -> {args.record_dataset}", flush=True)
+            print(f"saved dataset -> {cfg.run.record_dataset}", flush=True)
     print_recording_saved(cfg.recording)
-    keep_open = bool(args.viewer and not args.close_on_finish)
+    keep_open = bool(cfg.run.viewer and not cfg.run.close_on_finish)
     if keep_open:
         print("cable_routing_physical_handle_demo viewer_hold; press Ctrl+C to exit", flush=True)
     while keep_open:

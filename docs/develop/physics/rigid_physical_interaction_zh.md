@@ -1,5 +1,12 @@
 # 刚体任务的机械臂物理交互实现
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 本文说明 Swap、OneStroke 和 Maze Wall Removal 如何通过真实刚体接触完成抓取，
 而不是用 `AttachmentManager` 将物体绑定到机械臂。
 
@@ -80,7 +87,7 @@ Swap 方块接近正方体，采用常规两侧夹取：
 运行：
 
 ```bash
-python -m prototypes.swap_physical_grasp_demo --viewer --keep-open --verbose
+python -m demos.legacy.swap_physical_grasp_demo --viewer --keep-open --verbose
 ```
 
 ## 5. OneStroke
@@ -120,10 +127,10 @@ viewer 中看清墙块是否落在两个色块之间。
 运行单墙 smoke 和完整任务：
 
 ```bash
-python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --no-edge-support --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --no-edge-support --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --max-walls 1 --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --max-walls 1 --no-edge-support --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --no-edge-support --viewer --keep-open --verbose
 ```
 
 默认完整命令会执行完整 separator plan；若只想达到 terminal 即停，可加
@@ -171,8 +178,8 @@ Maze physical demo 还针对细长墙块做了以下稳定性处理：
 运行：
 
 ```bash
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --keep-open --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --viewer --keep-open --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --keep-open --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --viewer --keep-open --verbose
 ```
 
 启动时会依次输出 `building_scene`、`scene_ready`、`robot_home_ready` 和

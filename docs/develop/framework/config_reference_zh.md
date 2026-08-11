@@ -3,6 +3,22 @@
 本文按“环境、机器人操纵、Swap 任务、MDP/RL、运行命令”几层整理当前配置。
 目的是让我们后续调物理、控制和训练时，能快速知道每个参数控制什么。
 
+> **状态（2026-08-10）：本文多处已与代码不符，逐节核对尚未进行。** 已确认的偏差：
+>
+> | 位置 | 本文写的 | 实际 |
+> |---|---|---|
+> | 来源文件名 | `configs/common_configs/manipulation_space.yaml` | `manipulation_space_tabletop_v1.yaml` |
+> | `rope.pbd.*_solver_iterations` | 10 / 6 / 6 | 16 / 12 / 6 |
+> | `rope.anchor_radius` | 0.008 | 0.012 |
+> | `rope.model` | `pbd_elastic_tube` | `fem_ipc_tube`（2026-08-08 起为默认后端） |
+> | `rope.fem.*` | 无此节 | FEM+IPC 的材料与接触参数，单源在 `prefabs.rope_fem` |
+> | 命令示例 | `basic_env_demo`、`common_task_demo` 等 | 这些 demo 已删除 |
+> | 参数体系 | argparse `--flag` | 主线 demo 已于 2026-08-10 迁 Hydra |
+>
+> 在本文完成核对之前，以这几处为准：配置文件本身、`configs/README.md`（目录职责与
+> Hydra 组合方式）、`demos/README.md`（各 demo 的主配置与命令语法）、
+> `docs/develop/framework/demo_cli_and_config_zh.md`（参数体系的盘点与迁移记录）。
+
 ## 通用操作空间
 
 来源：`configs/common_configs/manipulation_space.yaml`

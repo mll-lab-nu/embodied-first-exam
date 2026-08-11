@@ -1,3 +1,9 @@
+# 2026-08-10：demos/legacy/ 已删除（swap / onestroke / maze_wall_removal / peeling
+# 的 demo 与 record_physical_demos），本文件里 `python -m demos.legacy.*` 的命令不再有效。
+# 同日 argparse 参数体系删除，主线 demo 一律用 Hydra 覆盖语法（run.viewer=true 这样），
+# 本文件里仍是 --flag 写法的行属于更早的记录，未逐条改写。
+# 当前可用命令见 demos/README.md 与各 demo 的 docstring。
+#
 # Enter the repo and activate the project environment.
 cd /projects/bfuo/jlyu3/topogym
 source .venv-gs110/bin/activate
@@ -41,8 +47,8 @@ python -m prototypes.swap_empty_slot_demo --seed 7 --viewer --keep-open --verbos
 # Swap physical full workflow: the current task reaches its terminal state
 # with one canonical move from slot 4 to the empty slot 3. No attachment or
 # block teleport is used after scene construction.
-python -m prototypes.swap_physical_grasp_demo --viewer --keep-open --verbose
-python -m prototypes.swap_physical_grasp_demo --record-video runs/demo_swap_physical_full.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
+python -m demos.legacy.swap_physical_grasp_demo --viewer --keep-open --verbose
+python -m demos.legacy.swap_physical_grasp_demo --record-video runs/demo_swap_physical_full.mp4 --record-fps 60 --record-camera oblique --record-res 960 960 --verbose
 
 # Official demo 2: OneStroke, solve the separating-wall task with multiple wall blocks.
 python -m prototypes.onestroke_wall_place_demo --record-video runs/demo_onestroke_solve.mp4 --record-fps 60 --record-res 640 640 --verbose
@@ -50,19 +56,19 @@ python -m prototypes.onestroke_wall_place_demo --viewer --keep-open --verbose
 
 # OneStroke physical contact: first validate one long-axis end grasp, then run
 # the complete separator plan without attachments or execution-time teleports.
-python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --max-walls 1 --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --viewer --keep-open --verbose
 # Gravity-in-gap variant: remove the invisible slot floor. First smoke one
 # placement, then run the full separator plan with the same setting.
-python -m prototypes.onestroke_physical_wall_demo --max-walls 1 --no-edge-support --viewer --keep-open --verbose
-python -m prototypes.onestroke_physical_wall_demo --no-edge-support --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --max-walls 1 --no-edge-support --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --no-edge-support --viewer --keep-open --verbose
 # Diagnostic only: continue the visual sequence even if an intermediate wall is
 # judged failed; final il_ready remains False when any move fails.
-python -m prototypes.onestroke_physical_wall_demo --no-edge-support --continue-on-failure --viewer --keep-open --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --no-edge-support --continue-on-failure --viewer --keep-open --verbose
 # Genesis keeps captured frames in memory until MP4 encoding. For this long
 # four-wall run, subsample at 1/4 and use 640px to avoid WSL OOM termination.
-python -m prototypes.onestroke_physical_wall_demo --record-video runs/demo_onestroke_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
-python -m prototypes.onestroke_physical_wall_demo --no-edge-support --record-video runs/demo_onestroke_physical_no_edge_support_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --record-video runs/demo_onestroke_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --no-edge-support --record-video runs/demo_onestroke_physical_no_edge_support_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
 
 # Official demo 3: Maze Wall Removal, inspect the generated maze and optionally remove the optimal wall set.
 python -m prototypes.maze_wall_removal_demo --viewer --keep-open --seed 11 --verbose
@@ -75,10 +81,10 @@ python -m prototypes.maze_wall_removal_demo --solve-oracle --record-video runs/d
 # path.
 # With --viewer, the finished scene remains open until Ctrl+C. Add
 # --close-on-finish when an automated smoke should exit immediately.
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --viewer --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --close-on-finish --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --record-video runs/demo_maze_wall_removal_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --viewer --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --max-walls 1 --viewer --close-on-finish --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --record-video runs/demo_maze_wall_removal_physical_full.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 640 640 --verbose
 
 # Official demo 4: Cable Routing, inspect the four-fixture routing scene and record endpoint-physics robot routing.
 python -m prototypes.cable_routing_oracle_demo --viewer --keep-open --route-mode initial --verbose
@@ -96,11 +102,11 @@ python -m prototypes.cable_routing_oracle_demo --run-oracle --oracle-mode kinema
 # handle-follow error after every waypoint and PBD wrap retention at the end.
 # At C, the pole must enter the low socket before the connector latch engages.
 # 2026-08-08 起默认后端 = FEM+IPC（rope.model=fem_ipc_tube + world_tabletop_fem_v1，需 GPU）。
-python -m prototypes.cable_routing_physical_handle_demo --viewer --max-waypoints 1 --verbose
-python -m prototypes.cable_routing_physical_handle_demo --probe --verbose
-python -m prototypes.cable_routing_physical_handle_demo --probe --record-video runs/demo_cable_routing_fem.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 960 720 --verbose
-# PBD 回退（--lite 是 PBD 分辨率旋钮，只在回退时使用）：
-python -m prototypes.cable_routing_physical_handle_demo --rope-model pbd_elastic_tube --env-config configs/env_configs/world_tabletop_v1.yaml --lite --probe --verbose
+python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.max_waypoints=1 run.verbose=true
+python -m demos.routing.cable_routing_physical_handle_demo run.probe=true run.verbose=true
+python -m demos.routing.cable_routing_physical_handle_demo run.probe=true recording=default recording.path=runs/demo_cable_routing_fem.mp4 recording.fps=30 recording.every_n_steps=4 recording.camera=oblique recording.res=[960,720] run.verbose=true
+# PBD 回退（run.lite 是 PBD 分辨率旋钮，只在回退时使用）：
+python -m demos.routing.cable_routing_physical_handle_demo task.rope.model=pbd_elastic_tube env_configs@env=world_tabletop_v1 run.lite=true run.probe=true run.verbose=true
 
 # Official demo 5: Peeling Level 1, semantic peel zones plus ordered film separation.
 python -m prototypes.peeling_oracle_demo --viewer --keep-open --run-oracle --settle-steps 20 --verbose
@@ -133,16 +139,16 @@ python -m prototypes.peeling_rigid_patch_suction_demo --patch-count 3 --source-l
 # fixed-base revolute mechanism; the gripper pinches a disk's rim and rolls it down,
 # driving the joint purely through finger-contact friction. No attachment or
 # execution-time joint/pose teleport is used.
-python -m prototypes.stacked_plate_physical_rotate_demo --viewer --verbose
-python -m prototypes.stacked_plate_physical_rotate_demo --record-video runs/demo_stacked_plate_contact.mp4 --record-fps 30 --record-every-n-steps 2 --record-camera oblique --record-res 640 640 --verbose
+python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true run.verbose=true
+python -m demos.connectivity.stacked_plate_physical_rotate_demo recording=default recording.path=runs/demo_stacked_plate_contact.mp4 recording.fps=30 recording.every_n_steps=2 recording.camera=oblique recording.res=[640,640] run.verbose=true
 
 # Collision-based IL smoke set. Each command prints `il_contract` and a final
 # `il_ready=True/False`; only `il_ready=True` runs should be accepted into an IL
 # dataset. These four tasks are the rigid-contact baseline group.
-python -m prototypes.swap_physical_grasp_demo --verbose
-python -m prototypes.onestroke_physical_wall_demo --verbose
-python -m prototypes.maze_wall_removal_physical_demo --seed 11 --verbose
-python -m prototypes.stacked_plate_physical_rotate_demo --verbose
+python -m demos.legacy.swap_physical_grasp_demo --verbose
+python -m demos.legacy.onestroke_physical_wall_demo --verbose
+python -m demos.legacy.maze_wall_removal_physical_demo --seed 11 --verbose
+python -m demos.connectivity.stacked_plate_physical_rotate_demo run.verbose=true
 
 # Official demo 7: Untangle robot drag, move the under-rope endpoint with Franka and let PBD rope contact evolve.
 python -m prototypes.untangle_robot_drag_demo --lite --settle-steps 10 --drag-steps 380 --endpoint-lift 0.014 --hold-steps 120 --record-video runs/demo_untangle_robot_wrap.mp4 --record-fps 30 --record-res 960 960 --record-every-n-steps 2 --verbose
@@ -152,11 +158,11 @@ python -m prototypes.untangle_robot_drag_demo --viewer --lite --keep-open --sett
 # continue until terminal. A topology action is committed only after the
 # released handle physically settles inside the target-hole tolerance.
 # 2026-08-08 起默认后端 = FEM+IPC（需 GPU）。--grasp-rope 0 = 接触测试（抓下方红绳，诚实失败）。
-python -m prototypes.untangle_physical_handle_demo --viewer --max-moves 1 --verbose
-python -m prototypes.untangle_physical_handle_demo --verbose
-python -m prototypes.untangle_physical_handle_demo --record-video runs/demo_untangle_fem.mp4 --record-fps 30 --record-every-n-steps 4 --record-camera oblique --record-res 960 720 --verbose
+python -m demos.entangle.untangle_physical_handle_demo run.viewer=true run.max_moves=1 run.verbose=true
+python -m demos.entangle.untangle_physical_handle_demo run.verbose=true
+python -m demos.entangle.untangle_physical_handle_demo recording=default recording.path=runs/demo_untangle_fem.mp4 recording.fps=30 recording.every_n_steps=4 recording.camera=oblique recording.res=[960,720] run.verbose=true
 # PBD 回退：
-python -m prototypes.untangle_physical_handle_demo --rope-model pbd_elastic_tube --env-config configs/env_configs/world_tabletop_v1.yaml --lite --max-moves 1 --verbose
+python -m demos.entangle.untangle_physical_handle_demo task.rope.model=pbd_elastic_tube env_configs@env=world_tabletop_v1 run.lite=true run.max_moves=1 run.verbose=true
 
 # Untangle manual fallback: same rope-side disturbance without Franka.
 python -m prototypes.untangle_rope_drag_demo --mode manual --demo-goal disturb --disturb-preset wrap --motion-model physics --lite --settle-steps 10 --drag-steps 380 --endpoint-lift 0.014 --hold-steps 120 --record-video runs/demo_untangle_physics_wrap.mp4 --record-fps 60 --record-res 1280 1280 --record-aa --verbose
@@ -189,3 +195,25 @@ uv run --project .external/openpi python scripts/register_openpi_config.py --tas
 cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_topogym_swap; cd - >/dev/null
 # 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)
 cd .external/openpi && WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null
+
+# --- rope_winding: 绳绕柱两圈 + 放置 (任务书 2.4; 2026-08-11 新建) ---
+# 设计与判据: docs/develop/physics/rope_winding/rope_winding_zh.md
+# A. 出生与静置 (只走前两个路点; 看绳是否近直躺平、无自发卷曲)
+python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.max_waypoints=2 2>&1 | tee runs/winding_a_spawn.log
+# B. 入绕 + 第一圈
+python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.max_waypoints=10 2>&1 | tee runs/winding_b_turn1.log
+# C. 成功例: 完整两圈 + 插进目标端口 (winding = +2)
+python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true 2>&1 | tee runs/winding_c_success.log
+# D. 失败对照例: 方向反转, 同样的抓取与放置, winding = -2
+python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true task.winding.direction=cw 2>&1 | tee runs/winding_d_cw.log
+# 转环 A/B: 绳端不能自转 vs 能自转 (读日志末尾的 twist_turns)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.keep_open=true task.winding.turns=1 task.rope.fem.follow_swivel=false 2>&1 | tee runs/winding_twist_off.log
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.keep_open=true task.winding.turns=1 2>&1 | tee runs/winding_twist_on.log
+# 成功/失败对照的 demo 录像 (同样的抓取与放置, 只有绕向相反)
+#   多相机名里有逗号, Hydra 会判为歧义; 用 [a,b] 列表形式或加引号
+python -B -m demos.routing.rope_winding_physical_handle_demo run.probe=true recording=hq recording.path=runs/videos/rope_winding_success.mp4 recording.camera=[oblique,topdown] recording.every_n_steps=3 2>&1 | tee runs/rope_winding_success.log
+python -B -m demos.routing.rope_winding_physical_handle_demo task.winding.direction=cw run.probe=true recording=hq recording.path=runs/videos/rope_winding_failure_cw.mp4 recording.camera=[oblique,topdown] recording.every_n_steps=3 2>&1 | tee runs/rope_winding_failure_cw.log
+# 绳↔夹爪接触打开后的每步代价 (只空跑计时, 不跑物理)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 task.physical_handle.robot_rope_contact=off 2>&1 | tee runs/winding_bench_off.log
+python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 2>&1 | tee runs/winding_bench_on.log
+# 其他常用覆盖: task.winding.turns=1 / task.winding.wind_radius=0.055 / run.lite=true

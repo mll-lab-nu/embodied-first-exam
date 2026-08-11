@@ -1,0 +1,30 @@
+# job 运行期间不让 Hydra 往 root logger 上挂 handler。
+#
+# 为什么不用 Hydra 自带的预设：
+#
+#   default   root: {handlers: [console, file]}
+#             -> 终端每条 Genesis 信息出现两遍（Genesis 自己 print 一遍，
+#                这个 console handler 再打一遍），且它生成的 .log 只截 logging，
+#                而 demo 用的是 print()，结果行一条都进不去。
+#
+#   none      root: null
+#             -> 不配置 root。但 hydra_logging 在更早阶段已经给 root 装过
+#                console handler（hydra/conf/hydra/hydra_logging/default.yaml
+#                同样是 `root: {handlers: [console]}`），那个 handler 会留下来
+#                接住 Genesis 的日志。实测标签从 [genesis][INFO] 变成 [HYDRA]，
+#                重复照旧。
+#
+# 这里显式给出一个空的 handler 列表：dictConfig 处理 `root` 时会先清掉已有的
+# handler 再装新的，装的是空列表，于是 job 期间 root 是静默的。
+#
+# 保留 hydra_logging 的默认值，所以 Hydra 自己在 job 之前/之后的消息
+# （multirun 的 "Launching N jobs" 等）照常显示 —— 那些发生在 job_logging
+# 生效之前。
+#
+# disable_existing_loggers: false 是必须的：置 true 会把 genesis 这类已建好的
+# logger 一并关掉，Genesis 自己的输出也会消失。
+version: 1
+root:
+  level: WARNING
+  handlers: []
+disable_existing_loggers: false

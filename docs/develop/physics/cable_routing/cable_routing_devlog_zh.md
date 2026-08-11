@@ -56,7 +56,7 @@ prototypes  CLI/viewer/录制入口，只做"门牌号"，不塞主逻辑
 - 新增 `topogym/generation/cable_routing_generator.py`：生成 `EpisodeSpec`。
 - 新增 `topogym/planning/cable_routing_planner.py`：把目标签名解析成自由端拖拽的 waypoint 计划。**顺手解决了一处重复**：绕桩/过渡的几何函数原来写在 `cable_routing_oracle_demo.py` 里、物理 demo 靠导入私有函数复用；现在统一搬进 planner，两个 demo 都从这里导入。
 - `topogym/supervision/cable_routing.py`：把 rope/peg 的接触指标和 routing 验证（`rope_wrap_metrics` / `print_routing_verification` 等）抽出来，两个 demo 共用。
-- `prototypes/cable_routing_physical_handle_demo.py`：消费 spec/plan，返回 `EpisodeResult`。
+- `demos/routing/cable_routing_physical_handle_demo.py`：消费 spec/plan，返回 `EpisodeResult`。
 
 至此"先 Swap 再扩展"迁移顺序里的 7 个任务（swap / onestroke / maze_wall_removal / stacked_plate / untangle / peeling / cable_routing）主力物理 demo 都完成了第一轮迁移。
 
@@ -128,7 +128,7 @@ prototypes  CLI/viewer/录制入口，只做"门牌号"，不塞主逻辑
 
 跑 cable routing 物理 demo（GPU、看 viewer）：
 ```
-python -m prototypes.cable_routing_physical_handle_demo --backend gpu --viewer --allow-target-lag --verbose
+python -m demos.routing.cable_routing_physical_handle_demo env.genesis.backend=gpu run.viewer=true run.allow_target_lag=true run.verbose=true
 ```
 - **小坑**：这个 demo（以及 `untangle_physical_handle_demo.py`）**没有 `--keep-open`**，viewer 默认就一直开着，用 `--close-on-finish` 才关。别的 demo 才用 `--keep-open`。
 - `--allow-target-lag`：不因 handle 落后目标点就中途 abort，这样能一路跑到 C 附近（复现飞出的地方）。

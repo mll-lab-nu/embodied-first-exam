@@ -16,7 +16,7 @@ from topogym.world import (
     TabletopBaseScene,
     tabletop_frames_from_config,
 )
-from topogym.world.rope import write_obj
+from topogym.world.rope import resolve_mesh_dir, write_obj
 
 
 def _list(value):
@@ -449,7 +449,12 @@ class StackedPlateSceneBuilder:
             )
 
     def _add_disks(self, scene, manifest: EntityManifest) -> tuple[dict[str, Any], dict[str, str]]:
-        asset_root = Path(__file__).resolve().parents[2] / "runs" / "generated_meshes" / "stacked_plate"
+        # Anchored via `resolve_mesh_dir` rather than a `parents[N]` hop: this file
+        # moved a directory deeper in the 2026-08-04 category reorg, which silently
+        # turned the old `parents[2]` into the package dir instead of the repo root
+        # -- generated assets would land in `topogym/runs/`, which `.gitignore` does
+        # not cover.
+        asset_root = resolve_mesh_dir("runs/generated_meshes/stacked_plate")
         asset_root.mkdir(parents=True, exist_ok=True)
         mech = getattr(self.task_cfg, "mechanism", None)
         joint_base = str(getattr(mech, "joint_name", "disk_joint")) if mech is not None else "disk_joint"

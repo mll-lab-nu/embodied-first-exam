@@ -1,0 +1,9 @@
+# untangle_continuous_inspect_demo 的主配置。
+#
+# 与 untangle_continuous_pinch.yaml 共用同一份 task 配置，只是 run 组不同 ——
+# 这个 demo 不跑机械臂动作，只生成、沉降、打印。
+
+defaults:
+  - config
+  - override run_configs@run: untangle_continuous_inspect
+  - _self_

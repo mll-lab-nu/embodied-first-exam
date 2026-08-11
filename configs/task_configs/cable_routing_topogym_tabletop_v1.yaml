@@ -128,18 +128,28 @@ target_signature:
   - {fixture: C, relation: endpoint}
 
 routes:
-  # Medium slack arc: shorter than the previous large loop, while still longer
-  # than the final desired route. This reduces extra bends that can snag while
-  # the gripper pulls around pegs.
+  # 2026-08-09 螺旋线实验（方案①：降低静止形失配）。FEM 的静止构型 = 出生路线，
+  # 旧路线弧长 0.745m（终态路径仅 0.627m，富余 0.119m/18.9%），且尾部钩形的
+  # 静止曲率半径只有 0.027m——正是观察到的线圈尺度。两个失配旋钮一起收：
+  #   弧长 0.745 -> 0.670m（终态富余 0.043m；oracle 最紧路点 green_P2_lower_right
+  #   需 ~0.634m，仍留 +0.035m 余量）；
+  #   最小静止曲率半径 0.027 -> 0.034m，且不再有孤立紧钩——尾部改为从北侧
+  #   经 r~0.06m 圆弧垂直落向插头点，终点切向朝南（正对 oracle 第一段拉动方向）。
+  # 端点（S、插头出生点 0.050,0.165）与 oracle 路点完全不变。
+  # 几何计算脚本：scratchpad/route_geometry.py（会话产物）。
+  # 留档（旧 Medium slack arc，回退直接替换回去）：
+  #   [-0.200,0.070] [-0.215,0.170] [-0.160,0.270] [-0.060,0.320]
+  #   [0.055,0.300] [0.125,0.240] [0.105,0.195] [0.050,0.165]
   initial:
     - {fixture: S, relation: center}
-    - {pos: [-0.200, 0.070, 0.009]}
-    - {pos: [-0.215, 0.170, 0.009]}
-    - {pos: [-0.160, 0.270, 0.009]}
-    - {pos: [-0.060, 0.320, 0.009]}
-    - {pos: [0.055, 0.300, 0.009]}
-    - {pos: [0.125, 0.240, 0.009]}
-    - {pos: [0.105, 0.195, 0.009]}
+    - {pos: [-0.204, 0.094, 0.009]}
+    - {pos: [-0.210, 0.198, 0.009]}
+    - {pos: [-0.152, 0.278, 0.009]}
+    - {pos: [-0.040, 0.312, 0.009]}
+    - {pos: [0.022, 0.302, 0.009]}
+    - {pos: [0.064, 0.283, 0.009]}
+    - {pos: [0.082, 0.241, 0.009]}
+    - {pos: [0.064, 0.199, 0.009]}
     - {pos: [0.050, 0.165, 0.009]}
   goal:
     - {fixture: S, relation: center}
@@ -152,10 +162,34 @@ rope:
   # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
   # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
   model: fem_ipc_tube
+  # 低分辨率档：run.lite=true 时套用，用于快速看路线是否正确。
+  # 2026-08-10 从 cable_routing_physical_handle_demo 的 Python 字面量搬来。
+  lite:
+    particle_size: 0.006
+    mesh:
+      segment_length: 0.014
+      radial_segments: 6
+      maxvolume: 0.00000012
+    pbd:
+      max_stretch_solver_iterations: 6
+      max_bending_solver_iterations: 3
+      max_volume_solver_iterations: 3
+  # FEM + IPC 后端的材料与接触参数。单源 = prefabs.rope_fem
+  # （2026-08-10 从 rope_backends/fem_ipc.py 的 _DEFAULTS 搬来，见该处注释）。
   fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    rest_shape: ${prefabs.rope_fem.rest_shape}
+    # 本任务覆写（prefab 是 null = 用耦合器默认值）：
     # routing post 是刻意重叠的静态复合碰撞体（shaft+喇叭底座，iter-3 楔形修复），
     # libuipc 的零相交初始态检查对它必然报错；静态体互嵌无自由度，豁免安全。
     sanity_check_enable: false
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
   color: [0.00, 0.90, 0.78]
   anchor_start: true
   anchor_end: false
@@ -183,6 +217,12 @@ rope:
     fixed: true
     collision: false
     exclude_pbd_collision: false
+    # 抓取相关的物理量单源在 physical_handle：机械臂夹的就是这个插头，
+    # 两处各写一份会在只改一处时静默分叉。
+    # 2026-08-10 从 cable_routing_physical_handle_demo 的 OmegaConf.merge 搬来 ——
+    # 此前这两个键不在配置里，靠运行时现加，Hydra 的 struct 模式会拒绝。
+    friction: ${task.physical_handle.handle_friction}
+    rho: ${task.physical_handle.rho}
     connector:
       enabled: true
       pin_depth: ${prefabs.rope_endpoint_connector.pin_depth}

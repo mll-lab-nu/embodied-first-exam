@@ -1,5 +1,12 @@
 # TopoGym Overall Module Dict
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 本文是当前代码架构的总字典，用尽量简单的语言说明每个模块负责什么、名字是什么意思，以及后续拆分 prototype 时应该把逻辑放到哪里。
 
 ## 一句话总览
@@ -163,7 +170,7 @@ topogym/supervision/
 topogym/runtime/
 ```
 
-这些模块暂时不 import Genesis，因此不会改变现有 demo 的物理行为。下一步可以从最臃肿、最脆弱的 `prototypes/cable_routing_physical_handle_demo.py` 开始，把 waypoint 生成和 safety monitor 迁到新层。
+这些模块暂时不 import Genesis，因此不会改变现有 demo 的物理行为。下一步可以从最臃肿、最脆弱的 `demos/routing/cable_routing_physical_handle_demo.py` 开始，把 waypoint 生成和 safety monitor 迁到新层。
 
 ## 迁移顺序：先 Swap，再扩展
 
@@ -179,7 +186,7 @@ topogym/runtime/
 ```text
 topogym/generation/swap_generator.py  # 生成 Swap EpisodeSpec
 topogym/planning/swap_planner.py      # 生成 Swap pick-place EpisodePlan
-prototypes/swap_physical_grasp_demo.py # 仍是 CLI，但开始消费 spec/plan/result
+demos/legacy/swap_physical_grasp_demo.py # 仍是 CLI，但开始消费 spec/plan/result
 ```
 
 `onestroke` 也已经完成刚体多步任务的第一轮迁移：
@@ -187,7 +194,7 @@ prototypes/swap_physical_grasp_demo.py # 仍是 CLI，但开始消费 spec/plan/
 ```text
 topogym/generation/onestroke_generator.py      # 生成 OneStroke EpisodeSpec
 topogym/planning/onestroke_wall_planner.py     # 生成完整 separator wall sequence
-prototypes/onestroke_physical_wall_demo.py     # 消费 spec/plan/result，保留原物理执行
+demos/legacy/onestroke_physical_wall_demo.py     # 消费 spec/plan/result，保留原物理执行
 ```
 
 这一步的标准是：旧 demo 的物理行为基本不变，但日志中已经能看到稳定的 `episode_id`、`plan_id`、`stable_ready` 和 `export_ready`。后续其他任务应该按照这个模板逐步迁移，而不是在各自 prototype 里继续堆长逻辑。
@@ -198,7 +205,7 @@ prototypes/onestroke_physical_wall_demo.py     # 消费 spec/plan/result，保�
 ```text
 topogym/generation/maze_wall_removal_generator.py  # 生成 Maze Wall Removal EpisodeSpec
 topogym/planning/maze_wall_removal_planner.py      # 将 sampled oracle_edges 包装成移除命令序列
-prototypes/maze_wall_removal_physical_demo.py      # 消费 spec/plan/result，保留原物理抓取和移除执行
+demos/legacy/maze_wall_removal_physical_demo.py      # 消费 spec/plan/result，保留原物理抓取和移除执行
 ```
 
 这一阶段的标准仍然是：旧 demo 的物理行为基本不变，但日志中能看到稳定的
@@ -210,7 +217,7 @@ prototype 继续变薄。
 ```text
 topogym/generation/stacked_plate_generator.py  # 生成 Stacked Plate EpisodeSpec
 topogym/planning/stacked_plate_planner.py      # 将 oracle angle 包装成接触旋转命令
-prototypes/stacked_plate_physical_rotate_demo.py # 消费 spec/plan/result，保留原接触旋转执行
+demos/connectivity/stacked_plate_physical_rotate_demo.py # 消费 spec/plan/result，保留原接触旋转执行
 ```
 
 这个任务和普通 pick-and-place 不同：planner 输出的是“推动某层圆盘绕 revolute
@@ -222,7 +229,7 @@ joint 旋转”的高层命令，而不是搬运物体的命令。物理接触�
 ```text
 topogym/generation/untangle_generator.py  # 生成 Untangle EpisodeSpec
 topogym/planning/untangle_planner.py      # 根据当前拓扑选择下一次 endpoint relocation
-prototypes/untangle_physical_handle_demo.py # 消费 spec/plan/result，保留原 PBD handle drag 执行
+demos/entangle/untangle_physical_handle_demo.py # 消费 spec/plan/result，保留原 PBD handle drag 执行
 ```
 
 这里的 planner 是动态的：每完成一次端点搬运后，先更新高层 topology state，
@@ -252,7 +259,7 @@ prototypes/peeling_rigid_patch_suction_demo.py # 刚体 suction 稳定线，接�
 topogym/generation/cable_routing_generator.py  # 生成 Cable Routing EpisodeSpec
 topogym/planning/cable_routing_planner.py       # 把 target_signature 解析成自由端 drag 的 waypoint 计划（原先在 oracle demo 里的几何函数搬到这里）
 topogym/supervision/cable_routing.py            # rope/peg wrap 指标、阶段验证和最终 routing verification
-prototypes/cable_routing_physical_handle_demo.py # 消费 spec/plan/result，保留原 PBD handle drag 执行
+demos/routing/cable_routing_physical_handle_demo.py # 消费 spec/plan/result，保留原 PBD handle drag 执行
 prototypes/cable_routing_oracle_demo.py          # 改为从 planning/supervision 导入共享 helper，行为不变
 ```
 

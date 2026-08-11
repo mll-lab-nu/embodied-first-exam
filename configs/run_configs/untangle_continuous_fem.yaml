@@ -1,0 +1,37 @@
+# untangle_continuous_fem_demo 的运行模式参数。
+#
+# 这个 demo 是 FEM+IPC 垂直切片的验证台，动作序列是它自己写死的一条，
+# 不走 planner。下面的运动参数因此留在 run 组：它们描述「这次怎么演示」，
+# 而不是任务场景的属性，写进共享的 task 配置反而会污染别的 demo。
+#
+# **材料与接触参数不在这里。** E / nu / rho / friction_mu / contact_d_hat /
+# follow_strength 六个值的单源是 prefabs.rope_fem，经 task.rope.fem 引用。
+# 此前这个 demo 用 argparse 默认值又抄了一份（--e 1e5、--nu 0.45 ……），
+# 是同一批数字的第三处定义。要改用：
+#   task.rope.fem.E=200000.0   task.rope.fem.contact_d_hat=0.001
+
+defaults:
+  - default
+  - _self_
+
+# 抓哪根绳。绳序按 braid.strand_colors：0=红，1=绿。
+grasp_strand: 0
+
+# 是否把机械臂放进场景。关掉时用脚本化的位姿直接驱动跟随带，
+# 把「IPC 接触本身行不行」与「机械臂能不能抓稳」分开验证。
+arm: false
+
+# --- 这条演示动作的参数 ---
+# 跟随带的半径（米）：绳端多长的一段被夹爪带动。
+band_radius: 0.015
+# carry_up 的抬升高度（米）。
+lift: 0.08
+# 放置点相对起点在 y 方向多让开一些（米）。
+place_margin: 0.02
+# 每个运动阶段的步数。
+move_steps: 280
+place_steps: 400
+settle_steps: 300
+
+# 写绳状态 trace 文件。
+trace: false

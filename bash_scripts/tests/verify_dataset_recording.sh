@@ -2,16 +2,16 @@
 # ============================================================================
 # 验证"逐帧数据集录制"（路线图 W3/W4）：录一条 H5，再检查其结构与字段健全性。
 # 通用脚本——为以后其它任务的数据集验证也做准备（一个任务的 demo 接上
-# --record-dataset 后，只需在下面 TASKS 里加一行即可复用）。
+# run.record_dataset 后，只需在下面 TASKS 里加一行即可复用）。
 #
 # 用法：
-#   bash bash_scripts/tests/verify_dataset_recording.sh              # 默认 swap
-#   bash bash_scripts/tests/verify_dataset_recording.sh swap         # 指定任务
+#   bash bash_scripts/tests/verify_dataset_recording.sh              # 全部任务
+#   bash bash_scripts/tests/verify_dataset_recording.sh untangle     # 指定任务
 #
 # 可调环境变量（都有默认值）：
 #   BACKEND=gpu           计算后端（gpu/cuda/cpu）
 #   SEED=0                episode seed
-#   EVERY=10              每 N 个物理步录一帧（--dataset-every-n-steps）
+#   EVERY=10              每 N 个物理步录一帧（run.dataset_every_n_steps）
 #   OUTDIR=runs/dataset_tests/<时间戳>   输出目录
 #   TOPOGYM_VENV=.venv    未激活 venv 时自动 source 的路径
 #
@@ -39,15 +39,14 @@ EVERY="${EVERY:-10}"
 OUTDIR="${OUTDIR:-runs/dataset_tests/$(date +%Y%m%d_%H%M%S)}"
 mkdir -p "$OUTDIR"
 
-# task 名 -> demo 模块（+ 该任务特有额外参数）。只列已接 --record-dataset 的任务；
+# task 名 -> demo 模块（+ 该任务特有的 Hydra 覆盖）。只列已接数据集录制的任务；
 # 其它任务接上 W4 后在此追加一行即可。
 declare -A TASKS=(
-  [swap]="prototypes.swap_physical_grasp_demo"
-  [untangle]="prototypes.untangle_physical_handle_demo"
-  [untangle_continuous]="prototypes.untangle_continuous_physical_pinch_demo"
-  [cable_routing]="prototypes.cable_routing_physical_handle_demo --allow-target-lag"
+  [untangle]="demos.entangle.untangle_physical_handle_demo"
+  [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
+  [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true"
 )
-ORDER=(swap untangle untangle_continuous cable_routing)
+ORDER=(untangle untangle_continuous cable_routing)
 
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
@@ -169,13 +168,14 @@ for name in "${SELECTED[@]}"; do
   echo
   echo "==================== verify: $name ===================="
   start=$(date +%s)
-  # EXTRA_ARGS：附加 CLI 参数（如 FEM 后端的 --env-config/--rope-model）。
+  # EXTRA_ARGS：附加的 Hydra 覆盖，例如
+  #   EXTRA_ARGS="env_configs@env=world_tabletop_fem_v1 task.rope.model=fem_ipc_tube"
   read -ra extra_env <<< "${EXTRA_ARGS:-}"
   python -m "$mod" "${extra[@]}" "${extra_env[@]}" \
-    --seed "$SEED" \
-    --backend "$BACKEND" \
-    --record-dataset "$h5" \
-    --dataset-every-n-steps "$EVERY" \
+    "run.seed=$SEED" \
+    "env.genesis.backend=$BACKEND" \
+    "run.record_dataset=$h5" \
+    "run.dataset_every_n_steps=$EVERY" \
     2>&1 | tee "$OUTDIR/$name.log"
   code=${PIPESTATUS[0]}
   dur=$(( $(date +%s) - start ))

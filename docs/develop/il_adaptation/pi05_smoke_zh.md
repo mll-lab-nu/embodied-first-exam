@@ -9,6 +9,13 @@
 `pi05_smoke.sh`）都接受任务名，形状从 H5 首帧推断，`repo_id` 从 H5 的 `setup.attrs.task_id` 派生。
 可选任务 = `bash_scripts/tests/verify_dataset_recording.sh` 的 `TASKS` 表里的键。
 
+> **2026-08-10：本文示例任务 `swap` 的 demo 已删除。** 它随 `demos/legacy/` 一起移除
+> （原因见 [`../framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)），
+> 因此 stage 1 的录制无法再用 `swap`。`bash_scripts/tests/pi05_smoke.sh` 的默认任务已改为
+> `untangle`。下面命令里的 `swap` 一律替换为 `untangle`（或 `untangle_continuous` /
+> `cable_routing`）即可，其余步骤与参数不变——脚本本来就是按任务参数化的。
+> 本文正文按当时记录原样保留。
+
 本文全程以 **`swap`** 为示例，因为它是首个端到端跑通的任务（纯刚体，物理不污染结论）；把命令里的
 `swap` 换成别的任务名即可。swap 任务本身已归入 `topogym/tasks/legacy/`（不考察四类空间关系，
 见 `../framework/task_taxonomy_zh.md`），但仍是本冒烟链路的默认任务，直到另一个任务达到同等就绪度。

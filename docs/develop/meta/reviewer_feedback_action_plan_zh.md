@@ -1,5 +1,12 @@
 # Dev-log：Reviewer 反馈 → 落地实现计划
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 > 日期：2026-07-09
 > 来源：外部 reviewer 对录制视频的反馈。本文把反馈逐条对应到当前代码/配置，给出具体改动步骤。
 > 其中"绳子端点建模"一项按用户要求咨询了 Fable，见第 4 节。
@@ -24,7 +31,7 @@
 
 ### 2.1 Swap 抓取更物理（grasp scale/ratio）
 
-**现状（**`configs/task_configs/swap_topogym_tabletop_v1.yaml` **+** `prototypes/swap_physical_grasp_demo.py`**）**
+**现状（**`configs/task_configs/swap_topogym_tabletop_v1.yaml` **+** `demos/legacy/swap_physical_grasp_demo.py`**）**
 
 - block 是 **3.8cm 立方体**（`blocks.*.size = [0.038,0.038,0.038]`）。
 - Panda 夹爪 `open_qpos=0.04 / closed_qpos=0.00`（每指 0~4cm）。

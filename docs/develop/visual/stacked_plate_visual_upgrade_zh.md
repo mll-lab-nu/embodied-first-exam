@@ -24,6 +24,6 @@
 ## 命令(用户 viewer 观感 + 裁剪)
 
 ```
-python -m prototypes.stacked_plate_physical_rotate_demo --viewer --backend gpu --verbose
+python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true env.genesis.backend=gpu run.verbose=true
 ```
 看:盘心轴承盖、支座法兰、盘缘刻度;逐项若不合意 `visual_details.<项>.enabled: false` 关。确认方向后再做 C3(旋钮)/C4(通孔)。

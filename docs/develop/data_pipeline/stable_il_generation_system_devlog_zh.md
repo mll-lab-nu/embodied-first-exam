@@ -1,5 +1,12 @@
 # 稳定环境生成系统 Dev Log
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 本文记录一次针对 RoboMME 稳定生成环境与 demonstrations 的方式的对照分析，并给出 TopoGym 需要落地的系统规划。
 
 当前阶段的首要目标不是生成 IL 数据，而是建立一套稳定、可复现、可按 seed 生成随机变式的环境生成系统。IL 数据、demo 视频、viewer 观察、RL 训练都应该是这套环境系统的下游消费者。
@@ -34,10 +41,10 @@ RoboMME README 里明确给出几个和我们直接相关的设计点：
 刚体任务已经开始形成可进入 IL 的合约：
 
 - `docs/develop/il_adaptation/collision_based_il_contract_zh.md`
-- `prototypes/swap_physical_grasp_demo.py`
-- `prototypes/onestroke_physical_wall_demo.py`
-- `prototypes/maze_wall_removal_physical_demo.py`
-- `prototypes/stacked_plate_physical_rotate_demo.py`
+- `demos/legacy/swap_physical_grasp_demo.py`
+- `demos/legacy/onestroke_physical_wall_demo.py`
+- `demos/legacy/maze_wall_removal_physical_demo.py`
+- `demos/connectivity/stacked_plate_physical_rotate_demo.py`
 
 这些任务的优点是：对象运动主要来自 Genesis rigid collision、摩擦、重力和 Franka 控制，失败也能通过 result 行里的 success / failure reason 过滤。旧文档和旧 demo 中偶尔会出现 `il_ready` 命名，第二阶段应逐步替换为更中性的 `export_ready` 或 `stable_ready`。
 
@@ -45,14 +52,14 @@ PBD handle 类任务也已有基础合约：
 
 - `docs/develop/physics/pbd_physical_handle_interaction_zh.md`
 - `topogym/primitives/pbd_handle_drag.py`
-- `prototypes/untangle_physical_handle_demo.py`
-- `prototypes/cable_routing_physical_handle_demo.py`
+- `demos/entangle/untangle_physical_handle_demo.py`
+- `demos/routing/cable_routing_physical_handle_demo.py`
 
 核心模式是：Franka 夹住一个 rigid handle，rope endpoint particles 通过 Genesis `fix_particles_to_link` 连接到 handle。机械臂不直接 teleport rope，也不逐帧 `set_particles_pos`。
 
 录制入口也有雏形：
 
-- `prototypes/record_physical_demos.py`
+- `demos/legacy/record_physical_demos.py`
 
 目前它主要覆盖 `swap/onestroke/maze`，还没有变成完整的数据生成 supervisor。
 
@@ -60,7 +67,7 @@ PBD handle 类任务也已有基础合约：
 
 1. prototype 仍然承担太多职责。
 
-`prototypes/cable_routing_physical_handle_demo.py` 同时做配置覆盖、场景创建、oracle waypoint 读取、夹爪执行、PBD 安全检查、connector latch、recording 和 result 判断。调 demo 可以，但不适合长期稳定采数据。
+`demos/routing/cable_routing_physical_handle_demo.py` 同时做配置覆盖、场景创建、oracle waypoint 读取、夹爪执行、PBD 安全检查、connector latch、recording 和 result 判断。调 demo 可以，但不适合长期稳定采数据。
 
 1. planner 层还不够独立。
 
@@ -171,7 +178,7 @@ EpisodeResult
 *_demo.py          # CLI 展示入口
 ```
 
-当前 `prototypes/cable_routing_physical_handle_demo.py` 以后应该变薄为：
+当前 `demos/routing/cable_routing_physical_handle_demo.py` 以后应该变薄为：
 
 ```text
 parse args
@@ -229,10 +236,10 @@ topogym/planning/
 
 迁移来源：
 
-- `prototypes/cable_routing_physical_handle_demo.py` 的 `_endpoint_oracle_targets`
+- `demos/routing/cable_routing_physical_handle_demo.py` 的 `_endpoint_oracle_targets`
 - `configs/task_configs/cable_routing*_v1.yaml` 的 `endpoint_oracle_waypoints`
-- `prototypes/onestroke_physical_wall_demo.py` 中 planned walls 相关逻辑
-- `prototypes/maze_wall_removal_physical_demo.py` 中 planned removals 相关逻辑
+- `demos/legacy/onestroke_physical_wall_demo.py` 中 planned walls 相关逻辑
+- `demos/legacy/maze_wall_removal_physical_demo.py` 中 planned removals 相关逻辑
 
 #### 3.5.3 新增 supervision 层
 
@@ -254,7 +261,7 @@ topogym/supervision/
 
 迁移来源：
 
-- `prototypes/cable_routing_physical_handle_demo.py` 的 `on_segment_complete` safety 检查
+- `demos/routing/cable_routing_physical_handle_demo.py` 的 `on_segment_complete` safety 检查
 - `topogym/primitives/pbd_handle_drag.py` 的 segment abort 逻辑
 - `docs/develop/physics/untangle/untangle_pbd_segfault_debug_zh.md` 中总结出的 PBD 崩溃模式
 
@@ -289,7 +296,7 @@ EpisodeSpec
 迁移来源：
 
 - 各 prototype 的 `main()` 和 `run_demo()`
-- `prototypes/record_physical_demos.py`
+- `demos/legacy/record_physical_demos.py`
 - `topogym/utils/recording.py`
 
 ### 3.6 Prototype 保留方式
@@ -303,7 +310,7 @@ prototypes/basic_env_demo.py
 prototypes/*_physical_*_demo.py
   只作为具体 task 的 viewer/recording CLI。
 
-prototypes/record_physical_demos.py
+demos/legacy/record_physical_demos.py
   变成调用 runtime runner 的批量展示脚本，而不是自己拼 command。
 ```
 
@@ -332,7 +339,7 @@ Prototype 中不再长期存在：
 
 3. 新增 `topogym/runtime/demo_runner.py`，先服务一个任务，例如 cable routing 或 maze。
 
-4. 把 `prototypes/cable_routing_physical_handle_demo.py` 里的 waypoint 读取和 safety callback 抽出一层，但保持 CLI 行为不变。
+4. 把 `demos/routing/cable_routing_physical_handle_demo.py` 里的 waypoint 读取和 safety callback 抽出一层，但保持 CLI 行为不变。
 
 5. 给 `prototypes/basic_env_demo.py` 或新 `prototypes/environment_generation_demo.py` 增加：
 
@@ -572,12 +579,12 @@ export_ready: 是否可以作为后续 demo/IL/RL/eval 的输入
 
 现有脚本：
 
-- `prototypes/record_physical_demos.py`
+- `demos/legacy/record_physical_demos.py`
 
 下一步应扩展为：
 
 ```text
-python -m prototypes.record_physical_demos \
+python -m demos.legacy.record_physical_demos \
   --tasks swap,onestroke,maze,cable_routing \
   --episodes-per-task 100 \
   --seed-start 0 \

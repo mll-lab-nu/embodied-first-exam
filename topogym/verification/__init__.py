@@ -12,7 +12,8 @@ Split out of `tasks/` per the blueprint
 from .bar_through_hole_verifier import (
     BarThroughHolePuzzleEvaluator,
     BarThroughHolePuzzleState,
-    cylinder_axis,
+    hexagon_contains,
+    prism_axis,
 )
 from .maze_wall_removal_verifier import (
     MazeWallRemovalPuzzleEvaluator,

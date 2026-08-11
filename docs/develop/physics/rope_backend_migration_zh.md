@@ -109,7 +109,7 @@ PBD 路径在迁移全过程可运行，随时可以补测。
 且需要手动关闭窗口）：
 
 ```bash
-time python -m prototypes.untangle_continuous_physical_pinch_demo \
+time python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --verbose --seed 0 --segment-length 0.004 --trace
 ```
 

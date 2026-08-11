@@ -138,7 +138,7 @@ n=6 / s=4mm 未能跟上，**原因未查明**。它的环向间距正好 4.000m
 被拽的绳无论被拖多远，都不允许穿过压在它上面的那根。
 
 ```bash
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --viewer --keep-open --verbose \
   --seed 0 --grasp-strand 1 --max-moves 1 \
   --segment-length 0.004 --trace
@@ -282,10 +282,10 @@ particles_reordered[i_rp, i_env].vel = corrective_vel + target_world_vel
 | trace 新增 `pair_gap(mm)` 列：每步记录该绳与最近的另一根绳之间中心线的最小距离 | `topogym/supervision/rope_trace.py` |
 | trace 新增 `over_z(mm)` 列：带符号的高度差，符号即上下关系 | 同上 |
 | trace header 记录 12mm / 8mm 两个参考值、centerline 采样数与间距 | 同上 |
-| trace header 记录检测器与 braid ground truth 的比对结果、每个 crossing 的 over/under 与 z_gap | `prototypes/untangle_continuous_physical_pinch_demo.py` |
+| trace header 记录检测器与 braid ground truth 的比对结果、每个 crossing 的 over/under 与 z_gap | `demos/entangle/untangle_continuous_physical_pinch_demo.py` |
 | z_gap 低于静止间距一半时输出提示：over/under 的判定裕度不足 | 同上 |
 | `--grasp-strand`：强制抓指定的绳，用于接触测试 | 同上 + `topogym/planning/untangle_continuous_planner.py` |
-| `--segment-length` 覆盖（两个 demo） | 同上 + `prototypes/untangle_continuous_inspect_demo.py` |
+| `--segment-length` 覆盖（两个 demo） | 同上 + `demos/entangle/untangle_continuous_inspect_demo.py` |
 | 扫描脚本 | `bash_scripts/tests/rope_contact_sweep.sh` |
 
 `pair_gap` 与 `over_z` 都用点到线段距离计算。centerline 采样间距在 5.5 ~ 7.5mm 量级
@@ -469,14 +469,14 @@ viewer 运行同样发生穿模，穿模步号与另外两次相同。此前"vie
 
 ```bash
 # 录像
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --verbose --seed 0 --grasp-strand 0 --segment-length 0.004 \
   --record-video runs/untangle_solve_pull_over_strand.mp4 \
   --record-camera oblique --record-res 960 720 \
   --record-every-n-steps 4 --record-fps 30 --trace
 
 # viewer，同参数
-python -m prototypes.untangle_continuous_physical_pinch_demo \
+python -m demos.entangle.untangle_continuous_physical_pinch_demo \
   --viewer --verbose --seed 0 --grasp-strand 0 --segment-length 0.004 --trace
 ```
 
@@ -484,7 +484,7 @@ python -m prototypes.untangle_continuous_physical_pinch_demo \
 
 ### 9.10 日志措辞
 
-`prototypes/untangle_continuous_physical_pinch_demo.py` 第 388 行的
+`demos/entangle/untangle_continuous_physical_pinch_demo.py` 第 388 行的
 `(over s{command.under_strand}, ...)` 中 "over" 为固定文本。用 `--grasp-strand` 指定下方那根时，
 该行（运行 A：`grasping s1 (over s0, ...)`）与同一 header 的
 `measured crossings: s0 over s1` 不一致。run10 的同一行写作 `over s1`，

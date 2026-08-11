@@ -8,21 +8,24 @@ declared kinematic event, so the IL contract line reports
 `runtime_attachment=True` per `docs/develop/visual/physical_realism_guidelines_zh.md`
 P1/P4.
 
-    python -m prototypes.bar_through_hole_physical_insert_demo --viewer --verbose
-    python -m prototypes.bar_through_hole_physical_insert_demo --inspect-only --viewer
-    python -m prototypes.bar_through_hole_physical_insert_demo --oracle-mode bypass --viewer
+Configuration is Hydra (`configs/bar_through_hole.yaml`).
+
+    python -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true
+    python -m demos.routing.bar_through_hole_physical_insert_demo run.inspect_only=true run.viewer=true
+    python -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass run.viewer=true
+    python -m demos.routing.bar_through_hole_physical_insert_demo --cfg job
 """
 
 from __future__ import annotations
 
-import argparse
 import os
-from pathlib import Path
 
 import genesis as gs
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 
-from topogym.core import add_common_config_arg, load_topogym_configs
+from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
 from topogym.primitives import (
     AttachmentManager,
@@ -32,65 +35,15 @@ from topogym.primitives import (
     entity_quat,
     print_collision_il_contract,
 )
+from topogym.supervision import stop_before_physics
 from topogym.tasks import BarThroughHoleSceneBuilder
 from topogym.utils.franka import initialize_franka_controller
 from topogym.utils.recording import (
-    add_recording_args,
-    merge_recording_config,
+    apply_recording_camera_overrides,
     print_recording_saved,
     recording_session_from_config,
 )
 from topogym.verification import BarThroughHolePuzzleEvaluator
-
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "bar_through_hole_topogym_tabletop_v1.yaml"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Push a rigid shaft through a bulkhead aperture."
-    )
-    add_common_config_arg(parser)
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default="gpu")
-    parser.add_argument("--viewer", action="store_true", help="Open the interactive viewer.")
-    parser.add_argument("--keep-open", action="store_true", help="Keep stepping after the run.")
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument(
-        "--inspect-only",
-        action="store_true",
-        help="Build the scene and settle at home without running the motion. "
-        "Use this first: it is where a home-pose/geometry interpenetration shows up.",
-    )
-    parser.add_argument(
-        "--oracle-mode",
-        choices=("insert", "bypass"),
-        default=None,
-        help="insert = thread it through; bypass = lift over the panel top "
-        "(the anti-shortcut, expected to be judged a failure).",
-    )
-    parser.add_argument("--verbose", action="store_true")
-    add_recording_args(parser)
-    return parser.parse_args()
-
-
-def load_configs(args: argparse.Namespace):
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    cfg.env.genesis.backend = args.backend
-    # Returns a new config -- `OmegaConf.merge` does not modify in place, so
-    # dropping the result leaves cfg without the `recording` section that
-    # `recording_session_from_config` reads.
-    return merge_recording_config(cfg, args)
-
 
 def _hud(bar_scene, evaluator, status):
     def render_lines():
@@ -107,7 +60,7 @@ def _hud(bar_scene, evaluator, status):
     return render_lines
 
 
-def run_demo(args, cfg, bar_scene, controller, *, episode_key, mode, status) -> EpisodeResult:
+def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> EpisodeResult:
     layout = bar_scene.layout
     physical = cfg.task.physical
     primitive_cfg = cfg.task.primitive
@@ -163,8 +116,11 @@ def run_demo(args, cfg, bar_scene, controller, *, episode_key, mode, status) -> 
         min_lift_delta=float(physical.min_lift_delta),
         max_grasp_tilt=float(np.deg2rad(float(physical.max_grasp_tilt_deg))),
         max_grasp_xy_error=float(physical.max_grasp_xy_error),
-        verbose=bool(args.verbose),
+        verbose=bool(cfg.run.verbose),
     )
+
+    if stop_before_physics(cfg, bar_scene.scene, "bar_through_hole_physical_insert_demo"):
+        raise SystemExit(0)
 
     with AttachmentManager(bar_scene.scene) as attachment_manager:
         held: list = []
@@ -259,25 +215,29 @@ def run_demo(args, cfg, bar_scene, controller, *, episode_key, mode, status) -> 
         f"phases={len(result.completed_phases)}/{len(AxialInsertPrimitive.NOMINAL_PHASES)}",
         flush=True,
     )
-    if args.verbose:
+    if cfg.run.verbose:
         print(f"bar_through_hole topology {state.to_info()}", flush=True)
     return episode_result
 
 
-def main() -> None:
-    args = parse_args()
-    cfg = load_configs(args)
-    mode = args.oracle_mode or str(cfg.task.oracle.mode)
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="bar_through_hole")
+def main(cfg: DictConfig) -> None:
+    cfg = apply_recording_camera_overrides(cfg)
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"bar_through_hole_config -> {resolved}", flush=True)
+
+    mode = cfg.run.oracle_mode or str(cfg.task.oracle.mode)
 
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
-    show_viewer = bool(args.viewer and has_display)
-    if args.viewer and not show_viewer:
+    show_viewer = bool(cfg.run.viewer and has_display)
+    if cfg.run.viewer and not show_viewer:
         print("[warn] no display detected; falling back to headless.", flush=True)
 
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
-    gs.init(backend=backends[args.backend], precision=str(cfg.env.genesis.precision))
+    gs.init(backend=backends[str(cfg.env.genesis.backend)], precision=str(cfg.env.genesis.precision))
 
     builder = BarThroughHoleSceneBuilder(cfg.env, cfg.task, cfg.robot_control)
     bar_scene = builder.build(show_viewer=show_viewer)
@@ -289,7 +249,7 @@ def main() -> None:
         settle_steps=int(cfg.task.physical.settle_steps),
     )
 
-    episode_key = EpisodeKey(task_id="bar_through_hole", seed=int(args.seed))
+    episode_key = EpisodeKey(task_id="bar_through_hole", seed=int(cfg.run.seed))
     evaluator = BarThroughHolePuzzleEvaluator()
     status = {"phase": "home", "mode": mode, "release_stable": True}
 
@@ -299,7 +259,7 @@ def main() -> None:
         cfg.recording,
         hud=_hud(bar_scene, evaluator, status),
     ):
-        if args.inspect_only:
+        if cfg.run.inspect_only:
             # Home settle only. This is the step that surfaces a home-pose /
             # geometry interpenetration, which is how stacked_plate got a solver
             # NaN before its raised-home config existed.
@@ -312,10 +272,10 @@ def main() -> None:
                 flush=True,
             )
         else:
-            run_demo(args, cfg, bar_scene, controller, episode_key=episode_key, mode=mode, status=status)
+            run_demo(cfg, bar_scene, controller, episode_key=episode_key, mode=mode, status=status)
 
     print_recording_saved(cfg.recording)
-    while args.keep_open and show_viewer:
+    while cfg.run.keep_open and show_viewer:
         bar_scene.scene.step()
 
 

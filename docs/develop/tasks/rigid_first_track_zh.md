@@ -101,23 +101,28 @@ docx 对 2.3 与 3.4 都明确标注了「刚体」定位：2.3 是「把柔性�
 
 ## 4. 逐任务环境需求
 
-### 4.1 docx 2.3 —— `routing/bar_through_hole.py` ✅ 阶段 1 已落地（2026-08-05）
+### 4.1 docx 2.3 —— `routing/bar_through_hole.py` ✅ 阶段 1 已落地（2026-08-05，08-12 改六棱柱）
 
 | 项 | 内容 |
 |---|---|
-| 场景资产 | 竖直面板（矩形孔）、圆轴、近端两个托座、远端托座、工业风装饰件 |
-| 开孔做法 | 四条 `Box` 拼出矩形孔（左右立柱 + 下槛 + 上楣）。不做布尔开孔——与 `routing/cable_routing.py:810-818` 走线柱拆成柱身＋锥底＋顶盖的既有凸块组合解法同构，其 docstring 记录了合成单体后凸包失真的理由 |
-| 圆轴 | `gs.morphs.Cylinder(euler=(0,90,0))`（默认 z 轴 → 转到 x），动态、`rho=2700`（铝的量级，P7） |
-| 承载方式 | **assisted attachment**：抓点在轴心后 65mm，指面只承受纯力矩，Franka 指增益 kp=100 承不住。用现成的 `primitives/attachment.py` 的 `AttachmentManager` 运动学承载，指面只需看起来夹住——与 cable_routing / untangle 抓刚体件的做法一致 |
-| 托座 | 圆轴在平面上绕自身轴是中性平衡会侧漂，故起止各配 U 形托座（底板 + 两侧挡块）。近端两个夹住轴心防倾覆，远端一个顶面与孔下沿齐平，使穿孔后变成两点支撑 |
+| 场景资产 | 竖直面板（**正六边形孔**）、**正六棱柱杆**、近端两个托座、远端托座、工业风六角法兰 |
+| 开孔做法 | 8 块凸 `Box`：4 块框（立柱 + 下槛 + 上楣）围出六边形的外接矩形，再 4 块沿斜边旋转的倒角块削去四个角三角形。不做布尔开孔——与 `routing/cable_routing.py:810-818` 走线柱拆成柱身＋锥底＋顶盖的既有凸块组合解法同构 |
+| 杆 | 程序化生成的正六棱柱网格（`hex_prism_mesh`，轴沿 local x），`gs.morphs.Mesh(convexify=True)`——棱柱本身是凸体，凸包即自身，所以 convexify 是**精确**而非近似。动态、`rho=2700`（铝的量级，P7）。对边距 0.018（此前是直径 0.024 的圆柱） |
+| 承载方式 | **assisted attachment**：抓点在杆心后 75mm，指面只承受纯力矩，Franka 指增益 kp=100 承不住。用现成的 `primitives/attachment.py` 的 `AttachmentManager` 运动学承载，指面只需看起来夹住——与 cable_routing / untangle 抓刚体件的做法一致 |
+| 托座 | **平顶开放块，无挡块**：六棱柱取平面朝下姿态，躺在一个面上不会滚，而挡块原本只为防圆轴侧滚而设。近端两个夹住杆心防倾覆，远端一个顶面与孔下沿齐平，使穿孔后变成两点支撑 |
 | 复用 | `StandardTabletopSceneBuilder`、`AttachmentManager`、`physical_contact.py` 的摩擦配置与位姿读取 |
 | 新增 | `primitives/axial_insert.py`（见下）、`verification/bar_through_hole_verifier.py` |
-| 不变量 | `threading_count ∈ {0,1}`。判定 = 两端分居面板两侧 **且** 轴与中平面的交点落在孔矩形内 |
-| 防捷径 | 从面板上方绕过去：起止 xy 与正常插入完全相同，只有搬运高度不同，轴落到面板顶上 → 交点在孔外 → 判 0。**「两端分居两侧」单独不够**：横搭在面板顶上也满足该条件，孔内交点判据是承重的 |
+| 不变量 | `threading_count ∈ {0,1}`。判定 = 两端分居面板两侧 **且** 杆轴与中平面的交点落在**六边形孔内**（`hexagon_contains`：正六边形是三条条带的交集，法向在 30°/90°/150°） |
+| 防捷径 | 从面板上方绕过去：起止 xy 与正常插入完全相同，只有搬运高度不同，杆落到面板顶上 → 交点在六边形外 → 判 0。**「两端分居两侧」单独不够**：横搭在面板顶上也满足该条件，孔内交点判据是承重的 |
 | 风险 | 低。无 PBD、无关节 |
 
-`threading_count` 取无符号 `{0,1}`：圆轴轴对称，端对端翻转是同一物理状态，state-based verifier
+`threading_count` 取无符号 `{0,1}`：杆轴对称，端对端翻转是同一物理状态，state-based verifier
 无法区分正反穿。§4.2 的方向敏感要求由 docx 2.4/2.5（绕/解绕）在任务对层面满足。
+
+**六边形不是键控配合**：杆的外接圆半径 0.0104 小于孔的内切圆半径 0.016，任意滚转角都能通过。
+六棱柱在这里的作用是工业观感 + 平面朝下不滚，不是增加对准约束。只判杆**轴**的穿越点，不判整个
+截面：截面留在孔内由碰撞保证，而精确的截面判据（孔六边形对杆六边形作 Minkowski 腐蚀）在正确落座
+位姿上恰好落在边界，会把真成功变成浮点掷硬币。
 
 **原语缺口（已解决）**：docx 的动作是「夹持杆中段、一次水平平移插入」。`PickPlacePrimitive` 的
 13 个阶段是顶抓序列，`translate` 发生在 `place` 之前而 `place` 是纯竖直下降，且释放后没有水平退出，
@@ -204,7 +209,7 @@ topogym/tasks/routing/bar_through_hole.py            # Layout / Scene / SceneBui
 topogym/verification/bar_through_hole_verifier.py    # PuzzleState + PuzzleEvaluator
 configs/task_configs/bar_through_hole_topogym_tabletop_v1.yaml
 topogym/primitives/<新原语>.py                        # 水平插入，见 §4.1 原语缺口
-prototypes/bar_through_hole_physical_insert_demo.py  # 要能录数据则必需
+demos/routing/bar_through_hole_physical_insert_demo.py  # 要能录数据则必需
 两处登记：topogym/core/taxonomy.py 的 CATEGORIES + topogym/tasks/__init__.py 的 re-export
 一处登记：topogym/verification/__init__.py 的 re-export
 四个 bash 注册表各一行：record_all_tasks.sh / collect_and_view.sh / stability_sweep.sh /

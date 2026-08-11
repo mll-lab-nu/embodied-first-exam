@@ -1,5 +1,12 @@
 # Swap Oracle Stage
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 This note records the first runnable Swap milestone: build a simple Swap scene
 and let Franka execute a scripted standard-answer path.
 
@@ -119,7 +126,7 @@ slot, target slot, and primitive heights.
 ```bash
 python -m prototypes.swap_empty_slot_demo
 python -m prototypes.swap_empty_slot_demo --viewer --keep-open
-python -m prototypes.swap_physical_grasp_demo --viewer --keep-open --verbose
+python -m demos.legacy.swap_physical_grasp_demo --viewer --keep-open --verbose
 ```
 
 `swap_empty_slot_demo` uses perfect attachments for the full random-state

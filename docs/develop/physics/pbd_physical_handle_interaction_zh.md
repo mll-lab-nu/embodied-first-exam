@@ -19,8 +19,8 @@ Cable 到达终点并通过插入检查后是一个例外：connector 自身的 
 - `topogym/primitives/pbd_handle_drag.py`
 - `topogym/tasks/entangle/untangle.py`
 - `topogym/tasks/routing/cable_routing.py`
-- `prototypes/untangle_physical_handle_demo.py`
-- `prototypes/cable_routing_physical_handle_demo.py`
+- `demos/entangle/untangle_physical_handle_demo.py`
+- `demos/routing/cable_routing_physical_handle_demo.py`
 
 ## 交互模型
 
@@ -91,13 +91,13 @@ physical primitive 随后完成：
 单动作 smoke：
 
 ```bash
-python -m prototypes.untangle_physical_handle_demo --viewer --lite --max-moves 1 --verbose
+python -m demos.entangle.untangle_physical_handle_demo run.viewer=true run.lite=true run.max_moves=1 run.verbose=true
 ```
 
 完整规划：
 
 ```bash
-python -m prototypes.untangle_physical_handle_demo --viewer --lite --verbose
+python -m demos.entangle.untangle_physical_handle_demo run.viewer=true run.lite=true run.verbose=true
 ```
 
 `untangle_physical_handle_demo` 默认使用 tabletop V1 的 common/env/task config。完整模式会持续执行到 topology terminal 或 `--max-moves` 上限。每个 move 都包含：
@@ -136,13 +136,13 @@ cable 的 start endpoint 继续固定在 `S`，free end 使用一个动态 handl
 先验证一次夹持和短距离拖动：
 
 ```bash
-python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --max-waypoints 1 --verbose
+python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.lite=true run.max_waypoints=1 run.verbose=true
 ```
 
 运行完整走线：
 
 ```bash
-python -m prototypes.cable_routing_physical_handle_demo --viewer --lite --verbose
+python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.lite=true run.verbose=true
 ```
 
 完整模式只抓取一次 free-end handle，并在保持夹爪闭合的情况下连续执行全部 waypoint。每一段结束都会检查 handle 与实际指垫中心的跟随误差；超过 `max_segment_follow_error` 会立即释放、撤回并终止，不会继续用已经滑脱的夹爪走剩余轨迹。

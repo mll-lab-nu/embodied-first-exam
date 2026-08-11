@@ -1,5 +1,12 @@
 # RoboMME 式产物 · 单任务落地路线图（第 1–6 层）
 
+> **2026-08-10 起本文引用的 `demos/legacy/` 已删除**（swap / onestroke /
+> maze_wall_removal / peeling 的 demo 与录制批处理 `record_physical_demos`），
+> 因此下面涉及这些 demo 的命令与文件路径不再有效。删除原因见
+> [`docs/develop/framework/demo_cli_and_config_zh.md`](../framework/demo_cli_and_config_zh.md)。
+> 这些任务的场景代码 `topogym/tasks/legacy/` 与任务配置保留（RL 环境壳仍在用），
+> 本文其余内容按当时记录原样保留。
+
 > 日期：2026-07-18
 > 关系：本文件是**可执行路线图**；它的现状分析依据在 `robomme_benchmark_deliverables_zh.md`（那份是**分析**，本份是**行动计划**）。两者配合读。
 > 目标读者：接着往下把 TopoGym 从"环境/demo"推到"benchmark 产物"的人。
@@ -75,7 +82,7 @@ W6  (P2, 合约文档, schema 定死后可与 W3/W4 并行)
 
 ## 4. 验证方式（端到端 CLI；sim 测试由跑的人本人执行）
 
-> 全部命令**在 repo 根目录、激活 venv 后运行**。demo 一律用 `python -m prototypes.<name>`（模块形式）而**不是** `python prototypes/<name>.py`——本 repo 没有 pyproject/setup，`topogym` 靠 repo 根在 `sys.path` 上才可导入，只有 `-m` 从根目录跑才满足（见 `cli_commands.txt`、`bash_scripts/record_all_tasks.sh`）。
+> 全部命令**在 repo 根目录、激活 venv 后运行**。demo 一律用 `python -m demos.<类别>.<name>`（模块形式）而**不是** `python demos/<类别>/<name>.py`——本 repo 没有 pyproject/setup，`topogym` 靠 repo 根在 `sys.path` 上才可导入，只有 `-m` 从根目录跑才满足（见 `cli_commands.txt`、`bash_scripts/record_all_tasks.sh`）。
 
 W1/W2（本轮，纯 Python，无需 Genesis）：
 
@@ -89,7 +96,7 @@ k=EpisodeKey(task_id='swap',seed=0); \
 assert EpisodeResult.ok(k).status is S.SUCCESS; \
 assert EpisodeResult.failed(k,'boom',status=S.ERROR).status is S.ERROR; print('W1+W2 OK')"
 # 冒烟：结果行里应出现 status=...
-python -m prototypes.swap_physical_grasp_demo --seed 0
+python -m demos.legacy.swap_physical_grasp_demo --seed 0
 ```
 
 W3（数据集录制，已实现）—— 一键录制+结构检查：
@@ -104,13 +111,13 @@ W4–W5（后续）：
 
 ```bash
 # 手动等价：swap 录制
-python -m prototypes.swap_physical_grasp_demo --seed 0 --record-dataset <out>/swap_ep0.h5
+python -m demos.legacy.swap_physical_grasp_demo --seed 0 --record-dataset <out>/swap_ep0.h5
 # 看 H5 结构
 python -c "import h5py; h5py.File('<out>/swap_ep0.h5').visit(print)"
 # replay 自校验（脚本同样需在 repo 根用 -m 跑）
 python -m scripts.dataset_replay <out>/swap_ep0.h5
 # cable_routing 端到端（接进同一套接口后）
-python -m prototypes.cable_routing_physical_handle_demo --seed 0 --backend gpu --record-dataset <out>/cable_ep0.h5 --close-on-finish
+python -m demos.routing.cable_routing_physical_handle_demo run.seed=0 env.genesis.backend=gpu run.record_dataset=<out>/cable_ep0.h5 run.close_on_finish=true
 ```
 
 > cable_routing 的 demo 不接受 `--keep-open`，用 `--close-on-finish`。

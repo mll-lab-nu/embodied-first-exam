@@ -1,7 +1,9 @@
 # demo 命令行参数与配置的归属
 
-> 状态：**已盘点，未开工**。本文记录现状、已发生的问题、参数三分类，以及分两步的计划。
-> 盘点日期 2026-08-05，范围是 `prototypes/*_demo.py` 共 11 个（legacy 任务不计）。
+> 状态：**进行中**。§1~§5 是 2026-08-05 的盘点（当时 `prototypes/` 平铺，11 个 demo、
+> 82 个参数），保留作为问题的记录。§6 的计划已被取代，实际走向见下方「实际进展」。
+>
+> 2026-08-10 复盘时参数已涨到 97 个、参数驱动的 merge 点 32 处，说明问题在扩大而非收敛。
 
 ---
 
@@ -95,7 +97,10 @@ cfg = OmegaConf.merge(cfg, {"task": {"braid": {"lenght": 1}}})   # 拼错
 
 这批里绝大多数**配置里已经有对应键**，flag 是第二份定义。
 
-### (b) 运行模式 —— 不进 configs/
+### (b) 运行模式 —— 进 configs/ 的 `run` 组
+
+> 2026-08-10 更正：08-05 写的是「不进 configs/」。引入 Hydra 后它们必须是配置字段，
+> 只是单独放在 `run` 组里与场景定义分开。判据不变。
 
 约 27 个：
 
@@ -130,9 +135,92 @@ cfg = OmegaConf.merge(cfg, {"task": {"braid": {"lenght": 1}}})   # 拼错
 
 ---
 
-## 6. 计划
+## 6. 实际进展（2026-08-10 起）
 
-### 第一步（针对已发生的三次问题，风险最低）
+08-05 的计划是「先加 `--set` 与 struct 模式，等要批量扫参时再上 Hydra」。
+实际决定直接引入 Hydra，跳过 `--set` 那一步——两者的覆盖语法一致，
+先做 `--set` 再换 Hydra 等于同一件事做两遍。
+
+已完成：
+
+| 项 | 内容 |
+|---|---|
+| FEM 参数归位 | `rope_backends/fem_ipc.py` 的 `_DEFAULTS` 六个值搬进 `configs/prefab_configs/` 的 `rope_fem` 块，三个任务配置转引；`_fem_value` 缺键时报错而非静默回落 |
+| 主配置与 config group | `configs/config.yaml` + `configs/run_configs/`；目录名不改，用 `组名@包名` 落到既有包路径，读取侧代码与 40 多个 yaml 未改动 |
+| 等价性验证 | `scripts/check_hydra_compose_equivalence.py`，10 个任务配置、455~727 个键，Hydra compose 与 `load_topogym_configs` 逐键一致 |
+| 目录整理 | `prototypes/` → `demos/`，分类与 `tasks/` 对齐；模块路径引用更新 |
+| 两处落地问题 | Hydra 的 root logger 重复输出（关掉 `job_logging`）；存档未展开插值（另存 `config_resolved.yaml`） |
+| 8 个主线 demo 迁移 | 全部完成，见下表 |
+
+### 迁移结果（2026-08-10）
+
+| demo | 行数 | 手写 merge |
+|---|---:|---:|
+| `entangle/untangle_continuous_physical_pinch_demo` | 774 → 578 | 11 → 0 |
+| `connectivity/stacked_plate_inspect_demo` | 78 → 65 | 1 → 0 |
+| `routing/bar_through_hole_physical_insert_demo` | 324 → 287 | 0 → 0 |
+| `connectivity/stacked_plate_physical_rotate_demo` | 330 → 261 | 1 → 0 |
+| `entangle/untangle_continuous_inspect_demo` | 291 → 151 | 8 → 0 |
+| `entangle/untangle_continuous_fem_demo` | 601 → 524 | 2 → 0 |
+| `entangle/untangle_physical_handle_demo` | 912 → 764 | 5 → 0 |
+| `routing/cable_routing_physical_handle_demo` | 1276 → 1065 | 9 → 0 |
+| 合计 | 4586 → 3695 | 37 → 0 |
+
+保留的 `OmegaConf.merge` 只剩每个 demo 的 `derive_config()`：那里合并的是**由其它
+配置值算出来的**内容（例如端点把手的尺寸取自 `task.physical_handle`），写成配置字面量
+会与几行之外的值重复。可选的固定数值组（例如低分辨率绳）已搬进任务配置的 `rope.lite`
+块，由 `run.lite` 选中。
+
+### 第二轮：删除 argparse 体系（同日）
+
+第一轮的判断是「legacy demo 保持 argparse 不动」，结果留下两套并存的参数体系。确认
+legacy 任务已被放弃后改为彻底移除：
+
+| 删除 | 规模 |
+|---|---|
+| `demos/legacy/` 五个文件 | 2242 行、102 个 `add_argument` |
+| `topogym/core/config.py` 的 `load_topogym_configs`、`add_common_config_arg` | 43 行 |
+| `topogym/utils/recording.py` 的 `add_recording_args`、`recording_config_from_args`、`merge_recording_config`、`_default_recording_config` | 83 行 |
+| `bash_scripts/lib/demo_cli.sh` | 只为翻译两套语法而存在 |
+| `scripts/check_hydra_compose_equivalence.py` | 比对对象没了；compose 那半保留为 `check_configs_compose.py` |
+
+连带处理：
+
+- `topogym/data/replay.py` 删 `_setup_swap`，该文件从此只有 Hydra 一套机制。副作用：
+  swap 是唯一评估 success 的任务，`--require-success` 此后无法通过，已在 docstring 与
+  参数帮助里写明。
+- `tests/fem_ipc_rope_spike.py` 迁 Hydra（450 → 368 行）。它标定出的数值就是
+  `prefabs.rope_fem` 那一组，此前这些量是 CLI 专属的，配置里查不到某次跑用了什么值；
+  现在 `--e` / `--nu` / `--rho` / `--friction-mu` / `--d-hat` / `--strength` 分别对应
+  `task.rope.fem.E` / `.nu` / `.rho` / `.friction_mu` / `.contact_d_hat` /
+  `.follow_strength`，与 demo 读的是同一处。迁移前后默认值逐项相同。
+- 四个 bash 脚本的任务注册表去掉 legacy 项，参数直接写 Hydra 点路径。
+  `record_all_tasks.sh` 顺带补上此前漏登记的 bar_through_hole。
+
+`topogym/tasks/legacy/` 与 `configs/task_configs/` 下四份任务配置**保留**：
+`topogym/envs/` 的三个 RL 环境壳仍在 import。
+
+保留 argparse 的地方只剩三个纯工具 CLI —— `topogym/data/replay.py`、
+`scripts/export_h5_lerobot.py`、`scripts/register_openpi_config.py`。它们接的是文件路径
+与容差，不加载任何 topogym 配置，不属于本文讨论的参数体系。
+
+### 迁移中出现的两类缺陷与静态检查
+
+实跑暴露两类缺陷，都在各 demo 自己的 Python 代码里，共用的配置体系没有问题：
+
+| 缺陷 | 机理 | 命中 |
+|---|---|---|
+| merge 往 struct 配置里加新键 | Hydra 交给 `main` 的配置带 `struct=True`，只能改已有键；被它替换掉的加载路径从不设这个标志，于是 demo 一直在运行时加 yaml 里没有的键 | 5 个键，2 个 demo |
+| 漏删的 `args` | `run_demo(args, cfg, ...)` 改成 `run_demo(cfg, ...)` 时只改了函数体 | 2 个 demo |
+
+两类都可静态判定，固化为 `tests/check_demo_configs.py`（标准库 + PyYAML，无需 GPU）：
+未定义名（`symtable`）、merge 加新键（`ast` 抽键路径比对 yaml）、`cfg.run.X` 是否在 run
+配置链里、以及一张七列的迁移形态指纹表。该脚本自身做过注入自检：两类缺陷各注入一次，
+均被报出并使退出码为 1。
+
+查不出的部分：带默认值的 `getattr` 动态访问、迁移时值取错、物理行为。
+
+### 已作废：08-05 的第一步（针对已发生的三次问题，风险最低）
 
 | 项 | 改动 | 挡住什么 |
 |---|---|---|
@@ -144,7 +232,7 @@ cfg = OmegaConf.merge(cfg, {"task": {"braid": {"lenght": 1}}})   # 拼错
 第 2 项落地前需逐个确认哪些是合法的动态加键。`merge_recording_config` 就是把整个
 `recording` 节加进配置的，开 struct 之后行为需要复核。
 
-### 第二步（等第一步稳定，且要做批量扫参时）
+### 已作废：08-05 的第二步（等第一步稳定，且要做批量扫参时）
 
 引入 Hydra。`hydra-core==1.3.2` **已经安装并在 `requirements/uv-topogym-gs110.txt`
 钉住**，全仓库无任何 `import hydra`；`recording.py` 的注释写着 "Hydra-friendly config
@@ -159,8 +247,8 @@ section"，说明当初就是朝这个方向设计的。所以不增加依赖。
 
 代价：
 
-- `@hydra.main` 接管 `main()`，启动方式由 `python -m prototypes.x --flag v` 变为
-  `python -m prototypes.x flag=v`。全部现有命令行、`bash_scripts/` 下的脚本、文档中的
+- `@hydra.main` 接管 `main()`，启动方式由 `python -m demos.<组>.<demo> --flag v` 变为
+  `python -m demos.<组>.<demo> flag=v`。全部现有命令行、`bash_scripts/` 下的脚本、文档中的
   命令都要改。
 - Hydra 1.3 默认 chdir 到输出目录，会打断 `runs/`、`.cache/topogym/meshes/` 这些相对路径。
   需 `hydra.job.chdir=False`。

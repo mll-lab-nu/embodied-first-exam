@@ -5,19 +5,25 @@ rim between its two finger pads and rolls it downward; the disk turns **only fro
 finger friction** (no joint writes, no teleport), so the arc is contact-driven and
 honest to the collision-based IL contract. Success = all disks' sector angles
 within tolerance, with real rotation / follow-error / release-drift checks.
+
+Configuration is Hydra (`configs/stacked_plate_rotate.yaml`).
+
+    python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true run.verbose=true
+    python -m demos.connectivity.stacked_plate_physical_rotate_demo task.oracle.target_angle_deg=90
+    python -m demos.connectivity.stacked_plate_physical_rotate_demo task.physical.noslip_iterations=8
+    python -m demos.connectivity.stacked_plate_physical_rotate_demo --cfg job
 """
 
 from __future__ import annotations
 
-import argparse
 import os
-from pathlib import Path
 
 import genesis as gs
+import hydra
 import numpy as np
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
 
-from topogym.core import load_topogym_configs
+from topogym.core import hydra_config_sources, save_resolved_config
 from topogym.generation import EpisodeResult, build_stacked_plate_episode_spec
 from topogym.planning import plan_stacked_plate_rotation
 from topogym.primitives import (
@@ -25,89 +31,17 @@ from topogym.primitives import (
     configure_gripper_contact_friction,
     print_collision_il_contract,
 )
+from topogym.supervision import stop_before_physics
 from topogym.tasks import StackedPlateSceneBuilder
 from topogym.verification import StackedPlatePuzzleEvaluator
 from topogym.utils import (
-    add_recording_args,
     initialize_franka_controller,
-    merge_recording_config,
+    apply_recording_camera_overrides,
     print_recording_saved,
     recording_session_from_config,
 )
 
 
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
-# stacked_plate 专用抬高 home：避开竖直大圆盘的 reset_home 互穿（见该文件抬头）。
-# 只有 home.qpos 与 base 不同；其余与 franka_panda_position_ik.yaml 一致。
-DEFAULT_ROBOT_CONFIG = (
-    CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik_stacked_plate_raised_home.yaml"
-)
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "stacked_plate_topogym_tabletop_v1.yaml"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Rotate vertical disks on a Y rod (pinch rim, roll down) to align their missing sectors."
-    )
-    parser.add_argument("--common-config", type=Path, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument("--seed", type=int, default=0, help="Stable episode seed / variant id.")
-    parser.add_argument("--variant-id", default="default")
-    parser.add_argument(
-        "--randomize-layout",
-        action="store_true",
-        help="Apply seeded bounded layout randomization (default off = deterministic).",
-    )
-    parser.add_argument(
-        "--difficulty",
-        default="default",
-        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
-    )
-    parser.add_argument("--keep-open", action="store_true")
-    parser.add_argument("--close-on-finish", action="store_true")
-    parser.add_argument("--settle-steps", type=int, default=None)
-    parser.add_argument("--move-steps", type=int, default=None)
-    parser.add_argument("--arc-steps", type=int, default=None)
-    parser.add_argument("--gripper-steps", type=int, default=None)
-    parser.add_argument("--grasp-qpos", type=float, default=None)
-    parser.add_argument("--noslip-iterations", type=int, default=None)
-    parser.add_argument("--target-angle-degrees", type=float, default=None)
-    parser.add_argument("--verbose", action="store_true")
-    add_recording_args(parser, default_fps=60, default_camera="oblique")
-    return parser.parse_args()
-
-
-def load_configs(args: argparse.Namespace):
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    overrides: dict = {}
-    if args.backend is not None:
-        overrides.setdefault("env", {}).setdefault("genesis", {})["backend"] = args.backend
-    if args.target_angle_degrees is not None:
-        overrides.setdefault("task", {}).setdefault("oracle", {})[
-            "target_angle_deg"
-        ] = float(args.target_angle_degrees)
-    if args.noslip_iterations is not None:
-        overrides.setdefault("task", {}).setdefault("physical", {})[
-            "noslip_iterations"
-        ] = int(args.noslip_iterations)
-    if overrides:
-        cfg = OmegaConf.merge(cfg, overrides)
-    return merge_recording_config(cfg, args)
-
-
-def _physical_value(physical, name: str, override):
-    return getattr(physical, name) if override is None else override
 
 
 def _hud(plate_scene, status: dict):
@@ -126,15 +60,15 @@ def _hud(plate_scene, status: dict):
     return render_lines
 
 
-def _build_primitive(cfg, plate_scene, args) -> RimRotatePrimitive:
+def _build_primitive(cfg, plate_scene) -> RimRotatePrimitive:
     physical = cfg.task.physical
     layout = plate_scene.layout
     return RimRotatePrimitive(
         approach_z=layout.world_z(float(physical.approach_z)),
-        steps_move=int(_physical_value(physical, "move_steps", args.move_steps)),
-        steps_arc=int(_physical_value(physical, "arc_steps", args.arc_steps)),
-        gripper_steps=int(_physical_value(physical, "gripper_steps", args.gripper_steps)),
-        grasp_qpos=float(_physical_value(physical, "grasp_qpos", args.grasp_qpos)),
+        steps_move=int(physical.move_steps),
+        steps_arc=int(physical.arc_steps),
+        gripper_steps=int(physical.gripper_steps),
+        grasp_qpos=float(physical.grasp_qpos),
         grasp_yaw_offset=float(physical.grasp_yaw_offset),
         approach_clearance=float(getattr(physical, "approach_clearance", 0.035)),
         retreat_clearance=float(getattr(physical, "retreat_clearance", 0.035)),
@@ -145,11 +79,11 @@ def _build_primitive(cfg, plate_scene, args) -> RimRotatePrimitive:
         min_rotation=float(np.deg2rad(float(physical.min_rotation_deg))),
         max_follow_error=float(getattr(physical, "max_rim_follow_error", 0.05)),
         max_release_drift=float(np.deg2rad(float(physical.max_release_drift_deg))),
-        verbose=args.verbose,
+        verbose=cfg.run.verbose,
     )
 
 
-def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episode_plan, commands) -> EpisodeResult:
+def run_demo(cfg, plate_scene, controller, status, *, episode_spec, episode_plan, commands) -> EpisodeResult:
     physical = cfg.task.physical
     layout = plate_scene.layout
     print_collision_il_contract(
@@ -165,8 +99,8 @@ def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episod
         finger_friction=float(physical.finger_friction),
     )
 
-    controller.step(int(_physical_value(physical, "settle_steps", args.settle_steps)))
-    primitive = _build_primitive(cfg, plate_scene, args)
+    controller.step(int(physical.settle_steps))
+    primitive = _build_primitive(cfg, plate_scene)
     print(
         "stacked_plate_physical_rotate_demo setup "
         f"episode_id={episode_spec.stable_id()} plan_id={episode_plan.plan_id} "
@@ -174,6 +108,9 @@ def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episod
         f"target_angle={np.rad2deg(layout.target_angle()):.1f}deg arc_steps={primitive.steps_arc}",
         flush=True,
     )
+
+    if stop_before_physics(cfg, plate_scene.scene, "stacked_plate_physical_rotate_demo"):
+        raise SystemExit(0)
 
     results = []
     max_follow_error = 0.0
@@ -193,7 +130,7 @@ def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episod
         )
         results.append(result)
         max_follow_error = max(max_follow_error, result.max_follow_error)
-        if args.verbose:
+        if cfg.run.verbose:
             print(
                 f"stacked_plate_physical_rotate_demo disk={command.disk_name} "
                 f"rotation_achieved={np.rad2deg(result.rotation_achieved):+.1f}deg "
@@ -245,31 +182,37 @@ def run_demo(args, cfg, plate_scene, controller, status, *, episode_spec, episod
     return episode_result
 
 
-def main() -> None:
-    args = parse_args()
-    cfg = load_configs(args)
-    if args.randomize_layout:
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="stacked_plate_rotate")
+def main(cfg: DictConfig) -> None:
+    cfg = apply_recording_camera_overrides(cfg)
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"stacked_plate_rotate_config -> {resolved}", flush=True)
+
+    if cfg.run.randomize_layout:
         from topogym.generation.layout_randomization import randomize_task_cfg
 
         cfg = randomize_task_cfg(
-            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+            cfg, str(cfg.task.task.id), cfg.run.seed, difficulty=cfg.run.difficulty
         )
         print(
-            f"stacked_plate_physical_rotate_demo randomize_layout=on seed={args.seed} "
-            f"difficulty={args.difficulty}",
+            f"stacked_plate_physical_rotate_demo randomize_layout=on seed={cfg.run.seed} "
+            f"difficulty={cfg.run.difficulty}",
             flush=True,
         )
+    # Which config file each group resolved to, recorded as episode provenance.
+    sources = hydra_config_sources()
     episode_spec = build_stacked_plate_episode_spec(
         cfg,
-        seed=args.seed,
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-        variant_id=args.variant_id,
+        seed=cfg.run.seed,
+        common_config=sources.get("common"),
+        env_config=sources.get("env"),
+        robot_config=sources.get("robot_control"),
+        task_config=sources.get("task"),
+        variant_id=cfg.run.variant_id,
     )
     has_display = os.name == "nt" or bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
-    if args.viewer and not has_display:
+    if cfg.run.viewer and not has_display:
         raise SystemExit("No graphical display detected.")
     noslip_iterations = int(cfg.task.physical.noslip_iterations)
     if noslip_iterations < 0:
@@ -282,7 +225,7 @@ def main() -> None:
         logging_level=cfg.env.genesis.logging_level,
     )
     print(
-        f"stacked_plate_physical_rotate_demo building_scene backend={cfg.env.genesis.backend} viewer={args.viewer}",
+        f"stacked_plate_physical_rotate_demo building_scene backend={cfg.env.genesis.backend} viewer={cfg.run.viewer}",
         flush=True,
     )
     plate_scene = StackedPlateSceneBuilder(
@@ -290,7 +233,7 @@ def main() -> None:
         cfg.task,
         cfg.robot_control,
         rigid_options=gs.options.RigidOptions(noslip_iterations=noslip_iterations),
-    ).build(show_viewer=args.viewer)
+    ).build(show_viewer=cfg.run.viewer)
     commands, episode_plan = plan_stacked_plate_rotation(plate_scene.layout)
     print("stacked_plate_physical_rotate_demo scene_ready", flush=True)
     controller = initialize_franka_controller(
@@ -312,7 +255,6 @@ def main() -> None:
         hud=_hud(plate_scene, status),
     ):
         run_demo(
-            args,
             cfg,
             plate_scene,
             controller,

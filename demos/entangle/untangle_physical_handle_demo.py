@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import argparse
 import os
 import sys
 from pathlib import Path
 
 import genesis as gs
+import hydra
 import numpy as np
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
-from topogym.core import add_common_config_arg, load_topogym_configs
+from topogym.core import hydra_config_sources, save_resolved_config
 from topogym.data import dataset_writer_or_null
 from topogym.envs import UntangleHighLevelEnv
 from topogym.generation import EpisodeResult, build_untangle_episode_spec
@@ -17,217 +17,63 @@ from topogym.planning import plan_next_untangle_move
 from topogym.primitives import (
     AttachmentManager,
     ConnectorLatch,
-    PBDHandleDragPrimitive,
+    HandleDragPrimitive,
     configure_gripper_contact_friction,
     ee_quat_for_yaw,
     entity_pos,
     print_collision_il_contract,
 )
-from topogym.supervision import StepProbe, probe_particles
+from topogym.supervision import StepProbe, probe_particles, stop_before_physics
 from topogym.tasks import UntangleSceneBuilder
 from topogym.utils import (
-    add_recording_args,
     initialize_franka_controller,
-    merge_recording_config,
+    apply_recording_camera_overrides,
     print_recording_saved,
     recording_session_from_config,
 )
 
 
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_fem_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "untangle_topogym_tabletop_v1.yaml"
+def derive_config(cfg):
+    """Config transforms this demo needs that are computed, not chosen.
 
+    What stays here is the demo's contract on the anchor pins: rigid handles, not
+    fixed, mesh-only under the plug connector, excluded from PBD self-collision.
+    The pin geometry it also overrides comes from `task.physical_handle`, so it
+    would duplicate values a few lines away if written as a literal. Values that
+    are plain settings live in the task config instead: `rope.anchor_pins.z_offset`
+    / `.friction` / `.rho` interpolate `physical_handle`, and `run.lite` selects
+    the `rope.lite` block.
+    """
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Untangle PBD ropes by physically grasping rigid endpoint handles."
-    )
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    add_common_config_arg(parser, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=0,
-        help="Stable episode seed. The current tabletop untangle layout is deterministic.",
-    )
-    parser.add_argument(
-        "--variant-id",
-        default="default",
-        help="Stable variant label for manifests and result lines.",
-    )
-    parser.add_argument(
-        "--randomize-layout",
-        action="store_true",
-        help="Apply seeded bounded layout randomization (default off = deterministic).",
-    )
-    parser.add_argument(
-        "--difficulty",
-        default="default",
-        help="Randomization magnitude bucket (easy/default/hard); only with --randomize-layout.",
-    )
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default=None)
-    parser.add_argument(
-        "--grasp-rope",
-        type=int,
-        default=None,
-        help=(
-            "Force the planner onto this rope (0=red, 1=green, 2=blue; strand "
-            "order in the task config) and waive the wrong-rope veto. The "
-            "contact test: green lies over red, so --grasp-rope 0 drags the "
-            "UNDER rope -- a move that cannot undo the crossing; the honest "
-            "outcome is a blocked rope and a surviving crossing."
-        ),
-    )
-    parser.add_argument(
-        "--fem-e",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.fem.E (Pa). Default 1e5 was calibrated on the "
-            "continuous task's on-table ropes; suspended spans here read stiff "
-            "at that value."
-        ),
-    )
-    parser.add_argument(
-        "--fem-nu",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.fem.nu. Default 0.45 is near-incompressible, which "
-            "locks linear-tet bending (rope reads rigid); try 0.3."
-        ),
-    )
-    parser.add_argument(
-        "--fem-friction-mu",
-        type=float,
-        default=None,
-        help="Override rope.fem.friction_mu (default 0.3).",
-    )
-    parser.add_argument(
-        "--log-level",
-        choices=("debug", "info", "warning"),
-        default=None,
-        help=(
-            "Override env.genesis.logging_level. 'debug' additionally turns on "
-            "libuipc's own logging (the IPC coupler only enables it at that "
-            "level), which is the visibility needed for CUDA-side crashes."
-        ),
-    )
-    parser.add_argument(
-        "--rope-model",
-        choices=("pbd_elastic_tube", "fem_ipc_tube"),
-        default=None,
-        help=(
-            "Override rope.model. 'fem_ipc_tube' selects the FEM+IPC backend; "
-            "pair it with --env-config world_tabletop_fem_v1.yaml. "
-            "--lite is a PBD-resolution knob and does not apply there."
-        ),
-    )
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument("--close-on-finish", action="store_true")
-    parser.add_argument("--lite", action="store_true", help="Use a lower-resolution PBD rope.")
-    parser.add_argument("--max-moves", type=int, default=8)
-    parser.add_argument("--max-grasp-attempts", type=int, default=None)
-    parser.add_argument("--between-moves-settle-steps", type=int, default=None)
-    parser.add_argument("--settle-steps", type=int, default=60)
-    add_recording_args(parser, default_fps=60, default_camera="oblique")
-    parser.add_argument(
-        "--record-dataset",
-        type=Path,
-        default=None,
-        help="Write a RoboMME-structural HDF5 dataset for this episode to this path.",
-    )
-    parser.add_argument(
-        "--dataset-every-n-steps",
-        type=int,
-        default=10,
-        help="Capture one dataset frame every N scene.step() calls (action granularity).",
-    )
-    parser.add_argument(
-        "--probe",
-        action="store_true",
-        help="Per-step flyout diagnostic PROBE lines (H1 finger contact vs H2 compression).",
-    )
-    parser.add_argument("--probe-every", type=int, default=5)
-    parser.add_argument("--verbose", action="store_true")
-    return parser.parse_args()
-
-
-def load_configs(args: argparse.Namespace):
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
     physical = cfg.task.physical_handle
     connector_enabled = bool(
         getattr(getattr(cfg.task.rope.anchor_pins, "connector", None), "enabled", False)
     )
-    overrides = {
-        "task": {
-            "rope": {
-                "anchor_pins": {
-                    "attachment_mode": "rigid_handles",
-                    "radius": float(physical.radius),
-                    "height": float(physical.height),
-                    "z_offset": float(physical.z_offset),
-                    "fixed": False,
-                    # Plug-connector mode (redesign Phase B): the connector is a
-                    # kinematic body driven by the socket latch / grasp attachment,
-                    # so it stays mesh-only — its below-board pin would otherwise
-                    # fight the solid board through the convex collision hull.
-                    "collision": not connector_enabled,
-                    "friction": float(physical.handle_friction),
-                    "rho": float(physical.rho),
-                    "exclude_pbd_collision": True,
-                }
-            }
-        }
-    }
-    if args.backend is not None:
-        overrides["env"] = {"genesis": {"backend": args.backend}}
-    cfg = OmegaConf.merge(cfg, overrides)
-    if args.rope_model is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"rope": {"model": args.rope_model}}})
-    if args.log_level is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"env": {"genesis": {"logging_level": args.log_level}}}
-        )
-    for key, value in (
-        ("E", args.fem_e),
-        ("nu", args.fem_nu),
-        ("friction_mu", args.fem_friction_mu),
-    ):
-        if value is not None:
-            cfg = OmegaConf.merge(cfg, {"task": {"rope": {"fem": {key: value}}}})
-    if args.lite:
-        cfg = OmegaConf.merge(
-            cfg,
-            {
-                "task": {
-                    "rope": {
-                        "particle_size": 0.006,
-                        "mesh": {
-                            "segment_length": 0.014,
-                            "radial_segments": 6,
-                            "maxvolume": 0.00000012,
-                        },
-                        "pbd": {
-                            "max_stretch_solver_iterations": 6,
-                            "max_bending_solver_iterations": 3,
-                            "max_volume_solver_iterations": 3,
-                        },
+    cfg = OmegaConf.merge(
+        cfg,
+        {
+            "task": {
+                "rope": {
+                    "anchor_pins": {
+                        "attachment_mode": "rigid_handles",
+                        "radius": float(physical.radius),
+                        "height": float(physical.height),
+                        "fixed": False,
+                        # Plug-connector mode (redesign Phase B): the connector is a
+                        # kinematic body driven by the socket latch / grasp attachment,
+                        # so it stays mesh-only -- its below-board pin would otherwise
+                        # fight the solid board through the convex collision hull.
+                        "collision": not connector_enabled,
+                        "exclude_pbd_collision": True,
                     }
                 }
-            },
-        )
-    return merge_recording_config(cfg, args)
+            }
+        },
+    )
+    if cfg.run.lite:
+        lite = OmegaConf.to_container(cfg.task.rope.lite, resolve=True)
+        cfg = OmegaConf.merge(cfg, {"task": {"rope": lite}})
+    return cfg
 
 
 def _endpoint_pin(handle, endpoint_index: int):
@@ -403,7 +249,7 @@ def _hud(topology_env: UntangleHighLevelEnv, status: dict):
 
 
 def run_demo(
-    args, cfg, untangle_scene, controller, *, episode_spec, status, dataset_writer=None
+    cfg, untangle_scene, controller, *, episode_spec, status, dataset_writer=None
 ) -> EpisodeResult:
     physical = cfg.task.physical_handle
     connector_enabled = bool(
@@ -423,21 +269,21 @@ def run_demo(
         ),
     )
     print(
-        "untangle_physical_handle_demo pbd_contract "
-        "rope_model=pbd_elastic_tube endpoint_constraint=fix_particles_to_link "
+        "untangle_physical_handle_demo rope_contract "
+        f"rope_model={cfg.task.rope.model} endpoint_constraint=fix_particles_to_link "
         f"runtime_set_particles_pos=False handle_collision={not connector_enabled} "
         f"handle_needs_coup=False connector_latch={connector_enabled}",
         flush=True,
     )
     max_grasp_attempts = (
         int(physical.max_grasp_attempts)
-        if args.max_grasp_attempts is None
-        else int(args.max_grasp_attempts)
+        if cfg.run.max_grasp_attempts is None
+        else int(cfg.run.max_grasp_attempts)
     )
     between_moves_settle_steps = (
         int(physical.between_moves_settle_steps)
-        if args.between_moves_settle_steps is None
-        else int(args.between_moves_settle_steps)
+        if cfg.run.between_moves_settle_steps is None
+        else int(cfg.run.between_moves_settle_steps)
     )
     if max_grasp_attempts <= 0:
         raise ValueError("physical_handle.max_grasp_attempts must be positive.")
@@ -448,9 +294,9 @@ def run_demo(
     placement_tolerance_xy = float(physical.placement_tolerance_xy)
     topology_env = UntangleHighLevelEnv(
         task_cfg=cfg.task,
-        seed=int(args.seed),
+        seed=int(cfg.run.seed),
         random_reset=False,
-        max_episode_steps=max(1, int(args.max_moves)),
+        max_episode_steps=max(1, int(cfg.run.max_moves)),
     )
     topology_env.reset()
     handles = [
@@ -492,7 +338,7 @@ def run_demo(
                     )
                 latches[(rope_name, endpoint_index)] = latch
     status.update({"phase": "settle", "move": ""})
-    primitive = PBDHandleDragPrimitive(
+    primitive = HandleDragPrimitive(
         approach_z=untangle_scene.layout.world_z(physical.approach_z),
         lift_delta=float(physical.lift_delta),
         move_steps=int(physical.move_steps),
@@ -505,13 +351,13 @@ def run_demo(
         min_lift_delta=float(physical.min_lift_delta),
         max_handle_error=float(physical.max_handle_error),
         release_hold_steps=int(physical.release_hold_steps),
-        verbose=args.verbose,
+        verbose=cfg.run.verbose,
     )
     print(
         "untangle_physical_handle_demo setup "
         f"episode_id={episode_spec.stable_id()} "
         "planner=untangle_topology_greedy_endpoint_move "
-        f"ropes={len(untangle_scene.rope_handles)} max_moves={int(args.max_moves)} "
+        f"ropes={len(untangle_scene.rope_handles)} max_moves={int(cfg.run.max_moves)} "
         f"max_grasp_attempts={max_grasp_attempts} "
         f"grasp_qpos={float(physical.grasp_qpos):.4f} "
         f"lift_delta={float(physical.lift_delta):.4f} "
@@ -528,22 +374,25 @@ def run_demo(
             untangle_scene.rope_handles,
             status,
             finger_links=physical.finger_links,
-            every=args.probe_every,
+            every=cfg.run.probe_every,
             rope_backend=untangle_scene.rope_backend,
         )
-        if args.probe
+        if cfg.run.probe
         else None
     )
     moves_completed = 0
     failure_reason = None
     all_physical_moves_succeeded = True
+    if stop_before_physics(cfg, untangle_scene.scene, "untangle_physical_handle_demo"):
+        raise SystemExit(0)
+
     with recording_session_from_config(
         untangle_scene.scene,
         untangle_scene.cameras,
         cfg.recording,
         hud=_hud(topology_env, status),
     ), AttachmentManager(untangle_scene.scene) as attachment_manager:
-        controller.step(max(0, int(args.settle_steps)))
+        controller.step(max(0, int(cfg.run.settle_steps)))
         initial_state = topology_env.topology_state()
         print(
             "untangle_physical_handle_demo initial_topology "
@@ -551,9 +400,9 @@ def run_demo(
             f"endpoint_overlaps={len(initial_state.endpoint_overlaps)}",
             flush=True,
         )
-        for move_index in range(max(1, int(args.max_moves))):
+        for move_index in range(max(1, int(cfg.run.max_moves))):
             planned_move = plan_next_untangle_move(
-                topology_env, untangle_scene.layout, grasp_rope=args.grasp_rope
+                topology_env, untangle_scene.layout, grasp_rope=cfg.run.grasp_rope
             )
             if planned_move is None:
                 if not topology_env.topology_state().is_terminal:
@@ -762,7 +611,7 @@ def run_demo(
         "knots": int(len(final_state.knots)),
         "endpoint_overlaps": int(len(final_state.endpoint_overlaps)),
         "moves_completed": int(moves_completed),
-        "max_moves": int(args.max_moves),
+        "max_moves": int(cfg.run.max_moves),
     }
     episode_result = (
         EpisodeResult.ok(
@@ -794,39 +643,45 @@ def run_demo(
     return episode_result
 
 
-def main() -> None:
-    args = parse_args()
-    if args.max_moves <= 0:
-        raise SystemExit("--max-moves must be positive.")
-    if args.max_grasp_attempts is not None and args.max_grasp_attempts <= 0:
-        raise SystemExit("--max-grasp-attempts must be positive.")
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="untangle_handle")
+def main(cfg: DictConfig) -> None:
+    if cfg.run.max_moves <= 0:
+        raise SystemExit("run.max_moves must be positive.")
+    if cfg.run.max_grasp_attempts is not None and cfg.run.max_grasp_attempts <= 0:
+        raise SystemExit("run.max_grasp_attempts must be positive.")
     if (
-        args.between_moves_settle_steps is not None
-        and args.between_moves_settle_steps < 0
+        cfg.run.between_moves_settle_steps is not None
+        and cfg.run.between_moves_settle_steps < 0
     ):
-        raise SystemExit("--between-moves-settle-steps must be nonnegative.")
-    cfg = load_configs(args)
-    if args.randomize_layout:
+        raise SystemExit("run.between_moves_settle_steps must be nonnegative.")
+    cfg = derive_config(cfg)
+    cfg = apply_recording_camera_overrides(cfg)
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"untangle_handle_config -> {resolved}", flush=True)
+    if cfg.run.randomize_layout:
         from topogym.generation.layout_randomization import randomize_task_cfg
 
         cfg = randomize_task_cfg(
-            cfg, str(cfg.task.task.id), args.seed, difficulty=args.difficulty
+            cfg, str(cfg.task.task.id), cfg.run.seed, difficulty=cfg.run.difficulty
         )
         print(
-            f"untangle_physical_handle_demo randomize_layout=on seed={args.seed} "
-            f"difficulty={args.difficulty}",
+            f"untangle_physical_handle_demo randomize_layout=on seed={cfg.run.seed} "
+            f"difficulty={cfg.run.difficulty}",
             flush=True,
         )
+    # 每个配置组解析到了哪个文件，作为 episode 溯源信息记录。
+    _sources = hydra_config_sources()
     episode_spec = build_untangle_episode_spec(
         cfg,
-        seed=args.seed,
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-        variant_id=args.variant_id,
+        seed=cfg.run.seed,
+        common_config=_sources.get("common"),
+        env_config=_sources.get("env"),
+        robot_config=_sources.get("robot_control"),
+        task_config=_sources.get("task"),
+        variant_id=cfg.run.variant_id,
     )
-    if args.verbose:
+    if cfg.run.verbose:
         print(
             "untangle_physical_handle_demo runtime "
             f"python={sys.executable} "
@@ -837,7 +692,7 @@ def main() -> None:
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
-    if args.viewer and not has_display:
+    if cfg.run.viewer and not has_display:
         raise SystemExit("No graphical display detected.")
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
     gs.init(
@@ -847,11 +702,11 @@ def main() -> None:
     )
     print(
         "untangle_physical_handle_demo building_scene "
-        f"backend={cfg.env.genesis.backend} viewer={args.viewer} lite={args.lite}",
+        f"backend={cfg.env.genesis.backend} viewer={cfg.run.viewer} lite={cfg.run.lite}",
         flush=True,
     )
     scene = UntangleSceneBuilder(cfg.env, cfg.task, cfg.robot_control).build(
-        show_viewer=args.viewer,
+        show_viewer=cfg.run.viewer,
         include_robot=True,
     )
     print("untangle_physical_handle_demo scene_ready", flush=True)
@@ -870,19 +725,18 @@ def main() -> None:
     # subgoal labels can read the live phase/move during the run.
     status: dict = {}
     dataset_writer_cm = dataset_writer_or_null(
-        args.record_dataset,
+        cfg.run.record_dataset,
         scene=scene.scene,
         cameras=scene.cameras,
         controller=controller,
         spec=episode_spec,
         plan=None,  # untangle plans per-move; no single episode plan
         task_goal="Untangle the ropes into their target holes.",
-        every_n_steps=args.dataset_every_n_steps,
+        every_n_steps=cfg.run.dataset_every_n_steps,
         subgoal_label_fn=lambda: f"{status.get('phase', 'setup')}:{status.get('move', '')}",
     )
     with dataset_writer_cm as dataset_writer:
         episode_result = run_demo(
-            args,
             cfg,
             scene,
             controller,
@@ -892,9 +746,9 @@ def main() -> None:
         )
         if dataset_writer is not None:
             dataset_writer.finalize(episode_result)
-            print(f"saved dataset -> {args.record_dataset}", flush=True)
+            print(f"saved dataset -> {cfg.run.record_dataset}", flush=True)
     print_recording_saved(cfg.recording)
-    keep_open = bool(args.viewer and not args.close_on_finish)
+    keep_open = bool(cfg.run.viewer and not cfg.run.close_on_finish)
     if keep_open:
         print("untangle_physical_handle_demo viewer_hold; press Ctrl+C to exit", flush=True)
     while keep_open:

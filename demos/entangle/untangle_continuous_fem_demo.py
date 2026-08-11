@@ -12,11 +12,11 @@ grasp band directly along the same phase sequence the pinch demo uses
 
   # contact test: grasp the UNDER strand, lift. PBD tunnelled at step 1176;
   # here the crossing must never flip.
-  python -m prototypes.untangle_continuous_fem_demo --seed 0 --grasp-strand 1 --trace
+  python -m demos.entangle.untangle_continuous_fem_demo run.seed=0 run.grasp_strand=1 run.trace=true
 
   # solve run: grasp the over strand (default), carry it across, place, settle.
   # The detector must report crossings 1 -> 0.
-  python -m prototypes.untangle_continuous_fem_demo --seed 0 --trace
+  python -m demos.entangle.untangle_continuous_fem_demo run.seed=0 run.trace=true
 
 The trace file uses the same columns as the PBD runs (run11~14 in
 docs/develop/physics/untangle/debug-log/) so the two solvers can be compared
@@ -30,80 +30,13 @@ without adding physics. They return with the robot arm integration.
 
 from __future__ import annotations
 
-import argparse
+import hydra
+from omegaconf import DictConfig
+
 import time
 from pathlib import Path
 
 import numpy as np
-
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "untangle_continuous_topogym_tabletop_v1.yaml"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Armless continuous untangle on FEM+IPC ropes."
-    )
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    parser.add_argument("--common-config", type=Path, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default="gpu")
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument(
-        "--grasp-strand",
-        type=int,
-        default=None,
-        help=(
-            "Which strand to grasp. Default: the crossing's over strand (the "
-            "solving move). Passing the under strand turns the run into the "
-            "contact test."
-        ),
-    )
-    parser.add_argument("--strands", type=int, default=None)
-    parser.add_argument("--segment-length", type=float, default=None)
-    # Material knobs, spike-calibrated defaults (run15: rest gap 9.66mm of 10).
-    parser.add_argument("--e", type=float, default=1e5)
-    parser.add_argument("--nu", type=float, default=0.45)
-    parser.add_argument("--rho", type=float, default=650.0)
-    parser.add_argument("--friction-mu", type=float, default=0.3)
-    parser.add_argument("--d-hat", type=float, default=0.002)
-    parser.add_argument("--strength", type=float, default=100.0)
-    parser.add_argument("--band-radius", type=float, default=0.015)
-    parser.add_argument("--lift", type=float, default=0.08, help="carry_up height (m).")
-    parser.add_argument(
-        "--place-margin",
-        type=float,
-        default=0.05,
-        help=(
-            "How far past the mirrored lane to place the grasped end (m). A "
-            "plain mirror lands it ON the other strand's lane, ~10mm short of "
-            "the 16mm separation the success criterion asks for."
-        ),
-    )
-    parser.add_argument("--move-steps", type=int, default=280, help="Steps per motion phase.")
-    parser.add_argument("--place-steps", type=int, default=400)
-    parser.add_argument("--settle-steps", type=int, default=300)
-    parser.add_argument(
-        "--arm",
-        action="store_true",
-        help=(
-            "Add the Franka and drive the grasp through it: IK moves the hand "
-            "along the same waypoints, the rope band follows the commanded hand "
-            "pose at a fixed offset. The robot is needs_coup=False -- outside "
-            "IPC entirely -- matching the task's design (finger contact carries "
-            "no signal, the grasp is a weld; design doc section 3.5)."
-        ),
-    )
-    parser.add_argument("--trace", action="store_true", help="Write the rope trace file.")
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument("--keep-open", action="store_true")
-    parser.add_argument("--verbose", action="store_true")
-    return parser.parse_args()
-
 
 def require_pyuipc() -> None:
     try:
@@ -265,36 +198,27 @@ class FEMTrace:
         self._file.close()
 
 
-def main() -> None:
-    args = parse_args()
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="untangle_continuous_fem")
+def main(cfg: DictConfig) -> None:
     require_pyuipc()
 
     import genesis as gs
-    from omegaconf import OmegaConf
 
-    from topogym.core import load_topogym_configs
+    from topogym.core import save_resolved_config
     from topogym.generation.braid import verify_braid_spec
     from topogym.primitives.fem_attachment import FEMRopeAttachment
+    from topogym.supervision import stop_before_physics
     from topogym.tasks import UntangleContinuousLayout
     from topogym.verification import UntangleContinuousPuzzleEvaluator
     from topogym.world import materials
     from topogym.world.genesis_ipc_vertex_constraints import install, pin_near
     from topogym.world.rope import tensor_to_numpy, tube_morph, write_obj
 
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    if args.strands is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"braid": {"n_strands": args.strands}}})
-    if args.segment_length is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"mesh": {"segment_length": args.segment_length}}}}
-        )
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"untangle_continuous_fem_config -> {resolved}", flush=True)
 
-    layout = UntangleContinuousLayout(cfg.task, seed=args.seed)
+    layout = UntangleContinuousLayout(cfg.task, seed=cfg.run.seed)
     braid = layout.braid_spec()
     workspace = cfg.common.manipulation_space.workspace
     report = verify_braid_spec(
@@ -305,7 +229,7 @@ def main() -> None:
         y_bounds=(float(workspace.y[0]), float(workspace.y[1])),
     )
     print(
-        f"untangle_continuous_fem seed={args.seed} word={braid.word} "
+        f"untangle_continuous_fem seed={cfg.run.seed} word={braid.word} "
         f"over_under={[(c.over_strand, c.under_strand) for c in braid.crossings]} {report}"
     )
     if not report.ok:
@@ -313,7 +237,7 @@ def main() -> None:
 
     crossing = braid.crossings[0]
     grasp_strand = (
-        int(args.grasp_strand) if args.grasp_strand is not None else int(crossing.over_strand)
+        int(cfg.run.grasp_strand) if cfg.run.grasp_strand is not None else int(crossing.over_strand)
     )
     is_contact_test = grasp_strand == int(crossing.under_strand)
     other_strand = int(crossing.under_strand if grasp_strand == crossing.over_strand else crossing.over_strand)
@@ -323,19 +247,19 @@ def main() -> None:
     )
 
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
-    gs.init(backend=backends[args.backend])
+    gs.init(backend=backends[str(cfg.env.genesis.backend)])
     install()
 
     scene = gs.Scene(
         sim_options=gs.options.SimOptions(dt=0.01, substeps=1, gravity=(0.0, 0.0, -9.81)),
-        coupler_options=gs.options.IPCCouplerOptions(contact_d_hat=float(args.d_hat)),
+        coupler_options=gs.options.IPCCouplerOptions(contact_d_hat=float(cfg.task.rope.fem.contact_d_hat)),
         fem_options=gs.options.FEMOptions(),
         viewer_options=gs.options.ViewerOptions(
             camera_pos=(0.55, -0.55, 0.45),
             camera_lookat=(0.0, 0.0, 0.03),
             camera_fov=45,
         ),
-        show_viewer=args.viewer,
+        show_viewer=cfg.run.viewer,
     )
     scene.add_entity(
         gs.morphs.Plane(),
@@ -343,7 +267,7 @@ def main() -> None:
         name="ground",
     )
     manifest = None
-    if args.arm:
+    if cfg.run.arm:
         from topogym.core import EntityManifest
 
         manifest = EntityManifest()
@@ -368,10 +292,10 @@ def main() -> None:
         )
     rope_material = gs.materials.FEM.Elastic(
         model="stable_neohookean",
-        E=float(args.e),
-        nu=float(args.nu),
-        rho=float(args.rho),
-        friction_mu=float(args.friction_mu),
+        E=float(cfg.task.rope.fem.E),
+        nu=float(cfg.task.rope.fem.nu),
+        rho=float(cfg.task.rope.fem.rho),
+        friction_mu=float(cfg.task.rope.fem.friction_mu),
     )
     rope_entities = []
     rope_meshes = []
@@ -395,13 +319,13 @@ def main() -> None:
     attachment = FEMRopeAttachment(
         rope_entities[grasp_strand],
         rope_meshes[grasp_strand].endpoint_centers[1],
-        float(args.band_radius),
-        strength=float(args.strength),
+        float(cfg.run.band_radius),
+        strength=float(cfg.task.rope.fem.follow_strength),
     )
 
     scene.build()
     controller = None
-    if args.arm:
+    if cfg.run.arm:
         from topogym.utils import initialize_franka_controller
 
         # Before any stepping: without PD gains + home pose the arm is an
@@ -415,7 +339,7 @@ def main() -> None:
     evaluator = UntangleContinuousPuzzleEvaluator.from_config(cfg.task)
 
     trace = None
-    if args.trace:
+    if cfg.run.trace:
         stamp = time.strftime("%Y%m%d-%H%M%S")
         trace_path = Path("runs") / f"untangle_continuous_fem_trace_{stamp}.log"
         trace = FEMTrace(
@@ -423,9 +347,9 @@ def main() -> None:
             strand_scene,
             radius=float(cfg.task.rope.radius),
             notes=(
-                f"seed={args.seed} word={braid.word} grasp_strand={grasp_strand} "
-                f"E={args.e} nu={args.nu} rho={args.rho} friction_mu={args.friction_mu} "
-                f"d_hat={args.d_hat} strength={args.strength} dt=0.01 substeps=1 "
+                f"seed={cfg.run.seed} word={braid.word} grasp_strand={grasp_strand} "
+                f"E={cfg.task.rope.fem.E} nu={cfg.task.rope.fem.nu} rho={cfg.task.rope.fem.rho} friction_mu={cfg.task.rope.fem.friction_mu} "
+                f"d_hat={cfg.task.rope.fem.contact_d_hat} strength={cfg.task.rope.fem.follow_strength} dt=0.01 substeps=1 "
                 f"solver=FEM+IPC (genesis 1.2.1 + pyuipc)"
             ),
         )
@@ -452,6 +376,9 @@ def main() -> None:
             if trace is not None and total_steps % 4 == 0:
                 trace.sample(total_steps, phase)
 
+    if stop_before_physics(cfg, scene, "untangle_continuous_fem_demo"):
+        raise SystemExit(0)
+
     run_phase("settle0", 120)
     state = evaluator.classify(strand_scene)
     gt_ok, gt_detail = evaluator.matches_braid_ground_truth(strand_scene)
@@ -467,14 +394,14 @@ def main() -> None:
     # --- the move -------------------------------------------------------------
     start = attachment.band_center()
     radius = float(cfg.task.rope.radius)
-    lift = float(args.lift)
+    lift = float(cfg.run.lift)
     carry = start + np.array([0.0, 0.0, lift])
     # Mirror across the braid center lane, then keep going by --place-margin so
     # the ropes end up separated, not adjacent.
-    place_y = -np.sign(start[1]) * (abs(start[1]) + float(args.place_margin))
+    place_y = -np.sign(start[1]) * (abs(start[1]) + float(cfg.run.place_margin))
     place_xy = np.array([start[0], place_y])
     cross = np.array([place_xy[0], place_xy[1], start[2] + lift])
-    settle_z = radius + float(args.d_hat)
+    settle_z = radius + float(cfg.task.rope.fem.contact_d_hat)
     place = np.array([place_xy[0], place_xy[1], settle_z])
 
     def lerp(a: np.ndarray, b: np.ndarray):
@@ -488,17 +415,17 @@ def main() -> None:
                 f"{len(attachment.indices)} verts at {np.round(start * 1000, 1).tolist()}mm"
             )
         run_phase("move1_grasp", 100, lambda alpha: start)
-        run_phase("move1_carry_up", int(args.move_steps), lerp(start, carry))
+        run_phase("move1_carry_up", int(cfg.run.move_steps), lerp(start, carry))
         if not is_contact_test:
-            run_phase("move1_cross_over", int(args.move_steps), lerp(carry, cross))
-            run_phase("move1_place_down", int(args.place_steps), lerp(cross, place))
+            run_phase("move1_cross_over", int(cfg.run.move_steps), lerp(carry, cross))
+            run_phase("move1_place_down", int(cfg.run.place_steps), lerp(cross, place))
         else:
             # Contact test: hold at height, the way run11/run13 failed.
             run_phase("move1_carry_up", 200, lambda alpha: carry)
         attachment.release()
         if trace is not None:
             trace.note("attachment released")
-        run_phase("move2_settle", int(args.settle_steps))
+        run_phase("move2_settle", int(cfg.run.settle_steps))
     else:
         # Arm mode: IK drives the hand, the band rides HAND_ABOVE below the
         # *commanded* hand pose (commanded, not measured: both the arm's PD loop
@@ -540,10 +467,10 @@ def main() -> None:
                 f"{len(attachment.indices)} verts, hand at "
                 f"{np.round(controller.hand_pos() * 1000, 1).tolist()}mm"
             )
-        run_arm_phase("move1_carry_up", int(args.move_steps), lerp(hand_over(start), hand_over(carry)))
+        run_arm_phase("move1_carry_up", int(cfg.run.move_steps), lerp(hand_over(start), hand_over(carry)))
         if not is_contact_test:
-            run_arm_phase("move1_cross_over", int(args.move_steps), lerp(hand_over(carry), hand_over(cross)))
-            run_arm_phase("move1_place_down", int(args.place_steps), lerp(hand_over(cross), hand_over(place)))
+            run_arm_phase("move1_cross_over", int(cfg.run.move_steps), lerp(hand_over(carry), hand_over(cross)))
+            run_arm_phase("move1_place_down", int(cfg.run.place_steps), lerp(hand_over(cross), hand_over(place)))
             release_hand = hand_over(place)
         else:
             run_arm_phase("move1_carry_up", 200, lambda alpha: hand_over(carry))
@@ -553,7 +480,7 @@ def main() -> None:
         if trace is not None:
             trace.note("attachment released, gripper opened")
         run_arm_phase("move2_settle", 80, lerp(release_hand, release_hand + np.array([0.0, 0.0, 0.08])))
-        run_phase("move2_settle", int(args.settle_steps))
+        run_phase("move2_settle", int(cfg.run.settle_steps))
 
     elapsed = time.perf_counter() - started
     print(
@@ -590,7 +517,7 @@ def main() -> None:
     if trace is not None:
         trace.close()
 
-    if args.keep_open or args.viewer:
+    if cfg.run.keep_open or cfg.run.viewer:
         print("untangle_continuous_fem holding the viewer open; Ctrl+C to exit.")
         while True:
             scene.step()

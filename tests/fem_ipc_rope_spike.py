@@ -18,9 +18,15 @@ once per *substep* but configures it with the full `sim.dt`
 (ipc_coupler/utils.py:93), i.e. it is built for substeps=1. The locked
 tabletop preset (substeps=4) is deliberately not used here.
 
-    python -m prototypes.fem_ipc_rope_spike --seed 0 --verbose
-    python -m prototypes.fem_ipc_rope_spike --seed 0 --viewer --keep-open
-    python -m prototypes.fem_ipc_rope_spike --seed 0 --e 2e5 --d-hat 0.001   # calibration sweep
+Configuration is Hydra (`configs/fem_ipc_rope_spike.yaml`). The material knobs
+that used to be CLI-only now live in `task.rope.fem`, single-sourced from
+`prefabs.rope_fem` -- which is where this script's own calibration output landed.
+
+    python -m tests.fem_ipc_rope_spike run.seed=0 run.verbose=true
+    python -m tests.fem_ipc_rope_spike run.viewer=true run.keep_open=true
+    python -m tests.fem_ipc_rope_spike task.rope.fem.E=2e5 task.rope.fem.contact_d_hat=0.001
+    python -m tests.fem_ipc_rope_spike run.test=contact run.verbose=true
+    python -m tests.fem_ipc_rope_spike -m task.rope.fem.E=1e5,2e5,4e5   # sweep
 
 Requires `pip install pyuipc` (CUDA 12.6+). The import is checked up front so a
 missing wheel fails with one clear line instead of a stack trace mid-build.
@@ -28,90 +34,11 @@ missing wheel fails with one clear line instead of a stack trace mid-build.
 
 from __future__ import annotations
 
-import argparse
 import time
-from pathlib import Path
 
+import hydra
 import numpy as np
-
-CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
-DEFAULT_COMMON_CONFIG = CONFIG_ROOT / "common_configs" / "manipulation_space_tabletop_v1.yaml"
-DEFAULT_ENV_CONFIG = CONFIG_ROOT / "env_configs" / "world_tabletop_v1.yaml"
-DEFAULT_ROBOT_CONFIG = CONFIG_ROOT / "robot_control_configs" / "franka_panda_position_ik.yaml"
-DEFAULT_TASK_CONFIG = CONFIG_ROOT / "task_configs" / "untangle_continuous_topogym_tabletop_v1.yaml"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Two braided FEM ropes under the IPC coupler, settle and measure."
-    )
-    parser.add_argument("--task-config", type=Path, default=DEFAULT_TASK_CONFIG)
-    parser.add_argument("--common-config", type=Path, default=DEFAULT_COMMON_CONFIG)
-    parser.add_argument("--env-config", type=Path, default=DEFAULT_ENV_CONFIG)
-    parser.add_argument("--robot-config", type=Path, default=DEFAULT_ROBOT_CONFIG)
-    parser.add_argument("--backend", choices=("cpu", "gpu", "cuda"), default="gpu")
-    parser.add_argument("--seed", type=int, default=0, help="Braid layout seed.")
-    parser.add_argument("--strands", type=int, default=None, help="Override braid.n_strands.")
-    parser.add_argument(
-        "--segment-length",
-        type=float,
-        default=None,
-        help=(
-            "Override rope.mesh.segment_length (metres). For FEM this only sets "
-            "surface ring spacing / tet density -- the PBD particle-barrier "
-            "arithmetic does not apply."
-        ),
-    )
-    # Material / contact calibration knobs (step 1.3). CLI flags instead of config
-    # edits so sweeps never touch the PBD baseline config.
-    parser.add_argument("--e", type=float, default=1e5, help="Young's modulus E (Pa).")
-    parser.add_argument("--nu", type=float, default=0.45, help="Poisson ratio.")
-    parser.add_argument("--rho", type=float, default=650.0, help="Density kg/m^3 (PBD prefab value).")
-    parser.add_argument("--friction-mu", type=float, default=0.3, help="FEM material friction.")
-    parser.add_argument(
-        "--d-hat",
-        type=float,
-        default=0.002,
-        help=(
-            "IPC contact activation distance (m). The libuipc default 0.01 is "
-            "wider than the 4mm rope radius and would hold the ropes ~10mm "
-            "apart; 2mm keeps the barrier inside the visual surface gap."
-        ),
-    )
-    parser.add_argument("--contact-resistance", type=float, default=None)
-    parser.add_argument("--dt", type=float, default=0.01)
-    parser.add_argument("--settle-steps", type=int, default=400, help="Max settle steps.")
-    parser.add_argument(
-        "--settle-tol",
-        type=float,
-        default=5e-5,
-        help="Converged when max vertex displacement per step falls below this (m).",
-    )
-    parser.add_argument(
-        "--test",
-        choices=("settle", "anchor", "follow", "contact"),
-        default="settle",
-        help=(
-            "settle: build + settle + measure (step 1). anchor: pin the anchor "
-            "bands, verify they hold through settling. follow: additionally "
-            "drive a grasp band up 60mm and report tracking error. contact: "
-            "the PBD-failure reproduction -- grasp the UNDER strand's free "
-            "end, lift 80mm; the strand must not pass through the one resting "
-            "on it (crossing over/under must not flip; PBD flipped at step 1176)."
-        ),
-    )
-    parser.add_argument("--band-radius", type=float, default=0.015, help="Follow band radius (m).")
-    parser.add_argument(
-        "--strength",
-        type=float,
-        default=100.0,
-        help="SoftPositionConstraint strength rate for the follow band.",
-    )
-    parser.add_argument("--drive-steps", type=int, default=400, help="Steps for the lift phase.")
-    parser.add_argument("--viewer", action="store_true")
-    parser.add_argument("--keep-open", action="store_true", help="Step forever when finished.")
-    parser.add_argument("--verbose", action="store_true")
-    return parser.parse_args()
+from omegaconf import DictConfig
 
 
 def require_pyuipc() -> None:
@@ -149,35 +76,27 @@ def pairwise_gap(line_a: np.ndarray, line_b: np.ndarray) -> tuple[float, float]:
     return float(dist[ia, ib]), float(line_a[ia, 2] - line_b[ib, 2])
 
 
-def main() -> None:
-    args = parse_args()
+@hydra.main(version_base="1.3", config_path="../configs", config_name="fem_ipc_rope_spike")
+def main(cfg: DictConfig) -> None:
     require_pyuipc()
 
     import genesis as gs
-    from omegaconf import OmegaConf
 
-    from topogym.core import load_topogym_configs
+    from topogym.core import save_resolved_config
     from topogym.generation.braid import verify_braid_spec
+    from topogym.supervision import stop_before_physics
     from topogym.tasks import UntangleContinuousLayout
     from topogym.world import materials
     from topogym.world.rope import tensor_to_numpy, tube_morph, write_obj
 
-    cfg = load_topogym_configs(
-        common_config=args.common_config,
-        env_config=args.env_config,
-        robot_config=args.robot_config,
-        task_config=args.task_config,
-    )
-    if args.strands is not None:
-        cfg = OmegaConf.merge(cfg, {"task": {"braid": {"n_strands": args.strands}}})
-    if args.segment_length is not None:
-        cfg = OmegaConf.merge(
-            cfg, {"task": {"rope": {"mesh": {"segment_length": args.segment_length}}}}
-        )
+    resolved = save_resolved_config(cfg)
+    if resolved is not None:
+        print(f"fem_ipc_spike_config -> {resolved}", flush=True)
+    fem = cfg.task.rope.fem
 
     # task frame with origin (0,0,0): braid.base_z=0.007 puts the ropes just above
     # z=0, so a ground plane through the origin plays the tabletop's role.
-    layout = UntangleContinuousLayout(cfg.task, seed=args.seed)
+    layout = UntangleContinuousLayout(cfg.task, seed=cfg.run.seed)
     braid = layout.braid_spec()
     workspace = cfg.common.manipulation_space.workspace
     report = verify_braid_spec(
@@ -188,16 +107,16 @@ def main() -> None:
         y_bounds=(float(workspace.y[0]), float(workspace.y[1])),
     )
     print(
-        f"fem_ipc_spike seed={args.seed} word={braid.word} "
+        f"fem_ipc_spike seed={cfg.run.seed} word={braid.word} "
         f"over_under={[(c.over_strand, c.under_strand) for c in braid.crossings]} {report}"
     )
     if not report.ok:
         raise SystemExit("fem_ipc_spike: braid self-check FAILED")
 
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
-    gs.init(backend=backends[args.backend])
+    gs.init(backend=backends[cfg.env.genesis.backend])
 
-    if args.test != "settle":
+    if cfg.run.test != "settle":
         # Must run before gs.Scene(): the simulator constructs its coupler there,
         # and the patch swaps which coupler class it constructs.
         from topogym.primitives.fem_attachment import FEMRopeAttachment
@@ -209,12 +128,12 @@ def main() -> None:
 
         install()
 
-    coupler_kwargs = {"contact_d_hat": float(args.d_hat)}
-    if args.contact_resistance is not None:
-        coupler_kwargs["contact_resistance"] = float(args.contact_resistance)
+    coupler_kwargs = {"contact_d_hat": float(fem.contact_d_hat)}
+    if cfg.run.contact_resistance is not None:
+        coupler_kwargs["contact_resistance"] = float(cfg.run.contact_resistance)
     scene = gs.Scene(
         sim_options=gs.options.SimOptions(
-            dt=float(args.dt),
+            dt=float(cfg.run.dt),
             substeps=1,
             gravity=(0.0, 0.0, -9.81),
         ),
@@ -225,7 +144,7 @@ def main() -> None:
             camera_lookat=(0.0, 0.0, 0.03),
             camera_fov=45,
         ),
-        show_viewer=args.viewer,
+        show_viewer=cfg.run.viewer,
     )
 
     # coup_type must be explicit: a Plane entity carries a base joint, so the IPC
@@ -239,10 +158,10 @@ def main() -> None:
 
     rope_material = gs.materials.FEM.Elastic(
         model="stable_neohookean",
-        E=float(args.e),
-        nu=float(args.nu),
-        rho=float(args.rho),
-        friction_mu=float(args.friction_mu),
+        E=float(fem.E),
+        nu=float(fem.nu),
+        rho=float(fem.rho),
+        friction_mu=float(fem.friction_mu),
     )
     rope_entities = []
     rope_meshes = []
@@ -259,7 +178,7 @@ def main() -> None:
         )
         rope_entities.append(entity)
         rope_meshes.append(mesh)
-        if args.verbose:
+        if cfg.run.verbose:
             print(
                 f"fem_ipc_spike {layout.strand_name(strand_index)}: "
                 f"surface_mesh {len(mesh.vertices)} verts, "
@@ -270,12 +189,12 @@ def main() -> None:
     # selectors against the tet-mesh vertices during scene.build().
     attachment = None
     grasp_strand = None
-    if args.test != "settle":
+    if cfg.run.test != "settle":
         anchor_radius = float(cfg.task.rope.anchor_radius)
         for entity, mesh in zip(rope_entities, rope_meshes):
             pin_near(entity, [mesh.endpoint_centers[0]], anchor_radius)
-        if args.test in ("follow", "contact"):
-            if args.test == "contact":
+        if cfg.run.test in ("follow", "contact"):
+            if cfg.run.test == "contact":
                 if layout.n_strands < 2:
                     raise SystemExit("fem_ipc_spike: contact test needs >= 2 strands.")
                 # The PBD-losing configuration: grasp the strand the other one
@@ -286,11 +205,11 @@ def main() -> None:
             attachment = FEMRopeAttachment(
                 rope_entities[grasp_strand],
                 rope_meshes[grasp_strand].endpoint_centers[1],
-                float(args.band_radius),
-                strength=float(args.strength),
+                float(cfg.run.band_radius),
+                strength=float(fem.follow_strength),
             )
             print(
-                f"fem_ipc_spike test={args.test}: will grasp s{grasp_strand} "
+                f"fem_ipc_spike test={cfg.run.test}: will grasp s{grasp_strand} "
                 f"free end at {np.round(rope_meshes[grasp_strand].endpoint_centers[1] * 1000, 1).tolist()}mm"
             )
 
@@ -300,6 +219,12 @@ def main() -> None:
             f"fem_ipc_spike {entity.name}: {entity.n_vertices} FEM vertices, "
             f"{entity.n_elements} tets"
         )
+
+    # 与 demo 用同一支度量。本脚本是最小对照场景：没有桌子、没有机械臂、
+    # 没有 connector latch，且 substeps=1，用来判断每次 IPC advance 的
+    # 固定开销来自场景内容还是来自 libuipc/环境本身。
+    if stop_before_physics(cfg, scene, "fem_ipc_spike"):
+        raise SystemExit(0)
 
     def positions(entity) -> np.ndarray:
         pos = tensor_to_numpy(entity.get_state().pos)
@@ -313,7 +238,7 @@ def main() -> None:
     steps_run = 0
     check_every = 10
     converged_at = None
-    for step in range(1, args.settle_steps + 1):
+    for step in range(1, cfg.run.settle_steps + 1):
         scene.step()
         steps_run = step
         if step % check_every == 0:
@@ -323,9 +248,9 @@ def main() -> None:
                 for cur, prev in zip(current, previous)
             ) / check_every
             previous = current
-            if args.verbose:
+            if cfg.run.verbose:
                 print(f"fem_ipc_spike settle step={step} max_move={moved * 1000:.4f}mm/step")
-            if moved < args.settle_tol:
+            if moved < cfg.run.settle_tol:
                 converged_at = step
                 break
     elapsed = time.perf_counter() - started
@@ -346,7 +271,7 @@ def main() -> None:
             print(
                 f"fem_ipc_spike s{a}~s{b}: centreline_gap={gap * 1000:.2f}mm "
                 f"(surfaces {'+' if surface_gap >= 0 else ''}{surface_gap * 1000:.2f}mm apart; "
-                f"PBD baseline 8.7mm centreline, target >= {2 * radius * 1000 + args.d_hat * 1000:.0f}mm) "
+                f"PBD baseline 8.7mm centreline, target >= {2 * radius * 1000 + fem.contact_d_hat * 1000:.0f}mm) "
                 f"s{a} over_z={over_z * 1000:+.2f}mm"
             )
             min_vertex = float(
@@ -364,7 +289,7 @@ def main() -> None:
         )
 
     # --- constraint tests -----------------------------------------------------
-    if args.test != "settle":
+    if cfg.run.test != "settle":
         for index, (entity, spawn) in enumerate(zip(rope_entities, spawn_positions)):
             pins = resolved_pins(entity)
             if pins is None or len(pins) == 0:
@@ -383,7 +308,7 @@ def main() -> None:
             f"fem_ipc_spike attach s{grasp_strand}: band {len(attachment.indices)} verts, "
             f"center {np.round(center * 1000, 1).tolist()}mm"
         )
-        lift = 0.06 if args.test == "follow" else 0.08
+        lift = 0.06 if cfg.run.test == "follow" else 0.08
         braid_layout = layout.braid_layout()
         crossing_x = float(braid_layout.x_start) + float(
             braid.crossings[0].position_frac
@@ -404,9 +329,9 @@ def main() -> None:
         under = int(braid.crossings[0].under_strand)
         flips = 0
         drive_started = time.perf_counter()
-        total_drive = int(args.drive_steps) + 200
+        total_drive = int(cfg.run.drive_steps) + 200
         for step in range(1, total_drive + 1):
-            alpha = min(1.0, step / float(args.drive_steps))  # lift, then hold 200
+            alpha = min(1.0, step / float(cfg.run.drive_steps))  # lift, then hold 200
             attachment.drive_to(center + np.array([0.0, 0.0, lift * alpha]))
             scene.step()
             if step % 20 == 0 or step == total_drive:
@@ -416,7 +341,7 @@ def main() -> None:
                     f"fem_ipc_spike drive step={step} target_z=+{lift * alpha * 1000:.1f}mm "
                     f"track_err={err * 1000:.2f}mm"
                 )
-                if args.test == "contact":
+                if cfg.run.test == "contact":
                     dz, min_dist = crossing_state()
                     if dz < 0.0:
                         flips += 1
@@ -430,7 +355,7 @@ def main() -> None:
             f"fem_ipc_spike drive: {total_drive} steps in {drive_elapsed:.1f}s "
             f"({total_drive / drive_elapsed:.1f} steps/s)"
         )
-        if args.test == "contact":
+        if cfg.run.test == "contact":
             print(
                 f"fem_ipc_spike contact verdict: "
                 + (
@@ -440,7 +365,7 @@ def main() -> None:
                 )
             )
 
-    if args.keep_open or args.viewer:
+    if cfg.run.keep_open or cfg.run.viewer:
         print("fem_ipc_spike holding the viewer open; Ctrl+C to exit.")
         while True:
             scene.step()
