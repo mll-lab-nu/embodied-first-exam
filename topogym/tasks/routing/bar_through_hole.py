@@ -44,7 +44,12 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
-from topogym.tasks._visuals import box_entity_enabled
+from topogym.tasks._visuals import (
+    add_aperture_ring,
+    add_industrial_pedestal,
+    add_panel_bolts,
+    box_entity_enabled,
+)
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 from topogym.world.rope import resolve_mesh_dir, write_obj
 
@@ -507,80 +512,81 @@ class BarThroughHoleSceneBuilder:
         if bolts is not None and bool(getattr(bolts, "enabled", True)):
             self._add_bolts(scene, manifest, layout, bolts)
 
-    def _add_flange(self, scene, manifest, layout, flange) -> None:
-        """A hexagonal bolted collar around the bore, on the panel's near face.
+        pedestal = getattr(details, "pedestal", None)
+        if pedestal is not None and bool(getattr(pedestal, "enabled", True)):
+            self._add_cradle_pedestals(scene, manifest, layout, pedestal)
 
-        Six segments, one per hex edge, each seated just outside its edge so the
-        collar traces the bore rather than covering it. Collision-free, so the
-        overlap at the corners is cosmetic only.
+    def _add_cradle_pedestals(self, scene, manifest, layout, pedestal) -> None:
+        """Dress each cradle's load block as a bolted pedestal.
+
+        The blocks themselves are untouched -- same top face, same footprint, so
+        the shaft rests where it did. `add_industrial_pedestal` gives the tall
+        far cradle a foot plate, anchor bolts, knee braces and a cap collar, and
+        the two low near pads just the plate and bolts, since a brace does not
+        read at 12 mm.
         """
 
-        band = float(flange.band)
-        depth = float(flange.depth)
-        color = _list(flange.color)
-        face_x = layout.panel_x - 0.5 * layout.panel_thickness - 0.5 * depth
-        across_flats = float(self.task_cfg.aperture.across_flats)
-        center_z = float(self.task_cfg.aperture.center_z)
-        corners = hexagon_vertices(across_flats)
-        edge_len = float(np.linalg.norm(corners[1] - corners[0]))
-        for k in range(6):
-            p, q = corners[k], corners[(k + 1) % 6]
-            delta = q - p
-            mid = 0.5 * (p + q)
-            outward = np.array([delta[1], -delta[0]], dtype=float)
-            outward /= np.linalg.norm(outward)
-            if float(np.dot(outward, mid)) < 0.0:
-                outward = -outward
-            seat = mid + outward * (0.5 * band)
-            name = f"flange_{k}"
-            manifest.add(
-                name,
-                scene.add_entity(
-                    gs.morphs.Box(
-                        pos=tuple(
-                            layout.position_to_world(
-                                (face_x, float(seat[0]), center_z + float(seat[1]))
-                            )
-                        ),
-                        size=(depth, edge_len + band, band),
-                        euler=(float(np.degrees(np.arctan2(delta[1], delta[0]))), 0.0, 0.0),
-                        fixed=True,
-                        collision=False,
-                    ),
-                    surface=materials.plastic("frame", color),
-                    name=name,
-                ),
+        for name, spec in layout.cradle_specs():
+            if not bool(getattr(spec, "enabled", True)):
+                continue
+            add_industrial_pedestal(
+                scene,
+                manifest,
+                prefix=name,
+                spec=pedestal,
+                center_x=float(spec.x),
+                center_y=0.0,
+                top_z=float(spec.base_top_z),
+                block_size=_list(spec.base_size),
+                to_world=layout.position_to_world,
             )
 
-    def _add_bolts(self, scene, manifest, layout, bolts) -> None:
-        """Bolt heads at the panel's corners."""
+    def _add_flange(self, scene, manifest, layout, flange) -> None:
+        """A hexagonal bolted collar around the bore, on both panel faces.
 
-        radius = float(bolts.radius)
-        height = float(bolts.height)
-        color = _list(bolts.color)
+        Both faces are dressed identically: the panel is a bulkhead, and a bore
+        collar that exists only on the robot's side gives the far half of the
+        insertion -- the half the shaft is actually in when it seats -- a
+        visibly different wall to sit in. `faces` in config can drop back to one
+        side if a camera only ever sees one.
+        """
+
+        add_aperture_ring(
+            scene,
+            manifest,
+            prefix="flange",
+            corners=hexagon_vertices(float(self.task_cfg.aperture.across_flats)),
+            panel_x=layout.panel_x,
+            panel_thickness=layout.panel_thickness,
+            center_z=float(self.task_cfg.aperture.center_z),
+            band=float(flange.band),
+            depth=float(flange.depth),
+            color=_list(flange.color),
+            to_world=layout.position_to_world,
+            faces=tuple(_list(getattr(flange, "faces", ("near", "far")))),
+        )
+
+    def _add_bolts(self, scene, manifest, layout, bolts) -> None:
+        """Bolt heads at the panel's four corners, on both faces."""
+
         inset = float(bolts.inset)
         half_width = 0.5 * float(self.task_cfg.panel.width)
         top = float(self.task_cfg.panel.top_z)
-        face_x = layout.panel_x - 0.5 * layout.panel_thickness - 0.5 * height
-        for y_sign, y_tag in ((1.0, "l"), (-1.0, "r")):
-            for z_value, z_tag in ((top - inset, "t"), (inset, "b")):
-                name = f"panel_bolt_{y_tag}{z_tag}"
-                manifest.add(
-                    name,
-                    scene.add_entity(
-                        gs.morphs.Cylinder(
-                            pos=tuple(
-                                layout.position_to_world(
-                                    (face_x, y_sign * (half_width - inset), z_value)
-                                )
-                            ),
-                            radius=radius,
-                            height=height,
-                            euler=(0.0, 90.0, 0.0),
-                            fixed=True,
-                            collision=False,
-                        ),
-                        surface=materials.plastic("frame", color),
-                        name=name,
-                    ),
-                )
+        stations = [
+            (f"{y_tag}{z_tag}", (y_sign * (half_width - inset), z_value))
+            for y_sign, y_tag in ((1.0, "l"), (-1.0, "r"))
+            for z_value, z_tag in ((top - inset, "t"), (inset, "b"))
+        ]
+        add_panel_bolts(
+            scene,
+            manifest,
+            prefix="panel_bolt",
+            stations=stations,
+            panel_x=layout.panel_x,
+            panel_thickness=layout.panel_thickness,
+            radius=float(bolts.radius),
+            height=float(bolts.height),
+            color=_list(bolts.color),
+            to_world=layout.position_to_world,
+            faces=tuple(_list(getattr(bolts, "faces", ("near", "far")))),
+        )

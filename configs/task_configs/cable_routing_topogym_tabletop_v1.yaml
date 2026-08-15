@@ -191,7 +191,11 @@ rope:
     newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
     newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
   color: [0.00, 0.90, 0.78]
-  anchor_start: true
+  # false = 起始端交给 fixed_terminal 的跟随带（本任务一直以来的行为）。
+  # 2026-08-14 之前这里写的是 true，但它是**死键**：代码先判端子存不存在，
+  # 端子一存在就走跟随带，永远轮不到它。判断顺序已改成 anchor_start 优先，
+  # 所以这里必须显式写 false 才能保持原样。
+  anchor_start: false
   anchor_end: false
   anchor_radius: 0.009
   radius: ${prefabs.rope_pbd.radius}

@@ -740,16 +740,23 @@ def with_end_entries(
     arc: a sharp corner self-intersects the swept tube and tetgen rejects the
     mesh. Task-level topology/route ground truth reads the raw control points
     and is unaffected.
+
+    Either entry may be ``None``, leaving that end of the polyline untouched.
+    That is what a fitting lying on its side wants: its bore is horizontal, so
+    the rope runs straight into it and there is nothing to climb over.
     """
 
     arc_radius = max(0.008, 2.0 * float(rope_radius))
     landing_radius = 2.0 * float(rope_radius)
     adjusted = np.asarray(polyline, dtype=float).copy()
-    entries: list[np.ndarray] = []
+    entries: list[np.ndarray | None] = []
     for (end_index, neighbor_index), entry in (
         ((0, 1), start_entry),
         ((-1, -2), end_entry),
     ):
+        if entry is None:
+            entries.append(None)
+            continue
         tip_z = float(entry["tip_z"])
         exit_z = float(entry["exit_z"])
         end_xy = adjusted[end_index, :2].copy()
@@ -779,7 +786,10 @@ def with_end_entries(
             )
         adjusted[end_index, :2] += (2.0 * arc_radius + landing_radius) * direction
         entries.append(np.stack(points, axis=0))
-    return np.concatenate((entries[0], adjusted, entries[1][::-1]), axis=0)
+    parts = [part for part in (entries[0], adjusted) if part is not None]
+    if entries[1] is not None:
+        parts.append(entries[1][::-1])
+    return np.concatenate(parts, axis=0)
 
 
 def connector_entry_heights(connector_cfg, *, base_z: float) -> dict:

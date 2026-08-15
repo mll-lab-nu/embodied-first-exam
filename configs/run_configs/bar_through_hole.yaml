@@ -12,3 +12,7 @@ inspect_only: false
 # 覆盖 task.oracle.mode：insert = 穿过去；bypass = 从面板上方绕过（反捷径用例，
 # 预期判失败）。null = 用 task 配置里的值。
 oracle_mode: null
+
+# inspect_only 的静置步数。用它量「杆自己会不会漂」：杆是贴着托座面生成的，
+# 任何横向蠕变都直接从对准预算（孔 inradius - 杆 inradius）里扣。
+inspect_settle_steps: 200

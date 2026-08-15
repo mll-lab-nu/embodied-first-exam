@@ -28,8 +28,10 @@ panel:
   # cable_routing 的教训是绕到障碍物 +x 侧会让前臂横扫过去（净空只剩 14mm）。
   x: 0.130
   thickness: 0.030
-  # 0.240 → 0.280：场景放开。
-  width: 0.280
+  # 0.240 → 0.280 → 0.400：隔板加长，读起来是一堵墙而不是一块窄立板。
+  # 沿 y 加长不影响任何既有余量：EE 全程在 y≈0，桌面 y 跨度 1.400（±0.700）。
+  # 高度不能一起加，见下方 top_z。
+  width: 0.400
   # 顶面 150mm。上限由 home pose 决定：默认 home 指尖在 task z≈0.1608，
   # 高于它就会像 stacked_plate 那样在 reset 时扎进结构 → 求解器 NaN。留 11mm 余量。
   top_z: 0.150
@@ -93,18 +95,44 @@ cradles:
 # 一律 collision=False，逐项可关；关掉任何一项都不会改变物理。
 # 配方同 stacked_plate（docs/develop/visual/stacked_plate_visual_upgrade_zh.md）。
 visual_details:
-  # 六段拼成的六角法兰环，贴在面板近面、沿孔缘一圈。
+  # 六段拼成的六角法兰环，沿孔缘一圈。faces 列出要贴的面板面：
+  # near = 机器人一侧（-x），far = 杆穿过去之后所在的一侧（+x）。
+  # 两面同款，隔板正反看起来一致。
   flange:
     enabled: true
     band: 0.010
     depth: 0.004
     color: [0.55, 0.57, 0.60]
+    faces: [near, far]
+  # 面板四角铆钉，同样两面都有：一侧是螺栓头，另一侧读作螺母。
   bolts:
     enabled: true
     radius: 0.004
     height: 0.004
     inset: 0.018
     color: [0.24, 0.25, 0.27]
+    faces: [near, far]
+  # 托座的工业支架外观。承载块本身一点没动（顶面高度、footprint 不变），
+  # 这里全是 collision=False 的包裹件，关掉不改变任何接触。
+  # 高度 < 0.030 的块只画底板和地脚螺栓（阈值在 tasks/_visuals.py）：
+  # 12mm 的近端托座上画斜撑看不出来，只有 far 托座（0.070 高）画全套。
+  pedestal:
+    enabled: true
+    # 底板 xy 相对承载块的放大倍数。1.5 留出的边沿刚好够放下地脚螺栓。
+    foot_scale: 1.5
+    foot_thickness: 0.006
+    # 地脚螺栓自动落在底板边沿的中线上，不需要单独的 inset。
+    bolt_radius: 0.0035
+    bolt_height: 0.004
+    # 斜撑：从底板外缘斜拉到承载块上部侧面。
+    brace_thickness: 0.005
+    # 顶部机加工唇边。collar_gap 让它停在顶面下方 1mm —— 与顶面共面会 z-fighting，
+    # 而且真正接杆的必须是承载块的顶面。
+    collar: 0.005
+    collar_thickness: 0.008
+    collar_gap: 0.001
+    color: [0.30, 0.32, 0.35]
+    bolt_color: [0.20, 0.21, 0.23]
 
 oracle:
   mode: insert          # insert | bypass（bypass = 防捷径对照：从上方绕过去）

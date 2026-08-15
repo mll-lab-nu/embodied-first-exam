@@ -14,6 +14,20 @@ def _as_numpy(value) -> np.ndarray:
     return np.asarray(value)
 
 
+def _local_z_axis(quat) -> np.ndarray:
+    """World direction of a (w, x, y, z) quaternion's local +z."""
+
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
+    return np.array(
+        [
+            2.0 * (x * z + w * y),
+            2.0 * (y * z - w * x),
+            1.0 - 2.0 * (x * x + y * y),
+        ],
+        dtype=float,
+    )
+
+
 @dataclass
 class ConnectorLatch:
     """Capture a physically inserted rigid handle at a fixed connector pose.
@@ -104,19 +118,19 @@ class ConnectorLatch:
         if quat_norm <= 1e-8:
             return False
         quat /= quat_norm
-        w, x, y, z = quat
-        local_z_world = np.array(
-            [
-                2.0 * (x * z + w * y),
-                2.0 * (y * z - w * x),
-                1.0 - 2.0 * (x * x + y * y),
-            ],
-            dtype=float,
-        )
         self.last_xy_error = float(np.linalg.norm(current[:2] - self.target_pos[:2]))
         self.last_z_error = abs(float(current[2] - self.target_pos[2]))
+        # Tilt is measured against the orientation this latch holds, not against
+        # world vertical. For a plug being inserted into a socket `target_quat`
+        # is upright and the two are the same thing; for one that is simply held
+        # where it lies -- rope_winding's plug rests on its side -- vertical is
+        # the wrong reference and would reject every pose it ever has.
+        axis = _local_z_axis(quat)
+        target_axis = _local_z_axis(self.target_quat)
         self.last_tilt_deg = float(
-            np.rad2deg(np.arccos(np.clip(abs(local_z_world[2]), 0.0, 1.0)))
+            np.rad2deg(
+                np.arccos(np.clip(abs(float(np.dot(axis, target_axis))), 0.0, 1.0))
+            )
         )
         self.active = bool(
             self.last_xy_error <= float(self.capture_tolerance_xy)

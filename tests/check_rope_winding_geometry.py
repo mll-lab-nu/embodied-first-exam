@@ -11,7 +11,17 @@ What it proves:
     winding 0;
   - a finished rope reads exactly +turns, and the mirrored run exactly -turns
     (the task's contrast pair);
-  - the rope is long enough for the tightest moment of the route, with margin.
+  - the cable can get from the plug to the post's shaft with room to bend;
+  - the rope is long enough for the tightest moment of the route, with margin;
+  - the wrist schedule tracks the orbit 1:1 through the forward stretch, hands
+    all of that travel back over the points that remain so every turn closes,
+    stays inside joint7's travel, and never asks one waypoint for half a turn;
+  - the gripper-wrap metric reads one turn per orbit for a fixed wrist and zero
+    for one that turns with the orbit -- the arithmetic behind the wrist spin
+    that is meant to keep the rope off the gripper;
+  - `RigidAttachment` really does hold the plug still relative to the gripper
+    through the sharpest turn the route asks for, which the shipped code did not
+    do until 2026-08-15.
 
     python tests/check_rope_winding_geometry.py
 
@@ -33,11 +43,27 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
 from topogym.planning.rope_winding_planner import (  # noqa: E402
+    MAX_WRIST_STEP,
+    WRIST_BUDGET,
     WindingSpec,
     plan_rope_winding_route,
     post_center,
 )
-from topogym.supervision.rope_winding import winding_number  # noqa: E402
+from topogym.primitives.attachment import (  # noqa: E402
+    RigidAttachment,
+    _quat_rotate as _rotate_by_quat,
+)
+from topogym.primitives.physical_contact import (  # noqa: E402
+    quat_about_axis,
+    quat_mul,
+)
+from topogym.primitives.pick_place import HAND_TO_PAD_Z  # noqa: E402
+from topogym.supervision.rope_twist import TwistTracker  # noqa: E402
+from topogym.supervision.rope_winding import (  # noqa: E402
+    gripper_frame_metrics,
+    winding_number,
+    winding_sweep,
+)
 
 TASK_CFG = REPO / "configs" / "task_configs" / "rope_winding_topogym_tabletop_v1.yaml"
 PREFABS = REPO / "configs" / "prefab_configs" / "topogym_prefabs_v1.yaml"
@@ -99,6 +125,15 @@ class StandInLayout:
         return np.stack([self.route_point(p) for p in self.cfg.routes[name]], axis=0)
 
 
+def _quat_axis_z(quat) -> np.ndarray:
+    """Local +z of a (w, x, y, z) quaternion, in world axes."""
+
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
+    return np.array(
+        [2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y)], dtype=float
+    )
+
+
 def densify(points, step=0.002):
     """Resample a polyline so azimuth steps stay far below pi.
 
@@ -128,6 +163,9 @@ def main() -> int:
     center = post_center(layout, spec)
     post = cfg.fixtures[spec.post]
     settle_radius = float(post.radius) + float(cfg.rope.radius)
+    # The winding count's band, tighter than the gateway's on purpose -- see
+    # `settled_band_radius`.
+    wrap_band = float(post.radius) + 2.0 * float(cfg.rope.radius)
     anchor = layout.route_point({"fixture": "S", "relation": "center"})
     seat = layout.route_point({"fixture": "C", "relation": "endpoint"})
 
@@ -144,9 +182,14 @@ def main() -> int:
     check(
         "waypoint count = lift + entry + turns*points + exit + hover + insert",
         len(labels) == expected,
-        f"{len(labels)} (expected {expected})",
+        f"{len(labels)} (expected {expected}); the wrist gives its travel back "
+        f"over the last {spec.arc_points_per_turn - spec.yaw_forward_points} "
+        "points of each turn rather than at a standstill, so there are no "
+        "wrist-only waypoints",
     )
-    orbit = [index for index, label in enumerate(labels) if label.startswith("wind_t")]
+    orbit = [
+        index for index, label in enumerate(labels) if label.startswith("wind_t")
+    ]
     radii = np.linalg.norm(points[orbit][:, :2] - center[None, :2], axis=1)
     check(
         "orbit points sit on wind_radius",
@@ -163,6 +206,36 @@ def main() -> int:
         ),
         f"{heights[-1] - entry_z:.4f} m",
     )
+    # Each turn has to pass OVER the last one, not graze it. The outlet's
+    # underside is half a rope below the orbit height and the previous wrap's top
+    # is half a rope above its own, so the gap between consecutive turns is
+    # `climb - 2*rope_radius`. At the 0.008 this shipped with, that gap was
+    # exactly ZERO: turn two went past turn one touching it. That is the position
+    # the second turn kept failing at, and the one that lifting the hand by hand
+    # got past.
+    turn_gap = spec.climb_per_turn - 2.0 * float(cfg.rope.radius)
+    check(
+        "consecutive turns clear each other",
+        turn_gap > 0.0,
+        f"{turn_gap * 1000:+.1f} mm between the outlet's underside and the "
+        f"previous wrap's top (climb {spec.climb_per_turn * 1000:.0f} mm, rope "
+        f"{2 * float(cfg.rope.radius) * 1000:.0f} mm thick)",
+    )
+    # ...and the whole spiral has to fit under the post's top, which is what
+    # bounds how many turns this layout can do at all. Stated as a relation, not
+    # a number, so raising `turns` fails here instead of in the sim.
+    post_top_task = float(post.pos[2]) + 0.5 * float(post.height)
+    spiral_top = (
+        spec.wind_z_start + spec.turns * spec.climb_per_turn + float(cfg.rope.radius)
+    )
+    room = post_top_task - 0.010
+    check(
+        "the whole spiral fits below the post top",
+        spiral_top <= room + 1e-9,
+        f"top wrap at {spiral_top:.3f} vs {room:.3f} usable ({post_top_task:.3f} "
+        f"post top less 10 mm); this post and climb hold "
+        f"{int((room - spec.wind_z_start) // spec.climb_per_turn)} turns",
+    )
     post_top = layout.world_z(float(post.pos[2]) + 0.5 * float(post.height))
     check(
         "oracle stays below the post top (the gateway is not used)",
@@ -170,8 +243,156 @@ def main() -> int:
         f"max {heights.max():.4f} vs top {post_top:.4f}",
     )
 
+    print("\nplug entry")
+    # Where the cable meets the plug. `connector_mesh` is a SOLID of revolution
+    # with no bore, so the rope's tube always passes through the plug's surface;
+    # the only thing that decides whether that reads as a cable entering a
+    # fitting or as clipping is whether it goes in through the cap ON THE AXIS.
+    #
+    # Lying on its side the plug rests on its flange, so its axis sits exactly
+    # `flange_radius` above the board (`cable_routing.py` `_add_endpoint_handle`)
+    # -- a height the placement fixes on its own, without consulting `rope.z`.
+    # If the two disagree the cable goes in through the side of the cap.
+    connector_cfg = cfg.rope.endpoint_handle.connector
+    if str(getattr(connector_cfg, "pose", "upright")) == "flat":
+        axis_z = float(connector_cfg.flange_radius)
+        rope_z = float(cfg.rope.z)
+        rope_r = float(cfg.rope.radius)
+        check(
+            "the cable meets the plug's cap on its axis",
+            abs(rope_z - axis_z) <= rope_r,
+            f"rope centreline at {rope_z * 1000:.0f} mm, plug axis at "
+            f"{axis_z * 1000:.0f} mm (flange_radius), off by "
+            f"{(rope_z - axis_z) * 1000:+.0f} mm for a {rope_r * 1000:.0f} mm rope",
+        )
+        check(
+            "and clears the column wall it runs inside",
+            rope_z - rope_r >= axis_z - float(connector_cfg.column_radius),
+            f"rope bottom at {(rope_z - rope_r) * 1000:.0f} mm vs column bottom at "
+            f"{(axis_z - float(connector_cfg.column_radius)) * 1000:.0f} mm",
+        )
+
+    print("\ncable exit")
+    # Where the cable leaves the plug, and whether it can get from there to the
+    # post. The plug is carried in the pose it was grasped in: lying on its side,
+    # so the cable leaves along the plug's axis, horizontally, at the plug's own
+    # height. Two checks here used to ask only whether the 90-degree carry pitch
+    # pointed the right way; they went with it (2026-08-14).
+    connector = cfg.rope.endpoint_handle.connector
+    grasp_h = float(connector.flange_height) + 0.5 * float(connector.column_height)
+    cap_offset = (
+        float(connector.flange_height)
+        + float(connector.column_height)
+        + 0.35 * float(connector.column_height)
+        - grasp_h
+    )
+    pad_half_height = 0.0085  # panda.xml fingertip_pad_collision_1, half size along z
+    # Where the cable actually leaves the plug, relative to the grip centre.
+    # `connector_mesh` puts the local origin at the grasp column's middle, so the
+    # cap's apex -- the point the cable enters -- is half a column plus the cap
+    # beyond it. Lying flat that offset is horizontal and the exit is at the grip
+    # centre's own height; pitched nose-down it is straight down.
+    connector = cfg.rope.endpoint_handle.connector
+    column_height = float(connector.column_height)
+    cap_offset = 0.5 * column_height + float(
+        getattr(connector, "cap_height", 0.35 * column_height)
+    )
+    pitch = math.radians(float(getattr(cfg.physical_handle, "carry_pitch_deg", 0.0)))
+    exit_height = spec.wind_z_start - cap_offset * math.sin(pitch)
+    # The fingertips reach 9.4 mm below the pad centre: the finger body starts
+    # 58.4 mm below the hand (panda.xml `left_finger`) and its mesh runs 53.9 mm
+    # further (`finger_0.obj`), against HAND_TO_PAD_Z of 102.9.
+    finger_reach_below_pads = 0.0584 + 0.0539 - HAND_TO_PAD_Z
+    fingertip_height = spec.wind_z_start - finger_reach_below_pads
+    # Which WAY the carry pitch turns the plug, computed the same way the demo
+    # does rather than asserted in prose. The plug's local +z is its cap, the end
+    # that swallows the cable, so a correct pitch sends it to -z. Written the
+    # other way round first (`axis x z` instead of `z x axis`) it sent the cap to
+    # +z -- cable out over the top of the hand -- and every number below still
+    # read fine, because they all assume the intended direction.
+    if abs(pitch) > 1e-9:
+        heading = math.atan2(
+            *(
+                layout.route_polyline("initial")[-1][:2]
+                - layout.route_polyline("initial")[-2][:2]
+            )[::-1]
+        )
+        flat_quat = quat_mul(
+            quat_about_axis((0.0, 0.0, 1.0), heading),
+            quat_about_axis((0.0, 1.0, 0.0), -0.5 * math.pi),
+        )
+        cap = _quat_axis_z(flat_quat)
+        turned = _quat_axis_z(
+            quat_mul(quat_about_axis(np.cross((0.0, 0.0, 1.0), cap), pitch), flat_quat)
+        )
+        check(
+            "the carry pitch turns the plug's CAP down, not its pin",
+            turned[2] < -0.999,
+            f"cap points {np.round(turned, 3).tolist()} after "
+            f"{math.degrees(pitch):.0f}deg (flat: {np.round(cap, 3).tolist()})",
+        )
+
+    # How far the cable's exit is from the finger envelope. There are two ways to
+    # be clear of it, and the carry pose decides which is in play:
+    #   flat      -- clear ALONG the plug's axis: cap offset vs finger reach
+    #   nose-down -- clear BELOW the fingertips
+    # The fingers reach 10.5 mm along the axis (`finger_0.obj`, x +-0.0105).
+    #
+    # Neither is comfortable at the shipped geometry, which is why this only asks
+    # for "outside at all". Flat leaves 6.5 mm, and measured 2026-08-15 that was
+    # not enough: the rope's last 3 cm sat inside the jaw for the whole orbit
+    # (`near_s` 0.96, `near_depth` -0.011, `pad_gap` 0.0032) even at the
+    # waypoints where the plug's alignment was perfect. Nose-down buys 7.6 mm
+    # below instead -- but it aims the outlet across the rope's own direction and
+    # folds it through 90 degrees in 13 mm, half the 27 mm hook this task treats
+    # as its danger line.
+    #
+    # The fix that needs neither compromise is a longer nose (`cap_height`),
+    # which clears the fingers axially without bending anything. Open question
+    # there: the plug is placed with its origin ON the rope's endpoint
+    # (`tasks/routing/cable_routing.py` `_add_endpoint_handle`), so a longer cap
+    # swallows more rope than the follow band welds.
+    finger_reach_along_axis = 0.0105
+    axial_clear = cap_offset * math.cos(pitch) - finger_reach_along_axis
+    vertical_clear = fingertip_height - exit_height
+    check(
+        "the cable's exit is outside the finger envelope",
+        max(axial_clear, vertical_clear) > 0.0,
+        f"{axial_clear * 1000:+.1f} mm along the axis, "
+        f"{vertical_clear * 1000:+.1f} mm below the fingertips "
+        f"(carry pitch {math.degrees(pitch):.0f}deg, cap offset "
+        f"{cap_offset * 1000:.0f} mm) -- thin either way, see the comment",
+    )
+
+    check(
+        "the cable leaving the plug has room to bend back to the board",
+        exit_height - float(cfg.rope.radius) > 3.0 * float(cfg.rope.radius),
+        f"{(exit_height - float(cfg.rope.radius)) * 1000:.0f} mm of drop for a "
+        f"{float(cfg.rope.radius) * 1000:.0f} mm rope",
+    )
+    # The rope has to meet the post's shaft: above the flared base, below the
+    # top it must never cross.
+    flare_top = 0.010  # prefabs.rope_routing_post.base_height
+    check(
+        "the cable meets the post on its shaft",
+        flare_top < exit_height < post_top - TASK_ORIGIN[2],
+        f"cable exit at z={exit_height:.4f}, shaft spans "
+        f"{flare_top:.4f}..{post_top - TASK_ORIGIN[2]:.4f}",
+    )
+    # Reported, not checked: the cost taken on by dropping the pitch. The cable
+    # now runs out along the plug's axis at pad height, through the jaw, which is
+    # the very thing the pitch was added to avoid. Whether it matters is a
+    # contact question only a run can answer -- watch `pad_gap` and `PADCONTACT`.
+    # A permanently red check for a cost we chose would teach people to skim past
+    # this whole section.
+    print(
+        f"  [--] cable exits along the plug axis, through the jaw: "
+        f"{cap_offset * 1000:.0f} mm of cable inside pads reaching "
+        f"+-{pad_half_height * 1000:.1f} mm of the axis"
+    )
+
     print("\ntopology")
-    turns_spawn = winding_number(densify(layout.route_polyline("initial")), center)
+    turns_spawn = winding_number(densify(layout.route_polyline("initial")), center, wrap_band)
     check(
         "spawn route does not encircle the post",
         abs(turns_spawn) < 0.25,
@@ -179,7 +400,15 @@ def main() -> int:
     )
 
     def finished_rope(sign: float) -> np.ndarray:
-        """Rope in the finished state: anchor -> post -> wraps -> target port."""
+        """Rope in the finished state: anchor -> post -> wraps -> target port.
+
+        Note this model closes to the seat the SHORT way, so its sweep is always
+        `turns` plus something inside +-0.5 turn, and `winding_number` -- which
+        rounds -- always returns exactly `turns`. That makes the two checks below
+        a test of the SIGN convention and nothing more; they cannot fail on
+        magnitude. The real rope does not take the short way out, and the sweep
+        check further down is the one that measures what it does take.
+        """
 
         entry = float(np.arctan2(anchor[1] - center[1], anchor[0] - center[0]))
         exit_angle = float(np.arctan2(seat[1] - center[1], seat[0] - center[0]))
@@ -197,7 +426,7 @@ def main() -> int:
         )
         return densify(np.vstack([anchor[None, :], wrapped, seat[None, :]]))
 
-    turns_forward = winding_number(finished_rope(spec.sign), center)
+    turns_forward = winding_number(finished_rope(spec.sign), center, wrap_band)
     check(
         "a finished rope reads the target winding",
         abs(turns_forward - spec.target_winding) < 0.25,
@@ -205,7 +434,7 @@ def main() -> int:
     )
     mirrored = "cw" if spec.direction == "ccw" else "ccw"
     command_mirror, plan_mirror = plan_rope_winding_route(layout, direction=mirrored)
-    turns_mirror = winding_number(finished_rope(-spec.sign), center)
+    turns_mirror = winding_number(finished_rope(-spec.sign), center, wrap_band)
     check(
         f"the mirrored run ({mirrored}) reads the opposite sign",
         abs(turns_mirror - command_mirror.target_winding) < 0.25
@@ -226,13 +455,384 @@ def main() -> int:
         f"{math.degrees(sweep(points)):+.0f}deg vs {math.degrees(sweep(mirror_points)):+.0f}deg",
     )
 
-    # The oracle must not turn the plug: the rope end is welded to it, so any
-    # plug rotation wrings the rope against the stationary finger pads. Twist is
-    # relieved at the rope's end instead (`rope.fem.follow_swivel`).
+    # What the rope's sweep actually is when it leaves the post the way the
+    # oracle leaves it: along the exit tangent, then across to C. `winding_number`
+    # is `round(sweep)`, so the criterion is decided by which side of the nearest
+    # half-integer the sweep lands on -- and the run-in from the anchor plus that
+    # run-out are pure overhead on top of the wrap count. Measured 2026-08-13:
+    # 2.674 turns for a two-turn wrap, i.e. past 2.5, and the GPU run duly read
+    # +3.000 and failed its own success check.
+    def oracle_rope(through: str) -> np.ndarray:
+        """anchor -> wraps settled on the post -> the oracle's path from there."""
+
+        entry = float(np.arctan2(anchor[1] - center[1], anchor[0] - center[0]))
+        last = orbit[-1]
+        end_angle = float(
+            np.arctan2(points[last][1] - center[1], points[last][0] - center[0])
+        )
+        total = spec.sign * (2.0 * math.pi * spec.turns) + (
+            (end_angle - entry + math.pi) % (2.0 * math.pi) - math.pi
+        )
+        angles = entry + np.linspace(0.0, total, 600)
+        wrapped = np.stack(
+            [
+                center[0] + settle_radius * np.cos(angles),
+                center[1] + settle_radius * np.sin(angles),
+                np.full(len(angles), layout.world_z(float(cfg.rope.z))),
+            ],
+            axis=1,
+        )
+        tail = points[last + 1 : labels.index(through) + 1]
+        parts = [anchor[None, :], wrapped] + ([tail] if len(tail) else [])
+        return densify(np.vstack(parts))
+
+    sweep_final = winding_sweep(oracle_rope("place_at_C"), center, wrap_band)
+    margin = 0.5 - abs(sweep_final - round(sweep_final))
     check(
-        "the oracle never turns the plug",
-        all((waypoint.yaw or 0.0) == 0.0 for waypoint in plan.waypoints),
-        "twist is relieved by the end swivel, not by rotating the plug",
+        "the finished sweep stays on the target's side of the rounding boundary",
+        abs(round(sweep_final) - spec.target_winding) < 0.5,
+        f"sweep {sweep_final:+.3f} turns rounds to {round(sweep_final):+d}, "
+        f"target {spec.target_winding:+.1f} "
+        f"(sweep at the last orbit point: "
+        f"{winding_sweep(oracle_rope('wind_t%d_%02d' % (spec.turns, spec.arc_points_per_turn)), center, wrap_band):+.3f}; "
+        f"margin to the boundary {margin:.3f})",
+    )
+
+    # The wrist schedule. `yaw` on a winding waypoint is a tool roll relative to
+    # the grasp yaw, and the whole gripper turns by it -- hand, plug and rope end
+    # together. It tracks the orbit 1:1 for `yaw_forward_points` of each turn,
+    # then hands all of that back over the points that remain -- except on the
+    # last turn, which holds instead, because a return only ever buys travel for
+    # the tracking that follows it.
+    print("\nwrist schedule")
+    rolls = {w.label: (w.yaw or 0.0) for w in plan.waypoints}
+    if not spec.yaw_track:
+        check("yaw tracking is off; the wrist holds the grasp pose", not any(rolls.values()))
+    else:
+        orbit_labels = [lab for lab in labels if lab.startswith("wind_t")]
+        step_angle = 2.0 * math.pi / spec.arc_points_per_turn
+        forward = spec.yaw_forward_points
+        # Gains, in units of the orbit step, between consecutive orbit points.
+        # The step INTO point k has index k-2 here: the first orbit point's step
+        # comes from wind_entry, which is not in this list.
+        gains = [
+            (rolls[b] - rolls[a]) / (spec.sign * step_angle)
+            for a, b in zip(orbit_labels[:-1], orbit_labels[1:])
+        ]
+        forward_gains = [
+            gain
+            for i, gain in enumerate(gains)
+            if (i + 1) % spec.arc_points_per_turn + 1 <= forward
+        ]
+        check(
+            "the wrist tracks the orbit 1:1 through the forward stretch",
+            bool(forward_gains) and max(abs(g - 1.0) for g in forward_gains) < 1e-9,
+            f"{len(forward_gains)} forward steps, gain "
+            f"{min(forward_gains):.3f}..{max(forward_gains):.3f}",
+        )
+        # The lift must not roll. It is a 35 mm vertical move off the board with
+        # the rope still lying on it, floored at 40 steps, and the plug has just
+        # been picked up -- the worst place in the route to ask the wrist for a
+        # large angle. It took the full pre-roll until 2026-08-15, which at the
+        # old flick schedule's -90 degrees survived and at -132 dragged the plug
+        # 10 mm through the board on waypoint 1. The pre-roll belongs on the long
+        # travel to `wind_entry`.
+        check(
+            "the lift off the port holds the pose the plug was grasped in",
+            abs(rolls["lift_from_port"]) < 1e-12,
+            f"lift roll {math.degrees(rolls['lift_from_port']):+.1f}deg, "
+            f"pre-roll deferred to wind_entry "
+            f"({math.degrees(rolls['wind_entry']):+.1f}deg)",
+        )
+        # Nothing may turn the wrist once the orbit is done: the rope is already
+        # wound and has nowhere to pay out the torsion, so a roll during the exit
+        # or the set-down goes straight into the rope.
+        after = [lab for lab in labels[labels.index(orbit_labels[-1]) :]]
+        check(
+            "the wrist locks after the last orbit point",
+            len({round(rolls[lab], 12) for lab in after}) == 1,
+            "held at "
+            f"{math.degrees(rolls[after[0]]):+.0f}deg through {', '.join(after[1:])}",
+        )
+        # Franka joint7 travels +-2.8973 rad (166 deg) and the grasp does not land
+        # it centred -- measured 2026-08-15, a run started at -0.4296 rad, 25
+        # degrees off. `WRIST_BUDGET` is what is left, and the planner clamps the
+        # alignment phase so the whole schedule fits inside it. Measure the
+        # absolute roll, not the span: the phase slides the band, and an
+        # unclamped one put a one-turn plan at +227 degrees.
+        worst_roll = max(abs(value) for value in rolls.values())
+        check(
+            "the whole schedule fits the wrist's travel, phase included",
+            worst_roll <= WRIST_BUDGET + 1e-9,
+            f"worst roll {math.degrees(worst_roll):+.0f}deg of a "
+            f"{math.degrees(WRIST_BUDGET):.0f}deg budget "
+            "(joint7 166 less a 25deg grasp offset)",
+        )
+
+        def turn_end(turn):
+            return rolls[f"wind_t{turn}_{spec.arc_points_per_turn:02d}"]
+
+        # Every turn but the last must close, or the roll ratchets and turn two is
+        # not turn one. The first shipped schedule did not close evenly -- flicks
+        # at points 2 and 6 threw 270 in turn 1 and 360 in turn 2, and the
+        # reported symptom was "turn 1 looks fine, turn 2 twists".
+        closing = [
+            turn_end(turn) - (turn_end(turn - 1) if turn > 1 else rolls["wind_entry"])
+            for turn in range(1, spec.turns)
+        ]
+        check(
+            "every turn but the last returns the wrist to where it started",
+            all(abs(v) < 1e-9 for v in closing),
+            (
+                ", ".join(f"{math.degrees(v):+.1f}" for v in closing) + "deg net"
+                if closing
+                else "single turn; nothing to close"
+            ),
+        )
+        # ...and the last turn does NOT return. The return buys travel for the
+        # tracking that follows it, and after the last turn there is none: on a
+        # one-turn run `winding` already reads +1.000 when the return starts, and
+        # giving the travel back swept the plug's alignment through a whole turn
+        # and dragged the rope into the jaw (`runs/rolling_return_1turn.log`,
+        # `intrusion` 51 -> 190). The old flick schedule made the same call for
+        # the same reason; this check exists because replacing the flicks lost it.
+        held = [
+            rolls[f"wind_t{spec.turns}_{i:02d}"]
+            for i in range(forward, spec.arc_points_per_turn + 1)
+        ]
+        check(
+            "the last turn holds its roll instead of handing it back",
+            max(held) - min(held) < 1e-9,
+            f"held at {math.degrees(held[0]):+.0f}deg for the last "
+            f"{spec.arc_points_per_turn - forward} orbit points",
+        )
+        # No waypoint may ask the wrist for half a turn or more. The command is a
+        # quaternion and the interpolation takes the short arc, so a 264-degree
+        # request is executed as 96 in the opposite direction: measured
+        # 2026-08-15, that drove joint7 onto its stop and left it welded there for
+        # the rest of the route. `WindingSpec.from_config` refuses such a schedule
+        # outright; this is the same guard against the emitted waypoints.
+        steps = [abs(rolls[b] - rolls[a]) for a, b in zip(labels[:-1], labels[1:])]
+        check(
+            "no single waypoint asks the wrist past the short-arc boundary",
+            max(steps) < math.pi - 1e-9,
+            f"largest single turn {math.degrees(max(steps)):.0f}deg "
+            f"(hard limit 180, spec refuses past {math.degrees(MAX_WRIST_STEP):.0f})",
+        )
+        # The alignment error: where the plug's bore points minus where the rope
+        # arrives at it. Constant through the forward stretch by construction (the
+        # planner puts the phase there, as far as the joint can spare); past 90
+        # degrees the rope enters through the plug's side rather than its cap.
+        errors = [
+            math.atan2(math.sin(raw), math.cos(raw))
+            for raw in (
+                rolls[lab] - spec.sign * step_angle * (i + 1)
+                for i, lab in enumerate(orbit_labels)
+            )
+        ]
+        forward_errors = [
+            e
+            for i, e in enumerate(errors)
+            if i % spec.arc_points_per_turn + 1 <= forward
+        ]
+        spread = max(forward_errors) - min(forward_errors)
+        check(
+            "the plug holds one alignment through the whole forward stretch",
+            spread < 1e-9,
+            f"{len(forward_errors)} forward points, spread "
+            f"{math.degrees(spread):.1e}deg",
+        )
+        # Half a return sweep is obtuse; a hold only drifts, and over
+        # (per_turn - forward) steps of one orbit step each it reaches 90 degrees
+        # at worst, which is the boundary and not past it. So only the turns that
+        # return cost anything here.
+        returning = max(0, spec.turns - 1)
+        obtuse = (
+            0.5
+            * returning
+            * (spec.arc_points_per_turn - forward)
+            / (spec.turns * spec.arc_points_per_turn)
+        )
+        check(
+            "the returns cost at most a quarter of the route in side-on entry",
+            obtuse <= 0.25 + 1e-9,
+            f"{obtuse * 100:.1f}% of the orbit obtuse: {returning} turn(s) return, "
+            f"the last holds; forward {forward}/{spec.arc_points_per_turn} points "
+            "exactly aligned",
+        )
+
+    # The twist tracker, against synthesised motion rather than a solver. The
+    # measure it replaces read +0.40 turns on a rope lying still, so the first
+    # check below -- bend the rope without wringing it, read zero -- is the whole
+    # reason this exists, and the rest bound what the reading can be trusted for.
+    print("\ntwist tracking")
+    TWIST_BINS, TWIST_RING = 24, 8
+
+    def twist_rope(bend: float, twist_turns, length: float = 0.5) -> np.ndarray:
+        """A tube of ring nodes: bent by ``bend`` radians, wrung by ``twist_turns``.
+
+        ``twist_turns`` is per-bin (an array) or a scalar applied to every bin.
+        The rings are laid on a frame parallel-transported along the centreline,
+        so with ``twist_turns`` zero the tube carries no torsion by construction
+        no matter how it is bent -- which is what the tracker has to agree with.
+        The bend is planar, where spatial and time transport must give the same
+        answer, so a disagreement here is the tracker's and not the test's.
+        """
+
+        s = np.linspace(0.0, length, TWIST_BINS)
+        if abs(bend) < 1e-9:
+            centre = np.stack([s, np.zeros_like(s), np.zeros_like(s)], axis=1)
+            tangent = np.tile(np.array([1.0, 0.0, 0.0]), (TWIST_BINS, 1))
+        else:
+            radius = length / bend
+            angle = s / radius
+            centre = np.stack(
+                [radius * np.sin(angle), radius * (1.0 - np.cos(angle)), np.zeros_like(s)],
+                axis=1,
+            )
+            tangent = np.stack([np.cos(angle), np.sin(angle), np.zeros_like(s)], axis=1)
+        # Planar curve: the out-of-plane direction is parallel along it.
+        normal = np.tile(np.array([0.0, 0.0, 1.0]), (TWIST_BINS, 1))
+        binormal = np.cross(tangent, normal)
+        phase = np.broadcast_to(np.asarray(twist_turns, dtype=float), (TWIST_BINS,))
+        ring = np.linspace(0.0, 2.0 * math.pi, TWIST_RING, endpoint=False)
+        out = np.empty((TWIST_BINS * TWIST_RING, 3))
+        for i in range(TWIST_BINS):
+            a = ring + 2.0 * math.pi * phase[i]
+            out[i * TWIST_RING : (i + 1) * TWIST_RING] = (
+                centre[i]
+                + 0.004 * np.cos(a)[:, None] * normal[i]
+                + 0.004 * np.sin(a)[:, None] * binormal[i]
+            )
+        return out
+
+    twist_groups = [
+        np.arange(i * TWIST_RING, (i + 1) * TWIST_RING) for i in range(TWIST_BINS)
+    ]
+    twist_outer = np.ones(TWIST_BINS * TWIST_RING, dtype=bool)
+
+    def run_twist(frames) -> dict:
+        tracker = TwistTracker(frames[0], twist_groups, twist_outer)
+        result = {}
+        for frame in frames[1:]:
+            result = tracker.update(frame)
+        return result
+
+    ramp = np.linspace(0.0, 1.0, TWIST_BINS)
+
+    bent = run_twist([twist_rope(b, 0.0) for b in np.linspace(0.0, 0.5 * math.pi, 20)])
+    check(
+        "bending the rope without wringing it reads no twist",
+        abs(bent["net"]) < 0.01 and abs(bent["span"]) < 0.01,
+        f"net {bent['net']:+.4f}, span {bent['span']:.4f} through a 90deg bend",
+    )
+    wrung = run_twist([twist_rope(0.0, 2.0 * ramp * f) for f in np.linspace(0.0, 1.0, 40)])
+    check(
+        "a rope wrung two turns end to end reads two turns",
+        abs(wrung["net"] - 2.0) < 0.01,
+        f"net {wrung['net']:+.4f}",
+    )
+    # Half a turn per sample is where the unwrap breaks. Well inside it the
+    # reading must still exceed one turn -- the failure this replaces was a
+    # measure that could not.
+    coarse = run_twist([twist_rope(0.0, 3.0 * ramp * f) for f in np.linspace(0.0, 1.0, 13)])
+    check(
+        "three turns still read three at a quarter turn per sample",
+        abs(coarse["net"] - 3.0) < 0.02 and coarse["max_step"] < math.pi,
+        f"net {coarse['net']:+.4f}, worst step "
+        f"{math.degrees(coarse['max_step']):.0f}deg",
+    )
+    starved = run_twist([twist_rope(0.0, 3.0 * ramp * f) for f in np.linspace(0.0, 1.0, 6)])
+    check(
+        "and an under-sampled run says so instead of reading low quietly",
+        starved["max_step"] > 0.5 * math.pi,
+        f"worst step {math.degrees(starved['max_step']):.0f}deg "
+        f"(net read {starved['net']:+.3f} against a true 3.000)",
+    )
+    # Wrung in the middle, both ends untwisted: end-to-end cancels to nothing and
+    # only the span sees it. This is why the reading is not net alone.
+    hump = np.sin(math.pi * ramp)
+    middle = run_twist([twist_rope(0.0, hump * f) for f in np.linspace(0.0, 1.0, 30)])
+    check(
+        "a rope wrung in the middle shows in span even though net cancels",
+        abs(middle["net"]) < 0.01 and abs(middle["span"] - 1.0) < 0.02,
+        f"net {middle['net']:+.4f}, span {middle['span']:.4f}, "
+        f"peak at s={middle['peak_s']:.2f}",
+    )
+
+    # The gripper-wrap metric, against a synthesised orbit rather than a solver.
+    # The review's complaint is that the rope tangles with the gripper itself;
+    # the claim behind the agreed cure is that a fixed wrist lets the strand
+    # sweep one whole turn around the hand per orbit, and that a wrist turning
+    # with the orbit leaves no sweep at all. Both halves are arithmetic, so both
+    # are settled here before any GPU time is spent measuring them.
+    print("\ngripper wrap")
+    # Arbitrary: every quantity below is a difference or a distance.
+    hand_z = 0.30
+
+    def strand(hand_xy: np.ndarray, strand_z: float, count: int = 60) -> np.ndarray:
+        """Centerline, free end first: from under the hand in to the post axis."""
+
+        fractions = np.linspace(0.0, 1.0, count)[:, None]
+        xy = hand_xy[None, :] + fractions * (center[:2] - hand_xy)[None, :]
+        return np.hstack([xy, np.full((count, 1), strand_z)])
+
+    def hand_frame(yaw: float) -> np.ndarray:
+        """Fingers-down hand rotation at world yaw ``yaw``: Rz(yaw) @ diag(1,-1,-1)."""
+
+        c, s = math.cos(yaw), math.sin(yaw)
+        return np.array([[c, s, 0.0], [s, -c, 0.0], [0.0, 0.0, -1.0]])
+
+    def orbit_wrap(yaw_of_angle, pad_clearance: float) -> tuple[float, int]:
+        """Net wrap in turns, and the worst intrusion count, over the full route.
+
+        ``pad_clearance`` is how far the strand hangs below the fingertip pads;
+        negative puts it up among the fingers.
+        """
+
+        angles = np.linspace(0.0, spec.sign * 2.0 * math.pi * spec.turns, 16 * spec.turns + 1)
+        bearings, yaws, intrusions = [], [], []
+        for angle in angles:
+            hand_xy = center[:2] + spec.wind_radius * np.array(
+                [math.cos(angle), math.sin(angle)]
+            )
+            nodes = strand(hand_xy, hand_z - HAND_TO_PAD_Z - pad_clearance)
+            metrics = gripper_frame_metrics(
+                nodes,
+                np.linspace(0.0, 1.0, len(nodes)),
+                nodes,
+                np.array([hand_xy[0], hand_xy[1], hand_z]),
+                hand_frame(float(yaw_of_angle(angle))),
+                free_end_first=True,
+            )
+            bearings.append(metrics["strand_bearing"])
+            yaws.append(metrics["hand_yaw"])
+            intrusions.append(metrics["intrusion"])
+        swept = np.unwrap(bearings) - np.unwrap(yaws)
+        return float((swept[-1] - swept[0]) / (2.0 * math.pi)), max(intrusions)
+
+    fixed_wrap, clear_intrusion = orbit_wrap(lambda angle: 0.0, 0.010)
+    check(
+        "a fixed wrist sweeps the rope one turn around the gripper per orbit",
+        abs(fixed_wrap - spec.target_winding) < 0.02,
+        f"wrap {fixed_wrap:+.3f} over {spec.turns} orbits, target {spec.target_winding:+.1f}",
+    )
+    tracked_wrap, _ = orbit_wrap(lambda angle: angle, 0.010)
+    check(
+        "a wrist that turns with the orbit leaves no sweep",
+        abs(tracked_wrap) < 0.02,
+        f"wrap {tracked_wrap:+.3f}",
+    )
+    check(
+        "rope hanging below the fingertips is not counted as intrusion",
+        clear_intrusion == 0,
+        "strand 10 mm below the pad centre, i.e. 1.5 mm clear of the fingertips",
+    )
+    _, jaw_intrusion = orbit_wrap(lambda angle: 0.0, -0.050)
+    check(
+        "rope up among the fingers is counted",
+        jaw_intrusion > 0,
+        f"{jaw_intrusion} nodes with the strand 50 mm above the pads",
     )
 
     print("\nrope length")
@@ -241,7 +841,7 @@ def main() -> int:
     )
     worst, worst_label = 0.0, ""
     for index, label in enumerate(labels):
-        if label.startswith("wind_t"):
+        if index in orbit:
             wound = (orbit.index(index) + 1) / spec.arc_points_per_turn
         elif orbit and index > orbit[-1]:
             wound = float(spec.turns)
@@ -312,8 +912,161 @@ def main() -> int:
         f"travel {spec.travel_speed * 1000:.2f} mm/step"
     )
 
+    check_one_turn(raw)
+    check_rigid_grasp()
+
     print("\n" + ("FAIL: " + ", ".join(failures) if failures else "PASS: all checks"))
     return 1 if failures else 0
+
+
+def check_one_turn(raw) -> None:
+    """The same schedule checks again at `turns=1`, which is what gets run.
+
+    The config ships `turns: 2` and everything above reads it, but the demo is
+    driven at `task.winding.turns=1` for nearly every diagnostic run -- and the
+    two are not the same schedule. On a one-turn plan the last turn is the ONLY
+    turn, so it holds rather than returns and never reaches the low end of the
+    band; sizing the alignment phase off `rolls` alone therefore read the band as
+    112 degrees instead of 135 and let the phase push the plan to 154 of a 141
+    budget. Nothing here caught it, because nothing here ran a one-turn plan.
+    """
+
+    print("\none turn")
+    raw = {**raw, "winding": {**raw["winding"], "turns": 1}}
+    cfg = wrap(raw)
+    spec = WindingSpec.from_config(cfg)
+    _, plan = plan_rope_winding_route(StandInLayout(cfg))
+    rolls = [w.yaw or 0.0 for w in plan.waypoints]
+    labels = [w.label for w in plan.waypoints]
+    check(
+        "the one-turn schedule fits the wrist's travel too",
+        max(abs(v) for v in rolls) <= WRIST_BUDGET + 1e-9,
+        f"worst roll {math.degrees(max(abs(v) for v in rolls)):+.0f}deg of a "
+        f"{math.degrees(WRIST_BUDGET):.0f}deg budget",
+    )
+    steps = [abs(b - a) for a, b in zip(rolls[:-1], rolls[1:])]
+    check(
+        "and asks no waypoint past the short-arc boundary",
+        max(steps) < math.pi - 1e-9,
+        f"largest single turn {math.degrees(max(steps)):.0f}deg; the only turn "
+        "holds instead of returning, so there is no fast unwind at all",
+    )
+    orbit = [lab for lab in labels if lab.startswith("wind_t")]
+    held = [
+        rolls[labels.index(f"wind_t1_{i:02d}")]
+        for i in range(spec.yaw_forward_points, spec.arc_points_per_turn + 1)
+    ]
+    check(
+        "and holds through the tail of its only turn",
+        max(held) - min(held) < 1e-9,
+        f"{len(orbit)} orbit points, held at {math.degrees(held[0]):+.0f}deg "
+        f"for the last {spec.arc_points_per_turn - spec.yaw_forward_points}",
+    )
+
+
+class _StubBody:
+    """Just enough of a Genesis entity for `RigidAttachment` to drive."""
+
+    def __init__(self, pos, quat) -> None:
+        self.pos = np.asarray(pos, dtype=float)
+        self.quat = np.asarray(quat, dtype=float)
+
+    def get_pos(self):
+        return self.pos
+
+    def get_quat(self):
+        return self.quat
+
+    def set_pos(self, pos, **_) -> None:
+        self.pos = np.asarray(pos, dtype=float)
+
+    def set_quat(self, quat, **_) -> None:
+        self.quat = np.asarray(quat, dtype=float)
+
+
+def check_rigid_grasp() -> None:
+    """The held plug must not turn or slide inside the pads. Ever.
+
+    This is the promise `planning/rope_winding_planner.py` states in prose --
+    "the WHOLE GRIPPER turns by it -- hand, plug and rope end together, so
+    nothing slides on the finger pads" -- and which was false in the shipped code
+    until 2026-08-15: the grasp attachment pinned the plug to one WORLD
+    orientation, so the wrist's whole +-135 degree schedule swept the pads across
+    a plug that never moved.
+
+    No solver needed: `RigidAttachment` is arithmetic on poses, so drive a stub
+    body from a stub hand through more roll than the route asks for and check
+    the relative pose is the one it was grasped in.
+    """
+
+    print("\nrigid grasp")
+    hand = {"pos": np.array([0.1, 0.2, 1.05]), "quat": quat_about_axis((0, 1, 0), math.pi)}
+    # The plug as this task holds it: lying flat, 103 mm below the hand.
+    plug = _StubBody(
+        hand["pos"] + np.array([0.0, 0.0, -HAND_TO_PAD_Z]),
+        quat_mul(quat_about_axis((0, 0, 1), 0.89), quat_about_axis((0, 1, 0), -0.5 * math.pi)),
+    )
+    attachment = RigidAttachment(
+        entity=plug,
+        parent_pos_fn=lambda: hand["pos"],
+        offset=np.zeros(3),
+        parent_quat_fn=lambda: hand["quat"],
+    )
+    attachment.attach()
+
+    def relative():
+        w, x, y, z = plug.quat
+        inverse = np.array([hand["quat"][0], -hand["quat"][1], -hand["quat"][2], -hand["quat"][3]])
+        return quat_mul(inverse, plug.quat), _rotate_by_quat(inverse, plug.pos - hand["pos"])
+
+    quat0, offset0 = relative()
+    worst_turn = 0.0
+    worst_slide = 0.0
+    base = np.array(hand["quat"], dtype=float)
+    for step in range(1, 61):
+        # More roll than any waypoint asks for, about the vertical, plus a
+        # little drift in the other axes so a yaw-only implementation cannot pass.
+        hand["quat"] = quat_mul(
+            quat_about_axis((0, 0, 1), math.radians(270.0) * step / 60.0), base
+        )
+        hand["pos"] = hand["pos"] + np.array([0.0, 0.0, 1e-4])
+        attachment.sync()
+        quat, offset = relative()
+        # Angle between the two orientations, via the drift quaternion's vector
+        # part. `2*acos(w)` is the textbook form and is useless here: near
+        # identity it reads the square root of the floating-point error, which
+        # showed up as a 2.4e-06 degree "slip" that is entirely acos.
+        drift = quat_mul(np.array([quat0[0], -quat0[1], -quat0[2], -quat0[3]]), quat)
+        worst_turn = max(
+            worst_turn,
+            2.0 * math.atan2(float(np.linalg.norm(drift[1:])), abs(float(drift[0]))),
+        )
+        worst_slide = max(worst_slide, float(np.linalg.norm(offset - offset0)))
+    check(
+        "the held plug neither turns nor slides in the gripper's frame",
+        worst_turn < 1e-9 and worst_slide < 1e-9,
+        f"through 270deg of roll: turned {math.degrees(worst_turn):.2e}deg, "
+        f"slid {worst_slide * 1000:.2e}mm",
+    )
+
+    # And the position-only default, which every other task was written against,
+    # must be untouched by the above.
+    plain_hand = {"pos": np.array([0.0, 0.0, 1.0])}
+    plain = _StubBody(np.array([0.0, 0.0, 0.9]), np.array([1.0, 0.0, 0.0, 0.0]))
+    plain_attachment = RigidAttachment(
+        entity=plain,
+        parent_pos_fn=lambda: plain_hand["pos"],
+        offset=np.array([0.0, 0.0, -0.1]),
+        quat=(1.0, 0.0, 0.0, 0.0),
+    )
+    plain_attachment.attach()
+    plain_hand["pos"] = np.array([0.3, -0.2, 1.4])
+    plain_attachment.sync()
+    check(
+        "the position-only attachment other tasks use is unchanged",
+        bool(np.allclose(plain.pos, plain_hand["pos"] + np.array([0.0, 0.0, -0.1]))),
+        f"child at {np.round(plain.pos, 4).tolist()}",
+    )
 
 
 if __name__ == "__main__":

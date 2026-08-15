@@ -142,6 +142,7 @@ class HandleDragPrimitive:
         on_lift=None,
         before_release=None,
         ee_quat=None,
+        segment_quats=None,
         trace: list[np.ndarray] | None = None,
         attachment_manager=None,
     ) -> HandleDragResult:
@@ -160,6 +161,16 @@ class HandleDragPrimitive:
             labels = [str(value) for value in segment_labels]
             if len(labels) != len(targets):
                 raise ValueError("segment_labels must match target_centers.")
+        # Per-segment hand orientation. None means the whole drag holds
+        # `ee_quat`, which is what every caller but rope_winding wants; winding
+        # turns the wrist as it orbits so the rope keeps the same bearing out of
+        # the hand instead of sweeping around it.
+        if segment_quats is None:
+            quats = [ee_quat] * len(targets)
+        else:
+            quats = [np.asarray(value, dtype=float) for value in segment_quats]
+            if len(quats) != len(targets):
+                raise ValueError("segment_quats must match target_centers.")
 
         completed: list[str] = []
         completed_segments: list[str] = []
@@ -302,8 +313,9 @@ class HandleDragPrimitive:
             else float(self.early_complete_target_error)
         )
         previous_command_hand = None
-        for index, (label, target, segment_steps) in enumerate(
-            zip(labels, targets, steps),
+        previous_command_quat = None
+        for index, (label, target, segment_steps, segment_quat) in enumerate(
+            zip(labels, targets, steps, quats),
             start=1,
         ):
             if on_segment_start is not None:
@@ -317,7 +329,11 @@ class HandleDragPrimitive:
                     previous_command_hand if self.command_space_segments else None
                 ),
                 steps=segment_steps,
-                quat=ee_quat,
+                quat=segment_quat,
+                # Turn from the last COMMANDED orientation, not the measured one,
+                # for the same reason positions are commanded that way: IK lag
+                # would otherwise feed back into the next segment's start.
+                start_quat_override=previous_command_quat,
                 trace_handle=handle,
                 trace=trace,
                 progress_label=label,
@@ -332,6 +348,7 @@ class HandleDragPrimitive:
                 ),
             )
             previous_command_hand = target_hand.copy()
+            previous_command_quat = segment_quat
             segment_handle_pos = _entity_pos(handle)
             _, follow_delta, follow_error = _follow_state(controller, segment_handle_pos)
             target_error = float(np.linalg.norm(segment_handle_pos - target))
@@ -464,6 +481,7 @@ class HandleDragPrimitive:
         steps: int,
         quat,
         start_override=None,
+        start_quat_override=None,
         rotate_from_current: bool = False,
         trace_handle=None,
         trace: list[np.ndarray] | None = None,
@@ -482,7 +500,11 @@ class HandleDragPrimitive:
             else controller.hand_pos()
         )
         target = np.asarray(target, dtype=float)
-        start_quat = controller.hand_quat() if rotate_from_current else None
+        start_quat = (
+            np.asarray(start_quat_override, dtype=float)
+            if start_quat_override is not None
+            else (controller.hand_quat() if rotate_from_current else None)
+        )
         steps = max(1, int(steps))
         progress_interval = max(20, steps // 5)
         handle_target = target - np.array([0.0, 0.0, HAND_TO_PAD_Z])

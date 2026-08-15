@@ -39,6 +39,47 @@ def _fixture_items(fixtures_cfg) -> list[tuple[str, Any]]:
     return [(str(name), fixture) for name, fixture in fixtures_cfg.items()]
 
 
+def connector_pose(rope_cfg) -> str:
+    """How the free-end plug sits: ``upright`` (in a socket) or ``flat``.
+
+    ``upright`` is the cable_routing shape: the plug stands on its pin in a
+    port, the rope climbs its bore and leaves through the cap on top. That puts
+    the rope's last centimetres vertically between the gripper's pads.
+
+    ``flat`` lays it on its side with nothing to plug into (the untangle
+    variant's arrangement), so the rope enters horizontally along the plug's
+    axis while the pads close across it. Chosen for rope_winding, where the
+    gripper carries the plug through two full orbits and any rope in the pads'
+    path gets wound onto them.
+    """
+
+    handle_cfg = getattr(rope_cfg, "endpoint_handle", None)
+    connector_cfg = getattr(handle_cfg, "connector", None) if handle_cfg else None
+    pose = str(getattr(connector_cfg, "pose", "upright") or "upright")
+    if pose not in ("upright", "flat"):
+        raise ValueError(
+            f"rope.endpoint_handle.connector.pose must be 'upright' or 'flat', got {pose!r}."
+        )
+    return pose
+
+
+def rope_axis_heading(mesh: RopeMesh) -> float:
+    """Compass angle the rope arrives at its free end on, in radians.
+
+    A flat-lying plug has to point back down the rope: the cap swallows the
+    cable, the pin sticks out the far side. This is also the yaw the gripper
+    wants, since its pads must close ACROSS the plug's axis rather than along
+    it -- see the demo's grasp yaw.
+    """
+
+    tail = np.asarray(mesh.centerline[-1], dtype=float)
+    before = np.asarray(mesh.centerline[-2], dtype=float)
+    direction = tail[:2] - before[:2]
+    if float(np.linalg.norm(direction)) <= 1e-9:
+        return 0.0
+    return float(np.arctan2(direction[1], direction[0]))
+
+
 @dataclass(frozen=True)
 class CableRoutingSignature:
     """Ordered routing target around fixtures."""
@@ -189,17 +230,26 @@ class CableRoutingLayout:
                 start_entry = rope_prefab.connector_entry_heights(
                     connector_cfg, base_z=board_z
                 )
-            port_cfg = getattr(
-                getattr(self.cfg.rope, "endpoint_handle", None), "spawn_port", None
-            )
-            end_base = board_z + (
-                float(getattr(port_cfg, "rim_height", 0.002))
-                if port_cfg is not None and bool(getattr(port_cfg, "enabled", False))
-                else 0.0
-            )
-            end_entry = rope_prefab.connector_entry_heights(
-                connector_cfg, base_z=end_base
-            )
+            if connector_pose(self.cfg.rope) == "flat":
+                # The plug lies on its side, so its bore is horizontal and the
+                # rope runs straight in. No climb over a cap, and -- the reason
+                # this pose exists -- no vertical rope run between the gripper's
+                # pads: they close across the plug's axis, the rope leaves along
+                # it. The rope's own end height is set by `rope.z`, and the plug
+                # is placed to match in `_add_endpoint_handle`.
+                end_entry = None
+            else:
+                port_cfg = getattr(
+                    getattr(self.cfg.rope, "endpoint_handle", None), "spawn_port", None
+                )
+                end_base = board_z + (
+                    float(getattr(port_cfg, "rim_height", 0.002))
+                    if port_cfg is not None and bool(getattr(port_cfg, "enabled", False))
+                    else 0.0
+                )
+                end_entry = rope_prefab.connector_entry_heights(
+                    connector_cfg, base_z=end_base
+                )
             polyline = rope_prefab.with_end_entries(
                 polyline,
                 rope_radius=float(self.cfg.rope.radius),
@@ -240,6 +290,11 @@ class CableRoutingScene:
     tabletop: TabletopBaseScene | None = None
     # Solver backend (rope_backends protocol); node access goes through it.
     rope_backend: Any | None = None
+    # Compass angle the rope arrives at the free end on, when the plug lies flat.
+    # It is both the plug's yaw and the yaw the gripper must grasp at (pads
+    # across the plug axis). None when the plug stands upright, which is
+    # rotationally symmetric about the approach and needs no such alignment.
+    plug_heading: float | None = None
 
 
 class CableRoutingSceneBuilder:
@@ -334,12 +389,21 @@ class CableRoutingSceneBuilder:
             else "none"
         )
         start_token = end_token = None
-        if start_plug is not None:
+        # `anchor_start` decides, and a terminal/plug at that end is only the
+        # fallback. It used to be the other way round, which made the key dead
+        # wherever a terminal existed -- both tasks that get here set it true and
+        # neither was honouring it. Pinning while a terminal stands there is a
+        # real configuration, and it is untangle_continuous' one
+        # (`untangle_continuous.py` `declare_anchor` plus a separate power-strip
+        # body): the body is scenery, the constraint is a pin, and the two are
+        # not coupled. Following the link instead makes that end a soft,
+        # orientation-carrying attachment, which is what `follow_swivel` acts on.
+        if bool(self.task_cfg.rope.anchor_start):
+            backend.declare_anchor(rope_entity, (mesh.endpoint_centers[0],), anchor_radius)
+        elif start_plug is not None:
             start_token = backend.declare_follow(
                 rope_entity, mesh.endpoint_centers[0], anchor_radius
             )
-        elif bool(self.task_cfg.rope.anchor_start):
-            backend.declare_anchor(rope_entity, (mesh.endpoint_centers[0],), anchor_radius)
         if attachment_mode == "rigid_handle":
             end_token = backend.declare_follow(
                 rope_entity, mesh.endpoint_centers[1], anchor_radius
@@ -387,15 +451,26 @@ class CableRoutingSceneBuilder:
                     positions=node_positions,
                 )
             )
-            end_indices = tuple(
-                rope_prefab.connector_anchor_indices(
-                    rope_entity,
-                    mesh.endpoint_centers[1],
-                    axis_radius=anchor_axis_radius,
-                    z_top=end_z_top,
-                    positions=node_positions,
+            if connector_pose(self.task_cfg.rope) == "flat":
+                # `connector_anchor_indices` walks a VERTICAL cylinder up the
+                # fitting's bore; a plug on its side has a horizontal one, so
+                # the plain within-radius selection around the endpoint is both
+                # correct and simpler here.
+                end_indices = tuple(
+                    backend.resolve_indices(
+                        rope_entity, (mesh.endpoint_centers[1],), anchor_radius
+                    )
                 )
-            )
+            else:
+                end_indices = tuple(
+                    rope_prefab.connector_anchor_indices(
+                        rope_entity,
+                        mesh.endpoint_centers[1],
+                        axis_radius=anchor_axis_radius,
+                        z_top=end_z_top,
+                        positions=node_positions,
+                    )
+                )
         else:
             start_indices = tuple(
                 backend.resolve_indices(
@@ -407,7 +482,10 @@ class CableRoutingSceneBuilder:
                     rope_entity, (mesh.endpoint_centers[1],), anchor_radius
                 )
             )
-        if start_plug is not None:
+        # Same order as the declaration above; the two must not disagree.
+        if bool(self.task_cfg.rope.anchor_start):
+            backend.anchor(rope_entity, indices=list(start_indices))
+        elif start_plug is not None:
             start_indices = tuple(
                 backend.follow_link(
                     rope_entity,
@@ -416,8 +494,6 @@ class CableRoutingSceneBuilder:
                     indices=start_indices,
                 )
             )
-        elif bool(self.task_cfg.rope.anchor_start):
-            backend.anchor(rope_entity, indices=list(start_indices))
         if attachment_mode == "rigid_handle":
             if end_pin is None:
                 raise RuntimeError(
@@ -453,6 +529,11 @@ class CableRoutingSceneBuilder:
             cameras=tabletop.cameras,
             tabletop=tabletop,
             rope_backend=backend,
+            plug_heading=(
+                rope_axis_heading(mesh)
+                if connector_enabled and connector_pose(self.task_cfg.rope) == "flat"
+                else None
+            ),
         )
 
     def _robot_material(self, backend):
@@ -763,31 +844,53 @@ class CableRoutingSceneBuilder:
             # center). Mesh-only when collision=False: the demo's spawn latch /
             # assisted grasp drives it kinematically (same lifecycle as untangle).
             board_z = self.layout.world_z(0.0)
-            spawn_port_cfg = getattr(handle_cfg, "spawn_port", None)
-            seat_base = board_z + (
-                float(getattr(spawn_port_cfg, "rim_height", 0.002))
-                if spawn_port_cfg is not None
-                and bool(getattr(spawn_port_cfg, "enabled", False))
-                else 0.0
-            )
             path = rope_prefab.connector_obj_path(
                 connector_cfg,
                 default_output_dir=self.task_cfg.rope.mesh.output_dir,
             )
-            morph = gs.morphs.Mesh(
-                file=str(path),
-                pos=(
-                    float(pos[0]),
-                    float(pos[1]),
-                    seat_base + rope_prefab.connector_grasp_height(connector_cfg),
-                ),
-                scale=1.0,
-                decimate=False,
-                convexify=True,
-                fixed=fixed,
-                collision=collision,
-                file_meshes_are_zup=True,
-            )
+            if connector_pose(self.task_cfg.rope) == "flat":
+                # Lying on its side, the widest part (the flange) rests on the
+                # board, so the axis sits one flange radius up. The mesh is a
+                # solid of revolution about local +z with the cap (where the
+                # cable enters) at the top; -90 deg about y lays that axis into
+                # the horizontal plane, and the extra yaw aims the cap back down
+                # the rope so the cable runs straight in and the pin points out
+                # into free space. Same arrangement as untangle_continuous.
+                axis_z = board_z + float(connector_cfg.flange_radius)
+                heading = rope_axis_heading(mesh)
+                morph = gs.morphs.Mesh(
+                    file=str(path),
+                    pos=(float(pos[0]), float(pos[1]), axis_z),
+                    euler=(0.0, -90.0, float(np.degrees(heading))),
+                    scale=1.0,
+                    decimate=False,
+                    convexify=True,
+                    fixed=fixed,
+                    collision=collision,
+                    file_meshes_are_zup=True,
+                )
+            else:
+                spawn_port_cfg = getattr(handle_cfg, "spawn_port", None)
+                seat_base = board_z + (
+                    float(getattr(spawn_port_cfg, "rim_height", 0.002))
+                    if spawn_port_cfg is not None
+                    and bool(getattr(spawn_port_cfg, "enabled", False))
+                    else 0.0
+                )
+                morph = gs.morphs.Mesh(
+                    file=str(path),
+                    pos=(
+                        float(pos[0]),
+                        float(pos[1]),
+                        seat_base + rope_prefab.connector_grasp_height(connector_cfg),
+                    ),
+                    scale=1.0,
+                    decimate=False,
+                    convexify=True,
+                    fixed=fixed,
+                    collision=collision,
+                    file_meshes_are_zup=True,
+                )
         elif shape == "cylinder":
             morph = gs.morphs.Cylinder(
                 pos=tuple(pos),

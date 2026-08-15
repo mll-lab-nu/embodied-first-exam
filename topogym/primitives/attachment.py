@@ -5,6 +5,22 @@ from typing import Any, Callable
 
 import numpy as np
 
+from .physical_contact import entity_quat, quat_mul
+
+
+def _quat_conj(q) -> np.ndarray:
+    w, x, y, z = np.asarray(q, dtype=float)
+    return np.array([w, -x, -y, -z], dtype=float)
+
+
+def _quat_rotate(q, v) -> np.ndarray:
+    """Rotate vector ``v`` by the (w, x, y, z) quaternion ``q``."""
+
+    w, x, y, z = np.asarray(q, dtype=float)
+    u = np.array([x, y, z], dtype=float)
+    v = np.asarray(v, dtype=float)
+    return v + 2.0 * np.cross(u, np.cross(u, v) + w * v)
+
 
 def _as_numpy(value) -> np.ndarray:
     if hasattr(value, "detach"):
@@ -86,6 +102,30 @@ class RigidAttachment:
     # link through 90 degrees in a single step -- straight into the position-write
     # velocity amplification that PBD turns into a solver blow-up.
     quat: tuple[float, float, float, float] | None = None
+    # Follow the parent's ORIENTATION too, not just its position.
+    #
+    # Without this the child holds whichever world orientation it had at
+    # `attach()` while the parent turns underneath it -- which for a grasp means
+    # the finger pads rotate around the held object. rope_winding rolls its wrist
+    # +-135 degrees to track the orbit and throws it back twice a turn, and until
+    # 2026-08-15 the plug sat through all of it: the pads swept the whole schedule
+    # across a plug that never moved, and the rope's end band (welded to the
+    # plug's link) was clamped in world orientation while the rope was wound twice
+    # around a post.
+    #
+    # Given this, the child's pose relative to the parent is captured once at
+    # `attach()` and restored every sync, so "the grasp is rigid" stops being a
+    # property of the waypoint schedule and becomes one no code path can break.
+    # Read the parent's ACTUAL pose rather than the commanded one, so IK tracking
+    # error moves the pair together instead of shearing it.
+    #
+    # `ramp_to` still works under this: it turns the RELATIVE pose, so the child
+    # can be re-oriented in the gripper's own frame (rope_winding pitches the plug
+    # nose-down at the grasp) and then goes on following the hand rigidly.
+    #
+    # None keeps the position-only behaviour every other task was written
+    # against.
+    parent_quat_fn: Callable[[], Any] | None = None
     active: bool = False
     # Set by `ramp_to`: where `quat` is heading, and how many `sync` calls it has
     # left to get there. Untouched, these stay None/0 and `sync` is bit-for-bit
@@ -94,10 +134,23 @@ class RigidAttachment:
     _ramp_to: np.ndarray | None = field(default=None, init=False, repr=False)
     _ramp_step: int = field(default=0, init=False, repr=False)
     _ramp_steps: int = field(default=0, init=False, repr=False)
+    # Child pose in the parent's frame, captured at `attach()`. Only used when
+    # `parent_quat_fn` is set.
+    _rel_quat: np.ndarray | None = field(default=None, init=False, repr=False)
+    _rel_offset: np.ndarray | None = field(default=None, init=False, repr=False)
 
     def attach(self, *, yaw: float | None = None) -> None:
         if yaw is not None:
             self.yaw = float(yaw)
+        if self.parent_quat_fn is not None:
+            # Capture BEFORE the first sync, so what gets restored is where the
+            # child actually is. Nothing moves on this call.
+            parent_quat = np.asarray(self.parent_quat_fn(), dtype=float).reshape(4)
+            inverse = _quat_conj(parent_quat)
+            self._rel_quat = quat_mul(inverse, entity_quat(self.entity))
+            self._rel_offset = _quat_rotate(
+                inverse, _xyz(self.entity.get_pos()) - _xyz(self.parent_pos_fn())
+            )
         self.active = True
         self.sync()
 
@@ -120,6 +173,20 @@ class RigidAttachment:
         """
 
         steps = max(1, int(steps))
+        if self.parent_quat_fn is not None:
+            # Following the parent, so what ramps is the pose RELATIVE to it.
+            # `quat` is still a world target -- callers think in world axes -- so
+            # it is converted here, once, against the parent's pose now. That is
+            # exact while the parent is still, which is when this is used (the
+            # plug is turned at the grasp, before the hand travels), and it means
+            # the child keeps following the parent all the way through the turn
+            # instead of being pinned to a world orientation for the duration.
+            parent_quat = np.asarray(self.parent_quat_fn(), dtype=float).reshape(4)
+            self._ramp_from = np.asarray(self._rel_quat, dtype=float)
+            self._ramp_to = quat_mul(_quat_conj(parent_quat), np.asarray(quat, dtype=float))
+            self._ramp_step = 0
+            self._ramp_steps = steps
+            return
         current = (
             np.asarray(self.quat, dtype=float)
             if self.quat is not None
@@ -136,6 +203,18 @@ class RigidAttachment:
     def sync(self) -> None:
         if not self.active:
             return
+        if self.parent_quat_fn is not None:
+            self._advance_ramp(relative=True)
+            parent_quat = np.asarray(self.parent_quat_fn(), dtype=float).reshape(4)
+            child_pos = _xyz(self.parent_pos_fn()) + _quat_rotate(
+                parent_quat, self._rel_offset
+            )
+            child_quat = quat_mul(parent_quat, self._rel_quat)
+            self.entity.set_pos(tuple(child_pos), zero_velocity=True)
+            self.entity.set_quat(
+                tuple(float(v) for v in child_quat), zero_velocity=True, relative=False
+            )
+            return
         self._advance_ramp()
         parent_pos = _xyz(self.parent_pos_fn())
         child_pos = parent_pos + rotate_z(self.offset, self.yaw)
@@ -147,19 +226,27 @@ class RigidAttachment:
         )
         self.entity.set_quat(quat, zero_velocity=True, relative=False)
 
-    def _advance_ramp(self) -> None:
+    def _advance_ramp(self, *, relative: bool = False) -> None:
         if self._ramp_to is None:
             return
         self._ramp_step += 1
         if self._ramp_step >= self._ramp_steps:
-            self.quat = tuple(float(v) for v in self._ramp_to)
+            reached = np.asarray(self._ramp_to, dtype=float)
+            if relative:
+                self._rel_quat = reached
+            else:
+                self.quat = tuple(float(v) for v in reached)
             self._ramp_from = None
             self._ramp_to = None
             self._ramp_step = 0
             self._ramp_steps = 0
             return
         fraction = self._ramp_step / self._ramp_steps
-        self.quat = tuple(float(v) for v in slerp(self._ramp_from, self._ramp_to, fraction))
+        turned = slerp(self._ramp_from, self._ramp_to, fraction)
+        if relative:
+            self._rel_quat = turned
+        else:
+            self.quat = tuple(float(v) for v in turned)
 
     def release(self, *, sync: bool = True) -> None:
         if sync:
@@ -316,6 +403,7 @@ class AttachmentManager:
         yaw: float = 0.0,
         child_yaw_offset: float = 0.0,
         quat=None,
+        parent_quat_fn: Callable[[], Any] | None = None,
     ) -> RigidAttachment:
         attachment = RigidAttachment(
             entity=entity,
@@ -324,6 +412,7 @@ class AttachmentManager:
             yaw=float(yaw),
             child_yaw_offset=float(child_yaw_offset),
             quat=None if quat is None else tuple(float(v) for v in quat),
+            parent_quat_fn=parent_quat_fn,
         )
         self.attachments.append(attachment)
         return attachment

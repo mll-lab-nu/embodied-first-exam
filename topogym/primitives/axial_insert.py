@@ -60,21 +60,37 @@ def _quat_slerp(start, end, alpha: float) -> np.ndarray:
     )
 
 
-def _axis_tilt(quat, reference) -> float:
-    """Angle between a cylinder's local +z axis and ``reference``."""
+def _axis_tilt(quat, part_axis) -> float:
+    """How far the part's long axis has swung from where it rests.
+
+    ``part_axis`` is that axis in the part's OWN frame -- (1, 0, 0) for the hex
+    shaft, whose mesh is generated axis-along-X. The parts this primitive
+    carries spawn unrotated, so the same vector is also the rest direction in
+    world, and the tilt is the angle between the two.
+
+    Reading the rotation matrix's third column instead -- the part's local +z --
+    is right only for a Genesis Cylinder, which is the shape this was first
+    written against. For the shaft it reported a perfectly flat, perfectly
+    aligned part as 90 degrees off, so the grasp gate could never pass.
+
+    Sign is ignored: a shaft flipped end for end is the same physical state.
+    """
 
     w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
-    axis = np.array(
-        [2.0 * (x * z + w * y), 2.0 * (y * z - w * x), 1.0 - 2.0 * (x * x + y * y)],
-        dtype=float,
-    )
+    rest = np.asarray(part_axis, dtype=float).reshape(3)
+    rest_norm = float(np.linalg.norm(rest))
+    if rest_norm < 1e-12:
+        return 0.0
+    rest = rest / rest_norm
+    # Rotate `rest` by the quaternion (Rodrigues form, no matrix needed).
+    u = np.array([x, y, z], dtype=float)
+    t = 2.0 * np.cross(u, rest)
+    axis = rest + w * t + np.cross(u, t)
     norm = float(np.linalg.norm(axis))
     if norm < 1e-12:
         return 0.0
     axis = axis / norm
-    reference = np.asarray(reference, dtype=float)
-    reference = reference / np.linalg.norm(reference)
-    return float(np.arccos(np.clip(abs(float(np.dot(axis, reference))), -1.0, 1.0)))
+    return float(np.arccos(np.clip(abs(float(np.dot(axis, rest))), -1.0, 1.0)))
 
 
 @dataclass(frozen=True)

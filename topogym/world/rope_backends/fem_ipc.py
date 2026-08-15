@@ -78,9 +78,17 @@ class _FollowSync:
         self._entries: list[tuple] = []  # (handle, link, local_offsets, entity)
         self._scene = None
         self._swivel = bool(swivel)
+        # How far each band has let the rope's end turn, accumulated. Kept
+        # because the fitted angle is otherwise computed and thrown away every
+        # step, which left "is the band actually yielding?" unanswerable -- and
+        # on 2026-08-14 that was the question holding up the twist work.
+        self._turned: list[float] = []
+        self._last_angle: list[float | None] = []
 
     def add(self, scene, handle, link, local_offsets: np.ndarray, entity) -> None:
         self._entries.append((handle, link, local_offsets, entity))
+        self._turned.append(0.0)
+        self._last_angle.append(None)
         if self._scene is None:
             self._scene = scene
             original = scene.step
@@ -92,18 +100,27 @@ class _FollowSync:
             scene.step = step_with_follow_sync
 
     def sync(self) -> None:
-        for handle, link, local_offsets, entity in self._entries:
+        for index, (handle, link, local_offsets, entity) in enumerate(self._entries):
             link_pos = np.asarray(tensor_to_numpy(link.get_pos()), dtype=float).reshape(3)
             rotation = _quat_to_mat(tensor_to_numpy(link.get_quat()))
             offsets = (
-                self._spun(local_offsets, entity, handle, link_pos, rotation)
+                self._spun(index, local_offsets, entity, handle, link_pos, rotation)
                 if self._swivel
                 else local_offsets
             )
             handle.update_targets(link_pos[None, :] + offsets @ rotation.T)
 
-    @staticmethod
-    def _spun(local_offsets, entity, handle, link_pos, rotation) -> np.ndarray:
+    def turned_turns(self) -> list[float]:
+        """Accumulated swivel per band, in turns, in declaration order.
+
+        Zero everywhere means the bands are not yielding -- either the swivel is
+        off, or `_spun` is failing to fit. A band that is doing its job on a
+        winding route reads roughly one turn per orbit.
+        """
+
+        return [value / (2.0 * np.pi) for value in self._turned]
+
+    def _spun(self, index, local_offsets, entity, handle, link_pos, rotation) -> np.ndarray:
         """Re-aim the band at the rope's OWN azimuth instead of the link's.
 
         Without this the band is a torsional clamp: it fixes where every node of
@@ -134,6 +151,15 @@ class _FollowSync:
         if not np.isfinite(total.real) or abs(total) < 1e-18:
             return local_offsets
         angle = float(np.angle(total))
+        # Accumulate the fit, unwrapped in TIME. `np.angle` only ever returns
+        # (-pi, pi], so a band that has let the end round past half a turn reads
+        # as if it had turned back -- the same aliasing that made the old spatial
+        # twist measure unusable. Only the running total is meaningful.
+        previous = self._last_angle[index]
+        if previous is not None:
+            step = angle - previous
+            self._turned[index] += float(np.arctan2(np.sin(step), np.cos(step)))
+        self._last_angle[index] = angle
         cos_a, sin_a = float(np.cos(angle)), float(np.sin(angle))
         spun = np.array(local_offsets, dtype=float, copy=True)
         spun[:, 0] = cos_a * local_offsets[:, 0] - sin_a * local_offsets[:, 1]
@@ -324,6 +350,11 @@ class FemIpcRopeBackend:
     def nodes(self, entity) -> np.ndarray:
         positions = tensor_to_numpy(entity.get_state().pos)
         return positions[0] if positions.ndim == 3 else positions
+
+    def swivel_turns(self) -> list[float]:
+        """Accumulated follow-band swivel, in turns, in declaration order."""
+
+        return self._follow_sync.turned_turns()
 
     def node_velocities(self, entity) -> np.ndarray:
         velocities = tensor_to_numpy(entity.get_state().vel)

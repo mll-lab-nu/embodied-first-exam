@@ -7,11 +7,10 @@
 # 绕反方向计为负值，与目标严格区分（覆盖 winding.direction=cw 即失败对照例）。
 #
 # 线圈化的构造性规避（2026-08-11，根因链见 rope_backend_migration_zh.md 螺旋章）：
-#   1. 出生路线是单段 R=0.20m 的缓弧（166 度）——静止曲率 kappa_0 均匀且极小，
+#   1. 出生路线是单段 R=0.203m 的缓弧（200 度）——静止曲率 kappa_0 均匀且极小，
 #      无任何紧钩形；spawn 与 straight 两种静止形语义在此几乎重合；
 #   2. rope.fem.rest_shape=straight 显式声明（保险带：绳的无应力构型 = 直杆）；
-#   3. 富余最小化：绳长 0.580m = oracle 全程最大需求 0.537m x 1.08
-#      （几何预算脚本：scratchpad/winding_geometry.py，会话产物）；
+#   3. 富余最小化：绳长 0.708m = oracle 全程最大需求 0.653m x 1.085；
 #   4. 自由跨距短：锚点/柱/目标口彼此靠近，富余无处成圈。
 #
 # 资产与 cable_routing 同源共享（routing post / fixed terminal / 工业插头 /
@@ -46,9 +45,28 @@ fixtures:
   # 720 度的轨迹全程远离工作区边界。
   POST:
     type: peg
-    pos: [0.020, 0.020, 0.031]
-    radius: 0.012
-    height: 0.070
+    # 2026-08-15 加高加粗，为了诊断方便：
+    #   - 半径 0.012 -> 0.020：绳在柱上的落位半径从 16mm 涨到 24mm，缠绕更容易看清。
+    #   - 柱顶 0.066 -> 0.090。原来对两圈缠绕最高点 0.061 只差 5mm，gateway
+    #     语义（只有柱顶能改变 winding number）全靠 oracle 自觉不越顶；任何
+    #     5mm 的超调都会让绳滑过柱顶、winding number 悄悄掉一圈。现在 29mm。
+    #
+    # 柱顶的上限由夹爪的**竖向占位**定，不是由 ee_link 那一个点定：
+    #   指垫 0.045（缠绕高度）| 手掌体底面 0.090 = 0.148 - 0.0584(left_finger)
+    #   | 手心原点 0.148 | 腕部往上
+    # 手指必须在缠绕高度上从柱身旁边过，这是任务本身要求的，躲不掉也不用躲
+    # （夹爪轴心离柱面 55mm）。但**手掌体**在改动前一直是从柱顶上方扫过的，
+    # 柱顶越过 0.090 就会在它旁边多出一段实体。0.090 与它齐平，但轨道加大到
+    # 0.095 之后两者水平相隔 75mm，齐平已经无所谓。
+    #
+    # 试过 0.196（高过手心 0.148）——见 2026-08-15 的第一版：那让手掌体和柱子
+    # 在 z 上重叠 106mm，viewer 里一眼就看出太近。「高过末端执行器」这个说法
+    # 隐含把夹爪当成一个点，实际它往下垂 103mm、手掌体本身还占 58mm。
+    #
+    # 底面保持在 -0.004（pos_z = -0.004 + height/2）。
+    pos: [0.020, 0.020, 0.043]
+    radius: 0.020
+    height: 0.094
     base_radius: ${prefabs.rope_routing_post.base_radius}
     base_height: ${prefabs.rope_routing_post.base_height}
     post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
@@ -58,14 +76,19 @@ fixtures:
     #  oracle demo；本任务只有物理 demo，所以直接写最终值）。
     collision: true
     routing_post_dress: true
-  # 目标端口：绕完 turns 圈后插头的放置点，「距离不远」（离柱 0.164m）。
+  # 目标区：绕完 turns 圈后把插头**放下**的地方，「距离不远」（离柱 0.164m）。
+  # 2026-08-12 从平嵌端口改成地面靶心：插头侧躺出生、也侧躺放下，全程姿态不变。
+  # 保留 connector 类型是因为 _add_connector_target_marker 会在这里画红白靶心，
+  # 那就是目标区的视觉；flush_port 关掉后不再生成端口环与凹孔。
   C:
     type: connector
+    # enabled: false —— 不生成任何立体，只留坐标；视觉是 connector_target 的地面靶心。
+    enabled: false
     pos: [0.150, 0.120, 0.019]
     size: [0.026, 0.040, 0.034]
     color: [0.85, 0.05, 0.05]
     collision: false
-    flush_port: true
+    flush_port: false
 
 # 缠绕 oracle 的几何参数（planning/rope_winding_planner.py 读取）。
 winding:
@@ -75,17 +98,53 @@ winding:
   # ccw = 俯视逆时针（+z 右手系）。cw 是方向反转的失败对照例
   # （任务书要求的 contrast pair：同样的抓取位形，镜像轨迹，winding = -turns）。
   direction: ccw
-  # 夹爪绕柱轨道半径。下限由夹爪体积定：指垫+插头法兰在柱杆外需要 ~0.04；
-  # 0.050 另留 1cm 余量。绳在张力下自行收落到柱面（半径 0.016），不需要
-  # 轨道贴柱。
-  wind_radius: 0.050
-  # 第一圈的轨道高度（task z）。柱高 0.070：起点离桌面 3cm，绳垂到桌面以上
-  # 的柱杆段接触。
-  wind_z_start: 0.030
-  # 每圈爬升。1.5 x 绳径（8mm）：上一圈的绳让开下一圈，圈间由 IPC 的
-  # d_hat=2mm 势垒定自然间距。2 圈终点 z = 0.054 < 柱顶 0.070（gateway 语义：
-  # 全程低于柱顶，不越顶）。
-  climb_per_turn: 0.012
+  # 夹爪绕柱轨道半径。下限由夹爪体积定：指垫+插头法兰在柱杆外需要 ~0.04。
+  # 下限由**手掌碰撞体的实测尺寸**定，不是拍的。读 Genesis 自带的 panda.xml：
+  # `hand_c` -> assets/hand.stl，无缩放，包围盒（手心原点系）
+  #     x +-0.0316    y -0.1040..+0.1004    z -0.0259..+0.0660
+  # 手掌沿**指垫张开方向**伸出 0.104m。绕行中这条长轴是切向的（指垫横跨插头
+  # 轴线，而插头指着柱心），所以正常跟踪时不碰；**但甩腕是原地转手腕**，长轴
+  # 必然扫过指向柱心的那一刻。0.095 时夹爪轴心离柱面只有 0.075，长半轴 0.104
+  # 会啃进柱体 29mm——2026-08-15 实跑看到的穿模就是这个。0.140 给出 16mm 净空。
+  #
+  # 所以按最坏朝向留：0.020(柱) + 0.104(手掌长半轴) + 0.016(余量) = 0.140。
+  #
+  # 沿革：0.050 -> 0.075（柱半径 0.012 -> 0.020，不加大净空会掉到 30mm）
+  #    -> 0.095（实跑蹭柱，当时以为是小臂）-> 0.140（读了碰撞网格，是手掌，
+  #       而且只在甩腕时发生）。代价是绕行弧长 +47%，单次跑约 32 分钟；
+  #       唯一的时间旋钮是 wind_speed。
+  wind_radius: 0.140
+  # 第一圈的轨道高度（= 插头原点，task z）。
+  # 柱顶 0.090，一圈终点 0.053、两圈 0.061，都在柱顶以下（gateway 语义要求）。
+  #
+  # 0.045 这个值是 2026-08-12 为搬运俯仰定的（俯仰后出线口落在原点下方 17mm，
+  # 需要离桌足够高才有弯曲余量）。俯仰已于 2026-08-14 删除，这个理由不再成立——
+  # 现在电缆沿插头轴向水平引出，出线口就在 0.045 本身，仍落在柱身 0.010~0.090 内。
+  # 要不要降回 0.030 是独立的调参问题，没有数据支持之前不动。
+  wind_z_start: 0.045
+  # 每圈爬升。**下限是一整个绳直径**，不是一个绳半径：
+  #
+  #   第 n 圈出线口底面 = z_n − 4mm      上一圈绳顶面 = z_{n−1} + 4mm
+  #   要净空 > 0  →  climb > 8mm
+  #
+  # 0.008 正好等于绳直径，净空 **0.0mm**——第二圈是**擦着**第一圈过去的。
+  # 这就是 2026-08-16 用户手动实验找到的那个「绕第二圈到某个位置抬手才能过」
+  # 的位置：不是方位角的问题，是高度差为零。也解释了为什么问题只在第二圈出现。
+  #
+  # 2026-08-12 压到 0.008 的理由是「两圈按 0.012 会爬到 0.069，贴着当时的柱顶
+  # 0.070」——**那时柱顶是 0.070，现在是 0.090**，理由早就失效，值没跟着调回来。
+  #
+  #   climb   相邻净空   两圈顶(柱顶0.090)
+  #   0.008    0.0mm      0.061        <- 擦着过
+  #   0.012   +4.0mm      0.069
+  #   0.014   +6.0mm      0.073        <- 取这个，余量 0.75 倍绳径
+  #   0.016   +8.0mm      0.077
+  #
+  # 圈数受柱高约束，关系是：
+  #     wind_z_start + turns × climb + 绳半径 + 余量 ≤ 柱顶
+  # 现在 0.045 + 2×0.014 + 0.004 = 0.077 ≤ 0.090。要绕三圈得把 wind_z_start
+  # 降到 0.038 以下或加高柱子——离线 gate 会算这条并在 turns 调大时拦住。
+  climb_per_turn: 0.014
   # 每圈的路点数。45 度/点，弧段 ~39mm；折线相对真圆的最大偏差 3.8mm，
   # 小于绳径，绳自己会贴成圆。12 点（30 度）也可以，只是更慢。
   arc_points_per_turn: 8
@@ -94,7 +153,44 @@ winding:
   exit_extension: 0.060
   # 2026-08-12 撤销：这里曾有一个 `swivel` 开关，让插头随轨道角原地自转来抵消扭转。
   # 实测反而让绳与夹爪缠得更厉害——绳端焊在插头上，转插头等于把绳贴着静止的指垫拧。
-  # 扭转改由绳端在插头内自转来释放，见 rope.fem.follow_swivel。
+  # 扭转的处理见 rope.fem 里 follow_swivel 那段撤销说明。
+  # ---- 手腕自转（2026-08-13 加入，与上面那次撤销的做法不同）----
+  # 上面转的是插头、指垫不动；这里转的是整只手，插头与绳端跟着一起转，
+  # 指垫与插头之间没有相对滑动。
+  #
+  # 为什么要转：固定手腕搬着插头绕柱，绳子离开手的方位角每圈扫过一整圈，
+  # 这个扫掠就是把绳拖过手指的原因（2026-08-13 实测两圈累计 +2.04 圈）。
+  # 手腕 1:1 跟住轨道角，方位角就不动了。
+  # 2026-08-16 关掉：插头低头之后是绕竖轴的旋转体，夹爪绕竖轴转不改变它指的方向,
+  # 所以没有可跟踪的东西了。跟踪一关，甩腕/返回/joint7 预算整套问题都不存在，
+  # 而且与圈数无关。见 physical_handle.carry_pitch_deg 那段。
+  yaw_track: false
+  # 手腕转不动整整 720 度（joint7 全行程 332 度，抓取时还已经偏了 25 度，
+  # 可用约 ±141），所以净扫掠消不掉，只能挪位置。
+  #
+  # 做法：一圈 8 点，前 yaw_forward_points 点按 1:1 跟踪，剩下的点反向把攒下的
+  # 行程一次还清，一圈净转 0。返回速率由算术决定：
+  #     返回/点 = -45 度 x f / (8 - f)
+  #
+  #   f=5  返回 -75 度/点   手腕带 ±112.5  钝角占轨道 18.8%
+  #   f=6  返回 -135 度/点  手腕带 ±135    钝角占轨道 12.5%   <- 取这个
+  #   f=7  返回 -315 度/点  手腕带 ±157.5  超过 joint7，且单点 >=180 度
+  #
+  # 单点 180 度是硬边界：手腕目标以四元数下发、插值走短弧，到了 180 度就会朝
+  # 反方向执行（2026-08-15 实测，270 度的甩开被执行成 +96 度，joint7 顶死限位
+  # 之后 6 个航点全废）。planner 的 MAX_WRIST_STEP 会在 plan 时就拦下来。
+  #
+  # 2026-08-15 从「原地甩腕」改成这个。原来是在轨道点上停下来转 270 度，插头
+  # 长 39mm、又是 collision=false 的纯网格，尖端就在绳所在的平面上划出一个
+  # 直径 40mm 的**闭合圆**——闭合的扫掠会把绳套进去（docs/debug/preview.png
+  # 里的 inner loop），同一下还把绳在焊点与指垫之间拧了 0.6 圈。现在改成边走
+  # 边转：每个轨道点手平移 110mm 而插头转 135 度，尖端划的是开放摆线，
+  # 110mm 对 40mm 的圆有 2.75 倍裕度，绳被推着走而不是被套住。转速也从
+  # 4.5 度/步降到 1.1 度/步。
+  #
+  # f 越大跟踪段越长（对齐越好），但返回段越短、单点转角越大。改这个数是
+  # 本任务里「对齐 vs 套圈风险」唯一的旋钮。
+  yaw_forward_points: 6
   # ---- 速度（米/步）。步数由「段长 ÷ 速度」算出来，所以整条路线匀速 ----
   # 这是本任务唯一的耗时旋钮：一步 FEM+IPC 约 0.66 秒（2026-08-11 实测，
   # 见 docs/develop/physics/fem_ipc_step_cost_zh.md），总时长 ≈ 路径长 ÷ 速度
@@ -123,28 +219,45 @@ routing:
   wrap_clearance: 0.032
   wrap_contact_tolerance: 0.010
   wrap_near_tolerance: 0.036
-  # 缠绕圈带跨 z 0.030~0.054，高度带放宽到覆盖整个爬升区间。
+  # 缠绕圈带跨 z 0.045~0.061，高度带放宽到覆盖整个爬升区间。
   wrap_height_tolerance: 0.040
 
 routes:
   # 出生路线 = 静止形（rest_shape=straight 下它是初始预应力的来源）。
-  # 单段 R=0.20m 圆弧（圆心 (0.003, -0.029)，180 度），弧长 0.628m：
-  #   - 均匀 kappa_0 = 5/m，无孤立紧钩（cable 螺旋事故的模板是 0.027m 的钩）；
+  # 单段 R=0.2029m 圆弧（圆心 (-0.020, -0.055)，200 度），弧长 0.7082m：
+  #   - 均匀 kappa_0 = 4.9/m，无孤立紧钩（cable 螺旋事故的模板是 0.027m 的钩）；
   #   - 从柱南侧绕过，spawn 时不环绕柱（winding number 出生为 0，离线校验过）；
   #   - 离柱最近 0.188m、离 C 最近 0.277m，插头出生点离柱 0.224m、离 C 0.277m；
-  #   - 富余：oracle 绷紧路径最紧时刻在 C 上方 hover（约 0.553m），留 ~0.075m
-  #     （12%）。cable_routing 出事时是 0.119m/19%，untangle 出生即 82% 伸展。
-  # 由 winding_geometry.py 生成；改布局必须重跑该脚本再改这里。
+  #   - 富余：oracle 绷紧路径最紧时刻在 C 上方 hover（0.653m），留 0.055m（8.5%）。
+  #     cable_routing 出事时是 0.119m/19%，untangle 出生即 82% 伸展。
+  #
+  # 2026-08-15 两次加长，都只动弧的鼓度、不动端点：166 -> 205 度（柱加粗吃绳），
+  # 205 -> 208.5 -> 200 度。**能加长的空间很有限**：绷紧需求由端点与柱定，加大轨道
+  # 并不改变它（最紧时刻在 C 上方 hover，与轨道无关），所以富余的天花板是
+  # 「不成圈」那条线——cable_routing 在 19% 螺旋崩掉，本任务的带是 5~15%。
+  # 218 度（22%）和 235 度（31%）都试过，都出带。208.5 度（14.7%）跑出来自由跨距
+  # 自己打圈（绳交叉成环），2026-08-15 收到 200 度 = 8.5%，落在带的中段。
+  # 要真正加长，得先降低需求：把锚点 S 或目标区 C 挪得离柱更近。端点不动的
+  # 好处是**离柱 0.188m、离目标区 C 0.277m 这两个距离完全不变**，它们只由端点定。
+  # 代价是绳的自由端在 -y/-x 方向铺得更开（到 -0.272 / -0.234），但那一段只是躺
+  # 在板上的绳，机械臂不去那里，不占可达性。
+  # 试过的另一个方案是把插头出生点外移，被否掉：路线会擦到目标区 C（15mm）。
+  #
+  # z 全部是 0.015 = rope.z = 侧躺插头的轴心高度。**三分量的 pos 是原样使用的**
+  # （layout.route_point 只对二分量 pos 补 rope.z），所以这些 z 必须手动跟着
+  # rope.z 走——2026-08-14 改了 rope.z 却漏了这里，插头轴心与绳端差了 6mm，
+  # 由 demo 的 grasp_geometry 那行量出来。
   initial:
     - {fixture: S, relation: center}
-    - {pos: [-0.188, 0.032, 0.009]}
-    - {pos: [-0.196, -0.046, 0.009]}
-    - {pos: [-0.174, -0.121, 0.009]}
-    - {pos: [-0.125, -0.182, 0.009]}
-    - {pos: [-0.057, -0.219, 0.009]}
-    - {pos: [0.021, -0.228, 0.009]}
-    - {pos: [0.095, -0.206, 0.009]}
-    - {pos: [0.156, -0.157, 0.009]}
+    - {pos: [-0.199, 0.039, 0.015]}
+    - {pos: [-0.222, -0.036, 0.015]}
+    - {pos: [-0.214, -0.114, 0.015]}
+    - {pos: [-0.178, -0.183, 0.015]}
+    - {pos: [-0.118, -0.233, 0.015]}
+    - {pos: [-0.043, -0.257, 0.015]}
+    - {pos: [0.035, -0.251, 0.015]}
+    - {pos: [0.105, -0.216, 0.015]}
+    - {pos: [0.156, -0.157, 0.015]}
   # 参考终态（slack 报告用，不驱动 oracle）：S -> 柱 -> C。
   goal:
     - {fixture: S, relation: center}
@@ -176,24 +289,39 @@ rope:
     # 本任务覆写（prefab 默认 spawn）：无应力构型 = 直杆。出生缓弧成为真实的
     # 弯曲预应力（真实电缆被摆成弧形的状态），缠绕产生的形变以直杆为基准度量。
     rest_shape: straight
-    # 两端的跟随带当作**转环**：仍然定住绳端沿轴和横截面上的位置，但不再约束它绕轴的转角。
-    #
-    # 关掉的话两端都是扭转夹具，绕柱每圈往绳里灌一整圈扭转、无处可去，绳最后是拧着的，
-    # 而且会顺着扭转缠上指垫。打开后扭转从两端自行泄掉。
-    # 实现见 world/rope_backends/fem_ipc.py 的 _FollowSync._spun()。
-    follow_swivel: true
+    # 这里曾有 follow_swivel: true（跟随带当转环，让绳端绕轴自由转）。
+    # 2026-08-14 撤销：实测它不是在泄扭转，而是在**制造**扭转。静置段机械臂一步
+    # 没动、绳子躺在板上，两条带自己转了 0.42 / 0.25 圈，绳子被拧了 0.40 圈；
+    # 同样的绕柱动作关掉之后扭转几乎为 0（runs/twist_one_turn.log vs
+    # twist_swivel_off.log）。_FollowSync._spun 每步把 band 的目标重新对准绳子
+    # 当前的方位，没有任何基准角，于是拟合里的系统性偏差会无界累积。
+    # 全仓库只有本任务设过这个键，所以那段代码从来没有第二个任务验证过。
     # routing post 是刻意重叠的静态复合碰撞体（shaft + 喇叭底座），libuipc 的
     # 零相交初始态检查必然报错；静态体互嵌无自由度，豁免安全（同 cable）。
     sanity_check_enable: false
     newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
     newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
   color: [0.00, 0.90, 0.78]
+  # true = 起始端的节点**硬钉死**（vc.pin_near），固定端子只当视觉体，不驱动绳子。
+  # 这是 untangle_continuous 的做法，也是唯一一个长期在跑、没报过扭转问题的组合。
+  # 注意：2026-08-14 之前这个键是死的（端子存在就被跟随带分支吃掉），现在真的生效。
   anchor_start: true
   anchor_end: false
-  anchor_radius: 0.009
+  # 绳端跟随带的选取半径。9mm 足以罩住绳端那一圈节点。
+  # 0.012 = 与 untangle_continuous 同值。带更厚，约束不容易被少数节点带偏。
+  anchor_radius: 0.012
   radius: ${prefabs.rope_pbd.radius}
   centerline_spline: true
-  z: 0.009
+  # 路线高度 = 侧躺插头的轴心高度（= flange_radius）。这两个数必须相等：
+  # connector_mesh 是**实心**旋转体，没有过线孔，所以绳管一定穿过插头表面；
+  # 唯一能决定它看起来是「线缆插进接头」还是「穿模」的，是绳子有没有沿轴线
+  # 从圆帽顶点进去。圆帽剖面半径在顶点收到 0，同轴进入时相交部分全在插头内部。
+  #
+  # 2026-08-14 之前这里是 0.009 而轴心是 0.015，差 6mm（当时按 untangle_continuous
+  # 的 0.007 vs 0.015 抄的）。后果是线缆从帽子**侧面**斜插进去，且绳下缘正好与
+  # 柱体下壁相切、零余量。tests/check_rope_winding_geometry.py 的 "plug entry"
+  # 一节盯着这一条。
+  z: 0.015
   endpoint_handle:
     enabled: true
     name: winding_free_end_handle
@@ -220,17 +348,33 @@ rope:
     rho: ${task.physical_handle.rho}
     connector:
       enabled: true
-      pin_depth: ${prefabs.rope_endpoint_connector.pin_depth}
-      pin_radius: ${prefabs.rope_endpoint_connector.pin_radius}
-      flange_radius: ${prefabs.rope_endpoint_connector.flange_radius}
-      flange_height: ${prefabs.rope_endpoint_connector.flange_height}
-      column_radius: ${prefabs.rope_endpoint_connector.column_radius}
-      column_height: ${prefabs.rope_endpoint_connector.column_height}
+      # 2026-08-12 改为**侧躺**（同 untangle_continuous 的摆法），插头不插任何东西。
+      #
+      # 竖立时绳从插头轴心竖直穿过两个指垫之间再从帽顶出去，全程贴着指垫；夹爪一转
+      # 绳就顺势卷上指垫。侧躺后插头的孔是横的：绳沿轴向直着进去，而指垫是**横跨**
+      # 轴向合拢的，绳走的方向上根本没有指垫。
+      # 代价见下面的尺寸放大，以及 rope.z 与轴心高度的对齐。
+      pose: flat
+      # 尺寸比 prefab 放大约 1.35x（**本任务局部覆写，不改 prefab** —— cable_routing 与
+      # 离散 untangle 的插头是直立插进插孔的，约束不同）。放大的两个理由只在侧躺时出现，
+      # 与 untangle_continuous 的推导相同：
+      #   1. 侧躺时指垫中心落在插头**轴心**高度 = flange_radius。11mm 时指垫底缘离桌
+      #      只剩 ~2.5mm（指垫半高约 8.5mm），几乎蹭桌；15mm 给到 ~6.5mm。
+      #   2. 指垫沿柱轴方向约 ±7.5mm，而原抓取柱只有 ±7mm —— 指垫会悬到法兰上
+      #      （法兰比柱粗）。放大后柱 ±10mm，指垫完全落在柱面内。
+      pin_depth: 0.013
+      pin_radius: 0.0075
+      flange_radius: 0.015     # 侧躺时触桌的最粗处 -> 轴心离桌 15mm
+      flange_height: 0.006
+      column_radius: 0.010     # Ø20mm 抓取柱；physical_handle.grasp_qpos 取同值
+      column_height: 0.020     # 柱跨 ±10mm，容得下 ±7.5mm 的指垫
       grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
       radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
       output_dir: .cache/topogym/meshes/rope_winding
+    # 出生插座已撤销：插头侧躺在桌面上，不插任何东西。它存在的唯一作用是给夹爪一个
+    # 刚体去抓（同 untangle_continuous 的 free_end_connector）。
     spawn_port:
-      enabled: true
+      enabled: false
       rim_radius: ${prefabs.rope_flush_port.rim_radius}
       rim_height: ${prefabs.rope_flush_port.rim_height}
       recess_radius: ${prefabs.rope_flush_port.recess_radius}
@@ -274,8 +418,12 @@ rope:
 # 注意：S 的 pos 就是出生弧的起点。
 
 physical_handle:
-  # 与 cable 同源的抓取/搬运参数（插头、latch、attachment 全部同一套机制）。
-  z_offset: 0.005
+  # 与 cable 同源的抓取/搬运参数（插头、attachment 同一套机制）。
+  # 绳的路线高度到插头轴心高度的差。两者现在相等（rope.z = flange_radius = 0.015，
+  # 理由见 rope.z 的注释），所以是 0。放下时插头原点仍落在轴心高度上。
+  # 这个值必须跟着 rope.z 走：它曾是 0.006 来补当时的 6mm 错位，对齐之后再留着
+  # 就会把插头放在离桌 21mm 的空中。
+  z_offset: 0.0
   rho: 700.0
   finger_links: [left_finger, right_finger]
   # 绳能不能看见夹爪。off = 机械臂整体不进 IPC（其余任务的现状，绳直接穿过指垫）；
@@ -294,8 +442,50 @@ physical_handle:
   robot_rope_friction: 0.004
   finger_friction: 4.5
   handle_friction: 4.5
-  grasp_qpos: 0.0075
+  # 夹爪闭合到的半宽 = 抓取柱半径（放大后 0.010），指垫贴柱面、零预紧。
+  grasp_qpos: 0.010
+  # 插头侧躺时这个值不生效：抓取偏航必须**横跨**插头轴向，而轴向由绳的到达方向决定，
+  # 由场景算出来交给 demo（CableRoutingScene.plug_heading）。留着是给直立姿态用的。
   grasp_yaw: 1.57079632679
+  # 抓取后把插头低头 90 度，让出线口转到指垫下方。2026-08-16 重新启用。
+  #
+  # 为什么必须有它：插头侧躺时电缆沿轴向水平引出，而**帽口和指垫在同一个高度**
+  # （都是 wind_z_start）。实测 2026-08-15，整个绕行段绳的最后 3cm 都在钳口里
+  # （near_s≈0.96、near_depth=-0.011 即指垫上方 11mm、pad_gap=0.0032），
+  # 包括对齐完美的那六个点——**这不是旋转能治的，是构造决定的**。轴向净空只有
+  # 6.5mm：电缆入口在抓取中心 +17mm，而手指沿轴向伸出 ±10.5mm。
+  #
+  # 低头之后（相对指垫中心）：
+  #   针脚顶 +29mm | 指垫 0 | 指尖 -9.4mm | 帽口/出线 -17mm
+  # 电缆在指尖**下方 7.6mm** 出来，绳绕着夹爪转多少圈都碰不到手指。
+  #
+  # 这同时让手腕不必再跟踪轨道：竖着的插头是绕竖轴的旋转体，夹爪绕竖轴转时它
+  # 指的方向根本不变。所以 winding.yaw_track 关掉，joint7 的行程预算、返回段、
+  # 甩腕这一整套问题一并消失，且**与圈数无关**。
+  #
+  # 2026-08-14 删过一次，因为实测这一下注入 +0.57 圈扭转（runs/twist_idle.log）。
+  # 但那次测量时插头姿态是冻死在世界系的（parent_quat_fn 还没有），绳端被世界
+  # 姿态钳住；现在抓取是真刚性的，代价要重新量。转轴取 plug_axis x z——同时垂直
+  # 于插头轴与竖直方向，对绳端是纯弯曲不是扭转（同 untangle_continuous）。
+  # 0 = 平躺搬运。2026-08-16 从 90 撤回。
+  #
+  # 低头是抄 untangle_continuous 的，但**没核它的前提**。它的注释写着 "A slack
+  # rope hangs vertically from whatever holds it, so that cap is a ~90 degree
+  # corner" ——那边插头被提起、绳垂着，水平出线口才是直角，低头把它消掉。
+  # 本任务的绳是**水平跑向 120mm 外的柱子**：水平出线口本来没有弯，低头反而
+  # 造出一个。实测出线口降到 0.028、朝下，而躺地绳中心在 0.015，只有 13mm
+  # 落差要转过 90 度 —— 弯曲半径 1.6 倍绳直径，是本配置自己写下的危险基准
+  # （cable 螺旋事故那个 0.027m 的钩）的一半。同时绳垂到板面被贴地拖走，
+  # 缠上喇叭底座而不是柱身，post_contact 从 48 掉到 0。
+  #
+  # 同一个改动在两个任务里效果相反，因为**绳的去向不同**。抄之前要核前提。
+  #
+  # 代价（明知）：平躺时电缆在指垫高度水平引出，绳会回到钳口（实测 63~103 个
+  # 节点）。那是另一件事，解法是加长帽子而不是俯仰，见 rope_winding 的待办。
+  carry_pitch_deg: 0.0
+  # 俯仰的步数。给足是为了别把焊在插头上的绳端一帧甩出去（同 ramp_to 的理由）；
+  # 这是 sync 调用数，AttachmentManager 每个物理步 sync 两次。
+  carry_pitch_steps: 120
   runtime_gripper_attachment: true
   runtime_attachment_handoff_steps: 12
   motion_profile: linear
@@ -318,7 +508,7 @@ physical_handle:
   max_segment_follow_error: 0.045
   max_segment_target_error: 0.070
   target_error_abort_fraction: 0.90
-  early_complete_segments: [insert_at_C]
+  early_complete_segments: [place_at_C]
   early_complete_target_error: 0.010
   max_downward_follow_error_z: 0.047
   # 缠绕接触的发散兜底（supervision/rope_winding.py 的 post_contact）：

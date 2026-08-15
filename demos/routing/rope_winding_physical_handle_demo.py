@@ -7,9 +7,11 @@ trajectory (`task.winding.direction=cw`) reaches -turns and fails, which is the
 task's contrast pair: same grasp, same placement, opposite topology.
 
 The gripper never touches the deformable body: it grasps the plug, and the rope
-follows through the endpoint constraint. The plug starts seated in a spawn latch
-(mesh-only, so it would otherwise fall through the board) and is handed to the
-grasp attachment at gripper close.
+follows through the endpoint constraint. The plug lies flat on the board and is
+plugged into nothing -- it exists so the arm has a rigid body to hold. It is
+mesh-only, so a kinematic hold keeps it from falling through the board until the
+grasp attachment takes over at gripper close, and the same hold sets it down
+again at the target.
 
 Configuration is Hydra (`configs/rope_winding.yaml`).
 
@@ -17,7 +19,25 @@ Configuration is Hydra (`configs/rope_winding.yaml`).
     python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.max_waypoints=10
     python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true task.winding.direction=cw
     python -m demos.routing.rope_winding_physical_handle_demo task.winding.turns=1
+    python -m demos.routing.rope_winding_physical_handle_demo task.winding.yaw_track=false
     python -m demos.routing.rope_winding_physical_handle_demo --cfg job
+
+The wrist turns with the orbit (`task.winding.yaw_track`) so the rope keeps the
+same bearing out of the hand instead of sweeping around it once per turn; set it
+false for the fixed-wrist behaviour the `wrap` numbers were first measured
+against. `wrap_report` / `wrap_summary` are the readout for both.
+
+Two numbers in `wrap_report` / `wrap_summary` guard the grasp itself:
+`grip_slip_deg` is how far the plug has turned or slid inside the pads (a rigid
+grasp holds it at 0), and `plug_vs_rope_deg` is the angle between the plug's bore
+and the rope arriving at it (past 90 the rope is entering side-on through the
+plug's body instead of through its cap). Both were assumptions until 2026-08-15,
+when the first turned out to be false for the whole route.
+
+Rope torsion is reported by `TWIST` / `twist_onset` / `twist_summary`, which run
+unconditionally: their reference frame is fixed at the episode's first step, so
+they cannot be switched off without losing the baseline. `twist_legacy` beside
+them is `rope_twist_turns`, kept only until the two have been compared on a run.
 """
 
 from __future__ import annotations
@@ -46,20 +66,31 @@ from topogym.primitives import (
     configure_gripper_contact_friction,
     ee_quat_for_yaw,
     entity_pos,
+    entity_quat,
     print_collision_il_contract,
+    quat_about_axis,
+    quat_mul,
 )
 from topogym.supervision import (
     StepProbe,
+    TwistProbe,
+    gripper_wrap,
     material_bins,
+    material_coords,
+    pad_gap,
     post_contact,
     print_winding_verification,
+    rope_free_end_first,
     rope_twist_turns,
+    settled_band_radius,
     stop_before_physics,
     winding_centerline,
     winding_number,
 )
-from topogym.supervision.cable_routing import rope_particles
+from topogym.primitives.pick_place import HAND_TO_PAD_Z
+from topogym.supervision.cable_routing import rope_particles, tensor_to_numpy
 from topogym.tasks import RopeWindingSceneBuilder
+from topogym.tasks.routing.cable_routing import connector_pose
 from topogym.utils import (
     apply_recording_camera_overrides,
     initialize_franka_controller,
@@ -177,6 +208,332 @@ def _validate_physical_handle_contract(cfg, scene) -> tuple[str, ...]:
     return (str(getattr(handle_cfg, "name", "winding_free_end_handle")),)
 
 
+def _quat_conjugate(quat) -> np.ndarray:
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(-1, 4)[0])
+    return np.array([w, -x, -y, -z], dtype=float)
+
+
+def _quat_axes(quat) -> np.ndarray:
+    """Columns of the rotation matrix for a (w, x, y, z) quat: its local x, y, z."""
+
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(-1, 4)[0])
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+        ],
+        dtype=float,
+    )
+
+
+def _grasp_geometry(scene, handle, ee_quat, heading, free_end_first) -> str:
+    """Three angles that say whether the gripper holds the plug the intended way.
+
+    The intent is stated in three places (`rope_axis_heading`'s docstring, the
+    `plug_heading` field comment, the grasp-yaw comment below): the plug lies
+    along the rope, and the pads close ACROSS its axis rather than along it.
+    Nothing checked it. `gs.morphs.Mesh(euler=...)` is x-y-z degrees but the
+    repo never pinned down extrinsic vs intrinsic, and for this plug the two
+    differ completely -- intrinsic would spin a solid of revolution about its
+    own axis and leave it pointing along world -x whatever the rope does.
+
+    So: derive the directions from the entity's ACTUAL pose and report the
+    angles. Printed every run, like `start_anchor=`, because the alternative is
+    another assumption that looks obviously right and was never measured.
+    """
+
+    axis = _quat_axes(entity_quat(handle))[:, 2]          # plug's local +z = its bore
+    pads = _quat_axes(ee_quat)[:, 1]                      # hand's local y = finger travel
+    rope = np.array([np.cos(heading), np.sin(heading), 0.0])
+
+    def between(a, b) -> float:
+        cos = float(np.clip(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)), -1.0, 1.0))
+        return float(np.degrees(np.arccos(cos)))
+
+    # Where the rope actually ends, from the nodes rather than the design route.
+    arc = material_coords(scene)[:, 0]
+    fraction = arc / max(float(arc.max()), 1e-9)
+    tail = fraction <= 0.02 if free_end_first else fraction >= 0.98
+    rope_end = rope_particles(scene)[tail].mean(axis=0)
+    # Perpendicular distance from that point to the plug's axis line, split into
+    # its vertical and lateral parts. Which one is non-zero says where to look:
+    # `dz` is a height mismatch (`rope.z` vs the plug's axis), `lateral` means the
+    # rope's mesh does not end where its design route says it does.
+    offset = rope_end - np.asarray(entity_pos(handle), dtype=float)
+    perpendicular = offset - axis * float(np.dot(offset, axis))
+    off_axis = float(np.linalg.norm(perpendicular))
+
+    return (
+        f"axis_vs_pads_deg={between(axis, pads):.1f} "
+        f"axis_vs_rope_deg={between(axis, rope):.1f} "
+        f"rope_end_off_axis_mm={off_axis * 1000:.1f} "
+        f"(dz={perpendicular[2] * 1000:+.1f} "
+        f"lateral={float(np.linalg.norm(perpendicular[:2])) * 1000:.1f}) "
+        f"plug_z_mm={float(entity_pos(handle)[2]) * 1000:.1f} "
+        f"rope_end_z_mm={float(rope_end[2]) * 1000:.1f}"
+    )
+
+
+def _arm_qpos(controller) -> np.ndarray:
+    qpos = np.asarray(tensor_to_numpy(controller.robot.get_qpos()), dtype=float)
+    width = controller.arm_joint_count + controller.gripper_joint_count
+    return qpos.reshape(-1, width)[0, : controller.arm_joint_count]
+
+
+class _Unwrapped:
+    """Accumulated change of an angle, sampled at intervals under half a turn."""
+
+    def __init__(self) -> None:
+        self._previous: float | None = None
+        self.total = 0.0
+
+    def update(self, angle) -> float:
+        angle = float(angle)
+        if angle != angle:  # NaN: no usable sample, hold the accumulator.
+            return self.total
+        if self._previous is not None:
+            step = angle - self._previous
+            self.total += float(np.arctan2(np.sin(step), np.cos(step)))
+        self._previous = angle
+        return self.total
+
+
+class WrapTracker:
+    """How far the rope has swept around the gripper, accumulated over the run.
+
+    The review says the rope tangles with the gripper itself, and the agreed cure
+    is to spin the wrist as it orbits. Before writing that spin, two numbers have
+    to be measured rather than assumed: how much rotation the rope actually
+    demands, and how much of it the wrist can deliver.
+
+    `wrap` is the first. It is the strand's world bearing out of the hand minus
+    the hand's own yaw, unwrapped -- one turn per orbit is the tangling
+    hypothesis, and `strand_bearing` against `orbit` is directly the yaw profile
+    a co-rotating wrist would have to follow. `q7` is the second: the Franka's
+    tool roll, whose travel is the budget the profile has to fit in.
+
+    One instance is shared by the probe and the per-waypoint report, so both read
+    the same accumulators. Unwrapping only needs samples closer together than
+    half a turn, and either caller alone provides that (a waypoint is 45 degrees
+    of orbit).
+    """
+
+    def __init__(
+        self, scene, controller, groups, spec, handle, *, free_end_first: bool,
+        cap_offset: float = 0.0, carry_pitch: float = 0.0,
+    ):
+        self.scene = scene
+        self.controller = controller
+        self.groups = groups
+        self.handle = handle
+        self.free_end_first = bool(free_end_first)
+        self.post_xy = np.asarray(post_center(scene.layout, spec), dtype=float)[:2]
+        # Where the cable actually leaves the plug, in world z: the pads are
+        # `HAND_TO_PAD_Z` below the hand, and the cap sits `cap_offset` along the
+        # plug's axis from there -- straight down when the carry is nose-down,
+        # level with the pads when it is flat.
+        self._outlet_drop = HAND_TO_PAD_Z + cap_offset * float(np.sin(carry_pitch))
+        self.reset()
+
+    def reset(self) -> None:
+        """Start over, at the grasp.
+
+        Before the fingers close there is nothing to accumulate: the hand is
+        still crossing the board, and its bearing to the rope can swing more than
+        half a turn between probe samples, which is exactly what an unwrap cannot
+        survive. Wrap is defined relative to the grasp anyway.
+        """
+
+        self._orbit = _Unwrapped()
+        self._yaw = _Unwrapped()
+        self._bearing = _Unwrapped()
+        self.max_wrap = 0.0
+        self.max_intrusion = 0
+        self.first_intrusion_phase: str | None = None
+        self.q7_min = float("inf")
+        self.q7_max = float("-inf")
+        self.yaw_min = 0.0
+        self.yaw_max = 0.0
+        self.max_roll_error = 0.0
+        self.max_twist = 0.0
+        # The plug's pose in the hand's frame, as of this moment. Held to compare
+        # against: a rigid grasp keeps it constant, so `grip_slip` is how far the
+        # promise has drifted. `_grasp_geometry` measures the same intent but only
+        # once, at build time, which is exactly why it could not catch the plug
+        # sitting still through the whole wrist schedule.
+        self._grip_reference = quat_mul(
+            _quat_conjugate(tensor_to_numpy(self.controller.hand_quat())),
+            entity_quat(self.handle),
+        )
+        self.max_grip_slip = 0.0
+        # `grip_slip` is only a promise while the plug IS held. After the hand-off
+        # at the target the latch pins the plug and the hand retreats 80 mm, so
+        # the "slip" climbs by exactly that retreat -- 53 degrees on the
+        # 2026-08-15 run, which read as a broken grasp in the summary and was
+        # nothing of the kind. Stop measuring when we let go.
+        self.held = True
+        self.max_plug_vs_rope = 0.0
+        self.max_cap_entry = 0.0
+        self.obtuse_samples = 0
+        self.samples = 0
+        # The rising-spiral invariant: the outlet must stay above everything
+        # already laid down. Worst case over the run is the number that says
+        # whether it held.
+        self.worst_blocking_gap = float("inf")
+
+    def sample(self, phase: str, commanded_roll: float | None = None) -> dict:
+        hand = np.asarray(self.controller.hand_pos(), dtype=float)
+        metrics = gripper_wrap(
+            self.scene,
+            self.controller,
+            self.groups,
+            free_end_first=self.free_end_first,
+            outlet_z=float(hand[2]) - self._outlet_drop,
+        )
+        orbit = self._orbit.update(
+            np.arctan2(hand[1] - self.post_xy[1], hand[0] - self.post_xy[0])
+        )
+        yaw = self._yaw.update(metrics["hand_yaw"])
+        bearing = self._bearing.update(metrics["strand_bearing"])
+        wrap = (bearing - yaw) / (2.0 * np.pi)
+        q7 = float(_arm_qpos(self.controller)[-1])
+        intrusion = int(metrics["intrusion"])
+        # Torsion in the rope itself, per waypoint rather than per N steps. The
+        # question it answers is where twist enters: smoothly along the tracked
+        # arcs, or in steps at the flicks.
+        twist = rope_twist_turns(self.scene, self.groups)
+        if twist == twist:
+            self.max_twist = max(self.max_twist, abs(twist))
+
+        self.max_wrap = max(self.max_wrap, abs(wrap))
+        self.max_intrusion = max(self.max_intrusion, intrusion)
+        if intrusion and self.first_intrusion_phase is None:
+            self.first_intrusion_phase = phase
+        self.q7_min = min(self.q7_min, q7)
+        self.q7_max = max(self.q7_max, q7)
+        self.yaw_min = min(self.yaw_min, yaw)
+        self.yaw_max = max(self.yaw_max, yaw)
+        # Commanded roll minus what the wrist actually reached. This is the
+        # measurement the wrist-budget question needs: the arm has redundancy
+        # beyond joint7, and only a run that asks for roll can say how much of it
+        # is available.
+        roll_error = 0.0 if commanded_roll is None else float(commanded_roll) - yaw
+        self.max_roll_error = max(self.max_roll_error, abs(roll_error))
+
+        grip = self._grip_metrics()
+        if self.held:
+            self.max_grip_slip = max(self.max_grip_slip, grip["grip_slip_deg"])
+        self.max_plug_vs_rope = max(self.max_plug_vs_rope, grip["plug_vs_rope_deg"])
+        self.max_cap_entry = max(self.max_cap_entry, grip["cap_entry_mm"])
+        self.samples += 1
+        if grip["plug_vs_rope_deg"] >= 90.0:
+            self.obtuse_samples += 1
+        gap = float(metrics.get("blocking_gap", float("nan")))
+        if gap == gap:
+            self.worst_blocking_gap = min(self.worst_blocking_gap, gap)
+
+        return {
+            "roll_cmd": float("nan") if commanded_roll is None else float(commanded_roll),
+            "roll_error": roll_error,
+            "orbit": orbit,
+            "hand_yaw": yaw,
+            "strand_bearing": bearing,
+            "wrap": wrap,
+            "near_r": float(metrics["near_r"]),
+            "near_depth": float(metrics["near_depth"]),
+            "near_s": float(metrics["near_s"]),
+            "intrusion": intrusion,
+            "q7": q7,
+            "twist": twist,
+            "blocking_gap": float(metrics.get("blocking_gap", float("nan"))),
+            **grip,
+        }
+
+    def _grip_metrics(self) -> dict:
+        """The two promises the winding schedule makes, as numbers.
+
+        `grip_slip_deg` -- the plug's pose in the hand's frame, against where it
+        was at the grasp. Zero means the grasp is rigid: the plug neither turns
+        inside the pads nor slides. It read the whole wrist schedule until
+        2026-08-15, when the attachment was holding the plug at a fixed WORLD
+        orientation while the wrist rolled underneath it.
+
+        `plug_vs_rope_deg` -- the angle between the plug's bore and the rope
+        arriving at it. `connector_mesh` is a solid of revolution with no cable
+        hole, so the rope always passes through the plug's surface; whether that
+        reads as "plugged in" or as clipping is entirely whether it goes in
+        through the cap, on axis. Past 90 degrees it is entering side-on.
+
+        `cap_entry_mm` -- how far the rope's end sits off that axis, which is the
+        other way the cap can be missed.
+        """
+
+        hand_quat = tensor_to_numpy(self.controller.hand_quat())
+        relative = quat_mul(_quat_conjugate(hand_quat), entity_quat(self.handle))
+        # Angle of reference^-1 * relative. Via atan2 of the vector part against
+        # the scalar, not `2*acos(w)`: near identity -- which is where a rigid
+        # grasp lives, and the whole point of the number -- acos reads back the
+        # square root of the floating-point error rather than the angle.
+        drift = quat_mul(_quat_conjugate(self._grip_reference), relative)
+        slip = 2.0 * float(
+            np.arctan2(float(np.linalg.norm(drift[1:])), abs(float(drift[0])))
+        )
+
+        axis = _quat_axes(entity_quat(self.handle))[:, 2]
+        nodes = rope_particles(self.scene)
+        arc = material_coords(self.scene)[:, 0]
+        fraction = arc / max(float(arc.max()), 1e-9)
+        if not self.free_end_first:
+            fraction = 1.0 - fraction
+        end = nodes[fraction <= 0.02].mean(axis=0)
+        # A short way back along the rope, so the direction is the strand's own
+        # rather than one section's noise.
+        back = nodes[(fraction > 0.04) & (fraction <= 0.09)].mean(axis=0)
+        # Toward the rope, not away from it. The plug's bore points BACK DOWN the
+        # cable it swallows, so aligned means the bore and this vector agree.
+        # Written the other way round first, which made a correctly held plug read
+        # 174 degrees instead of 6 -- the 2026-08-15 run's `obtuse=24/24`.
+        approach = back - end
+        norm = float(np.linalg.norm(approach))
+        cos = (
+            float(np.clip(np.dot(axis, approach / norm), -1.0, 1.0))
+            if norm > 1e-9
+            else 1.0
+        )
+        offset = end - np.asarray(entity_pos(self.handle), dtype=float)
+        perpendicular = offset - axis * float(np.dot(offset, axis))
+        return {
+            "grip_slip_deg": float(np.degrees(slip)),
+            "plug_vs_rope_deg": float(np.degrees(np.arccos(cos))),
+            "cap_entry_mm": float(np.linalg.norm(perpendicular)) * 1000.0,
+        }
+
+    def summary_text(self) -> str:
+        first = self.first_intrusion_phase or "none"
+        q7_min = self.q7_min if self.q7_min < float("inf") else float("nan")
+        q7_max = self.q7_max if self.q7_max > float("-inf") else float("nan")
+        return (
+            f"max_wrap={self.max_wrap:.3f} first_intrusion_phase={first} "
+            f"max_intrusion={self.max_intrusion} "
+            f"q7_min={q7_min:+.4f} q7_max={q7_max:+.4f} "
+            f"yaw_span_deg={np.degrees(self.yaw_max - self.yaw_min):+.1f} "
+            f"max_roll_error_deg={np.degrees(self.max_roll_error):.1f} "
+            f"max_twist={self.max_twist:.2f} "
+            # The two constraints the 2026-08-15 rework exists to keep. Lead with
+            # them: `max_grip_slip_deg` must be 0 (the grasp is rigid by
+            # construction once the attachment follows the hand's rotation, so
+            # anything else means it does not), and `obtuse` must be 0 outside the
+            # flicks, where the plug turns in place and has to sweep past the rope.
+            f"max_grip_slip_deg={self.max_grip_slip:.2f}{'' if self.held else ' (to handoff)'} "
+            f"max_plug_vs_rope_deg={self.max_plug_vs_rope:.1f} "
+            f"obtuse={self.obtuse_samples}/{self.samples} "
+            f"max_cap_entry_mm={self.max_cap_entry:.1f} "
+            # Negative anywhere means the spiral stopped rising clear of itself.
+            f"worst_blocking_gap={self.worst_blocking_gap:+.4f}"
+        )
+
+
 class RopeWindingProbe(StepProbe):
     """Per-step diagnostic; the winding number is the one that matters.
 
@@ -189,7 +546,20 @@ class RopeWindingProbe(StepProbe):
     STALL_HAND_V = 0.0003
     FLYOUT_JUMP = 0.02
 
-    def __init__(self, scene, controller, handle, spec, groups, status, *, every, surface_z):
+    def __init__(
+        self,
+        scene,
+        controller,
+        handle,
+        spec,
+        groups,
+        status,
+        wrap_tracker,
+        *,
+        every,
+        surface_z,
+        finger_links,
+    ):
         super().__init__(scene.scene, every=every)
         self.controller = controller
         self.winding_scene = scene
@@ -197,8 +567,11 @@ class RopeWindingProbe(StepProbe):
         self.spec = spec
         self.groups = groups
         self.status = status
+        self.wrap_tracker = wrap_tracker
+        self.finger_links = tuple(str(name) for name in finger_links)
         self.surface_z = float(surface_z)
         self.post_xy = post_center(scene.layout, spec)
+        self.settled_band = settled_band_radius(scene.layout, spec)
         self._last_hand = np.asarray(controller.hand_pos(), dtype=float)
         self._last_nodes = rope_particles(scene)
 
@@ -216,24 +589,44 @@ class RopeWindingProbe(StepProbe):
             jump = float("nan")
         self._last_nodes = nodes
         turns = winding_number(
-            winding_centerline(self.winding_scene, self.groups), self.post_xy
+            winding_centerline(self.winding_scene, self.groups),
+            self.post_xy,
+            self.settled_band,
         )
         self.status["winding"] = turns
         twist = rope_twist_turns(self.winding_scene, self.groups)
         contact = post_contact(self.winding_scene, self.spec)
+        pads = pad_gap(self.winding_scene, self.controller.robot, self.finger_links)
+        phase = self.status.get("phase", "?")
+        wrap = self.wrap_tracker.sample(phase)
         flags = ""
+        if pads <= 0.0:
+            flags += " PADCONTACT"
         if hand_v < self.STALL_HAND_V:
             flags += " STALL"
         if min_z_above < 0.0 or (jump == jump and jump > self.FLYOUT_JUMP):
             flags += " FLYOUT?"
+        if wrap["intrusion"]:
+            flags += " GRIPWRAP"
         handle_z = float(entity_pos(self.handle)[2]) - self.surface_z
         print(
-            f"PROBE step={self.count:05d} phase={self.status.get('phase', '?')} "
-            f"winding={turns:+.3f} twist={twist:+.2f} "
+            f"PROBE step={self.count:05d} phase={phase} "
+            f"winding={turns:+.3f} twist_legacy={twist:+.2f} "
             f"hand_v={hand_v:.5f} handle_z_above={handle_z:+.4f} "
             f"rope_minz_above_surf={min_z_above:+.4f} rope_spread={spread:.4f} "
-            f"rope_jump={jump:.4f} post_gap={contact['surface_gap']:+.4f} "
-            f"post_contact={contact['contact_nodes']}{flags}",
+            f"rope_jump={jump:.4f} pad_gap={pads:+.4f} "
+            f"post_gap={contact['surface_gap']:+.4f} "
+            f"post_contact={contact['contact_nodes']} "
+            f"orbit={np.degrees(wrap['orbit']):+.1f} "
+            f"hand_yaw={np.degrees(wrap['hand_yaw']):+.1f} "
+            f"strand_bearing={np.degrees(wrap['strand_bearing']):+.1f} "
+            f"wrap={wrap['wrap']:+.3f} "
+            f"grip_slip_deg={wrap['grip_slip_deg']:.1f} "
+            f"plug_vs_rope_deg={wrap['plug_vs_rope_deg']:.1f} "
+            f"blocking_gap={wrap['blocking_gap']:+.4f} "
+            f"near_r={wrap['near_r']:.4f} "
+            f"near_depth={wrap['near_depth']:+.4f} near_s={wrap['near_s']:.3f} "
+            f"intrusion={wrap['intrusion']} q7={wrap['q7']:+.4f}{flags}",
             flush=True,
         )
 
@@ -272,17 +665,25 @@ def run_demo(
         manipulated=manipulated,
         runtime_attachment=True,
         runtime_set_pose=True,
-        success_checks=("lift_delta", "handle_follow_error", "winding_number", "connector_capture"),
+        success_checks=("lift_delta", "handle_follow_error", "winding_number", "placement_xy"),
     )
     contact_mode = robot_contact_mode(cfg)
+    # Derived, not asserted. This line read `start_anchor=fixed_nodes` as a
+    # literal until 2026-08-14 while the scene was actually following the
+    # terminal's link, and that sent a whole debugging round down the wrong path.
+    # A contract banner that cannot be wrong is worth more than a tidy one.
+    start_anchor = (
+        "pinned_nodes" if bool(cfg.task.rope.anchor_start) else "terminal_follow_band"
+    )
     print(
         "rope_winding_physical_handle_demo rope_contract "
         f"rope_model={cfg.task.rope.model} rest_shape={cfg.task.rope.fem.rest_shape} "
-        "endpoint_constraint=follow_band start_anchor=fixed_nodes "
+        f"endpoint_constraint=follow_band start_anchor={start_anchor} "
         "handle_collision=False handle_needs_coup=False "
         f"robot_rope_contact={contact_mode} "
         f"ipc_links={list(cfg.task.physical_handle.finger_links) if contact_mode == 'fingers' else []} "
-        "connector_latch=environment_socket_after_capture",
+        f"follow_swivel={bool(getattr(cfg.task.rope.fem, 'follow_swivel', False))} "
+        "placement=set_down_at_target_zone",
         flush=True,
     )
     handle = scene.rope_handle.end_pin
@@ -310,11 +711,19 @@ def run_demo(
     targets = [np.asarray(waypoint.position, dtype=float) for waypoint in episode_plan.waypoints]
     target_labels = [str(waypoint.label) for waypoint in episode_plan.waypoints]
     target_steps = [int(waypoint.steps) for waypoint in episode_plan.waypoints]
+    # Tool roll per waypoint, relative to the grasp yaw. The planner works in
+    # offsets because the grasp yaw is the plug's, and the scene decides it at
+    # spawn (see `grasp_yaw` below).
+    target_rolls = [
+        0.0 if waypoint.yaw is None else float(waypoint.yaw)
+        for waypoint in episode_plan.waypoints
+    ]
     if cfg.run.max_waypoints is not None:
         limit = int(cfg.run.max_waypoints)
         targets = targets[:limit]
         target_labels = target_labels[:limit]
         target_steps = target_steps[:limit]
+        target_rolls = target_rolls[:limit]
     speedup = max(1.0, float(cfg.run.viewer_speedup))
     slow_factor = max(1.0, float(cfg.run.slow_factor))
     target_steps = [
@@ -323,25 +732,21 @@ def run_demo(
     ]
     full_route = cfg.run.max_waypoints is None
 
-    latch = (
-        ConnectorLatch(
-            scene=scene.scene,
-            handle=handle,
-            target_pos=targets[-1],
-            capture_tolerance_xy=float(physical.latch_capture_tolerance_xy),
-            capture_tolerance_z=float(physical.latch_capture_tolerance_z),
-            capture_max_tilt_deg=float(physical.latch_capture_max_tilt_deg),
-            auto_capture=bool(getattr(physical, "latch_auto_capture", True)),
-        )
-        if full_route
-        else None
-    )
-    # SOCKETED at spawn: the mesh-only plug would fall through the board
+    # The plug lies flat and is put DOWN at the target rather than plugged into
+    # anything, so there is no socket to latch into. The hold that keeps the
+    # mesh-only plug from falling through the board is the same one it spawned
+    # with, re-aimed at wherever the hand left it (see the end of the run).
+    # RESTING on the board at spawn: the mesh-only plug would fall through it
     # otherwise; handed to the grasp attachment atomically at on_close.
     spawn_latch = ConnectorLatch(
         scene=scene.scene,
         handle=handle,
         target_pos=entity_pos(handle),
+        # The pose it is already in. Leaving this at the default upright quat
+        # would both fail the tilt gate (a plug on its side reads 90 degrees off
+        # vertical) and, worse, snap it upright the moment it engaged -- and the
+        # rope's end is welded to it.
+        target_quat=entity_quat(handle),
         capture_tolerance_xy=0.010,
         capture_tolerance_z=0.020,
         capture_max_tilt_deg=30.0,
@@ -350,6 +755,10 @@ def run_demo(
     if not spawn_latch.try_engage():
         raise RuntimeError("Rope winding free-end plug failed to seat at spawn.")
     grasp_attachment: list = []
+    # The pose the plug was picked up in, so `lay_plug_flat` can put it back.
+    flat_quat: list = []
+    pitch_angle = float(np.radians(float(getattr(physical, "carry_pitch_deg", 0.0))))
+    pitch_steps = int(getattr(physical, "carry_pitch_steps", 120))
 
     primitive = HandleDragPrimitive(
         approach_z=scene.layout.world_z(physical.approach_z),
@@ -370,7 +779,7 @@ def run_demo(
         max_segment_follow_error=float(physical.max_segment_follow_error),
         # Transport is attachment-assisted, so hand-vs-commanded waypoint lag is
         # a controller property, not a grasp failure. Success gates stay: the
-        # winding number, the C latch, and the final connector error.
+        # winding number and where the plug ends up.
         max_segment_target_error=(
             None
             if cfg.run.allow_target_lag
@@ -395,7 +804,25 @@ def run_demo(
         command_space_segments=True,
         verbose=cfg.run.verbose,
     )
-    ee_quat = ee_quat_for_yaw(controller.default_ee_quat, float(physical.grasp_yaw))
+    # A plug lying on its side has one grasp yaw that works: the pads have to
+    # close ACROSS its axis, not along it. That axis is wherever the rope
+    # arrives from, so the scene hands the angle over rather than the config
+    # guessing it. An upright plug is symmetric about the approach, so there the
+    # config's fixed yaw is the answer.
+    grasp_yaw = (
+        float(scene.plug_heading)
+        if scene.plug_heading is not None
+        else float(physical.grasp_yaw)
+    )
+    ee_quat = ee_quat_for_yaw(controller.default_ee_quat, grasp_yaw)
+    # One commanded orientation per waypoint: the grasp yaw plus the planner's
+    # tool roll. With `winding.yaw_track` off every roll is 0 and this is just
+    # `ee_quat` repeated, i.e. the fixed-wrist behaviour.
+    segment_quats = [
+        ee_quat_for_yaw(controller.default_ee_quat, grasp_yaw + roll)
+        for roll in target_rolls
+    ]
+    yaw_tracking = any(roll != 0.0 for roll in target_rolls)
     status.update(
         {
             "phase": "settle",
@@ -409,16 +836,47 @@ def run_demo(
 
     # Material grouping of the rope's nodes: computed once, valid all episode.
     groups = material_bins(scene, bins=int(cfg.task.success.centerline_bins))
+    # Which end of that ordering the plug is at: asked once, at spawn, while the
+    # rope is still where the layout put it.
+    free_end_first = rope_free_end_first(scene, groups, entity_pos(handle))
+    connector_cfg = cfg.task.rope.endpoint_handle.connector
+    column_height = float(connector_cfg.column_height)
+    cap_offset = 0.5 * column_height + float(
+        getattr(connector_cfg, "cap_height", 0.35 * column_height)
+    )
+    wrap_tracker = WrapTracker(
+        scene,
+        controller,
+        groups,
+        spec,
+        handle,
+        free_end_first=free_end_first,
+        cap_offset=cap_offset,
+        carry_pitch=float(np.radians(float(getattr(physical, "carry_pitch_deg", 0.0)))),
+    )
+    print(
+        "rope_winding_physical_handle_demo grasp_geometry "
+        + (
+            _grasp_geometry(scene, handle, ee_quat, grasp_yaw, free_end_first)
+            if scene.plug_heading is not None
+            else "plug_pose=upright; no axis to align"
+        )
+        + "  (targets: axis_vs_pads 90, axis_vs_rope 0 or 180, off_axis 0)",
+        flush=True,
+    )
     print(
         "rope_winding_physical_handle_demo setup "
         f"waypoints={len(targets)} groups={len(groups)} "
+        f"free_end_first={free_end_first} "
         f"grasp_qpos={float(physical.grasp_qpos):.4f} "
-        f"grasp_yaw={float(physical.grasp_yaw):.4f} "
         f"wind_radius={spec.wind_radius:.3f} wind_z_start={spec.wind_z_start:.3f} "
         f"climb_per_turn={spec.climb_per_turn:.3f} "
         f"follow_swivel={bool(getattr(cfg.task.rope.fem, 'follow_swivel', False))} "
         f"robot_rope_friction={float(physical.robot_rope_friction):.3f} "
-        f"latch_mode={latch.step_hook_mode if latch is not None else 'disabled'} "
+        f"plug_pose={connector_pose(cfg.task.rope)} "
+        f"grasp_yaw={grasp_yaw:+.4f} yaw_track={yaw_tracking} "
+        f"roll_band_deg=[{np.degrees(min(target_rolls)):+.0f},"
+        f"{np.degrees(max(target_rolls)):+.0f}] "
         f"viewer_speedup={speedup:.2f} slow_factor={slow_factor:.2f} "
         f"allow_target_lag={bool(cfg.run.allow_target_lag)} "
         f"segment_steps={target_steps}",
@@ -428,6 +886,13 @@ def run_demo(
     def on_segment_start(index, total, label, target):
         status["phase"] = label
         status["waypoint"] = index
+        # The plug is carried nose-down (see `pitch_outlet_down`, which runs at the
+        # grasp). Lay it flat again for the last leg, so it is set down the way
+        # it spawned and the way the target zone expects: the ramp only advances
+        # on sync calls, so it has to start a whole segment before the release,
+        # not inside `before_release`.
+        if label == "to_C_hover":
+            lay_plug_flat()
         print(
             "rope_winding_physical_handle_demo waypoint_start "
             f"index={index}/{total} phase={label} target={target.tolist()}",
@@ -442,11 +907,40 @@ def run_demo(
             f"follow_error={follow_error:.4f} target_error={target_error:.4f}",
             flush=True,
         )
+        # One line per waypoint, probe or no probe: this is the table the wrist
+        # spin gets designed from. `strand_bearing` against `orbit` is the yaw
+        # profile the wrist would have to follow; `q7` is what it has to spend.
+        wrap = wrap_tracker.sample(label, commanded_roll=target_rolls[index - 1])
+        print(
+            "rope_winding_physical_handle_demo wrap_report "
+            f"phase={label} orbit_deg={np.degrees(wrap['orbit']):+.1f} "
+            f"strand_bearing_deg={np.degrees(wrap['strand_bearing']):+.1f} "
+            f"hand_yaw_deg={np.degrees(wrap['hand_yaw']):+.1f} "
+            f"roll_cmd_deg={np.degrees(wrap['roll_cmd']):+.1f} "
+            f"roll_err_deg={np.degrees(wrap['roll_error']):+.1f} "
+            f"wrap={wrap['wrap']:+.3f} "
+            f"grip_slip_deg={wrap['grip_slip_deg']:.1f} "
+            f"plug_vs_rope_deg={wrap['plug_vs_rope_deg']:.1f} "
+            f"cap_entry_mm={wrap['cap_entry_mm']:.1f} "
+            f"blocking_gap={wrap['blocking_gap']:+.4f} "
+            f"twist_span={twist_probe.latest['span']:+.3f} "
+            f"twist_net={twist_probe.latest['net']:+.3f} "
+            f"twist_peak_s={twist_probe.latest['peak_s']:.3f} "
+            f"twist_legacy={wrap['twist']:+.2f} "
+            f"intrusion={wrap['intrusion']} "
+            f"near_r={wrap['near_r']:.4f} near_depth={wrap['near_depth']:+.4f} "
+            f"near_s={wrap['near_s']:.3f} q7={wrap['q7']:+.4f}",
+            flush=True,
+        )
         # One winding report per completed turn: the count should step by
         # exactly one, which is what separates winding from dragging the rope
         # around without ever catching the post.
         if label.startswith("wind_t") and label.endswith(f"{spec.arc_points_per_turn:02d}"):
-            turns = winding_number(winding_centerline(scene, groups), post_center(scene.layout, spec))
+            turns = winding_number(
+                winding_centerline(scene, groups),
+                post_center(scene.layout, spec),
+                settled_band_radius(scene.layout, spec),
+            )
             print(
                 f"rope_winding_physical_handle_demo turn_complete phase={label} "
                 f"winding_number={turns:+.3f}",
@@ -476,33 +970,123 @@ def run_demo(
         # its spawn latch to a hand attachment in the same step.
         offset = entity_pos(handle) - np.asarray(controller.hand_pos(), dtype=float)
         attachment = attachment_manager.create(
-            entity=handle, parent_pos_fn=controller.hand_pos, offset=offset
+            entity=handle,
+            parent_pos_fn=controller.hand_pos,
+            offset=offset,
+            # Hold the pose it is in. The default is yaw-only and therefore
+            # upright, which would wrench a plug lying on its side through 90
+            # degrees in a single step -- and the rope's end band rides the
+            # plug's link, so the rope goes with it.
+            quat=entity_quat(handle),
+            # ...and keep holding it *relative to the hand*, so the wrist's orbit
+            # tracking turns the plug with it. Until 2026-08-15 only the line
+            # above was here: the plug kept one world orientation for the whole
+            # route while the wrist rolled +-90 and threw 180 three times, so the
+            # pads swept that entire schedule across a plug that never moved, and
+            # the rope's end band -- welded to the plug's link -- stayed clamped
+            # in world orientation while the rope was wound twice around a post.
+            parent_quat_fn=controller.hand_quat,
         )
         spawn_latch.active = False
         attachment.attach()
         grasp_attachment.append(attachment)
+        flat_quat.append(entity_quat(handle))
+        pitch_outlet_down(attachment)
+        # Wrap is measured from the grasp: this is the moment the gripper and the
+        # rope acquire a relationship worth accumulating.
+        wrap_tracker.reset()
+
+    def pitch_outlet_down(attachment) -> None:
+        """Turn the plug so the cable leaves it BELOW the fingertips.
+
+        "Outlet", not "nose": the end that has to go down is the cap, where the
+        cable enters, not the pin.
+
+        Lying flat, the plug's cap sits at the same height as the pads and the
+        cable runs out along its axis -- 17 mm from the grip centre, against
+        fingers that reach 10.5 mm. Measured 2026-08-15: the rope's last 3 cm was
+        inside the jaw for the whole orbit (`near_s` 0.96, `near_depth` -0.011,
+        `pad_gap` 0.0032), including the six waypoints where the plug's alignment
+        was perfect. No amount of wrist rotation reaches that -- it is where the
+        cable comes out, not which way the plug points.
+
+        Nose-down puts the cap 17 mm BELOW the grip centre and the fingertips
+        9.4 mm below it, so the cable emerges 7.6 mm clear of the fingers and
+        stays clear at every bearing, for any number of turns.
+
+        The axis is the one perpendicular to both the plug's own axis and the
+        vertical, which turns the cap through a quarter circle without twisting
+        the rope about its own centreline -- untangle_continuous picks the same
+        one for the same reason. The turn is ramped, not written, because the
+        rope's end band rides the plug's link.
+        """
+
+        if pitch_angle == 0.0:
+            return
+        # `z x axis`, not `axis x z`. The plug's local +z IS the cap -- the end
+        # that swallows the cable -- so turning it toward -z is what puts the
+        # outlet underneath. The other order points the cap at the ceiling and
+        # the cable comes out over the top of the hand, which is what this did
+        # when first written.
+        axis = np.cross(np.array([0.0, 0.0, 1.0]), _quat_axes(flat_quat[0])[:, 2])
+        if float(np.linalg.norm(axis)) < 1e-9:
+            return
+        target = quat_mul(quat_about_axis(axis, pitch_angle), flat_quat[0])
+        attachment.ramp_to(target, pitch_steps)
+        print(
+            "rope_winding_physical_handle_demo carry_pitch "
+            f"deg={np.degrees(pitch_angle):.0f} steps={pitch_steps} "
+            f"axis={np.round(axis / np.linalg.norm(axis), 3).tolist()}",
+            flush=True,
+        )
+
+    def lay_plug_flat() -> None:
+        """Back to the pose it was picked up in, before it is set down.
+
+        It has to land the way the target zone expects it -- and the way it
+        spawned -- or the placement reads as a plug standing on its nose.
+        """
+
+        if pitch_angle == 0.0 or not grasp_attachment or not flat_quat:
+            return
+        grasp_attachment[0].ramp_to(flat_quat[0], pitch_steps)
 
     def release_grasp_attachment():
         attachment = grasp_attachment.pop()
         attachment.release(sync=False)
         attachment_manager.attachments.remove(attachment)
 
-    def engage_connector_latch(handle_pos, final_target):
-        del handle_pos, final_target
-        if latch is None:
+    def hand_off_at_target(pre_release_pos, final_target) -> bool:
+        """Pin the plug where the route put it, before the gripper lets go.
+
+        `HandleDragPrimitive` opens the fingers and then lifts the hand 80 mm to
+        get clear. The grasp attachment follows `hand_pos` and does not care that
+        the fingers opened, so until 2026-08-15 the plug rode the retreat up and
+        was only pinned afterwards -- at whatever height the hand had reached.
+        Measured: `handle_z_above` climbed from the 0.015 it was placed at to
+        0.112 and the spawn latch froze it there, plug and rope end hanging in
+        mid air. Nothing in the solver corrects that: the plug is mesh-only and
+        kinematically driven, so it neither falls nor rests on anything.
+
+        Returning True tells the primitive the object is already held by someone
+        else, so it does not sync its own hold on the way out.
+        """
+
+        if not grasp_attachment:
             return False
-        status["phase"] = "connector_latch"
-        engaged = latch.try_engage()
-        if engaged and grasp_attachment:
-            release_grasp_attachment()
+        release_grasp_attachment()
+        wrap_tracker.held = False
+        spawn_latch.target_pos = entity_pos(handle)
+        spawn_latch.active = True
+        spawn_latch.sync()
         print(
-            "rope_winding_physical_handle_demo connector_latch "
-            f"engaged={engaged} xy_error={latch.last_xy_error:.4f} "
-            f"z_error={latch.last_z_error:.4f} tilt_deg={latch.last_tilt_deg:.1f} "
-            f"capture_checks={latch.capture_checks}",
+            "rope_winding_physical_handle_demo handoff_at_target "
+            f"plug pinned at {np.round(entity_pos(handle), 4).tolist()} "
+            f"target {np.round(final_target, 4).tolist()}",
             flush=True,
         )
-        return bool(engaged)
+        return True
+
 
     if cfg.run.probe:
         _print_probe_plan(target_labels, targets, target_steps)
@@ -512,6 +1096,12 @@ def run_demo(
 
     with recording_session_from_config(scene.scene, scene.cameras, cfg.recording, hud=_hud(status)):
         with attachment_manager:
+            # Installed before the settle, and not behind `run.probe`: its
+            # reference frame is fixed at the first sample, so that sample has to
+            # be the true start of the episode, and its unwrap needs a steady
+            # cadence from there on. Diagnostics you can switch off are fine;
+            # a baseline you can switch off is not.
+            twist_probe = TwistProbe(scene, status, every=int(cfg.run.probe_every))
             controller.step(
                 max(
                     0,
@@ -529,8 +1119,10 @@ def run_demo(
                     spec,
                     groups,
                     status,
+                    wrap_tracker,
                     every=cfg.run.probe_every,
                     surface_z=scene.layout.world_z(0.0),
+                    finger_links=physical.finger_links,
                 )
             result = primitive.run(
                 controller,
@@ -541,25 +1133,44 @@ def run_demo(
                 on_segment_start=on_segment_start,
                 on_segment_complete=on_segment_complete,
                 on_close=engage_grasp_attachment,
-                before_release=engage_connector_latch if full_route else None,
+                # Fires after the last waypoint and BEFORE the fingers open and
+                # the hand retreats -- which is the only moment the plug is both
+                # let go of and still where the route put it.
+                before_release=hand_off_at_target,
                 ee_quat=ee_quat,
+                segment_quats=segment_quats,
                 trace=trace,
                 attachment_manager=attachment_manager,
             )
+            print(
+                "rope_winding_physical_handle_demo wrap_summary "
+                f"{wrap_tracker.summary_text()}",
+                flush=True,
+            )
+            print(
+                "rope_winding_physical_handle_demo twist_summary "
+                f"{twist_probe.summary_text()}",
+                flush=True,
+            )
             if grasp_attachment:
-                # The plug is still in hand: either the route was cut short by
-                # `run.max_waypoints` (staged verification) or it aborted. Both
-                # need the plug frozen where the hand left it -- it is mesh-only,
-                # so releasing it without a latch drops it through the board --
-                # but only one of them is a failure, and the log has to say which.
+                # Only reached when `before_release` did not fire -- an abort
+                # returns from `run()` without ever getting to the hand-off. The
+                # plug is mesh-only, so nothing in the solver would stop it
+                # falling through the board; the same hold it spawned with is
+                # re-aimed at wherever the hand left it.
                 release_grasp_attachment()
                 spawn_latch.target_pos = entity_pos(handle)
                 spawn_latch.active = True
                 spawn_latch.sync()
+                if not result.success:
+                    ending = "abort_hold"
+                elif full_route:
+                    ending = "placed"
+                else:
+                    ending = "staged_hold"
                 print(
-                    "rope_winding_physical_handle_demo "
-                    f"{'staged_hold' if result.success else 'abort_hold'} "
-                    "plug frozen at hand pose (not returned to spawn)",
+                    f"rope_winding_physical_handle_demo {ending} "
+                    f"plug set down at {np.round(entity_pos(handle), 4).tolist()}",
                     flush=True,
                 )
             if result.success:
@@ -590,6 +1201,7 @@ def run_demo(
             settled_handle_pos = entity_pos(handle)
             if probe is not None:
                 probe.uninstall()
+            twist_probe.uninstall()
 
     # Exclude reset_home (a set_dofs_position teleport) from the dataset: it is
     # post-task cleanup, not demonstration.
@@ -603,20 +1215,20 @@ def run_demo(
             "reason=wind_route_failed_before_safe_settle",
             flush=True,
         )
-    connector_error_xy = float(np.linalg.norm(settled_handle_pos[:2] - targets[-1][:2]))
-    endpoint_success = connector_error_xy <= float(physical.connector_tolerance_xy)
-    latch_engaged = bool(latch is not None and latch.active)
+    # "Put down at the target", not "plugged in": the placement check is how far
+    # the plug ended up from the target zone's centre.
+    placement_error_xy = float(np.linalg.norm(settled_handle_pos[:2] - targets[-1][:2]))
+    placement_success = placement_error_xy <= float(physical.connector_tolerance_xy)
     success = bool(
-        result.success and winding_success and endpoint_success and latch_engaged and full_route
+        result.success and winding_success and placement_success and full_route
     )
     metrics = {
         "task_success": bool(success),
         "physical_success": bool(result.success),
         "winding_success": bool(winding_success),
         "full_route": bool(full_route),
-        "endpoint_success": bool(endpoint_success),
-        "latch_engaged": bool(latch_engaged),
-        "connector_error_xy": float(connector_error_xy),
+        "placement_success": bool(placement_success),
+        "placement_error_xy": float(placement_error_xy),
         "turns": int(spec.turns),
         "direction": str(spec.direction),
         "completed_waypoints": len(result.completed_segments),
@@ -638,8 +1250,8 @@ def run_demo(
         f"task_success={success} physical_success={result.success} "
         f"stable_ready={episode_result.stable_ready} export_ready={episode_result.export_ready} "
         f"winding_success={winding_success} full_route={full_route} "
-        f"endpoint_success={endpoint_success} latch_engaged={latch_engaged} "
-        f"connector_error_xy={connector_error_xy:.4f} "
+        f"placement_success={placement_success} "
+        f"placement_error_xy={placement_error_xy:.4f} "
         f"turns={spec.turns} direction={spec.direction} "
         f"completed_waypoints={len(result.completed_segments)}/{len(targets)} "
         f"grasped={result.grasped} failure_reason={result.failure_reason}",
@@ -696,7 +1308,15 @@ def main(cfg: DictConfig) -> None:
     scene = RopeWindingSceneBuilder(
         cfg.env, cfg.task, cfg.robot_control, route_mode="initial"
     ).build(show_viewer=cfg.run.viewer, include_robot=True)
-    route_command, episode_plan = plan_rope_winding_route(scene.layout)
+    route_command, episode_plan = plan_rope_winding_route(
+        scene.layout,
+        # The emitted wrist yaw is an offset from the pose the plug is grasped
+        # in, so the planner needs that pose to aim the plug at the rope rather
+        # than at wherever the spawn route happened to leave it.
+        plug_heading=(
+            0.0 if scene.plug_heading is None else float(scene.plug_heading)
+        ),
+    )
     print("rope_winding_physical_handle_demo scene_ready", flush=True)
     controller = initialize_franka_controller(
         scene=scene.scene,

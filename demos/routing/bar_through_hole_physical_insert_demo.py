@@ -60,6 +60,25 @@ def _hud(bar_scene, evaluator, status):
     return render_lines
 
 
+def configure_contacts(cfg, bar_scene, controller) -> None:
+    """Apply the configured friction to the shaft and the fingers.
+
+    Called from `main` rather than from `run_demo` so the inspect-only path gets
+    it too: that path exists to judge how the scene settles, and settling under
+    Genesis' default friction instead of the configured value would make it
+    answer a question about a scene nobody runs.
+    """
+
+    physical = cfg.task.physical
+    configure_gripper_contact_friction(
+        entities=[bar_scene.bar_entity()],
+        robot=controller.robot,
+        finger_links=list(physical.finger_links),
+        object_friction=float(physical.bar_friction),
+        finger_friction=float(physical.finger_friction),
+    )
+
+
 def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> EpisodeResult:
     layout = bar_scene.layout
     physical = cfg.task.physical
@@ -74,14 +93,6 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         success_checks=("lift_delta", "lift_tilt", "threading_count", "release_stable"),
     )
 
-    configure_gripper_contact_friction(
-        entities=[bar],
-        robot=controller.robot,
-        finger_links=list(physical.finger_links),
-        object_friction=float(physical.bar_friction),
-        finger_friction=float(physical.finger_friction),
-    )
-
     evaluator = BarThroughHolePuzzleEvaluator(
         tilt_tolerance=float(np.deg2rad(float(cfg.task.success.tilt_tolerance_deg))),
         seated_z_tolerance=float(cfg.task.success.seated_z_tolerance),
@@ -91,21 +102,27 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
     # Both modes travel to the same xy; only the carry height differs. The bypass
     # goes over the panel top instead of through the aperture, so the shaft lands
     # on the lintel and the crossing falls outside the aperture rectangle.
+    # Heights in config are task-frame (task z=0 is the table top); the
+    # controller drives IK in world. `layout.world_z` is the conversion every
+    # other demo in the repo applies at exactly this call -- see
+    # stacked_plate_physical_rotate_demo.py:67 and its three siblings. Passing
+    # the task number straight through commands the hand to world z=0.210, i.e.
+    # 0.71 m *below* the table, and the arm dives for the floor.
     insert_xy = layout.insert_hand_xy()
     if mode == "bypass":
-        insert_z = float(cfg.task.oracle.bypass_lift_z)
+        insert_z = layout.world_z(float(cfg.task.oracle.bypass_lift_z))
         seat_z = insert_z
     else:
-        insert_z = float(primitive_cfg.insert_z)
-        seat_z = float(primitive_cfg.seat_z)
+        insert_z = layout.world_z(float(primitive_cfg.insert_z))
+        seat_z = layout.world_z(float(primitive_cfg.seat_z))
 
     primitive = AxialInsertPrimitive(
-        approach_z=float(primitive_cfg.approach_z),
-        grasp_z=float(primitive_cfg.grasp_z),
-        lift_z=float(primitive_cfg.lift_z),
+        approach_z=layout.world_z(float(primitive_cfg.approach_z)),
+        grasp_z=layout.world_z(float(primitive_cfg.grasp_z)),
+        lift_z=layout.world_z(float(primitive_cfg.lift_z)),
         insert_z=insert_z,
         seat_z=seat_z,
-        clear_z=float(primitive_cfg.clear_z),
+        clear_z=layout.world_z(float(primitive_cfg.clear_z)),
         steps_per_phase=int(primitive_cfg.steps_per_phase),
         insert_steps=int(primitive_cfg.insert_steps),
         gripper_steps=int(primitive_cfg.gripper_steps),
@@ -249,6 +266,8 @@ def main(cfg: DictConfig) -> None:
         settle_steps=int(cfg.task.physical.settle_steps),
     )
 
+    configure_contacts(cfg, bar_scene, controller)
+
     episode_key = EpisodeKey(task_id="bar_through_hole", seed=int(cfg.run.seed))
     evaluator = BarThroughHolePuzzleEvaluator()
     status = {"phase": "home", "mode": mode, "release_stable": True}
@@ -263,11 +282,24 @@ def main(cfg: DictConfig) -> None:
             # Home settle only. This is the step that surfaces a home-pose /
             # geometry interpenetration, which is how stacked_plate got a solver
             # NaN before its raised-home config existed.
-            controller.step(200)
+            #
+            # Report the settle drift per axis, not just the final pose: the
+            # shaft is spawned exactly on its cradles, so any lateral creep here
+            # is spent out of the insertion budget before the arm even moves,
+            # and a bare world-frame position makes that invisible.
+            spawn = entity_pos(bar_scene.bar_entity()).copy()
+            controller.step(int(cfg.run.inspect_settle_steps))
+            settled = entity_pos(bar_scene.bar_entity())
+            drift = settled - spawn
+            layout = bar_scene.layout
+            budget = layout.aperture_inradius - layout.bar_inradius
             state = evaluator.classify(bar_scene)
             print(
                 "bar_through_hole inspect "
-                f"bar_pos={entity_pos(bar_scene.bar_entity())} "
+                f"bar_pos={settled} "
+                f"drift_mm=({drift[0] * 1e3:+.2f}, {drift[1] * 1e3:+.2f}, {drift[2] * 1e3:+.2f}) "
+                f"lateral_drift_mm={float(np.hypot(drift[1], drift[2])) * 1e3:.2f} "
+                f"align_budget_mm={budget * 1e3:.2f} "
                 f"threading={state.threading_count} tilt_deg={np.rad2deg(state.tilt_rad):.2f}",
                 flush=True,
             )

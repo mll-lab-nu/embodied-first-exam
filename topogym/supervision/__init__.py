@@ -17,6 +17,7 @@ from .pbd_probe import (
 )
 from .step_bench import stop_before_physics
 from .rope_trace import RopeTrace, min_bend_radius
+from .rope_twist import TwistProbe, TwistTracker
 from .rope_stability import (
     ParticleSpacingReport,
     RopeBlowUp,
@@ -32,14 +33,22 @@ from .cable_routing import (
     signature_text,
 )
 from .rope_winding import (
+    gripper_frame_metrics,
+    gripper_wrap,
     material_bins,
     material_coords,
+    pad_gap,
     post_contact,
     print_winding_verification,
+    rope_free_end_first,
     rope_twist_turns,
+    settled_band_radius,
     winding_centerline,
     winding_metrics,
     winding_number,
+    winding_sweep,
+    wrap_band_radius,
+    wrapped_span,
 )
 
 __all__ = [
@@ -54,6 +63,8 @@ __all__ = [
     "probe_velocities",
     "ParticleSpacingReport",
     "RopeBlowUp",
+    "TwistProbe",
+    "TwistTracker",
     "particle_spacing_reports",
     "rope_blow_ups",
     "StabilityDecision",
@@ -67,12 +78,20 @@ __all__ = [
     "print_routing_verification",
     "rope_wrap_metrics",
     "signature_text",
+    "gripper_frame_metrics",
+    "gripper_wrap",
     "material_bins",
     "material_coords",
+    "pad_gap",
     "post_contact",
     "print_winding_verification",
+    "rope_free_end_first",
     "rope_twist_turns",
+    "settled_band_radius",
     "winding_centerline",
     "winding_metrics",
     "winding_number",
+    "winding_sweep",
+    "wrap_band_radius",
+    "wrapped_span",
 ]
