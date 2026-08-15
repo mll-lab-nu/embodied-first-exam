@@ -168,6 +168,17 @@ physical:
   # （P7：不怼到 0）。真正承载的是 assisted attachment，指面只需看起来夹住。
   grasp_qpos: 0.008
   close_hold_steps: 30
+  # 合爪后指位的下限。assisted carry 下 lift_delta 证明不了任何事（attachment 会
+  # 把杆抬起来，指垫碰没碰到都一样），指行程是唯一能区分「夹到杆」和「夹了个空」
+  # 的读数。null = 不判，但照样打印。先跑一次看 finger_qpos 打出来多少，再把门设在
+  # 那个值和指令位 grasp_qpos(0.008) 之间。杆的对角半宽是 0.0104，夹到杆时指位应当
+  # 明显高于 0.008。
+  min_finger_qpos: null
+  # 把杆在夹爪里摆正回静置姿态所用的 ramp 步数（计的是 sync 次数，物理步是它的一半）。
+  # 六棱柱平面朝下时没有面对着指垫，合爪压的是两条棱，会把自由状态的杆拧几度；
+  # 之后 attachment 会把这个误差一路带到只有 7mm 间隙的孔口。搬运本来就是已声明的
+  # 运动学事件，摆正不额外增加任何主张。
+  straighten_steps: 60
   insert_settle_steps: 30
   # 预载释放会踢一下，给足静置步数（onestroke 用 100）。
   release_hold_steps: 100

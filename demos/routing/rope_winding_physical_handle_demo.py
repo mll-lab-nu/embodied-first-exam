@@ -886,13 +886,6 @@ def run_demo(
     def on_segment_start(index, total, label, target):
         status["phase"] = label
         status["waypoint"] = index
-        # The plug is carried nose-down (see `pitch_outlet_down`, which runs at the
-        # grasp). Lay it flat again for the last leg, so it is set down the way
-        # it spawned and the way the target zone expects: the ramp only advances
-        # on sync calls, so it has to start a whole segment before the release,
-        # not inside `before_release`.
-        if label == "to_C_hover":
-            lay_plug_flat()
         print(
             "rope_winding_physical_handle_demo waypoint_start "
             f"index={index}/{total} phase={label} target={target.tolist()}",
@@ -991,16 +984,16 @@ def run_demo(
         attachment.attach()
         grasp_attachment.append(attachment)
         flat_quat.append(entity_quat(handle))
-        pitch_outlet_down(attachment)
+        pitch_plug_for_carry(attachment)
         # Wrap is measured from the grasp: this is the moment the gripper and the
         # rope acquire a relationship worth accumulating.
         wrap_tracker.reset()
 
-    def pitch_outlet_down(attachment) -> None:
-        """Turn the plug so the cable leaves it BELOW the fingertips.
+    def pitch_plug_for_carry(attachment) -> None:
+        """Stand the plug up so the cable leaves it ABOVE the pads.
 
-        "Outlet", not "nose": the end that has to go down is the cap, where the
-        cable enters, not the pin.
+        "Outlet", not "nose": the end that has to clear the jaw is the cap, where
+        the cable enters, not the pin.
 
         Lying flat, the plug's cap sits at the same height as the pads and the
         cable runs out along its axis -- 17 mm from the grip centre, against
@@ -1010,24 +1003,40 @@ def run_demo(
         was perfect. No amount of wrist rotation reaches that -- it is where the
         cable comes out, not which way the plug points.
 
-        Nose-down puts the cap 17 mm BELOW the grip centre and the fingertips
-        9.4 mm below it, so the cable emerges 7.6 mm clear of the fingers and
-        stays clear at every bearing, for any number of turns.
+        Cap UP (`carry_pitch_deg` -90) puts the outlet 17 mm above the grip
+        centre, 8.5 mm over the top of the pads, and the cable leaves across
+        them rather than through them. Cap DOWN (+90) clears the fingertips by
+        more, and was tried first, but it aims the outlet at the board: the rope
+        had 13 mm to turn through 90 degrees, then got dragged along the surface
+        and wrapped the post's flared base instead of its shaft (`post_contact`
+        48 -> 0). Pointing up, the bend has the whole free span to happen in.
+
+        What up does NOT buy: the finger bodies run 44.5 mm above the pads, so
+        the outlet is out of the pad plane but still between the fingers. The
+        bearing the cable leaves on sweeps a full turn per orbit, and on the two
+        bearings that point at a finger it meets its inner face. `intrusion` and
+        `pad_gap` are the readout.
 
         The axis is the one perpendicular to both the plug's own axis and the
         vertical, which turns the cap through a quarter circle without twisting
         the rope about its own centreline -- untangle_continuous picks the same
         one for the same reason. The turn is ramped, not written, because the
         rope's end band rides the plug's link.
+
+        It stays this way to the end. Standing up the plug is a solid of
+        revolution about the VERTICAL, so orbiting no longer sweeps its bore past
+        the rope and there is nothing for the wrist to track; and it is set down
+        on the target zone still standing (`physical_handle.z_offset` carries the
+        seat height that goes with that).
         """
 
         if pitch_angle == 0.0:
             return
-        # `z x axis`, not `axis x z`. The plug's local +z IS the cap -- the end
-        # that swallows the cable -- so turning it toward -z is what puts the
-        # outlet underneath. The other order points the cap at the ceiling and
-        # the cable comes out over the top of the hand, which is what this did
-        # when first written.
+        # `z x axis`, not `axis x z`, and then the SIGN picks the end: the plug's
+        # local +z IS the cap -- the end that swallows the cable -- so about this
+        # axis a positive angle turns the cap down and a negative one turns it
+        # up. With the cross product the other way round both flip, which is what
+        # this did when first written.
         axis = np.cross(np.array([0.0, 0.0, 1.0]), _quat_axes(flat_quat[0])[:, 2])
         if float(np.linalg.norm(axis)) < 1e-9:
             return
@@ -1039,17 +1048,6 @@ def run_demo(
             f"axis={np.round(axis / np.linalg.norm(axis), 3).tolist()}",
             flush=True,
         )
-
-    def lay_plug_flat() -> None:
-        """Back to the pose it was picked up in, before it is set down.
-
-        It has to land the way the target zone expects it -- and the way it
-        spawned -- or the placement reads as a plug standing on its nose.
-        """
-
-        if pitch_angle == 0.0 or not grasp_attachment or not flat_quat:
-            return
-        grasp_attachment[0].ramp_to(flat_quat[0], pitch_steps)
 
     def release_grasp_attachment():
         attachment = grasp_attachment.pop()

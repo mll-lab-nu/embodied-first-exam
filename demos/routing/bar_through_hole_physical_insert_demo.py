@@ -108,7 +108,9 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
     # stacked_plate_physical_rotate_demo.py:67 and its three siblings. Passing
     # the task number straight through commands the hand to world z=0.210, i.e.
     # 0.71 m *below* the table, and the arm dives for the floor.
-    insert_xy = layout.insert_hand_xy()
+    # The aperture centre is where the SHAFT has to be; the primitive works out
+    # where that puts the hand from the pair's measured offset.
+    insert_part_xy = layout.aperture_center()[:2]
     if mode == "bypass":
         insert_z = layout.world_z(float(cfg.task.oracle.bypass_lift_z))
         seat_z = insert_z
@@ -133,8 +135,18 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         min_lift_delta=float(physical.min_lift_delta),
         max_grasp_tilt=float(np.deg2rad(float(physical.max_grasp_tilt_deg))),
         max_grasp_xy_error=float(physical.max_grasp_xy_error),
+        min_finger_qpos=(
+            None if physical.min_finger_qpos is None else float(physical.min_finger_qpos)
+        ),
         verbose=bool(cfg.run.verbose),
     )
+
+    # How the shaft lies before anything touches it. The pads close on two of the
+    # hex corners -- there is no flat facing them -- so the free shaft is turned a
+    # few degrees before the carry takes over, and the carry then holds that error
+    # all the way to a bore with 7 mm of clearance. This is the orientation the
+    # grip is straightened back to.
+    rest_quat = entity_quat(bar)
 
     if stop_before_physics(cfg, bar_scene.scene, "bar_through_hole_physical_insert_demo"):
         raise SystemExit(0)
@@ -154,6 +166,20 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
                 quat=entity_quat(bar),
             )
             attachment.attach()
+            # Straighten the shaft in the grip. `ramp_to` is the repo's declared way
+            # to re-orient a held child -- rope_winding pitches its plug nose-down at
+            # the grasp the same way -- and it costs no additional claim here,
+            # because the carry itself is already a declared kinematic event
+            # (`runtime_attachment=True` above). Correcting the grip is what the
+            # attachment is FOR; the alternative is spending the bore's clearance on
+            # a few degrees of closing disturbance and then tuning finger preload to
+            # chase it back down.
+            #
+            # `steps` counts sync calls and AttachmentManager syncs twice per
+            # scene.step, so this finishes in half as many physics steps -- well
+            # inside the lift phase, which is why the turn is over before
+            # `lift_test` reads the tilt.
+            attachment.ramp_to(rest_quat, steps=int(physical.straighten_steps))
             held.append(attachment)
             status["phase"] = "carrying"
             return attachment
@@ -169,7 +195,7 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
             controller,
             part=bar,
             grasp_xy=layout.grasp_xy(),
-            insert_xy=insert_xy,
+            insert_part_xy=insert_part_xy,
             retreat_xy=layout.grasp_xy(),
             part_axis=(1.0, 0.0, 0.0),
             ee_quat=controller.default_ee_quat,
@@ -201,6 +227,7 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         "release_stable": bool(release_stable),
         "release_drift": drift,
         "lift_delta": float(result.lift_delta),
+        "finger_qpos": float(result.finger_qpos),
         "lift_tilt_deg": float(np.rad2deg(result.lift_tilt)),
         "align_tilt_deg": float(np.rad2deg(result.align_tilt)),
         "bar_tilt_deg": float(np.rad2deg(state.tilt_rad)),
@@ -228,6 +255,7 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         f"threading={state.threading_count} geometry_ok={state.geometry_ok} "
         f"release_stable={release_stable} drift={drift:.5f} "
         f"lift_delta={result.lift_delta:.4f} lift_tilt={np.rad2deg(result.lift_tilt):.2f}deg "
+        f"finger_qpos={result.finger_qpos:.4f} "
         f"failure_reason={episode_result.failure_reason} "
         f"phases={len(result.completed_phases)}/{len(AxialInsertPrimitive.NOMINAL_PHASES)}",
         flush=True,

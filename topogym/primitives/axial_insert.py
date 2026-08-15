@@ -105,6 +105,7 @@ class AxialInsertResult:
     lift_delta: float
     lift_tilt: float
     align_tilt: float
+    finger_qpos: float
     completed_phases: tuple[str, ...]
 
 
@@ -149,6 +150,13 @@ class AxialInsertPrimitive:
     # grasp gate reads tilt as well as rise.
     max_grasp_tilt: float = float(np.deg2rad(2.0))
     max_grasp_xy_error: float = 0.025
+    # Where the fingers must still be once they have stopped closing. Under an
+    # assisted carry `lift_delta` proves nothing -- the attachment raises the part
+    # whether or not the pads ever touched it -- so finger travel is the one
+    # reading that separates "closed on the part" from "closed on air". None
+    # leaves it unchecked; the measured value is reported either way, which is
+    # how the threshold gets set in the first place.
+    min_finger_qpos: float | None = None
     insert_steps: int | None = None
     verbose: bool = False
 
@@ -158,7 +166,7 @@ class AxialInsertPrimitive:
         *,
         part: Any,
         grasp_xy,
-        insert_xy,
+        insert_part_xy,
         retreat_xy,
         part_axis=(1.0, 0.0, 0.0),
         ee_quat=None,
@@ -166,7 +174,14 @@ class AxialInsertPrimitive:
         release_fn: Callable[[], None] | None = None,
     ) -> AxialInsertResult:
         grasp_xy = np.asarray(grasp_xy, dtype=float).reshape(2)
-        insert_xy = np.asarray(insert_xy, dtype=float).reshape(2)
+        # `insert_part_xy` is where the PART's centre has to end up, not where the
+        # hand goes. The two differ by the grasp offset, and that offset is not the
+        # nominal one: the part is wherever it settled and wherever the closing pads
+        # nudged it, and the carry freezes that error in. Aiming the hand at a
+        # precomputed number therefore spends the receptacle's clearance on a
+        # deviation nobody measured -- 4.9 mm of a 7 mm budget, in the case this was
+        # written for. The offset is read off the actual pair after the lift instead.
+        insert_part_xy = np.asarray(insert_part_xy, dtype=float).reshape(2)
         retreat_xy = np.asarray(retreat_xy, dtype=float).reshape(2)
         part_axis = np.asarray(part_axis, dtype=float).reshape(3)
         completed: list[str] = []
@@ -197,6 +212,9 @@ class AxialInsertPrimitive:
 
         controller.step(max(0, int(self.close_hold_steps)))
         completed.append("grasp_settle")
+        # Read the fingers where they came to rest, before the attachment makes
+        # every later reading agree with the hand.
+        finger_qpos = float(np.min(_as_numpy(controller.gripper_qpos())))
 
         # Hand the part over before the lift: the pads cannot hold the moment on
         # their own, so the attachment has to be live for the very first move
@@ -218,12 +236,14 @@ class AxialInsertPrimitive:
             lift_delta >= float(self.min_lift_delta)
             and lift_tilt <= float(self.max_grasp_tilt)
             and grasp_xy_error <= float(self.max_grasp_xy_error)
+            and (self.min_finger_qpos is None or finger_qpos >= float(self.min_finger_qpos))
         )
         if not grasped:
             reason = (
                 f"grasp_check_failed: lift_delta={lift_delta:.4f} "
                 f"lift_tilt={np.rad2deg(lift_tilt):.2f}deg "
-                f"grasp_xy_error={grasp_xy_error:.4f}"
+                f"grasp_xy_error={grasp_xy_error:.4f} "
+                f"finger_qpos={finger_qpos:.4f}"
             )
             if release_fn is not None:
                 release_fn()
@@ -242,8 +262,13 @@ class AxialInsertPrimitive:
                 lift_delta=lift_delta,
                 lift_tilt=lift_tilt,
                 align_tilt=lift_tilt,
+                finger_qpos=finger_qpos,
                 completed_phases=tuple(completed),
             )
+
+        # Turn the part target into a hand target using the pair's ACTUAL offset.
+        carry_offset_xy = lifted_part_pos[:2] - np.asarray(controller.hand_pos(), dtype=float)[:2]
+        insert_xy = insert_part_xy - carry_offset_xy
 
         # Align laterally and to the insertion height while still clear of the
         # receptacle, so `insert` stays a single-axis push.
@@ -305,6 +330,7 @@ class AxialInsertPrimitive:
             lift_delta=lift_delta,
             lift_tilt=lift_tilt,
             align_tilt=align_tilt,
+            finger_qpos=finger_qpos,
             completed_phases=tuple(completed),
         )
 

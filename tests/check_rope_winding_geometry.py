@@ -274,10 +274,9 @@ def main() -> int:
 
     print("\ncable exit")
     # Where the cable leaves the plug, and whether it can get from there to the
-    # post. The plug is carried in the pose it was grasped in: lying on its side,
-    # so the cable leaves along the plug's axis, horizontally, at the plug's own
-    # height. Two checks here used to ask only whether the 90-degree carry pitch
-    # pointed the right way; they went with it (2026-08-14).
+    # post. `physical_handle.carry_pitch_deg` decides: 0 carries it in the pose it
+    # was grasped in (on its side, cable out along the axis at the grip centre's
+    # own height), -90 stands it up with the cap on top, +90 stands it on its cap.
     connector = cfg.rope.endpoint_handle.connector
     grasp_h = float(connector.flange_height) + 0.5 * float(connector.column_height)
     cap_offset = (
@@ -291,7 +290,7 @@ def main() -> int:
     # `connector_mesh` puts the local origin at the grasp column's middle, so the
     # cap's apex -- the point the cable enters -- is half a column plus the cap
     # beyond it. Lying flat that offset is horizontal and the exit is at the grip
-    # centre's own height; pitched nose-down it is straight down.
+    # centre's own height; pitched it is vertical, above or below by the sign.
     connector = cfg.rope.endpoint_handle.connector
     column_height = float(connector.column_height)
     cap_offset = 0.5 * column_height + float(
@@ -306,10 +305,11 @@ def main() -> int:
     fingertip_height = spec.wind_z_start - finger_reach_below_pads
     # Which WAY the carry pitch turns the plug, computed the same way the demo
     # does rather than asserted in prose. The plug's local +z is its cap, the end
-    # that swallows the cable, so a correct pitch sends it to -z. Written the
-    # other way round first (`axis x z` instead of `z x axis`) it sent the cap to
-    # +z -- cable out over the top of the hand -- and every number below still
-    # read fine, because they all assume the intended direction.
+    # that swallows the cable; about `z x plug_axis` a positive pitch sends it
+    # down and a negative one sends it up, so the sign in the config is the whole
+    # statement of intent and this is where it gets checked. Getting the cross
+    # product backwards flips both, and every number below still reads fine
+    # because they all assume the intended direction.
     if abs(pitch) > 1e-9:
         heading = math.atan2(
             *(
@@ -325,43 +325,56 @@ def main() -> int:
         turned = _quat_axis_z(
             quat_mul(quat_about_axis(np.cross((0.0, 0.0, 1.0), cap), pitch), flat_quat)
         )
+        wanted = -1.0 if pitch > 0.0 else 1.0
         check(
-            "the carry pitch turns the plug's CAP down, not its pin",
-            turned[2] < -0.999,
+            "the carry pitch stands the plug on its axis, cap "
+            + ("down" if wanted < 0 else "up"),
+            abs(turned[2] - wanted) < 0.001,
             f"cap points {np.round(turned, 3).tolist()} after "
             f"{math.degrees(pitch):.0f}deg (flat: {np.round(cap, 3).tolist()})",
         )
 
-    # How far the cable's exit is from the finger envelope. There are two ways to
-    # be clear of it, and the carry pose decides which is in play:
+    # How far the cable's exit is from the jaw. There are three ways to be clear
+    # of it, and the carry pose decides which is in play:
     #   flat      -- clear ALONG the plug's axis: cap offset vs finger reach
-    #   nose-down -- clear BELOW the fingertips
+    #   cap down  -- clear BELOW the fingertips
+    #   cap up    -- clear ABOVE the pads
     # The fingers reach 10.5 mm along the axis (`finger_0.obj`, x +-0.0105).
     #
-    # Neither is comfortable at the shipped geometry, which is why this only asks
+    # None is comfortable at the shipped geometry, which is why this only asks
     # for "outside at all". Flat leaves 6.5 mm, and measured 2026-08-15 that was
     # not enough: the rope's last 3 cm sat inside the jaw for the whole orbit
     # (`near_s` 0.96, `near_depth` -0.011, `pad_gap` 0.0032) even at the
-    # waypoints where the plug's alignment was perfect. Nose-down buys 7.6 mm
+    # waypoints where the plug's alignment was perfect. Cap down buys 7.6 mm
     # below instead -- but it aims the outlet across the rope's own direction and
     # folds it through 90 degrees in 13 mm, half the 27 mm hook this task treats
-    # as its danger line.
+    # as its danger line. Cap up buys 8.5 mm above the pads with the bend spread
+    # over the whole free span, and is what ships.
     #
-    # The fix that needs neither compromise is a longer nose (`cap_height`),
+    # Cap up is clear of the PADS, not of the fingers: their bodies run
+    # `finger_reach_above_pads` higher still, so the exit sits in the slot
+    # between them and only the two bearings along the finger thickness are
+    # open. That is reported below rather than checked -- whether it costs
+    # anything is a contact question a run answers, not arithmetic.
+    #
+    # The fix that needs no compromise at all is a longer nose (`cap_height`),
     # which clears the fingers axially without bending anything. Open question
     # there: the plug is placed with its origin ON the rope's endpoint
     # (`tasks/routing/cable_routing.py` `_add_endpoint_handle`), so a longer cap
     # swallows more rope than the follow band welds.
     finger_reach_along_axis = 0.0105
+    finger_reach_above_pads = HAND_TO_PAD_Z - 0.0584
     axial_clear = cap_offset * math.cos(pitch) - finger_reach_along_axis
     vertical_clear = fingertip_height - exit_height
+    above_pads_clear = exit_height - (spec.wind_z_start + pad_half_height)
     check(
-        "the cable's exit is outside the finger envelope",
-        max(axial_clear, vertical_clear) > 0.0,
+        "the cable's exit is outside the pads",
+        max(axial_clear, vertical_clear, above_pads_clear) > 0.0,
         f"{axial_clear * 1000:+.1f} mm along the axis, "
-        f"{vertical_clear * 1000:+.1f} mm below the fingertips "
+        f"{vertical_clear * 1000:+.1f} mm below the fingertips, "
+        f"{above_pads_clear * 1000:+.1f} mm above the pad tops "
         f"(carry pitch {math.degrees(pitch):.0f}deg, cap offset "
-        f"{cap_offset * 1000:.0f} mm) -- thin either way, see the comment",
+        f"{cap_offset * 1000:.0f} mm) -- thin whichever way, see the comment",
     )
 
     check(
@@ -379,17 +392,30 @@ def main() -> int:
         f"cable exit at z={exit_height:.4f}, shaft spans "
         f"{flare_top:.4f}..{post_top - TASK_ORIGIN[2]:.4f}",
     )
-    # Reported, not checked: the cost taken on by dropping the pitch. The cable
-    # now runs out along the plug's axis at pad height, through the jaw, which is
-    # the very thing the pitch was added to avoid. Whether it matters is a
-    # contact question only a run can answer -- watch `pad_gap` and `PADCONTACT`.
-    # A permanently red check for a cost we chose would teach people to skim past
-    # this whole section.
-    print(
-        f"  [--] cable exits along the plug axis, through the jaw: "
-        f"{cap_offset * 1000:.0f} mm of cable inside pads reaching "
-        f"+-{pad_half_height * 1000:.1f} mm of the axis"
-    )
+    # Reported, not checked: the cost the chosen carry pose takes on. Whether it
+    # matters is a contact question only a run can answer -- watch `pad_gap`,
+    # `intrusion` and `PADCONTACT`. A permanently red check for a cost we chose
+    # would teach people to skim past this whole section.
+    if abs(pitch) < 1e-9:
+        print(
+            f"  [--] cable exits along the plug axis, through the jaw: "
+            f"{cap_offset * 1000:.0f} mm of cable inside pads reaching "
+            f"+-{pad_half_height * 1000:.1f} mm of the axis"
+        )
+    elif pitch < 0.0:
+        print(
+            f"  [--] cable exits {above_pads_clear * 1000:.1f} mm above the pads "
+            f"but still between the fingers, whose bodies run "
+            f"{finger_reach_above_pads * 1000:.1f} mm above them; the exit "
+            f"bearing sweeps a full turn per orbit and meets a finger's inner "
+            f"face twice a turn"
+        )
+    else:
+        print(
+            f"  [--] cable exits {-vertical_clear * 1000:.1f} mm below the "
+            f"fingertips and points at the board {exit_height * 1000:.0f} mm "
+            f"down: the rope turns 90 degrees in that drop"
+        )
 
     print("\ntopology")
     turns_spawn = winding_number(densify(layout.route_polyline("initial")), center, wrap_band)

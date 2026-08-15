@@ -196,6 +196,20 @@ cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_t
 # 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)
 cd .external/openpi && WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null
 
+# --- bar_through_hole: 刚性杆穿隔板孔 (任务书 2.3) ---
+# 纯刚体任务, 不需要 FEM 那份 env。搬运用 assisted attachment (IL 契约里
+# runtime_attachment=True), 抓起来之后杆会 ramp 回静置姿态, 对孔用的是实测的
+# 杆-手偏移, 不是预先算好的手部坐标。
+# A. 只建场景 + home 位静置, 量杆自己会不会漂 (不跑动作)
+python -B -m demos.routing.bar_through_hole_physical_insert_demo run.inspect_only=true run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/bar_inspect.log
+# B. 完整插入。看 finger_qpos (指位, 判有没有真夹到杆) / lift_tilt (摆正后应接近 0) /
+#    threading=1 / release_stable=True
+python -B -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true 2>&1 | tee runs/bar_insert.log
+# C. 反捷径对照: 同样的起止 xy, 只把搬运高度抬到面板顶上绕过去, 判失败 (threading=0)
+python -B -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass run.viewer=true run.verbose=true 2>&1 | tee runs/bar_bypass.log
+# D. 录像
+python -B -m demos.routing.bar_through_hole_physical_insert_demo recording=hq recording.path=runs/videos/bar_through_hole.mp4 recording.camera=[oblique,topdown] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/bar_insert_video.log
+
 # --- rope_winding: 绳绕柱两圈 + 放置 (任务书 2.4; 2026-08-11 新建) ---
 # 设计与判据: docs/develop/physics/rope_winding/rope_winding_zh.md
 # A. 出生与静置 (只走前两个路点; 看绳是否近直躺平、无自发卷曲)

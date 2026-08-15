@@ -233,13 +233,13 @@ class BarThroughHoleLayout:
         center = self.bar_rest_center()
         return np.array([center[0] - self.grasp_offset(), center[1]], dtype=float)
 
-    def insert_hand_xy(self) -> np.ndarray:
-        """World xy of the hand when the shaft is centred in the aperture."""
+    # Where the hand goes is not published here: it is the shaft's target minus the
+    # offset the pair actually ends up with, which only the primitive can measure
+    # after the lift. A precomputed hand xy assumes the shaft is exactly on its
+    # nominal spot, and every millimetre it is not comes straight out of the bore's
+    # clearance.
 
-        center = self.aperture_center()
-        return np.array([center[0] - self.grasp_offset(), center[1]], dtype=float)
-
-    # The anti-shortcut rollout reuses `insert_hand_xy` unchanged and differs only
+    # The anti-shortcut rollout aims at the same aperture centre and differs only
     # in carry height: identical start and end xy, different trajectory homotopy.
     # That is what docx asks a contrast pair to be, and it keeps the hand behind
     # the panel plane -- carrying the shaft to the far side would drag the forearm
