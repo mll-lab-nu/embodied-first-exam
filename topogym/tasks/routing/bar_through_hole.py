@@ -44,6 +44,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
+from topogym.tasks._fixtures import add_v_block, v_block_seat_drop
 from topogym.tasks._visuals import (
     add_aperture_ring,
     add_industrial_pedestal,
@@ -253,6 +254,24 @@ class BarThroughHoleLayout:
             return ()
         return tuple((str(name), spec) for name, spec in cradles.items())
 
+    def bar_profile(self) -> np.ndarray:
+        """The shaft's cross-section, as the V-blocks and the bore both read it."""
+
+        return hexagon_vertices(self.bar_across_flats)
+
+    def cradle_apex_z(self, spec) -> float:
+        """Groove bottom for a cradle, from the axis height its config asks for.
+
+        Config states `seat_axis_z` -- where the shaft's AXIS ends up -- because
+        that is the number the rest of the task is written against: the rest pose,
+        the grasp height, and the far cradle's agreement with the aperture sill.
+        The apex is derived from it and the shaft's profile, so changing the
+        shaft's size moves the grooves instead of silently changing where it sits.
+        """
+
+        half_angle = np.deg2rad(float(getattr(spec, "half_angle_deg", 45.0)))
+        return float(spec.seat_axis_z) - v_block_seat_drop(self.bar_profile(), half_angle)
+
 
 @dataclass
 class BarThroughHoleScene:
@@ -421,33 +440,37 @@ class BarThroughHoleSceneBuilder:
     # ---------------------------------------------------------------- cradles
 
     def _add_cradles(self, scene, manifest: EntityManifest, layout: BarThroughHoleLayout) -> None:
-        """Open flat-top blocks the shaft rests across.
+        """V-blocks the shaft rests in, from the shared `_fixtures` builder.
 
-        No side chocks: a hexagonal shaft lies on one of its faces and cannot
-        roll, which is what the earlier round shaft's chocks existed to prevent.
-        Blocks sit away from the grasp x so the fingers close on bare shaft.
+        These were flat-top pads until 2026-08-16. A pad locates the shaft
+        vertically and in nothing else, so it crept 5.2 mm sideways just settling
+        under gravity and the closing pads turned it a further 3.3 degrees --
+        both spent out of the bore's 7 mm of clearance before the arm had done
+        anything. A groove takes the sideways freedom away, which is the whole
+        reason the oracle's own alignment correction can stay small.
+
+        Grooves sit away from the grasp x, same as the pads did, so the fingers
+        still close on bare shaft.
         """
 
         for name, spec in layout.cradle_specs():
             if not bool(getattr(spec, "enabled", True)):
                 continue
-            color = _list(getattr(spec, "color", self.task_cfg.panel.color))
-            base_size = tuple(float(v) for v in _list(spec.base_size))
-            base_top = float(spec.base_top_z)
-            center_x = float(spec.x)
-            manifest.add(
-                f"{name}_base",
-                scene.add_entity(
-                    gs.morphs.Box(
-                        pos=tuple(
-                            layout.position_to_world((center_x, 0.0, base_top - 0.5 * base_size[2]))
-                        ),
-                        size=base_size,
-                        fixed=True,
-                    ),
-                    surface=materials.plastic("fixture", color),
-                    name=f"{name}_base",
-                ),
+            add_v_block(
+                scene,
+                manifest,
+                prefix=name,
+                center_x=float(spec.x),
+                center_y=0.0,
+                apex_z=layout.cradle_apex_z(spec),
+                length_x=float(spec.length_x),
+                half_angle_rad=float(np.deg2rad(float(spec.half_angle_deg))),
+                jaw_width=float(spec.jaw_width),
+                jaw_thickness=float(spec.jaw_thickness),
+                post_width=float(spec.post_width),
+                base_z=0.0,
+                color=_list(getattr(spec, "color", self.task_cfg.panel.color)),
+                to_world=layout.position_to_world,
             )
 
     # -------------------------------------------------------------------- bar
@@ -517,18 +540,19 @@ class BarThroughHoleSceneBuilder:
             self._add_cradle_pedestals(scene, manifest, layout, pedestal)
 
     def _add_cradle_pedestals(self, scene, manifest, layout, pedestal) -> None:
-        """Dress each cradle's load block as a bolted pedestal.
+        """Dress each V-block's post as a bolted pedestal.
 
-        The blocks themselves are untouched -- same top face, same footprint, so
+        The post and the jaws are untouched -- same groove, same footprint, so
         the shaft rests where it did. `add_industrial_pedestal` gives the tall
-        far cradle a foot plate, anchor bolts, knee braces and a cap collar, and
-        the two low near pads just the plate and bolts, since a brace does not
-        read at 12 mm.
+        far post a foot plate, anchor bolts, knee braces and a cap collar, and
+        the two short near posts just the plate and bolts, since a brace does not
+        read at that height. The collar is what visually joins post to jaws.
         """
 
         for name, spec in layout.cradle_specs():
             if not bool(getattr(spec, "enabled", True)):
                 continue
+            apex_z = layout.cradle_apex_z(spec)
             add_industrial_pedestal(
                 scene,
                 manifest,
@@ -536,8 +560,8 @@ class BarThroughHoleSceneBuilder:
                 spec=pedestal,
                 center_x=float(spec.x),
                 center_y=0.0,
-                top_z=float(spec.base_top_z),
-                block_size=_list(spec.base_size),
+                top_z=apex_z,
+                block_size=(float(spec.length_x), float(spec.post_width), apex_z),
                 to_world=layout.position_to_world,
             )
 

@@ -1,12 +1,18 @@
 """Push a rigid shaft through a bulkhead aperture (docx 2.3).
 
-Assisted grasp: the shaft is gripped 65 mm behind its centre of mass, so the
+Assisted grasp: the shaft is gripped 75 mm behind its centre of mass, so the
 pads see a pure moment the Franka's finger gains cannot hold. The part is
 carried by `AttachmentManager` (`topogym/primitives/attachment.py`), the same
 mechanism cable_routing and untangle use for their rigid handles. That is a
 declared kinematic event, so the IL contract line reports
 `runtime_attachment=True` per `docs/develop/visual/physical_realism_guidelines_zh.md`
 P1/P4.
+
+The attachment carries the shaft; it does not aim it. The grip is rigid in the
+HAND's frame (`parent_quat_fn`), so every motion the shaft makes -- the lift, the
+alignment turn, the push through the bore -- is one the arm made. Nothing here
+re-poses the part on its own. An episode recorded from this demo can therefore
+be imitated: the actions explain the observations.
 
 Configuration is Hydra (`configs/bar_through_hole.yaml`).
 
@@ -90,7 +96,13 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         manipulated=["bar"],
         runtime_attachment=True,
         runtime_set_pose=False,
-        success_checks=("lift_delta", "lift_tilt", "threading_count", "release_stable"),
+        success_checks=(
+            "lift_delta",
+            "lift_tilt",
+            "align_tilt",
+            "threading_count",
+            "release_stable",
+        ),
     )
 
     evaluator = BarThroughHolePuzzleEvaluator(
@@ -134,19 +146,14 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         release_hold_steps=int(physical.release_hold_steps),
         min_lift_delta=float(physical.min_lift_delta),
         max_grasp_tilt=float(np.deg2rad(float(physical.max_grasp_tilt_deg))),
+        max_align_tilt=float(np.deg2rad(float(physical.max_align_tilt_deg))),
+        align_axis_steps=int(physical.align_axis_steps),
         max_grasp_xy_error=float(physical.max_grasp_xy_error),
         min_finger_qpos=(
             None if physical.min_finger_qpos is None else float(physical.min_finger_qpos)
         ),
         verbose=bool(cfg.run.verbose),
     )
-
-    # How the shaft lies before anything touches it. The pads close on two of the
-    # hex corners -- there is no flat facing them -- so the free shaft is turned a
-    # few degrees before the carry takes over, and the carry then holds that error
-    # all the way to a bore with 7 mm of clearance. This is the orientation the
-    # grip is straightened back to.
-    rest_quat = entity_quat(bar)
 
     if stop_before_physics(cfg, bar_scene.scene, "bar_through_hole_physical_insert_demo"):
         raise SystemExit(0)
@@ -164,22 +171,14 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
                 parent_pos_fn=controller.hand_pos,
                 offset=entity_pos(bar) - np.asarray(controller.hand_pos(), dtype=float),
                 quat=entity_quat(bar),
+                # Hold the shaft RELATIVE to the hand, the same way rope_winding
+                # holds its plug. Without this the shaft keeps whatever world
+                # orientation it had at the grasp while the wrist turns underneath
+                # it -- which would make `align_axis` sweep the pads across a shaft
+                # that never moves, and leave the alignment undone.
+                parent_quat_fn=controller.hand_quat,
             )
             attachment.attach()
-            # Straighten the shaft in the grip. `ramp_to` is the repo's declared way
-            # to re-orient a held child -- rope_winding pitches its plug nose-down at
-            # the grasp the same way -- and it costs no additional claim here,
-            # because the carry itself is already a declared kinematic event
-            # (`runtime_attachment=True` above). Correcting the grip is what the
-            # attachment is FOR; the alternative is spending the bore's clearance on
-            # a few degrees of closing disturbance and then tuning finger preload to
-            # chase it back down.
-            #
-            # `steps` counts sync calls and AttachmentManager syncs twice per
-            # scene.step, so this finishes in half as many physics steps -- well
-            # inside the lift phase, which is why the turn is over before
-            # `lift_test` reads the tilt.
-            attachment.ramp_to(rest_quat, steps=int(physical.straighten_steps))
             held.append(attachment)
             status["phase"] = "carrying"
             return attachment
@@ -198,6 +197,9 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
             insert_part_xy=insert_part_xy,
             retreat_xy=layout.grasp_xy(),
             part_axis=(1.0, 0.0, 0.0),
+            # The bore's axis: the shaft has to come out parallel to the panel
+            # normal, which `layout.panel_plane()` already publishes.
+            insert_axis=layout.panel_plane()[1],
             ee_quat=controller.default_ee_quat,
             attach_fn=attach_bar,
             release_fn=release_bar,
@@ -255,6 +257,7 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
         f"threading={state.threading_count} geometry_ok={state.geometry_ok} "
         f"release_stable={release_stable} drift={drift:.5f} "
         f"lift_delta={result.lift_delta:.4f} lift_tilt={np.rad2deg(result.lift_tilt):.2f}deg "
+        f"align_tilt={np.rad2deg(result.align_tilt):.2f}deg "
         f"finger_qpos={result.finger_qpos:.4f} "
         f"failure_reason={episode_result.failure_reason} "
         f"phases={len(result.completed_phases)}/{len(AxialInsertPrimitive.NOMINAL_PHASES)}",

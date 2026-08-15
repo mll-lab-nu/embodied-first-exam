@@ -60,6 +60,50 @@ def _quat_slerp(start, end, alpha: float) -> np.ndarray:
     )
 
 
+def _quat_mul(a, b) -> np.ndarray:
+    aw, ax, ay, az = (float(v) for v in np.asarray(a, dtype=float).reshape(4))
+    bw, bx, by, bz = (float(v) for v in np.asarray(b, dtype=float).reshape(4))
+    return np.array(
+        [
+            aw * bw - ax * bx - ay * by - az * bz,
+            aw * bx + ax * bw + ay * bz - az * by,
+            aw * by - ax * bz + ay * bw + az * bx,
+            aw * bz + ax * by - ay * bx + az * bw,
+        ],
+        dtype=float,
+    )
+
+
+def _rotate(quat, vector) -> np.ndarray:
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
+    u = np.array([x, y, z], dtype=float)
+    v = np.asarray(vector, dtype=float).reshape(3)
+    t = 2.0 * np.cross(u, v)
+    return v + w * t + np.cross(u, t)
+
+
+def _rotation_between(source, target) -> np.ndarray:
+    """Shortest rotation taking unit vector ``source`` onto ``target``.
+
+    Both are treated as undirected: a shaft pointing down its own axis the other
+    way is the same physical alignment, and taking the long way round would ask
+    the wrist for a 180-degree turn to fix a 3-degree error.
+    """
+
+    source = np.asarray(source, dtype=float).reshape(3)
+    target = np.asarray(target, dtype=float).reshape(3)
+    source = source / max(float(np.linalg.norm(source)), 1e-12)
+    target = target / max(float(np.linalg.norm(target)), 1e-12)
+    if float(np.dot(source, target)) < 0.0:
+        target = -target
+    axis = np.cross(source, target)
+    quat = np.concatenate([[1.0 + float(np.dot(source, target))], axis])
+    norm = float(np.linalg.norm(quat))
+    if norm < 1e-12:  # already opposed after the flip above, i.e. nothing to do
+        return np.array([1.0, 0.0, 0.0, 0.0], dtype=float)
+    return quat / norm
+
+
 def _axis_tilt(quat, part_axis) -> float:
     """How far the part's long axis has swung from where it rests.
 
@@ -120,6 +164,7 @@ class AxialInsertPrimitive:
         "close",
         "grasp_settle",
         "lift_test",
+        "align_axis",
         "align",
         "insert",
         "insert_settle",
@@ -148,7 +193,12 @@ class AxialInsertPrimitive:
     # The dominant failure here is rotational, not translational: a part that
     # droops in the pads still lifts, then jams the receptacle mouth. So the
     # grasp gate reads tilt as well as rise.
-    max_grasp_tilt: float = float(np.deg2rad(2.0))
+    max_grasp_tilt: float = float(np.deg2rad(15.0))
+    # What the shaft's axis must be within AFTER the wrist has turned to align it.
+    # This is the gate that guards the receptacle; `max_grasp_tilt` above only
+    # asks whether the closing pads tumbled the part.
+    max_align_tilt: float = float(np.deg2rad(1.0))
+    align_axis_steps: int | None = None
     max_grasp_xy_error: float = 0.025
     # Where the fingers must still be once they have stopped closing. Under an
     # assisted carry `lift_delta` proves nothing -- the attachment raises the part
@@ -169,6 +219,7 @@ class AxialInsertPrimitive:
         insert_part_xy,
         retreat_xy,
         part_axis=(1.0, 0.0, 0.0),
+        insert_axis=(1.0, 0.0, 0.0),
         ee_quat=None,
         attach_fn: Callable[[], Any] | None = None,
         release_fn: Callable[[], None] | None = None,
@@ -184,6 +235,7 @@ class AxialInsertPrimitive:
         insert_part_xy = np.asarray(insert_part_xy, dtype=float).reshape(2)
         retreat_xy = np.asarray(retreat_xy, dtype=float).reshape(2)
         part_axis = np.asarray(part_axis, dtype=float).reshape(3)
+        insert_axis = np.asarray(insert_axis, dtype=float).reshape(3)
         completed: list[str] = []
         initial_part_pos = _entity_pos(part)
         grasp_offset_xy = initial_part_pos[:2] - grasp_xy
@@ -266,15 +318,75 @@ class AxialInsertPrimitive:
                 completed_phases=tuple(completed),
             )
 
+        # Bring the part's axis parallel to the insertion direction BY TURNING THE
+        # WRIST. The part is held, so it turns with the hand; the correction is
+        # therefore an arm action like any other, and an imitation-learning episode
+        # recorded from this run contains the alignment as something the robot did.
+        #
+        # Re-orienting the part inside the grip instead -- which the attachment can
+        # do, and which this primitive did until 2026-08-16 -- produces the same
+        # final pose and a useless demonstration: the shaft turns while the arm
+        # holds still, so nothing in the action stream explains the motion and a
+        # policy trained on it never learns to align anything.
+        #
+        # Requires the caller's attachment to follow the parent's ORIENTATION
+        # (`parent_quat_fn`); with the position-only default the hand turns under a
+        # part that keeps its world orientation, and the wrist rotation does
+        # nothing but sweep the pads across it.
+        carry_quat = np.asarray(controller.hand_quat(), dtype=float).reshape(4)
+        correction = _rotation_between(_rotate(_entity_quat(part), part_axis), insert_axis)
+        aligned_quat = _quat_mul(correction, carry_quat)
+        hold_pos = np.asarray(controller.hand_pos(), dtype=float)
+        self._move_linear(
+            controller,
+            hold_pos,
+            quat=aligned_quat,
+            start_quat=carry_quat,
+            steps=self.align_axis_steps,
+        )
+        align_tilt = _axis_tilt(_entity_quat(part), part_axis)
+        completed.append("align_axis")
+        self._log(controller, "align_axis", hold_pos, part)
+
+        if align_tilt > float(self.max_align_tilt):
+            reason = (
+                f"align_check_failed: align_tilt={np.rad2deg(align_tilt):.2f}deg "
+                f"lift_tilt={np.rad2deg(lift_tilt):.2f}deg"
+            )
+            if release_fn is not None:
+                release_fn()
+            controller.open_gripper(self.gripper_steps)
+            completed.append("recovery_open")
+            self._move_linear(controller, approach_target, quat=aligned_quat)
+            completed.append("recovery_retreat")
+            return AxialInsertResult(
+                success=False,
+                grasped=True,
+                inserted=False,
+                failure_reason=reason,
+                initial_part_pos=initial_part_pos,
+                lifted_part_pos=lifted_part_pos,
+                final_part_pos=_entity_pos(part),
+                lift_delta=lift_delta,
+                lift_tilt=lift_tilt,
+                align_tilt=align_tilt,
+                finger_qpos=finger_qpos,
+                completed_phases=tuple(completed),
+            )
+
         # Turn the part target into a hand target using the pair's ACTUAL offset.
-        carry_offset_xy = lifted_part_pos[:2] - np.asarray(controller.hand_pos(), dtype=float)[:2]
+        # Read after the wrist has turned, not before: turning the hand swings the
+        # part around it, so the offset the travel has to cancel is the one that
+        # exists once the part is pointing the right way.
+        carry_offset_xy = (
+            _entity_pos(part)[:2] - np.asarray(controller.hand_pos(), dtype=float)[:2]
+        )
         insert_xy = insert_part_xy - carry_offset_xy
 
         # Align laterally and to the insertion height while still clear of the
         # receptacle, so `insert` stays a single-axis push.
         align_target = np.array([grasp_xy[0], insert_xy[1], self.insert_z], dtype=float)
-        self._move_linear(controller, align_target, quat=ee_quat)
-        align_tilt = _axis_tilt(_entity_quat(part), part_axis)
+        self._move_linear(controller, align_target, quat=aligned_quat)
         completed.append("align")
         self._log(controller, "align", align_target, part)
 
@@ -282,7 +394,10 @@ class AxialInsertPrimitive:
         self._move_linear(
             controller,
             insert_target,
-            quat=ee_quat,
+            # Every move from here on holds the ALIGNED wrist pose. Reverting to
+            # `ee_quat` would turn the shaft straight back off axis on the one
+            # move that pushes it into the bore.
+            quat=aligned_quat,
             steps=self.insert_steps if self.insert_steps is not None else self.steps_per_phase,
         )
         completed.append("insert")
@@ -292,7 +407,7 @@ class AxialInsertPrimitive:
         completed.append("insert_settle")
 
         seat_target = np.array([insert_xy[0], insert_xy[1], self.seat_z], dtype=float)
-        self._move_linear(controller, seat_target, quat=ee_quat)
+        self._move_linear(controller, seat_target, quat=aligned_quat)
         completed.append("seat")
 
         if release_fn is not None:
@@ -304,15 +419,17 @@ class AxialInsertPrimitive:
         completed.append("release_settle")
 
         clear_target = np.array([insert_xy[0], insert_xy[1], self.clear_z], dtype=float)
-        self._move_linear(controller, clear_target, quat=ee_quat)
+        self._move_linear(controller, clear_target, quat=aligned_quat)
         completed.append("clear")
 
         withdraw_target = np.array([retreat_xy[0], retreat_xy[1], self.clear_z], dtype=float)
-        self._move_linear(controller, withdraw_target, quat=ee_quat)
+        self._move_linear(controller, withdraw_target, quat=aligned_quat)
         completed.append("withdraw")
 
+        # Part released and cleared, so the wrist can go back to the canonical
+        # carry pose -- the arm ends where the next episode would start it.
         retreat_target = np.array([retreat_xy[0], retreat_xy[1], self.approach_z], dtype=float)
-        self._move_linear(controller, retreat_target, quat=ee_quat)
+        self._move_linear(controller, retreat_target, quat=ee_quat, start_quat=aligned_quat)
         completed.append("retreat")
 
         final_part_pos = _entity_pos(part)

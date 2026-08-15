@@ -65,6 +65,28 @@ CASES = (
 )
 
 
+# The wrist-alignment correction (2026-08-16). `align_axis` turns the hand by
+# `_rotation_between(shaft axis now, bore axis)` and the shaft, held rigidly in
+# the hand's frame, turns with it. The property that has to hold is end-to-end:
+# applying the correction to the shaft's own orientation must leave its axis on
+# the bore's axis. Testing the quaternion's components instead would pass for a
+# correction that is off by a sign and still fail in the scene.
+BORE_AXIS = (1.0, 0.0, 0.0)
+
+ALIGN_CASES = (
+    ("already aligned", IDENTITY),
+    ("yawed 3.3deg, the measured closing disturbance", quat(Z_AXIS, 3.3)),
+    ("yawed the other way", quat(Z_AXIS, -3.3)),
+    ("pitched 4deg", quat((0, 1, 0), 4.0)),
+    ("yawed and pitched together", axial_insert._quat_mul(quat(Z_AXIS, 3.0), quat((0, 1, 0), 2.0))),
+    # End-for-end is the same alignment. A correction that took the short way to
+    # the *signed* axis would ask the wrist for a 180-degree turn here.
+    ("flipped end for end", quat(Z_AXIS, 180.0)),
+    ("flipped and yawed 2deg", axial_insert._quat_mul(quat(Z_AXIS, 178.0), IDENTITY)),
+    ("rolled about its own axis", quat(X_AXIS, 40.0)),
+)
+
+
 def main() -> int:
     failures: list[str] = []
     for description, rotation, part_axis, expected in CASES:
@@ -73,6 +95,21 @@ def main() -> int:
         print(f"[{'ok' if ok else 'error'}] {description}: {actual:.3f}deg (want {expected:.1f})")
         if not ok:
             failures.append(description)
+
+    print()
+    for description, rotation in ALIGN_CASES:
+        axis_now = axial_insert._rotate(rotation, X_AXIS)
+        correction = axial_insert._rotation_between(axis_now, BORE_AXIS)
+        corrected = axial_insert._quat_mul(correction, rotation)
+        residual = float(np.degrees(axial_insert._axis_tilt(corrected, X_AXIS)))
+        turn = float(np.degrees(2.0 * np.arccos(np.clip(abs(correction[0]), -1.0, 1.0))))
+        ok = residual < 1e-6 and turn <= 90.0
+        print(
+            f"[{'ok' if ok else 'error'}] align {description}: "
+            f"residual={residual:.6f}deg wrist_turn={turn:.2f}deg"
+        )
+        if not ok:
+            failures.append(f"align {description}")
 
     for failure in failures:
         print(f"[error] {failure}")

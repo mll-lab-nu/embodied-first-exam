@@ -197,13 +197,14 @@ cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_t
 cd .external/openpi && WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null
 
 # --- bar_through_hole: 刚性杆穿隔板孔 (任务书 2.3) ---
-# 纯刚体任务, 不需要 FEM 那份 env。搬运用 assisted attachment (IL 契约里
-# runtime_attachment=True), 抓起来之后杆会 ramp 回静置姿态, 对孔用的是实测的
-# 杆-手偏移, 不是预先算好的手部坐标。
+# 纯刚体任务, 不需要 FEM 那份 env。托座是 V 形块 (topogym/tasks/_fixtures.py 的
+# 通用构件)。搬运用 assisted attachment (IL 契约里 runtime_attachment=True), 且是
+# 相对手的刚性握持: 杆的每一次转动都由手腕做出来, 不在夹爪里改杆的姿态 —— 否则
+# 录出来的 IL 数据里对准这一步凭空发生, 策略学不到。对孔用的是实测的杆-手偏移。
 # A. 只建场景 + home 位静置, 量杆自己会不会漂 (不跑动作)
 python -B -m demos.routing.bar_through_hole_physical_insert_demo run.inspect_only=true run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/bar_inspect.log
-# B. 完整插入。看 finger_qpos (指位, 判有没有真夹到杆) / lift_tilt (摆正后应接近 0) /
-#    threading=1 / release_stable=True
+# B. 完整插入。看 finger_qpos (指位, 判有没有真夹到杆) / lift_tilt (合爪扰动, 门槛 15°) /
+#    align_tilt (手腕对准之后, 门槛 1°, 这道才是卡孔的) / threading=1 / release_stable=True
 python -B -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true 2>&1 | tee runs/bar_insert.log
 # C. 反捷径对照: 同样的起止 xy, 只把搬运高度抬到面板顶上绕过去, 判失败 (threading=0)
 python -B -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass run.viewer=true run.verbose=true 2>&1 | tee runs/bar_bypass.log

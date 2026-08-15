@@ -305,11 +305,12 @@ def main() -> int:
     fingertip_height = spec.wind_z_start - finger_reach_below_pads
     # Which WAY the carry pitch turns the plug, computed the same way the demo
     # does rather than asserted in prose. The plug's local +z is its cap, the end
-    # that swallows the cable; about `z x plug_axis` a positive pitch sends it
-    # down and a negative one sends it up, so the sign in the config is the whole
-    # statement of intent and this is where it gets checked. Getting the cross
-    # product backwards flips both, and every number below still reads fine
-    # because they all assume the intended direction.
+    # that swallows the cable; about `z x plug_axis` a positive pitch sends the
+    # cap down and the PIN up -- "plug up" in this task's wording, and what the
+    # config asks for -- while a negative one does the opposite. The sign is the
+    # whole statement of intent, and this is where it gets checked: getting the
+    # cross product backwards flips both, and every number below still reads fine
+    # because they all follow the pitch rather than assert a direction.
     if abs(pitch) > 1e-9:
         heading = math.atan2(
             *(
@@ -327,8 +328,8 @@ def main() -> int:
         )
         wanted = -1.0 if pitch > 0.0 else 1.0
         check(
-            "the carry pitch stands the plug on its axis, cap "
-            + ("down" if wanted < 0 else "up"),
+            "the carry pitch stands the plug on its axis, "
+            + ("pin up / cap down" if wanted < 0 else "pin down / cap up"),
             abs(turned[2] - wanted) < 0.001,
             f"cap points {np.round(turned, 3).tolist()} after "
             f"{math.degrees(pitch):.0f}deg (flat: {np.round(cap, 3).tolist()})",
@@ -336,26 +337,25 @@ def main() -> int:
 
     # How far the cable's exit is from the jaw. There are three ways to be clear
     # of it, and the carry pose decides which is in play:
-    #   flat      -- clear ALONG the plug's axis: cap offset vs finger reach
-    #   cap down  -- clear BELOW the fingertips
-    #   cap up    -- clear ABOVE the pads
+    #   flat                 -- clear ALONG the plug's axis: cap offset vs reach
+    #   pin up / cap down    -- clear BELOW the fingertips
+    #   pin down / cap up    -- clear ABOVE the pads
     # The fingers reach 10.5 mm along the axis (`finger_0.obj`, x +-0.0105).
     #
     # None is comfortable at the shipped geometry, which is why this only asks
     # for "outside at all". Flat leaves 6.5 mm, and measured 2026-08-15 that was
     # not enough: the rope's last 3 cm sat inside the jaw for the whole orbit
     # (`near_s` 0.96, `near_depth` -0.011, `pad_gap` 0.0032) even at the
-    # waypoints where the plug's alignment was perfect. Cap down buys 7.6 mm
-    # below instead -- but it aims the outlet across the rope's own direction and
-    # folds it through 90 degrees in 13 mm, half the 27 mm hook this task treats
-    # as its danger line. Cap up buys 8.5 mm above the pads with the bend spread
-    # over the whole free span, and is what ships.
+    # waypoints where the plug's alignment was perfect.
     #
-    # Cap up is clear of the PADS, not of the fingers: their bodies run
+    # Pin up -- what ships -- buys 7.6 mm below the fingertips, and is the only
+    # one of the three clear at EVERY bearing. Its cost is that the outlet then
+    # aims at the board and the rope folds through 90 degrees in the 28 mm below
+    # it, against a 27 mm danger line this task set for itself; that is reported
+    # below and watched on the run, not checked here. Pin down buys 8.5 mm above
+    # the pads instead, but is clear of the PADS only: the finger bodies run
     # `finger_reach_above_pads` higher still, so the exit sits in the slot
-    # between them and only the two bearings along the finger thickness are
-    # open. That is reported below rather than checked -- whether it costs
-    # anything is a contact question a run answers, not arithmetic.
+    # between them and only the two bearings along the finger thickness are open.
     #
     # The fix that needs no compromise at all is a longer nose (`cap_height`),
     # which clears the fingers axially without bending anything. Open question
@@ -412,10 +412,41 @@ def main() -> int:
         )
     else:
         print(
-            f"  [--] cable exits {-vertical_clear * 1000:.1f} mm below the "
-            f"fingertips and points at the board {exit_height * 1000:.0f} mm "
-            f"down: the rope turns 90 degrees in that drop"
+            f"  [--] cable exits {vertical_clear * 1000:.1f} mm below the "
+            f"fingertips, pointing at the board: the rope turns 90 degrees "
+            f"inside the {exit_height * 1000:.0f} mm between the outlet and the "
+            f"surface"
         )
+
+    print("\nplacement")
+    # How high the plug's origin has to be when it is set down, for the pose it
+    # is carried in -- `physical_handle.z_offset` is what carries that, and the
+    # two have to be changed together. The plug is mesh-only and pinned by the
+    # latch, so nothing in the solver corrects a wrong height: too low buries the
+    # body in the board, too high leaves it hanging (measured 2026-08-15, 112 mm
+    # of it, when the hand-off fired after the retreat instead of before).
+    seat_task_z = float(points[-1][2]) - TASK_ORIGIN[2]
+    if abs(abs(pitch) - 0.5 * math.pi) < 1e-9:
+        # Standing on its axis: pin down rests on the flange (its pin buried in
+        # the board, which is what "plugged into the target zone" looks like),
+        # pin up rests on the cap itself.
+        under_origin = (
+            float(connector.flange_height) + 0.5 * column_height
+            if pitch < 0.0
+            else cap_offset
+        )
+    else:
+        # On its side it rests on the flange's rim, so the axis is one flange
+        # radius up.
+        under_origin = float(connector.flange_radius)
+    check(
+        "the plug is set down ON the board for the pose it is carried in",
+        abs(seat_task_z - under_origin) <= 0.0005,
+        f"seat at {seat_task_z * 1000:.1f} mm, pose needs "
+        f"{under_origin * 1000:.1f} mm (rope route {float(cfg.rope.z) * 1000:.0f} "
+        f"mm + z_offset {float(cfg.physical_handle.z_offset) * 1000:.0f} mm, "
+        f"carry pitch {math.degrees(pitch):.0f}deg)",
+    )
 
     print("\ntopology")
     turns_spawn = winding_number(densify(layout.route_polyline("initial")), center, wrap_band)
@@ -1073,6 +1104,47 @@ def check_rigid_grasp() -> None:
         worst_turn < 1e-9 and worst_slide < 1e-9,
         f"through 270deg of roll: turned {math.degrees(worst_turn):.2e}deg, "
         f"slid {worst_slide * 1000:.2e}mm",
+    )
+
+    # The same attachment with the orbit spin fitted. Two things have to hold, and
+    # they pull in opposite directions: the plug must turn by EXACTLY the
+    # commanded angle about the world vertical (too little and torsion is still
+    # injected, too much and it is injected the other way), and it must turn about
+    # ITS OWN origin, because the rope is welded there -- a spin implemented about
+    # the world's origin would swing the plug on a 1.1 m arm.
+    spin = {"angle": 0.0}
+    spun = _StubBody(plug.pos.copy(), plug.quat.copy())
+    spun_attachment = RigidAttachment(
+        entity=spun,
+        parent_pos_fn=lambda: hand["pos"],
+        offset=np.zeros(3),
+        parent_quat_fn=lambda: hand["quat"],
+        yaw_spin_fn=lambda: spin["angle"],
+    )
+    spun_attachment.attach()
+    base_quat = np.asarray(spun.quat, dtype=float)
+    base_pos = np.asarray(spun.pos, dtype=float)
+    worst_angle = 0.0
+    worst_move = 0.0
+    for step in range(1, 91):
+        # More than a full turn: two orbits ask for 720 degrees, which is exactly
+        # why this cannot be the wrist's job.
+        spin["angle"] = 2.0 * math.pi * step / 45.0
+        spun_attachment.sync()
+        wanted = quat_mul(quat_about_axis((0, 0, 1), spin["angle"]), base_quat)
+        drift = quat_mul(
+            np.array([wanted[0], -wanted[1], -wanted[2], -wanted[3]]), spun.quat
+        )
+        worst_angle = max(
+            worst_angle,
+            2.0 * math.atan2(float(np.linalg.norm(drift[1:])), abs(float(drift[0]))),
+        )
+        worst_move = max(worst_move, float(np.linalg.norm(spun.pos - base_pos)))
+    check(
+        "the orbit spin turns the plug about the vertical, through its own origin",
+        worst_angle < 1e-9 and worst_move < 1e-9,
+        f"through 720deg of spin: off by {math.degrees(worst_angle):.2e}deg, "
+        f"moved {worst_move * 1000:.2e}mm",
     )
 
     # And the position-only default, which every other task was written against,

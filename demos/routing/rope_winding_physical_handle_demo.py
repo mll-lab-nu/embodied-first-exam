@@ -27,12 +27,22 @@ same bearing out of the hand instead of sweeping around it once per turn; set it
 false for the fixed-wrist behaviour the `wrap` numbers were first measured
 against. `wrap_report` / `wrap_summary` are the readout for both.
 
+What actually keeps torsion out of the rope is a different knob:
+`task.physical_handle.plug_spin_tracks_orbit` turns the PLUG about the vertical
+inside the gripper, by the hand's own azimuth about the post. Carried pin-up the
+rope leaves the plug's cap straight down, so the welded band's tangent is
+vertical and the orbit's rotation would otherwise land entirely along it -- as
+one turn of twist per orbit. `wrap_plug` near zero says the rope and the plug
+held the same relative angle; `wrap` beside it is the old wrist-referenced
+baseline.
+
 Two numbers in `wrap_report` / `wrap_summary` guard the grasp itself:
-`grip_slip_deg` is how far the plug has turned or slid inside the pads (a rigid
-grasp holds it at 0), and `plug_vs_rope_deg` is the angle between the plug's bore
-and the rope arriving at it (past 90 the rope is entering side-on through the
-plug's body instead of through its cap). Both were assumptions until 2026-08-15,
-when the first turned out to be false for the whole route.
+`grip_slip_deg` is how far the plug is from where the attachment commands it
+(0 unless the solver moves it between syncs), and `plug_vs_rope_deg` is the angle
+between the plug's bore and the rope arriving at it (past 90 the rope is entering
+side-on through the plug's body instead of through its cap). Both were
+assumptions until 2026-08-15, when the first turned out to be false for the whole
+route.
 
 Rope torsion is reported by `TWIST` / `twist_onset` / `twist_summary`, which run
 unconditionally: their reference frame is fixed at the episode's first step, so
@@ -299,6 +309,60 @@ class _Unwrapped:
         return self.total
 
 
+class OrbitSpin:
+    """How far the plug must turn about the vertical, right now.
+
+    The free span between the plug and the post rotates about the post once per
+    orbit. Carried pin-up the rope leaves the plug's cap straight DOWN, so the
+    welded band's tangent is vertical and that rotation lands entirely along the
+    rope's own tangent -- as torsion, one turn per orbit, unless the plug turns
+    with it. Turning it by the same angle makes plug and span a single rigid
+    rotation, which is what "the rope and the plug keep the same relative angle"
+    means as a number.
+
+    The angle is the hand's own azimuth about the post, read from where the hand
+    ACTUALLY is (so IK lag is followed rather than fought), unwrapped, and zeroed
+    at the grasp. Signed by construction: ccw orbits raise it, cw lower it, so
+    nothing here needs to know the winding direction.
+
+    It stops accumulating at `freeze()`. Past the last orbit point the rope is
+    already wound and has nowhere to pay out to, so more turning would inject
+    torsion rather than cancel it -- the same reason the planner holds its final
+    wrist roll through exit, travel and placement instead of unwinding it.
+    """
+
+    def __init__(self, controller, post_xy) -> None:
+        self.controller = controller
+        self.post_xy = np.asarray(post_xy, dtype=float)[:2]
+        self._azimuth = _Unwrapped()
+        self._zero = 0.0
+        self.frozen = False
+        self._held = 0.0
+
+    def reset(self) -> None:
+        """Start from zero here -- called once the plug is grasped and pitched."""
+
+        self._azimuth = _Unwrapped()
+        self._zero = self._sample()
+        self.frozen = False
+        self._held = 0.0
+
+    def freeze(self) -> None:
+        self._held = self()
+        self.frozen = True
+
+    def _sample(self) -> float:
+        hand = np.asarray(self.controller.hand_pos(), dtype=float)
+        return self._azimuth.update(
+            np.arctan2(hand[1] - self.post_xy[1], hand[0] - self.post_xy[0])
+        )
+
+    def __call__(self) -> float:
+        if self.frozen:
+            return self._held
+        return self._sample() - self._zero
+
+
 class WrapTracker:
     """How far the rope has swept around the gripper, accumulated over the run.
 
@@ -321,13 +385,20 @@ class WrapTracker:
 
     def __init__(
         self, scene, controller, groups, spec, handle, *, free_end_first: bool,
-        cap_offset: float = 0.0, carry_pitch: float = 0.0,
+        cap_offset: float = 0.0, carry_pitch: float = 0.0, spin=None,
+        commanded_quat_fn=lambda: None,
     ):
         self.scene = scene
         self.controller = controller
         self.groups = groups
         self.handle = handle
         self.free_end_first = bool(free_end_first)
+        # The `OrbitSpin` driving the plug, or None -- reported so a run can be
+        # read back without guessing what the plug was asked to do.
+        self.spin = spin
+        # What the grasp attachment currently commands the plug's orientation to
+        # be, or None before there is one. `grip_slip_deg` measures against this.
+        self.commanded_quat_fn = commanded_quat_fn
         self.post_xy = np.asarray(post_center(scene.layout, spec), dtype=float)[:2]
         # Where the cable actually leaves the plug, in world z: the pads are
         # `HAND_TO_PAD_Z` below the hand, and the cap sits `cap_offset` along the
@@ -348,7 +419,9 @@ class WrapTracker:
         self._orbit = _Unwrapped()
         self._yaw = _Unwrapped()
         self._bearing = _Unwrapped()
+        self._plug_yaw = _Unwrapped()
         self.max_wrap = 0.0
+        self.max_wrap_plug = 0.0
         self.max_intrusion = 0
         self.first_intrusion_phase: str | None = None
         self.q7_min = float("inf")
@@ -357,21 +430,13 @@ class WrapTracker:
         self.yaw_max = 0.0
         self.max_roll_error = 0.0
         self.max_twist = 0.0
-        # The plug's pose in the hand's frame, as of this moment. Held to compare
-        # against: a rigid grasp keeps it constant, so `grip_slip` is how far the
-        # promise has drifted. `_grasp_geometry` measures the same intent but only
-        # once, at build time, which is exactly why it could not catch the plug
-        # sitting still through the whole wrist schedule.
-        self._grip_reference = quat_mul(
-            _quat_conjugate(tensor_to_numpy(self.controller.hand_quat())),
-            entity_quat(self.handle),
-        )
         self.max_grip_slip = 0.0
-        # `grip_slip` is only a promise while the plug IS held. After the hand-off
-        # at the target the latch pins the plug and the hand retreats 80 mm, so
-        # the "slip" climbs by exactly that retreat -- 53 degrees on the
-        # 2026-08-15 run, which read as a broken grasp in the summary and was
-        # nothing of the kind. Stop measuring when we let go.
+        # `grip_slip` is only a promise while the plug IS held; the summary says
+        # so rather than implying the number covers the whole run. (It used to be
+        # load-bearing: measured against a grasp-time snapshot, the 80 mm hand-off
+        # retreat added 53 degrees of "slip" on the 2026-08-15 run and read as a
+        # broken grasp. Measured against the command it cannot, but the run still
+        # ends with nobody commanding anything.)
         self.held = True
         self.max_plug_vs_rope = 0.0
         self.max_cap_entry = 0.0
@@ -397,6 +462,15 @@ class WrapTracker:
         yaw = self._yaw.update(metrics["hand_yaw"])
         bearing = self._bearing.update(metrics["strand_bearing"])
         wrap = (bearing - yaw) / (2.0 * np.pi)
+        # The same sweep measured against the PLUG rather than the hand. Once the
+        # plug turns inside the gripper the two stop agreeing, and it is the plug
+        # the rope is welded to: `wrap_plug` near zero is the statement that the
+        # rope and the plug kept the same relative angle, which is the whole
+        # point of the spin. The plug's local x is horizontal whenever its axis is
+        # vertical, so its azimuth is well defined in the carried pose.
+        plug_x = _quat_axes(entity_quat(self.handle))[:, 0]
+        plug_yaw = self._plug_yaw.update(np.arctan2(plug_x[1], plug_x[0]))
+        wrap_plug = (bearing - plug_yaw) / (2.0 * np.pi)
         q7 = float(_arm_qpos(self.controller)[-1])
         intrusion = int(metrics["intrusion"])
         # Torsion in the rope itself, per waypoint rather than per N steps. The
@@ -407,6 +481,7 @@ class WrapTracker:
             self.max_twist = max(self.max_twist, abs(twist))
 
         self.max_wrap = max(self.max_wrap, abs(wrap))
+        self.max_wrap_plug = max(self.max_wrap_plug, abs(wrap_plug))
         self.max_intrusion = max(self.max_intrusion, intrusion)
         if intrusion and self.first_intrusion_phase is None:
             self.first_intrusion_phase = phase
@@ -438,8 +513,11 @@ class WrapTracker:
             "roll_error": roll_error,
             "orbit": orbit,
             "hand_yaw": yaw,
+            "plug_yaw": plug_yaw,
             "strand_bearing": bearing,
             "wrap": wrap,
+            "wrap_plug": wrap_plug,
+            "plug_spin": 0.0 if self.spin is None else float(self.spin()),
             "near_r": float(metrics["near_r"]),
             "near_depth": float(metrics["near_depth"]),
             "near_s": float(metrics["near_s"]),
@@ -453,11 +531,16 @@ class WrapTracker:
     def _grip_metrics(self) -> dict:
         """The two promises the winding schedule makes, as numbers.
 
-        `grip_slip_deg` -- the plug's pose in the hand's frame, against where it
-        was at the grasp. Zero means the grasp is rigid: the plug neither turns
-        inside the pads nor slides. It read the whole wrist schedule until
-        2026-08-15, when the attachment was holding the plug at a fixed WORLD
-        orientation while the wrist rolled underneath it.
+        `grip_slip_deg` -- the plug's actual orientation against the one the
+        attachment commands. Zero means the solver is not moving it between
+        syncs. It is measured against the COMMAND, not against a snapshot taken
+        when the fingers closed, because this task turns the plug on purpose once
+        it is held (90 degrees of carry pitch, then a turn per orbit) and a
+        snapshot reads all of that as slip. The property a snapshot used to guard
+        -- that the plug follows the hand's rotation rather than sitting in a
+        fixed world orientation, false in the shipped code until 2026-08-15 -- is
+        now structural (`parent_quat_fn`) and proved offline every run of
+        `tests/check_rope_winding_geometry.py`.
 
         `plug_vs_rope_deg` -- the angle between the plug's bore and the rope
         arriving at it. `connector_mesh` is a solid of revolution with no cable
@@ -469,16 +552,20 @@ class WrapTracker:
         other way the cap can be missed.
         """
 
-        hand_quat = tensor_to_numpy(self.controller.hand_quat())
-        relative = quat_mul(_quat_conjugate(hand_quat), entity_quat(self.handle))
-        # Angle of reference^-1 * relative. Via atan2 of the vector part against
-        # the scalar, not `2*acos(w)`: near identity -- which is where a rigid
-        # grasp lives, and the whole point of the number -- acos reads back the
-        # square root of the floating-point error rather than the angle.
-        drift = quat_mul(_quat_conjugate(self._grip_reference), relative)
-        slip = 2.0 * float(
-            np.arctan2(float(np.linalg.norm(drift[1:])), abs(float(drift[0])))
-        )
+        # Where the attachment says the plug should be, against where it is.
+        # Zero unless the solver moves it between syncs.
+        commanded = self.commanded_quat_fn()
+        if commanded is None:
+            slip = 0.0
+        else:
+            # Angle of commanded^-1 * actual. Via atan2 of the vector part against
+            # the scalar, not `2*acos(w)`: near identity -- which is where a rigid
+            # grasp lives, and the whole point of the number -- acos reads back
+            # the square root of the floating-point error rather than the angle.
+            drift = quat_mul(_quat_conjugate(commanded), entity_quat(self.handle))
+            slip = 2.0 * float(
+                np.arctan2(float(np.linalg.norm(drift[1:])), abs(float(drift[0])))
+            )
 
         axis = _quat_axes(entity_quat(self.handle))[:, 2]
         nodes = rope_particles(self.scene)
@@ -514,17 +601,22 @@ class WrapTracker:
         q7_min = self.q7_min if self.q7_min < float("inf") else float("nan")
         q7_max = self.q7_max if self.q7_max > float("-inf") else float("nan")
         return (
-            f"max_wrap={self.max_wrap:.3f} first_intrusion_phase={first} "
+            f"max_wrap={self.max_wrap:.3f} "
+            # Against the plug, not the wrist. With the spin on this is the
+            # success number: near zero means the rope and the plug held the same
+            # relative angle through the orbits, so nothing was wrung in.
+            f"max_wrap_plug={self.max_wrap_plug:.3f} "
+            f"first_intrusion_phase={first} "
             f"max_intrusion={self.max_intrusion} "
             f"q7_min={q7_min:+.4f} q7_max={q7_max:+.4f} "
             f"yaw_span_deg={np.degrees(self.yaw_max - self.yaw_min):+.1f} "
             f"max_roll_error_deg={np.degrees(self.max_roll_error):.1f} "
             f"max_twist={self.max_twist:.2f} "
             # The two constraints the 2026-08-15 rework exists to keep. Lead with
-            # them: `max_grip_slip_deg` must be 0 (the grasp is rigid by
-            # construction once the attachment follows the hand's rotation, so
-            # anything else means it does not), and `obtuse` must be 0 outside the
-            # flicks, where the plug turns in place and has to sweep past the rope.
+            # them: `max_grip_slip_deg` must be 0 (anything else means the solver
+            # is moving the plug out from under the attachment's write), and
+            # `obtuse` must be 0 outside the flicks, where the plug turns in place
+            # and has to sweep past the rope.
             f"max_grip_slip_deg={self.max_grip_slip:.2f}{'' if self.held else ' (to handoff)'} "
             f"max_plug_vs_rope_deg={self.max_plug_vs_rope:.1f} "
             f"obtuse={self.obtuse_samples}/{self.samples} "
@@ -620,7 +712,8 @@ class RopeWindingProbe(StepProbe):
             f"orbit={np.degrees(wrap['orbit']):+.1f} "
             f"hand_yaw={np.degrees(wrap['hand_yaw']):+.1f} "
             f"strand_bearing={np.degrees(wrap['strand_bearing']):+.1f} "
-            f"wrap={wrap['wrap']:+.3f} "
+            f"wrap={wrap['wrap']:+.3f} wrap_plug={wrap['wrap_plug']:+.3f} "
+            f"plug_spin_deg={np.degrees(wrap['plug_spin']):+.1f} "
             f"grip_slip_deg={wrap['grip_slip_deg']:.1f} "
             f"plug_vs_rope_deg={wrap['plug_vs_rope_deg']:.1f} "
             f"blocking_gap={wrap['blocking_gap']:+.4f} "
@@ -755,7 +848,8 @@ def run_demo(
     if not spawn_latch.try_engage():
         raise RuntimeError("Rope winding free-end plug failed to seat at spawn.")
     grasp_attachment: list = []
-    # The pose the plug was picked up in, so `lay_plug_flat` can put it back.
+    # The pose the plug was picked up in -- lying flat -- as the base the carry
+    # pitch turns FROM. It is not turned back: the plug is set down standing.
     flat_quat: list = []
     pitch_angle = float(np.radians(float(getattr(physical, "carry_pitch_deg", 0.0))))
     pitch_steps = int(getattr(physical, "carry_pitch_steps", 120))
@@ -844,6 +938,13 @@ def run_demo(
     cap_offset = 0.5 * column_height + float(
         getattr(connector_cfg, "cap_height", 0.35 * column_height)
     )
+    # None when the switch is off, and then nothing is handed to the attachment
+    # and the run is the old one exactly.
+    orbit_spin = (
+        OrbitSpin(controller, post_center(scene.layout, spec))
+        if bool(getattr(physical, "plug_spin_tracks_orbit", False))
+        else None
+    )
     wrap_tracker = WrapTracker(
         scene,
         controller,
@@ -853,6 +954,10 @@ def run_demo(
         free_end_first=free_end_first,
         cap_offset=cap_offset,
         carry_pitch=float(np.radians(float(getattr(physical, "carry_pitch_deg", 0.0)))),
+        spin=orbit_spin,
+        commanded_quat_fn=(
+            lambda: grasp_attachment[0].commanded_quat() if grasp_attachment else None
+        ),
     )
     print(
         "rope_winding_physical_handle_demo grasp_geometry "
@@ -875,6 +980,7 @@ def run_demo(
         f"robot_rope_friction={float(physical.robot_rope_friction):.3f} "
         f"plug_pose={connector_pose(cfg.task.rope)} "
         f"grasp_yaw={grasp_yaw:+.4f} yaw_track={yaw_tracking} "
+        f"plug_spin_tracks_orbit={orbit_spin is not None} "
         f"roll_band_deg=[{np.degrees(min(target_rolls)):+.0f},"
         f"{np.degrees(max(target_rolls)):+.0f}] "
         f"viewer_speedup={speedup:.2f} slow_factor={slow_factor:.2f} "
@@ -886,6 +992,17 @@ def run_demo(
     def on_segment_start(index, total, label, target):
         status["phase"] = label
         status["waypoint"] = index
+        # The orbit is over at `wind_exit`. Stop turning the plug there, for the
+        # reason the planner holds its last wrist roll from here on: the rope is
+        # wound and can no longer pay anything out, so a turn past this point
+        # wrings torsion in instead of cancelling it.
+        if label == "wind_exit" and orbit_spin is not None:
+            orbit_spin.freeze()
+            print(
+                "rope_winding_physical_handle_demo plug_spin_frozen "
+                f"phase={label} deg={np.degrees(orbit_spin()):+.1f}",
+                flush=True,
+            )
         print(
             "rope_winding_physical_handle_demo waypoint_start "
             f"index={index}/{total} phase={label} target={target.tolist()}",
@@ -911,7 +1028,8 @@ def run_demo(
             f"hand_yaw_deg={np.degrees(wrap['hand_yaw']):+.1f} "
             f"roll_cmd_deg={np.degrees(wrap['roll_cmd']):+.1f} "
             f"roll_err_deg={np.degrees(wrap['roll_error']):+.1f} "
-            f"wrap={wrap['wrap']:+.3f} "
+            f"wrap={wrap['wrap']:+.3f} wrap_plug={wrap['wrap_plug']:+.3f} "
+            f"plug_spin_deg={np.degrees(wrap['plug_spin']):+.1f} "
             f"grip_slip_deg={wrap['grip_slip_deg']:.1f} "
             f"plug_vs_rope_deg={wrap['plug_vs_rope_deg']:.1f} "
             f"cap_entry_mm={wrap['cap_entry_mm']:.1f} "
@@ -979,6 +1097,10 @@ def run_demo(
             # the rope's end band -- welded to the plug's link -- stayed clamped
             # in world orientation while the rope was wound twice around a post.
             parent_quat_fn=controller.hand_quat,
+            # ...and turn it about the vertical as the hand orbits, so the plug
+            # and the free span rotate together instead of the span wringing
+            # torsion into a plug held still. See `OrbitSpin`.
+            yaw_spin_fn=orbit_spin,
         )
         spawn_latch.active = False
         attachment.attach()
@@ -986,14 +1108,21 @@ def run_demo(
         flat_quat.append(entity_quat(handle))
         pitch_plug_for_carry(attachment)
         # Wrap is measured from the grasp: this is the moment the gripper and the
-        # rope acquire a relationship worth accumulating.
+        # rope acquire a relationship worth accumulating. The spin's zero is the
+        # same moment, and is taken after the carry pitch so the pitch itself is
+        # not counted as orbit.
         wrap_tracker.reset()
+        if orbit_spin is not None:
+            orbit_spin.reset()
 
     def pitch_plug_for_carry(attachment) -> None:
-        """Stand the plug up so the cable leaves it ABOVE the pads.
+        """Stand the plug up PIN UP, so the cable leaves it below the fingertips.
 
-        "Outlet", not "nose": the end that has to clear the jaw is the cap, where
-        the cable enters, not the pin.
+        Naming, because this has been read backwards more than once: for this
+        task "plug up" means the PIN -- the pointed end -- is up, which puts the
+        cap, where the cable enters, DOWN, and sends the rope downward out of the
+        hand. `carry_pitch_deg` +90 is that pose. Always say which way BOTH ends
+        go; "up" on its own is ambiguous.
 
         Lying flat, the plug's cap sits at the same height as the pads and the
         cable runs out along its axis -- 17 mm from the grip centre, against
@@ -1003,19 +1132,18 @@ def run_demo(
         was perfect. No amount of wrist rotation reaches that -- it is where the
         cable comes out, not which way the plug points.
 
-        Cap UP (`carry_pitch_deg` -90) puts the outlet 17 mm above the grip
-        centre, 8.5 mm over the top of the pads, and the cable leaves across
-        them rather than through them. Cap DOWN (+90) clears the fingertips by
-        more, and was tried first, but it aims the outlet at the board: the rope
-        had 13 mm to turn through 90 degrees, then got dragged along the surface
-        and wrapped the post's flared base instead of its shaft (`post_contact`
-        48 -> 0). Pointing up, the bend has the whole free span to happen in.
+        Pin up puts the outlet 17 mm BELOW the grip centre against fingertips
+        that reach 9.4 mm, so the cable emerges 7.6 mm clear of them and stays
+        clear at every bearing, for any number of turns. It is the only one of
+        the three poses with clearance in all directions: flat leaves the outlet
+        in the pad plane, and pin DOWN lifts it 8.5 mm over the pads but leaves
+        it between the finger bodies, which run 44.5 mm higher still.
 
-        What up does NOT buy: the finger bodies run 44.5 mm above the pads, so
-        the outlet is out of the pad plane but still between the fingers. The
-        bearing the cable leaves on sweeps a full turn per orbit, and on the two
-        bearings that point at a finger it meets its inner face. `intrusion` and
-        `pad_gap` are the readout.
+        Known cost, chosen with it: the outlet aims at the board 28 mm below, so
+        the rope turns 90 degrees inside that drop -- about 1.6 rope diameters of
+        bend radius -- and then trails along the surface, where on 2026-08-14 it
+        wrapped the post's flared base instead of its shaft (`post_contact`
+        48 -> 0). The knob for that is `winding.wind_z_start`, not the pose.
 
         The axis is the one perpendicular to both the plug's own axis and the
         vertical, which turns the cap through a quarter circle without twisting
@@ -1034,9 +1162,9 @@ def run_demo(
             return
         # `z x axis`, not `axis x z`, and then the SIGN picks the end: the plug's
         # local +z IS the cap -- the end that swallows the cable -- so about this
-        # axis a positive angle turns the cap down and a negative one turns it
-        # up. With the cross product the other way round both flip, which is what
-        # this did when first written.
+        # axis a POSITIVE angle turns the cap down and the pin up, which is the
+        # shipped pose. With the cross product the other way round both flip,
+        # which is what this did when first written.
         axis = np.cross(np.array([0.0, 0.0, 1.0]), _quat_axes(flat_quat[0])[:, 2])
         if float(np.linalg.norm(axis)) < 1e-9:
             return

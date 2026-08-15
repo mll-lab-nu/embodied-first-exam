@@ -126,6 +126,24 @@ class RigidAttachment:
     # None keeps the position-only behaviour every other task was written
     # against.
     parent_quat_fn: Callable[[], Any] | None = None
+    # Turn the child about the WORLD vertical, through its own origin, by
+    # whatever this returns -- on top of following the parent. Only meaningful
+    # with `parent_quat_fn`; None leaves every other task bit-for-bit unchanged.
+    #
+    # rope_winding needs it because a rigid grasp is not enough. Its plug is
+    # carried pin-up, so the rope leaves the cap straight DOWN and the welded
+    # band's tangent is vertical; the free span from plug to post then rotates
+    # about the post once per orbit. A plug that does not turn with it takes that
+    # whole rotation as a relative turn about the rope's own tangent -- i.e. as
+    # torsion, one turn per orbit, two over the route. Turning the plug by the
+    # same angle makes the pair a rigid rotation and nothing is wrung in.
+    #
+    # Read every sync rather than ramped over a step count: `ramp_to` counts sync
+    # calls, and converting a waypoint's control steps into sync calls depends on
+    # the manager syncing twice per scene step AND on how the primitive expands
+    # its segments. A function of the parent's ACTUAL pose cannot drift out of
+    # step with the motion it is cancelling.
+    yaw_spin_fn: Callable[[], float] | None = None
     active: bool = False
     # Set by `ramp_to`: where `quat` is heading, and how many `sync` calls it has
     # left to get there. Untouched, these stay None/0 and `sync` is bit-for-bit
@@ -200,6 +218,36 @@ class RigidAttachment:
     def ramping(self) -> bool:
         return self._ramp_to is not None
 
+    def commanded_quat(self, parent_quat=None) -> np.ndarray:
+        """The child orientation ``sync`` writes right now.
+
+        Exposed because "is the grasp still holding?" cannot be answered against
+        a snapshot taken when the fingers closed: rope_winding deliberately turns
+        the plug in the gripper afterwards -- 90 degrees of carry pitch, then a
+        turn per orbit -- and every one of those would read as slip. What the
+        attachment promises is that the child is where THIS says it is.
+
+        ``parent_quat`` is passed in by `sync`, which has already read it.
+        """
+
+        if self.parent_quat_fn is None:
+            return (
+                np.asarray(self.quat, dtype=float)
+                if self.quat is not None
+                else np.asarray(yaw_quat(self.yaw + self.child_yaw_offset), dtype=float)
+            )
+        if parent_quat is None:
+            parent_quat = np.asarray(self.parent_quat_fn(), dtype=float).reshape(4)
+        child_quat = quat_mul(parent_quat, self._rel_quat)
+        if self.yaw_spin_fn is not None:
+            # Left-multiplied, so it is a turn in WORLD axes; the position is
+            # written separately and untouched, so the child turns about its own
+            # origin rather than orbiting the world's.
+            child_quat = quat_mul(
+                np.asarray(yaw_quat(float(self.yaw_spin_fn())), dtype=float), child_quat
+            )
+        return child_quat
+
     def sync(self) -> None:
         if not self.active:
             return
@@ -209,7 +257,7 @@ class RigidAttachment:
             child_pos = _xyz(self.parent_pos_fn()) + _quat_rotate(
                 parent_quat, self._rel_offset
             )
-            child_quat = quat_mul(parent_quat, self._rel_quat)
+            child_quat = self.commanded_quat(parent_quat)
             self.entity.set_pos(tuple(child_pos), zero_velocity=True)
             self.entity.set_quat(
                 tuple(float(v) for v in child_quat), zero_velocity=True, relative=False
@@ -404,6 +452,7 @@ class AttachmentManager:
         child_yaw_offset: float = 0.0,
         quat=None,
         parent_quat_fn: Callable[[], Any] | None = None,
+        yaw_spin_fn: Callable[[], float] | None = None,
     ) -> RigidAttachment:
         attachment = RigidAttachment(
             entity=entity,
@@ -413,6 +462,7 @@ class AttachmentManager:
             child_yaw_offset=float(child_yaw_offset),
             quat=None if quat is None else tuple(float(v) for v in quat),
             parent_quat_fn=parent_quat_fn,
+            yaw_spin_fn=yaw_spin_fn,
         )
         self.attachments.append(attachment)
         return attachment
