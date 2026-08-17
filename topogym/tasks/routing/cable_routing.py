@@ -9,6 +9,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
+from topogym.planning import arc_route_points
 from topogym.world.rope import (
     RopeEndpointHandle,
     RopeMesh,
@@ -185,7 +186,29 @@ class CableRoutingLayout:
         if route_name not in routes:
             available = ", ".join(sorted(routes.keys()))
             raise ValueError(f"Unknown route {route_name!r}; available: {available}.")
-        return np.stack([self.route_point(point) for point in routes[route_name]], axis=0)
+        points: list[np.ndarray] = []
+        for point in routes[route_name]:
+            # `arc_to` bends the leg from the previous point into a circular arc
+            # of the given sweep, and so sets its LENGTH -- which for a rope's
+            # spawn route is the whole point, because the length has to move with
+            # `winding.turns`. Every other entry is one point, as before.
+            if not isinstance(point, str) and "arc_to" in point:
+                if not points:
+                    raise ValueError(
+                        f"route {route_name!r} starts with an `arc_to` point; an arc "
+                        "needs a preceding point to bend away from."
+                    )
+                points.extend(
+                    arc_route_points(
+                        points[-1],
+                        self.route_point(point["arc_to"]),
+                        np.radians(float(point["sweep_deg"])),
+                        samples=point.get("samples"),
+                    )
+                )
+            else:
+                points.append(self.route_point(point))
+        return np.stack(points, axis=0)
 
     def target_signature(self) -> CableRoutingSignature:
         entries = []

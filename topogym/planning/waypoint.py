@@ -3,7 +3,74 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
+import numpy as np
+
 from .subgoal import PlannedSubgoal
+
+
+def arc_route_points(start, end, sweep: float, samples: int | None = None) -> list:
+    """The points of a circular arc from ``start`` to ``end``, ``start`` excluded.
+
+    A route that has to be a fixed LENGTH -- a rope's rest shape, where the
+    length is the whole point -- cannot be written as a list of coordinates and
+    still be adjustable: rope_winding's spawn arc was ten hand-computed points,
+    and every change of turn count needs a different length between the same two
+    ends. One sweep angle says it instead, and the arithmetic is here rather than
+    in the config comment where it cannot be checked.
+
+    ``sweep`` is in radians, signed, counter-clockwise seen from +z, and it is
+    the free parameter: with the ends fixed, a bigger sweep bulges the arc and
+    lengthens it (length = chord * sweep / (2 sin(sweep/2))). z is interpolated
+    linearly, so a level route stays level.
+    """
+
+    start = np.asarray(start, dtype=float)
+    end = np.asarray(end, dtype=float)
+    sweep = float(sweep)
+    chord = end[:2] - start[:2]
+    span = float(np.linalg.norm(chord))
+    if span <= 1e-9:
+        raise ValueError("an arc route point needs two distinct ends.")
+    if not 1e-6 < abs(sweep) < 2.0 * np.pi - 1e-6:
+        raise ValueError(
+            f"arc sweep must be within (0, 360) degrees, got {np.degrees(sweep):.1f}."
+        )
+    radius = span / (2.0 * np.sin(abs(sweep) / 2.0))
+    middle = 0.5 * (start[:2] + end[:2])
+    normal = np.array([-chord[1], chord[0]], dtype=float) / span
+    # Two circles of this radius pass through both ends. Which one is the arc
+    # depends on the sweep's sign AND on whether it is the minor or the major
+    # arc, so rather than case-split, take the centre whose actual sweep is the
+    # one asked for.
+    height = float(np.sqrt(max(radius * radius - 0.25 * span * span, 0.0)))
+    for offset in (height, -height):
+        centre = middle + normal * offset
+        first = float(np.arctan2(start[1] - centre[1], start[0] - centre[0]))
+        last = float(np.arctan2(end[1] - centre[1], end[0] - centre[0]))
+        turned = (last - first) % (2.0 * np.pi)
+        if sweep < 0.0:
+            turned -= 2.0 * np.pi
+        if abs(turned - sweep) < 1e-6:
+            break
+    else:  # pragma: no cover - unreachable for a valid sweep
+        raise ValueError(f"no arc of {np.degrees(sweep):.1f} degrees joins those ends.")
+    if samples is None:
+        # ~2 degrees a step: the sagitta against the true circle is then under
+        # 0.1 mm at any radius this repo uses, so the rope mesh is built on a
+        # circle rather than on a coarse chord chain.
+        samples = max(8, int(round(abs(np.degrees(sweep)) / 2.0)))
+    fractions = np.linspace(0.0, 1.0, int(samples) + 1)[1:]
+    return [
+        np.array(
+            [
+                centre[0] + radius * np.cos(first + sweep * t),
+                centre[1] + radius * np.sin(first + sweep * t),
+                float(start[2] + (end[2] - start[2]) * t),
+            ],
+            dtype=float,
+        )
+        for t in fractions
+    ]
 
 
 @dataclass(frozen=True)

@@ -8,6 +8,7 @@ from .attachment import (
     rotate_z,
     yaw_quat,
 )
+from .gated_insert import GatedInsertPrimitive, GatedInsertResult
 from .axial_insert import AxialInsertPrimitive, AxialInsertResult
 from .connector_latch import ConnectorLatch
 from .physical_contact import (
@@ -40,6 +41,8 @@ from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, R
 
 __all__ = [
     "AttachmentManager",
+    "GatedInsertPrimitive",
+    "GatedInsertResult",
     "ParticleAttachment",
     "ConnectorLatch",
     "EndpointAttachment",

@@ -4,6 +4,9 @@
 # docx 2.3：刚性杆水平穿过隔板上的孔。防捷径 = 面板矮到可以把杆从上方绕过去，
 # 终点位置相近但两端同侧，判失败。因此面板高度是任务设计的一部分，不是随手取值。
 #
+# 2026-08-17：配色统一到中性灰工程塑料（与 gate_cage_ball 同一套，去蓝调，
+# 件与件之间只靠明度区分）；近端两个 V 槽由 0.021 抬到 0.055，手部高度同步上移。
+#
 # 2026-08-12 三处修订：
 #   1. 杆与孔都改成正六棱柱。六边形按 across_flats（对边距）标注 —— 六角棒料与
 #      六角孔在工业上就是按对边距给尺寸的。取平面朝下的姿态：杆躺在一个面上不会滚，
@@ -35,7 +38,7 @@ panel:
   # 顶面 150mm。上限由 home pose 决定：默认 home 指尖在 task z≈0.1608，
   # 高于它就会像 stacked_plate 那样在 reset 时扎进结构 → 求解器 NaN。留 11mm 余量。
   top_z: 0.150
-  color: [0.42, 0.45, 0.48]
+  color: [0.60, 0.60, 0.59]
 
 aperture:
   # 正六边形对边距 0.032（对角 0.0370）。杆对边距 0.018 → 单边间隙 7mm，
@@ -55,11 +58,11 @@ bar:
   # 铝的量级。assisted attachment 运动学承载，质量不与夹爪较劲，
   # 因此按 physical_realism_guidelines_zh.md P7「密度用真实材料量级」取值。
   rho: 2700.0
-  color: [0.72, 0.74, 0.77]
+  color: [0.74, 0.71, 0.60]
   # 生成的棱柱网格落点（相对仓库根，由 rope.resolve_mesh_dir 解析）。
   mesh_output_dir: runs/generated_meshes/bar_through_hole
-  # 起始静置位姿（轴心）。z = 托座顶(0.012) + 杆 inradius(0.009)。
-  rest_pos: [-0.050, 0.000, 0.021]
+  # 起始静置位姿（轴心）。与近端两个 V 槽的 seat_axis_z 一致，槽底由截面反推。
+  rest_pos: [-0.050, 0.000, 0.055]
   # 抓点到杆心的 x 距离。由插入终态反推：杆心要到 panel.x 才跨骑，
   # 而手部半深≈25mm + 面板半厚 15mm + 余量。0.065 → 0.075（放开）。
   grasp_offset: 0.075
@@ -80,27 +83,29 @@ cradles:
     enabled: true
     # 抓点在 x=-0.125；本托座在 -0.070，间距 55mm。
     x: -0.070
-    # 杆的静置轴高，与 bar.rest_pos 的 z 一致。
-    seat_axis_z: 0.021
+    # 杆的静置轴高，与 bar.rest_pos 的 z 一致。2026-08-17 由 0.021 抬到 0.055：
+    # 立柱因此有 40.8mm，超过 _visuals 的 30mm 阈值，会画出完整的支架外观
+    # （底板+地脚螺栓+斜撑+唇边），而不是一块贴地的小垫块。
+    seat_axis_z: 0.055
     length_x: 0.030
     half_angle_deg: 45.0
-    # 斜面顶端 = apex + jaw_width*cos45。近端 apex 只有 0.0068，16mm 的斜面顶到
-    # 0.0181，仍低于杆轴 0.021，夹板不会挡住指垫下降的那一段。
+    # 斜面顶端 = apex + jaw_width*cos45 = 0.0408 + 0.0113 = 0.0521，低于杆轴 0.055，
+    # 夹板不会挡住指垫。抓点在 x=-0.125，与两个 V 槽的 x 也不重叠。
     jaw_width: 0.016
     jaw_thickness: 0.006
     post_width: 0.024
-    color: [0.32, 0.34, 0.36]
+    color: [0.50, 0.50, 0.49]
   near_b:
     enabled: true
     # 与 near_a 一起把杆心(-0.050)夹在两托座之间。
     x: 0.020
-    seat_axis_z: 0.021
+    seat_axis_z: 0.055
     length_x: 0.030
     half_angle_deg: 45.0
     jaw_width: 0.016
     jaw_thickness: 0.006
     post_width: 0.024
-    color: [0.32, 0.34, 0.36]
+    color: [0.50, 0.50, 0.49]
   far:
     enabled: true
     # 终态杆端在 x=0.230，本托座接住远端。
@@ -115,7 +120,7 @@ cradles:
     jaw_width: 0.016
     jaw_thickness: 0.006
     post_width: 0.030
-    color: [0.32, 0.34, 0.36]
+    color: [0.50, 0.50, 0.49]
 
 # ---------------------------------------------------------------- 工业风装饰
 # 一律 collision=False，逐项可关；关掉任何一项都不会改变物理。
@@ -128,7 +133,7 @@ visual_details:
     enabled: true
     band: 0.010
     depth: 0.004
-    color: [0.55, 0.57, 0.60]
+    color: [0.52, 0.52, 0.51]
     faces: [near, far]
   # 面板四角铆钉，同样两面都有：一侧是螺栓头，另一侧读作螺母。
   bolts:
@@ -136,13 +141,13 @@ visual_details:
     radius: 0.004
     height: 0.004
     inset: 0.018
-    color: [0.24, 0.25, 0.27]
+    color: [0.34, 0.34, 0.33]
     faces: [near, far]
   # V 块立柱的工业支架外观。立柱与斜夹板本身一点没动（槽底高度、footprint 不变），
   # 这里全是 collision=False 的包裹件，关掉不改变任何接触。
-  # 高度 < 0.030 的块只画底板和地脚螺栓（阈值在 tasks/_visuals.py）：
-  # 近端立柱只有 6.8mm，画斜撑看不出来；只有 far 立柱（64.8mm 高）画全套，
-  # 顶部那圈唇边正好落在立柱与斜夹板的交接处。
+  # 高度 < 0.030 的块只画底板和地脚螺栓（阈值在 tasks/_visuals.py）。
+  # 2026-08-17 抬高近端托座后，三根立柱都超过该阈值（近端 40.8mm、far 64.8mm），
+  # 因此三个都画全套：底板 + 地脚螺栓 + 斜撑 + 顶部唇边。
   pedestal:
     enabled: true
     # 底板 xy 相对承载块的放大倍数。1.5 留出的边沿刚好够放下地脚螺栓。
@@ -158,8 +163,8 @@ visual_details:
     collar: 0.005
     collar_thickness: 0.008
     collar_gap: 0.001
-    color: [0.30, 0.32, 0.35]
-    bolt_color: [0.20, 0.21, 0.23]
+    color: [0.45, 0.45, 0.44]
+    bolt_color: [0.34, 0.34, 0.33]
 
 oracle:
   mode: insert          # insert | bypass（bypass = 防捷径对照：从上方绕过去）
@@ -172,11 +177,12 @@ oracle:
 # Heights are relative to the task-frame table surface, and are hand-link z
 # (the pads sit HAND_TO_PAD_Z = 0.1029 below).
 primitive:
-  approach_z: 0.210
-  # 指垫 0.0211 ≈ 杆心 0.021（居中夹）；指尖 0.0116 离桌面。
-  grasp_z: 0.124
-  # 杆抬升 0.045 ≫ min_lift_delta 0.025。
-  lift_z: 0.169
+  approach_z: 0.244
+  # 指垫 0.055 = 杆心（居中夹）。抓点在 x=-0.125，两个 V 槽在 -0.070 / +0.020，
+  # 手指下降处杆是裸露的，指尖不会碰到夹板。
+  grasp_z: 0.158
+  # 杆抬升 0.045 ≫ min_lift_delta 0.025（与抬高托座前相同）。
+  lift_z: 0.203
   # 杆心 0.090，比孔中心(0.086)高 4mm。抬高是为了横推时越过 far V 槽的斜面顶端
   # (0.0761)：杆底此时在 0.081，净空 4.9mm。孔内仍然装得下 —— 杆的上棱在
   # (±0.0104, 0.090)，代入六边形三条边界都有余量，顶面 0.099 离孔顶 0.102 还差 3mm。

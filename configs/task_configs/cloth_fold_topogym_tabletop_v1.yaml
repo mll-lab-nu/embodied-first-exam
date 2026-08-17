@@ -1,0 +1,93 @@
+# Cloth Fold（docx 1.1「对折／折角」）在 TopoGym tabletop V1 任务坐标系下的布局。
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# **本文件目前只到 spike 需要的程度。** 类别 1（形变与自身层叠）四类里唯一没有实现的一类，
+# 而 `topogym/tasks/deformation/__init__.py` 写着「落地前需先确定可形变布料在 Genesis 中的
+# 建模方案」。下面 cloth 块的材料值是**未标定的起点**，标定它们正是
+# `tests/pbd_cloth_spike.py` 的工作；目标 footprint、判据阈值等要等 spike 的结论才写。
+#
+# 抓取模型：接近触发的运动学吸附（`PBDParticleAttachmentDragPrimitive`），
+# 不让手指与布做硬接触。这不是偷懒，是领域标准做法（SoftGym picker 及其后续），
+# 也是本仓 2026 年 peeling 那次 native segfault 之后的既定结论
+# （`docs/develop/physics/peeling/peeling_segfault_debug_zh.md`）。
+
+task:
+  id: cloth_fold
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: cloth_fold_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+# ---------------------------------------------------------------------- 布片
+cloth:
+  name: fold_cloth
+  # 正方形单层平铺。0.240 见方的理由是两条边都要够得着：
+  # 中心 x=0.040 时布跨 x[-0.080, +0.160]，机械臂作业区是 x[-0.23, +0.31]、
+  # y[-0.30, +0.30]（basic_env_demo 的 workspace），抓取边中点与对折落点都在里面。
+  # 对折后覆盖 0.240 x 0.120。
+  size: [0.240, 0.240]
+  center: [0.040, 0.000]
+  # 铺放高度。给一个粒子半径的离地量，避免出生瞬间与桌面互穿。
+  z: 0.003
+  # 控制网格。Genesis 会按 PBDOptions.particle_size 各向同性重网格化，所以这只是
+  # 输入网格，实际粒子数通常更多（peeling 的 13x9 就是这样）。
+  mesh:
+    cols: 33
+    rows: 33
+    output_dir: .cache/topogym/meshes/cloth_fold
+  # 粒子尺度。**这个值同时是物理参数和判据参数**：它既决定碰撞厚度（隧穿余量、
+  # 夹爪闭合间隙的下限），又决定「层数 3 → 1」这类判据能不能分辨出层。
+  # 调它必须连着自碰撞与层数统计一起验，不能只看稳定性。
+  # 0.006 起步：比绳的 0.004 大，粒子数更少、碰撞余量更大。
+  particle_size: 0.006
+  # 材料。**未标定**：先用 prefabs.rope_pbd.elastic 的值做起点，只把 bending 放软
+  # （绳要挺、布要垂）。spike 的 weld / speed 两项测完再定。
+  rho: 400.0
+  static_friction: 0.35
+  kinetic_friction: 0.25
+  stretch_compliance: 0.0012
+  bending_compliance: 0.0200
+  stretch_relaxation: 0.35
+  bending_relaxation: 0.2
+  air_resistance: 0.001
+  color: [0.85, 0.42, 0.28]
+
+# ------------------------------------------------------------------ 抓取护栏
+# 五条护栏里落在配置上的三条。推导写在每一条上，spike 的输出会改这里的数值。
+grasp:
+  # 吸附捕获容差：手到抓取点的距离超过它就拒绝吸附并如实失败
+  # （`PBDParticleAttachmentDragPrimitive` 的 attach_error 校验）。
+  # **给大了就是「磁力抓取」**：捕获半径大到能隔层吸附，「抓错层」这个真实失败模式
+  # 就被抹掉了，与 docx 的防捷径原则冲突。上限应小于一个布厚。
+  attach_tolerance: 0.008
+  # 指垫停在抓取点上方多少。**这是「手指永远够不到布」的唯一保证**，
+  # 所以它有下限：≥ 2 倍 particle_size。demo 会在开跑前校验。
+  touch_clearance: 0.015
+  # 装饰性闭合的半宽。None = 全程张开（吸附近似最诚实的形态）。
+  # 给了值就必须 ≥ particle_size / 2，否则两指之间不存在粒子的可行位置，
+  # 求解器会注入发散的修正量——这就是「挤压爆炸」。
+  grasp_qpos: null
+  # 焊接区半径：以抓取点为中心多大范围内的粒子被吸附。权重从中心的 1 锥度到边缘的 0，
+  # 理由见 ParticleAttachment 的 weights 注释（硬焊会把焊接区变成刚性夹板，
+  # 形变全堆到边缘，实测把绳的弯曲半径钉在 6-9mm 并触发材料内部自碰撞）。
+  weld_radius: 0.018
+
+physical:
+  approach_z: 0.250
+  lift_delta: 0.060
+  move_steps: 120
+  gripper_steps: 60
+  motion_settle_steps: 10
+  max_follow_error: 0.045
+  release_hold_steps: 30
+
+success:
+  # 判据阈值待定：要等 spike 给出布在这套参数下的静止平整度基线，
+  # 否则「平整度方差」的阈值是拍出来的。
+  settle_steps: 120

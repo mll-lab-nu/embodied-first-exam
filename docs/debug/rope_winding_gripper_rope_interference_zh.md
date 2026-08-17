@@ -7,7 +7,8 @@
 | 键 | 值 | 说明 |
 |---|---|---|
 | `fixtures.POST.radius` | 0.020 | 绳在柱上的落位半径 0.024 |
-| `fixtures.POST` 柱顶 | 0.090 | 底面埋在 −0.004 |
+| `fixtures.POST` 柱顶 | 0.105 | 底面埋在 −0.004；容三圈 |
+| `rope.spawn_arc.sweep_deg` | 200 | 出生弧鼓度，决定绳长；须与 `turns` 配对 |
 | `winding.wind_radius` | 0.140 | 夹爪轴心离柱面 0.120 |
 | `winding.wind_z_start` | 0.045 | 指垫高度 |
 | `winding.climb_per_turn` | 0.014 | 相邻两圈净空 6 mm |
@@ -133,6 +134,32 @@
 
 **状态**：代码已完成，机理待 A/B 实测确认。按上述推算 `nose_down_1turn`（同为针脚朝上、不跟踪、一圈）应读约 1.0 圈扭转，实测 `max_span` 为 0.357。差值的可能去向：扭转转为 writhe（即 3.2 节）、跟随带处滑移、或 FEM 绳扭转刚度低使 `TwistTracker` 读数偏低。开关关闭即为改动前的行为，A/B 跑法见第 7 节。
 
+### 2.9 圈数扩展到三圈
+
+**需求**：后续任务设置需要包含三圈。
+
+**柱高**：三圈要求柱顶 ≥ 0.101（`wind_z_start + turns × climb + 绳半径 + 10 mm`），原为 0.090。已改为 0.105（`height` 0.094 → 0.109，`pos.z` 0.043 → 0.0505，底面仍在 −0.004）。
+
+**夹爪路径不需要改**。手掌碰撞体底面在指垫上方 77 mm（`HAND_TO_PAD_Z` 0.1029 − `hand_c` 的 z 下界 0.0259），第一圈指垫最低在 0.045，故手掌底面在 0.122：柱顶低于 0.122 时手掌在任何轨道半径下都不与柱重叠，0.105 留 17 mm。手指（顶在指垫上方 44.5 mm）本来就要在缠绕高度从柱身旁边过，轨道 0.140 时离柱面 0.120，与柱高无关。`wind_radius` 0.140 仍按最坏朝向配（0.020 + 手掌长半轴 0.104 + 余量 0.016）。
+
+**绑定约束：绳长必须随圈数变**。柱上每绕一圈消耗 `2π × 落位半径` = 0.151 m，故绷紧需求随圈数增加，而富余 =（绳长 − 需求）/ 需求 必须落在 5–15%（`SLACK_BAND`）。同一根绳不能同时服务两个圈数。
+
+| turns | 绷紧需求 | 带内 sweep 范围 | 取值 | 绳长 | 富余 |
+|---|---|---|---|---|---|
+| 1 | 0.503 m | 144–164° | 155 | 0.554 m | 10.1% |
+| 2 | 0.653 m | 195–209° | 200 | 0.708 m | 8.4% |
+| 3 | 0.804 m | 224–235° | 230 | 0.885 m | 10.0% |
+
+**改动**：`routes.initial` 里的十个手算坐标改为一个 `arc_to` 条目，鼓度由 `rope.spawn_arc.sweep_deg` 给出（`planning/waypoint.py` 的 `arc_route_points`，逆时针为正，端点不变）。绷紧需求的计算集中到 `planning/rope_winding_planner.py` 的 `taut_demand`，离线检查与 demo 开跑前的校验共用同一份。demo 新增 `rope_slack` 一行并在带外时拒绝启动；离线检查新增 `--turns` / `--sweep-deg` 两个覆盖参数，可在秒级先验一对配置。
+
+由于弧现在按 2° 采样而非十点折线，两圈的绳长由 0.7043 变为 0.7082（真弧长），富余由 7.8% 变为 8.4%，仍在带内。
+
+三圈脚印 x[−0.277, +0.156]、y[−0.320, +0.100]，在 0.70×0.80 板内；离柱最近 0.188 m、离 C 最近 0.277 m 与鼓度无关，三个 sweep 下均不变；出生 winding number 均为 0.000。三圈路线 29 个航点、3627 步、约 39.9 分钟。
+
+**记录**：此前 `turns=1` 的诊断跑一直沿用 200° 弧，富余 **+40.9%**，始终在带外——离线检查当时只校验配置里的 `turns`，未核过其它圈数。现在三个圈数都会被校验。
+
+**状态**：代码与配置已完成，待实跑验证。
+
 ## 3. 已确认但未修复的问题
 
 ### 3.1 电缆出口位于手指作用范围内
@@ -254,3 +281,18 @@ python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.ke
 viewer 中插头不应看出在转（旋转体）。若看得出，说明自转轴写错。
 
 两圈运行（`turns=2`，约 29 分钟）确认扭转不随圈数累积。
+
+三圈（第 2.9 节）。圈数与 `sweep_deg` 必须配对，配错会被拒：
+
+```
+python tests/check_rope_winding_geometry.py --turns 3 --sweep-deg 230
+
+python -m demos.routing.rope_winding_physical_handle_demo run.build_only=true \
+  task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230 2>&1 | tee runs/spin_on_3turn_preflight.log
+
+python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true \
+  run.probe=true run.probe_every=5 task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230 \
+  2>&1 | tee runs/spin_on_3turn.log
+```
+
+`build_only` 建完场景即退，用来核 `rope_slack` 一行与出生绳形，几秒钟。完整三圈约 40 分钟。观察量在两圈的基础上增加：第三圈的 `blocking_gap` 是否仍为正（螺旋顶 0.091，柱顶 0.105），以及 `plug_spin_deg` 末值是否到 1080°。

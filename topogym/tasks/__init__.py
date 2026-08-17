@@ -53,6 +53,11 @@ from .legacy.peeling_physical import (
     release_all_peeling_groups,
     release_peeling_groups,
 )
+from .connectivity.gate_cage_ball import (
+    GateCageBallLayout,
+    GateCageBallScene,
+    GateCageBallSceneBuilder,
+)
 from .connectivity.stacked_plate import (
     StackedPlateLayout,
     StackedPlateScene,
@@ -104,6 +109,9 @@ __all__ = [
     "PeelingPhysicalSceneBuilder",
     "release_all_peeling_groups",
     "release_peeling_groups",
+    "GateCageBallLayout",
+    "GateCageBallScene",
+    "GateCageBallSceneBuilder",
     "StackedPlateLayout",
     "StackedPlateScene",
     "StackedPlateSceneBuilder",

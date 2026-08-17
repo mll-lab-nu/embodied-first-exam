@@ -64,10 +64,12 @@ from topogym.core import hydra_config_sources, save_resolved_config
 from topogym.data import dataset_writer_or_null
 from topogym.generation import EpisodeResult, build_cable_routing_episode_spec
 from topogym.planning import (
+    SLACK_BAND,
     RopeWindingRouteCommand,
     WindingSpec,
     plan_rope_winding_route,
     post_center,
+    taut_demand,
 )
 from topogym.primitives import (
     AttachmentManager,
@@ -216,6 +218,47 @@ def _validate_physical_handle_contract(cfg, scene) -> tuple[str, ...]:
     if scene.rope_handle.end_pin is None:
         raise RuntimeError("Rope winding demo requires a built free-end handle.")
     return (str(getattr(handle_cfg, "name", "winding_free_end_handle")),)
+
+
+def _check_rope_slack(cfg, scene, spec, episode_plan) -> str:
+    """Refuse a (turns, sweep_deg) pair the rope cannot serve. Returns a report.
+
+    One turn on the post eats `2 pi * settle_radius` -- 151 mm here -- so the
+    taut demand moves with `winding.turns` while the spawn arc's length does not
+    follow on its own. Three turns on the two-turn arc is 12% SHORT: the rope
+    would be dragged off the post or through the anchor. Too much slack is the
+    other failure, the one cable_routing's helix blew up on at 19%.
+
+    Checked here rather than only in `tests/check_rope_winding_geometry.py`
+    because the pair is set on the command line, and the cost of finding out
+    late is a 40-minute GPU run.
+    """
+
+    length = float(
+        np.sum(
+            np.linalg.norm(
+                np.diff(scene.layout.route_polyline("initial"), axis=0), axis=1
+            )
+        )
+    )
+    need, label = taut_demand(scene.layout, spec, episode_plan.waypoints)
+    slack = (length - need) / need
+    low, high = SLACK_BAND
+    sweep = float(cfg.task.rope.spawn_arc.sweep_deg)
+    report = (
+        f"turns={spec.turns} sweep_deg={sweep:.0f} rope={length:.3f} "
+        f"taut_need={need:.3f} at {label} slack={slack * 100:.1f}% "
+        f"band={low * 100:.0f}..{high * 100:.0f}%"
+    )
+    if not low <= slack <= high:
+        raise RuntimeError(
+            f"rope_winding slack out of band -- {report}. `winding.turns` and "
+            "`rope.spawn_arc.sweep_deg` have to be set together; the table is in "
+            "the task config beside `spawn_arc`. Run "
+            f"`python tests/check_rope_winding_geometry.py --turns {spec.turns} "
+            "--sweep-deg <deg>` to find the sweep this turn count needs."
+        )
+    return report
 
 
 def _quat_conjugate(quat) -> np.ndarray:
@@ -753,6 +796,11 @@ def run_demo(
 ) -> EpisodeResult:
     physical = cfg.task.physical_handle
     manipulated = _validate_physical_handle_contract(cfg, scene)
+    print(
+        "rope_winding_physical_handle_demo rope_slack "
+        + _check_rope_slack(cfg, scene, spec, episode_plan),
+        flush=True,
+    )
     print_collision_il_contract(
         "rope_winding_physical_handle_demo",
         manipulated=manipulated,

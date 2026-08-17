@@ -25,7 +25,7 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     "deformation": (),
     "routing": ("bar_through_hole", "cable_routing", "rope_winding"),
     "entangle": ("untangle", "untangle_continuous"),
-    "connectivity": ("stacked_plate",),
+    "connectivity": ("gate_cage_ball", "stacked_plate"),
 }
 
 # Predate the taxonomy, not yet placed on the capability axis. Not a deprecation
@@ -83,7 +83,14 @@ def _check() -> int:
         else:
             print(f"[ok] {category}: {list(declared) or '(reserved, empty)'}")
 
-    stray = sorted(p.stem for p in TASKS_ROOT.glob("*.py") if p.stem not in ("__init__", "_visuals"))
+    # Shared helper modules are underscore-prefixed (`_visuals`, `_fixtures`), the
+    # same convention `_on_disk` filters on. Naming them one by one here meant every
+    # new shared module failed this check until someone extended the list.
+    stray = sorted(
+        p.stem
+        for p in TASKS_ROOT.glob("*.py")
+        if p.stem != "__init__" and not p.stem.startswith("_")
+    )
     if stray:
         problems.append(f"tasks/ root holds uncategorised modules: {stray}")
 

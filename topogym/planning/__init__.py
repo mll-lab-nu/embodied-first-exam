@@ -1,6 +1,11 @@
 """Planner-facing contracts for subgoals and waypoints."""
 
 from .cable_routing_planner import CableRoutingRouteCommand, plan_cable_routing_endpoint_route
+from .gate_cage_ball_planner import (
+    GateTriggerDecision,
+    GateTriggerRule,
+    GreedyTriggerRule,
+)
 from .maze_wall_removal_planner import (
     MazeWallRemovalCommand,
     maze_edge_name,
@@ -13,11 +18,13 @@ from .onestroke_wall_planner import (
 )
 from .peeling_planner import PeelingLiftCommand, plan_peeling_single_lift
 from .rope_winding_planner import (
+    SLACK_BAND,
     RopeWindingRouteCommand,
     WindingSpec,
     plan_rope_winding_route,
     post_center,
     post_top_z,
+    taut_demand,
 )
 from .stacked_plate_planner import (
     StackedPlateRotateCommand,
@@ -30,11 +37,15 @@ from .untangle_continuous_planner import (
     UntangleContinuousMoveCommand,
     plan_next_untangle_continuous_move,
 )
-from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget
+from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget, arc_route_points
 
 __all__ = [
+    "SLACK_BAND",
     "CableRoutingRouteCommand",
     "EpisodePlan",
+    "GateTriggerDecision",
+    "GateTriggerRule",
+    "GreedyTriggerRule",
     "MazeWallRemovalCommand",
     "OneStrokeWallCommand",
     "PeelingLiftCommand",
@@ -47,8 +58,10 @@ __all__ = [
     "WaypointPlan",
     "WaypointTarget",
     "WindingSpec",
+    "arc_route_points",
     "post_center",
     "post_top_z",
+    "taut_demand",
     "edge_name",
     "maze_edge_name",
     "plan_cable_routing_endpoint_route",

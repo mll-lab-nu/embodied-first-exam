@@ -1,6 +1,6 @@
 # 纯刚体任务轨道（工程计划）
 
-> 日期：2026-08-05
+> 日期：2026-08-05，2026-08-17 更新（2.3 完成；确定从 4.1 继续；补 §3.1 与 §5 的 4.2 决定）
 > 上游：`../TopoGym_tasks.docx`
 > 配套：[`task_environment_buildout_zh.md`](task_environment_buildout_zh.md)（17 个未实现任务的完整
 > 清单与成本分档）、`../framework/task_taxonomy_zh.md`（四类定义与判定契约）
@@ -16,7 +16,18 @@
 - 纯刚体的未实现任务共 **5 个**：docx 2.3、3.4、4.1、4.3、4.4。
 - 建议顺序：**2.3 → 4.1 → 4.4 → 4.3 → 3.4**。前四个之间存在基建复用关系，3.4 单独成本最高。
 - 这条轨道做完，`connectivity/` 将**四个 docx 任务全部落地**（4.1–4.4），成为第一个完整的类别。
+  4.2 与 docx 原文的差异见 §5。
 - 这条轨道**覆盖不到 `deformation/`**——该类别按定义即可形变体，无刚体版本。详见 §5。
+
+**进度（2026-08-17）**
+
+| docx | 模块 | 状态 |
+|---|---|---|
+| 2.3 | `routing/bar_through_hole.py` | 阶段 1 已完成。全流程 16/16 相通过，`threading=1`、`release_stable=True`。反捷径对照（`run.oracle_mode=bypass`）未跑 |
+| 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
+| 4.4 | `connectivity/linkbar_merge_components.py` | 未开工 |
+| 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
+| 3.4 | `entangle/unlink_c_ring.py` | 未开工 |
 
 ---
 
@@ -97,6 +108,32 @@ docx 对 2.3 与 3.4 都明确标注了「刚体」定位：2.3 是「把柔性�
 - **4.3 在两者之后**：它同时需要自由滚动的小球与枢轴铰链。
 - **3.4 最后**：需要新的复合非凸几何与一个现有原语覆盖不到的六自由度抽出动作。
 
+### 3.1 跨任务约束：状态改变必须由机械臂动作产生
+
+2.3 落地过程中确立，适用于本轨道其余四个任务。
+
+`AttachmentManager` 每步写入被搬运物体的位姿，因此它既能承载物体，也能在夹爪内改变物体的姿态。
+后者会使物体的转动不对应任何机械臂动作：录制出的 episode 中，观测里物体发生了转动而动作流中没有
+对应项，以模仿学习为目标的策略无法从中学到该转动。
+
+**规则**：物体的每一次位姿变化都必须由机械臂的位姿变化解释。
+
+2.3 的两条具体做法可直接沿用：
+
+| 做法 | 实现 |
+|---|---|
+| 握持相对手部刚性 | `AttachmentManager.create(..., parent_quat_fn=controller.hand_quat)`。缺省档只跟随位置，手腕转动时物体保持世界姿态不变，等同于未执行该动作 |
+| 对准由手腕完成 | 读物体当前轴向，计算到目标轴向的最短旋转，将该旋转左乘到**指令**末端姿态上并下发。物体因被握持而随之转动 |
+
+第二条的基准取指令姿态而非实测姿态：IK 存在数百分之一度量级的稳态跟踪误差，取实测值等于要求 IK
+复现自身误差并再叠加一次。2.3 实测该差异为 `align_tilt` 0.64° 与 0.01°。
+
+判定门也随之分为两道，二者问的不是同一件事：`max_grasp_tilt` 检查合爪是否掀翻物体（放宽），
+`max_align_tilt` 检查手腕对准后是否满足插入所需精度（收紧，不过关则在接触受体前中止）。
+
+对后续任务的直接影响：4.1 的挡板插入、4.4 的连接杆扣入、3.4 的 C 环抽出都涉及被搬运刚体的姿态，
+一律按上表处理。4.3 的分流板由接触驱动关节，不使用 attachment，不受本条约束。
+
 ---
 
 ## 4. 逐任务环境需求
@@ -108,8 +145,9 @@ docx 对 2.3 与 3.4 都明确标注了「刚体」定位：2.3 是「把柔性�
 | 场景资产 | 竖直面板（**正六边形孔**）、**正六棱柱杆**、近端两个托座、远端托座、工业风六角法兰 |
 | 开孔做法 | 8 块凸 `Box`：4 块框（立柱 + 下槛 + 上楣）围出六边形的外接矩形，再 4 块沿斜边旋转的倒角块削去四个角三角形。不做布尔开孔——与 `routing/cable_routing.py:810-818` 走线柱拆成柱身＋锥底＋顶盖的既有凸块组合解法同构 |
 | 杆 | 程序化生成的正六棱柱网格（`hex_prism_mesh`，轴沿 local x），`gs.morphs.Mesh(convexify=True)`——棱柱本身是凸体，凸包即自身，所以 convexify 是**精确**而非近似。动态、`rho=2700`（铝的量级，P7）。对边距 0.018（此前是直径 0.024 的圆柱） |
-| 承载方式 | **assisted attachment**：抓点在杆心后 75mm，指面只承受纯力矩，Franka 指增益 kp=100 承不住。用现成的 `primitives/attachment.py` 的 `AttachmentManager` 运动学承载，指面只需看起来夹住——与 cable_routing / untangle 抓刚体件的做法一致 |
-| 托座 | **平顶开放块，无挡块**：六棱柱取平面朝下姿态，躺在一个面上不会滚，而挡块原本只为防圆轴侧滚而设。近端两个夹住杆心防倾覆，远端一个顶面与孔下沿齐平，使穿孔后变成两点支撑 |
+| 承载方式 | **assisted attachment**：抓点在杆心后 75mm，指面只承受纯力矩，Franka 指增益 kp=100 承不住。用现成的 `primitives/attachment.py` 的 `AttachmentManager` 运动学承载，指面只需看起来夹住——与 cable_routing / untangle 抓刚体件的做法一致。握持取相对手部刚性档（`parent_quat_fn`），对准由手腕完成，见 §3.1 |
+| 托座 | **V 形块**（2026-08-16 由平顶块改）：两片斜夹板 + 立柱，夹角取机加工标准 90°。平顶块只约束高度，实测杆在重力静置下横移 5.2mm、合爪再转 3.3°，而孔的单边间隙为 7mm；改 V 槽后两项分别为 0.0mm 与 0.04°。近端两个夹住杆心防倾覆，远端一个的 `seat_axis_z` 与孔下沿加杆内切半径相等，使穿孔后变成两点支撑 |
+| 通用构件 | `tasks/_fixtures.py` 的 `add_v_block` / `v_block_seat_drop`。承重件模块，与只放装饰件的 `_visuals.py` 分开。槽底由零件截面轮廓的支撑距离反推，同一构件适用于圆棒、六角棒与方料 |
 | 复用 | `StandardTabletopSceneBuilder`、`AttachmentManager`、`physical_contact.py` 的摩擦配置与位姿读取 |
 | 新增 | `primitives/axial_insert.py`（见下）、`verification/bar_through_hole_verifier.py` |
 | 不变量 | `threading_count ∈ {0,1}`。判定 = 两端分居面板两侧 **且** 杆轴与中平面的交点落在**六边形孔内**（`hexagon_contains`：正六边形是三条条带的交集，法向在 30°/90°/150°） |
@@ -127,8 +165,18 @@ docx 对 2.3 与 3.4 都明确标注了「刚体」定位：2.3 是「把柔性�
 **原语缺口（已解决）**：docx 的动作是「夹持杆中段、一次水平平移插入」。`PickPlacePrimitive` 的
 13 个阶段是顶抓序列，`translate` 发生在 `place` 之前而 `place` 是纯竖直下降，且释放后没有水平退出，
 episode 会以张开的夹爪停在孔口。已新写 `primitives/axial_insert.py`
-（`AxialInsertPrimitive`，15 阶段），不改 `PickPlacePrimitive`——它已被 swap / onestroke /
+（`AxialInsertPrimitive`，**16 阶段**），不改 `PickPlacePrimitive`——它已被 swap / onestroke /
 maze_wall_removal 三个任务共用，改动面过大。
+
+`run()` 的三个接口约定：
+
+- `insert_part_xy` 给的是**零件中心**的目标位置，不是手的目标位置。手的目标由抬起后实测的
+  零件—手偏移反算。给定预先算好的手部坐标等价于假定零件恰好位于名义位置，实测偏差会全额计入
+  受体的对准预算（2.3 实测为 7mm 预算中的 4.9mm）。
+- `insert_axis` 给受体的轴向；`align_axis` 相把手腕转到使零件轴与之平行的姿态。
+- `min_finger_qpos` 检查合爪停位。assisted carry 下 `lift_delta` 不能作为抓取成功的证据——
+  attachment 会抬起零件，与指面是否接触无关；指行程是可区分「夹到零件」与「合于空处」的读数。
+  2.3 实测夹到零件为 0.0092、指令位为 0.008。
 
 ### 4.2 docx 4.1 —— `connectivity/gate_cage_ball.py`
 
@@ -187,10 +235,25 @@ maze_wall_removal 三个任务共用，改动面过大。
 
 | 类别目录 | 纯刚体轨道做完后 | 说明 |
 |---|---|---|
-| `connectivity/` | **4 / 4 完成** | 4.2 已实现，本轨道补齐 4.1、4.3、4.4 |
+| `connectivity/` | **4 / 4 完成** | 4.2 已实现（与 docx 原文有差异，见下），本轨道补齐 4.1、4.3、4.4 |
 | `routing/` | 2 / 7 | 2.4 已实现 + 本轨道的 2.3。其余 5 个（2.1、2.2、2.5、2.6、2.7）都含绳或闭合环 |
 | `entangle/` | 2 / 4 | 3.1 已实现 + 本轨道的 3.4。3.2、3.3 含绳或闭合带 |
 | `deformation/` | **0 / 5，仍为空** | 该类别按定义即「可形变物体自身的形状、铺展与层叠关系」，不存在刚体版本 |
+
+### 5.1 4.2 与 docx 原文的差异（2026-08-17 决定保留现状）
+
+| 项 | docx 4.2 | `connectivity/stacked_plate.py` |
+|---|---|---|
+| 圆盘取向 | 两层水平圆盘，绕同一竖直转轴 | 竖立圆盘，串在一根水平 Y 轴杆上 |
+| 驱动 | 旋转下层盘 | 指垫捏轮缘滚动驱动 revolute 关节 |
+| 终态 | 竖杆在重力下自由落下贯穿两层 | 各盘扇形缺口转入角度对齐（`alignment_spread <= tolerance`） |
+| 中间失败态 | 杆卡在两层之间 | 无对应实现 |
+
+差异集中在后两行：缺口对齐已实现，通道打开后零件通过未实现，因此 docx 所述的 `C_free`
+状态变化（可行下落通道从不存在变为存在）在当前实现中不被判定。
+
+**决定**：保留现有的竖立圆盘形态，不改回 docx 几何。`connectivity/` 的 `C_free` 判定契约由
+4.1 与 4.3 承担，二者都以小球的自由空间连通性为不变量，覆盖该契约无缺口。
 
 因此纯刚体轨道无法单独让四个类别都非空。若同时希望 `deformation/` 脱离空目录状态，最短路径是
 docx 1.4 `hose_bend_u`——软管即开放弹性管，与现有 PBD 管线同构，不需要布料求解
@@ -199,7 +262,13 @@ docx 1.4 `hose_bend_u`——软管即开放弹性管，与现有 PBD 管线同�
 
 ---
 
-## 6. 第一步：2.3 `bar_through_hole` 的落地清单
+## 6. 落地清单
+
+2.3 按本节清单完成。4.1 沿用同一文件集，把模块名换成
+`connectivity/gate_cage_ball.py` 与 `verification/gate_cage_ball_verifier.py`，并按 §7 第 2 条
+先做 Sphere 参数标定。
+
+### 6.1 文件集（以 2.3 为例）
 
 最小文件集（依据 `../framework/module_boundaries_zh.md` §6，其中 planner / supervision / MDP 为
 条件项）：
@@ -227,11 +296,17 @@ demos/routing/bar_through_hole_physical_insert_demo.py  # 要能录数据则必�
 ## 7. 未决事项
 
 1. ~~**水平插入原语的形态**~~ —— 已定：新写独立原语 `primitives/axial_insert.py`
-   （`AxialInsertPrimitive`），15 阶段，`run()` 接 `insert_axis` 方向向量与 attach/release 回调。
+   （`AxialInsertPrimitive`），16 阶段，`run()` 接 `insert_axis` 方向向量与 attach/release 回调。
    未为 3.4 的抽出动作预留免释放变体（按 CLAUDE.md §3，等 3.4 真要复用时再改）；届时若确认可合并，
    只需加一个「不释放、反向」的分支。
-2. **4.1 的 Sphere 参数**：仓库内无先例，滚动阻尼、摩擦、恢复系数均需首次标定。建议在正式建任务
-   前先用一个最小场景（平面 + 球）确认滚动行为可控。
+2. **4.1 的 Sphere 参数**（当前的第一项行动）：仓库内无先例，滚动阻尼、摩擦、恢复系数均需首次
+   标定。在正式建任务前先用一个最小场景（平面 + 球）确认滚动行为可控：球能持续滚动而不过早停止，
+   也不出现穿透或无衰减弹跳。该场景同时为 4.3 的槽道滚动提供参数起点。
 3. **3.4 的碰撞精度**：复合环的分段数直接决定防捷径是否成立。建议在实现任务前先做一次独立验证：
    固定环 + C 环，脚本化地试若干条非 gateway 轨迹，确认全部被卡住。
 4. 本轨道与 `task_environment_buildout_zh.md` §5 推荐的 3.2 + 2.5 是否并行推进。
+5. **2.3 的两项收尾**：反捷径对照 `run.oracle_mode=bypass` 未跑；`min_finger_qpos` 阈值未写入配置
+   （实测夹到杆 0.0092、指令位 0.008，判别窗口 1.2mm，可通过下调 `grasp_qpos` 至 0.006 拉宽至 3mm）。
+6. **单自由度铰链发射器的抽取时机**：`stacked_plate.py` 的 `_write_disk_urdf` 目前硬绑圆柱碰撞体与
+   Y 轴。4.4 是第二个使用者，按 CLAUDE.md §3「抄两遍再抽象」，在 4.4 落地时抽到
+   `tasks/_fixtures.py`，与 `add_v_block` 同列。

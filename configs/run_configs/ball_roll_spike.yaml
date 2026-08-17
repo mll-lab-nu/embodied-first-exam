@@ -1,0 +1,39 @@
+# tests/ball_roll_spike.py 的运行模式参数。
+#
+# 球的几何与材料不在这里 —— 它们在 task 配置的 ball 块里（gate_cage_ball），
+# 用点路径覆盖即可扫参：
+#   task.ball.radius=0.015
+#   task.ball.friction=0.2
+#   task.ball.rho=1150.0
+
+defaults:
+  - default
+  - _self_
+
+# 做哪一项测试。
+#   roll : 给初速度让球滚，量滚行距离、停止步数、速度衰减
+#   drop : 从高处落下，量反弹高度与最低点（穿透检查）
+#   rest : 静置，量自发漂移
+#   all  : 依次跑上面三项
+test: all
+
+# roll：初速度（米/秒）与自转设置。
+#   rolling : 自转与平动匹配（纯滚动起步，接触点初速为零）
+#   sliding : 不给自转（纯滑动起步，量摩擦把滑动转成滚动的过程）
+speed: 0.40
+spin: rolling
+
+# roll / drop / rest 各自的步数上限。dt 取自 env 预设（tabletop V1 = 0.01s），
+# 因此 600 步 = 6 秒。
+roll_steps: 600
+drop_steps: 300
+rest_steps: 300
+
+# 每隔多少步打印一行轨迹采样。
+sample_every: 30
+
+# 判定球已停止的速率阈值（米/秒）。低于它即记为停止并报出步数。
+stop_speed: 0.005
+
+# drop：释放高度，从球底面到桌面（米）。
+drop_height: 0.100

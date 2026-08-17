@@ -1,0 +1,13 @@
+# tests/pbd_cloth_spike.py 的主配置。
+#
+# env 用 world_tabletop_v1：与 fem_ipc_rope_spike 不同，本脚本**要**走 tabletop 预设，
+# 因为它量的就是布在那张桌面上、按那组 sim 参数（dt=0.01 / substeps=4）的行为，
+# 而护栏 3（速度预算）的门槛直接由 substep_dt 决定。换一组 sim 参数量出来的数
+# 不能用来定 cloth_fold 的护栏值。
+
+defaults:
+  - config
+  - override task_configs@task: cloth_fold_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: pbd_cloth_spike
+  - _self_

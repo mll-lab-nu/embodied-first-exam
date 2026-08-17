@@ -196,6 +196,47 @@ cd .external/openpi && uv run scripts/compute_norm_stats.py --config-name pi05_t
 # 5. 跑几个 train step (首次拉 pi05_base checkpoint 数 GB + 需 GPU; config 里 num_train_steps=5)
 cd .external/openpi && WANDB_MODE=disabled uv run scripts/train.py pi05_topogym_swap --exp-name=swap_smoke --overwrite; cd - >/dev/null
 
+# --- 渲染速度测量 (回答 reviewer 的 "what is the rendering speed") ---
+# 日志里的 `Running at N FPS` 是 scene.step() 的速率, 且 runs/ 下的长跑都不开相机,
+# 所以渲染成本此前从未被单独量过。下面分别量 step / render / step+render。
+# **务必看输出里的 renderer 和有没有 libEGL 警告**: Rasterizer 走 OpenGL, EGL 拿不到
+# 设备时会静默退回软件渲染 (WSL 上实测慢约一个数量级), 那种数不能用来回答 reviewer。
+# 一键扫分辨率 (每档一个进程, 末尾出汇总表并检查有没有软件渲染回退)
+bash bash_scripts/tests/render_bench.sh
+# 只量一档
+python -B -m tests.render_bench run.res=256 2>&1 | tee runs/render_bench_256.log
+# 换 GPU 后端 / 换相机集 / 加帧数
+BACKEND=gpu bash bash_scripts/tests/render_bench.sh
+RESOLUTIONS="256 512" CAMERAS="[base_camera]" FRAMES=80 bash bash_scripts/tests/render_bench.sh
+
+# --- gate_cage_ball: 插板截留往复小球 (任务书 4.1) ---
+# 工业原型 = 直线振动送料轨上的插板阀。球沿轨道**匀速往复**(_ball_shuttle.py 驱动,
+# 撞到东西就换向), 不靠斜坡。终态自明: 成功=球在盒内持续来回撞, 失败=球从敞口滚出轨道。
+# 两端不对称: 近端敞口(球唯一出入口, 闸板封的就是它), 远端实壁(撞上换向)。
+# 三个正交旋钮: ball.speed 缩放全部时序 / entry_start_y 定球何时到门 / flat_end_y 定窗口多长。
+# 基准难度 = 臂比球先到, 必须在槽口上方悬停约 0.9s 等球进来再下板。
+#
+# 小球标定 spike (tests/ball_roll_spike.py) 的结论已并入本设计: 零滚动阻力 + 零回弹
+# => 球没有自发换向的手段, 故改为驱动式匀速往复。spike 仍可用于复核求解器行为。
+#
+# A. 只建场景不步进, 看几何 (viewer 里转着看)
+python -B -m demos.connectivity.gate_cage_ball_inspect_demo run.static_only=true run.viewer=true run.keep_open=true 2>&1 | tee runs/gate_static.log
+# B. 放球跑一遍, 不动机械臂。看 entered_step / window 对 window_pred / shuttle reversals
+python -B -m demos.connectivity.gate_cage_ball_inspect_demo run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/gate_rollout.log
+# C. oracle 全流程: 取板 -> 搬到槽口 -> 悬停等待 -> 球进来后下板 -> 释放 -> 复核
+python -B -m demos.connectivity.gate_cage_ball_physical_gate_demo run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/gate_oracle.log
+# D. greedy 对照: 到位就插, 不看球
+python -B -m demos.connectivity.gate_cage_ball_physical_gate_demo run.trigger=greedy run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/gate_greedy.log
+# E. 变体: 只改球速, 全部时序按比例缩放
+python -B -m demos.connectivity.gate_cage_ball_physical_gate_demo task.ball.speed=0.180 run.verbose=true 2>&1 | tee runs/gate_fast.log
+# F. 三视角录像 (oblique 斜视 / front 正视 / wrist 第一人称)。每路各出一个文件。
+#    success: 球被封在盒内持续往复；fail: 球被关在门外后原路滚出轨道。
+#    task.success.settle_steps 加长是为了在动作结束后还能拍到终态 (默认 120 只有 1.2s)。
+python -B -m demos.connectivity.gate_cage_ball_physical_gate_demo recording=hq recording.path=runs/videos/gate_cage_ball/success.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 task.success.settle_steps=400 run.verbose=true 2>&1 | tee runs/gate_success.log
+python -B -m demos.connectivity.gate_cage_ball_physical_gate_demo run.trigger=greedy recording=hq recording.path=runs/videos/gate_cage_ball/fail.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 task.success.settle_steps=400 run.verbose=true 2>&1 | tee runs/gate_fail.log
+#    内存不够时 (三路相机的帧在编码前都存内存): recording.res=[640,640] recording.every_n_steps=5
+
+
 # --- bar_through_hole: 刚性杆穿隔板孔 (任务书 2.3) ---
 # 纯刚体任务, 不需要 FEM 那份 env。托座是 V 形块 (topogym/tasks/_fixtures.py 的
 # 通用构件)。搬运用 assisted attachment (IL 契约里 runtime_attachment=True), 且是
@@ -208,8 +249,11 @@ python -B -m demos.routing.bar_through_hole_physical_insert_demo run.inspect_onl
 python -B -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true 2>&1 | tee runs/bar_insert.log
 # C. 反捷径对照: 同样的起止 xy, 只把搬运高度抬到面板顶上绕过去, 判失败 (threading=0)
 python -B -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass run.viewer=true run.verbose=true 2>&1 | tee runs/bar_bypass.log
-# D. 录像
-python -B -m demos.routing.bar_through_hole_physical_insert_demo recording=hq recording.path=runs/videos/bar_through_hole.mp4 recording.camera=[oblique,topdown] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/bar_insert_video.log
+# D. 三视角 success/fail 对照录像。两条**场景完全相同**，只有搬运高度不同：
+#    success = 穿过孔 (threading=1)；fail = 从面板上方绕过去 (threading=0)，
+#    终点 xy 几乎一致，唯一差别是轨迹的同伦类，这正是 docx 要的 contrast pair。
+python -B -m demos.routing.bar_through_hole_physical_insert_demo recording=hq recording.path=runs/videos/bar_through_hole/success.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/bar_success.log
+python -B -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass recording=hq recording.path=runs/videos/bar_through_hole/fail_bypass.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/bar_fail_bypass.log
 
 # --- rope_winding: 绳绕柱两圈 + 放置 (任务书 2.4; 2026-08-11 新建) ---
 # 设计与判据: docs/develop/physics/rope_winding/rope_winding_zh.md
@@ -231,4 +275,68 @@ python -B -m demos.routing.rope_winding_physical_handle_demo task.winding.direct
 # 绳↔夹爪接触打开后的每步代价 (只空跑计时, 不跑物理)
 python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 task.physical_handle.robot_rope_contact=off 2>&1 | tee runs/winding_bench_off.log
 python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 2>&1 | tee runs/winding_bench_on.log
-# 其他常用覆盖: task.winding.turns=1 / task.winding.wind_radius=0.055 / run.lite=true
+# 插头自转 A/B (2026-08-16): 绕柱时插头在夹爪里跟着轨道自转, 抵消绕行注入的扭转。
+#   机理与观察量见 docs/debug/rope_winding_gripper_rope_interference_zh.md 2.8 节。
+#   关 = 改动前的行为。看 twist_span 增量 / wrap_plug / plug_spin_deg。
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=1 task.physical_handle.plug_spin_tracks_orbit=false 2>&1 | tee runs/spin_off_1turn.log
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=1 task.physical_handle.plug_spin_tracks_orbit=true 2>&1 | tee runs/spin_on_1turn.log
+# 自转开启后的两圈稳定性 (默认圈数; 约 29 分钟, 2674 步)。
+#   两圈必须用 probe_every=5: probe_every=15 会有超过 90 度的采样间隔, TwistTracker 的
+#   时间向 unwrap 会混叠 (5.2 节)。第 2.6 节的相邻圈净空也只有第二圈才体现。
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=2 2>&1 | tee runs/spin_on_2turn.log
+# 一圈诊断跑要配 sweep_deg=155。此前一直沿用 200 度 (富余 +40.9%, 一直在带外,
+#   因为 gate 那时只校验配置里的 turns)，现在会被拒。
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=1 task.rope.spawn_arc.sweep_deg=155 2>&1 | tee runs/spin_on_1turn.log
+# 圈数与出生弧鼓度必须配对给 (2026-08-16): 柱上每绕一圈吃 0.151m 绳, 所以绷紧需求
+#   随圈数走, 而绳长由 rope.spawn_arc.sweep_deg 决定。富余必须落在 5~15%。
+#     turns=1 -> sweep_deg 155    turns=2 -> 200 (默认)    turns=3 -> 230
+#   配错会被拒: 离线 gate 与 demo 开跑前的 rope_slack 校验都算这条。
+# 先用离线 gate 秒验一对 (不需要 GPU):
+python tests/check_rope_winding_geometry.py --turns 3 --sweep-deg 230
+# 再用 build_only 在真场景上验一遍 banner (建场景即退, 不跑物理):
+python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230 2>&1 | tee runs/spin_on_3turn_preflight.log
+# 三圈完整跑 (29 个航点, 3627 步, 约 40 分钟)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230 2>&1 | tee runs/spin_on_3turn.log
+# 其他常用覆盖: task.winding.wind_radius=0.055 / run.lite=true
+
+# --- PBD 布料 spike (类别 1 的建模方案, 2026-08-17 新建) ---
+# 诊断工具, 不是任务。结论写进 docs/develop/physics/cloth/pbd_cloth_spike_zh.md。
+#
+# 第一轮 (2026-08-17) 已定的两条, 不用重跑:
+#   cost    : 每步 9ms, 与 particle_size 基本无关。比 FEM+IPC 的 660ms 便宜 73 倍,
+#             所以 particle_size 按判据精度选即可, 不用为速度让步。
+#             墙钟被建场景占满 (每个进程约 3.5-4 分钟), 优化每步没有意义。
+#   contact : Genesis 1.2.1 上不再 segfault (1.1.0 上会), 撑到净空 0。
+#             但手指把布推到桌面下方 2.5mm, 接触并不干净。
+# 第一轮作废的三条 (仪器问题, 已修, 需重跑): settle / weld / speed —— 见下。
+#
+# 统一跑法 (推荐): 每格独立进程+超时, 最后打一张汇总表。
+bash bash_scripts/tests/pbd_cloth_spike.sh                        # 全部六项
+bash bash_scripts/tests/pbd_cloth_spike.sh settle weld speed pinch  # 第二轮要重跑的
+SKIP_CONTACT=1 bash bash_scripts/tests/pbd_cloth_spike.sh         # 跳过可能崩的那项
+# 可调: BACKEND / DRAG_SPEEDS / PINCH_QPOS / SETTLE_DROP_Z / PARTICLE_SIZES /
+#       BENCH_STEPS / TIMEOUT_S / SKIP_CONTACT / OUTDIR
+#
+# 下面是等价的手动分解 (调试单项时用):
+# 1) 静置基线 + **重力是否真的作用在布上**。必须从高处放手: 第一轮把布生成在了
+#    平衡高度上, 全程零位移, 分不出「没事可做」和「根本没在仿真」。先看 gravity= 那项。
+python -B -m tests.pbd_cloth_spike run.test=settle task.cloth.z=0.050 run.verbose=true 2>&1 | tee runs/cloth_settle.log
+# 2) 焊接方式: 锥度 vs 硬焊。形变判据已改成建在仿真粒子的近邻图上 (对重网格免疫);
+#    第一轮用控制网格编号去查重网格后的粒子, 量的是噪声。
+#    顺带看日志里 `pbd_cloth_spike remesh` 那行的 order_preserved —— 它决定所有
+#    需要追踪材料点的判据 (折线位置/层归属/材料守恒) 能不能按现在的方式实现。
+python -B -m tests.pbd_cloth_spike run.test=weld run.taper=true  run.verbose=true 2>&1 | tee runs/cloth_weld_taper.log
+python -B -m tests.pbd_cloth_spike run.test=weld run.taper=false run.verbose=true 2>&1 | tee runs/cloth_weld_hard.log
+# 3) 速度预算。第一轮扫到 0.008 全过、看门狗从未响 (阈值设成了 20mm, 而实测最大
+#    位移 8.4mm), 所以「没炸」等于「没往危险的地方看」。现在扫过隧穿门槛 0.012,
+#    看门狗改成「粒子位移 > 3 倍驱动端位移」才算发散。
+python -B -m tests.pbd_cloth_spike -m run.test=speed run.drag_speed=0.004,0.012,0.024,0.048 2>&1 | tee runs/cloth_speed_sweep.log
+# 4) 挤压 (新增): 在布上合拢手指。这是「夹爪穿模、布飞出去」最可能的机制,
+#    而 contact 测不到它 —— 那一项是闭着手指往下降, 从没在布上合拢过。
+#    参照量 particle_size/2 = 0.003 是单层布的半厚, 扫参跨过它。
+python -B -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.001,0.002,0.003,0.005,0.008 2>&1 | tee runs/cloth_pinch_sweep.log
+# 5) 每步成本 vs 分辨率 (空跑计时)。第一轮已完成, 不用重跑。
+python -B -m tests.pbd_cloth_spike -m run.bench_steps=100 task.cloth.particle_size=0.004,0.006,0.010 2>&1 | tee runs/cloth_cost.log
+# 6) **单独跑**: 闭合手指下降到布面。第一轮已完成 (survived=True), 不用重跑。
+#    它不进 all —— 万一 core dump 会把整个进程带走, 排在它后面的测试全废。
+python -B -m tests.pbd_cloth_spike run.test=contact run.verbose=true 2>&1 | tee runs/cloth_contact.log

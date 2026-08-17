@@ -1,0 +1,9 @@
+# gate_cage_ball_physical_gate_demo 的主配置。
+# 场景与 inspect demo 共用同一份 task 配置，只换 run 组。
+
+defaults:
+  - config
+  - override task_configs@task: gate_cage_ball_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: gate_cage_ball_gate
+  - _self_

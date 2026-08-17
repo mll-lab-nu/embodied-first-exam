@@ -1,0 +1,19 @@
+# tests/render_bench.py 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 每档计时多少帧。热身取其一半（最少 10），与 supervision/step_bench.py 的做法一致：
+# 那里实测前 200 步速率仍在两个方向漂移，热身太短量到的是热身本身。
+# 这个参数不改变每帧成本，只改变平均值的收敛程度——换个值结果明显不同，就说明还没收敛。
+bench_frames: 100
+
+# 相机分辨率（正方形）。一个进程只量一档：相机分辨率在构造时固定，扫描要重建场景，
+# 而在同一进程里反复 destroy/init Genesis 是不必要的风险。扫描交给
+# bash_scripts/tests/render_bench.sh，每档一个进程。
+res: 256
+
+# 量哪些相机。base_camera 是策略观测用的（原生 256）；wrist 是第一人称（原生 256）；
+# oblique 是给人看的录像视角（原生 512）。
+cameras: [base_camera, wrist, oblique]

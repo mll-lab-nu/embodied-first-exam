@@ -15,6 +15,10 @@ from .bar_through_hole_verifier import (
     hexagon_contains,
     prism_axis,
 )
+from .gate_cage_ball_verifier import (
+    GateCageBallEvaluator,
+    GateCageBallState,
+)
 from .maze_wall_removal_verifier import (
     MazeWallRemovalPuzzleEvaluator,
     MazeWallRemovalPuzzleState,
@@ -40,6 +44,8 @@ __all__ = [
     "BarThroughHolePuzzleEvaluator",
     "BarThroughHolePuzzleState",
     "GeoCrossing",
+    "GateCageBallEvaluator",
+    "GateCageBallState",
     "MazeWallRemovalPuzzleEvaluator",
     "MazeWallRemovalPuzzleState",
     "OneStrokePuzzleEvaluator",

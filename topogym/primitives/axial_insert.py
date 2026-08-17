@@ -333,15 +333,25 @@ class AxialInsertPrimitive:
         # (`parent_quat_fn`); with the position-only default the hand turns under a
         # part that keeps its world orientation, and the wrist rotation does
         # nothing but sweep the pads across it.
-        carry_quat = np.asarray(controller.hand_quat(), dtype=float).reshape(4)
+        # Turn from the COMMANDED carry pose, not the measured one. IK tracks with a
+        # standing error of a few tenths of a degree, so the measured pose is the
+        # command plus that error; taking it as the base asks IK to reproduce its own
+        # error and then adds a fresh one on top. Measured on the first V-block run,
+        # that turned a 0.04-degree shaft error into 0.64 degrees -- the correction
+        # was doing nothing but injecting tracking error twice. The command is the
+        # right base: the world-frame correction applied to it lands where it should,
+        # error and all.
+        base_quat = np.asarray(
+            controller.default_ee_quat if ee_quat is None else ee_quat, dtype=float
+        ).reshape(4)
         correction = _rotation_between(_rotate(_entity_quat(part), part_axis), insert_axis)
-        aligned_quat = _quat_mul(correction, carry_quat)
+        aligned_quat = _quat_mul(correction, base_quat)
         hold_pos = np.asarray(controller.hand_pos(), dtype=float)
         self._move_linear(
             controller,
             hold_pos,
             quat=aligned_quat,
-            start_quat=carry_quat,
+            start_quat=base_quat,
             steps=self.align_axis_steps,
         )
         align_tilt = _axis_tilt(_entity_quat(part), part_axis)

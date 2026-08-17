@@ -1,0 +1,32 @@
+# gate_cage_ball_physical_gate_demo 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 用哪个触发规则。两者共用同一个接口，构成官方对照对：
+#   oracle : 等球进来且封门来得及，再下板 —— 预期成功
+#   greedy : 到位就插，不看球 —— 预期失败（球还没进来，被关在外面）
+trigger: oracle
+
+# oracle 在「到门口的时间 - 插入耗时」之上还要求的富余（秒）。
+# 它吸收的是指令下降与 IK 实际跟踪之间的差；bar_through_hole 上实测这一项到过 7.5mm。
+safety_margin: 0.15
+
+# ---------------------------------------------------------------- 关于对照对
+# 当前 release_y 是固定值，因此单跑这两条命令得到的是「这一个实例上两种策略各自
+# 怎样」，不是基线成绩。原因有二，都要在阶段 2 用随机化解决：
+#
+# 1. release_y 固定 => 球的时间线每个 episode 完全相同 => 最优策略退化成「等 N 步
+#    再插」这样一个常数，不需要观测球。任务还没有强制模型去感知。
+# 2. greedy 的成败由 entry_delay 与 insert_duration 的大小关系单方面决定。把几何调
+#    到 greedy 必失败，等于把基线的分数写进场景定义。
+#
+# 阶段 2 的做法：把 release_y 注册进 generation/layout_randomization.py，区间按
+# 场景本身的合理范围取（送料速度的物理量程），**不按基线分数反推**；然后在同一组
+# 种子上实测 oracle / greedy / 固定延时三条基线并如实报告。区间跨过
+# entry_delay == insert_duration 这条边界时，greedy 会在一部分实例上侥幸成功
+# （球从下降中的闸板底下钻进去），那正是它落到中间水平的机制，不该被消掉。
+#
+# 唯一该被硬保证的是可解性：window > insert_duration + safety_margin。
+# demo 启动时只对这一条报警。

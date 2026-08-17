@@ -125,6 +125,49 @@ def post_top_z(layout, spec: WindingSpec) -> float:
     return layout.world_z(float(fixture.pos[2]) + 0.5 * float(fixture.height))
 
 
+def settle_radius(layout, spec: WindingSpec) -> float:
+    """Radius the rope's centreline settles at once it is wrapped on the post."""
+
+    return float(layout.cfg.fixtures[spec.post].radius) + float(layout.cfg.rope.radius)
+
+
+def taut_demand(layout, spec: WindingSpec, waypoints) -> tuple[float, str]:
+    """Longest taut path the route ever asks the rope for, and the waypoint of it.
+
+    Anchor to the post, plus whatever is already wrapped, plus post to wherever
+    the plug is. One turn on the post eats ``2 pi * settle_radius`` -- 151 mm at
+    this layout -- which is why the turn count and the rope's length are not
+    independent, and why this lives beside the planner instead of being written
+    out twice. `tests/check_rope_winding_geometry.py` turns it into the slack
+    gate; the demo refuses to start a run outside that band.
+    """
+
+    center = post_center(layout, spec)
+    anchor = np.asarray(
+        layout.route_point({"fixture": "S", "relation": "center"}), dtype=float
+    )
+    per_turn = 2.0 * np.pi * settle_radius(layout, spec)
+    labels = [str(waypoint.label) for waypoint in waypoints]
+    orbit = [index for index, label in enumerate(labels) if label.startswith("wind_t")]
+    worst, worst_label = 0.0, ""
+    for index, label in enumerate(labels):
+        if index in orbit:
+            wound = (orbit.index(index) + 1) / spec.arc_points_per_turn
+        elif orbit and index > orbit[-1]:
+            wound = float(spec.turns)
+        else:
+            wound = 0.0
+        point = np.asarray(waypoints[index].position, dtype=float)
+        need = (
+            float(np.linalg.norm(anchor[:2] - center[:2]))
+            + wound * per_turn
+            + float(np.linalg.norm(point[:2] - center[:2]))
+        )
+        if need > worst:
+            worst, worst_label = need, label
+    return worst, worst_label
+
+
 def _orbit_point(center: np.ndarray, radius: float, angle: float, z: float) -> np.ndarray:
     return np.array(
         [
@@ -146,6 +189,13 @@ class RopeWindingRouteCommand:
     target_winding: float
     final_route_point_xyz: tuple[float, float, float]
 
+
+#: Slack band the rope's spawn length has to land in: (length - taut demand) /
+#: taut demand. Too much and the free span coils -- cable_routing's helix blew up
+#: at 19% -- too little and the rope fights its anchor instead of laying onto the
+#: post. The demand moves with `winding.turns`, so `rope.spawn_arc.sweep_deg` has
+#: to move with it too; this is the pair both the offline gate and the demo check.
+SLACK_BAND = (0.05, 0.15)
 
 #: Largest wrist turn one waypoint may ask for, in radians -- a hard bound, not
 #: a hint. The command is a quaternion and the interpolation takes the short arc

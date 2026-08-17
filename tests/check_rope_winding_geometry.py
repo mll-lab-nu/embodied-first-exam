@@ -32,6 +32,7 @@ references this reads are resolved here by hand.
 
 from __future__ import annotations
 
+import argparse
 import math
 import sys
 from pathlib import Path
@@ -44,11 +45,14 @@ sys.path.insert(0, str(REPO))
 
 from topogym.planning.rope_winding_planner import (  # noqa: E402
     MAX_WRIST_STEP,
+    SLACK_BAND,
     WRIST_BUDGET,
     WindingSpec,
     plan_rope_winding_route,
     post_center,
+    taut_demand,
 )
+from topogym.planning.waypoint import arc_route_points  # noqa: E402
 from topogym.primitives.attachment import (  # noqa: E402
     RigidAttachment,
     _quat_rotate as _rotate_by_quat,
@@ -122,7 +126,23 @@ class StandInLayout:
         return self.fixture_pos(str(spec["fixture"]), z=float(self.cfg.rope.z))
 
     def route_polyline(self, name):
-        return np.stack([self.route_point(p) for p in self.cfg.routes[name]], axis=0)
+        # Mirrors `CableRoutingLayout.route_polyline`, arc entries included --
+        # the spawn arc's length IS the rope's length, so a stand-in that could
+        # not expand it would be checking a different rope than the sim builds.
+        points = []
+        for entry in self.cfg.routes[name]:
+            if not isinstance(entry, str) and "arc_to" in entry:
+                points.extend(
+                    arc_route_points(
+                        points[-1],
+                        self.route_point(entry["arc_to"]),
+                        math.radians(float(entry["sweep_deg"])),
+                        samples=entry.get("samples"),
+                    )
+                )
+            else:
+                points.append(self.route_point(entry))
+        return np.stack(points, axis=0)
 
 
 def _quat_axis_z(quat) -> np.ndarray:
@@ -150,12 +170,26 @@ def densify(points, step=0.002):
     return np.asarray(out)
 
 
-def main() -> int:
+def main(argv=None) -> int:
     raw = yaml.safe_load(TASK_CFG.read_text(encoding="utf-8"))
     prefabs = yaml.safe_load(PREFABS.read_text(encoding="utf-8"))
     # The two interpolations the checks below dereference.
     raw["rope"]["radius"] = prefabs["rope_pbd"]["radius"]
     raw["rope"]["endpoint_handle"]["z_offset"] = raw["physical_handle"]["z_offset"]
+    # `turns` and `sweep_deg` are the one pair a run has to get right together,
+    # and both are set on the command line for anything but the default. Check
+    # the pair here, in a second, rather than 40 minutes into a GPU run.
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--turns", type=int, help="override task.winding.turns")
+    parser.add_argument(
+        "--sweep-deg", type=float, help="override task.rope.spawn_arc.sweep_deg"
+    )
+    args = parser.parse_args(argv)
+    if args.turns is not None:
+        raw["winding"]["turns"] = int(args.turns)
+    if args.sweep_deg is not None:
+        raw["rope"]["spawn_arc"]["sweep_deg"] = float(args.sweep_deg)
+    raw["routes"]["initial"][-1]["sweep_deg"] = raw["rope"]["spawn_arc"]["sweep_deg"]
     cfg = wrap(raw)
 
     layout = StandInLayout(cfg)
@@ -896,23 +930,10 @@ def main() -> int:
     rope_length = float(
         np.sum(np.linalg.norm(np.diff(layout.route_polyline("initial"), axis=0), axis=1))
     )
-    worst, worst_label = 0.0, ""
-    for index, label in enumerate(labels):
-        if index in orbit:
-            wound = (orbit.index(index) + 1) / spec.arc_points_per_turn
-        elif orbit and index > orbit[-1]:
-            wound = float(spec.turns)
-        else:
-            wound = 0.0
-        # Taut-path length: anchor to the post, the wrapped part, then out to
-        # wherever the plug currently is.
-        need = (
-            float(np.linalg.norm(anchor[:2] - center[:2]))
-            + wound * 2.0 * math.pi * settle_radius
-            + float(np.linalg.norm(points[index][:2] - center[:2]))
-        )
-        if need > worst:
-            worst, worst_label = need, label
+    # Taut-path length: anchor to the post, the wrapped part, then out to
+    # wherever the plug currently is. Shared with the demo's pre-run check, so a
+    # bad (turns, sweep_deg) pair cannot pass here and fail there or vice versa.
+    worst, worst_label = taut_demand(layout, spec, plan.waypoints)
     margin = rope_length - worst
     check(
         "the rope reaches through the tightest moment of the route",
@@ -923,11 +944,58 @@ def main() -> int:
     # docs/develop/physics/rope_backend_migration_zh.md): cable_routing coiled at
     # 19%. Too little and the rope fights its own anchor instead.
     slack = margin / worst
+    low, high = SLACK_BAND
     check(
         "slack stays in the band that neither coils nor over-tightens",
-        0.05 <= slack <= 0.15,
-        f"{slack * 100:.1f}%",
+        low <= slack <= high,
+        f"{slack * 100:.1f}% at turns={spec.turns}, "
+        f"sweep {float(cfg.rope.spawn_arc.sweep_deg):.0f}deg",
     )
+    # ...and the same for every turn count the task ships, because the demand
+    # moves with the turn count and the rope's length does not follow on its own.
+    # One turn on the post eats 2*pi*settle_radius = 151 mm here, so a route that
+    # is comfortable at two turns is 12% SHORT at three. Reported as the sweep
+    # each count needs, not just pass/fail, so the config table can be checked
+    # against arithmetic rather than against memory.
+    print(
+        f"  [--] one turn on the post eats "
+        f"{2.0 * math.pi * settle_radius * 1000:.0f} mm of rope; "
+        f"the spawn arc's sweep is what pays for it"
+    )
+    for count in (1, 2, 3):
+        probe_cfg = wrap(
+            {**raw, "winding": {**raw["winding"], "turns": count}}
+        )
+        probe_layout = StandInLayout(probe_cfg)
+        probe_spec = WindingSpec.from_config(probe_cfg)
+        _, probe_plan = plan_rope_winding_route(probe_layout)
+        need, _ = taut_demand(probe_layout, probe_spec, probe_plan.waypoints)
+        # Sweep that puts this count in the middle of the band, by bisection on
+        # the real arc code rather than on a closed form nobody would re-derive.
+        chord = float(
+            np.linalg.norm(
+                probe_layout.route_point({"fixture": "S", "relation": "center"})[:2]
+                - np.asarray(
+                    probe_layout.route_point(
+                        raw["routes"]["initial"][-1]["arc_to"]
+                    ),
+                    dtype=float,
+                )[:2]
+            )
+        )
+        target = need * 0.5 * (low + high + 2.0)
+        lo, hi = 40.0, 355.0
+        for _ in range(60):
+            middle = 0.5 * (lo + hi)
+            theta = math.radians(middle)
+            if chord * theta / (2.0 * math.sin(0.5 * theta)) < target:
+                lo = middle
+            else:
+                hi = middle
+        print(
+            f"  [--] turns={count}: needs {need:.3f} m taut, "
+            f"so sweep_deg ~{0.5 * (lo + hi):.0f} for mid-band"
+        )
 
     # Wall clock is why this route is kept short. One FEM+IPC step is ~0.66 s on
     # the reference machine (2026-08-11, docs/develop/physics/fem_ipc_step_cost_zh.md)

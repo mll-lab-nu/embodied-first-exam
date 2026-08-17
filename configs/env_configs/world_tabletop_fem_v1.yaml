@@ -149,10 +149,17 @@ cameras:
     fov: 90
     near: 0.01
     far: 3.0
+    # 手部连杆的 local 坐标。指尖在 local +z 方向（MJCF 里 left_finger z=+0.0584，
+    # pad 再 +0.0445，合计 primitives/pick_place.py 的 HAND_TO_PAD_Z=0.1029）。
+    #
+    # 2026-08-17 修正：原值 offset_lookat 的 local z 是 -0.090，比 offset_pos 的
+    # +0.030 更小，视线因此朝 local -z，正好背对指尖，拍到的是手腕后方与手臂自身。
+    # 用 default_ee_quat=[0,1,0,0] 映射到世界后是仰角 +45 度，画面里看不到工作区。
+    # 现值视线朝 local +z（俯角 84.8 度，略带前倾），指垫落在画面中央偏下。
     attach:
       enabled: true
       entity: robot
       link: hand
-      offset_pos: [0.040, 0.000, 0.030]
-      offset_lookat: [0.160, 0.000, -0.090]
-      offset_up: [0.0, 0.0, 1.0]
+      offset_pos: [0.050, 0.000, 0.005]
+      offset_lookat: [0.065, 0.000, 0.170]
+      offset_up: [1.0, 0.0, 0.0]

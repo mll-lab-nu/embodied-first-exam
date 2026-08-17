@@ -1,0 +1,10 @@
+# tests/render_bench.py 的主配置。
+#
+# 场景用共享的 tabletop（桌子 + 机械臂），不带任何任务件：量的是所有任务都要付的
+# 那部分渲染成本。带上任务几何会让数字只对那一个任务成立。
+
+defaults:
+  - config
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: render_bench
+  - _self_

@@ -1,0 +1,83 @@
+# tests/pbd_cloth_spike.py 的运行模式参数。
+#
+# 布的几何、材料与护栏参数不在这里 —— 它们在 task 配置的 cloth / grasp 块
+# （cloth_fold），用点路径覆盖即可扫参：
+#   task.cloth.particle_size=0.004
+#   task.cloth.bending_compliance=0.05
+#   task.grasp.weld_radius=0.030
+
+defaults:
+  - default
+  - _self_
+
+# 做哪一项测试：
+#   settle  : 布自由静置，量平整度基线与自发漂移（判据阈值要从它出发）。
+#             **要配 task.cloth.z=0.050 从高处放手**：2026-08-17 那次生成高度正好
+#             等于平衡高度，全程零位移，分不出「没事可做」和「根本没在仿真」。
+#   weld    : 锥度焊接 vs 硬焊接，看焊接区边缘的形变
+#   speed   : 吸附状态下横拖，扫末端速度，找布开始发散的那条线
+#   pinch   : 在布上合拢手指（挤压）。contact 测不到这个——它是闭着手指往下降。
+#   contact : 闭合手指下降到布面附近，是否 native segfault
+#             （1.1.0 上会；1.2.1 上 2026-08-17 实测不会，撑到净空 0）
+#   all     : 依次跑 settle -> weld -> speed -> pinch（**不含 contact**，见下）
+# `contact` 不进 all：它可能整个进程 core dump，跑在别的测试前面会把它们一起带走。
+# `pinch` 排在 all 的最后：它是这四项里最可能发散的。
+test: settle
+
+# contact：手指从布面上方多少开始下降、每步降多少、降到离布面多近为止。
+# 每一步都 flush 一行，所以万一 segfault，最后一行就是崩溃时的净空。
+contact_start_clearance: 0.060
+contact_step: 0.002
+contact_min_clearance: 0.000
+
+# speed：横拖的指令速度（米/步）。扫参用 -m run.drag_speed=0.001,0.002,0.004,0.008。
+# 参考量级：现有 demo 的指令速度是 0.9~2.0 mm/步。
+# 隧穿的理论门槛是 v * substep_dt > particle_size/2，即 particle_size=0.006、
+# substep_dt=0.0025s 时约 1.2 m/s = 12 mm/步 —— 比 demo 速度高一个量级，
+# 所以这一项要是先炸，炸的原因不是隧穿。
+drag_speed: 0.002
+drag_distance: 0.120
+
+# weld：是否用锥度权重。false = 硬焊（焊接区内每个粒子都被绝对驱动）。
+taper: true
+# weld / speed 共用的提起量。
+lift_delta: 0.060
+
+# 每项测试之前的落布步数。布出生在桌面上方 cloth.z，会先掉下来；不先落稳的话
+# 每项测试开头量到的都是这段下落，weld 的静止边长也会取在下落中途。
+presettle_steps: 60
+
+# settle：落稳之后再静置多少步（量平整度基线与自发漂移）。
+settle_steps: 300
+
+# 每隔多少步打印一行采样。
+sample_every: 25
+
+# weld 的形变判据用的近邻数。图建在**仿真粒子**的静止位置上，不用控制网格的边
+# （Genesis 会重网格化：1089 个控制顶点进去、1398 个粒子出来，控制网格的编号
+#  查到的是「碰巧排在那个号上的粒子」）。
+rest_neighbours: 4
+
+# pinch：合拢到的半宽（米）与合拢后保持的步数。
+# 参照量是 particle_size/2 —— 单层布的半厚。扫参跨过它：
+#   -m run.pinch_qpos=0.001,0.002,0.003,0.005,0.008
+# 挤压不是在合拢那一步发散，是在之后每一步求解器都解不出可行位置时发散，
+# 所以要保持住再看。
+pinch_qpos: 0.003
+pinch_hold_steps: 200
+
+# 看门狗阈值。触发即记录（settle/weld/speed/pinch 会停下，contact 只记不停——
+# 它要回答的是「进程活没活下来」）。spike 的目的就是找到触发条件，
+# 所以这里是记录而不是防御。
+#   disp_ratio    : 单步粒子位移允许达到「驱动端单步位移」的多少倍。
+#                   固定阈值分不出「被指令拖得快」和「发散」：2026-08-17 那次
+#                   末端每步走 8mm，粒子当然也走 8mm，20mm 的线永远不响、
+#                   3mm 的线次次响。发散的定义是材料跑赢了驱动它的东西。
+#   max_step_disp : 上面那条的绝对下限（米），给不驱动的 settle / 几乎不驱动的
+#                   contact 用。取半个粒子。
+#   max_speed     : 任一粒子的最大速率（米/秒）。绝对兜底。
+#   min_z_below   : 最低粒子相对桌面的高度低于这个值即判为穿透（米，负值）
+disp_ratio: 3.0
+max_step_disp: 0.003
+max_speed: 3.0
+min_z_below: -0.005
