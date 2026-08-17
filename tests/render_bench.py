@@ -51,6 +51,12 @@ from topogym.core import save_resolved_config
 from topogym.world import StandardTabletopSceneBuilder
 
 
+# Cameras the locked preset pins. `base_camera` is the policy observation camera:
+# res, pose and fov are all frozen so a recorded observation means the same thing
+# in every task and every dataset (topogym/world/tabletop.py:522-540).
+_LOCKED_RES_CAMERAS = frozenset({"base_camera"})
+
+
 def time_it(fn, count: int) -> float:
     """Milliseconds per call, after a warm-up of the same shape.
 
@@ -88,8 +94,28 @@ def main(cfg: DictConfig) -> None:
     # down and re-initialising it inside one process -- avoidable risk for a
     # measurement whose whole value is being trustworthy. The sweep lives in
     # bash_scripts/tests/render_bench.sh, one process per row.
-    overrides = {"env": {"cameras": {name: {"res": [res, res]} for name in names}}}
-    env_cfg = OmegaConf.merge(cfg.env, OmegaConf.create(overrides))
+    # `base_camera` is frozen at 256x256 by the locked preset (tabletop.py:522),
+    # along with its pose and fov -- it is the policy observation camera, and the
+    # freeze is what makes datasets comparable across tasks. Resizing it raises
+    # rather than silently changing what a recorded observation means, so the
+    # sweep leaves it alone and resizes only the others. Its cost still gets
+    # measured, just always at 256.
+    resized = {
+        name: {"res": [res, res]} for name in names if name not in _LOCKED_RES_CAMERAS
+    }
+    skipped = sorted(set(names) & _LOCKED_RES_CAMERAS)
+    if skipped and res != 256:
+        print(
+            f"render_bench note: {skipped} have a locked resolution and stay at "
+            f"256x256 while the others go to {res}x{res}.",
+            flush=True,
+        )
+    # Merge into the WHOLE cfg, not into cfg.env: the override dict carries its own
+    # `env` key, and merging that into cfg.env asks for cfg.env.env, which the
+    # struct-locked config rejects with `full_key: env.env`. Same shape as
+    # `utils/recording.py:apply_recording_camera_overrides`.
+    merged = OmegaConf.merge(cfg, {"env": {"cameras": resized}}) if resized else cfg
+    env_cfg = merged.env
     builder = StandardTabletopSceneBuilder(env_cfg, cfg.robot_control)
     tabletop = builder.create(show_viewer=False, include_robot=True)
     builder.finalize(tabletop)
@@ -118,8 +144,9 @@ def main(cfg: DictConfig) -> None:
 
         render_ms = time_it(render_once, frames)
         both_ms = time_it(both, frames)
+        actual_res = int(env_cfg.cameras[name].res[0])
         print(
-            f"render_bench res={res:4d} camera={name:<11} renderer={renderer} "
+            f"render_bench res={actual_res:4d} camera={name:<11} renderer={renderer} "
             f"backend={str(cfg.env.genesis.backend)} "
             f"step={step_ms:7.2f}ms render={render_ms:7.2f}ms both={both_ms:7.2f}ms "
             f"render_fps={1e3 / max(render_ms, 1e-9):7.1f} "
