@@ -1,0 +1,14 @@
+# tests/batch_render_probe.py 的主配置。
+#
+# 批量渲染器要求 CUDA 后端，所以这里把它钉住，而不是沿用 world_tabletop_v1 的 cpu。
+# n_envs=0 那一档在 CUDA 上跑也是对照组：它走的仍是默认光栅化器。
+
+defaults:
+  - config
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: batch_render_probe
+  - _self_
+
+env:
+  genesis:
+    backend: cuda

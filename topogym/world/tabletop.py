@@ -165,6 +165,12 @@ class StandardTabletopSceneBuilder:
             scene_kwargs["rigid_options"] = self.rigid_options
         if self.pbd_options is not None:
             scene_kwargs["pbd_options"] = self.pbd_options
+        renderer = self._select_renderer()
+        if renderer is not None:
+            scene_kwargs["renderer"] = renderer
+        # Caller wins: an explicit `scene_options["renderer"]` overrides the
+        # n_envs-driven choice, so a spike can pin a renderer without touching
+        # the env config.
         if self.scene_options:
             scene_kwargs.update(self.scene_options)
         viewer_kwargs = {
@@ -445,6 +451,60 @@ class StandardTabletopSceneBuilder:
 
     def _frames(self) -> TabletopFrames:
         return tabletop_frames_from_config(self.env_cfg)
+
+    def _select_renderer(self):
+        """Batch renderer when `sim.n_envs > 0`, Genesis' default otherwise.
+
+        The whole switch is `env.sim.n_envs`. At 0 this returns None and Genesis
+        applies its own default (`Rasterizer`, engine/scene.py:130), so the
+        single-environment path -- every demo, every recording, the viewer -- is
+        bit-for-bit what it was.
+
+        Above 0 the Madrona batch renderer is selected, which draws all
+        environments in one call. That is the right lever here rather than a
+        guess: `tests/render_bench.py` measured frame cost as roughly flat in
+        resolution (1.75 ms fixed + 0.65-1.0 ms per megapixel on a 4090), so a
+        frame is dominated by per-frame setup, and per-frame setup is exactly what
+        batching amortizes across environments.
+
+        Its preconditions are checked HERE rather than left to fail deep inside
+        Genesis, because two of them are things a caller can act on and the
+        engine's own messages arrive after the scene is half-built.
+        """
+
+        n_envs = int(getattr(self.env_cfg.sim, "n_envs", 0) or 0)
+        if n_envs <= 0:
+            return None
+
+        if gs.backend != gs.cuda:
+            raise ValueError(
+                f"sim.n_envs={n_envs} selects the batch renderer, which requires the "
+                f"CUDA backend, but gs.init ran with {gs.backend}. Set "
+                "env.genesis.backend=cuda, or keep n_envs=0 for the single-environment "
+                "path."
+            )
+        try:
+            import gs_madrona  # noqa: F401
+        except ImportError as exc:
+            raise ValueError(
+                "The batch renderer needs `gs_madrona`, which is Linux x86-64 only. "
+                "Keep sim.n_envs=0 on this machine."
+            ) from exc
+
+        # Madrona renders every camera into one batch, so they must agree on size.
+        # Left to Genesis this surfaces as a ValueError unpacking a set, after the
+        # scene is built.
+        sizes = {
+            name: tuple(int(v) for v in camera.res)
+            for name, camera in self.env_cfg.cameras.items()
+        }
+        if len(set(sizes.values())) > 1:
+            raise ValueError(
+                "The batch renderer requires every camera to share one resolution; "
+                f"got {sizes}. Override the odd ones out, or drop them from "
+                "env.cameras for batched runs."
+            )
+        return gs.renderers.BatchRenderer()
 
     def _validate_locked_preset(self) -> None:
         preset_cfg = getattr(self.env_cfg, "preset", None)

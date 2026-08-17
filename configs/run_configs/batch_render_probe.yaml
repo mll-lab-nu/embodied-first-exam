@@ -1,0 +1,15 @@
+# tests/batch_render_probe.py 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 一个进程只跑一个 n_envs（重建场景要在同进程里 destroy/init Genesis，不必要的风险）。
+# 扫描交给 bash_scripts/tests/batch_render_probe.sh。
+n_envs_sweep: [0]
+
+# 计时帧数（前面另有一半的热身）。
+bench_frames: 40
+
+# 用哪个相机取形状与计时。批量渲染要求所有相机同分辨率，所以只用一个最省事。
+camera: base_camera
