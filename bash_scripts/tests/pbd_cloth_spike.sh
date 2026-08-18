@@ -32,6 +32,7 @@
 #   PINCH_QPOS="0.0005 0.001 0.002 0.004 0.006"  pinch 扫哪些闭合半宽（米）
 #   SETTLE_DROP_Z=0.050              settle 从多高放手（米）
 #   ATTACH_MODES="..."               grip 扫哪几种附着方式
+#   FRICTIONS="0.4:0.5 0.8:1.0 ..."  friction 扫哪几档布↔桌面摩擦
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
 #   TIMEOUT_S=900                    单格墙钟超时（秒）
@@ -67,6 +68,9 @@ PINCH_QPOS="${PINCH_QPOS:-0.0005 0.001 0.002 0.004 0.006}"
 SETTLE_DROP_Z="${SETTLE_DROP_Z:-0.050}"
 # grip 扫哪几种附着方式。前两种是「事后改坐标」，后两种是「交给求解器」。
 ATTACH_MODES="${ATTACH_MODES:-overwrite_graded overwrite_rigid link_patch link_single}"
+# friction 扫哪几档「布↔桌面」摩擦，写成 "动摩擦:静摩擦" 成对给。
+# 两头都要看：太小整片布被拖走，太大布像粘在桌上（docx 1.5 铺桌布就做不成）。
+FRICTIONS="${FRICTIONS:-0.4:0.5 0.8:1.0 1.5:1.8}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
@@ -84,7 +88,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(settle grip fold speed pinch cost contact)
+ORDER=(settle grip fold friction speed pinch cost contact)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -173,6 +177,14 @@ for name in "${SELECTED[@]}"; do
     fold)
       run_cell "fold" fold run.test=fold run.verbose=true
       ;;
+    friction)
+      for pair in $FRICTIONS; do
+        kin="${pair%%:*}"; sta="${pair##*:}"
+        run_cell "fric_${kin}_${sta}" fold run.test=fold run.verbose=true           "task.cloth.tabletop_friction.kinetic_mu=$kin"           "task.cloth.tabletop_friction.static_mu=$sta"
+        # 同一档再确认布没被粘死: 从 5cm 放手, 该落平就要落平。
+        run_cell "fric_${kin}_${sta}_settle" settle run.test=settle run.verbose=true           "task.cloth.z=$SETTLE_DROP_Z"           "task.cloth.tabletop_friction.kinetic_mu=$kin"           "task.cloth.tabletop_friction.static_mu=$sta"
+      done
+      ;;
     speed)
       for speed in $DRAG_SPEEDS; do
         run_cell "speed_$speed" speed run.test=speed "run.drag_speed=$speed"
@@ -218,6 +230,9 @@ echo "  grip        看 follow_ratio：接近 1 才算抓住了（2026-08-19 默
 echo "              同时看 worst_edge_strain：抓得越死，材料要拉伸得越多。"
 echo "              选那个「跟得上、又没拉伸太多」的；link_single 还要在 viewer 里"
 echo "              确认布角不会绕着那一个点乱转。"
+echo "  friction    抓得住: anchor_shift_mm / far_half_shift_mm 降到几毫米, two_layer_frac 上到 0.8+;"
+echo "              没粘死: 同档的 _settle 行 gravity=fell 且 flatness_var 接近 0。"
+echo "              两条都满足的那一档才是要写回配置的值。"
 echo "  fold        **最关键的一行**: self_contact_gap_mm 接近 particle_size_mm 说明"
 echo "              两层是叠着的; 接近 0 说明穿模了, 层数类判据在 PBD 下做不出来。"
 echo "              配合 two_layer_frac (对折后应有可观比例的双层) 与"

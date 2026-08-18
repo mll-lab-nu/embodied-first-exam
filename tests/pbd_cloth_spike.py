@@ -192,16 +192,27 @@ class Watchdog:
         self.table_z = float(table_z)
         self.max_step_disp = float(cfg.run.max_step_disp)
         self.disp_ratio = float(cfg.run.disp_ratio)
-        # Metres the DRIVER moves per step in this test: the commanded drag speed
-        # where there is one, 0 where the test commands nothing.
+        # Metres the DRIVER moves per step right now: the commanded rate while
+        # something is carrying the cloth, 0 where the test commands nothing.
+        # Settable mid-run, because the regime changes -- see `set_reference`.
         self.reference = float(reference)
         self.max_speed = float(cfg.run.max_speed)
         self.min_z_below = float(cfg.run.min_z_below)
-        self._previous = particles(cloth)
+        # A copy, not the array itself. `np.asarray` does not copy an array
+        # that is already float64, so if the backend ever handed back a view
+        # of live memory, `_previous` would track it and every displacement
+        # would read as zero -- the detector silently doing nothing, which is
+        # the one failure it must not have.
+        self._previous = np.array(particles(cloth), copy=True)
         self.worst_step_disp = 0.0
         self.worst_speed = 0.0
         self.lowest_z = float("inf")
+        # FIRST trip only. It used to be overwritten by every later one, so the
+        # 2026-08-19 fold reported `@1201` when it first went over at 1191 -- the
+        # summary said nothing about when things actually started going wrong.
         self.tripped: str | None = None
+        self.tripped_phase: str | None = None
+        self.phase: str = "start"
 
     def limit(self) -> float:
         """The step-displacement a particle is allowed, for this test's drive rate.
@@ -217,18 +228,36 @@ class Watchdog:
 
         return max(self.max_step_disp, self.disp_ratio * self.reference)
 
+    def set_reference(self, reference: float, phase: str) -> None:
+        """Change the drive rate the limit is measured against, and say why.
+
+        A single constant cannot serve a whole episode. While the hand carries
+        the cloth the drive rate is the hand's own step (0.36 mm on the 2026-08-19
+        fold); once the cloth is let go there is no driver at all and it is simply
+        falling, which is legitimately an order of magnitude faster. That run used
+        the same 6 mm limit for both, so it could not have caught a divergence
+        mid-fold (17x headroom) and it flagged the landing as one.
+        """
+
+        self.reference = float(reference)
+        self.phase = str(phase)
+
     def check(self, step: int) -> str | None:
         current = particles(self.cloth)
         if not np.all(np.isfinite(current)):
-            self.tripped = f"nan_at_step={step}"
+            if self.tripped is None:
+                self.tripped = f"nan_at_step={step}"
+                self.tripped_phase = self.phase
             return self.tripped
         disp = float(np.max(np.linalg.norm(current - self._previous, axis=1)))
         speed = float(np.max(np.linalg.norm(velocities(self.cloth), axis=1)))
         low = float(current[:, 2].min()) - self.table_z
-        self._previous = current
+        self._previous = np.array(current, copy=True)
         self.worst_step_disp = max(self.worst_step_disp, disp)
         self.worst_speed = max(self.worst_speed, speed)
         self.lowest_z = min(self.lowest_z, low)
+        if self.tripped is not None:
+            return self.tripped
         ceiling = self.limit()
         if disp > ceiling:
             self.tripped = f"step_disp={disp:.4f}>{ceiling:.4f}@{step}"
@@ -236,6 +265,8 @@ class Watchdog:
             self.tripped = f"speed={speed:.3f}>{self.max_speed:.3f}@{step}"
         elif low < self.min_z_below:
             self.tripped = f"below_table={low:.4f}<{self.min_z_below:.4f}@{step}"
+        if self.tripped is not None:
+            self.tripped_phase = self.phase
         return self.tripped
 
     def summary(self) -> str:
@@ -245,6 +276,7 @@ class Watchdog:
             f"worst_speed={self.worst_speed:.3f} "
             f"lowest_z_above_table={self.lowest_z:+.5f} "
             f"blowup={self.tripped or 'none'}"
+            + ("" if self.tripped is None else f" blowup_phase={self.tripped_phase}")
         )
 
 
@@ -746,7 +778,7 @@ def run_fold(cfg, ctx) -> None:
         )
 
     grip = ctx.attach(cfg)
-    dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
+    dog = Watchdog(cfg, cloth, table_z)
     phase(cfg, ctx, "attached", dog)
 
     # The path is a ROTATION ABOUT THE FOLD LINE, not a translation with a height
@@ -791,7 +823,11 @@ def run_fold(cfg, ctx) -> None:
         max(2, int(round(steps / 2))): "apex",     # 90 degrees: over the fold line
         steps: "placed",                           # 180 degrees: down on the far side
     }
-    ok = True
+    # The limit follows the hand's OWN rate around the arc. The 2026-08-19 run
+    # used `drag_speed` (2 mm a step) while the arc actually advances 0.36, so
+    # the ceiling sat 17x above anything that could happen.
+    dog.set_reference(np.pi * radius / steps, "carried")
+    completed = False
     for index in range(1, steps + 1):
         theta = np.pi * index / steps
         xy = centre_xy + direction * (radius * float(np.cos(theta)))
@@ -802,8 +838,7 @@ def run_fold(cfg, ctx) -> None:
             continuous_ik=True,
         )
         grip.sync()
-        if dog.check(index):
-            ok = False
+        tripped = dog.check(index)
         if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
             print(
                 f"[cloth_fold step={index:4d}] theta={np.degrees(theta):5.1f} "
@@ -811,13 +846,30 @@ def run_fold(cfg, ctx) -> None:
                 flush=True,
             )
         if index in marks:
+            dog.phase = marks[index]
             phase(cfg, ctx, marks[index], dog)
-        if not ok:
+        if tripped:
+            # Report where it got to before giving up. The 2026-08-19 run broke
+            # out at step 1191 of 1200 and never printed `placed`, so the record
+            # had a hole at exactly the moment the fold completes.
+            if "placed" not in [marks[k] for k in marks if k <= index]:
+                phase(cfg, ctx, "aborted", dog)
             break
+    else:
+        completed = True
 
     # 3. Let go, and let it lie. A fold that only exists while the hand holds it
     #    is not a fold.
     grip.release()
+    # Nothing is carrying the cloth now; it is falling. A corner dropped from the
+    # apex reaches roughly sqrt(2*g*h) = 1.6 m/s, i.e. ~16 mm a step, and that is
+    # the cloth behaving correctly rather than diverging. Judging the landing by
+    # the carried-phase limit is what made a 99%-complete fold read as a failure.
+    dog.set_reference(
+        float(np.sqrt(2.0 * abs(float(cfg.env.sim.gravity[2])) * max(radius, 1e-9)))
+        * float(cfg.env.sim.dt),
+        "released",
+    )
     phase(cfg, ctx, "released", dog)
     for index in range(1, max(1, int(cfg.run.fold_settle_steps)) + 1):
         scene.step()
@@ -838,12 +890,26 @@ def run_fold(cfg, ctx) -> None:
         if len(anchor)
         else float("nan")
     )
+    # Whole-sheet mean displacement says nothing about a fold: the half that gets
+    # folded is SUPPOSED to travel the full 283 mm (the 2026-08-19 run read
+    # moved_max 350 mm, which was the fold working). Only the half that stays
+    # behind carries the "did the sheet slide" signal.
+    far_half = np.flatnonzero(
+        (rest_nodes[:, :2] - centre_xy) @ direction < 0.0
+    )
+    far_shift = (
+        float(np.linalg.norm(
+            nodes[far_half][:, :2] - rest_nodes[far_half][:, :2], axis=1
+        ).mean())
+        if len(far_half)
+        else float("nan")
+    )
     covered = max(1, layers["covered_cells"])
     print(
         f"pbd_cloth_spike fold grasp_at={str(cfg.run.grasp_at)} "
         f"pin={str(cfg.run.pin)} pinned={len(pinned)} steps={steps} "
         f"radius_mm={radius * 1e3:.1f} cell_mm={cell * 1e3:.1f} "
-        f"completed={ok} "
+        f"completed={completed} "
         f"covered_cells={layers['covered_cells']} "
         f"two_layer_cells={layers['two_layer_cells']} "
         f"two_layer_frac={layers['two_layer_cells'] / covered:.3f} "
@@ -851,6 +917,7 @@ def run_fold(cfg, ctx) -> None:
         f"self_contact_gap_mm={contact_gap * 1e3:.2f} "
         f"(particle_size_mm={particle_size * 1e3:.1f}) "
         f"fold_iou={iou:.3f} anchor_shift_mm={anchor_shift * 1e3:.2f} "
+        f"far_half_shift_mm={far_shift * 1e3:.2f} "
         f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
         f"{dog.summary()}",
         flush=True,

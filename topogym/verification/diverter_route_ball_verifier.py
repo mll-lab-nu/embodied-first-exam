@@ -176,6 +176,11 @@ class DiverterRouteBallState:
 
         if self.is_terminal:
             return None
+        if self.commanded_side is None:
+            # Nothing was asked for, so there is nothing to have got wrong. The
+            # inspect demo reads states with no command; without this the
+            # fall-through blamed the judge for a disagreement that never existed.
+            return "no_command"
         if self.ball_stuck:
             # A wedged ball with the flap short of a seat is the under-rotation
             # failure and is named after its cause. A wedged ball with the flap

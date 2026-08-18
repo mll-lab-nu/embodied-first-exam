@@ -264,6 +264,7 @@ class HeadingDrive:
         self.steps_driven = 0
         self._stalled = 0
         self._last_xy: np.ndarray | None = None
+        self._window: list[np.ndarray] = []
         self._original_step = None
 
     def start(self) -> None:
@@ -273,6 +274,7 @@ class HeadingDrive:
         self.jammed = False
         self._stalled = 0
         self._last_xy = None
+        self._window = []
 
     def ball_xy(self) -> np.ndarray:
         return _as_numpy(self.ball.get_pos()).reshape(-1, 3)[0][:2].astype(float)
@@ -291,11 +293,18 @@ class HeadingDrive:
             self.coast()
             return
 
-        progress = float(np.linalg.norm(xy - self._last_xy))
-        # Anything under a fifth of the commanded advance is not motion.
-        if progress < 0.2 * self.speed * self.dt:
-            self._stalled += 1
-            if self._stalled >= self.stall_steps:
+        # NET displacement over a window, not per-step. Measured 2026-08-19: a ball
+        # pressed against the diverter flap creeps and slides along it at well over
+        # the per-step threshold while going nowhere, so a per-step test (which is
+        # what `BallShuttle` uses, and which is right for a ball bouncing off a
+        # gate) never fired and the run was labelled `ball_never_left` instead of
+        # jammed. Over a window, sliding-in-place reads as the standstill it is.
+        self._window.append(xy)
+        if len(self._window) > self.stall_steps:
+            self._window.pop(0)
+        if len(self._window) >= self.stall_steps:
+            progress = float(np.linalg.norm(xy - self._window[0]))
+            if progress < 0.2 * self.speed * self.dt * self.stall_steps:
                 self.running = False
                 self.jammed = True
                 # Hand over to the rolling-resistance stand-in rather than simply
@@ -308,8 +317,6 @@ class HeadingDrive:
                 self.coasting = True
                 self._last_xy = xy
                 return
-        else:
-            self._stalled = 0
         self._last_xy = xy
 
         velocity = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:6].astype(float)
