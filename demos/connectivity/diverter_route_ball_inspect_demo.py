@@ -193,7 +193,12 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
     # the branches run at an angle, so a distance in x is not a distance along one.
     final_side = exit_side if exit_side is not None else expected
     final_station = (
-        layout.branch_station(final_side, final)[0] if final_side is not None else float("nan")
+        layout.branch_station(final_side, final)[0] if final_side is not None else None
+    )
+    # A jam leaves the ball in the lane, where no branch station means anything.
+    station_text = "n/a" if final_station is None else f"{final_station:+.4f}"
+    runout_text = (
+        "n/a" if final_station is None else f"{final_station - layout.exit_station:+.4f}"
     )
     print(
         "diverter_route_ball inspect "
@@ -205,8 +210,8 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
         f"jam_xy={'n/a' if jam_xy is None else f'({jam_xy[0]:+.4f},{jam_xy[1]:+.4f})'} "
         f"lane_max_abs_y={max_abs_y_in_lane:.4f} "
         f"final=({final[0]:+.4f},{final[1]:+.4f}) "
-        f"final_station={final_station:+.4f}/{layout.exit_station:.3f} "
-        f"runout={final_station - layout.exit_station:+.4f} "
+        f"final_station={station_text}/{layout.exit_station:.3f} "
+        f"runout={runout_text} "
         f"routed_correctly={exit_side is not None and exit_side == expected}",
         flush=True,
     )

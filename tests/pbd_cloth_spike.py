@@ -49,6 +49,7 @@ on its own.
     python -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.001,0.003,0.006
     python -m tests.pbd_cloth_spike run.bench_steps=100        # per-step cost
     python -m tests.pbd_cloth_spike run.viewer=true run.keep_open=true
+    python -m tests.pbd_cloth_spike run.test=fold recording=hq recording.path=runs/videos/cloth_fold.mp4
 
 Prints one `pbd_cloth_spike <test>` summary line per test, plus sampled lines
 under `run.verbose=true`. Every per-step line is flushed, so a native crash still
@@ -69,7 +70,12 @@ from topogym.core import save_resolved_config
 from topogym.primitives.attachment import ParticleAttachment
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.supervision import stop_before_physics
-from topogym.utils import initialize_franka_controller
+from topogym.utils import (
+    apply_recording_camera_overrides,
+    initialize_franka_controller,
+    print_recording_saved,
+    recording_session_from_config,
+)
 from topogym.world import StandardTabletopSceneBuilder, materials
 
 
@@ -1134,6 +1140,8 @@ class _Context:
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="pbd_cloth_spike")
 def main(cfg: DictConfig) -> None:
+    # Camera resolution has to reach the env before the scene is built.
+    cfg = apply_recording_camera_overrides(cfg)
     resolved = save_resolved_config(cfg)
     if resolved is not None:
         print(f"pbd_cloth_spike_config -> {resolved}", flush=True)
@@ -1272,8 +1280,13 @@ def main(cfg: DictConfig) -> None:
         rest_pairs, rest_lengths, origin, particles(cloth), fold_target, show_viewer,
     )
     context.spawn_peak = spawn_peak
-    for name in names:
-        TESTS[name](cfg, context)
+    # Recording wraps the tests only. The build, the settle and the rest-graph
+    # pass happen before it opens, so a video is the motion and not two minutes
+    # of a still sheet.
+    with recording_session_from_config(scene, tabletop.cameras, cfg.recording):
+        for name in names:
+            TESTS[name](cfg, context)
+    print_recording_saved(cfg.recording)
 
     while cfg.run.keep_open and show_viewer:
         scene.step()
