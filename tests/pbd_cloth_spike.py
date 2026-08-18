@@ -519,6 +519,34 @@ def glide(controller, target, *, quat, steps: int, sync=None) -> None:
 # --------------------------------------------------------------------- tests
 
 
+def pinned_indices(nodes, centre_xy, direction, mode: str):
+    """Particles held down on the table for the run, if any.
+
+    A discriminator, not a feature. Two things can stop a sheet folding and they
+    look identical from outside: the material may be too stiff to hinge, or
+    nothing may be holding the far half down so the whole sheet is towed. Pinning
+    the far half removes the second one. If it folds pinned, the material is fine
+    and the work is on friction and weight; if it still will not fold, the
+    material is the problem.
+
+    ``far_half``    everything on the other side of the fold line
+    ``far_quarter`` only the outer half of that -- closer to what friction over a
+                    large area would do, and it leaves the material near the fold
+                    line free to lift as the top layer lands on it
+    """
+
+    if mode == "none":
+        return np.array([], dtype=int)
+    along = (np.asarray(nodes, dtype=float)[:, :2] - centre_xy) @ direction
+    if mode == "far_half":
+        return np.flatnonzero(along < 0.0)
+    if mode == "far_quarter":
+        return np.flatnonzero(along < 0.5 * float(along.min()))
+    raise SystemExit(
+        f"run.pin must be none / far_half / far_quarter, got {mode!r}."
+    )
+
+
 def phase(cfg, ctx, name: str, dog=None) -> None:
     """Report the sheet's state, and hold here if this is the stop point.
 
@@ -698,6 +726,24 @@ def run_fold(cfg, ctx) -> None:
         np.linalg.norm(rest_nodes[:, :2] - anchor_at, axis=1) < 3.0 * particle_size
     )
 
+    # Optionally hold the far half down, to separate "the material cannot fold"
+    # from "nothing is stopping the sheet being towed". See `pinned_indices`.
+    pin_centre = np.asarray(ctx.origin, dtype=float)[:2] + np.asarray(
+        list(cloth_cfg.center), dtype=float
+    )
+    pin_span = np.asarray(ctx.grasp_point, dtype=float)[:2] - pin_centre
+    pinned = pinned_indices(
+        rest_nodes, pin_centre, pin_span / max(float(np.linalg.norm(pin_span)), 1e-9),
+        str(cfg.run.pin),
+    )
+    if len(pinned):
+        cloth.fix_particles(particles_idx_local=[int(i) for i in pinned])
+        print(
+            f"pbd_cloth_spike pin mode={str(cfg.run.pin)} pinned={len(pinned)}"
+            f"/{len(rest_nodes)}",
+            flush=True,
+        )
+
     grip = ctx.attach(cfg)
     dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
     phase(cfg, ctx, "attached", dog)
@@ -793,7 +839,8 @@ def run_fold(cfg, ctx) -> None:
     )
     covered = max(1, layers["covered_cells"])
     print(
-        f"pbd_cloth_spike fold grasp_at={str(cfg.run.grasp_at)} steps={steps} "
+        f"pbd_cloth_spike fold grasp_at={str(cfg.run.grasp_at)} "
+        f"pin={str(cfg.run.pin)} pinned={len(pinned)} steps={steps} "
         f"radius_mm={radius * 1e3:.1f} cell_mm={cell * 1e3:.1f} "
         f"completed={ok} "
         f"covered_cells={layers['covered_cells']} "
