@@ -33,6 +33,7 @@
 #   SETTLE_DROP_Z=0.050              settle 从多高放手（米）
 #   ATTACH_MODES="..."               grip 扫哪几种附着方式
 #   FRICTIONS="0.4:0.5 0.8:1.0 ..."  friction 扫哪几档布↔桌面摩擦
+#   FOLD_STEP_COUNTS="240 600 1200"  quasistatic 扫哪几档步数
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
 #   TIMEOUT_S=900                    单格墙钟超时（秒）
@@ -71,6 +72,8 @@ ATTACH_MODES="${ATTACH_MODES:-overwrite_graded overwrite_rigid link_patch link_s
 # friction 扫哪几档「布↔桌面」摩擦，写成 "动摩擦:静摩擦" 成对给。
 # 两头都要看：太小整片布被拖走，太大布像粘在桌上（docx 1.5 铺桌布就做不成）。
 FRICTIONS="${FRICTIONS:-0.4:0.5 0.8:1.0 1.5:1.8}"
+# quasistatic 扫哪几档步数。同一条路径切成不同份数走完 = 只有快慢不同。
+FOLD_STEP_COUNTS="${FOLD_STEP_COUNTS:-240 600 1200}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
@@ -88,7 +91,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(settle grip fold friction speed pinch cost contact)
+ORDER=(settle grip fold quasistatic negatives friction speed pinch cost contact)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -177,6 +180,17 @@ for name in "${SELECTED[@]}"; do
     fold)
       run_cell "fold" fold run.test=fold run.verbose=true
       ;;
+    quasistatic)
+      for n in $FOLD_STEP_COUNTS; do
+        run_cell "qs_${n}steps" fold run.test=fold run.verbose=true "run.fold_steps=$n"
+      done
+      ;;
+    negatives)
+      # 和 fold 共用同一套测量, 所以三行数字可以直接并排比。
+      for m in drag crumple; do
+        run_cell "neg_$m" fold run.test=fold run.verbose=true "run.motion=$m"
+      done
+      ;;
     friction)
       for pair in $FRICTIONS; do
         kin="${pair%%:*}"; sta="${pair##*:}"
@@ -230,6 +244,10 @@ echo "  grip        看 follow_ratio：接近 1 才算抓住了（2026-08-19 默
 echo "              同时看 worst_edge_strain：抓得越死，材料要拉伸得越多。"
 echo "              选那个「跟得上、又没拉伸太多」的；link_single 还要在 viewer 里"
 echo "              确认布角不会绕着那一个点乱转。"
+echo "  quasistatic speed_ratio 接近 1 的那一档就是准静态的; 远大于 1 说明布有一段"
+echo "              在自己塌下去, 那是动态操作, 本类要避开。选定后钉死写进配置。"
+echo "  negatives   把 drag / crumple 两行与 fold 那行并排比: 哪几个量把它们分开了,"
+echo "              阈值就卡在中间。覆盖面积单独一个是分不开揉成一团的。"
 echo "  friction    抓得住: anchor_shift_mm / far_half_shift_mm 降到几毫米, two_layer_frac 上到 0.8+;"
 echo "              没粘死: 同档的 _settle 行 gravity=fell 且 flatness_var 接近 0。"
 echo "              两条都满足的那一档才是要写回配置的值。"

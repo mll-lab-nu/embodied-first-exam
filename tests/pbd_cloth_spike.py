@@ -437,23 +437,38 @@ def self_contact_gap(rest_nodes: np.ndarray, nodes: np.ndarray, radius: float) -
     return worst
 
 
-def footprint_iou(nodes: np.ndarray, target_lo, target_hi, cell: float) -> float:
-    """Overlap between where the cloth now covers and where it should.
+def occupied_cells(nodes: np.ndarray, cell: float) -> set:
+    """The (x, y) cells the cloth covers, on the shared grid."""
 
-    Rasterised on the same cell grid as `layer_report`: the union of occupied
-    cells against the target rectangle's cells. Crumpling the sheet into a ball
-    halves the area just as folding does, which is why docx 1.1 pairs this with
-    flatness rather than trusting it alone.
-    """
-
-    covered = {
+    return {
         (int(np.floor(x / cell)), int(np.floor(y / cell))) for x, y in nodes[:, :2]
     }
-    lo = (int(np.floor(target_lo[0] / cell)), int(np.floor(target_lo[1] / cell)))
-    hi = (int(np.floor(target_hi[0] / cell)), int(np.floor(target_hi[1] / cell)))
-    target = {
-        (x, y) for x in range(lo[0], hi[0] + 1) for y in range(lo[1], hi[1] + 1)
-    }
+
+
+def fold_target_cells(rest_nodes: np.ndarray, centre_xy, direction, cell: float) -> set:
+    """Where a finished corner fold should end up: half the ORIGINAL outline.
+
+    Taken from the cloth's own rest footprint cut along the fold line, not from
+    an idealised box. Folding a square corner-to-corner leaves a TRIANGLE -- half
+    of 576 cm2 -- while the axis-aligned rectangle spanned by the two corners is
+    400 cm2, so scoring against that rectangle caps a perfect fold at 0.72 and
+    a real one read 0.433 against a target it could never fill (2026-08-19).
+    """
+
+    along = (np.asarray(rest_nodes, dtype=float)[:, :2] - centre_xy) @ direction
+    return occupied_cells(rest_nodes[along < 0.0], cell)
+
+
+def footprint_iou(nodes: np.ndarray, target: set, cell: float) -> float:
+    """Overlap between where the cloth covers and where it should.
+
+    Shared cells divided by cells either one covers: 1.0 is identical, 0 is no
+    overlap. Crumpling the sheet into a ball halves the area just as folding
+    does, which is why docx 1.1 pairs this with flatness rather than trusting it
+    alone.
+    """
+
+    covered = occupied_cells(nodes, cell)
     if not target:
         return float("nan")
     return len(covered & target) / len(covered | target)
@@ -550,6 +565,52 @@ def glide(controller, target, *, quat, steps: int, sync=None) -> None:
 
 
 # --------------------------------------------------------------------- tests
+
+
+#: Which way the held corner is taken. `fold` is the task; the other two are the
+#: wrong executions docx 1.1 names, kept here so the judges' thresholds have a
+#: failure reference and not only a success one -- a threshold set from one side
+#: is a guess.
+MOTIONS = ("fold", "drag", "crumple")
+
+
+def motion_target(motion: str, t: float, centre_xy, direction, radius: float, base):
+    """Where the hand should be, a fraction ``t`` through the motion.
+
+    ``fold``     half a turn about the fold line: the corner rises to the fold
+                 line's height and comes down on the far side. The task.
+    ``drag``     the same path in plan, but never leaving the surface. docx 1.1's
+                 "sliding it along without lifting": the outline ends up in
+                 roughly the right place while the sheet is pushed into wrinkles.
+    ``crumple``  the corner is spiralled inward to the middle, staying low, so
+                 the material gathers instead of folding. docx 1.1's "bunching it
+                 up halves the area too" -- the case that coverage alone cannot
+                 tell from a real fold, which is why flatness and layer count are
+                 judged with it.
+    """
+
+    base = np.asarray(base, dtype=float)
+    centre_xy = np.asarray(centre_xy, dtype=float)
+    direction = np.asarray(direction, dtype=float)
+    if motion == "fold":
+        theta = np.pi * float(t)
+        xy = centre_xy + direction * (radius * float(np.cos(theta)))
+        return np.array([xy[0], xy[1], base[2] + radius * float(np.sin(theta))])
+    if motion == "drag":
+        theta = np.pi * float(t)
+        xy = centre_xy + direction * (radius * float(np.cos(theta)))
+        return np.array([xy[0], xy[1], base[2]])
+    # crumple: one full turn inward, at the height it started from.
+    angle = 2.0 * np.pi * float(t)
+    reach = radius * (1.0 - float(t))
+    turned = np.array(
+        [
+            direction[0] * np.cos(angle) - direction[1] * np.sin(angle),
+            direction[0] * np.sin(angle) + direction[1] * np.cos(angle),
+        ]
+    )
+    xy = centre_xy + turned * reach
+    return np.array([xy[0], xy[1], base[2]])
 
 
 def pinned_indices(nodes, centre_xy, direction, mode: str):
@@ -818,21 +879,28 @@ def run_fold(cfg, ctx) -> None:
     )
 
     # Where the named stops fall on the half turn.
+    # The fold's stops are named for what they are; the wrong executions have no
+    # apex to speak of, so theirs are just progress markers.
+    if str(cfg.run.motion) == "fold":
+        names = ("lifted", "apex", "placed")       # 30 / 90 / 180 degrees
+    else:
+        names = ("q1", "mid", "placed")
     marks = {
-        max(1, int(round(steps / 6))): "lifted",   # 30 degrees: corner up, barely across
-        max(2, int(round(steps / 2))): "apex",     # 90 degrees: over the fold line
-        steps: "placed",                           # 180 degrees: down on the far side
+        max(1, int(round(steps / 6))): names[0],
+        max(2, int(round(steps / 2))): names[1],
+        steps: names[2],
     }
     # The limit follows the hand's OWN rate around the arc. The 2026-08-19 run
     # used `drag_speed` (2 mm a step) while the arc actually advances 0.36, so
     # the ceiling sat 17x above anything that could happen.
     dog.set_reference(np.pi * radius / steps, "carried")
+    motion = str(cfg.run.motion)
+    if motion not in MOTIONS:
+        raise SystemExit(f"run.motion must be one of {sorted(MOTIONS)}, got {motion!r}.")
     completed = False
     for index in range(1, steps + 1):
-        theta = np.pi * index / steps
-        xy = centre_xy + direction * (radius * float(np.cos(theta)))
         controller.move_ee_to(
-            np.array([xy[0], xy[1], base[2] + radius * float(np.sin(theta))]),
+            motion_target(motion, index / steps, centre_xy, direction, radius, base),
             quat=ctx.ee_quat,
             steps=1,
             continuous_ik=True,
@@ -841,7 +909,7 @@ def run_fold(cfg, ctx) -> None:
         tripped = dog.check(index)
         if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
             print(
-                f"[cloth_fold step={index:4d}] theta={np.degrees(theta):5.1f} "
+                f"[cloth_{motion} step={index:4d}] at={100.0 * index / steps:5.1f}% "
                 f"{dog.summary()}",
                 flush=True,
             )
@@ -860,6 +928,12 @@ def run_fold(cfg, ctx) -> None:
 
     # 3. Let go, and let it lie. A fold that only exists while the hand holds it
     #    is not a fold.
+    # Snapshot before the release: past this point the numbers are a falling
+    # sheet's, which says nothing about how the carry went.
+    carry_peak = float(dog.worst_speed)
+    hand_mps = (np.pi * radius / steps) / float(cfg.env.sim.dt)
+    carry_seconds = steps * float(cfg.env.sim.dt)
+
     grip.release()
     # Nothing is carrying the cloth now; it is falling. A corner dropped from the
     # apex reaches roughly sqrt(2*g*h) = 1.6 m/s, i.e. ~16 mm a step, and that is
@@ -882,9 +956,9 @@ def run_fold(cfg, ctx) -> None:
         rest_nodes, nodes, float(cfg.run.neighbour_radius_scale) * particle_size
     )
     variance, peak = flatness(cloth, table_z)
-    lo_xy = np.minimum(anchor_at, np.asarray(ctx.grasp_point, dtype=float)[:2])
-    hi_xy = np.maximum(anchor_at, np.asarray(ctx.grasp_point, dtype=float)[:2])
-    iou = footprint_iou(nodes, lo_xy, hi_xy, cell)
+    iou = footprint_iou(
+        nodes, fold_target_cells(rest_nodes, centre_xy, direction, cell), cell
+    )
     anchor_shift = (
         float(np.linalg.norm(nodes[anchor][:, :2] - rest_nodes[anchor][:, :2], axis=1).mean())
         if len(anchor)
@@ -906,7 +980,7 @@ def run_fold(cfg, ctx) -> None:
     )
     covered = max(1, layers["covered_cells"])
     print(
-        f"pbd_cloth_spike fold grasp_at={str(cfg.run.grasp_at)} "
+        f"pbd_cloth_spike fold motion={motion} grasp_at={str(cfg.run.grasp_at)} "
         f"pin={str(cfg.run.pin)} pinned={len(pinned)} steps={steps} "
         f"radius_mm={radius * 1e3:.1f} cell_mm={cell * 1e3:.1f} "
         f"completed={completed} "
@@ -918,6 +992,17 @@ def run_fold(cfg, ctx) -> None:
         f"(particle_size_mm={particle_size * 1e3:.1f}) "
         f"fold_iou={iou:.3f} anchor_shift_mm={anchor_shift * 1e3:.2f} "
         f"far_half_shift_mm={far_shift * 1e3:.2f} "
+        # Quasi-static or not, as a ratio. Nothing on the cloth can outrun the
+        # grasped corner in a fold done slowly enough -- that corner is the point
+        # furthest from the fold line, so every other point travels less. A ratio
+        # far above 1 means some part of the sheet is snapping rather than being
+        # carried, which is the dynamic regime this category is meant to avoid.
+        f"hand_mps={hand_mps:.4f} carry_peak_mps={carry_peak:.4f} "
+        f"speed_ratio={carry_peak / max(hand_mps, 1e-9):.1f} "
+        # And creep against inertia: a slide that is proportional to how long the
+        # carry lasted is creep under a sustained pull, not momentum.
+        f"carry_s={carry_seconds:.2f} "
+        f"slide_rate_mm_s={anchor_shift * 1e3 / max(carry_seconds, 1e-9):.2f} "
         f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
         f"{dog.summary()}",
         flush=True,
