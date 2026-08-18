@@ -30,6 +30,7 @@ action there. `fixed_direction` gets exactly half of them wrong, which is docx
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 
 import genesis as gs
 import hydra
@@ -100,6 +101,17 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
 
     rule = make_rule(cfg.run.oracle_mode)
     plan = rule.decide(layout, ball_scene.flap_angle(), commanded)
+    # Deliberate under- or over-rotation, for the contrast runs. Applied to the
+    # rule's answer rather than inside the rule: the rule stays the oracle, and
+    # what is being demonstrated is an execution error on top of a correct plan.
+    offset = float(np.deg2rad(float(getattr(cfg.run, "target_offset_deg", 0.0) or 0.0)))
+    if offset != 0.0:
+        plan = replace(
+            plan,
+            target_angle=plan.target_angle + offset,
+            rotate=True,
+            reason=f"{plan.reason}+offset{np.rad2deg(offset):+.0f}deg",
+        )
     status["target_deg"] = float(np.rad2deg(plan.target_angle))
     print(
         f"diverter_route_ball plan command={commanded} prompt={layout.command_prompt()!r} "
