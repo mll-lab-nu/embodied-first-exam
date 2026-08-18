@@ -351,6 +351,16 @@ def main(cfg: DictConfig) -> None:
                 dt=float(cfg.env.sim.dt),
                 stall_steps=int(cfg.task.ball.stall_steps),
                 offtrack_decel=float(cfg.task.ball.offtrack_decel),
+                brake_rect=(
+                    layout.target_pad_rect_world(layout.commanded_side)
+                    if layout.target_pad_enabled()
+                    else None
+                ),
+                brake_decel=(
+                    float(layout.target_pad_cfg.brake_decel)
+                    if layout.target_pad_enabled()
+                    else 0.0
+                ),
             ) as drive:
                 run_rollout(cfg, ball_scene, drive, state)
         state["phase"] = "done"

@@ -240,6 +240,8 @@ class HeadingDrive:
         dt: float = 0.01,
         stall_steps: int = 5,
         offtrack_decel: float = 0.090,
+        brake_rect: tuple[float, float, float, float, float] | None = None,
+        brake_decel: float = 0.0,
         running: bool = False,
     ) -> None:
         self.scene = scene
@@ -253,6 +255,11 @@ class HeadingDrive:
         self.dt = float(dt)
         self.stall_steps = max(1, int(stall_steps))
         self.offtrack_decel = max(0.0, float(offtrack_decel))
+        # (cx, cy, half_along, half_across, yaw) in world xy, or None. Inside it
+        # the coast brakes hard instead: the landing pad outside the commanded
+        # exit, so the ball comes to rest ON the target rather than rolling on.
+        self.brake_rect = None if brake_rect is None else tuple(float(v) for v in brake_rect)
+        self.brake_decel = max(0.0, float(brake_decel))
         heading = np.asarray(heading, dtype=float).reshape(2)
         norm = float(np.linalg.norm(heading))
         if norm <= 0.0:
@@ -337,16 +344,37 @@ class HeadingDrive:
         self.ball.set_dofs_velocity(velocity)
         self.steps_driven += 1
 
-    def coast(self) -> None:
-        """Shed speed at a constant rate; same stand-in as `BallShuttle.coast`."""
+    def on_pad(self) -> bool:
+        """Is the ball on the braking pad?"""
 
-        if self.offtrack_decel <= 0.0:
+        if self.brake_rect is None:
+            return False
+        cx, cy, half_along, half_across, yaw = self.brake_rect
+        dx, dy = self.ball_xy() - np.array([cx, cy], dtype=float)
+        cos_yaw, sin_yaw = np.cos(yaw), np.sin(yaw)
+        along = cos_yaw * dx + sin_yaw * dy
+        across = -sin_yaw * dx + cos_yaw * dy
+        return bool(abs(along) <= half_along and abs(across) <= half_across)
+
+    def coast(self) -> None:
+        """Shed speed at a constant rate; same stand-in as `BallShuttle.coast`.
+
+        On the landing pad the rate is `brake_decel` instead, which is the pad
+        being a high-friction mat. A mat rather than writing the velocity to zero:
+        zeroing would put a physically impossible event into the observation
+        stream, and these episodes are meant to become imitation data. The pad sits
+        downstream of the exit mouth, where the verdict was already decided, so
+        braking there changes where the ball ENDS, not what the episode scored.
+        """
+
+        decel = self.brake_decel if self.on_pad() else self.offtrack_decel
+        if decel <= 0.0:
             return
         velocity = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:6].astype(float)
         speed = float(np.hypot(velocity[0], velocity[1]))
         if speed <= 1e-6:
             return
-        scale = max(0.0, speed - self.offtrack_decel * self.dt) / speed
+        scale = max(0.0, speed - decel * self.dt) / speed
         velocity[0] *= scale
         velocity[1] *= scale
         velocity[3] = -velocity[1] / max(self.radius, 1e-9)

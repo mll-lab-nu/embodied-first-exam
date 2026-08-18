@@ -231,6 +231,43 @@ class DiverterRouteBallLayout:
     def exit_center(self, side: str) -> np.ndarray:
         return self.branch_point(side, self.exit_station)
 
+    # ----- target pad -------------------------------------------------------
+
+    @property
+    def target_pad_cfg(self):
+        return getattr(self.cfg, "target_pad", None)
+
+    def target_pad_enabled(self) -> bool:
+        pad = self.target_pad_cfg
+        return pad is not None and bool(getattr(pad, "enabled", True))
+
+    def target_pad_center(self, side: str) -> np.ndarray:
+        """Centre of the landing pad, just outside a branch's exit mouth."""
+
+        pad = self.target_pad_cfg
+        station = (
+            self.exit_station + float(pad.pad_offset) + 0.5 * float(pad.pad_length)
+        )
+        return self.branch_point(side, station)
+
+    def target_pad_rect_world(self, side: str) -> tuple[float, float, float, float, float]:
+        """(cx, cy, half_along, half_across, yaw) of the pad, in world xy.
+
+        The braking region handed to the feeder. Oriented to the branch, because
+        the ball arrives along it and a square in x/y would brake it early on one
+        corner and late on the other.
+        """
+
+        pad = self.target_pad_cfg
+        center = self.position_to_world((*self.target_pad_center(side), 0.0))
+        return (
+            float(center[0]),
+            float(center[1]),
+            0.5 * float(pad.pad_length),
+            0.5 * float(pad.pad_width),
+            float(np.deg2rad(self.branch_yaw_deg(side))),
+        )
+
     def exit_patch_center(self, side: str) -> np.ndarray:
         """Centre of the region the judge tests, just inside the exit mouth.
 
@@ -744,36 +781,40 @@ class DiverterRouteBallSceneBuilder:
     # --------------------------------------------------------- target marker
 
     def _add_target_marker(self, scene, manifest, layout) -> None:
-        """A red/white bullseye on the exit the instruction asks for.
+        """A red/white bullseye on the landing pad outside the commanded exit.
 
         Same construction as `routing/cable_routing._add_connector_target_marker`:
-        concentric squares, `collision=False`, so it can never touch the ball or
-        the gripper. Rotated to the branch so it reads as part of the chute.
+        concentric rectangles, `collision=False`, so it can never touch the ball
+        or the gripper. Rotated to the branch so it reads as part of the chute.
 
-        It is drawn on the judge's own exit patch -- same centre, same size -- so
-        a viewer watching the ball cross it is watching the thing the flood fill
-        tests. Anything else would let the picture and the verdict drift apart.
+        The pad is also where the feeder brakes (see
+        `DiverterRouteBallLayout.target_pad_rect_world`), so the ball comes to
+        rest on it. Only the commanded side gets one -- a ball that went the
+        wrong way rolls on and stops wherever it stops, which is what makes the
+        two outcomes tell themselves apart in a single frame.
 
-        Switching it off is the language-only condition: with no marker, the two
-        instructions give an identical observation and a policy that ignores the
-        prompt is capped at half. See the config for why both conditions matter.
+        Drawn only where the ball can arrive by leaving through this exit, so
+        "resting on the bullseye" and "left by the commanded exit" are the same
+        event; the judge still decides at the mouth, upstream of here.
         """
 
-        marker = getattr(self.task_cfg, "target_marker", None)
-        if marker is None or not bool(getattr(marker, "enabled", True)):
+        if not layout.target_pad_enabled():
             return
+        pad = layout.target_pad_cfg
         side = layout.commanded_side
-        center = layout.exit_patch_center(side)
-        outer = float(self.task_cfg.success.exit_patch)
-        rings = max(2, int(marker.ring_count))
-        thickness = float(marker.thickness)
-        step = outer / float(rings)
-        red = _list(marker.red_color)
-        white = _list(marker.white_color)
-        base_z = layout.floor_top_z + float(marker.z_offset)
+        center = layout.target_pad_center(side)
+        along = float(pad.pad_length)
+        across = float(pad.pad_width)
+        rings = max(2, int(pad.ring_count))
+        thickness = float(pad.thickness)
+        red = _list(pad.red_color)
+        white = _list(pad.white_color)
+        base_z = layout.floor_top_z + float(pad.z_offset)
         for index in range(rings):
-            size = outer - index * step
-            if size <= 0.0:
+            shrink = index / float(rings)
+            size_along = along * (1.0 - shrink)
+            size_across = across * (1.0 - shrink)
+            if size_along <= 0.0 or size_across <= 0.0:
                 break
             name = f"target_{side}_{index:02d}"
             manifest.add(
@@ -786,7 +827,7 @@ class DiverterRouteBallSceneBuilder:
                                  base_z + index * thickness)
                             )
                         ),
-                        size=(size, size, thickness),
+                        size=(size_along, size_across, thickness),
                         euler=(0.0, 0.0, layout.branch_yaw_deg(side)),
                         fixed=True,
                         collision=False,
