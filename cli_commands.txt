@@ -210,7 +210,7 @@ BACKEND=gpu bash bash_scripts/tests/render_bench.sh
 RESOLUTIONS="256 512" CAMERAS="[base_camera]" FRAMES=80 bash bash_scripts/tests/render_bench.sh
 
 # --- gate_cage_ball: 插板截留往复小球 (任务书 4.1) ---
-# 工业原型 = 直线振动送料轨上的插板阀。球沿轨道**匀速往复**(_ball_shuttle.py 驱动,
+# 工业原型 = 直线振动送料轨上的插板阀。球沿轨道**匀速往复**(_ball_drive.py 的 BallShuttle 驱动,
 # 撞到东西就换向), 不靠斜坡。终态自明: 成功=球在盒内持续来回撞, 失败=球从敞口滚出轨道。
 # 两端不对称: 近端敞口(球唯一出入口, 闸板封的就是它), 远端实壁(撞上换向)。
 # 三个正交旋钮: ball.speed 缩放全部时序 / entry_start_y 定球何时到门 / flat_end_y 定窗口多长。
@@ -311,8 +311,9 @@ python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run
 # 第一轮作废的三条 (仪器问题, 已修, 需重跑): settle / weld / speed —— 见下。
 #
 # 统一跑法 (推荐): 每格独立进程+超时, 最后打一张汇总表。
-bash bash_scripts/tests/pbd_cloth_spike.sh                        # 全部六项
-bash bash_scripts/tests/pbd_cloth_spike.sh settle weld speed pinch  # 第二轮要重跑的
+bash bash_scripts/tests/pbd_cloth_spike.sh                   # 全部七项
+bash bash_scripts/tests/pbd_cloth_spike.sh fold              # 只跑唯一还能推翻方案的那项
+bash bash_scripts/tests/pbd_cloth_spike.sh fold speed pinch  # 第二轮要跑的三项
 SKIP_CONTACT=1 bash bash_scripts/tests/pbd_cloth_spike.sh         # 跳过可能崩的那项
 # 可调: BACKEND / DRAG_SPEEDS / PINCH_QPOS / SETTLE_DROP_Z / PARTICLE_SIZES /
 #       BENCH_STEPS / TIMEOUT_S / SKIP_CONTACT / OUTDIR
@@ -330,13 +331,19 @@ python -B -m tests.pbd_cloth_spike run.test=weld run.taper=false run.verbose=tru
 # 3) 速度预算。第一轮扫到 0.008 全过、看门狗从未响 (阈值设成了 20mm, 而实测最大
 #    位移 8.4mm), 所以「没炸」等于「没往危险的地方看」。现在扫过隧穿门槛 0.012,
 #    看门狗改成「粒子位移 > 3 倍驱动端位移」才算发散。
-python -B -m tests.pbd_cloth_spike -m run.test=speed run.drag_speed=0.004,0.012,0.024,0.048 2>&1 | tee runs/cloth_speed_sweep.log
+python -B -m tests.pbd_cloth_spike -m run.test=speed run.drag_speed=0.002,0.008,0.016,0.032 2>&1 | tee runs/cloth_speed_sweep.log
 # 4) 挤压 (新增): 在布上合拢手指。这是「夹爪穿模、布飞出去」最可能的机制,
 #    而 contact 测不到它 —— 那一项是闭着手指往下降, 从没在布上合拢过。
 #    参照量 particle_size/2 = 0.003 是单层布的半厚, 扫参跨过它。
-python -B -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.001,0.002,0.003,0.005,0.008 2>&1 | tee runs/cloth_pinch_sweep.log
-# 5) 每步成本 vs 分辨率 (空跑计时)。第一轮已完成, 不用重跑。
+python -B -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.0005,0.001,0.002,0.004,0.006 2>&1 | tee runs/cloth_pinch_sweep.log
+# 5) **最关键的一项**: 真正的对折动作 —— 把边提起、越过中线、放到另一半上、松手、静置,
+#    然后量两层布有没有互相穿过去。这是唯一还能推翻 PBD 方案的问题:
+#    层分不开的话「上下层重叠率」「层数 3->1」在 PBD 下就判不出来。
+#    看 self_contact_gap_mm: 接近 particle_size_mm(4.0) = 叠着; 接近 0 = 穿模。
+#    (覆盖面积/IoU 分辨不出这两种 —— 合成数据里两者的 IoU 都是 0.968。)
+python -B -m tests.pbd_cloth_spike run.test=fold run.verbose=true 2>&1 | tee runs/cloth_fold.log
+# 6) 每步成本 vs 分辨率 (空跑计时)。第一轮已完成, 不用重跑。
 python -B -m tests.pbd_cloth_spike -m run.bench_steps=100 task.cloth.particle_size=0.004,0.006,0.010 2>&1 | tee runs/cloth_cost.log
-# 6) **单独跑**: 闭合手指下降到布面。第一轮已完成 (survived=True), 不用重跑。
+# 7) **单独跑**: 闭合手指下降到布面。第一轮已完成 (survived=True), 不用重跑。
 #    它不进 all —— 万一 core dump 会把整个进程带走, 排在它后面的测试全废。
 python -B -m tests.pbd_cloth_spike run.test=contact run.verbose=true 2>&1 | tee runs/cloth_contact.log

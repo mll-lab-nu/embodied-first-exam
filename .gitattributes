@@ -1,0 +1,12 @@
+# 行尾规范。
+#
+# 本仓 core.autocrlf=true，而开发是在 Windows 检出、WSL 里执行的：同一个工作区，
+# 一边按 Windows 习惯写成 CRLF，另一边用 bash 去跑。bash 会把行尾的 \r 当成命令的
+# 一部分，于是 `set -o pipefail` 变成 `set -o pipefail\r`、`cd "$X"` 变成 `cd "$X\r"`，
+# 报出来的是 `$'\r': command not found` 这类看不懂的错。
+#
+# 2026-08-19 实测：pbd_cloth_spike.sh 与 rope_contact_sweep.sh 的工作区副本都已是
+# CRLF（git ls-files --eol 显示 i/lf w/crlf），前者因此完全跑不起来。
+#
+# 所以对要被 bash 执行的文件强制 LF —— 检出时不转换，无论 autocrlf 怎么设。
+*.sh text eol=lf

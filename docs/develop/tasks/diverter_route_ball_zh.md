@@ -1,6 +1,6 @@
 # docx 4.3 旋转分流板改变小球出口 —— 工程计划
 
-> 日期：2026-08-17
+> 日期：2026-08-17，2026-08-18 更新（三项决策定案；步骤 1 代码落地，取值与派生几何改为实际值）
 > 上游：`../TopoGym_tasks.docx` §4.3
 > 配套：[`rigid_first_track_zh.md`](rigid_first_track_zh.md)（本任务在纯刚体轨道中的位置与依赖）、
 > `../framework/task_taxonomy_zh.md` §4.4（C4 判定契约）
@@ -11,15 +11,16 @@
 
 ## 0. 结论摘要
 
-- 场景形态推荐**桌面水平 Y 形分岔 + 竖直枢轴分流板**，小球沿 4.1 已验证的匀速驱动进入，
+- 场景形态取**桌面水平 Y 形分岔 + 竖直枢轴分流板**，小球沿 4.1 已验证的匀速驱动进入，
   与 docx 的竖直落料槽存在几何差异，理由与代价见 §2。
 - 依赖的两项基建各自的状态：小球与驱动器**已跑通**（4.1）；单自由度铰链**需要从
   `stacked_plate.py` 的圆盘专用 URDF 写法泛化**——4.3 是第二个使用者，抽取时机由
   `rigid_first_track_zh.md` §7.6 原定的 4.4 提前到本任务。
 - 新增一条仓库此前没有的能力：**逐 episode 变化的语言指令**。`task_goal` 目前在每个 demo 中
   硬编码，4.3 要求它随实例变化（走左／走右），这是防捷径成立的前提。
-- 实施分 7 个阶段，阶段 0 为不含机械臂的物理 spike，阶段 6 为可跳过的重构。
-- 三项待决事项见 §10，其中前两项影响阶段 1 之前的取值。
+- 本轮交付边界为「oracle 全流程跑通」，实施分 **4 个步骤**（§8）。随机化注册、20 种子基线、
+  录像与两项重构不在本轮。
+- §10 的三项待决事项已于 2026-08-18 全部定案，取值见该节。
 
 ---
 
@@ -41,7 +42,7 @@
 | 来源 | 内容 | 状态 |
 |---|---|---|
 | `connectivity/gate_cage_ball.py` | 布局类的 task-frame 换算、`_box` 构件、配置组织方式 | 2026-08-17 全流程通过 |
-| `connectivity/_ball_shuttle.py` | 匀速驱动 + 出轨后恒减速滑行，包装 `scene.step` | 同上 |
+| `connectivity/_ball_drive.py` | 匀速驱动 + 出轨后恒减速滑行，包装 `scene.step`。2026-08-18 由 `_ball_shuttle.py` 改名，因为它现在同时装 4.1 的换向驱动与 4.3 的恒速航向驱动 | 同上 |
 | `verification/gate_cage_ball_verifier.py` | xy 栅格化 + 障碍按球半径膨胀 + flood-fill | 同上 |
 | `tests/ball_roll_spike.py` | 球的滚动/回弹实测（零回弹、平地零滚阻），本任务沿用其结论与写法 | 已完成 |
 | `primitives/rim_rotate.py` | 接触驱动 revolute 关节的相位结构与判据（跟随误差、释放漂移） | `stacked_plate` 在用 |
@@ -105,30 +106,58 @@
 - 分流板与拨杆在同一转动连杆上：拨杆自枢轴向下游伸出，末端手柄竖起，手柄底面高于侧壁顶面，
   夹爪顶抓手柄并沿水平圆弧摆动，分流板由关节随动。机械臂全程不进入通道内部。
 
-### 3.2 第一版取值
+### 3.2 取值（步骤 1 已落地）
 
-单位米，task 坐标系（z=0 为桌面）。阶段 0 之后定稿。
+单位米，task 坐标系（z=0 为桌面）。**配置里只给下面这几个自变量，其余全部派生**，
+改宽度或改角度时整套几何自洽：
 
-| 项 | 值 | 备注 |
+| 配置项 | 值 | 备注 |
 |---|---|---|
-| `channel.inner_width` | 0.070 | 球径 50 mm，两侧各 10 mm |
-| `channel.wall_thickness` / `wall_height` | 0.012 / 0.045 | 壁高高于球心（0.034） |
-| `channel.floor_top_z` / `floor_thickness` | 0.009 / 0.009 | 与 4.1 同 |
-| `entry.start_x` → `fork.apex_x` | -0.130 → 0.060 | 进料段长 0.190，用时 1.58 s |
-| `branch.angle_deg` / `branch.length` | 30 / 0.170 | 出口中心 (0.207, ±0.085) |
-| `ball.radius` / `speed` / `release_x` | 0.025 / 0.120 / -0.110 | 速度沿用 4.1 实测可用值 |
-| `flap.length` / `thickness` / `height` | 0.085 / 0.010 / 0.045 | 长度须使封位时自由边与支路外壁重叠 ≥ 5 mm |
-| `flap.limit_deg` | ±30 | revolute 限位 |
-| `lever.radius` / 手柄尺寸 / 手柄顶 z | 0.055 / 0.016×0.016×0.030 / 0.105 | 手柄底面 0.075，高于壁顶 0.054 |
+| `channel.inner_width` | 0.090 | 落座后的通行宽度等于它（板与支路内边界共线，通道等宽） |
+| `channel.wall_thickness` / `wall_height` | 0.012 / 0.045 | 壁高远高于球心（0.030） |
+| `channel.floor_top_z` / `plate.thickness` | 0.004 / 0.004 | 整体一块薄底板，见 §3.3 |
+| `channel.entry_start_x` / `fork_origin_x` | -0.200 / -0.020 | 后者定整套派生几何的原点 |
+| `branch.angle_deg` / `exit_station` | 30 / 0.200 | |
+| `ball.radius` / `speed` / `release_x` | 0.026 / 0.120 / -0.170 | 半径的上下界见下 |
+| `diverter.flap.thickness` / `wall_gap` / `ground_clearance` | 0.012 / 0.004 / 0.001 | |
+| `diverter.lever.radius` / `knob_size` / `knob_height` | 0.055 / 0.018 / 0.050 | 拨杆向下游伸出 |
 
-判定条件：全程 x 跨度 0.34、y 跨度 0.22，位于桌面与 Franka 工作区内；抓手柄时手部 z 约 0.193，
-与 4.1 的取板高度（0.188）同量级。
+派生结果（`tests` 之外由 `DiverterRouteBallLayout` 计算，已离线核对）：
+
+| 量 | 公式 | 值 |
+|---|---|---|
+| 分流鼻（枢轴）`nose_x` | `fork_origin_x + hw/sin a` | +0.070 |
+| 进料壁与支路外壁交接 `junction_x` | `fork_origin_x + hw(cos a −1)/sin a` | −0.032 |
+| 板长 | `hw/(sin a·cos a) − wall_gap` | 0.0999 |
+| 出口中心 | `fork_origin + exit_station·d` | (0.153, ±0.100) |
+| 落座角 | `∓a`（封左为 +30°） | ±30° |
+| 底板 | 由最外侧构件反推 | x ∈ [−0.232, 0.173]，y ±0.169 |
+| 释放到出口 | `(nose_x − release_x + exit_station − hw·cot a)/v` | 3.02 s |
+
+**球半径的上下界**（两条都由几何反推，改通道宽度或角度需重算）：
+
+| 界 | 条件 | 数值 |
+|---|---|---|
+| 下界 | 半开时板尖两侧的旁通间隙必须小于球径，否则球溜过去，中间失败态不成立 | 间隙 46.2 mm |
+| 上界 | 落座后的通行宽度须显著大于球径 | 通道 90 mm |
+
+取 52 mm：下界余 5.7 mm，上界每侧余 19 mm。
+
+抓手柄时指垫在 z=0.098、手部在 0.201，与 4.1 的取板高度（0.188）同量级；手柄中心距 Franka
+底座 0.688 m（4.1 的取板点是 0.645 m）。
+
+### 3.3 底板做成一整块的原因
+
+支路的地板在分岔口必然互相重叠，两块同高的顶面会 z-fighting。改为整体一块底板后，
+侧壁站在板上，没有重叠也没有共面。板取 4 mm 厚：球从出口滚出去时只下一个 4 mm 的台阶，
+而深色板面与浅色球的对比让各相机都能跟踪到球（桌面本身是浅灰）。
 
 ---
 
 ## 4. 球的驱动
 
-新增一种驱动模式，与 4.1 的换向驱动并列，放在 `tasks/connectivity/_ball_shuttle.py`：
+新增一个驱动类 `HeadingDrive`，与 4.1 的 `BallShuttle` 并列，放在
+`tasks/connectivity/_ball_drive.py`（原 `_ball_shuttle.py`，因同时承载两种驱动而改名）：
 
 ```
 v = 实测水平速度
@@ -145,7 +174,7 @@ v = 实测水平速度
 3. **出网络后沿用 4.1 的恒减速滑行**（`offtrack_decel`），使离开出口的球滚一段后静止，
    终态在画面中可读。
 
-已知风险：紧贴侧壁的擦碰之后重新归一化速率，可能把球再次推向该侧壁。阶段 0 观测，必要时改为
+已知风险：紧贴侧壁的擦碰之后重新归一化速率，可能把球再次推向该侧壁。步骤 1 观测，必要时改为
 仅在方向落在通道角度范围内时归一化。
 
 ---
@@ -171,7 +200,7 @@ v = 实测水平速度
 | `flap_not_seated` | 关节角未到达限位容差内（旋转不到位） |
 | `rotate_check_failed` | 原语自身的跟随误差／释放漂移判据不过 |
 
-注：半开态的实际表现（卡住，或偏向一侧通过）在阶段 0 观测后确定归入哪个标签；两种表现都判失败。
+注：半开态的实际表现（卡住，或偏向一侧通过）在步骤 1 观测后确定归入哪个标签；两种表现都判失败。
 
 ---
 
@@ -228,30 +257,37 @@ v = 实测水平速度
 依据 `../framework/module_boundaries_zh.md` §6 与 `rigid_first_track_zh.md` §6.1。
 
 ```text
-新增
-  topogym/tasks/connectivity/diverter_route_ball.py          Layout / Scene / SceneBuilder
-  topogym/verification/diverter_route_ball_verifier.py       State + Evaluator
-  topogym/planning/diverter_route_ball_planner.py            指令 -> 目标角与旋转方向；含 fixed_direction 基线
-  topogym/primitives/pivot_lever.py                          竖直轴拨杆的接触驱动旋转
-  configs/task_configs/diverter_route_ball_topogym_tabletop_v1.yaml
-  configs/run_configs/diverter_route_ball.yaml               inspect 运行组
-  configs/run_configs/diverter_route_ball_route.yaml         route 运行组（command / oracle_mode）
-  configs/diverter_route_ball.yaml、configs/diverter_route_ball_route.yaml   两个 hydra 主配置
-  demos/connectivity/diverter_route_ball_inspect_demo.py
-  demos/connectivity/diverter_route_ball_physical_route_demo.py
-  tests/diverter_ball_spike.py（+ 对应两个配置）
+新增（✅ = 步骤 1 已落地）
+✅ topogym/tasks/connectivity/diverter_route_ball.py          Layout / Scene / SceneBuilder
+   topogym/verification/diverter_route_ball_verifier.py       State + Evaluator
+   topogym/planning/diverter_route_ball_planner.py            指令 -> 目标角与旋转方向；含 fixed_direction 基线
+   topogym/primitives/pivot_lever.py                          竖直轴拨杆的接触驱动旋转
+✅ configs/task_configs/diverter_route_ball_topogym_tabletop_v1.yaml
+✅ configs/run_configs/diverter_route_ball.yaml               inspect 运行组
+   configs/run_configs/diverter_route_ball_route.yaml         route 运行组（command / oracle_mode）
+✅ configs/diverter_route_ball.yaml                           inspect 主配置
+   configs/diverter_route_ball_route.yaml                     route 主配置
+✅ demos/connectivity/diverter_route_ball_inspect_demo.py
+   demos/connectivity/diverter_route_ball_physical_route_demo.py
 
 修改
-  topogym/tasks/_fixtures.py                                 + 通用单自由度铰链发射器
-  topogym/tasks/connectivity/_ball_shuttle.py                + 恒速航向驱动
-  topogym/generation/layout_randomization.py                 + _ChoiceJitter + 本任务条目
-  cli_commands.txt                                           + 一节命令
+✅ topogym/tasks/_fixtures.py                                 + HingeShape / write_hinge_urdf /
+                                                               add_hinge_mechanism / hinge_joint_dof
+✅ topogym/tasks/connectivity/_ball_shuttle.py -> _ball_drive.py  + HeadingDrive
+   topogym/generation/layout_randomization.py                 + _ChoiceJitter + 本任务条目（本轮之外）
+   cli_commands.txt                                           + 一节命令
 
 登记
-  topogym/core/taxonomy.py  CATEGORIES["connectivity"]
-  topogym/tasks/__init__.py、topogym/verification/__init__.py、
-  topogym/planning/__init__.py、topogym/primitives/__init__.py 的 re-export
+✅ topogym/core/taxonomy.py  CATEGORIES["connectivity"]
+✅ topogym/tasks/__init__.py 的 re-export
+   topogym/verification/__init__.py、topogym/planning/__init__.py、
+   topogym/primitives/__init__.py 的 re-export
 ```
+
+不做独立的 `tests/diverter_ball_spike.py`：4.1 的 `gate_cage_ball_inspect_demo.py` 已经是
+「建真场景 + 放球滚一遍 + 不含机械臂」的形态，独立 spike 会把通道几何复制一份且用完即弃。
+`tests/ball_roll_spike.py` 那种独立 spike 测的是与几何无关的材料属性（回弹、滚阻），
+那些值 4.1 已测过、直接沿用。
 
 四个 bash 注册表（`record_all_tasks.sh` / `collect_and_view.sh` / `stability_sweep.sh` /
 `verify_dataset_recording.sh`）在开始录数据时再登记。4.1 同样尚未登记，两者一并处理。
@@ -261,111 +297,129 @@ planner 80–120、配置 150–200、demo 300–380。
 
 ---
 
-## 8. 分阶段实施
+## 8. 实施步骤
 
-每阶段列出产出、验收判据与运行命令。命令一律 `| tee runs/*.log`，便于事后取实测值。
+本轮交付边界为「oracle 全流程跑通」，共 4 步。每步列出产出、验收判据与运行命令；
+命令一律 `| tee runs/*.log`，实测值从日志取，逐步验收后再进下一步。
 
-### 阶段 0：物理 spike（不含机械臂）
+### 步骤 1：铰链发射器 + 场景 + inspect demo ✅ 代码已落地，待实机验收
 
-产出：`tests/diverter_ball_spike.py`。通道 + 分流板（`fixed=True`，按配置摆到三个相位之一）+
-恒速航向驱动的球，无机械臂、无关节。
+产出见 §7 打勾项。要点：
 
-验收：
+- `_fixtures.py` 的 `write_hinge_urdf` / `add_hinge_mechanism`：转轴方向、关节类型
+  （continuous 或带限位 revolute）、阻尼与摩擦、转动连杆上的**多个**碰撞体。
+  模板取自 `stacked_plate.py` 的 `_write_disk_urdf`（硬绑圆柱碰撞体、Y 轴、continuous、
+  单碰撞体，三项都不适用于分流板）。本步骤不迁移 `stacked_plate`。
+- 分流板、连接柱、拨杆臂、手柄是同一个转动连杆上的四个碰撞体。
+- inspect demo 三种模式：`static_only`（只建场景）、`sweep_joint`（写关节扫全程，
+  运动学检查，不属于 episode）、球 rollout（`flap_phase=seal_left|seal_right|half|config`）。
 
-- 板封左时球从右出口离开、封右时从左出口离开，各 5 个速度取值全部成立；
-- 半开相位下的表现稳定可复现（卡住或偏向一侧通过，二者之一），据此确定失败标签；
-- 记录球自释放到离开出口的用时，作为物理层复核的超时预算；
-- 无穿透、无沿壁弹跳。
+**验收**
 
-```bash
-python -B -m tests.diverter_ball_spike run.phase=seal_left run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_spike_left.log
-python -B -m tests.diverter_ball_spike run.phase=seal_right run.verbose=true 2>&1 | tee runs/div_spike_right.log
-python -B -m tests.diverter_ball_spike run.phase=half run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_spike_half.log
-python -B -m tests.diverter_ball_spike -m task.ball.speed=0.08,0.12,0.18 2>&1 | tee runs/div_spike_speed.log
-```
-
-### 阶段 1：铰链发射器与场景
-
-产出：`_fixtures.py` 的通用铰链发射器、`diverter_route_ball.py`、任务配置、inspect demo。
-
-铰链发射器的参数面（由本任务的需求确定，不做超出需求的泛化）：转轴方向、关节类型
-（continuous / 带限位 revolute）、阻尼与摩擦、转动连杆上的**多个**碰撞体（各自形状、尺寸、
-局部位姿）、可选的视觉网格。
-
-验收：
-
-- `run.static_only=true` 下构建无互相穿透；
-- inspect demo 用 `set_dofs_position` 扫过关节全程（此处为运动学检查，不属于 episode），
-  两端到位、限位生效、拨杆与侧壁无干涉；
-- 判据的几何层读数与板相位一致（封左 → `{"left":0,"right":1}`）。
+- `static_only` 下构建无互相穿透；
+- 关节扫描：命令值故意越过限位 10°，两端 `reached` 都停在 ±30°（`worst_limit_error` < 1°），
+  拨杆与侧壁无干涉；
+- 封左 → 球从右出口离开；封右 → 球从左出口离开；三个球速取值下均成立
+  （打印行的 `routed_correctly=True`）；
+- 半开 → `jammed=True`，且 `jam_xy` 落在分岔口附近。几何上旁通间隙 46.2 mm 小于球径 52 mm，
+  预期确定卡住；若实测出现「偏向一侧通过」，记录下来并据此定步骤 4 的失败标签；
+- 记录 `exit_time`（预测 3.02 s），作为步骤 4 物理层复核的超时预算；
+- `lane_max_abs_y` 应远小于 (90−52)/2 = 19 mm，否则球在进料道里跑偏；
+- 已知风险：擦碰后速率归一化可能把球再次推向侧壁。此处观测，必要时改为仅在方向落在
+  通道角度范围内时归一化。
 
 ```bash
 python -B -m demos.connectivity.diverter_route_ball_inspect_demo run.static_only=true run.viewer=true run.keep_open=true 2>&1 | tee runs/div_static.log
 python -B -m demos.connectivity.diverter_route_ball_inspect_demo run.sweep_joint=true run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_sweep.log
+python -B -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=seal_left run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_roll_left.log
+python -B -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=seal_right run.verbose=true 2>&1 | tee runs/div_roll_right.log
+python -B -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=half run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_roll_half.log
+python -B -m demos.connectivity.diverter_route_ball_inspect_demo -m run.flap_phase=seal_left task.ball.speed=0.08,0.12,0.18 2>&1 | tee runs/div_roll_speed.log
 ```
 
-### 阶段 2：拨杆原语（不放球）
+### 步骤 2：判据（几何层）
 
-产出：`primitives/pivot_lever.py`。相位结构、跟随误差／释放漂移判据沿用 `rim_rotate.py`，
-接近与退出几何按顶抓竖直手柄重写。
+产出：`verification/diverter_route_ball_verifier.py`（State + Evaluator）、
+`verification/__init__.py` re-export、inspect demo 的 `run.classify=true` 分支。
 
-验收：关节从任一端转到另一端；到位角误差、跟随误差、释放漂移三项在阈值内；手柄未脱手；
-退刀后机械臂不遮挡通道。
+栅格化 + 障碍按球半径膨胀 + flood-fill **复制**自 `gate_cage_ball_verifier.py`
+（4.1 问「是否触达场地边界」，4.3 问「是否触达指定出口区」，同一套栅格两种查询）。
+本轮复制而不抽取共用助手，4.1 的已通过状态不受影响；抽取列入本轮之外。
+
+**验收**
+
+- 三个相位下几何读数与实际相位一致（封左 → `{"left":0,"right":1}`）；
+- 几何读数与步骤 1 观测到的球实际去向一致——这一条是本步骤的意义所在：几何判据与物理结果对表；
+- `python topogym/core/taxonomy.py` 通过。
+
+```bash
+python -B -m demos.connectivity.diverter_route_ball_inspect_demo -m run.classify=true run.flap_phase=seal_left,seal_right,half 2>&1 | tee runs/div_classify.log
+python topogym/core/taxonomy.py
+```
+
+### 步骤 3：拨杆原语与 planner（不放球）
+
+产出：`primitives/pivot_lever.py`、`planning/diverter_route_ball_planner.py`、
+route demo 的 `run.stage=rotate_only` 路径与两个配置文件、两处 re-export。
+
+原语的相位结构与三项判据（到位角误差、跟随误差、释放漂移）沿用 `rim_rotate.py`；
+接近与退出几何按「顶抓竖直手柄 + 水平圆弧」重写——`rim_rotate.py` 的 `rim_point_world`
+假定圆盘面在 XZ 平面、法向沿 Y，且接近逻辑按「越过圆盘顶」写死，不可直接复用。
+关节限位吸收越程，因此沿圆弧多扫 5°。
+
+**验收**：关节从任一端转到另一端，两个方向各一次；三项判据在阈值内；手柄未脱手；
+退刀后机械臂不遮挡通道；planner 在四种「初始相位 × 指令」组合上给出预期决策（离线断言）。
+
+**回退方案**：若顶抓在摆动中脱手，改为闭爪推动手柄（不抓取）。
 
 ```bash
 python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.stage=rotate_only run.command=left run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_rotate_left.log
 python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.stage=rotate_only run.command=right run.verbose=true 2>&1 | tee runs/div_rotate_right.log
 ```
 
-### 阶段 3：完整 episode
+### 步骤 4：完整 episode（oracle 跑通）
 
-产出：完整 route demo（旋转 → 退刀 → 启动驱动 → S–T 弹珠测试 → 判定）、planner、verifier 接线。
+产出：route demo 完整流程（旋转或按指令跳过 → 退刀 → 启动驱动 → S–T 弹珠测试 → 判定）、
+verifier 的物理层与失败标签、按实例取值的 `task_goal`。episode 结构照
+`gate_cage_ball_physical_gate_demo.py`。
 
-验收：四种「初始相位 × 指令」组合全部得到预期结局；`fixed_direction` 基线在其中一半失败且
-失败标签为 `wrong_exit`；打印行包含不变量读数、离开侧、用时、关节角误差。
+「不需要旋转」的实例作为一等路径处理：oracle 读出指令侧已连通即跳过旋转、直接放球；
+该 episode 不含操作动作，`print_collision_il_contract` 的输出需如实反映。
 
-```bash
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.command=left run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_oracle_left.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.command=right run.verbose=true 2>&1 | tee runs/div_oracle_right.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.oracle_mode=fixed_direction run.command=left run.verbose=true 2>&1 | tee runs/div_fixed_left.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.oracle_mode=fixed_direction run.command=right run.verbose=true 2>&1 | tee runs/div_fixed_right.log
-```
+本步骤收尾：订正 `rigid_first_track_zh.md` 的进度表与 §5.1 差异表（补 4.3 一行）；
+本文件补实测值；`cli_commands.txt` 加一节。
 
-### 阶段 4：随机化与对照对
+**验收：四种组合的预期结局**（`fixed_direction` 定义为总是转到「封右」端）
 
-产出：`_ChoiceJitter`、随机化条目、planner 的单元测试（指令 → 目标角与旋转方向，纯算术，
-不依赖 Genesis）、20 个种子的两条基线实测。
+| 初始封闭侧 | 指令 | oracle 动作 | oracle | fixed_direction 动作 | fixed |
+|---|---|---|---|---|---|
+| 左 | 右 | 不旋转 | 成功 | 旋转→封右 | 失败（`wrong_exit`）|
+| 左 | 左 | 旋转→封右 | 成功 | 旋转→封右 | 成功 |
+| 右 | 左 | 不旋转 | 成功 | 已在封右，不动 | 成功 |
+| 右 | 右 | 旋转→封左 | 成功 | 已在封右，不动 | 失败（`wrong_exit`）|
 
-验收：20 个种子上 oracle 成功率与 `fixed_direction` 成功率分别落在预期区间并如实记录；
-`python topogym/core/taxonomy.py` 通过。
-
-```bash
-python -B -m pytest tests/test_diverter_route_ball_planner.py -q 2>&1 | tee runs/div_unit.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo -m run.seed=0,1,2,3,4,5,6,7,8,9 run.randomize=true 2>&1 | tee runs/div_sweep_oracle.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo -m run.seed=0,1,2,3,4,5,6,7,8,9 run.randomize=true run.oracle_mode=fixed_direction 2>&1 | tee runs/div_sweep_fixed.log
-python topogym/core/taxonomy.py
-```
-
-### 阶段 5：录像与文档
-
-产出：成功／失败两段录像；`cli_commands.txt` 新增一节；
-`rigid_first_track_zh.md` 的进度表、§5.1 差异表、§7 待决事项同步更新；本文件补实测值。
+oracle 四种组合全部成功；`fixed_direction` 恰好 2/4 失败且标签为 `wrong_exit`——这正是 docx
+「期望成功率被钉在一半」的机制，在固定实例上逐项复核。任何一行与预期不符都先查因，不调几何
+去凑结果：把几何调到某条基线必失败，等于把基线分数写进场景定义
+（`gate_cage_ball_gate.yaml` 尾部已就同一问题留下说明）。
 
 ```bash
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo recording=hq recording.path=runs/videos/diverter_route_ball/success.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/div_success.log
-python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.oracle_mode=fixed_direction recording=hq recording.path=runs/videos/diverter_route_ball/fail.mp4 recording.camera=[oblique,front,wrist] recording.res=[960,960] recording.every_n_steps=3 run.verbose=true 2>&1 | tee runs/div_fail.log
+python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.init_sealed_side=left run.command=right run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/div_o_lr.log
+python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.init_sealed_side=left  run.command=left  run.verbose=true 2>&1 | tee runs/div_o_ll.log
+python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.init_sealed_side=right run.command=left  run.verbose=true 2>&1 | tee runs/div_o_rl.log
+python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.init_sealed_side=right run.command=right run.verbose=true 2>&1 | tee runs/div_o_rr.log
+python -B -m demos.connectivity.diverter_route_ball_physical_route_demo -m run.oracle_mode=fixed_direction task.diverter.init_sealed_side=left,right run.command=left,right 2>&1 | tee runs/div_fixed_all.log
 ```
 
-### 阶段 6：重构（可跳过）
+### 本轮之外
 
-两项抽取，各自带一次回归运行成本，因此排在功能完成之后：
-
-| 抽取项 | 涉及 | 回归 |
-|---|---|---|
-| flood-fill 栅格助手 | 4.1 与 4.3 两个 verifier 共用 | 重跑 4.1 的 oracle / greedy 各一次 |
-| `stacked_plate` 迁移到通用铰链发射器 | 满足 `rigid_first_track_zh.md` §7.6 | 重跑 `stacked_plate_physical_rotate_demo` 一次 |
-
-阶段 1–5 期间两处保持复制，4.1 与 4.2 的已通过状态不受影响。
+| 项 | 内容 |
+|---|---|
+| 随机化注册 | `layout_randomization.py` 新增 `_ChoiceJitter`，注册初始相位与指令两个离散轴（§6.2 的契约冲突与解法）。该 directive 同时解开 4.1 阶段 2 的 `ball.release_y` 随机化 |
+| 基线实测 | 20 个种子上 oracle 与 `fixed_direction` 的成功率 |
+| 录像 | 成功／失败两段 hq 录像 |
+| 重构 | flood-fill 栅格助手抽取（需重跑 4.1 的 oracle/greedy）；`stacked_plate` 迁移到通用铰链发射器（需重跑其 rotate demo，且要给发射器补一个 mesh 视觉分支）——满足 `rigid_first_track_zh.md` §7.6 |
+| bash 注册表 | 四个注册表在开始录数据集时登记；4.1 同样未登记，届时一并处理 |
 
 ---
 
@@ -373,17 +427,24 @@ python -B -m demos.connectivity.diverter_route_ball_physical_route_demo run.orac
 
 | 风险 | 影响 | 应对 |
 |---|---|---|
-| 擦碰后速率归一化把球推向侧壁 | 球贴壁减速或停住 | 阶段 0 观测；改为仅在方向落在通道角度范围内时归一化 |
-| 半开态表现不稳定（有时卡住、有时通过） | 中间失败态不可复现 | 两种表现都判失败，标签按阶段 0 实测确定；必要时加宽分流鼻 |
-| 分流板封位存在缝隙，球挤过 | 判据与物理不一致 | 板长按「与外壁重叠 ≥ 5 mm」取；阶段 0 用最高球速验证 |
-| 接触驱动的关节角不到限位 | 分流板半开 | 关节限位吸收越程，原语沿圆弧多扫 5°；关节摩擦按阶段 2 实测取值 |
+| 擦碰后速率归一化把球推向侧壁 | 球贴壁减速或停住 | 步骤 1 观测（看 `lane_max_abs_y`）；改为仅在方向落在通道角度范围内时归一化 |
+| 半开态表现不稳定（有时卡住、有时通过） | 中间失败态不可复现 | 几何上旁通间隙 46.2 mm 小于球径 52 mm，预期确定卡住；若实测仍有通过，加大球径或缩短板长 |
+| 分流板封位存在缝隙，球挤过 | 判据与物理不一致 | 板尖距外壁 3.5 mm，远小于球径；步骤 1 用最高球速验证 |
+| 接触驱动的关节角不到限位 | 分流板半开 | 关节限位吸收越程，原语沿圆弧多扫 5°；关节摩擦按步骤 3 实测取值 |
 | 手柄在摆动中脱手 | 旋转失败 | 沿用 `rim_rotate` 的跟随误差判据；必要时改为闭爪推动手柄（不抓取） |
 
 ---
 
-## 10. 待决事项
+## 10. 已定事项（2026-08-18）
 
-1. **场景形态**（阶段 0 之前）：采用 §2 的 B 方案（桌面水平分岔），还是按 docx 原文做竖直板面。
-   本文按 B 展开。
-2. **初始相位与指令的组合**（阶段 0 之前）：§6.3 三种取法，本文推荐 docx 原文的 2×2 独立随机。
-3. **抓取方式**（阶段 2）：顶抓手柄摆动，或闭爪推动手柄。本文按顶抓展开，推动作为回退方案。
+| 项 | 结论 | 影响 |
+|---|---|---|
+| 场景形态 | §2 的 B 方案：桌面水平 Y 形分岔 | 步骤 1 按此落地；需在 `rigid_first_track_zh.md` §5.1 差异表补一行 |
+| 初始相位与指令的组合 | docx 原文的 2×2 独立随机（§6.3） | 四种组合中两种的正确动作是不旋转，步骤 4 按一等路径处理；录 IL 数据时用配置项只取需要旋转的两种 |
+| 交付边界 | 到 oracle 全流程跑通（步骤 1–4） | 随机化注册、20 种子基线、录像与两项重构列入「本轮之外」 |
+
+仍未定、留到实测后决定的两项：
+
+1. **抓取方式**（步骤 3）：顶抓手柄摆动，或闭爪推动手柄。按顶抓展开，推动作为回退方案。
+2. **半开态的失败标签**（步骤 1 实测后）：`ball_stuck_at_fork` 与 `wrong_exit` 两者之一，
+   取决于球是卡住还是偏向一侧通过。几何预测是卡住。

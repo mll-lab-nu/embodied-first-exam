@@ -13,6 +13,10 @@ checks in no meshes, so a reusable fixture is code.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Sequence
+
 import genesis as gs
 import numpy as np
 from omegaconf import OmegaConf
@@ -144,3 +148,233 @@ def add_v_block(
             name=f"{prefix}_post",
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Single-DOF hinge mechanism (procedural URDF)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class HingeShape:
+    """One rigid part of a hinge's rotating link, in the link's local frame.
+
+    The link's origin sits on the joint axis, so a part's ``origin`` is also its
+    offset from the pivot -- which is what a lever arm is described by anyway.
+    """
+
+    kind: str  # "box" -> size (x, y, z); "cylinder" -> size (radius, length)
+    size: Sequence[float]
+    origin: Sequence[float] = (0.0, 0.0, 0.0)
+    rpy: Sequence[float] = (0.0, 0.0, 0.0)
+    color: Sequence[float] | None = None
+
+    def half_extent(self) -> np.ndarray:
+        """Axis-aligned half size, used only to size the link's inertia box.
+
+        A rotated or cylindrical part is approximated by its own bounding box.
+        The inertia of a driven mechanism running against a joint limit does not
+        turn on this being exact, and an exact composite tensor would be a
+        machinery bill nothing here is asking for.
+        """
+
+        if self.kind == "box":
+            return 0.5 * np.asarray(_to_container(self.size), dtype=float).reshape(3)
+        if self.kind == "cylinder":
+            radius, length = (float(v) for v in _to_container(self.size))
+            return np.array([radius, radius, 0.5 * length], dtype=float)
+        raise ValueError(f"Unsupported HingeShape.kind={self.kind!r}; use 'box' or 'cylinder'.")
+
+    def geometry_xml(self) -> str:
+        if self.kind == "box":
+            x, y, z = (float(v) for v in _to_container(self.size))
+            return f'<box size="{x:.9f} {y:.9f} {z:.9f}"/>'
+        radius, length = (float(v) for v in _to_container(self.size))
+        return f'<cylinder radius="{radius:.9f}" length="{length:.9f}"/>'
+
+
+def _origin_xml(origin, rpy) -> str:
+    ox, oy, oz = (float(v) for v in _to_container(origin))
+    rr, rp, ry = (float(v) for v in _to_container(rpy))
+    return f'<origin xyz="{ox:.9f} {oy:.9f} {oz:.9f}" rpy="{rr:.9f} {rp:.9f} {ry:.9f}"/>'
+
+
+def write_hinge_urdf(
+    path,
+    *,
+    robot_name: str,
+    joint_name: str,
+    axis,
+    shapes: Sequence[HingeShape],
+    mass: float,
+    color,
+    limit_rad: tuple[float, float] | None = None,
+    damping: float = 0.0,
+    friction: float = 0.0,
+    effort: float = 50.0,
+    max_velocity: float = 5.0,
+) -> Path:
+    """Write a two-link URDF: a fixed base and one link on a single joint.
+
+    Generalized from `tasks/connectivity/stacked_plate.py`'s `_write_disk_urdf`,
+    which is hard-wired to one cylinder collider, the Y axis and a continuous
+    joint. Three of those are wrong for a diverter flap, which needs a box
+    collider, the Z axis, a joint that STOPS at each seated position, and several
+    parts on the same rotating link (the flap inside the channel plus the lever
+    the gripper turns it by, above the walls).
+
+    ``limit_rad`` picks the joint type: ``None`` writes a ``continuous`` joint,
+    a ``(lower, upper)`` pair writes a ``revolute`` one. The limit is load-bearing
+    rather than a safety rail -- a contact-driven sweep that overshoots is
+    stopped by it, so the seated pose is set by the joint rather than by how
+    accurately the arm tracked the arc.
+
+    ``mass`` is distributed over the bounding box of ``shapes``: the inertial
+    origin is that box's centre and the tensor is a solid cuboid of the same
+    extent. See `HingeShape.half_extent`.
+
+    Note for the `stacked_plate` migration (`rigid_first_track_zh.md` §7.6): its
+    disk carries a *mesh* visual over a cylinder collider, and no shape kind here
+    writes a `<mesh>` element yet. Adding one is a few lines, and is left until
+    that task is actually migrated rather than written blind now.
+    """
+
+    path = Path(path)
+    shapes = list(shapes)
+    if not shapes:
+        raise ValueError("A hinge needs at least one shape on its rotating link.")
+    mass = float(mass)
+    if mass <= 0.0:
+        raise ValueError(f"Hinge mass must be positive, got {mass}.")
+
+    lower = np.full(3, np.inf)
+    upper = np.full(3, -np.inf)
+    for shape in shapes:
+        origin = np.asarray(_to_container(shape.origin), dtype=float).reshape(3)
+        half = shape.half_extent()
+        lower = np.minimum(lower, origin - half)
+        upper = np.maximum(upper, origin + half)
+    center = 0.5 * (lower + upper)
+    extent = np.maximum(upper - lower, 1e-4)
+    ixx = mass * (extent[1] ** 2 + extent[2] ** 2) / 12.0
+    iyy = mass * (extent[0] ** 2 + extent[2] ** 2) / 12.0
+    izz = mass * (extent[0] ** 2 + extent[1] ** 2) / 12.0
+
+    default_rgba = _to_container(color)
+    parts: list[str] = []
+    for index, shape in enumerate(shapes):
+        rgba = _to_container(shape.color) if shape.color is not None else default_rgba
+        rgba_text = " ".join(f"{float(v):.6f}" for v in list(rgba)[:3]) + " 1"
+        geometry = shape.geometry_xml()
+        origin = _origin_xml(shape.origin, shape.rpy)
+        parts.append(
+            f"""    <collision>
+      {origin}
+      <geometry>{geometry}</geometry>
+    </collision>
+    <visual>
+      {origin}
+      <geometry>{geometry}</geometry>
+      <material name="{robot_name}_mat_{index}">
+        <color rgba="{rgba_text}"/>
+      </material>
+    </visual>"""
+        )
+
+    ax, ay, az = (float(v) for v in _to_container(axis))
+    if limit_rad is None:
+        joint_type = "continuous"
+        limit_xml = ""
+    else:
+        joint_type = "revolute"
+        low, high = (float(v) for v in limit_rad)
+        limit_xml = (
+            f'\n    <limit lower="{low:.9f}" upper="{high:.9f}" '
+            f'effort="{float(effort):.6f}" velocity="{float(max_velocity):.6f}"/>'
+        )
+
+    xml = f"""<?xml version="1.0"?>
+<robot name="{robot_name}">
+  <link name="hinge_base"/>
+  <link name="hinge_arm">
+    <inertial>
+      <origin xyz="{center[0]:.9f} {center[1]:.9f} {center[2]:.9f}" rpy="0 0 0"/>
+      <mass value="{mass:.9f}"/>
+      <inertia ixx="{ixx:.9f}" ixy="0" ixz="0" iyy="{iyy:.9f}" iyz="0" izz="{izz:.9f}"/>
+    </inertial>
+{chr(10).join(parts)}
+  </link>
+  <joint name="{joint_name}" type="{joint_type}">
+    <parent link="hinge_base"/>
+    <child link="hinge_arm"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="{ax:.9f} {ay:.9f} {az:.9f}"/>{limit_xml}
+    <dynamics damping="{float(damping):.9f}" friction="{float(friction):.9f}"/>
+  </joint>
+</robot>
+"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(xml, encoding="utf-8")
+    return path
+
+
+def add_hinge_mechanism(
+    scene,
+    manifest,
+    *,
+    name: str,
+    urdf_path,
+    world_pos,
+    axis,
+    shapes: Sequence[HingeShape],
+    mass: float,
+    color,
+    joint_name: str = "hinge_joint",
+    limit_rad: tuple[float, float] | None = None,
+    damping: float = 0.0,
+    friction: float = 0.0,
+    armature: float = 0.01,
+    contact_friction: float = 1.0,
+) -> tuple[Any, str]:
+    """Write the URDF and add it to the scene; returns ``(entity, joint_name)``.
+
+    ``fixed=True`` pins the BASE link to the world, which is what a pivot bolted
+    to a frame is; the joint still turns. ``convexify=False`` keeps the parts as
+    the primitives they were written as, and ``recompute_inertia=False`` keeps
+    the tensor `write_hinge_urdf` computed -- both matching `stacked_plate`.
+    """
+
+    written = write_hinge_urdf(
+        urdf_path,
+        robot_name=name,
+        joint_name=joint_name,
+        axis=axis,
+        shapes=shapes,
+        mass=mass,
+        color=color,
+        limit_rad=limit_rad,
+        damping=damping,
+        friction=friction,
+    )
+    entity = scene.add_entity(
+        gs.morphs.URDF(
+            file=str(written),
+            pos=tuple(float(v) for v in _to_container(world_pos)),
+            fixed=True,
+            convexify=False,
+            recompute_inertia=False,
+            prioritize_urdf_material=True,
+            default_armature=float(armature),
+        ),
+        material=gs.materials.Rigid(friction=float(contact_friction)),
+        name=name,
+    )
+    manifest.add(name, entity)
+    return entity, joint_name
+
+
+def hinge_joint_dof(entity, joint_name: str) -> int:
+    """Local DOF index of a hinge's single joint."""
+
+    joint = entity.get_joint(name=str(joint_name))
+    return int(np.asarray(joint.dofs_idx_local).reshape(-1)[0])

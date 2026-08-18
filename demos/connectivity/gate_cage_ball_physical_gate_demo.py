@@ -48,7 +48,7 @@ from topogym.primitives import (
 )
 from topogym.supervision import stop_before_physics
 from topogym.tasks import GateCageBallSceneBuilder
-from topogym.tasks.connectivity._ball_shuttle import BallShuttle
+from topogym.tasks.connectivity._ball_drive import BallShuttle
 from topogym.utils.franka import initialize_franka_controller
 from topogym.utils.recording import (
     apply_recording_camera_overrides,

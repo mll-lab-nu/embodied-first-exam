@@ -53,6 +53,13 @@ from .legacy.peeling_physical import (
     release_all_peeling_groups,
     release_peeling_groups,
 )
+from .connectivity.diverter_route_ball import (
+    DiverterRouteBallLayout,
+    DiverterRouteBallScene,
+    DiverterRouteBallSceneBuilder,
+    other_side,
+    side_sign,
+)
 from .connectivity.gate_cage_ball import (
     GateCageBallLayout,
     GateCageBallScene,
@@ -109,9 +116,14 @@ __all__ = [
     "PeelingPhysicalSceneBuilder",
     "release_all_peeling_groups",
     "release_peeling_groups",
+    "DiverterRouteBallLayout",
+    "DiverterRouteBallScene",
+    "DiverterRouteBallSceneBuilder",
     "GateCageBallLayout",
     "GateCageBallScene",
     "GateCageBallSceneBuilder",
+    "other_side",
+    "side_sign",
     "StackedPlateLayout",
     "StackedPlateScene",
     "StackedPlateSceneBuilder",

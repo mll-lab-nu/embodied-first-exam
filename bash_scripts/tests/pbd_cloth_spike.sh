@@ -2,7 +2,7 @@
 # ============================================================================
 # PBD 布料 spike 的统一跑法（类别 1 的建模方案，2026-08-17）。
 #
-# 四个未知量，由便宜到贵，每一个都可能改变后面的设计：
+# 六项，由便宜到贵。fold 是唯一还能推翻整个方案的一项，其余是标定护栏：
 #   settle  静置基线：平整度方差 + 自发漂移，并确认重力真的作用在布上
 #           （从 SETTLE_DROP_Z 高处放手；2026-08-17 那次生成在平衡位置上，
 #            全程零位移，分不出「没事可做」和「没在仿真」）。
@@ -20,14 +20,15 @@
 # `set -e`，就是为了让后面的汇总仍然打得出来。
 #
 # 用法：
-#   bash bash_scripts/tests/pbd_cloth_spike.sh                 # 全部五项
+#   bash bash_scripts/tests/pbd_cloth_spike.sh                 # 全部六项
+#   bash bash_scripts/tests/pbd_cloth_spike.sh fold            # 只跑关键那一项
 #   bash bash_scripts/tests/pbd_cloth_spike.sh settle weld     # 只跑其中几项
 #   SKIP_CONTACT=1 bash bash_scripts/tests/pbd_cloth_spike.sh  # 跳过会崩的那项
 #
 # 可调环境变量（都有默认值）：
 #   BACKEND=gpu                      计算后端（gpu/cuda/cpu）
-#   DRAG_SPEEDS="0.004 0.012 0.024 0.048"   speed 扫哪些指令速度（米/步）
-#   PINCH_QPOS="0.001 0.002 0.003 0.005 0.008"  pinch 扫哪些闭合半宽（米）
+#   DRAG_SPEEDS="0.002 0.008 0.016 0.032"   speed 扫哪些指令速度（米/步）
+#   PINCH_QPOS="0.0005 0.001 0.002 0.004 0.006"  pinch 扫哪些闭合半宽（米）
 #   SETTLE_DROP_Z=0.050              settle 从多高放手（米）
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
@@ -55,11 +56,12 @@ if [[ -z "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 BACKEND="${BACKEND:-gpu}"
-# 2026-08-17 扫到 0.008 全过、看门狗从未响 —— 上界在更高处。隧穿的理论门槛是
-# 每子步半个粒子 = 0.003/4 子步 -> 约 0.012 米/步，所以扫参必须跨过它。
-DRAG_SPEEDS="${DRAG_SPEEDS:-0.004 0.012 0.024 0.048}"
-# 参照量是 particle_size/2 = 0.003（单层布的半厚），扫参跨过它。
-PINCH_QPOS="${PINCH_QPOS:-0.001 0.002 0.003 0.005 0.008}"
+# 2026-08-17 那次扫参在高速端只跑了 4 步（距离固定、步数=距离/速度），发散来不及
+# 发展；现在步数固定为 run.drag_steps，每档一样多。隧穿的理论门槛是每子步半个粒子
+# = 0.002 / 4 子步 -> 0.008 米/步（particle_size 0.004），所以扫参跨过它。
+DRAG_SPEEDS="${DRAG_SPEEDS:-0.002 0.008 0.016 0.032}"
+# 参照量是 particle_size/2 = 0.002（单层布的半厚），扫参跨过它。
+PINCH_QPOS="${PINCH_QPOS:-0.0005 0.001 0.002 0.004 0.006}"
 SETTLE_DROP_Z="${SETTLE_DROP_Z:-0.050}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
@@ -78,7 +80,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(settle weld speed pinch cost contact)
+ORDER=(settle weld fold speed pinch cost contact)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -163,6 +165,9 @@ for name in "${SELECTED[@]}"; do
       run_cell "weld_taper" weld run.test=weld run.taper=true  run.verbose=true
       run_cell "weld_hard"  weld run.test=weld run.taper=false run.verbose=true
       ;;
+    fold)
+      run_cell "fold" fold run.test=fold run.verbose=true
+      ;;
     speed)
       for speed in $DRAG_SPEEDS; do
         run_cell "speed_$speed" speed run.test=speed "run.drag_speed=$speed"
@@ -206,6 +211,10 @@ echo "              NO = 重网格化打乱了顶点顺序，所有需要追踪�
 echo "              （折线位置、层归属、材料守恒）都要换实现方式。"
 echo "  weld        比两行的 worst_edge_strain：硬焊明显更大 = 焊区确实成了刚性夹板，"
 echo "              锥度权重要保留；两行接近则这条护栏可以简化。"
+echo "  fold        **最关键的一行**: self_contact_gap_mm 接近 particle_size_mm 说明"
+echo "              两层是叠着的; 接近 0 说明穿模了, 层数类判据在 PBD 下做不出来。"
+echo "              配合 two_layer_frac (对折后应有可观比例的双层) 与"
+echo "              far_edge_shift_mm (不为 0 说明布在桌上滑了, 折线会落错位置)。"
 echo "  speed       第一个出现 blowup=（非 none）或 completed=False 的速度就是上界；"
 echo "              对照同一行的 tunnel_threshold 判断是不是隧穿导致的。"
 echo "  pinch       第一个 blowup= 非 none 的 qpos 就是闭合间隙的下限；"

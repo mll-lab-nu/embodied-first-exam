@@ -20,7 +20,7 @@ speed, so no velocity is written at runtime. Starting outside is what makes "too
 early" a real failure: seal the doorway before the ball is in and the ball is
 locked out. Starting it inside would make "insert immediately" a winning script.
 
-The ball is driven, not dropped: `ball_shuttle.BallShuttle` holds its speed along
+The ball is driven, not dropped: `_ball_drive.BallShuttle` holds its speed along
 the lane and reverses it when something blocks the way. That is why there are no
 ramps here. `tests/ball_roll_spike.py` measured rigid-vs-rigid restitution at
 -0.001, so a ball has no way of its own to turn around -- gravity ramps were the

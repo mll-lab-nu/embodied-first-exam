@@ -16,10 +16,15 @@ defaults:
 #             等于平衡高度，全程零位移，分不出「没事可做」和「根本没在仿真」。
 #   weld    : 锥度焊接 vs 硬焊接，看焊接区边缘的形变
 #   speed   : 吸附状态下横拖，扫末端速度，找布开始发散的那条线
+#   fold    : **真正的任务动作**：把边提起、越过中线、放到另一半上、松手、静置。
+#             回答唯一还能推翻方案的问题——两层布叠上去会不会互相穿过去。
+#             PBD 的自碰撞会漏是本仓自己的历史（两根绳应隔 12mm，实测 2.5mm、
+#             互嵌 5.5mm，见 rope_contact_sweep.sh）。层分不开的话，
+#             「上下层重叠率」「层数 3→1」这类判据在 PBD 下就做不出来。
 #   pinch   : 在布上合拢手指（挤压）。contact 测不到这个——它是闭着手指往下降。
 #   contact : 闭合手指下降到布面附近，是否 native segfault
 #             （1.1.0 上会；1.2.1 上 2026-08-17 实测不会，撑到净空 0）
-#   all     : 依次跑 settle -> weld -> speed -> pinch（**不含 contact**，见下）
+#   all     : 依次跑 settle -> weld -> fold -> speed -> pinch（**不含 contact**，见下）
 # `contact` 不进 all：它可能整个进程 core dump，跑在别的测试前面会把它们一起带走。
 # `pinch` 排在 all 的最后：它是这四项里最可能发散的。
 test: settle
@@ -30,13 +35,15 @@ contact_start_clearance: 0.060
 contact_step: 0.002
 contact_min_clearance: 0.000
 
-# speed：横拖的指令速度（米/步）。扫参用 -m run.drag_speed=0.001,0.002,0.004,0.008。
+# speed：横拖的指令速度（米/步）。扫参用 -m run.drag_speed=0.004,0.012,0.024,0.048。
+# **步数固定、距离随速度变**：2026-08-17 那次距离固定，最慢档跑 45 步而最快档只跑
+# 4 步，而发散需要几步才发展得起来——那个扫参在高速端根本没机会看到问题。
+drag_steps: 60
 # 参考量级：现有 demo 的指令速度是 0.9~2.0 mm/步。
 # 隧穿的理论门槛是 v * substep_dt > particle_size/2，即 particle_size=0.006、
 # substep_dt=0.0025s 时约 1.2 m/s = 12 mm/步 —— 比 demo 速度高一个量级，
 # 所以这一项要是先炸，炸的原因不是隧穿。
 drag_speed: 0.002
-drag_distance: 0.120
 
 # weld：是否用锥度权重。false = 硬焊（焊接区内每个粒子都被绝对驱动）。
 taper: true
@@ -52,6 +59,16 @@ settle_steps: 300
 
 # 每隔多少步打印一行采样。
 sample_every: 25
+
+# fold：划弧的步数、弧顶高度（米）、松手后静置的步数。
+# 弧顶要够高，布才不会在半路蹭到桌面；0.100 对 0.240 的对折跨距够用。
+fold_steps: 240
+fold_arc_height: 0.100
+fold_settle_steps: 150
+# 自接触判据：静止时距离小于「这个倍数 × particle_size」的粒子对算同一片材料，
+# 不计入自接触。剩下的粒子对在对折后的最近距离就是层间净空——接近 particle_size
+# 说明两层是叠着的，接近 0 说明穿模了。
+neighbour_radius_scale: 3.0
 
 # weld 的形变判据用的近邻数。图建在**仿真粒子**的静止位置上，不用控制网格的边
 # （Genesis 会重网格化：1089 个控制顶点进去、1398 个粒子出来，控制网格的编号

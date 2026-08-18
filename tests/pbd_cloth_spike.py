@@ -292,6 +292,84 @@ def weld_indices(nodes: np.ndarray, center, radius: float):
     return indices, np.clip(weights, 0.0, 1.0)
 
 
+def layer_report(nodes, table_z: float, cell: float, particle_size: float) -> dict:
+    """How the sheet stacks on itself, binned into (x, y) cells.
+
+    docx 1.1 judges a fold by layer count and by upper/lower overlap, so the
+    question is not "did the cloth move" but "are there two layers where there
+    should be two, and can they be told apart". In each cell the particles are
+    sorted by height and the largest vertical break between consecutive ones is
+    the layer separation; a cell whose break exceeds half a particle is carrying
+    two layers.
+
+    A separation that collapses to ~0 is the failure this whole test exists to
+    look for: PBD self-collision leaking, which is exactly how the ropes in this
+    repo ended up embedded 5.5 mm into each other (`rope_contact_sweep.sh`).
+    """
+
+    buckets: dict = {}
+    for index in range(len(nodes)):
+        key = (int(np.floor(nodes[index, 0] / cell)), int(np.floor(nodes[index, 1] / cell)))
+        buckets.setdefault(key, []).append(float(nodes[index, 2]) - table_z)
+    gaps = []
+    for heights in buckets.values():
+        if len(heights) < 2:
+            continue
+        ordered = np.sort(np.asarray(heights))
+        widest = float(np.max(np.diff(ordered)))
+        if widest > 0.5 * particle_size:
+            gaps.append(widest)
+    return {
+        "covered_cells": len(buckets),
+        "two_layer_cells": len(gaps),
+        "gap_median": float(np.median(gaps)) if gaps else float("nan"),
+        "gap_min": float(np.min(gaps)) if gaps else float("nan"),
+    }
+
+
+def self_contact_gap(rest_nodes: np.ndarray, nodes: np.ndarray, radius: float) -> float:
+    """Closest approach between particles that were NOT neighbours at rest.
+
+    The physics-side twin of `layer_report`: two particles from far-apart parts of
+    the sheet should never come closer than about one particle. Pairs that were
+    already close at rest are excluded, because their closeness is the material,
+    not a contact. Chunked over rows so the pairwise distances never have to
+    exist all at once.
+    """
+
+    worst = float("inf")
+    chunk = 256
+    for start in range(0, len(nodes), chunk):
+        stop = min(start + chunk, len(nodes))
+        rest_d = np.linalg.norm(rest_nodes[start:stop, None, :] - rest_nodes[None, :, :], axis=2)
+        live_d = np.linalg.norm(nodes[start:stop, None, :] - nodes[None, :, :], axis=2)
+        live_d[rest_d <= radius] = np.inf
+        worst = min(worst, float(live_d.min()))
+    return worst
+
+
+def footprint_iou(nodes: np.ndarray, target_lo, target_hi, cell: float) -> float:
+    """Overlap between where the cloth now covers and where it should.
+
+    Rasterised on the same cell grid as `layer_report`: the union of occupied
+    cells against the target rectangle's cells. Crumpling the sheet into a ball
+    halves the area just as folding does, which is why docx 1.1 pairs this with
+    flatness rather than trusting it alone.
+    """
+
+    covered = {
+        (int(np.floor(x / cell)), int(np.floor(y / cell))) for x, y in nodes[:, :2]
+    }
+    lo = (int(np.floor(target_lo[0] / cell)), int(np.floor(target_lo[1] / cell)))
+    hi = (int(np.floor(target_hi[0] / cell)), int(np.floor(target_hi[1] / cell)))
+    target = {
+        (x, y) for x in range(lo[0], hi[0] + 1) for y in range(lo[1], hi[1] + 1)
+    }
+    if not target:
+        return float("nan")
+    return len(covered & target) / len(covered | target)
+
+
 def hand_for(point) -> np.ndarray:
     return np.asarray(point, dtype=float) + np.array([0.0, 0.0, HAND_TO_PAD_Z])
 
@@ -433,6 +511,101 @@ def run_contact(cfg, ctx) -> None:
     )
 
 
+def run_fold(cfg, ctx) -> None:
+    """The actual task motion, and the one question that can still kill the plan.
+
+    Everything else here lifts a patch or drags it sideways. Nothing has ever put
+    the sheet down ON ITSELF, which is what a fold IS -- layer count 1 -> 2 -- and
+    what every judge in docx 1.1 is written against.
+
+    The risk is specific: PBD self-collision leaks. That is not a guess about this
+    material, it is this repo's own history with ropes, where two strands meant to
+    rest 12 mm apart ended up 2.5 mm apart, embedded 5.5 mm into each other
+    (`bash_scripts/tests/rope_contact_sweep.sh`). If two cloth layers pass through
+    each other the same way, "upper/lower overlap" and "layers 3 -> 1" cannot be
+    judged in PBD at all and the criteria have to change -- so this is measured
+    before a task is built on top of them, not after.
+
+    Path: pick the edge up, swing it over the sheet's centre line, set it down on
+    the far half, let go, let it settle. `z(t) = z0 + h*sin(pi*t)` returns to the
+    surface at both ends, so it is one continuous lift-move-place with no corners.
+    """
+
+    scene, cloth, table_z, verbose = ctx.scene, ctx.cloth, ctx.table_z, ctx.verbose
+    controller = ctx.controller
+    cloth_cfg = cfg.task.cloth
+    particle_size = float(cloth_cfg.particle_size)
+    cell = 2.0 * particle_size
+
+    rest_nodes = particles(cloth)
+    attachment, indices, _weights = ctx.attach(cfg, taper=True)
+    dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
+
+    # The far edge, which nothing is holding: if it moves, the sheet slid on the
+    # table instead of folding about its own centre line, and the crease lands in
+    # the wrong place however good the rest of the motion was.
+    far_edge = np.flatnonzero(rest_nodes[:, 0] < np.percentile(rest_nodes[:, 0], 5))
+    far_before = float(rest_nodes[far_edge, 0].mean())
+
+    start = np.asarray(controller.hand_pos(), dtype=float)
+    centre_x = float(ctx.origin[0]) + float(cloth_cfg.center[0])
+    span = 2.0 * (start[0] - centre_x)          # mirror the grasp across the fold line
+    height = float(cfg.run.fold_arc_height)
+    steps = max(2, int(cfg.run.fold_steps))
+    for index in range(1, steps + 1):
+        alpha = index / steps
+        controller.move_ee_to(
+            start + np.array([-span * alpha, 0.0, height * np.sin(np.pi * alpha)]),
+            quat=ctx.ee_quat,
+            steps=1,
+            continuous_ik=True,
+        )
+        attachment.sync()
+        tripped = dog.check(index)
+        if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
+            print(f"[cloth_fold step={index:4d}] {dog.summary()}", flush=True)
+        if tripped:
+            break
+
+    # Let go and let it lie. A fold that only exists while the hand holds it is
+    # not a fold; the layers have to stay put once nothing is driving them.
+    attachment.release(sync=False)
+    for index in range(1, max(1, int(cfg.run.fold_settle_steps)) + 1):
+        scene.step()
+        dog.check(steps + index)
+
+    nodes = particles(cloth)
+    layers = layer_report(nodes, table_z, cell, particle_size)
+    contact_gap = self_contact_gap(
+        rest_nodes, nodes, float(cfg.run.neighbour_radius_scale) * particle_size
+    )
+    variance, peak = flatness(cloth, table_z)
+    # Target footprint: the half of the original outline the sheet folds onto.
+    half_x = 0.5 * float(cloth_cfg.size[0])
+    half_y = 0.5 * float(cloth_cfg.size[1])
+    mid_y = float(ctx.origin[1]) + float(cloth_cfg.center[1])
+    lo = (centre_x - half_x, mid_y - half_y)
+    hi = (centre_x, mid_y + half_y)
+    iou = footprint_iou(nodes, lo, hi, cell)
+    far_after = float(nodes[far_edge, 0].mean())
+    covered = max(1, layers["covered_cells"])
+    print(
+        f"pbd_cloth_spike fold steps={steps} arc_height={height:.3f} "
+        f"cell_mm={cell * 1e3:.1f} "
+        f"covered_cells={layers['covered_cells']} "
+        f"two_layer_cells={layers['two_layer_cells']} "
+        f"two_layer_frac={layers['two_layer_cells'] / covered:.3f} "
+        f"layer_gap_median_mm={layers['gap_median'] * 1e3:.2f} "
+        f"layer_gap_min_mm={layers['gap_min'] * 1e3:.2f} "
+        f"self_contact_gap_mm={contact_gap * 1e3:.2f} "
+        f"(particle_size_mm={particle_size * 1e3:.1f}) "
+        f"fold_iou={iou:.3f} far_edge_shift_mm={(far_after - far_before) * 1e3:+.2f} "
+        f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
+        f"{dog.summary()}",
+        flush=True,
+    )
+
+
 def run_pinch(cfg, ctx) -> None:
     """Close the fingers ON the cloth. The squeeze case, which nothing else covers.
 
@@ -472,8 +645,6 @@ def run_pinch(cfg, ctx) -> None:
         quat=ctx.ee_quat,
         steps=int(cfg.task.physical.move_steps),
     )
-    dog = Watchdog(cfg, cloth, table_z)
-
     steps = max(1, int(cfg.task.physical.gripper_steps))
     print(
         f"pbd_cloth_spike pinch staging qpos={qpos:.4f} "
@@ -481,8 +652,17 @@ def run_pinch(cfg, ctx) -> None:
         f"ratio={qpos / max(half_thickness, 1e-9):.2f} pads_at={centre[2]:.5f}",
         flush=True,
     )
-    controller.set_gripper(qpos, steps=steps)
-    dog.check(0)
+    # Baseline AFTER the staging and BEFORE the closing, then close one step at a
+    # time. The 2026-08-17 run did `set_gripper(qpos, steps=60)` and checked once
+    # afterwards, folding 60 steps of finger travel into a single sample: every
+    # cell tripped at "step 0" with the same 37 mm, including the ones whose gap
+    # was wider than the cloth. That measured the closing motion, not the squeeze.
+    opening = float(controller.current_gripper_qpos)
+    dog = Watchdog(cfg, cloth, table_z)
+    for index in range(1, steps + 1):
+        controller.set_gripper(opening + (qpos - opening) * index / steps, steps=1)
+        if dog.check(index):
+            break
     # Hold closed: a squeeze does not diverge on the closing step, it diverges
     # while the solver keeps failing to satisfy a constraint set with no solution.
     hold = max(1, int(cfg.run.pinch_hold_steps))
@@ -513,13 +693,16 @@ def run_speed(cfg, ctx) -> None:
     dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
 
     speed = float(cfg.run.drag_speed)
-    distance = float(cfg.run.drag_distance)
     lift = float(cfg.run.lift_delta)
-    steps = max(1, int(round((distance + lift) / max(speed, 1e-9))))
+    # FIXED step count; the distance follows from it. With a fixed distance the
+    # 2026-08-17 sweep ran 45 steps at the slowest speed and 4 at the fastest --
+    # and a divergence needs several steps to develop, so the top of that sweep
+    # could not have found one however unstable it was. Every cell now gets the
+    # same number of chances.
+    drag_steps = max(2, int(cfg.run.drag_steps))
+    lift_steps = max(2, int(round(lift / max(speed, 1e-9))))
+    distance = speed * drag_steps
     start = np.asarray(controller.hand_pos(), dtype=float)
-    # Up first, then across: the same lift-move shape the fold task will use.
-    lift_steps = max(1, int(round(lift / max(speed, 1e-9))))
-    drag_steps = max(1, steps - lift_steps)
 
     def advance(target, count, label):
         begin = np.asarray(controller.hand_pos(), dtype=float)
@@ -614,6 +797,7 @@ def run_weld(cfg, ctx) -> None:
 
 TESTS = {
     "settle": run_settle,
+    "fold": run_fold,
     "pinch": run_pinch,
     "contact": run_contact,
     "speed": run_speed,
@@ -624,13 +808,13 @@ TESTS = {
 # `pinch` is last in ALL: it is the one that squeezes, so it is the likeliest
 # of these four to diverge, and anything queued behind a diverging cell wastes
 # its build time. `contact` stays out entirely -- see above.
-ALL = ("settle", "weld", "speed", "pinch")
+ALL = ("settle", "weld", "fold", "speed", "pinch")
 
 
 class _Context:
     def __init__(
         self, cfg, scene, cloth, controller, table_z, grasp_point, ee_quat,
-        rest_pairs, rest_lengths,
+        rest_pairs, rest_lengths, origin,
     ):
         self.cfg = cfg
         self.scene = scene
@@ -641,6 +825,7 @@ class _Context:
         self.ee_quat = ee_quat
         self.rest_pairs = rest_pairs
         self.rest_lengths = rest_lengths
+        self.origin = np.asarray(origin, dtype=float)
         # Peak height before any stepping; set by `main` right after build.
         self.spawn_peak = 0.0
         self.verbose = bool(cfg.run.verbose)
@@ -833,7 +1018,7 @@ def main(cfg: DictConfig) -> None:
 
     context = _Context(
         cfg, scene, cloth, controller, table_z, grasp_point, ee_quat,
-        rest_pairs, rest_lengths,
+        rest_pairs, rest_lengths, origin,
     )
     context.spawn_peak = spawn_peak
     for name in names:
