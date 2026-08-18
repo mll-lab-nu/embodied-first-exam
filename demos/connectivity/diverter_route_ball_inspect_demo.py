@@ -23,6 +23,7 @@ episode, and nothing in an episode may move the flap that way
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.sweep_joint=true run.viewer=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=seal_left run.verbose=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=half run.viewer=true
+    python -m demos.connectivity.diverter_route_ball_inspect_demo run.classify=true run.verbose=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo --cfg job
 """
 
@@ -40,6 +41,7 @@ from topogym.supervision import stop_before_physics
 from topogym.tasks import DiverterRouteBallSceneBuilder, other_side
 from topogym.tasks.connectivity._ball_drive import HeadingDrive
 from topogym.utils.franka import initialize_franka_controller
+from topogym.verification import DiverterRouteBallEvaluator
 from topogym.utils.recording import (
     apply_recording_camera_overrides,
     print_recording_saved,
@@ -156,7 +158,11 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
         scene.step()
         xy = task_xy(ball_scene, ball)
         state["ball_x"], state["ball_y"] = float(xy[0]), float(xy[1])
-        if xy[0] < layout.nose_x:
+        # Only the STRAIGHT lane: past the junction the walls flare and the flap
+        # deflects the ball on purpose, so counting that stretch would report the
+        # deflection as wander. Measured 2026-08-18: gated at nose_x this read
+        # 33.7 mm on a correctly routed run, against 0.0 mm in the straight lane.
+        if xy[0] < layout.junction_x:
             max_abs_y_in_lane = max(max_abs_y_in_lane, abs(float(xy[1])))
         if exit_side is None and float(xy[0]) > exit_plane_x:
             exit_side = "right" if float(xy[1]) > 0.0 else "left"
@@ -199,6 +205,27 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
             "run.rollout_steps, or check task.ball.speed and the drive threshold.",
             flush=True,
         )
+    if cfg.run.classify:
+        # The geometric judge, read on the same scene the rollout just happened in.
+        # Its point is the agreement line: the flood fill and the physics have to
+        # give the same answer, and a disagreement means the judge is wrong.
+        state = DiverterRouteBallEvaluator().classify(
+            ball_scene,
+            commanded_side=expected,
+            exit_side=exit_side,
+            ball_stuck=bool(drive.jammed),
+        )
+        print(
+            "diverter_route_ball classify "
+            f"reachable={state.invariant_value} open_side={state.open_side} "
+            f"observed_exit={exit_side} agrees={state.open_side == exit_side} "
+            f"seated={state.seated} success={state.is_terminal} "
+            f"label={state.failure_label}",
+            flush=True,
+        )
+        if cfg.run.verbose:
+            print(f"diverter_route_ball topology {state.to_info()}", flush=True)
+
     if exit_side is not None and expected is not None and exit_side != expected:
         print(
             f"[warn] the ball left by {exit_side} while the flap seals {sealed}: the "

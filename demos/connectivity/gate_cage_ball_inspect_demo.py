@@ -192,7 +192,6 @@ def main(cfg: DictConfig) -> None:
     print(
         "gate_cage_ball setup "
         f"door_y={layout.door_y:+.3f} flat_end_y={layout.flat_end_y:+.3f} "
-        f"return_end_y={layout.return_end_y:+.3f} "
         f"inner_width={layout.inner_width:.3f} ball_r={layout.ball_radius:.3f} "
         f"release_y={float(cfg.task.ball.release_y):+.3f} "
         f"speed={layout.ball_speed:.3f}m/s entry_delay={layout.entry_delay():.2f}s "

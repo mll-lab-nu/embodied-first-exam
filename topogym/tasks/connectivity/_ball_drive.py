@@ -284,6 +284,14 @@ class HeadingDrive:
             if self._stalled >= self.stall_steps:
                 self.running = False
                 self.jammed = True
+                # Hand over to the rolling-resistance stand-in rather than simply
+                # stopping. Measured 2026-08-18 (`runs/div_roll_half.log`): the
+                # contact leaves the ball ~18 mm/s going backwards, and with no
+                # rolling resistance in the solver that velocity is kept forever --
+                # the ball wedged at the flap tip, then crept 71 mm back up the lane
+                # over the remaining rollout. A jam has to READ as a jam: the ball
+                # has to come to rest where it stuck.
+                self.coasting = True
                 self._last_xy = xy
                 return
         else:
