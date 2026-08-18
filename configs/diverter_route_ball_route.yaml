@@ -1,0 +1,9 @@
+# diverter_route_ball_physical_route_demo 的主配置。
+# 场景与 inspect demo 共用同一份 task 配置，只换 run 组。
+
+defaults:
+  - config
+  - override task_configs@task: diverter_route_ball_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: diverter_route_ball_route
+  - _self_

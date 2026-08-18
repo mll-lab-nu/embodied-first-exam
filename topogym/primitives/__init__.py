@@ -30,6 +30,11 @@ from .pbd_particle_pinch import (
     PBDParticlePinchResult,
 )
 from .pick_place import PickPlacePrimitive, PickPlaceResult
+from .pivot_lever import (
+    PivotLeverPrimitive,
+    PivotLeverResult,
+    knob_point_world,
+)
 from .rim_rotate import (
     RimRotatePrimitive,
     RimRotateResult,
@@ -61,6 +66,9 @@ __all__ = [
     "quat_mul",
     "validate_rigid_friction",
     "PickPlacePrimitive",
+    "PivotLeverPrimitive",
+    "PivotLeverResult",
+    "knob_point_world",
     "PickPlaceResult",
     "RimRotatePrimitive",
     "RimRotateResult",

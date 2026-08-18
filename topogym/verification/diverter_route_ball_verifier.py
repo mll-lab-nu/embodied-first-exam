@@ -291,11 +291,13 @@ class DiverterRouteBallEvaluator:
         """Target region for one exit, sitting just INSIDE the exit plane.
 
         Upstream of the plane because the fill is clipped there; a patch centred on
-        the mouth itself would have half its cells cut away.
+        the mouth itself would have half its cells cut away. The scene draws its
+        target bullseye on this same rectangle, so the picture and the verdict
+        cannot drift apart.
         """
 
         patch = float(layout.cfg.success.exit_patch)
-        center = layout.branch_point(side, layout.exit_station - 0.5 * patch)
+        center = layout.exit_patch_center(side)
         return OrientedRect(
             center=(float(center[0]), float(center[1])),
             half=(0.5 * patch, 0.5 * patch),
@@ -309,7 +311,7 @@ class DiverterRouteBallEvaluator:
         pitch = float(layout.cfg.success.grid_pitch)
         rects = self.obstacle_rects(scene)
 
-        x_lo, x_hi, y_half = layout.plate_bounds()
+        x_lo, x_hi, y_half = layout.footprint_bounds()
         # Nothing past the exit plane takes part: see the module docstring.
         x_hi = min(x_hi, layout.exit_plane_x + pitch)
         xs = np.arange(x_lo, x_hi + pitch, pitch)

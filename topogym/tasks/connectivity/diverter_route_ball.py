@@ -231,6 +231,16 @@ class DiverterRouteBallLayout:
     def exit_center(self, side: str) -> np.ndarray:
         return self.branch_point(side, self.exit_station)
 
+    def exit_patch_center(self, side: str) -> np.ndarray:
+        """Centre of the region the judge tests, just inside the exit mouth.
+
+        The target marker is drawn on exactly this, so what a viewer sees is what
+        the flood fill asks about.
+        """
+
+        patch = float(self.cfg.success.exit_patch)
+        return self.branch_point(side, self.exit_station - 0.5 * patch)
+
     @property
     def exit_plane_x(self) -> float:
         """x of both exit centres. Equal by construction -- the branches mirror.
@@ -331,6 +341,32 @@ class DiverterRouteBallLayout:
         return None if sealed is None else other_side(sealed)
 
     @property
+    def commanded_side(self) -> str:
+        """Which exit this episode asks for. Part of the instance, not the run mode."""
+
+        side = str(self.cfg.command.side)
+        if side not in SIDES:
+            raise ValueError(f"command.side must be one of {SIDES}, got {side!r}.")
+        return side
+
+    def command_prompt(self, side: str | None = None) -> str:
+        """The episode's language instruction, generated from the commanded side.
+
+        Generated rather than hand-written per demo because it has to agree with
+        `command.side` in every episode -- this is the repo's first task whose
+        prompt varies per instance, and the H5 writer takes it as a per-episode
+        argument already.
+        """
+
+        side = self.commanded_side if side is None else str(side)
+        return f"Send the ball out the {side} exit."
+
+    def target_angle(self, side: str) -> float:
+        """Joint angle that routes the ball to ``side`` (by sealing the other)."""
+
+        return self.seat_angle(other_side(side))
+
+    @property
     def initial_sealed_side(self) -> str:
         side = str(self.cfg.diverter.init_sealed_side)
         if side not in SIDES:
@@ -398,8 +434,8 @@ class DiverterRouteBallLayout:
     def drive_region_world(self) -> tuple[float, float, float, float]:
         """(x_lo, x_hi, y_lo, y_hi) in world xy over which the feeder drives.
 
-        The base plate's footprint: the tray is driven, and the ball coasts once
-        it runs off the end of it. Taking a REGION rather than the old single x
+        The layout's footprint: the feeder drives over it, and the ball coasts once
+        it runs past the end. Taking a REGION rather than the old single x
         threshold is what lets the ball leave under power instead of being cut
         loose inside the channel -- measured 2026-08-19, handing over 11 mm short
         of the mouth left the ball still touching the branch wall, and it lost
@@ -411,7 +447,7 @@ class DiverterRouteBallLayout:
         thing in the scene and the drive should stop where the tray stops.
         """
 
-        x_lo, x_hi, y_half = self.plate_bounds()
+        x_lo, x_hi, y_half = self.footprint_bounds()
         lo = self.position_to_world((x_lo, -y_half, 0.0))
         hi = self.position_to_world((x_hi, y_half, 0.0))
         return float(lo[0]), float(hi[0]), float(lo[1]), float(hi[1])
@@ -431,12 +467,17 @@ class DiverterRouteBallLayout:
         branch = self.exit_station - self.half_width * np.cos(self.angle) / np.sin(self.angle)
         return float((lane + branch) / speed)
 
-    # ----- base plate -------------------------------------------------------
+    # ----- footprint --------------------------------------------------------
 
-    def plate_bounds(self) -> tuple[float, float, float]:
-        """(x_min, x_max, y_half) of the base plate, from the parts standing on it."""
+    def footprint_bounds(self) -> tuple[float, float, float]:
+        """(x_min, x_max, y_half) of the layout, from its outermost parts.
 
-        margin = float(self.cfg.plate.margin)
+        Generates nothing -- there is no base plate any more, the walls stand on
+        the table. Two things still need the rectangle: where the feeder drives,
+        and how far the judge's grid has to reach.
+        """
+
+        margin = float(self.cfg.footprint.margin)
         outer = self.half_width + self.wall_thickness
         y_half = self.exit_station * np.sin(self.angle) + outer * np.cos(self.angle) + margin
         return (
@@ -498,11 +539,11 @@ class DiverterRouteBallSceneBuilder:
         layout = DiverterRouteBallLayout(
             self.task_cfg, task_origin=tabletop.frames.task_origin
         )
-        self._add_plate(scene, manifest, layout)
         self._add_entry(scene, manifest, layout)
         self._add_branches(scene, manifest, layout)
         entity, joint_name = self._add_diverter(scene, manifest, layout)
         self._add_ball(scene, manifest, layout)
+        self._add_target_marker(scene, manifest, layout)
 
         tabletop_builder.finalize(tabletop)
         joint_dof = hinge_joint_dof(entity, joint_name)
@@ -547,33 +588,6 @@ class DiverterRouteBallSceneBuilder:
             (float(length), layout.wall_thickness, height),
             self.task_cfg.channel.color,
             yaw_deg=yaw_deg,
-        )
-
-    # ----------------------------------------------------------------- plate
-
-    def _add_plate(self, scene, manifest, layout) -> None:
-        """One base plate under the whole layout.
-
-        A single slab rather than a floor per channel: the branch floors would
-        overlap around the fork, and two coplanar top faces at the same height
-        z-fight. It is kept thin (millimetres) so a ball that runs off an exit
-        steps down onto the table without hopping, and dark, so the pale ball
-        stays readable against it from every camera.
-        """
-
-        plate = self.task_cfg.plate
-        x_lo, x_hi, y_half = layout.plate_bounds()
-        thickness = float(plate.thickness)
-        self._box(
-            scene,
-            manifest,
-            "base_plate",
-            layout.position_to_world(
-                (0.5 * (x_lo + x_hi), 0.0, layout.floor_top_z - 0.5 * thickness)
-            ),
-            (x_hi - x_lo, 2.0 * y_half, thickness),
-            plate.color,
-            role="board",
         )
 
     # ----------------------------------------------------------------- lane
@@ -701,6 +715,11 @@ class DiverterRouteBallSceneBuilder:
         ]
 
         asset_root = resolve_mesh_dir("runs/generated_meshes/diverter_route_ball")
+        # A limit at the seats would make "turn until it stops" land the flap
+        # perfectly every time, and getting the angle right is what this task is
+        # for. Off by default; the flap is also short enough (see flap.wall_gap)
+        # that the WALL is not a stop either.
+        limited = bool(getattr(mech, "joint_limited", False))
         limit = float(layout.angle)
         return add_hinge_mechanism(
             scene,
@@ -713,9 +732,7 @@ class DiverterRouteBallSceneBuilder:
             mass=float(mech.mass),
             color=_list(flap.color),
             joint_name=str(mech.joint_name),
-            # The two seats ARE the limits: an arc that overshoots is stopped
-            # where the flap belongs instead of pushing past it.
-            limit_rad=(-limit, limit),
+            limit_rad=(-limit, limit) if limited else None,
             damping=float(mech.joint_damping),
             friction=float(mech.joint_friction),
             armature=float(mech.joint_armature),
@@ -723,6 +740,63 @@ class DiverterRouteBallSceneBuilder:
         )
 
     # ------------------------------------------------------------------ ball
+
+    # --------------------------------------------------------- target marker
+
+    def _add_target_marker(self, scene, manifest, layout) -> None:
+        """A red/white bullseye on the exit the instruction asks for.
+
+        Same construction as `routing/cable_routing._add_connector_target_marker`:
+        concentric squares, `collision=False`, so it can never touch the ball or
+        the gripper. Rotated to the branch so it reads as part of the chute.
+
+        It is drawn on the judge's own exit patch -- same centre, same size -- so
+        a viewer watching the ball cross it is watching the thing the flood fill
+        tests. Anything else would let the picture and the verdict drift apart.
+
+        Switching it off is the language-only condition: with no marker, the two
+        instructions give an identical observation and a policy that ignores the
+        prompt is capped at half. See the config for why both conditions matter.
+        """
+
+        marker = getattr(self.task_cfg, "target_marker", None)
+        if marker is None or not bool(getattr(marker, "enabled", True)):
+            return
+        side = layout.commanded_side
+        center = layout.exit_patch_center(side)
+        outer = float(self.task_cfg.success.exit_patch)
+        rings = max(2, int(marker.ring_count))
+        thickness = float(marker.thickness)
+        step = outer / float(rings)
+        red = _list(marker.red_color)
+        white = _list(marker.white_color)
+        base_z = layout.floor_top_z + float(marker.z_offset)
+        for index in range(rings):
+            size = outer - index * step
+            if size <= 0.0:
+                break
+            name = f"target_{side}_{index:02d}"
+            manifest.add(
+                name,
+                scene.add_entity(
+                    gs.morphs.Box(
+                        pos=tuple(
+                            layout.position_to_world(
+                                (float(center[0]), float(center[1]),
+                                 base_z + index * thickness)
+                            )
+                        ),
+                        size=(size, size, thickness),
+                        euler=(0.0, 0.0, layout.branch_yaw_deg(side)),
+                        fixed=True,
+                        collision=False,
+                    ),
+                    surface=materials.plastic(
+                        "deformable", red if index % 2 == 0 else white
+                    ),
+                    name=name,
+                ),
+            )
 
     def _add_ball(self, scene, manifest, layout) -> None:
         """The ball, at rest on the feed lane. Nothing holds it: the lane is flat."""

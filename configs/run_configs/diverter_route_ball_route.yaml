@@ -1,0 +1,22 @@
+# diverter_route_ball_physical_route_demo 的运行模式参数。
+#
+# 指令方向不在这里 —— 它属于实例定义，在 task 里：
+#   task.command.side=right
+#   task.diverter.init_sealed_side=left
+
+defaults:
+  - default
+  - _self_
+
+# 用哪条规则决定目标角。两者共用一个接口，构成官方对照对：
+#   oracle           读指令与当前板相位，封住另一侧 —— 预期成功
+#   fixed_direction  永远转到同一个落座端，不看指令 —— 预期成功率约一半
+oracle_mode: oracle
+
+# 跑到哪一步：
+#   full         旋转 -> 退刀 -> 放球 -> S–T 弹珠测试 -> 判定
+#   rotate_only  只做旋转，用来单独量原语的落点误差
+stage: full
+
+# 弹珠测试的步数上限。球从释放到出口实测 3.10s；600 步 = 6 秒，留出滚出后静止的时间。
+marble_steps: 600

@@ -1,6 +1,12 @@
 """Planner-facing contracts for subgoals and waypoints."""
 
 from .cable_routing_planner import CableRoutingRouteCommand, plan_cable_routing_endpoint_route
+from .diverter_route_ball_planner import (
+    DiverterOracleRule,
+    DiverterRotateCommand,
+    FixedDirectionRule,
+    make_rule,
+)
 from .gate_cage_ball_planner import (
     GateTriggerDecision,
     GateTriggerRule,
@@ -42,6 +48,9 @@ from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget, arc_route_point
 __all__ = [
     "SLACK_BAND",
     "CableRoutingRouteCommand",
+    "DiverterOracleRule",
+    "DiverterRotateCommand",
+    "FixedDirectionRule",
     "EpisodePlan",
     "GateTriggerDecision",
     "GateTriggerRule",
@@ -64,6 +73,7 @@ __all__ = [
     "taut_demand",
     "edge_name",
     "maze_edge_name",
+    "make_rule",
     "plan_cable_routing_endpoint_route",
     "plan_maze_wall_removals",
     "plan_onestroke_separator",
