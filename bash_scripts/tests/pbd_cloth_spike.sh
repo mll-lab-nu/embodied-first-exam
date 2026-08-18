@@ -6,8 +6,9 @@
 #   settle  静置基线：平整度方差 + 自发漂移，并确认重力真的作用在布上
 #           （从 SETTLE_DROP_Z 高处放手；2026-08-17 那次生成在平衡位置上，
 #            全程零位移，分不出「没事可做」和「没在仿真」）。
-#   weld    锥度焊接 vs 硬焊：看焊接区边缘的边长应变（硬焊会把焊区变成刚性夹板，
-#           实测把 4mm 绳的弯曲半径钉在 6-9mm 并触发材料内部自碰撞）。
+#   grip    四种「让布跟着夹爪走」的方式，在同一次垂直提起上对比：布跟上了命令
+#           高度的百分之多少（followed_mm / follow_ratio），以及材料为此要拉伸
+#           多少（worst_edge_strain）。2026-08-19 实测默认那种只跟上四成。
 #   speed   扫末端速度找布开始发散的线，产出速度预算护栏的常数。
 #   cost    每步耗时 vs 粒子尺度（空跑计时，不跑动作）。
 #   pinch   在布上合拢手指（挤压）：contact 测不到它——那一项是闭着手指往下降。
@@ -30,6 +31,7 @@
 #   DRAG_SPEEDS="0.002 0.008 0.016 0.032"   speed 扫哪些指令速度（米/步）
 #   PINCH_QPOS="0.0005 0.001 0.002 0.004 0.006"  pinch 扫哪些闭合半宽（米）
 #   SETTLE_DROP_Z=0.050              settle 从多高放手（米）
+#   ATTACH_MODES="..."               grip 扫哪几种附着方式
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
 #   TIMEOUT_S=900                    单格墙钟超时（秒）
@@ -63,6 +65,8 @@ DRAG_SPEEDS="${DRAG_SPEEDS:-0.002 0.008 0.016 0.032}"
 # 参照量是 particle_size/2 = 0.002（单层布的半厚），扫参跨过它。
 PINCH_QPOS="${PINCH_QPOS:-0.0005 0.001 0.002 0.004 0.006}"
 SETTLE_DROP_Z="${SETTLE_DROP_Z:-0.050}"
+# grip 扫哪几种附着方式。前两种是「事后改坐标」，后两种是「交给求解器」。
+ATTACH_MODES="${ATTACH_MODES:-overwrite_graded overwrite_rigid link_patch link_single}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
@@ -80,7 +84,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(settle weld fold speed pinch cost contact)
+ORDER=(settle grip fold speed pinch cost contact)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -160,10 +164,11 @@ for name in "${SELECTED[@]}"; do
       run_cell "settle" settle run.test=settle run.verbose=true \
         "task.cloth.z=$SETTLE_DROP_Z"
       ;;
-    weld)
-      # 同一个动作，只改焊接权重。两行的 worst_edge_strain 对比就是结论。
-      run_cell "weld_taper" weld run.test=weld run.taper=true  run.verbose=true
-      run_cell "weld_hard"  weld run.test=weld run.taper=false run.verbose=true
+    grip)
+      # 同一次垂直提起，只改「怎么让布跟着夹爪走」。四行并排读就是结论。
+      for mode in $ATTACH_MODES; do
+        run_cell "grip_$mode" grip run.test=grip run.verbose=true \n          "task.grasp.attach_mode=$mode"
+      done
       ;;
     fold)
       run_cell "fold" fold run.test=fold run.verbose=true
@@ -209,8 +214,10 @@ echo "              然后 flatness_var / peak_above_table 才是 1.1 平整度�
 echo "  remesh      日志里 pbd_cloth_spike remesh 那行的 order_preserved："
 echo "              NO = 重网格化打乱了顶点顺序，所有需要追踪材料点的判据"
 echo "              （折线位置、层归属、材料守恒）都要换实现方式。"
-echo "  weld        比两行的 worst_edge_strain：硬焊明显更大 = 焊区确实成了刚性夹板，"
-echo "              锥度权重要保留；两行接近则这条护栏可以简化。"
+echo "  grip        看 follow_ratio：接近 1 才算抓住了（2026-08-19 默认那种只有 0.4）。"
+echo "              同时看 worst_edge_strain：抓得越死，材料要拉伸得越多。"
+echo "              选那个「跟得上、又没拉伸太多」的；link_single 还要在 viewer 里"
+echo "              确认布角不会绕着那一个点乱转。"
 echo "  fold        **最关键的一行**: self_contact_gap_mm 接近 particle_size_mm 说明"
 echo "              两层是叠着的; 接近 0 说明穿模了, 层数类判据在 PBD 下做不出来。"
 echo "              配合 two_layer_frac (对折后应有可观比例的双层) 与"

@@ -211,11 +211,21 @@ class HeadingDrive:
     velocity is re-imposed every step, so reading velocity back would mostly
     return the command. This is the same reasoning as `BallShuttle`'s.
 
-    Past ``drive_max_x`` the ball has left through an exit and the drive hands
-    over to `BallShuttle`'s constant deceleration, so it rolls clear and settles
-    instead of running to the edge of the table. Both exits sit at the same x by
-    construction (the branches are mirror images), so one threshold serves both
-    and the handover still knows nothing about which branch was taken.
+    Outside ``region`` -- the driven tray's footprint -- the drive hands over to
+    `BallShuttle`'s constant deceleration, so the ball rolls clear and settles
+    instead of running to the edge of the table.
+
+    A region rather than the single x threshold this used to take. Measured
+    2026-08-19: the threshold sat at the exit centres' x, and the branches run at
+    an angle to x, so a ball riding a branch's inner wall was cut loose 11 mm
+    BEFORE the mouth -- still inside the channel and still touching the wall. It
+    then lost the remaining 0.103 m/s within 5.6 mm, against a coast model that
+    predicts 59 mm, because the wall was doing the braking rather than the coast.
+    Driving until the tray ends lets the ball leave under power and hand over in
+    free space, where the coast is the only thing acting on it.
+
+    The region is a rectangle, and it says nothing about branches -- a ball that
+    went the wrong way leaves under power too.
     """
 
     def __init__(
@@ -225,7 +235,7 @@ class HeadingDrive:
         *,
         speed: float,
         radius: float,
-        drive_max_x: float,
+        region: tuple[float, float, float, float],
         heading: tuple[float, float] = (1.0, 0.0),
         dt: float = 0.01,
         stall_steps: int = 5,
@@ -236,7 +246,10 @@ class HeadingDrive:
         self.ball = ball
         self.speed = float(speed)
         self.radius = float(radius)
-        self.drive_max_x = float(drive_max_x)
+        x_lo, x_hi, y_lo, y_hi = (float(v) for v in region)
+        if x_hi <= x_lo or y_hi <= y_lo:
+            raise ValueError(f"HeadingDrive region must be non-empty, got {region}.")
+        self.region = (x_lo, x_hi, y_lo, y_hi)
         self.dt = float(dt)
         self.stall_steps = max(1, int(stall_steps))
         self.offtrack_decel = max(0.0, float(offtrack_decel))
@@ -269,9 +282,10 @@ class HeadingDrive:
         if self._last_xy is None:
             self._last_xy = xy
 
-        if float(xy[0]) > self.drive_max_x:
-            # Out through an exit: stop steering and let the rolling-resistance
-            # stand-in bring it to rest where it can be seen.
+        x_lo, x_hi, y_lo, y_hi = self.region
+        if not (x_lo <= float(xy[0]) <= x_hi and y_lo <= float(xy[1]) <= y_hi):
+            # Off the end of the tray: stop steering and let the
+            # rolling-resistance stand-in bring it to rest where it can be seen.
             self.running = False
             self.coasting = True
             self.coast()

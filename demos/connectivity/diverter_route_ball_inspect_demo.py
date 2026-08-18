@@ -144,7 +144,6 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
     ball = ball_scene.ball_entity()
     scene = ball_scene.scene
     dt = float(cfg.env.sim.dt)
-    exit_plane_x = layout.exit_plane_x
     sample_every = max(1, int(cfg.run.sample_every))
 
     drive.start()
@@ -164,10 +163,13 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
         # 33.7 mm on a correctly routed run, against 0.0 mm in the straight lane.
         if xy[0] < layout.junction_x:
             max_abs_y_in_lane = max(max_abs_y_in_lane, abs(float(xy[1])))
-        if exit_side is None and float(xy[0]) > exit_plane_x:
-            exit_side = "right" if float(xy[1]) > 0.0 else "left"
-            exit_step = step
-            state["exit"] = exit_side
+        if exit_side is None:
+            # Station ALONG the branch, not a plane of constant x -- see
+            # `DiverterRouteBallLayout.exited_side`.
+            exit_side = layout.exited_side(xy)
+            if exit_side is not None:
+                exit_step = step
+                state["exit"] = exit_side
         if jam_step is None and drive.jammed:
             jam_step = step
             jam_xy = xy.copy()
@@ -186,6 +188,13 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
     angle = ball_scene.flap_angle()
     sealed = layout.sealed_side_at(angle)
     expected = None if sealed is None else other_side(sealed)
+    # How far past the mouth the ball ended up, measured along the branch it took
+    # (or, if it never left, the one it would have). `final` alone cannot say:
+    # the branches run at an angle, so a distance in x is not a distance along one.
+    final_side = exit_side if exit_side is not None else expected
+    final_station = (
+        layout.branch_station(final_side, final)[0] if final_side is not None else float("nan")
+    )
     print(
         "diverter_route_ball inspect "
         f"flap={np.rad2deg(angle):+.2f}deg sealed={sealed} expected_exit={expected} "
@@ -196,6 +205,8 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
         f"jam_xy={'n/a' if jam_xy is None else f'({jam_xy[0]:+.4f},{jam_xy[1]:+.4f})'} "
         f"lane_max_abs_y={max_abs_y_in_lane:.4f} "
         f"final=({final[0]:+.4f},{final[1]:+.4f}) "
+        f"final_station={final_station:+.4f}/{layout.exit_station:.3f} "
+        f"runout={final_station - layout.exit_station:+.4f} "
         f"routed_correctly={exit_side is not None and exit_side == expected}",
         flush=True,
     )
@@ -320,7 +331,7 @@ def main(cfg: DictConfig) -> None:
                 ball_scene.ball_entity(),
                 speed=layout.ball_speed,
                 radius=layout.ball_radius,
-                drive_max_x=layout.drive_max_x(),
+                region=layout.drive_region_world(),
                 dt=float(cfg.env.sim.dt),
                 stall_steps=int(cfg.task.ball.stall_steps),
                 offtrack_decel=float(cfg.task.ball.offtrack_decel),

@@ -42,10 +42,13 @@ cloth:
   #   particle_size 0.010 > 间距 7.5mm -> 1089 粒子，原样不动，顺序保留
   #   particle_size 0.004 ≈ 间距/2     -> 4225 粒子，整齐细分，顺序保留
   #   particle_size 0.006 卡在中间      -> 1398 粒子，重采样，**顺序打乱**（偏移 319mm）
-  # 这里取间距 = particle_size = 0.004（0.240/60），Genesis 完全不动它。
+  # 2026-08-18 又试了「让间距正好等于 particle_size」（61x61 + 0.004）：Genesis 仍然
+  # 加了 34 个粒子并打乱顺序。**所以「相等」不是充分条件，别再凭推理定这个组合。**
+  # 目前唯一实测保序的是 33x33 + particle_size 0.004（细分成 65x65 = 4225 粒子）。
+  # 任何改动之后都要看日志里 `pbd_cloth_spike remesh` 那行确认 order_preserved=yes。
   mesh:
-    cols: 61
-    rows: 61
+    cols: 33
+    rows: 33
     output_dir: .cache/topogym/meshes/cloth_fold
   # 粒子尺度。**这个值同时是物理参数和判据参数**：它既决定碰撞厚度（隧穿余量、
   # 夹爪闭合间隙的下限），又决定「层数 3 → 1」这类判据能不能分辨出层。
@@ -80,10 +83,20 @@ grasp:
   # 给了值就必须 ≥ particle_size / 2，否则两指之间不存在粒子的可行位置，
   # 求解器会注入发散的修正量——这就是「挤压爆炸」。
   grasp_qpos: null
-  # 焊接区半径：以抓取点为中心多大范围内的粒子被吸附。权重从中心的 1 锥度到边缘的 0，
-  # 理由见 ParticleAttachment 的 weights 注释（硬焊会把焊接区变成刚性夹板，
-  # 形变全堆到边缘，实测把绳的弯曲半径钉在 6-9mm 并触发材料内部自碰撞）。
-  weld_radius: 0.018
+  # 附着范围：以抓取点为中心多大范围内的点被夹爪带着走。
+  attach_radius: 0.018
+  # 用哪种方式让这些点跟着夹爪走。四选一，2026-08-19 起由实测决定：
+  #   overwrite_graded : 物理算完之后从 Python 改坐标，每个点「有多听话」按到中心的
+  #                      距离从 1 递减到 0。**这是原来的默认**，实测手抬 40mm 布只
+  #                      上来 16.4mm —— 平均只听四成。
+  #   overwrite_rigid  : 同上，但每个点都完全听话。
+  #   link_patch       : fix_particles_to_link —— 在算物理之前就告诉求解器这些点
+  #                      跟着夹爪这个刚体走，约束进到求解里，还会跟着一起转。
+  #                      绳子任务一直用的是这个（rope_backends/pbd.py:109）。
+  #   link_single      : 同上，但只绑最近的一个点（SoftGym picker 的配置）。
+  # 只绑一个点会丢掉两样东西：抓错层这个真实失败模式（docx 1.2 需要），
+  # 以及对朝向的约束（布会绕着那个点转，而 docx 1.1 要判折线位置）。
+  attach_mode: link_patch
 
 physical:
   approach_z: 0.250

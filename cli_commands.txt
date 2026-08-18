@@ -313,7 +313,7 @@ python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run
 # 统一跑法 (推荐): 每格独立进程+超时, 最后打一张汇总表。
 bash bash_scripts/tests/pbd_cloth_spike.sh                   # 全部七项
 bash bash_scripts/tests/pbd_cloth_spike.sh fold              # 只跑唯一还能推翻方案的那项
-bash bash_scripts/tests/pbd_cloth_spike.sh fold speed pinch  # 第二轮要跑的三项
+bash bash_scripts/tests/pbd_cloth_spike.sh grip              # 第三轮: 先解决抓不住
 SKIP_CONTACT=1 bash bash_scripts/tests/pbd_cloth_spike.sh         # 跳过可能崩的那项
 # 可调: BACKEND / DRAG_SPEEDS / PINCH_QPOS / SETTLE_DROP_Z / PARTICLE_SIZES /
 #       BENCH_STEPS / TIMEOUT_S / SKIP_CONTACT / OUTDIR
@@ -322,12 +322,18 @@ SKIP_CONTACT=1 bash bash_scripts/tests/pbd_cloth_spike.sh         # 跳过可能
 # 1) 静置基线 + **重力是否真的作用在布上**。必须从高处放手: 第一轮把布生成在了
 #    平衡高度上, 全程零位移, 分不出「没事可做」和「根本没在仿真」。先看 gravity= 那项。
 python -B -m tests.pbd_cloth_spike run.test=settle task.cloth.z=0.050 run.verbose=true 2>&1 | tee runs/cloth_settle.log
-# 2) 焊接方式: 锥度 vs 硬焊。形变判据已改成建在仿真粒子的近邻图上 (对重网格免疫);
-#    第一轮用控制网格编号去查重网格后的粒子, 量的是噪声。
-#    顺带看日志里 `pbd_cloth_spike remesh` 那行的 order_preserved —— 它决定所有
-#    需要追踪材料点的判据 (折线位置/层归属/材料守恒) 能不能按现在的方式实现。
-python -B -m tests.pbd_cloth_spike run.test=weld run.taper=true  run.verbose=true 2>&1 | tee runs/cloth_weld_taper.log
-python -B -m tests.pbd_cloth_spike run.test=weld run.taper=false run.verbose=true 2>&1 | tee runs/cloth_weld_hard.log
+# 2) **当前的阻塞项**: 夹爪抓不住布 —— 2026-08-19 实测手抬 40mm 布只上来 16.4mm。
+#    四种「让布跟着夹爪走」的方式, 同一次垂直提起上对比:
+#      overwrite_graded 物理算完后从 Python 改坐标, 每个点按到中心的距离只听一部分 (原默认)
+#      overwrite_rigid  同上, 但每个点完全听话
+#      link_patch       fix_particles_to_link: 算物理之前就告诉求解器这些点跟着夹爪走
+#                       (绳子任务一直用这个), 还会跟着一起转
+#      link_single      同上, 但只绑最近的一个点 (SoftGym picker 的配置)
+#    读 follow_ratio (接近 1 才算抓住) 和 worst_edge_strain (抓得越死材料拉伸越多)。
+#    link_single 还要在 viewer 里确认布角不会绕着那一个点乱转。
+bash bash_scripts/tests/pbd_cloth_spike.sh grip
+#    或者手动单跑一种:
+python -B -m tests.pbd_cloth_spike run.test=grip run.verbose=true task.grasp.attach_mode=link_patch 2>&1 | tee runs/grip_link_patch.log
 # 3) 速度预算。第一轮扫到 0.008 全过、看门狗从未响 (阈值设成了 20mm, 而实测最大
 #    位移 8.4mm), 所以「没炸」等于「没往危险的地方看」。现在扫过隧穿门槛 0.012,
 #    看门狗改成「粒子位移 > 3 倍驱动端位移」才算发散。
@@ -342,6 +348,32 @@ python -B -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.0005,0.001
 #    看 self_contact_gap_mm: 接近 particle_size_mm(4.0) = 叠着; 接近 0 = 穿模。
 #    (覆盖面积/IoU 分辨不出这两种 —— 合成数据里两者的 IoU 都是 0.968。)
 python -B -m tests.pbd_cloth_spike run.test=fold run.verbose=true 2>&1 | tee runs/cloth_fold.log
+#
+# --- fold 的 viewer 逐段诊断 (2026-08-19) ---
+# 动作被切成六段, 每段结束打印一行布的状态 (bbox / 质心 / 离桌粒子数 / 平移量);
+# run.stop_after 会让 viewer 停在那一段之后不动, 可以转视角慢慢看。
+#   attached -> lifted -> apex -> placed -> released -> done
+# 默认抓「离机械臂最远的那个角」折到对角 (三角折), 因为平摊在桌上的布,
+# 夹爪唯一下得去手的地方就是角。run.grasp_at=edge_mid 是原来的半折。
+#
+# 1) 先看抓上没有: 手停在布面上方 15mm, 焊住一小片
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.verbose=true run.stop_after=attached 2>&1 | tee runs/fold_p1_attached.log
+# 2) **最有诊断价值的一段**: 只垂直提 40mm, 完全不横移。
+#    整片布跟着起来 = 材料太硬/太轻, 和划弧、速度都无关;
+#    只有被抓的那个角起来、其余贴桌 = 材料没问题, 问题在后面的划弧。
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.verbose=true run.stop_after=lifted 2>&1 | tee runs/fold_p2_lifted.log
+# 3) 弧顶: 走到一半、最高点
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.verbose=true run.stop_after=apex 2>&1 | tee runs/fold_p3_apex.log
+# 4) 落到对角、还没松手
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.verbose=true run.stop_after=placed 2>&1 | tee runs/fold_p4_placed.log
+# 5) 松手瞬间 (对比 placed 与 released 两行, 看松手后布弹不弹)
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.verbose=true run.stop_after=released 2>&1 | tee runs/fold_p5_released.log
+# 6) 全程跑完不停, 看最终判据
+python -B -m tests.pbd_cloth_spike run.test=fold run.viewer=true run.keep_open=true run.verbose=true 2>&1 | tee runs/fold_full.log
+#
+# 调参时常用的组合 (布更软 / 更抓桌面 / 弧压低):
+#   task.cloth.bending_compliance=0.20  task.cloth.static_friction=1.5
+#   task.cloth.rho=1200                 run.fold_arc_height=0.02  run.fold_lift=0.02
 # 6) 每步成本 vs 分辨率 (空跑计时)。第一轮已完成, 不用重跑。
 python -B -m tests.pbd_cloth_spike -m run.bench_steps=100 task.cloth.particle_size=0.004,0.006,0.010 2>&1 | tee runs/cloth_cost.log
 # 7) **单独跑**: 闭合手指下降到布面。第一轮已完成 (survived=True), 不用重跑。

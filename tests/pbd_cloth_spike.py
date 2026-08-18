@@ -20,11 +20,10 @@ The questions, cheapest first, each able to change the design:
                the 2026-08-17 run spawned the sheet exactly at its resting height
                and read every motion quantity as zero, which cannot distinguish
                "nothing to do" from "not simulated", so this now reports the drop.
-- ``weld``    Tapered attachment weights against a hard weld. `ParticleAttachment`
-               records that a uniform weld turns the held band into a rigid splint
-               and pins the bend radius to 6-9 mm on a 4 mm rope, which then fires
-               self-collision *inside* the material. A sheet should crease at the
-               weld's edge for the same reason. Measured, not assumed.
+- ``grip``    Four ways of holding the cloth, compared on one straight lift:
+               how much of the commanded height the cloth actually follows, and
+               how much the material has to stretch to pay for it. Measured
+               2026-08-19: the default hold followed only four tenths.
 - ``speed``   How fast can the hand drag an attached patch before the sheet
                diverges? Gives the constant for the speed-budget guard rail.
 - ``pinch``   Fingers closing ON the cloth: the squeeze. The likeliest cause of
@@ -45,7 +44,7 @@ on its own.
 
     python -m tests.pbd_cloth_spike run.test=settle task.cloth.z=0.050 run.verbose=true
     python -m tests.pbd_cloth_spike run.test=contact run.verbose=true
-    python -m tests.pbd_cloth_spike run.test=weld run.taper=false
+    python -m tests.pbd_cloth_spike -m run.test=grip task.grasp.attach_mode=overwrite_graded,link_patch,link_single
     python -m tests.pbd_cloth_spike -m run.test=speed run.drag_speed=0.004,0.012,0.024
     python -m tests.pbd_cloth_spike -m run.test=pinch run.pinch_qpos=0.001,0.003,0.006
     python -m tests.pbd_cloth_spike run.bench_steps=100        # per-step cost
@@ -125,6 +124,52 @@ def grid_mesh(size, center, z, cols: int, rows: int, path: Path):
         for face in faces:
             handle.write(f"f {face[0] + 1} {face[1] + 1} {face[2] + 1}\n")
     return vertices, np.asarray(faces, dtype=int)
+
+
+class Grip:
+    """One way of making the cloth follow the gripper, behind one interface.
+
+    Four of them, because which one to use is a measurement and not an argument.
+    They differ along two axes:
+
+    HOW the particles are made to follow ---------------------------------------
+    ``overwrite``  the solver runs a step, then we set those particles' positions
+                   from Python. The solver never learns they are held, so it goes
+                   on trying to move them and their neighbours receive
+                   contradictory pushes. This is what `ParticleAttachment` does.
+    ``link``       `fix_particles_to_link` tells the solver, before it runs, that
+                   these particles ride a rigid body. The constraint is inside the
+                   solve, and it carries the body's rotation too. It is what the
+                   rope tasks have always used (`rope_backends/pbd.py`), and it is
+                   the same idea as SoftGym's picker giving its held particle
+                   infinite mass.
+
+    HOW MANY, and how hard ------------------------------------------------------
+    ``graded``     every particle in the disc, each held only as hard as its
+                   distance from the centre allows (1 at the middle, 0 at the rim).
+                   Measured 2026-08-19: the hand rose 40 mm and the cloth 16.4,
+                   because the average hold is about a third.
+    ``patch``      every particle in the disc, each held completely.
+    ``single``     only the nearest particle, held completely -- SoftGym's own
+                   configuration.
+    """
+
+    def __init__(self, mode: str, entity, indices, attachment=None) -> None:
+        self.mode = str(mode)
+        self.entity = entity
+        self.indices = np.asarray(indices, dtype=int)
+        self.attachment = attachment
+
+    def sync(self) -> None:
+        # Nothing to do for the `link` modes: the solver is already carrying them.
+        if self.attachment is not None:
+            self.attachment.sync()
+
+    def release(self) -> None:
+        if self.attachment is not None:
+            self.attachment.release(sync=False)
+        else:
+            self.entity.release_particle(particles_idx_local=list(self.indices))
 
 
 class Watchdog:
@@ -236,9 +281,10 @@ def rest_graph(nodes: np.ndarray, neighbours: int = 4):
 def edge_strain(nodes: np.ndarray, pairs: np.ndarray, rest: np.ndarray) -> float:
     """Worst relative stretch over the rest graph.
 
-    The crease proxy for the weld test: a hard weld cannot bend inside the held
-    patch, so the deformation piles onto the ring of pairs at its boundary and
-    shows up here before it shows up anywhere visual.
+    The crease proxy for the `grip` test: a patch whose every particle is held
+    completely cannot bend at all, so the bending the motion demands piles onto
+    the ring of material just outside it, and shows up here before it shows up
+    anywhere visual.
     """
 
     lengths = np.linalg.norm(nodes[pairs[:, 0]] - nodes[pairs[:, 1]], axis=1)
@@ -270,22 +316,26 @@ def remesh_report(control: np.ndarray, simulated: np.ndarray) -> str:
     )
 
 
-def weld_indices(nodes: np.ndarray, center, radius: float):
-    """Particles inside the weld disc, and their tapered grip weights.
+def attached_indices(nodes: np.ndarray, center, radius: float, *, single: bool = False):
+    """Which particles the gripper takes, and how hard it holds each one.
 
-    The taper is the whole point: `ParticleAttachment`'s own notes record that
-    driving every held particle absolutely makes the patch a rigid splint, which
-    pinned a 4 mm rope's bend radius at 6-9 mm and drove Genesis' rest-distance
-    self-collision rule into firing inside the material. Weight 1 at the centre
-    falling to 0 at the rim removes the discontinuity.
+    The weights matter: `ParticleAttachment`'s own notes record that holding every
+    particle completely leaves the patch unable to bend, which pinned a 4 mm
+    rope's bend radius at 6-9 mm and drove Genesis' rest-distance self-collision
+    rule into firing inside the material. Falling from 1 at the centre to 0 at
+    the rim removes that edge, at the cost of holding weakly -- which is the
+    trade the `grip` test measures.
     """
 
     offsets = nodes[:, :2] - np.asarray(center, dtype=float)[:2]
     distance = np.linalg.norm(offsets, axis=1)
+    if single:
+        indices = np.array([int(np.argmin(distance))])
+        return indices, np.ones(1)
     indices = np.flatnonzero(distance <= float(radius))
     if indices.size == 0:
         raise SystemExit(
-            f"weld_radius={radius} caught no particles; the cloth's particle "
+            f"attach_radius={radius} caught no particles; the cloth's particle "
             "spacing is larger than the disc."
         )
     weights = 1.0 - distance[indices] / max(float(radius), 1e-9)
@@ -370,6 +420,68 @@ def footprint_iou(nodes: np.ndarray, target_lo, target_hi, cell: float) -> float
     return len(covered & target) / len(covered | target)
 
 
+def grasp_and_target(cfg, origin, cloth_cfg):
+    """Where to grab the sheet, and where that point has to end up.
+
+    ``corner``   the corner furthest from the arm, folded onto the diagonally
+                 opposite one -- the triangle fold, and the one a person does
+                 first because a corner is the only part of a sheet lying flat
+                 that a gripper can get under.
+    ``edge_mid`` the near edge's midpoint, mirrored across the centre line -- a
+                 half fold. What the 2026-08-18 run used.
+
+    `grasp_inset` keeps the attached disc inside the material: centred exactly on a
+    corner, half the disc would hang off the cloth and catch fewer particles on
+    one side than the other, which tilts the patch as soon as it is lifted.
+    """
+
+    centre = np.asarray(origin, dtype=float)[:2] + np.asarray(
+        list(cloth_cfg.center), dtype=float
+    )
+    half = 0.5 * np.asarray(list(cloth_cfg.size), dtype=float)
+    inset = float(cfg.run.grasp_inset)
+    mode = str(cfg.run.grasp_at)
+    if mode == "corner":
+        offset = np.array([half[0] - inset, half[1] - inset])
+    elif mode == "edge_mid":
+        offset = np.array([half[0] - inset, 0.0])
+    else:
+        raise SystemExit(
+            f"run.grasp_at must be 'corner' or 'edge_mid', got {mode!r}."
+        )
+    z = float(origin[2]) + float(cloth_cfg.z)
+    return (
+        np.array([centre[0] + offset[0], centre[1] + offset[1], z]),
+        np.array([centre[0] - offset[0], centre[1] - offset[1], z]),
+    )
+
+
+def cloth_state(nodes, rest, table_z: float, lift_threshold: float) -> str:
+    """One line saying where the sheet is and what shape it is in.
+
+    Printed at every phase boundary so a viewer session can be read back
+    afterwards: the 2026-08-18 fold recorded only the first and last positions,
+    which could not separate "carried away during the arc" from "skated after
+    release".
+
+    `moved_mean_mm` is the honest "did the sheet go somewhere" number -- the
+    average distance every particle is from where it started. `lifted` counts
+    what is actually off the table, which is how you see the difference between
+    hinging one half over and picking the whole thing up.
+    """
+
+    lo, hi = nodes[:, :2].min(axis=0), nodes[:, :2].max(axis=0)
+    above = nodes[:, 2] - table_z
+    shift = np.linalg.norm(nodes[:, :2] - rest[:, :2], axis=1)
+    return (
+        f"bbox_x=[{lo[0]:+.3f},{hi[0]:+.3f}] bbox_y=[{lo[1]:+.3f},{hi[1]:+.3f}] "
+        f"centroid=({nodes[:, 0].mean():+.3f},{nodes[:, 1].mean():+.3f}) "
+        f"lifted={int((above > lift_threshold).sum())}/{len(nodes)} "
+        f"top_mm={above.max() * 1e3:.1f} "
+        f"moved_mean_mm={shift.mean() * 1e3:.1f} moved_max_mm={shift.max() * 1e3:.1f}"
+    )
+
+
 def hand_for(point) -> np.ndarray:
     return np.asarray(point, dtype=float) + np.array([0.0, 0.0, HAND_TO_PAD_Z])
 
@@ -399,6 +511,38 @@ def glide(controller, target, *, quat, steps: int, sync=None) -> None:
 
 
 # --------------------------------------------------------------------- tests
+
+
+def phase(cfg, ctx, name: str, dog=None) -> None:
+    """Report the sheet's state, and hold here if this is the stop point.
+
+    `run.stop_after=<name>` with a viewer freezes the run at that boundary and
+    keeps stepping so the camera can be moved -- the same idea as the
+    `debug_stop_after` markers the peeling primitives grew during their own
+    native-crash hunt (`pbd_particle_pinch.py`). Headless it just exits, so a
+    stop point left in a batch script cannot hang a queue.
+    """
+
+    nodes = particles(ctx.cloth)
+    line = cloth_state(nodes, ctx.rest_nodes, ctx.table_z, float(cfg.run.lift_threshold))
+    print(
+        f"pbd_cloth_spike phase={name} {line}"
+        + ("" if dog is None else f" {dog.summary()}"),
+        flush=True,
+    )
+    if str(cfg.run.stop_after or "") != name:
+        return
+    if not ctx.show_viewer:
+        print(
+            f"pbd_cloth_spike stop_after={name}; headless, exiting here.", flush=True
+        )
+        raise SystemExit(0)
+    print(
+        f"pbd_cloth_spike stop_after={name}; holding the viewer. Ctrl+C to quit.",
+        flush=True,
+    )
+    while True:
+        ctx.scene.step()
 
 
 def run_settle(cfg, ctx) -> None:
@@ -512,23 +656,25 @@ def run_contact(cfg, ctx) -> None:
 
 
 def run_fold(cfg, ctx) -> None:
-    """The actual task motion, and the one question that can still kill the plan.
+    """The task motion, split into phases you can stop at and look at.
 
-    Everything else here lifts a patch or drags it sideways. Nothing has ever put
-    the sheet down ON ITSELF, which is what a fold IS -- layer count 1 -> 2 -- and
-    what every judge in docx 1.1 is written against.
+    This is the one test that can still kill the PBD plan, and the 2026-08-18 run
+    came back inconclusive: the sheet did not fold, it ended up flat and 372 mm
+    away, so the question it exists to answer -- do two layers stay separate --
+    was never reached. Two candidate causes could not be told apart from what was
+    logged, which is why the motion is now cut into named phases with the sheet's
+    state printed at each boundary:
 
-    The risk is specific: PBD self-collision leaks. That is not a guess about this
-    material, it is this repo's own history with ropes, where two strands meant to
-    rest 12 mm apart ended up 2.5 mm apart, embedded 5.5 mm into each other
-    (`bash_scripts/tests/rope_contact_sweep.sh`). If two cloth layers pass through
-    each other the same way, "upper/lower overlap" and "layers 3 -> 1" cannot be
-    judged in PBD at all and the criteria have to change -- so this is measured
-    before a task is built on top of them, not after.
+      attached  the cloth is held, nothing has moved yet
+      lifted    a PURE VERTICAL lift, no travel. If the whole sheet comes up
+                here, the material is too stiff or too light and the arc is
+                innocent -- this is the phase that separates those.
+      apex      halfway across, at the top of the arc
+      placed    back down on the far side, still held
+      released  the cloth is let go
+      done      after settling
 
-    Path: pick the edge up, swing it over the sheet's centre line, set it down on
-    the far half, let go, let it settle. `z(t) = z0 + h*sin(pi*t)` returns to the
-    surface at both ends, so it is one continuous lift-move-place with no corners.
+    Stop at any of them with `run.stop_after=<phase> run.viewer=true`.
     """
 
     scene, cloth, table_z, verbose = ctx.scene, ctx.cloth, ctx.table_z, ctx.verbose
@@ -537,42 +683,93 @@ def run_fold(cfg, ctx) -> None:
     particle_size = float(cloth_cfg.particle_size)
     cell = 2.0 * particle_size
 
-    rest_nodes = particles(cloth)
-    attachment, indices, _weights = ctx.attach(cfg, taper=True)
+    rest_nodes = ctx.rest_nodes
+    # The corner diagonally opposite the grasp: the anchor. In a real fold it does
+    # not move at all, so its displacement is the direct measure of "the sheet
+    # slid instead of hinging".
+    anchor_at = np.asarray(ctx.fold_target, dtype=float)[:2]
+    anchor = np.flatnonzero(
+        np.linalg.norm(rest_nodes[:, :2] - anchor_at, axis=1) < 3.0 * particle_size
+    )
+
+    grip = ctx.attach(cfg)
     dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
+    phase(cfg, ctx, "attached", dog)
 
-    # The far edge, which nothing is holding: if it moves, the sheet slid on the
-    # table instead of folding about its own centre line, and the crease lands in
-    # the wrong place however good the rest of the motion was.
-    far_edge = np.flatnonzero(rest_nodes[:, 0] < np.percentile(rest_nodes[:, 0], 5))
-    far_before = float(rest_nodes[far_edge, 0].mean())
+    # The path is a ROTATION ABOUT THE FOLD LINE, not a translation with a height
+    # curve bolted on. The cloth between the fold line and the grasped corner has
+    # a fixed length, so the corner can only travel on the circle of that radius:
+    # anywhere outside it the sheet is being stretched (and the rest of it gets
+    # towed in), anywhere well inside it the sheet is slack and lies back down on
+    # the table, where the hand then drags it sideways.
+    #
+    # The 2026-08-19 run did both at once. Its straight 40 mm lift put the hand
+    # 147 mm from the fold line against 141.4 mm of available cloth -- 5.6 mm of
+    # over-reach, which is why the cloth only rose 16.9 mm of a commanded 42 and
+    # why it had already begun to slide. Its apex was 80 mm where the material
+    # allows 141, so the folded-over half never left the table and got towed:
+    # every particle moved 62.5 mm on average by the top of the arc.
+    #
+    # With the radius taken from the cloth instead of from two free parameters,
+    # `fold_lift` and `fold_arc_height` stop existing -- they were never free.
+    centre_xy = np.asarray(ctx.origin, dtype=float)[:2] + np.asarray(
+        list(cloth_cfg.center), dtype=float
+    )
+    span = np.asarray(ctx.grasp_point, dtype=float)[:2] - centre_xy
+    material = float(np.linalg.norm(span))
+    if material < 1e-6:
+        raise SystemExit("the grasp point is on the fold line; there is nothing to fold.")
+    direction = span / material
+    # A little inside the circle, so the cloth is carried rather than stretched.
+    radius = material * float(cfg.run.fold_slack)
+    base = np.asarray(controller.hand_pos(), dtype=float)
+    steps = max(4, int(cfg.run.fold_steps))
+    print(
+        f"pbd_cloth_spike fold_path material_mm={material * 1e3:.1f} "
+        f"radius_mm={radius * 1e3:.1f} apex_mm={radius * 1e3:.1f} "
+        f"arc_len_mm={np.pi * radius * 1e3:.0f} steps={steps} "
+        f"per_step_mm={np.pi * radius / steps * 1e3:.2f}",
+        flush=True,
+    )
 
-    start = np.asarray(controller.hand_pos(), dtype=float)
-    centre_x = float(ctx.origin[0]) + float(cloth_cfg.center[0])
-    span = 2.0 * (start[0] - centre_x)          # mirror the grasp across the fold line
-    height = float(cfg.run.fold_arc_height)
-    steps = max(2, int(cfg.run.fold_steps))
+    # Where the named stops fall on the half turn.
+    marks = {
+        max(1, int(round(steps / 6))): "lifted",   # 30 degrees: corner up, barely across
+        max(2, int(round(steps / 2))): "apex",     # 90 degrees: over the fold line
+        steps: "placed",                           # 180 degrees: down on the far side
+    }
+    ok = True
     for index in range(1, steps + 1):
-        alpha = index / steps
+        theta = np.pi * index / steps
+        xy = centre_xy + direction * (radius * float(np.cos(theta)))
         controller.move_ee_to(
-            start + np.array([-span * alpha, 0.0, height * np.sin(np.pi * alpha)]),
+            np.array([xy[0], xy[1], base[2] + radius * float(np.sin(theta))]),
             quat=ctx.ee_quat,
             steps=1,
             continuous_ik=True,
         )
-        attachment.sync()
-        tripped = dog.check(index)
+        grip.sync()
+        if dog.check(index):
+            ok = False
         if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
-            print(f"[cloth_fold step={index:4d}] {dog.summary()}", flush=True)
-        if tripped:
+            print(
+                f"[cloth_fold step={index:4d}] theta={np.degrees(theta):5.1f} "
+                f"{dog.summary()}",
+                flush=True,
+            )
+        if index in marks:
+            phase(cfg, ctx, marks[index], dog)
+        if not ok:
             break
 
-    # Let go and let it lie. A fold that only exists while the hand holds it is
-    # not a fold; the layers have to stay put once nothing is driving them.
-    attachment.release(sync=False)
+    # 3. Let go, and let it lie. A fold that only exists while the hand holds it
+    #    is not a fold.
+    grip.release()
+    phase(cfg, ctx, "released", dog)
     for index in range(1, max(1, int(cfg.run.fold_settle_steps)) + 1):
         scene.step()
         dog.check(steps + index)
+    phase(cfg, ctx, "done", dog)
 
     nodes = particles(cloth)
     layers = layer_report(nodes, table_z, cell, particle_size)
@@ -580,26 +777,26 @@ def run_fold(cfg, ctx) -> None:
         rest_nodes, nodes, float(cfg.run.neighbour_radius_scale) * particle_size
     )
     variance, peak = flatness(cloth, table_z)
-    # Target footprint: the half of the original outline the sheet folds onto.
-    half_x = 0.5 * float(cloth_cfg.size[0])
-    half_y = 0.5 * float(cloth_cfg.size[1])
-    mid_y = float(ctx.origin[1]) + float(cloth_cfg.center[1])
-    lo = (centre_x - half_x, mid_y - half_y)
-    hi = (centre_x, mid_y + half_y)
-    iou = footprint_iou(nodes, lo, hi, cell)
-    far_after = float(nodes[far_edge, 0].mean())
+    lo_xy = np.minimum(anchor_at, np.asarray(ctx.grasp_point, dtype=float)[:2])
+    hi_xy = np.maximum(anchor_at, np.asarray(ctx.grasp_point, dtype=float)[:2])
+    iou = footprint_iou(nodes, lo_xy, hi_xy, cell)
+    anchor_shift = (
+        float(np.linalg.norm(nodes[anchor][:, :2] - rest_nodes[anchor][:, :2], axis=1).mean())
+        if len(anchor)
+        else float("nan")
+    )
     covered = max(1, layers["covered_cells"])
     print(
-        f"pbd_cloth_spike fold steps={steps} arc_height={height:.3f} "
-        f"cell_mm={cell * 1e3:.1f} "
+        f"pbd_cloth_spike fold grasp_at={str(cfg.run.grasp_at)} steps={steps} "
+        f"radius_mm={radius * 1e3:.1f} cell_mm={cell * 1e3:.1f} "
+        f"completed={ok} "
         f"covered_cells={layers['covered_cells']} "
         f"two_layer_cells={layers['two_layer_cells']} "
         f"two_layer_frac={layers['two_layer_cells'] / covered:.3f} "
         f"layer_gap_median_mm={layers['gap_median'] * 1e3:.2f} "
-        f"layer_gap_min_mm={layers['gap_min'] * 1e3:.2f} "
         f"self_contact_gap_mm={contact_gap * 1e3:.2f} "
         f"(particle_size_mm={particle_size * 1e3:.1f}) "
-        f"fold_iou={iou:.3f} far_edge_shift_mm={(far_after - far_before) * 1e3:+.2f} "
+        f"fold_iou={iou:.3f} anchor_shift_mm={anchor_shift * 1e3:.2f} "
         f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
         f"{dog.summary()}",
         flush=True,
@@ -688,7 +885,7 @@ def run_speed(cfg, ctx) -> None:
 
     scene, cloth, table_z, verbose = ctx.scene, ctx.cloth, ctx.table_z, ctx.verbose
     controller = ctx.controller
-    attachment, offsets, weights = ctx.attach(cfg, taper=bool(cfg.run.taper))
+    grip = ctx.attach(cfg)
     # After the attach staging, so the approach is not counted as one huge step.
     dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
 
@@ -714,7 +911,7 @@ def run_speed(cfg, ctx) -> None:
                 steps=1,
                 continuous_ik=True,
             )
-            attachment.sync()
+            grip.sync()
             tripped = dog.check(index)
             if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
                 print(f"[cloth_{label} step={index:4d}] {dog.summary()}", flush=True)
@@ -736,29 +933,46 @@ def run_speed(cfg, ctx) -> None:
         f"pbd_cloth_spike speed drag_speed={speed:.4f} "
         f"m_per_substep={speed / max(1, int(cfg.env.sim.substeps)):.5f} "
         f"tunnel_threshold={float(cfg.task.cloth.particle_size) / 2:.5f} "
-        f"substep_dt={substep_dt:.5f} taper={bool(cfg.run.taper)} "
-        f"welded={len(offsets)} completed={ok} "
+        f"substep_dt={substep_dt:.5f} mode={grip.mode} "
+        f"attached={len(grip.indices)} completed={ok} "
         f"flatness_var={variance:.3e} {dog.summary()}",
         flush=True,
     )
 
 
-def run_weld(cfg, ctx) -> None:
-    """Tapered weld against a hard one, on the same lift.
+def run_grip(cfg, ctx) -> None:
+    """Does the cloth actually come with the hand, and what does it cost?
 
-    Reports the worst edge strain, which is where a rigid splint shows up first:
-    the held patch cannot bend, so the whole demand lands on the ring of edges at
-    its boundary.
+    A straight vertical lift, nothing else, so the only thing under test is how
+    the cloth is held. Two numbers decide it:
+
+    `followed_mm` -- how far the cloth's top rose against how far the hand was
+    told to rise. Measured 2026-08-19 with the default hold: the hand went up
+    40 mm and the cloth 16.4, i.e. it followed four tenths of the command. A hold
+    that works reads close to the full amount.
+
+    `worst_edge_strain` -- how much the material has to stretch somewhere. Holding
+    every particle of the patch completely stops that patch bending at all, so
+    the bending the motion demands piles onto the ring of material just outside
+    it. This is the cost side of holding harder, and the reason the graded hold
+    existed in the first place.
+
+    Run the four modes and read them together: the one to keep is the one that
+    follows the command without paying too much strain for it.
     """
 
     scene, cloth, table_z, verbose = ctx.scene, ctx.cloth, ctx.table_z, ctx.verbose
     controller = ctx.controller
-    taper = bool(cfg.run.taper)
-    attachment, offsets, weights = ctx.attach(cfg, taper=taper)
-    # After the attach staging, so the approach is not counted as one huge step.
+    grip = ctx.attach(cfg)
+    # After the staging move, so the approach is not counted as one huge step.
     dog = Watchdog(cfg, cloth, table_z, reference=float(cfg.run.drag_speed))
 
     pairs, rest = ctx.rest_pairs, ctx.rest_lengths
+    before_top = float(particles(cloth)[:, 2].max()) - table_z
+    # The hand's OWN rise, not just what it was told to do. Without it a low
+    # follow ratio cannot say whether the cloth failed to follow the hand or
+    # the arm failed to reach the command -- and those need different fixes.
+    before_hand = float(controller.hand_pos()[2])
 
     lift = float(cfg.run.lift_delta)
     speed = float(cfg.run.drag_speed)
@@ -773,26 +987,36 @@ def run_weld(cfg, ctx) -> None:
             steps=1,
             continuous_ik=True,
         )
-        attachment.sync()
+        grip.sync()
         tripped = dog.check(index)
         worst_strain = max(worst_strain, edge_strain(particles(cloth), pairs, rest))
         if verbose and index % max(1, int(cfg.run.sample_every)) == 0:
             print(
-                f"[cloth_weld step={index:4d}] worst_edge_strain={worst_strain:.4f} "
+                f"[cloth_grip step={index:4d}] worst_edge_strain={worst_strain:.4f} "
+                f"top_mm={(particles(cloth)[:, 2].max() - table_z) * 1e3:.1f} "
                 f"{dog.summary()}",
                 flush=True,
             )
         if tripped:
             break
+    nodes = particles(cloth)
     variance, peak = flatness(cloth, table_z)
+    rose = (float(nodes[:, 2].max()) - table_z) - before_top
+    hand_rose = float(controller.hand_pos()[2]) - before_hand
     print(
-        f"pbd_cloth_spike weld taper={taper} welded_particles={len(offsets)} "
-        f"weight_min={float(weights.min()) if weights is not None else 1.0:.3f} "
+        f"pbd_cloth_spike grip mode={grip.mode} attached={len(grip.indices)} "
+        f"commanded_mm={lift * 1e3:.1f} hand_rose_mm={hand_rose * 1e3:.1f} "
+        f"followed_mm={rose * 1e3:.1f} "
+        f"follow_ratio={rose / max(hand_rose, 1e-9):.2f} "
+        f"reach_ratio={hand_rose / max(lift, 1e-9):.2f} "
         f"worst_edge_strain={worst_strain:.4f} rest_pairs={len(pairs)} "
+        f"lifted={int(((nodes[:, 2] - table_z) > float(cfg.run.lift_threshold)).sum())}"
+        f"/{len(nodes)} "
         f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
         f"{dog.summary()}",
         flush=True,
     )
+
 
 
 TESTS = {
@@ -801,20 +1025,24 @@ TESTS = {
     "pinch": run_pinch,
     "contact": run_contact,
     "speed": run_speed,
-    "weld": run_weld,
+    "grip": run_grip,
 }
 # `contact` is excluded on purpose: a segfault there would take everything queued
 # behind it down unmeasured.
 # `pinch` is last in ALL: it is the one that squeezes, so it is the likeliest
 # of these four to diverge, and anything queued behind a diverging cell wastes
 # its build time. `contact` stays out entirely -- see above.
-ALL = ("settle", "weld", "fold", "speed", "pinch")
+ALL = ("settle", "grip", "fold", "speed", "pinch")
+
+
+#: The four ways of holding the cloth that `_Context.attach` can build.
+MODES = ("overwrite_graded", "overwrite_rigid", "link_patch", "link_single")
 
 
 class _Context:
     def __init__(
         self, cfg, scene, cloth, controller, table_z, grasp_point, ee_quat,
-        rest_pairs, rest_lengths, origin,
+        rest_pairs, rest_lengths, origin, rest_nodes, fold_target, show_viewer,
     ):
         self.cfg = cfg
         self.scene = scene
@@ -826,11 +1054,16 @@ class _Context:
         self.rest_pairs = rest_pairs
         self.rest_lengths = rest_lengths
         self.origin = np.asarray(origin, dtype=float)
+        # Particle positions once the sheet has settled and before anything
+        # touches it: every 'did it move' number is measured against these.
+        self.rest_nodes = np.asarray(rest_nodes, dtype=float)
+        self.fold_target = np.asarray(fold_target, dtype=float)
+        self.show_viewer = bool(show_viewer)
         # Peak height before any stepping; set by `main` right after build.
         self.spawn_peak = 0.0
         self.verbose = bool(cfg.run.verbose)
 
-    def attach(self, cfg, *, taper: bool):
+    def attach(self, cfg, *, mode: str | None = None) -> Grip:
         """Weld the patch under the hand, the way the production primitive does.
 
         Two properties are copied from `PBDParticleAttachmentDragPrimitive`
@@ -844,10 +1077,21 @@ class _Context:
         controller = self.controller
         if controller is None:
             raise SystemExit("this test needs the robot; it was built without one.")
+        mode = str(mode if mode is not None else cfg.task.grasp.attach_mode)
+        if mode not in MODES:
+            raise SystemExit(
+                f"task.grasp.attach_mode must be one of {sorted(MODES)}, got {mode!r}."
+            )
         nodes = particles(self.cloth)
-        indices, weights = weld_indices(
-            nodes, self.grasp_point, float(cfg.task.grasp.weld_radius)
+        indices, weights = attached_indices(
+            nodes,
+            self.grasp_point,
+            float(cfg.task.grasp.attach_radius),
+            single=(mode == "link_single"),
         )
+        # The pads stop this far ABOVE the cloth and stay open: the fingers never
+        # touch it in any of the four modes, so the comparison is only about how
+        # the particles are carried.
         clearance = float(cfg.task.grasp.touch_clearance)
         touch = np.asarray(self.grasp_point, dtype=float).copy()
         touch[2] = float(nodes[indices, 2].max()) + clearance
@@ -858,23 +1102,34 @@ class _Context:
             quat=self.ee_quat,
             steps=int(cfg.task.physical.move_steps),
         )
-        attachment = ParticleAttachment(
-            entity=self.cloth,
-            indices=indices,
-            parent_pos_fn=controller.hand_pos,
-            offset=(0.0, 0.0, -(HAND_TO_PAD_Z + clearance)),
-            weights=(weights if taper else None),
-        )
-        attachment.attach()
+        if mode.startswith("link"):
+            # Bound to the hand link, so the solver carries them. No offset to
+            # keep: the binding is made where the particles already are.
+            self.cloth.fix_particles_to_link(
+                controller.ee_link.idx, particles_idx_local=[int(i) for i in indices]
+            )
+            grip = Grip(mode, self.cloth, indices)
+            offset_mm = 0.0
+        else:
+            attachment = ParticleAttachment(
+                entity=self.cloth,
+                indices=indices,
+                parent_pos_fn=controller.hand_pos,
+                offset=(0.0, 0.0, -(HAND_TO_PAD_Z + clearance)),
+                # `graded` holds each particle only as hard as its distance
+                # allows; `rigid` holds every one of them completely.
+                weights=(weights if mode == "overwrite_graded" else None),
+            )
+            attachment.attach()
+            grip = Grip(mode, self.cloth, indices, attachment)
+            offset_mm = float(np.linalg.norm(attachment.anchor_offset)) * 1e3
         print(
-            f"pbd_cloth_spike attach welded={len(indices)} taper={taper} "
-            f"weld_radius={float(cfg.task.grasp.weld_radius):.4f} "
-            f"touch_clearance={clearance:.4f} "
-            f"attach_offset_mm="
-            f"{float(np.linalg.norm(attachment.anchor_offset)) * 1e3:.2f}",
+            f"pbd_cloth_spike attach mode={mode} attached={len(indices)} "
+            f"attach_radius={float(cfg.task.grasp.attach_radius):.4f} "
+            f"touch_clearance={clearance:.4f} attach_offset_mm={offset_mm:.2f}",
             flush=True,
         )
-        return attachment, indices, (weights if taper else None)
+        return grip
 
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="pbd_cloth_spike")
@@ -958,14 +1213,7 @@ def main(cfg: DictConfig) -> None:
     )
     ee_quat = controller.default_ee_quat
 
-    # Grasp the right edge's midpoint, which is where docx 1.1 puts the pinch.
-    grasp_point = origin + np.array(
-        [
-            float(cloth_cfg.center[0]) + 0.5 * float(cloth_cfg.size[0]) - 0.010,
-            float(cloth_cfg.center[1]),
-            float(cloth_cfg.z),
-        ]
-    )
+    grasp_point, fold_target = grasp_and_target(cfg, origin, cloth_cfg)
     substep_dt = float(cfg.env.sim.dt) / max(1, int(cfg.env.sim.substeps))
     print(
         f"pbd_cloth_spike setup control_vertices={len(vertices)} "
@@ -973,6 +1221,9 @@ def main(cfg: DictConfig) -> None:
         f"particle_size={float(cloth_cfg.particle_size):.4f} "
         f"size={list(cloth_cfg.size)} dt={float(cfg.env.sim.dt):.4f} "
         f"substeps={int(cfg.env.sim.substeps)} substep_dt={substep_dt:.5f} "
+        f"grasp_at={str(cfg.run.grasp_at)} "
+        f"grasp=({grasp_point[0]:+.3f},{grasp_point[1]:+.3f}) "
+        f"target=({fold_target[0]:+.3f},{fold_target[1]:+.3f}) "
         f"tests={names}",
         flush=True,
     )
@@ -1018,7 +1269,7 @@ def main(cfg: DictConfig) -> None:
 
     context = _Context(
         cfg, scene, cloth, controller, table_z, grasp_point, ee_quat,
-        rest_pairs, rest_lengths, origin,
+        rest_pairs, rest_lengths, origin, particles(cloth), fold_target, show_viewer,
     )
     context.spawn_peak = spawn_peak
     for name in names:

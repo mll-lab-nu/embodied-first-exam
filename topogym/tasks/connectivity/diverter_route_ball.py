@@ -233,9 +233,48 @@ class DiverterRouteBallLayout:
 
     @property
     def exit_plane_x(self) -> float:
-        """x of both exit planes. Equal by construction -- the branches mirror."""
+        """x of both exit centres. Equal by construction -- the branches mirror.
+
+        Used only by the judge's flood fill, as the plane it clips the fill at.
+        It is NOT how "the ball left" is decided; see `exited_side` for why.
+        """
 
         return self.fork_origin_x + self.exit_station * np.cos(self.angle)
+
+    def branch_station(self, side: str, xy) -> tuple[float, float]:
+        """A point resolved into one branch's own frame: (along, toward-splitter)."""
+
+        rel = np.asarray(xy, dtype=float).reshape(2) - np.array(
+            [self.fork_origin_x, 0.0], dtype=float
+        )
+        return (
+            float(rel @ self.branch_dir(side)),
+            float(rel @ self.branch_inner_normal(side)),
+        )
+
+    def exited_side(self, xy) -> str | None:
+        """Which exit the ball has passed, by station ALONG the branch.
+
+        Not a plane of constant x, which is what this used to be. The branches
+        run at `angle` to x, so one x plane cuts them at a station that depends on
+        how far off the centre line the ball is: measured 2026-08-19, a ball
+        riding the inner wall crosses x = `exit_plane_x` a full 11 mm BEFORE the
+        mouth, and one riding the outer wall 11 mm after -- 22 mm of spread on a
+        90 mm channel, all of it invisible in the reading. Resolving into the
+        branch's own frame removes the dependence entirely.
+
+        The lateral guard is not redundant: it keeps a ball deep in one branch
+        from being read as having left by the other. At the far end of the left
+        branch the right branch's station reads only half as much, and its
+        lateral offset is 173 mm against a 45 mm half width, so both guards
+        exclude it independently.
+        """
+
+        for side in SIDES:
+            station, across = self.branch_station(side, xy)
+            if station >= self.exit_station and abs(across) <= self.half_width:
+                return side
+        return None
 
     # ----- flap -------------------------------------------------------------
 
@@ -356,10 +395,26 @@ class DiverterRouteBallLayout:
             (float(self.cfg.ball.release_x), 0.0, self.floor_top_z + self.ball_radius)
         )
 
-    def drive_max_x(self) -> float:
-        """World x past which the ball has left through an exit."""
+    def drive_region_world(self) -> tuple[float, float, float, float]:
+        """(x_lo, x_hi, y_lo, y_hi) in world xy over which the feeder drives.
 
-        return float(self.position_to_world((self.exit_plane_x, 0.0, 0.0))[0])
+        The base plate's footprint: the tray is driven, and the ball coasts once
+        it runs off the end of it. Taking a REGION rather than the old single x
+        threshold is what lets the ball leave under power instead of being cut
+        loose inside the channel -- measured 2026-08-19, handing over 11 mm short
+        of the mouth left the ball still touching the branch wall, and it lost
+        the remaining 0.103 m/s in 5.6 mm against a coast model that predicts
+        59 mm. Past the wall ends there is nothing to rub against and the coast
+        behaves as modelled.
+
+        A rectangle rather than a distance from the fork, because the plate is a
+        thing in the scene and the drive should stop where the tray stops.
+        """
+
+        x_lo, x_hi, y_half = self.plate_bounds()
+        lo = self.position_to_world((x_lo, -y_half, 0.0))
+        hi = self.position_to_world((x_hi, y_half, 0.0))
+        return float(lo[0]), float(hi[0]), float(lo[1]), float(hi[1])
 
     def travel_time(self) -> float:
         """Seconds from release to the exit plane, along the shorter of the two.
