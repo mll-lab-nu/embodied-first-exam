@@ -77,6 +77,7 @@ from topogym.utils import (
     recording_session_from_config,
 )
 from topogym.world import StandardTabletopSceneBuilder, materials
+from topogym.world.rope import TabletopParticleFriction
 
 
 def _as_numpy(value) -> np.ndarray:
@@ -1263,6 +1264,34 @@ def main(cfg: DictConfig) -> None:
     tabletop.manifest.add(str(cloth_cfg.name), cloth)
     builder.finalize(tabletop)
 
+    # Friction against the TABLE, which Genesis does not provide for a body that
+    # is merely resting: its deformable-vs-rigid friction scales with the normal
+    # velocity and only runs while a particle is moving INTO the surface, so a
+    # sheet already lying on the table gets essentially none however high the
+    # table's `coup_friction` is set (`world/rope.py` TabletopParticleFriction,
+    # and `docs/develop/physics/pbd_tabletop_friction_zh.md`). The 2026-08-19
+    # folds slid the whole sheet across the table for exactly this reason: there
+    # was no sustained-contact friction at all, not merely too little.
+    #
+    # The model suits a sheet without changes. Particles above `contact_band` are
+    # left alone, so the half being carried is untouched while the half on the
+    # table is held; and its load factor (particles / touching particles) is 1
+    # for a flat sheet, which is the textbook mu*g.
+    friction_cfg = getattr(cloth_cfg, "tabletop_friction", None)
+    table_friction = None
+    if friction_cfg is not None and bool(friction_cfg.enabled):
+        table_friction = TabletopParticleFriction(
+            scene,
+            [cloth],
+            surface_z=table_z,
+            contact_band=float(friction_cfg.contact_band),
+            static_mu=float(friction_cfg.static_mu),
+            kinetic_mu=float(friction_cfg.kinetic_mu),
+            dt=float(cfg.env.sim.dt),
+            gravity=abs(float(cfg.env.sim.gravity[2])),
+            max_load_factor=float(friction_cfg.max_load_factor),
+        ).install()
+
     controller = initialize_franka_controller(
         scene=scene, manifest=tabletop.manifest, robot_cfg=cfg.robot_control, settle_steps=0
     )
@@ -1277,6 +1306,7 @@ def main(cfg: DictConfig) -> None:
         f"size={list(cloth_cfg.size)} dt={float(cfg.env.sim.dt):.4f} "
         f"substeps={int(cfg.env.sim.substeps)} substep_dt={substep_dt:.5f} "
         f"grasp_at={str(cfg.run.grasp_at)} "
+        f"table_friction={'off' if table_friction is None else f'{float(friction_cfg.kinetic_mu):.2f}/{float(friction_cfg.static_mu):.2f}'} "
         f"grasp=({grasp_point[0]:+.3f},{grasp_point[1]:+.3f}) "
         f"target=({fold_target[0]:+.3f},{fold_target[1]:+.3f}) "
         f"tests={names}",
