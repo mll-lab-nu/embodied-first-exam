@@ -27,6 +27,11 @@ sweep_steps: 90
 #   config                   用 task.diverter.init_sealed_side
 flap_phase: config
 
+# 直接给挡板角度（度），覆盖 flap_phase。用来扫「物理成功带」：拓扑判据在
+# 16..70deg 全说可达，但球能不能真的走通取决于瞄准质量，那只有跑物理才知道。
+# null = 用 flap_phase。
+flap_deg: null
+
 # 放球滚一遍的步数上限。球从释放到出口 3.02s；600 步 = 6 秒，留出滚出后静止的时间。
 rollout_steps: 600
 

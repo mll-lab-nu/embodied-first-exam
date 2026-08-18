@@ -61,9 +61,18 @@ def entity_pos(entity) -> np.ndarray:
     return _as_numpy(entity.get_pos()).reshape(-1, 3)[0].astype(float)
 
 
-def resolve_phase_angle(layout, phase: str) -> float:
-    """Joint angle for a `run.flap_phase` name."""
+def resolve_phase_angle(layout, phase: str, flap_deg=None) -> float:
+    """Joint angle for a `run.flap_phase` name, or `run.flap_deg` if given.
 
+    An explicit angle exists because the named phases only cover the seats and
+    the midpoint, and the question that needs answering is what happens BETWEEN
+    them: the flood fill calls every angle from 16 to 70 degrees routable, but
+    whether the ball actually gets out depends on how well the flap aims it,
+    which no amount of geometry will tell us.
+    """
+
+    if flap_deg is not None:
+        return float(np.deg2rad(float(flap_deg)))
     phase = str(phase)
     if phase == "config":
         return layout.seat_angle(layout.initial_sealed_side)
@@ -282,7 +291,9 @@ def main(cfg: DictConfig) -> None:
         settle_steps=0 if cfg.run.static_only else int(cfg.task.physical.settle_steps),
     )
 
-    phase_angle = resolve_phase_angle(layout, cfg.run.flap_phase)
+    phase_angle = resolve_phase_angle(
+        layout, cfg.run.flap_phase, getattr(cfg.run, "flap_deg", None)
+    )
     ball_scene.set_flap_angle(phase_angle)
     # Episode reset, before anything is measured: the settle above costs scene
     # steps and the ball is a free body from the moment it is added.
