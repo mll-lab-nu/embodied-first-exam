@@ -192,11 +192,26 @@ class HeadingDrive:
     depends on:
 
     1. **It does not steer.** Each step it reads the ball's heading back and
-       rescales it to the commanded speed. A glancing contact with the diverter
-       flap turns the ball, and the drive then carries it on in the new
+       pushes along it toward the commanded speed. A glancing contact with the
+       diverter flap turns the ball, and the drive then carries it on in the new
        direction. The branch is therefore chosen by the flap's geometry; a drive
        that knew about the branches would be deciding the outcome it is supposed
        to be measuring.
+
+    1b. **It pushes with a bounded force, and never writes velocity.** This is
+       what stops it walking the ball through a closed gate. `BallShuttle` writes
+       the velocity directly, which is fine against a wide flat gate, but a state
+       write beats any contact: the solver resolves the overlap and the next step
+       puts the full speed back, ratcheting the ball through. Observed
+       2026-08-19 on an under-rotated flap -- 12 mm of plate, and the ball forced
+       its way past into the branch. A motor force goes through the solver
+       instead, so the flap wins; `max_thrust` is the whole guarantee, and it is
+       two orders below what the flap's joint friction resists.
+
+       Nothing writes the spin either. A force through the centre makes the ball
+       slide, and floor friction spins it up into rolling on its own -- the
+       required friction is a tenth of what is available, so it rolls almost at
+       once.
     2. **A blocked ball stops** rather than reversing (which is what
        `BallShuttle` does, because a caged ball has to keep shuttling to read as
        caged). A flap left half-open wedges the ball at the fork, and that
@@ -235,7 +250,10 @@ class HeadingDrive:
         *,
         speed: float,
         radius: float,
+        mass: float,
         region: tuple[float, float, float, float],
+        thrust_gain: float = 1.0,
+        max_thrust: float = 0.15,
         heading: tuple[float, float] = (1.0, 0.0),
         dt: float = 0.01,
         stall_steps: int = 5,
@@ -248,6 +266,9 @@ class HeadingDrive:
         self.ball = ball
         self.speed = float(speed)
         self.radius = float(radius)
+        self.mass = float(mass)
+        self.thrust_gain = float(thrust_gain)
+        self.max_thrust = float(max_thrust)
         x_lo, x_hi, y_lo, y_hi = (float(v) for v in region)
         if x_hi <= x_lo or y_hi <= y_lo:
             raise ValueError(f"HeadingDrive region must be non-empty, got {region}.")
@@ -323,26 +344,28 @@ class HeadingDrive:
                 # has to come to rest where it stuck.
                 self.coasting = True
                 self._last_xy = xy
+                self.coast()
                 return
         self._last_xy = xy
 
-        velocity = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:6].astype(float)
-        measured = velocity[:2]
+        measured = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:2].astype(float)
         speed = float(np.linalg.norm(measured))
         # Below a quarter of the command the direction is noise (the ball is in
         # the middle of resolving a contact), so the previous heading is kept
         # rather than amplifying whatever the solver happened to leave behind.
         if speed > 0.25 * self.speed:
             self.heading = measured / speed
-        velocity[0] = self.heading[0] * self.speed
-        velocity[1] = self.heading[1] * self.speed
-        # Rolling, not sliding: the contact point one radius below the centre has
-        # to be stationary, so omega = (z_hat x v) / r.
-        velocity[3] = -velocity[1] / max(self.radius, 1e-9)
-        velocity[4] = velocity[0] / max(self.radius, 1e-9)
-        velocity[5] = 0.0
-        self.ball.set_dofs_velocity(velocity)
+        self._push(self.thrust_gain * (self.heading * self.speed - measured))
         self.steps_driven += 1
+
+    def _push(self, force) -> None:
+        """Apply a horizontal motor force, magnitude-clamped to `max_thrust`."""
+
+        force = np.asarray(force, dtype=float).reshape(2)
+        magnitude = float(np.linalg.norm(force))
+        if magnitude > self.max_thrust:
+            force = force * (self.max_thrust / magnitude)
+        self.ball.control_dofs_force(force, dofs_idx_local=[0, 1])
 
     def on_pad(self) -> bool:
         """Is the ball on the braking pad?"""
@@ -368,19 +391,16 @@ class HeadingDrive:
         """
 
         decel = self.brake_decel if self.on_pad() else self.offtrack_decel
-        if decel <= 0.0:
+        measured = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:2].astype(float)
+        speed = float(np.linalg.norm(measured))
+        if decel <= 0.0 or speed <= 1e-4:
+            self._push(np.zeros(2))
             return
-        velocity = _as_numpy(self.ball.get_dofs_velocity()).reshape(-1)[:6].astype(float)
-        speed = float(np.hypot(velocity[0], velocity[1]))
-        if speed <= 1e-6:
-            return
-        scale = max(0.0, speed - decel * self.dt) / speed
-        velocity[0] *= scale
-        velocity[1] *= scale
-        velocity[3] = -velocity[1] / max(self.radius, 1e-9)
-        velocity[4] = velocity[0] / max(self.radius, 1e-9)
-        velocity[5] = 0.0
-        self.ball.set_dofs_velocity(velocity)
+        # Retarding force, not a velocity write: same reason as `drive`. Capped by
+        # the speed it would take to a standstill inside one step, so the brake
+        # cannot reverse the ball.
+        stop = self.mass * speed / self.dt
+        self._push(-min(self.mass * decel, stop) * measured / speed)
 
     def __enter__(self) -> HeadingDrive:
         if self._original_step is not None:

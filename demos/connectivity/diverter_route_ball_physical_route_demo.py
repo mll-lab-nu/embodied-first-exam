@@ -211,6 +211,11 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
         ball,
         speed=layout.ball_speed,
         radius=layout.ball_radius,
+        # Mass from the sphere's own density and radius: the brake is specified
+        # as a deceleration, and a force drive needs the mass to turn it into one.
+        mass=float(cfg.task.ball.rho) * (4.0 / 3.0) * np.pi * layout.ball_radius ** 3,
+        thrust_gain=float(cfg.task.ball.thrust_gain),
+        max_thrust=float(cfg.task.ball.max_thrust),
         region=(lo_x, hi_x, lo_y, hi_y),
         dt=dt,
         stall_steps=int(cfg.task.ball.stall_steps),

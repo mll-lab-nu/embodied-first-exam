@@ -347,6 +347,11 @@ def main(cfg: DictConfig) -> None:
                 ball_scene.ball_entity(),
                 speed=layout.ball_speed,
                 radius=layout.ball_radius,
+                # Mass from the sphere's own density and radius: the brake is specified
+                # as a deceleration, and a force drive needs the mass to turn it into one.
+                mass=float(cfg.task.ball.rho) * (4.0 / 3.0) * np.pi * layout.ball_radius ** 3,
+                thrust_gain=float(cfg.task.ball.thrust_gain),
+                max_thrust=float(cfg.task.ball.max_thrust),
                 region=layout.drive_region_world(),
                 dt=float(cfg.env.sim.dt),
                 stall_steps=int(cfg.task.ball.stall_steps),
