@@ -208,6 +208,44 @@ def particle_error(nodes, targets, tolerance: float) -> tuple[float, float]:
     return float(distance.mean()), float((distance > float(tolerance)).mean())
 
 
+def particle_error_parts(
+    nodes, targets, rest_nodes, fold_point, fold_normal, band: float
+) -> dict:
+    """Where the particle error comes from, split three ways by rest position.
+
+    A single mean says a fold is off without saying which part of it. These say
+    which, and the three have different meanings:
+
+    ``static``  the half that was never meant to move. Non-zero here means the
+                sheet was dragged across the table -- a physics problem (friction,
+                carry duration), not a planning one.
+    ``moving``  the half that folds. This is the fold itself succeeding or not.
+    ``crease``  the strip within ``band`` of the fold line, counted separately
+                because it has an IRREDUCIBLE floor: a crease has a bend radius,
+                so that material physically cannot reach its reflected position.
+                A perfect fold still reads some millimetres here, and reading it
+                apart from the rest is what stops that floor being mistaken for a
+                bad fold.
+    """
+
+    rest_nodes = np.asarray(rest_nodes, dtype=float)
+    fold_point = np.asarray(fold_point, dtype=float)
+    fold_normal = np.asarray(fold_normal, dtype=float)
+    distance = np.linalg.norm(
+        np.asarray(nodes, dtype=float) - np.asarray(targets, dtype=float), axis=1
+    )
+    along = (_xy(rest_nodes) - fold_point) @ fold_normal
+
+    def mean_of(mask):
+        return float(distance[mask].mean()) if mask.any() else float("nan")
+
+    return {
+        "static": mean_of(along < 0.0),
+        "moving": mean_of(along > 0.0),
+        "crease": mean_of(np.abs(along) <= float(band)),
+    }
+
+
 def crease_indices(rest_nodes, fold_point, fold_normal) -> np.ndarray:
     """Which particles started ON the fold line -- the ones that become the crease.
 
@@ -357,6 +395,11 @@ class ClothFoldState:
     layer_gap_median: float
     peak_above_table: float
     anchor_shift: float
+    # Where the particle error comes from, so a failing fold says which part
+    # failed. `err_crease` has an irreducible floor -- see `particle_error_parts`.
+    err_static: float
+    err_moving: float
+    err_crease: float
     thresholds: ClothFoldThresholds
 
     @property
@@ -422,6 +465,9 @@ class ClothFoldState:
             "layer_gap_median_mm": float(self.layer_gap_median * 1e3),
             "peak_above_table_mm": float(self.peak_above_table * 1e3),
             "anchor_shift_mm": float(self.anchor_shift * 1e3),
+            "err_static_mm": float(self.err_static * 1e3),
+            "err_moving_mm": float(self.err_moving * 1e3),
+            "err_crease_mm": float(self.err_crease * 1e3),
             "gates": {k: bool(v) for k, v in self.gates.items()},
             "terminal": bool(self.is_terminal),
             # C1 has no integer topological invariant; saying so explicitly keeps
@@ -439,6 +485,9 @@ class ClothFoldState:
             f"flatness_var={self.flatness_var:.3e} "
             f"covered_cells={self.covered_cells} two_layer_cells={self.two_layer_cells} "
             f"over_layer_cells={self.over_layer_cells} max_layers={self.max_layers} "
+            f"err_static_mm={self.err_static * 1e3:.2f} "
+            f"err_moving_mm={self.err_moving * 1e3:.2f} "
+            f"err_crease_mm={self.err_crease * 1e3:.2f} "
             f"anchor_shift_mm={self.anchor_shift * 1e3:.2f} "
             f"gates={','.join(k for k, v in self.gates.items() if not v) or 'all_pass'} "
             f"terminal={self.is_terminal}"
@@ -491,10 +540,14 @@ class ClothFoldEvaluator:
 
         # The primary reading: distance to where a finished fold puts each
         # particle, solved in closed form from the rest layout.
+        targets = fold_targets(rest_nodes, fold_point, fold_normal, self.fold_thickness)
         err_mean, off_frac = particle_error(
-            nodes,
-            fold_targets(rest_nodes, fold_point, fold_normal, self.fold_thickness),
-            self.thresholds.particle_off_target_m,
+            nodes, targets, self.thresholds.particle_off_target_m
+        )
+        # Four particle rows either side of the line: wide enough to contain a
+        # crease's bend, narrow enough that the rest of the flap is not in it.
+        parts = particle_error_parts(
+            nodes, targets, rest_nodes, fold_point, fold_normal, 4.0 * self.particle_size
         )
         layers = layer_report(nodes, table_z, self.cell, self.particle_size)
         offset, straightness = crease_report(
@@ -524,5 +577,8 @@ class ClothFoldEvaluator:
             layer_gap_median=float(layers["gap_median"]),
             peak_above_table=float(heights.max()),
             anchor_shift=anchor_shift(rest_nodes, nodes, fold_point, fold_normal),
+            err_static=parts["static"],
+            err_moving=parts["moving"],
+            err_crease=parts["crease"],
             thresholds=self.thresholds,
         )

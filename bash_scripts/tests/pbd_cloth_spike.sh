@@ -34,7 +34,7 @@
 #   ATTACH_MODES="..."               grip 扫哪几种附着方式
 #   FRICTIONS="0.4:0.5 0.8:1.0 ..."  friction 扫哪几档布↔桌面摩擦
 #   FOLD_STEP_COUNTS="240 600 1200"  quasistatic 扫哪几档步数
-#   GRASP_AT=edge_mid|corner        抓右边缘中点（docx 1.1）还是抓角
+#   GRASP_AT=corner|edge_mid        折角（默认，单夹爪可行）还是边中点对折
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
 #   TIMEOUT_S=900                    单格墙钟超时（秒）
@@ -78,10 +78,13 @@ FRICTIONS="${FRICTIONS:-0.4:0.5 0.8:1.0 1.5:1.8}"
 # 而布在桌面上的滑移按「每秒多少毫米」积累，走得久就滑得多）。所以现在扫快的一头。
 FOLD_STEP_COUNTS="${FOLD_STEP_COUNTS:-120 180 240}"
 
-# 抓哪里。docx 1.1 写的是「捏持右侧边缘中点」，对折成长方形；corner 是抓角对角折，
-# 折成三角形。两者面积一样（都是半张布）但形状不同，所以门槛不能互相搬用 ——
-# 2026-08-20 之前的全部标定跑的都是 corner。默认按 docx 走。
-GRASP_AT="${GRASP_AT:-edge_mid}"
+# 抓哪里。docx 1.1 的标题是「对折／折角」，两种都算这一条。
+# corner   吸住一个角折到对角，折痕是对角线。**单个夹爪只做得成这一种**，
+#          因为要翻的三角形有两个顶点正好落在折线上，等于门轴两端钉死。
+# edge_mid 捏住边缘中点对折成长方形。2026-08-20 实测：远端那条 240mm 的边没有
+#          约束，两个角被拖着走，落位后最高点 20.4mm（应为 6mm），三条判据全不过，
+#          且与「贴桌面推」读数重合。要做它得有两个抓取点。
+GRASP_AT="${GRASP_AT:-corner}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
