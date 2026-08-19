@@ -544,6 +544,39 @@ class DiverterRouteBallScene:
         value = self.diverter_entity().get_dofs_position(dofs_idx_local=[int(self.joint_dof)])
         return float(_as_numpy(value).reshape(-1)[0])
 
+    def lock_flap(self, angle: float | None = None, *, kp: float = 50.0,
+                  kv: float = 5.0, force: float = 5.0) -> float:
+        """Hold the flap at its current angle for the rest of the episode.
+
+        A position servo on the joint, switched on AFTER the arm has let go. The
+        mechanism this models is a self-locking one -- a detent or a worm drive --
+        which is what a real diverter has, and `primitives/connector_latch.py`
+        is the same idea for a different task.
+
+        Two reasons it is worth having. The flap is otherwise held only by joint
+        friction, so a ball pressing on it gives ground; and without a lock the
+        angle at judgement time is not the angle the arm left, which makes
+        `target_error` ambiguous about what it measured.
+
+        It is NOT what stops a ball squeezing through a gap narrower than itself:
+        that is contact penetration between ball and plate, and no amount of
+        holding the plate still prevents it. Measured 2026-08-19, a corridor
+        0.5 mm narrower than the ball leaks whatever the flap is doing. The lock
+        removes one source of give; the clearance still has to be real.
+
+        Switched on by `mechanism.lock_after_turn`, and never before the release:
+        a servo fighting the gripper would make the sweep a tug of war.
+        """
+
+        entity = self.diverter_entity()
+        dof = [int(self.joint_dof)]
+        target = self.flap_angle() if angle is None else float(angle)
+        entity.set_dofs_kp([float(kp)], dofs_idx_local=dof)
+        entity.set_dofs_kv([float(kv)], dofs_idx_local=dof)
+        entity.set_dofs_force_range([-float(force)], [float(force)], dofs_idx_local=dof)
+        entity.control_dofs_position([target], dofs_idx_local=dof)
+        return target
+
     def set_flap_angle(self, angle: float) -> None:
         """Write the joint directly. Episode reset and inspection only.
 

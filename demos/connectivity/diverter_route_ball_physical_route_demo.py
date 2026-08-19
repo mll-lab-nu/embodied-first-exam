@@ -176,6 +176,18 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
             flush=True,
         )
 
+    # Lock before the ball is anywhere near: the angle the arm left is the angle
+    # that gets judged, and the flap stops giving ground under the ball's push.
+    mech = cfg.task.diverter.mechanism
+    if bool(getattr(mech, "lock_after_turn", False)):
+        locked = ball_scene.lock_flap(
+            kp=float(mech.lock_kp), kv=float(mech.lock_kv), force=float(mech.lock_force)
+        )
+        print(
+            f"diverter_route_ball flap locked at {np.rad2deg(locked):+.2f}deg",
+            flush=True,
+        )
+
     if str(cfg.run.stage) == "rotate_only":
         status["phase"] = "done"
         metrics = {"rotate_only": True}
