@@ -73,7 +73,9 @@ ATTACH_MODES="${ATTACH_MODES:-overwrite_graded overwrite_rigid link_patch link_s
 # 两头都要看：太小整片布被拖走，太大布像粘在桌上（docx 1.5 铺桌布就做不成）。
 FRICTIONS="${FRICTIONS:-0.4:0.5 0.8:1.0 1.5:1.8}"
 # quasistatic 扫哪几档步数。同一条路径切成不同份数走完 = 只有快慢不同。
-FOLD_STEP_COUNTS="${FOLD_STEP_COUNTS:-240 600 1200}"
+# 2026-08-20 扫过 240/600/1200：慢的一头每项都更差（布自己下落的速度不随手变慢，
+# 而布在桌面上的滑移按「每秒多少毫米」积累，走得久就滑得多）。所以现在扫快的一头。
+FOLD_STEP_COUNTS="${FOLD_STEP_COUNTS:-120 180 240}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
@@ -174,7 +176,7 @@ for name in "${SELECTED[@]}"; do
     grip)
       # 同一次垂直提起，只改「怎么让布跟着夹爪走」。四行并排读就是结论。
       for mode in $ATTACH_MODES; do
-        run_cell "grip_$mode" grip run.test=grip run.verbose=true \n          "task.grasp.attach_mode=$mode"
+        run_cell "grip_$mode" grip run.test=grip run.verbose=true          "task.grasp.attach_mode=$mode"
       done
       ;;
     fold)

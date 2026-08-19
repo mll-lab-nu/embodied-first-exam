@@ -890,10 +890,21 @@ def run_fold(cfg, ctx) -> None:
         max(2, int(round(steps / 2))): names[1],
         steps: names[2],
     }
-    # The limit follows the hand's OWN rate around the arc. The 2026-08-19 run
-    # used `drag_speed` (2 mm a step) while the arc actually advances 0.36, so
-    # the ceiling sat 17x above anything that could happen.
-    dog.set_reference(np.pi * radius / steps, "carried")
+    # What the cloth may legitimately do in one step, in ANY phase: fall. A point
+    # released at the apex reaches sqrt(2*g*h) ~ 1.6 m/s, i.e. ~16 mm a step, and
+    # gravity does not wait for the hand to let go -- the part of the sheet that
+    # is not yet supported is already falling mid-carry.
+    #
+    # Deriving the ceiling from the HAND's rate instead is what aborted the
+    # 600/1200-step folds and both wrong-motion runs (2026-08-20). The measured
+    # reason: the cloth's peak speed does not drop when the hand slows down, it
+    # RISES (0.41 / 0.79 / 0.99 m/s at 240 / 600 / 1200 steps) because a slower
+    # carry leaves the unsupported part falling for longer. A hand-derived
+    # ceiling therefore tightens exactly where the cloth is moving fastest.
+    fall_step = float(
+        np.sqrt(2.0 * abs(float(cfg.env.sim.gravity[2])) * max(radius, 1e-9))
+    ) * float(cfg.env.sim.dt)
+    dog.set_reference(fall_step, "carried")
     motion = str(cfg.run.motion)
     if motion not in MOTIONS:
         raise SystemExit(f"run.motion must be one of {sorted(MOTIONS)}, got {motion!r}.")
@@ -935,15 +946,9 @@ def run_fold(cfg, ctx) -> None:
     carry_seconds = steps * float(cfg.env.sim.dt)
 
     grip.release()
-    # Nothing is carrying the cloth now; it is falling. A corner dropped from the
-    # apex reaches roughly sqrt(2*g*h) = 1.6 m/s, i.e. ~16 mm a step, and that is
-    # the cloth behaving correctly rather than diverging. Judging the landing by
-    # the carried-phase limit is what made a 99%-complete fold read as a failure.
-    dog.set_reference(
-        float(np.sqrt(2.0 * abs(float(cfg.env.sim.gravity[2])) * max(radius, 1e-9)))
-        * float(cfg.env.sim.dt),
-        "released",
-    )
+    # Same ceiling, and now nothing is driving the cloth at all -- only the label
+    # changes, so a trip can be read back to the phase it happened in.
+    dog.set_reference(fall_step, "released")
     phase(cfg, ctx, "released", dog)
     for index in range(1, max(1, int(cfg.run.fold_settle_steps)) + 1):
         scene.step()
