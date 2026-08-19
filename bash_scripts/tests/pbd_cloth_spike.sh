@@ -34,6 +34,7 @@
 #   ATTACH_MODES="..."               grip 扫哪几种附着方式
 #   FRICTIONS="0.4:0.5 0.8:1.0 ..."  friction 扫哪几档布↔桌面摩擦
 #   FOLD_STEP_COUNTS="240 600 1200"  quasistatic 扫哪几档步数
+#   GRASP_AT=edge_mid|corner        抓右边缘中点（docx 1.1）还是抓角
 #   PARTICLE_SIZES="0.004 0.006 0.010"      cost 扫哪些粒子尺度（米）
 #   BENCH_STEPS=100                  cost 每格计时多少步
 #   TIMEOUT_S=900                    单格墙钟超时（秒）
@@ -76,6 +77,11 @@ FRICTIONS="${FRICTIONS:-0.4:0.5 0.8:1.0 1.5:1.8}"
 # 2026-08-20 扫过 240/600/1200：慢的一头每项都更差（布自己下落的速度不随手变慢，
 # 而布在桌面上的滑移按「每秒多少毫米」积累，走得久就滑得多）。所以现在扫快的一头。
 FOLD_STEP_COUNTS="${FOLD_STEP_COUNTS:-120 180 240}"
+
+# 抓哪里。docx 1.1 写的是「捏持右侧边缘中点」，对折成长方形；corner 是抓角对角折，
+# 折成三角形。两者面积一样（都是半张布）但形状不同，所以门槛不能互相搬用 ——
+# 2026-08-20 之前的全部标定跑的都是 corner。默认按 docx 走。
+GRASP_AT="${GRASP_AT:-edge_mid}"
 PARTICLE_SIZES="${PARTICLE_SIZES:-0.004 0.006 0.010}"
 BENCH_STEPS="${BENCH_STEPS:-100}"
 TIMEOUT_S="${TIMEOUT_S:-900}"
@@ -151,7 +157,7 @@ run_cell() {
   echo "==================== $tag ===================="
   local start; start=$(date +%s)
   timeout "${TIMEOUT_S}s" python -B -m tests.pbd_cloth_spike \
-    env.genesis.backend="$BACKEND" "$@" 2>&1 | tee "$log"
+    env.genesis.backend="$BACKEND" run.grasp_at="$GRASP_AT" "$@" 2>&1 | tee "$log"
   local code=${PIPESTATUS[0]}
   local dur=$(( $(date +%s) - start ))
   local state; state="$(verdict "$code" "$log")"

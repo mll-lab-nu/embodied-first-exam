@@ -77,6 +77,7 @@ from topogym.utils import (
     recording_session_from_config,
 )
 from topogym.world import StandardTabletopSceneBuilder, materials
+from topogym.verification.cloth_fold_verifier import ClothFoldEvaluator
 from topogym.world.rope import TabletopParticleFriction
 
 
@@ -381,41 +382,6 @@ def attached_indices(nodes: np.ndarray, center, radius: float, *, single: bool =
     return indices, np.clip(weights, 0.0, 1.0)
 
 
-def layer_report(nodes, table_z: float, cell: float, particle_size: float) -> dict:
-    """How the sheet stacks on itself, binned into (x, y) cells.
-
-    docx 1.1 judges a fold by layer count and by upper/lower overlap, so the
-    question is not "did the cloth move" but "are there two layers where there
-    should be two, and can they be told apart". In each cell the particles are
-    sorted by height and the largest vertical break between consecutive ones is
-    the layer separation; a cell whose break exceeds half a particle is carrying
-    two layers.
-
-    A separation that collapses to ~0 is the failure this whole test exists to
-    look for: PBD self-collision leaking, which is exactly how the ropes in this
-    repo ended up embedded 5.5 mm into each other (`rope_contact_sweep.sh`).
-    """
-
-    buckets: dict = {}
-    for index in range(len(nodes)):
-        key = (int(np.floor(nodes[index, 0] / cell)), int(np.floor(nodes[index, 1] / cell)))
-        buckets.setdefault(key, []).append(float(nodes[index, 2]) - table_z)
-    gaps = []
-    for heights in buckets.values():
-        if len(heights) < 2:
-            continue
-        ordered = np.sort(np.asarray(heights))
-        widest = float(np.max(np.diff(ordered)))
-        if widest > 0.5 * particle_size:
-            gaps.append(widest)
-    return {
-        "covered_cells": len(buckets),
-        "two_layer_cells": len(gaps),
-        "gap_median": float(np.median(gaps)) if gaps else float("nan"),
-        "gap_min": float(np.min(gaps)) if gaps else float("nan"),
-    }
-
-
 def self_contact_gap(rest_nodes: np.ndarray, nodes: np.ndarray, radius: float) -> float:
     """Closest approach between particles that were NOT neighbours at rest.
 
@@ -435,43 +401,6 @@ def self_contact_gap(rest_nodes: np.ndarray, nodes: np.ndarray, radius: float) -
         live_d[rest_d <= radius] = np.inf
         worst = min(worst, float(live_d.min()))
     return worst
-
-
-def occupied_cells(nodes: np.ndarray, cell: float) -> set:
-    """The (x, y) cells the cloth covers, on the shared grid."""
-
-    return {
-        (int(np.floor(x / cell)), int(np.floor(y / cell))) for x, y in nodes[:, :2]
-    }
-
-
-def fold_target_cells(rest_nodes: np.ndarray, centre_xy, direction, cell: float) -> set:
-    """Where a finished corner fold should end up: half the ORIGINAL outline.
-
-    Taken from the cloth's own rest footprint cut along the fold line, not from
-    an idealised box. Folding a square corner-to-corner leaves a TRIANGLE -- half
-    of 576 cm2 -- while the axis-aligned rectangle spanned by the two corners is
-    400 cm2, so scoring against that rectangle caps a perfect fold at 0.72 and
-    a real one read 0.433 against a target it could never fill (2026-08-19).
-    """
-
-    along = (np.asarray(rest_nodes, dtype=float)[:, :2] - centre_xy) @ direction
-    return occupied_cells(rest_nodes[along < 0.0], cell)
-
-
-def footprint_iou(nodes: np.ndarray, target: set, cell: float) -> float:
-    """Overlap between where the cloth covers and where it should.
-
-    Shared cells divided by cells either one covers: 1.0 is identical, 0 is no
-    overlap. Crumpling the sheet into a ball halves the area just as folding
-    does, which is why docx 1.1 pairs this with flatness rather than trusting it
-    alone.
-    """
-
-    covered = occupied_cells(nodes, cell)
-    if not target:
-        return float("nan")
-    return len(covered & target) / len(covered | target)
 
 
 def grasp_and_target(cfg, origin, cloth_cfg):
@@ -812,14 +741,6 @@ def run_fold(cfg, ctx) -> None:
     cell = 2.0 * particle_size
 
     rest_nodes = ctx.rest_nodes
-    # The corner diagonally opposite the grasp: the anchor. In a real fold it does
-    # not move at all, so its displacement is the direct measure of "the sheet
-    # slid instead of hinging".
-    anchor_at = np.asarray(ctx.fold_target, dtype=float)[:2]
-    anchor = np.flatnonzero(
-        np.linalg.norm(rest_nodes[:, :2] - anchor_at, axis=1) < 3.0 * particle_size
-    )
-
     # Optionally hold the far half down, to separate "the material cannot fold"
     # from "nothing is stopping the sheet being towed". See `pinned_indices`.
     pin_centre = np.asarray(ctx.origin, dtype=float)[:2] + np.asarray(
@@ -869,11 +790,21 @@ def run_fold(cfg, ctx) -> None:
     # A little inside the circle, so the cloth is carried rather than stretched.
     radius = material * float(cfg.run.fold_slack)
     base = np.asarray(controller.hand_pos(), dtype=float)
-    steps = max(4, int(cfg.run.fold_steps))
+    # How fast, not how many. The calibration is a SPEED (3.6 mm a step, from the
+    # 120/180/240 sweep on a 435 mm arc); a fixed step count turns into a
+    # different speed the moment the arc changes length, and the edge-midpoint
+    # fold docx 1.1 asks for has a 308 mm arc rather than the corner fold's 435.
+    # `fold_steps` stays as an override so the sweep can still ask for a count.
+    steps = (
+        max(4, int(cfg.run.fold_steps))
+        if cfg.run.fold_steps
+        else max(4, int(round(np.pi * radius / float(cfg.run.fold_step_m))))
+    )
     print(
         f"pbd_cloth_spike fold_path material_mm={material * 1e3:.1f} "
         f"radius_mm={radius * 1e3:.1f} apex_mm={radius * 1e3:.1f} "
         f"arc_len_mm={np.pi * radius * 1e3:.0f} steps={steps} "
+        f"step_mm={np.pi * radius / steps * 1e3:.2f} "
         f"per_step_mm={np.pi * radius / steps * 1e3:.2f}",
         flush=True,
     )
@@ -955,48 +886,24 @@ def run_fold(cfg, ctx) -> None:
         dog.check(steps + index)
     phase(cfg, ctx, "done", dog)
 
+    # The judges are the PRODUCTION ones, imported rather than reimplemented: the
+    # numbers this spike prints are the numbers the task will gate on, or the
+    # calibration is against something the task does not measure.
     nodes = particles(cloth)
-    layers = layer_report(nodes, table_z, cell, particle_size)
+    state = ClothFoldEvaluator.from_config(cfg.task).classify(
+        rest_nodes, nodes, table_z=table_z, fold_point=centre_xy, fold_normal=direction
+    )
     contact_gap = self_contact_gap(
         rest_nodes, nodes, float(cfg.run.neighbour_radius_scale) * particle_size
     )
-    variance, peak = flatness(cloth, table_z)
-    iou = footprint_iou(
-        nodes, fold_target_cells(rest_nodes, centre_xy, direction, cell), cell
-    )
-    anchor_shift = (
-        float(np.linalg.norm(nodes[anchor][:, :2] - rest_nodes[anchor][:, :2], axis=1).mean())
-        if len(anchor)
-        else float("nan")
-    )
-    # Whole-sheet mean displacement says nothing about a fold: the half that gets
-    # folded is SUPPOSED to travel the full 283 mm (the 2026-08-19 run read
-    # moved_max 350 mm, which was the fold working). Only the half that stays
-    # behind carries the "did the sheet slide" signal.
-    far_half = np.flatnonzero(
-        (rest_nodes[:, :2] - centre_xy) @ direction < 0.0
-    )
-    far_shift = (
-        float(np.linalg.norm(
-            nodes[far_half][:, :2] - rest_nodes[far_half][:, :2], axis=1
-        ).mean())
-        if len(far_half)
-        else float("nan")
-    )
-    covered = max(1, layers["covered_cells"])
     print(
         f"pbd_cloth_spike fold motion={motion} grasp_at={str(cfg.run.grasp_at)} "
         f"pin={str(cfg.run.pin)} pinned={len(pinned)} steps={steps} "
         f"radius_mm={radius * 1e3:.1f} cell_mm={cell * 1e3:.1f} "
         f"completed={completed} "
-        f"covered_cells={layers['covered_cells']} "
-        f"two_layer_cells={layers['two_layer_cells']} "
-        f"two_layer_frac={layers['two_layer_cells'] / covered:.3f} "
-        f"layer_gap_median_mm={layers['gap_median'] * 1e3:.2f} "
+        f"{state.summary()} "
         f"self_contact_gap_mm={contact_gap * 1e3:.2f} "
         f"(particle_size_mm={particle_size * 1e3:.1f}) "
-        f"fold_iou={iou:.3f} anchor_shift_mm={anchor_shift * 1e3:.2f} "
-        f"far_half_shift_mm={far_shift * 1e3:.2f} "
         # Quasi-static or not, as a ratio. Nothing on the cloth can outrun the
         # grasped corner in a fold done slowly enough -- that corner is the point
         # furthest from the fold line, so every other point travels less. A ratio
@@ -1007,8 +914,7 @@ def run_fold(cfg, ctx) -> None:
         # And creep against inertia: a slide that is proportional to how long the
         # carry lasted is creep under a sustained pull, not momentum.
         f"carry_s={carry_seconds:.2f} "
-        f"slide_rate_mm_s={anchor_shift * 1e3 / max(carry_seconds, 1e-9):.2f} "
-        f"flatness_var={variance:.3e} peak_above_table={peak:.5f} "
+        f"slide_rate_mm_s={state.anchor_shift * 1e3 / max(carry_seconds, 1e-9):.2f} "
         f"{dog.summary()}",
         flush=True,
     )
