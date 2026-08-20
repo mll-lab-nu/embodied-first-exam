@@ -282,7 +282,21 @@ rope:
     nu: ${prefabs.rope_fem.nu}
     rho: ${prefabs.rope_fem.rho}
     friction_mu: ${prefabs.rope_fem.friction_mu}
-    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    # 本任务覆写（prefab 是 0.002）。2026-08-20：势垒作用距离必须小于绳**自己
+    # 表面**上「不共顶点」的最近一对图元间距，否则绳在自己内部互相排斥。
+    # 管半径 4mm 时该间距按截面边数走：n=8 -> 3.06mm，n=12 -> 2.07mm，
+    # n=20 -> 1.25mm。prefab 的 0.002 是照两根绳叠放的静止间距标定的（见 prefab
+    # 注释），从来没有对过管皮自身的分辨率：n=12 只剩 3.5% 余量，n=20 直接违反。
+    #
+    # 违反的后果是三件事同时发生，实测（radial=20，静置 300 步，机械臂不动）：
+    #   d_hat=0.002 -> rope_spread 0.2303 单调降到 0.2242、rope_jump 每步 0.0002、
+    #                  TWIST span 0.090 涨到 0.285、max_twist 2.67 圈，lift 检查失败；
+    #   d_hat=0.0008 -> rope_spread 0.2624 一位不变、rope_jump 0.0000、
+    #                  TWIST 前 20 步稳定到 0.066 后完全静止、max_twist 0.17 圈，跑通。
+    # 表现在画面上就是全长的螺旋皱褶、向弧心收缩、以及卷成电话线。
+    #
+    # 建场景时有校验（world/rope.py 的 check_self_contact_clearance），配错会拒绝启动。
+    contact_d_hat: 0.0008
     follow_strength: ${prefabs.rope_fem.follow_strength}
     # 无应力构型。straight = 出生缓弧是真实的弯曲预应力（绳一直想弹直），
     # spawn = 绳天生就是这个弧、待着没有弯曲能。两者出生顶点位置完全相同。

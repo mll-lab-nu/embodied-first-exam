@@ -287,11 +287,32 @@ def main(cfg: DictConfig) -> None:
 
     # Hold the arm at its home pose. It takes no part in this demo, but a Franka
     # with no joint targets collapses under gravity on the first step.
-    initialize_franka_controller(
+    controller = initialize_franka_controller(
         scene=merge_scene.scene,
         manifest=merge_scene.manifest,
         robot_cfg=cfg.robot_control,
         settle_steps=0 if cfg.run.static_only else int(cfg.task.physical.settle_steps),
+    )
+
+    # Where the parked hand sits relative to the knob's circle. The beam sweeps
+    # through every angle while the arm is parked, so a home pose that overlaps the
+    # circle is an obstacle the beam has to push through -- `stacked_plate` hit the
+    # same shared home and ended up needing its own raised one.
+    hand = np.asarray(controller.hand_pos(), dtype=float).reshape(3)
+    hand_task = hand - np.asarray(layout.task_origin, dtype=float)
+    hand_radius = float(np.linalg.norm(hand_task[:2] - layout.pivot_xy))
+    hand_angle = float(np.rad2deg(np.arctan2(
+        hand_task[1] - layout.pivot_xy[1], hand_task[0] - layout.pivot_xy[0]
+    )))
+    print(
+        f"linkbar_merge_components home_clearance "
+        f"hand_task=({hand_task[0]:+.4f},{hand_task[1]:+.4f},{hand_task[2]:+.4f}) "
+        f"hand_radius={hand_radius:.4f} hand_angle={hand_angle:+.1f}deg "
+        f"knob_station={layout.knob_station:.4f} "
+        f"radial_gap={abs(hand_radius - layout.knob_station):.4f} "
+        f"knob_top_z={layout.knob_top_z:.4f} "
+        f"vertical_gap={hand_task[2] - layout.knob_top_z:+.4f}",
+        flush=True,
     )
 
     print(

@@ -421,11 +421,17 @@ def main(argv=None) -> int:
         f"radius {radius * 1e3:.1f}mm, worst deviation "
         f"{float(np.abs(spans - radius).max()) * 1e6:.3f}um",
     )
+    # It stops short by exactly the slack held back from taut, not by some
+    # tolerance that happens to fit -- so this stays true if the sheet or the
+    # grasp point changes.
+    gap = float(np.linalg.norm(points[-1][:2] - layout.fold_target()[:2]))
+    expected = layout.material_distance() * (1.0 - float(cfg["physical"]["fold_slack"]))
     check(
-        "the arc ends on the opposite corner",
-        float(np.linalg.norm(points[-1][:2] - layout.fold_target()[:2])) < 3e-3,
-        f"ends {float(np.linalg.norm(points[-1][:2] - layout.fold_target()[:2])) * 1e3:.1f}mm "
-        f"from it (the gap is the fold_slack held back from taut)",
+        "the arc ends on the opposite corner, short by exactly the slack",
+        abs(gap - expected) < 1e-9,
+        f"{gap * 1e3:.2f}mm short, and {float(cfg['physical']['fold_slack']):.2f} slack "
+        f"on {layout.material_distance() * 1e3:.1f}mm of material predicts "
+        f"{expected * 1e3:.2f}mm",
     )
     check(
         "it goes over the top, not around the side",

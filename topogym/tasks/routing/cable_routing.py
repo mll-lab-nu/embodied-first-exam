@@ -293,6 +293,15 @@ class CableRoutingLayout:
         model = str(self.cfg.rope.model)
         if model not in ("pbd_elastic_tube", "fem_ipc_tube"):
             raise ValueError(f"Unsupported CableRouting rope model: {model!r}.")
+        if model == "fem_ipc_tube":
+            # The IPC barrier must not span the rope's own skin; a mesh that is
+            # finer than the contact distance makes the rope repel itself.
+            rope_prefab.check_self_contact_clearance(
+                radius=float(self.cfg.rope.radius),
+                radial_segments=int(self.cfg.rope.mesh.radial_segments),
+                ring_spacing=float(np.min(np.linalg.norm(np.diff(centerline, axis=0), axis=1))),
+                contact_d_hat=float(self.cfg.rope.fem.contact_d_hat),
+            )
         vertices, faces = _make_elastic_tube_mesh(
             centerline,
             radius=float(self.cfg.rope.radius),
