@@ -63,7 +63,7 @@ from topogym.tasks._fixtures import (
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 from topogym.world.rope import resolve_mesh_dir
 
-SOCKETS = ("b1", "a2")
+LINKBAR_SOCKETS = ("b1", "a2")
 
 # Which component each catch is part of. This is the fact the policy has to read
 # off the scene and the only thing that separates the two, so it is written once
@@ -178,7 +178,7 @@ class LinkbarMergeLayout:
     def nearest_socket(self, angle: float) -> str:
         """Whichever catch is the shorter turn from ``angle``. The baseline's rule."""
 
-        return min(SOCKETS, key=lambda name: abs(self.socket_angle(name) - float(angle)))
+        return min(LINKBAR_SOCKETS, key=lambda name: abs(self.socket_angle(name) - float(angle)))
 
     # ------------------------------------------------------------------- beam
 
@@ -261,7 +261,7 @@ class LinkbarMergeLayout:
         return bool(float(np.linalg.norm(offset)) <= self.capture_tolerance_xy)
 
     def seated_socket(self, angle: float) -> str | None:
-        for socket in SOCKETS:
+        for socket in LINKBAR_SOCKETS:
             if self.seated(angle, socket):
                 return socket
         return None
@@ -315,7 +315,7 @@ class LinkbarMergeLayout:
         """
 
         init_deg = float(self.cfg.linkbar.init_angle_deg)
-        angles = {name: float(np.rad2deg(self.socket_angle(name))) for name in SOCKETS}
+        angles = {name: float(np.rad2deg(self.socket_angle(name))) for name in LINKBAR_SOCKETS}
         low = float(self.cfg.sockets.min_sweep_deg)
         high = float(self.cfg.sockets.max_sweep_deg)
 
@@ -423,7 +423,7 @@ class LinkbarMergeScene:
 
         beam = self.beam_link_idx()
         pairs = self.weld_pairs()
-        for socket in SOCKETS:
+        for socket in LINKBAR_SOCKETS:
             other = self.socket_link_idx(socket)
             if (min(beam, other), max(beam, other)) in pairs:
                 return socket
@@ -915,8 +915,8 @@ class LinkbarMergeSceneBuilder:
         if not bool(arc.enabled):
             return
         segments = int(arc.segments)
-        low = min(layout.socket_angle(name) for name in SOCKETS)
-        high = max(layout.socket_angle(name) for name in SOCKETS)
+        low = min(layout.socket_angle(name) for name in LINKBAR_SOCKETS)
+        high = max(layout.socket_angle(name) for name in LINKBAR_SOCKETS)
         for index in range(segments):
             angle = low + (high - low) * (index + 0.5) / segments
             xy = layout.pin_center_xy(angle)
@@ -929,7 +929,7 @@ class LinkbarMergeSceneBuilder:
                 yaw_deg=float(np.rad2deg(angle)),
                 collision=False,
             )
-        for socket in SOCKETS:
+        for socket in LINKBAR_SOCKETS:
             xy = layout.socket_center_xy(socket)
             self._box(
                 scene, manifest, f"arc_seat_{socket}",

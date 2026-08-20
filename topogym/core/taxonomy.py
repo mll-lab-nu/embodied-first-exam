@@ -25,7 +25,12 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     "deformation": ("cloth_fold",),
     "routing": ("bar_through_hole", "cable_routing", "rope_winding"),
     "entangle": ("untangle", "untangle_continuous"),
-    "connectivity": ("diverter_route_ball", "gate_cage_ball", "stacked_plate"),
+    "connectivity": (
+        "diverter_route_ball",
+        "gate_cage_ball",
+        "linkbar_merge_components",
+        "stacked_plate",
+    ),
 }
 
 # Predate the taxonomy, not yet placed on the capability axis. Not a deprecation

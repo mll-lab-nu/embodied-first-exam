@@ -1,0 +1,274 @@
+# Linkbar Merge Components（docx 4.4）在 TopoGym tabletop V1 任务坐标系下的布局。
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# 工业原型：两段模块化工作台机架。组件 A 螺栓固定在台面上（底梁、枢轴立柱、伸出臂
+# 都不动），组件 B 是一段自由摆放的机架，落在两块定位块之间。连接梁铰接在 A 的枢轴
+# 立柱上，只能绕竖直轴转；梁端的销在一个水平圆上走。圆上有两个卡座：B1 装在 B 的
+# 内端，A2 装在 A 自己那条伸出臂的末端。机械臂只转梁上的手柄，把销扣进其中一个卡座。
+#
+# 两个卡座是**同一个零件**：tasks/connectivity/linkbar_merge_components.py 的
+# _socket_shapes() 只写一份形状，A2 与 B 各用一次。因此「同款插口」是代码保证而不是
+# 两段配置恰好写成一样。二者同半径、同扫掠成本，唯一区别是装在谁身上——这正是本任务
+# 要考的东西。
+#
+# 与 docx 的几何差异：docx 图画的是竖直平面内摆动，这里改为桌面水平面（铰链轴 +z）。
+# 判定的不变量（约束图 β₀ 2→1）完整保留；改动的理由与代价见
+# docs/develop/tasks/linkbar_merge_components_zh.md §1。
+# 第二处差异：docx 的物理复核是「提起 A 看 B 是否被带起」，这里 A 是世界固定基座，
+# 改为提起 B 看是否被拉住，判别力相同。
+#
+# 派生量不写在这里，由 LinkbarMergeLayout 从下面几个数算出来，改半径或改角度时整套
+# 几何自洽：
+#   socket_center(θ)      = pivot + arm_radius · (cos θ, sin θ)      卡座（销的落座点）
+#   socket_yaw(θ)         = θ − 90°·sign(θ − init)                   卡座口朝销来的方向
+#   socket_pad_half_width = pin.radius + pin_clearance + jaw_thickness  卡座的径向半宽
+#   outrigger 长度        = arm_radius − socket_pad_half_width       伸出臂止于卡座底板
+#   B 的机架起点          = socket_pad_half_width + base.gap         沿径向朝外
+#
+# 现值（arm_radius=0.170，init=0°，b1=+55°，a2=−45°）：
+#   B1 卡座 (0.0775, 0.1392)，A2 卡座 (0.1002, −0.1202)，
+#   捕获窗 15mm ≈ 5.06° 关节角，越程余量（销到背板）24mm ≈ 8.1°。
+
+task:
+  id: linkbar_merge_components
+  difficulty: smoke
+
+coordinate_frame: task
+
+# ---------------------------------------------------------------- 枢轴
+# 整套几何的原点。x 取 −0.020：让手柄在初始角落在 x≈0.080（距 Franka 底座 0.650m，
+# 与 4.1 的取板点 0.645m、4.3 的拨杆 0.688m 同量级），两个卡座也都留在可达范围内。
+pivot:
+  x: -0.020
+  y: 0.0
+
+# ---------------------------------------------------------------- 连接梁
+linkbar:
+  # 销走的圆半径。也是两个卡座的半径——「同在旋转圆上」在这里是一个数。
+  arm_radius: 0.170
+  # 初始角。0° = 梁指向 +x（远离机械臂、朝 front 相机）。两个卡座分居它两侧。
+  init_angle_deg: 0.0
+
+  beam:
+    # 梁底 0.075 高于一切卡座颚板（顶面 0.053），所以梁可以从任何卡座上方扫过，
+    # 只有销会进卡座。这条净空是「扫过去不挂住」与「扫到位才锁上」能分开的前提。
+    bottom_z: 0.075
+    height: 0.020
+    width: 0.026
+    color: [0.42, 0.46, 0.52]
+
+  pin:
+    radius: 0.010
+    # 销底 0.012 高于底板顶面 0.008，留 4mm：销在整圈行程里不蹭任何底板。
+    bottom_z: 0.012
+    collar_radius: 0.015
+    collar_height: 0.008
+    color: [0.88, 0.55, 0.10]
+
+  axle:
+    radius: 0.018
+    # 转轴伸出梁顶多少。露出一截才看得出「梁绕它转」。
+    rise: 0.010
+    color: [0.55, 0.56, 0.58]
+
+  hub:
+    radius: 0.030
+    height: 0.024
+
+  knob:
+    # 手柄所在半径。取 0.100 < arm_radius：手柄在销的内侧，夹爪够手柄时离卡座还远，
+    # 不会在落座瞬间撞到卡座颚板。
+    station: 0.100
+    boss_radius: 0.016
+    boss_height: 0.010
+    # 圆柱手柄而不是方柱：方柱的对角线比端面宽，转动时会把指腹撑开（4.3 实测结论）。
+    radius: 0.011
+    height: 0.050
+    cap_radius: 0.014
+    cap_height: 0.006
+    # 指腹在手柄上的高度（自手柄底面起）。手柄 0.105–0.155，取中偏下。
+    grasp_height: 0.025
+    color: [0.12, 0.13, 0.15]
+    cap_color: [0.88, 0.55, 0.10]
+
+  mechanism:
+    joint_name: linkbar_joint
+    mass: 0.450
+    joint_damping: 0.050
+    joint_friction: 0.030
+    joint_armature: 0.010
+    contact_friction: 1.000
+    # 关节**不设限位**。圆上有两个座，限位只能描述其中一个；而且「转到停为止」会把
+    # 本任务要考的瞄准直接抹掉（4.3 就同一问题留下过书面理由）。越程由卡座背板吃掉。
+
+# ---------------------------------------------------------------- 卡座角位置
+# 防捷径的随机化轴。逐 episode 改这两个角即可：oracle 读 b1 的归属仍然可解，而
+# 「转向最近的座」「总是转同一个方向」都被钉在随机水平。
+sockets:
+  b1_angle_deg: 55.0
+  a2_angle_deg: -45.0
+  # 允许的扫掠幅度（相对 init_angle_deg 的绝对值）。下界保证「转过去」是一次真动作
+  # 而不是抖一下；上界保证手柄不出机械臂工作区。两个角必须分居 init 两侧，否则销要
+  # 穿过一个座才能到另一个座——LinkbarMergeLayout.validate 直接报错。
+  min_sweep_deg: 30.0
+  max_sweep_deg: 75.0
+
+# ---------------------------------------------------------------- 卡座（同款零件）
+# 局部坐标：+x 朝外穿过卡座口（销来的方向），+y 横跨卡槽。零件对卡槽左右对称，
+# 因此同一份形状可以按两种朝向安装（见 socket_yaw_deg）。
+socket:
+  # 销与颚板的单边间隙。卡槽半宽 = pin.radius + 这个值 = 0.014。
+  pin_clearance: 0.004
+  jaw_thickness: 0.010
+  jaw_length: 0.090
+  jaw_station: 0.010
+  jaw_height: 0.045
+  pad_thickness: 0.008
+  pad_length: 0.110
+  pad_station: 0.005
+  # 背板。销落座点在局部原点，背板中心在 −0.040：越程余量 = 0.040 − 0.010（销半径）
+  # − 0.006（背板半厚）= 0.024m ≈ 8.1° 关节角，比捕获窗宽，过冲会被挡住而不是飞过。
+  back_stop_station: -0.040
+  back_stop_thickness: 0.012
+  # 口部导角。纯视觉：在物理上放宽入口等于偷偷改掉卡座能容忍多少对不准，而这份
+  # 预算属于 capture_tolerance_xy。
+  lip_length: 0.018
+  lip_flare_deg: 18.0
+  # 捕获窗：销心距落座点多近才锁上。15mm ≈ 5.06° 关节角，是本任务的瞄准精度要求。
+  capture_tolerance_xy: 0.015
+  # A2 那份是固定件，质量只用来写 URDF 的惯量，不影响任何判定。
+  mass: 0.300
+  contact_friction: 1.000
+  color: [0.62, 0.63, 0.65]
+  accent_color: [0.88, 0.55, 0.10]
+
+# ---------------------------------------------------------------- 组件 A（固定）
+component_a:
+  # 底梁：自枢轴朝机械臂一侧伸出。8mm 平板而不是厚梁——销底在 0.012，销的圆上
+  # 任何高过它的东西都是销会撞的东西。
+  spine:
+    length: 0.170
+    width: 0.070
+    thickness: 0.008
+    # 末端立柱。离枢轴 0.140（x≈−0.160）：让 A 读起来是一段机架而不是一块贴在
+    # 桌上的板。高度取 0.070 而不是更高，有两个原因：低于梁底 0.075 留 5mm，梁扫到
+    # 任何角度都不会碰它；以及避免与 Franka 共用 home 位姿的前臂发生干涉。
+    post_inset: 0.030
+    post_height: 0.070
+    post_radius: 0.016
+    color: [0.55, 0.56, 0.58]
+  # 伸出臂：自枢轴通往 A2 卡座。它的方向随 a2_angle_deg 派生，因此 A2 在画面里
+  # 始终**结构上连着 A**——这就是「接口的全局归属」在视觉上的表达。
+  outrigger:
+    width: 0.056
+    thickness: 0.008
+    color: [0.55, 0.56, 0.58]
+  # 梁转在它上面的固定立柱。顶面 0.070 刚好在梁底（0.075）之下，转轴从它上方穿出，
+  # 于是关节的「固定半边」与「转动半边」在画面里是分开的两件东西。
+  pivot_column:
+    radius: 0.026
+    height: 0.070
+    color: [0.45, 0.46, 0.48]
+
+# ---------------------------------------------------------------- 组件 B（自由体）
+# 单个刚体：卡座 + 机架写在同一个 URDF link 里。提起测试问的是「B 整体是否被拉住」，
+# 若拆成多个实体，没被焊到的那些各自回答自己，会照常抬起来。
+component_b:
+  # 0.90kg：静摩擦约 7.9N，销进槽时的擦碰推不动它。定位块负责剩下的部分。
+  mass: 0.900
+  contact_friction: 0.900
+  color: [0.28, 0.40, 0.52]
+  base:
+    length: 0.170
+    width: 0.110
+    thickness: 0.008
+    # 与卡座底板之间的缝。留 4mm 避免两块共面板边缘互相穿插。
+    gap: 0.004
+  post:
+    size: 0.020
+    spacing: 0.045
+    height: 0.090
+    # 沿 B 轴向（自机架起点算起）的两处立柱站位。最内一处 0.030 已在销的进给通道
+    # 之外（通道只在卡座局部 y≈0 附近）。
+    stations: [0.030, 0.140]
+  top_rail:
+    thickness: 0.016
+    height: 0.016
+    color: [0.55, 0.56, 0.58]
+  # 定位块：只挡横向，不挡向上。提起测试的通道必须始终是敞开的，否则判据测的就
+  # 不是约束而是这两块铁。
+  locators:
+    enabled: true
+    size: [0.030, 0.070, 0.035]
+    spacing: 0.048
+    clearance: 0.002
+    color: [0.35, 0.36, 0.38]
+
+# ---------------------------------------------------------------- 摆动圆弧标记
+# docx 4.4 图里的那条虚线，画它的理由也一样：它是「两个卡座是同样一次转动」的可读证据。
+# 纯视觉，无碰撞。
+swing_arc:
+  enabled: true
+  segments: 16
+  tick_size: [0.012, 0.004, 0.0010]
+  seat_tick_size: [0.026, 0.007, 0.0012]
+  z_offset: 0.0006
+  color: [0.46, 0.47, 0.49]
+  seat_color: [0.88, 0.55, 0.10]
+
+# ---------------------------------------------------------------- 指令
+# 与 4.3 不同，本任务的指令是常量：要读的信息（哪个卡座属于 B）在场景里，不在语言里。
+command:
+  prompt: "Join the two frames into one."
+
+# ---------------------------------------------------------------- 提起测试
+# 物理层复核。合并成功则 B 被 weld 拉住（梁的铰链不允许竖直位移），接错或没扣上则
+# B 自由抬起。力 = force_scale × component_b.mass × g，逐步重复施加（外力每步清零）。
+# 取 3.0：净上升加速度约 2g，0.2 秒内自由的 B 明显离台，被拉住的 B 不动。
+lift_test:
+  force_scale: 3.0
+  steps: 20
+  settle_steps: 20
+
+# ---------------------------------------------------------------- 判据
+success:
+  # 被合并的 B 允许的最大上移。
+  max_lift_delta: 0.005
+  # 未合并时同样的力必须抬起的高度。低于它说明力标定坏了，判据无判别力——
+  # 这一条不判任务成败，只用来标记「判据本身失效」。
+  min_free_lift: 0.050
+  settle_steps: 60
+
+# ---------------------------------------------------------------- 原语参数
+# 全部是 hand link 在 task 帧的 z（指腹在其下方 HAND_TO_PAD_Z=0.1029 处）。
+motion:
+  approach_z: 0.300
+  retreat_z: 0.300
+  steps_per_phase: 100
+  steps_arc: 240
+  gripper_steps: 50
+  close_hold_steps: 35
+  arc_settle_steps: 60
+  release_hold_steps: 45
+  # 手柄直径 0.022，合到 0.006 让指腹实压。
+  grasp_qpos: 0.006
+  finger_links: [left_finger, right_finger]
+  finger_friction: 3.000
+  knob_friction: 2.000
+  # 到位角容差。捕获窗 15mm ≈ 5.06°，这里收到 4° 留出余量。
+  target_tolerance_deg: 4.0
+  max_follow_error: 0.040
+  max_release_drift_deg: 5.0
+  # 合爪停位低于它即判为「合在空处」。assisted carry 不适用，这里是纯接触驱动，
+  # 指行程仍是区分「夹到手柄」与「夹空」的读数。
+  min_finger_qpos: 0.004
+
+physical:
+  settle_steps: 40
+
+mdp:
+  max_episode_steps: 60
+  reward:
+    success: 10.0
+    wrong_socket_penalty: 1.0
+    action: 0.01

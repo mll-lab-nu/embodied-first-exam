@@ -29,6 +29,7 @@ from .pbd_particle_pinch import (
     PBDParticlePinchDragPrimitive,
     PBDParticlePinchResult,
 )
+from .socket_weld import SocketWeld
 from .pick_place import PickPlacePrimitive, PickPlaceResult
 from .pivot_lever import (
     PivotLeverPrimitive,
@@ -66,6 +67,7 @@ __all__ = [
     "quat_mul",
     "validate_rigid_friction",
     "PickPlacePrimitive",
+    "SocketWeld",
     "PivotLeverPrimitive",
     "PivotLeverResult",
     "knob_point_world",
