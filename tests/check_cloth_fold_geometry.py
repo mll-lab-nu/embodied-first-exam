@@ -61,6 +61,76 @@ sys.modules[_tex_spec.name] = textures
 _tex_spec.loader.exec_module(textures)
 
 
+# `topogym.planning` is NumPy-only, so it imports normally -- the same route
+# `check_rope_winding_geometry.py` takes.
+sys.path.insert(0, str(REPO))
+from topogym.planning.cloth_fold_planner import (  # noqa: E402
+    chord_error,
+    fold_waypoints,
+)
+
+
+class _StandInLayout:
+    """Just enough of `ClothFoldLayout` for the planner, without Genesis.
+
+    Mirrors the real geometry from the same config, so a change to one and not
+    the other shows up as this check disagreeing with the demo's own log line.
+    """
+
+    def __init__(self, cfg, table_z=0.0):
+        self.task_cfg = _Node(cfg)
+        self._cfg = cfg
+        self._table_z = table_z
+
+    def _offset(self):
+        half = 0.5 * np.asarray(self._cfg["cloth"]["size"], dtype=float)
+        inset = float(self._cfg["grasp"]["inset"])
+        if str(self._cfg["grasp"]["at"]) == "corner":
+            return np.array([half[0] - inset, half[1] - inset])
+        return np.array([half[0] - inset, 0.0])
+
+    def cloth_centre(self):
+        return np.asarray(self._cfg["cloth"]["center"], dtype=float)
+
+    def rest_z(self):
+        return self._table_z + float(self._cfg["cloth"]["z"])
+
+    fold_point = cloth_centre
+
+    def fold_normal(self):
+        offset = self._offset()
+        return offset / float(np.linalg.norm(offset))
+
+    def material_distance(self):
+        return float(np.linalg.norm(self._offset()))
+
+    def fold_radius(self):
+        return self.material_distance() * float(self._cfg["physical"]["fold_slack"])
+
+    def fold_steps(self):
+        arc = float(np.pi * self.fold_radius())
+        return max(4, int(round(arc / float(self._cfg["physical"]["fold_step_m"]))))
+
+    def grasp_point(self):
+        return np.array([*(self.cloth_centre() + self._offset()), self.rest_z()])
+
+    def fold_target(self):
+        return np.array([*(self.cloth_centre() - self._offset()), self.rest_z()])
+
+
+class _Node(dict):
+    """Attribute access, as OmegaConf gives the real layout."""
+
+    def __init__(self, data):
+        super().__init__({k: _Node(v) if isinstance(v, dict) else v for k, v in data.items()})
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+
 def _sheet_mesh_fn():
     """`cloth_sheet_mesh` lifted out of the task module by source.
 
@@ -332,6 +402,53 @@ def main(argv=None) -> int:
         and good.over_layer_cells == 0,
         f"crumpled {states['crumpled'].over_layer_cells}/"
         f"{states['crumpled'].covered_cells} cells, perfect {good.over_layer_cells}",
+    )
+
+    print("\n手走的弧线是由材料定死的，不是选出来的")
+    layout = _StandInLayout(cfg)
+    points = np.array([w.position for w in fold_waypoints(layout)])
+    centre, normal = layout.fold_point(), layout.fold_normal()
+    radius = layout.fold_radius()
+    # Every waypoint the same length of material from the fold line: that is what
+    # "the corner can only travel on a circle" means, and both ways of getting it
+    # wrong were measured in 2026-08-19 (over-reach stretches the sheet, under-
+    # reach lets it sag and be towed).
+    along = (points[:, :2] - centre) @ normal
+    spans = np.linalg.norm(np.column_stack([along, points[:, 2] - layout.rest_z()]), axis=1)
+    check(
+        "every waypoint is the same distance from the fold line",
+        float(np.abs(spans - radius).max()) < 1e-9,
+        f"radius {radius * 1e3:.1f}mm, worst deviation "
+        f"{float(np.abs(spans - radius).max()) * 1e6:.3f}um",
+    )
+    check(
+        "the arc ends on the opposite corner",
+        float(np.linalg.norm(points[-1][:2] - layout.fold_target()[:2])) < 3e-3,
+        f"ends {float(np.linalg.norm(points[-1][:2] - layout.fold_target()[:2])) * 1e3:.1f}mm "
+        f"from it (the gap is the fold_slack held back from taut)",
+    )
+    check(
+        "it goes over the top, not around the side",
+        float(points[:, 2].max() - layout.rest_z()) > 0.9 * radius,
+        f"apex {float(points[:, 2].max() - layout.rest_z()) * 1e3:.1f}mm of a "
+        f"{radius * 1e3:.1f}mm radius",
+    )
+    # The primitive drives straight lines between waypoints, so the segments have
+    # to be short enough that the chords hug the circle.
+    error = chord_error(layout)
+    check(
+        "straight segments stay within a particle of the arc",
+        error < float(cfg["cloth"]["particle_size"]),
+        f"worst chord error {error * 1e3:.2f}mm vs a "
+        f"{float(cfg['cloth']['particle_size']) * 1e3:.1f}mm particle",
+    )
+    total = sum(int(w.steps) for w in fold_waypoints(layout))
+    check(
+        "the segments add up to the calibrated speed",
+        abs(np.pi * radius / total - float(cfg["physical"]["fold_step_m"])) < 2e-4,
+        f"{total} steps over {np.pi * radius * 1e3:.0f}mm = "
+        f"{np.pi * radius / total * 1e3:.2f}mm a step, asked for "
+        f"{float(cfg['physical']['fold_step_m']) * 1e3:.2f}",
     )
 
     print("\n布面有 UV，贴图才有地方可贴")
