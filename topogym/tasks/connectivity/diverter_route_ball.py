@@ -354,8 +354,20 @@ class DiverterRouteBallLayout:
         return self.floor_top_z + float(self.cfg.diverter.flap.ground_clearance)
 
     @property
+    def flap_top_z(self) -> float:
+        """Above the wall tops, on purpose.
+
+        The flap used to be exactly a wall segment -- same 12 mm thickness, same
+        45 mm top -- and a first-time viewer could not tell it was the part that
+        moves. Standing it proud is the cheapest of the four cues (the others are
+        thickness, a visible axle, and the swing arc on the floor).
+        """
+
+        return self.wall_top_z + float(self.cfg.diverter.flap.rise_above_wall)
+
+    @property
     def flap_height(self) -> float:
-        return self.wall_top_z - self.flap_bottom_z
+        return self.flap_top_z - self.flap_bottom_z
 
     def seat_angle(self, sealed_side: str) -> float:
         """Joint angle that seals ``sealed_side`` (and feeds the other one)."""
@@ -378,30 +390,56 @@ class DiverterRouteBallLayout:
         return None if sealed is None else other_side(sealed)
 
     @property
-    def commanded_side(self) -> str:
-        """Which exit this episode asks for. Part of the instance, not the run mode."""
+    def dead_end_side(self) -> str:
+        """Which branch is capped. The ball can enter it but never leave."""
 
-        side = str(self.cfg.command.side)
+        side = str(self.cfg.diverter.dead_end_side)
         if side not in SIDES:
-            raise ValueError(f"command.side must be one of {SIDES}, got {side!r}.")
+            raise ValueError(f"diverter.dead_end_side must be one of {SIDES}, got {side!r}.")
         return side
 
-    def command_prompt(self, side: str | None = None) -> str:
-        """The episode's language instruction, generated from the commanded side.
+    @property
+    def live_side(self) -> str:
+        """The branch that leads to the target."""
 
-        Generated rather than hand-written per demo because it has to agree with
-        `command.side` in every episode -- this is the repo's first task whose
-        prompt varies per instance, and the H5 writer takes it as a per-episode
-        argument already.
+        return other_side(self.dead_end_side)
+
+    @property
+    def commanded_side(self) -> str:
+        """Where the ball has to end up.
+
+        Derived rather than configured: with one branch capped there is only one
+        destination, so asking for it separately would be a second source of
+        truth that could disagree with the geometry. What varies per episode is
+        which branch is the dead end -- and that has to be READ off the scene,
+        which is the task.
         """
 
-        side = self.commanded_side if side is None else str(side)
-        return f"Send the ball out the {side} exit."
+        return self.live_side
+
+    def command_prompt(self, side: str | None = None) -> str:
+        """The episode's instruction. Constant here, and deliberately so.
+
+        With one destination there is nothing for an instruction to disambiguate.
+        The per-episode prompt machinery stays wired (the H5 writer takes it as a
+        per-episode argument) so a two-destination variant can switch it back on
+        without re-plumbing.
+        """
+
+        del side
+        return str(getattr(self.cfg.command, "prompt", "Send the ball to the target."))
 
     def target_angle(self, side: str) -> float:
         """Joint angle that routes the ball to ``side`` (by sealing the other)."""
 
         return self.seat_angle(other_side(side))
+
+    def branch_end_station(self, side: str) -> float:
+        """Axial length of a branch: the dead one runs on past its exit plane."""
+
+        if side != self.dead_end_side:
+            return self.exit_station
+        return self.exit_station + float(self.cfg.branch.dead_end_extra)
 
     @property
     def initial_sealed_side(self) -> str:
@@ -425,7 +463,8 @@ class DiverterRouteBallLayout:
 
     @property
     def lever_arm_bottom_z(self) -> float:
-        return self.wall_top_z + float(self.cfg.diverter.lever.arm_gap)
+        # Above the FLAP now, not the wall: the flap is the taller of the two.
+        return self.flap_top_z + float(self.cfg.diverter.lever.arm_gap)
 
     @property
     def lever_arm_top_z(self) -> float:
@@ -452,6 +491,33 @@ class DiverterRouteBallLayout:
         xy = self.knob_center_xy(joint_angle)
         z = self.lever_arm_top_z + float(self.cfg.diverter.lever.grasp_height)
         return self.position_to_world((float(xy[0]), float(xy[1]), z))
+
+    def swing_arc_cfg(self):
+        return getattr(self.cfg.diverter, "swing_arc", None)
+
+    def swing_arc_points(self):
+        """(xy, yaw_deg, is_seat) for each tick of the floor swing indicator.
+
+        Drawn on the arc the LEVER sweeps -- the empty wedge between the two
+        branches -- rather than under the flap, where the ball runs. The two end
+        ticks sit on the seats, so the marking reads as a range with two detents,
+        which is what a valve position indicator looks like.
+        """
+
+        arc = self.swing_arc_cfg()
+        if arc is None:
+            return []
+        count = max(2, int(arc.segments))
+        radius = self.lever_radius
+        nose = self.nose_xy()
+        limit = self.angle
+        points = []
+        for index in range(count):
+            frac = index / (count - 1)
+            angle = -limit + frac * 2.0 * limit
+            xy = nose + radius * np.array([np.cos(angle), np.sin(angle)], dtype=float)
+            points.append((xy, float(np.rad2deg(angle)), index in (0, count - 1)))
+        return points
 
     # ----- ball -------------------------------------------------------------
 
@@ -614,6 +680,7 @@ class DiverterRouteBallSceneBuilder:
         entity, joint_name = self._add_diverter(scene, manifest, layout)
         self._add_ball(scene, manifest, layout)
         self._add_target_marker(scene, manifest, layout)
+        self._add_swing_arc(scene, manifest, layout)
 
         tabletop_builder.finalize(tabletop)
         joint_dof = hinge_joint_dof(entity, joint_name)
@@ -708,9 +775,9 @@ class DiverterRouteBallSceneBuilder:
         """
 
         offset = layout.half_width + 0.5 * layout.wall_thickness
-        exit_station = layout.exit_station
         for side in SIDES:
             yaw = layout.branch_yaw_deg(side)
+            exit_station = layout.branch_end_station(side)
             for tag, station, sign in (
                 ("outer", layout.outer_wall_station, -1.0),
                 ("inner", layout.inner_wall_station, 1.0),
@@ -727,6 +794,41 @@ class DiverterRouteBallSceneBuilder:
                 self._wall(
                     scene, manifest, layout, f"branch_{side}_{tag}", center, length, yaw
                 )
+        self._add_dead_end_cap(scene, manifest, layout)
+
+    def _add_dead_end_cap(self, scene, manifest, layout) -> None:
+        """The wall that closes the dead branch.
+
+        This is what turns the scene from two equivalent forks into a question
+        with an answer: the ball can only reach the target through the OTHER
+        branch, so "is there a path" becomes a real question about the free space
+        rather than a label the judge applies. The dead branch also runs on past
+        the live one's exit plane, so the ball visibly travels into it and stops,
+        instead of looking as though it bumped something at the fork.
+        """
+
+        side = layout.dead_end_side
+        station = layout.branch_end_station(side)
+        center = layout.branch_point(side, station + 0.5 * layout.wall_thickness)
+        self._box(
+            scene,
+            manifest,
+            "dead_end_cap",
+            layout.position_to_world(
+                (
+                    float(center[0]),
+                    float(center[1]),
+                    layout.floor_top_z + 0.5 * layout.wall_height,
+                )
+            ),
+            (
+                layout.wall_thickness,
+                2.0 * (layout.half_width + layout.wall_thickness),
+                layout.wall_height,
+            ),
+            self.task_cfg.channel.color,
+            yaw_deg=layout.branch_yaw_deg(side),
+        )
 
     # -------------------------------------------------------------- diverter
 
@@ -750,20 +852,40 @@ class DiverterRouteBallSceneBuilder:
         arm_height = float(lever.arm_height)
         knob_height = float(lever.knob_height)
         knob_size = float(lever.knob_size)
-        post = float(lever.post_size)
-        post_height = arm_bottom - layout.wall_top_z
+        # One axle from the flap's underside up past the lever arm, replacing the
+        # short square post that used to hide between them. A visible axle is the
+        # most direct answer to "what does this thing turn about", and it is one
+        # part instead of two.
+        axle_radius = float(lever.axle_radius)
+        axle_top = layout.lever_arm_top_z + float(lever.axle_rise)
+        axle_height = axle_top - layout.flap_bottom_z
+        tip_length = float(flap.tip_length)
+        tip_thickness = float(flap.tip_thickness)
+        body_length = max(0.001, length - tip_length)
 
         shapes = [
             HingeShape(
                 kind="box",
-                size=(length, float(flap.thickness), height),
-                origin=(-0.5 * length, 0.0, layout.flap_bottom_z + 0.5 * height),
+                size=(body_length, float(flap.thickness), height),
+                origin=(-0.5 * body_length, 0.0, layout.flap_bottom_z + 0.5 * height),
                 color=_list(flap.color),
             ),
+            # Visual-only taper at the free end. `collide=False` keeps it out of
+            # the physics, so shaping the part for readability cannot change what
+            # the ball touches -- and the verifier's single-rectangle model of the
+            # flap stays the one that matters.
             HingeShape(
                 kind="box",
-                size=(post, post, post_height),
-                origin=(0.0, 0.0, layout.wall_top_z + 0.5 * post_height),
+                size=(tip_length, tip_thickness, height),
+                origin=(-body_length - 0.5 * tip_length, 0.0,
+                        layout.flap_bottom_z + 0.5 * height),
+                color=_list(flap.color),
+                collide=False,
+            ),
+            HingeShape(
+                kind="cylinder",
+                size=(axle_radius, axle_height),
+                origin=(0.0, 0.0, layout.flap_bottom_z + 0.5 * axle_height),
                 color=_list(lever.color),
             ),
             HingeShape(
@@ -834,7 +956,7 @@ class DiverterRouteBallSceneBuilder:
         if not layout.target_pad_enabled():
             return
         pad = layout.target_pad_cfg
-        side = layout.commanded_side
+        side = layout.live_side
         center = layout.target_pad_center(side)
         along = float(pad.pad_length)
         across = float(pad.pad_width)
@@ -867,6 +989,47 @@ class DiverterRouteBallSceneBuilder:
                     ),
                     surface=materials.plastic(
                         "deformable", red if index % 2 == 0 else white
+                    ),
+                    name=name,
+                ),
+            )
+
+    def _add_swing_arc(self, scene, manifest, layout) -> None:
+        """Floor ticks marking how far the lever swings, with a mark at each seat.
+
+        Decoration (`collision=False`), on the arc the lever sweeps. It is the
+        cue that says "this turns, and this far" without a texture and without
+        making the part look unlike a machine -- a valve position indicator is
+        exactly this.
+        """
+
+        arc = layout.swing_arc_cfg()
+        if arc is None or not bool(getattr(arc, "enabled", True)):
+            return
+        thickness = float(arc.thickness)
+        base_z = layout.floor_top_z + float(arc.z_offset)
+        tick = [float(v) for v in _list(arc.tick_size)]
+        seat_tick = [float(v) for v in _list(arc.seat_tick_size)]
+        for index, (xy, yaw_deg, is_seat) in enumerate(layout.swing_arc_points()):
+            size = seat_tick if is_seat else tick
+            name = f"swing_tick_{index:02d}"
+            manifest.add(
+                name,
+                scene.add_entity(
+                    gs.morphs.Box(
+                        pos=tuple(
+                            layout.position_to_world(
+                                (float(xy[0]), float(xy[1]), base_z)
+                            )
+                        ),
+                        size=(size[0], size[1], thickness),
+                        euler=(0.0, 0.0, yaw_deg),
+                        fixed=True,
+                        collision=False,
+                    ),
+                    surface=materials.plastic(
+                        "fixture",
+                        _list(arc.seat_color if is_seat else arc.color),
                     ),
                     name=name,
                 ),

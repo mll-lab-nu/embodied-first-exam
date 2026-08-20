@@ -232,18 +232,20 @@ def run_rollout(cfg, ball_scene, drive, state) -> None:
         )
     if cfg.run.classify:
         # The geometric judge, read on the same scene the rollout just happened in.
-        # Its point is the agreement line: the flood fill and the physics have to
-        # give the same answer, and a disagreement means the judge is wrong.
+        # The line that matters is `judge_disagrees`: the ball reaching a target
+        # the flood fill calls unreachable is the one combination that cannot be
+        # true, and it means the judge is wrong rather than the run.
         state = DiverterRouteBallEvaluator().classify(
             ball_scene,
-            commanded_side=expected,
-            exit_side=exit_side,
+            reached_target=bool(exit_side == layout.live_side),
             ball_stuck=bool(drive.jammed),
         )
         print(
             "diverter_route_ball classify "
-            f"reachable={state.invariant_value} open_side={state.open_side} "
-            f"observed_exit={exit_side} agrees={state.open_side == exit_side} "
+            f"dead_end={layout.dead_end_side} live={layout.live_side} "
+            f"target_reachable={state.invariant_value} observed_exit={exit_side} "
+            f"reached_target={state.reached_target} "
+            f"judge_disagrees={state.judge_disagrees} "
             f"seated={state.seated} success={state.is_terminal} "
             f"label={state.failure_label}",
             flush=True,
@@ -357,7 +359,7 @@ def main(cfg: DictConfig) -> None:
                 stall_steps=int(cfg.task.ball.stall_steps),
                 offtrack_decel=float(cfg.task.ball.offtrack_decel),
                 brake_rect=(
-                    layout.target_pad_rect_world(layout.commanded_side)
+                    layout.target_pad_rect_world(layout.live_side)
                     if layout.target_pad_enabled()
                     else None
                 ),

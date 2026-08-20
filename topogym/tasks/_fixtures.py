@@ -168,6 +168,10 @@ class HingeShape:
     origin: Sequence[float] = (0.0, 0.0, 0.0)
     rpy: Sequence[float] = (0.0, 0.0, 0.0)
     color: Sequence[float] | None = None
+    # Visual-only parts get no <collision>, so shaping a part for readability
+    # cannot quietly change what the payload collides with -- and the judge's
+    # model of the part stays the one thing that touches the ball.
+    collide: bool = True
 
     def half_extent(self) -> np.ndarray:
         """Axis-aligned half size, used only to size the link's inertia box.
@@ -250,6 +254,8 @@ def write_hinge_urdf(
     lower = np.full(3, np.inf)
     upper = np.full(3, -np.inf)
     for shape in shapes:
+        if not shape.collide:
+            continue
         origin = np.asarray(_to_container(shape.origin), dtype=float).reshape(3)
         half = shape.half_extent()
         lower = np.minimum(lower, origin - half)
@@ -267,12 +273,18 @@ def write_hinge_urdf(
         rgba_text = " ".join(f"{float(v):.6f}" for v in list(rgba)[:3]) + " 1"
         geometry = shape.geometry_xml()
         origin = _origin_xml(shape.origin, shape.rpy)
-        parts.append(
+        collision = (
             f"""    <collision>
       {origin}
       <geometry>{geometry}</geometry>
     </collision>
-    <visual>
+"""
+            if shape.collide
+            else ""
+        )
+        parts.append(
+            collision
+            + f"""    <visual>
       {origin}
       <geometry>{geometry}</geometry>
       <material name="{robot_name}_mat_{index}">

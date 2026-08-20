@@ -2,26 +2,29 @@
 
 Everything else in docx 4.3 is a fixed motion: the arm takes the lever, sweeps
 an arc, lets go. The only decision is the target angle, and it depends on two
-things -- the instruction, and where the flap currently is. That decision is this
-module, and it is arithmetic on those two, so it needs no Genesis and is
-unit-testable.
+things -- which branch is the dead end, and where the flap currently is. That
+decision is this module, and it is arithmetic on those two, so it needs no
+Genesis and is unit-testable.
+
+The dead end is what has to be READ: it varies per episode, it is the only thing
+that says which way is correct, and nothing in the instruction carries it (with
+one destination the instruction is a constant).
 
 Two rules with one interface, so the contrast pair is honest, the same shape
 `gate_cage_ball_planner` uses for its trigger rules:
 
-    DiverterOracleRule    read the instruction and the flap, seal the other side
-    FixedDirectionRule    always drive to the same seat, ignoring the instruction
+    DiverterOracleRule    read which branch is dead and where the flap is, seal the dead one
+    FixedDirectionRule    always drive to the same seat, whatever the scene shows
 
-`FixedDirectionRule` is the scripted baseline docx 4.3's anti-shortcut is aimed
-at. It wins exactly the instances where its fixed seat happens to be the one
-asked for -- half of them, once the instruction and the initial phase are drawn
-independently. Keeping it beside the oracle rather than in a demo is what makes
-that a measurement instead of an assertion.
+`FixedDirectionRule` always drives to the same seat whatever the scene looks
+like. It wins exactly the instances where that seat happens to be the one that
+seals the dead end -- half of them, once the dead end and the initial phase are
+drawn independently. Keeping it beside the oracle rather than in a demo is what
+makes that a measurement instead of an assertion.
 
-**Not rotating is a real decision, not a no-op.** When the flap already routes to
-the commanded side the correct action is to leave it alone, and half the 2x2
-instances are like that. A rule that always rotates gets those wrong, which is
-the point.
+**Not rotating is a real decision, not a no-op.** When the flap already seals the
+dead end the correct action is to leave it alone, and half the 2x2 instances are
+like that. A rule that always rotates gets those wrong, which is the point.
 """
 
 from __future__ import annotations
@@ -42,7 +45,7 @@ class DiverterRotateCommand:
 
 @dataclass(frozen=True)
 class DiverterOracleRule:
-    """Seal whichever branch is not the one asked for."""
+    """Seal the dead branch, so the only route left is the one with the target."""
 
     def decide(self, layout, current_angle: float, commanded_side: str) -> DiverterRotateCommand:
         current_angle = float(current_angle)
@@ -54,7 +57,7 @@ class DiverterOracleRule:
             start_angle=current_angle,
             target_angle=current_angle if already == side else target,
             rotate=already != side,
-            reason="already_open" if already == side else "rotate_to_seal_other",
+            reason="already_open" if already == side else "rotate_to_seal_dead_end",
         )
 
 

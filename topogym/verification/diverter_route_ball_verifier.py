@@ -4,8 +4,14 @@ The C4 (`connectivity`) invariant contract in
 `docs/develop/framework/task_taxonomy_zh.md` Section 4.4 wants a reading on a
 declared space. Here the space is the BALL's configuration space -- the robot only
 turns the flap's lever and never touches the ball -- so `to_info()` declares
-`"space": "c_free"`. The reading is S-T reachability: from the release point, is
-there still a route to the left exit, and to the right one?
+`"space": "c_free"`. The reading is S-T reachability, and there is exactly one
+S-T pair: from the ball's release point, is there still a route to the target?
+
+One pair because one branch is capped. Two open exits made "connectivity" a label
+the judge applied rather than something the scene showed -- both exits counted as
+arriving, so nothing in the picture said where the ball was supposed to end up.
+With a dead end there is one destination, and whether a route to it exists is
+decided by the flap.
 
 Method, and its two departures from `gate_cage_ball_verifier`, which this is
 otherwise a copy of:
@@ -54,7 +60,6 @@ import numpy as np
 from topogym.tasks.connectivity.diverter_route_ball import (
     SIDES,
     DiverterRouteBallScene,
-    other_side,
     side_sign,
 )
 
@@ -89,109 +94,79 @@ class OrientedRect:
 
 @dataclass(frozen=True)
 class DiverterRouteBallState:
-    """One reading of the flap's phase and of what the ball can still reach."""
+    """One reading of the flap's phase and of where the ball got to."""
 
     ball_xy: tuple[float, float]
     flap_angle: float
     sealed_side: str | None
-    reachable: dict[str, bool]
-    commanded_side: str | None = None
-    exit_side: str | None = None
+    dead_end_side: str
+    live_side: str
+    target_reachable: bool
+    reached_target: bool = False
+    in_dead_end: bool = False
     ball_stuck: bool = False
     settle_drift: float = 0.0
 
     @property
     def seated(self) -> bool:
-        """Whether the flap reached one of its two seats (not left half-open)."""
+        """Whether the flap reached one of its two seats.
+
+        Diagnostic only. It is deliberately NOT part of success: docx 4.3 puts the
+        marble test in charge, and the measured landing error of the arm (about
+        4 degrees) sits right on top of any tolerance tight enough to be worth
+        having. What "seated" is good for is telling one failure from another --
+        a ball wedged with the flap short of a seat is an under-rotation, a ball
+        wedged with it seated is something else.
+        """
 
         return self.sealed_side is not None
 
     @property
-    def open_side(self) -> str | None:
-        """The branch the geometry says is reachable, when exactly one is."""
+    def invariant_value(self) -> int:
+        """Is the target reachable from the ball's release point: 1 or 0.
 
-        open_sides = [side for side in SIDES if self.reachable[side]]
-        return open_sides[0] if len(open_sides) == 1 else None
-
-    @property
-    def invariant_value(self) -> dict[str, int]:
-        """S-T reachability per exit.
-
-        A dict rather than one integer because Section 4.4 allows it and because
-        both bits matter: the task flips one route on while flipping the other
-        off, and a single number would record only half of that.
+        A single S-T pair now, not a bit per exit. Closing one branch is what
+        makes it a single pair: there is one destination, and the flap decides
+        whether a route to it exists.
         """
 
-        return {side: int(bool(self.reachable[side])) for side in SIDES}
+        return int(bool(self.target_reachable))
 
     @property
-    def geometry_ok(self) -> bool:
-        """Exactly the commanded exit is reachable.
+    def judge_disagrees(self) -> bool:
+        """The one combination that cannot be true: the ball got somewhere the
+        flood fill says it cannot go.
 
-        Deliberately NOT also requiring `seated`. Measured offline 2026-08-19: the
-        flap's travel is +/-30 degrees, but it already closes one side's gap from
-        15.5 degrees onward -- from there the ball routes correctly, and below
-        15.0 degrees both gaps stay closed and it wedges. `seat_tolerance_deg`
-        (4 degrees) is a much tighter band than the mechanism's, so requiring a
-        seat here would fail runs in which the ball demonstrably left by the
-        commanded exit. Docx 4.3 puts the S-T marble test in charge; a second,
-        stricter, non-physical gate would be the judge overruling it.
-
-        Whether the ARM did its job to tolerance is a different question, and it
-        is asked by the rotate primitive's own target-error check.
+        Only this direction is a contradiction. "A path exists but the ball did
+        not take it" is ordinary -- the ball has to be aimed into the branch, and
+        a flap that is open but badly angled throws it into a wall. The reverse
+        means the judge is wrong, and that has happened: a 6 mm grid over-blocked
+        by half a cell diagonal and called an open route closed, which only came
+        out because a human watched the ball go through it.
         """
 
-        if self.commanded_side is None:
-            return False
-        return bool(
-            self.reachable[self.commanded_side]
-            and not self.reachable[other_side(self.commanded_side)]
-        )
+        return bool(self.reached_target and not self.target_reachable)
 
     @property
     def is_terminal(self) -> bool:
-        """Success: the ball actually left by the commanded exit, and the judge agrees.
+        """Success: the ball reached the target, and is not stuck on the way."""
 
-        The physical marble test is the primary reading -- docx 4.3 says the S-T
-        marble test IS the task -- and the geometric one has to agree with it. If
-        they ever disagree, the judge is wrong rather than the policy, which is
-        why `judge_disagrees_with_physics` is a label of its own.
-        """
-
-        return bool(
-            self.commanded_side is not None
-            and self.exit_side == self.commanded_side
-            and not self.ball_stuck
-            and self.geometry_ok
-        )
+        return bool(self.reached_target and not self.ball_stuck)
 
     @property
     def failure_label(self) -> str | None:
-        """Which way it went wrong, kept apart from a bare False.
-
-        Rotating short of a seat, routing to the wrong exit and wedging the ball at
-        the fork are three different errors, and collapsing them would throw away
-        the signal an error analysis over the flap's phase needs.
-        """
+        """Which way it went wrong, kept apart from a bare False."""
 
         if self.is_terminal:
             return None
-        if self.commanded_side is None:
-            # Nothing was asked for, so there is nothing to have got wrong. The
-            # inspect demo reads states with no command; without this the
-            # fall-through blamed the judge for a disagreement that never existed.
-            return "no_command"
+        if self.in_dead_end:
+            return "dead_end"
         if self.ball_stuck:
-            # A wedged ball with the flap short of a seat is the under-rotation
-            # failure and is named after its cause. A wedged ball with the flap
-            # seated is something else -- a seated flap has a clear 90 mm passage --
-            # so it keeps its own label rather than being folded into the first.
+            # Wedged short of a seat is an under-rotation and is named after its
+            # cause; wedged with the flap seated is something else, because a
+            # seated flap leaves the full channel width open.
             return "ball_stuck_at_fork" if self.seated else "flap_not_seated"
-        if self.exit_side is None:
-            return "ball_never_left"
-        if self.commanded_side is not None and self.exit_side != self.commanded_side:
-            return "wrong_exit"
-        return "judge_disagrees_with_physics"
+        return "ball_never_left"
 
     def to_info(self) -> dict[str, Any]:
         return {
@@ -205,12 +180,14 @@ class DiverterRouteBallState:
             "flap_angle_deg": float(np.rad2deg(self.flap_angle)),
             "sealed_side": self.sealed_side,
             "seated": bool(self.seated),
-            "open_side": self.open_side,
-            "commanded_side": self.commanded_side,
-            "exit_side": self.exit_side,
+            "dead_end_side": self.dead_end_side,
+            "live_side": self.live_side,
+            "target_reachable": bool(self.target_reachable),
+            "reached_target": bool(self.reached_target),
+            "in_dead_end": bool(self.in_dead_end),
             "ball_stuck": bool(self.ball_stuck),
             "settle_drift": float(self.settle_drift),
-            "geometry_ok": bool(self.geometry_ok),
+            "judge_disagrees": bool(self.judge_disagrees),
             "failure_label": self.failure_label,
             "terminal": bool(self.is_terminal),
         }
@@ -251,24 +228,36 @@ class DiverterRouteBallEvaluator:
             )
         )
 
-        # Branch walls: outer away from the splitter, inner toward it.
-        exit_station = layout.exit_station
+        # Branch walls: outer away from the splitter, inner toward it. The dead
+        # branch runs on past the live one's exit plane and is capped.
         for side in SIDES:
             yaw = float(np.deg2rad(layout.branch_yaw_deg(side)))
+            end_station = layout.branch_end_station(side)
             for station, sign in (
                 (layout.outer_wall_station, -1.0),
                 (layout.inner_wall_station, 1.0),
             ):
                 center = layout.branch_point(
-                    side, 0.5 * (station + exit_station), sign * offset
+                    side, 0.5 * (station + end_station), sign * offset
                 )
                 rects.append(
                     OrientedRect(
                         center=(float(center[0]), float(center[1])),
-                        half=(0.5 * (exit_station - station), 0.5 * thickness),
+                        half=(0.5 * (end_station - station), 0.5 * thickness),
                         yaw=yaw,
                     )
                 )
+        dead = layout.dead_end_side
+        cap_center = layout.branch_point(
+            dead, layout.branch_end_station(dead) + 0.5 * thickness
+        )
+        rects.append(
+            OrientedRect(
+                center=(float(cap_center[0]), float(cap_center[1])),
+                half=(0.5 * thickness, half_width + thickness),
+                yaw=float(np.deg2rad(layout.branch_yaw_deg(dead))),
+            )
+        )
 
         # The flap, from its live joint angle. It hangs from the pivot at the nose
         # and points along the link's local -x, so its centre is half a length back
@@ -303,8 +292,8 @@ class DiverterRouteBallEvaluator:
             half=(0.5 * patch, 0.5 * patch),
         )
 
-    def reachable_exits(self, scene: DiverterRouteBallScene) -> dict[str, bool]:
-        """Flood-fill the ball's free space from the release point to each exit."""
+    def target_reachable(self, scene: DiverterRouteBallScene) -> bool:
+        """Flood-fill the ball's free space from the release point to the target."""
 
         layout = scene.layout
         radius = layout.ball_radius
@@ -322,10 +311,8 @@ class DiverterRouteBallEvaluator:
         for rect in rects:
             blocked |= rect.blocked_mask(grid_x, grid_y, radius)
 
-        targets = {
-            side: self._exit_patch(layout, side).blocked_mask(grid_x, grid_y, 0.0)
-            for side in SIDES
-        }
+        live = layout.live_side
+        target_mask = self._exit_patch(layout, live).blocked_mask(grid_x, grid_y, 0.0)
 
         release = layout.ball_release_center() - np.asarray(layout.task_origin, dtype=float)
         start = (
@@ -338,14 +325,10 @@ class DiverterRouteBallEvaluator:
         seen = np.zeros_like(blocked)
         seen[start] = True
         queue = deque([start])
-        reached = {side: False for side in SIDES}
         while queue:
             i, j = queue.popleft()
-            for side, mask in targets.items():
-                if mask[i, j]:
-                    reached[side] = True
-            if all(reached.values()):
-                break
+            if target_mask[i, j]:
+                return True
             for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 ni, nj = i + di, j + dj
                 if not (0 <= ni < len(xs) and 0 <= nj < len(ys)):
@@ -353,14 +336,14 @@ class DiverterRouteBallEvaluator:
                 if not seen[ni, nj] and not blocked[ni, nj]:
                     seen[ni, nj] = True
                     queue.append((ni, nj))
-        return reached
+        return False
 
     def classify(
         self,
         scene: DiverterRouteBallScene,
         *,
-        commanded_side: str | None = None,
-        exit_side: str | None = None,
+        reached_target: bool = False,
+        in_dead_end: bool = False,
         ball_stuck: bool = False,
         settle_drift: float = 0.0,
     ) -> DiverterRouteBallState:
@@ -374,9 +357,11 @@ class DiverterRouteBallEvaluator:
             ball_xy=(float(ball_xy[0]), float(ball_xy[1])),
             flap_angle=float(angle),
             sealed_side=layout.sealed_side_at(angle),
-            reachable=self.reachable_exits(scene),
-            commanded_side=None if commanded_side is None else str(commanded_side),
-            exit_side=None if exit_side is None else str(exit_side),
+            dead_end_side=layout.dead_end_side,
+            live_side=layout.live_side,
+            target_reachable=self.target_reachable(scene),
+            reached_target=bool(reached_target),
+            in_dead_end=bool(in_dead_end),
             ball_stuck=bool(ball_stuck),
             settle_drift=float(settle_drift),
         )

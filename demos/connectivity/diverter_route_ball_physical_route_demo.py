@@ -1,9 +1,16 @@
-"""Turn the diverter so the ball leaves by the exit you were told (docx 4.3).
+"""Turn the diverter so the ball can reach the target (docx 4.3).
 
 The whole episode in one run: the arm pinches the lever knob, sweeps it to the
-angle that seals the branch NOT asked for, lets go and retreats -- and only then
-is the ball released, to roll through the fork and out. The robot never touches
-the ball; the state change is on the BALL's free space.
+angle that seals the DEAD branch, lets go and retreats -- and only then is the
+ball released, to roll through the fork and out to the target. The robot never
+touches the ball; the state change is on the BALL's free space.
+
+One branch is capped, and only the other one leads to the target. That is what
+makes this a question about connectivity rather than a choice between two equally
+good exits: the ball can only arrive if a route exists, and the flap is what
+decides whether it does. Which branch is the dead end varies per episode and has
+to be read off the scene -- there is no instruction carrying it, because with one
+destination the instruction is a constant.
 
 **The joint has no limit.** "Turn until it stops" is not available, so the angle
 the arm leaves the flap at is its own doing, and `target_error` is a hard check.
@@ -16,13 +23,12 @@ Two rules share one interface so the contrast pair is honest:
     run.oracle_mode=oracle            read the instruction, seal the other branch
     run.oracle_mode=fixed_direction   always drive to the same seat
 
-Half the (instruction x initial phase) combinations need no rotation at all --
-the flap already routes the right way -- and leaving it alone is the correct
-action there. `fixed_direction` gets exactly half of them wrong, which is docx
-4.3's anti-shortcut measured rather than asserted.
+Half the (dead end x initial phase) combinations need no rotation at all -- the
+flap already seals the dead branch -- and leaving it alone is the correct action
+there. `fixed_direction` gets exactly half of them wrong.
 
     python -m demos.connectivity.diverter_route_ball_physical_route_demo run.viewer=true
-    python -m demos.connectivity.diverter_route_ball_physical_route_demo task.command.side=right
+    python -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.dead_end_side=right
     python -m demos.connectivity.diverter_route_ball_physical_route_demo run.stage=rotate_only
     python -m demos.connectivity.diverter_route_ball_physical_route_demo run.oracle_mode=fixed_direction
 """
@@ -87,8 +93,8 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
     layout = ball_scene.layout
     motion = cfg.task.motion
     dt = float(cfg.env.sim.dt)
-    commanded = layout.commanded_side
-    status["command"] = commanded
+    commanded = layout.commanded_side  # the live side, derived from the dead end
+    status["command"] = f"{commanded}(dead={layout.dead_end_side})"
     status["mode"] = str(cfg.run.oracle_mode)
 
     print_collision_il_contract(
@@ -114,7 +120,8 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
         )
     status["target_deg"] = float(np.rad2deg(plan.target_angle))
     print(
-        f"diverter_route_ball plan command={commanded} prompt={layout.command_prompt()!r} "
+        f"diverter_route_ball plan dead_end={layout.dead_end_side} live={commanded} "
+        f"prompt={layout.command_prompt()!r} "
         f"mode={cfg.run.oracle_mode} start={np.rad2deg(plan.start_angle):+.2f}deg "
         f"target={np.rad2deg(plan.target_angle):+.2f}deg rotate={plan.rotate} "
         f"reason={plan.reason}",
@@ -217,6 +224,7 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
     lo_x, hi_x, lo_y, hi_y = layout.drive_region_world()
     exit_side = None
     exit_step = None
+    in_dead_end = False
 
     with HeadingDrive(
         ball_scene.scene,
@@ -253,6 +261,15 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
                 if exit_side is not None:
                     exit_step = step
                     status["exit"] = exit_side
+            if not in_dead_end:
+                # Deep enough into the capped branch to be there on purpose, not
+                # just nosing past the fork. Read along that branch's own axis.
+                station, across = layout.branch_station(layout.dead_end_side, xy)
+                in_dead_end = bool(
+                    station > layout.exit_station and abs(across) <= layout.half_width
+                )
+                if in_dead_end:
+                    status["exit"] = "dead_end"
             if exit_side is not None and not drive.running and not drive.coasting:
                 break
         # The reading has to survive continued stepping, as in gate_cage_ball's
@@ -264,19 +281,22 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
 
     state = evaluator.classify(
         ball_scene,
-        commanded_side=commanded,
-        exit_side=exit_side,
+        reached_target=bool(exit_side == commanded),
+        in_dead_end=in_dead_end,
         ball_stuck=jammed,
         settle_drift=drift,
     )
     status["phase"] = "done"
 
     metrics = {
-        "commanded_side": commanded,
+        "dead_end_side": layout.dead_end_side,
+        "live_side": commanded,
         "exit_side": exit_side,
         "exit_step": exit_step,
+        "in_dead_end": in_dead_end,
         "flap_deg": float(np.rad2deg(ball_scene.flap_angle())),
-        "reachable": state.invariant_value,
+        "target_reachable": state.invariant_value,
+        "judge_disagrees": state.judge_disagrees,
         "ball_stuck": jammed,
         "settle_drift": drift,
         "rotate_success": None if result is None else bool(result.success),
@@ -298,13 +318,21 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
 
     print(
         "diverter_route_ball_physical_route_demo result "
-        f"mode={cfg.run.oracle_mode} command={commanded} success={episode_result.success} "
-        f"exit={exit_side} exit_step={exit_step} "
+        f"mode={cfg.run.oracle_mode} dead_end={layout.dead_end_side} live={commanded} "
+        f"success={episode_result.success} exit={exit_side} exit_step={exit_step} "
+        f"in_dead_end={in_dead_end} "
         f"flap={np.rad2deg(ball_scene.flap_angle()):+.2f}deg "
-        f"reachable={state.invariant_value} stuck={jammed} drift={drift:.5f} "
+        f"target_reachable={state.invariant_value} stuck={jammed} drift={drift:.5f} "
         f"failure={episode_result.failure_reason}",
         flush=True,
     )
+    if state.judge_disagrees:
+        print(
+            "[warn] the ball reached the target but the flood fill says it cannot: "
+            "the judge is wrong, not the run. Check success.grid_pitch and the "
+            "obstacle rectangles before touching the scene.",
+            flush=True,
+        )
     if cfg.run.verbose:
         print(f"diverter_route_ball topology {state.to_info()}", flush=True)
     return episode_result
@@ -356,7 +384,7 @@ def main(cfg: DictConfig) -> None:
         "diverter_route_ball setup "
         f"nose_x={layout.nose_x:+.4f} flap_len={layout.flap_length:.4f} "
         f"seat=±{np.rad2deg(layout.angle):.1f}deg limited={bool(getattr(cfg.task.diverter.mechanism, 'joint_limited', False))} "
-        f"init_sealed={layout.initial_sealed_side} command={layout.commanded_side} "
+        f"init_sealed={layout.initial_sealed_side} dead_end={layout.dead_end_side} "
         f"knob_r={layout.lever_radius:.3f} travel_pred={layout.travel_time():.2f}s",
         flush=True,
     )
