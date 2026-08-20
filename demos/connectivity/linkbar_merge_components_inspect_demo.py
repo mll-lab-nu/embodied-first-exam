@@ -93,6 +93,55 @@ def make_latch(merge_scene, *, auto_capture: bool) -> SocketWeld:
     )
 
 
+def link_owners(merge_scene) -> dict[int, str]:
+    """Global link index -> the manifest name of the entity it belongs to."""
+
+    owners = {}
+    for name, entity in merge_scene.manifest.as_dict().items():
+        links = getattr(entity, "links", None)
+        if not links:
+            continue
+        for link in links:
+            owners[int(link.idx)] = name
+    return owners
+
+
+def blockers(merge_scene, owners) -> str:
+    """What is the beam touching right now, and how hard.
+
+    A stalled sweep is either a collision or a servo that ran out of authority, and
+    the two want opposite fixes. Guessing between them from the angle alone was
+    wrong once already, so the demo reads the contact set instead: Genesis reports
+    the pairs from the last step, and the manifest turns a link index back into a
+    part name.
+    """
+
+    contacts = merge_scene.linkbar_entity().get_contacts(exclude_self_contact=True)
+    if not contacts:
+        return "none"
+    link_a = np.asarray(_to_numpy(contacts["link_a"])).reshape(-1)
+    link_b = np.asarray(_to_numpy(contacts["link_b"])).reshape(-1)
+    force = np.asarray(_to_numpy(contacts["force_a"])).reshape(-1, 3)
+    beam = int(merge_scene.beam_link_idx())
+    totals: dict[str, float] = {}
+    for index, (first, second) in enumerate(zip(link_a, link_b)):
+        other = int(second) if int(first) == beam else int(first)
+        name = owners.get(other, f"link{other}")
+        totals[name] = totals.get(name, 0.0) + float(np.linalg.norm(force[index]))
+    if not totals:
+        return "none"
+    return ",".join(
+        f"{name}:{value:.2f}N"
+        for name, value in sorted(totals.items(), key=lambda item: -item[1])
+    )
+
+
+def _to_numpy(value):
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return value
+
+
 def drive_joint(merge_scene, target: float, *, steps: int, cfg) -> float:
     """Servo the joint to ``target`` and report the residual error, in radians.
 
@@ -127,6 +176,7 @@ def run_sweep(cfg, merge_scene, state) -> None:
     worst = 0.0
     b_start = b_xy(merge_scene)
     b_drift = 0.0
+    owners = link_owners(merge_scene)
     for label, target in stations:
         state["phase"] = f"sweep:{label}"
         error = drive_joint(merge_scene, target, steps=steps, cfg=cfg)
@@ -139,7 +189,8 @@ def run_sweep(cfg, merge_scene, state) -> None:
             f"[sweep -> {label:4s}] target={np.rad2deg(target):+7.2f}deg "
             f"reached={np.rad2deg(merge_scene.arm_angle()):+7.2f}deg "
             f"error={np.rad2deg(error):+6.2f}deg "
-            + " ".join(f"gap_{name}={gaps[name]*1000:6.1f}mm" for name in LINKBAR_SOCKETS),
+            + " ".join(f"gap_{name}={gaps[name]*1000:6.1f}mm" for name in LINKBAR_SOCKETS)
+            + f" touching={blockers(merge_scene, owners)}",
             flush=True,
         )
     print(
