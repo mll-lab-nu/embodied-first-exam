@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from topogym.supervision.pbd_probe import probe_particles
+from topogym.verification.cloth_fold_verifier import grid_neighbours, stretch_report
 
 
 @dataclass
@@ -51,6 +52,11 @@ class ClothFoldWatch:
     max_speed: float = 3.0
     min_z_below: float = -0.005
     phase: str = "start"
+    #: Rest positions. Given, the watch also tracks how far the material gets
+    #: from inextensible WHILE IT IS BEING CARRIED, which is where a cloth that
+    #: stretches is most visible and where the end-state reading cannot see it
+    #: (by then the crease dominates the maximum).
+    rest_nodes: object = None
 
     _previous: np.ndarray = field(init=False)
     worst_step_disp: float = field(default=0.0, init=False)
@@ -58,11 +64,18 @@ class ClothFoldWatch:
     lowest_z: float = field(default=float("inf"), init=False)
     tripped: str | None = field(default=None, init=False)
     tripped_phase: str | None = field(default=None, init=False)
+    worst_stretch_mean: float = field(default=float("nan"), init=False)
+    worst_stretch_max: float = field(default=float("nan"), init=False)
+    _pairs: object = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         # Copied: `probe_particles` may hand back a view, and a view would track
         # the live state and make every step's displacement read zero.
         self._previous = np.array(probe_particles(self.cloth), copy=True)
+        if self.rest_nodes is not None:
+            self._pairs = grid_neighbours(len(np.asarray(self.rest_nodes)))
+            self.worst_stretch_mean = 0.0
+            self.worst_stretch_max = 0.0
 
     @property
     def limit(self) -> float:
@@ -85,6 +98,10 @@ class ClothFoldWatch:
         self.worst_step_disp = max(self.worst_step_disp, displacement)
         self.worst_speed = max(self.worst_speed, speed)
         self.lowest_z = min(self.lowest_z, lowest)
+        if self._pairs is not None:
+            stretch = stretch_report(self.rest_nodes, current, self._pairs)
+            self.worst_stretch_mean = max(self.worst_stretch_mean, stretch["mean"])
+            self.worst_stretch_max = max(self.worst_stretch_max, stretch["max"])
 
         if self.tripped is not None:
             return self.tripped
@@ -110,7 +127,13 @@ class ClothFoldWatch:
             f"worst_step_disp={self.worst_step_disp:.5f} "
             f"disp_limit={self.limit:.5f} "
             f"worst_speed={self.worst_speed:.3f} "
-            f"lowest_z_above_table={self.lowest_z:+.5f} "
+            + (
+                ""
+                if self._pairs is None
+                else f"carry_stretch_mean={self.worst_stretch_mean:.3f} "
+                f"carry_stretch_max={self.worst_stretch_max:.3f} "
+            )
+            + f"lowest_z_above_table={self.lowest_z:+.5f} "
             f"blowup={self.tripped or 'none'}"
             + ("" if self.tripped is None else f" blowup_phase={self.tripped_phase}")
         )

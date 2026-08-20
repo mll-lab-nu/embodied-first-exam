@@ -118,6 +118,10 @@ def main(cfg: DictConfig) -> None:
             dt=float(cfg.env.sim.dt),
             fall_height=layout.fold_radius(),
             gravity=abs(float(cfg.env.sim.gravity[2])),
+            # So the carry's stretch is tracked too: a cloth that extends
+            # while it is held reads as chewing gum, and by the end state the
+            # crease dominates the reading and hides it.
+            rest_nodes=rest,
         )
         # The watch runs off scene.step, which the primitive drives indirectly
         # through the controller, so hook it the same way the recorder does.

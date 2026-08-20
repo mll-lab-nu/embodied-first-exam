@@ -148,6 +148,67 @@ def layer_report(nodes, table_z: float, cell: float, particle_size: float) -> di
     }
 
 
+def grid_neighbours(count: int) -> np.ndarray:
+    """Neighbour index pairs for a square grid of ``count`` particles.
+
+    Exact rather than searched: the sheet is a regular grid whose vertex order
+    survives Genesis' remesh, so particle *i*'s neighbours are *i+1* along the row
+    and *i+side* down it. A nearest-neighbour search would cost O(P^2) and answer
+    the same question less reliably once the sheet is folded, because a fold puts
+    unrelated material within a particle of itself.
+    """
+
+    side = int(round(np.sqrt(int(count))))
+    if side * side != int(count):
+        raise ValueError(f"{count} particles is not a square grid.")
+    index = np.arange(int(count)).reshape(side, side)
+    right = np.column_stack([index[:, :-1].ravel(), index[:, 1:].ravel()])
+    down = np.column_stack([index[:-1, :].ravel(), index[1:, :].ravel()])
+    return np.vstack([right, down])
+
+
+def stretch_report(rest_nodes, nodes, pairs=None) -> dict:
+    """How much longer the material is than it was. 1.0 means inextensible.
+
+    Real fabric barely stretches -- you can crumple it freely but not pull it
+    longer -- so a sheet that visibly extends when picked up reads as chewing gum
+    however good its surface looks. `physical_realism_guidelines_zh.md` M8 asks
+    the same of ropes with a 1.05 ceiling.
+
+    Read `max` with the crease in mind: a fold that is geometrically perfect puts
+    the pairs spanning the fold line at zero bend radius, which this metric counts
+    as stretch. On the synthetic perfect fold that is 1.46, and it is exactly the
+    one row of pairs across the crease (0.8% of them). During the CARRY, before
+    any crease exists, `max` means what it says.
+
+    The mean and the worst are reported apart because they have different causes
+    and different fixes. A raised MEAN is the whole sheet extending, which in PBD
+    is as much about how many iterations the solver gets as about the compliance
+    value -- a very stiff constraint that never converges still stretches. A high
+    WORST with a normal mean is local, and on this task it has an obvious
+    suspect: `link_patch` binds 73 particles rigidly to the gripper, so when the
+    hand lifts, that patch holds still while its neighbours hang, and the ring of
+    material between them has to bridge the difference. Measured 0.571 edge
+    strain there on 2026-08-20 -- an edge at 1.57x its rest length -- and that was
+    the best of the four attachment modes.
+    """
+
+    rest_nodes = np.asarray(rest_nodes, dtype=float)
+    nodes = np.asarray(nodes, dtype=float)
+    if pairs is None:
+        pairs = grid_neighbours(len(rest_nodes))
+    rest_len = np.linalg.norm(rest_nodes[pairs[:, 0]] - rest_nodes[pairs[:, 1]], axis=1)
+    live_len = np.linalg.norm(nodes[pairs[:, 0]] - nodes[pairs[:, 1]], axis=1)
+    ratio = live_len / np.maximum(rest_len, 1e-12)
+    return {
+        "mean": float(ratio.mean()),
+        "max": float(ratio.max()),
+        # How much of the sheet is stretched enough to see. 5% is the ceiling the
+        # repo's realism guidelines already use for rope.
+        "frac_over": float((ratio > 1.05).mean()),
+    }
+
+
 def fold_targets(rest_nodes, fold_point, fold_normal, thickness: float) -> np.ndarray:
     """Where every particle should be once the fold is done, solved in closed form.
 
@@ -405,6 +466,10 @@ class ClothFoldState:
     err_static: float
     err_moving: float
     err_crease: float
+    # How far the material is from inextensible. See `stretch_report`.
+    stretch_mean: float
+    stretch_max: float
+    stretch_frac_over: float
     thresholds: ClothFoldThresholds
 
     @property
@@ -470,6 +535,9 @@ class ClothFoldState:
             "layer_gap_median_mm": float(self.layer_gap_median * 1e3),
             "peak_above_table_mm": float(self.peak_above_table * 1e3),
             "anchor_shift_mm": float(self.anchor_shift * 1e3),
+            "stretch_mean": float(self.stretch_mean),
+            "stretch_max": float(self.stretch_max),
+            "stretch_frac_over": float(self.stretch_frac_over),
             "err_static_mm": float(self.err_static * 1e3),
             "err_moving_mm": float(self.err_moving * 1e3),
             "err_crease_mm": float(self.err_crease * 1e3),
@@ -490,6 +558,9 @@ class ClothFoldState:
             f"flatness_var={self.flatness_var:.3e} "
             f"covered_cells={self.covered_cells} two_layer_cells={self.two_layer_cells} "
             f"over_layer_cells={self.over_layer_cells} max_layers={self.max_layers} "
+            f"stretch_mean={self.stretch_mean:.3f} "
+            f"stretch_max={self.stretch_max:.3f} "
+            f"stretch_frac_over={self.stretch_frac_over:.3f} "
             f"err_static_mm={self.err_static * 1e3:.2f} "
             f"err_moving_mm={self.err_moving * 1e3:.2f} "
             f"err_crease_mm={self.err_crease * 1e3:.2f} "
@@ -554,6 +625,7 @@ class ClothFoldEvaluator:
         parts = particle_error_parts(
             nodes, targets, rest_nodes, fold_point, fold_normal, 4.0 * self.particle_size
         )
+        stretch = stretch_report(rest_nodes, nodes)
         layers = layer_report(nodes, table_z, self.cell, self.particle_size)
         offset, straightness = crease_report(
             nodes, crease_indices(rest_nodes, fold_point, fold_normal), fold_point, fold_normal
@@ -582,6 +654,9 @@ class ClothFoldEvaluator:
             layer_gap_median=float(layers["gap_median"]),
             peak_above_table=float(heights.max()),
             anchor_shift=anchor_shift(rest_nodes, nodes, fold_point, fold_normal),
+            stretch_mean=stretch["mean"],
+            stretch_max=stretch["max"],
+            stretch_frac_over=stretch["frac_over"],
             err_static=parts["static"],
             err_moving=parts["moving"],
             err_crease=parts["crease"],
