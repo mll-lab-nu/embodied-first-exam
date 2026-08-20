@@ -206,6 +206,27 @@ class ClothFoldLayout:
         arc = float(np.pi * self.fold_radius())
         return max(4, int(round(arc / float(self.task_cfg.physical.fold_step_m))))
 
+    def grasp_yaw(self) -> float:
+        """Which way the gripper should face, radians about world Z.
+
+        Along the fold normal, i.e. the direction the held corner travels. Two
+        reasons, and they agree:
+
+        - it is how a hand pinches a corner -- fingers across the corner,
+          perpendicular to the pull, not at some unrelated angle to it;
+        - it is much easier on the wrist. Holding the arm's default orientation
+          instead means the tool's yaw stays fixed in the WORLD while the arm
+          swings through 180 degrees around a diagonal, which drives the last
+          joint through a large range for no reason. Genesis' `continuous_ik`
+          runs one seeded solve and returns whatever it reached without saying it
+          fell short, so an unreachable orientation shows up not as an error but
+          as an arm quietly in the wrong pose -- measured 2026-08-20 as a hand
+          42 mm off its command with the gripper rolled flat onto the sheet.
+        """
+
+        normal = self.fold_normal()
+        return float(np.arctan2(normal[1], normal[0]))
+
     def summary(self) -> str:
         grasp, target = self.grasp_point(), self.fold_target()
         return (
@@ -218,6 +239,7 @@ class ClothFoldLayout:
             f"radius_mm={self.fold_radius() * 1e3:.1f} "
             f"arc_mm={np.pi * self.fold_radius() * 1e3:.0f} "
             f"steps={self.fold_steps()} "
+            f"grasp_yaw_deg={np.degrees(self.grasp_yaw()):+.1f} "
             f"step_mm={np.pi * self.fold_radius() / self.fold_steps() * 1e3:.2f}"
         )
 

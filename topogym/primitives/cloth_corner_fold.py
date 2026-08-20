@@ -43,8 +43,23 @@ class ClothFoldResult:
     attached_particles: int
     attach_error: float
     worst_follow_error: float
+    #: The ARM's own tracking error, separate from the cloth's. A large value
+    #: here means the IK never reached the commanded pose, so nothing downstream
+    #: is a statement about the trajectory or the material.
+    worst_pose_error: float = float("nan")
+    worst_tilt_rad: float = float("nan")
     failure_reason: str | None = None
     completed_phases: tuple[str, ...] = ()
+
+
+def _quat_angle(a, b) -> float:
+    """Angle between two orientations, radians. 0 when they match."""
+
+    a = np.asarray(a, dtype=float).ravel()
+    b = np.asarray(b, dtype=float).ravel()
+    a = a / max(float(np.linalg.norm(a)), 1e-12)
+    b = b / max(float(np.linalg.norm(b)), 1e-12)
+    return float(2.0 * np.arccos(min(1.0, abs(float(np.dot(a, b))))))
 
 
 def attached_indices(nodes: np.ndarray, center, radius: float) -> np.ndarray:
@@ -149,6 +164,9 @@ class ClothCornerFoldPrimitive:
         cloth.fix_particles_to_link(
             controller.ee_link.idx, particles_idx_local=[int(i) for i in indices]
         )
+        bind_offset = np.asarray(
+            particles_fn()[indices].mean(axis=0), dtype=float
+        ) - grasp_point
         self._phases.append("attach")
         self._notify(on_phase, "attach")
         if self.verbose:
@@ -160,9 +178,14 @@ class ClothCornerFoldPrimitive:
             )
 
         worst_follow = 0.0
-        centre_offset = np.asarray(nodes[indices].mean(axis=0), dtype=float) - self._pad_for_hand(
-            controller.hand_pos()
-        )
+        worst_pose = 0.0
+        worst_tilt = 0.0
+        # Where the held material sits relative to the point it was asked to
+        # follow, measured at bind time. Everything after is judged against
+        # `waypoint + this`, so the reading is "how far is the material from where
+        # the plan wants it" and nothing else. Subtracting an offset measured
+        # against the PAD instead counted the clearance twice and put a constant
+        # 8 mm into every reading (2026-08-20).
         for waypoint in waypoints:
             target = np.asarray(waypoint.position, dtype=float)
             steps = max(1, int(waypoint.steps or 1))
@@ -185,15 +208,29 @@ class ClothCornerFoldPrimitive:
             # link binding this stays near zero; a growing value means the arm
             # could not reach and the cloth is being stretched to cover it.
             held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
-            worst_follow = max(
-                worst_follow, float(np.linalg.norm(held - centre_offset - target))
+            follow = float(np.linalg.norm(held - (target + bind_offset)))
+            worst_follow = max(worst_follow, follow)
+            # Did the ARM get where it was told? `continuous_ik` runs one seeded
+            # solve of 50 iterations and returns whatever it reached, reporting
+            # nothing when that is not the commanded pose. A fold that tracks
+            # badly looks identical in the material readings to a fold whose
+            # trajectory was wrong, so the two are separated here: `pose` is the
+            # arm's own error, `follow` is the cloth's.
+            commanded = self._hand_for_pad(
+                target, float(target[2]) + float(self.touch_clearance)
             )
+            pose = float(np.linalg.norm(np.asarray(controller.hand_pos(), dtype=float) - commanded))
+            tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
+            worst_pose = max(worst_pose, pose)
+            worst_tilt = max(worst_tilt, tilt)
             self._notify(on_phase, waypoint.label)
             if self.verbose:
                 print(
                     f"cloth_fold {waypoint.label} "
                     f"target=({target[0]:+.3f},{target[1]:+.3f},{target[2]:+.3f}) "
-                    f"follow_mm={worst_follow * 1e3:.1f}",
+                    f"follow_mm={follow * 1e3:.1f} "
+                    f"arm_pos_err_mm={pose * 1e3:.1f} "
+                    f"arm_tilt_deg={np.degrees(tilt):.1f}",
                     flush=True,
                 )
         self._phases.append("carried")
@@ -213,6 +250,8 @@ class ClothCornerFoldPrimitive:
             attached_particles=int(len(indices)),
             attach_error=attach_error,
             worst_follow_error=float(worst_follow),
+            worst_pose_error=float(worst_pose),
+            worst_tilt_rad=float(worst_tilt),
             failure_reason=(
                 None
                 if worst_follow <= float(self.max_follow_error)

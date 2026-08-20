@@ -29,6 +29,7 @@ from omegaconf import DictConfig
 from topogym.core import save_resolved_config
 from topogym.planning.cloth_fold_planner import plan_cloth_fold
 from topogym.primitives.cloth_corner_fold import ClothCornerFoldPrimitive
+from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
 from topogym.supervision.cloth_fold import ClothFoldWatch
 from topogym.tasks import ClothFoldSceneBuilder, cloth_particles, settle_cloth
@@ -140,7 +141,7 @@ def main(cfg: DictConfig) -> None:
                 cloth_scene.cloth,
                 grasp_point=layout.grasp_point(),
                 waypoints=waypoints,
-                ee_quat=controller.default_ee_quat,
+                ee_quat=ee_quat_for_yaw(controller.default_ee_quat, layout.grasp_yaw()),
                 particles_fn=lambda: cloth_particles(cloth_scene),
                 on_phase=lambda name: setattr(watch, "phase", name),
             )
@@ -169,6 +170,8 @@ def main(cfg: DictConfig) -> None:
         f"attach_error_mm={result.attach_error * 1e3:.2f} "
         f"attached={result.attached_particles} "
         f"follow_error_mm={result.worst_follow_error * 1e3:.1f} "
+        f"arm_pos_err_mm={result.worst_pose_error * 1e3:.1f} "
+        f"arm_tilt_deg={np.degrees(result.worst_tilt_rad):.1f} "
         f"phases={'/'.join(result.completed_phases)} "
         f"{state.summary()} {watch.summary()}",
         flush=True,
