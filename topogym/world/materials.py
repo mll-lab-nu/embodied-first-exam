@@ -53,20 +53,27 @@ def plastic(
     Two consequences of that same function, both worth knowing before using this:
     the mesh must carry UVs (without them the texture collapses to its mean
     colour), and the image is applied against a white diffuse, so the texture's
-    own colours are final and ``color`` stops having any effect.
+    own colours are final.
+
+    Which is why ``color`` is NOT forwarded when a texture is given. Genesis
+    treats ``color`` as a shorthand for ``diffuse_texture`` and rejects both at
+    once ("'color' and 'diffuse_texture' cannot both be set"), so the caller's
+    colour has to be baked into the image instead -- which is what
+    `textures.fabric_weave` does with its own ``color`` argument. ``color`` stays
+    a required argument here so a role's palette still comes from config in one
+    place, and so switching the texture off returns the same flat colour as before.
     """
 
     if role not in _ROLE_ROUGHNESS:
         raise ValueError(
             f"Unknown material role {role!r}; expected one of {sorted(_ROLE_ROUGHNESS)}."
         )
-    kwargs = {
-        "color": tuple(float(channel) for channel in color),
-        "roughness": _ROLE_ROUGHNESS[role],
-    }
+    kwargs = {"roughness": _ROLE_ROUGHNESS[role]}
     if vis_mode is not None:
         kwargs["vis_mode"] = str(vis_mode)
-    if texture is not None:
+    if texture is None:
+        kwargs["color"] = tuple(float(channel) for channel in color)
+    else:
         image = np.ascontiguousarray(texture)
         if image.dtype != np.uint8:
             # The renderer asserts this; failing here says which texture is wrong.
