@@ -191,6 +191,26 @@ class LinkbarMergeLayout:
         return self.beam_bottom_z + float(self.cfg.linkbar.beam.height)
 
     @property
+    def axle_bottom_z(self) -> float:
+        """Where the turning shaft starts: just above A's fixed pivot column.
+
+        The shaft cannot run down to the table, because A's column is already
+        there. Two solid cylinders on the same axis, overlapping over the column's
+        whole height, is a permanent contact between a world-fixed body and the one
+        part that has to turn freely -- and Genesis does not know they are meant to
+        be a bearing. Measured 2026-08-20 with the shaft starting at z=0: a driven
+        sweep stalled up to 22 degrees short of its target, and the servo pushing
+        against the jam shoved component B 9 mm out of place.
+
+        ``axle.clearance`` keeps the shaft's underside off the column's top face as
+        well. Coplanar faces would be a thrust bearing, which is a smaller version
+        of the same mistake.
+        """
+
+        column = self.cfg.component_a.pivot_column
+        return float(column.height) + float(self.cfg.linkbar.axle.clearance)
+
+    @property
     def pin_radius(self) -> float:
         return float(self.cfg.linkbar.pin.radius)
 
@@ -253,6 +273,18 @@ class LinkbarMergeLayout:
         """The same window read as a joint angle, which is what the arm controls."""
 
         return float(np.rad2deg(self.capture_tolerance_xy / self.arm_radius))
+
+    @property
+    def max_lift_delta(self) -> float:
+        """How far a merged component B may rise under the lift test."""
+
+        return float(self.cfg.success.max_lift_delta)
+
+    @property
+    def min_free_lift(self) -> float:
+        """How far an UNMERGED B must rise, for the probe to have any judging power."""
+
+        return float(self.cfg.success.min_free_lift)
 
     def seated(self, angle: float, socket: str) -> bool:
         """Is the pin inside this catch's capture window at joint angle ``angle``?"""
@@ -817,7 +849,8 @@ class LinkbarMergeSceneBuilder:
         beam_height = float(beam.height)
         beam_mid_z = layout.beam_bottom_z + 0.5 * beam_height
         pin_height = layout.beam_bottom_z - layout.pin_bottom_z
-        axle_height = layout.beam_top_z + float(bar.axle.rise)
+        axle_bottom = layout.axle_bottom_z
+        axle_height = layout.beam_top_z + float(bar.axle.rise) - axle_bottom
         knob_bottom = layout.knob_bottom_z
 
         shapes = [
@@ -832,7 +865,7 @@ class LinkbarMergeSceneBuilder:
             HingeShape(
                 kind="cylinder",
                 size=(float(bar.axle.radius), axle_height),
-                origin=(0.0, 0.0, 0.5 * axle_height),
+                origin=(0.0, 0.0, axle_bottom + 0.5 * axle_height),
                 color=_list(bar.axle.color),
             ),
             # The thickening where the beam meets the shaft. A bare bar butted onto

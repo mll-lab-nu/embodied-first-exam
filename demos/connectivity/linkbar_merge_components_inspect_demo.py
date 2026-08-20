@@ -46,6 +46,7 @@ from topogym.utils.recording import (
     print_recording_saved,
     recording_session_from_config,
 )
+from topogym.verification import LinkbarMergeEvaluator
 
 SEAT_PHASES = ("none", "b1", "a2", "angle")
 
@@ -193,7 +194,7 @@ def run_seat(cfg, merge_scene, latch, state) -> None:
     )
 
 
-def run_lift(cfg, merge_scene, state) -> None:
+def run_lift(cfg, merge_scene, state):
     """The physical recheck: pull B up and see whether anything holds it."""
 
     state["phase"] = "lift_probe"
@@ -215,6 +216,47 @@ def run_lift(cfg, merge_scene, state) -> None:
         f"min_free={float(cfg.task.success.min_free_lift):.4f} held={held}",
         flush=True,
     )
+    return result
+
+
+def run_classify(cfg, merge_scene, lift_result) -> None:
+    """Read the constraint graph, and check it against what the lift test saw.
+
+    The peak rise is what the judge gets, not the final one: a body that is held
+    still gives a little under load, and the peak is the honest reading of how much.
+    """
+
+    state = LinkbarMergeEvaluator().classify(
+        merge_scene,
+        lift_delta=None if lift_result is None else lift_result.peak_delta_z,
+    )
+    info = state.to_info()
+    print(
+        "linkbar_merge_components classify "
+        + " ".join(
+            f"{key}={info[key]}"
+            for key in ("invariant", "invariant_value", "space", "component_count",
+                        "latched_socket", "latch_edges", "lift_tested", "lift_held",
+                        "judge_disagrees", "probe_uninformative", "failure_label",
+                        "terminal")
+        ),
+        flush=True,
+    )
+    if state.judge_disagrees:
+        print(
+            "[warn] the constraint graph says merged but component B lifted anyway. "
+            "That means the JUDGE is wrong, not the run: check the weld set and the "
+            "link -> assembly mapping in verification/linkbar_merge_components_verifier.py "
+            "before touching the scene.",
+            flush=True,
+        )
+    if state.probe_uninformative:
+        print(
+            "[warn] component B did not merge and did not lift either, so the pull "
+            "was too weak to judge with. Raise task.lift_test.force_scale until an "
+            "unmerged B clears task.success.min_free_lift.",
+            flush=True,
+        )
 
 
 @hydra.main(version_base="1.3", config_path="../../configs",
@@ -286,8 +328,9 @@ def main(cfg: DictConfig) -> None:
         else:
             with make_latch(merge_scene, auto_capture=True) as latch:
                 run_seat(cfg, merge_scene, latch, state)
-                if cfg.run.lift_probe:
-                    run_lift(cfg, merge_scene, state)
+                lift_result = run_lift(cfg, merge_scene, state) if cfg.run.lift_probe else None
+                if cfg.run.classify:
+                    run_classify(cfg, merge_scene, lift_result)
         state["phase"] = "done"
 
     print_recording_saved(cfg.recording)

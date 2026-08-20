@@ -20,10 +20,13 @@ sweep_joint: false
 sweep_steps: 180
 # 每一段允许的残余角误差。超过它说明梁在半路被挡住了。
 sweep_tolerance_deg: 1.0
+# force 是关节力矩上限（N·m）。取 2.0 而不是更大：折算到销上约 12N，驱动 0.45kg 的梁
+# 绰绰有余，同时限制了梁万一顶到卡座时能把自由体 B 推多远——检查工具不该自己制造
+# 它要测量的那个位移。
 sweep_servo:
   kp: 60.0
   kv: 6.0
-  force: 8.0
+  force: 2.0
 
 # 落座相位。写关节到指定角，让闩自己判断看见了什么。
 #   none  : 停在初始角，两个捕获窗都进不去，闩必须不动作（对照档）
@@ -36,3 +39,7 @@ seat_angle_deg: 0.0
 
 # 落座后跑提起测试：给 B 一个向上的力，看有没有东西拉住它。
 lift_probe: false
+
+# 跑判据：读约束图求 component_count，并与提起测试的结果对表。
+# 与 lift_probe 一起开才有物理层读数；单开只报约束图那一半。
+classify: false

@@ -31,6 +31,10 @@ from .gate_cage_ball_verifier import (
     GateCageBallEvaluator,
     GateCageBallState,
 )
+from .linkbar_merge_components_verifier import (
+    LinkbarMergeEvaluator,
+    LinkbarMergeState,
+)
 from .maze_wall_removal_verifier import (
     MazeWallRemovalPuzzleEvaluator,
     MazeWallRemovalPuzzleState,
@@ -55,6 +59,8 @@ from .untangle_continuous_verifier import (
 __all__ = [
     "BarThroughHolePuzzleEvaluator",
     "BarThroughHolePuzzleState",
+    "LinkbarMergeEvaluator",
+    "LinkbarMergeState",
     "DiverterRouteBallEvaluator",
     "DiverterRouteBallState",
     "GeoCrossing",
