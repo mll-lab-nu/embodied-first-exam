@@ -369,7 +369,7 @@ def main(argv=None) -> int:
         )
 
     print("\n织纹是画出来的，不是纯色")
-    with tempfile.TemporaryDirectory() as tmp:
+    if True:
         tex_cfg = cfg["cloth"]["texture"]
         kwargs = dict(
             color=cfg["cloth"]["color"],
@@ -382,16 +382,20 @@ def main(argv=None) -> int:
             cloud_noise=float(tex_cfg["cloud_noise"]),
             seed=int(tex_cfg["seed"]),
         )
-        first = textures.fabric_weave(Path(tmp) / "a.png", **kwargs)
-        again = textures.fabric_weave(Path(tmp) / "b.png", **kwargs)
+        first = textures.fabric_weave(**kwargs)
+        again = textures.fabric_weave(**kwargs)
         check(
             "the same parameters give the same image, byte for byte",
-            first.read_bytes() == again.read_bytes(),
+            first.tobytes() == again.tobytes(),
             "so a run is reproducible from config alone",
         )
-        from PIL import Image
-
-        pixels = np.asarray(Image.open(first), dtype=float) / 255.0
+        # The renderer asserts exactly this dtype before it will use the image.
+        check(
+            "the image is uint8",
+            first.dtype == np.uint8,
+            f"{first.dtype} -- genesis asserts uint8 in surface_uvs_to_trimesh_visual",
+        )
+        pixels = first.astype(float) / 255.0
         threads = int(round(float(cfg["cloth"]["size"][0]) / float(tex_cfg["thread_pitch"])))
         check(
             "the weave is at the physical scale the config asks for",

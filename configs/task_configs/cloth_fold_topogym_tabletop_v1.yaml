@@ -57,17 +57,41 @@ cloth:
   # 0.004：与网格间距相等（见上），且 2026-08-17 实测每步耗时与粒子尺度无关
   # （0.004/0.006/0.010 都是 9ms），所以加密是免费的——按判据精度选，不为速度让步。
   particle_size: 0.004
-  # 材料。**未标定**：先用 prefabs.rope_pbd.elastic 的值做起点，只把 bending 放软
-  # （绳要挺、布要垂）。
-  rho: 400.0
+  # 材料：**整套采用 Genesis `PBD.Cloth` 的构造默认值**（2026-08-21）。
+  #
+  # 起因是组会反馈「布料材质有明显的橡皮泥感」。查下来，原来这一组值**字面上就是
+  # 绳子 prefab 的值**（`prefab_configs/topogym_prefabs_v1.yaml:68-72`），只把
+  # bending 放软了 6.7 倍 —— 配置自己的旧注释写着「先用 prefabs.rope_pbd.elastic
+  # 的值做起点」。绳子就是该硬该沉的。
+  #
+  # 与官方默认值逐项对照（`bash_scripts/tests/genesis_cloth_api_probe.sh` 实测）：
+  #   参数                 官方默认   原值      原值偏离
+  #   stretch_compliance   1e-07     0.0012    软 12000 倍   <- 主因
+  #   bending_compliance   1e-05     0.0200    软 2000 倍
+  #   rho                  4.0       400.0     重 100 倍
+  #   bending_relaxation   0.1       0.2       2 倍
+  #   static_friction      0.15      0.35
+  #   kinetic_friction     0.15      0.25
+  #   stretch_relaxation   0.3       0.35      接近
+  #   air_resistance       0.001     0.001     相同
+  #
+  # 柔度 = 多容易变形。**主因是拉伸柔度差了 12000 倍**：真实布料几乎拉不长
+  # ——可以随便揉随便折，但拽不长。原来那块布拉伸毫不费力，再加上重 100 倍，
+  # 就是一块又沉又能拉长的东西，正是橡皮泥。
+  # （比值上也确实偏硬：官方的弯曲柔度是拉伸的 100 倍，原来只有 16.7 倍。但那是次因。）
+  #
+  # **整套照搬不挑不拣**：混着取会让结果没法解读，分不清哪一项起了作用。
+  # 风险：1e-07 是极硬的约束，PBD 在 substeps=4 下可能收敛不了（表现为抖动或发散），
+  # 看门狗会抓住；判据门槛也可能要重标。过不了就回退这一段、只留贴图。
+  rho: 4.0
   # **这两个是布↔布（粒子之间）的摩擦，不管桌面。** 折叠之后两层之间靠它。
   # 布↔桌面完全是另一回事，见下面的 tabletop_friction。
-  static_friction: 0.35
-  kinetic_friction: 0.25
-  stretch_compliance: 0.0012
-  bending_compliance: 0.0200
-  stretch_relaxation: 0.35
-  bending_relaxation: 0.2
+  static_friction: 0.15
+  kinetic_friction: 0.15
+  stretch_compliance: 1.0e-07
+  bending_compliance: 1.0e-05
+  stretch_relaxation: 0.3
+  bending_relaxation: 0.1
   air_resistance: 0.001
   color: [0.85, 0.42, 0.28]
   # 织物贴图。**这是唯一能给布加表面细节的通道。**
@@ -76,8 +100,8 @@ cloth:
   # 所以法线贴图给了也没用，织纹必须画进 diffuse 图本身。
   # 2026-08-21 之前布是一块纯色塑料，画面上整块布只有一个颜色、只靠光照梯度分明暗 ——
   # 这正是组会反馈说的「橡皮泥感」的视觉那一半。
-  # 图是程序生成的（`topogym/world/textures.py`），每次建场按下面的参数重画进
-  # .cache/topogym/textures/，与控制网格同样的缓存约定；固定种子，同参数逐字节可复现。
+  # 图是程序生成的（`topogym/world/textures.py`），每次建场按下面的参数在内存里画好
+  # 直接交给 ImageTexture(image_array=...)，不落文件；固定种子，同参数逐字节相同。
   texture:
     enabled: true
     # 相邻纱线的间距（米）。**比真实织物粗，是故意的**：真布约 0.3mm 的织纹在本场景的

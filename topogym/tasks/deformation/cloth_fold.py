@@ -34,7 +34,7 @@ import numpy as np
 
 from topogym.core import EntityManifest
 from topogym.supervision.pbd_probe import probe_particles
-from topogym.world import StandardTabletopSceneBuilder, materials
+from topogym.world import StandardTabletopSceneBuilder, materials, textures
 from topogym.world.rope import TabletopParticleFriction
 
 
@@ -345,9 +345,7 @@ class ClothFoldSceneBuilder:
                 bending_relaxation=float(cloth_cfg.bending_relaxation),
                 air_resistance=float(cloth_cfg.air_resistance),
             ),
-            surface=materials.plastic(
-                "deformable", list(cloth_cfg.color), vis_mode="visual"
-            ),
+            surface=self._cloth_surface(cloth_cfg),
             name=str(cloth_cfg.name),
         )
         tabletop.manifest.add(str(cloth_cfg.name), cloth)
@@ -372,6 +370,45 @@ class ClothFoldSceneBuilder:
             flush=True,
         )
         return cloth_scene
+
+    def _cloth_surface(self, cloth_cfg):
+        """The sheet's surface, with a woven diffuse image when one is asked for.
+
+        A diffuse texture is the ONLY way to give this cloth surface detail: the
+        rasterizer builds its visual from `surface.get_rgba()` and drops
+        roughness, metallic, normal and emissive, and the raytracer that would
+        honour them needs a LuisaRender build this install does not have. Without
+        it the sheet is one flat colour with a lighting gradient across it, which
+        is most of why it read as modelling clay.
+        """
+
+        texture_cfg = getattr(cloth_cfg, "texture", None)
+        image = None
+        if texture_cfg is not None and bool(texture_cfg.enabled):
+            image = textures.fabric_weave(
+                color=list(cloth_cfg.color),
+                size_m=list(cloth_cfg.size),
+                thread_pitch_m=float(texture_cfg.thread_pitch),
+                pixels_per_thread=int(texture_cfg.pixels_per_thread),
+                thread_shading=float(texture_cfg.thread_shading),
+                weft_tint=float(texture_cfg.weft_tint),
+                fibre_noise=float(texture_cfg.fibre_noise),
+                cloud_noise=float(texture_cfg.cloud_noise),
+                seed=int(texture_cfg.seed),
+            )
+        surface = materials.plastic(
+            "deformable", list(cloth_cfg.color), vis_mode="visual", texture=image
+        )
+        if image is not None:
+            # Says `FLAT(...)` if the texture is set somewhere the renderer does
+            # not read, which otherwise looks exactly like not setting one.
+            print(
+                "cloth_fold texture "
+                f"{materials.texture_reaches_renderer(surface)} "
+                f"thread_pitch_mm={float(texture_cfg.thread_pitch) * 1e3:.1f}",
+                flush=True,
+            )
+        return surface
 
     def _install_table_friction(self, scene, cloth, layout: ClothFoldLayout):
         """Sustained cloth-against-table friction, which Genesis does not provide.

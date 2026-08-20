@@ -16,8 +16,11 @@ map would otherwise carry, and without it a weave reads as a checkerboard.
 Generated rather than photographed: nothing to download, no licence to track, no
 binary in the repository, any resolution, and the parameters are open -- which is
 what a per-episode "different cloth every time" randomisation would need later.
-Written into the same `.cache/topogym` tree the control meshes use, regenerated
-on every build, so a config edit always takes effect.
+
+Returned as an array rather than written to a file: `gs.textures.ImageTexture`
+takes `image_array` directly, so there is no file to cache, stale or fail to find.
+The dtype is uint8 because the renderer asserts exactly that
+(`genesis/utils/mesh.py surface_uvs_to_trimesh_visual`).
 """
 
 from __future__ import annotations
@@ -26,11 +29,8 @@ from pathlib import Path
 
 import numpy as np
 
-CACHE_ROOT = Path(".cache/topogym/textures")
-
 
 def fabric_weave(
-    path: Path,
     *,
     color,
     size_m,
@@ -41,8 +41,12 @@ def fabric_weave(
     fibre_noise: float = 0.05,
     cloud_noise: float = 0.08,
     seed: int = 0,
-) -> Path:
-    """Paint a plain-weave sheet and write it as PNG. Returns ``path``.
+    preview_path: Path | None = None,
+) -> np.ndarray:
+    """Paint a plain-weave sheet. Returns an ``(H, W, 3)`` uint8 array.
+
+    ``preview_path`` writes the same image out as a PNG as well, for looking at
+    without a render. Nothing in the pipeline reads it.
 
     ``size_m`` is the cloth's real extent and ``thread_pitch_m`` the spacing
     between neighbouring threads, so the weave's on-screen scale is physical
@@ -87,10 +91,15 @@ def fabric_weave(
         1.0 + float(cloud_noise) * _smooth_noise(shade.shape, rng, octaves=3)
     )
 
+    # The renderer multiplies the texture by a white diffuse, so the image's own
+    # colours ARE the final colours -- the surface's `color` stops mattering once
+    # a texture is attached, and the tint has to be baked here.
     base = np.asarray([float(channel) for channel in color], dtype=float)
     image = np.clip(shade[..., None] * base[None, None, :], 0.0, 1.0)
-    _write_png(path, (image * 255.0 + 0.5).astype(np.uint8))
-    return path
+    rgb = (image * 255.0 + 0.5).astype(np.uint8)
+    if preview_path is not None:
+        _write_png(Path(preview_path), rgb)
+    return rgb
 
 
 def _cells(pixels: int, threads: int):
@@ -139,6 +148,4 @@ def _write_png(path: Path, rgb: np.ndarray) -> None:
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    # No metadata: PNG writers otherwise stamp a timestamp, and the offline check
-    # compares two generations of the same parameters byte for byte.
     Image.fromarray(rgb, mode="RGB").save(path, format="PNG", optimize=True)
