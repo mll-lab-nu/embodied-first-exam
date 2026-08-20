@@ -1,0 +1,14 @@
+# tests/weld_constraint_spike.py 的主配置。
+#
+# env 用 world_tabletop_v1：spike 量的是 weld 约束在**任务实际使用的那组 sim 参数**
+# （dt=0.01 / substeps=4）下的行为，换一组参数量出来的数不能用来定 4.4 提起测试的阈值。
+#
+# task 组本 spike 一个键都不读——场景（四个盒子）由脚本自己搭。这里仍然把它覆盖成
+# gate_cage_ball，是为了让 `--cfg job` 打出来的整棵配置树里不混进 PBD/FEM 的任务参数。
+
+defaults:
+  - config
+  - override task_configs@task: gate_cage_ball_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: weld_constraint_spike
+  - _self_

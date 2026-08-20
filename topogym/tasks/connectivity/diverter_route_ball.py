@@ -325,6 +325,37 @@ class DiverterRouteBallLayout:
 
     # ----- flap -------------------------------------------------------------
 
+    def check_pivot_clearance(self, margin: float = 0.002) -> float:
+        """Static walls must sit outside the circle the rotating parts sweep.
+
+        The flap's pivot end and the axle both turn about the pivot, so anything
+        fixed within that radius is a collision waiting to happen. The nearest
+        fixed thing is the upstream corner of a branch's inner wall, which the
+        setback places at ``hypot(nose_setback, wall_thickness / 2)`` from the
+        pivot. Checked at build time because it is exactly the kind of thing that
+        goes wrong silently: raising the axle radius from 11 to 13 mm once left
+        2 mm here, and nothing would have said so.
+
+        Returns the clearance, so the caller can report it.
+        """
+
+        corner = float(
+            np.hypot(float(self.cfg.diverter.nose_setback), 0.5 * self.wall_thickness)
+        )
+        swept = max(
+            0.5 * float(self.cfg.diverter.flap.thickness),
+            float(self.cfg.diverter.lever.axle_radius),
+        )
+        clearance = corner - swept
+        if clearance < margin:
+            raise ValueError(
+                f"The splitter walls come within {corner * 1000:.1f} mm of the pivot "
+                f"while the rotating parts sweep {swept * 1000:.1f} mm "
+                f"(clearance {clearance * 1000:.1f} mm < {margin * 1000:.1f} mm). "
+                "Raise diverter.nose_setback, or thin the flap / the axle."
+            )
+        return clearance
+
     @property
     def flap_reach(self) -> float:
         """Nose-to-wall distance along a seated flap.
@@ -503,68 +534,6 @@ class DiverterRouteBallLayout:
         )
         return self.position_to_world((float(xy[0]), float(xy[1]), z))
 
-    def pier_cfg(self):
-        return getattr(self.cfg.diverter, "pier", None)
-
-    def pier_box(self):
-        """(centre_xy, size_xyz) of the splitter pier, or None.
-
-        Sits in the wedge between the two branches' inner walls, entirely behind
-        them, so the ball can never reach it and no clearance changes. Its job is
-        visual: it makes the pivot look mounted into the structure instead of a
-        shaft standing between two thin plates.
-
-        The wedge widens downstream at the branch angle, so the pier's half width
-        is checked against the narrowest point it spans -- its upstream end.
-        """
-
-        pier = self.pier_cfg()
-        if pier is None or not bool(getattr(pier, "enabled", True)):
-            return None
-        start_x = self.nose_x + float(pier.start_offset)
-        length = float(pier.length)
-        half_width = float(pier.half_width)
-        # Wedge half width at the pier's upstream end; the pier must fit inside it.
-        available = float(pier.start_offset) * np.tan(self.angle)
-        if half_width > available:
-            raise ValueError(
-                f"diverter.pier.half_width={half_width:.4f} does not fit the wedge "
-                f"at start_offset={pier.start_offset} (available {available:.4f}); "
-                "move it downstream or make it narrower."
-            )
-        height = self.wall_height + float(pier.rise_above_wall)
-        return (
-            np.array([start_x + 0.5 * length, 0.0], dtype=float),
-            (length, 2.0 * half_width, height),
-        )
-
-    def swing_arc_cfg(self):
-        return getattr(self.cfg.diverter, "swing_arc", None)
-
-    def swing_arc_points(self):
-        """(xy, yaw_deg, is_seat) for each tick of the floor swing indicator.
-
-        Drawn on the arc the LEVER sweeps -- the empty wedge between the two
-        branches -- rather than under the flap, where the ball runs. The two end
-        ticks sit on the seats, so the marking reads as a range with two detents,
-        which is what a valve position indicator looks like.
-        """
-
-        arc = self.swing_arc_cfg()
-        if arc is None:
-            return []
-        count = max(2, int(arc.segments))
-        radius = self.lever_radius
-        nose = self.nose_xy()
-        limit = self.angle
-        points = []
-        for index in range(count):
-            frac = index / (count - 1)
-            angle = -limit + frac * 2.0 * limit
-            xy = nose + radius * np.array([np.cos(angle), np.sin(angle)], dtype=float)
-            points.append((xy, float(np.rad2deg(angle)), index in (0, count - 1)))
-        return points
-
     # ----- ball -------------------------------------------------------------
 
     @property
@@ -721,12 +690,12 @@ class DiverterRouteBallSceneBuilder:
         layout = DiverterRouteBallLayout(
             self.task_cfg, task_origin=tabletop.frames.task_origin
         )
+        layout.check_pivot_clearance()
         self._add_entry(scene, manifest, layout)
         self._add_branches(scene, manifest, layout)
         entity, joint_name = self._add_diverter(scene, manifest, layout)
         self._add_ball(scene, manifest, layout)
         self._add_target_marker(scene, manifest, layout)
-        self._add_swing_arc(scene, manifest, layout)
 
         tabletop_builder.finalize(tabletop)
         joint_dof = hinge_joint_dof(entity, joint_name)
@@ -841,25 +810,6 @@ class DiverterRouteBallSceneBuilder:
                     scene, manifest, layout, f"branch_{side}_{tag}", center, length, yaw
                 )
         self._add_dead_end_cap(scene, manifest, layout)
-        self._add_pier(scene, manifest, layout)
-
-    def _add_pier(self, scene, manifest, layout) -> None:
-        """The solid splitter the pivot is mounted into. See `pier_box`."""
-
-        box = layout.pier_box()
-        if box is None:
-            return
-        center, size = box
-        self._box(
-            scene,
-            manifest,
-            "splitter_pier",
-            layout.position_to_world(
-                (float(center[0]), float(center[1]), layout.floor_top_z + 0.5 * size[2])
-            ),
-            size,
-            layout.pier_cfg().color,
-        )
 
     def _add_dead_end_cap(self, scene, manifest, layout) -> None:
         """The wall that closes the dead branch.
@@ -1092,47 +1042,6 @@ class DiverterRouteBallSceneBuilder:
                     ),
                     surface=materials.plastic(
                         "deformable", red if index % 2 == 0 else white
-                    ),
-                    name=name,
-                ),
-            )
-
-    def _add_swing_arc(self, scene, manifest, layout) -> None:
-        """Floor ticks marking how far the lever swings, with a mark at each seat.
-
-        Decoration (`collision=False`), on the arc the lever sweeps. It is the
-        cue that says "this turns, and this far" without a texture and without
-        making the part look unlike a machine -- a valve position indicator is
-        exactly this.
-        """
-
-        arc = layout.swing_arc_cfg()
-        if arc is None or not bool(getattr(arc, "enabled", True)):
-            return
-        thickness = float(arc.thickness)
-        base_z = layout.floor_top_z + float(arc.z_offset)
-        tick = [float(v) for v in _list(arc.tick_size)]
-        seat_tick = [float(v) for v in _list(arc.seat_tick_size)]
-        for index, (xy, yaw_deg, is_seat) in enumerate(layout.swing_arc_points()):
-            size = seat_tick if is_seat else tick
-            name = f"swing_tick_{index:02d}"
-            manifest.add(
-                name,
-                scene.add_entity(
-                    gs.morphs.Box(
-                        pos=tuple(
-                            layout.position_to_world(
-                                (float(xy[0]), float(xy[1]), base_z)
-                            )
-                        ),
-                        size=(size[0], size[1], thickness),
-                        euler=(0.0, 0.0, yaw_deg),
-                        fixed=True,
-                        collision=False,
-                    ),
-                    surface=materials.plastic(
-                        "fixture",
-                        _list(arc.seat_color if is_seat else arc.color),
                     ),
                     name=name,
                 ),

@@ -1,0 +1,48 @@
+# tests/weld_constraint_spike.py 的运行模式参数。
+#
+# 本 spike 的场景（四个盒子）不属于任何 task，所以盒子的尺寸与质量写在这里而不是
+# task 配置里：它们是这台诊断工具的量程设置，不是某个任务的场景定义。
+# 4.4 落地后本文件与 spike 一并作废。
+
+defaults:
+  - default
+  - _self_
+
+# 做哪一项测试。
+#   readback : 加/删 weld 后 get_weld_constraints() 的读数（verifier 的 union-find 靠它）
+#   static   : 焊到世界固定件上，向上拉，看是否纹丝不动；删除后再拉一次作对照
+#   pair     : 两个可动体互焊，只拉其中一个，看另一个是否被带起
+#   all      : 依次跑上面三项
+test: all
+
+# 探针盒子：边长（米）与质量（千克）。密度由二者反算，脚本里不再单独给。
+# 0.06m / 0.20kg 是 4.4 里组件 B 的量级下限，不是精确复刻——本 spike 问的是约束
+# 「成不成立」，不是「在 B 的具体质量下拉多高」。
+box_edge: 0.060
+box_mass: 0.200
+box_friction: 0.80
+
+# 提起探针：向上外力 = lift_force_scale × box_mass × g，持续 lift_steps 步。
+# 取 3.0 而不是更小，是因为 pair 测试里同一个力要抬两个盒子：净加速度
+# 单盒 ≈ 2g、双盒 ≈ 0.5g，两种情况都要明显离地才能读出「被带起」。
+# 20 步 = 0.2 秒（dt 取自 env 预设）。
+lift_force_scale: 3.0
+lift_steps: 20
+
+# 每次改变构型后先静置这么多步再加约束：在还在沉降的位姿上焊接，会把沉降误差
+# 冻进 weld 的相对位姿里。
+settle_steps: 30
+
+# 每隔多少步打印一行提起过程的高度采样（run.verbose=true 时）。
+sample_every: 5
+
+# 判据阈值（米）。
+# max_held_lift  ：被约束住的体（以及全程没受力的对照体）允许的最大上移
+# min_free_lift  ：删除 weld 后同一个力必须能抬起的高度，用来证明「不动」是约束造成的
+# min_carried_lift：pair 里未受力的伙伴必须被带起的高度
+# max_pair_spread：pair 里两体上移量之差。力作用在 box_a 的 link 原点、偏离合体质心，
+#                  合体会同时转动，因此这一项放宽，判别力主要来自 min_carried_lift。
+max_held_lift: 0.005
+min_free_lift: 0.050
+min_carried_lift: 0.020
+max_pair_spread: 0.050

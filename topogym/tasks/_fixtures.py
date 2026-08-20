@@ -203,53 +203,28 @@ def _origin_xml(origin, rpy) -> str:
     return f'<origin xyz="{ox:.9f} {oy:.9f} {oz:.9f}" rpy="{rr:.9f} {rp:.9f} {ry:.9f}"/>'
 
 
-def write_hinge_urdf(
-    path,
-    *,
-    robot_name: str,
-    joint_name: str,
-    axis,
-    shapes: Sequence[HingeShape],
-    mass: float,
-    color,
-    limit_rad: tuple[float, float] | None = None,
-    damping: float = 0.0,
-    friction: float = 0.0,
-    effort: float = 50.0,
-    max_velocity: float = 5.0,
-) -> Path:
-    """Write a two-link URDF: a fixed base and one link on a single joint.
+def _link_xml(link_name: str, *, robot_name: str, shapes: Sequence[HingeShape],
+              mass: float, color) -> str:
+    """One `<link>` carrying every shape in ``shapes``.
 
-    Generalized from `tasks/connectivity/stacked_plate.py`'s `_write_disk_urdf`,
-    which is hard-wired to one cylinder collider, the Y axis and a continuous
-    joint. Three of those are wrong for a diverter flap, which needs a box
-    collider, the Z axis, a joint that STOPS at each seated position, and several
-    parts on the same rotating link (the flap inside the channel plus the lever
-    the gripper turns it by, above the walls).
+    Shared by the hinge writer and the rigid-assembly writer: several primitives
+    in one link is how this repo builds a non-convex part, so a swinging lever and
+    a bolted-together frame differ only in whether a joint follows.
 
-    ``limit_rad`` picks the joint type: ``None`` writes a ``continuous`` joint,
-    a ``(lower, upper)`` pair writes a ``revolute`` one. The limit is load-bearing
-    rather than a safety rail -- a contact-driven sweep that overshoots is
-    stopped by it, so the seated pose is set by the joint rather than by how
-    accurately the arm tracked the arc.
-
-    ``mass`` is distributed over the bounding box of ``shapes``: the inertial
-    origin is that box's centre and the tensor is a solid cuboid of the same
-    extent. See `HingeShape.half_extent`.
-
-    Note for the `stacked_plate` migration (`rigid_first_track_zh.md` §7.6): its
-    disk carries a *mesh* visual over a cylinder collider, and no shape kind here
-    writes a `<mesh>` element yet. Adding one is a few lines, and is left until
-    that task is actually migrated rather than written blind now.
+    ``mass`` is distributed over the bounding box of the COLLIDING shapes: the
+    inertial origin is that box's centre and the tensor is a solid cuboid of the
+    same extent. Visual-only parts are excluded so that dressing a part cannot
+    move its centre of mass. See `HingeShape.half_extent`.
     """
 
-    path = Path(path)
     shapes = list(shapes)
     if not shapes:
-        raise ValueError("A hinge needs at least one shape on its rotating link.")
+        raise ValueError(f"Link {link_name!r} needs at least one shape.")
     mass = float(mass)
     if mass <= 0.0:
-        raise ValueError(f"Hinge mass must be positive, got {mass}.")
+        raise ValueError(f"Link {link_name!r} mass must be positive, got {mass}.")
+    if not any(shape.collide for shape in shapes):
+        raise ValueError(f"Link {link_name!r} has no colliding shape to size its inertia on.")
 
     lower = np.full(3, np.inf)
     upper = np.full(3, -np.inf)
@@ -293,6 +268,61 @@ def write_hinge_urdf(
     </visual>"""
         )
 
+    return f"""  <link name="{link_name}">
+    <inertial>
+      <origin xyz="{center[0]:.9f} {center[1]:.9f} {center[2]:.9f}" rpy="0 0 0"/>
+      <mass value="{mass:.9f}"/>
+      <inertia ixx="{ixx:.9f}" ixy="0" ixz="0" iyy="{iyy:.9f}" iyz="0" izz="{izz:.9f}"/>
+    </inertial>
+{chr(10).join(parts)}
+  </link>"""
+
+
+def write_hinge_urdf(
+    path,
+    *,
+    robot_name: str,
+    joint_name: str,
+    axis,
+    shapes: Sequence[HingeShape],
+    mass: float,
+    color,
+    limit_rad: tuple[float, float] | None = None,
+    damping: float = 0.0,
+    friction: float = 0.0,
+    effort: float = 50.0,
+    max_velocity: float = 5.0,
+) -> Path:
+    """Write a two-link URDF: a fixed base and one link on a single joint.
+
+    Generalized from `tasks/connectivity/stacked_plate.py`'s `_write_disk_urdf`,
+    which is hard-wired to one cylinder collider, the Y axis and a continuous
+    joint. Three of those are wrong for a diverter flap, which needs a box
+    collider, the Z axis, a joint that STOPS at each seated position, and several
+    parts on the same rotating link (the flap inside the channel plus the lever
+    the gripper turns it by, above the walls).
+
+    ``limit_rad`` picks the joint type: ``None`` writes a ``continuous`` joint,
+    a ``(lower, upper)`` pair writes a ``revolute`` one. The limit is load-bearing
+    rather than a safety rail -- a contact-driven sweep that overshoots is
+    stopped by it, so the seated pose is set by the joint rather than by how
+    accurately the arm tracked the arc.
+
+    ``mass`` is distributed over the bounding box of ``shapes``: the inertial
+    origin is that box's centre and the tensor is a solid cuboid of the same
+    extent. See `HingeShape.half_extent`.
+
+    Note for the `stacked_plate` migration (`rigid_first_track_zh.md` §7.6): its
+    disk carries a *mesh* visual over a cylinder collider, and no shape kind here
+    writes a `<mesh>` element yet. Adding one is a few lines, and is left until
+    that task is actually migrated rather than written blind now.
+    """
+
+    path = Path(path)
+    link_xml = _link_xml(
+        "hinge_arm", robot_name=robot_name, shapes=shapes, mass=mass, color=color
+    )
+
     ax, ay, az = (float(v) for v in _to_container(axis))
     if limit_rad is None:
         joint_type = "continuous"
@@ -308,14 +338,7 @@ def write_hinge_urdf(
     xml = f"""<?xml version="1.0"?>
 <robot name="{robot_name}">
   <link name="hinge_base"/>
-  <link name="hinge_arm">
-    <inertial>
-      <origin xyz="{center[0]:.9f} {center[1]:.9f} {center[2]:.9f}" rpy="0 0 0"/>
-      <mass value="{mass:.9f}"/>
-      <inertia ixx="{ixx:.9f}" ixy="0" ixz="0" iyy="{iyy:.9f}" iyz="0" izz="{izz:.9f}"/>
-    </inertial>
-{chr(10).join(parts)}
-  </link>
+{link_xml}
   <joint name="{joint_name}" type="{joint_type}">
     <parent link="hinge_base"/>
     <child link="hinge_arm"/>
@@ -390,3 +413,80 @@ def hinge_joint_dof(entity, joint_name: str) -> int:
 
     joint = entity.get_joint(name=str(joint_name))
     return int(np.asarray(joint.dofs_idx_local).reshape(-1)[0])
+
+
+# ---------------------------------------------------------------------------
+
+
+def write_body_urdf(path, *, robot_name: str, shapes: Sequence[HingeShape],
+                    mass: float, color) -> Path:
+    """Write a one-link URDF: several primitives welded into a single rigid body.
+
+    The case this exists for is a part that has to LOOK like an assembly and
+    BEHAVE like one object. `linkbar_merge_components`' component B is a section
+    of machine frame -- rails, uprights, feet -- and the lift test that judges the
+    task asks whether B as a whole is held down, so B has to be one body with one
+    pose, not a pile of separate entities that would drift apart.
+
+    A single link with several `<collision>` elements is how URDF says that, and
+    it is the same construction `write_hinge_urdf` already puts on its rotating
+    link; the two share `_link_xml`. It is also the repo's standing answer to
+    non-convex geometry -- a union of convex primitives rather than a concave
+    mesh (`routing/bar_through_hole.py` bores its panel out of 8 boxes).
+
+    No joint is written, so the body is free or pinned purely by the morph's
+    ``fixed`` flag. Like `write_hinge_urdf`, no `<mesh>` shape kind exists yet.
+    """
+
+    path = Path(path)
+    xml = f"""<?xml version="1.0"?>
+<robot name="{robot_name}">
+{_link_xml("body", robot_name=robot_name, shapes=shapes, mass=mass, color=color)}
+</robot>
+"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(xml, encoding="utf-8")
+    return path
+
+
+def add_rigid_assembly(
+    scene,
+    manifest,
+    *,
+    name: str,
+    urdf_path,
+    world_pos,
+    shapes: Sequence[HingeShape],
+    mass: float,
+    color,
+    fixed: bool = False,
+    contact_friction: float = 1.0,
+    yaw_deg: float = 0.0,
+) -> Any:
+    """Write the URDF and add it to the scene; returns the entity.
+
+    ``convexify=False`` keeps the parts as the primitives they were written as,
+    and ``recompute_inertia=False`` keeps the tensor `write_body_urdf` computed --
+    both matching `add_hinge_mechanism`. Recomputing would fold the visual-only
+    parts back into the mass properties, which is exactly what `_link_xml`
+    excludes them from.
+    """
+
+    written = write_body_urdf(
+        urdf_path, robot_name=name, shapes=shapes, mass=mass, color=color
+    )
+    entity = scene.add_entity(
+        gs.morphs.URDF(
+            file=str(written),
+            pos=tuple(float(v) for v in _to_container(world_pos)),
+            euler=(0.0, 0.0, float(yaw_deg)),
+            fixed=bool(fixed),
+            convexify=False,
+            recompute_inertia=False,
+            prioritize_urdf_material=True,
+        ),
+        material=gs.materials.Rigid(friction=float(contact_friction)),
+        name=name,
+    )
+    manifest.add(name, entity)
+    return entity
