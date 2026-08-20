@@ -24,12 +24,17 @@ an 8 mm plan-view grid is a coarser version of an exact 3D destination per
 particle, and a sheet put down in the wrong place misses every target, so the
 crease term is subsumed once the targets live in world coordinates. They stay in
 the output because they identify WHICH failure occurred: measured 2026-08-20 on
-this cloth, same grasp point, only the hand's path changed --
+this cloth, same grasp point and same measurement, only the hand's path changed --
 
-    走法              双层率  覆盖 IoU  对角位移   平整度方差
-    fold（正确）       0.860   0.870    1.19mm     3.62e-06
-    drag（贴地拖）     0.336   0.719   10.49mm     5.64e-06
-    crumple（揉成团）  0.145   0.561    8.16mm     5.27e-06
+    走法               平均误差  偏离比例  两层率  覆盖IoU | 静止半 移动半 折痕带
+    fold（正确）        2.87mm    0.011    0.845   0.875  |  2.40   3.33   4.18
+    drag（贴地拖）     25.95mm    0.443    0.202   0.703  |  9.22  42.87  11.38
+    crumple（揉成团）  51.15mm    0.839    0.073   0.601  | 19.40  83.28  21.06
+
+The right-hand columns are why the decomposition is worth printing: a good fold's
+2.87 mm is mostly its stationary half creeping across the table (2.40 mm, equal
+to `anchor_shift`), not the fold going wrong, and the crease band's 4.18 mm is
+about one particle -- the bend radius, which no trajectory removes.
 
 Everything here is plain NumPy over ``(P, 3)`` particle arrays. Genesis is never
 imported, so `tests/check_cloth_fold_geometry.py` can feed it synthetic cloth and

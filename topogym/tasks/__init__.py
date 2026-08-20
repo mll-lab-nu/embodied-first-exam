@@ -15,6 +15,15 @@ This module re-exports every task's public names flat, so importers say
 task is reclassified into a different category directory.
 """
 
+from .deformation.cloth_fold import (
+    ClothFoldLayout,
+    ClothFoldScene,
+    ClothFoldSceneBuilder,
+    cloth_particles,
+    cloth_sheet_mesh,
+    remesh_report,
+    settle_cloth,
+)
 from .routing.bar_through_hole import (
     BarThroughHoleLayout,
     BarThroughHoleScene,

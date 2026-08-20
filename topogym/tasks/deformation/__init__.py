@@ -15,3 +15,24 @@
 
 See `docs/develop/framework/task_taxonomy_zh.md`.
 """
+
+from .cloth_fold import (
+    ClothFoldLayout,
+    ClothFoldScene,
+    ClothFoldSceneBuilder,
+    cloth_particles,
+    cloth_sheet_mesh,
+    remesh_report,
+    settle_cloth,
+)
+
+__all__ = [
+    "ClothFoldLayout",
+    "ClothFoldScene",
+    "ClothFoldSceneBuilder",
+    "cloth_particles",
+    "cloth_sheet_mesh",
+    "remesh_report",
+    "settle_cloth",
+]
+

@@ -9,6 +9,13 @@ Split out of `tasks/` per the blueprint
 "verification 暂时放在各 tasks/*.py 旁边，等接口稳定后再迁移").
 """
 
+from .cloth_fold_verifier import (
+    ClothFoldEvaluator,
+    ClothFoldState,
+    ClothFoldThresholds,
+    fold_targets,
+    particle_error,
+)
 from .bar_through_hole_verifier import (
     BarThroughHolePuzzleEvaluator,
     BarThroughHolePuzzleState,
