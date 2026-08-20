@@ -166,7 +166,21 @@ class ClothCornerFoldPrimitive:
         for waypoint in waypoints:
             target = np.asarray(waypoint.position, dtype=float)
             steps = max(1, int(waypoint.steps or 1))
-            self._glide(controller, self._hand_for_pad(target, target[2]), ee_quat, steps)
+            # The pads stay `touch_clearance` ABOVE the material for the whole
+            # arc, not just on the way down. Sending them to the waypoint's own
+            # height instead put the fingers on the sheet the moment the carry
+            # started, and the clearance -- the one guarantee that the fingers
+            # never contact the cloth -- was only true during the approach.
+            #
+            # The bound particles keep the offset they had when the link took
+            # them, which is exactly that clearance, so commanding the pad this
+            # much higher puts the material on the waypoint.
+            self._glide(
+                controller,
+                self._hand_for_pad(target, float(target[2]) + float(self.touch_clearance)),
+                ee_quat,
+                steps,
+            )
             # How far the held material is from where it was asked to be. With a
             # link binding this stays near zero; a growing value means the arm
             # could not reach and the cloth is being stretched to cover it.

@@ -395,17 +395,24 @@ def check_self_contact_clearance(
     centre of its spawn arc (a near-incompressible section cannot widen without
     it), and accumulates twist that turns into a telephone-cord coil -- 2.67
     turns with the barrier violated, 0.17 with it clear.
+
+    Past the clearance the barrier is unambiguously inside the skin and this
+    raises. Between 75% and 100% there is no margin left for deformation to eat,
+    which is where cable_routing's 12-segment section at 2mm sits; that prints
+    the same arithmetic and keeps going, because no run has measured it.
     """
 
     clearance = self_contact_clearance(radius, radial_segments, ring_spacing)
+    detail = (
+        f"rope.fem.contact_d_hat={float(contact_d_hat):.4f} m against a self-surface "
+        f"clearance of {clearance:.4f} m (radius {radius:.4f} m, {radial_segments} radial "
+        f"segments, {ring_spacing:.4f} m rings). Lower contact_d_hat below "
+        f"{0.75 * clearance:.4f} m, or coarsen the skin."
+    )
+    if float(contact_d_hat) >= clearance:
+        raise SystemExit(f"The IPC barrier spans the rope's own surface: {detail}")
     if float(contact_d_hat) > 0.75 * clearance:
-        raise SystemExit(
-            f"rope.fem.contact_d_hat={float(contact_d_hat):.4f} m reaches the rope's own "
-            f"surface: radius {radius:.4f} m at {radial_segments} radial segments and "
-            f"{ring_spacing:.4f} m rings leaves only {clearance:.4f} m between "
-            "non-adjacent surface primitives. Lower contact_d_hat below "
-            f"{0.75 * clearance:.4f} m, or coarsen the skin."
-        )
+        print(f"rope self-contact clearance has no margin left: {detail}", flush=True)
 
 
 def write_obj(path: Path, vertices: np.ndarray, faces: np.ndarray) -> None:

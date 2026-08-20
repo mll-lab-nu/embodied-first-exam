@@ -144,6 +144,10 @@ def main(cfg: DictConfig) -> None:
                 particles_fn=lambda: cloth_particles(cloth_scene),
                 on_phase=lambda name: setattr(watch, "phase", name),
             )
+            # A still tail with the arm out of the way, so the video ends on the
+            # finished cloth rather than on the retreat.
+            for _ in range(max(0, int(cfg.run.final_hold_steps))):
+                cloth_scene.scene.step()
         finally:
             cloth_scene.scene.step = original_step
 

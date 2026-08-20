@@ -2,8 +2,12 @@
 #
 # 这个 demo 目前没有自己的诊断开关：轨迹由材料决定（planner）、速度是标定值
 # （task.physical.fold_step_m）、判据门槛在 task.success —— 都不属于「这一次怎么跑」。
-# 留着这个文件是为了 defaults 里有个位置，将来加开关不用改别处。
-
 defaults:
   - default
   - _self_
+
+# 机械臂退开之后再空跑多少步才停止录制（dt=0.01，所以 100 步 = 1 秒）。
+# 让视频最后是一段**布已经落定、机械臂已经让开**的稳定画面，便于截图看折的结果。
+# 这是录制上的事不是任务定义，所以在 run 而不在 task —— 松手后的物理沉降是
+# task.physical.release_hold_steps，两者管的不是一回事。
+final_hold_steps: 100

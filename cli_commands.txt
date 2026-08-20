@@ -305,6 +305,11 @@ python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true
 python tests/check_rope_tube_mesh.py --radial 20 2>&1 | tee runs/rope_skin_check.log
 # 2. 每步耗时 (节点数涨了约 1.7 倍, 确认没有超出 1.5~2 倍)
 python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 2>&1 | tee runs/rope_skin_bench.log
+# 2b. 接触势垒的对照 (2026-08-20 定位: d_hat=2mm 撞上管皮自身点距, 见 3.4 节)
+#   看 rope_spread 是否恒定、rope_jump 是否为 0、twist_summary 的 onset 是否 none
+python -B -m demos.routing.rope_winding_physical_handle_demo run.max_waypoints=2 run.probe=true run.probe_every=5 run.settle_steps=300 2>&1 | tee runs/creep_dhat_fixed.log
+#   复现旧行为 (会被建场景校验拦下, 拿 --cfg 看数或临时放宽才跑得起来)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true task.rope.fem.contact_d_hat=0.002 2>&1 | tee runs/creep_dhat_reject.log
 # 3. 出生态实拍 A/B (只跑前两个路点, 1~2 分钟)
 python -B -m demos.routing.rope_winding_physical_handle_demo run.max_waypoints=2 recording=hq recording.path=runs/videos/rope_smooth/spawn.mp4 recording.camera=[oblique,front] recording.res=[960,960] recording.every_n_steps=2 2>&1 | tee runs/rope_smooth_spawn.log
 # 4. 绕柱段实拍 (绳贴上 24mm 半径柱面之后是否仍平滑)
