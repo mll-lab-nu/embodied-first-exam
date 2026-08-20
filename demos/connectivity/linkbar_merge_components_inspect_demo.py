@@ -62,6 +62,21 @@ def _hud(state):
     return render_lines
 
 
+def b_xy(merge_scene) -> np.ndarray:
+    """Component B's position, for measuring whether the beam walked it out of place.
+
+    B is a free body on purpose -- the lift test needs it to be -- so the pin
+    brushing a jaw on the way in can shove it. Its catch only has 4 mm of side
+    clearance, so a few millimetres of drift is the difference between latching and
+    not, and it is the number the locating cleats have to justify.
+    """
+
+    value = merge_scene.component_b_entity().get_pos()
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value).reshape(-1, 3)[0][:2].astype(float)
+
+
 def make_latch(merge_scene, *, auto_capture: bool) -> SocketWeld:
     return SocketWeld(
         scene=merge_scene.scene,
@@ -109,11 +124,14 @@ def run_sweep(cfg, merge_scene, state) -> None:
                 ("a2", layout.socket_angle("a2")),
                 ("init", layout.init_angle)]
     worst = 0.0
+    b_start = b_xy(merge_scene)
+    b_drift = 0.0
     for label, target in stations:
         state["phase"] = f"sweep:{label}"
         error = drive_joint(merge_scene, target, steps=steps, cfg=cfg)
         state["angle"] = merge_scene.arm_angle()
         worst = max(worst, abs(error))
+        b_drift = max(b_drift, float(np.linalg.norm(b_xy(merge_scene) - b_start)))
         gaps = {name: float(np.linalg.norm(merge_scene.pin_xy() - layout.socket_center_xy(name)))
                 for name in LINKBAR_SOCKETS}
         print(
@@ -126,6 +144,8 @@ def run_sweep(cfg, merge_scene, state) -> None:
     print(
         f"linkbar_merge_components sweep worst_error_deg={np.rad2deg(worst):.2f} "
         f"capture_window_deg={layout.capture_tolerance_deg():.2f} "
+        f"b_drift_mm={b_drift * 1000:.2f} "
+        f"side_clearance_mm={float(cfg.task.socket.pin_clearance) * 1000:.1f} "
         f"reached_both={bool(np.rad2deg(worst) <= float(cfg.run.sweep_tolerance_deg))}",
         flush=True,
     )
@@ -153,6 +173,7 @@ def run_seat(cfg, merge_scene, latch, state) -> None:
     layout = merge_scene.layout
     phase, angle = seat_angle_for(cfg, layout)
     state["phase"] = f"seat:{phase}"
+    b_start = b_xy(merge_scene)
     merge_scene.set_arm_angle(angle)
     state["angle"] = angle
     for _ in range(int(cfg.task.success.settle_steps)):
@@ -164,6 +185,7 @@ def run_seat(cfg, merge_scene, latch, state) -> None:
         f"angle={np.rad2deg(merge_scene.arm_angle()):+7.2f}deg "
         + " ".join(f"gap_{name}={gaps[name]*1000:6.1f}mm" for name in LINKBAR_SOCKETS)
         + f" capture={layout.capture_tolerance_xy*1000:.1f}mm "
+        f"b_drift_mm={float(np.linalg.norm(b_xy(merge_scene) - b_start)) * 1000:.2f} "
         f"latched={latch.latched} checks={latch.capture_checks} "
         f"weld_pairs={sorted(merge_scene.weld_pairs())} "
         f"latched_readback={merge_scene.latched_socket()}",

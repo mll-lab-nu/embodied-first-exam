@@ -388,6 +388,9 @@ class ClothFoldSceneBuilder:
             image = textures.fabric_weave(
                 color=list(cloth_cfg.color),
                 size_m=list(cloth_cfg.size),
+                pattern=str(texture_cfg.pattern),
+                accent_color=list(texture_cfg.accent_color),
+                stripe_pitch_m=float(texture_cfg.stripe_pitch),
                 thread_pitch_m=float(texture_cfg.thread_pitch),
                 pixels_per_thread=int(texture_cfg.pixels_per_thread),
                 thread_shading=float(texture_cfg.thread_shading),

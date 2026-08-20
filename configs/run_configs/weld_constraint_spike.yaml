@@ -40,9 +40,12 @@ sample_every: 5
 # max_held_lift  ：被约束住的体（以及全程没受力的对照体）允许的最大上移
 # min_free_lift  ：删除 weld 后同一个力必须能抬起的高度，用来证明「不动」是约束造成的
 # min_carried_lift：pair 里未受力的伙伴必须被带起的高度
-# max_pair_spread：pair 里两体上移量之差。力作用在 box_a 的 link 原点、偏离合体质心，
-#                  合体会同时转动，因此这一项放宽，判别力主要来自 min_carried_lift。
+# max_separation_drift：pair 里两体间距的变化量。weld 承诺的是「相对位姿不变」，
+#                  而力作用在 box_a 的 link 原点、偏离合体质心，等于同时施加一个力矩，
+#                  自由飞行的合体没有任何东西可以反抗它，因此会明显翻滚（2026-08-20
+#                  实测 120mm 跨距上两体高差 95mm，即 53°）。翻滚下两体高度必然不同，
+#                  拿高度差当判据会把正常的刚体运动判成 weld 失效；间距与朝向无关。
 max_held_lift: 0.005
 min_free_lift: 0.050
 min_carried_lift: 0.020
-max_pair_spread: 0.050
+max_separation_drift: 0.002

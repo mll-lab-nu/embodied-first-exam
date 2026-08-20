@@ -198,13 +198,26 @@ def run_pair(cfg, scene, bodies, home, verbose: bool) -> bool:
 
     This is 4.4's lift test in miniature. There the pull is on component B and the
     thing that refuses to rise is the beam's hinge; here both bodies are free, so
-    the readable signal is that they move together instead of apart.
+    the readable signal is that they move as one body.
+
+    **"As one body" is a constant SEPARATION, not a matching height.** The pull
+    lands on box_a's link origin, which is half the pair's span off their combined
+    centre of mass, so it is also a torque -- and a welded pair in free flight has
+    nothing to react that torque against, so it rolls. Measured 2026-08-20: the two
+    heights differ by 95 mm over a 120 mm span, which is 53 degrees of roll and
+    exactly what rigid-body dynamics should do. Comparing the two heights would
+    call that a broken weld. The distance between the bodies is the invariant a
+    weld actually promises, and it is indifferent to how the pair is oriented.
     """
 
     force = float(cfg.run.lift_force_scale) * float(cfg.run.box_mass) * GRAVITY
     link_a = int(bodies["box_a"].base_link.idx)
     link_b = int(bodies["box_b"].base_link.idx)
 
+    def separation() -> float:
+        return float(np.linalg.norm(body_pos(bodies["box_a"]) - body_pos(bodies["box_b"])))
+
+    before = separation()
     scene.rigid_solver.add_weld_constraint(link_a, link_b)
     risen = lift(
         scene, cfg,
@@ -212,20 +225,23 @@ def run_pair(cfg, scene, bodies, home, verbose: bool) -> bool:
         force=force,
         watch={"box_a": bodies["box_a"], "box_b": bodies["box_b"], "control": bodies["control"]},
     )
+    after = separation()
     scene.rigid_solver.delete_weld_constraint(link_a, link_b)
 
     # Half the applied force now carries twice the mass, so the pair rises less
     # than one box would. The test is that the partner came ALONG, not how high.
     carried = risen["box_b"] >= float(cfg.run.min_carried_lift)
-    together = abs(risen["box_a"] - risen["box_b"]) <= float(cfg.run.max_pair_spread)
+    rigid = abs(after - before) <= float(cfg.run.max_separation_drift)
     quiet = abs(risen["control"]) <= float(cfg.run.max_held_lift)
-    ok = bool(carried and together and quiet)
+    ok = bool(carried and rigid and quiet)
     print(
         f"weld_constraint_spike pair force={force:.3f}N "
         f"pulled_lift={risen['box_a']:+.4f}m partner_lift={risen['box_b']:+.4f}m "
-        f"spread={abs(risen['box_a'] - risen['box_b']):.4f}m "
+        f"separation_before={before:.5f}m separation_after={after:.5f}m "
+        f"separation_drift={abs(after - before) * 1e3:.3f}mm "
+        f"height_spread={abs(risen['box_a'] - risen['box_b']):.4f}m (roll, not slack) "
         f"untouched_control={risen['control']:+.4f}m "
-        f"carried={carried} moved_together={together} ok={ok}",
+        f"carried={carried} rigid={rigid} ok={ok}",
         flush=True,
     )
     return ok

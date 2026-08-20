@@ -44,8 +44,11 @@ from .rim_rotate import (
 )
 from .handle_drag import HandleDragPrimitive, HandleDragResult
 from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, RopeEndpointDragPrimitive
+from .cloth_corner_fold import ClothCornerFoldPrimitive, ClothFoldResult
 
 __all__ = [
+    "ClothCornerFoldPrimitive",
+    "ClothFoldResult",
     "AttachmentManager",
     "GatedInsertPrimitive",
     "GatedInsertResult",

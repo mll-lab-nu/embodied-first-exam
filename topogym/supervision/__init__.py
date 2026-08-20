@@ -50,8 +50,11 @@ from .rope_winding import (
     wrap_band_radius,
     wrapped_span,
 )
+from .cloth_fold import ClothFoldWatch, watch_steps
 
 __all__ = [
+    "ClothFoldWatch",
+    "watch_steps",
     "RopeTrace",
     "min_bend_radius",
     "DOMAIN_CORNER",

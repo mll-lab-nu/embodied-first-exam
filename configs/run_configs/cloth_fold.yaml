@@ -1,0 +1,9 @@
+# cloth_fold_physical_demo 的运行模式参数。
+#
+# 这个 demo 目前没有自己的诊断开关：轨迹由材料决定（planner）、速度是标定值
+# （task.physical.fold_step_m）、判据门槛在 task.success —— 都不属于「这一次怎么跑」。
+# 留着这个文件是为了 defaults 里有个位置，将来加开关不用改别处。
+
+defaults:
+  - default
+  - _self_

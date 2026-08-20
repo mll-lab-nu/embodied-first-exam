@@ -34,6 +34,9 @@ def fabric_weave(
     *,
     color,
     size_m,
+    pattern: str = "plain",
+    accent_color=None,
+    stripe_pitch_m: float = 0.030,
     thread_pitch_m: float = 0.002,
     pixels_per_thread: int = 8,
     thread_shading: float = 0.45,
@@ -58,6 +61,13 @@ def fabric_weave(
     Plain weave means each thread passes over one and under the next, so which of
     the two directions is on top flips every cell -- that alternation, not the
     colour, is what makes a surface read as woven.
+
+    ``pattern="stripes"`` bands ``accent_color`` across ``color`` every
+    ``stripe_pitch_m``. Worth having for more than looks: a fold is hard to read
+    in a video of a plain sheet, because a folded half looks like the half it
+    landed on. With stripes the two halves visibly meet, and a sheet that has
+    been dragged or bunched shows it in the pattern rather than only in the
+    numbers.
     """
 
     size_m = np.asarray(size_m, dtype=float)
@@ -94,12 +104,41 @@ def fabric_weave(
     # The renderer multiplies the texture by a white diffuse, so the image's own
     # colours ARE the final colours -- the surface's `color` stops mattering once
     # a texture is attached, and the tint has to be baked here.
-    base = np.asarray([float(channel) for channel in color], dtype=float)
-    image = np.clip(shade[..., None] * base[None, None, :], 0.0, 1.0)
+    base = _base_colour(
+        shade.shape,
+        color=color,
+        pattern=pattern,
+        accent_color=accent_color,
+        stripe_pitch_m=stripe_pitch_m,
+        size_m=size_m,
+    )
+    image = np.clip(shade[..., None] * base, 0.0, 1.0)
     rgb = (image * 255.0 + 0.5).astype(np.uint8)
     if preview_path is not None:
         _write_png(Path(preview_path), rgb)
     return rgb
+
+
+def _base_colour(shape, *, color, pattern, accent_color, stripe_pitch_m, size_m):
+    """Per-pixel colour before the weave's shading is applied."""
+
+    base = np.asarray([float(channel) for channel in color], dtype=float)
+    field = np.broadcast_to(base, (*shape, 3)).copy()
+    if pattern == "plain":
+        return field
+    if pattern != "stripes":
+        raise ValueError(f"pattern must be 'plain' or 'stripes', got {pattern!r}.")
+    if accent_color is None:
+        raise ValueError("pattern='stripes' needs accent_color.")
+
+    accent = np.asarray([float(channel) for channel in accent_color], dtype=float)
+    # Bands run along one axis at a physical pitch, so their width on screen is
+    # set in millimetres like everything else here rather than in pixels.
+    span = float(np.asarray(size_m, dtype=float)[1])
+    position = np.linspace(0.0, span, shape[0], endpoint=False)
+    band = (np.floor(position / float(stripe_pitch_m)).astype(int) % 2) == 1
+    field[band, :, :] = accent
+    return field
 
 
 def _cells(pixels: int, threads: int):

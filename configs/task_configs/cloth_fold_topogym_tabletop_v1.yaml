@@ -93,7 +93,11 @@ cloth:
   stretch_relaxation: 0.3
   bending_relaxation: 0.1
   air_resistance: 0.001
-  color: [0.85, 0.42, 0.28]
+  # 蓝白条纹的底色（白），条纹色见 texture.accent_color。
+  # 改成条纹不只是好看：**折叠在视频里看得见** —— 平色的布折过去之后，翻上来的
+  # 那一半和它盖住的那一半长得一样，画面上分不出折没折；有条纹就能直接看到两半
+  # 对上，被拖走或者揉起来也会在花纹上显出来，而不是只体现在数字里。
+  color: [0.90, 0.91, 0.93]
   # 织物贴图。**这是唯一能给布加表面细节的通道。**
   # Genesis 的光栅化器只保留 diffuse 颜色与 diffuse 贴图，粗糙度/金属度/法线/自发光
   # 全部是光追专用（`genesis/utils/mesh.py:235`），而光追在本安装不可用（缺 LuisaRender）。
@@ -104,6 +108,11 @@ cloth:
   # 直接交给 ImageTexture(image_array=...)，不落文件；固定种子，同参数逐字节相同。
   texture:
     enabled: true
+    # plain = 单色织物；stripes = 在底色上按 stripe_pitch 打 accent_color 的条带。
+    pattern: stripes
+    accent_color: [0.20, 0.33, 0.55]
+    # 条带宽度（米）。0.030 在 0.240 的布上是 8 条，折过去之后能清楚看到条纹相接。
+    stripe_pitch: 0.030
     # 相邻纱线的间距（米）。**比真实织物粗，是故意的**：真布约 0.3mm 的织纹在本场景的
     # 相机距离下不到一个像素，只会糊成灰色或者出摩尔纹，分辨不出来的织纹等于没有。
     # 0.002 是「在这个距离拍一张照片会看到的表观尺度」。
