@@ -1,9 +1,11 @@
 """Offline health check for a rope's spawn tube skin (the OBJ fed to tetgen).
 
-The rendered rope IS this skin: tetgen keeps the input facets on the exterior
-boundary (a 2026-08-19 run fed it 4920 facets and got 4920 boundary faces back,
-with all 937 Steiner points interior), so every artefact visible in a video is
-either in this file or in the shading. This script measures the file.
+What Genesis renders for a volumetric FEM body is the boundary of the tet mesh,
+but tetgen has been keeping this skin's facets verbatim (a 2026-08-19 run fed it
+4920 facets and got 4920 boundary faces back, all 937 Steiner points interior),
+so the two coincide and a static-frame artefact is measurable here. Shading is
+not a suspect: Genesis smooths vertex normals by default and re-averages them
+every frame, so only geometry can show.
 
 What it reports, and why each number is here:
   - cross-section facet error -- how far the n-gon sits from a true circle; the

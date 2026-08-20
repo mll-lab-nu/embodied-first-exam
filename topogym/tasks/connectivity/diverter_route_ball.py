@@ -472,7 +472,13 @@ class DiverterRouteBallLayout:
 
     @property
     def knob_top_z(self) -> float:
-        return self.lever_arm_top_z + float(self.cfg.diverter.lever.knob_height)
+        lever = self.cfg.diverter.lever
+        return (
+            self.lever_arm_top_z
+            + float(lever.boss_height)
+            + float(lever.knob_height)
+            + float(lever.cap_height)
+        )
 
     def knob_center_xy(self, joint_angle: float) -> np.ndarray:
         """Where the knob sits at a joint angle. The arm points downstream.
@@ -486,11 +492,51 @@ class DiverterRouteBallLayout:
         return self.nose_xy() + self.lever_radius * direction
 
     def knob_grasp_world(self, joint_angle: float) -> np.ndarray:
-        """World point the finger pads should close on."""
+        """World point the finger pads should close on: partway up the grip."""
 
+        lever = self.cfg.diverter.lever
         xy = self.knob_center_xy(joint_angle)
-        z = self.lever_arm_top_z + float(self.cfg.diverter.lever.grasp_height)
+        z = (
+            self.lever_arm_top_z
+            + float(lever.boss_height)
+            + float(lever.grasp_height)
+        )
         return self.position_to_world((float(xy[0]), float(xy[1]), z))
+
+    def pier_cfg(self):
+        return getattr(self.cfg.diverter, "pier", None)
+
+    def pier_box(self):
+        """(centre_xy, size_xyz) of the splitter pier, or None.
+
+        Sits in the wedge between the two branches' inner walls, entirely behind
+        them, so the ball can never reach it and no clearance changes. Its job is
+        visual: it makes the pivot look mounted into the structure instead of a
+        shaft standing between two thin plates.
+
+        The wedge widens downstream at the branch angle, so the pier's half width
+        is checked against the narrowest point it spans -- its upstream end.
+        """
+
+        pier = self.pier_cfg()
+        if pier is None or not bool(getattr(pier, "enabled", True)):
+            return None
+        start_x = self.nose_x + float(pier.start_offset)
+        length = float(pier.length)
+        half_width = float(pier.half_width)
+        # Wedge half width at the pier's upstream end; the pier must fit inside it.
+        available = float(pier.start_offset) * np.tan(self.angle)
+        if half_width > available:
+            raise ValueError(
+                f"diverter.pier.half_width={half_width:.4f} does not fit the wedge "
+                f"at start_offset={pier.start_offset} (available {available:.4f}); "
+                "move it downstream or make it narrower."
+            )
+        height = self.wall_height + float(pier.rise_above_wall)
+        return (
+            np.array([start_x + 0.5 * length, 0.0], dtype=float),
+            (length, 2.0 * half_width, height),
+        )
 
     def swing_arc_cfg(self):
         return getattr(self.cfg.diverter, "swing_arc", None)
@@ -795,6 +841,25 @@ class DiverterRouteBallSceneBuilder:
                     scene, manifest, layout, f"branch_{side}_{tag}", center, length, yaw
                 )
         self._add_dead_end_cap(scene, manifest, layout)
+        self._add_pier(scene, manifest, layout)
+
+    def _add_pier(self, scene, manifest, layout) -> None:
+        """The solid splitter the pivot is mounted into. See `pier_box`."""
+
+        box = layout.pier_box()
+        if box is None:
+            return
+        center, size = box
+        self._box(
+            scene,
+            manifest,
+            "splitter_pier",
+            layout.position_to_world(
+                (float(center[0]), float(center[1]), layout.floor_top_z + 0.5 * size[2])
+            ),
+            size,
+            layout.pier_cfg().color,
+        )
 
     def _add_dead_end_cap(self, scene, manifest, layout) -> None:
         """The wall that closes the dead branch.
@@ -888,21 +953,59 @@ class DiverterRouteBallSceneBuilder:
                 origin=(0.0, 0.0, layout.flap_bottom_z + 0.5 * axle_height),
                 color=_list(lever.color),
             ),
+            # Hub where the arm meets the shaft. Every real operating lever has
+            # this thickening at its root; a bare rod of one diameter stuck into
+            # an arm reads as unfinished rather than as a machine part.
+            HingeShape(
+                kind="cylinder",
+                size=(float(lever.hub_radius), float(lever.hub_height)),
+                origin=(0.0, 0.0, arm_bottom + 0.5 * float(lever.hub_height)),
+                color=_list(lever.color),
+            ),
             HingeShape(
                 kind="box",
                 size=(layout.lever_radius, float(lever.arm_thickness), arm_height),
                 origin=(0.5 * layout.lever_radius, 0.0, arm_bottom + 0.5 * arm_height),
                 color=_list(lever.color),
             ),
+            # The handle in three pieces instead of one prism: a metal boss on the
+            # arm, a dark rubber grip, a bright end cap. That is what a valve
+            # handle looks like, and the round grip also fixes a mechanical
+            # problem -- a square one cams the finger pads apart as the lever
+            # turns, because its 25.5 mm diagonal is wider than its 18 mm face.
             HingeShape(
-                kind="box",
-                size=(knob_size, knob_size, knob_height),
+                kind="cylinder",
+                size=(float(lever.boss_radius), float(lever.boss_height)),
                 origin=(
                     layout.lever_radius,
                     0.0,
-                    layout.lever_arm_top_z + 0.5 * knob_height,
+                    layout.lever_arm_top_z + 0.5 * float(lever.boss_height),
+                ),
+                color=_list(lever.color),
+            ),
+            HingeShape(
+                kind="cylinder",
+                size=(0.5 * knob_size, knob_height),
+                origin=(
+                    layout.lever_radius,
+                    0.0,
+                    layout.lever_arm_top_z + float(lever.boss_height) + 0.5 * knob_height,
                 ),
                 color=_list(lever.knob_color),
+            ),
+            HingeShape(
+                kind="cylinder",
+                size=(float(lever.cap_radius), float(lever.cap_height)),
+                origin=(
+                    layout.lever_radius,
+                    0.0,
+                    layout.lever_arm_top_z
+                    + float(lever.boss_height)
+                    + knob_height
+                    + 0.5 * float(lever.cap_height),
+                ),
+                color=_list(lever.cap_color),
+                collide=False,
             ),
         ]
 

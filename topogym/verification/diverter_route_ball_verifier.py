@@ -247,6 +247,15 @@ class DiverterRouteBallEvaluator:
                         yaw=yaw,
                     )
                 )
+        pier = layout.pier_box()
+        if pier is not None:
+            center, size = pier
+            rects.append(
+                OrientedRect(
+                    center=(float(center[0]), float(center[1])),
+                    half=(0.5 * size[0], 0.5 * size[1]),
+                )
+            )
         dead = layout.dead_end_side
         cap_center = layout.branch_point(
             dead, layout.branch_end_station(dead) + 0.5 * thickness
