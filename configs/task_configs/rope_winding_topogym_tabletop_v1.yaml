@@ -284,9 +284,20 @@ rope:
     friction_mu: ${prefabs.rope_fem.friction_mu}
     contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
     follow_strength: ${prefabs.rope_fem.follow_strength}
-    # 本任务覆写（prefab 默认 spawn）：无应力构型 = 直杆。出生缓弧成为真实的
-    # 弯曲预应力（真实电缆被摆成弧形的状态），缠绕产生的形变以直杆为基准度量。
-    rest_shape: straight
+    # 无应力构型。straight = 出生缓弧是真实的弯曲预应力（绳一直想弹直），
+    # spawn = 绳天生就是这个弧、待着没有弯曲能。两者出生顶点位置完全相同。
+    #
+    # 2026-08-20 由 straight 改回 spawn：**straight 从未真正生效过**。它的实现
+    # 把管顶点投影到出生中心线再摊平成直管，只要中心线上有相对管半径过急的弯，
+    # 就会有四面体翻转，兜底退回 spawn（rope_winding_zh.md 3.1：2026-08-12 实测
+    # 1/8430；2026-08-19 的 3 相机跑是 1/12683，位置在端子入口那个 8mm 的 U 形弯）。
+    # 于是本任务的全部历史验证都建立在 spawn 上，而 banner 一直印 straight。
+    #
+    # 入口弧改圆之后 straight 有可能第一次通过，那是一个未验证的物理变化：
+    # 绕柱段曲率差 36.8 -> 41.7 /m（+13%），弯曲能约 +28%，出生弧本身也从零能
+    # 变成存能。文档把 straight 定性为防「电话线」螺旋的保险带、主防线是平缓
+    # 出生弧（κ0=5/m）与压紧的富余，所以这里先与实际对齐，straight 另立实验。
+    rest_shape: spawn
     # 这里曾有 follow_swivel: true（跟随带当转环，让绳端绕轴自由转）。
     # 2026-08-14 撤销：实测它不是在泄扭转，而是在**制造**扭转。静置段机械臂一步
     # 没动、绳子躺在板上，两条带自己转了 0.42 / 0.25 圈，绳子被拧了 0.40 圈；
@@ -415,9 +426,23 @@ rope:
     output_dir: .cache/topogym/meshes/rope_winding
   particle_size: ${prefabs.rope_pbd.particle_size}
   mesh:
-    # 网格分辨率沿用 cable 的细管档（更圆、柱接触点更多）。
+    # 渲染出来的皮就是这张管皮：tetgen 在表面不插点（本次运行输入 4920 面片，
+    # 输出 exterior boundary 也是 4920，937 个 Steiner 点全在内部），所以这两个
+    # 数直接决定观感。
+    #
+    # segment_length 对本任务的出生路线是**死键**：路线是 arc_route_points 按 2°
+    # 出的 101 个控制点（弦长 7.08mm），catmull_rom_centerline 的
+    # n = max(2, ceil(7.08/segment_length)) 恒为 2，环距被钉在 3.54mm，
+    # 与这里写什么无关。改环距要改路线的 samples 或那个 max(2, ...) 下限。
+    #
+    # radial_segments 20（2026-08-20，原 12 沿用 cable 的细管档）：12 边形截面
+    # 偏离真圆 0.136mm = 管半径的 3.4%，整根呈现 12 条纵向棱，加上 3.54x2.07mm
+    # 的近方形四边形按同一方向切对角线（螺距 12x3.54 = 42.5mm），合起来就是
+    # 用户看到的「密集拧转褶皱」。20 边形把截面偏差压到 0.049mm（1.2%）、
+    # 周向弦压到 1.25mm。代价：皮顶点 2462 -> 4102，tet 与节点数约 1.6 倍，
+    # 见下方 safety_max_contact_nodes。
     segment_length: 0.0055
-    radial_segments: 12
+    radial_segments: 20
     maxvolume: 0.000000050
     output_dir: .cache/topogym/meshes/rope_winding
   pbd:
@@ -576,8 +601,12 @@ physical_handle:
   #   safety_min_gap        绳节点到柱面的最小间隙，负值 = 扎进柱子；
   #   safety_max_contact_nodes  贴柱节点数上限 —— 两圈缠满本来就比 cable 单圈
   #                             路过多得多，所以给得宽，只拦「整根绳堆到柱上」。
+  #
+  # 这是**节点绝对数**，所以它跟着网格分辨率走，改 rope.mesh 必须同改：
+  # radial_segments 12 时全绳 3399 节点、实测贴柱峰值 1476（43%），阈值 3000；
+  # 改 20 之后节点约 5400，同比例峰值约 2350，阈值按同样的一倍余量给 4800。
   safety_min_gap: -0.0015
-  safety_max_contact_nodes: 3000
+  safety_max_contact_nodes: 4800
   release_hold_steps: 20
   route_settle_steps: 40
   connector_tolerance_xy: 0.018

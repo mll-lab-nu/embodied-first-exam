@@ -234,11 +234,18 @@ class CableRoutingLayout:
                 polyline, max_segment_length=float(self.cfg.rope.mesh.segment_length)
             )
             if connector_on:
-                # Reserve each end's entry footprint so with_end_entries' endpoint
+                # Reserve each entry's footprint so with_end_entries' endpoint
                 # displacement + landing does not overlap the now-dense body
                 # points (self-intersection -> tetgen failure).
+                #
+                # Only the ends that actually get an entry below. The flat plug
+                # pose takes no entry (its bore is horizontal, the rope runs
+                # straight in), and reserving there just left a bare chord over
+                # the last `reach` of rope -- a density step in the very stretch
+                # the gripper closes on.
                 reach = 2.0 * max(0.008, 2.0 * rope_r) + 2.0 * rope_r + 0.004
-                polyline = rope_prefab.reserve_endpoint_footprint(polyline, reach)
+                ends = ("start",) if connector_pose(self.cfg.rope) == "flat" else ("start", "end")
+                polyline = rope_prefab.reserve_endpoint_footprint(polyline, reach, ends=ends)
         if connector_on and len(polyline) >= 2:
             # Per-end entry arcs (cable_routing_element_design_zh.md): the S end
             # emerges from the fixed terminal's gland, the free end leaves the

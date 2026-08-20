@@ -11,11 +11,12 @@
 #      的 per-vertex pin 与 SoftPositionConstraint follow。
 # 换 Genesis 版本、换安装来源（wheel / git 源码）都可能让其中一处失配。
 #
-# 2026-08-19 在 mll-4090-2 上失配一次：
+# 2026-08-19 在 mll-4090-2 上报的是：
 #   AttributeError: module 'genesis.engine.couplers.ipc_coupler.coupler'
 #   has no attribute 'build_ipc_scene_config'
-# 原因是该版本把 build_ipc_scene_config 写成函数体内的延迟导入，名字不进模块
-# 命名空间，替换点必须落在定义处 ipc_coupler/utils.py。
+# 但根因是该 venv 没装 libuipc（pip 包 pyuipc）：coupler.py 把 uipc 与 .utils 的
+# import 一起包在 try/except ImportError 里，缺 uipc 时整段被静默跳过，名字不进
+# 命名空间。所以 B 节先查 uipc，再查替换点——顺序反了就会照着症状误诊。
 #
 # 不需要 GPU：只 import genesis 读源码，不 gs.init()、不建 scene。
 #
@@ -78,26 +79,50 @@ for dist_info in genesis_dir.parent.glob("genesis_world-*.dist-info"):
 print(f"origin         {origin}")
 report(gs.__version__ == "1.2.1", "genesis 版本是 install() 对着写的 1.2.1", gs.__version__)
 
-# --- B. build_ipc_scene_config 的替换点 --------------------------------------
-print("\n=== B. build_ipc_scene_config 替换点 ===")
+# --- B. IPC 依赖与 build_ipc_scene_config 的替换点 ----------------------------
+print("\n=== B. libuipc 与 build_ipc_scene_config 替换点 ===")
 coupler_mod = importlib.import_module("genesis.engine.couplers.ipc_coupler.coupler")
-utils_mod = importlib.import_module("genesis.engine.couplers.ipc_coupler.utils")
 
-# 名字在哪个模块的命名空间里可见，替换就必须落在哪个模块：coupler.py 顶层
-# import 时替 coupler 才生效；写成函数体内延迟导入时，调用时才去 utils 取名字，
-# 只有替 utils 生效。
+# coupler.py 把 uipc 与 .utils 的 import 一起包在 try/except ImportError 里，缺
+# uipc 时整段 import 被静默跳过（只留下 UIPC_AVAILABLE=False），build_ipc_scene_config
+# 因此不进 coupler 的命名空间。install() 取它时报的 AttributeError 是这个被吞掉的
+# ImportError 的下游症状，2026-08-19 就是这样误诊了一轮。
+try:
+    import uipc  # noqa: F401
+
+    uipc_ok = True
+    uipc_detail = getattr(uipc, "__file__", "")
+except ImportError as exc:
+    uipc_ok = False
+    uipc_detail = str(exc)
+print(f"coupler.UIPC_AVAILABLE  {getattr(coupler_mod, 'UIPC_AVAILABLE', '<缺此标志>')}")
+report(uipc_ok, "libuipc（pip 包 pyuipc）可 import", uipc_detail)
+
+utils_mod = None
+if uipc_ok:
+    utils_mod = importlib.import_module("genesis.engine.couplers.ipc_coupler.utils")
+
+# 名字在哪个模块的命名空间里可见，替换就必须落在哪个模块：coupler.py 顶层 import
+# 时替 coupler 才生效；若改成调用时才取名字的延迟导入，则只有替 utils 生效。
 if hasattr(coupler_mod, "build_ipc_scene_config"):
     effective = "coupler"
-elif hasattr(utils_mod, "build_ipc_scene_config"):
+elif utils_mod is not None and hasattr(utils_mod, "build_ipc_scene_config"):
     effective = "utils"
 else:
     effective = None
 
-for line_no, line in enumerate(inspect.getsource(coupler_mod).splitlines(), 1):
-    if "build_ipc_scene_config" in line:
-        indent = len(line) - len(line.lstrip())
-        kind = "模块顶层" if indent == 0 else f"缩进 {indent}（函数体内）"
-        print(f"coupler.py:{line_no}  {kind}  {line.strip()}")
+source_lines = inspect.getsource(coupler_mod).splitlines()
+for line_no, line in enumerate(source_lines, 1):
+    if "build_ipc_scene_config" not in line:
+        continue
+    indent = len(line) - len(line.lstrip())
+    block = "模块顶层"
+    for prev in range(line_no - 2, -1, -1):
+        text = source_lines[prev]
+        if text.strip() and (len(text) - len(text.lstrip())) < indent:
+            block = f"{prev + 1}: {text.strip()}"
+            break
+    print(f"coupler.py:{line_no}  {line.strip()}    <- 所在块 {block}")
 print(f"本机上有效的替换点   {effective}")
 
 # install() 当前实际替换的模块，从源码里读，改完代码这里跟着变。
@@ -108,12 +133,15 @@ for name, module_var in (("coupler", "coupler_module"), ("utils", "utils_module"
         current = name
 print(f"install() 用的替换点 {current}")
 
-report(effective is not None, "build_ipc_scene_config 在两个模块之一可见")
-report(
-    effective is not None and current == effective,
-    "install() 的替换点与本机一致",
-    f"install()={current} 本机={effective}",
-)
+if uipc_ok:
+    report(effective is not None, "build_ipc_scene_config 在两个模块之一可见")
+    report(
+        effective is not None and current == effective,
+        "install() 的替换点与本机一致",
+        f"install()={current} 本机={effective}",
+    )
+else:
+    print("[skip] 替换点判定：uipc 缺失时 coupler 的命名空间本来就不全，判不了")
 
 # --- C. vendored 副本与装好的 1.2.1 的差异 ------------------------------------
 print("\n=== C. _add_fem_entities_to_ipc vendored 副本 diff ===")

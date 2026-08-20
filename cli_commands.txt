@@ -298,6 +298,17 @@ python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true
 # 三圈完整跑 (29 个航点, 3627 步, 约 40 分钟)
 python -B -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.keep_open=true run.probe=true run.probe_every=5 task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230 2>&1 | tee runs/spin_on_3turn.log
 # 其他常用覆盖: task.winding.wind_radius=0.055 / run.lite=true
+# 表皮平滑化 (2026-08-20, radial_segments 12->20 + 入口弧 10 度采样 + 自由端不再挖空档)
+#   设计与判据: docs/develop/physics/rope_winding/rope_winding_zh.md 3.3 节
+# 1. 生成管皮并体检 (建场景即退, 不跑物理, 不需要 GPU 时间)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true 2>&1 | tee runs/rope_skin_build.log
+python tests/check_rope_tube_mesh.py --radial 20 2>&1 | tee runs/rope_skin_check.log
+# 2. 每步耗时 (节点数涨了约 1.7 倍, 确认没有超出 1.5~2 倍)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.bench_steps=60 2>&1 | tee runs/rope_skin_bench.log
+# 3. 出生态实拍 A/B (只跑前两个路点, 1~2 分钟)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.max_waypoints=2 recording=hq recording.path=runs/videos/rope_smooth/spawn.mp4 recording.camera=[oblique,front] recording.res=[960,960] recording.every_n_steps=2 2>&1 | tee runs/rope_smooth_spawn.log
+# 4. 绕柱段实拍 (绳贴上 24mm 半径柱面之后是否仍平滑)
+python -B -m demos.routing.rope_winding_physical_handle_demo run.max_waypoints=10 run.probe=true run.probe_every=5 recording=hq recording.path=runs/videos/rope_smooth/wrap.mp4 recording.camera=[oblique,wrist] recording.res=[960,960] recording.every_n_steps=3 2>&1 | tee runs/rope_smooth_wrap.log
 
 # --- PBD 布料 spike (类别 1 的建模方案, 2026-08-17 新建) ---
 # 诊断工具, 不是任务。结论写进 docs/develop/physics/cloth/pbd_cloth_spike_zh.md。

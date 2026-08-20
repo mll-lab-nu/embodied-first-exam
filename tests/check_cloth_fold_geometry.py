@@ -53,6 +53,34 @@ fold_targets = _verifier.fold_targets
 fold_target_cells = _verifier.fold_target_cells
 occupied_cells = _verifier.occupied_cells
 
+_tex_spec = importlib.util.spec_from_file_location(
+    "topogym_textures", REPO / "topogym/world/textures.py"
+)
+textures = importlib.util.module_from_spec(_tex_spec)
+sys.modules[_tex_spec.name] = textures
+_tex_spec.loader.exec_module(textures)
+
+
+def _sheet_mesh_fn():
+    """`cloth_sheet_mesh` lifted out of the task module by source.
+
+    That module imports Genesis at the top, so it cannot be loaded here at all;
+    the function itself needs only NumPy and pathlib. Lifting it keeps this check
+    running against the REAL generator rather than a copy that could drift.
+    """
+
+    import ast
+
+    source = (REPO / "topogym/tasks/deformation/cloth_fold.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    wanted = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "cloth_sheet_mesh"]
+    namespace = {"np": np, "Path": Path}
+    exec(compile(ast.Module(body=wanted, type_ignores=[]), "cloth_fold.py", "exec"), namespace)
+    return namespace["cloth_sheet_mesh"]
+
+
+cloth_sheet_mesh = _sheet_mesh_fn()
+
 TASK_CFG = REPO / "configs/task_configs/cloth_fold_topogym_tabletop_v1.yaml"
 
 TABLE_Z = 0.0
@@ -305,6 +333,80 @@ def main(argv=None) -> int:
         f"crumpled {states['crumpled'].over_layer_cells}/"
         f"{states['crumpled'].covered_cells} cells, perfect {good.over_layer_cells}",
     )
+
+    print("\n布面有 UV，贴图才有地方可贴")
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        obj = Path(tmp) / "sheet.obj"
+        cols, rows = int(cfg["cloth"]["mesh"]["cols"]), int(cfg["cloth"]["mesh"]["rows"])
+        verts, _faces = cloth_sheet_mesh(
+            list(cfg["cloth"]["size"]), centre, TABLE_Z + float(cfg["cloth"]["z"]),
+            cols, rows, obj,
+        )
+        lines = obj.read_text(encoding="utf-8").splitlines()
+        v_lines = [l for l in lines if l.startswith("v ")]
+        vt_lines = [l for l in lines if l.startswith("vt ")]
+        f_lines = [l for l in lines if l.startswith("f ")]
+        # Genesis' rasterizer keeps diffuse colour and texture and nothing else,
+        # so a missing UV is a missing surface -- there is no second channel.
+        check(
+            "every vertex carries a texture coordinate",
+            len(vt_lines) == len(v_lines) == cols * rows,
+            f"{len(v_lines)} vertices, {len(vt_lines)} uvs",
+        )
+        uv = np.array([[float(x) for x in l.split()[1:3]] for l in vt_lines])
+        check(
+            "the uvs cover the sheet exactly once, no tiling",
+            float(uv.min()) == 0.0 and float(uv.max()) == 1.0,
+            f"u,v in [{uv.min():.3f}, {uv.max():.3f}] -- one image covers it, so "
+            f"nothing depends on how the sampler wraps",
+        )
+        check(
+            "faces reference the uvs",
+            all("/" in token for line in f_lines for token in line.split()[1:]),
+            f"{len(f_lines)} faces in v/vt form",
+        )
+
+    print("\n织纹是画出来的，不是纯色")
+    with tempfile.TemporaryDirectory() as tmp:
+        tex_cfg = cfg["cloth"]["texture"]
+        kwargs = dict(
+            color=cfg["cloth"]["color"],
+            size_m=cfg["cloth"]["size"],
+            thread_pitch_m=float(tex_cfg["thread_pitch"]),
+            pixels_per_thread=int(tex_cfg["pixels_per_thread"]),
+            thread_shading=float(tex_cfg["thread_shading"]),
+            weft_tint=float(tex_cfg["weft_tint"]),
+            fibre_noise=float(tex_cfg["fibre_noise"]),
+            cloud_noise=float(tex_cfg["cloud_noise"]),
+            seed=int(tex_cfg["seed"]),
+        )
+        first = textures.fabric_weave(Path(tmp) / "a.png", **kwargs)
+        again = textures.fabric_weave(Path(tmp) / "b.png", **kwargs)
+        check(
+            "the same parameters give the same image, byte for byte",
+            first.read_bytes() == again.read_bytes(),
+            "so a run is reproducible from config alone",
+        )
+        from PIL import Image
+
+        pixels = np.asarray(Image.open(first), dtype=float) / 255.0
+        threads = int(round(float(cfg["cloth"]["size"][0]) / float(tex_cfg["thread_pitch"])))
+        check(
+            "the weave is at the physical scale the config asks for",
+            pixels.shape[0] == threads * int(tex_cfg["pixels_per_thread"]),
+            f"{threads} threads across {cfg['cloth']['size'][0] * 1e3:.0f}mm, "
+            f"{pixels.shape[0]}px image",
+        )
+        # A flat colour reads 0 here, and a flat colour is what made the cloth
+        # look like a slab of clay.
+        spread = float(pixels.mean(axis=2).std())
+        check(
+            "the surface is not one flat colour",
+            spread > 0.02,
+            f"brightness spread {spread:.3f} across the sheet",
+        )
 
     print()
     if failures:

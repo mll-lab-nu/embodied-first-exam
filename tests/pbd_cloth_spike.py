@@ -77,6 +77,7 @@ from topogym.utils import (
     recording_session_from_config,
 )
 from topogym.world import StandardTabletopSceneBuilder, materials
+from topogym.tasks.deformation.cloth_fold import cloth_sheet_mesh
 from topogym.verification.cloth_fold_verifier import ClothFoldEvaluator
 from topogym.world.rope import TabletopParticleFriction
 
@@ -99,39 +100,6 @@ def velocities(cloth) -> np.ndarray:
     if values.ndim == 3:
         values = values[0]
     return np.asarray(values, dtype=float)
-
-
-def grid_mesh(size, center, z, cols: int, rows: int, path: Path):
-    """A flat rectangular triangle grid, written as OBJ.
-
-    Same construction as the legacy peeling film (`tasks/legacy/peeling_physical.py`
-    `cloth_mesh`) minus its peel-corner blending, which this does not need. It is
-    only the CONTROL mesh: Genesis remeshes it isotropically to
-    ``PBDOptions.particle_size``, so the particle count is usually larger.
-    """
-
-    xs = np.linspace(-0.5 * float(size[0]), 0.5 * float(size[0]), int(cols))
-    ys = np.linspace(-0.5 * float(size[1]), 0.5 * float(size[1]), int(rows))
-    vertices = np.array(
-        [[float(center[0]) + x, float(center[1]) + y, float(z)] for y in ys for x in xs],
-        dtype=float,
-    )
-    faces = []
-    for row in range(int(rows) - 1):
-        for col in range(int(cols) - 1):
-            lower_left = row * int(cols) + col
-            lower_right = lower_left + 1
-            upper_left = (row + 1) * int(cols) + col
-            upper_right = upper_left + 1
-            faces.append([lower_left, lower_right, upper_right])
-            faces.append([lower_left, upper_right, upper_left])
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        for vertex in vertices:
-            handle.write(f"v {vertex[0]:.6f} {vertex[1]:.6f} {vertex[2]:.6f}\n")
-        for face in faces:
-            handle.write(f"f {face[0] + 1} {face[1] + 1} {face[2] + 1}\n")
-    return vertices, np.asarray(faces, dtype=int)
 
 
 class Grip:
@@ -1293,7 +1261,7 @@ def main(cfg: DictConfig) -> None:
     path = Path(str(cloth_cfg.mesh.output_dir)) / "cloth_fold_sheet.obj"
     # Faces go into the OBJ; only the vertices are needed here, for the remesh
     # probe. The strain proxy is built from the simulated particles instead.
-    vertices, _faces = grid_mesh(
+    vertices, _faces = cloth_sheet_mesh(
         list(cloth_cfg.size),
         origin[:2] + np.asarray(list(cloth_cfg.center), dtype=float),
         table_z + float(cloth_cfg.z),

@@ -39,19 +39,42 @@ from topogym.world.rope import TabletopParticleFriction
 
 
 def cloth_sheet_mesh(size, center, z: float, cols: int, rows: int, path: Path):
-    """A flat rectangular triangle grid, written as OBJ. Returns (vertices, faces).
+    """A flat rectangular triangle grid with texture coordinates, written as OBJ.
 
     This is only the CONTROL mesh: Genesis remeshes it isotropically to
     ``PBDOptions.particle_size``, so the simulated particle count is larger. The
     33x33 / 0.004 combination the config ships is the only one measured to keep
     vertex order through that remesh, and vertex order is what makes every
     material-tracking judge possible -- see the config's note before changing it.
+
+    The ``vt`` lines matter as much as the geometry: Genesis' rasterizer keeps a
+    surface's diffuse colour and TEXTURE and discards everything else (roughness,
+    metallic, normal maps are raytracer-only, and the raytracer needs an
+    extension this install does not have). A texture is therefore the only way to
+    give the cloth any surface detail at all -- and a texture with no UVs to map
+    onto does nothing. The sheet shipped without them until 2026-08-21, which is
+    part of why it reads as a slab of modelling clay.
+
+    UVs span [0, 1] exactly once over the sheet rather than tiling. Tiling would
+    need the sampler to wrap, which is renderer behaviour this code cannot check;
+    one full-coverage image has no such dependency, at the cost of regenerating
+    the image when the sheet's size changes.
     """
 
     xs = np.linspace(-0.5 * float(size[0]), 0.5 * float(size[0]), int(cols))
     ys = np.linspace(-0.5 * float(size[1]), 0.5 * float(size[1]), int(rows))
     vertices = np.array(
         [[float(center[0]) + x, float(center[1]) + y, float(z)] for y in ys for x in xs],
+        dtype=float,
+    )
+    # One UV per vertex, in the same order, so the two indices coincide in the
+    # face lines below.
+    uvs = np.array(
+        [
+            [col / max(1, int(cols) - 1), row / max(1, int(rows) - 1)]
+            for row in range(int(rows))
+            for col in range(int(cols))
+        ],
         dtype=float,
     )
     faces = []
@@ -67,8 +90,14 @@ def cloth_sheet_mesh(size, center, z: float, cols: int, rows: int, path: Path):
     with path.open("w", encoding="utf-8") as handle:
         for vertex in vertices:
             handle.write(f"v {vertex[0]:.6f} {vertex[1]:.6f} {vertex[2]:.6f}\n")
+        for uv in uvs:
+            handle.write(f"vt {uv[0]:.6f} {uv[1]:.6f}\n")
         for face in faces:
-            handle.write(f"f {face[0] + 1} {face[1] + 1} {face[2] + 1}\n")
+            handle.write(
+                "f "
+                + " ".join(f"{index + 1}/{index + 1}" for index in face)
+                + "\n"
+            )
     return vertices, np.asarray(faces, dtype=int)
 
 

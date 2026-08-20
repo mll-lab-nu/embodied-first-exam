@@ -138,23 +138,39 @@ def catmull_rom_centerline(
     return np.stack(out, axis=0)
 
 
-def reserve_endpoint_footprint(polyline: np.ndarray, reach: float) -> np.ndarray:
-    """Drop interior points within ``reach`` arc-length of each end, keeping the
-    two true endpoints.
+def reserve_endpoint_footprint(
+    polyline: np.ndarray, reach: float, *, ends: tuple[str, ...] = ("start", "end")
+) -> np.ndarray:
+    """Drop interior points within ``reach`` arc-length of the named ends, keeping
+    the two true endpoints.
 
     ``with_end_entries`` displaces each endpoint by a fixed reach and inserts a
     U-turn+landing; on a dense (splined) polyline the untouched neighbours within
     that reach collide with the landing and self-intersect the swept tube. Clearing
     the footprint restores the sparse-endpoint condition the entries assume.
+
+    ``ends`` must name exactly the ends that will get an entry. Clearing an end
+    that is never refilled leaves the rope with a ``reach``-long chord where the
+    body is dense -- for the flat plug pose that was the last 28mm, resampled at
+    4.7mm against a 3.5mm body, right where the gripper closes.
     """
 
+    selected = tuple(str(end) for end in ends)
+    unknown = [end for end in selected if end not in ("start", "end")]
+    if unknown:
+        raise ValueError(f"reserve_endpoint_footprint: unknown ends {unknown}.")
+
     pts = np.asarray(polyline, dtype=float)
-    if len(pts) < 3:
+    if len(pts) < 3 or not selected:
         return pts
     seg = np.linalg.norm(np.diff(pts, axis=0), axis=1)
     s = np.concatenate([[0.0], np.cumsum(seg)])
     total = float(s[-1])
-    keep = (s > reach) & (s < total - reach)
+    keep = np.ones(len(pts), dtype=bool)
+    if "start" in selected:
+        keep &= s > reach
+    if "end" in selected:
+        keep &= s < total - reach
     keep[0] = keep[-1] = True
     out = pts[keep]
     if len(out) < 3:
@@ -765,15 +781,24 @@ def with_end_entries(
         points = [np.array([end_xy[0], end_xy[1], tip_z])]
         # Semicircular U-turn over the fixture top: vertical exit along the
         # axis, vertical descent 2*arc_radius beside it.
+        #
+        # Sampled at 10 degrees, not 30. These points are inserted AFTER the
+        # spline, so nothing rounds them afterwards -- `sample_polyline` only
+        # cuts the chords linearly. At 30 degrees the U-turn is a literal
+        # 7-gon whose chord sagitta is 0.27mm on a 4mm tube, twice the
+        # circumferential facet error, and it reads as a lengthwise crease;
+        # the parallel-transported ring frame also had to swing a full 30
+        # degrees at each of those vertices. 10 degrees puts the sagitta at
+        # 0.030mm and adds 0.4mm of rope.
         center_xy = end_xy + arc_radius * direction
-        for theta in np.deg2rad((180.0, 150.0, 120.0, 90.0, 60.0, 30.0, 0.0)):
+        for theta in np.deg2rad(np.arange(180.0, -1.0, -10.0)):
             arc_xy = center_xy + arc_radius * np.cos(theta) * direction
             points.append(
                 np.array([arc_xy[0], arc_xy[1], exit_z + arc_radius * np.sin(theta)])
             )
         # Quarter-arc landing: vertical descent eases into the board-level run.
         landing_center = end_xy + (2.0 * arc_radius + landing_radius) * direction
-        for phi in np.deg2rad((0.0, 30.0, 60.0, 90.0)):
+        for phi in np.deg2rad(np.arange(0.0, 91.0, 10.0)):
             landing_xy = landing_center - landing_radius * np.cos(phi) * direction
             points.append(
                 np.array(

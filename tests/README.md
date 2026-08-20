@@ -16,6 +16,7 @@
 python tests/check_demo_configs.py            # 只用标准库 + PyYAML，任何解释器都能跑
 python tests/check_configs_compose.py         # 需要 hydra 包，即项目 venv
 python tests/check_rope_winding_geometry.py   # 需要项目 venv
+python tests/check_rope_tube_mesh.py          # 只用 numpy；量的是已经生成的管皮 OBJ
 ```
 
 | 文件 | 检查什么 |
@@ -23,6 +24,7 @@ python tests/check_rope_winding_geometry.py   # 需要项目 venv
 | `check_demo_configs.py` | demo 的 Hydra 接线：未定义名、`OmegaConf.merge` 是否往 struct 配置里加新键、`cfg.run.X` 是否在该 demo 的 run 配置链里，以及一张七列的迁移形态指纹表 |
 | `check_configs_compose.py` | 每份任务配置与每份主配置能否 compose，以及全部 `${...}` 插值能否解析 |
 | `check_rope_winding_geometry.py` | rope_winding 的布局与 oracle：路点是否是配置要求的螺旋、出生路线是否已经绕柱、终态绕数是否恰为 ±turns、绳长是否够 |
+| `check_rope_tube_mesh.py` | 喂给 tetgen 的那张绳管皮：两个方向的镶嵌误差（截面弦高 vs 环距按曲率折算的纵向弦高）、表皮自带扭转、最小曲率半径与管半径之比。先用 `run.build_only=true` 生成 OBJ |
 
 前两个覆盖不到的部分写在各自的 docstring 里：带默认值的 `getattr` 动态访问、迁移时值
 取错、以及物理行为。第二类刚发生过一次——`fem_ipc_rope_spike` 迁 Hydra 时默认后端从
