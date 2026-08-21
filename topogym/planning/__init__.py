@@ -12,6 +12,12 @@ from .gate_cage_ball_planner import (
     GateTriggerRule,
     GreedyTriggerRule,
 )
+from .linkbar_merge_components_planner import (
+    LinkbarOracleRule,
+    LinkbarRotateCommand,
+    NearestSocketRule,
+    make_linkbar_rule,
+)
 from .maze_wall_removal_planner import (
     MazeWallRemovalCommand,
     maze_edge_name,
@@ -48,6 +54,10 @@ from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget, arc_route_point
 __all__ = [
     "SLACK_BAND",
     "CableRoutingRouteCommand",
+    "LinkbarOracleRule",
+    "LinkbarRotateCommand",
+    "NearestSocketRule",
+    "make_linkbar_rule",
     "DiverterOracleRule",
     "DiverterRotateCommand",
     "FixedDirectionRule",

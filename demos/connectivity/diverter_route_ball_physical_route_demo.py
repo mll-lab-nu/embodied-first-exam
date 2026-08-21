@@ -143,6 +143,7 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
         release_hold_steps=int(motion.release_hold_steps),
         target_tolerance=float(np.deg2rad(float(motion.target_tolerance_deg))),
         max_follow_error=float(motion.max_follow_error),
+        max_lag=float(np.deg2rad(float(motion.max_lag_deg))),
         max_release_drift=float(np.deg2rad(float(motion.max_release_drift_deg))),
         min_finger_qpos=(
             None if motion.min_finger_qpos is None else float(motion.min_finger_qpos)
@@ -169,6 +170,7 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
             f"final={np.rad2deg(result.final_angle):+.2f}deg "
             f"target_error={np.rad2deg(result.target_error):.2f}deg "
             f"follow_error={result.max_follow_error:.4f} "
+            f"max_lag={np.rad2deg(result.max_lag):.2f}deg "
             f"release_drift={np.rad2deg(result.release_drift):.2f}deg "
             f"finger_qpos={result.finger_qpos:.4f} "
             f"phases={len(result.completed_phases)}/{len(PivotLeverPrimitive.NOMINAL_PHASES)}",
@@ -203,6 +205,7 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
                 {
                     "target_error_deg": float(np.rad2deg(result.target_error)),
                     "follow_error": float(result.max_follow_error),
+                    "max_lag_deg": float(np.rad2deg(result.max_lag)),
                     "release_drift_deg": float(np.rad2deg(result.release_drift)),
                     "finger_qpos": float(result.finger_qpos),
                 }
