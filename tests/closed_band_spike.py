@@ -258,9 +258,23 @@ def main(cfg: DictConfig) -> None:
     tabletop_builder = StandardTabletopSceneBuilder(
         cfg.env, cfg.robot_control, scene_options=backend.scene_options()
     )
+    # All four materials, not just the two the builder creates its own rigids
+    # with. `table_material` and `robot_material` default to None, which leaves
+    # those entities on Genesis' default `Rigid()`: needs_coup=True with no
+    # coup_type, so the coupler auto-selects on `n_joints > 0` and a FIXED box
+    # (a fixed base joint) comes out as 'external_articulation'. That is the case
+    # `FemIpcRopeBackend.static_rigid_material` exists to prevent, and leaving the
+    # visible table on the default killed the 2026-08-21 run inside libuipc with
+    # an unattributable cudaErrorInvalidDevice. `cable_routing.py:363-369` passes
+    # all four; that is the pattern.
     tabletop = tabletop_builder.create(
         show_viewer=cfg.run.viewer,
         include_robot=bool(cfg.run.include_robot),
+        # The arm stays outside IPC, as it does in every migrated rope task
+        # (rope_backend_migration_zh.md: `needs_coup=False`, finger contact
+        # carries no signal for these tasks).
+        robot_material=gs.materials.Rigid(needs_coup=False),
+        table_material=backend.static_rigid_material(),
         static_material=backend.static_rigid_material(),
         decoration_material=backend.decoration_rigid_material(),
     )
@@ -411,6 +425,34 @@ def main(cfg: DictConfig) -> None:
         float(cfg.run.crown_radius),
         strength=float(fem.follow_strength),
     )
+
+    # What coupling type every rigid will get, worked out with the coupler's own
+    # rule (`ipc_coupler/coupler.py:207-215`) BEFORE the build, because libuipc
+    # reports every setup problem as the same unattributable
+    # cudaErrorInvalidDevice and by then there is nothing left to inspect. A fixed
+    # body that lands on 'external_articulation' is the known trap.
+    print("closed_band_spike coupling:")
+    for item in getattr(scene, "entities", []):
+        material = getattr(item, "material", None)
+        if material is None or not hasattr(material, "needs_coup"):
+            continue
+        joints = int(getattr(item, "n_joints", 0) or 0)
+        base = getattr(item, "base_link", None)
+        base_fixed = bool(getattr(base, "is_fixed", False))
+        declared = getattr(material, "coup_type", None)
+        if not material.needs_coup:
+            chosen = "(outside IPC)"
+        elif declared is not None:
+            chosen = str(declared)
+        elif joints > 0:
+            chosen = "external_articulation" if base_fixed else "two_way_soft_constraint"
+        else:
+            chosen = "ipc_only"
+        print(
+            f"  {str(getattr(item, 'name', type(item).__name__)):22s} "
+            f"{type(item).__name__:12s} joints={joints} base_fixed={base_fixed} -> {chosen}",
+            flush=True,
+        )
 
     tabletop_builder.finalize(tabletop)
     print(f"closed_band_spike band: {entity.n_vertices} FEM vertices, {entity.n_elements} tets")
