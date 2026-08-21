@@ -44,6 +44,14 @@ band_radius: 0.020
 # 顶部不按住的话整个环只会绕竖直轴整体转，并沿挂销滑出去（2026-08-21 实测）。
 crown_radius: 0.020
 
+# 是否声明顶部按住带。设 false 则整个实体只剩一条 follow band，
+# 用来把「两条 follow band」从其他可能原因里分出来（诊断用，正常跑保持 true）。
+crown_hold: true
+
+# 是否加载机械臂。本 spike 用不到它，但仓库里所有跑通过的 FEM+IPC 场景都带臂，
+# include_robot=false 在 FEM 侧没有先例，因此留成开关而不是写死（诊断用）。
+include_robot: false
+
 # 录制相机。在 env.cameras 之外再加一台特写 —— 那几台的取景是整张桌子，
 # 而这条带只有 130mm 高。pos/lookat 与 band 一样用 task 系。
 # 名字不能与 env.cameras 里的任何一台重名（会在录制里把那台顶掉），因此叫 band；

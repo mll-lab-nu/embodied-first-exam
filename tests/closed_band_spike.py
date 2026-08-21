@@ -260,7 +260,7 @@ def main(cfg: DictConfig) -> None:
     )
     tabletop = tabletop_builder.create(
         show_viewer=cfg.run.viewer,
-        include_robot=False,
+        include_robot=bool(cfg.run.include_robot),
         static_material=backend.static_rigid_material(),
         decoration_material=backend.decoration_rigid_material(),
     )
@@ -523,7 +523,8 @@ def main(cfg: DictConfig) -> None:
 
         # --- wind the flat O up into the figure-8 ---------------------------------
         # The crown holds the top cap on the peg for the duration of the turn.
-        crown.engage(positions()[crown.verts])
+        if crown is not None:
+            crown.engage(positions()[crown.verts])
         driver = LobeTwistDriver(
             lobe, peg_world, positions(), lift_per_half_turn=lift_per_half_turn
         )
@@ -534,7 +535,8 @@ def main(cfg: DictConfig) -> None:
             turn=lambda alpha: driver.turn_by(wound_turns * alpha),
         )
         lobe.release()
-        crown.release()
+        if crown is not None:
+            crown.release()
         run_steps(int(cfg.run.flip_settle_steps), "release")
         wound = crossings_of(read_centerline())
         print(
@@ -570,7 +572,8 @@ def main(cfg: DictConfig) -> None:
         correct = str(cfg.run.flip_side) == "correct"
         delta = -wound_turns if correct else wound_turns
         expected = 0 if correct else 2
-        crown.engage(positions()[crown.verts])
+        if crown is not None:
+            crown.engage(positions()[crown.verts])
         driver = LobeTwistDriver(
             lobe, peg_world, positions(), lift_per_half_turn=lift_per_half_turn
         )
@@ -581,7 +584,8 @@ def main(cfg: DictConfig) -> None:
             turn=lambda alpha: driver.turn_by(delta * alpha),
         )
         lobe.release()
-        crown.release()
+        if crown is not None:
+            crown.release()
         run_steps(int(cfg.run.flip_settle_steps), "flip_settle")
 
         final_line = read_centerline()
