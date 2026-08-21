@@ -30,8 +30,10 @@ Sign conventions, used by the planner and the verifier as well:
   refuses a layout that breaks it, rather than letting an unsolvable instance be
   generated silently.
 - A catch's mouth faces the side the pin arrives from, so its yaw is
-  ``angle -/+ 90`` depending on which way the beam turns to reach it. The part is
-  symmetric across its own slot, so both installations use the same shape list.
+  ``angle -/+ 90`` depending on which way the beam turns to reach it, and its slot
+  curves along the pin's circle rather than running straight. One generator builds
+  both, mirrored for the catch the beam reaches clockwise: a handedness, not a
+  difference -- both curve toward the pivot and both open toward the beam's start.
 
 Heights are stacked so that only the pin ever touches a catch: A's base plates and
 the catch pads are 8 mm thick, the pin hangs to 12 mm, the beam's underside is at
@@ -253,9 +255,9 @@ class LinkbarMergeLayout:
     def socket_pad_half_width(self) -> float:
         """Half the catch's footprint ACROSS the slot, i.e. its radial half-extent.
 
-        Both neighbours are placed off this number -- A's outrigger stops here and
-        B's frame starts here -- so the plates butt instead of overlapping, and two
-        coplanar top faces never z-fight.
+        B's frame starts here, so the plates butt instead of overlapping and two
+        coplanar top faces never z-fight. A's outrigger uses `socket_inner_reach`
+        instead, which is the larger number on that side.
         """
 
         sock = self.cfg.socket
@@ -264,6 +266,34 @@ class LinkbarMergeLayout:
             + float(sock.pin_clearance)
             + float(sock.jaw_thickness)
         )
+
+    @property
+    def socket_arc_span(self) -> float:
+        """Arc length from the seat to whichever end of the catch is further."""
+
+        sock = self.cfg.socket
+        return max(float(sock.jaw_arc_back), float(sock.jaw_arc_mouth))
+
+    @property
+    def socket_sagitta(self) -> float:
+        """How far the catch's far end sits inboard of its seat.
+
+        The slot follows the pin's circle, so the catch curves toward the pivot,
+        and its ends are nearer the pivot than its middle by this much.
+        """
+
+        radius = self.arm_radius
+        return float(radius * (1.0 - np.cos(self.socket_arc_span / radius)))
+
+    @property
+    def socket_inner_reach(self) -> float:
+        """How far a catch reaches radially INWARD from its seat.
+
+        More than half its width, because of the curve. A's outrigger stops here,
+        so the outrigger plate and the catch pad butt instead of overlapping.
+        """
+
+        return self.socket_pad_half_width + self.socket_sagitta
 
     @property
     def capture_tolerance_xy(self) -> float:
@@ -583,7 +613,7 @@ class LinkbarMergeSceneBuilder:
         self._rail(
             scene, manifest, layout, "a_outrigger",
             layout.a_outrigger_angle,
-            layout.arm_radius - layout.socket_pad_half_width,
+            layout.arm_radius - layout.socket_inner_reach,
             float(outrigger.width), float(outrigger.thickness),
             outrigger.color,
         )
@@ -629,13 +659,27 @@ class LinkbarMergeSceneBuilder:
 
     # --------------------------------------------------------------- catches
 
-    def _socket_shapes(self) -> list[HingeShape]:
+    def _socket_shapes(self, layout, approach_sign: float) -> list[HingeShape]:
         """The catch, in its own frame: +x out through the mouth, +y across the slot.
 
-        One list, used for A2 and for B1 both, because docx 4.4's anti-shortcut
-        argument only holds if the two really are the same part. The shape is
-        symmetric across the slot, which is what lets one part be installed facing
-        either way round the circle (see `LinkbarMergeLayout.socket_yaw_deg`).
+        **The slot follows the pin's circle, because the pin does.** A straight slot
+        cannot guide a pin swinging on an arm: over the 55 mm from the mouth to the
+        seat, a 170 mm arc departs from the chord by 12.9 mm, which is three times
+        the side clearance. Measured 2026-08-20 with straight jaws -- the pin jammed
+        against A2's jaw 22 degrees short of the seat at 13 N, and on B, whose catch
+        is free to move, it shoved the whole assembly 14.5 mm aside instead. Both
+        symptoms, one cause.
+
+        So the pad and the jaws are cut into `jaw_segments` short pieces laid along
+        the arc, each yawed to its own midpoint tangent. The residual error inside a
+        segment is the sagitta of that segment alone -- under a millimetre at three
+        segments, against 4 mm of clearance.
+
+        One generator, called once per catch, because docx 4.4's anti-shortcut
+        argument only holds if the two really are the same part. ``approach_sign``
+        mirrors it for the catch the beam reaches clockwise. That is a handedness,
+        not a difference: both curve toward the pivot and both open toward the
+        beam's start, so in the scene they are the same object installed two ways.
 
         Load path: the pin enters at +x, runs down the slot to the origin where the
         latch fires, and is stopped by the back plate if it overshoots. The jaws
@@ -644,56 +688,91 @@ class LinkbarMergeSceneBuilder:
         """
 
         sock = self.task_cfg.socket
+        radius = layout.arm_radius
+        sign = float(approach_sign)
         pin_radius = float(self.task_cfg.linkbar.pin.radius)
         slot_half = pin_radius + float(sock.pin_clearance)
         jaw_thickness = float(sock.jaw_thickness)
-        jaw_length = float(sock.jaw_length)
         jaw_height = float(sock.jaw_height)
         pad_thickness = float(sock.pad_thickness)
         jaw_offset = slot_half + 0.5 * jaw_thickness
         pad_width = 2.0 * jaw_offset + jaw_thickness
-        stop_station = float(sock.back_stop_station)
-        stop_thickness = float(sock.back_stop_thickness)
+        back = float(sock.jaw_arc_back)
+        mouth = float(sock.jaw_arc_mouth)
+        segments = max(1, int(sock.jaw_segments))
 
-        shapes = [
-            HingeShape(
-                kind="box",
-                size=(float(sock.pad_length), pad_width, pad_thickness),
-                origin=(float(sock.pad_station), 0.0, 0.5 * pad_thickness),
-                color=_list(sock.color),
-            ),
-        ]
-        for sign in (1.0, -1.0):
+        def arc_point(angle: float) -> np.ndarray:
+            """Where the slot centreline is, ``angle`` radians round from the seat."""
+
+            return np.array(
+                [radius * np.sin(angle), sign * radius * (np.cos(angle) - 1.0)],
+                dtype=float,
+            )
+
+        def arc_normal(angle: float) -> np.ndarray:
+            """Across the slot at that point, pointing away from the pivot."""
+
+            return np.array([np.sin(angle), sign * np.cos(angle)], dtype=float)
+
+        shapes: list[HingeShape] = []
+        edges = np.linspace(-back, mouth, segments + 1) / radius
+        for low, high in zip(edges[:-1], edges[1:]):
+            middle = 0.5 * (low + high)
+            centre = arc_point(middle)
+            normal = arc_normal(middle)
+            yaw = -sign * middle
+            length = radius * (high - low)
             shapes.append(
                 HingeShape(
                     kind="box",
-                    size=(jaw_length, jaw_thickness, jaw_height),
-                    origin=(float(sock.jaw_station), sign * jaw_offset,
-                            pad_thickness + 0.5 * jaw_height),
+                    size=(length, pad_width, pad_thickness),
+                    origin=(centre[0], centre[1], 0.5 * pad_thickness),
+                    rpy=(0.0, 0.0, yaw),
                     color=_list(sock.color),
                 )
             )
+            for side in (1.0, -1.0):
+                jaw = centre + side * jaw_offset * normal
+                shapes.append(
+                    HingeShape(
+                        kind="box",
+                        size=(length, jaw_thickness, jaw_height),
+                        origin=(jaw[0], jaw[1], pad_thickness + 0.5 * jaw_height),
+                        rpy=(0.0, 0.0, yaw),
+                        color=_list(sock.color),
+                    )
+                )
+
+        # The back plate closes the deep end of the slot, and is what bounds an
+        # overshoot: the joint has no limits, so this is the only hard stop.
+        stop_angle = -float(sock.back_stop_arc) / radius
+        stop_centre = arc_point(stop_angle)
         shapes.append(
             HingeShape(
                 kind="box",
-                size=(stop_thickness, pad_width, jaw_height),
-                origin=(stop_station, 0.0, pad_thickness + 0.5 * jaw_height),
+                size=(float(sock.back_stop_thickness), pad_width, jaw_height),
+                origin=(stop_centre[0], stop_centre[1], pad_thickness + 0.5 * jaw_height),
+                rpy=(0.0, 0.0, -sign * stop_angle),
                 color=_list(sock.accent_color),
             )
         )
+
         # A chamfer on each jaw's lip, so the mouth reads as a mouth. Visual only:
         # widening the entry in physics would change how much misalignment the
         # catch forgives, and that budget belongs to `capture_tolerance_xy`.
         lip_length = float(sock.lip_length)
-        for sign in (1.0, -1.0):
+        lip_angle = (mouth + 0.5 * lip_length) / radius
+        lip_centre = arc_point(lip_angle)
+        lip_normal = arc_normal(lip_angle)
+        for side in (1.0, -1.0):
+            lip = lip_centre + side * (jaw_offset + 0.5 * jaw_thickness) * lip_normal
             shapes.append(
                 HingeShape(
                     kind="box",
                     size=(lip_length, jaw_thickness, jaw_height),
-                    origin=(float(sock.jaw_station) + 0.5 * jaw_length + 0.5 * lip_length,
-                            sign * (jaw_offset + 0.5 * jaw_thickness),
-                            pad_thickness + 0.5 * jaw_height),
-                    rpy=(0.0, 0.0, sign * float(np.deg2rad(float(sock.lip_flare_deg)))),
+                    origin=(lip[0], lip[1], pad_thickness + 0.5 * jaw_height),
+                    rpy=(0.0, 0.0, -sign * lip_angle
+                         + side * float(np.deg2rad(float(sock.lip_flare_deg)))),
                     color=_list(sock.accent_color),
                     collide=False,
                 )
@@ -712,7 +791,7 @@ class LinkbarMergeSceneBuilder:
             urdf_path=asset_root / "socket_a2.urdf",
             world_pos=layout.position_to_world((centre[0], centre[1], 0.0)),
             yaw_deg=layout.socket_yaw_deg("a2"),
-            shapes=self._socket_shapes(),
+            shapes=self._socket_shapes(layout, layout.approach_sign("a2")),
             mass=float(self.task_cfg.socket.mass),
             color=_list(self.task_cfg.socket.color),
             fixed=True,
@@ -744,7 +823,7 @@ class LinkbarMergeSceneBuilder:
         base_length = float(base.length)
         base_centre = start + 0.5 * base_length
 
-        shapes = list(self._socket_shapes())
+        shapes = list(self._socket_shapes(layout, out))
         shapes.append(
             HingeShape(
                 kind="box",
