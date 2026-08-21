@@ -1,8 +1,10 @@
 # tests/closed_band_spike.py 的主配置。
 #
-# env 用 world_tabletop_v1 而非 fem 版：本脚本自建场景（一个地面 + 壁面 + 挂销 +
-# 闭合带），只从 env 取 genesis 后端设置，不用 tabletop 预设的 sim 参数。
-# 与 configs/fem_ipc_rope_spike.yaml 同一套做法。
+# env 用 world_tabletop_fem_v1：场景走 StandardTabletopSceneBuilder，桌子、灯光、
+# 相机、task 坐标系与其余任务一致，dt/substeps 也由该预设给（substeps=4，
+# IPC 侧由 genesis_ipc_vertex_constraints 的 substep-aware 补丁按 substep_dt 前进）。
+# 与 configs/fem_ipc_rope_spike.yaml 的自建场景做法不同：那份量的是后端，
+# 这份量的是一个要变成任务的场景。
 #
 # task 借用 untangle_continuous 的配置只为拿到 rope 块（材料单源 prefabs.rope_fem，
 # 可用 task.rope.fem.* 点路径扫参）。场景几何在 run.band 里，与该任务无关。
@@ -10,20 +12,15 @@
 defaults:
   - config
   - override task_configs@task: untangle_continuous_topogym_tabletop_v1
-  - override env_configs@env: world_tabletop_v1
+  - override env_configs@env: world_tabletop_fem_v1
   - override run_configs@run: closed_band_spike
   - _self_
-
-# world_tabletop_v1 的 backend 是 cpu。FEM+IPC 只在 GPU 上有意义，在这里钉住。
-env:
-  genesis:
-    backend: gpu
 
 task:
   rope:
     fem:
-      # 挂销的根部刻意埋进面板里（销 x 跨 [0.015, 0.045]，面板前面在 0.040）。
-      # libuipc 的零相交初始态检查会拒绝这种静态互嵌，而静态体互嵌没有自由度。
+      # 挂销根部刻意埋进面板（run.band.peg_embed），面板底面又贴着桌面。
+      # libuipc 的零相交初始态检查会拒绝这类静态互嵌，而静态体互嵌没有自由度。
       # 与 cable_routing 的走线柱（柱身 + 喇叭底座刻意重叠）同一条豁免。
       sanity_check_enable: false
     mesh:

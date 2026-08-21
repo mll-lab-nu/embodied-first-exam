@@ -276,6 +276,17 @@ class LinkbarMergeLayout:
         return float(self.cfg.socket.neighbour_overlap)
 
     @property
+    def capture_tolerance_xy(self) -> float:
+        """How close the pin has to get to a seat before the latch fires."""
+
+        return float(self.cfg.socket.capture_tolerance_xy)
+
+    def capture_tolerance_deg(self) -> float:
+        """The same window read as a joint angle, which is what the arm controls."""
+
+        return float(np.rad2deg(self.capture_tolerance_xy / self.arm_radius))
+
+    @property
     def max_travel(self) -> float:
         """How far a merged carriage may run under the travel test."""
 

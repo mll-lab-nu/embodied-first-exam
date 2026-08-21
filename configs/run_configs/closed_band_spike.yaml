@@ -22,12 +22,6 @@ defaults:
 #   flip   : 驱动下瓣绕竖直轴转半圈。正确一侧自交叉 1->0，错误一侧 1->2。
 test: settle
 
-# 时间步。本脚本自建场景，不走 env 的 tabletop 预设：
-# IPC coupler 每个 substep 推进一次自己的世界，却按整个 sim.dt 配置
-# （ipc_coupler/utils.py:93），即它按 substeps=1 设计。
-# 锁定的 tabletop 预设是 substeps=4，这里不用。
-dt: 0.01
-
 # 沉降上限步数，以及收敛判据（单步最大顶点位移低于该值即认为收敛，米）。
 settle_steps: 400
 settle_tol: 0.00005
@@ -46,22 +40,23 @@ flip_settle_steps: 200
 # 下瓣抓取带的选取半径（米）。取到能覆盖整个下端半圆帽。
 band_radius: 0.020
 
-# 是否把顶部半圆帽钉在挂销上。默认关 —— 带靠接触挂住是 settle/hold 要验的内容之一。
-# 打开只用于把「带脱销」与「8 字自解」两种失败分开。
-pin_top: false
+# 顶部半圆帽的按住带半径（米）。拧的时候按住，拧完释放 —— 拧一个环要两只手，
+# 顶部不按住的话整个环只会绕竖直轴整体转，并沿挂销滑出去（2026-08-21 实测）。
+crown_radius: 0.020
 
-# 录制相机。**本脚本自建场景，不用 env.cameras** —— 那组相机位姿是 world 系
-# （桌面在 z=0.9196429），这里没有桌子，指过去什么都没有。
-# 名字取 oblique 与 recording.camera 的默认值对齐，加 recording=default 即可录。
+# 录制相机。在 env.cameras 之外再加一台特写 —— 那几台的取景是整张桌子，
+# 而这条带只有 130mm 高。pos/lookat 与 band 一样用 task 系。
+# 名字不能与 env.cameras 里的任何一台重名（会在录制里把那台顶掉），因此叫 band；
+# 录它要写 recording.camera=band，录全部写 recording.camera=all。
 # 视角接近正对壁面（沿 +x 看），与自交叉判定用的投影方向一致，
 # 因此 8 字与 O 形在画面里就是判定读到的那两个形状。
 # recording.res 若设了会覆盖这里的 res。
 camera:
-  name: oblique
+  name: band
   res: [768, 768]
-  pos: [-0.50, -0.14, 0.17]
-  lookat: [0.02, 0.00, 0.145]
-  fov: 38
+  pos: [-0.34, -0.13, 0.19]
+  lookat: [0.015, 0.00, 0.145]
+  fov: 42
 
 # 场景几何。docx 3.3 的壁面挂销 + 闭合弹性带。
 # 坐标为 task 系（原点在桌面中心，z=0 为桌面）；本脚本用一个过原点的地面平面
@@ -75,12 +70,25 @@ band:
   #             = 0.015 + 0.004 + 0.002 = 0.021。取 0.022 留 1mm 余量。
   # 上限由夹爪决定：瓣宽 2*loop_radius = 44mm，指垫要进得去。
   loop_radius: 0.022
-  # 挂销轴心（米）。z=0.20 下生成器给出：O 形最低点 z=0.067、8 字最低点 z=0.095，
-  # 都在工作空间 z 范围 [0.03, 0.40] 内且离地面有余量。
-  peg_center: [0.02, 0.0, 0.20]
-  # 挂销半径与长度（米）。轴沿 x（面板法向），带挂在其中段。
+  # 挂销轴心（米），也是带所在的平面。z=0.20 下生成器给出：
+  # O 形最低点 z=0.067、8 字最低点 z=0.095，都在工作空间 z 范围 [0.03, 0.40] 内。
+  # x 必须落在挂销跨度的中段：2026-08-21 首跑把它放在离销尖 5mm 处，
+  # 拧到 56 度时带直接滑出销尖，整段落到地面，其后全部读数作废。
+  # 挂销跨度 = [panel_x - panel_thickness/2 - peg_length, panel_x - panel_thickness/2]
+  #          = [-0.010, 0.040]，中点 0.015。
+  peg_center: [0.015, 0.0, 0.20]
+  # 挂销半径与长度（米）。轴沿 x（面板法向），从面板前表面向外伸。
   peg_radius: 0.015
-  peg_length: 0.030
+  peg_length: 0.050
+  # 销根埋进面板的深度（米）。静态体刻意互嵌，与 cable_routing 的走线柱同一做法；
+  # 对应 configs/closed_band_spike.yaml 里的 sanity_check_enable: false 豁免。
+  peg_embed: 0.005
+  # 带的所在平面到挂销两端的最小余量（米）。低于它直接报错，不进求解器。
+  peg_end_margin: 0.015
+  # 销尖端盖，防止带滑出。半径须大于带的内表面半径
+  # （loop_radius - rope.radius = 0.022 - 0.004 = 0.018），否则挡不住。
+  peg_flange_radius: 0.026
+  peg_flange_thickness: 0.006
   # 要拧到的半圈数。**带按平整 O 形出生，8 字由求解器拧出来**，理由见
   # tests/closed_band_spike.py 的模块文档（直杆静止形状会把接缝扭转抄进静止态）。
   # +1 / -1 是 docx 3.3 的两种手性。

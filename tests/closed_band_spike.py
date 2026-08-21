@@ -30,10 +30,20 @@ The wind-up is the inverse of the task's own action, so one driver serves both,
 and `run.test=hold` measures what docx 3.3 depends on: whether a band released
 after winding stays wound, or springs open with no robot involved.
 
-Standalone scene -- ground plane, wall panel, peg, band. No table preset, no
-robot. dt=0.01 / substeps=1, because the stock IPC coupler advances its world
-once per substep while configuring it with the whole `sim.dt`
-(`ipc_coupler/utils.py:93`). Same shape as `tests/fem_ipc_rope_spike.py`.
+The scene is the STANDARD TABLETOP -- table, lighting, cameras, task frame -- with
+a wall panel and a pegged band on it, and the robot left out. It differs from
+`tests/fem_ipc_rope_spike.py`, which builds a bare ground plane, because that one
+measures the backend while this one measures a scene that has to become a task:
+same table, same lights, same coordinates the eventual `band_untwist` will use.
+dt and substeps come from the env preset (`world_tabletop_fem_v1`: substeps=4,
+which the IPC patch is substep-aware for).
+
+Both hands are needed to wind a loop. With the top free, turning the lower lobe
+just rotates the whole loop about the vertical and walks it off the peg -- measured
+2026-08-21, the band left a 30 mm peg after 56 degrees of turn and the run became a
+heap on the floor. So a second follow band holds the top cap during the turn and
+lets go before the hold test, and the peg is centred under the band with a flange
+at its tip.
 
     python -m tests.closed_band_spike run.test=mesh
     python -m tests.closed_band_spike run.test=settle run.verbose=true
@@ -41,8 +51,8 @@ once per substep while configuring it with the whole `sim.dt`
     python -m tests.closed_band_spike run.test=flip run.flip_side=wrong
     python -m tests.closed_band_spike -m run.test=hold task.rope.fem.E=5e4,1e5,2e5
 
-Recording is the `recording` config group, one camera defined in `run.camera`
-(this scene has no table, so `env.cameras`' world-frame poses point at nothing).
+Recording is the `recording` config group. `run.camera` adds a close-up on top of
+the env's cameras, which are framed for a whole tabletop rather than a 130 mm band.
 The view is close to face-on to the panel, i.e. the same projection the
 self-crossing count is read in, so the video shows the shape the verdict is about.
 The saved frames carry that count as a HUD line. `run.keep_open` steps forever, so
@@ -50,7 +60,7 @@ it runs AFTER the recorder closes -- the video is written either way, but the
 process then waits for Ctrl+C.
 
     python -m tests.closed_band_spike run.test=hold recording=default \\
-        recording.path=runs/closed_band_hold.mp4
+        recording.camera=band recording.path=runs/closed_band_hold.mp4
 
 Requires `pip install pyuipc` (CUDA 12.6+).
 """
@@ -133,7 +143,11 @@ def main(cfg: DictConfig) -> None:
         print_recording_saved,
         recording_session_from_config,
     )
-    from topogym.world import materials
+    from topogym.world import (
+        StandardTabletopSceneBuilder,
+        materials,
+        tabletop_frames_from_config,
+    )
     from topogym.world.closed_band import (
         WALL_PROJECTION,
         band_self_crossings,
@@ -142,7 +156,7 @@ def main(cfg: DictConfig) -> None:
         closed_tube_mesh,
         hanging_band_centerline,
     )
-    from topogym.world.genesis_ipc_vertex_constraints import follow_near, resolved_pins
+    from topogym.world.genesis_ipc_vertex_constraints import follow_near
     from topogym.world.rope import (
         check_self_contact_clearance,
         resolve_mesh_dir,
@@ -171,11 +185,21 @@ def main(cfg: DictConfig) -> None:
             "docx 3.3 is +1 or -1 half turn."
         )
 
+    # `run.band` is in the task frame (origin at the table surface centre) like
+    # every task config; the mesh is loaded at world origin, so the centerline is
+    # generated in world coordinates and the readings are reported back in task z.
+    world_frames = tabletop_frames_from_config(cfg.env)
+    peg_world = world_frames.task_to_world(peg_center)
+    surface_z = float(world_frames.task_origin[2])
+
+    def task_z(z_world) -> float:
+        return float(z_world) - surface_z
+
     def centerline_at(half_turns: float) -> np.ndarray:
         return hanging_band_centerline(
             perimeter=float(band.perimeter),
             loop_radius=float(band.loop_radius),
-            peg_center=peg_center,
+            peg_center=peg_world,
             half_turns=half_turns,
             segment_length=segment_length,
         )
@@ -208,9 +232,9 @@ def main(cfg: DictConfig) -> None:
         f"{len(spawn_line)} rings x {radial}, skin {len(vertices)} verts -> {mesh_path}"
     )
     print(
-        f"closed_band_spike flat O hangs to z {spawn_line[:, 2].min() * 1000:.1f} mm and reads "
+        f"closed_band_spike flat O hangs to task z {task_z(spawn_line[:, 2].min()) * 1000:.1f} mm and reads "
         f"{len(crossings_of(spawn_line))} self-crossings; the generator puts "
-        f"{wound_turns:+.1f} half turns at z {wound_line[:, 2].min() * 1000:.1f} mm "
+        f"{wound_turns:+.1f} half turns at task z {task_z(wound_line[:, 2].min()) * 1000:.1f} mm "
         f"({len(crossings_of(wound_line))} crossings, lift "
         f"{lift_per_half_turn * wound_turns * 1000:+.1f} mm)"
     )
@@ -225,45 +249,116 @@ def main(cfg: DictConfig) -> None:
     backend = rope_backend(rope)
     backend.pre_scene()
 
-    scene = gs.Scene(
-        sim_options=gs.options.SimOptions(
-            dt=float(cfg.run.dt), substeps=1, gravity=(0.0, 0.0, -9.81)
-        ),
-        viewer_options=gs.options.ViewerOptions(
-            camera_pos=(-0.55, -0.30, 0.32),
-            camera_lookat=(float(peg_center[0]), 0.0, float(peg_center[2]) - 0.05),
-            camera_fov=45,
-        ),
+    # The standard tabletop, not a bare ground plane. `fem_ipc_rope_spike` builds
+    # its own minimal scene because it is measuring the BACKEND; this one is
+    # measuring a scene that has to become a task, so it uses the table, the
+    # lighting, the cameras and the task frame every other task uses. dt and
+    # substeps come from the env preset (world_tabletop_fem_v1: substeps=4, which
+    # the IPC patch is substep-aware for) rather than being set here.
+    tabletop_builder = StandardTabletopSceneBuilder(
+        cfg.env, cfg.robot_control, scene_options=backend.scene_options()
+    )
+    tabletop = tabletop_builder.create(
         show_viewer=cfg.run.viewer,
-        **backend.scene_options(),
+        include_robot=False,
+        static_material=backend.static_rigid_material(),
+        decoration_material=backend.decoration_rigid_material(),
     )
-
-    # `static_rigid_material` is 'ipc_only', which the plane also needs: a Plane
-    # carries a base joint, so the coupler's auto-select picks
-    # 'external_articulation' and its own plane handler then rejects it.
+    scene, manifest = tabletop.scene, tabletop.manifest
     static = backend.static_rigid_material()
-    scene.add_entity(gs.morphs.Plane(), material=static, name="ground")
-    scene.add_entity(
-        gs.morphs.Box(
-            pos=(float(band.panel_x), 0.0, 0.5 * float(band.panel_top_z)),
-            size=(float(band.panel_thickness), float(band.panel_width), float(band.panel_top_z)),
-            fixed=True,
+
+    panel_face_x = float(band.panel_x) - 0.5 * float(band.panel_thickness)
+    peg_tip_x = panel_face_x - float(band.peg_length)
+    # The band must hang clear of BOTH ends of the peg. The first run put it 5 mm
+    # from the tip (peg x [15, 45] mm, band at x=20 mm) and it walked straight
+    # off: twisting the lower lobe torques the whole loop about the vertical, and
+    # the only way a loop draped on a round peg answers that torque is by sliding
+    # along it. Centre it and cap the tip.
+    margin = float(band.peg_end_margin)
+    if not (peg_tip_x + margin <= float(peg_center[0]) <= panel_face_x - margin):
+        raise SystemExit(
+            f"closed_band_spike: run.band.peg_center x={float(peg_center[0]):.3f} m is not at "
+            f"least {margin * 1000:.0f} mm inside the peg, which spans x "
+            f"[{peg_tip_x:.3f}, {panel_face_x:.3f}] m. Move it, lengthen the peg, or shrink "
+            "peg_end_margin."
+        )
+
+    manifest.add(
+        "panel",
+        scene.add_entity(
+            gs.morphs.Box(
+                pos=tuple(
+                    world_frames.task_to_world(
+                        (float(band.panel_x), 0.0, 0.5 * float(band.panel_top_z))
+                    )
+                ),
+                size=(
+                    float(band.panel_thickness),
+                    float(band.panel_width),
+                    float(band.panel_top_z),
+                ),
+                fixed=True,
+            ),
+            material=static,
+            surface=materials.plastic("fixture", (0.62, 0.64, 0.67)),
+            name="panel",
         ),
-        material=static,
-        surface=materials.plastic("fixture", (0.62, 0.64, 0.67)),
-        name="panel",
     )
-    scene.add_entity(
-        gs.morphs.Cylinder(
-            pos=(float(band.panel_x) - 0.5 * float(band.peg_length), 0.0, float(peg_center[2])),
-            radius=float(band.peg_radius),
-            height=float(band.peg_length),
-            euler=(0.0, 90.0, 0.0),  # default-Z cylinder axis -> world X (the panel normal)
-            fixed=True,
+    manifest.add(
+        "peg",
+        scene.add_entity(
+            gs.morphs.Cylinder(
+                pos=tuple(
+                    world_frames.task_to_world(
+                        (
+                            0.5 * (panel_face_x + float(band.peg_embed) + peg_tip_x),
+                            0.0,
+                            float(peg_center[2]),
+                        )
+                    )
+                ),
+                radius=float(band.peg_radius),
+                height=float(band.peg_length) + float(band.peg_embed),
+                euler=(0.0, 90.0, 0.0),  # default-Z cylinder axis -> world X (panel normal)
+                fixed=True,
+            ),
+            material=static,
+            surface=materials.plastic("fixture", (0.95, 0.55, 0.10)),
+            name="peg",
         ),
-        material=static,
-        surface=materials.plastic("fixture", (0.95, 0.55, 0.10)),
-        name="peg",
+    )
+    # End stop. Without it a bare cylinder has nothing to hold the band on, which
+    # is how the 2026-08-21 run lost it. Its radius has to clear the band's inner
+    # surface (loop_radius - tube radius) or the loop slides over the cap instead.
+    flange_radius = float(band.peg_flange_radius)
+    inner_surface = float(band.loop_radius) - radius
+    if flange_radius <= inner_surface:
+        raise SystemExit(
+            f"closed_band_spike: peg_flange_radius {flange_radius * 1000:.1f} mm does not clear "
+            f"the band's inner surface at {inner_surface * 1000:.1f} mm, so it stops nothing."
+        )
+    manifest.add(
+        "peg_flange",
+        scene.add_entity(
+            gs.morphs.Cylinder(
+                pos=tuple(
+                    world_frames.task_to_world(
+                        (
+                            peg_tip_x - 0.5 * float(band.peg_flange_thickness),
+                            0.0,
+                            float(peg_center[2]),
+                        )
+                    )
+                ),
+                radius=flange_radius,
+                height=float(band.peg_flange_thickness),
+                euler=(0.0, 90.0, 0.0),
+                fixed=True,
+            ),
+            material=static,
+            surface=materials.plastic("fixture", (0.95, 0.55, 0.10)),
+            name="peg_flange",
+        ),
     )
     entity = scene.add_entity(
         tube_morph(mesh_path, rope),
@@ -271,42 +366,53 @@ def main(cfg: DictConfig) -> None:
         surface=materials.plastic("deformable", (0.20, 0.62, 0.32), vis_mode="visual"),
         name="band",
     )
+    manifest.add("band", entity)
 
-    # One camera, defined in `run.camera` rather than taken from `env.cameras`:
-    # this scene has no table, so the env's world-frame camera poses (table top at
-    # z=0.9196429) point at nothing. `recording.res` is honoured here for the same
-    # reason -- `apply_recording_camera_overrides` rewrites `cfg.env.cameras`,
-    # which this script never reads. It is named to match `recording.camera`'s
-    # default so `recording=default` works with no further overrides.
+    # A close-up on top of the env's own cameras: those are framed for a whole
+    # tabletop, and this band is 130 mm tall. `run.camera` is in the task frame
+    # like the rest of `run.band`. The view is near face-on to the panel, i.e. the
+    # projection the self-crossing count is read in, so what the video shows is
+    # the shape the verdict is about. `recording.res` overrides its resolution
+    # here rather than through `apply_recording_camera_overrides`, which only
+    # rewrites `cfg.env.cameras`.
     camera_cfg = cfg.run.camera
     resolution = cfg.recording.res if cfg.recording.res is not None else camera_cfg.res
-    cameras = {
-        str(camera_cfg.name): scene.add_camera(
-            res=tuple(int(value) for value in resolution),
-            pos=tuple(float(value) for value in camera_cfg.pos),
-            lookat=tuple(float(value) for value in camera_cfg.lookat),
-            up=(0.0, 0.0, 1.0),
-            fov=float(camera_cfg.fov),
-            GUI=False,
+    cameras = dict(tabletop.cameras)
+    if str(camera_cfg.name) in cameras:
+        raise SystemExit(
+            f"closed_band_spike: run.camera.name={camera_cfg.name!r} already names an env "
+            f"camera ({sorted(cameras)}); it would shadow it in the recording."
         )
-    }
+    cameras[str(camera_cfg.name)] = scene.add_camera(
+        res=tuple(int(value) for value in resolution),
+        pos=tuple(world_frames.task_to_world(camera_cfg.pos)),
+        lookat=tuple(world_frames.task_to_world(camera_cfg.lookat)),
+        up=(0.0, 0.0, 1.0),
+        fov=float(camera_cfg.fov),
+        GUI=False,
+    )
 
     if str(fem.rest_shape) == "straight":
         backend.declare_rest_straight(entity, spawn_line)
-    if bool(cfg.run.pin_top):
-        backend.declare_anchor(
-            entity,
-            [peg_center + np.array([0.0, 0.0, float(band.loop_radius)])],
-            float(band.loop_radius),
-        )
     lobe = follow_near(
         entity,
         spawn_line[int(np.argmin(spawn_line[:, 2]))],
         float(cfg.run.band_radius),
         strength=float(fem.follow_strength),
     )
+    # A second band on the top cap, held still while the lower one turns. Winding
+    # a loop needs two hands: with the top free the whole loop just rotates about
+    # the vertical and no twist accumulates -- it only leaves the peg. This is a
+    # follow band and not `declare_anchor`, because pins are `is_fixed` at build
+    # time with no way to let go, and this one has to let go before the hold test.
+    crown = follow_near(
+        entity,
+        spawn_line[int(np.argmax(spawn_line[:, 2]))],
+        float(cfg.run.crown_radius),
+        strength=float(fem.follow_strength),
+    )
 
-    scene.build()
+    tabletop_builder.finalize(tabletop)
     print(f"closed_band_spike band: {entity.n_vertices} FEM vertices, {entity.n_elements} tets")
     if stop_before_physics(cfg, scene, "closed_band_spike"):
         raise SystemExit(0)
@@ -354,12 +460,12 @@ def main(cfg: DictConfig) -> None:
             label=label,
             step=step,
             crossings=len(hits),
-            bottom_z=float(line[:, 2].min() * 1000.0),
+            bottom_z=task_z(line[:, 2].min()) * 1000.0,
         )
         text = (
             f"closed_band_spike {label} step={step} crossings={len(hits)} "
             f"depth_gaps={[f'{hit.gap * 1000:.1f}' for hit in hits]}mm "
-            f"bottom_z={line[:, 2].min() * 1000:.1f}mm"
+            f"bottom_z={task_z(line[:, 2].min()) * 1000:.1f}mm"
         )
         if driver is not None:
             text += f" lobe_err={driver.tracking_error(positions()) * 1000:.2f}mm"
@@ -405,21 +511,21 @@ def main(cfg: DictConfig) -> None:
         )
         print(
             f"closed_band_spike settled O: crossings={len(crossings_of(settled))} (want 0), "
-            f"z range [{settled[:, 2].min() * 1000:.1f}, {settled[:, 2].max() * 1000:.1f}]mm, "
+            f"task z range [{task_z(settled[:, 2].min()) * 1000:.1f}, "
+            f"{task_z(settled[:, 2].max()) * 1000:.1f}]mm, "
             f"arc length {closed_arc_length(settled)[1] * 1000:.1f}mm "
             f"(spawn {frames.perimeter * 1000:.1f}mm), peg top at "
-            f"{(peg_center[2] + float(band.peg_radius)) * 1000:.1f}mm"
+            f"{(float(peg_center[2]) + float(band.peg_radius)) * 1000:.1f}mm"
         )
-        if bool(cfg.run.pin_top):
-            pins = resolved_pins(entity)
-            print(f"closed_band_spike pinned {0 if pins is None else len(pins)} verts at the peg")
 
         if str(cfg.run.test) == "settle":
             return
 
         # --- wind the flat O up into the figure-8 ---------------------------------
+        # The crown holds the top cap on the peg for the duration of the turn.
+        crown.engage(positions()[crown.verts])
         driver = LobeTwistDriver(
-            lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
+            lobe, peg_world, positions(), lift_per_half_turn=lift_per_half_turn
         )
         run_steps(
             int(cfg.run.drive_steps),
@@ -428,6 +534,7 @@ def main(cfg: DictConfig) -> None:
             turn=lambda alpha: driver.turn_by(wound_turns * alpha),
         )
         lobe.release()
+        crown.release()
         run_steps(int(cfg.run.flip_settle_steps), "release")
         wound = crossings_of(read_centerline())
         print(
@@ -448,8 +555,8 @@ def main(cfg: DictConfig) -> None:
         after = crossings_of(after_line)
         print(
             f"closed_band_spike hold verdict: crossings {len(wound)} -> {len(after)} over "
-            f"{int(cfg.run.hold_steps)} steps, bottom_z {before[:, 2].min() * 1000:.1f} -> "
-            f"{after_line[:, 2].min() * 1000:.1f} mm -- "
+            f"{int(cfg.run.hold_steps)} steps, bottom_z {task_z(before[:, 2].min()) * 1000:.1f} -> "
+            f"{task_z(after_line[:, 2].min()) * 1000:.1f} mm -- "
             + (
                 "PASS -- the released figure-8 held"
                 if len(after) == 1
@@ -463,8 +570,9 @@ def main(cfg: DictConfig) -> None:
         correct = str(cfg.run.flip_side) == "correct"
         delta = -wound_turns if correct else wound_turns
         expected = 0 if correct else 2
+        crown.engage(positions()[crown.verts])
         driver = LobeTwistDriver(
-            lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
+            lobe, peg_world, positions(), lift_per_half_turn=lift_per_half_turn
         )
         run_steps(
             int(cfg.run.drive_steps),
@@ -473,13 +581,14 @@ def main(cfg: DictConfig) -> None:
             turn=lambda alpha: driver.turn_by(delta * alpha),
         )
         lobe.release()
+        crown.release()
         run_steps(int(cfg.run.flip_settle_steps), "flip_settle")
 
         final_line = read_centerline()
         final = crossings_of(final_line)
         print(
             f"closed_band_spike flip verdict ({cfg.run.flip_side}): crossings {len(after)} -> "
-            f"{len(final)} (want {expected}), bottom_z {final_line[:, 2].min() * 1000:.1f}mm, "
+            f"{len(final)} (want {expected}), bottom_z {task_z(final_line[:, 2].min()) * 1000:.1f}mm, "
             f"arc length {closed_arc_length(final_line)[1] * 1000:.1f}mm -- "
             + ("PASS" if len(final) == expected else "FAIL")
         )
