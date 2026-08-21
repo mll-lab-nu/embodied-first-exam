@@ -4,7 +4,7 @@
 # linkbar_merge_components_topogym_tabletop_v1.yaml），用点路径覆盖即可扫参：
 #   task.sockets.b1_angle_deg=40
 #   task.socket.capture_tolerance_xy=0.010
-#   task.lift_test.force_scale=2.0
+#   task.travel_test.force_scale=2.0
 
 defaults:
   - default
@@ -37,9 +37,9 @@ sweep_servo:
 seat_phase: none
 seat_angle_deg: 0.0
 
-# 落座后跑提起测试：给 B 一个向上的力，看有没有东西拉住它。
-lift_probe: false
+# 落座后跑行程测试：沿导轨方向推小车，看有没有东西拦住它。
+travel_probe: false
 
 # 跑判据：读约束图求 component_count，并与提起测试的结果对表。
-# 与 lift_probe 一起开才有物理层读数；单开只报约束图那一半。
+# 与 travel_probe 一起开才有物理层读数；单开只报约束图那一半。
 classify: false

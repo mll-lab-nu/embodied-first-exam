@@ -10,9 +10,9 @@ numbers rather than by eye:
 2. Does the latch fire where it should, and only there? Seated at a catch it must
    engage; parked between them it must not. That window is the aiming requirement
    the whole task rests on.
-3. What does the lift test read? Latched into B1, B has to stay down; latched into
-   A2, or not latched, B has to come off the table. The gap between those two
-   numbers is what `success.max_lift_delta` gets set from, so it is measured here
+3. What does the travel test read? Latched into B1 the carriage cannot run; latched
+   into A2, or not latched, it goes to the end of its rail. The gap between those
+   two numbers is what `success.max_travel` gets set from, so it is measured here
    rather than guessed.
 
 The joint sweep and the seat phases write the joint directly. That is a kinematic
@@ -21,8 +21,8 @@ check, NOT an episode, and nothing in an episode may move the beam that way
 
     python -m demos.connectivity.linkbar_merge_components_inspect_demo run.static_only=true run.viewer=true
     python -m demos.connectivity.linkbar_merge_components_inspect_demo run.sweep_joint=true run.verbose=true
-    python -m demos.connectivity.linkbar_merge_components_inspect_demo run.seat_phase=b1 run.lift_probe=true run.verbose=true
-    python -m demos.connectivity.linkbar_merge_components_inspect_demo run.seat_phase=none run.lift_probe=true
+    python -m demos.connectivity.linkbar_merge_components_inspect_demo run.seat_phase=b1 run.travel_probe=true run.verbose=true
+    python -m demos.connectivity.linkbar_merge_components_inspect_demo run.seat_phase=none run.travel_probe=true
     python -m demos.connectivity.linkbar_merge_components_inspect_demo --cfg job
 """
 
@@ -39,7 +39,7 @@ from topogym.core import save_resolved_config
 from topogym.primitives import SocketWeld
 from topogym.supervision import stop_before_physics
 from topogym.tasks import LINKBAR_SOCKETS, LinkbarMergeSceneBuilder
-from topogym.tasks.connectivity._lift_probe import lift_probe
+from topogym.tasks.connectivity._travel_probe import travel_probe
 from topogym.utils.franka import initialize_franka_controller
 from topogym.utils.recording import (
     apply_recording_camera_overrides,
@@ -73,18 +73,14 @@ def _hud(state):
 
 
 def b_xy(merge_scene) -> np.ndarray:
-    """Component B's position, for measuring whether the beam walked it out of place.
+    """The carriage's catch, for measuring whether the beam walked it out of place.
 
-    B is a free body on purpose -- the lift test needs it to be -- so the pin
-    brushing a jaw on the way in can shove it. Its catch only has 4 mm of side
-    clearance, so a few millimetres of drift is the difference between latching and
-    not, and it is the number the locating cleats have to justify.
+    On a rail it can only move along one line, which is the point of the rail -- but
+    the pin brushing a jaw can still run the carriage down it, and the catch has only
+    4 mm of side clearance, so the drift is worth reading rather than assuming.
     """
 
-    value = merge_scene.component_b_entity().get_pos()
-    if hasattr(value, "detach"):
-        value = value.detach().cpu().numpy()
-    return np.asarray(value).reshape(-1, 3)[0][:2].astype(float)
+    return np.asarray(merge_scene.socket_seat_xy("b1"), dtype=float)
 
 
 def make_latch(merge_scene, *, auto_capture: bool) -> SocketWeld:
@@ -251,41 +247,47 @@ def run_seat(cfg, merge_scene, latch, state) -> None:
     )
 
 
-def run_lift(cfg, merge_scene, state):
-    """The physical recheck: pull B up and see whether anything holds it."""
+def run_travel(cfg, merge_scene, state):
+    """The physical recheck: push the carriage along its rail and see what holds it."""
 
-    state["phase"] = "lift_probe"
-    probe = cfg.task.lift_test
-    result = lift_probe(
+    state["phase"] = "travel_probe"
+    probe = cfg.task.travel_test
+    layout = merge_scene.layout
+    result = travel_probe(
         merge_scene.scene,
         merge_scene.component_b_entity(),
+        dof=merge_scene.carriage_dof,
+        link_idx=merge_scene.carriage_link_idx(),
+        direction=np.append(layout.rail_direction_world(), 0.0),
         mass=float(cfg.task.component_b.mass),
         force_scale=float(probe.force_scale),
         steps=int(probe.steps),
+        limit=layout.rail_travel,
         settle_steps=int(probe.settle_steps),
     )
-    held = result.peak_delta_z <= float(cfg.task.success.max_lift_delta)
+    blocked = result.peak_travel <= float(cfg.task.success.max_travel)
     print(
-        f"linkbar_merge_components lift latched={merge_scene.latched_socket()} "
+        f"linkbar_merge_components travel latched={merge_scene.latched_socket()} "
         f"force={result.force:.3f}N steps={result.steps} "
-        f"delta={result.delta_z:+.4f}m peak={result.peak_delta_z:+.4f}m "
-        f"max_held={float(cfg.task.success.max_lift_delta):.4f} "
-        f"min_free={float(cfg.task.success.min_free_lift):.4f} held={held}",
+        f"travel={result.travel:.4f}m peak={result.peak_travel:.4f}m "
+        f"limit={result.limit:.4f}m reached_stop={result.reached_stop} "
+        f"max_blocked={float(cfg.task.success.max_travel):.4f} "
+        f"min_free={float(cfg.task.success.min_free_travel):.4f} blocked={blocked}",
         flush=True,
     )
     return result
 
 
-def run_classify(cfg, merge_scene, lift_result) -> None:
-    """Read the constraint graph, and check it against what the lift test saw.
+def run_classify(cfg, merge_scene, travel_result) -> None:
+    """Read the constraint graph, and check it against what the travel test saw.
 
-    The peak rise is what the judge gets, not the final one: a body that is held
-    still gives a little under load, and the peak is the honest reading of how much.
+    The peak travel is what the judge gets, not the final one: a carriage that is
+    held still gives a little under load, and the peak is the honest reading.
     """
 
     state = LinkbarMergeEvaluator().classify(
         merge_scene,
-        lift_delta=None if lift_result is None else lift_result.peak_delta_z,
+        travel=None if travel_result is None else travel_result.peak_travel,
     )
     info = state.to_info()
     print(
@@ -293,7 +295,8 @@ def run_classify(cfg, merge_scene, lift_result) -> None:
         + " ".join(
             f"{key}={info[key]}"
             for key in ("invariant", "invariant_value", "space", "component_count",
-                        "latched_socket", "latch_edges", "lift_tested", "lift_held",
+                        "latched_socket", "latch_edges", "travel_tested",
+                        "motion_blocked",
                         "judge_disagrees", "probe_uninformative", "failure_label",
                         "terminal")
         ),
@@ -301,7 +304,7 @@ def run_classify(cfg, merge_scene, lift_result) -> None:
     )
     if state.judge_disagrees:
         print(
-            "[warn] the constraint graph says merged but component B lifted anyway. "
+            "[warn] the constraint graph says merged but the carriage travelled anyway. "
             "That means the JUDGE is wrong, not the run: check the weld set and the "
             "link -> assembly mapping in verification/linkbar_merge_components_verifier.py "
             "before touching the scene.",
@@ -309,9 +312,9 @@ def run_classify(cfg, merge_scene, lift_result) -> None:
         )
     if state.probe_uninformative:
         print(
-            "[warn] component B did not merge and did not lift either, so the pull "
-            "was too weak to judge with. Raise task.lift_test.force_scale until an "
-            "unmerged B clears task.success.min_free_lift.",
+            "[warn] the carriage did not merge and did not travel either, so the push "
+            "was too weak to judge with. Raise task.travel_test.force_scale until an "
+            "unmerged carriage clears task.success.min_free_travel.",
             flush=True,
         )
 
@@ -417,9 +420,9 @@ def main(cfg: DictConfig) -> None:
         else:
             with make_latch(merge_scene, auto_capture=True) as latch:
                 run_seat(cfg, merge_scene, latch, state)
-                lift_result = run_lift(cfg, merge_scene, state) if cfg.run.lift_probe else None
+                probe = run_travel(cfg, merge_scene, state) if cfg.run.travel_probe else None
                 if cfg.run.classify:
-                    run_classify(cfg, merge_scene, lift_result)
+                    run_classify(cfg, merge_scene, probe)
         state["phase"] = "done"
 
     print_recording_saved(cfg.recording)

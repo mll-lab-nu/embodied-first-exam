@@ -21,13 +21,21 @@ for the reason it should rather than because it was labelled the wrong answer.
 Two layers, as the C4 contract requires, recorded separately:
 
 - **Constraint graph** -- `component_count`, computed here from the live weld set.
-- **Lift test** -- measured by the caller with `tasks/connectivity/_lift_probe.py`,
-  because only the caller can step physics. Merged, B is held by the latch and the
-  beam's hinge, which has no vertical freedom; unmerged, B is a loose object.
-  Measured 2026-08-20: 1.9 mm against 397 mm.
+- **Travel test** -- measured by the caller with
+  `tasks/connectivity/_travel_probe.py`, because only the caller can step physics.
+  Component B is a carriage on a radial rail, so "merged" has a direct physical
+  reading: it can no longer travel. At the seat the beam lies along the rail and
+  takes the load as a straight push or pull, so the lock is stiff rather than
+  incidental.
 
-`judge_disagrees` is the cross-check between them. The graph saying "merged" while
-B lifts anyway does not mean the run failed -- it means this judge is wrong, and
+The rail is not an edge in the graph. It ties the carriage to the table, and the
+table is not one of the three assemblies -- the same status as A's own bolts. What
+the graph counts is constraints BETWEEN assemblies; what the travel test measures
+is whether B still has freedom relative to A. The two answer the same question
+from opposite ends, which is why they are worth recording separately.
+
+`judge_disagrees` is the cross-check. The graph saying "merged" while the carriage
+travels anyway does not mean the run failed -- it means this judge is wrong, and
 the weld or the link mapping is what needs looking at.
 """
 
@@ -83,17 +91,17 @@ def link_nodes(merge_scene) -> dict[int, str]:
 
 @dataclass(frozen=True)
 class LinkbarMergeState:
-    """One reading: what the constraint graph says, and what the lift test said."""
+    """One reading: what the constraint graph says, and what the travel test said."""
 
     component_count: int
     latched_socket: str | None
     latch_edges: tuple[tuple[str, str], ...] = ()
     pin_gaps: dict[str, float] = field(default_factory=dict)
     # Physical layer. Supplied by the caller, because only it can step physics.
-    lift_delta: float = 0.0
-    lift_tested: bool = False
-    max_lift_delta: float = 0.0
-    min_free_lift: float = 0.0
+    travel: float = 0.0
+    travel_tested: bool = False
+    max_travel: float = 0.0
+    min_free_travel: float = 0.0
     # The primitive's own gates (target error, follow error, release drift). A run
     # the arm botched is not evidence about the scene either way.
     rotate_ok: bool = True
@@ -109,8 +117,8 @@ class LinkbarMergeState:
         return bool(self.component_count == 1)
 
     @property
-    def lift_held(self) -> bool:
-        return bool(self.lift_tested and self.lift_delta <= self.max_lift_delta)
+    def motion_blocked(self) -> bool:
+        return bool(self.travel_tested and self.travel <= self.max_travel)
 
     @property
     def geometry_ok(self) -> bool:
@@ -118,25 +126,25 @@ class LinkbarMergeState:
 
     @property
     def judge_disagrees(self) -> bool:
-        """The graph says merged and B lifted anyway -> this judge is wrong, not the run."""
+        """Graph says merged, carriage travelled anyway -> the judge is wrong, not the run."""
 
-        return bool(self.merged and self.lift_tested and not self.lift_held)
+        return bool(self.merged and self.travel_tested and not self.motion_blocked)
 
     @property
     def probe_uninformative(self) -> bool:
-        """An unmerged B that did NOT lift means the pull was too weak to judge with.
+        """An unmerged carriage that did NOT run means the push was too weak to judge.
 
         Reported rather than folded into success: it says the probe is broken, and
-        a probe that cannot move a loose body would call every run a merge.
+        a probe that cannot move a free carriage would call every run a merge.
         """
 
         return bool(
-            self.lift_tested and not self.merged and self.lift_delta < self.min_free_lift
+            self.travel_tested and not self.merged and self.travel < self.min_free_travel
         )
 
     @property
     def is_terminal(self) -> bool:
-        return bool(self.merged and self.lift_held and self.rotate_ok)
+        return bool(self.merged and self.motion_blocked and self.rotate_ok)
 
     @property
     def failure_label(self) -> str | None:
@@ -148,7 +156,7 @@ class LinkbarMergeState:
             return "no_latch"
         if not self.merged:
             return "latched_wrong_socket"
-        return "lift_test_failed"
+        return "travel_test_failed"
 
     def to_info(self) -> dict[str, Any]:
         return {
@@ -165,9 +173,9 @@ class LinkbarMergeState:
             "latched_socket": self.latched_socket,
             "latch_edges": [list(edge) for edge in self.latch_edges],
             "pin_gaps": {name: float(gap) for name, gap in self.pin_gaps.items()},
-            "lift_tested": bool(self.lift_tested),
-            "lift_delta": float(self.lift_delta),
-            "lift_held": bool(self.lift_held),
+            "travel_tested": bool(self.travel_tested),
+            "travel": float(self.travel),
+            "motion_blocked": bool(self.motion_blocked),
             "rotate_ok": bool(self.rotate_ok),
             "judge_disagrees": bool(self.judge_disagrees),
             "probe_uninformative": bool(self.probe_uninformative),
@@ -178,7 +186,7 @@ class LinkbarMergeState:
 
 @dataclass(frozen=True)
 class LinkbarMergeEvaluator:
-    """Success = the two frames became one component, and B really is held."""
+    """Success = the two frames became one component, and the carriage really is locked."""
 
     def latch_edges(self, merge_scene) -> tuple[tuple[str, str], ...]:
         """Weld edges between assemblies, read from the solver."""
@@ -192,7 +200,7 @@ class LinkbarMergeEvaluator:
             edges.append((node_a, node_b))
         return tuple(edges)
 
-    def classify(self, merge_scene, *, lift_delta: float | None = None,
+    def classify(self, merge_scene, *, travel: float | None = None,
                  rotate_ok: bool = True) -> LinkbarMergeState:
         layout = merge_scene.layout
         edges = self.latch_edges(merge_scene)
@@ -208,10 +216,10 @@ class LinkbarMergeEvaluator:
             latched_socket=merge_scene.latched_socket(),
             latch_edges=edges,
             pin_gaps=gaps,
-            lift_delta=0.0 if lift_delta is None else float(lift_delta),
-            lift_tested=lift_delta is not None,
-            max_lift_delta=layout.max_lift_delta,
-            min_free_lift=layout.min_free_lift,
+            travel=0.0 if travel is None else float(travel),
+            travel_tested=travel is not None,
+            max_travel=layout.max_travel,
+            min_free_travel=layout.min_free_travel,
             rotate_ok=bool(rotate_ok),
         )
 

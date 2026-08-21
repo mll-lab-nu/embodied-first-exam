@@ -977,7 +977,7 @@ class DiverterRouteBallSceneBuilder:
             mass=float(mech.mass),
             color=_list(flap.color),
             joint_name=str(mech.joint_name),
-            limit_rad=(-limit, limit) if limited else None,
+            joint_limit=(-limit, limit) if limited else None,
             damping=float(mech.joint_damping),
             friction=float(mech.joint_friction),
             armature=float(mech.joint_armature),

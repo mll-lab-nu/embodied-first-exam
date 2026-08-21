@@ -1,8 +1,8 @@
 """Turn the beam into the catch that belongs to component B, and check the frames merged.
 
 The episode docx 4.4 describes, end to end: the arm takes the beam's knob, sweeps
-one arc, the latch fires where the pin seats, the arm retreats, and the two frames
-are then pulled apart to see whether they really are one.
+one arc, the latch fires where the pin seats, the arm retreats, and component B's
+carriage is then pushed along its rail to see whether the two frames really are one.
 
 Two rules run the same episode (`run.oracle_mode`):
 
@@ -46,7 +46,7 @@ from topogym.primitives import (
 )
 from topogym.supervision import stop_before_physics
 from topogym.tasks import LINKBAR_SOCKETS, LinkbarMergeSceneBuilder
-from topogym.tasks.connectivity._lift_probe import lift_probe
+from topogym.tasks.connectivity._travel_probe import travel_probe
 from topogym.utils.franka import initialize_franka_controller
 from topogym.utils.recording import (
     apply_recording_camera_overrides,
@@ -122,7 +122,7 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
         manipulated=["linkbar"],
         runtime_attachment=False,
         runtime_set_pose=False,
-        success_checks=("target_error", "finger_qpos", "component_count", "lift_delta"),
+        success_checks=("target_error", "finger_qpos", "component_count", "travel"),
     )
 
     rule = make_linkbar_rule(cfg.run.oracle_mode)
@@ -204,24 +204,28 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
             )
 
         # The physical recheck runs with the arm clear and the mechanism left as the
-        # episode left it. Disarm capture first: the probe hauls component B around,
-        # and a latch still watching for a seat would be watching a moving target.
+        # episode left it. Disarm capture first: the probe runs the carriage down its
+        # rail, and a latch still watching for a seat would be watching a moving one.
         latch.auto_capture = False
-        status["phase"] = "lift_probe"
-        probe = cfg.task.lift_test
-        lift = lift_probe(
+        status["phase"] = "travel_probe"
+        probe = cfg.task.travel_test
+        travel = travel_probe(
             merge_scene.scene,
             merge_scene.component_b_entity(),
+            dof=merge_scene.carriage_dof,
+            link_idx=merge_scene.carriage_link_idx(),
+            direction=np.append(layout.rail_direction_world(), 0.0),
             mass=float(cfg.task.component_b.mass),
             force_scale=float(probe.force_scale),
             steps=int(probe.steps),
+            limit=layout.rail_travel,
             settle_steps=int(probe.settle_steps),
         )
 
     status["phase"] = "verify"
     state = evaluator.classify(
         merge_scene,
-        lift_delta=lift.peak_delta_z,
+        travel=travel.peak_travel,
         rotate_ok=bool(result is None or result.success),
     )
     info = state.to_info()
@@ -230,22 +234,23 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
         f"mode={cfg.run.oracle_mode} planned={plan.target_socket} "
         f"latched={info['latched_socket']} "
         f"component_count={info['component_count']} "
-        f"lift_delta={lift.peak_delta_z:+.4f}m lift_held={info['lift_held']} "
+        f"travel={travel.peak_travel:.4f}m of {travel.limit:.4f}m "
+        f"motion_blocked={info['motion_blocked']} "
         f"rotate_ok={info['rotate_ok']} "
         f"task_success={info['terminal']} failure={info['failure_label']}",
         flush=True,
     )
     if state.judge_disagrees:
         print(
-            "[warn] the constraint graph says merged but component B lifted anyway. "
+            "[warn] the constraint graph says merged but the carriage travelled anyway. "
             "That means the JUDGE is wrong, not the run: check the weld set and the "
             "link -> assembly mapping before touching the scene.",
             flush=True,
         )
     if state.probe_uninformative:
         print(
-            "[warn] component B neither merged nor lifted, so the pull was too weak "
-            "to judge with. Raise task.lift_test.force_scale.",
+            "[warn] the carriage neither merged nor travelled, so the push was too weak "
+            "to judge with. Raise task.travel_test.force_scale.",
             flush=True,
         )
     if cfg.run.verbose:
@@ -257,8 +262,9 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
         "component_count": int(state.component_count),
         "latched_socket": state.latched_socket,
         "planned_socket": plan.target_socket,
-        "lift_delta": float(lift.peak_delta_z),
-        "lift_held": bool(state.lift_held),
+        "travel": float(travel.peak_travel),
+        "travel_limit": float(travel.limit),
+        "motion_blocked": bool(state.motion_blocked),
         "rotate_ok": bool(state.rotate_ok),
         "target_error_deg": (
             None if result is None else float(np.rad2deg(result.target_error))

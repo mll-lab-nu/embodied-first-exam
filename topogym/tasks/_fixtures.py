@@ -287,7 +287,8 @@ def write_hinge_urdf(
     shapes: Sequence[HingeShape],
     mass: float,
     color,
-    limit_rad: tuple[float, float] | None = None,
+    sliding: bool = False,
+    joint_limit: tuple[float, float] | None = None,
     damping: float = 0.0,
     friction: float = 0.0,
     effort: float = 50.0,
@@ -302,11 +303,25 @@ def write_hinge_urdf(
     parts on the same rotating link (the flap inside the channel plus the lever
     the gripper turns it by, above the walls).
 
-    ``limit_rad`` picks the joint type: ``None`` writes a ``continuous`` joint,
-    a ``(lower, upper)`` pair writes a ``revolute`` one. The limit is load-bearing
-    rather than a safety rail -- a contact-driven sweep that overshoots is
-    stopped by it, so the seated pose is set by the joint rather than by how
-    accurately the arm tracked the arc.
+    ``sliding`` and ``joint_limit`` pick the joint type:
+
+    ===========  =================  ==================================
+    ``sliding``  ``joint_limit``    joint
+    ===========  =================  ==================================
+    False        ``None``           ``continuous``
+    False        ``(lo, hi)`` rad   ``revolute``
+    True         ``(lo, hi)`` m     ``prismatic`` (URDF requires limits)
+    ===========  =================  ==================================
+
+    The limit is load-bearing rather than a safety rail. On a hinge, a
+    contact-driven sweep that overshoots is stopped by it, so the seated pose is
+    set by the joint rather than by how accurately the arm tracked the arc; on a
+    slide, it is the carriage's travel.
+
+    The name says "hinge" because a hinge is all it wrote until
+    `linkbar_merge_components` needed a carriage on a rail. Renaming it (and
+    `HingeShape`, which `add_rigid_assembly` already uses for parts with no joint
+    at all) is worth doing the next time all three call sites are open anyway.
 
     ``mass`` is distributed over the bounding box of ``shapes``: the inertial
     origin is that box's centre and the tensor is a solid cuboid of the same
@@ -324,12 +339,17 @@ def write_hinge_urdf(
     )
 
     ax, ay, az = (float(v) for v in _to_container(axis))
-    if limit_rad is None:
+    if sliding and joint_limit is None:
+        raise ValueError(
+            "A prismatic joint needs a travel limit: URDF has no unbounded slide, "
+            "and a carriage that can run off its rail is not a rail."
+        )
+    if joint_limit is None:
         joint_type = "continuous"
         limit_xml = ""
     else:
-        joint_type = "revolute"
-        low, high = (float(v) for v in limit_rad)
+        joint_type = "prismatic" if sliding else "revolute"
+        low, high = (float(v) for v in joint_limit)
         limit_xml = (
             f'\n    <limit lower="{low:.9f}" upper="{high:.9f}" '
             f'effort="{float(effort):.6f}" velocity="{float(max_velocity):.6f}"/>'
@@ -365,7 +385,9 @@ def add_hinge_mechanism(
     mass: float,
     color,
     joint_name: str = "hinge_joint",
-    limit_rad: tuple[float, float] | None = None,
+    yaw_deg: float = 0.0,
+    sliding: bool = False,
+    joint_limit: tuple[float, float] | None = None,
     damping: float = 0.0,
     friction: float = 0.0,
     armature: float = 0.01,
@@ -374,9 +396,13 @@ def add_hinge_mechanism(
     """Write the URDF and add it to the scene; returns ``(entity, joint_name)``.
 
     ``fixed=True`` pins the BASE link to the world, which is what a pivot bolted
-    to a frame is; the joint still turns. ``convexify=False`` keeps the parts as
+    to a frame is; the joint still moves. ``convexify=False`` keeps the parts as
     the primitives they were written as, and ``recompute_inertia=False`` keeps
     the tensor `write_hinge_urdf` computed -- both matching `stacked_plate`.
+
+    ``yaw_deg`` turns the whole mechanism, base and axis together, which is how a
+    rail laid along some direction in the scene gets its shapes written in its own
+    frame instead of in world coordinates.
     """
 
     written = write_hinge_urdf(
@@ -387,7 +413,8 @@ def add_hinge_mechanism(
         shapes=shapes,
         mass=mass,
         color=color,
-        limit_rad=limit_rad,
+        sliding=sliding,
+        joint_limit=joint_limit,
         damping=damping,
         friction=friction,
     )
@@ -395,6 +422,7 @@ def add_hinge_mechanism(
         gs.morphs.URDF(
             file=str(written),
             pos=tuple(float(v) for v in _to_container(world_pos)),
+            euler=(0.0, 0.0, float(yaw_deg)),
             fixed=True,
             convexify=False,
             recompute_inertia=False,

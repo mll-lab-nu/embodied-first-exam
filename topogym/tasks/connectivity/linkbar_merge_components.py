@@ -2,7 +2,7 @@
 
 Scene: two sections of machine frame stand on the table. Component A is bolted
 down -- its base spine, its pivot column and an outrigger rail are all world-fixed.
-Component B is a free body resting in a pair of locating cleats. A connecting beam
+Component B is a carriage on a radial rail. A connecting beam
 is hinged to A's pivot column on a single vertical joint, so its end pin travels a
 horizontal circle. Two catches sit on that circle: B1 on B's inboard end, A2 on the
 end of A's own outrigger. The arm turns the beam by a knob and drops the pin into
@@ -305,16 +305,16 @@ class LinkbarMergeLayout:
         return float(np.rad2deg(self.capture_tolerance_xy / self.arm_radius))
 
     @property
-    def max_lift_delta(self) -> float:
-        """How far a merged component B may rise under the lift test."""
+    def max_travel(self) -> float:
+        """How far a merged carriage may run under the travel test."""
 
-        return float(self.cfg.success.max_lift_delta)
+        return float(self.cfg.success.max_travel)
 
     @property
-    def min_free_lift(self) -> float:
-        """How far an UNMERGED B must rise, for the probe to have any judging power."""
+    def min_free_travel(self) -> float:
+        """How far an UNMERGED carriage must run, for the probe to judge anything."""
 
-        return float(self.cfg.success.min_free_lift)
+        return float(self.cfg.success.min_free_travel)
 
     def seated(self, angle: float, socket: str) -> bool:
         """Is the pin inside this catch's capture window at joint angle ``angle``?"""
@@ -332,9 +332,36 @@ class LinkbarMergeLayout:
 
     @property
     def b_axis_angle(self) -> float:
-        """B's long axis: radially outward from the pivot, through its own catch."""
+        """B's rail: radially outward from the pivot, through its own catch.
+
+        Radial and not tangential, and that is a load-bearing choice rather than a
+        tidy one. Latched, the carriage is held by two constraints at once: the
+        beam pins its catch to a circle about A's pivot, and the rail pins it to a
+        straight line. A radial rail crosses that circle head-on, so the two meet
+        at a point and the carriage cannot move at all -- at the seat the beam even
+        lies ALONG the rail, taking the load as a straight push or pull. A rail
+        laid along the tangent would instead touch the circle, and the carriage
+        could slide with the beam's angle changing only to second order: a lock
+        that is soft exactly where it needs to be stiff.
+        """
 
         return self.socket_angle("b1")
+
+    @property
+    def rail_travel(self) -> float:
+        """How far the carriage can run from its seated position, outward only.
+
+        Outward only, because inward is where the beam is: a carriage free to run
+        toward the pivot could be stopped by fouling the beam, which would read as
+        a merge without being one.
+        """
+
+        return float(self.cfg.component_b.rail.travel)
+
+    def rail_direction_world(self) -> np.ndarray:
+        """Unit vector the carriage travels along, in world xy, pointing outward."""
+
+        return direction(self.b_axis_angle)
 
     def b_station_xy(self, station: float, offset: float = 0.0) -> np.ndarray:
         """A point ``station`` further out along B's axis, ``offset`` across it.
@@ -406,6 +433,8 @@ class LinkbarMergeScene:
     layout: LinkbarMergeLayout
     joint_name: str = "linkbar_joint"
     joint_dof: int = 0
+    carriage_joint_name: str = "carriage_joint"
+    carriage_dof: int = 0
     cameras: dict = field(default_factory=dict)
     tabletop: TabletopBaseScene | None = None
 
@@ -417,34 +446,38 @@ class LinkbarMergeScene:
     def component_b_entity(self):
         return self.manifest.get("component_b")
 
-    def socket_seat_xy(self, socket: str):
-        """Where this catch's seat is NOW, measured rather than derived.
-
-        Both catches are built with their seat at the assembly's own origin, so the
-        entity's position is the seat. That matters for B1: component B is a free
-        body, and the beam brushing a jaw on the way in can walk it several
-        millimetres (measured 12.8 mm on one driven sweep). Testing capture against
-        the position B was BUILT at would then fire the latch while B's real catch
-        was somewhere else -- welding two parts that are not engaged.
-
-        For A2 the two are the same number, because A never moves; reading both the
-        same way is what keeps that a fact rather than an assumption.
-        """
-
-        value = self.socket_entity(socket).get_pos()
-        return _as_numpy(value).reshape(-1, 3)[0][:2].astype(float)
-
     def socket_entity(self, socket: str):
-        """The body a latch at ``socket`` welds the beam to.
-
-        For B1 that is component B itself; for A2 it is the catch bolted to A's
-        outrigger, which is world-fixed. Both are single-link assemblies, so each
-        has exactly one link index to name in a weld.
-        """
+        """The entity a catch belongs to: component B, or A's fixed outrigger catch."""
 
         return self.manifest.get(
             "component_b" if str(socket) == "b1" else "socket_a2"
         )
+
+    def socket_link(self, socket: str):
+        """The link a latch at this catch welds to -- and whose pose IS its seat.
+
+        For B1 that is the CARRIAGE, not the rail it runs on. Component B's entity
+        is a two-link mechanism whose base is the rail, bolted to the table; a weld
+        to that base would tie the beam to the table and leave the carriage free to
+        travel, which is the exact opposite of merging. For A2 the assembly has one
+        link and the distinction does not arise.
+
+        Reading the seat off this link rather than off the layout also keeps the
+        latch honest about a catch that moves: the carriage runs when it is not
+        held, so a capture window measured against where it was BUILT would fire on
+        a seat that had already left.
+        """
+
+        entity = self.socket_entity(socket)
+        if str(socket) == "b1":
+            return entity.get_link(name="hinge_arm")
+        return entity.base_link
+
+    def socket_seat_xy(self, socket: str):
+        """Where this catch's seat is NOW, in world xy."""
+
+        value = self.socket_link(socket).get_pos(relative=False)
+        return _as_numpy(value).reshape(-1, 3)[0][:2].astype(float)
 
     # ------------------------------------------------------------------ joint
 
@@ -468,6 +501,33 @@ class LinkbarMergeScene:
 
         return self.layout.pin_center_xy(self.arm_angle())
 
+    # ------------------------------------------------------------- the carriage
+
+    def carriage_link_idx(self) -> int:
+        """Global link index of the moving half of B -- what a push has to land on."""
+
+        return self.socket_link_idx("b1")
+
+    def carriage_travel(self) -> float:
+        """How far the carriage has run from its seat, read off its own joint.
+
+        The joint's coordinate, not a world displacement: it is exactly the
+        quantity the rail bounds, so it needs no frame conversion and no threshold
+        beyond "did it move".
+        """
+
+        value = self.component_b_entity().get_dofs_position(
+            dofs_idx_local=[int(self.carriage_dof)]
+        )
+        return float(_as_numpy(value).reshape(-1)[0])
+
+    def set_carriage_travel(self, travel: float) -> None:
+        """Write the carriage's position. Episode reset and inspection only."""
+
+        self.component_b_entity().set_dofs_position(
+            [float(travel)], dofs_idx_local=[int(self.carriage_dof)], zero_velocity=True
+        )
+
     # --------------------------------------------------------- constraint graph
 
     def beam_link_idx(self) -> int:
@@ -476,7 +536,7 @@ class LinkbarMergeScene:
         return int(self.linkbar_entity().get_link(name="hinge_arm").idx)
 
     def socket_link_idx(self, socket: str) -> int:
-        return int(self.socket_entity(socket).base_link.idx)
+        return int(self.socket_link(socket).idx)
 
     def weld_pairs(self) -> set[tuple[int, int]]:
         """The live weld set, as normalised link-index pairs.
@@ -531,23 +591,27 @@ class LinkbarMergeSceneBuilder:
 
         self._add_component_a(scene, manifest, layout)
         self._add_socket_a2(scene, manifest, layout)
-        self._add_component_b(scene, manifest, layout)
-        self._add_locators(scene, manifest, layout)
+        self._add_rail(scene, manifest, layout)
+        carriage, carriage_joint = self._add_component_b(scene, manifest, layout)
         entity, joint_name = self._add_linkbar(scene, manifest, layout)
         self._add_swing_arc(scene, manifest, layout)
 
         tabletop_builder.finalize(tabletop)
-        joint_dof = hinge_joint_dof(entity, joint_name)
         merge_scene = LinkbarMergeScene(
             scene=scene,
             manifest=manifest,
             layout=layout,
             joint_name=joint_name,
-            joint_dof=joint_dof,
+            joint_dof=hinge_joint_dof(entity, joint_name),
+            carriage_joint_name=carriage_joint,
+            carriage_dof=hinge_joint_dof(carriage, carriage_joint),
             cameras=tabletop.cameras,
             tabletop=tabletop,
         )
         merge_scene.set_arm_angle(layout.init_angle)
+        # The carriage starts seated, which is where its catch sits on the pin's
+        # circle. Everything downstream measures travel from there.
+        merge_scene.set_carriage_travel(0.0)
         return merge_scene
 
     # ------------------------------------------------------------------ boxes
@@ -800,24 +864,32 @@ class LinkbarMergeSceneBuilder:
 
     # ------------------------------------------------------------ component B
 
-    def _add_component_b(self, scene, manifest, layout) -> None:
-        """B: the same catch, plus a frame section hanging off it, as ONE rigid body.
+    def _add_component_b(self, scene, manifest, layout) -> tuple[Any, str]:
+        """B: the same catch, plus a frame section, riding on a rail as ONE carriage.
 
-        One body and not an assembly of entities, because the lift test asks whether
-        B as a whole is held down. Separate entities would each answer for
-        themselves and the ones that were never welded would simply rise.
+        A carriage on a prismatic joint rather than a free body, and that is what
+        the physical recheck rests on. As a free body B had six degrees of freedom
+        and nothing but friction and a pair of cleats holding it: measured
+        2026-08-20, the pin brushing a jaw walked it 12.8 mm and then 14.5 mm out
+        of place, far enough that the latch was testing a seat that had moved. A
+        carriage has one degree of freedom and cannot be nudged out of any other.
 
-        B's frame is written in the catch's local frame, which is why the station
-        arithmetic below runs along local +/-y: the catch's own axes are set by
-        which way it faces round the circle, and B hangs off its radially outward
-        side either way.
+        It also turns the judge into a bounded reading. "Merged" now means the
+        carriage cannot travel, and "not merged" means it runs to its stop -- a
+        fixed distance, not a displacement whose size depends on how hard the probe
+        pushed. See `_travel_probe.py`.
+
+        The frame is written in the catch's local frame, which is why the station
+        arithmetic runs along local +/-y: the catch's own axes are set by which way
+        it faces round the circle, and the rail runs radially outward either way.
         """
 
         comp = self.task_cfg.component_b
         base = comp.base
+        mech = comp.mechanism
         # In the catch's frame, radially outward is +y when the beam reaches B1
         # counter-clockwise and -y when it reaches it clockwise -- the same mirror
-        # `socket_yaw_deg` applies. B is built along that direction.
+        # `socket_yaw_deg` applies. The carriage is built, and travels, that way.
         out = layout.approach_sign("b1")
         start = layout.socket_pad_half_width + float(base.gap)
         base_length = float(base.length)
@@ -875,53 +947,68 @@ class LinkbarMergeSceneBuilder:
 
         centre = layout.socket_center_xy("b1")
         asset_root = resolve_mesh_dir("runs/generated_meshes/linkbar_merge_components")
-        add_rigid_assembly(
+        return add_hinge_mechanism(
             scene,
             manifest,
             name="component_b",
             urdf_path=asset_root / "component_b.urdf",
             world_pos=layout.position_to_world((centre[0], centre[1], 0.0)),
             yaw_deg=layout.socket_yaw_deg("b1"),
+            # Local +y is radially outward for this catch's handedness, and the
+            # travel runs from the seat (0) outward only.
+            axis=(0.0, out, 0.0),
+            sliding=True,
+            joint_limit=(0.0, layout.rail_travel),
             shapes=shapes,
             mass=float(comp.mass),
             color=_list(comp.color),
-            fixed=False,
+            joint_name=str(mech.joint_name),
+            damping=float(mech.joint_damping),
+            friction=float(mech.joint_friction),
+            armature=float(mech.joint_armature),
             contact_friction=float(comp.contact_friction),
         )
 
-    def _add_locators(self, scene, manifest, layout) -> None:
-        """Two fixed cleats against B's outboard end.
+    def _add_rail(self, scene, manifest, layout) -> None:
+        """The rail the carriage rides, and its end stop.
 
-        A workstation locates a part it expects to be lifted out again; these do the
-        same job here and are the reason a glancing contact from the pin does not
-        walk B out of reach of its own catch. They constrain B sideways ONLY -- the
-        lift test still has a clear path straight up, which is the whole point of
-        judging by lifting.
+        Visual only, like `stacked_plate`'s rod: the real constraint is the
+        prismatic joint, and rail beams that also collided would fight it. What
+        they are for is making the carriage's one degree of freedom legible --
+        without them a frame that slides along an invisible line reads as a bug.
         """
 
-        locators = self.task_cfg.component_b.locators
-        if not bool(locators.enabled):
+        rail = self.task_cfg.component_b.rail
+        if not bool(rail.enabled):
             return
-        base = self.task_cfg.component_b.base
-        outboard = (
-            layout.socket_pad_half_width
-            + float(base.gap)
-            + float(base.length)
-            + 0.5 * float(locators.size[0])
-            + float(locators.clearance)
-        )
         angle = layout.b_axis_angle
-        for sign, name in ((1.0, "b_locator_left"), (-1.0, "b_locator_right")):
-            xy = layout.b_station_xy(outboard, sign * float(locators.spacing))
+        yaw = float(np.rad2deg(angle))
+        base = self.task_cfg.component_b.base
+        inner = layout.socket_pad_half_width + float(base.gap)
+        length = float(base.length) + layout.rail_travel + 2.0 * float(rail.overhang)
+        centre_station = inner - float(rail.overhang) + 0.5 * length
+        beam_size = _list(rail.beam_size)
+        for sign, tag in ((1.0, "left"), (-1.0, "right")):
+            xy = layout.b_station_xy(centre_station, sign * float(rail.spacing))
             self._box(
-                scene,
-                manifest,
-                name,
-                layout.position_to_world((xy[0], xy[1], 0.5 * float(locators.size[2]))),
-                _list(locators.size),
-                locators.color,
-                yaw_deg=float(np.rad2deg(angle)),
+                scene, manifest, f"b_rail_{tag}",
+                layout.position_to_world((xy[0], xy[1], 0.5 * beam_size[2])),
+                (length, beam_size[1], beam_size[2]),
+                rail.color,
+                yaw_deg=yaw,
+                collision=False,
             )
+        stop_size = _list(rail.stop_size)
+        stop_station = inner + float(base.length) + layout.rail_travel + 0.5 * stop_size[0]
+        xy = layout.b_station_xy(stop_station)
+        self._box(
+            scene, manifest, "b_rail_stop",
+            layout.position_to_world((xy[0], xy[1], 0.5 * stop_size[2])),
+            stop_size,
+            rail.stop_color,
+            yaw_deg=yaw,
+            collision=False,
+        )
 
     # --------------------------------------------------------------- the beam
 
@@ -1024,7 +1111,7 @@ class LinkbarMergeSceneBuilder:
             mass=float(mech.mass),
             color=_list(beam.color),
             joint_name=str(mech.joint_name),
-            limit_rad=None,
+            joint_limit=None,
             damping=float(mech.joint_damping),
             friction=float(mech.joint_friction),
             armature=float(mech.joint_armature),
