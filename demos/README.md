@@ -6,7 +6,8 @@
 
 | 目录 | 任务 | demo |
 | --- | --- | --- |
-| `entangle/` | untangle_continuous | `untangle_continuous_physical_pinch_demo`（主力）、`untangle_continuous_fem_demo`、`untangle_continuous_inspect_demo` |
+| `entangle/` | swap_crossing_sign | `swap_crossing_sign_physical_pinch_demo` |
+| | untangle_continuous | `untangle_continuous_physical_pinch_demo`（主力）、`untangle_continuous_fem_demo`、`untangle_continuous_inspect_demo` |
 | | untangle（离散版） | `untangle_physical_handle_demo` |
 | `connectivity/` | stacked_plate | `stacked_plate_physical_rotate_demo`、`stacked_plate_inspect_demo` |
 | `routing/` | cable_routing | `cable_routing_physical_handle_demo` |
@@ -26,6 +27,11 @@ python -m demos.entangle.untangle_continuous_physical_pinch_demo run.viewer=true
 python -m demos.entangle.untangle_continuous_physical_pinch_demo task.rope.mesh.segment_length=0.004
 python -m demos.entangle.untangle_continuous_physical_pinch_demo --cfg job   # 只打印解析后的配置
 python -m demos.entangle.untangle_continuous_physical_pinch_demo -m run.seed=0,1,2   # 扫参
+
+swap_crossing_sign 另有一个选择第二步压哪根绳的开关，两个取值构成它的 contrast pair：
+```bash
+python -m demos.entangle.swap_crossing_sign_physical_pinch_demo                          # oracle：压另一根，符号翻转
+python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=restack_same  # 对照：压回同一根，预期失败
 ```
 
 覆盖整组配置用组名：`env_configs@env=world_tabletop_v1`、`recording=hq`、
@@ -37,6 +43,7 @@ python -m demos.entangle.untangle_continuous_physical_pinch_demo -m run.seed=0,1
 
 | demo | 主配置 | 运行模式配置 |
 | --- | --- | --- |
+| `entangle/swap_crossing_sign_physical_pinch_demo` | `configs/swap_crossing_sign_pinch.yaml` | `configs/run_configs/swap_crossing_sign.yaml` |
 | `entangle/untangle_continuous_physical_pinch_demo` | `configs/untangle_continuous_pinch.yaml` | `configs/run_configs/untangle_continuous.yaml` |
 | `entangle/untangle_continuous_fem_demo` | `configs/untangle_continuous_fem.yaml` | `configs/run_configs/untangle_continuous_fem.yaml` |
 | `entangle/untangle_continuous_inspect_demo` | `configs/untangle_continuous_inspect.yaml` | `configs/run_configs/untangle_continuous_inspect.yaml` |

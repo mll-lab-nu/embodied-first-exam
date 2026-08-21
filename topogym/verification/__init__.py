@@ -46,6 +46,11 @@ from .stacked_plate_verifier import (
     StackedPlatePuzzleEvaluator,
     StackedPlatePuzzleState,
 )
+from .swap_crossing_sign_verifier import (
+    SwapCrossingSignPuzzleEvaluator,
+    SwapCrossingSignPuzzleState,
+    signed_crossings,
+)
 from .swap_verifier import SwapPuzzleEvaluator, SwapPuzzleState, SwapSuccessChecker
 from .untangle_continuous_verifier import (
     GeoCrossing,
@@ -80,6 +85,9 @@ __all__ = [
     "SwapPuzzleEvaluator",
     "SwapPuzzleState",
     "SwapSuccessChecker",
+    "SwapCrossingSignPuzzleEvaluator",
+    "SwapCrossingSignPuzzleState",
+    "signed_crossings",
     "UntangleContinuousPuzzleEvaluator",
     "UntangleContinuousPuzzleState",
     "count_crossings",

@@ -43,6 +43,11 @@ from .stacked_plate_planner import (
     plan_stacked_plate_rotation,
 )
 from .subgoal import PlannedSubgoal
+from .swap_crossing_sign_planner import (
+    SwapCrossingSignRule,
+    make_swap_crossing_sign_rule,
+    plan_cover_move,
+)
 from .swap_planner import SwapMoveCommand, plan_swap_move
 from .untangle_planner import UntangleEndpointMoveCommand, plan_next_untangle_move
 from .untangle_continuous_planner import (
@@ -72,6 +77,7 @@ __all__ = [
     "RopeWindingRouteCommand",
     "StackedPlateRotateCommand",
     "SwapMoveCommand",
+    "SwapCrossingSignRule",
     "UntangleContinuousMoveCommand",
     "UntangleEndpointMoveCommand",
     "WaypointPlan",
@@ -90,6 +96,8 @@ __all__ = [
     "plan_peeling_single_lift",
     "plan_rope_winding_route",
     "plan_stacked_plate_rotation",
+    "make_swap_crossing_sign_rule",
+    "plan_cover_move",
     "plan_swap_move",
     "plan_next_untangle_continuous_move",
     "plan_next_untangle_move",

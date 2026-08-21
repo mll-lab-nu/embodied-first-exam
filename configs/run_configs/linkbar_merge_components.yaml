@@ -43,3 +43,7 @@ travel_probe: false
 # 跑判据：读约束图求 component_count，并与提起测试的结果对表。
 # 与 travel_probe 一起开才有物理层读数；单开只报约束图那一半。
 classify: false
+
+# 判定完成后再步进多少步。纯粹为了录像：终态不停顿的话，视频在结论出现的那一帧就
+# 结束了，看的人来不及看清最后是什么样子。100 步 = 1 秒。
+final_hold_steps: 100

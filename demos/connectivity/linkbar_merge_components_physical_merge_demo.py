@@ -272,7 +272,13 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
         "finger_qpos": None if result is None else float(result.finger_qpos),
         "judge_disagrees": bool(state.judge_disagrees),
     }
+    # Hold the settled scene for the recording. Nothing is measured here -- the
+    # verdict is already in -- but a video that cuts on the frame the verdict lands
+    # gives the viewer nothing to look at.
     status["phase"] = "done"
+    for _ in range(int(getattr(cfg.run, "final_hold_steps", 0) or 0)):
+        merge_scene.scene.step()
+
     if state.is_terminal:
         return EpisodeResult.ok(
             episode_key, metrics=metrics, export_ready=bool(state.rotate_ok)

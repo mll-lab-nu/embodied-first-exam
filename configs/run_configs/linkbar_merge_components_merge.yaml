@@ -15,7 +15,7 @@ defaults:
 # tests/check_linkbar_planner.py，这里是它在真实物理上的复核。
 oracle_mode: oracle
 
-# full        : 完整 episode（决策 → 转+扣 → 退刀 → 提起测试 → 判定）
+# full        : 完整 episode（决策 → 转+扣 → 退刀 → 行程测试 → 判定）
 # rotate_only : 只跑到扫掠结束，不判定。原语自身的验收档（到位角、跟随误差、指位）
 stage: full
 
@@ -23,3 +23,7 @@ stage: full
 # 规则本身仍是 oracle——演示的是「正确的计划 + 执行偏差」。
 # 超过捕获窗（5.06°）应当扣不上，落在窗内应当照样扣上。
 target_offset_deg: 0.0
+
+# 判定完成后再步进多少步。纯粹为了录像：终态不停顿的话，视频在结论出现的那一帧就
+# 结束了，看的人来不及看清最后是什么样子。100 步 = 1 秒。
+final_hold_steps: 100

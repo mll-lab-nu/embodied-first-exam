@@ -423,7 +423,11 @@ def main(cfg: DictConfig) -> None:
                 probe = run_travel(cfg, merge_scene, state) if cfg.run.travel_probe else None
                 if cfg.run.classify:
                     run_classify(cfg, merge_scene, probe)
+        # Hold the settled scene for the recording, for the same reason the merge
+        # demo does: a video that stops on the last measured frame shows nothing.
         state["phase"] = "done"
+        for _ in range(int(getattr(cfg.run, "final_hold_steps", 0) or 0)):
+            merge_scene.scene.step()
 
     print_recording_saved(cfg.recording)
     while cfg.run.keep_open and show_viewer:
