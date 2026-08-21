@@ -1,0 +1,84 @@
+# tests/closed_band_spike.py 的运行模式参数与场景几何。
+#
+# 材料与接触参数不在这里 —— 它们在 task 配置的 rope.fem 块里，单源 prefabs.rope_fem，
+# 用点路径覆盖即可扫参：
+#   task.rope.fem.E=50000.0
+#   task.rope.fem.friction_mu=0.6
+#   task.rope.fem.contact_d_hat=0.003
+#   task.rope.fem.rest_shape=straight
+# 网格分辨率同理：task.rope.mesh.segment_length / radial_segments，
+# 取值理由见 configs/closed_band_spike.yaml。
+
+defaults:
+  - default
+  - _self_
+
+# 做哪一项测试。四项按依赖排序，前一项不过不跑后一项。
+#   mesh   : 只建网格并写 OBJ，不进求解器。读数与
+#            tests/check_closed_band_mesh.py 相同，用于在 GPU 机器上复核。
+#   settle : 载入 FEM+IPC 并沉降平整 O 形。看四面体化是否通过、是否收敛、带是否脱销。
+#   hold   : 沉降后静置，逐段测自交叉数。**本轮的关键判据** ——
+#            8 字若无外力自行张开成 O，则该任务不需要机械臂即自解。
+#   flip   : 驱动下瓣绕竖直轴转半圈。正确一侧自交叉 1->0，错误一侧 1->2。
+test: settle
+
+# 时间步。本脚本自建场景，不走 env 的 tabletop 预设：
+# IPC coupler 每个 substep 推进一次自己的世界，却按整个 sim.dt 配置
+# （ipc_coupler/utils.py:93），即它按 substeps=1 设计。
+# 锁定的 tabletop 预设是 substeps=4，这里不用。
+dt: 0.01
+
+# 沉降上限步数，以及收敛判据（单步最大顶点位移低于该值即认为收敛，米）。
+settle_steps: 400
+settle_tol: 0.00005
+
+# hold 测试的静置步数与采样间隔。500 步 @ dt=0.01 约 5 秒。
+hold_steps: 500
+hold_sample_every: 25
+
+# flip 测试：转哪一边、转多少步、转完后再静置多少步。
+#   correct : 与初态 band.half_turns 反向，预期自交叉 1 -> 0
+#   wrong   : 与初态同向再加半圈，预期自交叉 1 -> 2
+flip_side: correct
+drive_steps: 400
+flip_settle_steps: 200
+
+# 下瓣抓取带的选取半径（米）。取到能覆盖整个下端半圆帽。
+band_radius: 0.020
+
+# 是否把顶部半圆帽钉在挂销上。默认关 —— 带靠接触挂住是 settle/hold 要验的内容之一。
+# 打开只用于把「带脱销」与「8 字自解」两种失败分开。
+pin_top: false
+
+# 场景几何。docx 3.3 的壁面挂销 + 闭合弹性带。
+# 坐标为 task 系（原点在桌面中心，z=0 为桌面）；本脚本用一个过原点的地面平面
+# 代替桌子，因此 task z 与 world z 相同。
+band:
+  # 带的闭合周长（米）。与扭转圈数无关 —— 扭转后直段变成螺旋，
+  # 生成器解出直段高度使周长守恒（world/closed_band.py 的 hanging_band_centerline）。
+  perimeter: 0.36
+  # 上下两个半圆帽的半径（米），即带的瓣宽的一半。
+  # 下限由挂销决定：loop_radius >= peg_radius + rope.radius + contact_d_hat
+  #             = 0.015 + 0.004 + 0.002 = 0.021。取 0.022 留 1mm 余量。
+  # 上限由夹爪决定：瓣宽 2*loop_radius = 44mm，指垫要进得去。
+  loop_radius: 0.022
+  # 挂销轴心（米）。z=0.20 下生成器给出：O 形最低点 z=0.067、8 字最低点 z=0.095，
+  # 都在工作空间 z 范围 [0.03, 0.40] 内且离地面有余量。
+  peg_center: [0.02, 0.0, 0.20]
+  # 挂销半径与长度（米）。轴沿 x（面板法向），带挂在其中段。
+  peg_radius: 0.015
+  peg_length: 0.030
+  # 要拧到的半圈数。**带按平整 O 形出生，8 字由求解器拧出来**，理由见
+  # tests/closed_band_spike.py 的模块文档（直杆静止形状会把接缝扭转抄进静止态）。
+  # +1 / -1 是 docx 3.3 的两种手性。
+  half_turns: 1.0
+  # 自交叉合并半径（米）。一处物理交叉跨若干中心线段，不合并会被逐段重复计数。
+  # 取值量级同 untangle_continuous 的 success.crossing_merge_radius（0.012）。
+  crossing_merge_radius: 0.012
+  # 壁面。挂销装在其上，带悬在它前方（-x 侧，朝机械臂）。
+  # 高度取 0.30 —— 高于 bar_through_hole 的 0.150 上限（那条上限来自默认 home
+  # 指尖 task z=0.1608）。本脚本不接机械臂，接臂时需配 task-local 抬高 home。
+  panel_x: 0.045
+  panel_thickness: 0.010
+  panel_width: 0.300
+  panel_top_z: 0.300

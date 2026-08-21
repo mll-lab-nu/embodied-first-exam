@@ -1,12 +1,12 @@
 """Linkbar Merge Components (docx 4.4): swing the beam into the socket that belongs to the OTHER frame.
 
-Scene: two sections of machine frame stand on the table. Component A is bolted
-down -- its base spine, its pivot column and an outrigger rail are all world-fixed.
-Component B is a carriage on a radial rail. A connecting beam
-is hinged to A's pivot column on a single vertical joint, so its end pin travels a
-horizontal circle. Two catches sit on that circle: B1 on B's inboard end, A2 on the
-end of A's own outrigger. The arm turns the beam by a knob and drops the pin into
-one of them, where a latch welds it.
+Scene: a bolted-down swing-arm station, and a cart parked on a straight rail
+beside it. Component A is a pivot column and one plate reaching out to its own
+catch, A2, and none of it moves. Component B is the cart: it rides the rail on a
+single sliding joint and carries catch B1 at its front. A connecting beam is hinged
+to A's pivot column on a vertical joint, so its end pin travels a horizontal circle,
+and both catches sit on that circle. The arm turns the beam by a knob and drops the
+pin into one of them, where a latch welds it. Into B1, the cart can no longer roll.
 
 **The two catches are the same part.** `_socket_shapes` is called once and its
 result is used for both, so "identical socket" is a property of the code rather
@@ -348,6 +348,32 @@ class LinkbarMergeLayout:
         return self.socket_angle("b1")
 
     @property
+    def socket_pad_lift(self) -> float:
+        """How far a catch's underside sits above the table.
+
+        Not zero, because B1's catch rides on the cart and a pad flat on the table
+        would scrape along it. A2 reaches the same height by sitting on A's 4 mm
+        outrigger plate, so both catches present their slot at exactly the same
+        height -- which they must, since there is one pin and it is at one height.
+        What differs is what is UNDER each: A's plate, or the cart. That is the
+        ownership cue, and it is the only thing separating the two.
+        """
+
+        return float(self.cfg.socket.pad_lift)
+
+    @property
+    def rail_top_z(self) -> float:
+        """Top of the rails, which is also the cart deck's underside."""
+
+        return float(_list(self.cfg.component_b.rail.section)[1])
+
+    @property
+    def cart_start(self) -> float:
+        """Where the cart's deck begins, measured outward from its catch's seat."""
+
+        return self.socket_pad_half_width + float(self.cfg.component_b.cart.gap)
+
+    @property
     def rail_travel(self) -> float:
         """How far the carriage can run from its seated position, outward only.
 
@@ -656,24 +682,19 @@ class LinkbarMergeSceneBuilder:
     # ------------------------------------------------------------ component A
 
     def _add_component_a(self, scene, manifest, layout) -> None:
-        """A's bolted-down frame: base spine back toward the arm, outrigger out to A2.
+        """A: a pivot column and one plate reaching out to its own catch.
 
-        Both rails start at the pivot, so the pivot column, the spine and the
-        outrigger read as one welded frame -- which is exactly the claim the task
-        makes about A2 belonging to A.
+        Two pieces plus the catch, and that is the whole fixed assembly. The plate
+        runs from the pivot to A2 because that is what makes A2 visibly part of A --
+        the claim the task turns on -- and it is 4 mm thick because that is exactly
+        what lifts A2's catch to `socket_pad_lift`, the height B1's catch reaches by
+        riding on the cart.
         """
 
         comp = self.task_cfg.component_a
-        spine = comp.spine
-        self._rail(
-            scene, manifest, layout, "a_spine",
-            layout.spine_angle,
-            float(spine.length), float(spine.width), float(spine.thickness),
-            spine.color,
-        )
-        # The outrigger stops where the catch pad starts, so the two plates butt
-        # rather than overlap: two coplanar top faces would z-fight.
         outrigger = comp.outrigger
+        # The plate stops where the catch pad starts, so the two butt rather than
+        # overlap: two coplanar top faces would z-fight.
         self._rail(
             scene, manifest, layout, "a_outrigger",
             layout.a_outrigger_angle,
@@ -681,9 +702,6 @@ class LinkbarMergeSceneBuilder:
             float(outrigger.width), float(outrigger.thickness),
             outrigger.color,
         )
-        # The fixed column the beam turns on. Its top stops just under the beam, so
-        # the rotating shaft above it is visibly the moving half of the joint --
-        # and the load path from beam to table is a real one.
         column = comp.pivot_column
         manifest.add(
             "a_pivot_column",
@@ -698,26 +716,6 @@ class LinkbarMergeSceneBuilder:
                 ),
                 surface=materials.plastic("fixture", _list(column.color)),
                 name="a_pivot_column",
-            ),
-        )
-        # An upright at the spine's far end. It stands outside the pin's circle, so
-        # it dresses the frame without ever being in the beam's way, and it is what
-        # makes A read as a frame section rather than as a plate on the table.
-        station = float(spine.length) - float(spine.post_inset)
-        xy = layout.pivot_xy + station * direction(layout.spine_angle)
-        manifest.add(
-            "a_spine_post",
-            scene.add_entity(
-                gs.morphs.Cylinder(
-                    pos=tuple(layout.position_to_world(
-                        (xy[0], xy[1], 0.5 * float(spine.post_height))
-                    )),
-                    radius=float(spine.post_radius),
-                    height=float(spine.post_height),
-                    fixed=True,
-                ),
-                surface=materials.plastic("fixture", _list(spine.color)),
-                name="a_spine_post",
             ),
         )
 
@@ -764,6 +762,7 @@ class LinkbarMergeSceneBuilder:
         back = float(sock.jaw_arc_back)
         mouth = float(sock.jaw_arc_mouth)
         segments = max(1, int(sock.jaw_segments))
+        lift = layout.socket_pad_lift
 
         def arc_point(angle: float) -> np.ndarray:
             """Where the slot centreline is, ``angle`` radians round from the seat."""
@@ -790,7 +789,7 @@ class LinkbarMergeSceneBuilder:
                 HingeShape(
                     kind="box",
                     size=(length, pad_width, pad_thickness),
-                    origin=(centre[0], centre[1], 0.5 * pad_thickness),
+                    origin=(centre[0], centre[1], lift + 0.5 * pad_thickness),
                     rpy=(0.0, 0.0, yaw),
                     color=_list(sock.color),
                 )
@@ -801,7 +800,7 @@ class LinkbarMergeSceneBuilder:
                     HingeShape(
                         kind="box",
                         size=(length, jaw_thickness, jaw_height),
-                        origin=(jaw[0], jaw[1], pad_thickness + 0.5 * jaw_height),
+                        origin=(jaw[0], jaw[1], lift + pad_thickness + 0.5 * jaw_height),
                         rpy=(0.0, 0.0, yaw),
                         color=_list(sock.color),
                     )
@@ -815,7 +814,8 @@ class LinkbarMergeSceneBuilder:
             HingeShape(
                 kind="box",
                 size=(float(sock.back_stop_thickness), pad_width, jaw_height),
-                origin=(stop_centre[0], stop_centre[1], pad_thickness + 0.5 * jaw_height),
+                origin=(stop_centre[0], stop_centre[1],
+                        lift + pad_thickness + 0.5 * jaw_height),
                 rpy=(0.0, 0.0, -sign * stop_angle),
                 color=_list(sock.accent_color),
             )
@@ -834,7 +834,7 @@ class LinkbarMergeSceneBuilder:
                 HingeShape(
                     kind="box",
                     size=(lip_length, jaw_thickness, jaw_height),
-                    origin=(lip[0], lip[1], pad_thickness + 0.5 * jaw_height),
+                    origin=(lip[0], lip[1], lift + pad_thickness + 0.5 * jaw_height),
                     rpy=(0.0, 0.0, -sign * lip_angle
                          + side * float(np.deg2rad(float(sock.lip_flare_deg)))),
                     color=_list(sock.accent_color),
@@ -865,83 +865,64 @@ class LinkbarMergeSceneBuilder:
     # ------------------------------------------------------------ component B
 
     def _add_component_b(self, scene, manifest, layout) -> tuple[Any, str]:
-        """B: the same catch, plus a frame section, riding on a rail as ONE carriage.
+        """B: a cart on a rail, carrying its catch at the front. One rigid body.
 
         A carriage on a prismatic joint rather than a free body, and that is what
         the physical recheck rests on. As a free body B had six degrees of freedom
         and nothing but friction and a pair of cleats holding it: measured
-        2026-08-20, the pin brushing a jaw walked it 12.8 mm and then 14.5 mm out
-        of place, far enough that the latch was testing a seat that had moved. A
-        carriage has one degree of freedom and cannot be nudged out of any other.
+        2026-08-20, the pin brushing a jaw walked it 12.8 mm and then 14.5 mm out of
+        place, far enough that the latch was testing a seat that had moved. A cart
+        has one degree of freedom and cannot be nudged out of any other -- measured
+        after the change, 0.00 mm.
 
-        It also turns the judge into a bounded reading. "Merged" now means the
-        carriage cannot travel, and "not merged" means it runs to its stop -- a
-        fixed distance, not a displacement whose size depends on how hard the probe
-        pushed. See `_travel_probe.py`.
+        It also turns the judge into a bounded reading: "merged" means the cart
+        cannot roll, "not merged" means it runs to its stop, a fixed distance rather
+        than a displacement whose size depends on how hard the probe pushed
+        (measured 0.0000 m against 0.1002 m). See `_travel_probe.py`.
 
-        The frame is written in the catch's local frame, which is why the station
+        Three shapes plus the catch. The catch sits at the front at table height,
+        the deck spans the rails just above it, and the body sits on the deck -- so
+        in side view the cart is one continuous stack from rail top upward, which is
+        what makes "it rides the rail" readable rather than something to be inferred.
+
+        Everything is written in the catch's local frame, which is why the station
         arithmetic runs along local +/-y: the catch's own axes are set by which way
         it faces round the circle, and the rail runs radially outward either way.
         """
 
         comp = self.task_cfg.component_b
-        base = comp.base
+        cart = comp.cart
         mech = comp.mechanism
         # In the catch's frame, radially outward is +y when the beam reaches B1
         # counter-clockwise and -y when it reaches it clockwise -- the same mirror
-        # `socket_yaw_deg` applies. The carriage is built, and travels, that way.
+        # `socket_yaw_deg` applies. The cart is built, and travels, that way.
         out = layout.approach_sign("b1")
-        start = layout.socket_pad_half_width + float(base.gap)
-        base_length = float(base.length)
-        base_centre = start + 0.5 * base_length
+        start = layout.cart_start
+        deck_length = float(cart.deck_length)
+        deck_thickness = float(cart.deck_thickness)
+        deck_bottom = layout.rail_top_z
+        body_inset = float(cart.body_inset)
 
         shapes = list(self._socket_shapes(layout, out))
         shapes.append(
             HingeShape(
                 kind="box",
-                size=(float(base.width), base_length, float(base.thickness)),
-                origin=(0.0, out * base_centre, 0.5 * float(base.thickness)),
+                size=(float(cart.deck_width), deck_length, deck_thickness),
+                origin=(0.0, out * (start + 0.5 * deck_length),
+                        deck_bottom + 0.5 * deck_thickness),
                 color=_list(comp.color),
             )
         )
-        post = comp.post
-        post_height = float(post.height)
-        stations = _list(post.stations)
-        for station in stations:
-            for sign in (1.0, -1.0):
-                shapes.append(
-                    HingeShape(
-                        kind="box",
-                        size=(float(post.size), float(post.size), post_height),
-                        origin=(sign * float(post.spacing), out * (start + station),
-                                float(base.thickness) + 0.5 * post_height),
-                        color=_list(comp.color),
-                    )
-                )
-        rail = comp.top_rail
-        rail_top_z = float(base.thickness) + post_height
-        rail_length = abs(stations[-1] - stations[0]) + float(post.size)
-        rail_centre = start + 0.5 * (stations[0] + stations[-1])
-        for sign in (1.0, -1.0):
-            shapes.append(
-                HingeShape(
-                    kind="box",
-                    size=(float(rail.thickness), rail_length, float(rail.height)),
-                    origin=(sign * float(post.spacing), out * rail_centre,
-                            rail_top_z + 0.5 * float(rail.height)),
-                    color=_list(rail.color),
-                )
-            )
-        # Cross brace between the two side frames, at the outboard end only: an
-        # inboard one would sit over the pin's approach. Visual, like all dressing.
+        body_height = float(cart.body_height)
         shapes.append(
             HingeShape(
                 kind="box",
-                size=(2.0 * float(post.spacing), float(rail.thickness), float(rail.height)),
-                origin=(0.0, out * (start + stations[-1]),
-                        rail_top_z + 0.5 * float(rail.height)),
-                color=_list(rail.color),
-                collide=False,
+                size=(float(cart.deck_width) - 2.0 * body_inset,
+                      deck_length - 2.0 * body_inset,
+                      body_height),
+                origin=(0.0, out * (start + 0.5 * deck_length),
+                        deck_bottom + deck_thickness + 0.5 * body_height),
+                color=_list(cart.body_color),
             )
         )
 
@@ -970,36 +951,40 @@ class LinkbarMergeSceneBuilder:
         )
 
     def _add_rail(self, scene, manifest, layout) -> None:
-        """The rail the carriage rides, and its end stop.
+        """Two straight rails under the cart, and a stop at the far end.
 
         Visual only, like `stacked_plate`'s rod: the real constraint is the
-        prismatic joint, and rail beams that also collided would fight it. What
-        they are for is making the carriage's one degree of freedom legible --
-        without them a frame that slides along an invisible line reads as a bug.
+        prismatic joint, and rails that also collided would fight it. What they are
+        for is making the cart's one degree of freedom legible -- a body sliding
+        along an invisible line reads as a bug rather than as a mechanism.
+
+        They start at the cart's own front, not further in: reaching under the catch
+        would put a rail through it.
         """
 
         rail = self.task_cfg.component_b.rail
         if not bool(rail.enabled):
             return
+        cart = self.task_cfg.component_b.cart
         angle = layout.b_axis_angle
         yaw = float(np.rad2deg(angle))
-        base = self.task_cfg.component_b.base
-        inner = layout.socket_pad_half_width + float(base.gap)
-        length = float(base.length) + layout.rail_travel + 2.0 * float(rail.overhang)
-        centre_station = inner - float(rail.overhang) + 0.5 * length
-        beam_size = _list(rail.beam_size)
+        width, height = _list(rail.section)
+        inner = layout.cart_start
+        length = float(cart.deck_length) + layout.rail_travel + float(rail.overhang)
+        centre_station = inner + 0.5 * length
+        half_gauge = 0.5 * float(rail.gauge)
         for sign, tag in ((1.0, "left"), (-1.0, "right")):
-            xy = layout.b_station_xy(centre_station, sign * float(rail.spacing))
+            xy = layout.b_station_xy(centre_station, sign * half_gauge)
             self._box(
                 scene, manifest, f"b_rail_{tag}",
-                layout.position_to_world((xy[0], xy[1], 0.5 * beam_size[2])),
-                (length, beam_size[1], beam_size[2]),
+                layout.position_to_world((xy[0], xy[1], 0.5 * height)),
+                (length, width, height),
                 rail.color,
                 yaw_deg=yaw,
                 collision=False,
             )
         stop_size = _list(rail.stop_size)
-        stop_station = inner + float(base.length) + layout.rail_travel + 0.5 * stop_size[0]
+        stop_station = inner + length + 0.5 * stop_size[0]
         xy = layout.b_station_xy(stop_station)
         self._box(
             scene, manifest, "b_rail_stop",

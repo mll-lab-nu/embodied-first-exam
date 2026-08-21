@@ -1,0 +1,46 @@
+# tests/closed_band_spike.py 的主配置。
+#
+# env 用 world_tabletop_v1 而非 fem 版：本脚本自建场景（一个地面 + 壁面 + 挂销 +
+# 闭合带），只从 env 取 genesis 后端设置，不用 tabletop 预设的 sim 参数。
+# 与 configs/fem_ipc_rope_spike.yaml 同一套做法。
+#
+# task 借用 untangle_continuous 的配置只为拿到 rope 块（材料单源 prefabs.rope_fem，
+# 可用 task.rope.fem.* 点路径扫参）。场景几何在 run.band 里，与该任务无关。
+
+defaults:
+  - config
+  - override task_configs@task: untangle_continuous_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: closed_band_spike
+  - _self_
+
+# world_tabletop_v1 的 backend 是 cpu。FEM+IPC 只在 GPU 上有意义，在这里钉住。
+env:
+  genesis:
+    backend: gpu
+
+task:
+  rope:
+    fem:
+      # 挂销的根部刻意埋进面板里（销 x 跨 [0.015, 0.045]，面板前面在 0.040）。
+      # libuipc 的零相交初始态检查会拒绝这种静态互嵌，而静态体互嵌没有自由度。
+      # 与 cable_routing 的走线柱（柱身 + 喇叭底座刻意重叠）同一条豁免。
+      sanity_check_enable: false
+    mesh:
+      # untangle_continuous 的 segment_length=0.009 是 PBD 的取值（避开 Genesis
+      # 的假自碰撞规则，见该配置内的推导）。FEM+IPC 没有那条约束，闭合带受另外
+      # 两条夹：
+      #
+      # (a) 纵向镶嵌不得比横向粗。ring pitch 对上局部弯曲的 sagitta 为
+      #     p^2/8R，最紧的弯是半圆帽 R=22mm；横向 sagitta 为
+      #     r(1-cos(pi/n))，8 段 4mm 管是 0.304mm。
+      #     p=9mm -> 0.461mm（超）；p=5mm -> 0.142mm（过）。
+      #
+      # (b) 接触势垒不得够到管自己的表面。self_contact_clearance(4mm, 8 段, p)
+      #     = min(3.06mm, 2p)，contact_d_hat=2mm 要求余量，8 段给 3.06mm。
+      #     段数加到 12 会把它压到 2.07mm，与 2mm 的势垒只差 3%。
+      #
+      # 因此段长取 5mm、径向段数留在 8。
+      segment_length: 0.005
+      radial_segments: 8
+      output_dir: .cache/topogym/meshes/closed_band_spike
