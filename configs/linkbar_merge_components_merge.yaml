@@ -1,0 +1,10 @@
+# linkbar_merge_components_physical_merge_demo 的主配置。
+#
+# 与 inspect demo 共用同一份 task 配置，只换运行组。
+
+defaults:
+  - config
+  - override task_configs@task: linkbar_merge_components_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: linkbar_merge_components_merge
+  - _self_
