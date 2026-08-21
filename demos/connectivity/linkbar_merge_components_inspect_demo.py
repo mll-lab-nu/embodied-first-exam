@@ -50,6 +50,15 @@ from topogym.verification import LinkbarMergeEvaluator
 
 SEAT_PHASES = ("none", "b1", "a2", "angle")
 
+# How far the parked hand's axis has to be from the knob's circle. The arm sits at
+# its home pose for the whole sweep, and an open gripper reaches about 40 mm to
+# either side of that axis, so a hand parked near the circle is something the beam
+# has to push through. Measured 2026-08-20: 37 mm fouled the beam at ~20 N and
+# stalled it 8 degrees short; 77 mm is clear. This is a "does the arm sit in the
+# way at all" cutoff rather than a design dial, so it stays here rather than in
+# config -- and it exists because finding this out cost two sweeps.
+_HOME_RADIAL_CLEARANCE_M = 0.060
+
 
 def _hud(state):
     def render_lines():
@@ -82,11 +91,8 @@ def make_latch(merge_scene, *, auto_capture: bool) -> SocketWeld:
     return SocketWeld(
         scene=merge_scene.scene,
         moving_link_idx=merge_scene.beam_link_idx(),
-        sockets={
-            name: (merge_scene.socket_link_idx(name),
-                   merge_scene.layout.socket_center_xy(name))
-            for name in LINKBAR_SOCKETS
-        },
+        sockets={name: merge_scene.socket_link_idx(name) for name in LINKBAR_SOCKETS},
+        seat_xy_fn=merge_scene.socket_seat_xy,
         pin_xy_fn=merge_scene.pin_xy,
         capture_tolerance_xy=merge_scene.layout.capture_tolerance_xy,
         auto_capture=auto_capture,
@@ -183,7 +189,7 @@ def run_sweep(cfg, merge_scene, state) -> None:
         state["angle"] = merge_scene.arm_angle()
         worst = max(worst, abs(error))
         b_drift = max(b_drift, float(np.linalg.norm(b_xy(merge_scene) - b_start)))
-        gaps = {name: float(np.linalg.norm(merge_scene.pin_xy() - layout.socket_center_xy(name)))
+        gaps = {name: float(np.linalg.norm(merge_scene.pin_xy() - merge_scene.socket_seat_xy(name)))
                 for name in LINKBAR_SOCKETS}
         print(
             f"[sweep -> {label:4s}] target={np.rad2deg(target):+7.2f}deg "
@@ -355,16 +361,27 @@ def main(cfg: DictConfig) -> None:
     hand_angle = float(np.rad2deg(np.arctan2(
         hand_task[1] - layout.pivot_xy[1], hand_task[0] - layout.pivot_xy[0]
     )))
+    radial_gap = abs(hand_radius - layout.knob_station)
     print(
         f"linkbar_merge_components home_clearance "
         f"hand_task=({hand_task[0]:+.4f},{hand_task[1]:+.4f},{hand_task[2]:+.4f}) "
         f"hand_radius={hand_radius:.4f} hand_angle={hand_angle:+.1f}deg "
         f"knob_station={layout.knob_station:.4f} "
-        f"radial_gap={abs(hand_radius - layout.knob_station):.4f} "
+        f"radial_gap={radial_gap:.4f} "
         f"knob_top_z={layout.knob_top_z:.4f} "
         f"vertical_gap={hand_task[2] - layout.knob_top_z:+.4f}",
         flush=True,
     )
+    if radial_gap < _HOME_RADIAL_CLEARANCE_M:
+        print(
+            f"[warn] the parked hand sits {radial_gap * 1000:.1f} mm from the knob's "
+            f"circle, under the {_HOME_RADIAL_CLEARANCE_M * 1000:.0f} mm an open "
+            "gripper needs. Expect the sweep to stall against the arm rather than "
+            "reach its target. Move task.pivot so the hand parks over the hub, or "
+            "give this task its own raised home the way stacked_plate did -- do not "
+            "edit the shared home.",
+            flush=True,
+        )
 
     print(
         "linkbar_merge_components setup "

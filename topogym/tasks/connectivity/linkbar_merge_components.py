@@ -387,6 +387,23 @@ class LinkbarMergeScene:
     def component_b_entity(self):
         return self.manifest.get("component_b")
 
+    def socket_seat_xy(self, socket: str):
+        """Where this catch's seat is NOW, measured rather than derived.
+
+        Both catches are built with their seat at the assembly's own origin, so the
+        entity's position is the seat. That matters for B1: component B is a free
+        body, and the beam brushing a jaw on the way in can walk it several
+        millimetres (measured 12.8 mm on one driven sweep). Testing capture against
+        the position B was BUILT at would then fire the latch while B's real catch
+        was somewhere else -- welding two parts that are not engaged.
+
+        For A2 the two are the same number, because A never moves; reading both the
+        same way is what keeps that a fact rather than an assumption.
+        """
+
+        value = self.socket_entity(socket).get_pos()
+        return _as_numpy(value).reshape(-1, 3)[0][:2].astype(float)
+
     def socket_entity(self, socket: str):
         """The body a latch at ``socket`` welds the beam to.
 

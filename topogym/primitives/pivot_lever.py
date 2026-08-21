@@ -74,6 +74,7 @@ class PivotLeverResult:
     final_angle: float
     target_error: float
     max_follow_error: float
+    max_lag: float
     release_drift: float
     finger_qpos: float
     completed_phases: tuple[str, ...]
@@ -108,6 +109,12 @@ class PivotLeverPrimitive:
     release_hold_steps: int = 30
     target_tolerance: float = np.deg2rad(8.0)
     max_follow_error: float = 0.030
+    # How far the joint may lag the hand DURING the sweep. This is the reading
+    # that tells carrying from pushing: if the pads hold, the joint tracks the
+    # hand's commanded angle; if they slip, the hand runs ahead and the lever is
+    # being shoved along rather than carried. The endpoint error cannot see it --
+    # a lever that slipped and then caught up ends in the right place.
+    max_lag: float = np.deg2rad(6.0)
     max_release_drift: float = np.deg2rad(5.0)
     min_rotation: float = np.deg2rad(2.0)
     min_finger_qpos: float | None = None
@@ -169,9 +176,34 @@ class PivotLeverPrimitive:
         finger_qpos = self._finger_qpos(controller)
         self._log("after_grasp_settle", controller, entity, dof)
 
+        # Confirm the grip BEFORE moving the lever. Fingers that stopped short of
+        # their command are resting on the handle; fingers that reached it closed
+        # on air. Sweeping without checking is what turns a failed grasp into a
+        # run that looks like the arm pushing the lever around.
+        if self.min_finger_qpos is not None and finger_qpos < float(self.min_finger_qpos):
+            controller.open_gripper(self.gripper_steps)
+            return PivotLeverResult(
+                success=False,
+                rotated=False,
+                start_angle=start,
+                target_angle=target,
+                final_angle=self._angle(entity, dof),
+                target_error=abs(_wrap_angle(self._angle(entity, dof) - target)),
+                max_follow_error=0.0,
+                max_lag=0.0,
+                release_drift=0.0,
+                finger_qpos=finger_qpos,
+                completed_phases=tuple(completed),
+                failure_reason=(
+                    f"grip_not_confirmed: finger_qpos={finger_qpos:.4f} < "
+                    f"{float(self.min_finger_qpos):.4f}; not sweeping"
+                ),
+            )
+
         # Sweep the hand along the knob's ideal arc; the joint follows from finger
         # friction. Cosine easing so the knob is not jerked at either end.
         follow_error = 0.0
+        lag = 0.0
         steps = max(1, int(self.steps_arc))
         for step in range(1, steps + 1):
             alpha = 0.5 - 0.5 * np.cos(np.pi * step / steps)
@@ -180,6 +212,9 @@ class PivotLeverPrimitive:
             controller.move_ee_to(ideal, quat=quat_at(angle), steps=1, continuous_ik=True)
             pad = controller.hand_pos()
             follow_error = max(follow_error, float(np.linalg.norm(ideal - pad)))
+            # The joint against where the hand has got to. Growing lag is the pads
+            # slipping on the handle.
+            lag = max(lag, abs(_wrap_angle(self._angle(entity, dof) - angle)))
         completed.append("rotate")
         controller.step(max(0, int(self.arc_settle_steps)))
         completed.append("arc_settle")
@@ -210,6 +245,7 @@ class PivotLeverPrimitive:
         checks = [
             target_error <= float(self.target_tolerance),
             follow_error <= float(self.max_follow_error),
+            lag <= float(self.max_lag),
             release_drift <= float(self.max_release_drift),
         ]
         if self.min_finger_qpos is not None:
@@ -221,6 +257,7 @@ class PivotLeverPrimitive:
                 "pivot_lever_check_failed:"
                 f" target_error={np.rad2deg(target_error):.2f}deg"
                 f" follow_error={follow_error:.4f}"
+                f" max_lag={np.rad2deg(lag):.2f}deg"
                 f" release_drift={np.rad2deg(release_drift):.2f}deg"
                 f" finger_qpos={finger_qpos:.4f}"
             )
@@ -232,6 +269,7 @@ class PivotLeverPrimitive:
             final_angle=final,
             target_error=target_error,
             max_follow_error=follow_error,
+            max_lag=lag,
             release_drift=release_drift,
             finger_qpos=finger_qpos,
             completed_phases=tuple(completed),

@@ -197,8 +197,10 @@ class LinkbarMergeEvaluator:
         layout = merge_scene.layout
         edges = self.latch_edges(merge_scene)
         pin_xy = merge_scene.pin_xy()
+        # Measured seats, not the ones the layout would derive: component B can be
+        # nudged, and a gap quoted against where it used to be is not a reading.
         gaps = {
-            name: float(((pin_xy - layout.socket_center_xy(name)) ** 2).sum() ** 0.5)
+            name: float(((pin_xy - merge_scene.socket_seat_xy(name)) ** 2).sum() ** 0.5)
             for name in LINKBAR_SOCKETS
         }
         return LinkbarMergeState(

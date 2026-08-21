@@ -33,13 +33,21 @@ import numpy as np
 class SocketWeld:
     """Weld a moving link to the first socket body its pin gets close enough to.
 
-    ``sockets`` maps a socket name to ``(link_index, seat_xy)``. ``pin_xy_fn``
-    reports where the pin is now, in the same frame as the seats.
+    ``sockets`` maps a socket name to the link index a latch there welds to.
+    ``seat_xy_fn(name)`` reports where that socket's seat is NOW and ``pin_xy_fn()``
+    where the pin is, both in the same frame.
+
+    Both are read live rather than passed as fixed positions. A socket bolted to a
+    body that can move -- which is exactly the interesting one, since welding to
+    something immovable merges nothing -- would otherwise be tested for capture at
+    the place it was built, and the latch would fire on a socket that had since
+    been pushed aside.
     """
 
     scene: Any
     moving_link_idx: int
-    sockets: dict[str, tuple[int, Any]]
+    sockets: dict[str, int]
+    seat_xy_fn: Callable[[str], Any]
     pin_xy_fn: Callable[[], Any]
     capture_tolerance_xy: float
     auto_capture: bool = True
@@ -55,10 +63,7 @@ class SocketWeld:
             raise ValueError("SocketWeld needs at least one socket to latch into.")
         if float(self.capture_tolerance_xy) <= 0.0:
             raise ValueError("capture_tolerance_xy must be positive.")
-        self.sockets = {
-            str(name): (int(link_idx), np.asarray(seat, dtype=float).reshape(2))
-            for name, (link_idx, seat) in self.sockets.items()
-        }
+        self.sockets = {str(name): int(link_idx) for name, link_idx in self.sockets.items()}
         self.last_gap = {name: float("inf") for name in self.sockets}
         self.install()
 
@@ -103,8 +108,10 @@ class SocketWeld:
 
         pin = np.asarray(self.pin_xy_fn(), dtype=float).reshape(2)
         return {
-            name: float(np.linalg.norm(pin - seat))
-            for name, (_, seat) in self.sockets.items()
+            name: float(
+                np.linalg.norm(pin - np.asarray(self.seat_xy_fn(name), dtype=float).reshape(2))
+            )
+            for name in self.sockets
         }
 
     def try_engage(self) -> str | None:
@@ -123,8 +130,9 @@ class SocketWeld:
         for name, gap in sorted(self.last_gap.items(), key=lambda item: item[1]):
             if gap > tolerance:
                 break
-            link_idx, _ = self.sockets[name]
-            self.scene.rigid_solver.add_weld_constraint(int(self.moving_link_idx), int(link_idx))
+            self.scene.rigid_solver.add_weld_constraint(
+                int(self.moving_link_idx), int(self.sockets[name])
+            )
             self.latched = name
             return name
         return None
@@ -135,9 +143,8 @@ class SocketWeld:
         if self.latched is None:
             return None
         released = self.latched
-        link_idx, _ = self.sockets[released]
         self.scene.rigid_solver.delete_weld_constraint(
-            int(self.moving_link_idx), int(link_idx)
+            int(self.moving_link_idx), int(self.sockets[released])
         )
         self.latched = None
         return released
