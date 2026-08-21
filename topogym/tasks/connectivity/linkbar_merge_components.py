@@ -2,13 +2,13 @@
 
 Scene: a bolted-down swing-arm station, and a cart parked on a straight rail
 beside it. Component A is a pivot column and one plate reaching out to its own
-catch, A2, and none of it moves. Component B is the cart: it rides the rail on a
-single sliding joint and carries catch B1 at its front. A connecting beam is hinged
+socket, A2, and none of it moves. Component B is the cart: it rides the rail on a
+single sliding joint and carries socket B1 at its front. A connecting beam is hinged
 to A's pivot column on a vertical joint, so its end pin travels a horizontal circle,
 and both catches sit on that circle. The arm turns the beam by a knob and drops the
 pin into one of them, where a latch welds it. Into B1, the cart can no longer roll.
 
-**The two catches are the same part.** `_socket_shapes` is called once and its
+**The two interfaces are the same part.** `_socket_shapes` is called once and its
 result is used for both, so "identical socket" is a property of the code rather
 than of two config blocks that happen to agree. They sit at the same radius, cost
 the same sweep to reach, and differ only in which body they are bolted to. That
@@ -26,19 +26,17 @@ Sign conventions, used by the planner and the verifier as well:
   screen-right.
 - The two catches sit on opposite sides of the beam's initial angle. That is not
   decoration: the pin would otherwise have to sweep THROUGH one catch to reach the
-  other, and a jaw at pin height is a hard stop. `LinkbarMergeLayout.validate`
+  other, and a plate at pin height is a hard stop. `LinkbarMergeLayout.validate`
   refuses a layout that breaks it, rather than letting an unsolvable instance be
   generated silently.
-- A catch's mouth faces the side the pin arrives from, so its yaw is
-  ``angle -/+ 90`` depending on which way the beam turns to reach it, and its slot
-  curves along the pin's circle rather than running straight. One generator builds
-  both, mirrored for the catch the beam reaches clockwise: a handedness, not a
-  difference -- both curve toward the pivot and both open toward the beam's start.
+- A pocket opens toward the side the pin arrives from, so its yaw is
+  ``angle -/+ 90`` depending on which way the beam turns to reach it. The part
+  itself is the same either way: two jambs and a back stop, 24 mm deep.
 
-Heights are stacked so that only the pin ever touches a catch: A's base plates and
-the catch pads are 8 mm thick, the pin hangs to 12 mm, the beam's underside is at
-75 mm and clears every jaw, and the knob starts above the beam so the fingers stay
-clear of the mechanism. The arm never reaches inside a frame.
+Heights are stacked so that only the pin ever touches a pocket: both pockets run
+4 mm to 59 mm, the pin hangs from the beam down to 16 mm, and the beam's underside
+at 75 mm clears both, so the beam sweeps over either one and only the pin goes in.
+The knob starts above the beam, so the fingers stay clear of everything.
 
 Everything is generated from config numbers, and the layout is derived rather than
 tabulated: the catch positions, B's whole pose, A's outrigger direction and the
@@ -252,57 +250,30 @@ class LinkbarMergeLayout:
     # ---------------------------------------------------------------- capture
 
     @property
-    def socket_pad_half_width(self) -> float:
-        """Half the catch's footprint ACROSS the slot, i.e. its radial half-extent.
+    def socket_half_width(self) -> float:
+        """Half the pocket's width across the slot, i.e. its radial half-extent.
 
-        B's frame starts here, so the plates butt instead of overlapping and two
-        coplanar top faces never z-fight. A's outrigger uses `socket_inner_reach`
-        instead, which is the larger number on that side.
+        Both neighbours are placed off this: A's outrigger runs out to it and the
+        cart's deck starts at it, each overlapping by `socket_neighbour_overlap` so
+        the pocket reads as bolted on rather than floating beside them.
         """
 
         sock = self.cfg.socket
         return (
             float(self.cfg.linkbar.pin.radius)
             + float(sock.pin_clearance)
-            + float(sock.jaw_thickness)
+            + float(sock.jamb_thickness)
         )
 
     @property
-    def socket_arc_span(self) -> float:
-        """Arc length from the seat to whichever end of the catch is further."""
+    def socket_neighbour_overlap(self) -> float:
+        """How far a plate's neighbour reaches into it.
 
-        sock = self.cfg.socket
-        return max(float(sock.jaw_arc_back), float(sock.jaw_arc_mouth))
-
-    @property
-    def socket_sagitta(self) -> float:
-        """How far the catch's far end sits inboard of its seat.
-
-        The slot follows the pin's circle, so the catch curves toward the pivot,
-        and its ends are nearer the pivot than its middle by this much.
+        A little overlap rather than a flush butt: two exactly coplanar faces
+        z-fight, while overlapping volume is invisible.
         """
 
-        radius = self.arm_radius
-        return float(radius * (1.0 - np.cos(self.socket_arc_span / radius)))
-
-    @property
-    def socket_inner_reach(self) -> float:
-        """How far a catch reaches radially INWARD from its seat.
-
-        More than half its width, because of the curve. A's outrigger stops here,
-        so the outrigger plate and the catch pad butt instead of overlapping.
-        """
-
-        return self.socket_pad_half_width + self.socket_sagitta
-
-    @property
-    def capture_tolerance_xy(self) -> float:
-        return float(self.cfg.socket.capture_tolerance_xy)
-
-    def capture_tolerance_deg(self) -> float:
-        """The same window read as a joint angle, which is what the arm controls."""
-
-        return float(np.rad2deg(self.capture_tolerance_xy / self.arm_radius))
+        return float(self.cfg.socket.neighbour_overlap)
 
     @property
     def max_travel(self) -> float:
@@ -348,30 +319,42 @@ class LinkbarMergeLayout:
         return self.socket_angle("b1")
 
     @property
-    def socket_pad_lift(self) -> float:
-        """How far a catch's underside sits above the table.
+    def socket_plate_lift(self) -> float:
+        """How far a pocket's underside sits above the table.
 
-        Not zero, because B1's catch rides on the cart and a pad flat on the table
+        Not zero, because B1's pocket rides on the cart and one flat on the table
         would scrape along it. A2 reaches the same height by sitting on A's 4 mm
-        outrigger plate, so both catches present their slot at exactly the same
-        height -- which they must, since there is one pin and it is at one height.
-        What differs is what is UNDER each: A's plate, or the cart. That is the
-        ownership cue, and it is the only thing separating the two.
+        outrigger, so both pockets present their mouth at exactly the same height --
+        which they must, since there is one pin and it is at one height. What
+        differs is what is UNDER each: A's plate, or the cart. That is the ownership
+        cue, and it is the only thing separating the two.
         """
 
-        return float(self.cfg.socket.pad_lift)
+        return float(self.cfg.socket.plate_lift)
 
     @property
     def rail_top_z(self) -> float:
-        """Top of the rails, which is also the cart deck's underside."""
+        """Top of the rails: what the cart's wheels run on."""
 
         return float(_list(self.cfg.component_b.rail.section)[1])
 
     @property
-    def cart_start(self) -> float:
-        """Where the cart's deck begins, measured outward from its catch's seat."""
+    def wheel_centre_z(self) -> float:
+        """Wheel axle height: one radius above the rail the wheel sits on."""
 
-        return self.socket_pad_half_width + float(self.cfg.component_b.cart.gap)
+        return self.rail_top_z + float(self.cfg.component_b.cart.wheel_radius)
+
+    @property
+    def deck_bottom_z(self) -> float:
+        """Cart deck underside: clear of the wheels it rides on."""
+
+        return self.wheel_centre_z + float(self.cfg.component_b.cart.wheel_radius)
+
+    @property
+    def cart_start(self) -> float:
+        """Where the cart's deck begins, measured outward from its plate's seat."""
+
+        return self.socket_half_width - self.socket_neighbour_overlap
 
     @property
     def rail_travel(self) -> float:
@@ -687,7 +670,7 @@ class LinkbarMergeSceneBuilder:
         Two pieces plus the catch, and that is the whole fixed assembly. The plate
         runs from the pivot to A2 because that is what makes A2 visibly part of A --
         the claim the task turns on -- and it is 4 mm thick because that is exactly
-        what lifts A2's catch to `socket_pad_lift`, the height B1's catch reaches by
+        what lifts A2's plate to `socket_plate_lift`, the height B1's plate reaches by
         riding on the cart.
         """
 
@@ -698,7 +681,8 @@ class LinkbarMergeSceneBuilder:
         self._rail(
             scene, manifest, layout, "a_outrigger",
             layout.a_outrigger_angle,
-            layout.arm_radius - layout.socket_inner_reach,
+            layout.arm_radius - layout.socket_half_width
+            + layout.socket_neighbour_overlap,
             float(outrigger.width), float(outrigger.thickness),
             outrigger.color,
         )
@@ -721,126 +705,77 @@ class LinkbarMergeSceneBuilder:
 
     # --------------------------------------------------------------- catches
 
-    def _socket_shapes(self, layout, approach_sign: float) -> list[HingeShape]:
-        """The catch, in its own frame: +x out through the mouth, +y across the slot.
+    def _socket_shapes(self, layout) -> list[HingeShape]:
+        """The pocket, in its own frame: +x toward the pin, +y across the slot.
 
-        **The slot follows the pin's circle, because the pin does.** A straight slot
-        cannot guide a pin swinging on an arm: over the 55 mm from the mouth to the
-        seat, a 170 mm arc departs from the chord by 12.9 mm, which is three times
-        the side clearance. Measured 2026-08-20 with straight jaws -- the pin jammed
-        against A2's jaw 22 degrees short of the seat at 13 N, and on B, whose catch
-        is free to move, it shoved the whole assembly 14.5 mm aside instead. Both
-        symptoms, one cause.
+        Two jambs and a back plate. The beam's pin hangs down from its end and
+        slides in tangentially; the jambs take it radially, the back plate stops it
+        at depth. That engagement is real: the pin is captured radially and can only
+        travel on a circle, so a radial push on the cart has nowhere to go, and the
+        travel test holds on mechanics alone. The weld is then what docx calls it --
+        the latch that locks once seated -- rather than the only thing carrying load.
 
-        So the pad and the jaws are cut into `jaw_segments` short pieces laid along
-        the arc, each yawed to its own midpoint tangent. The residual error inside a
-        segment is the sagitta of that segment alone -- under a millimetre at three
-        segments, against 4 mm of clearance.
+        **The pocket is shallow, and that is what makes it a straight one.** A slot
+        long enough to guide a swinging pin has to BE an arc: over 103 mm a 170 mm
+        arc departs from the chord by 12.9 mm against 4 mm of clearance, which
+        jammed the pin 22 degrees short of the seat (measured 2026-08-20). Over the
+        24 mm entry here the departure is 1.7 mm, so a straight pocket clears it
+        with 2.3 mm to spare and the whole arc-segmentation machinery is unnecessary.
 
-        One generator, called once per catch, because docx 4.4's anti-shortcut
-        argument only holds if the two really are the same part. ``approach_sign``
-        mirrors it for the catch the beam reaches clockwise. That is a handedness,
-        not a difference: both curve toward the pivot and both open toward the
-        beam's start, so in the scene they are the same object installed two ways.
+        Open on top on purpose: the pin comes down from the beam, so a roof over the
+        slot would be something the pin's own arm runs into. The cap behind the back
+        plate is decoration -- the pin never reaches past the stop.
 
-        Load path: the pin enters at +x, runs down the slot to the origin where the
-        latch fires, and is stopped by the back plate if it overshoots. The jaws
-        take the sideways load; nothing here has to hold the pin down, because the
-        beam's hinge already refuses to move it vertically.
+        One generator, called once per socket, with no handedness: the pocket always
+        opens toward the side the pin arrives from, so the same shape serves both
+        installations. docx 4.4's anti-shortcut argument needs the two interfaces to
+        be the same part, and here they are the same part in the literal sense.
         """
 
         sock = self.task_cfg.socket
-        radius = layout.arm_radius
-        sign = float(approach_sign)
         pin_radius = float(self.task_cfg.linkbar.pin.radius)
-        slot_half = pin_radius + float(sock.pin_clearance)
-        jaw_thickness = float(sock.jaw_thickness)
-        jaw_height = float(sock.jaw_height)
-        pad_thickness = float(sock.pad_thickness)
-        jaw_offset = slot_half + 0.5 * jaw_thickness
-        pad_width = 2.0 * jaw_offset + jaw_thickness
-        back = float(sock.jaw_arc_back)
-        mouth = float(sock.jaw_arc_mouth)
-        segments = max(1, int(sock.jaw_segments))
-        lift = layout.socket_pad_lift
+        jamb_thickness = float(sock.jamb_thickness)
+        jamb_height = float(sock.jamb_height)
+        back_thickness = float(sock.back_thickness)
+        entry = float(sock.entry_depth)
+        lift = layout.socket_plate_lift
+        jamb_offset = pin_radius + float(sock.pin_clearance) + 0.5 * jamb_thickness
+        width = 2.0 * jamb_offset + jamb_thickness
+        # The slot runs from the back plate's face out to the mouth. The pin seats
+        # at the local origin, so the stop sits one pin radius behind it.
+        back_face = -pin_radius
+        length = entry - back_face
+        centre = 0.5 * (back_face + entry)
 
-        def arc_point(angle: float) -> np.ndarray:
-            """Where the slot centreline is, ``angle`` radians round from the seat."""
-
-            return np.array(
-                [radius * np.sin(angle), sign * radius * (np.cos(angle) - 1.0)],
-                dtype=float,
+        shapes = [
+            HingeShape(
+                kind="box",
+                size=(back_thickness, width, jamb_height),
+                origin=(back_face - 0.5 * back_thickness, 0.0, lift + 0.5 * jamb_height),
+                color=_list(sock.accent_color),
             )
-
-        def arc_normal(angle: float) -> np.ndarray:
-            """Across the slot at that point, pointing away from the pivot."""
-
-            return np.array([np.sin(angle), sign * np.cos(angle)], dtype=float)
-
-        shapes: list[HingeShape] = []
-        edges = np.linspace(-back, mouth, segments + 1) / radius
-        for low, high in zip(edges[:-1], edges[1:]):
-            middle = 0.5 * (low + high)
-            centre = arc_point(middle)
-            normal = arc_normal(middle)
-            yaw = -sign * middle
-            length = radius * (high - low)
+        ]
+        for side in (1.0, -1.0):
             shapes.append(
                 HingeShape(
                     kind="box",
-                    size=(length, pad_width, pad_thickness),
-                    origin=(centre[0], centre[1], lift + 0.5 * pad_thickness),
-                    rpy=(0.0, 0.0, yaw),
+                    size=(length, jamb_thickness, jamb_height),
+                    origin=(centre, side * jamb_offset, lift + 0.5 * jamb_height),
                     color=_list(sock.color),
                 )
             )
-            for side in (1.0, -1.0):
-                jaw = centre + side * jaw_offset * normal
-                shapes.append(
-                    HingeShape(
-                        kind="box",
-                        size=(length, jaw_thickness, jaw_height),
-                        origin=(jaw[0], jaw[1], lift + pad_thickness + 0.5 * jaw_height),
-                        rpy=(0.0, 0.0, yaw),
-                        color=_list(sock.color),
-                    )
-                )
-
-        # The back plate closes the deep end of the slot, and is what bounds an
-        # overshoot: the joint has no limits, so this is the only hard stop.
-        stop_angle = -float(sock.back_stop_arc) / radius
-        stop_centre = arc_point(stop_angle)
+        # A cap over the closed end, so the pocket reads as a socket rather than as
+        # an open channel. Visual only, and behind the stop, where nothing goes.
         shapes.append(
             HingeShape(
                 kind="box",
-                size=(float(sock.back_stop_thickness), pad_width, jaw_height),
-                origin=(stop_centre[0], stop_centre[1],
-                        lift + pad_thickness + 0.5 * jaw_height),
-                rpy=(0.0, 0.0, -sign * stop_angle),
+                size=(back_thickness, width, jamb_thickness),
+                origin=(back_face - 0.5 * back_thickness, 0.0,
+                        lift + jamb_height + 0.5 * jamb_thickness),
                 color=_list(sock.accent_color),
+                collide=False,
             )
         )
-
-        # A chamfer on each jaw's lip, so the mouth reads as a mouth. Visual only:
-        # widening the entry in physics would change how much misalignment the
-        # catch forgives, and that budget belongs to `capture_tolerance_xy`.
-        lip_length = float(sock.lip_length)
-        lip_angle = (mouth + 0.5 * lip_length) / radius
-        lip_centre = arc_point(lip_angle)
-        lip_normal = arc_normal(lip_angle)
-        for side in (1.0, -1.0):
-            lip = lip_centre + side * (jaw_offset + 0.5 * jaw_thickness) * lip_normal
-            shapes.append(
-                HingeShape(
-                    kind="box",
-                    size=(lip_length, jaw_thickness, jaw_height),
-                    origin=(lip[0], lip[1], lift + pad_thickness + 0.5 * jaw_height),
-                    rpy=(0.0, 0.0, -sign * lip_angle
-                         + side * float(np.deg2rad(float(sock.lip_flare_deg)))),
-                    color=_list(sock.accent_color),
-                    collide=False,
-                )
-            )
         return shapes
 
     def _add_socket_a2(self, scene, manifest, layout) -> None:
@@ -855,7 +790,7 @@ class LinkbarMergeSceneBuilder:
             urdf_path=asset_root / "socket_a2.urdf",
             world_pos=layout.position_to_world((centre[0], centre[1], 0.0)),
             yaw_deg=layout.socket_yaw_deg("a2"),
-            shapes=self._socket_shapes(layout, layout.approach_sign("a2")),
+            shapes=self._socket_shapes(layout),
             mass=float(self.task_cfg.socket.mass),
             color=_list(self.task_cfg.socket.color),
             fixed=True,
@@ -900,10 +835,10 @@ class LinkbarMergeSceneBuilder:
         start = layout.cart_start
         deck_length = float(cart.deck_length)
         deck_thickness = float(cart.deck_thickness)
-        deck_bottom = layout.rail_top_z
+        deck_bottom = layout.deck_bottom_z
         body_inset = float(cart.body_inset)
 
-        shapes = list(self._socket_shapes(layout, out))
+        shapes = list(self._socket_shapes(layout))
         shapes.append(
             HingeShape(
                 kind="box",
@@ -925,6 +860,29 @@ class LinkbarMergeSceneBuilder:
                 color=_list(cart.body_color),
             )
         )
+
+        # Wheels, on the rails the deck spans. Visual only, like the rails: the
+        # prismatic joint is the constraint, and wheels that also collided would
+        # fight it. They are here so that "a cart, rolling on a track" is something
+        # the picture says rather than something the reader has to infer.
+        wheel_radius = float(cart.wheel_radius)
+        half_gauge = 0.5 * float(comp.rail.gauge)
+        for index, station in enumerate(_list(cart.wheel_stations)):
+            for side in (1.0, -1.0):
+                shapes.append(
+                    HingeShape(
+                        kind="cylinder",
+                        size=(wheel_radius, float(cart.wheel_width)),
+                        origin=(side * half_gauge, out * (start + station),
+                                layout.wheel_centre_z),
+                        # A cylinder's axis is its local z, so this lays it across
+                        # the track, which is the way an axle runs.
+                        rpy=(0.0, 0.5 * np.pi, 0.0),
+                        color=_list(cart.wheel_color),
+                        collide=False,
+                    )
+                )
+            del index
 
         centre = layout.socket_center_xy("b1")
         asset_root = resolve_mesh_dir("runs/generated_meshes/linkbar_merge_components")

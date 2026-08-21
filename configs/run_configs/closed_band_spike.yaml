@@ -50,6 +50,19 @@ band_radius: 0.020
 # 打开只用于把「带脱销」与「8 字自解」两种失败分开。
 pin_top: false
 
+# 录制相机。**本脚本自建场景，不用 env.cameras** —— 那组相机位姿是 world 系
+# （桌面在 z=0.9196429），这里没有桌子，指过去什么都没有。
+# 名字取 oblique 与 recording.camera 的默认值对齐，加 recording=default 即可录。
+# 视角接近正对壁面（沿 +x 看），与自交叉判定用的投影方向一致，
+# 因此 8 字与 O 形在画面里就是判定读到的那两个形状。
+# recording.res 若设了会覆盖这里的 res。
+camera:
+  name: oblique
+  res: [768, 768]
+  pos: [-0.50, -0.14, 0.17]
+  lookat: [0.02, 0.00, 0.145]
+  fov: 38
+
 # 场景几何。docx 3.3 的壁面挂销 + 闭合弹性带。
 # 坐标为 task 系（原点在桌面中心，z=0 为桌面）；本脚本用一个过原点的地面平面
 # 代替桌子，因此 task z 与 world z 相同。

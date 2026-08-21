@@ -40,6 +40,7 @@ python -m tests.fem_ipc_rope_spike run.bench_steps=100      # 每步耗时
 python -m tests.fem_ipc_rope_spike run.test=contact         # 两绳接触是否穿模
 python -m tests.closed_band_spike run.test=hold            # 8 字带释放后是否自解
 python -m tests.closed_band_spike run.test=flip run.flip_side=wrong
+python -m tests.closed_band_spike run.test=hold recording=default recording.path=runs/x.mp4
 ```
 
 `fem_ipc_rope_spike.py` 是 FEM+IPC 后端的诊断场景：自建 scene，只有一个地面加绳，
@@ -54,6 +55,9 @@ python -m tests.closed_band_spike run.test=flip run.flip_side=wrong
 `flip` 四档，按依赖排序，前一项不过不跑后一项；`hold` 是决定该任务是否成立的一档 ——
 8 字若无外力自行张开成 O，则不需要机械臂即自解。配置在
 `configs/closed_band_spike.yaml` 与 `configs/run_configs/closed_band_spike.yaml`。
+录制走 `recording` 配置组，相机单独定义在 `run.camera`（本场景没有桌子，`env.cameras`
+那组 world 系位姿指过去是空的）；视角接近正对壁面，与自交叉判定的投影方向一致，
+帧上带自交叉数的 HUD。`recording.path` 每次要单独给，否则三次跑会互相覆盖。
 
 demo 本身也带一个不跑物理的检查模式，`run.build_only=true`，约 90 秒；
 `run.bench_steps=N` 量每步耗时。见 [`../demos/README.md`](../demos/README.md)。

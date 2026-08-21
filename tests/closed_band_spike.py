@@ -41,6 +41,17 @@ once per substep while configuring it with the whole `sim.dt`
     python -m tests.closed_band_spike run.test=flip run.flip_side=wrong
     python -m tests.closed_band_spike -m run.test=hold task.rope.fem.E=5e4,1e5,2e5
 
+Recording is the `recording` config group, one camera defined in `run.camera`
+(this scene has no table, so `env.cameras`' world-frame poses point at nothing).
+The view is close to face-on to the panel, i.e. the same projection the
+self-crossing count is read in, so the video shows the shape the verdict is about.
+The saved frames carry that count as a HUD line. `run.keep_open` steps forever, so
+it runs AFTER the recorder closes -- the video is written either way, but the
+process then waits for Ctrl+C.
+
+    python -m tests.closed_band_spike run.test=hold recording=default \\
+        recording.path=runs/closed_band_hold.mp4
+
 Requires `pip install pyuipc` (CUDA 12.6+).
 """
 
@@ -118,6 +129,10 @@ def main(cfg: DictConfig) -> None:
 
     from topogym.core import save_resolved_config
     from topogym.supervision import stop_before_physics
+    from topogym.utils.recording import (
+        print_recording_saved,
+        recording_session_from_config,
+    )
     from topogym.world import materials
     from topogym.world.closed_band import (
         WALL_PROJECTION,
@@ -257,6 +272,25 @@ def main(cfg: DictConfig) -> None:
         name="band",
     )
 
+    # One camera, defined in `run.camera` rather than taken from `env.cameras`:
+    # this scene has no table, so the env's world-frame camera poses (table top at
+    # z=0.9196429) point at nothing. `recording.res` is honoured here for the same
+    # reason -- `apply_recording_camera_overrides` rewrites `cfg.env.cameras`,
+    # which this script never reads. It is named to match `recording.camera`'s
+    # default so `recording=default` works with no further overrides.
+    camera_cfg = cfg.run.camera
+    resolution = cfg.recording.res if cfg.recording.res is not None else camera_cfg.res
+    cameras = {
+        str(camera_cfg.name): scene.add_camera(
+            res=tuple(int(value) for value in resolution),
+            pos=tuple(float(value) for value in camera_cfg.pos),
+            lookat=tuple(float(value) for value in camera_cfg.lookat),
+            up=(0.0, 0.0, 1.0),
+            fov=float(camera_cfg.fov),
+            GUI=False,
+        )
+    }
+
     if str(fem.rest_shape) == "straight":
         backend.declare_rest_straight(entity, spawn_line)
     if bool(cfg.run.pin_top):
@@ -301,9 +335,27 @@ def main(cfg: DictConfig) -> None:
         pos = positions()
         return np.asarray([pos[group].mean(axis=0) for group in members], dtype=float)
 
+    # The recorded frames carry the same reading the log does, so a video can be
+    # judged without pairing it against the log. Refreshed from `report` rather
+    # than computed per frame: the crossing count needs a GPU read, and the
+    # sampling cadence is already fine enough to watch.
+    hud_state = {"label": "spawn", "step": 0, "crossings": 0, "bottom_z": 0.0}
+
+    def hud_line() -> list[str]:
+        return [
+            f"{hud_state['label']}  step {hud_state['step']}",
+            f"self-crossings {hud_state['crossings']}   bottom z {hud_state['bottom_z']:.0f} mm",
+        ]
+
     def report(label: str, step: int, driver=None) -> None:
         line = read_centerline()
         hits = crossings_of(line)
+        hud_state.update(
+            label=label,
+            step=step,
+            crossings=len(hits),
+            bottom_z=float(line[:, 2].min() * 1000.0),
+        )
         text = (
             f"closed_band_spike {label} step={step} crossings={len(hits)} "
             f"depth_gaps={[f'{hit.gap * 1000:.1f}' for hit in hits]}mm "
@@ -327,116 +379,120 @@ def main(cfg: DictConfig) -> None:
             f"({count / elapsed:.1f} steps/s)"
         )
 
-    # --- settle ---------------------------------------------------------------
-    previous = spawn_positions
-    check_every = 10
-    converged_at = None
-    started = time.perf_counter()
-    for step in range(1, int(cfg.run.settle_steps) + 1):
-        scene.step()
-        if step % check_every == 0:
-            current = positions()
-            moved = float(np.linalg.norm(current - previous, axis=1).max()) / check_every
-            previous = current
-            if cfg.run.verbose:
-                print(f"closed_band_spike settle step={step} max_move={moved * 1000:.4f}mm/step")
-            if moved < float(cfg.run.settle_tol):
-                converged_at = step
-                break
-    settled = read_centerline()
-    print(
-        f"closed_band_spike settle: {time.perf_counter() - started:.1f}s, "
-        + (f"converged at step {converged_at}" if converged_at else "NOT converged")
-    )
-    print(
-        f"closed_band_spike settled O: crossings={len(crossings_of(settled))} (want 0), "
-        f"z range [{settled[:, 2].min() * 1000:.1f}, {settled[:, 2].max() * 1000:.1f}]mm, "
-        f"arc length {closed_arc_length(settled)[1] * 1000:.1f}mm "
-        f"(spawn {frames.perimeter * 1000:.1f}mm), peg top at "
-        f"{(peg_center[2] + float(band.peg_radius)) * 1000:.1f}mm"
-    )
-    if bool(cfg.run.pin_top):
-        pins = resolved_pins(entity)
-        print(f"closed_band_spike pinned {0 if pins is None else len(pins)} verts at the peg")
-
-    def hold_viewer() -> None:
-        if cfg.run.keep_open or cfg.run.viewer:
-            print("closed_band_spike holding the viewer open; Ctrl+C to exit.")
-            while True:
-                scene.step()
-
-    if str(cfg.run.test) == "settle":
-        hold_viewer()
-        return
-
-    # --- wind the flat O up into the figure-8 ---------------------------------
-    driver = LobeTwistDriver(
-        lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
-    )
-    run_steps(
-        int(cfg.run.drive_steps),
-        f"wind->{wound_turns:+.1f}",
-        driver=driver,
-        turn=lambda alpha: driver.turn_by(wound_turns * alpha),
-    )
-    lobe.release()
-    run_steps(int(cfg.run.flip_settle_steps), "release")
-    wound = crossings_of(read_centerline())
-    print(
-        f"closed_band_spike wind verdict: {len(wound)} self-crossings just after release "
-        f"(want 1), signs {[hit.sign for hit in wound]} -- "
-        + (
-            "PASS"
-            if len(wound) == 1
-            else "FAIL -- the wind-up did not produce a figure-8, so the hold and flip "
-            "readings below say nothing about docx 3.3"
+    def run_phases() -> None:
+        # --- settle ---------------------------------------------------------------
+        previous = spawn_positions
+        check_every = 10
+        converged_at = None
+        started = time.perf_counter()
+        for step in range(1, int(cfg.run.settle_steps) + 1):
+            scene.step()
+            if step % check_every == 0:
+                current = positions()
+                moved = float(np.linalg.norm(current - previous, axis=1).max()) / check_every
+                previous = current
+                if cfg.run.verbose:
+                    print(f"closed_band_spike settle step={step} max_move={moved * 1000:.4f}mm/step")
+                if step % 50 == 0:
+                    report("settle", step)
+                if moved < float(cfg.run.settle_tol):
+                    converged_at = step
+                    break
+        settled = read_centerline()
+        print(
+            f"closed_band_spike settle: {time.perf_counter() - started:.1f}s, "
+            + (f"converged at step {converged_at}" if converged_at else "NOT converged")
         )
-    )
-
-    # --- hold (U3) ------------------------------------------------------------
-    before = read_centerline()
-    run_steps(int(cfg.run.hold_steps), "hold", every=int(cfg.run.hold_sample_every))
-    after_line = read_centerline()
-    after = crossings_of(after_line)
-    print(
-        f"closed_band_spike hold verdict: crossings {len(wound)} -> {len(after)} over "
-        f"{int(cfg.run.hold_steps)} steps, bottom_z {before[:, 2].min() * 1000:.1f} -> "
-        f"{after_line[:, 2].min() * 1000:.1f} mm -- "
-        + (
-            "PASS -- the released figure-8 held"
-            if len(after) == 1
-            else f"FAIL -- a released figure-8 must stay at 1 crossing, read {len(after)}"
+        print(
+            f"closed_band_spike settled O: crossings={len(crossings_of(settled))} (want 0), "
+            f"z range [{settled[:, 2].min() * 1000:.1f}, {settled[:, 2].max() * 1000:.1f}]mm, "
+            f"arc length {closed_arc_length(settled)[1] * 1000:.1f}mm "
+            f"(spawn {frames.perimeter * 1000:.1f}mm), peg top at "
+            f"{(peg_center[2] + float(band.peg_radius)) * 1000:.1f}mm"
         )
-    )
-    if str(cfg.run.test) == "hold":
-        hold_viewer()
-        return
+        if bool(cfg.run.pin_top):
+            pins = resolved_pins(entity)
+            print(f"closed_band_spike pinned {0 if pins is None else len(pins)} verts at the peg")
 
-    # --- flip (U4) ------------------------------------------------------------
-    correct = str(cfg.run.flip_side) == "correct"
-    delta = -wound_turns if correct else wound_turns
-    expected = 0 if correct else 2
-    driver = LobeTwistDriver(
-        lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
-    )
-    run_steps(
-        int(cfg.run.drive_steps),
-        f"flip:{cfg.run.flip_side}",
-        driver=driver,
-        turn=lambda alpha: driver.turn_by(delta * alpha),
-    )
-    lobe.release()
-    run_steps(int(cfg.run.flip_settle_steps), "flip_settle")
+        if str(cfg.run.test) == "settle":
+            return
 
-    final_line = read_centerline()
-    final = crossings_of(final_line)
-    print(
-        f"closed_band_spike flip verdict ({cfg.run.flip_side}): crossings {len(after)} -> "
-        f"{len(final)} (want {expected}), bottom_z {final_line[:, 2].min() * 1000:.1f}mm, "
-        f"arc length {closed_arc_length(final_line)[1] * 1000:.1f}mm -- "
-        + ("PASS" if len(final) == expected else "FAIL")
-    )
-    hold_viewer()
+        # --- wind the flat O up into the figure-8 ---------------------------------
+        driver = LobeTwistDriver(
+            lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
+        )
+        run_steps(
+            int(cfg.run.drive_steps),
+            f"wind->{wound_turns:+.1f}",
+            driver=driver,
+            turn=lambda alpha: driver.turn_by(wound_turns * alpha),
+        )
+        lobe.release()
+        run_steps(int(cfg.run.flip_settle_steps), "release")
+        wound = crossings_of(read_centerline())
+        print(
+            f"closed_band_spike wind verdict: {len(wound)} self-crossings just after release "
+            f"(want 1), signs {[hit.sign for hit in wound]} -- "
+            + (
+                "PASS"
+                if len(wound) == 1
+                else "FAIL -- the wind-up did not produce a figure-8, so the hold and flip "
+                "readings below say nothing about docx 3.3"
+            )
+        )
+
+        # --- hold (U3) ------------------------------------------------------------
+        before = read_centerline()
+        run_steps(int(cfg.run.hold_steps), "hold", every=int(cfg.run.hold_sample_every))
+        after_line = read_centerline()
+        after = crossings_of(after_line)
+        print(
+            f"closed_band_spike hold verdict: crossings {len(wound)} -> {len(after)} over "
+            f"{int(cfg.run.hold_steps)} steps, bottom_z {before[:, 2].min() * 1000:.1f} -> "
+            f"{after_line[:, 2].min() * 1000:.1f} mm -- "
+            + (
+                "PASS -- the released figure-8 held"
+                if len(after) == 1
+                else f"FAIL -- a released figure-8 must stay at 1 crossing, read {len(after)}"
+            )
+        )
+        if str(cfg.run.test) == "hold":
+            return
+
+        # --- flip (U4) ------------------------------------------------------------
+        correct = str(cfg.run.flip_side) == "correct"
+        delta = -wound_turns if correct else wound_turns
+        expected = 0 if correct else 2
+        driver = LobeTwistDriver(
+            lobe, peg_center, positions(), lift_per_half_turn=lift_per_half_turn
+        )
+        run_steps(
+            int(cfg.run.drive_steps),
+            f"flip:{cfg.run.flip_side}",
+            driver=driver,
+            turn=lambda alpha: driver.turn_by(delta * alpha),
+        )
+        lobe.release()
+        run_steps(int(cfg.run.flip_settle_steps), "flip_settle")
+
+        final_line = read_centerline()
+        final = crossings_of(final_line)
+        print(
+            f"closed_band_spike flip verdict ({cfg.run.flip_side}): crossings {len(after)} -> "
+            f"{len(final)} (want {expected}), bottom_z {final_line[:, 2].min() * 1000:.1f}mm, "
+            f"arc length {closed_arc_length(final_line)[1] * 1000:.1f}mm -- "
+            + ("PASS" if len(final) == expected else "FAIL")
+        )
+
+
+    with recording_session_from_config(scene, cameras, cfg.recording, hud=hud_line):
+        run_phases()
+    print_recording_saved(cfg.recording)
+
+    if cfg.run.keep_open or cfg.run.viewer:
+        print("closed_band_spike holding the viewer open; Ctrl+C to exit.")
+        while True:
+            scene.step()
 
 
 if __name__ == "__main__":
