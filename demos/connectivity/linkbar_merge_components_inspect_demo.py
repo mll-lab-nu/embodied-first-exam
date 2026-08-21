@@ -67,6 +67,7 @@ def _hud(state):
             f"phase={state.get('phase', '-')}",
             f"angle={np.rad2deg(state.get('angle', 0.0)):+.1f}deg",
             f"latched={state.get('latched', None)}",
+            state.get("probe", ""),
         ]
 
     return render_lines
@@ -264,6 +265,9 @@ def run_travel(cfg, merge_scene, state):
         steps=int(probe.steps),
         limit=layout.rail_travel,
         settle_steps=int(probe.settle_steps),
+        on_step=lambda force, moved: state.update(
+            probe=f"push {force:.1f}N  travel {moved * 1000:5.1f}mm"
+        ),
     )
     blocked = result.peak_travel <= float(cfg.task.success.max_travel)
     print(

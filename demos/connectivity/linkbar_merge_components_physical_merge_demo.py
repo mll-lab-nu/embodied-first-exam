@@ -66,6 +66,9 @@ def _hud(status):
             f"mode={status.get('mode', '-')}",
             f"target={status.get('target', '-')}",
             f"latched={status.get('latched', None)}",
+            # A held carriage does not move, so without this the travel test looks
+            # like nothing happening. The number is the evidence.
+            status.get("probe", ""),
         ]
 
     return render_lines
@@ -220,6 +223,9 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
             steps=int(probe.steps),
             limit=layout.rail_travel,
             settle_steps=int(probe.settle_steps),
+            on_step=lambda force, moved: status.update(
+                probe=f"push {force:.1f}N  travel {moved * 1000:5.1f}mm"
+            ),
         )
 
     status["phase"] = "verify"

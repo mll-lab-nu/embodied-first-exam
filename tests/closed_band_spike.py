@@ -488,6 +488,12 @@ def main(cfg: DictConfig) -> None:
     # than computed per frame: the crossing count needs a GPU read, and the
     # sampling cadence is already fine enough to watch.
     hud_state = {"label": "spawn", "step": 0, "crossings": 0, "bottom_z": 0.0}
+    # Closest the two strands ever came at the crossing. This is the number that
+    # decides whether a figure-8 can hold at all: below 2*radius + d_hat the
+    # contact barrier engages and there is something to resist unwinding; above
+    # it the 8 is unopposed strain energy. Measured 40.4 mm on 2026-08-21, i.e.
+    # no self-contact anywhere, and the band sprang flat in 25 steps.
+    closest_gap = {"value": float("inf")}
 
     def hud_line() -> list[str]:
         return [
@@ -504,6 +510,8 @@ def main(cfg: DictConfig) -> None:
             crossings=len(hits),
             bottom_z=task_z(line[:, 2].min()) * 1000.0,
         )
+        for hit in hits:
+            closest_gap["value"] = min(closest_gap["value"], hit.gap)
         text = (
             f"closed_band_spike {label} step={step} crossings={len(hits)} "
             f"depth_gaps={[f'{hit.gap * 1000:.1f}' for hit in hits]}mm "
@@ -591,6 +599,17 @@ def main(cfg: DictConfig) -> None:
                 "readings below say nothing about docx 3.3"
             )
         )
+        contact_at = 2.0 * radius + float(fem.contact_d_hat)
+        print(
+            f"closed_band_spike crossing contact: closest the strands came was "
+            f"{closest_gap['value'] * 1000:.1f}mm against the {contact_at * 1000:.1f}mm "
+            f"(2r + d_hat) the barrier needs -- "
+            + (
+                "the crossing is a contact"
+                if closest_gap["value"] <= contact_at
+                else "no self-contact, so nothing resists the 8 unwinding"
+            )
+        )
 
         # --- hold (U3) ------------------------------------------------------------
         before = read_centerline()
@@ -632,11 +651,21 @@ def main(cfg: DictConfig) -> None:
 
         final_line = read_centerline()
         final = crossings_of(final_line)
+        # The flip verdict is only meaningful from a figure-8. Starting at 0
+        # crossings and ending at 0 satisfies `len(final) == expected` for the
+        # correct side while nothing whatsoever happened, which is how the
+        # 2026-08-21 run reported PASS on a band that had already sprung flat.
+        if len(after) != 1:
+            outcome = (
+                f"VOID -- the flip started from {len(after)} crossings, not 1, so this "
+                "reading says nothing; fix the hold first"
+            )
+        else:
+            outcome = "PASS" if len(final) == expected else "FAIL"
         print(
             f"closed_band_spike flip verdict ({cfg.run.flip_side}): crossings {len(after)} -> "
             f"{len(final)} (want {expected}), bottom_z {task_z(final_line[:, 2].min()) * 1000:.1f}mm, "
-            f"arc length {closed_arc_length(final_line)[1] * 1000:.1f}mm -- "
-            + ("PASS" if len(final) == expected else "FAIL")
+            f"arc length {closed_arc_length(final_line)[1] * 1000:.1f}mm -- " + outcome
         )
 
 

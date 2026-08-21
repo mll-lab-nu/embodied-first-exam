@@ -70,7 +70,7 @@ class TravelResult:
 
 def travel_probe(scene, entity, *, dof: int, link_idx: int, direction, mass: float,
                  force_scale: float, steps: int, limit: float,
-                 settle_steps: int = 0) -> TravelResult:
+                 settle_steps: int = 0, on_step=None) -> TravelResult:
     """Push ``entity``'s carriage along ``direction`` at ``force_scale`` times its weight.
 
     ``force_scale`` is written as a multiple of weight so the probe means the same
@@ -84,6 +84,11 @@ def travel_probe(scene, entity, *, dof: int, link_idx: int, direction, mass: flo
     ``peak_travel`` is reported alongside the final position because a carriage
     that is held still gives a little under load, and the peak is the honest
     reading of how much.
+
+    ``on_step(force, travel)`` is called every step. A held carriage does not move,
+    so on its own the probe looks exactly like nothing happening -- there is no
+    visible evidence a force was even applied. The callback is how a caller puts the
+    applied force and the live reading somewhere a viewer can see them.
     """
 
     force = float(force_scale) * float(mass) * GRAVITY
@@ -103,6 +108,8 @@ def travel_probe(scene, entity, *, dof: int, link_idx: int, direction, mass: flo
         scene.rigid_solver.apply_links_external_force(push, links_idx=[int(link_idx)])
         scene.step()
         peak = max(peak, abs(position() - start))
+        if on_step is not None:
+            on_step(force, abs(position() - start))
     return TravelResult(
         force=force,
         steps=int(steps),

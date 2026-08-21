@@ -121,8 +121,13 @@ linkbar:
   mechanism:
     joint_name: linkbar_joint
     mass: 0.450
-    joint_damping: 0.050
-    joint_friction: 0.030
+    # 2026-08-21 下调（0.050 / 0.030）：这两项是扫掠时指腹要克服的阻力矩，
+    # 峰值角速度 1.5 rad/s 下合计约 0.11 N·m，而指腹能传的只有 0.23 N·m——两倍余量
+    # 不够，销进口袋那一下再加一点接触就打滑，梁差 5.03° 到不了位（录像与
+    # runs/lmc_full_record2.log 的 after_arc_settle 可见）。轻质摆臂装在轴承上，
+    # 0.02 / 0.015 更接近它本来的量级。
+    joint_damping: 0.020
+    joint_friction: 0.015
     joint_armature: 0.010
     contact_friction: 1.000
     # 关节**不设限位**。圆上有两个插口，限位只能描述其中一个；越程由背板吃掉。
@@ -307,8 +312,13 @@ motion:
   close_hold_steps: 35
   arc_settle_steps: 60
   release_hold_steps: 45
-  # 手柄直径 0.022，合到 0.006 让指腹实压。
-  grasp_qpos: 0.006
+  # 手柄半径 0.011，指腹被手柄顶在 0.0107 处停住。夹持力 = 指刚度(100) × 过行程，
+  # 所以指令值越小夹得越紧。
+  #
+  # 2026-08-21 由 0.006 改到 0.001：0.006 的过行程只有 4.7mm，每指 0.47N，两指的切向
+  # 能力折算到手柄半径上是 0.23 N·m，只有扫掠阻力矩的两倍——不够，实测打滑 5.03°。
+  # 0.001 的过行程 9.7mm，每指约 0.97N，余量约 4 倍。closed_qpos 是 0.00，还有余地。
+  grasp_qpos: 0.001
   finger_links: [left_finger, right_finger]
   finger_friction: 3.000
   knob_friction: 2.000
