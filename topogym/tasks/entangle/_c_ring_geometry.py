@@ -137,17 +137,23 @@ class RingFrame:
 class TabSpec:
     """A radial stub on the C, sticking out from the ring's outer surface.
 
-    It is there for a mechanical reason, not a cosmetic one. `tasks/_fixtures.py`
-    `_link_xml` places a body's centre of mass at the bounding box of its colliding
-    shapes, and a C's box is very nearly centred on the ring: the opening pulls it
-    barely 1 mm off centre. That 1 mm is still a gravity torque about the bar the C
-    hangs on, and nothing resists a ring spinning on a bar -- measured against the
-    tensor that same function writes, it turns the opening upright in about a third
-    of a second, and the C drops off unaided. The stub extends the box well past the
-    ring on one side, which puts the centre of mass below the ring and makes
-    stub-down the resting orientation.
+    `tasks/_fixtures.py` `_link_xml` places a body's centre of mass at the bounding
+    box of its colliding shapes. For a bare C that box is essentially centred on the
+    ring -- the opening pulls it 1.62 mm sideways and nothing at all downward -- and
+    the bar the C hangs from is directly above the ring's centre. So the orientation
+    the C would settle into is the one that puts those 1.62 mm straight down, which
+    is the opening turned onto the bar, 90 degrees from where it spawns. The stub
+    drops the box 8.3 mm below the ring, which moves that resting orientation to 11
+    degrees from the spawn azimuth instead of 90.
 
-    It doubles as the grasp feature, which is why its radius is its own parameter.
+    Measured 2026-08-22: neither resting orientation is reached, because Coulomb
+    friction at the hanging contact holds the C wherever it starts. At the default
+    contact friction of 1.0 that is mu*W*r = 12.3 mNm against a gravity torque of
+    0.79 mNm, a factor of 15, and 600 steps of hold move the opening by 0.6 degrees.
+    So the stub is NOT what keeps this scene linked. What it is: the grasp feature
+    (hence its own radius), and the margin if the contact ever gets slippery -- a
+    friction sweep, a different material, or a randomised layout that lightens the
+    C. Shortening it is a live option; see `docs/develop/tasks/unlink_c_ring_zh.md`.
     """
 
     azimuth_deg: float

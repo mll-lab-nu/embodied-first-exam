@@ -33,10 +33,14 @@ Sign conventions, used by the planner and the verifier as well:
   ``angle -/+ 90`` depending on which way the beam turns to reach it. The part
   itself is the same either way: two jambs and a back stop, 24 mm deep.
 
-Heights are stacked so that only the pin ever touches a pocket: both pockets run
-4 mm to 59 mm, the pin hangs from the beam down to 16 mm, and the beam's underside
-at 75 mm clears both, so the beam sweeps over either one and only the pin goes in.
-The knob starts above the beam, so the fingers stay clear of everything.
+Heights are stacked off the CART'S DECK rather than off the table, and only the pin
+ever touches a pocket. Rail 0-12 mm, wheels to 32 mm, deck 32-44 mm, both pockets
+44-84 mm, the pin hanging from the beam down to 52 mm, the beam's underside at
+95 mm clearing both. B1 projects forward from the cart's headstock with nothing
+under it, the way a coupler does; A2 is held to the same height by a stand on A's
+outrigger. A pocket sitting near the table instead read as bolted to the ground,
+which is a different mounting story from a chassis on wheels -- no amount of
+matching their colour or width made the two look like one object.
 
 Everything is generated from config numbers, and the layout is derived rather than
 tabulated: the catch positions, B's whole pose, A's outrigger direction and the
@@ -554,6 +558,56 @@ class LinkbarMergeScene:
             [float(travel)], dofs_idx_local=[int(self.carriage_dof)], zero_velocity=True
         )
 
+    def touching(self) -> str:
+        """What the beam is in contact with right now, and how hard.
+
+        A beam that moves when nothing commanded it has either been pushed or is
+        drifting, and the two want opposite fixes. Reading the contact set says
+        which -- the same diagnostic that found the parked arm fouling the sweep on
+        2026-08-20, where reasoning from the angle alone had been wrong twice.
+        """
+
+        contacts = self.linkbar_entity().get_contacts(exclude_self_contact=True)
+        if not contacts:
+            return "none"
+        owners = {}
+        for name, entity in self.manifest.as_dict().items():
+            for link in getattr(entity, "links", None) or ():
+                owners[int(link.idx)] = name
+        link_a = _as_numpy(contacts["link_a"]).reshape(-1)
+        link_b = _as_numpy(contacts["link_b"]).reshape(-1)
+        force = _as_numpy(contacts["force_a"]).reshape(-1, 3)
+        beam = self.beam_link_idx()
+        totals: dict[str, float] = {}
+        for index, (first, second) in enumerate(zip(link_a, link_b)):
+            other = int(second) if int(first) == beam else int(first)
+            name = owners.get(other, f"link{other}")
+            totals[name] = totals.get(name, 0.0) + float(np.linalg.norm(force[index]))
+        if not totals:
+            return "none"
+        return ",".join(f"{name}:{value:.2f}N"
+                        for name, value in sorted(totals.items(), key=lambda kv: -kv[1]))
+
+    def height_chain(self) -> str:
+        """The stack the whole coupling hangs off, as one line.
+
+        Printed at setup because "did my config change reach this machine" is a
+        question that has cost two runs already, and every number here moves when
+        the coupling height does.
+        """
+
+        layout = self.layout
+        cart = layout.cfg.component_b.cart
+        return (
+            f"rail_top={layout.rail_top_z:.4f} deck={layout.deck_bottom_z:.4f}.."
+            f"{layout.deck_bottom_z + float(cart.deck_thickness):.4f} "
+            f"socket={layout.socket_floor_z:.4f}.."
+            f"{layout.socket_floor_z + float(layout.cfg.socket.jamb_height):.4f} "
+            f"pin_bottom={layout.pin_bottom_z:.4f} "
+            f"beam_bottom={layout.beam_bottom_z:.4f} "
+            f"knob={layout.knob_bottom_z:.4f}..{layout.knob_top_z:.4f}"
+        )
+
     # --------------------------------------------------------- constraint graph
 
     def beam_link_idx(self) -> int:
@@ -761,6 +815,13 @@ class LinkbarMergeSceneBuilder:
         slot would be something the pin's own arm runs into. The cap behind the back
         plate is decoration -- the pin never reaches past the stop.
 
+        Nothing here reaches below `socket_floor_z`: the pocket sits at deck height
+        and projects forward from its host like a coupler, so there is no skirt down
+        to the table. An earlier version had one, to bridge a pocket that hung near
+        the floor -- once the coupling height moved up to the deck it had nothing
+        left to bridge, and its z span was still being measured from zero, which put
+        a slab from the table to the pocket's roof.
+
         One generator, called once per socket, with no handedness: the pocket always
         opens toward the side the pin arrives from, so the same shape serves both
         installations. docx 4.4's anti-shortcut argument needs the two interfaces to
@@ -799,28 +860,6 @@ class LinkbarMergeSceneBuilder:
                     color=_list(sock.color),
                 )
             )
-        # An apron filling the outboard side of the slot out to the host's own
-        # width, from the table up to the jambs' top. Without it the pocket is a
-        # narrow U hanging under a wide deck, meeting it across 2 mm of overlap, and
-        # it reads as a bracket bolted on rather than as the cart's nose.
-        #
-        # Visual only, and safely so: it lies entirely within the span of the outer
-        # jamb, which does collide, so the pin cannot reach it; the beam sweeps 31 mm
-        # above it. Switching it off moves no contact, which is the standing rule for
-        # anything in this repo that exists to be looked at.
-        face_width = float(sock.face_width)
-        apron_inner = jamb_offset - 0.5 * jamb_thickness
-        apron_outer = jamb_offset + 0.5 * jamb_thickness
-        shapes.append(
-            HingeShape(
-                kind="box",
-                size=(face_width, apron_outer - apron_inner, lift + jamb_height),
-                origin=(0.0, 0.5 * (apron_inner + apron_outer),
-                        0.5 * (lift + jamb_height)),
-                color=_list(sock.color),
-                collide=False,
-            )
-        )
         return shapes
 
     def _add_socket_a2(self, scene, manifest, layout) -> None:

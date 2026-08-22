@@ -347,6 +347,18 @@ def main(cfg: DictConfig) -> None:
         f"stage={stage} mode={cfg.run.oracle_mode}",
         flush=True,
     )
+    print(f"linkbar_merge_components heights {merge_scene.height_chain()}", flush=True)
+    # After the home settle and before anything is commanded. A beam that has left
+    # its start angle here moved without being asked to, and `touching` says whether
+    # something pushed it or it drifted on its own.
+    print(
+        "linkbar_merge_components settle_check "
+        f"angle={np.rad2deg(merge_scene.arm_angle()):+.2f}deg "
+        f"(init={float(cfg.task.linkbar.init_angle_deg):+.2f}deg) "
+        f"carriage={merge_scene.carriage_travel() * 1000:+.2f}mm "
+        f"touching={merge_scene.touching()}",
+        flush=True,
+    )
 
     episode_key = EpisodeKey(task_id="linkbar_merge_components", seed=int(cfg.run.seed))
     status = {"phase": "home", "mode": "-", "target": "-", "latched": None}

@@ -25,7 +25,7 @@
 |---|---|---|
 | 2.3 | `routing/bar_through_hole.py` | 阶段 1 已完成。全流程 16/16 相通过，`threading=1`、`release_stable=True`。反捷径对照（`run.oracle_mode=bypass`）未跑 |
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
-| 4.4 | `connectivity/linkbar_merge_components.py` | 未开工 |
+| 4.4 | `connectivity/linkbar_merge_components.py` | 场景与判据已过，执行层待复核。记录见 [`linkbar_merge_components_zh.md`](linkbar_merge_components_zh.md) |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
 | 3.4 | `entangle/unlink_c_ring.py` | 场景已落地（2026-08-21）。§7.3 的前置验证做完，见下。verifier、抽出原语、physical demo 未开工 |
 
@@ -220,18 +220,20 @@ maze_wall_removal 三个任务共用，改动面过大。
 ### 4.5 docx 3.4 —— `entangle/unlink_c_ring.py`
 
 场景与几何于 2026-08-21 落地，下表为落地后的实际形态；与规划时的差异各自注明。
+完整记录（尺寸推导、两项新增设计的理由、碰撞精度实测、待跑的 GPU 判据）见
+[`unlink_c_ring_zh.md`](unlink_c_ring_zh.md)。
 
 | 项 | 内容 |
 |---|---|
 | 场景资产 | 立柱 + 水平悬臂的支架、固定的闭合刚性圆环、带径向抓取凸台的 C 形开口环 |
 | 几何做法 | 两个环都是非凸体，按仓库既有解法拆为多段短圆柱沿圆周组合，用 `_fixtures.add_rigid_assembly` 焊成单刚体；C 环即少放几段留出开口。分段按**弧角**配（`segment_deg`）而不是按段数配 |
 | 支架取悬臂 | 规划时未定。固定环由悬臂从远端牵出，环面与悬臂垂直。这样 C 环的全部活动包络够不到立柱，立柱一次也不参与接触；悬臂只盖住 C 环远离机器人的那一半，近侧从上方是空的 |
-| 抓取凸台 | 规划时未列。它是力学件：`_fixtures._link_xml` 把质心放在碰撞件包围盒中心，C 环的包围盒只被开口拉偏 1.05mm，按该函数写出的惯量算约 0.35s 就把开口转到管身正上方、环自行脱落。凸台把质心拉到环心下方 7.5mm，静置姿态变为凸台朝下 |
+| 抓取凸台 | 规划时未列。`_fixtures._link_xml` 把质心放在碰撞件包围盒中心；不带凸台时该中心只横向偏 1.62mm、竖直不偏，静止姿态即「开口转到管身上」。凸台把包围盒下拉 8.30mm，静止姿态改到离出生姿态 11°。**但 2026-08-22 实测表明维持互锁的是悬挂接触的摩擦（12.3 vs 0.79 mNm），不是凸台**；凸台的实际作用是抓取特征与摩擦裕度 |
 | 复用 | `StandardTabletopSceneBuilder`、`_fixtures.{HingeShape, add_rigid_assembly}`、`_visuals.add_industrial_pedestal`、`world/closed_band.py` 的 `linking_number` |
 | 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）；六自由度抽出原语**尚未开工**——动作是「沿一条使开口始终对准闭环环身的空间轨迹一次抽出」，现有原语（顶抓放置、手柄拖拽、轮缘滚动）都不覆盖 |
 | 不变量 | 主读数取 `signed_crossing_sequence`（`task_taxonomy_zh.md` §4.3 对 C3 允许的取值；该节不含 `linking_number`），并显式声明「C 环开口用直弦补合」这一 canonical closure；`linking_number` 作为派生读数一并写入。verifier 未开工 |
 | 防捷径 | 由物理本身保证，且已实测：八条非 gateway 轨迹全部卡住，最浅穿透 1.0mm。**gateway 只有一条**——反向转 90° 后向上抽会被闭合环的另一侧挡住，不存在镜像解 |
-| 风险 | 几何一侧已消解（见 §7 第 3 条）。剩余风险在求解器一侧：静置是否自解、两条链约 1150 个接触对的每步开销，都要 GPU 实测 |
+| 风险 | 已消解。几何一侧见 §7 第 3 条；求解器一侧 2026-08-22 实测：600 步静置 `Lk` 恒为 −1、开口方位漂移 0.6°，每步 1ms（CPU，约 1115 步/秒），约 1150 个接触对未构成瓶颈 |
 
 ---
 
