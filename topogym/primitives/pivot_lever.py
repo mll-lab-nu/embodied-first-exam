@@ -39,6 +39,26 @@ def _as_numpy(value) -> np.ndarray:
     return np.asarray(value)
 
 
+def _quat_slerp(start, end, alpha: float) -> np.ndarray:
+    start = np.asarray(start, dtype=float)
+    end = np.asarray(end, dtype=float)
+    start = start / np.linalg.norm(start)
+    end = end / np.linalg.norm(end)
+    dot = float(np.dot(start, end))
+    if dot < 0.0:
+        end = -end
+        dot = -dot
+    if dot > 0.9995:
+        result = start + float(alpha) * (end - start)
+        return result / np.linalg.norm(result)
+    theta = np.arccos(np.clip(dot, -1.0, 1.0))
+    sin_theta = np.sin(theta)
+    return (
+        np.sin((1.0 - float(alpha)) * theta) / sin_theta * start
+        + np.sin(float(alpha) * theta) / sin_theta * end
+    )
+
+
 def _wrap_angle(angle: float) -> float:
     """Wrap to (-pi, pi]."""
 
@@ -283,7 +303,10 @@ class PivotLeverPrimitive:
         for step in range(1, steps + 1):
             alpha = 0.5 - 0.5 * np.cos(np.pi * step / steps)
             waypoint = (1.0 - alpha) * start + alpha * target
-            controller.move_ee_to(waypoint, quat=quat, steps=1, continuous_ik=True)
+            waypoint_quat = quat
+            if start_quat is not None and quat is not None:
+                waypoint_quat = _quat_slerp(start_quat, quat, alpha)
+            controller.move_ee_to(waypoint, quat=waypoint_quat, steps=1, continuous_ik=True)
 
     def _angle(self, entity, dof: int) -> float:
         value = entity.get_dofs_position(dofs_idx_local=[int(dof)])

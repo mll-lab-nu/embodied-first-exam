@@ -1,0 +1,303 @@
+"""Did the C ring come off the closed ring, and can it now leave freely?
+
+The C3 (`entangle`) contract in `docs/develop/framework/task_taxonomy_zh.md`
+Section 4.3 asks for four things, and all four are in `to_info()`: a signed crossing
+sequence as the invariant, an explicitly declared projection, an explicitly declared
+boundary condition, and a physical recheck kept apart from the geometric reading.
+
+Two of those need a word here.
+
+**The C ring is an open curve**, so a linking number is undefined until the opening
+is bridged. The declared closure is a straight chord across the opening
+(`_c_ring_geometry.centerline`), and it is not an arbitrary choice: that chord is the
+very segment the closed ring's body has to cross, so "the reading changed" and "the
+body went through the opening" are the same event.
+
+**The projection is derived from the layout, not configured.** Both rings turn with
+`stand.yaw_deg`, and a matrix that was right at one yaw looked straight down the C's
+own plane at another and read `Lk = -2`. `_c_ring_geometry.bisector_projection` takes
+the bisector of the two ring normals, which puts both rings at 45 degrees. The judge
+therefore reads `|Lk|`, not `Lk`: the sign follows the handedness of that basis and
+flipped from -1 to +1 when the stand was turned, with no change to the interlock.
+
+The physical recheck lives in `topogym/tasks/entangle/_c_ring_travel_probe.py`,
+because it has to step physics and this package stays free of side effects.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+import numpy as np
+
+from topogym.tasks.entangle import _c_ring_geometry as ring_geometry
+from topogym.tasks.entangle.unlink_c_ring import UnlinkCRingScene
+from topogym.world.closed_band import crossings_between, linking_number
+
+INVARIANT_NAME = "signed_crossing_sequence"
+
+# Curve numbering for the crossing sequence. Fixed by the order the centerlines are
+# handed to `crossings_between`, and written down because the sequence is meaningless
+# without it.
+FIXED_RING = 0
+C_RING = 1
+
+# Below this the reading is treated as unlinked. The linking number of two closed
+# curves is an integer, so anything near zero is zero; the tolerance only absorbs the
+# chord approximation, which moves nothing by half a crossing.
+_UNLINKED_TOLERANCE = 0.5
+
+
+def _entity_pos(entity) -> np.ndarray:
+    value = entity.get_pos()
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value).reshape(-1, 3)[0].astype(float)
+
+
+def _entity_quat(entity) -> np.ndarray:
+    value = entity.get_quat()
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value).reshape(-1, 4)[0].astype(float)
+
+
+def _quat_to_matrix(quat) -> np.ndarray:
+    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+        ],
+        dtype=float,
+    )
+
+
+def c_ring_frame(ring_scene: UnlinkCRingScene) -> ring_geometry.RingFrame:
+    """The C's current ring frame, read back from the solver.
+
+    The body was written with its URDF origin at the ring's centre and spawned
+    unrotated, so the entity's pose IS the frame's rigid transform -- no offset to
+    unwind, which is why `add_rigid_assembly` was given centre-relative shapes.
+    """
+
+    entity = ring_scene.c_ring_entity()
+    rotation = _quat_to_matrix(_entity_quat(entity))
+    center = _entity_pos(entity) - np.asarray(ring_scene.layout.task_origin, dtype=float)
+    spawn = ring_scene.geometry.c_spawn_frame
+    return ring_geometry.RingFrame(
+        center=center, normal=rotation @ spawn.normal, ref=rotation @ spawn.ref
+    )
+
+
+def opening_to_bar_deg(geometry: ring_geometry.SceneGeometry, frame) -> float:
+    """Angle between the C's opening and the direction from its centre to the bar.
+
+    Zero means the opening points straight at the bar, which is the aligned pose the
+    extraction has to reach. It is also the reading that says how far the resting
+    pose is from dropping off unaided, which is why the inspect demo watches it.
+
+    This is the alignment measure for a roll about the ring's own normal.
+    `axial_insert`'s `_axis_tilt` cannot serve: the normal is the rotation axis, so
+    it does not move and that reading stays zero through the whole turn.
+    """
+
+    opening = frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - frame.center
+    to_bar = geometry.tube_point - frame.center
+    scale = float(np.linalg.norm(opening) * np.linalg.norm(to_bar))
+    if scale < 1e-12:
+        return 0.0
+    cosine = float(np.dot(opening, to_bar)) / scale
+    return float(np.rad2deg(np.arccos(np.clip(cosine, -1.0, 1.0))))
+
+
+def signed_crossing_sequence(crossings) -> tuple[tuple[int, int, int], ...]:
+    """`(over curve, under curve, sign)` per crossing, sorted.
+
+    Section 4.3's literal form. Note this is NOT
+    `swap_crossing_sign_verifier.signed_crossings`, which orders the pair by strand
+    index and spends the third slot on which strand is on top. That works there
+    because the geometric sign of its single crossing never changes; here the two
+    crossings of a link share one geometric sign and differ in which ring is over, so
+    both facts have to be carried separately.
+    """
+
+    out = []
+    for crossing in crossings:
+        over = int(crossing.over_curve)
+        out.append((over, FIXED_RING if over == C_RING else C_RING, int(crossing.sign)))
+    return tuple(sorted(out))
+
+
+@dataclass(frozen=True)
+class UnlinkCRingPuzzleState:
+    """One reading of the two rings, with the thresholds it was judged against."""
+
+    crossings: tuple[tuple[int, int, int], ...]
+    linking: float
+    surface_gap: float
+    min_surface_gap: float
+    opening_to_bar_deg: float
+    center_drift: float
+    tilt_deg: float
+    projection_viewer: tuple[float, float, float]
+    gap_deg: float
+    travel_tested: bool = False
+    travel_free: bool = False
+    travel_info: dict[str, Any] = field(default_factory=dict)
+    release_stable: bool = True
+
+    @property
+    def invariant_value(self) -> tuple[tuple[int, int, int], ...]:
+        return self.crossings
+
+    @property
+    def crossing_count(self) -> int:
+        return len(self.crossings)
+
+    @property
+    def unlinked(self) -> bool:
+        return bool(abs(self.linking) < _UNLINKED_TOLERANCE)
+
+    @property
+    def separated(self) -> bool:
+        """Clear of the other ring by a real margin, not merely not overlapping.
+
+        A pose that reads unlinked while the two surfaces are still touching is a
+        reading taken mid-extraction, not a finished one.
+        """
+
+        return bool(self.surface_gap >= self.min_surface_gap)
+
+    @property
+    def geometry_ok(self) -> bool:
+        return bool(self.unlinked and self.separated)
+
+    @property
+    def judge_disagrees(self) -> bool:
+        """Geometry says unlinked, yet the ring cannot be pushed anywhere.
+
+        The judge is wrong, not the run. Worth surfacing rather than failing on:
+        it means the closure or the projection is misreading the scene.
+        """
+
+        return bool(self.unlinked and self.travel_tested and not self.travel_free)
+
+    @property
+    def probe_uninformative(self) -> bool:
+        """The ring moved freely while still linked -- the push overpowered the interlock."""
+
+        return bool(self.travel_tested and self.travel_free and not self.unlinked)
+
+    @property
+    def is_terminal(self) -> bool:
+        return bool(self.geometry_ok and self.travel_free and self.release_stable)
+
+    def to_info(self) -> dict[str, Any]:
+        return {
+            # --- the category invariant -------------------------------------
+            "invariant": INVARIANT_NAME,
+            "invariant_value": [list(item) for item in self.invariant_value],
+            "crossing_count": self.crossing_count,
+            # Derived from the same crossings; the judge reads its magnitude, since
+            # the sign follows the handedness of the projection basis.
+            "linking_number": float(self.linking),
+            "linking_number_abs": float(abs(self.linking)),
+            # --- declarations Section 4.3 requires --------------------------
+            "projection": {
+                "viewer": [float(v) for v in self.projection_viewer],
+                "rule": "bisector of the two ring normals, derived from the layout",
+            },
+            "canonical_closure": (
+                "the C ring's opening is bridged by a straight chord; that chord is "
+                "the segment the closed ring's body crosses"
+            ),
+            "boundary_condition": "the closed ring is fixed to the stand and never moves",
+            "gateway": "c_ring_opening",
+            "gap_deg": float(self.gap_deg),
+            # --- geometry readings ------------------------------------------
+            "surface_gap": float(self.surface_gap),
+            "min_surface_gap": float(self.min_surface_gap),
+            "separated": bool(self.separated),
+            "opening_to_bar_deg": float(self.opening_to_bar_deg),
+            "center_drift": float(self.center_drift),
+            "tilt_deg": float(self.tilt_deg),
+            "unlinked": bool(self.unlinked),
+            "geometry_ok": bool(self.geometry_ok),
+            # --- physical recheck, reported separately ----------------------
+            "travel_tested": bool(self.travel_tested),
+            "travel_free": bool(self.travel_free),
+            "free_translation": dict(self.travel_info),
+            "release_stable": bool(self.release_stable),
+            "judge_disagrees": bool(self.judge_disagrees),
+            "probe_uninformative": bool(self.probe_uninformative),
+            "terminal": bool(self.is_terminal),
+        }
+
+
+@dataclass(frozen=True)
+class UnlinkCRingPuzzleEvaluator:
+    """Success = unlinked, clear of the ring, free to translate, and stays put."""
+
+    min_surface_gap: float = 0.002
+
+    @classmethod
+    def from_config(cls, task_cfg) -> "UnlinkCRingPuzzleEvaluator":
+        success = getattr(task_cfg, "success", None)
+        if success is None:
+            return cls()
+        return cls(min_surface_gap=float(success.min_surface_gap))
+
+    def classify(
+        self,
+        ring_scene: UnlinkCRingScene,
+        *,
+        frame: ring_geometry.RingFrame | None = None,
+        travel=None,
+        release_stable: bool = True,
+    ) -> UnlinkCRingPuzzleState:
+        """Read the scene, or a hypothetical pose of the C ring.
+
+        ``frame`` exists so a caller can ask what a pose WOULD read -- the spawn pose
+        before anything has stepped, or a waypoint along a planned trajectory --
+        without moving the body to find out. Left out, it reads the solver.
+        """
+
+        geometry = ring_scene.geometry
+        frame = c_ring_frame(ring_scene) if frame is None else frame
+        fixed_line = ring_geometry.centerline(geometry.fixed, geometry.fixed_frame)
+        c_line = ring_geometry.centerline(
+            geometry.c_ring, frame, closure_samples=geometry.closure_samples
+        )
+        crossings = crossings_between(fixed_line, c_line, projection=geometry.projection)
+
+        return UnlinkCRingPuzzleState(
+            crossings=signed_crossing_sequence(crossings),
+            linking=float(linking_number(fixed_line, c_line, projection=geometry.projection)),
+            surface_gap=float(
+                ring_geometry.surface_gap(geometry.fixed_axes(), geometry.c_axes(frame))
+            ),
+            min_surface_gap=float(self.min_surface_gap),
+            opening_to_bar_deg=opening_to_bar_deg(geometry, frame),
+            center_drift=float(np.linalg.norm(frame.center - geometry.c_rest_frame.center)),
+            # How far the ring's plane has cocked off the bar's axis. Zero all
+            # through a roll about that axis, so it reads only genuine wobble.
+            tilt_deg=float(
+                np.rad2deg(
+                    np.arccos(
+                        np.clip(abs(float(np.dot(frame.normal, geometry.tube_direction))), -1.0, 1.0)
+                    )
+                )
+            ),
+            projection_viewer=tuple(float(v) for v in geometry.projection[2]),
+            gap_deg=float(geometry.c_ring.gap_deg),
+            travel_tested=travel is not None,
+            travel_free=bool(travel.all_free) if travel is not None else False,
+            travel_info=travel.to_info() if travel is not None else {},
+            release_stable=bool(release_stable),
+        )
+
+    def is_success(self, ring_scene: UnlinkCRingScene, **kwargs) -> bool:
+        return self.classify(ring_scene, **kwargs).is_terminal

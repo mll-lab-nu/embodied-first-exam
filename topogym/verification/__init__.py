@@ -52,6 +52,12 @@ from .swap_crossing_sign_verifier import (
     signed_crossings,
 )
 from .swap_verifier import SwapPuzzleEvaluator, SwapPuzzleState, SwapSuccessChecker
+from .unlink_c_ring_verifier import (
+    UnlinkCRingPuzzleEvaluator,
+    UnlinkCRingPuzzleState,
+    c_ring_frame,
+    opening_to_bar_deg,
+)
 from .untangle_continuous_verifier import (
     GeoCrossing,
     UntangleContinuousPuzzleEvaluator,
@@ -88,6 +94,10 @@ __all__ = [
     "SwapCrossingSignPuzzleEvaluator",
     "SwapCrossingSignPuzzleState",
     "signed_crossings",
+    "UnlinkCRingPuzzleEvaluator",
+    "UnlinkCRingPuzzleState",
+    "c_ring_frame",
+    "opening_to_bar_deg",
     "UntangleContinuousPuzzleEvaluator",
     "UntangleContinuousPuzzleState",
     "count_crossings",

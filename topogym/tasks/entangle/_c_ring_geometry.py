@@ -468,6 +468,20 @@ class SceneGeometry:
     def c_axes(self, frame: RingFrame):
         return body_axes(self.c_ring, frame, self.tab)
 
+    def align_rotation(self) -> tuple[np.ndarray, float]:
+        """Axis and angle in degrees that bring the opening onto the bar.
+
+        The same rotation `gateway_phases`' first phase applies, but expressed the
+        way a quaternion builder wants it: ``quat_about_axis(axis, radians(angle))``.
+        `apply_phases` negates its angle, so the sign is folded in here instead of
+        being left for two call sites to get right independently -- the primitive
+        and the offline gate both read it from this one place.
+        """
+
+        return -np.asarray(self.c_rest_frame.normal, dtype=float), float(
+            self.c_ring.gap_azimuth_deg
+        )
+
     def gateway_phases(self, *, carry: float = 0.090):
         """The one trajectory that unlinks: align the opening, drop out, carry away.
 

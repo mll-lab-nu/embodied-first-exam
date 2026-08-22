@@ -10,6 +10,7 @@ from .attachment import (
 )
 from .gated_insert import GatedInsertPrimitive, GatedInsertResult
 from .axial_insert import AxialInsertPrimitive, AxialInsertResult
+from .gateway_extract import GatewayExtractPrimitive, GatewayExtractResult
 from .connector_latch import ConnectorLatch
 from .physical_contact import (
     configure_finger_contact_friction,
@@ -47,6 +48,8 @@ from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, R
 from .cloth_corner_fold import ClothCornerFoldPrimitive, ClothFoldResult
 
 __all__ = [
+    "GatewayExtractPrimitive",
+    "GatewayExtractResult",
     "ClothCornerFoldPrimitive",
     "ClothFoldResult",
     "AttachmentManager",

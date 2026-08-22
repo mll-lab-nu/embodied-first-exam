@@ -35,7 +35,6 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
-from topogym.primitives import entity_pos, entity_quat
 from topogym.supervision import stop_before_physics
 from topogym.tasks import UnlinkCRingSceneBuilder
 from topogym.tasks.entangle import _c_ring_geometry as ring_geometry
@@ -45,74 +44,28 @@ from topogym.utils.recording import (
     print_recording_saved,
     recording_session_from_config,
 )
-from topogym.world.closed_band import linking_number
+from topogym.verification import UnlinkCRingPuzzleEvaluator
 
 # Below this the opening is close enough to the bar that the C can slip off, since
 # half the opening subtends that much. Reported as a margin, not enforced.
 FALL_OFF_MARGIN_DEG = 0.5
 
 
-def _quat_to_matrix(quat) -> np.ndarray:
-    w, x, y, z = (float(v) for v in np.asarray(quat, dtype=float).reshape(4))
-    return np.array(
-        [
-            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
-            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
-            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
-        ],
-        dtype=float,
-    )
+def reading(evaluator, ring_scene, frame=None) -> dict:
+    """The verifier's readings, flattened for printing.
 
-
-def live_frame(ring_scene) -> ring_geometry.RingFrame:
-    """The C's current ring frame, read back from the solver.
-
-    The body was written with its URDF origin at the ring's centre and spawned
-    unrotated, so the entity's pose IS the frame's rigid transform -- no offset to
-    unwind, which is the reason `add_rigid_assembly` was given centre-relative
-    shapes in the first place.
+    The judge owns the readback -- `module_boundaries_zh.md` section 3 -- so this
+    demo asks the evaluator rather than reconstructing the ring frame itself.
+    Passing ``frame`` reads a hypothetical pose (the spawn pose, before any
+    stepping); leaving it out reads the solver's current one.
     """
 
-    geometry = ring_scene.geometry
-    entity = ring_scene.c_ring_entity()
-    rotation = _quat_to_matrix(entity_quat(entity))
-    center = np.asarray(entity_pos(entity), dtype=float) - np.asarray(
-        ring_scene.layout.task_origin, dtype=float
-    )
-    spawn = geometry.c_spawn_frame
-    return ring_geometry.RingFrame(
-        center=center, normal=rotation @ spawn.normal, ref=rotation @ spawn.ref
-    )
-
-
-def reading(ring_scene, frame) -> dict:
-    """Linking number, how far the opening is from the bar, and how far the C moved."""
-
-    geometry = ring_scene.geometry
-    opening = (
-        frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - frame.center
-    )
-    to_bar = geometry.tube_point - frame.center
-    cosine = float(
-        np.dot(opening, to_bar) / (np.linalg.norm(opening) * np.linalg.norm(to_bar))
-    )
+    state = evaluator.classify(ring_scene, frame=frame)
     return {
-        "linking": linking_number(
-            ring_geometry.centerline(geometry.fixed, geometry.fixed_frame),
-            ring_geometry.centerline(
-                geometry.c_ring, frame, closure_samples=geometry.closure_samples
-            ),
-            projection=geometry.projection,
-        ),
-        "opening_to_bar_deg": float(np.rad2deg(np.arccos(np.clip(cosine, -1.0, 1.0)))),
-        "drift_mm": 1000.0 * float(np.linalg.norm(frame.center - geometry.c_rest_frame.center)),
-        "tilt_deg": float(
-            np.rad2deg(
-                np.arccos(
-                    np.clip(abs(float(np.dot(frame.normal, geometry.tube_direction))), -1.0, 1.0)
-                )
-            )
-        ),
+        "linking": state.linking,
+        "opening_to_bar_deg": state.opening_to_bar_deg,
+        "drift_mm": 1000.0 * state.center_drift,
+        "tilt_deg": state.tilt_deg,
     }
 
 
@@ -128,7 +81,7 @@ def _hud(ring_scene, state):
     return render_lines
 
 
-def hold(cfg, ring_scene, state) -> None:
+def hold(cfg, evaluator, ring_scene, state) -> None:
     """Step with nothing touching the C, and watch the interlock hold or not."""
 
     scene = ring_scene.scene
@@ -140,7 +93,7 @@ def hold(cfg, ring_scene, state) -> None:
         scene.step()
         if step % every and step != int(cfg.run.hold_steps):
             continue
-        sample = reading(ring_scene, live_frame(ring_scene))
+        sample = reading(evaluator, ring_scene)
         state.update(sample)
         worst_linking = min(worst_linking, abs(sample["linking"]))
         worst_angle = min(worst_angle, sample["opening_to_bar_deg"])
@@ -154,7 +107,7 @@ def hold(cfg, ring_scene, state) -> None:
                 flush=True,
             )
 
-    final = reading(ring_scene, live_frame(ring_scene))
+    final = reading(evaluator, ring_scene)
     print(
         "unlink_c_ring hold "
         f"steps={int(cfg.run.hold_steps)} "
@@ -225,7 +178,8 @@ def main(cfg: DictConfig) -> None:
         f"{(ring_geometry.HOME_FINGERTIP_Z - geometry.top_z) * 1000:.1f}mm",
         flush=True,
     )
-    spawn = reading(ring_scene, geometry.c_spawn_frame)
+    evaluator = UnlinkCRingPuzzleEvaluator.from_config(cfg.task)
+    spawn = reading(evaluator, ring_scene, frame=geometry.c_spawn_frame)
     # The projection is part of the judging contract (`task_taxonomy_zh.md` 4.3), and
     # it is derived from the layout rather than configured, so the run has to say
     # which one it used.
@@ -248,7 +202,7 @@ def main(cfg: DictConfig) -> None:
         if cfg.run.static_only:
             print("unlink_c_ring static_only=true; not stepping.", flush=True)
         else:
-            settled = reading(ring_scene, live_frame(ring_scene))
+            settled = reading(evaluator, ring_scene)
             print(
                 f"unlink_c_ring settled Lk={settled['linking']:+.1f} "
                 f"opening_to_bar={settled['opening_to_bar_deg']:.2f}deg "
@@ -257,7 +211,7 @@ def main(cfg: DictConfig) -> None:
             )
             state.update(settled)
             state["phase"] = "hold"
-            hold(cfg, ring_scene, state)
+            hold(cfg, evaluator, ring_scene, state)
         state["phase"] = "done"
 
     print_recording_saved(cfg.recording)
