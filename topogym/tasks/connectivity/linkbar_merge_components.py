@@ -610,8 +610,13 @@ class LinkbarMergeScene:
             return "none"
         owners = {}
         for name, entity in self.manifest.as_dict().items():
-            for link in getattr(entity, "links", None) or ():
-                owners[int(link.idx)] = name
+            links = getattr(entity, "links", None) or ()
+            for link in links:
+                # A multi-link entity is named down to the link: "robot" says the arm
+                # touched something, "robot/panda_hand" says which part of it did, and
+                # only the second one tells a wrist sweep from a finger brush.
+                label = name if len(links) == 1 else f"{name}/{getattr(link, 'name', link.idx)}"
+                owners[int(link.idx)] = label
         link_a = _as_numpy(contacts["link_a"]).reshape(-1)
         link_b = _as_numpy(contacts["link_b"]).reshape(-1)
         force = _as_numpy(contacts["force_a"]).reshape(-1, 3)

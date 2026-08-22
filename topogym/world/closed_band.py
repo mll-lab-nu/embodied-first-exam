@@ -54,6 +54,11 @@ class Crossing:
     gap: float  # over minus under along the viewing axis, meters
     over_at: float  # normalized position along the over curve, [0, 1)
     under_at: float  # normalized position along the under curve, [0, 1)
+    # Which of the two curves handed to `_crossings` is the one on top: 0 for the
+    # first, 1 for the second. `over_at` alone cannot say, because it is normalized
+    # along whichever curve won. Meaningless for a self-crossing, where both are the
+    # same curve, so it defaults to 0 and `band_self_crossings` ignores it.
+    over_curve: int = 0
 
 
 @dataclass(frozen=True)
@@ -402,9 +407,11 @@ def _crossings(
             if depth_a >= depth_b:
                 over, under = a1 - a0, b1 - b0
                 over_at, under_at = (i + t) / count_a, (j + u) / count_b
+                over_curve = 0
             else:
                 over, under = b1 - b0, a1 - a0
                 over_at, under_at = (j + u) / count_b, (i + t) / count_a
+                over_curve = 1
             twist = float(over[0] * under[1] - over[1] * under[0])
             hits.append(
                 Crossing(
@@ -413,6 +420,7 @@ def _crossings(
                     gap=float(abs(depth_a - depth_b)),
                     over_at=float(over_at),
                     under_at=float(under_at),
+                    over_curve=over_curve,
                 )
             )
     return hits
@@ -464,6 +472,25 @@ def band_self_crossings(
     return _merge_nearby(hits, merge_radius=merge_radius)
 
 
+def crossings_between(
+    curve_a: np.ndarray,
+    curve_b: np.ndarray,
+    *,
+    projection: np.ndarray = WALL_PROJECTION,
+) -> tuple[Crossing, ...]:
+    """Signed crossings between two closed curves in a projection.
+
+    `linking_number` is half their signed sum. This exists next to it because the
+    C3 judging contract records the crossing *sequence*, not only its total
+    (`docs/develop/framework/task_taxonomy_zh.md` section 4.3), and recomputing the
+    same pair loop to get at it would be the same work twice.
+    """
+
+    return tuple(
+        _crossings(curve_a, curve_b, projection=projection, same_curve=False, skip_adjacent=0)
+    )
+
+
 def linking_number(
     curve_a: np.ndarray,
     curve_b: np.ndarray,
@@ -477,9 +504,7 @@ def linking_number(
     curves (a crossing seen edge-on), not that the topology is fractional.
     """
 
-    hits = _crossings(
-        curve_a, curve_b, projection=projection, same_curve=False, skip_adjacent=0
-    )
+    hits = crossings_between(curve_a, curve_b, projection=projection)
     return 0.5 * float(sum(hit.sign for hit in hits))
 
 
@@ -493,6 +518,7 @@ __all__ = [
     "closed_transport_frames",
     "closed_tube_mesh",
     "band_reach",
+    "crossings_between",
     "linking_number",
     "pegged_band_centerline",
 ]

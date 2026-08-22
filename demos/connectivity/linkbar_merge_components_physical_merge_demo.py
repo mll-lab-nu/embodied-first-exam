@@ -44,6 +44,7 @@ from topogym.primitives import (
     configure_gripper_contact_friction,
     print_collision_il_contract,
 )
+from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.supervision import stop_before_physics
 from topogym.tasks import LINKBAR_SOCKETS, LinkbarMergeSceneBuilder
@@ -222,6 +223,28 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
 
     primitive = build_primitive(cfg, layout)
     evaluator = LinkbarMergeEvaluator()
+
+    # How far the wrist is asked to turn on the very first commanded step. The
+    # approach's opening move eases its POSITION to the traverse height over 100
+    # steps, but hands the controller its final ORIENTATION on step 1 -- so a home
+    # pose that is not already square to the knob gets corrected in one step at
+    # full gain. The disturbance on 2026-08-22 landed 7 steps into that move, at
+    # 218 N, with the hand 0.6 mm from where it started; that only adds up if what
+    # swung was the wrist. This prints the size of the swing it is asked for.
+    home_quat = np.asarray(controller.hand_quat(), dtype=float).reshape(4)
+    want_quat = np.asarray(
+        ee_quat_for_yaw(controller.default_ee_quat, merge_scene.arm_angle()), dtype=float
+    ).reshape(4)
+    snap_deg = np.rad2deg(
+        2.0 * np.arccos(np.clip(abs(float(np.dot(home_quat, want_quat))), 0.0, 1.0))
+    )
+    print(
+        "linkbar_merge_components wrist_snap "
+        f"home=({','.join(f'{v:+.3f}' for v in home_quat)}) "
+        f"commanded=({','.join(f'{v:+.3f}' for v in want_quat)}) "
+        f"turn={snap_deg:.2f}deg",
+        flush=True,
+    )
 
     with make_latch(merge_scene) as latch, FirstDisturbance(merge_scene) as watch:
         result = None
