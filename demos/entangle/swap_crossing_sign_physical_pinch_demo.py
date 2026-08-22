@@ -313,7 +313,7 @@ def run_demo(cfg: DictConfig) -> tuple[bool, object]:
                     "stopping rather than running a move that cannot do what it claims."
                 )
                 break
-            command, _plan = planned
+            command, plan = planned
             connector = rope_scene.free_end_connectors[command.strand_index]
             # Straight from the planner: it clamps each target to what the rope
             # can reach, so rebuilding them here would silently undo the clamp.
@@ -326,6 +326,12 @@ def run_demo(cfg: DictConfig) -> tuple[bool, object]:
                 f"grasp_xy=({command.grasp_xy[0]:+.3f},{command.grasp_xy[1]:+.3f}) "
                 f"place_xy=({command.place_xy[0]:+.3f},{command.place_xy[1]:+.3f}) "
                 f"arc_to_contact={command.crossing_arc * 1000:.0f}mm "
+                + (
+                    f"place_clearance={plan.metadata['place_clearance'] * 1000:.0f}mm"
+                    f"/{plan.metadata['place_clearance_target'] * 1000:.0f}mm "
+                    if "place_clearance" in plan.metadata
+                    else ""
+                ) +
                 f"lift={(command.lift_z - rope_scene.layout.world_z(0.0)) * 1000:.0f}mm "
                 f"pulled_back={(command.grasp_xy[0] - command.carry[0]) * 1000:.0f}mm"
             )

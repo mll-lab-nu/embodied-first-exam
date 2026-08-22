@@ -407,7 +407,15 @@ def main(cfg: DictConfig) -> None:
     )
 
     if str(fem.rest_shape) == "straight":
-        backend.declare_rest_straight(entity, spawn_line)
+        raise SystemExit(
+            "closed_band_spike: rope.fem.rest_shape=straight does not apply to a closed band. "
+            "`rest_shape_straight` unrolls the tet mesh onto a rod using `tube_material_coords`, "
+            "which measures arc length along an OPEN polyline; on a loop the vertices either "
+            "side of the seam land at opposite ends of the rod and their tets invert, so "
+            "`_inverted_tets` drops the whole declaration and the run silently continues on the "
+            "spawn rest shape. The 2026-08-21 sweep read bit-identical numbers with and without "
+            "it for exactly that reason. Use rest_shape=spawn."
+        )
     lobe = follow_near(
         entity,
         spawn_line[int(np.argmin(spawn_line[:, 2]))],

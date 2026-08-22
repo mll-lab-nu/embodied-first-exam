@@ -88,6 +88,20 @@ def _chord_crossing_fraction(start_xy, end_xy, obstacle: np.ndarray) -> float | 
     return best
 
 
+def _distance_to_polyline(point_xy, polyline: np.ndarray) -> float:
+    """Closest top-down distance from a point to a rope's centerline."""
+
+    p = np.asarray(point_xy, dtype=float)
+    a = polyline[:-1, :2]
+    b = polyline[1:, :2]
+    ab = b - a
+    length_sq = np.einsum("ij,ij->i", ab, ab)
+    length_sq = np.where(length_sq < 1e-18, 1e-18, length_sq)
+    t = np.clip(np.einsum("ij,ij->i", p[None, :] - a, ab) / length_sq, 0.0, 1.0)
+    closest = a + t[:, None] * ab
+    return float(np.linalg.norm(closest - p[None, :], axis=1).min())
+
+
 def plan_cover_move(
     rope_scene,
     state,
@@ -100,6 +114,7 @@ def plan_cover_move(
     tail_clearance: float,
     max_taut_ratio: float,
     cover_overshoot: float,
+    place_clearance: float = 0.0,
 ) -> tuple[UntangleContinuousMoveCommand, EpisodePlan] | None:
     """Lay `moved` across `covered`, landing past its free end.
 
@@ -126,10 +141,10 @@ def plan_cover_move(
     # anchor lane. Landing short of it would leave the two side by side with no
     # crossing at all; the overshoot is what guarantees the paths must meet.
     side = 1.0 if covered_xy[1] >= float(anchor[1]) else -1.0
-    place_xy = (
-        float(rope_scene.layout.braid_layout().x_end) - float(place_pullback),
-        covered_xy[1] + side * float(cover_overshoot),
-    )
+    place_x = float(rope_scene.layout.braid_layout().x_end) - float(place_pullback)
+
+    def aim(overshoot: float) -> tuple[float, float]:
+        return (place_x, covered_xy[1] + side * float(overshoot))
 
     # Same clamp as the untangle move, and it bites harder here: with
     # `braid.length: 1` the rope leaves the spawn already ~99% extended
@@ -155,9 +170,38 @@ def plan_cover_move(
     # longer than this rope: the aim point is past what it can reach, so the
     # contact would sit at a different arclength than the one the lift height is
     # then computed from -- an error in the safe direction, but an error.
-    settle = within_reach(
-        (place_xy[0], place_xy[1], float(rope_scene.layout.world_z(0.0)) + rope_radius)
-    )
+    place_z = float(rope_scene.layout.world_z(0.0)) + rope_radius
+
+    # Aiming past the other rope's *free end* is not the same as landing clear of
+    # its *body*, and the clamp is what pulls them apart: it drags the placement
+    # back along the anchor->target ray, and back is where the other rope's tail
+    # still is. Measured on the first run, the hand came down alongside that tail
+    # and the fingers knocked it aside.
+    #
+    # So the overshoot is searched rather than fixed: widen the aim until the
+    # clamped landing point is `place_clearance` clear of the other rope's
+    # centerline, and keep the first one that is. Widening costs lift -- a wider
+    # aim makes the two paths meet earlier, which leaves more rope hanging below
+    # the hand -- so this takes the *smallest* overshoot that clears, not the
+    # largest.
+    place_xy = aim(cover_overshoot)
+    settle = within_reach((place_xy[0], place_xy[1], place_z))
+    achieved_clearance = _distance_to_polyline(settle[:2], obstacle)
+    if place_clearance > 0.0 and achieved_clearance < float(place_clearance):
+        step = 0.01
+        for extra in np.arange(step, float(cover_overshoot) + 0.16 + step, step):
+            candidate_xy = aim(float(cover_overshoot) + float(extra))
+            candidate = within_reach((candidate_xy[0], candidate_xy[1], place_z))
+            candidate_clearance = _distance_to_polyline(candidate[:2], obstacle)
+            if candidate_clearance > achieved_clearance:
+                place_xy, settle, achieved_clearance = (
+                    candidate_xy,
+                    candidate,
+                    candidate_clearance,
+                )
+            if achieved_clearance >= float(place_clearance):
+                break
+
     crossing_fraction = _chord_crossing_fraction(anchor[:2], settle[:2], obstacle)
     if crossing_fraction is None:
         # The clamp pulled the placement back to the near side of the other rope,
@@ -183,7 +227,7 @@ def plan_cover_move(
     )
 
     carry = within_reach((grasp_xy[0], grasp_xy[1], lift_z))
-    cross = within_reach((carry[0], place_xy[1], lift_z))
+    cross = within_reach((carry[0], settle[1], lift_z))
 
     command = UntangleContinuousMoveCommand(
         strand_index=moved,
@@ -211,6 +255,7 @@ def plan_cover_move(
             "grasp_xy": list(grasp_xy),
             "place_xy": list(place_xy),
             "predicted_crossing_fraction": float(crossing_fraction),
+            "place_clearance": float(achieved_clearance),
         },
     )
     waypoint_plan = WaypointPlan(
@@ -252,6 +297,11 @@ def plan_cover_move(
             "strand_index": moved,
             "covered_strand": covered,
             "predicted_crossing_fraction": float(crossing_fraction),
+            # How far the hand comes down from the other rope's centerline. The
+            # thing this has to beat is the gripper's own footprint, not the
+            # rope's radius -- it is the fingers that hit it.
+            "place_clearance": float(achieved_clearance),
+            "place_clearance_target": float(place_clearance),
         },
     )
     return command, episode_plan
@@ -324,6 +374,7 @@ class SwapCrossingSignRule:
             tail_clearance=float(pinch_cfg.tail_clearance),
             max_taut_ratio=float(pinch_cfg.max_taut_ratio),
             cover_overshoot=float(pinch_cfg.cover_overshoot),
+            place_clearance=float(pinch_cfg.place_clearance),
         )
 
 

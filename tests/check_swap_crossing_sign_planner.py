@@ -49,6 +49,7 @@ KNOBS = dict(
     tail_clearance=-0.030,
     max_taut_ratio=0.90,
     cover_overshoot=0.070,
+    place_clearance=0.035,
 )
 
 
@@ -189,6 +190,18 @@ def main() -> int:
             f"[{'ok' if lifted else 'FAIL'}] lift {(command.lift_z - TABLE_Z) * 1000:.0f}mm "
             f"exceeds the {command.crossing_arc * 1000:.0f}mm of rope hanging below the hand"
         )
+        # The one the first GPU run failed on: the hand came down beside the
+        # other rope's tail and the fingers flicked it away. Aiming past its free
+        # end is not the same as landing clear of its body.
+        gap = float(np.linalg.norm(
+            polylines[0][:, :2] - settle_xy[None, :], axis=1
+        ).min())
+        clear = gap >= KNOBS["place_clearance"] - 1e-9
+        failures += 0 if clear else 1
+        print(
+            f"[{'ok' if clear else 'FAIL'}] landing point clears the covered rope's body: "
+            f"{gap * 1000:.0f}mm >= {KNOBS['place_clearance'] * 1000:.0f}mm"
+        )
         reach = float(np.linalg.norm(settle_xy - anchor_xy))
         limit = KNOBS["max_taut_ratio"] * float(
             np.linalg.norm(np.diff(polylines[1], axis=0), axis=1).sum()
@@ -208,7 +221,7 @@ def main() -> int:
     #    The ceiling is the arm's workspace, `common.manipulation_space.workspace.z`
     #    = [0.03, 0.40]. A plan asking for more than 0.40 is not a plan; the IK
     #    will refuse it at runtime and the move will be reported as failed.
-    print("    lobes  slack   crossing@  arc_below_hand  lift    carry_planar")
+    print("    lobes  slack   crossing@  arc_below_hand  lift    carry_planar  place_gap")
     lifts = []
     for lobes in (1, 2, 3):
         for slack in (1.0097, 1.05):
@@ -230,10 +243,15 @@ def main() -> int:
             fraction = 1.0 - command.crossing_arc / float(
                 np.linalg.norm(np.diff(lines[1], axis=0), axis=1).sum()
             )
+            gap = float(np.linalg.norm(
+                lines[0][:, :2] - np.asarray(command.settle[:2])[None, :], axis=1
+            ).min())
+            if gap < KNOBS["place_clearance"] - 1e-9:
+                failures += 1
             print(
                 f"    {lobes:<6} {slack:<7.4f} {fraction:<10.2f} "
                 f"{command.crossing_arc * 1000:<15.0f} {lift * 1000:<7.0f} "
-                f"{carry_planar * 1000:.0f}mm"
+                f"{carry_planar * 1000:<13.0f} {gap * 1000:.0f}mm"
             )
     ceiling = 0.40
     worst = max(lifts) if lifts else float("inf")
