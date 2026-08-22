@@ -226,9 +226,15 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
     spawn = reading(ring_scene, geometry.c_spawn_frame)
+    # The projection is part of the judging contract (`task_taxonomy_zh.md` 4.3), and
+    # it is derived from the layout rather than configured, so the run has to say
+    # which one it used.
+    viewer = geometry.projection[2]
     print(
         f"unlink_c_ring spawn Lk={spawn['linking']:+.1f} "
-        f"opening_to_bar={spawn['opening_to_bar_deg']:.2f}deg",
+        f"opening_to_bar={spawn['opening_to_bar_deg']:.2f}deg "
+        f"projection_viewer=({viewer[0]:+.3f},{viewer[1]:+.3f},{viewer[2]:+.3f}) "
+        f"stand_yaw={float(cfg.task.stand.yaw_deg):.1f}deg",
         flush=True,
     )
 

@@ -356,6 +356,29 @@ def surface_gap(axes_a, axes_b) -> float:
     return float((axis_distance - ra[:, None] - rb[None, :]).min())
 
 
+def bisector_projection(normal_a, normal_b) -> np.ndarray:
+    """A projection basis that views both ring planes obliquely.
+
+    Rows are ``(u, v, w)`` in `world/closed_band.py`'s convention: ``u, v`` span the
+    picture plane and ``w`` points at the viewer, so "over" means a larger ``w``.
+
+    The two ring normals are perpendicular to each other by construction -- the C
+    hangs on a stretch of bar that is tangent to the closed ring -- so looking along
+    their bisector puts both rings at 45 degrees and neither is seen edge-on. That is
+    the condition a crossing count needs to be defined at all.
+
+    Derived rather than written into config because the whole scene turns with
+    ``stand.yaw_deg``: a matrix that was correct at yaw 0 read ``Lk = -2`` at yaw 90,
+    where it happened to look straight down the C's own plane.
+    """
+
+    normal_a = _unit(np.asarray(normal_a, dtype=float).reshape(3))
+    normal_b = _unit(np.asarray(normal_b, dtype=float).reshape(3))
+    viewer = _unit(normal_a + normal_b)
+    across = _unit(normal_a - normal_b)
+    return np.vstack([across, np.cross(viewer, across), viewer])
+
+
 def rotation_about(axis, angle_rad: float) -> np.ndarray:
     """Rodrigues rotation matrix."""
 
@@ -555,7 +578,7 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         stand_axes=stand_axes,
         tube_point=tube_point,
         tube_direction=tube_direction,
-        projection=np.asarray(topology["projection_rows"], dtype=float),
+        projection=bisector_projection(fixed_frame.normal, tube_direction),
         closure_samples=int(topology["closure_samples"]),
         jam_depth=float(topology["jam_depth"]),
     )

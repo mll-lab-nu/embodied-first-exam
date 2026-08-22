@@ -188,7 +188,12 @@ def main() -> int:
     print("\nreading")
     print(f"  resting on the bar   surface gap {resting * 1000:+.3f} mm (contact, within the chord error)")
     print(f"  spawn, {cfg['c_ring']['spawn_drop'] * 1000:.0f} mm higher   surface gap {spawn * 1000:+.3f} mm")
-    print(f"  linking number at spawn {spawn_linking:+.1f} under the declared projection")
+    viewer = geometry.projection[2]
+    print(
+        f"  projection: looking along ({viewer[0]:+.3f}, {viewer[1]:+.3f}, {viewer[2]:+.3f}), "
+        "the bisector of the two ring normals"
+    )
+    print(f"  linking number at spawn {spawn_linking:+.1f} under that projection")
     if spawn <= 0.0:
         failures.append(f"the C spawns interpenetrating the closed ring by {-spawn * 1000:.2f} mm")
     if abs(abs(spawn_linking) - 1.0) > 1e-6:

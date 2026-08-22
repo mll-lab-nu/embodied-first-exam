@@ -60,6 +60,7 @@ from omegaconf import OmegaConf
 from topogym.core import EntityManifest
 from topogym.tasks._fixtures import (
     HingeShape,
+    _to_container,
     add_hinge_mechanism,
     add_rigid_assembly,
     hinge_joint_dof,
@@ -85,6 +86,24 @@ def _as_numpy(value) -> np.ndarray:
     if hasattr(value, "detach"):
         value = value.detach().cpu().numpy()
     return np.asarray(value)
+
+
+def shape_span_z(shapes) -> tuple[float, float]:
+    """Lowest and highest z the given parts actually occupy, in their link's frame.
+
+    Measured off the shapes rather than read back out of config, because the two
+    can disagree: a skirt whose height was written as a span from zero kept
+    reporting the intended 0.044 floor while standing on the table (2026-08-22).
+    A number taken from the same place the geometry comes from cannot catch that.
+    """
+
+    low, high = float("inf"), float("-inf")
+    for shape in shapes:
+        origin_z = float(_to_container(shape.origin)[2])
+        half = float(shape.half_extent()[2])
+        low = min(low, origin_z - half)
+        high = max(high, origin_z + half)
+    return low, high
 
 
 def direction(angle: float) -> np.ndarray:
@@ -465,6 +484,7 @@ class LinkbarMergeScene:
     joint_dof: int = 0
     carriage_joint_name: str = "carriage_joint"
     carriage_dof: int = 0
+    shape_spans: dict = field(default_factory=dict)
     cameras: dict = field(default_factory=dict)
     tabletop: TabletopBaseScene | None = None
 
@@ -598,6 +618,10 @@ class LinkbarMergeScene:
 
         layout = self.layout
         cart = layout.cfg.component_b.cart
+        spans = " ".join(
+            f"{name}_built={low:.4f}..{high:.4f}"
+            for name, (low, high) in sorted(self.shape_spans.items())
+        )
         return (
             f"rail_top={layout.rail_top_z:.4f} deck={layout.deck_bottom_z:.4f}.."
             f"{layout.deck_bottom_z + float(cart.deck_thickness):.4f} "
@@ -605,7 +629,8 @@ class LinkbarMergeScene:
             f"{layout.socket_floor_z + float(layout.cfg.socket.jamb_height):.4f} "
             f"pin_bottom={layout.pin_bottom_z:.4f} "
             f"beam_bottom={layout.beam_bottom_z:.4f} "
-            f"knob={layout.knob_bottom_z:.4f}..{layout.knob_top_z:.4f}"
+            f"knob={layout.knob_bottom_z:.4f}..{layout.knob_top_z:.4f} "
+            + spans
         )
 
     # --------------------------------------------------------- constraint graph
@@ -657,6 +682,7 @@ class LinkbarMergeSceneBuilder:
         self.task_cfg = task_cfg
         self.robot_cfg = robot_cfg
         self.rigid_options = rigid_options
+        self._spans: dict = {}
 
     def build(self, *, show_viewer: bool = False) -> LinkbarMergeScene:
         tabletop_builder = StandardTabletopSceneBuilder(
@@ -687,6 +713,7 @@ class LinkbarMergeSceneBuilder:
             carriage_dof=hinge_joint_dof(carriage, carriage_joint),
             cameras=tabletop.cameras,
             tabletop=tabletop,
+            shape_spans=dict(self._spans),
         )
         merge_scene.set_arm_angle(layout.init_angle)
         # The carriage starts seated, which is where its catch sits on the pin's
@@ -867,6 +894,8 @@ class LinkbarMergeSceneBuilder:
 
         centre = layout.socket_center_xy("a2")
         asset_root = resolve_mesh_dir("runs/generated_meshes/linkbar_merge_components")
+        shapes = self._socket_shapes(layout)
+        self._spans["socket"] = shape_span_z(shapes)
         add_rigid_assembly(
             scene,
             manifest,
@@ -874,7 +903,7 @@ class LinkbarMergeSceneBuilder:
             urdf_path=asset_root / "socket_a2.urdf",
             world_pos=layout.position_to_world((centre[0], centre[1], 0.0)),
             yaw_deg=layout.socket_yaw_deg("a2"),
-            shapes=self._socket_shapes(layout),
+            shapes=shapes,
             mass=float(self.task_cfg.socket.mass),
             color=_list(self.task_cfg.socket.color),
             fixed=True,
@@ -967,6 +996,8 @@ class LinkbarMergeSceneBuilder:
                     )
                 )
             del index
+
+        self._spans["cart"] = shape_span_z(shapes)
 
         centre = layout.socket_center_xy("b1")
         asset_root = resolve_mesh_dir("runs/generated_meshes/linkbar_merge_components")
