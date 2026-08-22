@@ -85,6 +85,61 @@ def _hud(status):
     return render_lines
 
 
+class FirstDisturbance:
+    """Catch the step at which the beam first leaves its start angle.
+
+    Phase-boundary logging says the beam moved somewhere inside a phase; it does not
+    say when, or against what. Both matter here: raising the pads' clearance over the
+    knob from 6 mm to 31 mm made the disturbance WORSE (2.49 -> 40.44 degrees), which
+    rules out the explanation that had been assumed twice. This watches every step and
+    freezes the contact set at the moment the angle first moves, so the next reading
+    names the part instead of narrowing a guess.
+
+    Wraps `scene.step` the way `SocketWeld` does, and restores it on exit.
+    """
+
+    def __init__(self, merge_scene, *, tolerance_deg: float = 0.5):
+        self.scene = merge_scene
+        self.tolerance = float(np.deg2rad(tolerance_deg))
+        self.start = merge_scene.arm_angle()
+        self.step_index = 0
+        self.hit_step = None
+        self.hit_angle = None
+        self.hit_touching = None
+        self.hit_hand = None
+        self._original = None
+
+    def __enter__(self):
+        original = self.scene.scene.step
+
+        def wrapped(*args, **kwargs):
+            result = original(*args, **kwargs)
+            self.step_index += 1
+            if self.hit_step is None:
+                angle = self.scene.arm_angle()
+                if abs(angle - self.start) > self.tolerance:
+                    self.hit_step = self.step_index
+                    self.hit_angle = angle
+                    self.hit_touching = self.scene.touching()
+            return result
+
+        self._original = original
+        self.scene.scene.step = wrapped
+        return self
+
+    def __exit__(self, *exc):
+        if self.scene.scene.step is not self._original:
+            self.scene.scene.step = self._original
+
+    def report(self) -> str:
+        if self.hit_step is None:
+            return f"never (start={np.rad2deg(self.start):+.2f}deg, {self.step_index} steps)"
+        return (
+            f"step={self.hit_step} angle={np.rad2deg(self.hit_angle):+.2f}deg "
+            f"(start={np.rad2deg(self.start):+.2f}deg) touching={self.hit_touching}"
+        )
+
+
 def make_latch(merge_scene) -> SocketWeld:
     """The catches' snap-lock, armed before the sweep starts.
 
@@ -168,7 +223,7 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
     primitive = build_primitive(cfg, layout)
     evaluator = LinkbarMergeEvaluator()
 
-    with make_latch(merge_scene) as latch:
+    with make_latch(merge_scene) as latch, FirstDisturbance(merge_scene) as watch:
         result = None
         if plan.rotate:
             status["phase"] = "rotate"
@@ -185,6 +240,10 @@ def run_episode(cfg, merge_scene, controller, *, episode_key, status) -> Episode
             )
             status["latched"] = latch.latched
             gaps = latch.gaps()
+            print(
+                f"linkbar_merge_components first_disturbance {watch.report()}",
+                flush=True,
+            )
             print(
                 "linkbar_merge_components rotate "
                 f"success={result.success} start={np.rad2deg(result.start_angle):+.2f}deg "
