@@ -775,14 +775,24 @@ class LinkbarMergeSceneBuilder:
                     color=_list(sock.color),
                 )
             )
-        # A cap over the closed end, so the pocket reads as a socket rather than as
-        # an open channel. Visual only, and behind the stop, where nothing goes.
+        # An apron filling the outboard side of the slot out to the host's own
+        # width, from the table up to the jambs' top. Without it the pocket is a
+        # narrow U hanging under a wide deck, meeting it across 2 mm of overlap, and
+        # it reads as a bracket bolted on rather than as the cart's nose.
+        #
+        # Visual only, and safely so: it lies entirely within the span of the outer
+        # jamb, which does collide, so the pin cannot reach it; the beam sweeps 31 mm
+        # above it. Switching it off moves no contact, which is the standing rule for
+        # anything in this repo that exists to be looked at.
+        face_width = float(sock.face_width)
+        apron_inner = jamb_offset - 0.5 * jamb_thickness
+        apron_outer = jamb_offset + 0.5 * jamb_thickness
         shapes.append(
             HingeShape(
                 kind="box",
-                size=(back_thickness, width, jamb_thickness),
-                origin=(back_face - 0.5 * back_thickness, 0.0,
-                        lift + jamb_height + 0.5 * jamb_thickness),
+                size=(face_width, apron_outer - apron_inner, lift + jamb_height),
+                origin=(0.0, 0.5 * (apron_inner + apron_outer),
+                        0.5 * (lift + jamb_height)),
                 color=_list(sock.color),
                 collide=False,
             )
