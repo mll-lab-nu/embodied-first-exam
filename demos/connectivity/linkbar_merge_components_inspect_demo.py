@@ -37,6 +37,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.primitives import SocketWeld
+from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.supervision import stop_before_physics
 from topogym.tasks import LINKBAR_SOCKETS, LinkbarMergeSceneBuilder
 from topogym.tasks.connectivity._travel_probe import travel_probe
@@ -49,6 +50,16 @@ from topogym.utils.recording import (
 from topogym.verification import LinkbarMergeEvaluator
 
 SEAT_PHASES = ("none", "b1", "a2", "angle")
+
+# How much room the pads need over the knob's cap while the gripper traverses to it
+# at `motion.approach_z`. The approach ends directly over the knob, so this is the
+# clearance that decides whether the trip brushes the beam -- and the fingertips sit
+# about another 10 mm below the pad centre, so the pad figure is the one to gate on.
+# Measured 2026-08-22: 16 mm of pad clearance left roughly 6 mm at the fingertips,
+# the traverse pushed the beam 2.49 degrees toward A2, and the gripper then closed
+# on empty air. It regressed silently when the coupling height was raised and
+# `approach_z` was not, which is why it is checked rather than remembered.
+_APPROACH_PAD_CLEARANCE_M = 0.030
 
 # How far the parked hand's axis has to be from the knob's circle. The arm sits at
 # its home pose for the whole sweep, and an open gripper reaches about 40 mm to
@@ -354,6 +365,23 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
     print(f"linkbar_merge_components heights {merge_scene.height_chain()}", flush=True)
+    pad_z = float(cfg.task.motion.approach_z) - HAND_TO_PAD_Z
+    approach_clearance = pad_z - layout.knob_cap_top_z
+    print(
+        "linkbar_merge_components approach_clearance "
+        f"approach_z={float(cfg.task.motion.approach_z):.4f} pad_z={pad_z:.4f} "
+        f"knob_cap_top={layout.knob_cap_top_z:.4f} "
+        f"clearance={approach_clearance:+.4f}",
+        flush=True,
+    )
+    if approach_clearance < _APPROACH_PAD_CLEARANCE_M:
+        print(
+            f"[warn] the pads pass {approach_clearance * 1000:.1f} mm over the knob on "
+            f"the way to it, under the {_APPROACH_PAD_CLEARANCE_M * 1000:.0f} mm an open "
+            "gripper needs. Expect the traverse to brush the beam and turn it before "
+            "the grasp. Raise task.motion.approach_z, or lower the knob.",
+            flush=True,
+        )
     if not cfg.run.static_only:
         print(
             "linkbar_merge_components settle_check "

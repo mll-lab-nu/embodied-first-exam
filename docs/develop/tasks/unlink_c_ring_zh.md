@@ -357,7 +357,7 @@ joint limits` 与 `Filtered out geometry pairs causing self-collision ...` 的�
 mkdir -p runs/videos/unlink_c_ring
 
 python -m demos.entangle.unlink_c_ring_inspect_demo \
-  recording=default 'recording.camera=[oblique,front,topdown]' \
+  recording=default 'recording.camera=[oblique,front,wrist]' \
   recording.path=runs/videos/unlink_c_ring/look.mp4 \
   2>&1 | tee runs/videos/unlink_c_ring/look.log
 ```
@@ -366,11 +366,16 @@ python -m demos.entangle.unlink_c_ring_inspect_demo \
 歧义并直接报错（`topogym/utils/recording.py` 的 `_recording_camera_names` 两种都收，但请求
 到不了那里）。录制器按 `<stem>_<相机名>.mp4` 拆开，产出三个文件：
 
-| 文件 | 视角 | 看什么 |
+三视角固定取 `oblique` / `front` / `wrist`（本项目的约定）：
+
+| 文件 | 机位 | 看什么 |
 |---|---|---|
-| `runs/videos/unlink_c_ring/look_oblique.mp4` | 斜俯视，默认录制机位 | 整体观感；支架应落在两环背后 |
-| `runs/videos/unlink_c_ring/look_front.mp4` | 正前方看回机器人 | C 环环面正对镜头，开口与凸台朝向可辨；支架应完全不在画面中央 |
-| `runs/videos/unlink_c_ring/look_topdown.mp4` | 正俯视 | 悬臂只占 `y >= 0`，`-y` 侧那半圈从上方无遮挡 |
+| `look_oblique.mp4` | task (1.00, −0.80, 0.50) 斜俯视，默认录制机位 | 整体观感；支架在 `+y`，应落在两环背后 |
+| `look_front.mp4` | task (0.42, 0, 0.38)，站在机械臂正前方面朝它俯视 | C 环环面正对镜头，开口与凸台朝向可辨；支架应完全不在画面中央 |
+| `look_wrist.mp4` | 挂在 hand 连杆上，随夹爪走 | home 位下 C 环是否已在夹爪视野内——这关系到 §7 第 4 条的抓取点怎么定 |
+
+本 demo 机械臂全程停在 home 位，`wrist` 因此是一张静止画面；它回答的不是运动过程，
+而是"从 home 位看出去够不够得着"。
 
 同时看日志末行的 `min_abs_Lk` 与 `min_opening_to_bar`，应与 §6.2 一致（1.00 / ~90°）。
 

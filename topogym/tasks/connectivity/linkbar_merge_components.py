@@ -95,6 +95,13 @@ def shape_span_z(shapes) -> tuple[float, float]:
     can disagree: a skirt whose height was written as a span from zero kept
     reporting the intended 0.044 floor while standing on the table (2026-08-22).
     A number taken from the same place the geometry comes from cannot catch that.
+
+    A rotated part is reported by its UNROTATED bounding box, because that is what
+    `HingeShape.half_extent` returns. The cart's wheels lie on their side, so they
+    come out 5 mm half-height instead of their 10 mm radius and the cart's reported
+    floor sits 5 mm above where the wheels actually touch the rail. Fine for what
+    this is for -- catching a part that spans a range nobody intended -- and stated
+    here so the discrepancy is not mistaken for wheels hanging in the air.
     """
 
     low, high = float("inf"), float("-inf")
@@ -257,6 +264,17 @@ class LinkbarMergeLayout:
     @property
     def knob_top_z(self) -> float:
         return self.knob_bottom_z + float(self.cfg.linkbar.knob.height)
+
+    @property
+    def knob_cap_top_z(self) -> float:
+        """Top of the knob's end cap: the highest thing the beam carries.
+
+        What the gripper has to clear on its way to the knob. The approach happens
+        at a fixed height and ends directly over the knob, so this is the number
+        that decides whether the traverse brushes the beam.
+        """
+
+        return self.knob_top_z + float(self.cfg.linkbar.knob.cap_height)
 
     def knob_center_xy(self, angle: float) -> np.ndarray:
         return self.pivot_xy + self.knob_station * direction(float(angle))
@@ -839,8 +857,8 @@ class LinkbarMergeSceneBuilder:
         with 2.3 mm to spare and the whole arc-segmentation machinery is unnecessary.
 
         Open on top on purpose: the pin comes down from the beam, so a roof over the
-        slot would be something the pin's own arm runs into. The cap behind the back
-        plate is decoration -- the pin never reaches past the stop.
+        slot would be something the pin's own arm runs into. Three boxes, and none of
+        them reaches below `socket_floor_z`.
 
         Nothing here reaches below `socket_floor_z`: the pocket sits at deck height
         and projects forward from its host like a coupler, so there is no skirt down
