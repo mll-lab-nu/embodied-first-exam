@@ -27,7 +27,7 @@
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
 | 4.4 | `connectivity/linkbar_merge_components.py` | 未开工 |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
-| 3.4 | `entangle/unlink_c_ring.py` | 未开工 |
+| 3.4 | `entangle/unlink_c_ring.py` | 场景已落地（2026-08-21）。§7.3 的前置验证做完，见下。verifier、抽出原语、physical demo 未开工 |
 
 ---
 
@@ -219,15 +219,19 @@ maze_wall_removal 三个任务共用，改动面过大。
 
 ### 4.5 docx 3.4 —— `entangle/unlink_c_ring.py`
 
+场景与几何于 2026-08-21 落地，下表为落地后的实际形态；与规划时的差异各自注明。
+
 | 项 | 内容 |
 |---|---|
-| 场景资产 | 支架、固定的闭合刚性圆环、C 形开口环 |
-| 几何做法 | 两个环都是非凸体。按仓库既有解法拆为多段短圆柱沿圆周组合；C 环即少放几段留出开口 |
-| 复用 | 仅 `StandardTabletopSceneBuilder` 与 `physical_contact.py` |
-| 新增 | 复合环几何生成器；一个六自由度抽出原语——动作是「沿一条使开口始终对准闭环环身的空间轨迹一次抽出」，现有原语（顶抓放置、手柄拖拽、轮缘滚动）都不覆盖 |
-| 不变量 | `linking_number` 1→0。判定为两环包围盒分离且无穿插；物理层复核为分离后 C 环可沿任意方向平移离开 |
-| 防捷径 | 由物理本身保证：平拉、旋转等非 gateway 轨迹会直接被环身卡住，不存在侥幸通过的连续路径 |
-| 风险 | 高。防捷径完全依赖碰撞精度——若复合近似太粗，开口尺寸失真会让本该卡住的轨迹通过，或让本该通过的轨迹卡住。分段数与碰撞裕度需实验确定 |
+| 场景资产 | 立柱 + 水平悬臂的支架、固定的闭合刚性圆环、带径向抓取凸台的 C 形开口环 |
+| 几何做法 | 两个环都是非凸体，按仓库既有解法拆为多段短圆柱沿圆周组合，用 `_fixtures.add_rigid_assembly` 焊成单刚体；C 环即少放几段留出开口。分段按**弧角**配（`segment_deg`）而不是按段数配 |
+| 支架取悬臂 | 规划时未定。固定环由悬臂从远端牵出，环面与悬臂垂直。这样 C 环的全部活动包络够不到立柱，立柱一次也不参与接触；悬臂只盖住 C 环远离机器人的那一半，近侧从上方是空的 |
+| 抓取凸台 | 规划时未列。它是力学件：`_fixtures._link_xml` 把质心放在碰撞件包围盒中心，C 环的包围盒只被开口拉偏 1.05mm，按该函数写出的惯量算约 0.35s 就把开口转到管身正上方、环自行脱落。凸台把质心拉到环心下方 7.5mm，静置姿态变为凸台朝下 |
+| 复用 | `StandardTabletopSceneBuilder`、`_fixtures.{HingeShape, add_rigid_assembly}`、`_visuals.add_industrial_pedestal`、`world/closed_band.py` 的 `linking_number` |
+| 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）；六自由度抽出原语**尚未开工**——动作是「沿一条使开口始终对准闭环环身的空间轨迹一次抽出」，现有原语（顶抓放置、手柄拖拽、轮缘滚动）都不覆盖 |
+| 不变量 | 主读数取 `signed_crossing_sequence`（`task_taxonomy_zh.md` §4.3 对 C3 允许的取值；该节不含 `linking_number`），并显式声明「C 环开口用直弦补合」这一 canonical closure；`linking_number` 作为派生读数一并写入。verifier 未开工 |
+| 防捷径 | 由物理本身保证，且已实测：八条非 gateway 轨迹全部卡住，最浅穿透 1.0mm。**gateway 只有一条**——反向转 90° 后向上抽会被闭合环的另一侧挡住，不存在镜像解 |
+| 风险 | 几何一侧已消解（见 §7 第 3 条）。剩余风险在求解器一侧：静置是否自解、两条链约 1150 个接触对的每步开销，都要 GPU 实测 |
 
 ---
 
@@ -302,8 +306,13 @@ demos/routing/bar_through_hole_physical_insert_demo.py  # 要能录数据则必�
 2. **4.1 的 Sphere 参数**（当前的第一项行动）：仓库内无先例，滚动阻尼、摩擦、恢复系数均需首次
    标定。在正式建任务前先用一个最小场景（平面 + 球）确认滚动行为可控：球能持续滚动而不过早停止，
    也不出现穿透或无衰减弹跳。该场景同时为 4.3 的槽道滚动提供参数起点。
-3. **3.4 的碰撞精度**：复合环的分段数直接决定防捷径是否成立。建议在实现任务前先做一次独立验证：
-   固定环 + C 环，脚本化地试若干条非 gateway 轨迹，确认全部被卡住。
+3. ~~**3.4 的碰撞精度**~~ —— 已做，结论见 `tests/check_c_ring_clearance.py`（纯 numpy，无 GPU：
+   两个环都是圆柱链，两条链之间的最小距离减去半径就是净空，对实际载入的碰撞体是精确的）。
+   分段按**弧角**配而不是按段数配（`segment_deg=10°`，两环各 36 / 32 段），弦近似矢高 0.11mm；
+   开口净宽 11.99mm 对 8mm 管身单边留 2mm，是矢高的 18 倍。八条非 gateway 轨迹（不转直接上／下、
+   沿管轴两向、横向两向、提起搬走、反向转 90° 再抬）实测全部卡住，最浅穿透 1.0mm；gateway 轨迹
+   全程净空为正、终态 `Lk=0`。**求解器一侧尚未验证**：静置是否自解由
+   `demos/entangle/unlink_c_ring_inspect_demo.py` 的 hold 段给读数，待 GPU 跑。
 4. 本轨道与 `task_environment_buildout_zh.md` §5 推荐的 3.2 + 2.5 是否并行推进。
 5. **2.3 的两项收尾**：反捷径对照 `run.oracle_mode=bypass` 未跑；`min_finger_qpos` 阈值未写入配置
    （实测夹到杆 0.0092、指令位 0.008，判别窗口 1.2mm，可通过下调 `grasp_qpos` 至 0.006 拉宽至 3mm）。

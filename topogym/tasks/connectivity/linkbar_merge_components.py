@@ -330,18 +330,24 @@ class LinkbarMergeLayout:
         return self.socket_angle("b1")
 
     @property
-    def socket_plate_lift(self) -> float:
-        """How far a pocket's underside sits above the table.
+    def socket_floor_z(self) -> float:
+        """Height of a pocket's underside: the cart's deck top.
 
-        Not zero, because B1's pocket rides on the cart and one flat on the table
-        would scrape along it. A2 reaches the same height by sitting on A's 4 mm
-        outrigger, so both pockets present their mouth at exactly the same height --
-        which they must, since there is one pin and it is at one height. What
-        differs is what is UNDER each: A's plate, or the cart. That is the ownership
-        cue, and it is the only thing separating the two.
+        The whole coupling chain hangs off this one number, and it is deck height
+        rather than floor height on purpose. A pocket whose underside sat near the
+        table read as bolted to the ground, which is a different mounting story from
+        a chassis carried on wheels -- the two never looked like one object however
+        their colour or width was matched.
+
+        At deck height, B1 projects forward from the cart's headstock with nothing
+        under it, the way a coupler does, and A2 is held up to the same height by a
+        stand on A's outrigger. Both pockets still present their mouth at exactly the
+        same height, which they must, since there is one pin and it is at one height.
+        What differs is what CARRIES each: a wheeled cart, or a fixed stand. That is
+        the ownership cue, and raising the chain made it stronger rather than weaker.
         """
 
-        return float(self.cfg.socket.plate_lift)
+        return float(self.cfg.socket.floor_z)
 
     @property
     def rail_top_z(self) -> float:
@@ -676,13 +682,14 @@ class LinkbarMergeSceneBuilder:
     # ------------------------------------------------------------ component A
 
     def _add_component_a(self, scene, manifest, layout) -> None:
-        """A: a pivot column and one plate reaching out to its own catch.
+        """A: a pivot column, a plate reaching out to A2, and the stand under it.
 
-        Two pieces plus the catch, and that is the whole fixed assembly. The plate
+        Three pieces plus the socket, and that is the whole fixed assembly. The plate
         runs from the pivot to A2 because that is what makes A2 visibly part of A --
-        the claim the task turns on -- and it is 4 mm thick because that is exactly
-        what lifts A2's plate to `socket_plate_lift`, the height B1's plate reaches by
-        riding on the cart.
+        the claim the task turns on. The stand on its end lifts A2 to
+        `socket_floor_z`, the height B1 reaches by riding on the cart, and it is the
+        fixed counterpart to the cart's wheels: same socket, visibly different thing
+        holding it up.
         """
 
         comp = self.task_cfg.component_a
@@ -697,6 +704,23 @@ class LinkbarMergeSceneBuilder:
             float(outrigger.width), float(outrigger.thickness),
             outrigger.color,
         )
+        # The stand that lifts A2 to the coupling height. It is not only packing:
+        # it is the visible answer to "what holds A2 up", and the fixed counterpart
+        # to the cart's wheels.
+        stand = comp.socket_stand
+        stand_bottom = float(outrigger.thickness)
+        stand_height = layout.socket_floor_z - stand_bottom
+        centre = layout.socket_center_xy("a2")
+        self._box(
+            scene, manifest, "a_socket_stand",
+            layout.position_to_world(
+                (centre[0], centre[1], stand_bottom + 0.5 * stand_height)
+            ),
+            (float(stand.depth), float(stand.width), stand_height),
+            stand.color,
+            yaw_deg=layout.socket_yaw_deg("a2"),
+        )
+
         column = comp.pivot_column
         manifest.add(
             "a_pivot_column",
@@ -749,7 +773,7 @@ class LinkbarMergeSceneBuilder:
         jamb_height = float(sock.jamb_height)
         back_thickness = float(sock.back_thickness)
         entry = float(sock.entry_depth)
-        lift = layout.socket_plate_lift
+        lift = layout.socket_floor_z
         jamb_offset = pin_radius + float(sock.pin_clearance) + 0.5 * jamb_thickness
         width = 2.0 * jamb_offset + jamb_thickness
         # The slot runs from the back plate's face out to the mouth. The pin seats

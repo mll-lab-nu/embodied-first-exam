@@ -98,6 +98,11 @@ from .entangle.swap_crossing_sign import (
     SwapCrossingSignScene,
     SwapCrossingSignSceneBuilder,
 )
+from .entangle.unlink_c_ring import (
+    UnlinkCRingLayout,
+    UnlinkCRingScene,
+    UnlinkCRingSceneBuilder,
+)
 from .entangle.untangle import RopeEndpointHandle, UntangleLayout, UntangleScene, UntangleSceneBuilder
 from .entangle.untangle_continuous import (
     UntangleContinuousLayout,
@@ -161,6 +166,9 @@ __all__ = [
     "SwapCrossingSignLayout",
     "SwapCrossingSignScene",
     "SwapCrossingSignSceneBuilder",
+    "UnlinkCRingLayout",
+    "UnlinkCRingScene",
+    "UnlinkCRingSceneBuilder",
     "UntangleLayout",
     "UntangleScene",
     "UntangleSceneBuilder",
