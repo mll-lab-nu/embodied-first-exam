@@ -53,50 +53,41 @@ crown_hold: true
 include_robot: false
 
 # 录制相机。在 env.cameras 之外再加一台特写 —— 那几台的取景是整张桌子，
-# 而这条带只有 130mm 高。pos/lookat 与 band 一样用 task 系。
+# 而这条带只有 160mm 长。pos/lookat 与 band 一样用 task 系。
 # 名字不能与 env.cameras 里的任何一台重名（会在录制里把那台顶掉），因此叫 band；
 # 录它要写 recording.camera=band，录全部写 recording.camera=all。
-# 视角接近正对壁面（沿 +x 看），与自交叉判定用的投影方向一致，
-# 因此 8 字与 O 形在画面里就是判定读到的那两个形状。
+# 视角俯看带面，与自交叉判定用的投影方向一致，因此 8 字与 O 形在画面里就是判定读到的形状。
 # recording.res 若设了会覆盖这里的 res。
 camera:
   name: band
   res: [768, 768]
-  pos: [-0.34, -0.13, 0.19]
-  lookat: [0.015, 0.00, 0.145]
+  pos: [0.010, -0.180, 0.230]
+  lookat: [0.010, 0.000, 0.004]
   fov: 42
 
-# 场景几何。docx 3.3 的壁面挂销 + 闭合弹性带。
-# 坐标为 task 系（原点在桌面中心，z=0 为桌面）；本脚本用一个过原点的地面平面
-# 代替桌子，因此 task z 与 world z 相同。
+# 场景几何。docx 3.3 的闭合弹性带，**平铺在桌面上、上瓣套在一根立柱上**。
+# 不取 docx 插图的壁挂自由悬垂：悬垂时交叉处两股相距 2*loop_radius（实测 40.4mm），
+# 够不到接触门槛 10mm，8 字全程无势垒，释放后 25 步内回弹（2026-08-21 实测，
+# rest_shape、E、d_hat 三项都改不动）。平铺时交叉是一股压在另一股上，
+# 中心线间距 = 2*管半径 = 8mm，落在势垒内，重力提供法向力、桌面摩擦锁住 ——
+# 与 cloth_fold 的折叠保持折叠是同一机理，也是这个求解器唯一能提供的势垒
+# （IPC 侧本构写死 StableNeoHookean，Genesis 没有塑性 FEM 模型）。
+# 坐标为 task 系（原点在桌面中心，z=0 为桌面）。
 band:
-  # 带的闭合周长（米）。与扭转圈数无关 —— 扭转后直段变成螺旋，
-  # 生成器解出直段高度使周长守恒（world/closed_band.py 的 hanging_band_centerline）。
+  # 带的闭合周长（米）。与扭转圈数无关 —— 生成器解出长度使周长守恒。
   perimeter: 0.36
-  # 上下两个半圆帽的半径（米），即带的瓣宽的一半。
-  # 下限由挂销决定：loop_radius >= peg_radius + rope.radius + contact_d_hat
-  #             = 0.015 + 0.004 + 0.002 = 0.021。取 0.022 留 1mm 余量。
-  # 上限由夹爪决定：瓣宽 2*loop_radius = 44mm，指垫要进得去。
-  loop_radius: 0.022
-  # 挂销轴心（米），也是带所在的平面。z=0.20 下生成器给出：
-  # O 形最低点 z=0.067、8 字最低点 z=0.095，都在工作空间 z 范围 [0.03, 0.40] 内。
-  # x 必须落在挂销跨度的中段：2026-08-21 首跑把它放在离销尖 5mm 处，
-  # 拧到 56 度时带直接滑出销尖，整段落到地面，其后全部读数作废。
-  # 挂销跨度 = [panel_x - panel_thickness/2 - peg_length, panel_x - panel_thickness/2]
-  #          = [-0.010, 0.040]，中点 0.015。
-  peg_center: [0.015, 0.0, 0.20]
-  # 挂销半径与长度（米）。轴沿 x（面板法向），从面板前表面向外伸。
-  peg_radius: 0.015
-  peg_length: 0.050
-  # 销根埋进面板的深度（米）。静态体刻意互嵌，与 cable_routing 的走线柱同一做法；
-  # 对应 configs/closed_band_spike.yaml 里的 sanity_check_enable: false 豁免。
-  peg_embed: 0.005
-  # 带的所在平面到挂销两端的最小余量（米）。低于它直接报错，不进求解器。
-  peg_end_margin: 0.015
-  # 销尖端盖，防止带滑出。半径须大于带的内表面半径
-  # （loop_radius - rope.radius = 0.022 - 0.004 = 0.018），否则挡不住。
-  peg_flange_radius: 0.026
-  peg_flange_thickness: 0.006
+  # 两个半圆帽的半径（米），即带的瓣宽的一半。
+  # 下限由立柱决定：loop_radius >= post_radius + rope.radius + contact_d_hat
+  #             = 0.010 + 0.004 + 0.002 = 0.016。取 0.018 留 2mm 余量。
+  loop_radius: 0.018
+  # 立柱轴心的 xy（米，task 系）。带所在平面的高度不在这里配 —— 它恒等于
+  # rope.radius（平铺时管心离桌面正好一个半径），由代码取，免得两处漂移。
+  # 该取值下平铺 O 形从柱心向 +x 伸出 141.4mm，8 字缩到 125.2mm，
+  # 两端都落在工作空间 x 范围 [-0.25, 0.25] 内。
+  post_xy: [-0.060, 0.0]
+  # 立柱半径与高度（米）。高度只要带抬不过柱顶即可，无需端盖。
+  post_radius: 0.010
+  post_height: 0.060
   # 要拧到的半圈数。**带按平整 O 形出生，8 字由求解器拧出来**，理由见
   # tests/closed_band_spike.py 的模块文档（直杆静止形状会把接缝扭转抄进静止态）。
   # +1 / -1 是 docx 3.3 的两种手性。
@@ -104,10 +95,3 @@ band:
   # 自交叉合并半径（米）。一处物理交叉跨若干中心线段，不合并会被逐段重复计数。
   # 取值量级同 untangle_continuous 的 success.crossing_merge_radius（0.012）。
   crossing_merge_radius: 0.012
-  # 壁面。挂销装在其上，带悬在它前方（-x 侧，朝机械臂）。
-  # 高度取 0.30 —— 高于 bar_through_hole 的 0.150 上限（那条上限来自默认 home
-  # 指尖 task z=0.1608）。本脚本不接机械臂，接臂时需配 task-local 抬高 home。
-  panel_x: 0.045
-  panel_thickness: 0.010
-  panel_width: 0.300
-  panel_top_z: 0.300

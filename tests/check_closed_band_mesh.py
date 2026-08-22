@@ -18,9 +18,9 @@ separate questions:
     (the one that minimises twist) would have given instead.
 
   - **reading**: does the self-crossing count answer 0 / 1 / 2 on an O, a
-    figure-8, and a wrong-way flip -- and still answer 1 when the 8 is squashed
-    flat so the crossing is hidden? That last case is docx 3.3's stated
-    anti-shortcut, executable here with no simulator.
+    figure-8, and a wrong-way flip -- and still answer 1 when the 8 is pressed flat
+    so the crossing is hidden? That last case is docx 3.3's stated anti-shortcut,
+    executable here with no simulator.
 
 Defaults are read from the spike's own config files so the two cannot drift.
 
@@ -58,6 +58,10 @@ REPO = Path(__file__).resolve().parents[1]
 MAX_RING_TWIST_FRACTION_OF_FACET = 0.5
 MIN_CURVATURE_OVER_RADIUS = 1.0
 SELF_LINKING_TARGET = 0
+# The band lies on the table around an upright post: it runs along +x and is wound
+# about that same axis, and the self-crossing is read top-down.
+LONG_AXIS = np.array([1.0, 0.0, 0.0])
+WIDTH_AXIS = np.array([0.0, 1.0, 0.0])
 
 
 def load_closed_band():
@@ -83,16 +87,18 @@ def config_defaults() -> dict:
     primary = yaml.safe_load((REPO / "configs/closed_band_spike.yaml").read_text(encoding="utf-8"))
     prefabs = yaml.safe_load((REPO / "configs/prefab_configs/topogym_prefabs_v1.yaml").read_text(encoding="utf-8"))
     band, mesh = run["band"], primary["task"]["rope"]["mesh"]
+    tube_radius = float(prefabs["rope_pbd"]["radius"])
     return {
         "perimeter": float(band["perimeter"]),
         "loop_radius": float(band["loop_radius"]),
-        "peg_center": [float(value) for value in band["peg_center"]],
-        "peg_radius": float(band["peg_radius"]),
+        # The band's plane is one tube radius above the table, same as the spike.
+        "peg_center": [float(band["post_xy"][0]), float(band["post_xy"][1]), tube_radius],
+        "peg_radius": float(band["post_radius"]),
         "half_turns": float(band["half_turns"]),
         "merge_radius": float(band["crossing_merge_radius"]),
         "segment_length": float(mesh["segment_length"]),
         "radial": int(mesh["radial_segments"]),
-        "radius": float(prefabs["rope_pbd"]["radius"]),
+        "radius": tube_radius,
         "d_hat": float(prefabs["rope_fem"]["contact_d_hat"]),
     }
 
@@ -157,16 +163,19 @@ def check_reading(cb, defaults: dict, failures: list) -> None:
     """The self-crossing count on curves whose answer is known by construction."""
 
     def curve(half_turns: float, perimeter: float, depth_scale: float = 1.0):
-        pts = cb.hanging_band_centerline(
+        pts = cb.pegged_band_centerline(
             perimeter=perimeter,
             loop_radius=defaults["loop_radius"],
             peg_center=defaults["peg_center"],
+            long_axis=LONG_AXIS,
+            width_axis=WIDTH_AXIS,
             half_turns=half_turns,
             segment_length=defaults["segment_length"],
         )
-        # Squashing is a scale toward the wall along the viewing axis: the picture
+        # Squashing is a scale toward the table along the viewing axis: the picture
         # is untouched, only the depth that separates the strands shrinks.
-        pts[:, 0] = defaults["peg_center"][0] + depth_scale * (pts[:, 0] - defaults["peg_center"][0])
+        plane = defaults["peg_center"][2]
+        pts[:, 2] = plane + depth_scale * (pts[:, 2] - plane)
         return pts
 
     # A band that has taken two half turns is physically shorter between the caps,
@@ -178,13 +187,16 @@ def check_reading(cb, defaults: dict, failures: list) -> None:
         ("figure-8", curve(1.0, defaults["perimeter"]), 1),
         ("figure-8 mirrored", curve(-1.0, defaults["perimeter"]), 1),
         ("wrong-way flip (two half turns)", curve(2.0, long_band), 2),
-        ("figure-8 squashed onto the wall", curve(1.0, defaults["perimeter"], 0.02), 1),
+        ("figure-8 pressed flat onto the table", curve(1.0, defaults["perimeter"], 0.02), 1),
     ]
     print()
     print("self-crossing reading")
     for name, pts, expected in cases:
         hits = cb.band_self_crossings(
-            pts, merge_radius=defaults["merge_radius"], skip_adjacent=2
+            pts,
+            projection=cb.TOPDOWN_PROJECTION,
+            merge_radius=defaults["merge_radius"],
+            skip_adjacent=2,
         )
         signs = [hit.sign for hit in hits]
         gaps = [f"{hit.gap * 1000:.1f}" for hit in hits]
@@ -219,15 +231,20 @@ def main() -> int:
     failures: list[str] = []
     peg = np.asarray(defaults["peg_center"], dtype=float)
 
-    centerline = cb.hanging_band_centerline(
+    centerline = cb.pegged_band_centerline(
         perimeter=args.perimeter,
         loop_radius=args.loop_radius,
         peg_center=peg,
+        long_axis=LONG_AXIS,
+        width_axis=WIDTH_AXIS,
         half_turns=args.half_turns,
         segment_length=args.segment_length,
     )
     frames = cb.closed_transport_frames(
-        centerline, tube_radius=args.radius, self_linking_target=SELF_LINKING_TARGET
+        centerline,
+        tube_radius=args.radius,
+        self_linking_target=SELF_LINKING_TARGET,
+        projection=cb.TOPDOWN_PROJECTION,
     )
     vertices, faces = cb.closed_tube_mesh(
         centerline, frames, radius=args.radius, radial_segments=args.radial
@@ -241,8 +258,9 @@ def main() -> int:
         f"{np.round(peg * 1000, 1).tolist()} mm, tube radius {args.radius * 1000:.1f} mm"
     )
     print(
-        f"               hangs from z {centerline[:, 2].max() * 1000:.1f} mm down to "
-        f"{centerline[:, 2].min() * 1000:.1f} mm"
+        f"               reaches {cb.band_reach(centerline, peg, LONG_AXIS) * 1000:.1f} mm from "
+        f"the post, task z range [{centerline[:, 2].min() * 1000:.1f}, "
+        f"{centerline[:, 2].max() * 1000:.1f}] mm"
     )
     print(f"mesh           {len(centerline)} rings x {args.radial} = {len(vertices)} verts, {len(faces)} faces")
 
@@ -365,23 +383,30 @@ def main() -> int:
     # its least-twist framing lands on Lk = +-1, which is a band that cannot be
     # flipped flat. Spawning the O and winding in-solver sidesteps the choice
     # entirely (no motion changes Lk), and this is the reading that says why.
-    wound = cb.hanging_band_centerline(
+    wound = cb.pegged_band_centerline(
         perimeter=args.perimeter,
         loop_radius=args.loop_radius,
         peg_center=peg,
+        long_axis=LONG_AXIS,
+        width_axis=WIDTH_AXIS,
         half_turns=defaults["half_turns"],
         segment_length=args.segment_length,
     )
     wound_frames = cb.closed_transport_frames(
-        wound, tube_radius=args.radius, self_linking_target=SELF_LINKING_TARGET
+        wound,
+        tube_radius=args.radius,
+        self_linking_target=SELF_LINKING_TARGET,
+        projection=cb.TOPDOWN_PROJECTION,
     )
     wound_nearest = int(np.rint(wound_frames.holonomy_turns))
     print()
     print(
-        f"wound state    {defaults['half_turns']:+.1f} half turns hangs to z "
-        f"{wound[:, 2].min() * 1000:.1f} mm ({(wound[:, 2].min() - centerline[:, 2].min()) * 1000:+.1f} "
-        f"mm against the flat O), {len(cb.band_self_crossings(wound, merge_radius=defaults['merge_radius']))} "
-        "self-crossings"
+        f"wound state    {defaults['half_turns']:+.1f} half turns reaches "
+        f"{cb.band_reach(wound, peg, LONG_AXIS) * 1000:.1f} mm "
+        f"({(cb.band_reach(wound, peg, LONG_AXIS) - cb.band_reach(centerline, peg, LONG_AXIS)) * 1000:+.1f} "
+        f"mm against the flat O), "
+        f"{len(cb.band_self_crossings(wound, projection=cb.TOPDOWN_PROJECTION, merge_radius=defaults['merge_radius']))}"
+        " self-crossings"
     )
     print(
         f"               Lk = {wound_frames.self_linking} at Tw = "

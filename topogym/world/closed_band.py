@@ -222,52 +222,60 @@ def closed_tube_mesh(
     return vertices, np.asarray(faces, dtype=int)
 
 
-def hanging_band_centerline(
+def pegged_band_centerline(
     *,
     perimeter: float,
     loop_radius: float,
     peg_center,
+    long_axis,
+    width_axis,
     half_turns: float = 0.0,
     segment_length: float,
 ) -> np.ndarray:
-    """A closed band hung on a horizontal peg, twisted by ``half_turns``.
+    """A closed band looped over a peg, twisted by ``half_turns`` about its own long axis.
 
-    The flat shape is a stadium in the vertical plane: a top semicircle of
-    ``loop_radius`` wrapped over ``peg_center``, two straights down, and a bottom
-    semicircle. ``half_turns=0`` leaves it an O; ``+-1`` gives the figure-8 of docx
-    3.3, ``+-2`` the two-crossing state a flip in the wrong direction reaches.
+    The flat shape is a stadium: a cap of ``loop_radius`` wrapped around
+    ``peg_center``, two straights running along ``long_axis``, and a far cap.
+    ``half_turns=0`` leaves it an O; ``+-1`` gives the figure-8 of docx 3.3, ``+-2``
+    the two-crossing state a flip in the wrong direction reaches.
 
-    The twist is a rotation about the vertical axis through the peg, ramped with a
-    smoothstep in height between the two cap centers and held constant on the caps
-    themselves. So the top cap stays put on the peg, the bottom cap turns as one
-    piece and stays in the wall plane, and the crossing appears halfway down where
-    the two strands have swapped sides -- the two of them sitting one full
-    ``2 * loop_radius`` apart along the panel normal, which is why nothing
-    interpenetrates at spawn. This is the same motion the robot has to undo, so
-    the spawn generator and the oracle's target are one routine.
+    The axes are arguments rather than assumptions because the same band is used
+    two ways. Hung on a wall peg, ``long_axis`` points down and the loop hangs in a
+    vertical plane. Lying on a table around an upright post, ``long_axis`` points
+    along the table and the loop lies flat -- which is the form the task uses,
+    because a figure-8 only holds when its crossing is a real contact and gravity
+    is what presses one strand onto the other. Measured 2026-08-21: hung free, the
+    two strands at the crossing stay ``2 * loop_radius`` apart and never touch, and
+    the figure-8 unwinds within 25 steps of release.
+
+    The twist is a rotation about ``long_axis`` through the peg, ramped with a
+    smoothstep along that axis and held constant on the caps. The peg cap therefore
+    stays put, the far cap turns as one piece, and the crossing appears halfway
+    along where the two strands have swapped sides.
 
     The ramp is a smoothstep rather than linear because a linear one meets the caps
     with a step in twist rate, and that corner is a curvature spike: measured on a
     360 mm band over a 22 mm loop, the tightest bend was 8.2 mm (2.05 tube radii,
     where the skin starts folding into itself) against the 21.1 mm a smoothstep
     gives. Twist rate is then not uniform along the band, which costs nothing here
-    -- with a straight rest shape the spawn distribution is an initial condition
-    the solver relaxes, not stored shape.
+    -- the spawn distribution is an initial condition the solver relaxes.
 
-    Height is solved for, not set, so that the O and the figure-8 are the SAME
-    band: twisting turns the straights into helices and pulls the caps together,
-    and the relation is not closed-form once the ramp is a smoothstep. The curve is
-    then resampled at uniform arc length, because sampling before the twist and
-    stretching afterwards leaves the ring pitch uneven where the twist is fastest.
+    Length along the long axis is solved for, not set, so that the O and the
+    figure-8 are the SAME band: twisting turns the straights into helices and pulls
+    the caps together, and the relation is not closed-form once the ramp is a
+    smoothstep. The curve is then resampled at uniform arc length, because sampling
+    before the twist and stretching afterwards leaves the ring pitch uneven where
+    the twist is fastest.
     """
 
-    top = np.asarray(peg_center, dtype=float)
-    across = np.array([0.0, 1.0, 0.0])
-    up = np.array([0.0, 0.0, 1.0])
+    peg = np.asarray(peg_center, dtype=float)
+    along = _unit(np.asarray(long_axis, dtype=float)[None, :])[0]
+    across = np.asarray(width_axis, dtype=float)
+    across = _unit((across - float(np.dot(across, along)) * along)[None, :])[0]
     step = float(segment_length) / 5.0
 
-    def _shape(straight: float) -> np.ndarray:
-        bottom = top - np.array([0.0, 0.0, straight])
+    def _shape(reach: float) -> np.ndarray:
+        far = peg + reach * along
 
         def _line(start, end):
             steps = max(2, int(np.ceil(float(np.linalg.norm(end - start)) / step)))
@@ -285,33 +293,28 @@ def hanging_band_centerline(
 
         pts = np.concatenate(
             [
-                _line(top + loop_radius * across, bottom + loop_radius * across),
-                _cap(bottom, across, -up),
-                _line(bottom - loop_radius * across, top - loop_radius * across),
-                _cap(top, -across, up),
+                _line(peg + loop_radius * across, far + loop_radius * across),
+                _cap(far, across, along),
+                _line(far - loop_radius * across, peg - loop_radius * across),
+                _cap(peg, -across, -along),
             ]
         )
-        ramp = np.clip((top[2] - pts[:, 2]) / straight, 0.0, 1.0)
+        offset = pts - peg[None, :]
+        ramp = np.clip(offset @ along / reach, 0.0, 1.0)
         angle = float(half_turns) * np.pi * ramp * ramp * (3.0 - 2.0 * ramp)
-        cos, sin = np.cos(angle), np.sin(angle)
-        local = pts[:, :2] - top[None, :2]
-        return np.column_stack(
-            [
-                top[0] + local[:, 0] * cos - local[:, 1] * sin,
-                top[1] + local[:, 0] * sin + local[:, 1] * cos,
-                pts[:, 2],
-            ]
+        return peg[None, :] + _rotate_about(
+            offset, np.broadcast_to(along, offset.shape), angle
         )
 
-    # Arc length grows monotonically with height, so bisect. At zero height the
-    # band is two caps plus the strands winding on the spot, which is the shortest
-    # a band with this much twist can be.
+    # Arc length grows monotonically with reach, so bisect. At zero reach the band
+    # is two caps plus the strands winding on the spot, which is the shortest a
+    # band with this much twist can be.
     floor = 2.0 * np.pi * loop_radius + 2.0 * loop_radius * abs(float(half_turns)) * np.pi
     if float(perimeter) <= floor:
         raise ValueError(
             f"perimeter {perimeter:.4f} m cannot take {half_turns:+.1f} half turns at "
             f"loop_radius {loop_radius:.4f} m: the caps and the winding alone are "
-            f"{floor:.4f} m, leaving no height. Lengthen the band or narrow the loop."
+            f"{floor:.4f} m, leaving no length. Lengthen the band or narrow the loop."
         )
     low, high = 1e-4, 0.5 * float(perimeter)
     for _ in range(60):
@@ -328,6 +331,19 @@ def hanging_band_centerline(
     wanted = np.linspace(0.0, arc[-1], count, endpoint=False)
     closed = np.vstack([dense, dense[0]])
     return np.column_stack([np.interp(wanted, arc, closed[:, axis]) for axis in range(3)])
+
+
+def band_reach(centerline: np.ndarray, peg_center, long_axis) -> float:
+    """How far the band extends from the peg along ``long_axis``.
+
+    The far cap's travel between two twist states, which is what a driver has to
+    take up: winding shortens the loop, and holding the far cap still instead would
+    stretch the band against its own length.
+    """
+
+    peg = np.asarray(peg_center, dtype=float)
+    along = _unit(np.asarray(long_axis, dtype=float)[None, :])[0]
+    return float(np.max((np.asarray(centerline, dtype=float) - peg[None, :]) @ along))
 
 
 def _segment_hit(p0, p1, q0, q1):
@@ -476,6 +492,7 @@ __all__ = [
     "closed_arc_length",
     "closed_transport_frames",
     "closed_tube_mesh",
-    "hanging_band_centerline",
+    "band_reach",
     "linking_number",
+    "pegged_band_centerline",
 ]

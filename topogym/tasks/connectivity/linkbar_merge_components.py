@@ -763,7 +763,7 @@ class LinkbarMergeSceneBuilder:
                 kind="box",
                 size=(back_thickness, width, jamb_height),
                 origin=(back_face - 0.5 * back_thickness, 0.0, lift + 0.5 * jamb_height),
-                color=_list(sock.accent_color),
+                color=_list(sock.color),
             )
         ]
         for side in (1.0, -1.0):
@@ -783,7 +783,7 @@ class LinkbarMergeSceneBuilder:
                 size=(back_thickness, width, jamb_thickness),
                 origin=(back_face - 0.5 * back_thickness, 0.0,
                         lift + jamb_height + 0.5 * jamb_thickness),
-                color=_list(sock.accent_color),
+                color=_list(sock.color),
                 collide=False,
             )
         )
