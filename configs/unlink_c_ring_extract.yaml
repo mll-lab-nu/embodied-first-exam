@@ -1,0 +1,9 @@
+# unlink_c_ring_physical_extract_demo 的主配置。
+
+defaults:
+  - config
+  - override task_configs@task: unlink_c_ring_topogym_tabletop_v1
+  # 纯刚体任务，不需要 FEM 那份 env。
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: unlink_c_ring_extract
+  - _self_

@@ -20,6 +20,15 @@ the bisector of the two ring normals, which puts both rings at 45 degrees. The j
 therefore reads `|Lk|`, not `Lk`: the sign follows the handedness of that basis and
 flipped from -1 to +1 when the stand was turned, with no change to the interlock.
 
+**The end state alone cannot judge this task.** The C ring carried on an assisted
+attachment has its pose written every step, so a trajectory that should have jammed
+tunnels through the closed ring instead -- and once it is 90 mm away it reads
+unlinked, because it *is* unlinked. Both the correct extraction and the shortcut end
+in the same state. So the reading needs path evidence: `min_gap_seen`, the smallest
+surface clearance the two chains ever had, fed in by a caller that samples it while
+the episode runs. `swap_crossing_sign`'s `separated_seen` is the same shape of
+argument.
+
 The physical recheck lives in `topogym/tasks/entangle/_c_ring_travel_probe.py`,
 because it has to step physics and this package stays free of side effects.
 """
@@ -144,6 +153,8 @@ class UnlinkCRingPuzzleState:
     tilt_deg: float
     projection_viewer: tuple[float, float, float]
     gap_deg: float
+    min_gap_seen: float | None = None
+    jam_depth: float = 0.001
     travel_tested: bool = False
     travel_free: bool = False
     travel_info: dict[str, Any] = field(default_factory=dict)
@@ -172,8 +183,25 @@ class UnlinkCRingPuzzleState:
         return bool(self.surface_gap >= self.min_surface_gap)
 
     @property
+    def path_watched(self) -> bool:
+        return self.min_gap_seen is not None
+
+    @property
+    def passed_through(self) -> bool:
+        """Did the two bodies ever interpenetrate on the way here?
+
+        The one reading that separates the gateway from the shortcut, because their
+        end states are identical. Unwatched paths report False rather than None so
+        the predicate stays a boolean; `path_watched` says whether it means anything.
+        """
+
+        return bool(
+            self.min_gap_seen is not None and self.min_gap_seen < -abs(self.jam_depth)
+        )
+
+    @property
     def geometry_ok(self) -> bool:
-        return bool(self.unlinked and self.separated)
+        return bool(self.unlinked and self.separated and not self.passed_through)
 
     @property
     def judge_disagrees(self) -> bool:
@@ -193,7 +221,12 @@ class UnlinkCRingPuzzleState:
 
     @property
     def is_terminal(self) -> bool:
-        return bool(self.geometry_ok and self.travel_free and self.release_stable)
+        return bool(
+            self.geometry_ok
+            and self.path_watched
+            and self.travel_free
+            and self.release_stable
+        )
 
     def to_info(self) -> dict[str, Any]:
         return {
@@ -225,6 +258,11 @@ class UnlinkCRingPuzzleState:
             "center_drift": float(self.center_drift),
             "tilt_deg": float(self.tilt_deg),
             "unlinked": bool(self.unlinked),
+            # --- path evidence, not an endpoint predicate --------------------
+            "path_watched": bool(self.path_watched),
+            "min_gap_seen": None if self.min_gap_seen is None else float(self.min_gap_seen),
+            "jam_depth": float(self.jam_depth),
+            "passed_through": bool(self.passed_through),
             "geometry_ok": bool(self.geometry_ok),
             # --- physical recheck, reported separately ----------------------
             "travel_tested": bool(self.travel_tested),
@@ -242,19 +280,23 @@ class UnlinkCRingPuzzleEvaluator:
     """Success = unlinked, clear of the ring, free to translate, and stays put."""
 
     min_surface_gap: float = 0.002
+    jam_depth: float = 0.001
 
     @classmethod
     def from_config(cls, task_cfg) -> "UnlinkCRingPuzzleEvaluator":
         success = getattr(task_cfg, "success", None)
-        if success is None:
-            return cls()
-        return cls(min_surface_gap=float(success.min_surface_gap))
+        topology = getattr(task_cfg, "topology", None)
+        return cls(
+            min_surface_gap=0.002 if success is None else float(success.min_surface_gap),
+            jam_depth=0.001 if topology is None else float(topology.jam_depth),
+        )
 
     def classify(
         self,
         ring_scene: UnlinkCRingScene,
         *,
         frame: ring_geometry.RingFrame | None = None,
+        min_gap_seen: float | None = None,
         travel=None,
         release_stable: bool = True,
     ) -> UnlinkCRingPuzzleState:
@@ -293,6 +335,8 @@ class UnlinkCRingPuzzleEvaluator:
             ),
             projection_viewer=tuple(float(v) for v in geometry.projection[2]),
             gap_deg=float(geometry.c_ring.gap_deg),
+            min_gap_seen=None if min_gap_seen is None else float(min_gap_seen),
+            jam_depth=float(self.jam_depth),
             travel_tested=travel is not None,
             travel_free=bool(travel.all_free) if travel is not None else False,
             travel_info=travel.to_info() if travel is not None else {},

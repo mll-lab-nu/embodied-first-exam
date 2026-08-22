@@ -138,3 +138,82 @@ visual_details:
     foot_scale: 2.5
     foot_thickness: 0.005
     color: [0.30, 0.32, 0.35]
+
+# ------------------------------------------------------------------------ 动作
+# gateway = docx 3.4 的正解；no_align = 防捷径对照，跳过对准直接下移搬走，
+# 起止位置与正解几乎相同，唯一区别是开口从未对准管身。
+oracle:
+  mode: gateway
+
+primitive:
+  # 抓在环身上的哪个方位角。约束不是「哪里好抓」，而是「转完之后手在哪」：
+  # 旋转把方位角 φ 的点搬到 ψ = φ − 90°，而手转完是横躺的，抓取点若落到下半圈，
+  # 手会插进桌面。270°（环身 −y 侧、管身竖直，看起来最顺手）转完落在环底，手心只剩
+  # z≈0.028，不可用；135° 转完落在 ψ=45°，手心 z≈0.061，下缘离桌约 21mm。
+  # 它离开口边缘 23.5°、离凸台 45°，静置时在 y=+0.021 处，避开了与固定环共面的那条竖线。
+  grasp_azimuth_deg: 135.0
+  # 抓取时的末端姿态。null = 用 robot_control 的 ik.default_ee_quat（指尖朝下）。
+  # **这是主风险的调节旋钮**：终姿态由代码算成「基准左乘 90° 滚转」，指尖会从朝下转到
+  # 朝侧向，而仓库里没有这个量级的手腕重定向先例，move_ee_to 也不报残差。若实测
+  # worst_tilt 偏大，把这里预偏 −45°，让行程对半分（起 −45°、终 +45°），
+  # 转完后手心还会更高。
+  grasp_ee_quat: null
+  # 沿工具轴后退多少开始接近 / 松开后退多远。不是 z 偏移——姿态可能不是指尖朝下。
+  approach_clearance: 0.060
+  retreat_clearance: 0.080
+  steps_per_phase: 90
+  # 对准与抽出各自加长：前者是 90° 重定向，后者只有 0.15mm 净空，都不能走快。
+  align_steps: 160
+  extract_steps: 120
+  gripper_steps: 30
+  close_hold_steps: 30
+  align_settle_steps: 30
+  release_hold_steps: 100
+  # 合爪停位。管身直径 10mm，取略小于半径的停位让指面真的压上去。
+  grasp_qpos: 0.004
+  # 抓取证据。assisted carry 下零件必然跟着走，指行程是唯一能区分「夹到环」与
+  # 「合于空处」的读数。首轮留 null：先量出实际值，再回填阈值。
+  min_finger_qpos: null
+  max_grasp_pos_error: 0.020
+  # 对准门。gateway 全程最紧处 0.15mm、开口单边余量 2.00mm，过不了就在下移前中止——
+  # 开口没对准还往下走是把环怼进管身，而 assisted carry 下那是穿模不是卡住。
+  max_align_deg: 3.0
+  # 抽出后沿管轴移开多远，与离线 gate 的 gateway_phases(carry=) 同值。
+  carry: 0.090
+  # 移开之后再放下多少。抽出后 C 环下缘离桌 5mm。
+  place_drop: 0.004
+
+# -------------------------------------------------------------------- 物理复核
+physical:
+  # 机械臂回 home 的沉降步数。
+  settle_steps: 40
+  # 指面与 C 环的接触摩擦。C 环靠 assisted attachment 承载，指面只需看起来夹住，
+  # 但摩擦仍要配：沉降与释放两段是真接触。范围由 physical_contact.validate_rigid_friction
+  # 限在 [0.01, 5.0]。
+  finger_links: [left_finger, right_finger]
+  finger_friction: 2.0
+  c_ring_friction: 1.0
+  # 释放后稳定性测试。判据是**停下来了**，不是**没动**：抽出后的 C 环是一个立在桌面上的
+  # 环，松手必然倒平，环心会掉约 31mm、横移约 35mm。那是预期行为，不是失败；不可接受的是
+  # 它一直在动（滚出板外）或读数变了。
+  # 因此量的是最后一段窗口内的位移：全程步进 release_check_steps，只在最后
+  # release_settle_window 步里要求位移小于 release_max_drift。
+  release_check_steps: 240
+  release_settle_window: 60
+  release_max_drift: 0.003
+
+# 自由平移探针。契约对 C3 强制要求「分离后可沿任意方向平移离开」。
+travel_test:
+  # 推力按 C 环自重的倍数给，换质量时含义不变。
+  force_scale: 3.0
+  steps: 60
+  settle_steps: 20
+  # 判「自由」的位移门槛。解链前六个方向实测全部卡住（穿透 8.75–9.00mm），
+  # 解链后应当全部远超此值。
+  free_travel: 0.010
+
+# ---------------------------------------------------------------------- 判定
+success:
+  # 判「已分离」的最小表面净空。仅仅不重叠还不够——读数为解链但两面仍贴着，
+  # 那是抽到一半的位姿，不是终态。
+  min_surface_gap: 0.002

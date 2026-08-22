@@ -150,6 +150,15 @@ class UnlinkCRingScene:
     def c_ring_entity(self):
         return self.manifest.get("c_ring")
 
+    def c_ring_link_idx(self) -> int:
+        """Global index of the C's only link -- where an external push has to land.
+
+        `_c_ring_travel_probe` pushes the body itself rather than writing its pose,
+        and `apply_links_external_force` addresses links, not entities.
+        """
+
+        return int(self.c_ring_entity().base_link.idx)
+
     def fixed_ring_entity(self):
         return self.manifest.get("fixed_ring")
 

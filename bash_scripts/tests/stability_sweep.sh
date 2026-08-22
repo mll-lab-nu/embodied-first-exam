@@ -49,8 +49,9 @@ declare -A TASKS=(
   [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
   [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true run.probe=true"
   [stacked_plate]="demos.connectivity.stacked_plate_physical_rotate_demo"
+  [unlink_c_ring]="demos.entangle.unlink_c_ring_physical_extract_demo"
 )
-ORDER=(untangle untangle_continuous cable_routing stacked_plate)
+ORDER=(untangle untangle_continuous cable_routing stacked_plate unlink_c_ring)
 SELECTED=( "$@" ); [[ ${#SELECTED[@]} -eq 0 ]] && SELECTED=( "${ORDER[@]}" )
 
 if ! python -c "import topogym" 2>/dev/null; then

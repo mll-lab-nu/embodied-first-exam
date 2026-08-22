@@ -1,0 +1,20 @@
+# unlink_c_ring_physical_extract_demo 的运行模式参数。
+#
+# 动作与几何不在这里 —— 它们在 task 配置的 primitive / oracle 块里，用点路径覆盖即可：
+#   task.primitive.grasp_azimuth_deg=120      （换抓取点，注意「转完之后手在哪」那条约束）
+#   task.primitive.align_steps=240            （对准走慢一点）
+#   task.primitive.max_align_deg=1.0          （对准门收紧）
+#   task.travel_test.force_scale=5.0          （自由平移探针推力）
+# 改了几何先跑这两条离线 gate，都不需要 GPU：
+#   python tests/check_c_ring_clearance.py
+#   python tests/check_gateway_extract_quat.py
+
+defaults:
+  - default
+  - _self_
+
+# 覆盖 task.oracle.mode。
+#   gateway  = docx 3.4 的正解：转 90° 对准开口 → 下移 18mm → 沿管轴移开
+#   no_align = 防捷径对照：跳过对准，其余完全相同，预期判失败
+# null = 用 task 配置里的值。
+oracle_mode: null
