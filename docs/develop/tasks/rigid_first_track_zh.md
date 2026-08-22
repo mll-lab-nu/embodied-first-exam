@@ -27,7 +27,7 @@
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
 | 4.4 | `connectivity/linkbar_merge_components.py` | 场景与判据已过，执行层待复核。记录见 [`linkbar_merge_components_zh.md`](linkbar_merge_components_zh.md) |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
-| 3.4 | `entangle/unlink_c_ring.py` | 场景已落地（2026-08-21）。§7.3 的前置验证做完，见下。verifier、抽出原语、physical demo 未开工 |
+| 3.4 | `entangle/unlink_c_ring.py` | 场景、verifier、抽出原语、physical demo 均已落地（2026-08-22）。§7.3 的前置验证做完，见下；场景侧 GPU 已验，抽出 episode 的 GPU 未跑。详见 [`unlink_c_ring_zh.md`](unlink_c_ring_zh.md) |
 
 ---
 
@@ -230,7 +230,7 @@ maze_wall_removal 三个任务共用，改动面过大。
 | 支架取悬臂 | 规划时未定。固定环由水平悬臂牵出 80mm，环面与悬臂垂直。这样 C 环的全部活动包络够不到立柱，立柱一次也不参与接触。悬臂朝向 2026-08-22 由桌子远端（`+x`）改到机器人左手边（`+y`）：`front` 相机架在 `+x`，视线沿悬臂轴线过来会把两环整个挡住；改后 `front` 正对 C 环环面，`oblique`（架在 `-y`）看到支架落在两环背后。立柱同时由 24mm 改细到 16mm |
 | 抓取凸台 | 规划时未列。`_fixtures._link_xml` 把质心放在碰撞件包围盒中心；不带凸台时该中心只横向偏 1.62mm、竖直不偏，静止姿态即「开口转到管身上」。凸台把包围盒下拉 8.30mm，静止姿态改到离出生姿态 11°。**但 2026-08-22 实测表明维持互锁的是悬挂接触的摩擦（12.3 vs 0.79 mNm），不是凸台**；凸台的实际作用是抓取特征与摩擦裕度 |
 | 复用 | `StandardTabletopSceneBuilder`、`_fixtures.{HingeShape, add_rigid_assembly}`、`_visuals.add_industrial_pedestal`、`world/closed_band.py` 的 `linking_number` |
-| 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）；六自由度抽出原语**尚未开工**——动作是「沿一条使开口始终对准闭环环身的空间轨迹一次抽出」，现有原语（顶抓放置、手柄拖拽、轮缘滚动）都不覆盖 |
+| 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）、`primitives/gateway_extract.py`、`verification/unlink_c_ring_verifier.py`、`tasks/entangle/_c_ring_travel_probe.py`。原语**新写而非改 `AxialInsertPrimitive`**：后者的 `align_axis` 用 `_rotation_between(part_axis, insert_axis)` 算修正量，而本任务是绕零件自身法向滚转，法向不动、该式恒为零，改不出来（§7 第 1 条据此结案） |
 | 不变量 | 主读数取 `signed_crossing_sequence`（`task_taxonomy_zh.md` §4.3 对 C3 允许的取值；该节不含 `linking_number`），并显式声明「C 环开口用直弦补合」这一 canonical closure；`linking_number` 作为派生读数一并写入。契约要求的投影方向**由布局导出而非写死**——取两环法向的角平分线，随 `stand.yaw_deg` 一起转；写死的矩阵在改朝向后正好沿 C 环平面看过去，读数错成 `Lk = -2`，由离线 gate 拦下。verifier 未开工 |
 | 防捷径 | 由物理本身保证，且已实测：八条非 gateway 轨迹全部卡住，最浅穿透 1.0mm。**gateway 只有一条**——反向转 90° 后向上抽会被闭合环的另一侧挡住，不存在镜像解 |
 | 风险 | 已消解。几何一侧见 §7 第 3 条；求解器一侧 2026-08-22 实测：600 步静置 `Lk` 恒为 −1、开口方位漂移 0.6°，每步 1ms（CPU，约 1115 步/秒），约 1150 个接触对未构成瓶颈 |

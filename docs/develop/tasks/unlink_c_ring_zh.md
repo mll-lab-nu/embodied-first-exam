@@ -1,6 +1,6 @@
 # docx 3.4 C 形环从固定圆环中解开 —— 基础场景建设
 
-> 日期：2026-08-22（同日补入 GPU 实测结果与由此产生的一处结论修正）
+> 日期：2026-08-22（同日三轮：场景落地 → GPU 实测与结论修正 → 抽出原语／verifier／physical demo）
 > 上游：`../TopoGym_tasks.docx` §3.4
 > 配套：[`rigid_first_track_zh.md`](rigid_first_track_zh.md)（本任务在纯刚体轨道中的位置，
 > §4.5 为落地后的形态表、§7 第 3 条为碰撞精度前置验证的结论）、
@@ -12,9 +12,10 @@
 
 ## 0. 结论摘要
 
-- 本轮交付边界为**场景与几何验证**：场景可载入、可静置、可观察，且
-  `rigid_first_track_zh.md` §7.3 要求的碰撞精度前置验证已完成。
-  verifier、六自由度抽出原语、physical demo 不在本轮。
+- 第一轮交付**场景与几何验证**：场景可载入、可静置、可观察，且
+  `rigid_first_track_zh.md` §7.3 要求的碰撞精度前置验证已完成（§1–§7）。
+- 第二轮补上抽出原语、verifier、自由平移探针与 physical demo，目标是一段判定为成功的
+  完整 episode 录像（§8）。代码已落地、离线 gate 全过，**GPU 未跑**。
 - 几何一侧的风险已消解。八条非 gateway 轨迹全部卡住，且**每一条都由两环的互锁本身卡住**
   （最深处 8.75–9.00mm），支架只是先碰到；gateway 轨迹全程净空为正、终态解链。
 - 相对规划新增两项设计，理由见 §2.2 与 §2.3：支架取**立柱 + 水平悬臂**，C 环带**径向抓取凸台**。
@@ -420,19 +421,170 @@ python -m demos.entangle.unlink_c_ring_inspect_demo run.verbose=true \
 
 ---
 
-## 7. 未决事项
+## 8. 第二轮：抽出、判定与 demo（2026-08-22）
+
+### 8.1 新原语 `primitives/gateway_extract.py`
+
+`rigid_first_track_zh.md` §7 第 1 条把「改 `AxialInsertPrimitive` 还是新写」留作未决。
+结论是**新写，且不是工作量问题，是表达不了**：`AxialInsertPrimitive.align_axis` 用
+`_rotation_between(part_axis_now, insert_axis)` 算修正量，而本任务的旋转是**绕零件自身法向**
+滚转——法向在滚转中不动，该式恒等于零；它的 `_axis_tilt` 对准门同理恒为 0。
+
+三条设计要点：
+
+| 项 | 做法与理由 |
+|---|---|
+| 转手腕而不转握持 | attachment 用 `parent_quat_fn=controller.hand_quat` 刚性焊在手系里，旋转由手腕做。`ramp_to` 能到同样的终态，但那是「零件转了而手臂没动」，动作流里没有东西解释这次转动（`axial_insert.py:321`），演示是废的 |
+| 偏移量跟着手转 | `axial_insert` 手部姿态全程不变，实测偏移在世界系里是常量；本任务手要转 90°，偏移存在**手部局部系**里，每步用当前指令姿态转回世界系：`hand = part − R(q) @ offset_in_hand` |
+| 按零件插值而不是按手插值 | 对准段是绕环心的纯滚转，手若走直线、姿态单独 slerp，零件中途会甩出去。gateway 全程只有 0.15mm 净空，这个差别就是过与不过 |
+
+对准门改判 `opening_to_bar_deg`（开口方向与「环心指向管身」方向的夹角），由 verifier 提供、
+以回调传入，原语因此不 import `verification/`。
+
+原语还**自测跟踪误差**：`move_ee_to` 不报残差、不校验可达性（`cloth_corner_fold.py:213`），
+而 90° 水平轴重定向在仓库里没有先例，所以每个 waypoint 记 `‖hand_pos − 指令‖` 与姿态夹角，
+把 `worst_pose_error` / `worst_tilt_rad` 放进 Result。这是判断手腕到底跟没跟上的唯一读数。
+
+### 8.2 判定：端点读数不够
+
+**这一轮最重要的发现。** C 环由 assisted attachment 承载，每步写位姿，因此错误轨迹在物理上
+**穿模而不是卡住**。而穿模之后把 C 环搬开 90mm，它读起来就是 unlinked——因为它确实
+unlinked。**正解与捷径的终态完全相同**，端点读数分不开。
+
+因此判定加入**路径证据**：demo 每步采样两条链的表面净空，把全程最小值 `min_gap_seen` 交给
+verifier；穿透超过 `jam_depth` 即 `passed_through`，直接判失败。这与
+`swap_crossing_sign` 的 `separated_seen` 是同一形状的论证——路径证据，不是终点谓词。
+采样开销实测 0.28ms/步，整段 episode 约 0.4 秒。
+
+### 8.3 `verification/unlink_c_ring_verifier.py`
+
+- `invariant = "signed_crossing_sequence"`，取契约 §4.3 的字面形式 `(over 曲线号, under 曲线号,
+  符号)`。这**不是** `swap_crossing_sign_verifier.signed_crossings` 的约定——那里把第三位用来
+  表示谁在上，因为它那一个交叉的几何符号从不变；本任务两个交叉共用一个几何符号、
+  区别在于哪个环在上，两件事必须分开携带。为此给
+  `world/closed_band.py` 的 `Crossing` 加了 `over_curve` 字段，并公开了
+  `crossings_between`（`linking_number` 本来就在内部算它，算完丢掉）。
+- 判据看 `|Lk|`：符号随投影基手性变，改支架朝向时已由 −1 变成 +1。
+- `is_terminal` = 解链 ∧ 表面净空达标 ∧ **未穿模** ∧ 自由平移探针各方向全过 ∧ 释放后稳定。
+- 另有两个只报警不判失败的读数，取自 linkbar 的先例：`judge_disagrees`（读数说解链但环推不动
+  ——判官错了，不是这次运行错了）与 `probe_uninformative`（还连着却推得动——推力压过了互锁）。
+- inspect demo 原本自带的 `live_frame` / `reading` 已搬进 verifier，两个 demo 共用一份。
+
+### 8.4 自由平移探针 `tasks/entangle/_c_ring_travel_probe.py`
+
+契约对 C3 强制要求「分离后可沿任意方向平移离开」。照
+`tasks/connectivity/_travel_probe.py`：**施力而不是写位姿**，力按自重的倍数给，同时报
+`travel` 与 `peak_travel`，`on_step` 回调把推力喂给 HUD。方向集取离线 gate 里那六个平移方向
+——解链前实测全部卡住，解链后应当全部自由，是同一组方向上的前后对照。六次推之间把位姿写回
+起点，否则第四次环已经在桌外；这一步在 episode 的操作结束之后，不属于演示。
+
+### 8.5 释放后判「停下来」，不判「没动」
+
+抽出后的 C 环是一个**立在桌面上的环**，松手必然倒平——环心掉约 31mm、横移约 35mm。
+那是把环放下应有的样子，拿它判失败是在判场景而不是判运行。所以量的是最后一段窗口内的位移
+（`release_settle_window`），要求它停下来且读数未变；一直不停（滚出板外）才判不稳。
+
+### 8.6 防捷径对照
+
+`run.oracle_mode=no_align`：同样的抓取、同样的下移、同样的搬离，唯一区别是开口从未对准管身。
+预期**执行顺利但判失败**，失败原因是 `passed_through`。
+
+### 8.7 文件与登记
+
+新增 `primitives/gateway_extract.py`、`verification/unlink_c_ring_verifier.py`、
+`tasks/entangle/_c_ring_travel_probe.py`、`demos/entangle/unlink_c_ring_physical_extract_demo.py`、
+`configs/unlink_c_ring_extract.yaml`、`configs/run_configs/unlink_c_ring_extract.yaml`、
+`tests/check_gateway_extract_quat.py`；task 配置增补 `oracle` / `primitive` / `physical` /
+`travel_test` / `success` 五块。
+
+登记：`primitives/__init__.py`、`verification/__init__.py`、
+`record_all_tasks.sh` 与 `stability_sweep.sh`（`TASKS` 与 `ORDER` 都改）。
+另两个 bash 注册表要 `run.record_dataset`，本轮不接，不登记。
+
+`tests/check_gateway_extract_quat.py` 是新增的离线 gate：原语用四元数合成旋转、
+`_c_ring_geometry.apply_phases` 用矩阵合成同一个旋转，两套写法各有一处可能写反符号，
+而写反的后果是把环转进闭合环里——在 assisted carry 下是穿模不是卡住，下游看不出来。
+gate 因此断言「转完开口确实落到管身方向上」，并比对两套写法在数值上一致
+（实测 3.3e-16），五个 `stand.yaw_deg` 取值全过。
+
+### 8.8 本轮验证状态
+
+离线全过：
+
+```text
+tests/check_gateway_extract_quat.py   5 个 yaw 全过；两套旋转写法一致到 3.3e-16
+tests/check_c_ring_clearance.py       退出码 0（负对照 --gap-deg 30 退出码 1）
+tests/check_demo_configs.py           20 个 demo，四项检查全部无命中
+tests/check_closed_band_mesh.py       退出码 0（Crossing 加字段后回归）
+topogym/core/taxonomy.py              退出码 0
+bash -n 两个注册表                     语法通过，无 CRLF
+```
+
+**GPU 未跑**，命令见 §9。
+
+---
+
+## 9. 第二轮待跑
+
+```bash
+mkdir -p runs/videos/unlink_c_ring
+
+# 1. 只验管线，不跑物理
+python -m demos.entangle.unlink_c_ring_physical_extract_demo run.build_only=true   2>&1 | tee runs/videos/unlink_c_ring/extract_buildonly.log
+
+# 2. 无头跑完整 episode
+python -m demos.entangle.unlink_c_ring_physical_extract_demo run.verbose=true   2>&1 | tee runs/videos/unlink_c_ring/extract.log
+
+# 3. 防捷径对照，预期判失败
+python -m demos.entangle.unlink_c_ring_physical_extract_demo run.verbose=true   run.oracle_mode=no_align 2>&1 | tee runs/videos/unlink_c_ring/extract_no_align.log
+
+# 4. 成功 episode 三视角录像
+python -m demos.entangle.unlink_c_ring_physical_extract_demo   recording=default 'recording.camera=[oblique,front,wrist]'   recording.path=runs/videos/unlink_c_ring/extract.mp4   2>&1 | tee runs/videos/unlink_c_ring/extract_record.log
+```
+
+通过标准：
+
+| 步骤 | 期望 |
+|---|---|
+| 1 | 场景与原语构造完成即退出，无异常 |
+| 2 | ` success=True`；`Lk` 由 ±1 变 0；`passed_through=False`；六个方向 `travel_free=True`；`release_stable=True` |
+| 3 | ` success=False`，`failure_reason` 为 `c_ring_passed_through_the_closed_ring` |
+| 4 | 三段视频里看得清「转 90° 对准开口 → 下移脱出 → 移开」，HUD 上 `Lk` 在脱出那一刻由 ±1 跳到 0 |
+
+**主风险读数**：第 2 步的 `wrist_tilt`。若明显大于零，说明 IK 没跟上 90° 重定向，
+demo 会直接打 warn 并给出退路。两条退路按顺序试，每次只改一个量：
+
+1. `task.primitive.grasp_ee_quat` 预偏 −45°，手腕行程对半分（起 −45°、终 +45°），
+   转完后手心还更高；
+2. `task.c_ring.gap_azimuth_deg` 由 90 改到 45~60，需要的滚转同步减小。这条**现在才安全**
+   ——§6.4 已证明摩擦把开口钉在出生方位，离管身 45° 仍远大于开口半角 21.5°。改完要重跑
+   两条离线 gate。
+
+第 4 步的录像同时覆盖 §6.3 那条尚未跑的 inspect 观感确认。
+
+---
+
+## 10. 未决事项
 
 1. ~~**凸台是否承担稳定作用**~~ —— 已答：不承担，见 §6.4。凸台长度因此完全由抓取需要决定，
    与质心无关；确定抓取点之后可以顺带重估，整组几何也能压低（第 3、4 条不等式都会松出来）。
 2. **摩擦裕度的边界**。`add_rigid_assembly` 的 `contact_friction` 目前取默认值 1.0，
    未作为配置暴露。若后续把它调低或让随机化改变 C 环质量，§2.3 的 15 倍裕度要重算，
    届时凸台的作用才会显现。
-3. **抽出原语的形态**。轨迹已量出，待写规格：是给 `AxialInsertPrimitive` 加一个
-   「不释放、反向」的分支，还是新写 `primitives/gateway_extract.py`。
-   按 `../CLAUDE.md` §3，等真要复用时再决定。
-4. **抓取点**。C 环靠近机器人的那半圈从上方无遮挡，凸台朝下且末端离桌面 8mm。
-   夹爪是捏管身还是捏凸台，要在 viewer 里看过手部姿态之后再定。
-5. **随机化**。`task_taxonomy_zh.md` §4.4 只对 C4 类强制要求注册随机化条目，本任务属 C3，
+3. ~~**抽出原语的形态**~~ —— 已答：新写 `primitives/gateway_extract.py`，理由见 §8.1
+   （`AxialInsertPrimitive` 的对准式在绕自身法向滚转时恒等于零，改不出来）。
+4. ~~**抓取点**~~ —— 已答：环身方位角 135°，见 §8.1 与 task 配置的 `primitive` 块。
+   约束不是「哪里好抓」而是「转完之后手在哪」。
+5. **手腕 90° 重定向能否跟上**（新的主风险）。仓库里没有这个量级的先例，`move_ee_to`
+   也不报残差，因此原语自测 `worst_pose_error` / `worst_tilt_rad`。GPU 未跑，
+   判据与两条退路见 §9。
+6. **`min_finger_qpos` 阈值未定**。首轮留 `null`：assisted carry 下它是唯一能区分
+   「夹到环」与「合于空处」的读数，但阈值要先量出实际值再回填。与 `bar_through_hole`
+   §7 第 5 条同一件待办。
+7. **随机化**。`task_taxonomy_zh.md` §4.4 只对 C4 类强制要求注册随机化条目，本任务属 C3，
    非强制。可随机的轴有 `stand.yaw_deg`、`c_ring.gap_azimuth_deg`、环心 xy。
-   `gap_azimuth_deg` 的范围受第 1、2 条约束：摩擦既然会把开口钉在出生方位，随机化就直接
-   决定了每个 episode 的初始方位，范围要避开开口半角 21.5° 以内。
+   `gap_azimuth_deg` 的范围受两头夹：摩擦既然会把开口钉在出生方位，随机化就直接决定了
+   每个 episode 的初始方位，下限要避开开口半角 21.5°，上限受第 5 条的手腕行程约束。
+8. **benchmark 产物资格**。仍缺 `generation/unlink_c_ring_generator.py`：本轮的
+   `oracle_mode=no_align` 是对照**动作**，不是对照**数据集**。按 `task_taxonomy_zh.md`
+   §4.0，缺可执行 contrast pair 生成器的任务不得进入 benchmark 产物。

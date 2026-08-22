@@ -19,6 +19,7 @@ python tests/check_rope_winding_geometry.py   # 需要项目 venv
 python tests/check_rope_tube_mesh.py          # 只用 numpy；量的是已经生成的管皮 OBJ
 python tests/check_closed_band_mesh.py        # 只用 numpy + PyYAML；自己生成闭合带并量
 python tests/check_c_ring_clearance.py        # 只用 numpy + PyYAML；量 docx 3.4 两个环的净空
+python tests/check_gateway_extract_quat.py    # 只用 numpy + PyYAML；抽出原语的旋转合成
 ```
 
 | 文件 | 检查什么 |
@@ -27,6 +28,7 @@ python tests/check_c_ring_clearance.py        # 只用 numpy + PyYAML；量 docx
 | `check_configs_compose.py` | 每份任务配置与每份主配置能否 compose，以及全部 `${...}` 插值能否解析 |
 | `check_rope_winding_geometry.py` | rope_winding 的布局与 oracle：路点是否是配置要求的螺旋、出生路线是否已经绕柱、终态绕数是否恰为 ±turns、绳长是否够 |
 | `check_rope_tube_mesh.py` | 喂给 tetgen 的那张绳管皮：两个方向的镶嵌误差（截面弦高 vs 环距按曲率折算的纵向弦高）、表皮自带扭转、最小曲率半径与管半径之比。先用 `run.build_only=true` 生成 OBJ |
+| `check_gateway_extract_quat.py` | docx 3.4 抽出原语的手腕转动：四元数合成之后 C 环开口是否真的落到管身方向上、手腕有没有走远路，以及原语的四元数写法与 `_c_ring_geometry.apply_phases` 的矩阵写法是否是同一个旋转。写反的后果是把环转进闭合环里，而 assisted carry 下那是穿模不是卡住，下游看不出来 |
 | `check_c_ring_clearance.py` | docx 3.4 的固定环 + C 环：五条布局不等式的余量、分段近似的弦高、出生时是否读作互锁（弦闭合后 `Lk=±1`），以及 gateway 轨迹全程无接触而八条非 gateway 轨迹是否全部卡住 |
 | `check_closed_band_mesh.py` | docx 3.3 的闭合弹性带（Phase 0）：周期扫掠是否水密且两向镶嵌相当、接缝闭合后的自链数 `Lk` 是否为 0（`Lk=±1` 的带永远翻不平）、出生自接触间隙是否够势垒、以及自交叉计数在 O 形／8 字／反向翻转／压扁 8 字四种解析折线上的读数 |
 

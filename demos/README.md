@@ -7,7 +7,7 @@
 | 目录 | 任务 | demo |
 | --- | --- | --- |
 | `entangle/` | swap_crossing_sign | `swap_crossing_sign_physical_pinch_demo` |
-| | unlink_c_ring | `unlink_c_ring_inspect_demo`（stage-0：场景与静置，尚无抽出原语） |
+| | unlink_c_ring | `unlink_c_ring_physical_extract_demo`（主力）、`unlink_c_ring_inspect_demo`（stage-0：场景与静置） |
 | | untangle_continuous | `untangle_continuous_physical_pinch_demo`（主力）、`untangle_continuous_fem_demo`、`untangle_continuous_inspect_demo` |
 | | untangle（离散版） | `untangle_physical_handle_demo` |
 | `connectivity/` | stacked_plate | `stacked_plate_physical_rotate_demo`、`stacked_plate_inspect_demo` |
