@@ -182,6 +182,7 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         max_grasp_pos_error=float(spec.max_grasp_pos_error),
         max_align_deg=float(spec.max_align_deg),
         rotate_with=str(spec.rotate_with),
+        align_passes=int(spec.align_passes),
         verbose=bool(cfg.run.verbose),
     )
 

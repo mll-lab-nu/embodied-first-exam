@@ -178,6 +178,10 @@ class GatewayExtractPrimitive:
     # "wrist" or "attachment"; see the module docstring. Not a tuning knob -- it
     # decides whether the episode's action stream explains the part's rotation.
     rotate_with: str = "wrist"
+    # How many measure-and-turn passes the attachment mode gets. One is not enough:
+    # a pass does not necessarily deliver the whole rotation it asks for, and the
+    # alignment gate is tight because the extraction has 2 mm of room per side.
+    align_passes: int = 3
     close_hold_steps: int = 30
     align_steps: int | None = None
     align_settle_steps: int = 30
@@ -320,22 +324,37 @@ class GatewayExtractPrimitive:
         align_steps = int(self.align_steps or self.steps_per_phase)
         turn_track = _Tracking()
         if self.rotate_with == "attachment" and attachment is not None:
-            # Closed loop on the measured pose: the correction is however far the
-            # opening actually is from the bar right now, not the nominal turn. The
-            # descent nudges a free part by a few degrees, and an open-loop turn
-            # carries that error straight through to the gate.
-            turn_deg = (
-                float(align_correction_fn()) if align_correction_fn is not None
-                else float(rotation_deg)
-            )
-            target = quat_mul(
-                quat_about_axis(rotation_axis, np.deg2rad(turn_deg)), entity_quat(part)
-            )
-            # ramp_to counts SYNC calls and the manager syncs twice a step, so a ramp
-            # meant to span N physics steps needs 2N. Its world-to-parent conversion
-            # is only exact while the parent is still, which is why the hand holds.
-            attachment.ramp_to(target, 2 * align_steps)
-            controller.step(align_steps)
+            # Closed loop, and iterated. The correction is however far the opening
+            # actually is from the bar right now, not the nominal turn -- the descent
+            # nudges a free part by a degree or ten. Iterating on top of that is what
+            # makes the phase converge without anyone having to be right about how
+            # much of a requested ramp actually lands: measured 2026-08-23, a single
+            # pass asking for 26.8 degrees delivered 11.7.
+            for attempt in range(max(1, int(self.align_passes))):
+                turn_deg = (
+                    float(align_correction_fn()) if align_correction_fn is not None
+                    else float(rotation_deg)
+                )
+                if abs(turn_deg) <= float(self.max_align_deg):
+                    break
+                target = quat_mul(
+                    quat_about_axis(rotation_axis, np.deg2rad(turn_deg)),
+                    entity_quat(part),
+                )
+                # ramp_to counts SYNC calls, and the manager syncs twice a step. Rather
+                # than trust that accounting, step until it says it is done: `ramping()`
+                # clears when `_advance_ramp` reaches the last step.
+                attachment.ramp_to(target, 2 * align_steps)
+                for _ in range(4 * align_steps):
+                    if not attachment.ramping():
+                        break
+                    controller.step(1)
+                self._log("turn_pass", turn_track, attempt=attempt + 1,
+                          requested=turn_deg,
+                          achieved=turn_deg - (
+                              float(align_correction_fn())
+                              if align_correction_fn is not None else 0.0
+                          ))
         else:
             self._move_part(
                 controller, turn_track, part_from=part_center, part_to=part_center,

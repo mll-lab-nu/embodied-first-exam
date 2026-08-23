@@ -135,6 +135,9 @@ class ClothLinkAttachDragPrimitive:
     #:
     #: 0 keeps the old behaviour, which is what `cloth_fold` was calibrated with.
     carry_settle_steps: int = 0
+    #: Steps spent holding the descent's final pose before the attach is checked.
+    #: Same reason as `carry_settle_steps`; 0 keeps `cloth_fold`'s behaviour.
+    touch_settle_steps: int = 0
     #: Set when the caller has already opened the gripper -- typically because it
     #: opened it DURING the scene's settle, so the motion costs no extra steps.
     #: Opening again is harmless but adds `gripper_steps` of an arm doing nothing,
@@ -187,6 +190,13 @@ class ClothLinkAttachDragPrimitive:
         self._notify(on_phase, "approach")
 
         self._glide(controller, touch_hand, ee_quat, max(1, int(self.move_steps) // 2))
+        # And let the descent finish before anything is measured against it. The
+        # same lag that shortens a carry also leaves the pads BELOW the height
+        # they were sent to -- measured 7.5 mm low on 2026-08-23, which is most of
+        # `touch_clearance` and therefore most of the promise that the fingers
+        # never reach the cloth. The attach tolerance is checked right after this,
+        # so the check would otherwise be scoring the lag rather than the aim.
+        self._hold(controller, touch_hand, ee_quat, int(self.touch_settle_steps))
         self._phases.append("touch")
 
         # Did the hand actually arrive over the material? Grabbing from further
@@ -303,15 +313,13 @@ class ClothLinkAttachDragPrimitive:
                     f"arm_tilt_deg={np.degrees(tilt):.1f}",
                     flush=True,
                 )
-        # Hold the last command until the arm actually gets there. Re-gliding to
-        # the same target ramps from where the arm IS, so the residual is covered
-        # at a rate well inside what it can track.
+        # Hold the last command until the arm actually gets there.
         if int(self.carry_settle_steps) > 0:
             final = np.asarray(waypoints[-1].position, dtype=float)
             commanded = self._hand_for_pad(
                 final, float(final[2]) + float(self.touch_clearance)
             )
-            self._glide(controller, commanded, ee_quat, int(self.carry_settle_steps))
+            self._hold(controller, commanded, ee_quat, int(self.carry_settle_steps))
             held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
             follow = float(np.linalg.norm(held - (final + bind_offset)))
             pose = float(
@@ -368,6 +376,25 @@ class ClothLinkAttachDragPrimitive:
     def _pad_for_hand(hand) -> np.ndarray:
         hand = np.asarray(hand, dtype=float)
         return np.array([hand[0], hand[1], hand[2] - HAND_TO_PAD_Z])
+
+    @staticmethod
+    def _hold(controller, target, quat, steps: int) -> None:
+        """Command one FIXED pose every step, so the arm converges onto it.
+
+        Different from `_glide` in the way that matters here: a glide ramps the
+        setpoint and stops the moment the ramp ends, which leaves the arm short
+        by whatever it was lagging at that instant. A constant setpoint lets the
+        error decay instead of chasing a moving one.
+
+        Measured 2026-08-23 on `cloth_unpleat`: settling the end of a pull with a
+        second glide took the arm's error from 31 mm to 9.3 mm and stalled there,
+        because the second ramp had its own lag. The residual is what a hold
+        removes.
+        """
+
+        target = np.asarray(target, dtype=float)
+        for _ in range(max(0, int(steps))):
+            controller.move_ee_to(target, quat=quat, steps=1, continuous_ik=True)
 
     @staticmethod
     def _glide(controller, target, quat, steps: int) -> None:

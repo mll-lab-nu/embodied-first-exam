@@ -203,6 +203,7 @@ def main(cfg: DictConfig) -> None:
             release_settle_steps=int(cfg.task.physical.release_hold_steps),
             max_follow_error=float(cfg.task.physical.max_follow_error),
             carry_settle_steps=int(cfg.task.physical.carry_settle_steps),
+            touch_settle_steps=int(cfg.task.physical.touch_settle_steps),
             grasp_qpos=(
                 None
                 if cfg.task.grasp.grasp_qpos is None
