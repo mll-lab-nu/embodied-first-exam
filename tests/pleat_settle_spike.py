@@ -61,14 +61,21 @@ from topogym.verification.cloth_fold_verifier import layer_report
 from topogym.verification.cloth_unpleat_verifier import single_layer_fraction
 
 
-def crest_height(nodes, table_z: float) -> float:
-    """Highest point of the band above the table.
+def crest_height(nodes, table_z: float, rest_z: float) -> float:
+    """Highest point of the band above the band's own RESTING PLANE.
+
+    Above the resting plane rather than above the table, because that is what the
+    demo's `min_crest_kept` gate measures (`ClothUnpleatLayout.crest_height`) and
+    the two have to be the same number. A flat band already sits one particle
+    radius up, so mixing the two references inflates this by that much -- measured
+    2026-08-23, the spike said 0.481 kept where the demo said 0.390 for the same
+    settled cloth.
 
     The pleat is the only thing standing up, so the peak IS the crest until the
     pleat stops existing -- at which point this reading is the answer.
     """
 
-    return float(np.asarray(nodes, dtype=float)[:, 2].max() - table_z)
+    return float(np.asarray(nodes, dtype=float)[:, 2].max() - table_z - rest_z)
 
 
 def plan_span(nodes, axis: int) -> float:
@@ -81,6 +88,7 @@ def plan_span(nodes, axis: int) -> float:
 def sample_line(
     label: str, nodes, velocity, table_z: float, cfg, step: int, axis: int
 ) -> str:
+    rest_z = float(cfg.task.cloth.z)
     layers = layer_report(
         nodes,
         table_z,
@@ -90,7 +98,7 @@ def sample_line(
     speed = float(np.linalg.norm(np.asarray(velocity, dtype=float), axis=1).max())
     return (
         f"pleat_settle_spike {label} step={step} "
-        f"crest_mm={crest_height(nodes, table_z) * 1e3:.2f} "
+        f"crest_mm={crest_height(nodes, table_z, rest_z) * 1e3:.2f} "
         f"span_mm={plan_span(nodes, axis) * 1e3:.1f} "
         f"single_layer_frac={single_layer_fraction(layers):.3f} "
         f"max_layers={layers['max_layers']} "
@@ -170,7 +178,7 @@ def main(cfg: DictConfig) -> None:
 
     final = band_particles(band)
     design_crest = marks["crest_z"] - float(cfg.task.cloth.z)
-    settled_crest = crest_height(final, table_z)
+    settled_crest = crest_height(final, table_z, float(cfg.task.cloth.z))
     kept = settled_crest / max(design_crest, 1e-9)
     # Both directions are failures and they need different fixes, so they are
     # named apart rather than reported as one distance.
