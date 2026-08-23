@@ -296,6 +296,20 @@ class GatewayExtractPrimitive:
         self._move_hand(controller, track, hand_at_grasp, quat=base_quat)
         phases.append("descend")
 
+        # Weld BEFORE the fingers move, not after. A ring hanging on a bar is a free
+        # pendulum with a swivel: the first pad to touch it shoves it away instead of
+        # trapping it. Measured 2026-08-23, closing on the unheld ring knocked its
+        # normal 57 deg off the layout axis, and no amount of in-plane alignment can
+        # turn that back -- the roll axis IS the normal. Welding first pins the pose
+        # the hover already got right (0.5 mm) so the close cannot spoil it.
+        #
+        # This does not paper over a missed grasp, it exposes one. With the ring held
+        # still, the fingers stall on the tube if they are actually around it and run
+        # to the commanded width if they are not, so `finger_qpos` finally means
+        # something; before this it read 0.0041 either way because the tube was being
+        # swept aside rather than gripped.
+        attachment = attach_fn() if attach_fn is not None else None
+
         if self.grasp_qpos is None:
             controller.close_gripper(int(self.gripper_steps))
         else:
@@ -324,8 +338,6 @@ class GatewayExtractPrimitive:
                 hover_xy_error=hover_xy_error, grasp_pos_error=grasp_pos_error,
                 hover_align_deg=hover_align_deg, grasp_align_deg=grasp_align_deg,
             )
-
-        attachment = attach_fn() if attach_fn is not None else None
 
         # The part is welded in the hand frame from here on, so the offset from hand
         # to part centre is constant in THAT frame and has to be rotated back out at

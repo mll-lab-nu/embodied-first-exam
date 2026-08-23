@@ -180,6 +180,16 @@ def free_translation_probe(
             peak = max(peak, moved)
             if on_step is not None:
                 on_step(force, moved)
+            # Stop pushing the moment the question is answered. Left to run the full
+            # budget the push keeps accelerating a ring that is already free: measured
+            # 2026-08-22 at force_scale 3.0, 3.6 METRES of travel in 60 steps, which is
+            # 36 mm per step against a 5 mm tube. At that speed a still-linked ring
+            # tunnels straight through the interlock and the probe reports it free --
+            # which is exactly the `probe_uninformative` warning that fired. Cutting
+            # out at the threshold bounds travel to roughly the threshold itself, so
+            # the reading no longer depends on getting the force exactly right.
+            if peak >= float(free_travel):
+                break
         results.append(
             DirectionTravel(
                 name=name,
