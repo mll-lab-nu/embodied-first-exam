@@ -4,13 +4,21 @@
 which is what makes the scene cheap and repeatable. That buys one question in
 return, and until it is answered nothing downstream is worth writing:
 
-1. **Does Genesis' remesh keep vertex order on a non-flat, non-square mesh?**
-   The layer count and the material-conservation judge both need particle *i* to
-   still be control vertex *i*. `cloth_fold` measured 33x33 flat + particle_size
-   0.004 as the one combination that survives, and its config says outright that
-   「间距等于 particle_size」is not a sufficient condition and the combination
-   must not be settled by reasoning. This mesh is 36x17 and folded, so it is a
-   different question with the same stakes.
+1. **What does Genesis' remesh do to this mesh?** `cloth_fold` measured 33x33
+   flat + particle_size 0.004 as the one combination that keeps vertex order, and
+   its config says outright that 「间距等于 particle_size」is not a sufficient
+   condition and the combination must not be settled by reasoning. This mesh is
+   36x17 and folded, so it is a different question.
+
+   The stakes are LOWER here than in 1.1, and it is worth being exact about why.
+   1.1's main judge is a per-particle distance to an analytic target, so it dies
+   without vertex order. All three of 1.2's gates -- height, layer count, spread
+   length -- read the point cloud and never ask which particle is which. What
+   vertex order buys here is the carry-time stretch diagnostic and the exact form
+   of `band_shift`; both have honest fallbacks. Measured 2026-08-22: a 36x17
+   control mesh came back as 2344 particles where a clean one-level subdivision
+   is 71x33 = 2343, so the grid arithmetic is simply unavailable and the demo
+   says so on its own line rather than guessing.
 2. **Does the pleat stand?** Three ways it can fail: it flattens itself, it
    springs open (PBD's bending constraint taking its rest angle from flat rather
    than from the mesh as built), or the solver diverges where the two arms meet

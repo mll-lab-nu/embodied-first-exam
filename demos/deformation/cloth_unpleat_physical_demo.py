@@ -123,6 +123,21 @@ def main(cfg: DictConfig) -> None:
         # than in cloth_fold: the pleat is authored into the mesh, so whether it
         # stands at all is decided during this settle, not at build time.
         rest = settle_band(band, int(cfg.task.success.settle_steps))
+        # Neighbour pairs for the carry-time stretch reading. A band is not a
+        # square sheet, so they cannot be inferred from the particle count the way
+        # `cloth_fold` does; and when Genesis' remesh is not a clean subdivision
+        # they cannot be had at all, in which case the stretch reading is dropped
+        # rather than guessed. **None of the three success gates need it** -- they
+        # are height, layer count and spread length, and none of those needs to
+        # know which particle is which.
+        pairs = simulated_grid_pairs(rest, band.grid)
+        if pairs is None:
+            print(
+                f"cloth_unpleat stretch_tracking=off particles={len(rest)} "
+                f"control_grid={band.grid[0]}x{band.grid[1]} "
+                f"reason=remesh_is_not_a_clean_subdivision",
+                flush=True,
+            )
         watch = ClothFoldWatch(
             cloth=band.cloth,
             table_z=layout.table_z,
@@ -131,10 +146,11 @@ def main(cfg: DictConfig) -> None:
             # height, which is the highest anything gets in this task.
             fall_height=float(cfg.task.cloth.pleat.crest_height),
             gravity=abs(float(cfg.env.sim.gravity[2])),
-            rest_nodes=rest,
-            # A band is not a square sheet, so the neighbour arithmetic cannot be
-            # inferred from the particle count.
-            pairs=simulated_grid_pairs(rest, band.grid),
+            # Both or neither: `rest_nodes` is only there for the stretch reading,
+            # and passing it without pairs sends the watch to `cloth_fold`'s
+            # square-sheet fallback, which raises on a band.
+            rest_nodes=None if pairs is None else rest,
+            pairs=pairs,
         )
         original_step = band.scene.step
         counter = {"n": 0}
