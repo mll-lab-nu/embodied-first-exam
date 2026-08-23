@@ -167,16 +167,18 @@ class _StandInLayout:
     def arc_radius(self) -> float:
         return self.arm_length() * float(self._cfg["physical"]["arc_slack"])
 
+    def start_radius(self) -> float:
+        crest, crease = self.crest_point(), self.crease_point()
+        return float(np.hypot(crest[0] - crease[0], crest[2] - crease[2]))
+
     def start_angle(self) -> float:
-        return float(
-            np.arctan2(
-                self._marks["crest_z"] - float(self._cfg["cloth"]["z"]),
-                self._marks["crest_x"] - self._marks["crease_x"],
-            )
-        )
+        crest, crease = self.crest_point(), self.crease_point()
+        return float(np.arctan2(crest[2] - crease[2], crest[0] - crease[0]))
 
     def arc_length(self) -> float:
-        return float(self.arc_radius() * self.start_angle())
+        return float(
+            0.5 * (self.start_radius() + self.arc_radius()) * abs(self.start_angle())
+        )
 
     def drag_steps(self) -> int:
         return max(
@@ -455,10 +457,22 @@ def main(argv=None) -> int:
         )
         for w in unfold_wp
     ]
+    # The invariant is not "constant radius" any more: the sweep opens the radius
+    # out from where the crest actually is to the taut value, because an authored
+    # pleat sags before the arm reaches it. What must never happen is the hand
+    # commanding further from the crease than the arm of cloth reaches.
+    arm = layout.arm_length()
     check(
-        "unfold 全程离下折痕的距离不变（顶缘只能在圆上走）",
-        max(radii) - min(radii) < 1e-9,
-        f"radius={radii[0] * 1e3:.2f}mm",
+        "unfold 全程不超出那条折臂的材料长度（不会把布拽直）",
+        max(radii) <= arm + 1e-9,
+        f"最远 {max(radii) * 1e3:.2f}mm ≤ 折臂 {arm * 1e3:.2f}mm",
+    )
+    check(
+        "半径从顶缘当前位置单调开到绷紧值",
+        all(b >= a - 1e-12 for a, b in zip(radii, radii[1:]))
+        or all(b <= a + 1e-12 for a, b in zip(radii, radii[1:])),
+        f"{radii[0] * 1e3:.2f}mm → {radii[-1] * 1e3:.2f}mm "
+        f"(taut {layout.arc_radius() * 1e3:.2f}mm)",
     )
     press_wp = drag_waypoints(layout, motion="press")
     crest = layout.crest_point()

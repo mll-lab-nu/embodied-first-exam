@@ -59,6 +59,8 @@ class ClothUnpleatLayout:
     origin: np.ndarray
     #: The profile's corners, cached because every landmark is read off them.
     _corners: np.ndarray | None = field(default=None, init=False, repr=False)
+    #: The crest as measured after settling. See `observe`.
+    _crest: np.ndarray | None = field(default=None, init=False, repr=False)
 
     def coordinate_frame(self) -> str:
         return str(self.task_cfg.coordinate_frame)
@@ -97,14 +99,73 @@ class ClothUnpleatLayout:
     def material_length(self) -> float:
         return float(self.task_cfg.cloth.material_length)
 
-    def crest_point(self) -> np.ndarray:
-        """World point on the pleat's top edge the gripper attaches to."""
+    def design_crest_point(self) -> np.ndarray:
+        """Where the mesh was authored to put the crest. Nominal, not observed."""
 
         marks = self.landmarks()
         centre = self.band_centre()
         return np.array(
             [centre[0] + marks["crest_x"], centre[1], self.world_z(marks["crest_z"])]
         )
+
+    def crest_point(self) -> np.ndarray:
+        """World point on the pleat's top edge the gripper attaches to.
+
+        The observed crest once `observe` has been called, the design crest
+        before that. **The difference is not a rounding error.** The pleat is
+        authored into the mesh and then let go, so it sags before anything
+        touches it -- measured 2026-08-22, by more than the 12 mm attachment
+        window, which is how this method came to exist. Reaching for the design
+        position after a settle is reaching into empty air.
+        """
+
+        return self._crest if self._crest is not None else self.design_crest_point()
+
+    def observe(self, nodes) -> np.ndarray:
+        """Find the settled crest in ``nodes`` and use it from here on.
+
+        The highest particle near the design crest, on the band's centre line.
+        Searched within the pleat's own plan width, because a crest that has
+        moved further than that is not a crest any more -- and the caller is
+        expected to check `crest_kept` rather than trust whatever this returns.
+
+        The returned point keeps the band's centre line for y, so the gripper
+        still sits mid-width rather than wherever the tallest particle happens to
+        be across the weave.
+        """
+
+        nodes = np.asarray(nodes, dtype=float)
+        design = self.design_crest_point()
+        window = float(self.task_cfg.cloth.pleat.width)
+        band = float(self.task_cfg.grasp.attach_radius)
+        near = np.flatnonzero(
+            (np.abs(nodes[:, 0] - design[0]) <= window)
+            & (np.abs(nodes[:, 1] - design[1]) <= band)
+        )
+        if near.size == 0:
+            raise ValueError(
+                f"no material within {window:.3f} m of the design crest at "
+                f"({design[0]:+.4f},{design[1]:+.4f}); the band is not where the "
+                f"layout says it is."
+            )
+        top = near[int(np.argmax(nodes[near, 2]))]
+        self._crest = np.array([nodes[top, 0], design[1], nodes[top, 2]])
+        return self._crest
+
+    def crest_height(self) -> float:
+        """Current crest height above the band's rest plane."""
+
+        return float(self.crest_point()[2] - self.rest_z())
+
+    def crest_kept(self) -> float:
+        """Observed crest height over the authored one. 1.0 means it did not sag.
+
+        The number the caller gates on: an episode that starts from a collapsed
+        pleat is not a hard episode, it is a different task.
+        """
+
+        design = float(self.design_crest_point()[2] - self.rest_z())
+        return self.crest_height() / max(design, 1e-9)
 
     def crease_point(self) -> np.ndarray:
         """World point the crest pivots about: where the band doubles back.
@@ -129,22 +190,34 @@ class ClothUnpleatLayout:
         return self.arm_length() * float(self.task_cfg.physical.arc_slack)
 
     def start_angle(self) -> float:
-        """Where the crest starts on that circle, radians from +x about the crease.
+        """Where the crest starts, radians from +x about the crease.
 
-        Measured from the profile rather than from the config so it stays correct
-        if the pleat's shape changes.
+        Taken from the crest's actual position rather than from the profile, so a
+        crest that sagged during the settle is swept from where it IS. The two
+        agree exactly before `observe` is called.
         """
 
-        marks = self.landmarks()
-        return float(
-            np.arctan2(
-                marks["crest_z"] - float(self.task_cfg.cloth.z),
-                marks["crest_x"] - marks["crease_x"],
-            )
-        )
+        crest, crease = self.crest_point(), self.crease_point()
+        return float(np.arctan2(crest[2] - crease[2], crest[0] - crease[0]))
+
+    def start_radius(self) -> float:
+        """How far the crest currently is from the crease, straight-line.
+
+        Less than `arc_radius` whenever the pleat has sagged: the arm is still the
+        same length of cloth, it has just stopped being straight. Driving the taut
+        radius from step one would yank that slack out in a single step, so the
+        planner opens the radius out over the sweep instead.
+        """
+
+        crest, crease = self.crest_point(), self.crease_point()
+        return float(np.hypot(crest[0] - crease[0], crest[2] - crease[2]))
 
     def arc_length(self) -> float:
-        return float(self.arc_radius() * self.start_angle())
+        """Path length of the sweep, using the mean radius it is driven at."""
+
+        return float(
+            0.5 * (self.start_radius() + self.arc_radius()) * abs(self.start_angle())
+        )
 
     def drag_steps(self) -> int:
         """Steps for the sweep, from the calibrated hand SPEED.
@@ -172,6 +245,8 @@ class ClothUnpleatLayout:
         crest, crease = self.crest_point(), self.crease_point()
         return (
             f"crest=({crest[0]:+.3f},{crest[1]:+.3f},{crest[2]:+.3f}) "
+            f"crest_kept={self.crest_kept():.3f} "
+            f"start_radius_mm={self.start_radius() * 1e3:.1f} "
             f"crease=({crease[0]:+.3f},{crease[1]:+.3f}) "
             f"material_mm={marks['material_length'] * 1e3:.0f} "
             f"plan_span_mm={marks['plan_span'] * 1e3:.1f} "

@@ -87,18 +87,6 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
 
-    waypoints, episode_plan = plan_cloth_unpleat(
-        layout,
-        motion=str(cfg.run.motion),
-        overpull_scale=float(cfg.run.overpull_scale),
-    )
-    print(
-        f"cloth_unpleat plan segments={len(waypoints)} "
-        f"{episode_plan.waypoint_plan.metadata} "
-        f"chord_error_mm={chord_error(layout) * 1e3:.3f}",
-        flush=True,
-    )
-
     primitive = ClothLinkAttachDragPrimitive(
         approach_z=float(cfg.task.physical.approach_z),
         touch_clearance=float(cfg.task.grasp.touch_clearance),
@@ -123,6 +111,47 @@ def main(cfg: DictConfig) -> None:
         # than in cloth_fold: the pleat is authored into the mesh, so whether it
         # stands at all is decided during this settle, not at build time.
         rest = settle_band(band, int(cfg.task.success.settle_steps))
+        # Where the crest ACTUALLY is. The pleat is authored into the mesh and
+        # then let go, so it sags before the arm arrives; reaching for the design
+        # position after a settle reaches into empty air, which is how the first
+        # run of this demo failed. Everything the planner derives -- start angle,
+        # start radius, step count -- follows from the observed crest.
+        crest = layout.observe(rest)
+        design = layout.design_crest_point()
+        print(
+            f"cloth_unpleat crest_after_settle "
+            f"design=({design[0]:+.4f},{design[1]:+.4f},{design[2]:+.4f}) "
+            f"observed=({crest[0]:+.4f},{crest[1]:+.4f},{crest[2]:+.4f}) "
+            f"design_mm={(design[2] - layout.rest_z()) * 1e3:.2f} "
+            f"observed_mm={layout.crest_height() * 1e3:.2f} "
+            f"kept={layout.crest_kept():.3f}",
+            flush=True,
+        )
+        # An episode that starts from a collapsed pleat is not a harder episode,
+        # it is a different task -- and judging it would put a meaningless row in
+        # the dataset. Fail here rather than sweep a flat band sideways.
+        if layout.crest_kept() < float(cfg.task.grasp.min_crest_kept):
+            raise SystemExit(
+                f"the pleat did not survive the settle: crest kept "
+                f"{layout.crest_kept():.3f} of its height, below "
+                f"task.grasp.min_crest_kept={float(cfg.task.grasp.min_crest_kept)}. "
+                f"Run `python -B -m tests.pleat_settle_spike` to see the sag over "
+                f"time before changing the geometry."
+            )
+
+        waypoints, episode_plan = plan_cloth_unpleat(
+            layout,
+            motion=str(cfg.run.motion),
+            overpull_scale=float(cfg.run.overpull_scale),
+        )
+        print(
+            f"cloth_unpleat plan segments={len(waypoints)} "
+            f"{episode_plan.waypoint_plan.metadata} "
+            f"chord_error_mm={chord_error(layout) * 1e3:.3f} "
+            f"{layout.summary()}",
+            flush=True,
+        )
+
         # Neighbour pairs for the carry-time stretch reading. A band is not a
         # square sheet, so they cannot be inferred from the particle count the way
         # `cloth_fold` does; and when Genesis' remesh is not a clean subdivision

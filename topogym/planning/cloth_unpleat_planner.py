@@ -40,11 +40,15 @@ DRAG_SEGMENTS = 10
 MOTIONS = ("unfold", "press", "overpull")
 
 
-def arc_point(layout, angle: float) -> np.ndarray:
-    """Where the crest is when it sits at ``angle`` about the crease, in world."""
+def arc_point(layout, angle: float, radius: float | None = None) -> np.ndarray:
+    """Where the crest sits at ``angle`` about the crease, in world.
+
+    ``radius`` defaults to the taut one. The sweep passes a growing value instead
+    -- see `drag_waypoints`.
+    """
 
     crease = np.asarray(layout.crease_point(), dtype=float)
-    radius = layout.arc_radius()
+    radius = layout.arc_radius() if radius is None else float(radius)
     return np.array(
         [
             crease[0] + radius * float(np.cos(angle)),
@@ -93,26 +97,35 @@ def drag_waypoints(
     # past it pulls the whole band rather than opening anything. Continuing to
     # ROTATE instead would drive the crest down through the table, which is a
     # different and less interesting wrong answer.
+    #
+    # The radius opens out over the sweep rather than being taut from step one.
+    # An authored pleat sags before anything touches it, which leaves the crest
+    # closer to the crease than its arm of cloth is long; commanding the taut
+    # radius immediately would pull that slack out in a single step. Where the
+    # pleat has not sagged the two radii are equal and this is the plain circle.
+    inner, taut = layout.start_radius(), layout.arc_radius()
     out: list[WaypointTarget] = []
     for index in range(1, segments + 1):
         fraction = index / segments
         angle = start * (1.0 - fraction)
+        radius = inner + (taut - inner) * fraction
         out.append(
             WaypointTarget(
                 label=f"arc_{index:02d}",
-                position=tuple(float(v) for v in arc_point(layout, angle)),
+                position=tuple(float(v) for v in arc_point(layout, angle, radius)),
                 steps=per_segment,
                 # Everything before the last waypoint has the crest off the table.
                 lifted=index < segments,
                 metadata={
                     "fraction": round(fraction, 4),
                     "angle_deg": round(float(np.degrees(angle)), 2),
+                    "radius_mm": round(float(radius) * 1e3, 2),
                 },
             )
         )
     if motion == "overpull":
         extra = layout.arc_length() * (float(overpull_scale) - 1.0)
-        flat = np.asarray(arc_point(layout, 0.0), dtype=float)
+        flat = np.asarray(arc_point(layout, 0.0, taut), dtype=float)
         tow_segments = max(1, int(round(segments * (float(overpull_scale) - 1.0))))
         for index in range(1, tow_segments + 1):
             out.append(
@@ -165,6 +178,7 @@ def plan_cloth_unpleat(
             "planner": "cloth_unpleat_crest_arc",
             "motion": motion,
             "segments": segments,
+            "start_radius_m": float(layout.start_radius()),
             "radius_m": float(layout.arc_radius()),
             "steps": int(layout.drag_steps()),
         },
