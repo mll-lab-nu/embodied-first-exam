@@ -72,6 +72,10 @@ def main(cfg: DictConfig) -> None:
         show_viewer=cfg.run.viewer
     )
     layout = band.layout
+    # Built once and used twice: the start-state guard reads the same measures the
+    # end-state verdict does, so "still a pleat" and "unpleated" are the same
+    # arithmetic on two different moments rather than two definitions.
+    evaluator = ClothUnpleatEvaluator.from_config(cfg.task)
     if stop_before_physics(cfg, band.scene, "cloth_unpleat"):
         return
 
@@ -108,9 +112,17 @@ def main(cfg: DictConfig) -> None:
             f"kept={layout.crest_kept():.3f}",
             flush=True,
         )
-        # An episode that starts from a collapsed pleat is not a harder episode,
-        # it is a different task -- and judging it would put a meaningless row in
-        # the dataset. Stop here rather than sweep a flat band sideways.
+        # Is this still a pleat? Two direct readings rather than the crest height
+        # this used to gate on: the material has to still be stored (or there is
+        # nothing to unfold) and the layers have to still be stacked (or it is not
+        # this task). Height was dropped 2026-08-23 -- the pleat always lies down
+        # within 25 steps and no material parameter prevents it, so gating on
+        # height rejected every episode. See the task config.
+        #
+        # An episode that starts from a pleat that has already come apart is not a
+        # harder episode, it is a different task, and judging it would put a
+        # meaningless row in the dataset. Stop here rather than sweep a flat band
+        # sideways.
         #
         # It holds still for a moment before stopping, so the recording ends on
         # the collapsed pleat instead of cutting off mid-settle. A truncated clip
@@ -118,24 +130,39 @@ def main(cfg: DictConfig) -> None:
         # and it is the only picture of the failure anyone gets. The recorder
         # saves on the way out of its `with` even when the body raises, so the
         # video survives the SystemExit below.
-        if layout.crest_kept() < float(cfg.task.grasp.min_crest_kept):
+        start = evaluator.classify(rest, rest, table_z=layout.table_z, grid=band.grid)
+        stored_ok = start.spread_ratio <= float(cfg.task.grasp.max_start_spread_ratio)
+        layers_ok = start.over_layer_cells >= int(
+            cfg.task.grasp.min_start_three_layer_cells
+        )
+        print(
+            f"cloth_unpleat start_state spread_ratio={start.spread_ratio:.3f} "
+            f"max={float(cfg.task.grasp.max_start_spread_ratio)} "
+            f"three_layer_cells={start.over_layer_cells} "
+            f"min={int(cfg.task.grasp.min_start_three_layer_cells)} "
+            f"single_layer_frac={start.single_layer_frac:.3f} "
+            f"peak_mm={start.peak_above_table * 1e3:.2f} "
+            f"stored_ok={stored_ok} layers_ok={layers_ok}",
+            flush=True,
+        )
+        if not (stored_ok and layers_ok):
+            reason = "material_already_released" if not stored_ok else "layers_came_apart"
             print(
-                f"cloth_unpleat aborted reason=pleat_collapsed "
-                f"crest_kept={layout.crest_kept():.3f} "
-                f"min_crest_kept={float(cfg.task.grasp.min_crest_kept)} "
-                f"crest_mm={layout.crest_height() * 1e3:.2f} "
-                f"design_mm={(design[2] - layout.rest_z()) * 1e3:.2f} "
+                f"cloth_unpleat aborted reason={reason} "
                 f"holding={int(cfg.run.final_hold_steps)}",
                 flush=True,
             )
             for _ in range(max(0, int(cfg.run.final_hold_steps))):
                 band.scene.step()
             raise SystemExit(
-                f"the pleat did not survive the settle: crest kept "
-                f"{layout.crest_kept():.3f} of its height, below "
-                f"task.grasp.min_crest_kept={float(cfg.task.grasp.min_crest_kept)}. "
-                f"Run `python -B -m tests.pleat_settle_spike` for the sag over "
-                f"time -- a slow slide and an immediate drop need different fixes."
+                f"the pleat did not survive the settle ({reason}): spread_ratio "
+                f"{start.spread_ratio:.3f} (max "
+                f"{float(cfg.task.grasp.max_start_spread_ratio)}), three-layer "
+                f"cells {start.over_layer_cells} (min "
+                f"{int(cfg.task.grasp.min_start_three_layer_cells)}). "
+                f"Run `bash bash_scripts/tests/pleat_stability_sweep.sh` -- the "
+                f"material parameters that hold the pleat together are measured, "
+                f"not guessed."
             )
 
         waypoints, episode_plan = plan_cloth_unpleat(
@@ -234,7 +261,7 @@ def main(cfg: DictConfig) -> None:
         finally:
             band.scene.step = original_step
 
-    state = ClothUnpleatEvaluator.from_config(cfg.task).classify(
+    state = evaluator.classify(
         rest,
         band_particles(band),
         table_z=layout.table_z,

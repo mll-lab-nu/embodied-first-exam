@@ -1,14 +1,17 @@
 """Did the pleat actually get spread out? (docx 1.2)
 
-Three criteria decide, and docx 1.2 names all three: 最大高度低于阈值 +
-覆盖区域单层 + 总铺展长度 ≈ 材料全长. They are joined by AND, and the reason is
-the shortcut docx names in the same paragraph -- pressing the pleat flat also
-brings the height down, and only the layer count and the length conservation tell
-the two apart.
+docx 1.2 names three criteria: 最大高度低于阈值 + 覆盖区域单层 + 总铺展长度 ≈
+材料全长. **Two of them gate here, and the third is recorded.**
 
-**Height** is the morphological reading: a standing pleat is 30 mm tall and a
-band lying flat is one cloth thickness. Its gate is deliberately loose, because a
-pressed-flat pleat is supposed to PASS it and be caught by the other two.
+**Height** is dropped to a diagnostic, and the reason is measured rather than
+chosen. docx's third criterion assumes the pleat stands, so that pressing it flat
+is a distinct wrong answer that passes on height and fails on the other two.
+This cloth cannot stand: Genesis' PBD cloth ignores `bending_compliance`
+entirely (1e-1 through 1e-8 gave identical settles, 2026-08-23), so nothing holds
+a crease, and the authored pleat lies down inside 25 steps. The starting state
+therefore already passes any height threshold that a finished unfold would pass,
+and a gate that is satisfied before the episode begins is worse than no gate --
+it looks like a criterion and does no work. See the task config for the sweep.
 
 **Single-layer fraction** is the structural reading the category contract asks
 for beside a morphological one (C1, `task_taxonomy_zh.md` 4.1). It is also the
@@ -158,21 +161,22 @@ def rect_grid_neighbours(cols: int, rows: int) -> np.ndarray:
 class ClothUnpleatThresholds:
     """What counts as unpleated: the three gates docx 1.2 names, joined by AND.
 
-    ``max_height_m``           the pleat is no longer standing. Loose on purpose:
-                               a pressed-flat pleat should pass this one, so that
-                               the other two are what reject it. That split is the
-                               whole reason docx asks for three readings.
     ``single_layer_frac_min``  the covered area is one layer deep again.
+                               The structural reading.
     ``spread_ratio_min``       the material the pleat held has been given back.
+                               The morphological one. Together they satisfy the
+                               category contract's requirement for a conjunction
+                               of the two kinds (C1, `task_taxonomy_zh.md` 4.1).
 
-    Band shift, stretch and flatness are recorded but not gated by default. The
-    optional slots let any of them be switched on from config once there are
-    measured runs to place them from.
+    ``max_height_m`` is optional and ships as ``null`` -- see the module
+    docstring for why. Band shift, stretch and flatness are likewise recorded
+    rather than gated; the optional slots let any of them be switched on from
+    config once there are measured runs to place them from.
     """
 
-    max_height_m: float
     single_layer_frac_min: float
     spread_ratio_min: float
+    max_height_m: float | None = None
     band_shift_max: float | None = None
     stretch_max: float | None = None
     flatness_var_max: float | None = None
@@ -184,9 +188,9 @@ class ClothUnpleatThresholds:
             return None if value is None else float(value)
 
         return cls(
-            max_height_m=float(success_cfg["max_height_m"]),
             single_layer_frac_min=float(success_cfg["single_layer_frac_min"]),
             spread_ratio_min=float(success_cfg["spread_ratio_min"]),
+            max_height_m=opt("max_height_m"),
             band_shift_max=opt("band_shift_max"),
             stretch_max=opt("stretch_max"),
             flatness_var_max=opt("flatness_var_max"),
@@ -219,10 +223,11 @@ class ClothUnpleatState:
 
         limits = self.thresholds
         passed = {
-            "max_height": self.peak_above_table <= limits.max_height_m,
             "single_layer_frac": self.single_layer_frac >= limits.single_layer_frac_min,
             "spread_ratio": self.spread_ratio >= limits.spread_ratio_min,
         }
+        if limits.max_height_m is not None:
+            passed["max_height"] = self.peak_above_table <= limits.max_height_m
         if limits.band_shift_max is not None:
             passed["band_shift"] = self.band_shift <= limits.band_shift_max
         if limits.stretch_max is not None:
@@ -233,8 +238,9 @@ class ClothUnpleatState:
 
     @property
     def is_terminal(self) -> bool:
-        """Conjunction, never a single threshold -- C1 requires it, and docx 1.2's
-        press-it-flat shortcut is exactly why."""
+        """Conjunction, never a single threshold -- C1 requires it, and a band that
+        was towed rather than unfolded is exactly why: it recovers length without
+        recovering layers."""
 
         values = self.gates.values()
         return bool(values) and all(values)

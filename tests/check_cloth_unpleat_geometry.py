@@ -8,9 +8,10 @@ What it proves:
   - a band spread flat passes every gate;
   - the pleat as built fails, which is the floor the task starts from;
   - **the shortcut docx 1.2 names fails on the gates that are supposed to catch
-    it.** Pressing the pleat flat is meant to PASS the height gate and be
-    rejected by the layer count and the length -- if it ever fails on height
-    instead, the three-way conjunction has stopped meaning what docx asked for;
+    it.** Pressing the pleat flat is rejected by the layer count and the length,
+    which is also the real starting state: the pleat lies down within 25 steps
+    and no material parameter prevents it (measured 2026-08-23), so the height
+    criterion is recorded rather than gated and this check pins that down;
   - an over-pulled band passes all three, and `band_shift` is what tells it
     apart. That is recorded rather than gated on purpose, and this check exists
     so the fact stays visible;
@@ -342,16 +343,25 @@ def main(argv=None) -> int:
         clearance >= float(cloth["particle_size"]),
         f"{clearance * 1e3:.1f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
     )
-    # The window the gripper attaches through has to stay clear of that flat run
-    # even after the crest sags to the collapse threshold, which is why the layout
-    # caps it against the crest's height rather than using the config value flat.
-    kept = float(cfg["grasp"]["min_crest_kept"])
-    floor = kept * float(cloth["pleat"]["crest_height"]) * (1.0 - 0.45)
+    # The window the gripper attaches through has to catch the TOP layer and miss
+    # the one under it. The pleat lies down to a flat three-layer stack -- measured
+    # 2026-08-23 at 7.5 mm above the band's resting plane, stable from step 25 --
+    # so the three layers sit at roughly 0, h/2 and h. The layout caps the window
+    # at 0.45 of the crest's CURRENT height, and 0.45 < 0.5 is exactly what keeps
+    # the window's floor above the middle layer whatever h turns out to be.
+    stack = 0.0075
+    cap = float(cfg["grasp"]["attach_z_band"])
+    window = min(cap, 0.45 * stack)
     check(
-        "顶缘沉到 min_crest_kept 时抓取窗口底部仍高于平铺段",
-        floor > float(cloth["particle_size"]) / 2.0,
-        f"窗口底 {floor * 1e3:.2f}mm > 半个粒子 "
-        f"{float(cloth['particle_size']) / 2.0 * 1e3:.1f}mm",
+        "抓取窗口只够到最上层，够不到中间那层",
+        stack - window > stack / 2.0,
+        f"窗口底 {(stack - window) * 1e3:.2f}mm > 中间层 {stack / 2.0 * 1e3:.2f}mm"
+        f"（实测三层总高 {stack * 1e3:.1f}mm，窗口 ±{window * 1e3:.2f}mm）",
+    )
+    check(
+        "窗口的上限值本身不会破坏这条保证",
+        cap < stack / 2.0 or 0.45 * stack <= cap,
+        f"上限 {cap * 1e3:.1f}mm，按高度收窄后取 {window * 1e3:.2f}mm",
     )
 
     print("\n== 判据：三种末态 ==")
@@ -362,10 +372,13 @@ def main(argv=None) -> int:
     rest_nodes = band_nodes(section, cfg)
     cases = {
         "unfold（正确）": band_nodes(profile_at(flat_polyline(cfg, corners), arcs), cfg),
-        "press（压塌，docx 点名的捷径）": band_nodes(
+        # 这一档同时是两样东西：docx 点名的捷径，以及**真实的起始状态**。
+        # 实测褶皱放手 25 步内就躺平成这个三层叠合的形状（2026-08-23）。
+        "press（压塌／也就是真实起始态）": band_nodes(
             profile_at(pressed_polyline(cfg, corners), arcs), cfg
         ),
-        "nothing（褶皱原样立着）": rest_nodes,
+        # t=0 的建模形状。仿真里它只存在 25 步，留着是为了确认判据对它也不放行。
+        "nothing（t=0 建模形状）": rest_nodes,
         "overpull（展平但整条带被拖走）": band_nodes(
             profile_at(flat_polyline(cfg, corners, shift=0.08), arcs), cfg
         ),
@@ -388,29 +401,45 @@ def main(argv=None) -> int:
         states["unfold（正确）"].summary(),
     )
     check(
-        "褶皱原样立着不算完成",
-        not states["nothing（褶皱原样立着）"].is_terminal,
-        f"gates={[k for k, v in states['nothing（褶皱原样立着）'].gates.items() if not v]}",
+        "t=0 的建模形状不算完成",
+        not states["nothing（t=0 建模形状）"].is_terminal,
+        f"gates={[k for k, v in states['nothing（t=0 建模形状）'].gates.items() if not v]}",
     )
 
-    pressed = states["press（压塌，docx 点名的捷径）"]
+    pressed = states["press（压塌／也就是真实起始态）"]
     check(
         "压塌不算完成",
         not pressed.is_terminal,
         f"gates={[k for k, v in pressed.gates.items() if not v]}",
     )
-    # The load-bearing one. docx 1.2 asks for a judge under which pressing and
-    # unfolding are strictly separable, and names WHICH readings do the work.
-    check(
-        "压塌通过高度这一条（所以它不是靠高度被挡住的）",
-        pressed.gates["max_height"],
-        f"peak={pressed.peak_above_table * 1e3:.2f}mm ≤ {limits.max_height_m * 1e3:.1f}mm",
-    )
+    # The load-bearing one. docx 1.2 asks for a judge under which a pleat that is
+    # still holding its material and one that has given it back are strictly
+    # separable, and names WHICH readings do that work.
     check(
         "压塌被层数与长度守恒一起挡住",
         not pressed.gates["single_layer_frac"] and not pressed.gates["spread_ratio"],
         f"single={pressed.single_layer_frac:.3f} < {limits.single_layer_frac_min} 且 "
         f"spread={pressed.spread_ratio:.3f} < {limits.spread_ratio_min}",
+    )
+    # 高度这条判据 2026-08-23 降为诊断量：这块布立不住（bending_compliance 是死
+    # 参数），褶皱放手 25 步内躺平，起始状态本身就已经通过任何一条合理的高度门槛。
+    # 一条永远满足的判据看起来像标准却不起作用，比没有更糟。
+    check(
+        "高度不在门槛里，只记录",
+        limits.max_height_m is None and "max_height" not in pressed.gates,
+        f"max_height_m={limits.max_height_m}，门槛={sorted(pressed.gates)}",
+    )
+    check(
+        "高度读数仍然出现在 to_info 里（降级不等于删掉）",
+        "peak_above_table_mm" in pressed.to_info(),
+        f"peak_above_table_mm={pressed.to_info()['peak_above_table_mm']:.2f}",
+    )
+    # 类别合同 C1 (task_taxonomy_zh.md 4.1) 要求结构指标与形态指标的合取，
+    # 禁止单一位置阈值。降为两条之后这一点仍然成立，所以要钉住。
+    check(
+        "两条门槛一个结构（层数）一个形态（长度），仍是合取",
+        sorted(pressed.gates) == ["single_layer_frac", "spread_ratio"],
+        f"门槛={sorted(pressed.gates)}",
     )
 
     over = states["overpull（展平但整条带被拖走）"]
@@ -588,7 +617,7 @@ def main(argv=None) -> int:
         for item in failures:
             print(f"  - {item}")
         return 1
-    print("== 通过：三条判据合起来把压塌与原样立着都挡在外面 ==")
+    print("== 通过：两条门槛（层数 + 材料守恒）把压塌与建模形状都挡在外面 ==")
     return 0
 
 
