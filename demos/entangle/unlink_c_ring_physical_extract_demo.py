@@ -263,26 +263,28 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 status["align_deg"] = reading
                 return reading
 
-            def align_correction() -> float:
-                """Signed turn about the ring's normal that puts the opening on the bar.
+            def align_correction():
+                """Live axis, and the signed turn about it that puts the opening on the bar.
 
-                Measured, not nominal. The descent nudges a free ring by a few degrees
-                (14 degrees on the 2026-08-22 run), and an open-loop turn carries that
-                straight into the alignment gate.
+                Measured, not nominal, and the axis is measured too. Closing the fingers
+                nudges a free ring -- 14 degrees on the 2026-08-22 run -- and that nudge
+                moves the ring's normal as well as its opening. Turning about the
+                layout's axis instead of this one tips the ring out of its own plane,
+                which the alignment reading can never recover from by turning further.
                 """
 
                 frame = c_ring_frame(ring_scene)
+                normal = np.asarray(frame.normal, dtype=float).reshape(3)
                 opening = (
                     frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0]
                     - frame.center
                 )
                 to_bar = geometry.tube_point - frame.center
-                # Both live in the ring's plane; the signed angle between them about
-                # the ring's normal is exactly the correction.
-                normal = frame.normal
+                # Project both into the ring's plane; the signed angle between them
+                # about the normal is exactly the in-plane correction.
                 opening -= float(np.dot(opening, normal)) * normal
                 to_bar -= float(np.dot(to_bar, normal)) * normal
-                return float(
+                return normal, float(
                     np.rad2deg(
                         np.arctan2(
                             float(np.dot(np.cross(opening, to_bar), normal)),

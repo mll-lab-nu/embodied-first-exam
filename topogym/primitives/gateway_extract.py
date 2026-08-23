@@ -80,6 +80,21 @@ def _matrix(quat) -> np.ndarray:
     )
 
 
+def _quat_angle_between_axes(a, b) -> float:
+    """Angle in degrees between two axes, sign-insensitive.
+
+    A rotation axis and its negation are the same axis, so the reading has to fold
+    at 90 degrees or a flipped normal reads as fully drifted.
+    """
+
+    a = np.asarray(a, dtype=float).reshape(3)
+    b = np.asarray(b, dtype=float).reshape(3)
+    scale = float(np.linalg.norm(a) * np.linalg.norm(b))
+    if scale < 1e-12:
+        return 0.0
+    return float(np.rad2deg(np.arccos(np.clip(abs(float(np.dot(a, b))) / scale, 0.0, 1.0))))
+
+
 def _quat_angle(a, b) -> float:
     """Angle between two orientations, in radians, sign-insensitive."""
 
@@ -324,22 +339,34 @@ class GatewayExtractPrimitive:
         align_steps = int(self.align_steps or self.steps_per_phase)
         turn_track = _Tracking()
         if self.rotate_with == "attachment" and attachment is not None:
-            # Closed loop, and iterated. The correction is however far the opening
-            # actually is from the bar right now, not the nominal turn -- the descent
-            # nudges a free part by a degree or ten. Iterating on top of that is what
-            # makes the phase converge without anyone having to be right about how
-            # much of a requested ramp actually lands: measured 2026-08-23, a single
-            # pass asking for 26.8 degrees delivered 11.7.
+            # Closed loop, and iterated. Two things make a single open-loop turn wrong.
+            # The correction is however far the opening actually is from the bar right
+            # now, not the nominal turn -- closing the fingers shoves a free part by a
+            # degree or ten. And the axis has to be the part's LIVE normal: the same
+            # shove tips it off the layout's axis, and a roll about a stale axis lifts
+            # the opening out of the ring's plane instead of spinning it within the
+            # plane. Measured 2026-08-23 with the stale axis: one pass took 26.8 deg
+            # down to 15.0, and three passes made it WORSE at 20.5, which is the
+            # signature of turning about the wrong axis rather than of under-turning.
             for attempt in range(max(1, int(self.align_passes))):
-                turn_deg = (
-                    float(align_correction_fn()) if align_correction_fn is not None
-                    else float(rotation_deg)
+                turn_axis = np.asarray(rotation_axis, dtype=float).reshape(3)
+                turn_deg = float(rotation_deg)
+                if align_correction_fn is not None:
+                    measured_axis, measured_deg = align_correction_fn()
+                    turn_axis = np.asarray(measured_axis, dtype=float).reshape(3)
+                    turn_deg = float(measured_deg)
+                # How far the live axis has drifted from the layout's. This is the
+                # reading that says whether the alignment has an out-of-plane floor
+                # it can never turn its way under.
+                axis_drift = _quat_angle_between_axes(turn_axis, rotation_axis)
+                self._log(
+                    "turn_pass", turn_track, attempt=attempt + 1,
+                    requested=turn_deg, axis_drift=axis_drift,
                 )
                 if abs(turn_deg) <= float(self.max_align_deg):
                     break
                 target = quat_mul(
-                    quat_about_axis(rotation_axis, np.deg2rad(turn_deg)),
-                    entity_quat(part),
+                    quat_about_axis(turn_axis, np.deg2rad(turn_deg)), entity_quat(part)
                 )
                 # ramp_to counts SYNC calls, and the manager syncs twice a step. Rather
                 # than trust that accounting, step until it says it is done: `ramping()`
@@ -349,12 +376,6 @@ class GatewayExtractPrimitive:
                     if not attachment.ramping():
                         break
                     controller.step(1)
-                self._log("turn_pass", turn_track, attempt=attempt + 1,
-                          requested=turn_deg,
-                          achieved=turn_deg - (
-                              float(align_correction_fn())
-                              if align_correction_fn is not None else 0.0
-                          ))
         else:
             self._move_part(
                 controller, turn_track, part_from=part_center, part_to=part_center,
