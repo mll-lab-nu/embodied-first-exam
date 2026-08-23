@@ -275,8 +275,24 @@ class GatewayExtractPrimitive:
         controller.open_gripper(int(self.gripper_steps))
         phases.append("open")
 
-        self._move_hand(controller, track, hand_approach, quat=base_quat,
-                        start_quat=_as_numpy(controller.hand_quat()).reshape(4))
+        # Over the top, not straight at it. A single Cartesian interpolation from
+        # wherever the arm is standing to the point above the grasp cuts a diagonal
+        # through the scene, and on this task the thing it cuts through is the part it
+        # is going to pick up: the straight-down descent has 47 mm of plan-view room
+        # against the closed ring, but the diagonal getting there has none. Rise in
+        # place (reorienting here, clear of everything), translate at that height, then
+        # come down. Three axis-aligned legs, one held orientation.
+        here = np.asarray(controller.hand_pos(), dtype=float).reshape(3)
+        transit_z = max(float(here[2]), float(hand_approach[2]))
+        self._move_hand(
+            controller, track, np.array([here[0], here[1], transit_z]), quat=base_quat,
+            start_quat=_as_numpy(controller.hand_quat()).reshape(4),
+        )
+        self._move_hand(
+            controller, track,
+            np.array([hand_approach[0], hand_approach[1], transit_z]), quat=base_quat,
+        )
+        self._move_hand(controller, track, hand_approach, quat=base_quat)
         phases.append("approach")
 
         # Hover: settle, then check the pads are over the grasp point before going
