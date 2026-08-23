@@ -373,15 +373,15 @@ def main(argv=None) -> int:
         state = evaluator.classify(rest_nodes, nodes, table_z=0.0)
         states[label] = state
         print(
-            f"  {label:34s} peak={state.peak_above_table * 1e3:6.2f}mm "
+            f"  {label:30s} peak={state.peak_above_table * 1e3:6.2f}mm "
             f"single={state.single_layer_frac:.3f} "
-            f"spread={state.spread_ratio:.3f} "
+            f"recovered={state.recovered_frac:+.3f} "
             f"shift={state.band_shift * 1e3:6.2f}mm "
             f"terminal={state.is_terminal}"
         )
 
     check(
-        "铺平的布带三条判据全过",
+        "铺平的布带两条门槛全过",
         states["unfold（正确）"].is_terminal,
         states["unfold（正确）"].summary(),
     )
@@ -401,10 +401,10 @@ def main(argv=None) -> int:
     # still holding its material and one that has given it back are strictly
     # separable, and names WHICH readings do that work.
     check(
-        "压塌被层数与长度守恒一起挡住",
-        not pressed.gates["single_layer_frac"] and not pressed.gates["spread_ratio"],
+        "压塌被层数与材料守恒一起挡住",
+        not pressed.gates["single_layer_frac"] and not pressed.gates["recovered_frac"],
         f"single={pressed.single_layer_frac:.3f} < {limits.single_layer_frac_min} 且 "
-        f"spread={pressed.spread_ratio:.3f} < {limits.spread_ratio_min}",
+        f"recovered={pressed.recovered_frac:+.3f} < {limits.recovered_frac_min}",
     )
     # 高度这条判据 2026-08-23 降为诊断量：这块布立不住（bending_compliance 是死
     # 参数），褶皱放手 25 步内躺平，起始状态本身就已经通过任何一条合理的高度门槛。
@@ -423,15 +423,15 @@ def main(argv=None) -> int:
     # 禁止单一位置阈值。降为两条之后这一点仍然成立，所以要钉住。
     check(
         "两条门槛一个结构（层数）一个形态（长度），仍是合取",
-        sorted(pressed.gates) == ["single_layer_frac", "spread_ratio"],
+        sorted(pressed.gates) == ["recovered_frac", "single_layer_frac"],
         f"门槛={sorted(pressed.gates)}",
     )
 
     over = states["overpull（展平但整条带被拖走）"]
     check(
-        "拉过头三条判据也全过（它是另一种走法，不是失败）",
+        "拉过头两条门槛也全过（它是另一种走法，不是失败）",
         over.is_terminal,
-        f"spread={over.spread_ratio:.3f}",
+        f"recovered={over.recovered_frac:+.3f}",
     )
     check(
         "band_shift 是唯一分得出拉过头的读数",
@@ -451,10 +451,10 @@ def main(argv=None) -> int:
             "min",
         ),
         (
-            "spread_ratio",
-            good.spread_ratio,
-            worst.spread_ratio,
-            limits.spread_ratio_min,
+            "recovered_frac",
+            good.recovered_frac,
+            worst.recovered_frac,
+            limits.recovered_frac_min,
             "min",
         ),
     ):

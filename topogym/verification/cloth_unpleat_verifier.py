@@ -18,10 +18,19 @@ for beside a morphological one (C1, `task_taxonomy_zh.md` 4.1). It is also the
 only one of the three that does not need particle identities -- a real robot sees
 a point cloud, not vertex numbers.
 
-**Spread ratio** is material conservation: the pleat holds a known length of
-cloth, and giving it back is the same event as the pleat ceasing to exist. This
-is what makes 「压扁」 and 「展开」 strictly separable, which is the property
+**Recovered fraction** is material conservation: the pleat holds a known length
+of cloth, and giving it back is the same event as the pleat ceasing to exist.
+This is what makes 「压扁」 and 「展开」 strictly separable, which is the property
 docx 1.2 asks the judge to have.
+
+It is measured as the share of the STORED material that came back, not as the
+band's length over its material length. Those two look interchangeable and are
+not: the raw ratio starts at 0.764 rather than at zero, so it can only ever move
+through 0.236, and a threshold of 0.90 on it -- which reads as "nearly all of
+it" -- actually passes a band that has given back barely more than half its
+pleat. Measured 2026-08-23: a run that recovered 40.9 mm of 61.4 mm scored 0.921
+and passed. The recovered fraction says 0.67 for the same run, which is what it
+is.
 
 Recorded but not gated: how far the whole band slid (the reading that tells an
 unfold from a tow), stretch, flatness, and the layer histogram. `band_shift` is
@@ -163,10 +172,11 @@ class ClothUnpleatThresholds:
 
     ``single_layer_frac_min``  the covered area is one layer deep again.
                                The structural reading.
-    ``spread_ratio_min``       the material the pleat held has been given back.
-                               The morphological one. Together they satisfy the
-                               category contract's requirement for a conjunction
-                               of the two kinds (C1, `task_taxonomy_zh.md` 4.1).
+    ``recovered_frac_min``     the material the pleat held has been given back,
+                               as a share of what it held. The morphological one.
+                               Together they satisfy the category contract's
+                               requirement for a conjunction of the two kinds
+                               (C1, `task_taxonomy_zh.md` 4.1).
 
     ``max_height_m`` is optional and ships as ``null`` -- see the module
     docstring for why. Band shift, stretch and flatness are likewise recorded
@@ -175,8 +185,9 @@ class ClothUnpleatThresholds:
     """
 
     single_layer_frac_min: float
-    spread_ratio_min: float
+    recovered_frac_min: float
     max_height_m: float | None = None
+    spread_ratio_min: float | None = None
     band_shift_max: float | None = None
     stretch_max: float | None = None
     flatness_var_max: float | None = None
@@ -189,8 +200,9 @@ class ClothUnpleatThresholds:
 
         return cls(
             single_layer_frac_min=float(success_cfg["single_layer_frac_min"]),
-            spread_ratio_min=float(success_cfg["spread_ratio_min"]),
+            recovered_frac_min=float(success_cfg["recovered_frac_min"]),
             max_height_m=opt("max_height_m"),
+            spread_ratio_min=opt("spread_ratio_min"),
             band_shift_max=opt("band_shift_max"),
             stretch_max=opt("stretch_max"),
             flatness_var_max=opt("flatness_var_max"),
@@ -203,6 +215,7 @@ class ClothUnpleatState:
 
     peak_above_table: float
     single_layer_frac: float
+    recovered_frac: float
     spread_ratio: float
     spread_span: float
     band_shift: float
@@ -224,8 +237,10 @@ class ClothUnpleatState:
         limits = self.thresholds
         passed = {
             "single_layer_frac": self.single_layer_frac >= limits.single_layer_frac_min,
-            "spread_ratio": self.spread_ratio >= limits.spread_ratio_min,
+            "recovered_frac": self.recovered_frac >= limits.recovered_frac_min,
         }
+        if limits.spread_ratio_min is not None:
+            passed["spread_ratio"] = self.spread_ratio >= limits.spread_ratio_min
         if limits.max_height_m is not None:
             passed["max_height"] = self.peak_above_table <= limits.max_height_m
         if limits.band_shift_max is not None:
@@ -251,6 +266,7 @@ class ClothUnpleatState:
         return {
             "peak_above_table_m": float(self.peak_above_table),
             "single_layer_frac": float(self.single_layer_frac),
+            "recovered_frac": float(self.recovered_frac),
             "spread_ratio": float(self.spread_ratio),
             "flatness_var": float(self.flatness_var),
         }
@@ -279,6 +295,7 @@ class ClothUnpleatState:
         return (
             f"peak_mm={self.peak_above_table * 1e3:.2f} "
             f"single_layer_frac={self.single_layer_frac:.3f} "
+            f"recovered_frac={self.recovered_frac:.3f} "
             f"spread_ratio={self.spread_ratio:.3f} "
             f"spread_mm={self.spread_span * 1e3:.1f} "
             f"band_shift_mm={self.band_shift * 1e3:.2f} "
@@ -339,6 +356,12 @@ class ClothUnpleatEvaluator:
         rest_nodes = np.asarray(rest_nodes, dtype=float)
         layers = layer_report(nodes, float(table_z), self.cell, self.particle_size)
         span = spread_span(nodes, self.material_axis)
+        # How much of what the pleat was holding at the START has come back. The
+        # denominator is the band's own stored material, measured on the rest
+        # state rather than taken from the config, so a pleat that relaxed a
+        # little before the arm arrived is not credited to the arm.
+        rest_span = spread_span(rest_nodes, self.material_axis)
+        stored = max(self.material_length - rest_span, 1e-9)
         heights = nodes[:, 2] - float(table_z)
 
         shape = None if grid is None else simulated_grid_shape(len(rest_nodes), grid)
@@ -349,6 +372,7 @@ class ClothUnpleatEvaluator:
         return ClothUnpleatState(
             peak_above_table=peak_height(nodes, table_z),
             single_layer_frac=single_layer_fraction(layers),
+            recovered_frac=(span - rest_span) / stored,
             spread_ratio=span / max(self.material_length, 1e-9),
             spread_span=span,
             band_shift=band_shift(

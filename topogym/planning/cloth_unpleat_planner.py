@@ -51,7 +51,6 @@ def pull_waypoints(
         raise ValueError(f"motion must be one of {MOTIONS}, got {motion!r}.")
 
     segments = max(2, int(segments))
-    per_segment = max(1, int(round(layout.pull_steps() / segments)))
     start = np.asarray(layout.grasp_point(), dtype=float)
     direction = layout.pull_direction()
 
@@ -60,6 +59,14 @@ def pull_waypoints(
         distance = -distance
     elif motion == "overpull":
         distance = distance * float(overpull_scale)
+
+    # Steps from THIS motion's distance, not from the nominal pull. Sharing one
+    # step count across motions of different lengths would make them different
+    # SPEEDS, and then a comparison between them is confounded by the one thing
+    # the calibration is supposed to hold fixed. Measured 2026-08-23: overpull
+    # ran at 2.4 mm a step against unfold's 1.5 because of exactly this.
+    steps = max(4, int(round(abs(distance) / float(layout.task_cfg.physical.pull_step_m))))
+    per_segment = max(1, int(round(steps / segments)))
 
     out: list[WaypointTarget] = []
     for index in range(1, segments + 1):
