@@ -128,6 +128,8 @@ class _StandInLayout:
         self._cfg = cfg
         self._table_z = float(table_z)
         cloth = cfg["cloth"]
+        self.material_axis = 0 if str(cloth["material_axis"]).lower() == "x" else 1
+        self.sweep_axis = 1 - self.material_axis
         self._corners = _mesh.pleat_profile(
             material_length=float(cloth["material_length"]),
             pleat_width=float(cloth["pleat"]["width"]),
@@ -147,18 +149,19 @@ class _StandInLayout:
     def rest_z(self) -> float:
         return self._table_z + float(self._cfg["cloth"]["z"])
 
+    def _plan_point(self, material: float, height: float) -> np.ndarray:
+        point = np.zeros(3)
+        point[self.material_axis] = self._centre[self.material_axis] + float(material)
+        point[self.sweep_axis] = self._centre[self.sweep_axis]
+        point[2] = self._table_z + float(height)
+        return point
+
     def crest_point(self) -> np.ndarray:
-        return np.array(
-            [
-                self._centre[0] + self._marks["crest_x"],
-                self._centre[1],
-                self._table_z + self._marks["crest_z"],
-            ]
-        )
+        return self._plan_point(self._marks["crest_s"], self._marks["crest_z"])
 
     def crease_point(self) -> np.ndarray:
-        return np.array(
-            [self._centre[0] + self._marks["crease_x"], self._centre[1], self.rest_z()]
+        return self._plan_point(
+            self._marks["crease_s"], float(self._cfg["cloth"]["z"])
         )
 
     def arm_length(self) -> float:
@@ -169,11 +172,13 @@ class _StandInLayout:
 
     def start_radius(self) -> float:
         crest, crease = self.crest_point(), self.crease_point()
-        return float(np.hypot(crest[0] - crease[0], crest[2] - crease[2]))
+        axis = self.material_axis
+        return float(np.hypot(crest[axis] - crease[axis], crest[2] - crease[2]))
 
     def start_angle(self) -> float:
         crest, crease = self.crest_point(), self.crease_point()
-        return float(np.arctan2(crest[2] - crease[2], crest[0] - crease[0]))
+        axis = self.material_axis
+        return float(np.arctan2(crest[2] - crease[2], crest[axis] - crease[axis]))
 
     def arc_length(self) -> float:
         return float(
@@ -228,15 +233,20 @@ def band_nodes(section, cfg, *, table_z: float = 0.0) -> np.ndarray:
     cloth = cfg["cloth"]
     step = float(cloth["particle_size"])
     width = float(cloth["width"])
-    ys = np.arange(-0.5 * width, 0.5 * width + 1e-9, step)
+    offsets = np.arange(-0.5 * width, 0.5 * width + 1e-9, step)
     centre = np.asarray(cloth["center"], dtype=float)
-    return np.array(
-        [
-            [centre[0] + point[0], centre[1] + y, table_z + point[1]]
-            for y in ys
-            for point in np.asarray(section, dtype=float)
-        ]
-    )
+    material = 0 if str(cloth["material_axis"]).lower() == "x" else 1
+    sweep = 1 - material
+    section = np.asarray(section, dtype=float)
+    out = np.zeros((len(offsets) * len(section), 3))
+    index = 0
+    for offset in offsets:
+        for point in section:
+            out[index, material] = centre[material] + point[0]
+            out[index, sweep] = centre[sweep] + offset
+            out[index, 2] = table_z + point[1]
+            index += 1
+    return out
 
 
 def flat_polyline(cfg, corners, *, shift: float = 0.0) -> np.ndarray:

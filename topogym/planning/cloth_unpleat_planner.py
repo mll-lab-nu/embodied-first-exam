@@ -43,19 +43,21 @@ MOTIONS = ("unfold", "press", "overpull")
 def arc_point(layout, angle: float, radius: float | None = None) -> np.ndarray:
     """Where the crest sits at ``angle`` about the crease, in world.
 
+    The arc lies in the vertical plane containing the band's own length axis, so
+    it turns with the band rather than being pinned to world x.
+
     ``radius`` defaults to the taut one. The sweep passes a growing value instead
     -- see `drag_waypoints`.
     """
 
     crease = np.asarray(layout.crease_point(), dtype=float)
     radius = layout.arc_radius() if radius is None else float(radius)
-    return np.array(
-        [
-            crease[0] + radius * float(np.cos(angle)),
-            crease[1],
-            layout.rest_z() + radius * float(np.sin(angle)),
-        ]
+    point = crease.copy()
+    point[layout.material_axis] = (
+        crease[layout.material_axis] + radius * float(np.cos(angle))
     )
+    point[2] = layout.rest_z() + radius * float(np.sin(angle))
+    return point
 
 
 def drag_waypoints(
@@ -128,14 +130,12 @@ def drag_waypoints(
         flat = np.asarray(arc_point(layout, 0.0, taut), dtype=float)
         tow_segments = max(1, int(round(segments * (float(overpull_scale) - 1.0))))
         for index in range(1, tow_segments + 1):
+            towed = flat.copy()
+            towed[layout.material_axis] += extra * index / tow_segments
             out.append(
                 WaypointTarget(
                     label=f"tow_{index:02d}",
-                    position=(
-                        float(flat[0] + extra * index / tow_segments),
-                        float(flat[1]),
-                        float(flat[2]),
-                    ),
+                    position=tuple(float(v) for v in towed),
                     steps=per_segment,
                     lifted=False,
                     metadata={"tow_m": round(float(extra * index / tow_segments), 4)},

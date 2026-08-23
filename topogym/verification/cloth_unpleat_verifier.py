@@ -53,17 +53,17 @@ def peak_height(nodes, table_z: float) -> float:
     return float(np.asarray(nodes, dtype=float)[:, 2].max() - float(table_z))
 
 
-def spread_span(nodes) -> float:
-    """How far the band reaches along x, in metres.
+def spread_span(nodes, axis: int = 1) -> float:
+    """How far the band reaches along its own length axis, in metres.
 
-    Along x rather than as a bounding box: the band's length direction is the one
+    One axis rather than a bounding box: the band's length direction is the one
     the pleat stores material in, and a band that has been fanned out sideways has
     not given the pleat back. Measuring the axis the material lives on keeps the
     reading tied to the conservation argument rather than to the outline's size.
     """
 
-    xs = np.asarray(nodes, dtype=float)[:, 0]
-    return float(xs.max() - xs.min())
+    values = np.asarray(nodes, dtype=float)[:, int(axis)]
+    return float(values.max() - values.min())
 
 
 def single_layer_fraction(layers: dict) -> float:
@@ -80,7 +80,9 @@ def single_layer_fraction(layers: dict) -> float:
     return float(covered - stacked) / float(covered)
 
 
-def band_shift(rest_nodes, nodes, *, cols: int | None = None, keep: float = 0.25) -> float:
+def band_shift(
+    rest_nodes, nodes, *, cols: int | None = None, keep: float = 0.25, axis: int = 1
+) -> float:
     """How far the far end of the band travelled, in metres.
 
     The far end -- the flat run behind the crease -- is the part no correct
@@ -95,8 +97,9 @@ def band_shift(rest_nodes, nodes, *, cols: int | None = None, keep: float = 0.25
     picks up the very material the motion is supposed to move and reports a
     correct unfold as a 44 mm slide.
 
-    Without ``cols`` the fallback takes the far end by x AND by height together,
-    which separates the same two things whenever the arms are still up.
+    Without ``cols`` the fallback takes the far end by position along ``axis``
+    AND by height together, which separates the same two things whenever the arms
+    are still up.
 
     Not a gate. It is the reading that tells an over-pull from an unfold, and both
     are executions rather than one being a failure, so the judge reports it and
@@ -117,12 +120,12 @@ def band_shift(rest_nodes, nodes, *, cols: int | None = None, keep: float = 0.25
         columns = np.arange(len(rest_nodes)) % cols
         selected = np.flatnonzero(columns < max(1, int(round(float(keep) * cols))))
     else:
-        xs, zs = rest_nodes[:, 0], rest_nodes[:, 2]
-        cutoff = float(xs.min()) + float(keep) * float(xs.max() - xs.min())
+        along, zs = rest_nodes[:, int(axis)], rest_nodes[:, 2]
+        cutoff = float(along.min()) + float(keep) * float(along.max() - along.min())
         # "On the table" relative to the band's own lowest material, so this does
         # not need to know where the table is.
         floor = float(zs.min()) + 0.5 * float(zs.max() - zs.min())
-        selected = np.flatnonzero((xs <= cutoff) & (zs <= floor))
+        selected = np.flatnonzero((along <= cutoff) & (zs <= floor))
     if selected.size == 0:
         return float("nan")
     return float(
@@ -298,14 +301,23 @@ class ClothUnpleatEvaluator:
     cell: float
     particle_size: float
     material_length: float
+    #: World axis the band's length runs along, 0 for x and 1 for y. The spread
+    #: and shift readings are both statements about that axis, so the judge has
+    #: to be told which one it is rather than assuming the band has not been
+    #: turned. Read from the same config key the layout reads.
+    material_axis: int = 1
 
     @classmethod
     def from_config(cls, task_cfg) -> "ClothUnpleatEvaluator":
+        axis = str(task_cfg["cloth"]["material_axis"]).lower()
+        if axis not in ("x", "y"):
+            raise ValueError(f"cloth.material_axis must be 'x' or 'y', got {axis!r}.")
         return cls(
             thresholds=ClothUnpleatThresholds.from_config(task_cfg["success"]),
             cell=float(task_cfg["success"]["cell"]),
             particle_size=float(task_cfg["cloth"]["particle_size"]),
             material_length=float(task_cfg["cloth"]["material_length"]),
+            material_axis=0 if axis == "x" else 1,
         )
 
     def classify(self, rest_nodes, nodes, *, table_z: float, grid=None) -> ClothUnpleatState:
@@ -320,7 +332,7 @@ class ClothUnpleatEvaluator:
         nodes = np.asarray(nodes, dtype=float)
         rest_nodes = np.asarray(rest_nodes, dtype=float)
         layers = layer_report(nodes, float(table_z), self.cell, self.particle_size)
-        span = spread_span(nodes)
+        span = spread_span(nodes, self.material_axis)
         heights = nodes[:, 2] - float(table_z)
 
         shape = None if grid is None else simulated_grid_shape(len(rest_nodes), grid)
@@ -333,7 +345,12 @@ class ClothUnpleatEvaluator:
             single_layer_frac=single_layer_fraction(layers),
             spread_ratio=span / max(self.material_length, 1e-9),
             spread_span=span,
-            band_shift=band_shift(rest_nodes, nodes, cols=shape[0] if shape else None),
+            band_shift=band_shift(
+                rest_nodes,
+                nodes,
+                cols=shape[0] if shape else None,
+                axis=self.material_axis,
+            ),
             flatness_var=float(np.var(heights)),
             covered_cells=int(layers["covered_cells"]),
             two_layer_cells=int(layers["two_layer_cells"]),

@@ -2,8 +2,8 @@
 
 `cloth_fold.cloth_sheet_mesh` covers the one case where the cloth lies flat.
 docx 1.2, 1.3 and 1.5 all start from cloth that is folded, rolled or gathered,
-and geometrically they are the same construction: a polyline in the x-z plane
-swept along y. This file is that construction. docx 1.2's standing pleat is its
+and geometrically they are the same construction: a polyline in the
+material-height plane swept sideways. This file is that construction. docx 1.2's standing pleat is its
 first profile; 1.3's spiral and 1.5's gathered stack are the same call with a
 different polyline.
 
@@ -68,8 +68,10 @@ def pleat_profile(
 
     The shape is a knife pleat that has not been pressed down: the band runs
     along the table, doubles back and upward to a crest, comes back down past the
-    crease and continues. Written as (x, z) with x already centred on the band's
-    plan-view middle and z measured above the table.
+    crease and continues. Written as (material, z): the first coordinate runs
+    along the band and is already centred on its plan-view middle, the second is
+    height above the table. Which world axis the material ends up on is
+    `sweep_profile_mesh`'s business, not this function's.
 
     ::
 
@@ -127,8 +129,10 @@ def pleat_landmarks(profile) -> dict:
     material = polyline_length(profile)
     span = float(profile[:, 0].max() - profile[:, 0].min())
     return {
-        "crease_x": float(crease[0]),
-        "crest_x": float(crest[0]),
+        # Material coordinates along the band, NOT world x -- which world axis
+        # the band runs along is the caller's choice (`sweep_profile_mesh`).
+        "crease_s": float(crease[0]),
+        "crest_s": float(crest[0]),
         "crest_z": float(crest[1]),
         # How far the crest is from the crease THROUGH THE MATERIAL. The crest
         # can only travel on a circle of this radius about the crease, the same
@@ -148,8 +152,13 @@ def sweep_profile_mesh(
     centre,
     table_z: float,
     path: Path,
+    material_axis: int = 0,
 ):
-    """Sweep an ``(N, 2)`` x-z profile along y and write it as an OBJ.
+    """Sweep an ``(N, 2)`` profile along the other horizontal axis, as an OBJ.
+
+    The profile's first coordinate runs along ``material_axis`` (0 for world x,
+    1 for world y) and its second is height above the table; the sweep goes along
+    whichever of the two is left.
 
     Returns ``(vertices, faces, cols, rows)``. Vertices are ordered
     ``row * cols + col`` with ``col`` running along the material and ``row``
@@ -158,25 +167,30 @@ def sweep_profile_mesh(
 
     **The UVs are laid out with the material direction along v, not u.** The
     texture's stripes are bands of constant v (`world/textures.py:_base_colour`),
-    so this puts them across the material -- which is the direction the pleat
-    stores and gives back. A stripe pattern running the other way looks the same
-    before and after the unfold and shows nothing.
+    so this puts them across the material. They travel with the cloth, so which
+    world axis the material runs along does not change how the stripes sit on it
+    -- rotating the band rotates its texture with it, which is the point.
     """
 
     profile = np.asarray(profile, dtype=float)
+    material_axis = int(material_axis)
+    if material_axis not in (0, 1):
+        raise ValueError(f"material_axis must be 0 (x) or 1 (y), got {material_axis}.")
+    sweep_axis = 1 - material_axis
+
     rows = max(2, int(round(float(width) / float(spacing))) + 1)
-    ys = np.linspace(-0.5 * float(width), 0.5 * float(width), rows)
+    offsets = np.linspace(-0.5 * float(width), 0.5 * float(width), rows)
     cols = len(profile)
 
     centre = np.asarray(centre, dtype=float)
-    vertices = np.array(
-        [
-            [centre[0] + point[0], centre[1] + y, table_z + point[1]]
-            for y in ys
-            for point in profile
-        ],
-        dtype=float,
-    )
+    vertices = np.zeros((rows * cols, 3), dtype=float)
+    index = 0
+    for offset in offsets:
+        for point in profile:
+            vertices[index, material_axis] = centre[material_axis] + point[0]
+            vertices[index, sweep_axis] = centre[sweep_axis] + offset
+            vertices[index, 2] = table_z + point[1]
+            index += 1
 
     # Arc length along the profile, normalised: v has to follow the MATERIAL, not
     # the x coordinate, or the texture bunches up wherever the profile leaves the

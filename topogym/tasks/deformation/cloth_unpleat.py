@@ -66,6 +66,42 @@ class ClothUnpleatLayout:
         return str(self.task_cfg.coordinate_frame)
 
     @property
+    def material_axis(self) -> int:
+        """World axis the band's length runs along: 0 for x, 1 for y.
+
+        The band runs along y as shipped. Reason: `front` looks down the world x
+        axis, so a crease running along x is seen END ON, and a fold seen end on
+        shows its cross-section -- the crest's height and the three layers under
+        it are directly readable. With the band along x the same camera faces the
+        flat side of the pleat and its depth has to be inferred from shading.
+
+        The cloth is rotated, not the texture: the stripes are bound to the
+        material by the mesh's UVs, so they turn with the band and keep the same
+        relationship to the crease.
+        """
+
+        axis = str(self.task_cfg.cloth.material_axis).lower()
+        if axis not in ("x", "y"):
+            raise ValueError(f"cloth.material_axis must be 'x' or 'y', got {axis!r}.")
+        return 0 if axis == "x" else 1
+
+    @property
+    def sweep_axis(self) -> int:
+        """The horizontal axis the band's WIDTH runs along."""
+
+        return 1 - self.material_axis
+
+    def _plan_point(self, material: float, height: float) -> np.ndarray:
+        """A world point from a (material, height) pair on the band's own axes."""
+
+        centre = self.band_centre()
+        point = np.zeros(3, dtype=float)
+        point[self.material_axis] = centre[self.material_axis] + float(material)
+        point[self.sweep_axis] = centre[self.sweep_axis]
+        point[2] = self.world_z(height)
+        return point
+
+    @property
     def table_z(self) -> float:
         return float(self.origin[2])
 
@@ -103,10 +139,7 @@ class ClothUnpleatLayout:
         """Where the mesh was authored to put the crest. Nominal, not observed."""
 
         marks = self.landmarks()
-        centre = self.band_centre()
-        return np.array(
-            [centre[0] + marks["crest_x"], centre[1], self.world_z(marks["crest_z"])]
-        )
+        return self._plan_point(marks["crest_s"], marks["crest_z"])
 
     def crest_point(self) -> np.ndarray:
         """World point on the pleat's top edge the gripper attaches to.
@@ -138,9 +171,10 @@ class ClothUnpleatLayout:
         design = self.design_crest_point()
         window = float(self.task_cfg.cloth.pleat.width)
         band = float(self.task_cfg.grasp.attach_radius)
+        material, sweep = self.material_axis, self.sweep_axis
         near = np.flatnonzero(
-            (np.abs(nodes[:, 0] - design[0]) <= window)
-            & (np.abs(nodes[:, 1] - design[1]) <= band)
+            (np.abs(nodes[:, material] - design[material]) <= window)
+            & (np.abs(nodes[:, sweep] - design[sweep]) <= band)
         )
         if near.size == 0:
             raise ValueError(
@@ -149,7 +183,10 @@ class ClothUnpleatLayout:
                 f"layout says it is."
             )
         top = near[int(np.argmax(nodes[near, 2]))]
-        self._crest = np.array([nodes[top, 0], design[1], nodes[top, 2]])
+        crest = design.copy()
+        crest[material] = nodes[top, material]
+        crest[2] = nodes[top, 2]
+        self._crest = crest
         return self._crest
 
     def crest_height(self) -> float:
@@ -191,8 +228,7 @@ class ClothUnpleatLayout:
         """
 
         marks = self.landmarks()
-        centre = self.band_centre()
-        return np.array([centre[0] + marks["crease_x"], centre[1], self.rest_z()])
+        return self._plan_point(marks["crease_s"], float(self.task_cfg.cloth.z))
 
     def arm_length(self) -> float:
         """Cloth between the crease and the crest, measured along the material."""
@@ -213,7 +249,8 @@ class ClothUnpleatLayout:
         """
 
         crest, crease = self.crest_point(), self.crease_point()
-        return float(np.arctan2(crest[2] - crease[2], crest[0] - crease[0]))
+        axis = self.material_axis
+        return float(np.arctan2(crest[2] - crease[2], crest[axis] - crease[axis]))
 
     def start_radius(self) -> float:
         """How far the crest currently is from the crease, straight-line.
@@ -225,7 +262,8 @@ class ClothUnpleatLayout:
         """
 
         crest, crease = self.crest_point(), self.crease_point()
-        return float(np.hypot(crest[0] - crease[0], crest[2] - crease[2]))
+        axis = self.material_axis
+        return float(np.hypot(crest[axis] - crease[axis], crest[2] - crease[2]))
 
     def arc_length(self) -> float:
         """Path length of the sweep, using the mean radius it is driven at."""
@@ -249,16 +287,22 @@ class ClothUnpleatLayout:
     def grasp_yaw(self) -> float:
         """Fingers across the crest, i.e. facing the direction the crest travels.
 
-        The crest opens toward +x, so this is 0 -- written as arithmetic rather
-        than as a constant so a mirrored layout stays correct.
+        Derived rather than written down: the crest opens along the band's own
+        axis, in the direction of increasing material coordinate, so rotating the
+        band rotates the wrist with it. Holding the arm's default orientation
+        instead would leave the tool at an arbitrary angle to the pull, which
+        `cloth_fold` measured as a hand 42 mm off its command.
         """
 
-        return 0.0 if self.start_angle() > 0.0 else float(np.pi)
+        direction = np.zeros(2, dtype=float)
+        direction[self.material_axis] = 1.0 if self.start_angle() > 0.0 else -1.0
+        return float(np.arctan2(direction[1], direction[0]))
 
     def summary(self) -> str:
         marks = self.landmarks()
         crest, crease = self.crest_point(), self.crease_point()
         return (
+            f"axis={'xy'[self.material_axis]} "
             f"crest=({crest[0]:+.3f},{crest[1]:+.3f},{crest[2]:+.3f}) "
             f"crest_kept={self.crest_kept():.3f} "
             f"start_radius_mm={self.start_radius() * 1e3:.1f} "
@@ -353,6 +397,7 @@ class ClothUnpleatSceneBuilder:
             centre=layout.band_centre(),
             table_z=layout.table_z,
             path=path,
+            material_axis=layout.material_axis,
         )
         cloth = scene.add_entity(
             gs.morphs.Mesh(

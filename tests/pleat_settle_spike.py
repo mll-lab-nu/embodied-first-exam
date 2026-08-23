@@ -71,14 +71,16 @@ def crest_height(nodes, table_z: float) -> float:
     return float(np.asarray(nodes, dtype=float)[:, 2].max() - table_z)
 
 
-def plan_span(nodes) -> float:
-    """How far the band reaches along x. Grows if the pleat springs open."""
+def plan_span(nodes, axis: int) -> float:
+    """How far the band reaches along its length. Grows if the pleat springs open."""
 
-    xs = np.asarray(nodes, dtype=float)[:, 0]
-    return float(xs.max() - xs.min())
+    values = np.asarray(nodes, dtype=float)[:, int(axis)]
+    return float(values.max() - values.min())
 
 
-def sample_line(label: str, nodes, velocity, table_z: float, cfg, step: int) -> str:
+def sample_line(
+    label: str, nodes, velocity, table_z: float, cfg, step: int, axis: int
+) -> str:
     layers = layer_report(
         nodes,
         table_z,
@@ -89,7 +91,7 @@ def sample_line(label: str, nodes, velocity, table_z: float, cfg, step: int) -> 
     return (
         f"pleat_settle_spike {label} step={step} "
         f"crest_mm={crest_height(nodes, table_z) * 1e3:.2f} "
-        f"span_mm={plan_span(nodes) * 1e3:.1f} "
+        f"span_mm={plan_span(nodes, axis) * 1e3:.1f} "
         f"single_layer_frac={single_layer_fraction(layers):.3f} "
         f"max_layers={layers['max_layers']} "
         f"three_plus_cells={layers['over_layer_cells']} "
@@ -128,8 +130,12 @@ def main(cfg: DictConfig) -> None:
     if stop_before_physics(cfg, band.scene, "pleat_settle_spike"):
         return
 
+    axis = layout.material_axis
     spawn = band_particles(band)
-    print(sample_line("spawn", spawn, np.zeros_like(spawn), table_z, cfg, 0), flush=True)
+    print(
+        sample_line("spawn", spawn, np.zeros_like(spawn), table_z, cfg, 0, axis),
+        flush=True,
+    )
     # What the mesh was authored to be, so the settled readings have something to
     # be a change FROM that does not depend on the simulator.
     marks = layout.landmarks()
@@ -156,6 +162,7 @@ def main(cfg: DictConfig) -> None:
                         table_z,
                         cfg,
                         step,
+                        axis,
                     ),
                     flush=True,
                 )
@@ -169,7 +176,7 @@ def main(cfg: DictConfig) -> None:
     # named apart rather than reported as one distance.
     if kept < float(cfg.run.crest_keep_min):
         verdict = "collapsed"
-    elif plan_span(final) > marks["plan_span"] * float(cfg.run.span_grow_max):
+    elif plan_span(final, axis) > marks["plan_span"] * float(cfg.run.span_grow_max):
         verdict = "sprang_open"
     else:
         verdict = "stands"
@@ -177,7 +184,9 @@ def main(cfg: DictConfig) -> None:
         f"pleat_settle_spike verdict={verdict} "
         f"crest_kept={kept:.3f} "
         f"crest_mm={settled_crest * 1e3:.2f} design_mm={design_crest * 1e3:.1f} "
-        f"span_mm={plan_span(final) * 1e3:.1f} design_span_mm={marks['plan_span'] * 1e3:.1f}",
+        f"axis={'xy'[axis]} "
+        f"span_mm={plan_span(final, axis) * 1e3:.1f} "
+        f"design_span_mm={marks['plan_span'] * 1e3:.1f}",
         flush=True,
     )
 
