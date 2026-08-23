@@ -211,6 +211,21 @@ def main(cfg: DictConfig) -> None:
             ),
             verbose=bool(cfg.run.verbose),
         )
+        # The two settle budgets, echoed because their absence and their presence
+        # look identical in every other line of the log. Three times now a run
+        # has been read as new evidence when it was the previous binary -- the
+        # readings these change (`attach_error_mm`, the z term of `arm_gap_mm`,
+        # the residual after `carry_settled`) all look plausible either way.
+        print(
+            f"cloth_unpleat motion_budget "
+            f"pull_steps={layout.pull_steps()} "
+            f"touch_settle={int(cfg.task.physical.touch_settle_steps)} "
+            f"carry_settle={int(cfg.task.physical.carry_settle_steps)} "
+            f"pull_scale={float(cfg.task.physical.pull_scale)} "
+            f"pull_step_mm={float(cfg.task.physical.pull_step_m) * 1e3:.2f}",
+            flush=True,
+        )
+
         # Neighbour pairs for the carry-time stretch reading. A band is not a
         # square sheet, so they cannot be inferred from the particle count the way
         # `cloth_fold` does; and when Genesis' remesh is not a clean subdivision
