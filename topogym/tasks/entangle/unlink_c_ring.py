@@ -1,22 +1,27 @@
 """Unlink C Ring (docx 3.4): pull an open C-ring off a closed ring it is threaded on.
 
-Scene: a post on the table carries a horizontal arm, and a closed rigid ring hangs
-from the arm's far end, standing in a vertical plane. A C-shaped open ring hangs on
-that ring's lowest stretch of bar, opening pointed sideways, a stub hanging below it.
+Scene: a post stands on the table and carries a closed rigid ring lying FLAT across
+its top, bolted to the rim right above the post. A C-shaped open ring hangs on the
+opposite rim, one ring diameter away, in a vertical plane, opening pointed sideways.
 
 **The opening is the whole task.** The closed ring's body has to leave through it, and
 `tests/check_c_ring_clearance.py` measures that every other way out is a rigid-body
-dead end -- pulling, sliding along the bar, lifting and carrying it aside, and turning
-the wrong way all jam by more than a millimetre. That gate runs without a solver and
-is the reason the geometry in the config looks over-specified: five inequalities have
-to hold at once, and the anti-shortcut is the one dimension with only 2 mm of slack
-per side.
+dead end -- pulling, sliding along the bar, and lifting and carrying it aside all jam
+by more than a millimetre. Turning the opening onto the bar and then leaving through
+it works either way up, so there are two gateways; both are the task, and what the
+anti-shortcut rules out is not turning at all. That gate runs without a solver and is
+the reason the geometry in the config looks over-specified: five inequalities have to
+hold at once, and the opening has only 2 mm of slack per side.
 
-**Why an arm and not a plain post.** The C swings, turns and drops within a radius of
-the bar it hangs on, and every one of those poses would be near a post placed under
-the ring. The arm carries the ring clear so the post is never in contact -- one fewer
-thing for a jam to be blamed on -- and it reaches from the far side so the half of the
-C nearer the robot has open sky above it.
+**Why the closed ring lies flat.** It sits on top of the post and the C hangs on the
+opposite rim, one ring diameter away, so nothing the arm has to reach is underneath
+anything. The layout it replaced stood the ring on edge at the end of a horizontal
+cantilever; that arm ran directly over the grasp point, and the offline gate did not
+catch it because the gate measures the C RING's envelope, not the hand's.
+
+A flat ring also puts the extraction's rotation axis horizontal and pointing at the
+robot. A gripper that comes in face-on to the C therefore rolls it about its own tool
+axis -- one wrist joint -- rather than tipping the whole hand over.
 
 **Both rings are chains of cylinders**, not meshes: `gs.morphs.Mesh(convexify=True)`
 would fill a ring's hole in. `tasks/_fixtures.py` `add_rigid_assembly` welds a chain
@@ -24,13 +29,12 @@ into one body with one pose, which is what the moving C has to be. The chain geo
 and every derived length live in `./_c_ring_geometry.py`, which is Genesis-free so the
 offline gate can import it on a machine with no solver.
 
-STAGING (intentional, not an oversight): this is the scene and its geometry gate.
-There is no `verification/unlink_c_ring_verifier.py`, no extraction primitive and no
-physical demo yet, so per `docs/develop/framework/task_taxonomy_zh.md` Section 4.0 this
-task does NOT yet qualify for benchmark artifacts. The shape of the extraction
-primitive was deliberately left open until the scene fixed the trajectory it has to
-follow; `demos/entangle/unlink_c_ring_inspect_demo.py` reports that trajectory's
-clearances so the primitive can be specified against measurements.
+STAGING (intentional, not an oversight): the scene, `verification/unlink_c_ring_verifier.py`,
+`primitives/gateway_extract.py` and `demos/entangle/unlink_c_ring_physical_extract_demo.py`
+are all in place, but there is no `generation/unlink_c_ring_generator.py` and so no
+executable contrast PAIR -- `run.oracle_mode=no_align` is a contrast action, not a
+contrast dataset. Per `docs/develop/framework/task_taxonomy_zh.md` Section 4.0 this
+task therefore does NOT yet qualify for benchmark artifacts.
 """
 
 from __future__ import annotations
@@ -49,7 +53,7 @@ from topogym.tasks._visuals import add_industrial_pedestal, box_entity_enabled
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 from topogym.world.rope import resolve_mesh_dir
 
-STAND_PARTS = ("stand_post", "stand_arm")
+STAND_PARTS = ("stand_post",)
 
 
 def _list(value):
@@ -204,10 +208,12 @@ class UnlinkCRingSceneBuilder:
     # ------------------------------------------------------------------ stand
 
     def _add_stand(self, scene, manifest, layout, geometry) -> None:
-        """Post and arm: two plain fixed cylinders, no URDF needed.
+        """The post: one plain fixed cylinder, no URDF needed.
 
-        They never move and never move relative to each other, so they can be two
-        entities; only the C has to be one body with one pose.
+        There is no arm. An earlier layout carried the closed ring on a horizontal
+        cantilever, and the arm ended up directly over the grasp point -- the
+        clearance gate had cleared the C RING against it and the HAND was what
+        collided. A ring lying flat on top of the post needs no arm at all.
         """
 
         stand = self.task_cfg.stand

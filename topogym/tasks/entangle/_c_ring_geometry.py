@@ -422,15 +422,17 @@ class SceneGeometry:
     fixed: RingSpec
     fixed_frame: RingFrame
     c_ring: RingSpec
-    tab: TabSpec
+    tab: TabSpec | None
     c_rest_frame: RingFrame
     c_spawn_frame: RingFrame
     stand_axes: tuple[np.ndarray, np.ndarray, np.ndarray]
     tube_point: np.ndarray
     tube_direction: np.ndarray
+    hang_direction: np.ndarray
     projection: np.ndarray
     closure_samples: int
     jam_depth: float
+    stand_clearance: float
 
     @property
     def hang_offset(self) -> float:
@@ -450,17 +452,35 @@ class SceneGeometry:
 
     @property
     def top_z(self) -> float:
-        """Highest point of anything fixed in the scene."""
+        """Highest point of anything fixed in the scene.
+
+        The closed ring lies flat, so it only reaches its own tube radius above its
+        plane -- unlike a ring stood on edge, which would add a whole major radius.
+        That is most of why this layout leaves the arm's home pose so much room.
+        """
 
         starts, ends, radii = self.stand_axes
         axis = ends - starts
         # A cylinder's cap is flat: the radius only lifts the silhouette by how much
         # the axis leans off vertical. Adding the full radius would read the upright
-        # post as 12 mm taller than it is.
+        # post as taller than it is.
         lean = np.sqrt(np.clip(1.0 - (axis[:, 2] / np.linalg.norm(axis, axis=1)) ** 2, 0.0, 1.0))
         stand_top = float(np.max(np.maximum(starts[:, 2], ends[:, 2]) + radii * lean))
-        ring_top = float(self.fixed_frame.center[2] + self.fixed.outer_radius)
+        ring_top = float(self.fixed_frame.center[2] + self.fixed.tube_radius)
         return max(stand_top, ring_top)
+
+    @property
+    def post_center(self) -> np.ndarray:
+        """Where the post stands: on the rim, diametrically opposite the C."""
+
+        return self.stand_axes[0][0]
+
+    @property
+    def post_to_c_ring(self) -> float:
+        """Clearance between the post's surface and the C ring's outermost point."""
+
+        gap = float(np.linalg.norm(self.post_center[:2] - self.c_rest_frame.center[:2]))
+        return gap - self.c_ring.outer_radius - float(self.stand_axes[2][0])
 
     def fixed_axes(self):
         return body_axes(self.fixed, self.fixed_frame)
@@ -473,14 +493,16 @@ class SceneGeometry:
 
         The same rotation `gateway_phases`' first phase applies, but expressed the
         way a quaternion builder wants it: ``quat_about_axis(axis, radians(angle))``.
-        `apply_phases` negates its angle, so the sign is folded in here instead of
-        being left for two call sites to get right independently -- the primitive
-        and the offline gate both read it from this one place.
+
+        The angle is wrapped to (-180, 180]. As a rotation matrix -270 and +90 are
+        the same thing, so `apply_phases` never cared; a WRIST does, and asking it
+        for 270 degrees when 90 would do is how a reachable motion turns into an
+        unreachable one.
         """
 
-        return -np.asarray(self.c_rest_frame.normal, dtype=float), float(
-            self.c_ring.gap_azimuth_deg
-        )
+        turn = -float(self.c_ring.gap_azimuth_deg)
+        turn = (turn + 180.0) % 360.0 - 180.0
+        return np.asarray(self.c_rest_frame.normal, dtype=float), turn
 
     def gateway_phases(self, *, carry: float = 0.090):
         """The one trajectory that unlinks: align the opening, drop out, carry away.
@@ -488,14 +510,16 @@ class SceneGeometry:
         Phase 1 turns the C about the bar until its opening points at the bar --
         which is what "keeping the opening aligned with the ring body" means once the
         C hangs from that body. Phase 2 is the only direction the bar can leave
-        through. Phase 3 just clears the area, and runs along the bar because that is
-        the one axis with nothing in it.
+        through. Phase 3 carries it out RADIALLY, away from the closed ring's centre:
+        every other direction runs back under the ring, whose far rim curves down
+        over the path.
         """
 
+        axis, turn = self.align_rotation()
         return (
-            ("rotate", (self.c_ring.gap_azimuth_deg, tuple(self.c_rest_frame.normal))),
+            ("rotate", (-turn, tuple(axis))),
             ("translate", (0.0, 0.0, -self.extract_travel)),
-            ("translate", tuple(-float(carry) * self.tube_direction)),
+            ("translate", tuple(float(carry) * self.hang_direction)),
         )
 
     def checks(self) -> list[tuple[str, float, float, bool]]:
@@ -514,24 +538,39 @@ class SceneGeometry:
                 rest_z - self.extract_travel - self.c_ring.outer_radius,
                 TABLE_CLEARANCE,
             ),
-            (
-                "tab clears the table at rest",
-                rest_z - self.c_ring.major_radius - self.tab.length,
-                TABLE_CLEARANCE,
-            ),
+            ("post clears the C ring", self.post_to_c_ring, self.stand_clearance),
             ("stand clears the home pose", HOME_FINGERTIP_Z - self.top_z, 0.0),
         ]
+        if self.tab is not None:
+            rows.insert(
+                3,
+                (
+                    "tab clears the table at rest",
+                    rest_z - self.c_ring.major_radius - self.tab.length,
+                    TABLE_CLEARANCE,
+                ),
+            )
         return [(name, value, limit, value > limit) for name, value, limit in rows]
 
 
 def scene_geometry(cfg: dict) -> SceneGeometry:
-    """Build the derived geometry from a plain dict of the task config."""
+    """Build the derived geometry from a plain dict of the task config.
+
+    The layout: a post stands on the table and carries a closed ring lying FLAT at
+    its top, attached at the rim right above the post. The C hangs on the opposite
+    rim, one ring diameter away, so nothing the arm has to reach is under anything.
+
+    An earlier version stood the closed ring on edge at the end of a horizontal
+    cantilever. It failed for a reason the clearance gate could not see: the gate
+    measured the C ring's envelope against the arm, and the thing that collided was
+    the HAND, descending onto a grasp point directly beneath the cantilever.
+    A flat ring removes the overhead structure entirely -- and, as a bonus, puts the
+    extraction's rotation axis horizontal, pointing at the robot, so a gripper that
+    approaches the C face-on rolls it about its own tool axis.
+    """
 
     stand, fixed_cfg, c_cfg = cfg["stand"], cfg["fixed_ring"], cfg["c_ring"]
     topology, tab_cfg = cfg["topology"], cfg["c_ring"]["tab"]
-
-    yaw = np.deg2rad(float(stand["yaw_deg"]))
-    toward_post = np.array([np.cos(yaw), np.sin(yaw), 0.0])
 
     fixed = RingSpec(
         major_radius=float(fixed_cfg["major_radius"]),
@@ -539,11 +578,15 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         segment_deg=float(fixed_cfg["segment_deg"]),
         joint_overlap=float(fixed_cfg["joint_overlap"]),
     )
-    # Azimuth 0 points at the ring's lowest point -- the stretch of bar the C hangs on.
+    # The closed ring lies flat: normal up, azimuth 0 pointing at the hang point so
+    # every other bearing in this function is measured from the same place.
+    hang_yaw = np.deg2rad(float(stand["hang_yaw_deg"]))
+    hang_direction = np.array([np.cos(hang_yaw), np.sin(hang_yaw), 0.0])
     fixed_frame = RingFrame.create(
-        [float(v) for v in fixed_cfg["center"]], toward_post, [0.0, 0.0, -1.0]
+        [float(v) for v in fixed_cfg["center"]], [0.0, 0.0, 1.0], hang_direction
     )
     tube_point = fixed_frame.point(0.0, fixed.major_radius)[0]
+    # Tangent to the flat ring at the hang point: horizontal, across the radius.
     tube_direction = fixed_frame.binormal
 
     c_ring = RingSpec(
@@ -554,11 +597,13 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         segment_deg=float(c_cfg["segment_deg"]),
         joint_overlap=float(c_cfg["joint_overlap"]),
     )
-    tab = TabSpec(
-        azimuth_deg=float(tab_cfg["azimuth_deg"]),
-        length=float(tab_cfg["length"]),
-        radius=float(tab_cfg["radius"]),
-    )
+    tab = None
+    if bool(tab_cfg.get("enabled", False)):
+        tab = TabSpec(
+            azimuth_deg=float(tab_cfg["azimuth_deg"]),
+            length=float(tab_cfg["length"]),
+            radius=float(tab_cfg["radius"]),
+        )
     # Azimuth 0 points straight up, at the bar the C hangs from, so the opening's
     # azimuth reads directly as how far it is from falling off.
     hang = c_ring.inner_radius - fixed.tube_radius
@@ -569,17 +614,14 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         translation=(0.0, 0.0, float(c_cfg["spawn_drop"]))
     )
 
-    post_top_z = float(fixed_frame.center[2]) + fixed.major_radius
-    post_xy = fixed_frame.center + float(stand["arm_length"]) * toward_post
+    # The post stands under the rim opposite the hang point and rises to the ring's
+    # own plane -- the ring is bolted to its top, so there is no arm at all.
+    ring_z = float(fixed_frame.center[2])
+    post_xy = fixed_frame.point(np.pi, fixed.major_radius)[0]
     stand_axes = (
-        np.vstack([[post_xy[0], post_xy[1], 0.0], [post_xy[0], post_xy[1], post_top_z]]),
-        np.vstack(
-            [
-                [post_xy[0], post_xy[1], post_top_z],
-                [fixed_frame.center[0], fixed_frame.center[1], post_top_z],
-            ]
-        ),
-        np.array([float(stand["post_radius"]), float(stand["arm_radius"])]),
+        np.vstack([[post_xy[0], post_xy[1], 0.0]]),
+        np.vstack([[post_xy[0], post_xy[1], ring_z]]),
+        np.array([float(stand["post_radius"])]),
     )
 
     return SceneGeometry(
@@ -592,9 +634,11 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         stand_axes=stand_axes,
         tube_point=tube_point,
         tube_direction=tube_direction,
+        hang_direction=hang_direction,
         projection=bisector_projection(fixed_frame.normal, tube_direction),
         closure_samples=int(topology["closure_samples"]),
         jam_depth=float(topology["jam_depth"]),
+        stand_clearance=float(stand["clearance"]),
     )
 
 

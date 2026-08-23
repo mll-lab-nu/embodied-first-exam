@@ -46,6 +46,7 @@ from topogym.primitives import (
     configure_gripper_contact_friction,
     entity_pos,
     entity_quat,
+    face_on_quat,
     print_collision_il_contract,
 )
 from topogym.supervision import stop_before_physics
@@ -122,6 +123,22 @@ def _hud(ring_scene, evaluator, status):
     return render_lines
 
 
+def approach_axis(ring_scene, mount_pos) -> np.ndarray:
+    """Which way the fingers point: along the C's normal, away from the robot.
+
+    The C's normal has two signs and only one of them has the arm reaching outward
+    rather than through its own base, so the sign is chosen against the robot mount
+    instead of being written into config where a change of `hang_yaw_deg` would
+    silently invert it.
+    """
+
+    geometry = ring_scene.geometry
+    axis = np.asarray(geometry.tube_direction, dtype=float)
+    mount = np.asarray(OmegaConf.to_container(mount_pos), dtype=float)[:2]
+    outward = geometry.c_rest_frame.center[:2] - mount
+    return axis if float(np.dot(axis[:2], outward)) >= 0.0 else -axis
+
+
 def configure_contacts(cfg, ring_scene, controller) -> None:
     """Apply the configured friction to the C ring and the fingers.
 
@@ -189,8 +206,14 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         np.deg2rad(float(spec.grasp_azimuth_deg)), geometry.c_ring.major_radius
     )[0]
     axis, rotation_deg = geometry.align_rotation()
-    ee_quat = spec.grasp_ee_quat
-    ee_quat = None if ee_quat is None else np.asarray(OmegaConf.to_container(ee_quat), dtype=float)
+    # Come in face-on to the C, tool axis along the C's own normal, pointed away from
+    # the robot. That makes the extraction's turn a roll about the tool axis -- one
+    # wrist joint -- instead of tipping the whole hand over, which is the single
+    # biggest thing the flat-ring layout bought.
+    tool_axis = approach_axis(ring_scene, cfg.common.robot_setup.mount.pos)
+    ee_quat = face_on_quat(
+        controller.default_ee_quat, tool_axis, float(spec.grasp_roll_deg)
+    )
 
     primitive = build_primitive(cfg)
     if stop_before_physics(cfg, ring_scene.scene, "unlink_c_ring_physical_extract_demo"):
@@ -235,7 +258,9 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 rotation_axis=axis,
                 rotation_deg=rotation_deg,
                 extract_delta=(0.0, 0.0, -geometry.extract_travel),
-                clear_delta=tuple(-float(spec.carry) * geometry.tube_direction),
+                # Radially outward, away from the closed ring's centre. Along the
+                # bar instead would curve back under the far rim.
+                clear_delta=tuple(float(spec.carry) * geometry.hang_direction),
                 place_delta=(0.0, 0.0, -float(spec.place_drop)),
                 ee_quat=ee_quat,
                 align_probe=align_probe,

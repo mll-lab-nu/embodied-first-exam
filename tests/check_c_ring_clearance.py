@@ -22,8 +22,13 @@ Four questions, in order:
     does that compare with the clearances it has to be small against?
   - **reading**: at spawn, is the pair linked -- one crossing pair and `Lk = -1`
     under the declared projection, with the C closed by the declared chord?
-  - **gateway**: the one aligning trajectory stays clear the whole way and ends
-    unlinked; every other trajectory jams, and the report says where and how deep.
+  - **gateways**: both aligning trajectories stay clear the whole way and end
+    unlinked; every non-aligning trajectory jams, and the report says where and how
+    deep. There are two because the closed ring lies flat: turning the opening up and
+    dropping out, or turning it down and lifting out, are mirror images and nothing
+    is overhead to block the second. Both still require the opening to be brought
+    onto the bar, which is what the task is about; the shortcut the anti-shortcut
+    guards against is not turning at all.
 
 Defaults come from the task config, so the gate and the scene cannot drift apart.
 
@@ -64,24 +69,44 @@ def load_module(name: str, relative: str):
     return module
 
 
+def mirror_gateway_phases(geometry):
+    """The other way out: turn the opening DOWN, and lift the bar out through it.
+
+    A mirror of `SceneGeometry.gateway_phases`, and the reason this layout has two
+    solutions where the earlier one had a single: the closed ring used to stand on
+    edge, and its far side blocked the upward escape. Lying flat, it blocks nothing
+    overhead. Probed explicitly rather than left in the non-gateway list, where it
+    would read as an anti-shortcut failure when it is really a second correct answer.
+
+    It goes STRAIGHT UP and keeps going, with no carry phase, because that is the
+    shape of this escape: 18 mm unlinks the pair, but the C is then straddling the
+    ring's own plane, and carrying it sideways from there drags it across the rim.
+    Clearing the ring means rising past it first. The task's own oracle takes the
+    other gateway for exactly this reason -- dropping out leaves the C below
+    everything, free to be carried off in one move.
+    """
+
+    axis, turn = geometry.align_rotation()
+    return (
+        ("rotate", (turn, tuple(axis))),
+        ("translate", (0.0, 0.0, PROBE_TRAVEL)),
+    )
+
+
 def non_gateway_phases(geometry, cg) -> list[tuple[str, tuple]]:
     """The trajectories that must all jam, and why each one is worth probing.
 
     These are the shortcuts a policy that has not understood the interlock would
     take: they start and finish where the real motion does, or close to it, and they
-    differ only in whether the opening was ever brought onto the bar.
+    differ in the one thing that matters -- the opening was never brought onto the
+    bar. Turning the wrong way is NOT among them; it is a second gateway, see
+    `mirror_gateway_phases`.
     """
 
-    up = tuple(geometry.c_rest_frame.normal)
     along = geometry.tube_direction
     across = np.cross(along, [0.0, 0.0, 1.0])
     travel = PROBE_TRAVEL
     return [
-        # Turning the wrong way puts the opening under the bar. The C then has to
-        # climb the whole hole to reach it, and the closed ring's far side is in
-        # the way -- so the task has one gateway, not a mirrored pair.
-        ("turn the wrong way, then lift", (("rotate", (-geometry.c_ring.gap_azimuth_deg, up)),
-                                           ("translate", (0.0, 0.0, travel)))),
         ("drop without turning", (("translate", (0.0, 0.0, -travel)),)),
         ("lift without turning", (("translate", (0.0, 0.0, travel)),)),
         ("slide along the bar", (("translate", tuple(travel * along)),)),
@@ -170,7 +195,8 @@ def main() -> int:
         f"{geometry.fixed.sagitta * 1000:.3f} mm"
     )
     print(
-        f"  C ring      {c_segments:3d} cylinders (last is the tab), chord sagitta "
+        f"  C ring      {c_segments:3d} cylinders"
+        f"{' (last is the tab)' if geometry.tab is not None else ''}, chord sagitta "
         f"{geometry.c_ring.sagitta * 1000:.3f} mm"
     )
     print(
@@ -199,21 +225,27 @@ def main() -> int:
     if abs(abs(spawn_linking) - 1.0) > 1e-6:
         failures.append(f"the pair does not read as linked at spawn: Lk = {spawn_linking:+.2f}")
 
-    print("\ngateway")
-    result = sweep(geometry, cg, geometry.gateway_phases())
-    end_linking = linking(geometry, cg, closed_band, result["end_frame"])
-    print(
-        f"  align the opening, drop {geometry.extract_travel * 1000:.0f} mm, carry away:"
-        f"  ring {result['ring'] * 1000:+.2f} mm   stand {result['stand'] * 1000:+.2f} mm"
-        f"   end Lk {end_linking:+.1f}"
-    )
-    if result["jam_at"] is not None:
-        failures.append(
-            f"the gateway trajectory jams at {result['jam_at']:.0%} of the way through, "
-            f"{-result['jam_depth'] * 1000:.2f} mm deep"
+    travel_mm = geometry.extract_travel * 1000.0
+    print("\ngateways (both must stay clear the whole way and end unlinked)")
+    for label, phases in (
+        (f"opening up,   drop {travel_mm:.0f} mm", geometry.gateway_phases()),
+        (f"opening down, lift clear", mirror_gateway_phases(geometry)),
+    ):
+        result = sweep(geometry, cg, phases)
+        end_linking = linking(geometry, cg, closed_band, result["end_frame"])
+        ok = result["jam_at"] is None and abs(end_linking) <= 1e-6
+        print(
+            f"  [{'ok  ' if ok else 'FAIL'}] {label}, carry away:"
+            f"  ring {result['ring'] * 1000:+.2f} mm   stand {result['stand'] * 1000:+.2f} mm"
+            f"   end Lk {end_linking:+.1f}"
         )
-    if abs(end_linking) > 1e-6:
-        failures.append(f"the gateway trajectory ends still linked: Lk = {end_linking:+.2f}")
+        if result["jam_at"] is not None:
+            failures.append(
+                f"the '{label}' gateway jams at {result['jam_at']:.0%} of the way through, "
+                f"{-result['jam_depth'] * 1000:.2f} mm deep"
+            )
+        if abs(end_linking) > 1e-6:
+            failures.append(f"the '{label}' gateway ends still linked: Lk = {end_linking:+.2f}")
 
     print("\nnon-gateway (every one of these must jam)")
     for name, phases in non_gateway_phases(geometry, cg):

@@ -100,7 +100,7 @@ def main() -> int:
     print("gateway_extract rotation gate\n")
 
     for yaw in (0.0, 45.0, 90.0, 180.0, 270.0):
-        cfg["stand"]["yaw_deg"] = yaw
+        cfg["stand"]["hang_yaw_deg"] = yaw
         geometry = cg.scene_geometry(cfg)
         axis, degrees = geometry.align_rotation()
 
@@ -117,7 +117,7 @@ def main() -> int:
 
         ok = after <= MAX_ALIGN_DEG and slack <= MAX_TURN_SLACK_DEG
         print(
-            f"  [{'ok  ' if ok else 'FAIL'}] stand yaw {yaw:5.1f}deg   "
+            f"  [{'ok  ' if ok else 'FAIL'}] hang yaw {yaw:5.1f}deg   "
             f"opening_to_bar {before:6.2f} -> {after:6.4f} deg   "
             f"wrist turn {wrist_deg:6.2f}deg (asked {abs(degrees):.2f})"
         )
@@ -133,8 +133,8 @@ def main() -> int:
     # The two builders must agree: the quaternion the primitive composes and the
     # matrix `apply_phases` applies are the same rotation, or the demo and the gate
     # that certified its clearance are running different trajectories.
-    cfg["stand"]["yaw_deg"] = float(yaml.safe_load(
-        TASK_CONFIG.read_text(encoding="utf-8"))["stand"]["yaw_deg"])
+    cfg["stand"]["hang_yaw_deg"] = float(yaml.safe_load(
+        TASK_CONFIG.read_text(encoding="utf-8"))["stand"]["hang_yaw_deg"])
     geometry = cg.scene_geometry(cfg)
     axis, degrees = geometry.align_rotation()
     from_quat = matrix(quat_about_axis(axis, np.deg2rad(degrees)))
