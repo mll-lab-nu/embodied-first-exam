@@ -197,6 +197,12 @@ class GatewayExtractPrimitive:
     # a pass does not necessarily deliver the whole rotation it asks for, and the
     # alignment gate is tight because the extraction has 2 mm of room per side.
     align_passes: int = 3
+    # Bounds on the hover re-aim. It corrects for the part having been nudged since
+    # the pose was handed in, so it is a small correction by construction; a large one
+    # means the measurement is wrong, and following it does more damage than ignoring
+    # the nudge would have.
+    max_regrasp_move: float = 0.030
+    max_regrasp_wrist_deg: float = 30.0
     close_hold_steps: int = 30
     align_steps: int | None = None
     align_settle_steps: int = 30
@@ -291,9 +297,37 @@ class GatewayExtractPrimitive:
         # that closes ACROSS the tube depends on which way the part is facing.
         if regrasp_fn is not None:
             new_pos, new_quat = regrasp_fn()
-            grasp_pos = np.asarray(new_pos, dtype=float).reshape(3)
-            base_quat = np.asarray(new_quat, dtype=float).reshape(4)
-            base_quat = base_quat / np.linalg.norm(base_quat)
+            new_pos = np.asarray(new_pos, dtype=float).reshape(3)
+            new_quat = np.asarray(new_quat, dtype=float).reshape(4)
+            new_quat = new_quat / np.linalg.norm(new_quat)
+            # How big a correction is being asked for? A re-aim is meant to be a few
+            # millimetres and a few degrees. Anything larger means the reading is bad,
+            # and acting on it swings the hand through the very part it is aiming at:
+            # measured 2026-08-23, an unclamped re-aim turned the wrist 179 deg and
+            # left the ring at 168 deg from the bar, worse than it started.
+            self._log(
+                "regrasp", track,
+                moved=float(np.linalg.norm(new_pos - grasp_pos)),
+                wrist_deg=float(np.rad2deg(_quat_angle(base_quat, new_quat))),
+            )
+            if (
+                float(np.linalg.norm(new_pos - grasp_pos)) > float(self.max_regrasp_move)
+                or float(np.rad2deg(_quat_angle(base_quat, new_quat)))
+                > float(self.max_regrasp_wrist_deg)
+            ):
+                return self._abort(
+                    controller, track, phases, release_fn,
+                    reason=(
+                        f"regrasp_implausible(moved="
+                        f"{float(np.linalg.norm(new_pos - grasp_pos)):.4f}, wrist="
+                        f"{float(np.rad2deg(_quat_angle(base_quat, new_quat))):.1f}deg)"
+                    ),
+                    initial_part_pos=initial_part_pos, finger_qpos=0.0,
+                    hover_xy_error=0.0, grasp_pos_error=0.0,
+                    hover_align_deg=0.0, grasp_align_deg=0.0,
+                )
+            grasp_pos = new_pos
+            base_quat = new_quat
             aligned_quat = base_quat if skip_align else quat_mul(
                 quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg))), base_quat
             )

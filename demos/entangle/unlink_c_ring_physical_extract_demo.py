@@ -183,6 +183,8 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         max_grasp_pos_error=float(spec.max_grasp_pos_error),
         max_align_deg=float(spec.max_align_deg),
         rotate_with=str(spec.rotate_with),
+        max_regrasp_move=float(spec.max_regrasp_move),
+        max_regrasp_wrist_deg=float(spec.max_regrasp_wrist_deg),
         align_passes=int(spec.align_passes),
         verbose=bool(cfg.run.verbose),
     )
@@ -282,6 +284,13 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                     float(spec.grasp_roll_deg) if spec.grasp_roll_deg is not None
                     else grasp_yaw_deg(geometry, live, float(spec.grasp_azimuth_deg))
                 )
+                # A two-finger gripper is symmetric under a half turn -- yaw and
+                # yaw+180 are the same grip with the pads swapped -- but the sign of
+                # the tube's tangent is arbitrary, so the raw angle can jump half a
+                # turn between two readings of the same ring. Take the representative
+                # nearest the yaw already commanded. Measured 2026-08-23 without this:
+                # the wrist spun 179 deg on the re-aim and swept the scene on the way.
+                yaw = roll_deg + ((yaw - roll_deg + 90.0) % 180.0 - 90.0)
                 return (
                     layout.position_to_world(point),
                     ee_quat_for_yaw(controller.default_ee_quat, np.deg2rad(yaw)),
