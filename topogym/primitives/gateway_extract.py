@@ -228,6 +228,7 @@ class GatewayExtractPrimitive:
         ee_quat=None,
         align_probe: Callable[[], float] | None = None,
         align_target_fn: Callable[[], Any] | None = None,
+        regrasp_fn: Callable[[], Any] | None = None,
         attach_fn: Callable[[], Any] | None = None,
         release_fn: Callable[[], None] | None = None,
         skip_align: bool = False,
@@ -277,6 +278,35 @@ class GatewayExtractPrimitive:
         # tube is wide will push it away on the way in, and the close that follows
         # grips nothing while every other reading still looks plausible.
         controller.step(int(self.hover_settle_steps))
+
+        # Re-aim at where the part is NOW, then settle again. The pose handed in was
+        # measured before the arm moved, and by the time the hand is overhead the part
+        # has been nudged: measured 2026-08-23, the ring reached hover with its plane
+        # 25.8 deg off the layout's, which puts the true tube 22.7 mm from the point
+        # this was told to grasp and turns the closing axis 26 deg off the tube's
+        # normal. The pads then graze the tube instead of pinching it -- they close to
+        # the commanded width on air while shoving the part on the way past.
+        #
+        # Both quantities have to be re-derived, not just the position: the wrist yaw
+        # that closes ACROSS the tube depends on which way the part is facing.
+        if regrasp_fn is not None:
+            new_pos, new_quat = regrasp_fn()
+            grasp_pos = np.asarray(new_pos, dtype=float).reshape(3)
+            base_quat = np.asarray(new_quat, dtype=float).reshape(4)
+            base_quat = base_quat / np.linalg.norm(base_quat)
+            aligned_quat = base_quat if skip_align else quat_mul(
+                quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg))), base_quat
+            )
+            aligned_quat = np.asarray(aligned_quat, dtype=float) / np.linalg.norm(aligned_quat)
+            hand_at_grasp = grasp_pos - tool_offset(base_quat, HAND_TO_PAD_Z)
+            self._move_hand(
+                controller, track,
+                hand_at_grasp - tool_offset(base_quat, float(self.approach_clearance)),
+                quat=base_quat,
+                start_quat=_as_numpy(controller.hand_quat()).reshape(4),
+            )
+            controller.step(int(self.hover_settle_steps))
+
         pads_now = np.asarray(controller.hand_pos(), dtype=float) + tool_offset(
             base_quat, HAND_TO_PAD_Z
         )

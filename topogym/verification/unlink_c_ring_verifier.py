@@ -113,8 +113,17 @@ def opening_to_bar_deg(geometry: ring_geometry.SceneGeometry, frame) -> float:
     it does not move and that reading stays zero through the whole turn.
     """
 
+    normal = np.asarray(frame.normal, dtype=float).reshape(3)
     opening = frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - frame.center
     to_bar = geometry.tube_point - frame.center
+    # Measured IN the ring's plane. The bar is a straight line, so the ring sliding
+    # along it changes nothing about whether the opening faces it -- but taken as a
+    # raw 3D angle that harmless slide shows up as misalignment the turn cannot
+    # remove. Measured 2026-08-23: a ring sitting exactly on its aligned orientation
+    # (0.07 deg of residual) still read 10.1 deg this way. Out-of-plane tilt is a real
+    # defect, but it is `tilt_deg`'s job to report it, not this one's.
+    opening -= float(np.dot(opening, normal)) * normal
+    to_bar -= float(np.dot(to_bar, normal)) * normal
     scale = float(np.linalg.norm(opening) * np.linalg.norm(to_bar))
     if scale < 1e-12:
         return 0.0

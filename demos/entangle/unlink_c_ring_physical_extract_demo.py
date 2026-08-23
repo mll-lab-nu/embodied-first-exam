@@ -264,6 +264,29 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 status["align_deg"] = reading
                 return reading
 
+            def regrasp_pose():
+                """Where to grasp and which way to hold the wrist, measured at hover.
+
+                The pose computed before the run is stale by the time the hand is
+                overhead: the ring's plane can turn freely about the vertical through
+                its contact with the bar -- gravity gives that degree of freedom no
+                restoring torque at all -- so the approach only has to brush it once.
+                """
+
+                live = c_ring_frame(ring_scene)
+                point = live.point(
+                    np.deg2rad(float(spec.grasp_azimuth_deg)),
+                    geometry.c_ring.major_radius,
+                )[0]
+                yaw = (
+                    float(spec.grasp_roll_deg) if spec.grasp_roll_deg is not None
+                    else grasp_yaw_deg(geometry, live, float(spec.grasp_azimuth_deg))
+                )
+                return (
+                    layout.position_to_world(point),
+                    ee_quat_for_yaw(controller.default_ee_quat, np.deg2rad(yaw)),
+                )
+
             def align_target():
                 """The absolute orientation the ring has to reach to clear the bar.
 
@@ -311,6 +334,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 ee_quat=ee_quat,
                 align_probe=align_probe,
                 align_target_fn=align_target,
+                regrasp_fn=regrasp_pose,
                 attach_fn=attach_ring,
                 release_fn=release_ring,
                 skip_align=(mode != "gateway"),
