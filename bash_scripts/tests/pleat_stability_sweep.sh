@@ -18,17 +18,24 @@
 # 所以这个脚本的主要读数是**跨度在采样区间里涨了多少**，不是顶缘高度。
 #
 # 两组旋钮，分别对应两种可能的机制：
-#   bend  弯曲柔度。折痕记不记得住形状。调硬既可能撑住帐篷，也可能拦住材料外滑。
-#   mu    布↔布摩擦。三层叠着互相滑得顺不顺。只影响「爬」，不影响「塌」。
-#   combo 两者的笛卡尔积，用来看它们是不是互相独立。默认不跑，格子多。
+#   bend  弯曲柔度。折痕记不记得住形状。
+#         **2026-08-23 实测：1e-5 到 1e-8 四个数量级，读数一位都没变。**
+#         四个数量级零变化是「参数没进求解」的特征，不是「影响很小」。
+#         所以默认档位现在**跨软硬两侧**：软的一侧也一样就能定论。
+#   relax 弯曲松弛率。compliance 若是死的，这一项才是真正的旋钮。
+#   mu    布↔布摩擦。三层叠着互相滑得顺不顺。只影响「爬」，不影响「塌」：
+#         0.15/0.4/0.8 实测把爬从 +6.3 压到 +4.3mm，降三成，但止不住。
+#   combo bend × mu 的笛卡尔积。已跑过一次，每格只跟着它的 mu 走，与 bend 无关。
 #
 # 用法：
 #   bash bash_scripts/tests/pleat_stability_sweep.sh            # bend + mu
 #   bash bash_scripts/tests/pleat_stability_sweep.sh bend       # 只扫弯曲柔度
+#   bash bash_scripts/tests/pleat_stability_sweep.sh relax      # 只扫弯曲松弛率
 #   bash bash_scripts/tests/pleat_stability_sweep.sh combo      # 笛卡尔积
 #
 # 可调环境变量（都有默认值）：
-#   BENDINGS="1e-5 1e-6 1e-7 1e-8"   扫哪些弯曲柔度
+#   BENDINGS="1e-1 1e-3 1e-5 1e-8"   扫哪些弯曲柔度（跨软硬两侧）
+#   BENDING_RELAXATIONS="0.02 0.1 0.5 1.0"  扫哪些弯曲松弛率
 #   FRICTIONS="0.15 0.4 0.8"         扫哪些布↔布摩擦（静摩擦与动摩擦取同值）
 #   SETTLE_STEPS=200                 每格静置多少步（塌陷 25 步内就发生完，200 够看爬）
 #   SAMPLE_EVERY=25                  每几步采一次样
@@ -54,7 +61,8 @@ if [[ -z "${VIRTUAL_ENV:-}" ]]; then
   fi
 fi
 
-BENDINGS="${BENDINGS:-1e-5 1e-6 1e-7 1e-8}"
+BENDINGS="${BENDINGS:-1e-1 1e-3 1e-5 1e-8}"
+BENDING_RELAXATIONS="${BENDING_RELAXATIONS:-0.02 0.1 0.5 1.0}"
 FRICTIONS="${FRICTIONS:-0.15 0.4 0.8}"
 SETTLE_STEPS="${SETTLE_STEPS:-200}"
 SAMPLE_EVERY="${SAMPLE_EVERY:-25}"
@@ -68,7 +76,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(bend mu combo)
+ORDER=(bend relax mu combo)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -147,6 +155,11 @@ for name in "${SELECTED[@]}"; do
         run_cell "bend_$bc" "task.cloth.bending_compliance=$bc"
       done
       ;;
+    relax)
+      for br in $BENDING_RELAXATIONS; do
+        run_cell "relax_$br" "task.cloth.bending_relaxation=$br"
+      done
+      ;;
     mu)
       for mu in $FRICTIONS; do
         run_cell "mu_$mu" \
@@ -185,8 +198,9 @@ echo
 echo "  排除项: v (max_speed) 跳到 1 以上, 或 低点 变负, 说明那一档 PBD 收敛不了,"
 echo "  数字不可信, 往回退一档。基线的 v 是 0.06 左右。"
 echo
-echo "  两组分开看还能分辨机制: bend 影响塌与爬, mu 只影响爬。"
-echo "  若只有 mu 止得住爬而 bend 止不住, 说明是层间打滑而不是折痕记忆。"
+echo "  bend 那一组若**软硬两侧读数完全相同**, 说明弯曲柔度没进求解 ——"
+echo "  那就别再往这个方向调, 去看 relax 组; relax 也一样就说明这块布在这个"
+echo "  尺度上没有任何抗弯能力, 立着的褶皱做不出来, 改为直接建一个躺平的褶皱。"
 echo
 echo "  选定之后写回 configs/task_configs/cloth_unpleat_topogym_tabletop_v1.yaml,"
 echo "  并在注释里记下**偏离 cloth_fold 官方默认值的理由**: 1.1 是一张平铺的方布,"

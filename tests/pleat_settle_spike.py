@@ -156,6 +156,24 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
 
+    # What the solver was actually handed. Printed because a sweep that produces
+    # identical readings across four orders of magnitude has two explanations --
+    # the parameter does nothing, or the override never arrived -- and they are
+    # not distinguishable from the numbers alone. Measured 2026-08-23:
+    # bending_compliance 1e-5 through 1e-8 gave byte-identical curves.
+    cloth_cfg = cfg.task.cloth
+    print(
+        f"pleat_settle_spike material rho={float(cloth_cfg.rho)} "
+        f"stretch_compliance={float(cloth_cfg.stretch_compliance):.3e} "
+        f"bending_compliance={float(cloth_cfg.bending_compliance):.3e} "
+        f"stretch_relaxation={float(cloth_cfg.stretch_relaxation)} "
+        f"bending_relaxation={float(cloth_cfg.bending_relaxation)} "
+        f"cloth_mu={float(cloth_cfg.static_friction)}/{float(cloth_cfg.kinetic_friction)} "
+        f"particle_size={float(cloth_cfg.particle_size)} "
+        f"substeps={int(cfg.env.sim.substeps)} dt={float(cfg.env.sim.dt)}",
+        flush=True,
+    )
+
     steps = max(1, int(cfg.run.settle_steps))
     every = max(1, int(cfg.run.sample_every))
     with recording_session_from_config(band.scene, band.cameras, cfg.recording):
