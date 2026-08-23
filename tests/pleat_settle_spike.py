@@ -176,20 +176,19 @@ def main(cfg: DictConfig) -> None:
 
     steps = max(1, int(cfg.run.settle_steps))
     every = max(1, int(cfg.run.sample_every))
+    peak_speed = 0.0
     with recording_session_from_config(band.scene, band.cameras, cfg.recording):
         for step in range(1, steps + 1):
             band.scene.step()
             if step % every == 0 or step == steps:
+                nodes = probe_particles(band.cloth)
+                velocity = probe_velocities(band.cloth)
+                peak_speed = max(
+                    peak_speed,
+                    float(np.linalg.norm(np.asarray(velocity, dtype=float), axis=1).max()),
+                )
                 print(
-                    sample_line(
-                        "settle",
-                        probe_particles(band.cloth),
-                        probe_velocities(band.cloth),
-                        table_z,
-                        cfg,
-                        step,
-                        axis,
-                    ),
+                    sample_line("settle", nodes, velocity, table_z, cfg, step, axis),
                     flush=True,
                 )
     print_recording_saved(cfg.recording)
@@ -198,17 +197,32 @@ def main(cfg: DictConfig) -> None:
     design_crest = marks["crest_z"] - float(cfg.task.cloth.z)
     settled_crest = crest_height(final, table_z, float(cfg.task.cloth.z))
     kept = settled_crest / max(design_crest, 1e-9)
-    # Both directions are failures and they need different fixes, so they are
-    # named apart rather than reported as one distance.
-    if kept < float(cfg.run.crest_keep_min):
-        verdict = "collapsed"
-    elif plan_span(final, axis) > marks["plan_span"] * float(cfg.run.span_grow_max):
+    span = plan_span(final, axis)
+    # Order matters, and `diverged` has to come first. Measured 2026-08-23:
+    # cloth-cloth friction 3.0 threw the band into the air -- 76 m/s, lowest
+    # particle 35 mm ABOVE the table, crest 212 mm where 22 mm was designed --
+    # and the crest test alone called that `stands`. A verdict that reports a
+    # cloth which has left the scene as a success is worse than no verdict.
+    #
+    # `sprang_open` before `collapsed` for a different reason: a pleat that has
+    # fed most of its material out is usually also short, so both trip, and the
+    # one that says WHY is the useful label.
+    if (
+        peak_speed > float(cfg.run.max_speed)
+        or kept > float(cfg.run.crest_keep_max)
+        or float(np.asarray(final)[:, 2].min()) - table_z
+        > float(cfg.task.cloth.z) + float(cfg.task.cloth.particle_size)
+    ):
+        verdict = "diverged"
+    elif span > marks["plan_span"] * float(cfg.run.span_grow_max):
         verdict = "sprang_open"
+    elif kept < float(cfg.run.crest_keep_min):
+        verdict = "collapsed"
     else:
         verdict = "stands"
     print(
         f"pleat_settle_spike verdict={verdict} "
-        f"crest_kept={kept:.3f} "
+        f"crest_kept={kept:.3f} peak_speed={peak_speed:.3f} "
         f"crest_mm={settled_crest * 1e3:.2f} design_mm={design_crest * 1e3:.1f} "
         f"axis={'xy'[axis]} "
         f"span_mm={plan_span(final, axis) * 1e3:.1f} "

@@ -18,14 +18,17 @@
 # 所以这个脚本的主要读数是**跨度在采样区间里涨了多少**，不是顶缘高度。
 #
 # 两组旋钮，分别对应两种可能的机制：
-#   bend  弯曲柔度。折痕记不记得住形状。
-#         **2026-08-23 实测：1e-5 到 1e-8 四个数量级，读数一位都没变。**
-#         四个数量级零变化是「参数没进求解」的特征，不是「影响很小」。
-#         所以默认档位现在**跨软硬两侧**：软的一侧也一样就能定论。
-#   relax 弯曲松弛率。compliance 若是死的，这一项才是真正的旋钮。
-#   mu    布↔布摩擦。三层叠着互相滑得顺不顺。只影响「爬」，不影响「塌」：
-#         0.15/0.4/0.8 实测把爬从 +6.3 压到 +4.3mm，降三成，但止不住。
-#   combo bend × mu 的笛卡尔积。已跑过一次，每格只跟着它的 mu 走，与 bend 无关。
+#   bend  弯曲柔度。**已实测为死参数，留着只为复核。**
+#         2026-08-23：1e-1 到 1e-8 跨七个数量级，读数一位没变，而 material 行
+#         证明覆盖确实到了材质构造函数。是 Genesis 不用它，不是没传进去。
+#   relax 弯曲松弛率。**这才是活的旋钮，而且它是「爬」的成因不是解药。**
+#         Genesis 的 PBD 弯曲约束把**平面**当静止角，relax 决定每子步把折痕往
+#         平面推多用力。实测 0.02/0.1/0.5/1.0 的爬是 +3.3/+6.3/+49.0/+61.8mm，
+#         1.0 那档跨度 266.9mm 已超过材料全长 260mm（布被拉长了）。
+#         所以要往**小**调，不是往大调。
+#   mu    布↔布摩擦。0.15/0.4/0.8/1.5 的爬是 +6.3/+5.8/+4.3/+1.2mm，
+#         但 1.5 的峰值速度到了 0.746（基线 0.07），3.0 直接把布甩到空中。
+#   combo relax × mu 的笛卡尔积 —— 这两个才是活的那一对。
 #
 # 用法：
 #   bash bash_scripts/tests/pleat_stability_sweep.sh            # bend + mu
@@ -167,10 +170,10 @@ for name in "${SELECTED[@]}"; do
       done
       ;;
     combo)
-      for bc in $BENDINGS; do
+      for br in $BENDING_RELAXATIONS; do
         for mu in $FRICTIONS; do
-          run_cell "combo_${bc}_${mu}" \
-            "task.cloth.bending_compliance=$bc" \
+          run_cell "combo_${br}_${mu}" \
+            "task.cloth.bending_relaxation=$br" \
             "task.cloth.static_friction=$mu" "task.cloth.kinetic_friction=$mu"
         done
       done
@@ -198,9 +201,15 @@ echo
 echo "  排除项: v (max_speed) 跳到 1 以上, 或 低点 变负, 说明那一档 PBD 收敛不了,"
 echo "  数字不可信, 往回退一档。基线的 v 是 0.06 左右。"
 echo
-echo "  bend 那一组若**软硬两侧读数完全相同**, 说明弯曲柔度没进求解 ——"
-echo "  那就别再往这个方向调, 去看 relax 组; relax 也一样就说明这块布在这个"
-echo "  尺度上没有任何抗弯能力, 立着的褶皱做不出来, 改为直接建一个躺平的褶皱。"
+echo "  bend 已实测为死参数 (七个数量级零变化), 不要再往那个方向调。"
+echo "  活的是 relax, 而且它是成因不是解药: 弯曲约束把平面当静止角, 一直在把"
+echo "  折痕往平推。所以 relax 要往**小**调; 大了褶皱会自己弹开甚至把布拉长。"
+echo "  代价要说清: relax 调到很小等于这块布几乎没有弯曲约束作用, 这是比改一个"
+echo "  柔度数值更大的偏离, 写回配置时要如实记下。"
+echo
+echo "  verdict=diverged 优先于其余三种: 峰值速度超线、顶缘高过建模值太多、或者"
+echo "  整块布离开桌面, 都算发散。摩擦 3.0 那次布飞到 76 m/s 而旧判据报了 stands,"
+echo "  这条就是为它加的。"
 echo
 echo "  选定之后写回 configs/task_configs/cloth_unpleat_topogym_tabletop_v1.yaml,"
 echo "  并在注释里记下**偏离 cloth_fold 官方默认值的理由**: 1.1 是一张平铺的方布,"
