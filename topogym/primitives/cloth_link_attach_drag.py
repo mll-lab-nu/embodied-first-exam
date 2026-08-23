@@ -68,26 +68,45 @@ def _quat_angle(a, b) -> float:
     return float(2.0 * np.arccos(min(1.0, abs(float(np.dot(a, b))))))
 
 
-def attached_indices(nodes: np.ndarray, center, radius: float) -> np.ndarray:
+def attached_indices(
+    nodes: np.ndarray, center, radius: float, *, z_band: float | None = None
+) -> np.ndarray:
     """Particles within ``radius`` of the grasp point, in the plane.
 
     Planar distance, not 3D: the disc is meant to catch the sheet under the pads
     whatever height it has settled to.
+
+    ``z_band`` adds a height window around the grasp point on top of that, and is
+    required wherever material lies under material. At docx 1.2's pleat the
+    band's flat run passes directly BENEATH the crest the gripper pinches, so a
+    planar disc binds a layer the pads are nowhere near. Grabbing the wrong layer
+    is a failure the task has to be able to produce -- `cloth_fold`'s config
+    names it as the reason that task binds a patch rather than a single particle
+    -- so the attachment has to be able to miss, not reach through the cloth.
+
+    ``None`` (the default) keeps the planar-only behaviour a single flat sheet
+    wants.
     """
 
-    offsets = np.asarray(nodes, dtype=float)[:, :2] - np.asarray(center, dtype=float)[:2]
-    indices = np.flatnonzero(np.linalg.norm(offsets, axis=1) <= float(radius))
+    nodes = np.asarray(nodes, dtype=float)
+    center = np.asarray(center, dtype=float)
+    within = np.linalg.norm(nodes[:, :2] - center[:2], axis=1) <= float(radius)
+    if z_band is not None:
+        within &= np.abs(nodes[:, 2] - float(center[2])) <= float(z_band)
+    indices = np.flatnonzero(within)
     if indices.size == 0:
         raise ValueError(
-            f"attach_radius={radius} caught no particles; the cloth's particle "
-            f"spacing is larger than the disc."
+            f"attach_radius={radius} z_band={z_band} caught no particles at "
+            f"({center[0]:+.4f},{center[1]:+.4f},{center[2]:+.4f}); either the "
+            f"disc is smaller than the particle spacing or the grasp point is "
+            f"not on the layer it names."
         )
     return indices
 
 
 @dataclass
 class ClothLinkAttachDragPrimitive:
-    """One lift-move-place fold, driven along waypoints from the planner."""
+    """One attach-carry-release motion, driven along waypoints from the planner."""
 
     approach_z: float
     touch_clearance: float
@@ -97,6 +116,11 @@ class ClothLinkAttachDragPrimitive:
     move_steps: int
     release_settle_steps: int
     max_follow_error: float
+    #: Height window around the grasp point, on top of the planar disc. ``None``
+    #: catches whatever is under the pads at any height, which is what a single
+    #: flat sheet wants; a value is needed wherever layers stack, so the hand
+    #: binds the one it is actually touching. See `attached_indices`.
+    attach_z_band: float | None = None
     #: Cosmetic close. ``None`` keeps the gripper open the whole time, which is
     #: the honest shape for a suction-style hold; a value must be at least half a
     #: particle or the fingers have nowhere to be and the solver diverges.
@@ -118,7 +142,7 @@ class ClothLinkAttachDragPrimitive:
         self._phases = []
         grasp_point = np.asarray(grasp_point, dtype=float)
         if not waypoints:
-            raise ValueError("a fold needs at least one waypoint.")
+            raise ValueError("a carry needs at least one waypoint.")
 
         controller.open_gripper(int(self.gripper_steps))
         self._phases.append("open")
@@ -127,7 +151,12 @@ class ClothLinkAttachDragPrimitive:
         # cloth's own top, not above the table: a settled sheet is a particle
         # radius up, and a lifted one is higher still.
         nodes = particles_fn()
-        indices = attached_indices(nodes, grasp_point, float(self.attach_radius))
+        indices = attached_indices(
+            nodes,
+            grasp_point,
+            float(self.attach_radius),
+            z_band=(None if self.attach_z_band is None else float(self.attach_z_band)),
+        )
         pad_z = float(nodes[indices, 2].max()) + float(self.touch_clearance)
         touch_hand = self._hand_for_pad(grasp_point, pad_z)
 
