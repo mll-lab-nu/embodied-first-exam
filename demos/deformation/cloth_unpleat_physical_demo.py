@@ -1,8 +1,11 @@
-"""The whole cloth_unpleat episode: build, pinch the crest, spread it, judge it.
+"""The whole cloth_unpleat episode: build, take the band's end, pull it, judge it.
 
-docx 1.2「展开单个褶皱」end to end. The band spawns with an unpressed pleat in its
-middle, the arm pinches the crest, sweeps it round to flat, lets go, and the
-judges say whether that unfolded the pleat or merely moved it.
+docx 1.2「展开单个褶皱」end to end. The band spawns with a pleat in its middle, the
+arm takes the band's free END, drags it away from the fold along the table, lets
+go, and the judges say whether that unfolded the pleat or merely towed the band.
+
+The pleat itself is never touched: table friction on the far half is the anchor,
+and the tension runs down the flat tail into the fold.
 
 Nothing here decides anything on its own. The trajectory comes from
 `planning/cloth_unpleat_planner.py` (the arc is fixed by the material, not
@@ -12,7 +15,7 @@ chosen), the motion from `primitives/cloth_link_attach_drag.py`, the verdict fro
 
     python -B -m demos.deformation.cloth_unpleat_physical_demo
     python -B -m demos.deformation.cloth_unpleat_physical_demo run.viewer=true
-    python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=press
+    python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=shove
     python -B -m demos.deformation.cloth_unpleat_physical_demo \\
         recording=hq recording.camera=[oblique,front,wrist]
 """
@@ -28,7 +31,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
-from topogym.planning.cloth_unpleat_planner import chord_error, plan_cloth_unpleat
+from topogym.planning.cloth_unpleat_planner import plan_cloth_unpleat
 from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
@@ -95,21 +98,29 @@ def main(cfg: DictConfig) -> None:
         # Everything is measured against the SETTLED band. More load-bearing here
         # than in cloth_fold: the pleat is authored into the mesh, so whether it
         # stands at all is decided during this settle, not at build time.
-        rest = settle_band(band, int(cfg.task.success.settle_steps))
-        # Where the crest ACTUALLY is. The pleat is authored into the mesh and
-        # then let go, so it sags before the arm arrives; reaching for the design
-        # position after a settle reaches into empty air, which is how the first
-        # run of this demo failed. Everything the planner derives -- start angle,
-        # start radius, step count -- follows from the observed crest.
-        crest = layout.observe(rest)
-        design = layout.design_crest_point()
+        # The settle and the gripper's opening happen at the same time. They are
+        # independent -- the cloth relaxes whether or not the hand is doing
+        # anything -- and running them in sequence put the arm on screen doing
+        # nothing for two seconds before the episode started.
+        controller.open_gripper(int(cfg.task.physical.gripper_steps))
+        rest = settle_band(
+            band,
+            max(
+                0,
+                int(cfg.task.success.settle_steps)
+                - int(cfg.task.physical.gripper_steps),
+            ),
+        )
+        # Where the band's free end ACTUALLY is. It should agree with the design
+        # position -- the band does not move during the settle once the bending
+        # constraint is off -- but agreeing is a fact to check, not to assume.
+        grasp = layout.observe(rest)
+        design = layout.design_grasp_point()
         print(
-            f"cloth_unpleat crest_after_settle "
+            f"cloth_unpleat grasp_after_settle "
             f"design=({design[0]:+.4f},{design[1]:+.4f},{design[2]:+.4f}) "
-            f"observed=({crest[0]:+.4f},{crest[1]:+.4f},{crest[2]:+.4f}) "
-            f"design_mm={(design[2] - layout.rest_z()) * 1e3:.2f} "
-            f"observed_mm={layout.crest_height() * 1e3:.2f} "
-            f"kept={layout.crest_kept():.3f}",
+            f"observed=({grasp[0]:+.4f},{grasp[1]:+.4f},{grasp[2]:+.4f}) "
+            f"moved_mm={float(np.linalg.norm(grasp - design)) * 1e3:.2f}",
             flush=True,
         )
         # Is this still a pleat? Two direct readings rather than the crest height
@@ -173,7 +184,6 @@ def main(cfg: DictConfig) -> None:
         print(
             f"cloth_unpleat plan segments={len(waypoints)} "
             f"{episode_plan.waypoint_plan.metadata} "
-            f"chord_error_mm={chord_error(layout) * 1e3:.3f} "
             f"{layout.summary()}",
             flush=True,
         )
@@ -183,11 +193,11 @@ def main(cfg: DictConfig) -> None:
             touch_clearance=float(cfg.task.grasp.touch_clearance),
             attach_tolerance=float(cfg.task.grasp.attach_tolerance),
             attach_radius=float(cfg.task.grasp.attach_radius),
-            # The band's flat run passes directly under the crest, so the
-            # attachment has to be told which height it is grasping at, and the
-            # window has to follow the crest down as it sags -- which is why this
-            # is built here, after the observation, rather than before the settle.
+            # None for this task: the grasp is the band's end, a single layer on
+            # the table with nothing under it to catch by mistake.
             attach_z_band=layout.attach_z_band(),
+            # The gripper was opened during the settle above.
+            skip_initial_open=True,
             gripper_steps=int(cfg.task.physical.gripper_steps),
             move_steps=int(cfg.task.physical.move_steps),
             release_settle_steps=int(cfg.task.physical.release_hold_steps),
@@ -199,13 +209,6 @@ def main(cfg: DictConfig) -> None:
             ),
             verbose=bool(cfg.run.verbose),
         )
-        print(
-            f"cloth_unpleat attach window_mm={layout.attach_z_band() * 1e3:.2f} "
-            f"cap_mm={float(cfg.task.grasp.attach_z_band) * 1e3:.1f} "
-            f"crest_mm={layout.crest_height() * 1e3:.2f}",
-            flush=True,
-        )
-
         # Neighbour pairs for the carry-time stretch reading. A band is not a
         # square sheet, so they cannot be inferred from the particle count the way
         # `cloth_fold` does; and when Genesis' remesh is not a clean subdivision
@@ -225,8 +228,9 @@ def main(cfg: DictConfig) -> None:
             cloth=band.cloth,
             table_z=layout.table_z,
             dt=float(cfg.env.sim.dt),
-            # What the carried material may honestly fall from: the crest's own
-            # height, which is the highest anything gets in this task.
+            # What the carried material may honestly fall from. Nothing is
+            # lifted in this task -- the pull stays in the plane -- so the pleat's
+            # own height is the whole budget.
             fall_height=float(cfg.task.cloth.pleat.crest_height),
             gravity=abs(float(cfg.env.sim.gravity[2])),
             # Both or neither: `rest_nodes` is only there for the stretch reading,
@@ -248,7 +252,7 @@ def main(cfg: DictConfig) -> None:
             result = primitive.run(
                 controller,
                 band.cloth,
-                grasp_point=layout.crest_point(),
+                grasp_point=layout.grasp_point(),
                 waypoints=waypoints,
                 ee_quat=ee_quat_for_yaw(controller.default_ee_quat, layout.grasp_yaw()),
                 particles_fn=lambda: band_particles(band),

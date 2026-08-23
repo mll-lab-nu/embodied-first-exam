@@ -6,14 +6,21 @@ comes back down and continues -- so a strip of it stacks three layers deep while
 the rest lies flat. The gripper pinches the crest and takes the stored material
 back out.
 
-**Where the crest can go is decided by the material, not chosen.** The crest is
-joined to the lower crease by a fixed length of cloth, so it travels on a circle
-about that crease -- the same constraint `cloth_fold` derives its arc from, and
-for the same reason. docx 1.2 describes the motion as 「一次水平拖拽」; that is
-the intent, and the circle is what the intent works out to once the crest starts
-30 mm above the table. A straight line between the crest's start and its flat
-target cuts 34 mm inside that circle, which leaves the cloth slack and shoves it
-rather than unfolding it.
+**The gripper pulls the band's free END sideways, not the pleat itself.** The
+tension runs down the flat tail into the fold, and table friction on the far half
+is what holds the anchor while the fold feeds its material out. docx 1.2 has the
+gripper pinch the crest; this task does not, because the pleat lies flat here (no
+material parameter in Genesis 1.2.1 makes cloth hold a crease -- see the config)
+and there is no standing edge to pinch.
+
+The distance is arithmetic, not a tuned number: if the far half stays put, the end
+travels exactly the difference between the band's material length and its plan
+span, and that difference IS the pleat.
+
+**This makes "the whole band slid" the task's primary failure**, where pinching
+the crest had the lower crease as a pivot. `band_shift` is the reading that
+separates a band that was unfolded from one that was towed, and it is why the
+judge records it alongside the two gates.
 
 Three things the task then reads, all from docx 1.2: the height comes down to one
 cloth thickness, the covered area goes back to a single layer, and the spread
@@ -60,8 +67,8 @@ class ClothUnpleatLayout:
     origin: np.ndarray
     #: The profile's corners, cached because every landmark is read off them.
     _corners: np.ndarray | None = field(default=None, init=False, repr=False)
-    #: The crest as measured after settling. See `observe`.
-    _crest: np.ndarray | None = field(default=None, init=False, repr=False)
+    #: The grasp point as measured after settling. See `observe`.
+    _grasp: np.ndarray | None = field(default=None, init=False, repr=False)
 
     def coordinate_frame(self) -> str:
         return str(self.task_cfg.coordinate_frame)
@@ -136,187 +143,136 @@ class ClothUnpleatLayout:
     def material_length(self) -> float:
         return float(self.task_cfg.cloth.material_length)
 
-    def design_crest_point(self) -> np.ndarray:
-        """Where the mesh was authored to put the crest. Nominal, not observed."""
+    def design_grasp_point(self) -> np.ndarray:
+        """Where the mesh puts the gripper's target: the band's free end.
 
-        marks = self.landmarks()
-        return self._plan_point(marks["crest_s"], marks["crest_z"])
+        **The gripper pulls the END, not the pleat.** The pull is transmitted
+        through the flat tail into the fold, and the far half of the band is held
+        down by table friction while the fold feeds material out -- which makes
+        "the whole band slid instead" the task's primary failure, and
+        `band_shift` the reading that catches it.
 
-    def crest_point(self) -> np.ndarray:
-        """World point on the pleat's top edge the gripper attaches to.
+        The tail end rather than the lead-in end: the pleat opens by the tail
+        moving AWAY from the crease, and the lead-in run is longer (99 mm against
+        75 mm) and carries the pleat's three layers on top of it, so it is the
+        end with more friction holding it down. Pulling the other one would drag
+        the anchor.
 
-        The observed crest once `observe` has been called, the design crest
-        before that. **The difference is not a rounding error.** The pleat is
-        authored into the mesh and then let go, so it sags before anything
-        touches it -- measured 2026-08-22, by more than the 12 mm attachment
-        window, which is how this method came to exist. Reaching for the design
-        position after a settle is reaching into empty air.
+        Inset from the very edge by `grasp.edge_inset` so the whole attachment
+        disc lands on cloth; centred on the band's width so the pull has no
+        moment about the band's own axis.
         """
 
-        return self._crest if self._crest is not None else self.design_crest_point()
+        marks = self.landmarks()
+        end = 0.5 * marks["plan_span"] - float(self.task_cfg.grasp.edge_inset)
+        return self._plan_point(end, float(self.task_cfg.cloth.z))
+
+    def grasp_point(self) -> np.ndarray:
+        """The end the gripper attaches to: observed once settled, design before."""
+
+        return self._grasp if self._grasp is not None else self.design_grasp_point()
 
     def observe(self, nodes) -> np.ndarray:
-        """Find the settled crest in ``nodes`` and use it from here on.
+        """Find the band's actual free end in ``nodes`` and use it from here on.
 
-        The highest particle near the design crest, on the band's centre line.
-        Searched within the pleat's own plan width, because a crest that has
-        moved further than that is not a crest any more -- and the caller is
-        expected to check `crest_kept` rather than trust whatever this returns.
+        The band does not move during the settle once the bending constraint is
+        off (measured 2026-08-23: plan span stationary from step 25), so this
+        normally agrees with the design point. It is measured anyway because
+        agreeing is a fact to check, not one to assume -- and because reaching for
+        a design position that the cloth has left is how the first version of this
+        demo failed.
 
-        The returned point keeps the band's centre line for y, so the gripper
-        still sits mid-width rather than wherever the tallest particle happens to
-        be across the weave.
+        Taken as the extreme material along the band's axis, then pulled back in
+        by `edge_inset`, on the width's centre line.
         """
 
         nodes = np.asarray(nodes, dtype=float)
-        design = self.design_crest_point()
-        window = float(self.task_cfg.cloth.pleat.width)
-        band = float(self.task_cfg.grasp.attach_radius)
+        design = self.design_grasp_point()
         material, sweep = self.material_axis, self.sweep_axis
-        near = np.flatnonzero(
-            (np.abs(nodes[:, material] - design[material]) <= window)
-            & (np.abs(nodes[:, sweep] - design[sweep]) <= band)
-        )
+        band = float(self.task_cfg.grasp.attach_radius)
+        near = np.flatnonzero(np.abs(nodes[:, sweep] - design[sweep]) <= band)
         if near.size == 0:
             raise ValueError(
-                f"no material within {window:.3f} m of the design crest at "
-                f"({design[0]:+.4f},{design[1]:+.4f}); the band is not where the "
-                f"layout says it is."
+                f"no material within {band:.3f} m of the band's centre line at "
+                f"{design[sweep]:+.4f}; the band is not where the layout says."
             )
-        top = near[int(np.argmax(nodes[near, 2]))]
-        crest = design.copy()
-        crest[material] = nodes[top, material]
-        crest[2] = nodes[top, 2]
-        self._crest = crest
-        return self._crest
+        edge = float(nodes[near, material].max())
+        point = design.copy()
+        point[material] = edge - float(self.task_cfg.grasp.edge_inset)
+        point[2] = float(nodes[near, 2].max())
+        self._grasp = point
+        return self._grasp
 
-    def crest_height(self) -> float:
-        """Current crest height above the band's rest plane."""
+    def pull_direction(self) -> np.ndarray:
+        """Unit vector the hand pulls along: outward from the pleat, in plane."""
 
-        return float(self.crest_point()[2] - self.rest_z())
+        direction = np.zeros(3, dtype=float)
+        direction[self.material_axis] = 1.0
+        return direction
 
-    def attach_z_band(self) -> float:
-        """Height window for the attachment, in metres.
+    def pull_distance(self) -> float:
+        """How far the end has to travel: exactly the material the pleat stores.
 
-        The configured value is a CEILING. What is used is the smaller of it and
-        45% of the crest's current height above the rest plane, because the
-        window travels with the crest and the crest sags. Left uncapped, a crest
-        that has sunk to `min_crest_kept` would put the window's floor below the
-        flat run passing underneath it -- and binding that layer is the failure
-        the window exists to prevent.
+        Not a tuned number. If the far half stays put, the end moves by the
+        difference between the band's material length and its plan span, and that
+        difference IS the pleat. `pull_scale` is the only slack, for the fact that
+        friction lets the anchor creep a little.
         """
 
-        return min(
-            float(self.task_cfg.grasp.attach_z_band), 0.45 * self.crest_height()
+        return float(self.landmarks()["stored"]) * float(
+            self.task_cfg.physical.pull_scale
         )
 
-    def crest_kept(self) -> float:
-        """Observed crest height over the authored one. 1.0 means it did not sag.
+    def pull_steps(self) -> int:
+        """Steps for the pull, from a commanded SPEED rather than a step count.
 
-        The number the caller gates on: an episode that starts from a collapsed
-        pleat is not a hard episode, it is a different task.
-        """
-
-        design = float(self.design_crest_point()[2] - self.rest_z())
-        return self.crest_height() / max(design, 1e-9)
-
-    def crease_point(self) -> np.ndarray:
-        """World point the crest pivots about: where the band doubles back.
-
-        Treated as fixed the way `cloth_fold` treats its fold line -- the flat run
-        leading up to it is held down by table friction. How well that holds is a
-        measured question, and `band_shift` in the judge is the reading for it.
-        """
-
-        marks = self.landmarks()
-        return self._plan_point(marks["crease_s"], float(self.task_cfg.cloth.z))
-
-    def arm_length(self) -> float:
-        """Cloth between the crease and the crest, measured along the material."""
-
-        return float(self.landmarks()["arm_length"])
-
-    def arc_radius(self) -> float:
-        """Radius the hand follows. Slightly inside taut, as in `cloth_fold`."""
-
-        return self.arm_length() * float(self.task_cfg.physical.arc_slack)
-
-    def start_angle(self) -> float:
-        """Where the crest starts, radians about the crease, in the band's own plane.
-
-        Taken from the crest's actual position rather than from the profile, so a
-        crest that sagged during the settle is swept from where it IS. The two
-        agree exactly before `observe` is called.
-        """
-
-        crest, crease = self.crest_point(), self.crease_point()
-        axis = self.material_axis
-        return float(np.arctan2(crest[2] - crease[2], crest[axis] - crease[axis]))
-
-    def start_radius(self) -> float:
-        """How far the crest currently is from the crease, straight-line.
-
-        Less than `arc_radius` whenever the pleat has sagged: the arm is still the
-        same length of cloth, it has just stopped being straight. Driving the taut
-        radius from step one would yank that slack out in a single step, so the
-        planner opens the radius out over the sweep instead.
-        """
-
-        crest, crease = self.crest_point(), self.crease_point()
-        axis = self.material_axis
-        return float(np.hypot(crest[axis] - crease[axis], crest[2] - crease[2]))
-
-    def arc_length(self) -> float:
-        """Path length of the sweep, using the mean radius it is driven at."""
-
-        return float(
-            0.5 * (self.start_radius() + self.arc_radius()) * abs(self.start_angle())
-        )
-
-    def drag_steps(self) -> int:
-        """Steps for the sweep, from the calibrated hand SPEED.
-
-        A fixed step count would become a different speed the moment the pleat
-        changes size, and the speed is the calibrated quantity (`cloth_fold`'s
-        120/180/240 sweep, 3.6 mm a step).
+        A fixed count would become a different speed the moment the pleat changes
+        size. The speed itself is no longer inherited from `cloth_fold`'s 3.6 mm a
+        step: that value was set by a tradeoff against the cloth creeping across
+        the table while the hand worked, and with `bending_relaxation` at zero the
+        band does not creep at all (measured 2026-08-23, plan span flat over 200
+        steps). Slower is now free, and a slower pull is both gentler on the
+        contact and legible in a video.
         """
 
         return max(
-            4, int(round(self.arc_length() / float(self.task_cfg.physical.drag_step_m)))
+            4, int(round(self.pull_distance() / float(self.task_cfg.physical.pull_step_m)))
         )
 
-    def grasp_yaw(self) -> float:
-        """Fingers across the crest, i.e. facing the direction the crest travels.
+    def attach_z_band(self) -> float | None:
+        """Height window for the attachment, or None for a planar disc.
 
-        Derived rather than written down: the crest opens along the band's own
-        axis, in the direction of increasing material coordinate, so rotating the
-        band rotates the wrist with it. Holding the arm's default orientation
-        instead would leave the tool at an arbitrary angle to the pull, which
-        `cloth_fold` measured as a hand 42 mm off its command.
+        ``None`` here, and that is a consequence of pulling the END rather than
+        the crest: the end is a single layer lying on the table, so there is no
+        layer under it to grab by mistake. The window existed to keep the hand off
+        the flat run passing beneath the crest, and there is no crest in the grasp
+        any more.
         """
 
-        direction = np.zeros(2, dtype=float)
-        direction[self.material_axis] = 1.0 if self.start_angle() > 0.0 else -1.0
+        value = self.task_cfg.grasp.attach_z_band
+        return None if value is None else float(value)
+
+    def grasp_yaw(self) -> float:
+        """Fingers across the band, facing the direction the end travels."""
+
+        direction = self.pull_direction()
         return float(np.arctan2(direction[1], direction[0]))
 
     def summary(self) -> str:
         marks = self.landmarks()
-        crest, crease = self.crest_point(), self.crease_point()
+        grasp = self.grasp_point()
+        target = grasp + self.pull_direction() * self.pull_distance()
         return (
             f"axis={'xy'[self.material_axis]} "
-            f"crest=({crest[0]:+.3f},{crest[1]:+.3f},{crest[2]:+.3f}) "
-            f"crest_kept={self.crest_kept():.3f} "
-            f"start_radius_mm={self.start_radius() * 1e3:.1f} "
-            f"crease=({crease[0]:+.3f},{crease[1]:+.3f}) "
+            f"grasp=({grasp[0]:+.3f},{grasp[1]:+.3f},{grasp[2]:+.3f}) "
+            f"target=({target[0]:+.3f},{target[1]:+.3f}) "
             f"material_mm={marks['material_length'] * 1e3:.0f} "
             f"plan_span_mm={marks['plan_span'] * 1e3:.1f} "
             f"stored_mm={marks['stored'] * 1e3:.1f} "
             f"spread_ratio_now={marks['plan_span'] / marks['material_length']:.3f} "
-            f"radius_mm={self.arc_radius() * 1e3:.1f} "
-            f"start_deg={np.degrees(self.start_angle()):.1f} "
-            f"arc_mm={self.arc_length() * 1e3:.1f} "
-            f"steps={self.drag_steps()} "
-            f"step_mm={self.arc_length() / self.drag_steps() * 1e3:.2f}"
+            f"pull_mm={self.pull_distance() * 1e3:.1f} "
+            f"steps={self.pull_steps()} "
+            f"step_mm={self.pull_distance() / self.pull_steps() * 1e3:.2f}"
         )
 
 

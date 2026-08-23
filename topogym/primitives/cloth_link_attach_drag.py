@@ -121,6 +121,11 @@ class ClothLinkAttachDragPrimitive:
     #: flat sheet wants; a value is needed wherever layers stack, so the hand
     #: binds the one it is actually touching. See `attached_indices`.
     attach_z_band: float | None = None
+    #: Set when the caller has already opened the gripper -- typically because it
+    #: opened it DURING the scene's settle, so the motion costs no extra steps.
+    #: Opening again is harmless but adds `gripper_steps` of an arm doing nothing,
+    #: which is dead time in every recording of the episode.
+    skip_initial_open: bool = False
     #: Cosmetic close. ``None`` keeps the gripper open the whole time, which is
     #: the honest shape for a suction-style hold; a value must be at least half a
     #: particle or the fingers have nowhere to be and the solver diverges.
@@ -144,7 +149,8 @@ class ClothLinkAttachDragPrimitive:
         if not waypoints:
             raise ValueError("a carry needs at least one waypoint.")
 
-        controller.open_gripper(int(self.gripper_steps))
+        if not self.skip_initial_open:
+            controller.open_gripper(int(self.gripper_steps))
         self._phases.append("open")
 
         # Down to a hand height that leaves the pads `touch_clearance` above the

@@ -6,14 +6,16 @@
 # 回声，一起跑只会得到三份同样的错误。
 #
 #   check     免 GPU 的判据单测。改过阈值或褶皱几何之后必跑，秒级。
-#   settle    褶皱静置 400 步：它到底站不站得住。褶皱是画进控制网格再放手的，
-#             所以这个问题只有仿真能回答，而 verdict != stands 时后面两格必然
-#             卡在 demo 的 min_crest_kept 上。双机位录制。
+#   settle    褶皱静置 400 步：放手之后它还算不算一个褶皱（材料还收着、三层还叠着）。
+#             判的东西与 demo 的起始护栏完全相同，所以这一格过了 demo 就不会在
+#             同一处停下。双机位录制。
 #   unfold    **任务本体**，三视角录制。这一格的视频就是要交付的东西。
-#   press     docx 1.2 点名的捷径（把褶皱压塌），三视角录制。
-#             它应当 unpleated=false，且失败的是单层率与铺展比、不是最大高度 ——
-#             阈值标定要的就是这两行并排读。
-#   overpull  沿同一条弧线拉过头。三条判据都会过，看的是 band_shift_mm。
+#             夹爪抓布带的自由端，贴着桌面往远离褶皱的方向拉，靠桌面摩擦按住
+#             另一端把褶皱抽平。褶皱本身不碰。
+#   shove     往**反方向**拉（朝着褶皱推），三视角录制。搬动了同样多的布料却
+#             什么也没展开，应当 unpleated=false。
+#   overpull  拉过头，整条布带开始滑。两条门槛都会过，看的是 band_shift_mm ——
+#             抓端头拉之后，「整条布带被拖走」是这个任务的首要失败模式。
 #             不录像：它是个数字，不是画面。
 #
 # 用法：
@@ -73,7 +75,7 @@ if ! python -c "import genesis" 2>/dev/null; then
   exit 1
 fi
 
-ORDER=(check settle unfold press overpull)
+ORDER=(check settle unfold shove overpull)
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")
 else
@@ -182,9 +184,9 @@ for name in "${SELECTED[@]}"; do
       mapfile -t args < <(demo_args unfold unpleat)
       run_cell unfold python -B -m demos.deformation.cloth_unpleat_physical_demo "${args[@]}"
       ;;
-    press)
-      mapfile -t args < <(demo_args press press)
-      run_cell press python -B -m demos.deformation.cloth_unpleat_physical_demo "${args[@]}"
+    shove)
+      mapfile -t args < <(demo_args shove shove)
+      run_cell shove python -B -m demos.deformation.cloth_unpleat_physical_demo "${args[@]}"
       ;;
     overpull)
       # 不录像：这一格要的是一个数字（band_shift_mm），不是画面。
@@ -204,22 +206,22 @@ done
 
 echo
 echo "该看哪几行："
-echo "  settle    verdict=stands 才算褶皱立得住。crest_kept 是静置后顶缘剩下建模高度的"
-echo "            几成，也是 demo 会卡的那条线（task.grasp.min_crest_kept）。"
-echo "            collapsed -> 折臂再陡一点（pleat.width 收窄）；"
-echo "            sprang_open -> PBD 把平面当弯曲静止角，预置褶皱这条路不通。"
-echo "  unfold    unpleated=true 且 diverged=false 才算成功。三个数按顺序读："
-echo "            peak_mm（褶皱没了）、single_layer_frac（回到一层）、"
-echo "            spread_ratio（材料还回来了）。gates= 后面列的是没过的那几条。"
-echo "  press     应当 unpleated=false，而且 gates= 里是 single_layer_frac 与"
-echo "            spread_ratio，**不该有 max_height**。压塌本来就该通过高度那一条，"
-echo "            由另外两条拒绝它 —— docx 1.2 要求三项联合就是为了这个。"
-echo "            两格的三个数并排写进 task 配置的 success 块注释，阈值卡在中间。"
-echo "  overpull  三条判据都会过（它是另一种走法，不是失败）。看 band_shift_mm："
-echo "            它是唯一分得出「整条布带被拖走」的读数。"
-echo "  全部      crest_after_settle 那行给出建模顶缘与实测顶缘的差；"
-echo "            stretch_tracking=off 说明 Genesis 的重网格化不是干净的细分，"
-echo "            拉伸诊断量因此关闭 —— 三条判据都不需要它。"
+echo "  settle    verdict=intact 才往下跑。released = 材料已经自己放出来了,"
+echo "            layers_lost = 三层散了, diverged = 发散(优先于其余三种)。"
+echo "            判的东西与 demo 的起始护栏相同, 所以这一格过了 demo 不会再卡。"
+echo "  unfold    unpleated=true 且 diverged=false 才算成功。两条门槛按顺序读:"
+echo "            single_layer_frac(回到一层) 与 spread_ratio(材料还回来了)。"
+echo "            gates= 后面列的是没过的那几条。"
+echo "            **band_shift_mm 要一起看**: 抓端头拉之后, 整条布带被拖走是首要"
+echo "            失败模式, 而它两条门槛都过得了 —— 只有这个读数分得出来。"
+echo "  shove     应当 unpleated=false, gates= 里两条都在。它搬动了与 unfold 同样多"
+echo "            的布料却什么也没展开, 用来确认判据读的不是位移。"
+echo "  overpull  两条门槛都会过。看 band_shift_mm 比 unfold 大多少 —— 这两格并排"
+echo "            读, 就能决定 band_shift 要不要从诊断量升格为门槛。"
+echo "  全部      start_state 那行是动作前的护栏读数(材料还收着/三层还在);"
+echo "            grasp_after_settle 的 moved_mm 应当接近 0(布带静置时不动);"
+echo "            stretch_tracking=off 说明 Genesis 的重网格化不是干净的细分,"
+echo "            拉伸诊断量因此关闭 —— 两条门槛都不需要它。"
 echo
 echo "视频: $OUTDIR"
 echo "日志: $OUTDIR/*.log"

@@ -442,14 +442,14 @@ python -B -m demos.deformation.cloth_unpleat_physical_demo \
 # 3) 捷径对照 (标定阈值用)。press 应当 unpleated=false, 且失败的是
 #    single_layer_frac 与 spread_ratio 两条, 不是 max_height。
 python -B -m demos.deformation.cloth_unpleat_physical_demo \
-  run.motion=press \
+  run.motion=shove \
   recording=hq \
-  recording.path=runs/videos/cloth_unpleat/press.mp4 \
+  recording.path=runs/videos/cloth_unpleat/shove.mp4 \
   recording.camera=[oblique,front,wrist] \
   recording.res=[960,960] \
   recording.every_n_steps=3 \
   run.verbose=true \
-  2>&1 | tee runs/videos/cloth_unpleat/press.log
+  2>&1 | tee runs/videos/cloth_unpleat/shove.log
 # 拉过头: 三条判据都会过, 看的是 band_shift_mm 有多大 (它是唯一分得出来的读数)
 python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=overpull run.verbose=true 2>&1 | tee runs/videos/cloth_unpleat/overpull.log
 

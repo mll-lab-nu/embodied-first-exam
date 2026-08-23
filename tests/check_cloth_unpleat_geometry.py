@@ -18,8 +18,9 @@ What it proves:
   - the profile's own arithmetic closes: the material the pleat stores is exactly
     the difference between its length and its plan span, which is what makes the
     spread ratio a conservation law rather than a tuned number;
-  - the planner's chords hug the arc, and its `press` and `overpull` motions
-    really are the motions their names claim.
+  - the pull travels exactly the material the pleat stores, stays in the plane
+    (friction on the far half is the anchor, and lifting removes it), and its
+    `shove` and `overpull` motions really are the motions their names claim.
 
     python tests/check_cloth_unpleat_geometry.py
 
@@ -88,10 +89,7 @@ band_shift = _verifier.band_shift
 
 # `topogym.planning` is NumPy-only, so it imports normally.
 sys.path.insert(0, str(REPO))
-from topogym.planning.cloth_unpleat_planner import (  # noqa: E402
-    chord_error,
-    drag_waypoints,
-)
+from topogym.planning.cloth_unpleat_planner import pull_waypoints  # noqa: E402
 
 failures: list[str] = []
 
@@ -158,39 +156,25 @@ class _StandInLayout:
         point[2] = self._table_z + float(height)
         return point
 
-    def crest_point(self) -> np.ndarray:
-        return self._plan_point(self._marks["crest_s"], self._marks["crest_z"])
+    def design_grasp_point(self) -> np.ndarray:
+        end = 0.5 * self._marks["plan_span"] - float(self._cfg["grasp"]["edge_inset"])
+        return self._plan_point(end, float(self._cfg["cloth"]["z"]))
 
-    def crease_point(self) -> np.ndarray:
-        return self._plan_point(
-            self._marks["crease_s"], float(self._cfg["cloth"]["z"])
-        )
+    def grasp_point(self) -> np.ndarray:
+        return self.design_grasp_point()
 
-    def arm_length(self) -> float:
-        return float(self._marks["arm_length"])
+    def pull_direction(self) -> np.ndarray:
+        direction = np.zeros(3)
+        direction[self.material_axis] = 1.0
+        return direction
 
-    def arc_radius(self) -> float:
-        return self.arm_length() * float(self._cfg["physical"]["arc_slack"])
+    def pull_distance(self) -> float:
+        return float(self._marks["stored"]) * float(self._cfg["physical"]["pull_scale"])
 
-    def start_radius(self) -> float:
-        crest, crease = self.crest_point(), self.crease_point()
-        axis = self.material_axis
-        return float(np.hypot(crest[axis] - crease[axis], crest[2] - crease[2]))
-
-    def start_angle(self) -> float:
-        crest, crease = self.crest_point(), self.crease_point()
-        axis = self.material_axis
-        return float(np.arctan2(crest[2] - crease[2], crest[axis] - crease[axis]))
-
-    def arc_length(self) -> float:
-        return float(
-            0.5 * (self.start_radius() + self.arc_radius()) * abs(self.start_angle())
-        )
-
-    def drag_steps(self) -> int:
+    def pull_steps(self) -> int:
         return max(
             4,
-            int(round(self.arc_length() / float(self._cfg["physical"]["drag_step_m"]))),
+            int(round(self.pull_distance() / float(self._cfg["physical"]["pull_step_m"]))),
         )
 
 
@@ -324,7 +308,7 @@ def main(argv=None) -> int:
         f"stored={marks['stored'] * 1e3:.1f}mm span={marks['plan_span'] * 1e3:.1f}mm",
     )
     check(
-        "顶缘绕下折痕的半径就是那条折臂的长度",
+        "上折臂的材料长度 = sqrt(宽² + 高²)",
         abs(
             marks["arm_length"]
             - np.hypot(float(cloth["pleat"]["width"]), float(cloth["pleat"]["crest_height"]))
@@ -343,25 +327,26 @@ def main(argv=None) -> int:
         clearance >= float(cloth["particle_size"]),
         f"{clearance * 1e3:.1f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
     )
-    # The window the gripper attaches through has to catch the TOP layer and miss
-    # the one under it. The pleat lies down to a flat three-layer stack -- measured
-    # 2026-08-23 at 7.5 mm above the band's resting plane, stable from step 25 --
-    # so the three layers sit at roughly 0, h/2 and h. The layout caps the window
-    # at 0.45 of the crest's CURRENT height, and 0.45 < 0.5 is exactly what keeps
-    # the window's floor above the middle layer whatever h turns out to be.
-    stack = 0.0075
-    cap = float(cfg["grasp"]["attach_z_band"])
-    window = min(cap, 0.45 * stack)
+    # The grasp is the band's END, and the disc that binds particles has to land
+    # on ONE layer. What guarantees that is distance from the fold, not a height
+    # window: the pleat's three layers occupy the plan strip [-w, +w] about the
+    # crease, and the grasp sits far outside it.
+    #
+    # This replaced a height-window check on 2026-08-23, when the grasp moved from
+    # the pleat's crest to the band's end. The crest had the flat run directly
+    # beneath it and needed the window; the end has nothing beneath it.
+    reach = 0.5 * marks["plan_span"] - float(cfg["grasp"]["edge_inset"])
+    clear = reach - float(cloth["pleat"]["width"])
     check(
-        "抓取窗口只够到最上层，够不到中间那层",
-        stack - window > stack / 2.0,
-        f"窗口底 {(stack - window) * 1e3:.2f}mm > 中间层 {stack / 2.0 * 1e3:.2f}mm"
-        f"（实测三层总高 {stack * 1e3:.1f}mm，窗口 ±{window * 1e3:.2f}mm）",
+        "抓取点离三层区足够远，附着盘只碰得到一层",
+        clear > float(cfg["grasp"]["attach_radius"]) * 2.0,
+        f"离三层区 {clear * 1e3:.1f}mm > 2 倍盘半径 "
+        f"{float(cfg['grasp']['attach_radius']) * 2.0 * 1e3:.1f}mm",
     )
     check(
-        "窗口的上限值本身不会破坏这条保证",
-        cap < stack / 2.0 or 0.45 * stack <= cap,
-        f"上限 {cap * 1e3:.1f}mm，按高度收窄后取 {window * 1e3:.2f}mm",
+        "高度窗口已关闭（端头只有一层，不需要它）",
+        cfg["grasp"]["attach_z_band"] is None,
+        f"attach_z_band={cfg['grasp']['attach_z_band']}",
     )
 
     print("\n== 判据：三种末态 ==")
@@ -540,75 +525,77 @@ def main(argv=None) -> int:
 
     print("\n== 轨迹 ==")
     layout = _StandInLayout(cfg)
-    error = chord_error(layout)
-    check(
-        "分段直线与弧线的最大偏差远小于一个粒子",
-        error < 0.25 * float(cloth["particle_size"]),
-        f"{error * 1e3:.3f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
-    )
-    unfold_wp = drag_waypoints(layout, motion="unfold")
-    crease = layout.crease_point()
-    ends_flat = abs(float(unfold_wp[-1].position[2]) - layout.rest_z()) < 1e-6
-    check(
-        "unfold 的终点落在桌面高度上",
-        ends_flat,
-        f"z={float(unfold_wp[-1].position[2]) * 1e3:.2f}mm",
-    )
     axis = layout.material_axis
-    radii = [
-        float(
-            np.hypot(
-                float(w.position[axis]) - crease[axis],
-                float(w.position[2]) - layout.rest_z(),
-            )
-        )
-        for w in unfold_wp
-    ]
-    # The invariant is not "constant radius" any more: the sweep opens the radius
-    # out from where the crest actually is to the taut value, because an authored
-    # pleat sags before the arm reaches it. What must never happen is the hand
-    # commanding further from the crease than the arm of cloth reaches.
-    arm = layout.arm_length()
+    grasp = layout.grasp_point()
+    unfold_wp = pull_waypoints(layout, motion="unfold")
+    shove_wp = pull_waypoints(layout, motion="shove")
+    over_wp = pull_waypoints(layout, motion="overpull", overpull_scale=1.6)
+
+    # 行程不是调出来的：另一端不动的话，端头走的距离恰好等于褶皱收着的材料量。
+    travel = float(unfold_wp[-1].position[axis]) - grasp[axis]
+    expected = marks["stored"] * float(cfg["physical"]["pull_scale"])
     check(
-        "unfold 全程不超出那条折臂的材料长度（不会把布拽直）",
-        max(radii) <= arm + 1e-9,
-        f"最远 {max(radii) * 1e3:.2f}mm ≤ 折臂 {arm * 1e3:.2f}mm",
+        "拉的距离 = 褶皱收着的材料量（× pull_scale）",
+        abs(travel - expected) < 1e-9,
+        f"{travel * 1e3:.2f}mm，收料 {marks['stored'] * 1e3:.1f}mm × "
+        f"{float(cfg['physical']['pull_scale'])}",
+    )
+    # 整个动作在平面内：靠的是桌面摩擦按住另一端，抬起来就没有摩擦了。
+    off_plane = max(
+        abs(float(w.position[2]) - grasp[2]) for w in unfold_wp
+    )
+    sideways = max(
+        abs(float(w.position[1 - axis]) - grasp[1 - axis]) for w in unfold_wp
     )
     check(
-        "半径从顶缘当前位置单调开到绷紧值",
-        all(b >= a - 1e-12 for a, b in zip(radii, radii[1:]))
-        or all(b <= a + 1e-12 for a, b in zip(radii, radii[1:])),
-        f"{radii[0] * 1e3:.2f}mm → {radii[-1] * 1e3:.2f}mm "
-        f"(taut {layout.arc_radius() * 1e3:.2f}mm)",
+        "全程贴着桌面、不侧偏（摩擦才按得住另一端）",
+        off_plane < 1e-9 and sideways < 1e-9,
+        f"离面 {off_plane * 1e3:.3f}mm，侧偏 {sideways * 1e3:.3f}mm",
     )
-    press_wp = drag_waypoints(layout, motion="press")
-    crest = layout.crest_point()
     check(
-        "press 只往下走、水平位置不动",
-        all(
-            abs(float(w.position[i]) - crest[i]) < 1e-12
-            for w in press_wp
-            for i in (0, 1)
-        )
-        and float(press_wp[-1].position[2]) < float(press_wp[0].position[2]),
-        f"({crest[0]:+.4f},{crest[1]:+.4f}) z "
-        f"{float(press_wp[0].position[2]) * 1e3:.1f}"
-        f"→{float(press_wp[-1].position[2]) * 1e3:.1f}mm",
+        "shove 往反方向走（同样多的位移，做错的动作）",
+        float(shove_wp[-1].position[axis]) < grasp[axis] - 1e-9
+        and abs(
+            abs(float(shove_wp[-1].position[axis]) - grasp[axis]) - abs(travel)
+        ) < 1e-9,
+        f"shove {'xy'[axis]}={float(shove_wp[-1].position[axis]):+.4f} vs "
+        f"起点 {grasp[axis]:+.4f}",
     )
-    over_wp = drag_waypoints(layout, motion="overpull", overpull_scale=1.6)
     check(
-        "overpull 越过平铺位置继续走",
+        "overpull 越过「料已放完」那个点继续走",
         float(over_wp[-1].position[axis]) > float(unfold_wp[-1].position[axis]) + 0.005,
         f"overpull {'xy'[axis]}={float(over_wp[-1].position[axis]):+.4f} vs "
         f"unfold {'xy'[axis]}={float(unfold_wp[-1].position[axis]):+.4f}",
     )
-    steps = layout.drag_steps()
+    steps = layout.pull_steps()
     check(
         "步数由标定速度算出来，不是写死的",
-        abs(layout.arc_length() / steps - float(cfg["physical"]["drag_step_m"]))
-        < 0.1 * float(cfg["physical"]["drag_step_m"]),
-        f"arc={layout.arc_length() * 1e3:.1f}mm / {steps} 步 = "
-        f"{layout.arc_length() / steps * 1e3:.2f}mm/步",
+        abs(layout.pull_distance() / steps - float(cfg["physical"]["pull_step_m"]))
+        < 0.1 * float(cfg["physical"]["pull_step_m"]),
+        f"行程 {layout.pull_distance() * 1e3:.1f}mm / {steps} 步 = "
+        f"{layout.pull_distance() / steps * 1e3:.2f}mm/步",
+    )
+    # 抓取点必须整个附着盘都落在布上，否则一半悬空、抓到的粒子两侧不等。
+    edge = 0.5 * marks["plan_span"]
+    inset = float(cfg["grasp"]["edge_inset"])
+    check(
+        "整个附着盘落在布上（抓取点离边缘够远）",
+        inset >= float(cloth["particle_size"]) * 2.0,
+        f"内缩 {inset * 1e3:.1f}mm ≥ 2 倍粒径 "
+        f"{float(cloth['particle_size']) * 2.0 * 1e3:.1f}mm",
+    )
+    check(
+        "抓的是端头附近，不是布带中段",
+        edge - inset > 0.4 * marks["plan_span"],
+        f"抓在 {'xy'[axis]}={grasp[axis]:+.4f}，端头在 "
+        f"{float(np.asarray(cloth['center'])[axis] + edge):+.4f}",
+    )
+    # 拉完之后端头要还够得着。作业区 x[-0.23,+0.31] / y[-0.30,+0.30]。
+    limit = 0.31 if axis == 0 else 0.30
+    check(
+        "拉到底之后仍在作业区内",
+        float(over_wp[-1].position[axis]) < limit,
+        f"overpull 终点 {float(over_wp[-1].position[axis]):+.4f} < {limit}",
     )
 
     print()

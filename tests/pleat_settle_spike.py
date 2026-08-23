@@ -19,7 +19,18 @@ return, and until it is answered nothing downstream is worth writing:
    control mesh came back as 2344 particles where a clean one-level subdivision
    is 71x33 = 2343, so the grid arithmetic is simply unavailable and the demo
    says so on its own line rather than guessing.
-2. **Does the pleat stand?** Three ways it can fail: it flattens itself, it
+2. **Is it still a pleat when the arm arrives?** Not "does it stand" -- that
+   question is settled: it does not, and no material parameter changes that
+   (`bending_compliance` is ignored by Genesis 1.2.1, measured across seven
+   orders of magnitude on 2026-08-23). The pleat lies down to a flat three-layer
+   stack inside 25 steps and that is the state the task starts from.
+
+   What has to hold instead is what the task actually needs, and it is the same
+   pair the demo gates on: the material is still stored (or there is nothing to
+   unfold) and the layers are still stacked (or it is not this task). Both are
+   measured directly rather than through the crest's height.
+
+   Three ways it can fail: it flattens itself, it
    springs open (PBD's bending constraint taking its rest angle from flat rather
    than from the mesh as built), or the solver diverges where the two arms meet
    at the crest, which is the one place in the mesh where material sits within a
@@ -65,14 +76,13 @@ def crest_height(nodes, table_z: float, rest_z: float) -> float:
     """Highest point of the band above the band's own RESTING PLANE.
 
     Above the resting plane rather than above the table, because that is what the
-    demo's `min_crest_kept` gate measures (`ClothUnpleatLayout.crest_height`) and
-    the two have to be the same number. A flat band already sits one particle
-    radius up, so mixing the two references inflates this by that much -- measured
-    2026-08-23, the spike said 0.481 kept where the demo said 0.390 for the same
-    settled cloth.
+    profile's own crest height is measured from, so the two are comparable. A flat
+    band already sits one particle radius up, and mixing the two references
+    inflated this reading by that much until 2026-08-23.
 
-    The pleat is the only thing standing up, so the peak IS the crest until the
-    pleat stops existing -- at which point this reading is the answer.
+    Diagnostic only since the same date: the verdict is decided by whether the
+    material is still stored and the layers still stacked, not by this. The pleat
+    always lies down, so its height stopped separating anything.
     """
 
     return float(np.asarray(nodes, dtype=float)[:, 2].max() - table_z - rest_z)
@@ -198,6 +208,14 @@ def main(cfg: DictConfig) -> None:
     settled_crest = crest_height(final, table_z, float(cfg.task.cloth.z))
     kept = settled_crest / max(design_crest, 1e-9)
     span = plan_span(final, axis)
+    layers = layer_report(
+        final, table_z, float(cfg.task.success.cell), float(cfg.task.cloth.particle_size)
+    )
+    spread = span / float(cfg.task.cloth.material_length)
+    stored_ok = spread <= float(cfg.task.grasp.max_start_spread_ratio)
+    layers_ok = int(layers["over_layer_cells"]) >= int(
+        cfg.task.grasp.min_start_three_layer_cells
+    )
     # Order matters, and `diverged` has to come first. Measured 2026-08-23:
     # cloth-cloth friction 3.0 threw the band into the air -- 76 m/s, lowest
     # particle 35 mm ABOVE the table, crest 212 mm where 22 mm was designed --
@@ -214,15 +232,19 @@ def main(cfg: DictConfig) -> None:
         > float(cfg.task.cloth.z) + float(cfg.task.cloth.particle_size)
     ):
         verdict = "diverged"
-    elif span > marks["plan_span"] * float(cfg.run.span_grow_max):
-        verdict = "sprang_open"
-    elif kept < float(cfg.run.crest_keep_min):
-        verdict = "collapsed"
+    elif not stored_ok:
+        verdict = "released"
+    elif not layers_ok:
+        verdict = "layers_lost"
     else:
-        verdict = "stands"
+        verdict = "intact"
     print(
         f"pleat_settle_spike verdict={verdict} "
-        f"crest_kept={kept:.3f} peak_speed={peak_speed:.3f} "
+        f"spread_ratio={spread:.3f} max={float(cfg.task.grasp.max_start_spread_ratio)} "
+        f"three_layer_cells={int(layers['over_layer_cells'])} "
+        f"min={int(cfg.task.grasp.min_start_three_layer_cells)} "
+        f"peak_speed={peak_speed:.3f} "
+        f"crest_kept={kept:.3f} "
         f"crest_mm={settled_crest * 1e3:.2f} design_mm={design_crest * 1e3:.1f} "
         f"axis={'xy'[axis]} "
         f"span_mm={plan_span(final, axis) * 1e3:.1f} "
@@ -232,7 +254,7 @@ def main(cfg: DictConfig) -> None:
 
     while cfg.run.keep_open and show_viewer:
         band.scene.step()
-    raise SystemExit(0 if verdict == "stands" else 1)
+    raise SystemExit(0 if verdict == "intact" else 1)
 
 
 if __name__ == "__main__":
