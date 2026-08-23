@@ -232,6 +232,14 @@ primitive:
 physical:
   # 机械臂回 home 的沉降步数。
   settle_steps: 40
+
+  # 等 C 环真正停下来的参数。固定步数在这里不合用：环平面绕竖直轴的转动没有恢复力矩，
+  # 不会振荡衰减，只会带着出生时的初速一直转到摩擦耗尽。40 步（0.4 秒）下，读到的姿态
+  # 与手抵达悬停位时的实际姿态差 49.5mm / 25.8°，接近一个环半径。
+  settle_window: 25
+  settle_max_steps: 2000
+  settle_move_tol: 0.0002      # 每个 window 内环心位移上限，米
+  settle_turn_tol: 0.20        # 每个 window 内环法向转角上限，度
   # 指面与 C 环的接触摩擦。C 环靠 assisted attachment 承载，指面只需看起来夹住，
   # 但摩擦仍要配：沉降与释放两段是真接触。范围由 physical_contact.validate_rigid_friction
   # 限在 [0.01, 5.0]。

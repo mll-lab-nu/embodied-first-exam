@@ -190,6 +190,42 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
     )
 
 
+def settle_until_still(ring_scene, controller, *, window, max_steps, move_tol, turn_tol):
+    """Step until the C ring stops moving, and report what it took.
+
+    A fixed step count is the wrong instrument here. The ring's plane can turn about
+    the vertical through its contact with the bar, and gravity gives that degree of
+    freedom no restoring torque whatever -- so it does not oscillate and damp out on a
+    predictable schedule, it just keeps turning at whatever rate the spawn drop gave it
+    until friction alone stops it. Measured 2026-08-23 at the old 40 steps: the pose
+    read after settling was 49.5 mm and 25.8 deg away from where the ring actually was
+    by the time the hand got overhead, which is most of a ring radius.
+
+    Returns the steps used and the residual motion, so a settle that ran out of budget
+    says so instead of quietly handing back a moving part.
+    """
+
+    def pose():
+        frame = c_ring_frame(ring_scene)
+        return np.asarray(frame.center, dtype=float), np.asarray(frame.normal, dtype=float)
+
+    last_pos, last_normal = pose()
+    moved = turned = 0.0
+    used = 0
+    while used < int(max_steps):
+        controller.step(int(window))
+        used += int(window)
+        now_pos, now_normal = pose()
+        moved = float(np.linalg.norm(now_pos - last_pos))
+        turned = float(
+            np.rad2deg(np.arccos(np.clip(abs(float(now_normal @ last_normal)), 0.0, 1.0)))
+        )
+        last_pos, last_normal = now_pos, now_normal
+        if moved <= float(move_tol) and turned <= float(turn_tol):
+            break
+    return used, moved, turned
+
+
 def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> EpisodeResult:
     print_collision_il_contract(
         "unlink_c_ring_physical_extract_demo",
@@ -215,7 +251,28 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
     evaluator = UnlinkCRingPuzzleEvaluator.from_config(cfg.task)
     c_ring = ring_scene.c_ring_entity()
 
-    # Aim at where the ring actually settled, not at where it was spawned.
+    # Aim at where the ring actually settled, not at where it was spawned -- and wait
+    # for that to be true before reading it.
+    steps, moved, turned = settle_until_still(
+        ring_scene, controller,
+        window=int(physical.settle_window),
+        max_steps=int(physical.settle_max_steps),
+        move_tol=float(physical.settle_move_tol),
+        turn_tol=float(physical.settle_turn_tol),
+    )
+    if cfg.run.verbose:
+        print(
+            f"unlink_c_ring settle steps={steps} residual_move={moved * 1000:.2f}mm "
+            f"residual_turn={turned:.2f}deg",
+            flush=True,
+        )
+    if steps >= int(physical.settle_max_steps):
+        print(
+            f"[warn] the ring was still moving after {steps} settle steps "
+            f"({moved * 1000:.2f}mm, {turned:.2f}deg per window). The grasp pose is "
+            "read from a part that has not stopped; expect the hover re-aim to fight it.",
+            flush=True,
+        )
     settled = c_ring_frame(ring_scene)
     grasp_point = settled.point(
         np.deg2rad(float(spec.grasp_azimuth_deg)), geometry.c_ring.major_radius
