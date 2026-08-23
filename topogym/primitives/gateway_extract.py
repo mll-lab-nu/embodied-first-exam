@@ -131,6 +131,10 @@ class _Tracking:
     # worst overlap is 9 mm says nothing about which phase caused it, and the phase
     # that caused it is the whole diagnosis.
     watch: Any = None
+    # Worst distance between where the part actually was and where the waypoint said
+    # it should be. The hand's own tracking error does not answer the question this
+    # task cares about -- the part is what has to miss the other ring.
+    worst_part_drift: float = 0.0
 
 
 
@@ -510,7 +514,7 @@ class GatewayExtractPrimitive:
                     wrist_deg=float(np.rad2deg(_quat_angle(base_quat, aligned_quat))),
                 )
             self._move_part(
-                controller, turn_track, part_from=part_center, part_to=part_center,
+                controller, turn_track, part_entity=part, part_from=part_center, part_to=part_center,
                 quat_from=base_quat, quat_to=aligned_quat,
                 offset_in_hand=offset_in_hand, steps=align_steps,
             )
@@ -530,7 +534,8 @@ class GatewayExtractPrimitive:
         part_center = entity_pos(part)
 
         align_deg = float(align_probe()) if align_probe is not None else 0.0
-        self._log("turn", turn_track, align_deg=align_deg)
+        self._log("turn", turn_track, align_deg=align_deg,
+                  part_drift=turn_track.worst_part_drift)
         aligned_part_pos = entity_pos(part)
         aligned = skip_align or align_deg <= float(self.max_align_deg)
         self._log("align", track, align_deg=align_deg)
@@ -615,7 +620,7 @@ class GatewayExtractPrimitive:
         controller.step(max(0, int(self.motion_settle_steps)))
 
     def _move_part(self, controller, track, *, part_from, part_to, quat_from, quat_to,
-                   offset_in_hand, steps=None) -> None:
+                   offset_in_hand, steps=None, part_entity=None) -> None:
         """Straight line for the PART, with the hand solved for at every waypoint.
 
         During the turn ``part_from == part_to``: the part's centre is held while the
@@ -633,6 +638,11 @@ class GatewayExtractPrimitive:
             quat = slerp(quat_from, quat_to, alpha)
             part = (1.0 - alpha) * part_from + alpha * part_to
             self._command(controller, track, part - _matrix(quat) @ offset_in_hand, quat)
+            if part_entity is not None:
+                track.worst_part_drift = max(
+                    track.worst_part_drift,
+                    float(np.linalg.norm(entity_pos(part_entity) - part)),
+                )
         controller.step(max(0, int(self.motion_settle_steps)))
 
     def _command(self, controller, track, hand_target, quat) -> None:
