@@ -426,10 +426,14 @@ class GatewayExtractPrimitive:
         controller.open_gripper(int(self.gripper_steps))
         phases.append("recovery_open")
         hand_now = np.asarray(controller.hand_pos(), dtype=float)
+        # Back off along the tool axis the hand is ACTUALLY holding, not the default
+        # one. This primitive's approach is face-on and horizontal, so retreating
+        # along the default (fingers-down) axis would drive the hand into the table.
+        held_quat = _as_numpy(controller.hand_quat()).reshape(4)
         self._move_hand(
             controller, track,
-            hand_now - tool_offset(controller.default_ee_quat, float(self.retreat_clearance)),
-            quat=_as_numpy(controller.hand_quat()).reshape(4),
+            hand_now - tool_offset(held_quat, float(self.retreat_clearance)),
+            quat=held_quat,
         )
         phases.append("recovery_retreat")
         zero = np.zeros(3)
