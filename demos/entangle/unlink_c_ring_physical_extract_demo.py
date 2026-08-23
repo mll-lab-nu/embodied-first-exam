@@ -36,7 +36,7 @@ from contextlib import contextmanager
 import genesis as gs
 import hydra
 import numpy as np
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
@@ -44,9 +44,9 @@ from topogym.primitives import (
     AttachmentManager,
     GatewayExtractPrimitive,
     configure_gripper_contact_friction,
+    ee_quat_for_yaw,
     entity_pos,
     entity_quat,
-    face_on_quat,
     print_collision_il_contract,
 )
 from topogym.supervision import stop_before_physics
@@ -123,22 +123,6 @@ def _hud(ring_scene, evaluator, status):
     return render_lines
 
 
-def approach_axis(ring_scene, mount_pos) -> np.ndarray:
-    """Which way the fingers point: along the C's normal, away from the robot.
-
-    The C's normal has two signs and only one of them has the arm reaching outward
-    rather than through its own base, so the sign is chosen against the robot mount
-    instead of being written into config where a change of `hang_yaw_deg` would
-    silently invert it.
-    """
-
-    geometry = ring_scene.geometry
-    axis = np.asarray(geometry.tube_direction, dtype=float)
-    mount = np.asarray(OmegaConf.to_container(mount_pos), dtype=float)[:2]
-    outward = geometry.c_rest_frame.center[:2] - mount
-    return axis if float(np.dot(axis[:2], outward)) >= 0.0 else -axis
-
-
 def configure_contacts(cfg, ring_scene, controller) -> None:
     """Apply the configured friction to the C ring and the fingers.
 
@@ -206,13 +190,13 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         np.deg2rad(float(spec.grasp_azimuth_deg)), geometry.c_ring.major_radius
     )[0]
     axis, rotation_deg = geometry.align_rotation()
-    # Come in face-on to the C, tool axis along the C's own normal, pointed away from
-    # the robot. That makes the extraction's turn a roll about the tool axis -- one
-    # wrist joint -- instead of tipping the whole hand over, which is the single
-    # biggest thing the flat-ring layout bought.
-    tool_axis = approach_axis(ring_scene, cfg.common.robot_setup.mount.pos)
-    ee_quat = face_on_quat(
-        controller.default_ee_quat, tool_axis, float(spec.grasp_roll_deg)
+    # Come straight down. Aligning the tool axis with the C's normal instead would
+    # make the turn a pure tool-axis roll and cost the wrist almost nothing, but it
+    # means reaching out sideways with a horizontal hand, which reads badly. The turn
+    # is only 45 degrees here (it equals the opening's azimuth), so a vertical
+    # approach ending 45 degrees tipped stays in comfortable wrist territory.
+    ee_quat = ee_quat_for_yaw(
+        controller.default_ee_quat, np.deg2rad(float(spec.grasp_roll_deg))
     )
 
     primitive = build_primitive(cfg)

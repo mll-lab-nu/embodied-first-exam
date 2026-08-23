@@ -79,17 +79,32 @@ def mirror_gateway_phases(geometry):
     would read as an anti-shortcut failure when it is really a second correct answer.
 
     It goes STRAIGHT UP and keeps going, with no carry phase, because that is the
-    shape of this escape: 18 mm unlinks the pair, but the C is then straddling the
-    ring's own plane, and carrying it sideways from there drags it across the rim.
-    Clearing the ring means rising past it first. The task's own oracle takes the
-    other gateway for exactly this reason -- dropping out leaves the C below
-    everything, free to be carried off in one move.
+    shape of this escape: the C ends up straddling the ring's own plane, and carrying
+    it sideways from there drags it across the rim. Clearing the ring means rising
+    past it first.
+
+    **The two gateways are not equally cheap.** Dropping out moves the bar from the
+    hole's near rim to just past the C's outside -- twice the two tube radii, 18 mm.
+    Lifting out has to carry the bar the whole way across the hole first, so the
+    travel is the hole's radius plus the C's outer radius, an order of magnitude more.
+    That is why the oracle takes the dropping gateway, and why the lifting one is
+    barely a shortcut worth worrying about.
     """
 
-    axis, turn = geometry.align_rotation()
+    axis, _ = geometry.align_rotation()
+    # To the BOTTOM (azimuth 180), not merely the negative of the aligning turn --
+    # that only swings the opening a quarter turn past the bar and leaves it on the
+    # side, which is no gateway at all.
+    turn = ((180.0 - geometry.c_ring.gap_azimuth_deg) + 180.0) % 360.0 - 180.0
+    lift = (
+        geometry.hang_offset
+        + geometry.c_ring.outer_radius
+        + geometry.fixed.tube_radius
+        + 0.010
+    )
     return (
-        ("rotate", (turn, tuple(axis))),
-        ("translate", (0.0, 0.0, PROBE_TRAVEL)),
+        ("rotate", (-turn, tuple(axis))),
+        ("translate", (0.0, 0.0, lift)),
     )
 
 

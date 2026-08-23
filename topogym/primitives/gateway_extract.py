@@ -77,45 +77,6 @@ def _quat_angle(a, b) -> float:
     return float(2.0 * np.arccos(np.clip(dot, -1.0, 1.0)))
 
 
-def rotation_between(source, target) -> np.ndarray:
-    """Shortest rotation carrying ``source`` onto ``target``, as (w, x, y, z)."""
-
-    a = np.asarray(source, dtype=float) / np.linalg.norm(source)
-    b = np.asarray(target, dtype=float) / np.linalg.norm(target)
-    dot = float(np.clip(np.dot(a, b), -1.0, 1.0))
-    if dot > 1.0 - 1e-12:
-        return np.array([1.0, 0.0, 0.0, 0.0])
-    if dot < -1.0 + 1e-12:
-        # Antiparallel: any perpendicular axis is a valid half turn.
-        axis = np.cross(a, [1.0, 0.0, 0.0])
-        if float(np.linalg.norm(axis)) < 1e-9:
-            axis = np.cross(a, [0.0, 1.0, 0.0])
-        return quat_about_axis(axis, np.pi)
-    return quat_about_axis(np.cross(a, b), float(np.arccos(dot)))
-
-
-def face_on_quat(default_ee_quat, tool_axis, roll_deg: float = 0.0) -> np.ndarray:
-    """Wrist pose whose tool axis points along ``tool_axis``, plus a roll about it.
-
-    Built by turning the default pose rather than written out, so it follows the
-    layout: for docx 3.4 the tool axis is the C ring's own normal, which is what makes
-    the extraction's turn a roll about the tool axis instead of a reorientation of the
-    whole hand.
-
-    ``roll_deg`` spins the hand about that axis. Which roll puts the finger pads
-    across the tube rather than along it depends on the Franka hand's own geometry,
-    not on anything derivable from the scene, so it is left for a caller to set from
-    what the viewer shows.
-    """
-
-    base = np.asarray(default_ee_quat, dtype=float).reshape(4)
-    current = _matrix(base) @ np.array([0.0, 0.0, 1.0])
-    quat = quat_mul(rotation_between(current, tool_axis), base)
-    if roll_deg:
-        quat = quat_mul(quat_about_axis(tool_axis, np.deg2rad(float(roll_deg))), quat)
-    return quat / np.linalg.norm(quat)
-
-
 def tool_offset(quat, distance: float) -> np.ndarray:
     """Where the fingertip pads sit relative to the hand origin, at this orientation."""
 

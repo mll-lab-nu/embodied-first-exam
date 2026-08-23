@@ -1,0 +1,12 @@
+# tests/pleat_settle_spike.py 的主配置。
+#
+# env 用 world_tabletop_v1：这一项量的就是布带在那张桌面上、按那组 sim 参数
+# （dt=0.01 / substeps=4）的行为。换一组 sim 参数量出来的数不能用来决定
+# cloth_unpleat 的褶皱几何。
+
+defaults:
+  - config
+  - override task_configs@task: cloth_unpleat_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_v1
+  - override run_configs@run: pleat_settle_spike
+  - _self_

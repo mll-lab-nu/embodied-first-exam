@@ -396,3 +396,53 @@ python -B -m tests.pbd_cloth_spike -m run.bench_steps=100 task.cloth.particle_si
 # 7) **单独跑**: 闭合手指下降到布面。第一轮已完成 (survived=True), 不用重跑。
 #    它不进 all —— 万一 core dump 会把整个进程带走, 排在它后面的测试全废。
 python -B -m tests.pbd_cloth_spike run.test=contact run.verbose=true 2>&1 | tee runs/cloth_contact.log
+
+# --- cloth_unpleat (docx 1.2 展开单个褶皱, 2026-08-22 新建) ---
+# 建设顺序是有意的: 先证明褶皱能立住, 再跑动作。褶皱是画进控制网格的, 不是折出来的,
+# 所以「它到底站不站得住」只有仿真能回答, 而层数与材料守恒两条判据都建立在
+# 顶点顺序保得住之上。第 0 步不过就别往下跑。
+
+# 0) 方案闸口: 保序 + 褶皱静置。看三样 ——
+#    `order_preserved=yes`(建场那行) / `verdict=stands` / `max_speed` 有没有炸。
+#    verdict=collapsed 就加大 pleat.crest_height; verdict=sprang_open 说明 PBD 的
+#    弯曲约束把平面当静止角, 预置褶皱这条路走不通, 停下来汇报。
+mkdir -p runs/videos/cloth_unpleat
+python -B -m tests.pleat_settle_spike run.verbose=true 2>&1 | tee runs/videos/cloth_unpleat/pleat_settle.log
+# 想看着它落: 三视角录制同一次静置
+python -B -m tests.pleat_settle_spike recording=hq recording.path=runs/videos/cloth_unpleat/settle.mp4 recording.camera=[oblique,front] recording.res=[960,960] recording.every_n_steps=3 2>&1 | tee runs/videos/cloth_unpleat/settle_record.log
+
+# 1) 免 GPU 判据单测 (改阈值之后必跑, 秒级)
+python -B tests/check_cloth_unpleat_geometry.py 2>&1 | tee runs/check_cloth_unpleat.log
+
+# 2) **三视角录制的任务 demo**。落三个文件:
+#    unpleat_oblique.mp4 / unpleat_front.mp4 / unpleat_wrist.mp4
+python -B -m demos.deformation.cloth_unpleat_physical_demo \
+  recording=hq \
+  recording.path=runs/videos/cloth_unpleat/unpleat.mp4 \
+  recording.camera=[oblique,front,wrist] \
+  recording.res=[960,960] \
+  recording.every_n_steps=3 \
+  run.verbose=true \
+  2>&1 | tee runs/videos/cloth_unpleat/unpleat.log
+
+# 3) 捷径对照 (标定阈值用)。press 应当 unpleated=false, 且失败的是
+#    single_layer_frac 与 spread_ratio 两条, 不是 max_height。
+python -B -m demos.deformation.cloth_unpleat_physical_demo \
+  run.motion=press \
+  recording=hq \
+  recording.path=runs/videos/cloth_unpleat/press.mp4 \
+  recording.camera=[oblique,front,wrist] \
+  recording.res=[960,960] \
+  recording.every_n_steps=3 \
+  run.verbose=true \
+  2>&1 | tee runs/videos/cloth_unpleat/press.log
+# 拉过头: 三条判据都会过, 看的是 band_shift_mm 有多大 (它是唯一分得出来的读数)
+python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=overpull run.verbose=true 2>&1 | tee runs/videos/cloth_unpleat/overpull.log
+
+# 4) 只验管线不跑物理 (配置/建场/原语构造走一遍就退出)
+python -B -m demos.deformation.cloth_unpleat_physical_demo run.build_only=true 2>&1 | tee runs/videos/cloth_unpleat/buildonly.log
+
+# --- cloth_fold 改名回归 (2026-08-22: ClothCornerFoldPrimitive ->
+#     ClothLinkAttachDragPrimitive, 模块改为 primitives/cloth_link_attach_drag.py) ---
+# 读数应与改名前一致: folded=true, diverged=false, 平均误差约 2.9mm, 双层率约 0.85。
+python -B -m demos.deformation.cloth_fold_physical_demo run.verbose=true 2>&1 | tee runs/cloth_fold_after_rename.log

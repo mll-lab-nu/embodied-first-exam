@@ -10,11 +10,7 @@ from .attachment import (
 )
 from .gated_insert import GatedInsertPrimitive, GatedInsertResult
 from .axial_insert import AxialInsertPrimitive, AxialInsertResult
-from .gateway_extract import (
-    GatewayExtractPrimitive,
-    GatewayExtractResult,
-    face_on_quat,
-)
+from .gateway_extract import GatewayExtractPrimitive, GatewayExtractResult
 from .connector_latch import ConnectorLatch
 from .physical_contact import (
     configure_finger_contact_friction,
@@ -54,7 +50,6 @@ from .cloth_link_attach_drag import ClothLinkAttachDragPrimitive, ClothAttachDra
 __all__ = [
     "GatewayExtractPrimitive",
     "GatewayExtractResult",
-    "face_on_quat",
     "ClothLinkAttachDragPrimitive",
     "ClothAttachDragResult",
     "AttachmentManager",

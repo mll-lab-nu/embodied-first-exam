@@ -24,6 +24,13 @@ from .deformation.cloth_fold import (
     remesh_report,
     settle_cloth,
 )
+from .deformation.cloth_unpleat import (
+    ClothUnpleatLayout,
+    ClothUnpleatScene,
+    ClothUnpleatSceneBuilder,
+    band_particles,
+    settle_band,
+)
 from .routing.bar_through_hole import (
     BarThroughHoleLayout,
     BarThroughHoleScene,

@@ -57,6 +57,10 @@ class ClothFoldWatch:
     #: stretches is most visible and where the end-state reading cannot see it
     #: (by then the crease dominates the maximum).
     rest_nodes: object = None
+    #: Neighbour index pairs for the stretch reading. ``None`` derives them from
+    #: the particle count, which only works on a square sheet; a band has to hand
+    #: its own in (`cloth_unpleat_verifier.rect_grid_neighbours`).
+    pairs: object = None
 
     _previous: np.ndarray = field(init=False)
     worst_step_disp: float = field(default=0.0, init=False)
@@ -73,7 +77,11 @@ class ClothFoldWatch:
         # the live state and make every step's displacement read zero.
         self._previous = np.array(probe_particles(self.cloth), copy=True)
         if self.rest_nodes is not None:
-            self._pairs = grid_neighbours(len(np.asarray(self.rest_nodes)))
+            self._pairs = (
+                grid_neighbours(len(np.asarray(self.rest_nodes)))
+                if self.pairs is None
+                else self.pairs
+            )
             self.worst_stretch_mean = 0.0
             self.worst_stretch_max = 0.0
 
