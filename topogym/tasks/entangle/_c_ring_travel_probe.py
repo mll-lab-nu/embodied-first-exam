@@ -106,7 +106,7 @@ def probe_directions(geometry) -> tuple[tuple[str, np.ndarray], ...]:
     """The six directions, named as the offline gate names them.
 
     Built from the layout rather than from world axes so they follow
-    ``stand.yaw_deg`` the way everything else in this task does.
+    ``stand.hang_yaw_deg`` the way everything else in this task does.
     """
 
     along = np.asarray(geometry.tube_direction, dtype=float)

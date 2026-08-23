@@ -368,8 +368,8 @@ def bisector_projection(normal_a, normal_b) -> np.ndarray:
     the condition a crossing count needs to be defined at all.
 
     Derived rather than written into config because the whole scene turns with
-    ``stand.yaw_deg``: a matrix that was correct at yaw 0 read ``Lk = -2`` at yaw 90,
-    where it happened to look straight down the C's own plane.
+    ``stand.hang_yaw_deg``: a matrix that was correct at one hang bearing read
+    ``Lk = -2`` at another, where it happened to look straight down the C's own plane.
     """
 
     normal_a = _unit(np.asarray(normal_a, dtype=float).reshape(3))

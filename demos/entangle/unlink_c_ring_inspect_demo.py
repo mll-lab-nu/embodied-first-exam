@@ -188,7 +188,7 @@ def main(cfg: DictConfig) -> None:
         f"unlink_c_ring spawn Lk={spawn['linking']:+.1f} "
         f"opening_to_bar={spawn['opening_to_bar_deg']:.2f}deg "
         f"projection_viewer=({viewer[0]:+.3f},{viewer[1]:+.3f},{viewer[2]:+.3f}) "
-        f"stand_yaw={float(cfg.task.stand.yaw_deg):.1f}deg",
+        f"hang_yaw={float(cfg.task.stand.hang_yaw_deg):.1f}deg",
         flush=True,
     )
 

@@ -4,7 +4,7 @@
 #   task.c_ring.gap_deg=30            （开口变窄，预期 gateway 也过不去）
 #   task.c_ring.tab.length=0.010      （凸台变短，预期 hold 阶段开口向管身漂移）
 #   task.fixed_ring.segment_deg=15    （分段变粗，预期弦近似误差从 0.11mm 升到 0.26mm）
-#   task.stand.yaw_deg=45             （整组绕 z 转，几何判据不变，只改观感与取景）
+#   task.stand.hang_yaw_deg=180       （C 环改挂在别的环缘，几何判据不变，只改观感与取景）
 # 改了几何先跑 `python tests/check_c_ring_clearance.py`，它不需要 GPU。
 
 defaults:

@@ -16,6 +16,7 @@ export LD_LIBRARY_PATH=/usr/lib/wsl/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 python -m prototypes.swap_tabletop_baseline_demo --viewer --keep-open --verbose
 python -m prototypes.onestroke_tabletop_baseline_demo --viewer --keep-open --verbose
 python -m prototypes.maze_wall_removal_tabletop_baseline_demo --seed 11 --viewer --keep-open --verbose
+
 # Cable Routing defaults to a lighter PBD mesh for quick layout inspection.
 # Add --full-pbd when checking the production rope discretization.
 python -m prototypes.cable_routing_tabletop_baseline_demo --route-mode initial --viewer --keep-open --verbose

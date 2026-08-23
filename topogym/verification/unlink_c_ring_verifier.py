@@ -14,8 +14,8 @@ very segment the closed ring's body has to cross, so "the reading changed" and "
 body went through the opening" are the same event.
 
 **The projection is derived from the layout, not configured.** Both rings turn with
-`stand.yaw_deg`, and a matrix that was right at one yaw looked straight down the C's
-own plane at another and read `Lk = -2`. `_c_ring_geometry.bisector_projection` takes
+`stand.hang_yaw_deg`, and a matrix that was right at one bearing looked straight down
+the C's own plane at another and read `Lk = -2`. `_c_ring_geometry.bisector_projection` takes
 the bisector of the two ring normals, which puts both rings at 45 degrees. The judge
 therefore reads `|Lk|`, not `Lk`: the sign follows the handedness of that basis and
 flipped from -1 to +1 when the stand was turned, with no change to the interlock.

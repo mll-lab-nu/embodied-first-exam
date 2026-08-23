@@ -386,9 +386,10 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
     if result.worst_tilt_rad > np.deg2rad(5.0):
         print(
             f"[warn] the wrist lagged its commanded pose by up to "
-            f"{np.rad2deg(result.worst_tilt_rad):.1f} deg. The 90 degree reorientation "
-            "has no precedent in this repo and the IK reports nothing on its own; "
-            "pre-bias task.primitive.grasp_ee_quat by -45 deg to halve the travel.",
+            f"{np.rad2deg(result.worst_tilt_rad):.1f} deg. The turn is meant to be a "
+            "roll about the tool axis (joint 7), so a large lag means the approach "
+            "pose is off: check task.primitive.grasp_roll_deg and that the tool axis "
+            "really lines up with the C ring's normal.",
             flush=True,
         )
     if cfg.run.verbose:
