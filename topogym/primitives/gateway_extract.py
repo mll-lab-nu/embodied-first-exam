@@ -227,7 +227,7 @@ class GatewayExtractPrimitive:
         place_delta,
         ee_quat=None,
         align_probe: Callable[[], float] | None = None,
-        align_correction_fn: Callable[[], float] | None = None,
+        align_target_fn: Callable[[], Any] | None = None,
         attach_fn: Callable[[], Any] | None = None,
         release_fn: Callable[[], None] | None = None,
         skip_align: bool = False,
@@ -293,8 +293,26 @@ class GatewayExtractPrimitive:
                 hover_align_deg=hover_align_deg, grasp_align_deg=hover_align_deg,
             )
 
+        # Which phase tips the part out of its own plane, and by how much? The layout
+        # spawns the part unrotated with its normal ON the rotation axis (checked
+        # offline by `tests/check_c_ring_clearance.py`), so the part's live normal is
+        # just the current rotation applied to that axis. Sampled at hover, after the
+        # descent and after the close, because a reading taken only at the end cannot
+        # say which phase did it.
+        def drift() -> float:
+            return _quat_angle_between_axes(
+                _matrix(entity_quat(part)) @ np.asarray(rotation_axis, dtype=float),
+                rotation_axis,
+            )
+
+        self._log("pre_descend", track, align_deg=hover_align_deg, axis_drift=drift())
         self._move_hand(controller, track, hand_at_grasp, quat=base_quat)
         phases.append("descend")
+        self._log(
+            "post_descend", track,
+            align_deg=float(align_probe()) if align_probe is not None else 0.0,
+            axis_drift=drift(),
+        )
 
         # Weld BEFORE the fingers move, not after. A ring hanging on a bar is a free
         # pendulum with a swivel: the first pad to touch it shoves it away instead of
@@ -328,7 +346,8 @@ class GatewayExtractPrimitive:
             self.min_finger_qpos is None or finger_qpos >= float(self.min_finger_qpos)
         )
         self._log("grasp", track, finger_qpos=finger_qpos, pos_error=grasp_pos_error,
-                  align_deg=grasp_align_deg, disturbed=grasp_align_deg - hover_align_deg)
+                  align_deg=grasp_align_deg, disturbed=grasp_align_deg - hover_align_deg,
+                  axis_drift=drift())
         if not grasped:
             return self._abort(
                 controller, track, phases, release_fn,
@@ -351,35 +370,32 @@ class GatewayExtractPrimitive:
         align_steps = int(self.align_steps or self.steps_per_phase)
         turn_track = _Tracking()
         if self.rotate_with == "attachment" and attachment is not None:
-            # Closed loop, and iterated. Two things make a single open-loop turn wrong.
-            # The correction is however far the opening actually is from the bar right
-            # now, not the nominal turn -- closing the fingers shoves a free part by a
-            # degree or ten. And the axis has to be the part's LIVE normal: the same
-            # shove tips it off the layout's axis, and a roll about a stale axis lifts
-            # the opening out of the ring's plane instead of spinning it within the
-            # plane. Measured 2026-08-23 with the stale axis: one pass took 26.8 deg
-            # down to 15.0, and three passes made it WORSE at 20.5, which is the
-            # signature of turning about the wrong axis rather than of under-turning.
+            # Ramp to an ABSOLUTE pose, not an incremental roll, and iterate.
+            #
+            # A roll about the part's own normal cannot fix a part whose normal is
+            # wrong, and the descent tips this one badly: measured 2026-08-23, the
+            # ring reached the close with its normal 65 deg off the layout axis. Rolled
+            # about that axis the ring does not travel along the bar it hangs on, it
+            # sweeps through it -- which is what `min_gap_seen` was reporting as 5 mm
+            # of interpenetration. The target below puts the normal back on the layout
+            # axis and the opening on the bar in one motion, so the roll that follows
+            # is a roll along the bar.
+            #
+            # Iterated because the target is re-read each pass: it is measured against
+            # the part's live centre, and one ramp does not have to land it exactly.
             for attempt in range(max(1, int(self.align_passes))):
-                turn_axis = np.asarray(rotation_axis, dtype=float).reshape(3)
-                turn_deg = float(rotation_deg)
-                if align_correction_fn is not None:
-                    measured_axis, measured_deg = align_correction_fn()
-                    turn_axis = np.asarray(measured_axis, dtype=float).reshape(3)
-                    turn_deg = float(measured_deg)
-                # How far the live axis has drifted from the layout's. This is the
-                # reading that says whether the alignment has an out-of-plane floor
-                # it can never turn its way under.
-                axis_drift = _quat_angle_between_axes(turn_axis, rotation_axis)
-                self._log(
-                    "turn_pass", turn_track, attempt=attempt + 1,
-                    requested=turn_deg, axis_drift=axis_drift,
-                )
-                if abs(turn_deg) <= float(self.max_align_deg):
+                if align_target_fn is not None:
+                    target = np.asarray(align_target_fn(), dtype=float).reshape(4)
+                else:
+                    target = quat_mul(
+                        quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg))),
+                        entity_quat(part),
+                    )
+                residual = float(np.rad2deg(_quat_angle(entity_quat(part), target)))
+                self._log("turn_pass", turn_track, attempt=attempt + 1,
+                          residual=residual, axis_drift=drift())
+                if residual <= float(self.max_align_deg):
                     break
-                target = quat_mul(
-                    quat_about_axis(turn_axis, np.deg2rad(turn_deg)), entity_quat(part)
-                )
                 # ramp_to counts SYNC calls, and the manager syncs twice a step. Rather
                 # than trust that accounting, step until it says it is done: `ramping()`
                 # clears when `_advance_ramp` reaches the last step.

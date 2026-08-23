@@ -48,6 +48,7 @@ from topogym.primitives import (
     entity_pos,
     entity_quat,
     print_collision_il_contract,
+    quat_about_axis,
 )
 from topogym.supervision import stop_before_physics
 from topogym.tasks import UnlinkCRingSceneBuilder
@@ -263,35 +264,37 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 status["align_deg"] = reading
                 return reading
 
-            def align_correction():
-                """Live axis, and the signed turn about it that puts the opening on the bar.
+            def align_target():
+                """The absolute orientation the ring has to reach to clear the bar.
 
-                Measured, not nominal, and the axis is measured too. Closing the fingers
-                nudges a free ring -- 14 degrees on the 2026-08-22 run -- and that nudge
-                moves the ring's normal as well as its opening. Turning about the
-                layout's axis instead of this one tips the ring out of its own plane,
-                which the alignment reading can never recover from by turning further.
+                Not a correction to the ring's current pose. Its current pose is the
+                problem: the descent tips the ring off the plane it hangs in, and the
+                extraction needs it back on that plane -- rolling a tilted ring about
+                its own tilted normal drags it through the bar instead of along it.
+
+                So the target is built from the layout's plane and the ring's measured
+                centre: keep the normal where the layout puts it, and turn the opening
+                about that normal until it points at the bar. The ring spawns unrotated
+                so its spawn frame IS the identity pose, and the turn between the two
+                is the whole target.
                 """
 
-                frame = c_ring_frame(ring_scene)
-                normal = np.asarray(frame.normal, dtype=float).reshape(3)
+                spawn = geometry.c_spawn_frame
+                normal = np.asarray(spawn.normal, dtype=float).reshape(3)
                 opening = (
-                    frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0]
-                    - frame.center
+                    spawn.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0]
+                    - spawn.center
                 )
-                to_bar = geometry.tube_point - frame.center
-                # Project both into the ring's plane; the signed angle between them
-                # about the normal is exactly the in-plane correction.
+                to_bar = geometry.tube_point - c_ring_frame(ring_scene).center
                 opening -= float(np.dot(opening, normal)) * normal
                 to_bar -= float(np.dot(to_bar, normal)) * normal
-                return normal, float(
-                    np.rad2deg(
-                        np.arctan2(
-                            float(np.dot(np.cross(opening, to_bar), normal)),
-                            float(np.dot(opening, to_bar)),
-                        )
+                turn = float(
+                    np.arctan2(
+                        float(np.dot(np.cross(opening, to_bar), normal)),
+                        float(np.dot(opening, to_bar)),
                     )
                 )
+                return quat_about_axis(normal, turn)
 
             status["phase"] = "extract" if mode == "gateway" else "no_align"
             result = primitive.run(
@@ -307,7 +310,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 place_delta=(0.0, 0.0, -float(spec.place_drop)),
                 ee_quat=ee_quat,
                 align_probe=align_probe,
-                align_correction_fn=align_correction,
+                align_target_fn=align_target,
                 attach_fn=attach_ring,
                 release_fn=release_ring,
                 skip_align=(mode != "gateway"),
