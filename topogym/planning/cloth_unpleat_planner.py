@@ -94,11 +94,11 @@ def drag_waypoints(
         ]
 
     # `unfold` sweeps the crest round to flat. `overpull` runs that same sweep and
-    # then keeps going in a straight line along +x, which is what towing the band
-    # looks like: the material is already taut at the end of the arc, so anything
-    # past it pulls the whole band rather than opening anything. Continuing to
-    # ROTATE instead would drive the crest down through the table, which is a
-    # different and less interesting wrong answer.
+    # then keeps going in a straight line along the band's own axis, which is what
+    # towing the band looks like: the material is already taut at the end of the
+    # arc, so anything past it pulls the whole band rather than opening anything.
+    # Continuing to ROTATE instead would drive the crest down through the table,
+    # which is a different and less interesting wrong answer.
     #
     # The radius opens out over the sweep rather than being taut from step one.
     # An authored pleat sags before anything touches it, which leaves the crest

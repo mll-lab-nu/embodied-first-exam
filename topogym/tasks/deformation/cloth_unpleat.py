@@ -241,7 +241,7 @@ class ClothUnpleatLayout:
         return self.arm_length() * float(self.task_cfg.physical.arc_slack)
 
     def start_angle(self) -> float:
-        """Where the crest starts, radians from +x about the crease.
+        """Where the crest starts, radians about the crease, in the band's own plane.
 
         Taken from the crest's actual position rather than from the profile, so a
         crest that sagged during the settle is swept from where it IS. The two

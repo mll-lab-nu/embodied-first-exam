@@ -470,10 +470,11 @@ def main(argv=None) -> int:
         ends_flat,
         f"z={float(unfold_wp[-1].position[2]) * 1e3:.2f}mm",
     )
+    axis = layout.material_axis
     radii = [
         float(
             np.hypot(
-                float(w.position[0]) - crease[0],
+                float(w.position[axis]) - crease[axis],
                 float(w.position[2]) - layout.rest_z(),
             )
         )
@@ -499,18 +500,23 @@ def main(argv=None) -> int:
     press_wp = drag_waypoints(layout, motion="press")
     crest = layout.crest_point()
     check(
-        "press 只往下走、x 不动",
-        all(abs(float(w.position[0]) - crest[0]) < 1e-12 for w in press_wp)
+        "press 只往下走、水平位置不动",
+        all(
+            abs(float(w.position[i]) - crest[i]) < 1e-12
+            for w in press_wp
+            for i in (0, 1)
+        )
         and float(press_wp[-1].position[2]) < float(press_wp[0].position[2]),
-        f"x={crest[0]:+.4f} z {float(press_wp[0].position[2]) * 1e3:.1f}"
+        f"({crest[0]:+.4f},{crest[1]:+.4f}) z "
+        f"{float(press_wp[0].position[2]) * 1e3:.1f}"
         f"→{float(press_wp[-1].position[2]) * 1e3:.1f}mm",
     )
     over_wp = drag_waypoints(layout, motion="overpull", overpull_scale=1.6)
     check(
         "overpull 越过平铺位置继续走",
-        float(over_wp[-1].position[0]) > float(unfold_wp[-1].position[0]) + 0.005,
-        f"overpull x={float(over_wp[-1].position[0]):+.4f} vs "
-        f"unfold x={float(unfold_wp[-1].position[0]):+.4f}",
+        float(over_wp[-1].position[axis]) > float(unfold_wp[-1].position[axis]) + 0.005,
+        f"overpull {'xy'[axis]}={float(over_wp[-1].position[axis]):+.4f} vs "
+        f"unfold {'xy'[axis]}={float(unfold_wp[-1].position[axis]):+.4f}",
     )
     steps = layout.drag_steps()
     check(
