@@ -126,6 +126,13 @@ class _Tracking:
     worst_pose_error: float = 0.0
     worst_tilt_rad: float = 0.0
 
+    # Optional callback returning extra readings to print on every phase line. Used to
+    # carry the live ring-to-ring clearance in from the demo: knowing the episode's
+    # worst overlap is 9 mm says nothing about which phase caused it, and the phase
+    # that caused it is the whole diagnosis.
+    watch: Any = None
+
+
 
 @dataclass(frozen=True)
 class GatewayExtractResult:
@@ -235,6 +242,7 @@ class GatewayExtractPrimitive:
         align_probe: Callable[[], float] | None = None,
         align_target_fn: Callable[[], Any] | None = None,
         regrasp_fn: Callable[[], Any] | None = None,
+        watch_fn: Callable[[], Any] | None = None,
         attach_fn: Callable[[], Any] | None = None,
         release_fn: Callable[[], None] | None = None,
         skip_align: bool = False,
@@ -269,7 +277,7 @@ class GatewayExtractPrimitive:
         hand_approach = hand_at_grasp - tool_offset(base_quat, float(self.approach_clearance))
 
         phases: list[str] = []
-        track = _Tracking()
+        track = _Tracking(watch=watch_fn)
         initial_part_pos = entity_pos(part)
 
         controller.open_gripper(int(self.gripper_steps))
@@ -448,7 +456,7 @@ class GatewayExtractPrimitive:
         part_center = entity_pos(part)
 
         align_steps = int(self.align_steps or self.steps_per_phase)
-        turn_track = _Tracking()
+        turn_track = _Tracking(watch=watch_fn)
         if self.rotate_with == "attachment" and attachment is not None:
             # Ramp to an ABSOLUTE pose, not an incremental roll, and iterate.
             #
@@ -691,6 +699,8 @@ class GatewayExtractPrimitive:
         if not self.verbose:
             return
         parts = []
+        if track.watch is not None:
+            values = {**values, **dict(track.watch())}
         for key, value in values.items():
             rendered = (
                 np.array2string(np.round(value, 4))

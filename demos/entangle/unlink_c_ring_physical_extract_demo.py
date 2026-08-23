@@ -81,13 +81,19 @@ def watch_surface_gap(ring_scene, status):
     fixed_axes = geometry.fixed_axes()
     scene = ring_scene.scene
     original_step = scene.step
-    seen = {"min_gap": float("inf")}
+    # The phase the minimum happened in is recorded next to it. "The chains overlapped
+    # by 9 mm somewhere in the episode" does not say whether the trajectory is wrong or
+    # the grasp is: the same number came out of the descent when the pads were shoving
+    # the ring, and out of the carry when the alignment was off. Only the phase
+    # separates them, and `status["phase"]` is already being kept for the HUD.
+    seen = {"min_gap": float("inf"), "min_gap_phase": "before_start"}
 
     def wrapped_step(*args, **kwargs):
         result = original_step(*args, **kwargs)
         gap = ring_geometry.surface_gap(fixed_axes, geometry.c_axes(c_ring_frame(ring_scene)))
         if gap < seen["min_gap"]:
             seen["min_gap"] = gap
+            seen["min_gap_phase"] = str(status.get("phase", "unknown"))
             status["min_gap"] = gap
         return result
 
@@ -401,6 +407,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 align_probe=align_probe,
                 align_target_fn=align_target,
                 regrasp_fn=regrasp_pose,
+                watch_fn=lambda: {"min_gap": gap_watch["min_gap"]},
                 attach_fn=attach_ring,
                 release_fn=release_ring,
                 skip_align=(mode != "gateway"),
@@ -503,7 +510,8 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "unlink_c_ring_physical_extract_demo result "
         f"mode={mode} success={episode_result.success} "
         f"Lk={state.linking:+.1f} unlinked={state.unlinked} "
-        f"passed_through={state.passed_through} min_gap_seen={gap_watch['min_gap'] * 1000:+.2f}mm "
+        f"passed_through={state.passed_through} "
+        f"min_gap_phase={gap_watch['min_gap_phase']} min_gap_seen={gap_watch['min_gap'] * 1000:+.2f}mm "
         f"travel_free={state.travel_free} min_peak_travel={travel.min_peak_travel * 1000:.1f}mm "
         f"blocked={','.join(travel.blocked) or 'none'} "
         f"release_stable={release_stable} settle_drift={drift:.5f} "
