@@ -252,11 +252,40 @@ class ClothUnpleatLayout:
         value = self.task_cfg.grasp.attach_z_band
         return None if value is None else float(value)
 
-    def grasp_yaw(self) -> float:
-        """Fingers across the band, facing the direction the end travels."""
+    def grasp_yaw(self) -> float | None:
+        """Which way the wrist faces, radians about world Z, or None to leave it.
 
+        A knob rather than a derivation, because which setting the ARM can
+        actually hold is a measured question here. `cloth_fold` faces the tool
+        along the direction of travel for two reasons that agreed there -- it is
+        how a hand pinches, and it keeps the last joint out of a large swing --
+        but this task pulls at table height where the arm has much less room, and
+        2026-08-23 a pull commanded 64 mm delivered 33 mm while holding the
+        commanded orientation to 0.8 degrees. Holding an orientation the arm can
+        barely reach and paying for it in position is exactly what `continuous_ik`
+        does silently, so the setting has to be testable without editing code.
+
+        ``across``      tool faces along the pull. Fingers lie across the band,
+                        which is how a hand takes a hem.
+        ``along``       turned a quarter turn from that.
+        ``arm_default`` leaves the arm's own orientation alone -- the cheapest
+                        pose for the wrist, and the one to fall back to if the
+                        other two cannot be held.
+        """
+
+        mode = str(self.task_cfg.grasp.finger_axis)
+        if mode == "arm_default":
+            return None
         direction = self.pull_direction()
-        return float(np.arctan2(direction[1], direction[0]))
+        yaw = float(np.arctan2(direction[1], direction[0]))
+        if mode == "across":
+            return yaw
+        if mode == "along":
+            return yaw + 0.5 * float(np.pi)
+        raise ValueError(
+            f"grasp.finger_axis must be 'across', 'along' or 'arm_default', "
+            f"got {mode!r}."
+        )
 
     def summary(self) -> str:
         marks = self.landmarks()

@@ -266,11 +266,26 @@ class ClothLinkAttachDragPrimitive:
             worst_tilt = max(worst_tilt, tilt)
             self._notify(on_phase, waypoint.label)
             if self.verbose:
+                # The commanded and achieved HAND poses, per axis, not just the
+                # scalar gap. `continuous_ik` reports nothing when it falls
+                # short, so a run that cannot reach and a run whose trajectory
+                # was wrong look identical in the material readings -- and the
+                # scalar `arm_pos_err_mm` still does not say WHICH way the arm
+                # fell short. Measured 2026-08-23: a pull commanded 64 mm along y
+                # delivered 33 mm with the orientation held to 0.8 degrees, which
+                # is the signature of the solver trading position away to keep
+                # the wrist angle. Per-axis is what tells that apart from simply
+                # being outside the workspace.
+                reached = np.asarray(controller.hand_pos(), dtype=float)
+                gap = reached - commanded
                 print(
                     f"cloth_fold {waypoint.label} "
                     f"target=({target[0]:+.3f},{target[1]:+.3f},{target[2]:+.3f}) "
                     f"follow_mm={follow * 1e3:.1f} "
                     f"arm_pos_err_mm={pose * 1e3:.1f} "
+                    f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
+                    f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
+                    f"want=({commanded[0]:+.3f},{commanded[1]:+.3f},{commanded[2]:+.3f}) "
                     f"arm_tilt_deg={np.degrees(tilt):.1f}",
                     flush=True,
                 )

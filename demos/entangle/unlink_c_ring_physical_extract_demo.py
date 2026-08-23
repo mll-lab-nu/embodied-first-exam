@@ -375,6 +375,8 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "grasp_align_deg": float(result.grasp_align_deg),
         "grasp_pos_error": float(result.grasp_pos_error),
         "align_deg": float(result.align_deg),
+        "align_pose_error": float(result.align_pose_error),
+        "align_tilt_deg": float(np.rad2deg(result.align_tilt_rad)),
         "worst_pose_error": float(result.worst_pose_error),
         "worst_tilt_deg": float(np.rad2deg(result.worst_tilt_rad)),
         "oracle_mode": mode,
@@ -412,8 +414,10 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         f"hover_err={result.hover_xy_error:.4f} finger_qpos={result.finger_qpos:.4f} "
         f"align_hover={result.hover_align_deg:.1f} align_grasp={result.grasp_align_deg:.1f} "
         f"align_turned={result.align_deg:.1f}deg "
-        f"pose_err={result.worst_pose_error:.4f} "
-        f"wrist_tilt={np.rad2deg(result.worst_tilt_rad):.2f}deg "
+        f"turn_pose_err={result.align_pose_error:.4f} "
+        f"turn_tilt={np.rad2deg(result.align_tilt_rad):.2f}deg "
+        f"run_pose_err={result.worst_pose_error:.4f} "
+        f"run_tilt={np.rad2deg(result.worst_tilt_rad):.2f}deg "
         f"failure_reason={episode_result.failure_reason} "
         f"phases={len(result.completed_phases)}/{len(GatewayExtractPrimitive.NOMINAL_PHASES)}",
         flush=True,
@@ -430,13 +434,14 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
             "overpowered the interlock. Lower task.travel_test.force_scale.",
             flush=True,
         )
-    if str(cfg.task.primitive.rotate_with) == "wrist" and result.worst_tilt_rad > np.deg2rad(5.0):
+    if str(cfg.task.primitive.rotate_with) == "wrist" and result.align_tilt_rad > np.deg2rad(5.0):
         print(
-            f"[warn] the wrist lagged its commanded pose by up to "
-            f"{np.rad2deg(result.worst_tilt_rad):.1f} deg, so the arm did not actually "
-            "perform the turn. Either reduce it (task.c_ring.gap_azimuth_deg is the "
-            "turn angle) or set task.primitive.rotate_with=attachment and accept that "
-            "the action stream no longer explains the rotation.",
+            f"[warn] during the turn the wrist lagged its commanded orientation by up "
+            f"to {np.rad2deg(result.align_tilt_rad):.1f} deg, so the arm did not fully "
+            "perform it. Either shrink the turn (task.c_ring.gap_azimuth_deg IS the "
+            "turn angle) or set task.primitive.rotate_with=attachment -- which works, "
+            "but hands the rotation to the attachment, so the action stream no longer "
+            "explains it.",
             flush=True,
         )
     if abs(result.grasp_align_deg - result.hover_align_deg) > 10.0:

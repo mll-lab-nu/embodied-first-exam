@@ -254,7 +254,15 @@ def main(cfg: DictConfig) -> None:
                 band.cloth,
                 grasp_point=layout.grasp_point(),
                 waypoints=waypoints,
-                ee_quat=ee_quat_for_yaw(controller.default_ee_quat, layout.grasp_yaw()),
+                # None leaves the arm's own orientation alone, which is the
+                # `arm_default` setting of `grasp.finger_axis` -- the fallback
+                # when the wrist cannot hold a commanded angle out at the pull's
+                # far end without giving up position for it.
+                ee_quat=(
+                    None
+                    if layout.grasp_yaw() is None
+                    else ee_quat_for_yaw(controller.default_ee_quat, layout.grasp_yaw())
+                ),
                 particles_fn=lambda: band_particles(band),
                 on_phase=lambda name: setattr(watch, "phase", name),
             )

@@ -54,7 +54,7 @@ from typing import Any, Callable, ClassVar
 import numpy as np
 
 from .attachment import slerp
-from .physical_contact import entity_pos, quat_about_axis, quat_mul
+from .physical_contact import entity_pos, entity_quat, quat_about_axis, quat_mul
 
 # Distance from the `hand` link origin to the fingertip pad centre, along the tool
 # axis. Vertical only while the fingers point down, which is why it is applied
@@ -100,6 +100,12 @@ class _Tracking:
     Carried as an argument rather than kept on the primitive because the primitive
     is frozen, like every other one in this package, and because making it explicit
     keeps two concurrent runs from sharing it.
+
+    The TURN gets its own instance. A single worst-over-the-run figure is dominated
+    by the long free-space flight from the home pose -- measured 68.6 mm and 28.6
+    degrees before the hand had even reached the part on 2026-08-23 -- and reading
+    that as evidence about the turn is how a wrist that was merely lagging on
+    approach gets blamed for a turn it may well be able to make.
     """
 
     worst_pose_error: float = 0.0
@@ -129,6 +135,9 @@ class GatewayExtractResult:
     hover_align_deg: float
     grasp_align_deg: float
     align_deg: float
+    # Tracking during the turn alone, apart from the run-wide worst below.
+    align_pose_error: float
+    align_tilt_rad: float
     worst_pose_error: float
     worst_tilt_rad: float
     completed_phases: tuple[str, ...]
@@ -309,6 +318,7 @@ class GatewayExtractPrimitive:
         part_center = entity_pos(part)
 
         align_steps = int(self.align_steps or self.steps_per_phase)
+        turn_track = _Tracking()
         if self.rotate_with == "attachment" and attachment is not None:
             # Closed loop on the measured pose: the correction is however far the
             # opening actually is from the bar right now, not the nominal turn. The
@@ -328,10 +338,12 @@ class GatewayExtractPrimitive:
             controller.step(align_steps)
         else:
             self._move_part(
-                controller, track, part_from=part_center, part_to=part_center,
+                controller, turn_track, part_from=part_center, part_to=part_center,
                 quat_from=base_quat, quat_to=aligned_quat,
                 offset_in_hand=offset_in_hand, steps=align_steps,
             )
+            track.worst_pose_error = max(track.worst_pose_error, turn_track.worst_pose_error)
+            track.worst_tilt_rad = max(track.worst_tilt_rad, turn_track.worst_tilt_rad)
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")
@@ -346,6 +358,7 @@ class GatewayExtractPrimitive:
         part_center = entity_pos(part)
 
         align_deg = float(align_probe()) if align_probe is not None else 0.0
+        self._log("turn", turn_track, align_deg=align_deg)
         aligned_part_pos = entity_pos(part)
         aligned = skip_align or align_deg <= float(self.max_align_deg)
         self._log("align", track, align_deg=align_deg)
@@ -404,6 +417,8 @@ class GatewayExtractPrimitive:
             hover_align_deg=hover_align_deg,
             grasp_align_deg=grasp_align_deg,
             align_deg=align_deg,
+            align_pose_error=turn_track.worst_pose_error,
+            align_tilt_rad=turn_track.worst_tilt_rad,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,
             completed_phases=tuple(phases),
@@ -498,6 +513,8 @@ class GatewayExtractPrimitive:
             hover_align_deg=hover_align_deg,
             grasp_align_deg=grasp_align_deg,
             align_deg=align_deg,
+            align_pose_error=turn_track.worst_pose_error,
+            align_tilt_rad=turn_track.worst_tilt_rad,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,
             completed_phases=tuple(phases),

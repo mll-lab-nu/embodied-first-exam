@@ -170,14 +170,16 @@ primitive:
   # rigid_first_track_zh.md §3.1「物体的每一次位姿变化都必须由机械臂的位姿变化解释」；
   # attachment 放弃这条——环转了而手臂没动，动作流里没有东西解释这次转动。
   #
-  # 取 attachment 的理由是实测：2026-08-22 指令绕水平轴转 45°，手腕只跟上 2°
-  # （wrist_tilt=43°），手把位置弧线跟完了但姿态没转。仓库里 rope_winding /
-  # untangle_continuous / swap_crossing_sign 三个任务的插头翻转同样走 attachment，
-  # untangle_continuous_physical_pinch_demo.py:419 写明理由是「用手腕 pitch 会需要
-  # 很大的腕部俯仰才够得到」——同一条线。
+  # 默认 wrist。2026-08-22 曾据 wrist_tilt=43° 判定手腕转不动而改用 attachment，
+  # 那个判断证据不足：该读数是**全程**最差值，而 2026-08-23 的日志显示光是从 home 位
+  # 飞到工件上方就已经产生 28.6° 的瞬态滞后，43° 里只有约 14° 可能来自转动本身。
+  # 现在转动段单独计量（结果行的 turn_tilt / turn_pose_err），先用 wrist 拿到干净读数。
   #
-  # 想换回 wrist 就改这里，结果行与 metrics 都会记下用的是哪一种。
-  rotate_with: attachment
+  # 若 turn_tilt 确实很大，改成 attachment：手不动，由 attachment 在握持内部把环转过去。
+  # 仓库里 rope_winding / untangle_continuous / swap_crossing_sign 三个任务的插头翻转
+  # 都这么做，untangle_continuous_physical_pinch_demo.py:419 写明理由是「用手腕 pitch
+  # 会需要很大的腕部俯仰才够得到」。代价见上。
+  rotate_with: wrist
 
   # 下降前先在正上方悬停并沉降这么多步，然后核对指垫的水平对位。
   # move_ee_to 每个 waypoint 只跑一次带种子的 IK 且什么都不报，到哪算哪；悬停沉降是把
