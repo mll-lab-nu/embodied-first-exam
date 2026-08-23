@@ -409,6 +409,13 @@ bash bash_scripts/tests/cloth_unpleat_record.sh unfold press # 只跑两段录�
 # 所以「它到底站不站得住」只有仿真能回答, 而层数与材料守恒两条判据都建立在
 # 顶点顺序保得住之上。第 0 步不过就别往下跑。
 
+# -1) **褶皱起始状态稳不稳的扫参** (2026-08-23 起, 基线已知不稳, 见脚本头注释)。
+#     主读数是「爬」那一列: 跨度在采样区间里涨了多少。基线是 +4.8 mm/s 且不见变慢,
+#     意味着起始状态随静置步数漂移、且重力在替机械臂放料。
+bash bash_scripts/tests/pleat_stability_sweep.sh          # bend + mu 两组
+bash bash_scripts/tests/pleat_stability_sweep.sh bend     # 只扫弯曲柔度
+bash bash_scripts/tests/pleat_stability_sweep.sh combo    # 笛卡尔积, 格子多
+
 # 0) 方案闸口: 保序 + 褶皱静置。看三样 ——
 #    `order_preserved=yes`(建场那行) / `verdict=stands` / `max_speed` 有没有炸。
 #    verdict=collapsed 就加大 pleat.crest_height; verdict=sprang_open 说明 PBD 的
