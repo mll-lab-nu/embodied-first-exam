@@ -157,6 +157,21 @@ class ClothUnpleatLayout:
 
         return float(self.crest_point()[2] - self.rest_z())
 
+    def attach_z_band(self) -> float:
+        """Height window for the attachment, in metres.
+
+        The configured value is a CEILING. What is used is the smaller of it and
+        45% of the crest's current height above the rest plane, because the
+        window travels with the crest and the crest sags. Left uncapped, a crest
+        that has sunk to `min_crest_kept` would put the window's floor below the
+        flat run passing underneath it -- and binding that layer is the failure
+        the window exists to prevent.
+        """
+
+        return min(
+            float(self.task_cfg.grasp.attach_z_band), 0.45 * self.crest_height()
+        )
+
     def crest_kept(self) -> float:
         """Observed crest height over the authored one. 1.0 means it did not sag.
 

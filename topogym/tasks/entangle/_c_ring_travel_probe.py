@@ -12,10 +12,16 @@ episode. Genesis clears external forces each step, so the push is re-applied eve
 step. Same reasoning, and the same shape, as `tasks/connectivity/_travel_probe.py`.
 
 **Every direction, because one is not evidence.** While the two rings are linked,
-`tests/check_c_ring_clearance.py` measures all six of these directions jamming on the
-interlock by 8.75-9.00 mm. Once unlinked they should all run free. Probing the same
-six is what makes the before/after an actual comparison rather than two unrelated
+`tests/check_c_ring_clearance.py` measures each of these directions jamming on the
+interlock by around 9 mm. Once unlinked they should all run free, and probing the same
+set is what makes the before/after an actual comparison rather than two unrelated
 numbers.
+
+**Down is not in the set.** A ring that has been set down rests on the table, so
+pushing it down moves it nowhere whether or not it is still linked -- the reading
+carries no information about the interlock and only ever produces a false "blocked".
+Measured 2026-08-22: 0.03 mm of travel down against 1-4 mm every other way, on a ring
+the geometry agreed was free.
 
 This lives in `tasks/` rather than `verification/` for the reason
 `linkbar_merge_components_verifier.py:25` gives: only the caller can step physics, and
@@ -117,7 +123,6 @@ def probe_directions(geometry) -> tuple[tuple[str, np.ndarray], ...]:
         ("across_bar", across),
         ("back_across_bar", -across),
         ("up", np.array([0.0, 0.0, 1.0])),
-        ("down", np.array([0.0, 0.0, -1.0])),
     )
 
 

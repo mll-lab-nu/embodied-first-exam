@@ -13,13 +13,23 @@ the part's own normal*: the normal does not move, so the correction is identical
 zero. Its `_axis_tilt` gate is zero for the same reason. Both the motion and its gate
 have to be written against a different reading.
 
-**The wrist turns; the grip does not.** `AttachmentManager.ramp_to` could rotate the
-part inside the hand and reach the same final pose, and that is exactly what
-`axial_insert.py:321` warns against: the part turns while the arm holds still, so
-nothing in the action stream explains the motion and a policy trained on it never
-learns to align anything. Same rule as `rigid_first_track_zh.md` section 3.1. So the
-caller welds the part rigidly in the hand frame (`parent_quat_fn=controller.hand_quat`)
-and this primitive turns the wrist.
+**Who turns the part: `rotate_with`.** Two modes, and the choice is a real trade.
+
+``"wrist"`` turns the hand and lets the rigid grip carry the part, which is what
+`rigid_first_track_zh.md` section 3.1 asks for: every pose change of the part is
+explained by a pose change of the arm. `axial_insert.py:321` spells out why the
+alternative makes a useless demonstration.
+
+``"attachment"`` holds the hand still and ramps the part's orientation inside the grip
+(`AttachmentManager.ramp_to`). It gives up that property. It exists because the wrist
+sometimes cannot do the turn at all: `untangle_continuous_physical_pinch_demo.py:419`
+rejected a wrist pitch as needing "a large wrist pitch to reach", and rope_winding,
+untangle_continuous and swap_crossing_sign all turn their plugs this way. Measured for
+docx 3.4 on 2026-08-22: commanded 45 degrees about a horizontal axis, the wrist
+tracked 2 -- the hand followed the position arc and simply did not rotate.
+
+Whichever mode runs is printed and recorded, because it changes what the recorded
+episode means.
 
 **Targets are the part's centre, and the grasp offset rotates with the hand.**
 `axial_insert` keeps one world-frame carry offset because its hand never changes
@@ -101,6 +111,7 @@ class GatewayExtractResult:
     """What the extraction did, and how well the arm tracked it."""
 
     success: bool
+    hovered: bool
     grasped: bool
     aligned: bool
     extracted: bool
@@ -109,7 +120,14 @@ class GatewayExtractResult:
     aligned_part_pos: np.ndarray
     final_part_pos: np.ndarray
     finger_qpos: float
+    hover_xy_error: float
     grasp_pos_error: float
+    # The alignment reading at three points, because one number at the end cannot say
+    # WHERE it went wrong. If the part is already off at `grasp_align_deg`, the hand
+    # disturbed it on the way in; if it is right there and wrong after the turn, the
+    # wrist is the problem. Those two have opposite fixes.
+    hover_align_deg: float
+    grasp_align_deg: float
     align_deg: float
     worst_pose_error: float
     worst_tilt_rad: float
@@ -123,6 +141,7 @@ class GatewayExtractPrimitive:
     NOMINAL_PHASES: ClassVar[tuple[str, ...]] = (
         "open",
         "approach",
+        "hover_settle",
         "descend",
         "close",
         "grasp_settle",
@@ -141,6 +160,15 @@ class GatewayExtractPrimitive:
     approach_clearance: float
     retreat_clearance: float
     grasp_qpos: float | None = None
+    # Hold above the part before descending. `move_ee_to` runs one seeded solve per
+    # waypoint and reports nothing, so the hand arrives wherever 50 iterations got to;
+    # settling here is what turns that into a pose worth measuring, and measuring it
+    # before the descent is what keeps a misaligned hand from knocking a free part
+    # away instead of gripping it.
+    hover_settle_steps: int = 40
+    # "wrist" or "attachment"; see the module docstring. Not a tuning knob -- it
+    # decides whether the episode's action stream explains the part's rotation.
+    rotate_with: str = "wrist"
     close_hold_steps: int = 30
     align_steps: int | None = None
     align_settle_steps: int = 30
@@ -171,6 +199,7 @@ class GatewayExtractPrimitive:
         place_delta,
         ee_quat=None,
         align_probe: Callable[[], float] | None = None,
+        align_correction_fn: Callable[[], float] | None = None,
         attach_fn: Callable[[], Any] | None = None,
         release_fn: Callable[[], None] | None = None,
         skip_align: bool = False,
@@ -214,6 +243,28 @@ class GatewayExtractPrimitive:
         self._move_hand(controller, track, hand_approach, quat=base_quat,
                         start_quat=_as_numpy(controller.hand_quat()).reshape(4))
         phases.append("approach")
+
+        # Hover: settle, then check the pads are over the grasp point before going
+        # down. The part is free and light, so a hand that is off by more than the
+        # tube is wide will push it away on the way in, and the close that follows
+        # grips nothing while every other reading still looks plausible.
+        controller.step(int(self.hover_settle_steps))
+        pads_now = np.asarray(controller.hand_pos(), dtype=float) + tool_offset(
+            base_quat, HAND_TO_PAD_Z
+        )
+        hover_xy_error = float(np.linalg.norm((pads_now - grasp_pos)[:2]))
+        hover_align_deg = float(align_probe()) if align_probe is not None else 0.0
+        phases.append("hover_settle")
+        self._log("hover", track, xy_error=hover_xy_error, align_deg=hover_align_deg)
+        if hover_xy_error > float(self.max_grasp_pos_error):
+            return self._abort(
+                controller, track, phases, release_fn,
+                reason=f"hover_misaligned(xy_error={hover_xy_error:.4f})",
+                initial_part_pos=initial_part_pos, finger_qpos=0.0,
+                hover_xy_error=hover_xy_error, grasp_pos_error=hover_xy_error,
+                hover_align_deg=hover_align_deg, grasp_align_deg=hover_align_deg,
+            )
+
         self._move_hand(controller, track, hand_at_grasp, quat=base_quat)
         phases.append("descend")
 
@@ -226,6 +277,7 @@ class GatewayExtractPrimitive:
         phases.append("grasp_settle")
 
         finger_qpos = float(np.min(_as_numpy(controller.gripper_qpos())))
+        grasp_align_deg = float(align_probe()) if align_probe is not None else 0.0
         pads = np.asarray(controller.hand_pos(), dtype=float) + tool_offset(
             base_quat, HAND_TO_PAD_Z
         )
@@ -233,14 +285,16 @@ class GatewayExtractPrimitive:
         grasped = grasp_pos_error <= float(self.max_grasp_pos_error) and (
             self.min_finger_qpos is None or finger_qpos >= float(self.min_finger_qpos)
         )
-        self._log("grasp", track, finger_qpos=finger_qpos, pos_error=grasp_pos_error)
+        self._log("grasp", track, finger_qpos=finger_qpos, pos_error=grasp_pos_error,
+                  align_deg=grasp_align_deg, disturbed=grasp_align_deg - hover_align_deg)
         if not grasped:
             return self._abort(
                 controller, track, phases, release_fn,
                 reason=f"grasp_failed(finger_qpos={finger_qpos:.4f}, "
                        f"pos_error={grasp_pos_error:.4f})",
                 initial_part_pos=initial_part_pos, finger_qpos=finger_qpos,
-                grasp_pos_error=grasp_pos_error,
+                hover_xy_error=hover_xy_error, grasp_pos_error=grasp_pos_error,
+                hover_align_deg=hover_align_deg, grasp_align_deg=grasp_align_deg,
             )
 
         attachment = attach_fn() if attach_fn is not None else None
@@ -254,14 +308,42 @@ class GatewayExtractPrimitive:
         )
         part_center = entity_pos(part)
 
-        self._move_part(
-            controller, track, part_from=part_center, part_to=part_center,
-            quat_from=base_quat, quat_to=aligned_quat,
-            offset_in_hand=offset_in_hand, steps=self.align_steps,
-        )
+        align_steps = int(self.align_steps or self.steps_per_phase)
+        if self.rotate_with == "attachment" and attachment is not None:
+            # Closed loop on the measured pose: the correction is however far the
+            # opening actually is from the bar right now, not the nominal turn. The
+            # descent nudges a free part by a few degrees, and an open-loop turn
+            # carries that error straight through to the gate.
+            turn_deg = (
+                float(align_correction_fn()) if align_correction_fn is not None
+                else float(rotation_deg)
+            )
+            target = quat_mul(
+                quat_about_axis(rotation_axis, np.deg2rad(turn_deg)), entity_quat(part)
+            )
+            # ramp_to counts SYNC calls and the manager syncs twice a step, so a ramp
+            # meant to span N physics steps needs 2N. Its world-to-parent conversion
+            # is only exact while the parent is still, which is why the hand holds.
+            attachment.ramp_to(target, 2 * align_steps)
+            controller.step(align_steps)
+        else:
+            self._move_part(
+                controller, track, part_from=part_center, part_to=part_center,
+                quat_from=base_quat, quat_to=aligned_quat,
+                offset_in_hand=offset_in_hand, steps=align_steps,
+            )
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")
+
+        # The grip changed if the attachment did the turning, and the hand may have
+        # tracked imperfectly if the wrist did, so re-measure rather than trusting the
+        # offset captured before the turn.
+        carry_quat = base_quat if self.rotate_with == "attachment" else aligned_quat
+        offset_in_hand = _matrix(carry_quat).T @ (
+            entity_pos(part) - np.asarray(controller.hand_pos(), dtype=float)
+        )
+        part_center = entity_pos(part)
 
         align_deg = float(align_probe()) if align_probe is not None else 0.0
         aligned_part_pos = entity_pos(part)
@@ -275,8 +357,9 @@ class GatewayExtractPrimitive:
                 controller, track, phases, release_fn,
                 reason=f"align_failed(opening_to_bar={align_deg:.2f}deg)",
                 initial_part_pos=initial_part_pos, finger_qpos=finger_qpos,
-                grasp_pos_error=grasp_pos_error, grasped=True, align_deg=align_deg,
-                aligned_part_pos=aligned_part_pos,
+                hover_xy_error=hover_xy_error, grasp_pos_error=grasp_pos_error,
+                hover_align_deg=hover_align_deg, grasp_align_deg=grasp_align_deg,
+                grasped=True, align_deg=align_deg, aligned_part_pos=aligned_part_pos,
             )
 
         for name, delta, steps in (
@@ -287,7 +370,7 @@ class GatewayExtractPrimitive:
             target = part_center + np.asarray(delta, dtype=float).reshape(3)
             self._move_part(
                 controller, track, part_from=part_center, part_to=target,
-                quat_from=aligned_quat, quat_to=aligned_quat,
+                quat_from=carry_quat, quat_to=carry_quat,
                 offset_in_hand=offset_in_hand, steps=steps,
             )
             part_center = target
@@ -304,19 +387,22 @@ class GatewayExtractPrimitive:
         hand_now = np.asarray(controller.hand_pos(), dtype=float)
         self._move_hand(
             controller, track,
-            hand_now - tool_offset(aligned_quat, float(self.retreat_clearance)),
-            quat=aligned_quat,
+            hand_now - tool_offset(carry_quat, float(self.retreat_clearance)),
+            quat=carry_quat,
         )
         phases.append("retreat")
 
-        del attachment  # lifetime belongs to the caller's AttachmentManager
         return GatewayExtractResult(
-            success=True, grasped=True, aligned=True, extracted=True, failure_reason=None,
+            success=True, hovered=True, grasped=True, aligned=True, extracted=True,
+            failure_reason=None,
             initial_part_pos=initial_part_pos,
             aligned_part_pos=aligned_part_pos,
             final_part_pos=entity_pos(part),
             finger_qpos=finger_qpos,
+            hover_xy_error=hover_xy_error,
             grasp_pos_error=grasp_pos_error,
+            hover_align_deg=hover_align_deg,
+            grasp_align_deg=grasp_align_deg,
             align_deg=align_deg,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,
@@ -380,7 +466,8 @@ class GatewayExtractPrimitive:
     # ----------------------------------------------------------------- helpers
 
     def _abort(self, controller, track, phases, release_fn, *, reason, initial_part_pos,
-               finger_qpos, grasp_pos_error, grasped=False, align_deg=0.0,
+               finger_qpos, grasp_pos_error, hover_xy_error=0.0, hover_align_deg=0.0,
+               grasp_align_deg=0.0, grasped=False, align_deg=0.0,
                aligned_part_pos=None) -> GatewayExtractResult:
         if release_fn is not None:
             release_fn()
@@ -399,13 +486,17 @@ class GatewayExtractPrimitive:
         phases.append("recovery_retreat")
         zero = np.zeros(3)
         return GatewayExtractResult(
-            success=False, grasped=grasped, aligned=False, extracted=False,
+            success=False, hovered=hover_xy_error <= float(self.max_grasp_pos_error),
+            grasped=grasped, aligned=False, extracted=False,
             failure_reason=reason,
             initial_part_pos=initial_part_pos,
             aligned_part_pos=zero if aligned_part_pos is None else aligned_part_pos,
             final_part_pos=zero,
             finger_qpos=finger_qpos,
+            hover_xy_error=hover_xy_error,
             grasp_pos_error=grasp_pos_error,
+            hover_align_deg=hover_align_deg,
+            grasp_align_deg=grasp_align_deg,
             align_deg=align_deg,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,

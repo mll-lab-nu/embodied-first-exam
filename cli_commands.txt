@@ -398,6 +398,13 @@ python -B -m tests.pbd_cloth_spike -m run.bench_steps=100 task.cloth.particle_si
 python -B -m tests.pbd_cloth_spike run.test=contact run.verbose=true 2>&1 | tee runs/cloth_contact.log
 
 # --- cloth_unpleat (docx 1.2 展开单个褶皱, 2026-08-22 新建) ---
+# 统一跑法 (推荐, 给有 GPU 的机器): 五格按顺序跑, check/settle 是闸口,
+# 不过就跳过后面的; 跑完打一张汇总表, 视频与日志都落在同一个时间戳目录下。
+bash bash_scripts/tests/cloth_unpleat_record.sh              # 全部五格
+bash bash_scripts/tests/cloth_unpleat_record.sh settle       # 只跑闸口
+bash bash_scripts/tests/cloth_unpleat_record.sh unfold press # 只跑两段录制
+#
+# 下面是逐条的等价命令, 调参或只想跑其中一步时用。
 # 建设顺序是有意的: 先证明褶皱能立住, 再跑动作。褶皱是画进控制网格的, 不是折出来的,
 # 所以「它到底站不站得住」只有仿真能回答, 而层数与材料守恒两条判据都建立在
 # 顶点顺序保得住之上。第 0 步不过就别往下跑。

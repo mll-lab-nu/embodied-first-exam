@@ -319,16 +319,28 @@ def main(argv=None) -> int:
         ) < 1e-12,
         f"{marks['arm_length'] * 1e3:.2f}mm",
     )
-    # The layers are born this far apart; closer than a particle and PBD starts
-    # by resolving a collision instead of by holding still.
-    gap = min(
+    # How far the crest is above the material directly beneath it at birth. Closer
+    # than a particle and PBD opens the episode by resolving a collision instead
+    # of by holding still.
+    clearance = min(
         abs(corners[2][1] - corners[1][1]),
         abs(corners[2][1] - corners[0][1]),
     )
     check(
-        "三层出生时的层间距不小于一个粒子",
-        gap >= float(cloth["particle_size"]),
-        f"{gap * 1e3:.1f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
+        "顶缘与其正下方材料的高差不小于一个粒子",
+        clearance >= float(cloth["particle_size"]),
+        f"{clearance * 1e3:.1f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
+    )
+    # The window the gripper attaches through has to stay clear of that flat run
+    # even after the crest sags to the collapse threshold, which is why the layout
+    # caps it against the crest's height rather than using the config value flat.
+    kept = float(cfg["grasp"]["min_crest_kept"])
+    floor = kept * float(cloth["pleat"]["crest_height"]) * (1.0 - 0.45)
+    check(
+        "顶缘沉到 min_crest_kept 时抓取窗口底部仍高于平铺段",
+        floor > float(cloth["particle_size"]) / 2.0,
+        f"窗口底 {floor * 1e3:.2f}mm > 半个粒子 "
+        f"{float(cloth['particle_size']) / 2.0 * 1e3:.1f}mm",
     )
 
     print("\n== 判据：三种末态 ==")

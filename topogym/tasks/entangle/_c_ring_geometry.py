@@ -214,6 +214,18 @@ def centerline(spec: RingSpec, frame: RingFrame, *, closure_samples: int = 6) ->
     return np.vstack([arc, chord])
 
 
+def ring_tangent(frame: RingFrame, azimuth_deg: float) -> np.ndarray:
+    """Unit direction the tube runs at one azimuth: the circle's tangent there.
+
+    What a gripper has to close ACROSS. Closing along it instead pushes the ring
+    away instead of pinching it, which is not something the pose alone reveals --
+    the hand looks correctly placed either way.
+    """
+
+    angle = np.deg2rad(float(azimuth_deg))
+    return _unit(-np.sin(angle) * frame.ref + np.cos(angle) * frame.binormal)
+
+
 def direction_to_rpy(direction: np.ndarray) -> tuple[float, float, float]:
     """URDF ``rpy`` that points a cylinder's local +Z along ``direction``.
 

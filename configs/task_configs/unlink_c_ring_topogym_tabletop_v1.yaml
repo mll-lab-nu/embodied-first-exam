@@ -155,9 +155,35 @@ primitive:
   # 但 viewer 里手横着伸出去很别扭，2026-08-22 改回竖直。代价是滚转变成真的手腕重定向
   # ——不过只有 45°（等于开口方位角），起于竖直、止于偏 45°，都在舒服的范围内。
   #
-  # 这里的角是绕**竖直轴**的偏航，用来让指面横跨管身而不是顺着管身。指头合拢的方向
-  # 由 Franka 的手部几何定，光看场景推不出来，要在 wrist 视角里看一眼再定。
-  grasp_roll_deg: 0.0
+  # 绕竖直轴的偏航，用来让指面**横跨**管身而不是顺着管身。null = 由几何算出（推荐）。
+  # 之所以要算：Franka 的手指沿 hand 局部 y 滑动（panda.xml 的 finger 类
+  # axis="0 1 0" type="slide"），默认指尖朝下的姿态把它摆到世界 -y——而抓取点处管身的
+  # 水平走向恰好也是 -y，指面于是顺着管身合拢，手指下来先顶到管身把自由的环推开。
+  # 算出来的值是 -90°，此时合拢轴与管身正交（点积 0）。
+  # 填数字则直接用该值，用于人工试凑。
+  grasp_roll_deg: null
+
+  # 谁来转这个 45°：wrist = 转手腕，刚性握持带着环转；attachment = 手不动，
+  # 由 attachment 在握持内部把环转过去。
+  #
+  # **这不是调参项，它决定录下来的 episode 意味着什么。** wrist 满足
+  # rigid_first_track_zh.md §3.1「物体的每一次位姿变化都必须由机械臂的位姿变化解释」；
+  # attachment 放弃这条——环转了而手臂没动，动作流里没有东西解释这次转动。
+  #
+  # 取 attachment 的理由是实测：2026-08-22 指令绕水平轴转 45°，手腕只跟上 2°
+  # （wrist_tilt=43°），手把位置弧线跟完了但姿态没转。仓库里 rope_winding /
+  # untangle_continuous / swap_crossing_sign 三个任务的插头翻转同样走 attachment，
+  # untangle_continuous_physical_pinch_demo.py:419 写明理由是「用手腕 pitch 会需要
+  # 很大的腕部俯仰才够得到」——同一条线。
+  #
+  # 想换回 wrist 就改这里，结果行与 metrics 都会记下用的是哪一种。
+  rotate_with: attachment
+
+  # 下降前先在正上方悬停并沉降这么多步，然后核对指垫的水平对位。
+  # move_ee_to 每个 waypoint 只跑一次带种子的 IK 且什么都不报，到哪算哪；悬停沉降是把
+  # 「到哪」变成一个可测量的位姿，而在下降前测它，是为了不让一只没对准的手把自由的环
+  # 推开——推开之后合爪抓空，其余读数却仍然像模像样。
+  hover_settle_steps: 40
   # 沿工具轴后退多少开始接近 / 松开后退多远。不是 z 偏移——本任务的工具轴是水平的。
   approach_clearance: 0.070
   retreat_clearance: 0.090
@@ -169,12 +195,13 @@ primitive:
   close_hold_steps: 30
   align_settle_steps: 30
   release_hold_steps: 100
+  # 悬停对位判据，同时也是抓取后的位置判据。取略小于管身直径（10mm）。
+  max_grasp_pos_error: 0.008
   # 合爪停位。管身直径 10mm，取略小于半径的停位让指面真的压上去。
   grasp_qpos: 0.004
   # 抓取证据。assisted carry 下零件必然跟着走，指行程是唯一能区分「夹到环」与
   # 「合于空处」的读数。首轮留 null：先量出实际值，再回填阈值。
   min_finger_qpos: null
-  max_grasp_pos_error: 0.020
   # 对准门。gateway 全程最紧处 0.15mm、开口单边余量 2.00mm，过不了就在下移前中止——
   # 开口没对准还往下走是把环怼进管身，而 assisted carry 下那是穿模不是卡住。
   max_align_deg: 3.0

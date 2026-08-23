@@ -123,6 +123,29 @@ def _hud(ring_scene, evaluator, status):
     return render_lines
 
 
+def grasp_yaw_deg(geometry, frame, grasp_azimuth_deg: float) -> float:
+    """Yaw about the vertical that closes the fingers ACROSS the tube, not along it.
+
+    The Franka's fingers slide on the hand link's local y (`panda.xml`, the `finger`
+    default class is `axis="0 1 0" type="slide"`), which the default fingers-down pose
+    puts on world -y. Yawing the wrist by theta turns that closing axis to
+    ``(sin theta, -cos theta, 0)``; setting ``theta = atan2(ty, tx)`` against the
+    tube's horizontal run makes the two perpendicular.
+
+    This is derived rather than configured because getting it wrong does not look
+    wrong: the hand sits exactly where it should and the pads simply run along the
+    tube, so closing pushes the free ring away instead of pinching it, and the only
+    symptom is a grasp that quietly did not happen.
+    """
+
+    tangent = ring_geometry.ring_tangent(frame, grasp_azimuth_deg)
+    horizontal = np.array([tangent[0], tangent[1], 0.0])
+    if float(np.linalg.norm(horizontal)) < 1e-6:
+        # The tube runs straight up here, so every horizontal closing axis crosses it.
+        return 0.0
+    return float(np.rad2deg(np.arctan2(horizontal[1], horizontal[0])))
+
+
 def configure_contacts(cfg, ring_scene, controller) -> None:
     """Apply the configured friction to the C ring and the fingers.
 
@@ -149,6 +172,7 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         approach_clearance=float(spec.approach_clearance),
         retreat_clearance=float(spec.retreat_clearance),
         grasp_qpos=float(spec.grasp_qpos),
+        hover_settle_steps=int(spec.hover_settle_steps),
         close_hold_steps=int(spec.close_hold_steps),
         align_steps=int(spec.align_steps),
         align_settle_steps=int(spec.align_settle_steps),
@@ -157,6 +181,7 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         min_finger_qpos=None if min_finger is None else float(min_finger),
         max_grasp_pos_error=float(spec.max_grasp_pos_error),
         max_align_deg=float(spec.max_align_deg),
+        rotate_with=str(spec.rotate_with),
         verbose=bool(cfg.run.verbose),
     )
 
@@ -166,7 +191,9 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "unlink_c_ring_physical_extract_demo",
         manipulated=["c_ring"],
         runtime_attachment=True,
-        runtime_set_pose=False,
+        # True whenever the attachment does the turning: the part's orientation is
+        # written inside the grip, so that rotation is NOT explained by the arm.
+        runtime_set_pose=str(cfg.task.primitive.rotate_with) == "attachment",
         success_checks=(
             "finger_qpos",
             "opening_to_bar",
@@ -195,9 +222,10 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
     # means reaching out sideways with a horizontal hand, which reads badly. The turn
     # is only 45 degrees here (it equals the opening's azimuth), so a vertical
     # approach ending 45 degrees tipped stays in comfortable wrist territory.
-    ee_quat = ee_quat_for_yaw(
-        controller.default_ee_quat, np.deg2rad(float(spec.grasp_roll_deg))
-    )
+    roll_deg = grasp_yaw_deg(geometry, settled, float(spec.grasp_azimuth_deg))
+    if spec.grasp_roll_deg is not None:
+        roll_deg = float(spec.grasp_roll_deg)
+    ee_quat = ee_quat_for_yaw(controller.default_ee_quat, np.deg2rad(roll_deg))
 
     primitive = build_primitive(cfg)
     if stop_before_physics(cfg, ring_scene.scene, "unlink_c_ring_physical_extract_demo"):
@@ -234,6 +262,34 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 status["align_deg"] = reading
                 return reading
 
+            def align_correction() -> float:
+                """Signed turn about the ring's normal that puts the opening on the bar.
+
+                Measured, not nominal. The descent nudges a free ring by a few degrees
+                (14 degrees on the 2026-08-22 run), and an open-loop turn carries that
+                straight into the alignment gate.
+                """
+
+                frame = c_ring_frame(ring_scene)
+                opening = (
+                    frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0]
+                    - frame.center
+                )
+                to_bar = geometry.tube_point - frame.center
+                # Both live in the ring's plane; the signed angle between them about
+                # the ring's normal is exactly the correction.
+                normal = frame.normal
+                opening -= float(np.dot(opening, normal)) * normal
+                to_bar -= float(np.dot(to_bar, normal)) * normal
+                return float(
+                    np.rad2deg(
+                        np.arctan2(
+                            float(np.dot(np.cross(opening, to_bar), normal)),
+                            float(np.dot(opening, to_bar)),
+                        )
+                    )
+                )
+
             status["phase"] = "extract" if mode == "gateway" else "no_align"
             result = primitive.run(
                 controller,
@@ -248,6 +304,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 place_delta=(0.0, 0.0, -float(spec.place_drop)),
                 ee_quat=ee_quat,
                 align_probe=align_probe,
+                align_correction_fn=align_correction,
                 attach_fn=attach_ring,
                 release_fn=release_ring,
                 skip_align=(mode != "gateway"),
@@ -313,11 +370,15 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "release_stable": bool(release_stable),
         "release_settle_drift": drift,
         "finger_qpos": float(result.finger_qpos),
+        "hover_xy_error": float(result.hover_xy_error),
+        "hover_align_deg": float(result.hover_align_deg),
+        "grasp_align_deg": float(result.grasp_align_deg),
         "grasp_pos_error": float(result.grasp_pos_error),
         "align_deg": float(result.align_deg),
         "worst_pose_error": float(result.worst_pose_error),
         "worst_tilt_deg": float(np.rad2deg(result.worst_tilt_rad)),
         "oracle_mode": mode,
+        "rotate_with": str(cfg.task.primitive.rotate_with),
     }
 
     task_success = bool(state.is_terminal)
@@ -348,7 +409,9 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         f"travel_free={state.travel_free} min_peak_travel={travel.min_peak_travel * 1000:.1f}mm "
         f"blocked={','.join(travel.blocked) or 'none'} "
         f"release_stable={release_stable} settle_drift={drift:.5f} "
-        f"finger_qpos={result.finger_qpos:.4f} align={result.align_deg:.2f}deg "
+        f"hover_err={result.hover_xy_error:.4f} finger_qpos={result.finger_qpos:.4f} "
+        f"align_hover={result.hover_align_deg:.1f} align_grasp={result.grasp_align_deg:.1f} "
+        f"align_turned={result.align_deg:.1f}deg "
         f"pose_err={result.worst_pose_error:.4f} "
         f"wrist_tilt={np.rad2deg(result.worst_tilt_rad):.2f}deg "
         f"failure_reason={episode_result.failure_reason} "
@@ -367,13 +430,21 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
             "overpowered the interlock. Lower task.travel_test.force_scale.",
             flush=True,
         )
-    if result.worst_tilt_rad > np.deg2rad(5.0):
+    if str(cfg.task.primitive.rotate_with) == "wrist" and result.worst_tilt_rad > np.deg2rad(5.0):
         print(
             f"[warn] the wrist lagged its commanded pose by up to "
-            f"{np.rad2deg(result.worst_tilt_rad):.1f} deg. The turn is meant to be a "
-            "roll about the tool axis (joint 7), so a large lag means the approach "
-            "pose is off: check task.primitive.grasp_roll_deg and that the tool axis "
-            "really lines up with the C ring's normal.",
+            f"{np.rad2deg(result.worst_tilt_rad):.1f} deg, so the arm did not actually "
+            "perform the turn. Either reduce it (task.c_ring.gap_azimuth_deg is the "
+            "turn angle) or set task.primitive.rotate_with=attachment and accept that "
+            "the action stream no longer explains the rotation.",
+            flush=True,
+        )
+    if abs(result.grasp_align_deg - result.hover_align_deg) > 10.0:
+        print(
+            f"[warn] closing the gripper turned the ring by "
+            f"{result.grasp_align_deg - result.hover_align_deg:+.1f} deg. The closed-loop "
+            "align correction absorbs it, but a free part being shoved on the way in "
+            "means the pads are landing on the tube rather than beside it.",
             flush=True,
         )
     if cfg.run.verbose:
@@ -419,9 +490,10 @@ def main(cfg: DictConfig) -> None:
     axis, rotation_deg = geometry.align_rotation()
     print(
         "unlink_c_ring setup "
-        f"mode={mode} "
+        f"mode={mode} rotate_with={cfg.task.primitive.rotate_with} "
         f"grasp_azimuth={float(cfg.task.primitive.grasp_azimuth_deg):.0f}deg "
         f"turn={rotation_deg:.0f}deg about ({axis[0]:+.2f},{axis[1]:+.2f},{axis[2]:+.2f}) "
+        f"grasp_yaw={grasp_yaw_deg(geometry, geometry.c_rest_frame, float(cfg.task.primitive.grasp_azimuth_deg)):.1f}deg "
         f"extract={geometry.extract_travel * 1000:.0f}mm "
         f"carry={float(cfg.task.primitive.carry) * 1000:.0f}mm "
         f"opening_to_bar={opening_to_bar_deg(geometry, geometry.c_rest_frame):.1f}deg",

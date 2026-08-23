@@ -87,25 +87,6 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
 
-    primitive = ClothLinkAttachDragPrimitive(
-        approach_z=float(cfg.task.physical.approach_z),
-        touch_clearance=float(cfg.task.grasp.touch_clearance),
-        attach_tolerance=float(cfg.task.grasp.attach_tolerance),
-        attach_radius=float(cfg.task.grasp.attach_radius),
-        # The band's flat run passes directly under the crest, so the attachment
-        # has to be told which height it is grasping at. Without it the hand binds
-        # the layer it is nowhere near -- see `attached_indices`.
-        attach_z_band=float(cfg.task.grasp.attach_z_band),
-        gripper_steps=int(cfg.task.physical.gripper_steps),
-        move_steps=int(cfg.task.physical.move_steps),
-        release_settle_steps=int(cfg.task.physical.release_hold_steps),
-        max_follow_error=float(cfg.task.physical.max_follow_error),
-        grasp_qpos=(
-            None if cfg.task.grasp.grasp_qpos is None else float(cfg.task.grasp.grasp_qpos)
-        ),
-        verbose=bool(cfg.run.verbose),
-    )
-
     with recording_session_from_config(band.scene, band.cameras, cfg.recording):
         # Everything is measured against the SETTLED band. More load-bearing here
         # than in cloth_fold: the pleat is authored into the mesh, so whether it
@@ -149,6 +130,34 @@ def main(cfg: DictConfig) -> None:
             f"{episode_plan.waypoint_plan.metadata} "
             f"chord_error_mm={chord_error(layout) * 1e3:.3f} "
             f"{layout.summary()}",
+            flush=True,
+        )
+
+        primitive = ClothLinkAttachDragPrimitive(
+            approach_z=float(cfg.task.physical.approach_z),
+            touch_clearance=float(cfg.task.grasp.touch_clearance),
+            attach_tolerance=float(cfg.task.grasp.attach_tolerance),
+            attach_radius=float(cfg.task.grasp.attach_radius),
+            # The band's flat run passes directly under the crest, so the
+            # attachment has to be told which height it is grasping at, and the
+            # window has to follow the crest down as it sags -- which is why this
+            # is built here, after the observation, rather than before the settle.
+            attach_z_band=layout.attach_z_band(),
+            gripper_steps=int(cfg.task.physical.gripper_steps),
+            move_steps=int(cfg.task.physical.move_steps),
+            release_settle_steps=int(cfg.task.physical.release_hold_steps),
+            max_follow_error=float(cfg.task.physical.max_follow_error),
+            grasp_qpos=(
+                None
+                if cfg.task.grasp.grasp_qpos is None
+                else float(cfg.task.grasp.grasp_qpos)
+            ),
+            verbose=bool(cfg.run.verbose),
+        )
+        print(
+            f"cloth_unpleat attach window_mm={layout.attach_z_band() * 1e3:.2f} "
+            f"cap_mm={float(cfg.task.grasp.attach_z_band) * 1e3:.1f} "
+            f"crest_mm={layout.crest_height() * 1e3:.2f}",
             flush=True,
         )
 
