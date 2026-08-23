@@ -53,7 +53,7 @@ from typing import Any, Callable, ClassVar
 
 import numpy as np
 
-from .attachment import slerp
+from .attachment import _quat_conj, slerp
 from .physical_contact import entity_pos, entity_quat, quat_about_axis, quat_mul
 
 # Distance from the `hand` link origin to the fingertip pad centre, along the tool
@@ -485,6 +485,22 @@ class GatewayExtractPrimitive:
                         break
                     controller.step(1)
         else:
+            # Closed loop on the wrist route too. The part is rigid in the grip, so the
+            # world rotation that takes it from where it IS to where it must be is the
+            # same world rotation the hand has to make -- left-multiply it onto the
+            # commanded pose and the arm carries the part into alignment. Without this
+            # the turn is the nominal one, which is only right if nothing nudged the
+            # part on the way in.
+            if align_target_fn is not None:
+                target_part = np.asarray(align_target_fn(), dtype=float).reshape(4)
+                correction = quat_mul(target_part, _quat_conj(entity_quat(part)))
+                aligned_quat = quat_mul(correction, base_quat)
+                aligned_quat = np.asarray(aligned_quat, dtype=float)
+                aligned_quat = aligned_quat / np.linalg.norm(aligned_quat)
+                self._log(
+                    "turn_plan", turn_track,
+                    wrist_deg=float(np.rad2deg(_quat_angle(base_quat, aligned_quat))),
+                )
             self._move_part(
                 controller, turn_track, part_from=part_center, part_to=part_center,
                 quat_from=base_quat, quat_to=aligned_quat,

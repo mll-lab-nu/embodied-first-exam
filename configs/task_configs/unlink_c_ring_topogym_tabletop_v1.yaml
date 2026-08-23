@@ -192,7 +192,15 @@ primitive:
   # 「用手腕 pitch 会需要很大的腕部俯仰才够得到」——同一条线。
   #
   # 改回 wrist 仍然可用（代码保留），结果行的 turn_tilt 就是重新评估它的读数。
-  rotate_with: attachment
+  # 谁来转 C 环。这不是调参项，它决定 episode 的动作流能不能解释零件的转动
+  # （docs/develop/tasks/rigid_first_track_zh.md 第 3.1 节）。
+  #   wrist      : 手腕转，环因为被握着而跟着转。任务的拓扑内容在这一档才成立。
+  #   attachment : 直接写环的朝向，手不动。IL contract 会打 runtime_set_pose=True。
+  # hang_yaw_deg=180 下这个转动是绕世界 -y 的 45°，与前臂方向近乎垂直
+  # （|轴·伸展|=0.102），即第 6 关节的纯俯仰，工具轴从竖直朝下变成倾斜 45°。
+  # 此前判定「手腕做不到」的那次实测（tilt=43deg）是在 hang_yaw_deg=270 下取的，
+  # 那个配置需要 ±90° 偏航而手撑不住，转动开始前就已有 28.6° 误差，读数不可用。
+  rotate_with: wrist
 
   # attachment 档下「量一次—转一次」重复多少遍。一遍不够：2026-08-23 实测请求 26.8°
   # 只落实了 11.7°，而对准门只有几度的余量。每遍都重新量，因此会自己收敛；
