@@ -110,14 +110,32 @@ def main(cfg: DictConfig) -> None:
         )
         # An episode that starts from a collapsed pleat is not a harder episode,
         # it is a different task -- and judging it would put a meaningless row in
-        # the dataset. Fail here rather than sweep a flat band sideways.
+        # the dataset. Stop here rather than sweep a flat band sideways.
+        #
+        # It holds still for a moment before stopping, so the recording ends on
+        # the collapsed pleat instead of cutting off mid-settle. A truncated clip
+        # reads as a crashed run; a held one IS the evidence for what went wrong,
+        # and it is the only picture of the failure anyone gets. The recorder
+        # saves on the way out of its `with` even when the body raises, so the
+        # video survives the SystemExit below.
         if layout.crest_kept() < float(cfg.task.grasp.min_crest_kept):
+            print(
+                f"cloth_unpleat aborted reason=pleat_collapsed "
+                f"crest_kept={layout.crest_kept():.3f} "
+                f"min_crest_kept={float(cfg.task.grasp.min_crest_kept)} "
+                f"crest_mm={layout.crest_height() * 1e3:.2f} "
+                f"design_mm={(design[2] - layout.rest_z()) * 1e3:.2f} "
+                f"holding={int(cfg.run.final_hold_steps)}",
+                flush=True,
+            )
+            for _ in range(max(0, int(cfg.run.final_hold_steps))):
+                band.scene.step()
             raise SystemExit(
                 f"the pleat did not survive the settle: crest kept "
                 f"{layout.crest_kept():.3f} of its height, below "
                 f"task.grasp.min_crest_kept={float(cfg.task.grasp.min_crest_kept)}. "
-                f"Run `python -B -m tests.pleat_settle_spike` to see the sag over "
-                f"time before changing the geometry."
+                f"Run `python -B -m tests.pleat_settle_spike` for the sag over "
+                f"time -- a slow slide and an immediate drop need different fixes."
             )
 
         waypoints, episode_plan = plan_cloth_unpleat(
