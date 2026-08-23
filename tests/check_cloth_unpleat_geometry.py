@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tempfile
 import types
 from pathlib import Path
 
@@ -453,6 +454,60 @@ def main(argv=None) -> int:
             ok,
             f"正确 {value_good:.3f} / 阈值 {limit:.3f} / 压塌 {value_bad:.3f}",
         )
+
+    print("\n== 条纹与折痕 ==")
+    # docx 1.2 的画面要读出「收在褶皱里的材料被放出来」。折痕沿布带的宽度方向走，
+    # 所以条纹必须沿材料方向排、被折痕横着切断；平行的话褶皱只是把两条之间的材料
+    # 藏起来，展开前后几乎看不出差别。这一条钉住的是**两个必须同时成立的约定**：
+    # 网格把宽度放在 v 轴，贴图沿 v 分带。
+    with tempfile.TemporaryDirectory() as tmp:
+        mesh_path = Path(tmp) / "band.obj"
+        section = _mesh.resample_polyline(corners, float(cloth["mesh"]["spacing"]))
+        _vertices, _faces, cols, rows = _mesh.sweep_profile_mesh(
+            section,
+            width=float(cloth["width"]),
+            spacing=float(cloth["mesh"]["spacing"]),
+            centre=np.asarray(cloth["center"], dtype=float),
+            table_z=0.0,
+            path=mesh_path,
+            material_axis=0 if str(cloth["material_axis"]).lower() == "x" else 1,
+        )
+        uvs = np.array(
+            [
+                [float(v) for v in line.split()[1:3]]
+                for line in mesh_path.read_text(encoding="utf-8").splitlines()
+                if line.startswith("vt ")
+            ]
+        )
+    grid = uvs.reshape(rows, cols, 2)
+    check(
+        "贴图的条带轴（v）落在布带的宽度上",
+        float(np.abs(np.diff(grid[..., 1], axis=1)).max()) < 1e-9
+        and float(np.abs(np.diff(grid[..., 1], axis=0)).min()) > 0.0,
+        f"v 沿材料方向恒定、沿宽度从 {grid[0, 0, 1]:.2f} 到 {grid[-1, 0, 1]:.2f}",
+    )
+    check(
+        "u 跟着材料走（褶皱处贴图不会挤成一团）",
+        float(np.abs(np.diff(grid[..., 0], axis=0)).max()) < 1e-9
+        and float(np.diff(grid[0, :, 0]).min()) > 0.0,
+        f"u 沿宽度恒定、沿材料从 {grid[0, 0, 0]:.2f} 到 {grid[0, -1, 0]:.2f}",
+    )
+    # 贴图那一侧：fabric_weave 按 size_m[1] 分带，所以宽度必须排第二。
+    size_m = _mesh.texture_size_m(
+        float(cloth["material_length"]), float(cloth["width"])
+    )
+    check(
+        "texture_size_m 把宽度放在第二位（与 v 轴对齐）",
+        abs(size_m[1] - float(cloth["width"])) < 1e-12,
+        f"size_m={size_m}",
+    )
+    stripes = float(cloth["width"]) / float(cloth["texture"]["stripe_pitch"])
+    check(
+        "被折痕切断的条纹不止两三条",
+        stripes >= 5.0,
+        f"宽 {float(cloth['width']) * 1e3:.0f}mm / 间距 "
+        f"{float(cloth['texture']['stripe_pitch']) * 1e3:.0f}mm = {stripes:.0f} 条",
+    )
 
     print("\n== 轨迹 ==")
     layout = _StandInLayout(cfg)

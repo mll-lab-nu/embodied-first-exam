@@ -43,6 +43,7 @@ from .cloth_profile_mesh import (
     polyline_length,
     resample_polyline,
     sweep_profile_mesh,
+    texture_size_m,
 )
 from .cloth_unpleat import (
     ClothUnpleatLayout,
@@ -71,4 +72,5 @@ __all__ = [
     "polyline_length",
     "resample_polyline",
     "sweep_profile_mesh",
+    "texture_size_m",
 ]

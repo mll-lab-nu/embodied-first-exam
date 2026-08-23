@@ -165,11 +165,17 @@ def sweep_profile_mesh(
     across the width, matching `cloth_sheet_mesh` so the same neighbour
     arithmetic works on both.
 
-    **The UVs are laid out with the material direction along v, not u.** The
-    texture's stripes are bands of constant v (`world/textures.py:_base_colour`),
-    so this puts them across the material. They travel with the cloth, so which
-    world axis the material runs along does not change how the stripes sit on it
-    -- rotating the band rotates its texture with it, which is the point.
+    **The UVs put the material along u and the width along v.** The texture's
+    stripes are bands of constant v (`world/textures.py:_base_colour`), so this
+    makes each stripe a band of constant WIDTH running the length of the band --
+    and the pleat's crease, which runs across the width, cuts every one of them.
+    That is the whole reason the stripes are there: a crease parallel to the
+    stripes hides material between two of them and looks much the same before and
+    after, while a crease across them visibly interrupts each stripe and puts it
+    back on unfolding.
+
+    The pairing with the texture's own ``size_m`` is not optional -- see
+    `texture_size_m`, which exists so the two cannot drift apart.
     """
 
     profile = np.asarray(profile, dtype=float)
@@ -192,14 +198,18 @@ def sweep_profile_mesh(
             vertices[index, 2] = table_z + point[1]
             index += 1
 
-    # Arc length along the profile, normalised: v has to follow the MATERIAL, not
-    # the x coordinate, or the texture bunches up wherever the profile leaves the
-    # horizontal and doubles back on itself at the pleat.
+    # Arc length along the profile, normalised. u has to follow the MATERIAL
+    # rather than a world coordinate, or the texture bunches up wherever the
+    # profile leaves the horizontal and doubles back on itself at the pleat.
     steps = np.linalg.norm(np.diff(profile, axis=0), axis=1)
     arc = np.concatenate([[0.0], np.cumsum(steps)])
     arc = arc / max(float(arc[-1]), 1e-12)
     uvs = np.array(
-        [[row / max(1, rows - 1), float(arc[col])] for row in range(rows) for col in range(cols)],
+        [
+            [float(arc[col]), row / max(1, rows - 1)]
+            for row in range(rows)
+            for col in range(cols)
+        ],
         dtype=float,
     )
 
@@ -224,6 +234,19 @@ def sweep_profile_mesh(
                 "f " + " ".join(f"{index + 1}/{index + 1}" for index in face) + "\n"
             )
     return vertices, np.asarray(faces, dtype=int), cols, rows
+
+
+def texture_size_m(material_length: float, width: float) -> list:
+    """``size_m`` for `world/textures.fabric_weave`, ordered ``(u, v)``.
+
+    Exists so the mesh's UV layout and the texture's stripe axis cannot drift
+    apart. `fabric_weave` bands its stripes along ``size_m[1]``, which is the v
+    axis, and `sweep_profile_mesh` puts the WIDTH on v -- so the width goes
+    second. Swap either one on its own and the stripes turn parallel to the
+    crease, which is exactly the arrangement the stripes exist to avoid.
+    """
+
+    return [float(material_length), float(width)]
 
 
 def edge_report(vertices, cols: int, rows: int) -> str:

@@ -48,6 +48,7 @@ from .cloth_profile_mesh import (
     pleat_profile,
     resample_polyline,
     sweep_profile_mesh,
+    texture_size_m,
 )
 
 
@@ -454,8 +455,9 @@ class ClothUnpleatSceneBuilder:
         Same reasoning as `cloth_fold`: the rasterizer keeps a surface's diffuse
         colour and texture and drops everything else, and the raytracer that
         would honour the rest needs a LuisaRender build this install does not
-        have. ``size_m`` is passed width-first so the texture's stripe pitch is
-        measured along the MATERIAL, which is the axis the mesh puts on v.
+        have. ``size_m`` comes from `texture_size_m` rather than being written out
+        here, because its order has to match the mesh's UV layout exactly -- see
+        that function.
         """
 
         texture_cfg = getattr(cloth_cfg, "texture", None)
@@ -463,7 +465,9 @@ class ClothUnpleatSceneBuilder:
         if texture_cfg is not None and bool(texture_cfg.enabled):
             image = textures.fabric_weave(
                 color=list(cloth_cfg.color),
-                size_m=[float(cloth_cfg.width), float(cloth_cfg.material_length)],
+                size_m=texture_size_m(
+                    float(cloth_cfg.material_length), float(cloth_cfg.width)
+                ),
                 pattern=str(texture_cfg.pattern),
                 accent_color=list(texture_cfg.accent_color),
                 stripe_pitch_m=float(texture_cfg.stripe_pitch),
