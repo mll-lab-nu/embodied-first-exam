@@ -6,7 +6,7 @@ and the judges say whether that produced a fold.
 
 Nothing here decides anything on its own. The trajectory comes from
 `planning/cloth_fold_planner.py` (the arc is fixed by the material, not chosen),
-the motion from `primitives/cloth_corner_fold.py`, the verdict from
+the motion from `primitives/cloth_link_attach_drag.py`, the verdict from
 `verification/cloth_fold_verifier.py`, and whether the solver stayed sane from
 `supervision/cloth_fold.py`. This file wires them together and reports.
 
@@ -28,7 +28,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.planning.cloth_fold_planner import plan_cloth_fold
-from topogym.primitives.cloth_corner_fold import ClothCornerFoldPrimitive
+from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
 from topogym.supervision.cloth_fold import ClothFoldWatch
@@ -92,7 +92,7 @@ def main(cfg: DictConfig) -> None:
         flush=True,
     )
 
-    primitive = ClothCornerFoldPrimitive(
+    primitive = ClothLinkAttachDragPrimitive(
         approach_z=float(cfg.task.physical.approach_z),
         touch_clearance=float(cfg.task.grasp.touch_clearance),
         attach_tolerance=float(cfg.task.grasp.attach_tolerance),

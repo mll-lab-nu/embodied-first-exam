@@ -32,7 +32,7 @@ line while the wrist slerps would swing the part into the bar in the middle.
 **Nothing here reports IK residuals, because `move_ee_to` does not.** A 90 degree
 reorientation about a horizontal axis has no precedent in this repo, so the primitive
 measures its own tracking error every waypoint and hands back the worst, the way
-`cloth_corner_fold` does. That reading is the evidence for whether the wrist actually
+`cloth_link_attach_drag` does. That reading is the evidence for whether the wrist actually
 followed.
 """
 

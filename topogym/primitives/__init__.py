@@ -49,14 +49,14 @@ from .rim_rotate import (
 )
 from .handle_drag import HandleDragPrimitive, HandleDragResult
 from .rope_endpoint_drag import EndpointAttachment, EndpointAttachmentManager, RopeEndpointDragPrimitive
-from .cloth_corner_fold import ClothCornerFoldPrimitive, ClothFoldResult
+from .cloth_link_attach_drag import ClothLinkAttachDragPrimitive, ClothAttachDragResult
 
 __all__ = [
     "GatewayExtractPrimitive",
     "GatewayExtractResult",
     "face_on_quat",
-    "ClothCornerFoldPrimitive",
-    "ClothFoldResult",
+    "ClothLinkAttachDragPrimitive",
+    "ClothAttachDragResult",
     "AttachmentManager",
     "GatedInsertPrimitive",
     "GatedInsertResult",

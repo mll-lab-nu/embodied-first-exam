@@ -1,4 +1,10 @@
-"""Pick a cloth corner up, carry it half a turn about the fold line, put it down.
+"""Attach to a patch of PBD cloth, carry it along waypoints, put it down.
+
+The waypoints come from a planner and this file does not care what shape they
+make: `cloth_fold` sends half a turn about the fold line, `cloth_unpleat` sends a
+straight horizontal drag. What this primitive owns is the attach-and-carry
+mechanism -- descend, check the hand actually reached the grasp point, close,
+bind the caught particles to the gripper link, drive, release.
 
 Written as its own primitive rather than as flags on
 `PBDParticleAttachmentDragPrimitive`, which is the other PBD attach-and-drag
@@ -37,7 +43,7 @@ from topogym.primitives.pick_place import HAND_TO_PAD_Z
 
 
 @dataclass
-class ClothFoldResult:
+class ClothAttachDragResult:
     success: bool
     grasped: bool
     attached_particles: int
@@ -80,7 +86,7 @@ def attached_indices(nodes: np.ndarray, center, radius: float) -> np.ndarray:
 
 
 @dataclass
-class ClothCornerFoldPrimitive:
+class ClothLinkAttachDragPrimitive:
     """One lift-move-place fold, driven along waypoints from the planner."""
 
     approach_z: float
@@ -108,7 +114,7 @@ class ClothCornerFoldPrimitive:
         ee_quat=None,
         particles_fn,
         on_phase=None,
-    ) -> ClothFoldResult:
+    ) -> ClothAttachDragResult:
         self._phases = []
         grasp_point = np.asarray(grasp_point, dtype=float)
         if not waypoints:
@@ -141,7 +147,7 @@ class ClothCornerFoldPrimitive:
         attach_error = float(np.linalg.norm(reached[:2] - grasp_point[:2]))
         if attach_error > float(self.attach_tolerance):
             self._retreat(controller, ee_quat)
-            return ClothFoldResult(
+            return ClothAttachDragResult(
                 success=False,
                 grasped=False,
                 attached_particles=0,
@@ -244,7 +250,7 @@ class ClothCornerFoldPrimitive:
         self._retreat(controller, ee_quat)
         self._phases.append("retreat")
         self._notify(on_phase, "done")
-        return ClothFoldResult(
+        return ClothAttachDragResult(
             success=worst_follow <= float(self.max_follow_error),
             grasped=True,
             attached_particles=int(len(indices)),

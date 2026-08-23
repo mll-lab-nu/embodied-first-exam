@@ -429,7 +429,7 @@ python -m demos.entangle.unlink_c_ring_inspect_demo run.verbose=true \
 footprint（`y ∈ [0, 0.090]`）之外。数值复核：手心 z 由 0.050 走到 0.072，离底座 0.53–0.55m，
 **工具轴全程 `(1, 0, 0)` 不变**——这就是「滚转只用 joint 7」的直接证据。
 
-原语还**自测跟踪误差**：`move_ee_to` 不报残差、不校验可达性（`cloth_corner_fold.py:213`）。
+原语还**自测跟踪误差**：`move_ee_to` 不报残差、不校验可达性（`cloth_link_attach_drag.py:219`）。
 第三轮改形态之后这条已不是主风险（滚转落在 joint 7 上），但读数保留——每个 waypoint 记 `‖hand_pos − 指令‖` 与姿态夹角，
 把 `worst_pose_error` / `worst_tilt_rad` 放进 Result。这是判断手腕到底跟没跟上的唯一读数。
 
