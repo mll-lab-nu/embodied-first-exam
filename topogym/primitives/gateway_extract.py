@@ -373,6 +373,8 @@ class GatewayExtractPrimitive:
                 hover_xy_error=hover_xy_error, grasp_pos_error=grasp_pos_error,
                 hover_align_deg=hover_align_deg, grasp_align_deg=grasp_align_deg,
                 grasped=True, align_deg=align_deg, aligned_part_pos=aligned_part_pos,
+                align_pose_error=turn_track.worst_pose_error,
+                align_tilt_rad=turn_track.worst_tilt_rad,
             )
 
         for name, delta, steps in (
@@ -483,6 +485,7 @@ class GatewayExtractPrimitive:
     def _abort(self, controller, track, phases, release_fn, *, reason, initial_part_pos,
                finger_qpos, grasp_pos_error, hover_xy_error=0.0, hover_align_deg=0.0,
                grasp_align_deg=0.0, grasped=False, align_deg=0.0,
+               align_pose_error=0.0, align_tilt_rad=0.0,
                aligned_part_pos=None) -> GatewayExtractResult:
         if release_fn is not None:
             release_fn()
@@ -513,8 +516,8 @@ class GatewayExtractPrimitive:
             hover_align_deg=hover_align_deg,
             grasp_align_deg=grasp_align_deg,
             align_deg=align_deg,
-            align_pose_error=turn_track.worst_pose_error,
-            align_tilt_rad=turn_track.worst_tilt_rad,
+            align_pose_error=align_pose_error,
+            align_tilt_rad=align_tilt_rad,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,
             completed_phases=tuple(phases),

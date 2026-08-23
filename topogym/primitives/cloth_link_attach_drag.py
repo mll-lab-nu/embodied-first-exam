@@ -121,6 +121,20 @@ class ClothLinkAttachDragPrimitive:
     #: flat sheet wants; a value is needed wherever layers stack, so the hand
     #: binds the one it is actually touching. See `attached_indices`.
     attach_z_band: float | None = None
+    #: Steps spent holding the LAST waypoint's command before letting go, so the
+    #: arm has time to arrive at it.
+    #:
+    #: `_glide` ramps the COMMAND and takes one solver step per interpolation
+    #: step; the arm's own position control lags that ramp and nothing waits for
+    #: it, so every glide ends with the arm still short by its lag distance.
+    #: Measured 2026-08-23 on `cloth_unpleat`: a 64 mm pull commanded at 1.6 mm a
+    #: step ended 31 mm short, and the shortfall was identical with the wrist
+    #: unconstrained and with the whole layout moved 40 mm -- it is a tracking lag,
+    #: not a reach limit. The same run showed a constant 7.5 mm z shortfall left
+    #: over from the descent, for the same reason.
+    #:
+    #: 0 keeps the old behaviour, which is what `cloth_fold` was calibrated with.
+    carry_settle_steps: int = 0
     #: Set when the caller has already opened the gripper -- typically because it
     #: opened it DURING the scene's settle, so the motion costs no extra steps.
     #: Opening again is harmless but adds `gripper_steps` of an arm doing nothing,
@@ -287,6 +301,33 @@ class ClothLinkAttachDragPrimitive:
                     f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
                     f"want=({commanded[0]:+.3f},{commanded[1]:+.3f},{commanded[2]:+.3f}) "
                     f"arm_tilt_deg={np.degrees(tilt):.1f}",
+                    flush=True,
+                )
+        # Hold the last command until the arm actually gets there. Re-gliding to
+        # the same target ramps from where the arm IS, so the residual is covered
+        # at a rate well inside what it can track.
+        if int(self.carry_settle_steps) > 0:
+            final = np.asarray(waypoints[-1].position, dtype=float)
+            commanded = self._hand_for_pad(
+                final, float(final[2]) + float(self.touch_clearance)
+            )
+            self._glide(controller, commanded, ee_quat, int(self.carry_settle_steps))
+            held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
+            follow = float(np.linalg.norm(held - (final + bind_offset)))
+            pose = float(
+                np.linalg.norm(
+                    np.asarray(controller.hand_pos(), dtype=float) - commanded
+                )
+            )
+            # The worst readings are updated, not replaced: the point of the hold
+            # is that the END of the carry is where the plan said, and a lag that
+            # was only ever transient is not a defect worth reporting as one.
+            worst_follow = follow
+            worst_pose = pose
+            if self.verbose:
+                print(
+                    f"cloth_fold carry_settled steps={int(self.carry_settle_steps)} "
+                    f"follow_mm={follow * 1e3:.1f} arm_pos_err_mm={pose * 1e3:.1f}",
                     flush=True,
                 )
         self._phases.append("carried")
