@@ -337,16 +337,22 @@ class GatewayExtractPrimitive:
                     hover_xy_error=0.0, grasp_pos_error=0.0,
                     hover_align_deg=0.0, grasp_align_deg=0.0,
                 )
+            moved = float(np.linalg.norm(new_pos - grasp_pos))
             grasp_pos = new_pos
             base_quat = new_quat
             hand_at_grasp = grasp_pos - tool_offset(base_quat, HAND_TO_PAD_Z)
-            self._move_hand(
-                controller, track,
-                hand_at_grasp - tool_offset(base_quat, float(self.approach_clearance)),
-                quat=base_quat,
-                start_quat=_as_numpy(controller.hand_quat()).reshape(4),
-            )
-            controller.step(int(self.hover_settle_steps))
+            # Re-approach only when the re-aim actually moved the target. When the
+            # part settled where the plan said (measured: 0.5 mm), repeating the
+            # whole approach leg burns ~130 steps to correct nothing and reads on
+            # video as the arm dithering over the part.
+            if moved > 0.002:
+                self._move_hand(
+                    controller, track,
+                    hand_at_grasp - tool_offset(base_quat, float(self.approach_clearance)),
+                    quat=base_quat,
+                    start_quat=_as_numpy(controller.hand_quat()).reshape(4),
+                )
+                controller.step(int(self.hover_settle_steps))
 
         pads_now = np.asarray(controller.hand_pos(), dtype=float) + tool_offset(
             base_quat, HAND_TO_PAD_Z

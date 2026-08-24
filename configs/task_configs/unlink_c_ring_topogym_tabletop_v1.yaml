@@ -210,22 +210,21 @@ primitive:
   # move_ee_to 每个 waypoint 只跑一次带种子的 IK 且什么都不报，到哪算哪；悬停沉降是把
   # 「到哪」变成一个可测量的位姿，而在下降前测它，是为了不让一只没对准的手把自由的环
   # 推开——推开之后合爪抓空，其余读数却仍然像模像样。
-  hover_settle_steps: 40
+  hover_settle_steps: 25
   # 沿工具轴后退多少开始接近 / 松开后退多远。不是 z 偏移——本任务的工具轴是水平的。
   approach_clearance: 0.070
   retreat_clearance: 0.090
-  steps_per_phase: 90
+  steps_per_phase: 60
   # 对准与抽出各自加长：前者是 90° 滚转，后者净空很紧，都不能走快。
   # 对准阶段的总步数，按两段（上提、平移）均分。
-  align_steps: 320
-
+  align_steps: 160
   # 每段动作结束后静置多少步，让手收敛一次再走下一段。
   motion_settle_steps: 20
-  extract_steps: 120
+  extract_steps: 80
   gripper_steps: 30
-  close_hold_steps: 30
-  align_settle_steps: 60
-  release_hold_steps: 100
+  close_hold_steps: 20
+  align_settle_steps: 30
+  release_hold_steps: 60
   # 悬停对位判据，同时也是抓取后的位置判据。取略小于管身直径（10mm）。
   max_grasp_pos_error: 0.008
   # 合爪停位。管身直径 10mm，取略小于半径的停位让指面真的压上去。
@@ -265,8 +264,8 @@ physical:
   # 它一直在动（滚出板外）或读数变了。
   # 因此量的是最后一段窗口内的位移：全程步进 release_check_steps，只在最后
   # release_settle_window 步里要求位移小于 release_max_drift。
-  release_check_steps: 240
-  release_settle_window: 60
+  release_check_steps: 150
+  release_settle_window: 40
   release_max_drift: 0.003
 
 # 自由平移探针。契约对 C3 强制要求「分离后可沿任意方向平移离开」。
