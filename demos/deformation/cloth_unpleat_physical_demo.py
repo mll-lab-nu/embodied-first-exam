@@ -198,6 +198,13 @@ def main(cfg: DictConfig) -> None:
             attach_z_band=layout.attach_z_band(),
             # The gripper was opened during the settle above.
             skip_initial_open=True,
+            # Same switch as `cloth_unroll`, same reason: the fingers straddle
+            # the grasp point by 80 mm while open, and both the descent and the
+            # close sweep them across the cloth. Off by default so this task's
+            # calibrated readings do not move until an A/B says they should.
+            close_before_descend=bool(
+                cfg.task.grasp.get("close_before_descend", False)
+            ),
             gripper_steps=int(cfg.task.physical.gripper_steps),
             move_steps=int(cfg.task.physical.move_steps),
             release_settle_steps=int(cfg.task.physical.release_hold_steps),

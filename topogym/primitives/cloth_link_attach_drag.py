@@ -143,6 +143,17 @@ class ClothLinkAttachDragPrimitive:
     #: Opening again is harmless but adds `gripper_steps` of an arm doing nothing,
     #: which is dead time in every recording of the episode.
     skip_initial_open: bool = False
+    #: Close the fingers in the air, before descending, instead of on the cloth.
+    #:
+    #: The attach is a kinematic bind, so the fingers never need to grip: closing
+    #: on the cloth is plausibility, not mechanism. It costs something measurable
+    #: though. Measured 2026-08-24 on `cloth_unroll`: with the fingers open at
+    #: `open_qpos=0.04` they straddle the grasp point by 80 mm, and BOTH the
+    #: descent and the 60-step close swept them across the cloth -- `close` alone
+    #: put material under the table for all 60 of its steps at two different
+    #: clearances. Closing first shrinks the pads' footprint over the cloth from
+    #: +/-40 mm to +/-`grasp_qpos`, and moves the close itself into clear air.
+    close_before_descend: bool = False
     #: Cosmetic close. ``None`` keeps the gripper open the whole time, which is
     #: the honest shape for a suction-style hold; a value must be at least half a
     #: particle or the fingers have nowhere to be and the solver diverges.
@@ -195,6 +206,11 @@ class ClothLinkAttachDragPrimitive:
         self._glide(controller, approach_hand, ee_quat, int(self.move_steps))
         self._phases.append("approach")
 
+        if self.close_before_descend and self.grasp_qpos is not None:
+            self._notify(on_phase, "close")
+            controller.set_gripper(float(self.grasp_qpos), steps=int(self.gripper_steps))
+            self._phases.append("close")
+
         self._notify(on_phase, "descend")
         self._glide(controller, touch_hand, ee_quat, max(1, int(self.move_steps) // 2))
         # And let the descent finish before anything is measured against it. The
@@ -227,7 +243,7 @@ class ClothLinkAttachDragPrimitive:
                 completed_phases=tuple(self._phases),
             )
 
-        if self.grasp_qpos is not None:
+        if self.grasp_qpos is not None and not self.close_before_descend:
             self._notify(on_phase, "close")
             controller.set_gripper(float(self.grasp_qpos), steps=int(self.gripper_steps))
             self._phases.append("close")
