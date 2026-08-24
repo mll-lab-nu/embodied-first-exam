@@ -421,58 +421,32 @@ def extract_direction(geometry, frame: RingFrame) -> np.ndarray:
     )
 
 
-def slide_waypoints(
-    geometry,
-    frame: RingFrame,
-    *,
-    chords: int = 8,
-    lift: float = 0.0,
-    the_long_way: bool = False,
-) -> np.ndarray:
-    """Ring-centre positions that carry the bar round to the opening, without turning.
+def slide_waypoints(geometry, frame: RingFrame, *, lift: float = 0.020) -> np.ndarray:
+    """Ring-centre positions that bring the bar to the opening: lift, then swing over.
 
-    The bar pierces the C's plane at one point. Sliding the C so that point travels
-    from the top of its interior round to the opening is the whole alignment, and it
-    is a TRANSLATION: the C's orientation never changes, so the centre swings on an
-    arc about the piercing point at whatever radius it currently hangs at.
+    Two straight legs, the way a hand does it with a keyring:
 
-    **Why not roll the ring about its own centre instead.** The relative motion is
-    identical and the roll needs no translation at all, which is why it was the
-    original trajectory. It costs far more than it looks like it should: the wrist has
-    to turn with the part, the gripper origin sits `HAND_TO_PAD_Z` = 103 mm behind the
-    pads, and the resulting lever from hand origin to ring centre is 134 mm. Measured
-    2026-08-23, the controller holds a commanded orientation to 14.28 degrees at this
-    reach even parked, which swings the ring 134 x sin(14.28) = 33 mm; the bar is only
-    9 mm inside the rim, and the ring's centre was measured wandering 54.9 mm during
-    the roll. Ten times the step count moved the lag 12.16 -> 12.58 degrees, so it is
-    the controller's steady-state accuracy, not a rate that can be slowed away.
-    Holding the wrist still costs a 35 mm translation and removes the lever entirely.
+      1. **Lift.** Raise the ring toward the bar by ``lift``, so the bar moves from
+         the top of the ring's interior toward its centre. The interior is a 50 mm
+         hole with nothing in it; every millimetre of lift is a millimetre of
+         clearance under everything that follows.
+      2. **Swing.** One straight line that carries the centre to the aligned pose --
+         the bar sitting toward the opening at the same reduced radius. Both
+         endpoints are within (h - lift) of the bar, so the whole chord stays at
+         least ``lift`` clear of the tube. Measured offline: lift 20 mm gives
+         19.8 mm of clearance over the entire leg.
 
-    **An arc, in chords, not a straight line.** One chord cuts 3.35 mm inside the true
-    arc, which is more than the whole budget; eight bring it to 0.053 mm. `apply_phases`
-    has no arc primitive and does not need one.
-
-    ``lift`` raises the ring toward the bar before the arc, and is the difference
-    between this working and not. The ring HANGS on the bar, so at rest the two
-    surfaces touch and the arc has no clearance at all; the hand's tracking error then
-    lands entirely on the interlock. Worse, it lands in the one direction that hurts:
-    falling behind an arc means sitting on its chord, which is inward, which is into
-    the bar. Measured 2026-08-23 with no lift, the hand strayed 5.9 mm from the path
-    and the rings overlapped by 6.1 mm -- the same number, because the stray IS the
-    overlap. Lifting by d puts d of clearance under the whole arc (measured: 8 mm of
-    lift gives 7.78 mm), so a stray smaller than d costs nothing. The extraction that
-    follows has to travel ``extract_travel + lift`` for the same reason.
-
-    ``the_long_way`` walks the other side of the circle to the same place. There is
-    only one centre that puts the bar at the opening -- the ring never turns, so the
-    opening's world direction is fixed -- which is why this trajectory has one
-    alignment where the roll had two mirror-image ones. The long way round is the only
-    alternative left, and `tests/check_c_ring_clearance.py` probes it to say whether
-    it is a second gateway or a jam.
+    This replaced an arc that slid the ring round the bar at its hanging radius --
+    i.e. with the tube in contact the whole way. That path needed the arc chorded,
+    the lift chorded, hundreds of settle steps and an integral bias on the command,
+    all to squeeze a ~6 mm steady hand error into a 0 mm corridor, and it still
+    clipped. The straight legs put the motion through the middle of the hole, where
+    the corridor is wider than the error, and need none of it.
 
     ``frame`` is measured at the moment of use -- the gate passes the resting frame,
-    the demo passes the ring's live frame -- so the path closes the loop on where the
-    ring actually is rather than on where the layout said it would be.
+    the demo passes the live one -- so the path is laid out from where the ring
+    actually is. The extraction that follows must travel ``extract_travel + lift``,
+    the same accounting as before.
     """
 
     bar = np.asarray(geometry.tube_point, dtype=float)
@@ -480,33 +454,12 @@ def slide_waypoints(
     hang = float(np.linalg.norm(bar - rest))
     if hang < 1e-9:
         return np.asarray([rest], dtype=float)
-    start = rest + float(lift) * (bar - rest) / hang
-    radius = hang - float(lift)
-    finish = bar - radius * extract_direction(geometry, frame)
-    from_start = (start - bar) / radius
-    to_finish = (finish - bar) / radius
-    angle = float(np.arccos(np.clip(float(from_start @ to_finish), -1.0, 1.0)))
-    axis = np.cross(from_start, to_finish)
-    norm = float(np.linalg.norm(axis))
-    if norm < 1e-12 or angle < 1e-9:
-        return np.asarray([rest, start], dtype=float)
-    axis = axis / norm
-    if the_long_way:
-        axis, angle = -axis, 2.0 * np.pi - angle
-    steps = max(1, int(chords))
-    # The lift is chorded too, not one jump. It is the leg with no clearance under it
-    # -- the ring starts in contact and only earns room as it rises -- so it is the leg
-    # least able to absorb the hand's steady-state offset. Measured 2026-08-23 with the
-    # lift as a single 12 mm move: the whole episode's overlap, -1.8 mm, appeared
-    # during that one leg and the eight arc chords after it added nothing at all.
-    return np.asarray(
-        [rest + (start - rest) * step / steps for step in range(steps + 1)]
-        + [
-            bar + rotation_about(axis, angle * step / steps) @ (start - bar)
-            for step in range(1, steps + 1)
-        ],
-        dtype=float,
-    )
+    lift = float(np.clip(lift, 0.0, hang))
+    toward = (bar - rest) / hang
+    lifted = rest + lift * toward
+    finish = bar - (hang - lift) * extract_direction(geometry, frame)
+    return np.asarray([rest, lifted, finish], dtype=float)
+
 
 
 def bisector_projection(normal_a, normal_b) -> np.ndarray:
@@ -657,20 +610,15 @@ class SceneGeometry:
         turn = (turn + 180.0) % 360.0 - 180.0
         return np.asarray(self.c_rest_frame.normal, dtype=float), turn
 
-    def gateway_phases(self, *, carry: float = 0.090, arc_chords: int = 8, lift: float = 0.008):
+    def gateway_phases(self, *, carry: float = 0.090, lift: float = 0.020):
         """The one trajectory that unlinks, as a phase list for the offline gate.
 
-        Nothing here but bookkeeping: `slide_waypoints` and `extract_direction` own the
-        geometry so that the gate and the runtime cannot drift apart, and this differs
-        the absolute points into the ("translate", delta) phases `apply_phases` speaks.
-
-        Laid out from the RESTING frame -- the C spawns `spawn_drop` above where it
-        settles, and 2 mm is more than this trajectory's whole clearance budget.
+        Bookkeeping only: `slide_waypoints` and `extract_direction` own the geometry
+        so the gate and the runtime cannot drift apart. Laid out from the RESTING
+        frame -- the C spawns `spawn_drop` above where it settles.
         """
 
-        waypoints = slide_waypoints(
-            self, self.c_rest_frame, chords=arc_chords, lift=lift
-        )
+        waypoints = slide_waypoints(self, self.c_rest_frame, lift=lift)
         opening = extract_direction(self, self.c_rest_frame)
         phases: list[tuple[str, tuple[float, float, float]]] = []
         for before, after in zip(waypoints[:-1], waypoints[1:]):

@@ -370,7 +370,6 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                     for point in ring_geometry.slide_waypoints(
                         geometry,
                         c_ring_frame(ring_scene),
-                        chords=int(spec.align_chords),
                         lift=float(spec.slide_lift),
                     )[1:]
                 ]
@@ -528,10 +527,8 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
     if result.align_part_drift > float(cfg.task.success.max_slide_drift):
         print(
             f"[warn] the ring strayed {result.align_part_drift * 1000:.1f} mm from the "
-            "slide path. The bar sits only 9 mm inside the rim, so this is the reading "
-            "that decides whether the ring goes round the closed ring or through it. "
-            "Raise task.primitive.motion_settle_steps so each chord converges, or "
-            "task.primitive.align_chords so each one is shorter.",
+            "slide path. The corridor through the ring's interior is about slide_lift "
+            "wide, so raise task.primitive.slide_lift if this approaches it.",
             flush=True,
         )
     if abs(result.grasp_align_deg - result.hover_align_deg) > 10.0:
@@ -583,18 +580,14 @@ def main(cfg: DictConfig) -> None:
     configure_contacts(cfg, ring_scene, controller)
 
     slide = ring_geometry.slide_waypoints(
-        geometry,
-        geometry.c_rest_frame,
-        chords=int(cfg.task.primitive.align_chords),
-        lift=float(cfg.task.primitive.slide_lift),
+        geometry, geometry.c_rest_frame, lift=float(cfg.task.primitive.slide_lift)
     )
     out = ring_geometry.extract_direction(geometry, geometry.c_rest_frame)
     print(
         "unlink_c_ring setup "
         f"mode={mode} grasp_azimuth={float(cfg.task.primitive.grasp_azimuth_deg):.0f}deg "
         f"lift={float(cfg.task.primitive.slide_lift) * 1000:.0f}mm "
-        f"slide={sum(float(np.linalg.norm(b - a)) for a, b in zip(slide[1:-1], slide[2:])) * 1000:.0f}mm"
-        f" in {len(slide) - 2} chords "
+        f"swing={float(np.linalg.norm(slide[-1] - slide[1])) * 1000:.0f}mm "
         f"out=({out[0]:+.2f},{out[1]:+.2f},{out[2]:+.2f}) "
         f"grasp_yaw={grasp_yaw_deg(geometry, geometry.c_rest_frame, float(cfg.task.primitive.grasp_azimuth_deg)):.1f}deg "
         f"extract={geometry.extract_travel * 1000:.0f}mm "

@@ -1,10 +1,11 @@
-"""Turn a held part until its opening lines up with a bar, then draw it off.
+"""Slide a held part until its opening lines up with a bar, then draw it off.
 
-docx 3.4's action: grasp the C ring hanging on the closed ring's lower bar, roll it
-about that bar until its opening faces the bar, translate straight out so the bar
-leaves through the opening, and carry it clear. The trajectory itself was measured
-without a solver first (`tests/check_c_ring_clearance.py`); this primitive is how an
-arm executes it.
+docx 3.4's action: grasp the C ring hanging on the closed ring's lower bar, lift it
+so the bar sits in the middle of its interior, swing it so the bar faces the
+opening, translate out so the bar leaves through the opening, and carry it clear --
+the same motion a hand makes taking a key off a keyring. The trajectory itself is
+measured without a solver first (`tests/check_gateway_slide_path.py` and
+`tests/check_c_ring_clearance.py`); this primitive is how an arm executes it.
 
 **Why this is not a branch on `AxialInsertPrimitive`.** Not the amount of work -- it
 cannot express the motion. That primitive's `align_axis` computes its correction as
@@ -33,11 +34,13 @@ into `offset_in_hand` when the grasp is measured and never reappears.
 it in through ``align_path_fn`` -- evaluated inside the align phase, so the path is
 measured against where the part actually is rather than where the layout said.
 
-**Targets are the part's centre.** `axial_insert` keeps one world-frame carry offset;
-this stores the offset in the hand's own frame and maps it back out every waypoint
-(`hand = part - R(q) @ offset_in_hand`), which costs nothing while the wrist is still
-and is what let the roll be expressed at all. Interpolating the *part* rather than the
-hand is what keeps the ring on its arc instead of swinging it through the chord.
+**Targets are the part's centre.** The offset from hand to part is measured at the
+grasp, stored in the hand's frame, and mapped back out at every waypoint
+(`hand = part - R(q) @ offset_in_hand`). The alignment path itself comes from
+`tasks/entangle/_c_ring_geometry.slide_waypoints`: lift the part so the bar sits in
+the middle of its interior, then one straight swing to the aligned pose -- two legs
+through empty space, replacing an arc that slid the part along the tube at zero
+clearance and needed chording, long settles and command biasing that still clipped.
 
 **Nothing here reports IK residuals, because `move_ee_to` does not.** A 90 degree
 reorientation about a horizontal axis has no precedent in this repo, so the primitive
@@ -120,11 +123,6 @@ class _Tracking:
     # it should be. The hand's own tracking error does not answer the question this
     # task cares about -- the part is what has to miss the other ring.
     worst_part_drift: float = 0.0
-    # Standing overshoot added to the hand's command, integrated from the hand's own
-    # error. See `_move_part`: it is the only way to close the loop here, because the
-    # part is welded in the grip and therefore carries no information the hand does
-    # not already have.
-    command_bias: Any = None
 
 
 
@@ -205,10 +203,6 @@ class GatewayExtractPrimitive:
     # the nudge would have.
     max_regrasp_move: float = 0.030
     max_regrasp_wrist_deg: float = 30.0
-    # Cap on the overshoot `_move_part` integrates onto the hand's command. Bounded so
-    # a waypoint the arm simply cannot reach asks for a large correction once and then
-    # stops, instead of winding up and throwing the part.
-    max_command_bias: float = 0.020
     close_hold_steps: int = 30
     align_steps: int | None = None
     align_settle_steps: int = 30
@@ -438,12 +432,12 @@ class GatewayExtractPrimitive:
         path = [] if skip_align or align_path_fn is None else [
             np.asarray(point, dtype=float).reshape(3) for point in align_path_fn()
         ]
-        chord_steps = max(1, align_steps // max(1, len(path))) if path else align_steps
+        leg_steps = max(1, align_steps // max(1, len(path))) if path else align_steps
         for index, target in enumerate(path):
             self._move_part(
                 controller, turn_track, part_from=part_center, part_to=target,
                 quat_from=base_quat, quat_to=base_quat,
-                offset_in_hand=offset_in_hand, steps=chord_steps, part_entity=part,
+                offset_in_hand=offset_in_hand, steps=leg_steps, part_entity=part,
             )
             # Per leg, because the run-wide worst does not say WHICH leg. `behind` is
             # measured after the leg's settle, so it is the steady-state offset rather
@@ -575,34 +569,12 @@ class GatewayExtractPrimitive:
             quat = slerp(quat_from, quat_to, alpha)
             part = (1.0 - alpha) * part_from + alpha * part_to
             aim = part - _matrix(quat) @ offset_in_hand
-            if part_entity is None:
-                self._command(controller, track, aim, quat)
-                continue
-            # Integral action on the HAND's own error, because the arm does not reach
-            # what it is told: measured 2026-08-23 it sits about 6 mm off its commanded
-            # Cartesian pose at this reach, steadily, at the grasp and at every
-            # waypoint after, and more settling does not shrink it.
-            #
-            # Correcting against the PART instead is degenerate, and was tried before
-            # this: the part is welded in the grip, so part_actual = hand_actual + d
-            # and part_target = aim + d, which makes
-            # hand_actual + (part_target - part_actual) equal to `aim` exactly. The two
-            # errors are one number; only the hand's own can be fed back.
-            #
-            # Bounded, so a waypoint the arm simply cannot reach asks for a large
-            # overshoot once and then stops rather than winding up.
-            if track.command_bias is None:
-                track.command_bias = np.zeros(3, dtype=float)
-            reached = self._command(controller, track, aim + track.command_bias, quat)
-            track.command_bias = np.clip(
-                track.command_bias + 0.5 * (aim - reached),
-                -self.max_command_bias,
-                self.max_command_bias,
-            )
-            track.worst_part_drift = max(
-                track.worst_part_drift,
-                float(np.linalg.norm(entity_pos(part_entity) - part)),
-            )
+            self._command(controller, track, aim, quat)
+            if part_entity is not None:
+                track.worst_part_drift = max(
+                    track.worst_part_drift,
+                    float(np.linalg.norm(entity_pos(part_entity) - part)),
+                )
         controller.step(max(0, int(self.motion_settle_steps)))
 
     def _command(self, controller, track, hand_target, quat) -> np.ndarray:
