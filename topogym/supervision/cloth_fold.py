@@ -66,6 +66,15 @@ class ClothFoldWatch:
     worst_step_disp: float = field(default=0.0, init=False)
     worst_speed: float = field(default=0.0, init=False)
     lowest_z: float = field(default=float("inf"), init=False)
+    #: Where and when the deepest particle was, recorded alongside `lowest_z`.
+    #: A single worst-case number cannot say whether material dips as it lands,
+    #: as it is dragged, or only under the gripper, and those want different
+    #: answers -- so the position and the step are kept with it.
+    lowest_xy: tuple[float, float] = field(default=(float("nan"), float("nan")), init=False)
+    lowest_step: int = field(default=-1, init=False)
+    lowest_phase: str = field(default="", init=False)
+    #: How many particles were below the table at the worst moment for it.
+    below_count: int = field(default=0, init=False)
     tripped: str | None = field(default=None, init=False)
     tripped_phase: str | None = field(default=None, init=False)
     worst_stretch_mean: float = field(default=float("nan"), init=False)
@@ -105,7 +114,15 @@ class ClothFoldWatch:
         self._previous = np.array(current, copy=True)
         self.worst_step_disp = max(self.worst_step_disp, displacement)
         self.worst_speed = max(self.worst_speed, speed)
-        self.lowest_z = min(self.lowest_z, lowest)
+        if lowest < self.lowest_z:
+            self.lowest_z = lowest
+            deepest = int(np.argmin(current[:, 2]))
+            self.lowest_xy = (float(current[deepest, 0]), float(current[deepest, 1]))
+            self.lowest_step = int(step)
+            self.lowest_phase = str(self.phase)
+        self.below_count = max(
+            self.below_count, int(np.count_nonzero(current[:, 2] < float(self.table_z)))
+        )
         if self._pairs is not None:
             stretch = stretch_report(self.rest_nodes, current, self._pairs)
             self.worst_stretch_mean = max(self.worst_stretch_mean, stretch["mean"])
@@ -142,6 +159,9 @@ class ClothFoldWatch:
                 f"carry_stretch_max={self.worst_stretch_max:.3f} "
             )
             + f"lowest_z_above_table={self.lowest_z:+.5f} "
+            f"lowest_at=({self.lowest_xy[0]:+.3f},{self.lowest_xy[1]:+.3f})"
+            f"@{self.lowest_step}/{self.lowest_phase or '?'} "
+            f"worst_below_count={self.below_count} "
             f"blowup={self.tripped or 'none'}"
             + ("" if self.tripped is None else f" blowup_phase={self.tripped_phase}")
         )
