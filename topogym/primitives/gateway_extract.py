@@ -422,13 +422,22 @@ class GatewayExtractPrimitive:
             np.asarray(point, dtype=float).reshape(3) for point in align_path_fn()
         ]
         chord_steps = max(1, align_steps // max(1, len(path))) if path else align_steps
-        for target in path:
+        for index, target in enumerate(path):
             self._move_part(
                 controller, turn_track, part_from=part_center, part_to=target,
                 quat_from=base_quat, quat_to=base_quat,
                 offset_in_hand=offset_in_hand, steps=chord_steps, part_entity=part,
             )
             part_center = target
+            # Per leg, because the run-wide worst does not say WHICH leg. Leg 0 is the
+            # lift and the rest are the arc; a lift that lags reads as drift but cannot
+            # overlap anything (behind the command means not yet lifted, which is where
+            # the part already was), so the two have to be told apart.
+            self._log(
+                f"slide{index}", turn_track,
+                leg=float(np.linalg.norm(np.asarray(target, dtype=float) - part_center)),
+                behind=float(np.linalg.norm(entity_pos(part) - target)),
+            )
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")
