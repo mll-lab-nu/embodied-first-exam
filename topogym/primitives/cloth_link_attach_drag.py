@@ -185,10 +185,17 @@ class ClothLinkAttachDragPrimitive:
 
         approach_hand = touch_hand.copy()
         approach_hand[2] = max(float(self.approach_z), float(touch_hand[2]) + 0.06)
+        # `_notify` sets the CURRENT phase for whoever is watching, so it belongs
+        # BEFORE the motion it names; `_phases` records what has completed, so it
+        # belongs after. Those two were both after until 2026-08-24, which meant
+        # every step of the descent and the touch settle was reported as
+        # "approach" -- and a penetration diagnosis then pointed at the wrong
+        # 120 steps.
+        self._notify(on_phase, "approach")
         self._glide(controller, approach_hand, ee_quat, int(self.move_steps))
         self._phases.append("approach")
-        self._notify(on_phase, "approach")
 
+        self._notify(on_phase, "descend")
         self._glide(controller, touch_hand, ee_quat, max(1, int(self.move_steps) // 2))
         # And let the descent finish before anything is measured against it. The
         # same lag that shortens a carry also leaves the pads BELOW the height
@@ -196,6 +203,7 @@ class ClothLinkAttachDragPrimitive:
         # `touch_clearance` and therefore most of the promise that the fingers
         # never reach the cloth. The attach tolerance is checked right after this,
         # so the check would otherwise be scoring the lag rather than the aim.
+        self._notify(on_phase, "touch_settle")
         self._hold(controller, touch_hand, ee_quat, int(self.touch_settle_steps))
         self._phases.append("touch")
 
@@ -220,6 +228,7 @@ class ClothLinkAttachDragPrimitive:
             )
 
         if self.grasp_qpos is not None:
+            self._notify(on_phase, "close")
             controller.set_gripper(float(self.grasp_qpos), steps=int(self.gripper_steps))
             self._phases.append("close")
 
@@ -346,6 +355,7 @@ class ClothLinkAttachDragPrimitive:
         controller.step(max(0, int(self.release_settle_steps)))
         self._phases.append("settled")
 
+        self._notify(on_phase, "retreat")
         self._retreat(controller, ee_quat)
         self._phases.append("retreat")
         self._notify(on_phase, "done")
