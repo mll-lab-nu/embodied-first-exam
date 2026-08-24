@@ -494,8 +494,13 @@ def slide_waypoints(
     if the_long_way:
         axis, angle = -axis, 2.0 * np.pi - angle
     steps = max(1, int(chords))
+    # The lift is chorded too, not one jump. It is the leg with no clearance under it
+    # -- the ring starts in contact and only earns room as it rises -- so it is the leg
+    # least able to absorb the hand's steady-state offset. Measured 2026-08-23 with the
+    # lift as a single 12 mm move: the whole episode's overlap, -1.8 mm, appeared
+    # during that one leg and the eight arc chords after it added nothing at all.
     return np.asarray(
-        [rest, start]
+        [rest + (start - rest) * step / steps for step in range(steps + 1)]
         + [
             bar + rotation_about(axis, angle * step / steps) @ (start - bar)
             for step in range(1, steps + 1)

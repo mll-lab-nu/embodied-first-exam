@@ -428,16 +428,16 @@ class GatewayExtractPrimitive:
                 quat_from=base_quat, quat_to=base_quat,
                 offset_in_hand=offset_in_hand, steps=chord_steps, part_entity=part,
             )
-            part_center = target
-            # Per leg, because the run-wide worst does not say WHICH leg. Leg 0 is the
-            # lift and the rest are the arc; a lift that lags reads as drift but cannot
-            # overlap anything (behind the command means not yet lifted, which is where
-            # the part already was), so the two have to be told apart.
+            # Per leg, because the run-wide worst does not say WHICH leg. `behind` is
+            # measured after the leg's settle, so it is the steady-state offset rather
+            # than a lag: measured 2026-08-23 it sits at 5.5 mm and does not shrink
+            # with more settling, which is what ruled settling out as the fix.
             self._log(
                 f"slide{index}", turn_track,
                 leg=float(np.linalg.norm(np.asarray(target, dtype=float) - part_center)),
                 behind=float(np.linalg.norm(entity_pos(part) - target)),
             )
+            part_center = target
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")
