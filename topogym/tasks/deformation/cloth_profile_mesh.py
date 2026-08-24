@@ -3,9 +3,8 @@
 `cloth_fold.cloth_sheet_mesh` covers the one case where the cloth lies flat.
 docx 1.2, 1.3 and 1.5 all start from cloth that is folded, rolled or gathered,
 and geometrically they are the same construction: a polyline in the
-material-height plane swept sideways. This file is that construction. docx 1.2's standing pleat is its
-first profile; 1.3's spiral and 1.5's gathered stack are the same call with a
-different polyline.
+material-height plane swept sideways. This file is that construction. docx 1.2's pleat and 1.3's spiral are both
+profiles here; 1.5's gathered stack is the same call with a third polyline.
 
 **Every edge is held to the same length.** Genesis remeshes the control mesh
 isotropically to `PBDOptions.particle_size`, and vertex order surviving that
@@ -138,6 +137,137 @@ def pleat_landmarks(profile) -> dict:
         # can only travel on a circle of this radius about the crease, the same
         # constraint docx 1.1's arc comes from.
         "arm_length": float(np.linalg.norm(crest - crease)),
+        "material_length": material,
+        "plan_span": span,
+        "stored": material - span,
+    }
+
+
+def spiral_profile(
+    *,
+    material_length: float,
+    bar_radius: float,
+    clearance: float,
+    pitch: float,
+    turns: float,
+    bar_height: float,
+    rest_z: float,
+    spacing: float,
+) -> np.ndarray:
+    """A band wound on a horizontal bar, hanging off it and lying on the table.
+
+    docx 1.3's roll, in the arrangement of a washroom paper dispenser: the band
+    spirals around a rigid bar, leaves it tangentially, hangs down and runs flat
+    along the table. Written as (material, height) like `pleat_profile`, except
+    that the first coordinate is measured from the BAR's axis rather than from
+    the band's plan-view middle -- a rolled band has no useful middle, and the
+    bar is the thing every other landmark is relative to.
+
+    ::
+
+              .-~~~-.
+             ( ((|)) )     spiral, `turns` turns, wound clockwise
+              '-~~~-'|     leaves at the +material side, tangent down
+                     |     drape
+        -------------+------------------------  table
+                     '------ flat run ------'   <- the gripper takes this end
+
+    **Why it leaves from the side and not the bottom.** The tangent to a spiral
+    at its outermost point is perpendicular to the radius there, so a band that
+    leaves at the side falls straight down and a band that leaves at the bottom
+    sets off horizontally at roll height and has to kink to reach the table.
+    Ending on the side is both the shape a real dispenser has and the one with no
+    crease in it. Measured on the shipped numbers: the exit tangent is
+    (+0.043, -0.999), i.e. within 2.5 degrees of vertical.
+
+    The winding is CLOCKWISE (the angle decreases as material is paid out) so
+    that the exit lands on the +material side and the flat run heads the same
+    way. Winding the other way would put the flat run on the far side of the
+    bar, under the roll.
+
+    ``spacing`` is the target edge length of the control mesh. The spiral is
+    sampled at that spacing here rather than being handed to `resample_polyline`
+    as a curve, because that function resamples per SEGMENT: a densely sampled
+    curve would keep its own density and ignore the target. Sampling here and
+    then passing the result through `resample_polyline` is a no-op on the spiral
+    and still subdivides the two straight pieces, which is what keeps the whole
+    control mesh at one edge length.
+
+    The chords cut the corner of the spiral by r(1 - cos(spacing/2r)); at the
+    shipped 7.5 mm spacing and a 9 mm inner radius that is 0.77 mm, under a
+    particle radius, so the simulated roll is not measurably smaller than the
+    designed one.
+    """
+
+    r_in = float(bar_radius) + float(clearance)
+    if float(clearance) <= 0.0 or float(pitch) <= 0.0 or float(turns) <= 0.0:
+        raise ValueError("clearance, pitch and turns must all be positive.")
+
+    sweep = 2.0 * math.pi * float(turns)
+    # Sample by arc length rather than by angle: the spiral's radius grows, so a
+    # uniform angle step would make the outer turns coarser than the inner ones.
+    coarse = np.linspace(0.0, sweep, max(64, int(sweep * 200)))
+    radius = r_in + float(pitch) * coarse / (2.0 * math.pi)
+    angle = sweep - coarse
+    curve = np.stack(
+        [radius * np.cos(angle), float(bar_height) + radius * np.sin(angle)], axis=1
+    )
+    arc = np.concatenate(
+        [[0.0], np.cumsum(np.linalg.norm(np.diff(curve, axis=0), axis=1))]
+    )
+    steps = max(2, int(round(float(arc[-1]) / float(spacing))))
+    spiral = np.stack(
+        [
+            np.interp(np.linspace(0.0, float(arc[-1]), steps + 1), arc, curve[:, 0]),
+            np.interp(np.linspace(0.0, float(arc[-1]), steps + 1), arc, curve[:, 1]),
+        ],
+        axis=1,
+    )
+
+    r_out = float(radius[-1])
+    drape = float(bar_height) - float(rest_z)
+    # Against the SAMPLED polyline's length, not the dense curve's. The chords
+    # cut corners, so the two differ by a couple of millimetres -- and the total
+    # has to come out at exactly `material_length`, because that is the
+    # denominator the material-conservation judge divides by.
+    flat = float(material_length) - float(polyline_length(spiral)) - drape
+    # The attachment disc has to land on the flat run, and the grasp is inset
+    # from its end. Anything shorter and the gripper has nothing to take hold of.
+    if flat <= 4.0 * float(spacing):
+        raise ValueError(
+            f"material_length={material_length} leaves a flat run of {flat:.4f} m "
+            f"after {arc[-1]:.4f} m of spiral and {drape:.4f} m of drape; the "
+            f"gripper needs more than {4.0 * float(spacing):.4f} m to grasp."
+        )
+
+    return np.vstack(
+        [
+            spiral,
+            [[r_out, float(rest_z)], [r_out + flat, float(rest_z)]],
+        ]
+    )
+
+
+def spiral_landmarks(profile, *, bar_height: float, rest_z: float) -> dict:
+    """The quantities a planner and a judge need, read off the profile itself."""
+
+    profile = np.asarray(profile, dtype=float)
+    material = polyline_length(profile)
+    span = float(profile[:, 0].max() - profile[:, 0].min())
+    # The spiral ends where the band first reaches the table; everything after is
+    # the flat run the gripper works on.
+    on_table = np.flatnonzero(profile[:, 1] <= float(rest_z) + 1e-9)
+    exit_index = int(on_table[0]) if on_table.size else len(profile) - 2
+    return {
+        # Offsets from the BAR's axis along the material direction.
+        "exit_s": float(profile[exit_index, 0]),
+        "free_end_s": float(profile[-1, 0]),
+        "flat_run": float(profile[-1, 0] - profile[exit_index, 0]),
+        "roll_radius": float(np.abs(profile[:exit_index, 0]).max()),
+        # How much material is wound up: the pull has to pay out exactly this.
+        "rolled": float(polyline_length(profile[: exit_index + 1])) - (
+            float(bar_height) - float(rest_z)
+        ),
         "material_length": material,
         "plan_span": span,
         "stored": material - span,

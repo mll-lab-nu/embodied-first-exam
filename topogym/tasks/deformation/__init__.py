@@ -6,7 +6,7 @@ docx `TopoGym_tasks.docx` 第 1 节列了五个候选任务，本目录的进度
 |---|---|---|
 | 1.1 | 对折／折角 | `cloth_fold.py`，2026-08-21 跑通并标定 |
 | 1.2 | 展开单个褶皱 | `cloth_unpleat.py`，建设中 |
-| 1.3 | 展开自身卷曲的布带 | 未开工 |
+| 1.3 | 展开自身卷曲的布带 | `cloth_unroll.py`，代码已落地，待 GPU 标定 |
 | 1.4 | 将软管弯成 U 形 | 不属于本目录，走 FEM+IPC 管（见下） |
 | 1.5 | 铺展桌布并形成目标垂坠 | 未开工 |
 
@@ -42,6 +42,8 @@ from .cloth_profile_mesh import (
     pleat_profile,
     polyline_length,
     resample_polyline,
+    spiral_landmarks,
+    spiral_profile,
     sweep_profile_mesh,
     texture_size_m,
 )
@@ -51,6 +53,11 @@ from .cloth_unpleat import (
     ClothUnpleatSceneBuilder,
     band_particles,
     settle_band,
+)
+from .cloth_unroll import (
+    ClothUnrollLayout,
+    ClothUnrollScene,
+    ClothUnrollSceneBuilder,
 )
 
 __all__ = [
@@ -71,6 +78,11 @@ __all__ = [
     "pleat_profile",
     "polyline_length",
     "resample_polyline",
+    "spiral_landmarks",
+    "spiral_profile",
     "sweep_profile_mesh",
     "texture_size_m",
+    "ClothUnrollLayout",
+    "ClothUnrollScene",
+    "ClothUnrollSceneBuilder",
 ]

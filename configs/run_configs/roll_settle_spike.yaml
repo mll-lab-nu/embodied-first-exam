@@ -1,0 +1,46 @@
+# tests/roll_settle_spike.py 的运行模式参数。
+#
+# 布卷的几何、材料与判据参数不在这里 —— 它们在 task 配置（cloth_unroll）的
+# cloth / dispenser 块，用点路径覆盖即可扫参：
+#   task.cloth.roll.pitch=0.007
+#   task.cloth.roll.clearance=0.008
+#   task.dispenser.bar_radius=0.006
+#   task.cloth.bending_relaxation=0.1
+
+defaults:
+  - default
+  - _self_
+
+# 静置多少步（dt=0.01，所以 400 步 = 4 秒）。
+# 与 pleat_settle_spike 取同一值：卷筒塌陷或自开都是慢过程，比布落到桌面慢得多。
+settle_steps: 400
+
+# 每隔多少步打印一行采样。曲线的形状本身是诊断：卷筒外径一路变大是自开，
+# 缠绕粒子数一路变少是滑落，两者在末态的单张读数上分不开。
+sample_every: 25
+
+# 建不建机械臂。默认不建：这一项没有任何东西碰布，不建能省下建场时间。
+# 要看抽纸器与手臂的相对位置时置 true。
+include_robot: false
+
+# ------------------------------------------------------------------ 判据
+# 判的东西与 demo 的起始护栏相同（`task.grasp.max_start_spread_ratio` /
+# `min_start_three_layer_cells`），沿用 1.2 立下的规矩：闸口过了 demo 就不会在
+# 同一处停下，两边不该有各自的定义。1.3 多一条，因为多了夹具：布卷还在不在梁上。
+#
+# verdict：intact / fell_off（整卷离开横梁）/ unwound（自己开了）/
+#          layers_lost（层叠散了）/ diverged（发散，优先于其余四种）。
+
+# 「还缠在梁上」的判定半径 = 横梁半径 + 这个余量。取 2 个粒子。
+# 0.004 + 0.008 = 0.012，只把最内圈（r=0.009）算进去。
+on_bar_margin: 0.008
+
+# 判的是**整卷有没有离开横梁**，不是「缠了多少」——所以门槛取得低。
+# 掉下来的卷筒在这个半径里是 0 个粒子，与完好状态之间没有中间地带。
+# 具体数目由重网格化后的粒子数决定（控制网格算不出来），spike 跑完按实测抬。
+min_on_bar: 20
+
+# 静置里没有任何东西在驱动布，所以任一粒子超过这个速率就不是在落定。
+# 与 pleat_settle_spike 同值；1.3 更容易撞到它，因为布与刚体圆柱的接触
+# 是本仓没做过的（`rope_winding` 绕柱那次是绳，粒子数少一个量级）。
+max_speed: 1.0

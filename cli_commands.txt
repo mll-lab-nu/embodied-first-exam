@@ -456,6 +456,66 @@ python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=overpull r
 # 4) 只验管线不跑物理 (配置/建场/原语构造走一遍就退出)
 python -B -m demos.deformation.cloth_unpleat_physical_demo run.build_only=true 2>&1 | tee runs/videos/cloth_unpleat/buildonly.log
 
+# --- cloth_unroll (docx 1.3 展开自身卷曲的布带, 2026-08-24 新建) ---
+# 场景: 布带绕在一根水平横梁上两圈, 横梁架在两根立柱之间, 像公共卫生间的抽纸器。
+# 动作: 夹爪抓平铺段的自由端, 贴着桌面沿 +y 直线拉; 旋转全部由卷筒绕梁吸收,
+#       手腕不转。行程 174mm 一次够不着, 所以一个 episode 是三段抓取。
+#
+# 统一跑法 (推荐, 给有 GPU 的机器): 五格按顺序跑, check/settle 是闸口,
+# 不过就跳过后面的; 跑完打一张汇总表, 视频与日志都落在同一个时间戳目录下。
+bash bash_scripts/tests/cloth_unroll_record.sh              # 全部五格
+bash bash_scripts/tests/cloth_unroll_record.sh settle       # 只跑闸口
+bash bash_scripts/tests/cloth_unroll_record.sh unroll shove # 只跑两段录制
+#
+# 下面是逐条的等价命令, 调参或只想跑其中一步时用。
+# 建设顺序与 1.2 相同: 先证明卷筒放手之后还在梁上、还卷着, 再跑动作。
+# 螺旋是画进控制网格的, 不是缠出来的, 所以「它到底散不散」只有仿真能回答。
+
+# 0) 方案闸口: 卷筒静置。看四样 ——
+#    `spawn` 那行的 max_speed / lowest_mm (出生时布与刚体有没有互穿),
+#    `settle` 各行的 roll_r_mm (一路涨 = 卷筒自开, 先查 bending_relaxation 是不是 0),
+#    `settle` 各行的 on_bar (一路掉 = 卷筒从梁上滑落),
+#    `verdict=intact` 才往下跑。
+mkdir -p runs/videos/cloth_unroll
+python -B -m tests.roll_settle_spike run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/roll_settle.log
+# 想看着它落: 双机位录制同一次静置
+python -B -m tests.roll_settle_spike recording=hq recording.path=runs/videos/cloth_unroll/settle.mp4 recording.camera=[oblique,front] recording.res=[960,960] recording.every_n_steps=3 2>&1 | tee runs/videos/cloth_unroll/settle_record.log
+
+# 1) 免 GPU 判据单测 (改阈值或卷筒几何之后必跑, 秒级)
+python -B tests/check_cloth_unroll_geometry.py 2>&1 | tee runs/check_cloth_unroll.log
+
+# 2) **三视角录制的任务 demo**。落三个文件:
+#    unroll_oblique.mp4 / unroll_front.mp4 / unroll_wrist.mp4
+#    先对一眼 `cloth_unroll motion_budget` 那行 (strokes / total_mm / final_y),
+#    确认跑的是当前这版而不是上一次的二进制 —— 这个标记在 1.2 里救过三次误读。
+python -B -m demos.deformation.cloth_unroll_physical_demo \
+  recording=hq \
+  recording.path=runs/videos/cloth_unroll/unroll.mp4 \
+  recording.camera=[oblique,front,wrist] \
+  recording.res=[960,960] \
+  recording.every_n_steps=3 \
+  run.verbose=true \
+  2>&1 | tee runs/videos/cloth_unroll/unroll.log
+# 只跑第一段抓取 (调试重新 observe 时用, 不必每次从头等三段跑完)
+python -B -m demos.deformation.cloth_unroll_physical_demo run.max_strokes=1 run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/stroke1.log
+
+# 3) 走错的对照 (标定阈值用)。shove 应当 unrolled=false, 且失败的是
+#    single_layer_frac 与 recovered_frac 两条。
+python -B -m demos.deformation.cloth_unroll_physical_demo \
+  run.motion=shove \
+  recording=hq \
+  recording.path=runs/videos/cloth_unroll/shove.mp4 \
+  recording.camera=[oblique,front,wrist] \
+  recording.res=[960,960] \
+  recording.every_n_steps=3 \
+  run.verbose=true \
+  2>&1 | tee runs/videos/cloth_unroll/shove.log
+# 拉过头: 两条门槛都会过, 看的是 on_bar 与 out_of_plane_mm (整卷被扯下来是本场景独有的失败)
+python -B -m demos.deformation.cloth_unroll_physical_demo run.motion=overpull run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/overpull.log
+
+# 4) 只验管线不跑物理 (配置/建场/原语构造走一遍就退出)
+python -B -m demos.deformation.cloth_unroll_physical_demo run.build_only=true 2>&1 | tee runs/videos/cloth_unroll/buildonly.log
+
 # --- cloth_fold 改名回归 (2026-08-22: ClothCornerFoldPrimitive ->
 #     ClothLinkAttachDragPrimitive, 模块改为 primitives/cloth_link_attach_drag.py) ---
 # 读数应与改名前一致: folded=true, diverged=false, 平均误差约 2.9mm, 双层率约 0.85。

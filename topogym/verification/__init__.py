@@ -25,6 +25,13 @@ from .cloth_unpleat_verifier import (
     single_layer_fraction,
     spread_span,
 )
+from .cloth_unroll_verifier import (
+    ClothUnrollEvaluator,
+    ClothUnrollState,
+    ClothUnrollThresholds,
+    out_of_plane_thickness,
+    wound_particles,
+)
 from .bar_through_hole_verifier import (
     BarThroughHolePuzzleEvaluator,
     BarThroughHolePuzzleState,

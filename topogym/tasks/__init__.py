@@ -31,6 +31,11 @@ from .deformation.cloth_unpleat import (
     band_particles,
     settle_band,
 )
+from .deformation.cloth_unroll import (
+    ClothUnrollLayout,
+    ClothUnrollScene,
+    ClothUnrollSceneBuilder,
+)
 from .routing.bar_through_hole import (
     BarThroughHoleLayout,
     BarThroughHoleScene,
