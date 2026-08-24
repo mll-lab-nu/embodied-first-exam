@@ -149,15 +149,17 @@ class GatewayExtractResult:
     # Tracking during the turn alone, apart from the run-wide worst below.
     align_pose_error: float
     align_tilt_rad: float
+    worst_pose_error: float
+    worst_tilt_rad: float
+    completed_phases: tuple[str, ...]
     # How far the PART strayed from its waypoints during the slide. This, not
     # `align_pose_error`, is the reading that decides whether the ring goes round the
     # closed ring or through it: the slide is commanded closed-loop on the part, so
     # the hand's own per-step numbers measure the correction being applied, not an
-    # error left standing.
+    # error left standing. Defaulted, so it goes last -- a dataclass cannot take a
+    # defaulted field before a bare one, and `py_compile` does not catch that because
+    # the check happens at import.
     align_part_drift: float = 0.0
-    worst_pose_error: float
-    worst_tilt_rad: float
-    completed_phases: tuple[str, ...]
 
 
 @dataclass(frozen=True)
