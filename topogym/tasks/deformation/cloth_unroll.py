@@ -204,7 +204,19 @@ class ClothUnrollLayout:
         end = float(nodes[near, material].max())
         point = self._plan_point(0.0, float(self.task_cfg.cloth.z))
         point[material] = end - float(self.task_cfg.grasp.edge_inset)
-        point[2] = float(nodes[near, 2].max())
+        # Height of the material AT the grasp, not the highest particle anywhere
+        # on the centre line. Those differ, and the second one is useless: the
+        # `flat` filter above is an upper bound, so its max is that bound
+        # whenever ANY particle in the strip is near it. Measured 2026-08-24:
+        # the grasp came back at 0.9295 against a ceiling of 0.9296 while the
+        # band rested at 0.9216 -- 7.9 mm high, nearly the whole
+        # `touch_clearance`. `attach_radius` covered for it, but the pads were
+        # descending to the wrong place.
+        at = near[
+            np.abs(nodes[near, material] - point[material])
+            <= float(self.task_cfg.grasp.attach_radius)
+        ]
+        point[2] = float(nodes[at, 2].max()) if at.size else self.rest_z()
         self._grasp = point
         return self._grasp
 

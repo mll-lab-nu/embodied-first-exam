@@ -21,9 +21,12 @@ What it proves:
   - the shipped config pulls in ONE continuous stroke, and cutting the travel into
     more strokes leaves the hand's endpoint unchanged -- the arithmetic that says
     splitting never bought reach, which is why the split was removed;
-  - the stroke stays in the plane, ends inside the reach envelope 1.2 measured,
-    and the `shove` and `overpull` motions really are the motions their names
-    claim.
+  - with `pull_scale` at 1.0 the hand finishes exactly where a flat band's grasp
+    would be, and that position depends on the dispenser, the material length and
+    the grasp inset ALONE -- the roll's radius, pitch and turn count cancel. Which
+    is the whole list of levers when the finish is out of reach;
+  - the stroke stays in the plane, and the `shove` and `overpull` motions really
+    are the motions their names claim.
 
     python tests/check_cloth_unroll_geometry.py
 
@@ -45,12 +48,16 @@ import yaml
 REPO = Path(__file__).resolve().parents[1]
 TASK_CFG = REPO / "configs/task_configs/cloth_unroll_topogym_tabletop_v1.yaml"
 
-#: How far along y the arm was MEASURED delivering a pull on `cloth_unpleat`
-#: (2026-08-23: commanded end reached with an 8.6 mm residual). Not a limit the
-#: robot config states -- it is an observation, and it is the only reach number
-#: on this tabletop that has been measured rather than assumed, which is why the
-#: stroke arithmetic is checked against it.
-MEASURED_REACH_Y = 0.152
+#: How far along y the arm has been MEASURED delivering a pull. Not a limit the
+#: robot config states -- an observation, and the only reach number on this
+#: tabletop that has been measured rather than assumed.
+#:
+#: 0.152 until 2026-08-24, which was simply where `cloth_unpleat` stopped rather
+#: than where the arm ran out. `cloth_unroll` then commanded +0.181 and the hand
+#: delivered +0.175 (y gap 6.0 mm), with the gap growing smoothly from 3.4 mm at
+#: the start of the pull -- no sign of a wall. Recorded at the commanded value,
+#: since that is what the planner is checked against.
+MEASURED_REACH_Y = 0.181
 
 
 # Stand-in packages, so a module can be loaded by path and still resolve the
@@ -673,12 +680,29 @@ def main(argv=None) -> int:
         + float(cloth["material_length"])
         - float(cfg["grasp"]["edge_inset"])
     )
+    # 恒等式在 pull_scale=1.0 时成立（1.0 的定义就是「正好铺平」）。出厂取值是
+    # 1.12，实测标定出来的，所以这里用 scale=1.0 的那份配置去验恒等式，再单独看
+    # 出厂取值把手送到哪。
+    unit_cfg = copy.deepcopy(cfg)
+    unit_cfg["physical"]["pull_scale"] = 1.0
+    unit = _StandInLayout(unit_cfg)
     check(
-        "末位 = 夹具位置 + inner_s + 材料全长 − edge_inset（与卷筒几何无关）",
-        abs(float(final[axis]) - predicted) < 1e-9,
+        "pull_scale=1.0 时末位 = 夹具位置 + inner_s + 材料全长 − edge_inset（与卷筒几何无关）",
+        abs(float(unit.final_grasp_point()[axis]) - predicted) < 1e-9,
         f"{centre[axis]:+.4f} + {marks['inner_s']:+.4f} + "
         f"{float(cloth['material_length']):.3f} − {float(cfg['grasp']['edge_inset']):.3f} "
         f"= {predicted:+.4f}",
+    )
+    check(
+        "pull_scale 是唯一把末位推过铺平位的旋钮",
+        float(final[axis]) > predicted
+        and abs(
+            (float(final[axis]) - float(layout.grasp_point()[axis]))
+            / (float(unit.final_grasp_point()[axis]) - float(unit.grasp_point()[axis]))
+            - float(cfg["physical"]["pull_scale"])
+        ) < 1e-9,
+        f"scale={float(cfg['physical']['pull_scale'])} -> 末位 {float(final[axis]):+.4f}"
+        f"（铺平位 {predicted:+.4f}，多走 {(float(final[axis]) - predicted) * 1e3:.1f}mm）",
     )
     # 与 1.2 **实测送到**的位置比。这一条现在是提示不是门槛：出厂取值就在实测区间之外，
     # 而唯一能解决这个未知的办法是跑一次读 arm_pos_err_mm —— 让离线闸口把那次跑挡在
@@ -686,12 +710,13 @@ def main(argv=None) -> int:
     gap = float(final[axis]) - MEASURED_REACH_Y
     print(
         f"  [note] 末位 {'xy'[axis]}={float(final[axis]):+.4f}，"
-        f"1.2 实测送到 {MEASURED_REACH_Y:+.3f}，"
+        f"实测送到过 {MEASURED_REACH_Y:+.3f}，"
         + (
             f"**超出 {gap * 1e3:.1f}mm，未经实测**：跑一次看 arm_pos_err_mm 与末态跨度"
             if gap > 0
             else f"余量 {-gap * 1e3:.1f}mm"
         )
+        + "（这个数是实测送到的最远处，不是机械臂的极限）"
     )
     # 展开后布带末端要落在作业区里。作业区 x[-0.23,+0.31] / y[-0.30,+0.30]。
     workspace = 0.31 if axis == 0 else 0.30
