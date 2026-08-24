@@ -36,6 +36,10 @@ board:
 #   rope_winding 的 0.020 柱半径同式要 0.060，够不到，所以柱不能再粗。
 # 高度 0.085：环抬不过柱顶就出不去，这是 gateway 的全部含义；不绕柱所以不需要
 #   rope_winding 的 0.109。越高 carry_z 下限越高（越顶高度按拉线比例放大）。
+# 挡头 head_radius 0.022 / head_height 0.006：**碰撞体**，与 cable_routing 的装饰顶盖不同。
+#   2026-08-24 实测无挡头时：远端帽抬到 0.155 后拉线与桌面夹角约 40 度，A 处的缠绕
+#   在 tan(角) > mu=0.3（17 度）时沿柱身上滑，平移段第 60 步环脱离 A 顶，之后什么也
+#   没套住。挡头外伸 0.010 >= 管径 0.008 才挡得住；gateway 从柱身顶改为挡头顶。
 # 柱距 0.140、A 在 -0.060：2026-08-24 用户要求场景占桌面更大面积、便于看清；
 #   上限由远端帽落在工作区 x >= -0.25 + 余量决定（远端帽在 A.x - 出生伸出量）。
 #   柱越远拉伸越大（平移段要绷紧），周长随之加长。
@@ -45,6 +49,8 @@ posts:
     pos: [-0.060, 0.000]
     radius: 0.012
     height: 0.085
+    head_radius: 0.022
+    head_height: 0.006
     base_radius: ${prefabs.rope_routing_post.base_radius}
     base_height: ${prefabs.rope_routing_post.base_height}
     post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
@@ -53,6 +59,8 @@ posts:
     pos: [0.080, 0.000]
     radius: 0.012
     height: 0.085
+    head_radius: 0.022
+    head_height: 0.006
     base_radius: ${prefabs.rope_routing_post.base_radius}
     base_height: ${prefabs.rope_routing_post.base_height}
     post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
@@ -146,9 +154,11 @@ transfer:
   carry_margin: 0.010
   # 落点：B 远侧，x = B.x + r_post + r_tube + landing_clearance。
   landing_clearance: 0.020
-  # 段 2 提离：near band 抬到 A 顶 + r_tube + lift_margin，再向 B 方向平移 shift 后释放。
+  # 段 2 提离：near band 抬到 A 挡头顶 + r_tube + lift_margin，再向 B 方向平移 shift 后释放。
+  # shift 要让帽从 A 外侧（A.x - r_post - r_tube = -0.076）滑过挡头另一侧
+  # （A.x + head_radius + r_tube = -0.034），即 >= 0.042；取 0.060 留余量。
   lift_margin: 0.020
-  shift: 0.030
+  shift: 0.060
   # 驱动速度（米/步），沿用 rope_winding 的 travel_speed。
   drive_speed: 0.0020
   min_segment_steps: 20

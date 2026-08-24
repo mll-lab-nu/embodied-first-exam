@@ -379,16 +379,32 @@ def main(cfg: DictConfig) -> None:
         grid=band.grid,
         **bar,
     )
-    # Two independent verdicts, deliberately not merged: `unrolled` is whether the
-    # arm did the task, `diverged` is whether the solver produced physics. An
-    # episode that diverged is not a failed attempt, it is no attempt at all, and
-    # scoring it either way would poison a dataset.
+    # THREE independent verdicts, deliberately not merged.
+    #
+    # `unrolled`   did the arm do the task
+    # `diverged`   did the solver produce physics at all
+    # `contact_ok` did the cloth stay out of the table
+    #
+    # The third is not cosmetic and it is not part of `terminal`. Genesis' PBD
+    # contact has no penetration barrier, so cloth pressed against a rigid body
+    # sinks into it; this measures how far. It matters because the judges read
+    # HEIGHT -- material inside the table is still counted by the layer report --
+    # and because an episode whose cloth passed through the table is not a
+    # demonstration of anything, whatever the arm did. Same reason `diverged` is
+    # separate: scoring it either way would poison a dataset.
+    penetration_max = cfg.task.success.get("penetration_max", None)
+    penetration = -min(0.0, float(watch.lowest_z))
+    contact_ok = penetration_max is None or penetration <= float(penetration_max)
     unrolled = bool(state.is_terminal)
     worst_follow = max((r.worst_follow_error for r in results), default=float("nan"))
     worst_pose = max((r.worst_pose_error for r in results), default=float("nan"))
     worst_tilt = max((r.worst_tilt_rad for r in results), default=float("nan"))
     print(
         f"cloth_unroll result unrolled={unrolled} diverged={watch.diverged} "
+        f"contact_ok={contact_ok} "
+        f"penetration_mm={penetration * 1e3:.2f}"
+        + ("" if penetration_max is None else f"/{float(penetration_max) * 1e3:.1f}")
+        + " "
         f"motion={cfg.run.motion} "
         f"strokes_run={len(results)}/{planned} "
         f"grasped={sum(1 for r in results if r.grasped)} "
@@ -420,8 +436,8 @@ def main(cfg: DictConfig) -> None:
     # is supposed to succeed. Same for a deliberately shortened run -- one stroke
     # of three cannot empty the roll and it is not a failure that it did not.
     if str(cfg.run.motion) != "unroll" or planned < strokes:
-        raise SystemExit(0 if not watch.diverged else 1)
-    raise SystemExit(0 if unrolled and not watch.diverged else 1)
+        raise SystemExit(0 if not watch.diverged and contact_ok else 1)
+    raise SystemExit(0 if unrolled and not watch.diverged and contact_ok else 1)
 
 
 if __name__ == "__main__":

@@ -221,7 +221,9 @@ def main() -> int:
             if label == "carry" and ratio < 1.0 and label not in slack_legs:
                     slack_legs.append(label)
         descending = label == "descend"
-        want = (target.radius + ring.tube_radius) if descending else keep_off
+        # On the descent the strands pass the head on the way down, so the head
+        # radius is what they must clear; before that they must stay off the shaft.
+        want = (target.head_radius + ring.tube_radius) if descending else keep_off
         ok = leg_min >= want
         print(
             f"  {label:8s} -> {np.round(point * 1000, 1).tolist()} mm: {leg_min * 1000:.1f} mm "
@@ -272,7 +274,12 @@ def main() -> int:
                 failures.append(f"{name} grasp too close to post {post.name}")
 
     lift_z = anchor.top_z + ring.tube_radius + float(task.transfer.lift_margin)
-    print(f"lift-off       near band to {lift_z * 1000:.1f} mm then +{float(task.transfer.shift) * 1000:.0f} mm toward {target.name}")
+    print(f"lift-off       near band to {lift_z * 1000:.1f} mm (head top {anchor.top_z * 1000:.1f}) then +{float(task.transfer.shift) * 1000:.0f} mm toward {target.name}")
+    for post in posts.values():
+        overhang = post.head_radius - post.radius
+        print(f"  head {post.name}: overhang {overhang * 1000:.1f} mm vs tube diameter {2 * ring.tube_radius * 1000:.0f} (want >=) {'ok' if overhang >= 2 * ring.tube_radius else 'FAIL'}")
+        if overhang < 2 * ring.tube_radius:
+            failures.append(f"post {post.name} head overhang smaller than the tube diameter: it will not retain the loop")
 
     print()
     if failures:

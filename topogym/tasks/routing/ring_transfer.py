@@ -310,8 +310,8 @@ class RingTransferSceneBuilder:
 
     def _add_post(self, scene, manifest: EntityManifest, post_cfg) -> None:
         """Routing post as in cable_routing: shaft cylinder (exact wrap radius) +
-        separate convex base cone + collision-free cap. A single flare+shaft solid
-        is not convex and its hull would fatten the wrap radius."""
+        separate convex base cone, plus a retaining head that DOES collide. A single
+        flare+shaft solid is not convex and its hull would fatten the wrap radius."""
 
         name = f"post_{post_cfg.name}"
         radius, height = float(post_cfg.radius), float(post_cfg.height)
@@ -349,19 +349,23 @@ class RingTransferSceneBuilder:
             name=f"{name}_base",
         )
         manifest.add(f"{name}_base", base)
-        cap = scene.add_entity(
+        # Retaining head: a COLLISION body (ipc_only), unlike cable_routing's
+        # decorative cap. Without it the loop slides up and off the anchor as
+        # soon as the far cap is lifted (_ring_transfer_geometry.py module doc).
+        head_radius, head_height = float(post_cfg.head_radius), float(post_cfg.head_height)
+        head = scene.add_entity(
             gs.morphs.Cylinder(
-                pos=tuple(self.layout.to_world((xy[0], xy[1], height + 0.0015))),
-                radius=radius + 0.005,
-                height=0.003,
+                pos=tuple(self.layout.to_world((xy[0], xy[1], height + 0.5 * head_height))),
+                radius=head_radius,
+                height=head_height,
                 fixed=True,
-                collision=False,
+                collision=True,
             ),
             surface=surface,
-            name=f"{name}_cap",
-            **self._decoration(),
+            name=f"{name}_head",
+            **self._static(),
         )
-        manifest.add(f"{name}_cap", cap)
+        manifest.add(f"{name}_head", head)
 
     @staticmethod
     def _print_coupling_audit(scene) -> None:

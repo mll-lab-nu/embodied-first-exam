@@ -395,11 +395,41 @@ class ClothUnrollSceneBuilder:
         self, *, show_viewer: bool = False, include_robot: bool = True
     ) -> ClothUnrollScene:
         cloth_cfg = self.task_cfg.cloth
+        # Solver iteration counts, when the config asks for them.
+        #
+        # PBD does not guarantee zero penetration: each substep PREDICTS a
+        # position from velocity and gravity, then ITERATES corrections toward
+        # the constraints -- stretch, bending, and contact with rigid bodies.
+        # Those corrections fight each other, the iteration budget is finite, and
+        # what is left over is a residual. IPC is different in kind: contact is a
+        # barrier energy that goes to infinity as the gap closes, so a
+        # penetrating state is unreachable rather than merely discouraged.
+        #
+        # The residual is therefore bounded by the iteration budget, and the rope
+        # path has always set it (16/12/6 in the prefab) while every cloth task
+        # has run on whatever Genesis defaults to. Left absent here so nothing
+        # changes until a sweep says what to use.
+        pbd_cfg = getattr(cloth_cfg, "pbd", None)
+        iterations = (
+            {}
+            if pbd_cfg is None
+            else {
+                key: int(getattr(pbd_cfg, key))
+                for key in (
+                    "max_stretch_solver_iterations",
+                    "max_bending_solver_iterations",
+                    "max_volume_solver_iterations",
+                )
+                if getattr(pbd_cfg, key, None) is not None
+            }
+        )
+        if iterations:
+            print(f"cloth_unroll pbd_iterations {iterations}", flush=True)
         builder = StandardTabletopSceneBuilder(
             self.env_cfg,
             self.robot_cfg,
             pbd_options=gs.options.PBDOptions(
-                particle_size=float(cloth_cfg.particle_size)
+                particle_size=float(cloth_cfg.particle_size), **iterations
             ),
         )
         tabletop = builder.create(show_viewer=show_viewer, include_robot=include_robot)

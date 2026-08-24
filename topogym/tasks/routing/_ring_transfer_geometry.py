@@ -27,6 +27,14 @@ diameter plus two tubes plus the barrier. `strand_separation_at` evaluates that
 line where it passes B; `min_strand_separation` is what it has to clear. Two
 follow bands, one per finger, model the hook.
 
+Why the posts have collision HEADS: the stretch pulls the anchor wrap upward at
+about 40 degrees (the held cap must clear B's head from 0.176 m away), and a
+wrap held only by friction slides up the shaft once tan(angle) exceeds mu
+(0.3, i.e. 17 degrees). Measured 2026-08-24 on a headless post: the loop left
+A's top at carry step ~60 and never enclosed anything. A head wider than the
+tube retains the wrap, as a real peg's head does, and the gateway becomes the
+head's top instead of the shaft's.
+
 The carry over B happens at a height where each strand -- a straight line from
 the anchor's tangent point on the table up to its held end -- clears B's top
 where it crosses B. The strands are only straight while the loop is taut, so the
@@ -55,12 +63,16 @@ from topogym.world.closed_band import (
 class PostSpec:
     name: str
     center: np.ndarray  # task-frame xy
-    radius: float
-    height: float
+    radius: float  # shaft: the wrap radius
+    height: float  # shaft height
+    head_radius: float  # retaining head on top, a collision body
+    head_height: float
 
     @property
     def top_z(self) -> float:
-        return float(self.height)
+        """Top of the head: what the loop has to clear to leave or land."""
+
+        return float(self.height) + float(self.head_height)
 
 
 @dataclass(frozen=True)
@@ -87,7 +99,11 @@ def posts_from_config(posts_cfg) -> dict[str, PostSpec]:
             center=np.array([float(item.pos[0]), float(item.pos[1])], dtype=float),
             radius=float(item.radius),
             height=float(item.height),
+            head_radius=float(item.head_radius),
+            head_height=float(item.head_height),
         )
+        if posts[name].head_radius < posts[name].radius:
+            raise ValueError(f"post {name}: head_radius must be at least the shaft radius.")
     if len(posts) < 2:
         raise ValueError("ring_transfer needs at least two posts.")
     return posts
