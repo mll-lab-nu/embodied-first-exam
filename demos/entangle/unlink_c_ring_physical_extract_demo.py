@@ -470,7 +470,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "worst_pose_error": float(result.worst_pose_error),
         "worst_tilt_deg": float(np.rad2deg(result.worst_tilt_rad)),
         "oracle_mode": mode,
-        "slide_drift": float(result.align_pose_error),
+        "slide_drift": float(result.align_part_drift),
     }
 
     task_success = bool(state.is_terminal)
@@ -525,9 +525,9 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
             "overpowered the interlock. Lower task.travel_test.force_scale.",
             flush=True,
         )
-    if result.align_pose_error > float(cfg.task.success.max_slide_drift):
+    if result.align_part_drift > float(cfg.task.success.max_slide_drift):
         print(
-            f"[warn] the hand strayed {result.align_pose_error * 1000:.1f} mm from the "
+            f"[warn] the ring strayed {result.align_part_drift * 1000:.1f} mm from the "
             "slide path. The bar sits only 9 mm inside the rim, so this is the reading "
             "that decides whether the ring goes round the closed ring or through it. "
             "Raise task.primitive.motion_settle_steps so each chord converges, or "

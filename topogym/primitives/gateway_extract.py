@@ -149,6 +149,12 @@ class GatewayExtractResult:
     # Tracking during the turn alone, apart from the run-wide worst below.
     align_pose_error: float
     align_tilt_rad: float
+    # How far the PART strayed from its waypoints during the slide. This, not
+    # `align_pose_error`, is the reading that decides whether the ring goes round the
+    # closed ring or through it: the slide is commanded closed-loop on the part, so
+    # the hand's own per-step numbers measure the correction being applied, not an
+    # error left standing.
+    align_part_drift: float = 0.0
     worst_pose_error: float
     worst_tilt_rad: float
     completed_phases: tuple[str, ...]
@@ -470,6 +476,7 @@ class GatewayExtractPrimitive:
                 grasped=True, align_deg=align_deg, aligned_part_pos=aligned_part_pos,
                 align_pose_error=turn_track.worst_pose_error,
                 align_tilt_rad=turn_track.worst_tilt_rad,
+                align_part_drift=turn_track.worst_part_drift,
             )
 
         for name, delta, steps in (
@@ -516,6 +523,7 @@ class GatewayExtractPrimitive:
             align_deg=align_deg,
             align_pose_error=turn_track.worst_pose_error,
             align_tilt_rad=turn_track.worst_tilt_rad,
+            align_part_drift=turn_track.worst_part_drift,
             worst_pose_error=track.worst_pose_error,
             worst_tilt_rad=track.worst_tilt_rad,
             completed_phases=tuple(phases),
@@ -555,12 +563,27 @@ class GatewayExtractPrimitive:
             alpha = self._ease(step / steps)
             quat = slerp(quat_from, quat_to, alpha)
             part = (1.0 - alpha) * part_from + alpha * part_to
-            self._command(controller, track, part - _matrix(quat) @ offset_in_hand, quat)
-            if part_entity is not None:
-                track.worst_part_drift = max(
-                    track.worst_part_drift,
-                    float(np.linalg.norm(entity_pos(part_entity) - part)),
+            if part_entity is None:
+                self._command(
+                    controller, track, part - _matrix(quat) @ offset_in_hand, quat
                 )
+                continue
+            # Closed loop on the PART, which is the thing that has to miss the other
+            # ring. Feeding forward `part - R(q) @ offset_in_hand` assumes the arm
+            # reaches what it is told, and this one does not: measured 2026-08-23 it
+            # sits about 6 mm off its commanded Cartesian pose at this reach, steadily,
+            # at the grasp and at every waypoint after. The part is welded in the grip,
+            # so the part's error IS the hand's error -- ask the hand to move by
+            # whatever the part still owes, and the standing offset cancels instead of
+            # being inherited. Fixed point: part where it should be, hand asked to
+            # stay put.
+            here = np.asarray(controller.hand_pos(), dtype=float)
+            owed = part - entity_pos(part_entity)
+            self._command(controller, track, here + owed, quat)
+            track.worst_part_drift = max(
+                track.worst_part_drift,
+                float(np.linalg.norm(entity_pos(part_entity) - part)),
+            )
         controller.step(max(0, int(self.motion_settle_steps)))
 
     def _command(self, controller, track, hand_target, quat) -> None:
