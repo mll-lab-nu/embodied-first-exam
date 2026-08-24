@@ -120,6 +120,19 @@ class ClothUnrollLayout:
     def bar_height(self) -> float:
         return self.world_z(float(self.task_cfg.dispenser.bar_height))
 
+    def support_z(self) -> float:
+        """World z of the surface the band actually rests on.
+
+        The riser's top when there is one, the table otherwise. Distinct from
+        `table_z`, which stays the VISIBLE table because that is what the judges
+        and the layer binning are referenced to.
+        """
+
+        riser = getattr(self.task_cfg, "riser", None)
+        if riser is None or not bool(riser.enabled):
+            return self.table_z
+        return self.world_z(float(riser.height))
+
     def _plan_point(self, material: float, height: float) -> np.ndarray:
         """A world point from a (material-offset, height) pair on the band's axes."""
 
@@ -408,6 +421,7 @@ class ClothUnrollSceneBuilder:
             self.task_cfg, np.asarray(tabletop.frames.task_origin, dtype=float)
         )
 
+        self._add_riser(scene, tabletop.manifest, layout)
         self._add_dispenser(scene, tabletop.manifest, layout)
 
         spacing = float(cloth_cfg.mesh.spacing)
@@ -468,6 +482,62 @@ class ClothUnrollSceneBuilder:
         )
         return band
 
+    def _add_riser(self, scene, manifest: EntityManifest, layout) -> None:
+        """A thin rigid slab under the band, invisible by default.
+
+        It does not fix anything physically -- the band sinks into it exactly as
+        it sank into the table, because Genesis' PBD contact is not a barrier.
+        What it does is put the sinking somewhere the camera cannot see, which is
+        the actual complaint: a PBD cloth renders at its particle centres with no
+        thickness and lies almost parallel to the table, so a 2 mm dip hides a
+        wide swathe of it behind the tabletop and reads as a tear.
+
+        Sized from the band's own reach rather than a fixed rectangle, so a
+        change to `material_length` or the dispenser's position cannot leave the
+        far end hanging off the edge.
+        """
+
+        cfg = getattr(self.task_cfg, "riser", None)
+        if cfg is None or not bool(cfg.enabled):
+            return
+
+        marks = layout.landmarks()
+        centre = layout.bar_centre()
+        along, across = layout.material_axis, layout.bar_axis
+        margin = float(cfg.margin)
+        # From behind the roll to beyond where the fully paid-out band ends.
+        back = float(marks["inner_s"]) - float(marks["roll_radius"]) - margin
+        front = float(marks["inner_s"]) + layout.material_length() + margin
+
+        size = np.zeros(3, dtype=float)
+        size[along] = front - back
+        size[across] = float(self.task_cfg.cloth.width) + 2.0 * margin
+        size[2] = float(cfg.height)
+
+        pos = np.zeros(3, dtype=float)
+        pos[along] = centre[along] + 0.5 * (back + front)
+        pos[across] = centre[across]
+        pos[2] = layout.table_z + 0.5 * float(cfg.height)
+
+        visible = bool(getattr(cfg, "visible", False))
+        entity = scene.add_entity(
+            gs.morphs.Box(
+                pos=tuple(float(v) for v in pos),
+                size=tuple(float(v) for v in size),
+                fixed=True,
+                visualization=visible,
+            ),
+            surface=materials.plastic("table", list(cfg.color)),
+            name=str(cfg.name),
+        )
+        manifest.add(str(cfg.name), entity)
+        print(
+            f"cloth_unroll riser top_mm={float(cfg.height) * 1e3:.1f} "
+            f"size_mm=({size[0] * 1e3:.0f},{size[1] * 1e3:.0f},{size[2] * 1e3:.1f}) "
+            f"visible={visible} rest_z_mm={float(self.task_cfg.cloth.z) * 1e3:.1f}",
+            flush=True,
+        )
+
     def _add_dispenser(self, scene, manifest: EntityManifest, layout) -> None:
         """Two posts and the bar between them, all fixed.
 
@@ -490,7 +560,10 @@ class ClothUnrollSceneBuilder:
             pos = np.zeros(3, dtype=float)
             pos[across] = centre[across] + side * half
             pos[along] = centre[along]
-            pos[2] = layout.table_z + 0.5 * float(cfg.post_height)
+            # Standing on the riser, not the table: two fixed bodies overlapping
+            # is a contact pair nothing can resolve, and the riser reaches out
+            # past the posts on both axes.
+            pos[2] = layout.support_z() + 0.5 * float(cfg.post_height)
             post = scene.add_entity(
                 gs.morphs.Cylinder(
                     pos=tuple(float(v) for v in pos),
@@ -586,7 +659,9 @@ class ClothUnrollSceneBuilder:
         return TabletopParticleFriction(
             scene,
             [cloth],
-            surface_z=layout.table_z,
+            # The riser's top, not the table's: `contact_band` is measured from
+            # whatever the band is actually lying on.
+            surface_z=layout.support_z(),
             contact_band=float(friction_cfg.contact_band),
             static_mu=float(friction_cfg.static_mu),
             kinetic_mu=float(friction_cfg.kinetic_mu),

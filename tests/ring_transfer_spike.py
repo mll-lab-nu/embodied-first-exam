@@ -158,6 +158,9 @@ def main(cfg: DictConfig) -> None:
         watch(nodes)
         line = centerline()
         winding, raw, integral = winding_signature(line, posts, tolerance=tolerance)
+        # The sign is the loop's orientation (which way round it was spawned),
+        # not a topological difference: |w| = 1 is "around the post".
+        winding = {name: abs(value) for name, value in winding.items()}
         ratio = closed_arc_length(line)[1] / built.frames.perimeter
         contacts = {name: post_contact_count(nodes, post, tube_radius=ring.tube_radius) for name, post in posts.items()}
         gaps = {name: post_surface_gap(nodes, post) for name, post in posts.items()}

@@ -23,13 +23,13 @@ include_robot: false
 
 # 特写相机（task 系 pos/lookat），在 env.cameras 之外加一台，名字不能与之重名。
 # 录它写 recording.camera=ring，录全部写 recording.camera=all。
-# 俯视偏斜，两根柱与环全在画面内（环远端到 x=-0.154，落点到 x=0.070）。
+# 俯视偏斜，两根柱与环全在画面内（环远端到 x=-0.218，落点到 x=0.116，平转最远 y=0.16）。
 camera:
   name: ring
   res: [768, 768]
-  pos: [-0.040, -0.260, 0.320]
-  lookat: [-0.030, 0.020, 0.010]
-  fov: 48
+  pos: [-0.050, -0.380, 0.420]
+  lookat: [-0.040, 0.030, 0.010]
+  fov: 50
 
 # 失败处置阶梯（按顺序试，一次只动一项；每项都是 task.* 的点路径覆盖）：
 #   stretch 环从 B 滑脱          -> task.rope.fem.friction_mu 升到 0.5；再不行加柱高 task.posts.1.height

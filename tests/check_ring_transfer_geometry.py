@@ -12,7 +12,7 @@ What it proves:
   - the IPC barrier stays inside the tube's own self-contact clearance;
   - the stretch trapezoid admits post B: where the two taut strands pass B they
     are further apart than B's diameter plus two tubes plus the barrier, and
-    the negative controls (a pinched cap; rope_winding's 20 mm posts) are
+    the negative controls (a pinched cap; a post 5 mm too fat) are
     rejected;
   - along the whole far-cap path -- swing, rise, carry, descend -- the strands
     never come within a tube radius of post B's shaft until the descent, and on
@@ -165,17 +165,19 @@ def main() -> int:
     )
     if pinched >= need:
         failures.append("negative control: a pinched cap should not admit the target post")
-    fat = replace(target, radius=0.020)
+    # A post 5 mm too fat for this trapezoid must be rejected; the radius is derived
+    # from the layout so the control keeps biting when the layout is scaled.
+    fat = replace(target, radius=0.5 * have - 2.0 * ring.tube_radius - d_hat + 0.005)
     fat_have = geo.strand_separation_at(
         ring=ring, anchor=anchor, landing_xy=landing, held_half_width=half, query_xy=fat.center
     )
     fat_need = geo.min_strand_separation(fat, ring, d_hat)
     print(
-        f"               negative control, 20 mm post: {fat_have * 1000:.1f} vs {fat_need * 1000:.1f} mm "
+        f"               negative control, {fat.radius * 1000:.1f} mm post: {fat_have * 1000:.1f} vs {fat_need * 1000:.1f} mm "
         f"{'rejected as expected' if fat_have < fat_need else 'NOT rejected'}"
     )
     if fat_have >= fat_need:
-        failures.append("negative control: a 20 mm post should not fit the triangle")
+        failures.append("negative control: an over-size post should not fit the trapezoid")
 
     floor = geo.carry_height_floor(
         anchor=anchor,
