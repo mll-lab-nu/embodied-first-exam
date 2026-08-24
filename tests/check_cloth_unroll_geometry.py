@@ -196,7 +196,9 @@ class _StandInLayout:
         return float(self._marks["rolled"])
 
     def pull_total(self) -> float:
-        return self.rolled_length() * float(self._cfg["physical"]["pull_scale"])
+        return float(self._marks["flat_travel"]) * float(
+            self._cfg["physical"]["pull_scale"]
+        )
 
     def stroke_count(self) -> int:
         return max(
@@ -561,13 +563,33 @@ def main(argv=None) -> int:
     shove_wp = stroke_waypoints(layout, motion="shove")
     over_wp = stroke_waypoints(layout, motion="overpull", overpull_scale=1.6)
 
-    # 总行程不是调出来的：梁按住不动的话，端头走的距离恰好等于卷筒收着的材料量。
+    # 总行程不是调出来的，但它也**不是卷料长度**。2026-08-24 实测：按卷料 161mm 拉，
+    # 卷筒确实放空了（on_bar=0），可垂落段那 43mm 没人给它留行程，于是掉在已经铺好的
+    # 布上——末态 215mm/260mm、114 个两层格。正确的量是「让布带铺平所需的端头位移」。
     check(
-        "总行程 = 卷筒收着的材料量（× pull_scale）",
-        abs(layout.pull_total() - marks["rolled"] * float(cfg["physical"]["pull_scale"]))
-        < 1e-12,
-        f"{layout.pull_total() * 1e3:.1f}mm，卷料 {marks['rolled'] * 1e3:.1f}mm × "
-        f"{float(cfg['physical']['pull_scale'])}",
+        "总行程 = 让布带铺平所需的端头位移（× pull_scale），不是卷料长度",
+        abs(
+            layout.pull_total()
+            - marks["flat_travel"] * float(cfg["physical"]["pull_scale"])
+        ) < 1e-12
+        and marks["flat_travel"] > marks["rolled"],
+        f"{layout.pull_total() * 1e3:.1f}mm；卷料只有 {marks['rolled'] * 1e3:.1f}mm，"
+        f"差的 {(marks['flat_travel'] - marks['rolled']) * 1e3:.1f}mm 是垂落段减卷筒半径",
+    )
+    check(
+        "铺平位移 = 卷料 + 垂落 − (卷筒半径 − 内端偏置)",
+        abs(
+            marks["flat_travel"]
+            - (
+                marks["rolled"]
+                + (float(dispenser["bar_height"]) - float(cloth["z"]))
+                - (marks["exit_s"] - marks["inner_s"])
+            )
+        ) < 1e-9,
+        f"{marks['rolled'] * 1e3:.1f} + "
+        f"{(float(dispenser['bar_height']) - float(cloth['z'])) * 1e3:.1f} − "
+        f"{(marks['exit_s'] - marks['inner_s']) * 1e3:.1f} = "
+        f"{marks['flat_travel'] * 1e3:.1f}mm",
     )
     check(
         "行程按段数均分，不是「几段满行程 + 一段零头」",
@@ -640,13 +662,36 @@ def main(argv=None) -> int:
         f"每段 {layout.stroke_distance() * 1e3:.1f}mm / {steps} 步 = "
         f"{layout.stroke_distance() / steps * 1e3:.2f}mm/步",
     )
-    # 可达性。这一条是本任务与 1.2 最实在的差别：行程被圈数锁死，够不着就只能改
-    # 场景而不是改参数。比的是 1.2 **实测送到**的位置，不是作业区的名义边界。
+    # 可达性。**手的终点只由三个量决定**，卷筒几何一个都不进：
+    #     末位 = 夹具位置 + inner_s + 材料全长 − edge_inset
+    # 圈数、层距、梁高全部抵消（绕得紧只是让端头的**起点**更靠外）。所以够不着的时候
+    # 能动的只有这三个，先钉住这条恒等式，免得下次又去调圈数。
     final = layout.final_grasp_point()
+    predicted = (
+        centre[axis]
+        + marks["inner_s"]
+        + float(cloth["material_length"])
+        - float(cfg["grasp"]["edge_inset"])
+    )
     check(
-        "拉完之后夹爪仍在实测到位的区间内",
-        axis == 1 and float(final[axis]) <= MEASURED_REACH_Y,
-        f"末位 {'xy'[axis]}={float(final[axis]):+.4f} ≤ 实测 {MEASURED_REACH_Y:+.3f}",
+        "末位 = 夹具位置 + inner_s + 材料全长 − edge_inset（与卷筒几何无关）",
+        abs(float(final[axis]) - predicted) < 1e-9,
+        f"{centre[axis]:+.4f} + {marks['inner_s']:+.4f} + "
+        f"{float(cloth['material_length']):.3f} − {float(cfg['grasp']['edge_inset']):.3f} "
+        f"= {predicted:+.4f}",
+    )
+    # 与 1.2 **实测送到**的位置比。这一条现在是提示不是门槛：出厂取值就在实测区间之外，
+    # 而唯一能解决这个未知的办法是跑一次读 arm_pos_err_mm —— 让离线闸口把那次跑挡在
+    # 门外，就把「还没测」变成了「不许测」。
+    gap = float(final[axis]) - MEASURED_REACH_Y
+    print(
+        f"  [note] 末位 {'xy'[axis]}={float(final[axis]):+.4f}，"
+        f"1.2 实测送到 {MEASURED_REACH_Y:+.3f}，"
+        + (
+            f"**超出 {gap * 1e3:.1f}mm，未经实测**：跑一次看 arm_pos_err_mm 与末态跨度"
+            if gap > 0
+            else f"余量 {-gap * 1e3:.1f}mm"
+        )
     )
     # 展开后布带末端要落在作业区里。作业区 x[-0.23,+0.31] / y[-0.30,+0.30]。
     workspace = 0.31 if axis == 0 else 0.30

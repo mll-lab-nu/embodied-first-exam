@@ -1,0 +1,39 @@
+# tests/ring_transfer_spike.py 的运行模式参数。场景几何、材料、抓取与 oracle 段参数
+# 都在 task 配置里（task.posts / task.ring / task.grasp / task.transfer），这里只有
+# 「这一次怎么跑」。
+
+defaults:
+  - default
+  - _self_
+
+# 做哪一项测试。四项按依赖排序，前一项不过不跑后一项。
+#   mesh     : 只建网格写 OBJ，不进求解器（无需 CUDA）。
+#   settle   : 载入 FEM+IPC，环套在 A 上沉降。判 A 绕数 1、B 绕数 0、无穿模。
+#   stretch  : 两条 hook band 钩住远端帽，按 oracle 路径绕 A 平转、抬升、越过 B 顶、
+#              落到 B 远侧、释放。判 A、B 绕数同为 1、环留在 B 上、拉伸期间 A 顶未被越过。
+#              **本轮的关键判据**：单夹爪能否把 B 套进环。
+#   transfer : near band 捏住 A 侧帽，抬过 A 顶、向 B 平移、释放。判 A=0、B=1。
+test: settle
+
+# 沉降上限步数，以及收敛判据取 task.success.settle_tol。
+settle_steps: 400
+
+# 是否加载机械臂。spike 用不到它；仓库里跑通的 FEM+IPC 场景都带臂，留开关备诊断。
+include_robot: false
+
+# 特写相机（task 系 pos/lookat），在 env.cameras 之外加一台，名字不能与之重名。
+# 录它写 recording.camera=ring，录全部写 recording.camera=all。
+# 俯视偏斜，两根柱与环全在画面内（环远端到 x=-0.154，落点到 x=0.070）。
+camera:
+  name: ring
+  res: [768, 768]
+  pos: [-0.040, -0.260, 0.320]
+  lookat: [-0.030, 0.020, 0.010]
+  fov: 48
+
+# 失败处置阶梯（按顺序试，一次只动一项；每项都是 task.* 的点路径覆盖）：
+#   stretch 环从 B 滑脱          -> task.rope.fem.friction_mu 升到 0.5；再不行加柱高 task.posts.1.height
+#   stretch 期间 A 顶被越过      -> 降 task.transfer.carry_z 至离线门下限，或缩短 landing_clearance
+#   stretch band_err 持续 > 5mm  -> task.rope.fem.follow_strength 加倍（张力约 1 N，见 spike 文档）
+#   transfer 环不离开 A          -> 加大 task.transfer.shift，或抬 lift_margin
+#   任一阶段穿模                 -> 复核 d_hat 与 check_self_contact_clearance，不要先调 E

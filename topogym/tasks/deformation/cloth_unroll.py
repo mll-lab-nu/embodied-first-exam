@@ -218,13 +218,39 @@ class ClothUnrollLayout:
         return direction
 
     def pull_total(self) -> float:
-        """Total travel across every stroke: the material the roll holds.
+        """Total travel: how far the free end must move to lay the band flat.
 
-        Not a tuned number -- the roll gives back exactly what is wound on it, and
+        Not a tuned number -- it comes off the profile (`flat_travel`), and
         `pull_scale` is the only slack, for whatever the bar's friction keeps.
+
+        It is NOT the material wound on the bar, which is what this returned until
+        2026-08-24. Pulling `rolled` empties the roll and still leaves the drape
+        -- the material hanging between the bar and the table -- unlaid, so it
+        drops onto the band that has already been paid out. Measured: the roll
+        emptied (`on_bar=0`) and the band still finished at 215 mm of its 260 mm
+        with 114 doubled cells.
         """
 
-        return self.rolled_length() * float(self.task_cfg.physical.pull_scale)
+        return float(self.landmarks()["flat_travel"]) * float(
+            self.task_cfg.physical.pull_scale
+        )
+
+    def final_grasp_position(self) -> float:
+        """Where the hand finishes, along the pay-out axis.
+
+        Worth having as its own reading because of what it does NOT depend on.
+        Substituting the definitions leaves
+
+            centre + inner_s + material_length - edge_inset
+
+        so the roll's radius, pitch and turn count cancel completely: winding
+        tighter or adding a turn changes where the pull STARTS, never where it
+        ends. Only the dispenser's position, the material's length and the grasp
+        inset move it, which is the whole list of levers when the finish is out of
+        the arm's reach.
+        """
+
+        return float(self.final_grasp_point()[self.material_axis])
 
     def stroke_count(self) -> int:
         """How many grasps the travel is split into.

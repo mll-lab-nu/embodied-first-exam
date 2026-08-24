@@ -11,7 +11,7 @@
 #             同一处停下。双机位录制。
 #   unroll    **任务本体**，三视角录制。这一格的视频就是要交付的东西。
 #             夹爪抓平铺段的自由端，贴着桌面沿 +y 直线拉，旋转全部由卷筒绕梁
-#             吸收，手腕不转。行程 161mm，一次连续拉完（30mm/s，约 5.4 秒）。
+#             吸收，手腕不转。行程 195mm，一次连续拉完（30mm/s，约 6.5 秒）。
 #   shove     往**反方向**拉（朝着卷筒推），三视角录制。搬动了同样多的布料却
 #             一点没放料，应当 unrolled=false。
 #   overpull  拉过头，越过「料已放完」那个点继续走。两条门槛都会过，看的是
@@ -32,7 +32,7 @@
 #   MAX_STROKES=0                 只跑前几段抓取（0 = 全跑完）。出厂配置只有一段，
 #                                 圈数调大到行程超出可达时才会分段。
 #   TIMEOUT_S=2400                单格墙钟超时（秒）。比 1.2 长：行程 161mm 且
-#                                 手走得慢（30mm/s），拉动本身就有 5.4 秒。
+#                                 手走得慢（30mm/s），拉动本身就有 6.5 秒。
 #   KEEP_GOING=0                  置 1 则前一格失败也继续跑（默认不继续）
 #   OUTDIR=runs/videos/cloth_unroll/<时间戳>
 #   TOPOGYM_VENV=.venv
@@ -227,8 +227,8 @@ echo "            **on_bar 要一起看**: 完全展开应当是 0; 不是 0 说
 echo "            布被拉薄或穿桌面的话, 主旋钮是 pull_step_m (当前 0.0003 = 30mm/s):"
 echo "            那不是力太大 —— fix_particles_to_link 是运动学绑定, 不存在力;"
 echo "            限制拉伸的是 PBD 把位移传播出去的速度, 手走快了张力还没传到卷筒。"
-echo "            再降不动就从求解器那一侧改: task.cloth.stretch_relaxation=0.6"
-echo "            或 env.sim.substeps=8, 代价是过松弛超调与算力。"
+echo "            再断就继续降。substeps 那条路不存在: preset 锁死 substeps=4,"
+echo "            改了直接抛异常, 而且锁得对 —— 全仓阈值都是在那组参数下标的。"
 echo "  shove     应当 unrolled=false, gates= 里两条都在。它搬动了与 unroll 同样多"
 echo "            的布料却一点没放料, 用来确认判据读的不是位移。"
 echo "  overpull  两条门槛都会过。看 on_bar 与 out_of_plane_mm 跟 unroll 差多少 ——"

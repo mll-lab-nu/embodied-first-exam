@@ -23,7 +23,7 @@ TASKS_ROOT = Path(__file__).resolve().parents[1] / "tasks"
 # category slug -> task ids. Empty tuple = category reserved, nothing built yet.
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "deformation": ("cloth_fold",),
-    "routing": ("bar_through_hole", "cable_routing", "rope_winding"),
+    "routing": ("bar_through_hole", "cable_routing", "ring_transfer", "rope_winding"),
     "entangle": ("swap_crossing_sign", "unlink_c_ring", "untangle", "untangle_continuous"),
     "connectivity": (
         "diverter_route_ball",

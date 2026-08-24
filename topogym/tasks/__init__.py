@@ -42,6 +42,11 @@ from .routing.bar_through_hole import (
     BarThroughHoleSceneBuilder,
 )
 from .routing.cable_routing import CableRoutingLayout, CableRoutingScene, CableRoutingSceneBuilder, CableRoutingSignature
+from .routing.ring_transfer import (
+    RingTransferLayout,
+    RingTransferScene,
+    RingTransferSceneBuilder,
+)
 from .routing.rope_winding import (
     RopeWindingLayout,
     RopeWindingScene,
@@ -131,6 +136,9 @@ __all__ = [
     "CableRoutingScene",
     "CableRoutingSceneBuilder",
     "CableRoutingSignature",
+    "RingTransferLayout",
+    "RingTransferScene",
+    "RingTransferSceneBuilder",
     "RopeWindingLayout",
     "RopeWindingScene",
     "RopeWindingSceneBuilder",

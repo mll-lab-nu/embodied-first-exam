@@ -258,16 +258,34 @@ def spiral_landmarks(profile, *, bar_height: float, rest_z: float) -> dict:
     # the flat run the gripper works on.
     on_table = np.flatnonzero(profile[:, 1] <= float(rest_z) + 1e-9)
     exit_index = int(on_table[0]) if on_table.size else len(profile) - 2
+    inner_s = float(profile[0, 0])
+    free_end_s = float(profile[-1, 0])
     return {
         # Offsets from the BAR's axis along the material direction.
+        "inner_s": inner_s,
         "exit_s": float(profile[exit_index, 0]),
-        "free_end_s": float(profile[-1, 0]),
-        "flat_run": float(profile[-1, 0] - profile[exit_index, 0]),
+        "free_end_s": free_end_s,
+        "flat_run": free_end_s - float(profile[exit_index, 0]),
         "roll_radius": float(np.abs(profile[:exit_index, 0]).max()),
-        # How much material is wound up: the pull has to pay out exactly this.
+        # How much material is wound up.
         "rolled": float(polyline_length(profile[: exit_index + 1])) - (
             float(bar_height) - float(rest_z)
         ),
+        # **How far the free end has to MOVE for the band to end up flat.**
+        #
+        # Not the same as `rolled`, and conflating the two is a mistake with a
+        # measured cost: `cloth_unroll` pulled `rolled` on 2026-08-24 and finished
+        # with 60 mm of material folded over the paid-out band instead of laid
+        # flat, because the drape hanging from the bar also has to be laid out and
+        # nothing had budgeted travel for it.
+        #
+        # Once flat, the band runs from its inner end to `material_length` beyond
+        # it, and the inner end lands about where it sat on the bar. So the free
+        # end finishes at `inner_s + material_length`, and the travel is that
+        # minus where it started. Note what is NOT in this: the roll's radius,
+        # pitch and turn count all cancel -- winding tighter or looser moves the
+        # free end's START, not its FINISH.
+        "flat_travel": inner_s + material - free_end_s,
         "material_length": material,
         "plan_span": span,
         "stored": material - span,
