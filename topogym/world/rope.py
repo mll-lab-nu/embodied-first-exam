@@ -466,33 +466,27 @@ class TabletopParticleFriction:
     left completely alone, so a rope being carried by the gripper is unaffected
     without needing to know which rope that is.
 
-    **`min_height` adds the NORMAL half of the same gap, and it is off by
-    default.** Genesis' PBD-vs-rigid contact is not a penetration barrier -- it
-    is resolved at the velocity level while a particle moves into the surface,
-    with no real normal force (`docs/develop/physics/pbd_tabletop_friction_zh.md`
-    section 6). Material held down by something else therefore sinks and stays
-    sunk. Measured 2026-08-24 on `cloth_unroll`: dragging the band by a
-    kinematically attached patch put particles 1.7 mm BELOW the table top, 3.7 mm
-    under where a resting particle centre belongs, which is 92% of a particle
-    diameter -- and since Genesis renders a PBD cloth at its particle centres,
-    with no thickness, the cloth visibly disappeared into the table.
+    **Tangential only, and that is a limit rather than an oversight.** Genesis'
+    PBD-vs-rigid contact is also not a penetration barrier -- material pressed
+    against the table dips into it, and a PBD cloth renders at its particle
+    centres with no thickness, so the dip is visible. A `min_height` option that
+    handed sunk particles a separation VELOCITY was tried on 2026-08-24 and
+    removed the same day: it did not work and it did harm.
 
-    Set `min_height` to where a resting particle CENTRE belongs (one particle
-    radius above the surface) and anything below it is given a separation
-    velocity. Still velocity only, so the position-write hazard above does not
-    apply. Left at None everywhere it has not been measured: turning it on
-    changes contact behaviour, and every other task's thresholds were calibrated
-    without it.
+    - It did not work. A velocity written after `scene.step` only seeds the next
+      step's prediction, and the solver re-resolves positions from there; the
+      deepest particle went from 1.70 mm to 1.87 mm below the table, i.e. no
+      change. A velocity-level push cannot hold a position the solver decides.
+    - It did harm. The cap was 0.1 m/s against gravity's 0.098 m/s per step at
+      dt=0.01, so any resting material dipping a couple of millimetres became
+      effectively weightless. The band billowed and concertinaed instead of
+      lying flat: max layers 2 -> 4, peak height 5.9 -> 13.0 mm, paid-out span
+      238 -> 200 mm.
+
+    The honest fix is a real contact barrier, which on this stack means FEM+IPC,
+    and IPC does not support PBD. See section 6 of
+    `docs/develop/physics/pbd_tabletop_friction_zh.md`.
     """
-
-    #: Fraction of the penetration depth recovered per step. Half rather than
-    #: all: a single-step snap back is the position-write failure mode wearing a
-    #: velocity disguise, and PBD reconstructs `vel = (pos - ipos) / dt` anyway.
-    LIFT_GAIN = 0.5
-    #: Ceiling on the separation speed, m/s. A deeply buried particle climbs out
-    #: over several steps instead of being launched. 0.1 m/s is 1 mm per step at
-    #: dt=0.01 -- two orders below the `disp_limit` the divergence watch trips on.
-    MAX_LIFT_SPEED = 0.1
 
     def __init__(
         self,
@@ -506,7 +500,6 @@ class TabletopParticleFriction:
         dt: float,
         gravity: float,
         max_load_factor: float = 3.0,
-        min_height: float | None = None,
     ) -> None:
         self.scene = scene
         self.entities = list(entities)
@@ -517,7 +510,6 @@ class TabletopParticleFriction:
         self.dt = float(dt)
         self.gravity = abs(float(gravity))
         self.max_load_factor = float(max_load_factor)
-        self.min_height = None if min_height is None else float(min_height)
         self._orig_step = None
 
     def apply(self) -> None:
@@ -569,26 +561,12 @@ class TabletopParticleFriction:
                 where=moving,
             )
             velocities[contact, :2] = planar * scale[:, None]
+            # Vertical velocity is left alone. Not because that is right -- see
+            # the class docstring -- but because the one thing that can be done
+            # about it here was measured to make matters worse.
             entity.set_particles_vel(
                 velocities[contact], particles_idx_local=contact.tolist()
             )
-
-            # The normal half, when asked for. Separate from the tangential write
-            # above because it selects a DIFFERENT set: `contact` is everything
-            # near the surface, this is only what has gone under it.
-            if self.min_height is None:
-                continue
-            floor = self.surface_z + self.min_height
-            under = np.flatnonzero(positions[:, 2] < floor)
-            if under.size == 0:
-                continue
-            lift = np.minimum(
-                (floor - positions[under, 2]) / self.dt * self.LIFT_GAIN,
-                self.MAX_LIFT_SPEED,
-            )
-            normal = np.array(velocities[under], dtype=float)
-            normal[:, 2] = np.maximum(normal[:, 2], lift)
-            entity.set_particles_vel(normal, particles_idx_local=under.tolist())
 
     def install(self) -> TabletopParticleFriction:
         """Wrap ``scene.step`` so friction is applied after every step."""

@@ -574,9 +574,10 @@ class ClothUnrollSceneBuilder:
         the anchor, not the table -- but the paid-out band still has to stay
         where it is put rather than sliding back.
 
-        The NORMAL half (`min_height`) is what stops the band sinking into the
-        table, which Genesis' PBD contact does not do on its own. See the config
-        and `TabletopParticleFriction`'s docstring for the measurement.
+        There is no normal half. The band DOES sink into the table -- Genesis'
+        PBD contact is not a barrier -- and the one thing this module could do
+        about it was measured on 2026-08-24 to leave the penetration unchanged
+        while making the band billow. See `TabletopParticleFriction`'s docstring.
         """
 
         friction_cfg = getattr(self.task_cfg.cloth, "tabletop_friction", None)
@@ -592,9 +593,4 @@ class ClothUnrollSceneBuilder:
             dt=float(self.env_cfg.sim.dt),
             gravity=abs(float(self.env_cfg.sim.gravity[2])),
             max_load_factor=float(friction_cfg.max_load_factor),
-            min_height=(
-                None
-                if getattr(friction_cfg, "min_height", None) is None
-                else float(friction_cfg.min_height)
-            ),
         ).install()
