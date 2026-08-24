@@ -48,7 +48,6 @@ from topogym.primitives import (
     entity_pos,
     entity_quat,
     print_collision_il_contract,
-    quat_about_axis,
 )
 from topogym.supervision import stop_before_physics
 from topogym.tasks import UnlinkCRingSceneBuilder
@@ -188,10 +187,9 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         min_finger_qpos=None if min_finger is None else float(min_finger),
         max_grasp_pos_error=float(spec.max_grasp_pos_error),
         max_align_deg=float(spec.max_align_deg),
-        rotate_with=str(spec.rotate_with),
         max_regrasp_move=float(spec.max_regrasp_move),
         max_regrasp_wrist_deg=float(spec.max_regrasp_wrist_deg),
-        align_passes=int(spec.align_passes),
+        motion_settle_steps=int(spec.motion_settle_steps),
         verbose=bool(cfg.run.verbose),
     )
 
@@ -237,9 +235,10 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "unlink_c_ring_physical_extract_demo",
         manipulated=["c_ring"],
         runtime_attachment=True,
-        # True whenever the attachment does the turning: the part's orientation is
-        # written inside the grip, so that rotation is NOT explained by the arm.
-        runtime_set_pose=str(cfg.task.primitive.rotate_with) == "attachment",
+        # False, and structurally so: the attachment carries the part but never
+        # writes its orientation. The alignment is a slide, so every pose change of
+        # the part is explained by a pose change of the arm.
+        runtime_set_pose=False,
         success_checks=(
             "finger_qpos",
             "opening_to_bar",
@@ -283,12 +282,8 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
     grasp_point = settled.point(
         np.deg2rad(float(spec.grasp_azimuth_deg)), geometry.c_ring.major_radius
     )[0]
-    axis, rotation_deg = geometry.align_rotation()
-    # Come straight down. Aligning the tool axis with the C's normal instead would
-    # make the turn a pure tool-axis roll and cost the wrist almost nothing, but it
-    # means reaching out sideways with a horizontal hand, which reads badly. The turn
-    # is only 45 degrees here (it equals the opening's azimuth), so a vertical
-    # approach ending 45 degrees tipped stays in comfortable wrist territory.
+    # Come straight down, and stay that way: the wrist holds this orientation for the
+    # whole episode. Nothing here needs it to turn -- the alignment is a slide.
     roll_deg = grasp_yaw_deg(geometry, settled, float(spec.grasp_azimuth_deg))
     if spec.grasp_roll_deg is not None:
         roll_deg = float(spec.grasp_roll_deg)
@@ -359,53 +354,44 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                     ee_quat_for_yaw(controller.default_ee_quat, np.deg2rad(yaw)),
                 )
 
-            def align_target():
-                """The absolute orientation the ring has to reach to clear the bar.
+            def align_path():
+                """Where the ring's centre has to go, measured at the moment of use.
 
-                Not a correction to the ring's current pose. Its current pose is the
-                problem: the descent tips the ring off the plane it hangs in, and the
-                extraction needs it back on that plane -- rolling a tilted ring about
-                its own tilted normal drags it through the bar instead of along it.
-
-                So the target is built from the layout's plane and the ring's measured
-                centre: keep the normal where the layout puts it, and turn the opening
-                about that normal until it points at the bar. The ring spawns unrotated
-                so its spawn frame IS the identity pose, and the turn between the two
-                is the whole target.
+                `slide_waypoints` walks the centre round the point where the bar
+                pierces the ring's plane, so the bar travels from the top of the
+                interior to the opening without the ring turning at all. Read here
+                rather than before the run: the grasp is allowed to nudge the ring,
+                and a path laid out against the layout's pose would carry that nudge
+                straight into a 9 mm clearance.
                 """
 
-                spawn = geometry.c_spawn_frame
-                normal = np.asarray(spawn.normal, dtype=float).reshape(3)
-                opening = (
-                    spawn.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0]
-                    - spawn.center
-                )
-                to_bar = geometry.tube_point - c_ring_frame(ring_scene).center
-                opening -= float(np.dot(opening, normal)) * normal
-                to_bar -= float(np.dot(to_bar, normal)) * normal
-                turn = float(
-                    np.arctan2(
-                        float(np.dot(np.cross(opening, to_bar), normal)),
-                        float(np.dot(opening, to_bar)),
-                    )
-                )
-                return quat_about_axis(normal, turn)
+                return [
+                    layout.position_to_world(point)
+                    for point in ring_geometry.slide_waypoints(
+                        geometry,
+                        c_ring_frame(ring_scene),
+                        chords=int(spec.align_chords),
+                    )[1:]
+                ]
 
             status["phase"] = "extract" if mode == "gateway" else "no_align"
             result = primitive.run(
                 controller,
                 part=c_ring,
                 grasp_pos=layout.position_to_world(grasp_point),
-                rotation_axis=axis,
-                rotation_deg=rotation_deg,
-                extract_delta=(0.0, 0.0, -geometry.extract_travel),
+                # Away from the bar along the ring's own opening -- 45 degrees off
+                # vertical under this layout, not straight down.
+                extract_delta=tuple(
+                    -geometry.extract_travel
+                    * ring_geometry.extract_direction(geometry, settled)
+                ),
                 # Radially outward, away from the closed ring's centre. Along the
                 # bar instead would curve back under the far rim.
                 clear_delta=tuple(float(spec.carry) * geometry.hang_direction),
                 place_delta=(0.0, 0.0, -float(spec.place_drop)),
                 ee_quat=ee_quat,
                 align_probe=align_probe,
-                align_target_fn=align_target,
+                align_path_fn=align_path,
                 regrasp_fn=regrasp_pose,
                 watch_fn=lambda: {"min_gap": gap_watch["min_gap"]},
                 attach_fn=attach_ring,
@@ -483,7 +469,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
         "worst_pose_error": float(result.worst_pose_error),
         "worst_tilt_deg": float(np.rad2deg(result.worst_tilt_rad)),
         "oracle_mode": mode,
-        "rotate_with": str(cfg.task.primitive.rotate_with),
+        "slide_drift": float(result.align_pose_error),
     }
 
     task_success = bool(state.is_terminal)
@@ -538,14 +524,13 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
             "overpowered the interlock. Lower task.travel_test.force_scale.",
             flush=True,
         )
-    if str(cfg.task.primitive.rotate_with) == "wrist" and result.align_tilt_rad > np.deg2rad(5.0):
+    if result.align_pose_error > float(cfg.task.success.max_slide_drift):
         print(
-            f"[warn] during the turn the wrist lagged its commanded orientation by up "
-            f"to {np.rad2deg(result.align_tilt_rad):.1f} deg, so the arm did not fully "
-            "perform it. Either shrink the turn (task.c_ring.gap_azimuth_deg IS the "
-            "turn angle) or set task.primitive.rotate_with=attachment -- which works, "
-            "but hands the rotation to the attachment, so the action stream no longer "
-            "explains it.",
+            f"[warn] the hand strayed {result.align_pose_error * 1000:.1f} mm from the "
+            "slide path. The bar sits only 9 mm inside the rim, so this is the reading "
+            "that decides whether the ring goes round the closed ring or through it. "
+            "Raise task.primitive.motion_settle_steps so each chord converges, or "
+            "task.primitive.align_chords so each one is shorter.",
             flush=True,
         )
     if abs(result.grasp_align_deg - result.hover_align_deg) > 10.0:
@@ -596,12 +581,16 @@ def main(cfg: DictConfig) -> None:
     )
     configure_contacts(cfg, ring_scene, controller)
 
-    axis, rotation_deg = geometry.align_rotation()
+    slide = ring_geometry.slide_waypoints(
+        geometry, geometry.c_rest_frame, chords=int(cfg.task.primitive.align_chords)
+    )
+    out = ring_geometry.extract_direction(geometry, geometry.c_rest_frame)
     print(
         "unlink_c_ring setup "
-        f"mode={mode} rotate_with={cfg.task.primitive.rotate_with} "
-        f"grasp_azimuth={float(cfg.task.primitive.grasp_azimuth_deg):.0f}deg "
-        f"turn={rotation_deg:.0f}deg about ({axis[0]:+.2f},{axis[1]:+.2f},{axis[2]:+.2f}) "
+        f"mode={mode} grasp_azimuth={float(cfg.task.primitive.grasp_azimuth_deg):.0f}deg "
+        f"slide={sum(float(np.linalg.norm(b - a)) for a, b in zip(slide[:-1], slide[1:])) * 1000:.0f}mm"
+        f" in {len(slide) - 1} chords "
+        f"out=({out[0]:+.2f},{out[1]:+.2f},{out[2]:+.2f}) "
         f"grasp_yaw={grasp_yaw_deg(geometry, geometry.c_rest_frame, float(cfg.task.primitive.grasp_azimuth_deg)):.1f}deg "
         f"extract={geometry.extract_travel * 1000:.0f}mm "
         f"carry={float(cfg.task.primitive.carry) * 1000:.0f}mm "

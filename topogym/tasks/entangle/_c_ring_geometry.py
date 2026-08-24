@@ -368,6 +368,124 @@ def surface_gap(axes_a, axes_b) -> float:
     return float((axis_distance - ra[:, None] - rb[None, :]).min())
 
 
+def opening_to_bar_deg(geometry, frame) -> float:
+    """Angle between the C's opening and the direction from its centre to the bar.
+
+    Zero means the opening points straight at the bar, which is the aligned pose the
+    extraction has to reach. It is also the reading that says how far the resting
+    pose is from dropping off unaided, which is why the inspect demo watches it.
+
+    This is the alignment measure for a roll about the ring's own normal.
+    `axial_insert`'s `_axis_tilt` cannot serve: the normal is the rotation axis, so
+    it does not move and that reading stays zero through the whole turn.
+
+    Lives here rather than in the verifier because it is pure geometry with no scene
+    in it, and because `tests/check_gateway_slide_path.py` needs it: that gate imports
+    by path to stay solver-free, and the verifier reaches for the whole package.
+    Re-exported from `verification/unlink_c_ring_verifier.py`, which is where callers
+    already look for it.
+
+    """
+
+    normal = np.asarray(frame.normal, dtype=float).reshape(3)
+    opening = frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - frame.center
+    to_bar = geometry.tube_point - frame.center
+    # Measured IN the ring's plane. The bar is a straight line, so the ring sliding
+    # along it changes nothing about whether the opening faces it -- but taken as a
+    # raw 3D angle that harmless slide shows up as misalignment the turn cannot
+    # remove. Measured 2026-08-23: a ring sitting exactly on its aligned orientation
+    # (0.07 deg of residual) still read 10.1 deg this way. Out-of-plane tilt is a real
+    # defect, but it is `tilt_deg`'s job to report it, not this one's.
+    opening -= float(np.dot(opening, normal)) * normal
+    to_bar -= float(np.dot(to_bar, normal)) * normal
+    scale = float(np.linalg.norm(opening) * np.linalg.norm(to_bar))
+    if scale < 1e-12:
+        return 0.0
+    cosine = float(np.dot(opening, to_bar)) / scale
+    return float(np.rad2deg(np.arccos(np.clip(cosine, -1.0, 1.0))))
+
+
+
+def extract_direction(geometry, frame: RingFrame) -> np.ndarray:
+    """Unit vector from the ring's centre toward its own opening.
+
+    The bar leaves through the opening, so the extraction moves the ring the OTHER
+    way: `-extract_travel * extract_direction(...)`. Under the current layout this
+    comes out at (0.707, 0, 0.707) -- 45 degrees off vertical, not straight down,
+    which is the visible difference between this trajectory and the roll it replaced.
+    """
+
+    centre = np.asarray(frame.center, dtype=float)
+    return _unit(
+        frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - centre
+    )
+
+
+def slide_waypoints(
+    geometry, frame: RingFrame, *, chords: int = 8, the_long_way: bool = False
+) -> np.ndarray:
+    """Ring-centre positions that carry the bar round to the opening, without turning.
+
+    The bar pierces the C's plane at one point. Sliding the C so that point travels
+    from the top of its interior round to the opening is the whole alignment, and it
+    is a TRANSLATION: the C's orientation never changes, so the centre swings on an
+    arc about the piercing point at whatever radius it currently hangs at.
+
+    **Why not roll the ring about its own centre instead.** The relative motion is
+    identical and the roll needs no translation at all, which is why it was the
+    original trajectory. It costs far more than it looks like it should: the wrist has
+    to turn with the part, the gripper origin sits `HAND_TO_PAD_Z` = 103 mm behind the
+    pads, and the resulting lever from hand origin to ring centre is 134 mm. Measured
+    2026-08-23, the controller holds a commanded orientation to 14.28 degrees at this
+    reach even parked, which swings the ring 134 x sin(14.28) = 33 mm; the bar is only
+    9 mm inside the rim, and the ring's centre was measured wandering 54.9 mm during
+    the roll. Ten times the step count moved the lag 12.16 -> 12.58 degrees, so it is
+    the controller's steady-state accuracy, not a rate that can be slowed away.
+    Holding the wrist still costs a 35 mm translation and removes the lever entirely.
+
+    **An arc, in chords, not a straight line.** One chord cuts 3.35 mm inside the true
+    arc, which is more than the whole budget; eight bring it to 0.053 mm. `apply_phases`
+    has no arc primitive and does not need one.
+
+    ``the_long_way`` walks the other side of the circle to the same place. There is
+    only one centre that puts the bar at the opening -- the ring never turns, so the
+    opening's world direction is fixed -- which is why this trajectory has one
+    alignment where the roll had two mirror-image ones. The long way round is the only
+    alternative left, and `tests/check_c_ring_clearance.py` probes it to say whether
+    it is a second gateway or a jam.
+
+    ``frame`` is measured at the moment of use -- the gate passes the resting frame,
+    the demo passes the ring's live frame -- so the path closes the loop on where the
+    ring actually is rather than on where the layout said it would be.
+    """
+
+    bar = np.asarray(geometry.tube_point, dtype=float)
+    start = np.asarray(frame.center, dtype=float)
+    radius = float(np.linalg.norm(bar - start))
+    if radius < 1e-9:
+        return np.asarray([start], dtype=float)
+    finish = bar - radius * extract_direction(geometry, frame)
+    from_start = (start - bar) / radius
+    to_finish = (finish - bar) / radius
+    angle = float(np.arccos(np.clip(float(from_start @ to_finish), -1.0, 1.0)))
+    axis = np.cross(from_start, to_finish)
+    norm = float(np.linalg.norm(axis))
+    if norm < 1e-12 or angle < 1e-9:
+        return np.asarray([start], dtype=float)
+    axis = axis / norm
+    if the_long_way:
+        axis, angle = -axis, 2.0 * np.pi - angle
+    steps = max(1, int(chords))
+    return np.asarray(
+        [start]
+        + [
+            bar + rotation_about(axis, angle * step / steps) @ (start - bar)
+            for step in range(1, steps + 1)
+        ],
+        dtype=float,
+    )
+
+
 def bisector_projection(normal_a, normal_b) -> np.ndarray:
     """A projection basis that views both ring planes obliquely.
 
@@ -516,23 +634,29 @@ class SceneGeometry:
         turn = (turn + 180.0) % 360.0 - 180.0
         return np.asarray(self.c_rest_frame.normal, dtype=float), turn
 
-    def gateway_phases(self, *, carry: float = 0.090):
-        """The one trajectory that unlinks: align the opening, drop out, carry away.
+    def gateway_phases(self, *, carry: float = 0.090, arc_chords: int = 8):
+        """The one trajectory that unlinks, as a phase list for the offline gate.
 
-        Phase 1 turns the C about the bar until its opening points at the bar --
-        which is what "keeping the opening aligned with the ring body" means once the
-        C hangs from that body. Phase 2 is the only direction the bar can leave
-        through. Phase 3 carries it out RADIALLY, away from the closed ring's centre:
-        every other direction runs back under the ring, whose far rim curves down
-        over the path.
+        Nothing here but bookkeeping: `slide_waypoints` and `extract_direction` own the
+        geometry so that the gate and the runtime cannot drift apart, and this differs
+        the absolute points into the ("translate", delta) phases `apply_phases` speaks.
+
+        Laid out from the RESTING frame -- the C spawns `spawn_drop` above where it
+        settles, and 2 mm is more than this trajectory's whole clearance budget.
         """
 
-        axis, turn = self.align_rotation()
-        return (
-            ("rotate", (-turn, tuple(axis))),
-            ("translate", (0.0, 0.0, -self.extract_travel)),
-            ("translate", tuple(float(carry) * self.hang_direction)),
+        waypoints = slide_waypoints(self, self.c_rest_frame, chords=arc_chords)
+        opening = extract_direction(self, self.c_rest_frame)
+        phases: list[tuple[str, tuple[float, float, float]]] = []
+        for before, after in zip(waypoints[:-1], waypoints[1:]):
+            phases.append(("translate", tuple(float(v) for v in after - before)))
+        phases.append(
+            ("translate", tuple(float(v) for v in -self.extract_travel * opening))
         )
+        phases.append(
+            ("translate", tuple(float(v) for v in float(carry) * self.hang_direction))
+        )
+        return tuple(phases)
 
     def checks(self) -> list[tuple[str, float, float, bool]]:
         """(name, measured, lower limit, ok) for every inequality the scene rests on."""

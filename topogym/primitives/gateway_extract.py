@@ -13,31 +13,31 @@ the part's own normal*: the normal does not move, so the correction is identical
 zero. Its `_axis_tilt` gate is zero for the same reason. Both the motion and its gate
 have to be written against a different reading.
 
-**Who turns the part: `rotate_with`.** Two modes, and the choice is a real trade.
+**The part is slid into alignment, not turned.** The bar pierces the C's plane at one
+point; walking the ring's centre round that point on an arc brings the bar from the top
+of the interior to the opening. Relative to the ring that is the same motion a roll
+would produce, and the ring's orientation never changes.
 
-``"wrist"`` turns the hand and lets the rigid grip carry the part, which is what
-`rigid_first_track_zh.md` section 3.1 asks for: every pose change of the part is
-explained by a pose change of the arm. `axial_insert.py:321` spells out why the
-alternative makes a useless demonstration.
+The roll was the original design and it does not work here. The gripper origin sits
+`HAND_TO_PAD_Z` = 103 mm behind the pads, so the lever from hand origin to ring centre
+is 134 mm, and every degree of wrist orientation error becomes 2.3 mm of ring
+displacement. Measured 2026-08-23: the controller holds a commanded orientation to
+14.28 degrees at this reach even parked, the ring's centre wandered 54.9 mm during the
+roll, and the bar is 9 mm inside the rim -- so the ring swept through the closed ring
+rather than round it. Ten times the step count moved the tracking lag from 12.16 to
+12.58 degrees, which rules out speed as the cause: it is steady-state accuracy.
+Sliding needs no wrist rotation at all, so the constant orientation error is absorbed
+into `offset_in_hand` when the grasp is measured and never reappears.
 
-``"attachment"`` holds the hand still and ramps the part's orientation inside the grip
-(`AttachmentManager.ramp_to`). It gives up that property. It exists because the wrist
-sometimes cannot do the turn at all: `untangle_continuous_physical_pinch_demo.py:419`
-rejected a wrist pitch as needing "a large wrist pitch to reach", and rope_winding,
-untangle_continuous and swap_crossing_sign all turn their plugs this way. Measured for
-docx 3.4 on 2026-08-22: commanded 45 degrees about a horizontal axis, the wrist
-tracked 2 -- the hand followed the position arc and simply did not rotate.
+`tasks/entangle/_c_ring_geometry.slide_waypoints` owns the arc, and the caller passes
+it in through ``align_path_fn`` -- evaluated inside the align phase, so the path is
+measured against where the part actually is rather than where the layout said.
 
-Whichever mode runs is printed and recorded, because it changes what the recorded
-episode means.
-
-**Targets are the part's centre, and the grasp offset rotates with the hand.**
-`axial_insert` keeps one world-frame carry offset because its hand never changes
-orientation. Here the hand turns 90 degrees, so the offset is stored in the hand's
-own frame and mapped back out every waypoint: `hand = part - R(q) @ offset_in_hand`.
-Interpolating the *part* rather than the hand also matters more than usual -- the
-measured clearance along this path is 0.15 mm, so a hand that travels in a straight
-line while the wrist slerps would swing the part into the bar in the middle.
+**Targets are the part's centre.** `axial_insert` keeps one world-frame carry offset;
+this stores the offset in the hand's own frame and maps it back out every waypoint
+(`hand = part - R(q) @ offset_in_hand`), which costs nothing while the wrist is still
+and is what let the roll be expressed at all. Interpolating the *part* rather than the
+hand is what keeps the ring on its arc instead of swinging it through the chord.
 
 **Nothing here reports IK residuals, because `move_ee_to` does not.** A 90 degree
 reorientation about a horizontal axis has no precedent in this repo, so the primitive
@@ -53,8 +53,8 @@ from typing import Any, Callable, ClassVar
 
 import numpy as np
 
-from .attachment import _quat_conj, slerp
-from .physical_contact import entity_pos, entity_quat, quat_about_axis, quat_mul
+from .attachment import slerp
+from .physical_contact import entity_pos
 
 # Distance from the `hand` link origin to the fingertip pad centre, along the tool
 # axis. Vertical only while the fingers point down, which is why it is applied
@@ -78,21 +78,6 @@ def _matrix(quat) -> np.ndarray:
         ],
         dtype=float,
     )
-
-
-def _quat_angle_between_axes(a, b) -> float:
-    """Angle in degrees between two axes, sign-insensitive.
-
-    A rotation axis and its negation are the same axis, so the reading has to fold
-    at 90 degrees or a flipped normal reads as fully drifted.
-    """
-
-    a = np.asarray(a, dtype=float).reshape(3)
-    b = np.asarray(b, dtype=float).reshape(3)
-    scale = float(np.linalg.norm(a) * np.linalg.norm(b))
-    if scale < 1e-12:
-        return 0.0
-    return float(np.rad2deg(np.arccos(np.clip(abs(float(np.dot(a, b))) / scale, 0.0, 1.0))))
 
 
 def _quat_angle(a, b) -> float:
@@ -201,13 +186,6 @@ class GatewayExtractPrimitive:
     # before the descent is what keeps a misaligned hand from knocking a free part
     # away instead of gripping it.
     hover_settle_steps: int = 40
-    # "wrist" or "attachment"; see the module docstring. Not a tuning knob -- it
-    # decides whether the episode's action stream explains the part's rotation.
-    rotate_with: str = "wrist"
-    # How many measure-and-turn passes the attachment mode gets. One is not enough:
-    # a pass does not necessarily deliver the whole rotation it asks for, and the
-    # alignment gate is tight because the extraction has 2 mm of room per side.
-    align_passes: int = 3
     # Bounds on the hover re-aim. It corrects for the part having been nudged since
     # the pose was handed in, so it is a small correction by construction; a large one
     # means the measurement is wrong, and following it does more damage than ignoring
@@ -237,14 +215,12 @@ class GatewayExtractPrimitive:
         *,
         part: Any,
         grasp_pos,
-        rotation_axis,
-        rotation_deg: float,
         extract_delta,
         clear_delta,
         place_delta,
         ee_quat=None,
         align_probe: Callable[[], float] | None = None,
-        align_target_fn: Callable[[], Any] | None = None,
+        align_path_fn: Callable[[], Any] | None = None,
         regrasp_fn: Callable[[], Any] | None = None,
         watch_fn: Callable[[], Any] | None = None,
         attach_fn: Callable[[], Any] | None = None,
@@ -272,10 +248,6 @@ class GatewayExtractPrimitive:
         base_quat = np.asarray(
             controller.default_ee_quat if ee_quat is None else ee_quat, dtype=float
         ).reshape(4)
-        turn = quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg)))
-        aligned_quat = base_quat if skip_align else quat_mul(turn, base_quat)
-        aligned_quat = np.asarray(aligned_quat, dtype=float) / np.linalg.norm(aligned_quat)
-
         grasp_pos = np.asarray(grasp_pos, dtype=float).reshape(3)
         hand_at_grasp = grasp_pos - tool_offset(base_quat, HAND_TO_PAD_Z)
         hand_approach = hand_at_grasp - tool_offset(base_quat, float(self.approach_clearance))
@@ -356,10 +328,6 @@ class GatewayExtractPrimitive:
                 )
             grasp_pos = new_pos
             base_quat = new_quat
-            aligned_quat = base_quat if skip_align else quat_mul(
-                quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg))), base_quat
-            )
-            aligned_quat = np.asarray(aligned_quat, dtype=float) / np.linalg.norm(aligned_quat)
             hand_at_grasp = grasp_pos - tool_offset(base_quat, HAND_TO_PAD_Z)
             self._move_hand(
                 controller, track,
@@ -385,25 +353,11 @@ class GatewayExtractPrimitive:
                 hover_align_deg=hover_align_deg, grasp_align_deg=hover_align_deg,
             )
 
-        # Which phase tips the part out of its own plane, and by how much? The layout
-        # spawns the part unrotated with its normal ON the rotation axis (checked
-        # offline by `tests/check_c_ring_clearance.py`), so the part's live normal is
-        # just the current rotation applied to that axis. Sampled at hover, after the
-        # descent and after the close, because a reading taken only at the end cannot
-        # say which phase did it.
-        def drift() -> float:
-            return _quat_angle_between_axes(
-                _matrix(entity_quat(part)) @ np.asarray(rotation_axis, dtype=float),
-                rotation_axis,
-            )
-
-        self._log("pre_descend", track, align_deg=hover_align_deg, axis_drift=drift())
         self._move_hand(controller, track, hand_at_grasp, quat=base_quat)
         phases.append("descend")
         self._log(
             "post_descend", track,
             align_deg=float(align_probe()) if align_probe is not None else 0.0,
-            axis_drift=drift(),
         )
 
         # Weld BEFORE the fingers move, not after. A ring hanging on a bar is a free
@@ -438,8 +392,7 @@ class GatewayExtractPrimitive:
             self.min_finger_qpos is None or finger_qpos >= float(self.min_finger_qpos)
         )
         self._log("grasp", track, finger_qpos=finger_qpos, pos_error=grasp_pos_error,
-                  align_deg=grasp_align_deg, disturbed=grasp_align_deg - hover_align_deg,
-                  axis_drift=drift())
+                  align_deg=grasp_align_deg, disturbed=grasp_align_deg - hover_align_deg)
         if not grasped:
             return self._abort(
                 controller, track, phases, release_fn,
@@ -461,73 +414,29 @@ class GatewayExtractPrimitive:
 
         align_steps = int(self.align_steps or self.steps_per_phase)
         turn_track = _Tracking(watch=watch_fn)
-        if self.rotate_with == "attachment" and attachment is not None:
-            # Ramp to an ABSOLUTE pose, not an incremental roll, and iterate.
-            #
-            # A roll about the part's own normal cannot fix a part whose normal is
-            # wrong, and the descent tips this one badly: measured 2026-08-23, the
-            # ring reached the close with its normal 65 deg off the layout axis. Rolled
-            # about that axis the ring does not travel along the bar it hangs on, it
-            # sweeps through it -- which is what `min_gap_seen` was reporting as 5 mm
-            # of interpenetration. The target below puts the normal back on the layout
-            # axis and the opening on the bar in one motion, so the roll that follows
-            # is a roll along the bar.
-            #
-            # Iterated because the target is re-read each pass: it is measured against
-            # the part's live centre, and one ramp does not have to land it exactly.
-            for attempt in range(max(1, int(self.align_passes))):
-                if align_target_fn is not None:
-                    target = np.asarray(align_target_fn(), dtype=float).reshape(4)
-                else:
-                    target = quat_mul(
-                        quat_about_axis(rotation_axis, np.deg2rad(float(rotation_deg))),
-                        entity_quat(part),
-                    )
-                residual = float(np.rad2deg(_quat_angle(entity_quat(part), target)))
-                self._log("turn_pass", turn_track, attempt=attempt + 1,
-                          residual=residual, axis_drift=drift())
-                if residual <= float(self.max_align_deg):
-                    break
-                # ramp_to counts SYNC calls, and the manager syncs twice a step. Rather
-                # than trust that accounting, step until it says it is done: `ramping()`
-                # clears when `_advance_ramp` reaches the last step.
-                attachment.ramp_to(target, 2 * align_steps)
-                for _ in range(4 * align_steps):
-                    if not attachment.ramping():
-                        break
-                    controller.step(1)
-        else:
-            # Closed loop on the wrist route too. The part is rigid in the grip, so the
-            # world rotation that takes it from where it IS to where it must be is the
-            # same world rotation the hand has to make -- left-multiply it onto the
-            # commanded pose and the arm carries the part into alignment. Without this
-            # the turn is the nominal one, which is only right if nothing nudged the
-            # part on the way in.
-            if align_target_fn is not None:
-                target_part = np.asarray(align_target_fn(), dtype=float).reshape(4)
-                correction = quat_mul(target_part, _quat_conj(entity_quat(part)))
-                aligned_quat = quat_mul(correction, base_quat)
-                aligned_quat = np.asarray(aligned_quat, dtype=float)
-                aligned_quat = aligned_quat / np.linalg.norm(aligned_quat)
-                self._log(
-                    "turn_plan", turn_track,
-                    wrist_deg=float(np.rad2deg(_quat_angle(base_quat, aligned_quat))),
-                )
+        # Slide, do not turn. The path is a list of positions for the part's CENTRE,
+        # read here rather than handed in, so it is measured against where the part
+        # actually ended up after the grasp. The wrist holds `base_quat` throughout:
+        # that is the whole point of this trajectory, see `slide_waypoints`.
+        path = [] if skip_align or align_path_fn is None else [
+            np.asarray(point, dtype=float).reshape(3) for point in align_path_fn()
+        ]
+        chord_steps = max(1, align_steps // max(1, len(path))) if path else align_steps
+        for target in path:
             self._move_part(
-                controller, turn_track, part_entity=part, part_from=part_center, part_to=part_center,
-                quat_from=base_quat, quat_to=aligned_quat,
-                offset_in_hand=offset_in_hand, steps=align_steps,
+                controller, turn_track, part_from=part_center, part_to=target,
+                quat_from=base_quat, quat_to=base_quat,
+                offset_in_hand=offset_in_hand, steps=chord_steps, part_entity=part,
             )
-            track.worst_pose_error = max(track.worst_pose_error, turn_track.worst_pose_error)
-            track.worst_tilt_rad = max(track.worst_tilt_rad, turn_track.worst_tilt_rad)
+            part_center = target
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")
 
-        # The grip changed if the attachment did the turning, and the hand may have
-        # tracked imperfectly if the wrist did, so re-measure rather than trusting the
-        # offset captured before the turn.
-        carry_quat = base_quat if self.rotate_with == "attachment" else aligned_quat
+        # The hand tracks imperfectly, so re-measure the offset rather than trusting
+        # the one captured before the slide. The orientation is unchanged by
+        # construction -- the wrist never turned -- so the carry pose is the grasp pose.
+        carry_quat = base_quat
         offset_in_hand = _matrix(carry_quat).T @ (
             entity_pos(part) - np.asarray(controller.hand_pos(), dtype=float)
         )

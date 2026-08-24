@@ -27,7 +27,7 @@
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
 | 4.4 | `connectivity/linkbar_merge_components.py` | 场景与判据已过，执行层待复核。记录见 [`linkbar_merge_components_zh.md`](linkbar_merge_components_zh.md) |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
-| 3.4 | `entangle/unlink_c_ring.py` | 场景、verifier、抽出原语、physical demo 均已落地（2026-08-22）。§7.3 的前置验证做完，见下；场景侧 GPU 已验，抽出 episode 的 GPU 未跑。详见 [`unlink_c_ring_zh.md`](unlink_c_ring_zh.md) |
+| 3.4 | `entangle/unlink_c_ring.py` | 场景、verifier、抽出原语、physical demo 均已落地。2026-08-23 把对准从「绕环心自转」改成「环心沿弧平移」，`runtime_set_pose` 因此恒为 False，本任务不再是 §3.1 的例外。抽出 episode 的 GPU 待跑。详见 [`unlink_c_ring_zh.md`](unlink_c_ring_zh.md) |
 
 ---
 
@@ -230,9 +230,10 @@ maze_wall_removal 三个任务共用，改动面过大。
 | 支架形态 | 最终为**立柱 + 平放的闭合环**：环平躺在立柱顶端，C 环挂在正对面的环缘，相距一个环直径，没有悬臂。中间试过「竖立环 + 水平悬臂」，viewer 里机械臂被悬臂卡住——离线 gate 量的是 C 环包络与悬臂的净空，没量手的，而抓取点就在悬臂正下方。平放还带来一项收益：抽出的转轴变成水平指向机器人，夹爪侧向正对环面进去时工具轴与转轴重合，90° 滚转落在 joint 7 上 |
 | 抓取凸台 | 规划时未列。`_fixtures._link_xml` 把质心放在碰撞件包围盒中心；不带凸台时该中心只横向偏 1.62mm、竖直不偏，静止姿态即「开口转到管身上」。凸台把包围盒下拉 8.30mm，静止姿态改到离出生姿态 11°。**但 2026-08-22 实测表明维持互锁的是悬挂接触的摩擦（12.3 vs 0.79 mNm），不是凸台**；凸台的实际作用是抓取特征与摩擦裕度 |
 | 复用 | `StandardTabletopSceneBuilder`、`_fixtures.{HingeShape, add_rigid_assembly}`、`_visuals.add_industrial_pedestal`、`world/closed_band.py` 的 `linking_number` |
-| 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）、`primitives/gateway_extract.py`、`verification/unlink_c_ring_verifier.py`、`tasks/entangle/_c_ring_travel_probe.py`。原语**新写而非改 `AxialInsertPrimitive`**：后者的 `align_axis` 用 `_rotation_between(part_axis, insert_axis)` 算修正量，而本任务是绕零件自身法向滚转，法向不动、该式恒为零，改不出来（§7 第 1 条据此结案） |
+| 新增 | `tasks/entangle/_c_ring_geometry.py`（Genesis-free 的环几何与全部导出量）、`primitives/gateway_extract.py`、`verification/unlink_c_ring_verifier.py`、`tasks/entangle/_c_ring_travel_probe.py`。原语**新写而非改 `AxialInsertPrimitive`**：后者的 `align_axis` 用 `_rotation_between(part_axis, insert_axis)` 算修正量，而本任务是绕零件自身法向滚转，法向不动、该式恒为零，改不出来（§7 第 1 条据此结案）。原语内的滚转分支已于 2026-08-23 随对准改平移一并删除 |
 | 不变量 | 主读数取 `signed_crossing_sequence`（`task_taxonomy_zh.md` §4.3 对 C3 允许的取值；该节不含 `linking_number`），并显式声明「C 环开口用直弦补合」这一 canonical closure；`linking_number` 作为派生读数一并写入。契约要求的投影方向**由布局导出而非写死**——取两环法向的角平分线，随 `stand.yaw_deg` 一起转；写死的矩阵在改朝向后正好沿 C 环平面看过去，读数错成 `Lk = -2`，由离线 gate 拦下。verifier 未开工 |
-| 防捷径 | 由物理本身保证，且已实测：七条非 gateway 轨迹全部卡住，每一条都由两环互锁本身卡住（8.60–8.97mm）。**gateway 有两条**，互为镜像——平放的环头顶无遮挡，「开口朝下、向上抽」同样成立；两条都要求先把开口对准管身，防捷径不受影响 |
+| 对准方式 | **平移，不是自转**（2026-08-23 改）。管身穿过 C 环平面于一点，环心绕该点沿一段弧走 36.1mm（拆 8 段弦），管身相对于环即从正上方走到缺口处；环的朝向全程不变。自转在此做不到：夹爪原点在指面后方 103mm，从手原点到环心的杠杆是 134mm，要把环心位移压进 9mm 的余量需腕部姿态准到 3.85°，而控制器静止时的稳态误差就是 14.28°（十倍步数对照证明与速度无关）。改平移后手腕不转，该误差在抓取测偏移时即被吸收 |
+| 防捷径 | 由物理本身保证，且已实测：七条非 gateway 轨迹全部卡住，每一条都由两环互锁本身卡住（8.60–8.97mm）。**gateway 只有一条**——环不转，缺口的世界方向固定，能让管身落在缺口上的环心唯一。唯一的替代是沿弧的另一侧绕过去，实测在 19% 处被立柱挡住（互锁本身只有 −0.20mm，即这个方向的唯一性由支架保证），gate 单独一节打印 |
 | 风险 | 已消解。几何一侧见 §7 第 3 条；求解器一侧 2026-08-22 实测：600 步静置 `Lk` 恒为 −1、开口方位漂移 0.6°，每步 1ms（CPU，约 1115 步/秒），约 1150 个接触对未构成瓶颈 |
 
 ---

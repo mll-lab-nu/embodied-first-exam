@@ -41,6 +41,7 @@ from typing import Any
 import numpy as np
 
 from topogym.tasks.entangle import _c_ring_geometry as ring_geometry
+from topogym.tasks.entangle._c_ring_geometry import opening_to_bar_deg
 from topogym.tasks.entangle.unlink_c_ring import UnlinkCRingScene
 from topogym.world.closed_band import crossings_between, linking_number
 
@@ -99,36 +100,6 @@ def c_ring_frame(ring_scene: UnlinkCRingScene) -> ring_geometry.RingFrame:
     return ring_geometry.RingFrame(
         center=center, normal=rotation @ spawn.normal, ref=rotation @ spawn.ref
     )
-
-
-def opening_to_bar_deg(geometry: ring_geometry.SceneGeometry, frame) -> float:
-    """Angle between the C's opening and the direction from its centre to the bar.
-
-    Zero means the opening points straight at the bar, which is the aligned pose the
-    extraction has to reach. It is also the reading that says how far the resting
-    pose is from dropping off unaided, which is why the inspect demo watches it.
-
-    This is the alignment measure for a roll about the ring's own normal.
-    `axial_insert`'s `_axis_tilt` cannot serve: the normal is the rotation axis, so
-    it does not move and that reading stays zero through the whole turn.
-    """
-
-    normal = np.asarray(frame.normal, dtype=float).reshape(3)
-    opening = frame.point(np.deg2rad(geometry.c_ring.gap_azimuth_deg), 1.0)[0] - frame.center
-    to_bar = geometry.tube_point - frame.center
-    # Measured IN the ring's plane. The bar is a straight line, so the ring sliding
-    # along it changes nothing about whether the opening faces it -- but taken as a
-    # raw 3D angle that harmless slide shows up as misalignment the turn cannot
-    # remove. Measured 2026-08-23: a ring sitting exactly on its aligned orientation
-    # (0.07 deg of residual) still read 10.1 deg this way. Out-of-plane tilt is a real
-    # defect, but it is `tilt_deg`'s job to report it, not this one's.
-    opening -= float(np.dot(opening, normal)) * normal
-    to_bar -= float(np.dot(to_bar, normal)) * normal
-    scale = float(np.linalg.norm(opening) * np.linalg.norm(to_bar))
-    if scale < 1e-12:
-        return 0.0
-    cosine = float(np.dot(opening, to_bar)) / scale
-    return float(np.rad2deg(np.arccos(np.clip(cosine, -1.0, 1.0))))
 
 
 def signed_crossing_sequence(crossings) -> tuple[tuple[int, int, int], ...]:
