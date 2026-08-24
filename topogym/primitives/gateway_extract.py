@@ -120,6 +120,11 @@ class _Tracking:
     # it should be. The hand's own tracking error does not answer the question this
     # task cares about -- the part is what has to miss the other ring.
     worst_part_drift: float = 0.0
+    # Standing overshoot added to the hand's command, integrated from the hand's own
+    # error. See `_move_part`: it is the only way to close the loop here, because the
+    # part is welded in the grip and therefore carries no information the hand does
+    # not already have.
+    command_bias: Any = None
 
 
 
@@ -200,6 +205,10 @@ class GatewayExtractPrimitive:
     # the nudge would have.
     max_regrasp_move: float = 0.030
     max_regrasp_wrist_deg: float = 30.0
+    # Cap on the overshoot `_move_part` integrates onto the hand's command. Bounded so
+    # a waypoint the arm simply cannot reach asks for a large correction once and then
+    # stops, instead of winding up and throwing the part.
+    max_command_bias: float = 0.020
     close_hold_steps: int = 30
     align_steps: int | None = None
     align_settle_steps: int = 30
@@ -565,32 +574,46 @@ class GatewayExtractPrimitive:
             alpha = self._ease(step / steps)
             quat = slerp(quat_from, quat_to, alpha)
             part = (1.0 - alpha) * part_from + alpha * part_to
+            aim = part - _matrix(quat) @ offset_in_hand
             if part_entity is None:
-                self._command(
-                    controller, track, part - _matrix(quat) @ offset_in_hand, quat
-                )
+                self._command(controller, track, aim, quat)
                 continue
-            # Closed loop on the PART, which is the thing that has to miss the other
-            # ring. Feeding forward `part - R(q) @ offset_in_hand` assumes the arm
-            # reaches what it is told, and this one does not: measured 2026-08-23 it
-            # sits about 6 mm off its commanded Cartesian pose at this reach, steadily,
-            # at the grasp and at every waypoint after. The part is welded in the grip,
-            # so the part's error IS the hand's error -- ask the hand to move by
-            # whatever the part still owes, and the standing offset cancels instead of
-            # being inherited. Fixed point: part where it should be, hand asked to
-            # stay put.
-            here = np.asarray(controller.hand_pos(), dtype=float)
-            owed = part - entity_pos(part_entity)
-            self._command(controller, track, here + owed, quat)
+            # Integral action on the HAND's own error, because the arm does not reach
+            # what it is told: measured 2026-08-23 it sits about 6 mm off its commanded
+            # Cartesian pose at this reach, steadily, at the grasp and at every
+            # waypoint after, and more settling does not shrink it.
+            #
+            # Correcting against the PART instead is degenerate, and was tried before
+            # this: the part is welded in the grip, so part_actual = hand_actual + d
+            # and part_target = aim + d, which makes
+            # hand_actual + (part_target - part_actual) equal to `aim` exactly. The two
+            # errors are one number; only the hand's own can be fed back.
+            #
+            # Bounded, so a waypoint the arm simply cannot reach asks for a large
+            # overshoot once and then stops rather than winding up.
+            if track.command_bias is None:
+                track.command_bias = np.zeros(3, dtype=float)
+            reached = self._command(controller, track, aim + track.command_bias, quat)
+            track.command_bias = np.clip(
+                track.command_bias + 0.5 * (aim - reached),
+                -self.max_command_bias,
+                self.max_command_bias,
+            )
             track.worst_part_drift = max(
                 track.worst_part_drift,
                 float(np.linalg.norm(entity_pos(part_entity) - part)),
             )
         controller.step(max(0, int(self.motion_settle_steps)))
 
-    def _command(self, controller, track, hand_target, quat) -> None:
-        """One waypoint, plus the tracking error nobody else measures."""
+    def _command(self, controller, track, hand_target, quat) -> np.ndarray:
+        """One waypoint, plus the tracking error nobody else measures.
 
+        Returns where the hand actually got to, which is what the caller integrates
+        against: `move_ee_to` reports nothing, so this is the only place the arm's
+        steady-state error is visible at all.
+        """
+
+        hand_target = np.asarray(hand_target, dtype=float)
         controller.move_ee_to(hand_target, quat=quat, steps=1, continuous_ik=True)
         reached = np.asarray(controller.hand_pos(), dtype=float)
         track.worst_pose_error = max(
@@ -600,6 +623,7 @@ class GatewayExtractPrimitive:
             track.worst_tilt_rad,
             _quat_angle(_as_numpy(controller.hand_quat()).reshape(4), quat),
         )
+        return reached
 
     @staticmethod
     def _ease(progress: float) -> float:
