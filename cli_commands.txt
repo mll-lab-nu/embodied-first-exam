@@ -459,7 +459,12 @@ python -B -m demos.deformation.cloth_unpleat_physical_demo run.build_only=true 2
 # --- cloth_unroll (docx 1.3 展开自身卷曲的布带, 2026-08-24 新建) ---
 # 场景: 布带绕在一根水平横梁上两圈, 横梁架在两根立柱之间, 像公共卫生间的抽纸器。
 # 动作: 夹爪抓平铺段的自由端, 贴着桌面沿 +y 直线拉; 旋转全部由卷筒绕梁吸收,
-#       手腕不转。行程 174mm 一次够不着, 所以一个 episode 是三段抓取。
+#       手腕不转。行程 161mm, 一次连续拉完 (60mm/s, 约 2.7 秒)。
+#       2026-08-24: 此前是 1.5mm/步 分三段, 布带被拉成薄带、回弹时粒子穿过桌面。
+#       原因是速度不是力 —— fix_particles_to_link 是运动学绑定, 抓到的粒子精确
+#       跟着手走; 限制拉伸的是 PBD 把位移传播出去的速度 (一次迭代约一条边,
+#       布带材料方向有 ~35 个粒子)。分段也一并取消: 手的终点是「起点 + 总行程」,
+#       分不分段都一样, 分段只换来两次松手-退开-重抓。
 #
 # 统一跑法 (推荐, 给有 GPU 的机器): 五格按顺序跑, check/settle 是闸口,
 # 不过就跳过后面的; 跑完打一张汇总表, 视频与日志都落在同一个时间戳目录下。
@@ -496,8 +501,9 @@ python -B -m demos.deformation.cloth_unroll_physical_demo \
   recording.every_n_steps=3 \
   run.verbose=true \
   2>&1 | tee runs/videos/cloth_unroll/unroll.log
-# 只跑第一段抓取 (调试重新 observe 时用, 不必每次从头等三段跑完)
-python -B -m demos.deformation.cloth_unroll_physical_demo run.max_strokes=1 run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/stroke1.log
+# 拉薄/穿模时的两个后备旋钮 (先降 pull_step_m, 不够再从求解器那一侧改)
+python -B -m demos.deformation.cloth_unroll_physical_demo task.physical.pull_step_m=0.0004 run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/slow.log
+python -B -m demos.deformation.cloth_unroll_physical_demo task.cloth.stretch_relaxation=0.6 env.sim.substeps=8 run.verbose=true 2>&1 | tee runs/videos/cloth_unroll/stiffer.log
 
 # 3) 走错的对照 (标定阈值用)。shove 应当 unrolled=false, 且失败的是
 #    single_layer_frac 与 recovered_frac 两条。

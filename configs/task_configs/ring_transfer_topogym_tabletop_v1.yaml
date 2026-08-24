@@ -1,0 +1,158 @@
+# ring_transfer —— docx 2.6「绳圈从柱 A 转移到柱 B」，TopoGym tabletop V1 task 系。
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# 场景：底板上两根工业走线柱（与 cable_routing / rope_winding 同一 prefab：柱身 +
+# 喇叭底座 + 顶盖），一条闭合弹性环（FEM+IPC 周期管，topogym/world/closed_band.py）
+# 平铺在桌面、套在柱 A 上、长轴背离柱 B。终态：环套在柱 B 上、不再围住 A。
+# linking signature (A:1, B:0) -> (A:0, B:1)，中间两次越过柱顶：B 顶落套、A 顶提离。
+#
+# 变体轴预留（2026-08-24 决定）：posts 是列表、ring.enclosure / goal.enclosure 是子集，
+# 判定器输出每柱绕数；本轮只实现 |enclosure| = 1 的出生形与 A->B 这一条序列。
+#
+# 单夹爪能不能把柱 B 套进环，取决于「拉伸三角」（_ring_transfer_geometry.py 模块文档）：
+# 远端帽被拉过 B 时，两股绳从 A 的切点直线收拢到夹持段，B 必须落在两股之间。
+# 该不等式把柱半径、环宽、柱距三者绑在一起，下面每个数都标了它在这条链里的位置。
+
+task:
+  id: ring_transfer
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: ring_transfer_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+# 立柱列表。每项 name / pos(xy, task 系) / radius / height。
+#
+# 半径 0.010：由拉伸三角决定。两股绳在 B 处的间距要 >= 2(r_post + 2 r_tube + d_hat)
+#   = 2(0.010 + 0.008 + 0.002) = 0.040；环宽 0.080 在柱距 0.080、落点 x=0.070 下给
+#   0.080 - 0.056 x (0.080/0.110) = 0.0393 —— 与 rope_winding 的 0.020 柱半径下
+#   同式要 0.060，任何 <50% 的拉伸都够不到，所以柱取细。
+# 高度 0.060：环抬不过柱顶就出不去，这是 gateway 的全部含义；不绕柱所以不需要
+#   rope_winding 的 0.109。越低越省提升行程（carry_z 下限与它成正比）。
+# 柱距 0.080：越近拉伸越小（落点 x=0.070 时表层长度 0.37 < 周长 0.40，落地零拉伸），
+#   但两根柱底座（半径 0.016）之间还要留夹爪在 A 外侧下手的空间；A 在 -x 侧靠近机械臂。
+# 底座与柱身刻意互嵌（同 cable_routing 走线柱），因此 rope.fem.sanity_check_enable=false。
+posts:
+  - name: A
+    pos: [-0.040, 0.000]
+    radius: 0.010
+    height: 0.060
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [1.00, 0.48, 0.00]
+  - name: B
+    pos: [0.040, 0.000]
+    radius: 0.010
+    height: 0.060
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [0.20, 0.45, 0.95]
+
+# 闭合弹性环。平面高度不配置：恒等于 rope.radius（平铺时管心离桌面一个半径）。
+ring:
+  # 周长 0.40：
+  #   - 出生跑道形从 A 心伸出 (0.40 - 2 pi 0.040)/2 + 0.040 = 0.114，远端帽到 x=-0.154，
+  #     在工作区 x >= -0.25 内且离机械臂底座 (-0.570) 0.42；
+  #   - 搬运越过 B 顶时（夹持点 z=0.095、落点 x=0.070）表层需求 0.436，拉伸 9%；
+  #   - 落地后需求 0.37，环松弛；围住两柱的最短周长 2x0.080 + 2 pi 0.014 = 0.248。
+  #   环在终态是松的。若要终态绷紧（docx 2.7 的回弹防捷径）需要周长 < 0.248，
+  #   而拉伸三角在该周长下要求 >60% 拉伸 —— 两者冲突，2.7 另行设计，本任务不需要绷紧。
+  perimeter: 0.40
+  # 半环宽 0.040（环宽 0.080）：拉伸三角在 B 处需要 0.040，取 0.080 - 0.056 x 0.727 = 0.0393
+  #   （0.056 = 0.080 - 2 x 夹持半宽 0.012），余量与 min_strand_separation 的 d_hat 项同量级。
+  #   下限另有 loop_radius >= r_post + r_tube + d_hat = 0.016（closed_band_spike 同式）。
+  loop_radius: 0.040
+  # 环从出生柱伸出的方向（xy，单位化）。背离 B：朝 B 伸会与 B 相交。
+  long_axis: [-1.0, 0.0]
+  # 初态围住的柱子集。本轮只支持单元素（多柱出生形是预留变体）。
+  enclosure: [A]
+  color: [0.16, 0.16, 0.18]
+
+# 目标。instruction 本轮固定一句；enclosure 与 ring.enclosure 的差集推出跨越序列
+# [(B, on), (A, off)]。
+goal:
+  enclosure: [B]
+  instruction: "Move the elastic loop from post A onto post B."
+
+rope:
+  model: fem_ipc_tube
+  radius: ${prefabs.rope_pbd.radius}
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    # 闭合环上 straight 不可用：rest_shape_straight 沿开放折线量弧长，接缝两侧顶点
+    # 落到直杆两端、四面体翻转，整条声明被丢弃后静默退回 spawn（closed_band_spike 实测）。
+    rest_shape: spawn
+    # 柱身与喇叭底座刻意互嵌（静态体，无自由度），豁免 libuipc 零相交初始态检查。
+    sanity_check_enable: false
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
+  mesh:
+    # 段长 0.005、径向 8 段：closed_band_spike 的推导 ——
+    #   (a) 纵向 sagitta p^2/8R 不得超过横向 r(1-cos(pi/n))：最紧弯 R=0.040 时
+    #       p=5mm 给 0.078mm < 0.304mm；
+    #   (b) 自接触间隙 self_contact_clearance(4mm, 8, 5mm) = 3.06mm > d_hat 2mm。
+    segment_length: 0.005
+    radial_segments: 8
+    maxvolume: ${prefabs.rope_pbd.maxvolume}
+    output_dir: .cache/topogym/meshes/ring_transfer
+
+# 抓取。两条 follow band 在建场景时按出生位置声明：far = 远端帽顶点（拉伸段用），
+# near = 出生柱一侧的帽顶点（提离段用）。
+grasp:
+  # follow band 的选取半径。决定夹持段的宽度（= 2 x band_radius 的弦），进拉伸三角。
+  band_radius: 0.012
+  # engage 前手心与 band 质心的允许偏差；超差拒绝焊接（rope-free-end-clearance-rule 第二条）。
+  attach_tolerance: 0.020
+  # 夹爪级净空：任一抓取点到任一柱面的最小距离（指半展 0.040 + 余量）。
+  post_clearance: 0.050
+
+# oracle 段参数（与 planner 共用；数值推导见 _ring_transfer_geometry.py）。
+transfer:
+  # 段 1a 绕 A 平转：远端帽在此高度沿半径 = 出生伸出量的圆弧绕 A 转，从长轴方向
+  # 经 +y 转到 swing_end_deg。0.030 略离桌面，减少拖行摩擦但仍低于柱顶。
+  swing_z: 0.030
+  # 平转终止角（相对 A->B 方向，度）。B 到环轴线的横向偏移 = 柱距 x sin(角)，
+  # 必须 > loop_radius + r_post + r_tube = 0.054：0.080 x sin55 = 0.066，余量 12mm；
+  # 40 度只有 0.051，-y 侧绳股会撞上 B。精确条件由离线门按绳股线段到 B 轴的距离检查
+  # （平转、抬升、平移、下放四段全程采样）。
+  swing_end_deg: 55.0
+  swing_waypoints: 8
+  # 段 1b 抬升到 carry_z 后平移到落点上方：绳股从 A 切点直线到夹持点，经过 B 上方时
+  # 底面须高于 B 顶 + r_tube + carry_margin；carry_height_floor 给出下限
+  #   0.004 + (0.060 + 0.004 + 0.010 - 0.004) / (0.080 / 0.110) = 0.100。
+  carry_z: 0.105
+  carry_margin: 0.010
+  # 落点：B 远侧，x = B.x + r_post + r_tube + landing_clearance。
+  landing_clearance: 0.016
+  # 段 2 提离：near band 抬到 A 顶 + r_tube + lift_margin，再向 B 方向平移 shift 后释放。
+  lift_margin: 0.020
+  shift: 0.030
+  # 驱动速度（米/步），沿用 rope_winding 的 travel_speed。
+  drive_speed: 0.0020
+  min_segment_steps: 20
+  # 释放后静置步数：环回缩与落座。
+  release_settle_steps: 200
+
+success:
+  # 中心线读回的材料分桶数（= 出生环数，spike 同式）。
+  centerline_bins: 80
+  # 绕数取整容差：|w - round(w)| 超过即报投影退化。
+  winding_tolerance: 0.1
+  # 任一柱的最小表面间隙（米），负值 = 穿模。
+  min_surface_gap: 0.0
+  # 释放后静置期间中心线最大位移（米/步）低于该值视为落定。
+  settle_tol: 0.0001
+  # 只记录不判定
+  max_stretch_ratio: null

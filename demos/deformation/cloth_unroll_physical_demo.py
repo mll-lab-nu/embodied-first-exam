@@ -2,22 +2,28 @@
 
 docx 1.3「展开自身卷曲的布带」end to end. The band spawns wound twice around a
 horizontal bar held between two posts -- a washroom paper dispenser -- with a
-short flat run lying on the table. The arm takes that run's free END, drags it
-away along the table, lets go, takes the new end, and repeats until the roll is
-empty. Then the judges say whether that paid the roll out or merely towed it.
+short flat run lying on the table. The arm takes that run's free END and drags it
+away along the table until the roll is empty, then lets go. The judges say whether
+that paid the roll out or merely towed it.
 
 **The wrist never turns.** Every bit of rotation is absorbed by the roll turning
 on its bar, which is what keeps the gripper's pose relative to the cloth fixed.
 Orbiting the roll instead would ask the wrist to follow through 720 degrees for
 two turns, past the last joint's travel.
 
-**The episode is several grasps, not one.** Two turns on an 8 mm bar store about
-174 mm of material and `cloth_unpleat` measured a 64 mm pull arriving 8.6 mm
-short. The travel is split evenly rather than taken in full-length strokes with a
-remainder, because the hand ends up at the start plus the TOTAL and a remainder
-left for last lands exactly where the arm is weakest. The free end is re-measured
-before every stroke: it is somewhere new each time, and reaching for a position
-the cloth has left is how 1.2's first run failed.
+**One continuous stroke, slowly.** Two turns on an 8 mm bar store about 161 mm
+and the arm reaches that, so the loop below runs once as shipped. It was three
+strokes until 2026-08-24; splitting was a mistake, because the hand ends up at
+the start plus the TOTAL however the travel is cut, so the cuts bought no reach
+and only added two release-retreat-reapproach cycles -- the stop-start motion
+visible in the first recordings. The loop is kept for a larger `turns`, and the
+free end is re-measured before every stroke because it is somewhere new each time.
+
+The speed matters more than anything else here. `fix_particles_to_link` binds the
+caught particles kinematically, so they go exactly where the hand goes and there
+is no force to tune; what limits stretch is how fast PBD propagates that into the
+rest of the cloth. At 1.2's 1.5 mm a step the band stretched into a thin strip and
+the recoil drove particles through the table -- see `physical.pull_step_m`.
 
 Nothing here decides anything on its own. The trajectory comes from
 `planning/cloth_unroll_planner.py` (the travel is fixed by the material, not

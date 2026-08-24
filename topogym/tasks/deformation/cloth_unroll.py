@@ -30,9 +30,10 @@ friction turns the whole roll about the bar, and either pays material out.
 would force the wrist to follow through two full turns, which no arm's last joint
 can do in one grasp. Pulling straight puts all of the rotation in the roll, so
 the held end keeps its orientation for free -- which is what "the gripper's pose
-relative to the cloth stays fixed" actually asks for. The travel is longer than
-one reach, so the episode is several grasps: pull, release, take the new free end,
-pull again.
+relative to the cloth stays fixed" actually asks for. The travel fits in one
+reach, so as shipped that is one continuous stroke; the multi-stroke machinery
+below is kept for a larger `turns`, which is the only thing that puts the travel
+past what the arm can reach.
 
 Judging lives in `topogym/verification/cloth_unroll_verifier.py`; the strokes live
 in `topogym/planning/cloth_unroll_planner.py`; the roll's control mesh comes from
@@ -228,13 +229,20 @@ class ClothUnrollLayout:
     def stroke_count(self) -> int:
         """How many grasps the travel is split into.
 
-        `stroke_m` is a CEILING on one stroke, not its length. Splitting the
-        travel evenly instead of taking full-length strokes and a short remainder
-        matters for reach: the hand ends up at the start plus the TOTAL, so any
-        overshoot in the last stroke lands exactly where the arm is weakest.
-        Measured on the shipped numbers, full 70 mm strokes would have put the
-        hand at y=+0.180 against the y=+0.152 `cloth_unpleat` was measured
-        reaching; dividing evenly puts it at +0.144.
+        `stroke_m` is a CEILING on one stroke, not its length, and the shipped
+        config sets it ABOVE the total so there is exactly one continuous stroke.
+
+        Splitting is not a reach device and it is worth saying so, because that is
+        what it was mistaken for until 2026-08-24: the hand ends up at the start
+        plus the TOTAL however the travel is cut, so cutting it buys nothing in
+        reach and costs a release-retreat-reapproach-regrasp cycle per cut. What
+        splitting is for is a single stroke's tracking residual, and the machinery
+        earns its place when a larger `turns` pushes the travel past what the arm
+        can reach at all.
+
+        When it does split, it splits EVENLY rather than taking full-length
+        strokes and a short remainder -- a remainder left for last lands exactly
+        where the arm is weakest.
         """
 
         return max(1, int(np.ceil(self.pull_total() / float(self.task_cfg.physical.stroke_m))))

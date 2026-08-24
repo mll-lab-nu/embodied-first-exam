@@ -9,12 +9,20 @@ through 720 degrees for two turns, past the last joint's travel.
 **The distance is arithmetic, not a choice.** If the bar holds, the end travels
 exactly the material the roll stores. `pull_scale` is the only slack in it.
 
-One thing differs from `cloth_unpleat`, and it is the reason this module exists at
-all rather than reusing that planner: **the travel does not fit in one grasp.**
-Two turns on an 8 mm bar store ~174 mm, and 1.2 measured a 64 mm pull arriving
-8.6 mm short even with the settle holds in place. So an episode is several
-grasps, and this planner plans ONE of them -- from wherever the free end is NOW,
-which has to be re-measured between strokes because it is somewhere new each time.
+This plans ONE stroke, from wherever the free end is NOW. As shipped an episode
+is a single continuous stroke -- two turns on an 8 mm bar store ~161 mm and the
+arm reaches that -- so the loop runs once. The per-stroke shape is kept because
+a larger `turns` puts the travel past what the arm can reach, and because the
+starting point has to come from a measurement either way: reaching for a position
+the cloth has left is how `cloth_unpleat`'s first run failed.
+
+**The stroke is slow on purpose.** `fix_particles_to_link` is a kinematic bind,
+so the caught particles go exactly where the hand goes and there is no force to
+tune; what limits stretch is how fast PBD propagates that displacement into the
+rest of the cloth, roughly an edge per iteration against ~35 particles of band.
+At 1.2's 1.5 mm a step the tension had not reached the roll before the hand moved
+again and the band stretched into a thin strip (measured 2026-08-24). The speed
+lives in `physical.pull_step_m`, which this module reads rather than sets.
 
 Three motions come out of the same geometry so the judge's thresholds have
 something on both sides:

@@ -18,9 +18,12 @@ What it proves:
   - the layer spacing and the bar clearance are both at least a particle, which is
     what keeps PBD from opening the episode by resolving a collision (1.2's
     measured lesson, cloth against cloth; here it is also cloth against a rigid);
-  - the strokes divide the travel evenly, stay in the plane, end inside the reach
-    envelope 1.2 measured, and the `shove` and `overpull` motions really are the
-    motions their names claim.
+  - the shipped config pulls in ONE continuous stroke, and cutting the travel into
+    more strokes leaves the hand's endpoint unchanged -- the arithmetic that says
+    splitting never bought reach, which is why the split was removed;
+  - the stroke stays in the plane, ends inside the reach envelope 1.2 measured,
+    and the `shove` and `overpull` motions really are the motions their names
+    claim.
 
     python tests/check_cloth_unroll_geometry.py
 
@@ -30,6 +33,7 @@ over particle arrays, which is the point of keeping it independent of the scene.
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import sys
 import types
@@ -549,7 +553,7 @@ def main(argv=None) -> int:
         f"{int(cfg['grasp']['min_start_three_layer_cells'])}",
     )
 
-    print("\n== 轨迹：多次抓取 ==")
+    print("\n== 轨迹 ==")
     layout = _StandInLayout(cfg)
     grasp = layout.grasp_point()
     strokes = layout.stroke_count()
@@ -578,9 +582,25 @@ def main(argv=None) -> int:
         f"{float(cfg['physical']['stroke_m']) * 1e3:.1f}mm",
     )
     check(
-        "一次抓取拉不完，确实需要多段",
-        strokes > 1,
-        f"{strokes} 段",
+        "出厂配置一次连续拉完，不分段",
+        strokes == 1,
+        f"{strokes} 段 × {layout.stroke_distance() * 1e3:.1f}mm",
+    )
+    # 分段与否终点相同 —— 这正是 2026-08-24 取消分段的那条算术：手停在
+    # 「起点 + **总**行程」，切成几段都一样，所以分段从来没有换来可达性，
+    # 只换来两次「松手 → 退开 → 回来 → 重新抓」。钉住它，免得再有人拿可达性
+    # 当理由把行程切碎。
+    split_cfg = copy.deepcopy(cfg)
+    split_cfg["physical"]["stroke_m"] = 0.040
+    split = _StandInLayout(split_cfg)
+    check(
+        "切成多段之后手的终点不变（分段换不来可达性）",
+        split.stroke_count() > 1
+        and abs(
+            float(split.final_grasp_point()[axis]) - float(layout.final_grasp_point()[axis])
+        ) < 1e-12,
+        f"{split.stroke_count()} 段与 {strokes} 段都停在 "
+        f"{'xy'[axis]}={float(layout.final_grasp_point()[axis]):+.4f}",
     )
     # 单段行程等于一次抓取的位移，起点是**实测的**自由端。
     travel = float(unroll_wp[-1].position[axis]) - grasp[axis]
