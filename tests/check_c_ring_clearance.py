@@ -22,16 +22,14 @@ Four questions, in order:
     does that compare with the clearances it has to be small against?
   - **reading**: at spawn, is the pair linked -- one crossing pair and `Lk = -1`
     under the declared projection, with the C closed by the declared chord?
-  - **gateway**: the aligning trajectory stays clear the whole way and ends unlinked;
-    every non-aligning trajectory jams, and the report says where and how deep. There
-    is exactly ONE, because the alignment is a slide and the ring never turns: the
-    opening's direction in the world is fixed, so only one ring centre puts the bar on
-    it. The roll this replaced had two mirror solutions -- opening turned up and
-    dropped out, opening turned down and lifted out -- because turning moves the
-    opening's world direction too. Which way round the arc the centre travels is the
-    only alternative left, and it is probed on its own line: the long way is stopped
-    by the stand, not by the interlock. The shortcut the anti-shortcut contrast guards
-    against is not sliding at all.
+  - **gateways**: both aligning trajectories stay clear the whole way and end
+    unlinked; every non-aligning trajectory jams, and the report says where and how
+    deep. The alignment is a SLIDE and the ring never turns, so the opening's world
+    direction is fixed and exactly one ring centre puts the bar on it. The two are
+    therefore the same ending reached by opposite ways round the arc, not the two
+    different endings the earlier roll had. Both require the opening to be brought
+    onto the bar, which is what the task is about; the shortcut the anti-shortcut
+    contrast guards against is not sliding at all.
 
 Defaults come from the task config, so the gate and the scene cannot drift apart.
 
@@ -72,7 +70,7 @@ def load_module(name: str, relative: str):
     return module
 
 
-def long_way_gateway_phases(geometry, cg, *, carry: float = 0.090):
+def long_way_gateway_phases(geometry, cg, *, carry: float = 0.090, lift: float = 0.008):
     """The same alignment, reached round the other side of the circle.
 
     There is exactly one place the ring's centre can sit for the bar to be at the
@@ -81,16 +79,16 @@ def long_way_gateway_phases(geometry, cg, *, carry: float = 0.090):
     solutions -- opening turned up and dropped out, opening turned down and lifted
     out -- because turning moves the opening's world direction too.
 
-    So the only alternative left is which way round the arc the centre travels, and it
-    is worth probing rather than assuming: the long way carries the ring's body most
-    of the way round the bar, and whether that is a second gateway or a jam is a fact
-    about this layout, not something to declare. Probed here instead of in the
-    non-gateway list because if it does stay clear it is a correct answer, not a
-    shortcut.
+    So the only alternative left is which way round the arc the centre travels, and
+    the answer depends on the lift: measured 2026-08-23, without it the long way is
+    stopped by the STAND at 19% (the interlock alone would have let it through), and
+    with the 8 mm lift the ring clears the post too and it becomes a second gateway.
+    Probed here rather than in the non-gateway list because it brings the opening onto
+    the bar exactly as the short way does -- it is a correct answer, not a shortcut.
     """
 
     waypoints = cg.slide_waypoints(
-        geometry, geometry.c_rest_frame, chords=8, the_long_way=True
+        geometry, geometry.c_rest_frame, chords=8, lift=lift, the_long_way=True
     )
     opening = cg.extract_direction(geometry, geometry.c_rest_frame)
     phases = [
@@ -98,7 +96,10 @@ def long_way_gateway_phases(geometry, cg, *, carry: float = 0.090):
         for before, after in zip(waypoints[:-1], waypoints[1:])
     ]
     phases.append(
-        ("translate", tuple(float(v) for v in -geometry.extract_travel * opening))
+        (
+            "translate",
+            tuple(float(v) for v in -(geometry.extract_travel + lift) * opening),
+        )
     )
     phases.append(
         ("translate", tuple(float(v) for v in float(carry) * geometry.hang_direction))
@@ -238,46 +239,30 @@ def main() -> int:
     if abs(abs(spawn_linking) - 1.0) > 1e-6:
         failures.append(f"the pair does not read as linked at spawn: Lk = {spawn_linking:+.2f}")
 
-    travel_mm = geometry.extract_travel * 1000.0
-    print("\ngateway (the one trajectory that unlinks -- clear all the way, ends unlinked)")
-    label = f"slide to the opening, out {travel_mm:.0f} mm, carry away"
-    result = sweep(geometry, cg, geometry.gateway_phases())
-    end_linking = linking(geometry, cg, closed_band, result["end_frame"])
-    ok = result["jam_at"] is None and abs(end_linking) <= 1e-6
-    print(
-        f"  [{'ok  ' if ok else 'FAIL'}] {label}:"
-        f"  ring {result['ring'] * 1000:+.2f} mm   stand {result['stand'] * 1000:+.2f} mm"
-        f"   end Lk {end_linking:+.1f}"
-    )
-    if result["jam_at"] is not None:
-        failures.append(
-            f"the gateway jams at {result['jam_at']:.0%} of the way through, "
-            f"{-result['jam_depth'] * 1000:.2f} mm deep"
-        )
-    if abs(end_linking) > 1e-6:
-        failures.append(f"the gateway ends still linked: Lk = {end_linking:+.2f}")
-
-    # One alignment, not two. The ring never turns, so the opening's direction in the
-    # world is fixed and only one centre puts the bar on it -- where the roll this
-    # replaced had two mirror-image solutions. The only alternative left is which way
-    # round the arc the centre travels, and the answer is a fact about this layout:
-    # measured 2026-08-23, the long way is stopped by the STAND while the interlock
-    # alone would have let it through. The post is load-bearing for uniqueness here,
-    # which is worth printing rather than leaving implied.
-    print("\nthe long way round the same arc (must be blocked)")
-    long_way = sweep(geometry, cg, long_way_gateway_phases(geometry, cg))
-    if long_way["jam_at"] is None:
-        print(f"  [FAIL] never jams, closest ring {long_way['ring'] * 1000:+.2f} mm")
-        failures.append(
-            "the long way round is not blocked -- this layout has two gateways, and "
-            "both the oracle and the anti-shortcut contrast assume one"
-        )
-    else:
+    lift = float(cfg["primitive"]["slide_lift"])
+    travel_mm = (geometry.extract_travel + lift) * 1000.0
+    print("\ngateways (both must stay clear the whole way and end unlinked)")
+    for label, phases in (
+        (f"slide the short way, out {travel_mm:.0f} mm, carry away",
+         geometry.gateway_phases(lift=lift)),
+        ("slide the long way round, same ending",
+         long_way_gateway_phases(geometry, cg, lift=lift)),
+    ):
+        result = sweep(geometry, cg, phases)
+        end_linking = linking(geometry, cg, closed_band, result["end_frame"])
+        ok = result["jam_at"] is None and abs(end_linking) <= 1e-6
         print(
-            f"  [ok  ] jams at {long_way['jam_at']:4.0%} on {long_way['blocker']}, "
-            f"{-long_way['jam_depth'] * 1000:5.2f} mm deep"
-            f"   (interlock alone: {long_way['ring'] * 1000:+6.2f} mm)"
+            f"  [{'ok  ' if ok else 'FAIL'}] {label}:"
+            f"  ring {result['ring'] * 1000:+.2f} mm   stand {result['stand'] * 1000:+.2f} mm"
+            f"   end Lk {end_linking:+.1f}"
         )
+        if result["jam_at"] is not None:
+            failures.append(
+                f"the '{label}' gateway jams at {result['jam_at']:.0%} of the way "
+                f"through, {-result['jam_depth'] * 1000:.2f} mm deep"
+            )
+        if abs(end_linking) > 1e-6:
+            failures.append(f"the '{label}' gateway ends still linked: Lk = {end_linking:+.2f}")
 
     print("\nnon-gateway (every one of these must jam)")
     for name, phases in non_gateway_phases(geometry, cg):

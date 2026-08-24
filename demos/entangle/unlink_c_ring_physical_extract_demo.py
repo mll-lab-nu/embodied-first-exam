@@ -371,6 +371,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                         geometry,
                         c_ring_frame(ring_scene),
                         chords=int(spec.align_chords),
+                        lift=float(spec.slide_lift),
                     )[1:]
                 ]
 
@@ -382,7 +383,7 @@ def run_demo(cfg, ring_scene, controller, *, episode_key, mode, status) -> Episo
                 # Away from the bar along the ring's own opening -- 45 degrees off
                 # vertical under this layout, not straight down.
                 extract_delta=tuple(
-                    -geometry.extract_travel
+                    -(geometry.extract_travel + float(spec.slide_lift))
                     * ring_geometry.extract_direction(geometry, settled)
                 ),
                 # Radially outward, away from the closed ring's centre. Along the
@@ -582,14 +583,18 @@ def main(cfg: DictConfig) -> None:
     configure_contacts(cfg, ring_scene, controller)
 
     slide = ring_geometry.slide_waypoints(
-        geometry, geometry.c_rest_frame, chords=int(cfg.task.primitive.align_chords)
+        geometry,
+        geometry.c_rest_frame,
+        chords=int(cfg.task.primitive.align_chords),
+        lift=float(cfg.task.primitive.slide_lift),
     )
     out = ring_geometry.extract_direction(geometry, geometry.c_rest_frame)
     print(
         "unlink_c_ring setup "
         f"mode={mode} grasp_azimuth={float(cfg.task.primitive.grasp_azimuth_deg):.0f}deg "
-        f"slide={sum(float(np.linalg.norm(b - a)) for a, b in zip(slide[:-1], slide[1:])) * 1000:.0f}mm"
-        f" in {len(slide) - 1} chords "
+        f"lift={float(cfg.task.primitive.slide_lift) * 1000:.0f}mm "
+        f"slide={sum(float(np.linalg.norm(b - a)) for a, b in zip(slide[1:-1], slide[2:])) * 1000:.0f}mm"
+        f" in {len(slide) - 2} chords "
         f"out=({out[0]:+.2f},{out[1]:+.2f},{out[2]:+.2f}) "
         f"grasp_yaw={grasp_yaw_deg(geometry, geometry.c_rest_frame, float(cfg.task.primitive.grasp_azimuth_deg)):.1f}deg "
         f"extract={geometry.extract_travel * 1000:.0f}mm "

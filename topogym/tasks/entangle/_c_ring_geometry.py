@@ -422,7 +422,12 @@ def extract_direction(geometry, frame: RingFrame) -> np.ndarray:
 
 
 def slide_waypoints(
-    geometry, frame: RingFrame, *, chords: int = 8, the_long_way: bool = False
+    geometry,
+    frame: RingFrame,
+    *,
+    chords: int = 8,
+    lift: float = 0.0,
+    the_long_way: bool = False,
 ) -> np.ndarray:
     """Ring-centre positions that carry the bar round to the opening, without turning.
 
@@ -447,6 +452,17 @@ def slide_waypoints(
     arc, which is more than the whole budget; eight bring it to 0.053 mm. `apply_phases`
     has no arc primitive and does not need one.
 
+    ``lift`` raises the ring toward the bar before the arc, and is the difference
+    between this working and not. The ring HANGS on the bar, so at rest the two
+    surfaces touch and the arc has no clearance at all; the hand's tracking error then
+    lands entirely on the interlock. Worse, it lands in the one direction that hurts:
+    falling behind an arc means sitting on its chord, which is inward, which is into
+    the bar. Measured 2026-08-23 with no lift, the hand strayed 5.9 mm from the path
+    and the rings overlapped by 6.1 mm -- the same number, because the stray IS the
+    overlap. Lifting by d puts d of clearance under the whole arc (measured: 8 mm of
+    lift gives 7.78 mm), so a stray smaller than d costs nothing. The extraction that
+    follows has to travel ``extract_travel + lift`` for the same reason.
+
     ``the_long_way`` walks the other side of the circle to the same place. There is
     only one centre that puts the bar at the opening -- the ring never turns, so the
     opening's world direction is fixed -- which is why this trajectory has one
@@ -460,10 +476,12 @@ def slide_waypoints(
     """
 
     bar = np.asarray(geometry.tube_point, dtype=float)
-    start = np.asarray(frame.center, dtype=float)
-    radius = float(np.linalg.norm(bar - start))
-    if radius < 1e-9:
-        return np.asarray([start], dtype=float)
+    rest = np.asarray(frame.center, dtype=float)
+    hang = float(np.linalg.norm(bar - rest))
+    if hang < 1e-9:
+        return np.asarray([rest], dtype=float)
+    start = rest + float(lift) * (bar - rest) / hang
+    radius = hang - float(lift)
     finish = bar - radius * extract_direction(geometry, frame)
     from_start = (start - bar) / radius
     to_finish = (finish - bar) / radius
@@ -471,13 +489,13 @@ def slide_waypoints(
     axis = np.cross(from_start, to_finish)
     norm = float(np.linalg.norm(axis))
     if norm < 1e-12 or angle < 1e-9:
-        return np.asarray([start], dtype=float)
+        return np.asarray([rest, start], dtype=float)
     axis = axis / norm
     if the_long_way:
         axis, angle = -axis, 2.0 * np.pi - angle
     steps = max(1, int(chords))
     return np.asarray(
-        [start]
+        [rest, start]
         + [
             bar + rotation_about(axis, angle * step / steps) @ (start - bar)
             for step in range(1, steps + 1)
@@ -634,7 +652,7 @@ class SceneGeometry:
         turn = (turn + 180.0) % 360.0 - 180.0
         return np.asarray(self.c_rest_frame.normal, dtype=float), turn
 
-    def gateway_phases(self, *, carry: float = 0.090, arc_chords: int = 8):
+    def gateway_phases(self, *, carry: float = 0.090, arc_chords: int = 8, lift: float = 0.008):
         """The one trajectory that unlinks, as a phase list for the offline gate.
 
         Nothing here but bookkeeping: `slide_waypoints` and `extract_direction` own the
@@ -645,13 +663,18 @@ class SceneGeometry:
         settles, and 2 mm is more than this trajectory's whole clearance budget.
         """
 
-        waypoints = slide_waypoints(self, self.c_rest_frame, chords=arc_chords)
+        waypoints = slide_waypoints(
+            self, self.c_rest_frame, chords=arc_chords, lift=lift
+        )
         opening = extract_direction(self, self.c_rest_frame)
         phases: list[tuple[str, tuple[float, float, float]]] = []
         for before, after in zip(waypoints[:-1], waypoints[1:]):
             phases.append(("translate", tuple(float(v) for v in after - before)))
         phases.append(
-            ("translate", tuple(float(v) for v in -self.extract_travel * opening))
+            (
+                "translate",
+                tuple(float(v) for v in -(self.extract_travel + float(lift)) * opening),
+            )
         )
         phases.append(
             ("translate", tuple(float(v) for v in float(carry) * self.hang_direction))
