@@ -75,6 +75,24 @@ class ClothFoldWatch:
     lowest_phase: str = field(default="", init=False)
     #: How many particles were below the table at the worst moment for it.
     below_count: int = field(default=0, init=False)
+    #: **How much cloth was under the table, and for how long.**
+    #:
+    #: `lowest_z` and `below_count` are both PEAKS -- the deepest single particle
+    #: ever, and the worst single instant. Neither says anything about duration,
+    #: and a visual artifact is almost entirely about duration: a wide patch
+    #: sitting 0.5 mm under for six seconds never beats a 2 mm spike that lasted
+    #: one step, yet it is the one a viewer sees. Measured 2026-08-24:
+    #: `cloth_unpleat` and `cloth_unroll` had near-identical peaks (2.12 vs
+    #: 1.95 mm, 16 vs 14 particles) while only one of them looked wrong.
+    #:
+    #: `below_steps` is how many steps had ANY particle under the table;
+    #: `below_particle_steps` is the running sum of the counts, i.e. area times
+    #: duration; `below_by_phase` splits the first by phase so a settling
+    #: transient and a whole carry are never confused again.
+    below_steps: int = field(default=0, init=False)
+    below_particle_steps: int = field(default=0, init=False)
+    below_by_phase: dict = field(default_factory=dict, init=False)
+    steps_seen: int = field(default=0, init=False)
     tripped: str | None = field(default=None, init=False)
     tripped_phase: str | None = field(default=None, init=False)
     worst_stretch_mean: float = field(default=float("nan"), init=False)
@@ -120,9 +138,14 @@ class ClothFoldWatch:
             self.lowest_xy = (float(current[deepest, 0]), float(current[deepest, 1]))
             self.lowest_step = int(step)
             self.lowest_phase = str(self.phase)
-        self.below_count = max(
-            self.below_count, int(np.count_nonzero(current[:, 2] < float(self.table_z)))
-        )
+        under = int(np.count_nonzero(current[:, 2] < float(self.table_z)))
+        self.below_count = max(self.below_count, under)
+        self.steps_seen += 1
+        if under:
+            self.below_steps += 1
+            self.below_particle_steps += under
+            phase = str(self.phase) or "?"
+            self.below_by_phase[phase] = self.below_by_phase.get(phase, 0) + 1
         if self._pairs is not None:
             stretch = stretch_report(self.rest_nodes, current, self._pairs)
             self.worst_stretch_mean = max(self.worst_stretch_mean, stretch["mean"])
@@ -162,6 +185,9 @@ class ClothFoldWatch:
             f"lowest_at=({self.lowest_xy[0]:+.3f},{self.lowest_xy[1]:+.3f})"
             f"@{self.lowest_step}/{self.lowest_phase or '?'} "
             f"worst_below_count={self.below_count} "
+            f"below_steps={self.below_steps}/{self.steps_seen} "
+            f"below_particle_steps={self.below_particle_steps} "
+            f"below_by_phase={{{','.join(f'{k}:{v}' for k, v in sorted(self.below_by_phase.items(), key=lambda kv: -kv[1]))}}} "
             f"blowup={self.tripped or 'none'}"
             + ("" if self.tripped is None else f" blowup_phase={self.tripped_phase}")
         )
