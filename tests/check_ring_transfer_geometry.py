@@ -10,13 +10,15 @@ What it proves:
   - the periodic tube is watertight, genus one, and closes at self-linking 0
     (a band spawned at Lk = +-1 looks identical and cannot be flipped flat);
   - the IPC barrier stays inside the tube's own self-contact clearance;
-  - the stretch triangle admits post B: where the two taut strands pass B they
+  - the stretch trapezoid admits post B: where the two taut strands pass B they
     are further apart than B's diameter plus two tubes plus the barrier, and
-    the negative control (rope_winding's 20 mm posts) is rejected;
+    the negative controls (a pinched cap; rope_winding's 20 mm posts) are
+    rejected;
   - along the whole far-cap path -- swing, rise, carry, descend -- the strands
     never come within a tube radius of post B's shaft until the descent, and on
     the descent they come down on either side of it;
-  - the loop is never asked to stretch beyond the configured ratio, and the
+  - the loop is taut through the carry (the straight-strand model only holds
+    under tension, and the carry is where the strands sweep over B), never stretched beyond the cap ratio, and the
     carry height is above `carry_height_floor` for the landing point;
   - every held point is inside the manipulation workspace, and the far-cap
     grasp is a gripper's width away from both posts.
@@ -140,8 +142,7 @@ def main() -> int:
     )
 
     # --- stretch triangle ------------------------------------------------------
-    band_radius = float(task.grasp.band_radius)
-    half = geo.held_half_width(ring, band_radius)
+    half = 0.5 * float(task.grasp.spread)
     landing = geo.landing_point(ring=ring, anchor=anchor, target=target, transfer_cfg=task.transfer)
     need = geo.min_strand_separation(target, ring, d_hat)
     have = geo.strand_separation_at(
@@ -149,12 +150,21 @@ def main() -> int:
     )
     print()
     print(
-        f"stretch        landing {np.round(landing * 1000, 1).tolist()} mm, held half-width {half * 1000:.1f} mm; "
+        f"stretch        landing {np.round(landing * 1000, 1).tolist()} mm, fingers spread {2 * half * 1000:.0f} mm; "
         f"strand separation at {target.name} {have * 1000:.1f} mm vs needed {need * 1000:.1f} mm "
         f"{'ok' if have >= need else 'FAIL'}"
     )
     if have < need:
-        failures.append("stretch triangle does not admit the target post")
+        failures.append("stretch trapezoid does not admit the target post")
+    pinched = geo.strand_separation_at(
+        ring=ring, anchor=anchor, landing_xy=landing, held_half_width=ring.tube_radius, query_xy=target.center
+    )
+    print(
+        f"               negative control, pinched cap: {pinched * 1000:.1f} vs {need * 1000:.1f} mm "
+        f"{'rejected as expected' if pinched < need else 'NOT rejected'}"
+    )
+    if pinched >= need:
+        failures.append("negative control: a pinched cap should not admit the target post")
     fat = replace(target, radius=0.020)
     fat_have = geo.strand_separation_at(
         ring=ring, anchor=anchor, landing_xy=landing, held_half_width=half, query_xy=fat.center
@@ -187,6 +197,7 @@ def main() -> int:
     print()
     print("far-cap path   (strand-to-B-axis distance per leg, min over samples)")
     worst_stretch = 0.0
+    slack_legs: list[str] = []
     previous = None
     for label, point in path:
         if previous is None:
@@ -199,12 +210,14 @@ def main() -> int:
         for held in samples:
             for start, end in geo.strand_segments(ring=ring, anchor=anchor, held_xyz=held, held_half_width=half):
                 leg_min = min(leg_min, geo.segment_distance(start, end, *axis))
-            reach_now = float(np.linalg.norm(held[:2] - anchor.center))
-            if reach_now > geo.loop_reach(spawn, ring, anchor) - 1e-6 or held[2] > float(task.transfer.swing_z) + 1e-6:
-                worst_stretch = max(
-                    worst_stretch,
-                    geo.stretched_length(ring=ring, anchor=anchor, held_xyz=held, held_half_width=half) / ring.perimeter,
-                )
+            ratio = geo.stretched_length(ring=ring, anchor=anchor, held_xyz=held, held_half_width=half) / ring.perimeter
+            if label in ("rise", "carry"):
+                worst_stretch = max(worst_stretch, ratio)
+            # The rise starts unstretched by construction (the swing keeps the
+            # spawn reach) and happens where B is tens of mm clear of the
+            # strands; tautness only matters where the strands sweep over B.
+            if label == "carry" and ratio < 1.0 and label not in slack_legs:
+                    slack_legs.append(label)
         descending = label == "descend"
         want = (target.radius + ring.tube_radius) if descending else keep_off
         ok = leg_min >= want
@@ -222,9 +235,11 @@ def main() -> int:
             ):
                 failures.append(f"held point {np.round(held, 3).tolist()} leaves the workspace at leg {label!r}")
         previous = point
-    print(f"stretch ratio  worst along the path {worst_stretch:.3f} (cap {MAX_STRETCH_RATIO})")
+    print(f"stretch ratio  worst over rise+carry {worst_stretch:.3f} (cap {MAX_STRETCH_RATIO}); slack legs: {slack_legs or 'none'}")
     if worst_stretch > MAX_STRETCH_RATIO:
         failures.append(f"stretch ratio {worst_stretch:.3f} exceeds {MAX_STRETCH_RATIO}")
+    if slack_legs:
+        failures.append(f"loop goes slack during {slack_legs}: strand sag over post B is not modelled")
     at_table = geo.stretched_length(
         ring=ring, anchor=anchor, held_xyz=path[-1][1], held_half_width=half
     ) / ring.perimeter
@@ -236,11 +251,17 @@ def main() -> int:
 
     # --- grasps ----------------------------------------------------------------
     clearance = float(task.grasp.post_clearance)
-    far = geo.far_cap_point(spawn, ring, anchor)
+    left, right = geo.hook_points(spawn, ring, anchor, float(task.grasp.spread))
     near = geo.near_cap_point(spawn, ring, anchor)
     print()
     print("grasp points")
-    for name, point, gated in (("far cap", far, True), ("near cap", near, False)):
+    print(
+        f"  hook bands at {np.round(left[:2] * 1000, 1).tolist()} / {np.round(right[:2] * 1000, 1).tolist()} mm, "
+        f"{np.linalg.norm(left - right) * 1000:.1f} mm apart (band radius {float(task.grasp.band_radius) * 1000:.0f}, must not overlap)"
+    )
+    if np.linalg.norm(left - right) <= 2.0 * float(task.grasp.band_radius):
+        failures.append("hook bands overlap")
+    for name, point, gated in (("hook L", left, True), ("hook R", right, True), ("near cap", near, False)):
         for post in posts.values():
             gap = float(geo.xy_distance_to_post(point, post)[0]) - post.radius
             verdict = ("ok" if gap >= clearance else "FAIL") if gated else "(reported only)"

@@ -11,23 +11,28 @@ loop lies flat, so its centerline plane is one tube radius above the table --
 derived, never configured.
 
 The numbers that decide whether the task can be done with ONE gripper come from
-the stretch phase, and they are worth stating once because they are not obvious:
+the stretch phase, and they are worth stating once because they are not obvious.
 
-The loop starts hooked on post A and pointing away from post B. The only way a
-single grasp can get post B *inside* the loop is to pull the far cap past B at
-table height, so that B enters the triangle formed by A's two tangent points and
-the held cap. The two strands straighten under tension, so their separation
-narrows linearly from the loop's full width at A to the held piece's width at
-the cap. `strand_separation_at` evaluates that line where it passes B, and
-`min_strand_separation` is what it has to clear: B's diameter plus two tube
-diameters plus the barrier. This is the inequality that sizes `loop_radius`
-against `posts[*].radius` and the post spacing; at 20 mm posts and a 60 mm loop
-it cannot be met at any stretch below ~50 %, which is why the posts are 10 mm.
+A loop pulled from a single pinched point is a doubled strand: under tension it
+collapses to the anchor post's wrap width, 2 (r_post + r_tube) = 28 mm here, and
+a closed curve made of two coincident strands winds around nothing but the
+anchor. Pinching the far cap therefore cannot get post B inside the loop --
+measured by this module's first version, the strands passed B 12.5 mm from its
+axis against the 14 mm of shaft plus tube. What does work, and is how a person
+does it, is to HOOK the loop over both open fingers: the fingers go inside the
+cap, the gripper opens to `grasp.spread`, and the cap is carried held open that
+wide. The loop then forms a trapezoid from the anchor wrap (28 mm) to the held
+piece (`spread`), and B enters where the strands are further apart than B's
+diameter plus two tubes plus the barrier. `strand_separation_at` evaluates that
+line where it passes B; `min_strand_separation` is what it has to clear. Two
+follow bands, one per finger, model the hook.
 
-The carry over B happens at a height where the strand -- a straight line from
-A's tangent point on the table up to the held cap -- clears B's top where it
-crosses B's x. `carry_height_floor` gives that height for a landing point; the
-oracle's `carry_z` must be at or above it, and the offline gate checks it.
+The carry over B happens at a height where each strand -- a straight line from
+the anchor's tangent point on the table up to its held end -- clears B's top
+where it crosses B. The strands are only straight while the loop is taut, so the
+gate also checks the loop is stretched (ratio >= 1) throughout the carry;
+`carry_height_floor` gives the height for a landing point and the oracle's
+`carry_z` must be at or above it.
 """
 
 from __future__ import annotations
@@ -193,10 +198,10 @@ def strand_separation_at(
     """Separation of the two taut strands where they pass `query_xy`.
 
     The strands run from the anchor post's tangent points (separation
-    2*loop_radius) to the held cap (separation 2*held_half_width). Under tension
-    they are straight, so the separation is linear in the distance along the
-    pull direction. Points behind the anchor or beyond the landing read as the
-    end values.
+    2 (r_post + r_tube), the wrap the loop collapses to under tension) to the
+    held piece (separation 2*held_half_width). Under tension they are straight,
+    so the separation is linear in the distance along the pull direction. Points
+    behind the anchor or beyond the landing read as the end values.
     """
 
     direction = np.asarray(landing_xy, dtype=float) - anchor.center
@@ -205,19 +210,31 @@ def strand_separation_at(
         raise ValueError("landing point coincides with the anchor post.")
     direction /= length
     fraction = float(np.clip(np.dot(np.asarray(query_xy, dtype=float) - anchor.center, direction) / length, 0.0, 1.0))
-    return 2.0 * (ring.loop_radius + (held_half_width - ring.loop_radius) * fraction)
+    wrap_half = anchor.radius + ring.tube_radius
+    return 2.0 * (wrap_half + (held_half_width - wrap_half) * fraction)
 
 
-def held_half_width(ring: RingSpec, band_radius: float) -> float:
-    """Half-width of the piece of cap the grasp band holds rigid.
+def hook_points(centerline: np.ndarray, ring: RingSpec, post: PostSpec, spread: float) -> tuple[np.ndarray, np.ndarray]:
+    """Where the two fingers hook the far cap: the cap's samples nearest to the
+    apex offset by +-spread/2 across the long axis. One follow band each."""
 
-    The band captures every vertex within `band_radius` of the cap apex. On a cap
-    of radius `loop_radius` that is an arc whose chord half-width is exactly
-    `band_radius` (the chord of a circle at distance r from a point on it), capped
-    at the loop radius. Everything outside it straightens under tension.
-    """
-
-    return min(float(band_radius), ring.loop_radius)
+    along = np.array([ring.long_axis[0], ring.long_axis[1], 0.0])
+    across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0])
+    peg = np.array([post.center[0], post.center[1], 0.0])
+    reach = float(np.max((centerline - peg[None, :]) @ along))
+    cap_centre = peg + (reach - ring.loop_radius) * along
+    half = 0.5 * float(spread)
+    if half >= ring.loop_radius:
+        raise ValueError(
+            f"grasp.spread/2 = {half:.4f} m must be less than loop_radius {ring.loop_radius:.4f} m: "
+            "the fingers hook the cap, they cannot be wider than it."
+        )
+    forward = float(np.sqrt(ring.loop_radius**2 - half**2))
+    points = []
+    for side in (1.0, -1.0):
+        target = cap_centre + forward * along + side * half * across
+        points.append(np.asarray(centerline[int(np.argmin(np.linalg.norm(centerline - target[None, :], axis=1)))], dtype=float))
+    return points[0], points[1]
 
 
 def carry_height_floor(
@@ -405,7 +422,7 @@ __all__ = [
     "carry_height_floor",
     "far_cap_path",
     "far_cap_point",
-    "held_half_width",
+    "hook_points",
     "landing_point",
     "loop_perimeter",
     "loop_reach",
