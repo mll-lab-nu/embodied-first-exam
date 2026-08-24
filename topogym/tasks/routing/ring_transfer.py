@@ -171,7 +171,13 @@ class RingTransferSceneBuilder:
         frames = tabletop_frames_from_config(env_cfg)
         self.layout = RingTransferLayout(task_cfg, task_origin=frames.task_origin)
 
-    def build(self, *, show_viewer: bool = False, include_robot: bool = True) -> RingTransferScene:
+    def build(
+        self, *, show_viewer: bool = False, include_robot: bool = True, extra_cameras: dict | None = None
+    ) -> RingTransferScene:
+        """``extra_cameras``: name -> {pos, lookat, fov, res} in the TASK frame, added
+        before the scene is built (Genesis refuses cameras afterwards). Names must
+        not shadow the env cameras."""
+
         rope_cfg = self.task_cfg.rope
         fem_cfg = rope_cfg.fem
         if str(fem_cfg.rest_shape) != "spawn":
@@ -231,6 +237,19 @@ class RingTransferSceneBuilder:
             NEAR_BAND: FEMRopeAttachment(entity, layout.to_world(layout.near_cap_point()), band_radius, strength=strength),
         }
 
+        cameras = dict(tabletop.cameras)
+        for cam_name, cam in (extra_cameras or {}).items():
+            if str(cam_name) in cameras:
+                raise ValueError(f"ring_transfer: extra camera {cam_name!r} shadows an env camera.")
+            cameras[str(cam_name)] = scene.add_camera(
+                res=tuple(int(v) for v in cam["res"]),
+                pos=tuple(layout.to_world(cam["pos"])),
+                lookat=tuple(layout.to_world(cam["lookat"])),
+                up=(0.0, 0.0, 1.0),
+                fov=float(cam["fov"]),
+                GUI=False,
+            )
+
         self._print_coupling_audit(scene)
         tabletop_builder.finalize(tabletop)
 
@@ -262,7 +281,7 @@ class RingTransferSceneBuilder:
             bands=bands,
             members=members,
             frames=frames,
-            cameras=dict(tabletop.cameras),
+            cameras=cameras,
             tabletop=tabletop,
             rope_backend=backend,
         )

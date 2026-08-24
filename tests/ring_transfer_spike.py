@@ -117,25 +117,24 @@ def main(cfg: DictConfig) -> None:
     # --- scene ------------------------------------------------------------
     backends = {"cpu": gs.cpu, "gpu": gs.gpu, "cuda": gs.cuda}
     gs.init(backend=backends[cfg.env.genesis.backend], precision=str(cfg.env.genesis.precision))
-    built = RingTransferSceneBuilder(cfg.env, task, cfg.robot_control).build(
-        show_viewer=bool(cfg.run.viewer), include_robot=bool(cfg.run.include_robot)
-    )
-    scene = built.scene
-
-    # A close-up on top of the env cameras (those frame the whole table).
+    # A close-up on top of the env cameras (those frame the whole table). It goes
+    # in through the builder because Genesis refuses cameras once the scene is built.
     camera_cfg = cfg.run.camera
     resolution = cfg.recording.res if cfg.recording.res is not None else camera_cfg.res
-    cameras = dict(built.cameras)
-    if str(camera_cfg.name) in cameras:
-        raise SystemExit(f"ring_transfer_spike: run.camera.name={camera_cfg.name!r} shadows an env camera.")
-    cameras[str(camera_cfg.name)] = scene.add_camera(
-        res=tuple(int(v) for v in resolution),
-        pos=tuple(layout.to_world(camera_cfg.pos)),
-        lookat=tuple(layout.to_world(camera_cfg.lookat)),
-        up=(0.0, 0.0, 1.0),
-        fov=float(camera_cfg.fov),
-        GUI=False,
+    built = RingTransferSceneBuilder(cfg.env, task, cfg.robot_control).build(
+        show_viewer=bool(cfg.run.viewer),
+        include_robot=bool(cfg.run.include_robot),
+        extra_cameras={
+            str(camera_cfg.name): {
+                "pos": camera_cfg.pos,
+                "lookat": camera_cfg.lookat,
+                "fov": camera_cfg.fov,
+                "res": resolution,
+            }
+        },
     )
+    scene = built.scene
+    cameras = built.cameras
     if stop_before_physics(cfg, scene, "ring_transfer_spike"):
         raise SystemExit(0)
 
