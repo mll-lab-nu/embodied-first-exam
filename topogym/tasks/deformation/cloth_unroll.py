@@ -568,12 +568,15 @@ class ClothUnrollSceneBuilder:
         return surface
 
     def _install_table_friction(self, scene, cloth, layout: ClothUnrollLayout):
-        """Sustained cloth-against-table friction, which Genesis does not provide.
+        """Cloth against the table: friction, and here also the normal constraint.
 
-        Matters less here than in `cloth_unpleat` -- the bar is the anchor, not
-        the table -- but the paid-out band still has to stay where it is put
-        rather than sliding back, and without this a resting sheet gets
-        essentially no friction at all.
+        The tangential half matters less than in `cloth_unpleat` -- the bar is
+        the anchor, not the table -- but the paid-out band still has to stay
+        where it is put rather than sliding back.
+
+        The NORMAL half (`min_height`) is what stops the band sinking into the
+        table, which Genesis' PBD contact does not do on its own. See the config
+        and `TabletopParticleFriction`'s docstring for the measurement.
         """
 
         friction_cfg = getattr(self.task_cfg.cloth, "tabletop_friction", None)
@@ -589,4 +592,9 @@ class ClothUnrollSceneBuilder:
             dt=float(self.env_cfg.sim.dt),
             gravity=abs(float(self.env_cfg.sim.gravity[2])),
             max_load_factor=float(friction_cfg.max_load_factor),
+            min_height=(
+                None
+                if getattr(friction_cfg, "min_height", None) is None
+                else float(friction_cfg.min_height)
+            ),
         ).install()

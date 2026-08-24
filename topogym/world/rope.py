@@ -465,7 +465,34 @@ class TabletopParticleFriction:
     Segments lifted clear of the surface fall outside ``contact_band`` and are
     left completely alone, so a rope being carried by the gripper is unaffected
     without needing to know which rope that is.
+
+    **`min_height` adds the NORMAL half of the same gap, and it is off by
+    default.** Genesis' PBD-vs-rigid contact is not a penetration barrier -- it
+    is resolved at the velocity level while a particle moves into the surface,
+    with no real normal force (`docs/develop/physics/pbd_tabletop_friction_zh.md`
+    section 6). Material held down by something else therefore sinks and stays
+    sunk. Measured 2026-08-24 on `cloth_unroll`: dragging the band by a
+    kinematically attached patch put particles 1.7 mm BELOW the table top, 3.7 mm
+    under where a resting particle centre belongs, which is 92% of a particle
+    diameter -- and since Genesis renders a PBD cloth at its particle centres,
+    with no thickness, the cloth visibly disappeared into the table.
+
+    Set `min_height` to where a resting particle CENTRE belongs (one particle
+    radius above the surface) and anything below it is given a separation
+    velocity. Still velocity only, so the position-write hazard above does not
+    apply. Left at None everywhere it has not been measured: turning it on
+    changes contact behaviour, and every other task's thresholds were calibrated
+    without it.
     """
+
+    #: Fraction of the penetration depth recovered per step. Half rather than
+    #: all: a single-step snap back is the position-write failure mode wearing a
+    #: velocity disguise, and PBD reconstructs `vel = (pos - ipos) / dt` anyway.
+    LIFT_GAIN = 0.5
+    #: Ceiling on the separation speed, m/s. A deeply buried particle climbs out
+    #: over several steps instead of being launched. 0.1 m/s is 1 mm per step at
+    #: dt=0.01 -- two orders below the `disp_limit` the divergence watch trips on.
+    MAX_LIFT_SPEED = 0.1
 
     def __init__(
         self,
@@ -479,6 +506,7 @@ class TabletopParticleFriction:
         dt: float,
         gravity: float,
         max_load_factor: float = 3.0,
+        min_height: float | None = None,
     ) -> None:
         self.scene = scene
         self.entities = list(entities)
@@ -489,6 +517,7 @@ class TabletopParticleFriction:
         self.dt = float(dt)
         self.gravity = abs(float(gravity))
         self.max_load_factor = float(max_load_factor)
+        self.min_height = None if min_height is None else float(min_height)
         self._orig_step = None
 
     def apply(self) -> None:
@@ -540,10 +569,26 @@ class TabletopParticleFriction:
                 where=moving,
             )
             velocities[contact, :2] = planar * scale[:, None]
-            # Vertical velocity is gravity's and the contact solver's business.
             entity.set_particles_vel(
                 velocities[contact], particles_idx_local=contact.tolist()
             )
+
+            # The normal half, when asked for. Separate from the tangential write
+            # above because it selects a DIFFERENT set: `contact` is everything
+            # near the surface, this is only what has gone under it.
+            if self.min_height is None:
+                continue
+            floor = self.surface_z + self.min_height
+            under = np.flatnonzero(positions[:, 2] < floor)
+            if under.size == 0:
+                continue
+            lift = np.minimum(
+                (floor - positions[under, 2]) / self.dt * self.LIFT_GAIN,
+                self.MAX_LIFT_SPEED,
+            )
+            normal = np.array(velocities[under], dtype=float)
+            normal[:, 2] = np.maximum(normal[:, 2], lift)
+            entity.set_particles_vel(normal, particles_idx_local=under.tolist())
 
     def install(self) -> TabletopParticleFriction:
         """Wrap ``scene.step`` so friction is applied after every step."""
