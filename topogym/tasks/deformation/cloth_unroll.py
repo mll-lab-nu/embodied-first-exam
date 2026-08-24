@@ -131,7 +131,7 @@ class ClothUnrollLayout:
         riser = getattr(self.task_cfg, "riser", None)
         if riser is None or not bool(riser.enabled):
             return self.table_z
-        return self.world_z(float(riser.height))
+        return self.world_z(float(riser.top))
 
     def _plan_point(self, material: float, height: float) -> np.ndarray:
         """A world point from a (material-offset, height) pair on the band's axes."""
@@ -509,15 +509,22 @@ class ClothUnrollSceneBuilder:
         back = float(marks["inner_s"]) - float(marks["roll_radius"]) - margin
         front = float(marks["inner_s"]) + layout.material_length() + margin
 
+        # Thick, and buried in the table. A slab only as deep as the step it
+        # provides is a thin collider, and a particle that gets more than
+        # halfway into one is nearer the BOTTOM face -- the solver then pushes it
+        # out downwards, straight onto the table. Measured 2026-08-24 with a
+        # 4 mm slab: the deepest particle went from 1.8 mm below the support to
+        # 5.35 mm, i.e. right through. Overlapping the table costs nothing --
+        # both are fixed, so contact forces move neither.
         size = np.zeros(3, dtype=float)
         size[along] = front - back
         size[across] = float(self.task_cfg.cloth.width) + 2.0 * margin
-        size[2] = float(cfg.height)
+        size[2] = float(cfg.thickness)
 
         pos = np.zeros(3, dtype=float)
         pos[along] = centre[along] + 0.5 * (back + front)
         pos[across] = centre[across]
-        pos[2] = layout.table_z + 0.5 * float(cfg.height)
+        pos[2] = layout.table_z + float(cfg.top) - 0.5 * float(cfg.thickness)
 
         visible = bool(getattr(cfg, "visible", False))
         entity = scene.add_entity(
@@ -532,8 +539,9 @@ class ClothUnrollSceneBuilder:
         )
         manifest.add(str(cfg.name), entity)
         print(
-            f"cloth_unroll riser top_mm={float(cfg.height) * 1e3:.1f} "
-            f"size_mm=({size[0] * 1e3:.0f},{size[1] * 1e3:.0f},{size[2] * 1e3:.1f}) "
+            f"cloth_unroll riser top_mm={float(cfg.top) * 1e3:.1f} "
+            f"thickness_mm={float(cfg.thickness) * 1e3:.0f} "
+            f"size_mm=({size[0] * 1e3:.0f},{size[1] * 1e3:.0f}) "
             f"visible={visible} rest_z_mm={float(self.task_cfg.cloth.z) * 1e3:.1f}",
             flush=True,
         )
