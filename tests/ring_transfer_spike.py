@@ -273,7 +273,7 @@ def main(cfg: DictConfig) -> None:
             path_c = layout.carry_path(start_xy=start_xy)
             heading = target.center - anchor.center
             across_c = np.array([-heading[1], heading[0], 0.0]) / float(np.linalg.norm(heading))
-            need_u = 2.0 * (target.radius + 2.0 * ring.tube_radius + float(fem.contact_d_hat))
+            need_u = 2.0 * (target.radius + 2.0 * ring.tube_radius + float(task.rope.fem.contact_d_hat))
             print(
                 "ring_transfer_spike carry path (task mm): "
                 + " -> ".join(f"{label}{np.round(point * 1000).astype(int).tolist()}" for label, point in path_c),
