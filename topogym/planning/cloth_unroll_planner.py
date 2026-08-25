@@ -59,6 +59,13 @@ PULL_SEGMENTS = 8
 
 MOTIONS = ("unroll", "shove", "overpull")
 
+#: How close the HAND can get to the bar's centre line before the gripper fouls
+#: the dispenser. Measured 2026-08-25, not derived: commanded past it, the hand
+#: stopped dead at 57 mm from the bar centre and stayed there for six segments
+#: while the commands ran on to 175 mm beyond. It is the gripper's own extent
+#: plus the bar, so it does not follow from the bar radius alone.
+SHOVE_BAR_CLEARANCE = 0.057
+
 
 def stroke_waypoints(
     layout,
@@ -82,7 +89,17 @@ def stroke_waypoints(
 
     distance = layout.stroke_distance()
     if motion == "shove":
-        distance = -distance
+        # Bounded by the fixture, not by the nominal stroke reversed. Measured
+        # 2026-08-25: the full reversal sent the hand to y=-0.228 and it stalled
+        # at -0.053 with `arm_pos_err_mm=177`, grinding the band into 11 layers
+        # and putting cloth under the table for three segments (536 particle-
+        # steps) -- the only motion of the three that penetrated at all. The
+        # gripper cannot pass the dispenser, so the distractor has to stop short
+        # of it. What is left is the room actually available, which is what a
+        # wrong action gets in this scene.
+        axis = layout.material_axis
+        room = abs(float(start[axis]) - float(layout.bar_centre()[axis]))
+        distance = -min(distance, max(0.0, room - SHOVE_BAR_CLEARANCE))
     elif motion == "overpull":
         distance = distance * float(overpull_scale)
 

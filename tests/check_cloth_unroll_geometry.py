@@ -102,7 +102,10 @@ ClothUnrollEvaluator = _verifier.ClothUnrollEvaluator
 
 # `topogym.planning` is NumPy-only, so it imports normally.
 sys.path.insert(0, str(REPO))
-from topogym.planning.cloth_unroll_planner import stroke_waypoints  # noqa: E402
+from topogym.planning.cloth_unroll_planner import (  # noqa: E402
+    SHOVE_BAR_CLEARANCE,
+    stroke_waypoints,
+)
 
 failures: list[str] = []
 
@@ -647,13 +650,22 @@ def main(argv=None) -> int:
         off_plane < 1e-9 and sideways < 1e-9,
         f"离面 {off_plane * 1e3:.3f}mm，侧偏 {sideways * 1e3:.3f}mm",
     )
+    # 原契约是「位移与 unroll 相同、方向相反」，2026-08-25 实测证明它在本场景里
+    # 做不到：夹爪推不过夹具，命令送到 y=-0.228 时手停在 -0.053，arm_pos_err 177mm，
+    # 布被碾成 11 层并沉入桌面 536 粒子·帧——三种走法里唯一发生穿模的一个。
+    # 现契约改为「反方向、走满可用余量、且不撞夹具」。代价是 shove 与 unroll 的位移
+    # 不再相等，判据因此可以靠位移把两者分开——这一条在标定门槛时要记着。
+    bar_axis_pos = float(layout.bar_centre()[axis])
+    room = abs(grasp[axis] - bar_axis_pos) - SHOVE_BAR_CLEARANCE
+    reached = float(shove_wp[-1].position[axis])
     check(
-        "shove 往反方向走（同样多的位移，做错的动作）",
-        float(shove_wp[-1].position[axis]) < grasp[axis] - 1e-9
-        and abs(abs(float(shove_wp[-1].position[axis]) - grasp[axis]) - abs(travel))
-        < 1e-9,
-        f"shove {'xy'[axis]}={float(shove_wp[-1].position[axis]):+.4f} vs "
-        f"起点 {grasp[axis]:+.4f}",
+        "shove 往反方向走，走满可用余量且停在夹具之外",
+        reached < grasp[axis] - 1e-9
+        and abs(abs(reached - grasp[axis]) - room) < 1e-9
+        and abs(reached - bar_axis_pos) >= SHOVE_BAR_CLEARANCE - 1e-9,
+        f"shove {'xy'[axis]}={reached:+.4f}，走了 {abs(reached - grasp[axis]) * 1e3:.1f}mm"
+        f"（余量 {room * 1e3:.1f}mm），距梁心 {abs(reached - bar_axis_pos) * 1e3:.1f}mm "
+        f">= {SHOVE_BAR_CLEARANCE * 1e3:.1f}mm",
     )
     check(
         "overpull 越过「料已放完」那个点继续走",
