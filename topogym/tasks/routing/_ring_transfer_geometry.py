@@ -176,6 +176,52 @@ def spawn_mesh(ring: RingSpec, centerline: np.ndarray):
     return frames, vertices, faces
 
 
+def pinch_point(centerline: np.ndarray, ring: RingSpec, post: PostSpec, *, along: float, side: float) -> np.ndarray:
+    """Where the carry oracle pinches: on one of the loop's STRAIGHTS, `along` metres
+    from the spawn post down the long axis, on the `side` (+1/-1 across) straight.
+
+    Not the cap apex: pinching a cap means closing the fingers along the radial
+    direction, and the Franka hand -- ~200 mm long along its closing axis, palm
+    bottom 77 mm above the fingertips, i.e. below a 93 mm head -- then sits on
+    top of the post (measured 2026-08-25). On a straight the closing axis is
+    across the loop's long axis and the hand lies alongside the post, offset by
+    `along`; `hand_clearance` checks the palm box against every head.
+    """
+
+    long = np.array([ring.long_axis[0], ring.long_axis[1], 0.0])
+    across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0])
+    peg = np.array([post.center[0], post.center[1], 0.0])
+    target = peg + float(along) * long + float(side) * ring.loop_radius * across
+    return np.asarray(centerline[int(np.argmin(np.linalg.norm(centerline - target[None, :], axis=1)))], dtype=float)
+
+
+def hand_clearance(*, fingertip_xy, close_axis, fingertip_z: float, posts, physical_cfg) -> dict[str, float]:
+    """Smallest gap between the hand's palm box and each post's head, metres
+    (negative = overlap). The box is `hand_half_length` along the closing axis,
+    `hand_half_thickness` across it, and its bottom is `palm_bottom_above_tip`
+    above the fingertips; a head only matters where the box bottom is below its
+    top."""
+
+    tip = np.asarray(fingertip_xy, dtype=float)[:2]
+    axis = np.asarray(close_axis, dtype=float)[:2]
+    axis = axis / float(np.linalg.norm(axis))
+    normal = np.array([-axis[1], axis[0]])
+    half_len = float(physical_cfg.hand_half_length)
+    half_thick = float(physical_cfg.hand_half_thickness)
+    bottom = float(fingertip_z) + float(physical_cfg.palm_bottom_above_tip)
+    out = {}
+    for name, post in posts.items():
+        if bottom >= post.top_z:
+            out[name] = float("inf")
+            continue
+        rel = post.center - tip
+        # Distance from the head disc to the box in the box's own frame.
+        du = max(abs(float(np.dot(rel, axis))) - half_len, 0.0)
+        dv = max(abs(float(np.dot(rel, normal))) - half_thick, 0.0)
+        out[name] = float(np.hypot(du, dv)) - post.head_radius
+    return out
+
+
 def strand_tangent(centerline: np.ndarray, point) -> np.ndarray:
     """Unit xy tangent of the loop at the sample nearest `point` (central difference)."""
 
@@ -539,6 +585,8 @@ __all__ = [
     "loop_reach",
     "min_strand_separation",
     "near_cap_point",
+    "hand_clearance",
+    "pinch_point",
     "post_axis_segment",
     "posts_from_config",
     "rest_length_around",

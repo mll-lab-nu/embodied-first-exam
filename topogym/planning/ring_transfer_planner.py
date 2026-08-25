@@ -136,7 +136,7 @@ def off_phase(layout, *, start_xy=None) -> GraspPhase:
 def carry_phase(layout) -> GraspPhase:
     """Pinch the near cap, lift over A, carry hanging, lasso B from the side, put down."""
 
-    grasp = layout.near_cap_point()
+    grasp = layout.pinch_point()
     path = layout.carry_path(start_xy=grasp[:2])
     tangent = layout.strand_tangent(grasp)
     close_axis = (-float(tangent[1]), float(tangent[0]))

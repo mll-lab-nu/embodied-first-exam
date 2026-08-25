@@ -604,8 +604,20 @@ class ClothUnrollSceneBuilder:
                 cloud_noise=float(texture_cfg.cloud_noise),
                 seed=int(texture_cfg.seed),
             )
+        # "visual" skins the ORIGINAL swept mesh onto the simulated particles
+        # through a binding map. That map is the suspect for the band rendering
+        # torn while every particle reading is healthy: the roll is born as a
+        # spiral whose turns sit `roll.pitch` apart (4.5 mm) while the solver's
+        # own particle spacing is 3.7 mm (measured 2026-08-25), so a vertex on
+        # one turn is barely further from the NEXT turn than from its own
+        # neighbours. Cross-bound vertices get dragged across the sheet as the
+        # band pays out. "particle" draws the solver state directly, with no map
+        # in between, which is the diagnostic that separates the two.
         surface = materials.plastic(
-            "deformable", list(cloth_cfg.color), vis_mode="visual", texture=image
+            "deformable",
+            list(cloth_cfg.color),
+            vis_mode=str(getattr(cloth_cfg, "vis_mode", "visual") or "visual"),
+            texture=image,
         )
         if image is not None:
             print(

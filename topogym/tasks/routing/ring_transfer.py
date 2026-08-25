@@ -109,6 +109,12 @@ class RingTransferLayout:
     def near_cap_point(self) -> np.ndarray:
         return geo.near_cap_point(self.spawn, self.ring, self.anchor)
 
+    def pinch_point(self) -> np.ndarray:
+        """The carry oracle's grasp: on a straight, clear of both posts (see geometry)."""
+
+        carry = self.task_cfg.carry
+        return geo.pinch_point(self.spawn, self.ring, self.anchor, along=float(carry.pinch_along), side=float(carry.pinch_side))
+
     def strand_tangent(self, point) -> np.ndarray:
         """Unit xy tangent of the spawn loop nearest `point` (sets the pinch yaw)."""
 
@@ -116,7 +122,7 @@ class RingTransferLayout:
 
     def carry_path(self, start_xy=None) -> list[tuple[str, np.ndarray]]:
         if start_xy is None:
-            start_xy = self.near_cap_point()
+            start_xy = self.pinch_point()
         return geo.carry_path(
             ring=self.ring,
             anchor=self.anchor,
@@ -253,7 +259,9 @@ class RingTransferSceneBuilder:
         bands = {
             HOOK_BANDS[0]: FEMRopeAttachment(entity, layout.to_world(left), band_radius, strength=strength),
             HOOK_BANDS[1]: FEMRopeAttachment(entity, layout.to_world(right), band_radius, strength=strength),
-            NEAR_BAND: FEMRopeAttachment(entity, layout.to_world(layout.near_cap_point()), band_radius, strength=strength),
+            # The carry oracle's pinch band. (transfer's lift-off phase uses it
+            # too; that route is unavailable in the default layout.)
+            NEAR_BAND: FEMRopeAttachment(entity, layout.to_world(layout.pinch_point()), band_radius, strength=strength),
         }
 
         cameras = dict(tabletop.cameras)
