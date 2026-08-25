@@ -101,16 +101,26 @@ def main(cfg: DictConfig) -> None:
 
         return layout.to_world(held_task_xyz) + hand_above
 
+    band_sides: dict[str, float] = {}
+
+    def assign_sides(phase: GraspPhase, held_task_xyz) -> None:
+        """Which hook band is on which side of the finger axis, from where the
+        bands ARE. Band names follow the loop's spawn axis, not the wrist yaw;
+        assigning by name drove them across each other (attach_error 68 mm)."""
+
+        yaw = phase.yaw_at(held_task_xyz)
+        across = np.array([-np.sin(yaw), np.cos(yaw), 0.0])
+        for name in phase.bands:
+            centre = layout.to_task(built.bands[name].band_center())
+            band_sides[name] = 1.0 if float(np.dot(centre - np.asarray(held_task_xyz), across)) >= 0.0 else -1.0
+
     def band_targets(phase: GraspPhase, held_task_xyz) -> dict[str, np.ndarray]:
         held = np.asarray(held_task_xyz, dtype=float)
         if phase.kind == "hook":
             # Fingers open along `across` of the wrist yaw (yaw = pull direction).
             yaw = phase.yaw_at(held)
             across = np.array([-np.sin(yaw), np.cos(yaw), 0.0])
-            return {
-                phase.bands[0]: layout.to_world(held + half_spread * across),
-                phase.bands[1]: layout.to_world(held - half_spread * across),
-            }
+            return {name: layout.to_world(held + band_sides[name] * half_spread * across) for name in phase.bands}
         return {phase.bands[0]: layout.to_world(held)}
 
     def glide(hand_from: np.ndarray, hand_to: np.ndarray, yaw_from: float, yaw_to: float, *, phase: GraspPhase | None, held_to=None, held_from=None, label: str):
@@ -134,6 +144,7 @@ def main(cfg: DictConfig) -> None:
         # Where the material to grasp actually is (observed), in the task frame.
         centres = {name: layout.to_task(built.bands[name].band_center()) for name in phase.bands}
         held0 = np.mean([centres[name] for name in phase.bands], axis=0)
+        assign_sides(phase, held0)
         yaw = phase.yaw_at(held0)
         quat = ee_quat_for_yaw(controller.default_ee_quat, yaw)
         controller.set_gripper(hook_qpos if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))

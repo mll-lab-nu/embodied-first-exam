@@ -218,8 +218,14 @@ def carry_path(
     the anchor, carry it hanging, lasso the target from the side, put it down.
 
     Heights are FINGER heights; the loop's bottom U hangs `hang_depth` below.
-      lift     -- straight up until the bottom U is `hang_bottom_z` above the
-                  table (below the target's head, above its base cone).
+      lift     -- straight up until the bottom U clears the ANCHOR's head by
+                  `clear_margin`: the loop is linked with the anchor and can
+                  only leave over its head, so the whole loop has to rise above
+                  it (measured 2026-08-25: lifting the cap alone left the loop
+                  hanging on A's shaft).
+      travel   -- at that height to above the approach point.
+      approach -- down until the bottom U is `hang_bottom_z` above the table
+                  (below the target's head, above its base cone).
       detour   -- (only if `detour` > 0) sideways, for a lift point on the far
                   side of the anchor; with the fingers between anchor and
                   target the hanging loop is already clear of the anchor.
@@ -234,6 +240,7 @@ def carry_path(
     start = np.asarray(start_xy, dtype=float)[:2]
     depth = hang_depth(ring, float(carry_cfg.spread))
     finger_z = float(carry_cfg.hang_bottom_z) + depth
+    clear_z = anchor.top_z + ring.tube_radius + float(carry_cfg.clear_margin) + depth
     direction = target.center - anchor.center
     direction = direction / float(np.linalg.norm(direction))
     across = np.array([-direction[1], direction[0]])
@@ -242,13 +249,14 @@ def carry_path(
     landing = target.center + float(carry_cfg.push_past) * direction
     path = [
         ("start", np.array([start[0], start[1], ring.tube_radius])),
-        ("lift", np.array([start[0], start[1], finger_z])),
+        ("lift", np.array([start[0], start[1], clear_z])),
     ]
     if detour > 0.0:
         side = start + detour * across
-        path.append(("detour", np.array([side[0], side[1], finger_z])))
-        path.append(("approach_side", np.array([approach[0] + detour * across[0], approach[1] + detour * across[1], finger_z])))
+        path.append(("detour", np.array([side[0], side[1], clear_z])))
+        path.append(("approach_side", np.array([approach[0] + detour * across[0], approach[1] + detour * across[1], clear_z])))
     path += [
+        ("travel", np.array([approach[0], approach[1], clear_z])),
         ("approach", np.array([approach[0], approach[1], finger_z])),
         ("push", np.array([landing[0], landing[1], finger_z])),
         ("lower", np.array([landing[0], landing[1], float(carry_cfg.drop_z)])),

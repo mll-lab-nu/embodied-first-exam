@@ -280,8 +280,15 @@ def main(cfg: DictConfig) -> None:
                 + " -> ".join(f"{label}{np.round(point * 1000).astype(int).tolist()}" for label, point in path_c),
                 flush=True,
             )
+            # Which band is on which side of the finger axis, from where they ARE
+            # (band names follow the loop's own axis, not the A->B heading;
+            # assigning by name drove them across each other on 2026-08-25).
+            sides = {}
+            for name in LIFT_BANDS:
+                centre = layout.to_task(built.bands[name].band_center())
+                sides[name] = 1.0 if float(np.dot(centre - np.array([start_xy[0], start_xy[1], 0.0]), across_c)) >= 0.0 else -1.0
             for label, point in path_c[1:]:
-                goals = {LIFT_BANDS[0]: point + half_c * across_c, LIFT_BANDS[1]: point - half_c * across_c}
+                goals = {name: point + sides[name] * half_c * across_c for name in LIFT_BANDS}
                 drive(LIFT_BANDS, goals, f"carry:{label}")
             for name in LIFT_BANDS:
                 built.bands[name].release()
