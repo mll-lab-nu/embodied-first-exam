@@ -82,6 +82,7 @@ def edge_multiplicities(faces: np.ndarray) -> Counter:
 def main() -> int:
     task, common = load_task_cfg()
     failures: list[str] = []
+    target_cfg_base = [p for p in task.posts if str(p.name) == str(task.goal.enclosure[0])][0].base_height
 
     posts = geo.posts_from_config(task.posts)
     ring = geo.ring_from_config(task.ring, task.rope)
@@ -272,6 +273,41 @@ def main() -> int:
             print(f"  {name:8s} to {post.name} surface {gap * 1000:.1f} mm (want >= {clearance * 1000:.0f}) {verdict}")
             if gated and gap < clearance:
                 failures.append(f"{name} grasp too close to post {post.name}")
+
+    # carry oracle
+    lift_l, lift_r = geo.lift_points(spawn, ring, anchor, float(task.carry.spread))
+    depth = geo.hang_depth(ring, float(task.carry.spread))
+    carry = geo.carry_path(ring=ring, anchor=anchor, target=target, start_xy=0.5 * (lift_l + lift_r), carry_cfg=task.carry)
+    finger_z = carry[1][1][2]
+    print()
+    print(
+        f"carry          lift bands at {np.round(lift_l[:2] * 1000, 1).tolist()} / {np.round(lift_r[:2] * 1000, 1).tolist()} mm "
+        f"({np.linalg.norm(lift_l - lift_r) * 1000:.1f} apart); hang depth {depth * 1000:.0f} mm, fingers at {finger_z * 1000:.0f} mm "
+        f"(workspace z max {float(workspace.z[1]) * 1000:.0f})"
+    )
+    if np.linalg.norm(lift_l - lift_r) <= 2.0 * float(task.grasp.band_radius):
+        failures.append("lift bands overlap")
+    for other in (geo.near_cap_point(spawn, ring, anchor),):
+        for point in (lift_l, lift_r):
+            if np.linalg.norm(point - other) <= 2.0 * float(task.grasp.band_radius):
+                failures.append("lift band overlaps the near band")
+    bottom = float(task.carry.hang_bottom_z)
+    print(
+        f"               bottom U at {bottom * 1000:.0f} mm: below {target.name}'s head underside "
+        f"{target.height * 1000:.0f} and above its base cone {float(target_cfg_base) * 1000:.0f} "
+        f"{'ok' if float(target_cfg_base) < bottom < target.height else 'FAIL'}"
+    )
+    if not (float(target_cfg_base) < bottom < target.height):
+        failures.append("carry hang_bottom_z is not on the target's shaft")
+    for label, point in carry:
+        if point[2] + float(task.physical.hand_above) > float(workspace.z[1]) + 1e-9:
+            failures.append(f"carry waypoint {label} puts the hand above the workspace")
+    # the hanging loop must pass beside the anchor's head on the detour legs
+    for label, point in carry[2:5]:
+        clearance = float(np.linalg.norm(point[:2] - anchor.center)) - 0.5 * float(task.carry.spread) - anchor.head_radius - ring.tube_radius
+        print(f"               {label:14s} hanging loop to {anchor.name}'s head {clearance * 1000:.1f} mm {'ok' if clearance > 0 else 'FAIL'}")
+        if clearance <= 0:
+            failures.append(f"carry leg {label} sweeps the hanging loop through {anchor.name}")
 
     lift_z = anchor.top_z + ring.tube_radius + float(task.transfer.lift_margin)
     print(f"lift-off       near band to {lift_z * 1000:.1f} mm (head top {anchor.top_z * 1000:.1f}) then +{float(task.transfer.shift) * 1000:.0f} mm toward {target.name}")

@@ -18,6 +18,12 @@ hand offset (`physical.hand_above`) and the lateral finger offsets.
 
 Motions, so the judge has both sides:
 - ``transfer``       the task: on B, then off A;
+- ``carry``          the same task by the other route (user's proposal,
+                     2026-08-25): hook the loop next to A with the fingers
+                     spread, lift it over A's head, carry it hanging, lasso B
+                     from the side (the bottom U meets B's shaft and the strands
+                     part around it), lower, release. No stretch, no second
+                     anchor, any post spacing;
 - ``drape_outside``  the on-phase lands the cap on B's NEAR side and there is no
                      off-phase: the loop ends up beside B, still on A -- the
                      projection looks like an enclosure and the winding says no;
@@ -34,9 +40,10 @@ import numpy as np
 from topogym.planning.subgoal import PlannedSubgoal
 from topogym.planning.waypoint import EpisodePlan, WaypointPlan, WaypointTarget
 
-MOTIONS = ("transfer", "drape_outside", "lift_only")
+MOTIONS = ("transfer", "carry", "drape_outside", "lift_only")
 HOOK_BANDS = ("hook_left", "hook_right")
 NEAR_BAND = "near"
+LIFT_BANDS = ("lift_left", "lift_right")
 
 
 @dataclass(frozen=True)
@@ -49,10 +56,13 @@ class GraspPhase:
     bands: tuple[str, ...]
     waypoints: tuple[WaypointTarget, ...]
     anchor_xy: tuple[float, float]  # the post the strands run from; sets the yaw
+    fixed_yaw: float | None = None  # carry: the wrist does not turn
 
     def yaw_at(self, xy) -> float:
         """Wrist yaw: fingers ACROSS the pull direction from the anchor."""
 
+        if self.fixed_yaw is not None:
+            return float(self.fixed_yaw)
         direction = np.asarray(xy, dtype=float)[:2] - np.asarray(self.anchor_xy, dtype=float)
         return float(np.arctan2(direction[1], direction[0]))
 
@@ -118,6 +128,25 @@ def off_phase(layout, *, start_xy=None) -> GraspPhase:
     )
 
 
+def carry_phase(layout) -> GraspPhase:
+    """Lift next to A, carry hanging, lasso B from the side, put down."""
+
+    path = layout.carry_path()
+    heading = layout.target.center - layout.anchor.center
+    yaw = float(np.arctan2(heading[1], heading[0]))
+    labels = [label for label, _ in path[1:]]
+    points = [point for _, point in path[1:]]
+    return GraspPhase(
+        name=f"carry_{layout.anchor.name}_to_{layout.target.name}",
+        kind="hook",
+        post=layout.target.name,
+        bands=LIFT_BANDS,
+        waypoints=_targets(points, labels, lifted=True),
+        anchor_xy=tuple(float(v) for v in layout.anchor.center),
+        fixed_yaw=yaw,
+    )
+
+
 def plan_ring_transfer(layout, *, motion: str = "transfer"):
     """Plan one episode. Returns ``(phases, EpisodePlan)``."""
 
@@ -125,6 +154,8 @@ def plan_ring_transfer(layout, *, motion: str = "transfer"):
         raise ValueError(f"motion must be one of {MOTIONS}, got {motion!r}.")
     if motion == "transfer":
         phases = [on_phase(layout), off_phase(layout)]
+    elif motion == "carry":
+        phases = [carry_phase(layout)]
     elif motion == "drape_outside":
         phases = [on_phase(layout, drape_outside=True)]
     else:
@@ -161,4 +192,4 @@ def plan_ring_transfer(layout, *, motion: str = "transfer"):
     return phases, plan
 
 
-__all__ = ["GraspPhase", "HOOK_BANDS", "MOTIONS", "NEAR_BAND", "off_phase", "on_phase", "plan_ring_transfer"]
+__all__ = ["GraspPhase", "HOOK_BANDS", "LIFT_BANDS", "MOTIONS", "NEAR_BAND", "carry_phase", "off_phase", "on_phase", "plan_ring_transfer"]

@@ -60,6 +60,7 @@ from topogym.world.rope_backends import rope_backend
 
 HOOK_BANDS = ("hook_left", "hook_right")
 NEAR_BAND = "near"
+LIFT_BANDS = ("lift_left", "lift_right")  # carry oracle: fingers next to the anchor
 
 
 @dataclass
@@ -105,6 +106,21 @@ class RingTransferLayout:
 
     def near_cap_point(self) -> np.ndarray:
         return geo.near_cap_point(self.spawn, self.ring, self.anchor)
+
+    def lift_points(self) -> tuple[np.ndarray, np.ndarray]:
+        return geo.lift_points(self.spawn, self.ring, self.anchor, float(self.task_cfg.grasp.spread))
+
+    def carry_path(self, start_xy=None) -> list[tuple[str, np.ndarray]]:
+        if start_xy is None:
+            left, right = self.lift_points()
+            start_xy = 0.5 * (left + right)
+        return geo.carry_path(
+            ring=self.ring,
+            anchor=self.anchor,
+            target=self.target,
+            start_xy=start_xy,
+            carry_cfg=self.task_cfg.carry,
+        )
 
     def far_cap_path(self) -> list[tuple[str, np.ndarray]]:
         return geo.far_cap_path(
@@ -236,6 +252,9 @@ class RingTransferSceneBuilder:
             HOOK_BANDS[1]: FEMRopeAttachment(entity, layout.to_world(right), band_radius, strength=strength),
             NEAR_BAND: FEMRopeAttachment(entity, layout.to_world(layout.near_cap_point()), band_radius, strength=strength),
         }
+        lift_left, lift_right = layout.lift_points()
+        bands[LIFT_BANDS[0]] = FEMRopeAttachment(entity, layout.to_world(lift_left), band_radius, strength=strength)
+        bands[LIFT_BANDS[1]] = FEMRopeAttachment(entity, layout.to_world(lift_right), band_radius, strength=strength)
 
         cameras = dict(tabletop.cameras)
         for cam_name, cam in (extra_cameras or {}).items():
@@ -397,6 +416,7 @@ class RingTransferSceneBuilder:
 
 __all__ = [
     "HOOK_BANDS",
+    "LIFT_BANDS",
     "NEAR_BAND",
     "RingTransferLayout",
     "RingTransferScene",

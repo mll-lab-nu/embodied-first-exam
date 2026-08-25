@@ -16,6 +16,7 @@ the same target. The arm is outside IPC (`needs_coup=False`, every rope task).
 
     python -B -m demos.routing.ring_transfer_physical_demo
     python -B -m demos.routing.ring_transfer_physical_demo run.viewer=true
+    python -B -m demos.routing.ring_transfer_physical_demo run.motion=carry
     python -B -m demos.routing.ring_transfer_physical_demo run.motion=drape_outside
     python -B -m demos.routing.ring_transfer_physical_demo \\
         recording=hq recording.camera=[oblique,front,wrist]
@@ -103,9 +104,9 @@ def main(cfg: DictConfig) -> None:
     def band_targets(phase: GraspPhase, held_task_xyz) -> dict[str, np.ndarray]:
         held = np.asarray(held_task_xyz, dtype=float)
         if phase.kind == "hook":
-            direction = held[:2] - np.asarray(phase.anchor_xy)
-            direction = direction / max(float(np.linalg.norm(direction)), 1e-9)
-            across = np.array([-direction[1], direction[0], 0.0])
+            # Fingers open along `across` of the wrist yaw (yaw = pull direction).
+            yaw = phase.yaw_at(held)
+            across = np.array([-np.sin(yaw), np.cos(yaw), 0.0])
             return {
                 phase.bands[0]: layout.to_world(held + half_spread * across),
                 phase.bands[1]: layout.to_world(held - half_spread * across),

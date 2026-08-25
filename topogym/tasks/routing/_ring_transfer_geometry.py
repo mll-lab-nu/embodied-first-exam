@@ -176,6 +176,77 @@ def spawn_mesh(ring: RingSpec, centerline: np.ndarray):
     return frames, vertices, faces
 
 
+def lift_points(centerline: np.ndarray, ring: RingSpec, post: PostSpec, spread: float) -> tuple[np.ndarray, np.ndarray]:
+    """Where the two fingers hook the loop NEXT TO the spawn post for the carry
+    oracle: the near cap's shoulders, `spread` apart, on the post's outer side.
+    Lifting there takes the cap over the post's head (the loop is slack around it)
+    and leaves the loop hanging from the fingers with the far cap as its bottom."""
+
+    along = np.array([ring.long_axis[0], ring.long_axis[1], 0.0])
+    across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0])
+    peg = np.array([post.center[0], post.center[1], 0.0])
+    half = 0.5 * float(spread)
+    if half >= ring.loop_radius:
+        raise ValueError("grasp.spread/2 must be less than loop_radius.")
+    forward = float(np.sqrt(ring.loop_radius**2 - half**2))
+    points = []
+    for side in (1.0, -1.0):
+        target = peg + forward * along + side * half * across
+        points.append(np.asarray(centerline[int(np.argmin(np.linalg.norm(centerline - target[None, :], axis=1)))], dtype=float))
+    return points[0], points[1]
+
+
+def hang_depth(ring: RingSpec, spread: float) -> float:
+    """How far below the fingers a loop hooked on them hangs: half the material
+    not taken up by the two caps (top between the fingers, bottom U)."""
+
+    return 0.5 * (ring.perimeter - 2.0 * float(spread))
+
+
+def carry_path(
+    *,
+    ring: RingSpec,
+    anchor: PostSpec,
+    target: PostSpec,
+    start_xy,
+    carry_cfg,
+) -> list[tuple[str, np.ndarray]]:
+    """Held-point waypoints (task frame) for the carry oracle: lift the loop off
+    the anchor, carry it hanging, lasso the target from the side, put it down.
+
+    Heights are FINGER heights; the loop's bottom U hangs `hang_depth` below.
+      lift     -- straight up until the bottom U is `hang_bottom_z` above the
+                  table (below the target's head, above its base cone).
+      detour   -- sideways, so the hanging loop passes beside the anchor rather
+                  than over it (its bottom is far below the anchor's head).
+      approach -- to `approach_before` short of the target, on its near side,
+                  in line with the anchor->target direction.
+      push     -- past the target by `push_past`: the bottom U meets the shaft,
+                  the two strands part around it, the hand ends on the far side.
+      lower    -- down to `drop_z`, still on the far side; the loop lands around
+                  the target.
+    """
+
+    start = np.asarray(start_xy, dtype=float)[:2]
+    depth = hang_depth(ring, float(carry_cfg.spread))
+    finger_z = float(carry_cfg.hang_bottom_z) + depth
+    direction = target.center - anchor.center
+    direction = direction / float(np.linalg.norm(direction))
+    across = np.array([-direction[1], direction[0]])
+    detour = start + float(carry_cfg.detour) * across
+    approach = target.center - (target.radius + ring.tube_radius + float(carry_cfg.approach_before)) * direction
+    landing = target.center + float(carry_cfg.push_past) * direction
+    return [
+        ("start", np.array([start[0], start[1], ring.tube_radius])),
+        ("lift", np.array([start[0], start[1], finger_z])),
+        ("detour", np.array([detour[0], detour[1], finger_z])),
+        ("approach_side", np.array([approach[0] + float(carry_cfg.detour) * across[0], approach[1] + float(carry_cfg.detour) * across[1], finger_z])),
+        ("approach", np.array([approach[0], approach[1], finger_z])),
+        ("push", np.array([landing[0], landing[1], finger_z])),
+        ("lower", np.array([landing[0], landing[1], float(carry_cfg.drop_z)])),
+    ]
+
+
 def far_cap_point(centerline: np.ndarray, ring: RingSpec, post: PostSpec) -> np.ndarray:
     """The loop's far cap apex: the material the stretch phase grasps."""
 
@@ -443,6 +514,9 @@ __all__ = [
     "PostSpec",
     "RingSpec",
     "carry_height_floor",
+    "carry_path",
+    "hang_depth",
+    "lift_points",
     "far_cap_path",
     "far_cap_point",
     "hook_points",

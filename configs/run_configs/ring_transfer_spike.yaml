@@ -13,6 +13,8 @@ defaults:
 #              落到 B 远侧、释放。判 A、B 绕数同为 1、环留在 B 上、拉伸期间 A 顶未被越过。
 #              **本轮的关键判据**：单夹爪能否把 B 套进环。
 #   transfer : near band 捏住 A 侧帽，抬过 A 顶、向 B 平移、释放。判 A=0、B=1。
+#   carry    : （独立于 stretch/transfer）lift band 在 A 旁钩起整环、悬着搬到 B 近侧、
+#              侧向推过 B、放下。判 A=0、B=1。参数在 task.carry。
 test: settle
 
 # 沉降上限步数，以及收敛判据取 task.success.settle_tol。
