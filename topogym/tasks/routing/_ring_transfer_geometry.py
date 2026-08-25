@@ -176,34 +176,30 @@ def spawn_mesh(ring: RingSpec, centerline: np.ndarray):
     return frames, vertices, faces
 
 
-def lift_points(centerline: np.ndarray, ring: RingSpec, post: PostSpec, spread: float) -> tuple[np.ndarray, np.ndarray]:
-    """Where the two fingers hook the loop for the carry oracle: the near cap's
-    shoulders, `spread` apart. The near cap is the half-circle around the spawn
-    post that bulges AWAY from the far cap (toward the target), so the fingers go
-    in between the post and the target. Lifting there takes the cap up over the
-    post's head and the rest of the loop follows, leaving it hanging from the
-    fingers with the far cap as its bottom U -- and the hanging loop is already
-    on the target's side of the post, so no detour round the post is needed."""
+def strand_tangent(centerline: np.ndarray, point) -> np.ndarray:
+    """Unit xy tangent of the loop at the sample nearest `point` (central difference)."""
 
-    along = np.array([ring.long_axis[0], ring.long_axis[1], 0.0])
-    across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0])
-    peg = np.array([post.center[0], post.center[1], 0.0])
-    half = 0.5 * float(spread)
-    if half >= ring.loop_radius:
-        raise ValueError("grasp.spread/2 must be less than loop_radius.")
-    forward = float(np.sqrt(ring.loop_radius**2 - half**2))
-    points = []
-    for side in (1.0, -1.0):
-        target = peg - forward * along + side * half * across
-        points.append(np.asarray(centerline[int(np.argmin(np.linalg.norm(centerline - target[None, :], axis=1)))], dtype=float))
-    return points[0], points[1]
+    pts = np.asarray(centerline, dtype=float)
+    index = int(np.argmin(np.linalg.norm(pts[:, :2] - np.asarray(point, dtype=float)[None, :2], axis=1)))
+    tangent = pts[(index + 1) % len(pts), :2] - pts[index - 1, :2]
+    return tangent / float(np.linalg.norm(tangent))
 
 
-def hang_depth(ring: RingSpec, spread: float) -> float:
-    """How far below the fingers a loop hooked on them hangs: half the material
-    not taken up by the two caps (top between the fingers, bottom U)."""
+def hang_depth(ring: RingSpec, carry_cfg) -> float:
+    """How far below the fingertips a PINCHED loop hangs.
 
-    return 0.5 * (ring.perimeter - 2.0 * float(spread))
+    `carry.hang_depth` when the spike has measured it; otherwise the pessimistic
+    estimate: half the material outside the clamped segment, i.e. the two
+    strands hanging straight down side by side. The real loop hangs shorter --
+    the clamp holds a `clamp_width` piece straight and the rope leaves it
+    horizontally before bending down over a length (EI/w)^(1/3) ~ 40 mm, which
+    is also what keeps the hanging loop open (`u_width` in the spike).
+    """
+
+    measured = getattr(carry_cfg, "hang_depth", None)
+    if measured is not None:
+        return float(measured)
+    return 0.5 * (ring.perimeter - 2.0 * float(carry_cfg.clamp_width))
 
 
 def carry_path(
@@ -214,10 +210,11 @@ def carry_path(
     start_xy,
     carry_cfg,
 ) -> list[tuple[str, np.ndarray]]:
-    """Held-point waypoints (task frame) for the carry oracle: lift the loop off
-    the anchor, carry it hanging, lasso the target from the side, put it down.
+    """Held-point waypoints (task frame) for the carry oracle: PINCH the near cap,
+    lift the loop off the anchor, carry it hanging, lasso the target from the
+    side, put it down.
 
-    Heights are FINGER heights; the loop's bottom U hangs `hang_depth` below.
+    Heights are FINGERTIP heights; the loop's bottom U hangs `hang_depth` below.
       lift     -- straight up until the bottom U clears the ANCHOR's head by
                   `clear_margin`: the loop is linked with the anchor and can
                   only leave over its head, so the whole loop has to rise above
@@ -238,7 +235,7 @@ def carry_path(
     """
 
     start = np.asarray(start_xy, dtype=float)[:2]
-    depth = hang_depth(ring, float(carry_cfg.spread))
+    depth = hang_depth(ring, carry_cfg)
     finger_z = float(carry_cfg.hang_bottom_z) + depth
     clear_z = anchor.top_z + ring.tube_radius + float(carry_cfg.clear_margin) + depth
     direction = target.center - anchor.center
@@ -533,7 +530,7 @@ __all__ = [
     "carry_height_floor",
     "carry_path",
     "hang_depth",
-    "lift_points",
+    "strand_tangent",
     "far_cap_path",
     "far_cap_point",
     "hook_points",

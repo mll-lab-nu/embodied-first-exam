@@ -144,22 +144,30 @@ def main(cfg: DictConfig) -> None:
         # Where the material to grasp actually is (observed), in the task frame.
         centres = {name: layout.to_task(built.bands[name].band_center()) for name in phase.bands}
         held0 = np.mean([centres[name] for name in phase.bands], axis=0)
-        assign_sides(phase, held0)
+        if phase.kind == "hook":
+            assign_sides(phase, held0)
         yaw = phase.yaw_at(held0)
         quat = ee_quat_for_yaw(controller.default_ee_quat, yaw)
-        # A hook phase is an INTERNAL grasp: the fingers go into the loop closed and
-        # open against the rope from inside (a pinch would collapse the hanging loop
-        # to a doubled strand and the lasso onto B would not part around the
-        # shaft). A pinch phase opens now and closes on the strand at the bottom.
+        # Pinch: open pads come down straddling the strand (the yaw puts the
+        # closing axis across it), close on it, and only THEN does the assist
+        # engage. Hook (transfer's on-phase): an internal grasp -- fingers enter
+        # the loop closed and open against the rope from inside.
         controller.set_gripper(gripper_closed if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))
         hand_now = np.asarray(controller.hand_pos(), dtype=float)
         yaw_now = yaw
         hover = hand_for(np.array([held0[0], held0[1], approach_z]))
         glide(hand_now, hover, yaw_now, yaw, phase=None, label=f"{phase.name}:hover")
-        grasp_hand = hand_for(held0)
+        grasp_point = held0 + (np.array([0.0, 0.0, float(grasp_cfg.pinch_lift)]) if phase.kind == "pinch" else 0.0)
+        grasp_hand = hand_for(grasp_point)
         glide(hover, grasp_hand, yaw, yaw, phase=None, label=f"{phase.name}:descend")
         for _ in range(int(physical.touch_settle_steps)):
             controller.move_ee_to(grasp_hand, quat=quat, steps=1, continuous_ik=True)
+        if phase.kind == "pinch":
+            # Close on the rope: each finger stops one tube radius from the centre
+            # line, so the strand sits between the pads. The arm is outside IPC,
+            # so this is a commanded stop, not a contact one; the finger reading
+            # printed below is the grasp evidence.
+            controller.set_gripper(float(grasp_cfg.grasp_qpos), steps=int(physical.gripper_steps))
         # The assist must not hide a hand that never got there: the fingertip
         # point has to be within attach_tolerance of the band(s) before engaging.
         tip = layout.to_task(np.asarray(controller.hand_pos(), dtype=float) - hand_above)
@@ -174,9 +182,7 @@ def main(cfg: DictConfig) -> None:
         )
         if worst > float(grasp_cfg.attach_tolerance):
             raise SystemExit(f"ring_transfer {phase.name}: hand missed the band by {worst * 1000:.1f} mm; refusing to engage the assist.")
-        if phase.kind == "pinch":
-            controller.set_gripper(gripper_closed, steps=int(physical.gripper_steps))
-        else:
+        if phase.kind == "hook":
             # Spread the fingers until the pads meet the rope from inside: the
             # visible act of taking hold. The bands engage only after that.
             controller.set_gripper(hook_qpos, steps=int(physical.gripper_steps))

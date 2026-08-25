@@ -453,9 +453,17 @@ class ClothLinkAttachDragPrimitive:
             pad_tip = float(reached[2]) - HAND_TO_PAD_TIP_Z - float(target[2])
             worst_pad_tip = min(worst_pad_tip, pad_tip)
             if self.hold_pad_height:
+                # Against the GEOMETRIC target, which does not contain the trim.
+                # Measuring against `commanded` (which does) makes the error
+                # never shrink -- the arm's constant deficit d is re-counted every
+                # waypoint and the trim ramps d, 2d, 3d... Measured 2026-08-25 on
+                # the first recorded run: `pad_tip_mm` went -1.4 -> +10.7 over
+                # eight segments and the gripper ended up floating above the
+                # sheet. With the trim excluded the loop settles at d and holds.
+                desired = float(target[2]) + float(self.touch_clearance) + HAND_TO_PAD_Z
                 height_trim = float(
                     np.clip(
-                        height_trim + (float(commanded[2]) - float(reached[2])),
+                        height_trim + (desired - float(reached[2])),
                         0.0,
                         float(self.max_height_trim),
                     )

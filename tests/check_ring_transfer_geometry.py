@@ -281,31 +281,23 @@ def main() -> int:
             if gated and gap < clearance:
                 failures.append(f"{name} grasp too close to post {post.name}")
 
-    # carry oracle
-    lift_l, lift_r = geo.lift_points(spawn, ring, anchor, float(task.carry.spread))
-    depth = geo.hang_depth(ring, float(task.carry.spread))
-    carry = geo.carry_path(ring=ring, anchor=anchor, target=target, start_xy=0.5 * (lift_l + lift_r), carry_cfg=task.carry)
+    # carry oracle (pinch at the near cap apex)
+    pinch = geo.near_cap_point(spawn, ring, anchor)
+    depth = geo.hang_depth(ring, task.carry)
+    carry = geo.carry_path(ring=ring, anchor=anchor, target=target, start_xy=pinch[:2], carry_cfg=task.carry)
     finger_z = carry[1][1][2]
+    tangent = geo.strand_tangent(spawn, pinch)
     print()
     print(
-        f"carry          lift bands at {np.round(lift_l[:2] * 1000, 1).tolist()} / {np.round(lift_r[:2] * 1000, 1).tolist()} mm "
-        f"({np.linalg.norm(lift_l - lift_r) * 1000:.1f} apart); hang depth {depth * 1000:.0f} mm, fingers at {finger_z * 1000:.0f} mm "
-        f"(workspace z max {float(workspace.z[1]) * 1000:.0f})"
+        f"carry          pinch at {np.round(pinch[:2] * 1000, 1).tolist()} mm, strand tangent {np.round(tangent, 3).tolist()}; "
+        f"hang depth {depth * 1000:.0f} mm ({'measured' if getattr(task.carry, 'hang_depth', None) is not None else 'estimate'}), "
+        f"fingertips at {finger_z * 1000:.0f} mm (workspace z max {float(workspace.z[1]) * 1000:.0f})"
     )
-    if np.linalg.norm(lift_l - lift_r) <= 2.0 * float(task.grasp.band_radius):
-        failures.append("lift bands overlap")
-    for other in (geo.near_cap_point(spawn, ring, anchor),):
-        for point in (lift_l, lift_r):
-            if np.linalg.norm(point - other) <= 2.0 * float(task.grasp.band_radius):
-                failures.append("lift band overlaps the near band")
-    # Internal grasp: the fingers enter the loop CLOSED at the chord midpoint and
-    # open along `across`; the closed finger bodies extend `finger_half_width`
-    # along the anchor->target line and must clear the anchor's head.
-    mid = 0.5 * (lift_l + lift_r)
-    finger_gap = float(np.linalg.norm(mid[:2] - anchor.center)) - anchor.head_radius - float(task.physical.finger_half_width)
-    print(f"               closed fingers at the grasp chord to {anchor.name}'s head edge {finger_gap * 1000:.1f} mm {'ok' if finger_gap > 0 else 'FAIL'}")
+    # Closed finger bodies at the pinch point must clear the anchor's head.
+    finger_gap = float(np.linalg.norm(pinch[:2] - anchor.center)) - anchor.head_radius - float(task.physical.finger_half_width)
+    print(f"               fingers at the pinch to {anchor.name}'s head edge {finger_gap * 1000:.1f} mm {'ok' if finger_gap > 0 else 'FAIL'}")
     if finger_gap <= 0:
-        failures.append("closed fingers would hit the anchor's head at the carry grasp point")
+        failures.append("fingers would hit the anchor's head at the carry pinch point")
     bottom = float(task.carry.hang_bottom_z)
     print(
         f"               bottom U at {bottom * 1000:.0f} mm: below {target.name}'s head underside "
@@ -326,7 +318,7 @@ def main() -> int:
     across_c = np.array([-heading[1], heading[0]])
     for label, point in carry[1:-1]:
         worst = min(
-            float(np.linalg.norm(point[:2] + side * 0.5 * float(task.carry.spread) * across_c - anchor.center))
+            float(np.linalg.norm(point[:2] + side * float(task.carry.hang_half_width) * across_c - anchor.center))
             - anchor.head_radius - ring.tube_radius
             for side in (-1.0, 1.0)
         )

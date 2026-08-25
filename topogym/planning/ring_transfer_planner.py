@@ -18,9 +18,9 @@ hand offset (`physical.hand_above`) and the lateral finger offsets.
 
 Motions, so the judge has both sides:
 - ``transfer``       the task: on B, then off A;
-- ``carry``          the same task by the other route (user's proposal,
-                     2026-08-25): hook the loop next to A with the fingers
-                     spread, lift it over A's head, carry it hanging, lasso B
+- ``carry``          the default (user's proposal, 2026-08-25): PINCH the near
+                     cap -- open pads straddle the strand, close, only then
+                     attach -- lift it over A's head, carry it hanging, lasso B
                      from the side (the bottom U meets B's shaft and the strands
                      part around it), lower, release. No stretch, no second
                      anchor, any post spacing;
@@ -43,7 +43,6 @@ from topogym.planning.waypoint import EpisodePlan, WaypointPlan, WaypointTarget
 MOTIONS = ("transfer", "carry", "drape_outside", "lift_only")
 HOOK_BANDS = ("hook_left", "hook_right")
 NEAR_BAND = "near"
-LIFT_BANDS = ("lift_left", "lift_right")
 
 
 @dataclass(frozen=True)
@@ -55,12 +54,18 @@ class GraspPhase:
     post: str  # the post this phase crosses
     bands: tuple[str, ...]
     waypoints: tuple[WaypointTarget, ...]
-    anchor_xy: tuple[float, float]  # the post the strands run from; sets the yaw
-    fixed_yaw: float | None = None  # carry: the wrist does not turn
+    anchor_xy: tuple[float, float]  # the post the strands run from; sets the hook yaw
+    fixed_yaw: float | None = None
+    # Pinch: the xy direction the fingers close along -- perpendicular to the
+    # strand at the grasp point, so the rope lies between the open pads.
+    close_axis: tuple[float, float] | None = None
 
     def yaw_at(self, xy) -> float:
-        """Wrist yaw: fingers ACROSS the pull direction from the anchor."""
+        """Wrist yaw. Hook: fingers ACROSS the pull direction from the anchor.
+        Pinch: fingers close along `close_axis` (at yaw 0 they close along y)."""
 
+        if self.close_axis is not None:
+            return float(np.arctan2(self.close_axis[1], self.close_axis[0]) - 0.5 * np.pi)
         if self.fixed_yaw is not None:
             return float(self.fixed_yaw)
         direction = np.asarray(xy, dtype=float)[:2] - np.asarray(self.anchor_xy, dtype=float)
@@ -115,35 +120,36 @@ def off_phase(layout, *, start_xy=None) -> GraspPhase:
     start_xy = np.asarray(start_xy, dtype=float)[:2]
     lift = np.array([start_xy[0], start_xy[1], layout.lift_z()])
     shifted = lift + float(layout.task_cfg.transfer.shift) * np.array([toward[0], toward[1], 0.0])
+    # The strand hugging the anchor's outer surface runs perpendicular to the
+    # anchor->target line, so the fingers close along that line.
     return GraspPhase(
         name=f"off_{anchor.name}",
         kind="pinch",
         post=anchor.name,
         bands=(NEAR_BAND,),
         waypoints=_targets([lift, shifted], ["lift", "shift"], lifted=True),
-        # Fingers across the anchor->target line: the strand hugging the anchor's
-        # outer surface runs perpendicular to that line, so the pads land on
-        # either side of it.
-        anchor_xy=tuple(float(v) for v in (start_xy - toward)),
+        anchor_xy=tuple(float(v) for v in anchor.center),
+        close_axis=(float(toward[0]), float(toward[1])),
     )
 
 
 def carry_phase(layout) -> GraspPhase:
-    """Lift next to A, carry hanging, lasso B from the side, put down."""
+    """Pinch the near cap, lift over A, carry hanging, lasso B from the side, put down."""
 
-    path = layout.carry_path()
-    heading = layout.target.center - layout.anchor.center
-    yaw = float(np.arctan2(heading[1], heading[0]))
+    grasp = layout.near_cap_point()
+    path = layout.carry_path(start_xy=grasp[:2])
+    tangent = layout.strand_tangent(grasp)
+    close_axis = (-float(tangent[1]), float(tangent[0]))
     labels = [label for label, _ in path[1:]]
     points = [point for _, point in path[1:]]
     return GraspPhase(
         name=f"carry_{layout.anchor.name}_to_{layout.target.name}",
-        kind="hook",
+        kind="pinch",
         post=layout.target.name,
-        bands=LIFT_BANDS,
+        bands=(NEAR_BAND,),
         waypoints=_targets(points, labels, lifted=True),
         anchor_xy=tuple(float(v) for v in layout.anchor.center),
-        fixed_yaw=yaw,
+        close_axis=close_axis,
     )
 
 
@@ -192,4 +198,4 @@ def plan_ring_transfer(layout, *, motion: str = "transfer"):
     return phases, plan
 
 
-__all__ = ["GraspPhase", "HOOK_BANDS", "LIFT_BANDS", "MOTIONS", "NEAR_BAND", "carry_phase", "off_phase", "on_phase", "plan_ring_transfer"]
+__all__ = ["GraspPhase", "HOOK_BANDS", "MOTIONS", "NEAR_BAND", "carry_phase", "off_phase", "on_phase", "plan_ring_transfer"]

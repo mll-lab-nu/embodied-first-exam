@@ -11,9 +11,10 @@ the task; it answers whether the task can exist:
     stretch   hooked open on two bands, the far cap is swung  winding A=1, B=1,
               round A, carried over B and put down            loop stays on B
     transfer  the near cap is lifted over A's top and let go  winding A=0, B=1
-    carry     (independent of the two above) the loop is       winding A=0, B=1
-              hooked next to A, lifted, carried hanging and
-              lassoed onto B from the side
+    carry     (independent of the two above) the near cap is   winding A=0, B=1
+              PINCHED, the loop lifted over A, carried hanging
+              and lassoed onto B from the side; reads how wide
+              the hanging loop's bottom U is (`u_width`)
 
 Each test runs the ones before it and stops at the first failure. Verdicts are
 enumerated, not booleans: `ok / penetrated / slipped_off_target / stayed_on_anchor
@@ -73,7 +74,6 @@ def main(cfg: DictConfig) -> None:
     from topogym.tasks.routing import _ring_transfer_geometry as geo
     from topogym.tasks.routing.ring_transfer import (
         HOOK_BANDS,
-        LIFT_BANDS,
         NEAR_BAND,
         RingTransferLayout,
         RingTransferSceneBuilder,
@@ -265,34 +265,42 @@ def main(cfg: DictConfig) -> None:
             return
 
         if str(cfg.run.test) == "carry":
-            # --- carry: hook next to A, lift, carry hanging, lasso B ---------------
-            for name in LIFT_BANDS:
-                built.bands[name].attach()
-            for name in LIFT_BANDS:
-                targets[name] = built.bands[name].band_center()
-            start_xy = 0.5 * (layout.to_task(built.bands[LIFT_BANDS[0]].band_center()) + layout.to_task(built.bands[LIFT_BANDS[1]].band_center()))
+            # --- carry: PINCH the near cap, lift over A, carry hanging, lasso B ---
+            near = built.bands[NEAR_BAND]
+            near.attach()
+            targets[NEAR_BAND] = near.band_center()
+            start_xy = layout.to_task(near.band_center())[:2]
             path_c = layout.carry_path(start_xy=start_xy)
             heading = target.center - anchor.center
             across_c = np.array([-heading[1], heading[0], 0.0]) / float(np.linalg.norm(heading))
-            half_c = 0.5 * float(task.carry.spread)
+            need_u = 2.0 * (target.radius + 2.0 * ring.tube_radius + float(fem.contact_d_hat))
             print(
                 "ring_transfer_spike carry path (task mm): "
                 + " -> ".join(f"{label}{np.round(point * 1000).astype(int).tolist()}" for label, point in path_c),
                 flush=True,
             )
-            # Which band is on which side of the finger axis, from where they ARE
-            # (band names follow the loop's own axis, not the A->B heading;
-            # assigning by name drove them across each other on 2026-08-25).
-            sides = {}
-            for name in LIFT_BANDS:
-                centre = layout.to_task(built.bands[name].band_center())
-                sides[name] = 1.0 if float(np.dot(centre - np.array([start_xy[0], start_xy[1], 0.0]), across_c)) >= 0.0 else -1.0
+
+            def hang_reading(label: str) -> None:
+                """How the pinched loop hangs: depth below the band and the width of
+                its bottom U across the push direction. The width decides whether
+                the lasso can work at all (need >= 2(r_post + 2 r_tube + d_hat))."""
+
+                nodes = built.nodes()
+                low = nodes[nodes[:, 2] <= nodes[:, 2].min() + 0.03]
+                width = float(np.ptp(low @ across_c))
+                depth = float(layout.to_task(near.band_center())[2] - nodes[:, 2].min())
+                print(
+                    f"ring_transfer_spike carry:{label} hang_depth={depth * 1000:.1f}mm u_width={width * 1000:.1f}mm "
+                    f"(need >= {need_u * 1000:.1f}) -- {'ok' if width >= need_u else 'U TOO NARROW: fall back to the internal-grasp hook'}",
+                    flush=True,
+                )
+
             for label, point in path_c[1:]:
-                goals = {name: point + sides[name] * half_c * across_c for name in LIFT_BANDS}
-                drive(LIFT_BANDS, goals, f"carry:{label}")
-            for name in LIFT_BANDS:
-                built.bands[name].release()
-                targets.pop(name, None)
+                drive((NEAR_BAND,), {NEAR_BAND: point}, f"carry:{label}")
+                if label in ("lift", "travel", "approach"):
+                    hang_reading(label)
+            near.release()
+            targets.pop(NEAR_BAND, None)
             reading = settle(int(task.transfer.release_settle_steps), "carry:release")
             want_goal = {name: (1 if name == target.name else 0) for name in posts}
             code = verdict("carry", reading, want=want_goal)

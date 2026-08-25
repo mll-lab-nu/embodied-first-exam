@@ -15,7 +15,10 @@ to a doubled strand and cannot be put around anything -- the strands pass B
 version). So the stretch phase HOOKS the far cap over both open fingers: two
 follow bands at the cap's shoulders, `grasp.spread` apart, hold the cap open
 wider than B. The lift-off phase pinches the near cap where it hugs A and
-carries it over A's top. `_ring_transfer_geometry.py` derives every number and
+carries it over A's top. The default `carry` route (2026-08-25) is a single
+PINCH of the near cap: the clamp holds ~20 mm of rope straight, the rope leaves
+it horizontally and only then bends down, so the hanging loop stays open wide
+enough to lasso B from the side. `_ring_transfer_geometry.py` derives every number and
 `tests/check_ring_transfer_geometry.py` gates the layout without a GPU.
 
 Posts are a list and the initial / goal enclosures are subsets (`ring.enclosure`,
@@ -58,9 +61,8 @@ from topogym.world.rope import (
 )
 from topogym.world.rope_backends import rope_backend
 
-HOOK_BANDS = ("hook_left", "hook_right")
-NEAR_BAND = "near"
-LIFT_BANDS = ("lift_left", "lift_right")  # carry oracle: fingers next to the anchor
+HOOK_BANDS = ("hook_left", "hook_right")  # transfer route: fingers spread inside the far cap
+NEAR_BAND = "near"  # carry route (pinch) and transfer's lift-off: the near cap apex
 
 
 @dataclass
@@ -107,13 +109,14 @@ class RingTransferLayout:
     def near_cap_point(self) -> np.ndarray:
         return geo.near_cap_point(self.spawn, self.ring, self.anchor)
 
-    def lift_points(self) -> tuple[np.ndarray, np.ndarray]:
-        return geo.lift_points(self.spawn, self.ring, self.anchor, float(self.task_cfg.grasp.spread))
+    def strand_tangent(self, point) -> np.ndarray:
+        """Unit xy tangent of the spawn loop nearest `point` (sets the pinch yaw)."""
+
+        return geo.strand_tangent(self.spawn, point)
 
     def carry_path(self, start_xy=None) -> list[tuple[str, np.ndarray]]:
         if start_xy is None:
-            left, right = self.lift_points()
-            start_xy = 0.5 * (left + right)
+            start_xy = self.near_cap_point()
         return geo.carry_path(
             ring=self.ring,
             anchor=self.anchor,
@@ -252,9 +255,6 @@ class RingTransferSceneBuilder:
             HOOK_BANDS[1]: FEMRopeAttachment(entity, layout.to_world(right), band_radius, strength=strength),
             NEAR_BAND: FEMRopeAttachment(entity, layout.to_world(layout.near_cap_point()), band_radius, strength=strength),
         }
-        lift_left, lift_right = layout.lift_points()
-        bands[LIFT_BANDS[0]] = FEMRopeAttachment(entity, layout.to_world(lift_left), band_radius, strength=strength)
-        bands[LIFT_BANDS[1]] = FEMRopeAttachment(entity, layout.to_world(lift_right), band_radius, strength=strength)
 
         cameras = dict(tabletop.cameras)
         for cam_name, cam in (extra_cameras or {}).items():
@@ -417,7 +417,6 @@ class RingTransferSceneBuilder:
 
 __all__ = [
     "HOOK_BANDS",
-    "LIFT_BANDS",
     "NEAR_BAND",
     "RingTransferLayout",
     "RingTransferScene",
