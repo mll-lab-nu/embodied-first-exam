@@ -65,6 +65,26 @@ class ClothFoldWatch:
     _previous: np.ndarray = field(init=False)
     worst_step_disp: float = field(default=0.0, init=False)
     worst_speed: float = field(default=0.0, init=False)
+    #: Census of WHERE the material is, sampled rather than every step. The
+    #: task metrics are all summaries -- a span, a grid occupancy, a layer count
+    #: -- and every one of them can read healthy while the sheet is somewhere
+    #: else entirely. Measured 2026-08-25 on `cloth_unroll`: `spread_mm=263.5`
+    #: over `covered_cells=522` with `gates=all_pass`, and the oblique camera
+    #: showed no band on the table at all.
+    #:
+    #: `worst_gap` is a TEAR detector that survives remeshing. `stretch_*` needs
+    #: vertex correspondence and Genesis does not preserve it (control 595 ->
+    #: sim 2283), which is why those read nan on every run. Nearest-neighbour
+    #: spacing needs no correspondence: at rest it is the mesh spacing, and a
+    #: sheet pulled thin has neighbours further apart wherever it thinned.
+    census_every: int = 50
+    rest_spacing: float | None = None
+    n_particles: int = field(default=0, init=False)
+    n_far: int = field(default=0, init=False)
+    bbox_lo: tuple[float, float, float] = field(default=(0.0, 0.0, 0.0), init=False)
+    bbox_hi: tuple[float, float, float] = field(default=(0.0, 0.0, 0.0), init=False)
+    worst_gap: float = field(default=0.0, init=False)
+    worst_gap_ratio: float = field(default=0.0, init=False)
     lowest_z: float = field(default=float("inf"), init=False)
     #: Where and when the deepest particle was, recorded alongside `lowest_z`.
     #: A single worst-case number cannot say whether material dips as it lands,
@@ -121,6 +141,33 @@ class ClothFoldWatch:
         ) * float(self.dt)
         return float(self.disp_ratio) * free_fall
 
+    def _census(self, current: np.ndarray) -> None:
+        self.n_particles = int(current.shape[0])
+        # The PBD solver parks particles that leave its domain at a far corner
+        # rather than clamping them per axis, so material that escapes does NOT
+        # lower `lowest_z` -- it vanishes from every metric while still counting
+        # toward the totals. 10 m is far outside any tabletop scene.
+        far = np.linalg.norm(current, axis=1) > 10.0
+        self.n_far = int(np.count_nonzero(far))
+        keep = current[~far]
+        if keep.size == 0:
+            return
+        self.bbox_lo = tuple(float(v) for v in keep.min(axis=0))
+        self.bbox_hi = tuple(float(v) for v in keep.max(axis=0))
+        # Nearest-neighbour spacing, on a subsample so the cost stays flat.
+        # O(m^2) on m=400 is 160k distances, which is nothing next to a step.
+        if keep.shape[0] > 400:
+            idx = np.linspace(0, keep.shape[0] - 1, 400).astype(int)
+            sample = keep[idx]
+        else:
+            sample = keep
+        d = np.linalg.norm(sample[:, None, :] - sample[None, :, :], axis=2)
+        np.fill_diagonal(d, np.inf)
+        gap = float(d.min(axis=1).max())
+        self.worst_gap = max(self.worst_gap, gap)
+        if self.rest_spacing:
+            self.worst_gap_ratio = self.worst_gap / float(self.rest_spacing)
+
     def check(self, step: int) -> str | None:
         current = probe_particles(self.cloth)
         if not np.all(np.isfinite(current)):
@@ -141,6 +188,8 @@ class ClothFoldWatch:
         under = int(np.count_nonzero(current[:, 2] < float(self.table_z)))
         self.below_count = max(self.below_count, under)
         self.steps_seen += 1
+        if self.census_every and self.steps_seen % int(self.census_every) == 1:
+            self._census(current)
         if under:
             self.below_steps += 1
             self.below_particle_steps += under
@@ -181,6 +230,13 @@ class ClothFoldWatch:
                 else f"carry_stretch_mean={self.worst_stretch_mean:.3f} "
                 f"carry_stretch_max={self.worst_stretch_max:.3f} "
             )
+            + f"particles={self.n_particles} parked_outside={self.n_far} "
+            f"bbox_x=[{self.bbox_lo[0]:+.3f},{self.bbox_hi[0]:+.3f}] "
+            f"bbox_y=[{self.bbox_lo[1]:+.3f},{self.bbox_hi[1]:+.3f}] "
+            f"bbox_z=[{self.bbox_lo[2]:+.3f},{self.bbox_hi[2]:+.3f}] "
+            f"worst_gap_mm={self.worst_gap * 1e3:.1f}"
+            + ("" if not self.rest_spacing else f" worst_gap_ratio={self.worst_gap_ratio:.2f}")
+            + " "
             + f"lowest_z_above_table={self.lowest_z:+.5f} "
             f"lowest_at=({self.lowest_xy[0]:+.3f},{self.lowest_xy[1]:+.3f})"
             f"@{self.lowest_step}/{self.lowest_phase or '?'} "

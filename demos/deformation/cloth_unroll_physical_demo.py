@@ -283,6 +283,9 @@ def main(cfg: DictConfig) -> None:
         watch = ClothFoldWatch(
             cloth=band.cloth,
             table_z=layout.table_z,
+            # Rest spacing turns `worst_gap` into a ratio: 1.0 is the sheet at rest,
+            # and a torn or thinned region shows up as a value above it.
+            rest_spacing=float(cfg.task.cloth.mesh.spacing),
             dt=float(cfg.env.sim.dt),
             # What the material may honestly fall from. Nothing is lifted -- the
             # pull stays in the plane -- so the bar's own height is the budget,
