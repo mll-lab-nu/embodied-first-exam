@@ -125,6 +125,22 @@ class FrankaPositionIKController:
                 "max_solver_iters": int(budget("max_solver_iters", 50)),
                 "max_step_size": float(budget("max_step_size", 0.15)),
             }
+            # Echoed once, because a sweep that returns identical readings has
+            # two explanations -- the parameter does nothing, or the override
+            # never arrived -- and the numbers alone cannot separate them. The
+            # same trap cost a run on `cloth_unpleat`'s material sweep, whose
+            # spike prints its material line for exactly this reason. Measured
+            # 2026-08-24: max_solver_iters 50/200/800 gave byte-identical
+            # readings, which is why this line exists.
+            if not getattr(self, "_ik_budget_logged", False):
+                self._ik_budget_logged = True
+                print(
+                    f"franka ik_budget max_samples={ik_kwargs['max_samples']} "
+                    f"max_solver_iters={ik_kwargs['max_solver_iters']} "
+                    f"max_step_size={ik_kwargs['max_step_size']} "
+                    f"ee_quat_commanded={quat is not None}",
+                    flush=True,
+                )
         qpos = _as_numpy(
             self.robot.inverse_kinematics(
                 link=self.ee_link,
