@@ -66,7 +66,9 @@ posts:
     post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
     color: [0.20, 0.45, 0.95]
 
-# 闭合弹性环。平面高度不配置：恒等于 rope.radius（平铺时管心离桌面一个半径）。
+# 闭合弹性环。出生高度不配置：管心 = rope.radius + contact_d_hat + 1mm，即管皮在势垒外 1mm，
+# 沉降时自己落到桌面。直接出生在 rope.radius（管皮贴桌）会落在势垒内，第一步被顶起约 d_hat
+# （2026-08-24 观察到的开局「向上跳一下」）。
 ring:
   # 周长 0.53：
   #   - 出生跑道形从 A 心伸出 (0.53 - 2 pi 0.050)/2 + 0.050 = 0.158，远端帽到 x=-0.218，

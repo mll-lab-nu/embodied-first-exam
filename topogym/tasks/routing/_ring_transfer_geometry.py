@@ -7,8 +7,8 @@ GPU, and `RingTransferLayout` calls the same functions so the scene and the gate
 cannot disagree.
 
 Frame: task coordinates (origin at the table centre, z=0 on the tabletop). The
-loop lies flat, so its centerline plane is one tube radius above the table --
-derived, never configured.
+loop lies flat; it spawns one tube radius plus `contact_d_hat` + 1 mm above the
+table (outside the barrier) and settles onto it -- derived, never configured.
 
 The numbers that decide whether the task can be done with ONE gripper come from
 the stretch phase, and they are worth stating once because they are not obvious.
@@ -84,6 +84,7 @@ class RingSpec:
     enclosure: tuple[str, ...]  # posts the loop is spawned around
     segment_length: float
     radial_segments: int
+    spawn_clearance: float  # skin-to-table gap at spawn: contact_d_hat + margin
 
 
 def posts_from_config(posts_cfg) -> dict[str, PostSpec]:
@@ -122,6 +123,7 @@ def ring_from_config(ring_cfg, rope_cfg) -> RingSpec:
         enclosure=tuple(str(name) for name in ring_cfg.enclosure),
         segment_length=float(rope_cfg.mesh.segment_length),
         radial_segments=int(rope_cfg.mesh.radial_segments),
+        spawn_clearance=float(rope_cfg.fem.contact_d_hat) + 0.001,
     )
 
 
@@ -140,7 +142,12 @@ def spawn_centerline(ring: RingSpec, posts: dict[str, PostSpec]) -> np.ndarray:
             "generated so far; multi-post spawns are the reserved variant axis."
         )
     post = posts[ring.enclosure[0]]
-    peg = np.array([post.center[0], post.center[1], ring.tube_radius], dtype=float)
+    # Spawn just OUTSIDE the contact barrier, not resting on the table: a tube
+    # whose skin starts within `contact_d_hat` of the table is inside the barrier
+    # at step 0 and gets shoved upward on the first solve (read as a visible hop;
+    # settle logs showed the centerline rising from 4.0 to 6.4 mm). From here it
+    # drops the last millimetres under gravity instead.
+    peg = np.array([post.center[0], post.center[1], ring.tube_radius + ring.spawn_clearance], dtype=float)
     along = np.array([ring.long_axis[0], ring.long_axis[1], 0.0], dtype=float)
     across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0], dtype=float)
     return pegged_band_centerline(

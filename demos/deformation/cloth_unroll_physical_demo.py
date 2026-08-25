@@ -91,6 +91,9 @@ def make_primitive(cfg, *, skip_initial_open: bool) -> ClothLinkAttachDragPrimit
             else float(cfg.task.grasp.attach_z_band)
         ),
         skip_initial_open=skip_initial_open,
+        attach_single_particle=bool(
+            cfg.task.grasp.get("attach_single_particle", False)
+        ),
         hold_bound_height=bool(
             cfg.task.grasp.get("hold_bound_height", False)
         ),

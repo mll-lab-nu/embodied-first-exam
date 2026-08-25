@@ -238,6 +238,11 @@ grasp:
   # takes those particles out of collision, so nothing else keeps them above
   # the table. Off until the A/B is measured.
   hold_bound_height: false
+  # 绑定是刚性的、会把粒子移出碰撞求解，于是绑定瞬间的竖直状态被永久冻结：
+  # 那一刻在桌面以下的粒子，整个 episode 都在桌面以下。只绑一个粒子把这件事
+  # 封顶到一个粒子，其余留在求解器里可以被桌面顶回来。代价是拖拽权威变弱，
+  # 可能要下调 physical.pull_step_m；看 follow_mm。默认关，等 A/B。
+  attach_single_particle: false
   # 「静置之后这还算不算一个褶皱」的护栏。动作开始之前检查，不过就如实失败。
   #
   # 2026-08-22 的教训：褶皱是画进网格再放手的，动作开始之前它自己就会往下沉。

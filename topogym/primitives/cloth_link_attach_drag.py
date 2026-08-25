@@ -77,7 +77,12 @@ def _quat_angle(a, b) -> float:
 
 
 def attached_indices(
-    nodes: np.ndarray, center, radius: float, *, z_band: float | None = None
+    nodes: np.ndarray,
+    center,
+    radius: float,
+    *,
+    z_band: float | None = None,
+    single: bool = False,
 ) -> np.ndarray:
     """Particles within ``radius`` of the grasp point, in the plane.
 
@@ -94,6 +99,19 @@ def attached_indices(
 
     ``None`` (the default) keeps the planar-only behaviour a single flat sheet
     wants.
+
+    ``single`` binds ONE particle instead of the disc, which is how SoftGym holds
+    cloth. A link binding is rigid and takes its particles OUT of collision, so
+    every bound particle is frozen at the height it had at bind time and can
+    never recover -- measured 2026-08-24 on `cloth_unroll` at 20 mm clearance,
+    the close pressed the patch centre to 1.6 mm below the table and the bind
+    held 21 particles there for all eight pull segments (7205 particle-steps,
+    `lowest_at` x = the grasp x exactly). One particle caps that at one particle,
+    and leaves every neighbour in the solver where the table can push it back.
+
+    The particle chosen is the HIGHEST in the disc, ties broken by planar
+    distance. Picking the nearest instead would pick the one directly under the
+    closing fingers, which is the one most likely to be pressed under.
     """
 
     nodes = np.asarray(nodes, dtype=float)
@@ -102,6 +120,11 @@ def attached_indices(
     if z_band is not None:
         within &= np.abs(nodes[:, 2] - float(center[2])) <= float(z_band)
     indices = np.flatnonzero(within)
+    if single and indices.size:
+        top = nodes[indices, 2]
+        keep = indices[top >= top.max() - 1e-9]
+        planar = np.linalg.norm(nodes[keep, :2] - center[:2], axis=1)
+        indices = keep[[int(np.argmin(planar))]]
     if indices.size == 0:
         raise ValueError(
             f"attach_radius={radius} z_band={z_band} caught no particles at "
@@ -197,6 +220,19 @@ class ClothLinkAttachDragPrimitive:
     #: clearances. Closing first shrinks the pads' footprint over the cloth from
     #: +/-40 mm to +/-`grasp_qpos`, and moves the close itself into clear air.
     close_before_descend: bool = False
+    #: Bind ONE particle instead of the whole disc, the way SoftGym does.
+    #:
+    #: The bind is rigid and removes its particles from collision, so it freezes
+    #: their vertical state permanently: anything pressed under the table at the
+    #: bind instant stays there for the rest of the episode. Fewer bound
+    #: particles is a cap on how much can be frozen wrong, and everything left
+    #: unbound stays in the solver where the table can push it back up.
+    #:
+    #: Costs drag authority. One kinematic particle has to move the sheet through
+    #: PBD's distance constraints, which propagate about one edge per iteration,
+    #: so the pull may need a smaller `physical.pull_step_m` -- the same limit
+    #: that took `cloth_unroll` from 150 to 30 mm/s. Watch `follow_mm`.
+    attach_single_particle: bool = False
     #: Servo the commanded height so the HELD material stays at the height it
     #: had when the link took it, instead of riding the link's own z error.
     #:
@@ -216,6 +252,14 @@ class ClothLinkAttachDragPrimitive:
     #: The loop closes on the MATERIAL, not the arm, so it is indifferent to why
     #: the arm falls short -- IK budget, wrist constraint or workspace limit all
     #: correct the same way. One waypoint of lag: segment 1 is uncorrected.
+    #:
+    #: **Measured 2026-08-24: no effect, and the reason matters.** `held_dz_mm`
+    #: read +/-0.0 for all eight segments with the servo OFF, so the held patch
+    #: never dropped at all -- the bind froze the arm's 8.5 mm shortfall into the
+    #: offset and it cancels. Totals were 7205 vs 7195 particle-steps, inside
+    #: run-to-run noise. This servo defends the bind height; the bind height was
+    #: already wrong. Left in place, default off, so the result is not re-derived.
+    #: See `attach_single_particle` for what the evidence pointed at instead.
     hold_bound_height: bool = False
     #: Ceiling on the servo's accumulated correction, so a saturated arm cannot
     #: wind it up without bound. Two clearances' worth of the measured shortfall.
@@ -256,6 +300,7 @@ class ClothLinkAttachDragPrimitive:
             grasp_point,
             float(self.attach_radius),
             z_band=(None if self.attach_z_band is None else float(self.attach_z_band)),
+            single=bool(self.attach_single_particle),
         )
         pad_z = float(nodes[indices, 2].max()) + float(self.touch_clearance)
         touch_hand = self._hand_for_pad(grasp_point, pad_z)
