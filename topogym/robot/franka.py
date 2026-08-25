@@ -97,12 +97,33 @@ class FrankaPositionIKController:
         target_quat = self.default_ee_quat if quat is None else _array(quat)
         ik_kwargs = {}
         if continuous_ik:
+            # Seeded from the current pose, so a swept arc carries its elbow
+            # configuration instead of re-solving from scratch each step.
+            #
+            # The three budgets are the SOLVER's, and they are what decides
+            # whether the returned joints actually put the hand on the target.
+            # Measured 2026-08-24 on `cloth_unroll`: raising the commanded height
+            # by 4 mm left the hand 4.5 mm BELOW it, while the controller tracked
+            # the returned joints to within half a degree -- the same half-degree
+            # it managed at the lower pose, where the hand arrived to 1.0 mm. The
+            # controller is not the problem; the solve is stopping short.
+            #
+            # They read from config now (same defaults) so that can be swept
+            # without editing a file every physical demo in the repo shares.
+            ik_cfg = getattr(self.cfg, "ik", None)
+
+            def budget(name: str, fallback):
+                if ik_cfg is None:
+                    return fallback
+                value = getattr(ik_cfg, name, None)
+                return fallback if value is None else value
+
             ik_kwargs = {
                 "init_qpos": self.robot.get_qpos(),
                 "dofs_idx_local": self.arm_dofs,
-                "max_samples": 1,
-                "max_solver_iters": 50,
-                "max_step_size": 0.15,
+                "max_samples": int(budget("max_samples", 1)),
+                "max_solver_iters": int(budget("max_solver_iters", 50)),
+                "max_step_size": float(budget("max_step_size", 0.15)),
             }
         qpos = _as_numpy(
             self.robot.inverse_kinematics(

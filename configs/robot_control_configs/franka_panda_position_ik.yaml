@@ -31,6 +31,19 @@ controller:
 ik:
   enabled: true
   default_ee_quat: [0.0, 1.0, 0.0, 0.0]
+  # ---------------------------------------------- 求解预算（`continuous_ik` 路径）
+  # 全仓所有物理 demo 共用这条路径，2026-08-24 之前这三项写死在
+  # `topogym/robot/franka.py` 里，从来没人调过。
+  #
+  # 实测：把命令位姿抬高 4mm，手只上去 0.2mm（hand_gap 的 dz 从 −1.0 变成 −4.5mm），
+  # 而同一时刻控制器把 IK 给的关节角追到了 0.5° 以内 —— 两档一样。
+  # 也就是**控制器没问题，是求解停早了**：返回的关节角正解不等于目标位姿。
+  #
+  # 留原值以保持所有已标定任务的行为不变；扫参用点路径覆盖：
+  #   robot_control.ik.max_solver_iters=200
+  max_samples: 1
+  max_solver_iters: 50
+  max_step_size: 0.15
 
 gripper:
   open_qpos: 0.04
