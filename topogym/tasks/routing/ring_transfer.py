@@ -336,6 +336,7 @@ class RingTransferSceneBuilder:
         radius, height = float(post_cfg.radius), float(post_cfg.height)
         xy = (float(post_cfg.pos[0]), float(post_cfg.pos[1]))
         surface = materials.plastic("fixture", tuple(post_cfg.color))
+        trim = materials.plastic("fixture", tuple(getattr(post_cfg, "trim_color", post_cfg.color)))
         shaft = scene.add_entity(
             gs.morphs.Cylinder(
                 pos=tuple(self.layout.to_world((xy[0], xy[1], 0.5 * height))),
@@ -364,7 +365,7 @@ class RingTransferSceneBuilder:
                 file_meshes_are_zup=True,
             ),
             material=gs.materials.Rigid(rho=700.0, coup_type="ipc_only"),
-            surface=surface,
+            surface=trim,
             name=f"{name}_base",
         )
         manifest.add(f"{name}_base", base)
@@ -380,7 +381,7 @@ class RingTransferSceneBuilder:
                 fixed=True,
                 collision=True,
             ),
-            surface=surface,
+            surface=trim,
             name=f"{name}_head",
             **self._static(),
         )

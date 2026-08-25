@@ -15,7 +15,7 @@ defaults:
 #   transfer : near band 捏住 A 侧帽，抬过 A 顶、向 B 平移、释放。判 A=0、B=1。
 #   carry    : （独立于 stretch/transfer）lift band 在 A 旁钩起整环、悬着搬到 B 近侧、
 #              侧向推过 B、放下。判 A=0、B=1。参数在 task.carry。
-test: settle
+test: carry
 
 # 沉降上限步数，以及收敛判据取 task.success.settle_tol。
 settle_steps: 400
@@ -25,13 +25,13 @@ include_robot: false
 
 # 特写相机（task 系 pos/lookat），在 env.cameras 之外加一台，名字不能与之重名。
 # 录它写 recording.camera=ring，录全部写 recording.camera=all。
-# 俯视偏斜，两根柱与环全在画面内（环远端到 x=-0.218，落点到 x=0.116，平转最远 y=0.16）。
+# 俯视偏斜，两根柱与环全在画面内（环远端到 x=-0.204，推过 B 到 x=0.18，抬起高度 0.25）。
 camera:
   name: ring
   res: [768, 768]
-  pos: [-0.050, -0.380, 0.420]
-  lookat: [-0.040, 0.030, 0.010]
-  fov: 50
+  pos: [0.000, -0.450, 0.450]
+  lookat: [0.000, 0.000, 0.060]
+  fov: 55
 
 # 失败处置阶梯（按顺序试，一次只动一项；每项都是 task.* 的点路径覆盖）：
 #   stretch 环从 B 滑脱          -> task.rope.fem.friction_mu 升到 0.5；再不行加柱高 task.posts.1.height

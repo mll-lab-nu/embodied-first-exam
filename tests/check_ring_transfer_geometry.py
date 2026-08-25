@@ -46,6 +46,7 @@ from topogym.tasks.routing import _ring_transfer_geometry as geo  # noqa: E402
 from topogym.world.rope import check_self_contact_clearance  # noqa: E402
 
 TASK_CONFIG = REPO / "configs/task_configs/ring_transfer_topogym_tabletop_v1.yaml"
+RUN_CONFIG = REPO / "configs/run_configs/ring_transfer.yaml"
 PREFABS = REPO / "configs/prefab_configs/topogym_prefabs_v1.yaml"
 COMMON = REPO / "configs/common_configs/manipulation_space_tabletop_v1.yaml"
 
@@ -82,6 +83,12 @@ def edge_multiplicities(faces: np.ndarray) -> Counter:
 def main() -> int:
     task, common = load_task_cfg()
     failures: list[str] = []
+    # The transfer route (stretch trapezoid over the anchor) only works for close
+    # posts; it is gated hard only when it is the demo's default motion, and
+    # otherwise reported as available / not available.
+    default_motion = str(OmegaConf.load(RUN_CONFIG).motion)
+    transfer_failures: list[str] = []
+    transfer_fail = transfer_failures if default_motion != "transfer" else failures
     target_cfg_base = [p for p in task.posts if str(p.name) == str(task.goal.enclosure[0])][0].base_height
 
     posts = geo.posts_from_config(task.posts)
@@ -156,7 +163,7 @@ def main() -> int:
         f"{'ok' if have >= need else 'FAIL'}"
     )
     if have < need:
-        failures.append("stretch trapezoid does not admit the target post")
+        transfer_fail.append("stretch trapezoid does not admit the target post")
     pinched = geo.strand_separation_at(
         ring=ring, anchor=anchor, landing_xy=landing, held_half_width=ring.tube_radius, query_xy=target.center
     )
@@ -190,7 +197,7 @@ def main() -> int:
     carry_z = float(task.transfer.carry_z)
     print(f"carry height   carry_z {carry_z * 1000:.1f} mm >= floor {floor * 1000:.1f} mm  {'ok' if carry_z >= floor else 'FAIL'}")
     if carry_z < floor:
-        failures.append("carry_z below carry_height_floor")
+        transfer_fail.append("carry_z below carry_height_floor")
 
     # --- the far-cap path, sampled --------------------------------------------
     path = geo.far_cap_path(ring=ring, anchor=anchor, target=target, spawn_line=spawn, transfer_cfg=task.transfer)
@@ -231,20 +238,20 @@ def main() -> int:
             f"(want >= {want * 1000:.1f}) {'ok' if ok else 'FAIL'}"
         )
         if not ok:
-            failures.append(f"strands touch post {target.name} during leg {label!r}")
+            transfer_fail.append(f"strands touch post {target.name} during leg {label!r}")
         for held in (previous, point):
             if not (
                 float(workspace.x[0]) + WORKSPACE_MARGIN <= held[0] <= float(workspace.x[1]) - WORKSPACE_MARGIN
                 and float(workspace.y[0]) + WORKSPACE_MARGIN <= held[1] <= float(workspace.y[1]) - WORKSPACE_MARGIN
                 and held[2] <= float(workspace.z[1])
             ):
-                failures.append(f"held point {np.round(held, 3).tolist()} leaves the workspace at leg {label!r}")
+                transfer_fail.append(f"held point {np.round(held, 3).tolist()} leaves the workspace at leg {label!r}")
         previous = point
     print(f"stretch ratio  worst over rise+carry {worst_stretch:.3f} (cap {MAX_STRETCH_RATIO}); slack legs: {slack_legs or 'none'}")
     if worst_stretch > MAX_STRETCH_RATIO:
-        failures.append(f"stretch ratio {worst_stretch:.3f} exceeds {MAX_STRETCH_RATIO}")
+        transfer_fail.append(f"stretch ratio {worst_stretch:.3f} exceeds {MAX_STRETCH_RATIO}")
     if slack_legs:
-        failures.append(f"loop goes slack during {slack_legs}: strand sag over post B is not modelled")
+        transfer_fail.append(f"loop goes slack during {slack_legs}: strand sag over post B is not modelled")
     at_table = geo.stretched_length(
         ring=ring, anchor=anchor, held_xyz=path[-1][1], held_half_width=half
     ) / ring.perimeter
@@ -327,6 +334,12 @@ def main() -> int:
         if overhang < 2 * ring.tube_radius:
             failures.append(f"post {post.name} head overhang smaller than the tube diameter: it will not retain the loop")
 
+    print()
+    print(
+        f"transfer route  {'available' if not transfer_failures else 'NOT available for this layout'}"
+        f" (default motion: {default_motion})"
+        + ("".join(f"\n  - {item}" for item in transfer_failures) if transfer_failures else "")
+    )
     print()
     if failures:
         print("FAIL")

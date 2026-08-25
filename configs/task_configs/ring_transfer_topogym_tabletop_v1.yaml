@@ -30,67 +30,63 @@ board:
 
 # 立柱列表。每项 name / pos(xy, task 系) / radius / height。
 #
-# 半径 0.012：由拉伸梯形决定。两股绳在 B 处的间距要 >= 2(r_post + 2 r_tube + d_hat)
-#   = 2(0.012 + 0.008 + 0.002) = 0.044；A 处 2(0.012+0.004)=0.032、指张开 0.070，柱距
-#   0.140、落点 x=0.116 时 B 处间距 0.032 + 0.038 x (0.140/0.176) = 0.062，余量 18mm。
-#   rope_winding 的 0.020 柱半径同式要 0.060，够不到，所以柱不能再粗。
-# 高度 0.080：环抬不过柱顶就出不去，这是 gateway 的全部含义；不绕柱所以不需要
-#   rope_winding 的 0.109。越高 transfer 的 carry_z 下限越高；carry 路线要把整环抬到
-#   挡头顶以上（指尖 = 0.086 + 0.004 + 0.010 + 悬挂深度 0.195 = 0.295，手 0.398 <= 工作区
-#   0.40），0.085 会超出，故取 0.080。
-# 挡头 head_radius 0.022 / head_height 0.006：**碰撞体**，与 cable_routing 的装饰顶盖不同。
-#   2026-08-24 实测无挡头时：远端帽抬到 0.155 后拉线与桌面夹角约 40 度，A 处的缠绕
-#   在 tan(角) > mu=0.3（17 度）时沿柱身上滑，平移段第 60 步环脱离 A 顶，之后什么也
-#   没套住。挡头外伸 0.010 >= 管径 0.008 才挡得住；gateway 从柱身顶改为挡头顶。
-# 柱距 0.140、A 在 -0.060：2026-08-24 用户要求场景占桌面更大面积、便于看清；
-#   上限由远端帽落在工作区 x >= -0.25 + 余量决定（远端帽在 A.x - 出生伸出量）。
-#   柱越远拉伸越大（平移段要绷紧），周长随之加长。
+# 2026-08-25 第二版（用户看过 demo 后：环再小、柱距再远、柱子更拟真、整体放大）。
+# 默认 oracle 是 carry（搬运套索），它不拉伸、与柱距无关，所以下面的取值不再受
+# transfer 拉伸梯形的约束；transfer 在这组几何下不可用（离线门只报告，不拦截）。
+#
+# 半径 0.016、高 0.100：工业走线柱的比例（cable_routing 的 0.012 x 0.10 量级），比第一版
+#   粗高各三成。carry 要把整环抬到挡头顶以上：指尖 = 0.108 + 0.004 + 0.010 + 悬挂深度
+#   (0.40 - 0.14)/2 = 0.130 → 0.252，手 0.355 <= 工作区 0.40。
+# 挡头 head_radius 0.026 / head_height 0.008：**碰撞体**（外伸 0.010 >= 管径 0.008）。
+#   2026-08-24 实测无挡头时环被拔滑越顶；gateway = 挡头顶。
+# 底座 base_radius 0.030 / base_height 0.016：本任务不复用 prefab 的 0.016/0.010——
+#   柱更粗，底座按比例放大，视觉上像螺栓固定的走线柱脚。
+# 柱距 0.220（A -0.100、B +0.120）：远端帽在 A.x - 出生伸出量 0.104 = -0.204 >= -0.25+0.02；
+#   推过 B 后的手位 0.180 <= 0.25 - 0.02。
+# 颜色：深灰金属色柱身、黑色挡头与底座——去掉第一版的橙/蓝。
 # 底座与柱身刻意互嵌（同 cable_routing 走线柱），因此 rope.fem.sanity_check_enable=false。
 posts:
   - name: A
-    pos: [-0.060, 0.000]
-    radius: 0.012
-    height: 0.080
-    head_radius: 0.022
-    head_height: 0.006
-    base_radius: ${prefabs.rope_routing_post.base_radius}
-    base_height: ${prefabs.rope_routing_post.base_height}
-    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
-    color: [1.00, 0.48, 0.00]
+    pos: [-0.100, 0.000]
+    radius: 0.016
+    height: 0.100
+    head_radius: 0.026
+    head_height: 0.008
+    base_radius: 0.030
+    base_height: 0.016
+    post_radial_segments: 32
+    color: [0.42, 0.43, 0.45]
+    trim_color: [0.10, 0.10, 0.11]
   - name: B
-    pos: [0.080, 0.000]
-    radius: 0.012
-    height: 0.080
-    head_radius: 0.022
-    head_height: 0.006
-    base_radius: ${prefabs.rope_routing_post.base_radius}
-    base_height: ${prefabs.rope_routing_post.base_height}
-    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
-    color: [0.20, 0.45, 0.95]
+    pos: [0.120, 0.000]
+    radius: 0.016
+    height: 0.100
+    head_radius: 0.026
+    head_height: 0.008
+    base_radius: 0.030
+    base_height: 0.016
+    post_radial_segments: 32
+    color: [0.42, 0.43, 0.45]
+    trim_color: [0.10, 0.10, 0.11]
 
 # 闭合弹性环。出生高度不配置：管心 = rope.radius + contact_d_hat + 1mm，即管皮在势垒外 1mm，
 # 沉降时自己落到桌面。直接出生在 rope.radius（管皮贴桌）会落在势垒内，第一步被顶起约 d_hat
 # （2026-08-24 观察到的开局「向上跳一下」）。
 ring:
-  # 周长 0.53：
-  #   - 出生跑道形从 A 心伸出 (0.53 - 2 pi 0.050)/2 + 0.050 = 0.158，远端帽到 x=-0.218，
-  #     在工作区 x >= -0.25 内（余量 3cm）且离机械臂底座 (-0.570) 0.35；
-  #   - 搬运越过 B 顶（carry_z=0.155、落点 x=0.116、指张开 0.070）需求约 0.56，拉伸 5~7%；
-  #     平移段全程须绷紧（拉伸比 >= 1），否则绳股下垂、越顶高度无法由直线模型保证 ——
-  #     离线门逐样本检查；
-  #   - 落地后环松弛；围住两柱的最短周长 2x0.140 + 2 pi 0.016 = 0.381。
-  #   环在终态是松的。若要终态绷紧（docx 2.7 的回弹防捷径）需要周长 < 0.381，
-  #   而平移段在该周长下要求 >45% 拉伸 —— 两者冲突，2.7 另行设计，本任务不需要绷紧。
-  perimeter: 0.53
-  # 半环宽 0.050（环宽 0.100）：两指钩住远端帽后张到 grasp.spread=0.070，帽必须比它宽
-  #   （hook_points 的前提）；下限另有 loop_radius >= r_post + r_tube + d_hat
-  #   = 0.018（closed_band_spike 同式）。
-  loop_radius: 0.050
+  # 周长 0.40（第一版 0.53，用户要求环再小）：
+  #   - 出生跑道形从 A 心伸出 (0.40 - 2 pi 0.045)/2 + 0.045 = 0.104，远端帽到 x=-0.204；
+  #   - carry 悬挂深度 (0.40 - 2 x 0.070)/2 = 0.130，决定抬离高度（见 posts 注释）；
+  #   - 围住 B 后松环伸出 0.104，到 x=0.016，离 A 挡头边 0.074 —— 终态不再贴着 A。
+  #   下限：钩住远端帽要 loop_radius > spread/2，且环要套得进柱（见 loop_radius）。
+  perimeter: 0.40
+  # 半环宽 0.045（环宽 0.090）：两指张开 0.070 钩住时帽必须比它宽（hook_points / lift_points
+  #   的前提），再留 10mm；下限另有 loop_radius >= r_post + r_tube + d_hat = 0.022。
+  loop_radius: 0.045
   # 环从出生柱伸出的方向（xy，单位化）。背离 B：朝 B 伸会与 B 相交。
   long_axis: [-1.0, 0.0]
   # 初态围住的柱子集。本轮只支持单元素（多柱出生形是预留变体）。
   enclosure: [A]
-  color: [0.16, 0.16, 0.18]
+  color: [0.12, 0.12, 0.13]
 
 # 目标。instruction 本轮固定一句；enclosure 与 ring.enclosure 的差集推出跨越序列
 # [(B, on), (A, off)]。
@@ -140,7 +136,9 @@ grasp:
   # 夹爪级净空：任一抓取点到任一柱面的最小距离（指半展 0.040 + 余量）。
   post_clearance: 0.050
 
-# oracle 段参数（与 planner 共用；数值推导见 _ring_transfer_geometry.py）。
+# transfer（借 A 撑开梯形）的段参数。**第二版几何（柱距 0.22）下 transfer 不可用**：
+# 越过 B 顶的平移段拉伸比 1.96（上限 1.2），离线门只报告不拦截。保留这一块是为近柱距
+# 变体与对照 motion；主 oracle 见下面的 carry。
 transfer:
   # 段 1a 绕 A 平转：远端帽在此高度沿半径 = 出生伸出量的圆弧绕 A 转，从长轴方向
   # 经 +y 转到 swing_end_deg。0.030 略离桌面，减少拖行摩擦但仍低于柱顶。
@@ -155,7 +153,7 @@ transfer:
   #   0.004 + (0.085 + 0.004 + 0.010 - 0.004) / (0.140 / 0.176) = 0.123，
   # 但平移途中夹持点离 A 更远、B 在拉线上的比例更小，同样的越顶高度要更高；
   # 离线门逐样本量绳股到 B 轴距离，取值以它通过为准。
-  carry_z: 0.155
+  carry_z: 0.200
   carry_margin: 0.010
   # 落点：B 远侧，x = B.x + r_post + r_tube + landing_clearance。
   landing_clearance: 0.020
@@ -176,14 +174,14 @@ transfer:
 # U 底撞上柱身后两股分到柱子两侧（套马索）→ 放低、松手。不借 A 撑开、不拉伸，柱距无关。
 # 与 transfer（借 A 撑开梯形）并列，哪条更稳由 spike 读数定。
 carry:
-  # 两指张开量（同 grasp.spread）。悬挂深度 = (周长 - 2 x spread)/2 = 0.195。
+  # 两指张开量（同 grasp.spread）。悬挂深度 = (周长 - 2 x spread)/2 = 0.130。
   spread: 0.070
   # 抬离 A 时环底部 U 高出 A 挡头顶的余量。环与 A 是链环关系，只能从挡头顶上方脱离——
   # 2026-08-25 实测只抬钩点到 0.235（底部 0.04）时环仍挂在 A 柱身上。
-  # 指尖高度 = 0.086 + r_tube 0.004 + 0.010 + 0.195 = 0.295，手 0.398 <= 工作区 0.40。
+  # 指尖高度 = 0.108 + r_tube 0.004 + 0.010 + 0.130 = 0.252，手 0.355 <= 工作区 0.40。
   clear_margin: 0.010
-  # 推向 B 时环底部 U 离桌面的高度：低于挡头下沿 0.080、高于底座锥顶 0.010，取柱身中段。
-  hang_bottom_z: 0.040
+  # 推向 B 时环底部 U 离桌面的高度：低于挡头下沿 0.100、高于底座锥顶 0.016，取柱身中段。
+  hang_bottom_z: 0.050
   # 侧向绕开 A 的偏移（沿 across）。钩点在 A 与 B 之间的那半个帽（near cap 两肩），
   # 抬起后悬着的环已在 A 的 B 侧、离挡头边 14mm，直线走向 B 不经过 A，故取 0（不绕）。
   # 若钩点改到 A 的外侧则要设 >= 0.035 + 0.022 + 余量。
@@ -200,8 +198,8 @@ physical:
   # Franka hand 坐标系原点到指尖的距离；follow band 的目标 = 指令手位 - hand_above
   # （与 untangle_continuous_fem_demo 同值同做法）。
   hand_above: 0.103
-  # 接近/退开高度（task z），高于挡头顶 0.091 加钩住时的抬升 0.155 之上的余量。
-  approach_z: 0.220
+  # 接近/退开高度（task z）：指尖高于挡头顶 0.108 即可，再留 8cm 给悬着的环。
+  approach_z: 0.200
   # 开合夹爪的步数。
   gripper_steps: 30
   # 手到位后再静置几步，让 IK 收敛到位再做 attach_error 校验。
@@ -211,7 +209,7 @@ physical:
 
 success:
   # 中心线读回的材料分桶数（= 出生环数 = 周长/段长，spike 同式）。
-  centerline_bins: 106
+  centerline_bins: 80
   # 绕数取整容差：|w - round(w)| 超过即报投影退化。
   winding_tolerance: 0.1
   # 任一柱的最小表面间隙（米），负值 = 穿模。
