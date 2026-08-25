@@ -42,6 +42,14 @@ import numpy as np
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
 
 
+def _as_numpy_qpos(value):
+    """Joint vector as plain NumPy, whatever backend handed it over."""
+
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value, dtype=float)
+
+
 @dataclass
 class ClothAttachDragResult:
     success: bool
@@ -106,7 +114,34 @@ def attached_indices(
 
 @dataclass
 class ClothLinkAttachDragPrimitive:
-    """One attach-carry-release motion, driven along waypoints from the planner."""
+    """One attach-carry-release motion, driven along waypoints from the planner.
+
+    **Two ways this puts cloth inside the table, measured 2026-08-24 across six
+    runs of `cloth_unpleat` and `cloth_unroll`. They pull against each other, so
+    a fix for one has so far always fed the other.**
+
+    A. *The pads sit below the cloth.* `HAND_TO_PAD_Z` points at the pad's
+       CENTRE, and the pad body reaches about 10 mm below that, so a
+       `touch_clearance` of 8 mm puts the pad's underside 2 mm INSIDE the sheet.
+       It ploughs a furrow wherever the pads are -- at +/-40 mm while the fingers
+       are open, and directly on the grasped patch if they are closed first.
+       Clearing it needs `touch_clearance` >= the pad's half height, which is
+       geometry rather than tuning: the pad underside and the bound patch hang
+       from the same link, so raising one above the sheet raises the hand.
+
+    B. *The bound patch is dragged under.* The caught particles are rigid to the
+       link, so whatever the arm undershoots in z, the patch goes that far below
+       the waypoint -- and the waypoint is one particle radius above the table.
+       At the calibrated clearance the arm holds 1.5 mm and this barely shows; at
+       20 mm it holds 7.3 mm and the deepest point moves to the band centre line
+       at the end of the pull, which is the patch itself, not a finger.
+
+    Raising `touch_clearance` removes A and feeds B, because the higher pose
+    tracks worse (attach error 0.16 -> 2.24 -> 3.30 -> 4.12 mm at 8/12/14/20 mm).
+    The untried lever is B own cause: the carry drives waypoints with `_glide`,
+    and a ramp always lags. `_hold` is what this file already uses to remove that
+    lag at the END of a carry; nothing yet removes it DURING one.
+    """
 
     approach_z: float
     touch_clearance: float
@@ -144,6 +179,14 @@ class ClothLinkAttachDragPrimitive:
     #: which is dead time in every recording of the episode.
     skip_initial_open: bool = False
     #: Close the fingers in the air, before descending, instead of on the cloth.
+    #:
+    #: **Measured harmful 2026-08-24. Left in place so the result is not lost,
+    #: default off, and do not turn it on without reading this.** It does what it
+    #: promises -- the `close` phase moves into clear air and `attach_error` is
+    #: unaffected -- and total penetration got 3x worse on `cloth_unpleat`
+    #: (858 -> 2741 particle-steps) and 5.6x worse on `cloth_unroll`
+    #: (1801 -> 10090), because closed fingers sit ON the bound patch and press
+    #: it for the whole carry, where open ones were 40 mm away from it.
     #:
     #: The attach is a kinematic bind, so the fingers never need to grip: closing
     #: on the cloth is plausibility, not mechanism. It costs something measurable
@@ -403,8 +446,7 @@ class ClothLinkAttachDragPrimitive:
         hand = np.asarray(hand, dtype=float)
         return np.array([hand[0], hand[1], hand[2] - HAND_TO_PAD_Z])
 
-    @staticmethod
-    def _hold(controller, target, quat, steps: int) -> None:
+    def _hold(self, controller, target, quat, steps: int) -> None:
         """Command one FIXED pose every step, so the arm converges onto it.
 
         Different from `_glide` in the way that matters here: a glide ramps the
@@ -419,8 +461,33 @@ class ClothLinkAttachDragPrimitive:
         """
 
         target = np.asarray(target, dtype=float)
+        commanded_qpos = None
         for _ in range(max(0, int(steps))):
-            controller.move_ee_to(target, quat=quat, steps=1, continuous_ik=True)
+            commanded_qpos = controller.move_ee_to(
+                target, quat=quat, steps=1, continuous_ik=True
+            )
+        if not self.verbose or commanded_qpos is None:
+            return
+        # Where the residual actually lives. `move_ee_to` does two things -- solve
+        # IK for a joint vector, then ask a position controller to reach it -- and
+        # a steady-state pose error can come from either. Measured 2026-08-24, the
+        # hand sat 4.7 mm below a target 4 mm above the one it had been holding
+        # to 0.9 mm, which is the arm barely rising at all; whether that is the
+        # solver not reaching the pose or the controller not reaching the joints
+        # changes the fix completely, and only this comparison separates them.
+        actual_qpos = np.asarray(
+            _as_numpy_qpos(controller.robot.get_qpos()), dtype=float
+        ).ravel()[: len(commanded_qpos)]
+        joint_gap = np.abs(np.asarray(commanded_qpos, dtype=float) - actual_qpos)
+        hand = np.asarray(controller.hand_pos(), dtype=float)
+        print(
+            f"cloth_fold hold_residual steps={int(steps)} "
+            f"hand_gap_mm=({(hand[0] - target[0]) * 1e3:+.1f},"
+            f"{(hand[1] - target[1]) * 1e3:+.1f},{(hand[2] - target[2]) * 1e3:+.1f}) "
+            f"joint_gap_max_deg={np.degrees(joint_gap.max()):.3f} "
+            f"joint_gap_sum_deg={np.degrees(joint_gap.sum()):.3f}",
+            flush=True,
+        )
 
     @staticmethod
     def _glide(controller, target, quat, steps: int) -> None:
