@@ -202,6 +202,9 @@ def main(cfg: DictConfig) -> None:
             # the grasp point by 80 mm while open, and both the descent and the
             # close sweep them across the cloth. Off by default so this task's
             # calibrated readings do not move until an A/B says they should.
+            hold_bound_height=bool(
+                cfg.task.grasp.get("hold_bound_height", False)
+            ),
             close_before_descend=bool(
                 cfg.task.grasp.get("close_before_descend", False)
             ),

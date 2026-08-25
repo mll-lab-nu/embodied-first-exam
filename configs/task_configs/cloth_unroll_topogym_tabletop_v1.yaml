@@ -221,6 +221,11 @@ grasp:
   # 先合拢之后：闭合发生在半空（零接触），下降与触碰静置时指垫在布上的覆盖
   # 从 ±40mm 缩到 ±grasp_qpos。
   close_before_descend: false
+  # Servo the commanded height so the bound patch keeps the height it had
+  # at bind time instead of riding the link's z error. The bind is rigid and
+  # takes those particles out of collision, so nothing else keeps them above
+  # the table. Off until the A/B is measured.
+  hold_bound_height: false
   # 动作开始之前的护栏，与 1.2 同一套：材料还收着没有、层数还在没有。
   # 起始铺展比实测 88.4/260 = 0.340（1.2 是 0.764）—— 卷起来的布带俯视跨度小得多。
   max_start_spread_ratio: 0.45

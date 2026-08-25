@@ -233,6 +233,11 @@ grasp:
   # 与 1.3 同源 —— `touch_clearance` 加在指垫中心而不是底面。
   # 默认关闭：本任务的读数已标定，A/B 说该开再开。
   close_before_descend: false
+  # Servo the commanded height so the bound patch keeps the height it had
+  # at bind time instead of riding the link's z error. The bind is rigid and
+  # takes those particles out of collision, so nothing else keeps them above
+  # the table. Off until the A/B is measured.
+  hold_bound_height: false
   # 「静置之后这还算不算一个褶皱」的护栏。动作开始之前检查，不过就如实失败。
   #
   # 2026-08-22 的教训：褶皱是画进网格再放手的，动作开始之前它自己就会往下沉。

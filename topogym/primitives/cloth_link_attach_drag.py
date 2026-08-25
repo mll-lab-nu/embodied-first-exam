@@ -197,6 +197,29 @@ class ClothLinkAttachDragPrimitive:
     #: clearances. Closing first shrinks the pads' footprint over the cloth from
     #: +/-40 mm to +/-`grasp_qpos`, and moves the close itself into clear air.
     close_before_descend: bool = False
+    #: Servo the commanded height so the HELD material stays at the height it
+    #: had when the link took it, instead of riding the link's own z error.
+    #:
+    #: A link binding is rigid and takes the bound particles OUT of collision:
+    #: their position is the link pose composed with an offset frozen at bind
+    #: time, so `held_z(t) = held_z(bind) + [link_z(t) - link_z(bind)]` and
+    #: nothing in the solver stops that patch from crossing the table. The cloth
+    #: sinks by exactly how far the link fell between the bind and now -- which
+    #: is why raising `touch_clearance` made total penetration WORSE (1801 ->
+    #: 7205 particle-steps at 8 -> 20 mm): it fixes the pads and enlarges this.
+    #:
+    #: Measured 2026-08-24 on `cloth_unroll` at 20 mm clearance: the arm ran
+    #: 8.3 -> 9.2 mm below its commanded z across all eight pull segments, near
+    #: constant, while `follow_mm` grew 3.2 -> 5.5. A constant offset is what a
+    #: ramp's tracking lag looks like, and `_glide` never waits it out.
+    #:
+    #: The loop closes on the MATERIAL, not the arm, so it is indifferent to why
+    #: the arm falls short -- IK budget, wrist constraint or workspace limit all
+    #: correct the same way. One waypoint of lag: segment 1 is uncorrected.
+    hold_bound_height: bool = False
+    #: Ceiling on the servo's accumulated correction, so a saturated arm cannot
+    #: wind it up without bound. Two clearances' worth of the measured shortfall.
+    max_height_trim: float = 0.02
     #: Cosmetic close. ``None`` keeps the gripper open the whole time, which is
     #: the honest shape for a suction-style hold; a value must be at least half a
     #: particle or the fingers have nowhere to be and the solver diverges.
@@ -300,6 +323,10 @@ class ClothLinkAttachDragPrimitive:
         bind_offset = np.asarray(
             particles_fn()[indices].mean(axis=0), dtype=float
         ) - grasp_point
+        # The height the servo defends. Read from the particles, not from the
+        # plan: the bind freezes whatever the material actually had.
+        bind_height = float(grasp_point[2] + bind_offset[2])
+        height_trim = 0.0
         self._phases.append("attach")
         self._notify(on_phase, "attach")
         if self.verbose:
@@ -331,12 +358,11 @@ class ClothLinkAttachDragPrimitive:
             # The bound particles keep the offset they had when the link took
             # them, which is exactly that clearance, so commanding the pad this
             # much higher puts the material on the waypoint.
-            self._glide(
-                controller,
-                self._hand_for_pad(target, float(target[2]) + float(self.touch_clearance)),
-                ee_quat,
-                steps,
+            commanded = self._hand_for_pad(
+                target,
+                float(target[2]) + float(self.touch_clearance) + height_trim,
             )
+            self._glide(controller, commanded, ee_quat, steps)
             # How far the held material is from where it was asked to be. With a
             # link binding this stays near zero; a growing value means the arm
             # could not reach and the cloth is being stretched to cover it.
@@ -349,13 +375,18 @@ class ClothLinkAttachDragPrimitive:
             # badly looks identical in the material readings to a fold whose
             # trajectory was wrong, so the two are separated here: `pose` is the
             # arm's own error, `follow` is the cloth's.
-            commanded = self._hand_for_pad(
-                target, float(target[2]) + float(self.touch_clearance)
-            )
             pose = float(np.linalg.norm(np.asarray(controller.hand_pos(), dtype=float) - commanded))
             tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
             worst_pose = max(worst_pose, pose)
             worst_tilt = max(worst_tilt, tilt)
+            if self.hold_bound_height:
+                height_trim = float(
+                    np.clip(
+                        height_trim + (bind_height - float(held[2])),
+                        0.0,
+                        float(self.max_height_trim),
+                    )
+                )
             self._notify(on_phase, waypoint.label)
             if self.verbose:
                 # The commanded and achieved HAND poses, per axis, not just the
@@ -376,6 +407,8 @@ class ClothLinkAttachDragPrimitive:
                     f"follow_mm={follow * 1e3:.1f} "
                     f"arm_pos_err_mm={pose * 1e3:.1f} "
                     f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
+                    f"held_dz_mm={(float(held[2]) - bind_height) * 1e3:+.1f} "
+                    f"trim_mm={height_trim * 1e3:.1f} "
                     f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
                     f"want=({commanded[0]:+.3f},{commanded[1]:+.3f},{commanded[2]:+.3f}) "
                     f"arm_tilt_deg={np.degrees(tilt):.1f}",
