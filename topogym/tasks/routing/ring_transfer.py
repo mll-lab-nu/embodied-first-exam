@@ -25,9 +25,10 @@ Posts are a list and the initial / goal enclosures are subsets (`ring.enclosure`
 `goal.enclosure`), so the multi-post variants of docx 2.7 are config edits; only
 the single-post spawn is generated so far.
 
-Coupling under IPC: the table, both posts' shafts and bases are `ipc_only`
-statics, the caps are outside IPC, the arm is outside IPC (`needs_coup=False`,
-as in every migrated rope task). All four `create()` materials are passed --
+Coupling under IPC: the table, both posts' shafts, bases and heads are
+`ipc_only` statics; the arm's hand and fingers join IPC as pinned ABD bodies
+(`physical.robot_rope_contact=fingers`) so the pinch is a real contact; the
+rest of the arm stays with the rigid solver. All four `create()` materials are passed --
 leaving the table on Genesis' default makes the coupler pick
 `external_articulation` for a fixed box and libuipc dies with an unattributable
 cudaErrorInvalidDevice (2026-08-21).
@@ -221,7 +222,7 @@ class RingTransferSceneBuilder:
         tabletop = tabletop_builder.create(
             show_viewer=show_viewer,
             include_robot=include_robot,
-            robot_material=gs.materials.Rigid(needs_coup=False),
+            robot_material=self._robot_material(),
             table_material=backend.static_rigid_material(),
             static_material=backend.static_rigid_material(),
             decoration_material=backend.decoration_rigid_material(),
@@ -311,6 +312,33 @@ class RingTransferSceneBuilder:
             cameras=cameras,
             tabletop=tabletop,
             rope_backend=backend,
+        )
+
+    def _robot_material(self):
+        """Whether the rope can see the gripper: `physical.robot_rope_contact`.
+
+        ``off``: the arm stays outside IPC (needs_coup=False) and the rope passes
+        through the fingers -- the grasp is then the assist alone.
+        ``fingers``: the links in `physical.finger_links` (hand + both fingers
+        here) join IPC as ABD bodies pinned to their IK pose, so the pads really
+        squeeze the rope and the palm cannot pass through it (user requirement,
+        2026-08-25). Same mechanism and caveats as
+        `cable_routing.CableRoutingSceneBuilder._robot_material`; the friction
+        is HIGH here (a pinch has to hold), unlike rope_winding's 0.004 where the
+        pads were only meant to brush past the rope.
+        """
+
+        physical = self.task_cfg.physical
+        mode = str(getattr(physical, "robot_rope_contact", "off") or "off")
+        if mode == "off":
+            return gs.materials.Rigid(needs_coup=False)
+        if mode != "fingers":
+            raise ValueError(f"physical.robot_rope_contact must be 'off' or 'fingers', got {mode!r}.")
+        links = tuple(str(name) for name in physical.finger_links)
+        return gs.materials.Rigid(
+            coup_type="two_way_soft_constraint",
+            coup_links=links,
+            coup_friction=float(physical.robot_rope_friction),
         )
 
     # -- fixtures ------------------------------------------------------------

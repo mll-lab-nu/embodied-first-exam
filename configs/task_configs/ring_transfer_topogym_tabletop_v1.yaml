@@ -135,8 +135,10 @@ grasp:
   # 捏取时每指的合拢目标 = 绳半径（两指之间正好留出绳径；臂在 IPC 之外，手指不与绳碰撞，
   # 靠指令位停住）。
   grasp_qpos: 0.004
-  # 捏取时指尖高于绳中心线的量：指尖落在绳心上方 2mm，指垫底面与桌面齐平。
-  pinch_lift: 0.002
+  # 捏取时指尖相对绳中心线的高度。指垫底面就是指尖，要让指垫盖住绳的截面中段：
+  # 指尖 = 绳心 - 2mm（指垫底离桌面 2mm）。+2mm 时指垫只盖住绳的上 2mm，看起来像绳
+  # 顶在指尖下面（2026-08-25 视频）。
+  pinch_lift: -0.002
   # 钩住时两指的张开量 = 远端被撑开的宽度，进拉伸梯形。Franka 最大 0.080；
   # 取 0.070 留指垫厚度，且必须 < 环宽 0.080。
   spread: 0.070
@@ -223,6 +225,16 @@ carry:
 
 # 机械臂执行参数（demo 用；spike 不带臂，不读这一块）。
 physical:
+  # 绳能不能看见夹爪（2026-08-25 用户要求真实接触、不穿模）：
+  #   off     = 臂在 IPC 之外，绳直接穿过指垫，抓取只靠 assist；
+  #   fingers = finger_links 里的 link 进 IPC（ABD，每步钉到 IK 位姿），指垫真的夹住绳、
+  #             手掌穿不过绳；其余臂体仍归刚体求解器。机制同 cable_routing。
+  robot_rope_contact: fingers
+  finger_links: [hand, left_finger, right_finger]
+  # 绳↔指垫的 IPC 摩擦。实际接触摩擦 = sqrt(rope.fem.friction_mu x 此值) = sqrt(0.3 x 0.6) ≈ 0.42。
+  # rope_winding 取 0.004 是为了让绳蹭过指垫；这里是捏取，要握得住。assist 仍在（同一运动
+  # 不冲突），接触负责不穿模与视觉。
+  robot_rope_friction: 0.6
   # Franka hand 坐标系原点到指尖的距离；follow band 的目标 = 指令手位 - hand_above
   # （与 untangle_continuous_fem_demo 同值同做法）。
   hand_above: 0.103
