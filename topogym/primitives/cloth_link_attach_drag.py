@@ -62,6 +62,15 @@ class ClothAttachDragResult:
     #: is a statement about the trajectory or the material.
     worst_pose_error: float = float("nan")
     worst_tilt_rad: float = float("nan")
+    #: Lowest the PAD TIP reached, relative to the cloth surface, over the whole
+    #: motion. Negative is inside the sheet, which is what a pinch looks like;
+    #: below minus the cloth thickness the gripper is inside the TABLE.
+    #:
+    #: The cloth-particle counters are blind to this -- they watch material, and
+    #: the gripper is not material. Measured 2026-08-25 on `cloth_unpleat`: every
+    #: cloth gate passed with the pad tip 6.6 mm under the table, and the
+    #: recording showed a gripper buried in the tabletop.
+    worst_pad_tip: float = float("nan")
     failure_reason: str | None = None
     completed_phases: tuple[str, ...] = ()
 
@@ -253,14 +262,20 @@ class ClothLinkAttachDragPrimitive:
     #: the arm falls short -- IK budget, wrist constraint or workspace limit all
     #: correct the same way. One waypoint of lag: segment 1 is uncorrected.
     #:
-    #: **Measured 2026-08-24: no effect, and the reason matters.** `held_dz_mm`
-    #: read +/-0.0 for all eight segments with the servo OFF, so the held patch
-    #: never dropped at all -- the bind froze the arm's 8.5 mm shortfall into the
-    #: offset and it cancels. Totals were 7205 vs 7195 particle-steps, inside
-    #: run-to-run noise. This servo defends the bind height; the bind height was
-    #: already wrong. Left in place, default off, so the result is not re-derived.
-    #: See `attach_single_particle` for what the evidence pointed at instead.
-    hold_bound_height: bool = False
+    #: Servos the ARM's own z, not the material's. An earlier version defended
+    #: the bound patch's height and was measured useless 2026-08-24 (`held_dz_mm`
+    #: read +/-0.0 for all eight segments with it OFF: the bind freezes the arm's
+    #: shortfall into the offset, so it cancels). The quantity that does NOT
+    #: cancel is where the GRIPPER ends up, and with the arm outside the coupler
+    #: nothing stops it entering the table.
+    #:
+    #: Measured 2026-08-25, `arm_gap_mm` z over eight pull segments:
+    #:   cloth_unroll  -1.4 -1.4 -1.4 -1.4 -1.4 -1.4 -1.4 -1.4
+    #:   cloth_unpleat -8.1 -8.0 -7.9 -7.9 -7.9 -7.9 -7.8 -7.9
+    #: A constant offset, which is what a position controller's steady-state
+    #: error under constant load looks like, so one integral term removes it.
+    #: The descent does not need it (static residual -1.5 mm; `_hold` converges).
+    hold_pad_height: bool = True
     #: Ceiling on the servo's accumulated correction, so a saturated arm cannot
     #: wind it up without bound. Two clearances' worth of the measured shortfall.
     max_height_trim: float = 0.02
@@ -387,6 +402,7 @@ class ClothLinkAttachDragPrimitive:
             )
 
         worst_follow = 0.0
+        worst_pad_tip = float("inf")
         worst_pose = 0.0
         worst_tilt = 0.0
         # Where the held material sits relative to the point it was asked to
@@ -429,14 +445,17 @@ class ClothLinkAttachDragPrimitive:
             # badly looks identical in the material readings to a fold whose
             # trajectory was wrong, so the two are separated here: `pose` is the
             # arm's own error, `follow` is the cloth's.
-            pose = float(np.linalg.norm(np.asarray(controller.hand_pos(), dtype=float) - commanded))
+            reached = np.asarray(controller.hand_pos(), dtype=float)
+            pose = float(np.linalg.norm(reached - commanded))
             tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
             worst_pose = max(worst_pose, pose)
             worst_tilt = max(worst_tilt, tilt)
-            if self.hold_bound_height:
+            pad_tip = float(reached[2]) - HAND_TO_PAD_TIP_Z - float(target[2])
+            worst_pad_tip = min(worst_pad_tip, pad_tip)
+            if self.hold_pad_height:
                 height_trim = float(
                     np.clip(
-                        height_trim + (bind_height - float(held[2])),
+                        height_trim + (float(commanded[2]) - float(reached[2])),
                         0.0,
                         float(self.max_height_trim),
                     )
@@ -452,7 +471,6 @@ class ClothLinkAttachDragPrimitive:
                 # is the signature of the solver trading position away to keep
                 # the wrist angle. Per-axis is what tells that apart from simply
                 # being outside the workspace.
-                reached = np.asarray(controller.hand_pos(), dtype=float)
                 gap = reached - commanded
                 print(
                     f"cloth_fold {waypoint.label} "
@@ -513,6 +531,7 @@ class ClothLinkAttachDragPrimitive:
             worst_follow_error=float(worst_follow),
             worst_pose_error=float(worst_pose),
             worst_tilt_rad=float(worst_tilt),
+            worst_pad_tip=float(worst_pad_tip),
             failure_reason=(
                 None
                 if worst_follow <= float(self.max_follow_error)

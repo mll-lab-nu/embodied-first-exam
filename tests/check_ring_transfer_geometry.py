@@ -298,6 +298,14 @@ def main() -> int:
         for point in (lift_l, lift_r):
             if np.linalg.norm(point - other) <= 2.0 * float(task.grasp.band_radius):
                 failures.append("lift band overlaps the near band")
+    # Internal grasp: the fingers enter the loop CLOSED at the chord midpoint and
+    # open along `across`; the closed finger bodies extend `finger_half_width`
+    # along the anchor->target line and must clear the anchor's head.
+    mid = 0.5 * (lift_l + lift_r)
+    finger_gap = float(np.linalg.norm(mid[:2] - anchor.center)) - anchor.head_radius - float(task.physical.finger_half_width)
+    print(f"               closed fingers at the grasp chord to {anchor.name}'s head edge {finger_gap * 1000:.1f} mm {'ok' if finger_gap > 0 else 'FAIL'}")
+    if finger_gap <= 0:
+        failures.append("closed fingers would hit the anchor's head at the carry grasp point")
     bottom = float(task.carry.hang_bottom_z)
     print(
         f"               bottom U at {bottom * 1000:.0f} mm: below {target.name}'s head underside "

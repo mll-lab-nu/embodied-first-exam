@@ -238,7 +238,9 @@ grasp:
   # at bind time instead of riding the link's z error. The bind is rigid and
   # takes those particles out of collision, so nothing else keeps them above
   # the table. Off until the A/B is measured.
-  hold_bound_height: false
+  # 补掉手臂在拉动段的恒定 z 欠量（unpleat -8.0mm、unroll -1.4mm，八段纹丝不动）。
+  # 机械臂退出软体耦合之后没有东西阻止夹爪进入桌面，这一项是唯一的防线。
+  hold_pad_height: true
   # 绑定是刚性的、会把粒子移出碰撞求解，于是绑定瞬间的竖直状态被永久冻结：
   # 那一刻在桌面以下的粒子，整个 episode 都在桌面以下。只绑一个粒子把这件事
   # 封顶到一个粒子，其余留在求解器里可以被桌面顶回来。代价是拖拽权威变弱，

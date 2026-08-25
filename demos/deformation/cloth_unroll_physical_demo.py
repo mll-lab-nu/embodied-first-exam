@@ -94,8 +94,8 @@ def make_primitive(cfg, *, skip_initial_open: bool) -> ClothLinkAttachDragPrimit
         attach_single_particle=bool(
             cfg.task.grasp.get("attach_single_particle", False)
         ),
-        hold_bound_height=bool(
-            cfg.task.grasp.get("hold_bound_height", False)
+        hold_pad_height=bool(
+            cfg.task.grasp.get("hold_pad_height", True)
         ),
         close_before_descend=bool(
             cfg.task.grasp.get("close_before_descend", False)
@@ -407,6 +407,13 @@ def main(cfg: DictConfig) -> None:
     unrolled = bool(state.is_terminal)
     worst_follow = max((r.worst_follow_error for r in results), default=float("nan"))
     worst_pose = max((r.worst_pose_error for r in results), default=float("nan"))
+    # The cloth counters watch material; the gripper is not material. Measured
+    # 2026-08-25 on `cloth_unpleat`: every cloth gate passed with the pad tip
+    # 6.6 mm under the table. `pad_tip` is relative to the cloth surface, so the
+    # tip is inside the TABLE once it drops below minus the cloth thickness.
+    pad_tip = min((r.worst_pad_tip for r in results), default=float("nan"))
+    cloth_z = float(cfg.task.cloth.z)
+    gripper_ok = not (pad_tip == pad_tip) or pad_tip >= -cloth_z
     worst_tilt = max((r.worst_tilt_rad for r in results), default=float("nan"))
     print(
         f"cloth_unroll result unrolled={unrolled} diverged={watch.diverged} "
@@ -421,6 +428,7 @@ def main(cfg: DictConfig) -> None:
         f"attached={'/'.join(str(r.attached_particles) for r in results)} "
         f"follow_error_mm={worst_follow * 1e3:.1f} "
         f"arm_pos_err_mm={worst_pose * 1e3:.1f} "
+        f"pad_tip_mm={pad_tip * 1e3:+.1f} gripper_ok={gripper_ok} "
         f"arm_tilt_deg={np.degrees(worst_tilt):.1f} "
         f"{state.summary()} {watch.summary()}",
         flush=True,
@@ -445,8 +453,8 @@ def main(cfg: DictConfig) -> None:
     # is supposed to succeed. Same for a deliberately shortened run -- one stroke
     # of three cannot empty the roll and it is not a failure that it did not.
     if str(cfg.run.motion) != "unroll" or planned < strokes:
-        raise SystemExit(0 if not watch.diverged and contact_ok else 1)
-    raise SystemExit(0 if unrolled and not watch.diverged and contact_ok else 1)
+        raise SystemExit(0 if not watch.diverged and contact_ok and gripper_ok else 1)
+    raise SystemExit(0 if unrolled and not watch.diverged and contact_ok and gripper_ok else 1)
 
 
 if __name__ == "__main__":

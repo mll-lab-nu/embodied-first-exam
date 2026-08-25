@@ -205,8 +205,8 @@ def main(cfg: DictConfig) -> None:
             attach_single_particle=bool(
                 cfg.task.grasp.get("attach_single_particle", False)
             ),
-            hold_bound_height=bool(
-                cfg.task.grasp.get("hold_bound_height", False)
+            hold_pad_height=bool(
+                cfg.task.grasp.get("hold_pad_height", True)
             ),
             close_before_descend=bool(
                 cfg.task.grasp.get("close_before_descend", False)

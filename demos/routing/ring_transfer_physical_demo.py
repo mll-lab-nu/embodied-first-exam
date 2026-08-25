@@ -147,7 +147,11 @@ def main(cfg: DictConfig) -> None:
         assign_sides(phase, held0)
         yaw = phase.yaw_at(held0)
         quat = ee_quat_for_yaw(controller.default_ee_quat, yaw)
-        controller.set_gripper(hook_qpos if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))
+        # A hook phase is an INTERNAL grasp: the fingers go into the loop closed and
+        # open against the rope from inside (a pinch would collapse the hanging loop
+        # to a doubled strand and the lasso onto B would not part around the
+        # shaft). A pinch phase opens now and closes on the strand at the bottom.
+        controller.set_gripper(gripper_closed if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))
         hand_now = np.asarray(controller.hand_pos(), dtype=float)
         yaw_now = yaw
         hover = hand_for(np.array([held0[0], held0[1], approach_z]))
@@ -172,8 +176,17 @@ def main(cfg: DictConfig) -> None:
             raise SystemExit(f"ring_transfer {phase.name}: hand missed the band by {worst * 1000:.1f} mm; refusing to engage the assist.")
         if phase.kind == "pinch":
             controller.set_gripper(gripper_closed, steps=int(physical.gripper_steps))
+        else:
+            # Spread the fingers until the pads meet the rope from inside: the
+            # visible act of taking hold. The bands engage only after that.
+            controller.set_gripper(hook_qpos, steps=int(physical.gripper_steps))
         for name in phase.bands:
             built.bands[name].attach()
+        print(
+            f"ring_transfer {phase.name} grasped kind={phase.kind} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} "
+            f"bands={[f'{n}:{len(built.bands[n].indices)}' for n in phase.bands]}",
+            flush=True,
+        )
         held_prev = held0
         hand_prev = grasp_hand
         yaw_prev = yaw
@@ -190,7 +203,9 @@ def main(cfg: DictConfig) -> None:
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
         for name in phase.bands:
             built.bands[name].release()
-        controller.set_gripper(gripper_open, steps=int(physical.gripper_steps))
+        # Letting go: an internal grasp closes (the fingers come back together
+        # inside the loop and lift out of it); a pinch opens.
+        controller.set_gripper(gripper_closed if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))
         retreat = hand_for(np.array([held_prev[0], held_prev[1], approach_z]))
         glide(hand_prev, retreat, yaw_prev, yaw_prev, phase=None, label=f"{phase.name}:retreat")
         for _ in range(int(task.transfer.release_settle_steps)):
