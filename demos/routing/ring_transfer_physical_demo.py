@@ -123,6 +123,15 @@ def main(cfg: DictConfig) -> None:
             return {name: layout.to_world(held + band_sides[name] * half_spread * across) for name in phase.bands}
         return {phase.bands[0]: layout.to_world(held)}
 
+    # Pinch: where the rope sits relative to the fingertip point at the moment
+    # of the grasp (world frame). The band is then driven to the MEASURED hand
+    # plus this offset every step, so the rope stays exactly where the pads
+    # closed on it. Driving it to the commanded hand instead (the pre-contact
+    # recipe) put the rope a few mm ahead of the lagging fingers and pushed one
+    # pad open on every accelerating leg (2026-08-25 video: "opens and
+    # re-closes while carrying").
+    grip_offset: dict[str, np.ndarray] = {}
+
     def glide(hand_from: np.ndarray, hand_to: np.ndarray, yaw_from: float, yaw_to: float, *, phase: GraspPhase | None, held_to=None, held_from=None, label: str):
         distance = float(np.linalg.norm(hand_to - hand_from))
         steps = max(min_steps, int(np.ceil(distance / speed)))
@@ -132,9 +141,14 @@ def main(cfg: DictConfig) -> None:
             hand = hand_from + alpha * (hand_to - hand_from)
             yaw = yaw_from + alpha * delta_yaw
             if phase is not None and held_to is not None:
-                held = np.asarray(held_from) + alpha * (np.asarray(held_to) - np.asarray(held_from))
-                for name, target in band_targets(phase, held).items():
-                    built.bands[name].drive_to(target)
+                if phase.kind == "pinch":
+                    tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
+                    for name in phase.bands:
+                        built.bands[name].drive_to(tip_now + grip_offset[name])
+                else:
+                    held = np.asarray(held_from) + alpha * (np.asarray(held_to) - np.asarray(held_from))
+                    for name, target in band_targets(phase, held).items():
+                        built.bands[name].drive_to(target)
             controller.move_ee_to(hand, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw), steps=1, continuous_ik=True)
         if cfg.run.verbose:
             state = classify()
@@ -188,6 +202,8 @@ def main(cfg: DictConfig) -> None:
             controller.set_gripper(hook_qpos, steps=int(physical.gripper_steps))
         for name in phase.bands:
             built.bands[name].attach()
+            tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
+            grip_offset[name] = np.asarray(built.bands[name].band_center(), dtype=float) - tip_now
         print(
             f"ring_transfer {phase.name} grasped kind={phase.kind} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} "
             f"bands={[f'{n}:{len(built.bands[n].indices)}' for n in phase.bands]}",
