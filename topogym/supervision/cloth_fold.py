@@ -84,6 +84,10 @@ class ClothFoldWatch:
     bbox_lo: tuple[float, float, float] = field(default=(0.0, 0.0, 0.0), init=False)
     bbox_hi: tuple[float, float, float] = field(default=(0.0, 0.0, 0.0), init=False)
     worst_gap: float = field(default=0.0, init=False)
+    #: The typical spacing, so `worst_gap` can be read against the sheet's own
+    #: state rather than only against its rest value. A tear is a LOCAL gap:
+    #: worst far above median. A uniformly stretched sheet moves both.
+    median_gap: float = field(default=0.0, init=False)
     worst_gap_ratio: float = field(default=0.0, init=False)
     lowest_z: float = field(default=float("inf"), init=False)
     #: Where and when the deepest particle was, recorded alongside `lowest_z`.
@@ -154,16 +158,23 @@ class ClothFoldWatch:
             return
         self.bbox_lo = tuple(float(v) for v in keep.min(axis=0))
         self.bbox_hi = tuple(float(v) for v in keep.max(axis=0))
-        # Nearest-neighbour spacing, on a subsample so the cost stays flat.
-        # O(m^2) on m=400 is 160k distances, which is nothing next to a step.
-        if keep.shape[0] > 400:
-            idx = np.linspace(0, keep.shape[0] - 1, 400).astype(int)
-            sample = keep[idx]
-        else:
-            sample = keep
-        d = np.linalg.norm(sample[:, None, :] - sample[None, :, :], axis=2)
-        np.fill_diagonal(d, np.inf)
-        gap = float(d.min(axis=1).max())
+        # EXACT nearest neighbour over the whole set, in chunks. A subsample is
+        # not admissible here and the first version of this used one: thinning
+        # the set to 1/k raises nearest-neighbour distance by about sqrt(k) on
+        # its own, so the reading measures the sampling, not the cloth. Measured
+        # 2026-08-25: 400 of 2346 gave ratio 1.83, which is BELOW the ~2.45 that
+        # subsampling alone predicts -- an artefact, not a signal.
+        #
+        # Chunked so the pairwise block never exceeds ~256 x N, and only every
+        # `census_every` steps, which is nothing next to a solver step.
+        best = np.empty(keep.shape[0], dtype=float)
+        for lo in range(0, keep.shape[0], 256):
+            hi = min(lo + 256, keep.shape[0])
+            d = np.linalg.norm(keep[lo:hi, None, :] - keep[None, :, :], axis=2)
+            d[np.arange(hi - lo), np.arange(lo, hi)] = np.inf
+            best[lo:hi] = d.min(axis=1)
+        gap = float(best.max())
+        self.median_gap = float(np.median(best))
         self.worst_gap = max(self.worst_gap, gap)
         if self.rest_spacing:
             self.worst_gap_ratio = self.worst_gap / float(self.rest_spacing)
@@ -234,7 +245,8 @@ class ClothFoldWatch:
             f"bbox_x=[{self.bbox_lo[0]:+.3f},{self.bbox_hi[0]:+.3f}] "
             f"bbox_y=[{self.bbox_lo[1]:+.3f},{self.bbox_hi[1]:+.3f}] "
             f"bbox_z=[{self.bbox_lo[2]:+.3f},{self.bbox_hi[2]:+.3f}] "
-            f"worst_gap_mm={self.worst_gap * 1e3:.1f}"
+            f"worst_gap_mm={self.worst_gap * 1e3:.1f} "
+            f"median_gap_mm={self.median_gap * 1e3:.1f}"
             + ("" if not self.rest_spacing else f" worst_gap_ratio={self.worst_gap_ratio:.2f}")
             + " "
             + f"lowest_z_above_table={self.lowest_z:+.5f} "

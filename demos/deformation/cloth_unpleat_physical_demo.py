@@ -257,9 +257,12 @@ def main(cfg: DictConfig) -> None:
         watch = ClothFoldWatch(
             cloth=band.cloth,
             table_z=layout.table_z,
-            # Rest spacing turns `worst_gap` into a ratio: 1.0 is the sheet at rest,
-            # and a torn or thinned region shows up as a value above it.
-            rest_spacing=float(cfg.task.cloth.mesh.spacing),
+            # `particle_size`, NOT `mesh.spacing`: Genesis remeshes the control mesh
+            # to the solver's own particle spacing (595 control vertices came back as
+            # 2346), so the control value is the wrong denominator by about 2x.
+            # The primary reference is `median_gap` anyway -- it is measured from the
+            # sheet itself, so a tear reads as worst >> median with no config in it.
+            rest_spacing=float(cfg.task.cloth.particle_size),
             dt=float(cfg.env.sim.dt),
             # What the carried material may honestly fall from. Nothing is
             # lifted in this task -- the pull stays in the plane -- so the pleat's
