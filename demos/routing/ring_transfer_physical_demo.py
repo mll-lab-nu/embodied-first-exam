@@ -207,6 +207,22 @@ def main(cfg: DictConfig) -> None:
             yaw_next = phase.yaw_at(held) if phase.kind == "hook" else yaw
             glide(hand_prev, hand_for(held), yaw_prev, yaw_next, phase=phase, held_from=held_prev, held_to=held, label=f"{phase.name}:{wp.label}")
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
+            if phase.kind == "pinch" and phase.close_axis is not None and wp.label in ("lift", "travel", "approach"):
+                # How the pinched loop hangs: depth below the fingertips and the
+                # width of its bottom U along the strand (across the closing
+                # axis). The width is what the lasso onto B needs -- at least
+                # 2 (r_post + 2 r_tube + d_hat).
+                nodes = built.nodes()
+                low = nodes[nodes[:, 2] <= nodes[:, 2].min() + 0.03]
+                along = np.array([-phase.close_axis[1], phase.close_axis[0], 0.0])
+                width = float(np.ptp(low @ along))
+                depth = float(held[2] - nodes[:, 2].min())
+                need = 2.0 * (layout.target.radius + 2.0 * layout.ring.tube_radius + float(task.rope.fem.contact_d_hat))
+                print(
+                    f"ring_transfer {phase.name}:{wp.label} hang_depth_mm={depth * 1000:.1f} u_width_mm={width * 1000:.1f} "
+                    f"(need >= {need * 1000:.0f}) {'ok' if width >= need else 'U TOO NARROW'}",
+                    flush=True,
+                )
         for name in phase.bands:
             built.bands[name].release()
         # Letting go: an internal grasp closes (the fingers come back together
