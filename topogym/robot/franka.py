@@ -132,7 +132,13 @@ class FrankaPositionIKController:
             # spike prints its material line for exactly this reason. Measured
             # 2026-08-24: max_solver_iters 50/200/800 gave byte-identical
             # readings, which is why this line exists.
-            if not getattr(self, "_ik_budget_logged", False):
+            #
+            # Silent unless a budget differs from the built-in default, so the
+            # shipped configuration of every task in the repo prints exactly what
+            # it printed before -- this file is on every physical demo's path.
+            defaults = {"max_samples": 1, "max_solver_iters": 50, "max_step_size": 0.15}
+            swept = any(ik_kwargs[key] != value for key, value in defaults.items())
+            if swept and not getattr(self, "_ik_budget_logged", False):
                 self._ik_budget_logged = True
                 print(
                     f"franka ik_budget max_samples={ik_kwargs['max_samples']} "

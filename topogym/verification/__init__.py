@@ -25,6 +25,12 @@ from .cloth_unpleat_verifier import (
     single_layer_fraction,
     spread_span,
 )
+from .ring_transfer_verifier import (
+    RingTransferEvaluator,
+    RingTransferState,
+    RingTransferThresholds,
+    RingTransferWatch,
+)
 from .cloth_unroll_verifier import (
     ClothUnrollEvaluator,
     ClothUnrollState,

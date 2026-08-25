@@ -86,8 +86,8 @@ PBD 管线同构。因此 `deformation/` 的第一个实现不必等布料求解
 | 2.3 横杆穿过孔（刚体） | `bar_through_hole.py` | 竖直面板（四条 Box 围成矩形孔）、刚性横杆（Cylinder） | 全部为刚体基元；动作复用 `PickPlacePrimitive` | 中 |
 | 2.2 线缆穿过护线孔 | `cable_through_port.py` | 同上面板 + PBD 线缆 + 左侧锚点 | 面板同 2.3；线缆复用现有 PBD 管线 | 中 |
 | 2.1 绳端穿过挂钩 | `rope_through_hook.py` | 顶梁、J 形挂钩、配重（购物袋）、绳 | 挂钩用 `make_elastic_tube_mesh` 沿 J 形中心线扫掠得网格，碰撞用多段凸块组合 | 中 |
-| 2.6 绳圈从柱 A 转移到柱 B | `ring_transfer_post.py` | 两根立柱 + 闭合弹性圈 | 闭合弹性环 | 阻塞 |
-| 2.7 闭合环同时围住两柱 | `ring_enclose_two_posts.py` | 同上 | 闭合弹性环 | 阻塞 |
+| 2.6 绳圈从柱 A 转移到柱 B | `ring_transfer.py`（已落地 2026-08-24，见 `ring_transfer_zh.md`） | 两根带挡头的走线柱 + 闭合弹性圈 | 闭合弹性环（`world/closed_band.py`，已解除阻塞） | 已实现 |
+| 2.7 闭合环同时围住两柱 | 复用 `ring_transfer` 场景与 on-phase | 同上 | 同上；终态绷紧与单手套环冲突，见 `ring_transfer_zh.md` §4 | 中 |
 
 **2.5 与 2.4 的配对关系**：docx 2.4/2.5 构成方向敏感的 contrast pair（加圈／解圈，几乎镜像的
 轨迹）。按 `task_taxonomy_zh.md` §6.3 的成对命名准则，二者应共用词干

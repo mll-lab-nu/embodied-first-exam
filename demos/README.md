@@ -14,6 +14,7 @@
 | `routing/` | cable_routing | `cable_routing_physical_handle_demo` |
 | | rope_winding | `rope_winding_physical_handle_demo` |
 | | bar_through_hole | `bar_through_hole_physical_insert_demo` |
+| | ring_transfer | `ring_transfer_physical_demo` |
 
 `topogym/tasks/deformation/` 目前是空的，这里不建对应目录。
 
@@ -54,6 +55,7 @@ python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=
 | `routing/cable_routing_physical_handle_demo` | `configs/cable_routing.yaml` | `configs/run_configs/cable_routing.yaml` |
 | `routing/rope_winding_physical_handle_demo` | `configs/rope_winding.yaml` | `configs/run_configs/rope_winding.yaml` |
 | `routing/bar_through_hole_physical_insert_demo` | `configs/bar_through_hole.yaml` | `configs/run_configs/bar_through_hole.yaml` |
+| `routing/ring_transfer_physical_demo` | `configs/ring_transfer.yaml` | `configs/run_configs/ring_transfer.yaml` |
 
 `tests/fem_ipc_rope_spike.py`（FEM 后端诊断场景）用同一套方式，主配置
 `configs/fem_ipc_rope_spike.yaml`。仓库里的检查与测量都在 `tests/`，见

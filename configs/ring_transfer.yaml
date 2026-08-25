@@ -1,0 +1,9 @@
+# demos/routing/ring_transfer_physical_demo.py 的主配置。
+# 与 tests/ring_transfer_spike.py 共用 task 配置，只在 run 层不同。
+
+defaults:
+  - config
+  - override task_configs@task: ring_transfer_topogym_tabletop_v1
+  - override env_configs@env: world_tabletop_fem_v1
+  - override run_configs@run: ring_transfer
+  - _self_

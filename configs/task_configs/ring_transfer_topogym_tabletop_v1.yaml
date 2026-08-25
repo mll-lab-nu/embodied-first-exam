@@ -165,6 +165,20 @@ transfer:
   # 释放后静置步数：环回缩与落座。
   release_settle_steps: 200
 
+# 机械臂执行参数（demo 用；spike 不带臂，不读这一块）。
+physical:
+  # Franka hand 坐标系原点到指尖的距离；follow band 的目标 = 指令手位 - hand_above
+  # （与 untangle_continuous_fem_demo 同值同做法）。
+  hand_above: 0.103
+  # 接近/退开高度（task z），高于挡头顶 0.091 加钩住时的抬升 0.155 之上的余量。
+  approach_z: 0.220
+  # 开合夹爪的步数。
+  gripper_steps: 30
+  # 手到位后再静置几步，让 IK 收敛到位再做 attach_error 校验。
+  touch_settle_steps: 20
+  # 开局静置步数（spike 实测 50 步收敛）。
+  settle_steps: 80
+
 success:
   # 中心线读回的材料分桶数（= 出生环数 = 周长/段长，spike 同式）。
   centerline_bins: 106
