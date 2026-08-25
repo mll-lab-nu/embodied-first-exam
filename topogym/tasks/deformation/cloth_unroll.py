@@ -432,7 +432,26 @@ class ClothUnrollSceneBuilder:
                 particle_size=float(cloth_cfg.particle_size), **iterations
             ),
         )
-        tabletop = builder.create(show_viewer=show_viewer, include_robot=include_robot)
+        tabletop = builder.create(
+            show_viewer=show_viewer,
+            include_robot=include_robot,
+            # The arm is outside the soft-body coupler, as it is in every rope
+            # task (`ring_transfer.py:215`, `closed_band_spike.py:318`). All
+            # manipulation here goes through the kinematic bind, so finger
+            # contact carries no signal -- and with the coupler on it carried
+            # the OPPOSITE of signal: the pads pressed cloth through the table
+            # and the bind froze it there.
+            #
+            # PBD's stable standoff is 5-9 mm (measured 2026-08-25) while a real
+            # pinch on a 2 mm sheet needs the pads at the surface, so no clearance
+            # exists that is both penetration-free and reachable on hardware.
+            # Leaving the coupler on forces that choice; taking the arm out of it
+            # removes the choice.
+            #
+            # The cost is that nothing stops the arm passing THROUGH the cloth:
+            # trajectory correctness is now the script's job, not the solver's.
+            robot_material=gs.materials.Rigid(needs_coup=False),
+        )
         scene = tabletop.scene
         layout = ClothUnrollLayout(
             self.task_cfg, np.asarray(tabletop.frames.task_origin, dtype=float)

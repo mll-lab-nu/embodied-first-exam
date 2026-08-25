@@ -39,7 +39,7 @@ from typing import Any
 
 import numpy as np
 
-from topogym.primitives.pick_place import HAND_TO_PAD_Z
+from topogym.primitives.pick_place import HAND_TO_PAD_TIP_Z, HAND_TO_PAD_Z
 
 
 def _as_numpy_qpos(value):
@@ -378,7 +378,11 @@ class ClothLinkAttachDragPrimitive:
             print(
                 f"cloth_fold attach particles={len(indices)} "
                 f"attach_error_mm={attach_error * 1e3:.2f} "
-                f"clearance_mm={float(self.touch_clearance) * 1e3:.1f}",
+                f"clearance_mm={float(self.touch_clearance) * 1e3:.1f} "
+                # Negative = the pad tip is inside the sheet. With the arm outside
+                # the coupler that is free visually and costs nothing physically;
+                # it is the TABLE the tip must stay above.
+                f"pad_tip_mm={(float(controller.hand_pos()[2]) - HAND_TO_PAD_TIP_Z - float(grasp_point[2])) * 1e3:+.1f}",
                 flush=True,
             )
 
@@ -456,6 +460,7 @@ class ClothLinkAttachDragPrimitive:
                     f"follow_mm={follow * 1e3:.1f} "
                     f"arm_pos_err_mm={pose * 1e3:.1f} "
                     f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
+                    f"pad_tip_mm={(reached[2] - HAND_TO_PAD_TIP_Z - float(target[2])) * 1e3:+.1f} "
                     f"held_dz_mm={(float(held[2]) - bind_height) * 1e3:+.1f} "
                     f"trim_mm={height_trim * 1e3:.1f} "
                     f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "

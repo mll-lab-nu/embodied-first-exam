@@ -10,6 +10,14 @@ import numpy as np
 # center, derived from the MJCF (left_finger z=0.0584 + pad_z=0.0445).
 HAND_TO_PAD_Z: float = 0.1029
 
+# Same origin down to the pad's TIP -- the surface that actually meets the
+# object. The fingertip pad is a box of half-height 0.0085 centred at 0.0445 in
+# the finger frame (MJCF `fingertip_pad_collision_1`), so the tip is 8.5 mm
+# BELOW the centre `HAND_TO_PAD_Z` names. Aiming the centre at a surface buries
+# the tip 8.5 mm inside it, which is what put cloth under the table on
+# `cloth_unpleat` and `cloth_unroll` before 2026-08-25.
+HAND_TO_PAD_TIP_Z: float = 0.1114
+
 
 def _as_numpy(value) -> np.ndarray:
     if hasattr(value, "detach"):

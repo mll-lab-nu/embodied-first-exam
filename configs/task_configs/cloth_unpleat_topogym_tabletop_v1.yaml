@@ -203,7 +203,10 @@ grasp:
   attach_tolerance: 0.008
   # 指垫停在抓取点上方多少。手指与布硬接触在 Genesis 1.1.0 上是 native segfault，
   # 这一项是「手指永远够不到布」的唯一保证，下限 = 2 倍 particle_size。
-  touch_clearance: 0.008
+  # 相切：指垫半高 8.5mm、中心在 HAND_TO_PAD_Z=0.1029，垫尖低 8.5mm。原来的 0.008
+  # 碰巧就是相切，但在耦合开着时相切会压穿布；机械臂退出耦合后（needs_coup=False，
+  # 见 tasks/deformation/cloth_unpleat.py）这个值才是安全的。推导见 cloth_unroll 同项。
+  touch_clearance: 0.0085
   # 夹爪合拢到的半宽。必须 ≥ particle_size / 2，否则两指之间不存在粒子的可行位置。
   grasp_qpos: 0.004
   attach_radius: 0.018
