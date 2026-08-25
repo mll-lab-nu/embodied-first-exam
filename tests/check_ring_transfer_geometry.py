@@ -302,12 +302,22 @@ def main() -> int:
     for label, point in carry:
         if point[2] + float(task.physical.hand_above) > float(workspace.z[1]) + 1e-9:
             failures.append(f"carry waypoint {label} puts the hand above the workspace")
-    # the hanging loop must pass beside the anchor's head on the detour legs
-    for label, point in carry[2:5]:
-        clearance = float(np.linalg.norm(point[:2] - anchor.center)) - 0.5 * float(task.carry.spread) - anchor.head_radius - ring.tube_radius
-        print(f"               {label:14s} hanging loop to {anchor.name}'s head {clearance * 1000:.1f} mm {'ok' if clearance > 0 else 'FAIL'}")
-        if clearance <= 0:
-            failures.append(f"carry leg {label} sweeps the hanging loop through {anchor.name}")
+    # Once lifted, the loop hangs as two strands at the finger positions
+    # (hand +- spread/2 along `across`); each must stay clear of the anchor's
+    # head at every waypoint from the lift top on. (During the lift itself the
+    # loop passes over the head on purpose -- that is the gateway.)
+    heading = target.center - anchor.center
+    heading = heading / float(np.linalg.norm(heading))
+    across_c = np.array([-heading[1], heading[0]])
+    for label, point in carry[1:-1]:
+        worst = min(
+            float(np.linalg.norm(point[:2] + side * 0.5 * float(task.carry.spread) * across_c - anchor.center))
+            - anchor.head_radius - ring.tube_radius
+            for side in (-1.0, 1.0)
+        )
+        print(f"               {label:14s} hanging strands to {anchor.name}'s head {worst * 1000:.1f} mm {'ok' if worst > 0 else 'FAIL'}")
+        if worst <= 0:
+            failures.append(f"carry leg {label} hangs a strand through {anchor.name}'s head")
 
     lift_z = anchor.top_z + ring.tube_radius + float(task.transfer.lift_margin)
     print(f"lift-off       near band to {lift_z * 1000:.1f} mm (head top {anchor.top_z * 1000:.1f}) then +{float(task.transfer.shift) * 1000:.0f} mm toward {target.name}")

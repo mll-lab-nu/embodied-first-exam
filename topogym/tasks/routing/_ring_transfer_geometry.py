@@ -177,10 +177,13 @@ def spawn_mesh(ring: RingSpec, centerline: np.ndarray):
 
 
 def lift_points(centerline: np.ndarray, ring: RingSpec, post: PostSpec, spread: float) -> tuple[np.ndarray, np.ndarray]:
-    """Where the two fingers hook the loop NEXT TO the spawn post for the carry
-    oracle: the near cap's shoulders, `spread` apart, on the post's outer side.
-    Lifting there takes the cap over the post's head (the loop is slack around it)
-    and leaves the loop hanging from the fingers with the far cap as its bottom."""
+    """Where the two fingers hook the loop for the carry oracle: the near cap's
+    shoulders, `spread` apart. The near cap is the half-circle around the spawn
+    post that bulges AWAY from the far cap (toward the target), so the fingers go
+    in between the post and the target. Lifting there takes the cap up over the
+    post's head and the rest of the loop follows, leaving it hanging from the
+    fingers with the far cap as its bottom U -- and the hanging loop is already
+    on the target's side of the post, so no detour round the post is needed."""
 
     along = np.array([ring.long_axis[0], ring.long_axis[1], 0.0])
     across = np.array([-ring.long_axis[1], ring.long_axis[0], 0.0])
@@ -191,7 +194,7 @@ def lift_points(centerline: np.ndarray, ring: RingSpec, post: PostSpec, spread: 
     forward = float(np.sqrt(ring.loop_radius**2 - half**2))
     points = []
     for side in (1.0, -1.0):
-        target = peg + forward * along + side * half * across
+        target = peg - forward * along + side * half * across
         points.append(np.asarray(centerline[int(np.argmin(np.linalg.norm(centerline - target[None, :], axis=1)))], dtype=float))
     return points[0], points[1]
 
@@ -217,8 +220,9 @@ def carry_path(
     Heights are FINGER heights; the loop's bottom U hangs `hang_depth` below.
       lift     -- straight up until the bottom U is `hang_bottom_z` above the
                   table (below the target's head, above its base cone).
-      detour   -- sideways, so the hanging loop passes beside the anchor rather
-                  than over it (its bottom is far below the anchor's head).
+      detour   -- (only if `detour` > 0) sideways, for a lift point on the far
+                  side of the anchor; with the fingers between anchor and
+                  target the hanging loop is already clear of the anchor.
       approach -- to `approach_before` short of the target, on its near side,
                   in line with the anchor->target direction.
       push     -- past the target by `push_past`: the bottom U meets the shaft,
@@ -233,18 +237,23 @@ def carry_path(
     direction = target.center - anchor.center
     direction = direction / float(np.linalg.norm(direction))
     across = np.array([-direction[1], direction[0]])
-    detour = start + float(carry_cfg.detour) * across
+    detour = float(carry_cfg.detour)
     approach = target.center - (target.radius + ring.tube_radius + float(carry_cfg.approach_before)) * direction
     landing = target.center + float(carry_cfg.push_past) * direction
-    return [
+    path = [
         ("start", np.array([start[0], start[1], ring.tube_radius])),
         ("lift", np.array([start[0], start[1], finger_z])),
-        ("detour", np.array([detour[0], detour[1], finger_z])),
-        ("approach_side", np.array([approach[0] + float(carry_cfg.detour) * across[0], approach[1] + float(carry_cfg.detour) * across[1], finger_z])),
+    ]
+    if detour > 0.0:
+        side = start + detour * across
+        path.append(("detour", np.array([side[0], side[1], finger_z])))
+        path.append(("approach_side", np.array([approach[0] + detour * across[0], approach[1] + detour * across[1], finger_z])))
+    path += [
         ("approach", np.array([approach[0], approach[1], finger_z])),
         ("push", np.array([landing[0], landing[1], finger_z])),
         ("lower", np.array([landing[0], landing[1], float(carry_cfg.drop_z)])),
     ]
+    return path
 
 
 def far_cap_point(centerline: np.ndarray, ring: RingSpec, post: PostSpec) -> np.ndarray:

@@ -407,6 +407,11 @@ class ClothLinkAttachDragPrimitive:
                 target,
                 float(target[2]) + float(self.touch_clearance) + height_trim,
             )
+            # Before the motion, not after. Setting it after left every glide
+            # filed under the PREVIOUS label: `attach:43` on `cloth_unroll`
+            # 2026-08-24 was pull_01's drag, not the bind. Same trap as the
+            # descent, fixed there 2026-08-24 and missed here.
+            self._notify(on_phase, waypoint.label)
             self._glide(controller, commanded, ee_quat, steps)
             # How far the held material is from where it was asked to be. With a
             # link binding this stays near zero; a growing value means the arm
@@ -432,7 +437,6 @@ class ClothLinkAttachDragPrimitive:
                         float(self.max_height_trim),
                     )
                 )
-            self._notify(on_phase, waypoint.label)
             if self.verbose:
                 # The commanded and achieved HAND poses, per axis, not just the
                 # scalar gap. `continuous_ik` reports nothing when it falls
