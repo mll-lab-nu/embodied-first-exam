@@ -136,6 +136,7 @@ def main(cfg: DictConfig) -> None:
     # pad open on every accelerating leg (2026-08-25 video: "opens and
     # re-closes while carrying").
     grip_offset: dict[str, np.ndarray] = {}
+    phase_assist: dict[str, bool] = {}
 
     def probe(label: str, step: int, hand_cmd: np.ndarray, phase: GraspPhase) -> dict:
         """One line of evidence per `physical.probe_every` steps while the rope is
@@ -148,6 +149,8 @@ def main(cfg: DictConfig) -> None:
         hand_now = np.asarray(controller.hand_pos(), dtype=float)
         arm_err = float(np.linalg.norm(hand_cmd - hand_now))
         tip_now = hand_now - hand_above
+        # With the assist on this is the band's tracking error; without it, it is
+        # how far the pinched material has slipped from where the pads closed.
         band_err = max(
             float(np.linalg.norm(built.bands[name].band_center() - (tip_now + grip_offset[name])))
             for name in phase.bands
@@ -172,6 +175,44 @@ def main(cfg: DictConfig) -> None:
             flush=True,
         )
         return reading
+
+    def reactive_lift(phase: GraspPhase, held_from: np.ndarray, yaw: float) -> np.ndarray:
+        """Take the loop off the anchor by feedback rather than by a fixed path
+        (user's design, 2026-08-25): while the loop reads STRETCHED, step the hand
+        horizontally toward the anchor's axis (the strand caught under the head is
+        on the far side; moving over the post slackens it); while it reads slack,
+        step straight up. Done when the lowest point of the loop is above the head.
+        The hand never goes further past the axis than `carry.unhook_past`."""
+
+        rl = task.carry.reactive
+        anchor = layout.anchor
+        clear_z = anchor.top_z + layout.ring.tube_radius + float(task.carry.clear_margin)
+        limit_xy = anchor.center + float(task.carry.unhook_past) * (anchor.center - held_from[:2]) / max(float(np.linalg.norm(anchor.center - held_from[:2])), 1e-9)
+        held = np.asarray(held_from, dtype=float).copy()
+        quat = ee_quat_for_yaw(controller.default_ee_quat, yaw)
+        moved_xy = moved_z = 0
+        for step in range(1, int(rl.max_steps) + 1):
+            nodes = built.nodes()
+            state = classify()
+            lowest = float(nodes[:, 2].min())
+            if lowest > clear_z:
+                print(f"ring_transfer reactive_lift done at step {step}: loop bottom {lowest * 1000:.1f}mm > {clear_z * 1000:.1f}mm (xy steps {moved_xy}, z steps {moved_z})", flush=True)
+                break
+            to_axis = limit_xy - held[:2]
+            dist = float(np.linalg.norm(to_axis))
+            if state.length_ratio > float(rl.stretch_max) and dist > 1e-4:
+                held[:2] += to_axis / dist * min(float(rl.step_xy), dist)
+                moved_xy += 1
+            else:
+                held[2] += float(rl.step_z)
+                moved_z += 1
+            controller.move_ee_to(hand_for(held), quat=quat, steps=1, continuous_ik=True)
+            if cfg.run.verbose and step % int(physical.probe_every) == 0:
+                probe(f"{phase.name}:reactive_lift", step, hand_for(held), phase)
+                print(f"ring_transfer reactive_lift step={step} length_ratio={state.length_ratio:.3f} lowest={lowest * 1000:.1f}mm held={np.round(held * 1000).astype(int).tolist()} xy_steps={moved_xy} z_steps={moved_z}", flush=True)
+        else:
+            print(f"ring_transfer reactive_lift: NOT done after {rl.max_steps} steps (length_ratio {classify().length_ratio:.3f}, lowest {float(built.nodes()[:, 2].min()) * 1000:.1f}mm)", flush=True)
+        return held
 
     def lift_verdict(phase: GraspPhase) -> None:
         """Did the loop come off the anchor cleanly? Clean means: no vertex touching
@@ -200,9 +241,10 @@ def main(cfg: DictConfig) -> None:
             yaw = yaw_from + alpha * delta_yaw
             if phase is not None and held_to is not None:
                 if phase.kind == "pinch":
-                    tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
-                    for name in phase.bands:
-                        built.bands[name].drive_to(tip_now + grip_offset[name])
+                    if phase_assist.get(phase.name, True):
+                        tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
+                        for name in phase.bands:
+                            built.bands[name].drive_to(tip_now + grip_offset[name])
                 else:
                     held = np.asarray(held_from) + alpha * (np.asarray(held_to) - np.asarray(held_from))
                     for name, target in band_targets(phase, held).items():
@@ -260,10 +302,13 @@ def main(cfg: DictConfig) -> None:
             # Spread the fingers until the pads meet the rope from inside: the
             # visible act of taking hold. The bands engage only after that.
             controller.set_gripper(hook_qpos, steps=int(physical.gripper_steps))
+        assist = phase.kind != "pinch" or bool(grasp_cfg.get("assist", True))
         for name in phase.bands:
-            built.bands[name].attach()
+            if assist:
+                built.bands[name].attach()
             tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
             grip_offset[name] = np.asarray(built.bands[name].band_center(), dtype=float) - tip_now
+        phase_assist[phase.name] = assist
         print(
             f"ring_transfer {phase.name} grasped kind={phase.kind} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} "
             f"bands={[f'{n}:{len(built.bands[n].indices)}' for n in phase.bands]}",
@@ -278,9 +323,17 @@ def main(cfg: DictConfig) -> None:
         shift_xy = np.zeros(3)
         if phase.kind == "pinch":
             shift_xy = np.array([held0[0] - phase.waypoints[0].position[0], held0[1] - phase.waypoints[0].position[1], 0.0])
+        reactive = phase.kind == "pinch" and bool(task.carry.get("reactive_lift", False)) and any(wp.label == "clear" for wp in phase.waypoints)
         for wp in phase.waypoints:
             held = np.asarray(wp.position, dtype=float) + shift_xy
             yaw_next = phase.yaw_at(held) if phase.kind == "hook" else yaw
+            if reactive and wp.label in ("over_anchor", "clear"):
+                if wp.label == "over_anchor":
+                    continue  # the reactive lift decides where to go
+                held = reactive_lift(phase, held_prev, yaw)
+                hand_prev, held_prev = hand_for(held), held
+                lift_verdict(phase)
+                continue
             glide(hand_prev, hand_for(held), yaw_prev, yaw_next, phase=phase, held_from=held_prev, held_to=held, label=f"{phase.name}:{wp.label}")
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
             if wp.label == "clear":
@@ -289,7 +342,7 @@ def main(cfg: DictConfig) -> None:
                 print(f"ring_transfer stop_after={wp.label}: holding {int(cfg.run.final_hold_steps)} steps for inspection, then exiting", flush=True)
                 for _ in range(int(cfg.run.final_hold_steps)):
                     for name in phase.bands:
-                        if phase.kind == "pinch":
+                        if phase.kind == "pinch" and built.bands[name].active:
                             built.bands[name].drive_to(np.asarray(controller.hand_pos(), dtype=float) - hand_above + grip_offset[name])
                     controller.move_ee_to(hand_prev, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw_prev), steps=1, continuous_ik=True)
                 raise SystemExit(2)
@@ -310,7 +363,8 @@ def main(cfg: DictConfig) -> None:
                     flush=True,
                 )
         for name in phase.bands:
-            built.bands[name].release()
+            if built.bands[name].active:
+                built.bands[name].release()
         # Letting go: an internal grasp closes (the fingers come back together
         # inside the loop and lift out of it); a pinch opens.
         controller.set_gripper(gripper_closed if phase.kind == "hook" else gripper_open, steps=int(physical.gripper_steps))

@@ -135,6 +135,11 @@ grasp:
   # 捏取时每指的合拢目标 = 绳半径 + contact_d_hat：指垫停在势垒作用距离上，绳被两侧势垒夹住。
   # 取 0.004 时实测 finger_qpos 走到 -0.002——两指越过绳心，势垒没来得及起作用，绳被压穿。
   grasp_qpos: 0.006
+  # carry 段是否再叠加 assist（follow band 把捏住的绳段钉在指尖）。2026-08-25 实测叠加时
+  # 指垫与被钉住的刚性绳段互相顶，手指穿过绳（finger_qpos -0.0026），IPC 把穿透力经两向耦合
+  # 反推到臂上，臂被拖偏 130mm。false = 纯靠指垫摩擦夹持（环重 0.1 N，摩擦 ≈0.42）；
+  # near band 仍声明，只用来读「绳有没有从指间滑走」。
+  assist: false
   # 捏取时指尖相对绳中心线的高度。指垫底面就是指尖，要让指垫盖住绳的截面中段：
   # 指尖 = 绳心 - 2mm（指垫底离桌面 2mm）。+2mm 时指垫只盖住绳的上 2mm，看起来像绳
   # 顶在指尖下面（2026-08-25 视频）。
@@ -220,6 +225,17 @@ carry:
   # 悬挂深度 0.140 > 0.120，环底部仍在桌上，抬这么高也不产生张力。
   lift_low_z: 0.120
   unhook_past: 0.020
+  # 反应式抬离（用户 2026-08-25 提议）：lift_low 之后每步读环的拉伸比与最低点——
+  #   拉伸比 > stretch_max → 朝 A 轴心方向水平走 step_xy（最多走到 A + unhook_past）；
+  #   否则                → 竖直上升 step_z；
+  #   环最低点 > 挡头顶 + clear_margin → 抬离完成（lift verdict）。
+  # 步数封顶 max_steps；false = 走 over_anchor / clear 固定 waypoint。
+  reactive_lift: true
+  reactive:
+    stretch_max: 1.02
+    step_xy: 0.003
+    step_z: 0.003
+    max_steps: 400
   # 推之前停在 B 近侧柱面前多远，再沿 A->B 方向直推。
   approach_before: 0.050
   # 推过 B 轴多远再放低。要让 U 已经绕到柱子两侧、手在远侧；同时手掌盒体（沿 x 半长 0.10）
@@ -236,7 +252,10 @@ physical:
   #   fingers = finger_links 里的 link 进 IPC（ABD，每步钉到 IK 位姿），指垫真的夹住绳、
   #             手掌穿不过绳；其余臂体仍归刚体求解器。机制同 cable_routing。
   robot_rope_contact: fingers
-  finger_links: [hand, left_finger, right_finger]
+  # 只放两根手指，手掌留在 IPC 之外（rope_winding 验证过的组合）；手掌不穿模由离线门的
+  # hand_clearance 几何检查保证。2026-08-25 三个 link 都进 IPC 时臂在绳松弛状态下就落后
+  # 20mm、之后被拖偏 130mm。
+  finger_links: [left_finger, right_finger]
   # 绳↔指垫的 IPC 摩擦。实际接触摩擦 = sqrt(rope.fem.friction_mu x 此值) = sqrt(0.3 x 0.6) ≈ 0.42。
   # rope_winding 取 0.004 是为了让绳蹭过指垫；这里是捏取，要握得住。assist 仍在（同一运动
   # 不冲突），接触负责不穿模与视觉。
