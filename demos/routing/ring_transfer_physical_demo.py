@@ -240,15 +240,18 @@ def main(cfg: DictConfig) -> None:
 
     def lift_verdict(phase: GraspPhase) -> None:
         """Did the loop come off the anchor cleanly? Clean means: no vertex touching
-        the anchor, winding about it 0, and the whole loop above its head top.
-        Anything else is a snag and the carry that follows is not the task's."""
+        the anchor and the whole loop above its head top. The winding number is
+        NOT a criterion here: it is a top-down projection, and a loop hanging
+        directly above the post still projects around its axis (read 1 at this
+        moment on 2026-08-26, 0 twenty-five steps into travel). It is printed
+        for the record; the final judgement uses it once the loop is down."""
 
         nodes = built.nodes()
         anchor = layout.anchor
         contacts = post_contact_count(nodes, anchor, tube_radius=layout.ring.tube_radius)
         state = classify()
         lowest = float(nodes[:, 2].min())
-        clean = contacts == 0 and state.winding.get(anchor.name, 1) == 0 and lowest > anchor.top_z
+        clean = contacts == 0 and lowest > anchor.top_z
         print(
             f"ring_transfer lift verdict: {'CLEAN' if clean else 'SNAGGED'} -- {anchor.name} contacts={contacts} "
             f"winding={state.winding.get(anchor.name)} loop_min_z={lowest * 1000:.1f}mm head_top={anchor.top_z * 1000:.1f}mm",
@@ -422,6 +425,14 @@ def main(cfg: DictConfig) -> None:
                 held = reactive_lift(phase, held_prev, yaw)
                 hand_prev, held_prev = hand_for(held), held
                 lift_verdict(phase)
+                if str(cfg.run.stop_after or "") == "clear":
+                    print(f"ring_transfer stop_after=clear: holding {int(cfg.run.final_hold_steps)} steps for inspection, then exiting", flush=True)
+                    for _ in range(int(cfg.run.final_hold_steps)):
+                        for name in phase.bands:
+                            if built.bands[name].active:
+                                built.bands[name].drive_to(np.asarray(controller.hand_pos(), dtype=float) - hand_above + grip_offset[name])
+                        controller.move_ee_to(hand_prev, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw_prev), steps=1, continuous_ik=True)
+                    raise SystemExit(2)
                 continue
             glide(hand_prev, hand_for(held), yaw_prev, yaw_next, phase=phase, held_from=held_prev, held_to=held, label=f"{phase.name}:{wp.label}")
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
