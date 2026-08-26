@@ -256,6 +256,8 @@ physical:
   touch_settle_steps: 20
   # 开局静置步数（spike 实测 50 步收敛）。
   settle_steps: 80
+  # 抓着绳时每隔多少步打一行 probe（臂位误差、band 误差、A 接触、环最低点、绕数）。
+  probe_every: 25
 
 success:
   # 中心线读回的材料分桶数（= 出生环数 = 周长/段长，spike 同式）。

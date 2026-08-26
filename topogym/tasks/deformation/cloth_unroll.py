@@ -397,6 +397,74 @@ def settle_band(band: ClothUnrollScene, steps: int) -> np.ndarray:
     return band.rest_nodes
 
 
+class TapeRelease:
+    """Holds the wrapped band against the drum and lets it go as it pays out.
+
+    A band wound on a fixed drum has nothing to hold it there. Genesis' PBD cloth
+    ignores `bending_compliance` entirely (measured 2026-08-23 over seven decades)
+    and offers no adhesion, so the only mechanisms available are layers pressing
+    on each other, gravity pressing onto a surface, or a kinematic pin. The first
+    forces a layer pitch small enough to confuse the visual binding map, which is
+    what tore the band on camera. The second holds only the drum's upper half and
+    still loses the wrap to the drape's weight -- measured 2026-08-25, a 180
+    degree wrap kept 40% of the band against a designed 62%, and what slid off
+    piled at the drum's foot.
+
+    So the band is pinned, and the pin is released along the peel front. This is
+    what the user named: a roll that behaves like tape, held everywhere and freed
+    exactly where it is being pulled from.
+
+    The front is keyed to the length PAID OUT, never to time, so the pull speed
+    stays a free parameter -- what bounds it is unchanged (PBD propagates about
+    one edge per iteration; see `physical.pull_step_m`).
+    """
+
+    def __init__(self, cloth, layout, nodes, *, reach: float, lead: float):
+        self.cloth = cloth
+        self.lead = float(lead)
+        axis_pt = layout.bar_centre()
+        material, bar_ax = layout.material_axis, layout.bar_axis
+        centre_m = float(axis_pt[material])
+        centre_z = layout.bar_height()
+        nodes = np.asarray(nodes, dtype=float)
+        # Distance to the drum AXIS, so the band's width along the bar is ignored.
+        radial = np.hypot(nodes[:, material] - centre_m, nodes[:, 2] - centre_z)
+        self.held = np.flatnonzero(radial <= float(reach))
+        if self.held.size == 0:
+            raise ValueError(
+                f"tape reach={reach} caught no particles around the drum axis at "
+                f"({centre_m:+.4f}, {centre_z:+.4f}); the drum geometry and the "
+                f"reach disagree."
+            )
+        # Angle around the axis, measured so that it GROWS away from the exit
+        # tangent -- the peel front sweeps it in one direction.
+        sign = float(np.sign(layout.pull_direction()[material]) or 1.0)
+        dm = (nodes[self.held, material] - centre_m) * sign
+        dz = nodes[self.held, 2] - centre_z
+        self.angle = np.arctan2(dm, -dz)          # 0 = straight below the axis
+        self.radius = float(np.median(radial[self.held]))
+        self.released = np.zeros(self.held.size, dtype=bool)
+        self.cloth.fix_particles(particles_idx_local=[int(i) for i in self.held])
+
+    def advance(self, paid_out: float) -> int:
+        """Free everything the peel front has passed. Returns how many, total."""
+
+        front = (float(paid_out) + self.lead) / max(self.radius, 1e-9)
+        due = (self.angle <= self.angle.min() + front) & ~self.released
+        if np.any(due):
+            self.cloth.release_particle(
+                particles_idx_local=[int(i) for i in self.held[due]]
+            )
+            self.released |= due
+        return int(self.released.sum())
+
+    def summary(self) -> str:
+        return (
+            f"tape held={self.held.size} released={int(self.released.sum())} "
+            f"radius_mm={self.radius * 1e3:.1f} lead_mm={self.lead * 1e3:.1f}"
+        )
+
+
 class ClothUnrollSceneBuilder:
     """Standard tabletop, a two-post dispenser, one PBD cloth band wound on it."""
 

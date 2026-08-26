@@ -15,3 +15,7 @@ motion: carry
 
 # 机械臂退开后再空跑多少步才停止录制（dt=0.01，100 步 = 1 秒）。
 final_hold_steps: 100
+
+# 诊断：跑完这个 waypoint（lift / travel / approach / push / lower）就停住 final_hold_steps 步
+# 并退出（exit 2），录像照常保存。null = 跑完整个流程。
+stop_after: null

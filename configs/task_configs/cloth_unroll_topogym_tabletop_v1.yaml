@@ -155,6 +155,15 @@ cloth:
   #
   # 代价：终态 on_bar 永远不为零，成功判据要从「料全部离开梁」改成「卷上的料
   # 全部展开」——后者更贴近 docx 1.3 的原意，终态也更好定义。
+  # 胶带式保持：出生后把整个包裹弧钉在鼓上，随剥离前沿逐段释放。
+  # reach = 离鼓轴多远算「贴在鼓上」，取 bar_radius + clearance + 2 粒径。
+  # lead  = 前沿提前量：释放要走在夹爪前面，否则布被钉着的部分会被硬拽
+  #         （看 worst_gap_mm 会不会超过 median_gap_mm）。
+  # 前沿挂在「已放出长度」上而不是时间上，所以拉动速度仍是自由参数。
+  tape:
+    enabled: false
+    reach: 0.068
+    lead: 0.020
   anchor_tail:
     enabled: false
     radius: 0.010

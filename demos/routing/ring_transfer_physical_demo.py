@@ -43,7 +43,12 @@ from topogym.utils import (
     print_recording_saved,
     recording_session_from_config,
 )
-from topogym.verification.ring_transfer_verifier import RingTransferEvaluator, RingTransferWatch
+from topogym.verification.ring_transfer_verifier import (
+    RingTransferEvaluator,
+    RingTransferWatch,
+    post_contact_count,
+    post_surface_gap,
+)
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="ring_transfer")
@@ -132,6 +137,59 @@ def main(cfg: DictConfig) -> None:
     # re-closes while carrying").
     grip_offset: dict[str, np.ndarray] = {}
 
+    def probe(label: str, step: int, hand_cmd: np.ndarray, phase: GraspPhase) -> dict:
+        """One line of evidence per `physical.probe_every` steps while the rope is
+        held: is the arm where it was told to be, is the rope where the fingers
+        are, and is the loop touching the anchor. `arm_err` is the commanded hand
+        minus the measured one -- an arm being pulled by a snagged rope shows up
+        here first; `band_err` is the band centroid minus its target."""
+
+        nodes = built.nodes()
+        hand_now = np.asarray(controller.hand_pos(), dtype=float)
+        arm_err = float(np.linalg.norm(hand_cmd - hand_now))
+        tip_now = hand_now - hand_above
+        band_err = max(
+            float(np.linalg.norm(built.bands[name].band_center() - (tip_now + grip_offset[name])))
+            for name in phase.bands
+            if name in grip_offset
+        ) if phase.kind == "pinch" else float("nan")
+        anchor = layout.anchor
+        near_anchor = nodes[np.linalg.norm(nodes[:, :2] - anchor.center[None, :], axis=1) <= anchor.head_radius + 3.0 * layout.ring.tube_radius]
+        reading = {
+            "arm_err_mm": arm_err * 1000.0,
+            "band_err_mm": band_err * 1000.0,
+            "A_contacts": post_contact_count(nodes, anchor, tube_radius=layout.ring.tube_radius),
+            "A_gap_mm": post_surface_gap(nodes, anchor) * 1000.0,
+            "near_A_max_z_mm": (float(near_anchor[:, 2].max()) * 1000.0) if len(near_anchor) else float("nan"),
+            "loop_min_z_mm": float(nodes[:, 2].min()) * 1000.0,
+            "finger_qpos": np.round(controller.gripper_qpos(), 4).tolist(),
+        }
+        state = classify()
+        print(
+            f"ring_transfer probe {label} step={step} arm_err={reading['arm_err_mm']:.1f}mm band_err={reading['band_err_mm']:.1f}mm "
+            f"A_contacts={reading['A_contacts']} A_gap={reading['A_gap_mm']:.1f}mm near_A_max_z={reading['near_A_max_z_mm']:.1f}mm "
+            f"loop_min_z={reading['loop_min_z_mm']:.1f}mm winding={state.winding} finger_qpos={reading['finger_qpos']}",
+            flush=True,
+        )
+        return reading
+
+    def lift_verdict(phase: GraspPhase) -> None:
+        """Did the loop come off the anchor cleanly? Clean means: no vertex touching
+        the anchor, winding about it 0, and the whole loop above its head top.
+        Anything else is a snag and the carry that follows is not the task's."""
+
+        nodes = built.nodes()
+        anchor = layout.anchor
+        contacts = post_contact_count(nodes, anchor, tube_radius=layout.ring.tube_radius)
+        state = classify()
+        lowest = float(nodes[:, 2].min())
+        clean = contacts == 0 and state.winding.get(anchor.name, 1) == 0 and lowest > anchor.top_z
+        print(
+            f"ring_transfer lift verdict: {'CLEAN' if clean else 'SNAGGED'} -- {anchor.name} contacts={contacts} "
+            f"winding={state.winding.get(anchor.name)} loop_min_z={lowest * 1000:.1f}mm head_top={anchor.top_z * 1000:.1f}mm",
+            flush=True,
+        )
+
     def glide(hand_from: np.ndarray, hand_to: np.ndarray, yaw_from: float, yaw_to: float, *, phase: GraspPhase | None, held_to=None, held_from=None, label: str):
         distance = float(np.linalg.norm(hand_to - hand_from))
         steps = max(min_steps, int(np.ceil(distance / speed)))
@@ -150,6 +208,8 @@ def main(cfg: DictConfig) -> None:
                     for name, target in band_targets(phase, held).items():
                         built.bands[name].drive_to(target)
             controller.move_ee_to(hand, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw), steps=1, continuous_ik=True)
+            if phase is not None and cfg.run.verbose and (step % int(physical.probe_every) == 0 or step == steps):
+                probe(label, step, hand, phase)
         if cfg.run.verbose:
             state = classify()
             print(f"ring_transfer {label}: {steps} steps, hand {np.round(controller.hand_pos() * 1000, 1).tolist()}mm, {state.summary()}", flush=True)
@@ -223,6 +283,16 @@ def main(cfg: DictConfig) -> None:
             yaw_next = phase.yaw_at(held) if phase.kind == "hook" else yaw
             glide(hand_prev, hand_for(held), yaw_prev, yaw_next, phase=phase, held_from=held_prev, held_to=held, label=f"{phase.name}:{wp.label}")
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
+            if wp.label == "lift":
+                lift_verdict(phase)
+            if str(cfg.run.stop_after or "") == wp.label:
+                print(f"ring_transfer stop_after={wp.label}: holding {int(cfg.run.final_hold_steps)} steps for inspection, then exiting", flush=True)
+                for _ in range(int(cfg.run.final_hold_steps)):
+                    for name in phase.bands:
+                        if phase.kind == "pinch":
+                            built.bands[name].drive_to(np.asarray(controller.hand_pos(), dtype=float) - hand_above + grip_offset[name])
+                    controller.move_ee_to(hand_prev, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw_prev), steps=1, continuous_ik=True)
+                raise SystemExit(2)
             if phase.kind == "pinch" and phase.close_axis is not None and wp.label in ("lift", "travel", "approach"):
                 # How the pinched loop hangs: depth below the fingertips and the
                 # width of its bottom U along the strand (across the closing

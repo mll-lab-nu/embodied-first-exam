@@ -51,6 +51,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.planning.cloth_unroll_planner import plan_cloth_unroll
+from topogym.tasks.deformation.cloth_unroll import TapeRelease
 from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
@@ -65,6 +66,23 @@ from topogym.utils import (
 )
 from topogym.verification import ClothUnrollEvaluator
 from topogym.verification.cloth_unpleat_verifier import simulated_grid_pairs
+
+
+def _advance(watch, tape, name: str, waypoints) -> None:
+    """Phase bookkeeping, and the peel front when the label is a pull segment.
+
+    Keyed to the DISTANCE the plan has paid out by this waypoint, never to the
+    step count, so the pull speed stays free: a faster pull reaches the same
+    waypoint having paid out the same length, and frees the same material.
+    """
+
+    watch.phase = name
+    if tape is None or not name.startswith("pull_"):
+        return
+    index = int(name.split("_")[1])
+    start = np.asarray(waypoints[0].position, dtype=float)
+    here = np.asarray(waypoints[min(index, len(waypoints)) - 1].position, dtype=float)
+    tape.advance(float(np.linalg.norm(here - start)))
 
 
 def make_primitive(cfg, *, skip_initial_open: bool) -> ClothLinkAttachDragPrimitive:
@@ -203,6 +221,18 @@ def main(cfg: DictConfig) -> None:
         # stopping so the recording ends on the collapsed roll rather than cutting
         # off mid-settle; the recorder saves on the way out of its `with` even
         # when the body raises, so the video survives the SystemExit.
+        tape_cfg = cfg.task.cloth.get("tape", None)
+        tape = None
+        if tape_cfg is not None and bool(tape_cfg.get("enabled", False)):
+            tape = TapeRelease(
+                band.cloth,
+                layout,
+                rest,
+                reach=float(tape_cfg.reach),
+                lead=float(tape_cfg.lead),
+            )
+            print(f"cloth_unroll {tape.summary()}", flush=True)
+
         start = evaluator.classify(rest, rest, table_z=layout.table_z, grid=band.grid, **bar)
         # "Is the material still stored?" has two ways to be measured and they
         # stop agreeing once the drum is wide. `spread_ratio` is the band's
@@ -374,7 +404,7 @@ def main(cfg: DictConfig) -> None:
                         )
                     ),
                     particles_fn=lambda: band_particles(band),
-                    on_phase=lambda name: setattr(watch, "phase", name),
+                    on_phase=lambda name: _advance(watch, tape, name, waypoints),
                 )
                 results.append(result)
                 here = evaluator.classify(
