@@ -151,6 +151,19 @@ grasp:
   attach_tolerance: 0.020
   # 夹爪级净空：任一抓取点到任一柱面的最小距离（指半展 0.040 + 余量）。
   post_clearance: 0.050
+  # ---- 捏取按实测收敛 + 抓取证据门（2026-08-25 inspect_clear2：descend 结束指尖离桌 19mm、
+  # 绳顶 10mm，指垫在绳上方合拢，finger_qpos 正好停在指令值 0.006，环没离开桌面；位置门
+  # attach_error 4.6mm 照样放行）。
+  # hover / descend 结束后用实测残差修正指令，直到手位与目标差 < settle_tol（IK 会停早，
+  # franka.py 有记录）；封顶 settle_max_steps。
+  settle_tol: 0.002
+  settle_max_steps: 150
+  # 合拢逐步走，连续 10 步 finger_qpos 变化 < 0.05mm 视为静止；封顶 close_max_steps。
+  # （inspect_clear2：set_gripper 80 步走完手指仍在 0.036，之后才慢慢关——先把过程打印出来。）
+  close_max_steps: 200
+  # 合拢后先抬 lift_check，near band 中心必须跟着升 >= lift_check_min_rise，否则判「没夹住」退出。
+  lift_check: 0.010
+  lift_check_min_rise: 0.006
 
 # transfer（借 A 撑开梯形）的段参数。**第二版几何（柱距 0.22）下 transfer 不可用**：
 # 越过 B 顶的平移段拉伸比 1.96（上限 1.2），离线门只报告不拦截。保留这一块是为近柱距
@@ -236,6 +249,12 @@ carry:
     step_xy: 0.003
     step_z: 0.003
     max_steps: 400
+    # 中止条件（2026-08-25 inspect_clear2：空手时拉伸比恒 1.000，逻辑一路判「松弛→再升」，
+    # 爬了 1.2m 到臂长以外，arm_err 709mm）。绳相对指尖滑走 > slip_abort、臂落后 > arm_err_abort、
+    # 指尖高于 max_z（工作区上限）任一成立即报 ABORT 退出（exit 3）。
+    slip_abort: 0.030
+    arm_err_abort: 0.050
+    max_z: 0.40
   # 推之前停在 B 近侧柱面前多远，再沿 A->B 方向直推。
   approach_before: 0.050
   # 推过 B 轴多远再放低。要让 U 已经绕到柱子两侧、手在远侧；同时手掌盒体（沿 x 半长 0.10）

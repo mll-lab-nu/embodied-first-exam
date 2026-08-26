@@ -191,6 +191,7 @@ def main(cfg: DictConfig) -> None:
         held = np.asarray(held_from, dtype=float).copy()
         quat = ee_quat_for_yaw(controller.default_ee_quat, yaw)
         moved_xy = moved_z = 0
+        band = phase.bands[0]
         for step in range(1, int(rl.max_steps) + 1):
             nodes = built.nodes()
             state = classify()
@@ -198,6 +199,24 @@ def main(cfg: DictConfig) -> None:
             if lowest > clear_z:
                 print(f"ring_transfer reactive_lift done at step {step}: loop bottom {lowest * 1000:.1f}mm > {clear_z * 1000:.1f}mm (xy steps {moved_xy}, z steps {moved_z})", flush=True)
                 break
+            # Guards: a lost rope reads "slack" forever and the loop would climb
+            # out of the workspace (2026-08-25: 400 z-steps to 1.32 m, arm 0.7 m
+            # behind). Slip, an arm that cannot follow, or the height cap all end
+            # the run here with the evidence printed.
+            hand_now = np.asarray(controller.hand_pos(), dtype=float)
+            slip = float(np.linalg.norm(built.bands[band].band_center() - (hand_now - hand_above + grip_offset[band])))
+            arm_err = float(np.linalg.norm(hand_for(held) - hand_now))
+            reason = None
+            if slip > float(rl.slip_abort):
+                reason = f"rope slipped {slip * 1000:.1f}mm from the pads"
+            elif arm_err > float(rl.arm_err_abort):
+                reason = f"arm cannot follow (arm_err {arm_err * 1000:.1f}mm)"
+            elif held[2] > float(rl.max_z):
+                reason = f"fingertip above max_z ({held[2] * 1000:.0f}mm)"
+            if reason is not None:
+                probe(f"{phase.name}:reactive_lift", step, hand_for(held), phase)
+                print(f"ring_transfer reactive_lift ABORT at step {step}: {reason}; length_ratio {state.length_ratio:.3f}, lowest {lowest * 1000:.1f}mm", flush=True)
+                raise SystemExit(3)
             to_axis = limit_xy - held[:2]
             dist = float(np.linalg.norm(to_axis))
             if state.length_ratio > float(rl.stretch_max) and dist > 1e-4:
@@ -230,6 +249,46 @@ def main(cfg: DictConfig) -> None:
             f"winding={state.winding.get(anchor.name)} loop_min_z={lowest * 1000:.1f}mm head_top={anchor.top_z * 1000:.1f}mm",
             flush=True,
         )
+
+    def settle_to(hand_target: np.ndarray, quat: np.ndarray, *, label: str) -> float:
+        """Drive the MEASURED hand onto `hand_target`. The IK stops short of its
+        target by a few mm (documented in franka.py) and per-step gliding never
+        waits, so the pinch came down 16 mm above the rope (2026-08-25). Each
+        step re-commands the target pushed out by the measured residual."""
+
+        tol = float(grasp_cfg.settle_tol)
+        residual = float("inf")
+        steps = 0
+        for steps in range(1, int(grasp_cfg.settle_max_steps) + 1):
+            hand_now = np.asarray(controller.hand_pos(), dtype=float)
+            error = hand_target - hand_now
+            residual = float(np.linalg.norm(error))
+            if residual < tol:
+                break
+            controller.move_ee_to(hand_target + error, quat=quat, steps=1, continuous_ik=True)
+        tip_z = float(layout.to_task(np.asarray(controller.hand_pos(), dtype=float) - hand_above)[2])
+        print(f"ring_transfer {label} settled: residual={residual * 1000:.1f}mm after {steps} steps (tip z={tip_z * 1000:.1f}mm){'' if residual < tol else ' NOT CONVERGED'}", flush=True)
+        return residual
+
+    def close_until_still(qpos: float, *, label: str) -> np.ndarray:
+        """Close the gripper and step until the fingers stop moving; prints the
+        finger reading every 10 steps so a delayed or blocked closure is visible
+        (2026-08-25: 80 fixed steps ended with the fingers still open at 0.036)."""
+
+        controller.set_gripper(qpos)
+        history = [np.asarray(controller.gripper_qpos(), dtype=float).copy()]
+        steps = 0
+        for steps in range(1, int(grasp_cfg.close_max_steps) + 1):
+            controller.step(1)
+            history.append(np.asarray(controller.gripper_qpos(), dtype=float).copy())
+            if steps % 10 == 0:
+                print(f"ring_transfer {label} close step={steps} finger_qpos={np.round(history[-1], 4).tolist()}", flush=True)
+                if float(np.abs(history[-1] - history[-11]).max()) < 5e-5:
+                    break
+        else:
+            print(f"ring_transfer {label} close: fingers NOT STILL after {steps} steps", flush=True)
+        print(f"ring_transfer {label} close done: {steps} steps, finger_qpos={np.round(history[-1], 4).tolist()} (commanded {qpos})", flush=True)
+        return history[-1]
 
     def glide(hand_from: np.ndarray, hand_to: np.ndarray, yaw_from: float, yaw_to: float, *, phase: GraspPhase | None, held_to=None, held_from=None, label: str):
         distance = float(np.linalg.norm(hand_to - hand_from))
@@ -273,17 +332,19 @@ def main(cfg: DictConfig) -> None:
         yaw_now = yaw
         hover = hand_for(np.array([held0[0], held0[1], approach_z]))
         glide(hand_now, hover, yaw_now, yaw, phase=None, label=f"{phase.name}:hover")
+        if phase.kind == "pinch":
+            settle_to(hover, quat, label=f"{phase.name}:hover")
         grasp_point = held0 + (np.array([0.0, 0.0, float(grasp_cfg.pinch_lift)]) if phase.kind == "pinch" else 0.0)
         grasp_hand = hand_for(grasp_point)
         glide(hover, grasp_hand, yaw, yaw, phase=None, label=f"{phase.name}:descend")
-        for _ in range(int(physical.touch_settle_steps)):
-            controller.move_ee_to(grasp_hand, quat=quat, steps=1, continuous_ik=True)
         if phase.kind == "pinch":
-            # Close on the rope: each finger stops one tube radius from the centre
-            # line, so the strand sits between the pads. The arm is outside IPC,
-            # so this is a commanded stop, not a contact one; the finger reading
-            # printed below is the grasp evidence.
-            controller.set_gripper(float(grasp_cfg.grasp_qpos), steps=int(physical.gripper_steps))
+            settle_to(grasp_hand, quat, label=f"{phase.name}:descend")
+            # Close on the rope: each finger stops at tube radius + d_hat from the
+            # centre line, so the strand sits between the pads held by the barrier.
+            close_until_still(float(grasp_cfg.grasp_qpos), label=phase.name)
+        else:
+            for _ in range(int(physical.touch_settle_steps)):
+                controller.move_ee_to(grasp_hand, quat=quat, steps=1, continuous_ik=True)
         # The assist must not hide a hand that never got there: the fingertip
         # point has to be within attach_tolerance of the band(s) before engaging.
         tip = layout.to_task(np.asarray(controller.hand_pos(), dtype=float) - hand_above)
@@ -296,8 +357,23 @@ def main(cfg: DictConfig) -> None:
             f"tolerance={float(grasp_cfg.attach_tolerance) * 1000:.0f} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()}",
             flush=True,
         )
-        if worst > float(grasp_cfg.attach_tolerance):
+        if phase.kind != "pinch" and worst > float(grasp_cfg.attach_tolerance):
             raise SystemExit(f"ring_transfer {phase.name}: hand missed the band by {worst * 1000:.1f} mm; refusing to engage the assist.")
+        if phase.kind == "pinch":
+            # The grasp evidence: lift a little and the pinched material must come
+            # along. A position check cannot tell "pads round the rope" from "pads
+            # above the rope" (2026-08-25: attach_error 4.6 mm, rope never moved).
+            band = phase.bands[0]
+            band_z0 = float(built.bands[band].band_center()[2])
+            check = float(grasp_cfg.lift_check)
+            grasp_point = grasp_point + np.array([0.0, 0.0, check])
+            grasp_hand = hand_for(grasp_point)
+            settle_to(grasp_hand, quat, label=f"{phase.name}:lift_check")
+            rise = float(built.bands[band].band_center()[2]) - band_z0
+            held = rise >= float(grasp_cfg.lift_check_min_rise)
+            print(f"ring_transfer {phase.name} lift_check: band rose {rise * 1000:.1f}mm of {check * 1000:.0f} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} -> {'HELD' if held else 'NOT HELD'}", flush=True)
+            if not held:
+                raise SystemExit(f"ring_transfer {phase.name}: rope not held (band rose {rise * 1000:.1f} mm of {check * 1000:.0f}); nothing to carry.")
         if phase.kind == "hook":
             # Spread the fingers until the pads meet the rope from inside: the
             # visible act of taking hold. The bands engage only after that.
@@ -314,7 +390,7 @@ def main(cfg: DictConfig) -> None:
             f"bands={[f'{n}:{len(built.bands[n].indices)}' for n in phase.bands]}",
             flush=True,
         )
-        held_prev = held0
+        held_prev = grasp_point if phase.kind == "pinch" else held0
         hand_prev = grasp_hand
         yaw_prev = yaw
         # A pinch phase's path is relative to where the material actually is

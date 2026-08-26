@@ -90,6 +90,15 @@ IPC 里把拉力传回臂——就是「起伏、绕圈」的来源。环与 A �
 绳截面；合拢 80 步（30 步只走到 0.036）。带臂实测悬挂深度 140–155 mm、U 宽 106–130 mm；
 `carry.hang_depth` 取 0.140，推的高度按它算（0.19 的外推值让 U 底从 B 挡头上划过、没套上）。
 
+2026-08-25 第二次（inspect_clear2）：carry 段去掉 assist、`finger_links` 只留两指后，**整段没抓到绳**——
+descend 结束指尖离桌 19 mm（绳顶 10 mm），指垫在绳上方合拢，finger_qpos 正好停在指令值 0.006；
+`set_gripper` 80 步走完手指仍在 0.036；环全程 loop_min_z 2 mm，band_err 与手抬高量 1:1 增长；
+反应式抬离读拉伸比恒 1.000，空手升了 400 步到 1.32 m。位置门 attach_error 4.6 mm 照样放行。由此补三项：
+（1）hover / descend 之后按实测残差修正指令直到 < `grasp.settle_tol`（IK 停早的对策）；
+（2）合拢逐步走到手指静止并逐 10 步打印；合拢后先抬 `grasp.lift_check`，near band 必须跟着升
+≥ `lift_check_min_rise`，否则报「rope not held」退出——这才是捏住的证据，取代位置门；
+（3）反应式抬离加中止条件：滑移 > `slip_abort`、arm_err > `arm_err_abort`、指尖高于 `max_z` 任一即 ABORT。
+
 ## 4. 与 2.7 的关系
 
 on-phase 结束时环同时围住 A、B（2.7 的终态）。但 2.7 要求终态绷紧（错误动作释放后回弹）需要周长
