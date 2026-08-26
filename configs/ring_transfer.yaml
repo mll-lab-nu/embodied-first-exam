@@ -6,4 +6,10 @@ defaults:
   - override task_configs@task: ring_transfer_topogym_tabletop_v1
   - override env_configs@env: world_tabletop_fem_v1
   - override run_configs@run: ring_transfer
+  # 指关节增益加大，合拢不再爬行（见该文件头）。
+  - override robot_control_configs@robot_control: franka_panda_position_ik_fast_fingers
   - _self_
+
+# 录制每 2 个物理步取一帧：dt 0.01、30fps 下 every_n_steps=1 是 0.3 倍速慢放，2 → 0.6 倍速。
+recording:
+  every_n_steps: 2

@@ -161,8 +161,9 @@ grasp:
   # attach_error 4.6mm 照样放行）。
   # hover / descend 结束后用实测残差修正指令，直到手位与目标差 < settle_tol（IK 会停早，
   # franka.py 有记录）；封顶 settle_max_steps。
-  settle_tol: 0.002
-  settle_max_steps: 150
+  # hover 的 IK 残差实测停在 2.4mm，再等 150 步也不动；容差 0.003、封顶 40 步。
+  settle_tol: 0.003
+  settle_max_steps: 40
   # 合拢逐步走，连续 10 步 finger_qpos 变化 < 0.05mm 视为静止；封顶 close_max_steps。
   # （inspect_clear2：set_gripper 80 步走完手指仍在 0.036，之后才慢慢关——先把过程打印出来。）
   # inspect_clear4：无阻力时也要 300+ 步才收到 0.006（指关节 PD 响应慢），封顶 400。
@@ -198,10 +199,11 @@ transfer:
   lift_margin: 0.020
   shift: 0.060
   # 驱动速度（米/步），沿用 rope_winding 的 travel_speed。
-  drive_speed: 0.0020
+  # 2026-08-26 从 0.002 提到 0.003（band 跟随实测手位，臂滞后不影响握持）。
+  drive_speed: 0.0030
   min_segment_steps: 20
   # 释放后静置步数：环回缩与落座。
-  release_settle_steps: 200
+  release_settle_steps: 80
 
 # 主 oracle「搬运套索」（run.motion=carry / spike run.test=carry），2026-08-25 按用户提议加入：
 # 捏住 A 与 B 之间那半个帽的顶点（near band）→ 抬起，环从挡头上方脱离 A、悬挂在夹爪下
@@ -306,8 +308,8 @@ physical:
   gripper_steps: 80
   # 手到位后再静置几步，让 IK 收敛到位再做 attach_error 校验。
   touch_settle_steps: 20
-  # 开局静置步数（spike 实测 50 步收敛）。
-  settle_steps: 80
+  # 开局静置步数（spike 实测 50 步收敛）。home 姿态夹爪已是张开的，不再额外开合。
+  settle_steps: 50
   # 抓着绳时每隔多少步打一行 probe（臂位误差、band 误差、A 接触、环最低点、绕数）。
   probe_every: 25
 

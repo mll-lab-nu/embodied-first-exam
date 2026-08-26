@@ -475,7 +475,10 @@ def main(cfg: DictConfig) -> None:
         print(f"ring_transfer after {phase.name}: {classify().summary()}", flush=True)
 
     with recording_session_from_config(scene, built.cameras, cfg.recording):
-        controller.open_gripper(int(physical.gripper_steps))
+        # The home pose already has the gripper open (0.04); re-opening it was
+        # 80 idle steps at the head of every video.
+        if float(np.min(controller.gripper_qpos())) < gripper_open - 1e-3:
+            controller.open_gripper(int(physical.gripper_steps))
         for _ in range(int(physical.settle_steps)):
             scene.step()
         start = classify()
