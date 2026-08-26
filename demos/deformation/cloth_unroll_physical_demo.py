@@ -204,13 +204,34 @@ def main(cfg: DictConfig) -> None:
         # off mid-settle; the recorder saves on the way out of its `with` even
         # when the body raises, so the video survives the SystemExit.
         start = evaluator.classify(rest, rest, table_z=layout.table_z, grid=band.grid, **bar)
-        stored_ok = start.spread_ratio <= float(cfg.task.grasp.max_start_spread_ratio)
+        # "Is the material still stored?" has two ways to be measured and they
+        # stop agreeing once the drum is wide. `spread_ratio` is the band's
+        # horizontal EXTENT over its length, which on a small roll is the same
+        # question -- but a phi-119 drum puts 119 mm of drum into that extent,
+        # and a drum tall enough to clear the table forces a 70 mm drape, and
+        # neither is released material. Measured 2026-08-25: the drum geometry
+        # read 0.45 (at the limit) while 62% of the band was still wrapped on it.
+        #
+        # `min_start_stored_frac` measures the thing the guardrail is actually
+        # for: how much of the band is still on the drum. `on_bar` counts
+        # particles within `bar_radius + 2*particle` of the axis, which covers a
+        # single wrap exactly. Left unset by default -- the small-roll geometry
+        # is calibrated against `spread_ratio` and that calibration stands.
+        stored_frac = float(start.on_bar) / max(len(rest), 1)
+        stored_min = cfg.task.grasp.get("min_start_stored_frac", None)
+        stored_ok = (
+            start.spread_ratio <= float(cfg.task.grasp.max_start_spread_ratio)
+            if stored_min is None
+            else stored_frac >= float(stored_min)
+        )
         layers_ok = start.over_layer_cells >= int(
             cfg.task.grasp.min_start_three_layer_cells
         )
         print(
             f"cloth_unroll start_state spread_ratio={start.spread_ratio:.3f} "
             f"max={float(cfg.task.grasp.max_start_spread_ratio)} "
+            f"stored_frac={stored_frac:.3f} "
+            f"stored_min={'-' if stored_min is None else float(stored_min)} "
             f"multi_layer_cells={start.over_layer_cells} "
             f"min={int(cfg.task.grasp.min_start_three_layer_cells)} "
             f"single_layer_frac={start.single_layer_frac:.3f} "
@@ -231,7 +252,9 @@ def main(cfg: DictConfig) -> None:
             raise SystemExit(
                 f"the roll did not survive the settle ({reason}): spread_ratio "
                 f"{start.spread_ratio:.3f} (max "
-                f"{float(cfg.task.grasp.max_start_spread_ratio)}), multi-layer "
+                f"{float(cfg.task.grasp.max_start_spread_ratio)}), stored_frac "
+                f"{stored_frac:.3f} (min "
+                f"{'-' if stored_min is None else float(stored_min)}), multi-layer "
                 f"cells {start.over_layer_cells} (min "
                 f"{int(cfg.task.grasp.min_start_three_layer_cells)}), on_bar "
                 f"{start.on_bar}. Run `python -B -m tests.roll_settle_spike` -- "
