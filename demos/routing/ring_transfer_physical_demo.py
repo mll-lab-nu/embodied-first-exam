@@ -225,6 +225,11 @@ def main(cfg: DictConfig) -> None:
             else:
                 held[2] += float(rl.step_z)
                 moved_z += 1
+            # Same as glide(): with the assist on, the band follows the MEASURED
+            # hand every step. Missing here on 2026-08-26 (inspect_clear4): the
+            # band target stayed put while the hand rose 39 mm -> "slipped" abort.
+            if phase_assist.get(phase.name, True):
+                built.bands[band].drive_to(hand_now - hand_above + grip_offset[band])
             controller.move_ee_to(hand_for(held), quat=quat, steps=1, continuous_ik=True)
             if cfg.run.verbose and step % int(physical.probe_every) == 0:
                 probe(f"{phase.name}:reactive_lift", step, hand_for(held), phase)

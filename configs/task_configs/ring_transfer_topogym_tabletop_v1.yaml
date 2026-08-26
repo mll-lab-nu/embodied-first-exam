@@ -165,7 +165,8 @@ grasp:
   settle_max_steps: 150
   # 合拢逐步走，连续 10 步 finger_qpos 变化 < 0.05mm 视为静止；封顶 close_max_steps。
   # （inspect_clear2：set_gripper 80 步走完手指仍在 0.036，之后才慢慢关——先把过程打印出来。）
-  close_max_steps: 200
+  # inspect_clear4：无阻力时也要 300+ 步才收到 0.006（指关节 PD 响应慢），封顶 400。
+  close_max_steps: 400
   # 合拢后先抬 lift_check，near band 中心必须跟着升 >= lift_check_min_rise，否则判「没夹住」退出。
   lift_check: 0.010
   lift_check_min_rise: 0.006
