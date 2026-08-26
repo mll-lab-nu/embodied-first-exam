@@ -283,7 +283,7 @@ def main(cfg: DictConfig) -> None:
             yaw_next = phase.yaw_at(held) if phase.kind == "hook" else yaw
             glide(hand_prev, hand_for(held), yaw_prev, yaw_next, phase=phase, held_from=held_prev, held_to=held, label=f"{phase.name}:{wp.label}")
             held_prev, hand_prev, yaw_prev = held, hand_for(held), yaw_next
-            if wp.label == "lift":
+            if wp.label == "clear":
                 lift_verdict(phase)
             if str(cfg.run.stop_after or "") == wp.label:
                 print(f"ring_transfer stop_after={wp.label}: holding {int(cfg.run.final_hold_steps)} steps for inspection, then exiting", flush=True)
@@ -293,7 +293,7 @@ def main(cfg: DictConfig) -> None:
                             built.bands[name].drive_to(np.asarray(controller.hand_pos(), dtype=float) - hand_above + grip_offset[name])
                     controller.move_ee_to(hand_prev, quat=ee_quat_for_yaw(controller.default_ee_quat, yaw_prev), steps=1, continuous_ik=True)
                 raise SystemExit(2)
-            if phase.kind == "pinch" and phase.close_axis is not None and wp.label in ("lift", "travel", "approach"):
+            if phase.kind == "pinch" and phase.close_axis is not None and wp.label in ("clear", "travel", "approach"):
                 # How the pinched loop hangs: depth below the fingertips and the
                 # width of its bottom U along the strand (across the closing
                 # axis). The width is what the lasso onto B needs -- at least

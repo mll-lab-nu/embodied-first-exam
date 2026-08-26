@@ -256,55 +256,55 @@ def carry_path(
     start_xy,
     carry_cfg,
 ) -> list[tuple[str, np.ndarray]]:
-    """Held-point waypoints (task frame) for the carry oracle: PINCH the near cap,
-    lift the loop off the anchor, carry it hanging, lasso the target from the
-    side, put it down.
+    """Held-point waypoints (task frame) for the carry oracle: PINCH the loop on a
+    straight, take it off the anchor from directly above, carry it hanging, lasso
+    the target from the side, put it down.
 
     Heights are FINGERTIP heights; the loop's bottom U hangs `hang_depth` below.
-      lift     -- straight up until the bottom U clears the ANCHOR's head by
-                  `clear_margin`: the loop is linked with the anchor and can
-                  only leave over its head, so the whole loop has to rise above
-                  it (measured 2026-08-25: lifting the cap alone left the loop
-                  hanging on A's shaft).
-      travel   -- at that height to above the approach point.
-      approach -- down until the bottom U is `hang_bottom_z` above the table
-                  (below the target's head, above its base cone).
-      detour   -- (only if `detour` > 0) sideways, for a lift point on the far
-                  side of the anchor; with the fingers between anchor and
-                  target the hanging loop is already clear of the anchor.
-      approach -- to `approach_before` short of the target, on its near side,
-                  in line with the anchor->target direction.
-      push     -- past the target by `push_past`: the bottom U meets the shaft,
-                  the two strands part around it, the hand ends on the far side.
-      lower    -- down to `drop_z`, still on the far side; the loop lands around
-                  the target.
+      lift_low    -- a few cm straight up; the rest of the loop stays on the
+                     table, so nothing is under tension.
+      over_anchor -- horizontally to above the anchor's axis, and `unhook_past`
+                     beyond it on the side away from the pinch. The loop slides
+                     loosely on the table around the shaft.
+      clear       -- straight up until the bottom U is `clear_margin` above the
+                     anchor's head. Pulled from above, the strands pass over the
+                     head's rim and the U (106-130 mm wide, measured) clears the
+                     52 mm head. Pulling from the SIDE instead wraps the loop
+                     round the shaft and jams it under the head lip: measured
+                     2026-08-25 (inspect_lift), the far strand climbed to 106 mm
+                     (lip 100-108) and stayed, the loop stretched 56 % and the
+                     arm was dragged 142 mm off its command.
+      travel      -- at that height to above the approach point.
+      approach    -- down until the bottom U is `hang_bottom_z` above the table
+                     (below the target's head, above its base cone).
+      push        -- past the target by `push_past`: the bottom U meets the shaft,
+                     the two strands part around it, the hand ends on the far side.
+      lower       -- down to `drop_z`, still on the far side; the loop lands around
+                     the target.
     """
 
     start = np.asarray(start_xy, dtype=float)[:2]
     depth = hang_depth(ring, carry_cfg)
     finger_z = float(carry_cfg.hang_bottom_z) + depth
     clear_z = anchor.top_z + ring.tube_radius + float(carry_cfg.clear_margin) + depth
+    low_z = float(carry_cfg.lift_low_z)
     direction = target.center - anchor.center
     direction = direction / float(np.linalg.norm(direction))
-    across = np.array([-direction[1], direction[0]])
-    detour = float(carry_cfg.detour)
+    toward_anchor = anchor.center - start
+    toward_anchor = toward_anchor / float(np.linalg.norm(toward_anchor))
+    over = anchor.center + float(carry_cfg.unhook_past) * toward_anchor
     approach = target.center - (target.radius + ring.tube_radius + float(carry_cfg.approach_before)) * direction
     landing = target.center + float(carry_cfg.push_past) * direction
-    path = [
+    return [
         ("start", np.array([start[0], start[1], ring.tube_radius])),
-        ("lift", np.array([start[0], start[1], clear_z])),
-    ]
-    if detour > 0.0:
-        side = start + detour * across
-        path.append(("detour", np.array([side[0], side[1], clear_z])))
-        path.append(("approach_side", np.array([approach[0] + detour * across[0], approach[1] + detour * across[1], clear_z])))
-    path += [
+        ("lift_low", np.array([start[0], start[1], low_z])),
+        ("over_anchor", np.array([over[0], over[1], low_z])),
+        ("clear", np.array([over[0], over[1], clear_z])),
         ("travel", np.array([approach[0], approach[1], clear_z])),
         ("approach", np.array([approach[0], approach[1], finger_z])),
         ("push", np.array([landing[0], landing[1], finger_z])),
         ("lower", np.array([landing[0], landing[1], float(carry_cfg.drop_z)])),
     ]
-    return path
 
 
 def far_cap_point(centerline: np.ndarray, ring: RingSpec, post: PostSpec) -> np.ndarray:

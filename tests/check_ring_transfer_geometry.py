@@ -285,7 +285,7 @@ def main() -> int:
     pinch = geo.pinch_point(spawn, ring, anchor, along=float(task.carry.pinch_along), side=float(task.carry.pinch_side))
     depth = geo.hang_depth(ring, task.carry)
     carry = geo.carry_path(ring=ring, anchor=anchor, target=target, start_xy=pinch[:2], carry_cfg=task.carry)
-    finger_z = carry[1][1][2]
+    finger_z = carry[3][1][2]  # the `clear` height
     tangent = geo.strand_tangent(spawn, pinch)
     close_axis = np.array([-tangent[1], tangent[0]])
     print()
@@ -299,14 +299,28 @@ def main() -> int:
     # and at the drop (fingertips at drop_z on B's far side).
     for label, xy, z in (
         ("grasp", pinch[:2], ring.tube_radius + float(task.grasp.pinch_lift)),
+        ("over_anchor", carry[2][1][:2], carry[2][1][2]),
         ("drop", carry[-1][1][:2], carry[-1][1][2]),
     ):
         gaps = geo.hand_clearance(fingertip_xy=xy, close_axis=close_axis, fingertip_z=z, posts=posts, physical_cfg=task.physical)
         text = ", ".join(f"{name}: {'clear above' if np.isinf(gap) else f'{gap * 1000:.1f} mm'}" for name, gap in gaps.items())
         bad = [name for name, gap in gaps.items() if gap <= 0.0]
-        print(f"               palm box at {label:5s} vs heads: {text} {'ok' if not bad else 'FAIL'}")
+        print(f"               palm box at {label:11s} vs heads: {text} {'ok' if not bad else 'FAIL'}")
         if bad:
             failures.append(f"the hand overlaps post {bad} at the carry {label}")
+    # The fingers hang below the palm: over the anchor the fingertips themselves
+    # must be above its head, and the loop's bottom must still be on the table
+    # (no tension) -- i.e. lift_low_z below hang_depth.
+    low_z = carry[2][1][2]
+    tip_gap = low_z - anchor.top_z
+    print(
+        f"               fingertips over {anchor.name} at {low_z * 1000:.0f} mm: {tip_gap * 1000:.1f} mm above its head "
+        f"{'ok' if tip_gap > 0 else 'FAIL'}; loop bottom still on the table {'ok' if low_z < depth else 'FAIL (lift_low_z >= hang_depth)'}"
+    )
+    if tip_gap <= 0:
+        failures.append("fingertips pass through the anchor's head on the way over it")
+    if low_z >= depth:
+        failures.append("lift_low_z lifts the whole loop: it must stay below hang_depth")
     bottom = float(task.carry.hang_bottom_z)
     print(
         f"               bottom U at {bottom * 1000:.0f} mm: below {target.name}'s head underside "
@@ -326,6 +340,8 @@ def main() -> int:
     heading = heading / float(np.linalg.norm(heading))
     across_c = np.array([-heading[1], heading[0]])
     for label, point in carry[1:-1]:
+        if label in ("lift_low", "over_anchor", "clear"):
+            continue  # the loop is meant to be around / over the anchor here
         if point[2] - depth >= anchor.top_z:
             continue  # the whole loop is above the head here
         worst = min(
