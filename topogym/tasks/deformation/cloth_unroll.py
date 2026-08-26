@@ -430,11 +430,20 @@ class TapeRelease:
         # Distance to the drum AXIS, so the band's width along the bar is ignored.
         radial = np.hypot(nodes[:, material] - centre_m, nodes[:, 2] - centre_z)
         self.held = np.flatnonzero(radial <= float(reach))
+        # Where the material actually IS relative to the drum axis. `held` being
+        # small has two very different causes -- the reach is wrong, or the band
+        # is not on the drum -- and the distribution separates them at a glance.
+        self.radial_stats = (
+            float(radial.min()), float(np.median(radial)), float(radial.max())
+        )
+        self.design_radius = float(reach)
         if self.held.size == 0:
             raise ValueError(
                 f"tape reach={reach} caught no particles around the drum axis at "
-                f"({centre_m:+.4f}, {centre_z:+.4f}); the drum geometry and the "
-                f"reach disagree."
+                f"({centre_m:+.4f}, {centre_z:+.4f}); the band's radial distance "
+                f"to that axis runs [{radial.min():.4f}, {np.median(radial):.4f}, "
+                f"{radial.max():.4f}] m. A median far above the reach means the "
+                f"band is not on the drum, not that the reach is too small."
             )
         # Angle around the axis, measured so that it GROWS away from the exit
         # tangent -- the peel front sweeps it in one direction.
@@ -459,9 +468,12 @@ class TapeRelease:
         return int(self.released.sum())
 
     def summary(self) -> str:
+        lo, mid, hi = self.radial_stats
         return (
             f"tape held={self.held.size} released={int(self.released.sum())} "
-            f"radius_mm={self.radius * 1e3:.1f} lead_mm={self.lead * 1e3:.1f}"
+            f"radius_mm={self.radius * 1e3:.1f} lead_mm={self.lead * 1e3:.1f} "
+            f"radial_mm=[{lo * 1e3:.1f},{mid * 1e3:.1f},{hi * 1e3:.1f}] "
+            f"reach_mm={self.design_radius * 1e3:.1f}"
         )
 
 
