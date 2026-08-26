@@ -165,10 +165,7 @@ class ClothUnrollLayout:
         """
 
         profile = self.profile()
-        point = self.bar_centre().astype(float)
-        point[self.material_axis] += float(profile[0, 0])
-        point[2] = self.world_z(float(profile[0, 1]))
-        return point
+        return self._plan_point(float(profile[0, 0]), float(profile[0, 1]))
 
     def material_length(self) -> float:
         return float(self.task_cfg.cloth.material_length)
