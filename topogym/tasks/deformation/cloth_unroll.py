@@ -153,6 +153,23 @@ class ClothUnrollLayout:
             rest_z=float(self.task_cfg.cloth.z),
         )
 
+    def tail_point(self) -> np.ndarray:
+        """World position of the band's INNERMOST end -- the one on the drum.
+
+        A free-ended wrap on a fixed drum cannot hold a hanging load, whatever the
+        friction: the capstan relation is `T_drape <= T_free * exp(mu*theta)` and
+        the free end carries zero tension, so the right side is zero and any drape
+        weight slips. Measured 2026-08-25: the band walked off a 241-degree wrap
+        during settle. Real dispensers do not rely on friction either -- the last
+        turn is fixed to the core. `anchor_tail` pins these particles.
+        """
+
+        profile = self.profile()
+        point = self.bar_centre().astype(float)
+        point[self.material_axis] += float(profile[0, 0])
+        point[2] = self.world_z(float(profile[0, 1]))
+        return point
+
     def material_length(self) -> float:
         return float(self.task_cfg.cloth.material_length)
 
@@ -508,6 +525,28 @@ class ClothUnrollSceneBuilder:
             grid=(cols, rows),
             table_friction=self._install_table_friction(scene, cloth, layout),
         )
+        anchor_cfg = getattr(cloth_cfg, "anchor_tail", None)
+        if anchor_cfg is not None and bool(getattr(anchor_cfg, "enabled", False)):
+            nodes = band_particles(band)
+            tail = layout.tail_point()
+            radius = float(getattr(anchor_cfg, "radius", 0.010))
+            held = np.flatnonzero(np.linalg.norm(nodes - tail, axis=1) <= radius)
+            if held.size == 0:
+                raise ValueError(
+                    f"anchor_tail.radius={radius} caught no particles at the band's "
+                    f"inner end ({tail[0]:+.4f},{tail[1]:+.4f},{tail[2]:+.4f}); the "
+                    f"drum geometry and the radius disagree."
+                )
+            # `fix_particles`, not `fix_particles_to_link`: the drum is fixed, so
+            # pinning in world space is the same thing and needs no link index.
+            cloth.fix_particles(particles_idx_local=[int(i) for i in held])
+            print(
+                f"cloth_unroll anchor_tail particles={held.size} "
+                f"at=({tail[0]:+.3f},{tail[1]:+.3f},{tail[2]:+.3f}) "
+                f"radius_mm={radius * 1e3:.1f}",
+                flush=True,
+            )
+
         print(
             f"cloth_unroll scene particles={len(band_particles(band))} "
             f"{remesh_report(vertices, band_particles(band))} "
