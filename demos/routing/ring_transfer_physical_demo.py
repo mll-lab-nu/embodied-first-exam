@@ -357,23 +357,8 @@ def main(cfg: DictConfig) -> None:
             f"tolerance={float(grasp_cfg.attach_tolerance) * 1000:.0f} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()}",
             flush=True,
         )
-        if phase.kind != "pinch" and worst > float(grasp_cfg.attach_tolerance):
+        if worst > float(grasp_cfg.attach_tolerance):
             raise SystemExit(f"ring_transfer {phase.name}: hand missed the band by {worst * 1000:.1f} mm; refusing to engage the assist.")
-        if phase.kind == "pinch":
-            # The grasp evidence: lift a little and the pinched material must come
-            # along. A position check cannot tell "pads round the rope" from "pads
-            # above the rope" (2026-08-25: attach_error 4.6 mm, rope never moved).
-            band = phase.bands[0]
-            band_z0 = float(built.bands[band].band_center()[2])
-            check = float(grasp_cfg.lift_check)
-            grasp_point = grasp_point + np.array([0.0, 0.0, check])
-            grasp_hand = hand_for(grasp_point)
-            settle_to(grasp_hand, quat, label=f"{phase.name}:lift_check")
-            rise = float(built.bands[band].band_center()[2]) - band_z0
-            held = rise >= float(grasp_cfg.lift_check_min_rise)
-            print(f"ring_transfer {phase.name} lift_check: band rose {rise * 1000:.1f}mm of {check * 1000:.0f} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} -> {'HELD' if held else 'NOT HELD'}", flush=True)
-            if not held:
-                raise SystemExit(f"ring_transfer {phase.name}: rope not held (band rose {rise * 1000:.1f} mm of {check * 1000:.0f}); nothing to carry.")
         if phase.kind == "hook":
             # Spread the fingers until the pads meet the rope from inside: the
             # visible act of taking hold. The bands engage only after that.
@@ -385,6 +370,29 @@ def main(cfg: DictConfig) -> None:
             tip_now = np.asarray(controller.hand_pos(), dtype=float) - hand_above
             grip_offset[name] = np.asarray(built.bands[name].band_center(), dtype=float) - tip_now
         phase_assist[phase.name] = assist
+        if phase.kind == "pinch":
+            # The grasp evidence: lift a little and the pinched material must come
+            # along (with the assist on, this checks the weld; without it, the
+            # friction pinch). A position check cannot tell "pads round the rope"
+            # from "pads above the rope" (2026-08-25: attach_error 4.6 mm, rope never moved).
+            band = phase.bands[0]
+            band_z0 = float(built.bands[band].band_center()[2])
+            check = float(grasp_cfg.lift_check)
+            grasp_point = grasp_point + np.array([0.0, 0.0, check])
+            grasp_hand = hand_for(grasp_point)
+            for _ in range(int(grasp_cfg.settle_max_steps)):
+                if assist:
+                    built.bands[band].drive_to(np.asarray(controller.hand_pos(), dtype=float) - hand_above + grip_offset[band])
+                hand_now = np.asarray(controller.hand_pos(), dtype=float)
+                if float(np.linalg.norm(grasp_hand - hand_now)) < float(grasp_cfg.settle_tol):
+                    break
+                controller.move_ee_to(grasp_hand + (grasp_hand - hand_now), quat=quat, steps=1, continuous_ik=True)
+            print(f"ring_transfer {phase.name}:lift_check settled: residual={float(np.linalg.norm(grasp_hand - np.asarray(controller.hand_pos(), dtype=float))) * 1000:.1f}mm", flush=True)
+            rise = float(built.bands[band].band_center()[2]) - band_z0
+            held = rise >= float(grasp_cfg.lift_check_min_rise)
+            print(f"ring_transfer {phase.name} lift_check: band rose {rise * 1000:.1f}mm of {check * 1000:.0f} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} -> {'HELD' if held else 'NOT HELD'}", flush=True)
+            if not held:
+                raise SystemExit(f"ring_transfer {phase.name}: rope not held (band rose {rise * 1000:.1f} mm of {check * 1000:.0f}); nothing to carry.")
         print(
             f"ring_transfer {phase.name} grasped kind={phase.kind} finger_qpos={np.round(controller.gripper_qpos(), 4).tolist()} "
             f"bands={[f'{n}:{len(built.bands[n].indices)}' for n in phase.bands]}",

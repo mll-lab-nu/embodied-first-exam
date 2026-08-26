@@ -139,11 +139,16 @@ grasp:
   # 指垫与被钉住的刚性绳段互相顶，手指穿过绳（finger_qpos -0.0026），IPC 把穿透力经两向耦合
   # 反推到臂上，臂被拖偏 130mm。false = 纯靠指垫摩擦夹持（环重 0.1 N，摩擦 ≈0.42）；
   # near band 仍声明，只用来读「绳有没有从指间滑走」。
-  assist: false
-  # 捏取时指尖相对绳中心线的高度。指垫底面就是指尖，要让指垫盖住绳的截面中段：
-  # 指尖 = 绳心 - 2mm（指垫底离桌面 2mm）。+2mm 时指垫只盖住绳的上 2mm，看起来像绳
-  # 顶在指尖下面（2026-08-25 视频）。
-  pinch_lift: -0.002
+  #
+  # 2026-08-26 定为 B 路线（用户）：assist 负责「握住」，视觉上指垫必须合在绳两侧。手指进 IPC
+  # 时刚体手指会越过 IPC 副本走到 -0.002 穿绳（有/无 assist 两次实测一样），所以臂回到 IPC 之外
+  # （physical.robot_rope_contact=off），合拢停在指令值 grasp_qpos（指垫离绳面 1mm），合拢后
+  # 再焊 assist，lift_check 验证绳跟手走。
+  assist: true
+  # 捏取时指尖相对绳中心线的高度。inspect_clear3 实测：指尖点下探到离桌 9.4mm 时指垫已经贴桌
+  # （指垫底面比指尖点低约 7mm），再往下不去。取 +0.006：指尖 11mm，指垫底离桌约 4mm，仍盖住
+  # 绳截面 4~10mm，且不压在桌上（贴桌时合拢是拖着桌面滑，每 10 步只走 0.4mm）。
+  pinch_lift: 0.006
   # 钩住时两指的张开量 = 远端被撑开的宽度，进拉伸梯形。Franka 最大 0.080；
   # 取 0.070 留指垫厚度，且必须 < 环宽 0.080。
   spread: 0.070
@@ -270,7 +275,9 @@ physical:
   #   off     = 臂在 IPC 之外，绳直接穿过指垫，抓取只靠 assist；
   #   fingers = finger_links 里的 link 进 IPC（ABD，每步钉到 IK 位姿），指垫真的夹住绳、
   #             手掌穿不过绳；其余臂体仍归刚体求解器。机制同 cable_routing。
-  robot_rope_contact: fingers
+  # 2026-08-26 改回 off（B 路线）：fingers 模式下刚体手指越过 IPC 副本穿绳（finger_qpos -0.002），
+  # 「夹住」的视觉靠合拢停在 grasp_qpos 实现，握持靠 assist。fingers 的参数保留供对照。
+  robot_rope_contact: "off"
   # 只放两根手指，手掌留在 IPC 之外（rope_winding 验证过的组合）；手掌不穿模由离线门的
   # hand_clearance 几何检查保证。2026-08-25 三个 link 都进 IPC 时臂在绳松弛状态下就落后
   # 20mm、之后被拖偏 130mm。

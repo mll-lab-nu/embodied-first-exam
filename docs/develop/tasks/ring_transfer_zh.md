@@ -99,6 +99,13 @@ descend 结束指尖离桌 19 mm（绳顶 10 mm），指垫在绳上方合拢，
 ≥ `lift_check_min_rise`，否则报「rope not held」退出——这才是捏住的证据，取代位置门；
 （3）反应式抬离加中止条件：滑移 > `slip_abort`、arm_err > `arm_err_abort`、指尖高于 `max_z` 任一即 ABORT。
 
+2026-08-25 第三次（inspect_clear3）：descend 在指尖 9.4 mm 处到底——指垫已贴桌（指垫底面比指尖点低
+约 7 mm）；合拢每 10 步只走 0.4 mm（指垫拖着桌面滑）；lift_check 期间手指走到 −0.0023，腕部机位里
+指垫合拢后绳从中间穿过。机制：`two_way_soft_constraint` 是给手指在 IPC 里做副本、用刚度 100 的弹簧
+互拉，碰绳的是副本，渲染与 finger_qpos 是刚体手指，刚体手指的 PD 力可以越过副本——有/无 assist 两次
+都是 −0.002。**2026-08-26 定 B 路线**（用户）：臂回到 IPC 之外，合拢停在 `grasp_qpos`（指垫离绳面
+1 mm，视觉上夹住），合拢后焊 assist，`lift_check` 仍验证绳跟手走；`pinch_lift` +0.006（指垫底离桌 4 mm）。
+
 ## 4. 与 2.7 的关系
 
 on-phase 结束时环同时围住 A、B（2.7 的终态）。但 2.7 要求终态绷紧（错误动作释放后回弹）需要周长
