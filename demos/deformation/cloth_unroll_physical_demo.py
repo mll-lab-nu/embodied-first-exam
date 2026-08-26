@@ -192,6 +192,26 @@ def main(cfg: DictConfig) -> None:
         # anything -- and running them in sequence put the arm on screen doing
         # nothing for two seconds before the episode started.
         controller.open_gripper(int(cfg.task.physical.gripper_steps))
+        # BEFORE the settle, not after. The wrap is what has to be held, and by
+        # the end of a settle it is no longer there to hold: measured 2026-08-25,
+        # pinning afterwards caught 3 particles because the band's closest point
+        # to the drum axis had already reached 67.5 mm against a 59.5 mm drum
+        # surface. Whether it stays is also marginal -- `spread_ratio` came out
+        # 0.443 / 0.450 / 0.456 / 0.572 across runs of the same scene, flipping on
+        # nothing more than a kernel recompile. Pinning at birth removes the
+        # question instead of betting on it.
+        tape_cfg = cfg.task.cloth.get("tape", None)
+        tape = None
+        if tape_cfg is not None and bool(tape_cfg.get("enabled", False)):
+            tape = TapeRelease(
+                band.cloth,
+                layout,
+                band_particles(band),
+                reach=float(tape_cfg.reach),
+                lead=float(tape_cfg.lead),
+            )
+            print(f"cloth_unroll {tape.summary()}", flush=True)
+
         rest = settle_band(
             band,
             max(
@@ -221,18 +241,6 @@ def main(cfg: DictConfig) -> None:
         # stopping so the recording ends on the collapsed roll rather than cutting
         # off mid-settle; the recorder saves on the way out of its `with` even
         # when the body raises, so the video survives the SystemExit.
-        tape_cfg = cfg.task.cloth.get("tape", None)
-        tape = None
-        if tape_cfg is not None and bool(tape_cfg.get("enabled", False)):
-            tape = TapeRelease(
-                band.cloth,
-                layout,
-                rest,
-                reach=float(tape_cfg.reach),
-                lead=float(tape_cfg.lead),
-            )
-            print(f"cloth_unroll {tape.summary()}", flush=True)
-
         start = evaluator.classify(rest, rest, table_z=layout.table_z, grid=band.grid, **bar)
         # "Is the material still stored?" has two ways to be measured and they
         # stop agreeing once the drum is wide. `spread_ratio` is the band's
