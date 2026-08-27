@@ -308,21 +308,36 @@ def main(argv=None) -> int:
         " -> ".join(f"{on_post:+.2f}/{whole:+.2f}" for on_post, whole in readings)
         + " (on post / whole rope)",
     )
-    # The verdict's invariant must not be fooled by slack: the same taut rope
-    # with a loose loop laid on the board beside the post (the shape a peeled
-    # wrap takes) still reads zero, where the on-post reading may not.
-    loose = [anchor]
-    loose.extend(
+    # The verdict's invariant must not be fooled by slack. The shape a peeled
+    # wrap took on 2026-08-27 (start_turns=2): the rope comes in from the anchor
+    # along its tangent, is dragged against the post three quarters of the way
+    # round, and its slack goes back the OTHER way round the outside to the hand.
+    # On the post that is 0.73 of a turn and rounds to one; round the whole
+    # rope, closed end to end, it is nothing -- and the hand has orbited exactly
+    # start_turns times, so nothing is right.
+    hug_turns = 0.73
+    hug = [anchor]
+    hug.extend(
+        helix_route_points(anchor, center, settle_radius, hug_turns, 0.0, spec.sign, z_start=anchor[2])
+    )
+    hug_end = float(np.arctan2(hug[-1][1] - center[1], hug[-1][0] - center[0]))
+    hand = points[orbit[-1]]
+    hand_bearing = float(np.arctan2(hand[1] - center[1], hand[0] - center[0]))
+    back = (hand_bearing - hug_end) % (2.0 * np.pi) - 2.0 * np.pi  # the cw way
+    hug.extend(
         [
-            center + np.array([0.030 * np.cos(a), 0.030 * np.sin(a), 0.0])
-            for a in np.linspace(-np.pi, 0.5 * np.pi, 40)
+            center + np.array([0.05 * np.cos(a), 0.05 * np.sin(a), 0.0])
+            for a in np.linspace(hug_end, hug_end + back, 60)
         ]
     )
-    loose.append(points[orbit[-1]])
+    hug.append(hand)
+    hug = densify(np.asarray(hug))
     check(
-        "a loose three-quarter hug beside the post is not a wrap",
-        abs(winding_topological(densify(np.asarray(loose)), center)) < 1e-6,
-        f"whole rope {winding_topological(densify(np.asarray(loose)), center):+.2f}",
+        "a loose three-quarter hug reads as a wrap on the post but not on the whole rope",
+        abs(winding_number(hug, center, wrap_band) - spec.sign) < 1e-6
+        and abs(winding_topological(hug, center)) < 1e-6,
+        f"on post {winding_number(hug, center, wrap_band):+.2f}, whole rope "
+        f"{winding_topological(hug, center):+.2f}",
     )
     check(
         "the planned orbit lands on the target",

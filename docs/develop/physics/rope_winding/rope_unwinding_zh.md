@@ -68,6 +68,29 @@
 
 ## 6. 运行
 
+### 6.1 2026-08-27 两圈 / 三圈：判据被松绳误导，改用全绳拓扑量
+
+`start_turns=2`、`3` 各跑一次（全程 21 / 29 航点、放置误差 3.3 mm、`physical_success=True`），
+但 `rope_winding_verify` 读 `winding_number=+1.000`（`swept_turns` 0.730 / 1.113）判失败。
+逐 probe 看读数：两圈时第一圈内 2 → 1 → 0（下面那圈是松的，跟着一起脱离柱面），第二圈
+`post_contact` 从 470 回升到 2251、读数回到 +1；三圈同样在解完之后回升。回升的符号与
+原缠绕相同，说明这是**脱下来的松绳被张力拖回柱面、贴着柱走了 3/4 圈**，`winding_number`
+只看柱面带内的绳段，0.73 圈按 canonical closure 四舍五入成 1。夹爪确实绕了 start_turns 圈，
+按同伦不变性绳上不可能剩下一圈。
+
+改动：`supervision/rope_winding.py` 新增 `winding_topological`——整条绳（锚点到自由端）绕柱轴
+的展开方位角，按端点间短路闭合，是同伦不变量本身，与绳在哪里无关；`print_winding_verification`
+的判据改用它，`winding_number`（柱上读数）降为诊断量并以 `on_post_winding=` 并列打印。
+`tests/check_rope_unwinding_geometry.py` 加了对应负对照（3/4 圈贴柱 + 尾段从外侧绕回：柱上读 1、
+全绳读 0）。rope_winding 的一圈 / 两圈路线上两者一致，回归门不变。
+
+### 6.2 2026-08-27 一圈 A/B：`plug_spin_tracks_orbit`
+
+开：`twist_net=-1.08`，终态 `contact_nodes=479`；关：`twist_net=+0.02`，`contact_nodes=57`，
+其余判据相同。解绕时插头自转与绳的扫掠同向叠加而不是抵消（绕柱任务里它是为抵消设计的），
+本任务默认关闭。
+
+
 2026-08-26 首跑（start_turns=1，GPU，无 viewer）：`success=True`，`winding_number=0.000`
 （`swept_turns=+0.156`，`turn_complete` 时已读 0），`placement_error_xy=0.0034`，13/13 航点，
 `wound_max_z=0.005`（解下来的绳躺在柱脚旁的板面上，没有越顶）。`post_contact` 沿轨道单调下降

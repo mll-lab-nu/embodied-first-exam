@@ -227,7 +227,14 @@ oblique / wrist 机位看得见的位置。
 | GPU：physical offset | `run.target_offset_deg=12` 判 `outside_zone` | 待跑 |
 | 录像 | oblique / front / wrist 三机位，`runs/videos/linkbar_rotate_to_zone/`，检查销色与区色可辨 | 待跑 |
 
-命令：
+一键脚本（八格，逐格 PASS/FAIL，日志落 `runs/linkbar_zone/<时间戳>/`）：
+
+```
+bash bash_scripts/tests/linkbar_rotate_to_zone_check.sh              # 全部
+bash bash_scripts/tests/linkbar_rotate_to_zone_check.sh offline seat # 只跑几组：offline / sweep / seat / physical
+```
+
+单条命令：
 
 ```
 python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.sweep_joint=true 2>&1 | tee runs/linkbar_zone_sweep.log
