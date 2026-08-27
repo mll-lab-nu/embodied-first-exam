@@ -127,7 +127,8 @@ def figure_eight_local_points(spec: FigureEightSpec) -> tuple[np.ndarray, np.nda
     t_c, t_o = spec.tangent_length(r_c), spec.tangent_length(r_o)
     c_closed = np.array([spec.lobe_center_distance(r_c), 0.0])
     c_open = np.array([-spec.lobe_center_distance(r_o), 0.0])
-    ramp = min(spec.lift_ramp, 0.5 * min(t_c, t_o))
+    # The ramp feet must stay on the tangent lines, short of the tangent points.
+    ramp = min(spec.lift_ramp, 0.8 * min(t_c, t_o))
 
     # Tangent points. A tangent from an external point at distance d touches a
     # circle of radius r at angle acos(r / d) from the centre->point direction;
