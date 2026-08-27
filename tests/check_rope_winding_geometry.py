@@ -612,16 +612,18 @@ def main(argv=None) -> int:
         [layout.route_polyline("initial")[-1]] + list(points), center, anchor
     )
     check(
-        "the verdict is the on-post count and the run to C goes straight",
-        str(getattr(getattr(cfg, "success", None), "winding_metric", "on_post")) == "on_post"
-        and spec.to_c_route == "straight",
-        "switching either to 'closure' changes what +2 means here -- see below",
+        "the verdict is the closed whole-rope count and the run to C goes straight",
+        str(getattr(getattr(cfg, "success", None), "winding_metric", "on_post")) == "closure"
+        and spec.to_c_route == "straight"
+        and "to_C_around" not in labels,
+        "on_post depends on the rope hugging the post; a detour would loosen the top wrap",
     )
-    print(
-        f"  [--] closed whole-rope count: spawn {spawn_reading:+.0f}, the free end's "
-        f"path adds {path_delta:+d} (two orbits and the straight run to C, which "
-        f"crosses the ray opposite the anchor) = {spawn_reading + path_delta:+.0f}; "
-        f"the on-post count reads {spec.target_winding:+.0f}"
+    check(
+        "spawn reading + the free end's whole path (orbits AND the straight run to C) = target",
+        abs(spawn_reading + path_delta - spec.target_winding) < 1e-6,
+        f"{spawn_reading:+.0f} {path_delta:+d} = {spawn_reading + path_delta:+.0f}, "
+        f"target {spec.target_winding:+.0f}; C has to sit where that run does not "
+        "cross the ray opposite the anchor",
     )
     sweep_final = winding_sweep(oracle_rope("place_at_C"), center, wrap_band)
     margin = 0.5 - abs(sweep_final - round(sweep_final))

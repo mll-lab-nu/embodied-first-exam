@@ -89,7 +89,7 @@ fixtures:
     type: connector
     # enabled: false —— 不生成任何立体，只留坐标；视觉是 connector_target 的地面靶心。
     enabled: false
-    pos: [0.150, 0.120, 0.019]
+    pos: [0.075, -0.130, 0.019]
     size: [0.026, 0.040, 0.034]
     color: [0.85, 0.05, 0.05]
     collision: false
@@ -635,6 +635,12 @@ physical_handle:
 
 # winding 成功判定（supervision/rope_winding.py）。
 success:
+  # closure：整条绳绕柱轴的展开方位角 + 自由端到锚点的短路闭合（supervision
+  # winding_topological），纯几何的拓扑不变量；on_post 只数贴在柱面上的绳段，
+  # 依赖绳绷紧贴柱，rope_unwinding 2026-08-27 实测松绳会让它读错。两个任务统一用 closure；
+  # 为此 C 从 (0.150, 0.120) 挪到柱的南侧——从最后一个轨道点直线去 C 不再穿过锚点的
+  # 对径射线（S 在 155 度，射线在 335 度），闭合计数才等于柱上圈数（原位置读 3）。
+  winding_metric: closure
   # winding number 与目标（direction 符号 x turns）的容差（圈）。canonical
   # closure 的闭合角贡献 < 0.25 圈（两端都远离柱），取整判定在此容差内稳定。
   winding_tolerance: 0.25
