@@ -43,6 +43,12 @@ class WindingSpec:
     #: task's contrast pair when the spawn is already wound (rope_unwinding: the
     #: wrong way round takes winding from 1 to 2, not to 0). None derives it.
     orbit_direction: str | None
+    #: How the free end travels from the last orbit to C. "straight": the
+    #: short way in bearing (rope_winding, whose verdict is the on-post count
+    #: and does not care). "closure": whichever way round makes the whole-rope
+    #: count closed to the anchor land on the target (rope_unwinding, whose
+    #: verdict is that count) -- see `free_end_winding_delta`.
+    to_c_route: str
     wind_radius: float
     wind_z_start: float
     climb_per_turn: float
@@ -67,6 +73,11 @@ class WindingSpec:
             )
         turns = int(cfg.turns)
         start_turns = int(getattr(cfg, "start_turns", 0))
+        to_c_route = str(getattr(cfg, "to_c_route", "straight")).lower()
+        if to_c_route not in ("straight", "closure"):
+            raise ValueError(
+                f"winding.to_c_route must be 'straight' or 'closure', got {to_c_route!r}."
+            )
         orbit_direction = getattr(cfg, "orbit_direction", None)
         if orbit_direction is not None:
             orbit_direction = str(orbit_direction).lower()
@@ -114,6 +125,7 @@ class WindingSpec:
             start_turns=start_turns,
             direction=chosen,
             orbit_direction=orbit_direction,
+            to_c_route=to_c_route,
             wind_radius=float(cfg.wind_radius),
             wind_z_start=float(cfg.wind_z_start),
             climb_per_turn=float(cfg.climb_per_turn),
@@ -231,6 +243,55 @@ def taut_demand(layout, spec: WindingSpec, waypoints) -> tuple[float, str]:
         if need > worst:
             worst, worst_label = need, label
     return worst, worst_label
+
+
+def free_end_winding_delta(path, post_xy, anchor_xy) -> int:
+    """How much carrying the free end along ``path`` changes the winding number.
+
+    The task's winding number (task book 2.4/2.5) closes the rope from its free
+    end back to the anchor the short way round the post. That closure is what
+    makes the count an integer, and it also means the count is not decided by
+    the orbits alone: it changes by one every time the free end crosses the ray
+    OPPOSITE the anchor -- there the "short way" flips sides -- in either sense,
+    whether that crossing happens during an orbit or on the way to the target.
+    rope_unwinding found this out on 2026-08-27: every orbit read correctly, and
+    the straight run from the last orbit to C crossed that ray once more, so the
+    verdict read +1 with nothing on the post.
+
+    Signed: +1 per counter-clockwise crossing. Computed as the unwrapped sweep of
+    the path about the post plus the change in the short-way closure, which is
+    the same thing and needs no ray bookkeeping.
+    """
+
+    path = np.asarray(path, dtype=float)[:, :2]
+    post_xy = np.asarray(post_xy, dtype=float)[:2]
+    anchor_bearing = float(
+        np.arctan2(anchor_xy[1] - post_xy[1], anchor_xy[0] - post_xy[0])
+    )
+    bearings = np.unwrap(np.arctan2(path[:, 1] - post_xy[1], path[:, 0] - post_xy[0]))
+    swept = float(bearings[-1] - bearings[0])
+    closure_end = _wrap_to_pi(anchor_bearing - float(bearings[-1]))
+    closure_start = _wrap_to_pi(anchor_bearing - float(bearings[0]))
+    return int(round((swept + closure_end - closure_start) / (2.0 * np.pi)))
+
+
+def spawn_winding(layout, spec: WindingSpec) -> float:
+    """Winding number of the spawn route itself, closed the task's way.
+
+    `spec.initial_winding` is what the config SAYS (start_turns); this is what
+    the route geometry reads, tails included. The two can differ: rope_winding's
+    spawn arc passes the post on the far side from the anchor's closure, and
+    reads -1 where the config says 0 (see the geometry gate).
+    """
+
+    from topogym.supervision.rope_winding import winding_topological  # local: supervision imports planning
+
+    route = np.asarray(layout.route_polyline("initial"), dtype=float)
+    dense = [route[0]]
+    for start, end in zip(route[:-1], route[1:]):
+        steps = max(1, int(np.linalg.norm(end - start) / 0.002))
+        dense.extend(start + (end - start) * k / steps for k in range(1, steps + 1))
+    return float(winding_topological(np.asarray(dense), post_center(layout, spec)))
 
 
 def _orbit_point(center: np.ndarray, radius: float, angle: float, z: float) -> np.ndarray:
@@ -525,12 +586,34 @@ def plan_rope_winding_route(
     # to the grasp pose would look tidier and would wring another quarter turn
     # into a rope that is already wound and can no longer pay it out anywhere.
     hold_roll = targets[-1][3]
-    targets.append(
-        ("wind_exit", last_point + spec.exit_extension * tangent, False, hold_roll, None)
-    )
-    targets.append(
-        ("to_C_hover", np.array([seat[0], seat[1], hover_z], dtype=float), False, hold_roll, None)
-    )
+    exit_point = last_point + spec.exit_extension * tangent
+    targets.append(("wind_exit", exit_point, False, hold_roll, None))
+    # Which way round the post the free end travels to C decides the count as
+    # much as the orbits do (`free_end_winding_delta`). A straight run takes
+    # the short way in bearing; if that leaves the count one off the target,
+    # go round the other side instead, through one extra point on the orbit
+    # circle at the far bearing's midpoint -- each of the two legs is then
+    # itself a short way, and neither passes closer to the post than the orbit.
+    anchor_xy = np.asarray(
+        layout.route_point({"fixture": "S", "relation": "center"}), dtype=float
+    )[:2]
+    hover = np.array([seat[0], seat[1], hover_z], dtype=float)
+    path = [plug_spawn] + [point for _, point, _, _, _ in targets] + [hover]
+    needed = int(round(spec.target_winding - spawn_winding(layout, spec)))
+    if spec.to_c_route == "closure" and free_end_winding_delta(path, center, anchor_xy) != needed:
+        exit_bearing = float(np.arctan2(exit_point[1] - center[1], exit_point[0] - center[0]))
+        seat_bearing = float(np.arctan2(seat[1] - center[1], seat[0] - center[0]))
+        short = _wrap_to_pi(seat_bearing - exit_bearing)
+        long_way = short - np.sign(short) * 2.0 * np.pi
+        around = _orbit_point(center, spec.wind_radius, exit_bearing + 0.5 * long_way, hover_z)
+        targets.append(("to_C_around", around, False, hold_roll, None))
+        path = [plug_spawn] + [point for _, point, _, _, _ in targets] + [hover]
+        if free_end_winding_delta(path, center, anchor_xy) != needed:
+            raise ValueError(
+                "rope_winding planner: no way round the post to C reaches the "
+                f"target winding (need {needed:+d} from the spawn state)."
+            )
+    targets.append(("to_C_hover", hover, False, hold_roll, None))
     targets.append(("place_at_C", seat.copy(), False, hold_roll, None))
 
     # Uniform commanded speed: steps = distance / speed. Two speeds, because the

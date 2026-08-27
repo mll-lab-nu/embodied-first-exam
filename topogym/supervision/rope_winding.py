@@ -575,7 +575,17 @@ def print_winding_verification(scene, spec: WindingSpec, groups: list[np.ndarray
     success_cfg = getattr(scene.layout.cfg, "success", None)
     tolerance = float(getattr(success_cfg, "winding_tolerance", 0.25))
     metrics = winding_metrics(scene, spec, groups)
-    turns = metrics["winding_topological"]
+    # Which count is the verdict is the task's call (`success.winding_metric`):
+    # "on_post" is the task book's wraps-on-the-post reading (rope_winding,
+    # 0 -> 2); "closure" is the whole-rope count closed to the anchor, which
+    # slack cannot fool (rope_unwinding). They differ by the tails: with C
+    # where both layouts put it, a straight run to C adds one to the closure
+    # count, which is why rope_unwinding's oracle routes to C the other way.
+    metric = str(getattr(success_cfg, "winding_metric", "on_post"))
+    if metric not in ("on_post", "closure"):
+        raise ValueError(f"success.winding_metric must be 'on_post' or 'closure', got {metric!r}.")
+    turns = metrics["winding_number" if metric == "on_post" else "winding_topological"]
+    other = metrics["winding_topological" if metric == "on_post" else "winding_number"]
     target = metrics["target_winding"]
     winding_ok = abs(turns - target) <= tolerance
     # Gateway semantics: winding may only change over the post's top, so a run
@@ -584,9 +594,9 @@ def print_winding_verification(scene, spec: WindingSpec, groups: list[np.ndarray
     print(
         f"rope_winding_verify post={spec.post} success={winding_ok and below_top} "
         f"winding_number={turns:+.3f} target={target:+.1f} tolerance={tolerance:.2f} "
-        # The on-post reading, for comparison: equal to the verdict's whenever
-        # the rope off the post lies clear of it.
-        f"on_post_winding={metrics['winding_number']:+.3f} "
+        f"metric={metric} "
+        # The other count, for comparison.
+        f"{'closure' if metric == 'on_post' else 'on_post'}_winding={other:+.3f} "
         # The unrounded sweep `winding_number` came from. Distance from the
         # nearest half-integer is the margin the reading has left.
         f"swept_turns={metrics['swept_turns']:+.3f} "

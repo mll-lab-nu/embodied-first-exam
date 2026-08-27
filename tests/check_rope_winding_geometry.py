@@ -48,8 +48,10 @@ from topogym.planning.rope_winding_planner import (  # noqa: E402
     SLACK_BAND,
     WRIST_BUDGET,
     WindingSpec,
+    free_end_winding_delta,
     plan_rope_winding_route,
     post_center,
+    spawn_winding,
     taut_demand,
 )
 from topogym.planning.waypoint import arc_route_points, helix_route_points  # noqa: E402
@@ -595,6 +597,32 @@ def main(argv=None) -> int:
         parts = [anchor[None, :], wrapped] + ([tail] if len(tail) else [])
         return densify(np.vstack(parts))
 
+    # The verdict (2026-08-27) is the whole-rope count closed from the free end
+    # back to the anchor, and that count moves whenever the free end crosses the
+    # ray opposite the anchor -- so the run to C is part of the count. Summed
+    # along the free end's whole path, spawn to C, it has to land on the target.
+    # Reported alongside: what the spawn route reads under that closure. This
+    # layout's spawn arc passes the post on the far side from the closure and
+    # reads -1 where the task book's "0 -> 2" says 0; the oracle's three
+    # crossings (two orbits and the run to C) then land on +2. Not a failure --
+    # the target is met -- but the "starts at 0" in the docs is the on-post
+    # reading, not this one.
+    spawn_reading = spawn_winding(layout, spec)
+    path_delta = free_end_winding_delta(
+        [layout.route_polyline("initial")[-1]] + list(points), center, anchor
+    )
+    check(
+        "the verdict is the on-post count and the run to C goes straight",
+        str(getattr(getattr(cfg, "success", None), "winding_metric", "on_post")) == "on_post"
+        and spec.to_c_route == "straight",
+        "switching either to 'closure' changes what +2 means here -- see below",
+    )
+    print(
+        f"  [--] closed whole-rope count: spawn {spawn_reading:+.0f}, the free end's "
+        f"path adds {path_delta:+d} (two orbits and the straight run to C, which "
+        f"crosses the ray opposite the anchor) = {spawn_reading + path_delta:+.0f}; "
+        f"the on-post count reads {spec.target_winding:+.0f}"
+    )
     sweep_final = winding_sweep(oracle_rope("place_at_C"), center, wrap_band)
     margin = 0.5 - abs(sweep_final - round(sweep_final))
     check(

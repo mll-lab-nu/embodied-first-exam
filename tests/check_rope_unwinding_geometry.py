@@ -52,8 +52,10 @@ from tests.check_rope_winding_geometry import (  # noqa: E402
 from topogym.planning.rope_winding_planner import (  # noqa: E402
     SLACK_BAND,
     WindingSpec,
+    free_end_winding_delta,
     plan_rope_winding_route,
     post_center,
+    spawn_winding,
     taut_demand,
 )
 from topogym.planning.waypoint import helix_route_points  # noqa: E402
@@ -224,11 +226,13 @@ def main(argv=None) -> int:
     command, plan = plan_rope_winding_route(layout)
     labels = [waypoint.label for waypoint in plan.waypoints]
     points = np.array([waypoint.position for waypoint in plan.waypoints])
-    expected = 2 + spec.start_turns * spec.arc_points_per_turn + 3
+    detour = "to_C_around" in labels
+    expected = 2 + spec.start_turns * spec.arc_points_per_turn + 3 + int(detour)
     check(
-        "waypoint count = lift + entry + start_turns*points + exit + hover + place",
+        "waypoint count = lift + entry + start_turns*points + exit (+ around) + hover + place",
         len(labels) == expected,
-        f"{len(labels)} (expected {expected})",
+        f"{len(labels)} (expected {expected}); "
+        + ("the run to C goes round the far side of the post" if detour else "straight to C"),
     )
     orbit = [index for index, label in enumerate(labels) if label.startswith("wind_t")]
     radii = np.linalg.norm(points[orbit][:, :2] - center[None, :2], axis=1)
@@ -344,6 +348,33 @@ def main(argv=None) -> int:
         abs(spec.expected_winding - spec.target_winding) < 1e-9,
         f"expected {spec.expected_winding:+.1f}, target {spec.target_winding:+.1f}",
     )
+    # The count is closed from the free end back to the anchor, so it moves
+    # whenever the free end crosses the ray opposite the anchor -- on the way
+    # to C as much as during the orbits. 2026-08-27: two and three wraps both
+    # read 0 after the last orbit and +1 at C, because the straight run to C
+    # crossed that ray once more. The planner now picks the side; this is the
+    # sum along the whole free-end path, spawn to C.
+    spawn_reading = spawn_winding(layout, spec)
+    delta = free_end_winding_delta([spawn[-1]] + list(points), center, anchor)
+    check(
+        "the spawn route reads start_turns with the task's closure too",
+        abs(spawn_reading - spec.initial_winding) < 1e-6,
+        f"{spawn_reading:+.2f}",
+    )
+    check(
+        "spawn reading + the free end's whole path (orbits AND the run to C) = target",
+        abs(spawn_reading + delta - spec.target_winding) < 1e-6,
+        f"{spawn_reading:+.0f} {delta:+d} = {spawn_reading + delta:+.0f}, target "
+        f"{spec.target_winding:+.0f}"
+        + (" (via to_C_around)" if detour else ""),
+    )
+    straight = [spawn[-1]] + [p for p, l in zip(points, labels) if l != "to_C_around"]
+    if detour:
+        check(
+            "...and the straight run to C would have been one off",
+            abs(spawn_reading + free_end_winding_delta(straight, center, anchor) - spec.target_winding) > 0.5,
+            f"straight: {spawn_reading + free_end_winding_delta(straight, center, anchor):+.0f}",
+        )
     wrong = WindingSpec.from_config(
         wrap({**raw, "winding": {**raw["winding"], "orbit_direction": raw["winding"]["direction"]}})
     )

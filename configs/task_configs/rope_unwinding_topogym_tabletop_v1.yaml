@@ -71,6 +71,10 @@ winding:
   # null = 轨道方向由 planner 派生（解绕 = 与缠绕反向）。设成与 direction 相同即
   # 任务书的失败对照例：轨道与缠绕同向，winding 读 2·start_turns 而不是 0。
   orbit_direction: null
+  # 解绕的判据是全绳闭合计数（见 success.winding_metric），而从最后一个轨道点直线去 C
+  # 会穿过锚点的对径射线、让计数多 1；closure = planner 按计数选择绕到柱的另一侧去 C
+  # （多一个航点 to_C_around）。rope_winding 用 straight。
+  to_c_route: closure
   wind_radius: 0.140
   # 最下一圈的高度；解绕从 wind_z_start + start_turns x climb_per_turn 开始逐圈下降。
   wind_z_start: 0.045
@@ -265,6 +269,10 @@ physical_handle:
   latch_capture_max_tilt_deg: 45.0
 
 success:
+  # closure：整条绳绕柱轴的展开方位角 + 端点短路闭合（supervision winding_topological），
+  # 松绳贴柱不会误读；on_post 是柱上绳段的读数（rope_winding 用），2026-08-27 两圈/三圈
+  # 实跑里被拖回柱面的松绳（0.65~0.73 圈）读成 1，且松掉的整圈读成 0。
+  winding_metric: closure
   winding_tolerance: 0.25
   wound_max_z: 0.070
   centerline_bins: 150

@@ -68,21 +68,29 @@
 
 ## 6. 运行
 
-### 6.1 2026-08-27 两圈 / 三圈：判据被松绳误导，改用全绳拓扑量
+### 6.1 2026-08-27 两圈 / 三圈：判据与去 C 的路线
 
-`start_turns=2`、`3` 各跑一次（全程 21 / 29 航点、放置误差 3.3 mm、`physical_success=True`），
-但 `rope_winding_verify` 读 `winding_number=+1.000`（`swept_turns` 0.730 / 1.113）判失败。
-逐 probe 看读数：两圈时第一圈内 2 → 1 → 0（下面那圈是松的，跟着一起脱离柱面），第二圈
-`post_contact` 从 470 回升到 2251、读数回到 +1；三圈同样在解完之后回升。回升的符号与
-原缠绕相同，说明这是**脱下来的松绳被张力拖回柱面、贴着柱走了 3/4 圈**，`winding_number`
-只看柱面带内的绳段，0.73 圈按 canonical closure 四舍五入成 1。夹爪确实绕了 start_turns 圈，
-按同伦不变性绳上不可能剩下一圈。
+`start_turns=2`、`3` 各跑两次（全程 21 / 29 航点、放置误差 3.3 mm、`physical_success=True`），
+判定都失败。两个独立原因：
 
-改动：`supervision/rope_winding.py` 新增 `winding_topological`——整条绳（锚点到自由端）绕柱轴
-的展开方位角，按端点间短路闭合，是同伦不变量本身，与绳在哪里无关；`print_winding_verification`
-的判据改用它，`winding_number`（柱上读数）降为诊断量并以 `on_post_winding=` 并列打印。
-`tests/check_rope_unwinding_geometry.py` 加了对应负对照（3/4 圈贴柱 + 尾段从外侧绕回：柱上读 1、
-全绳读 0）。rope_winding 的一圈 / 两圈路线上两者一致，回归门不变。
+1. **柱上读数被松绳误导。** 第一次跑：两圈时第一圈内柱上读数 2 → 1 → 0（下面那圈松了，
+   跟着一起脱离柱面），第二圈 `post_contact` 从 470 回升到 2251、读数回到 +1；三圈同样。
+   回升的符号与原缠绕相同，是脱下来的松绳被张力拖回柱面贴了 0.65~0.73 圈，`winding_number`
+   只看柱面带内的绳段，按 canonical closure 四舍五入成 1；反过来松掉但还没脱离的整圈又读成 0。
+   解法：`supervision/rope_winding.py` 新增 `winding_topological`——整条绳绕柱轴的展开方位角
+   加端点间短路闭合——由 `success.winding_metric: closure` 选为判据（rope_winding 保持 `on_post`）。
+   第二次跑验证：每个 `turn_complete` 的闭合计数都正确（X=3：2 → 1 → 0），柱上读数不是。
+2. **去 C 的路线本身改变闭合计数。** 第二次跑闭合计数在最后一圈末读 0、到 C 后读 +1。
+   闭合到锚点的计数在自由端穿过**锚点对径射线**时变 1（短路闭合换边），从最后一个轨道点
+   （方位 245°）直线去 C（38°）恰好穿过 335° 那条射线。`planning/rope_winding_planner.py`
+   新增 `free_end_winding_delta`（沿自由端路径累计的计数变化）与 `winding.to_c_route: closure`：
+   直线路线计数不对时绕柱的另一侧去 C，多一个航点 `to_C_around`（轨道半径上、远侧中点、
+   悬停高度）。门里校验「出生读数 + 自由端全程 = 目标」并有负对照（直线会多 1）。
+
+**两种计数的关系。** 柱上读数是任务书「0 → 2」的口径；闭合计数在本布局下（S 在西北、C 在东北）
+等于柱上读数 + 1——rope_winding 的 oracle 在闭合口径下读 3。rope_winding 的判据与路线
+不动（`on_post` + `straight`，门里有断言）；两种口径统一（例如把 C 移到不穿对径射线的一侧）
+留待决定。
 
 ### 6.2 2026-08-27 一圈 A/B：`plug_spin_tracks_orbit`
 
