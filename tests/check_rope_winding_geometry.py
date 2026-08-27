@@ -52,7 +52,7 @@ from topogym.planning.rope_winding_planner import (  # noqa: E402
     post_center,
     taut_demand,
 )
-from topogym.planning.waypoint import arc_route_points  # noqa: E402
+from topogym.planning.waypoint import arc_route_points, helix_route_points  # noqa: E402
 from topogym.primitives.attachment import (  # noqa: E402
     RigidAttachment,
     _quat_rotate as _rotate_by_quat,
@@ -138,6 +138,24 @@ class StandInLayout:
                         self.route_point(entry["arc_to"]),
                         math.radians(float(entry["sweep_deg"])),
                         samples=entry.get("samples"),
+                    )
+                )
+            elif not isinstance(entry, str) and "helix_around" in entry:
+                post = self.cfg.fixtures[str(entry["helix_around"])]
+                radius = (
+                    float(post.radius)
+                    + float(self.cfg.rope.radius)
+                    + float(entry.get("standoff", 0.002))
+                )
+                points.extend(
+                    helix_route_points(
+                        points[-1],
+                        self.fixture_pos(str(entry["helix_around"]), z=0.0),
+                        radius,
+                        float(entry["turns"]),
+                        float(entry["climb"]),
+                        1.0 if str(entry.get("direction", "ccw")).lower() == "ccw" else -1.0,
+                        z_start=self.world_z(float(entry["z_start"])),
                     )
                 )
             else:

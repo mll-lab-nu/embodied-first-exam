@@ -1,0 +1,261 @@
+# Rope Unwinding layout expressed in the TopoGym tabletop V1 task frame.
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# 任务书 §2.5「从柱子上解下一圈绳（1 -> 0）」，扩展到 start_turns ∈ {1, 2, 3}：
+# 绳出生时已绕柱 start_turns 圈（routes.initial 的 helix_around 条目），锚定端由
+# 固定端子钉死，自由端插头平躺在板面上由 spawn latch 钉住；夹爪抓插头，沿与
+# 缠绕相反的方向连续环绕 start_turns 圈（从最上一圈开始逐圈下降），winding number
+# 从 ±start_turns 变为 0，再把插头放到 C。方向做错（winding.direction 反转）时
+# 读数变为 ±2·start_turns，是本任务的失败对照例。
+#
+# 与 rope_winding 共用：场景装配（CableRoutingSceneBuilder）、资产（routing post /
+# fixed terminal / 工业插头）、planner（winding.start_turns 派生出轨道方向与 z 排表）、
+# winding number 判据（supervision/rope_winding.py）与 demo 主体。布局数值全部沿用
+# rope_winding_topogym_tabletop_v1.yaml，那边的设计日志注释同样适用于本文件，不再复述。
+#
+# 弹性势能：rope.fem.rest_shape=spawn，出生的螺旋就是无应力构型，绳不会自己弹离柱子；
+# 代价是解开之后绳保留螺旋记忆，多出的绳段（每圈约 0.151 m）松散躺在板上。
+
+task:
+  id: rope_unwinding
+  difficulty: smoke
+
+coordinate_frame: task
+
+board:
+  name: rope_unwinding_board
+  enabled: false
+  pos: ${common.manipulation_space.board.pos}
+  size: ${common.manipulation_space.board.size}
+  color: [0.92, 0.92, 0.94]
+
+fixtures:
+  # 绳的锚定端参考点；视觉由 rope.fixed_terminal 承担。
+  S:
+    type: start
+    enabled: false
+    pos: [-0.150, 0.100, 0.019]
+    radius: 0.014
+    height: 0.032
+    color: [0.02, 0.85, 0.12]
+    collision: false
+  # 绕线柱。柱顶 0.105：三圈的最上一圈 0.045 + 3 x 0.014 + 绳半径 0.004 + 10 mm 余量 = 0.101。
+  POST:
+    type: peg
+    pos: [0.020, 0.020, 0.0505]
+    radius: 0.020
+    height: 0.109
+    base_radius: ${prefabs.rope_routing_post.base_radius}
+    base_height: ${prefabs.rope_routing_post.base_height}
+    post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
+    color: [1.00, 0.48, 0.00]
+    collision: true
+    routing_post_dress: true
+  # 解绕完成后插头的放置区（只画靶心，不装端口）。
+  C:
+    type: connector
+    enabled: false
+    pos: [0.150, 0.120, 0.019]
+    size: [0.026, 0.040, 0.034]
+    color: [0.85, 0.05, 0.05]
+    collision: false
+    flush_port: false
+
+winding:
+  post: POST
+  # 出生时柱上的圈数（难度轴，1/2/3），终态 turns=0。direction 是柱上已有缠绕的方向；
+  # 夹爪的轨道方向 = 反向（planner 的 orbit_sign）。
+  start_turns: 1
+  turns: 0
+  direction: ccw
+  wind_radius: 0.140
+  # 最下一圈的高度；解绕从 wind_z_start + start_turns x climb_per_turn 开始逐圈下降。
+  wind_z_start: 0.045
+  climb_per_turn: 0.014
+  arc_points_per_turn: 8
+  exit_extension: 0.060
+  yaw_track: false
+  yaw_forward_points: 6
+  wind_speed: 0.0009
+  travel_speed: 0.0020
+  min_segment_steps: 40
+
+target_signature:
+  - {fixture: C, relation: endpoint}
+
+routing:
+  side_clearance: 0.055
+  wrap_clearance: 0.032
+  wrap_contact_tolerance: 0.010
+  wrap_near_tolerance: 0.036
+  wrap_height_tolerance: 0.040
+
+routes:
+  # 出生路线 = 绳的静止形状：S -> 切向接上柱 -> 绕 start_turns 圈（半径 = 柱半径 +
+  # 绳半径 + 2 mm 留缝）-> 尾弧到插头出生点。尾弧的 sweep_deg 是唯一的松弛旋钮，
+  # 与 start_turns 配对（见 rope.spawn_arc）。
+  # 插头出生点的方位由「尾弧必须沿最上一圈的切线离开柱子」决定：切线方向 -33 度，
+  # 顺时针（负 sweep）弯 120 度的弧，其弦相对切线偏 -60 度，所以插头在柱的正下方
+  # （-y）0.216 m 处；弧向 -x 侧鼓出约 59 mm，离柱轴始终 > 0.15 m。
+  # tests/check_rope_unwinding_geometry.py 检查这个夹角（< 30 度）。
+  initial:
+    - {fixture: S, relation: center}
+    - {helix_around: POST, turns: "${task.winding.start_turns}", direction: "${task.winding.direction}", z_start: "${task.winding.wind_z_start}", climb: "${task.winding.climb_per_turn}"}
+    - {arc_to: {pos: [-0.006, -0.218, 0.015]}, sweep_deg: "${task.rope.spawn_arc.sweep_deg}"}
+  goal:
+    - {fixture: S, relation: center}
+    - {fixture: C, relation: endpoint}
+
+rope:
+  name: unwinding_cable
+  model: fem_ipc_tube
+  lite:
+    particle_size: 0.006
+    mesh:
+      segment_length: 0.014
+      radial_segments: 6
+      maxvolume: 0.00000012
+    pbd:
+      max_stretch_solver_iterations: 6
+      max_bending_solver_iterations: 3
+      max_volume_solver_iterations: 3
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: 0.0008
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    # 出生螺旋即无应力构型；straight 会让预绕的绳储存弯曲能并试图弹离柱子。
+    rest_shape: spawn
+    sanity_check_enable: false
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
+  color: [0.00, 0.90, 0.78]
+  anchor_start: true
+  anchor_end: false
+  anchor_radius: 0.012
+  radius: ${prefabs.rope_pbd.radius}
+  centerline_spline: true
+  z: 0.015
+  # 尾弧张角，负号 = 顺时针（向远离柱子的一侧鼓出）。最紧时刻在解绕开始
+  # （start_turns 圈全在柱上），需求 = |S-柱| + start_turns x 2π x 落位半径 + |柱-插头|；
+  # 出生螺旋比落位周长每圈多出约 12 mm，所以配对值随圈数只缓慢变化。
+  # 松弛带 5~15%（planning SLACK_BAND）。
+  # 同一个值服务三档圈数（tests/check_rope_unwinding_geometry.py --start-turns N 复核）：
+  #   -130 -> start_turns 1 / 2 / 3 的松弛 8.5% / 8.9% / 9.2%
+  spawn_arc:
+    sweep_deg: -130
+  endpoint_handle:
+    enabled: true
+    name: unwinding_free_end_handle
+    shape: box
+    size: [0.022, 0.022, 0.032]
+    grip_width: 0.022
+    radius: 0.011
+    height: 0.032
+    z_offset: ${task.physical_handle.z_offset}
+    color: ${prefabs.rope_endpoint_connector.color}
+    attachment_mode: rigid_handle
+    fixed: false
+    collision: false
+    exclude_pbd_collision: true
+    friction: ${task.physical_handle.handle_friction}
+    rho: ${task.physical_handle.rho}
+    connector:
+      enabled: true
+      pose: flat
+      pin_depth: 0.013
+      pin_radius: 0.0075
+      flange_radius: 0.015
+      flange_height: 0.006
+      column_radius: 0.010
+      column_height: 0.020
+      grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
+      radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
+      output_dir: .cache/topogym/meshes/rope_unwinding
+    spawn_port:
+      enabled: false
+      rim_radius: ${prefabs.rope_flush_port.rim_radius}
+      rim_height: ${prefabs.rope_flush_port.rim_height}
+      recess_radius: ${prefabs.rope_flush_port.recess_radius}
+      color: ${prefabs.rope_flush_port.ring_color}
+  fixed_terminal:
+    enabled: true
+    base_radius: ${prefabs.rope_fixed_terminal.base_radius}
+    base_height: ${prefabs.rope_fixed_terminal.base_height}
+    body_radius: ${prefabs.rope_fixed_terminal.body_radius}
+    body_height: ${prefabs.rope_fixed_terminal.body_height}
+    gland_radius: ${prefabs.rope_fixed_terminal.gland_radius}
+    gland_height: ${prefabs.rope_fixed_terminal.gland_height}
+    radial_segments: ${prefabs.rope_fixed_terminal.radial_segments}
+    color: ${prefabs.rope_fixed_terminal.color}
+    output_dir: .cache/topogym/meshes/rope_unwinding
+  particle_size: ${prefabs.rope_pbd.particle_size}
+  mesh:
+    segment_length: 0.0055
+    radial_segments: 20
+    maxvolume: 0.000000050
+    output_dir: .cache/topogym/meshes/rope_unwinding
+  pbd:
+    max_stretch_solver_iterations: ${prefabs.rope_pbd.pbd.max_stretch_solver_iterations}
+    max_bending_solver_iterations: ${prefabs.rope_pbd.pbd.max_bending_solver_iterations}
+    max_volume_solver_iterations: 16
+  elastic:
+    rho: ${prefabs.rope_pbd.elastic.rho}
+    static_friction: ${prefabs.rope_pbd.elastic.static_friction}
+    kinetic_friction: ${prefabs.rope_pbd.elastic.kinetic_friction}
+    stretch_compliance: ${prefabs.rope_pbd.elastic.stretch_compliance}
+    bending_compliance: 0.0100
+    volume_compliance: 0.00200
+    stretch_relaxation: ${prefabs.rope_pbd.elastic.stretch_relaxation}
+    bending_relaxation: ${prefabs.rope_pbd.elastic.bending_relaxation}
+    volume_relaxation: ${prefabs.rope_pbd.elastic.volume_relaxation}
+
+physical_handle:
+  # 与 carry_pitch_deg 绑定：针脚朝上（帽口朝下）落座时帽顶贴板，原点离板 0.017 - 0.015。
+  z_offset: 0.002
+  rho: 700.0
+  finger_links: [left_finger, right_finger]
+  robot_rope_contact: fingers
+  robot_rope_friction: 0.004
+  finger_friction: 4.5
+  handle_friction: 4.5
+  grasp_qpos: 0.010
+  grasp_yaw: 1.57079632679
+  # 正号 = 帽口朝下、针脚朝上（用户口径「插头朝上」）；转轴 z x plug_axis。
+  carry_pitch_deg: 90.0
+  carry_pitch_steps: 120
+  plug_spin_tracks_orbit: true
+  runtime_gripper_attachment: true
+  runtime_attachment_handoff_steps: 12
+  motion_profile: linear
+  approach_z: 0.250
+  lift_delta: 0.024
+  insert_hover_lift: 0.035
+  move_steps: 120
+  gripper_steps: 60
+  close_hold_steps: 40
+  motion_settle_steps: 0
+  min_lift_delta: 0.006
+  max_handle_error: 0.050
+  max_segment_follow_error: 0.045
+  max_segment_target_error: 0.070
+  target_error_abort_fraction: 0.90
+  early_complete_segments: [place_at_C]
+  early_complete_target_error: 0.010
+  max_downward_follow_error_z: 0.047
+  safety_min_gap: -0.0015
+  safety_max_contact_nodes: 4800
+  release_hold_steps: 20
+  route_settle_steps: 40
+  connector_tolerance_xy: 0.018
+  latch_auto_capture: false
+  latch_capture_tolerance_xy: 0.014
+  latch_capture_tolerance_z: 0.014
+  latch_capture_max_tilt_deg: 45.0
+
+success:
+  winding_tolerance: 0.25
+  wound_max_z: 0.070
+  centerline_bins: 150

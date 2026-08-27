@@ -13,7 +13,10 @@ mesh-only, so a kinematic hold keeps it from falling through the board until the
 grasp attachment takes over at gripper close, and the same hold sets it down
 again at the target.
 
-Configuration is Hydra (`configs/rope_winding.yaml`).
+Configuration is Hydra (`configs/rope_winding.yaml`). Task book 2.5, taking a
+rope OFF the post (`winding.start_turns` wraps at spawn, `turns: 0`), runs the
+same code through `demos/routing/rope_unwinding_physical_handle_demo.py`
+(`configs/rope_unwinding.yaml`).
 
     python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.verbose=true
     python -m demos.routing.rope_winding_physical_handle_demo run.viewer=true run.probe=true run.max_waypoints=10
@@ -246,16 +249,23 @@ def _check_rope_slack(cfg, scene, spec, episode_plan) -> str:
     low, high = SLACK_BAND
     sweep = float(cfg.task.rope.spawn_arc.sweep_deg)
     report = (
-        f"turns={spec.turns} sweep_deg={sweep:.0f} rope={length:.3f} "
-        f"taut_need={need:.3f} at {label} slack={slack * 100:.1f}% "
+        f"start_turns={spec.start_turns} turns={spec.turns} sweep_deg={sweep:.0f} "
+        f"rope={length:.3f} taut_need={need:.3f} at {label} slack={slack * 100:.1f}% "
         f"band={low * 100:.0f}..{high * 100:.0f}%"
     )
     if not low <= slack <= high:
+        # Whichever of the two is nonzero is the one that sets the demand.
+        unwinding = spec.start_turns > spec.turns
+        key = "winding.start_turns" if unwinding else "winding.turns"
+        gate = (
+            f"tests/check_rope_unwinding_geometry.py --start-turns {spec.start_turns}"
+            if unwinding
+            else f"tests/check_rope_winding_geometry.py --turns {spec.turns}"
+        )
         raise RuntimeError(
-            f"rope_winding slack out of band -- {report}. `winding.turns` and "
+            f"{cfg.task.id} slack out of band -- {report}. `{key}` and "
             "`rope.spawn_arc.sweep_deg` have to be set together; the table is in "
-            "the task config beside `spawn_arc`. Run "
-            f"`python tests/check_rope_winding_geometry.py --turns {spec.turns} "
+            f"the task config beside `spawn_arc`. Run `python {gate} "
             "--sweep-deg <deg>` to find the sweep this turn count needs."
         )
     return report
@@ -1404,6 +1414,7 @@ def run_demo(
         "placement_success": bool(placement_success),
         "placement_error_xy": float(placement_error_xy),
         "turns": int(spec.turns),
+        "start_turns": int(spec.start_turns),
         "direction": str(spec.direction),
         "completed_waypoints": len(result.completed_segments),
         "planned_waypoints": len(targets),
@@ -1426,7 +1437,7 @@ def run_demo(
         f"winding_success={winding_success} full_route={full_route} "
         f"placement_success={placement_success} "
         f"placement_error_xy={placement_error_xy:.4f} "
-        f"turns={spec.turns} direction={spec.direction} "
+        f"turns={spec.turns} start_turns={spec.start_turns} direction={spec.direction} "
         f"completed_waypoints={len(result.completed_segments)}/{len(targets)} "
         f"grasped={result.grasped} failure_reason={result.failure_reason}",
         flush=True,
@@ -1436,6 +1447,16 @@ def run_demo(
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="rope_winding")
 def main(cfg: DictConfig) -> None:
+    run_from_config(cfg, scene_builder=RopeWindingSceneBuilder)
+
+
+def run_from_config(cfg: DictConfig, *, scene_builder=RopeWindingSceneBuilder) -> None:
+    """The whole run, from a composed config: scene, plan, episode, viewer hold.
+
+    `scene_builder` is the task's builder class -- rope_unwinding's demo passes
+    its own; everything below reads the task from `cfg` and the planner's spec.
+    """
+
     if cfg.run.max_waypoints is not None and cfg.run.max_waypoints <= 0:
         raise SystemExit("run.max_waypoints must be positive.")
     if float(cfg.run.viewer_speedup) <= 0.0:
@@ -1475,11 +1496,11 @@ def main(cfg: DictConfig) -> None:
     print(
         "rope_winding_physical_handle_demo building_scene "
         f"backend={cfg.env.genesis.backend} viewer={cfg.run.viewer} lite={cfg.run.lite} "
-        f"turns={spec.turns} direction={spec.direction} "
-        f"target_winding={spec.target_winding:+.1f}",
+        f"task={cfg.task.id} turns={spec.turns} start_turns={spec.start_turns} "
+        f"direction={spec.direction} target_winding={spec.target_winding:+.1f}",
         flush=True,
     )
-    scene = RopeWindingSceneBuilder(
+    scene = scene_builder(
         cfg.env, cfg.task, cfg.robot_control, route_mode="initial"
     ).build(show_viewer=cfg.run.viewer, include_robot=True)
     route_command, episode_plan = plan_rope_winding_route(
@@ -1514,7 +1535,10 @@ def main(cfg: DictConfig) -> None:
         spec=episode_spec,
         plan=episode_plan,
         task_goal=(
-            f"Wind the rope {spec.turns} turns {spec.direction} around the post "
+            f"Unwind the rope's {spec.start_turns} {spec.direction} turns from the "
+            "post and set its plug down on the target zone."
+            if spec.start_turns > spec.turns
+            else f"Wind the rope {spec.turns} turns {spec.direction} around the post "
             "and plug its end into the target port."
         ),
         every_n_steps=cfg.run.dataset_every_n_steps,

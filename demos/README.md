@@ -13,6 +13,7 @@
 | `connectivity/` | stacked_plate | `stacked_plate_physical_rotate_demo`、`stacked_plate_inspect_demo` |
 | `routing/` | cable_routing | `cable_routing_physical_handle_demo` |
 | | rope_winding | `rope_winding_physical_handle_demo` |
+| | rope_unwinding | `rope_unwinding_physical_handle_demo`（入口；主体复用 rope_winding 的 `run_from_config`） |
 | | bar_through_hole | `bar_through_hole_physical_insert_demo` |
 | | ring_transfer | `ring_transfer_physical_demo` |
 
@@ -54,6 +55,7 @@ python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=
 | `connectivity/stacked_plate_inspect_demo` | `configs/stacked_plate_inspect.yaml` | `configs/run_configs/stacked_plate_inspect.yaml` |
 | `routing/cable_routing_physical_handle_demo` | `configs/cable_routing.yaml` | `configs/run_configs/cable_routing.yaml` |
 | `routing/rope_winding_physical_handle_demo` | `configs/rope_winding.yaml` | `configs/run_configs/rope_winding.yaml` |
+| `routing/rope_unwinding_physical_handle_demo` | `configs/rope_unwinding.yaml` | `configs/run_configs/rope_unwinding.yaml` |
 | `routing/bar_through_hole_physical_insert_demo` | `configs/bar_through_hole.yaml` | `configs/run_configs/bar_through_hole.yaml` |
 | `routing/ring_transfer_physical_demo` | `configs/ring_transfer.yaml` | `configs/run_configs/ring_transfer.yaml` |
 

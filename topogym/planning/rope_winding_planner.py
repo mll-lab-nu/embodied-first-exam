@@ -32,7 +32,17 @@ class WindingSpec:
 
     post: str
     turns: int
+    #: Turns already on the post when the episode starts. 0 for rope_winding
+    #: (task book 2.4); rope_unwinding (2.5) spawns the rope wound `start_turns`
+    #: times and asks for `turns: 0`. `direction` is the sense of the wrap that
+    #: is (or will be) on the post; which way the hand orbits follows from the
+    #: difference -- see `orbit_sign`.
+    start_turns: int
     direction: str
+    #: Force the hand's orbit sense regardless of what the wrap needs -- the
+    #: task's contrast pair when the spawn is already wound (rope_unwinding: the
+    #: wrong way round takes winding from 1 to 2, not to 0). None derives it.
+    orbit_direction: str | None
     wind_radius: float
     wind_z_start: float
     climb_per_turn: float
@@ -56,8 +66,23 @@ class WindingSpec:
                 f"got {chosen!r}."
             )
         turns = int(cfg.turns)
-        if turns < 1:
-            raise ValueError(f"winding.turns must be >= 1, got {turns}.")
+        start_turns = int(getattr(cfg, "start_turns", 0))
+        orbit_direction = getattr(cfg, "orbit_direction", None)
+        if orbit_direction is not None:
+            orbit_direction = str(orbit_direction).lower()
+            if orbit_direction not in _DIRECTION_SIGNS:
+                raise ValueError(
+                    f"winding.orbit_direction must be one of {sorted(_DIRECTION_SIGNS)} "
+                    f"or null, got {orbit_direction!r}."
+                )
+        if start_turns < 0:
+            raise ValueError(f"winding.start_turns must be >= 0, got {start_turns}.")
+        if turns < 0 or turns == start_turns:
+            raise ValueError(
+                f"winding.turns must be >= 0 and differ from winding.start_turns "
+                f"(got turns={turns}, start_turns={start_turns}); a route that "
+                "changes nothing is not a task."
+            )
         points_per_turn = max(4, int(cfg.arc_points_per_turn))
         forward = int(getattr(cfg, "yaw_forward_points", points_per_turn - 2))
         if not 1 <= forward < points_per_turn:
@@ -86,7 +111,9 @@ class WindingSpec:
         return cls(
             post=str(cfg.post),
             turns=turns,
+            start_turns=start_turns,
             direction=chosen,
+            orbit_direction=orbit_direction,
             wind_radius=float(cfg.wind_radius),
             wind_z_start=float(cfg.wind_z_start),
             climb_per_turn=float(cfg.climb_per_turn),
@@ -110,6 +137,42 @@ class WindingSpec:
         """Signed winding number a successful episode must reach."""
 
         return self.sign * float(self.turns)
+
+    @property
+    def initial_winding(self) -> float:
+        """Signed winding number the rope spawns with."""
+
+        return self.sign * float(self.start_turns)
+
+    @property
+    def orbit_turns(self) -> int:
+        """Full orbits the hand makes around the post."""
+
+        return abs(self.turns - self.start_turns)
+
+    @property
+    def turn_step(self) -> float:
+        """+1 when each orbit adds a wrap, -1 when it takes one off."""
+
+        return 1.0 if self.turns > self.start_turns else -1.0
+
+    @property
+    def orbit_sign(self) -> float:
+        """Sense of the hand's orbit: +1 counter-clockwise seen from +z.
+
+        Winding on goes the way of the wrap; winding off goes against it --
+        unless `orbit_direction` forces it, which is how the contrast run is made.
+        """
+
+        if self.orbit_direction is not None:
+            return _DIRECTION_SIGNS[self.orbit_direction]
+        return self.sign * self.turn_step
+
+    @property
+    def expected_winding(self) -> float:
+        """Winding number the planned orbit actually produces (= target unless forced)."""
+
+        return self.initial_winding + self.orbit_sign * float(self.orbit_turns)
 
 
 def post_center(layout, spec: WindingSpec) -> np.ndarray:
@@ -152,11 +215,13 @@ def taut_demand(layout, spec: WindingSpec, waypoints) -> tuple[float, str]:
     worst, worst_label = 0.0, ""
     for index, label in enumerate(labels):
         if index in orbit:
-            wound = (orbit.index(index) + 1) / spec.arc_points_per_turn
+            wound = spec.start_turns + spec.turn_step * (
+                (orbit.index(index) + 1) / spec.arc_points_per_turn
+            )
         elif orbit and index > orbit[-1]:
             wound = float(spec.turns)
         else:
-            wound = 0.0
+            wound = float(spec.start_turns)
         point = np.asarray(waypoints[index].position, dtype=float)
         need = (
             float(np.linalg.norm(anchor[:2] - center[:2]))
@@ -185,6 +250,7 @@ class RopeWindingRouteCommand:
 
     waypoint_count: int
     turns: int
+    start_turns: int
     direction: str
     target_winding: float
     final_route_point_xyz: tuple[float, float, float]
@@ -222,7 +288,11 @@ def _wrap_to_pi(angle: float) -> float:
 def plan_rope_winding_route(
     layout, *, direction: str | None = None, plug_heading: float = 0.0
 ) -> tuple[RopeWindingRouteCommand, EpisodePlan]:
-    """Wind the free end ``turns`` times around the post, then seat it in C.
+    """Take the free end from ``start_turns`` wraps on the post to ``turns``, then seat it in C.
+
+    rope_winding (task book 2.4) starts at 0 and winds on; rope_unwinding (2.5)
+    starts at ``start_turns`` and orbits the other way, descending from the top
+    wrap, until none is left. Same phases either way.
 
     Phases: lift the plug off its spawn port -> pull radially in to the orbit
     entry (the rope comes to rest against the post here) -> ``turns`` full
@@ -259,7 +329,11 @@ def plan_rope_winding_route(
         getattr(layout.cfg.physical_handle, "insert_hover_lift", 0.035)
     )
 
-    wind_z = layout.world_z(spec.wind_z_start)
+    # Height the hand orbits at first. Winding on starts at the bottom of the
+    # spiral and climbs; winding off starts at the TOP wrap -- the one nearest
+    # the free end -- and descends, so each turn comes off from above the ones
+    # still on the post.
+    wind_z = layout.world_z(spec.wind_z_start + spec.start_turns * spec.climb_per_turn)
     entry_angle = float(
         np.arctan2(plug_spawn[1] - center[1], plug_spawn[0] - center[0])
     )
@@ -301,7 +375,7 @@ def plan_rope_winding_route(
     targets: list[tuple[str, np.ndarray, bool, float, int | None]] = []
 
     per_turn = spec.arc_points_per_turn
-    total_points = spec.turns * per_turn
+    total_points = spec.orbit_turns * per_turn
     step_angle = 2.0 * np.pi / per_turn
 
     # Roll at each orbit point. Forward at 1:1, then back at whatever rate clears
@@ -309,7 +383,7 @@ def plan_rope_winding_route(
     # wrist where it began. Built from a zero base, then centred so the wrist
     # works both sides of the pose it grasped in rather than running off one end.
     forward = spec.yaw_forward_points
-    back = -spec.sign * step_angle * forward / (per_turn - forward)
+    back = -spec.orbit_sign * step_angle * forward / (per_turn - forward)
     rolls: list[float] = []
     roll = 0.0
     for index in range(1, total_points + 1):
@@ -324,11 +398,11 @@ def plan_rope_winding_route(
         #
         # The old flick schedule made the same call for the same reason and this
         # was lost when the flicks were replaced; hence the check in tests/.
-        last_turn = (index - 1) // per_turn == spec.turns - 1
+        last_turn = (index - 1) // per_turn == spec.orbit_turns - 1
         if not spec.yaw_track:
             roll = 0.0
         elif point_index <= forward:
-            roll += spec.sign * step_angle
+            roll += spec.orbit_sign * step_angle
         elif not last_turn:
             roll += back
         rolls.append(roll)
@@ -348,7 +422,7 @@ def plan_rope_winding_route(
     settle_radius = float(layout.cfg.fixtures[spec.post].radius) + float(
         layout.cfg.rope.radius
     )
-    lead = spec.sign * float(np.arcsin(min(1.0, settle_radius / spec.wind_radius)))
+    lead = spec.orbit_sign * float(np.arcsin(min(1.0, settle_radius / spec.wind_radius)))
 
     # The error is constant through the forward stretch and sweeps a whole turn
     # during the return, so there is nothing to centre: put the forward stretch
@@ -365,7 +439,7 @@ def plan_rope_winding_route(
     errors = [
         plug_heading
         + rolls[index]
-        - (entry_angle + spec.sign * step_angle * (index + 1))
+        - (entry_angle + spec.orbit_sign * step_angle * (index + 1))
         - lead
         for index in range(total_points)
     ]
@@ -429,9 +503,10 @@ def plan_rope_winding_route(
     )
 
     for index in range(1, total_points + 1):
-        angle = entry_angle + spec.sign * step_angle * index
+        angle = entry_angle + spec.orbit_sign * step_angle * index
         z = layout.world_z(
-            spec.wind_z_start + spec.climb_per_turn * (index / per_turn)
+            spec.wind_z_start
+            + spec.climb_per_turn * (spec.start_turns + spec.turn_step * index / per_turn)
         )
         turn_index = (index - 1) // per_turn + 1
         point_index = (index - 1) % per_turn + 1
@@ -439,10 +514,10 @@ def plan_rope_winding_route(
         label = f"wind_t{turn_index}_{point_index:02d}"
         targets.append((label, point, True, rolls[index - 1], None))
 
-    last_angle = entry_angle + spec.sign * step_angle * total_points
+    last_angle = entry_angle + spec.orbit_sign * step_angle * total_points
     last_point = targets[-1][1]
     # Tangent of the orbit at the final angle, in the travel direction.
-    tangent = spec.sign * np.array(
+    tangent = spec.orbit_sign * np.array(
         [-float(np.sin(last_angle)), float(np.cos(last_angle)), 0.0], dtype=float
     )
     # The wrist locks once the orbit is over. Everything after this point --
@@ -492,6 +567,7 @@ def plan_rope_winding_route(
     command = RopeWindingRouteCommand(
         waypoint_count=len(waypoints),
         turns=spec.turns,
+        start_turns=spec.start_turns,
         direction=spec.direction,
         target_winding=spec.target_winding,
         final_route_point_xyz=waypoints[-1].position,
@@ -503,6 +579,7 @@ def plan_rope_winding_route(
         target={
             "post": spec.post,
             "turns": spec.turns,
+            "start_turns": spec.start_turns,
             "direction": spec.direction,
             "target_winding": spec.target_winding,
             "final_route_point_xyz": command.final_route_point_xyz,
@@ -514,13 +591,16 @@ def plan_rope_winding_route(
         metadata={"planner": "rope_winding_endpoint_route", "direction": spec.direction},
     )
     episode_plan = EpisodePlan(
-        task_id="rope_winding",
+        # rope_winding and rope_unwinding share this planner; the config says
+        # which one is being planned.
+        task_id=str(getattr(getattr(layout.cfg, "task", None), "id", "rope_winding")),
         subgoals=(subgoal,),
         waypoint_plan=waypoint_plan,
         plan_id="rope_winding_endpoint_route",
         metadata={
             "waypoint_count": command.waypoint_count,
             "turns": spec.turns,
+            "start_turns": spec.start_turns,
             "direction": spec.direction,
         },
     )

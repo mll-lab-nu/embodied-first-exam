@@ -52,6 +52,11 @@ from .routing.rope_winding import (
     RopeWindingScene,
     RopeWindingSceneBuilder,
 )
+from .routing.rope_unwinding import (
+    RopeUnwindingLayout,
+    RopeUnwindingScene,
+    RopeUnwindingSceneBuilder,
+)
 from .legacy.onestroke import (
     OneStrokeLayout,
     OneStrokeScene,
@@ -142,6 +147,9 @@ __all__ = [
     "RopeWindingLayout",
     "RopeWindingScene",
     "RopeWindingSceneBuilder",
+    "RopeUnwindingLayout",
+    "RopeUnwindingScene",
+    "RopeUnwindingSceneBuilder",
     "OneStrokeLayout",
     "OneStrokeScene",
     "OneStrokeSceneBuilder",

@@ -105,7 +105,7 @@ YAML 字段、H5 attrs、bash 变量、文档表头）统一使用同一组字�
 ```python
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "deformation": (),
-    "routing": ("bar_through_hole", "cable_routing", "rope_winding"),
+    "routing": ("bar_through_hole", "cable_routing", "rope_unwinding", "rope_winding"),
     "entangle": ("untangle", "untangle_continuous"),
     "connectivity": ("stacked_plate",),
 }
@@ -220,6 +220,7 @@ def invariant_value(self) -> int | tuple[int, ...] | dict[str, float]:
 | task_id | 类别目录 | 依据 | 缺口 |
 |---|---|---|---|
 | `rope_winding` | `routing/` | 绳绕柱 0 → 2 圈 + 放置，对应 docx 2.4 | 尚未跑过 GPU 验收（判据与 oracle 已有离线 gate：`tests/check_rope_winding_geometry.py`） |
+| `rope_unwinding` | `routing/` | 从柱上解下 start_turns ∈ {1,2,3} 圈绳 + 放置，对应 docx 2.5；rope_winding 的镜像，共用 planner / 判据 / demo 主体 | 尚未跑过 GPU 验收（离线 gate：`tests/check_rope_unwinding_geometry.py`） |
 | `cable_routing` | `routing/` | 线缆绕过多个障碍桩布线，接近 docx 2.2 变体（**不是 2.4** —— 2.4 的「绕了几圈」由 `rope_winding` 实现，2026-08-11 起） | 无 verifier 文件；判定散在 `supervision/cable_routing.py`；判据是「在桩的哪一侧」签名而非 winding number |
 | `untangle` | `entangle/` | 离散版交叉任务，对应 docx 3.1 | 无 verifier 文件 |
 | `untangle_continuous` | `entangle/` | 连续绳交叉消除，对应 docx 3.1 | 缺物理层分拉复核 |
@@ -250,19 +251,19 @@ def invariant_value(self) -> int | tuple[int, ...] | dict[str, float]:
 
 ### 5.3 尚未实现的任务
 
-docx 共 20 个任务小节，已实现 3 个（2.4 → `rope_winding`、3.1 → `untangle` + `untangle_continuous`、
-4.2 → `stacked_plate`），**尚未实现 17 个**：1.1–1.5、2.1–2.3、2.5–2.7、3.2–3.4、4.1、4.3、4.4。
+docx 共 20 个任务小节，已实现 4 个（2.4 → `rope_winding`、2.5 → `rope_unwinding`、3.1 → `untangle` +
+`untangle_continuous`、4.2 → `stacked_plate`），**尚未实现 16 个**：1.1–1.5、2.1–2.3、2.6、2.7、3.2–3.4、4.1、4.3、4.4。
 （`cable_routing` 是 2.2 的变体但不完全对应，暂不计入已实现小节；`bar_through_hole` 同理对 2.3。）
 
-其中 **2.5「从柱子上解下一圈绳」是 `rope_winding` 的镜像**：柱、端子、插头、端口、
-winding number 判据全部可复用，改的是 oracle 的起止圈数（1 → 0）与出生时绳已绕柱一圈。
+2.5「从柱子上解下一圈绳」于 2026-08-26 作为 `rope_winding` 的镜像落地（`rope_unwinding`）：柱、端子、插头、
+winding number 判据全部复用，改的是 oracle 的起止圈数（`winding.start_turns` → 0）与出生路线（`helix_around`）。
 
 按类别分布（括号内为该类已实现数）：
 
 | 类别目录 | 未实现 | docx 小节 |
 |---|---|---|
 | `deformation/` | 5（已实现 0） | 1.1–1.5 |
-| `routing/` | 6（已实现 1） | 2.1、2.2、2.3、2.5、2.6、2.7 |
+| `routing/` | 5（已实现 2） | 2.1、2.2、2.3、2.6、2.7 |
 | `entangle/` | 3（已实现 1） | 3.2、3.3、3.4 |
 | `connectivity/` | 3（已实现 1） | 4.1、4.3、4.4 |
 
@@ -300,7 +301,7 @@ topogym/tasks/
 
 ```
 demos/
-├── routing/          # cable_routing, rope_winding, bar_through_hole
+├── routing/          # cable_routing, rope_winding, rope_unwinding, bar_through_hole
 ├── entangle/         # untangle, untangle_continuous
 ├── connectivity/     # stacked_plate
 └── legacy/           # maze_wall_removal, onestroke, peeling, swap

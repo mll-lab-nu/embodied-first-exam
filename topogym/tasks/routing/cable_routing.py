@@ -9,7 +9,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
-from topogym.planning import arc_route_points
+from topogym.planning import arc_route_points, helix_route_points
 from topogym.world.rope import (
     RopeEndpointHandle,
     RopeMesh,
@@ -204,6 +204,34 @@ class CableRoutingLayout:
                         self.route_point(point["arc_to"]),
                         np.radians(float(point["sweep_deg"])),
                         samples=point.get("samples"),
+                    )
+                )
+            elif not isinstance(point, str) and "helix_around" in point:
+                # `helix_around` spawns the rope ALREADY WOUND on a post
+                # (rope_unwinding): from the previous point tangentially onto
+                # the post, then `turns` times around it. The wrap radius is the
+                # rope's settled radius plus a small standoff so the tube does
+                # not spawn inside IPC's contact distance of the post.
+                if not points:
+                    raise ValueError(
+                        f"route {route_name!r} starts with a `helix_around` point; "
+                        "a helix needs a preceding point to approach from."
+                    )
+                post = self.cfg.fixtures[str(point["helix_around"])]
+                radius = (
+                    float(post.radius)
+                    + float(self.cfg.rope.radius)
+                    + float(point.get("standoff", 0.002))
+                )
+                points.extend(
+                    helix_route_points(
+                        points[-1],
+                        self.fixture_pos(str(point["helix_around"]), z=0.0),
+                        radius,
+                        float(point["turns"]),
+                        float(point["climb"]),
+                        1.0 if str(point.get("direction", "ccw")).lower() == "ccw" else -1.0,
+                        z_start=self.world_z(float(point["z_start"])),
                     )
                 )
             else:

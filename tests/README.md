@@ -16,6 +16,7 @@
 python tests/check_demo_configs.py            # 只用标准库 + PyYAML，任何解释器都能跑
 python tests/check_configs_compose.py         # 需要 hydra 包，即项目 venv
 python tests/check_rope_winding_geometry.py   # 需要项目 venv
+python tests/check_rope_unwinding_geometry.py # 需要项目 venv；docx 2.5 预绕螺旋 + 反向 oracle 的布局门
 python tests/check_rope_tube_mesh.py          # 只用 numpy；量的是已经生成的管皮 OBJ
 python tests/check_closed_band_mesh.py        # 只用 numpy + PyYAML；自己生成闭合带并量
 python tests/check_ring_transfer_geometry.py  # 需要项目 venv；docx 2.6 两柱 + 闭合环的布局门
@@ -28,6 +29,7 @@ python tests/check_gateway_slide_path.py      # 只用 numpy + PyYAML；抽出�
 | `check_demo_configs.py` | demo 的 Hydra 接线：未定义名、`OmegaConf.merge` 是否往 struct 配置里加新键、`cfg.run.X` 是否在该 demo 的 run 配置链里，以及一张七列的迁移形态指纹表 |
 | `check_configs_compose.py` | 每份任务配置与每份主配置能否 compose，以及全部 `${...}` 插值能否解析 |
 | `check_rope_winding_geometry.py` | rope_winding 的布局与 oracle：路点是否是配置要求的螺旋、出生路线是否已经绕柱、终态绕数是否恰为 ±turns、绳长是否够 |
+| `check_rope_unwinding_geometry.py` | rope_unwinding（docx 2.5）：出生路线读数恰为 ±start_turns、螺旋在柱身上且圈间有净空、尾弧沿切线离柱、oracle 反向轨道逐圈下降且在柱顶下、逐圈脱离读 start_turns…1,0、强制同向轨道读 2·start_turns、三档圈数的 slack 都在带内 |
 | `check_rope_tube_mesh.py` | 喂给 tetgen 的那张绳管皮：两个方向的镶嵌误差（截面弦高 vs 环距按曲率折算的纵向弦高）、表皮自带扭转、最小曲率半径与管半径之比。先用 `run.build_only=true` 生成 OBJ |
 | `check_gateway_slide_path.py` | docx 3.4 抽出原语的对准滑动：环心走完弧之后开口是否真的落到管身方向上，以及弧的分段够不够细（单段弦向内切 3.35mm，超过整个余量；8 段 0.053mm）。带负对照——断言 1 段是不够的，这样以后有人悄悄去掉分段会在这里失败而不是在场景里失败。四个 `hang_yaw_deg` 都测。取代了 `check_gateway_extract_quat.py`：执行路径上已经没有四元数合成 |
 | `check_c_ring_clearance.py` | docx 3.4 的固定环 + C 环：五条布局不等式的余量、分段近似的弦高、出生时是否读作互锁（弦闭合后 `Lk=±1`），以及 gateway 轨迹全程无接触而八条非 gateway 轨迹是否全部卡住 |

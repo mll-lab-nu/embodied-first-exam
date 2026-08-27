@@ -58,7 +58,13 @@ from .untangle_continuous_planner import (
     UntangleContinuousMoveCommand,
     plan_next_untangle_continuous_move,
 )
-from .waypoint import EpisodePlan, WaypointPlan, WaypointTarget, arc_route_points
+from .waypoint import (
+    EpisodePlan,
+    WaypointPlan,
+    WaypointTarget,
+    arc_route_points,
+    helix_route_points,
+)
 
 __all__ = [
     "SLACK_BAND",
@@ -88,6 +94,7 @@ __all__ = [
     "WaypointTarget",
     "WindingSpec",
     "arc_route_points",
+    "helix_route_points",
     "post_center",
     "post_top_z",
     "taut_demand",
