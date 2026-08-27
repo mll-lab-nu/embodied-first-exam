@@ -68,6 +68,9 @@ winding:
   start_turns: 1
   turns: 0
   direction: ccw
+  # null = 轨道方向由 planner 派生（解绕 = 与缠绕反向）。设成与 direction 相同即
+  # 任务书的失败对照例：轨道与缠绕同向，winding 读 2·start_turns 而不是 0。
+  orbit_direction: null
   wind_radius: 0.140
   # 最下一圈的高度；解绕从 wind_z_start + start_turns x climb_per_turn 开始逐圈下降。
   wind_z_start: 0.045
