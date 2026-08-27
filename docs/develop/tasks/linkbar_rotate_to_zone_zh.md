@@ -220,11 +220,11 @@ oblique / wrist 机位看得见的位置。
 | 离线：规划器 | `python tests/check_linkbar_planner.py` 退出 0 | 过（2026-08-27） |
 | 离线：布局几何 | `python tests/check_linkbar_zone_geometry.py` 退出 0 | 过（2026-08-27，`.venv-gs110`） |
 | 离线：配置组合 | 两个 demo `--cfg job` | 过（2026-08-27） |
-| GPU：inspect sweep | `run.sweep_joint=true`，`reached_both=True` | 待跑 |
-| GPU：inspect seat | `seat_phase=left/right/none`，`pin_zone` 分别为 left/right/None，`speed` < 0.05 | 待跑 |
-| GPU：physical oracle | `task_success=True`，`angular_speed` 读数记入 §8 | 待跑 |
-| GPU：physical nearest | 默认布局（target=left，left 更远）判 `wrong_zone` | 待跑 |
-| GPU：physical offset | `run.target_offset_deg=12` 判 `outside_zone` | 待跑 |
+| GPU：inspect sweep | `run.sweep_joint=true`，`reached_both=True` | 过（2026-08-27，worst_error 0.00°） |
+| GPU：inspect seat | `seat_phase=left/right/none`，`pin_zone` 分别为 left/right/None，`speed` < 0.05 | 过（2026-08-27，三相位 speed 0.0000） |
+| GPU：physical oracle | `task_success=True`，`angular_speed` 读数记入 §8 | 过（2026-08-27） |
+| GPU：physical nearest | 默认布局（target=left，left 更远）判 `wrong_zone` | 过（2026-08-27） |
+| GPU：physical offset | `run.target_offset_deg=12` 判 `outside_zone` | 过（2026-08-27） |
 | 录像 | oblique / front / wrist 三机位，`runs/videos/linkbar_rotate_to_zone/`，检查销色与区色可辨 | 待跑 |
 
 一键脚本（八格，逐格 PASS/FAIL，日志落 `runs/linkbar_zone/<时间戳>/`）：
@@ -248,12 +248,24 @@ python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.target_off
 
 ## 8. 实测值
 
-本节待 GPU 门填写。需要记录：
+### 8.1 2026-08-27 GPU 验收（`bash_scripts/tests/linkbar_rotate_to_zone_check.sh`，4090）
 
-- 沉降 30 步后的 `angular_speed`（决定 `max_angular_speed 0.05` 是否合适）。
-- 松手漂移 `release_drift`（首版实测门 5°；区域半宽 8°，到位容差 4°，二者之和须 < 8°）。
-- 时长缩短后（`steps_per_phase 80`、`arc_settle 30`、`release_hold 30`）的 `max_lag` 与
-  `follow_error`。若门触发，先回退这三项；`steps_arc 240` 不降。
+| 格 | 读数 | 结论 |
+|---|---|---|
+| sweep | left/right 均 error 0.00°，`touching=none` | 梁能到两块区域，无接触 |
+| seat none / left / right | drift 0.000°，speed 0.0000 rad/s；判据分别 `outside_zone` / `terminal=True` / `wrong_zone` | 判据与相位一一对应 |
+| physical oracle | final +56.71°（目标 +55°），target_error 1.71°，max_lag 2.82°，release_drift 0.00°，finger_qpos 0.0105，沉降后 speed 0.0000 | `task_success=True` |
+| physical nearest_zone | final −46.39°（目标 −45°），target_error 1.39°，max_lag 2.30° | `wrong_zone`（期望） |
+| physical offset +12° | final +69.00°（目标 +67°），target_error 2.00°，max_lag 3.37° | `outside_zone`（期望） |
+
+观察：
+
+- 三条 episode 松手后关节角速度均为 0.0000 rad/s，`max_angular_speed 0.05` 余量充足，阈值不动。
+- 三条 episode 终角都**越过**目标 1.4–2.0°（同向），`release_drift` 为 0，说明过冲发生在扫掠末段而不是松手后。
+  对 8° 半宽与 4° 到位容差无影响；若将来把半宽收到 4° 以下，要先查这项。
+- 时长缩短项（`steps_per_phase 80`、`arc_settle 30`、`release_hold 30`）下 `max_lag` ≤ 3.37°、
+  `follow_error` ≤ 0.0116，均未触门（6° / 0.040）。
+- 首次扰动在 step ≈ 360（合爪阶段，指腹接触 1.5 N），与首版一致。
 
 首版实测（仍适用于保留的部分）：
 
