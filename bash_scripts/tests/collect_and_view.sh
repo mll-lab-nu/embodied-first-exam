@@ -42,6 +42,7 @@ TASK="${1:-untangle}"
 declare -A TASKS=(
   [untangle]="demos.entangle.untangle_physical_handle_demo"
   [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
+  [band_untwist]="demos.entangle.band_untwist_physical_pinch_demo"
   [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true"
 )
 spec="${TASKS[$TASK]:-}"

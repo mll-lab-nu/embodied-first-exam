@@ -75,6 +75,10 @@
 `pad_gap` 最小 1.4 mm（绳末段贴在指垫上）——与 rope_winding 的同类读数相当，待 A/B
 `plug_spin_tracks_orbit`。
 
+2026-08-27 失败对照例（`task.winding.orbit_direction=ccw`，轨道与缠绕同向）：`success=False`，
+`winding_number=+2.000`（`swept_turns=+2.298`），`below_post_top=True`，`placement_error_xy=0.0034`，
+13/13 航点——同样的抓取、同样的放置终点，只有拓扑不同，与任务书 §2.5 的对照定义一致。
+
 
 ```bash
 python tests/check_rope_unwinding_geometry.py                     # 离线门，默认 start_turns=1

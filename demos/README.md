@@ -6,7 +6,8 @@
 
 | 目录 | 任务 | demo |
 | --- | --- | --- |
-| `entangle/` | swap_crossing_sign | `swap_crossing_sign_physical_pinch_demo` |
+| `entangle/` | band_untwist | `band_untwist_physical_pinch_demo`（主力）、`band_untwist_inspect_demo`（场景与静置：8 字站不站得住） |
+| | swap_crossing_sign | `swap_crossing_sign_physical_pinch_demo` |
 | | unlink_c_ring | `unlink_c_ring_physical_extract_demo`（主力）、`unlink_c_ring_inspect_demo`（stage-0：场景与静置） |
 | | untangle_continuous | `untangle_continuous_physical_pinch_demo`（主力）、`untangle_continuous_fem_demo`、`untangle_continuous_inspect_demo` |
 | | untangle（离散版） | `untangle_physical_handle_demo` |
@@ -37,6 +38,12 @@ python -m demos.entangle.swap_crossing_sign_physical_pinch_demo                 
 python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=restack_same  # 对照：压回同一根，预期失败
 ```
 
+band_untwist 的开关是抓哪个绳头，两个取值构成它的 contrast pair：
+```bash
+python -m demos.entangle.band_untwist_physical_pinch_demo                          # oracle：抓压在上面那股的绳头，自交叉 1 -> 0
+python -m demos.entangle.band_untwist_physical_pinch_demo run.oracle_mode=wrong_end  # 对照：抓被压的那股，自交叉 1 -> 2，预期失败
+```
+
 覆盖整组配置用组名：`env_configs@env=world_tabletop_v1`、`recording=hq`、
 `task_configs@task=cable_routing_topogym_tabletop_v1`。
 
@@ -46,6 +53,8 @@ python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=
 
 | demo | 主配置 | 运行模式配置 |
 | --- | --- | --- |
+| `entangle/band_untwist_physical_pinch_demo` | `configs/band_untwist_pinch.yaml` | `configs/run_configs/band_untwist.yaml` |
+| `entangle/band_untwist_inspect_demo` | `configs/band_untwist_inspect.yaml` | `configs/run_configs/band_untwist_inspect.yaml` |
 | `entangle/swap_crossing_sign_physical_pinch_demo` | `configs/swap_crossing_sign_pinch.yaml` | `configs/run_configs/swap_crossing_sign.yaml` |
 | `entangle/untangle_continuous_physical_pinch_demo` | `configs/untangle_continuous_pinch.yaml` | `configs/run_configs/untangle_continuous.yaml` |
 | `entangle/untangle_continuous_fem_demo` | `configs/untangle_continuous_fem.yaml` | `configs/run_configs/untangle_continuous_fem.yaml` |

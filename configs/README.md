@@ -17,7 +17,7 @@ each task layout's `world_z()` (`world_z = task_z + 0.9196429`).
   frames, cameras, robot mount). World coordinates.
 - `robot_control_configs/` — robot assets, joints, home pose, controllers, IK, gripper.
 - `task_configs/<task>_topogym_tabletop_v1.yaml` — per-task layout, objects, oracle,
-  physical, mdp. Mainline: untangle / untangle_continuous / stacked_plate /
+  physical, mdp. Mainline: untangle / untangle_continuous / band_untwist / stacked_plate /
   cable_routing / bar_through_hole. The swap / onestroke / maze_wall_removal / peeling
   configs stay for the RL env shells in `topogym/envs/`, though their demos were deleted.
 - `prefab_configs/topogym_prefabs_v1.yaml` — shared modeling props (rope family:

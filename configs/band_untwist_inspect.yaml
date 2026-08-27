@@ -1,0 +1,10 @@
+# band_untwist_inspect_demo 的主配置。
+#
+# 与 band_untwist_pinch.yaml 共用同一份 task 配置，只是 run 组不同 ——
+# 这个 demo 不跑机械臂动作，只生成、沉降、打印自交叉读数。
+
+defaults:
+  - config
+  - override task_configs@task: band_untwist_topogym_tabletop_v1
+  - override run_configs@run: band_untwist_inspect
+  - _self_

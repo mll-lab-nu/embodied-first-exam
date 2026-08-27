@@ -529,3 +529,22 @@ python -B -m demos.deformation.cloth_unroll_physical_demo run.build_only=true 2>
 #     ClothLinkAttachDragPrimitive, 模块改为 primitives/cloth_link_attach_drag.py) ---
 # 读数应与改名前一致: folded=true, diverged=false, 平均误差约 2.9mm, 双层率约 0.85。
 python -B -m demos.deformation.cloth_fold_physical_demo run.verbose=true 2>&1 | tee runs/cloth_fold_after_rename.log
+
+# ===================== band_untwist (docx 3.3, 开口绳桌面版, 2026-08-27) =====================
+# 0) 无 GPU 门 (改几何/规划器后先跑)
+python tests/check_band_untwist_geometry.py
+
+# 1) 场景成立: 沉降后静置 300 步, band_untwist_hold 行的 self_crossings 必须恒为 1
+python -B -m demos.entangle.band_untwist_inspect_demo run.viewer=true run.keep_open=true 2>&1 | tee runs/band_untwist_inspect.log
+
+# 2a) oracle: 抓压在上面那股的绳头, 终态 self_crossings=0, 退出码 0
+python -B -m demos.entangle.band_untwist_physical_pinch_demo run.viewer=true run.verbose=true 2>&1 | tee runs/band_untwist_oracle.log
+
+# 2b) 对照: 抓被压那股的绳头, 终态 self_crossings=2 (failure_label=wrong_end), 退出码 1
+python -B -m demos.entangle.band_untwist_physical_pinch_demo run.oracle_mode=wrong_end run.viewer=true run.verbose=true 2>&1 | tee runs/band_untwist_wrong_end.log
+
+# 2c) 静止形状对照 (终态 O 的形状; spawn 档材料"记得"8 字)
+python -B -m demos.entangle.band_untwist_physical_pinch_demo task.rope.fem.rest_shape=straight run.verbose=true 2>&1 | tee runs/band_untwist_oracle_straight.log
+
+# 3) 三机位录像
+python -B -m demos.entangle.band_untwist_physical_pinch_demo recording=hq recording.path=runs/videos/band_untwist/oracle.mp4 "recording.camera=[oblique,front,wrist]" run.verbose=true 2>&1 | tee runs/videos/band_untwist/oracle.log

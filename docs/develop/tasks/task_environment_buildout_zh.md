@@ -101,7 +101,7 @@ PBD 管线同构。因此 `deformation/` 的第一个实现不必等布料求解
 |---|---|---|---|---|
 | 3.2 交换两根线的上下关系 | `swap_crossing_sign.py` | 与 3.1 完全相同：两根线缆、悬挂端固定、一处交叉 | **全部已有**。`untangle_continuous` 的冻结配置正是 `n_strands: 2` / `braid.length: 1`，即恰好一处交叉（配置 `:47`、`:55`，注释记录 seed 0–3 上 `crossing_count` 均为 1） | 低 |
 | 3.4 C 形环从固定圆环中解开 | `unlink_c_ring.py` | 支架、固定闭合刚性圆环、C 形开口环 | 刚体互锁。圆环／C 环用多段短圆柱沿圆周组合（沿用 §1.2 的凸块组合解法），无新求解器 | 高 |
-| 3.3 8 字绳圈改成 O 形 | `band_untwist.py` | 壁面挂销 + 闭合弹性带 | 闭合弹性环 | 阻塞 |
+| 3.3 8 字绳圈改成 O 形 | `band_untwist.py` | **已落地（2026-08-27）**：桌面 + 开口 FEM 绳摆成 8 字，两绳头各一个插头。与 docx 的闭合带 + 挂销偏离，理由与 spike 数据见 `band_untwist_zh.md` | 无新求解器能力：复用 `untangle_continuous` 绳管线；新增开口单曲线自交叉计数（`verification/band_untwist_verifier.py`） | 低 |
 
 **3.2 是全表成本最低的任务**。场景、原语、配置结构全部与 `untangle_continuous` 相同，差别只在
 目标与判据：终态交叉数仍为 1，翻转的是 over/under 符号。而
@@ -144,7 +144,7 @@ PBD 管线同构。因此 `deformation/` 的第一个实现不必等布料求解
 | 低（复用现有场景 + 原语） | 3.2 `swap_crossing_sign`、2.5 `rope_unwind_post` | entangle、routing |
 | 中（新场景资产，无新建模能力） | 1.4 `hose_bend_u`、2.3 `bar_through_hole`、2.2 `cable_through_port`、2.1 `rope_through_hook`、4.1 `gate_cage_ball` | deformation、routing ×3、connectivity |
 | 高（新几何或新机构，无新求解器） | 3.4 `unlink_c_ring`、4.4 `linkbar_merge_components`、4.3 `diverter_route_ball` | entangle、connectivity ×2 |
-| 阻塞 | 2.6、2.7、3.3（闭合环）；1.1、1.2、1.3、1.5（布料） | routing ×2、entangle、deformation ×4 |
+| 阻塞 | 2.6、2.7（闭合环）；1.1、1.2、1.3、1.5（布料）。3.3 于 2026-08-27 改走开口绳桌面路线后脱离此档（见上表） | routing ×2、deformation ×4 |
 
 不需要新建模能力的任务共 7 个（低 2 + 中 5），覆盖全部四个类别。
 

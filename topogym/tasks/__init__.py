@@ -115,6 +115,11 @@ from .legacy.swap import (
     SwapScene,
     SwapSceneBuilder,
 )
+from .entangle.band_untwist import (
+    BandUntwistLayout,
+    BandUntwistScene,
+    BandUntwistSceneBuilder,
+)
 from .entangle.swap_crossing_sign import (
     SwapCrossingSignLayout,
     SwapCrossingSignScene,
@@ -191,6 +196,9 @@ __all__ = [
     "SwapScene",
     "SwapSceneBuilder",
     "RopeEndpointHandle",
+    "BandUntwistLayout",
+    "BandUntwistScene",
+    "BandUntwistSceneBuilder",
     "SwapCrossingSignLayout",
     "SwapCrossingSignScene",
     "SwapCrossingSignSceneBuilder",

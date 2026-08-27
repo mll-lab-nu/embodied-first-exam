@@ -30,6 +30,7 @@ topogym/tasks/
 | `routing` | Cable Routing | `routing/cable_routing.py` | `CableRoutingLayout` / `CableRoutingScene(Builder)` / `CableRoutingSignature` |
 | `entangle` | Untangle（离散版） | `entangle/untangle.py` | `UntangleLayout` / `UntangleScene(Builder)` / `RopeEndpointHandle`（PBD 绳子） |
 | `entangle` | Untangle（连续版） | `entangle/untangle_continuous.py` | `UntangleContinuousLayout` / `UntangleContinuousScene(Builder)` / `settle_scene` |
+| `entangle` | Band Untwist（docx 3.3，开口绳桌面版） | `entangle/band_untwist.py`（几何在 `entangle/_figure_eight_geometry.py`） | `BandUntwistLayout` / `BandUntwistScene(Builder)`；`settle_scene` 复用连续版 |
 | `connectivity` | Stacked Plate | `connectivity/stacked_plate.py` | `StackedPlateLayout` / `StackedPlateScene(Builder)`，另有 `sync_stacked_plate_physics` / `apply_stacked_plate_visuals` |
 | `deformation` | —— | —— | 尚无实现；候选任务见 `TopoGym_tasks.docx` 第 1 节 |
 | `legacy` | Swap | `legacy/swap.py` | `SwapLayout` / `SwapScene(Builder)` / `SwapOraclePlan` |

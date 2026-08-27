@@ -1497,7 +1497,9 @@ def run_from_config(cfg: DictConfig, *, scene_builder=RopeWindingSceneBuilder) -
         "rope_winding_physical_handle_demo building_scene "
         f"backend={cfg.env.genesis.backend} viewer={cfg.run.viewer} lite={cfg.run.lite} "
         f"task={cfg.task.task.id} turns={spec.turns} start_turns={spec.start_turns} "
-        f"direction={spec.direction} target_winding={spec.target_winding:+.1f}",
+        f"direction={spec.direction} orbit={'ccw' if spec.orbit_sign > 0 else 'cw'}"
+        f"{'' if spec.orbit_direction is None else ' (forced)'} "
+        f"target_winding={spec.target_winding:+.1f} expected_winding={spec.expected_winding:+.1f}",
         flush=True,
     )
     scene = scene_builder(

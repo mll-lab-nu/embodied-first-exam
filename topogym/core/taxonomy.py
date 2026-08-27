@@ -30,7 +30,13 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
         "rope_unwinding",
         "rope_winding",
     ),
-    "entangle": ("swap_crossing_sign", "unlink_c_ring", "untangle", "untangle_continuous"),
+    "entangle": (
+        "band_untwist",
+        "swap_crossing_sign",
+        "unlink_c_ring",
+        "untangle",
+        "untangle_continuous",
+    ),
     "connectivity": (
         "diverter_route_ball",
         "gate_cage_ball",

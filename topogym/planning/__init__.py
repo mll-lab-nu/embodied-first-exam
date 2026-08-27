@@ -47,6 +47,12 @@ from .stacked_plate_planner import (
     plan_stacked_plate_rotation,
 )
 from .subgoal import PlannedSubgoal
+from .band_untwist_planner import (
+    BandUntwistMoveCommand,
+    BandUntwistRule,
+    make_band_untwist_rule,
+    plan_untwist_move,
+)
 from .swap_crossing_sign_planner import (
     SwapCrossingSignRule,
     make_swap_crossing_sign_rule,
@@ -107,6 +113,10 @@ __all__ = [
     "plan_peeling_single_lift",
     "plan_rope_winding_route",
     "plan_stacked_plate_rotation",
+    "BandUntwistMoveCommand",
+    "BandUntwistRule",
+    "make_band_untwist_rule",
+    "plan_untwist_move",
     "make_swap_crossing_sign_rule",
     "plan_cover_move",
     "plan_swap_move",

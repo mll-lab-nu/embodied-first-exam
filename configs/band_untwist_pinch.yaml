@@ -1,0 +1,17 @@
+# band_untwist_physical_pinch_demo 的主配置。
+#
+# 只声明与共享基座 configs/config.yaml 的差异，其余（组的选择、hydra 输出目录、
+# chdir 设置）都从它继承。config.yaml 的默认任务是 untangle_continuous，
+# 所以这里必须显式覆盖 task_configs@task。
+#
+# 用法：
+#   python -m demos.entangle.band_untwist_physical_pinch_demo
+#   python -m demos.entangle.band_untwist_physical_pinch_demo run.viewer=true run.keep_open=true
+#   python -m demos.entangle.band_untwist_physical_pinch_demo run.oracle_mode=wrong_end
+#   python -m demos.entangle.band_untwist_physical_pinch_demo --cfg job   # 只打印解析后的配置
+
+defaults:
+  - config
+  - override task_configs@task: band_untwist_topogym_tabletop_v1
+  - override run_configs@run: band_untwist
+  - _self_

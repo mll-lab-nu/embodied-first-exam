@@ -19,6 +19,7 @@ python tests/check_rope_winding_geometry.py   # 需要项目 venv
 python tests/check_rope_unwinding_geometry.py # 需要项目 venv；docx 2.5 预绕螺旋 + 反向 oracle 的布局门
 python tests/check_rope_tube_mesh.py          # 只用 numpy；量的是已经生成的管皮 OBJ
 python tests/check_closed_band_mesh.py        # 只用 numpy + PyYAML；自己生成闭合带并量
+python tests/check_band_untwist_geometry.py   # 只用 numpy + PyYAML；docx 3.3 开口绳 8 字的几何、自交叉计数与规划器门
 python tests/check_ring_transfer_geometry.py  # 需要项目 venv；docx 2.6 两柱 + 闭合环的布局门
 python tests/check_c_ring_clearance.py        # 只用 numpy + PyYAML；量 docx 3.4 两个环的净空
 python tests/check_gateway_slide_path.py      # 只用 numpy + PyYAML；抽出原语的滑动路径
@@ -34,7 +35,8 @@ python tests/check_gateway_slide_path.py      # 只用 numpy + PyYAML；抽出�
 | `check_gateway_slide_path.py` | docx 3.4 抽出原语的对准滑动：环心走完弧之后开口是否真的落到管身方向上，以及弧的分段够不够细（单段弦向内切 3.35mm，超过整个余量；8 段 0.053mm）。带负对照——断言 1 段是不够的，这样以后有人悄悄去掉分段会在这里失败而不是在场景里失败。四个 `hang_yaw_deg` 都测。取代了 `check_gateway_extract_quat.py`：执行路径上已经没有四元数合成 |
 | `check_c_ring_clearance.py` | docx 3.4 的固定环 + C 环：五条布局不等式的余量、分段近似的弦高、出生时是否读作互锁（弦闭合后 `Lk=±1`），以及 gateway 轨迹全程无接触而八条非 gateway 轨迹是否全部卡住 |
 | `check_ring_transfer_geometry.py` | docx 2.6（`ring_transfer`）的两根走线柱 + 闭合弹性环：环与柱的净空、周期管水密与 `Lk=0`、势垒不越过自表面；拉伸梯形在 B 处的绳股间距（含两个负对照：单点捏住、20mm 柱）；远端帽整条 oracle 路径（平转/抬升/平移/下放）逐样本量绳股线段到 B 轴的距离、平移段全程绷紧、越顶高度下限、工作区与抓取净空 |
-| `check_closed_band_mesh.py` | docx 3.3 的闭合弹性带（Phase 0）：周期扫掠是否水密且两向镶嵌相当、接缝闭合后的自链数 `Lk` 是否为 0（`Lk=±1` 的带永远翻不平）、出生自接触间隙是否够势垒、以及自交叉计数在 O 形／8 字／反向翻转／压扁 8 字四种解析折线上的读数 |
+| `check_band_untwist_geometry.py` | docx 3.3 的开口绳桌面版（`band_untwist`）：8 字控制线的端距、最小转角半径、交叉处抬高与绳长；开口折线自交叉计数在 8 字／压扁 8 字／直绳／两头相邻的 C 形／两交叉曲线上的读数（C 形专抓闭合计数器的幻影段）；规划器在 oracle / wrong_end 两档各选一端、抬升过弧长、落点等距交叉点且离另一端 place_clearance、全部路点在工作区内 |
+| `check_closed_band_mesh.py` | docx 3.3 的闭合弹性带（Phase 0，**已废弃路线**，保留作证据）：周期扫掠是否水密且两向镶嵌相当、接缝闭合后的自链数 `Lk` 是否为 0（`Lk=±1` 的带永远翻不平）、出生自接触间隙是否够势垒、以及自交叉计数在 O 形／8 字／反向翻转／压扁 8 字四种解析折线上的读数 |
 
 前两个覆盖不到的部分写在各自的 docstring 里：带默认值的 `getattr` 动态访问、迁移时值
 取错、以及物理行为。第二类刚发生过一次——`fem_ipc_rope_spike` 迁 Hydra 时默认后端从

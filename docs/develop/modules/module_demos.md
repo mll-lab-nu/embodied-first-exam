@@ -17,6 +17,7 @@
 | --- | --- | --- |
 | `entangle/` | untangle_continuous | `untangle_continuous_physical_pinch_demo.py`、`untangle_continuous_fem_demo.py`、`untangle_continuous_inspect_demo.py` |
 | `entangle/` | untangle（离散版） | `untangle_physical_handle_demo.py` |
+| `entangle/` | band_untwist | `band_untwist_physical_pinch_demo.py`、`band_untwist_inspect_demo.py` |
 | `connectivity/` | stacked_plate | `stacked_plate_physical_rotate_demo.py`、`stacked_plate_inspect_demo.py` |
 | `routing/` | cable_routing | `cable_routing_physical_handle_demo.py` |
 | `routing/` | bar_through_hole | `bar_through_hole_physical_insert_demo.py` |

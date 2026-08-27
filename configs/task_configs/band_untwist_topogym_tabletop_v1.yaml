@@ -1,0 +1,288 @@
+# band_untwist (docx 3.3　8 字绳圈改成 O 形) 的布局，写在 TopoGym tabletop V1 任务帧里。
+# 几何约定：单位米；task z=0 是桌面；pos 是中心点；size 是完整长宽高。
+#
+# 与 docx 的差异（理由见 tasks/entangle/band_untwist.py 模块 docstring）：
+#   docx        闭合弹性带挂在壁面挂销上，扭成 8 字，翻转下瓣
+#   本任务      **开口** FEM 绳平放在桌面上摆成 8 字，抓压在上面那股的绳头跨过另一股
+# 闭合带路线的 spike（tests/closed_band_spike.py，2026-08-21）证明悬挂的 8 字在 FEM+IPC
+# 下 0.25 秒内自行弹回 O 形——交叉处两股相距 40mm，没有任何自接触势垒。平放在桌面上
+# 时重力把上股压在下股上、桌面摩擦固定形状，8 字才站得住。
+#
+# 绳子物理块（rope:）逐字复制自 swap_crossing_sign / untangle_continuous，
+# 那里的 PBD/FEM 调参记录都是实测值，不要凭空改；本文件只改了 mesh.segment_length
+# 与 mesh.output_dir，见各自注释。
+
+task:
+  id: band_untwist
+  # 目前只有一档：单个自交叉。难度轴（叶半径、交叉角、开口宽度的分布）按
+  # docs/develop/tasks/variation_and_difficulty_plan_zh.md 的方式另立。
+  difficulty: easy
+
+coordinate_frame: task
+
+# 8 字几何（tasks/entangle/_figure_eight_geometry.py）。两个「泪滴」在交叉点相接：
+# 每个泪滴 = 一个圆 + 从交叉点到圆的两条切线，所以两股都以 half_angle_deg 离开
+# 交叉点、以 2×half_angle_deg 相交。闭合叶是完整泪滴；开口叶在底部截断，
+# 两个绳头相距 end_gap。绳子走向与 over 端见几何模块 docstring。
+figure_eight:
+  # 闭合叶（远离机械臂那一侧）的圆半径。最小弯曲半径 = 这个值，40mm ≫ 管半径 4mm。
+  closed_lobe_radius: 0.040
+  # 开口叶（绳头那一侧）的圆半径。比闭合叶略大，让两个绳头有地方错开。
+  open_lobe_radius: 0.050
+  # 两个绳头的直线距离。**必须 ≥ rope.free_end_connector.min_clearance (0.07)**，
+  # 否则两个插头挤在一个夹爪跨距里，builder 会拒绝建场景。0.08 留 10mm 余量。
+  # 上限 2×open_lobe_radius（再宽开口叶就切不出弧）。
+  end_gap: 0.080
+  # 两股离开交叉点时与 8 字轴线的夹角。45° → 两股互成 90° 交叉，投影交叉最稳、
+  # 交叉点最不容易被判成擦边。切线长 = 半径 / tan(45°) = 半径。
+  half_angle_deg: 45.0
+  # 上股在交叉处抬高多少（中心线间距）。与 untangle_continuous 的 braid.over_lift 同值同理：
+  # 2×半径 + particle_size = 12mm 是「出生时两股互不作用」的临界，也是 PBD 下的静止间距。
+  # FEM+IPC 下静止间距 ≈ 2×半径 + d_hat = 10mm，多出的 2mm 靠沉降落下。
+  over_lift: 0.012
+  # 抬高段的坡长（从交叉点沿切线到回到桌面的距离）。20mm 坡上升 12mm，
+  # 样条最陡处约 30°。
+  lift_ramp: 0.020
+  # 绳中心线的桌面高度。同 untangle_continuous 的 braid.base_z（半径 0.004 → 底面 3mm 净空）。
+  base_z: 0.007
+  # 交叉点在任务系的位置。x 略往远处推，让开口叶的两个绳头落在 x≈-0.08，
+  # 离机械臂基座（x=-0.57）约 0.49m，在 Franka 舒适工作区内；闭合叶顶端 x≈+0.12。
+  center: [0.02, 0.00]
+  # 8 字轴线（交叉点 → 闭合叶）在任务系的朝向。0 = 闭合叶朝 +x（远离机械臂），
+  # 绳头朝机械臂。
+  heading_deg: 0.0
+  # 每 90° 弧放几个控制点。3 → 闭合叶 270° 弧上 10 个点；再密样条与折线无异。
+  arc_points_per_quarter: 3
+  color: [1.00, 0.06, 0.03]
+
+rope:
+  # 2026-08-08 默认切 FEM+IPC（迁移验收全过，见 rope_backend_migration_zh.md）。
+  # 回退 PBD：改回 pbd_elastic_tube 并把 env 指回 world_tabletop_v1.yaml。
+  model: fem_ipc_tube
+  # FEM + IPC 后端的材料与接触参数。单源 = prefabs.rope_fem
+  # （2026-08-10 从 rope_backends/fem_ipc.py 的 _DEFAULTS 搬来，见该处注释）。
+  fem:
+    E: ${prefabs.rope_fem.E}
+    nu: ${prefabs.rope_fem.nu}
+    rho: ${prefabs.rope_fem.rho}
+    friction_mu: ${prefabs.rope_fem.friction_mu}
+    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    follow_strength: ${prefabs.rope_fem.follow_strength}
+    rest_shape: ${prefabs.rope_fem.rest_shape}
+    sanity_check_enable: ${prefabs.rope_fem.sanity_check_enable}
+    newton_max_iterations: ${prefabs.rope_fem.newton_max_iterations}
+    newton_tolerance: ${prefabs.rope_fem.newton_tolerance}
+  # 绳↔桌面摩擦。**和下面 elastic.*_friction 是两个独立的旋钮**：
+  #   elastic.*_friction   -> 绳↔绳（PBD 粒子间）
+  #   table_friction       -> 绳↔桌面（写进桌子刚体 geom 的 coup_friction）
+  # 耦合器对"可变形体 vs 刚体"读的是刚体 geom 的 coup_friction
+  # （legacy_coupler._func_collide_in_rigid_geom），与 PBD 材质摩擦无关。
+  # 这个区分正好解开本任务的两难：绳↔绳必须低（高了会把压着的另一根拖着走），
+  # 绳↔桌必须高（低了绳子在桌面上乱滑）。
+  # Genesis 默认 0.1；只作用于本任务的桌子实例（走 create(table_material=...) 覆写）。
+  # **注意：这个值对"绳子躺在桌上滑不滑"几乎没有影响**——Genesis 的绳↔刚体摩擦是冲击式的
+  # （切向削减量 ∝ 法向速度，且只在正撞进表面时生效），静止接触时归零。实测从 0.1 提到 0.8
+  # 对持续摆动/乱滑毫无改善。真正管用的是下面的 tabletop_friction。
+  # 这里保留一个较高值只是让"撞上桌面那一瞬"的行为合理。
+  table_friction: 0.8
+  # 绳↔桌面的**持续接触**摩擦，自己实现的库仑模型（world/rope.py 的
+  # TabletopParticleFriction），只改速度不改位置。
+  # 背景与推导见 docs/develop/physics/pbd_tabletop_friction_zh.md。
+  # 这是让"被扰动的绳会停下来"的唯一机制——PBD.Elastic 没有任何耗散项
+  # （*_relaxation 是约束松弛因子，不是阻尼；对照 PBD.Cloth 才有 air_resistance）。
+  tabletop_friction:
+    enabled: true
+    # 减速度 = mu * g，与速度无关。0.4/0.5 是塑料线缆搁在桌面的量级。
+    # 调参方向：绳子像粘在桌上、settle 时摊不开 -> 调低；仍然滑来滑去 -> 调高。
+    kinetic_mu: 0.4
+    static_mu: 0.5
+    # 粒子 z 低于「桌面 + 这个」才算接触。约等于一个绳半径，刚好覆盖躺平截面的下缘。
+    # 被机械臂提起的绳段 z 高，自然落在带外、完全不受影响。
+    contact_band: 0.005
+    # 整根绳的重量压在少数触桌粒子上的集中系数上限。八边形平躺约 3/8 顶点触桌 -> ~2.7。
+    # 封顶别调太高：绳子被提起时触点变少、这个比值反而涨，但那时重量在夹爪上，不该加大摩擦。
+    max_load_factor: 3.0
+  # 自由端的刚体抓握接头。**不插任何东西**，唯一作用是给夹爪一个刚体去抓。
+  # 为什么必须有它（见 untangle_continuous_solver_divergence_zh.md）：
+  #   1. 夹爪闭在**刚体**上走的是刚体求解器的完整接触；直接闭在 PBD 粒子上走的是
+  #      coupler 的软速度投影，不保证不穿透，穿深了 SDF 法向还会翻面把粒子弹出去。
+  #   2. 绳子用 Genesis 原生 fix_particles_to_link 跟随接头——它存的是**相对 link**
+  #      的位姿、**跟随姿态**，且由求解器内部推进，不经过外部写位置。
+  #      我们此前自制的焊接带存的是**世界坐标固定偏移**：attach 时绳子平躺，带子就被
+  #      永久钉成水平，抬起时必须在带边缘几毫米内完成 ~90 度转向，把半径 4mm 的绳
+  #      折到 5~7mm 曲率半径 —— 那就是爆解的根源。
+  # 尺寸沿用离散版 physical_handle 验证过的可抓尺度（半径 8.5mm、高 32mm）。
+  # 自由端的刚体接头 —— 和离散版 untangle 用**同一个工业插头几何**
+  # （prefabs.rope_endpoint_connector：销 + 法兰 + 环槽抓取柱 + 圆帽），
+  # 区别是它**不插任何东西**、侧躺在桌面上让机械臂直接拿。
+  # 摆放：绕 y 轴 -90deg，柱轴沿 x 躺平 —— 圆帽（线缆进入端）朝锚定端，
+  # 销朝外悬空。躺平时最粗的法兰触桌，所以轴心高度 = 桌面 + flange_radius。
+  # 为什么要有它：夹爪夹**刚体**走的是刚体求解器的完整接触；直接夹 PBD 粒子
+  # 走的是耦合器的软速度投影，挡不住穿透（见 blowup debug log）。绳子靠
+  # fix_particles_to_link 跟随，它带朝向，不会像手写焊接带那样被永远压平。
+  free_end_connector:
+    enabled: true
+    #
+    # 尺寸比 prefab 放大约 1.35x（**本任务局部覆盖，不改 prefab** —— 那份是离散
+    # untangle / cable_routing 共用的，它们的插头是**直立插进插孔**的，约束不同）。
+    # 放大的两个实打实的理由，都只在「躺平」这个姿态下才出现：
+    #   1. 躺平时夹爪指垫中心落在插头**轴心**高度 = flange_radius。11mm 时指垫
+    #      底缘离桌只剩 ~2.5mm（指垫半高约 8.5mm），几乎蹭桌；15mm 给到 ~6.5mm。
+    #   2. 指垫沿柱轴方向约 ±7.5mm，而原抓取柱只有 ±7mm —— 指垫正好**悬到法兰上**
+    #      （法兰 Ø22mm 比柱 Ø15mm 粗），先撞法兰再谈夹柱。放大后柱 ±10mm，
+    #      指垫完全落在柱面内，法兰退到 x=+10mm 之外。
+    # 直立版没有这两个问题：法兰在柱**下方**，顶抓不会碰到，轴心高度也不由它决定。
+    pin_depth: 0.013
+    pin_radius: 0.0075
+    flange_radius: 0.015     # 躺平时触桌的最粗处 -> 轴心离桌 15mm
+    flange_height: 0.006
+    column_radius: 0.010     # Ø20mm 抓取柱；grasp_qpos_handle 取同值
+    column_height: 0.020     # 柱跨 x=±10mm，容得下 ±7.5mm 的指垫
+    grip_rings: ${prefabs.rope_endpoint_connector.grip_rings}
+    radial_segments: ${prefabs.rope_endpoint_connector.radial_segments}
+    rho: 700.0
+    friction: 1.6
+    color: ${prefabs.rope_endpoint_connector.color}
+  # 锚定端粒子选取半径。同离散版：固定"一带"(2~3 圈)粒子而不是单圈，
+  # 分散刚体↔PBD 耦合、消掉接缝硬 hinge。
+  anchor_radius: 0.012
+  # 物理参数单源 = configs/prefab_configs/topogym_prefabs_v1.yaml（prefabs.rope_pbd）。
+  # 与离散版 untangle / cable_routing 同源，连续版不做任何物理改动。
+  radius: ${prefabs.rope_pbd.radius}
+  particle_size: ${prefabs.rope_pbd.particle_size}
+  mesh:
+    # ------------------------------------------------------------------
+    # **这个值不能随便降低。**它同时被两个互相冲突的约束夹着：
+    #
+    # (a) 碰撞屏障不漏：Genesis 的 PBD 碰撞是粒子级的（每个粒子是半径
+    #     particle_size/2 的球），要形成不漏的面需要 segment_length <= particle_size。
+    #     9mm 时沿绳方向有 5mm 无覆盖的缝，实测两绳穿模约 4~5mm。
+    #
+    # (b) 弯曲时不触发**假自碰撞**：Genesis 的自碰撞排除规则是
+    #     `rest_dist > particle_size`（pbd_solver._func_solve_collision），它只看
+    #     静止距离，分不清"这是我自己的邻居"还是"这是另一根绳"。对角邻居的静止
+    #     距离 = sqrt(segment_length^2 + 环向间距^2)，只要它略大于 particle_size，
+    #     绳子一弯、内侧被压缩就会触发"自己推自己"，与拉伸约束打架。
+    #
+    # 实测曲线（radius=4mm, particle_size=4mm, radial_segments=8）：
+    #   seg=4mm  对角 5.04mm  弯曲半径 <19.4mm 即触发   <- 场景里到处都是，会爆解
+    #   seg=6mm  对角 6.74mm  弯曲半径 < 9.8mm 即触发
+    #   seg=9mm  对角 9.51mm  弯曲半径 < 6.9mm 即触发   <- 8mm 粗的绳弯不到，安全
+    #
+    # 我们场景的实际弯曲半径：交叉处上方绳跨过下方绳约 10mm，抓取点折弯更小。
+    # 所以 (b) 要求 segment_length >= 9mm，(a) 要求 <= 4mm —— **没有中间地带**。
+    #
+    # 取 9mm：接受约 4mm 的绳-绳穿模（可承受：拓扑判定用中心线 z，不受影响），
+    # 换取弯曲不爆解（灾难性）。
+    # 留档：2026-08-02 曾降到 4mm 试图堵 (a)，结果 (b) 被触发——夹爪抓起绳子时
+    # 抓取点折弯即爆解飞出，交叉处也被自己撑变形、上下关系糊掉。已回滚。
+    # ------------------------------------------------------------------
+    # ---- 本任务改为 0.005 ----
+    # 上面 (b) 是 PBD 的假自碰撞约束，在 IPC 下不存在（IPC 自接触按表面距离算，
+    # 不看静止距离）。本任务默认走 FEM+IPC，叶片弯曲半径 40~50mm，与 closed_band
+    # spike 同型：9mm 的纵向节距比环向（8 段 × 4mm 半径 ≈ 3.1mm）粗 3 倍，
+    # 沿弯曲的管皮会出现明显棱面，spike 已把它降到 0.005。回退 PBD 时改回 0.009。
+    segment_length: 0.005
+    radial_segments: 8
+    maxvolume: ${prefabs.rope_pbd.maxvolume}
+    # 自己的目录：管网格每次 build 都重写同名 obj，与 untangle_continuous 共用
+    # 一个目录会让两个任务同时跑时互相覆盖。几何目前相同，但共用没有收益。
+    output_dir: .cache/topogym/meshes/band_untwist
+  pbd:
+    max_stretch_solver_iterations: ${prefabs.rope_pbd.pbd.max_stretch_solver_iterations}
+    max_bending_solver_iterations: ${prefabs.rope_pbd.pbd.max_bending_solver_iterations}
+    max_volume_solver_iterations: ${prefabs.rope_pbd.pbd.max_volume_solver_iterations}
+  elastic:
+    rho: ${prefabs.rope_pbd.elastic.rho}
+    # 与离散版 untangle 同值，理由也同：prefab 原值 0.35/0.25 会让一根绳移动时
+    # 把压着的另一根"拖着走"；这里保留一点点摩擦，只为让绳落到绳上后静置自然、
+    # 不打滑。（就地覆写，不动被 cable_routing 共用的 prefab。）
+    #
+    # 留档：2026-07-29 曾抬到 0.18/0.12 试图压住摆动，是**误诊**——摆动的真凶是
+    # 机械臂无控制器塌陷 + settle 判据 bug，摩擦完全无关，反而复现了离散版当年
+    # 特意避开的"拖着走"。摆动现在由 settle.damp_every 主动抽动能解决。
+    # 若仍有残余拖拽，按离散版注释的建议可继续下探直至 0.0 做隔离验证。
+    static_friction: 0.05
+    kinetic_friction: 0.02
+    stretch_compliance: ${prefabs.rope_pbd.elastic.stretch_compliance}
+    bending_compliance: ${prefabs.rope_pbd.elastic.bending_compliance}
+    volume_compliance: ${prefabs.rope_pbd.elastic.volume_compliance}
+    stretch_relaxation: ${prefabs.rope_pbd.elastic.stretch_relaxation}
+    bending_relaxation: ${prefabs.rope_pbd.elastic.bending_relaxation}
+    volume_relaxation: ${prefabs.rope_pbd.elastic.volume_relaxation}
+
+# 抓绳头上的刚体插头 + 抬起跨过 + 放下（HandleDragPrimitive）。
+# 原语参数逐字沿用 swap_crossing_sign（那里有每个值的实测推导），只留本任务会读的键。
+# 抓取是 kinematic weld 不是摩擦夹持：本 benchmark 要隔离的是拓扑推理，
+# 抓取成功率恒 100%（设计文档 §3.5）。
+pinch:
+  # 绳↔机器人接触。默认关闭，理由见 tasks/entangle/untangle_continuous.py 的
+  # _robot_material() docstring。
+  robot_rope_contact: false
+  # 抬升高度 = 场景最高点 + max(lift_clearance, 交叉点到绳头的弧长 + lift_clearance)。
+  # 第二项是本任务的关键：被抓那股从绳头到交叉点整段要离开桌面（约 120mm），
+  # 交叉点才会跟着被带走；只抬绳头而交叉点还压在下股上，横移只是把绳头拖过去。
+  lift_clearance: 0.040
+  # 放下时绳头离另一个绳头（也就是另一股的尾巴）的俯视距离。
+  # 比的是夹爪占地不是绳半径：插头法兰半径 0.015 + 绳碰撞半径 0.006 + 余量 ≈ 0.035。
+  # planner 把放置点放在「以交叉点为圆心、过另一绳头」的圆上，弦长 = 这个值，
+  # 所以放置点到交叉点的距离与抓取点相同，绳既不绷紧也不多余。
+  place_clearance: 0.035
+  # 下面几个是原语自身的参数，值同 swap_crossing_sign。
+  approach_z: 0.250
+  lift_delta: 0.060
+  move_steps: 260
+  gripper_steps: 120
+  # 手到插头的允许偏差；超了拒绝焊接（weld honesty check）。
+  attach_tolerance: 0.030
+  motion_settle_steps: 20
+  release_hold_steps: 30
+  # = rope.free_end_connector.column_radius。手指闭到柱面、零预紧，承力的是 assisted attachment。
+  grasp_qpos_handle: 0.010
+  min_lift_delta: 0.014
+  max_handle_error: 0.035
+  close_hold_steps: 100
+  # 抬起后把插头出线口转向下方的角度；0 = 关闭。推导见 swap_crossing_sign 配置。
+  carry_pitch_deg: 0.0
+  carry_pitch_steps: 260
+  # 放下之后重新静置的步数上限（走 settle_scene，收敛就提前退出）。
+  between_moves_settle_steps: 800
+  # 判定"节点炸了"的阈值：离自己那根绳中心线多远算离群。0.030 = 7 倍半径。
+  blow_up_tolerance: 0.030
+
+oracle:
+  # 固定一步：抓 over 端跨过另一股放下。交叉数 1 → 0 是一次动作的事；
+  # 多给步数只会在失败态上再抓一次、把读数搅乱。
+  max_moves: 1
+
+# 几何判定参数（verification/band_untwist_verifier.py）。
+success:
+  # 俯视中心线采样段数。绳长约 0.51m，80 段 ≈ 6.4mm/段，比绳径 8mm 细，足以分辨交叉。
+  centerline_samples: 80
+  # 一次物理交叉横跨好几段中心线，这个半径内的命中合并成一个。取略大于绳径。
+  crossing_merge_radius: 0.012
+  # 两个插头都要落回桌面（轴心离静止高度不超过这个值），交叉数 0 才算解开——
+  # 提着绳头时交叉数也是 0，那不是解开。5mm 容许插头搁在绳身上的微小抬高。
+  end_height_tolerance: 0.005
+
+# 建好场景后先让重力把上方绳压到下方绳上，再开始数交叉/动机械臂。
+settle:
+  steps: 800
+  # 判定"静下来了"：单步内 95% 分位的粒子位移（米）。用分位数不用最大值——PBD 有
+  # 数值噪声底，单个粒子的抖动会否决一根其实已经静止的绳子（第一版就是这么误报的）。
+  # 用位移不用速度，是为了不依赖求解器内部量；dt=0.01 时 0.0002 m/step ≈ 2 cm/s。
+  #
+  # 0.0002 这个值仍是**估计**：真正该定多少，要用 trace_every 看衰减曲线定——
+  # 曲线还在降说明 steps 不够，曲线走平说明那就是噪声底、限值不能定在它以下。
+  max_particle_step: 0.0002
+  # >0 时每这么多步打印一次 p95/max，用来看衰减曲线。调参时开，平时设 0。
+  trace_every: 50
+  # 每这么多步把所有粒子速度清零，主动抽走动能。0 = 关闭。
+  # **现已关闭**：这是在没有桌面摩擦时用来强行抽动能的替代品（fake），现在
+  # rope.tabletop_friction 提供了真正的库仑摩擦，就不该再留着——留着会掩盖
+  # "摩擦到底有没有起作用"。
+  # 保留这个参数是为了回退：如果关掉后 settle 反而不收敛，说明"改速度安全"这个
+  # 判断有误，把它调回 25 可以恢复原行为。
+  damp_every: 0
+  # 兜底：跑满 steps 还没收敛就报错，而不是把还在摆的绳子交给机械臂。
+  require_converged: true

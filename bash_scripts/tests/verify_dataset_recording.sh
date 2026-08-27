@@ -44,9 +44,10 @@ mkdir -p "$OUTDIR"
 declare -A TASKS=(
   [untangle]="demos.entangle.untangle_physical_handle_demo"
   [untangle_continuous]="demos.entangle.untangle_continuous_physical_pinch_demo"
+  [band_untwist]="demos.entangle.band_untwist_physical_pinch_demo"
   [cable_routing]="demos.routing.cable_routing_physical_handle_demo run.allow_target_lag=true"
 )
-ORDER=(untangle untangle_continuous cable_routing)
+ORDER=(untangle untangle_continuous cable_routing band_untwist)
 
 if [[ $# -gt 0 ]]; then
   SELECTED=("$@")

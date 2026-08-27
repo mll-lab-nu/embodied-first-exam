@@ -38,6 +38,12 @@ from .cloth_unroll_verifier import (
     out_of_plane_thickness,
     wound_particles,
 )
+from .band_untwist_verifier import (
+    BandUntwistPuzzleEvaluator,
+    BandUntwistPuzzleState,
+    SelfCrossing,
+    open_self_crossings,
+)
 from .bar_through_hole_verifier import (
     BarThroughHolePuzzleEvaluator,
     BarThroughHolePuzzleState,
@@ -90,6 +96,10 @@ from .untangle_continuous_verifier import (
 )
 
 __all__ = [
+    "BandUntwistPuzzleEvaluator",
+    "BandUntwistPuzzleState",
+    "SelfCrossing",
+    "open_self_crossings",
     "BarThroughHolePuzzleEvaluator",
     "BarThroughHolePuzzleState",
     "LinkbarMergeEvaluator",
