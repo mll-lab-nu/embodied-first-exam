@@ -119,7 +119,13 @@ def helix_route_points(
     first = bearing + sign * float(np.arccos(radius / distance))
     base_z = float(start[2]) if z_start is None else float(z_start)
     if samples_per_turn is None:
-        samples_per_turn = 180  # ~2 degrees a step, as `arc_route_points`
+        # About 7 mm a step: the spacing `arc_route_points` gives at the radii
+        # this repo uses (2 degrees of a 0.2 m arc). Finer than the rope mesh's
+        # own segment length is not more accurate, it is a denser centreline --
+        # and on a FEM tube that puts the rings inside IPC's contact distance
+        # (`check_self_contact_clearance`): 180 samples a turn at r=0.026 came
+        # out at 0.4 mm rings against a 0.8 mm barrier.
+        samples_per_turn = max(12, int(round(2.0 * np.pi * radius / 0.007)))
     count = max(8, int(round(turns * int(samples_per_turn))))
     fractions = np.linspace(0.0, 1.0, count + 1)
     sweep = sign * 2.0 * np.pi * turns
