@@ -68,6 +68,14 @@
 
 ## 6. 运行
 
+2026-08-26 首跑（start_turns=1，GPU，无 viewer）：`success=True`，`winding_number=0.000`
+（`swept_turns=+0.156`，`turn_complete` 时已读 0），`placement_error_xy=0.0034`，13/13 航点，
+`wound_max_z=0.005`（解下来的绳躺在柱脚旁的板面上，没有越顶）。`post_contact` 沿轨道单调下降
+（2079 → 1009 → 479），即圈是逐渐剥离而不是整体上滑。`twist_net` 累计 −1.1 圈，
+`pad_gap` 最小 1.4 mm（绳末段贴在指垫上）——与 rope_winding 的同类读数相当，待 A/B
+`plug_spin_tracks_orbit`。
+
+
 ```bash
 python tests/check_rope_unwinding_geometry.py                     # 离线门，默认 start_turns=1
 python tests/check_rope_unwinding_geometry.py --start-turns 3
