@@ -98,8 +98,12 @@ routes:
   # 顺时针（负 sweep）弯 120 度的弧，其弦相对切线偏 -60 度，所以插头在柱的正下方
   # （-y）0.216 m 处；弧向 -x 侧鼓出约 59 mm，离柱轴始终 > 0.15 m。
   # tests/check_rope_unwinding_geometry.py 检查这个夹角（< 30 度）。
+  # S 之后先水平走 40 mm 再起坡：端子出口的入线弧把绳压在 rope.z，直接从 S 斜向
+  # 上爬到 wind_z_start 会在入线弧末端形成 49 度折角（曲率半径 2.7 mm < 管半径 4 mm，
+  # tetgen 报管皮自交）；有了这一段，30 mm 的爬升摊在 146 mm 上，坡度 12 度。
   initial:
     - {fixture: S, relation: center}
+    - {pos: [-0.114, 0.083, 0.015]}
     - {helix_around: POST, turns: "${task.winding.start_turns}", direction: "${task.winding.direction}", z_start: "${task.winding.wind_z_start}", climb: "${task.winding.climb_per_turn}"}
     - {arc_to: {pos: [-0.006, -0.218, 0.015]}, sweep_deg: "${task.rope.spawn_arc.sweep_deg}"}
   goal:
