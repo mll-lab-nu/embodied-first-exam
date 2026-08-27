@@ -182,7 +182,15 @@ run_cell() {
   echo
   echo "==================== $tag ===================="
   local start; start=$(date +%s)
-  timeout "${TIMEOUT_S}s" "$@" 2>&1 | tee "$log"
+  # timeout 是外部程序，跑不了 shell 函数，所以 demo 名在这里展开成真命令。
+  local cmd=()
+  case "$1" in
+    inspect)  shift; cmd=(python -B -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo
+                          env.genesis.backend="$BACKEND" "${VIEWER_ARGS[@]}") ;;
+    physical) shift; cmd=(python -B -m demos.connectivity.linkbar_rotate_to_zone_physical_demo
+                          env.genesis.backend="$BACKEND" "${VIEWER_ARGS[@]}") ;;
+  esac
+  timeout "${TIMEOUT_S}s" "${cmd[@]}" "$@" 2>&1 | tee "$log"
   local code=${PIPESTATUS[0]}
   local dur=$(( $(date +%s) - start ))
   local state; state="$(run_state "$code" "$log")"
@@ -190,15 +198,6 @@ run_cell() {
   verdict="$(grade "$tag" "$log" "$state")" || FAIL=1
   ROWS+=("$tag|${dur}s|$verdict")
   echo "---- $tag: $verdict"
-}
-
-inspect() {
-  python -B -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo \
-    env.genesis.backend="$BACKEND" "${VIEWER_ARGS[@]}" "$@"
-}
-physical() {
-  python -B -m demos.connectivity.linkbar_rotate_to_zone_physical_demo \
-    env.genesis.backend="$BACKEND" "${VIEWER_ARGS[@]}" "$@"
 }
 
 echo "outdir=$OUTDIR  backend=$BACKEND  viewer=$VIEWER  timeout=${TIMEOUT_S}s"
