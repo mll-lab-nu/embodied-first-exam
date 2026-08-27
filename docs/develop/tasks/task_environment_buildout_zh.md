@@ -115,7 +115,7 @@ PBD 管线同构。因此 `deformation/` 的第一个实现不必等布料求解
 | docx | 建议模块 | 场景资产 | 建模能力 | 成本档 |
 |---|---|---|---|---|
 | 4.1 关闭挡板困住移动小球 | `gate_cage_ball.py` | 带开口的围栏（Box 组合）、滚动小球（Sphere）、挡板（Box） | 全部为刚体基元。需要仓库首个 `gs.morphs.Sphere` 与首个「机器人不接触、自行运动」的物体；挡板插入复用 `PickPlacePrimitive` | 中 |
-| 4.4 旋转连接杆合并两个组件 | `linkbar_merge_components.py` | 两组刚性杆件、铰接连接杆、两个同款插口 | 铰链复用 `_write_disk_urdf` 的 URDF 写法（需泛化几何与轴）；插接锁定复用 `ConnectorLatch`；判据为约束图 union-find | 高 |
+| 4.4 旋转连接杆合并两个组件（2026-08-27 改为转到同色区域） | `linkbar_rotate_to_zone.py` | 固定立柱、铰接连接杆、两块颜色区域 | 铰链复用 `_fixtures.add_hinge_mechanism`；判据为关节角落在目标区域窗口内且静止 | 中 |
 | 4.3 旋转分流板改变小球出口 | `diverter_route_ball.py` | 入口竖槽、分岔结构、左右出口、枢轴分流板、小球 | 同 4.1 的小球 + 同 4.4 的铰链 | 高 |
 
 **4.1 与 4.3 引入的共同新要素**：机器人全程不接触被判定物体，拓扑操作施加在另一个物体的自由
@@ -143,7 +143,7 @@ PBD 管线同构。因此 `deformation/` 的第一个实现不必等布料求解
 |---|---|---|
 | 低（复用现有场景 + 原语） | 3.2 `swap_crossing_sign`、2.5 `rope_unwind_post` | entangle、routing |
 | 中（新场景资产，无新建模能力） | 1.4 `hose_bend_u`、2.3 `bar_through_hole`、2.2 `cable_through_port`、2.1 `rope_through_hook`、4.1 `gate_cage_ball` | deformation、routing ×3、connectivity |
-| 高（新几何或新机构，无新求解器） | 3.4 `unlink_c_ring`、4.4 `linkbar_merge_components`、4.3 `diverter_route_ball` | entangle、connectivity ×2 |
+| 高（新几何或新机构，无新求解器） | 3.4 `unlink_c_ring`、4.4 `linkbar_rotate_to_zone`、4.3 `diverter_route_ball` | entangle、connectivity ×2 |
 | 阻塞 | 2.6、2.7（闭合环）；1.1、1.2、1.3、1.5（布料）。3.3 于 2026-08-27 改走开口绳桌面路线后脱离此档（见上表） | routing ×2、deformation ×4 |
 
 不需要新建模能力的任务共 7 个（低 2 + 中 5），覆盖全部四个类别。

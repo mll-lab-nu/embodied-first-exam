@@ -12,10 +12,10 @@ from .gate_cage_ball_planner import (
     GateTriggerRule,
     GreedyTriggerRule,
 )
-from .linkbar_merge_components_planner import (
+from .linkbar_rotate_to_zone_planner import (
     LinkbarOracleRule,
     LinkbarRotateCommand,
-    NearestSocketRule,
+    NearestZoneRule,
     make_linkbar_rule,
 )
 from .maze_wall_removal_planner import (
@@ -77,7 +77,7 @@ __all__ = [
     "CableRoutingRouteCommand",
     "LinkbarOracleRule",
     "LinkbarRotateCommand",
-    "NearestSocketRule",
+    "NearestZoneRule",
     "make_linkbar_rule",
     "DiverterOracleRule",
     "DiverterRotateCommand",

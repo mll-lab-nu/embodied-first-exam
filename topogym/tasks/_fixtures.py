@@ -319,7 +319,8 @@ def write_hinge_urdf(
     slide, it is the carriage's travel.
 
     The name says "hinge" because a hinge is all it wrote until
-    `linkbar_merge_components` needed a carriage on a rail. Renaming it (and
+    the 2026-08 cart version of `linkbar_rotate_to_zone` needed a carriage on a rail
+    (since removed; the sliding form stays because it is written and tested). Renaming it (and
     `HingeShape`, which `add_rigid_assembly` already uses for parts with no joint
     at all) is worth doing the next time all three call sites are open anyway.
 
@@ -451,10 +452,11 @@ def write_body_urdf(path, *, robot_name: str, shapes: Sequence[HingeShape],
     """Write a one-link URDF: several primitives welded into a single rigid body.
 
     The case this exists for is a part that has to LOOK like an assembly and
-    BEHAVE like one object. `linkbar_merge_components`' component B is a section
-    of machine frame -- rails, uprights, feet -- and the lift test that judges the
-    task asks whether B as a whole is held down, so B has to be one body with one
-    pose, not a pile of separate entities that would drift apart.
+    BEHAVE like one object. the first use was the cart-version `linkbar_rotate_to_zone`'s
+    component B, a section of machine frame -- rails, uprights, feet -- judged by
+    whether B as a whole was held down, so B had to be one body with one pose, not
+    a pile of separate entities that would drift apart. That task has since dropped
+    the cart; `unlink_c_ring` is the current caller.
 
     A single link with several `<collision>` elements is how URDF says that, and
     it is the same construction `write_hinge_urdf` already puts on its rotating

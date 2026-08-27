@@ -40,7 +40,7 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     "connectivity": (
         "diverter_route_ball",
         "gate_cage_ball",
-        "linkbar_merge_components",
+        "linkbar_rotate_to_zone",
         "stacked_plate",
     ),
 }

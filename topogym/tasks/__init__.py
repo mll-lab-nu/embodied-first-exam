@@ -96,11 +96,11 @@ from .connectivity.gate_cage_ball import (
     GateCageBallScene,
     GateCageBallSceneBuilder,
 )
-from .connectivity.linkbar_merge_components import (
-    LINKBAR_SOCKETS,
-    LinkbarMergeLayout,
-    LinkbarMergeScene,
-    LinkbarMergeSceneBuilder,
+from .connectivity.linkbar_rotate_to_zone import (
+    LINKBAR_ZONES,
+    LinkbarRotateLayout,
+    LinkbarRotateScene,
+    LinkbarRotateSceneBuilder,
 )
 from .connectivity.stacked_plate import (
     StackedPlateLayout,
@@ -180,10 +180,10 @@ __all__ = [
     "GateCageBallLayout",
     "GateCageBallScene",
     "GateCageBallSceneBuilder",
-    "LINKBAR_SOCKETS",
-    "LinkbarMergeLayout",
-    "LinkbarMergeScene",
-    "LinkbarMergeSceneBuilder",
+    "LINKBAR_ZONES",
+    "LinkbarRotateLayout",
+    "LinkbarRotateScene",
+    "LinkbarRotateSceneBuilder",
     "other_side",
     "side_sign",
     "StackedPlateLayout",

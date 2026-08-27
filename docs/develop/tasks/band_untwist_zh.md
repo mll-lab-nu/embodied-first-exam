@@ -64,7 +64,7 @@ Phase 0 spike（`tests/closed_band_spike.py`，`world/closed_band.py`，2026-08-
 | `end_gap` | 0.080 | ≥ `rope.free_end_connector.min_clearance` 0.07（夹爪跨距规则，builder 强制） |
 | `half_angle_deg` | 45 | 两股互成 90° 交叉，投影最稳 |
 | `over_lift` | 0.012 | 同 untangle_continuous：2r + particle_size；IPC 静止间距 2r + d_hat = 10 mm |
-| `lift_ramp` | 0.020 | 抬高段坡长 |
+| `lift_ramp` | 0.030 | 抬高段坡长；0.020 时样条最小弯曲半径 7.9 mm < 3×管半径，GPU 首跑后放宽 |
 | `base_z` | 0.007 | 同 untangle_continuous |
 | `center` | (0.02, 0) | 绳头落在 x ≈ −0.08、闭合叶顶 x ≈ +0.12，在工作区内 |
 | `heading_deg` | 0 | 闭合叶朝 +x（远离机械臂），绳头朝机械臂 |
@@ -138,9 +138,18 @@ Phase 0 spike（`tests/closed_band_spike.py`，`world/closed_band.py`，2026-08-
 - `tests/check_configs_compose.py`（项目 venv）：新配置 compose 通过。
 - `python topogym/core/taxonomy.py`：`entangle` 一致（`deformation` 一行的不一致早于本任务）。
 
-### 6.2 GPU 门（待跑，按顺序，前一项不过不跑后一项）
+### 6.2 GPU 门（2026-08-27 三门全过，RTX 4090，Genesis 1.2.1，无头模式）
 
-命令见 `cli_commands.txt` 的 band_untwist 段。
+命令见 `cli_commands.txt` 的 band_untwist 段。实测读数（`runs/band_untwist_{inspect,oracle,wrong_end}.log`）：
+
+- 门 1：`settle_steps=1`（出生即静止）、`gt_match=True`、交叉处 z_gap 11.5 mm（IPC 静止间距 10 mm 之上），
+  静置 300 步自交叉恒 1、z_gap 11.4~11.6 mm，无 blow-up。**8 字在桌面上站得住。**
+- 门 2a oracle：抓端 0（over 股），弧长 121 mm，抬升 182 mm，`success=True grasped=True`，
+  `self_crossings=1->0 ends_on_table=True terminal=True`，无 blow-up，退出码 0。
+- 门 2b wrong_end：抓端 1（under 股），`self_crossings=1->2 failure_label=wrong_end terminal=False`，
+  两个交叉分别为 over_end=1（新压上去的，z_gap 9.7 mm）与 over_end=0（原交叉，12.1 mm），退出码 1。
+  与 docx「翻错一侧变 2」一致。
+- 这三次跑的是 `lift_ramp=0.020`（spawn 最小弯曲半径 7.9 mm）；之后已改 0.030，几何门仍过，GPU 未重跑。
 
 | # | 命令 | 判据 |
 |---|---|---|

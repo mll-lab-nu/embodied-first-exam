@@ -28,7 +28,7 @@
 | `unlink_c_ring`            | `unlink_c_ring`            | entangle     | `unlink_c_ring_topogym_tabletop_v1.yaml`            |
 | `close_gate`               | `gate_cage_ball`           | connectivity | `gate_cage_ball_topogym_tabletop_v1.yaml`           |
 | `diverter_route_ball`      | `diverter_route_ball`      | connectivity | `diverter_route_ball_topogym_tabletop_v1.yaml`      |
-| `linkbar_merge_components` | `linkbar_merge_components` | connectivity | `linkbar_merge_components_topogym_tabletop_v1.yaml` |
+| `linkbar_rotate_to_zone`   | `linkbar_rotate_to_zone`   | connectivity | `linkbar_rotate_to_zone_topogym_tabletop_v1.yaml`   |
 | `cloth_fold`               | `cloth_fold`               | deformation  | `cloth_fold_topogym_tabletop_v1.yaml`               |
 | `cloth_unpleat`            | `cloth_unpleat`            | deformation  | `cloth_unpleat_topogym_tabletop_v1.yaml`            |
 | `cloth_unroll`             | `cloth_unroll`             | deformation  | `cloth_unroll_topogym_tabletop_v1.yaml`             |
@@ -49,7 +49,7 @@
 | 种子对场景的作用      | 仅 `swap_crossing_sign` 的 `run.seed` 进入 braid 采样（只决定交叉符号，两种实例）。其余 10 个任务 seed 只是 `EpisodeKey` 身份字段。                                                                                                                                                    |
 | run 配置键       | `randomize_layout` / `difficulty` 只存在于 cable_routing / stacked_plate / untangle 的 run 配置；11 个任务的 run 配置无此键。                                                                                                                                           |
 | 测量器           | `stability_sweep.sh` 任务表含 untangle / untangle_continuous / cable_routing / stacked_plate / unlink_c_ring；其余 10 个未登记。                                                                                                                                  |
-| 离线几何门         | rope_winding / ring_transfer / unlink_c_ring / cloth_fold / cloth_unpleat / cloth_unroll 有 `tests/check_*_geometry.py`；linkbar 有 `LinkbarMergeLayout.validate()`；diverter 有 `check_pivot_clearance()`；gate_cage_ball 有运行期可解性检查；bar_through_hole 无校验器。 |
+| 离线几何门         | rope_winding / ring_transfer / unlink_c_ring / cloth_fold / cloth_unpleat / cloth_unroll 有 `tests/check_*_geometry.py`；linkbar 有 `tests/check_linkbar_zone_geometry.py` + `LinkbarRotateLayout.validate()`；diverter 有 `check_pivot_clearance()`；gate_cage_ball 有运行期可解性检查；bar_through_hole 无校验器。 |
 | episode split | `configs/episode_splits/` 仅 cable_routing / swap / untangle。                                                                                                                                                                                          |
 | oracle 对配置的依赖 | 11 个任务的 oracle 路点均由配置或实时状态推导，无手写绝对路点。例外：`bar_through_hole.primitive.*_z` 与 `gate_cage_ball.motion.*_z` 是手工推导的绝对高度，不随布局重算。                                                                                                                             |
 
@@ -121,7 +121,7 @@
 | `_Validate(fn, max_retry)`          | 采样后调用可行性校验，失败重采        | 全部                                                                   |
 
 
-`_ScalarJitter` 与 `_ChoiceJitter` 的需求已在 `diverter_route_ball_zh.md` §6.2 与 `linkbar_merge_components_zh.md` §5 提出，本文合并。
+`_ScalarJitter` 与 `_ChoiceJitter` 的需求已在 `diverter_route_ball_zh.md` §6.2 与 `linkbar_rotate_to_zone_zh.md` §5 提出，本文合并。
 
 ---
 
@@ -273,7 +273,11 @@
 
 
 
-### 3.8 linkbar_merge_components（docx 4.4，C4 强制）
+### 3.8 linkbar_rotate_to_zone（docx 4.4，C4 强制）
+
+> 2026-08-27 任务改造后叶子名变更：`sockets.b1_angle_deg / a2_angle_deg` → `zones.left.angle_deg / zones.right.angle_deg`；
+> 「B1 所在侧」轴 → `zones.target`（Cat{left, right}）与 `zones.assignment`（两色互换，Cat 0.5）；
+> D 类中 `socket.entry_depth`、`component_b.*`、高度链已随小车一并删除。下表数值仍适用。
 
 
 | 类   | 叶子                                                                                                                                                      | 当前值 | easy                    | default   | hard      | 说明                                      |
@@ -286,8 +290,8 @@
 
 
 - 难度统计量：期望 b1 − a2（越小，最近插口捷径的期望成功率越接近 0.5）。
-- 校验：`LinkbarMergeLayout.validate()`（已实现：异侧、扫掠范围）。
-- 说明：本任务是准备度最高的一个，oracle 按归属决策，无需改动。
+- 校验：`LinkbarRotateLayout.validate()`（已实现：异侧、扫掠范围、两区不重叠、两色不同）。
+- 说明：本任务是准备度最高的一个，oracle 按销的颜色决策，无需改动。
 
 
 
@@ -373,7 +377,7 @@
 
 ### 4.4 第 3 级：基线成功率矩阵（GPU）
 
-每任务在同一组 seed 上跑 oracle 与对照策略（`cw`、`restack_same`、`no_align`、`greedy`、`fixed_direction`、`nearest_socket`、`bypass`、`shove`/`overpull`），按难度档报告成功率。预期：oracle 在三档均保持高成功率（下降为几何余量收窄所致，逐格记录失败标签）；对照策略在含 A 类轴的任务上接近该轴的随机水平。
+每任务在同一组 seed 上跑 oracle 与对照策略（`cw`、`restack_same`、`no_align`、`greedy`、`fixed_direction`、`nearest_zone`、`bypass`、`shove`/`overpull`），按难度档报告成功率。预期：oracle 在三档均保持高成功率（下降为几何余量收窄所致，逐格记录失败标签）；对照策略在含 A 类轴的任务上接近该轴的随机水平。
 
 ### 4.5 第 4 级：固化 split
 
@@ -390,7 +394,7 @@
 
 | 序   | 任务                           | 前置代码                                            | 理由                               |
 | --- | ---------------------------- | ----------------------------------------------- | -------------------------------- |
-| 1   | linkbar_merge_components     | `_ScalarJitter` + `_ChoiceJitter` + `_Validate` | C4 强制；`validate()` 已有；oracle 无需改 |
+| 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_Validate` | C4 强制；`validate()` 已有；oracle 无需改 |
 | 2   | diverter_route_ball          | 同上 + ball.radius 不等式函数                          | C4 强制；2×2 实例轴已在配置                |
 | 3   | gate_cage_ball               | `_ScalarJitter` + 可解性拒绝                         | C4 强制；run 配置已规划                  |
 | 4   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
@@ -484,15 +488,15 @@
 
 三档：easy 两离散轴各半、一定有目标垫、张角 28–32°；default 三成无目标垫、张角 26–34°；hard 七成无目标垫、张角 24–36°、拨杆 ±8 mm。
 
-### 6.8 linkbar_merge_components
+### 6.8 linkbar_rotate_to_zone
 
-基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；左右各一个外观相同的插口，一个属本体 A、一个属轨道小车 B。任务为转梁把销钉插入 B 的插口。
+基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；左右各一块颜色区域（橙／蓝），销钉与其中一块同色。任务为转梁把销钉停进同色区域。
 
-- B1 所在侧：B 的插口在梁左或梁右。
-- `b1_angle` / `a2_angle`：两插口离梁初始方向的角度（35–75°）。二者之差决定「转向最近插口」策略的猜中概率。
-- `init_angle`：梁初始偏转 ±15°，插口随之偏移。
+- `zones.target`：目标是左区还是右区（销钉取该区颜色）。`zones.assignment`：两区颜色互换。
+- `zones.left.angle_deg` / `zones.right.angle_deg`：两区离梁初始方向的角度（35–75°）。二者之差决定「转向最近区域」策略的猜中概率。
+- `init_angle`：梁初始偏转 ±15°，两区随之偏移。
 
-三档：easy 两插口远近差 ≥20°；default 两角独立随机；hard 差 ≤10° 且梁初始偏转。
+三档：easy 两区远近差 ≥20°；default 两角独立随机；hard 差 ≤10° 且梁初始偏转。
 
 ### 6.9 cloth_fold
 

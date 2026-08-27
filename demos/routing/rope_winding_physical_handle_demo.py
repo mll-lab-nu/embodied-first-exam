@@ -101,6 +101,7 @@ from topogym.supervision import (
     stop_before_physics,
     winding_centerline,
     winding_number,
+    winding_topological,
 )
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.supervision.cable_routing import rope_particles, tensor_to_numpy
@@ -1105,14 +1106,16 @@ def run_demo(
         # exactly one, which is what separates winding from dragging the rope
         # around without ever catching the post.
         if label.startswith("wind_t") and label.endswith(f"{spec.arc_points_per_turn:02d}"):
+            centerline = winding_centerline(scene, groups)
             turns = winding_number(
-                winding_centerline(scene, groups),
+                centerline,
                 post_center(scene.layout, spec),
                 settled_band_radius(scene.layout, spec),
             )
             print(
                 f"rope_winding_physical_handle_demo turn_complete phase={label} "
-                f"winding_number={turns:+.3f}",
+                f"winding_number={turns:+.3f} "
+                f"winding_topological={winding_topological(centerline, post_center(scene.layout, spec)):+.3f}",
                 flush=True,
             )
         # Divergence guard: the rope sinking into the post, or the whole rope

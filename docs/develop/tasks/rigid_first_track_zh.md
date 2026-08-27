@@ -25,7 +25,7 @@
 |---|---|---|
 | 2.3 | `routing/bar_through_hole.py` | 阶段 1 已完成。全流程 16/16 相通过，`threading=1`、`release_stable=True`。反捷径对照（`run.oracle_mode=bypass`）未跑 |
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
-| 4.4 | `connectivity/linkbar_merge_components.py` | 场景与判据已过，执行层待复核。记录见 [`linkbar_merge_components_zh.md`](linkbar_merge_components_zh.md) |
+| 4.4 | `connectivity/linkbar_rotate_to_zone.py` | 2026-08-27 改造：删除小车与插口，判据改为销停在同色区域；离线门已过，GPU 三门待跑。记录见 [`linkbar_rotate_to_zone_zh.md`](linkbar_rotate_to_zone_zh.md) |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
 | 3.4 | `entangle/unlink_c_ring.py` | 场景、verifier、抽出原语、physical demo 均已落地。2026-08-23 把对准从「绕环心自转」改成「环心沿弧平移」，`runtime_set_pose` 因此恒为 False，本任务不再是 §3.1 的例外。抽出 episode 的 GPU 待跑。详见 [`unlink_c_ring_zh.md`](unlink_c_ring_zh.md) |
 
@@ -77,7 +77,7 @@
 |---|---|---|---|---|
 | 2.3 | `bar_through_hole.py` | `routing/` | 刚性横杆水平插入竖直面板上的孔 | 低 |
 | 4.1 | `gate_cage_ball.py` | `connectivity/` | 在正确时机把挡板插入围栏开口，困住滚动小球 | 中 |
-| 4.4 | `linkbar_merge_components.py` | `connectivity/` | 旋转铰接连接杆扣入插口，合并两个刚体组件 | 中 |
+| 4.4 | `linkbar_rotate_to_zone.py` | `connectivity/` | 旋转铰接连接杆，把销停进与销同色的区域（原为扣入插口合并两组件，2026-08-27 改） | 中 |
 | 4.3 | `diverter_route_ball.py` | `connectivity/` | 旋转分流板改变小球从哪个出口离开 | 中 |
 | 3.4 | `unlink_c_ring.py` | `entangle/` | C 形开口环从固定闭环中沿开口方向抽出 | 高 |
 
@@ -96,9 +96,9 @@ docx 对 2.3 与 3.4 都明确标注了「刚体」定位：2.3 是「把柔性�
       ├── Sphere + 自由滚动物体 ─────┐
       └── shake test（物理层复核）    │
                                       ├──► 4.3 diverter_route_ball
-4.4 linkbar_merge_components          │
+4.4 linkbar_rotate_to_zone            │
       ├── 泛化的 URDF 铰链发射器 ─────┘
-      └── 约束图 union-find verifier
+      └── 关节角区域 verifier（首版为约束图 union-find）
 
 3.4 unlink_c_ring     （无上游依赖，也不被复用；成本最高，放最后）
 ```
@@ -191,7 +191,11 @@ maze_wall_removal 三个任务共用，改动面过大。
 | 随机化 | **必须**。`task_taxonomy_zh.md` §4.4 规定 C4 任务未在 `generation/layout_randomization.py` 注册随机化条目者不得进入 benchmark 产物；本任务随机化的是球的初始位置与速度（即插板时机） |
 | 风险 | 中。Sphere 参数未标定；shake test 的判定阈值需实验确定 |
 
-### 4.3 docx 4.4 —— `connectivity/linkbar_merge_components.py`
+### 4.3 docx 4.4 —— `connectivity/linkbar_rotate_to_zone.py`
+
+> 下表是 2026-08 首版（插口 + 小车 + 约束图）的规划，已于 2026-08-27 按 review 改造：
+> 小车、插口、weld 闩、行程测试全部删除，判据改为「销停在与销同色的区域内且静止」，
+> `space` 取 `joint_angle`。现行定义见 [`linkbar_rotate_to_zone_zh.md`](linkbar_rotate_to_zone_zh.md)。
 
 | 项 | 内容 |
 |---|---|

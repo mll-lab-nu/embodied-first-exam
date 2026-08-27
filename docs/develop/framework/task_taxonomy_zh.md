@@ -198,12 +198,15 @@ def invariant_value(self) -> int | tuple[int, ...] | dict[str, float]:
 ### 4.4 C4 `connectivity`
 
 - 不变量类型：`int`（连通分量数 β₀）或 `bool`（S–T 可达）或二者的组合 `dict`。
-- 允许的 `invariant` 值：`component_count` / `st_reachable` / `free_space_component_count`。
+- 允许的 `invariant` 值：`component_count` / `st_reachable` / `free_space_component_count` / `pin_zone`
+  （`pin_zone` 为 2026-08-27 `linkbar_rotate_to_zone` 改造引入：被操作件的单关节坐标落在哪块目标窗口，
+  类型 `str | None`；是对本类「连通分量」定义的一处偏离，理由见该任务文档 §1）。
 - 必须声明连通性定义在**哪个对象的位形空间**上。docx 4.1/4.2/4.3 的连通性定义在**被操作物体的
-  C_free** 上（机器人全程不接触小球），4.4 定义在**约束图**上。二者不可混用，须写入
-  `to_info()` 的 `"space"` 键，取值 `c_free` 或 `constraint_graph`。
+  C_free** 上（机器人全程不接触小球），4.4 首版定义在**约束图**上，2026-08-27 改造后定义在
+  连接杆的**关节角**上。三者不可混用，须写入 `to_info()` 的 `"space"` 键，取值 `c_free`、
+  `constraint_graph` 或 `joint_angle`。
 - 必须有物理层复核：shake test（docx 4.1）、贯穿到底判定（4.2）、S–T 弹珠测试（4.3）、
-  提起测试（4.4）。docx 4.3 明确「S–T 弹珠测试本身就是任务」，即该类允许物理复核作为主判据。
+  提起测试（4.4 首版；改造后为松手沉降后的静止判定 `at_rest`）。docx 4.3 明确「S–T 弹珠测试本身就是任务」，即该类允许物理复核作为主判据。
 - **随机化是本类防捷径的必要条件**：docx 4.1/4.3/4.4 的防捷径均依赖逐 episode 随机化初始相位或
   指令方向，使脚本化策略的期望成功率被固定在随机水平。因此 C4 任务在
   `generation/layout_randomization.py` 中**必须**注册随机化条目，未注册的 C4 任务不得进入

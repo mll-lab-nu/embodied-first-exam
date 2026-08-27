@@ -1,0 +1,30 @@
+# linkbar_rotate_to_zone_physical_demo 的运行模式参数。
+#
+# 场景几何与两块区域的角位置、颜色都在 task 配置里，不在这里——它们属于实例定义。
+# 逐 episode 换实例就是覆盖这几项：
+#   task.zones.target=right
+#   task.zones.left.angle_deg=-40 task.zones.right.angle_deg=50
+#   task.zones.assignment.left=blue task.zones.assignment.right=orange
+
+defaults:
+  - default
+  - _self_
+
+# 对照对。两条规则跑同一个 episode，动作成本相同，只有销的颜色能把它们分开。
+#   oracle        : 读销的颜色，转到同色区域
+#   nearest_zone  : 转向角度上更近的那块区域，不看颜色
+# 两块区域角位置独立随机后，nearest_zone 恰好对一半——离线部分见
+# tests/check_linkbar_planner.py，这里是它在真实物理上的复核。
+oracle_mode: oracle
+
+# full        : 完整 episode（决策 → 转 → 退刀 → 沉降 → 判定）
+# rotate_only : 只跑到扫掠结束，不判定。原语自身的验收档（到位角、跟随误差、指位）
+stage: full
+
+# 故意的欠转／过转，用来造执行误差的对照 run。加在规则给出的目标角上，
+# 规则本身仍是 oracle——演示的是「正确的计划 + 执行偏差」。
+# 超过区域半宽（8°）应当判 outside_zone，落在半宽内应当照样成功。
+target_offset_deg: 0.0
+
+# 判定完成后再步进多少步。纯粹为了录像。60 步 = 0.6 秒。
+final_hold_steps: 60

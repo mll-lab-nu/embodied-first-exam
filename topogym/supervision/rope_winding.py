@@ -140,6 +140,33 @@ def winding_number(centerline: np.ndarray, post_xy, wrap_band: float) -> float:
     return (swept + closure) / (2.0 * np.pi)
 
 
+def winding_topological(centerline: np.ndarray, post_xy) -> float:
+    """Signed turns of the WHOLE rope around the post axis, anchor to free end.
+
+    The homotopy invariant itself: with both ends held and the post fixed, the
+    rope's unwrapped azimuth from end to end, closed the short way from the free
+    end's bearing back to the anchor's, is an integer that only a crossing of the
+    post can change. It does not care where the rope IS -- on the post, on the
+    board, in a loose coil -- only how many times it goes round.
+
+    `winding_number` above reads only the rope resting on the post, which is the
+    right thing to look at while a wrap is being laid or peeled, but it is not
+    invariant: rope_unwinding at two wraps (2026-08-27) read +1 at the end with
+    every orbit done, because the slack that came off the post was dragged back
+    against it three quarters of the way round -- 0.73 of sweep, rounded up. The
+    verdict is on this quantity; the on-post reading is a diagnostic.
+    """
+
+    centerline = np.asarray(centerline, dtype=float)
+    post_xy = np.asarray(post_xy, dtype=float)[:2]
+    angles = np.unwrap(
+        np.arctan2(centerline[:, 1] - post_xy[1], centerline[:, 0] - post_xy[0])
+    )
+    swept = float(angles[-1] - angles[0])
+    closure = float(np.arctan2(np.sin(-swept), np.cos(-swept)))
+    return (swept + closure) / (2.0 * np.pi)
+
+
 def rope_twist_turns(scene, groups: list[np.ndarray]) -> float:
     """Total twist stored in the rope, in turns. NaN if it cannot be measured.
 
@@ -529,6 +556,7 @@ def winding_metrics(scene, spec: WindingSpec, groups: list[np.ndarray]) -> dict:
     contact = post_contact(scene, spec)
     return {
         "winding_number": float(turns),
+        "winding_topological": float(winding_topological(centerline, center)),
         "swept_turns": winding_sweep(centerline, center, settled_band),
         "target_winding": float(spec.target_winding),
         "wound_points": int(len(wound)),
@@ -547,7 +575,7 @@ def print_winding_verification(scene, spec: WindingSpec, groups: list[np.ndarray
     success_cfg = getattr(scene.layout.cfg, "success", None)
     tolerance = float(getattr(success_cfg, "winding_tolerance", 0.25))
     metrics = winding_metrics(scene, spec, groups)
-    turns = metrics["winding_number"]
+    turns = metrics["winding_topological"]
     target = metrics["target_winding"]
     winding_ok = abs(turns - target) <= tolerance
     # Gateway semantics: winding may only change over the post's top, so a run
@@ -556,6 +584,9 @@ def print_winding_verification(scene, spec: WindingSpec, groups: list[np.ndarray
     print(
         f"rope_winding_verify post={spec.post} success={winding_ok and below_top} "
         f"winding_number={turns:+.3f} target={target:+.1f} tolerance={tolerance:.2f} "
+        # The on-post reading, for comparison: equal to the verdict's whenever
+        # the rope off the post lies clear of it.
+        f"on_post_winding={metrics['winding_number']:+.3f} "
         # The unrounded sweep `winding_number` came from. Distance from the
         # nearest half-integer is the margin the reading has left.
         f"swept_turns={metrics['swept_turns']:+.3f} "

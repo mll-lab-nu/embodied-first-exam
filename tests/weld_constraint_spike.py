@@ -1,8 +1,10 @@
 """Does Genesis' runtime weld constraint do what docx 4.4 needs?
 
 DIAGNOSTIC TOOL, not a task. `docs/develop/tasks/rigid_first_track_zh.md` §4.3
-gives docx 4.4 (`linkbar_merge_components`) two requirements that both rest on
-one API the repo has never used:
+gave docx 4.4 (then `linkbar_merge_components`, now `linkbar_rotate_to_zone`)
+two requirements that both rested on one API the repo had never used. That task
+dropped the latch and the cart on 2026-08-27; the spike stays as the record of
+what the weld API does, for the next task that needs one:
 
 - **The latch.** "到位后由固定约束锁定" -- the connecting beam, once its end pin is
   inside a socket, is held there by a constraint rather than by contact. The

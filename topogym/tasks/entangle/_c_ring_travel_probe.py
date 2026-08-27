@@ -9,7 +9,8 @@ topology reading, and it is the one the category contract
 `AttachmentManager`, imposes the motion instead of asking for it: the ring would move
 whether or not the closed ring still held it, and the probe would pass on every
 episode. Genesis clears external forces each step, so the push is re-applied every
-step. Same reasoning, and the same shape, as `tasks/connectivity/_travel_probe.py`.
+step. The same shape was first used by the cart version of `linkbar_rotate_to_zone`
+(its `_travel_probe.py`, removed 2026-08-27 with the cart).
 
 **Every direction, because one is not evidence.** While the two rings are linked,
 `tests/check_c_ring_clearance.py` measures each of these directions jamming on the
@@ -24,7 +25,7 @@ Measured 2026-08-22: 0.03 mm of travel down against 1-4 mm every other way, on a
 the geometry agreed was free.
 
 This lives in `tasks/` rather than `verification/` for the reason
-`linkbar_merge_components_verifier.py:25` gives: only the caller can step physics, and
+the linkbar task's first verifier gave: only the caller can step physics, and
 the verification package stays free of side effects. Nothing here belongs to the
 episode -- the arm is clear and no action explains the ring moving.
 """

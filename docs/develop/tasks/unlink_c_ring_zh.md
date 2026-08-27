@@ -496,7 +496,7 @@ verifier；穿透超过 `jam_depth` 即 `passed_through`，直接判失败。这
 ### 8.4 自由平移探针 `tasks/entangle/_c_ring_travel_probe.py`
 
 契约对 C3 强制要求「分离后可沿任意方向平移离开」。照
-`tasks/connectivity/_travel_probe.py`：**施力而不是写位姿**，力按自重的倍数给，同时报
+linkbar 首版的 `tasks/connectivity/_travel_probe.py`（2026-08-27 随小车删除）：**施力而不是写位姿**，力按自重的倍数给，同时报
 `travel` 与 `peak_travel`，`on_step` 回调把推力喂给 HUD。方向集取离线 gate 里那六个平移方向
 ——解链前实测全部卡住，解链后应当全部自由，是同一组方向上的前后对照。六次推之间把位姿写回
 起点，否则第四次环已经在桌外；这一步在 episode 的操作结束之后，不属于演示。

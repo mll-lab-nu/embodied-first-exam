@@ -233,7 +233,9 @@ physical_handle:
   # 正号 = 帽口朝下、针脚朝上（用户口径「插头朝上」）；转轴 z x plug_axis。
   carry_pitch_deg: 90.0
   carry_pitch_steps: 120
-  plug_spin_tracks_orbit: true
+  # 2026-08-27 一圈 A/B：开着时 twist_net 每圈 -1.1（自转与解绕的扫掠同向叠加），
+  # 关掉后 +0.02 且绳末段完全脱离柱面（contact_nodes 479 -> 57）。解绕不需要自转。
+  plug_spin_tracks_orbit: false
   runtime_gripper_attachment: true
   runtime_attachment_handoff_steps: 12
   motion_profile: linear

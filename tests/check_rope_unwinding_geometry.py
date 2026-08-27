@@ -58,7 +58,11 @@ from topogym.planning.rope_winding_planner import (  # noqa: E402
 )
 from topogym.planning.waypoint import helix_route_points  # noqa: E402
 from topogym.primitives.pick_place import HAND_TO_PAD_Z  # noqa: E402
-from topogym.supervision.rope_winding import winding_number, winding_sweep  # noqa: E402
+from topogym.supervision.rope_winding import (  # noqa: E402
+    winding_number,
+    winding_sweep,
+    winding_topological,
+)
 
 TASK_CFG = REPO / "configs" / "task_configs" / "rope_unwinding_topogym_tabletop_v1.yaml"
 # Underside of the hand's collision body, above the finger pads (`hand_c` z
@@ -288,14 +292,37 @@ def main(argv=None) -> int:
             rope.append(hand)
         else:
             rope = [anchor, hand]
-        readings.append(winding_number(densify(np.asarray(rope)), center, wrap_band))
+        readings.append(
+            (
+                winding_number(densify(np.asarray(rope)), center, wrap_band),
+                winding_topological(densify(np.asarray(rope)), center),
+            )
+        )
     check(
         "taking the wraps off one by one reads start_turns, ..., 1, 0",
         all(
-            abs(reading - spec.sign * (spec.start_turns - taken)) < 1e-6
-            for taken, reading in enumerate(readings)
+            abs(on_post - spec.sign * (spec.start_turns - taken)) < 1e-6
+            and abs(whole - spec.sign * (spec.start_turns - taken)) < 1e-6
+            for taken, (on_post, whole) in enumerate(readings)
         ),
-        " -> ".join(f"{reading:+.2f}" for reading in readings),
+        " -> ".join(f"{on_post:+.2f}/{whole:+.2f}" for on_post, whole in readings)
+        + " (on post / whole rope)",
+    )
+    # The verdict's invariant must not be fooled by slack: the same taut rope
+    # with a loose loop laid on the board beside the post (the shape a peeled
+    # wrap takes) still reads zero, where the on-post reading may not.
+    loose = [anchor]
+    loose.extend(
+        [
+            center + np.array([0.030 * np.cos(a), 0.030 * np.sin(a), 0.0])
+            for a in np.linspace(-np.pi, 0.5 * np.pi, 40)
+        ]
+    )
+    loose.append(points[orbit[-1]])
+    check(
+        "a loose three-quarter hug beside the post is not a wrap",
+        abs(winding_topological(densify(np.asarray(loose)), center)) < 1e-6,
+        f"whole rope {winding_topological(densify(np.asarray(loose)), center):+.2f}",
     )
     check(
         "the planned orbit lands on the target",

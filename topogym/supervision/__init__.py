@@ -47,6 +47,7 @@ from .rope_winding import (
     winding_metrics,
     winding_number,
     winding_sweep,
+    winding_topological,
     wrap_band_radius,
     wrapped_span,
 )
@@ -95,6 +96,7 @@ __all__ = [
     "winding_metrics",
     "winding_number",
     "winding_sweep",
+    "winding_topological",
     "wrap_band_radius",
     "wrapped_span",
 ]
