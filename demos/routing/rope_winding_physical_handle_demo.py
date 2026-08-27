@@ -263,7 +263,7 @@ def _check_rope_slack(cfg, scene, spec, episode_plan) -> str:
             else f"tests/check_rope_winding_geometry.py --turns {spec.turns}"
         )
         raise RuntimeError(
-            f"{cfg.task.id} slack out of band -- {report}. `{key}` and "
+            f"{cfg.task.task.id} slack out of band -- {report}. `{key}` and "
             "`rope.spawn_arc.sweep_deg` have to be set together; the table is in "
             f"the task config beside `spawn_arc`. Run `python {gate} "
             "--sweep-deg <deg>` to find the sweep this turn count needs."
@@ -1496,7 +1496,7 @@ def run_from_config(cfg: DictConfig, *, scene_builder=RopeWindingSceneBuilder) -
     print(
         "rope_winding_physical_handle_demo building_scene "
         f"backend={cfg.env.genesis.backend} viewer={cfg.run.viewer} lite={cfg.run.lite} "
-        f"task={cfg.task.id} turns={spec.turns} start_turns={spec.start_turns} "
+        f"task={cfg.task.task.id} turns={spec.turns} start_turns={spec.start_turns} "
         f"direction={spec.direction} target_winding={spec.target_winding:+.1f}",
         flush=True,
     )
