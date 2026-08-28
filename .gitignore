@@ -33,3 +33,6 @@ bash_scripts/recordings/
 
 # TetGen scratch files (dumped into repo root during soft-body meshing)
 tetgen-tmpfile*
+
+# Weekly report decks (per-week folders with copied demo videos; shared by zip, not git)
+topogym_weekly_report/

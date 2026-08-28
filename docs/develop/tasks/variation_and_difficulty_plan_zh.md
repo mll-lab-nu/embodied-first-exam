@@ -1,391 +1,442 @@
-# 已部署任务的变体参数与难度分布方案
+# 已部署任务的变体参数化方案
 
-> 日期：2026-08-26
-> 范围：`runs/videos/` 下 11 个已录制任务
+> 日期：2026-08-26 初稿；2026-08-27 增补 `rope_unwinding`、`band_untwist`，`linkbar_merge_components` 改造为 `linkbar_rotate_to_zone`；
+> **2026-08-28 按 review 意见改版：先把全部变体参数化并给出可行包络，难度档位改为实测后划定，不再预设三档范围。**
+> 范围：`runs/videos/` 下 13 个已录制任务
 > 上游：`../framework/task_taxonomy_zh.md` §4.4（C4 类随机化为准入条件）、
 > `topogym/generation/layout_randomization.py`（现有随机化接缝）、
-> `bash_scripts/tests/stability_sweep.sh`（SEED × DIFFICULTY 测量器）
+> `bash_scripts/tests/stability_sweep.sh`（SEED × 参数 测量器）
 
 ---
 
-## 0. 本文回答的三个问题
+## 0. 本文回答的问题
 
-1. 每个任务哪些参数可以按种子变化，哪些不能变，变化范围由什么约束决定。
+1. 每个任务哪些参数按种子变化，哪些不变，变化范围（可行包络）由什么约束决定。
 2. 场景几何简单的情况下，如何让不同种子产生实质不同的实例。
-3. 难度档位如何绑定到**分布**而非取值组合，以及如何验证。
+3. 难度档位如何从实测结果划定（§4），而不是预先指定。
 
-第 1 节是现状，第 2 节是通用规则，第 3 节是逐任务表，第 4 节是测试与实施顺序。
+第 1 节是现状，第 2 节是参数化规则，第 3 节是逐任务参数表，第 4 节是实测与划档程序，第 5 节是实施顺序，第 6 节是逐任务直观说明，第 7 节是数据量与先例。
 
 ### 0.1 录像目录与 task_id 对照
 
 
-| `runs/videos/` 目录          | task_id                    | 类别           | 任务配置                                                |
-| -------------------------- | -------------------------- | ------------ | --------------------------------------------------- |
-| `rope_winding`             | `rope_winding`             | routing      | `rope_winding_topogym_tabletop_v1.yaml`             |
-| `transfer-rope-ring`       | `ring_transfer`            | routing      | `ring_transfer_topogym_tabletop_v1.yaml`            |
-| `bar_through_hole`         | `bar_through_hole`         | routing      | `bar_through_hole_topogym_tabletop_v1.yaml`         |
-| `switch_rope_side`         | `swap_crossing_sign`       | entangle     | `swap_crossing_sign_topogym_tabletop_v1.yaml`       |
-| `unlink_c_ring`            | `unlink_c_ring`            | entangle     | `unlink_c_ring_topogym_tabletop_v1.yaml`            |
-| `close_gate`               | `gate_cage_ball`           | connectivity | `gate_cage_ball_topogym_tabletop_v1.yaml`           |
-| `diverter_route_ball`      | `diverter_route_ball`      | connectivity | `diverter_route_ball_topogym_tabletop_v1.yaml`      |
-| `linkbar_rotate_to_zone`   | `linkbar_rotate_to_zone`   | connectivity | `linkbar_rotate_to_zone_topogym_tabletop_v1.yaml`   |
-| `cloth_fold`               | `cloth_fold`               | deformation  | `cloth_fold_topogym_tabletop_v1.yaml`               |
-| `cloth_unpleat`            | `cloth_unpleat`            | deformation  | `cloth_unpleat_topogym_tabletop_v1.yaml`            |
-| `cloth_unroll`             | `cloth_unroll`             | deformation  | `cloth_unroll_topogym_tabletop_v1.yaml`             |
+| `runs/videos/` 目录      | task_id                  | 类别           | 任务配置                                              |
+| ---------------------- | ------------------------ | ------------ | ------------------------------------------------- |
+| `rope_winding`         | `rope_winding`           | routing      | `rope_winding_topogym_tabletop_v1.yaml`           |
+| `rope_unwinding`       | `rope_unwinding`         | routing      | `rope_unwinding_topogym_tabletop_v1.yaml`         |
+| `transfer-rope-ring`   | `ring_transfer`          | routing      | `ring_transfer_topogym_tabletop_v1.yaml`          |
+| `bar_through_hole`     | `bar_through_hole`       | routing      | `bar_through_hole_topogym_tabletop_v1.yaml`       |
+| `switch_rope_side`     | `swap_crossing_sign`     | entangle     | `swap_crossing_sign_topogym_tabletop_v1.yaml`     |
+| `unlink_c_ring`        | `unlink_c_ring`          | entangle     | `unlink_c_ring_topogym_tabletop_v1.yaml`          |
+| `rope_untwist`         | `band_untwist`           | entangle     | `band_untwist_topogym_tabletop_v1.yaml`           |
+| `close_gate`           | `gate_cage_ball`         | connectivity | `gate_cage_ball_topogym_tabletop_v1.yaml`         |
+| `diverter_route_ball`  | `diverter_route_ball`    | connectivity | `diverter_route_ball_topogym_tabletop_v1.yaml`    |
+| `linkbar_color_region` | `linkbar_rotate_to_zone` | connectivity | `linkbar_rotate_to_zone_topogym_tabletop_v1.yaml` |
+| `cloth_fold`           | `cloth_fold`             | deformation  | `cloth_fold_topogym_tabletop_v1.yaml`             |
+| `cloth_unpleat`        | `cloth_unpleat`          | deformation  | `cloth_unpleat_topogym_tabletop_v1.yaml`          |
+| `cloth_unroll`         | `cloth_unroll`           | deformation  | `cloth_unroll_topogym_tabletop_v1.yaml`           |
 
+
+### 0.2 改版说明（2026-08-28）
+
+review 意见：先把计划的全部变体参数化，难度按实测结果划定。对本文的影响：
+
+
+| 项                   | 改版前                            | 改版后                                                        |
+| ------------------- | ------------------------------ | ---------------------------------------------------------- |
+| 逐任务表                | 每轴给 easy / default / hard 三个范围 | 每轴给一个**可行包络**（采样分布），边界只由物理、几何、可达约束决定                       |
+| 离散轴                 | 各档概率不同                         | 一律等概率                                                      |
+| 难度                  | 预设为分布参数                        | §4 的划档程序：在包络内 sweep，按实测 oracle 成功率、失败标签与候选统计量划分，划定后再写成分布参数 |
+| `_DIFFICULTY_SCALE` | 难度倍率                           | 划档前不使用；`run.difficulty` 保留键位，划档前取值 `envelope`（全包络）         |
+
+
+原三档数值保留在 git 历史（2026-08-27 版本），划档时可作为初始分箱参考。
 
 ---
-
-
 
 ## 1. 现状
 
 
-| 项             | 状态                                                                                                                                                                                                                                                    |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 随机化接缝         | `layout_randomization.py::randomize_task_cfg(cfg, task_id, seed, difficulty)`：深拷贝 `cfg.task`、按注册表施加有界抖动、未注册任务原样返回。四种 directive 全部是连续量：`_AbsXYJitter` / `_FracJitter` / `_EachScalarJitter` / `_EachAbsXYJitter`。                                      |
-| 已注册任务         | `untangle` / `cable_routing` / `stacked_plate` / `peeling`。**本文 11 个任务均未注册。**                                                                                                                                                                         |
-| 难度实现          | `_DIFFICULTY_SCALE = {easy: 0.5, smoke: 0.5, default: 1.0, hard: 1.8}`，作用为全部抖动半宽的统一倍率。                                                                                                                                                                |
-| 种子对场景的作用      | 仅 `swap_crossing_sign` 的 `run.seed` 进入 braid 采样（只决定交叉符号，两种实例）。其余 10 个任务 seed 只是 `EpisodeKey` 身份字段。                                                                                                                                                    |
-| run 配置键       | `randomize_layout` / `difficulty` 只存在于 cable_routing / stacked_plate / untangle 的 run 配置；11 个任务的 run 配置无此键。                                                                                                                                           |
-| 测量器           | `stability_sweep.sh` 任务表含 untangle / untangle_continuous / cable_routing / stacked_plate / unlink_c_ring；其余 10 个未登记。                                                                                                                                  |
-| 离线几何门         | rope_winding / ring_transfer / unlink_c_ring / cloth_fold / cloth_unpleat / cloth_unroll 有 `tests/check_*_geometry.py`；linkbar 有 `tests/check_linkbar_zone_geometry.py` + `LinkbarRotateLayout.validate()`；diverter 有 `check_pivot_clearance()`；gate_cage_ball 有运行期可解性检查；bar_through_hole 无校验器。 |
-| episode split | `configs/episode_splits/` 仅 cable_routing / swap / untangle。                                                                                                                                                                                          |
-| oracle 对配置的依赖 | 11 个任务的 oracle 路点均由配置或实时状态推导，无手写绝对路点。例外：`bar_through_hole.primitive.*_z` 与 `gate_cage_ball.motion.*_z` 是手工推导的绝对高度，不随布局重算。                                                                                                                             |
+| 项             | 状态                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 随机化接缝         | `layout_randomization.py::randomize_task_cfg(cfg, task_id, seed, difficulty)`：深拷贝 `cfg.task`、按注册表施加有界抖动、未注册任务原样返回。四种 directive 全部是连续量：`_AbsXYJitter` / `_FracJitter` / `_EachScalarJitter` / `_EachAbsXYJitter`。                                                                                                                                                                                     |
+| 已注册任务         | `untangle` / `cable_routing` / `stacked_plate` / `peeling`。**本文 13 个任务均未注册。**                                                                                                                                                                                                                                                                                                                        |
+| 种子对场景的作用      | 仅 `swap_crossing_sign` 的 `run.seed` 进入 braid 采样（只决定交叉符号）。`band_untwist` 的 seed 传到 `BandUntwistLayout.seed` 但未消费。其余任务 seed 只是 `EpisodeKey` 身份字段；`RopeUnwindingSceneBuilder`、`LinkbarRotateSceneBuilder` 无 seed 参数。                                                                                                                                                                                    |
+| run 配置键       | `randomize_layout` / `difficulty` 只存在于 cable_routing / stacked_plate / untangle 的 run 配置。                                                                                                                                                                                                                                                                                                            |
+| 测量器           | `stability_sweep.sh` 任务表含 untangle / untangle_continuous / cable_routing / stacked_plate / unlink_c_ring。                                                                                                                                                                                                                                                                                            |
+| 可行性校验         | 已有函数：`LinkbarRotateLayout.validate()`、`DiverterRouteBallLayout.check_pivot_clearance()`、`unlink_c_ring` `SceneGeometry.checks()`、`FigureEightSpec.__post_init__` + builder 断言、`WindingSpec.from_config` + demo 的 slack 带拒绝、gate_cage_ball 运行期可解性打印；离线门 `tests/check_*_geometry.py`（rope_winding / rope_unwinding / ring_transfer / band_untwist / cloth×3 / linkbar / c_ring）。bar_through_hole 无校验器。 |
+| episode split | `configs/episode_splits/` 仅 cable_routing / swap / untangle。                                                                                                                                                                                                                                                                                                                                         |
+| oracle 对配置的依赖 | 13 个任务的 oracle 路点均由配置或实时状态推导。例外：`bar_through_hole.primitive.*_z` 与 `gate_cage_ball.motion.*_z` 是手写绝对高度；`rope_unwinding.routes.initial` 有两个手写出生点。                                                                                                                                                                                                                                                     |
 
 
 ---
 
-
-
-## 2. 通用规则
-
-
+## 2. 参数化规则
 
 ### 2.1 参数分四类
 
-每个任务的配置叶子按下列四类划分，第 3 节逐任务给出归属。
 
-
-| 类别    | 定义                                          | 采样方式           |
-| ----- | ------------------------------------------- | -------------- |
-| A 实例轴 | 离散取值，改变正确动作本身（哪根柱、哪一侧、绕几圈、交叉符号）。            | Categorical 分布 |
-| B 布局轴 | 连续几何量，oracle 读回后自适应，改变动作的位置与幅度。             | 有界连续分布         |
-| C 派生量 | 由 A/B 决定、必须随之重算的量（绳长、步数、随动高度）。              | 重解，不采样         |
-| D 固定量 | 已有实测失败记录或求解器约束的参数（粒径、d_hat、步长、摩擦、substeps）。 | 不变             |
+| 类别    | 定义                                          | 采样方式            |
+| ----- | ------------------------------------------- | --------------- |
+| A 实例轴 | 离散取值，改变正确动作本身（哪根柱、哪一侧、绕几圈、交叉符号）。            | 等概率 Categorical |
+| B 布局轴 | 连续几何量，oracle 读回后自适应，改变动作的位置与幅度。             | 包络内均匀分布         |
+| C 派生量 | 由 A/B 决定、必须随之重算的量（绳长、出生点、步数、随动高度）。          | 重解，不采样          |
+| D 固定量 | 已有实测失败记录或求解器约束的参数（粒径、d_hat、步长、摩擦、substeps）。 | 不变              |
 
 
 物理参数（摩擦、刚度、d_hat）全部归 D 类。各任务配置注释均记录了这些值的实测来源，改动会改变物理稳定性而非任务难度。
 
-### 2.2 同一种子如何产生多样实例
+### 2.2 可行包络的定义
 
-场景几何简单时，多样性主要来自 A 类而非 B 类。原则：**每个任务至少一条 A 类轴**，使脚本化策略（固定方向、最近目标、固定延时）的期望成功率被固定在随机水平；B 类轴提供连续覆盖，使策略无法记忆绝对坐标。
+每条 B 类轴的包络是一个区间 `[lo, hi]`，边界只来自三种来源，逐任务表的「边界来源」列注明：
 
-采样流程（每个 episode）：
+
+| 来源       | 举例                                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 校验函数的硬边界 | `zones.min_sweep_deg`=35、`end_gap ≥ min_clearance`、`c_ring` 不等式 #1                                                              |
+| 实测事故记录   | `climb_per_turn` 0.008 零间隙、`pleat.width` 0.024 压塌余量、`hang_yaw_deg` 270° 位姿误差 28.6°                                              |
+| 可达约束     | 工作区盒 x[−0.25, 0.25] y[−0.30, 0.30] z[0.03, 0.40]；各任务实测可达点（cloth_unroll y ≤ 0.181、linkbar 拨杆 ≤ 0.688 m、cloth_fold 抓取角抬升 ≤ 33 mm） |
+
+
+包络内不区分难易；包络之外的样本由校验拒绝。包络边界本身是**待实测量**：§4 的 sweep 会把包络边缘 oracle 失败或物理不稳的区域切掉。
+
+多条轴联合采样时，边界以校验函数为准（如 `ball.radius` 的双侧不等式同时受 `inner_width` 与 `angle_deg` 影响）。
+
+### 2.3 采样流程
 
 1. `rng = np.random.SeedSequence(seed)`；每条轴用 `spawn` 出的独立子流，子流索引由轴名的稳定哈希决定。新增一条轴不改变已有轴在同一种子下的取值。
 2. 先采 A 类，再采 B 类，再重算 C 类。
-3. 调用该任务的可行性校验（第 3 节「校验」列）；不通过则整体重采，最多 N 次（建议 20），超过则报错并记录该难度档的拒绝率。
-4. 采样结果写入 `TaskVariant.parameters`（`episode_spec.py`），H5 `setup/` 已有 `difficulty` 字段。
+3. 调用该任务的校验函数；不通过则整体重采，最多 20 次，超过则报错并记录拒绝率。拒绝率 > 5% 说明包络声明过宽，收窄包络而非提高重试次数。
+4. 采样结果（含 A/B/C 全部取值）写入 `TaskVariant.parameters`（`episode_spec.py`），H5 `setup/` 逐 episode 落盘，供 §4 划档使用。
 
-视觉轴（颜色、纹理 `texture.seed`、装饰件）可以单独随机，与物理层无关，本文不展开；按 `visual-realism-workstream` 的「装饰与碰撞分离」规则处理。
+场景几何简单时，多样性主要来自 A 类而非 B 类。原则：**每个任务至少一条 A 类轴**，使脚本化策略（固定方向、最近目标、固定延时）的期望成功率被固定在随机水平；B 类轴提供连续覆盖。
 
-### 2.3 难度绑定到分布
+B 类抖动幅度的下限：必须大于两个噪声底——仿真非确定性（cloth_unroll 同配置两次运行 `single_layer_frac` 相差 0.09）与控制误差（IK 跟踪 7.5 mm、拨板落座 4°）。小于噪声底的差异策略与评测都无法分辨；位置轴包络半宽通常 ≥ 2 cm、角度轴 ≥ 10°。
 
-定义：难度档 $d \in \text{easy}, \text{default}, \text{hard}$ 为一个映射，把每条轴 $a$ 映射到一个分布 $P_d(a)$。一个 episode 是 $(d, \text{seed})$ 的函数：seed 决定从 $P_d$ 中抽哪个样本。
-
-
-| 轴类型  | 分布族                                      | 难度改变的参数                             |
-| ---- | ---------------------------------------- | ----------------------------------- |
-| B 连续 | 截断均匀 $U[c - w_d, c + w_d]$，或以基线值为中心的截断正态 | 半宽 $w_d$、中心 $c_d$（允许随难度平移，如孔径中心值下移） |
-| A 离散 | Categorical$(p_d)$                       | 各取值概率（如 turns=3 的概率随难度上升）           |
-
-
-约束：
-
-- **支撑集单调**：$\text{supp}P_{\text{easy}} \subseteq \text{supp}P_{\text{default}} \subseteq \text{supp}P_{\text{hard}}$，或分布中心沿一个明确的「裕度统计量」单调（例如期望间隙递减）。第 3 节每个任务指明该统计量。
-- **难度不写成取值表**：不存在「hard = (孔径 0.028, 长度 0.22)」这类固定组合；hard 只声明分布参数。
-- **范围来自物理量程，不从基线分数反推**（`run_configs/gate_cage_ball_gate.yaml` 已记录该原则）。
-- 现有 `_DIFFICULTY_SCALE` 是本定义的特例（$c_d = c$，$w_d = k_d \cdot w$）。实施时把它推广为每条 directive 可声明 per-difficulty 的 $(c_d, w_d)$ 或 $p_d$；未声明时退化为倍率。
-
-难度统计量的验证方式见 §4.1：对每档抽 1000 个样本，检查统计量的均值随档位单调、拒绝率低于阈值。
+视觉轴（颜色、纹理 `texture.seed`、装饰件）可以单独随机，与物理层无关，本文不展开；按「装饰与碰撞分离」规则处理。
 
 ### 2.4 需要新增的 directive
 
 
-| directive                           | 用途                     | 使用任务                                                                 |
-| ----------------------------------- | ---------------------- | -------------------------------------------------------------------- |
-| `_ScalarJitter(path, lo_d, hi_d)`   | 单个标量叶子的截断均匀采样，边界按难度声明  | 多数任务                                                                 |
-| `_ChoiceJitter(path, choices, p_d)` | 离散实例轴                  | diverter / linkbar / rope_winding / ring_transfer / 布料 material_axis |
-| `_DerivedSolve(fn)`                 | 采样后调用任务模块的重算函数写回 C 类叶子 | rope_winding（sweep_deg）、cradle 跟随、post 对称                            |
-| `_Validate(fn, max_retry)`          | 采样后调用可行性校验，失败重采        | 全部                                                                   |
+| directive                      | 用途                                                                           | 使用任务                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `_ScalarJitter(path, lo, hi)`  | 单个标量叶子的均匀采样                                                                  | 多数任务                                                                                  |
+| `_ChoiceJitter(path, choices)` | 离散实例轴，等概率                                                                    | diverter / linkbar / rope_winding / rope_unwinding / ring_transfer / 布料 material_axis |
+| `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架、linkbar 两区角随 init_angle 平移） | ring_transfer / bar_through_hole / linkbar                                            |
+| `_DerivedSolve(fn)`            | 采样后调用任务模块的重算函数写回 C 类叶子                                                       | rope_winding（sweep_deg）、rope_unwinding（两个出生点）、ring_transfer（long_axis）                |
+| `_Validate(fn, max_retry)`     | 采样后调用可行性校验，失败重采                                                              | 全部                                                                                    |
 
 
-`_ScalarJitter` 与 `_ChoiceJitter` 的需求已在 `diverter_route_ball_zh.md` §6.2 与 `linkbar_rotate_to_zone_zh.md` §5 提出，本文合并。
+划档后再扩展：每条 directive 可声明 per-difficulty 的 `(lo_d, hi_d)` 或 `p_d`（§4.4）。
+
+### 2.5 参数化过程中同步固定的 Layout / Planner 接口约定
+
+oracle 对变体的适应程度由 Layout 层提供的接口决定。diverter / linkbar / gate_cage_ball / band_untwist 四个任务的 planner 在随机化后无需改动，其余任务需要补接口。参数化落地时按下列六条同步整理。
+
+
+| 约定             | 内容                                                                                                      | 已符合                                                                                                                         | 需补                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 1 单一几何来源       | planner 只调用 `Layout` 方法，不读 `cfg.task` 叶子。测试：对 50 个随机 seed 的 cfg 离线调用 `plan_*()`，不建 Genesis 场景。          | diverter、linkbar、gate、band_untwist、cloth×3、rope_winding、rope_unwinding、ring_transfer                                        | bar_through_hole（`primitive.*_z`）、gate_cage_ball（`motion.*_z`）：改为 `Layout` 推导，先例 `knob_grasp_world()`；rope_unwinding 的两个出生点 |
+| 2 实例轴以语义查询暴露   | planner 问 `layout.live_side()` / `target_zone()` / `goal_enclosure()` / `winding_target()`，同一段代码覆盖全部实例。 | diverter、linkbar、ring_transfer、band_untwist（实测 `over_end`）                                                                  | rope_winding / rope_unwinding（direction 在 `WindingSpec` 中）、cloth 的 `material_axis` / 抓取角序号                                  |
+| 3 先观测后规划       | planner 输入为 settle 后测量的状态，不用设计位。                                                                        | cloth_unpleat / cloth_unroll `observe()`、unlink_c_ring `regrasp_pose()`、swap_crossing_sign、band_untwist、ring_transfer 反应式抬升 | cloth_fold、bar_through_hole、gate_cage_ball 的抓取位                                                                             |
+| 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding                                                        | linkbar / diverter `steps_arc`、gate `insert_steps`、bar_through_hole `move_steps`                                            |
+| 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`；linkbar `validate()`、diverter `check_pivot_clearance()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
+| 6 决策规则与对照策略同接口 | `Rule.decide(layout, observation, command)`；oracle 与捷径基线是同一接口的不同实现。                                     | diverter、linkbar、gate_cage_ball、band_untwist（`wrong_end`）                                                                   | 其余任务的 `oracle_mode` 分支改为 Rule 类                                                                                             |
+
+
+附带约束：planner 不读 `difficulty`。
+
+约定 1、2、5 与随机化注册是同一次改动（注册一条轴时必须同时提供该轴的 Layout 查询与校验项），约定 3、4、6 按 §5 顺序逐任务补。
 
 ---
 
+## 3. 逐任务参数化
 
-
-## 3. 逐任务方案
-
-表内「难度统计量」指 §2.3 的单调量；「校验」指采样后调用的可行性函数。范围单位：m / deg，任务坐标系。`c` 为当前配置值。
+表列说明：「包络」为采样分布（A 类等概率 Categorical，B 类均匀分布）；「边界来源」对应 §2.2；「候选难度统计量」是 §4 划档时的第一候选，划档前不使用。单位 m / deg，任务坐标系。
 
 ### 3.1 rope_winding（docx 2.4）
 
 
-| 类   | 叶子                                                                                                                                 | 当前值             | easy                                                     | default                  | hard              | 说明                                                            |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------- |
-| A   | `winding.turns`                                                                                                                    | 2               | Cat{1:0.7, 2:0.3}                                        | Cat{1:0.2, 2:0.6, 3:0.2} | Cat{2:0.4, 3:0.6} | 主难度轴；3 圈出生足迹 x[−0.277,0.156] 已超出 workspace 盒，受板面 0.70×0.80 约束 |
-| A   | `winding.direction`                                                                                                                | ccw             | Cat{ccw:0.5, cw:0.5}（三档相同）                               |                          |                   | 指令轴；cw 同时是 contrast pair                                      |
-| B   | `fixtures.POST.pos[x,y]`                                                                                                           | (0.020, 0.020)  | ±0.015                                                   | ±0.025                   | ±0.040            |                                                               |
-| B   | `fixtures.C.pos[x,y]`                                                                                                              | (0.075, −0.130) | ±0.010                                                   | ±0.020                   | ±0.030            | 落点                                                            |
-| B   | `fixtures.S.pos[x,y]`                                                                                                              | (−0.150, 0.100) | ±0.010                                                   | ±0.020                   | ±0.030            | 锚点                                                            |
-| B   | `winding.climb_per_turn`                                                                                                           | 0.014           | [0.013, 0.016]                                           | [0.011, 0.016]           | [0.010, 0.016]    | 下限 `2·rope.radius = 0.008` 实测为零间隙失败点，故 ≥ 0.010                |
-| B   | `winding.wind_z_start`                                                                                                             | 0.045           | ±0.005                                                   | ±0.008                   | ±0.010            | 与 turns·climb 共同受 post 顶 0.105 − 0.010 封顶                     |
-| C   | `rope.spawn_arc.sweep_deg`                                                                                                         | 200             | 按 slack ∈ [0.05, 0.15]、目标 0.10 重解（`planner.taut_demand`） |                          |                   | 现有 turns→sweep 表：1/2/3 → 155/200/230                          |
-| D   | `winding.wind_radius`（≥0.140）、`rope.z` = `flange_radius`、`contact_d_hat`、`rope.mesh.*`、`safety_max_contact_nodes`、`POST.collision` |                 |                                                          |                          |                   | 各有实测事故记录                                                      |
+| 类   | 叶子                                                                                                                                 | 当前值             | 包络                                                        | 边界来源                                                                              |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| A   | `winding.turns`                                                                                                                    | 2               | Cat{1, 2, 3}                                              | 3 圈出生足迹 x[−0.277, 0.156] 超出工作区盒，受板面 0.70×0.80 约束；更多圈受柱顶封顶                         |
+| A   | `winding.direction`                                                                                                                | ccw             | Cat{ccw, cw}                                              | 指令轴；cw 同时是 contrast pair                                                          |
+| B   | `fixtures.POST.pos[x,y]`                                                                                                           | (0.020, 0.020)  | ±0.040                                                    | 工作区；C 方位角约束（下）                                                                    |
+| B   | `fixtures.C.pos[x,y]`                                                                                                              | (0.075, −0.130) | ±0.030                                                    | C 相对柱心方位角须在 150°–335°                                                             |
+| B   | `fixtures.S.pos[x,y]`                                                                                                              | (−0.150, 0.100) | ±0.030                                                    | 工作区；slack 带                                                                       |
+| B   | `winding.climb_per_turn`                                                                                                           | 0.014           | [0.010, 0.016]                                            | 0.008 = 2·rope.radius 实测零间隙失败；上限受柱顶                                               |
+| B   | `winding.wind_z_start`                                                                                                             | 0.045           | ±0.010                                                    | `wind_z_start + turns·climb + rope.radius ≤ post_top − 0.010`                     |
+| C   | `rope.spawn_arc.sweep_deg`                                                                                                         | 200             | 按 slack ∈ [0.05, 0.15]、目标 0.10 由 `planner.taut_demand` 反解 | 现有 turns→sweep 表 1/2/3 → 155/200/230                                              |
+| C   | C 相对柱心方位角                                                                                                                          | 292°            | 须在 150°–335°，否则拒绝或改 `winding.to_c_route: closure`         | 2026-08-27 判据改为 `winding_metric: closure`：最后一个轨道点直线去 C 若穿过锚点 S 的对径射线，闭合计数比柱上圈数多 1 |
+| D   | `winding.wind_radius`（≥0.140）、`rope.z` = `flange_radius`、`contact_d_hat`、`rope.mesh.*`、`safety_max_contact_nodes`、`POST.collision` |                 |                                                           | 各有实测事故记录                                                                          |
 
 
-- 难度统计量：期望圈数；次要：POST 到 C 的距离。
-- 校验：`tests/check_rope_winding_geometry.py` 全套不等式（slack 带、螺旋在柱顶下、圈间净空、插头轴线对齐）。
-- 前置代码：`_DerivedSolve` 调 `planner` 的 taut_demand 反解 sweep_deg；run 配置补 `randomize_layout`/`difficulty`。
-- 镜像任务 `rope_unwinding`（docx 2.5，2026-08-26 落地）的主难度轴是 `winding.start_turns`（出生时柱上的圈数，1/2/3），同一张表的 B/D 类叶子照搬；`rope.spawn_arc.sweep_deg = −130` 三档通用（slack 8.5%–9.2%），不需要 `_DerivedSolve`；校验 `tests/check_rope_unwinding_geometry.py --start-turns N`。
+- 校验：`tests/check_rope_winding_geometry.py`（slack 带、螺旋在柱顶下、圈间净空、插头轴线对齐、C 方位角）。
+- 前置代码：`_DerivedSolve` 反解 sweep_deg；run 配置补 `randomize_layout` / `difficulty`。
+- 候选难度统计量：圈数；POST 到 C 的距离。
+
+### 3.1b rope_unwinding（docx 2.5）
+
+rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反向环绕解到 0 圈后把插头放到 C。场景装配、planner、判据全部复用（`RopeUnwindingSceneBuilder` 为空子类；`WindingSpec` 新增 `start_turns` / `orbit_direction`）。
 
 
+| 类   | 叶子                                                                                                                          | 当前值    | 包络                                                                       | 边界来源                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| A   | `winding.start_turns`                                                                                                       | 1      | Cat{1, 2, 3}                                                             | 三档 GPU 已各通过一次（2026-08-27）                                                               |
+| A   | `winding.direction`                                                                                                         | ccw    | Cat{ccw, cw}                                                             | 出生缠绕方向；轨道方向由 planner 反向派生。`orbit_direction` 强制同向是 contrast pair（读数 2·start_turns），不是实例轴 |
+| B   | `POST.pos`、`S.pos`、`C.pos`、`climb_per_turn`、`wind_z_start`                                                                  | 同 §3.1 | 同 §3.1                                                                   | 同 §3.1，含 C 方位角约束                                                                        |
+| C   | `routes.initial[1].pos`（S 出口切线引入点，当前 [−0.114, 0.083]）                                                                       |        | 随 `S.pos` 重算：沿 S 出口弧切线 40 mm                                             | 手写字面值；不重算会在出生网格上形成 49° 折角（弯曲半径 2.7 mm < 管半径），tetgen 报自交                                 |
+| C   | `routes.initial[3].arc_to.pos`（插头出生点，当前 [−0.006, −0.218]）                                                                   |        | 随 `POST.pos`、`start_turns` 重算：沿最上一圈切线离开，尾弧弦与切线夹角 < 30°                   | 手写字面值                                                                                   |
+| C   | `rope.spawn_arc.sweep_deg`                                                                                                  | −130   | 三种圈数通用（slack 8.5% / 8.9% / 9.2%）；位置抖动后由离线门复核 slack 仍在 [0.05, 0.15]，越界则反解 | 出生螺旋每圈比落位周长多 12 mm，抵消了圈数增加的需求                                                           |
+| D   | 同 §3.1；另加 `plug_spin_tracks_orbit = false`（2026-08-27 A/B：开则插头自转与解绕扫掠同向叠加，`twist_net` −1.1/圈）、`rope.fem.rest_shape = spawn` |        |                                                                          |                                                                                         |
+
+
+- 校验：`tests/check_rope_unwinding_geometry.py --start-turns N --sweep-deg D`（出生读数 = ±start_turns、尾弧无折角、oracle 全程在柱顶下、最紧时刻 slack 带、C 方位角）。
+- 前置代码：两个 `routes.initial` 字面值改为由 layout 推导；run 配置补键（`run_configs/rope_unwinding.yaml:37-40` 已说明缺失）。
+- 候选难度统计量：出生圈数。
+- 已知风险：解下的绳保留螺旋记忆散在柱脚，圈数多、柱距 C 近时可能进入夹爪路径；sweep 时记录 `contact_nodes` 终值。
 
 ### 3.2 ring_transfer（docx 2.6）
 
 
-| 类   | 叶子                                                                                                             | 当前值        | easy                                                     | default        | hard           | 说明                                            |
-| --- | -------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------- | -------------- | -------------- | --------------------------------------------- |
-| A   | `ring.enclosure` / `goal.enclosure`                                                                            | [A] / [B]  | Cat{A→B:0.5, B→A:0.5}（三档相同）                              |                |                | 指令轴；两柱几何相同，交换即可，oracle 读 `layout.crossings()` |
-| B   | 柱对中点 xy（同时平移 A、B）                                                                                              | (0.010, 0) | ±0.010                                                   | ±0.020         | ±0.030         | 单柱独立抖动会改变柱距                                   |
-| B   | 柱距                                                                                                             | B−A        |                                                          | 0.220          | [0.20, 0.24]   | [0.19, 0.26]                                  |
-| B   | 柱对朝向角                                                                                                          | 0°         | ±10°                                                     | ±20°           | ±30°           | 需把 `ring.long_axis` 同步旋转（C 类）                 |
-| B   | `posts[*].radius`                                                                                              | 0.016      | [0.015, 0.018]                                           | [0.014, 0.020] | [0.013, 0.022] | 上限受 `loop_radius ≥ r + tube + d_hat`          |
-| B   | `posts[*].head_radius − radius`                                                                                | 0.010      | ≥0.008（`≥ 2·tube_radius`）                                |                |                |                                               |
-| C   | `ring.long_axis`、`carry.hang_depth`                                                                            |            | 前者随柱对朝向旋转；后者是实测值（0.14 对 perimeter 0.46），perimeter 不动则不重算 |                |                |                                               |
-| D   | `ring.perimeter`、`ring.loop_radius`、`grasp.grasp_qpos`、`rope.fem.*`、`robot_rope_contact`、`carry.hang_bottom_z` |            |                                                          |                |                | perimeter 变化要求重测 hang_depth，第一阶段固定            |
+| 类   | 叶子                                                                                                                  | 当前值        | 包络               | 边界来源                                                   |
+| --- | ------------------------------------------------------------------------------------------------------------------- | ---------- | ---------------- | ------------------------------------------------------ |
+| A   | `ring.enclosure` / `goal.enclosure`                                                                                 | [A] / [B]  | Cat{A→B, B→A}    | 指令轴；两柱几何相同，交换即可，oracle 读 `layout.crossings()`          |
+| B   | 柱对中点 xy（A、B 同时平移）                                                                                                   | (0.010, 0) | ±0.030           | 工作区；`carry` 路径最高点 + `hand_above` ≤ 0.40                |
+| B   | 柱距 abs(B − A)                                                                                                       | 0.220      | [0.18, 0.28]     | 下限：悬挂股避开 A 挡头、手掌与两挡头净空；上限：工作区                          |
+| B   | 柱对朝向角                                                                                                               | 0°         | ±30°             | 手腕偏航行程；`ring.long_axis` 随之旋转（C）                        |
+| B   | `posts[*].radius`                                                                                                   | 0.016      | [0.013, 0.022]   | 上限 `loop_radius ≥ r + tube + d_hat`（0.050 ≥ r + 0.006） |
+| B   | `posts[*].head_radius − radius`                                                                                     | 0.010      | [0.008, 0.014]   | 下限 `≥ 2·tube_radius`；上限：悬挂股避开挡头、抬升高度                   |
+| C   | `ring.long_axis`                                                                                                    | [0, −1]    | 随柱对朝向旋转          |                                                        |
+| C   | `carry.hang_depth`                                                                                                  | 0.140（实测）  | perimeter 不动则不重算 | 用推导值 0.19 曾使环底擦过 B 挡头                                  |
+| D   | `ring.perimeter`、`ring.loop_radius`、`grasp.grasp_qpos`、`rope.fem.*`、`robot_rope_contact`（off）、`carry.hang_bottom_z` |            |                  | perimeter 变化要求重测 hang_depth，第一阶段固定                     |
 
 
-- 难度统计量：柱距与柱半径（B 柱套入所需张开宽度 `2(r_post + 2 r_tube + d_hat)`）。
-- 校验：`tests/check_ring_transfer_geometry.py`（环净空、手掌与挡头净空、悬挂股避开挡头、workspace）。
-- 前置代码：run 配置无 `seed`/`randomize_layout`；demo 未建 EpisodeSpec。`posts` 是列表，需要「成对平移/旋转」的 directive。
-
-
+- 校验：`tests/check_ring_transfer_geometry.py`（环净空、手掌与挡头净空、悬挂股避开挡头、workspace、`lift_low_z` 与挡头顶）。
+- 前置代码：run 配置无 `seed` / `randomize_layout`；demo 未建 EpisodeSpec；`posts` 是列表，需 `_PairJitter`。
+- 候选难度统计量：柱距；柱半径（B 柱套入所需张开宽度 `2(r_post + 2 r_tube + d_hat)`）。
 
 ### 3.3 bar_through_hole（docx 2.3 变体）
 
 
-| 类   | 叶子                                                                                                                                          | 当前值         | easy                 | default        | hard           | 说明                                                                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------- | -------------- | -------------- | ---------------------------------------------------------------------- |
-| B   | `aperture.across_flats`                                                                                                                     | 0.032       | [0.034, 0.038]       | [0.030, 0.036] | [0.027, 0.032] | 单边净空 = (across_flats − 0.018)/2；实测 IK 跟踪误差 7.5 mm，hard 下限净空 4.5 mm 需实测 |
-| B   | `bar.rest_pos[x,y]`                                                                                                                         | (−0.050, 0) | ±0.010               | ±0.020         | ±0.030         | `cradles.near_a.x`/`near_b.x` 随之平移（C）                                  |
-| B   | `panel.x`                                                                                                                                   | 0.130       | ±0.010               | ±0.020         | ±0.030         | `cradles.far.x` 随之平移（C）；EE 全程需在 panel.x 一侧                             |
-| B   | `bar.length`                                                                                                                                | 0.200       | [0.19, 0.21]         | [0.18, 0.22]   | [0.17, 0.23]   | 影响 `max_align_tilt_deg` 的几何上限                                          |
-| B   | `bar.grasp_offset`                                                                                                                          | 0.075       | ±0.005               | ±0.010         | ±0.015         |                                                                        |
-| C   | `cradles.near_a.x`、`near_b.x`、`far.x`                                                                                                       |             | 与 bar / panel 保持当前偏移 |                |                |                                                                        |
-| D   | `aperture.center_z`、`bar.rest_pos[z]`、`cradles.*.seat_axis_z`、`panel.top_z`（≤0.1608，余量 11 mm）、`cradles.*.jaw_width`（≤0.023）、`primitive.*_z` |             |                      |                |                | `primitive.*_z` 是手工绝对高度                                                |
+| 类   | 叶子                                                                                                                                          | 当前值         | 包络                   | 边界来源                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------- | ------------------------------------------------------------------------------------ |
+| B   | `aperture.across_flats`                                                                                                                     | 0.032       | [0.027, 0.038]       | 单边净空 = (across_flats − 0.018)/2；下限 4.5 mm 低于实测 IK 跟踪误差 7.5 mm，包络下边缘预期被 §4 切掉；上限受面板尺寸 |
+| B   | `bar.rest_pos[x,y]`                                                                                                                         | (−0.050, 0) | ±0.030               | `cradles.near_a.x` / `near_b.x` 随之平移（C）；EE 全程在 x < panel.x                           |
+| B   | `panel.x`                                                                                                                                   | 0.130       | ±0.030               | `cradles.far.x` 随之平移（C）；工作区                                                          |
+| B   | `bar.length`                                                                                                                                | 0.200       | [0.17, 0.23]         | `max_align_tilt_deg` 几何上限；杆两端不出工作区                                                   |
+| B   | `bar.grasp_offset`                                                                                                                          | 0.075       | ±0.015               | 抓取点不与 near 托架重叠                                                                      |
+| C   | `cradles.near_a.x`、`near_b.x`、`far.x`                                                                                                       |             | 与 bar / panel 保持当前偏移 |                                                                                      |
+| D   | `aperture.center_z`、`bar.rest_pos[z]`、`cradles.*.seat_axis_z`、`panel.top_z`（≤0.1608，余量 11 mm）、`cradles.*.jaw_width`（≤0.023）、`primitive.*_z` |             |                      | `primitive.*_z` 是手写绝对高度                                                              |
 
 
-- 难度统计量：期望单边净空。
 - 校验：无现成校验器；需新增 `BarThroughHoleLayout.validate()`：净空 > 0、cradle 顺序、EE 位置 < panel.x、`primitive.*_z` 与 `aperture.center_z` 一致。
-- 前置代码：把 `primitive.insert_z / seat_z / grasp_z` 改为由 `aperture.center_z`、`bar.rest_pos[z]` 推导（diverter 与 linkbar 的 `knob_grasp_world()` 是先例），否则 z 轴全部归 D。
-
-
+- 前置代码：`primitive.insert_z / seat_z / grasp_z` 改为由 `aperture.center_z`、`bar.rest_pos[z]` 推导，否则 z 轴全部归 D。
+- 候选难度统计量：单边净空。
 
 ### 3.4 swap_crossing_sign（docx 3.2）
 
 
-| 类   | 叶子                                                                                                                                | 当前值     | easy                    | default        | hard           | 说明                                                       |
-| --- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------- | -------------- | -------------- | -------------------------------------------------------- |
-| A   | 交叉符号（braid 字）                                                                                                                     | seed 决定 | Cat{+:0.5, −:0.5}（三档相同） |                |                | 现有机制，`generation/braid.py:153-162`                       |
-| B   | 交叉位置 `frac ∈ braid_span`                                                                                                          | 固定中点    | [0.45, 0.55]            | [0.35, 0.65]   | [0.25, 0.75]   | 需改 `braid.py:225`（length=1 时取中点）为按 seed 采样               |
-| B   | `braid.channel_spacing`                                                                                                           | 0.085   | [0.080, 0.095]          | [0.070, 0.095] | [0.060, 0.095] | 上限 ≈0.101（`crossing_window ≥ 0.6·spacing`）；越小两绳越近        |
-| B   | `braid.center_y`                                                                                                                  | 0       | ±0.020                  | ±0.030         | ±0.040         |                                                          |
-| B   | `braid.x_end`                                                                                                                     | 0.200   | [0.19, 0.21]            | [0.17, 0.22]   | [0.16, 0.22]   | 自由端插头须留夹爪级净空                                             |
-| D   | `braid.length`（=1）、`n_strands`、`over_lift`（=0.012）、`base_z`、`rope.mesh.segment_length`（0.009）、`rope.elastic.*_friction`、`pinch.*` |         |                         |                |                | `pinch.tail_clearance = −0.030` 是进行中的 H7 实验，随机化不应叠加在未定值上 |
+| 类   | 叶子                                                                                                                                | 当前值     | 包络             | 边界来源                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------- | -------------------------------------------------------------------- |
+| A   | 交叉符号（braid 字）                                                                                                                     | seed 决定 | Cat{+, −}      | 现有机制，`generation/braid.py:153-162`                                   |
+| B   | 交叉位置 `frac ∈ braid_span`                                                                                                          | 固定中点    | [0.25, 0.75]   | `braid_span` = [0.10, 0.85]；自由尾段 ≥ 64 mm；需改 `braid.py:225` 按 seed 采样 |
+| B   | `braid.channel_spacing`                                                                                                           | 0.085   | [0.060, 0.095] | 上限 ≈0.101（`crossing_window ≥ 0.6·spacing`）；下限：两绳最近距离 > 抓取干扰（待实测）     |
+| B   | `braid.center_y`                                                                                                                  | 0       | ±0.040         | 工作区 y ±0.30 减 spacing/2                                              |
+| B   | `braid.x_end`                                                                                                                     | 0.200   | [0.16, 0.22]   | 自由端插头须留夹爪级净空；`x_end ≤ 0.22` 工作区                                      |
+| D   | `braid.length`（=1）、`n_strands`、`over_lift`（=0.012）、`base_z`、`rope.mesh.segment_length`（0.009）、`rope.elastic.*_friction`、`pinch.*` |         |                | `pinch.tail_clearance = −0.030` 是进行中的 H7 实验，随机化不叠加在未定值上              |
 
 
-- 难度统计量：期望 channel_spacing（间距小则两绳干扰增大、`separation_threshold` 0.016 更难达到）。
 - 校验：`braid.verify_braid_spec`（已在建场景时调用）+ `tests/check_swap_crossing_sign_planner.py`。
-- 说明：task 配置 `:18-19` 写明「不开难度轴」，指 `braid.length`；本文难度轴是间距与位置，不改交叉数。
-
-
+- 候选难度统计量：`channel_spacing`（间距小则两绳干扰增大、`separation_threshold` 0.016 更难达到）。
+- 说明：task 配置 `:18-19` 「不开难度轴」指 `braid.length`；本文轴是间距与位置，不改交叉数。
 
 ### 3.5 unlink_c_ring（docx 3.4）
 
 
-| 类   | 叶子                                                                                                        | 当前值            | easy                      | default  | hard       | 说明                                                      |
-| --- | --------------------------------------------------------------------------------------------------------- | -------------- | ------------------------- | -------- | ---------- | ------------------------------------------------------- |
-| B   | `c_ring.gap_deg`                                                                                          | 23             | [25, 28]                  | [23, 27] | [21.5, 24] | 单边净空 = R·sin(gap/2) − r_c − r_f，当前 2.0 mm；下限受不等式 #1     |
-| B   | `c_ring.gap_azimuth_deg`                                                                                  | 315            | ±5                        | ±10      | ±15        | 下限避开开口半角、上限受手腕行程（`unlink_c_ring_zh.md` 第 7 条）           |
-| B   | `stand.hang_yaw_deg`                                                                                      | 180            | ±5                        | ±10      | ±15        | 投影方向已由 `bisector_projection` 推导；270° 实测位姿误差 28.6°，不进入范围 |
-| B   | `fixed_ring.center[x,y]`                                                                                  | (0.060, 0.055) | ±0.010                    | ±0.015   | ±0.020     | 整体平移                                                    |
-| C   | `primitive.grasp_azimuth_deg`                                                                             | 67.5           | 保持与 gap_azimuth 相差 112.5° |          |            |                                                         |
-| D   | 全部 z、`c_ring.major_radius`、`fixed_ring.*_radius`、`c_ring.tab.*`、`primitive.slide_lift`、`max_regrasp_*`、摩擦 |                |                           |          |            | 不等式 #5（home 指尖与支架顶）余量 15.8 mm                           |
+| 类   | 叶子                                                                                                        | 当前值            | 包络                      | 边界来源                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------- | -------------- | ----------------------- | ------------------------------------------------------------------------ |
+| B   | `c_ring.gap_deg`                                                                                          | 23             | [21.5, 28]              | 单边净空 = R·sin(gap/2) − r_c − r_f；下限：不等式 #1（缺口塞得下管身）；上限：开口半角 14° 以内保证自释放裕度 |
+| B   | `c_ring.gap_azimuth_deg`                                                                                  | 315            | ±15                     | 下限避开开口半角、上限受手腕行程（`unlink_c_ring_zh.md` 第 7 条）                            |
+| B   | `stand.hang_yaw_deg`                                                                                      | 180            | ±15                     | 270° 实测位姿误差 28.6°，不进入包络；投影方向由 `bisector_projection` 推导                   |
+| B   | `fixed_ring.center[x,y]`                                                                                  | (0.060, 0.055) | ±0.020                  | 整体平移；C 环落点在工作区                                                           |
+| C   | `primitive.grasp_azimuth_deg`                                                                             | 67.5           | 与 gap_azimuth 相差 112.5° |                                                                          |
+| D   | 全部 z、`c_ring.major_radius`、`fixed_ring.*_radius`、`c_ring.tab.*`、`primitive.slide_lift`、`max_regrasp_*`、摩擦 |                |                         | 不等式 #5（home 指尖与支架顶）余量 15.8 mm                                            |
 
 
-- 难度统计量：期望开口单边净空。
 - 校验：`SceneGeometry.checks()` 返回 `(name, measured, limit, ok)`，直接作为拒绝采样判据；另跑 `tests/check_c_ring_clearance.py`。
-- 说明：C3 类随机化非强制，但本任务 gateway 唯一且靠碰撞防捷径，随机化能验证该性质在范围内成立。
-
-
+- 候选难度统计量：开口单边净空。
+- 说明：C3 类随机化非强制，但本任务 gateway 唯一且靠碰撞防捷径，随机化可验证该性质在包络内成立。
 
 ### 3.6 gate_cage_ball（docx 4.1，C4 强制）
 
 
-| 类     | 叶子                                                                                                          | 当前值         | easy           | default        | hard           | 说明                        |
-| ----- | ----------------------------------------------------------------------------------------------------------- | ----------- | -------------- | -------------- | -------------- | ------------------------- |
-| B（时机） | `ball.release_y`                                                                                            | −0.400      | [−0.42, −0.38] | [−0.44, −0.36] | [−0.46, −0.34] | run 配置已规划为第 2 阶段注册项       |
-| B（时机） | `ball.speed`                                                                                                | 0.120       | [0.09, 0.11]   | [0.10, 0.14]   | [0.12, 0.16]   | 同时缩短 entry_delay 与 window |
-| B     | `channel.flat_end_y`                                                                                        | 0.150       | [0.16, 0.20]   | [0.13, 0.18]   | [0.11, 0.15]   | 只改 window 长度              |
-| B     | `gate_rack.center[x,y]`                                                                                     | (−0.090, 0) | ±0.010         | ±0.020         | ±0.030         | 抓取位，oracle 读回             |
-| B     | `channel.center_x`                                                                                          | 0.075       | ±0.010         | ±0.015         | ±0.020         |                           |
-| D     | `gate_slot.guide_gap`（3 mm/侧）、`gate_slot.post_height`、`gate.seated_*`、`gate_rack.base_size[z]`、`motion.*_z` |             |                |                |                | `motion.*_z` 手工绝对高度       |
+| 类     | 叶子                                                                                                          | 当前值         | 包络             | 边界来源                                              |
+| ----- | ----------------------------------------------------------------------------------------------------------- | ----------- | -------------- | ------------------------------------------------- |
+| B（时机） | `ball.release_y`                                                                                            | −0.400      | [−0.46, −0.34] | 槽道入口 `entry_start_y` = −0.42 以远为斜坡段；run 配置已规划为注册项 |
+| B（时机） | `ball.speed`                                                                                                | 0.120       | [0.08, 0.16]   | 物理送料量程；上限由可解性不等式切                                 |
+| B     | `channel.flat_end_y`                                                                                        | 0.150       | [0.11, 0.20]   | 只改 window 长度；工作区 y                                |
+| B     | `gate_rack.center[x,y]`                                                                                     | (−0.090, 0) | ±0.030         | 抓取位，oracle 读回；与槽道不重叠                              |
+| B     | `channel.center_x`                                                                                          | 0.075       | ±0.020         | 工作区                                               |
+| D     | `gate_slot.guide_gap`（3 mm/侧）、`gate_slot.post_height`、`gate.seated_*`、`gate_rack.base_size[z]`、`motion.*_z` |             |                | `motion.*_z` 手写绝对高度                               |
 
 
-- 难度统计量：期望 `last_commit = entry_delay + window − insert_duration − t_ready`（可提交余量）。
 - 校验：`window > insert_duration + safety_margin`（demo 已打印并告警，改为采样拒绝）。
-- 说明：时机随机化本身就是实例轴——固定延时策略的成功率随 `release_y`/`speed` 分布落到中间水平，这是预期机制（run 配置注释）。
-
-
+- 候选难度统计量：`last_commit = entry_delay + window − insert_duration − t_ready`（可提交余量）。
+- 说明：时机随机化本身构成实例轴——固定延时策略的成功率随 `release_y` / `speed` 分布落到中间水平（run 配置注释）。
 
 ### 3.7 diverter_route_ball（docx 4.3，C4 强制）
 
 
-| 类   | 叶子                                                                                                      | 当前值            | easy                            | default                  | hard                     | 说明                                                  |
-| --- | ------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------- | ------------------------ | ------------------------ | --------------------------------------------------- |
-| A   | `diverter.dead_end_side`                                                                                | left           | Cat{left:0.5, right:0.5}（三档相同）  |                          |                          | 指令轴                                                 |
-| A   | `diverter.init_sealed_side`                                                                             | right          | Cat{left:0.5, right:0.5}，与上一条独立 |                          |                          | 2×2 中一半实例正确动作为不旋转                                   |
-| A   | `target_pad.enabled`                                                                                    | true           | Cat{true:1.0}                   | Cat{true:0.7, false:0.3} | Cat{true:0.3, false:0.7} | false = 仅语言可解                                       |
-| B   | `branch.angle_deg`                                                                                      | 30             | ±2                              | ±4                       | ±6                       | oracle 目标角 = 该值；需重算 `ball.radius` 双侧不等式             |
-| B   | `diverter.lever.radius`                                                                                 | 0.055          | ±0.003                          | ±0.005                   | ±0.008                   |                                                     |
-| B   | `channel.fork_origin_x`                                                                                 | −0.020         | ±0.005                          | ±0.010                   | ±0.015                   | 拨杆落点距基座 0.688 m，需复核可达                               |
-| B   | `ball.speed` / `ball.release_x`                                                                         | 0.120 / −0.170 | ±0.01 / ±0.01                   | ±0.02 / ±0.02            | ±0.03 / ±0.03            |                                                     |
-| D   | `ball.radius`、`channel.inner_width`、`flap.thickness`、`joint_limited`（=false）、`mechanism.*`、`grid_pitch` |                |                                 |                          |                          | `ball.radius` 上下界由 `inner_width` 与 `angle_deg` 共同决定 |
+| 类   | 叶子                                                                                                      | 当前值            | 包络                  | 边界来源                                        |
+| --- | ------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ------------------------------------------- |
+| A   | `diverter.dead_end_side`                                                                                | left           | Cat{left, right}    | 指令轴                                         |
+| A   | `diverter.init_sealed_side`                                                                             | right          | Cat{left, right}，独立 | 2×2 中一半实例正确动作为不旋转                           |
+| A   | `target_pad.enabled`                                                                                    | true           | Cat{true, false}    | false = 仅语言可解                               |
+| B   | `branch.angle_deg`                                                                                      | 30             | ±6                  | `ball.radius` 双侧不等式（半开间隙 < 球径 < 落座通道宽度）随之重算 |
+| B   | `diverter.lever.radius`                                                                                 | 0.055          | ±0.008              | 拨杆落点距基座 ≤ 0.69 m                            |
+| B   | `channel.fork_origin_x`                                                                                 | −0.020         | ±0.015              | 同上                                          |
+| B   | `ball.speed` / `ball.release_x`                                                                         | 0.120 / −0.170 | ±0.03 / ±0.03       | 有界推力驱动量程；入口段长度                              |
+| D   | `ball.radius`、`channel.inner_width`、`flap.thickness`、`joint_limited`（=false）、`mechanism.*`、`grid_pitch` |                |                     |                                             |
 
 
-- 难度统计量：`target_pad.enabled=false` 的概率；次要：`branch.angle_deg` 偏离 30° 的幅度。
-- 校验：`check_pivot_clearance()`（建场景时抛错）+ 半开间隙 < 球径 < 落座通道宽度的双侧不等式（需从配置注释 `:181-186` 抽成函数）。
+- 校验：`check_pivot_clearance()`（建场景时抛错）+ 球径双侧不等式（需从配置注释 `:181-186` 抽成函数）。
+- 候选难度统计量：`target_pad.enabled`；`branch.angle_deg` 偏离 30° 的幅度。
 - 说明：IL 录制时按 `diverter_route_ball_zh.md` §6.3 只取需旋转的两种组合；评测保留 2×2。
-
-
 
 ### 3.8 linkbar_rotate_to_zone（docx 4.4，C4 强制）
 
-> 2026-08-27 任务改造后叶子名变更：`sockets.b1_angle_deg / a2_angle_deg` → `zones.left.angle_deg / zones.right.angle_deg`；
-> 「B1 所在侧」轴 → `zones.target`（Cat{left, right}）与 `zones.assignment`（两色互换，Cat 0.5）；
-> D 类中 `socket.entry_depth`、`component_b.*`、高度链已随小车一并删除。下表数值仍适用。
+> 2026-08-27 由 `linkbar_merge_components` 改造：删除小车、导轨、插口、weld 闩、行程测试；保留立柱、横梁、`PivotLeverPrimitive` 与全部实测高度。判据改为「销的关节角落在同色区域角窗口内且静止」。首版记录见 git 历史（`a884929` 及之前）。
 
 
-| 类   | 叶子                                                                                                                                                      | 当前值 | easy                    | default   | hard      | 说明                                      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----------------------- | --------- | --------- | --------------------------------------- |
-| A   | B1 所在侧                                                                                                                                                  | +   | Cat{+:0.5, −:0.5}（三档相同） |           |           | 采样后 b1、a2 同时取反                          |
-| B   | `sockets.b1_angle_deg`（绝对值）                                                                                                                             | 55  | U[40, 70]               | U[35, 75] | U[35, 75] | 硬范围 `[min_sweep, max_sweep]` = [35, 75] |
-| B   | `sockets.a2_angle_deg`（绝对值）                                                                                                                             | 45  | 与                       | b1        | 之差 ≥ 20   | 无约束 U[35, 75]                           |
-| B   | `linkbar.init_angle_deg`                                                                                                                                | 0   | ±5                      | ±10       | ±15       | 两插口角同步平移（C），否则 `validate()` 拒绝          |
-| D   | `pivot.x`、`motion.approach_z`、`motion.grasp_qpos`、`socket.entry_depth`、`mechanism.joint_friction`（0.10）、`component_b.mechanism.joint_friction`（4.0）、高度链 |     |                         |           |           | 各有 2026-08-20~22 事故记录                   |
+| 类   | 叶子                                                                                                                                                                    | 当前值           | 包络               | 边界来源                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------- | ---------------------------------------------------- |
+| A   | `zones.target`                                                                                                                                                        | left          | Cat{left, right} | 目标区；销、销套环、手柄盖取该区颜色                                   |
+| A   | `zones.assignment.left` / `.right`                                                                                                                                    | orange / blue | Cat{原样, 互换}      | 与 target 独立                                          |
+| B   | `zones.left.angle_deg`                                                                                                                                                | +55           | U[35, 75]        | `[min_sweep, max_sweep]`：35° 以下转动不构成决策，75° 以上手柄出工作区  |
+| B   | `zones.right.angle_deg`                                                                                                                                               | −45           | −U[35, 75]       | 两区异侧；中心角距 ≥ 2·half_width + 5°                        |
+| B   | `linkbar.init_angle_deg`                                                                                                                                              | 0             | ±15              | 两区角同步平移（C）；扫掠范围仍在 [35, 75]                           |
+| B   | `zones.half_width_deg`                                                                                                                                                | 8             | [6, 10]          | 下限受 `motion.target_tolerance_deg` 4° 与实测落座误差；上限受两区角距 |
+| D   | `pivot.x`（+0.020）、`motion.approach_z`（0.315）、`motion.grasp_qpos`（0.001）、`motion.steps_arc`（240）、`mechanism.joint_friction`（0.10）、`axle.clearance`（0.002）、高度链、`knob.*` |               |                  | 各有 2026-08-20~22 事故记录；`arm_radius` / `pivot` 不进判据    |
 
 
-- 难度统计量：期望 b1 − a2（越小，最近插口捷径的期望成功率越接近 0.5）。
-- 校验：`LinkbarRotateLayout.validate()`（已实现：异侧、扫掠范围、两区不重叠、两色不同）。
-- 说明：本任务是准备度最高的一个，oracle 按销的颜色决策，无需改动。
-
-
+- 校验：`LinkbarRotateLayout.validate()`（异侧、扫掠范围、两区角距、两色不同、target 合法）；离线 `tests/check_linkbar_zone_geometry.py`、`tests/check_linkbar_planner.py`（oracle 4/4，`nearest_zone` 2/4）。
+- 前置代码：三条 A/B 轴已是 hydra 覆盖项；`LinkbarRotateSceneBuilder` 无 seed 参数，走 `randomize_task_cfg` 在 `cfg.task` 层做。
+- 候选难度统计量：abs(abs(left) − abs(right))（越小，`nearest_zone` 捷径的期望成功率越接近 0.5）；`half_width_deg`。
 
 ### 3.9 cloth_fold（docx 1.x）
 
 
-| 类   | 叶子                                                                                                                                                      | 当前值        | easy         | default      | hard         | 说明                                                          |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ | ------------ | ------------ | ----------------------------------------------------------- |
-| A   | 抓取角序号（4 角）                                                                                                                                              | 固定一角       | Cat 均匀（三档相同） |              |              | `_grasp_offset()` 目前只实现一角，需扩展；`edge_mid` 实测三项判据不过，排除        |
-| B   | `cloth.center[x,y]`                                                                                                                                     | (0.040, 0) | ±0.010       | ±0.020       | ±0.030       | 抓取角与落点须在 x[−0.23, 0.31] y[−0.30, 0.30] 内，且抬升可达（实测 33 mm 上限） |
-| B   | `grasp.inset`                                                                                                                                           | 0          | [0, 0.006]   | [0, 0.012]   | [0, 0.020]   | 上限由附着盘在布内决定                                                 |
-| B   | `physical.fold_slack`                                                                                                                                   | 0.98       | [0.97, 0.99] | [0.95, 1.00] | [0.93, 1.00] | <1 布松垂被拖，=1 恰好绕折线                                           |
-| D   | `cloth.size`、`mesh.cols/rows`、`particle_size`（33×33 + 0.004 是唯一实测保序组合）、`fold_step_m`、`touch_clearance`、`grasp_qpos`、`contact_band`、`bending_relaxation` |            |              |              |              | 布的 yaw 无叶子，网格生成器轴对齐，需新代码                                    |
+| 类   | 叶子                                                                                                                                                      | 当前值        | 包络           | 边界来源                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ | ------------------------------------------------------- |
+| A   | 抓取角序号（4 角）                                                                                                                                              | 固定一角       | Cat{4 角}     | `_grasp_offset()` 目前只实现一角，需扩展；`edge_mid` 实测三项判据不过，排除    |
+| B   | `cloth.center[x,y]`                                                                                                                                     | (0.040, 0) | ±0.030       | 抓取角与落点在 x[−0.23, 0.31] y[−0.30, 0.30] 内；抓取角抬升实测上限 33 mm |
+| B   | `grasp.inset`                                                                                                                                           | 0          | [0, 0.020]   | 附着盘（半径 0.018）在布内                                        |
+| B   | `physical.fold_slack`                                                                                                                                   | 0.98       | [0.93, 1.00] | <1 布松垂被拖；>1 拉布                                          |
+| D   | `cloth.size`、`mesh.cols/rows`、`particle_size`（33×33 + 0.004 是唯一实测保序组合）、`fold_step_m`、`touch_clearance`、`grasp_qpos`、`contact_band`、`bending_relaxation` |            |              | 布的 yaw 无叶子，网格生成器轴对齐，需新代码                                |
 
 
-- 难度统计量：期望 inset 与 center 偏移（抓取点离基座距离）。
-- 校验：`tests/check_cloth_fold_geometry.py`；落点/抓取点在作业区内。
-- 说明：`success.particle_off_target_frac_max = 0.02` 两侧余量约 2 倍，配置注释已预告多种子后需重定；随机化后先按 §4.3 重新标定阈值再定成功率。
-
-
+- 校验：`tests/check_cloth_fold_geometry.py`；落点 / 抓取点在作业区内。
+- 候选难度统计量：inset；抓取点离基座距离。
+- 说明：`success.particle_off_target_frac_max = 0.02` 两侧余量约 2 倍，配置注释已预告多种子后需重定；§4.3 先重标定阈值再统计成功率。
 
 ### 3.10 cloth_unpleat（docx 1.x）
 
 
-| 类   | 叶子                                                                                                        | 当前值        | easy                    | default        | hard           | 说明                               |
-| --- | --------------------------------------------------------------------------------------------------------- | ---------- | ----------------------- | -------------- | -------------- | -------------------------------- |
-| A   | `cloth.material_axis`                                                                                     | y          | Cat{y:0.5, x:0.5}（三档相同） |                |                | 90° 离散旋转，layout 与 evaluator 各读一次 |
-| B   | `cloth.center[x,y]`                                                                                       | (0.040, 0) | ±0.010                  | ±0.020         | ±0.030         | 展开后跨 y 到 +0.161，拉伸终点须 < 0.30     |
-| B   | `cloth.pleat.width`                                                                                       | 0.024      | [0.030, 0.040]          | [0.026, 0.038] | [0.024, 0.030] | 0.024 是实测下限（压塌一侧余量 0.09）；只向上取    |
-| B   | `cloth.pleat.crest_height`                                                                                | 0.022      | [0.020, 0.024]          | [0.018, 0.026] | [0.016, 0.028] | `pleat_profile` 要求 tail > 0      |
-| B   | `physical.pull_scale`                                                                                     | 1.05       | [1.03, 1.08]            | [1.00, 1.10]   | [0.98, 1.12]   |                                  |
-| B   | `grasp.edge_inset`                                                                                        | 0.012      | [0.010, 0.014]          | [0.009, 0.016] | [0.008, 0.018] | 下限 `2·particle_size`             |
-| D   | `bending_relaxation`（=0.0，任务成立条件）、布间摩擦 0.4、`pull_step_m`、`mesh.spacing`、`particle_size`、`touch_clearance` |            |                         |                |                |                                  |
+| 类   | 叶子                                                                                                        | 当前值        | 包络             | 边界来源                                                    |
+| --- | --------------------------------------------------------------------------------------------------------- | ---------- | -------------- | ------------------------------------------------------- |
+| A   | `cloth.material_axis`                                                                                     | y          | Cat{x, y}      | 90° 离散旋转，layout 与 evaluator 各读一次                        |
+| B   | `cloth.center[x,y]`                                                                                       | (0.040, 0) | ±0.030         | 展开后跨 y 到 +0.161，拉伸终点 < 0.30                             |
+| B   | `cloth.pleat.width`                                                                                       | 0.024      | [0.024, 0.040] | 0.024 实测下限（压塌一侧余量 0.09）；上限 `pleat_profile` tail > 0     |
+| B   | `cloth.pleat.crest_height`                                                                                | 0.022      | [0.016, 0.028] | `pleat_profile` tail > 0；`crest_height > attach_z_band` |
+| B   | `physical.pull_scale`                                                                                     | 1.05       | [0.98, 1.12]   | 多拉会把布带整体拖走                                              |
+| B   | `grasp.edge_inset`                                                                                        | 0.012      | [0.008, 0.018] | 下限 `2·particle_size`                                    |
+| D   | `bending_relaxation`（=0.0，任务成立条件）、布间摩擦 0.4、`pull_step_m`、`mesh.spacing`、`particle_size`、`touch_clearance` |            |                |                                                         |
 
 
-- 难度统计量：期望 pleat.width（越窄，正确与压塌的判据间距越小）。
 - 校验：`tests/check_cloth_unpleat_geometry.py`；起始态守卫（`spread_ratio ≤ 0.80`、三层格 ≥ 12）在建场景后仍会拦截。
+- 候选难度统计量：`pleat.width`（越窄，正确与压塌的判据间距越小）。
 - 说明：oracle 在 settle 后重新观测自由端（`observe()`），布局抖动不需要额外补偿。
-
-
 
 ### 3.11 cloth_unroll（docx 1.4）
 
 
-| 类   | 叶子                                                                                                                   | 当前值             | easy                    | default        | hard           | 说明                                                                |
-| --- | -------------------------------------------------------------------------------------------------------------------- | --------------- | ----------------------- | -------------- | -------------- | ----------------------------------------------------------------- |
-| A   | `cloth.material_axis`                                                                                                | y               | Cat{y:0.5, x:0.5}（三档相同） |                |                |                                                                   |
-| B   | `cloth.center[x,y]`（杆轴）                                                                                              | (0.040, −0.100) | ±0.010                  | ±0.020         | ±0.030         | `center[axis] + material_length < 0.30`，余量 0.12                   |
-| B   | `cloth.roll.turns`                                                                                                   | 1.5             | [1.25, 1.5]             | [1.0, 1.75]    | [1.25, 1.75]   | 行程封顶约 200 mm（2.0 圈需 246 mm）；终点位置与圈数无关（`final_grasp_position` 恒等式） |
-| B   | `cloth.roll.pitch`                                                                                                   | 0.014           | [0.014, 0.016]          | [0.014, 0.018] | [0.014, 0.018] | 只向上；≥3.8× 粒距否则视觉网格错绑                                              |
-| B   | `dispenser.bar_height`                                                                                               | 0.045           | ±0.003                  | ±0.005         | ±0.008         | 须 > roll_radius，且 post_height > bar_height + roll_radius          |
-| D   | `pull_step_m`（0.0003）、`pull_scale`（1.30 实测非单调）、`roll.clearance`、`attach_radius`、`particle_size`、`bending_relaxation` |                 |                         |                |                |                                                                   |
+| 类   | 叶子                                                                                                                   | 当前值             | 包络             | 边界来源                                                           |
+| --- | -------------------------------------------------------------------------------------------------------------------- | --------------- | -------------- | -------------------------------------------------------------- |
+| A   | `cloth.material_axis`                                                                                                | y               | Cat{x, y}      |                                                                |
+| B   | `cloth.center[x,y]`（杆轴）                                                                                              | (0.040, −0.100) | ±0.030         | `center[axis] + material_length < 0.30`，余量 0.12；实测可达 y ≤ 0.181 |
+| B   | `cloth.roll.turns`                                                                                                   | 1.5             | [1.0, 1.75]    | 行程封顶约 200 mm（2.0 圈需 246 mm）；终点位置与圈数无关                          |
+| B   | `cloth.roll.pitch`                                                                                                   | 0.014           | [0.014, 0.018] | 只向上；≥3.8× 粒距否则视觉网格错绑                                           |
+| B   | `dispenser.bar_height`                                                                                               | 0.045           | ±0.008         | > roll_radius；post_height > bar_height + roll_radius           |
+| D   | `pull_step_m`（0.0003）、`pull_scale`（1.30 实测非单调）、`roll.clearance`、`attach_radius`、`particle_size`、`bending_relaxation` |                 |                |                                                                |
 
 
-- 难度统计量：期望圈数（材料存量 `stored`）。
-- 校验：`tests/check_cloth_unroll_geometry.py`（平铺段 > 4·spacing、附着盘离垂落段、挡头/立柱高度链）。
-- 说明：同一配置两次运行 `single_layer_frac` 相差 0.09（GPU 非确定性）；随机化引入的变化需大于该值才可归因，阈值余量需保持 ≥ 0.09。
+- 校验：`tests/check_cloth_unroll_geometry.py`（平铺段 > 4·spacing、附着盘离垂落段、挡头 / 立柱高度链）。
+- 候选难度统计量：圈数（材料存量 `stored`）。
+- 说明：同一配置两次运行 `single_layer_frac` 相差 0.09（GPU 非确定性）；阈值余量需保持 ≥ 0.09。
+
+### 3.12 band_untwist（docx 3.3）
+
+开口 FEM 绳平放桌面摆成 8 字（闭合叶朝 +x、开口叶两绳头朝机械臂、一处自交叉），两绳头各一个刚体插头。任务为抓压在上面那股的绳头，整股抬离桌面跨过另一股，放到另一绳头外侧，自交叉 1 → 0。闭合弹性带路线因无自接触势垒自行回弹而废弃（`band_untwist_zh.md` §1.1）。
+
+
+| 类   | 叶子                                                                                                                                                                                             | 当前值       | 包络             | 边界来源                                                                                                                                    |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | 上压股（哪一端在上）                                                                                                                                                                                     | 端 0 固定    | Cat{端 0, 端 1}  | **当前无此轴**：`OVER_END = 0` 由折线点序决定（`_figure_eight_geometry.py:44`）。需新增镜像开关（折线反序，或 `half_angle_deg` 一侧取负）。planner 从实测 `over_end` 决定抓哪端，不需改 |
+| B   | `figure_eight.heading_deg`                                                                                                                                                                     | 0         | ±30            | 整个 8 字绕中心旋转；无代码读回；足迹在工作区                                                                                                                |
+| B   | `figure_eight.center[x,y]`                                                                                                                                                                     | (0.02, 0) | ±0.030         | 绳头 x≈−0.08、闭合叶顶 x≈+0.12；足迹在工作区                                                                                                          |
+| B   | `figure_eight.half_angle_deg`                                                                                                                                                                  | 45        | [30, 60]       | 两股交叉夹角 = 2·half_angle；偏离 90° 越多投影计数越易抖                                                                                                  |
+| B   | `figure_eight.closed_lobe_radius`                                                                                                                                                              | 0.040     | [0.032, 0.055] | 控制多边形最小转角半径 ≥ 3·管半径 = 0.012                                                                                                             |
+| B   | `figure_eight.open_lobe_radius`                                                                                                                                                                | 0.050     | [0.040, 0.065] | 交叉点到绳头弧长决定抬升高度（当前 183 mm，上限 workspace z 0.40）                                                                                           |
+| B   | `figure_eight.end_gap`                                                                                                                                                                         | 0.080     | [0.070, 0.095] | 硬下限 `min_clearance` 0.07（夹爪跨距，builder 拒绝）；上限 `2·open_lobe_radius`                                                                       |
+| D   | `over_lift`（0.012 = 2r + particle_size）、`base_z`（0.007）、`lift_ramp`（0.030）、`rope.mesh.segment_length`（0.005，仅 FEM 下合法）、`rope.fem.*`、`rope.elastic.*_friction`、`pinch.*`、`free_end_connector.*` |           |                | `lift_ramp` 0.030 只过了离线门，GPU 三门在 0.020 下过                                                                                               |
+
+
+- 校验：`FigureEightSpec.__post_init__` + builder 的绳头间距 ≥ `min_clearance` + `tests/check_band_untwist_geometry.py`（转角半径 ≥ 3r、足迹在工作区、抬升 ≤ 0.40、放置弦长 = `place_clearance`）。
+- 前置代码：镜像轴；`BandUntwistLayout.seed` 已传入未消费，在 `figure_eight_spec()` 内消费即可；run 配置无 `randomize_layout` / `difficulty`。
+- 候选难度统计量：`open_lobe_radius`（抬升高度）；`half_angle_deg` 偏离 45° 的幅度。
+- 说明：oracle 只读实时量（插头位姿、实测交叉点与 over 端、绳顶高）与 `pinch.lift_clearance` / `place_clearance`，不读 `figure_eight.*`，全部 B 类轴对 oracle 透明。
 
 ---
 
-
-
-## 4. 测试方案
-
-
+## 4. 实测与划档程序
 
 ### 4.1 第 0 级：纯配置单元测试（无 Genesis）
 
-扩展现有 7 项性质测试到 11 个任务：确定性（同 seed 同结果）、seed 敏感、越界为零、输入不可变、未注册 no-op。新增两项：
+扩展现有 7 项性质测试到 13 个任务：确定性（同 seed 同结果）、seed 敏感、越界为零、输入不可变、未注册 no-op。新增：
 
-- **分布统计**：每档抽 1000 个样本，第 3 节「难度统计量」的均值按 easy → default → hard 单调；离散轴的经验频率与声明的 $p_d$ 偏差 < 0.05。
-- **拒绝率**：每档校验拒绝率 < 5%；超过则该档范围过宽，收窄而非提高重试次数。
-
-
+- **拒绝率**：每任务抽 1000 个样本，校验拒绝率 < 5%；超过则收窄包络。
+- **planner 离线可解**：对 50 个随机 seed 的 cfg 调用 `plan_*()`（不建 Genesis），无异常且路点在工作区内（§2.5 约定 1）。
 
 ### 4.2 第 1 级：离线几何门批量运行（无 GPU）
 
-对每个任务、每档、seed 0–99，采样后调用第 3 节「校验」列的函数，输出 `runs/variation/<task>/<difficulty>_gate.csv`（seed、各不等式读数、通过与否）。目标：通过率 100%（拒绝采样后）。
+对每任务 seed 0–199，采样后调用第 3 节「校验」列的函数，输出 `runs/variation/<task>/envelope_gate.csv`（seed、全部轴取值、各不等式读数、通过与否）。目标：拒绝采样后通过率 100%。
 
-### 4.3 第 2 级：物理稳定性 sweep（GPU）
+### 4.3 第 2 级：包络 sweep（GPU）
 
-`stability_sweep.sh` 任务表补齐 11 个任务；`SEEDS="0 1 2 3 4 5 6 7 8 9" DIFFICULTIES="easy default hard" RANDOMIZE=1`。头条指标 CRASH 计数 = 0；FAIL 单独统计。布料三任务另记 `single_layer_frac` 等读数的跨种子散布，用于重定 `success.*` 阈值（配置注释均标注现值为单次标定）。
+`stability_sweep.sh` 任务表补齐 13 个任务；`SEEDS="0 … 49" DIFFICULTIES="envelope" RANDOMIZE=1`。每格记录：全部轴取值、物理分类（OK / FAIL / CRASH-segv / CRASH-phys / TIMEOUT）、oracle 成功与失败标签、对照策略（`cw` / `orbit_direction` / `restack_same` / `no_align` / `wrong_end` / `greedy` / `fixed_direction` / `nearest_zone` / `bypass` / `shove` / `overpull`）成功与否、任务读数（净空、`single_layer_frac`、闭合计数等）。
 
-### 4.4 第 3 级：基线成功率矩阵（GPU）
+布料三任务另记读数的跨种子散布，用于重定 `success.*` 阈值（配置注释均标注现值为单次标定）。
 
-每任务在同一组 seed 上跑 oracle 与对照策略（`cw`、`restack_same`、`no_align`、`greedy`、`fixed_direction`、`nearest_zone`、`bypass`、`shove`/`overpull`），按难度档报告成功率。预期：oracle 在三档均保持高成功率（下降为几何余量收窄所致，逐格记录失败标签）；对照策略在含 A 类轴的任务上接近该轴的随机水平。
+处置：CRASH 集中在某轴的包络边缘 → 该轴收窄；oracle FAIL 集中在某轴边缘 → 记为该轴的 oracle 胜任边界，包络保留但在划档时归入最高档或剔除（§4.4 决定）。
+
+### 4.4 划档
+
+划档在 §4.3 数据上进行，输出为每档、每轴一个分布参数，写回注册表（`_ScalarJitter` 的 `(lo_d, hi_d)`、`_ChoiceJitter` 的 `p_d`）。步骤：
+
+1. 对每任务选定难度统计量 `s`（第 3 节「候选难度统计量」为初选；以 sweep 中与 oracle 失败率、对照策略成功率相关性最高者为准）。
+2. 按 `s` 把 sweep 样本分成 3 个分位区间，检查：各区间 oracle 成功率单调递减、对照策略成功率在含 A 类轴的任务上接近随机水平、无区间 CRASH。
+3. 每档的分布 = 该分位区间在各轴上的投影（连续轴取区间端点为 `(lo_d, hi_d)`，离散轴取经验频率为 `p_d`）；满足 `supp P_easy ⊆ supp P_default ⊆ supp P_hard`。
+4. 每档报告：oracle 成功率、拒绝率、对照策略成功率。三者作为任务规格的一部分进入产物文档。
+5. 划档不由基线分数反推（`run_configs/gate_cage_ball_gate.yaml` 已记录该原则）：区间边界来自 `s` 的分位数，不因某个基线的分数调整。
+
+若某任务在整个包络内 oracle 成功率无显著变化（如仅连续轴的位置抖动），该任务只设一档 `default`，不强行分三档。
 
 ### 4.5 第 4 级：固化 split
 
-每任务写 `configs/episode_splits/<task>.yaml`（train/val/test seed 列表 × 难度档），`EpisodeKey.variant_id` 取难度标签。此后随机化注册表的任何改动视为版本变更，split 文件随之升版。
+每任务写 `configs/episode_splits/<task>.yaml`（train / val / test seed 列表 × 难度档），`EpisodeKey.variant_id` 取难度标签。此后注册表的任何改动视为版本变更，split 文件随之升版。
 
 ---
-
-
 
 ## 5. 实施顺序
 
@@ -395,90 +446,106 @@
 | 序   | 任务                           | 前置代码                                            | 理由                               |
 | --- | ---------------------------- | ----------------------------------------------- | -------------------------------- |
 | 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_Validate` | C4 强制；`validate()` 已有；oracle 无需改 |
-| 2   | diverter_route_ball          | 同上 + ball.radius 不等式函数                          | C4 强制；2×2 实例轴已在配置                |
+| 2   | diverter_route_ball          | 同上 + 球径不等式函数                                    | C4 强制；2×2 实例轴已在配置                |
 | 3   | gate_cage_ball               | `_ScalarJitter` + 可解性拒绝                         | C4 强制；run 配置已规划                  |
-| 4   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
-| 5   | rope_winding                 | `_DerivedSolve`（sweep_deg 反解）                   | EpisodeSpec 已建                   |
-| 6   | unlink_c_ring                | `SceneGeometry.checks()` 接入拒绝采样                 | 已在 sweep 表                       |
-| 7   | cloth_unpleat / cloth_unroll | run 配置补 seed 键；`_ChoiceJitter`                  | oracle 有重观测                      |
-| 8   | ring_transfer                | 成对 post directive；run 配置 + EpisodeSpec          |                                  |
-| 9   | cloth_fold                   | 四角抓取扩展                                          | 阈值余量最窄                           |
-| 10  | bar_through_hole             | `primitive.*_z` 改为推导 + 新增 validate              | 无校验器、z 手工                        |
+| 4   | band_untwist                 | 镜像轴；在 `figure_eight_spec()` 消费 seed             | oracle 不读布局叶子                    |
+| 5   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
+| 6   | rope_winding                 | `_DerivedSolve`（sweep_deg 反解）+ C 方位角校验          | EpisodeSpec 已建                   |
+| 7   | rope_unwinding               | 两个 `routes.initial` 字面值改为推导 + run 配置键           | 复用 rope_winding 注册项              |
+| 8   | unlink_c_ring                | `SceneGeometry.checks()` 接入拒绝采样                 | 已在 sweep 表                       |
+| 9   | cloth_unpleat / cloth_unroll | run 配置补 seed 键；`_ChoiceJitter`                  | oracle 有重观测                      |
+| 10  | ring_transfer                | `_PairJitter`；run 配置 + EpisodeSpec              |                                  |
+| 11  | cloth_fold                   | 四角抓取扩展                                          | 阈值余量最窄                           |
+| 12  | bar_through_hole             | `primitive.*_z` 改为推导 + 新增 validate              | 无校验器、z 手写                        |
 
 
-每步交付物：注册表条目、单元测试、run 配置键、`stability_sweep.sh` 表项、第 1 级 gate CSV。GPU 级别（§4.3、§4.4）由用户按 `interactive-verification-preference` 自行运行。
+每步交付物：注册表条目、单元测试、run 配置键、`stability_sweep.sh` 表项、第 1 级 gate CSV。GPU 级别（§4.3、§4.4）由用户自行运行。
+
 ---
 
 ## 6. 逐任务的直观说明（参数改变后的场景形态）
 
-本节用非形式化语言复述第 3 节：每个参数改变后场景会呈现什么，三档难度各自的典型场景。数值以第 3 节为准。
+本节用非形式化语言复述第 3 节：每个参数改变后场景会呈现什么，以及包络两端的极端形态。数值以第 3 节为准。
 
-### 6.1 rope_winding
+### SoftGym 的变体生成流程为：每个任务预先采样 1000 个环境变体，其中 800 个作为训练集、200 个作为评测集。变体的内容为初始状态：物体尺寸、初始位形、初始位置等参数在采样范围内随机取值，生成后缓存为初始状态文件，训练与评测时从缓存中加载。SoftGym 无语言输入接口，每个环境的目标固定（例如布料对折），目标信息隐含在奖励函数中，变体之间的差异仅存在于初始状态。 [arxiv](https://arxiv.org/pdf/2011.07215)
 
-基准：左后方固定端子，中部偏右一根立柱，右前方靶心贴纸；绳弧形铺在桌上，插头在右前方。任务为抓插头绕柱 2 圈后放到靶心。
+难度处理方式：SoftGym 划分为 SoftGym-Medium、SoftGym-Hard、SoftGym-Robot 三个部分，其中 SoftGym-Hard 包含四个更困难的独立任务场景。难度差异通过注册独立任务实现，单一环境内部不按参数值划分难度档。这与此前已确定的原则一致（难度档位实现为独立注册的环境配置，初始状态变体为批内变化）。 [arxiv](https://arxiv.org/pdf/2510.10903)
 
-- `turns`：绕 1 / 2 / 3 圈。圈数多则绳更长、柱上螺旋更高、手臂绕行路径更长。
-- `direction`：逆时针或顺时针。画面相同，需读指令。
-- `POST.pos` / `C.pos` / `S.pos`：柱、靶心、端子各自在桌面平移数厘米。
-- `climb_per_turn`：圈与圈的间距，小则螺旋密集，大则松散。
-- `wind_z_start`：第一圈离桌面的高度。
-- `sweep_deg`：随上述量重算的绳长，柱移远或圈数增加则绳自动变长。
+### 6.2 rope_unwinding
 
-三档：easy 以 1 圈为主，物体平移 1–2 cm，圈距宽松；default 以 2 圈为主，物体平移 2–3 cm；hard 以 2–3 圈为主，物体平移 3–4 cm，3 圈绳长约 0.9 m，圈距压到 1 cm。
+基准：与 rope_winding 同一桌面，绳出生时已绕柱 1 圈，插头平放在柱南侧板面上。任务为抓插头反向环绕把绳解下，再把插头放到靶心。
 
-### 6.2 ring_transfer
+- `start_turns`：出生时绕 1 / 2 / 3 圈，柱上螺旋更高，手臂反向绕更多圈。
+- `direction`：出生缠绕为逆时针或顺时针，解绕方向随之相反。
+- 柱、端子、靶心位置：同 rope_winding；引入点与插头出生点随之重算，出生绳无折角。
+
+包络两端：1 圈 ↔ 3 圈、物体平移 3–4 cm。
+
+### 6.3 ring_transfer
 
 基准：两根带挡头的走线柱左右并排（相距 22 cm），弹性环平铺套在左柱 A。任务为把环搬到右柱 B。
 
 - `enclosure/goal` 交换：环出生在右柱、目标为左柱。
-- 柱对中点：两柱一起平移。柱距：18–28 cm。柱对朝向角：两柱连线相对桌边倾斜，环长轴随之旋转。
+- 柱对中点：两柱一起平移。柱距：18–28 cm。柱对朝向角：两柱连线相对桌边倾斜最多 30°，环长轴随之旋转。
 - `posts.radius`：柱身粗细，粗柱要求环张开更宽才能套入。`head_radius`：挡头大小。
 
-三档：easy 柱距 20–24 cm、近似正对、柱径与当前相同；default 柱距 19–26 cm、倾斜 ≤20°、柱径 ±2 mm；hard 柱距 18–28 cm、倾斜 ≤30°、柱径最大 22 mm。
+包络两端：柱距 18 cm、正对、柱径 13 mm ↔ 柱距 28 cm、倾斜 30°、柱径 22 mm。
 
-### 6.3 bar_through_hole
+### 6.4 bar_through_hole
 
 基准：左侧两个 V 形托架托着六角杆，右侧竖立面板中央开六角孔，面板后方另一托架。任务为抓杆、抬起、水平穿孔、放到后方托架。
 
-- `across_flats`：孔径。杆 18 mm，孔 32 mm 时单边余量 7 mm；孔 27 mm 时单边 4.5 mm。
-- `bar.rest_pos` xy：杆与前方两托架一起平移。`panel.x`：面板与后方托架一起平移，穿孔距离改变。
+- `across_flats`：孔径。杆 18 mm，孔 38 mm 时单边余量 10 mm；孔 27 mm 时单边 4.5 mm。
+- `bar.rest_pos` xy：杆与前方两托架一起平移。`panel.x`：面板与后方托架一起平移。
 - `bar.length`：杆长，长杆更易倾斜卡孔。`grasp_offset`：抓取点离杆中心的距离。
-- 各高度不变（手臂抬升/插入高度为手写常数）。
+- 各高度不变。
 
-三档：easy 孔 34–38 mm、物体平移 ≤1 cm；default 孔 30–36 mm、平移 2 cm；hard 孔 27–32 mm（最小余量低于 7.5 mm 的实测跟踪误差，需实测）、杆最长 23 cm。
+包络两端：孔 38 mm、物体在基准位 ↔ 孔 27 mm、物体平移 3 cm、杆 23 cm。
 
-### 6.4 swap_crossing_sign
+### 6.5 swap_crossing_sign
 
 基准：左侧插线板，两根绳并排向右铺设，中段交叉一次，右端各有插头。任务为翻转交叉的上下关系。
 
-- 交叉符号：出生时哪根在上。交叉位置：交叉点在绳的哪一段（当前固定在中点）。
-- `channel_spacing`：两绳平行间距，60 mm 时抓一根易碰另一根，分离判据更难满足。
+- 交叉符号：出生时哪根在上。交叉位置：交叉点在绳的哪一段。
+- `channel_spacing`：两绳平行间距，60 mm 时抓一根易碰另一根。
 - `center_y`：两绳整体前后平移。`x_end`：绳长与插头位置。
 
-三档：easy 交叉在 45–55% 处、间距 8–9.5 cm；default 交叉 35–65%、间距 7–9.5 cm、平移 3 cm；hard 交叉 25–75%、间距最小 6 cm、绳最短 16 cm。
+包络两端：交叉在中段、间距 9.5 cm ↔ 交叉靠近插线板或插头（25% / 75%）、间距 6 cm、绳最短 16 cm。
 
-### 6.5 unlink_c_ring
+### 6.6 unlink_c_ring
 
 基准：支架悬臂挂一个竖直闭合圆环，C 环挂在圆环上。任务为抓 C 环、缺口对准圆环管身、滑出。
 
 - `gap_deg`：缺口角度，决定对准余量（28° 约 4 mm，21.5° 约 1 mm）。
 - `gap_azimuth_deg`：出生时缺口朝向，决定手腕转动量。
-- `hang_yaw_deg`：整个装置绕竖轴旋转，接近方向改变。`fixed_ring.center` xy：装置平移。
-- 半径与高度不变（支架顶与初始指尖仅 16 mm）。
+- `hang_yaw_deg`：整个装置绕竖轴旋转。`fixed_ring.center` xy：装置平移。
+- 半径与高度不变。
 
-三档：easy 缺口 25–28°、装置朝向 ±5°；default 缺口 23–27°、朝向 ±10°、平移 1.5 cm；hard 缺口 21.5–24°、朝向 ±15°、缺口方位 ±15°。
+包络两端：缺口 28°、装置正对 ↔ 缺口 21.5°、装置转 15°、缺口方位偏 15°。
 
-### 6.6 gate_cage_ball
+### 6.7 band_untwist
+
+基准：一根开口绳平放桌面摆成 8 字，闭合叶朝远离机械臂的方向，两个带插头的绳头朝机械臂，中间一处交叉。任务为抓压在上面那股的绳头，整股抬起跨过另一股，放到另一绳头外侧。
+
+- 上压股（待新增）：出生时哪一端的绳压在上面，决定抓哪个插头。
+- `heading_deg`：整个 8 字绕中心旋转。`center`：8 字平移。
+- `half_angle_deg`：交叉处两股的夹角（当前 90°）。
+- `closed_lobe_radius` / `open_lobe_radius`：两叶大小；开口叶越大，交叉点到绳头越长，抬升越高。
+- `end_gap`：两绳头相距多远，下限由夹爪跨距决定。
+
+包络两端：基准形状 ↔ 旋转 30°、平移 3 cm、交叉夹角 60° 或 120°、开口叶最大（抬升接近工作区顶）。
+
+### 6.8 gate_cage_ball
 
 基准：直槽道，前端开口，中部有闸槽，末端封闭；闸板置于左侧架子；球从远端滚入。任务为球过闸槽后插入闸板。
 
-- `release_y`：球的起滚点，决定到闸口的时刻。`speed`：球速，快则可插闸窗口短。
+- `release_y`：球的起滚点。`speed`：球速，快则可插闸窗口短。
 - `flat_end_y`：过闸后到末端的距离，长则窗口长。
 - `gate_rack.center`：架子位置。`channel.center_x`：槽道左右平移。
 
-三档：easy 球速 9–11 cm/s、内段 16–20 cm；default 球速 10–14 cm/s、内段 13–18 cm、起滚点 ±4 cm；hard 球速最高 16 cm/s、内段最短 11 cm、架子与槽道各平移 2–3 cm。
+包络两端：球速 8 cm/s、内段 20 cm ↔ 球速 16 cm/s、内段 11 cm（窗口只比插闸动作略长）。
 
-### 6.7 diverter_route_ball
+### 6.9 diverter_route_ball
 
 基准：槽道中段分为左右两岔，分岔口有可转拨板与带旋钮的拨杆，一条岔为死路。任务为按指令转板后放球。
 
@@ -486,51 +553,46 @@
 - `target_pad.enabled`：活路出口是否有目标垫；无垫时只能依赖指令。
 - `branch.angle_deg`：岔道张角，拨板目标角随之改变。`lever.radius`：拨杆长度。`fork_origin_x`：分岔口位置。`ball.speed / release_x`：球速与起点。
 
-三档：easy 两离散轴各半、一定有目标垫、张角 28–32°；default 三成无目标垫、张角 26–34°；hard 七成无目标垫、张角 24–36°、拨杆 ±8 mm。
+包络两端：有目标垫、张角 30° ↔ 无目标垫、张角 24° 或 36°、拨杆 ±8 mm。
 
-### 6.8 linkbar_rotate_to_zone
+### 6.10 linkbar_rotate_to_zone
 
-基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；左右各一块颜色区域（橙／蓝），销钉与其中一块同色。任务为转梁把销钉停进同色区域。
+基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；左右各一块颜色区域（橙 / 蓝），销钉与其中一块同色。任务为转梁把销钉停进同色区域。
 
-- `zones.target`：目标是左区还是右区（销钉取该区颜色）。`zones.assignment`：两区颜色互换。
-- `zones.left.angle_deg` / `zones.right.angle_deg`：两区离梁初始方向的角度（35–75°）。二者之差决定「转向最近区域」策略的猜中概率。
-- `init_angle`：梁初始偏转 ±15°，两区随之偏移。
+- `zones.target`：目标是左区还是右区。`zones.assignment`：两区颜色互换。
+- `zones.left/right.angle_deg`：两区离梁初始方向的角度（35–75°）；二者之差决定「转向最近区域」策略的猜中概率。
+- `init_angle`：梁初始偏转 ±15°。`half_width_deg`：区域宽度（判定窗口）。
 
-三档：easy 两区远近差 ≥20°；default 两角独立随机；hard 差 ≤10° 且梁初始偏转。
+包络两端：两区远近差大、区域宽 10° ↔ 两区几乎等远、区域宽 6°、梁初始偏转。
 
-### 6.9 cloth_fold
+### 6.11 cloth_fold
 
 基准：24 cm 方布平铺，中心略偏右。任务为捏一角沿对角线弧线放到对角，对折成三角。
 
 - 抓取角序号：四角之一（当前只实现一角）。`cloth.center`：布平移。
-- `grasp.inset`：从角尖向内的捏取距离，大则角尖下垂。`fold_slack`：弧线半径与对角线之比，<1 布下垂拖行。
-- 布尺寸、网格、粒径不变；布不可旋转（网格生成器轴对齐）。
+- `grasp.inset`：从角尖向内的捏取距离。`fold_slack`：弧线半径与对角线之比。
+- 布尺寸、网格、粒径不变；布不可旋转。
 
-三档：easy 四角随机、平移 ≤1 cm、从角尖捏、弧线绷紧；default 平移 2 cm、内缩 ≤1 cm、松紧 0.95–1.0；hard 平移 3 cm、内缩 ≤2 cm、松紧最低 0.93。
+包络两端：从角尖捏、弧线绷紧、布在基准位 ↔ 向内 2 cm 捏、松紧 0.93、布平移 3 cm。
 
-### 6.10 cloth_unpleat
+### 6.12 cloth_unpleat
 
 基准：12×26 cm 布带，中段叠一个 Z 形褶（三层），沿前后方向铺设。任务为捏自由端沿带方向拉平。
 
 - `material_axis`：前后或左右铺设。`cloth.center`：平移。
-- `pleat.width`：褶叠入宽度，24 mm 为实测下限，40 mm 时褶大、拉距长。`crest_height`：褶隆起高度。
+- `pleat.width`：褶叠入宽度，24 mm 为实测下限。`crest_height`：褶隆起高度。
 - `pull_scale`：拉距相对理论值的比例。`edge_inset`：捏取点离布边的距离。
 
-三档：easy 褶宽 30–40 mm、平移 1 cm；default 褶宽 26–38 mm、隆起 ±4 mm、平移 2 cm；hard 褶宽 24–30 mm、平移 3 cm。
+包络两端：褶宽 40 mm、隆起 28 mm ↔ 褶宽 24 mm、隆起 16 mm、布带平移 3 cm。
 
-### 6.11 cloth_unroll
+### 6.13 cloth_unroll
 
 基准：小支架横一根杆，布带卷在杆上 1.5 圈，尾端垂到桌面。任务为捏桌上的布带末端沿桌面拉，把布全部拉下展平。
 
-- `material_axis`：支架与拉向旋转 90°。`cloth.center`（杆位置）：支架平移，展开后末端须在工作区内。
-- `roll.turns`：1–1.75 圈，圈数多则拉距长（1.75 圈约 20 cm，接近单次行程上限）。
-- `roll.pitch`：层间距，只允许增大。`bar_height`：杆高。
+- `material_axis`：支架与拉向旋转 90°。`cloth.center`（杆位置）：支架平移。
+- `roll.turns`：1–1.75 圈，圈数多则拉距长。`roll.pitch`：层间距，只允许增大。`bar_height`：杆高。
 
-三档：easy 1.25–1.5 圈、平移 ≤1 cm；default 1–1.75 圈、前后/左右各半、平移 2 cm；hard 1.25–1.75 圈为主、平移 3 cm、杆高 ±8 mm。
-
-### 6.12 难度作为分布的含义
-
-每档是一个抽样范围而非固定场景。bar_through_hole 的 hard 表示孔径在 27–32 mm 内按 seed 抽取，easy 表示范围整体移到 34–38 mm；离散轴同理，难度改变的是各选项的概率（如 hard 档 70% 实例无目标垫）。
+包络两端：1 圈、支架在基准位 ↔ 1.75 圈（拉距接近单次行程上限）、支架平移 3 cm、杆高 ±8 mm。
 
 ---
 
@@ -539,29 +601,33 @@
 ### 7.1 变体数量对 IL 的充分性
 
 - 连续轴使可生成的实例数无上限；数据规模的实际约束是物理耗时（FEM+IPC 绳任务约 46 min/episode），两三千 GPU 小时预算下每任务约数百条。
-- 含 A 类离散轴的任务（diverter、linkbar、rope_winding、ring_transfer、swap_crossing_sign、三个布料任务）每条离散组合下叠加连续抖动，模式数 2–12，IL 可学到「按场景或指令选择动作」。
-- 仅有连续轴的任务（bar_through_hole、gate_cage_ball、unlink_c_ring）数百条数据在视觉上接近，IL 主要学到位置泛化。此为结构性限制；可选补充为视觉随机化（纹理、颜色、相机微扰），不改物理层。
-- 拒绝采样与 oracle 胜任域会过滤掉最难实例，数据集中 hard 档的实际难度低于声明；每档须报告 oracle 成功率与拒绝率，作为任务规格的一部分。
+- 含 A 类离散轴的任务（diverter、linkbar_rotate_to_zone、rope_winding、rope_unwinding、ring_transfer、swap_crossing_sign、三个布料任务；band_untwist 待补镜像轴）每条离散组合下叠加连续抖动，模式数 2–12，IL 可学到「按场景或指令选择动作」。
+- 仅有连续轴的任务（bar_through_hole、gate_cage_ball、unlink_c_ring）数百条数据在视觉上接近，IL 主要学到位置泛化。此为结构性限制；可选补充为视觉随机化，不改物理层。
+- 拒绝采样与 oracle 胜任域会过滤掉最难实例；每档须报告 oracle 成功率与拒绝率（§4.4 第 4 步）。
 
 ### 7.2 oracle 通用性现状
 
-| 状态 | 任务 |
-|---|---|
-| oracle 由 layout / 实时状态推导，随机化后无需修改 | diverter、linkbar、gate_cage_ball、swap_crossing_sign、unlink_c_ring、cloth_unpleat、cloth_unroll、rope_winding（绳长需重解） |
-| oracle 存在但部分量手写或范围受限 | bar_through_hole、gate_cage_ball（z 高度手写）；cloth_fold（单角、不重观测）；ring_transfer（`hang_depth` 为实测值，环周长固定；仅 `carry` 路线可用） |
 
-11 个任务均有 oracle；无一在第 3 节范围上验证过。每个 oracle 的胜任域由各自的不等式集合界定，hard 档下限是否在域内需 GPU sweep 确认。
+| 状态                                | 任务                                                                                                                                                                   |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| oracle 由 layout / 实时状态推导，随机化后无需修改 | diverter、linkbar_rotate_to_zone、gate_cage_ball、swap_crossing_sign、unlink_c_ring、band_untwist、cloth_unpleat、cloth_unroll、rope_winding（绳长需重解）、rope_unwinding（两个出生点需重算） |
+| oracle 存在但部分量手写或范围受限              | bar_through_hole、gate_cage_ball（z 高度手写）；cloth_fold（单角、不重观测）；ring_transfer（`hang_depth` 为实测值，环周长固定；仅 `carry` 路线可用）                                                    |
+
+
+13 个任务均有 oracle；无一在第 3 节包络上验证过。每个 oracle 的胜任域由各自的不等式集合界定，包络边缘是否在域内由 §4.3 确认。
 
 ### 7.3 先例
 
-纯仿真基准中「单一 oracle 覆盖随机化变体」的四种机制：
+纯仿真基准中「单一 oracle 覆盖随机化变体」的机制：
 
-| 机制 | 代表 | 与本方案的关系 |
-|---|---|---|
-| 特权状态脚本 oracle，参数化 | Ravens / Transporter Networks（Zeng 等，CoRL 2020）；DeformableRavens（Seita 等，ICRA 2021，报告演示器成功率）；FabricFlowNet（Weng 等，CoRL 2021）、Foldsformer 的 SoftGym 脚本专家 | 本方案主路线。本方案的「先观测后规划」为闭环脚本，比 Ravens 的开环脚本多一次测量 |
-| 逐实例搜索重解 | SoftGym（Lin 等，CoRL 2020）以仿真器为模型的 CEM | 每条演示需数百次回滚，本方案不采用 |
-| 物体系路点 + 运动规划，失败丢弃 | RLBench（James 等）；ManiSkill2/3 的 motion-planning 解法 | 本方案的拒绝采样与之同形 |
-| 少量示范 + 变换重放 + 仿真验证 | MimicGen（Mandlekar 等，CoRL 2023）；RoboCasa 数据生成 | 数据源不同（人类示范），「变换后验证、失败丢弃」相同 |
-| 单示范 + 对应关系迁移 | DexGarmentLab（2025） | 用于标出解析式路线的适用边界 |
 
-以上引用细节据记忆整理，成文前需核对原文（尤其 DeformableRavens 的演示器成功率数字与 DexGarmentLab 的机制描述）。LIBERO 为人类遥操作数据，不属于 oracle 生成路线。
+| 机制                 | 代表                                                                                                                                                      | 与本方案的关系                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 特权状态脚本 oracle，参数化  | Ravens / Transporter Networks（Zeng 等，CoRL 2020）；DeformableRavens（Seita 等，ICRA 2021，报告演示器成功率）；FabricFlowNet（Weng 等，CoRL 2021）、Foldsformer 的 SoftGym 脚本专家 | 本方案主路线。本方案的「先观测后规划」为闭环脚本，比 Ravens 的开环脚本多一次测量                        |
+| 逐实例搜索重解            | SoftGym（Lin 等，CoRL 2020）以仿真器为模型的 CEM                                                                                                                    | 每条演示需数百次回滚，本方案不采用                                                   |
+| 物体系路点 + 运动规划，失败丢弃  | RLBench（James 等）；ManiSkill2/3 的 motion-planning 解法                                                                                                      | 本方案的拒绝采样与之同形；RLBench 的 variation（语义差异）/ episode（位姿随机）二分对应本文 A / B 类 |
+| 少量示范 + 变换重放 + 仿真验证 | MimicGen（Mandlekar 等，CoRL 2023）；RoboCasa 数据生成                                                                                                           | 数据源不同（人类示范），「变换后验证、失败丢弃」相同                                          |
+| 单示范 + 对应关系迁移       | DexGarmentLab（2025）                                                                                                                                     | 用于标出解析式路线的适用边界                                                      |
+
+
+以上引用细节据记忆整理，成文前需核对原文。LIBERO 为人类遥操作数据，不属于 oracle 生成路线；domain randomization（Tobin 等 2017）对应视觉轴，不构成变体。

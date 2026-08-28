@@ -101,7 +101,7 @@
 柱的南侧 (0.075, −0.130)**（方位 292°，在 150°~335° 的允许区内）：两个任务直线去 C 都不穿对径射线，
 闭合计数 = 柱上圈数，`to_C_around` 不再需要（`to_c_route: straight`），rope_winding 的判据改为
 `success.winding_metric: closure`、oracle 不变。离线门：rope_winding 1/2/3 圈松弛 11.1% / 9.1% /
-10.6%（配对表 155/200/230 不变），rope_unwinding 三档 8.5% 起不变。
+10.6%（配对表 155/200/230 不变），rope_unwinding 三档 8.5% 起不变。GPU 验证（2026-08-27，rope_winding 两圈，C 挪后）：`success=True`，闭合计数与柱上读数在 `wind_t1_08` / `wind_t2_08` / 终态全部相等（1 / 2 / 2），`placement_error_xy=0.0002`，21/21 航点。rope_unwinding 一圈（直线去 C，13 航点）：`success=True`，闭合计数与柱上读数均 0，`contact_nodes=76`（绳完全脱离柱面），`placement_error_xy=0.0011`。两个任务在同一口径下闭环。
 
 ### 6.2 2026-08-27 一圈 A/B：`plug_spin_tracks_orbit`
 
