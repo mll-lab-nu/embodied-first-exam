@@ -60,12 +60,12 @@ OUTDIR="${OUTDIR:-runs/linkbar_variation/$(date +%Y%m%d_%H%M%S)}"
 VIEWER_ARGS=()
 [[ "$VIEWER" == "1" ]] && VIEWER_ARGS=(run.viewer=true)
 
-GROUPS=(visual oracle nearest)
-if [[ $# -gt 0 ]]; then SELECTED=("$@"); else SELECTED=("${GROUPS[@]}"); fi
+SUITES=(visual oracle nearest)
+if [[ $# -gt 0 ]]; then SELECTED=("$@"); else SELECTED=("${SUITES[@]}"); fi
 for name in "${SELECTED[@]}"; do
-  case " ${GROUPS[*]} " in
+  case " ${SUITES[*]} " in
     *" $name "*) ;;
-    *) echo "[error] 未知组 '$name'；可选：${GROUPS[*]}" >&2; exit 1 ;;
+    *) echo "[error] 未知组 '$name'；可选：${SUITES[*]}" >&2; exit 1 ;;
   esac
 done
 
@@ -131,7 +131,7 @@ run_cell() {
   local v; v="$(variant_line "$log")"
   [[ -n "$v" ]] && VARIANT[$seed]="${v#linkbar_rotate_to_zone variant }"
 
-  local verdict
+  local verdict=""
   case "$group" in
     visual)
       if [[ "$state" == "ok" && -s "$OUTDIR/visual_s${seed}.mp4" ]]; then verdict="ok (看 mp4)"; else verdict="FAIL $state"; FAIL=1; fi
