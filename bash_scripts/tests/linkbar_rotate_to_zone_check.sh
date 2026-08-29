@@ -137,6 +137,9 @@ grade() {
     offline_geometry)
       expect_all "$log" "overlap angles=0" "ok"
       ;;
+    offline_variant)
+      expect_all "$log" "[PASS] layout_randomization" "PASS"
+      ;;
     sweep)
       expect_all "$log" "reached_both=True"
       ;;
@@ -169,7 +172,7 @@ grade() {
 summary_line() {
   local tag="$1" log="$2"
   case "$tag" in
-    offline_*)  grep -aE 'succeeded on|^ok$' "$log" | tail -1 ;;
+    offline_*)  grep -aE 'succeeded on|^ok$|rejection rate|skipped\(validate\)' "$log" | tail -1 ;;
     sweep)      grep -aF 'linkbar_rotate_to_zone sweep' "$log" | tail -1 ;;
     seat_*)     grep -aF 'linkbar_rotate_to_zone seat' "$log" | tail -1 ;;
     physical_*) grep -aF 'linkbar_rotate_to_zone result' "$log" | tail -1 ;;
@@ -208,6 +211,7 @@ for name in "${SELECTED[@]}"; do
     offline)
       run_cell offline_planner  python -B tests/check_linkbar_planner.py
       run_cell offline_geometry python -B tests/check_linkbar_zone_geometry.py
+      run_cell offline_variant  python -B tests/check_variant_rng.py
       ;;
     sweep)
       run_cell sweep inspect run.sweep_joint=true run.verbose=true

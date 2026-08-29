@@ -28,3 +28,11 @@ target_offset_deg: 0.0
 
 # 判定完成后再步进多少步。纯粹为了录像。60 步 = 0.6 秒。
 final_hold_steps: 60
+
+# --- 变体（2026-08-29）------------------------------------------------------
+# 按 seed 在包络内随机布局（generation/layout_randomization.py 的注册条目）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进 episode 元数据的变体标识。
+variant_id: default

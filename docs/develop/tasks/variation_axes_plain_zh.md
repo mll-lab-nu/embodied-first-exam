@@ -91,8 +91,8 @@
 | 模块 | 现状 | 要做的 |
 | --- | --- | --- |
 | `configs/task_configs/<task>.yaml` | 无 variation 块 | 新增 `variation:` 块：每条轴写 `{path, kind: choice / uniform / levels, values 或 lo/hi, derive: <Layout 方法名>}`；档位表 `levels: {easy, medium, hard}` 划档后再填。任务定义单文件内聚，与 RoboMME 一个任务一个文件同形 |
-| `topogym/generation/variant_rng.py`（新） | 无 | `VariantRng(seed)`：每个 episode 一个实例，`stream(axis_name)` 按轴名的稳定哈希从 `SeedSequence` 派生独立随机流。不做全局单例：全局状态会使取值依赖调用顺序、并行不安全、测试需手动重置 |
-| `topogym/generation/layout_randomization.py` | 4 个旧任务的 python 字面值注册表、4 种连续 directive、难度倍率 | 改为读 yaml `variation:` 块；新增 `_ChoiceJitter` / `_ScalarJitter` / `_PairJitter` / `_DerivedSolve` / `_Validate`；随机数只从 `VariantRng` 取；删除难度倍率，改为 `seed % 3` 选档位表（划档前 `envelope` 档 = 全包络） |
+| `topogym/generation/variant_rng.py` | **已落地（2026-08-29）** | `VariantRng(seed)`：每个 episode 一个实例，`stream(name, retry=k)` 按名字的 SHA-256 前 8 字节作 `SeedSequence` 派生键，得到只由 (seed, name, `VARIANT_RNG_VERSION`) 决定的独立随机流；`tier(n)` = seed % n。名字约定 `"<task_id>/<叶子路径>"`，保留前缀 `visual/`、`demo/`、`braid/word`。不做全局单例；重采用 `retry=k` 进名字而不是继续抽。已接入 `layout_randomization.py`（每叶子一条流）与 `braid.sample_braid_word`（`braid/word` 流）；测试 `tests/check_variant_rng.py`（含黄金值）。改派生规则必须升版本号 |
+| `topogym/generation/layout_randomization.py` | **2026-08-29 已清理**：legacy 四任务条目、四种旧指令、难度倍率均删除；现有五种指令 `_ChoiceJitter` / `_ScalarJitter` / `_SwapJitter` / `_ShiftBy` / `_Validate`，重采按 `retry=k` 命名；注册表仍为 python 字面值 | 改为读 yaml `variation:` 块；新增 `_ChoiceJitter` / `_ScalarJitter` / `_PairJitter` / `_DerivedSolve` / `_Validate`；随机数只从 `VariantRng` 取；删除难度倍率，改为 `seed % 3` 选档位表（划档前 `envelope` 档 = 全包络） |
 | `topogym/tasks/<cat>/<task>.py` Layout | 部分任务有 `validate()` / `checks()`；派生量散在 demo | `checks() -> [(name, measured, limit, ok)]` 统一签名；派生函数（绳长反解、出生点、环长轴、抬升高度）；`task_goal()` 指令模板；`success_params()` |
 | `topogym/generation/<task>_generator.py` | 7 个旧任务有，seed 只作身份 | 13 个任务各一个：`build_<task>_episode_spec(cfg, seed)` 输出 `EpisodeSpec`，把采样结果、指令文本、判据参数绑成一条记录 |
 | `configs/episode_splits/<task>.yaml` | 仅 3 个任务 | 13 个任务各一份 train / val / test seed 列表；每任务固化 1000 条变体记录（离线门通过即可，不跑物理） |
@@ -119,7 +119,7 @@ seed → VariantRng(seed)
 | 序 | 任务 | 前置代码 |
 | --- | --- | --- |
 | 0 | 通用 | `VariantRng`；`layout_randomization.py` 读 yaml + 五种 directive；`EpisodeSpec` 加 `success_params` |
-| 1 | linkbar_rotate_to_zone | `validate()` 已有；两区角联合抽样后按角差分箱 |
+| 1 | linkbar_rotate_to_zone | **进行中（2026-08-29）**：注册条目、两个 demo 接线、`run.randomize_layout` 键、离线门、实验脚本 `bash_scripts/tests/linkbar_variation_sweep.sh` 已备；待 GPU 跑 visual / oracle / nearest 三组。角差分箱留到划档 |
 | 2 | diverter_route_ball | 球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
 | 3 | gate_cage_ball | 新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
 | 4 | band_untwist | 镜像开关（同步 `layout.over_end`）；planner 抬升 ≤ 0.40 守卫；`end_gap` 上限随开口叶半径 |

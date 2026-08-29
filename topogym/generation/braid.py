@@ -33,6 +33,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from topogym.generation.variant_rng import VariantRng
+
 # A lane swap must run at least this much x per unit of y it travels, i.e. the
 # swap stays flatter than ~59 degrees in the top-down view. Steeper than that and
 # the swept tube starts to pinch on its own inside radius.
@@ -137,12 +139,22 @@ def reduce_braid_word(word) -> tuple[int, ...]:
     return tuple(stack)
 
 
-def sample_braid_word(*, n_strands: int, length: int, seed: int) -> tuple[int, ...]:
+def sample_braid_word(
+    *,
+    n_strands: int,
+    length: int,
+    seed: int | None = None,
+    rng: np.random.Generator | None = None,
+) -> tuple[int, ...]:
     """Sample a freely reduced word of exactly ``length`` letters.
 
     Letters are rejected as they are drawn rather than reduced afterwards, so the
     requested difficulty always equals the resulting crossing count (a
     reduce-after-sampling scheme would silently hand back shorter braids).
+
+    Randomness comes from ``rng`` when given; otherwise from the episode seed's
+    ``"braid/word"`` stream (``VariantRng``), so the word depends only on the seed
+    and not on whatever else was drawn before it.
     """
 
     if int(n_strands) < 2:
@@ -150,7 +162,10 @@ def sample_braid_word(*, n_strands: int, length: int, seed: int) -> tuple[int, .
     if int(length) < 0:
         raise ValueError(f"Braid length must be >= 0, got {length}.")
 
-    rng = np.random.default_rng(int(seed))
+    if rng is None:
+        if seed is None:
+            raise ValueError("sample_braid_word needs either rng or seed.")
+        rng = VariantRng(seed).stream("braid/word")
     word: list[int] = []
     while len(word) < int(length):
         letter = int(rng.integers(1, int(n_strands)))  # generator 1..n-1
@@ -274,12 +289,13 @@ def build_braid_spec(
     *,
     n_strands: int,
     length: int,
-    seed: int,
+    seed: int | None = None,
     layout: BraidLayout,
+    rng: np.random.Generator | None = None,
 ) -> BraidSpec:
-    """Sample a braid and lay it out. Deterministic in ``seed``."""
+    """Sample a braid and lay it out. Deterministic in ``seed`` (or ``rng``)."""
 
-    word = sample_braid_word(n_strands=n_strands, length=length, seed=seed)
+    word = sample_braid_word(n_strands=n_strands, length=length, seed=seed, rng=rng)
     control_points, crossings = braid_to_control_points(
         word,
         n_strands=n_strands,

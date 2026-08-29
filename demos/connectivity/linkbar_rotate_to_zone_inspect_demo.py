@@ -35,6 +35,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.supervision import stop_before_physics
 from topogym.tasks import LINKBAR_ZONES, LinkbarRotateSceneBuilder
@@ -48,6 +49,20 @@ from topogym.verification import LinkbarRotateEvaluator
 
 TASK_ID = "linkbar_rotate_to_zone"
 SEAT_PHASES = ("none", "left", "right", "angle")
+
+
+def _variant_line(cfg) -> str:
+    """One parseable line with every sampled leaf (bash_scripts/tests/linkbar_variation_sweep.sh reads it)."""
+    z = cfg.task.zones
+    init = float(cfg.task.linkbar.init_angle_deg)
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} target={z.target} "
+        f"assignment=left:{z.assignment.left},right:{z.assignment.right} "
+        f"left_deg={float(z.left.angle_deg):+.2f} right_deg={float(z.right.angle_deg):+.2f} "
+        f"init_deg={init:+.2f} "
+        f"sweep_left={float(z.left.angle_deg) - init:+.2f} "
+        f"sweep_right={float(z.right.angle_deg) - init:+.2f}"
+    )
 
 # How much room the pads need over the knob's cap while the gripper traverses to it
 # at `motion.approach_z`. See the physical demo for the measurement behind it.
@@ -187,6 +202,10 @@ def main(cfg: DictConfig) -> None:
     resolved = save_resolved_config(cfg)
     if resolved is not None:
         print(f"{TASK_ID}_config -> {resolved}", flush=True)
+
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+        print(_variant_line(cfg), flush=True)
 
     phase = str(cfg.run.seat_phase)
     if phase not in SEAT_PHASES:

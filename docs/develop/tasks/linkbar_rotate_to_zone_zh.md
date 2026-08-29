@@ -184,8 +184,22 @@ oblique / wrist 机位看得见的位置。
 
 `tests/check_linkbar_planner.py` 四例交叉：oracle 4/4，`nearest_zone` 恰好 2/4。
 
-`generation/layout_randomization.py` 尚未注册本任务；C4 任务未注册者不得进入 benchmark 产物。
-分档方案见 `variation_and_difficulty_plan_zh.md` §3.8。
+`generation/layout_randomization.py` 已注册本任务（2026-08-29，第一个按包络注册的任务）：
+
+| 指令 | 叶子 | 取值 |
+|---|---|---|
+| 二选一 | `zones.target` | left / right |
+| 互换 | `zones.assignment.left` ↔ `.right` | 概率 1/2 |
+| 均匀 | `zones.left.angle_deg` | [35, 75] |
+| 均匀 | `zones.right.angle_deg` | [−75, −35] |
+| 均匀 | `linkbar.init_angle_deg` | [−15, 15] |
+| 派生 | 两区角各加 `init_angle_deg` | 随横梁同步平移 |
+| 校验 | `LinkbarRotateLayout.validate()` | 不过则整体重采（按 seed 确定） |
+
+触发：`run.randomize_layout=true run.seed=<seed>`（两个 demo 均接入，打印一行 `linkbar_rotate_to_zone variant seed=… target=… …`）。
+离线门 `tests/check_variant_rng.py`（1000 个 seed 的包络与确定性）。
+实验脚本 `bash_scripts/tests/linkbar_variation_sweep.sh`：每 seed 三格——`visual`（静态一帧录像，人眼看）、`oracle`（须 `task_success=True`）、`nearest`（对照成功率，期望接近 1/2）。GPU 结果待跑，记入 §8。
+分档不预设，按 sweep 结果划定：`variation_axes_plain_zh.md` §5。
 
 ---
 
@@ -280,7 +294,7 @@ python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.target_off
 
 ## 9. 未决事项
 
-- 随机化未注册到 `generation/layout_randomization.py`。
+- 变体 GPU sweep（`linkbar_variation_sweep.sh`）未跑；跑完后按 §5 记成功率。
 - `mdp.max_episode_steps` 无消费者（无 gym env）。
 - `segments` 7 段为估计值；俯视机位若看出折线，加到 11。
 
