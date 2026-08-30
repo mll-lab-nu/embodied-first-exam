@@ -157,23 +157,26 @@ def check_layout_randomization() -> list[str]:
             fails.append("zones.target is not the 'linkbar_rotate_to_zone/zones.target' stream")
 
         # Envelope over 1000 seeds.
-        targets, swaps, rejects = set(), set(), 0
+        palette = set(base.task.zones.colors.keys())
+        targets, pairs, used, rejects = set(), set(), set(), 0
         for seed in range(1000):
             out = randomize_task_cfg(base, task, seed)
             z = out.task.zones
             init = float(out.task.linkbar.init_angle_deg)
             left, right = float(z.left.angle_deg), float(z.right.angle_deg)
             targets.add(str(z.target))
-            swaps.add((str(z.assignment.left), str(z.assignment.right)))
+            pair = (str(z.assignment.left), str(z.assignment.right))
+            pairs.add(pair)
+            used.update(pair)
             if not -15.0 <= init <= 15.0:
                 fails.append(f"seed {seed}: init {init:+.2f} outside [-15, 15]")
             for name, sweep in (("left", left - init), ("right", right - init)):
-                if not 35.0 <= abs(sweep) <= 75.0:
-                    fails.append(f"seed {seed}: |sweep {name}| = {abs(sweep):.2f} outside [35, 75]")
+                if not 15.0 <= abs(sweep) <= 75.0:
+                    fails.append(f"seed {seed}: |sweep {name}| = {abs(sweep):.2f} outside [15, 75]")
             if (left - init) * (right - init) >= 0:
                 fails.append(f"seed {seed}: zones on the same side")
-            if {str(z.assignment.left), str(z.assignment.right)} != {"orange", "blue"}:
-                fails.append(f"seed {seed}: assignment {dict(z.assignment)} is not a permutation")
+            if pair[0] == pair[1] or not set(pair) <= palette:
+                fails.append(f"seed {seed}: assignment {dict(z.assignment)} not two distinct palette colours")
             if validator is not None:
                 # Count how often the first draw was rejected: retry=0 must fail validate.
                 probe = lr._unlocked_copy(base)
@@ -184,8 +187,11 @@ def check_layout_randomization() -> list[str]:
                     rejects += 1
         if targets != {"left", "right"}:
             fails.append(f"zones.target never took both values: {targets}")
-        if len(swaps) != 2:
-            fails.append(f"assignment never swapped: {swaps}")
+        n_pairs = len(palette) * (len(palette) - 1)
+        if len(pairs) != n_pairs:
+            fails.append(f"assignment covered {len(pairs)} of {n_pairs} ordered colour pairs")
+        if used != palette:
+            fails.append(f"palette colours never used: {palette - used}")
         if validator is None:
             print("    skipped(validate): Genesis not importable here; rejection rate unmeasured")
         else:

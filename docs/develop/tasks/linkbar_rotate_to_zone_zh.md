@@ -13,7 +13,7 @@
 ## 0. 结论摘要
 
 - 场景：固定立柱上铰接一条连接梁，梁绕竖直轴转，梁端的销在水平圆上走。圆上分居初始角
-  两侧各一块颜色区域（橙／蓝），销、销套环、手柄盖三处取其中一块的颜色。
+  两侧各一块颜色区域（从 `zones.colors` 六色调色板里取两种不同颜色），销、销套环、手柄盖三处取其中一块的颜色。
 - 判据：松手沉降后，销的关节角落在同色区域的角窗口内，且关节角速度低于阈值。单帧画面
   可辨：销在同色区里，或在异色区／区外。
 - 2026-08-27 改造：删除小车、导轨、两个插口、weld 闩、行程测试、约束图 union-find。
@@ -83,13 +83,17 @@ oblique / wrist 机位看得见的位置。
 |---|---|
 | 区域 orange | `[0.88, 0.55, 0.10]` |
 | 区域 blue | `[0.15, 0.45, 0.85]` |
+| 区域 green | `[0.20, 0.68, 0.28]` |
+| 区域 red | `[0.85, 0.15, 0.15]` |
+| 区域 purple | `[0.58, 0.25, 0.75]` |
+| 区域 yellow | `[0.95, 0.85, 0.15]` |
 | 梁 | `[0.42, 0.46, 0.52]` |
 | 转轴／轮毂／手柄座 | `[0.55, 0.56, 0.58]` |
 | 手柄 | `[0.12, 0.13, 0.15]` |
 | 立柱 | `[0.50, 0.51, 0.53]` |
 | 桌面 | 0.78–0.82 浅灰 |
 
-橙与蓝对桌面浅灰、对梁的蓝灰都有明度或色相差。
+六色对桌面浅灰、对梁的蓝灰都有明度或色相差；不随机化时默认 left=orange、right=blue。
 
 ### 2.3 区域的画法
 
@@ -128,7 +132,7 @@ oblique / wrist 机位看得见的位置。
 | `pin_color()` | `zone_color(target_zone())` |
 | `nearest_zone(angle)` | 角差最小的区 |
 
-`validate()` 拒绝：两区同侧；扫掠幅度出 [35°, 75°]；两区中心角距 < 2·half_width + 5°；
+`validate()` 拒绝：两区同侧；扫掠幅度出 [15°, 75°]（2026-08-29 前下界为 35°）；两区中心角距 < 2·half_width + 5°；
 两区同色；`target` 不是 left/right。
 
 ---
@@ -172,8 +176,8 @@ oblique / wrist 机位看得见的位置。
 | 轴 | 叶子 | 说明 |
 |---|---|---|
 | 目标 | `task.zones.target` | left / right |
-| 角位置 | `task.zones.left.angle_deg` / `task.zones.right.angle_deg` | 异侧，各在 [35°, 75°] |
-| 颜色分配 | `task.zones.assignment.left` / `.right` | orange / blue 互换 |
+| 角位置 | `task.zones.left.angle_deg` / `task.zones.right.angle_deg` | 异侧，各在 [15°, 75°] |
+| 颜色分配 | `task.zones.assignment.left` / `.right` | 调色板六色里两种不同颜色 |
 
 对照规则（`run.oracle_mode`）：
 
@@ -189,9 +193,9 @@ oblique / wrist 机位看得见的位置。
 | 指令 | 叶子 | 取值 |
 |---|---|---|
 | 二选一 | `zones.target` | left / right |
-| 互换 | `zones.assignment.left` ↔ `.right` | 概率 1/2 |
-| 均匀 | `zones.left.angle_deg` | [35, 75] |
-| 均匀 | `zones.right.angle_deg` | [−75, −35] |
+| 不放回抽两个 | `zones.assignment.left` / `.right` | `zones.colors` 的键，30 种有序组合 |
+| 均匀 | `zones.left.angle_deg` | [15, 75] |
+| 均匀 | `zones.right.angle_deg` | [−75, −15] |
 | 均匀 | `linkbar.init_angle_deg` | [−15, 15] |
 | 派生 | 两区角各加 `init_angle_deg` | 随横梁同步平移 |
 | 校验 | `LinkbarRotateLayout.validate()` | 不过则整体重采（按 seed 确定） |
@@ -290,11 +294,38 @@ python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.target_off
 | 枢轴 x +0.020 | 手柄圆与指尖净空 43 mm |
 | `approach_z 0.315` | 指腹对手柄盖余 41 mm |
 
+### 8.2 2026-08-29 变体 sweep（`bash_scripts/tests/linkbar_variation_sweep.sh`，4090，seed 0–9）
+
+| seed | target | assignment | left | right | init | visual | oracle | nearest_zone |
+|---|---|---|---|---|---|---|---|---|
+| 0 | right | left:blue, right:orange | +57.27 | −56.45 | −11.78 | ok | PASS | success |
+| 1 | left | left:orange, right:blue | +51.00 | −75.10 | −14.53 | ok | PASS | wrong_zone |
+| 2 | right | left:orange, right:blue | +61.57 | −67.97 | +3.97 | ok | PASS | wrong_zone |
+| 3 | right | left:blue, right:orange | +70.40 | −45.66 | +10.23 | ok | PASS | success |
+| 4 | right | left:blue, right:orange | +65.67 | −38.29 | +6.83 | ok | PASS | success |
+| 5 | right | left:blue, right:orange | +33.77 | −53.78 | −4.82 | ok | PASS | wrong_zone |
+| 6 | right | left:orange, right:blue | +84.45 | −55.54 | +9.60 | ok | PASS | success |
+| 7 | right | left:blue, right:orange | +57.06 | −55.23 | −3.75 | ok | PASS | success |
+| 8 | right | left:blue, right:orange | +34.76 | −66.29 | −6.06 | ok | PASS | wrong_zone |
+| 9 | right | left:orange, right:blue | +57.86 | −70.42 | +2.24 | ok | PASS | wrong_zone |
+
+结论：
+
+- oracle **10/10** `task_success=True`：在声明的包络（两区扫掠角 [35°, 75°]、横梁初始角 ±15°、目标与颜色随机）内，同一个 oracle 对每个变体都可解，无需改动。
+- `nearest_zone` **5/10**：与期望 1/2 一致。逐条核对：它转向 |sweep| 较小的那块，成功当且仅当那块恰为目标（seed 0/3/4/6/7）。防捷径成立。
+- 离线：1000 个 seed 校验拒绝率 0.000（包络本身保证两区异侧且角距 ≥ 70°）；黄金值在 numpy 2.4.4 上与 2.2.2 一致。
+- seed 0–9 里 `target=right` 占 9/10，是这十个种子的偶然（1000 个种子上 right 占 0.494，颜色互换率 0.516）。做人眼演示时若要两种目标都出现，多取几个种子即可，不要为此改采样。
+- 视觉（`visual_s*.mp4`）：人眼看首帧，十格几乎一样。原因：离散组合只有 2×2=4 种（seed 0/3/4/5/7/8 六个同为「左蓝右橙、目标右」），角度包络 [35°, 75°] 只有 40° 宽，在半径 0.170 的圆弧上从 oblique 机位只差几个像素。
+
+### 8.3 2026-08-29 包络加宽（待 GPU 复测）
+
+针对 §8.2 的视觉结论改了三处：`min_sweep_deg` 35 → 15（下界只需保证销出生时不在区里：half_width 8° + 余量）；`zones.colors` 扩成六色调色板，`assignment` 改为不放回抽两种（`_DistinctChoiceJitter`，替代原互换）；注册条目角度边界改为 [15, 75]。`max_sweep_deg` 75 是可达上界，不动；两侧规则不动。离线门 1000 seed 通过。扫掠角 15–25° 未在 GPU 实测过，须重跑 `linkbar_variation_sweep.sh` 看 oracle 是否仍全过。
+
 ---
 
 ## 9. 未决事项
 
-- 变体 GPU sweep（`linkbar_variation_sweep.sh`）未跑；跑完后按 §5 记成功率。
+- §8.3 加宽包络后的 GPU sweep 未跑（oracle 成功率、小扫掠角下的过冲）。
 - `mdp.max_episode_steps` 无消费者（无 gym env）。
 - `segments` 7 段为估计值；俯视机位若看出折线，加到 11。
 

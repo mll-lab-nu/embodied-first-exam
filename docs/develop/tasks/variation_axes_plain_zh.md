@@ -55,7 +55,7 @@
 | swap_crossing_sign | **出生时哪根绳压在上面** | + / − | 场景线索（必须看交叉处） |
 | band_untwist | **8 字哪一端的绳压在上面** | 端 0 / 端 1 | 场景线索（待新增） |
 | diverter_route_ball | **死路在哪边**；**拨板出生时封着哪边** | 左 / 右；左 / 右（独立） | 指令 + 场景；两者组合里一半实例正确动作是不转 |
-| linkbar_rotate_to_zone | **销钉是哪种颜色**（即目标区）；**两区颜色是否互换** | 左 / 右；原样 / 互换 | 场景线索（销钉、套环、手柄盖同色） |
+| linkbar_rotate_to_zone | **销钉是哪种颜色**（即目标区）；**两区各是六色里的哪两种** | 左 / 右；30 种有序颜色对 | 场景线索（销钉、套环、手柄盖同色） |
 | cloth_fold | **捏哪个角** | 四角之一 | 指令（待扩展） |
 | cloth_unpleat / cloth_unroll | **布带沿桌子前后铺还是左右铺** | 前后 / 左右 | 场景 |
 
@@ -119,7 +119,7 @@ seed → VariantRng(seed)
 | 序 | 任务 | 前置代码 |
 | --- | --- | --- |
 | 0 | 通用 | `VariantRng`；`layout_randomization.py` 读 yaml + 五种 directive；`EpisodeSpec` 加 `success_params` |
-| 1 | linkbar_rotate_to_zone | **进行中（2026-08-29）**：注册条目、两个 demo 接线、`run.randomize_layout` 键、离线门、实验脚本 `bash_scripts/tests/linkbar_variation_sweep.sh` 已备；待 GPU 跑 visual / oracle / nearest 三组。角差分箱留到划档 |
+| 1 | linkbar_rotate_to_zone | **已完成（2026-08-29）**：注册条目、demo 接线、离线门、`bash_scripts/tests/linkbar_variation_sweep.sh`；GPU seed 0–9：oracle 10/10 成功、`nearest_zone` 5/10（防捷径成立）、拒绝率 0；结果见 `linkbar_rotate_to_zone_zh.md` §8.2。视觉上十格几乎一样，2026-08-29 把扫掠角下界 35→15、颜色扩为六色调色板（§8.3），待 GPU 复测。角差分箱留到划档 |
 | 2 | diverter_route_ball | 球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
 | 3 | gate_cage_ball | 新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
 | 4 | band_untwist | 镜像开关（同步 `layout.over_end`）；planner 抬升 ≤ 0.40 守卫；`end_gap` 上限随开口叶半径 |

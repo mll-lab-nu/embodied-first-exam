@@ -138,10 +138,16 @@ zones:
     angle_deg: 55.0
   right:
     angle_deg: -45.0
-  # 可用的颜色。名字只在配置里当键用，判据不看名字，看 target 指向的那块区域。
+  # 调色板。名字只在配置里当键用，判据不看名字，看 target 指向的那块区域。随机化时
+  # 从这里抽两种不同颜色给两块区域（layout_randomization 的 linkbar 条目）；每种都要
+  # 与桌面浅灰、梁的蓝灰拉得开，且能当销 / 套环 / 手柄盖的颜色。
   colors:
     orange: [0.88, 0.55, 0.10]
     blue: [0.15, 0.45, 0.85]
+    green: [0.20, 0.68, 0.28]
+    red: [0.85, 0.15, 0.15]
+    purple: [0.58, 0.25, 0.75]
+    yellow: [0.95, 0.85, 0.15]
   assignment:
     left: orange
     right: blue
@@ -155,10 +161,11 @@ zones:
   segments: 7
   thickness: 0.0010
   z_offset: 0.0006
-  # 允许的扫掠幅度（相对 init_angle_deg 的绝对值）。下界保证「转过去」是一次真动作
-  # 而不是抖一下；上界保证手柄不出机械臂工作区。两块区域必须分居 init 两侧，且互不
-  # 重叠——LinkbarRotateLayout.validate 直接报错。
-  min_sweep_deg: 35.0
+  # 允许的扫掠幅度（相对 init_angle_deg 的绝对值）。下界保证销出生时不在区里
+  # （half_width 8° + 余量），上界保证手柄不出机械臂工作区。两块区域必须分居 init
+  # 两侧，且互不重叠——LinkbarRotateLayout.validate 直接报错。
+  # 2026-08-29 下界 35 → 15：原 [35, 75] 包络里十个变体画面几乎一样。
+  min_sweep_deg: 15.0
   max_sweep_deg: 75.0
 
 # ---------------------------------------------------------------- 摆动圆弧标记

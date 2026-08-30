@@ -74,6 +74,18 @@ class _SwapJitter:
 
 
 @dataclass(frozen=True)
+class _DistinctChoiceJitter:
+    """Fill the leaves in ``paths`` with distinct keys of the mapping at ``keys_of``.
+
+    One draw (a permutation without replacement) for the whole group, so the
+    group shares one stream named after ``keys_of``.
+    """
+
+    paths: tuple  # e.g. ("zones.assignment.left", "zones.assignment.right")
+    keys_of: str  # e.g. "zones.colors"
+
+
+@dataclass(frozen=True)
 class _ShiftBy:
     """Add the value at ``by_path`` to every leaf in ``paths`` (derived, no draw).
 
@@ -110,18 +122,19 @@ def _validate_linkbar_rotate_to_zone(task_cfg) -> None:
 # then at most one _Validate.
 _REGISTRY: dict[str, list] = {
     # Anti-shortcut axes: which zone is the target (the pin takes its colour) and
-    # whether the two colours are swapped. Layout axes: each zone's angle, drawn
+    # which two palette colours the zones get. Layout axes: each zone's angle, drawn
     # within [min_sweep, max_sweep] on its own side, and the beam's initial angle;
     # both zone angles are then shifted with the beam so the sweeps stay in range.
     # The oracle asks `layout.target_zone()` / `pin_color()` and reads the live joint
     # angle, so nothing in the planner changes. `LinkbarRotateLayout.validate`
     # (opposite sides, sweep range, zone separation, distinct colours) rejects the
-    # draw where the shift pushes a sweep past the ceiling.
+    # draw where the shift pushes a sweep past the ceiling. Bounds mirror the yaml's
+    # min_sweep_deg / max_sweep_deg (15 / 75 since 2026-08-29).
     "linkbar_rotate_to_zone": [
         _ChoiceJitter("zones.target", ("left", "right")),
-        _SwapJitter("zones.assignment.left", "zones.assignment.right"),
-        _ScalarJitter("zones.left.angle_deg", 35.0, 75.0),
-        _ScalarJitter("zones.right.angle_deg", -75.0, -35.0),
+        _DistinctChoiceJitter(("zones.assignment.left", "zones.assignment.right"), "zones.colors"),
+        _ScalarJitter("zones.left.angle_deg", 15.0, 75.0),
+        _ScalarJitter("zones.right.angle_deg", -75.0, -15.0),
         _ScalarJitter("linkbar.init_angle_deg", -15.0, 15.0),
         _ShiftBy(("zones.left.angle_deg", "zones.right.angle_deg"), "linkbar.init_angle_deg"),
         _Validate(_validate_linkbar_rotate_to_zone),
@@ -142,7 +155,7 @@ def sampled_leaves(task_id) -> tuple[str, ...]:
             leaves.append(d.path)
         elif isinstance(d, _SwapJitter):
             leaves.extend((d.path_a, d.path_b))
-        elif isinstance(d, _ShiftBy):
+        elif isinstance(d, (_DistinctChoiceJitter, _ShiftBy)):
             leaves.extend(d.paths)
     out: list[str] = []
     for leaf in leaves:
@@ -200,6 +213,16 @@ def _apply(task, directives, vrng: VariantRng, prefix: str, retry: int) -> None:
                 a, b = _get_node(task, d.path_a), _get_node(task, d.path_b)
                 _set_node(task, d.path_a, b)
                 _set_node(task, d.path_b, a)
+        elif isinstance(d, _DistinctChoiceJitter):
+            rng = vrng.stream(f"{prefix}/{d.keys_of}", retry=retry)
+            keys = list(_get_node(task, d.keys_of).keys())
+            if len(keys) < len(d.paths):
+                raise ValueError(
+                    f"{d.keys_of} has {len(keys)} entries; need {len(d.paths)} distinct"
+                )
+            picks = rng.choice(len(keys), size=len(d.paths), replace=False)
+            for path, i in zip(d.paths, picks):
+                _set_node(task, path, _same_type(_get_node(task, path), keys[int(i)]))
         elif isinstance(d, _ShiftBy):
             by = float(_get_node(task, d.by_path))
             for path in d.paths:
