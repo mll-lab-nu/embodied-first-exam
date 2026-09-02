@@ -352,6 +352,11 @@ python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.target_off
 
 ### 8.4 2026-09-01 改版后变体 sweep（`bash_scripts/tests/linkbar_variation_sweep.sh`，4090，seed 0–9，`runs/linkbar_variation/20260901_183506/`）
 
+> 注（2026-09-02）：本节与 §8.5 的 `max_lag` 是旧定义——关节角与**指令角**之差，含手的 IK 跟踪滞后（约 11 mm，在 100 mm 手柄圆上折合 2–3°）。
+> 2026-09-02 起原语改为关节角与**手部实际角**之差，只量指垫打滑；新旧读数不可比。「lag 随扫掠角增长」是跟踪滞后随角速度增长，不是打滑；
+> 恒定角速度的改动保留，理由是角速度决定跟踪滞后与终角过冲。新定义下的读数见 §8.7。
+
+
 | seed | target | assignment (c1 / c2) | c1 | c2 | init | gap | 同侧 | 目标扫掠 | oracle final / err / max_lag | nearest_zone |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | color_2 | blue / red | +15.35 | +76.23 | −11.78 | 44.9 | 是 | 88.0° | +78.43 / 2.19 / **4.79** | wrong_zone |
@@ -406,6 +411,23 @@ seed 0–9 oracle 组重跑（`runs/linkbar_variation/20260901_212731/`，10/10 
 - 时长：扫掠段随扫掠角在 1.2–4.6 s 之间，小扫掠比改版前更短。
 
 ---
+
+### 8.6 2026-09-02 初始角改为派生后复核（`linkbar_variation_sweep.sh`，4090，seed 0–9，`runs/linkbar_variation/20260902_144216/`）
+
+seed→变体映射改变后重跑三组：visual 10/10 有帧且逐 seed 可分；oracle **10/10**；`nearest_zone` **3/10**（seed 5/6/7 成功，
+逐条核对均为「近区恰为目标」；seed 4 两区离初始角 13.0° vs 28.7°、目标是远区，wrong_zone）。同侧 4 / 异侧 6，近邻对 seed 6（净角距 7.1°）。
+初始角贴禁区边的实例出现（seed 8 init −10.85°，color_1 −44.83°），与离线的「贴边 103/1000」一致。防捷径与 oracle 覆盖结论不变。
+
+### 8.7 2026-09-02 `max_lag` 改为关节相对手部实际角后的读数（`runs/lag_fix/linkbar/`，seed 0–2）
+
+| seed | 扫掠 | target_error | follow_error | max_lag（新定义） | 旧定义读数（§8.6 同 seed） |
+|---|---|---|---|---|---|
+| 0 | 80.0° | 2.24° | 0.0110 m | **0.77°** | 2.67° |
+| 1 | 93.4° | 2.08° | 0.0112 m | **0.76°** | — |
+| 2 | 37.7° | 1.46° | 0.0110 m | **0.48°** | — |
+
+三格 `rotate success=True`、`task_success=True`。关节相对手的真实落后不到 1°：本任务的指垫确实是带着手柄转的，
+旧读数里的 2–3° 几乎全是手的跟踪滞后（`follow_error` 11 mm 在 100 mm 半径上 ≈ 6°，扫弧方向上的分量 2–3°）。
 
 ## 9. 未决事项
 

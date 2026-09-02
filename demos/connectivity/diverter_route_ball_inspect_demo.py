@@ -392,9 +392,14 @@ def main(cfg: DictConfig) -> None:
                 ),
             ) as drive:
                 run_rollout(cfg, ball_scene, drive, state)
+        # Hold the final scene for the recording: with static_only nothing has
+        # stepped yet, and a recorder that saw no frame writes no video.
         state["phase"] = "done"
+        for _ in range(max(0, int(cfg.run.final_hold_steps))):
+            ball_scene.scene.step()
 
     print_recording_saved(cfg.recording)
+
     while cfg.run.keep_open and show_viewer:
         ball_scene.scene.step()
 

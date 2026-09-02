@@ -263,7 +263,7 @@ v = 实测水平速度
 0.69 m 的比例约 47%（十万样本蒙特卡洛，距离 0.651–0.732 m）；球起点 ±0.03 的下半段球心已进
 后挡板。按「归一化量 + 派生」构造后首抽拒绝率为 0（1000 seed），张角包络不用收窄。
 
-**校验** `DiverterRouteBallLayout.checks()`（六行，`(name, measured, limit, ok)`；`validate()` 任一行不 ok 即拒绝；
+**校验** `DiverterRouteBallLayout.checks()`（七行，`(name, measured, limit, ok)`；`validate()` 任一行不 ok 即拒绝；
 建场景、离线门、demo 启动打印同一份）：
 
 | 行 | 读数 | 门 | 默认几何 |
@@ -274,9 +274,10 @@ v = 实测水平速度
 | `fork_range` | 分岔口派生区间宽度 | > 0 且现值在内 | 40 mm |
 | `ball_spawn` | `release_x` | 在派生区间内 | −0.170 |
 | `knob_reach` | 两落座角下手柄距底座取大 | ≤ `reach.max_knob_dist` 0.690 | 0.688 |
+| `approach_clearance` | `motion.approach_z − HAND_TO_PAD_Z − 端盖顶 0.135` | ≥ 30 mm（linkbar 同门） | 62 mm（`approach_z` 0.300；原 0.260 只剩 22 mm） |
 
-`motion.steps_arc` 固定 120 步改为 `arc_deg_per_step: 0.5` + `min_steps_arc: 60`，由
-`layout.steps_arc(sweep)` 推导：张角随机后落座到落座扫 48°–72°，角速度不变。
+`motion.steps_arc` 固定 120 步改为 `arc_deg_per_step: 0.23`（与 linkbar 同；2026-09-02 先按 0.5 上线，发现指垫打滑后降速，见 §8 步骤 5）+ `min_steps_arc: 60`，由
+`layout.steps_arc(sweep)` 推导：张角随机后落座到落座扫 48°–72°（209–314 步），角速度不变。
 
 离线门：`tests/check_variant_rng.py`（叶子集合、包络、派生区间、8 种离散组合全覆盖、`rotate_needed` ≈ 1/2、
 拒绝率 ≤ 2%）与 `tests/check_diverter_geometry.py`（seed 0–199 checks 全过、16 个包络角点读数、
@@ -468,16 +469,73 @@ python -B -m demos.connectivity.diverter_route_ball_physical_route_demo -m run.o
 
 ### 步骤 5：变体部署（2026-09-02，离线已过，GPU 待跑）
 
-产出：§6.2 的 yaml 块与六行 `checks()`、两个 demo 的 `run.randomize_layout` 接线与 `variant` 行、
+产出：§6.2 的 yaml 块与七行 `checks()`、两个 demo 的 `run.randomize_layout` 接线与 `variant` 行、
 `run_configs` 三个键、两个离线门、`diverter_variation_sweep.sh`。
 
 离线实测（1000 seed）：首抽拒绝率 0.000；8 种离散组合全覆盖；`rotate_needed` 516/1000；
 `knob_reach` 最大 0.690 m；`fork_origin_x` 落在 [−0.060, −0.020]；`half_open_bypass_gap` 40.9–41.9 mm。
 包络角点（张角 24/36 × 拨杆 0.047/0.063 × 两个 frac 0/1）16 格 checks 全过，判据 flood-fill 三条结论一致。
 
-GPU 验收（用户跑 `bash bash_scripts/tests/diverter_variation_sweep.sh`，seed 0–9）：
-oracle 10/10 `success=True`；`fixed_direction` 成功率 0.3–0.7；十格首帧可分；
-`max_lag` / `target_error` 不随张角单调增长；`knob_reach` 最大格（0.690 m）IK 到位。结果表填在这里。
+GPU 实测（4090，`bash bash_scripts/tests/diverter_variation_sweep.sh`，seed 0–9；首跑 `runs/diverter_variation/20260902_144903/`，
+approach_z 提高后重跑 oracle / visual `runs/diverter_variation/20260902_150649_rerun/`）：
+
+| seed | dead | sealed | 转 | pad | 张角 | 拨杆 | fork_x | 球速 | release_x | knob_reach | target_error / max_lag | oracle | fixed_direction |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | left | right | 是 | 否 | 34.39 | 0.050 | −0.052 | 0.098 | −0.133 | 0.639 | 2.59 / 16.19 | **首跑 FAIL `flap_not_seated` → 重跑 PASS** | dead_end |
+| 1 | left | left | 否 | 是 | 27.70 | 0.062 | −0.037 | 0.128 | −0.099 | 0.688 | — | PASS | dead_end |
+| 2 | right | right | 否 | 是 | 33.46 | 0.058 | −0.027 | 0.135 | −0.097 | 0.678 | — | PASS | success |
+| 3 | right | right | 否 | 否 | 27.14 | 0.048 | −0.052 | 0.118 | −0.115 | 0.657 | — | PASS | success |
+| 4 | right | right | 否 | 是 | 28.22 | 0.059 | −0.053 | 0.127 | −0.130 | 0.667 | — | PASS | success |
+| 5 | right | left | 是 | 否 | 27.70 | 0.060 | −0.033 | 0.115 | −0.110 | 0.688 | 1.94 / 13.83 | PASS | success |
+| 6 | right | left | 是 | 是 | 34.28 | 0.059 | −0.050 | 0.127 | −0.159 | 0.649 | 2.39 / 14.31 | PASS | success |
+| 7 | right | left | 是 | 否 | 29.78 | 0.051 | −0.040 | 0.123 | −0.104 | 0.665 | 2.47 / 16.35 | PASS | success |
+| 8 | left | left | 否 | 是 | 33.10 | 0.049 | −0.023 | 0.141 | −0.168 | 0.681 | — | PASS | dead_end |
+| 9 | right | left | 是 | 是 | 31.45 | 0.053 | −0.047 | 0.143 | −0.155 | 0.654 | 2.50 / 15.95 | PASS | success |
+
+结论：
+
+- oracle 重跑 **10/10**（首跑 9/10）。seed 0 首跑失败的原因：接近段（home → 手柄上方）张开的指尖把拨杆撞转了 71°（−34° → −105°），
+  随后抓空（`finger_qpos` 0.0051 < 0.007）中止。根因是 `motion.approach_z` 0.260 留给指垫的净空只有 22 mm（端盖顶 0.135，
+  yaml 注释里的「手柄顶 0.114」是旧几何），默认布局靠运气过；seed 0 的分岔口离机械臂最近（`nose_x` 0.027，手柄离 home 位水平 27 mm），
+  接近路径更短更斜就撞上了。处置：`approach_z` / `retreat_z` 0.260 → 0.300（净空 62 mm），`checks()` 加 `approach_clearance ≥ 30 mm`
+  一行（linkbar 同门）。`rotate_only` 单格复核：seed 0 落座 +36.99°，误差 2.59°。
+- `fixed_direction` 7/10：与这十个 seed 的死路侧抽样一致（dead=right 恰好 7 个）；1000 seed 离线 dead=right 比例 0.486。不是包络偏置。
+- 十格首帧（`visual_s*.mp4`）：死路端墙、挡板相位、目标垫、张角、分岔口位置、拨杆长、球起点逐 seed 不同，无穿模。
+  首跑 visual 全 FAIL 是 inspect demo `static_only` 一步不走、录像器无帧可写（"No image to save"）；加 `run.final_hold_steps` 60 后解决。
+- `target_error` 1.9–2.6°（容差 8°），不随张角变化。
+- **`max_lag` 读数定义修正（2026-09-02）**：首跑与重跑的 `max_lag` 13.8–16.4° 超过 `max_lag_deg` 6°，每格 `rotate success=False`、
+  `export_ready=False`，但球都正确路由。查明是读数定义问题：原语比的是关节角与**指令角**，把手部约 11 mm 的 IK 跟踪滞后
+  （`follow_error`，在 50–60 mm 手柄圆上即 11–13°）算进了「打滑」；默认布局 08-22 的 `runs/diverter_slerp_regress.log` 已是 14.84°。
+  `pivot_lever.py` 改为比关节角与**手部实际位置对转轴的角度**（`hand_angle_about`），机械臂跟踪滞后由 `max_follow_error` 单独把关；
+  阈值 6° 不动。修正后复测（`runs/lag_fix/`）：
+
+  | 格 | 张角 | 拨杆 | 角速度 | follow_error | max_lag 旧定义 → 新定义 | rotate |
+  |---|---|---|---|---|---|---|
+  | 默认布局 | 30.0 | 0.055 | 0.5°/步 | 0.0111 | 14.72° → **7.89°** | 仍 False |
+  | seed 0 | 34.4 | 0.050 | 0.5°/步 | 0.0096 | 16.19° → **9.63°** | 仍 False |
+  | seed 5 | 27.7 | 0.060 | 0.5°/步 | 0.0129 | 13.83° → **6.29°** | 仍 False |
+  | seed 6 | 34.3 | 0.059 | 0.5°/步 | 0.0122 | 14.31° → **6.67°** | 仍 False |
+  | seed 7 | 29.8 | 0.051 | 0.5°/步 | 0.0118 | 16.35° → **8.90°** | 仍 False |
+  | seed 9 | 31.5 | 0.053 | 0.5°/步 | 0.0118 | 15.95° → **8.40°** | 仍 False |
+  | 默认布局，诊断 `arc_deg_per_step=0.23` | 30.0 | 0.055 | 0.23°/步 | 0.0094 | — → **3.32°** | **True** |
+
+  对照 linkbar（半径 100 mm、0.23°/步）：新定义下 0.5–0.8°（§8.7），指垫确实带着手柄转。
+  结论：diverter 修正后仍有 6–10° 的关节相对手的真实落后，且随角速度变化（0.5°/步 → 0.23°/步 降到 3.3°）。这不再是读数问题，
+  是执行质量：0.5°/步（缓动中段 ≈ 80°/s）下指垫在 ⌀18 mm 握持段上打滑，关节阻尼 / 摩擦力矩超过了指垫摩擦能传递的。
+  处置（用户定，2026-09-02）：`arc_deg_per_step` 0.5 → 0.23，与 linkbar 同一角速度，也为真机一致性考虑；不动阈值、不动握持参数。
+  降速后 seed 0–9 oracle 重跑（`runs/lag_fix/diverter_023/`）：
+
+  | seed | 转 | 步数 | target_error | follow_error | max_lag（新定义） | rotate | episode |
+  |---|---|---|---|---|---|---|---|
+  | 0 | 是 | 300 | 2.62° | 0.0080 | **4.35°** | True | success |
+  | 5 | 是 | 241 | 2.00° | 0.0109 | **2.16°** | True | success |
+  | 6 | 是 | 299 | 2.44° | 0.0101 | **2.32°** | True | success |
+  | 7 | 是 | 259 | 2.52° | 0.0102 | **3.78°** | True | success |
+  | 9 | 是 | 274 | 2.54° | 0.0100 | **3.38°** | True | success |
+  | 1 / 2 / 3 / 4 / 8 | 否 | — | — | — | — | 未旋转 | success |
+
+  oracle **10/10**，五个旋转格 `rotate success=True`、`export_ready=True`，`max_lag` 2.2–4.4°（门 6°），`release_drift` 0，`target_error` 不变。
+  从此 diverter 的旋转判据与 linkbar 处于同一读数定义、同一角速度下。
 
 ### 本轮之外
 

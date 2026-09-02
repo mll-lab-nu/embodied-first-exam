@@ -54,6 +54,8 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
+from topogym.primitives.pick_place import HAND_TO_PAD_Z
+
 from topogym.tasks._fixtures import HingeShape, add_hinge_mechanism, hinge_joint_dof
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 from topogym.world.rope import resolve_mesh_dir
@@ -669,7 +671,16 @@ class DiverterRouteBallLayout:
         release_x = float(self.cfg.ball.release_x)
         reach = self.knob_reach()
         max_reach = float(self.cfg.reach.max_knob_dist)
+        # The open gripper traverses to a point above the knob at approach_z and
+        # its fingers hang below the pads; 30 mm of pad-to-cap clearance is what
+        # linkbar settled on. Measured 2026-09-02 at 22 mm: one variant's approach
+        # knocked the lever 71 deg before the grasp (seed 0, knob 27 mm from the
+        # hand's home xy).
+        approach_clearance = (
+            float(self.cfg.motion.approach_z) - HAND_TO_PAD_Z - self.knob_top_z
+        )
         return [
+
             ("pivot_clearance", pivot_clearance, 0.002, pivot_clearance >= 0.002),
             ("half_open_bypass_gap", bypass, 2.0 * r - 0.004, bypass < 2.0 * r - 0.004),
             ("seated_lane_width", lane, 2.0 * r + 0.020, lane >= 2.0 * r + 0.020),
@@ -677,7 +688,9 @@ class DiverterRouteBallLayout:
              and fork_lo <= self.fork_origin_x <= fork_hi + 1e-9),
             ("ball_spawn", release_x, spawn_lo, spawn_lo - 1e-9 <= release_x <= spawn_hi + 1e-9),
             ("knob_reach", reach, max_reach, reach <= max_reach + 1e-9),
+            ("approach_clearance", approach_clearance, 0.030, approach_clearance >= 0.030),
         ]
+
 
     def validate(self) -> None:
         """Refuse a layout that fails any check, instead of building it anyway."""

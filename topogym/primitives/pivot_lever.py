@@ -20,7 +20,16 @@ the hand comes straight down onto it and sweeps a HORIZONTAL arc, and the wrist
 has to yaw with the knob because the knob turns with the joint. Sharing the
 phase list and the three checks (target error, follow error, release drift) is
 worth more than sharing the geometry, which does not transfer.
+
+Two readings during the sweep, kept apart on purpose: `max_follow_error` is how
+far the HAND trails the point it was commanded to (the arm's IK tracking), and
+`max_lag` is how far the JOINT trails the hand's actual angle about the pivot
+(the pads slipping on the knob). Until 2026-09-02 the lag was taken against the
+commanded angle, so it also contained the tracking lag -- 11 mm of it on a
+55 mm knob circle reads as 11 deg, which failed every diverter sweep at a 6 deg
+limit while the ball was being routed correctly.
 """
+
 
 from __future__ import annotations
 
@@ -83,8 +92,21 @@ def knob_point_world(pivot_xy, radius: float, angle: float, z: float) -> np.ndar
     )
 
 
+def hand_angle_about(pivot_xy, hand_xy) -> float:
+    """Joint-frame angle of the hand about the pivot: the inverse of `knob_point_world`.
+
+    The gripper points straight down and only yaws, so the pads' xy is the
+    hand's xy; the knob the pads hold is at this angle by construction.
+    """
+
+    pivot_xy = np.asarray(pivot_xy, dtype=float).reshape(2)
+    hand_xy = np.asarray(hand_xy, dtype=float).reshape(2)
+    return float(np.arctan2(hand_xy[1] - pivot_xy[1], hand_xy[0] - pivot_xy[0]))
+
+
 @dataclass(frozen=True)
 class PivotLeverResult:
+
     """Outcome and physical checkpoints from one lever sweep."""
 
     success: bool
@@ -129,12 +151,15 @@ class PivotLeverPrimitive:
     release_hold_steps: int = 30
     target_tolerance: float = np.deg2rad(8.0)
     max_follow_error: float = 0.030
-    # How far the joint may lag the hand DURING the sweep. This is the reading
-    # that tells carrying from pushing: if the pads hold, the joint tracks the
-    # hand's commanded angle; if they slip, the hand runs ahead and the lever is
-    # being shoved along rather than carried. The endpoint error cannot see it --
-    # a lever that slipped and then caught up ends in the right place.
+    # How far the joint may lag the hand's ACTUAL angle about the pivot DURING
+    # the sweep. This is the reading that tells carrying from pushing: if the
+    # pads hold, the joint sits where the hand is; if they slip, the hand runs
+    # ahead and the lever is being shoved along rather than carried. The
+    # endpoint error cannot see it -- a lever that slipped and then caught up
+    # ends in the right place. The arm trailing its own command is a different
+    # thing and is bounded by `max_follow_error`.
     max_lag: float = np.deg2rad(6.0)
+
     max_release_drift: float = np.deg2rad(5.0)
     min_rotation: float = np.deg2rad(2.0)
     min_finger_qpos: float | None = None
@@ -230,11 +255,13 @@ class PivotLeverPrimitive:
             angle = start + alpha * sweep
             ideal = knob_point_world(pivot_xy, radius, angle, grasp_z + HAND_TO_PAD_Z)
             controller.move_ee_to(ideal, quat=quat_at(angle), steps=1, continuous_ik=True)
-            pad = controller.hand_pos()
-            follow_error = max(follow_error, float(np.linalg.norm(ideal - pad)))
-            # The joint against where the hand has got to. Growing lag is the pads
-            # slipping on the handle.
-            lag = max(lag, abs(_wrap_angle(self._angle(entity, dof) - angle)))
+            hand = controller.hand_pos()
+            follow_error = max(follow_error, float(np.linalg.norm(ideal - hand)))
+            # The joint against where the hand has actually got to, not against
+            # the command: growing lag is the pads slipping on the handle.
+            hand_angle = hand_angle_about(pivot_xy, hand[:2])
+            lag = max(lag, abs(_wrap_angle(self._angle(entity, dof) - hand_angle)))
+
         completed.append("rotate")
         controller.step(max(0, int(self.arc_settle_steps)))
         completed.append("arc_settle")

@@ -71,7 +71,7 @@
 | swap_crossing_sign | 交叉点在绳的哪一段；两根绳整体前后位置；绳的长度 |
 | unlink_c_ring | C 环出生时缺口朝哪个方向；整个装置绕竖轴转的角度；装置在桌上的位置 |
 | band_untwist | 8 字整体的朝向和位置；交叉处两股的夹角；闭合叶的大小；两绳头之间的距离 |
-| gate_cage_ball | 球的起滚点；球过闸后到尽头的距离；闸板架子的位置；槽道左右位置 |
+| gate_cage_ball | 球速；槽道左右位置；闸板架子沿槽道方向的位置；球过闸后到尽头的距离（在「封得住」允许的区间内的归一化位置）；球的起滚点（在「臂来得及」允许的区间内的归一化位置）；架子离槽道的距离（在不重叠区间内的归一化位置） |
 | diverter_route_ball | 岔道张角；拨杆长度；球速；分岔口位置（在可达区间内的归一化位置）；球起点（在直道可出生段内的归一化位置） |
 | linkbar_rotate_to_zone | 两块颜色区在固定导轨（±90°）上的位置（不重叠即可，可同侧、可相邻）；横梁初始偏转（±15° 扣掉两区禁区后的并集上定位，销不出生在区里）；颜色区的宽度 |
 | cloth_fold | 布的位置；弧线松紧 |
@@ -120,8 +120,8 @@ seed → VariantRng(seed)
 | --- | --- | --- |
 | 0 | 通用 | `VariantRng`（已落地 08-29）；`layout_randomization.py` 读 yaml `variation:` 块 + 五种 kind（已落地 09-01）。`EpisodeSpec` / H5 落盘属数据管线，暂缓 |
 | 1 | linkbar_rotate_to_zone | **已完成（2026-08-29）**；**2026-09-02 收尾**：初始角改为 `init_frac` 派生（±15° 扣掉两区禁区后的并集上定位），首抽拒绝率 0.234 → 0.002，seed→变体映射随之改变，09-01 §8.4 的 GPU 十格需按新规则重跑复核。原记录：注册条目、demo 接线、离线门、`bash_scripts/tests/linkbar_variation_sweep.sh`；GPU seed 0–9：oracle 10/10 成功、`nearest_zone` 5/10（防捷径成立）、拒绝率 0；结果见 `linkbar_rotate_to_zone_zh.md` §8.2。视觉上十格几乎一样 → **2026-09-01 改版**：固定 ±90° 虚线导轨 + 两区自由放置（同侧/相邻均可）、六色调色板、键名 color_1/color_2、销出生不在区内（首抽拒绝率 0.234，结构性）；离线门全过；GPU seed 0–9：oracle 10/10、`nearest_zone` 5/10、十格画面可分（§5.3、§8.4）。`steps_arc` 已改为按扫掠角推导（恒定角速度，88–92° 扫掠 `max_lag` 4.79° → 2.9°）。角差分箱留到划档 |
-| 2 | diverter_route_ball | **已落地（2026-09-02，GPU 待跑）**：yaml 块 3 离散 + 3 连续 + 2 归一化派生（分岔口按可达反解、球起点按直道长度）；`checks()` 六行含可达行；`steps_arc` 按扫掠角推导；离线 1000 seed 拒绝率 0、8 种离散组合全覆盖、`rotate_needed` 0.516；`diverter_variation_sweep.sh` 三组待用户在 GPU 跑。原前置：球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
-| 3 | gate_cage_ball | 新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
+| 2 | diverter_route_ball | **已落地（2026-09-02，GPU 待跑）**：yaml 块 3 离散 + 3 连续 + 2 归一化派生（分岔口按可达反解、球起点按直道长度）；`checks()` 六行含可达行；`steps_arc` 按扫掠角推导；离线 1000 seed 拒绝率 0、8 种离散组合全覆盖、`rotate_needed` 0.516；GPU seed 0–9：oracle **10/10**（首跑 9/10，seed 0 接近段撞拨杆，`approach_z` 0.260 → 0.300 后过；`checks()` 加接近净空行）、`fixed_direction` 7/10（与死路侧抽样一致）、十格首帧可分；`max_lag` 14–16° 超 6° 门是 08-22 起的既有问题（`diverter_route_ball_zh.md` §8 步骤 5）。原前置：球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
+| 3 | gate_cage_ball | **已落地（2026-09-03）**：`timing:` 段把步长与触发富余写进任务定义；封闭区长度、球起点、架子 x 按两条可解性判据反解区间后派生；`checks()` 五行；第三条对照规则 `fixed_delay`；离线 1000 seed 拒绝率 0、球先到 46%。GPU seed 0–9：oracle 首跑 6/10（判据 `pinched` 把贴着已落座闸板往返的球标成夹住）→ 修正定义后 **10/10**，greedy 8/10，fixed_delay 6/10；见 `gate_cage_ball_zh.md` §5。原前置：新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
 | 4 | band_untwist | 镜像开关（同步 `layout.over_end`）；planner 抬升 ≤ 0.40 守卫；`end_gap` 上限随开口叶半径 |
 | 5 | swap_crossing_sign | `braid.py` 交叉位置改为接收采样值并裁剪窗口；接入 `verify_braid_spec`；planner 抬升守卫 |
 | 6 | rope_winding | 绳长反解；`to_c_route: closure`；柱顶联合不等式进 `checks()` |

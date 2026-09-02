@@ -10,7 +10,8 @@
 
 定下「每任务首抽拒绝率 ≤ 2%，区间依赖其他轴的量抽归一化位置再由 Layout 派生」的范式，通用层加 `derived` kind；
 linkbar 的初始角按此收尾（拒绝率 0.234 → 0.002）；diverter_route_ball 的变体逻辑按 linkbar 六项清单部署完毕，
-离线门全过（拒绝率 0），GPU sweep 待跑。
+离线门全过（拒绝率 0）；GPU sweep：linkbar 新规则复核 oracle 10/10 / nearest 3/10，diverter oracle 首跑 9/10 → 修接近高度后 10/10。
+拨杆原语的 `max_lag` 读数改为关节相对手部实际角；diverter 角速度降到 linkbar 的 0.23°/步后旋转判据全过、`export_ready=True`。
 
 ## 1. 会话里定下的决定
 
@@ -38,7 +39,7 @@ linkbar 的初始角按此收尾（拒绝率 0.234 → 0.002）；diverter_route
 
 ### 2.3 diverter（第 2 步）
 
-- yaml：`channel.fork_x_min/-max/fork_frac`、`ball.spawn_wall_margin/spawn_fork_margin/spawn_frac`、`reach:` 段、`motion.steps_arc` → `arc_deg_per_step 0.5 + min_steps_arc 60`、末尾 `variation:` 块（3 choice + 3 uniform + 2 frac + derived + validate）。
+- yaml：`channel.fork_x_min/-max/fork_frac`、`ball.spawn_wall_margin/spawn_fork_margin/spawn_frac`、`reach:` 段、`motion.steps_arc` → `arc_deg_per_step 0.23 + min_steps_arc 60`（先按 0.5 上线，指垫打滑后降到 linkbar 的 0.23）、末尾 `variation:` 块（3 choice + 3 uniform + 2 frac + derived + validate）。
 - Layout：`fork_origin_x_bounds/-from_frac`、`release_x_bounds/-from_frac`、`knob_reach`、`half_open_bypass_gap`、`checks()` 六行、`validate()`、`steps_arc()`；`check_pivot_clearance()` 并入 `checks()`；builder 改调 `validate()`；模块级 `derive_task_cfg` / `validate_task_cfg`。
 - demo：两个 demo 接 `randomize_task_cfg` + `variant` 行；physical demo `steps_arc` 由 layout 推导、`EpisodeKey.variant_id`、启动打印 `checks` 行；run 配置加 `randomize_layout / difficulty / variant_id`。
 - 离线门：`check_variant_rng.py` diverter 段；新 `tests/check_diverter_geometry.py`。
@@ -53,9 +54,31 @@ linkbar 的初始角按此收尾（拒绝率 0.234 → 0.002）；diverter_route
 | `check_diverter_geometry.py` | PASS：seed 0–199 checks 全过；16 个包络角点 `knob_reach` 0.625–0.690、旁通间隙 40.9–41.9 mm；判据 flood-fill 三条结论在每个角点一致；oracle 2×2 正确、`fixed_direction` 2/4；`steps_arc` 60°→120、48°→96、72°→144 |
 | `check_configs_compose.py`、`check_demo_configs.py` | PASS（26 个 demo） |
 
+### 3.1 GPU（4090，用户跑 + 单格诊断）
+
+| 任务 | 结果 |
+|---|---|
+| linkbar `linkbar_variation_sweep.sh` seed 0–9（新采样规则） | visual 10/10、oracle **10/10**、`nearest_zone` 3/10（逐条核对均为近区恰为目标）；详见 `linkbar_rotate_to_zone_zh.md` §8.6 |
+| diverter `diverter_variation_sweep.sh` seed 0–9 首跑 | visual 全 FAIL（`static_only` 无帧可录）、oracle 9/10（seed 0 `flap_not_seated`）、`fixed_direction` 7/10 |
+| seed 0 诊断（`rotate_only` verbose） | 接近段指尖撞拨杆 −34° → −105°，抓空中止。`approach_z` 0.260 只给指垫 22 mm 净空（端盖顶 0.135，yaml 注释的 0.114 是旧几何） |
+| 修后重跑 oracle / visual（`runs/diverter_variation/20260902_150649_rerun/`） | oracle **10/10**，`target_error` 1.9–2.6°；visual 10/10 有帧。详见 `diverter_route_ball_zh.md` §8 步骤 5 |
+
+| `max_lag` 定义修正后复测（`runs/lag_fix/`） | linkbar 0.5–0.8°；diverter 默认 7.9°、变体 6.3–9.6°，0.23°/步 诊断 3.3° |
+| diverter `arc_deg_per_step` 0.23 重跑 seed 0–9（`runs/lag_fix/diverter_023/`） | oracle 10/10，旋转格 `rotate success=True`，`max_lag` 2.2–4.4° |
+
+修的三处：`motion.approach_z` / `retreat_z` 0.260 → 0.300；`checks()` 加第七行 `approach_clearance ≥ 30 mm`（linkbar 同门）；
+inspect demo 加 `run.final_hold_steps` 60（run 配置新键）。
+
 ## 4. 遗留 / 观察
 
-- **GPU 待跑（用户）**：`bash bash_scripts/tests/linkbar_variation_sweep.sh`（新采样规则复核）与 `bash bash_scripts/tests/diverter_variation_sweep.sh`（seed 0–9，三组）。验收：oracle 10/10、对照 0.3–0.7、十格可分、`max_lag` 不随张角增长、`knob_reach` 0.690 那格 IK 到位。
+- **`max_lag` 读数定义已修正**（`topogym/primitives/pivot_lever.py`，linkbar / diverter 共用）：原比关节角与指令角，含手的 IK 跟踪滞后
+  （11 mm 在 55 mm 手柄圆上 ≈ 11°）；改为比关节角与手部实际位置对转轴的角度（`hand_angle_about`），阈值 6° 不动，`max_follow_error`
+  继续把关跟踪。复测：linkbar seed 0–2 由 2.7° 降到 0.5–0.8°；diverter 默认布局 14.7° → 7.9°，五个需旋转变体 13.8–16.4° → 6.3–9.6°。
+- **diverter 降角速度**：修正读数后仍有 6–10° 真实落后，且随角速度变（诊断 0.23°/步 降到 3.3°）——指垫在 ⌀18 mm 握持段上打滑。
+  用户定：`arc_deg_per_step` 0.5 → 0.23，与 linkbar 同（真机一致性）。重跑 seed 0–9 oracle **10/10**，五个旋转格 `rotate success=True`、
+  `export_ready=True`，`max_lag` 2.2–4.4°、`target_error` 2.0–2.6°、`release_drift` 0（`runs/lag_fix/diverter_023/`）。
+- `fixed_direction` 7/10 是这十个 seed 的死路侧恰好 7 个 right；1000 seed 离线 0.486，不是包络偏置。
+
 - diverter 的 `release_x` 包络上限在分岔口最靠 −x 时约 −0.07（球心离交接点 36 mm），球到板的距离短，起跑加速段（0.35 s）可能还没到速；sweep 时看 `spawn_frac` 接近 1 的格。
 - `diverter_route_ball_zh.md` §3.2 的板长 0.0999 / 旁通 46.2 mm 是 `wall_gap=0.004` 时代的值（现 0.0839 / 41.5 mm）；§6.1「两条指令字符串」已过时（指令恒定）。未改。
 - `TopoGym_变体参数轴表.xlsx` 的 linkbar 初始角行与 diverter 全部行需手动同步。
@@ -69,19 +92,20 @@ linkbar 的初始角按此收尾（拒绝率 0.234 → 0.002）；diverter_route
 ## 6. 文件清单
 
 ```
+topogym/primitives/pivot_lever.py                                       max_lag 改为关节相对手部实际角；hand_angle_about
 topogym/generation/layout_randomization.py                              derived kind、_resolve_fn、派生错误算拒绝
 topogym/tasks/connectivity/linkbar_rotate_to_zone.py                    init_angle_segments / init_angle_from_frac / derive_task_cfg
-topogym/tasks/connectivity/diverter_route_ball.py                       bounds / derive / checks / validate / steps_arc；check_pivot_clearance 并入
-configs/task_configs/linkbar_rotate_to_zone_topogym_tabletop_v1.yaml    init_span_deg / init_frac / variation 块
-configs/task_configs/diverter_route_ball_topogym_tabletop_v1.yaml       派生叶子、reach 段、arc_deg_per_step、variation 块
-configs/run_configs/diverter_route_ball.yaml, _route.yaml               randomize_layout / difficulty / variant_id
+topogym/tasks/connectivity/diverter_route_ball.py                       bounds / derive / checks（七行）/ validate / steps_arc；check_pivot_clearance 并入
+configs/task_configs/linkbar_rotate_to_zone_topogym_tabletop_v1.yaml    init_span_deg / init_frac / variation 块；max_lag_deg 注释
+configs/task_configs/diverter_route_ball_topogym_tabletop_v1.yaml       派生叶子、reach 段、arc_deg_per_step、approach_z 0.300、variation 块
+configs/run_configs/diverter_route_ball.yaml, _route.yaml               randomize_layout / difficulty / variant_id；inspect 加 final_hold_steps
 demos/connectivity/diverter_route_ball_{physical_route,inspect}_demo.py  接线、variant 行、steps_arc、checks 行
 tests/check_variant_rng.py                                              directives 段、MAX_REJECTION、linkbar 段改写、diverter 段
 tests/check_linkbar_zone_geometry.py                                    init 段三例
-tests/check_diverter_geometry.py                                        新
+tests/check_diverter_geometry.py                                        新（steps_arc 期望按 0.23°/步）
 bash_scripts/tests/diverter_variation_sweep.sh                          新
-docs/develop/tasks/diverter_route_ball_zh.md                            §6.2、§8 步骤 5
-docs/develop/tasks/linkbar_rotate_to_zone_zh.md                         §5.3
+docs/develop/tasks/diverter_route_ball_zh.md                            §6.2、§8 步骤 5（含 GPU 结果表）
+docs/develop/tasks/linkbar_rotate_to_zone_zh.md                         §5.3、§8.4 注、§8.6、§8.7
 docs/develop/tasks/variation_and_difficulty_plan_zh.md                  §2.3 / §2.4 / §2.5 / §3.7 / §3.8 / §5
 docs/develop/tasks/variation_axes_plain_zh.md                           §4 两行、§6.1、§6.2
 docs/progress/2026-09-02_progress_zh.md                                 本文

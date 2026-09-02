@@ -4,29 +4,37 @@ defaults:
   - default
   - _self_
 
-# 用哪个触发规则。两者共用同一个接口，构成官方对照对：
-#   oracle : 等球进来且封门来得及，再下板 —— 预期成功
-#   greedy : 到位就插，不看球 —— 预期失败（球还没进来，被关在外面）
+# 用哪个触发规则。三者共用同一个接口（planning/gate_cage_ball_planner.py），构成官方对照组：
+#   oracle      : 等球进来且封门来得及，再下板 —— 预期成功
+#   greedy      : 到位就插，不看球 —— 臂先到的实例失败（球被关在外面），球先到的实例可能侥幸
+#   fixed_delay : 从 episode 开始数够 fixed_delay_s 秒就插，不看球 —— 时机轴的捷径：
+#                 起点与球速逐 seed 变后，它的成功率落到中间水平
 trigger: oracle
 
-# oracle 在「到门口的时间 - 插入耗时」之上还要求的富余（秒）。
-# 它吸收的是指令下降与 IK 实际跟踪之间的差；bar_through_hole 上实测这一项到过 7.5mm。
-safety_margin: 0.15
+# fixed_delay 规则的下板时刻（秒，从 episode 开始计）。3.6 ≈ 默认实例上 oracle 的下板时刻
+# （球 3.33s 到门，臂 2.40s 就位）。刻意不随实例变——变了就不是固定延时了。
+fixed_delay_s: 3.6
 
-# ---------------------------------------------------------------- 关于对照对
-# 当前 release_y 是固定值，因此单跑这两条命令得到的是「这一个实例上两种策略各自
-# 怎样」，不是基线成绩。原因有二，都要在阶段 2 用随机化解决：
+# oracle 的富余 safety_margin 与可解性判据一起搬进了 task 配置的 timing 段
+# （校验函数只拿得到 task 配置），这里不再有它。
+
+# ---------------------------------------------------------------- 关于对照组
+# release_y / speed / flat_end_y 逐 seed 随机（task 配置末尾的 variation 块，2026-09-03），
+# 区间按场景本身的合理范围与两条可解性判据取，**不按基线分数反推**：
 #
-# 1. release_y 固定 => 球的时间线每个 episode 完全相同 => 最优策略退化成「等 N 步
-#    再插」这样一个常数，不需要观测球。任务还没有强制模型去感知。
-# 2. greedy 的成败由 entry_delay 与 insert_duration 的大小关系单方面决定。把几何调
-#    到 greedy 必失败，等于把基线的分数写进场景定义。
+# 1. 起点固定时球的时间线每个 episode 完全相同，最优策略退化成「等 N 步再插」这样一个
+#    常数，不需要观测球。随机化后 fixed_delay 就是这个常数策略，它的分数是「不感知」的上限。
+# 2. greedy 的成败由 entry_delay 与 t_ready 的大小关系单方面决定。包络跨过
+#    entry_delay == t_ready 这条边界（离线 1000 seed 里球先到的约 46%），greedy 会在一部分
+#    实例上侥幸成功，那正是它落到中间水平的机制，不该被消掉。
 #
-# 阶段 2 的做法：把 release_y 注册进 generation/layout_randomization.py，区间按
-# 场景本身的合理范围取（送料速度的物理量程），**不按基线分数反推**；然后在同一组
-# 种子上实测 oracle / greedy / 固定延时三条基线并如实报告。区间跨过
-# entry_delay == insert_duration 这条边界时，greedy 会在一部分实例上侥幸成功
-# （球从下降中的闸板底下钻进去），那正是它落到中间水平的机制，不该被消掉。
-#
-# 唯一该被硬保证的是可解性：window > insert_duration + safety_margin。
-# demo 启动时只对这一条报警。
+# 硬保证的只有可解性：GateCageBallLayout.checks() 的判据 A（窗口 ≥ 插入耗时 + safety_margin）
+# 与判据 B（臂就位时最晚下板时刻还没过），随机化时按构造满足。
+
+# --- 变体（2026-09-03）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进 episode 元数据的变体标识。
+variant_id: default

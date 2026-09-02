@@ -211,8 +211,211 @@ class GateCageBallLayout:
             (float(rack.center_x), float(rack.center_y), base_top + 0.5 * height)
         )
 
+    # ----- timing -------------------------------------------------------------
+    # The arm's side of the race, in seconds. Step counts live in `motion`, the
+    # step length in `timing.sim_dt` (a copy of env.sim.dt the demo asserts
+    # against), because the variation validator only ever sees the task config.
+    # Same formulas as GatedInsertPrimitive.time_to_station / insert_duration;
+    # the demo asserts the two agree at start-up.
+
+    @property
+    def sim_dt(self) -> float:
+        return float(self.cfg.timing.sim_dt)
+
+    def t_ready(self) -> float:
+        """Seconds from the episode's start until the plate hovers over the slot."""
+
+        motion = self.cfg.motion
+        moves = 5  # approach, descend, lift, carry, align
+        steps = (
+            int(motion.gripper_steps)
+            + moves * int(motion.steps_per_phase)
+            + int(motion.gripper_steps)
+            + int(motion.close_hold_steps)
+        )
+        return steps * self.sim_dt
+
+    def insert_duration(self) -> float:
+        """Seconds from committing the descent until the slot is sealed."""
+
+        motion = self.cfg.motion
+        return (int(motion.insert_steps) + int(motion.insert_settle_steps)) * self.sim_dt
+
+    def window_margin(self) -> float:
+        """Window minus the seal time minus the trigger rule's safety margin (>= 0 to be sealable)."""
+
+        return (
+            self.predicted_window()
+            - self.insert_duration()
+            - float(self.cfg.timing.safety_margin)
+        )
+
+    def last_commit(self) -> float:
+        """Latest second at which committing still seals before the ball is back out."""
+
+        return self.entry_delay() + self.predicted_window() - self.insert_duration()
+
+    def ready_margin(self) -> float:
+        """How long after the arm is on station the last commit still is (>= 0 to be solvable)."""
+
+        return self.last_commit() - self.t_ready() - float(self.cfg.timing.ready_margin)
+
+    def hover_wait(self) -> float:
+        """Seconds the arm waits on station before the ball first enters; negative = ball first.
+
+        Reported, never constrained: its sign is what separates the trigger
+        rules, and choosing geometry to fix it would write a baseline's score
+        into the scene (configs/run_configs/gate_cage_ball_gate.yaml).
+        """
+
+        return self.entry_delay() - self.t_ready()
+
+    # ----- variation: derived leaves ------------------------------------------
+    # Three leaves have ranges that depend on other axes, so the yaml samples a
+    # unit fraction for each and `derive_task_cfg` maps it onto the range the
+    # drawn speed / geometry allows. Order matters: the closed section sets the
+    # window, the window bounds the release, the channel bounds the rack.
+
+    def flat_end_y_bounds(self) -> tuple[float, float]:
+        """Closed-section end: long enough that the window fits the seal (condition A)."""
+
+        channel = self.cfg.channel
+        need = self.door_y + self.ball_radius + 0.5 * self.ball_speed * (
+            self.insert_duration() + float(self.cfg.timing.safety_margin)
+        )
+        return float(max(float(channel.flat_end_y_min), need)), float(channel.flat_end_y_max)
+
+    def flat_end_y_from_frac(self, frac: float) -> float:
+        lo, hi = self.flat_end_y_bounds()
+        if not hi >= lo:
+            raise ValueError(
+                f"No closed-section length seals a {self.ball_speed:.3f} m/s ball: needs "
+                f"flat_end_y >= {lo:+.3f}, ceiling {hi:+.3f}."
+            )
+        return float(lo + min(max(float(frac), 0.0), 1.0) * (hi - lo))
+
+    def release_y_bounds(self) -> tuple[float, float]:
+        """Where the ball may start: on the rail, wholly outside the door, and far
+        enough out that the arm is on station before the last commit (condition B)."""
+
+        ball = self.cfg.ball
+        lo = self.entry_start_y + float(ball.spawn_entry_margin)
+        outside = self.door_y - self.ball_radius - float(ball.spawn_door_margin)
+        need = (
+            self.t_ready()
+            + self.insert_duration()
+            - self.predicted_window()
+            + float(self.cfg.timing.ready_margin)
+        )
+        in_time = self.door_y - self.ball_speed * max(0.0, need)
+        return float(lo), float(min(outside, in_time))
+
+    def release_y_from_frac(self, frac: float) -> float:
+        lo, hi = self.release_y_bounds()
+        if not hi >= lo:
+            raise ValueError(
+                f"The entry lane from {self.entry_start_y:+.3f} is too short for the arm "
+                f"({self.t_ready():.2f} s to station) to beat a {self.ball_speed:.3f} m/s ball: "
+                f"release_y would have to be <= {hi:+.3f}."
+            )
+        return float(lo + min(max(float(frac), 0.0), 1.0) * (hi - lo))
+
+    def rack_x_bounds(self) -> tuple[float, float]:
+        """Rack centre x: a fixed floor toward the arm, a ceiling clear of the guide posts."""
+
+        rack = self.cfg.gate_rack
+        slot = self.cfg.gate_slot
+        inner_lo, _ = self.wall_inner_x()
+        post_face = inner_lo - float(slot.post_width)  # the posts stand proud of the wall
+        hi = post_face - float(rack.channel_gap) - 0.5 * float(rack.base_size[0])
+        return float(rack.x_min), float(hi)
+
+    def rack_x_from_frac(self, frac: float) -> float:
+        lo, hi = self.rack_x_bounds()
+        if not hi >= lo:
+            raise ValueError(
+                f"No rack position clears the channel: needs centre <= {hi:+.3f}, floor {lo:+.3f}."
+            )
+        return float(lo + min(max(float(frac), 0.0), 1.0) * (hi - lo))
+
+    def rack_channel_gap(self) -> float:
+        """Clear x between the rack's near edge and the guide posts' outer face."""
+
+        rack = self.cfg.gate_rack
+        inner_lo, _ = self.wall_inner_x()
+        post_face = inner_lo - float(self.cfg.gate_slot.post_width)
+        return float(post_face - (float(rack.center_x) + 0.5 * float(rack.base_size[0])))
+
+    def hover_reach(self) -> float:
+        """Distance from the arm's base to the hover point over the slot (task xy)."""
+
+        base = np.asarray([float(v) for v in self.cfg.reach.base_xy], dtype=float)
+        return float(np.hypot(self.center_x - base[0], self.door_y - base[1]))
+
+    # ----- variation: checks -------------------------------------------------
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a solvable, buildable layout needs.
+
+        One list for the randomizer's reject step, the offline gate and the
+        demo's start-up print. Seconds for the two timing rows, metres otherwise.
+        """
+
+        window = self.window_margin()
+        ready = self.ready_margin()
+        spawn_lo, spawn_hi = self.release_y_bounds()
+        release_y = float(self.cfg.ball.release_y)
+        gap = self.rack_channel_gap()
+        min_gap = float(self.cfg.gate_rack.channel_gap)
+        reach = self.hover_reach()
+        max_reach = float(self.cfg.reach.max_hover_dist)
+        return [
+            ("window_margin", window, 0.0, window >= -1e-9),
+            ("ready_margin", ready, 0.0, ready >= -1e-9),
+            ("ball_spawn", release_y, spawn_lo, spawn_lo - 1e-9 <= release_y <= spawn_hi + 1e-9),
+            ("rack_channel_gap", gap, min_gap, gap >= min_gap - 1e-9),
+            ("hover_reach", reach, max_reach, reach <= max_reach + 1e-9),
+        ]
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"gate_cage_ball layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Order
+    matters: the closed section (needs the speed), then the release (needs the
+    window), then the rack (needs the channel's x). A ``ValueError`` (empty
+    range) rejects the draw.
+    """
+
+    layout = GateCageBallLayout(task_cfg)
+    task_cfg.channel.flat_end_y = layout.flat_end_y_from_frac(float(task_cfg.channel.flat_end_frac))
+    task_cfg.ball.release_y = layout.release_y_from_frac(float(task_cfg.ball.release_frac))
+    task_cfg.gate_rack.center_x = layout.rack_x_from_frac(float(task_cfg.gate_rack.x_frac))
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    GateCageBallLayout(task_cfg).validate()
+
+
 @dataclass
 class GateCageBallScene:
+
     scene: Any
     manifest: EntityManifest
     layout: GateCageBallLayout
@@ -244,7 +447,9 @@ class GateCageBallSceneBuilder:
         manifest = tabletop.manifest
 
         layout = GateCageBallLayout(self.task_cfg, task_origin=tabletop.frames.task_origin)
+        layout.validate()
         self._add_channel(scene, manifest, layout)
+
         self._add_far_wall(scene, manifest, layout)
         self._add_gate_slot(scene, manifest, layout)
         self._add_gate_rack(scene, manifest, layout)

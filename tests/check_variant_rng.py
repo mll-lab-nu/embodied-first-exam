@@ -4,7 +4,7 @@
 is a pure function of ``(seed, name, VARIANT_RNG_VERSION)``: same numbers every
 call, on every machine, no matter what else was drawn first. This script checks
 that promise and the two call sites that now depend on it
-(``layout_randomization.randomize_task_cfg`` on the linkbar and diverter yamls'
+(``layout_randomization.randomize_task_cfg`` on the linkbar, diverter and gate yamls'
 ``variation:`` blocks, and ``braid.sample_braid_word``).
 
 The golden-value check is deliberate: if someone changes the derivation rule
@@ -390,6 +390,78 @@ def check_diverter_randomization() -> list[str]:
     return fails
 
 
+_GATE_CFG = REPO / "configs" / "task_configs" / "gate_cage_ball_topogym_tabletop_v1.yaml"
+
+
+def check_gate_randomization() -> list[str]:
+    """Properties of the gate_cage_ball yaml's axes: leaves, envelope, derived ranges, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_GATE_CFG)})
+    task = "gate_cage_ball"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "ball.speed", "channel.center_x", "gate_rack.center_y",
+        "channel.flat_end_frac", "ball.release_frac", "gate_rack.x_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the gate hooks cannot run")
+        return fails
+    from topogym.tasks.connectivity.gate_cage_ball import GateCageBallLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: independent axes in range, derived leaves in the
+    # range the drawn speed / geometry allows, every check passing, and the arm
+    # arriving both before and after the ball -- the sign of hover_wait is what
+    # separates the trigger rules and must not be constrained away.
+    rejects, ball_first, arm_first = 0, 0, 0
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        layout = GateCageBallLayout(t)
+        speed, cx, ry = float(t.ball.speed), float(t.channel.center_x), float(t.gate_rack.center_y)
+        if not 0.080 <= speed <= 0.160:
+            fails.append(f"seed {seed}: speed {speed:.3f} outside [0.08, 0.16]")
+        if not 0.055 <= cx <= 0.095:
+            fails.append(f"seed {seed}: center_x {cx:+.4f} outside [0.055, 0.095]")
+        if not -0.030 <= ry <= 0.030:
+            fails.append(f"seed {seed}: rack center_y {ry:+.4f} outside [-0.03, 0.03]")
+        for name, value, (lo, hi) in (
+            ("flat_end_y", float(t.channel.flat_end_y), layout.flat_end_y_bounds()),
+            ("release_y", float(t.ball.release_y), layout.release_y_bounds()),
+            ("rack center_x", float(t.gate_rack.center_x), layout.rack_x_bounds()),
+        ):
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {name} {value:+.4f} outside derived [{lo:+.4f}, {hi:+.4f}]")
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        if layout.hover_wait() < 0.0:
+            ball_first += 1
+        else:
+            arm_first += 1
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if ball_first == 0 or arm_first == 0:
+        fails.append(f"hover_wait never changed sign (ball first {ball_first}, arm first {arm_first})")
+    rate = rejects / 1000.0
+    print(f"    ball first: {ball_first}/1000, arm first: {arm_first}/1000")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: derived ranges broken?")
+    return fails
+
+
 def check_braid() -> list[str]:
     fails: list[str] = []
     signs = set()
@@ -422,6 +494,7 @@ def main() -> int:
         ("directives", check_directives),
         ("layout_randomization(linkbar)", check_layout_randomization),
         ("layout_randomization(diverter)", check_diverter_randomization),
+        ("layout_randomization(gate)", check_gate_randomization),
         ("braid", check_braid),
     ]
     total = 0

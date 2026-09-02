@@ -11,10 +11,12 @@ contract reports `runtime_attachment=True`. The grip is rigid in the HAND's fram
 (`parent_quat_fn`), so every motion the plate makes is one the arm made -- nothing
 re-poses it on its own.
 
-Two oracles share one interface so the contrast pair is honest:
+Three trigger rules share one interface so the contrast group is honest:
 
-    run.trigger=oracle   wait until the ball is in with time to spare, then seal
-    run.trigger=greedy   seal the moment the arm is in place, ignoring the ball
+    run.trigger=oracle       wait until the ball is in with time to spare, then seal
+    run.trigger=greedy       seal the moment the arm is in place, ignoring the ball
+    run.trigger=fixed_delay  seal at run.fixed_delay_s after the episode starts
+
 
 Which of the two wins is a property of the instance, not something this scene is
 built to decide: it turns on whether the arm reaches its station before or after
@@ -24,7 +26,9 @@ described in `configs/run_configs/gate_cage_ball_gate.yaml`.
     python -m demos.connectivity.gate_cage_ball_physical_gate_demo run.viewer=true run.verbose=true
     python -m demos.connectivity.gate_cage_ball_physical_gate_demo run.trigger=greedy run.verbose=true
     python -m demos.connectivity.gate_cage_ball_physical_gate_demo task.ball.release_y=-0.300
+    python -m demos.connectivity.gate_cage_ball_physical_gate_demo run.randomize_layout=true run.seed=3
 """
+
 
 from __future__ import annotations
 
@@ -37,7 +41,9 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
-from topogym.planning import GateTriggerRule, GreedyTriggerRule
+from topogym.generation.layout_randomization import randomize_task_cfg
+from topogym.planning.gate_cage_ball_planner import make_trigger_rule
+
 from topogym.primitives import (
     AttachmentManager,
     GatedInsertPrimitive,
@@ -57,8 +63,31 @@ from topogym.utils.recording import (
 )
 from topogym.verification import GateCageBallEvaluator
 
+TASK_ID = "gate_cage_ball"
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+    task = cfg.task
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} speed={float(task.ball.speed):.3f} "
+        f"flat_end_y={float(task.channel.flat_end_y):+.4f} release_y={float(task.ball.release_y):+.4f} "
+        f"center_x={float(task.channel.center_x):+.4f} rack_x={float(task.gate_rack.center_x):+.4f} "
+        f"rack_y={float(task.gate_rack.center_y):+.4f} entry_delay={layout.entry_delay():.2f} "
+        f"window={layout.predicted_window():.2f} hover_wait={layout.hover_wait():+.2f} "
+        f"slack={layout.ready_margin():+.2f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
 
 def _as_numpy(value) -> np.ndarray:
+
     if hasattr(value, "detach"):
         value = value.detach().cpu().numpy()
     return np.asarray(value)
@@ -125,15 +154,32 @@ def run_demo(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeResu
     )
 
     dt = float(cfg.env.sim.dt)
-    insert_duration = primitive.insert_duration(dt)
-    if str(cfg.run.trigger) == "greedy":
-        rule = GreedyTriggerRule()
-    else:
-        rule = GateTriggerRule(
-            door_y=layout.door_y,
-            insert_duration=insert_duration,
-            safety_margin=float(cfg.run.safety_margin),
+    # The layout carries its own copy of the step length and the timing formulas
+    # (the variation validator only sees the task config); both must agree with
+    # what the episode actually runs, or the solvability checks were about a
+    # different instance.
+    if abs(dt - layout.sim_dt) > 1e-12:
+        raise SystemExit(
+            f"task.timing.sim_dt={layout.sim_dt} != env.sim.dt={dt}: the layout's timing "
+            "checks would not describe this run. Keep the two equal."
         )
+    insert_duration = primitive.insert_duration(dt)
+    t_ready = primitive.time_to_station(dt)
+    if abs(insert_duration - layout.insert_duration()) > 1e-9 or abs(t_ready - layout.t_ready()) > 1e-9:
+        raise SystemExit(
+            f"GateCageBallLayout timing ({layout.t_ready():.3f}s / {layout.insert_duration():.3f}s) "
+            f"disagrees with GatedInsertPrimitive ({t_ready:.3f}s / {insert_duration:.3f}s); "
+            "the two formulas drifted apart."
+        )
+    margin = float(cfg.task.timing.safety_margin)
+    rule = make_trigger_rule(
+        str(cfg.run.trigger),
+        door_y=layout.door_y,
+        insert_duration=insert_duration,
+        safety_margin=margin,
+        fixed_delay_s=float(cfg.run.fixed_delay_s),
+    )
+
     # The ball is free from the moment the episode starts, so the arm is racing it.
     # Two facts, of different kinds.
     #
@@ -149,10 +195,9 @@ def run_demo(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeResu
     # configs/run_configs/gate_cage_ball_gate.yaml.
     entry_delay = layout.entry_delay()
     window = layout.predicted_window(dt=dt)
-    margin = float(cfg.run.safety_margin)
-    t_ready = primitive.time_to_station(dt)
-    last_commit = entry_delay + window - insert_duration
-    solvable = last_commit > t_ready
+    last_commit = layout.last_commit()
+    solvable = all(ok for _, _, _, ok in layout.checks())
+
     print(
         f"gate_cage_ball trigger={cfg.run.trigger} entry_delay={entry_delay:.2f}s "
         f"window={window:.2f}s insert_duration={insert_duration:.2f}s "
@@ -162,15 +207,17 @@ def run_demo(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeResu
         f"solvable={solvable}",
         flush=True,
     )
+    print(f"gate_cage_ball checks {_checks_line(layout)}", flush=True)
     if not solvable:
         print(
-            f"[warn] last_commit {last_commit:.2f}s <= t_ready {t_ready:.2f}s: the ball "
-            "is back out before the arm can seal, so no policy can win this instance. "
-            "Lengthen the closed section (task.channel.flat_end_y), slow the ball "
-            "(task.feed_ramp.rise down), or speed the arm "
+            "[warn] a layout check failed (see the checks line): the ball is back out "
+            "before the arm can seal, so no policy can win this instance. Lengthen the "
+            "closed section (task.channel.flat_end_y), slow the ball (task.ball.speed), "
+            "release it farther out (task.ball.release_y), or speed the arm "
             "(task.motion.steps_per_phase down).",
             flush=True,
         )
+
 
     if stop_before_physics(cfg, ball_scene.scene, "gate_cage_ball_physical_gate_demo"):
         raise SystemExit(0)
@@ -201,10 +248,16 @@ def run_demo(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeResu
                 attachment.release(sync=False)
             held.clear()
 
+        hover_calls = [0]
+
         def trigger_fn():
-            decision = rule.decide(*ball_state(ball_scene))
+            # The primitive asks once per hover step, after time_to_station.
+            elapsed = t_ready + hover_calls[0] * dt
+            hover_calls[0] += 1
+            decision = rule.decide(*ball_state(ball_scene), elapsed_s=elapsed)
             status["trigger"] = decision.reason
             return decision
+
 
         status["phase"] = "fetch"
         result = primitive.run(
@@ -287,7 +340,11 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"gate_cage_ball_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+
     has_display = os.name == "nt" or bool(
+
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
     show_viewer = bool(cfg.run.viewer and has_display)
@@ -322,10 +379,15 @@ def main(cfg: DictConfig) -> None:
         tuple(float(v) for v in ball_scene.layout.ball_release_center()), zero_velocity=True
     )
 
-    episode_key = EpisodeKey(task_id="gate_cage_ball", seed=int(cfg.run.seed))
+    episode_key = EpisodeKey(
+        task_id=TASK_ID, seed=int(cfg.run.seed), variant_id=str(cfg.run.variant_id)
+    )
     status = {"phase": "home", "trigger": "-"}
 
     layout = ball_scene.layout
+    if cfg.run.randomize_layout:
+        print(_variant_line(cfg, layout), flush=True)
+
     lane_lo, lane_hi = layout.lane_bounds()
     with recording_session_from_config(
         ball_scene.scene, ball_scene.cameras, cfg.recording, hud=_hud(ball_scene, status)

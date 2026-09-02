@@ -56,8 +56,10 @@ class GateTriggerRule:
     insert_duration: float
     safety_margin: float = 0.15
 
-    def decide(self, ball_y: float, ball_vy: float) -> GateTriggerDecision:
+    def decide(self, ball_y: float, ball_vy: float, elapsed_s: float = 0.0) -> GateTriggerDecision:
+        del elapsed_s  # the oracle reads the ball, not the clock
         inside = float(ball_y) > float(self.door_y)
+
         if not inside:
             return GateTriggerDecision(
                 commit=False,
@@ -111,8 +113,8 @@ class GreedyTriggerRule:
     randomized release makes that half the episodes.
     """
 
-    def decide(self, ball_y: float, ball_vy: float) -> GateTriggerDecision:
-        del ball_y, ball_vy
+    def decide(self, ball_y: float, ball_vy: float, elapsed_s: float = 0.0) -> GateTriggerDecision:
+        del ball_y, ball_vy, elapsed_s
         return GateTriggerDecision(
             commit=True,
             reason="greedy_no_wait",
@@ -120,3 +122,43 @@ class GreedyTriggerRule:
             time_to_door=float("inf"),
             margin=float("inf"),
         )
+
+
+@dataclass(frozen=True)
+class FixedDelayRule:
+    """The other scripted baseline: commit at a fixed time after the episode starts.
+
+    What a policy that memorised one instance's timeline would do. With the
+    release point and the ball's speed drawn per episode this constant is right
+    on some instances and wrong on the rest, which is what the timing axis is
+    for. ``elapsed_s`` is the caller's clock from the episode's start (the arm's
+    time to station plus the hover so far).
+    """
+
+    delay_s: float
+
+    def decide(self, ball_y: float, ball_vy: float, elapsed_s: float = 0.0) -> GateTriggerDecision:
+        del ball_y, ball_vy
+        due = float(elapsed_s) >= float(self.delay_s)
+        return GateTriggerDecision(
+            commit=due,
+            reason="fixed_delay_due" if due else "fixed_delay_waiting",
+            inside=False,
+            time_to_door=float("inf"),
+            margin=float("inf"),
+        )
+
+
+def make_trigger_rule(mode: str, *, door_y: float, insert_duration: float,
+                      safety_margin: float, fixed_delay_s: float):
+    """The three trigger rules by their ``run.trigger`` names."""
+
+    if mode == "oracle":
+        return GateTriggerRule(door_y=door_y, insert_duration=insert_duration,
+                               safety_margin=safety_margin)
+    if mode == "greedy":
+        return GreedyTriggerRule()
+    if mode == "fixed_delay":
+        return FixedDelayRule(delay_s=fixed_delay_s)
+    raise ValueError(f"run.trigger={mode!r}; expected oracle, greedy or fixed_delay")
+

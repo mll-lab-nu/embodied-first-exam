@@ -141,7 +141,7 @@ oracle 对变体的适应程度由 Layout 层提供的接口决定。diverter / 
 | 2 实例轴以语义查询暴露   | planner 问 `layout.live_side()` / `target_zone()` / `goal_enclosure()` / `winding_target()`，同一段代码覆盖全部实例。 | diverter、linkbar、ring_transfer、band_untwist（实测 `over_end`）                                                                  | rope_winding / rope_unwinding（direction 在 `WindingSpec` 中）、cloth 的 `material_axis` / 抓取角序号                                  |
 | 3 先观测后规划       | planner 输入为 settle 后测量的状态，不用设计位。                                                                        | cloth_unpleat / cloth_unroll `observe()`、unlink_c_ring `regrasp_pose()`、swap_crossing_sign、band_untwist、ring_transfer 反应式抬升 | cloth_fold、bar_through_hole、gate_cage_ball 的抓取位                                                                             |
 | 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding、linkbar `steps_arc(sweep)`（2026-09-01）、diverter `steps_arc(sweep)`（2026-09-02） | gate `insert_steps`、bar_through_hole `move_steps`                                                      |
-| 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`、diverter `checks()`（六行，2026-09-02）；linkbar `validate()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
+| 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`、diverter `checks()`（七行，2026-09-02）、gate_cage_ball `checks()`（五行，2026-09-03）；linkbar `validate()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
 | 6 决策规则与对照策略同接口 | `Rule.decide(layout, observation, command)`；oracle 与捷径基线是同一接口的不同实现。                                     | diverter、linkbar、gate_cage_ball、band_untwist（`wrong_end`）                                                                   | 其余任务的 `oracle_mode` 分支改为 Rule 类                                                                                             |
 
 
@@ -271,20 +271,24 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 3.6 gate_cage_ball（docx 4.1，C4 强制）
 
+> **2026-09-03 落地**。原表 `release_y ∈ [−0.46, −0.34]` 下界越过轨底起点 `entry_start_y = −0.42`；`release_y`、`flat_end_y`、`gate_rack.center_x` 改为按两条可解性判据反解区间后派生。详见 `gate_cage_ball_zh.md`。
+
 
 | 类     | 叶子                                                                                                          | 当前值         | 包络             | 边界来源                                              |
 | ----- | ----------------------------------------------------------------------------------------------------------- | ----------- | -------------- | ------------------------------------------------- |
-| B（时机） | `ball.release_y`                                                                                            | −0.400      | [−0.46, −0.34] | 槽道入口 `entry_start_y` = −0.42 以远为斜坡段；run 配置已规划为注册项 |
-| B（时机） | `ball.speed`                                                                                                | 0.120       | [0.08, 0.16]   | 物理送料量程；上限由可解性不等式切                                 |
-| B     | `channel.flat_end_y`                                                                                        | 0.150       | [0.11, 0.20]   | 只改 window 长度；工作区 y                                |
-| B     | `gate_rack.center[x,y]`                                                                                     | (−0.090, 0) | ±0.030         | 抓取位，oracle 读回；与槽道不重叠                              |
-| B     | `channel.center_x`                                                                                          | 0.075       | ±0.020         | 工作区                                               |
-| D     | `gate_slot.guide_gap`（3 mm/侧）、`gate_slot.post_height`、`gate.seated_*`、`gate_rack.base_size[z]`、`motion.*_z` |             |                | `motion.*_z` 手写绝对高度                               |
+| B（时机） | `ball.speed`                                                                                                | 0.120       | [0.08, 0.16]   | 送料量程；同时缩放 `entry_delay` 与窗口                       |
+| B     | `channel.center_x`                                                                                          | 0.075       | [0.055, 0.095] | 工作区                                               |
+| B     | `gate_rack.center_y`                                                                                        | 0           | ±0.030         | 架子沿轨道方向平移                                          |
+| C     | `channel.flat_end_y` ← `channel.flat_end_frac` U[0,1]                                                       | 0.150       | `[max(0.11, door_y + r + ½·v·(insert_duration + safety_margin)), 0.20]` | 判据 A（窗口 ≥ 插入耗时 + 富余）取等                            |
+| C     | `ball.release_y` ← `ball.release_frac` U[0,1]                                                               | −0.400      | `[entry_start_y + 0.02, min(door_y − r − 0.02, door_y − v·max(0, t_ready + insert_duration − window + ready_margin))]` | 判据 B（臂就位时最晚下板时刻还没过）取等；整球在门外、在轨底上           |
+| C     | `gate_rack.center_x` ← `gate_rack.x_frac` U[0,1]                                                            | −0.090      | `[−0.120, 导柱外侧面 − 0.010 − ½·base_size[0]]` | 架子与导柱不重叠                                          |
+| D     | `gate_slot.*`、`gate.*`、`gate_rack.base_size`、`motion.*_z`（手写绝对高度）、`timing.*`（`sim_dt` 0.01、`safety_margin` 0.15、`ready_margin` 0.10） |             |                | `timing:` 段是 env.sim.dt 与 run.safety_margin 在 task 里的副本，demo 断言一致 |
 
 
-- 校验：`window > insert_duration + safety_margin`（demo 已打印并告警，改为采样拒绝）。
-- 候选难度统计量：`last_commit = entry_delay + window − insert_duration − t_ready`（可提交余量）。
-- 说明：时机随机化本身构成实例轴——固定延时策略的成功率随 `release_y` / `speed` 分布落到中间水平（run 配置注释）。
+- 校验：`GateCageBallLayout.checks()` 五行（判据 A 余量、判据 B 余量、球起点在派生区间内、架子到导柱净距 ≥ 0.010、门口悬停点距底座 ≤ 0.700）；`validate()` 任一行不 ok 即拒绝。
+- 对照规则三条：`oracle` / `greedy` / `fixed_delay`（2026-09-03 新增 `FixedDelayRule`，`run.fixed_delay_s`）。`hover_wait = entry_delay − t_ready` 的正负只报告不约束（离线 1000 seed 球先到 46%）。
+- 离线：`check_variant_rng.py` gate 段、`check_gate_cage_ball_geometry.py`。GPU：`gate_cage_ball_variation_sweep.sh`。
+- 候选难度统计量：`ready_margin`（判据 B 余量，越小越紧）；`window`；`hover_wait`。
 
 ### 3.7 diverter_route_ball（docx 4.3，C4 强制）
 
@@ -301,11 +305,11 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | B   | `ball.speed`                                                                                            | 0.120          | [0.090, 0.150]      | 有界推力驱动量程                                    |
 | C   | `channel.fork_origin_x` ← `channel.fork_frac` U[0,1]                                                    | −0.020         | `[−0.060, min(−0.020, 可达上界)]` | `reach.base_xy` (−0.570, 0)、`reach.max_knob_dist` 0.690；上界 = `base_x + sqrt(D² − (r sin a)²) − hw/sin a − r cos a`；只向 −x 挪（进料道变短）永远安全 |
 | C   | `ball.release_x` ← `ball.spawn_frac` U[0,1]                                                             | −0.170         | `[entry_start_x + r + 0.004, junction_x − r − 0.010]` | 整球离开后挡板；整球在分岔交接点上游                          |
-| C   | `steps_arc`                                                                                             | 120（@60°）     | `max(60, ceil(|sweep| / 0.5°))` | 恒定角速度；落座到落座扫 2×张角                           |
+| C   | `steps_arc`                                                                                             | 261（@60°）     | `max(60, ceil(|sweep| / 0.23°))` | 恒定角速度（与 linkbar 同 0.23°/步；0.5°/步 时指垫打滑，关节落后手 6–10°）；落座到落座扫 2×张角 |
 | D   | `ball.radius`、`channel.inner_width`、`flap.thickness`、`joint_limited`（=false）、`mechanism.*`、`grid_pitch`、`reach.*` |                |                     |                                             |
 
 
-- 校验：`DiverterRouteBallLayout.checks()` 六行（枢轴净空 ≥ 2 mm、半开旁通间隙 < 球径 − 4 mm、落座通道 ≥ 球径 + 20 mm、分岔口派生区间非空、球起点在派生区间内、手柄距底座 ≤ 0.690）；`validate()` 任一行不 ok 即拒绝；建场景、随机化、离线门共用。
+- 校验：`DiverterRouteBallLayout.checks()` 七行（枢轴净空 ≥ 2 mm、半开旁通间隙 < 球径 − 4 mm、落座通道 ≥ 球径 + 20 mm、分岔口派生区间非空、球起点在派生区间内、手柄距底座 ≤ 0.690、接近高度指垫到端盖顶 ≥ 30 mm）；`validate()` 任一行不 ok 即拒绝；建场景、随机化、离线门共用。
 - 离线：`tests/check_variant_rng.py` diverter 段、`tests/check_diverter_geometry.py`（16 个包络角点 + 判据 flood-fill 一致性 + 规则 2×2）。GPU：`bash_scripts/tests/diverter_variation_sweep.sh`。
 - 候选难度统计量：`target_pad.enabled`；`rotate_needed`；`branch.angle_deg` 偏离 30° 的幅度；`knob_reach`。
 - 说明：IL 录制时按 `diverter_route_ball_zh.md` §6.3 只取需旋转的两种组合；评测保留 2×2。
@@ -453,8 +457,8 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 序   | 任务                           | 前置代码                                            | 理由                               |
 | --- | ---------------------------- | ----------------------------------------------- | -------------------------------- |
 | 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_SpacedPairJitter` + `_Validate`（已落地） | C4 强制；`validate()` 已有；oracle 无需改 |
-| 2   | diverter_route_ball          | `derived` kind + `checks()` 六行（**已落地 2026-09-02**，GPU 待跑） | C4 强制；2×2 实例轴已在配置                |
-| 3   | gate_cage_ball               | `_ScalarJitter` + 可解性拒绝                         | C4 强制；run 配置已规划                  |
+| 2   | diverter_route_ball          | `derived` kind + `checks()` 七行（**已落地 2026-09-02**，GPU seed 0–9 oracle 10/10） | C4 强制；2×2 实例轴已在配置                |
+| 3   | gate_cage_ball               | `derived` 三叶子 + `checks()` 五行 + `timing:` 段（**已落地 2026-09-03**，GPU seed 0–9 oracle 10/10、greedy 8/10、fixed_delay 6/10；判据 `pinched` 定义修正） | C4 强制                              |
 | 4   | band_untwist                 | 镜像轴；在 `figure_eight_spec()` 消费 seed             | oracle 不读布局叶子                    |
 | 5   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
 | 6   | rope_winding                 | `_DerivedSolve`（sweep_deg 反解）+ C 方位角校验          | EpisodeSpec 已建                   |

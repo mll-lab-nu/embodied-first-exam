@@ -13,7 +13,7 @@ settled here instead of in a GPU sweep:
    `fixed_direction` is right on half of the 2 x 2.
 4. The judge agrees with the analytic bypass gap: half-open blocks the ball,
    seated routes it -- at the default geometry and at every corner.
-5. `steps_arc` follows the sweep at 0.5 deg/step, floored at 60.
+5. `steps_arc` follows the sweep at 0.23 deg/step, floored at 60.
 
     python tests/check_diverter_geometry.py
 
@@ -149,13 +149,14 @@ def main() -> int:
     if fixed_right != 2:
         failures.append(f"fixed_direction right on {fixed_right}/4, expected 2")
 
-    # 5. Sweep steps at 0.5 deg/step, floored at 60.
+    # 5. Sweep steps at 0.23 deg/step (linkbar's rate), floored at 60.
     layout = DiverterRouteBallLayout(load_cfg())
-    for sweep_deg, want in ((60.0, 120), (-60.0, 120), (48.0, 96), (72.0, 144), (10.0, 60), (0.0, 60)):
+    for sweep_deg, want in ((60.0, 261), (-60.0, 261), (48.0, 209), (72.0, 314), (10.0, 60), (0.0, 60)):
         got = layout.steps_arc(math.radians(sweep_deg))
         if got != want:
             failures.append(f"steps_arc({sweep_deg}) = {got}, expected {want}")
-    print("steps_arc: 60 deg -> 120, 48 -> 96, 72 -> 144, floor 60", flush=True)
+    print("steps_arc: 60 deg -> 261, 48 -> 209, 72 -> 314, floor 60", flush=True)
+
     print(f"default checks: {checks_line(layout)}", flush=True)
 
     for failure in failures:

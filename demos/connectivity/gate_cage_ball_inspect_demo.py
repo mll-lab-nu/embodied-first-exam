@@ -15,8 +15,10 @@ and it answers them as numbers rather than by eye:
     python -m demos.connectivity.gate_cage_ball_inspect_demo run.viewer=true run.keep_open=true
     python -m demos.connectivity.gate_cage_ball_inspect_demo run.verbose=true
     python -m demos.connectivity.gate_cage_ball_inspect_demo task.ball.release_y=-0.200
+    python -m demos.connectivity.gate_cage_ball_inspect_demo run.randomize_layout=true run.seed=3 run.static_only=true
     python -m demos.connectivity.gate_cage_ball_inspect_demo --cfg job
 """
+
 
 from __future__ import annotations
 
@@ -28,7 +30,9 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.supervision import stop_before_physics
+
 from topogym.tasks import GateCageBallSceneBuilder
 from topogym.tasks.connectivity._ball_drive import BallShuttle
 from topogym.utils.franka import initialize_franka_controller
@@ -161,7 +165,11 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"gate_cage_ball_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, "gate_cage_ball", cfg.run.seed, difficulty=cfg.run.difficulty)
+
     has_display = os.name == "nt" or bool(
+
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
     show_viewer = bool(cfg.run.viewer and has_display)
@@ -198,6 +206,19 @@ def main(cfg: DictConfig) -> None:
         f"window={layout.predicted_window():.2f}s",
         flush=True,
     )
+    if cfg.run.randomize_layout:
+        # Same line as the physical demo prints (the variation sweep script reads both).
+        task = cfg.task
+        print(
+            f"gate_cage_ball variant seed={int(cfg.run.seed)} speed={float(task.ball.speed):.3f} "
+            f"flat_end_y={float(task.channel.flat_end_y):+.4f} release_y={float(task.ball.release_y):+.4f} "
+            f"center_x={float(task.channel.center_x):+.4f} rack_x={float(task.gate_rack.center_x):+.4f} "
+            f"rack_y={float(task.gate_rack.center_y):+.4f} entry_delay={layout.entry_delay():.2f} "
+            f"window={layout.predicted_window():.2f} hover_wait={layout.hover_wait():+.2f} "
+            f"slack={layout.ready_margin():+.2f}",
+            flush=True,
+        )
+
 
     if stop_before_physics(cfg, ball_scene.scene, "gate_cage_ball_inspect_demo"):
         raise SystemExit(0)
@@ -228,7 +249,12 @@ def main(cfg: DictConfig) -> None:
                 run_rollout(cfg, ball_scene, state)
                 print(f"gate_cage_ball shuttle reversals={shuttle.reversals} "
                       f"driving={shuttle.driving}", flush=True)
+        # Hold the final scene for the recording: with static_only nothing has
+        # stepped yet, and a recorder that saw no frame writes no video.
         state["phase"] = "done"
+        for _ in range(max(0, int(cfg.run.final_hold_steps))):
+            ball_scene.scene.step()
+
 
     print_recording_saved(cfg.recording)
     while cfg.run.keep_open and show_viewer:

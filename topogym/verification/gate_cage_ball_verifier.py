@@ -243,12 +243,18 @@ class GateCageBallEvaluator:
                     queue.append((ni, nj))
 
         inside = bool(float(ball[1]) > layout.door_y)
-        # Caught in the doorway: the ball's centre is within the slot strip, so
-        # whatever the gate did it did to the ball rather than behind it.
-        slot_near, slot_far = layout.slot_y_extent()
-        pinched = bool(
-            gate_blocking and (slot_near - radius) <= float(ball[1]) <= (slot_far + radius)
-        )
+        # Caught in the doorway: the plate came down ON the ball, so it is held
+        # short of its seat and the ball's body is what is under it. Two readings,
+        # both required. Until 2026-09-03 this only asked whether the ball's
+        # centre lay within the slot strip, which a caged ball shuttling in a
+        # short closed section satisfies every time it touches the seated
+        # plate -- four of ten variant cells were labelled pinched that way while
+        # the plate sat fully down and the ball rolled free behind it.
+        gate_y = float(_entity_pos(scene.gate_entity())[1] - float(layout.task_origin[1]))
+        held_up = gate_bottom_z > float(cfg.gate.seated_bottom_z) + 0.005
+        under_plate = abs(float(ball[1]) - gate_y) < radius + 0.5 * float(cfg.gate.thickness)
+        pinched = bool(gate_blocking and held_up and under_plate)
+
 
         return GateCageBallState(
             ball_xy=(float(ball[0]), float(ball[1])),

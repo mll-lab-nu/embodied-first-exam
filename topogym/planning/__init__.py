@@ -9,8 +9,10 @@ from .diverter_route_ball_planner import (
 )
 from .gate_cage_ball_planner import (
     GateTriggerDecision,
+    FixedDelayRule,
     GateTriggerRule,
     GreedyTriggerRule,
+    make_trigger_rule,
 )
 from .linkbar_rotate_to_zone_planner import (
     LinkbarOracleRule,
@@ -84,8 +86,10 @@ __all__ = [
     "FixedDirectionRule",
     "EpisodePlan",
     "GateTriggerDecision",
+    "FixedDelayRule",
     "GateTriggerRule",
     "GreedyTriggerRule",
+    "make_trigger_rule",
     "MazeWallRemovalCommand",
     "OneStrokeWallCommand",
     "PeelingLiftCommand",

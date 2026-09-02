@@ -1,9 +1,10 @@
 # gate_cage_ball_inspect_demo 的运行模式参数。
 #
 # 几何与材料不在这里 —— 它们在 task 配置里，用点路径覆盖即可：
-#   task.ball.release_y=-0.200      （改释放点 = 改入槽速度与窗口位置）
-#   task.channel.flat_end_y=0.180   （改槽长 = 改窗口长度）
-#   task.return_ramp.rise=0.030     （改回程坡高度）
+#   task.ball.release_y=-0.200      （改释放点 = 改到门时刻）
+#   task.channel.flat_end_y=0.180   （改封闭区长 = 改窗口长度）
+#   task.ball.speed=0.160           （改球速 = 同时缩放两者）
+
 
 defaults:
   - default
@@ -19,3 +20,15 @@ rollout_steps: 600
 
 # 每隔多少步打印一行轨迹采样（run.verbose=true 时）。
 sample_every: 20
+
+# 结束后再步进多少步。纯粹为了录像：static_only 一步不走的话录像器没有帧可写
+# （"No image to save"）。60 步 = 0.6 秒。
+final_hold_steps: 60
+
+# --- 变体（2026-09-03）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进 episode 元数据的变体标识。
+variant_id: default

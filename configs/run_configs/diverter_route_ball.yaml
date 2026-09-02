@@ -41,6 +41,11 @@ sample_every: 20
 # 每次 rollout 结束后打印判据读数（几何层 S–T 连通性）。步骤 2 接上 verifier 后生效。
 classify: false
 
+# 结束后再步进多少步。纯粹为了录像：static_only 一步不走的话录像器没有帧可写
+# （"No image to save"），rollout 结束就停的话视频在结论那一帧结束。60 步 = 0.6 秒。
+final_hold_steps: 60
+
+
 # --- 变体（2026-09-02）------------------------------------------------------
 # 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
 randomize_layout: false
