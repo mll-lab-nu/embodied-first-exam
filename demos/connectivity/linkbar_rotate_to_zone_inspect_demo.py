@@ -20,7 +20,7 @@ check, NOT an episode, and nothing in an episode may move the beam that way
 
     python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.static_only=true run.viewer=true
     python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.sweep_joint=true run.verbose=true
-    python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.seat_phase=left
+    python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.seat_phase=color_1
     python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo run.seat_phase=angle run.seat_angle_deg=47.5
     python -m demos.connectivity.linkbar_rotate_to_zone_inspect_demo --cfg job
 """
@@ -48,20 +48,21 @@ from topogym.utils.recording import (
 from topogym.verification import LinkbarRotateEvaluator
 
 TASK_ID = "linkbar_rotate_to_zone"
-SEAT_PHASES = ("none", "left", "right", "angle")
+SEAT_PHASES = ("none", "color_1", "color_2", "angle")
 
 
 def _variant_line(cfg) -> str:
     """One parseable line with every sampled leaf (bash_scripts/tests/linkbar_variation_sweep.sh reads it)."""
     z = cfg.task.zones
     init = float(cfg.task.linkbar.init_angle_deg)
+    c1, c2 = float(z.color_1.angle_deg), float(z.color_2.angle_deg)
+    gap = abs(c2 - c1) - 2.0 * float(z.half_width_deg)
+    same_side = (c1 - init) * (c2 - init) > 0.0
     return (
         f"{TASK_ID} variant seed={int(cfg.run.seed)} target={z.target} "
-        f"assignment=left:{z.assignment.left},right:{z.assignment.right} "
-        f"left_deg={float(z.left.angle_deg):+.2f} right_deg={float(z.right.angle_deg):+.2f} "
-        f"init_deg={init:+.2f} "
-        f"sweep_left={float(z.left.angle_deg) - init:+.2f} "
-        f"sweep_right={float(z.right.angle_deg) - init:+.2f}"
+        f"assignment=color_1:{z.assignment.color_1},color_2:{z.assignment.color_2} "
+        f"color_1_deg={c1:+.2f} color_2_deg={c2:+.2f} init_deg={init:+.2f} "
+        f"gap_deg={gap:.2f} same_side={str(same_side).lower()}"
     )
 
 # How much room the pads need over the knob's cap while the gripper traverses to it
@@ -115,9 +116,9 @@ def run_sweep(cfg, rotate_scene, state) -> None:
 
     layout = rotate_scene.layout
     steps = int(cfg.run.sweep_steps)
-    stations = [("left", layout.zone_angle("left")),
+    stations = [("color_1", layout.zone_angle("color_1")),
                 ("init", layout.init_angle),
-                ("right", layout.zone_angle("right")),
+                ("color_2", layout.zone_angle("color_2")),
                 ("init", layout.init_angle)]
     worst = 0.0
     for label, target in stations:

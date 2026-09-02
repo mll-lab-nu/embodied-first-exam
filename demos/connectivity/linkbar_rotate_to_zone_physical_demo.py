@@ -9,10 +9,10 @@ Two rules run the same episode (`run.oracle_mode`):
     oracle        read the pin's colour, go to the zone painted the same
     nearest_zone  go to whichever zone is the shorter turn
 
-Both reach a zone, both cost the same motion. Only colour tells them apart, which
-is the point of the task -- and with the target drawn independently of the two
-zone angles, `nearest_zone` is right half the time. `tests/check_linkbar_planner.py`
-settles that offline; this demo is where it gets settled against physics.
+Both reach a zone. Only colour tells them apart, which is the point of the task --
+and with the target drawn independently of the two zone positions on the rail,
+`nearest_zone` is right half the time. `tests/check_linkbar_planner.py` settles
+that offline; this demo is where it gets settled against physics.
 
 `run.stage=rotate_only` stops after the sweep. That is the primitive's own
 acceptance run -- reach, follow error, grip -- with no judging attached.
@@ -20,8 +20,8 @@ acceptance run -- reach, follow error, grip -- with no judging attached.
     python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.viewer=true
     python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.stage=rotate_only run.verbose=true
     python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo run.oracle_mode=nearest_zone
-    python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo task.zones.target=right
-    python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo task.zones.left.angle_deg=-40 task.zones.right.angle_deg=50
+    python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo task.zones.target=color_1
+    python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo task.zones.color_1.angle_deg=30 task.zones.color_2.angle_deg=60
     python -m demos.connectivity.linkbar_rotate_to_zone_physical_demo --cfg job
 """
 
@@ -64,13 +64,17 @@ def _variant_line(cfg) -> str:
     """One parseable line with every sampled leaf (bash_scripts/tests/linkbar_variation_sweep.sh reads it)."""
     z = cfg.task.zones
     init = float(cfg.task.linkbar.init_angle_deg)
+    c1, c2 = float(z.color_1.angle_deg), float(z.color_2.angle_deg)
+    # Clear angle between the two painted spans (0 = touching), and whether both
+    # zones lie on one side of the beam's start -- the two things the old
+    # envelope could not produce.
+    gap = abs(c2 - c1) - 2.0 * float(z.half_width_deg)
+    same_side = (c1 - init) * (c2 - init) > 0.0
     return (
         f"{TASK_ID} variant seed={int(cfg.run.seed)} target={z.target} "
-        f"assignment=left:{z.assignment.left},right:{z.assignment.right} "
-        f"left_deg={float(z.left.angle_deg):+.2f} right_deg={float(z.right.angle_deg):+.2f} "
-        f"init_deg={init:+.2f} "
-        f"sweep_left={float(z.left.angle_deg) - init:+.2f} "
-        f"sweep_right={float(z.right.angle_deg) - init:+.2f}"
+        f"assignment=color_1:{z.assignment.color_1},color_2:{z.assignment.color_2} "
+        f"color_1_deg={c1:+.2f} color_2_deg={c2:+.2f} init_deg={init:+.2f} "
+        f"gap_deg={gap:.2f} same_side={str(same_side).lower()}"
     )
 
 # How much room the pads need over the knob's cap while the gripper traverses to it
@@ -151,13 +155,14 @@ class FirstDisturbance:
         )
 
 
-def build_primitive(cfg, layout) -> PivotLeverPrimitive:
+def build_primitive(cfg, layout, sweep: float) -> PivotLeverPrimitive:
     motion = cfg.task.motion
     return PivotLeverPrimitive(
         approach_z=layout.world_z(float(motion.approach_z)),
         retreat_z=layout.world_z(float(motion.retreat_z)),
         steps_per_phase=int(motion.steps_per_phase),
-        steps_arc=int(motion.steps_arc),
+        # Derived from the sweep so the angular speed is the same for every variant.
+        steps_arc=layout.steps_arc(sweep),
         gripper_steps=int(motion.gripper_steps),
         grasp_qpos=float(motion.grasp_qpos),
         close_hold_steps=int(motion.close_hold_steps),
@@ -205,6 +210,7 @@ def run_episode(cfg, rotate_scene, controller, *, episode_key, status) -> Episod
         f"start={np.rad2deg(plan.start_angle):+.2f}deg "
         f"target={np.rad2deg(plan.target_angle):+.2f}deg "
         f"sweep={np.rad2deg(plan.sweep):+.2f}deg rotate={plan.rotate} "
+        f"steps_arc={layout.steps_arc(plan.target_angle - plan.start_angle)} "
         f"reason={plan.reason} prompt={str(cfg.task.command.prompt)!r}",
         flush=True,
     )
@@ -212,7 +218,8 @@ def run_episode(cfg, rotate_scene, controller, *, episode_key, status) -> Episod
     if stop_before_physics(cfg, rotate_scene.scene, f"{TASK_ID}_physical_demo"):
         raise SystemExit(0)
 
-    primitive = build_primitive(cfg, layout)
+    # From the two angles rather than `plan.sweep`: an offset run rewrote the target.
+    primitive = build_primitive(cfg, layout, plan.target_angle - plan.start_angle)
     evaluator = LinkbarRotateEvaluator()
 
     # How far the wrist is asked to turn on the very first commanded step. The

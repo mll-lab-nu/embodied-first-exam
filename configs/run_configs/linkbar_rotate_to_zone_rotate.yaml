@@ -2,9 +2,9 @@
 #
 # 场景几何与两块区域的角位置、颜色都在 task 配置里，不在这里——它们属于实例定义。
 # 逐 episode 换实例就是覆盖这几项：
-#   task.zones.target=right
-#   task.zones.left.angle_deg=-40 task.zones.right.angle_deg=50
-#   task.zones.assignment.left=blue task.zones.assignment.right=orange
+#   task.zones.target=color_1
+#   task.zones.color_1.angle_deg=30 task.zones.color_2.angle_deg=60
+#   task.zones.assignment.color_1=green task.zones.assignment.color_2=red
 
 defaults:
   - default

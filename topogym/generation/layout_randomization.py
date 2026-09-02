@@ -2,13 +2,28 @@
 
 Every demo does ``cfg = load_configs(...)`` then ``<Task>SceneBuilder(cfg.env,
 cfg.task, ...).build()``. This module sits between the two: ``randomize_task_cfg``
-takes the loaded config, rewrites the leaves under ``cfg.task`` that the task has
-registered as variation axes, and hands the rewritten config to the builder. Scene
-builders, planners and verifiers never sample anything themselves; they read the
-config (or the live scene) and adapt. Which leaves may vary, and why, is the
+takes the loaded config, rewrites the leaves under ``cfg.task`` that the task's
+yaml declares as variation axes, and hands the rewritten config to the builder.
+Scene builders, planners and verifiers never sample anything themselves; they read
+the config (or the live scene) and adapt. Which leaves may vary, and why, is the
 subject of ``docs/develop/tasks/variation_axes_plain_zh.md``.
 
-Rules the registry follows:
+**Where the axes are declared.** In the task yaml, as a ``variation:`` list next
+to the geometry the bounds come from (there is no registry in Python; a task
+without the block is left untouched). One entry per axis::
+
+    variation:
+      - {kind: choice,          path: zones.target, values: [color_1, color_2]}
+      - {kind: uniform,         path: linkbar.init_angle_deg, lo: -15.0, hi: 15.0}
+      - {kind: distinct_choice, paths: [a, b], keys_of: zones.colors}
+      - {kind: spaced_pair,     paths: [lo_path, hi_path], lo: -82.0, hi: 82.0, min_gap: 16.0}
+      - {kind: validate,        fn: "package.module:function"}   # at most one
+
+``kind`` names a directive class below; the other keys are its fields. ``fn`` is
+imported when ``randomize_task_cfg`` runs, not when this module is, so a task
+module that pulls in Genesis does not make this module need it.
+
+Rules the declarations follow:
 
 - **Only leaves the oracle reads back.** A varied value the planner does not
   consult (a hand-written height, an absolute waypoint) would desync the plan from
@@ -19,20 +34,23 @@ Rules the registry follows:
 - **One named stream per leaf.** Draws come from ``VariantRng(seed).stream(
   "<task_id>/<leaf path>")``, so adding or reordering axes never changes another
   leaf's value for the same seed, and a rejected sample is redrawn under
-  ``retry=k`` -- the k-th redraw is itself a pure function of the seed.
-- **Validate, then reject.** A task may register a ``_Validate`` hook (its
-  ``Layout.validate()`` / ``checks()``); a ``ValueError`` from it rejects the draw
-  and the whole set of axes is resampled. A rejection rate above a few percent
-  means the declared envelope is too wide, not that retries should be raised.
+  ``retry=k`` -- the k-th redraw is itself a pure function of the seed. Renaming a
+  path therefore changes which variant a seed produces.
+- **Validate, then reject.** The ``validate`` entry names a function taking the
+  task config; a ``ValueError`` from it rejects the draw and the whole set of axes
+  is resampled. A rejection rate above a few percent means the declared envelope
+  is too wide, not that retries should be raised -- unless the task documents a
+  structural constraint (linkbar: the pin must not start on a zone).
 
-Only tasks with a recording under ``runs/videos/`` are registered; the 2026-07
-entries for the replaced tasks (untangle, cable_routing, stacked_plate, peeling)
-were removed on 2026-08-29 together with their difficulty multiplier.
+History: a Python registry (``_REGISTRY``) held the entries until 2026-09-01; the
+2026-07 entries for the legacy tasks (untangle, cable_routing, stacked_plate,
+peeling) were removed on 2026-08-29 together with their difficulty multiplier.
 """
 
 from __future__ import annotations
 
 import copy
+import importlib
 from dataclasses import dataclass
 
 from topogym.generation.variant_rng import VariantRng
@@ -53,24 +71,16 @@ class _ChoiceJitter:
     """Replace the leaf at ``path`` with one of ``values``, drawn uniformly."""
 
     path: str  # e.g. "zones.target"
-    values: tuple  # e.g. ("left", "right")
+    values: tuple  # e.g. ("color_1", "color_2")
 
 
 @dataclass(frozen=True)
 class _ScalarJitter:
     """Replace the scalar leaf at ``path`` with U(lo, hi)."""
 
-    path: str  # e.g. "zones.left.angle_deg"
+    path: str  # e.g. "linkbar.init_angle_deg"
     lo: float
     hi: float
-
-
-@dataclass(frozen=True)
-class _SwapJitter:
-    """With probability 1/2, exchange the values at ``path_a`` and ``path_b``."""
-
-    path_a: str
-    path_b: str
 
 
 @dataclass(frozen=True)
@@ -81,20 +91,24 @@ class _DistinctChoiceJitter:
     group shares one stream named after ``keys_of``.
     """
 
-    paths: tuple  # e.g. ("zones.assignment.left", "zones.assignment.right")
+    paths: tuple  # e.g. ("zones.assignment.color_1", "zones.assignment.color_2")
     keys_of: str  # e.g. "zones.colors"
 
 
 @dataclass(frozen=True)
-class _ShiftBy:
-    """Add the value at ``by_path`` to every leaf in ``paths`` (derived, no draw).
+class _SpacedPairJitter:
+    """Fill two scalar leaves with an ordered pair from ``[lo, hi]`` at least ``min_gap`` apart.
 
-    Keeps a group of leaves rigid relative to a sampled reference, e.g. zone
-    angles that must move with the beam's sampled initial angle.
+    Two values are drawn uniformly on ``[lo, hi - min_gap]``, sorted, and the
+    larger one is shifted up by ``min_gap``: that is the uniform distribution over
+    non-overlapping pairs, so no draw has to be rejected for overlap. The first
+    path always gets the smaller value. One stream for the pair.
     """
 
-    paths: tuple
-    by_path: str
+    paths: tuple  # (low_path, high_path)
+    lo: float
+    hi: float
+    min_gap: float
 
 
 @dataclass(frozen=True)
@@ -105,57 +119,76 @@ class _Validate:
     so the k-th redraw is still a pure function of the seed (see variant_rng).
     """
 
-    fn: object  # callable(task_cfg) -> None, raising ValueError to reject
+    fn: object  # callable(task_cfg) or "package.module:function"; raises ValueError to reject
     max_retries: int = 20
 
 
-def _validate_linkbar_rotate_to_zone(task_cfg) -> None:
-    # Imported lazily: the task module pulls in Genesis, which this module must not
-    # require (the unit test runs without it).
-    from topogym.tasks.connectivity.linkbar_rotate_to_zone import LinkbarRotateLayout
-
-    LinkbarRotateLayout(task_cfg).validate()
-
-
-# ------------------------------------------------------------------- registry
-# task_id -> ordered directives. Sampling directives first, then derived ones,
-# then at most one _Validate.
-_REGISTRY: dict[str, list] = {
-    # Anti-shortcut axes: which zone is the target (the pin takes its colour) and
-    # which two palette colours the zones get. Layout axes: each zone's angle, drawn
-    # within [min_sweep, max_sweep] on its own side, and the beam's initial angle;
-    # both zone angles are then shifted with the beam so the sweeps stay in range.
-    # The oracle asks `layout.target_zone()` / `pin_color()` and reads the live joint
-    # angle, so nothing in the planner changes. `LinkbarRotateLayout.validate`
-    # (opposite sides, sweep range, zone separation, distinct colours) rejects the
-    # draw where the shift pushes a sweep past the ceiling. Bounds mirror the yaml's
-    # min_sweep_deg / max_sweep_deg (15 / 75 since 2026-08-29).
-    "linkbar_rotate_to_zone": [
-        _ChoiceJitter("zones.target", ("left", "right")),
-        _DistinctChoiceJitter(("zones.assignment.left", "zones.assignment.right"), "zones.colors"),
-        _ScalarJitter("zones.left.angle_deg", 15.0, 75.0),
-        _ScalarJitter("zones.right.angle_deg", -75.0, -15.0),
-        _ScalarJitter("linkbar.init_angle_deg", -15.0, 15.0),
-        _ShiftBy(("zones.left.angle_deg", "zones.right.angle_deg"), "linkbar.init_angle_deg"),
-        _Validate(_validate_linkbar_rotate_to_zone),
-    ],
+_KINDS = {
+    "choice": _ChoiceJitter,
+    "uniform": _ScalarJitter,
+    "distinct_choice": _DistinctChoiceJitter,
+    "spaced_pair": _SpacedPairJitter,
+    "validate": _Validate,
 }
 
 
-def registered_tasks() -> tuple[str, ...]:
-    """Task ids that have a layout randomizer (others are a safe no-op)."""
-    return tuple(_REGISTRY)
+def _plain(value):
+    """OmegaConf node -> plain Python (lists become lists, not ListConfig)."""
+    if OmegaConf is not None and OmegaConf.is_config(value):
+        return OmegaConf.to_container(value, resolve=True)
+    return value
 
 
-def sampled_leaves(task_id) -> tuple[str, ...]:
-    """Dotted paths under ``cfg.task`` that randomization may rewrite for ``task_id``."""
+def _parse_directives(task_cfg) -> list:
+    """The task yaml's ``variation:`` block as directive objects; ``[]`` if absent."""
+    block = _plain(task_cfg.get("variation")) if hasattr(task_cfg, "get") else None
+    if not block:
+        return []
+    task_id = task_cfg.get("task", {}).get("id", "?") if hasattr(task_cfg, "get") else "?"
+    out = []
+    for index, entry in enumerate(block):
+        entry = dict(entry or {})
+        kind = entry.pop("kind", None)
+        cls = _KINDS.get(str(kind))
+        if cls is None:
+            raise ValueError(
+                f"{task_id}: variation[{index}] has kind={kind!r}; expected one of "
+                f"{sorted(_KINDS)}"
+            )
+        for key in ("paths", "values"):
+            if key in entry:
+                entry[key] = tuple(entry[key])
+        try:
+            out.append(cls(**entry))
+        except TypeError as exc:
+            raise ValueError(f"{task_id}: variation[{index}] ({kind}): {exc}") from None
+    if sum(isinstance(d, _Validate) for d in out) > 1:
+        raise ValueError(f"{task_id}: at most one validate entry in variation:, got more")
+    return out
+
+
+def _resolve_validate(fn):
+    """``"package.module:function"`` -> the function; a callable is returned as is."""
+    if callable(fn):
+        return fn
+    module_name, _, attr = str(fn).partition(":")
+    if not module_name or not attr:
+        raise ValueError(f"validate fn={fn!r}; expected 'package.module:function'")
+    return getattr(importlib.import_module(module_name), attr)
+
+
+def has_variation(task_cfg) -> bool:
+    """Does this task config declare any variation axes?"""
+    return bool(_parse_directives(task_cfg))
+
+
+def sampled_leaves(task_cfg) -> tuple[str, ...]:
+    """Dotted paths under ``cfg.task`` that randomization may rewrite."""
     leaves: list[str] = []
-    for d in _REGISTRY.get(str(task_id), ()):
+    for d in _parse_directives(task_cfg):
         if isinstance(d, (_ChoiceJitter, _ScalarJitter)):
             leaves.append(d.path)
-        elif isinstance(d, _SwapJitter):
-            leaves.extend((d.path_a, d.path_b))
-        elif isinstance(d, (_DistinctChoiceJitter, _ShiftBy)):
+        elif isinstance(d, (_DistinctChoiceJitter, _SpacedPairJitter)):
             leaves.extend(d.paths)
     out: list[str] = []
     for leaf in leaves:
@@ -207,12 +240,6 @@ def _apply(task, directives, vrng: VariantRng, prefix: str, retry: int) -> None:
         elif isinstance(d, _ScalarJitter):
             rng = vrng.stream(f"{prefix}/{d.path}", retry=retry)
             _set_node(task, d.path, float(rng.uniform(d.lo, d.hi)))
-        elif isinstance(d, _SwapJitter):
-            rng = vrng.stream(f"{prefix}/{d.path_a}<->{d.path_b}", retry=retry)
-            if rng.random() < 0.5:
-                a, b = _get_node(task, d.path_a), _get_node(task, d.path_b)
-                _set_node(task, d.path_a, b)
-                _set_node(task, d.path_b, a)
         elif isinstance(d, _DistinctChoiceJitter):
             rng = vrng.stream(f"{prefix}/{d.keys_of}", retry=retry)
             keys = list(_get_node(task, d.keys_of).keys())
@@ -223,10 +250,11 @@ def _apply(task, directives, vrng: VariantRng, prefix: str, retry: int) -> None:
             picks = rng.choice(len(keys), size=len(d.paths), replace=False)
             for path, i in zip(d.paths, picks):
                 _set_node(task, path, _same_type(_get_node(task, path), keys[int(i)]))
-        elif isinstance(d, _ShiftBy):
-            by = float(_get_node(task, d.by_path))
-            for path in d.paths:
-                _set_node(task, path, float(_get_node(task, path)) + by)
+        elif isinstance(d, _SpacedPairJitter):
+            rng = vrng.stream(f"{prefix}/{d.paths[0]}&{d.paths[1]}", retry=retry)
+            low, high = sorted(rng.uniform(d.lo, d.hi - d.min_gap, size=2).tolist())
+            _set_node(task, d.paths[0], float(low))
+            _set_node(task, d.paths[1], float(high + d.min_gap))
         elif isinstance(d, _Validate):
             continue
         else:  # pragma: no cover - registry typo
@@ -244,20 +272,19 @@ def _unlocked_copy(cfg):
 def randomize_task_cfg(cfg, task_id, seed, *, difficulty: str = "envelope"):
     """Return a copy of ``cfg`` with ``cfg.task`` rewritten for episode ``seed``.
 
-    No-op (returns ``cfg`` unchanged, same object) for tasks without a registered
-    randomizer. Deterministic in ``seed``; only registered ``cfg.task`` leaves
-    change. ``difficulty`` is accepted for call-site compatibility and currently
-    unused: every axis samples its full envelope until tiers are cut from sweep
-    data (variation_axes_plain_zh.md section 5).
+    No-op (returns ``cfg`` unchanged, same object) for a task whose yaml has no
+    ``variation:`` block. Deterministic in ``seed``; only declared ``cfg.task``
+    leaves change. ``difficulty`` is accepted for call-site compatibility and
+    currently unused: every axis samples its full envelope until tiers are cut
+    from sweep data (variation_axes_plain_zh.md section 5).
     """
-    directives = _REGISTRY.get(str(task_id))
+    directives = _parse_directives(cfg["task"])
     if not directives:
         return cfg
 
     validators = [d for d in directives if isinstance(d, _Validate)]
-    if len(validators) > 1:
-        raise ValueError(f"{task_id}: at most one _Validate directive, got {len(validators)}")
     validate = validators[0] if validators else None
+    validate_fn = _resolve_validate(validate.fn) if validate else None
     max_retries = int(validate.max_retries) if validate else 0
 
     vrng = VariantRng(seed)
@@ -269,7 +296,7 @@ def randomize_task_cfg(cfg, task_id, seed, *, difficulty: str = "envelope"):
         if validate is None:
             return out
         try:
-            validate.fn(out["task"])
+            validate_fn(out["task"])
         except ValueError as exc:
             last_error = exc
             continue

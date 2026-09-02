@@ -32,8 +32,8 @@ from topogym.planning.linkbar_rotate_to_zone_planner import (  # noqa: E402
 class StubLayout:
     """The four things a rule asks a layout, and nothing else."""
 
-    def __init__(self, left_deg: float, right_deg: float, *, target: str):
-        self.angles = {"left": math.radians(left_deg), "right": math.radians(right_deg)}
+    def __init__(self, c1_deg: float, c2_deg: float, *, target: str):
+        self.angles = {"color_1": math.radians(c1_deg), "color_2": math.radians(c2_deg)}
         self._target = target
         self.zone_half_width = math.radians(8.0)
 
@@ -47,16 +47,20 @@ class StubLayout:
         return min(self.angles, key=lambda name: abs(self.angles[name] - float(angle)))
 
 
-# (left angle, right angle, target zone, which zone is the shorter turn from 0 deg).
-# Both signs of "which side is left" appear, crossed with both answers to "is the
-# target the nearer one" -- that crossing is the point: it makes the nearer zone's
-# identity independent of the pin's colour, which is what drawing the target
-# independently of the two angles buys.
+# (color_1 angle, color_2 angle, target zone, which zone is the shorter turn from
+# 0 deg). Opposite-side and same-side pairs both appear, crossed with both answers
+# to "is the target the nearer one" -- that crossing is the point: it makes the
+# nearer zone's identity independent of the pin's colour, which is what drawing
+# the target independently of the two positions buys. On the same-side cases the
+# oracle's turn to the far zone passes over the near one; the verifier reads only
+# where the pin rests, so that is not a wrong answer.
 CASES = (
-    (55.0, -45.0, "left", "right"),
-    (35.0, -60.0, "left", "left"),
-    (-55.0, 45.0, "right", "right"),
-    (-35.0, 60.0, "right", "left"),
+    (-45.0, 55.0, "color_2", "color_1"),
+    (-60.0, 35.0, "color_2", "color_2"),
+    (30.0, 60.0, "color_2", "color_1"),
+    (30.0, 60.0, "color_1", "color_1"),
+    (-60.0, -30.0, "color_1", "color_2"),
+    (-60.0, -30.0, "color_2", "color_2"),
 )
 
 
@@ -66,8 +70,8 @@ def main() -> int:
     failures = []
     baseline_wins = 0
 
-    for left_deg, right_deg, target, expected_nearest in CASES:
-        layout = StubLayout(left_deg, right_deg, target=target)
+    for c1_deg, c2_deg, target, expected_nearest in CASES:
+        layout = StubLayout(c1_deg, c2_deg, target=target)
         got_oracle = oracle.decide(layout, 0.0)
         got_baseline = baseline.decide(layout, 0.0)
 
@@ -76,13 +80,12 @@ def main() -> int:
         if got_baseline.target_zone != expected_nearest:
             failures.append(
                 f"baseline chose {got_baseline.target_zone!r}, expected "
-                f"{expected_nearest!r} for left={left_deg} right={right_deg}"
+                f"{expected_nearest!r} for color_1={c1_deg} color_2={c2_deg}"
             )
-        # The turn must be the direct one. Sweeping the long way round would take
-        # the pin across the other zone.
+        # The turn must be the direct one, never the long way round the circle.
         if abs(got_oracle.sweep) > math.radians(180.0):
             failures.append(f"oracle swept the long way for target={target}")
-        target_deg = left_deg if target == "left" else right_deg
+        target_deg = c1_deg if target == "color_1" else c2_deg
         if got_oracle.sweep_sign != (1 if target_deg > 0 else -1):
             failures.append(f"oracle turned the wrong way for target={target}")
         if not got_oracle.rotate:
@@ -91,7 +94,7 @@ def main() -> int:
         baseline_right = got_baseline.target_zone == target
         baseline_wins += int(baseline_right)
         print(
-            f"left={left_deg:+6.1f} right={right_deg:+6.1f} target={target:5s} | oracle -> "
+            f"color_1={c1_deg:+6.1f} color_2={c2_deg:+6.1f} target={target:7s} | oracle -> "
             f"{got_oracle.target_zone} ({math.degrees(got_oracle.sweep):+6.1f}deg) | "
             f"nearest_zone -> {got_baseline.target_zone} "
             f"({'right colour' if baseline_right else 'wrong colour, fails'})",
@@ -106,7 +109,7 @@ def main() -> int:
 
     # Already inside the target zone: the oracle must say "no turn" rather than
     # command a sweep smaller than the zone.
-    parked = oracle.decide(StubLayout(55.0, -45.0, target="left"), math.radians(52.0))
+    parked = oracle.decide(StubLayout(-45.0, 55.0, target="color_2"), math.radians(52.0))
     if parked.rotate:
         failures.append("oracle asked for a turn from inside the target zone")
 

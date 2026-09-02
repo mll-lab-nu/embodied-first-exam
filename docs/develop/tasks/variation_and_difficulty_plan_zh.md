@@ -59,8 +59,8 @@ review 意见：先把计划的全部变体参数化，难度按实测结果划�
 
 | 项             | 状态                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 随机化接缝         | `layout_randomization.py::randomize_task_cfg(cfg, task_id, seed, difficulty)`：深拷贝 `cfg.task`、按注册表施加有界抖动、未注册任务原样返回。四种 directive 全部是连续量：`_AbsXYJitter` / `_FracJitter` / `_EachScalarJitter` / `_EachAbsXYJitter`。                                                                                                                                                                                     |
-| 已注册任务         | `untangle` / `cable_routing` / `stacked_plate` / `peeling`。**本文 13 个任务均未注册。**                                                                                                                                                                                                                                                                                                                        |
+| 随机化接缝         | `layout_randomization.py::randomize_task_cfg(cfg, task_id, seed, difficulty)`：深拷贝 `cfg.task`、按任务 yaml 的 `variation:` 块施加抖动、无块原样返回（2026-09-01 起；此前为 python 注册表 `_REGISTRY`，四种连续 directive）。                                                                                                                                                                                     |
+| 已声明变体的任务     | `linkbar_rotate_to_zone`（2026-09-01）。其余 12 个未声明；legacy 四任务的条目已于 08-29 删除。                                                                                                                                                                                                                                                                                                                        |
 | 种子对场景的作用      | 仅 `swap_crossing_sign` 的 `run.seed` 进入 braid 采样（只决定交叉符号）。`band_untwist` 的 seed 传到 `BandUntwistLayout.seed` 但未消费。其余任务 seed 只是 `EpisodeKey` 身份字段；`RopeUnwindingSceneBuilder`、`LinkbarRotateSceneBuilder` 无 seed 参数。                                                                                                                                                                                    |
 | run 配置键       | `randomize_layout` / `difficulty` 只存在于 cable_routing / stacked_plate / untangle 的 run 配置。                                                                                                                                                                                                                                                                                                            |
 | 测量器           | `stability_sweep.sh` 任务表含 untangle / untangle_continuous / cable_routing / stacked_plate / unlink_c_ring。                                                                                                                                                                                                                                                                                            |
@@ -122,7 +122,8 @@ B 类抖动幅度的下限：必须大于两个噪声底——仿真非确定性
 | ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `_ScalarJitter(path, lo, hi)`  | 单个标量叶子的均匀采样                                                                  | 多数任务                                                                                  |
 | `_ChoiceJitter(path, choices)` | 离散实例轴，等概率                                                                    | diverter / linkbar / rope_winding / rope_unwinding / ring_transfer / 布料 material_axis |
-| `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架、linkbar 两区角随 init_angle 平移） | ring_transfer / bar_through_hole / linkbar                                            |
+| `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架）                              | ring_transfer / bar_through_hole                                                      |
+| `_SpacedPairJitter(paths, lo, hi, min_gap)` | 区间内间距 ≥ min_gap 的有序标量对，构造式采样不拒绝（**已落地 2026-09-01**）                 | linkbar 两区中心                                                                        |
 | `_DerivedSolve(fn)`            | 采样后调用任务模块的重算函数写回 C 类叶子                                                       | rope_winding（sweep_deg）、rope_unwinding（两个出生点）、ring_transfer（long_axis）                |
 | `_Validate(fn, max_retry)`     | 采样后调用可行性校验，失败重采                                                              | 全部                                                                                    |
 
@@ -139,7 +140,7 @@ oracle 对变体的适应程度由 Layout 层提供的接口决定。diverter / 
 | 1 单一几何来源       | planner 只调用 `Layout` 方法，不读 `cfg.task` 叶子。测试：对 50 个随机 seed 的 cfg 离线调用 `plan_*()`，不建 Genesis 场景。          | diverter、linkbar、gate、band_untwist、cloth×3、rope_winding、rope_unwinding、ring_transfer                                        | bar_through_hole（`primitive.*_z`）、gate_cage_ball（`motion.*_z`）：改为 `Layout` 推导，先例 `knob_grasp_world()`；rope_unwinding 的两个出生点 |
 | 2 实例轴以语义查询暴露   | planner 问 `layout.live_side()` / `target_zone()` / `goal_enclosure()` / `winding_target()`，同一段代码覆盖全部实例。 | diverter、linkbar、ring_transfer、band_untwist（实测 `over_end`）                                                                  | rope_winding / rope_unwinding（direction 在 `WindingSpec` 中）、cloth 的 `material_axis` / 抓取角序号                                  |
 | 3 先观测后规划       | planner 输入为 settle 后测量的状态，不用设计位。                                                                        | cloth_unpleat / cloth_unroll `observe()`、unlink_c_ring `regrasp_pose()`、swap_crossing_sign、band_untwist、ring_transfer 反应式抬升 | cloth_fold、bar_through_hole、gate_cage_ball 的抓取位                                                                             |
-| 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding                                                        | linkbar / diverter `steps_arc`、gate `insert_steps`、bar_through_hole `move_steps`                                            |
+| 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding、linkbar `steps_arc(sweep)`（2026-09-01）                 | diverter `steps_arc`、gate `insert_steps`、bar_through_hole `move_steps`                                                      |
 | 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`；linkbar `validate()`、diverter `check_pivot_clearance()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
 | 6 决策规则与对照策略同接口 | `Rule.decide(layout, observation, command)`；oracle 与捷径基线是同一接口的不同实现。                                     | diverter、linkbar、gate_cage_ball、band_untwist（`wrong_end`）                                                                   | 其余任务的 `oracle_mode` 分支改为 Rule 类                                                                                             |
 
@@ -307,22 +308,23 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 ### 3.8 linkbar_rotate_to_zone（docx 4.4，C4 强制）
 
 > 2026-08-27 由 `linkbar_merge_components` 改造：删除小车、导轨、插口、weld 闩、行程测试；保留立柱、横梁、`PivotLeverPrimitive` 与全部实测高度。判据改为「销的关节角落在同色区域角窗口内且静止」。首版记录见 git 历史（`a884929` 及之前）。
+> **2026-09-01 改版**：两区不再分居初始角两侧，而是放在一条固定跨度（±90°）的虚线导轨上任意位置，可同侧、可相邻，只要求不重叠；区键名 `left/right` → `color_1/color_2`（无方位含义，随机化后 `color_1` 角度较小）。理由与实测见 `linkbar_rotate_to_zone_zh.md` §5.3。
 
 
 | 类   | 叶子                                                                                                                                                                    | 当前值           | 包络               | 边界来源                                                 |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------- | ---------------------------------------------------- |
-| A   | `zones.target`                                                                                                                                                        | left          | Cat{left, right} | 目标区；销、销套环、手柄盖取该区颜色                                   |
-| A   | `zones.assignment.left` / `.right`                                                                                                                                    | orange / blue | Cat{原样, 互换}      | 与 target 独立                                          |
-| B   | `zones.left.angle_deg`                                                                                                                                                | +55           | U[35, 75]        | `[min_sweep, max_sweep]`：35° 以下转动不构成决策，75° 以上手柄出工作区  |
-| B   | `zones.right.angle_deg`                                                                                                                                               | −45           | −U[35, 75]       | 两区异侧；中心角距 ≥ 2·half_width + 5°                        |
-| B   | `linkbar.init_angle_deg`                                                                                                                                              | 0             | ±15              | 两区角同步平移（C）；扫掠范围仍在 [35, 75]                           |
-| B   | `zones.half_width_deg`                                                                                                                                                | 8             | [6, 10]          | 下限受 `motion.target_tolerance_deg` 4° 与实测落座误差；上限受两区角距 |
-| D   | `pivot.x`（+0.020）、`motion.approach_z`（0.315）、`motion.grasp_qpos`（0.001）、`motion.steps_arc`（240）、`mechanism.joint_friction`（0.10）、`axle.clearance`（0.002）、高度链、`knob.*` |               |                  | 各有 2026-08-20~22 事故记录；`arm_radius` / `pivot` 不进判据    |
+| A   | `zones.target`                                                                                                                                                        | color_2       | Cat{color_1, color_2} | 目标区；销、销套环、手柄盖取该区颜色                                   |
+| A   | `zones.assignment.color_1` / `.color_2`                                                                                                                               | blue / orange | 六色不放回抽两种（30 种有序对） | 与 target 独立                                          |
+| B   | `zones.color_1.angle_deg` ≤ `zones.color_2.angle_deg`                                                                                                                 | −45 / +55     | 有序对，两中心 ∈ [−82, 82]，角距 ≥ 16 | 导轨 `rail.start/end_deg` ±90 减半宽 8；角距 = 2·half_width（相邻允许）。`_SpacedPairJitter` 构造式采样，不为重叠拒绝 |
+| B   | `linkbar.init_angle_deg`                                                                                                                                              | 0             | ±15              | 与两区独立；`validate` 拒绝销出生在区内（`|init − centre| < half_width + pin_start_margin 2°`），首抽拒绝率实测 0.234，结构性 |
+| B   | `zones.half_width_deg`                                                                                                                                                | 8             | [6, 10]（尚未采样）    | 下限受 `motion.target_tolerance_deg` 4° 与实测落座误差；上限受两区角距 |
+| C   | `steps_arc`                                                                                                                                                           | 240（@55°）    | `max(120, ceil(|sweep| / 0.23°))` | 固定角速度而非步数：步数固定时 `max_lag` 随扫掠角 0.05°/° 增长（2026-09-01 §8.4/§8.5） |
+| D   | `pivot.x`（+0.020）、`motion.approach_z`（0.315）、`motion.grasp_qpos`（0.001）、`motion.arc_deg_per_step`（0.23）、`mechanism.joint_friction`（0.10）、`axle.clearance`（0.002）、高度链、`knob.*`、`rail.*` |               |                  | 各有 2026-08-20~22 事故记录；`arm_radius` / `pivot` 不进判据；导轨跨度固定是任务定义    |
 
 
-- 校验：`LinkbarRotateLayout.validate()`（异侧、扫掠范围、两区角距、两色不同、target 合法）；离线 `tests/check_linkbar_zone_geometry.py`、`tests/check_linkbar_planner.py`（oracle 4/4，`nearest_zone` 2/4）。
-- 前置代码：三条 A/B 轴已是 hydra 覆盖项；`LinkbarRotateSceneBuilder` 无 seed 参数，走 `randomize_task_cfg` 在 `cfg.task` 层做。
-- 候选难度统计量：abs(abs(left) − abs(right))（越小，`nearest_zone` 捷径的期望成功率越接近 0.5）；`half_width_deg`。
+- 校验：`LinkbarRotateLayout.validate()`（初始角在导轨上、区整体在导轨内、销出生不在区内、两区不重叠、两色不同、target 合法）；离线 `tests/check_linkbar_zone_geometry.py`、`tests/check_linkbar_planner.py`（oracle 6/6，`nearest_zone` 3/6）。
+- 前置代码：已全部落地（注册条目、demo 接线、sweep 脚本）。`LinkbarRotateSceneBuilder` 无 seed 参数，走 `randomize_task_cfg` 在 `cfg.task` 层做。
+- 候选难度统计量：abs(|c1 − init| − |c2 − init|)（两区离初始角的远近差；越小，`nearest_zone` 捷径的期望成功率越接近 0.5）；目标区的扫掠角（同侧远区最大约 105°）；`half_width_deg`。
 
 ### 3.9 cloth_fold（docx 1.x）
 
@@ -445,7 +447,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 | 序   | 任务                           | 前置代码                                            | 理由                               |
 | --- | ---------------------------- | ----------------------------------------------- | -------------------------------- |
-| 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_Validate` | C4 强制；`validate()` 已有；oracle 无需改 |
+| 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_SpacedPairJitter` + `_Validate`（已落地） | C4 强制；`validate()` 已有；oracle 无需改 |
 | 2   | diverter_route_ball          | 同上 + 球径不等式函数                                    | C4 强制；2×2 实例轴已在配置                |
 | 3   | gate_cage_ball               | `_ScalarJitter` + 可解性拒绝                         | C4 强制；run 配置已规划                  |
 | 4   | band_untwist                 | 镜像轴；在 `figure_eight_spec()` 消费 seed             | oracle 不读布局叶子                    |
@@ -557,13 +559,13 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 6.10 linkbar_rotate_to_zone
 
-基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；左右各一块颜色区域（橙 / 蓝），销钉与其中一块同色。任务为转梁把销钉停进同色区域。
+基准：转轴上装横梁，梁端有销钉、梁上有旋钮，初始指向正前；销的圆上画一段固定跨度（±90°）的虚线导轨，导轨上放两块颜色区域（默认 −45° 蓝、+55° 橙），销钉与其中一块同色。任务为转梁把销钉停进同色区域。
 
-- `zones.target`：目标是左区还是右区。`zones.assignment`：两区颜色互换。
-- `zones.left/right.angle_deg`：两区离梁初始方向的角度（35–75°）；二者之差决定「转向最近区域」策略的猜中概率。
-- `init_angle`：梁初始偏转 ±15°。`half_width_deg`：区域宽度（判定窗口）。
+- `zones.target`：目标是哪块区。`zones.assignment`：两区各取六色里的哪两种。
+- `zones.color_1/color_2.angle_deg`：两区在导轨上的位置，可同侧、可相邻（净角距 0），不重叠；两区离初始角的远近差决定「转向最近区域」策略的猜中概率。
+- `init_angle`：梁初始偏转 ±15°，销出生时不在任一区里。`half_width_deg`：区域宽度（判定窗口，尚未采样）。
 
-包络两端：两区远近差大、区域宽 10° ↔ 两区几乎等远、区域宽 6°、梁初始偏转。
+包络两端：两区分居两侧、远近差大 ↔ 两区同侧相邻、目标是远的那块（销途中掠过近区，扫掠可达约 105°）。
 
 ### 6.11 cloth_fold
 

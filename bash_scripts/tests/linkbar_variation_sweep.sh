@@ -4,16 +4,17 @@
 #
 # 回答两个问题，每个 seed 三格：
 #   visual   inspect demo 建场景不步进，录一帧静态画面 → 人眼看 visual_s<seed>.mp4：
-#            两块颜色区的位置、颜色、横梁初始角是否逐 seed 不同，有无穿模。
+#            两块颜色区在固定导轨上的位置（同侧/异侧、相邻/分开）、颜色、横梁初始角
+#            是否逐 seed 不同，有无穿模，导轨长度是否固定。
 #   oracle   physical demo，oracle 规则 → 必须 task_success=True。这是「oracle 在包络
 #            内每个变体都可解」的直接证据。
-#   nearest  physical demo，nearest_zone 对照规则 → 只记录成败；两区角独立随机后
+#   nearest  physical demo，nearest_zone 对照规则 → 只记录成败；两区位置独立随机后
 #            期望成功率接近 1/2，落在 0.3–0.7 之间即防捷径成立。
 #
 # 变体参数来自 generation/layout_randomization.py 的 linkbar 注册条目，由
 # run.randomize_layout=true run.seed=<seed> 触发；demo 打印一行
-#   linkbar_rotate_to_zone variant seed=… target=… assignment=… left_deg=… …
-# 本脚本解析它进汇总表。
+#   linkbar_rotate_to_zone variant seed=… target=… assignment=… color_1_deg=… color_2_deg=… init_deg=… gap_deg=… same_side=…
+# 本脚本解析它进汇总表。gap_deg 是两色块之间的净角距（0 = 相邻）。
 #
 # **默认无头。** VIEWER=1 可开窗，但不加 run.keep_open。
 #
@@ -161,15 +162,16 @@ done
 echo
 echo "==================== 汇总 ===================="
 csv="$OUTDIR/summary.csv"
-echo "seed,target,assignment,left_deg,right_deg,init_deg,sweep_left,sweep_right,visual,oracle,nearest" > "$csv"
+echo "seed,target,assignment,color_1_deg,color_2_deg,init_deg,gap_deg,same_side,visual,oracle,nearest" > "$csv"
 n_near=0; n_near_ok=0
 for seed in $SEEDS; do
   v="${VARIANT[$seed]:-}"
   f() { echo "$v" | grep -aoE "$1=[^ ]+" | sed "s/$1=//"; }
-  printf '  seed %-3s target=%-5s assignment=%-22s left=%-7s right=%-7s init=%-7s | visual=%s oracle=%s nearest=%s\n' \
-    "$seed" "$(f target)" "$(f assignment)" "$(f left_deg)" "$(f right_deg)" "$(f init_deg)" \
+  printf '  seed %-3s target=%-7s assignment=%-28s c1=%-7s c2=%-7s init=%-7s gap=%-6s same_side=%-5s | visual=%s oracle=%s nearest=%s\n' \
+    "$seed" "$(f target)" "$(f assignment)" "$(f color_1_deg)" "$(f color_2_deg)" "$(f init_deg)" \
+    "$(f gap_deg)" "$(f same_side)" \
     "${VISUAL[$seed]:--}" "${ORACLE[$seed]:--}" "${NEAREST[$seed]:--}"
-  echo "$seed,$(f target),$(f assignment),$(f left_deg),$(f right_deg),$(f init_deg),$(f sweep_left),$(f sweep_right),${VISUAL[$seed]:-},${ORACLE[$seed]:-},${NEAREST[$seed]:-}" >> "$csv"
+  echo "$seed,$(f target),$(f assignment),$(f color_1_deg),$(f color_2_deg),$(f init_deg),$(f gap_deg),$(f same_side),${VISUAL[$seed]:-},${ORACLE[$seed]:-},${NEAREST[$seed]:-}" >> "$csv"
   if [[ -n "${NEAREST[$seed]:-}" ]]; then
     n_near=$((n_near + 1)); [[ "${NEAREST[$seed]}" == "success" ]] && n_near_ok=$((n_near_ok + 1))
   fi
@@ -179,7 +181,7 @@ if [[ $n_near -gt 0 ]]; then
 fi
 echo
 echo "怎么读："
-echo "  visual   打开 $OUTDIR/visual_s*.mp4：两区位置、颜色、横梁初始角应逐 seed 不同，且无穿模。"
+echo "  visual   打开 $OUTDIR/visual_s*.mp4：两区在导轨上的位置、颜色、横梁初始角应逐 seed 不同，导轨长度固定，且无穿模。"
 echo "  oracle   全部 PASS 才说明 oracle 覆盖了包络；FAIL 的 seed 看其 log 的 result 行与 variant 行，"
 echo "           判断是几何（区角/初始角组合）还是执行（max_lag / release_drift）问题。"
 echo "  nearest  成功率远离 1/2 说明两区角的分布让「转最近」有系统性优势，需回看包络。"

@@ -1,12 +1,13 @@
 """Linkbar Rotate To Zone (docx 4.4, reworked): turn the beam so its pin rests on the zone of its own colour.
 
 Scene: a fixed pivot column with a connecting beam hinged to it on a vertical
-joint, so the beam's end pin travels a horizontal circle. On that circle, one on
-either side of the beam's start angle, lie two coloured zones painted on the table.
-The pin (and the beam's collar and knob cap) carries the colour of ONE of them. The
-arm turns the beam by its knob and lets go; the beam stays where the joint's
-friction parks it. Success is the pin resting inside the zone whose colour it
-carries.
+joint, so the beam's end pin travels a horizontal circle. A fixed span of that
+circle is marked on the table as a dashed rail, and somewhere on the rail lie two
+coloured zones that do not overlap -- on the same side of the beam or on opposite
+sides, far apart or touching. The pin (and the beam's collar and knob cap) carries
+the colour of ONE of them. The arm turns the beam by its knob and lets go; the beam
+stays where the joint's friction parks it. Success is the pin resting inside the
+zone whose colour it carries.
 
 This replaced the cart-and-sockets version on 2026-08-27. That version judged
 success by pushing a rail cart and reading that it did not move, which is a fact
@@ -16,11 +17,13 @@ weld latch and the travel test are gone; the pivot, the beam and the knob primit
 are unchanged, including every height that was measured for the grasp.
 
 **The two zones are the same thing.** `_add_zones` draws both from one routine,
-at the same radius, the same size, costing the same sweep to reach. They differ
-only in colour, and the pin's colour is what says which one is the answer. Drawing
-`zones.target`, the two angles and the colour assignment independently per episode
-is what stops "turn to the nearer one" or "always turn the same way" from being a
-policy.
+at the same radius and the same size. They differ only in colour, and the pin's
+colour is what says which one is the answer. Drawing `zones.target`, the two
+positions on the rail and the colour assignment independently per episode is what
+stops "turn to the nearer one" or "always turn the same way" from being a policy.
+The zone keys `color_1` / `color_2` are labels and nothing more (they replaced
+`left` / `right` on 2026-09-01, when the zones stopped being one per side); after
+randomization `color_1` is the one at the smaller angle.
 
 Sign conventions, used by the planner and the verifier as well:
 
@@ -28,9 +31,10 @@ Sign conventions, used by the planner and the verifier as well:
   front camera) and grows counter-clockwise about +z. The front camera looks down
   -x with +z up, so its screen-right is +y and a positive angle swings the beam to
   screen-right.
-- The two zones sit on opposite sides of the beam's initial angle and do not
-  overlap. `LinkbarRotateLayout.validate` refuses a layout that breaks either,
-  rather than letting an ambiguous instance be generated silently.
+- Both zones lie wholly on the rail, do not overlap (touching is allowed), and
+  neither contains the pin at the beam's initial angle. `LinkbarRotateLayout.validate`
+  refuses a layout that breaks any of these, rather than letting an ambiguous or
+  already-solved instance be generated silently.
 - "In a zone" is an angle test: the joint angle is within `zones.half_width_deg`
   of the zone's centre angle. The painted block is drawn to exactly that span, so
   what the judge reads and what the camera shows are one number.
@@ -54,7 +58,7 @@ from topogym.tasks._fixtures import HingeShape, add_hinge_mechanism, hinge_joint
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 from topogym.world.rope import resolve_mesh_dir
 
-LINKBAR_ZONES = ("left", "right")
+LINKBAR_ZONES = ("color_1", "color_2")
 
 
 def _list(value):
@@ -126,6 +130,14 @@ class LinkbarRotateLayout:
     @property
     def init_angle(self) -> float:
         return float(np.deg2rad(float(self.cfg.linkbar.init_angle_deg)))
+
+    # ------------------------------------------------------------------- rail
+
+    def rail_span(self) -> tuple[float, float]:
+        """The fixed arc the zones may sit on, radians (start, end)."""
+
+        rail = self.cfg.rail
+        return float(np.deg2rad(float(rail.start_deg))), float(np.deg2rad(float(rail.end_deg)))
 
     # ------------------------------------------------------------------ zones
 
@@ -258,52 +270,79 @@ class LinkbarRotateLayout:
         xy = self.knob_center_xy(angle)
         return self.position_to_world((xy[0], xy[1], self.knob_grasp_z()))
 
+    def steps_arc(self, sweep: float) -> int:
+        """Sim steps for a sweep of ``sweep`` radians, at the configured angular rate.
+
+        What is held constant is the angular speed, not the step count: with a
+        fixed count the speed scaled with the sweep, and so did the joint's lag
+        behind the hand (2026-09-01 sweep: ~0.05 deg of lag per degree of sweep).
+        """
+
+        motion = self.cfg.motion
+        per_step = float(motion.arc_deg_per_step)
+        needed = int(np.ceil(abs(float(np.rad2deg(float(sweep)))) / per_step))
+        return max(int(motion.min_steps_arc), needed)
+
     # ------------------------------------------------------------- validation
 
     def validate(self) -> None:
         """Refuse a layout that cannot be solved, instead of building it anyway.
 
-        The zones must be on opposite sides of the start angle (so "which way" is
-        the decision, and neither turn passes over the other zone), each must be far
-        enough from the start that reaching it is a real turn, neither may be so far
-        round that the knob leaves the arm's working area, and the two painted spans
-        must not touch -- a pin on both zones at once has no verdict.
+        Each zone must lie wholly on the rail (the rail's ends are where the knob
+        leaves the arm's working area), the two painted spans must not overlap --
+        a pin on both zones at once has no verdict; touching is fine -- the pin
+        must not start inside either zone, or there is nothing to do, and the two
+        zones must be different colours, or the pin's colour names both.
         """
 
         self.target_zone()
         init_deg = float(self.cfg.linkbar.init_angle_deg)
         angles = {name: float(np.rad2deg(self.zone_angle(name))) for name in LINKBAR_ZONES}
-        low = float(self.cfg.zones.min_sweep_deg)
-        high = float(self.cfg.zones.max_sweep_deg)
         half = float(self.cfg.zones.half_width_deg)
+        rail_lo = float(self.cfg.rail.start_deg)
+        rail_hi = float(self.cfg.rail.end_deg)
+        keep_out = half + float(self.cfg.zones.pin_start_margin_deg)
 
-        sweeps = {name: angle - init_deg for name, angle in angles.items()}
-        if sweeps["left"] * sweeps["right"] >= 0.0:
+        if not rail_lo <= init_deg <= rail_hi:
             raise ValueError(
-                "The two zones must sit on opposite sides of the beam's initial "
-                f"angle. init={init_deg:.1f} deg, left={angles['left']:.1f} deg, "
-                f"right={angles['right']:.1f} deg."
+                f"The beam's initial angle {init_deg:.1f} deg is off the rail "
+                f"[{rail_lo:.1f}, {rail_hi:.1f}] deg."
             )
-        for name, sweep in sweeps.items():
-            if not low <= abs(sweep) <= high:
+        for name, angle in angles.items():
+            if not rail_lo + half <= angle <= rail_hi - half:
                 raise ValueError(
-                    f"Zone {name} is {abs(sweep):.1f} deg from the beam's initial "
-                    f"angle, outside the allowed [{low:.1f}, {high:.1f}] deg. Below "
-                    "the floor the turn is too small to be a decision; above the "
-                    "ceiling the knob leaves the arm's working area."
+                    f"Zone {name} at {angle:.1f} deg (+/-{half:.1f}) is not wholly on "
+                    f"the rail [{rail_lo:.1f}, {rail_hi:.1f}] deg; beyond its ends the "
+                    "knob leaves the arm's working area."
                 )
-        separation = abs(angles["left"] - angles["right"])
-        if separation < 2.0 * half + 5.0:
+            if abs(angle - init_deg) < keep_out:
+                raise ValueError(
+                    f"Zone {name} at {angle:.1f} deg is within {keep_out:.1f} deg of the "
+                    f"beam's initial angle {init_deg:.1f} deg: the pin would start on "
+                    "it, and there would be nothing to do."
+                )
+        separation = abs(angles["color_1"] - angles["color_2"])
+        if separation < 2.0 * half:
             raise ValueError(
                 f"The two zones are {separation:.1f} deg apart, but each spans "
-                f"+/-{half:.1f} deg; they need at least {2.0 * half + 5.0:.1f} deg "
-                "between centres so the pin can never be on both."
+                f"+/-{half:.1f} deg; they need at least {2.0 * half:.1f} deg between "
+                "centres so the pin can never be on both."
             )
-        if self.zone_color_name("left") == self.zone_color_name("right"):
+        if self.zone_color_name("color_1") == self.zone_color_name("color_2"):
             raise ValueError(
                 "Both zones are painted "
-                f"{self.zone_color_name('left')!r}; the pin's colour would name both."
+                f"{self.zone_color_name('color_1')!r}; the pin's colour would name both."
             )
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    LinkbarRotateLayout(task_cfg).validate()
 
 
 @dataclass
@@ -418,7 +457,7 @@ class LinkbarRotateSceneBuilder:
         self._add_pivot_column(scene, manifest, layout)
         entity, joint_name = self._add_linkbar(scene, manifest, layout)
         self._add_zones(scene, manifest, layout)
-        self._add_swing_arc(scene, manifest, layout)
+        self._add_rail(scene, manifest, layout)
 
         tabletop_builder.finalize(tabletop)
         rotate_scene = LinkbarRotateScene(
@@ -623,30 +662,33 @@ class LinkbarRotateSceneBuilder:
                     collision=False,
                 )
 
-    # ----------------------------------------------------------- swing arc
+    # ----------------------------------------------------------------- rail
 
-    def _add_swing_arc(self, scene, manifest, layout) -> None:
-        """Dashes on the table along the pin's circle between the two zones.
+    def _add_rail(self, scene, manifest, layout) -> None:
+        """Dashes on the table along a fixed span of the pin's circle.
 
         The dashed circle in docx 4.4's figure, drawn for the same reason: it is
-        what shows that both zones are the same turn away. Visual only.
+        what shows that both zones are reached by the same turn. The span is fixed
+        by config, not by where the zones happen to be. A dash whose centre falls
+        inside a zone's span is skipped: the painted block covers that stretch, and
+        two markers at one height would fight for the pixel. Visual only.
         """
 
-        arc = self.task_cfg.swing_arc
-        if not bool(arc.enabled):
+        rail = self.task_cfg.rail
+        if not bool(rail.enabled):
             return
-        segments = int(arc.segments)
-        half = layout.zone_half_width
-        low = min(layout.zone_angle(name) for name in LINKBAR_ZONES) + half
-        high = max(layout.zone_angle(name) for name in LINKBAR_ZONES) - half
+        segments = int(rail.segments)
+        low, high = layout.rail_span()
         for index in range(segments):
             angle = low + (high - low) * (index + 0.5) / segments
+            if layout.zone_at(angle) is not None:
+                continue
             xy = layout.pin_center_xy(angle)
             self._box(
-                scene, manifest, f"arc_tick_{index:02d}",
-                layout.position_to_world((xy[0], xy[1], float(arc.z_offset))),
-                _list(arc.tick_size),
-                arc.color,
+                scene, manifest, f"rail_tick_{index:02d}",
+                layout.position_to_world((xy[0], xy[1], float(rail.z_offset))),
+                _list(rail.tick_size),
+                rail.color,
                 role="marker",
                 yaw_deg=float(np.rad2deg(angle)),
                 collision=False,

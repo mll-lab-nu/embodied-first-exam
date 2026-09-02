@@ -5,10 +5,13 @@ the task config, so the facts the verifier and the painted zones both rest on ca
 be settled here:
 
 1. `in_zone` flips exactly at `half_width_deg` either side of a zone's centre.
-2. The two zones never claim the same angle.
+2. The two zones never claim the same angle (strictly inside; touching zones
+   share exactly their boundary angle, which is allowed).
 3. `pin_color()` is the target zone's colour, and only that.
-4. `validate` rejects the layouts it says it rejects: same side, out of sweep
-   range, overlapping spans, both zones the same colour, an unknown target.
+4. `validate` rejects the layouts it says it rejects: overlapping spans, a zone
+   off the rail, the pin starting inside a zone, both zones the same colour, an
+   unknown target -- and accepts the layouts the 2026-09-01 rework exists for:
+   both zones on one side of the beam, and two zones touching.
 
     python tests/check_linkbar_zone_geometry.py
 
@@ -50,6 +53,15 @@ def expect_reject(failures, label, **overrides) -> None:
         failures.append(f"validate accepted {label}")
 
 
+def expect_accept(failures, label, **overrides) -> None:
+    try:
+        LinkbarRotateLayout(load_cfg(**overrides)).validate()
+    except ValueError as exc:
+        failures.append(f"validate rejected {label}: {str(exc).splitlines()[0][:80]}")
+    else:
+        print(f"accept {label:20s}", flush=True)
+
+
 def main() -> int:
     failures = []
     layout = LinkbarRotateLayout(load_cfg())
@@ -73,10 +85,12 @@ def main() -> int:
         if not ok:
             failures.append(f"in_zone did not flip at the edge of {zone}")
 
+    # Strictly inside both spans: sample at a tenth of a degree, offset by a
+    # twentieth so a shared boundary (touching zones) is never itself sampled.
     both = [
         math.degrees(a)
-        for a in (math.radians(d / 10.0) for d in range(-1800, 1801))
-        if layout.in_zone(a, "left") and layout.in_zone(a, "right")
+        for a in (math.radians(d / 10.0 + 0.05) for d in range(-1800, 1800))
+        if layout.in_zone(a, "color_1") and layout.in_zone(a, "color_2")
     ]
     if both:
         failures.append(f"angles on both zones: {both[:3]}...")
@@ -95,14 +109,36 @@ def main() -> int:
     if swapped.pin_color() != layout.zone_color(other):
         failures.append("pin_color did not follow zones.target")
 
-    expect_reject(failures, "same_side", **{"zones.right.angle_deg": 40.0})
-    expect_reject(failures, "sweep_too_small", **{"zones.left.angle_deg": 20.0})
-    expect_reject(failures, "sweep_too_large", **{"zones.left.angle_deg": 80.0})
+    # half_width 8: spans 16 wide, centres must be >= 16 apart, >= 10 from init 0,
+    # and within [-82, 82] on the +/-90 rail.
     expect_reject(failures, "overlap",
-                  **{"zones.left.angle_deg": 36.0, "zones.right.angle_deg": -36.0,
-                     "zones.half_width_deg": 35.0})
-    expect_reject(failures, "same_colour", **{"zones.assignment.right": "orange"})
+                  **{"zones.color_1.angle_deg": 30.0, "zones.color_2.angle_deg": 45.0})
+    expect_reject(failures, "off_rail", **{"zones.color_2.angle_deg": 85.0})
+    expect_reject(failures, "pin_in_zone", **{"zones.color_1.angle_deg": 5.0})
+    expect_reject(failures, "pin_near_zone", **{"zones.color_1.angle_deg": -9.5})
+    expect_reject(failures, "init_off_rail", **{"linkbar.init_angle_deg": 95.0})
+    expect_reject(failures, "same_colour", **{"zones.assignment.color_2": "blue"})
     expect_reject(failures, "unknown_target", **{"zones.target": "middle"})
+    expect_accept(failures, "same_side",
+                  **{"zones.color_1.angle_deg": 30.0, "zones.color_2.angle_deg": 60.0})
+    expect_accept(failures, "touching",
+                  **{"zones.color_1.angle_deg": 30.0, "zones.color_2.angle_deg": 46.0})
+    expect_accept(failures, "rail_edge",
+                  **{"zones.color_1.angle_deg": -82.0, "zones.color_2.angle_deg": 82.0})
+    expect_accept(failures, "pin_at_margin", **{"zones.color_1.angle_deg": -10.0})
+    # Sweep steps follow the sweep at 0.23 deg/step (55 deg -> 240, the accepted
+    # rate), floored at 120; sign of the sweep does not matter.
+    for sweep_deg, want in ((55.0, 240), (-55.0, 240), (105.0, 457), (15.6, 120), (0.0, 120)):
+        got = layout.steps_arc(math.radians(sweep_deg))
+        print(f"steps_arc({sweep_deg:+6.1f}deg) = {got}", flush=True)
+        if got != want:
+            failures.append(f"steps_arc({sweep_deg}) = {got}, expected {want}")
+
+    touching = LinkbarRotateLayout(load_cfg(**{"zones.color_1.angle_deg": 30.0,
+                                                "zones.color_2.angle_deg": 46.0}))
+    if touching.zone_at(math.radians(37.9)) != "color_1" or \
+            touching.zone_at(math.radians(38.1)) != "color_2":
+        failures.append("touching zones: zone_at does not switch at the shared edge")
 
     for failure in failures:
         print(f"FAIL: {failure}", flush=True)

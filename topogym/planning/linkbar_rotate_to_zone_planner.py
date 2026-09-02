@@ -2,9 +2,9 @@
 
 Everything else in this task is one fixed motion: take the knob, sweep an arc, let
 go. The only decision is which of the two zones to aim at, and the two are the
-same paint at the same radius costing the same sweep. What separates them is
-colour, and the pin carries one of the two colours -- so that is what has to be
-READ, and it is the whole reason the task is not solvable by looking at the zones.
+same paint at the same radius. What separates them is colour, and the pin carries
+one of the two colours -- so that is what has to be READ, and it is the whole
+reason the task is not solvable by looking at the zones.
 
 The decision is arithmetic on the layout, so this module needs no Genesis and is
 unit-testable offline.
@@ -16,18 +16,19 @@ the contrast baseline is a measurement rather than an assertion:
     NearestZoneRule     go to whichever zone is the shorter turn
 
 `NearestZoneRule` wins exactly the instances where the nearer zone happens to be
-the pin's colour -- half of them, once the two zone angles are drawn independently
-on either side of the start and the target is drawn independently of both.
+the pin's colour -- half of them, once the two zone positions on the rail are drawn
+independently of which one is the target.
 
 **The oracle does not know the answer by name.** It asks the layout which zone the
 pin's colour names, which is exactly the fact the verifier tests. Hard-coding
-`"left"` here would make the oracle right for a reason the verifier does not use.
+`"color_1"` here would make the oracle right for a reason the verifier does not use.
 
-**The turn never takes the long way round.** The joint is continuous, so both zones
-are reachable in either direction, but the far way sweeps the pin across the other
-zone, which is the picture of a wrong answer even if it ends on the right one. The
-signed difference is used as-is rather than wrapped into (-180, 180], which for a
-layout `LinkbarRotateLayout.validate` accepts is always the direct path.
+**The turn is the direct one.** The joint is continuous, so both zones are
+reachable in either direction; the signed difference is used as-is rather than
+wrapped into (-180, 180], which on a rail of +/-90 deg is always the short way.
+When both zones sit on the same side of the beam and the target is the far one,
+the pin does pass over the other zone on its way -- unavoidable, and harmless: the
+verifier reads only where the pin rests after the release.
 """
 
 from __future__ import annotations

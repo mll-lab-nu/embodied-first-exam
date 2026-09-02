@@ -2,8 +2,8 @@
 #
 # 场景几何不在这里——它在 task 配置里（configs/task_configs/
 # linkbar_rotate_to_zone_topogym_tabletop_v1.yaml），用点路径覆盖即可扫参：
-#   task.zones.left.angle_deg=40
-#   task.zones.target=right
+#   task.zones.color_1.angle_deg=30 task.zones.color_2.angle_deg=60
+#   task.zones.target=color_1
 #   task.zones.half_width_deg=6
 
 defaults:
@@ -13,7 +13,7 @@ defaults:
 # 只建场景、一步不走。构建期的互相穿透在这一档能看见，不会被第一次沉降藏掉。
 static_only: false
 
-# 关节扫描：用位置控制把梁依次驱到 left → 初始角 → right → 初始角，报跟随误差。
+# 关节扫描：用位置控制把梁依次驱到 color_1 → 初始角 → color_2 → 初始角，报跟随误差。
 # 用位置控制而不是直接写关节，是因为这一档问的是「梁能不能真的过去」：
 # 直接写角度会穿过挡路的东西并报告成功。属于运动学检查，不是 episode。
 sweep_joint: false
@@ -28,8 +28,8 @@ sweep_servo:
 
 # 落位相位。写关节到指定角，沉降后跑判据，看判据读出什么。
 #   none  : 停在初始角，两块区域都不在，判据必须报 outside_zone（对照档）
-#   left  : 落到左区中心
-#   right : 落到右区中心
+#   color_1 : 落到 color_1 区中心
+#   color_2 : 落到 color_2 区中心
 #   angle : 落到 seat_angle_deg，用来走区域边界，验证判据确实在 half_width_deg 处翻转
 seat_phase: none
 seat_angle_deg: 0.0

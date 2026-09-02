@@ -3,15 +3,15 @@
 # linkbar_rotate_to_zone（docx 4.4 改造版）的验收跑法。
 #
 # 八格，四组，由便宜到关键：
-#   offline   两个无物理的门：规划器对照（oracle 4/4、nearest_zone 2/4）、布局几何
+#   offline   两个无物理的门：规划器对照（oracle 6/6、nearest_zone 3/6）、布局几何
 #             （区域边界翻转、无重叠、非法布局被拒）。几秒钟，先跑。
-#   sweep     位置控制把梁驱到 left → init → right → init，验梁能真的到两块区域
+#   sweep     位置控制把梁驱到 color_1 → init → color_2 → init，验梁能真的到两块区域
 #             （直接写关节会穿过挡路的东西并报告成功）。
 #   seat      写关节到三个相位再沉降，验判据读出的与画面一致：none → 区外，
-#             left → 同色区成功，right → 异色区 wrong_zone。同时读沉降后的角速度，
+#             color_2 → 同色区成功，color_1 → 异色区 wrong_zone。同时读沉降后的角速度，
 #             这是 success.max_angular_speed 阈值的实测依据。
 #   physical  带机械臂的完整 episode 三条：oracle 成功；nearest_zone 在默认布局
-#             （target=left，left 更远）转错判 wrong_zone；oracle + 过转 12° 判
+#             （target=color_2 在 +55°，比 color_1 的 −45° 更远）转错判 wrong_zone；oracle + 过转 12° 判
 #             outside_zone（区域半宽 8°）。
 #
 # **默认无头。** 判据全部在日志里。VIEWER=1 可开窗，但不会加 run.keep_open ——
@@ -146,11 +146,11 @@ grade() {
     seat_none)
       expect_all "$log" "pin_zone=None" "failure_label=outside_zone"
       ;;
-    seat_left)
-      expect_all "$log" "pin_zone=left" "in_target=True" "at_rest=True" "terminal=True"
+    seat_color_2)
+      expect_all "$log" "pin_zone=color_2" "in_target=True" "at_rest=True" "terminal=True"
       ;;
-    seat_right)
-      expect_all "$log" "pin_zone=right" "in_target=False" "failure_label=wrong_zone"
+    seat_color_1)
+      expect_all "$log" "pin_zone=color_1" "in_target=False" "failure_label=wrong_zone"
       ;;
     physical_oracle)
       expect_all "$log" "task_success=True"
@@ -218,8 +218,8 @@ for name in "${SELECTED[@]}"; do
       ;;
     seat)
       run_cell seat_none  inspect run.seat_phase=none
-      run_cell seat_left  inspect run.seat_phase=left
-      run_cell seat_right inspect run.seat_phase=right
+      run_cell seat_color_2 inspect run.seat_phase=color_2
+      run_cell seat_color_1 inspect run.seat_phase=color_1
       ;;
     physical)
       run_cell physical_oracle  physical run.oracle_mode=oracle
