@@ -283,6 +283,58 @@ class LinkbarRotateLayout:
         needed = int(np.ceil(abs(float(np.rad2deg(float(sweep)))) / per_step))
         return max(int(motion.min_steps_arc), needed)
 
+    # ------------------------------------------------------------ init angle
+
+    def init_angle_segments(self) -> list[tuple[float, float]]:
+        """Degrees the beam may start at: the init span minus each zone's keep-out.
+
+        The zones are drawn first, so where the pin may start is a function of
+        where they landed. Cutting the keep-outs (``half_width + pin_start_margin``
+        either side of a centre) out of ``linkbar.init_span_deg`` leaves one to
+        three intervals; ``init_angle_from_frac`` maps a unit draw onto their
+        union, so no draw ever puts the pin on a zone. Empty only when the two
+        zones cover the whole span (about 0.25% of pairs) -- that one is rejected.
+        """
+
+        lo, hi = (float(v) for v in self.cfg.linkbar.init_span_deg)
+        keep_out = float(self.cfg.zones.half_width_deg) + float(
+            self.cfg.zones.pin_start_margin_deg
+        )
+        segments = [(lo, hi)]
+        for name in LINKBAR_ZONES:
+            centre = float(np.rad2deg(self.zone_angle(name)))
+            ko_lo, ko_hi = centre - keep_out, centre + keep_out
+            cut: list[tuple[float, float]] = []
+            for start, end in segments:
+                if ko_hi <= start or ko_lo >= end:
+                    cut.append((start, end))
+                    continue
+                if ko_lo > start:
+                    cut.append((start, ko_lo))
+                if ko_hi < end:
+                    cut.append((ko_hi, end))
+            # Two keep-outs meeting at one angle leave a float-rounding sliver.
+            segments = [(s, e) for s, e in cut if e - s > 1e-6]
+        return segments
+
+
+    def init_angle_from_frac(self, frac: float) -> float:
+        """The beam's initial angle (deg) at unit position ``frac`` along the allowed set."""
+
+        segments = self.init_angle_segments()
+        total = sum(end - start for start, end in segments)
+        if total <= 0.0:
+            raise ValueError(
+                "The two zones' keep-outs cover the whole initial-angle span "
+                f"{list(self.cfg.linkbar.init_span_deg)} deg; nowhere for the pin to start."
+            )
+        t = min(max(float(frac), 0.0), 1.0) * total
+        for start, end in segments:
+            if t <= end - start:
+                return start + t
+            t -= end - start
+        return segments[-1][1]
+
     # ------------------------------------------------------------- validation
 
     def validate(self) -> None:
@@ -333,6 +385,20 @@ class LinkbarRotateLayout:
                 "Both zones are painted "
                 f"{self.zone_color_name('color_1')!r}; the pin's colour would name both."
             )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``: turns the
+    sampled ``linkbar.init_frac`` into ``linkbar.init_angle_deg`` on the set the
+    drawn zones leave free. A ``ValueError`` (empty set) rejects the draw.
+    """
+
+    layout = LinkbarRotateLayout(task_cfg)
+    task_cfg.linkbar.init_angle_deg = layout.init_angle_from_frac(
+        float(task_cfg.linkbar.init_frac)
+    )
 
 
 def validate_task_cfg(task_cfg) -> None:

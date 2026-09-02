@@ -218,9 +218,14 @@ oblique / wrist 机位看得见的位置。
   改版前 `_ShiftBy` 平移后区中心绝对值本就到 90°）。
 - **两区自由**：中心可在导轨上任意处，同侧或异侧、相邻或分开都允许，只要求不重叠。`nearest_zone` 对照在同侧布局下同样只有一半正确。
   同侧且目标是远区时，销在途中会掠过近区——判据只读松手后的静止态，不算错。
-- **销出生不在区内**：新增 `zones.pin_start_margin_deg = 2°`，`|init − centre| ≥ half_width + 2°`，否则拒绝。这是结构性约束，
-  1000 seed 实测首抽拒绝率 0.234（预估 20–25%：每区 20° 禁区 / 约 164° 可用），不适用「拒绝率 > 5% 即包络过宽」的一般规则；
-  `check_variant_rng.py` 对本任务的阈值为 0.30，并注明理由。重采仍是 seed 的纯函数。
+- **销出生不在区内**：新增 `zones.pin_start_margin_deg = 2°`，`|init − centre| ≥ half_width + 2°`。09-01 版靠拒绝实现，
+  1000 seed 实测首抽拒绝率 0.234（每区 20° 禁区 / 约 164° 可用），`check_variant_rng.py` 对本任务单独放宽阈值到 0.30。
+  **2026-09-02 改为构造式**：`variation:` 里不再抽 `init_angle_deg`，改抽 `linkbar.init_frac ∈ [0, 1]`，`derived` 条目调
+  `derive_task_cfg`，把它按长度比例映射到 `init_span_deg`（±15°）扣掉两区禁区后剩下的 1–3 段并集上
+  （`LinkbarRotateLayout.init_angle_segments` / `init_angle_from_frac`）。并集为空（两区把 ±15° 盖满）才拒绝，
+  1000 seed 首抽拒绝率 0.002；阈值回到全任务统一的 0.02。代价：seed → 变体的映射变了，§8.4 的十格不再对应同 seed，
+  需按新规则重跑 `linkbar_variation_sweep.sh` 复核（oracle 10/10、nearest ≈ 1/2）。离线 1000 seed：同侧 390、异侧 610、
+  近邻 65、初始角贴禁区边 103。
 - **键名**：`left` / `right` → `color_1` / `color_2`，随机化后 `color_1` 是角度较小的那块。判据字段 `pin_zone` / `target_zone`
   的取值随之变为 `color_1` / `color_2`；本任务此前无录制数据集，不涉及兼容。
 - 离线实测（1000 seed）：同侧 368、异侧 632、净角距 < 5° 的近邻对 69；六色 30 种有序组合全覆盖。

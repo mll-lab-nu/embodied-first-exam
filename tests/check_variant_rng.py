@@ -4,8 +4,8 @@
 is a pure function of ``(seed, name, VARIANT_RNG_VERSION)``: same numbers every
 call, on every machine, no matter what else was drawn first. This script checks
 that promise and the two call sites that now depend on it
-(``layout_randomization.randomize_task_cfg`` on the linkbar yaml's ``variation:``
-block and ``braid.sample_braid_word``).
+(``layout_randomization.randomize_task_cfg`` on the linkbar and diverter yamls'
+``variation:`` blocks, and ``braid.sample_braid_word``).
 
 The golden-value check is deliberate: if someone changes the derivation rule
 without bumping ``VARIANT_RNG_VERSION``, every recorded dataset's "seed N" silently
@@ -116,17 +116,95 @@ def _genesis_importable() -> bool:
     return True
 
 
-def _without_validate(cfg):
-    """A copy of ``cfg`` whose variation block has no validate entry."""
+# Every task's variation block must keep its first-draw rejection rate under
+# this bar (variation_axes_plain_zh.md section 6). Above it the fix is a derived
+# entry (sample a unit fraction, map it onto the range the drawn geometry allows)
+# or a narrower range -- never more retries.
+MAX_REJECTION = 0.02
+
+
+def _first_draw_rejected(lr, base, task: str, seed: int) -> bool:
+    """Would the retry=0 draw for ``seed`` be rejected (by derive or validate)?"""
+    probe = lr._unlocked_copy(base)
+    directives = lr._parse_directives(probe["task"])
+    lr._apply(probe["task"], directives, VariantRng(seed), task, 0)
+    try:
+        for cls in (lr._Derived, lr._Validate):
+            d = next((d for d in directives if isinstance(d, cls)), None)
+            if d is not None:
+                lr._resolve_fn(d.fn)(probe["task"])
+    except ValueError:
+        return True
+    return False
+
+
+def check_directives() -> list[str]:
+    """Parsing and ordering rules of the variation block, on toy configs (no task module)."""
+    fails: list[str] = []
     from omegaconf import OmegaConf
 
-    out = OmegaConf.create(OmegaConf.to_container(cfg, resolve=False))
-    out.task.variation = [e for e in out.task.variation if str(e.get("kind")) != "validate"]
-    return out
+    bare = OmegaConf.create({"task": {"task": {"id": "x"}, "a": 1.0}})
+    if randomize_task_cfg(bare, "x", 0) is not bare:
+        fails.append("a task without variation: did not return the input object")
+    for label, block in (
+        ("unknown kind", [{"kind": "gaussian", "path": "a", "lo": 0.0, "hi": 1.0}]),
+        ("two validates", [{"kind": "validate", "fn": "os:getcwd"}, {"kind": "validate", "fn": "os:getcwd"}]),
+        ("two deriveds", [{"kind": "derived", "fn": "os:getcwd"}, {"kind": "derived", "fn": "os:getcwd"}]),
+        ("missing field", [{"kind": "uniform", "path": "a"}]),
+        ("derived without fn", [{"kind": "derived"}]),
+    ):
+        broken = OmegaConf.create({"task": {"task": {"id": "x"}, "a": 1.0, "variation": block}})
+        try:
+            randomize_task_cfg(broken, "x", 0)
+        except ValueError:
+            pass
+        else:
+            fails.append(f"variation block with {label} was accepted")
+
+    # derived runs after sampling and before validate, sees the drawn leaf, and
+    # its ValueError counts as a rejection (the next retry redraws).
+    seen: list[float] = []
+
+    def derive(task):
+        seen.append(float(task["a"]))
+        task["b"] = 2.0 * float(task["a"])
+        if task["a"] < 0.5:
+            raise ValueError("a too small")
+
+    def validate(task):
+        if task["b"] != 2.0 * task["a"]:
+            raise ValueError("derived leaf not visible to validate")
+
+    plain = {"task": {"task": {"id": "toy"}, "a": 0.0, "b": 0.0, "variation": [
+        {"kind": "uniform", "path": "a", "lo": 0.0, "hi": 1.0},
+        {"kind": "derived", "fn": derive},
+        {"kind": "validate", "fn": validate},
+    ]}}
+    if sampled_leaves(plain["task"]) != ("a",):
+        fails.append(f"derived leaf leaked into sampled_leaves: {sampled_leaves(plain['task'])}")
+    outs = [randomize_task_cfg(plain, "toy", seed)["task"] for seed in range(50)]
+    if any(o["a"] < 0.5 or o["b"] != 2.0 * o["a"] for o in outs):
+        fails.append("derived/validate order: an accepted draw has a < 0.5 or b != 2a")
+    if len(seen) <= 50:
+        fails.append("derive never saw a rejected draw: the ValueError path was not exercised")
+    if plain["task"]["b"] != 0.0:
+        fails.append("randomize_task_cfg mutated the plain-dict input")
+    # Without a validate entry a derive error is a hard error, not a silent retry.
+    no_validate = {"task": {"task": {"id": "toy"}, "a": 0.0, "b": 0.0, "variation": [
+        {"kind": "uniform", "path": "a", "lo": 0.0, "hi": 0.4},
+        {"kind": "derived", "fn": derive},
+    ]}}
+    try:
+        randomize_task_cfg(no_validate, "toy", 0)
+    except ValueError:
+        pass
+    else:
+        fails.append("derive ValueError without a validate entry was swallowed")
+    return fails
 
 
 def check_layout_randomization() -> list[str]:
-    """Properties of the yaml-declared axes, on the first task that has them (linkbar)."""
+    """Properties of the linkbar yaml's axes: leaves, envelope, coverage, rejection."""
     fails: list[str] = []
     from omegaconf import OmegaConf
 
@@ -140,34 +218,18 @@ def check_layout_randomization() -> list[str]:
         return [f"{task} yaml has no variation: block"]
     want_leaves = (
         "zones.target", "zones.assignment.color_1", "zones.assignment.color_2",
-        "zones.color_1.angle_deg", "zones.color_2.angle_deg", "linkbar.init_angle_deg",
+        "zones.color_1.angle_deg", "zones.color_2.angle_deg", "linkbar.init_frac",
     )
     if sampled_leaves(base.task) != want_leaves:
         fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
 
-    # Parsing: no block -> same object back; unknown kind / two validates -> ValueError.
-    bare = OmegaConf.create({"task": {"task": {"id": "x"}, "a": 1.0}})
-    if randomize_task_cfg(bare, "x", 0) is not bare:
-        fails.append("a task without variation: did not return the input object")
-    for label, block in (
-        ("unknown kind", [{"kind": "gaussian", "path": "a", "lo": 0.0, "hi": 1.0}]),
-        ("two validates", [{"kind": "validate", "fn": "os:getcwd"}, {"kind": "validate", "fn": "os:getcwd"}]),
-        ("missing field", [{"kind": "uniform", "path": "a"}]),
-    ):
-        broken = OmegaConf.create({"task": {"task": {"id": "x"}, "a": 1.0, "variation": block}})
-        try:
-            randomize_task_cfg(broken, "x", 0)
-        except ValueError:
-            pass
-        else:
-            fails.append(f"variation block with {label} was accepted")
-
-    # Without Genesis the validate hook cannot be imported: sample without it.
-    genesis = _genesis_importable()
-    sample_cfg = base if genesis else _without_validate(base)
-    one = randomize_task_cfg(sample_cfg, task, 3)
-    two = randomize_task_cfg(sample_cfg, task, 3)
-    other = randomize_task_cfg(sample_cfg, task, 4)
+    # The derive and validate hooks import the task module, which pulls in Genesis.
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the linkbar hooks cannot run")
+        return fails
+    one = randomize_task_cfg(base, task, 3)
+    two = randomize_task_cfg(base, task, 3)
+    other = randomize_task_cfg(base, task, 4)
     if OmegaConf.to_container(one) != OmegaConf.to_container(two):
         fails.append(f"{task}: seed 3 twice gave different configs")
     if OmegaConf.to_container(one) == OmegaConf.to_container(other):
@@ -181,14 +243,15 @@ def check_layout_randomization() -> list[str]:
         fails.append("zones.target is not the 'linkbar_rotate_to_zone/zones.target' stream")
 
     # Envelope over 1000 seeds. Zone centres on the +/-90 rail minus the 8 deg
-    # half width, at least 2 * 8 apart, color_1 the smaller; neither within
-    # half_width + margin (10 deg) of the beam's start. Same-side pairs and
+    # half width, at least 2 * 8 apart, color_1 the smaller. The beam's start is
+    # derived onto [-15, 15] minus each zone's keep-out (half_width + margin =
+    # 10 deg), so no accepted draw has the pin on a zone. Same-side pairs and
     # near-touching pairs must both occur: they are what the rework is for.
     palette = set(base.task.zones.colors.keys())
     targets, pairs, used, rejects = set(), set(), set(), 0
-    same_side, opposite, near_touching = 0, 0, 0
+    same_side, opposite, near_touching, split_start = 0, 0, 0, 0
     for seed in range(1000):
-        out = randomize_task_cfg(sample_cfg, task, seed)
+        out = randomize_task_cfg(base, task, seed)
         z = out.task.zones
         init = float(out.task.linkbar.init_angle_deg)
         c1, c2 = float(z.color_1.angle_deg), float(z.color_2.angle_deg)
@@ -203,7 +266,7 @@ def check_layout_randomization() -> list[str]:
         if c2 - c1 < 16.0 - 1e-9:
             fails.append(f"seed {seed}: centres {c2 - c1:.2f} apart, spans overlap")
         for name, c in (("color_1", c1), ("color_2", c2)):
-            if abs(c - init) < 10.0:
+            if abs(c - init) < 10.0 - 1e-9:
                 fails.append(f"seed {seed}: {name} at {c:+.2f} contains the pin's start {init:+.2f}")
         if (c1 - init) * (c2 - init) > 0:
             same_side += 1
@@ -211,18 +274,12 @@ def check_layout_randomization() -> list[str]:
             opposite += 1
         if c2 - c1 - 16.0 < 5.0:
             near_touching += 1
+        if any(abs(c - init) < 12.0 for c in (c1, c2)):
+            split_start += 1  # a zone's keep-out cut the span; the start sits next to it
         if pair[0] == pair[1] or not set(pair) <= palette:
             fails.append(f"seed {seed}: assignment {dict(z.assignment)} not two distinct palette colours")
-        if genesis:
-            # Count how often the first draw was rejected: retry=0 must fail validate.
-            probe = lr._unlocked_copy(base)
-            directives = lr._parse_directives(probe["task"])
-            lr._apply(probe["task"], directives, VariantRng(seed), task, 0)
-            validate = next(d for d in directives if isinstance(d, lr._Validate))
-            try:
-                lr._resolve_validate(validate.fn)(probe["task"])
-            except ValueError:
-                rejects += 1
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
     if targets != {"color_1", "color_2"}:
         fails.append(f"zones.target never took both values: {targets}")
     n_pairs = len(palette) * (len(palette) - 1)
@@ -231,23 +288,105 @@ def check_layout_randomization() -> list[str]:
     if used != palette:
         fails.append(f"palette colours never used: {palette - used}")
     print(f"    zones same side of the beam: {same_side}/1000, opposite: {opposite}/1000, "
-          f"gap < 5 deg: {near_touching}/1000")
+          f"gap < 5 deg: {near_touching}/1000, start within 2 deg of a keep-out: {split_start}/1000")
     if same_side == 0 or opposite == 0:
         fails.append("zone pairs never on the same side, or never on opposite sides")
     if near_touching == 0:
         fails.append("no near-touching zone pair in 1000 seeds")
-    if not genesis:
-        print("    skipped(validate): Genesis not importable here; rejection rate unmeasured")
-    else:
-        rate = rejects / 1000.0
-        print(f"    validate rejection rate over 1000 seeds: {rate:.3f}")
-        # The only rejection left is "a zone contains the pin's start": with the
-        # centres drawn on the whole rail that is structural, not an over-wide
-        # envelope (keep-out 20 deg per zone on a ~164 deg range, ~20-25%), so
-        # the usual 5% bar does not apply. Anything above 30% would mean the
-        # constructive pair draw or the keep-out has changed.
-        if rate > 0.30:
-            fails.append(f"validate rejection rate {rate:.3f} > 0.30: more than the pin keep-out explains")
+    if split_start == 0:
+        fails.append("the beam's start never landed next to a keep-out: is the derive mapping onto the cut span?")
+    rate = rejects / 1000.0
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    # Since 2026-09-02 the start is derived onto the free set, so the only
+    # rejection left is the two keep-outs covering the whole +/-15 span (~0.25%).
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: constructive draw broken?")
+    return fails
+
+
+_DIVERTER_CFG = REPO / "configs" / "task_configs" / "diverter_route_ball_topogym_tabletop_v1.yaml"
+
+
+def check_diverter_randomization() -> list[str]:
+    """Properties of the diverter yaml's axes: leaves, envelope, derived ranges, coverage, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_DIVERTER_CFG)})
+    task = "diverter_route_ball"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "diverter.dead_end_side", "diverter.init_sealed_side", "target_pad.enabled",
+        "branch.angle_deg", "diverter.lever.radius", "ball.speed",
+        "channel.fork_frac", "ball.spawn_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the diverter hooks cannot run")
+        return fails
+    from topogym.tasks.connectivity.diverter_route_ball import DiverterRouteBallLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+    pick = VariantRng(3).stream(f"{task}/diverter.dead_end_side").integers(2)
+    if one.task.diverter.dead_end_side != ("left", "right")[int(pick)]:
+        fails.append("dead_end_side is not the named stream's draw")
+
+    # Envelope over 1000 seeds: the independent axes stay in their ranges; the
+    # two derived leaves stay in the range the drawn geometry allows; every
+    # check passes; the arm never has to reach past the configured limit; the
+    # 2 x 2 x 2 discrete combinations all occur and half the draws need a turn.
+    combos, rejects, rotate_needed = set(), 0, 0
+    reach_max, fork_lo_seen, fork_hi_seen = 0.0, 0.0, -1.0
+    for seed in range(1000):
+        out = randomize_task_cfg(base, task, seed)
+        t = out.task
+        layout = DiverterRouteBallLayout(t)
+        combos.add((str(t.diverter.dead_end_side), str(t.diverter.init_sealed_side),
+                    bool(t.target_pad.enabled)))
+        rotate_needed += t.diverter.dead_end_side != t.diverter.init_sealed_side
+        angle, lever, speed = float(t.branch.angle_deg), float(t.diverter.lever.radius), float(t.ball.speed)
+        if not 24.0 <= angle <= 36.0:
+            fails.append(f"seed {seed}: angle {angle:.2f} outside [24, 36]")
+        if not 0.047 <= lever <= 0.063:
+            fails.append(f"seed {seed}: lever {lever:.4f} outside [0.047, 0.063]")
+        if not 0.090 <= speed <= 0.150:
+            fails.append(f"seed {seed}: speed {speed:.3f} outside [0.09, 0.15]")
+        fork_lo, fork_hi = layout.fork_origin_x_bounds()
+        fork = float(t.channel.fork_origin_x)
+        if not fork_lo - 1e-9 <= fork <= fork_hi + 1e-9:
+            fails.append(f"seed {seed}: fork {fork:+.4f} outside derived [{fork_lo:+.4f}, {fork_hi:+.4f}]")
+        spawn_lo, spawn_hi = layout.release_x_bounds()
+        release = float(t.ball.release_x)
+        if not spawn_lo - 1e-9 <= release <= spawn_hi + 1e-9:
+            fails.append(f"seed {seed}: release {release:+.4f} outside derived [{spawn_lo:+.4f}, {spawn_hi:+.4f}]")
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        reach_max = max(reach_max, layout.knob_reach())
+        fork_lo_seen, fork_hi_seen = min(fork_lo_seen, fork), max(fork_hi_seen, fork)
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if len(combos) != 8:
+        fails.append(f"only {len(combos)} of 8 (dead_end, init_sealed, pad) combinations in 1000 seeds")
+    if not 0.4 <= rotate_needed / 1000.0 <= 0.6:
+        fails.append(f"rotate_needed fraction {rotate_needed / 1000.0:.3f} not near 1/2")
+    if reach_max > float(base.task.reach.max_knob_dist) + 1e-9:
+        fails.append(f"knob reach {reach_max:.4f} exceeds reach.max_knob_dist")
+    rate = rejects / 1000.0
+    print(f"    rotate_needed: {rotate_needed}/1000, knob reach max {reach_max:.3f} m, "
+          f"fork_origin_x in [{fork_lo_seen:+.3f}, {fork_hi_seen:+.3f}]")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    # Both coupled leaves are derived, so nothing should be rejected at all.
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: derived ranges broken?")
     return fails
 
 
@@ -280,7 +419,9 @@ def check_braid() -> list[str]:
 def main() -> int:
     sections = [
         ("variant_rng", check_variant_rng),
-        ("layout_randomization", check_layout_randomization),
+        ("directives", check_directives),
+        ("layout_randomization(linkbar)", check_layout_randomization),
+        ("layout_randomization(diverter)", check_diverter_randomization),
         ("braid", check_braid),
     ]
     total = 0

@@ -140,6 +140,36 @@ def main() -> int:
             touching.zone_at(math.radians(38.1)) != "color_2":
         failures.append("touching zones: zone_at does not switch at the shared edge")
 
+    # The beam's start is derived onto [-15, 15] minus each zone's keep-out
+    # (8 + 2 deg). One zone at -5 cuts [-15, 5] out, leaving [5, 15]; a zone at
+    # 0 with the other at 20 leaves nothing.
+    cut = LinkbarRotateLayout(load_cfg(**{"zones.color_1.angle_deg": -5.0,
+                                           "zones.color_2.angle_deg": 60.0}))
+    segments = [(round(s, 6), round(e, 6)) for s, e in cut.init_angle_segments()]
+    print(f"init segments (zone at -5): {segments}", flush=True)
+    if segments != [(5.0, 15.0)]:
+        failures.append(f"init_angle_segments = {segments}, expected [(5.0, 15.0)]")
+    ends = (cut.init_angle_from_frac(0.0), cut.init_angle_from_frac(1.0))
+    if not (abs(ends[0] - 5.0) < 1e-9 and abs(ends[1] - 15.0) < 1e-9):
+        failures.append(f"init_angle_from_frac ends = {ends}, expected (5, 15)")
+    split = LinkbarRotateLayout(load_cfg(**{"zones.color_1.angle_deg": -40.0,
+                                             "zones.color_2.angle_deg": 0.0}))
+    segments = [(round(s, 6), round(e, 6)) for s, e in split.init_angle_segments()]
+    if segments != [(-15.0, -10.0), (10.0, 15.0)]:
+        failures.append(f"split init_angle_segments = {segments}, expected two 5 deg pieces")
+    mid = split.init_angle_from_frac(0.5)
+    if abs(mid - (-10.0)) > 1e-9 and abs(mid - 10.0) > 1e-9:
+        failures.append(f"init_angle_from_frac(0.5) on two equal pieces = {mid}, expected a piece end")
+    covered = LinkbarRotateLayout(load_cfg(**{"zones.color_1.angle_deg": -8.0,
+                                               "zones.color_2.angle_deg": 12.0}))
+    try:
+        covered.init_angle_from_frac(0.5)
+    except ValueError:
+        pass
+    else:
+        failures.append("init_angle_from_frac accepted zones that cover the whole span")
+
+
     for failure in failures:
         print(f"FAIL: {failure}", flush=True)
     print("ok" if not failures else f"{len(failures)} failure(s)", flush=True)

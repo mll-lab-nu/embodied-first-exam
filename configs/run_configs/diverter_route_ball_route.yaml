@@ -1,7 +1,7 @@
 # diverter_route_ball_physical_route_demo 的运行模式参数。
 #
 # 指令方向不在这里 —— 它属于实例定义，在 task 里：
-#   task.command.side=right
+#   task.diverter.dead_end_side=right
 #   task.diverter.init_sealed_side=left
 
 defaults:
@@ -25,3 +25,11 @@ target_offset_deg: 0.0
 
 # 弹珠测试的步数上限。球从释放到出口实测 3.10s；600 步 = 6 秒，留出滚出后静止的时间。
 marble_steps: 600
+
+# --- 变体（2026-09-02）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进 episode 元数据的变体标识。
+variant_id: default

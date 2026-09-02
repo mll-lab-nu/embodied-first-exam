@@ -106,7 +106,7 @@ review 意见：先把计划的全部变体参数化，难度按实测结果划�
 
 1. `rng = np.random.SeedSequence(seed)`；每条轴用 `spawn` 出的独立子流，子流索引由轴名的稳定哈希决定。新增一条轴不改变已有轴在同一种子下的取值。
 2. 先采 A 类，再采 B 类，再重算 C 类。
-3. 调用该任务的校验函数；不通过则整体重采，最多 20 次，超过则报错并记录拒绝率。拒绝率 > 5% 说明包络声明过宽，收窄包络而非提高重试次数。
+3. 调用该任务的校验函数；不通过则整体重采，最多 20 次，超过则报错并记录拒绝率。**每个任务的首抽拒绝率必须 ≤ 2%**（`tests/check_variant_rng.py` 的 `MAX_REJECTION`）。区间依赖其他轴的量（球起点依赖分岔口、分岔口依赖张角与可达）不用独立区间 + 拒绝，而是抽归一化量再由 Layout 派生（`derived` kind），让约束由构造满足；超标的处置是加派生或收窄区间，不是提高重试次数（2026-09-02 定）。
 4. 采样结果（含 A/B/C 全部取值）写入 `TaskVariant.parameters`（`episode_spec.py`），H5 `setup/` 逐 episode 落盘，供 §4 划档使用。
 
 场景几何简单时，多样性主要来自 A 类而非 B 类。原则：**每个任务至少一条 A 类轴**，使脚本化策略（固定方向、最近目标、固定延时）的期望成功率被固定在随机水平；B 类轴提供连续覆盖。
@@ -124,7 +124,7 @@ B 类抖动幅度的下限：必须大于两个噪声底——仿真非确定性
 | `_ChoiceJitter(path, choices)` | 离散实例轴，等概率                                                                    | diverter / linkbar / rope_winding / rope_unwinding / ring_transfer / 布料 material_axis |
 | `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架）                              | ring_transfer / bar_through_hole                                                      |
 | `_SpacedPairJitter(paths, lo, hi, min_gap)` | 区间内间距 ≥ min_gap 的有序标量对，构造式采样不拒绝（**已落地 2026-09-01**）                 | linkbar 两区中心                                                                        |
-| `_DerivedSolve(fn)`            | 采样后调用任务模块的重算函数写回 C 类叶子                                                       | rope_winding（sweep_deg）、rope_unwinding（两个出生点）、ring_transfer（long_axis）                |
+| `_Derived(fn)`（yaml `derived`）| 采样后、校验前调用任务模块函数就地写回派生叶子；区间依赖其他轴的量抽归一化 `[0,1]` 再派生，构造式满足约束（**已落地 2026-09-02**） | linkbar（`init_frac`→初始角）、diverter（`fork_frac`→分岔口、`spawn_frac`→球起点）；待用：rope_winding（sweep_deg）、rope_unwinding（两个出生点）、ring_transfer（long_axis） |
 | `_Validate(fn, max_retry)`     | 采样后调用可行性校验，失败重采                                                              | 全部                                                                                    |
 
 
@@ -140,8 +140,8 @@ oracle 对变体的适应程度由 Layout 层提供的接口决定。diverter / 
 | 1 单一几何来源       | planner 只调用 `Layout` 方法，不读 `cfg.task` 叶子。测试：对 50 个随机 seed 的 cfg 离线调用 `plan_*()`，不建 Genesis 场景。          | diverter、linkbar、gate、band_untwist、cloth×3、rope_winding、rope_unwinding、ring_transfer                                        | bar_through_hole（`primitive.*_z`）、gate_cage_ball（`motion.*_z`）：改为 `Layout` 推导，先例 `knob_grasp_world()`；rope_unwinding 的两个出生点 |
 | 2 实例轴以语义查询暴露   | planner 问 `layout.live_side()` / `target_zone()` / `goal_enclosure()` / `winding_target()`，同一段代码覆盖全部实例。 | diverter、linkbar、ring_transfer、band_untwist（实测 `over_end`）                                                                  | rope_winding / rope_unwinding（direction 在 `WindingSpec` 中）、cloth 的 `material_axis` / 抓取角序号                                  |
 | 3 先观测后规划       | planner 输入为 settle 后测量的状态，不用设计位。                                                                        | cloth_unpleat / cloth_unroll `observe()`、unlink_c_ring `regrasp_pose()`、swap_crossing_sign、band_untwist、ring_transfer 反应式抬升 | cloth_fold、bar_through_hole、gate_cage_ball 的抓取位                                                                             |
-| 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding、linkbar `steps_arc(sweep)`（2026-09-01）                 | diverter `steps_arc`、gate `insert_steps`、bar_through_hole `move_steps`                                                      |
-| 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`；linkbar `validate()`、diverter `check_pivot_clearance()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
+| 4 步数由距离与速度推导   | 每段步数 = 距离 / 步长，不写固定步数。                                                                                  | cloth_fold `fold_steps()`、cloth_unroll `stroke_steps()`、rope_winding、linkbar `steps_arc(sweep)`（2026-09-01）、diverter `steps_arc(sweep)`（2026-09-02） | gate `insert_steps`、bar_through_hole `move_steps`                                                      |
+| 5 可行性校验统一签名    | `Layout.checks() -> list[(name, measured, limit, ok)]`，一份实现同时供随机化拒绝采样、离线门、demo 启动断言。                    | unlink_c_ring `SceneGeometry.checks()`、diverter `checks()`（六行，2026-09-02）；linkbar `validate()`、`FigureEightSpec`（抛错式）       | 其余任务的 `tests/check_*_geometry.py` 断言迁入 Layout；抛错式改为返回读数                                                                     |
 | 6 决策规则与对照策略同接口 | `Rule.decide(layout, observation, command)`；oracle 与捷径基线是同一接口的不同实现。                                     | diverter、linkbar、gate_cage_ball、band_untwist（`wrong_end`）                                                                   | 其余任务的 `oracle_mode` 分支改为 Rule 类                                                                                             |
 
 
@@ -288,21 +288,26 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 3.7 diverter_route_ball（docx 4.3，C4 强制）
 
+> **2026-09-02 落地**。§3.7 原表的 `fork_origin_x ±0.015`、`angle ±6`、`lever ±0.008` 独立抽时手柄超出 0.69 m 可达的比例约 47%，`release_x ±0.03` 下半段球心进后挡板；两者改为派生叶子，张角包络保持 24–36°，首抽拒绝率 0。详见 `diverter_route_ball_zh.md` §6.2。
+
 
 | 类   | 叶子                                                                                                      | 当前值            | 包络                  | 边界来源                                        |
 | --- | ------------------------------------------------------------------------------------------------------- | -------------- | ------------------- | ------------------------------------------- |
-| A   | `diverter.dead_end_side`                                                                                | left           | Cat{left, right}    | 指令轴                                         |
+| A   | `diverter.dead_end_side`                                                                                | left           | Cat{left, right}    | 场景轴（封闭端墙可见）                                 |
 | A   | `diverter.init_sealed_side`                                                                             | right          | Cat{left, right}，独立 | 2×2 中一半实例正确动作为不旋转                           |
-| A   | `target_pad.enabled`                                                                                    | true           | Cat{true, false}    | false = 仅语言可解                               |
-| B   | `branch.angle_deg`                                                                                      | 30             | ±6                  | `ball.radius` 双侧不等式（半开间隙 < 球径 < 落座通道宽度）随之重算 |
-| B   | `diverter.lever.radius`                                                                                 | 0.055          | ±0.008              | 拨杆落点距基座 ≤ 0.69 m                            |
-| B   | `channel.fork_origin_x`                                                                                 | −0.020         | ±0.015              | 同上                                          |
-| B   | `ball.speed` / `ball.release_x`                                                                         | 0.120 / −0.170 | ±0.03 / ±0.03       | 有界推力驱动量程；入口段长度                              |
-| D   | `ball.radius`、`channel.inner_width`、`flap.thickness`、`joint_limited`（=false）、`mechanism.*`、`grid_pitch` |                |                     |                                             |
+| A   | `target_pad.enabled`                                                                                    | true           | Cat{true, false}    | false = 画面无目标提示                              |
+| B   | `branch.angle_deg`                                                                                      | 30             | [24, 36]            | 下界受可达（张角小分流鼻远）；上界受占地；球径双侧不等式在 `checks()` 复核 |
+| B   | `diverter.lever.radius`                                                                                 | 0.055          | [0.047, 0.063]      | 与张角一起进可达反解                                  |
+| B   | `ball.speed`                                                                                            | 0.120          | [0.090, 0.150]      | 有界推力驱动量程                                    |
+| C   | `channel.fork_origin_x` ← `channel.fork_frac` U[0,1]                                                    | −0.020         | `[−0.060, min(−0.020, 可达上界)]` | `reach.base_xy` (−0.570, 0)、`reach.max_knob_dist` 0.690；上界 = `base_x + sqrt(D² − (r sin a)²) − hw/sin a − r cos a`；只向 −x 挪（进料道变短）永远安全 |
+| C   | `ball.release_x` ← `ball.spawn_frac` U[0,1]                                                             | −0.170         | `[entry_start_x + r + 0.004, junction_x − r − 0.010]` | 整球离开后挡板；整球在分岔交接点上游                          |
+| C   | `steps_arc`                                                                                             | 120（@60°）     | `max(60, ceil(|sweep| / 0.5°))` | 恒定角速度；落座到落座扫 2×张角                           |
+| D   | `ball.radius`、`channel.inner_width`、`flap.thickness`、`joint_limited`（=false）、`mechanism.*`、`grid_pitch`、`reach.*` |                |                     |                                             |
 
 
-- 校验：`check_pivot_clearance()`（建场景时抛错）+ 球径双侧不等式（需从配置注释 `:181-186` 抽成函数）。
-- 候选难度统计量：`target_pad.enabled`；`branch.angle_deg` 偏离 30° 的幅度。
+- 校验：`DiverterRouteBallLayout.checks()` 六行（枢轴净空 ≥ 2 mm、半开旁通间隙 < 球径 − 4 mm、落座通道 ≥ 球径 + 20 mm、分岔口派生区间非空、球起点在派生区间内、手柄距底座 ≤ 0.690）；`validate()` 任一行不 ok 即拒绝；建场景、随机化、离线门共用。
+- 离线：`tests/check_variant_rng.py` diverter 段、`tests/check_diverter_geometry.py`（16 个包络角点 + 判据 flood-fill 一致性 + 规则 2×2）。GPU：`bash_scripts/tests/diverter_variation_sweep.sh`。
+- 候选难度统计量：`target_pad.enabled`；`rotate_needed`；`branch.angle_deg` 偏离 30° 的幅度；`knob_reach`。
 - 说明：IL 录制时按 `diverter_route_ball_zh.md` §6.3 只取需旋转的两种组合；评测保留 2×2。
 
 ### 3.8 linkbar_rotate_to_zone（docx 4.4，C4 强制）
@@ -316,7 +321,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | A   | `zones.target`                                                                                                                                                        | color_2       | Cat{color_1, color_2} | 目标区；销、销套环、手柄盖取该区颜色                                   |
 | A   | `zones.assignment.color_1` / `.color_2`                                                                                                                               | blue / orange | 六色不放回抽两种（30 种有序对） | 与 target 独立                                          |
 | B   | `zones.color_1.angle_deg` ≤ `zones.color_2.angle_deg`                                                                                                                 | −45 / +55     | 有序对，两中心 ∈ [−82, 82]，角距 ≥ 16 | 导轨 `rail.start/end_deg` ±90 减半宽 8；角距 = 2·half_width（相邻允许）。`_SpacedPairJitter` 构造式采样，不为重叠拒绝 |
-| B   | `linkbar.init_angle_deg`                                                                                                                                              | 0             | ±15              | 与两区独立；`validate` 拒绝销出生在区内（`|init − centre| < half_width + pin_start_margin 2°`），首抽拒绝率实测 0.234，结构性 |
+| C   | `linkbar.init_angle_deg` ← `linkbar.init_frac` U[0,1]                                                                                                                 | 0             | `init_span_deg` ±15 扣掉两区禁区后的并集 | **2026-09-02 改为派生**：先抽两区，初始角在 ±15° 减去每区 `half_width + pin_start_margin`（10°）后的 1–3 段并集上按长度比例定位；并集为空（两区盖满 ±15°，约 0.25%）才拒绝。此前独立抽 + 拒绝，首抽拒绝率 0.234 |
 | B   | `zones.half_width_deg`                                                                                                                                                | 8             | [6, 10]（尚未采样）    | 下限受 `motion.target_tolerance_deg` 4° 与实测落座误差；上限受两区角距 |
 | C   | `steps_arc`                                                                                                                                                           | 240（@55°）    | `max(120, ceil(|sweep| / 0.23°))` | 固定角速度而非步数：步数固定时 `max_lag` 随扫掠角 0.05°/° 增长（2026-09-01 §8.4/§8.5） |
 | D   | `pivot.x`（+0.020）、`motion.approach_z`（0.315）、`motion.grasp_qpos`（0.001）、`motion.arc_deg_per_step`（0.23）、`mechanism.joint_friction`（0.10）、`axle.clearance`（0.002）、高度链、`knob.*`、`rail.*` |               |                  | 各有 2026-08-20~22 事故记录；`arm_radius` / `pivot` 不进判据；导轨跨度固定是任务定义    |
@@ -448,7 +453,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 序   | 任务                           | 前置代码                                            | 理由                               |
 | --- | ---------------------------- | ----------------------------------------------- | -------------------------------- |
 | 1   | linkbar_rotate_to_zone       | `_ScalarJitter` + `_ChoiceJitter` + `_SpacedPairJitter` + `_Validate`（已落地） | C4 强制；`validate()` 已有；oracle 无需改 |
-| 2   | diverter_route_ball          | 同上 + 球径不等式函数                                    | C4 强制；2×2 实例轴已在配置                |
+| 2   | diverter_route_ball          | `derived` kind + `checks()` 六行（**已落地 2026-09-02**，GPU 待跑） | C4 强制；2×2 实例轴已在配置                |
 | 3   | gate_cage_ball               | `_ScalarJitter` + 可解性拒绝                         | C4 强制；run 配置已规划                  |
 | 4   | band_untwist                 | 镜像轴；在 `figure_eight_spec()` 消费 seed             | oracle 不读布局叶子                    |
 | 5   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |

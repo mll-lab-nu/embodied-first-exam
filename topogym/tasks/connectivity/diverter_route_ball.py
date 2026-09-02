@@ -325,37 +325,6 @@ class DiverterRouteBallLayout:
 
     # ----- flap -------------------------------------------------------------
 
-    def check_pivot_clearance(self, margin: float = 0.002) -> float:
-        """Static walls must sit outside the circle the rotating parts sweep.
-
-        The flap's pivot end and the axle both turn about the pivot, so anything
-        fixed within that radius is a collision waiting to happen. The nearest
-        fixed thing is the upstream corner of a branch's inner wall, which the
-        setback places at ``hypot(nose_setback, wall_thickness / 2)`` from the
-        pivot. Checked at build time because it is exactly the kind of thing that
-        goes wrong silently: raising the axle radius from 11 to 13 mm once left
-        2 mm here, and nothing would have said so.
-
-        Returns the clearance, so the caller can report it.
-        """
-
-        corner = float(
-            np.hypot(float(self.cfg.diverter.nose_setback), 0.5 * self.wall_thickness)
-        )
-        swept = max(
-            0.5 * float(self.cfg.diverter.flap.thickness),
-            float(self.cfg.diverter.lever.axle_radius),
-        )
-        clearance = corner - swept
-        if clearance < margin:
-            raise ValueError(
-                f"The splitter walls come within {corner * 1000:.1f} mm of the pivot "
-                f"while the rotating parts sweep {swept * 1000:.1f} mm "
-                f"(clearance {clearance * 1000:.1f} mm < {margin * 1000:.1f} mm). "
-                "Raise diverter.nose_setback, or thin the flap / the axle."
-            )
-        return clearance
-
     @property
     def flap_reach(self) -> float:
         """Nose-to-wall distance along a seated flap.
@@ -585,6 +554,156 @@ class DiverterRouteBallLayout:
         branch = self.exit_station - self.half_width * np.cos(self.angle) / np.sin(self.angle)
         return float((lane + branch) / speed)
 
+    # ----- variation: derived leaves ----------------------------------------
+    # Two leaves have ranges that depend on other axes, so the yaml samples a
+    # unit fraction for each and `derive_task_cfg` maps it onto the range the
+    # drawn geometry allows (layout_randomization's `derived` entry). Nothing
+    # here draws a random number.
+
+    def fork_origin_x_bounds(self) -> tuple[float, float]:
+        """Where the fork origin may sit: a fixed floor, a ceiling set by arm reach.
+
+        The knob rides at ``nose + lever`` and the nose at ``fork + hw / sin a``,
+        so once the branch angle and lever length are drawn, the farthest fork the
+        arm still reaches at either seat is a closed form. Moving the fork the
+        other way only shortens the entry lane, hence the fixed floor.
+        """
+
+        channel = self.cfg.channel
+        reach = self.cfg.reach
+        lo = float(channel.fork_x_min)
+        hi = float(channel.fork_x_max)
+        base_x, base_y = (float(v) for v in reach.base_xy)
+        d = float(reach.max_knob_dist)
+        r = self.lever_radius
+        angle = self.angle
+        # The seated knob sits at (nose + r cos a, +/- r sin a); the far seat is
+        # the one on the opposite side of the base's y offset.
+        across = r * np.sin(angle) + abs(base_y)
+        if d <= across:
+            return lo, -np.inf
+        nose_max = base_x + np.sqrt(d * d - across * across) - r * np.cos(angle)
+        hi_reach = nose_max - self.half_width / np.sin(angle)
+        return lo, float(min(hi, hi_reach))
+
+    def fork_origin_x_from_frac(self, frac: float) -> float:
+        lo, hi = self.fork_origin_x_bounds()
+        if not hi >= lo:
+            raise ValueError(
+                f"No fork position within reach: the lever ({self.lever_radius:.3f} m) at "
+                f"{np.rad2deg(self.angle):.1f} deg needs the fork below {hi:+.3f}, "
+                f"floor is {lo:+.3f}."
+            )
+        return float(lo + min(max(float(frac), 0.0), 1.0) * (hi - lo))
+
+    def release_x_bounds(self) -> tuple[float, float]:
+        """Where the ball may spawn: whole ball off the back wall, whole ball
+        upstream of where the walls start to diverge."""
+
+        ball = self.cfg.ball
+        r = self.ball_radius
+        lo = self.entry_start_x + r + float(ball.spawn_wall_margin)
+        hi = self.junction_x - r - float(ball.spawn_fork_margin)
+        return float(lo), float(hi)
+
+    def release_x_from_frac(self, frac: float) -> float:
+        lo, hi = self.release_x_bounds()
+        if not hi >= lo:
+            raise ValueError(
+                f"The entry lane [{self.entry_start_x:+.3f}, {self.junction_x:+.3f}] is too "
+                f"short to spawn a {2.0 * self.ball_radius * 1000:.0f} mm ball with its margins."
+            )
+        return float(lo + min(max(float(frac), 0.0), 1.0) * (hi - lo))
+
+    # ----- variation: checks ---------------------------------------------------
+
+    def knob_reach(self) -> float:
+        """Distance from the arm's base to the knob at the farther seat (task xy)."""
+
+        base = np.asarray([float(v) for v in self.cfg.reach.base_xy], dtype=float)
+        return float(max(
+            np.linalg.norm(self.knob_center_xy(self.seat_angle(side)) - base) for side in SIDES
+        ))
+
+    def half_open_bypass_gap(self) -> float:
+        """Narrowest passage between the half-open flap and a branch's outer wall.
+
+        With the flap along the lane axis, the outer walls run straight at
+        ``half_width`` up to the junction and then swing away, so the pinch is at
+        the junction corner: its distance to the flap's centre line segment, less
+        half the flap's thickness. A ball wider than this jams at the fork -- the
+        intermediate state docx 4.3 asks for -- and one narrower slips past.
+        """
+
+        tip_x = float(self.flap_tip_xy(0.0)[0])
+        if tip_x <= self.junction_x <= self.nose_x:
+            corner = self.half_width
+        else:
+            corner = float(np.hypot(tip_x - self.junction_x, self.half_width))
+        return float(corner - 0.5 * float(self.cfg.diverter.flap.thickness))
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a buildable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate and the
+        demo's start-up print, so they cannot disagree. Metres, task frame.
+        """
+
+        r = self.ball_radius
+        # Static walls must sit outside the circle the rotating parts sweep. The
+        # flap's pivot end and the axle both turn about the pivot; the nearest
+        # fixed thing is the upstream corner of a branch's inner wall, which the
+        # setback places at hypot(nose_setback, wall_thickness / 2) from it.
+        # Exactly the kind of thing that goes wrong silently: raising the axle
+        # radius from 11 to 13 mm once left 2 mm here, and nothing said so.
+        corner = float(np.hypot(float(self.cfg.diverter.nose_setback), 0.5 * self.wall_thickness))
+        swept = max(0.5 * float(self.cfg.diverter.flap.thickness),
+                    float(self.cfg.diverter.lever.axle_radius))
+        pivot_clearance = corner - swept
+        # Half-open must jam the ball (gap < diameter, 4 mm to spare); seated must
+        # pass it (the seated lane is the entry width by construction, 10 mm a side).
+        bypass = self.half_open_bypass_gap()
+        lane = 2.0 * self.half_width
+        fork_lo, fork_hi = self.fork_origin_x_bounds()
+        spawn_lo, spawn_hi = self.release_x_bounds()
+        release_x = float(self.cfg.ball.release_x)
+        reach = self.knob_reach()
+        max_reach = float(self.cfg.reach.max_knob_dist)
+        return [
+            ("pivot_clearance", pivot_clearance, 0.002, pivot_clearance >= 0.002),
+            ("half_open_bypass_gap", bypass, 2.0 * r - 0.004, bypass < 2.0 * r - 0.004),
+            ("seated_lane_width", lane, 2.0 * r + 0.020, lane >= 2.0 * r + 0.020),
+            ("fork_range", fork_hi - fork_lo, 0.0, fork_hi >= fork_lo
+             and fork_lo <= self.fork_origin_x <= fork_hi + 1e-9),
+            ("ball_spawn", release_x, spawn_lo, spawn_lo - 1e-9 <= release_x <= spawn_hi + 1e-9),
+            ("knob_reach", reach, max_reach, reach <= max_reach + 1e-9),
+        ]
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"diverter_route_ball layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
+    def steps_arc(self, sweep: float) -> int:
+        """Sim steps for a sweep of ``sweep`` radians at the configured angular rate.
+
+        Constant angular speed, not constant step count: the seat-to-seat sweep
+        is twice the branch angle, so with the angle varying a fixed count would
+        make the speed -- and the joint's lag behind the hand -- vary with it.
+        """
+
+        motion = self.cfg.motion
+        per_step = float(motion.arc_deg_per_step)
+        # Round before the ceiling: 48 deg / 0.5 is 96.0000000001 in floats.
+        needed = int(np.ceil(round(abs(float(np.rad2deg(float(sweep)))) / per_step, 6)))
+        return max(int(motion.min_steps_arc), needed)
+
+
     # ----- footprint --------------------------------------------------------
 
     def footprint_bounds(self) -> tuple[float, float, float]:
@@ -603,6 +722,32 @@ class DiverterRouteBallLayout:
             self.exit_plane_x + margin,
             float(y_half),
         )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Order
+    matters: the fork position comes first (it depends on the drawn angle and
+    lever), then the ball's spawn (it depends on the fork). A ``ValueError``
+    (empty range) rejects the draw.
+    """
+
+    layout = DiverterRouteBallLayout(task_cfg)
+    task_cfg.channel.fork_origin_x = layout.fork_origin_x_from_frac(
+        float(task_cfg.channel.fork_frac)
+    )
+    task_cfg.ball.release_x = layout.release_x_from_frac(float(task_cfg.ball.spawn_frac))
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    DiverterRouteBallLayout(task_cfg).validate()
 
 
 @dataclass
@@ -690,7 +835,7 @@ class DiverterRouteBallSceneBuilder:
         layout = DiverterRouteBallLayout(
             self.task_cfg, task_origin=tabletop.frames.task_origin
         )
-        layout.check_pivot_clearance()
+        layout.validate()
         self._add_entry(scene, manifest, layout)
         self._add_branches(scene, manifest, layout)
         entity, joint_name = self._add_diverter(scene, manifest, layout)

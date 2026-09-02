@@ -55,7 +55,15 @@ linkbar:
   # 销走的圆半径。也是两块区域的半径——「同在旋转圆上」在这里是一个数。
   arm_radius: 0.170
   # 初始角。0° = 梁指向 +x（远离机械臂、朝 front 相机）。必须在导轨内，且销不在任一区里。
+  # 随机化时不直接抽它：先抽两区，再由 init_frac 在 init_span_deg 扣掉两区禁区
+  # （half_width + pin_start_margin）后剩下的区间并集上按长度比例定位
+  # （LinkbarRotateLayout.init_angle_from_frac），构造式保证销不在区里。2026-09-02 起；
+  # 此前直接在 ±15° 里均匀抽、撞区即重抽，首抽拒绝率 0.234。
   init_angle_deg: 0.0
+  # 初始角的抽样跨度（度）。梁停在机械臂正前方附近，两区才都可能在任一侧。
+  init_span_deg: [-15.0, 15.0]
+  # 初始角在允许集合上的归一化位置，[0, 1]；只在随机化时被写入，默认值对应 init_angle_deg=0。
+  init_frac: 0.5
 
   beam:
     bottom_z: 0.095
@@ -261,7 +269,10 @@ variation:
   - {kind: distinct_choice, paths: [zones.assignment.color_1, zones.assignment.color_2], keys_of: zones.colors}
   # 布局：两区在导轨上的中心角；color_1 取小的；相邻允许
   - {kind: spaced_pair, paths: [zones.color_1.angle_deg, zones.color_2.angle_deg], lo: -82.0, hi: 82.0, min_gap: 16.0}
-  # 布局：横梁初始角
-  - {kind: uniform, path: linkbar.init_angle_deg, lo: -15.0, hi: 15.0}
-  # 校验：销出生不在区内、区在导轨内、两色不同……不过则整体重抽（LinkbarRotateLayout.validate）
+  # 布局：横梁初始角在「init_span_deg 扣掉两区禁区」上的归一化位置
+  - {kind: uniform, path: linkbar.init_frac, lo: 0.0, hi: 1.0}
+  # 派生：init_frac -> linkbar.init_angle_deg（构造式保证销不在区里；并集为空则拒绝）
+  - {kind: derived, fn: "topogym.tasks.connectivity.linkbar_rotate_to_zone:derive_task_cfg"}
+  # 校验：区在导轨内、两色不同、销不在区内（兜底）……不过则整体重抽（LinkbarRotateLayout.validate）
   - {kind: validate, fn: "topogym.tasks.connectivity.linkbar_rotate_to_zone:validate_task_cfg"}
+

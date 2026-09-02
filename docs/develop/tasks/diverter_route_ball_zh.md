@@ -241,21 +241,47 @@ v = 实测水平速度
 `data/episode_dataset_writer.py:77` 已经把 `task_goal` 作为每 episode 参数，
 `scripts/export_h5_lerobot.py:24` 将其导出为 prompt，因此管线侧不需要改动，只需 demo 按实例传值。
 
-### 6.2 随机化轴
+### 6.2 随机化轴（2026-09-02 落地）
 
-`task_taxonomy_zh.md` §4.4：C4 任务未在 `generation/layout_randomization.py` 注册随机化条目者
-不得进入 benchmark 产物。本任务需要注册两个**离散**轴：分流板初始相位、指令方向。
+`task_taxonomy_zh.md` §4.4：C4 任务未声明随机化条目者不得进入 benchmark 产物。本任务的轴声明在
+`configs/task_configs/diverter_route_ball_topogym_tabletop_v1.yaml` 末尾的 `variation:` 块
+（`generation/layout_randomization.py` 读它；python 注册表已于 2026-09-01 删除）：
 
-现有 `layout_randomization.py` 的四种 directive 全部是连续扰动，且模块文档写明
-「never change topology / the success criterion unchanged」，与离散指令轴冲突。解法：
+| 类 | 叶子 | 抽法 | 说明 |
+|---|---|---|---|
+| A | `diverter.dead_end_side` | Cat{left, right} | 死路侧，只能从画面读出（封闭端墙） |
+| A | `diverter.init_sealed_side` | Cat{left, right}，独立 | 2×2 里一半实例正确动作是不转 |
+| A | `target_pad.enabled` | Cat{true, false} | 无垫时画面里没有目标提示 |
+| B | `branch.angle_deg` | U[24, 36] | 24° 以下手柄超出可达；36° 以上占地超出桌面 |
+| B | `diverter.lever.radius` | U[0.047, 0.063] | 拨杆长 |
+| B | `ball.speed` | U[0.090, 0.150] | 有界推力量程；scene_check 实测 0.08–0.18 均可路由 |
+| B→C | `channel.fork_frac` U[0, 1] → `channel.fork_origin_x` | **派生** | 区间 `[fork_x_min −0.060, min(fork_x_max −0.020, 可达上界)]`；可达上界由 `reach` 段（底座 (−0.570, 0)、手柄 ≤ 0.690 m）按张角与拨杆长反解 |
+| B→C | `ball.spawn_frac` U[0, 1] → `ball.release_x` | **派生** | 区间「整球离开后挡板 4 mm」到「整球在分岔交接点上游 10 mm」；随球径、分岔口位置自动变 |
+| D | `ball.radius`、`channel.inner_width`、`flap.*`、`mechanism.*`、`grid_pitch` | 固定 | 各有实测记录 |
 
-- 新增 `_ChoiceJitter(path, choices)` directive；
-- 指令侧写入 `cfg.task.command.side`（属于实例定义，而非运行模式）；
-- 在模块文档中补一段说明：C4 类额外随机化离散实例轴，oracle 读回该轴后仍然可解，
-  因此不违反「oracle 保持可解」这一原则。
+为什么两条轴是派生而不是独立区间：分岔口位置、张角、拨杆长三者独立抽时，手柄距底座超出
+0.69 m 的比例约 47%（十万样本蒙特卡洛，距离 0.651–0.732 m）；球起点 ±0.03 的下半段球心已进
+后挡板。按「归一化量 + 派生」构造后首抽拒绝率为 0（1000 seed），张角包络不用收窄。
 
-该 directive 落地后同时解开 4.1 阶段 2 的随机化（`ball.release_y`，见
-`configs/run_configs/gate_cage_ball_gate.yaml` 尾部说明）。
+**校验** `DiverterRouteBallLayout.checks()`（六行，`(name, measured, limit, ok)`；`validate()` 任一行不 ok 即拒绝；
+建场景、离线门、demo 启动打印同一份）：
+
+| 行 | 读数 | 门 | 默认几何 |
+|---|---|---|---|
+| `pivot_clearance` | 内壁收口角到枢轴 − 转动件扫过半径 | ≥ 2 mm | 2.5 mm |
+| `half_open_bypass_gap` | 半开时板尖与外壁交接角的最近距离 − 半板厚 | < 球径 − 4 mm | 41.5 mm（球径 52） |
+| `seated_lane_width` | `inner_width` | ≥ 球径 + 20 mm | 90 mm |
+| `fork_range` | 分岔口派生区间宽度 | > 0 且现值在内 | 40 mm |
+| `ball_spawn` | `release_x` | 在派生区间内 | −0.170 |
+| `knob_reach` | 两落座角下手柄距底座取大 | ≤ `reach.max_knob_dist` 0.690 | 0.688 |
+
+`motion.steps_arc` 固定 120 步改为 `arc_deg_per_step: 0.5` + `min_steps_arc: 60`，由
+`layout.steps_arc(sweep)` 推导：张角随机后落座到落座扫 48°–72°，角速度不变。
+
+离线门：`tests/check_variant_rng.py`（叶子集合、包络、派生区间、8 种离散组合全覆盖、`rotate_needed` ≈ 1/2、
+拒绝率 ≤ 2%）与 `tests/check_diverter_geometry.py`（seed 0–199 checks 全过、16 个包络角点读数、
+判据 flood-fill 在每个角点「半开堵、落座通、封活路不通」、oracle/fixed_direction 的 2×2、`steps_arc`）。
+GPU：`bash_scripts/tests/diverter_variation_sweep.sh`（visual / oracle / fixed 三组）。
 
 ### 6.3 初始相位与指令的组合
 
@@ -439,6 +465,19 @@ python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.div
 python -B -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.init_sealed_side=right run.command=right run.verbose=true 2>&1 | tee runs/div_o_rr.log
 python -B -m demos.connectivity.diverter_route_ball_physical_route_demo -m run.oracle_mode=fixed_direction task.diverter.init_sealed_side=left,right run.command=left,right 2>&1 | tee runs/div_fixed_all.log
 ```
+
+### 步骤 5：变体部署（2026-09-02，离线已过，GPU 待跑）
+
+产出：§6.2 的 yaml 块与六行 `checks()`、两个 demo 的 `run.randomize_layout` 接线与 `variant` 行、
+`run_configs` 三个键、两个离线门、`diverter_variation_sweep.sh`。
+
+离线实测（1000 seed）：首抽拒绝率 0.000；8 种离散组合全覆盖；`rotate_needed` 516/1000；
+`knob_reach` 最大 0.690 m；`fork_origin_x` 落在 [−0.060, −0.020]；`half_open_bypass_gap` 40.9–41.9 mm。
+包络角点（张角 24/36 × 拨杆 0.047/0.063 × 两个 frac 0/1）16 格 checks 全过，判据 flood-fill 三条结论一致。
+
+GPU 验收（用户跑 `bash bash_scripts/tests/diverter_variation_sweep.sh`，seed 0–9）：
+oracle 10/10 `success=True`；`fixed_direction` 成功率 0.3–0.7；十格首帧可分；
+`max_lag` / `target_error` 不随张角单调增长；`knob_reach` 最大格（0.690 m）IK 到位。结果表填在这里。
 
 ### 本轮之外
 

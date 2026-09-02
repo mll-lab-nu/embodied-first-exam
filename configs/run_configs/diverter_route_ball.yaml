@@ -40,3 +40,11 @@ sample_every: 20
 
 # 每次 rollout 结束后打印判据读数（几何层 S–T 连通性）。步骤 2 接上 verifier 后生效。
 classify: false
+
+# --- 变体（2026-09-02）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进 episode 元数据的变体标识。
+variant_id: default

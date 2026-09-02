@@ -24,6 +24,7 @@ episode, and nothing in an episode may move the flap that way
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=seal_left run.verbose=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.flap_phase=half run.viewer=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo run.classify=true run.verbose=true
+    python -m demos.connectivity.diverter_route_ball_inspect_demo run.randomize_layout=true run.seed=3 run.static_only=true
     python -m demos.connectivity.diverter_route_ball_inspect_demo --cfg job
 """
 
@@ -37,6 +38,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.supervision import stop_before_physics
 from topogym.tasks import DiverterRouteBallSceneBuilder, other_side
 from topogym.tasks.connectivity._ball_drive import HeadingDrive
@@ -49,6 +51,21 @@ from topogym.utils.recording import (
 )
 
 PHASES = ("config", "seal_left", "seal_right", "half")
+TASK_ID = "diverter_route_ball"
+
+
+def _variant_line(cfg) -> str:
+    """Same line as the physical demo prints (the variation sweep script reads both)."""
+    task = cfg.task
+    dead, sealed = str(task.diverter.dead_end_side), str(task.diverter.init_sealed_side)
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} dead_end={dead} init_sealed={sealed} "
+        f"rotate_needed={dead != sealed} pad={bool(task.target_pad.enabled)} "
+        f"angle_deg={float(task.branch.angle_deg):.2f} lever_r={float(task.diverter.lever.radius):.4f} "
+        f"fork_x={float(task.channel.fork_origin_x):+.4f} speed={float(task.ball.speed):.3f} "
+        f"release_x={float(task.ball.release_x):+.4f}"
+    )
+
 
 
 def _as_numpy(value) -> np.ndarray:
@@ -270,6 +287,10 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"diverter_route_ball_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+        print(_variant_line(cfg), flush=True)
+
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
@@ -316,6 +337,7 @@ def main(cfg: DictConfig) -> None:
         f"exit_left=({left_exit[0]:+.4f},{left_exit[1]:+.4f}) "
         f"exit_right=({right_exit[0]:+.4f},{right_exit[1]:+.4f}) "
         f"lane_clear={2.0 * layout.half_width:.3f} ball_dia={2.0 * layout.ball_radius:.3f} "
+        f"bypass_gap={layout.half_open_bypass_gap():.4f} knob_reach={layout.knob_reach():.3f} "
         f"travel_pred={layout.travel_time():.2f}s",
         flush=True,
     )

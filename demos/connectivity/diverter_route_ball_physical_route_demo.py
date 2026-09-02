@@ -31,6 +31,7 @@ there. `fixed_direction` gets exactly half of them wrong.
     python -m demos.connectivity.diverter_route_ball_physical_route_demo task.diverter.dead_end_side=right
     python -m demos.connectivity.diverter_route_ball_physical_route_demo run.stage=rotate_only
     python -m demos.connectivity.diverter_route_ball_physical_route_demo run.oracle_mode=fixed_direction
+    python -m demos.connectivity.diverter_route_ball_physical_route_demo run.randomize_layout=true run.seed=3
 """
 
 from __future__ import annotations
@@ -45,6 +46,8 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
+from topogym.generation.layout_randomization import randomize_task_cfg
+
 from topogym.planning import make_rule
 from topogym.primitives import (
     PivotLeverPrimitive,
@@ -60,6 +63,29 @@ from topogym.utils.recording import (
     print_recording_saved,
     recording_session_from_config,
 )
+
+TASK_ID = "diverter_route_ball"
+
+
+def _variant_line(cfg) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+    task = cfg.task
+    dead, sealed = str(task.diverter.dead_end_side), str(task.diverter.init_sealed_side)
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} dead_end={dead} init_sealed={sealed} "
+        f"rotate_needed={dead != sealed} pad={bool(task.target_pad.enabled)} "
+        f"angle_deg={float(task.branch.angle_deg):.2f} lever_r={float(task.diverter.lever.radius):.4f} "
+        f"fork_x={float(task.channel.fork_origin_x):+.4f} speed={float(task.ball.speed):.3f} "
+        f"release_x={float(task.ball.release_x):+.4f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
 from topogym.verification import DiverterRouteBallEvaluator
 
 
@@ -135,7 +161,8 @@ def run_episode(cfg, ball_scene, controller, *, episode_key, status) -> EpisodeR
         approach_z=layout.world_z(float(motion.approach_z)),
         retreat_z=layout.world_z(float(motion.retreat_z)),
         steps_per_phase=int(motion.steps_per_phase),
-        steps_arc=int(motion.steps_arc),
+        steps_arc=layout.steps_arc(plan.target_angle - plan.start_angle),
+
         gripper_steps=int(motion.gripper_steps),
         grasp_qpos=float(motion.grasp_qpos),
         close_hold_steps=int(motion.close_hold_steps),
@@ -349,6 +376,10 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"diverter_route_ball_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+        print(_variant_line(cfg), flush=True)
+
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
@@ -388,11 +419,17 @@ def main(cfg: DictConfig) -> None:
         f"nose_x={layout.nose_x:+.4f} flap_len={layout.flap_length:.4f} "
         f"seat=±{np.rad2deg(layout.angle):.1f}deg limited={bool(getattr(cfg.task.diverter.mechanism, 'joint_limited', False))} "
         f"init_sealed={layout.initial_sealed_side} dead_end={layout.dead_end_side} "
-        f"knob_r={layout.lever_radius:.3f} travel_pred={layout.travel_time():.2f}s",
+        f"knob_r={layout.lever_radius:.3f} knob_reach={layout.knob_reach():.3f} "
+        f"travel_pred={layout.travel_time():.2f}s "
+        f"budget={int(cfg.run.marble_steps) * float(cfg.env.sim.dt):.2f}s",
         flush=True,
     )
+    print(f"diverter_route_ball checks {_checks_line(layout)}", flush=True)
 
-    episode_key = EpisodeKey(task_id="diverter_route_ball", seed=int(cfg.run.seed))
+    episode_key = EpisodeKey(
+        task_id=TASK_ID, seed=int(cfg.run.seed), variant_id=str(cfg.run.variant_id)
+    )
+
     status = {"phase": "home", "command": "-", "mode": "-", "target_deg": 0.0, "exit": "-"}
     with recording_session_from_config(
         ball_scene.scene, ball_scene.cameras, cfg.recording, hud=_hud(ball_scene, status)

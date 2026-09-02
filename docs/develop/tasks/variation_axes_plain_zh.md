@@ -72,8 +72,8 @@
 | unlink_c_ring | C 环出生时缺口朝哪个方向；整个装置绕竖轴转的角度；装置在桌上的位置 |
 | band_untwist | 8 字整体的朝向和位置；交叉处两股的夹角；闭合叶的大小；两绳头之间的距离 |
 | gate_cage_ball | 球的起滚点；球过闸后到尽头的距离；闸板架子的位置；槽道左右位置 |
-| diverter_route_ball | 岔道张角；拨杆长度；分岔口位置；球速与起点 |
-| linkbar_rotate_to_zone | 两块颜色区在固定导轨（±90°）上的位置（不重叠即可，可同侧、可相邻）；横梁初始偏转（销不出生在区里）；颜色区的宽度 |
+| diverter_route_ball | 岔道张角；拨杆长度；球速；分岔口位置（在可达区间内的归一化位置）；球起点（在直道可出生段内的归一化位置） |
+| linkbar_rotate_to_zone | 两块颜色区在固定导轨（±90°）上的位置（不重叠即可，可同侧、可相邻）；横梁初始偏转（±15° 扣掉两区禁区后的并集上定位，销不出生在区里）；颜色区的宽度 |
 | cloth_fold | 布的位置；弧线松紧 |
 | cloth_unpleat | 布带位置；褶隆起的高度；拉多远；捏取点离布边多远 |
 | cloth_unroll | 支架位置；卷的层间距；杆离桌面的高度 |
@@ -92,7 +92,7 @@
 | --- | --- | --- |
 | `configs/task_configs/<task>.yaml` | linkbar 已有 `variation:` 块（2026-09-01）；其余 12 个无 | 每任务在 yaml 末尾加 `variation:` 列表，每条 `{kind, path 或 paths, 参数…}`，最多一条 `validate`；档位表 `levels:` 划档后再填。任务定义单文件内聚，与 RoboMME 一个任务一个文件同形 |
 | `topogym/generation/variant_rng.py` | **已落地（2026-08-29）** | `VariantRng(seed)`：每个 episode 一个实例，`stream(name, retry=k)` 按名字的 SHA-256 前 8 字节作 `SeedSequence` 派生键，得到只由 (seed, name, `VARIANT_RNG_VERSION`) 决定的独立随机流；`tier(n)` = seed % n。名字约定 `"<task_id>/<叶子路径>"`，保留前缀 `visual/`、`demo/`、`braid/word`。不做全局单例；重采用 `retry=k` 进名字而不是继续抽。已接入 `layout_randomization.py`（每叶子一条流）与 `braid.sample_braid_word`（`braid/word` 流）；测试 `tests/check_variant_rng.py`（含黄金值）。改派生规则必须升版本号 |
-| `topogym/generation/layout_randomization.py` | **2026-09-01 已改读 yaml**：`randomize_task_cfg` 解析 `cfg.task.variation` 块，无块即 no-op；python 注册表 `_REGISTRY` 已删除。kind ↔ 类：`choice`→`_ChoiceJitter`、`uniform`→`_ScalarJitter`、`distinct_choice`→`_DistinctChoiceJitter`、`spaced_pair`→`_SpacedPairJitter`（间距 ≥ min_gap 的有序对，构造式不拒绝）、`validate`→`_Validate`（`fn: "模块:函数"`，调用时才 import，本模块不依赖 Genesis）。重采按 `retry=k` 命名；流名 `<task_id>/<path>` 不变，搬家前后 100 seed 逐字节一致 | 到任务时补 `pair`（成对平移）/ `derived`（派生量重算）两种 kind；划档后每条轴加 `levels:` 子键，`seed % 3` 选档 |
+| `topogym/generation/layout_randomization.py` | **2026-09-01 已改读 yaml**：`randomize_task_cfg` 解析 `cfg.task.variation` 块，无块即 no-op；python 注册表 `_REGISTRY` 已删除。kind ↔ 类：`choice`→`_ChoiceJitter`、`uniform`→`_ScalarJitter`、`distinct_choice`→`_DistinctChoiceJitter`、`spaced_pair`→`_SpacedPairJitter`（间距 ≥ min_gap 的有序对，构造式不拒绝）、`validate`→`_Validate`（`fn: "模块:函数"`，调用时才 import，本模块不依赖 Genesis）。重采按 `retry=k` 命名；流名 `<task_id>/<path>` 不变，搬家前后 100 seed 逐字节一致 **2026-09-02 加 `derived`→`_Derived`**：采样后、校验前调用任务模块函数就地写回派生叶子；区间依赖其他轴的量抽归一化 `[0,1]` 再派生，构造式满足约束、不靠拒绝（linkbar 初始角、diverter 分岔口与球起点）。每任务首抽拒绝率门 ≤ 2%（`check_variant_rng.py` 的 `MAX_REJECTION`） | 到任务时补 `pair`（成对平移）；划档后每条轴加 `levels:` 子键，`seed % 3` 选档 |
 | `topogym/tasks/<cat>/<task>.py` Layout | 部分任务有 `validate()` / `checks()`；派生量散在 demo | `checks() -> [(name, measured, limit, ok)]` 统一签名；派生函数（绳长反解、出生点、环长轴、抬升高度）；`task_goal()` 指令模板；`success_params()` |
 | `topogym/generation/<task>_generator.py` | 7 个旧任务有，seed 只作身份 | 13 个任务各一个：`build_<task>_episode_spec(cfg, seed)` 输出 `EpisodeSpec`，把采样结果、指令文本、判据参数绑成一条记录 |
 | `configs/episode_splits/<task>.yaml` | 仅 3 个任务 | 13 个任务各一份 train / val / test seed 列表；每任务固化 1000 条变体记录（离线门通过即可，不跑物理） |
@@ -119,8 +119,8 @@ seed → VariantRng(seed)
 | 序 | 任务 | 前置代码 |
 | --- | --- | --- |
 | 0 | 通用 | `VariantRng`（已落地 08-29）；`layout_randomization.py` 读 yaml `variation:` 块 + 五种 kind（已落地 09-01）。`EpisodeSpec` / H5 落盘属数据管线，暂缓 |
-| 1 | linkbar_rotate_to_zone | **已完成（2026-08-29）**：注册条目、demo 接线、离线门、`bash_scripts/tests/linkbar_variation_sweep.sh`；GPU seed 0–9：oracle 10/10 成功、`nearest_zone` 5/10（防捷径成立）、拒绝率 0；结果见 `linkbar_rotate_to_zone_zh.md` §8.2。视觉上十格几乎一样 → **2026-09-01 改版**：固定 ±90° 虚线导轨 + 两区自由放置（同侧/相邻均可）、六色调色板、键名 color_1/color_2、销出生不在区内（首抽拒绝率 0.234，结构性）；离线门全过；GPU seed 0–9：oracle 10/10、`nearest_zone` 5/10、十格画面可分（§5.3、§8.4）。`steps_arc` 已改为按扫掠角推导（恒定角速度，88–92° 扫掠 `max_lag` 4.79° → 2.9°）。角差分箱留到划档 |
-| 2 | diverter_route_ball | 球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
+| 1 | linkbar_rotate_to_zone | **已完成（2026-08-29）**；**2026-09-02 收尾**：初始角改为 `init_frac` 派生（±15° 扣掉两区禁区后的并集上定位），首抽拒绝率 0.234 → 0.002，seed→变体映射随之改变，09-01 §8.4 的 GPU 十格需按新规则重跑复核。原记录：注册条目、demo 接线、离线门、`bash_scripts/tests/linkbar_variation_sweep.sh`；GPU seed 0–9：oracle 10/10 成功、`nearest_zone` 5/10（防捷径成立）、拒绝率 0；结果见 `linkbar_rotate_to_zone_zh.md` §8.2。视觉上十格几乎一样 → **2026-09-01 改版**：固定 ±90° 虚线导轨 + 两区自由放置（同侧/相邻均可）、六色调色板、键名 color_1/color_2、销出生不在区内（首抽拒绝率 0.234，结构性）；离线门全过；GPU seed 0–9：oracle 10/10、`nearest_zone` 5/10、十格画面可分（§5.3、§8.4）。`steps_arc` 已改为按扫掠角推导（恒定角速度，88–92° 扫掠 `max_lag` 4.79° → 2.9°）。角差分箱留到划档 |
+| 2 | diverter_route_ball | **已落地（2026-09-02，GPU 待跑）**：yaml 块 3 离散 + 3 连续 + 2 归一化派生（分岔口按可达反解、球起点按直道长度）；`checks()` 六行含可达行；`steps_arc` 按扫掠角推导；离线 1000 seed 拒绝率 0、8 种离散组合全覆盖、`rotate_needed` 0.516；`diverter_variation_sweep.sh` 三组待用户在 GPU 跑。原前置：球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
 | 3 | gate_cage_ball | 新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
 | 4 | band_untwist | 镜像开关（同步 `layout.over_end`）；planner 抬升 ≤ 0.40 守卫；`end_gap` 上限随开口叶半径 |
 | 5 | swap_crossing_sign | `braid.py` 交叉位置改为接收采样值并裁剪窗口；接入 `verify_braid_spec`；planner 抬升守卫 |

@@ -58,7 +58,17 @@ channel:
   # 两条支路中心线的公共起点。整套派生几何以它为原点。
   # 取 -0.020 而不是更靠前：拨杆手柄落在 x≈0.118，距 Franka 底座 0.688m，
   # 留出工作空间余量（4.1 的取板点是 0.645m）。
+  # 随机化时不直接抽它：先抽张角与拨杆长，再由 fork_frac 在
+  # [fork_x_min, min(fork_x_max, 可达上界)] 里定位（DiverterRouteBallLayout.
+  # fork_origin_x_from_frac）。可达上界由 reach 段反解：分岔口越靠 +x、张角越小、
+  # 拨杆越长，手柄离底座越远。只向 -x 挪（进料道变短）永远安全，所以 fork_x_max
+  # 就是这里的现值。
   fork_origin_x: -0.020
+  fork_x_min: -0.060
+  fork_x_max: -0.020
+  # 分岔口在允许区间内的归一化位置，[0, 1]；只在随机化时被写入。1 对应现值（可达允许时）。
+  fork_frac: 1.0
+
   color: [0.60, 0.60, 0.59]
 
 # ------------------------------------------------------------------ 支路
@@ -85,7 +95,7 @@ diverter:
   # 支路内壁相对分流鼻向下游让开的距离。这个缺口存在的唯一理由是给转动件让位——
   # 挡板的枢轴端与转轴都绕枢轴扫过一个圆，静止的墙必须待在那个圆之外。
   # 取到最小可行值，墙就贴着轴收口，看起来是墙托着轴，而不是轴悬在两片墙中间。
-  # 实际余量由 DiverterRouteBallLayout.check_pivot_clearance 在建场景时校验。
+  # 实际余量由 DiverterRouteBallLayout.checks() 的 pivot_clearance 一行在建场景时校验。
   nose_setback: 0.011
 
   flap:
@@ -179,12 +189,15 @@ diverter:
 # ------------------------------------------------------------------ 球
 ball:
   # 半径 0.026（直径 52mm）。上下都有约束，取值落在两者之间：
-  #   下界：半开态必须卡住。板半开时板尖在 (-0.030, 0)，尖端两侧到侧壁各 46.3mm，
-  #         球径必须大于它，否则球会从一侧溜过去，中间失败态就不成立。52 > 46.3，余 5.7mm。
+  #   下界：半开态必须卡住。板半开时板尖与支路外壁交接角之间的旁通间隙必须小于球径，
+  #         否则球会从一侧溜过去，中间失败态就不成立。
   #   上界：落座后的通行宽度等于通道内净宽 90mm（板与支路内边界共线，通道等宽），
   #         52mm 留出每侧 19mm，球在拐弯处不蹭壁。
-  # 改 channel.inner_width 或 branch.angle_deg 时这两个边界都会变，需重算。
+  # 两条都由 DiverterRouteBallLayout.checks() 按当前几何实算（half_open_bypass_gap、
+  # seated_lane_width），改 channel.inner_width 或 branch.angle_deg 时自动复核。
+  # 张角 24–36° 内旁通间隙 41–42mm，比球径小 10mm 以上。
   radius: 0.026
+
   # 哑光陶瓷轴承球的量级（同 4.1）。不用铬钢：镜面反射对视觉跟踪不利。
   rho: 3900.0
   friction: 0.4
@@ -204,8 +217,16 @@ ball:
   #   比关节摩擦 0.1 N·m 小一个数量级，因此球绝无可能把板推动或顶穿。
   thrust_gain: 1.0
   max_thrust: 0.15
-  # 开局位置（进料道上，后挡板前方 30mm）。
+  # 开局位置（进料道上，后挡板前方 30mm：球尾离墙 4mm）。
+  # 随机化时不直接抽它：由 spawn_frac 在「整球离开后挡板 spawn_wall_margin」到
+  # 「整球在分岔交接点上游 spawn_fork_margin」之间定位（DiverterRouteBallLayout.
+  # release_x_from_frac），球径、分岔口位置变了区间自动跟。
   release_x: -0.170
+  spawn_wall_margin: 0.004
+  spawn_fork_margin: 0.010
+  # 球在可出生段内的归一化位置，[0, 1]；只在随机化时被写入。0 对应现值。
+  spawn_frac: 0.0
+
   # 驱动器判定「被挡住」的窗口步数。2026-08-19 由 5 改为 40，同时判据从「逐步位移」
   # 改为「窗口内净位移」：球被挡板面挤着蹭时每步都有零点几毫米位移，逐步判据永远不触发
   # （实测板角 16/18/20 度三档球都停住了却报 jammed=False）。40 步 = 0.4s，
@@ -231,8 +252,14 @@ motion:
   # 由 layout.knob_grasp_world 算出，这里只给退刀高度。
   retreat_z: 0.260
   steps_per_phase: 30
-  # 圆弧扫掠的步数。手柄圆弧半径只有 55mm，步子要密才平滑。
-  steps_arc: 120
+  # 圆弧扫掠的角速度：每步转多少度，步数由扫掠角推导（DiverterRouteBallLayout.steps_arc），
+  #   steps = max(min_steps_arc, ceil(|sweep| / arc_deg_per_step))
+  # 落座到落座扫 2×张角：30° 时 60° / 0.5 = 120 步，与原先固定的 120 步一致；
+  # 张角随机后步数跟着变，角速度不变（linkbar 2026-09-01 的教训：步数固定时
+  # 关节滞后随扫掠角线性增长）。手柄圆弧半径只有 55mm，步子要密才平滑。
+  arc_deg_per_step: 0.5
+  min_steps_arc: 60
+
   gripper_steps: 30
   close_hold_steps: 30
   arc_settle_steps: 40
@@ -292,6 +319,16 @@ target_pad:
   red_color: [0.85, 0.05, 0.05]
   white_color: [0.97, 0.97, 0.97]
 
+# ---------------------------------------------------------------- 可达
+# 拨杆手柄距 Franka 底座的上限。校验函数只拿得到 task 配置，所以底座位置在这里
+# 重复声明一次；来源 common_configs/manipulation_space_tabletop_v1.yaml 的
+# robot_setup.mount.pos（task 坐标，桌面平面内）。0.690 = 默认几何实测可达的 0.688
+# （docs §3.2）留 2mm。GPU sweep 若在更远处仍能抓到，可放宽。
+# 用于 checks() 的 knob_reach 一行，也用于反解 fork_origin_x 的可达上界。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_knob_dist: 0.690
+
 physical:
   # 复位到 home 位之后的静置步数。机械臂在球的运动中不起作用，但仍要被驱动：
   # 场景里加了 Franka 而不给关节目标，一步进就会在重力下瘫掉。
@@ -311,3 +348,29 @@ success:
   seat_tolerance_deg: 4.0
   # 判定后继续步进这么多步做物理复核。
   settle_steps: 120
+
+# ---------------------------------------------------------------- 变体
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。
+# 每条 uniform 各有自己的区间；区间依赖其他轴的量（分岔口位置、球出生点）抽归一化
+# 位置再由 derived 派生，构造式满足约束、不靠拒绝。validate 只兜派生区间为空等情形。
+variation:
+  # 防捷径：哪条支路是死路（只能从画面读出）
+  - {kind: choice, path: diverter.dead_end_side, values: [left, right]}
+  # 防捷径：开局挡板封着哪侧；与死路侧独立，2×2 里一半实例正确动作是不转
+  - {kind: choice, path: diverter.init_sealed_side, values: [left, right]}
+  # 防捷径：活路出口有没有目标垫；无垫时画面里没有答案
+  - {kind: choice, path: target_pad.enabled, values: [true, false]}
+  # 布局：岔道张角。24° 以下手柄超出可达；36° 以上占地超出桌面
+  - {kind: uniform, path: branch.angle_deg, lo: 24.0, hi: 36.0}
+  # 布局：拨杆长
+  - {kind: uniform, path: diverter.lever.radius, lo: 0.047, hi: 0.063}
+  # 布局：球速（有界推力驱动量程；scene_check 实测 0.08–0.18 均可路由）
+  - {kind: uniform, path: ball.speed, lo: 0.090, hi: 0.150}
+  # 布局：分岔口在可达区间内的归一化位置
+  - {kind: uniform, path: channel.fork_frac, lo: 0.0, hi: 1.0}
+  # 布局：球在直道可出生段内的归一化位置
+  - {kind: uniform, path: ball.spawn_frac, lo: 0.0, hi: 1.0}
+  # 派生：fork_frac -> channel.fork_origin_x，spawn_frac -> ball.release_x
+  - {kind: derived, fn: "topogym.tasks.connectivity.diverter_route_ball:derive_task_cfg"}
+  # 校验：checks() 六行（枢轴净空、半开卡球、落座通行、分岔区间非空、出生段、可达）
+  - {kind: validate, fn: "topogym.tasks.connectivity.diverter_route_ball:validate_task_cfg"}
