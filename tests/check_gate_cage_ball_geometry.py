@@ -108,6 +108,17 @@ def main() -> int:
         else:
             failures.append(f"derive accepted {label}")
 
+    # A lowered approach height derives fine (no axis depends on it) but must fail
+    # validate(): 0.220 leaves the pads 12 mm over the parked plate, under the 30 mm gate.
+    low = layout_at(speed=0.12, flat_frac=0.5, release_frac=0.5, rack_frac=0.5,
+                    **{"motion.approach_z": 0.220})
+    try:
+        low.validate()
+    except ValueError as exc:
+        print(f"reject approach_too_low -> {str(exc).splitlines()[0][:90]}", flush=True)
+    else:
+        failures.append("validate accepted approach_z=0.220 (pad clearance 12 mm)")
+
     # 3. The layout's timing equals the primitive's.
     layout = GateCageBallLayout(load_cfg())
     motion = layout.cfg.motion

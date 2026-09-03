@@ -206,8 +206,10 @@ motion:
   grasp_qpos: 0.005
   min_lift_delta: 0.010
   # 合爪后指位的下限。assisted carry 下 lift_delta 证明不了任何事，指行程才是
-  # 「夹到板」与「夹了个空」的分界。null = 不判但照样打印；先跑一次看实测值再设。
-  min_finger_qpos: null
+  # 「夹到板」与「夹了个空」的分界。板厚 12mm 每指应被挡在 0.006，合爪指令 0.005；
+  # 2026-09-03 角点实测：夹到板 0.0063–0.0075，空夹（板已被撞离）0.0018 / −0.0010。
+  # 0.004 在两者之间；空夹时 attachment 照样把板拎起来，只有这一项能判出来。
+  min_finger_qpos: 0.004
   # 板宽 126mm，偏摆 θ 会让两端各扫 63*sin(θ)，槽内单边只有 3mm 余量 -> 2.7° 就吃光。
   max_plate_yaw_deg: 2.0
   # 悬停等待的步数上限。超过即判 trigger_never_fired，不会无限等下去。
@@ -269,5 +271,5 @@ variation:
   - {kind: uniform, path: gate_rack.x_frac, lo: 0.0, hi: 1.0}
   # 派生：flat_end_frac -> channel.flat_end_y，release_frac -> ball.release_y，x_frac -> gate_rack.center_x
   - {kind: derived, fn: "topogym.tasks.connectivity.gate_cage_ball:derive_task_cfg"}
-  # 校验：checks() 五行（判据 A、判据 B、出生段、架子净距、悬停可达）
+  # 校验：checks() 六行（判据 A、判据 B、出生段、架子净距、悬停可达、approach 净空）
   - {kind: validate, fn: "topogym.tasks.connectivity.gate_cage_ball:validate_task_cfg"}

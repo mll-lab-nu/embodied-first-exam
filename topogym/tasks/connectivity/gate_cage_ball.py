@@ -50,6 +50,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
+from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.tasks._visuals import box_entity_enabled
 from topogym.world import StandardTabletopSceneBuilder, TabletopBaseScene, materials
 
@@ -211,6 +212,13 @@ class GateCageBallLayout:
             (float(rack.center_x), float(rack.center_y), base_top + 0.5 * height)
         )
 
+    def plate_top_on_rack(self) -> float:
+        """Task z of the parked plate's top edge: rack base top + plate height."""
+
+        rack = self.cfg.gate_rack
+        gate = self.cfg.gate
+        return float(rack.base_size[2]) + float(gate.seated_top_z) - float(gate.seated_bottom_z)
+
     # ----- timing -------------------------------------------------------------
     # The arm's side of the race, in seconds. Step counts live in `motion`, the
     # step length in `timing.sim_dt` (a copy of env.sim.dt the demo asserts
@@ -369,12 +377,20 @@ class GateCageBallLayout:
         min_gap = float(self.cfg.gate_rack.channel_gap)
         reach = self.hover_reach()
         max_reach = float(self.cfg.reach.max_hover_dist)
+        # The open gripper traverses to a point above the parked plate at
+        # approach_z with its fingers hanging below the pads; 30 mm of pad-to-top
+        # clearance is the linkbar / diverter gate. Constant across the envelope
+        # (no axis moves approach_z or the plate), so it guards edits, not draws.
+        approach_clearance = (
+            float(self.cfg.motion.approach_z) - HAND_TO_PAD_Z - self.plate_top_on_rack()
+        )
         return [
             ("window_margin", window, 0.0, window >= -1e-9),
             ("ready_margin", ready, 0.0, ready >= -1e-9),
             ("ball_spawn", release_y, spawn_lo, spawn_lo - 1e-9 <= release_y <= spawn_hi + 1e-9),
             ("rack_channel_gap", gap, min_gap, gap >= min_gap - 1e-9),
             ("hover_reach", reach, max_reach, reach <= max_reach + 1e-9),
+            ("approach_clearance", approach_clearance, 0.030, approach_clearance >= 0.030),
         ]
 
     def validate(self) -> None:

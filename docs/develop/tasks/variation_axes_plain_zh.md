@@ -114,7 +114,16 @@ seed → VariantRng(seed)
 
 ### 6.2 落地顺序
 
-按「前置代码最少、C4 强制优先」排序，每步交付：yaml `variation:` 块、Layout 的 `checks()` 与派生函数、generator、单元测试（同 seed 同结果、seed 敏感、越界为零、拒绝率 < 5%、planner 离线可解）、run 配置键、sweep 表项。
+按「前置代码最少、C4 强制优先」排序，每步交付六项：yaml `variation:` 块、Layout 的 `checks()` 与派生函数、demo 接线 + variant 行 + run 配置键、`check_variant_rng.py` 任务段 + 几何离线门、sweep 脚本、GPU 实测写回文档。generator / EpisodeSpec 属数据管线，暂缓。
+
+**当前进度（2026-09-03）**：第 0–3 步已落地，三个 C4 强制任务（linkbar、diverter、gate_cage_ball）都在 GPU seed 0–9 上 oracle 10/10、对照规则落在中间、离线 1000 seed 首抽拒绝率 ≤ 0.2%。
+三步共用的范式已固定：每条轴各自区间；区间依赖其他轴的量抽归一化 `[0,1]` 再由 Layout 派生（`derived` kind）；拒绝率门 2%；`validate` 只兜派生区间为空。
+每个任务的 sweep 都晒出了一个判据里的隐含假设（diverter 的 `max_lag` 含手的跟踪滞后、gate 的 `pinched` 只看球心位置），都改的是判据定义而不是包络。
+角点门（§4.3）三任务全过：linkbar 20/20、diverter 256/256、gate 64/64——gate 首跑 54/64，暴露的是取板原语丢了姿态插值（`gate_cage_ball_zh.md` §5.3），修的是原语，包络同样没动。
+**下一个：第 4 步 band_untwist**。前置见下表第 4 行与 `variation_and_difficulty_plan_zh.md` §3.12；按范式要做的决定：
+上压股镜像开关是本任务唯一的防捷径离散轴（现在 `OVER_END = 0` 固定，`layout.over_end` 要跟着变）；`end_gap` 的上限依赖 `open_lobe_radius`，
+按范式抽归一化量派生；抬升高度 ≤ 0.40 由 `open_lobe_radius` 决定，进 `checks()`；`BandUntwistLayout.seed` 已传入未消费，随机数仍只在
+`layout_randomization.py` 抽，`figure_eight_spec()` 只接收采好的值。
 
 | 序 | 任务 | 前置代码 |
 | --- | --- | --- |
@@ -136,6 +145,7 @@ seed → VariantRng(seed)
 
 1. 第 0 级（无 Genesis）：每任务抽 1000 条变体，拒绝率 < 5%；50 条上离线调 planner，无异常且路点在工作区。
 2. 第 1 级（无 GPU）：seed 0–199 跑离线门，输出每条的轴取值与各不等式读数。
+   **角点门（2026-09-03 加）**：`tests/check_variant_corners.py` 从 yaml `variation:` 块构造包络全部顶点（连续轴两端点 × 离散轴全部取值；linkbar 的成对轴用命名对），过派生与校验、打印各判据余量，并经 Hydra compose 复现；`bash_scripts/tests/variant_corners_sweep.sh <task>` 把这些顶点逐个送进物理（`run.randomize_layout=false` + `task.*` 覆盖，走固定布局路径，不碰随机化逻辑）。随机 sweep 抽不到边界，这一步补上「oracle 在包络顶点上可解」的物理证据。
 3. 第 2 级（GPU）：`stability_sweep.sh` 补齐 13 个任务，全包络 × 50 seed；记录物理分类、oracle 成败与失败标签、对照策略成败、任务读数。
 4. 划档：按单调裕度轴（必要时加一条连续轴）把 sweep 样本分三个分位区间，检查 oracle 成功率单调、对照策略接近随机、无 CRASH；每档取值集合写回 yaml `variation.levels`；每档报告 oracle 成功率、拒绝率、对照策略成功率。包络内 oracle 成功率无显著变化的任务只设一档。
 5. 固化 split；每任务录 150 条训练（防捷径离散轴组合多的 200）+ 50 条评测；录制帧率改为 20 Hz（`dataset_every_n_steps: 5`），使 13 任务总帧数约 450 k，匹配 140 k 步 × batch 32 的训练预算（约 10 epoch）；oracle 执行加 5% 路点噪声 + 恢复选项。

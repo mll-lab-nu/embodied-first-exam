@@ -54,7 +54,7 @@ demo 建场景时断言 `timing.sim_dt == env.sim.dt`，并断言 Layout 的 `t_
 
 没有防捷径离散轴：时机本身就是隐藏信息。计划文档 §3.6 原表 `release_y ∈ [−0.46, −0.34]` 下界越过轨底起点 −0.42，由派生区间取代。
 
-`checks()` 五行（统一签名；`validate()` 任一行不 ok 即拒绝；建场景、随机化、离线门、demo 启动共用）：
+`checks()` 六行（统一签名；`validate()` 任一行不 ok 即拒绝；建场景、随机化、离线门、demo 启动共用）：
 
 | 行 | 读数 | 门 | 默认 |
 |---|---|---|---|
@@ -63,6 +63,7 @@ demo 建场景时断言 `timing.sim_dt == env.sim.dt`，并断言 Layout 的 `t_
 | `ball_spawn` | `release_y` | 在派生区间内 | −0.400 |
 | `rack_channel_gap` | 架子近缘到导柱外侧面 | ≥ 0.010 | 0.0465 |
 | `hover_reach` | 门口悬停点距底座 | ≤ 0.700 | 0.645 |
+| `approach_clearance` | `approach_z − HAND_TO_PAD_Z − 停放架上板顶 0.105`（指垫到板顶） | ≥ 0.030（linkbar / diverter 同门） | 0.032 |
 
 ## 4. 离线实测（2026-09-03）
 
@@ -108,12 +109,57 @@ greedy 与 fixed_delay 各有几格同一标签。逐条看：四格 `caged=True
   起点与球速逐 seed 变后，「记住一个时间线」的策略确实落到中间。
 - 十格首帧可分（5.1 的 visual 组）。
 
+### 5.3 角点 sweep 暴露的取板原语缺陷（2026-09-03，`runs/gate_cage_ball_corners/`）
+
+`tests/check_variant_corners.py` 把包络 6 条轴的端点全组合成 64 个角点，`variant_corners_sweep.sh` 逐格送进物理（固定布局路径，不碰随机化）。
+09-02 晚首跑 oracle **54/64**：10 个失败格全在停放架 `center_y=−0.03` 且 `x_frac=0`（架在 x_min −0.120）那一角，8 格 `grasp_check_failed`
+（`plate_yaw` 2.19° > 2.0°，`finger_qpos` −0.0010）、2 格时序（c002 `pinched`、c034 `ball_outside`，`slack` 0.10 s）。
+
+**根因（逐步追踪 + 对照实验）。** approach 是从 home（指开合轴沿 x）30 步移到停放架上方 `approach_z`，同时姿态要转到 `default_ee_quat`
+（指开合轴沿 y），腕转 90°。`GatedInsertPrimitive._move` 收了 `start_quat` 却没用，每一步给 IK 的姿态目标都是终态；派生源
+`AxialInsertPrimitive._move_linear` 和 `PivotLeverPrimitive._move` 都用 `_quat_slerp` 把姿态沿同一条余弦曲线插值，08-17 派生时没抄。
+IK 面对 90° 的姿态误差给出的中间解让手下沉、倾斜。同一段移动（home → 停放架上方）的对照：
+
+| 做法 | 下沉 | 倾角 | 水平落后 |
+|---|---|---|---|
+| 只平移，腕不转 | 1.5 mm | 1.7° | 61 mm |
+| 平移 + 每步姿态目标为终态（原写法） | 63 mm | 17° | 56 mm |
+| 只原地转腕，不平移 | 70 mm | 18° | 40 mm |
+| 原写法放慢 4 倍（120 步） | 70 mm | 18° | 39 mm |
+| 平移 + 姿态插值（修后） | 1.5 mm | 1.6° | 60 mm |
+
+放慢不消下沉，说明是解序列本身而非动态滞后；水平落后 40 mm 是 165 mm 平移压在 0.3 s 里的独立现象，settle 30 步归零，
+不是撞板原因（且加 settle 会把 `t_ready` 2.40 → 2.70 s、改变 `release_y` 派生上界，本次不加）。
+`approach_z` 0.240 给指尖的静态净空只有 12 mm（指垫 32 mm），下沉 60 mm 后指尖从板顶边缘扫过：第 12 步起两根耦合的手指被顶着合拢到
+−0.001，板被推向 −x 14 mm、偏摆 2.1°；随后合爪、attachment 把已偏的板挂上手。腕单向转，转到一半两指都甩到手的 −y 侧，板在 −y 侧
+（`center_y=−0.03`）时正好套住一根手指；在 +y 侧时从板面旁边过，不碰。架越靠 x_min 路径越长，最低点越深入板端。
+可达性无关：底座到架 0.451 m，`lift_test` 时手到位 ±4 mm。
+
+被碰的其实是 16 格：另 8 格板被推 69 mm、偏摆只 1.76°，判「过」，全程手指空夹（`finger_qpos` 0.0018）、靠 attachment 拎着插进槽——
+`min_finger_qpos` 为 null 漏掉的假成功。
+
+**处置（oracle 侧，包络不动）：** ① `_move` 补 `_quat_slerp`（对齐派生源）；② `min_finger_qpos` null → 0.004（夹到板 0.0063–0.0075，
+空夹 ≤ 0.0018）；③ `checks()` 加 `approach_clearance ≥ 0.030`（不随任何轴变，现值 0.032，防以后改低 `approach_z`）；
+④ `check_gate_cage_ball_geometry.py` 加 `approach_z=0.220` 必须被 `validate()` 拒绝。不把「板不能在扫掠体积里」写进包络：那是固化 bug 的形状。
+
+**修后重跑（`runs/gate_cage_ball_corners/20260903_145828_slerpfix/`、`runs/gate_cage_ball_variation/20260903_145828_slerpfix/`）：**
+
+| 组 | 修前 | 修后 |
+|---|---|---|
+| 角点 oracle（64 格） | 54/64 | **64/64** |
+| 角点取板读数 `finger_qpos` / `plate_yaw` | 停放架在 −0.03 一角：0.0018 ~ −0.0010 / 1.76 ~ 2.19° | 全部 64 格 0.0062–0.0069 / 0.22–0.35° |
+| 时序最紧的 c002 / c034（`slack` 0.10 s） | pinched / ball_outside | 过（板不再带 1.76° 偏摆进 3 mm 槽，插入不再拖时间；只是观察，未单独验证） |
+| seed 0–9 oracle / greedy / fixed_delay | 10/10 / 8/10 / 6/10 | 10/10 / 8/10 / 6/10，逐格标签与 5.2 表相同，悬停时长相同 |
+
+取板读数只随停放架位置变、与其他轴无关，64 格里 7 组不同读数对应 7 种架位组合。`min_finger_qpos` 0.004 在所有格之下 2 mm 以上。
+
 ## 6. 文件集
 
 ```
 configs/task_configs/gate_cage_ball_topogym_tabletop_v1.yaml   timing / reach 段、派生叶子、variation 块
 configs/run_configs/gate_cage_ball.yaml, _gate.yaml            randomize_layout / difficulty / variant_id；final_hold_steps；fixed_delay_s；safety_margin 搬走
-topogym/tasks/connectivity/gate_cage_ball.py                    t_ready / insert_duration / 三个 bounds+from_frac / checks / validate / derive_task_cfg / validate_task_cfg
+topogym/tasks/connectivity/gate_cage_ball.py                    t_ready / insert_duration / 三个 bounds+from_frac / checks（六行）/ validate / derive_task_cfg / validate_task_cfg / plate_top_on_rack
+topogym/primitives/gated_insert.py                              _move 姿态插值（_quat_slerp，09-03）
 topogym/planning/gate_cage_ball_planner.py                      FixedDelayRule、make_trigger_rule；decide 多一个 elapsed_s
 demos/connectivity/gate_cage_ball_{physical_gate,inspect}_demo.py  接线、variant 行、checks 行、dt 与时序断言
 tests/check_variant_rng.py                                      gate 段

@@ -24,6 +24,7 @@ python tests/check_ring_transfer_geometry.py  # 需要项目 venv；docx 2.6 两
 python tests/check_c_ring_clearance.py        # 只用 numpy + PyYAML；量 docx 3.4 两个环的净空
 python tests/check_gateway_slide_path.py      # 只用 numpy + PyYAML；抽出原语的滑动路径
 python tests/check_variant_rng.py             # 只用 numpy；每 episode 种子 → 按名字派生的随机流是否确定、独立、有黄金值
+python tests/check_variant_corners.py         # 需要项目 venv；三个任务变体包络的全部角点：派生、校验、各判据余量、Hydra 覆盖路径复现
 ```
 
 | 文件 | 检查什么 |
@@ -38,6 +39,7 @@ python tests/check_variant_rng.py             # 只用 numpy；每 episode 种�
 | `check_ring_transfer_geometry.py` | docx 2.6（`ring_transfer`）的两根走线柱 + 闭合弹性环：环与柱的净空、周期管水密与 `Lk=0`、势垒不越过自表面；拉伸梯形在 B 处的绳股间距（含两个负对照：单点捏住、20mm 柱）；远端帽整条 oracle 路径（平转/抬升/平移/下放）逐样本量绳股线段到 B 轴的距离、平移段全程绷紧、越顶高度下限、工作区与抓取净空 |
 | `check_band_untwist_geometry.py` | docx 3.3 的开口绳桌面版（`band_untwist`）：8 字控制线的端距、最小转角半径、交叉处抬高与绳长；开口折线自交叉计数在 8 字／压扁 8 字／直绳／两头相邻的 C 形／两交叉曲线上的读数（C 形专抓闭合计数器的幻影段）；规划器在 oracle / wrong_end 两档各选一端、抬升过弧长、落点等距交叉点且离另一端 place_clearance、全部路点在工作区内 |
 | `check_variant_rng.py` | `topogym/generation/variant_rng.py`：同种子同名字的流在两次调用、两个实例、先抽别的名字之后都逐数相等；不同名字、不同种子不相等；`retry=k` 各自独立；`tier(3)` = seed % 3；黄金值（seed 0、名字 `golden` 的首个均匀数）钉住派生规则，改规则不升 `VARIANT_RNG_VERSION` 在这里失败。另回归 `randomize_task_cfg`（4 个已注册任务：确定、种子敏感、输入不变、未注册原样返回、cable_routing 抖动在 ±0.010 内且等于该叶子命名流的直接抽样）与 `sample_braid_word`（传 seed 与传 `braid/word` 流结果相同） |
+| `check_variant_corners.py` | 变体包络的边界值测试（linkbar / diverter / gate_cage_ball）：从 yaml `variation:` 块自动构造角点——连续轴取两端点、离散轴取全部取值、`spaced_pair` 用脚本里的命名对，做全组合（20 / 256 / 64 个）；每个角点过任务自己的 `derived` / `validate` 钩子并打印各判据余量，再按 GPU 脚本的方式经 Hydra compose（`run.randomize_layout=false` + `task.*` 覆盖）复现同样读数。`--manifest` 输出角点清单给 `bash_scripts/tests/variant_corners_sweep.sh`。只在测试里用：不碰 `randomize_task_cfg`，seed→变体映射不变 |
 | `check_closed_band_mesh.py` | docx 3.3 的闭合弹性带（Phase 0，**已废弃路线**，保留作证据）：周期扫掠是否水密且两向镶嵌相当、接缝闭合后的自链数 `Lk` 是否为 0（`Lk=±1` 的带永远翻不平）、出生自接触间隙是否够势垒、以及自交叉计数在 O 形／8 字／反向翻转／压扁 8 字四种解析折线上的读数 |
 
 前两个覆盖不到的部分写在各自的 docstring 里：带默认值的 `getattr` 动态访问、迁移时值
