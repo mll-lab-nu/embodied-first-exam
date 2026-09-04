@@ -41,7 +41,7 @@
 说明：
 
 - ring_transfer 的柱高目前不能直接改：搬运路径里的三个高度是手写数值，柱高一变就错，须先改为按柱顶高度推导。
-- bar_through_hole 的孔径下限 31 mm 受插入高度的手写偏置限制；改为推导后可加一档 27 mm。
+- bar_through_hole 的孔径下限 31 mm 受插入高度的手写偏置限制；改为推导后（09-04）下限到 29 mm——再往下受横推段竖直窗口限制（far 托座斜面顶端到孔上沿），27 mm 每侧只剩 1.45 mm，除非收窄 far 托座夹板。
 - diverter 只有两档；可加第二维「岔道张角」36° / 30° / 24°（角越小拨杆离基座越远）。
 - linkbar 的这条轴不是单个参数，是两区角度联合抽样后按差值分箱。
 - 这些参数原先在连续布局轴里连续抽，改为离散档后，连续布局轴里相应删除。
@@ -53,7 +53,7 @@
 | rope_winding | **绕柱方向** | 顺 / 逆 | 只在指令里；画面相同 |
 | ring_transfer | **环从哪根柱搬到哪根** | A→B / B→A | 指令；两柱外观相同 |
 | swap_crossing_sign | **出生时哪根绳压在上面** | + / − | 场景线索（必须看交叉处） |
-| band_untwist | **8 字哪一端的绳压在上面** | 端 0 / 端 1 | 场景线索（待新增） |
+| band_untwist | **8 字哪一端的绳压在上面** | 端 0 / 端 1 | 场景线索（`figure_eight.over_end`，09-03） |
 | diverter_route_ball | **死路在哪边**；**拨板出生时封着哪边** | 左 / 右；左 / 右（独立） | 指令 + 场景；两者组合里一半实例正确动作是不转 |
 | linkbar_rotate_to_zone | **销钉是哪种颜色**（即目标区）；**两区各是六色里的哪两种** | color_1 / color_2；30 种有序颜色对 | 场景线索（销钉、套环、手柄盖同色） |
 | cloth_fold | **捏哪个角** | 四角之一 | 指令（待扩展） |
@@ -120,10 +120,15 @@ seed → VariantRng(seed)
 三步共用的范式已固定：每条轴各自区间；区间依赖其他轴的量抽归一化 `[0,1]` 再由 Layout 派生（`derived` kind）；拒绝率门 2%；`validate` 只兜派生区间为空。
 每个任务的 sweep 都晒出了一个判据里的隐含假设（diverter 的 `max_lag` 含手的跟踪滞后、gate 的 `pinched` 只看球心位置），都改的是判据定义而不是包络。
 角点门（§4.3）三任务全过：linkbar 20/20、diverter 256/256、gate 64/64——gate 首跑 54/64，暴露的是取板原语丢了姿态插值（`gate_cage_ball_zh.md` §5.3），修的是原语，包络同样没动。
-**下一个：第 4 步 band_untwist**。前置见下表第 4 行与 `variation_and_difficulty_plan_zh.md` §3.12；按范式要做的决定：
-上压股镜像开关是本任务唯一的防捷径离散轴（现在 `OVER_END = 0` 固定，`layout.over_end` 要跟着变）；`end_gap` 的上限依赖 `open_lobe_radius`，
-按范式抽归一化量派生；抬升高度 ≤ 0.40 由 `open_lobe_radius` 决定，进 `checks()`；`BandUntwistLayout.seed` 已传入未消费，随机数仍只在
-`layout_randomization.py` 抽，`figure_eight_spec()` 只接收采好的值。
+**第 4 步 band_untwist 已落地（2026-09-03，`band_untwist_zh.md` §7）**：镜像开关 `figure_eight.over_end` 是防捷径离散轴（两绳头位置不变、上下股互换）；
+`end_gap` 由 `end_frac` 在 [夹爪跨距 0.070, 0.95 × 开口叶直径] 里派生；`checks()` 六行，抬升高度 ≤ 0.40 在内；离线 1000 seed 拒绝率 0，256 角点全过。
+角点 c130（开口叶最大 + 绳头最近 + 镜像）落下压出第二个交叉：落点规则只量到另一插头、不看那股的弧，被搬那股正好压在它上面（孪生 c002 过，纯属运气）；09-04 改 planner 落点沿圆外摆到离留桌那股整条折线 ≥ 35 mm，`checks()` 加落点两行成八行，包络没动（`band_untwist_zh.md` §7.5）。
+FEM 绳一格 6–13 min，GPU 只跑 seed 0–9 与角点子集。
+**第 8 步 unlink_c_ring 已落地（2026-09-03 离线部分，`unlink_c_ring_zh.md` §11）**：五条连续轴、抓取方位角由开口方位角 + 112.5° 派生；`checks()` 从五行加到七行（抓取点可达、手在闭合环之外），
+手净空行把 `gap_azimuth_deg` 的包络从计划的 ±15 收到 ±10（302.4° 以下抓取点离环缘不足 45 mm，±15 约 8% 拒绝）；离线 1000 seed 拒绝率 0，32 角点全过。
+纯刚体，GPU 一格 8–18 s。08-24 的基线 `passed_through` 判失败复现后定性为判据口径（gateway 接触 −2.6 mm 对 no_align 互锁 −9 mm），判定器改判 `success.max_pass_through_depth` 5 mm。
+首跑 seed 0–9 oracle 7/10、角点 oracle 16/32：失败全是原语对准门 `max_align_deg` 3.0，开口方位角 305 那一侧摆动后残差 3.7–5.8°，根因是摆动段 9 mm 稳态落后（基线就有，门只剩 0.35° 余量）。
+处置是修原语不是改门或收包络：摆动段走完后重测环心、把差值加到命令点再走一段（`align_correct_passes`），残差压到 0.2–0.4°；重跑 oracle **10/10**、角点 **32/32**，no_align 10/10 判失败。同 diverter / gate 的先例：变体把执行链里的隐含假设晒出来，改的是执行链。
 
 | 序 | 任务 | 前置代码 |
 | --- | --- | --- |
@@ -131,15 +136,15 @@ seed → VariantRng(seed)
 | 1 | linkbar_rotate_to_zone | **已完成（2026-08-29）**；**2026-09-02 收尾**：初始角改为 `init_frac` 派生（±15° 扣掉两区禁区后的并集上定位），首抽拒绝率 0.234 → 0.002，seed→变体映射随之改变，09-01 §8.4 的 GPU 十格需按新规则重跑复核。原记录：注册条目、demo 接线、离线门、`bash_scripts/tests/linkbar_variation_sweep.sh`；GPU seed 0–9：oracle 10/10 成功、`nearest_zone` 5/10（防捷径成立）、拒绝率 0；结果见 `linkbar_rotate_to_zone_zh.md` §8.2。视觉上十格几乎一样 → **2026-09-01 改版**：固定 ±90° 虚线导轨 + 两区自由放置（同侧/相邻均可）、六色调色板、键名 color_1/color_2、销出生不在区内（首抽拒绝率 0.234，结构性）；离线门全过；GPU seed 0–9：oracle 10/10、`nearest_zone` 5/10、十格画面可分（§5.3、§8.4）。`steps_arc` 已改为按扫掠角推导（恒定角速度，88–92° 扫掠 `max_lag` 4.79° → 2.9°）。角差分箱留到划档 |
 | 2 | diverter_route_ball | **已落地（2026-09-02，GPU 待跑）**：yaml 块 3 离散 + 3 连续 + 2 归一化派生（分岔口按可达反解、球起点按直道长度）；`checks()` 六行含可达行；`steps_arc` 按扫掠角推导；离线 1000 seed 拒绝率 0、8 种离散组合全覆盖、`rotate_needed` 0.516；GPU seed 0–9：oracle **10/10**（首跑 9/10，seed 0 接近段撞拨杆，`approach_z` 0.260 → 0.300 后过；`checks()` 加接近净空行）、`fixed_direction` 7/10（与死路侧抽样一致）、十格首帧可分；`max_lag` 14–16° 超 6° 门是 08-22 起的既有问题（`diverter_route_ball_zh.md` §8 步骤 5）。原前置：球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
 | 3 | gate_cage_ball | **已落地（2026-09-03）**：`timing:` 段把步长与触发富余写进任务定义；封闭区长度、球起点、架子 x 按两条可解性判据反解区间后派生；`checks()` 五行；第三条对照规则 `fixed_delay`；离线 1000 seed 拒绝率 0、球先到 46%。GPU seed 0–9：oracle 首跑 6/10（判据 `pinched` 把贴着已落座闸板往返的球标成夹住）→ 修正定义后 **10/10**，greedy 8/10，fixed_delay 6/10；见 `gate_cage_ball_zh.md` §5。原前置：新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
-| 4 | band_untwist | 镜像开关（同步 `layout.over_end`）；planner 抬升 ≤ 0.40 守卫；`end_gap` 上限随开口叶半径 |
+| 4 | band_untwist | 已落地（09-03）：镜像开关 `figure_eight.over_end`；`checks()` 的 `lift_height` 行守 0.40；`end_gap` 由 `end_frac` 派生 |
 | 5 | swap_crossing_sign | `braid.py` 交叉位置改为接收采样值并裁剪窗口；接入 `verify_braid_spec`；planner 抬升守卫 |
 | 6 | rope_winding | 绳长反解；`to_c_route: closure`；柱顶联合不等式进 `checks()` |
 | 7 | rope_unwinding | 两个出生点改为推导；run 配置键 |
-| 8 | unlink_c_ring | `SceneGeometry.checks()` 接入拒绝采样；抓取方位角推导；补可达行 |
+| 8 | unlink_c_ring | 已落地（09-03）：`checks()` 七行含可达与手净空行并接入拒绝采样；抓取方位角由 `grasp_offset_deg` 派生；`gap_azimuth` ±10；判据 `passed_through` 改判 `max_pass_through_depth`；摆动段闭环修正后 GPU oracle 10/10、角点 32/32、no_align 10/10 判失败 |
 | 9 | cloth_unpleat / cloth_unroll | 修 `observe()` 抓取高度（unpleat）；褶宽上限 0.035；圈数上限按层距、杆高联合；run 配置补 seed 键 |
 | 10 | ring_transfer | 三个搬运高度改为按柱顶推导（柱高轴的前置）；环长轴、捏取侧推导；成对平移 / 旋转 directive；run 配置 + EpisodeSpec |
 | 11 | cloth_fold | 四角抓取（`_grasp_offset` + `finger_axis` 回退）；补工作区 / 可达断言 |
-| 12 | bar_through_hole | 插入高度改为推导；新增 `validate()` |
+| 12 | bar_through_hole | 已落地（09-04，`bar_through_hole_zh.md`）：四个搬运高度改由 Layout 推导（横推高度取「far 托座斜面顶端 ↔ 孔上沿」窗口的中点）；`checks()` 九行；`across_flats` 下界 0.027 → 0.029（竖直窗口）；杆长与抓取偏移由归一化 frac 派生、托座跟随用 `derived`；离线 1000 seed 拒绝率 0、64 角点全过 |
 
 ### 6.3 实测与划档
 

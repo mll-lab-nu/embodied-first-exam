@@ -7,7 +7,9 @@
 #   task.travel_test.force_scale=5.0          （自由平移探针推力）
 # 改了几何先跑这两条离线 gate，都不需要 GPU：
 #   python tests/check_c_ring_clearance.py
-#   python tests/check_gateway_extract_quat.py
+#   python tests/check_gateway_slide_path.py
+# 按 seed 随机布局：
+#   run.randomize_layout=true run.seed=3
 
 defaults:
   - default
@@ -18,3 +20,11 @@ defaults:
 #   no_align = 防捷径对照：跳过对准，其余完全相同，预期判失败
 # null = 用 task 配置里的值。
 oracle_mode: null
+
+# --- 变体（2026-09-03）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志与 episode 元数据的变体标识。
+variant_id: default

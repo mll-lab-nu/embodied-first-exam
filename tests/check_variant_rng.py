@@ -462,6 +462,237 @@ def check_gate_randomization() -> list[str]:
     return fails
 
 
+_BAND_CFG = REPO / "configs" / "task_configs" / "band_untwist_topogym_tabletop_v1.yaml"
+
+
+def check_band_untwist_randomization() -> list[str]:
+    """Properties of the band_untwist yaml's axes: leaves, envelope, derived end gap, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_BAND_CFG)})
+    task = "band_untwist"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "figure_eight.over_end", "figure_eight.heading_deg",
+        "figure_eight.center_x", "figure_eight.center_y",
+        "figure_eight.half_angle_deg", "figure_eight.closed_lobe_radius",
+        "figure_eight.open_lobe_radius", "figure_eight.end_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the band_untwist hooks cannot run")
+        return fails
+    from topogym.tasks.entangle.band_untwist import BandUntwistLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: independent axes in range, the end gap inside the
+    # range the drawn open lobe allows, every check passing, both over ends drawn
+    # (the anti-shortcut axis must actually flip), and a first-draw rejection
+    # rate under the bar.
+    rejects, over_end_counts, max_lift = 0, {0: 0, 1: 0}, 0.0
+    ranges = {
+        "heading_deg": (-30.0, 30.0), "center_x": (-0.010, 0.050), "center_y": (-0.030, 0.030),
+        "half_angle_deg": (30.0, 60.0), "closed_lobe_radius": (0.032, 0.055),
+        "open_lobe_radius": (0.040, 0.065), "end_frac": (0.0, 1.0),
+    }
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        layout = BandUntwistLayout(t)
+        eight = t.figure_eight
+        for leaf, (lo, hi) in ranges.items():
+            value = float(eight[leaf])
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {leaf} {value:+.4f} outside [{lo}, {hi}]")
+        lo, hi = layout.end_gap_bounds()
+        if not lo - 1e-9 <= float(eight.end_gap) <= hi + 1e-9:
+            fails.append(f"seed {seed}: end_gap {float(eight.end_gap):+.4f} outside derived [{lo:+.4f}, {hi:+.4f}]")
+        if int(eight.over_end) not in over_end_counts:
+            fails.append(f"seed {seed}: over_end {eight.over_end} not in {{0, 1}}")
+        else:
+            over_end_counts[int(eight.over_end)] += 1
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        max_lift = max(max_lift, layout.predicted_lift())
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if over_end_counts[0] == 0 or over_end_counts[1] == 0:
+        fails.append(f"over_end never flipped: {over_end_counts}")
+    rate = rejects / 1000.0
+    print(f"    over_end 0: {over_end_counts[0]}/1000, 1: {over_end_counts[1]}/1000; max predicted lift {max_lift:.3f} m")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: derived ranges broken?")
+    return fails
+
+
+_C_RING_CFG = REPO / "configs" / "task_configs" / "unlink_c_ring_topogym_tabletop_v1.yaml"
+
+
+def check_unlink_c_ring_randomization() -> list[str]:
+    """Properties of the unlink_c_ring yaml's axes: leaves, envelope, derived grasp azimuth, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_C_RING_CFG)})
+    task = "unlink_c_ring"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "stand.hang_yaw_deg", "fixed_ring.center_x", "fixed_ring.center_y",
+        "c_ring.gap_deg", "c_ring.gap_azimuth_deg",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the unlink_c_ring hooks cannot run")
+        return fails
+    from topogym.tasks.entangle.unlink_c_ring import UnlinkCRingLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range, the grasp azimuth exactly the
+    # opening's azimuth plus the configured offset, every check passing, and a
+    # first-draw rejection rate under the bar (expected 0: no row depends on more
+    # than one axis, so the envelope was cut to fit the rows).
+    rejects, min_hand, min_side = 0, float("inf"), float("inf")
+    ranges = {
+        "stand.hang_yaw_deg": (165.0, 195.0),
+        "fixed_ring.center_x": (0.040, 0.080), "fixed_ring.center_y": (0.035, 0.075),
+        "c_ring.gap_deg": (21.5, 28.0), "c_ring.gap_azimuth_deg": (305.0, 325.0),
+    }
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        want = (float(t.c_ring.gap_azimuth_deg) + float(t.primitive.grasp_offset_deg)) % 360.0
+        if abs(float(t.primitive.grasp_azimuth_deg) - want) > 1e-9:
+            fails.append(f"seed {seed}: grasp_azimuth_deg {float(t.primitive.grasp_azimuth_deg):.4f} != derived {want:.4f}")
+        layout = UnlinkCRingLayout(t)
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        geometry = layout.geometry()
+        min_hand = min(min_hand, geometry.hand_clearance)
+        min_side = min(min_side, 0.5 * geometry.c_ring.gap_clear_width - geometry.fixed.tube_radius)
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    rate = rejects / 1000.0
+    print(f"    min hand clearance {min_hand * 1000:.2f} mm; min opening clearance per side {min_side * 1000:.2f} mm")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
+_BAR_CFG = REPO / "configs" / "task_configs" / "bar_through_hole_topogym_tabletop_v1.yaml"
+
+
+def check_bar_through_hole_randomization() -> list[str]:
+    """Properties of the bar_through_hole yaml's axes: leaves, envelope, derived length /
+    grasp offset / cradles, checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_BAR_CFG)})
+    task = "bar_through_hole"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "aperture.across_flats", "bar.rest_x", "bar.rest_y", "panel.x",
+        "bar.length_frac", "bar.grasp_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the bar_through_hole hooks cannot run")
+        return fails
+    from topogym.tasks.routing.bar_through_hole import (
+        END_SETBACK, NEAR_A_BEHIND_CENTRE, BarThroughHoleLayout,
+    )
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the length and the grasp
+    # offset inside the ranges the drawn layout allows; the cradles on their
+    # formulas; the far seat on the sill; every check passing; first-draw
+    # rejection under the bar (expected 0: every row is met by construction).
+    rejects = 0
+    min_side, min_window, min_length, max_length = float("inf"), float("inf"), float("inf"), 0.0
+    ranges = {
+        "aperture.across_flats": (0.029, 0.038),
+        "bar.rest_x": (-0.080, -0.020), "bar.rest_y": (-0.030, 0.030),
+        "panel.x": (0.100, 0.160),
+        "bar.length_frac": (0.0, 1.0), "bar.grasp_frac": (0.0, 1.0),
+    }
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        layout = BarThroughHoleLayout(t)
+        length, offset = float(t.bar.length), float(t.bar.grasp_offset)
+        lo, hi = layout.length_bounds()
+        if not lo - 1e-9 <= length <= hi + 1e-9:
+            fails.append(f"seed {seed}: bar.length {length:.4f} outside derived [{lo:.4f}, {hi:.4f}]")
+        glo, ghi = layout.grasp_offset_bounds()
+        if not glo - 1e-9 <= offset <= ghi + 1e-9:
+            fails.append(f"seed {seed}: bar.grasp_offset {offset:.4f} outside derived [{glo:.4f}, {ghi:.4f}]")
+        rest_x, panel_x = float(t.bar.rest_x), float(t.panel.x)
+        want_x = {
+            "near_a": rest_x - NEAR_A_BEHIND_CENTRE,
+            "near_b": rest_x + 0.5 * length - END_SETBACK,
+            "far": panel_x + 0.5 * length - END_SETBACK,
+        }
+        for name, want in want_x.items():
+            if abs(float(t.cradles[name].x) - want) > 1e-9:
+                fails.append(f"seed {seed}: cradles.{name}.x {float(t.cradles[name].x):+.4f} != derived {want:+.4f}")
+        want_seat = float(t.aperture.center_z) - 0.5 * float(t.aperture.across_flats) + 0.5 * float(t.bar.across_flats)
+        if abs(float(t.cradles.far.seat_axis_z) - want_seat) > 1e-9:
+            fails.append(f"seed {seed}: cradles.far.seat_axis_z {float(t.cradles.far.seat_axis_z):.4f} != sill + inradius {want_seat:.4f}")
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        wlo, whi = layout.push_window()
+        min_window = min(min_window, whi - wlo)
+        min_side = min(min_side, layout.aperture_inradius - layout.bar_inradius)
+        min_length, max_length = min(min_length, length), max(max_length, length)
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    rate = rejects / 1000.0
+    print(f"    min lateral clearance per side {min_side * 1000:.2f} mm; min push window {min_window * 1000:.2f} mm; "
+          f"length {min_length:.3f}..{max_length:.3f}")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
 def check_braid() -> list[str]:
     fails: list[str] = []
     signs = set()
@@ -495,6 +726,9 @@ def main() -> int:
         ("layout_randomization(linkbar)", check_layout_randomization),
         ("layout_randomization(diverter)", check_diverter_randomization),
         ("layout_randomization(gate)", check_gate_randomization),
+        ("layout_randomization(band_untwist)", check_band_untwist_randomization),
+        ("layout_randomization(unlink_c_ring)", check_unlink_c_ring_randomization),
+        ("layout_randomization(bar_through_hole)", check_bar_through_hole_randomization),
         ("braid", check_braid),
     ]
     total = 0

@@ -13,7 +13,8 @@
 # 组（默认只跑 oracle）：
 #   oracle   oracle 规则 → 每格必须 success=True，这是「oracle 覆盖包络边界」的直接证据
 #   visual   inspect demo 建场景不步进，录一帧 → 人眼看极端几何有无穿模
-#   对照     linkbar: nearest；diverter: fixed；gate: greedy fixed。只记录，不计入退出码
+#   对照     linkbar: nearest；diverter: fixed；gate: greedy fixed；band_untwist: wrong_end；
+#            unlink_c_ring: no_align；bar_through_hole: bypass。只记录，不计入退出码
 #
 # 用法：
 #   bash bash_scripts/tests/variant_corners_sweep.sh diverter_route_ball            # oracle 组
@@ -27,7 +28,9 @@
 # 产出：<OUTDIR>/corners.tsv（角点清单：id、名字、Hydra 覆盖、离线各判据读数）、
 #   <group>_<id>.log、visual_<id>.mp4、summary.csv。
 # 退出码：任一 oracle 格非 success，或任一格 RAISED/TIMEOUT，即非 0。刻意不用 set -e。
-# 规模（每格约 10 s）：linkbar 20 格、gate 64 格、diverter 256 格（8 种离散组合 × 32）。
+# 规模（每格约 10 s）：linkbar 20 格、gate 64 格、diverter 256 格（8 种离散组合 × 32）；
+#   band_untwist 256 格但每格 6–13 min（FEM 绳），只跑 CORNERS= 子集；unlink_c_ring 32 格（纯刚体）全跑；
+#   bar_through_hole 64 格（纯刚体）全跑。
 # ============================================================================
 set -uo pipefail
 
@@ -37,6 +40,9 @@ cd "$REPO"
 
 TASK="${1:-}"
 [[ -n "$TASK" ]] && shift
+# visual 组给 inspect demo 的额外参数；没有 inspect demo 的任务把 INSPECT 指向 physical demo
+# 并用它自己的静态检查开关。
+INSPECT_ARGS=(run.static_only=true)
 case "$TASK" in
   linkbar_rotate_to_zone)
     PHYS=demos.connectivity.linkbar_rotate_to_zone_physical_demo
@@ -56,8 +62,29 @@ case "$TASK" in
     ORACLE_ARG=run.trigger=oracle
     CONTROLS=(greedy fixed); CONTROL_ARGS=(run.trigger=greedy run.trigger=fixed_delay)
     RESULT_KEY="gate_cage_ball_physical_gate_demo result"; SUCCESS_TOKEN="success=True" ;;
+  band_untwist)
+    # FEM 绳：oracle 一格 ≈ 6 min、wrong_end ≈ 13 min。256 个角点不要全跑，用 CORNERS= 选子集。
+    PHYS=demos.entangle.band_untwist_physical_pinch_demo
+    INSPECT=demos.entangle.band_untwist_inspect_demo
+    ORACLE_ARG=run.oracle_mode=oracle
+    CONTROLS=(wrong_end); CONTROL_ARGS=(run.oracle_mode=wrong_end)
+    RESULT_KEY="band_untwist_result"; SUCCESS_TOKEN="terminal=True" ;;
+  unlink_c_ring)
+    # 纯刚体，32 格，每格秒级到 1–2 min，全跑。
+    PHYS=demos.entangle.unlink_c_ring_physical_extract_demo
+    INSPECT=demos.entangle.unlink_c_ring_inspect_demo
+    ORACLE_ARG=run.oracle_mode=gateway
+    CONTROLS=(no_align); CONTROL_ARGS=(run.oracle_mode=no_align)
+    RESULT_KEY="unlink_c_ring_physical_extract_demo result"; SUCCESS_TOKEN=" success=True" ;;
+  bar_through_hole)
+    # 纯刚体，64 格，每格 10–60 s，全跑。没有 inspect demo：visual 组走 physical demo 的 inspect_only。
+    PHYS=demos.routing.bar_through_hole_physical_insert_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.inspect_only=true)
+    ORACLE_ARG=run.oracle_mode=insert
+    CONTROLS=(bypass); CONTROL_ARGS=(run.oracle_mode=bypass)
+    RESULT_KEY="bar_through_hole_physical_insert_demo result"; SUCCESS_TOKEN=" success=True" ;;
   *)
-    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball> [oracle visual 对照组...]" >&2
+    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball|band_untwist|unlink_c_ring|bar_through_hole> [oracle visual 对照组...]" >&2
     exit 1 ;;
 esac
 
@@ -159,7 +186,7 @@ run_cell() {
   local cmd=()
   case "$group" in
     visual)
-      cmd=(python -B -m "$INSPECT" "${common[@]}" run.static_only=true
+      cmd=(python -B -m "$INSPECT" "${common[@]}" "${INSPECT_ARGS[@]}"
            recording=default "recording.path=$OUTDIR/visual_${id}.mp4" recording.camera=oblique) ;;
     oracle)
       cmd=(python -B -m "$PHYS" "${common[@]}" "$ORACLE_ARG") ;;
@@ -183,11 +210,11 @@ run_cell() {
     oracle)
       if [[ "$state" != "ok" ]]; then verdict="FAIL $state"; FAIL=1
       elif result_line "$log" | grep -qaF "$SUCCESS_TOKEN"; then verdict="PASS"
-      else verdict="FAIL $(result_line "$log" | grep -aoE 'failure=[A-Za-z_]+')"; FAIL=1; fi ;;
+      else verdict="FAIL $(result_line "$log" | grep -aoE 'failure(_reason|_label)?=[A-Za-z_]+')"; FAIL=1; fi ;;
     *)
       if [[ "$state" != "ok" ]]; then verdict="$state"
       elif result_line "$log" | grep -qaF "$SUCCESS_TOKEN"; then verdict="success"
-      else verdict="$(result_line "$log" | grep -aoE 'failure=[A-Za-z_]+' | sed 's/failure=//')"; fi ;;
+      else verdict="$(result_line "$log" | grep -aoE 'failure(_reason|_label)?=[A-Za-z_]+' | sed 's/failure[a-z_]*=//')"; fi ;;
   esac
   VERDICT[$tag]="$verdict"
   echo "---- $tag (${dur}s): $verdict"

@@ -135,6 +135,7 @@ class UnlinkCRingPuzzleState:
     gap_deg: float
     min_gap_seen: float | None = None
     jam_depth: float = 0.001
+    max_pass_through_depth: float = 0.005
     travel_tested: bool = False
     travel_free: bool = False
     travel_info: dict[str, Any] = field(default_factory=dict)
@@ -173,10 +174,17 @@ class UnlinkCRingPuzzleState:
         The one reading that separates the gateway from the shortcut, because their
         end states are identical. Unwatched paths report False rather than None so
         the predicate stays a boolean; `path_watched` says whether it means anything.
+
+        Judged against `max_pass_through_depth`, not `jam_depth`: the offline sweep
+        moves an ideal ring and 1 mm separates chord error from interlock there, but
+        under the solver the held ring presses on the bar for real (2026-09-03 seed 0:
+        -2.6 mm while the wrist re-levels during the lift) and the shortcut's
+        interlock reads -9 mm. The threshold sits between those two populations.
         """
 
         return bool(
-            self.min_gap_seen is not None and self.min_gap_seen < -abs(self.jam_depth)
+            self.min_gap_seen is not None
+            and self.min_gap_seen < -abs(self.max_pass_through_depth)
         )
 
     @property
@@ -242,6 +250,7 @@ class UnlinkCRingPuzzleState:
             "path_watched": bool(self.path_watched),
             "min_gap_seen": None if self.min_gap_seen is None else float(self.min_gap_seen),
             "jam_depth": float(self.jam_depth),
+            "max_pass_through_depth": float(self.max_pass_through_depth),
             "passed_through": bool(self.passed_through),
             "geometry_ok": bool(self.geometry_ok),
             # --- physical recheck, reported separately ----------------------
@@ -261,6 +270,7 @@ class UnlinkCRingPuzzleEvaluator:
 
     min_surface_gap: float = 0.002
     jam_depth: float = 0.001
+    max_pass_through_depth: float = 0.005
 
     @classmethod
     def from_config(cls, task_cfg) -> "UnlinkCRingPuzzleEvaluator":
@@ -269,6 +279,9 @@ class UnlinkCRingPuzzleEvaluator:
         return cls(
             min_surface_gap=0.002 if success is None else float(success.min_surface_gap),
             jam_depth=0.001 if topology is None else float(topology.jam_depth),
+            max_pass_through_depth=(
+                0.005 if success is None else float(success.max_pass_through_depth)
+            ),
         )
 
     def classify(
@@ -317,6 +330,7 @@ class UnlinkCRingPuzzleEvaluator:
             gap_deg=float(geometry.c_ring.gap_deg),
             min_gap_seen=None if min_gap_seen is None else float(min_gap_seen),
             jam_depth=float(self.jam_depth),
+            max_pass_through_depth=float(self.max_pass_through_depth),
             travel_tested=travel is not None,
             travel_free=bool(travel.all_free) if travel is not None else False,
             travel_info=travel.to_info() if travel is not None else {},

@@ -22,6 +22,9 @@ backend's link attachment (see the `pinch:` block in the task config).
     # watch it in the viewer
     python -m demos.entangle.band_untwist_physical_pinch_demo run.viewer=true run.keep_open=true run.verbose=true
 
+    # a seeded variant of the layout (task yaml's variation block)
+    python -m demos.entangle.band_untwist_physical_pinch_demo run.randomize_layout=true run.seed=3
+
     # print the resolved config and exit
     python -m demos.entangle.band_untwist_physical_pinch_demo --cfg job
 """
@@ -37,6 +40,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning import make_band_untwist_rule
 from topogym.primitives import (
     AttachmentManager,
@@ -76,6 +80,31 @@ def _hud(status: dict):
     return render
 
 
+TASK_ID = "band_untwist"
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+    eight = cfg.task.figure_eight
+    spec = layout.figure_eight_spec()
+    ramp = min(spec.lift_ramp, 0.8 * min(spec.tangent_length(spec.closed_lobe_radius),
+                                         spec.tangent_length(spec.open_lobe_radius)))
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} over_end={int(eight.over_end)} "
+        f"heading={float(eight.heading_deg):+.1f} cx={float(eight.center_x):+.4f} cy={float(eight.center_y):+.4f} "
+        f"half_angle={float(eight.half_angle_deg):.1f} r_closed={float(eight.closed_lobe_radius):.4f} "
+        f"r_open={float(eight.open_lobe_radius):.4f} end_gap={float(eight.end_gap):.4f} "
+        f"ramp={ramp:.4f} lift_pred={layout.predicted_lift():.3f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
 def _connector_report(rope_scene, tag: str) -> None:
     for end, connector in sorted(rope_scene.free_end_connectors.items()):
         pos = np.asarray(entity_pos(connector), dtype=float)
@@ -93,6 +122,9 @@ def run_demo(cfg: DictConfig) -> tuple[bool, object]:
         cfg.robot_control,
         seed=cfg.run.seed,
     ).build(show_viewer=cfg.run.viewer)
+    print(f"{TASK_ID} checks {_checks_line(rope_scene.layout)}", flush=True)
+    if cfg.run.randomize_layout:
+        print(_variant_line(cfg, rope_scene.layout), flush=True)
     _connector_report(rope_scene, "post_build")
     # Park each plug at its spawn pose until the gripper takes it -- same assist
     # as swap_crossing_sign (a flat-lying plug is a wheel and rolls during the
@@ -415,6 +447,9 @@ def main(cfg: DictConfig) -> None:
     resolved = save_resolved_config(cfg)
     if resolved is not None:
         print(f"band_untwist_config -> {resolved}", flush=True)
+
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
 
     if int(cfg.env.sim.substeps) != 4 and bool(cfg.env.preset.locked):
         print(

@@ -218,6 +218,16 @@ class GatewayExtractPrimitive:
     # The measured clearance along the extraction is 0.15 mm against a 2.00 mm
     # per-side opening, so the alignment gate is tight by necessity, not by taste.
     max_align_deg: float = 3.0
+    # Close the loop on the part at the end of the slide. Each leg lands the part
+    # 5.5-6 mm short of its waypoint (a steady-state offset of the arm, measured
+    # 2026-08-23; settling does not shrink it), and the two legs add up to ~9 mm.
+    # That miss is what the alignment residual is made of: it grows with the
+    # opening's starting angle (0.4 deg at 34 deg, 5.8 deg at 55 deg, 2026-09-03)
+    # and crossed `max_align_deg` over half the variation envelope. So after the
+    # slide, re-measure the part, push the command past the goal by the shortfall,
+    # and move again -- up to this many passes, stopping once within the tolerance.
+    align_correct_passes: int = 2
+    align_correct_tol: float = 0.002
     verbose: bool = False
 
     def run(
@@ -455,6 +465,28 @@ class GatewayExtractPrimitive:
                 behind=float(np.linalg.norm(entity_pos(part) - target)),
             )
             part_center = target
+        if path:
+            # The arm lands short by a steady-state offset, so re-commanding the goal
+            # itself would land short again; command the goal plus the measured miss.
+            goal = np.asarray(path[-1], dtype=float)
+            command = goal.copy()
+            for index in range(int(self.align_correct_passes)):
+                actual = entity_pos(part)
+                miss = goal - actual
+                if float(np.linalg.norm(miss)) <= float(self.align_correct_tol):
+                    break
+                command = command + miss
+                self._move_part(
+                    controller, turn_track, part_from=actual, part_to=command,
+                    quat_from=base_quat, quat_to=base_quat,
+                    offset_in_hand=offset_in_hand, steps=leg_steps, part_entity=part,
+                )
+                controller.step(int(self.align_settle_steps))
+                self._log(
+                    f"correct{index}", turn_track,
+                    miss_before=float(np.linalg.norm(miss)),
+                    behind=float(np.linalg.norm(entity_pos(part) - goal)),
+                )
         phases.append("align")
         controller.step(int(self.align_settle_steps))
         phases.append("align_settle")

@@ -13,11 +13,12 @@ the distance between two sets of segments minus their radii, which is exact for 
 bodies the scene actually loads -- not for an idealised torus. What the GPU spike
 adds later is whether the scene is *stable*, which geometry cannot answer.
 
-Four questions, in order:
+Five questions, in order:
 
-  - **fit**: do the five inequalities the layout rests on hold, with what margin?
+  - **fit**: do the seven inequalities the layout rests on hold, with what margin?
     (opening wider than the bar, C fits over the bar, nothing hits the table during
-    the extraction, nothing hits the arm at reset)
+    the extraction, nothing hits the arm at reset, the grasp point within reach, the
+    hand outside the closed ring at the grasp point)
   - **fidelity**: how far does the chord approximation move each surface, and how
     does that compare with the clearances it has to be small against?
   - **reading**: at spawn, is the pair linked -- one crossing pair and `Lk = -1`
@@ -29,6 +30,10 @@ Four questions, in order:
     opening -- so the approach runs through the hole's empty middle rather than
     along the tube. The shortcut the anti-shortcut contrast guards against is
     skipping the alignment entirely.
+  - **variation envelope**: the same four answers at every corner of the yaml's
+    `variation:` block (2^n corners over the uniform axes, the grasp azimuth derived
+    the way the task's hook derives it), plus two draws that must fail a row --
+    the gate is only worth something if it can say no.
 
 Defaults come from the task config, so the gate and the scene cannot drift apart.
 
@@ -42,7 +47,9 @@ Needs numpy and PyYAML.
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib.util
+import itertools
 import sys
 from pathlib import Path
 
@@ -134,6 +141,103 @@ def linking(geometry, cg, closed_band, frame) -> float:
         cg.centerline(geometry.c_ring, frame, closure_samples=geometry.closure_samples),
         projection=geometry.projection,
     )
+
+
+# ---- variation envelope -----------------------------------------------------
+
+
+def envelope(cfg: dict) -> dict[str, tuple[float, float]]:
+    """Dotted path -> (lo, hi) for every uniform axis in the yaml's ``variation:`` block."""
+
+    return {
+        str(entry["path"]): (float(entry["lo"]), float(entry["hi"]))
+        for entry in cfg.get("variation", [])
+        if entry.get("kind") == "uniform"
+    }
+
+
+def set_leaf(cfg: dict, path: str, value: float) -> None:
+    node = cfg
+    *parents, leaf = path.split(".")
+    for key in parents:
+        node = node[key]
+    node[leaf] = value
+
+
+def corner_cfg(cfg: dict, **leaves: float) -> dict:
+    """A deep copy of the yaml with the given leaves written and the grasp azimuth
+    derived the same way ``unlink_c_ring.derive_task_cfg`` does it."""
+
+    out = copy.deepcopy(cfg)
+    for path, value in leaves.items():
+        set_leaf(out, path, value)
+    out["primitive"]["grasp_azimuth_deg"] = (
+        float(out["c_ring"]["gap_azimuth_deg"]) + float(out["primitive"]["grasp_offset_deg"])
+    ) % 360.0
+    return out
+
+
+def corner_failures(geometry, cg, closed_band, lift: float) -> list[str]:
+    """The fit / reading / gateway / non-gateway verdicts for one geometry, as failures."""
+
+    fails = [
+        f"{name}: {value * 1000:+.2f} mm, needs more than {limit * 1000:+.2f} mm"
+        for name, value, limit, ok in geometry.checks()
+        if not ok
+    ]
+    spawn_linking = linking(geometry, cg, closed_band, geometry.c_spawn_frame)
+    if abs(abs(spawn_linking) - 1.0) > 1e-6:
+        fails.append(f"not linked at spawn: Lk = {spawn_linking:+.2f}")
+    result = sweep(geometry, cg, geometry.gateway_phases(lift=lift))
+    if result["jam_at"] is not None:
+        fails.append(f"the gateway jams at {result['jam_at']:.0%}, {-result['jam_depth'] * 1000:.2f} mm deep")
+    end_linking = linking(geometry, cg, closed_band, result["end_frame"])
+    if abs(end_linking) > 1e-6:
+        fails.append(f"the gateway ends still linked: Lk = {end_linking:+.2f}")
+    for name, phases in non_gateway_phases(geometry, cg):
+        if sweep(geometry, cg, phases)["jam_at"] is None:
+            fails.append(f"{name!r} is not blocked")
+    return fails
+
+
+def check_envelope(cfg: dict, cg, closed_band, lift: float) -> list[str]:
+    """Every corner of the envelope passes all four questions; two draws outside it fail a row."""
+
+    fails: list[str] = []
+    axes = envelope(cfg)
+    want = {
+        "stand.hang_yaw_deg", "fixed_ring.center_x", "fixed_ring.center_y",
+        "c_ring.gap_deg", "c_ring.gap_azimuth_deg",
+    }
+    if set(axes) != want:
+        return [f"variation axes {sorted(axes)} != {sorted(want)}"]
+
+    paths = list(axes)
+    tightest: dict[str, float] = {}
+    corners = list(itertools.product(*(axes[p] for p in paths)))
+    for values in corners:
+        leaves = dict(zip(paths, values))
+        geometry = cg.scene_geometry(corner_cfg(cfg, **leaves))
+        for name, value, limit, _ in geometry.checks():
+            margin = value - limit
+            if name not in tightest or margin < tightest[name]:
+                tightest[name] = margin
+        for failure in corner_failures(geometry, cg, closed_band, lift):
+            label = " ".join(f"{p.split('.')[-1]}={v:g}" for p, v in leaves.items())
+            fails.append(f"corner [{label}]: {failure}")
+    for name, margin in tightest.items():
+        print(f"  {name:40s} tightest margin {margin * 1000:+8.2f} mm over {len(corners)} corners")
+
+    # Negatives: the two rows added for the envelope must be able to say no.
+    hand = cg.scene_geometry(corner_cfg(cfg, **{"c_ring.gap_azimuth_deg": 295.0}))
+    if all(ok for name, _, _, ok in hand.checks() if name.startswith("hand clears")):
+        fails.append("gap_azimuth_deg=295 should fail 'hand clears the ring at the grasp point'")
+    reach = cg.scene_geometry(corner_cfg(cfg, **{"stand.hang_yaw_deg": 0.0}))
+    if all(ok for name, _, _, ok in reach.checks() if name.startswith("hand reaches")):
+        fails.append("hang_yaw_deg=0 should fail 'hand reaches the grasp point'")
+    print(f"  negatives: gap_azimuth 295 -> hand row {hand.hand_clearance * 1000:+.2f} mm, "
+          f"hang_yaw 0 -> reach {reach.grasp_reach:.3f} m")
+    return fails
 
 
 def main() -> int:
@@ -238,12 +342,16 @@ def main() -> int:
             f"   (interlock alone: {probe['ring'] * 1000:+6.2f} mm)"
         )
 
+    if args.gap_deg is None and args.segment_deg is None:
+        print("\nvariation envelope (every corner must pass all of the above)")
+        failures.extend(check_envelope(cfg, cg, closed_band, lift))
+
     print()
     if failures:
         for failure in failures:
             print(f"[FAIL] {failure}")
         return 1
-    print("[pass] fit, fidelity, the linked reading, and the opening as the only gateway.")
+    print("[pass] fit, fidelity, the linked reading, the opening as the only gateway, and the envelope's corners.")
     return 0
 
 

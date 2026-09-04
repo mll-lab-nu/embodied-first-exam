@@ -25,6 +25,7 @@ to be judged a failure.
     python -m demos.entangle.unlink_c_ring_physical_extract_demo run.build_only=true
     python -m demos.entangle.unlink_c_ring_physical_extract_demo run.verbose=true
     python -m demos.entangle.unlink_c_ring_physical_extract_demo run.oracle_mode=no_align
+    python -m demos.entangle.unlink_c_ring_physical_extract_demo run.randomize_layout=true run.seed=3
     python -m demos.entangle.unlink_c_ring_physical_extract_demo run.viewer=true run.keep_open=true
 """
 
@@ -40,6 +41,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.primitives import (
     AttachmentManager,
     GatewayExtractPrimitive,
@@ -129,6 +131,29 @@ def _hud(ring_scene, evaluator, status):
     return render_lines
 
 
+TASK_ID = "unlink_c_ring"
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name.replace(' ', '_')}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
+def _variant_line(cfg, geometry) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+    task = cfg.task
+    side_clear = 0.5 * geometry.c_ring.gap_clear_width - geometry.fixed.tube_radius
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} gap={float(task.c_ring.gap_deg):.2f} "
+        f"gap_az={float(task.c_ring.gap_azimuth_deg):.1f} yaw={float(task.stand.hang_yaw_deg):+.1f} "
+        f"cx={float(task.fixed_ring.center_x):+.4f} cy={float(task.fixed_ring.center_y):+.4f} "
+        f"grasp_az={float(task.primitive.grasp_azimuth_deg):.1f} side_clear={side_clear:.4f} "
+        f"hand_clear={geometry.hand_clearance:.4f} reach={geometry.grasp_reach:.3f}"
+    )
+
+
 def grasp_yaw_deg(geometry, frame, grasp_azimuth_deg: float) -> float:
     """Yaw about the vertical that closes the fingers ACROSS the tube, not along it.
 
@@ -187,6 +212,8 @@ def build_primitive(cfg) -> GatewayExtractPrimitive:
         min_finger_qpos=None if min_finger is None else float(min_finger),
         max_grasp_pos_error=float(spec.max_grasp_pos_error),
         max_align_deg=float(spec.max_align_deg),
+        align_correct_passes=int(spec.align_correct_passes),
+        align_correct_tol=float(spec.align_correct_tol),
         max_regrasp_move=float(spec.max_regrasp_move),
         max_regrasp_wrist_deg=float(spec.max_regrasp_wrist_deg),
         motion_settle_steps=int(spec.motion_settle_steps),
@@ -553,6 +580,9 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"unlink_c_ring_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+
     mode = cfg.run.oracle_mode or str(cfg.task.oracle.mode)
 
     has_display = os.name == "nt" or bool(
@@ -570,6 +600,9 @@ def main(cfg: DictConfig) -> None:
     builder = UnlinkCRingSceneBuilder(cfg.env, cfg.task, cfg.robot_control)
     ring_scene = builder.build(show_viewer=show_viewer)
     geometry = ring_scene.geometry
+    print(f"{TASK_ID} checks {_checks_line(ring_scene.layout)}", flush=True)
+    if cfg.run.randomize_layout:
+        print(_variant_line(cfg, geometry), flush=True)
 
     controller = initialize_franka_controller(
         scene=ring_scene.scene,

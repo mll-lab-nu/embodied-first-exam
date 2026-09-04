@@ -79,12 +79,12 @@ def _list(value):
 
 @dataclass(frozen=True)
 class BandUntwistLayout:
-    """One hand-authored figure-8 rope on the table.
+    """One figure-8 rope on the table, fixed by ``task.figure_eight``.
 
-    ``seed`` is accepted for builder-signature parity with the other rope tasks
-    and is currently unused: the layout is fixed by ``task.figure_eight``. The
-    variation plan (`docs/develop/tasks/variation_and_difficulty_plan_zh.md`)
-    is where it becomes a real layout seed.
+    ``seed`` is the run seed, accepted for builder-signature parity with the
+    other rope tasks; the layout itself never samples. Per-episode variation is
+    written into the task cfg before this class sees it
+    (`generation/layout_randomization.py`, the yaml's ``variation:`` block).
     """
 
     cfg: Any
@@ -122,13 +122,12 @@ class BandUntwistLayout:
     def over_end(self) -> int:
         """The rope end whose strand the generator raised at the crossing."""
 
-        return int(fig8.OVER_END)
+        return int(self.cfg.figure_eight.over_end)
 
     def figure_eight_spec(self) -> fig8.FigureEightSpec:
         """The task-frame ``figure_eight:`` block as the generator's dataclass."""
 
         block = self.cfg.figure_eight
-        center = _list(block.center)
         return fig8.FigureEightSpec(
             closed_lobe_radius=float(block.closed_lobe_radius),
             open_lobe_radius=float(block.open_lobe_radius),
@@ -136,11 +135,71 @@ class BandUntwistLayout:
             half_angle_deg=float(block.half_angle_deg),
             over_lift=float(block.over_lift),
             base_z=float(block.base_z),
-            center=(float(center[0]), float(center[1])),
+            center=(float(block.center_x), float(block.center_y)),
             heading_deg=float(block.heading_deg),
             arc_points_per_quarter=int(block.arc_points_per_quarter),
             lift_ramp=float(block.lift_ramp),
+            over_end=int(block.over_end),
         )
+
+    # ----- variation: derived leaf + checks ------------------------------------
+
+    def end_gap_bounds(self) -> tuple[float, float]:
+        return fig8.end_gap_bounds(
+            float(self.cfg.figure_eight.open_lobe_radius),
+            float(self.cfg.rope.free_end_connector.min_clearance),
+            float(self.cfg.figure_eight.end_gap_max_ratio),
+        )
+
+    def end_gap_from_frac(self, frac: float) -> float:
+        return fig8.end_gap_from_frac(
+            float(self.cfg.figure_eight.open_lobe_radius),
+            float(frac),
+            float(self.cfg.rope.free_end_connector.min_clearance),
+            float(self.cfg.figure_eight.end_gap_max_ratio),
+        )
+
+    def predicted_lift(self) -> float:
+        """Task z the oracle will lift to, estimated from the spawn geometry (±30 mm)."""
+
+        return fig8.predicted_lift(
+            self.figure_eight_spec(),
+            float(self.cfg.figure_eight.tube_radius),
+            float(self.cfg.pinch.lift_clearance),
+        )
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a buildable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate and the
+        demo's start-up print. Reads only literal task leaves (``tube_radius``
+        is the yaml's copy of ``rope.radius``; the box is ``workspace:``), so it
+        works on an unresolved task config.
+        """
+
+        eight, ws = self.cfg.figure_eight, self.cfg.workspace
+        return fig8.figure_eight_checks(
+            self.figure_eight_spec(),
+            tube_radius=float(eight.tube_radius),
+            min_clearance=float(self.cfg.rope.free_end_connector.min_clearance),
+            end_gap_max_ratio=float(eight.end_gap_max_ratio),
+            workspace_x=(float(ws.x[0]), float(ws.x[1])),
+            workspace_y=(float(ws.y[0]), float(ws.y[1])),
+            workspace_z_max=float(ws.z_max),
+            workspace_margin=float(ws.margin),
+            lift_clearance=float(self.cfg.pinch.lift_clearance),
+            place_clearance=float(self.cfg.pinch.place_clearance),
+        )
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"band_untwist layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
 
     def control_points(self) -> np.ndarray:
         return fig8.figure_eight_control_points(self.figure_eight_spec())
@@ -286,6 +345,14 @@ class BandUntwistSceneBuilder:
         self.layout = BandUntwistLayout(task_cfg, seed=int(seed), task_origin=frames.task_origin)
 
     def build(self, *, show_viewer: bool = False, include_robot: bool = True) -> BandUntwistScene:
+        self.layout.validate()
+        tube_radius = float(self.task_cfg.figure_eight.tube_radius)
+        if abs(tube_radius - float(self.task_cfg.rope.radius)) > 1e-12:
+            raise ValueError(
+                f"task.figure_eight.tube_radius={tube_radius} != task.rope.radius="
+                f"{float(self.task_cfg.rope.radius)}: the layout checks would describe a "
+                "different tube. Keep the two equal."
+            )
         backend = _make_rope_backend(self.task_cfg.rope)
         self._rope_backend = backend
         backend.pre_scene()
@@ -476,6 +543,28 @@ def _end_heading(centerline: np.ndarray, end: int) -> float:
     if float(np.linalg.norm(direction)) <= 1e-9:
         return 0.0
     return float(np.arctan2(direction[1], direction[0]))
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``: the end gap
+    depends on the drawn open-lobe radius. A ``ValueError`` (empty range)
+    rejects the draw.
+    """
+
+    layout = BandUntwistLayout(task_cfg)
+    task_cfg.figure_eight.end_gap = layout.end_gap_from_frac(float(task_cfg.figure_eight.end_frac))
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    BandUntwistLayout(task_cfg).validate()
 
 
 def _particle_arclength(backend, rope_entity, centerline: np.ndarray) -> np.ndarray:

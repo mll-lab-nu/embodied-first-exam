@@ -11,9 +11,17 @@ defaults:
   - default
   - _self_
 
-# 只建场景、一步都不走。两条各三十多段的圆柱链互相穿过，正是最容易在生成时就互嵌的
+# 只建场景、不沉降不静置。两条各三十多段的圆柱链互相穿过，正是最容易在生成时就互嵌的
 # 形状；这一档让互嵌在第一次沉降把它掩盖之前就暴露出来。
 static_only: false
+# static_only 时只走这么多步，让录像器有帧可写（变体 sweep 的 visual 组用）。
+final_hold_steps: 20
+
+# --- 变体（2026-09-03）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+difficulty: envelope
+variant_id: default
 
 # 机械臂回 home 的沉降步数。C 环同时从 spawn_drop 落到管身上。
 settle_steps: 100

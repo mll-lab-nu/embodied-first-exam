@@ -4,7 +4,7 @@
 # docx 3.4：支架上固定一个闭合刚性圆环，C 形开口环与其互锁。开口是 unlink 的唯一
 # gateway——闭合环身必须从开口通过，其余方向都是刚体碰撞死路。
 #
-# 本文件的尺寸不是随手取的，五条不等式互相咬合，改任何一条都要重跑
+# 本文件的尺寸不是随手取的，七条不等式互相咬合，改任何一条都要重跑
 # `python tests/check_c_ring_clearance.py`：
 #
 #   1. 开口能过环身        gap_clear_width > 2 * fixed_ring.tube_radius
@@ -12,6 +12,8 @@
 #   3. 抽出时不撞桌面      c_ring 静置中心高 - 抽出行程 - c_ring 外半径 > 余量
 #   4. 静置时凸台不触桌    c_ring 静置中心高 - (major_radius + tab.length) > 余量
 #   5. reset 时不撞机械臂  固定环顶与悬臂顶 < home 位指尖 task z 0.1608
+#   6. 抓取点可达          抓取点距底座 < reach.max_grasp_dist（2026-09-03 加）
+#   7. 手在闭合环之外      R*sin(grasp_azimuth) > 手半宽 45mm（2026-09-03 加）
 #
 # 第 5 条与 bar_through_hole 的 panel.top_z 同一条余量：高于 home 指尖的结构会在
 # reset 的 set_dofs_position 瞬移里被扎进去，stacked_plate 当初就是这样出的求解器 NaN。
@@ -63,8 +65,11 @@ stand:
 # major_radius，这就是本形态给 home 位让出大量净空的原因。
 fixed_ring:
   # 环心。z = C 环静置中心 + 孔间隙 = 0.090 + 0.031。
-  # xy 使 C 环（挂在 -y 缘）落在 y=0 上，即机器人的正中线。
-  center: [0.060, 0.055, 0.130]
+  # 拆成三个标量：随机化器按点路径抽样，不支持列表元素；xy 是变体轴，z 不动。
+  # hang_yaw_deg 180 时 C 环挂在 -x 缘，静置中心 (0.005, 0.055, 0.084)。
+  center_x: 0.060
+  center_y: 0.055
+  center_z: 0.130
   # 环半径同时决定立柱离 C 环多远（两者相距 2*major_radius = 110mm）。
   major_radius: 0.055
   tube_radius: 0.004
@@ -155,9 +160,13 @@ oracle:
   mode: gateway
 
 primitive:
-  # 抓在环身上的哪个方位角（环自身坐标）。67.5° 配 315° 的开口，两者相距 112.5°，
-  # 手指离开口的端帽很远。滚转 +45° 之后抓取点落到世界方位 112.5°，起止两处
-  # y 都是 -50.8mm——这是 |y| 接近最大的那一段，也就是竖直下手时离闭合环最远的一段。
+  # 抓取点相对开口方位角的偏移。抓取点 = gap_azimuth_deg + 这个值（mod 360），
+  # 使手指始终离开口的端帽很远。随机化时 derive_task_cfg 按这条规则覆盖 grasp_azimuth_deg。
+  grasp_offset_deg: 112.5
+  # 抓在环身上的哪个方位角（环自身坐标，0 = 正上方的管身处，向外为正）。
+  # 67.5° = 315° + 112.5°：径向向外 R*sin(67.5°) = 50.8mm，减去手半宽 45mm 还剩 5.8mm
+  # 在闭合环之外（checks() 的「hand clears the ring」行）。滑出改法后环不再滚转，
+  # 起止同一点。固定布局用这个值；随机化时由 grasp_offset_deg 派生。
   grasp_azimuth_deg: 67.5
   # 接近姿态取**竖直**（指尖朝下，robot_control 的 ik.default_ee_quat）。
   # 曾试过让工具轴对齐 C 环法向（水平伸手），那样滚转就是 joint 7 的自转、最省手腕，
@@ -235,6 +244,12 @@ primitive:
   # 对准门。gateway 全程最紧处 0.15mm、开口单边余量 2.00mm，过不了就在下移前中止——
   # 开口没对准还往下走是把环怼进管身，而 assisted carry 下那是穿模不是卡住。
   max_align_deg: 3.0
+  # 摆动段的闭环修正。两段直线各落后目标 5.5–6mm（手臂稳态偏差，沉降不缩），叠成 9mm，
+  # 摆动后的对准残差就是它的垂直分量折成的角：出生开口角 34° 时 0.4°、55° 时 5.8°
+  # （2026-09-03 角点实测），半个包络过不了 3.0° 的门。走完两段后重测环心，把差值加到
+  # 命令点上再走一段，最多 align_correct_passes 次，差值小于 align_correct_tol 就停。
+  align_correct_passes: 2
+  align_correct_tol: 0.002
   # 抽出后沿**径向朝外**移开多远（远离闭合环的中心），与离线 gate 的
   # gateway_phases(carry=) 同值。不沿管轴走：那个方向会绕回闭合环下面，环的远缘压在头上。
   carry: 0.090
@@ -286,3 +301,36 @@ success:
   # 判「已分离」的最小表面净空。仅仅不重叠还不够——读数为解链但两面仍贴着，
   # 那是抽到一半的位姿，不是终态。
   min_surface_gap: 0.002
+  # 判「穿模过去」的全程最小面间距阈值（passed_through）。与 topology.jam_depth 分开：
+  # 那个 1mm 是离线扫描里理想刚体的弦误差与互锁的分界；求解器里被夹住的环会真的压在
+  # 杆上——2026-09-03 seed 0 实测 gateway 抬升段 -2.63mm（手腕从 20° 转平时环顶压杆），
+  # no_align 的互锁 -8.97mm。取 5mm 落在两群之间。
+  max_pass_through_depth: 0.005
+
+# ---------------------------------------------------------------- 可达
+# 抓取点距 Franka 底座的上限。底座位置来源同 gate_cage_ball 的 reach 段
+# （common_configs/manipulation_space_tabletop_v1.yaml 的 robot_setup.mount.pos）。
+# hang_yaw_deg 180 时 0.527 m；0 时 0.738 m，这就是 0 被排除在包络外的原因。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_grasp_dist: 0.700
+
+# ---------------------------------------------------------------- 变体
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。
+# 每条 uniform 各有自己的区间，互不依赖；抓取方位角由开口方位角派生（derived）。
+# 没有防捷径离散轴：开口不对准管身就卡住，由物理本身保证（variation_axes_plain_zh.md §3）。
+variation:
+  # 布局：C 环挂在固定环的哪个环缘，整组场景绕竖轴转。270 实测手腕位姿误差 28.6°，不进包络。
+  - {kind: uniform, path: stand.hang_yaw_deg, lo: 165.0, hi: 195.0}
+  # 布局：整个装置在桌上的位置
+  - {kind: uniform, path: fixed_ring.center_x, lo: 0.040, hi: 0.080}
+  - {kind: uniform, path: fixed_ring.center_y, lo: 0.035, hi: 0.075}
+  # 布局（难度候选）：开口张角。单边净空 R*sin(gap/2) - r_c - r_f = 1.26 .. 4.31 mm
+  - {kind: uniform, path: c_ring.gap_deg, lo: 21.5, hi: 28.0}
+  # 布局：开口方位角。±10 而非计划的 ±15：抓取点 = 方位角 + 112.5°，手半宽 45mm 的
+  # 净空行在 302.4° 以下失败，±15 约有 8% 首抽被拒，超过 2% 门。
+  - {kind: uniform, path: c_ring.gap_azimuth_deg, lo: 305.0, hi: 325.0}
+  # 派生：gap_azimuth_deg + grasp_offset_deg -> primitive.grasp_azimuth_deg
+  - {kind: derived, fn: "topogym.tasks.entangle.unlink_c_ring:derive_task_cfg"}
+  # 校验：SceneGeometry.checks() 七行（开口过杆、套得上、抽出离桌、立柱净空、home 净空、可达、手净空）
+  - {kind: validate, fn: "topogym.tasks.entangle.unlink_c_ring:validate_task_cfg"}

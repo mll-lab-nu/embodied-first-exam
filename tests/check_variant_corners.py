@@ -25,7 +25,7 @@ readings, so the manifest is known to feed the demo what was checked here.
 Test-only by construction: no ``VariantRng``, no ``randomize_task_cfg``; the
 production sampler is untouched and the seed -> variant mapping cannot move.
 
-    python tests/check_variant_corners.py                       # all three tasks
+    python tests/check_variant_corners.py                       # all registered tasks
     python tests/check_variant_corners.py --task gate_cage_ball
     python tests/check_variant_corners.py --task diverter_route_ball --manifest runs/x/corners.tsv
 
@@ -122,6 +122,29 @@ TASKS = {
         layout="topogym.tasks.connectivity.gate_cage_ball:GateCageBallLayout",
         pairs={},
     ),
+    # 256 corners; the physics run takes minutes per cell (FEM rope), so the GPU
+    # sweep is run on a CORNERS= subset.
+    "band_untwist": TaskSpec(
+        yaml="band_untwist_topogym_tabletop_v1.yaml",
+        physical_config="band_untwist_pinch",
+        layout="topogym.tasks.entangle.band_untwist:BandUntwistLayout",
+        pairs={},
+    ),
+    # 32 corners; rigid bodies only, seconds to a couple of minutes per GPU cell,
+    # so the sweep runs them all.
+    "unlink_c_ring": TaskSpec(
+        yaml="unlink_c_ring_topogym_tabletop_v1.yaml",
+        physical_config="unlink_c_ring_extract",
+        layout="topogym.tasks.entangle.unlink_c_ring:UnlinkCRingLayout",
+        pairs={},
+    ),
+    # 64 corners (six continuous axes); rigid bodies only, ~10-20 s per GPU cell.
+    "bar_through_hole": TaskSpec(
+        yaml="bar_through_hole_topogym_tabletop_v1.yaml",
+        physical_config="bar_through_hole",
+        layout="topogym.tasks.routing.bar_through_hole:BarThroughHoleLayout",
+        pairs={},
+    ),
 }
 
 
@@ -207,12 +230,16 @@ def build_corners(task_cfg, directives, pairs) -> list[Corner]:
 
 
 def _leaves(node, prefix="") -> dict:
+    """Dotted path -> value over every leaf, without resolving interpolations
+    (a task yaml may carry ``${prefabs...}`` leaves that only resolve under Hydra)."""
+    if OmegaConf.is_config(node):
+        node = OmegaConf.to_container(node, resolve=False)
     out = {}
-    if OmegaConf.is_dict(node):
-        for k in node.keys():
-            out.update(_leaves(node[k], f"{prefix}{k}."))
-    elif OmegaConf.is_list(node):
-        out[prefix[:-1]] = tuple(OmegaConf.to_container(node))
+    if isinstance(node, dict):
+        for k, v in node.items():
+            out.update(_leaves(v, f"{prefix}{k}."))
+    elif isinstance(node, list):
+        out[prefix[:-1]] = tuple(node)
     else:
         out[prefix[:-1]] = node
     return out

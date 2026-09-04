@@ -44,7 +44,9 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
+from topogym.primitives.pick_place import HAND_TO_PAD_Z
 from topogym.tasks._fixtures import add_v_block, v_block_seat_drop
+from topogym.tasks.entangle._c_ring_geometry import HOME_FINGERTIP_Z
 from topogym.tasks._visuals import (
     add_aperture_ring,
     add_industrial_pedestal,
@@ -59,6 +61,19 @@ def _list(value):
     if OmegaConf.is_config(value):
         value = OmegaConf.to_container(value, resolve=True)
     return value
+
+
+# Where the cradles sit relative to what they serve, in metres along x. The two
+# near blocks bracket the shaft's rest centre; `near_b` and `far` are placed from
+# the shaft's END so a short shaft still spans them. On the baseline config these
+# reproduce the hand-placed values -0.070 / 0.020 / 0.200 exactly.
+NEAR_A_BEHIND_CENTRE = 0.020
+END_SETBACK = 0.030
+# How far the shaft's rest end, the nearer cradle, and the hand at seat must all
+# stop short of the panel's near face; and how much shaft must remain beyond the
+# grasp point / past a cradle's jaw so the fingers close on bare stock.
+PANEL_MARGIN = 0.010
+FINGER_MARGIN = 0.015
 
 
 def hexagon_vertices(across_flats: float) -> np.ndarray:
@@ -216,7 +231,8 @@ class BarThroughHoleLayout:
         return self.bar_inradius * 2.0 / np.sqrt(3.0)
 
     def bar_rest_center(self) -> np.ndarray:
-        return self.position_to_world(self.cfg.bar.rest_pos)
+        bar = self.cfg.bar
+        return self.position_to_world((float(bar.rest_x), float(bar.rest_y), float(bar.rest_z)))
 
     def grasp_offset(self) -> float:
         """Signed x distance from the grasp point to the shaft centre.
@@ -272,6 +288,223 @@ class BarThroughHoleLayout:
         half_angle = np.deg2rad(float(getattr(spec, "half_angle_deg", 45.0)))
         return float(spec.seat_axis_z) - v_block_seat_drop(self.bar_profile(), half_angle)
 
+    def cradle_jaw_top_z(self, spec) -> float:
+        """Task-frame z of the top of a cradle's slanted jaws -- what a passing shaft must clear."""
+
+        half_angle = np.deg2rad(float(getattr(spec, "half_angle_deg", 45.0)))
+        return self.cradle_apex_z(spec) + float(spec.jaw_width) * float(np.cos(half_angle))
+
+    # ----- derived layout (variation) ----------------------------------------
+    #
+    # Task-frame numbers throughout. These are the formulas the yaml's
+    # ``variation:`` block names through `derive_task_cfg`; the fixed-layout path
+    # never calls them, so the hand-written baseline values stay authoritative
+    # there and `tests/check_bar_through_hole_geometry.py` pins the two to agree.
+
+    def panel_near_face_x(self) -> float:
+        return self.panel_x - 0.5 * self.panel_thickness
+
+    def sill_task_z(self) -> float:
+        """Task-frame z of the aperture's flat lower edge (see `sill_top_z` for world)."""
+
+        return float(self.cfg.aperture.center_z) - self.aperture_inradius
+
+    def length_bounds(self) -> tuple[float, float]:
+        """Where the shaft length may fall: the config's range, capped so the
+        shaft's rest end stops `PANEL_MARGIN` short of the panel's near face."""
+
+        lo, hi = (float(v) for v in _list(self.cfg.bar.length_range))
+        cap = 2.0 * (self.panel_near_face_x() - PANEL_MARGIN - float(self.cfg.bar.rest_x))
+        hi = min(hi, cap)
+        if hi < lo:
+            raise ValueError(
+                f"No shaft length fits: range [{lo:.3f}, {hi:.3f}] is empty with the shaft "
+                f"at x={float(self.cfg.bar.rest_x):+.3f} and the panel at x={self.panel_x:.3f}."
+            )
+        return lo, hi
+
+    def length_from_frac(self, frac: float) -> float:
+        lo, hi = self.length_bounds()
+        return lo + (hi - lo) * float(np.clip(frac, 0.0, 1.0))
+
+    def grasp_offset_bounds(self) -> tuple[float, float]:
+        """Where the grasp offset may fall: the config's range, capped so the pads
+        still close on shaft (`FINGER_MARGIN` of stock beyond the grasp point)."""
+
+        lo, hi = (float(v) for v in _list(self.cfg.bar.grasp_offset_range))
+        hi = min(hi, 0.5 * self.bar_length - FINGER_MARGIN)
+        if hi < lo:
+            raise ValueError(
+                f"No grasp offset fits: range [{lo:.3f}, {hi:.3f}] is empty for a "
+                f"{self.bar_length:.3f} m shaft."
+            )
+        return lo, hi
+
+    def grasp_offset_from_frac(self, frac: float) -> float:
+        lo, hi = self.grasp_offset_bounds()
+        return lo + (hi - lo) * float(np.clip(frac, 0.0, 1.0))
+
+    def cradle_x(self, name: str) -> float:
+        """Where a cradle belongs given the shaft, the panel, and the shaft length."""
+
+        half = 0.5 * self.bar_length
+        rest_x = float(self.cfg.bar.rest_x)
+        if name == "near_a":
+            return rest_x - NEAR_A_BEHIND_CENTRE
+        if name == "near_b":
+            return rest_x + half - END_SETBACK
+        if name == "far":
+            return self.panel_x + half - END_SETBACK
+        raise KeyError(name)
+
+    def far_seat_axis_z(self) -> float:
+        """The far cradle must agree with the sill: the seated shaft rests on both."""
+
+        return self.sill_task_z() + self.bar_inradius
+
+    def cradle_y(self, name: str) -> float:
+        """Task-frame y of a cradle's groove.
+
+        The near blocks sit under the resting shaft, so they follow `bar.rest_y`;
+        the far block catches the shaft where the bore puts it, on the panel's
+        centreline. Was a hard-coded 0.0 for all three until 2026-09-04: the
+        first variation corner with `rest_y` != 0 spawned the shaft beside its
+        grooves, it fell to the table, and the pads closed on air above it.
+        """
+
+        if name in ("near_a", "near_b"):
+            return float(self.cfg.bar.rest_y)
+        if name == "far":
+            return 0.0
+        raise KeyError(name)
+
+    # ----- derived heights (task frame, hand-link z) --------------------------
+
+    def grasp_hand_z(self) -> float:
+        """Pads centred on the resting shaft's axis."""
+
+        return float(self.cfg.bar.rest_z) + HAND_TO_PAD_Z
+
+    def lift_hand_z(self) -> float:
+        return self.grasp_hand_z() + float(self.cfg.primitive.lift_height)
+
+    def push_window(self) -> tuple[float, float]:
+        """Task-frame z range the shaft's AXIS may occupy during the horizontal push.
+
+        Lower bound: the shaft's flat bottom clears every cradle's jaw tops (the
+        far cradle's dominate, since its seat follows the sill). Upper bound: the
+        shaft's flat top stays under the aperture's upper edge. Both are
+        one-inradius offsets from the axis because the shaft lies flat-side-down.
+        """
+
+        clearance = self.aperture_inradius - self.bar_inradius
+        center_z = float(self.cfg.aperture.center_z)
+        jaw_tops = [
+            self.cradle_jaw_top_z(spec)
+            for _, spec in self.cradle_specs()
+            if bool(getattr(spec, "enabled", True))
+        ]
+        lo = max([center_z - clearance] + [top + self.bar_inradius for top in jaw_tops])
+        hi = center_z + clearance
+        return lo, hi
+
+    def push_center_z(self) -> float:
+        lo, hi = self.push_window()
+        return 0.5 * (lo + hi)
+
+    def insert_hand_z(self) -> float:
+        return self.push_center_z() + HAND_TO_PAD_Z
+
+    def seat_hand_z(self) -> float:
+        """Shaft bottom `seat_drop` above the sill when the pads open."""
+
+        return self.sill_task_z() + float(self.cfg.primitive.seat_drop) + self.bar_inradius + HAND_TO_PAD_Z
+
+    # ----- solvability -------------------------------------------------------
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a solvable, buildable layout needs.
+
+        One list for the randomizer's reject step, the offline gate, the corner
+        harness and the demo's start-up print. Metres throughout.
+        """
+
+        bar = self.cfg.bar
+        primitive = self.cfg.primitive
+        cradles = self.cfg.cradles
+        half = 0.5 * self.bar_length
+        rest_x = float(bar.rest_x)
+        near_face = self.panel_near_face_x()
+        grasp_x = rest_x - self.grasp_offset()
+        lo, hi = self.push_window()
+        seat_hand_x = self.panel_x - self.grasp_offset()
+        base_x, base_y = (float(v) for v in _list(self.cfg.reach.base_xy))
+        reach = float(np.hypot(seat_hand_x - base_x, float(bar.rest_y) - base_y))
+        far_seat_gap = abs(float(cradles.far.seat_axis_z) - self.far_seat_axis_z())
+        ge = [
+            ("push_window", hi - lo, 2.0 * float(primitive.push_clearance_min)),
+            ("bar_end_clears_panel", near_face - (rest_x + half), PANEL_MARGIN),
+            (
+                "near_cradle_clears_panel",
+                near_face - (float(cradles.near_b.x) + 0.5 * float(cradles.near_b.length_x)),
+                PANEL_MARGIN,
+            ),
+            ("grasp_on_shaft", half - self.grasp_offset(), FINGER_MARGIN),
+            (
+                "grasp_clears_near_a",
+                abs(grasp_x - float(cradles.near_a.x)) - 0.5 * float(cradles.near_a.length_x),
+                FINGER_MARGIN,
+            ),
+            (
+                "hand_short_of_panel",
+                near_face - (seat_hand_x + float(primitive.hand_half_depth)),
+                PANEL_MARGIN,
+            ),
+            # Guards edits rather than draws: no axis moves the panel's top.
+            ("panel_clears_home", HOME_FINGERTIP_Z - float(self.cfg.panel.top_z), 0.0),
+        ]
+        rows = [(name, value, limit, value >= limit - 1e-9) for name, value, limit in ge]
+        rows.append(("hand_reach", reach, float(self.cfg.reach.max_hand_dist), reach <= float(self.cfg.reach.max_hand_dist) + 1e-9))
+        rows.append(("far_cradle_matches_sill", far_seat_gap, 0.001, far_seat_gap <= 0.001 + 1e-9))
+        return rows
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"bar_through_hole layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Order
+    matters: the length (needs the panel and the rest x), then the grasp offset
+    (needs the length), then the cradles (need the length) and the far cradle's
+    seat (needs the aperture). A ``ValueError`` (empty range) rejects the draw.
+    """
+
+    layout = BarThroughHoleLayout(task_cfg)
+    task_cfg.bar.length = layout.length_from_frac(float(task_cfg.bar.length_frac))
+    task_cfg.bar.grasp_offset = layout.grasp_offset_from_frac(float(task_cfg.bar.grasp_frac))
+    for name in ("near_a", "near_b", "far"):
+        task_cfg.cradles[name].x = layout.cradle_x(name)
+    task_cfg.cradles.far.seat_axis_z = layout.far_seat_axis_z()
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    BarThroughHoleLayout(task_cfg).validate()
+
 
 @dataclass
 class BarThroughHoleScene:
@@ -305,6 +538,7 @@ class BarThroughHoleSceneBuilder:
         manifest = tabletop.manifest
 
         layout = BarThroughHoleLayout(self.task_cfg, task_origin=tabletop.frames.task_origin)
+        layout.validate()
         self._add_panel(scene, manifest, layout)
         self._add_cradles(scene, manifest, layout)
         self._add_bar(scene, manifest, layout)
@@ -461,7 +695,7 @@ class BarThroughHoleSceneBuilder:
                 manifest,
                 prefix=name,
                 center_x=float(spec.x),
-                center_y=0.0,
+                center_y=layout.cradle_y(name),
                 apex_z=layout.cradle_apex_z(spec),
                 length_x=float(spec.length_x),
                 half_angle_rad=float(np.deg2rad(float(spec.half_angle_deg))),
@@ -559,7 +793,7 @@ class BarThroughHoleSceneBuilder:
                 prefix=name,
                 spec=pedestal,
                 center_x=float(spec.x),
-                center_y=0.0,
+                center_y=layout.cradle_y(name),
                 top_z=apex_z,
                 block_size=(float(spec.length_x), float(spec.post_width), apex_z),
                 to_world=layout.position_to_world,

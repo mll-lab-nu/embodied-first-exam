@@ -20,9 +20,20 @@ drift.
 3. **Planner** -- on the spawn polyline with the counter's own reading: the
    oracle grasps the measured over end and the contrast grasps the other; the
    lift clears the rope hanging below the hand; the landing point keeps the
-   carried strand as extended as it was, sits `place_clearance` from the other
-   end on its far side, and every hand target is inside the workspace box and
-   under its ceiling.
+   carried strand as extended as it was, sits at least `place_clearance` from
+   the other end AND from the whole strand that stays down, on its far side,
+   matches the layout's offline replay of the same rule, and every hand target
+   is inside the workspace box and under its ceiling. A staying strand that
+   bulges past its plug pushes the landing further round (corner c130).
+
+4. **Variation envelope** -- every corner of the yaml's `variation:` block
+   (each uniform axis at both ends, `over_end` at both values, `end_gap`
+   derived from `end_frac`): the eight `figure_eight_checks` rows pass, the
+   polyline still reads as exactly one crossing, and the measured over end is
+   the one the spec asked for. Then three negatives: an open lobe too small for
+   the gripper's clearance closes the `end_gap` range, a crossing pushed
+   toward the workspace edge fails the footprint row, and a `place_clearance`
+   no point on the landing circle can honour makes the landing sweep raise.
 
     python tests/check_band_untwist_geometry.py
 
@@ -32,8 +43,9 @@ Prints one line per check and exits non-zero if any fails.
 from __future__ import annotations
 
 import importlib.util
+import itertools
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -45,6 +57,8 @@ sys.path.insert(0, str(REPO))
 from topogym.planning.band_untwist_planner import (  # noqa: E402
     make_band_untwist_rule,
     place_beside,
+    point_to_polyline,
+    stay_strand_xy,
 )
 
 
@@ -86,13 +100,16 @@ def config_defaults() -> dict:
             half_angle_deg=float(eight["half_angle_deg"]),
             over_lift=float(eight["over_lift"]),
             base_z=float(eight["base_z"]),
-            center=tuple(float(v) for v in eight["center"]),
+            center=(float(eight["center_x"]), float(eight["center_y"])),
             heading_deg=float(eight["heading_deg"]),
             arc_points_per_quarter=int(eight["arc_points_per_quarter"]),
             lift_ramp=float(eight["lift_ramp"]),
+            over_end=int(eight["over_end"]),
         ),
         "radius": float(prefabs["rope_pbd"]["radius"]),
-        "min_clearance": float(task["rope"]["free_end_connector"].get("min_clearance", 0.07)),
+        "tube_radius": float(eight["tube_radius"]),
+        "min_clearance": float(task["rope"]["free_end_connector"]["min_clearance"]),
+        "end_gap_max_ratio": float(eight["end_gap_max_ratio"]),
         "merge_radius": float(task["success"]["crossing_merge_radius"]),
         "lift_clearance": float(task["pinch"]["lift_clearance"]),
         "place_clearance": float(task["pinch"]["place_clearance"]),
@@ -101,7 +118,38 @@ def config_defaults() -> dict:
             "y": tuple(float(v) for v in workspace["y"]),
             "z": tuple(float(v) for v in workspace["z"]),
         },
+        # The task yaml's own copy of the box (the variation hooks only see task cfg).
+        "task_workspace": {
+            "x": tuple(float(v) for v in task["workspace"]["x"]),
+            "y": tuple(float(v) for v in task["workspace"]["y"]),
+            "z_max": float(task["workspace"]["z_max"]),
+            "margin": float(task["workspace"]["margin"]),
+        },
+        "variation": list(task["variation"]),
     }
+
+
+def checks_for(d: dict, spec, place_clearance: float | None = None) -> list:
+    """The eight envelope rows, with the same literals the hooks read."""
+
+    ws = d["task_workspace"]
+    return fig8.figure_eight_checks(
+        spec,
+        tube_radius=d["tube_radius"],
+        min_clearance=d["min_clearance"],
+        end_gap_max_ratio=d["end_gap_max_ratio"],
+        workspace_x=ws["x"],
+        workspace_y=ws["y"],
+        workspace_z_max=ws["z_max"],
+        workspace_margin=ws["margin"],
+        lift_clearance=d["lift_clearance"],
+        place_clearance=d["place_clearance"] if place_clearance is None else place_clearance,
+    )
+
+
+def checks_line(rows) -> str:
+    return " ".join(f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+                    for name, measured, limit, ok in rows)
 
 
 def densify(points: np.ndarray, step: float) -> np.ndarray:
@@ -115,18 +163,6 @@ def densify(points: np.ndarray, step: float) -> np.ndarray:
         for k in range(1, n + 1):
             out.append(a + (b - a) * (k / n))
     return np.stack(out, axis=0)
-
-
-def chord_turn_radii(points: np.ndarray) -> np.ndarray:
-    """Circumradius of each consecutive point triple, in the xy plane."""
-
-    p = np.asarray(points, dtype=float)[:, :2]
-    a, b, c = p[:-2], p[1:-1], p[2:]
-    ab, bc, ca = np.linalg.norm(b - a, axis=1), np.linalg.norm(c - b, axis=1), np.linalg.norm(a - c, axis=1)
-    cross = np.abs((b - a)[:, 0] * (c - a)[:, 1] - (b - a)[:, 1] * (c - a)[:, 0])
-    with np.errstate(divide="ignore", invalid="ignore"):
-        radii = np.where(cross < 1e-12, np.inf, ab * bc * ca / (2.0 * cross))
-    return radii
 
 
 class Gate:
@@ -151,9 +187,13 @@ def check_geometry(gate: Gate, d: dict) -> np.ndarray:
         separation >= d["min_clearance"],
         f"rope ends {separation * 1000:.0f}mm apart >= gripper clearance {d['min_clearance'] * 1000:.0f}mm",
     )
-    radii = chord_turn_radii(points)
-    # The crossing bump's three points are collinear in xy by construction; the
-    # tightest true corner is on the lobe arcs.
+    gate.check(
+        abs(d["tube_radius"] - radius) < 1e-12,
+        f"figure_eight.tube_radius {d['tube_radius']} == prefabs.rope_pbd.radius {radius} (the hooks read the copy)",
+    )
+    radii = fig8.chord_turn_radii(points)
+    # 3D circumradii, so the crossing bump counts (its points are collinear from
+    # above); at the default ramp the tightest corner is still on the lobe arcs.
     tightest = float(np.nanmin(radii[np.isfinite(radii)]))
     gate.check(
         tightest >= 3.0 * radius,
@@ -188,6 +228,11 @@ def check_geometry(gate: Gate, d: dict) -> np.ndarray:
         inside,
         f"rope footprint x[{points[:, 0].min():+.3f},{points[:, 0].max():+.3f}] "
         f"y[{points[:, 1].min():+.3f},{points[:, 1].max():+.3f}] inside the workspace",
+    )
+    tw = d["task_workspace"]
+    gate.check(
+        tw["x"] == ws["x"] and tw["y"] == ws["y"] and abs(tw["z_max"] - ws["z"][1]) < 1e-12,
+        f"task yaml workspace copy x{tw['x']} y{tw['y']} z_max {tw['z_max']} == manipulation_space.workspace",
     )
     return points
 
@@ -252,9 +297,23 @@ def check_reading(gate: Gate, d: dict, spawn_points: np.ndarray) -> None:
         gate.check(len(hits) == expected, f"{label}: reads {len(hits)} (expected {expected}) {detail}")
         if label == "figure-8 spawn" and hits:
             gate.check(
-                hits[0].over_end == fig8.OVER_END,
-                f"figure-8 spawn: measured over end {hits[0].over_end} == generator's {fig8.OVER_END}",
+                hits[0].over_end == spec.over_end,
+                f"figure-8 spawn: measured over end {hits[0].over_end} == spec's {spec.over_end}",
             )
+
+    # The mirror axis: same two end positions, the other strand on top.
+    mirrored = replace(spec, over_end=1 - spec.over_end)
+    m_points = fig8.figure_eight_control_points(mirrored)
+    m_hits = verifier.open_self_crossings(densify(m_points, 0.006), merge_radius=merge)
+    gate.check(
+        len(m_hits) == 1 and m_hits[0].over_end == mirrored.over_end,
+        f"figure-8 mirrored (over_end={mirrored.over_end}): reads {len(m_hits)}, measured over end "
+        f"{m_hits[0].over_end if m_hits else '-'}",
+    )
+    gate.check(
+        np.allclose(m_points[[0, -1], :2], spawn_points[[0, -1], :2], atol=1e-9),
+        "figure-8 mirrored: both rope ends sit exactly where the unmirrored ends sit",
+    )
 
 
 # --- 3. planner ---------------------------------------------------------------
@@ -350,10 +409,28 @@ def check_planner(gate: Gate, d: dict, spawn_points: np.ndarray) -> None:
         )
         chord = float(np.linalg.norm(place - other))
         gate.check(
-            abs(chord - d["place_clearance"]) < 1e-9,
+            chord >= d["place_clearance"] - 1e-9,
             f"{mode}: landing point {chord * 1000:.1f}mm from the other end (place_clearance "
             f"{d['place_clearance'] * 1000:.0f}mm)",
         )
+        stay_at = hits[0].under_at if command.grasped_over_end else hits[0].over_at
+        stay = stay_strand_xy(dense, other_end=command.other_end, stay_at=stay_at)
+        stay_clear = point_to_polyline(place, stay)
+        gate.check(
+            stay_clear >= d["place_clearance"] - 1e-9,
+            f"{mode}: landing point {stay_clear * 1000:.1f}mm from the strand that stays down "
+            f"({len(stay)} vertices, end {command.other_end} to the crossing)",
+        )
+        if mode == "oracle":
+            replay, _stay, _contact = fig8.predicted_place(
+                d["spec"], place_clearance=d["place_clearance"], lift_clearance=d["lift_clearance"]
+            )
+            gap = float(np.linalg.norm(replay - place))
+            gate.check(
+                gap < 0.005,
+                f"{mode}: layout's offline replay lands {gap * 1000:.1f}mm from the planner's point "
+                "(same place_beside, control polygon vs dense polyline)",
+            )
         gate.check(
             float(np.linalg.norm(place - grasp)) > float(np.linalg.norm(other - grasp)),
             f"{mode}: landing point is on the far side of the other end from the grasp",
@@ -373,9 +450,25 @@ def check_planner(gate: Gate, d: dict, spawn_points: np.ndarray) -> None:
             f"wrong_end=end{picks['wrong_end']} (measured over end {hits[0].over_end})",
         )
 
-    # `place_beside` picks the far side regardless of which end is grasped.
-    far = place_beside((0.0, 0.0), (-0.04, -0.1), (0.04, -0.1), clearance=0.035)
+    # `place_beside` picks the far side regardless of which end is grasped; with
+    # the staying strand a straight line to the crossing the chord rule holds.
+    straight = np.array([[0.04, -0.1], [0.0, 0.0]])
+    far = place_beside((0.0, 0.0), (-0.04, -0.1), (0.04, -0.1), straight, clearance=0.035)
     gate.check(far[0] > 0.04, f"place_beside lands past the other end: x={far[0]:+.3f}")
+    chord = float(np.linalg.norm(np.asarray(far) - np.array([0.04, -0.1])))
+    gate.check(
+        0.035 - 1e-6 <= chord <= 0.037,
+        f"place_beside straight strand: chord {chord * 1000:.1f}mm, the 35mm rule plus at most one sweep step",
+    )
+    # A staying strand that bulges out past its plug pushes the landing further round.
+    bulged = np.array([[0.04, -0.1], [0.09, -0.08], [0.06, -0.03], [0.0, 0.0]])
+    pushed = place_beside((0.0, 0.0), (-0.04, -0.1), (0.04, -0.1), bulged, clearance=0.035)
+    gate.check(
+        point_to_polyline(pushed, bulged) >= 0.035 - 1e-9
+        and float(np.linalg.norm(np.asarray(pushed) - np.array([0.04, -0.1]))) > 0.035 + 1e-6,
+        f"place_beside bulging strand: landing pushed to {np.asarray(pushed).round(3)}, "
+        f"{point_to_polyline(pushed, bulged) * 1000:.1f}mm clear of the strand",
+    )
 
     # Refuses on anything but exactly one crossing.
     for count, label in ((0, "solved"), (2, "two crossings")):
@@ -384,15 +477,98 @@ def check_planner(gate: Gate, d: dict, spawn_points: np.ndarray) -> None:
         gate.check(planned is None, f"planner refuses to move when {label}: {planned is None}")
 
 
+# --- 4. variation envelope -------------------------------------------------------
+
+
+def envelope(d: dict) -> dict:
+    """``{leaf: [values to visit]}`` straight from the yaml's variation block."""
+
+    axes = {}
+    for entry in d["variation"]:
+        path = entry.get("path", "")
+        leaf = path.split(".")[-1]
+        if entry["kind"] == "uniform":
+            axes[leaf] = [float(entry["lo"]), float(entry["hi"])]
+        elif entry["kind"] == "choice":
+            axes[leaf] = list(entry["values"])
+    return axes
+
+
+def spec_at(d: dict, **leaves) -> object:
+    """A spec with the sampled leaves written and ``end_gap`` derived, as the hooks do."""
+
+    base = d["spec"]
+    end_frac = leaves.pop("end_frac", 0.5)
+    cx = leaves.pop("center_x", base.center[0])
+    cy = leaves.pop("center_y", base.center[1])
+    r_o = leaves.get("open_lobe_radius", base.open_lobe_radius)
+    end_gap = fig8.end_gap_from_frac(r_o, end_frac, d["min_clearance"], d["end_gap_max_ratio"])
+    return replace(base, center=(cx, cy), end_gap=end_gap, **leaves)
+
+
+def check_envelope(gate: Gate, d: dict) -> None:
+    axes = envelope(d)
+    want = {"over_end", "heading_deg", "center_x", "center_y", "half_angle_deg",
+            "closed_lobe_radius", "open_lobe_radius", "end_frac"}
+    gate.check(set(axes) == want, f"variation block declares {sorted(axes)}")
+    names = list(axes)
+    worst: dict[str, tuple[float, str]] = {}
+    bad_corners, bad_reads, n = [], [], 0
+    for combo in itertools.product(*(axes[k] for k in names)):
+        leaves = dict(zip(names, combo))
+        label = " ".join(f"{k}={v:g}" if isinstance(v, float) else f"{k}={v}" for k, v in leaves.items())
+        spec = spec_at(d, **leaves)
+        rows = checks_for(d, spec)
+        n += 1
+        for name, measured, limit, ok in rows:
+            margin = (measured - limit) if name not in ("end_gap_ratio", "lift_height") else (limit - measured)
+            if name not in worst or margin < worst[name][0]:
+                worst[name] = (margin, f"{measured:+.4f}/{limit:+.4f} @ {label}")
+        if not all(ok for *_, ok in rows):
+            bad_corners.append(f"{label}: {checks_line(rows)}")
+        dense = densify(fig8.figure_eight_control_points(spec), 0.006)
+        hits = verifier.open_self_crossings(dense, merge_radius=d["merge_radius"])
+        if len(hits) != 1 or hits[0].over_end != spec.over_end:
+            bad_reads.append(f"{label}: reads {len(hits)} over_end={[h.over_end for h in hits]}")
+    for name, (margin, text) in worst.items():
+        print(f"     tightest {name:<16} margin {margin:+.4f}  ({text})")
+    gate.check(not bad_corners, f"{n} envelope corners: all eight checks pass" + (f"; failing: {bad_corners[:3]}" if bad_corners else ""))
+    gate.check(not bad_reads, f"{n} envelope corners: exactly one crossing, measured over end == spec" + (f"; failing: {bad_reads[:3]}" if bad_reads else ""))
+
+    # Negatives: the derived range must close, and the footprint row must reject.
+    try:
+        fig8.end_gap_from_frac(0.036, 0.5, d["min_clearance"], d["end_gap_max_ratio"])
+    except ValueError as exc:
+        gate.check(True, f"open_lobe_radius 0.036 closes the end_gap range: {str(exc)[:70]}")
+    else:
+        gate.check(False, "open_lobe_radius 0.036 was accepted (end_gap range should be empty)")
+    rows = checks_for(d, spec_at(d, center_x=0.16))
+    row = next(r for r in rows if r[0] == "footprint")
+    gate.check(not row[3], f"center_x=0.16 fails the footprint row: {row[1]:+.4f} vs {row[2]:+.4f}")
+    # A clearance no point on the landing circle can honour: the sweep raises
+    # in the planner, and the checks row reports it as a failure, not a crash.
+    try:
+        fig8.predicted_place(d["spec"], place_clearance=0.30, lift_clearance=d["lift_clearance"])
+    except ValueError as exc:
+        gate.check(True, f"place_clearance 0.30 makes the landing sweep raise: {str(exc)[:60]}")
+    else:
+        gate.check(False, "place_clearance 0.30 was accepted (no landing point can be that clear)")
+    row = next(r for r in checks_for(d, d["spec"], place_clearance=0.30) if r[0] == "place_clearance")
+    gate.check(not row[3], f"place_clearance 0.30 fails its row: {row[1]:+.4f} vs {row[2]:+.4f}")
+
+
 def main() -> int:
     d = config_defaults()
     gate = Gate()
     print("-- spawn geometry")
     points = check_geometry(gate, d)
+    print(f"   checks: {checks_line(checks_for(d, d['spec']))}")
     print("-- self-crossing reading")
     check_reading(gate, d, points)
     print("-- planner")
     check_planner(gate, d, points)
+    print("-- variation envelope")
+    check_envelope(gate, d)
     print(f"\n{'PASS' if gate.failures == 0 else f'{gate.failures} FAILED'}")
     return 1 if gate.failures else 0
 

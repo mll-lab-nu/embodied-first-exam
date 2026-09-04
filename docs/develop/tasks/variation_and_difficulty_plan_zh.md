@@ -219,6 +219,11 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 3.3 bar_through_hole（docx 2.3 变体）
 
+> **2026-09-04 落地**（`bar_through_hole_zh.md`）。`across_flats` 下界 0.027 → 0.029：原表只算了横向单边净空，没算横推段的竖直窗口
+> （far 托座斜面顶端到孔上沿，宽度 = across_flats − 0.0241），0.027 每侧只剩 1.45 mm。`rest_pos` 拆成 `rest_x / rest_y / rest_z`；
+> `bar.length`、`bar.grasp_offset` 抽归一化 frac 再派生（三者独立抽会让杆端进面板、抓点越过杆端）；托座跟随用 `derived` 而非 `pair`。
+> `primitive.*_z` 四个高度改由 Layout 推导；`checks()` 九行。
+
 
 | 类   | 叶子                                                                                                                                          | 当前值         | 包络                   | 边界来源                                                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------- | ------------------------------------------------------------------------------------ |
@@ -254,20 +259,23 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 3.5 unlink_c_ring（docx 3.4）
 
+> **2026-09-03 落地**（`unlink_c_ring_zh.md` §11）。`gap_azimuth_deg` 由 ±15 收到 ±10：新加的手净空行在 302.4° 以下失败。GPU：`passed_through` 判据改判 `success.max_pass_through_depth`；首跑 oracle 7/10、角点 16/32 暴露摆动段 9 mm 稳态落后，`gateway_extract.py` 加闭环修正后 oracle 10/10、角点 32/32、no_align 10/10 判失败。
+
 
 | 类   | 叶子                                                                                                        | 当前值            | 包络                      | 边界来源                                                                     |
 | --- | --------------------------------------------------------------------------------------------------------- | -------------- | ----------------------- | ------------------------------------------------------------------------ |
-| B   | `c_ring.gap_deg`                                                                                          | 23             | [21.5, 28]              | 单边净空 = R·sin(gap/2) − r_c − r_f；下限：不等式 #1（缺口塞得下管身）；上限：开口半角 14° 以内保证自释放裕度 |
-| B   | `c_ring.gap_azimuth_deg`                                                                                  | 315            | ±15                     | 下限避开开口半角、上限受手腕行程（`unlink_c_ring_zh.md` 第 7 条）                            |
-| B   | `stand.hang_yaw_deg`                                                                                      | 180            | ±15                     | 270° 实测位姿误差 28.6°，不进入包络；投影方向由 `bisector_projection` 推导                   |
-| B   | `fixed_ring.center[x,y]`                                                                                  | (0.060, 0.055) | ±0.020                  | 整体平移；C 环落点在工作区                                                           |
-| C   | `primitive.grasp_azimuth_deg`                                                                             | 67.5           | 与 gap_azimuth 相差 112.5° |                                                                          |
-| D   | 全部 z、`c_ring.major_radius`、`fixed_ring.*_radius`、`c_ring.tab.*`、`primitive.slide_lift`、`max_regrasp_*`、摩擦 |                |                         | 不等式 #5（home 指尖与支架顶）余量 15.8 mm                                            |
+| B   | `c_ring.gap_deg`                                                                                          | 23             | [21.5, 28]（已落地）        | 单边净空 = R·sin(gap/2) − r_c − r_f = 1.26 .. 4.31 mm；下限：不等式 #1（缺口塞得下管身）；上限：开口半角 14° 以内保证自释放裕度 |
+| B   | `c_ring.gap_azimuth_deg`                                                                                  | 315            | ±10（已落地；原计划 ±15）   | 下限：手净空行 R·sin(gap_az + 112.5°) > 45 mm 在 302.4° 失效，±15 约 8% 拒绝超 2% 门；上限：抓取点不到 90°（管身竖直，手腕偏航推导退化） |
+| B   | `stand.hang_yaw_deg`                                                                                      | 180            | ±15（已落地）              | 270° 实测位姿误差 28.6°，不进入包络；0 的抓取点 0.738 m 被可达行排除；投影方向由 `bisector_projection` 推导 |
+| B   | `fixed_ring.center_x` / `center_y`                                                                        | (0.060, 0.055) | ±0.020（已落地）            | 整体平移；原 `center: [x, y, z]` 拆成三个标量键，z 不动 |
+| C   | `primitive.grasp_azimuth_deg`                                                                             | 67.5           | = gap_azimuth + `primitive.grasp_offset_deg`（112.5）mod 360（已落地，`derive_task_cfg`） |                                                                          |
+| D   | 全部 z、`c_ring.major_radius`、`fixed_ring.*_radius`、`c_ring.tab.*`、`primitive.slide_lift`、`max_regrasp_*`、摩擦、`reach.*`、`HAND_HALF_WIDTH` 0.045 |                |                         | 不等式 #5（home 指尖与支架顶）余量 26.8 mm                                            |
 
 
-- 校验：`SceneGeometry.checks()` 返回 `(name, measured, limit, ok)`，直接作为拒绝采样判据；另跑 `tests/check_c_ring_clearance.py`。
+- 校验（09-03 落地）：`SceneGeometry.checks()` 七行——原五行加「抓取点可达」（`reach:` 段照 gate_cage_ball）与「手在闭合环之外」（yaml 注释里的 45 mm 规则写成判据）；`UnlinkCRingLayout.checks()` 转发，`validate_task_cfg` 作拒绝采样判据；`tests/check_c_ring_clearance.py` 加第五段对 32 角点重做四问。
 - 候选难度统计量：开口单边净空。
-- 说明：C3 类随机化非强制，但本任务 gateway 唯一且靠碰撞防捷径，随机化可验证该性质在包络内成立。
+- 前置代码（已做）：`checks()` 接入拒绝采样；抓取方位角派生；可达行。
+- 说明：C3 类随机化非强制，但本任务 gateway 唯一且靠碰撞防捷径，随机化可验证该性质在包络内成立；离线 32 角点八条非 gateway 全卡，即是该性质的证据。
 
 ### 3.6 gate_cage_ball（docx 4.1，C4 强制）
 
@@ -393,18 +401,18 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 | 类   | 叶子                                                                                                                                                                                             | 当前值       | 包络             | 边界来源                                                                                                                                    |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| A   | 上压股（哪一端在上）                                                                                                                                                                                     | 端 0 固定    | Cat{端 0, 端 1}  | **当前无此轴**：`OVER_END = 0` 由折线点序决定（`_figure_eight_geometry.py:44`）。需新增镜像开关（折线反序，或 `half_angle_deg` 一侧取负）。planner 从实测 `over_end` 决定抓哪端，不需改 |
+| A   | `figure_eight.over_end`（哪一端在上）                                                                                                                                                                | 0         | Cat{0, 1}       | **已落地（09-03）**：`over_end=1` 时几何模块把局部 b 取反并把点序反转，两绳头位置不变、上下股互换；`layout.over_end` 读 cfg。planner 从实测 `over_end` 决定抓哪端，未改 |
 | B   | `figure_eight.heading_deg`                                                                                                                                                                     | 0         | ±30            | 整个 8 字绕中心旋转；无代码读回；足迹在工作区                                                                                                                |
-| B   | `figure_eight.center[x,y]`                                                                                                                                                                     | (0.02, 0) | ±0.030         | 绳头 x≈−0.08、闭合叶顶 x≈+0.12；足迹在工作区                                                                                                          |
+| B   | `figure_eight.center_x` / `center_y`（原 `center` 列表拆成两键：随机化器不支持列表元素）                                                                                                                  | (0.02, 0) | x [−0.01, 0.05]，y ±0.030 | 绳头 x≈−0.08、闭合叶顶 x≈+0.12；`checks()` 的 `footprint` 行（≥ `workspace.margin` 0.040）                                                            |
 | B   | `figure_eight.half_angle_deg`                                                                                                                                                                  | 45        | [30, 60]       | 两股交叉夹角 = 2·half_angle；偏离 90° 越多投影计数越易抖                                                                                                  |
 | B   | `figure_eight.closed_lobe_radius`                                                                                                                                                              | 0.040     | [0.032, 0.055] | 控制多边形最小转角半径 ≥ 3·管半径 = 0.012                                                                                                             |
 | B   | `figure_eight.open_lobe_radius`                                                                                                                                                                | 0.050     | [0.040, 0.065] | 交叉点到绳头弧长决定抬升高度（当前 183 mm，上限 workspace z 0.40）                                                                                           |
-| B   | `figure_eight.end_gap`                                                                                                                                                                         | 0.080     | [0.070, 0.095] | 硬下限 `min_clearance` 0.07（夹爪跨距，builder 拒绝）；上限 `2·open_lobe_radius`                                                                       |
+| B→C | `figure_eight.end_frac` → `end_gap`                                                                                                                                                            | 0.080     | 派生 [0.070, 0.95·2·r_o] | 下限 `min_clearance` 0.070（现已显式写进 yaml）；上限 `end_gap_max_ratio` × 开口叶直径；`end_gap_from_frac` 派生，区间空则拒                                    |
 | D   | `over_lift`（0.012 = 2r + particle_size）、`base_z`（0.007）、`lift_ramp`（0.030）、`rope.mesh.segment_length`（0.005，仅 FEM 下合法）、`rope.fem.*`、`rope.elastic.*_friction`、`pinch.*`、`free_end_connector.*` |           |                | `lift_ramp` 0.030 只过了离线门，GPU 三门在 0.020 下过                                                                                               |
 
 
-- 校验：`FigureEightSpec.__post_init__` + builder 的绳头间距 ≥ `min_clearance` + `tests/check_band_untwist_geometry.py`（转角半径 ≥ 3r、足迹在工作区、抬升 ≤ 0.40、放置弦长 = `place_clearance`）。
-- 前置代码：镜像轴；`BandUntwistLayout.seed` 已传入未消费，在 `figure_eight_spec()` 内消费即可；run 配置无 `randomize_layout` / `difficulty`。
+- 校验（09-03 落地，09-04 加落点两行）：`BandUntwistLayout.checks()` 八行（绳头间距、开口比、转角半径 3D 含鼓包、足迹、抬升高度 ≤ `workspace.z_max` 0.40、管底净空、落点离留桌那股 ≥ `place_clearance`、铺绳直线离留桌那股 ≥ 2·管半径），纯函数在 `_figure_eight_geometry.figure_eight_checks`；`FigureEightSpec.__post_init__` 与 builder 的两个 raise 保留。`figure_eight.tube_radius` 是 `rope.radius` 的字面量副本（校验只拿得到未解析 task 配置），`workspace:` 段是 `manipulation_space.workspace` 的副本。详见 `band_untwist_zh.md` §7。
+- 前置代码（已做）：镜像轴；run 配置三个变体键；两个 demo 接 `randomize_task_cfg`；inspect demo 加 `static_only`。`BandUntwistLayout.seed` 保留为 run seed，不消费。
 - 候选难度统计量：`open_lobe_radius`（抬升高度）；`half_angle_deg` 偏离 45° 的幅度。
 - 说明：oracle 只读实时量（插头位姿、实测交叉点与 over 端、绳顶高）与 `pinch.lift_clearance` / `place_clearance`，不读 `figure_eight.*`，全部 B 类轴对 oracle 透明。
 
@@ -463,7 +471,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 5   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
 | 6   | rope_winding                 | `_DerivedSolve`（sweep_deg 反解）+ C 方位角校验          | EpisodeSpec 已建                   |
 | 7   | rope_unwinding               | 两个 `routes.initial` 字面值改为推导 + run 配置键           | 复用 rope_winding 注册项              |
-| 8   | unlink_c_ring                | `SceneGeometry.checks()` 接入拒绝采样                 | 已在 sweep 表                       |
+| 8   | unlink_c_ring                | `checks()` 七行接入拒绝采样 + 抓取方位角派生（**已落地 2026-09-03**，1000 seed 拒绝率 0、32 角点离线全过；GPU oracle 10/10、角点 32/32、no_align 10/10 判失败；判据 `passed_through` 与摆动段闭环修正两处改动） | 已在 sweep 表                       |
 | 9   | cloth_unpleat / cloth_unroll | run 配置补 seed 键；`_ChoiceJitter`                  | oracle 有重观测                      |
 | 10  | ring_transfer                | `_PairJitter`；run 配置 + EpisodeSpec              |                                  |
 | 11  | cloth_fold                   | 四角抓取扩展                                          | 阈值余量最窄                           |

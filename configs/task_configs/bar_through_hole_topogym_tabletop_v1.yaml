@@ -54,18 +54,35 @@ bar:
   # 正六棱柱，对边距 0.018 / 对角 0.0208。改动前是直径 0.024 的圆柱。
   across_flats: 0.018
   # 0.180 → 0.200：配合放开后的布局，穿过后两端各留更多。
+  # 2026-09-04 起是派生量：随机化时由 length_frac 在 [0.170, 0.230] 与「杆近端不进面板」
+  # 两者的交集里定位（BarThroughHoleLayout.length_bounds），固定布局时就用这里的值。
   length: 0.200
+  # 杆长的设计区间；派生时再与「杆近端不进面板」的上限取交集。
+  length_range: [0.170, 0.230]
+  # 杆长在允许区间内的归一化位置；0.5 在基准布局上还原 0.200。
+  length_frac: 0.5
   # 铝的量级。assisted attachment 运动学承载，质量不与夹爪较劲，
   # 因此按 physical_realism_guidelines_zh.md P7「密度用真实材料量级」取值。
   rho: 2700.0
   color: [0.74, 0.71, 0.60]
   # 生成的棱柱网格落点（相对仓库根，由 rope.resolve_mesh_dir 解析）。
   mesh_output_dir: runs/generated_meshes/bar_through_hole
-  # 起始静置位姿（轴心）。与近端两个 V 槽的 seat_axis_z 一致，槽底由截面反推。
-  rest_pos: [-0.050, 0.000, 0.055]
+  # 起始静置位姿（轴心）。2026-09-04 由 rest_pos: [x, y, z] 拆成三个标量：
+  # 随机化只能改标量叶子（layout_randomization 不走列表下标）。z 与近端两个 V 槽的
+  # seat_axis_z 一致，槽底由截面反推。
+  rest_x: -0.050
+  rest_y: 0.000
+  rest_z: 0.055
   # 抓点到杆心的 x 距离。由插入终态反推：杆心要到 panel.x 才跨骑，
   # 而手部半深≈25mm + 面板半厚 15mm + 余量。0.065 → 0.075（放开）。
+  # 2026-09-04 起是派生量：随机化时由 grasp_frac 在 [0.060, min(0.090, length/2 − 0.015)]
+  # 里定位（下界 = primitive.hand_half_depth + 面板半厚 + 20mm；上界保证指垫合在杆上，
+  # 不越过杆端）。固定布局时就用这里的值。
   grasp_offset: 0.075
+  # 抓取偏移的设计区间；派生时上限再与 length/2 − 0.015 取交集。
+  grasp_offset_range: [0.060, 0.090]
+  # 抓取偏移在允许区间内的归一化位置；0.6 在基准布局上还原 0.075。
+  grasp_frac: 0.6
 
 # -------------------------------------------------------------------- 托座
 # V 形块（两片斜夹板 + 立柱），由 topogym/tasks/_fixtures.py 的通用构件生成。
@@ -78,12 +95,14 @@ bar:
 # 落在两个斜面上；改成 30 会让六棱柱的两个下斜面与槽面贴合（面接触），代价是对滚转
 # 角敏感。默认取通用的 45。
 # 两个近端托座把杆心夹在中间（静置不倾覆），且都避开抓取点，手指下降处杆是裸露的。
+# 托座的 y 不在这里给：近端两个跟着 bar.rest_y，far 在面板中线（孔的 y = 0），
+# 由 BarThroughHoleLayout.cradle_y 决定。2026-09-04 之前三个都硬写 0，rest_y 一偏杆就出生在槽外。
 cradles:
   near_a:
     enabled: true
     # 抓点在 x=-0.125；本托座在 -0.070，间距 55mm。
     x: -0.070
-    # 杆的静置轴高，与 bar.rest_pos 的 z 一致。2026-08-17 由 0.021 抬到 0.055：
+    # 杆的静置轴高，与 bar.rest_z 一致。2026-08-17 由 0.021 抬到 0.055：
     # 立柱因此有 40.8mm，超过 _visuals 的 30mm 阈值，会画出完整的支架外观
     # （底板+地脚螺栓+斜撑+唇边），而不是一块贴地的小垫块。
     seat_axis_z: 0.055
@@ -111,7 +130,8 @@ cradles:
     # 终态杆端在 x=0.230，本托座接住远端。
     x: 0.200
     # 与孔的落座高度一致：孔下沿(0.070) + 杆 inradius(0.009)。杆变成「孔 + V 槽」
-    # 两点支撑，两处给出同一个轴高。
+    # 两点支撑，两处给出同一个轴高。随机化时随 across_flats 派生（孔越小下沿越高），
+    # checks() 的 far_cradle_matches_sill 行守两者一致。
     seat_axis_z: 0.079
     length_x: 0.040
     half_angle_deg: 45.0
@@ -176,19 +196,29 @@ oracle:
 
 # Heights are relative to the task-frame table surface, and are hand-link z
 # (the pads sit HAND_TO_PAD_Z = 0.1029 below).
+#
+# 2026-09-04：grasp_z / lift_z / insert_z / seat_z 四个手写绝对高度删掉，改由
+# BarThroughHoleLayout 从几何推导（grasp_hand_z / lift_hand_z / insert_hand_z / seat_hand_z）：
+#   grasp   杆心 rest_z（居中夹）+ HAND_TO_PAD_Z                       基准 0.158
+#   lift    grasp + lift_height                                          基准 0.203
+#   insert  横推高度窗口的中点 + HAND_TO_PAD_Z                          基准 0.192（原手写 0.193）
+#   seat    孔下沿 + seat_drop + bar_inradius + HAND_TO_PAD_Z            基准 0.183
+# 横推高度窗口（push_window）：杆心在横推段允许的 z 区间——下界 = far 托座斜面顶端 +
+# 杆 inradius（杆底不刮夹板），上界 = 孔心 + (孔 inradius − 杆 inradius)（杆顶不撞孔上沿）。
+# far 托座的 seat_axis_z 跟着孔下沿走，所以窗口宽度 = across_flats − 0.02412：
+# 0.029 → 4.88mm、0.032 → 7.88mm、0.038 → 13.88mm。原来的 0.193 把 7.88mm 切成 4.9 / 3.0，
+# 中点取法两侧各 3.94mm。
 primitive:
   approach_z: 0.244
-  # 指垫 0.055 = 杆心（居中夹）。抓点在 x=-0.125，两个 V 槽在 -0.070 / +0.020，
-  # 手指下降处杆是裸露的，指尖不会碰到夹板。
-  grasp_z: 0.158
   # 杆抬升 0.045 ≫ min_lift_delta 0.025（与抬高托座前相同）。
-  lift_z: 0.203
-  # 杆心 0.090，比孔中心(0.086)高 4mm。抬高是为了横推时越过 far V 槽的斜面顶端
-  # (0.0761)：杆底此时在 0.081，净空 4.9mm。孔内仍然装得下 —— 杆的上棱在
-  # (±0.0104, 0.090)，代入六边形三条边界都有余量，顶面 0.099 离孔顶 0.102 还差 3mm。
-  insert_z: 0.193
-  # 杆心 0.080，杆底 0.071，离孔下沿 1mm：释放时不是砸下去。
-  seat_z: 0.183
+  lift_height: 0.045
+  # 释放前杆底离孔下沿的高度：不是砸下去。
+  seat_drop: 0.001
+  # 横推段杆心离窗口两端各至少留这么多；checks() 的 push_window 行守 2 倍这个值。
+  # 2.4mm 对应 across_flats 的下界 0.029（窗口 4.88mm；原计划 0.027 只剩每侧 1.45mm）。
+  push_clearance_min: 0.0024
+  # 手沿 x 的半深。落座时手前缘 = panel.x − grasp_offset + 这个值，必须停在面板近面之前。
+  hand_half_depth: 0.025
   clear_z: 0.240
   steps_per_phase: 90
   # 插入放慢：单步位移越小，卡住时的冲击越小。
@@ -235,3 +265,39 @@ success:
   tilt_tolerance_deg: 10.0
   seated_z_tolerance: 0.015
   min_end_clearance: 0.030
+
+# ---------------------------------------------------------------- 可达
+# 落座时手心距 Franka 底座的上限。底座位置来源同 gate / unlink_c_ring 的 reach 段
+# （common_configs/manipulation_space_tabletop_v1.yaml 的 robot_setup.mount.pos）。
+# 手心 x = panel.x − grasp_offset；包络最远角（panel.x 0.160、grasp_offset 0.060、|y| 0.030）
+# 为 0.671 m。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_hand_dist: 0.700
+
+# ---------------------------------------------------------------- 变体
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。
+# 没有防捷径离散轴：绕过面板顶由 threading_count = 0 判失败，物理本身保证。
+# 角点门：6 条连续轴 → 64 个角点（tests/check_variant_corners.py）。
+variation:
+  # 单调裕度轴（难度候选）：孔的对边距。横向单边净空 = (across_flats − 0.018)/2 = 5.5 .. 10mm。
+  # 下界 0.029 由横推高度窗口定（4.88mm，见 primitive 段注释）；原表的 0.027 每侧只剩 1.45mm。
+  - {kind: uniform, path: aperture.across_flats, lo: 0.029, hi: 0.038}
+  # 布局：杆（连同前面两个托座）在桌上的位置
+  - {kind: uniform, path: bar.rest_x, lo: -0.080, hi: -0.020}
+  - {kind: uniform, path: bar.rest_y, lo: -0.030, hi: 0.030}
+  # 布局：面板（连同后面托座）的位置
+  - {kind: uniform, path: panel.x, lo: 0.100, hi: 0.160}
+  # 归一化：杆长。区间上限还受「杆近端不进面板」限制（rest_x −0.020 × panel.x 0.100 时上限 0.190），
+  # 抽 [0,1] 再派生，构造式满足、不靠拒绝。
+  - {kind: uniform, path: bar.length_frac, lo: 0.0, hi: 1.0}
+  # 归一化：抓取偏移。上限 length/2 − 0.015 随杆长变化（短杆 0.170 时上限 0.070）。
+  - {kind: uniform, path: bar.grasp_frac, lo: 0.0, hi: 1.0}
+  # 派生：length_frac → bar.length，grasp_frac → bar.grasp_offset，
+  #       cradles.near_a.x = rest_x − 0.020、near_b.x = rest_x + length/2 − 0.030、
+  #       far.x = panel.x + length/2 − 0.030（三式在基准布局上还原 −0.070 / 0.020 / 0.200），
+  #       cradles.far.seat_axis_z = 孔下沿 + 杆 inradius（随 across_flats 变）
+  - {kind: derived, fn: "topogym.tasks.routing.bar_through_hole:derive_task_cfg"}
+  # 校验：BarThroughHoleLayout.checks() 九行（横推窗口、杆端与面板、near_b 与面板、抓点在杆上、
+  #       抓点避开 near_a、手停在面板前、面板顶低于 home 指尖、可达、far 托座与孔下沿一致）
+  - {kind: validate, fn: "topogym.tasks.routing.bar_through_hole:validate_task_cfg"}

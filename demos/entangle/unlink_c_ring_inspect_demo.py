@@ -19,6 +19,7 @@ non-gateway trajectory jams. This demo answers the three things geometry cannot:
    the only figure in this scene with no analytic answer. `run.bench_steps=N`.
 
     python -m demos.entangle.unlink_c_ring_inspect_demo run.static_only=true
+    python -m demos.entangle.unlink_c_ring_inspect_demo run.randomize_layout=true run.seed=3 run.static_only=true recording=default
     python -m demos.entangle.unlink_c_ring_inspect_demo run.verbose=true
     python -m demos.entangle.unlink_c_ring_inspect_demo run.viewer=true run.keep_open=true
     python -m demos.entangle.unlink_c_ring_inspect_demo run.bench_steps=200
@@ -35,6 +36,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.supervision import stop_before_physics
 from topogym.tasks import UnlinkCRingSceneBuilder
 from topogym.tasks.entangle import _c_ring_geometry as ring_geometry
@@ -49,6 +51,8 @@ from topogym.verification import UnlinkCRingPuzzleEvaluator
 # Below this the opening is close enough to the bar that the C can slip off, since
 # half the opening subtends that much. Reported as a margin, not enforced.
 FALL_OFF_MARGIN_DEG = 0.5
+
+TASK_ID = "unlink_c_ring"
 
 
 def reading(evaluator, ring_scene, frame=None) -> dict:
@@ -143,6 +147,9 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"unlink_c_ring_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+
     has_display = os.name == "nt" or bool(
         os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
     )
@@ -178,6 +185,22 @@ def main(cfg: DictConfig) -> None:
         f"{(ring_geometry.HOME_FINGERTIP_Z - geometry.top_z) * 1000:.1f}mm",
         flush=True,
     )
+    checks = " ".join(
+        f"{name.replace(' ', '_')}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in ring_scene.layout.checks()
+    )
+    print(f"{TASK_ID} checks {checks}", flush=True)
+    if cfg.run.randomize_layout:
+        task = cfg.task
+        side_clear = 0.5 * geometry.c_ring.gap_clear_width - geometry.fixed.tube_radius
+        print(
+            f"{TASK_ID} variant seed={int(cfg.run.seed)} gap={float(task.c_ring.gap_deg):.2f} "
+            f"gap_az={float(task.c_ring.gap_azimuth_deg):.1f} yaw={float(task.stand.hang_yaw_deg):+.1f} "
+            f"cx={float(task.fixed_ring.center_x):+.4f} cy={float(task.fixed_ring.center_y):+.4f} "
+            f"grasp_az={float(task.primitive.grasp_azimuth_deg):.1f} side_clear={side_clear:.4f} "
+            f"hand_clear={geometry.hand_clearance:.4f} reach={geometry.grasp_reach:.3f}",
+            flush=True,
+        )
     evaluator = UnlinkCRingPuzzleEvaluator.from_config(cfg.task)
     spawn = reading(evaluator, ring_scene, frame=geometry.c_spawn_frame)
     # The projection is part of the judging contract (`task_taxonomy_zh.md` 4.3), and
@@ -200,7 +223,11 @@ def main(cfg: DictConfig) -> None:
         ring_scene.scene, ring_scene.cameras, cfg.recording, hud=_hud(ring_scene, state)
     ):
         if cfg.run.static_only:
-            print("unlink_c_ring static_only=true; not stepping.", flush=True)
+            # Build-and-look: no settling, no hold. A few steps only so the
+            # recorder has frames to write.
+            print("unlink_c_ring static_only=true; not settling or holding.", flush=True)
+            for _ in range(max(0, int(cfg.run.final_hold_steps))):
+                ring_scene.scene.step()
         else:
             settled = reading(evaluator, ring_scene)
             print(

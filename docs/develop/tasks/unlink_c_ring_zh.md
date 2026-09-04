@@ -325,6 +325,9 @@ gate 里那条镜像探针因此只做「转 + 直上」，不带搬离段：抽
 | `configs/unlink_c_ring.yaml` | inspect demo 主配置，env 取 `world_tabletop_v1` |
 | `configs/run_configs/unlink_c_ring.yaml` | `static_only` / `settle_steps` / `hold_steps` / `hold_sample_every` |
 | `demos/entangle/unlink_c_ring_inspect_demo.py` | stage-0 demo |
+| `bash_scripts/tests/unlink_c_ring_variation_sweep.sh` | 变体 sweep：visual / oracle / no_align 三组（§11，2026-09-03） |
+| `tests/check_variant_rng.py` unlink 段、`tests/check_variant_corners.py` `TASKS` 登记 | 变体离线门：1000 seed 拒绝率、32 角点（§11.3） |
+| `bash_scripts/tests/variant_corners_sweep.sh` unlink 分支 | 角点送进物理 |
 
 **登记**：`topogym/core/taxonomy.py` 的 `CATEGORIES["entangle"]`、`topogym/tasks/__init__.py`
 的 re-export、`demos/README.md`、`tests/README.md`、
@@ -612,10 +615,8 @@ demo 会直接打 warn 并给出退路。两条退路按顺序试，每次只改
 6. **`min_finger_qpos` 阈值未定**。首轮留 `null`：assisted carry 下它是唯一能区分
    「夹到环」与「合于空处」的读数，但阈值要先量出实际值再回填。与 `bar_through_hole`
    §7 第 5 条同一件待办。
-7. **随机化**。`task_taxonomy_zh.md` §4.4 只对 C4 类强制要求注册随机化条目，本任务属 C3，
-   非强制。可随机的轴有 `stand.yaw_deg`、`c_ring.gap_azimuth_deg`、环心 xy。
-   `gap_azimuth_deg` 的范围受两头夹：摩擦既然会把开口钉在出生方位，随机化就直接决定了
-   每个 episode 的初始方位，下限要避开开口半角 21.5°，上限受第 5 条的手腕行程约束。
+7. ~~**随机化**~~ —— 已做：见 §11（2026-09-03）。五条连续轴 + 抓取方位角派生，`gap_azimuth_deg`
+   取 315 ± 10，收窄的原因是新加的手净空行，不是这里原先担心的开口半角或手腕行程。
 8. **benchmark 产物资格**。仍缺 `generation/unlink_c_ring_generator.py`：本轮的
    `oracle_mode=no_align` 是对照**动作**，不是对照**数据集**。按 `task_taxonomy_zh.md`
    §4.0，缺可执行 contrast pair 生成器的任务不得进入 benchmark 产物。
@@ -743,3 +744,95 @@ demo 会直接打 warn 并给出退路。两条退路按顺序试，每次只改
 
 教训一条：走廊为零的路径不能靠控制精度去凑，要换一条有走廊的路径。前一版在
 「贴壁滑」上连修四层是方向性错误，此轮由用户指出。
+
+---
+
+## 11. 变体轴与派生（2026-09-03，变体计划 §6.2 第 8 步）
+
+按 linkbar / diverter / gate / band 的六项清单部署：yaml `variation:` 块、`checks()` 与派生钩子、demo 接线 + variant 行 + run 配置键、`check_variant_rng.py` 任务段 + 几何离线门、sweep 脚本、GPU 实测。
+没有防捷径离散轴：开口不对准管身就卡住，由物理本身保证（`variation_axes_plain_zh.md` §3）。
+
+### 11.1 轴
+
+| 类 | 叶子 | 抽法 | 说明 |
+|---|---|---|---|
+| B | `stand.hang_yaw_deg` | uniform [165, 195] | 整组场景绕竖轴转。270 实测手腕位姿误差 28.6°（§9.7），不进包络 |
+| B | `fixed_ring.center_x` / `center_y` | uniform [0.040, 0.080] / [0.035, 0.075] | 装置在桌上的位置。原 `center: [x, y, z]` 拆成三个标量键（随机化器不支持列表元素），z 不动 |
+| B（难度候选） | `c_ring.gap_deg` | uniform [21.5, 28] | 开口张角。单边净空 R·sin(gap/2) − r_c − r_f = 1.26 / 1.97 / 4.31 mm（21.5 / 23 / 28） |
+| B | `c_ring.gap_azimuth_deg` | uniform [305, 325] | 开口方位角。**±10 而非计划的 ±15**：抓取点 = 方位角 + 112.5°，手净空行（下表第 7 行）在 302.4° 以下失败，±15 约 8% 首抽被拒，超 2% 门 |
+| B→C | `primitive.grasp_azimuth_deg` | derived = `gap_azimuth_deg + primitive.grasp_offset_deg`（112.5）mod 360 | `derive_task_cfg` 覆盖；固定布局仍用 yaml 的 67.5。抓取点跟着开口走，手指始终远离开口端帽；不到 90°（那里管身竖直，手腕偏航的推导退化） |
+| D | 全部 z、两环半径、`tab.*`、`slide_lift`、`carry`、摩擦、`reach.*` | 不动 | |
+
+### 11.2 `checks()` 七行
+
+原五行不动，新加两行把 §10 第 5b 条「手的净空没有自动判据」和计划表的「补可达行」补上。两行都在 `SceneGeometry.checks()`（纯 numpy，两个离线门按路径导入），`UnlinkCRingLayout.checks()` 只是转发。
+
+| 行 | 读数 | 门 | 默认布局 | 32 角点最紧 |
+|---|---|---|---|---|
+| opening clears the bar | 开口净宽 | > 2 r_f | 11.93 / 8.00 mm | +2.52 mm（gap 21.5） |
+| C fits over the bar | 孔半径 − r_f | > 0 | 46.0 mm | +46.0 |
+| ring clears the table after extraction | 静置中心高 − 抽出行程 − 外半径 | > 4 mm | 6.0 / 4.0 | +2.0 |
+| post clears the C ring | 立柱面到 C 环最外点 | > `stand.clearance` 8 mm | 42.0 / 8.0 | +34.0 |
+| stand clears the home pose | home 指尖 z − 场景顶 | > 0 | 26.8 mm | +26.8 |
+| hand reaches the grasp point（新） | `reach.max_grasp_dist` − 抓取点到底座距离 | > 0 | 0.700 − 0.527 | +138.7 mm（yaw 165/195 + 远角） |
+| hand clears the ring at the grasp point（新） | R_c·sin(grasp_az) − `HAND_HALF_WIDTH` 0.045 | > 0 | 50.8 − 45 = +5.8 mm | **+1.39 mm**（gap_az 305 → grasp 57.5°） |
+
+`reach:` 段照 gate_cage_ball（`base_xy: [-0.570, 0.0]`、`max_grasp_dist: 0.700`）；`hang_yaw_deg 0` 的抓取点在 0.738 m，被这一行排除。
+手净空规则来自 yaml `c_ring.major_radius` 的注释（手半宽 45 mm，量到环缘管中心线），以前只是文字。
+
+### 11.3 离线实测（2026-09-03）
+
+| 门 | 结果 |
+|---|---|
+| `tests/check_c_ring_clearance.py`（加第五段「variation envelope」） | 32 角点：七行全过、出生 Lk=±1、gateway 不卡且终态 Lk=0、八条非 gateway 全卡；负例：`gap_azimuth_deg=295` 手净空 −4.45 mm 拒、`hang_yaw_deg=0` 可达 0.738 m 拒；`--gap-deg 18` 仍 exit 1 |
+| `tests/check_gateway_slide_path.py` | 不变，四个 `hang_yaw` 摆动段净空 19.80 mm |
+| `tests/check_variant_rng.py` unlink 段 | 叶子顺序、seed 3 确定性、1000 seed 每轴在区间内、派生抓取角逐 seed 等于规则值、七行全过；最小手净空 1.41 mm、最小单边净空 1.26 mm；首抽拒绝率 **0.000** |
+| `tests/check_variant_corners.py --task unlink_c_ring` | 32 角点 32 可行，Hydra compose 读数一致 |
+| `tests/check_demo_configs.py`、`tests/check_configs_compose.py` | 全过 |
+| CPU 冒烟 | `unlink_c_ring_inspect_demo env.genesis.backend=cpu run.build_only=true run.randomize_layout=true run.seed=3` 打出 checks 与 variant 行 |
+
+### 11.4 GPU 实测（待跑）
+
+**先复现基线。** 最近一次物理记录（`runs/videos/unlink_c_ring/fast_001128.log`，2026-08-24，§9.9 之后代码未动）`success=False`：
+Lk +1→0、分离 14 cm、探针五向全通、释放稳定都对，唯一失败项是 `passed_through`——两环最小面间距 −2.63 mm，超 `topology.jam_depth` 1 mm。
+按阶段（`[gateway_extract <phase>] min_gap=` 是累计最小值）：悬停 / 下降 −0.1 mm（手腕倾角 20.4°）→ 抓取 −0.5 mm → **抬升段 slide0 −2.6 mm**（倾角回到 0.7°）→ 之后沿用。
+抬升时手腕把 20° 转回来，环被夹在指垫上跟着转，环心离抓点 55 mm，环内侧顶部在这一瞬间压到杆上——更像真实接触挤压，不像穿模。
+
+判定规则（`run.randomize_layout=false run.seed=0 run.verbose=true recording=default`，gateway 与 no_align 各一次）：
+
+- **判据口径问题**（照 gate_cage_ball `pinched` 的先例改判据），须同时满足：Lk 恰在 `extract` 阶段翻转一次且当时 `align_deg ≤ max_align_deg`；`extract` / `clear` 的 `part=` 位置与 `c_rest_frame.center − (extract_travel + slide_lift)·extract_direction` 再 `+ carry·hang_direction` 差几毫米以内；同布局 `no_align` 的最小间距在 −8 到 −9 mm 量级而 gateway 远小于它；穿透量是刚体接触的几毫米而非 9 mm 互锁。处置：新叶子 `success.max_pass_through_depth`（如 0.005）供判定器的 `passed_through` 读，`topology.jam_depth` 1 mm 留给离线 `sweep()` 与探针。两组数据记回本节。
+- **轨迹 / 抓取问题**（不改判据）：Lk 在 `extract` 之前翻转或翻转时未对准；终点落在闭合环那一侧；gateway 最小间距逼近 no_align 的深度；或在 `descend` / `close` 就跌破且 `disturbed` > 10 mm（指垫压在管身上，修抓取）。
+
+**基线复现（2026-09-03 晚，4090，`runs/unlink_c_ring_variation/baseline_*/`）**：gateway 与 no_align 的读数和 08-24 逐阶段一致。
+
+| | gateway | no_align |
+|---|---|---|
+| 最小面间距首次跌破 −1 mm 的阶段 | 抬升段 slide0，−2.63 mm（手腕倾角 20.4° → 0.7°） | 抽出段 extract，−8.97 mm |
+| 对准时开口到管身 | 2.65°（≤ `max_align_deg` 3.0） | 44.5°（从未对准） |
+| extract / clear 后的环心 | 与「抬 20 → 摆 20 → 出 38 → 径向搬 90」的预期路径差 ≤ 2 mm | — |
+| 其余判据 | Lk +1→0、分离、探针五向全通、释放稳定 | 同左 |
+| 判词（`jam_depth` 1 mm） | success=False，`passed_through` | success=False，`passed_through` |
+
+判定规则四条里能核的三条全部指向判据口径：终点在正确一侧、gateway 的 −2.6 mm 与 no_align 的 −9.0 mm 两群分得开、2.6 mm 是刚体接触受力时的穿透量级而非 9 mm 互锁（Lk 逐阶段没有日志，只有终值 0 与对准角可核）。
+处置：判定器的 `passed_through` 改判新叶子 `success.max_pass_through_depth`（0.005，落在两群之间）；`topology.jam_depth` 1 mm 只留给离线 `sweep()` 与自由平移探针。改后 seed 0 重跑：gateway **success=True**（min_gap_seen 仍 −2.63 mm，`passed_through=False`），no_align 见下表。
+
+之后：`bash_scripts/tests/unlink_c_ring_variation_sweep.sh visual oracle no_align`（seed 0–9）、`variant_corners_sweep.sh unlink_c_ring oracle visual`（32 格全跑）。纯刚体，一格秒级到 1–2 min。
+
+**实测（2026-09-03 晚，4090，一格 8–18 s；`runs/unlink_c_ring_variation/20260903_202933/`、`runs/unlink_c_ring_corners/20260903_203647/`）**
+
+| 组 | 结果 |
+|---|---|
+| 基线 seed 0 gateway / no_align（新判据） | gateway **success=True**；no_align success=False（−8.97 mm，`passed_through`），防捷径对照仍成立 |
+| visual seed 0–9 | 10/10 有帧；开口朝向、装置角度、位置逐 seed 可分 |
+| oracle seed 0–9 | **7/10**。三格失败全是原语的对准门 `align_failed`：seed 5 / 6 / 8 摆动后开口到管身 3.14 / 4.31 / 3.14°，门 `max_align_deg` 3.0。通过格全程最小面间距 −2.16 … −3.47 mm，都在 5 mm 门内 |
+| no_align seed 0–9 | 10/10 判失败（`passed_through`，−8.84 … −9.00 mm）；与 gateway 的 −2 … −3.5 mm 两群分开 |
+| 角点 32 格 visual | 32/32 有帧 |
+| 角点 32 格 oracle | **16/32**：`gap_azimuth_deg=305` 的 16 格全部 `align_failed`（残差 3.7–5.8°），325 的 16 格全过（残差 0.4–1.9°）；与装置角度、位置、开口张角无关 |
+
+**对准失败的机制。** 每格结果行里 `turn_pose_err`（环偏离两段直线终点的距离）都是 8.4–10 mm，基线 seed 0 也是 9.1 mm（demo 的 `[warn] strayed 9.x mm` 本来就在）。来源见 `gateway_extract.py` 的注释：两段直线在对准阶段开始时按抓取后的实测位姿算一次，之后不修正；每段走完环相对目标有 5.5–6 mm 的稳态落后，多沉降不缩。这个位置偏差的方向基本固定，摆动后「开口到管身」的角残差 = 偏差的垂直分量 / 环心到管身距离（约 45 mm）：开口方位角离偏差方向越远垂直分量越大，所以残差随出生时的开口角单调上升——34° 时 0.4–1.9°，45°（基线）2.65°，55° 时 3.7–5.8°。门 3.0° 在基线只有 0.35° 余量，包络一动就越界。
+物理上 3–4° 过得去：seed 5 / 8 中止后跑探针，环在仍读作互锁的姿态下被 1.3 倍自重推出去了（demo 报 `[warn] the ring travelled freely while still reading linked`）。
+
+**处置（用户选定：闭环修正摆动段，不改门、不收包络）。** `gateway_extract.py` 在两段直线走完后重测环心，把「目标 − 实测」加到命令点上再走一段（手臂是稳态落后，重发同一目标还会落后同样的量，所以要把命令点推过目标），最多 `primitive.align_correct_passes`（2）次，差值小于 `primitive.align_correct_tol`（2 mm）就停。日志多一行 `[gateway_extract correct0] miss_before=… behind=…`。
+seed 0 固定布局：一次修正 5.4 mm → 0.1 mm，对准残差 2.65° → **0.28°**；305 那一角 5.5 mm → 0.2 mm，残差 **0.33°**，success=True。
+修正后重跑（`runs/unlink_c_ring_variation/20260903_223337_correct/`、`runs/unlink_c_ring_corners/20260903_223715_correct/`）：oracle seed 0–9 **10/10**，残差 0.2–0.3°；角点 oracle **32/32**，残差 0.2–0.4°（修前 0.4–5.8°）；全程最小面间距 −2.16 … −3.47 mm，全在 5 mm 门内。no_align 与 visual 不受修正影响，沿用上表。
+至此第 8 步六项齐全：oracle 覆盖包络内部与全部顶点，防捷径对照 10/10 判失败，两群面间距分得开。

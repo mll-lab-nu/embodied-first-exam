@@ -31,8 +31,14 @@ figure_eight:
   open_lobe_radius: 0.050
   # 两个绳头的直线距离。**必须 ≥ rope.free_end_connector.min_clearance (0.07)**，
   # 否则两个插头挤在一个夹爪跨距里，builder 会拒绝建场景。0.08 留 10mm 余量。
-  # 上限 2×open_lobe_radius（再宽开口叶就切不出弧）。
+  # 上限 end_gap_max_ratio × 2×open_lobe_radius（比 1 就是整个直径，开口叶切不出弧）。
+  # 随机化时不直接抽它：由 end_frac 在 [min_clearance, 上限] 里定位
+  # （_figure_eight_geometry.end_gap_from_frac），开口叶半径变了区间自动跟。
   end_gap: 0.080
+  # 绳头间距在允许区间内的归一化位置，[0, 1]；只在随机化时被写入。
+  end_frac: 0.5
+  # 上限占开口叶直径的比例。0.95 → 半径 0.040 时上限 0.076，与 0.070 的下限还有 6mm。
+  end_gap_max_ratio: 0.95
   # 两股离开交叉点时与 8 字轴线的夹角。45° → 两股互成 90° 交叉，投影交叉最稳、
   # 交叉点最不容易被判成擦边。切线长 = 半径 / tan(45°) = 半径。
   half_angle_deg: 45.0
@@ -49,12 +55,22 @@ figure_eight:
   base_z: 0.007
   # 交叉点在任务系的位置。x 略往远处推，让开口叶的两个绳头落在 x≈-0.08，
   # 离机械臂基座（x=-0.57）约 0.49m，在 Franka 舒适工作区内；闭合叶顶端 x≈+0.12。
-  center: [0.02, 0.00]
+  # 拆成两个标量键：随机化器按点路径抽样，不支持列表元素。
+  center_x: 0.02
+  center_y: 0.00
   # 8 字轴线（交叉点 → 闭合叶）在任务系的朝向。0 = 闭合叶朝 +x（远离机械臂），
   # 绳头朝机械臂。
   heading_deg: 0.0
   # 每 90° 弧放几个控制点。3 → 闭合叶 270° 弧上 10 个点；再密样条与折线无异。
   arc_points_per_quarter: 3
+  # 哪一端的绳压在上面：0 = 端 0（几何模块 docstring 的走向），1 = 镜像并反走，
+  # 两个绳头位置不变、上下股互换。这是本任务唯一的防捷径离散轴：画面里除了交叉处
+  # 本身，没有别的线索说该抓哪头。
+  over_end: 0
+  # 管半径的字面量副本 = rope.radius（prefabs.rope_pbd.radius）。变体校验只拿得到
+  # 未解析的 task 配置（rope.radius 是 ${prefabs…} 插值），所以这里再写一份；
+  # builder 建场景时断言两者相等。
+  tube_radius: 0.004
   color: [1.00, 0.06, 0.03]
 
 rope:
@@ -145,6 +161,10 @@ rope:
     rho: 700.0
     friction: 1.6
     color: ${prefabs.rope_endpoint_connector.color}
+    # 两个插头的最小间距 = 夹爪跨距：再近两个插头挤在一个夹爪跨距里，合爪时分不清
+    # 夹的是哪个。builder 拒建、checks() 的 end_separation 行、end_gap 派生下界共用。
+    # 原来是代码里的默认值 0.07，随机化后需要显式声明。
+    min_clearance: 0.070
   # 锚定端粒子选取半径。同离散版：固定"一带"(2~3 圈)粒子而不是单圈，
   # 分散刚体↔PBD 耦合、消掉接缝硬 hinge。
   anchor_radius: 0.012
@@ -225,10 +245,13 @@ pinch:
   # 第二项是本任务的关键：被抓那股从绳头到交叉点整段要离开桌面（约 120mm），
   # 交叉点才会跟着被带走；只抬绳头而交叉点还压在下股上，横移只是把绳头拖过去。
   lift_clearance: 0.040
-  # 放下时绳头离另一个绳头（也就是另一股的尾巴）的俯视距离。
+  # 放下时绳头离**留在桌上那股绳整条折线**（另一绳头到交叉点）的俯视距离。
   # 比的是夹爪占地不是绳半径：插头法兰半径 0.015 + 绳碰撞半径 0.006 + 余量 ≈ 0.035。
-  # planner 把放置点放在「以交叉点为圆心、过另一绳头」的圆上，弦长 = 这个值，
-  # 所以放置点到交叉点的距离与抓取点相同，绳既不绷紧也不多余。
+  # planner 把放置点放在「以交叉点为圆心、过另一绳头」的圆上（放置点到交叉点的距离
+  # 与抓取点相同，绳既不绷紧也不多余），从离另一绳头弦长 = 这个值的远侧点起沿圆继续
+  # 外摆，直到离那股绳整条折线都 ≥ 这个值。只量到插头不够：开口叶大、两绳头最近时，
+  # 那股的弧鼓出插头之外 40mm，被搬那股会正好压在它上面（角点 c130，09-04）。
+  # checks() 的 place_clearance / lay_down_clearance 两行离线复算同一落点。
   place_clearance: 0.035
   # 下面几个是原语自身的参数，值同 swap_crossing_sign。
   approach_z: 0.250
@@ -288,3 +311,43 @@ settle:
   damp_every: 0
   # 兜底：跑满 steps 还没收敛就报错，而不是把还在摆的绳子交给机械臂。
   require_converged: true
+
+# ---------------------------------------------------------------- 工作区
+# 变体校验函数只拿得到 task 配置，所以工作区盒子在这里再声明一次（来源
+# common_configs/manipulation_space_tabletop_v1.yaml 的 manipulation_space.workspace；
+# 离线门断言两者相等）。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
+  # 手部连杆的最高点：抬升高度 = 场景顶 + 交叉点到绳头弧长 + lift_clearance 不能超过它。
+  z_max: 0.40
+  # 8 字控制点离工作区 x/y 边界的最小距离。≥ pinch.place_clearance (0.035)：planner
+  # 的落点离另一绳头 place_clearance，由此保证落点也在工作区内。
+  margin: 0.040
+
+# ---------------------------------------------------------------- 变体
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。
+# 每条 uniform 各有自己的区间；绳头间距的上限依赖开口叶半径，抽归一化位置再由
+# derived 派生，构造式满足夹爪跨距，不靠拒绝。
+# 防捷径离散轴 = over_end：镜像后两绳头位置不变、只换压在上面的那股，
+# 「抓 +y 侧那头」之类的位置规则在两种取值下各错一半。
+variation:
+  # 防捷径：哪一端的绳压在上面
+  - {kind: choice, path: figure_eight.over_end, values: [0, 1]}
+  # 布局：8 字轴线朝向
+  - {kind: uniform, path: figure_eight.heading_deg, lo: -30.0, hi: 30.0}
+  # 布局：交叉点位置
+  - {kind: uniform, path: figure_eight.center_x, lo: -0.010, hi: 0.050}
+  - {kind: uniform, path: figure_eight.center_y, lo: -0.030, hi: 0.030}
+  # 布局：两股离开交叉点的半角（交叉夹角 = 2×）
+  - {kind: uniform, path: figure_eight.half_angle_deg, lo: 30.0, hi: 60.0}
+  # 布局：闭合叶半径
+  - {kind: uniform, path: figure_eight.closed_lobe_radius, lo: 0.032, hi: 0.055}
+  # 布局（难度候选）：开口叶半径，决定交叉点到绳头的弧长即抬升高度
+  - {kind: uniform, path: figure_eight.open_lobe_radius, lo: 0.040, hi: 0.065}
+  # 布局：绳头间距在允许区间内的归一化位置
+  - {kind: uniform, path: figure_eight.end_frac, lo: 0.0, hi: 1.0}
+  # 派生：end_frac -> figure_eight.end_gap
+  - {kind: derived, fn: "topogym.tasks.entangle.band_untwist:derive_task_cfg"}
+  # 校验：checks() 八行（绳头间距、开口比、转角半径、足迹、抬升高度、管底净空、落点净空、铺绳净空）
+  - {kind: validate, fn: "topogym.tasks.entangle.band_untwist:validate_task_cfg"}

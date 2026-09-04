@@ -22,7 +22,13 @@ Two things differ from the two-rope planners:
   move is the crossing itself (the under strand stays put under friction). The
   placement is put on the circle about the crossing that passes through the
   other end, so the carried strand ends the move exactly as extended as it
-  started -- neither taut nor slack -- and no clamp is needed.
+  started -- neither taut nor slack -- and no clamp is needed. Along that
+  circle the landing point swings outward, past the other end, until it is
+  ``place_clearance`` from the WHOLE strand that stays on the table, not just
+  from its plug: with a large open lobe and the plugs at their closest, the
+  staying strand's arc bulges past its plug and a landing measured from the
+  plug alone puts the carried strand right on top of it (corner c130,
+  2026-09-04 -- the rope then slides off to either side by chance).
 
 Pure numpy; no Genesis, so `tests/check_band_untwist_geometry.py` exercises it
 on synthetic polylines.
@@ -66,12 +72,41 @@ def _rotate_about(pivot, point, angle: float) -> np.ndarray:
     return pivot + np.array([c * offset[0] - s * offset[1], s * offset[0] + c * offset[1]])
 
 
-def place_beside(crossing_xy, grasp_xy, other_xy, *, clearance: float) -> tuple[float, float]:
-    """Where to lay the grasped end: past the other end, on the far side from
-    where it started, ``clearance`` away from it as a chord.
+def point_to_polyline(point, polyline) -> float:
+    """Smallest distance from ``point`` to the segments of ``polyline`` (xy)."""
 
-    Both candidate points lie on the circle about the crossing through the other
-    end; the one further from the grasp point is the far side.
+    p = np.asarray(point, dtype=float)[:2]
+    poly = np.asarray(polyline, dtype=float)[:, :2]
+    if len(poly) == 1:
+        return float(np.linalg.norm(p - poly[0]))
+    a, b = poly[:-1], poly[1:]
+    d = b - a
+    length_sq = np.einsum("ij,ij->i", d, d)
+    t = np.clip(np.einsum("ij,ij->i", p - a, d) / np.maximum(length_sq, 1e-18), 0.0, 1.0)
+    return float(np.linalg.norm(p - (a + t[:, None] * d), axis=1).min())
+
+
+PLACE_SWEEP_STEP = np.radians(0.5)
+PLACE_SWEEP_MAX = np.radians(150.0)
+
+
+def place_beside(
+    crossing_xy, grasp_xy, other_xy, stay_strand, *, clearance: float
+) -> tuple[float, float]:
+    """Where to lay the grasped end: past the other end, on the far side from
+    where it started, ``clearance`` away from the strand that stays down.
+
+    Candidates lie on the circle about the crossing through the other end. The
+    sweep starts at the point ``clearance`` past the other end (as a chord) on
+    the side further from the grasp point, then keeps turning the same way
+    until the point is ``clearance`` from every segment of ``stay_strand`` (the
+    staying strand's xy polyline, other end to crossing). Measured from the plug
+    alone, a large open lobe bulges past the plug and the carried strand would
+    land on it.
+
+    Raises ``ValueError`` if no point within ``PLACE_SWEEP_MAX`` clears the
+    strand; inside the variation envelope the layout's ``checks()`` rule that
+    out before the scene is built.
     """
 
     pivot = np.asarray(crossing_xy, dtype=float)
@@ -81,9 +116,39 @@ def place_beside(crossing_xy, grasp_xy, other_xy, *, clearance: float) -> tuple[
         raise ValueError("the other end sits on the crossing; no placement circle.")
     angle = 2.0 * np.arcsin(min(1.0, float(clearance) / (2.0 * radius)))
     grasp = np.asarray(grasp_xy, dtype=float)
-    candidates = [_rotate_about(pivot, other, angle), _rotate_about(pivot, other, -angle)]
-    far = max(candidates, key=lambda p: float(np.linalg.norm(p - grasp)))
-    return float(far[0]), float(far[1])
+    far_sign = max(
+        (1.0, -1.0),
+        key=lambda s: float(np.linalg.norm(_rotate_about(pivot, other, s * angle) - grasp)),
+    )
+    stay = np.asarray(stay_strand, dtype=float)[:, :2]
+    swept = 0.0
+    while swept <= PLACE_SWEEP_MAX:
+        candidate = _rotate_about(pivot, other, far_sign * (angle + swept))
+        if point_to_polyline(candidate, stay) >= float(clearance) - 1e-9:
+            return float(candidate[0]), float(candidate[1])
+        swept += PLACE_SWEEP_STEP
+    raise ValueError(
+        f"no landing point on the circle about the crossing (radius {radius:.3f}) is "
+        f"{clearance:.3f} clear of the staying strand within {np.degrees(PLACE_SWEEP_MAX):.0f} deg."
+    )
+
+
+def stay_strand_xy(polyline: np.ndarray, *, other_end: int, stay_at: float) -> np.ndarray:
+    """The xy polyline of the strand left on the table: from ``other_end`` along
+    the rope to normalized arc ``stay_at`` (where that strand passes the
+    crossing), that vertex included."""
+
+    polyline = np.asarray(polyline, dtype=float)
+    segments = np.linalg.norm(np.diff(polyline[:, :2], axis=0), axis=1)
+    arc = np.concatenate([[0.0], np.cumsum(segments)])
+    arc = arc / max(float(arc[-1]), 1e-12)
+    if int(other_end) == 0:
+        keep = arc <= float(stay_at) + 1e-9
+        keep[min(int(np.searchsorted(arc, float(stay_at))), len(arc) - 1)] = True
+    else:
+        keep = arc >= float(stay_at) - 1e-9
+        keep[max(int(np.searchsorted(arc, float(stay_at), side="right")) - 1, 0)] = True
+    return polyline[keep, :2]
 
 
 def plan_untwist_move(
@@ -121,7 +186,10 @@ def plan_untwist_move(
     at = crossing.over_at if grasped_over else crossing.under_at
     crossing_arc = rope_arc * (float(at) if end == 0 else 1.0 - float(at))
 
-    place_xy = place_beside(crossing.position, grasp_xy, other_xy, clearance=place_clearance)
+    # The strand that stays on the table: the other end's, up to the crossing.
+    stay_at = crossing.under_at if grasped_over else crossing.over_at
+    stay = stay_strand_xy(polyline, other_end=other, stay_at=float(stay_at))
+    place_xy = place_beside(crossing.position, grasp_xy, other_xy, stay, clearance=place_clearance)
 
     scene_top = float(polyline[:, 2].max()) + rope_radius
     lift_z = scene_top + max(float(lift_clearance), crossing_arc + float(lift_clearance))

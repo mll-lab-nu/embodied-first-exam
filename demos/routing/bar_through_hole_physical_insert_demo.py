@@ -19,6 +19,7 @@ Configuration is Hydra (`configs/bar_through_hole.yaml`).
     python -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true
     python -m demos.routing.bar_through_hole_physical_insert_demo run.inspect_only=true run.viewer=true
     python -m demos.routing.bar_through_hole_physical_insert_demo run.oracle_mode=bypass run.viewer=true
+    python -m demos.routing.bar_through_hole_physical_insert_demo run.randomize_layout=true run.seed=3
     python -m demos.routing.bar_through_hole_physical_insert_demo --cfg job
 """
 
@@ -33,6 +34,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation import EpisodeKey, EpisodeResult
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.primitives import (
     AttachmentManager,
     AxialInsertPrimitive,
@@ -50,6 +52,30 @@ from topogym.utils.recording import (
     recording_session_from_config,
 )
 from topogym.verification import BarThroughHolePuzzleEvaluator
+
+TASK_ID = "bar_through_hole"
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+    task = cfg.task
+    lo, hi = layout.push_window()
+    side_clear = layout.aperture_inradius - layout.bar_inradius
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} af={float(task.aperture.across_flats):.4f} "
+        f"rest_x={float(task.bar.rest_x):+.4f} rest_y={float(task.bar.rest_y):+.4f} "
+        f"panel_x={float(task.panel.x):.4f} length={float(task.bar.length):.4f} "
+        f"grasp_off={float(task.bar.grasp_offset):.4f} far_x={float(task.cradles.far.x):.4f} "
+        f"side_clear={side_clear:.4f} window={hi - lo:.4f} push_z={layout.push_center_z():.4f}"
+    )
+
 
 def _hud(bar_scene, evaluator, status):
     def render_lines():
@@ -122,18 +148,21 @@ def run_demo(cfg, bar_scene, controller, *, episode_key, mode, status) -> Episod
     # 0.71 m *below* the table, and the arm dives for the floor.
     # The aperture centre is where the SHAFT has to be; the primitive works out
     # where that puts the hand from the pair's measured offset.
+    # The four carry heights are derived by the layout from the shaft's rest
+    # height, the aperture and the cradles (2026-09-04); only approach / clear
+    # are stated in config, since no axis moves them.
     insert_part_xy = layout.aperture_center()[:2]
     if mode == "bypass":
         insert_z = layout.world_z(float(cfg.task.oracle.bypass_lift_z))
         seat_z = insert_z
     else:
-        insert_z = layout.world_z(float(primitive_cfg.insert_z))
-        seat_z = layout.world_z(float(primitive_cfg.seat_z))
+        insert_z = layout.world_z(layout.insert_hand_z())
+        seat_z = layout.world_z(layout.seat_hand_z())
 
     primitive = AxialInsertPrimitive(
         approach_z=layout.world_z(float(primitive_cfg.approach_z)),
-        grasp_z=layout.world_z(float(primitive_cfg.grasp_z)),
-        lift_z=layout.world_z(float(primitive_cfg.lift_z)),
+        grasp_z=layout.world_z(layout.grasp_hand_z()),
+        lift_z=layout.world_z(layout.lift_hand_z()),
         insert_z=insert_z,
         seat_z=seat_z,
         clear_z=layout.world_z(float(primitive_cfg.clear_z)),
@@ -275,6 +304,9 @@ def main(cfg: DictConfig) -> None:
     if resolved is not None:
         print(f"bar_through_hole_config -> {resolved}", flush=True)
 
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
+
     mode = cfg.run.oracle_mode or str(cfg.task.oracle.mode)
 
     has_display = os.name == "nt" or bool(
@@ -289,6 +321,9 @@ def main(cfg: DictConfig) -> None:
 
     builder = BarThroughHoleSceneBuilder(cfg.env, cfg.task, cfg.robot_control)
     bar_scene = builder.build(show_viewer=show_viewer)
+    print(f"{TASK_ID} checks {_checks_line(bar_scene.layout)}", flush=True)
+    if cfg.run.randomize_layout:
+        print(_variant_line(cfg, bar_scene.layout), flush=True)
 
     controller = initialize_franka_controller(
         scene=bar_scene.scene,

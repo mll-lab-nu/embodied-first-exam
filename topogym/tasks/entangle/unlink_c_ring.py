@@ -117,6 +117,11 @@ class UnlinkCRingLayout:
 
         return ring_geometry.scene_geometry(OmegaConf.to_container(self.cfg, resolve=True))
 
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """(name, measured, limit, ok) for every inequality the scene rests on."""
+
+        return self.geometry().checks()
+
     def validate(self) -> None:
         """Raise if any inequality the scene rests on is violated.
 
@@ -128,7 +133,7 @@ class UnlinkCRingLayout:
 
         broken = [
             f"{name} is {value * 1000:+.2f} mm, needs more than {limit * 1000:+.2f} mm"
-            for name, value, limit, ok in self.geometry().checks()
+            for name, value, limit, ok in self.checks()
             if not ok
         ]
         if broken:
@@ -321,3 +326,26 @@ class UnlinkCRingSceneBuilder:
             block_size=(2.0 * post_radius, 2.0 * post_radius, top_z),
             to_world=layout.position_to_world,
         )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``: the grasp
+    azimuth follows the drawn opening so the pads stay clear of its end caps.
+    """
+
+    primitive = task_cfg.primitive
+    primitive.grasp_azimuth_deg = (
+        float(task_cfg.c_ring.gap_azimuth_deg) + float(primitive.grasp_offset_deg)
+    ) % 360.0
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    UnlinkCRingLayout(task_cfg).validate()

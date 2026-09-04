@@ -516,6 +516,12 @@ HOME_FINGERTIP_Z = 0.1608
 # Kept off the table by this much at rest and at the end of the extraction.
 TABLE_CLEARANCE = 0.004
 
+# Half-width of the hand coming straight down onto the grasp point. The C hangs on
+# the closed ring's rim, so the hand crosses that ring's plane; it stays outside the
+# ring only if the grasp point sits further out than this past the rim (measured to
+# the rim tube's centreline). The rule the yaml's `c_ring.major_radius` was sized by.
+HAND_HALF_WIDTH = 0.045
+
 
 @dataclass(frozen=True)
 class SceneGeometry:
@@ -539,6 +545,9 @@ class SceneGeometry:
     closure_samples: int
     jam_depth: float
     stand_clearance: float
+    grasp_azimuth_deg: float
+    reach_base_xy: np.ndarray
+    max_grasp_dist: float
 
     @property
     def hang_offset(self) -> float:
@@ -587,6 +596,30 @@ class SceneGeometry:
 
         gap = float(np.linalg.norm(self.post_center[:2] - self.c_rest_frame.center[:2]))
         return gap - self.c_ring.outer_radius - float(self.stand_axes[2][0])
+
+    @property
+    def grasp_point(self) -> np.ndarray:
+        """Where the pads close on the C at rest, on its tube centreline."""
+
+        azimuth = np.deg2rad(self.grasp_azimuth_deg)
+        return self.c_rest_frame.point(azimuth, self.c_ring.major_radius)[0]
+
+    @property
+    def grasp_reach(self) -> float:
+        """Distance from the arm's base to the grasp point (task xy)."""
+
+        return float(np.linalg.norm(self.grasp_point[:2] - self.reach_base_xy))
+
+    @property
+    def hand_clearance(self) -> float:
+        """How far the hand's near edge stays outside the closed ring's rim.
+
+        The C's binormal is the hang direction (radially outward), so the grasp
+        point's outward coordinate past the rim is R·sin(azimuth).
+        """
+
+        outward = self.c_ring.major_radius * np.sin(np.deg2rad(self.grasp_azimuth_deg))
+        return float(outward - HAND_HALF_WIDTH)
 
     def fixed_axes(self):
         return body_axes(self.fixed, self.fixed_frame)
@@ -652,6 +685,8 @@ class SceneGeometry:
             ),
             ("post clears the C ring", self.post_to_c_ring, self.stand_clearance),
             ("stand clears the home pose", HOME_FINGERTIP_Z - self.top_z, 0.0),
+            ("hand reaches the grasp point", self.max_grasp_dist - self.grasp_reach, 0.0),
+            ("hand clears the ring at the grasp point", self.hand_clearance, 0.0),
         ]
         if self.tab is not None:
             rows.insert(
@@ -694,9 +729,8 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
     # every other bearing in this function is measured from the same place.
     hang_yaw = np.deg2rad(float(stand["hang_yaw_deg"]))
     hang_direction = np.array([np.cos(hang_yaw), np.sin(hang_yaw), 0.0])
-    fixed_frame = RingFrame.create(
-        [float(v) for v in fixed_cfg["center"]], [0.0, 0.0, 1.0], hang_direction
-    )
+    fixed_center = [float(fixed_cfg[k]) for k in ("center_x", "center_y", "center_z")]
+    fixed_frame = RingFrame.create(fixed_center, [0.0, 0.0, 1.0], hang_direction)
     tube_point = fixed_frame.point(0.0, fixed.major_radius)[0]
     # Tangent to the flat ring at the hang point: horizontal, across the radius.
     tube_direction = fixed_frame.binormal
@@ -751,6 +785,9 @@ def scene_geometry(cfg: dict) -> SceneGeometry:
         closure_samples=int(topology["closure_samples"]),
         jam_depth=float(topology["jam_depth"]),
         stand_clearance=float(stand["clearance"]),
+        grasp_azimuth_deg=float(cfg["primitive"]["grasp_azimuth_deg"]),
+        reach_base_xy=np.array([float(v) for v in cfg["reach"]["base_xy"]]),
+        max_grasp_dist=float(cfg["reach"]["max_grasp_dist"]),
     )
 
 
