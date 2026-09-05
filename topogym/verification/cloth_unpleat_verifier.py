@@ -93,7 +93,13 @@ def single_layer_fraction(layers: dict) -> float:
 
 
 def band_shift(
-    rest_nodes, nodes, *, cols: int | None = None, keep: float = 0.25, axis: int = 1
+    rest_nodes,
+    nodes,
+    *,
+    cols: int | None = None,
+    keep: float = 0.25,
+    axis: int = 1,
+    sign: float = 1.0,
 ) -> float:
     """How far the far end of the band travelled, in metres.
 
@@ -101,6 +107,11 @@ def band_shift(
     motion moves: table friction holds it while the pleat is opened in front of
     it. A band that was towed instead of unfolded moves it, and moves it by
     roughly the whole drag.
+
+    ``sign`` is which end of ``axis`` the FREE end lies at (+1 positive, -1 the
+    mirror layout, `cloth.pull_side`); the far end is the other one. The
+    material-order path does not need it -- index 0 is the lead-in end in both
+    layouts -- but the positional fallback does.
 
     ``keep`` is the fraction of the band that counts as "the far end", measured
     along the MATERIAL when ``cols`` (the simulated grid's material-direction
@@ -133,11 +144,15 @@ def band_shift(
         selected = np.flatnonzero(columns < max(1, int(round(float(keep) * cols))))
     else:
         along, zs = rest_nodes[:, int(axis)], rest_nodes[:, 2]
-        cutoff = float(along.min()) + float(keep) * float(along.max() - along.min())
+        span = float(along.max() - along.min())
         # "On the table" relative to the band's own lowest material, so this does
         # not need to know where the table is.
         floor = float(zs.min()) + 0.5 * float(zs.max() - zs.min())
-        selected = np.flatnonzero((along <= cutoff) & (zs <= floor))
+        if float(sign) >= 0.0:
+            far = along <= float(along.min()) + float(keep) * span
+        else:
+            far = along >= float(along.max()) - float(keep) * span
+        selected = np.flatnonzero(far & (zs <= floor))
     if selected.size == 0:
         return float("nan")
     return float(
@@ -329,18 +344,25 @@ class ClothUnpleatEvaluator:
     #: to be told which one it is rather than assuming the band has not been
     #: turned. Read from the same config key the layout reads.
     material_axis: int = 1
+    #: Which end of that axis the free end lies at: +1, or -1 for the mirror
+    #: layout (`cloth.pull_side`). Only the band-shift reading's positional
+    #: fallback needs it -- the far end is the other end.
+    pull_sign: float = 1.0
 
     @classmethod
     def from_config(cls, task_cfg) -> "ClothUnpleatEvaluator":
-        axis = str(task_cfg["cloth"]["material_axis"]).lower()
+        cloth = task_cfg["cloth"]
+        axis = str(cloth["material_axis"]).lower()
         if axis not in ("x", "y"):
             raise ValueError(f"cloth.material_axis must be 'x' or 'y', got {axis!r}.")
+        side = cloth.get("pull_side", 1) if hasattr(cloth, "get") else 1
         return cls(
             thresholds=ClothUnpleatThresholds.from_config(task_cfg["success"]),
             cell=float(task_cfg["success"]["cell"]),
-            particle_size=float(task_cfg["cloth"]["particle_size"]),
-            material_length=float(task_cfg["cloth"]["material_length"]),
+            particle_size=float(cloth["particle_size"]),
+            material_length=float(cloth["material_length"]),
             material_axis=0 if axis == "x" else 1,
+            pull_sign=-1.0 if int(side) < 0 else 1.0,
         )
 
     def classify(self, rest_nodes, nodes, *, table_z: float, grid=None) -> ClothUnpleatState:
@@ -380,6 +402,7 @@ class ClothUnpleatEvaluator:
                 nodes,
                 cols=shape[0] if shape else None,
                 axis=self.material_axis,
+                sign=self.pull_sign,
             ),
             flatness_var=float(np.var(heights)),
             covered_cells=int(layers["covered_cells"]),

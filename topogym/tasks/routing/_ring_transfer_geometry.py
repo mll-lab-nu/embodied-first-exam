@@ -59,6 +59,32 @@ from topogym.world.closed_band import (
 )
 
 
+# ---- variation: the Layout rules that replace hand-written leaves ------------
+# Each constant restores the 2026-08-25/26 baseline exactly (see the task yaml's
+# `carry` comments for the measurements behind the original numbers).
+#
+# lift_low_z = anchor head top + this: the fingertips pass over the head with the
+# loop's bottom still on the table (baseline 0.108 + 0.012 = 0.120).
+LIFT_LOW_ABOVE_HEAD = 0.012
+# hang_bottom_z = post base height + this: the hanging U meets the shaft between
+# the base cone and the head underside (baseline 0.016 + 0.024 = 0.040).
+HANG_BOTTOM_ABOVE_BASE = 0.024
+# drop_z = max(hang_bottom_z, target head top + this - palm_bottom_above_tip): the
+# palm box, which covers the target at the drop, stays above its head
+# (baseline max(0.040, 0.108 + 0.009 - 0.077) = 0.040).
+DROP_PALM_MARGIN = 0.009
+# pinch_along = anchor head radius + hand_half_thickness + this, capped at the
+# straight's length: the palm box beside the anchor clears its head
+# (baseline 0.026 + 0.030 + 0.014 = 0.070).
+PINCH_HEAD_GAP = 0.014
+# Layout rows: the spawn loop keeps this off the target's head; the hanging U
+# sits at least this far from the base cone and the head underside; every hand
+# position and the spawn loop keep this inside `workspace`.
+TARGET_SPAWN_CLEARANCE = 0.020
+SHAFT_MARGIN = 0.015
+WORKSPACE_MARGIN = 0.020
+
+
 @dataclass(frozen=True)
 class PostSpec:
     name: str
@@ -87,44 +113,161 @@ class RingSpec:
     spawn_clearance: float  # skin-to-table gap at spawn: contact_d_hat + margin
 
 
-def posts_from_config(posts_cfg) -> dict[str, PostSpec]:
-    """`task.posts` is a LIST so the variant axis (more posts) is a config edit."""
+def posts_from_config(posts_cfg, shape_cfg, *, centers: dict | None = None) -> dict[str, PostSpec]:
+    """`task.posts` maps name -> {x, y, colours}; `task.post_shape` is the one
+    shaft / head geometry both posts share (the loop's rest length around two
+    posts assumes equal radii, and the variation axes move both together).
+    `centers` overrides the yaml positions (name -> xy)."""
 
     posts: dict[str, PostSpec] = {}
-    for item in posts_cfg:
-        name = str(item.name)
-        if name in posts:
-            raise ValueError(f"ring_transfer: post name {name!r} appears twice in task.posts.")
+    radius = float(shape_cfg.radius)
+    head_radius = radius + float(shape_cfg.head_overhang)
+    if float(shape_cfg.head_overhang) < 0.0:
+        raise ValueError("post_shape.head_overhang must not be negative: the head retains the loop.")
+    for name, item in posts_cfg.items():
+        name = str(name)
+        center = centers[name] if centers is not None else (float(item.x), float(item.y))
         posts[name] = PostSpec(
             name=name,
-            center=np.array([float(item.pos[0]), float(item.pos[1])], dtype=float),
-            radius=float(item.radius),
-            height=float(item.height),
-            head_radius=float(item.head_radius),
-            head_height=float(item.head_height),
+            center=np.array([float(center[0]), float(center[1])], dtype=float),
+            radius=radius,
+            height=float(shape_cfg.height),
+            head_radius=head_radius,
+            head_height=float(shape_cfg.head_height),
         )
-        if posts[name].head_radius < posts[name].radius:
-            raise ValueError(f"post {name}: head_radius must be at least the shaft radius.")
-    if len(posts) < 2:
-        raise ValueError("ring_transfer needs at least two posts.")
+    if len(posts) != 2:
+        raise ValueError("ring_transfer needs exactly two posts (A and B).")
     return posts
 
 
-def ring_from_config(ring_cfg, rope_cfg) -> RingSpec:
-    axis = np.array([float(ring_cfg.long_axis[0]), float(ring_cfg.long_axis[1])], dtype=float)
+def ring_from_config(ring_cfg, rope_cfg, *, long_axis, on_post: str) -> RingSpec:
+    """`long_axis` and `on_post` come from the Layout (derived from the post pair),
+    not from the yaml."""
+
+    axis = np.asarray(long_axis, dtype=float)[:2]
     norm = float(np.linalg.norm(axis))
     if norm <= 1e-9:
-        raise ValueError("ring.long_axis must be a non-zero xy direction.")
+        raise ValueError("ring long_axis must be a non-zero xy direction.")
     return RingSpec(
         perimeter=float(ring_cfg.perimeter),
         loop_radius=float(ring_cfg.loop_radius),
         tube_radius=float(rope_cfg.radius),
         long_axis=axis / norm,
-        enclosure=tuple(str(name) for name in ring_cfg.enclosure),
+        enclosure=(str(on_post),),
         segment_length=float(rope_cfg.mesh.segment_length),
         radial_segments=int(rope_cfg.mesh.radial_segments),
         spawn_clearance=float(rope_cfg.fem.contact_d_hat) + 0.001,
     )
+
+
+# ---- the post pair and what the Layout derives from it ------------------------
+
+
+def pair_heading(pair_cfg) -> np.ndarray:
+    """Unit xy direction from post A to post B: `pair.heading_deg` from +x."""
+
+    theta = np.radians(float(pair_cfg.heading_deg))
+    return np.array([np.cos(theta), np.sin(theta)], dtype=float)
+
+
+def pair_centers(pair_cfg, mid_xy=None) -> dict[str, np.ndarray]:
+    """A and B from the pair's midpoint, spacing and heading. `mid_xy` overrides
+    `pair.mid_x / mid_y` (the derivation evaluates the pair at the origin first)."""
+
+    heading = pair_heading(pair_cfg)
+    if mid_xy is None:
+        mid_xy = (float(pair_cfg.mid_x), float(pair_cfg.mid_y))
+    mid = np.asarray(mid_xy, dtype=float)[:2]
+    half = 0.5 * float(pair_cfg.spacing)
+    if half <= 0.0:
+        raise ValueError("pair.spacing must be positive.")
+    return {"A": mid - half * heading, "B": mid + half * heading}
+
+
+def long_axis_from_heading(pair_cfg) -> np.ndarray:
+    """The loop extends from its post perpendicular to the pair, on the pair's
+    -y side when the heading is 0 (the 2026-08-25 layout: `[0, -1]`). Rotates
+    with the pair, so the whole scene turns together."""
+
+    heading = pair_heading(pair_cfg)
+    return np.array([heading[1], -heading[0]], dtype=float)
+
+
+def other_post(name: str) -> str:
+    if name not in ("A", "B"):
+        raise ValueError(f"ring_transfer posts are A and B, got {name!r}.")
+    return "B" if name == "A" else "A"
+
+
+def pinch_side_for(ring: RingSpec, anchor: PostSpec, target: PostSpec) -> float:
+    """Which straight the carry pinches: the one AWAY from the target, so the hand
+    is never between the posts (baseline -1 for A->B along +x)."""
+
+    across = np.array([-ring.long_axis[1], ring.long_axis[0]])
+    return -float(np.sign(np.dot(across, target.center - anchor.center)))
+
+
+def straight_length(ring: RingSpec) -> float:
+    """Length of each straight of the flat stadium: (perimeter - 2 pi loop_radius) / 2."""
+
+    return 0.5 * (ring.perimeter - 2.0 * np.pi * ring.loop_radius)
+
+
+def pinch_along_for(ring: RingSpec, anchor: PostSpec, physical_cfg) -> float:
+    """How far down the straight the carry pinches: far enough that the palm box
+    (half thickness along the straight) clears the anchor's head by
+    `PINCH_HEAD_GAP`, but not past the straight onto the far cap."""
+
+    want = anchor.head_radius + float(physical_cfg.hand_half_thickness) + PINCH_HEAD_GAP
+    return float(min(straight_length(ring), want))
+
+
+def carry_heights(*, anchor: PostSpec, target: PostSpec, base_height: float, physical_cfg) -> dict[str, float]:
+    """The three fingertip heights of the carry that follow the posts (module constants)."""
+
+    hang_bottom_z = float(base_height) + HANG_BOTTOM_ABOVE_BASE
+    return {
+        "lift_low_z": anchor.top_z + LIFT_LOW_ABOVE_HEAD,
+        "hang_bottom_z": hang_bottom_z,
+        "drop_z": max(hang_bottom_z, target.top_z + DROP_PALM_MARGIN - float(physical_cfg.palm_bottom_above_tip)),
+    }
+
+
+def mid_y_window(points_xy: np.ndarray, *, workspace_y, y_range) -> tuple[float, float]:
+    """Interval of pair midpoints (y) that keeps every point of the mid = 0 layout
+    inside the workspace by `WORKSPACE_MARGIN`, intersected with `y_range`."""
+
+    pts = np.asarray(points_xy, dtype=float)[:, :2]
+    lo = max(float(workspace_y[0]) + WORKSPACE_MARGIN - float(pts[:, 1].min()), float(y_range[0]))
+    hi = min(float(workspace_y[1]) - WORKSPACE_MARGIN - float(pts[:, 1].max()), float(y_range[1]))
+    return lo, hi
+
+
+def mid_x_window(
+    points_xy: np.ndarray, hands_xy: np.ndarray, *, mid_y: float, workspace_x, x_range, base_xy, max_hand_dist
+) -> tuple[float, float]:
+    """Interval of pair midpoints (x) for the mid = (0, mid_y) layout: the
+    workspace bound on every point, and the reach disc on every hand position
+    (`|hand - base| <= max_hand_dist`, solved for x at the hand's own y)."""
+
+    pts = np.asarray(points_xy, dtype=float)[:, :2]
+    lo = max(float(workspace_x[0]) + WORKSPACE_MARGIN - float(pts[:, 0].min()), float(x_range[0]))
+    hi = min(float(workspace_x[1]) - WORKSPACE_MARGIN - float(pts[:, 0].max()), float(x_range[1]))
+    base = np.asarray(base_xy, dtype=float)[:2]
+    reach = float(max_hand_dist)
+    for hand in np.asarray(hands_xy, dtype=float)[:, :2]:
+        dy = hand[1] + float(mid_y) - base[1]
+        if abs(dy) >= reach:
+            return lo, lo - 1.0
+        hi = min(hi, base[0] - hand[0] + float(np.sqrt(reach * reach - dy * dy)))
+    return lo, hi
+
+
+def value_from_frac(window: tuple[float, float], frac: float, *, what: str) -> float:
+    lo, hi = window
+    if hi < lo:
+        raise ValueError(f"ring_transfer: {what} has no feasible value (window [{lo:+.4f}, {hi:+.4f}] is empty).")
+    return float(lo + float(frac) * (hi - lo))
 
 
 def spawn_centerline(ring: RingSpec, posts: dict[str, PostSpec]) -> np.ndarray:
@@ -255,12 +398,17 @@ def carry_path(
     target: PostSpec,
     start_xy,
     carry_cfg,
+    lift_low_z: float,
+    hang_bottom_z: float,
+    drop_z: float,
 ) -> list[tuple[str, np.ndarray]]:
     """Held-point waypoints (task frame) for the carry oracle: PINCH the loop on a
     straight, take it off the anchor from directly above, carry it hanging, lasso
     the target from the side, put it down.
 
     Heights are FINGERTIP heights; the loop's bottom U hangs `hang_depth` below.
+    `lift_low_z`, `hang_bottom_z`, `drop_z` come from `carry_heights` (they
+    follow the posts); `clear` is derived here from the anchor's head.
       lift_low    -- a few cm straight up; the rest of the loop stays on the
                      table, so nothing is under tension.
       over_anchor -- horizontally to above the anchor's axis, and `unhook_past`
@@ -285,9 +433,9 @@ def carry_path(
 
     start = np.asarray(start_xy, dtype=float)[:2]
     depth = hang_depth(ring, carry_cfg)
-    finger_z = float(carry_cfg.hang_bottom_z) + depth
+    finger_z = float(hang_bottom_z) + depth
     clear_z = anchor.top_z + ring.tube_radius + float(carry_cfg.clear_margin) + depth
-    low_z = float(carry_cfg.lift_low_z)
+    low_z = float(lift_low_z)
     direction = target.center - anchor.center
     direction = direction / float(np.linalg.norm(direction))
     toward_anchor = anchor.center - start
@@ -303,7 +451,7 @@ def carry_path(
         ("travel", np.array([approach[0], approach[1], clear_z])),
         ("approach", np.array([approach[0], approach[1], finger_z])),
         ("push", np.array([landing[0], landing[1], finger_z])),
-        ("lower", np.array([landing[0], landing[1], float(carry_cfg.drop_z)])),
+        ("lower", np.array([landing[0], landing[1], float(drop_z)])),
     ]
 
 
@@ -570,9 +718,116 @@ def loop_perimeter(centerline: np.ndarray) -> float:
     return closed_arc_length(centerline)[1]
 
 
+# ---- the carry oracle's feasibility rows ---------------------------------------
+
+
+def carry_hand_positions(path, hand_above: float) -> np.ndarray:
+    """Hand (wrist) positions for the carry waypoints after `start`: fingertip + `hand_above` in z."""
+
+    return np.array([[p[0], p[1], p[2] + float(hand_above)] for _, p in path[1:]], dtype=float)
+
+
+def ring_transfer_checks(layout) -> list[tuple[str, float, float, bool]]:
+    """``[(name, measured, limit, ok)]``: what a spawnable, carry-solvable layout needs.
+
+    One list for the randomizer's reject step, the offline gate, the corner
+    harness and the demo's start-up print. Takes a `RingTransferLayout` (or the
+    gate's stand-in): `ring`, `posts`, `anchor`, `target`, `spawn`,
+    `pinch_point()`, `carry_path()`, `hang_bottom_z`, `task_cfg`. Metres.
+
+    The transfer route's rows (stretch trapezoid, far-cap path) are NOT here:
+    that route is unavailable at the baseline spacing and the offline gate only
+    reports it.
+    """
+
+    cfg = layout.task_cfg
+    ring, anchor, target, spawn = layout.ring, layout.anchor, layout.target, layout.spawn
+    physical, carry_cfg = cfg.physical, cfg.carry
+    d_hat = float(cfg.rope.fem.contact_d_hat)
+    base_height = float(cfg.post_shape.base_height)
+    depth = hang_depth(ring, carry_cfg)
+    pinch = layout.pinch_point()
+    path = layout.carry_path(start_xy=pinch[:2])
+    by_label = dict(path)
+    tangent = strand_tangent(spawn, pinch)
+    close_axis = np.array([-tangent[1], tangent[0]])
+    workspace = cfg.workspace
+    ws_x = [float(v) for v in workspace.x]
+    ws_y = [float(v) for v in workspace.y]
+    ws_z_max = float(workspace.z[1])
+
+    def palm_gap(label_xy, fingertip_z):
+        gaps = hand_clearance(
+            fingertip_xy=label_xy, close_axis=close_axis, fingertip_z=fingertip_z, posts=layout.posts, physical_cfg=physical
+        )
+        return float(min(gaps.values()))
+
+    # Hanging strands (hand +- hang_half_width across the heading) vs the anchor's
+    # head, on the legs where the loop is below the head top and away from it.
+    heading = target.center - anchor.center
+    heading = heading / float(np.linalg.norm(heading))
+    across = np.array([-heading[1], heading[0]])
+    strands_clear = float("inf")
+    for label, point in path:
+        if label in ("start", "lift_low", "over_anchor", "clear") or point[2] - depth >= anchor.top_z:
+            continue
+        for side in (-1.0, 1.0):
+            offset = point[:2] + side * float(carry_cfg.hang_half_width) * across
+            strands_clear = min(
+                strands_clear, float(np.linalg.norm(offset - anchor.center)) - anchor.head_radius - ring.tube_radius
+            )
+    hands = carry_hand_positions(path, float(physical.hand_above))
+    in_workspace = min(
+        float(np.min(hands[:, 0] - ws_x[0])),
+        float(np.min(ws_x[1] - hands[:, 0])),
+        float(np.min(hands[:, 1] - ws_y[0])),
+        float(np.min(ws_y[1] - hands[:, 1])),
+        float(np.min(ws_z_max - hands[:, 2])),
+    )
+    spawn_in_workspace = min(
+        float(np.min(spawn[:, 0] - ws_x[0])),
+        float(np.min(ws_x[1] - spawn[:, 0])),
+        float(np.min(spawn[:, 1] - ws_y[0])),
+        float(np.min(ws_y[1] - spawn[:, 1])),
+    )
+    hang_bottom_z = float(layout.hang_bottom_z)
+    ge = [
+        ("loop_clears_post", ring.loop_radius - (anchor.radius + ring.tube_radius + d_hat), 0.0),
+        (
+            "spawn_clears_target",
+            float(np.min(xy_distance_to_post(spawn, target))) - target.head_radius - ring.tube_radius,
+            TARGET_SPAWN_CLEARANCE,
+        ),
+        ("head_overhang", anchor.head_radius - anchor.radius, 2.0 * ring.tube_radius),
+        ("pinch_on_straight", straight_length(ring) - float(layout.pinch_along), 0.0),
+        ("palm_clears_heads_at_grasp", palm_gap(pinch[:2], ring.tube_radius + float(cfg.grasp.pinch_lift)), 0.0),
+        ("palm_clears_heads_over_anchor", palm_gap(by_label["over_anchor"][:2], by_label["over_anchor"][2]), 0.0),
+        ("palm_clears_heads_at_drop", palm_gap(by_label["lower"][:2], by_label["lower"][2]), 0.0),
+        ("fingertips_over_anchor_head", by_label["over_anchor"][2] - anchor.top_z, 0.0),
+        ("lift_low_below_hang", depth - by_label["lift_low"][2], 0.0),
+        ("hang_bottom_on_shaft", min(hang_bottom_z - base_height, target.height - hang_bottom_z), SHAFT_MARGIN),
+        ("u_width_fits_target", 2.0 * float(carry_cfg.hang_half_width) - min_strand_separation(target, ring, d_hat), 0.0),
+        ("hanging_strands_clear_anchor_head", strands_clear, 0.0),
+        ("carry_in_workspace", in_workspace, WORKSPACE_MARGIN),
+        ("spawn_in_workspace", spawn_in_workspace, WORKSPACE_MARGIN),
+    ]
+    rows = [(name, float(value), float(limit), bool(value >= limit - 1e-9)) for name, value, limit in ge]
+    base_xy = np.asarray([float(v) for v in cfg.reach.base_xy], dtype=float)
+    reach = float(np.max(np.linalg.norm(hands[:, :2] - base_xy[None, :], axis=1)))
+    max_reach = float(cfg.reach.max_hand_dist)
+    rows.append(("hand_reach", reach, max_reach, bool(reach <= max_reach + 1e-9)))
+    return rows
+
+
 __all__ = [
+    "DROP_PALM_MARGIN",
+    "HANG_BOTTOM_ABOVE_BASE",
+    "LIFT_LOW_ABOVE_HEAD",
+    "PINCH_HEAD_GAP",
     "PostSpec",
     "RingSpec",
+    "carry_hand_positions",
+    "carry_heights",
     "carry_height_floor",
     "carry_path",
     "hang_depth",
@@ -581,21 +836,32 @@ __all__ = [
     "far_cap_point",
     "hook_points",
     "landing_point",
+    "long_axis_from_heading",
     "loop_perimeter",
     "loop_reach",
+    "mid_x_window",
+    "mid_y_window",
     "min_strand_separation",
     "near_cap_point",
+    "other_post",
     "hand_clearance",
+    "pair_centers",
+    "pair_heading",
+    "pinch_along_for",
     "pinch_point",
+    "pinch_side_for",
     "post_axis_segment",
     "posts_from_config",
     "rest_length_around",
     "ring_from_config",
+    "ring_transfer_checks",
     "segment_distance",
     "spawn_centerline",
     "spawn_mesh",
+    "straight_length",
     "strand_segments",
     "strand_separation_at",
     "stretched_length",
+    "value_from_frac",
     "xy_distance_to_post",
 ]

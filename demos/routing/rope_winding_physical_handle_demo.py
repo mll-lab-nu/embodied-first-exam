@@ -66,6 +66,7 @@ from omegaconf import DictConfig, OmegaConf
 from topogym.core import hydra_config_sources, save_resolved_config
 from topogym.data import dataset_writer_or_null
 from topogym.generation import EpisodeResult, build_cable_routing_episode_spec
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning import (
     SLACK_BAND,
     RopeWindingRouteCommand,
@@ -147,6 +148,38 @@ def derive_config(cfg):
         lite = OmegaConf.to_container(cfg.task.rope.lite, resolve=True)
         cfg = OmegaConf.merge(cfg, {"task": {"rope": lite}})
     return cfg
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
+def _variant_line(cfg, layout, spec) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+
+    task = cfg.task
+    # Physical (task-frame) fixture positions through the layout: for a cw
+    # wrap they are the yaml's values mirrored in y.
+    origin = np.asarray(layout.position_to_world(np.zeros(3)), dtype=float)
+    post, anchor, target = (np.asarray(layout.fixture_pos(n), dtype=float) - origin for n in ("POST", "S", "C"))
+    spawn = np.asarray(layout.route_polyline("initial"), dtype=float)
+    plug = spawn[-1] - origin
+    _, plan = plan_rope_winding_route(layout)
+    need, _ = taut_demand(layout, spec, plan.waypoints)
+    length = float(np.sum(np.linalg.norm(np.diff(spawn, axis=0), axis=1)))
+    labels = [str(wp.label) for wp in plan.waypoints]
+    return (
+        f"{task.task.id} variant seed={int(cfg.run.seed)} turns={spec.turns} start_turns={spec.start_turns} "
+        f"direction={spec.direction} sweep_deg={float(task.rope.spawn_arc.sweep_deg):.1f} "
+        f"post_x={post[0]:+.4f} post_y={post[1]:+.4f} "
+        f"s_x={anchor[0]:+.4f} s_y={anchor[1]:+.4f} c_x={target[0]:+.4f} c_y={target[1]:+.4f} "
+        f"climb={float(task.winding.climb_per_turn):.4f} wind_z_start={float(task.winding.wind_z_start):.4f} "
+        f"plug_x={plug[0]:+.4f} plug_y={plug[1]:+.4f} slack={(length - need) / need:.3f} "
+        f"detour={int('to_C_around' in labels)} waypoints={len(labels)}"
+    )
 
 
 def robot_contact_mode(cfg) -> str:
@@ -1127,9 +1160,15 @@ def run_demo(
             reason = f"post_contact_safety_abort: phase={label} surface_gap={gap:.4f}"
             print(f"rope_winding_physical_handle_demo safety_abort reason={reason}", flush=True)
             return reason
-        if nodes_touching > int(physical.safety_max_contact_nodes):
+        fraction = float(getattr(physical, "safety_max_contact_fraction", 0.0))
+        node_limit = max(
+            int(physical.safety_max_contact_nodes),
+            int(fraction * int(status.get("rope_node_count", 0))),
+        )
+        if nodes_touching > node_limit:
             reason = (
-                f"post_contact_safety_abort: phase={label} contact_nodes={nodes_touching}"
+                f"post_contact_safety_abort: phase={label} contact_nodes={nodes_touching} "
+                f"limit={node_limit}"
             )
             print(f"rope_winding_physical_handle_demo safety_abort reason={reason}", flush=True)
             return reason
@@ -1298,6 +1337,24 @@ def run_demo(
                 )
             )
             status["phase"] = "wind_route"
+            # The divergence guard's baseline. The absolute
+            # `safety_max_contact_nodes` was calibrated on rope_winding as ~88%
+            # of the rope's nodes (two wound wraps peak at 43%); it is a node
+            # count, so it moves with the mesh and with how much rope a task
+            # spawns on the post. rope_unwinding spawns up to three wraps (its
+            # legitimate peak is ~40% of a longer rope, right at 4800), so its
+            # yaml also states the guard as `safety_max_contact_fraction` of
+            # the rope's own node count, which is what "the whole rope piling
+            # onto the post" means.
+            spawn_contact = post_contact(scene, spec)
+            status["rope_node_count"] = int(len(rope_particles(scene)))
+            print(
+                "rope_winding_physical_handle_demo post_contact_baseline "
+                f"contact_nodes={int(spawn_contact['contact_nodes'])} "
+                f"rope_nodes={status['rope_node_count']} "
+                f"surface_gap={float(spawn_contact['surface_gap']):+.4f}",
+                flush=True,
+            )
             if cfg.run.probe:
                 probe = RopeWindingProbe(
                     scene,
@@ -1466,6 +1523,12 @@ def run_from_config(cfg: DictConfig, *, scene_builder=RopeWindingSceneBuilder) -
         raise SystemExit("run.viewer_speedup must be positive.")
     if float(cfg.run.slow_factor) <= 0.0:
         raise SystemExit("run.slow_factor must be positive.")
+    # A seeded variant of the layout (the task yaml's `variation:` block; a
+    # task without one -- rope_winding today -- is left as is).
+    if bool(cfg.run.randomize_layout):
+        cfg = randomize_task_cfg(
+            cfg, str(cfg.task.task.id), int(cfg.run.seed), difficulty=str(cfg.run.difficulty)
+        )
     cfg = derive_config(cfg)
     cfg = apply_recording_camera_overrides(cfg)
     resolved = save_resolved_config(cfg)
@@ -1508,6 +1571,10 @@ def run_from_config(cfg: DictConfig, *, scene_builder=RopeWindingSceneBuilder) -
     scene = scene_builder(
         cfg.env, cfg.task, cfg.robot_control, route_mode="initial"
     ).build(show_viewer=cfg.run.viewer, include_robot=True)
+    if bool(cfg.run.randomize_layout):
+        print(_variant_line(cfg, scene.layout, spec), flush=True)
+    if hasattr(scene.layout, "checks"):
+        print(f"{cfg.task.task.id} checks " + _checks_line(scene.layout), flush=True)
     route_command, episode_plan = plan_rope_winding_route(
         scene.layout,
         # The emitted wrist yaw is an offset from the pose the plug is grasped

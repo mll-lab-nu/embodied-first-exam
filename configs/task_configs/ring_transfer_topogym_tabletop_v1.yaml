@@ -3,11 +3,14 @@
 #
 # 场景：底板上两根工业走线柱（与 cable_routing / rope_winding 同一 prefab：柱身 +
 # 喇叭底座 + 顶盖），一条闭合弹性环（FEM+IPC 周期管，topogym/world/closed_band.py）
-# 平铺在桌面、套在柱 A 上、长轴背离柱 B。终态：环套在柱 B 上、不再围住 A。
+# 平铺在桌面、套在出生柱上、长轴背离另一根柱。终态：环套在另一根柱上、不再围住出生柱。
 # linking signature (A:1, B:0) -> (A:0, B:1)，中间两次越过柱顶：B 顶落套、A 顶提离。
 #
-# 变体轴预留（2026-08-24 决定）：posts 是列表、ring.enclosure / goal.enclosure 是子集，
-# 判定器输出每柱绕数；本轮只实现 |enclosure| = 1 的出生形与 A->B 这一条序列。
+# 变体（2026-09-04，variation_axes_plain_zh.md §6.2 第 10 步）：两根柱由 `pair`
+# （中点、柱距、朝向）派生，`post_shape` 是两柱共用的尺寸，`ring.on_post` 是出生柱、
+# `goal.on_post` 派生为另一根。环长轴、捏取侧 / 捏取点、三个搬运高度全部由 Layout 按柱
+# 推导（`_ring_transfer_geometry.py` 顶部的常量），yaml 不再写这些数。2026-08-24
+# 预留的「多柱出生形（enclosure 子集）」放弃：抽样叶子必须是标量。
 #
 # 单夹爪能不能把柱 B 套进环，取决于「拉伸梯形」（_ring_transfer_geometry.py 模块文档）：
 # 环被拉紧后在 A 处收拢到 2(r_post + r_tube) = 0.028 宽，远端由**张开的两指钩住**
@@ -28,43 +31,57 @@ board:
   size: ${common.manipulation_space.board.size}
   color: [0.92, 0.92, 0.94]
 
-# 立柱列表。每项 name / pos(xy, task 系) / radius / height。
+# 柱对。两柱中心 = 中点 ± 柱距/2 · (cos heading, sin heading)。下面 posts.A/B 的 x/y 是
+# 由此派生的位置（随机化时 derive_task_cfg 写回；固定布局下两处必须一致，Layout 断言）。
 #
 # 2026-08-25 第二版（用户看过 demo 后：环再小、柱距再远、柱子更拟真、整体放大）。
 # 默认 oracle 是 carry（搬运套索），它不拉伸、与柱距无关，所以下面的取值不再受
 # transfer 拉伸梯形的约束；transfer 在这组几何下不可用（离线门只报告，不拦截）。
 #
-# 半径 0.016、高 0.100（挡头顶 0.108）：工业走线柱的比例。carry 要把整环抬到挡头顶以上：
-#   指尖 = 0.108 + 0.004 + 0.008 + 悬挂深度 0.140（实测）= 0.260，手 0.363 <= 工作区 0.40。
-# 挡头 head_radius 0.026 / head_height 0.008：**碰撞体**（外伸 0.010 >= 管径 0.008）。
-#   2026-08-24 实测无挡头时环被拔滑越顶；gateway = 挡头顶。
-# 底座 base_radius 0.030 / base_height 0.016：本任务不复用 prefab 的 0.016/0.010——
-#   柱更粗，底座按比例放大，视觉上像螺栓固定的走线柱脚。
 # 柱距 0.220（A -0.100、B +0.120）：远端帽在 A.x - 出生伸出量 0.104 = -0.204 >= -0.25+0.02；
 #   推过 B 后的手位 0.180 <= 0.25 - 0.02。
-# 颜色：深灰金属色柱身、黑色挡头与底座——去掉第一版的橙/蓝。
+pair:
+  # 中点。随机化时由 mid_x_frac / mid_y_frac 在派生窗口里取：窗口 = mid_*_range 与「carry 全部
+  # 手位 + 出生环都在 workspace 内（余量 0.020）」以及「手位到底座 <= reach.max_hand_dist」的交集
+  # （x 在 y 定下后按可达圆解）。基准 (0.010, 0)：spacing 0.22 时推过 B 的手位 x = 0.200，可达 0.770。
+  mid_x: 0.010
+  mid_y: 0.000
+  mid_x_range: [-0.020, 0.040]
+  mid_y_range: [-0.030, 0.030]
+  mid_x_frac: 0.5
+  mid_y_frac: 0.5
+  # 柱距（两柱中心距）。
+  spacing: 0.220
+  # A→B 相对 +x 的角（度）。环长轴 = (sin, -cos)：0° 时 [0, -1]，整环在两柱连线的 -y 一侧。
+  heading_deg: 0.0
+
+# 两柱共用的尺寸。
+# 半径 0.016、高 0.100（挡头顶 0.108）：工业走线柱的比例。carry 要把整环抬到挡头顶以上：
+#   指尖 = 0.108 + 0.004 + 0.008 + 悬挂深度 0.140（实测）= 0.260，手 0.363 <= 工作区 0.40。
+# 挡头 head_overhang 0.010（head_radius = radius + 0.010 = 0.026）/ head_height 0.008：**碰撞体**
+#   （外伸 0.010 >= 管径 0.008）。2026-08-24 实测无挡头时环被拔滑越顶；gateway = 挡头顶。
+# 底座 base_radius 0.030 / base_height 0.016：本任务不复用 prefab 的 0.016/0.010——
+#   柱更粗，底座按比例放大，视觉上像螺栓固定的走线柱脚。
 # 底座与柱身刻意互嵌（同 cable_routing 走线柱），因此 rope.fem.sanity_check_enable=false。
+post_shape:
+  radius: 0.016
+  height: 0.100
+  head_overhang: 0.010
+  head_height: 0.008
+  base_radius: 0.030
+  base_height: 0.016
+  post_radial_segments: 32
+
+# 两根柱：位置（由 pair 派生）与颜色。深灰金属色柱身、黑色挡头与底座——去掉第一版的橙/蓝。
 posts:
-  - name: A
-    pos: [-0.100, 0.000]
-    radius: 0.016
-    height: 0.100
-    head_radius: 0.026
-    head_height: 0.008
-    base_radius: 0.030
-    base_height: 0.016
-    post_radial_segments: 32
+  A:
+    x: -0.100
+    y: 0.000
     color: [0.42, 0.43, 0.45]
     trim_color: [0.10, 0.10, 0.11]
-  - name: B
-    pos: [0.120, 0.000]
-    radius: 0.016
-    height: 0.100
-    head_radius: 0.026
-    head_height: 0.008
-    base_radius: 0.030
-    base_height: 0.016
-    post_radial_segments: 32
+  B:
+    x: 0.120
+    y: 0.000
     color: [0.42, 0.43, 0.45]
     trim_color: [0.10, 0.10, 0.11]
 
@@ -73,39 +90,43 @@ posts:
 # （2026-08-24 观察到的开局「向上跳一下」）。
 ring:
   # 周长 0.46（0.53 → 0.40 → 0.36 → 0.46；2026-08-25 为避免机械臂穿模加长）：
-  #   - 出生跑道形从 A 心沿 -y 伸出 (0.46 - 2 pi 0.050)/2 + 0.050 = 0.123，直段长 0.073，
-  #     捏取点要落在直段上且离 A 足够远（见 carry.pinch_along）；
+  #   - 出生跑道形从出生柱心沿长轴伸出 (0.46 - 2 pi 0.050)/2 + 0.050 = 0.123，直段长 0.073，
+  #     捏取点要落在直段上且离柱足够远（Layout 的 pinch_along 规则）；
   #   - 悬挂深度：周长 0.36 时实测 0.136，按 (周长 - 0.04) 比例外推 0.19（carry.hang_depth，
   #     实测后改）；抬离指尖 0.093 + 0.004 + 0.008 + 0.19 = 0.295，手 0.398 <= 工作区 0.40；
-  #   - 围住 B 后松环伸出 0.123，落向 -y 一侧（放下位在 B 远侧，环从那里垂落），不碰 A。
+  #   - 围住 B 后松环伸出 0.123，落向长轴一侧（放下位在 B 远侧，环从那里垂落），不碰 A。
+  # 周长变了要重测 hang_depth，所以不作变体轴。
   perimeter: 0.46
-  # 半环宽 0.050（环宽 0.100，接近圆）：transfer 的钩持要帽比 0.070 宽；carry 的捏取点是近帽顶点，
-  #   离 A 心 0.050、离挡头边 0.024，合拢手指半宽 0.012 → 余量 12mm（离线门检查）。
-  #   下限另有 loop_radius >= r_post + r_tube + d_hat = 0.022。
+  # 半环宽 0.050（环宽 0.100，接近圆）：transfer 的钩持要帽比 0.070 宽；carry 的捏取点在直段上，
+  #   离柱心 0.050、离挡头边 0.024，合拢手指半宽 0.012 → 余量 12mm（checks 行 palm_clears_heads_at_grasp）。
+  #   下限另有 loop_radius >= r_post + r_tube + d_hat（柱半径 0.022 时 0.028；checks 行 loop_clears_post）。
   loop_radius: 0.050
-  # 环从出生柱伸出的方向（xy，单位化）。取 -y：整环都在两柱连线之外，捏取点、手掌、
-  # 悬挂的环都不在 A、B 之间（2026-08-25 用户原则：夹爪与机械臂不得穿模、不在两柱间抓）。
-  # 朝 B 伸会与 B 相交；背离 B 时捏取点只能在帽上，手掌会罩到 A。
-  long_axis: [0.0, -1.0]
-  # 初态围住的柱子集。本轮只支持单元素（多柱出生形是预留变体）。
-  enclosure: [A]
+  # 环出生时套在哪根柱上（防捷径指令轴：两柱外观相同，策略必须读指令）。长轴方向不配置：
+  # Layout 取垂直于柱对、朝 -y 一侧（heading 0° 时 [0, -1]），整环都在两柱连线之外，捏取点、
+  # 手掌、悬挂的环都不在两柱之间（2026-08-25 用户原则：夹爪与机械臂不得穿模、不在两柱间抓）。
+  on_post: A
   color: [0.12, 0.12, 0.13]
 
-# 目标。instruction 本轮固定一句；enclosure 与 ring.enclosure 的差集推出跨越序列
-# [(B, on), (A, off)]。
+# 目标：环搬到哪根柱。随机化时 derive_task_cfg 把 on_post 写成 ring.on_post 的另一根；固定布局下
+# 两处要成对（Layout 断言）。跨越序列由 layout.crossings() 推出。instruction 是模板，{start} / {goal}
+# 由 Layout.instruction() 填柱名——派生只写标量叶子：带空格的句子进不了角点 sweep 的 Hydra 覆盖
+# （09-05 首跑四个 B 出发的角点全在 `Error parsing override 'the'` 上退出）。
 goal:
-  enclosure: [B]
-  instruction: "Move the elastic loop from post A onto post B."
+  on_post: B
+  instruction: "Move the elastic loop from post {start} onto post {goal}."
 
 rope:
   model: fem_ipc_tube
-  radius: ${prefabs.rope_pbd.radius}
+  # prefabs.rope_pbd.radius 的字面量副本（checks() 读；角点门裸加载本文件时 ${prefabs} 解析不了）。
+  # builder 断言与 prefab 相等。
+  radius: 0.004
   fem:
     E: ${prefabs.rope_fem.E}
     nu: ${prefabs.rope_fem.nu}
     rho: ${prefabs.rope_fem.rho}
     friction_mu: ${prefabs.rope_fem.friction_mu}
-    contact_d_hat: ${prefabs.rope_fem.contact_d_hat}
+    # prefabs.rope_fem.contact_d_hat 的字面量副本（同 rope.radius）。
+    contact_d_hat: 0.002
     follow_strength: ${prefabs.rope_fem.follow_strength}
     # 闭合环上 straight 不可用：rest_shape_straight 沿开放折线量弧长，接缝两侧顶点
     # 落到直杆两端、四面体翻转，整条声明被丢弃后静默退回 spawn（closed_band_spike 实测）。
@@ -224,27 +245,25 @@ carry:
   # 悬挂环底部 U 的半宽（离线门用它查悬着的绳股是否碰 A 挡头）。推导 0.04，带臂实测
   # u_width 106~130 mm → 半宽取 0.065。
   hang_half_width: 0.065
-  # 捏取点：在出生柱的哪条直段上、离柱心多远（沿长轴）。side 是 across 方向的正负
-  # （long_axis [0,-1] 时 across = +x，-1 = 远离 B 的那条直段）。along 0.070 让手掌盒体
-  # （半厚 0.030）离 A 挡头边 (0.026) 有 14mm；直段总长 0.073，再远就上了远端帽。
-  pinch_along: 0.070
-  pinch_side: -1.0
+  # 捏取点不配置（Layout 推导）：捏远离目标柱的那条直段（pinch_side），沿长轴离柱心
+  # head_radius + hand_half_thickness + PINCH_HEAD_GAP 0.014（基准 0.026 + 0.030 + 0.014 = 0.070，
+  # 手掌盒体离挡头边 14mm），封顶直段长 0.073（再远就上了远端帽）。
   # 抬离 A 时环底部 U 高出 A 挡头顶的余量。环与 A 是链环关系，只能从挡头顶上方脱离——
   # 2026-08-25 实测只抬钩点到 0.235（底部 0.04）时环仍挂在 A 柱身上。
   # 指尖高度 = 0.108 + r_tube 0.004 + 0.008 + hang_depth 0.140 = 0.260，手 0.363 <= 工作区 0.40。
   clear_margin: 0.008
-  # 推向 B 时环底部 U 离桌面的高度。悬挂深度实测在 140~155 mm 之间浮动，U 底要留出
-  # ±15 mm 仍打在柱身上：0.040 离底座锥顶 0.016 有 24 mm、离挡头下沿 0.100 有 60 mm。
-  hang_bottom_z: 0.040
+  # 推向 B 时环底部 U 离桌面的高度不配置（Layout 推导）：base_height + HANG_BOTTOM_ABOVE_BASE 0.024
+  # = 0.040。悬挂深度实测在 140~155 mm 之间浮动，U 底要留出 ±15 mm 仍打在柱身上：0.040 离底座
+  # 锥顶 0.016 有 24 mm、离挡头下沿 0.100 有 60 mm（checks 行 hang_bottom_on_shaft，柱高 0.085 时 45 mm）。
   # 抬离 A 的方式（2026-08-25 inspect_lift 实测后定）：从捏取点**侧向**竖直抬起会把环勒在 A
   # 柱身上、A 远侧的绳段沿柱身爬到挡头下沿（near_A_max_z 106mm，挡头 100~108）并卡住，环被
   # 拉长 56%、臂被拖偏 142mm。环与 A 是链环关系，只能从 A **正上方**竖直提起：先抬一点
   # （lift_low_z，环其余部分留在桌上、无张力），水平移到 A 轴上方并朝远离捏取点那侧多走
   # unhook_past，再竖直抬到 clear 高度，底部 U（实测 106~130mm 宽）从挡头（直径 52mm）上方
   # 越过。
-  # lift_low_z 取 0.120：手指要从 A 挡头顶（0.108）上方经过（指尖 +12mm，手掌底 0.197）；
-  # 悬挂深度 0.140 > 0.120，环底部仍在桌上，抬这么高也不产生张力。
-  lift_low_z: 0.120
+  # lift_low_z 不配置（Layout 推导）：挡头顶 + LIFT_LOW_ABOVE_HEAD 0.012 = 0.120，手指从 A 挡头顶
+  # （0.108）上方经过（手掌底 0.197）；悬挂深度 0.140 > 0.120，环底部仍在桌上，抬这么高也不产生
+  # 张力（checks 行 lift_low_below_hang；柱高 0.115 时 0.135，余量 5 mm，是柱高轴的上界来源）。
   unhook_past: 0.020
   # 反应式抬离（用户 2026-08-25 提议）：lift_low 之后每步读环的拉伸比与最低点——
   #   拉伸比 > stretch_max → 朝 A 轴心方向水平走 step_xy（最多走到 A + unhook_past）；
@@ -266,11 +285,12 @@ carry:
   # 推之前停在 B 近侧柱面前多远，再沿 A->B 方向直推。
   approach_before: 0.050
   # 推过 B 轴多远再放低。要让 U 已经绕到柱子两侧、手在远侧；同时手掌盒体（沿 x 半长 0.10）
-  # 放低时不能罩到 B 挡头 —— 放下位的手掌底面 0.040 + 0.077 = 0.117 > 挡头顶 0.093，
-  # 离线门 hand_clearance 检查。
+  # 放低时不能罩到 B 挡头 —— 放下位的手掌底面 0.040 + 0.077 = 0.117 > 挡头顶 0.108，
+  # checks 行 palm_clears_heads_at_drop。
   push_past: 0.080
-  # 放低到的指尖高度（环从这里落到桌面后松手）。0.020 时手掌底面 0.097 只比挡头顶高 4mm。
-  drop_z: 0.040
+  # 放低到的指尖高度不配置（Layout 推导）：max(hang_bottom_z, 挡头顶 + DROP_PALM_MARGIN 0.009 −
+  # palm_bottom_above_tip 0.077)，基准 max(0.040, 0.040) = 0.040；柱高 0.115 时 0.056，手掌底面仍高出
+  # 挡头顶 9 mm。0.020 时手掌底面 0.097 只比挡头顶高 4mm（2026-08-25 实测）。
 
 # 机械臂执行参数（demo 用；spike 不带臂，不读这一块）。
 physical:
@@ -324,3 +344,47 @@ success:
   settle_tol: 0.0001
   # 只记录不判定
   max_stretch_ratio: null
+
+# 底座位置同 rope_unwinding / gate / unlink_c_ring / bar 的 reach 段。基准布局推过 B 的手位离底座
+# 0.770（08-26 带臂跑通），0.780 沿用 rope_unwinding 的假设，待 GPU 角点实测；它是 pair.mid_x
+# 派生窗口的主要边界（柱距 0.22 朝向 0° 时上限 0.019，柱距 0.28 时 −0.011）。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_hand_dist: 0.780
+
+# manipulation_space.workspace 的字面量副本（checks() 的 carry_in_workspace / spawn_in_workspace 行读；
+# 角点门裸加载本文件时读不到 common 配置）。builder 断言与 common 相等。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
+  z: [0.03, 0.40]
+
+# ---------------------------------------------------------------- 变体
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。
+# 角点门：7 条连续轴 × 2 根出生柱 → 256 个角点（tests/check_variant_corners.py）。
+# 离线探针（2026-09-04，scratch）：256 角点全部可行，最紧的行是 lift_low_below_hang（柱高 0.115：
+# 5 mm）、carry_in_workspace（柱高 0.115 的 clear 手位 0.378：余量 2 mm）、palm_clears_heads_at_grasp
+# （柱半径 0.022 + 挡头外伸 0.014：5.6 mm）；hand_reach 与 pinch_on_straight 在窗口边界上恰好为 0。
+variation:
+  # 防捷径指令轴：环出生在哪根柱。goal.on_post 与 instruction 派生。
+  - {kind: choice, path: ring.on_post, values: [A, B]}
+  # 单调裕度轴（难度候选）：柱高。上界由 lift_low_below_hang 定（挡头顶 + 0.012 < hang_depth 0.140）。
+  - {kind: uniform, path: post_shape.height, lo: 0.085, hi: 0.115}
+  # 布局：柱身半径。上界：U 底撑开量 2(r + 2 r_tube + d_hat) = 0.064 <= 实测 U 宽 0.130（u_width_fits_target）。
+  - {kind: uniform, path: post_shape.radius, lo: 0.013, hi: 0.022}
+  # 布局：挡头比柱身大多少。下界 = 管径 0.008（head_overhang 行）；上界受捏取点与挡头净空限制
+  # （pinch_along 封顶直段长后 palm_clears_heads_at_grasp 收到 5.6 mm）。
+  - {kind: uniform, path: post_shape.head_overhang, lo: 0.008, hi: 0.014}
+  # 布局：柱距。下界：悬挂股避开 A 挡头、手掌与两挡头净空；上界：工作区与可达（mid 窗口收窄到 3 cm）。
+  - {kind: uniform, path: pair.spacing, lo: 0.180, hi: 0.280}
+  # 布局：柱对朝向（A→B 相对 +x），环长轴随之转。
+  - {kind: uniform, path: pair.heading_deg, lo: -30.0, hi: 30.0}
+  # 归一化：柱对中点。窗口随柱距 / 朝向 / 可达变，抽 [0,1] 再派生，构造式满足、不靠拒绝。
+  - {kind: uniform, path: pair.mid_x_frac, lo: 0.0, hi: 1.0}
+  - {kind: uniform, path: pair.mid_y_frac, lo: 0.0, hi: 1.0}
+  # 派生：goal.on_post / instruction → mid_y（窗口）→ mid_x（窗口，含可达圆）→ posts.A/B.x,y。
+  - {kind: derived, fn: "topogym.tasks.routing.ring_transfer:derive_task_cfg"}
+  # 校验：RingTransferLayout.checks() 十五行（环净空、出生环避开目标柱、挡头外伸、捏取点在直段上、
+  #       手掌在抓取 / 越柱 / 放下位避开挡头、指尖高于挡头、lift_low 低于悬挂深度、U 底在柱身上、
+  #       U 宽够套柱、悬挂股避开 A 挡头、手位与出生环在工作区内、可达）。
+  - {kind: validate, fn: "topogym.tasks.routing.ring_transfer:validate_task_cfg"}

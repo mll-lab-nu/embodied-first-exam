@@ -16,6 +16,7 @@ chosen), the motion from `primitives/cloth_link_attach_drag.py`, the verdict fro
     python -B -m demos.deformation.cloth_unpleat_physical_demo
     python -B -m demos.deformation.cloth_unpleat_physical_demo run.viewer=true
     python -B -m demos.deformation.cloth_unpleat_physical_demo run.motion=shove
+    python -B -m demos.deformation.cloth_unpleat_physical_demo run.randomize_layout=true run.seed=3
     python -B -m demos.deformation.cloth_unpleat_physical_demo \\
         recording=hq recording.camera=[oblique,front,wrist]
 """
@@ -31,6 +32,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning.cloth_unpleat_planner import plan_cloth_unpleat
 from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
@@ -46,9 +48,38 @@ from topogym.utils import (
 from topogym.verification import ClothUnpleatEvaluator
 from topogym.verification.cloth_unpleat_verifier import simulated_grid_pairs
 
+TASK_ID = "cloth_unpleat"
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+
+    task = cfg.task
+    marks = layout.landmarks()
+    grasp = layout.design_grasp_point()
+    end = grasp + layout.pull_direction() * layout.pull_distance()
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} width={float(task.cloth.pleat.width):.4f} "
+        f"crest={float(task.cloth.pleat.crest_height):.4f} center_x={float(task.cloth.center_x):+.4f} "
+        f"center_y={float(task.cloth.center_y):+.4f} inset={float(task.grasp.edge_inset):.4f} "
+        f"pull_scale={float(task.physical.pull_scale):.3f} side={layout.pull_sign:+.0f} "
+        f"stored_mm={marks['stored'] * 1e3:.1f} pull_mm={layout.pull_distance() * 1e3:.1f} "
+        f"grasp_y={grasp[1]:+.4f} end_y={end[1]:+.4f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="cloth_unpleat")
 def main(cfg: DictConfig) -> None:
+    # A seeded variant of the layout (the task yaml's `variation:` block).
+    if bool(cfg.run.randomize_layout):
+        cfg = randomize_task_cfg(cfg, TASK_ID, int(cfg.run.seed), difficulty=str(cfg.run.difficulty))
     cfg = apply_recording_camera_overrides(cfg)
     resolved = save_resolved_config(cfg)
     if resolved is not None:
@@ -75,6 +106,9 @@ def main(cfg: DictConfig) -> None:
         show_viewer=cfg.run.viewer
     )
     layout = band.layout
+    if bool(cfg.run.randomize_layout):
+        print(_variant_line(cfg, layout), flush=True)
+    print(f"{TASK_ID} checks {_checks_line(layout)}", flush=True)
     # Built once and used twice: the start-state guard reads the same measures the
     # end-state verdict does, so "still a pleat" and "unpleated" are the same
     # arithmetic on two different moments rather than two definitions.

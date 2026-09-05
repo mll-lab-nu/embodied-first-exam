@@ -22,3 +22,13 @@ overpull_scale: 1.6
 # 这是录制上的事不是任务定义，所以在 run 而不在 task —— 松手后的物理沉降是
 # task.physical.release_hold_steps，两者管的不是一回事。
 final_hold_steps: 100
+
+# --- 变体（2026-09-05）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）：
+#   run.randomize_layout=true run.seed=3
+# 默认关 = 确定性布局。demo 建场景后打印 `cloth_unpleat variant seed=…` 与 `cloth_unpleat checks …` 两行。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志的变体标识（角点 sweep 用 corner_<id>）。
+variant_id: default

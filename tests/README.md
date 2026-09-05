@@ -24,8 +24,9 @@ python tests/check_ring_transfer_geometry.py  # 需要项目 venv；docx 2.6 两
 python tests/check_c_ring_clearance.py        # 只用 numpy + PyYAML；量 docx 3.4 两个环的净空 + 变体包络 32 角点
 python tests/check_gateway_slide_path.py      # 只用 numpy + PyYAML；抽出原语的滑动路径
 python tests/check_variant_rng.py             # 只用 numpy；每 episode 种子 → 按名字派生的随机流是否确定、独立、有黄金值
-python tests/check_variant_corners.py         # 需要项目 venv；六个任务变体包络的全部角点：派生、校验、各判据余量、Hydra 覆盖路径复现
+python tests/check_variant_corners.py         # 需要项目 venv；十个任务变体包络的全部角点：派生、校验、各判据余量、Hydra 覆盖路径复现
 python tests/check_bar_through_hole_geometry.py  # 需要项目 venv；docx 2.3 派生高度与托座位置还原手写基准、横推窗口、最坏角点
+python tests/check_cloth_unpleat_geometry.py  # 只用 numpy + PyYAML；docx 1.2 判据两侧、材料守恒、轨迹、变体包络 192 角点七行
 ```
 
 | 文件 | 检查什么 |
@@ -37,11 +38,12 @@ python tests/check_bar_through_hole_geometry.py  # 需要项目 venv；docx 2.3 
 | `check_rope_tube_mesh.py` | 喂给 tetgen 的那张绳管皮：两个方向的镶嵌误差（截面弦高 vs 环距按曲率折算的纵向弦高）、表皮自带扭转、最小曲率半径与管半径之比。先用 `run.build_only=true` 生成 OBJ |
 | `check_gateway_slide_path.py` | docx 3.4 抽出原语的对准滑动：环心走完弧之后开口是否真的落到管身方向上，以及弧的分段够不够细（单段弦向内切 3.35mm，超过整个余量；8 段 0.053mm）。带负对照——断言 1 段是不够的，这样以后有人悄悄去掉分段会在这里失败而不是在场景里失败。四个 `hang_yaw_deg` 都测。取代了 `check_gateway_extract_quat.py`：执行路径上已经没有四元数合成 |
 | `check_c_ring_clearance.py` | docx 3.4 的固定环 + C 环：七条布局不等式的余量（含抓取点可达、手在闭合环之外两行）、分段近似的弦高、出生时是否读作互锁（弦闭合后 `Lk=±1`），以及 gateway 轨迹全程无接触而八条非 gateway 轨迹是否全部卡住；再对 yaml `variation:` 块的 32 个角点重做以上四问，两个负例（`gap_azimuth_deg=295` 手净空、`hang_yaw_deg=0` 可达）必须被拒 |
-| `check_ring_transfer_geometry.py` | docx 2.6（`ring_transfer`）的两根走线柱 + 闭合弹性环：环与柱的净空、周期管水密与 `Lk=0`、势垒不越过自表面；拉伸梯形在 B 处的绳股间距（含两个负对照：单点捏住、20mm 柱）；远端帽整条 oracle 路径（平转/抬升/平移/下放）逐样本量绳股线段到 B 轴的距离、平移段全程绷紧、越顶高度下限、工作区与抓取净空 |
+| `check_ring_transfer_geometry.py` | docx 2.6（`ring_transfer`）的两根走线柱 + 闭合弹性环：周期管水密与 `Lk=0`、势垒不越过自表面；carry oracle 的 `RingTransferLayout.checks()` 十五行（环净空、出生环避开目标柱、挡头外伸、捏取点在直段上、手掌在抓取 / 越柱 / 放下位避开挡头、lift_low 低于悬挂深度、U 底在柱身上、U 宽够套柱、悬挂股避开出生柱挡头、手位与出生环在工作区、可达）；transfer 路线只报告（拉伸梯形在 B 处的绳股间距含两个负对照、远端帽路径逐样本量绳股到 B 轴距离、平移段绷紧、越顶高度下限）；变体包络：基准 yaml 还原手写值（A/B 位置、长轴 [0,-1]、捏取侧 −1、pinch_along 0.070、三高度 0.120/0.040/0.040）、朝向 30° 的布局 = 基准绕中点旋转、on_post=B 时跨越序列反转、256 个角点全过并打印各行最紧余量、三个负例（柱高 0.13、柱半径 0.030、柱距 0.28 + 中点 0.040）被拒 |
 | `check_band_untwist_geometry.py` | docx 3.3 的开口绳桌面版（`band_untwist`）：8 字控制线的端距、最小转角半径、交叉处抬高与绳长；开口折线自交叉计数在 8 字／压扁 8 字／直绳／两头相邻的 C 形／两交叉曲线上的读数（C 形专抓闭合计数器的幻影段）；规划器在 oracle / wrong_end 两档各选一端、抬升过弧长、落点等距交叉点且离另一端**与留桌那股整条折线** ≥ place_clearance、与布局的离线重演一致、全部路点在工作区内（鼓包折线把落点推远的合成例）；变体包络：yaml `variation:` 块的 256 个角点（`over_end` 两值 × 7 条 uniform 两端，`end_gap` 由 `end_frac` 派生）八行 `figure_eight_checks` 全过、恰一个交叉且实测 over 端 = spec、镜像格两绳头位置不变；负例：开口叶太小时 `end_gap` 区间闭合、交叉点推到工作区边缘时 footprint 拒、`place_clearance` 0.30 时落点扫描抛错且该行判负 |
+| `check_cloth_unpleat_geometry.py` | docx 1.2 的褶皱布带（`cloth_unpleat`）：在合成布上跑真实判定器——铺平过两条门、压塌（也是真实起始态）被层数与材料守恒一起挡住、拉过头两门都过而只有 `band_shift` 分得出；剖面算术（存料 = 全长 − 俯视跨度）；轨迹（拉距 = 存料 × pull_scale、贴桌不侧偏、shove / overpull 名副其实）；条纹与折痕垂直的两个约定；**变体包络**（2026-09-05）：七行 `cloth_unpleat_checks` 基准全过、两个派生还原基准、镜像布局（`pull_side` −1）七行相等且抓取点 / 终点 y 取反、192 角点全过并打印最紧行、三个负例（褶宽 0.040 内缩窗口为空、最远布局纵向 +0.030 被可达行拒、顶缘 3 mm 被拒） |
 | `check_bar_through_hole_geometry.py` | docx 2.3 的杆穿孔：2026-09-04 起四个搬运高度与三个托座 x 由 `BarThroughHoleLayout` 推导，本测试钉住推导在基准 yaml 上还原手写值（grasp / lift / seat 1 mm 内，insert 由 0.193 改到横推窗口中点 0.192）与托座 −0.070 / 0.020 / 0.200；横推窗口在 `across_flats` 0.029 / 0.032 / 0.038 三点为 4.88 / 7.88 / 13.88 mm；最坏角点（杆最靠面板、面板最靠杆）杆长区间收到 [0.170, 0.190]、抓取偏移收到 [0.060, 0.070] 且九行 `checks()` 全过 |
 | `check_variant_rng.py` | `topogym/generation/variant_rng.py`：同种子同名字的流在两次调用、两个实例、先抽别的名字之后都逐数相等；不同名字、不同种子不相等；`retry=k` 各自独立；`tier(3)` = seed % 3；黄金值（seed 0、名字 `golden` 的首个均匀数）钉住派生规则，改规则不升 `VARIANT_RNG_VERSION` 在这里失败。另回归 `randomize_task_cfg`（4 个已注册任务：确定、种子敏感、输入不变、未注册原样返回、cable_routing 抖动在 ±0.010 内且等于该叶子命名流的直接抽样）与 `sample_braid_word`（传 seed 与传 `braid/word` 流结果相同） |
-| `check_variant_corners.py` | 变体包络的边界值测试（linkbar / diverter / gate_cage_ball / band_untwist / unlink_c_ring / bar_through_hole）：从 yaml `variation:` 块自动构造角点——连续轴取两端点、离散轴取全部取值、`spaced_pair` 用脚本里的命名对，做全组合（20 / 256 / 64 / 256 / 32 / 64 个）；每个角点过任务自己的 `derived` / `validate` 钩子并打印各判据余量，再按 GPU 脚本的方式经 Hydra compose（`run.randomize_layout=false` + `task.*` 覆盖）复现同样读数。`--manifest` 输出角点清单给 `bash_scripts/tests/variant_corners_sweep.sh`。只在测试里用：不碰 `randomize_task_cfg`，seed→变体映射不变 |
+| `check_variant_corners.py` | 变体包络的边界值测试（linkbar / diverter / gate_cage_ball / band_untwist / unlink_c_ring / bar_through_hole / rope_unwinding / ring_transfer / rope_winding / cloth_unpleat）：从 yaml `variation:` 块自动构造角点——连续轴取两端点、离散轴取全部取值、`spaced_pair` 用脚本里的命名对，做全组合（20 / 256 / 64 / 256 / 32 / 64 / 1536 / 256 / 1536 / 192 个）；每个角点过任务自己的 `derived` / `validate` 钩子并打印各判据余量，再按 GPU 脚本的方式经 Hydra compose（`run.randomize_layout=false` + `task.*` 覆盖）复现同样读数。`--manifest` 输出角点清单给 `bash_scripts/tests/variant_corners_sweep.sh`。只在测试里用：不碰 `randomize_task_cfg`，seed→变体映射不变 |
 | `check_closed_band_mesh.py` | docx 3.3 的闭合弹性带（Phase 0，**已废弃路线**，保留作证据）：周期扫掠是否水密且两向镶嵌相当、接缝闭合后的自链数 `Lk` 是否为 0（`Lk=±1` 的带永远翻不平）、出生自接触间隙是否够势垒、以及自交叉计数在 O 形／8 字／反向翻转／压扁 8 字四种解析折线上的读数 |
 
 前两个覆盖不到的部分写在各自的 docstring 里：带默认值的 `getattr` 动态访问、迁移时值

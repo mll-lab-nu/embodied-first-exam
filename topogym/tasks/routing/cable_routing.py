@@ -9,7 +9,13 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
-from topogym.planning import arc_route_points, helix_route_points
+from topogym.planning import (
+    arc_route_points,
+    helix_route_points,
+    lead_in_route_point,
+    plug_spawn_point,
+    tail_arc_route_points,
+)
 from topogym.world.rope import (
     RopeEndpointHandle,
     RopeMesh,
@@ -125,7 +131,13 @@ class CableRoutingLayout:
 
     def fixture_pos(self, name: str, *, z: float | None = None) -> np.ndarray:
         fixture = self.cfg.fixtures[str(name)]
-        pos = np.asarray(_list(fixture.pos), dtype=float)
+        # `pos: [x, y, z]`, or three scalar keys `x / y / z` for a fixture whose
+        # position is a variation axis (the randomizer addresses leaves by
+        # dotted path and cannot index a list; rope_unwinding).
+        if "pos" in fixture:
+            pos = np.asarray(_list(fixture.pos), dtype=float)
+        else:
+            pos = np.array([float(fixture.x), float(fixture.y), float(fixture.z)], dtype=float)
         if z is not None:
             pos[2] = float(z)
         return self.position_to_world(pos)
@@ -140,6 +152,20 @@ class CableRoutingLayout:
         point = _list(point_spec)
         if isinstance(point, str):
             return self.fixture_pos(point, z=float(self.cfg.rope.z))
+
+        if "plug_spawn_from" in point:
+            # rope_winding's plug spawn point as a rule of the post and the
+            # anchor (`planning/waypoint.py::plug_spawn_point`); the numbers
+            # live in `rope.spawn_arc` next to the arc's sweep.
+            arc = self.cfg.rope.spawn_arc
+            return plug_spawn_point(
+                self.fixture_pos(str(point.get("anchor", "S")), z=0.0),
+                self.fixture_pos(str(point["plug_spawn_from"]), z=0.0),
+                float(arc.plug_distance),
+                np.radians(float(arc.plug_bearing_deg)),
+                np.radians(float(arc.anchor_lead_deg)),
+                self.world_z(float(self.cfg.rope.z)),
+            )
 
         if "pos" in point:
             pos = np.asarray(_list(point["pos"]), dtype=float)
@@ -198,11 +224,17 @@ class CableRoutingLayout:
                         f"route {route_name!r} starts with an `arc_to` point; an arc "
                         "needs a preceding point to bend away from."
                     )
+                # `sweep_deg` defaults to `rope.spawn_arc.sweep_deg` (the leaf
+                # the variation block derives), so the yaml needs no `${...}`
+                # interpolation that a bare load of the task file cannot resolve.
+                sweep_deg = point.get("sweep_deg", None)
+                if sweep_deg is None:
+                    sweep_deg = self.cfg.rope.spawn_arc.sweep_deg
                 points.extend(
                     arc_route_points(
                         points[-1],
                         self.route_point(point["arc_to"]),
-                        np.radians(float(point["sweep_deg"])),
+                        np.radians(float(sweep_deg)),
                         samples=point.get("samples"),
                     )
                 )
@@ -217,21 +249,67 @@ class CableRoutingLayout:
                         f"route {route_name!r} starts with a `helix_around` point; "
                         "a helix needs a preceding point to approach from."
                     )
+                # Turn count, sense, first-wrap height and climb default to the
+                # task's `winding` block (the planner reads the same leaves), so
+                # a variation axis on one of them moves the spawn too.
+                winding = getattr(self.cfg, "winding", None)
                 post = self.cfg.fixtures[str(point["helix_around"])]
                 radius = (
                     float(post.radius)
                     + float(self.cfg.rope.radius)
                     + float(point.get("standoff", 0.002))
                 )
+                turns = point.get("turns", None if winding is None else winding.start_turns)
+                direction = point.get("direction", "ccw" if winding is None else winding.direction)
+                z_start = point.get("z_start", None if winding is None else winding.wind_z_start)
+                climb = point.get("climb", None if winding is None else winding.climb_per_turn)
                 points.extend(
                     helix_route_points(
                         points[-1],
                         self.fixture_pos(str(point["helix_around"]), z=0.0),
                         radius,
-                        float(point["turns"]),
-                        float(point["climb"]),
-                        1.0 if str(point.get("direction", "ccw")).lower() == "ccw" else -1.0,
-                        z_start=self.world_z(float(point["z_start"])),
+                        float(turns),
+                        float(climb),
+                        1.0 if str(direction).lower() == "ccw" else -1.0,
+                        z_start=self.world_z(float(z_start)),
+                    )
+                )
+            elif not isinstance(point, str) and "lead_in_toward" in point:
+                # `lead_in_toward`: `length` metres from the previous point
+                # straight toward a fixture, at the rope's board height
+                # (rope_unwinding's level leg after the anchor).
+                if not points:
+                    raise ValueError(
+                        f"route {route_name!r} starts with a `lead_in_toward` point; "
+                        "it needs a preceding point to lead in from."
+                    )
+                points.append(
+                    lead_in_route_point(
+                        points[-1],
+                        self.fixture_pos(str(point["lead_in_toward"]), z=0.0),
+                        float(point["length"]),
+                        self.world_z(float(self.cfg.rope.z)),
+                    )
+                )
+            elif not isinstance(point, str) and "tail_arc" in point:
+                # `tail_arc`: the free tail after a `helix_around`, leaving the
+                # top wrap on its tangent and bending away from the post by
+                # `rope.spawn_arc.sweep_deg` (a magnitude) with a chord of
+                # `rope.spawn_arc.chord`; ends at the plug's spawn point.
+                if not points:
+                    raise ValueError(
+                        f"route {route_name!r} starts with a `tail_arc` point; "
+                        "it needs a helix to leave from."
+                    )
+                winding = self.cfg.winding
+                points.extend(
+                    tail_arc_route_points(
+                        points[-1],
+                        self.fixture_pos(str(point["tail_arc"]), z=0.0),
+                        1.0 if str(winding.direction).lower() == "ccw" else -1.0,
+                        float(self.cfg.rope.spawn_arc.chord),
+                        np.radians(float(self.cfg.rope.spawn_arc.sweep_deg)),
+                        self.world_z(float(self.cfg.rope.z)),
                     )
                 )
             else:
@@ -367,13 +445,17 @@ class CableRoutingScene:
 class CableRoutingSceneBuilder:
     """Build a four-fixture cable routing scene with one PBD rope."""
 
+    # A task whose layout carries feasibility rows (rope_unwinding) swaps in its
+    # own `CableRoutingLayout` subclass here.
+    layout_cls = CableRoutingLayout
+
     def __init__(self, env_cfg, task_cfg, robot_cfg, *, route_mode: str = "initial") -> None:
         self.env_cfg = env_cfg
         self.task_cfg = task_cfg
         self.robot_cfg = robot_cfg
         self.route_mode = str(route_mode)
         frames = tabletop_frames_from_config(env_cfg)
-        self.layout = CableRoutingLayout(
+        self.layout = self.layout_cls(
             task_cfg,
             task_origin=frames.task_origin,
         )

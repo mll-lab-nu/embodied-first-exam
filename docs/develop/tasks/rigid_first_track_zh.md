@@ -23,7 +23,7 @@
 
 | docx | 模块 | 状态 |
 |---|---|---|
-| 2.3 | `routing/bar_through_hole.py` | 阶段 1 已完成。全流程 16/16 相通过，`threading=1`、`release_stable=True`。反捷径对照（`run.oracle_mode=bypass`）未跑 |
+| 2.3 | `routing/bar_through_hole.py` | 阶段 1 已完成。全流程 16/16 相通过，`threading=1`、`release_stable=True`。2026-09-04 变体部署完成（§6.2 第 12 步）：oracle seed 0–9 10/10、角点 64/64；反捷径对照 `run.oracle_mode=bypass` 10/10 + 角点 64/64 判失败。记录见 [`bar_through_hole_zh.md`](bar_through_hole_zh.md) |
 | 4.1 | `connectivity/gate_cage_ball.py` | 下一个开工项 |
 | 4.4 | `connectivity/linkbar_rotate_to_zone.py` | 2026-08-27 改造：删除小车与插口，判据改为销停在同色区域；离线门已过，GPU 三门待跑。记录见 [`linkbar_rotate_to_zone_zh.md`](linkbar_rotate_to_zone_zh.md) |
 | 4.3 | `connectivity/diverter_route_ball.py` | 未开工 |
@@ -321,8 +321,9 @@ demos/routing/bar_through_hole_physical_insert_demo.py  # 要能录数据则必�
    全程净空为正、终态 `Lk=0`。**求解器一侧尚未验证**：静置是否自解由
    `demos/entangle/unlink_c_ring_inspect_demo.py` 的 hold 段给读数，待 GPU 跑。
 4. 本轨道与 `task_environment_buildout_zh.md` §5 推荐的 3.2 + 2.5 是否并行推进。
-5. **2.3 的两项收尾**：反捷径对照 `run.oracle_mode=bypass` 未跑；`min_finger_qpos` 阈值未写入配置
-   （实测夹到杆 0.0092、指令位 0.008，判别窗口 1.2mm，可通过下调 `grasp_qpos` 至 0.006 拉宽至 3mm）。
+5. ~~**2.3 的两项收尾**~~ —— 已做（2026-09-04）：反捷径对照 `run.oracle_mode=bypass` 随变体 sweep 跑过，seed 0–9 与 64 角点全部判失败；
+   `min_finger_qpos` 写入 0.0086（148 格实测夹到杆 0.0090–0.0094，只随 `bar.rest_y` 变；指令位 0.008），`grasp_qpos` 未动。
+   依据见 [`bar_through_hole_zh.md`](bar_through_hole_zh.md) §5.3。
 6. **单自由度铰链发射器的抽取时机**：`stacked_plate.py` 的 `_write_disk_urdf` 目前硬绑圆柱碰撞体与
    Y 轴。4.4 是第二个使用者，按 CLAUDE.md §3「抄两遍再抽象」，在 4.4 落地时抽到
    `tasks/_fixtures.py`，与 `add_v_block` 同列。

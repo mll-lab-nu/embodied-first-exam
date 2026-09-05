@@ -20,7 +20,14 @@ What it proves:
     spread ratio a conservation law rather than a tuned number;
   - the pull travels exactly the material the pleat stores, stays in the plane
     (friction on the far half is the anchor, and lifting removes it), and its
-    `shove` and `overpull` motions really are the motions their names claim.
+    `shove` and `overpull` motions really are the motions their names claim;
+  - **the variation envelope (2026-09-05)**: the seven feasibility rows of
+    `_cloth_unpleat_geometry.cloth_unpleat_checks` pass on the shipped yaml, the
+    two derivations reproduce the shipped `edge_inset` and `center_y`, every
+    corner of the yaml's `variation:` block (three pleat widths x two pull sides
+    x two ends of five continuous axes = 192) passes all seven rows, the mirror
+    layout reads the same rows and puts the grasp and the pull's end at the
+    negated coordinate, and three infeasible layouts are rejected.
 
     python tests/check_cloth_unpleat_geometry.py
 
@@ -83,6 +90,10 @@ _mesh = _load(
     "topogym.tasks.deformation.cloth_profile_mesh",
     "topogym/tasks/deformation/cloth_profile_mesh.py",
 )
+_geometry = _load(
+    "topogym.tasks.deformation._cloth_unpleat_geometry",
+    "topogym/tasks/deformation/_cloth_unpleat_geometry.py",
+)
 
 ClothUnpleatEvaluator = _verifier.ClothUnpleatEvaluator
 band_shift = _verifier.band_shift
@@ -137,7 +148,8 @@ class _StandInLayout:
             rest_z=float(cloth["z"]),
         )
         self._marks = _mesh.pleat_landmarks(self._corners)
-        self._centre = np.asarray(cloth["center"], dtype=float)
+        self._centre = np.array([float(cloth["center_x"]), float(cloth["center_y"])])
+        self.pull_sign = _geometry.pull_sign(cfg)
 
     @property
     def table_z(self) -> float:
@@ -158,14 +170,14 @@ class _StandInLayout:
 
     def design_grasp_point(self) -> np.ndarray:
         end = 0.5 * self._marks["plan_span"] - float(self._cfg["grasp"]["edge_inset"])
-        return self._plan_point(end, float(self._cfg["cloth"]["z"]))
+        return self._plan_point(self.pull_sign * end, float(self._cfg["cloth"]["z"]))
 
     def grasp_point(self) -> np.ndarray:
         return self.design_grasp_point()
 
     def pull_direction(self) -> np.ndarray:
         direction = np.zeros(3)
-        direction[self.material_axis] = 1.0
+        direction[self.material_axis] = self.pull_sign
         return direction
 
     def pull_distance(self) -> float:
@@ -220,7 +232,7 @@ def band_nodes(section, cfg, *, table_z: float = 0.0) -> np.ndarray:
     step = float(cloth["particle_size"])
     width = float(cloth["width"])
     offsets = np.arange(-0.5 * width, 0.5 * width + 1e-9, step)
-    centre = np.asarray(cloth["center"], dtype=float)
+    centre = np.array([float(cloth["center_x"]), float(cloth["center_y"])])
     material = 0 if str(cloth["material_axis"]).lower() == "x" else 1
     sweep = 1 - material
     section = np.asarray(section, dtype=float)
@@ -280,6 +292,163 @@ def pressed_polyline(cfg, corners) -> np.ndarray:
     )
 
 
+def _corner_cfgs(cfg):
+    """Every vertex of the yaml's ``variation:`` box, derived, as (label, cfg).
+
+    Built by hand from the block rather than through `layout_randomization` so
+    this gate stays numpy + PyYAML: `uniform` axes at both ends, `choice` axes at
+    every value, full product; then the same derivation the sampler runs.
+    """
+
+    import copy
+    import itertools
+
+    axes = []
+    for entry in cfg["variation"]:
+        if entry["kind"] == "uniform":
+            axes.append((entry["path"], [float(entry["lo"]), float(entry["hi"])]))
+        elif entry["kind"] == "choice":
+            axes.append((entry["path"], list(entry["values"])))
+    out = []
+    for combo in itertools.product(*(values for _, values in axes)):
+        c = copy.deepcopy(cfg)
+        labels = []
+        for (path, _), value in zip(axes, combo):
+            node = c
+            *parents, leaf = path.split(".")
+            for part in parents:
+                node = node[part]
+            node[leaf] = value
+            labels.append(f"{path.split('.')[-1]}={value}")
+        out.append((",".join(labels), c))
+    return out
+
+
+def _derive(cfg) -> None:
+    """The sampler's derivation step (`cloth_unpleat.derive_task_cfg`), on a dict."""
+
+    cfg["grasp"]["edge_inset"] = _geometry.edge_inset_from_frac(cfg, float(cfg["grasp"]["edge_inset_frac"]))
+    leaf = _geometry.along_leaf(cfg)
+    cfg["cloth"][leaf] = _geometry.center_along_from_frac(cfg, float(cfg["cloth"][f"{leaf}_frac"]))
+
+
+_LOWER_IS_TIGHTER = ("hand_reach", "pull_within_stroke", "start_still_stored")
+
+
+def _margin(row) -> float:
+    name, measured, limit, _ = row
+    return (limit - measured) if name in _LOWER_IS_TIGHTER else (measured - limit)
+
+
+def envelope_section(cfg) -> None:
+    import copy
+
+    rows = _geometry.cloth_unpleat_checks(cfg)
+    for name, measured, limit, ok in rows:
+        print(f"  {name:28s} {measured:+.4f} / {limit:+.4f} {'ok' if ok else 'FAIL'}")
+    check("基准 yaml 七行全过", all(ok for *_, ok in rows), ",".join(n for n, *_, ok in rows if not ok))
+    check("七行齐全", [r[0] for r in rows] == [
+        "pleat_fits_band", "crest_above_underlayer", "grasp_clears_three_layers",
+        "band_in_workspace", "hand_reach", "pull_within_stroke", "start_still_stored",
+    ], str([r[0] for r in rows]))
+
+    base = copy.deepcopy(cfg)
+    _derive(base)
+    check(
+        "派生还原基准：edge_inset_frac 0.4 → 0.012，center_y_frac 0.5 → 0.000",
+        abs(base["grasp"]["edge_inset"] - 0.012) < 1e-9 and abs(base["cloth"]["center_y"]) < 1e-9,
+        f"inset={base['grasp']['edge_inset']:.4f} center_y={base['cloth']['center_y']:+.4f}",
+    )
+    lo, hi = _geometry.edge_inset_bounds(cfg)
+    check("基准褶几何下内缩量区间是 [0.008, 0.018]（净空不封顶）", abs(lo - 0.008) < 1e-9 and abs(hi - 0.018) < 1e-9, f"[{lo:.4f}, {hi:.4f}]")
+    lo, hi = _geometry.center_along_bounds(cfg)
+    check("基准下纵向位置区间是 ±0.030（可达与工作区不封顶）", abs(lo + 0.030) < 1e-9 and abs(hi - 0.030) < 1e-9, f"[{lo:+.4f}, {hi:+.4f}]")
+
+    # Mirror layout: same rows, negated grasp and pull end.
+    mirror = copy.deepcopy(cfg)
+    mirror["cloth"]["pull_side"] = -1
+    _derive(mirror)
+    plus_rows, minus_rows = _geometry.cloth_unpleat_checks(base), _geometry.cloth_unpleat_checks(mirror)
+    check(
+        "镜像布局（pull_side −1）七行读数与 +1 逐行相等",
+        all(abs(a[1] - b[1]) < 1e-12 and abs(a[2] - b[2]) < 1e-12 for a, b in zip(plus_rows, minus_rows)),
+    )
+    gp, gm = _geometry.grasp_point_task(base), _geometry.grasp_point_task(mirror)
+    ep, em = _geometry.pull_end_task(base), _geometry.pull_end_task(mirror)
+    check(
+        "镜像布局的抓取点与拉动终点是 +1 的 y 取反",
+        abs(gp[0] - gm[0]) < 1e-12 and abs(gp[1] + gm[1]) < 1e-12 and abs(ep[1] + em[1]) < 1e-12,
+        f"+1 grasp y {gp[1]:+.4f} end y {ep[1]:+.4f}; −1 grasp y {gm[1]:+.4f} end y {em[1]:+.4f}",
+    )
+    stand_in = _StandInLayout(mirror)
+    check(
+        "镜像布局的规划器沿 −y 拉",
+        float(pull_waypoints(stand_in, motion="unfold")[-1].position[1]) < stand_in.grasp_point()[1],
+    )
+
+    # Corners.
+    corners = _corner_cfgs(cfg)
+    rejected, failed, tight = [], [], {}
+    for label, c in corners:
+        try:
+            _derive(c)
+        except ValueError as exc:
+            rejected.append(f"{label}: {exc}")
+            continue
+        rows = _geometry.cloth_unpleat_checks(c)
+        bad = [n for n, *_, ok in rows if not ok]
+        if bad:
+            failed.append(f"{label}: {bad}")
+        for row in rows:
+            m = _margin(row)
+            if row[0] not in tight or m < tight[row[0]][0]:
+                tight[row[0]] = (m, label)
+    check(f"角点数 = 3 × 2 × 2^5 = 192", len(corners) == 192, str(len(corners)))
+    check("192 个角点派生区间都非空", not rejected, "; ".join(rejected[:3]))
+    check("192 个角点七行全过", not failed, "; ".join(failed[:3]))
+    for name, (m, label) in tight.items():
+        print(f"  最紧 {name:28s} 余量 {m:+.4f}  @ {label}")
+    check(
+        "内缩量与纵向位置的派生把两条最紧的行压到 0 而不是负数",
+        tight["grasp_clears_three_layers"][0] >= -1e-9 and tight["hand_reach"][0] >= -1e-9,
+    )
+
+    # Negative examples: what the rows are for.
+    wide = copy.deepcopy(cfg)
+    wide["cloth"]["pleat"]["width"] = 0.040
+    wide["cloth"]["pleat"]["crest_height"] = 0.028
+    wide["grasp"]["edge_inset_frac"] = 1.0
+    try:
+        _derive(wide)
+        wide_ok = _geometry.edge_inset_bounds(wide)[1] < 0.018 - 1e-9
+        detail = f"inset window top {_geometry.edge_inset_bounds(wide)[1]:.4f} < 0.018"
+    except ValueError as exc:
+        wide_ok, detail = True, str(exc)[:80]
+    check("负例：褶宽 0.040 + 顶缘 0.028 把内缩量窗口压到 0.018 以下（0.035 是上限的原因）", wide_ok, detail)
+
+    far = copy.deepcopy(cfg)
+    far["cloth"]["pleat"]["width"] = 0.035
+    far["cloth"]["pleat"]["crest_height"] = 0.028
+    far["physical"]["pull_scale"] = 1.12
+    far["cloth"]["center_x"] = 0.070
+    far["grasp"]["edge_inset_frac"] = 0.0
+    _derive(far)
+    lo, hi = _geometry.center_along_bounds(far)
+    far["cloth"]["center_y"] = 0.030
+    rows = {r[0]: r for r in _geometry.cloth_unpleat_checks(far)}
+    check(
+        "负例：最长行程 + 布带最靠外时纵向 +0.030 被可达行拒，派生窗口上端低于 +0.030",
+        not rows["hand_reach"][3] and hi < 0.030 - 1e-9,
+        f"hand_reach {rows['hand_reach'][1]:.4f} > {rows['hand_reach'][2]:.4f}；窗口 [{lo:+.4f}, {hi:+.4f}]",
+    )
+
+    low = copy.deepcopy(cfg)
+    low["cloth"]["pleat"]["crest_height"] = 0.003
+    _derive(low)
+    rows = {r[0]: r for r in _geometry.cloth_unpleat_checks(low)}
+    check("负例：顶缘 3 mm 低于一个粒子，被 crest_above_underlayer 拒", not rows["crest_above_underlayer"][3])
+
+
 def main(argv=None) -> int:
     cfg = yaml.safe_load(TASK_CFG.read_text(encoding="utf-8"))
     evaluator = ClothUnpleatEvaluator.from_config(cfg)
@@ -315,34 +484,10 @@ def main(argv=None) -> int:
         ) < 1e-12,
         f"{marks['arm_length'] * 1e3:.2f}mm",
     )
-    # How far the crest is above the material directly beneath it at birth. Closer
-    # than a particle and PBD opens the episode by resolving a collision instead
-    # of by holding still.
-    clearance = min(
-        abs(corners[2][1] - corners[1][1]),
-        abs(corners[2][1] - corners[0][1]),
-    )
-    check(
-        "顶缘与其正下方材料的高差不小于一个粒子",
-        clearance >= float(cloth["particle_size"]),
-        f"{clearance * 1e3:.1f}mm vs particle {float(cloth['particle_size']) * 1e3:.1f}mm",
-    )
-    # The grasp is the band's END, and the disc that binds particles has to land
-    # on ONE layer. What guarantees that is distance from the fold, not a height
-    # window: the pleat's three layers occupy the plan strip [-w, +w] about the
-    # crease, and the grasp sits far outside it.
-    #
-    # This replaced a height-window check on 2026-08-23, when the grasp moved from
-    # the pleat's crest to the band's end. The crest had the flat run directly
-    # beneath it and needed the window; the end has nothing beneath it.
-    reach = 0.5 * marks["plan_span"] - float(cfg["grasp"]["edge_inset"])
-    clear = reach - float(cloth["pleat"]["width"])
-    check(
-        "抓取点离三层区足够远，附着盘只碰得到一层",
-        clear > float(cfg["grasp"]["attach_radius"]) * 2.0,
-        f"离三层区 {clear * 1e3:.1f}mm > 2 倍盘半径 "
-        f"{float(cfg['grasp']['attach_radius']) * 2.0 * 1e3:.1f}mm",
-    )
+    # The crest-height and three-layer-clearance rows moved into
+    # `cloth_unpleat_checks` on 2026-09-05 (`crest_above_underlayer`,
+    # `grasp_clears_three_layers`); the envelope section below runs them on the
+    # shipped yaml and on every corner.
     check(
         "高度窗口已关闭（端头只有一层，不需要它）",
         cfg["grasp"]["attach_z_band"] is None,
@@ -481,7 +626,7 @@ def main(argv=None) -> int:
             section,
             width=float(cloth["width"]),
             spacing=float(cloth["mesh"]["spacing"]),
-            centre=np.asarray(cloth["center"], dtype=float),
+            centre=np.array([float(cloth["center_x"]), float(cloth["center_y"])]),
             table_z=0.0,
             path=mesh_path,
             material_axis=0 if str(cloth["material_axis"]).lower() == "x" else 1,
@@ -588,7 +733,7 @@ def main(argv=None) -> int:
         "抓的是端头附近，不是布带中段",
         edge - inset > 0.4 * marks["plan_span"],
         f"抓在 {'xy'[axis]}={grasp[axis]:+.4f}，端头在 "
-        f"{float(np.asarray(cloth['center'])[axis] + edge):+.4f}",
+        f"{float(layout._centre[axis] + edge):+.4f}",
     )
     # 拉完之后端头要还够得着。作业区 x[-0.23,+0.31] / y[-0.30,+0.30]。
     limit = 0.31 if axis == 0 else 0.30
@@ -597,6 +742,9 @@ def main(argv=None) -> int:
         float(over_wp[-1].position[axis]) < limit,
         f"overpull 终点 {float(over_wp[-1].position[axis]):+.4f} < {limit}",
     )
+
+    print("\n== 变体包络（variation 块）==")
+    envelope_section(cfg)
 
     print()
     if failures:

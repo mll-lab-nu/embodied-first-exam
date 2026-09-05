@@ -21,9 +21,14 @@ it horizontally and only then bends down, so the hanging loop stays open wide
 enough to lasso B from the side. `_ring_transfer_geometry.py` derives every number and
 `tests/check_ring_transfer_geometry.py` gates the layout without a GPU.
 
-Posts are a list and the initial / goal enclosures are subsets (`ring.enclosure`,
-`goal.enclosure`), so the multi-post variants of docx 2.7 are config edits; only
-the single-post spawn is generated so far.
+Variation (2026-09-04): the two posts are derived from `task.pair` (midpoint,
+spacing, heading) and share `task.post_shape`; `ring.on_post` / `goal.on_post`
+name the start and goal posts. The loop's long axis, the pinch side and point,
+and the three carry heights are Layout rules (`_ring_transfer_geometry.py`'s
+constants), so the post-height axis moves them together. `derive_task_cfg` and
+`validate_task_cfg` are the hooks the yaml's `variation:` block names. The
+multi-post enclosures of docx 2.7 that the 2026-08-24 lists reserved were
+dropped: sampled leaves must be scalars.
 
 Coupling under IPC: the table, both posts' shafts, bases and heads are
 `ipc_only` statics; the arm's hand and fingers join IPC as pinned ABD bodies
@@ -71,19 +76,45 @@ class RingTransferLayout:
     """Task-frame layout; world conversion goes through `to_world` only."""
 
     task_cfg: Any
-    task_origin: tuple[float, float, float]
+    # The variation harness builds a Layout from the task config alone.
+    task_origin: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    # Evaluate the same pair at another midpoint (the mid windows are measured
+    # with the pair at the origin). None = the yaml's `pair.mid_x / mid_y`.
+    pair_mid: tuple[float, float] | None = None
 
     def __post_init__(self) -> None:
-        self.posts = geo.posts_from_config(self.task_cfg.posts)
-        self.ring = geo.ring_from_config(self.task_cfg.ring, self.task_cfg.rope)
+        cfg = self.task_cfg
+        # The pair (midpoint, spacing, heading) is the truth; `posts.A/B.x,y` are
+        # its derived positions (written by `derive_task_cfg`, and read here so
+        # a fixed layout composes the same way). They must agree.
+        if self.pair_mid is not None:
+            self.posts = geo.posts_from_config(cfg.posts, cfg.post_shape, centers=geo.pair_centers(cfg.pair, self.pair_mid))
+        else:
+            self.posts = geo.posts_from_config(cfg.posts, cfg.post_shape)
+            for name, center in geo.pair_centers(cfg.pair).items():
+                if float(np.linalg.norm(center - self.posts[name].center)) > 1e-6:
+                    raise ValueError(
+                        f"ring_transfer: posts.{name} ({self.posts[name].center.tolist()}) does not match the pair "
+                        f"(mid {float(cfg.pair.mid_x):+.4f},{float(cfg.pair.mid_y):+.4f} spacing {float(cfg.pair.spacing):.4f} "
+                        f"heading {float(cfg.pair.heading_deg):+.1f} deg -> {center.tolist()})."
+                    )
+        on_post = str(cfg.ring.on_post)
+        goal_post = str(cfg.goal.on_post)
+        if goal_post != geo.other_post(on_post):
+            raise ValueError(f"ring_transfer: goal.on_post {goal_post!r} must be the other post of ring.on_post {on_post!r}.")
+        self.long_axis = geo.long_axis_from_heading(cfg.pair)
+        self.ring = geo.ring_from_config(cfg.ring, cfg.rope, long_axis=self.long_axis, on_post=on_post)
         self.spawn = geo.spawn_centerline(self.ring, self.posts)
-        self.anchor = self.posts[self.ring.enclosure[0]]
-        goal = [str(name) for name in self.task_cfg.goal.enclosure]
-        if len(goal) != 1:
-            raise NotImplementedError("goal.enclosure with more than one post is the reserved variant axis.")
-        self.target = self.posts[goal[0]]
-        if self.target.name == self.anchor.name:
-            raise ValueError("goal.enclosure equals ring.enclosure: nothing to transfer.")
+        self.anchor = self.posts[on_post]
+        self.target = self.posts[goal_post]
+        self.pinch_side = geo.pinch_side_for(self.ring, self.anchor, self.target)
+        self.pinch_along = geo.pinch_along_for(self.ring, self.anchor, cfg.physical)
+        heights = geo.carry_heights(
+            anchor=self.anchor, target=self.target, base_height=float(cfg.post_shape.base_height), physical_cfg=cfg.physical
+        )
+        self.lift_low_z = heights["lift_low_z"]
+        self.hang_bottom_z = heights["hang_bottom_z"]
+        self.drop_z = heights["drop_z"]
 
     @property
     def coordinate_frame(self) -> str:
@@ -113,8 +144,7 @@ class RingTransferLayout:
     def pinch_point(self) -> np.ndarray:
         """The carry oracle's grasp: on a straight, clear of both posts (see geometry)."""
 
-        carry = self.task_cfg.carry
-        return geo.pinch_point(self.spawn, self.ring, self.anchor, along=float(carry.pinch_along), side=float(carry.pinch_side))
+        return geo.pinch_point(self.spawn, self.ring, self.anchor, along=self.pinch_along, side=self.pinch_side)
 
     def strand_tangent(self, point) -> np.ndarray:
         """Unit xy tangent of the spawn loop nearest `point` (sets the pinch yaw)."""
@@ -130,6 +160,9 @@ class RingTransferLayout:
             target=self.target,
             start_xy=start_xy,
             carry_cfg=self.task_cfg.carry,
+            lift_low_z=self.lift_low_z,
+            hang_bottom_z=self.hang_bottom_z,
+            drop_z=self.drop_z,
         )
 
     def far_cap_path(self) -> list[tuple[str, np.ndarray]]:
@@ -143,6 +176,27 @@ class RingTransferLayout:
 
     def lift_z(self) -> float:
         return self.anchor.top_z + self.ring.tube_radius + float(self.task_cfg.transfer.lift_margin)
+
+    # The transfer / lift-only routes' remaining `task.transfer` reads, so the
+    # planner asks the Layout and nothing else (variation_and_difficulty_plan §2.5).
+    def transfer_carry_z(self) -> float:
+        return float(self.task_cfg.transfer.carry_z)
+
+    def off_shift(self) -> float:
+        return float(self.task_cfg.transfer.shift)
+
+    def near_side_landing(self) -> np.ndarray:
+        """Where a draped cap stops short of the target (the `drape_outside` control)."""
+
+        direction = self.target.center - self.anchor.center
+        direction = direction / float(np.linalg.norm(direction))
+        offset = self.target.head_radius + self.ring.tube_radius + float(self.task_cfg.transfer.landing_clearance)
+        return self.target.center - offset * direction
+
+    def instruction(self) -> str:
+        """`goal.instruction` with the start and goal post names filled in."""
+
+        return str(self.task_cfg.goal.instruction).format(start=self.anchor.name, goal=self.target.name)
 
     def crossings(self) -> list[tuple[str, str]]:
         """Gateway sequence the goal implies: put on the new posts, take off the old."""
@@ -165,6 +219,128 @@ class RingTransferLayout:
             f"loop perimeter {self.ring.perimeter * 1000:.0f}mm reach {geo.loop_reach(self.spawn, self.ring, self.anchor) * 1000:.1f}mm "
             f"from {self.anchor.name}, crossings {self.crossings()}"
         )
+
+    # ----- variation: derived windows + checks -------------------------------
+
+    def mid_windows(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        """Feasible `pair.mid_y` and `pair.mid_x` windows, from THIS layout's pair
+        evaluated at the origin (the carry path and the spawn loop translate with
+        the pair). x is solved at the layout's own `mid_y`, so derive y first."""
+
+        cfg = self.task_cfg
+        origin = _layout_at_origin(cfg)
+        path = origin.carry_path()
+        hands = geo.carry_hand_positions(path, float(cfg.physical.hand_above))
+        points = np.vstack([hands[:, :2], origin.spawn[:, :2]])
+        y_window = geo.mid_y_window(points, workspace_y=cfg.workspace.y, y_range=cfg.pair.mid_y_range)
+        x_window = geo.mid_x_window(
+            points,
+            hands[:, :2],
+            mid_y=float(cfg.pair.mid_y),
+            workspace_x=cfg.workspace.x,
+            x_range=cfg.pair.mid_x_range,
+            base_xy=cfg.reach.base_xy,
+            max_hand_dist=float(cfg.reach.max_hand_dist),
+        )
+        return y_window, x_window
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a spawnable, carry-solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate, the corner
+        harness and the demo's start-up print. Metres throughout.
+        """
+
+        return geo.ring_transfer_checks(self)
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"ring_transfer layout check {name} failed: measured {measured:+.4f} against {limit:+.4f}."
+                )
+
+
+def _layout_at_origin(task_cfg) -> "RingTransferLayout":
+    """The same pair with its midpoint at (0, 0): what the mid windows are measured on."""
+
+    return RingTransferLayout(task_cfg, pair_mid=(0.0, 0.0))
+
+
+def _write_posts(task_cfg) -> None:
+    for name, center in geo.pair_centers(task_cfg.pair).items():
+        task_cfg.posts[name].x = float(center[0])
+        task_cfg.posts[name].y = float(center[1])
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Only
+    scalar leaves are written (the instruction text is `Layout.instruction()`:
+    a string with spaces cannot ride the corner sweep's Hydra overrides). Order
+    matters: the goal post (the other post of the drawn `ring.on_post`), then
+    the pair's midpoint y from its window (needs spacing and heading), then x
+    (needs y: the reach disc is solved at the hands' own y), then both posts'
+    positions. A ``ValueError`` (empty window) rejects the draw.
+    """
+
+    task_cfg.goal.on_post = geo.other_post(str(task_cfg.ring.on_post))
+    _write_posts(task_cfg)
+    layout = RingTransferLayout(task_cfg)
+    y_window, _ = layout.mid_windows()
+    task_cfg.pair.mid_y = geo.value_from_frac(y_window, float(task_cfg.pair.mid_y_frac), what="pair.mid_y")
+    _write_posts(task_cfg)
+    layout = RingTransferLayout(task_cfg)
+    _, x_window = layout.mid_windows()
+    task_cfg.pair.mid_x = geo.value_from_frac(x_window, float(task_cfg.pair.mid_x_frac), what="pair.mid_x")
+    _write_posts(task_cfg)
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    RingTransferLayout(task_cfg).validate()
+
+
+def _assert_literal_copies(task_cfg) -> None:
+    """The yaml's literal copies of prefab / common values must still match them.
+
+    `checks()` reads `rope.radius`, `rope.fem.contact_d_hat` and `workspace`, and the variation harness
+    loads the task yaml alone, where `${prefabs...}` and `${common...}` cannot
+    resolve -- so the task yaml carries literals, and the one place with both in
+    hand asserts they agree.
+    """
+
+    root = task_cfg._get_root() if hasattr(task_cfg, "_get_root") else None
+    prefabs = getattr(root, "prefabs", None) if root is not None else None
+    common = getattr(root, "common", None) if root is not None else None
+    if prefabs is not None:
+        for got, want, what in (
+            (float(task_cfg.rope.radius), float(prefabs.rope_pbd.radius), "rope.radius / prefabs.rope_pbd.radius"),
+            (
+                float(task_cfg.rope.fem.contact_d_hat),
+                float(prefabs.rope_fem.contact_d_hat),
+                "rope.fem.contact_d_hat / prefabs.rope_fem.contact_d_hat",
+            ),
+        ):
+            if abs(want - got) > 1e-9:
+                raise ValueError(f"ring_transfer: {what}: {got} != {want}")
+    if common is not None:
+        ws = common.manipulation_space.workspace
+        for axis in ("x", "y", "z"):
+            want = [float(v) for v in ws[axis]]
+            got = [float(v) for v in task_cfg.workspace[axis]]
+            if want != got:
+                raise ValueError(
+                    f"ring_transfer: workspace.{axis} {got} != manipulation_space.workspace.{axis} {want}"
+                )
 
 
 @dataclass
@@ -204,6 +380,8 @@ class RingTransferSceneBuilder:
         before the scene is built (Genesis refuses cameras afterwards). Names must
         not shadow the env cameras."""
 
+        _assert_literal_copies(self.task_cfg)
+        self.layout.validate()
         rope_cfg = self.task_cfg.rope
         fem_cfg = rope_cfg.fem
         if str(fem_cfg.rest_shape) != "spawn":
@@ -231,8 +409,8 @@ class RingTransferSceneBuilder:
         layout = self.layout
 
         self._add_board(scene, manifest)
-        for post_cfg in self.task_cfg.posts:
-            self._add_post(scene, manifest, post_cfg)
+        for post_name, post_cfg in self.task_cfg.posts.items():
+            self._add_post(scene, manifest, str(post_name), post_cfg, self.task_cfg.post_shape)
 
         # --- the loop ------------------------------------------------------
         ring = layout.ring
@@ -363,14 +541,17 @@ class RingTransferSceneBuilder:
             ),
         )
 
-    def _add_post(self, scene, manifest: EntityManifest, post_cfg) -> None:
+    def _add_post(self, scene, manifest: EntityManifest, post_name: str, post_cfg, shape_cfg) -> None:
         """Routing post as in cable_routing: shaft cylinder (exact wrap radius) +
         separate convex base cone, plus a retaining head that DOES collide. A single
-        flare+shaft solid is not convex and its hull would fatten the wrap radius."""
+        flare+shaft solid is not convex and its hull would fatten the wrap radius.
+        `post_cfg` is the post's position and colours; `shape_cfg` (`task.post_shape`)
+        the geometry both posts share."""
 
-        name = f"post_{post_cfg.name}"
-        radius, height = float(post_cfg.radius), float(post_cfg.height)
-        xy = (float(post_cfg.pos[0]), float(post_cfg.pos[1]))
+        name = f"post_{post_name}"
+        spec = self.layout.posts[post_name]
+        radius, height = spec.radius, spec.height
+        xy = (float(post_cfg.x), float(post_cfg.y))
         surface = materials.plastic("fixture", tuple(post_cfg.color))
         trim = materials.plastic("fixture", tuple(getattr(post_cfg, "trim_color", post_cfg.color)))
         shaft = scene.add_entity(
@@ -387,7 +568,7 @@ class RingTransferSceneBuilder:
         )
         manifest.add(name, shaft)
         base_path = routing_post_base_obj_path(
-            post_cfg, default_output_dir=self.task_cfg.rope.mesh.output_dir, name=f"{name}_base"
+            shape_cfg, default_output_dir=self.task_cfg.rope.mesh.output_dir, name=f"{name}_base"
         )
         base = scene.add_entity(
             gs.morphs.Mesh(
@@ -408,7 +589,7 @@ class RingTransferSceneBuilder:
         # Retaining head: a COLLISION body (ipc_only), unlike cable_routing's
         # decorative cap. Without it the loop slides up and off the anchor as
         # soon as the far cap is lifted (_ring_transfer_geometry.py module doc).
-        head_radius, head_height = float(post_cfg.head_radius), float(post_cfg.head_height)
+        head_radius, head_height = spec.head_radius, spec.head_height
         head = scene.add_entity(
             gs.morphs.Cylinder(
                 pos=tuple(self.layout.to_world((xy[0], xy[1], height + 0.5 * head_height))),
@@ -457,4 +638,6 @@ __all__ = [
     "RingTransferLayout",
     "RingTransferScene",
     "RingTransferSceneBuilder",
+    "derive_task_cfg",
+    "validate_task_cfg",
 ]

@@ -54,7 +54,13 @@ from topogym.planning.rope_winding_planner import (  # noqa: E402
     spawn_winding,
     taut_demand,
 )
-from topogym.planning.waypoint import arc_route_points, helix_route_points  # noqa: E402
+from topogym.planning.waypoint import (  # noqa: E402
+    arc_route_points,
+    helix_route_points,
+    lead_in_route_point,
+    plug_spawn_point,
+    tail_arc_route_points,
+)
 from topogym.primitives.attachment import (  # noqa: E402
     RigidAttachment,
     _quat_rotate as _rotate_by_quat,
@@ -117,12 +123,26 @@ class StandInLayout:
         return float(TASK_ORIGIN[2]) + float(z)
 
     def fixture_pos(self, name, *, z=None):
-        pos = np.asarray(self.cfg.fixtures[str(name)].pos, dtype=float).copy()
+        fixture = self.cfg.fixtures[str(name)]
+        if "pos" in fixture:
+            pos = np.asarray(fixture.pos, dtype=float).copy()
+        else:  # scalar x / y / z keys (a fixture whose position is a variation axis)
+            pos = np.array([fixture.x, fixture.y, fixture.z], dtype=float)
         if z is not None:
             pos[2] = float(z)
         return self.position_to_world(pos)
 
     def route_point(self, spec):
+        if "plug_spawn_from" in spec:
+            arc = self.cfg.rope.spawn_arc
+            return plug_spawn_point(
+                self.fixture_pos(str(spec.get("anchor", "S")), z=0.0),
+                self.fixture_pos(str(spec["plug_spawn_from"]), z=0.0),
+                float(arc.plug_distance),
+                math.radians(float(arc.plug_bearing_deg)),
+                math.radians(float(arc.anchor_lead_deg)),
+                self.world_z(float(self.cfg.rope.z)),
+            )
         if "pos" in spec:
             return self.position_to_world(spec["pos"])
         return self.fixture_pos(str(spec["fixture"]), z=float(self.cfg.rope.z))
@@ -134,15 +154,19 @@ class StandInLayout:
         points = []
         for entry in self.cfg.routes[name]:
             if not isinstance(entry, str) and "arc_to" in entry:
+                sweep_deg = entry.get("sweep_deg", None)
+                if sweep_deg is None:
+                    sweep_deg = self.cfg.rope.spawn_arc.sweep_deg
                 points.extend(
                     arc_route_points(
                         points[-1],
                         self.route_point(entry["arc_to"]),
-                        math.radians(float(entry["sweep_deg"])),
+                        math.radians(float(sweep_deg)),
                         samples=entry.get("samples"),
                     )
                 )
             elif not isinstance(entry, str) and "helix_around" in entry:
+                winding = self.cfg.winding
                 post = self.cfg.fixtures[str(entry["helix_around"])]
                 radius = (
                     float(post.radius)
@@ -154,10 +178,30 @@ class StandInLayout:
                         points[-1],
                         self.fixture_pos(str(entry["helix_around"]), z=0.0),
                         radius,
-                        float(entry["turns"]),
-                        float(entry["climb"]),
-                        1.0 if str(entry.get("direction", "ccw")).lower() == "ccw" else -1.0,
-                        z_start=self.world_z(float(entry["z_start"])),
+                        float(entry.get("turns", winding.start_turns)),
+                        float(entry.get("climb", winding.climb_per_turn)),
+                        1.0 if str(entry.get("direction", winding.direction)).lower() == "ccw" else -1.0,
+                        z_start=self.world_z(float(entry.get("z_start", winding.wind_z_start))),
+                    )
+                )
+            elif not isinstance(entry, str) and "lead_in_toward" in entry:
+                points.append(
+                    lead_in_route_point(
+                        points[-1],
+                        self.fixture_pos(str(entry["lead_in_toward"]), z=0.0),
+                        float(entry["length"]),
+                        self.world_z(float(self.cfg.rope.z)),
+                    )
+                )
+            elif not isinstance(entry, str) and "tail_arc" in entry:
+                points.extend(
+                    tail_arc_route_points(
+                        points[-1],
+                        self.fixture_pos(str(entry["tail_arc"]), z=0.0),
+                        1.0 if str(self.cfg.winding.direction).lower() == "ccw" else -1.0,
+                        float(self.cfg.rope.spawn_arc.chord),
+                        math.radians(float(self.cfg.rope.spawn_arc.sweep_deg)),
+                        self.world_z(float(self.cfg.rope.z)),
                     )
                 )
             else:
@@ -190,12 +234,25 @@ def densify(points, step=0.002):
     return np.asarray(out)
 
 
+def resolve(raw, prefabs, *, turns=None, sweep_deg=None):
+    """Dereference the `${}` interpolations the checks below read, and pin the
+    yaml's literal copies of prefab values to the prefabs."""
+
+    if abs(float(raw["rope"]["radius"]) - float(prefabs["rope_pbd"]["radius"])) > 1e-12:
+        raise SystemExit("rope.radius in the task yaml must equal prefabs.rope_pbd.radius (literal copy)")
+    if abs(float(raw["fixtures"]["POST"]["base_height"]) - float(prefabs["rope_routing_post"]["base_height"])) > 1e-12:
+        raise SystemExit("POST.base_height in the task yaml must equal prefabs.rope_routing_post.base_height")
+    raw["rope"]["endpoint_handle"]["z_offset"] = raw["physical_handle"]["z_offset"]
+    if turns is not None:
+        raw["winding"]["turns"] = int(turns)
+    if sweep_deg is not None:
+        raw["rope"]["spawn_arc"]["sweep_deg"] = float(sweep_deg)
+    return raw
+
+
 def main(argv=None) -> int:
     raw = yaml.safe_load(TASK_CFG.read_text(encoding="utf-8"))
     prefabs = yaml.safe_load(PREFABS.read_text(encoding="utf-8"))
-    # The two interpolations the checks below dereference.
-    raw["rope"]["radius"] = prefabs["rope_pbd"]["radius"]
-    raw["rope"]["endpoint_handle"]["z_offset"] = raw["physical_handle"]["z_offset"]
     # `turns` and `sweep_deg` are the one pair a run has to get right together,
     # and both are set on the command line for anything but the default. Check
     # the pair here, in a second, rather than 40 minutes into a GPU run.
@@ -205,11 +262,7 @@ def main(argv=None) -> int:
         "--sweep-deg", type=float, help="override task.rope.spawn_arc.sweep_deg"
     )
     args = parser.parse_args(argv)
-    if args.turns is not None:
-        raw["winding"]["turns"] = int(args.turns)
-    if args.sweep_deg is not None:
-        raw["rope"]["spawn_arc"]["sweep_deg"] = float(args.sweep_deg)
-    raw["routes"]["initial"][-1]["sweep_deg"] = raw["rope"]["spawn_arc"]["sweep_deg"]
+    raw = resolve(raw, prefabs, turns=args.turns, sweep_deg=args.sweep_deg)
     cfg = wrap(raw)
 
     layout = StandInLayout(cfg)
@@ -278,7 +331,7 @@ def main(argv=None) -> int:
     # ...and the whole spiral has to fit under the post's top, which is what
     # bounds how many turns this layout can do at all. Stated as a relation, not
     # a number, so raising `turns` fails here instead of in the sim.
-    post_top_task = float(post.pos[2]) + 0.5 * float(post.height)
+    post_top_task = float(post.z) + 0.5 * float(post.height)
     spiral_top = (
         spec.wind_z_start + spec.turns * spec.climb_per_turn + float(cfg.rope.radius)
     )
@@ -290,7 +343,7 @@ def main(argv=None) -> int:
         f"post top less 10 mm); this post and climb hold "
         f"{int((room - spec.wind_z_start) // spec.climb_per_turn)} turns",
     )
-    post_top = layout.world_z(float(post.pos[2]) + 0.5 * float(post.height))
+    post_top = layout.world_z(float(post.z) + 0.5 * float(post.height))
     check(
         "oracle stays below the post top (the gateway is not used)",
         float(heights.max()) < post_top,
@@ -611,19 +664,26 @@ def main(argv=None) -> int:
     path_delta = free_end_winding_delta(
         [layout.route_polyline("initial")[-1]] + list(points), center, anchor
     )
+    # 2026-09-05: the run to C is chosen by the planner (`to_c_route: closure`),
+    # straight where that keeps the count right -- the shipped layout -- and
+    # round the far side (`to_C_around`) where a randomised C sits past the ray
+    # opposite the anchor. On the shipped layout the run is still straight.
     check(
-        "the verdict is the closed whole-rope count and the run to C goes straight",
+        "the verdict is the closed whole-rope count, chosen route to C",
         str(getattr(getattr(cfg, "success", None), "winding_metric", "on_post")) == "closure"
-        and spec.to_c_route == "straight"
-        and "to_C_around" not in labels,
-        "on_post depends on the rope hugging the post; a detour would loosen the top wrap",
+        and spec.to_c_route == "closure",
+        "straight run on the shipped layout" if "to_C_around" not in labels else "via to_C_around",
     )
     check(
-        "spawn reading + the free end's whole path (orbits AND the straight run to C) = target",
+        "spawn reading + the free end's whole path (orbits AND the run to C) = target",
         abs(spawn_reading + path_delta - spec.target_winding) < 1e-6,
         f"{spawn_reading:+.0f} {path_delta:+d} = {spawn_reading + path_delta:+.0f}, "
-        f"target {spec.target_winding:+.0f}; C has to sit where that run does not "
-        "cross the ray opposite the anchor",
+        f"target {spec.target_winding:+.0f}",
+    )
+    check(
+        "the shipped layout's run to C is the straight one",
+        "to_C_around" not in labels,
+        "C south of the post (bearing 290) is short of the ray opposite the anchor (335)",
     )
     sweep_final = winding_sweep(oracle_rope("place_at_C"), center, wrap_band)
     margin = 0.5 - abs(sweep_final - round(sweep_final))
@@ -999,58 +1059,36 @@ def main(argv=None) -> int:
         f"{slack * 100:.1f}% at turns={spec.turns}, "
         f"sweep {float(cfg.rope.spawn_arc.sweep_deg):.0f}deg",
     )
-    # ...and the same for every turn count the task ships, because the demand
-    # moves with the turn count and the rope's length does not follow on its own.
-    # One turn on the post eats 2*pi*settle_radius = 151 mm here, so a route that
-    # is comfortable at two turns is 12% SHORT at three. Reported as the sweep
-    # each count needs, not just pass/fail, so the config table can be checked
-    # against arithmetic rather than against memory.
+    # ...and the same for every turn count the task ships: the demand moves
+    # with the turn count (one turn on the post eats 2*pi*settle_radius =
+    # 151 mm) and, since 2026-09-05, with the positions too, so the variation
+    # block derives the sweep from the slack band instead of reading a table.
+    # The rule must restore the hand-written pairs within a couple of degrees.
     print(
         f"  [--] one turn on the post eats "
         f"{2.0 * math.pi * settle_radius * 1000:.0f} mm of rope; "
         f"the spawn arc's sweep is what pays for it"
     )
-    for count in (1, 2, 3):
-        probe_cfg = wrap(
-            {**raw, "winding": {**raw["winding"], "turns": count}}
-        )
-        probe_layout = StandInLayout(probe_cfg)
-        probe_spec = WindingSpec.from_config(probe_cfg)
-        _, probe_plan = plan_rope_winding_route(probe_layout)
-        need, _ = taut_demand(probe_layout, probe_spec, probe_plan.waypoints)
-        # Sweep that puts this count in the middle of the band, by bisection on
-        # the real arc code rather than on a closed form nobody would re-derive.
-        chord = float(
-            np.linalg.norm(
-                probe_layout.route_point({"fixture": "S", "relation": "center"})[:2]
-                - np.asarray(
-                    probe_layout.route_point(
-                        raw["routes"]["initial"][-1]["arc_to"]
-                    ),
-                    dtype=float,
-                )[:2]
-            )
-        )
-        target = need * 0.5 * (low + high + 2.0)
-        lo, hi = 40.0, 355.0
-        for _ in range(60):
-            middle = 0.5 * (lo + hi)
-            theta = math.radians(middle)
-            if chord * theta / (2.0 * math.sin(0.5 * theta)) < target:
-                lo = middle
-            else:
-                hi = middle
-        print(
-            f"  [--] turns={count}: needs {need:.3f} m taut, "
-            f"so sweep_deg ~{0.5 * (lo + hi):.0f} for mid-band"
-        )
+    from topogym.tasks.routing._rope_winding_geometry import sweep_from_slack
 
-    # Wall clock is why this route is kept short. One FEM+IPC step is ~0.66 s on
-    # the reference machine (2026-08-11, docs/develop/physics/fem_ipc_step_cost_zh.md)
-    # and no solver knob has moved it, so the only lever is how many steps the
-    # run asks for. Counting only the waypoints understates it badly: the grasp
-    # sequence in front of them is a fixed cost that was 40% of the first real
-    # run, which is exactly the kind of thing an estimate has to include.
+    pairing = {1: 155.0, 2: 200.0, 3: 230.0}
+    solved = {}
+    for count in (1, 2, 3):
+        probe_cfg = wrap({**raw, "winding": {**raw["winding"], "turns": count}})
+        solved[count] = sweep_from_slack(StandInLayout(probe_cfg))
+        print(f"  [--] turns={count}: sweep_deg {solved[count]:.1f} for mid-band (table {pairing[count]:.0f})")
+    check(
+        "the slack rule restores the turns -> sweep_deg pairing table within 3 degrees",
+        all(abs(solved[c] - pairing[c]) <= 3.0 for c in (1, 2, 3)),
+        ", ".join(f"{c}: {solved[c]:.1f}" for c in (1, 2, 3)),
+    )
+    plug_xy = np.asarray(layout.route_polyline("initial")[-1], dtype=float)[:2] - TASK_ORIGIN[:2]
+    check(
+        "the plug spawn rule restores the hand-written point (0.156, -0.157)",
+        abs(plug_xy[0] - 0.156) < 0.001 and abs(plug_xy[1] + 0.157) < 0.001,
+        f"({plug_xy[0]:+.4f}, {plug_xy[1]:+.4f})",
+    )
+
     print("\nrun cost")
     physical = cfg.physical_handle
     steps = [int(waypoint.steps) for waypoint in plan.waypoints]
@@ -1088,8 +1126,139 @@ def main(argv=None) -> int:
     check_one_turn(raw)
     check_rigid_grasp()
 
+    print("\nvariation envelope")
+    _check_variation_envelope(prefabs)
+
     print("\n" + ("FAIL: " + ", ".join(failures) if failures else "PASS: all checks"))
     return 1 if failures else 0
+
+
+def _set(raw, dotted, value):
+    node = raw
+    parts = dotted.split(".")
+    for part in parts[:-1]:
+        node = node[part]
+    node[parts[-1]] = value
+
+
+def _derived_layout(raw):
+    """The yaml's three derivations by hand (the hooks live in a module that imports Genesis)."""
+
+    from topogym.tasks.routing._rope_winding_geometry import sweep_from_slack
+    from topogym.tasks.routing._winding_post_geometry import target_x_from_frac, wind_z_from_frac
+
+    cfg = wrap(raw)
+    raw["winding"]["wind_z_start"] = wind_z_from_frac(cfg, float(raw["winding"]["wind_z_frac"]))
+    raw["fixtures"]["C"]["x"] = target_x_from_frac(StandInLayout(wrap(raw)), float(raw["fixtures"]["C"]["x_frac"]))
+    raw["rope"]["spawn_arc"]["sweep_deg"] = sweep_from_slack(StandInLayout(wrap(raw)))
+    return StandInLayout(wrap(raw))
+
+
+def _check_variation_envelope(prefabs) -> None:
+    """2026-09-05, variation plan section 6.2 step 6: the yaml's `variation:` block.
+
+    The three derivations restore the shipped layout; a cw instruction leaves
+    the scene untouched (the anti-shortcut axis: same picture, opposite orbit);
+    every vertex of the envelope passes the twelve feasibility rows; and two
+    layouts outside the envelope fail the rows they should.
+    """
+
+    import itertools
+
+    from topogym.tasks.routing._rope_winding_geometry import rope_winding_checks
+
+    base = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
+    derived = _derived_layout(resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs))
+    check(
+        "frac 0.5 / 0.5 and the slack rule restore wind_z_start 0.045, C.x 0.075, sweep 200 +- 3",
+        abs(float(derived.cfg.winding.wind_z_start) - 0.045) < 1e-9
+        and abs(float(derived.cfg.fixtures.C.x) - 0.075) < 1e-9
+        and abs(float(derived.cfg.rope.spawn_arc.sweep_deg) - 200.0) <= 3.0,
+        f"wind_z_start {float(derived.cfg.winding.wind_z_start):.4f}, C.x {float(derived.cfg.fixtures.C.x):.4f}, "
+        f"sweep {float(derived.cfg.rope.spawn_arc.sweep_deg):.1f}",
+    )
+    rows = {name: (measured, limit, ok) for name, measured, limit, ok in rope_winding_checks(derived)}
+    check(
+        "the twelve feasibility rows pass on the shipped layout",
+        len(rows) == 12 and all(ok for _, _, ok in rows.values()),
+        " ".join(f"{n}={m:+.4f}" for n, (m, _, _) in rows.items()),
+    )
+    # cw: same spawn route, same fixtures, mirrored orbit, opposite target.
+    mirrored = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
+    mirrored["winding"]["direction"] = "cw"
+    cw = _derived_layout(mirrored)
+    ccw_spawn = derived.route_polyline("initial")
+    cw_spawn = cw.route_polyline("initial")
+    _, ccw_plan = plan_rope_winding_route(derived)
+    _, cw_plan = plan_rope_winding_route(cw)
+    check(
+        "a cw instruction leaves the scene untouched: same spawn route and sweep, opposite target",
+        ccw_spawn.shape == cw_spawn.shape
+        and bool(np.allclose(ccw_spawn, cw_spawn, atol=1e-9))
+        and abs(float(cw.cfg.rope.spawn_arc.sweep_deg) - float(derived.cfg.rope.spawn_arc.sweep_deg)) < 1e-6
+        and WindingSpec.from_config(cw.cfg).target_winding == -WindingSpec.from_config(derived.cfg).target_winding
+        and len(cw_plan.waypoints) == len(ccw_plan.waypoints),
+        f"{len(cw_spawn)} spawn points, {len(cw_plan.waypoints)} waypoints each way",
+    )
+    cw_rows = {n: ok for n, _, _, ok in rope_winding_checks(cw)}
+    check("...and passes the same twelve rows", all(cw_rows.values()))
+
+    axes = []
+    for entry in base["variation"]:
+        if entry["kind"] == "uniform":
+            axes.append((entry["path"], [float(entry["lo"]), float(entry["hi"])]))
+        elif entry["kind"] == "choice":
+            axes.append((entry["path"], list(entry["values"])))
+    tightest: dict[str, float] = {}
+    infeasible = []
+    count = 0
+    detours = 0
+    for values in itertools.product(*(vals for _, vals in axes)):
+        raw = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
+        for (path, _), value in zip(axes, values):
+            _set(raw, path, value)
+        count += 1
+        try:
+            corner = _derived_layout(raw)
+            corner_rows = rope_winding_checks(corner)
+            bad = [n for n, _, _, ok in corner_rows if not ok]
+            for n, m, l, _ in corner_rows:
+                margin = (l - m) if n == "hand_reach" else (m - l)
+                tightest[n] = min(tightest.get(n, float("inf")), margin)
+            _, corner_plan = plan_rope_winding_route(corner)
+            detours += int(any(w.label == "to_C_around" for w in corner_plan.waypoints))
+        except ValueError as exc:
+            bad = [f"derive: {exc}"]
+        if bad:
+            infeasible.append((values, bad))
+    check(
+        f"all {count} envelope corners are feasible",
+        not infeasible,
+        f"{len(infeasible)} infeasible" + (f"; first: {infeasible[0]}" if infeasible else "") + f"; {detours} need to_C_around",
+    )
+    print("  [--] tightest margin per row over the corners: " + " ".join(f"{n}={m:+.4f}" for n, m in tightest.items()))
+
+    far = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
+    far["fixtures"]["POST"]["x"] = 0.060
+    far_rows = {n: ok for n, _, _, ok in rope_winding_checks(_derived_layout(far))}
+    check("a post at x=0.060 fails hand_reach (the plug spawn point is the farthest waypoint)", not far_rows["hand_reach"])
+    # Without the anchor-lead cap the plug would sit past the ray opposite the
+    # anchor on this corner (S north-east of the post) and the spawn arc would
+    # already read a wrap; with it the plug slides back and the arc reads 0.
+    past = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
+    past["fixtures"]["S"]["x"], past["fixtures"]["S"]["y"] = -0.120, 0.130
+    past["fixtures"]["POST"]["x"], past["fixtures"]["POST"]["y"] = -0.020, -0.020
+    past["rope"]["spawn_arc"]["anchor_lead_deg"] = -30.0
+    past_layout = StandInLayout(wrap(past))
+    past_reading = spawn_winding(past_layout, WindingSpec.from_config(past_layout.cfg))
+    past["rope"]["spawn_arc"]["anchor_lead_deg"] = 20.0
+    capped_layout = StandInLayout(wrap(past))
+    capped_reading = spawn_winding(capped_layout, WindingSpec.from_config(capped_layout.cfg))
+    check(
+        "S north-east of the post: the uncapped plug spawn reads a wrap, the capped one reads 0",
+        abs(past_reading) > 0.5 and abs(capped_reading) < 1e-6,
+        f"uncapped {past_reading:+.0f}, capped {capped_reading:+.0f}",
+    )
 
 
 def check_one_turn(raw) -> None:

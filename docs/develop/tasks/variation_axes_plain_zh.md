@@ -40,7 +40,7 @@
 
 说明：
 
-- ring_transfer 的柱高目前不能直接改：搬运路径里的三个高度是手写数值，柱高一变就错，须先改为按柱顶高度推导。
+- ring_transfer 的柱高 2026-09-04 起可以直接改：搬运路径里的三个高度（`lift_low_z` / `hang_bottom_z` / `drop_z`）已改为 Layout 按挡头顶与底座高推导（`ring_transfer_zh.md` §7.1）。
 - bar_through_hole 的孔径下限 31 mm 受插入高度的手写偏置限制；改为推导后（09-04）下限到 29 mm——再往下受横推段竖直窗口限制（far 托座斜面顶端到孔上沿），27 mm 每侧只剩 1.45 mm，除非收窄 far 托座夹板。
 - diverter 只有两档；可加第二维「岔道张角」36° / 30° / 24°（角越小拨杆离基座越远）。
 - linkbar 的这条轴不是单个参数，是两区角度联合抽样后按差值分箱。
@@ -57,7 +57,8 @@
 | diverter_route_ball | **死路在哪边**；**拨板出生时封着哪边** | 左 / 右；左 / 右（独立） | 指令 + 场景；两者组合里一半实例正确动作是不转 |
 | linkbar_rotate_to_zone | **销钉是哪种颜色**（即目标区）；**两区各是六色里的哪两种** | color_1 / color_2；30 种有序颜色对 | 场景线索（销钉、套环、手柄盖同色） |
 | cloth_fold | **捏哪个角** | 四角之一 | 指令（待扩展） |
-| cloth_unpleat / cloth_unroll | **布带沿桌子前后铺还是左右铺** | 前后 / 左右 | 场景 |
+| cloth_unpleat | **布带的自由端在左边还是右边**（2026-09-05 起；沿 y 铺，自由端在 +y 端或 −y 端，整个布局镜像） | +y / −y | 场景（褶的折向：三层区叠向引入段那一侧，拉错端会拖走锚点）。「前后铺 / 左右铺」按变体轴表搁置：沿 +x 拉的终点桌面高度够不着 |
+| cloth_unroll | **布带沿桌子前后铺还是左右铺** | 前后 / 左右 | 场景 |
 
 没有防捷径离散轴的任务：rope_unwinding（出生缠绕方向画面可见，反向解绕只作对照策略）、bar_through_hole、unlink_c_ring、gate_cage_ball。这四个任务的防捷径由物理本身保证：绕过面板顶判 0、缺口不对准就卡住、时机不对就关不住。
 
@@ -139,10 +140,10 @@ FEM 绳一格 6–13 min，GPU 只跑 seed 0–9 与角点子集。
 | 4 | band_untwist | 已落地（09-03）：镜像开关 `figure_eight.over_end`；`checks()` 的 `lift_height` 行守 0.40；`end_gap` 由 `end_frac` 派生 |
 | 5 | swap_crossing_sign | `braid.py` 交叉位置改为接收采样值并裁剪窗口；接入 `verify_braid_spec`；planner 抬升守卫 |
 | 6 | rope_winding | 绳长反解；`to_c_route: closure`；柱顶联合不等式进 `checks()` |
-| 7 | rope_unwinding | 两个出生点改为推导；run 配置键 |
+| 7 | rope_unwinding | 已落地（09-04，`docs/develop/physics/rope_winding/rope_unwinding_zh.md` §7）：两个手写出生点改为 `routes.initial` 的规则条目 `lead_in_toward` / `tail_arc`；`direction=cw` 定义为镜像布局（Layout 取反三个 fixture 的 y；不镜像时首抽拒绝率 21%）；`wind_z_start` 由 `wind_z_frac` 派生、`C.x` 由 `x_frac` 在挖掉插头净空盘后的区间里派生（独立抽时 3.3% 拒绝）；`checks()` 十二行；离线 1000 seed 拒绝率 0、1536 角点全过；固定布局 GPU 复跑通过（插头出生点西移 28 mm）；GPU：seed 0–9 oracle **10/10**、visual 10/10、wrong_way 3/3 判失败、角点子集 **12/12**。三次首跑失败：网格生成硬边界（3 圈 × 圈距 0.0102 管皮自交 → `climb_per_turn` 下界 0.010 → 0.012，离线 tetgen 定界）；对照组覆盖进了布局校验（`checks()` 改用 oracle 轨道评估、planner 强制轨道下退回直线）；贴柱守卫的绝对门按两圈标定（改为 max(4800, 0.85 × 全绳节点)，锚点最贴柱的角点解下的绳绕在柱脚、贴柱数 1.6 倍出生值但闭合计数 0）|
 | 8 | unlink_c_ring | 已落地（09-03）：`checks()` 七行含可达与手净空行并接入拒绝采样；抓取方位角由 `grasp_offset_deg` 派生；`gap_azimuth` ±10；判据 `passed_through` 改判 `max_pass_through_depth`；摆动段闭环修正后 GPU oracle 10/10、角点 32/32、no_align 10/10 判失败 |
-| 9 | cloth_unpleat / cloth_unroll | 修 `observe()` 抓取高度（unpleat）；褶宽上限 0.035；圈数上限按层距、杆高联合；run 配置补 seed 键 |
-| 10 | ring_transfer | 三个搬运高度改为按柱顶推导（柱高轴的前置）；环长轴、捏取侧推导；成对平移 / 旋转 directive；run 配置 + EpisodeSpec |
+| 9 | cloth_unpleat / cloth_unroll | **cloth_unpleat 离线已落地（2026-09-05，`cloth_unpleat_zh.md`）**：褶宽 Cat{0.035, 0.030, 0.024}、`pull_side` 镜像轴、顶缘 / 横向位置 / 行程倍数三条连续轴、内缩量与纵向位置由 frac 派生（附着盘净空、可达盘）；`checks()` 七行；`observe()` 抓取高度修正；离线 1000 seed 拒绝率 0、192 角点全过；GPU 见该文档 §5。cloth_unroll 未开始：圈数上限按层距、杆高、行程上限联合 |
+| 10 | ring_transfer | **离线已落地（2026-09-04，`ring_transfer_zh.md` §7）**：三个搬运高度、环长轴、捏取侧 / 捏取点全部改为 Layout 按柱推导；成对平移 / 旋转不加新 kind，走 `pair`（中点、柱距、朝向）→ `derived` 写两柱位置（bar_through_hole 先例）；中点由 `mid_x_frac / mid_y_frac` 在工作区 ∩ 可达圆的窗口里派生；`ring.on_post` 是防捷径指令轴；`checks()` 十五行；离线 1000 seed 拒绝率 0、256 角点全过。**GPU 完成（09-05）**：seed 0–9 oracle 10/10（一格 1276–1375 步），角点子集 8/8（首跑 4/8：派生写了带空格的 `goal.instruction` 句子，角点 sweep 的 Hydra 覆盖按空格切词失败——派生只能写标量、无空格的叶子，指令改为模板 + `Layout.instruction()`），`lift_only` 对照重做为 carry 同款抬离 + 放到两柱中点，3/3 判失败、终态绕数集合为空。原前置：三个搬运高度改为按柱顶推导（柱高轴的前置）；环长轴、捏取侧推导；成对平移 / 旋转 directive；run 配置 + EpisodeSpec |
 | 11 | cloth_fold | 四角抓取（`_grasp_offset` + `finger_axis` 回退）；补工作区 / 可达断言 |
 | 12 | bar_through_hole | 已落地（09-04，`bar_through_hole_zh.md`）：四个搬运高度改由 Layout 推导（横推高度取「far 托座斜面顶端 ↔ 孔上沿」窗口的中点）；`checks()` 九行；`across_flats` 下界 0.027 → 0.029（竖直窗口）；杆长与抓取偏移由归一化 frac 派生、托座跟随用 `derived`；离线 1000 seed 拒绝率 0、64 角点全过 |
 

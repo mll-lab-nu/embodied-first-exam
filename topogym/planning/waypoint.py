@@ -142,6 +142,92 @@ def helix_route_points(
     ]
 
 
+def lead_in_route_point(start, toward, length: float, z: float) -> np.ndarray:
+    """``length`` metres from ``start`` straight toward ``toward`` (xy), at ``z``.
+
+    rope_unwinding's first leg after the anchor: the terminal's own inlet arc
+    pins the rope at the board height, and climbing to the first wrap straight
+    from there kinks it (49 degrees at the arc's end, a bend radius under the
+    tube's own). Forty millimetres level first spreads the climb out. Written
+    as a rule of the anchor's and the post's positions so the point moves with
+    them instead of being a coordinate somebody typed once.
+    """
+
+    start = np.asarray(start, dtype=float)
+    toward = np.asarray(toward, dtype=float)
+    offset = toward[:2] - start[:2]
+    distance = float(np.linalg.norm(offset))
+    if distance <= float(length):
+        raise ValueError(
+            f"lead-in of {float(length):.3f} m would overshoot a target {distance:.3f} m away."
+        )
+    xy = start[:2] + offset * (float(length) / distance)
+    return np.array([xy[0], xy[1], float(z)], dtype=float)
+
+
+def plug_spawn_point(anchor, center, distance: float, bearing: float, anchor_lead: float, z: float) -> np.ndarray:
+    """Where a rope's plug lies at spawn, as a rule of the post and the anchor.
+
+    rope_winding: the plug lies ``distance`` from the post's axis ``center`` at
+    the compass ``bearing`` (radians, counter-clockwise from +x), which
+    reproduces the hand-written spawn point. One exception keeps the spawn arc
+    from S to the plug on the near side of the post: the count the verdict
+    reads closes the rope from the plug straight back to the anchor, and that
+    closure flips whenever the plug sits past the ray OPPOSITE the anchor. So
+    the bearing is capped at ``anchor_bearing + pi - anchor_lead``, i.e. the
+    plug stays ``anchor_lead`` short of that ray and the spawn reads 0 wraps.
+    """
+
+    anchor = np.asarray(anchor, dtype=float)
+    center = np.asarray(center, dtype=float)
+    anchor_bearing = float(np.arctan2(anchor[1] - center[1], anchor[0] - center[0]))
+    cap = anchor_bearing + np.pi - float(anchor_lead)
+    # Compare on the same branch: bring `bearing` next to `cap`.
+    bearing = float(bearing)
+    bearing = bearing - 2.0 * np.pi * np.round((bearing - cap) / (2.0 * np.pi))
+    use = min(bearing, cap)
+    return np.array(
+        [center[0] + float(distance) * np.cos(use), center[1] + float(distance) * np.sin(use), float(z)],
+        dtype=float,
+    )
+
+
+def tail_arc_route_points(helix_end, center, sign: float, chord: float, sweep: float, z: float) -> list:
+    """The free tail after a spawn helix: an arc leaving the top wrap on its tangent.
+
+    ``helix_end`` is the last point of `helix_route_points` (on the wrap circle
+    about ``center``), ``sign`` the helix's winding sense. The tail leaves along
+    the circle's tangent there -- any other heading is a kink the rope takes at
+    spawn, on the post's surface -- and bends AWAY from the post by ``sweep``
+    (radians, magnitude; the side is decided here), so its chord of length
+    ``chord`` heads ``sweep / 2`` off the tangent. Returns the arc's points,
+    ``helix_end`` excluded, ending at the plug's spawn point at height ``z``.
+
+    The chord is the free parameter that sets the plug's distance from the post;
+    the sweep sets the arc's length, i.e. the rope's slack (see the task yaml's
+    `rope.spawn_arc`).
+    """
+
+    helix_end = np.asarray(helix_end, dtype=float)
+    center = np.asarray(center, dtype=float)
+    sign = 1.0 if float(sign) >= 0.0 else -1.0
+    radial = helix_end[:2] - center[:2]
+    if float(np.linalg.norm(radial)) <= 1e-9:
+        raise ValueError("the tail arc needs a helix end point off the post's axis.")
+    tangent = float(np.arctan2(radial[1], radial[0])) + sign * 0.5 * np.pi
+    signed_sweep = -sign * abs(float(sweep))
+    heading = tangent + 0.5 * signed_sweep
+    plug = np.array(
+        [
+            helix_end[0] + float(chord) * np.cos(heading),
+            helix_end[1] + float(chord) * np.sin(heading),
+            float(z),
+        ],
+        dtype=float,
+    )
+    return arc_route_points(helix_end, plug, signed_sweep)
+
+
 @dataclass(frozen=True)
 class WaypointTarget:
     """One physical target point for a primitive or motion executor."""

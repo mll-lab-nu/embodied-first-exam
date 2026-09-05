@@ -37,10 +37,14 @@ probe_every: 15
 viewer_speedup: 1.0
 slow_factor: 1.0
 
-# --- 数据生成相关 ----------------------------------------------------------
-# 没有 randomize_layout / difficulty：本 demo 还没接布局随机化，
-# 留着就是一个读不到的死键。接的时候连同 generation/layout_randomization.py
-# 的条目一起加。
+# --- 变体（2026-09-05）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）：
+#   run.randomize_layout=true run.seed=3
+# 默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志与 episode 元数据的变体标识（角点 sweep 用 corner_<id>）。
 variant_id: default
 # 录制 H5 数据集到该路径。null = 不录。
 record_dataset: null

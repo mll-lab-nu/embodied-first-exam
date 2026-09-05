@@ -7,8 +7,13 @@
 # 所以取值复制而不是共享；哪天两者需要分开调，改一边不会牵动另一边。
 #
 # 场景：布带整体平铺，中部有一个竖起的褶皱（局部三层重叠），其余部分平整。
-# 动作：夹爪捏住褶皱顶缘，把收在褶皱里的材料铺开。
+# 动作：夹爪捏住布带自由端，贴桌面拉，把收在褶皱里的材料铺开。
 # 状态变化：高度峰值从褶皱高度降至布厚、层数 3 → 1、铺展长度相应增加。
+#
+# 变体（2026-09-05）：文件末尾的 variation 块按 seed 抽褶宽三档、顶缘高度、布带横向位置、
+# 行程倍数、自由端在轴的哪一端（pull_side 镜像），以及两个归一化分数（捏取点内缩量、
+# 布带纵向位置）由 `cloth_unpleat.derive_task_cfg` 按当前褶几何映射到可行区间。
+# 七行可行性判据在 `_cloth_unpleat_geometry.py`，建场景 / 随机化 / 离线门 / 角点门共用。
 
 task:
   id: cloth_unpleat
@@ -36,7 +41,19 @@ cloth:
   # 四个边界都在里面，而且沿 y 摆比沿 x 摆余量更大。
   material_length: 0.260
   width: 0.120
-  center: [0.040, 0.000]
+  # 布带俯视中心（任务坐标）。原来是 center: [x, y] 一个列表，2026-09-05 拆成两个标量键：
+  # 随机化器只写标量叶子。center_x 是横向（宽度方向）位置，直接抽 ±0.030；
+  # center_y 是纵向（材料方向）位置，由 center_y_frac 派生——它的可行区间随褶宽、内缩量、
+  # 行程一起变（拉动终点要落在可达盘与工作区内），独立抽会撞可达门（见 variation 块）。
+  center_x: 0.040
+  center_y: 0.000
+  # 归一化 [0, 1]：0 = 区间下端（布带尽量靠 −y）、1 = 上端（尽量靠 +y）。0.5 还原 center_y 0。
+  center_y_frac: 0.5
+  # 自由端在材料轴的哪一端：+1 = +y 端（出厂），−1 = 镜像布局（剖面对 y 取反，自由端在 −y 端，
+  # 夹爪向 −y 拉）。底座在 y = 0、工作区关于 y = 0 对称，两侧的七行判据读数完全相同。
+  # 这是防捷径离散轴：画面里能看出该拉哪一端的线索是褶的折向（三层区叠向引入段那一侧），
+  # 永远向 +y 拉的策略在 −1 格会拖走锚点。
+  pull_side: 1
   # 布带的长度方向落在哪个世界轴上。**转的是布，不是纹理**：条纹由网格的 UV 绑在
   # 材料上，布转过去条纹跟着转，条纹与折痕的相对关系不变。
   #
@@ -218,7 +235,11 @@ grasp:
   attach_z_band: null
   # 抓取点从布带边缘往里缩多少。附着盘半径 0.018，正压在边缘上会有一半悬空。
   # 0.012 = 3 倍粒径，让整个盘落在布上，同时仍然抓在「边缘」这个语义范围内。
+  # 2026-09-05 起由 edge_inset_frac 派生：区间 [0.008, min(0.018, 半跨度 − 褶宽 − 2 × attach_radius)]，
+  # 上限随褶几何变（褶宽 0.035 + 顶缘 0.028 时只剩 0.0164）。固定布局跑时这里的值直接用。
   edge_inset: 0.012
+  # 归一化 [0, 1]，0.4 在基准褶几何下还原 0.012。
+  edge_inset_frac: 0.4
   # 手腕朝向。**这是个待实测的旋钮，不是推导出来的。**
   #   across      工具朝着拉的方向，手指横跨布带（人捏布边就是这个姿势）
   #   along       比 across 转 90°
@@ -316,6 +337,23 @@ physical:
   # 那是 run.motion=overpull 演示的那种失败。
   pull_scale: 1.05
 
+# ------------------------------------------------------------------ 可达与工作区
+# checks() 的 hand_reach 行：拉动终点（夹爪最远到的位置）离机械臂底座的水平距离上限。
+# base_xy 同 rope_unwinding / gate / unlink_c_ring / bar 的 reach 段（manipulation_space 的 mount.pos）。
+# **max_hand_dist 0.665 是假设**：桌面高度沿 +y 贴桌拉的唯一实测点是 cloth_unroll 2026-08-24
+# 在 x = 0.040 拉到 y = 0.181（离底座 0.636）；本任务 center_x 到 0.070 时同一 y 离底座 0.665。
+# 与 bar / gate 0.700、rope_unwinding 0.780 不是一个口径：那些手在 5–10 cm 高，这里指垫在
+# 桌面上 8.5 mm。角点子集里 center_x 0.070 + center_y 窗口上端的格实测后写回。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_hand_dist: 0.665
+
+# manipulation_space.workspace 的 x / y 字面量副本（checks() 的 band_in_workspace 行读；
+# 角点门裸加载本文件时读不到 common 配置）。builder 断言与 common 相等。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
+
 success:
   # 静置多少步再开始动作。**120 → 60，2026-08-23 按实测缩短的。**
   # `bending_relaxation=0` 之后布带从第 25 步起跨度、顶缘、单层率三个数就不再变化
@@ -384,3 +422,29 @@ success:
   # 拉伸（复用 cloth_fold_verifier 的 stretch_report）与平整度方差同样只记录。
   stretch_max: null
   flatness_var_max: null
+
+# ------------------------------------------------------------------ 变体
+# 每条轴各自独立区间；区间依赖其他轴的量抽归一化 frac 再由 derive_task_cfg 派生；
+# 首抽拒绝率门 2%（tests/check_variant_rng.py）。角点 3 × 2^5 × 2 = 192 个。
+variation:
+  # 单调裕度轴：褶叠进去的宽度三档。越窄，「拉平了」与「褶塌了」两种读数越难分开。
+  # 上限 0.035 来自抓取净空行：0.040 时 半跨度 − 内缩 − 褶宽 只剩 27 mm < 36 mm（2 × attach_radius）。
+  - {kind: choice, path: cloth.pleat.width, values: [0.035, 0.030, 0.024]}
+  # 防捷径离散轴：自由端在 +y 端还是 −y 端（镜像布局，见 cloth.pull_side 的注释）。
+  - {kind: choice, path: cloth.pull_side, values: [1, -1]}
+  # 布局：顶缘出生高度。只影响出生时三层间距与存料量（存料 55–85 mm）；下限 4 × 粒径。
+  - {kind: uniform, path: cloth.pleat.crest_height, lo: 0.016, hi: 0.028}
+  # 布局：布带横向（宽度方向）位置 ±0.030。布带 x 跨 [center_x − 0.06, center_x + 0.06]，离工作区边 ≥ 0.12。
+  - {kind: uniform, path: cloth.center_x, lo: 0.010, hi: 0.070}
+  # 布局：行程相对存料的倍数。> 1.1 开始拖整条布带（physical.pull_scale 的注释）。
+  - {kind: uniform, path: physical.pull_scale, lo: 0.98, hi: 1.12}
+  # 归一化：捏取点内缩量。区间上限随褶宽 / 顶缘变（附着盘要离三层区 ≥ 36 mm），抽 [0,1] 再派生。
+  - {kind: uniform, path: grasp.edge_inset_frac, lo: 0.0, hi: 1.0}
+  # 归一化：布带纵向位置。区间 [−0.030, min(+0.030, 可达盘弦长 − 终点偏移, 工作区 − 终点偏移)]，
+  # 随褶宽 / 内缩 / 行程 / center_x 变（center_y = +0.03 时 32 个角点里 14 个终点超过 0.181），抽 [0,1] 再派生。
+  - {kind: uniform, path: cloth.center_y_frac, lo: 0.0, hi: 1.0}
+  # 派生：edge_inset_frac -> grasp.edge_inset（要褶宽、顶缘），再 center_y_frac -> cloth.center_y（要内缩、行程、center_x）。
+  - {kind: derived, fn: "topogym.tasks.deformation.cloth_unpleat:derive_task_cfg"}
+  # 校验：ClothUnpleatLayout.checks() 七行（尾段 ≥ 4 格、顶缘 ≥ 粒径、附着盘离三层区、出生布带与拉动终点在工作区内、
+  #       拉动终点可达、行程 ≤ 0.120、出生铺展比 ≤ max_start_spread_ratio）。
+  - {kind: validate, fn: "topogym.tasks.deformation.cloth_unpleat:validate_task_cfg"}

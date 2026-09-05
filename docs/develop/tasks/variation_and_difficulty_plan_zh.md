@@ -122,7 +122,7 @@ B 类抖动幅度的下限：必须大于两个噪声底——仿真非确定性
 | ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `_ScalarJitter(path, lo, hi)`  | 单个标量叶子的均匀采样                                                                  | 多数任务                                                                                  |
 | `_ChoiceJitter(path, choices)` | 离散实例轴，等概率                                                                    | diverter / linkbar / rope_winding / rope_unwinding / ring_transfer / 布料 material_axis |
-| `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架）                              | ring_transfer / bar_through_hole                                                      |
+| `_PairJitter(paths, ...)`      | 成对平移 / 旋转（ring_transfer 两柱、bar_through_hole 杆与托架）——**未实现，两任务都改走 `derived`**：bar 由 `rest_x` 派生三个托座 x，ring 由 `pair`（中点、柱距、朝向）派生两柱位置 | （已由 `derived` 覆盖）                                                        |
 | `_SpacedPairJitter(paths, lo, hi, min_gap)` | 区间内间距 ≥ min_gap 的有序标量对，构造式采样不拒绝（**已落地 2026-09-01**）                 | linkbar 两区中心                                                                        |
 | `_Derived(fn)`（yaml `derived`）| 采样后、校验前调用任务模块函数就地写回派生叶子；区间依赖其他轴的量抽归一化 `[0,1]` 再派生，构造式满足约束（**已落地 2026-09-02**） | linkbar（`init_frac`→初始角）、diverter（`fork_frac`→分岔口、`spawn_frac`→球起点）；待用：rope_winding（sweep_deg）、rope_unwinding（两个出生点）、ring_transfer（long_axis） |
 | `_Validate(fn, max_retry)`     | 采样后调用可行性校验，失败重采                                                              | 全部                                                                                    |
@@ -196,6 +196,10 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 - 前置代码：两个 `routes.initial` 字面值改为由 layout 推导；run 配置补键（`run_configs/rope_unwinding.yaml:37-40` 已说明缺失）。
 - 候选难度统计量：出生圈数。
 - 已知风险：解下的绳保留螺旋记忆散在柱脚，圈数多、柱距 C 近时可能进入夹爪路径；sweep 时记录 `contact_nodes` 终值。
+- **已落地（2026-09-04，`docs/develop/physics/rope_winding/rope_unwinding_zh.md` §7）。** 与上表的差异：C 类两个出生点没有做成叶子，而是 `routes.initial` 的规则条目
+  （`lead_in_toward` / `tail_arc`，Layout 展开）；`sweep_deg` 不反解（位置抖动时 |S−柱| 同时进供给与需求，松弛 6.8–10.6%），改为幅值、弯向由 Layout 定；
+  `direction=cw` 定义为镜像布局（Layout 取反 fixture 的 y），不镜像的 cw 首抽拒绝率 21%；`wind_z_start` 与 `C.x` 各由一个归一化量派生；
+  C 方位角约束由 `to_c_route: closure` 吸收。
 
 ### 3.2 ring_transfer（docx 2.6）
 
@@ -216,6 +220,20 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 - 校验：`tests/check_ring_transfer_geometry.py`（环净空、手掌与挡头净空、悬挂股避开挡头、workspace、`lift_low_z` 与挡头顶）。
 - 前置代码：run 配置无 `seed` / `randomize_layout`；demo 未建 EpisodeSpec；`posts` 是列表，需 `_PairJitter`。
 - 候选难度统计量：柱距；柱半径（B 柱套入所需张开宽度 `2(r_post + 2 r_tube + d_hat)`）。
+
+**已落地（2026-09-04/05，`ring_transfer_zh.md` §7）**，与上表的对应：
+
+| 上表的叶子 | 落地后的叶子 | 说明 |
+|---|---|---|
+| `ring.enclosure` / `goal.enclosure` | `ring.on_post`（choice [A, B]）/ `goal.on_post`（派生为另一根） | 列表叶子既抽不了也进不了角点 sweep 的 Hydra 覆盖，改标量；多柱出生形的预留放弃 |
+| 柱对中点 xy | `pair.mid_x_frac` / `pair.mid_y_frac` → `pair.mid_x` / `mid_y` | 窗口 = `mid_*_range` ∩ 工作区 ∩ 可达圆（0.780）；直接抽 ±0.030 在柱距 0.28 时必拒 |
+| 柱距、柱对朝向角 | `pair.spacing` [0.18, 0.28]、`pair.heading_deg` ±30 | 两柱位置 `posts.A/B.x,y` 由 `derived` 写出，不加 `_PairJitter` |
+| `posts[*].radius`、`head_radius − radius` | `post_shape.radius` [0.013, 0.022]、`post_shape.head_overhang` [0.008, 0.014] | 两柱共用 `post_shape` 块 |
+| 柱高（§2 的单调裕度轴） | `post_shape.height` [0.085, 0.115] | 三个搬运高度改为 Layout 按挡头顶 / 底座高推导后才能动；上界由 lift_low < hang_depth 定 |
+| `ring.long_axis`（C） | 无叶子，Layout 由朝向推导 | 捏取侧、捏取点同样是 Layout 规则 |
+| `carry.hang_bottom_z`（D） | 无叶子，Layout = base_height + 0.024 | `drop_z`、`lift_low_z` 同 |
+
+结果：离线 1000 seed 拒绝率 0、256 角点全过；GPU seed 0–9 oracle 10/10、角点子集 8/8、`lift_only` 对照 3/3 判失败。
 
 ### 3.3 bar_through_hole（docx 2.3 变体）
 
@@ -473,7 +491,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 7   | rope_unwinding               | 两个 `routes.initial` 字面值改为推导 + run 配置键           | 复用 rope_winding 注册项              |
 | 8   | unlink_c_ring                | `checks()` 七行接入拒绝采样 + 抓取方位角派生（**已落地 2026-09-03**，1000 seed 拒绝率 0、32 角点离线全过；GPU oracle 10/10、角点 32/32、no_align 10/10 判失败；判据 `passed_through` 与摆动段闭环修正两处改动） | 已在 sweep 表                       |
 | 9   | cloth_unpleat / cloth_unroll | run 配置补 seed 键；`_ChoiceJitter`                  | oracle 有重观测                      |
-| 10  | ring_transfer                | `_PairJitter`；run 配置 + EpisodeSpec              |                                  |
+| 10  | ring_transfer                | `_PairJitter`；run 配置 + EpisodeSpec              | 已落地（09-04/05）：`pair` + `derived`，run 配置三键；EpisodeSpec 归目标 3 |
 | 11  | cloth_fold                   | 四角抓取扩展                                          | 阈值余量最窄                           |
 | 12  | bar_through_hole             | `primitive.*_z` 改为推导 + 新增 validate              | 无校验器、z 手写                        |
 
@@ -504,7 +522,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 基准：两根带挡头的走线柱左右并排（相距 22 cm），弹性环平铺套在左柱 A。任务为把环搬到右柱 B。
 
-- `enclosure/goal` 交换：环出生在右柱、目标为左柱。
+- `ring.on_post` 交换：环出生在右柱、目标为左柱（落地时列表 `enclosure/goal` 改成了标量）。
 - 柱对中点：两柱一起平移。柱距：18–28 cm。柱对朝向角：两柱连线相对桌边倾斜最多 30°，环长轴随之旋转。
 - `posts.radius`：柱身粗细，粗柱要求环张开更宽才能套入。`head_radius`：挡头大小。
 
@@ -630,7 +648,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 状态                                | 任务                                                                                                                                                                   |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | oracle 由 layout / 实时状态推导，随机化后无需修改 | diverter、linkbar_rotate_to_zone、gate_cage_ball、swap_crossing_sign、unlink_c_ring、band_untwist、cloth_unpleat、cloth_unroll、rope_winding（绳长需重解）、rope_unwinding（两个出生点需重算） |
-| oracle 存在但部分量手写或范围受限              | bar_through_hole、gate_cage_ball（z 高度手写）；cloth_fold（单角、不重观测）；ring_transfer（`hang_depth` 为实测值，环周长固定；仅 `carry` 路线可用）                                                    |
+| oracle 存在但部分量手写或范围受限              | bar_through_hole、gate_cage_ball（z 高度手写）；cloth_fold（单角、不重观测）；ring_transfer（`hang_depth` 为实测值，环周长固定；仅 `carry` 路线可用；09-05 起三个搬运高度已改为推导）                                                    |
 
 
 13 个任务均有 oracle；无一在第 3 节包络上验证过。每个 oracle 的胜任域由各自的不等式集合界定，包络边缘是否在域内由 §4.3 确认。

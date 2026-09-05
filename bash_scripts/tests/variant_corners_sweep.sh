@@ -30,7 +30,9 @@
 # 退出码：任一 oracle 格非 success，或任一格 RAISED/TIMEOUT，即非 0。刻意不用 set -e。
 # 规模（每格约 10 s）：linkbar 20 格、gate 64 格、diverter 256 格（8 种离散组合 × 32）；
 #   band_untwist 256 格但每格 6–13 min（FEM 绳），只跑 CORNERS= 子集；unlink_c_ring 32 格（纯刚体）全跑；
-#   bar_through_hole 64 格（纯刚体）全跑。
+#   bar_through_hole 64 格（纯刚体）全跑；rope_unwinding 1536 格、每格 8–18 min（FEM 绳），只跑 CORNERS= 子集；
+#   ring_transfer 256 格、每格 5–10 min（FEM 闭合环），只跑 CORNERS= 子集；
+#   cloth_unpleat 192 格、每格分钟级（PBD 布），只跑 CORNERS= 子集。
 # ============================================================================
 set -uo pipefail
 
@@ -83,8 +85,41 @@ case "$TASK" in
     ORACLE_ARG=run.oracle_mode=insert
     CONTROLS=(bypass); CONTROL_ARGS=(run.oracle_mode=bypass)
     RESULT_KEY="bar_through_hole_physical_insert_demo result"; SUCCESS_TOKEN=" success=True" ;;
+  rope_unwinding)
+    # FEM 绳：一格 8–18 min（随 start_turns）。1536 个角点不要全跑，用 CORNERS= 选子集。
+    # 没有 inspect demo：visual 组走 physical demo 只抓起插头（max_waypoints=1）。
+    PHYS=demos.routing.rope_unwinding_physical_handle_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.max_waypoints=1 run.viewer=false)
+    ORACLE_ARG=run.viewer=false
+    CONTROLS=(wrong_way); CONTROL_ARGS=(task.winding.orbit_direction=same)
+    RESULT_KEY="rope_winding_physical_handle_demo result"; SUCCESS_TOKEN="task_success=True" ;;
+  ring_transfer)
+    # FEM 闭合环：carry 一格约 2000 步、5–10 min。256 个角点不要全跑，用 CORNERS= 选子集。
+    # 没有 inspect demo：visual 组走 physical demo 抬离到 clear 就停（run.stop_after=clear，exit 2）。
+    PHYS=demos.routing.ring_transfer_physical_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.stop_after=clear run.viewer=false)
+    ORACLE_ARG=run.motion=carry
+    CONTROLS=(lift_only); CONTROL_ARGS=(run.motion=lift_only)
+    RESULT_KEY="ring_transfer result"; SUCCESS_TOKEN="success=True" ;;
+  cloth_unpleat)
+    # PBD 布：一格分钟级（首格实测后写回）。192 个角点不要全跑，用 CORNERS= 选子集。
+    # 没有 inspect demo：visual 组就是带录像的 oracle 格（unfold 走完，视频即证据）。
+    # 对照 shove：往褶的方向推同样距离，预期 unpleated=False。
+    PHYS=demos.deformation.cloth_unpleat_physical_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.motion=unfold run.viewer=false)
+    ORACLE_ARG=run.motion=unfold
+    CONTROLS=(shove); CONTROL_ARGS=(run.motion=shove)
+    RESULT_KEY="cloth_unpleat result"; SUCCESS_TOKEN="unpleated=True" ;;
+  rope_winding)
+    # FEM 绳：一格 10–40 min（随 turns）。1536 个角点不要全跑，用 CORNERS= 选子集。
+    # 没有 inspect demo：visual 组走 physical demo 只抓起插头（max_waypoints=1）。
+    PHYS=demos.routing.rope_winding_physical_handle_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.max_waypoints=1 run.viewer=false)
+    ORACLE_ARG=run.viewer=false
+    CONTROLS=(wrong_way); CONTROL_ARGS=(task.winding.orbit_direction=opposite)
+    RESULT_KEY="rope_winding_physical_handle_demo result"; SUCCESS_TOKEN="task_success=True" ;;
   *)
-    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball|band_untwist|unlink_c_ring|bar_through_hole> [oracle visual 对照组...]" >&2
+    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball|band_untwist|unlink_c_ring|bar_through_hole|rope_unwinding|ring_transfer|rope_winding|cloth_unpleat> [oracle visual 对照组...]" >&2
     exit 1 ;;
 esac
 

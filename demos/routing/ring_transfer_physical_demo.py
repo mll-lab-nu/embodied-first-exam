@@ -33,6 +33,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning.ring_transfer_planner import GraspPhase, plan_ring_transfer
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
@@ -51,8 +52,37 @@ from topogym.verification.ring_transfer_verifier import (
 )
 
 
+TASK_ID = "ring_transfer"
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+
+    task = cfg.task
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} on_post={layout.anchor.name} "
+        f"height={float(task.post_shape.height):.4f} radius={float(task.post_shape.radius):.4f} "
+        f"head_overhang={float(task.post_shape.head_overhang):.4f} spacing={float(task.pair.spacing):.4f} "
+        f"heading={float(task.pair.heading_deg):+.1f} mid_x={float(task.pair.mid_x):+.4f} mid_y={float(task.pair.mid_y):+.4f} "
+        f"a_x={layout.posts['A'].center[0]:+.4f} a_y={layout.posts['A'].center[1]:+.4f} "
+        f"b_x={layout.posts['B'].center[0]:+.4f} b_y={layout.posts['B'].center[1]:+.4f} "
+        f"long_axis={layout.long_axis[0]:+.3f},{layout.long_axis[1]:+.3f} pinch_side={layout.pinch_side:+.0f} "
+        f"pinch_along={layout.pinch_along:.4f} lift_low_z={layout.lift_low_z:.4f} drop_z={layout.drop_z:.4f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="ring_transfer")
 def main(cfg: DictConfig) -> None:
+    # A seeded variant of the layout (the task yaml's `variation:` block).
+    if bool(cfg.run.randomize_layout):
+        cfg = randomize_task_cfg(cfg, TASK_ID, int(cfg.run.seed), difficulty=str(cfg.run.difficulty))
     cfg = apply_recording_camera_overrides(cfg)
     resolved = save_resolved_config(cfg)
     if resolved is not None:
@@ -71,6 +101,9 @@ def main(cfg: DictConfig) -> None:
     )
     built = RingTransferSceneBuilder(cfg.env, cfg.task, cfg.robot_control).build(show_viewer=bool(cfg.run.viewer))
     layout, scene = built.layout, built.scene
+    if bool(cfg.run.randomize_layout):
+        print(_variant_line(cfg, layout), flush=True)
+    print(f"{TASK_ID} checks {_checks_line(layout)}", flush=True)
     task, physical, grasp_cfg = cfg.task, cfg.task.physical, cfg.task.grasp
     evaluator = RingTransferEvaluator.from_layout(layout, task)
     watch = RingTransferWatch(posts=layout.posts, tube_radius=layout.ring.tube_radius)
@@ -487,7 +520,7 @@ def main(cfg: DictConfig) -> None:
         if start.enclosure != want_start or not start.integral:
             raise SystemExit(f"ring_transfer: the loop did not settle around {sorted(want_start)}: {start.summary()}")
         phases, plan = plan_ring_transfer(layout, motion=str(cfg.run.motion))
-        print(f"ring_transfer plan {plan.plan_id} phases={[p.name for p in phases]} {layout.summary()}", flush=True)
+        print(f"ring_transfer plan {plan.plan_id} phases={[p.name for p in phases]} instruction={layout.instruction()!r} {layout.summary()}", flush=True)
         # The off-phase grasps wherever the near band ended up after the on-phase,
         # not the design point (measured 26.7 mm drift in the spike).
         for phase in phases:

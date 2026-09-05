@@ -1,27 +1,33 @@
-"""Offline gate for the ring_transfer layout (docx 2.6): posts, loop, and the
-one-gripper stretch path -- everything that can be wrong before a GPU is spent.
+"""Offline gate for the ring_transfer layout (docx 2.6): posts, loop, the carry
+oracle's feasibility rows and the variation envelope -- everything that can be
+wrong before a GPU is spent.
 
 Runs the REAL geometry module (`topogym/tasks/routing/_ring_transfer_geometry.py`)
-against the REAL task config, so an edit to either is caught here.
+and the REAL `RingTransferLayout` against the REAL task config, so an edit to
+either is caught here.
 
 What it proves:
-  - the loop clears every post's shaft with the barrier distance to spare, and
-    the spawn loop does not touch the post it is not hooked on;
   - the periodic tube is watertight, genus one, and closes at self-linking 0
     (a band spawned at Lk = +-1 looks identical and cannot be flipped flat);
   - the IPC barrier stays inside the tube's own self-contact clearance;
-  - the stretch trapezoid admits post B: where the two taut strands pass B they
-    are further apart than B's diameter plus two tubes plus the barrier, and
-    the negative controls (a pinched cap; a post 5 mm too fat) are
-    rejected;
-  - along the whole far-cap path -- swing, rise, carry, descend -- the strands
-    never come within a tube radius of post B's shaft until the descent, and on
-    the descent they come down on either side of it;
-  - the loop is taut through the carry (the straight-strand model only holds
-    under tension, and the carry is where the strands sweep over B), never stretched beyond the cap ratio, and the
-    carry height is above `carry_height_floor` for the landing point;
-  - every held point is inside the manipulation workspace, and the far-cap
-    grasp is a gripper's width away from both posts.
+  - the carry oracle's fifteen `RingTransferLayout.checks()` rows pass on the
+    baseline: loop clears the post, spawn loop clears the target, head
+    overhang retains the loop, pinch on the straight, palm box clear of both
+    heads at the grasp / over the anchor / at the drop, fingertips over the
+    anchor's head, lift_low below the hang depth, bottom U on the shaft, U
+    wide enough for the target, hanging strands clear of the anchor's head,
+    hands and spawn loop inside the workspace, hand reach;
+  - transfer route (reported, hard-gated only when it is the run config's
+    default motion): the stretch trapezoid admits post B with two negative
+    controls, the far-cap path keeps the strands off B until the descent, the
+    loop stays taut through the carry, carry height above its floor, every
+    held point in the workspace, hook grasps a gripper's width from both posts;
+  - variation envelope: the baseline yaml restores the hand-written layout
+    (posts, long axis, pinch side / point, three carry heights); a heading of
+    30 deg is the baseline rotated about the pair's midpoint; `ring.on_post: B`
+    reverses the crossings; all 256 corners of the yaml's `variation:` block
+    derive and pass every row (tightest margin per row printed); three
+    negative controls are rejected.
 
     python tests/check_ring_transfer_geometry.py
 
@@ -31,6 +37,7 @@ whose package init imports Genesis (CPU import is enough; no GPU is used).
 
 from __future__ import annotations
 
+import itertools
 import sys
 from collections import Counter
 from dataclasses import replace
@@ -43,6 +50,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
 from topogym.tasks.routing import _ring_transfer_geometry as geo  # noqa: E402
+from topogym.tasks.routing.ring_transfer import RingTransferLayout, derive_task_cfg  # noqa: E402
 from topogym.world.rope import check_self_contact_clearance  # noqa: E402
 
 TASK_CONFIG = REPO / "configs/task_configs/ring_transfer_topogym_tabletop_v1.yaml"
@@ -89,46 +97,16 @@ def main() -> int:
     default_motion = str(OmegaConf.load(RUN_CONFIG).motion)
     transfer_failures: list[str] = []
     transfer_fail = transfer_failures if default_motion != "transfer" else failures
-    target_cfg_base = [p for p in task.posts if str(p.name) == str(task.goal.enclosure[0])][0].base_height
 
-    posts = geo.posts_from_config(task.posts)
-    ring = geo.ring_from_config(task.ring, task.rope)
+    layout = RingTransferLayout(task)
+    posts, ring, anchor, target, spawn = layout.posts, layout.ring, layout.anchor, layout.target, layout.spawn
     d_hat = float(task.rope.fem.contact_d_hat)
-    anchor = posts[ring.enclosure[0]]
-    target = posts[str(task.goal.enclosure[0])]
-    others = [post for post in posts.values() if post.name != anchor.name]
-
-    spawn = geo.spawn_centerline(ring, posts)
     frames, vertices, faces = geo.spawn_mesh(ring, spawn)
     print(
         f"loop           perimeter {frames.perimeter:.4f} m, loop radius {ring.loop_radius * 1000:.1f} mm, "
         f"{len(spawn)} rings x {ring.radial_segments}, reach {geo.loop_reach(spawn, ring, anchor) * 1000:.1f} mm "
         f"from {anchor.name}, far cap at {np.round(geo.far_cap_point(spawn, ring, anchor)[:2] * 1000, 1).tolist()} mm"
     )
-
-    # --- posts vs loop ---------------------------------------------------------
-    print()
-    print("post clearance")
-    for post in posts.values():
-        need = post.radius + ring.tube_radius + d_hat
-        print(
-            f"  {post.name}: loop_radius {ring.loop_radius * 1000:.1f} >= r_post + r_tube + d_hat "
-            f"= {need * 1000:.1f} mm  {'ok' if ring.loop_radius >= need else 'FAIL'}"
-        )
-        if ring.loop_radius < need:
-            failures.append(f"loop_radius too small for post {post.name}")
-    distance_anchor = float(np.min(geo.xy_distance_to_post(spawn, anchor)))
-    print(
-        f"  spawn loop to {anchor.name} axis: {distance_anchor * 1000:.1f} mm "
-        f"(shaft + tube {(anchor.radius + ring.tube_radius) * 1000:.1f})"
-    )
-    if distance_anchor < anchor.radius + ring.tube_radius:
-        failures.append(f"spawn loop intersects post {anchor.name}")
-    for post in others:
-        gap = float(np.min(geo.xy_distance_to_post(spawn, post))) - post.radius - ring.tube_radius
-        print(f"  spawn loop to {post.name} surface: {gap * 1000:.1f} mm (want >= 20)")
-        if gap < 0.020:
-            failures.append(f"spawn loop too close to post {post.name}")
 
     # --- skin ------------------------------------------------------------------
     multiplicity = edge_multiplicities(faces)
@@ -281,77 +259,26 @@ def main() -> int:
             if gated and gap < clearance:
                 failures.append(f"{name} grasp too close to post {post.name}")
 
-    # carry oracle (pinch on a straight, clear of both posts)
-    pinch = geo.pinch_point(spawn, ring, anchor, along=float(task.carry.pinch_along), side=float(task.carry.pinch_side))
+    # --- carry oracle: the Layout's rows ----------------------------------------
+    pinch = layout.pinch_point()
     depth = geo.hang_depth(ring, task.carry)
-    carry = geo.carry_path(ring=ring, anchor=anchor, target=target, start_xy=pinch[:2], carry_cfg=task.carry)
-    finger_z = carry[3][1][2]  # the `clear` height
-    tangent = geo.strand_tangent(spawn, pinch)
-    close_axis = np.array([-tangent[1], tangent[0]])
+    carry = layout.carry_path()
     print()
     print(
-        f"carry          pinch at {np.round(pinch[:2] * 1000, 1).tolist()} mm, strand tangent {np.round(tangent, 3).tolist()}, "
-        f"closing along {np.round(close_axis, 3).tolist()}; hang depth {depth * 1000:.0f} mm "
-        f"({'measured' if getattr(task.carry, 'hang_depth', None) is not None else 'estimate'}), "
-        f"fingertips at {finger_z * 1000:.0f} mm (workspace z max {float(workspace.z[1]) * 1000:.0f})"
+        f"carry          pinch at {np.round(pinch[:2] * 1000, 1).tolist()} mm (side {layout.pinch_side:+.0f}, along {layout.pinch_along * 1000:.1f} mm), "
+        f"long axis {np.round(layout.long_axis, 3).tolist()}; hang depth {depth * 1000:.0f} mm "
+        f"({'measured' if getattr(task.carry, 'hang_depth', None) is not None else 'estimate'}); "
+        f"lift_low {layout.lift_low_z * 1000:.0f} / hang_bottom {layout.hang_bottom_z * 1000:.0f} / drop {layout.drop_z * 1000:.0f} mm; "
+        f"clear fingertips at {carry[3][1][2] * 1000:.0f} mm (workspace z max {float(workspace.z[1]) * 1000:.0f})"
     )
-    # The hand must not overlap any post: at the grasp (fingertips at the rope)
-    # and at the drop (fingertips at drop_z on B's far side).
-    for label, xy, z in (
-        ("grasp", pinch[:2], ring.tube_radius + float(task.grasp.pinch_lift)),
-        ("over_anchor", carry[2][1][:2], carry[2][1][2]),
-        ("drop", carry[-1][1][:2], carry[-1][1][2]),
-    ):
-        gaps = geo.hand_clearance(fingertip_xy=xy, close_axis=close_axis, fingertip_z=z, posts=posts, physical_cfg=task.physical)
-        text = ", ".join(f"{name}: {'clear above' if np.isinf(gap) else f'{gap * 1000:.1f} mm'}" for name, gap in gaps.items())
-        bad = [name for name, gap in gaps.items() if gap <= 0.0]
-        print(f"               palm box at {label:11s} vs heads: {text} {'ok' if not bad else 'FAIL'}")
-        if bad:
-            failures.append(f"the hand overlaps post {bad} at the carry {label}")
-    # The fingers hang below the palm: over the anchor the fingertips themselves
-    # must be above its head, and the loop's bottom must still be on the table
-    # (no tension) -- i.e. lift_low_z below hang_depth.
-    low_z = carry[2][1][2]
-    tip_gap = low_z - anchor.top_z
-    print(
-        f"               fingertips over {anchor.name} at {low_z * 1000:.0f} mm: {tip_gap * 1000:.1f} mm above its head "
-        f"{'ok' if tip_gap > 0 else 'FAIL'}; loop bottom still on the table {'ok' if low_z < depth else 'FAIL (lift_low_z >= hang_depth)'}"
-    )
-    if tip_gap <= 0:
-        failures.append("fingertips pass through the anchor's head on the way over it")
-    if low_z >= depth:
-        failures.append("lift_low_z lifts the whole loop: it must stay below hang_depth")
-    bottom = float(task.carry.hang_bottom_z)
-    print(
-        f"               bottom U at {bottom * 1000:.0f} mm: below {target.name}'s head underside "
-        f"{target.height * 1000:.0f} and above its base cone {float(target_cfg_base) * 1000:.0f} "
-        f"{'ok' if float(target_cfg_base) < bottom < target.height else 'FAIL'}"
-    )
-    if not (float(target_cfg_base) < bottom < target.height):
-        failures.append("carry hang_bottom_z is not on the target's shaft")
-    for label, point in carry:
-        if point[2] + float(task.physical.hand_above) > float(workspace.z[1]) + 1e-9:
-            failures.append(f"carry waypoint {label} puts the hand above the workspace")
-    # Once lifted, the loop hangs as two strands at the finger positions
-    # (hand +- spread/2 along `across`); each must stay clear of the anchor's
-    # head at every waypoint from the lift top on. (During the lift itself the
-    # loop passes over the head on purpose -- that is the gateway.)
-    heading = target.center - anchor.center
-    heading = heading / float(np.linalg.norm(heading))
-    across_c = np.array([-heading[1], heading[0]])
-    for label, point in carry[1:-1]:
-        if label in ("lift_low", "over_anchor", "clear"):
-            continue  # the loop is meant to be around / over the anchor here
-        if point[2] - depth >= anchor.top_z:
-            continue  # the whole loop is above the head here
-        worst = min(
-            float(np.linalg.norm(point[:2] + side * float(task.carry.hang_half_width) * across_c - anchor.center))
-            - anchor.head_radius - ring.tube_radius
-            for side in (-1.0, 1.0)
-        )
-        print(f"               {label:14s} hanging strands to {anchor.name}'s head {worst * 1000:.1f} mm {'ok' if worst > 0 else 'FAIL'}")
-        if worst <= 0:
-            failures.append(f"carry leg {label} hangs a strand through {anchor.name}'s head")
+    rows = layout.checks()
+    print(f"checks         {len(rows)} rows (measured / limit)")
+    for name, measured, limit, ok in rows:
+        print(f"  {name:34s} {measured:+.4f} / {limit:+.4f}  {'ok' if ok else 'FAIL'}")
+        if not ok:
+            failures.append(f"layout check {name} failed: {measured:+.4f} against {limit:+.4f}")
+    if len(rows) != 15:
+        failures.append(f"expected 15 layout rows, got {len(rows)}")
 
     lift_z = anchor.top_z + ring.tube_radius + float(task.transfer.lift_margin)
     print(f"lift-off       near band to {lift_z * 1000:.1f} mm (head top {anchor.top_z * 1000:.1f}) then +{float(task.transfer.shift) * 1000:.0f} mm toward {target.name}")
@@ -360,6 +287,10 @@ def main() -> int:
         print(f"  head {post.name}: overhang {overhang * 1000:.1f} mm vs tube diameter {2 * ring.tube_radius * 1000:.0f} (want >=) {'ok' if overhang >= 2 * ring.tube_radius else 'FAIL'}")
         if overhang < 2 * ring.tube_radius:
             failures.append(f"post {post.name} head overhang smaller than the tube diameter: it will not retain the loop")
+
+    print()
+    print("variation envelope")
+    failures.extend(_check_variation_envelope(task))
 
     print()
     print(
@@ -375,6 +306,130 @@ def main() -> int:
         return 1
     print("PASS")
     return 0
+
+
+def _corner_layout(task, values: dict):
+    """A copy of the task config with `values` (dotted path -> value) applied,
+    the yaml's derivation hook run, and the Layout built on it."""
+
+    cfg = OmegaConf.create(OmegaConf.to_container(task, resolve=True))
+    for path, value in values.items():
+        OmegaConf.update(cfg, path, value, merge=False)
+    derive_task_cfg(cfg)
+    return cfg, RingTransferLayout(cfg)
+
+
+def _rotate_about(points, center_xy, angle_deg):
+    pts = np.asarray(points, dtype=float).copy()
+    c, s = np.cos(np.radians(angle_deg)), np.sin(np.radians(angle_deg))
+    rel = pts[:, :2] - np.asarray(center_xy, dtype=float)[None, :]
+    pts[:, 0] = center_xy[0] + c * rel[:, 0] - s * rel[:, 1]
+    pts[:, 1] = center_xy[1] + s * rel[:, 0] + c * rel[:, 1]
+    return pts
+
+
+def _check_variation_envelope(task) -> list[str]:
+    failures: list[str] = []
+    base = RingTransferLayout(task)
+
+    # 1. The baseline yaml (randomize off) restores the hand-written 2026-08-25/26 layout.
+    want = {
+        "A": (-0.100, 0.000), "B": (0.120, 0.000), "long_axis": (0.0, -1.0), "pinch_side": -1.0,
+        "pinch_along": 0.070, "lift_low_z": 0.120, "hang_bottom_z": 0.040, "drop_z": 0.040,
+    }
+    got = {
+        "A": tuple(base.posts["A"].center), "B": tuple(base.posts["B"].center), "long_axis": tuple(base.long_axis),
+        "pinch_side": base.pinch_side, "pinch_along": base.pinch_along, "lift_low_z": base.lift_low_z,
+        "hang_bottom_z": base.hang_bottom_z, "drop_z": base.drop_z,
+    }
+    for key, value in want.items():
+        ok = np.allclose(got[key], value, atol=1e-6)
+        print(f"  baseline {key:14s} {np.round(got[key], 4).tolist() if isinstance(got[key], tuple) else round(got[key], 4)} (want {value}) {'ok' if ok else 'FAIL'}")
+        if not ok:
+            failures.append(f"baseline yaml does not restore {key}: {got[key]} vs {value}")
+
+    # 2. heading 30 deg = the baseline rotated about the pair's midpoint (posts,
+    #    spawn loop, pinch point and carry path all turn together).
+    mid = (float(task.pair.mid_x), float(task.pair.mid_y))
+    cfg30 = OmegaConf.create(OmegaConf.to_container(task, resolve=True))
+    cfg30.pair.heading_deg = 30.0
+    turned = RingTransferLayout(cfg30, pair_mid=mid)
+    same = (
+        np.allclose(_rotate_about(np.vstack([base.posts["A"].center, base.posts["B"].center]), mid, 30.0),
+                    np.vstack([turned.posts["A"].center, turned.posts["B"].center]), atol=1e-9)
+        and np.allclose(_rotate_about(base.spawn, mid, 30.0), turned.spawn, atol=1e-6)
+        and np.allclose(_rotate_about(np.asarray([p for _, p in base.carry_path()]), mid, 30.0),
+                        np.asarray([p for _, p in turned.carry_path()]), atol=1e-6)
+        and turned.pinch_side == base.pinch_side
+    )
+    print(f"  heading 30 deg: posts, spawn loop and carry path are the baseline rotated about the midpoint {'ok' if same else 'FAIL'}")
+    if not same:
+        failures.append("a heading of 30 deg is not the baseline layout rotated about the pair's midpoint")
+
+    # 3. ring.on_post = B: the goal is A, the crossings reverse, the pinch side flips.
+    cfg_b, on_b = _corner_layout(task, {"ring.on_post": "B"})
+    reversed_ok = (
+        str(cfg_b.goal.on_post) == "A" and on_b.crossings() == [("A", "on"), ("B", "off")]
+        and on_b.pinch_side == -base.pinch_side and on_b.instruction() == "Move the elastic loop from post B onto post A."
+    )
+    print(f"  on_post B: goal {cfg_b.goal.on_post}, crossings {on_b.crossings()}, pinch side {on_b.pinch_side:+.0f}, instruction {on_b.instruction()!r} {'ok' if reversed_ok else 'FAIL'}")
+    if not reversed_ok:
+        failures.append("ring.on_post=B does not reverse the transfer")
+
+    # 4. Every corner of the yaml's variation block derives and passes every row.
+    axes = []
+    for directive in task.variation:
+        kind = str(directive.kind)
+        if kind == "uniform":
+            axes.append((str(directive.path), [float(directive.lo), float(directive.hi)]))
+        elif kind == "choice":
+            axes.append((str(directive.path), [v for v in directive["values"]]))
+    corners = list(itertools.product(*[values for _, values in axes]))
+    tight: dict[str, tuple[float, tuple]] = {}
+    rejected, bad = 0, 0
+    for corner in corners:
+        values = {path: value for (path, _), value in zip(axes, corner)}
+        try:
+            _, layout = _corner_layout(task, values)
+        except ValueError as exc:
+            rejected += 1
+            print(f"  corner {values} rejected: {exc}")
+            continue
+        rows = layout.checks()
+        for name, measured, limit, ok in rows:
+            margin = (limit - measured) if name == "hand_reach" else (measured - limit)
+            if name not in tight or margin < tight[name][0]:
+                tight[name] = (margin, corner)
+            if not ok:
+                bad += 1
+                print(f"  corner {values}: {name} {measured:+.4f} against {limit:+.4f} FAIL")
+    print(f"  {len(corners)} corners: {rejected} rejected, {bad} failing rows; tightest margin per row:")
+    for name, (margin, corner) in tight.items():
+        print(f"    {name:34s} {margin * 1000:+7.1f} mm at {corner}")
+    if len(corners) != 256:
+        failures.append(f"expected 256 corners from the yaml, got {len(corners)}")
+    if rejected or bad:
+        failures.append(f"variation envelope: {rejected} corners rejected, {bad} failing rows")
+
+    # 5. Negative controls: a taller post, a fatter post, a pair pushed past the
+    #    workspace must each be rejected by the named row.
+    for label, values, row in (
+        ("post height 0.130", {"post_shape.height": 0.130}, "lift_low_below_hang"),
+        ("post radius 0.050", {"post_shape.radius": 0.050}, "loop_clears_post"),
+        ("spacing 0.280 at mid_x 0.040", {"pair.spacing": 0.280, "pair.mid_x": 0.040}, "carry_in_workspace"),
+    ):
+        cfg = OmegaConf.create(OmegaConf.to_container(task, resolve=True))
+        for path, value in values.items():
+            OmegaConf.update(cfg, path, value, merge=False)
+        # No derivation: the literal midpoint is the point of the third control.
+        for name, center in geo.pair_centers(cfg.pair).items():
+            cfg.posts[name].x, cfg.posts[name].y = float(center[0]), float(center[1])
+        rows = {name: ok for name, _, _, ok in RingTransferLayout(cfg).checks()}
+        caught = not rows[row]
+        print(f"  negative control {label}: {row} {'rejected as expected' if caught else 'NOT rejected'}")
+        if not caught:
+            failures.append(f"negative control {label} should fail {row}")
+    return failures
 
 
 if __name__ == "__main__":

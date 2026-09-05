@@ -9,13 +9,18 @@
 # 线圈化的构造性规避（2026-08-11，根因链见 rope_backend_migration_zh.md 螺旋章）：
 #   1. 出生路线是单段 R=0.203m 的缓弧（200 度）——静止曲率 kappa_0 均匀且极小，
 #      无任何紧钩形；spawn 与 straight 两种静止形语义在此几乎重合；
-#   2. rope.fem.rest_shape=straight 显式声明（保险带：绳的无应力构型 = 直杆）；
+#   2. rope.fem.rest_shape=spawn（2026-08-20 起；straight 从未真正生效，见 rope.fem 注释）；
 #   3. 富余最小化：绳长 0.708m = oracle 全程最大需求 0.653m x 1.085；
 #   4. 自由跨距短：锚点/柱/目标口彼此靠近，富余无处成圈。
 #
 # 资产与 cable_routing 同源共享（routing post / fixed terminal / 工业插头 /
 # 平嵌端口 prefab），场景由通用的 CableRoutingSceneBuilder 构建
 # （tasks/routing/rope_winding.py 是薄继承，见该文件 docstring）。
+#
+# 变体（2026-09-05，变体计划 §6.2 第 6 步）：S / POST / C 的位置写成 x / y / z 三个标量
+# （随机化器按点路径取叶子，不支持列表下标）；插头出生点由 routes.initial 的规则条目
+# plug_spawn_from 按柱与端子推导；出生弧张角 sweep_deg 在变体里按松弛带反解；
+# 轴与包络见文件末尾的 variation 块。
 
 task:
   id: rope_winding
@@ -36,7 +41,9 @@ fixtures:
   S:
     type: start
     enabled: false
-    pos: [-0.150, 0.100, 0.019]
+    x: -0.150
+    y: 0.100
+    z: 0.019
     radius: 0.014
     height: 0.032
     color: [0.02, 0.85, 0.12]
@@ -69,11 +76,15 @@ fixtures:
     # 第一圈指垫最低 0.045，所以手掌底面在 0.122 —— **柱顶低于 0.122 时手掌在
     # 任何轨道半径下都碰不到柱子**，0.105 还留 17mm。手指（顶在指垫上方 44.5mm）
     # 本来就要在缠绕高度从柱身旁边过，离柱面 0.120，与柱高无关。
-    pos: [0.020, 0.020, 0.0505]
+    x: 0.020
+    y: 0.020
+    z: 0.0505
     radius: 0.020
     height: 0.109
     base_radius: ${prefabs.rope_routing_post.base_radius}
-    base_height: ${prefabs.rope_routing_post.base_height}
+    # = prefabs.rope_routing_post.base_height 的字面量副本：checks() 的「最下一圈高于底座喇叭口」
+    # 一行要读它，而角点门裸加载本文件时解析不了 ${prefabs…}；builder 断言两者相等。
+    base_height: 0.010
     post_radial_segments: ${prefabs.rope_routing_post.post_radial_segments}
     color: [1.00, 0.48, 0.00]
     # 柱必须是实体：绳缠在它上面，接触就是任务本身
@@ -89,7 +100,14 @@ fixtures:
     type: connector
     # enabled: false —— 不生成任何立体，只留坐标；视觉是 connector_target 的地面靶心。
     enabled: false
-    pos: [0.075, -0.130, 0.019]
+    # x 在变体里由 x_frac 派生：x_range 里离插头出生点不到 0.040 的一段不用（插头法兰 0.015 +
+    # 靶心半长 0.020 + 5 mm），frac 按剩余区间的长度映射；基准 frac 0.5 还原 0.075。
+    # 固定布局下就用这里的 x。
+    x: 0.075
+    x_frac: 0.5
+    x_range: [0.045, 0.105]
+    y: -0.130
+    z: 0.019
     size: [0.026, 0.040, 0.034]
     color: [0.85, 0.05, 0.05]
     collision: false
@@ -100,9 +118,16 @@ winding:
   post: POST
   # 目标圈数。带号：direction=ccw 时目标 winding number = +turns。
   turns: 2
-  # ccw = 俯视逆时针（+z 右手系）。cw 是方向反转的失败对照例
-  # （任务书要求的 contrast pair：同样的抓取位形，镜像轨迹，winding = -turns）。
+  # ccw = 俯视逆时针（+z 右手系）。变体里 direction 是防捷径离散轴（variation_axes_plain_zh.md §3）：
+  # 桌上的东西一动不动，只有指令和目标符号（target_winding = sign x turns）翻转，
+  # 策略必须读指令。失败对照例是「轨道与指令相反」：orbit_direction: opposite（读 -turns）。
   direction: ccw
+  # null = 轨道方向 = direction。opposite = 强制反向（对照组）；same = 同向（rope_unwinding 的对照组）。
+  orbit_direction: null
+  # closure = planner 按闭合计数决定去 C 的路线：从最后一个轨道点直线去 C 若穿过锚点 S 的
+  # 对径射线（闭合计数会多 1），就绕柱的另一侧去（多一个航点 to_C_around）；否则仍是直线。
+  # 基准布局（C 在柱的南侧 290°）走直线；位置随机后由它兜住 C 方位角的约束。
+  to_c_route: closure
   # 夹爪绕柱轨道半径。下限由夹爪体积定：指垫+插头法兰在柱杆外需要 ~0.04。
   # 下限由**手掌碰撞体的实测尺寸**定，不是拍的。读 Genesis 自带的 panda.xml：
   # `hand_c` -> assets/hand.stl，无缩放，包围盒（手心原点系）
@@ -128,6 +153,9 @@ winding:
   # 0.010~0.090 内。**若实跑看到绳贴地被拖走，这里是第一个要抬的旋钮**
   # （抬 wind_z_start 就是给那 13mm 落差加余量）。
   wind_z_start: 0.045
+  # 变体里 wind_z_start 由 wind_z_frac 派生：区间 [0.035, min(0.055, 柱顶 0.105 − 0.010 − 绳半径 − turns x climb)]，
+  # 3 圈 x 0.016 时上限 0.043；固定布局下就用上面的值（frac 0.5 在基准圈数与圈距下还原 0.045）。
+  wind_z_frac: 0.5
   # 每圈爬升。**下限是一整个绳直径**，不是一个绳半径：
   #
   #   第 n 圈出线口底面 = z_n − 4mm      上一圈绳顶面 = z_{n−1} + 4mm
@@ -249,13 +277,15 @@ routes:
   initial:
     - {fixture: S, relation: center}
     # 2026-08-16：原来是十个手算坐标，现在由 rope.spawn_arc.sweep_deg 生成
-    # （planning/waypoint.py 的 arc_route_points，逆时针为正）。端点不变，所以
-    # 离柱 0.188m、离 C 0.277m 这两个距离仍然完全不变；变的只是弧的鼓度，
-    # 也就是**绳长**——而绳长必须跟着 winding.turns 走，见 spawn_arc 的注释。
-    # sweep_deg 的插值必须加引号：在 YAML 的 flow mapping 里裸写 ${...} 会被
-    # 当成嵌套 mapping 而解析失败。OmegaConf 对「整串就是一个插值」的字符串
-    # 仍然返回原类型，所以这里拿到的是数字。
-    - {arc_to: {pos: [0.156, -0.157, 0.015]}, sweep_deg: "${task.rope.spawn_arc.sweep_deg}"}
+    # （planning/waypoint.py 的 arc_route_points，逆时针为正）。弧的鼓度就是**绳长**，
+    # 而绳长必须跟着 winding.turns 与位置走，见 spawn_arc 的注释。
+    # 2026-09-05：终点（插头出生点）不再手写 (0.156, -0.157)，改成规则条目 plug_spawn_from
+    # （planning/waypoint.py 的 plug_spawn_point）：插头在柱心外 spawn_arc.plug_distance 处、
+    # 方位角 spawn_arc.plug_bearing_deg；若端子 S 在柱的东北（S 方位角 < 147.5°），插头沿圆往回滑，
+    # 离「S 对径射线」保持 anchor_lead_deg，出生弧就不会绕住柱（出生闭合计数恒 0）。
+    # 基准还原 (0.156, -0.157)。sweep_deg 省略时读 rope.spawn_arc.sweep_deg（不再用 ${…} 插值，
+    # 角点门裸加载本文件时解析不了）。
+    - {arc_to: {plug_spawn_from: POST, anchor: S}}
   # 参考终态（slack 报告用，不驱动 oracle）：S -> 柱 -> C。
   goal:
     - {fixture: S, relation: center}
@@ -333,7 +363,8 @@ rope:
   # 绳端跟随带的选取半径。9mm 足以罩住绳端那一圈节点。
   # 0.012 = 与 untangle_continuous 同值。带更厚，约束不容易被少数节点带偏。
   anchor_radius: 0.012
-  radius: ${prefabs.rope_pbd.radius}
+  # = prefabs.rope_pbd.radius 的字面量副本（同 POST.base_height 的理由）；builder 断言相等。
+  radius: 0.004
   centerline_spline: true
   # 路线高度 = 侧躺插头的轴心高度（= flange_radius）。这两个数必须相等：
   # connector_mesh 是**实心**旋转体，没有过线孔，所以绳管一定穿过插头表面；
@@ -358,17 +389,29 @@ rope:
   #     2     0.653m       195~209 度         200     0.708m     8.4%   <- 默认
   #     3     0.804m       224~235 度         230     0.885m    10.0%
   #
-  # 跑非默认圈数时两个都要给，例如：
+  # 固定布局下跑非默认圈数时两个都要给，例如：
   #     task.winding.turns=3 task.rope.spawn_arc.sweep_deg=230
   # 配错不会跑到一半才发现：离线 gate 与 demo 的开跑前校验都会算这条并拒绝。
   # 注意历史上 turns=1 的诊断跑一直沿用 200 度，富余 +40.9%，从来在带外——
   # gate 此前只校验配置里的 turns，没人核过。
+  #
+  # 变体里（2026-09-05）sweep_deg 不再查表，由 derive_task_cfg 按松弛带中点 10% 反解
+  # （_rope_winding_geometry.sweep_from_slack：最紧时刻 = 全部圈在柱上、插头举到 C 上方，
+  # 需求 = |S−柱| + turns x 0.151 + |柱−C|，位置一动需求就动）：基准 2 圈解出 201°。
   #
   # 三圈的脚印 x[-0.277,+0.156] y[-0.320,+0.100]，仍在 0.70x0.80 板内；离柱最近
   # 0.188m、离 C 最近 0.277m 与鼓度无关（只由端点定），三个 sweep 下都不变，
   # 出生 winding number 也都是 0.000。
   spawn_arc:
     sweep_deg: 200
+    # 插头出生点的规则（routes.initial 的 plug_spawn_from 条目）：柱心外 0.2233 m、方位角 307.5°
+    # （还原手写的 (0.156, -0.157)）；离 S 对径射线至少 20°：S 在柱东北（S 方位角 < 147.5°）时
+    # 插头沿圆往回滑，出生弧才不会绕住柱、去 C 的路线才凑得对闭合计数。离线 1536 角点：
+    # 10° 有 48 个角点 planner 找不到去 C 的路线、15° 有 24 个、20° 起全过；27° 时一半的布局滑动
+    # （基准 S 方位角 154.8° 离对径射线正好 27.2°），20° 时约五分之一。
+    plug_distance: 0.2233
+    plug_bearing_deg: 307.5
+    anchor_lead_deg: 20
   endpoint_handle:
     enabled: true
     name: winding_free_end_handle
@@ -625,6 +668,10 @@ physical_handle:
   # 改 20 之后节点约 5400，同比例峰值约 2350，阈值按同样的一倍余量给 4800。
   safety_min_gap: -0.0015
   safety_max_contact_nodes: 4800
+  # 门 = max(safety_max_contact_nodes, safety_max_contact_fraction x 全绳节点数)（demo 的
+  # post_contact 守卫，2026-09-04 起）：三圈缠满时贴柱节点接近 4800 的绝对数，比例门按
+  # 上面注释里原标定的口径（阈值 3000 / 全绳 3399 ≈ 88%）给 0.85。
+  safety_max_contact_fraction: 0.85
   release_hold_steps: 20
   route_settle_steps: 40
   connector_tolerance_xy: 0.018
@@ -632,6 +679,19 @@ physical_handle:
   latch_capture_tolerance_xy: 0.014
   latch_capture_tolerance_z: 0.014
   latch_capture_max_tilt_deg: 45.0
+
+# 手离 Franka 底座的上限（checks() 的 hand_reach 行：规划航点到 base_xy 的最大距离）。
+# 0.780 是 rope_unwinding 在 GPU 上验证到 0.7727 的数（同一轨道半径）。本任务手最远的点是
+# 插头出生点（柱东南 0.223 m）：柱 x 上界 0.045 就是由 (0.570 + x + 0.137)² + 0.196² ≤ 0.780² 反推的。
+reach:
+  base_xy: [-0.570, 0.0]
+  max_hand_dist: 0.780
+
+# manipulation_space.workspace 的 x / y 字面量副本（checks() 的 plug_in_workspace 行读；角点门裸加载
+# 本文件时读不到 common 配置）。builder 断言与 common 相等。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
 
 # winding 成功判定（supervision/rope_winding.py）。
 success:
@@ -649,3 +709,29 @@ success:
   wound_max_z: 0.070
   # 中心线分箱数（winding 方位角展开用）。绳长 0.58m -> ~4mm/箱，比绳径细。
   centerline_bins: 150
+
+variation:
+  # 难度候选：要绕的圈数（只有 2 圈有 GPU 证据；每格约 10 / 20 / 40 min）
+  - {kind: choice, path: winding.turns, values: [1, 2, 3]}
+  # 防捷径离散轴：指令方向。桌上的东西不动，只有轨道方向与目标符号翻转（见 winding.direction 注释）
+  - {kind: choice, path: winding.direction, values: [ccw, cw]}
+  # 布局：绕线柱位置。x 上界 0.045 由可达反推（见 reach 段），y ±0.040
+  - {kind: uniform, path: fixtures.POST.x, lo: -0.020, hi: 0.045}
+  - {kind: uniform, path: fixtures.POST.y, lo: -0.020, hi: 0.060}
+  # 布局：固定端子（锚点）位置 ±0.030
+  - {kind: uniform, path: fixtures.S.x, lo: -0.180, hi: -0.120}
+  - {kind: uniform, path: fixtures.S.y, lo: 0.070, hi: 0.130}
+  # 布局：放置靶心 y ±0.030；x 抽归一化 x_frac（见 fixtures.C 注释）
+  - {kind: uniform, path: fixtures.C.x_frac, lo: 0.0, hi: 1.0}
+  - {kind: uniform, path: fixtures.C.y, lo: -0.160, hi: -0.100}
+  # 布局：圈距。0.008 = 绳直径实测零间隙失败；0.010（圈间净空 2 mm）没实跑过，角点子集先跑；
+  # 本任务出生没有螺旋，rope_unwinding 的 tetgen 边界 0.012 不适用
+  - {kind: uniform, path: winding.climb_per_turn, lo: 0.010, hi: 0.016}
+  # 归一化：首圈高度，区间上限随圈数与圈距变（见 winding.wind_z_start 注释）
+  - {kind: uniform, path: winding.wind_z_frac, lo: 0.0, hi: 1.0}
+  # 派生（按序）：wind_z_frac -> wind_z_start；C.x_frac -> C.x（要先有插头出生点）；
+  #       sweep_deg 按松弛带中点反解（要先有 C：最紧时刻在 C 上方）。插头出生点是 Layout 规则，不是叶子。
+  - {kind: derived, fn: "topogym.tasks.routing.rope_winding:derive_task_cfg"}
+  # 校验：RopeWindingLayout.checks() 十二行（螺旋在柱顶下、最下一圈高于底座、圈间净空、出生弧离柱、
+  #       插头在工作区内、插头离靶心、手掌越柱顶、出生读数 0、自由端全程读数、可达、松弛带、张角范围）
+  - {kind: validate, fn: "topogym.tasks.routing.rope_winding:validate_task_cfg"}

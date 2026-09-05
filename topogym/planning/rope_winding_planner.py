@@ -81,10 +81,19 @@ class WindingSpec:
         orbit_direction = getattr(cfg, "orbit_direction", None)
         if orbit_direction is not None:
             orbit_direction = str(orbit_direction).lower()
+            # `same` = orbit in the wrap's own sense (rope_unwinding's contrast
+            # pair: winds further on instead of off); `opposite` = orbit
+            # against the instructed sense (rope_winding's contrast pair: reads
+            # -turns). Both are for a variation sweep, where the sweep script
+            # does not know the seed's `direction` in advance.
+            if orbit_direction == "same":
+                orbit_direction = chosen
+            elif orbit_direction == "opposite":
+                orbit_direction = "cw" if chosen == "ccw" else "ccw"
             if orbit_direction not in _DIRECTION_SIGNS:
                 raise ValueError(
-                    f"winding.orbit_direction must be one of {sorted(_DIRECTION_SIGNS)} "
-                    f"or null, got {orbit_direction!r}."
+                    f"winding.orbit_direction must be one of {sorted(_DIRECTION_SIGNS)}, "
+                    f"'same', 'opposite' or null, got {orbit_direction!r}."
                 )
         if start_turns < 0:
             raise ValueError(f"winding.start_turns must be >= 0, got {start_turns}.")
@@ -197,7 +206,9 @@ def post_top_z(layout, spec: WindingSpec) -> float:
     """World z of the post's top -- the only gateway that changes winding."""
 
     fixture = layout.cfg.fixtures[spec.post]
-    return layout.world_z(float(fixture.pos[2]) + 0.5 * float(fixture.height))
+    # `fixture_pos` already handles both `pos: [x, y, z]` and scalar `x / y / z`
+    # keys; only the height is read here. World frame throughout.
+    return float(layout.fixture_pos(spec.post)[2]) + 0.5 * float(fixture.height)
 
 
 def settle_radius(layout, spec: WindingSpec) -> float:
@@ -609,10 +620,17 @@ def plan_rope_winding_route(
         targets.append(("to_C_around", around, False, hold_roll, None))
         path = [plug_spawn] + [point for _, point, _, _, _ in targets] + [hover]
         if free_end_winding_delta(path, center, anchor_xy) != needed:
-            raise ValueError(
-                "rope_winding planner: no way round the post to C reaches the "
-                f"target winding (need {needed:+d} from the spawn state)."
-            )
+            if spec.orbit_direction is not None:
+                # The orbit itself is forced the wrong way (the task's contrast
+                # pair, `orbit_direction: same` in a variation sweep): no run to
+                # C can put the count right, so go straight and let the verdict
+                # read it, as the fixed-layout contrast run always did.
+                targets.pop()
+            else:
+                raise ValueError(
+                    "rope_winding planner: no way round the post to C reaches the "
+                    f"target winding (need {needed:+d} from the spawn state)."
+                )
     targets.append(("to_C_hover", hover, False, hold_roll, None))
     targets.append(("place_at_C", seat.copy(), False, hold_roll, None))
 

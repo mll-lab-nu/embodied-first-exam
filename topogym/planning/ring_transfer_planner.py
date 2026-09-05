@@ -27,8 +27,13 @@ Motions, so the judge has both sides:
 - ``drape_outside``  the on-phase lands the cap on B's NEAR side and there is no
                      off-phase: the loop ends up beside B, still on A -- the
                      projection looks like an enclosure and the winding says no;
-- ``lift_only``      the off-phase alone: the loop leaves A without ever having
-                     been put on B, and ends around nothing.
+- ``lift_only``      negative control for the judge (2026-09-05): the carry's
+                     pinch and lift-off, so the loop really leaves A (bottom U
+                     above A's head), then it is carried to the pair's midpoint
+                     and put down there. It ends around nothing: enclosure {}
+                     and B's top never crossed, so the judge must say failed.
+                     Its own phase builder -- `carry_phase` (the oracle) and
+                     `off_phase` (transfer's second half) are untouched.
 """
 
 from __future__ import annotations
@@ -84,15 +89,11 @@ def on_phase(layout, *, drape_outside: bool = False) -> GraspPhase:
     if drape_outside:
         # Land on the target's NEAR side instead of its far side: same height,
         # same swing, the cap simply stops short of the post.
-        target = layout.target
-        ring = layout.ring
-        direction = target.center - layout.anchor.center
-        direction = direction / float(np.linalg.norm(direction))
-        near = target.center - (target.head_radius + ring.tube_radius + float(layout.task_cfg.transfer.landing_clearance)) * direction
-        carry_z = float(layout.task_cfg.transfer.carry_z)
+        near = layout.near_side_landing()
+        carry_z = layout.transfer_carry_z()
         path = [item for item in path if item[0] not in ("carry", "descend")]
         path.append(("carry", np.array([near[0], near[1], carry_z])))
-        path.append(("descend", np.array([near[0], near[1], ring.tube_radius])))
+        path.append(("descend", np.array([near[0], near[1], layout.ring.tube_radius])))
     labels = [label for label, _ in path[1:]]
     points = [point for _, point in path[1:]]
     return GraspPhase(
@@ -119,7 +120,7 @@ def off_phase(layout, *, start_xy=None) -> GraspPhase:
         start_xy = anchor.center - (anchor.radius + ring.tube_radius) * toward
     start_xy = np.asarray(start_xy, dtype=float)[:2]
     lift = np.array([start_xy[0], start_xy[1], layout.lift_z()])
-    shifted = lift + float(layout.task_cfg.transfer.shift) * np.array([toward[0], toward[1], 0.0])
+    shifted = lift + layout.off_shift() * np.array([toward[0], toward[1], 0.0])
     # The strand hugging the anchor's outer surface runs perpendicular to the
     # anchor->target line, so the fingers close along that line.
     return GraspPhase(
@@ -153,6 +154,45 @@ def carry_phase(layout) -> GraspPhase:
     )
 
 
+def lift_only_phase(layout) -> GraspPhase:
+    """Pinch and lift off exactly as the carry does, then put the loop down at
+    the pair's midpoint instead of lassoing the target.
+
+    The lift legs (`lift_low`, `over_anchor`, `clear`) are the carry's own, so
+    the demo's reactive lift runs and the loop's bottom clears the anchor's
+    head. `travel` goes to the midpoint at the clear height (the hanging
+    strands are offset along the loop's long axis, perpendicular to the pair,
+    so they pass neither head), `lower` comes down to the carry's drop height
+    and the gripper opens. The loop lands flat between the posts.
+    """
+
+    anchor, target = layout.anchor, layout.target
+    grasp = layout.pinch_point()
+    carry = dict(layout.carry_path(start_xy=grasp[:2]))
+    tangent = layout.strand_tangent(grasp)
+    close_axis = (-float(tangent[1]), float(tangent[0]))
+    mid = 0.5 * (anchor.center + target.center)
+    clear_z = float(carry["clear"][2])
+    drop_z = float(carry["lower"][2])
+    labels = ["lift_low", "over_anchor", "clear", "travel", "lower"]
+    points = [
+        carry["lift_low"],
+        carry["over_anchor"],
+        carry["clear"],
+        np.array([mid[0], mid[1], clear_z]),
+        np.array([mid[0], mid[1], drop_z]),
+    ]
+    return GraspPhase(
+        name=f"lift_only_{anchor.name}",
+        kind="pinch",
+        post=anchor.name,
+        bands=(NEAR_BAND,),
+        waypoints=_targets(points, labels, lifted=True),
+        anchor_xy=tuple(float(v) for v in anchor.center),
+        close_axis=close_axis,
+    )
+
+
 def plan_ring_transfer(layout, *, motion: str = "transfer"):
     """Plan one episode. Returns ``(phases, EpisodePlan)``."""
 
@@ -165,7 +205,7 @@ def plan_ring_transfer(layout, *, motion: str = "transfer"):
     elif motion == "drape_outside":
         phases = [on_phase(layout, drape_outside=True)]
     else:
-        phases = [off_phase(layout)]
+        phases = [lift_only_phase(layout)]
 
     subgoals = tuple(
         PlannedSubgoal(
@@ -198,4 +238,4 @@ def plan_ring_transfer(layout, *, motion: str = "transfer"):
     return phases, plan
 
 
-__all__ = ["GraspPhase", "HOOK_BANDS", "MOTIONS", "NEAR_BAND", "carry_phase", "off_phase", "on_phase", "plan_ring_transfer"]
+__all__ = ["GraspPhase", "HOOK_BANDS", "MOTIONS", "NEAR_BAND", "carry_phase", "lift_only_phase", "off_phase", "on_phase", "plan_ring_transfer"]

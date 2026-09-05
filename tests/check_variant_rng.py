@@ -693,6 +693,401 @@ def check_bar_through_hole_randomization() -> list[str]:
     return fails
 
 
+_ROPE_UNWINDING_CFG = REPO / "configs" / "task_configs" / "rope_unwinding_topogym_tabletop_v1.yaml"
+
+
+def check_rope_unwinding_randomization() -> list[str]:
+    """Properties of the rope_unwinding yaml's axes: leaves, envelope, derived lowest-wrap
+    height, both senses and all three turn counts drawn, checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_ROPE_UNWINDING_CFG)})
+    task = "rope_unwinding"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "winding.start_turns", "winding.direction",
+        "fixtures.POST.x", "fixtures.POST.y", "fixtures.S.x", "fixtures.S.y",
+        "fixtures.C.x_frac", "fixtures.C.y", "winding.climb_per_turn", "winding.wind_z_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the rope_unwinding hooks cannot run")
+        return fails
+    from topogym.tasks.routing._rope_unwinding_geometry import (
+        PLUG_TARGET_CLEARANCE, plug_spawn_task_xy, target_x_from_frac, wind_z_bounds,
+    )
+    from topogym.tasks.routing.rope_unwinding import RopeUnwindingLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the lowest wrap's height on
+    # its formula inside the window the drawn turns and climb leave; every check
+    # passing; all three turn counts and both senses drawn; the reach, slack and
+    # detour statistics printed; first-draw rejection under the bar.
+    rejects = 0
+    ranges = {
+        "fixtures.POST.x": (-0.020, 0.060), "fixtures.POST.y": (-0.020, 0.060),
+        "fixtures.S.x": (-0.180, -0.120), "fixtures.S.y": (0.070, 0.130),
+        "fixtures.C.x_frac": (0.0, 1.0), "fixtures.C.y": (-0.160, -0.100),
+        "winding.climb_per_turn": (0.012, 0.016), "winding.wind_z_frac": (0.0, 1.0),
+    }
+    turns_seen, senses_seen = {}, {}
+    max_reach, min_slack, max_slack, detours = 0.0, float("inf"), 0.0, 0
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        turns = int(t.winding.start_turns)
+        sense = str(t.winding.direction)
+        if turns not in (1, 2, 3):
+            fails.append(f"seed {seed}: winding.start_turns {turns} not in (1, 2, 3)")
+        if sense not in ("ccw", "cw"):
+            fails.append(f"seed {seed}: winding.direction {sense!r} not ccw/cw")
+        turns_seen[turns] = turns_seen.get(turns, 0) + 1
+        senses_seen[sense] = senses_seen.get(sense, 0) + 1
+        lo, hi = wind_z_bounds(t)
+        want = lo + float(t.winding.wind_z_frac) * (hi - lo)
+        if abs(float(t.winding.wind_z_start) - want) > 1e-9:
+            fails.append(f"seed {seed}: winding.wind_z_start {float(t.winding.wind_z_start):.4f} != derived {want:.4f}")
+        layout = RopeUnwindingLayout(t)
+        want = target_x_from_frac(layout, float(t.fixtures.C.x_frac))
+        if abs(float(t.fixtures.C.x) - want) > 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.x {float(t.fixtures.C.x):.4f} != derived {want:.4f}")
+        if not 0.045 - 1e-9 <= float(t.fixtures.C.x) <= 0.105 + 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.x {float(t.fixtures.C.x):.4f} outside x_range")
+        plug = plug_spawn_task_xy(layout)
+        c_xy = (float(t.fixtures.C.x), (1.0 if sense == "ccw" else -1.0) * float(t.fixtures.C.y))
+        if float(np.hypot(c_xy[0] - plug[0], c_xy[1] - plug[1])) < PLUG_TARGET_CLEARANCE - 1e-9:
+            fails.append(f"seed {seed}: C within {PLUG_TARGET_CLEARANCE} of the plug spawn (derivation broke)")
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        by_name = {name: measured for name, measured, _, _ in rows}
+        max_reach = max(max_reach, by_name["hand_reach"])
+        min_slack, max_slack = min(min_slack, by_name["slack_in_band"]), max(max_slack, by_name["slack_in_band"])
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(turns_seen) != {1, 2, 3}:
+        fails.append(f"start_turns drawn {sorted(turns_seen)}; expected all of 1, 2, 3")
+    if set(senses_seen) != {"ccw", "cw"}:
+        fails.append(f"direction drawn {sorted(senses_seen)}; expected both ccw and cw")
+    rate = rejects / 1000.0
+    print(f"    start_turns {dict(sorted(turns_seen.items()))}; direction {dict(sorted(senses_seen.items()))}; "
+          f"max hand reach {max_reach:.3f}; slack {min_slack * 100:.1f}..{max_slack * 100:.1f}%")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
+_CLOTH_UNPLEAT_CFG = REPO / "configs" / "task_configs" / "cloth_unpleat_topogym_tabletop_v1.yaml"
+
+
+def check_cloth_unpleat_randomization() -> list[str]:
+    """Properties of the cloth_unpleat yaml's axes: leaves, envelope, the two derived
+    leaves on their formulas, all three pleat widths and both pull sides drawn,
+    seven checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_CLOTH_UNPLEAT_CFG)})
+    task = "cloth_unpleat"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "cloth.pleat.width", "cloth.pull_side", "cloth.pleat.crest_height", "cloth.center_x",
+        "physical.pull_scale", "grasp.edge_inset_frac", "cloth.center_y_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the cloth_unpleat hooks cannot run")
+        return fails
+    from topogym.tasks.deformation._cloth_unpleat_geometry import (
+        center_along_bounds, edge_inset_bounds, pull_end_task,
+    )
+    from topogym.tasks.deformation.cloth_unpleat import ClothUnpleatLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the grasp inset and the
+    # band's along-axis position on their formulas inside the windows the drawn
+    # pleat leaves; every check passing; all three widths and both sides drawn;
+    # the reach and pull statistics printed; first-draw rejection under the bar.
+    rejects = 0
+    ranges = {
+        "cloth.pleat.crest_height": (0.016, 0.028), "cloth.center_x": (0.010, 0.070),
+        "physical.pull_scale": (0.98, 1.12), "grasp.edge_inset_frac": (0.0, 1.0), "cloth.center_y_frac": (0.0, 1.0),
+    }
+    widths_seen, sides_seen = {}, {}
+    max_reach, max_pull, narrowed = 0.0, 0.0, 0
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        width = float(t.cloth.pleat.width)
+        side = int(t.cloth.pull_side)
+        if width not in (0.024, 0.030, 0.035):
+            fails.append(f"seed {seed}: cloth.pleat.width {width} not in (0.024, 0.030, 0.035)")
+        if side not in (1, -1):
+            fails.append(f"seed {seed}: cloth.pull_side {side} not +1/-1")
+        widths_seen[width] = widths_seen.get(width, 0) + 1
+        sides_seen[side] = sides_seen.get(side, 0) + 1
+        lo, hi = edge_inset_bounds(t)
+        want = lo + float(t.grasp.edge_inset_frac) * (hi - lo)
+        if abs(float(t.grasp.edge_inset) - want) > 1e-9:
+            fails.append(f"seed {seed}: grasp.edge_inset {float(t.grasp.edge_inset):.4f} != derived {want:.4f}")
+        if not 0.008 - 1e-9 <= float(t.grasp.edge_inset) <= 0.018 + 1e-9:
+            fails.append(f"seed {seed}: grasp.edge_inset {float(t.grasp.edge_inset):.4f} outside [0.008, 0.018]")
+        lo, hi = center_along_bounds(t)
+        want = lo + float(t.cloth.center_y_frac) * (hi - lo)
+        if abs(float(t.cloth.center_y) - want) > 1e-9:
+            fails.append(f"seed {seed}: cloth.center_y {float(t.cloth.center_y):+.4f} != derived {want:+.4f}")
+        if not -0.030 - 1e-9 <= float(t.cloth.center_y) <= 0.030 + 1e-9:
+            fails.append(f"seed {seed}: cloth.center_y {float(t.cloth.center_y):+.4f} outside +-0.030")
+        if hi - lo < 0.060 - 1e-9:
+            narrowed += 1
+        layout = ClothUnpleatLayout(t)
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        by_name = {name: measured for name, measured, _, _ in rows}
+        max_reach = max(max_reach, by_name["hand_reach"])
+        max_pull = max(max_pull, by_name["pull_within_stroke"])
+        end = pull_end_task(t)
+        if side * end[1] < 0.0:
+            fails.append(f"seed {seed}: pull_side {side} but the pull ends at y {end[1]:+.4f}")
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(widths_seen) != {0.024, 0.030, 0.035}:
+        fails.append(f"pleat.width drawn {sorted(widths_seen)}; expected all of 0.024, 0.030, 0.035")
+    if set(sides_seen) != {1, -1}:
+        fails.append(f"pull_side drawn {sorted(sides_seen)}; expected both +1 and -1")
+    rate = rejects / 1000.0
+    print(f"    pleat.width {dict(sorted(widths_seen.items()))}; pull_side {dict(sorted(sides_seen.items()))}; "
+          f"max hand reach {max_reach:.3f}; max pull {max_pull * 1e3:.1f} mm; "
+          f"centre window narrowed by reach / workspace in {narrowed} seeds")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
+_RING_TRANSFER_CFG = REPO / "configs" / "task_configs" / "ring_transfer_topogym_tabletop_v1.yaml"
+
+
+def check_ring_transfer_randomization() -> list[str]:
+    """Properties of the ring_transfer yaml's axes: leaves, envelope, the pair's
+    derived midpoint inside its windows and the posts on the pair, both start
+    posts drawn, checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_RING_TRANSFER_CFG)})
+    task = "ring_transfer"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "ring.on_post", "post_shape.height", "post_shape.radius", "post_shape.head_overhang",
+        "pair.spacing", "pair.heading_deg", "pair.mid_x_frac", "pair.mid_y_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the ring_transfer hooks cannot run")
+        return fails
+    from topogym.tasks.routing import _ring_transfer_geometry as geo
+    from topogym.tasks.routing.ring_transfer import RingTransferLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the midpoint on its formula
+    # inside the windows the drawn spacing / heading / reach leave; the posts on
+    # the pair; the goal post the other one; every check passing; both start
+    # posts drawn; reach and window statistics printed; first-draw rejection
+    # under the bar.
+    rejects = 0
+    ranges = {
+        "post_shape.height": (0.085, 0.115), "post_shape.radius": (0.013, 0.022),
+        "post_shape.head_overhang": (0.008, 0.014), "pair.spacing": (0.180, 0.280),
+        "pair.heading_deg": (-30.0, 30.0), "pair.mid_x_frac": (0.0, 1.0), "pair.mid_y_frac": (0.0, 1.0),
+    }
+    posts_seen: dict[str, int] = {}
+    max_reach, min_x_window, min_margin = 0.0, float("inf"), {}
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        on_post = str(t.ring.on_post)
+        if on_post not in ("A", "B"):
+            fails.append(f"seed {seed}: ring.on_post {on_post!r} not A/B")
+        posts_seen[on_post] = posts_seen.get(on_post, 0) + 1
+        if str(t.goal.on_post) != geo.other_post(on_post):
+            fails.append(f"seed {seed}: goal.on_post {t.goal.on_post!r} is not the other post of {on_post!r}")
+        layout = RingTransferLayout(t)
+        if f"post {on_post} onto post {t.goal.on_post}" not in layout.instruction():
+            fails.append(f"seed {seed}: instruction {layout.instruction()!r} does not name both posts in order")
+        y_window, x_window = layout.mid_windows()
+        want_y = y_window[0] + float(t.pair.mid_y_frac) * (y_window[1] - y_window[0])
+        want_x = x_window[0] + float(t.pair.mid_x_frac) * (x_window[1] - x_window[0])
+        if abs(float(t.pair.mid_y) - want_y) > 1e-9:
+            fails.append(f"seed {seed}: pair.mid_y {float(t.pair.mid_y):+.4f} != derived {want_y:+.4f}")
+        if abs(float(t.pair.mid_x) - want_x) > 1e-9:
+            fails.append(f"seed {seed}: pair.mid_x {float(t.pair.mid_x):+.4f} != derived {want_x:+.4f}")
+        min_x_window = min(min_x_window, x_window[1] - x_window[0])
+        for name, center in geo.pair_centers(t.pair).items():
+            got = (float(t.posts[name].x), float(t.posts[name].y))
+            if abs(got[0] - center[0]) > 1e-9 or abs(got[1] - center[1]) > 1e-9:
+                fails.append(f"seed {seed}: posts.{name} {got} not on the pair {center.tolist()}")
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        for name, measured, limit, _ in rows:
+            margin = (limit - measured) if name == "hand_reach" else (measured - limit)
+            min_margin[name] = min(min_margin.get(name, float("inf")), margin)
+        max_reach = max(max_reach, dict((n, m) for n, m, _, _ in rows)["hand_reach"])
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(posts_seen) != {"A", "B"}:
+        fails.append(f"ring.on_post drawn {sorted(posts_seen)}; expected both A and B")
+    rate = rejects / 1000.0
+    tight = sorted(min_margin.items(), key=lambda kv: kv[1])[:3]
+    print(f"    on_post {dict(sorted(posts_seen.items()))}; max hand reach {max_reach:.3f}; "
+          f"narrowest mid_x window {min_x_window * 1000:.1f} mm; tightest rows "
+          + ", ".join(f"{n} {m * 1000:+.1f} mm" for n, m in tight))
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
+_ROPE_WINDING_CFG = REPO / "configs" / "task_configs" / "rope_winding_topogym_tabletop_v1.yaml"
+
+
+def check_rope_winding_randomization() -> list[str]:
+    """Properties of the rope_winding yaml's axes: leaves, envelope, the three derived
+    leaves (lowest wrap, target x, spawn-arc sweep) on their rules, both senses and all
+    three turn counts drawn, checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_ROPE_WINDING_CFG)})
+    task = "rope_winding"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "winding.turns", "winding.direction",
+        "fixtures.POST.x", "fixtures.POST.y", "fixtures.S.x", "fixtures.S.y",
+        "fixtures.C.x_frac", "fixtures.C.y", "winding.climb_per_turn", "winding.wind_z_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the rope_winding hooks cannot run")
+        return fails
+    from topogym.tasks.routing._rope_winding_geometry import sweep_from_slack
+    from topogym.tasks.routing._winding_post_geometry import (
+        PLUG_TARGET_CLEARANCE, plug_spawn_task_xy, target_x_from_frac, wind_z_bounds,
+    )
+    from topogym.tasks.routing.rope_winding import RopeWindingLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    rejects = 0
+    ranges = {
+        "fixtures.POST.x": (-0.020, 0.045), "fixtures.POST.y": (-0.020, 0.060),
+        "fixtures.S.x": (-0.180, -0.120), "fixtures.S.y": (0.070, 0.130),
+        "fixtures.C.x_frac": (0.0, 1.0), "fixtures.C.y": (-0.160, -0.100),
+        "winding.climb_per_turn": (0.010, 0.016), "winding.wind_z_frac": (0.0, 1.0),
+    }
+    turns_seen, senses_seen = {}, {}
+    max_reach, min_sweep, max_sweep, slid = 0.0, float("inf"), 0.0, 0
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        turns, sense = int(t.winding.turns), str(t.winding.direction)
+        turns_seen[turns] = turns_seen.get(turns, 0) + 1
+        senses_seen[sense] = senses_seen.get(sense, 0) + 1
+        lo, hi = wind_z_bounds(t)
+        want = lo + float(t.winding.wind_z_frac) * (hi - lo)
+        if abs(float(t.winding.wind_z_start) - want) > 1e-9:
+            fails.append(f"seed {seed}: winding.wind_z_start {float(t.winding.wind_z_start):.4f} != derived {want:.4f}")
+        layout = RopeWindingLayout(t)
+        want = target_x_from_frac(layout, float(t.fixtures.C.x_frac))
+        if abs(float(t.fixtures.C.x) - want) > 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.x {float(t.fixtures.C.x):.4f} != derived {want:.4f}")
+        plug = plug_spawn_task_xy(layout)
+        if float(np.hypot(float(t.fixtures.C.x) - plug[0], float(t.fixtures.C.y) - plug[1])) < PLUG_TARGET_CLEARANCE - 1e-9:
+            fails.append(f"seed {seed}: C within {PLUG_TARGET_CLEARANCE} of the plug spawn (derivation broke)")
+        want = sweep_from_slack(layout)
+        if abs(float(t.rope.spawn_arc.sweep_deg) - want) > 1e-6:
+            fails.append(f"seed {seed}: spawn_arc.sweep_deg {float(t.rope.spawn_arc.sweep_deg):.2f} != solved {want:.2f}")
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        by_name = {name: measured for name, measured, _, _ in rows}
+        max_reach = max(max_reach, by_name["hand_reach"])
+        min_sweep, max_sweep = min(min_sweep, by_name["sweep_in_range"]), max(max_sweep, by_name["sweep_in_range"])
+        # The plug slides back from its default bearing only when the anchor sits
+        # north-east of the post; count how often the rule engages.
+        bearing = np.degrees(np.arctan2(plug[1] - float(t.fixtures.POST.y), plug[0] - float(t.fixtures.POST.x))) % 360.0
+        if bearing < 307.0:
+            slid += 1
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(turns_seen) != {1, 2, 3}:
+        fails.append(f"turns drawn {sorted(turns_seen)}; expected all of 1, 2, 3")
+    if set(senses_seen) != {"ccw", "cw"}:
+        fails.append(f"direction drawn {sorted(senses_seen)}; expected both ccw and cw")
+    rate = rejects / 1000.0
+    print(f"    turns {dict(sorted(turns_seen.items()))}; direction {dict(sorted(senses_seen.items()))}; "
+          f"max hand reach {max_reach:.3f}; sweep {min_sweep:.0f}..{max_sweep:.0f} deg; plug slid back in {slid} draws")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
 def check_braid() -> list[str]:
     fails: list[str] = []
     signs = set()
@@ -729,6 +1124,10 @@ def main() -> int:
         ("layout_randomization(band_untwist)", check_band_untwist_randomization),
         ("layout_randomization(unlink_c_ring)", check_unlink_c_ring_randomization),
         ("layout_randomization(bar_through_hole)", check_bar_through_hole_randomization),
+        ("layout_randomization(rope_unwinding)", check_rope_unwinding_randomization),
+        ("layout_randomization(rope_winding)", check_rope_winding_randomization),
+        ("layout_randomization(ring_transfer)", check_ring_transfer_randomization),
+        ("layout_randomization(cloth_unpleat)", check_cloth_unpleat_randomization),
         ("braid", check_braid),
     ]
     total = 0

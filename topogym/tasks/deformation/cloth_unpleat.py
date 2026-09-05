@@ -32,6 +32,16 @@ Judging lives in `topogym/verification/cloth_unpleat_verifier.py`; the arc lives
 in `topogym/planning/cloth_unpleat_planner.py`; the pleat's control mesh lives in
 `cloth_profile_mesh.py`. This file only says what the scene contains and where
 its landmarks are.
+
+Variation (2026-09-05): the task yaml's ``variation:`` block draws the pleat's
+width (three tiers) and crest height, the band's across-axis position, the pull
+scale, which end of the axis the free end lies at (`cloth.pull_side`, the mirror
+layout), and two unit fractions that `derive_task_cfg` maps onto the windows the
+drawn pleat leaves for `grasp.edge_inset` (the attachment disc must clear the
+three-layer strip) and for the band's along-axis position (the pull's end point
+must stay inside the arm's reach disc and the workspace box). The feasibility
+rows live in `_cloth_unpleat_geometry.py` (numpy only, so the offline gate reads
+the same rows without Genesis).
 """
 
 from __future__ import annotations
@@ -48,6 +58,13 @@ from topogym.supervision.pbd_probe import probe_particles
 from topogym.world import StandardTabletopSceneBuilder, materials, textures
 from topogym.world.rope import TabletopParticleFriction
 
+from ._cloth_unpleat_geometry import (
+    along_leaf,
+    center_along_from_frac,
+    cloth_unpleat_checks,
+    edge_inset_from_frac,
+    pull_sign,
+)
 from .cloth_fold import remesh_report
 from .cloth_profile_mesh import (
     edge_report,
@@ -64,7 +81,10 @@ class ClothUnpleatLayout:
     """Where the band is and where the pleat's landmarks are, in world metres."""
 
     task_cfg: Any
-    origin: np.ndarray
+    #: World position of the task frame's origin. Zero when the layout is built
+    #: from the task config alone (offline gate, corner harness): every
+    #: feasibility row is task-frame arithmetic and never needs it.
+    origin: np.ndarray = field(default_factory=lambda: np.zeros(3, dtype=float))
     #: The profile's corners, cached because every landmark is read off them.
     _corners: np.ndarray | None = field(default=None, init=False, repr=False)
     #: The grasp point as measured after settling. See `observe`.
@@ -99,6 +119,19 @@ class ClothUnpleatLayout:
 
         return 1 - self.material_axis
 
+    @property
+    def pull_sign(self) -> float:
+        """+1 when the free end is at the positive end of the band's axis, -1 mirrored.
+
+        `cloth.pull_side: -1` is the mirror layout: the profile is reflected in
+        the band's own axis, the tail (the end the gripper takes) lies at the
+        negative end and the pull runs toward negative coordinates. The scene cue
+        a policy has to read is which way the pleat folds -- pulling the lead-in
+        end instead drags the anchor (see `design_grasp_point`).
+        """
+
+        return pull_sign(self.task_cfg)
+
     def _plan_point(self, material: float, height: float) -> np.ndarray:
         """A world point from a (material, height) pair on the band's own axes."""
 
@@ -119,8 +152,9 @@ class ClothUnpleatLayout:
     def band_centre(self) -> np.ndarray:
         """World (x, y) of the band's plan-view middle."""
 
-        return np.asarray(self.origin, dtype=float)[:2] + np.asarray(
-            list(self.task_cfg.cloth.center), dtype=float
+        cloth = self.task_cfg.cloth
+        return np.asarray(self.origin, dtype=float)[:2] + np.array(
+            [float(cloth.center_x), float(cloth.center_y)], dtype=float
         )
 
     def rest_z(self) -> float:
@@ -129,12 +163,17 @@ class ClothUnpleatLayout:
     def corners(self) -> np.ndarray:
         if self._corners is None:
             cloth = self.task_cfg.cloth
-            self._corners = pleat_profile(
+            corners = pleat_profile(
                 material_length=float(cloth.material_length),
                 pleat_width=float(cloth.pleat.width),
                 crest_height=float(cloth.pleat.crest_height),
                 rest_z=float(cloth.z),
             )
+            # The mirror layout: reflect the material coordinate. Material ORDER
+            # is kept (index 0 is still the lead-in end), so the mesh's column
+            # order and every reading that walks it are unchanged.
+            corners[:, 0] *= self.pull_sign
+            self._corners = corners
         return self._corners
 
     def landmarks(self) -> dict:
@@ -165,7 +204,7 @@ class ClothUnpleatLayout:
 
         marks = self.landmarks()
         end = 0.5 * marks["plan_span"] - float(self.task_cfg.grasp.edge_inset)
-        return self._plan_point(end, float(self.task_cfg.cloth.z))
+        return self._plan_point(self.pull_sign * end, float(self.task_cfg.cloth.z))
 
     def grasp_point(self) -> np.ndarray:
         """The end the gripper attaches to: observed once settled, design before."""
@@ -182,8 +221,9 @@ class ClothUnpleatLayout:
         a design position that the cloth has left is how the first version of this
         demo failed.
 
-        Taken as the extreme material along the band's axis, then pulled back in
-        by `edge_inset`, on the width's centre line.
+        Taken as the extreme material along the band's axis on the free end's
+        side (`pull_sign`), then pulled back in by `edge_inset`, on the width's
+        centre line.
         """
 
         nodes = np.asarray(nodes, dtype=float)
@@ -196,10 +236,19 @@ class ClothUnpleatLayout:
                 f"no material within {band:.3f} m of the band's centre line at "
                 f"{design[sweep]:+.4f}; the band is not where the layout says."
             )
-        edge = float(nodes[near, material].max())
+        sign = self.pull_sign
+        along = nodes[near, material]
+        edge = float(along.max() if sign > 0 else along.min())
         point = design.copy()
-        point[material] = edge - float(self.task_cfg.grasp.edge_inset)
-        point[2] = float(nodes[near, 2].max())
+        point[material] = edge - sign * float(self.task_cfg.grasp.edge_inset)
+        # Height of the material AT the grasp, not the highest particle anywhere
+        # on the centre line. The strip `near` runs the whole band, so its max
+        # z is the settled pleat's top (table + 9.5 mm measured 2026-08-23),
+        # while the end lies one layer thick at table + 2 mm; the pads were
+        # being sent 7.5 mm high, most of `touch_clearance`. Same defect
+        # `cloth_unroll.observe` fixed 2026-08-24.
+        at = near[np.abs(along - point[material]) <= band]
+        point[2] = float(nodes[at, 2].max()) if at.size else self.rest_z()
         self._grasp = point
         return self._grasp
 
@@ -207,7 +256,7 @@ class ClothUnpleatLayout:
         """Unit vector the hand pulls along: outward from the pleat, in plane."""
 
         direction = np.zeros(3, dtype=float)
-        direction[self.material_axis] = 1.0
+        direction[self.material_axis] = self.pull_sign
         return direction
 
     def pull_distance(self) -> float:
@@ -287,12 +336,31 @@ class ClothUnpleatLayout:
             f"got {mode!r}."
         )
 
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a spawnable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate, the corner
+        harness and the demo's start-up print. Metres; task frame.
+        """
+
+        return cloth_unpleat_checks(self.task_cfg)
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"cloth_unpleat layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
     def summary(self) -> str:
         marks = self.landmarks()
         grasp = self.grasp_point()
         target = grasp + self.pull_direction() * self.pull_distance()
         return (
-            f"axis={'xy'[self.material_axis]} "
+            f"axis={'xy'[self.material_axis]} side={self.pull_sign:+.0f} "
             f"grasp=({grasp[0]:+.3f},{grasp[1]:+.3f},{grasp[2]:+.3f}) "
             f"target=({target[0]:+.3f},{target[1]:+.3f}) "
             f"material_mm={marks['material_length'] * 1e3:.0f} "
@@ -391,6 +459,8 @@ class ClothUnpleatSceneBuilder:
         layout = ClothUnpleatLayout(
             self.task_cfg, np.asarray(tabletop.frames.task_origin, dtype=float)
         )
+        _assert_literal_copies(self.task_cfg)
+        layout.validate()
 
         spacing = float(cloth_cfg.mesh.spacing)
         samples = resample_polyline(layout.corners(), spacing)
@@ -518,3 +588,49 @@ class ClothUnpleatSceneBuilder:
             gravity=abs(float(self.env_cfg.sim.gravity[2])),
             max_load_factor=float(friction_cfg.max_load_factor),
         ).install()
+
+
+def _assert_literal_copies(task_cfg) -> None:
+    """The yaml's literal copy of the workspace box must still match `common`.
+
+    `checks()` reads `workspace.x / y`, and the variation harness loads the task
+    yaml alone, where `${common...}` cannot resolve -- so the task yaml carries
+    literals, and the one place with both in hand asserts they agree.
+    """
+
+    root = task_cfg._get_root() if hasattr(task_cfg, "_get_root") else None
+    common = getattr(root, "common", None) if root is not None else None
+    if common is None:
+        return
+    ws = common.manipulation_space.workspace
+    for axis in ("x", "y"):
+        want = [float(v) for v in ws[axis]]
+        got = [float(v) for v in task_cfg.workspace[axis]]
+        if want != got:
+            raise ValueError(
+                f"cloth_unpleat: workspace.{axis} {got} != manipulation_space.workspace.{axis} {want}"
+            )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Order
+    matters: the grasp inset first (its window needs the drawn pleat), then the
+    band's along-axis position (its window needs the inset and the pull). A
+    ``ValueError`` (empty window) rejects the draw.
+    """
+
+    task_cfg.grasp.edge_inset = edge_inset_from_frac(task_cfg, float(task_cfg.grasp.edge_inset_frac))
+    leaf = along_leaf(task_cfg)
+    task_cfg.cloth[leaf] = center_along_from_frac(task_cfg, float(task_cfg.cloth[f"{leaf}_frac"]))
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    ClothUnpleatLayout(task_cfg).validate()

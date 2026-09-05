@@ -202,7 +202,7 @@ class RingTransferEvaluator:
     def from_layout(cls, layout, task_cfg) -> "RingTransferEvaluator":
         return cls(
             posts=layout.posts,
-            goal=[str(name) for name in task_cfg.goal.enclosure],
+            goal=[layout.target.name],
             required_crossings=[name for name, _ in layout.crossings()],
             thresholds=RingTransferThresholds.from_config(task_cfg.success),
         )

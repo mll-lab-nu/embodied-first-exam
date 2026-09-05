@@ -145,6 +145,42 @@ TASKS = {
         layout="topogym.tasks.routing.bar_through_hole:BarThroughHoleLayout",
         pairs={},
     ),
+    # 1536 corners (eight continuous axes x 3 turn counts x 2 senses); FEM rope,
+    # 7-18 min per GPU cell, so the physics sweep runs a CORNERS= subset only.
+    "rope_unwinding": TaskSpec(
+        yaml="rope_unwinding_topogym_tabletop_v1.yaml",
+        physical_config="rope_unwinding",
+        layout="topogym.tasks.routing.rope_unwinding:RopeUnwindingLayout",
+        pairs={},
+    ),
+    # 1536 corners (eight continuous axes x 3 turn counts x 2 senses); FEM rope,
+    # 10-40 min per GPU cell (one to three turns), so the physics sweep runs a
+    # CORNERS= subset only.
+    "rope_winding": TaskSpec(
+        yaml="rope_winding_topogym_tabletop_v1.yaml",
+        physical_config="rope_winding",
+        layout="topogym.tasks.routing.rope_winding:RopeWindingLayout",
+        pairs={},
+    ),
+    # 256 corners (seven continuous axes x 2 start posts); FEM closed band,
+    # ~5-10 min per GPU cell (carry = 2000 steps), so the physics sweep runs a
+    # CORNERS= subset only.
+    "ring_transfer": TaskSpec(
+        yaml="ring_transfer_topogym_tabletop_v1.yaml",
+        physical_config="ring_transfer",
+        layout="topogym.tasks.routing.ring_transfer:RingTransferLayout",
+        pairs={},
+    ),
+    # 192 corners (three pleat widths x two pull sides x five continuous axes);
+    # PBD cloth, minutes per GPU cell, so the physics sweep runs a CORNERS=
+    # subset only. The layout takes the task config alone (origin defaults to
+    # zero; every row is task-frame arithmetic).
+    "cloth_unpleat": TaskSpec(
+        yaml="cloth_unpleat_topogym_tabletop_v1.yaml",
+        physical_config="cloth_unpleat",
+        layout="topogym.tasks.deformation.cloth_unpleat:ClothUnpleatLayout",
+        pairs={},
+    ),
 }
 
 
