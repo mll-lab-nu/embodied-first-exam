@@ -26,15 +26,15 @@
 | rope_unwinding | **出生时绳已经绕在柱上的圈数** | 1 / 2 / 3 | 同上，反着解 |
 | ring_transfer | **走线柱的高度** | 8.5 / 10 / 11.5 cm | 柱越高，环要拎得越高才能越过挡头，绳拉得越紧 |
 | bar_through_hole | **面板上六角孔的对边距**（杆是 18 mm） | 38 / 34 / 31 mm | 孔越小，杆每边的余量从 10 mm 缩到 6.5 mm，稍歪就卡 |
-| swap_crossing_sign | **两根绳平行时的间距** | 9.5 / 8 / 6.5 cm | 越近，抓一根越容易碰到另一根，「分开够远」越难达到 |
+| swap_crossing_sign | **两根绳平行时的间距** | 9.5 / 8.3 / 7.2 cm | 越近，抓一根越容易碰到另一根，「分开够远」越难达到。6.5 cm 不可行：两插头出生在同一 x、相距一个间距，构建器规定两插头 < 7.0 cm 拒建（夹爪半跨 4 cm + 柱半径 + 余量），2026-09-07 落地时下限取 7.2 cm |
 | unlink_c_ring | **C 环缺口的张角** | 28° / 24.5° / 21.5° | 缺口越窄，穿过圆环管身时每边余量从 4.3 mm 缩到 1.3 mm |
 | band_untwist | **8 字开口那一叶的大小**（半径） | 4 / 5.2 / 6.5 cm | 叶越大，交叉点到绳头越远，整股要抬得越高才能跨过去 |
 | gate_cage_ball | **球滚动的速度** | 8 / 11 / 13 cm/s | 球越快，从过闸口到必须落闸的时间窗越短 |
 | diverter_route_ball | **活路出口有没有目标垫** | 有 / 无 | 无垫时画面看不出该去哪，只能读指令 |
 | linkbar_rotate_to_zone | **两块颜色区离横梁初始方向的远近差** | 相差 ≥20° / 10–20° / ≤10° | 两区离得一样远时，「转向最近那块」这个偷懒办法就变成抛硬币。2026-09-01 起两区在固定导轨上自由放置，可同侧、可相邻 |
-| cloth_fold | **捏取点离布角尖的距离** | 0 / 1 / 2 cm | 往里捏得越多，角尖越容易耷拉，折边越不齐 |
+| cloth_fold | **折痕落在哪**（被抓的角朝对角走完全程的多少） | 全程 / 九成 / 八成 | 折得越短，折痕越没有东西钉住它（角对角折时被两个没动的角钉住），落在哪全看放走多少材料。2026-09-07 取代原来的「捏取点内缩量」：那条轴无视它反而做得更好，不是难度 |
 | cloth_unpleat | **布带上那道褶叠进去的宽度** | 3.5 / 3 / 2.4 cm | 褶越窄，「拉平了」和「褶塌了」两种读数越难分开 |
-| cloth_unroll | **布带卷在杆上的圈数** | 1 / 1.25 / 1.44 圈 | 卷得多，要拉的距离和存在卷里的材料都多 |
+| cloth_unroll | **布带卷在杆上的圈数** | 1 / 1.25 / 1.5 圈 | 卷得多，要拉的距离和存在卷里的材料都多。1.5 以上在 28 cm 布上留不下桌上的平铺段（2026-09-05 离线算出） |
 
 每一行的共同点：左边是一个能用尺子或数数量出来的东西，右边三档是它的三个取值，从左到右 oracle 完成任务的余量单调变小（或要做的动作量单调变大）。
 
@@ -56,9 +56,10 @@
 | band_untwist | **8 字哪一端的绳压在上面** | 端 0 / 端 1 | 场景线索（`figure_eight.over_end`，09-03） |
 | diverter_route_ball | **死路在哪边**；**拨板出生时封着哪边** | 左 / 右；左 / 右（独立） | 指令 + 场景；两者组合里一半实例正确动作是不转 |
 | linkbar_rotate_to_zone | **销钉是哪种颜色**（即目标区）；**两区各是六色里的哪两种** | color_1 / color_2；30 种有序颜色对 | 场景线索（销钉、套环、手柄盖同色） |
-| cloth_fold | **捏哪个角** | 四角之一 | 指令（待扩展） |
+| cloth_fold | **捏哪个角** | 四角之一（`grasp.corner`，2026-09-06 起） | 指令（布是正方形、四角一样，画面无线索；`fixed_corner` 对照永远折远左角，实测 24/96 成功 = far_left 的格数） |
+| cloth_fold | **折到多远** | 全程 / 九成 / 八成（`goal.fold_fraction`，2026-09-07 起） | 指令（画面同样无线索；`fixed_fold` 对照永远角对角折，实测 32/96 成功 = f=1.0 的格数）。它同时是这个任务的单调裕度轴 |
 | cloth_unpleat | **布带的自由端在左边还是右边**（2026-09-05 起；沿 y 铺，自由端在 +y 端或 −y 端，整个布局镜像） | +y / −y | 场景（褶的折向：三层区叠向引入段那一侧，拉错端会拖走锚点）。「前后铺 / 左右铺」按变体轴表搁置：沿 +x 拉的终点桌面高度够不着 |
-| cloth_unroll | **布带沿桌子前后铺还是左右铺** | 前后 / 左右 | 场景 |
+| cloth_unroll | **支架在左边还是右边**（2026-09-05 起；支架在 −y 侧向 +y 拖，或镜像到 +y 侧向 −y 拖） | −y / +y | 场景（往哪边拖）。「前后铺 / 左右铺」搁置：沿 +x 拖的终点出工作区，朝机械臂拖的可达未实测 |
 
 没有防捷径离散轴的任务：rope_unwinding（出生缠绕方向画面可见，反向解绕只作对照策略）、bar_through_hole、unlink_c_ring、gate_cage_ball。这四个任务的防捷径由物理本身保证：绕过面板顶判 0、缺口不对准就卡住、时机不对就关不住。
 
@@ -69,7 +70,7 @@
 | rope_winding / rope_unwinding | 柱子、固定端子、靶心贴纸各自在桌上的位置；柱上每圈之间的间距；第一圈离桌面的高度 |
 | ring_transfer | 两根柱一起在桌上的位置；两柱的间距；两柱连线相对桌边的倾斜角；柱身粗细；挡头比柱身大多少 |
 | bar_through_hole | 杆（连同前面两个托架）的位置；面板（连同后面托架）的位置；杆的长度；抓杆的哪一段 |
-| swap_crossing_sign | 交叉点在绳的哪一段；两根绳整体前后位置；绳的长度 |
+| swap_crossing_sign | 交叉点在绳的哪一段（整条 x 跨度的 30%–75%，换道窗口按位置裁剪）；两根绳整体左右平移 ±4 cm；绳的长度（插头 x 16–20 cm，只往短里变） |
 | unlink_c_ring | C 环出生时缺口朝哪个方向；整个装置绕竖轴转的角度；装置在桌上的位置 |
 | band_untwist | 8 字整体的朝向和位置；交叉处两股的夹角；闭合叶的大小；两绳头之间的距离 |
 | gate_cage_ball | 球速；槽道左右位置；闸板架子沿槽道方向的位置；球过闸后到尽头的距离（在「封得住」允许的区间内的归一化位置）；球的起滚点（在「臂来得及」允许的区间内的归一化位置）；架子离槽道的距离（在不重叠区间内的归一化位置） |
@@ -77,7 +78,7 @@
 | linkbar_rotate_to_zone | 两块颜色区在固定导轨（±90°）上的位置（不重叠即可，可同侧、可相邻）；横梁初始偏转（±15° 扣掉两区禁区后的并集上定位，销不出生在区里）；颜色区的宽度 |
 | cloth_fold | 布的位置；弧线松紧 |
 | cloth_unpleat | 布带位置；褶隆起的高度；拉多远；捏取点离布边多远 |
-| cloth_unroll | 支架位置；卷的层间距；杆离桌面的高度 |
+| cloth_unroll | 支架位置（朝 / 离机械臂，沿拉动方向）；卷的层间距（按圈数、杆高派生）；杆离桌面的高度 |
 
 ## 5. 难度怎么来
 
@@ -138,13 +139,13 @@ FEM 绳一格 6–13 min，GPU 只跑 seed 0–9 与角点子集。
 | 2 | diverter_route_ball | **已落地（2026-09-02，GPU 待跑）**：yaml 块 3 离散 + 3 连续 + 2 归一化派生（分岔口按可达反解、球起点按直道长度）；`checks()` 六行含可达行；`steps_arc` 按扫掠角推导；离线 1000 seed 拒绝率 0、8 种离散组合全覆盖、`rotate_needed` 0.516；GPU seed 0–9：oracle **10/10**（首跑 9/10，seed 0 接近段撞拨杆，`approach_z` 0.260 → 0.300 后过；`checks()` 加接近净空行）、`fixed_direction` 7/10（与死路侧抽样一致）、十格首帧可分；`max_lag` 14–16° 超 6° 门是 08-22 起的既有问题（`diverter_route_ball_zh.md` §8 步骤 5）。原前置：球径双侧不等式抽成函数；可达行（拨杆 ≤ 0.69 m） |
 | 3 | gate_cage_ball | **已落地（2026-09-03）**：`timing:` 段把步长与触发富余写进任务定义；封闭区长度、球起点、架子 x 按两条可解性判据反解区间后派生；`checks()` 五行；第三条对照规则 `fixed_delay`；离线 1000 seed 拒绝率 0、球先到 46%。GPU seed 0–9：oracle 首跑 6/10（判据 `pinched` 把贴着已落座闸板往返的球标成夹住）→ 修正定义后 **10/10**，greedy 8/10，fixed_delay 6/10；见 `gate_cage_ball_zh.md` §5。原前置：新增 `checks()`：两条可解性不等式 + 架子与槽道不重叠 |
 | 4 | band_untwist | 已落地（09-03）：镜像开关 `figure_eight.over_end`；`checks()` 的 `lift_height` 行守 0.40；`end_gap` 由 `end_frac` 派生 |
-| 5 | swap_crossing_sign | `braid.py` 交叉位置改为接收采样值并裁剪窗口；接入 `verify_braid_spec`；planner 抬升守卫 |
-| 6 | rope_winding | 绳长反解；`to_c_route: closure`；柱顶联合不等式进 `checks()` |
+| 5 | swap_crossing_sign | 已落地（09-07，`swap_crossing_sign_zh.md`）：`braid.crossing_sign` Cat{+1, −1} 防捷径轴（braid 字直接给 `(±1,)`，0 = 沿用 seed 采样）；`braid.crossing_frac` U[0.30, 0.75]，换道窗口按位置向 `braid_span` 两端裁剪（`braid.crossing_window_at`），`verify_braid_spec` 改按裁剪后窗口判陡峭度并在建场景时调用；间距 U[0.072, 0.095]、`center_y` ±0.040、`x_end` U[0.16, 0.20]；共用 Layout 加 `checks()` 七行（插头间距、换道窗口、自由直段、工作区 x / y、插线板覆盖、separate 步预测抬升 ≤ 0.40）；三处取值与 §3.4 原表不同（交叉位置下限 0.25 → 0.30 抬升顶、线长上限 0.22 → 0.20 cover 步合成形状最坏 41.9 cm 超顶、间距下限 0.060 → 0.072 插头净空）；无派生叶子；离线 1000 seed 拒绝率 0、32 角点全过；untangle_continuous 共用构建器，seed 0–9 braid 字改前后逐位一致 |
+| 6 | rope_winding | 已落地（09-05，`docs/develop/physics/rope_winding/rope_unwinding_zh.md` 同目录的 `rope_winding_zh.md` §9）：出生弧张角按松弛带中点反解（绳长反解）；插头出生点改为规则条目 `plug_spawn_from`（柱心外 0.2233、方位角 307.5°，离锚点对径射线 ≥ 27°）；靶心 x / y 各由归一化量派生到「避开插头、直线去 C 不穿对径射线」的区域；`direction` 是防捷径轴（画面相同），对照组 `orbit_direction: opposite`；`to_c_route` 保持 straight——首跑角点 c1052 实测绕远侧路线会把缠满的绳倒拖、插头脱手；`checks()` 十三行；离线 1000 seed 拒绝率 0、1536 角点全过；GPU oracle 10/10、visual 10/10、wrong_way 3/3 判失败、角点子集 10/10 |
 | 7 | rope_unwinding | 已落地（09-04，`docs/develop/physics/rope_winding/rope_unwinding_zh.md` §7）：两个手写出生点改为 `routes.initial` 的规则条目 `lead_in_toward` / `tail_arc`；`direction=cw` 定义为镜像布局（Layout 取反三个 fixture 的 y；不镜像时首抽拒绝率 21%）；`wind_z_start` 由 `wind_z_frac` 派生、`C.x` 由 `x_frac` 在挖掉插头净空盘后的区间里派生（独立抽时 3.3% 拒绝）；`checks()` 十二行；离线 1000 seed 拒绝率 0、1536 角点全过；固定布局 GPU 复跑通过（插头出生点西移 28 mm）；GPU：seed 0–9 oracle **10/10**、visual 10/10、wrong_way 3/3 判失败、角点子集 **12/12**。三次首跑失败：网格生成硬边界（3 圈 × 圈距 0.0102 管皮自交 → `climb_per_turn` 下界 0.010 → 0.012，离线 tetgen 定界）；对照组覆盖进了布局校验（`checks()` 改用 oracle 轨道评估、planner 强制轨道下退回直线）；贴柱守卫的绝对门按两圈标定（改为 max(4800, 0.85 × 全绳节点)，锚点最贴柱的角点解下的绳绕在柱脚、贴柱数 1.6 倍出生值但闭合计数 0）|
 | 8 | unlink_c_ring | 已落地（09-03）：`checks()` 七行含可达与手净空行并接入拒绝采样；抓取方位角由 `grasp_offset_deg` 派生；`gap_azimuth` ±10；判据 `passed_through` 改判 `max_pass_through_depth`；摆动段闭环修正后 GPU oracle 10/10、角点 32/32、no_align 10/10 判失败 |
-| 9 | cloth_unpleat / cloth_unroll | **cloth_unpleat 离线已落地（2026-09-05，`cloth_unpleat_zh.md`）**：褶宽 Cat{0.035, 0.030, 0.024}、`pull_side` 镜像轴、顶缘 / 横向位置 / 行程倍数三条连续轴、内缩量与纵向位置由 frac 派生（附着盘净空、可达盘）；`checks()` 七行；`observe()` 抓取高度修正；离线 1000 seed 拒绝率 0、192 角点全过；GPU 见该文档 §5。cloth_unroll 未开始：圈数上限按层距、杆高、行程上限联合 |
+| 9 | cloth_unpleat / cloth_unroll | **cloth_unpleat 离线已落地（2026-09-05，`cloth_unpleat_zh.md`）**：褶宽 Cat{0.035, 0.030, 0.024}、`pull_side` 镜像轴、顶缘 / 横向位置 / 行程倍数三条连续轴、内缩量与纵向位置由 frac 派生（附着盘净空、可达盘）；`checks()` 七行；`observe()` 抓取高度修正；离线 1000 seed 拒绝率 0、192 角点全过；GPU 见该文档 §5。**cloth_unroll 离线已落地（2026-09-05，`cloth_unroll_zh.md` §9）**：圈数 Cat{1.0, 1.25, 1.5}、`pull_side` 镜像轴、杆高 / 横向位置两条连续轴、层距与纵向位置由 frac 派生（平铺段五行二分、可达盘）、起始守卫阈值派生（1 圈的松卷设计铺展比 0.63 > 固定 0.50）；`checks()` 十行；1.75 圈在 0.280 m 布上无平铺段；立柱 0.075 → 0.090；离线 1000 seed 拒绝率 0、96 角点全过；GPU 待跑 |
 | 10 | ring_transfer | **离线已落地（2026-09-04，`ring_transfer_zh.md` §7）**：三个搬运高度、环长轴、捏取侧 / 捏取点全部改为 Layout 按柱推导；成对平移 / 旋转不加新 kind，走 `pair`（中点、柱距、朝向）→ `derived` 写两柱位置（bar_through_hole 先例）；中点由 `mid_x_frac / mid_y_frac` 在工作区 ∩ 可达圆的窗口里派生；`ring.on_post` 是防捷径指令轴；`checks()` 十五行；离线 1000 seed 拒绝率 0、256 角点全过。**GPU 完成（09-05）**：seed 0–9 oracle 10/10（一格 1276–1375 步），角点子集 8/8（首跑 4/8：派生写了带空格的 `goal.instruction` 句子，角点 sweep 的 Hydra 覆盖按空格切词失败——派生只能写标量、无空格的叶子，指令改为模板 + `Layout.instruction()`），`lift_only` 对照重做为 carry 同款抬离 + 放到两柱中点，3/3 判失败、终态绕数集合为空。原前置：三个搬运高度改为按柱顶推导（柱高轴的前置）；环长轴、捏取侧推导；成对平移 / 旋转 directive；run 配置 + EpisodeSpec |
-| 11 | cloth_fold | 四角抓取（`_grasp_offset` + `finger_axis` 回退）；补工作区 / 可达断言 |
+| 11 | cloth_fold | **已落地（2026-09-06；2026-09-07 换单调裕度轴，`cloth_fold_zh.md`）**：`grasp.corner` 四选一指令轴、**`goal.fold_fraction` Cat{1.0, 0.9, 0.8}（折痕位置，同为指令轴）**、`center_y` ±0.030、`fold_slack` [0.96, 1.00]（0.93 按判据算 oracle 自己判失败）、`center_x` 由 frac 在远角可达盘（`max_hand_dist` 0.740，假设）封顶的窗口里派生；`checks()` 四行（原第五行随 `grasp.inset` 一起删，那条轴无视它反而得 100%、产生的是门线方差不是难度，见 §8）；结构判据改按预测两层区归一化、门 0.60 → 0.80；判定器占用网格锚到布（cloth_unpleat 同缺陷）；角点子集晒出两处执行链假设并修掉——控制网格三角形对角线按角选向（折痕顺着对角线边走则半布落地侧滑 30 mm）、`finger_axis` 默认 `arm_default`（near_left 手腕 +135° 时松手压偏）；对照 `drag` / `fixed_corner` / `fixed_fold`；离线 1000 seed 拒绝率 0、96 角点全过，GPU：seed 0–9 oracle 10/10、96 角点四组 96/32/24/0 逐格对上预期。原前置：四角抓取（`_grasp_offset` + `finger_axis` 回退）；补工作区 / 可达断言 |
 | 12 | bar_through_hole | 已落地（09-04，`bar_through_hole_zh.md`）：四个搬运高度改由 Layout 推导（横推高度取「far 托座斜面顶端 ↔ 孔上沿」窗口的中点）；`checks()` 九行；`across_flats` 下界 0.027 → 0.029（竖直窗口）；杆长与抓取偏移由归一化 frac 派生、托座跟随用 `derived`；离线 1000 seed 拒绝率 0、64 角点全过 |
 
 ### 6.3 实测与划档

@@ -8,7 +8,8 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from topogym.core import EntityManifest
-from topogym.generation.braid import BraidLayout, BraidSpec, build_braid_spec
+from topogym.generation.braid import BraidLayout, BraidSpec, build_braid_spec, verify_braid_spec
+from topogym.tasks.entangle import _swap_crossing_sign_geometry as braid_geometry
 from topogym.primitives import ParticleAttachment
 from topogym.tasks._visuals import box_entity_enabled
 from topogym.world.rope import (
@@ -96,17 +97,96 @@ class UntangleContinuousLayout:
             over_lift=float(braid_cfg.over_lift),
             braid_span=(float(span[0]), float(span[1])),
             crossing_fill=float(braid_cfg.crossing_fill),
+            # swap_crossing_sign's layout axis; absent (untangle_continuous)
+            # means the evenly spaced default.
+            crossing_frac=(
+                None
+                if getattr(braid_cfg, "crossing_frac", None) is None
+                else float(braid_cfg.crossing_frac)
+            ),
         )
 
     def braid_spec(self) -> BraidSpec:
-        """Generate this episode's braid. Deterministic in ``self.seed``."""
+        """Generate this episode's braid. Deterministic in ``self.seed``.
 
+        ``braid.crossing_sign`` (swap_crossing_sign's anti-shortcut axis) fixes
+        the one letter of a length-1 word directly; 0 or absent keeps the
+        seed's ``braid/word`` draw, so untangle_continuous and fixed-layout runs
+        are unchanged.
+        """
+
+        sign = int(getattr(self.cfg.braid, "crossing_sign", 0) or 0)
+        word = None
+        if sign:
+            if int(self.cfg.braid.length) != 1:
+                raise ValueError(
+                    f"braid.crossing_sign={sign} needs braid.length == 1, "
+                    f"got {int(self.cfg.braid.length)}."
+                )
+            word = (1 if sign > 0 else -1,)
         return build_braid_spec(
             n_strands=self.n_strands,
             length=int(self.cfg.braid.length),
             seed=int(self.seed),
             layout=self.braid_layout(),
+            word=word,
         )
+
+    # ----- variation: checks --------------------------------------------------
+
+    def predicted_lift(self) -> float:
+        """Task z the oracle's first move lifts to, estimated from the spawn geometry."""
+
+        return braid_geometry.predicted_lift(
+            self.braid_spec(),
+            float(self.cfg.braid.tube_radius),
+            float(self.cfg.pinch.lift_clearance),
+        )
+
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a buildable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate and the
+        demo's start-up print. Reads only literal task leaves (``tube_radius``
+        is the yaml's copy of ``rope.radius``; the box is ``workspace:``), so it
+        works on an unresolved task config.
+        """
+
+        braid_cfg, ws = self.cfg.braid, self.cfg.workspace
+        connector = self.cfg.rope.free_end_connector
+        strip_size = _list(self.cfg.power_strip.size)
+        return braid_geometry.braid_checks(
+            self.braid_spec(),
+            tube_radius=float(braid_cfg.tube_radius),
+            min_clearance=float(getattr(connector, "min_clearance", 0.07)),
+            # Lying on its side, the plug reaches past the rope end by half the
+            # grasp column, the flange and the pin (see _add_free_end_connectors).
+            plug_ahead=(
+                0.5 * float(connector.column_height)
+                + float(connector.flange_height)
+                + float(connector.pin_depth)
+            ),
+            flange_radius=float(connector.flange_radius),
+            strip_half_length=0.5 * float(strip_size[1]),
+            workspace_x=(float(ws.x[0]), float(ws.x[1])),
+            workspace_y=(float(ws.y[0]), float(ws.y[1])),
+            workspace_z_max=float(ws.z_max),
+            workspace_margin=float(ws.margin),
+            lift_clearance=float(self.cfg.pinch.lift_clearance),
+            lane_overshoot=float(getattr(self.cfg.pinch, "lane_overshoot", 0.0) or 0.0),
+            place_pullback=float(self.cfg.pinch.place_pullback),
+            separation_threshold=float(self.cfg.success.separation_threshold),
+        )
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"untangle_continuous layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
 
     def strand_name(self, strand_index: int) -> str:
         return f"rope_{int(strand_index)}"
@@ -342,7 +422,29 @@ class UntangleContinuousSceneBuilder:
         show_viewer: bool = False,
         include_robot: bool = True,
     ) -> UntangleContinuousScene:
+        tube_radius = float(self.task_cfg.braid.tube_radius)
+        if abs(tube_radius - float(self.task_cfg.rope.radius)) > 1e-12:
+            raise ValueError(
+                f"braid.tube_radius {tube_radius} != rope.radius "
+                f"{float(self.task_cfg.rope.radius)}: the layout checks would describe a "
+                "different rope than the one being built."
+            )
+        self.layout.validate()
         braid = self.layout.braid_spec()
+        # The generator's own invariants (reduced word, non-overlapping and
+        # flat-enough swap windows, over_lift clearing the particle contact,
+        # control points inside the workspace) -- checked here, where the scene
+        # is built, rather than only in the inspect demo.
+        workspace = self.task_cfg.workspace
+        report = verify_braid_spec(
+            braid,
+            rope_radius=float(self.task_cfg.rope.radius),
+            particle_size=float(self.task_cfg.rope.particle_size),
+            x_bounds=(float(workspace.x[0]), float(workspace.x[1])),
+            y_bounds=(float(workspace.y[0]), float(workspace.y[1])),
+        )
+        if not report.ok:
+            raise ValueError(f"UntangleContinuous braid self-check failed: {report}")
 
         backend = _make_rope_backend(self.task_cfg.rope)
         self._rope_backend = backend

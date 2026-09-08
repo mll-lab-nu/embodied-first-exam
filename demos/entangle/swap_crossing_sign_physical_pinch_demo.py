@@ -27,6 +27,9 @@ block in the task config for why it is not a friction pinch.
     # watch it in the viewer, one move at a time
     python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.viewer=true run.keep_open=true run.max_moves=1 run.verbose=true
 
+    # a seeded variant of the layout (task yaml's variation block)
+    python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.randomize_layout=true run.seed=3
+
     # print the resolved config and exit
     python -m demos.entangle.swap_crossing_sign_physical_pinch_demo --cfg job
 """
@@ -43,6 +46,7 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning import make_swap_crossing_sign_rule
 from topogym.primitives import (
     AttachmentManager,
@@ -65,6 +69,25 @@ from topogym.utils import (
 from topogym.verification import SwapCrossingSignPuzzleEvaluator, strand_polylines
 
 CONFIG_ROOT = Path(__file__).resolve().parents[2] / "configs"
+TASK_ID = "swap_crossing_sign"
+
+
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled leaf (the variation sweep script reads it)."""
+    braid = cfg.task.braid
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} sign={int(braid.crossing_sign):+d} "
+        f"frac={float(braid.crossing_frac):.4f} spacing={float(braid.channel_spacing):.4f} "
+        f"cy={float(braid.center_y):+.4f} x_end={float(braid.x_end):.4f} "
+        f"lift_pred={layout.predicted_lift():.3f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
 
 
 def _signature_text(signature) -> str:
@@ -77,6 +100,26 @@ def _signature_text(signature) -> str:
         over, under = (lo, hi) if sign > 0 else (hi, lo)
         parts.append(f"s{over} over s{under}")
     return "; ".join(parts)
+
+
+def _closest_approach(polylines: dict) -> str:
+    """Where the two centrelines come closest: xy, and how far along each rope.
+
+    `min_sep` alone says *that* the ropes touch; this says *where*, which is
+    what tells a bow in the laid rope apart from a dragged tail (2026-09-06
+    variation sweep: three cells stopped with min_sep 9.7 mm after separate).
+    """
+
+    strands = sorted(polylines)
+    if len(strands) < 2:
+        return ""
+    a, b = polylines[strands[0]], polylines[strands[1]]
+    distance = np.linalg.norm(a[:, None, :] - b[None, :, :], axis=2)
+    i, j = np.unravel_index(int(np.argmin(distance)), distance.shape)
+    return (
+        f"closest s{strands[0]}[{i}/{len(a) - 1}]=({a[i, 0]:+.3f},{a[i, 1]:+.3f}) "
+        f"s{strands[1]}[{j}/{len(b) - 1}]=({b[j, 0]:+.3f},{b[j, 1]:+.3f})"
+    )
 
 
 def _hud(status: dict):
@@ -116,6 +159,9 @@ def run_demo(cfg: DictConfig) -> tuple[bool, object]:
         cfg.robot_control,
         seed=cfg.run.seed,
     ).build(show_viewer=cfg.run.viewer)
+    print(f"{TASK_ID} checks {_checks_line(rope_scene.layout)}", flush=True)
+    if cfg.run.randomize_layout:
+        print(_variant_line(cfg, rope_scene.layout), flush=True)
     _connector_report(rope_scene, "post_build")
     # Park each plug at its spawn pose until the gripper takes it. Lying on its
     # flange rim the plug is a wheel -- in the FEM scene it rolls ~20mm inward
@@ -503,6 +549,11 @@ def run_demo(cfg: DictConfig) -> tuple[bool, object]:
                 initial_signature=initial_signature,
                 separated_seen=separated_seen,
             )
+            print(
+                f"swap_crossing_sign_geometry after move {moves}: "
+                + _closest_approach(strand_polylines(rope_scene, samples=evaluator.samples)),
+                flush=True,
+            )
             # The path evidence, recorded the moment it is true rather than
             # inferred at the end: the two cables were measured genuinely apart.
             if state.crossing_count == 0 and state.is_separated:
@@ -580,6 +631,9 @@ def main(cfg: DictConfig) -> None:
     resolved = save_resolved_config(cfg)
     if resolved is not None:
         print(f"swap_crossing_sign_config -> {resolved}", flush=True)
+
+    if cfg.run.randomize_layout:
+        cfg = randomize_task_cfg(cfg, TASK_ID, cfg.run.seed, difficulty=cfg.run.difficulty)
 
     # The frozen baseline pins sim.substeps to 4 and only checks when
     # env.preset.locked is set, so raising substeps needs both overrides.

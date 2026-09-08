@@ -50,8 +50,9 @@ import numpy as np
 from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
+from topogym.generation.layout_randomization import randomize_task_cfg
 from topogym.planning.cloth_unroll_planner import plan_cloth_unroll
-from topogym.tasks.deformation.cloth_unroll import TapeRelease
+from topogym.tasks.deformation.cloth_unroll import Spool
 from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
@@ -67,22 +68,45 @@ from topogym.utils import (
 from topogym.verification import ClothUnrollEvaluator
 from topogym.verification.cloth_unpleat_verifier import simulated_grid_pairs
 
+TASK_ID = "cloth_unroll"
 
-def _advance(watch, tape, name: str, waypoints) -> None:
-    """Phase bookkeeping, and the peel front when the label is a pull segment.
 
-    Keyed to the DISTANCE the plan has paid out by this waypoint, never to the
-    step count, so the pull speed stays free: a faster pull reaches the same
-    waypoint having paid out the same length, and frees the same material.
+def _variant_line(cfg, layout) -> str:
+    """One parseable line with every sampled or derived leaf (the variation sweep script reads it)."""
+
+    task = cfg.task
+    marks = layout.landmarks()
+    grasp = layout.design_grasp_point()
+    end = grasp + layout.pull_direction() * layout.pull_total()
+    return (
+        f"{TASK_ID} variant seed={int(cfg.run.seed)} side={layout.pull_sign:+.0f} "
+        f"turns={float(task.cloth.roll.turns):.2f} pitch={float(task.cloth.roll.pitch):.4f} "
+        f"bar_height={float(task.dispenser.bar_height):.4f} center_x={float(task.cloth.center_x):+.4f} "
+        f"center_y={float(task.cloth.center_y):+.4f} spread_max={float(task.grasp.max_start_spread_ratio):.3f} "
+        f"flat_mm={marks['flat_run'] * 1e3:.1f} pull_mm={layout.pull_total() * 1e3:.1f} "
+        f"grasp_y={grasp[1]:+.4f} end_y={end[1]:+.4f}"
+    )
+
+
+def _checks_line(layout) -> str:
+    return " ".join(
+        f"{name}={measured:+.4f}/{limit:+.4f}/{'ok' if ok else 'FAIL'}"
+        for name, measured, limit, ok in layout.checks()
+    )
+
+
+def _advance(watch, spool, controller, name: str) -> None:
+    """Phase bookkeeping, and the spool's stroke origin when the pull begins.
+
+    The spool itself turns every step (`watched_step` below), keyed to how far
+    the hand has travelled along the pull since this origin -- never to the
+    step count or to waypoints, so the pull speed stays free and the peel front
+    never lags a whole 30 mm segment behind the hand (it did until 2026-09-06).
     """
 
     watch.phase = name
-    if tape is None or not name.startswith("pull_"):
-        return
-    index = int(name.split("_")[1])
-    start = np.asarray(waypoints[0].position, dtype=float)
-    here = np.asarray(waypoints[min(index, len(waypoints)) - 1].position, dtype=float)
-    tape.advance(float(np.linalg.norm(here - start)))
+    if spool is not None and name == "pull_01":
+        spool.begin_stroke(controller.hand_pos())
 
 
 def make_primitive(cfg, *, skip_initial_open: bool) -> ClothLinkAttachDragPrimitive:
@@ -135,6 +159,9 @@ def make_primitive(cfg, *, skip_initial_open: bool) -> ClothLinkAttachDragPrimit
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="cloth_unroll")
 def main(cfg: DictConfig) -> None:
+    # A seeded variant of the layout (the task yaml's `variation:` block).
+    if bool(cfg.run.randomize_layout):
+        cfg = randomize_task_cfg(cfg, TASK_ID, int(cfg.run.seed), difficulty=str(cfg.run.difficulty))
     cfg = apply_recording_camera_overrides(cfg)
     resolved = save_resolved_config(cfg)
     if resolved is not None:
@@ -161,6 +188,9 @@ def main(cfg: DictConfig) -> None:
         show_viewer=cfg.run.viewer
     )
     layout = band.layout
+    if bool(cfg.run.randomize_layout):
+        print(_variant_line(cfg, layout), flush=True)
+    print(f"{TASK_ID} checks {_checks_line(layout)}", flush=True)
     # Built once and used twice: the start-state guard reads the same measures the
     # end-state verdict does, so "still a roll" and "unrolled" are the same
     # arithmetic on two different moments rather than two definitions.
@@ -191,26 +221,28 @@ def main(cfg: DictConfig) -> None:
         # independent -- the cloth relaxes whether or not the hand is doing
         # anything -- and running them in sequence put the arm on screen doing
         # nothing for two seconds before the episode started.
-        controller.open_gripper(int(cfg.task.physical.gripper_steps))
-        # BEFORE the settle, not after. The wrap is what has to be held, and by
-        # the end of a settle it is no longer there to hold: measured 2026-08-25,
-        # pinning afterwards caught 3 particles because the band's closest point
-        # to the drum axis had already reached 67.5 mm against a 59.5 mm drum
-        # surface. Whether it stays is also marginal -- `spread_ratio` came out
-        # 0.443 / 0.450 / 0.456 / 0.572 across runs of the same scene, flipping on
-        # nothing more than a kernel recompile. Pinning at birth removes the
-        # question instead of betting on it.
-        tape_cfg = cfg.task.cloth.get("tape", None)
-        tape = None
-        if tape_cfg is not None and bool(tape_cfg.get("enabled", False)):
-            tape = TapeRelease(
-                band.cloth,
+        # BEFORE ANY PHYSICS STEP -- the gripper's opening below steps the scene
+        # too. The spool maps every particle onto the band's profile by arc
+        # length, which is only exact while the particles still sit on it:
+        # measured 2026-09-06, binding after the 60 opening steps found the
+        # outer 42 mm of the roll already slid off the profile, left it free,
+        # and bound particles that had moved at the wrong arc, which the pull
+        # then tore loose (a 35 mm neighbour gap, a 38 mm jump in one step).
+        # The 2026-08-25 lesson is the same one a settle later: by the end of
+        # a settle the wrap is no longer there to hold (3 particles caught).
+        spool_cfg = cfg.task.cloth.get("spool", None)
+        spool = None
+        if spool_cfg is not None and bool(spool_cfg.get("enabled", False)):
+            spool = Spool(
+                band,
                 layout,
                 band_particles(band),
-                reach=float(tape_cfg.reach),
-                lead=float(tape_cfg.lead),
+                lead=float(spool_cfg.lead),
+                anchor_arc=float(spool_cfg.anchor_arc),
+                tear_allowance=float(spool_cfg.tear_allowance),
             )
-            print(f"cloth_unroll {tape.summary()}", flush=True)
+            print(f"cloth_unroll {spool.summary()}", flush=True)
+        controller.open_gripper(int(cfg.task.physical.gripper_steps))
 
         rest = settle_band(
             band,
@@ -319,7 +351,7 @@ def main(cfg: DictConfig) -> None:
             f"stroke_steps={layout.stroke_steps()} "
             f"touch_settle={int(cfg.task.physical.touch_settle_steps)} "
             f"carry_settle={int(cfg.task.physical.carry_settle_steps)} "
-            f"pull_scale={float(cfg.task.physical.pull_scale)} "
+            f"pull_slack_mm={float(cfg.task.cloth.spool.pull_slack) * 1e3:.0f} "
             f"pull_step_mm={float(cfg.task.physical.pull_step_m) * 1e3:.2f} "
             f"final_y={float(final[layout.material_axis]):+.4f} "
             f"{layout.summary()}",
@@ -369,6 +401,14 @@ def main(cfg: DictConfig) -> None:
             original_step(*args, **kwargs)
             counter["n"] += 1
             watch.check(counter["n"])
+            # The spool turns and the peel front follows the hand every step
+            # of a pull segment; past taut by the glue's allowance, the tail
+            # is torn off.
+            if spool is not None and str(watch.phase).startswith("pull_"):
+                hand = controller.hand_pos()
+                spool.advance(hand)
+                if spool.tear_check(hand):
+                    print(f"cloth_unroll spool_torn {spool.summary()}", flush=True)
 
         band.scene.step = watched_step
         results = []
@@ -412,7 +452,7 @@ def main(cfg: DictConfig) -> None:
                         )
                     ),
                     particles_fn=lambda: band_particles(band),
-                    on_phase=lambda name: _advance(watch, tape, name, waypoints),
+                    on_phase=lambda name: _advance(watch, spool, controller, name),
                 )
                 results.append(result)
                 here = evaluator.classify(
@@ -441,6 +481,8 @@ def main(cfg: DictConfig) -> None:
                         flush=True,
                     )
                     break
+            if spool is not None:
+                print(f"cloth_unroll {spool.summary()}", flush=True)
             # A still tail with the arm out of the way, so the video ends on the
             # finished band rather than on the retreat.
             for _ in range(max(0, int(cfg.run.final_hold_steps))):
@@ -497,6 +539,7 @@ def main(cfg: DictConfig) -> None:
         f"arm_pos_err_mm={worst_pose * 1e3:.1f} "
         f"pad_tip_mm={pad_tip * 1e3:+.1f} gripper_ok={gripper_ok} "
         f"arm_tilt_deg={np.degrees(worst_tilt):.1f} "
+        f"torn={'-' if spool is None else spool.torn_at is not None} "
         f"{state.summary()} {watch.summary()}",
         flush=True,
     )

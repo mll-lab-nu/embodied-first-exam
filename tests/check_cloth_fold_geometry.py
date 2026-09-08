@@ -16,7 +16,12 @@ What it proves:
     the one a single area threshold cannot see;
   - the fold target is half the cloth's own outline, not a box around it;
   - the config's thresholds sit between the measured right and wrong answers, so
-    each gate has room on both sides rather than clinging to one.
+    each gate has room on both sides rather than clinging to one;
+  - **the variation envelope** (2026-09-06): the yaml's five feasibility rows pass
+    on the baseline, the derived sheet position restores it, the four corners are
+    the four symmetric copies of one geometry, the two control motions are what
+    they claim to be, all 96 corners of the envelope pass every row, and three
+    deliberately bad layouts are rejected by the row that is there to catch them.
 
     python tests/check_cloth_fold_geometry.py
 
@@ -60,12 +65,25 @@ textures = importlib.util.module_from_spec(_tex_spec)
 sys.modules[_tex_spec.name] = textures
 _tex_spec.loader.exec_module(textures)
 
+# The layout rules and feasibility rows, numpy only; the task module that wraps
+# them imports Genesis, so they are loaded by path like the verifier.
+_geo_spec = importlib.util.spec_from_file_location(
+    "topogym.tasks.deformation._cloth_fold_geometry",
+    REPO / "topogym/tasks/deformation/_cloth_fold_geometry.py",
+)
+_geometry = importlib.util.module_from_spec(_geo_spec)
+sys.modules[_geo_spec.name] = _geometry
+_geo_spec.loader.exec_module(_geometry)
+
 
 # `topogym.planning` is NumPy-only, so it imports normally -- the same route
 # `check_rope_winding_geometry.py` takes.
 sys.path.insert(0, str(REPO))
 from topogym.planning.cloth_fold_planner import (  # noqa: E402
+    FIXED_CORNER,
+    FIXED_FRACTION,
     chord_error,
+    execution_layout,
     fold_waypoints,
 )
 
@@ -83,26 +101,43 @@ class _StandInLayout:
         self._table_z = table_z
 
     def _offset(self):
-        half = 0.5 * np.asarray(self._cfg["cloth"]["size"], dtype=float)
-        inset = float(self._cfg["grasp"]["inset"])
-        if str(self._cfg["grasp"]["at"]) == "corner":
-            return np.array([half[0] - inset, half[1] - inset])
-        return np.array([half[0] - inset, 0.0])
+        return _geometry.grasp_offset(self._cfg)
+
+    @property
+    def corner(self):
+        return _geometry.corner_name(self._cfg)
+
+    def with_corner(self, name):
+        import copy
+
+        cfg = copy.deepcopy(self._cfg)
+        cfg["grasp"]["corner"] = str(name)
+        return _StandInLayout(cfg, self._table_z)
+
+    def with_fold_fraction(self, value):
+        import copy
+
+        cfg = copy.deepcopy(self._cfg)
+        cfg["goal"]["fold_fraction"] = float(value)
+        return _StandInLayout(cfg, self._table_z)
+
+    def fold_fraction(self):
+        return _geometry.fold_fraction(self._cfg)
 
     def cloth_centre(self):
-        return np.asarray(self._cfg["cloth"]["center"], dtype=float)
+        return _geometry.cloth_centre_task(self._cfg)
 
     def rest_z(self):
         return self._table_z + float(self._cfg["cloth"]["z"])
 
-    fold_point = cloth_centre
+    def fold_point(self):
+        return _geometry.fold_point_task(self._cfg)
 
     def fold_normal(self):
-        offset = self._offset()
-        return offset / float(np.linalg.norm(offset))
+        return _geometry.fold_normal_task(self._cfg)
 
     def material_distance(self):
-        return float(np.linalg.norm(self._offset()))
+        return _geometry.material_distance(self._cfg)
 
     def fold_radius(self):
         return self.material_distance() * float(self._cfg["physical"]["fold_slack"])
@@ -115,7 +150,7 @@ class _StandInLayout:
         return np.array([*(self.cloth_centre() + self._offset()), self.rest_z()])
 
     def fold_target(self):
-        return np.array([*(self.cloth_centre() - self._offset()), self.rest_z()])
+        return np.array([*_geometry.fold_target_task(self._cfg), self.rest_z()])
 
 
 class _Node(dict):
@@ -172,7 +207,7 @@ def rest_sheet(cfg) -> np.ndarray:
     """
 
     size = np.asarray(cfg["cloth"]["size"], dtype=float)
-    centre = np.asarray(cfg["cloth"]["center"], dtype=float)
+    centre = _geometry.cloth_centre_task(cfg)
     side = 2 * int(cfg["cloth"]["mesh"]["cols"]) - 1
     xs = np.linspace(centre[0] - size[0] / 2, centre[0] + size[0] / 2, side)
     ys = np.linspace(centre[1] - size[1] / 2, centre[1] + size[1] / 2, side)
@@ -238,13 +273,291 @@ def lumped(nodes: np.ndarray, seed: int = 7) -> np.ndarray:
     return out
 
 
+def _corner_cfgs(cfg):
+    """Every vertex of the yaml's ``variation:`` box, as (label, cfg), not yet derived.
+
+    Built by hand from the block rather than through `layout_randomization` so
+    this gate stays numpy + PyYAML: `uniform` axes at both ends, `choice` axes at
+    every value, full product; then the same derivation the sampler runs.
+    """
+
+    import copy
+    import itertools
+
+    axes = []
+    for entry in cfg["variation"]:
+        if entry["kind"] == "uniform":
+            axes.append((entry["path"], [float(entry["lo"]), float(entry["hi"])]))
+        elif entry["kind"] == "choice":
+            axes.append((entry["path"], list(entry["values"])))
+    out = []
+    for combo in itertools.product(*(values for _, values in axes)):
+        c = copy.deepcopy(cfg)
+        labels = []
+        for (path, _), value in zip(axes, combo):
+            node = c
+            *parents, leaf = path.split(".")
+            for part in parents:
+                node = node[part]
+            node[leaf] = value
+            labels.append(f"{path.split('.')[-1]}={value}")
+        out.append((",".join(labels), c))
+    return out
+
+
+def _derive(cfg) -> None:
+    """The sampler's derivation step (`cloth_fold.derive_task_cfg`), on a dict."""
+
+    cfg["cloth"]["center_x"] = _geometry.center_x_from_frac(cfg, float(cfg["cloth"]["center_x_frac"]))
+
+
+_LOWER_IS_TIGHTER = ("far_corner_reach", "apex_below_workspace_top", "slack_within_gate")
+
+
+def _margin(row) -> float:
+    name, measured, limit, _ = row
+    return (limit - measured) if name in _LOWER_IS_TIGHTER else (measured - limit)
+
+
+def envelope_section(cfg) -> None:
+    import copy
+
+    rows = _geometry.cloth_fold_checks(cfg)
+    for name, measured, limit, ok in rows:
+        print(f"  {name:28s} {measured:+.4f} / {limit:+.4f} {'ok' if ok else 'FAIL'}")
+    check("基准 yaml 四行全过", all(ok for *_, ok in rows), ",".join(n for n, *_, ok in rows if not ok))
+    # 四行，不是五行：原来的 attach_disc_has_cloth（半边长 − inset ≥ 附着盘半径）随
+    # grasp.inset 一起在 2026-09-07 删掉，inset 没了它恒为 0.120 ≥ 0.018，是死行。
+    check("四行齐全", [r[0] for r in rows] == [
+        "far_corner_reach", "cloth_in_workspace", "apex_below_workspace_top",
+        "slack_within_gate",
+    ], str([r[0] for r in rows]))
+
+    # The baseline sits at the top of the derived window: the far corner of the
+    # shipped layout is 0.7398 from the base, 0.2 mm inside the 0.740 cap.
+    base = copy.deepcopy(cfg)
+    _derive(base)
+    lo, hi = _geometry.center_x_bounds(cfg)
+    check(
+        "派生还原基准：center_x_frac 1.0 → 窗口顶端 0.0402（基准 0.040 差 0.2 mm）",
+        abs(base["cloth"]["center_x"] - hi) < 1e-12 and abs(hi - 0.040) < 0.0005 and abs(lo - 0.010) < 1e-12,
+        f"window [{lo:.4f}, {hi:.4f}] -> center_x={base['cloth']['center_x']:.4f}",
+    )
+    far = _geometry.far_corner_task(base)
+    reach = float(np.linalg.norm(far - np.asarray(cfg["reach"]["base_xy"], dtype=float)))
+    check(
+        "窗口顶端就是远角落在可达盘上的位置（far_corner_reach 构造取等）",
+        abs(reach - float(cfg["reach"]["max_hand_dist"])) < 1e-9,
+        f"far corner ({far[0]:+.4f}, {far[1]:+.4f}) at {reach:.4f}",
+    )
+
+    # Four corners: one geometry, four symmetric copies.
+    per_corner = {}
+    for name in _geometry.CORNER_SIGNS:
+        c = copy.deepcopy(cfg)
+        c["grasp"]["corner"] = name
+        per_corner[name] = c
+    materials = {n: _geometry.material_distance(c) for n, c in per_corner.items()}
+    check(
+        "四个角的材料长相等（同一块布、同一折痕位置）",
+        max(materials.values()) - min(materials.values()) < 1e-12,
+        f"{materials['far_left'] * 1e3:.1f} mm",
+    )
+    centre = _geometry.cloth_centre_task(cfg)
+    opposite = (("far_left", "near_right"), ("far_right", "near_left"))
+    check(
+        "对角两角互为抓取点 / 落点：一个角的落点就是对角的抓取点",
+        all(
+            np.allclose(_geometry.fold_target_task(per_corner[a]), _geometry.grasp_point_task(per_corner[b]))
+            and np.allclose(_geometry.grasp_point_task(per_corner[a]) + _geometry.grasp_point_task(per_corner[b]), 2 * centre)
+            for a, b in opposite
+        ),
+    )
+    normals = {n: _StandInLayout(c).fold_normal() for n, c in per_corner.items()}
+    check(
+        "四个折向是四个对角线方向 (±1, ±1)/√2",
+        all(np.allclose(np.abs(v), 1 / np.sqrt(2)) for v in normals.values())
+        and all(np.sign(normals[n]).tolist() == list(_geometry.CORNER_SIGNS[n]) for n in normals),
+        " ".join(f"{n}=({v[0]:+.2f},{v[1]:+.2f})" for n, v in normals.items()),
+    )
+    far_side = {n: _geometry.far_corner_task(c)[0] for n, c in per_corner.items()}
+    check(
+        "不管抓哪个角，远角都在 +x 侧同一个 x 上",
+        max(far_side.values()) - min(far_side.values()) < 1e-12 and far_side["far_left"] > centre[0],
+        f"x = {far_side['far_left']:+.4f}",
+    )
+
+    # The control mesh's diagonal is chosen per corner so the crease crosses
+    # the diagonal edges (measured 2026-09-06: along them, the flap lands 30 mm
+    # off). Both orientations must be the same vertex grid, or the judges lose
+    # their vertex correspondence.
+    import tempfile
+
+    diag_ok = True
+    for name, c in per_corner.items():
+        diag = _geometry.mesh_diagonal(c)
+        normal = np.asarray(_geometry.CORNER_SIGNS[name], dtype=float)
+        crease_dir = np.array([-normal[1], normal[0]])
+        diag_dir = np.array([1.0, 1.0]) if diag == "up" else np.array([-1.0, 1.0])
+        diag_ok &= abs(float(crease_dir @ diag_dir)) < 1e-12
+    check("四个角各自的网格对角线都与折痕垂直（折痕横穿对角线边）", diag_ok,
+          " ".join(f"{n}={_geometry.mesh_diagonal(c)}" for n, c in per_corner.items()))
+    with tempfile.TemporaryDirectory() as tmp:
+        cols, rows = int(cfg["cloth"]["mesh"]["cols"]), int(cfg["cloth"]["mesh"]["rows"])
+        verts = {}
+        for diag in ("up", "down"):
+            v, f = cloth_sheet_mesh(list(cfg["cloth"]["size"]), centre, TABLE_Z + float(cfg["cloth"]["z"]),
+                                    cols, rows, Path(tmp) / f"{diag}.obj", diagonal=diag)
+            verts[diag] = (v, f)
+        check(
+            "两种对角线方向的控制网格顶点完全相同、面数相同（判定器靠顶点顺序）",
+            np.array_equal(verts["up"][0], verts["down"][0]) and verts["up"][1].shape == verts["down"][1].shape,
+            f"{len(verts['up'][0])} vertices, {len(verts['up'][1])} faces each",
+        )
+
+    # Control motions.
+    stand_in = _StandInLayout(cfg)
+    drag = fold_waypoints(stand_in, motion="drag")
+    fold = fold_waypoints(stand_in, motion="fold")
+    check(
+        "drag 走法：俯视路径与 fold 相同、全程贴桌面、没有一段标为抬起",
+        all(abs(w.position[2] - stand_in.rest_z()) < 1e-12 for w in drag)
+        and all(np.allclose(a.position[:2], b.position[:2]) for a, b in zip(drag, fold))
+        and not any(w.lifted for w in drag)
+        and sum(w.steps for w in drag) == sum(w.steps for w in fold),
+    )
+    for name in ("far_right", "near_left", "near_right"):
+        exec_layout = execution_layout(_StandInLayout(per_corner[name]), "fixed_corner")
+        check(
+            f"fixed_corner 走法：指令 {name} 时仍按 {FIXED_CORNER} 规划，抓取点是基准的",
+            exec_layout.corner == FIXED_CORNER
+            and np.allclose(exec_layout.grasp_point()[:2], _geometry.grasp_point_task(cfg)),
+        )
+    # fixed_fold：无视指令的折痕位置，永远角对角折。抓的角不变（那是另一条轴的对照），
+    # 变的是落点——指令说折一半时它仍把角送到对角角尖，差了整整半条对角线。
+    for value in (0.9, 0.8):
+        commanded = copy.deepcopy(cfg)
+        commanded["goal"]["fold_fraction"] = value
+        told = _StandInLayout(commanded)
+        exec_layout = execution_layout(told, "fixed_fold")
+        gap = float(np.linalg.norm(exec_layout.fold_target()[:2] - told.fold_target()[:2]))
+        check(
+            f"fixed_fold 走法：指令折 {value} 时仍按角对角规划，抓的角不变、落点差 {gap * 1e3:.0f} mm",
+            exec_layout.fold_fraction() == FIXED_FRACTION
+            and exec_layout.corner == told.corner
+            and abs(gap - 2.0 * (1.0 - value) * _geometry.material_distance(cfg)) < 1e-12,
+        )
+
+    # Corners of the envelope.
+    corners = _corner_cfgs(cfg)
+    rejected, failed, tight = [], [], {}
+    for label, c in corners:
+        try:
+            _derive(c)
+        except ValueError as exc:
+            rejected.append(f"{label}: {exc}")
+            continue
+        rows = _geometry.cloth_fold_checks(c)
+        bad = [n for n, *_, ok in rows if not ok]
+        if bad:
+            failed.append(f"{label}: {bad}")
+        for row in rows:
+            m = _margin(row)
+            if row[0] not in tight or m < tight[row[0]][0]:
+                tight[row[0]] = (m, label)
+    check("角点数 = 4 角 × 3 折痕档 × 2^3 连续轴 = 96", len(corners) == 96, str(len(corners)))
+    check("96 个角点派生区间都非空", not rejected, "; ".join(rejected[:3]))
+    check("96 个角点四行全过", not failed, "; ".join(failed[:3]))
+    for name, (m, label) in tight.items():
+        print(f"  最紧 {name:28s} 余量 {m:+.4f}  @ {label}")
+    check(
+        "布前后位置的派生把可达行压到 0 而不是负数",
+        tight["far_corner_reach"][0] >= -1e-9 and tight["far_corner_reach"][0] < 1e-6,
+        f"{tight['far_corner_reach'][0]:+.6f}",
+    )
+    windows = []
+    for _label, c in corners:
+        lo, hi = _geometry.center_x_bounds(c)
+        windows.append(hi - lo)
+    check(
+        "96 个角点的 center_x 窗口都 ≥ 0.020（连续轴抖动下限）",
+        min(windows) >= 0.020 - 1e-9,
+        f"窗口宽 [{min(windows):.4f}, {max(windows):.4f}]",
+    )
+
+    # Negative examples: what the rows are for.
+    loose = copy.deepcopy(cfg)
+    loose["physical"]["fold_slack"] = 0.93
+    _derive(loose)
+    rows = {r[0]: r for r in _geometry.cloth_fold_checks(loose)}
+    check(
+        "负例：松紧 0.93 让手停在离对角 11.9 mm，超过 7.5 mm 的平均误差门，被 slack_within_gate 拒",
+        not rows["slack_within_gate"][3] and abs(rows["slack_within_gate"][1] - 0.0119) < 0.0002,
+        f"{rows['slack_within_gate'][1] * 1e3:.1f} mm > {rows['slack_within_gate'][2] * 1e3:.1f}",
+    )
+    outer = copy.deepcopy(cfg)
+    outer["cloth"]["center_y"] = 0.030
+    outer["cloth"]["center_x"] = 0.070
+    lo, hi = _geometry.center_x_bounds(outer)
+    rows = {r[0]: r for r in _geometry.cloth_fold_checks(outer)}
+    check(
+        "负例：布最靠外 (0.070, +0.030) 抓远左角，远角离底座 0.775 被可达行拒；派生窗口顶端低于 0.070",
+        not rows["far_corner_reach"][3] and hi < 0.070 - 1e-9 and abs(rows["far_corner_reach"][1] - 0.775) < 0.001,
+        f"reach {rows['far_corner_reach'][1]:.4f} > {rows['far_corner_reach'][2]:.4f}；窗口 [{lo:.4f}, {hi:.4f}]",
+    )
+    deep = copy.deepcopy(cfg)
+    deep["goal"]["fold_fraction"] = 0.6
+    raised = ""
+    try:
+        _geometry.fold_fraction(deep)
+    except ValueError as exc:
+        raised = str(exc)
+    check(
+        "负例：折痕位置 0.6 没有对应的指令措辞，被 fold_fraction 拒（画面无线索，只能由句子说清）",
+        "EXTENT_WORDS" in raised or "must be one of" in raised,
+        raised[:80],
+    )
+
+    # 折痕位置越短，动的材料越少：材料长、弧半径、步数、最高点全部单调下降，而
+    # 落点从对角角尖一路走回布中心。这四条是这条轴的定义，钉住它们。
+    short = copy.deepcopy(cfg)
+    walked = []
+    for value in (1.0, 0.9, 0.8):
+        short["goal"]["fold_fraction"] = value
+        _derive(short)
+        walked.append(
+            (
+                _geometry.material_distance(short),
+                _geometry.fold_radius(short),
+                _geometry.apex_height(short),
+                _geometry.fold_target_task(short),
+                _geometry.fold_point_task(short),
+            )
+        )
+    centre = _geometry.cloth_centre_task(short)
+    check(
+        "折痕位置 1.0 / 0.9 / 0.8：材料长、弧半径、最高点逐档下降",
+        all(a[i] > b[i] for a, b in zip(walked, walked[1:]) for i in (0, 1, 2)),
+        " ".join(f"{w[0] * 1e3:.1f}mm" for w in walked),
+    )
+    # 镜像公式 落点 = 中心 + (1 − 2f)·offset 的两个整齐取值，钉住它：
+    # f = 1.0 落在对角角尖（离中心一整个 L），f = 0.75 落在中心与对角角尖的正中间。
+    check(
+        "折痕位置 1.0 落点是对角角尖，0.8 落点离中心 0.6 倍 L",
+        abs(float(np.linalg.norm(walked[0][3] - centre)) - walked[0][0]) < 1e-12
+        and abs(float(np.linalg.norm(walked[2][3] - centre)) - 0.6 * walked[0][0]) < 1e-9,
+        f"离中心 {float(np.linalg.norm(walked[0][3] - centre)) * 1e3:.1f} / "
+        f"{float(np.linalg.norm(walked[2][3] - centre)) * 1e3:.1f} mm",
+    )
+
+
 def main(argv=None) -> int:
     cfg = yaml.safe_load(TASK_CFG.read_text(encoding="utf-8"))
     evaluator = ClothFoldEvaluator.from_config(cfg)
     limits = evaluator.thresholds
 
     rest = rest_sheet(cfg)
-    centre = np.asarray(cfg["cloth"]["center"], dtype=float)
+    centre = _geometry.cloth_centre_task(cfg)
     # docx 1.1: grasp the middle of the right edge and take it to the far side,
     # so the fold line is the cloth's centre line and the normal points +x.
     fold_point = centre
@@ -534,6 +847,9 @@ def main(argv=None) -> int:
             spread > 0.02,
             f"brightness spread {spread:.3f} across the sheet",
         )
+
+    print("\n== 变体包络（variation 块）==")
+    envelope_section(cfg)
 
     print()
     if failures:

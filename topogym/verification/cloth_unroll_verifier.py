@@ -85,6 +85,56 @@ def bar_distance(nodes, *, bar_centre, bar_height: float, material_axis: int) ->
     return np.linalg.norm(offset, axis=1)
 
 
+def tail_gap(nodes, *, bar_centre, material_axis: int, pull_sign: float = 1.0) -> float:
+    """How far the band's REAR end has been pulled past the bar's axis, in metres.
+
+    The rear end is the particle farthest back along the pull (the end away
+    from the hand). Pulled just enough, the band has left the bar and its rear
+    lies at the bar's foot on the pull side: about one roll radius past the
+    axis, plus the tail's fold (measured 2026-09-06: +0.026 with a 26.5 mm
+    roll). Pulled too far, the whole band is towed along and the rear end
+    follows by exactly the excess. So this reading is "how much more than
+    enough was pulled", and the ``tail_gap_max`` gate is what makes over-pull
+    a failure rather than a more thorough success. Positive means past the
+    axis on the pull side; negative means material still behind the bar.
+    """
+
+    nodes = np.asarray(nodes, dtype=float)
+    axis = int(material_axis)
+    along = float(pull_sign) * (nodes[:, axis] - float(np.asarray(bar_centre, dtype=float)[axis]))
+    return float(along.min())
+
+
+def over_pull(nodes, *, bar_centre, material_axis: int, reference_m: float, pull_sign: float = 1.0) -> float:
+    """How far the band's FRONT end sits past where a fully paid-out, RELAXED band ends.
+
+    The front end is the particle farthest along the pull (the end the hand
+    let go of). ``reference_m`` is `relaxed_front_offset`: with the tail glued
+    to the spool the band, once let go, hangs straight down from the tail and
+    lies flat from the foot, so its free end sits at ``tail_radius +
+    (taut_length - hang_height) + edge_inset`` from the axis whatever the pull
+    did short of tearing (a taut diagonal only exists while the hand holds
+    it). Zero means the band ended there; positive means it was left stretched
+    or towed past it, which within `tear_allowance` the end state cannot show
+    and beyond it the glue has already let go (`tail_on_bar`). Measured
+    2026-09-06 with the spool: -4 to +8 mm across the fixed layout, seed 7,
+    c002 and c042; +72 for the over-pull motion (torn).
+
+    Why the front and not the rear: with the hand's travel fixed, the rear
+    end sits at front minus the laid span, so any fold that shortens the
+    laid band moves the rear forward by the same amount. Measured the same
+    day: rear ends at +38 mm on two seeds that were not over-pulled at all,
+    exactly the two with the lowest recovered fraction. The front end is
+    where the hand put it, folds or no folds. `tail_gap` stays recorded for
+    the fold's sake.
+    """
+
+    nodes = np.asarray(nodes, dtype=float)
+    axis = int(material_axis)
+    along = float(pull_sign) * (nodes[:, axis] - float(np.asarray(bar_centre, dtype=float)[axis]))
+    return float(along.max() - float(reference_m))
+
+
 def wound_particles(nodes, *, bar_centre, bar_height: float, material_axis: int, reach: float) -> int:
     """How many particles are still wrapped on the bar, within ``reach`` of its axis.
 
@@ -139,6 +189,23 @@ class ClothUnrollThresholds:
     forbids -- a band towed off the bar without turning recovers length without
     recovering layers.
 
+    ``on_bar_min``             (2026-09-06) the glued tail is still on the
+                               spool. The spool version's own failure: pulled
+                               past taut by more than the glue allows, the tail
+                               is torn off and nothing is left on the bar.
+    ``over_pull_max``          (2026-09-06) the band's FREE end is not pulled
+                               past where a taut band would end. A third gate,
+                               positional, joined to the other two by AND: it
+                               is what makes pulling too far a failure. What C1
+                               forbids is a LONE position threshold; a position
+                               gate on top of the structural and morphological
+                               ones is what "pull just enough" needs, because
+                               the first two are satisfied all the better by
+                               pulling more. ``tail_gap_max`` (the rear end)
+                               was tried first the same day and dropped: the
+                               rear moves with every fold, the front only with
+                               the hand.
+
     Everything below ships as ``null``. The optional slots exist so any of them
     can be switched on from config once there are measured runs to place them
     from; ``on_bar_max`` is the one most likely to be promoted, since it is the
@@ -151,6 +218,9 @@ class ClothUnrollThresholds:
     on_bar_max: int | None = None
     stretch_max: float | None = None
     flatness_var_max: float | None = None
+    over_pull_max: float | None = None
+    tail_gap_max: float | None = None
+    on_bar_min: int | None = None
 
     @classmethod
     def from_config(cls, success_cfg) -> "ClothUnrollThresholds":
@@ -159,6 +229,7 @@ class ClothUnrollThresholds:
             return None if value is None else float(value)
 
         on_bar = success_cfg.get("on_bar_max", None) if hasattr(success_cfg, "get") else None
+        on_bar_min = success_cfg.get("on_bar_min", None) if hasattr(success_cfg, "get") else None
         return cls(
             single_layer_frac_min=float(success_cfg["single_layer_frac_min"]),
             recovered_frac_min=float(success_cfg["recovered_frac_min"]),
@@ -166,6 +237,9 @@ class ClothUnrollThresholds:
             on_bar_max=None if on_bar is None else int(on_bar),
             stretch_max=opt("stretch_max"),
             flatness_var_max=opt("flatness_var_max"),
+            over_pull_max=opt("over_pull_max"),
+            tail_gap_max=opt("tail_gap_max"),
+            on_bar_min=None if on_bar_min is None else int(on_bar_min),
         )
 
 
@@ -181,6 +255,10 @@ class ClothUnrollState:
     out_of_plane: float
     on_bar: int
     flatness_var: float
+    #: The free end's distance past the flat band's end (`over_pull`).
+    over_pull: float
+    #: The rear end's distance past the bar's axis along the pull (`tail_gap`).
+    tail_gap: float
     # Recorded for diagnosis; no gate depends on them.
     covered_cells: int
     two_layer_cells: int
@@ -202,12 +280,18 @@ class ClothUnrollState:
         }
         if limits.on_bar_max is not None:
             passed["on_bar"] = self.on_bar <= limits.on_bar_max
+        if limits.on_bar_min is not None:
+            passed["tail_on_bar"] = self.on_bar >= limits.on_bar_min
         if limits.out_of_plane_max is not None:
             passed["out_of_plane"] = self.out_of_plane <= limits.out_of_plane_max
         if limits.stretch_max is not None:
             passed["stretch"] = self.stretch_max <= limits.stretch_max
         if limits.flatness_var_max is not None:
             passed["flatness_var"] = self.flatness_var <= limits.flatness_var_max
+        if limits.over_pull_max is not None:
+            passed["over_pull"] = self.over_pull <= limits.over_pull_max
+        if limits.tail_gap_max is not None:
+            passed["tail_gap"] = self.tail_gap <= limits.tail_gap_max
         return passed
 
     @property
@@ -228,6 +312,8 @@ class ClothUnrollState:
             "spread_ratio": float(self.spread_ratio),
             "out_of_plane_m": float(self.out_of_plane),
             "flatness_var": float(self.flatness_var),
+            "over_pull_m": float(self.over_pull),
+            "tail_gap_m": float(self.tail_gap),
         }
 
     def to_info(self) -> dict[str, Any]:
@@ -237,6 +323,8 @@ class ClothUnrollState:
             "peak_above_table_mm": float(self.peak_above_table * 1e3),
             "out_of_plane_mm": float(self.out_of_plane * 1e3),
             "on_bar": int(self.on_bar),
+            "over_pull_mm": float(self.over_pull * 1e3),
+            "tail_gap_mm": float(self.tail_gap * 1e3),
             "covered_cells": int(self.covered_cells),
             "two_layer_cells": int(self.two_layer_cells),
             "over_layer_cells": int(self.over_layer_cells),
@@ -258,6 +346,8 @@ class ClothUnrollState:
             f"spread_ratio={self.spread_ratio:.3f} "
             f"spread_mm={self.spread_span * 1e3:.1f} "
             f"on_bar={self.on_bar} "
+            f"over_pull_mm={self.over_pull * 1e3:+.1f} "
+            f"tail_gap_mm={self.tail_gap * 1e3:+.1f} "
             f"out_of_plane_mm={self.out_of_plane * 1e3:.2f} "
             f"peak_mm={self.peak_above_table * 1e3:.2f} "
             f"covered_cells={self.covered_cells} "
@@ -294,6 +384,15 @@ class ClothUnrollEvaluator:
     #: judge has to be told which one rather than assuming the band has not been
     #: turned. Read from the same config key the layout reads.
     material_axis: int = 1
+    #: +1 when the band is pulled toward +axis, -1 for the mirror layout
+    #: (`cloth.pull_side`); `tail_gap` and `over_pull` are measured along the pull.
+    pull_sign: float = 1.0
+    #: Where the free end sits, along the pull from the bar's axis, once a fully
+    #: paid-out band has been let go (`over_pull`'s zero).
+    relaxed_front_m: float = 0.0
+    #: The band's largest possible extent along the pull with the tail glued:
+    #: `recovered_frac`'s "everything that could be laid".
+    span_max_m: float = 0.0
 
     @classmethod
     def from_config(cls, task_cfg) -> "ClothUnrollEvaluator":
@@ -301,6 +400,10 @@ class ClothUnrollEvaluator:
         if axis not in ("x", "y"):
             raise ValueError(f"cloth.material_axis must be 'x' or 'y', got {axis!r}.")
         particle = float(task_cfg["cloth"]["particle_size"])
+        cloth = task_cfg["cloth"]
+        side = cloth.get("pull_side", 1) if hasattr(cloth, "get") else 1
+        from topogym.tasks.deformation._cloth_unroll_geometry import relaxed_front_offset, span_max
+
         return cls(
             thresholds=ClothUnrollThresholds.from_config(task_cfg["success"]),
             cell=float(task_cfg["success"]["cell"]),
@@ -308,6 +411,9 @@ class ClothUnrollEvaluator:
             material_length=float(task_cfg["cloth"]["material_length"]),
             on_bar_reach=float(task_cfg["dispenser"]["bar_radius"]) + 2.0 * particle,
             material_axis=0 if axis == "x" else 1,
+            pull_sign=-1.0 if int(side) < 0 else 1.0,
+            relaxed_front_m=float(relaxed_front_offset(task_cfg)),
+            span_max_m=float(span_max(task_cfg)),
         )
 
     def classify(
@@ -333,7 +439,11 @@ class ClothUnrollEvaluator:
         # state rather than taken from the config, so a roll that relaxed a
         # little before the arm arrived is not credited to the arm.
         rest_span = spread_span(rest_nodes, self.material_axis)
-        stored = max(self.material_length - rest_span, 1e-9)
+        # What could still be laid out: not the material length -- with the
+        # tail glued to the spool, `hang_height` of band always hangs from it
+        # and `anchor_arc` stays wound -- but the relaxed band's largest extent
+        # (`span_max`), so a full pull reads 1.0 (2026-09-06).
+        stored = max(self.span_max_m - rest_span, 1e-9)
         heights = nodes[:, 2] - float(table_z)
 
         shape = None if grid is None else simulated_grid_shape(len(rest_nodes), grid)
@@ -356,6 +466,13 @@ class ClothUnrollEvaluator:
                 reach=self.on_bar_reach,
             ),
             flatness_var=float(np.var(heights)),
+            over_pull=over_pull(
+                nodes, bar_centre=bar_centre, material_axis=self.material_axis,
+                reference_m=self.relaxed_front_m, pull_sign=self.pull_sign,
+            ),
+            tail_gap=tail_gap(
+                nodes, bar_centre=bar_centre, material_axis=self.material_axis, pull_sign=self.pull_sign
+            ),
             covered_cells=int(layers["covered_cells"]),
             two_layer_cells=int(layers["two_layer_cells"]),
             over_layer_cells=int(layers["over_layer_cells"]),

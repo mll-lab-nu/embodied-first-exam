@@ -52,9 +52,25 @@ import numpy as np
 
 from topogym.core import EntityManifest
 from topogym.supervision.pbd_probe import probe_particles
+from topogym.tasks._fixtures import HingeShape, add_hinge_mechanism, hinge_joint_dof
 from topogym.world import StandardTabletopSceneBuilder, materials, textures
 from topogym.world.rope import TabletopParticleFriction
 
+from ._cloth_unroll_geometry import (
+    along_leaf,
+    center_along_from_frac,
+    cloth_unroll_checks,
+    hang_height,
+    pitch_from_frac,
+    pull_sign,
+    spool_angle,
+    spool_cfg,
+    spool_plan,
+    start_spread_limit,
+    tail_radius,
+    taut_length,
+    taut_reach,
+)
 from .cloth_fold import remesh_report
 from .cloth_profile_mesh import (
     edge_report,
@@ -71,7 +87,10 @@ class ClothUnrollLayout:
     """Where the dispenser is and where the band's landmarks are, in world metres."""
 
     task_cfg: Any
-    origin: np.ndarray
+    #: World position of the task frame's origin. Zero when the layout is built
+    #: from the task config alone (offline gate, corner harness): every
+    #: feasibility row is task-frame arithmetic and never needs it.
+    origin: np.ndarray = field(default_factory=lambda: np.zeros(3, dtype=float))
     _profile: np.ndarray | None = field(default=None, init=False, repr=False)
     #: The free end as measured after settling, and again after every stroke.
     _grasp: np.ndarray | None = field(default=None, init=False, repr=False)
@@ -101,6 +120,20 @@ class ClothUnrollLayout:
         return 1 - self.material_axis
 
     @property
+    def pull_sign(self) -> float:
+        """+1 when the band leaves the roll toward +axis and is pulled that way, -1 mirrored.
+
+        `cloth.pull_side: -1` is the mirror layout: the profile is reflected in
+        the band's own axis, the flat run lies on the negative side of the bar
+        and the pull runs toward negative coordinates. The profile and its
+        landmarks stay unsigned (they are lengths); the sign is applied where a
+        material offset becomes a point (`_plan_point`), in `pull_direction`,
+        in `observe` and when the mesh is swept.
+        """
+
+        return pull_sign(self.task_cfg)
+
+    @property
     def table_z(self) -> float:
         return float(self.origin[2])
 
@@ -113,19 +146,24 @@ class ClothUnrollLayout:
     def bar_centre(self) -> np.ndarray:
         """World (x, y) of the bar's axis. Every profile offset is from here."""
 
-        return np.asarray(self.origin, dtype=float)[:2] + np.asarray(
-            list(self.task_cfg.cloth.center), dtype=float
+        cloth = self.task_cfg.cloth
+        return np.asarray(self.origin, dtype=float)[:2] + np.array(
+            [float(cloth.center_x), float(cloth.center_y)], dtype=float
         )
 
     def bar_height(self) -> float:
         return self.world_z(float(self.task_cfg.dispenser.bar_height))
 
     def _plan_point(self, material: float, height: float) -> np.ndarray:
-        """A world point from a (material-offset, height) pair on the band's axes."""
+        """A world point from a (material-offset, height) pair on the band's axes.
+
+        ``material`` is an unsigned offset from the bar's axis; the mirror
+        layout puts it on the other side.
+        """
 
         centre = self.bar_centre()
         point = np.zeros(3, dtype=float)
-        point[self.material_axis] = centre[self.material_axis] + float(material)
+        point[self.material_axis] = centre[self.material_axis] + self.pull_sign * float(material)
         point[self.bar_axis] = centre[self.bar_axis]
         point[2] = self.world_z(height)
         return point
@@ -154,18 +192,31 @@ class ClothUnrollLayout:
         )
 
     def tail_point(self) -> np.ndarray:
-        """World position of the band's INNERMOST end -- the one on the drum.
+        """World position of the glued tail's outer end once the roll is paid out.
 
-        A free-ended wrap on a fixed drum cannot hold a hanging load, whatever the
-        friction: the capstan relation is `T_drape <= T_free * exp(mu*theta)` and
-        the free end carries zero tension, so the right side is zero and any drape
-        weight slips. Measured 2026-08-25: the band walked off a 241-degree wrap
-        during settle. Real dispensers do not rely on friction either -- the last
-        turn is fixed to the core. `anchor_tail` pins these particles.
+        The inner `spool.anchor_arc` of band stays glued to the spool (real
+        dispensers fix the last turn to the core too). When the spool has
+        turned the whole roll out, that glued arc's outer end -- the point the
+        free band leaves from -- sits at the exit direction, `tail_radius` from
+        the axis, level with it. Everything the oracle and the tear rule
+        measure runs from here.
         """
 
-        profile = self.profile()
-        return self._plan_point(float(profile[0, 0]), float(profile[0, 1]))
+        return self._plan_point(tail_radius(self.task_cfg), float(self.task_cfg.dispenser.bar_height))
+
+    def taut_end_point(self) -> np.ndarray:
+        """Where the grasp point sits when the band is straight from the tail with `pull_slack` to spare.
+
+        The band between the tail's end and the grasp is `taut_length`; from
+        `hang_height` up, a straight band of that length minus the slack reaches
+        `taut_reach` along the table. This is the oracle's end point: pulled
+        further the band is taut, `tear_allowance` further the glue lets go.
+        """
+
+        cfg = self.task_cfg
+        return self._plan_point(
+            tail_radius(cfg) + taut_reach(cfg, spool_cfg(cfg)["pull_slack"]), float(cfg.cloth.z)
+        )
 
     def material_length(self) -> float:
         return float(self.task_cfg.cloth.material_length)
@@ -215,9 +266,11 @@ class ClothUnrollLayout:
                 f"no material lying on the table within {band:.3f} m of the band's "
                 f"centre line at {centre[across]:+.4f}; nothing to grasp."
             )
-        end = float(nodes[near, material].max())
+        sign = self.pull_sign
+        along = nodes[near, material]
+        end = float(along.max() if sign > 0 else along.min())
         point = self._plan_point(0.0, float(self.task_cfg.cloth.z))
-        point[material] = end - float(self.task_cfg.grasp.edge_inset)
+        point[material] = end - sign * float(self.task_cfg.grasp.edge_inset)
         # Height of the material AT the grasp, not the highest particle anywhere
         # on the centre line. Those differ, and the second one is useless: the
         # `flat` filter above is an upper bound, so its max is that bound
@@ -240,40 +293,36 @@ class ClothUnrollLayout:
         """Unit vector the hand pulls along: away from the bar, in plane."""
 
         direction = np.zeros(3, dtype=float)
-        direction[self.material_axis] = 1.0
+        direction[self.material_axis] = self.pull_sign
         return direction
 
     def pull_total(self) -> float:
-        """Total travel: how far the free end must move to lay the band flat.
+        """Total travel: from the grasp point (observed once settled) to `taut_end_point`.
 
-        Not a tuned number -- it comes off the profile (`flat_travel`), and
-        `pull_scale` is the only slack, for whatever the bar's friction keeps.
-
-        It is NOT the material wound on the bar, which is what this returned until
-        2026-08-24. Pulling `rolled` empties the roll and still leaves the drape
-        -- the material hanging between the bar and the table -- unlaid, so it
-        drops onto the band that has already been paid out. Measured: the roll
-        emptied (`on_bar=0`) and the band still finished at 215 mm of its 260 mm
-        with 114 doubled cells.
+        Until 2026-09-06 this was ``flat_travel x pull_scale`` -- the free end's
+        travel for a band that ends up flat on the table with its inner end
+        dropped from the bar, plus a measured overshoot for where that end
+        actually landed. With the tail glued to the spool the end of the pull is
+        a geometric fact instead: the band runs straight from the tail's end to
+        the grasp, and the hand stops `pull_slack` short of taut.
         """
 
-        return float(self.landmarks()["flat_travel"]) * float(
-            self.task_cfg.physical.pull_scale
-        )
+        end = self.taut_end_point()
+        return float(self.pull_sign * (end[self.material_axis] - self.grasp_point()[self.material_axis]))
 
     def final_grasp_position(self) -> float:
         """Where the hand finishes, along the pay-out axis.
 
         Worth having as its own reading because of what it does NOT depend on.
-        Substituting the definitions leaves
+        The finish is
 
-            centre + inner_s + material_length - edge_inset
+            centre + tail_radius + sqrt((material - anchor_arc - edge_inset - pull_slack)^2 - hang^2)
 
-        so the roll's radius, pitch and turn count cancel completely: winding
-        tighter or adding a turn changes where the pull STARTS, never where it
-        ends. Only the dispenser's position, the material's length and the grasp
-        inset move it, which is the whole list of levers when the finish is out of
-        the arm's reach.
+        so the roll's pitch and turn count cancel completely (they only move
+        `tail_radius` by a few millimetres): winding tighter or adding a turn
+        changes where the pull STARTS, never where it ends. The dispenser's
+        position and height, the material's length and the grasp inset are the
+        levers when the finish is out of the arm's reach.
         """
 
         return float(self.final_grasp_point()[self.material_axis])
@@ -311,7 +360,7 @@ class ClothUnrollLayout:
         envelope rather than trusting the arithmetic in a comment.
         """
 
-        return self.grasp_point() + self.pull_direction() * self.pull_total()
+        return self.taut_end_point()
 
     def stroke_steps(self) -> int:
         """Steps for one stroke, from the calibrated hand SPEED, as in 1.2."""
@@ -343,11 +392,30 @@ class ClothUnrollLayout:
             f"got {mode!r}."
         )
 
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a spawnable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate, the corner
+        harness and the demo's start-up print. Metres; task frame.
+        """
+
+        return cloth_unroll_checks(self.task_cfg)
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"cloth_unroll layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
     def summary(self) -> str:
         marks = self.landmarks()
         grasp = self.grasp_point()
         return (
-            f"axis={'xy'[self.material_axis]} "
+            f"axis={'xy'[self.material_axis]} side={self.pull_sign:+.0f} "
             f"bar=({self.bar_centre()[0]:+.3f},{self.bar_centre()[1]:+.3f},"
             f"{self.bar_height():.3f}) "
             f"grasp=({grasp[0]:+.3f},{grasp[1]:+.3f},{grasp[2]:+.3f}) "
@@ -374,6 +442,10 @@ class ClothUnrollScene:
     grid: tuple[int, int]
     table_friction: Any = None
     rest_nodes: np.ndarray | None = field(default=None)
+    #: The spool (the bar as a hinge entity) and its joint's name; `Spool`
+    #: resolves the link and dof once the scene is built.
+    bar_entity: Any = None
+    bar_joint: str = ""
 
 
 def band_particles(band: ClothUnrollScene) -> np.ndarray:
@@ -397,83 +469,187 @@ def settle_band(band: ClothUnrollScene, steps: int) -> np.ndarray:
     return band.rest_nodes
 
 
-class TapeRelease:
-    """Holds the wrapped band against the drum and lets it go as it pays out.
+def _spool_sense(layout) -> float:
+    """+1 or -1: the joint angle per radian of turn measured in the band's profile plane.
 
-    A band wound on a fixed drum has nothing to hold it there. Genesis' PBD cloth
-    ignores `bending_compliance` entirely (measured 2026-08-23 over seven decades)
-    and offers no adhesion, so the only mechanisms available are layers pressing
-    on each other, gravity pressing onto a surface, or a kinematic pin. The first
-    forces a layer pitch small enough to confuse the visual binding map, which is
-    what tore the band on camera. The second holds only the drum's upper half and
-    still loses the wrap to the drape's weight -- measured 2026-08-25, a 180
-    degree wrap kept 40% of the band against a designed 62%, and what slid off
-    piled at the drum's foot.
-
-    So the band is pinned, and the pin is released along the peel front. This is
-    what the user named: a roll that behaves like tape, held everywhere and freed
-    exactly where it is being pulled from.
-
-    The front is keyed to the length PAID OUT, never to time, so the pull speed
-    stays a free parameter -- what bounds it is unchanged (PBD propagates about
-    one edge per iteration; see `physical.pull_step_m`).
+    The profile plane has ``m`` (the pull side of the band's axis) as its first
+    axis and height as its second; the spool's joint turns about the bar's own
+    axis. Rotating the ``m`` direction by a small positive joint angle moves it
+    toward +height or toward -height depending on which way the bar's axis and
+    the pull direction point, and that is the sign here. Computed, not written:
+    the mirror layout (`pull_side` -1) flips it, and the offline gate pins it.
     """
 
-    def __init__(self, cloth, layout, nodes, *, reach: float, lead: float):
-        self.cloth = cloth
+    across = layout.bar_axis
+    axis = np.zeros(3, dtype=float)
+    axis[across] = 1.0
+    e_m = np.asarray(layout.pull_direction(), dtype=float)
+    e_z = np.array([0.0, 0.0, 1.0])
+    return 1.0 if float(np.dot(np.cross(axis, e_m), e_z)) > 0.0 else -1.0
+
+
+class Spool:
+    """The bar as a spool: the wound band rides on it, it turns as the band is paid out, the tail is glued.
+
+    The scene: the band is wound `turns` times round the bar and leaves it at
+    the exit tangent on the pull side, drops to the table and lies flat to the
+    free end. Along the band's profile each particle sits at an arc ``a`` from
+    the inner end; ``rolled`` is the arc at the exit tangent, ``b = rolled - a``
+    the band between a particle and the exit. At birth only the inner
+    `anchor_arc` of band -- the glued tail -- is bound to the spool's link
+    (`fix_particles_to_link`); the rest of the roll is left to the solver.
+    As the hand pulls the free end along the table by ``d``, the band between
+    the exit and the hand is taut, so ``d`` of band has passed the exit: the
+    spool is turned so that the particle at arc ``rolled - d`` (the peel front)
+    sits at the exit direction (`spool_angle`). ``held``, ``remaining`` and
+    ``glued`` are the arc bookkeeping the turn and `tear_check` read; only
+    ``glued`` says what is actually pinned. The spool stops turning when the
+    front reaches the tail, and the pull never frees it.
+
+    Pulled just enough, the band then runs straight from the glued tail's end
+    down to the table and flat to the hand (`ClothUnrollLayout.taut_end_point`,
+    `pull_slack` short of taut). Pulled past taut by more than
+    `tear_allowance`, the glue lets go: `tear_check` frees the tail, which is
+    the failure the judge reads as no band left on the bar (`on_bar_min`).
+
+    Why the environment turns the spool: Genesis 1.2.1's PBD-rigid coupling is
+    one-way (the bar pushes cloth, cloth never pushes the bar), so the band's
+    tension cannot drive a passive spool. The turn is keyed to the length paid
+    out, never to time, so the pull speed stays free; a shove (hand toward the
+    bar) pays out nothing, turns nothing and frees nothing. Before 2026-09-06
+    the bar was fixed and the wound band was pinned in place and peeled
+    around it (the "tape"); the last particle freed was the inner end, which
+    fell from the bar's height onto the band and folded -- the doubled 40 mm
+    every run carried. The glued tail removes that: it never leaves the bar.
+
+    Why only the tail is pinned (2026-09-07): binding the whole wound body as
+    well froze it in the analytic spiral, so the roll never settled and read as
+    a loose coil floating around the bar. On the tail alone gravity closes the
+    turns -- the start state's ``on_bar`` goes 198 -> 537 and ``spread_ratio``
+    0.405 -> 0.382, i.e. the roll settles TIGHTER. That is the opposite of the
+    2026-08-25 roll, which spread 0.392 -> 0.457 because nothing anchored it at
+    all; the tail is what stops the free end's weight peeling the outer turn
+    off. The roll still turns with the spool, carried round by the tail through
+    cloth-on-cloth contact (Genesis gives no cloth-rigid friction at all --
+    `legacy_coupler._func_pbd_collide_with_rigid_geom` leaves its tangential
+    block commented out), measured at 84% of the commanded angle with no other
+    coupling and 93% with a velocity nudge that was dropped as unnecessary.
+    Readings are unchanged: baseline `single_layer_frac` 0.949 against 0.948
+    pinned, c002 `recovered_frac` 0.984 against 1.019, c042 0.929 against
+    0.934, and both `overpull` and `shove` are still judged failures. The two
+    corners that motivated pinning the body pass on the tail alone -- c002 read
+    0.56 on 2026-09-06 morning, when there was no glued tail yet.
+    """
+
+    def __init__(self, band, layout, nodes, *, lead: float, anchor_arc: float, tear_allowance: float):
+        self.cloth = band.cloth
+        self.entity = band.bar_entity
+        self.link_idx = int(self.entity.get_link(name="hinge_arm").idx)
+        self.dof = hinge_joint_dof(self.entity, band.bar_joint)
+        self.layout = layout
         self.lead = float(lead)
-        axis_pt = layout.bar_centre()
-        material, bar_ax = layout.material_axis, layout.bar_axis
-        centre_m = float(axis_pt[material])
-        centre_z = layout.bar_height()
+        self.anchor_arc = float(anchor_arc)
+        self.tear_allowance = float(tear_allowance)
+        self._direction = np.asarray(layout.pull_direction(), dtype=float)
+        self._sense = _spool_sense(layout)
+        centre = layout.bar_centre()
+        material = layout.material_axis
         nodes = np.asarray(nodes, dtype=float)
-        # Distance to the drum AXIS, so the band's width along the bar is ignored.
-        radial = np.hypot(nodes[:, material] - centre_m, nodes[:, 2] - centre_z)
-        self.held = np.flatnonzero(radial <= float(reach))
-        # Where the material actually IS relative to the drum axis. `held` being
-        # small has two very different causes -- the reach is wrong, or the band
-        # is not on the drum -- and the distribution separates them at a glance.
-        self.radial_stats = (
-            float(radial.min()), float(np.median(radial)), float(radial.max())
+        m = layout.pull_sign * (nodes[:, material] - float(centre[material]))
+        z = nodes[:, 2] - float(layout.table_z)
+        marks = layout.landmarks()
+        held, remaining, glued = spool_plan(
+            np.stack([m, z], axis=1), layout.profile(), marks, self.lead, self.anchor_arc
         )
-        self.design_radius = float(reach)
-        if self.held.size == 0:
+        self.held = held
+        self.remaining = remaining
+        self.glued = glued
+        self.rolled = float(marks["rolled"])
+        self.taut = taut_length(layout.task_cfg)
+        self.hang = hang_height(layout.task_cfg)
+        self.tail = layout.tail_point()
+        self.released = np.zeros(held.size, dtype=bool)
+        self.torn_at = None
+        self.angle = 0.0
+        self._start = None
+        self._paid_before = 0.0
+        self._paid = 0.0
+        if held.size == 0 or not np.any(glued):
             raise ValueError(
-                f"tape reach={reach} caught no particles around the drum axis at "
-                f"({centre_m:+.4f}, {centre_z:+.4f}); the band's radial distance "
-                f"to that axis runs [{radial.min():.4f}, {np.median(radial):.4f}, "
-                f"{radial.max():.4f}] m. A median far above the reach means the "
-                f"band is not on the drum, not that the reach is too small."
+                f"spool holds {held.size} particles, {int(glued.sum())} glued: rolled arc {self.rolled:.4f} m, "
+                f"lead {self.lead:.4f}, anchor_arc {self.anchor_arc:.4f}; the band is not on the bar."
             )
-        # Angle around the axis, measured so that it GROWS away from the exit
-        # tangent -- the peel front sweeps it in one direction.
-        sign = float(np.sign(layout.pull_direction()[material]) or 1.0)
-        dm = (nodes[self.held, material] - centre_m) * sign
-        dz = nodes[self.held, 2] - centre_z
-        self.angle = np.arctan2(dm, -dz)          # 0 = straight below the axis
-        self.radius = float(np.median(radial[self.held]))
-        self.released = np.zeros(self.held.size, dtype=bool)
-        self.cloth.fix_particles(particles_idx_local=[int(i) for i in self.held])
+        self.cloth.fix_particles_to_link(
+            self.link_idx, particles_idx_local=[int(i) for i in held[glued]]
+        )
 
-    def advance(self, paid_out: float) -> int:
-        """Free everything the peel front has passed. Returns how many, total."""
+    def begin_stroke(self, hand_pos) -> None:
+        """Mark where the hand is as this pull starts; earlier strokes' pay-out is kept."""
 
-        front = (float(paid_out) + self.lead) / max(self.radius, 1e-9)
-        due = (self.angle <= self.angle.min() + front) & ~self.released
-        if np.any(due):
-            self.cloth.release_particle(
-                particles_idx_local=[int(i) for i in self.held[due]]
-            )
-            self.released |= due
+        self._paid_before = self._paid
+        self._start = np.asarray(hand_pos, dtype=float).copy()
+
+    @property
+    def paid_out(self) -> float:
+        return float(self._paid)
+
+    @property
+    def exhausted(self) -> bool:
+        """The peel front has reached the glued tail: nothing wound is left to pay out."""
+
+        return self._paid >= self.rolled - self.anchor_arc - 1e-9
+
+    def advance(self, hand_pos) -> int:
+        """Turn the spool and mark the band past the peel front for this hand position. Returns how many are past it, total.
+
+        Nothing is unpinned here: only the glued tail is ever bound to the link,
+        and the pull never frees it. ``released`` is the bookkeeping that says
+        how much of the roll the front has passed, which `summary` reports and
+        `exhausted` reads.
+        """
+
+        if self._start is None:
+            return int(self.released.sum())
+        travel = float(np.dot(np.asarray(hand_pos, dtype=float) - self._start, self._direction))
+        self._paid = self._paid_before + max(0.0, travel)
+        self.angle = spool_angle(self.layout.task_cfg, self._paid)
+        self.entity.set_dofs_position(
+            np.array([self._sense * self.angle], dtype=float), dofs_idx_local=[int(self.dof)]
+        )
+        self.released |= (self.remaining <= self._paid + self.lead) & ~self.glued
         return int(self.released.sum())
 
+    def tear_check(self, hand_pos) -> bool:
+        """Let the glued tail go once the hand has pulled the band past taut by `tear_allowance`.
+
+        The band between the tail's end and the grasp is `taut_length`; the
+        hand's plan position and the tail's end are `hang_height` apart in
+        height, so the band is taut when their distance reaches that length.
+        Geometric rather than force-based: the pin cannot break on its own, and
+        a distance rule is the same at any pull speed and can be checked offline.
+        Returns True on the step the tail is torn off.
+        """
+
+        if self.torn_at is not None or not self.exhausted:
+            return False
+        hand = np.asarray(hand_pos, dtype=float)
+        flat = float(np.hypot(hand[0] - self.tail[0], hand[1] - self.tail[1]))
+        distance = float(np.hypot(flat, self.hang))
+        if distance <= self.taut + self.tear_allowance:
+            return False
+        tail = self.held[self.glued]
+        self.cloth.release_particle(particles_idx_local=[int(i) for i in tail])
+        self.released |= self.glued
+        self.torn_at = self._paid
+        return True
+
     def summary(self) -> str:
-        lo, mid, hi = self.radial_stats
+        torn = "no" if self.torn_at is None else f"at_paid_out_mm={self.torn_at * 1e3:.1f}"
         return (
-            f"tape held={self.held.size} released={int(self.released.sum())} "
-            f"radius_mm={self.radius * 1e3:.1f} lead_mm={self.lead * 1e3:.1f} "
-            f"radial_mm=[{lo * 1e3:.1f},{mid * 1e3:.1f},{hi * 1e3:.1f}] "
-            f"reach_mm={self.design_radius * 1e3:.1f}"
+            f"spool held={self.held.size} glued={int(self.glued.sum())} released={int(self.released.sum())} "
+            f"paid_out_mm={self._paid * 1e3:.1f} angle_deg={np.degrees(self.angle):+.1f} "
+            f"lead_mm={self.lead * 1e3:.1f} rolled_mm={self.rolled * 1e3:.1f} "
+            f"taut_mm={self.taut * 1e3:.1f} torn={torn}"
         )
 
 
@@ -550,11 +726,17 @@ class ClothUnrollSceneBuilder:
         layout = ClothUnrollLayout(
             self.task_cfg, np.asarray(tabletop.frames.task_origin, dtype=float)
         )
+        _assert_literal_copies(self.task_cfg)
+        layout.validate()
 
-        self._add_dispenser(scene, tabletop.manifest, layout)
+        bar_entity, bar_joint = self._add_dispenser(scene, tabletop.manifest, layout)
 
         spacing = float(cloth_cfg.mesh.spacing)
         samples = resample_polyline(layout.profile(), spacing)
+        # The mirror layout: reflect the material offset about the bar's axis.
+        # Material ORDER is kept (index 0 is still the inner end on the bar), so
+        # the mesh's column order and every reading that walks it are unchanged.
+        samples[:, 0] *= layout.pull_sign
         path = Path(str(cloth_cfg.mesh.output_dir)) / "cloth_unroll_band.obj"
         vertices, _faces, cols, rows = sweep_profile_mesh(
             samples,
@@ -601,28 +783,9 @@ class ClothUnrollSceneBuilder:
             control_vertices=vertices,
             grid=(cols, rows),
             table_friction=self._install_table_friction(scene, cloth, layout),
+            bar_entity=bar_entity,
+            bar_joint=bar_joint,
         )
-        anchor_cfg = getattr(cloth_cfg, "anchor_tail", None)
-        if anchor_cfg is not None and bool(getattr(anchor_cfg, "enabled", False)):
-            nodes = band_particles(band)
-            tail = layout.tail_point()
-            radius = float(getattr(anchor_cfg, "radius", 0.010))
-            held = np.flatnonzero(np.linalg.norm(nodes - tail, axis=1) <= radius)
-            if held.size == 0:
-                raise ValueError(
-                    f"anchor_tail.radius={radius} caught no particles at the band's "
-                    f"inner end ({tail[0]:+.4f},{tail[1]:+.4f},{tail[2]:+.4f}); the "
-                    f"drum geometry and the radius disagree."
-                )
-            # `fix_particles`, not `fix_particles_to_link`: the drum is fixed, so
-            # pinning in world space is the same thing and needs no link index.
-            cloth.fix_particles(particles_idx_local=[int(i) for i in held])
-            print(
-                f"cloth_unroll anchor_tail particles={held.size} "
-                f"at=({tail[0]:+.3f},{tail[1]:+.3f},{tail[2]:+.3f}) "
-                f"radius_mm={radius * 1e3:.1f}",
-                flush=True,
-            )
 
         print(
             f"cloth_unroll scene particles={len(band_particles(band))} "
@@ -633,8 +796,8 @@ class ClothUnrollSceneBuilder:
         )
         return band
 
-    def _add_dispenser(self, scene, manifest: EntityManifest, layout) -> None:
-        """Two posts and the bar between them, all fixed.
+    def _add_dispenser(self, scene, manifest: EntityManifest, layout) -> tuple[Any, str]:
+        """Two fixed posts and the spool between them; returns ``(bar entity, joint name)``.
 
         The bar is the task's anchor: it is what makes the pull unroll the band
         instead of towing it, and what holds the innermost turn up. The posts do
@@ -669,28 +832,39 @@ class ClothUnrollSceneBuilder:
             )
             manifest.add(f"{cfg.name}_post_{'lo' if side < 0 else 'hi'}", post)
 
-        # `gs.morphs.Cylinder` stands on z; the bar has to lie along the posts'
-        # axis, so it is rolled a quarter turn about whichever axis leaves it
-        # pointing that way -- `(90,0,0)` sends the axis to world y and
-        # `(0,90,0)` to world x. Same construction as `stacked_plate.py:389`.
-        euler = (0.0, 90.0, 0.0) if across == 0 else (90.0, 0.0, 0.0)
+        # The bar is a spool (2026-09-06): a hinge entity with one continuous
+        # joint on its own axis, turned by `Spool` as the band is paid out. A
+        # URDF cylinder stands on its local z, so it is rolled a quarter turn to
+        # lie along the posts' axis: `(0, 90, 0)` sends it to world x, `(90, 0, 0)`
+        # to world y. The joint axis is that same direction.
+        axis = np.zeros(3, dtype=float)
+        axis[across] = 1.0
+        rpy = (0.0, 0.5 * np.pi, 0.0) if across == 0 else (0.5 * np.pi, 0.0, 0.0)
         bar_pos = np.zeros(3, dtype=float)
         bar_pos[across] = centre[across]
         bar_pos[along] = centre[along]
         bar_pos[2] = layout.bar_height()
-        bar = scene.add_entity(
-            gs.morphs.Cylinder(
-                pos=tuple(float(v) for v in bar_pos),
-                radius=float(cfg.bar_radius),
-                height=float(cfg.span),
-                euler=euler,
-                fixed=True,
-                collision=True,
-            ),
-            surface=materials.plastic("fixture", list(cfg.bar_color), vis_mode="visual"),
+        return add_hinge_mechanism(
+            scene,
+            manifest,
             name=f"{cfg.name}_bar",
+            urdf_path=Path(str(self.task_cfg.cloth.mesh.output_dir)) / "cloth_unroll_bar.urdf",
+            world_pos=bar_pos,
+            axis=axis,
+            shapes=[
+                HingeShape(
+                    "cylinder",
+                    (float(cfg.bar_radius), float(cfg.span)),
+                    rpy=rpy,
+                    color=list(cfg.bar_color),
+                )
+            ],
+            mass=float(cfg.get("bar_mass", 0.02)),
+            color=list(cfg.bar_color),
+            joint_name="spool_joint",
+            damping=0.0,
+            friction=0.0,
         )
-        manifest.add(f"{cfg.name}_bar", bar)
 
     def _cloth_surface(self, cloth_cfg):
         """The band's surface, with a woven diffuse image when one is asked for.
@@ -778,3 +952,48 @@ class ClothUnrollSceneBuilder:
             gravity=abs(float(self.env_cfg.sim.gravity[2])),
             max_load_factor=float(friction_cfg.max_load_factor),
         ).install()
+
+
+def _assert_literal_copies(task_cfg) -> None:
+    """The yaml's literal copy of the workspace box must still match `common`.
+
+    `checks()` reads `workspace.x / y`, and the variation harness loads the task
+    yaml alone, where `${common...}` cannot resolve -- so the task yaml carries
+    literals, and the one place with both in hand asserts they agree.
+    """
+
+    root = task_cfg._get_root() if hasattr(task_cfg, "_get_root") else None
+    common = getattr(root, "common", None) if root is not None else None
+    if common is None:
+        return
+    ws = common.manipulation_space.workspace
+    for axis in ("x", "y"):
+        want = [float(v) for v in ws[axis]]
+        got = [float(v) for v in task_cfg.workspace[axis]]
+        if want != got:
+            raise ValueError(
+                f"cloth_unroll: workspace.{axis} {got} != manipulation_space.workspace.{axis} {want}"
+            )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``. Order
+    matters: the layer pitch first (its window needs the drawn turns and bar
+    height), then the bar's along-axis position (its window needs the flat
+    run and the pull the pitch fixes), then the start-state guard (the
+    designed spread depends on the pitch). A ``ValueError`` (empty window)
+    rejects the draw. Plain floats are written: OmegaConf refuses numpy scalars.
+    """
+
+    task_cfg.cloth.roll.pitch = pitch_from_frac(task_cfg, float(task_cfg.cloth.roll.pitch_frac))
+    leaf = along_leaf(task_cfg)
+    task_cfg.cloth[leaf] = center_along_from_frac(task_cfg, float(task_cfg.cloth[f"{leaf}_frac"]))
+    task_cfg.grasp.max_start_spread_ratio = start_spread_limit(task_cfg)
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block."""
+
+    ClothUnrollLayout(task_cfg).validate()

@@ -296,7 +296,21 @@ class ClothLinkAttachDragPrimitive:
         ee_quat=None,
         particles_fn,
         on_phase=None,
+        extend=None,
     ) -> ClothAttachDragResult:
+        """Attach at ``grasp_point``, carry along ``waypoints``, release, retreat.
+
+        ``extend`` closes the loop on the MATERIAL: once the planned waypoints
+        are driven and the arm has converged on the last one, it is called with
+        the current particle positions and may return more waypoints, which are
+        driven the same way before it is asked again. ``None`` (or an empty list)
+        ends the carry. The caller decides what "enough" means -- this primitive
+        only drives what it is handed -- so a planner can pull until the cloth
+        reads unfolded instead of trusting a distance computed in advance. The
+        default keeps the open-loop behaviour every other caller was calibrated
+        with.
+        """
+
         self._phases = []
         grasp_point = np.asarray(grasp_point, dtype=float)
         if not waypoints:
@@ -411,114 +425,126 @@ class ClothLinkAttachDragPrimitive:
         # the plan wants it" and nothing else. Subtracting an offset measured
         # against the PAD instead counted the clearance twice and put a constant
         # 8 mm into every reading (2026-08-20).
-        for waypoint in waypoints:
-            target = np.asarray(waypoint.position, dtype=float)
-            steps = max(1, int(waypoint.steps or 1))
-            # The pads stay `touch_clearance` ABOVE the material for the whole
-            # arc, not just on the way down. Sending them to the waypoint's own
-            # height instead put the fingers on the sheet the moment the carry
-            # started, and the clearance -- the one guarantee that the fingers
-            # never contact the cloth -- was only true during the approach.
-            #
-            # The bound particles keep the offset they had when the link took
-            # them, which is exactly that clearance, so commanding the pad this
-            # much higher puts the material on the waypoint.
-            commanded = self._hand_for_pad(
-                target,
-                float(target[2]) + float(self.touch_clearance) + height_trim,
-            )
-            # Before the motion, not after. Setting it after left every glide
-            # filed under the PREVIOUS label: `attach:43` on `cloth_unroll`
-            # 2026-08-24 was pull_01's drag, not the bind. Same trap as the
-            # descent, fixed there 2026-08-24 and missed here.
-            self._notify(on_phase, waypoint.label)
-            self._glide(controller, commanded, ee_quat, steps)
-            # How far the held material is from where it was asked to be. With a
-            # link binding this stays near zero; a growing value means the arm
-            # could not reach and the cloth is being stretched to cover it.
-            held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
-            follow = float(np.linalg.norm(held - (target + bind_offset)))
-            worst_follow = max(worst_follow, follow)
-            # Did the ARM get where it was told? `continuous_ik` runs one seeded
-            # solve of 50 iterations and returns whatever it reached, reporting
-            # nothing when that is not the commanded pose. A fold that tracks
-            # badly looks identical in the material readings to a fold whose
-            # trajectory was wrong, so the two are separated here: `pose` is the
-            # arm's own error, `follow` is the cloth's.
-            reached = np.asarray(controller.hand_pos(), dtype=float)
-            pose = float(np.linalg.norm(reached - commanded))
-            tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
-            worst_pose = max(worst_pose, pose)
-            worst_tilt = max(worst_tilt, tilt)
-            pad_tip = float(reached[2]) - HAND_TO_PAD_TIP_Z - float(target[2])
-            worst_pad_tip = min(worst_pad_tip, pad_tip)
-            if self.hold_pad_height:
-                # Against the GEOMETRIC target, which does not contain the trim.
-                # Measuring against `commanded` (which does) makes the error
-                # never shrink -- the arm's constant deficit d is re-counted every
-                # waypoint and the trim ramps d, 2d, 3d... Measured 2026-08-25 on
-                # the first recorded run: `pad_tip_mm` went -1.4 -> +10.7 over
-                # eight segments and the gripper ended up floating above the
-                # sheet. With the trim excluded the loop settles at d and holds.
-                desired = float(target[2]) + float(self.touch_clearance) + HAND_TO_PAD_Z
-                height_trim = float(
-                    np.clip(
-                        height_trim + (desired - float(reached[2])),
-                        0.0,
-                        float(self.max_height_trim),
+        queue = list(waypoints)
+        extensions = 0
+        while True:
+            for waypoint in queue:
+                target = np.asarray(waypoint.position, dtype=float)
+                steps = max(1, int(waypoint.steps or 1))
+                # The pads stay `touch_clearance` ABOVE the material for the whole
+                # arc, not just on the way down. Sending them to the waypoint's own
+                # height instead put the fingers on the sheet the moment the carry
+                # started, and the clearance -- the one guarantee that the fingers
+                # never contact the cloth -- was only true during the approach.
+                #
+                # The bound particles keep the offset they had when the link took
+                # them, which is exactly that clearance, so commanding the pad this
+                # much higher puts the material on the waypoint.
+                commanded = self._hand_for_pad(
+                    target,
+                    float(target[2]) + float(self.touch_clearance) + height_trim,
+                )
+                # Before the motion, not after. Setting it after left every glide
+                # filed under the PREVIOUS label: `attach:43` on `cloth_unroll`
+                # 2026-08-24 was pull_01's drag, not the bind. Same trap as the
+                # descent, fixed there 2026-08-24 and missed here.
+                self._notify(on_phase, waypoint.label)
+                self._glide(controller, commanded, ee_quat, steps)
+                # How far the held material is from where it was asked to be. With a
+                # link binding this stays near zero; a growing value means the arm
+                # could not reach and the cloth is being stretched to cover it.
+                held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
+                follow = float(np.linalg.norm(held - (target + bind_offset)))
+                worst_follow = max(worst_follow, follow)
+                # Did the ARM get where it was told? `continuous_ik` runs one seeded
+                # solve of 50 iterations and returns whatever it reached, reporting
+                # nothing when that is not the commanded pose. A fold that tracks
+                # badly looks identical in the material readings to a fold whose
+                # trajectory was wrong, so the two are separated here: `pose` is the
+                # arm's own error, `follow` is the cloth's.
+                reached = np.asarray(controller.hand_pos(), dtype=float)
+                pose = float(np.linalg.norm(reached - commanded))
+                tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
+                worst_pose = max(worst_pose, pose)
+                worst_tilt = max(worst_tilt, tilt)
+                pad_tip = float(reached[2]) - HAND_TO_PAD_TIP_Z - float(target[2])
+                worst_pad_tip = min(worst_pad_tip, pad_tip)
+                if self.hold_pad_height:
+                    # Against the GEOMETRIC target, which does not contain the trim.
+                    # Measuring against `commanded` (which does) makes the error
+                    # never shrink -- the arm's constant deficit d is re-counted every
+                    # waypoint and the trim ramps d, 2d, 3d... Measured 2026-08-25 on
+                    # the first recorded run: `pad_tip_mm` went -1.4 -> +10.7 over
+                    # eight segments and the gripper ended up floating above the
+                    # sheet. With the trim excluded the loop settles at d and holds.
+                    desired = float(target[2]) + float(self.touch_clearance) + HAND_TO_PAD_Z
+                    height_trim = float(
+                        np.clip(
+                            height_trim + (desired - float(reached[2])),
+                            0.0,
+                            float(self.max_height_trim),
+                        )
+                    )
+                if self.verbose:
+                    # The commanded and achieved HAND poses, per axis, not just the
+                    # scalar gap. `continuous_ik` reports nothing when it falls
+                    # short, so a run that cannot reach and a run whose trajectory
+                    # was wrong look identical in the material readings -- and the
+                    # scalar `arm_pos_err_mm` still does not say WHICH way the arm
+                    # fell short. Measured 2026-08-23: a pull commanded 64 mm along y
+                    # delivered 33 mm with the orientation held to 0.8 degrees, which
+                    # is the signature of the solver trading position away to keep
+                    # the wrist angle. Per-axis is what tells that apart from simply
+                    # being outside the workspace.
+                    gap = reached - commanded
+                    print(
+                        f"cloth_fold {waypoint.label} "
+                        f"target=({target[0]:+.3f},{target[1]:+.3f},{target[2]:+.3f}) "
+                        f"follow_mm={follow * 1e3:.1f} "
+                        f"arm_pos_err_mm={pose * 1e3:.1f} "
+                        f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
+                        f"pad_tip_mm={(reached[2] - HAND_TO_PAD_TIP_Z - float(target[2])) * 1e3:+.1f} "
+                        f"held_dz_mm={(float(held[2]) - bind_height) * 1e3:+.1f} "
+                        f"trim_mm={height_trim * 1e3:.1f} "
+                        f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
+                        f"want=({commanded[0]:+.3f},{commanded[1]:+.3f},{commanded[2]:+.3f}) "
+                        f"arm_tilt_deg={np.degrees(tilt):.1f}",
+                        flush=True,
+                    )
+            # Hold the last command until the arm actually gets there.
+            if int(self.carry_settle_steps) > 0:
+                final = np.asarray(queue[-1].position, dtype=float)
+                commanded = self._hand_for_pad(
+                    final, float(final[2]) + float(self.touch_clearance)
+                )
+                self._hold(controller, commanded, ee_quat, int(self.carry_settle_steps))
+                held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
+                follow = float(np.linalg.norm(held - (final + bind_offset)))
+                pose = float(
+                    np.linalg.norm(
+                        np.asarray(controller.hand_pos(), dtype=float) - commanded
                     )
                 )
-            if self.verbose:
-                # The commanded and achieved HAND poses, per axis, not just the
-                # scalar gap. `continuous_ik` reports nothing when it falls
-                # short, so a run that cannot reach and a run whose trajectory
-                # was wrong look identical in the material readings -- and the
-                # scalar `arm_pos_err_mm` still does not say WHICH way the arm
-                # fell short. Measured 2026-08-23: a pull commanded 64 mm along y
-                # delivered 33 mm with the orientation held to 0.8 degrees, which
-                # is the signature of the solver trading position away to keep
-                # the wrist angle. Per-axis is what tells that apart from simply
-                # being outside the workspace.
-                gap = reached - commanded
-                print(
-                    f"cloth_fold {waypoint.label} "
-                    f"target=({target[0]:+.3f},{target[1]:+.3f},{target[2]:+.3f}) "
-                    f"follow_mm={follow * 1e3:.1f} "
-                    f"arm_pos_err_mm={pose * 1e3:.1f} "
-                    f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
-                    f"pad_tip_mm={(reached[2] - HAND_TO_PAD_TIP_Z - float(target[2])) * 1e3:+.1f} "
-                    f"held_dz_mm={(float(held[2]) - bind_height) * 1e3:+.1f} "
-                    f"trim_mm={height_trim * 1e3:.1f} "
-                    f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
-                    f"want=({commanded[0]:+.3f},{commanded[1]:+.3f},{commanded[2]:+.3f}) "
-                    f"arm_tilt_deg={np.degrees(tilt):.1f}",
-                    flush=True,
-                )
-        # Hold the last command until the arm actually gets there.
-        if int(self.carry_settle_steps) > 0:
-            final = np.asarray(waypoints[-1].position, dtype=float)
-            commanded = self._hand_for_pad(
-                final, float(final[2]) + float(self.touch_clearance)
-            )
-            self._hold(controller, commanded, ee_quat, int(self.carry_settle_steps))
-            held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
-            follow = float(np.linalg.norm(held - (final + bind_offset)))
-            pose = float(
-                np.linalg.norm(
-                    np.asarray(controller.hand_pos(), dtype=float) - commanded
-                )
-            )
-            # The worst readings are updated, not replaced: the point of the hold
-            # is that the END of the carry is where the plan said, and a lag that
-            # was only ever transient is not a defect worth reporting as one.
-            worst_follow = follow
-            worst_pose = pose
-            if self.verbose:
-                print(
-                    f"cloth_fold carry_settled steps={int(self.carry_settle_steps)} "
-                    f"follow_mm={follow * 1e3:.1f} arm_pos_err_mm={pose * 1e3:.1f}",
-                    flush=True,
-                )
+                # The worst readings are updated, not replaced: the point of the hold
+                # is that the END of the carry is where the plan said, and a lag that
+                # was only ever transient is not a defect worth reporting as one.
+                worst_follow = follow
+                worst_pose = pose
+                if self.verbose:
+                    print(
+                        f"cloth_fold carry_settled steps={int(self.carry_settle_steps)} "
+                        f"follow_mm={follow * 1e3:.1f} arm_pos_err_mm={pose * 1e3:.1f}",
+                        flush=True,
+                    )
+            # Closed loop on the material: ask the caller whether the cloth reads
+            # done, and drive whatever it hands back. Measured only after the hold
+            # above, so the reading is not taken while the arm is still lagging.
+            more = None if extend is None else extend(particles_fn())
+            if not more:
+                break
+            extensions += 1
+            queue = list(more)
+            self._phases.append(f"extend_{extensions}")
         self._phases.append("carried")
 
         cloth.release_particle(particles_idx_local=[int(i) for i in indices])

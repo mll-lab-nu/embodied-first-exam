@@ -47,9 +47,23 @@ from .untangle_continuous import (
     settle_scene,
 )
 
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled. The
+    rows are the shared layout's ``checks()`` (see
+    `_swap_crossing_sign_geometry.braid_checks`).
+    """
+
+    SwapCrossingSignLayout(task_cfg).validate()
+
+
 __all__ = [
     "SwapCrossingSignLayout",
     "SwapCrossingSignScene",
     "SwapCrossingSignSceneBuilder",
     "settle_scene",
+    "validate_task_cfg",
 ]

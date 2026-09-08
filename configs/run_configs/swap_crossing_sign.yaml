@@ -26,3 +26,11 @@ trace_every: 1
 # --- 任务控制 ------------------------------------------------------------
 # 抓放次数上限。null = 用 oracle.max_moves（本任务恒为 2）。
 max_moves: null
+
+# --- 变体（2026-09-07）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志与 episode 元数据的变体标识（角点 sweep 覆盖成 corner_<id>）。
+variant_id: default

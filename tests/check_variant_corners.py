@@ -130,6 +130,16 @@ TASKS = {
         layout="topogym.tasks.entangle.band_untwist:BandUntwistLayout",
         pairs={},
     ),
+    # 32 corners (one crossing sign x four continuous axes); FEM rope, two moves
+    # per cell (separate + cover, ~8-10 min), so the physics sweep runs a
+    # CORNERS= subset first. The layout is the one untangle_continuous shares
+    # (`swap_crossing_sign.py` aliases it); no derived leaf.
+    "swap_crossing_sign": TaskSpec(
+        yaml="swap_crossing_sign_topogym_tabletop_v1.yaml",
+        physical_config="swap_crossing_sign_pinch",
+        layout="topogym.tasks.entangle.swap_crossing_sign:SwapCrossingSignLayout",
+        pairs={},
+    ),
     # 32 corners; rigid bodies only, seconds to a couple of minutes per GPU cell,
     # so the sweep runs them all.
     "unlink_c_ring": TaskSpec(
@@ -179,6 +189,27 @@ TASKS = {
         yaml="cloth_unpleat_topogym_tabletop_v1.yaml",
         physical_config="cloth_unpleat",
         layout="topogym.tasks.deformation.cloth_unpleat:ClothUnpleatLayout",
+        pairs={},
+    ),
+    # 96 corners (two pull sides x three turn counts x four continuous axes);
+    # PBD cloth, about 20 s per GPU cell (cloth_unpleat measured), so the
+    # physics sweep can run them all. The layer pitch, the bar's along-axis
+    # position and the start-state guard are derived. The layout takes the task
+    # config alone (origin defaults to zero).
+    "cloth_unroll": TaskSpec(
+        yaml="cloth_unroll_topogym_tabletop_v1.yaml",
+        physical_config="cloth_unroll",
+        layout="topogym.tasks.deformation.cloth_unroll:ClothUnrollLayout",
+        pairs={},
+    ),
+    # 96 corners (four grasp corners x three fold fractions x three continuous axes);
+    # PBD cloth, expected 20-40 s per GPU cell, so the physics sweep can run
+    # them all. The sheet's x position is derived. The layout takes the task
+    # config alone (origin defaults to zero).
+    "cloth_fold": TaskSpec(
+        yaml="cloth_fold_topogym_tabletop_v1.yaml",
+        physical_config="cloth_fold",
+        layout="topogym.tasks.deformation.cloth_fold:ClothFoldLayout",
         pairs={},
     ),
 }

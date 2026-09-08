@@ -33,7 +33,7 @@ from omegaconf import DictConfig
 
 from topogym.core import save_resolved_config
 from topogym.generation.layout_randomization import randomize_task_cfg
-from topogym.planning.cloth_unpleat_planner import plan_cloth_unpleat
+from topogym.planning.cloth_unpleat_planner import PullExtender, plan_cloth_unpleat
 from topogym.primitives.cloth_link_attach_drag import ClothLinkAttachDragPrimitive
 from topogym.primitives.physical_contact import ee_quat_for_yaw
 from topogym.supervision import stop_before_physics
@@ -64,6 +64,7 @@ def _variant_line(cfg, layout) -> str:
         f"center_y={float(task.cloth.center_y):+.4f} inset={float(task.grasp.edge_inset):.4f} "
         f"pull_scale={float(task.physical.pull_scale):.3f} side={layout.pull_sign:+.0f} "
         f"stored_mm={marks['stored'] * 1e3:.1f} pull_mm={layout.pull_distance() * 1e3:.1f} "
+        f"pull_max_mm={marks['stored'] * float(task.physical.pull_extend_max_scale) * 1e3:.1f} "
         f"grasp_y={grasp[1]:+.4f} end_y={end[1]:+.4f}"
     )
 
@@ -157,12 +158,13 @@ def main(cfg: DictConfig) -> None:
             f"moved_mm={float(np.linalg.norm(grasp - design)) * 1e3:.2f}",
             flush=True,
         )
-        # Is this still a pleat? Two direct readings rather than the crest height
-        # this used to gate on: the material has to still be stored (or there is
-        # nothing to unfold) and the layers have to still be stacked (or it is not
-        # this task). Height was dropped 2026-08-23 -- the pleat always lies down
-        # within 25 steps and no material parameter prevents it, so gating on
-        # height rejected every episode. See the task config.
+        # Is this still a pleat? One direct reading: the material has to still be
+        # stored, i.e. the band's spread is well short of its material length.
+        # Height was dropped 2026-08-23 (the pleat always lies down within 25
+        # steps). The three-layer cell count was dropped 2026-09-05: it is a
+        # statistic of an 8 mm occupancy grid and read 24 or 6 cells for the same
+        # pleat depending on where the band sat relative to the grid, which
+        # aborted ten envelope corners. It is still printed, as a record.
         #
         # An episode that starts from a pleat that has already come apart is not a
         # harder episode, it is a different task, and judging it would put a
@@ -177,21 +179,17 @@ def main(cfg: DictConfig) -> None:
         # video survives the SystemExit below.
         start = evaluator.classify(rest, rest, table_z=layout.table_z, grid=band.grid)
         stored_ok = start.spread_ratio <= float(cfg.task.grasp.max_start_spread_ratio)
-        layers_ok = start.over_layer_cells >= int(
-            cfg.task.grasp.min_start_three_layer_cells
-        )
         print(
             f"cloth_unpleat start_state spread_ratio={start.spread_ratio:.3f} "
             f"max={float(cfg.task.grasp.max_start_spread_ratio)} "
             f"three_layer_cells={start.over_layer_cells} "
-            f"min={int(cfg.task.grasp.min_start_three_layer_cells)} "
             f"single_layer_frac={start.single_layer_frac:.3f} "
             f"peak_mm={start.peak_above_table * 1e3:.2f} "
-            f"stored_ok={stored_ok} layers_ok={layers_ok}",
+            f"stored_ok={stored_ok}",
             flush=True,
         )
-        if not (stored_ok and layers_ok):
-            reason = "material_already_released" if not stored_ok else "layers_came_apart"
+        if not stored_ok:
+            reason = "material_already_released"
             print(
                 f"cloth_unpleat aborted reason={reason} "
                 f"holding={int(cfg.run.final_hold_steps)}",
@@ -202,9 +200,7 @@ def main(cfg: DictConfig) -> None:
             raise SystemExit(
                 f"the pleat did not survive the settle ({reason}): spread_ratio "
                 f"{start.spread_ratio:.3f} (max "
-                f"{float(cfg.task.grasp.max_start_spread_ratio)}), three-layer "
-                f"cells {start.over_layer_cells} (min "
-                f"{int(cfg.task.grasp.min_start_three_layer_cells)}). "
+                f"{float(cfg.task.grasp.max_start_spread_ratio)}). "
                 f"Run `bash bash_scripts/tests/pleat_stability_sweep.sh` -- the "
                 f"material parameters that hold the pleat together are measured, "
                 f"not guessed."
@@ -214,6 +210,22 @@ def main(cfg: DictConfig) -> None:
             layout,
             motion=str(cfg.run.motion),
             overpull_scale=float(cfg.run.overpull_scale),
+        )
+        # The task motion closes the loop on the band's spread (see the task
+        # config's `pull_extend_*`). The two calibration motions stay open-loop:
+        # `shove` is supposed to leave the pleat closed, and `overpull` is a
+        # fixed overshoot by construction.
+        extender = (
+            PullExtender(
+                layout,
+                rest,
+                waypoints,
+                target_recovered=float(cfg.task.physical.pull_extend_target),
+                max_scale=float(cfg.task.physical.pull_extend_max_scale),
+                recoil_m=float(cfg.task.physical.pull_extend_recoil_m),
+            )
+            if str(cfg.run.motion) == "unfold"
+            else None
         )
         print(
             f"cloth_unpleat plan segments={len(waypoints)} "
@@ -335,6 +347,7 @@ def main(cfg: DictConfig) -> None:
                 ),
                 particles_fn=lambda: band_particles(band),
                 on_phase=lambda name: setattr(watch, "phase", name),
+                extend=extender,
             )
             # A still tail with the arm out of the way, so the video ends on the
             # finished band rather than on the retreat.
@@ -367,6 +380,8 @@ def main(cfg: DictConfig) -> None:
         f"{state.summary()} {watch.summary()}",
         flush=True,
     )
+    if extender is not None:
+        print(f"cloth_unpleat pull_extend {extender.summary()}", flush=True)
     if result.failure_reason:
         print(f"cloth_unpleat primitive_note {result.failure_reason}", flush=True)
 

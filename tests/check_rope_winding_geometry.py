@@ -664,15 +664,16 @@ def main(argv=None) -> int:
     path_delta = free_end_winding_delta(
         [layout.route_polyline("initial")[-1]] + list(points), center, anchor
     )
-    # 2026-09-05: the run to C is chosen by the planner (`to_c_route: closure`),
-    # straight where that keeps the count right -- the shipped layout -- and
-    # round the far side (`to_C_around`) where a randomised C sits past the ray
-    # opposite the anchor. On the shipped layout the run is still straight.
+    # 2026-09-05: the run to C stays STRAIGHT for this task. rope_unwinding's
+    # far-side detour (`to_c_route: closure`) drags a wound rope backwards most
+    # of a turn (corner c1052); rope_winding instead places C where the straight
+    # run already counts right (`target_x_windows_straight`).
     check(
-        "the verdict is the closed whole-rope count, chosen route to C",
+        "the verdict is the closed whole-rope count and the run to C goes straight",
         str(getattr(getattr(cfg, "success", None), "winding_metric", "on_post")) == "closure"
-        and spec.to_c_route == "closure",
-        "straight run on the shipped layout" if "to_C_around" not in labels else "via to_C_around",
+        and spec.to_c_route == "straight"
+        and "to_C_around" not in labels,
+        "the far-side detour is rope_unwinding's; a wound rope must not be dragged round",
     )
     check(
         "spawn reading + the free end's whole path (orbits AND the run to C) = target",
@@ -681,8 +682,8 @@ def main(argv=None) -> int:
         f"target {spec.target_winding:+.0f}",
     )
     check(
-        "the shipped layout's run to C is the straight one",
-        "to_C_around" not in labels,
+        "the shipped C sits where the straight run does not cross the ray opposite the anchor",
+        "to_C_around" not in labels and abs(spawn_reading + path_delta - spec.target_winding) < 1e-6,
         "C south of the post (bearing 290) is short of the ray opposite the anchor (335)",
     )
     sweep_final = winding_sweep(oracle_rope("place_at_C"), center, wrap_band)
@@ -1144,11 +1145,14 @@ def _set(raw, dotted, value):
 def _derived_layout(raw):
     """The yaml's three derivations by hand (the hooks live in a module that imports Genesis)."""
 
-    from topogym.tasks.routing._rope_winding_geometry import sweep_from_slack
-    from topogym.tasks.routing._winding_post_geometry import target_x_from_frac, wind_z_from_frac
+    from topogym.tasks.routing._rope_winding_geometry import (
+        sweep_from_slack, target_x_from_frac, target_y_from_frac,
+    )
+    from topogym.tasks.routing._winding_post_geometry import wind_z_from_frac
 
     cfg = wrap(raw)
     raw["winding"]["wind_z_start"] = wind_z_from_frac(cfg, float(raw["winding"]["wind_z_frac"]))
+    raw["fixtures"]["C"]["y"] = target_y_from_frac(StandInLayout(wrap(raw)), float(raw["fixtures"]["C"]["y_frac"]))
     raw["fixtures"]["C"]["x"] = target_x_from_frac(StandInLayout(wrap(raw)), float(raw["fixtures"]["C"]["x_frac"]))
     raw["rope"]["spawn_arc"]["sweep_deg"] = sweep_from_slack(StandInLayout(wrap(raw)))
     return StandInLayout(wrap(raw))
@@ -1170,17 +1174,18 @@ def _check_variation_envelope(prefabs) -> None:
     base = resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs)
     derived = _derived_layout(resolve(yaml.safe_load(TASK_CFG.read_text(encoding="utf-8")), prefabs))
     check(
-        "frac 0.5 / 0.5 and the slack rule restore wind_z_start 0.045, C.x 0.075, sweep 200 +- 3",
+        "frac 0.5 / 0.5 / 0.5 and the slack rule restore wind_z_start 0.045, C (0.075, -0.130), sweep 200 +- 3",
         abs(float(derived.cfg.winding.wind_z_start) - 0.045) < 1e-9
         and abs(float(derived.cfg.fixtures.C.x) - 0.075) < 1e-9
+        and abs(float(derived.cfg.fixtures.C.y) + 0.130) < 1e-9
         and abs(float(derived.cfg.rope.spawn_arc.sweep_deg) - 200.0) <= 3.0,
-        f"wind_z_start {float(derived.cfg.winding.wind_z_start):.4f}, C.x {float(derived.cfg.fixtures.C.x):.4f}, "
-        f"sweep {float(derived.cfg.rope.spawn_arc.sweep_deg):.1f}",
+        f"wind_z_start {float(derived.cfg.winding.wind_z_start):.4f}, C ({float(derived.cfg.fixtures.C.x):.4f}, "
+        f"{float(derived.cfg.fixtures.C.y):+.4f}), sweep {float(derived.cfg.rope.spawn_arc.sweep_deg):.1f}",
     )
     rows = {name: (measured, limit, ok) for name, measured, limit, ok in rope_winding_checks(derived)}
     check(
-        "the twelve feasibility rows pass on the shipped layout",
-        len(rows) == 12 and all(ok for _, _, ok in rows.values()),
+        "the thirteen feasibility rows pass on the shipped layout",
+        len(rows) == 13 and all(ok for _, _, ok in rows.values()),
         " ".join(f"{n}={m:+.4f}" for n, (m, _, _) in rows.items()),
     )
     # cw: same spawn route, same fixtures, mirrored orbit, opposite target.
@@ -1201,7 +1206,7 @@ def _check_variation_envelope(prefabs) -> None:
         f"{len(cw_spawn)} spawn points, {len(cw_plan.waypoints)} waypoints each way",
     )
     cw_rows = {n: ok for n, _, _, ok in rope_winding_checks(cw)}
-    check("...and passes the same twelve rows", all(cw_rows.values()))
+    check("...and passes the same thirteen rows", all(cw_rows.values()))
 
     axes = []
     for entry in base["variation"]:
@@ -1232,9 +1237,9 @@ def _check_variation_envelope(prefabs) -> None:
         if bad:
             infeasible.append((values, bad))
     check(
-        f"all {count} envelope corners are feasible",
-        not infeasible,
-        f"{len(infeasible)} infeasible" + (f"; first: {infeasible[0]}" if infeasible else "") + f"; {detours} need to_C_around",
+        f"all {count} envelope corners are feasible and none needs the far-side detour",
+        not infeasible and detours == 0,
+        f"{len(infeasible)} infeasible" + (f"; first: {infeasible[0]}" if infeasible else "") + f"; {detours} would detour (must be 0: C is derived so the straight run counts right)",
     )
     print("  [--] tightest margin per row over the corners: " + " ".join(f"{n}={m:+.4f}" for n, m in tightest.items()))
 
@@ -1251,7 +1256,7 @@ def _check_variation_envelope(prefabs) -> None:
     past["rope"]["spawn_arc"]["anchor_lead_deg"] = -30.0
     past_layout = StandInLayout(wrap(past))
     past_reading = spawn_winding(past_layout, WindingSpec.from_config(past_layout.cfg))
-    past["rope"]["spawn_arc"]["anchor_lead_deg"] = 20.0
+    past["rope"]["spawn_arc"]["anchor_lead_deg"] = 27.0
     capped_layout = StandInLayout(wrap(past))
     capped_reading = spawn_winding(capped_layout, WindingSpec.from_config(capped_layout.cfg))
     check(

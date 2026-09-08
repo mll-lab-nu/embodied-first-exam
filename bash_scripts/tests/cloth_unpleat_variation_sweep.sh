@@ -161,6 +161,9 @@ done
 echo
 echo "==================== 汇总 ===================="
 csv="$OUTDIR/summary.csv"
+# CSV 字段按 RFC 4180 加引号。判定器的 `gates=` 在多条门同时挂时是逗号连接的，
+# 不加引号会让那一行多出几列、按列解析的读者读到错位的值（2026-09-08）。
+csv_field() { printf '"%s"' "${1//\"/\"\"}"; }
 echo "seed,width,crest,center_x,center_y,inset,pull_scale,side,stored_mm,pull_mm,grasp_y,end_y,single_layer_frac,recovered_frac,band_shift_mm,oracle,shove" > "$csv"
 n_shove=0; n_shove_failed=0
 for seed in $SEEDS; do
@@ -171,7 +174,7 @@ for seed in $SEEDS; do
     "$(f stored_mm)" "$(f pull_mm)" "$(f grasp_y)" "$(f end_y)" \
     "${SINGLE[$seed]:--}" "${RECOVERED[$seed]:--}" "${SHIFT[$seed]:--}" \
     "${ORACLE[$seed]:--}" "${SHOVE[$seed]:--}"
-  echo "$seed,$(f width),$(f crest),$(f center_x),$(f center_y),$(f inset),$(f pull_scale),$(f side),$(f stored_mm),$(f pull_mm),$(f grasp_y),$(f end_y),${SINGLE[$seed]:-},${RECOVERED[$seed]:-},${SHIFT[$seed]:-},${ORACLE[$seed]:-},${SHOVE[$seed]:-}" >> "$csv"
+  echo "$seed,$(f width),$(f crest),$(f center_x),$(f center_y),$(f inset),$(f pull_scale),$(f side),$(f stored_mm),$(f pull_mm),$(f grasp_y),$(f end_y),${SINGLE[$seed]:-},${RECOVERED[$seed]:-},${SHIFT[$seed]:-},$(csv_field "${ORACLE[$seed]:-}"),$(csv_field "${SHOVE[$seed]:-}")" >> "$csv"
   if [[ -n "${SHOVE[$seed]:-}" ]]; then
     n_shove=$((n_shove + 1)); [[ "${SHOVE[$seed]}" == failed* ]] && n_shove_failed=$((n_shove_failed + 1))
   fi

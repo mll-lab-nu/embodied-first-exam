@@ -536,6 +536,80 @@ def check_band_untwist_randomization() -> list[str]:
     return fails
 
 
+_SWAP_CFG = REPO / "configs" / "task_configs" / "swap_crossing_sign_topogym_tabletop_v1.yaml"
+
+
+def check_swap_crossing_sign_randomization() -> list[str]:
+    """Properties of the swap_crossing_sign yaml's axes: leaves, envelope, sign flips, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_SWAP_CFG)})
+    task = "swap_crossing_sign"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "braid.crossing_sign", "braid.crossing_frac", "braid.channel_spacing",
+        "braid.center_y", "braid.x_end",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the swap_crossing_sign hooks cannot run")
+        return fails
+    from topogym.tasks.entangle.swap_crossing_sign import SwapCrossingSignLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range, both signs drawn and the
+    # generated braid word following the sign (the anti-shortcut axis must
+    # actually flip who is on top), every check passing, and a first-draw
+    # rejection rate under the bar.
+    rejects, sign_counts, max_lift = 0, {1: 0, -1: 0}, 0.0
+    ranges = {
+        "crossing_frac": (0.30, 0.75), "channel_spacing": (0.072, 0.095),
+        "center_y": (-0.040, 0.040), "x_end": (0.16, 0.20),
+    }
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        layout = SwapCrossingSignLayout(t)
+        braid = t.braid
+        for leaf, (lo, hi) in ranges.items():
+            value = float(braid[leaf])
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {leaf} {value:+.4f} outside [{lo}, {hi}]")
+        sign = int(braid.crossing_sign)
+        if sign not in sign_counts:
+            fails.append(f"seed {seed}: crossing_sign {sign} not in {{1, -1}}")
+        else:
+            sign_counts[sign] += 1
+            spec = layout.braid_spec()
+            if spec.word != (sign,):
+                fails.append(f"seed {seed}: braid word {spec.word} does not follow crossing_sign {sign}")
+            if abs(spec.crossings[0].position_frac - float(braid.crossing_frac)) > 1e-12:
+                fails.append(f"seed {seed}: crossing at {spec.crossings[0].position_frac} != crossing_frac")
+        bad = [name for name, _, _, ok in layout.checks() if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        max_lift = max(max_lift, layout.predicted_lift())
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if sign_counts[1] == 0 or sign_counts[-1] == 0:
+        fails.append(f"crossing_sign never flipped: {sign_counts}")
+    rate = rejects / 1000.0
+    print(f"    crossing_sign +1: {sign_counts[1]}/1000, -1: {sign_counts[-1]}/1000; max predicted lift {max_lift:.3f} m")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
 _C_RING_CFG = REPO / "configs" / "task_configs" / "unlink_c_ring_topogym_tabletop_v1.yaml"
 
 
@@ -894,6 +968,221 @@ def check_cloth_unpleat_randomization() -> list[str]:
     return fails
 
 
+_CLOTH_FOLD_CFG = REPO / "configs" / "task_configs" / "cloth_fold_topogym_tabletop_v1.yaml"
+
+
+def check_cloth_fold_randomization() -> list[str]:
+    """Properties of the cloth_fold yaml's axes: leaves, envelope, the derived sheet
+    x position on its formula, all four corners and three fold fractions drawn,
+    four checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_CLOTH_FOLD_CFG)})
+    task = "cloth_fold"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "grasp.corner", "goal.fold_fraction", "cloth.center_y", "physical.fold_slack",
+        "cloth.center_x_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the cloth_fold hooks cannot run")
+        return fails
+    from topogym.tasks.deformation._cloth_fold_geometry import (
+        CORNER_SIGNS, center_x_bounds, far_corner_task, fold_target_task, grasp_point_task,
+    )
+    from topogym.tasks.deformation.cloth_fold import ClothFoldLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the sheet's x position on
+    # its formula inside the window the drawn corner / y / fraction leave under
+    # the reach disc; every check passing; all four corners and three fractions;
+    # the far corner's reach printed; first-draw rejection under the bar.
+    rejects = 0
+    ranges = {
+        "cloth.center_y": (-0.030, 0.030), "physical.fold_slack": (0.96, 1.00), "cloth.center_x_frac": (0.0, 1.0),
+    }
+    corners_seen, fractions_seen = {}, {}
+    max_reach, narrowed, base_xy = 0.0, 0, np.asarray([-0.570, 0.0])
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        corner = str(t.grasp.corner)
+        fraction = float(t.goal.fold_fraction)
+        if corner not in CORNER_SIGNS:
+            fails.append(f"seed {seed}: grasp.corner {corner!r} not one of {sorted(CORNER_SIGNS)}")
+        if fraction not in (1.0, 0.9, 0.8):
+            fails.append(f"seed {seed}: goal.fold_fraction {fraction} not in (1.0, 0.9, 0.8)")
+        corners_seen[corner] = corners_seen.get(corner, 0) + 1
+        fractions_seen[fraction] = fractions_seen.get(fraction, 0) + 1
+        lo, hi = center_x_bounds(t)
+        want = lo + float(t.cloth.center_x_frac) * (hi - lo)
+        if abs(float(t.cloth.center_x) - want) > 1e-9:
+            fails.append(f"seed {seed}: cloth.center_x {float(t.cloth.center_x):.4f} != derived {want:.4f}")
+        if not 0.010 - 1e-9 <= float(t.cloth.center_x) <= 0.070 + 1e-9:
+            fails.append(f"seed {seed}: cloth.center_x {float(t.cloth.center_x):.4f} outside [0.010, 0.070]")
+        if hi < 0.070 - 1e-9:
+            narrowed += 1
+        layout = ClothFoldLayout(t)
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        by_name = {name: measured for name, measured, _, _ in rows}
+        max_reach = max(max_reach, by_name["far_corner_reach"])
+        # The +x one of grasp / put-down, and the one the reach row measures, have
+        # to stay the same point. They are picked by different rules (max x vs
+        # max distance from the base), and at `fold_fraction` 0.5 a near_* corner
+        # puts the sheet's own middle on the +x side, so the old ">" is now ">=".
+        far = far_corner_task(t)
+        other = (
+            grasp_point_task(t)
+            if np.allclose(far, fold_target_task(t))
+            else fold_target_task(t)
+        )
+        if far[0] < float(t.cloth.center_x) - 1e-12:
+            fails.append(f"seed {seed}: far corner is behind the sheet's middle")
+        if np.linalg.norm(far - base_xy) < np.linalg.norm(other - base_xy) - 1e-12:
+            fails.append(f"seed {seed}: the +x point is not the one furthest from the arm")
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(corners_seen) != set(CORNER_SIGNS):
+        fails.append(f"grasp.corner drawn {sorted(corners_seen)}; expected all four")
+    if set(fractions_seen) != {1.0, 0.9, 0.8}:
+        fails.append(f"goal.fold_fraction drawn {sorted(fractions_seen)}; expected 1.0, 0.9, 0.8")
+    rate = rejects / 1000.0
+    print(f"    grasp.corner {dict(sorted(corners_seen.items()))}; "
+          f"goal.fold_fraction {dict(sorted(fractions_seen.items()))}; "
+          f"max far-corner reach {max_reach:.4f}; center_x window capped by reach in {narrowed} seeds")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
+_CLOTH_UNROLL_CFG = REPO / "configs" / "task_configs" / "cloth_unroll_topogym_tabletop_v1.yaml"
+
+
+def check_cloth_unroll_randomization() -> list[str]:
+    """Properties of the cloth_unroll yaml's axes: leaves, envelope, the three derived
+    leaves on their formulas, all three turn counts and both pull sides drawn,
+    ten checks, rejection."""
+    fails: list[str] = []
+    from omegaconf import OmegaConf
+
+    import topogym.generation.layout_randomization as lr
+
+    base = OmegaConf.create({"task": OmegaConf.load(_CLOTH_UNROLL_CFG)})
+    task = "cloth_unroll"
+    if not has_variation(base.task):
+        return [f"{task} yaml has no variation: block"]
+    want_leaves = (
+        "cloth.pull_side", "cloth.roll.turns", "dispenser.bar_height", "cloth.center_x",
+        "cloth.roll.pitch_frac", "cloth.center_y_frac",
+    )
+    if sampled_leaves(base.task) != want_leaves:
+        fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
+    if not _genesis_importable():
+        print("    skipped: Genesis not importable here; the cloth_unroll hooks cannot run")
+        return fails
+    from topogym.tasks.deformation._cloth_unroll_geometry import (
+        CENTER_ALONG_BASE, CENTER_ALONG_SHIFT, PITCH_MAX, PITCH_MIN,
+        center_along_bounds, pitch_bounds, pull_end_task, start_spread_limit,
+    )
+    from topogym.tasks.deformation.cloth_unroll import ClothUnrollLayout
+
+    one = randomize_task_cfg(base, task, 3)
+    if OmegaConf.to_container(one) != OmegaConf.to_container(randomize_task_cfg(base, task, 3)):
+        fails.append(f"{task}: seed 3 twice gave different configs")
+    if OmegaConf.to_container(one) == OmegaConf.to_container(randomize_task_cfg(base, task, 4)):
+        fails.append(f"{task}: seed 3 and seed 4 gave the same config")
+
+    # Envelope over 1000 seeds: every axis in range; the layer pitch, the bar's
+    # along-axis position and the start-state guard on their formulas inside the
+    # windows the drawn turns / bar height leave; every check passing; all three
+    # turn counts and both sides drawn; the reach and pull statistics printed;
+    # first-draw rejection under the bar.
+    rejects = 0
+    ranges = {
+        "dispenser.bar_height": (0.037, 0.053), "cloth.center_x": (0.010, 0.050),
+        "cloth.roll.pitch_frac": (0.0, 1.0), "cloth.center_y_frac": (0.0, 1.0),
+    }
+    turns_seen, sides_seen = {}, {}
+    max_reach, max_pull, narrowed, pitch_capped = 0.0, 0.0, 0, 0
+    for seed in range(1000):
+        t = randomize_task_cfg(base, task, seed).task
+        for path, (lo, hi) in ranges.items():
+            value = float(OmegaConf.select(t, path))
+            if not lo - 1e-9 <= value <= hi + 1e-9:
+                fails.append(f"seed {seed}: {path} {value:+.4f} outside [{lo}, {hi}]")
+        turns = float(t.cloth.roll.turns)
+        side = int(t.cloth.pull_side)
+        if turns not in (1.0, 1.25, 1.5):
+            fails.append(f"seed {seed}: cloth.roll.turns {turns} not in (1.0, 1.25, 1.5)")
+        if side not in (1, -1):
+            fails.append(f"seed {seed}: cloth.pull_side {side} not +1/-1")
+        turns_seen[turns] = turns_seen.get(turns, 0) + 1
+        sides_seen[side] = sides_seen.get(side, 0) + 1
+        lo, hi = pitch_bounds(t)
+        want = lo + float(t.cloth.roll.pitch_frac) * (hi - lo)
+        if abs(float(t.cloth.roll.pitch) - want) > 1e-9:
+            fails.append(f"seed {seed}: cloth.roll.pitch {float(t.cloth.roll.pitch):.5f} != derived {want:.5f}")
+        if not PITCH_MIN - 1e-9 <= float(t.cloth.roll.pitch) <= PITCH_MAX + 1e-9:
+            fails.append(f"seed {seed}: cloth.roll.pitch {float(t.cloth.roll.pitch):.5f} outside [{PITCH_MIN}, {PITCH_MAX}]")
+        if hi < PITCH_MAX - 1e-9:
+            pitch_capped += 1
+        lo, hi = center_along_bounds(t)
+        want = lo + float(t.cloth.center_y_frac) * (hi - lo)
+        if abs(float(t.cloth.center_y) - want) > 1e-9:
+            fails.append(f"seed {seed}: cloth.center_y {float(t.cloth.center_y):+.4f} != derived {want:+.4f}")
+        along = side * float(t.cloth.center_y)
+        if not CENTER_ALONG_BASE - CENTER_ALONG_SHIFT - 1e-9 <= along <= CENTER_ALONG_BASE + CENTER_ALONG_SHIFT + 1e-9:
+            fails.append(f"seed {seed}: cloth.center_y {float(t.cloth.center_y):+.4f} outside the +-0.030 window about {CENTER_ALONG_BASE}")
+        if hi - lo < 2.0 * CENTER_ALONG_SHIFT - 1e-9:
+            narrowed += 1
+        if abs(float(t.grasp.max_start_spread_ratio) - start_spread_limit(t)) > 1e-9:
+            fails.append(f"seed {seed}: grasp.max_start_spread_ratio {float(t.grasp.max_start_spread_ratio):.4f} != derived {start_spread_limit(t):.4f}")
+        layout = ClothUnrollLayout(t)
+        rows = layout.checks()
+        bad = [name for name, _, _, ok in rows if not ok]
+        if bad:
+            fails.append(f"seed {seed}: checks failed after acceptance: {bad}")
+        by_name = {name: measured for name, measured, _, _ in rows}
+        max_reach = max(max_reach, by_name["hand_reach"])
+        max_pull = max(max_pull, by_name["pull_within_stroke"])
+        end = pull_end_task(t)
+        if side * end[1] < 0.0:
+            fails.append(f"seed {seed}: pull_side {side} but the pull ends at y {end[1]:+.4f}")
+        if _first_draw_rejected(lr, base, task, seed):
+            rejects += 1
+    if set(turns_seen) != {1.0, 1.25, 1.5}:
+        fails.append(f"roll.turns drawn {sorted(turns_seen)}; expected all of 1.0, 1.25, 1.5")
+    if set(sides_seen) != {1, -1}:
+        fails.append(f"pull_side drawn {sorted(sides_seen)}; expected both +1 and -1")
+    rate = rejects / 1000.0
+    print(f"    roll.turns {dict(sorted(turns_seen.items()))}; pull_side {dict(sorted(sides_seen.items()))}; "
+          f"max hand reach {max_reach:.3f}; max pull {max_pull * 1e3:.1f} mm; "
+          f"pitch window capped below {PITCH_MAX} in {pitch_capped} seeds; "
+          f"centre window narrowed by reach / workspace in {narrowed} seeds")
+    print(f"    first-draw rejection rate over 1000 seeds: {rate:.3f} (bar {MAX_REJECTION})")
+    if rate > MAX_REJECTION:
+        fails.append(f"first-draw rejection rate {rate:.3f} > {MAX_REJECTION}: envelope no longer fits the rows?")
+    return fails
+
+
 _RING_TRANSFER_CFG = REPO / "configs" / "task_configs" / "ring_transfer_topogym_tabletop_v1.yaml"
 
 
@@ -1010,16 +1299,18 @@ def check_rope_winding_randomization() -> list[str]:
     want_leaves = (
         "winding.turns", "winding.direction",
         "fixtures.POST.x", "fixtures.POST.y", "fixtures.S.x", "fixtures.S.y",
-        "fixtures.C.x_frac", "fixtures.C.y", "winding.climb_per_turn", "winding.wind_z_frac",
+        "fixtures.C.y_frac", "fixtures.C.x_frac", "winding.climb_per_turn", "winding.wind_z_frac",
     )
     if sampled_leaves(base.task) != want_leaves:
         fails.append(f"sampled_leaves = {sampled_leaves(base.task)}, expected {want_leaves}")
     if not _genesis_importable():
         print("    skipped: Genesis not importable here; the rope_winding hooks cannot run")
         return fails
-    from topogym.tasks.routing._rope_winding_geometry import sweep_from_slack
+    from topogym.tasks.routing._rope_winding_geometry import (
+        sweep_from_slack, target_x_from_frac, target_y_from_frac,
+    )
     from topogym.tasks.routing._winding_post_geometry import (
-        PLUG_TARGET_CLEARANCE, plug_spawn_task_xy, target_x_from_frac, wind_z_bounds,
+        PLUG_TARGET_CLEARANCE, plug_spawn_task_xy, wind_z_bounds,
     )
     from topogym.tasks.routing.rope_winding import RopeWindingLayout
 
@@ -1033,7 +1324,7 @@ def check_rope_winding_randomization() -> list[str]:
     ranges = {
         "fixtures.POST.x": (-0.020, 0.045), "fixtures.POST.y": (-0.020, 0.060),
         "fixtures.S.x": (-0.180, -0.120), "fixtures.S.y": (0.070, 0.130),
-        "fixtures.C.x_frac": (0.0, 1.0), "fixtures.C.y": (-0.160, -0.100),
+        "fixtures.C.y_frac": (0.0, 1.0), "fixtures.C.x_frac": (0.0, 1.0),
         "winding.climb_per_turn": (0.010, 0.016), "winding.wind_z_frac": (0.0, 1.0),
     }
     turns_seen, senses_seen = {}, {}
@@ -1052,9 +1343,16 @@ def check_rope_winding_randomization() -> list[str]:
         if abs(float(t.winding.wind_z_start) - want) > 1e-9:
             fails.append(f"seed {seed}: winding.wind_z_start {float(t.winding.wind_z_start):.4f} != derived {want:.4f}")
         layout = RopeWindingLayout(t)
+        want = target_y_from_frac(layout, float(t.fixtures.C.y_frac))
+        if abs(float(t.fixtures.C.y) - want) > 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.y {float(t.fixtures.C.y):.4f} != derived {want:.4f}")
+        if not -0.160 - 1e-9 <= float(t.fixtures.C.y) <= -0.100 + 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.y {float(t.fixtures.C.y):.4f} outside y_range")
         want = target_x_from_frac(layout, float(t.fixtures.C.x_frac))
         if abs(float(t.fixtures.C.x) - want) > 1e-9:
             fails.append(f"seed {seed}: fixtures.C.x {float(t.fixtures.C.x):.4f} != derived {want:.4f}")
+        if not 0.045 - 1e-9 <= float(t.fixtures.C.x) <= 0.105 + 1e-9:
+            fails.append(f"seed {seed}: fixtures.C.x {float(t.fixtures.C.x):.4f} outside x_range")
         plug = plug_spawn_task_xy(layout)
         if float(np.hypot(float(t.fixtures.C.x) - plug[0], float(t.fixtures.C.y) - plug[1])) < PLUG_TARGET_CLEARANCE - 1e-9:
             fails.append(f"seed {seed}: C within {PLUG_TARGET_CLEARANCE} of the plug spawn (derivation broke)")
@@ -1122,12 +1420,15 @@ def main() -> int:
         ("layout_randomization(diverter)", check_diverter_randomization),
         ("layout_randomization(gate)", check_gate_randomization),
         ("layout_randomization(band_untwist)", check_band_untwist_randomization),
+        ("layout_randomization(swap_crossing_sign)", check_swap_crossing_sign_randomization),
         ("layout_randomization(unlink_c_ring)", check_unlink_c_ring_randomization),
         ("layout_randomization(bar_through_hole)", check_bar_through_hole_randomization),
         ("layout_randomization(rope_unwinding)", check_rope_unwinding_randomization),
         ("layout_randomization(rope_winding)", check_rope_winding_randomization),
         ("layout_randomization(ring_transfer)", check_ring_transfer_randomization),
         ("layout_randomization(cloth_unpleat)", check_cloth_unpleat_randomization),
+        ("layout_randomization(cloth_unroll)", check_cloth_unroll_randomization),
+        ("layout_randomization(cloth_fold)", check_cloth_fold_randomization),
         ("braid", check_braid),
     ]
     total = 0

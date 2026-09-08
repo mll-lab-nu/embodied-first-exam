@@ -135,16 +135,30 @@ def edge_inset_from_frac(cfg, frac: float) -> float:
 
 
 def pull_distance(cfg) -> float:
-    """How far the free end travels: the stored material times `pull_scale`."""
+    """The PLANNED pull: the stored material times `pull_scale`."""
 
     return float(pleat_marks(cfg)["stored"]) * float(cfg["physical"]["pull_scale"])
 
 
-def _end_offset(cfg) -> float:
-    """Unsigned distance from the band's middle to the pull's END point, along the axis."""
+def pull_distance_max(cfg) -> float:
+    """The farthest the closed-loop pull may go: stored x `pull_extend_max_scale`.
+
+    The oracle pulls `pull_distance` first, then extends while the band's
+    spread is short of its target, never beyond this cap (planner
+    `PullExtender`). Every row about where the hand ends up uses this bound,
+    not the planned distance.
+    """
 
     marks = pleat_marks(cfg)
-    return marks["half_span"] - float(cfg["grasp"]["edge_inset"]) + pull_distance(cfg)
+    scale = max(float(cfg["physical"]["pull_scale"]), float(cfg["physical"]["pull_extend_max_scale"]))
+    return float(marks["stored"]) * scale
+
+
+def _end_offset(cfg) -> float:
+    """Unsigned distance from the band's middle to the farthest pull END point, along the axis."""
+
+    marks = pleat_marks(cfg)
+    return marks["half_span"] - float(cfg["grasp"]["edge_inset"]) + pull_distance_max(cfg)
 
 
 def _reach_half_width(cfg, across: float) -> float:
@@ -235,11 +249,11 @@ def grasp_point_task(cfg) -> np.ndarray:
 
 
 def pull_end_task(cfg) -> np.ndarray:
-    """Task-frame (x, y) where the grasped material ends up after the pull."""
+    """Task-frame (x, y) of the farthest point the grasped material may be taken to."""
 
     axis = material_axis(cfg)
     point = grasp_point_task(cfg)
-    point[axis] += pull_sign(cfg) * pull_distance(cfg)
+    point[axis] += pull_sign(cfg) * pull_distance_max(cfg)
     return point
 
 
@@ -295,7 +309,7 @@ def cloth_unpleat_checks(cfg) -> list[tuple[str, float, float, bool]]:
     base = np.asarray([float(v) for v in cfg["reach"]["base_xy"]], dtype=float)
     reach = float(np.linalg.norm(end - base))
     max_reach = float(cfg["reach"]["max_hand_dist"])
-    pull = pull_distance(cfg)
+    pull = pull_distance_max(cfg)
     spread = float(marks["plan_span"]) / float(cloth["material_length"])
     max_spread = float(cfg["grasp"]["max_start_spread_ratio"])
 
@@ -332,6 +346,7 @@ __all__ = [
     "material_axis",
     "pleat_marks",
     "pull_distance",
+    "pull_distance_max",
     "pull_end_task",
     "pull_sign",
     "workspace_margin",

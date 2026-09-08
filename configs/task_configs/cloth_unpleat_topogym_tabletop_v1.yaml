@@ -270,6 +270,10 @@ grasp:
   # 可能要下调 physical.pull_step_m；看 follow_mm。默认关，等 A/B。
   attach_single_particle: false
   # 「静置之后这还算不算一个褶皱」的护栏。动作开始之前检查，不过就如实失败。
+  # 2026-09-05 起只剩一条：布带铺开的长度是否明显短于材料全长（料还收在褶里）。
+  # 原来第二条「三层重叠格数 ≥ 12」撤掉了：它数的是 8 mm 占用网格里能看到三层的格子，
+  # 读数随布带相对网格的相位变（同一物理褶平移 60 mm 从 24 格变 6 格，角点 sweep 十格误判），
+  # 而布带位置现在是变体轴。三层格数仍打印，只记录。
   #
   # 2026-08-22 的教训：褶皱是画进网格再放手的，动作开始之前它自己就会往下沉。
   # 第一次跑 demo 时抓取点取的是建模位置，结果 attach 在空气里。现在抓取点改为
@@ -285,9 +289,6 @@ grasp:
   # 0.80：起始铺展比实测 0.764（= 设计值，材料一点没放出来），成功门槛是 0.90。
   # 0.80 卡在中间：起始状态必须明显还收着料，否则 episode 一开始就半成品了。
   max_start_spread_ratio: 0.80
-  # 12：三层重叠的格子数下限。实测 `bending_relaxation=0` 下，布↔布摩擦 0.4 稳定
-  # 在 33 格，0.15 会掉到 4 格（三层散掉）。12 在两者之间，且远高于噪声。
-  min_start_three_layer_cells: 12
   # 让粒子跟着夹爪走的方式在这个任务里没有开关：原语只做 `fix_particles_to_link`
   # 一种。1.1 四种各测一次，link_patch 全面胜出（跟随率 1.00、边最大拉伸只有其余的
   # 一半到五分之一、布不入桌），那个四选一开关只在 `tests/pbd_cloth_spike.py` 里
@@ -336,6 +337,20 @@ physical:
   # 摩擦会让另一端有一点点爬，留 5% 余量。**大于 1.1 就开始拖整条布带**，
   # 那是 run.motion=overpull 演示的那种失败。
   pull_scale: 1.05
+  # 闭环补拉（2026-09-05，planning/cloth_unpleat_planner.PullExtender）。按上面算好的距离拉完、
+  # 手臂到位后，量布带沿材料方向铺开的长度；不到目标就再拉差额，再量，直到达标或总行程到上限。
+  # 角点 sweep 实测：扁褶（顶缘 / 褶宽 ≤ 0.8）与褶宽 0.035 一律留 8–10 mm 两层残褶没打开，
+  # pull_scale 0.98 时回收比 0.78–0.85 落在门下；陡褶全部放出。开环公式假设存料全部能放出，实测不是。
+  #   pull_extend_target     目标回收比（判定器同一算术：(铺开长度 − 静置长度) / (材料全长 − 静置长度)），
+  #                          0.95 比门 0.85 高一档，留出 GPU 逐次抖动 ±0.05。
+  #   pull_extend_max_scale  总行程上限 = 存料 × 这个倍数。锚点滑走时铺开长度不涨，靠它止损。
+  #                          可达 / 工作区两行判据按这个上限算终点，不按 pull_scale。
+  #   pull_extend_recoil_m   补拉时布带还被夹爪拉着，处于张紧状态，比松手静置后长；判定读的是松手后的。
+  #                          出厂布局实测：拉着时 257.9 mm、松手后 252.9 mm，差 5 mm（约布长 2% 的弹性伸长），
+  #                          折成回收比是 0.08。目标铺开长度按这个量加高，否则拉着时看着够了、松手就差。
+  pull_extend_target: 0.95
+  pull_extend_max_scale: 1.15
+  pull_extend_recoil_m: 0.005
 
 # ------------------------------------------------------------------ 可达与工作区
 # checks() 的 hand_reach 行：拉动终点（夹爪最远到的位置）离机械臂底座的水平距离上限。
@@ -446,5 +461,6 @@ variation:
   # 派生：edge_inset_frac -> grasp.edge_inset（要褶宽、顶缘），再 center_y_frac -> cloth.center_y（要内缩、行程、center_x）。
   - {kind: derived, fn: "topogym.tasks.deformation.cloth_unpleat:derive_task_cfg"}
   # 校验：ClothUnpleatLayout.checks() 七行（尾段 ≥ 4 格、顶缘 ≥ 粒径、附着盘离三层区、出生布带与拉动终点在工作区内、
-  #       拉动终点可达、行程 ≤ 0.120、出生铺展比 ≤ max_start_spread_ratio）。
+  #       拉动终点可达、行程 ≤ 0.120、出生铺展比 ≤ max_start_spread_ratio）。终点与行程按补拉上限
+  #       存料 × pull_extend_max_scale 算。
   - {kind: validate, fn: "topogym.tasks.deformation.cloth_unpleat:validate_task_cfg"}

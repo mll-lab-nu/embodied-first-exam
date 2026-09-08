@@ -376,7 +376,18 @@ class ClothUnpleatEvaluator:
 
         nodes = np.asarray(nodes, dtype=float)
         rest_nodes = np.asarray(rest_nodes, dtype=float)
-        layers = layer_report(nodes, float(table_z), self.cell, self.particle_size)
+        # The layer grid is anchored to the SETTLED band's own corner, not the
+        # world origin. The band's position is a variation axis, and a
+        # world-anchored 8 mm grid reads a different three-layer count for the
+        # same physical pleat depending on where the layer edges fall relative
+        # to the cell boundaries: the 2026-09-05 corner sweep read 24 and 6
+        # cells for two bands that differed only by a 60 mm (7.5 cell) shift,
+        # with identical peak height and spread, and the start-state guard
+        # (min 12) aborted the second. Anchoring on the rest cloud makes the
+        # reading a function of the cloth alone; the end state is binned on the
+        # same grid so the two moments stay comparable.
+        origin = rest_nodes[:, :2].min(axis=0)
+        layers = layer_report(nodes, float(table_z), self.cell, self.particle_size, origin=origin)
         span = spread_span(nodes, self.material_axis)
         # How much of what the pleat was holding at the START has come back. The
         # denominator is the band's own stored material, measured on the rest

@@ -175,6 +175,9 @@ oracle 对变体的适应程度由 Layout 层提供的接口决定。diverter / 
 - 校验：`tests/check_rope_winding_geometry.py`（slack 带、螺旋在柱顶下、圈间净空、插头轴线对齐、C 方位角）。
 - 前置代码：`_DerivedSolve` 反解 sweep_deg；run 配置补 `randomize_layout` / `difficulty`。
 - 候选难度统计量：圈数；POST 到 C 的距离。
+- **已落地（2026-09-05，`docs/develop/physics/rope_winding/rope_winding_zh.md` §9）。** 与上表的差异：`sweep_deg` 由 `derived` 钩子按松弛带中点反解（没有单独的 `_DerivedSolve` 类）；
+  `fixtures.C.pos` 的 x、y 各由归一化量派生，C 方位角约束不靠拒绝、也不靠 `to_c_route: closure`（角点 c1052 实测绕远侧会把缠满的绳倒拖），而是派生时就把 C 放到直线去 C 不穿锚点对径射线的位置；
+  插头出生点是 Layout 规则（离对径射线 ≥ 27°）；POST.x 上界因插头出生点的可达从 0.060 收到 0.045；`direction` 不镜像，对照组 `orbit_direction: opposite`。
 
 ### 3.1b rope_unwinding（docx 2.5）
 
@@ -259,6 +262,8 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 - 候选难度统计量：单边净空。
 
 ### 3.4 swap_crossing_sign（docx 3.2）
+
+> **2026-09-07 落地**（`swap_crossing_sign_zh.md`）。三处取值与下表不同，都是算出来的：交叉位置下限 0.25 → 0.30（separate 步预测抬升 = 下面那根线的顶 1.1 cm + 交叉到插头的弧长 + 4 cm，x_end 0.20 / 间距 9.5 cm 时 0.25 要 38.5 cm、0.30 要 36 cm，工作区顶 40 cm，band_untwist 同类估计实测偏差 ±2.6 cm）；`x_end` 上限 0.22 → 0.20（cover 步在合成形状下最坏抬升 0.22 时 41.9 cm 超顶，0.20 时 39.9 cm；插头销尖 x_end + 2.9 cm，0.22 时离工作区边只剩 1 mm）；`channel_spacing` 下限 0.060 → 0.072（两插头出生相距一个间距，< 0.070 构建器拒建）。交叉符号作为显式 `choice` 轴 `braid.crossing_sign`（band_untwist 的 `over_end` 同款），0 = 沿用 seed 的 `braid/word` 流。B 类四条轴各自区间在全包络内可行（32 角点），无派生叶子。
 
 
 | 类   | 叶子                                                                                                                                | 当前值     | 包络             | 边界来源                                                                 |
@@ -363,18 +368,21 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 ### 3.9 cloth_fold（docx 1.x）
 
+**已落地（2026-09-06，`cloth_fold_zh.md`）。** 下表是落地后的实际包络；与原计划的差别：`fold_slack` 下限 0.93 → 0.96（按判据算：手停在离对角 材料长 × (1 − slack)，0.93 差 11.9 mm 超过主判据的 7.5 mm 平均误差门，oracle 自己就判失败）；`center_x` 不独立抽而由远角可达盘派生（基准远角离底座 0.740 已是本任务一直在抓的最远点，独立抽到 0.070 + center_y 0.030 时远角 0.775 无实测）。
 
-| 类   | 叶子                                                                                                                                                      | 当前值        | 包络           | 边界来源                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ | ------------------------------------------------------- |
-| A   | 抓取角序号（4 角）                                                                                                                                              | 固定一角       | Cat{4 角}     | `_grasp_offset()` 目前只实现一角，需扩展；`edge_mid` 实测三项判据不过，排除    |
-| B   | `cloth.center[x,y]`                                                                                                                                     | (0.040, 0) | ±0.030       | 抓取角与落点在 x[−0.23, 0.31] y[−0.30, 0.30] 内；抓取角抬升实测上限 33 mm |
-| B   | `grasp.inset`                                                                                                                                           | 0          | [0, 0.020]   | 附着盘（半径 0.018）在布内                                        |
-| B   | `physical.fold_slack`                                                                                                                                   | 0.98       | [0.93, 1.00] | <1 布松垂被拖；>1 拉布                                          |
-| D   | `cloth.size`、`mesh.cols/rows`、`particle_size`（33×33 + 0.004 是唯一实测保序组合）、`fold_step_m`、`touch_clearance`、`grasp_qpos`、`contact_band`、`bending_relaxation` |            |              | 布的 yaw 无叶子，网格生成器轴对齐，需新代码                                |
+| 类   | 叶子                                  | 当前值      | 包络                                   | 边界来源                                                                          |
+| --- | ----------------------------------- | -------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| A   | `grasp.corner`                      | far_left | Cat{far_left, far_right, near_left, near_right} | 指令轴（`goal.instruction` 模板 + `Layout.instruction()`）；`edge_mid` 实测三项判据不过，排除 |
+| A   | `goal.fold_fraction`                | 1.0      | Cat{1.0, 0.9, 0.8}                   | 单调裕度轴 + 指令轴（2026-09-07 取代 `grasp.inset`）：折痕位置，f = 抓点到折痕 ÷ 半对角线 16.97 cm。下限由实测定（余量 7.57 / 7.05 / 1.98 mm）；不取 > 1（悬空带有一个布厚的系统偏差）|
+| B   | `cloth.center_y`                    | 0        | ±0.030                               | 布边最远到 y = 0.150，离工作区边 0.30 余量大，不派生                                            |
+| B   | `physical.fold_slack`               | 0.98     | [0.96, 1.00]                         | `slack_within_gate` 行：材料长 × (1 − slack) ≤ `particle_error_mean_max` 0.0075        |
+| C   | `cloth.center_x_frac` → `cloth.center_x` | 1.0 → 0.040 | [0.010, min(0.070, 可达盘封顶)]（基准 0.0402；96 角点窗口宽 0.025–0.057） | 远角（抓取点 / 落点里 x 大的）离 `reach.base_xy` ≤ `reach.max_hand_dist` 0.740（假设，固定布局复跑 + 角点子集钉住） |
+| D   | `cloth.size`、`mesh.cols/rows`、`particle_size`（33×33 + 0.004 是唯一实测保序组合）、`fold_step_m`、`touch_clearance`、`grasp_qpos`、`attach_radius`、`contact_band`、`bending_relaxation` |          |                                      | 布的 yaw 无叶子，网格生成器轴对齐                                                             |
 
-
-- 校验：`tests/check_cloth_fold_geometry.py`；落点 / 抓取点在作业区内。
-- 候选难度统计量：inset；抓取点离基座距离。
+- 校验：`_cloth_fold_geometry.cloth_fold_checks` 五行（远角可达、出生布在工作区内、最高点低于工作区顶、松紧差距 ≤ 平均误差门、捏取点还在布上）；`tests/check_cloth_fold_geometry.py`「变体包络」段 96 角点。
+- 变体前修的执行链：判定器占用网格锚到静置点云最小角（cloth_unpleat 同一缺陷）；`_grasp_offset` 四角。角点子集晒出两处（`cloth_fold_zh.md` §5.2）：控制网格三角形对角线方向按抓哪个角选（折痕顺着对角线边走时半布落地侧滑 30 mm；交替对角线的对称网格被 Genesis 重网格成 4604 粒子、顶点顺序丢失，只能整张统一按角选向）；`grasp.finger_axis` 默认改 `arm_default`（near_left 落点在可达盘边上时 across 8.5 mm 判失败、arm_default 5.3 mm 过）。
+- 对照走法：`drag`（贴地拖，预期两层率 ≈ 0.2 判失败）、`fixed_corner`（无视指令永远折 far_left，预期 1/4 成功）。
+- 候选难度统计量：**移动那半布的平均误差**离 15 mm 单点容差的距离（随 `fold_fraction` 单调收窄，实测 7.57 / 7.05 / 1.98 mm）；或折痕偏移。**不要用整块布的平均误差**——折得短时动的材料少，它反而不涨（实测三档 3.75 / 2.85 / 3.54 mm）。
 - 说明：`success.particle_off_target_frac_max = 0.02` 两侧余量约 2 倍，配置注释已预告多种子后需重定；§4.3 先重标定阈值再统计成功率。
 
 ### 3.10 cloth_unpleat（docx 1.x）
@@ -400,17 +408,20 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 | 类   | 叶子                                                                                                                   | 当前值             | 包络             | 边界来源                                                           |
 | --- | -------------------------------------------------------------------------------------------------------------------- | --------------- | -------------- | -------------------------------------------------------------- |
-| A   | `cloth.material_axis`                                                                                                | y               | Cat{x, y}      |                                                                |
-| B   | `cloth.center[x,y]`（杆轴）                                                                                              | (0.040, −0.100) | ±0.030         | `center[axis] + material_length < 0.30`，余量 0.12；实测可达 y ≤ 0.181 |
-| B   | `cloth.roll.turns`                                                                                                   | 1.5             | [1.0, 1.75]    | 行程封顶约 200 mm（2.0 圈需 246 mm）；终点位置与圈数无关                          |
-| B   | `cloth.roll.pitch`                                                                                                   | 0.014           | [0.014, 0.018] | 只向上；≥3.8× 粒距否则视觉网格错绑                                           |
-| B   | `dispenser.bar_height`                                                                                               | 0.045           | ±0.008         | > roll_radius；post_height > bar_height + roll_radius           |
-| D   | `pull_step_m`（0.0003）、`pull_scale`（1.30 实测非单调）、`roll.clearance`、`attach_radius`、`particle_size`、`bending_relaxation` |                 |                |                                                                |
+| A   | `cloth.pull_side`（2026-09-05 起）                                                                                      | +1              | Cat{+1, −1}    | −1 = 镜像布局（支架在 y = +0.100，向 −y 拖）。原写的 `material_axis` Cat{x, y} 不采用：沿 +x 拖终点 x ≈ +0.32 出工作区，朝机械臂拖的可达未实测 |
+| B   | `cloth.center_x`（杆轴，拆键）                                                                                            | 0.040           | [0.010, 0.050] | 上限由可达盘：终点 y ≈ 0.225 时弦长 0.240                                  |
+| B → 派生 | `cloth.center_y_frac` → `cloth.center_y`                                                                          | 0.5 → −0.100    | −0.100 ± 0.030 | 上端 = min(可达盘弦长 − 终点偏移, 工作区 − 0.040 − 终点偏移)；1000 seed 里 57 个被封顶 |
+| B   | `cloth.roll.turns`                                                                                                   | 1.5             | Cat{1.0, 1.25, 1.5} | **[1.0, 1.75] 不成立**：0.280 m 布上 1.75 圈任何层距都没有平铺段，1.5 圈只允许层距 ≤ 0.0158（杆高 0.053）；终点位置与圈数无关 |
+| B → 派生 | `cloth.roll.pitch_frac` → `cloth.roll.pitch`                                                                     | 0 → 0.014       | [0.014, pitch_max ≤ 0.018] | 只向上；≥3.8× 粒距否则视觉网格错绑；pitch_max = 平铺段五行（≥ 4 格、附着盘离垂落段、抓取点离梁心 ≥ 57 mm、卷底离桌、立柱高过卷顶）都成立的最大层距，二分 |
+| B   | `dispenser.bar_height`                                                                                               | 0.045           | ±0.008         | > roll_radius；post_height > bar_height + roll_radius（立柱 0.075 → 0.090） |
+| 派生 | `grasp.max_start_spread_ratio`                                                                                       | 0.50            | 设计铺展比 + 0.11 | 1 圈的松卷设计铺展比 0.60–0.66 > 0.50，固定守卫会把健康布局当 material_already_released |
+| D   | `material_axis` y、`pull_step_m`（0.0003）、`pull_scale`（1.30 实测非单调）、`roll.clearance`、`attach_radius`、`particle_size`、`bending_relaxation`、`edge_inset` |                 |                |                                                                |
 
 
-- 校验：`tests/check_cloth_unroll_geometry.py`（平铺段 > 4·spacing、附着盘离垂落段、挡头 / 立柱高度链）。
+- 校验：`ClothUnrollLayout.checks()` 十行（`_cloth_unroll_geometry.py`），`tests/check_cloth_unroll_geometry.py` 变体包络段 96 角点。
 - 候选难度统计量：圈数（材料存量 `stored`）。
 - 说明：同一配置两次运行 `single_layer_frac` 相差 0.09（GPU 非确定性）；阈值余量需保持 ≥ 0.09。
+- 离线落地 2026-09-05，`cloth_unroll_zh.md` §9；GPU seed 10/10、角点 96/96（09-05）。09-06：胶带式保持默认开（§9.8）；判据加门 `over_pull`（§9.9）；09-06 晚横梁改为辊、布尾粘在辊上、拉过头扯断（§9.11）：oracle 终点由几何定（`pull_scale` 退役），判据四条门（`tail_on_bar`、`over_pull` 按放松位），探针四格两层格 0–16、单层率 0.93–0.97；全量待复跑。
 
 ### 3.12 band_untwist（docx 3.3）
 
@@ -486,7 +497,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 | 2   | diverter_route_ball          | `derived` kind + `checks()` 七行（**已落地 2026-09-02**，GPU seed 0–9 oracle 10/10） | C4 强制；2×2 实例轴已在配置                |
 | 3   | gate_cage_ball               | `derived` 三叶子 + `checks()` 五行 + `timing:` 段（**已落地 2026-09-03**，GPU seed 0–9 oracle 10/10、greedy 8/10、fixed_delay 6/10；判据 `pinched` 定义修正） | C4 强制                              |
 | 4   | band_untwist                 | 镜像轴；在 `figure_eight_spec()` 消费 seed             | oracle 不读布局叶子                    |
-| 5   | swap_crossing_sign           | `braid.py` 交叉位置按 seed 采样                        | seed 已接入                         |
+| 5   | swap_crossing_sign           | 已落地（**2026-09-07**）：`braid.crossing_frac` 接收采样值并裁剪窗口、`braid.crossing_sign` 直接给 braid 字、`verify_braid_spec` 进构建器、共用 Layout `checks()` 八行（第八行 `lane_entry_gap` 是 GPU 首跑 7/10 后加的）；离线 1000 seed 拒绝率 0、32 角点全过；GPU：seed 0–9 oracle 10/10、角点子集 8/8、restack_same 3/3 判失败 | 与 untangle_continuous 共用构建器，改前后 seed 0–9 braid 字逐位一致 |
 | 6   | rope_winding                 | `_DerivedSolve`（sweep_deg 反解）+ C 方位角校验          | EpisodeSpec 已建                   |
 | 7   | rope_unwinding               | 两个 `routes.initial` 字面值改为推导 + run 配置键           | 复用 rope_winding 注册项              |
 | 8   | unlink_c_ring                | `checks()` 七行接入拒绝采样 + 抓取方位角派生（**已落地 2026-09-03**，1000 seed 拒绝率 0、32 角点离线全过；GPU oracle 10/10、角点 32/32、no_align 10/10 判失败；判据 `passed_through` 与摆动段闭环修正两处改动） | 已在 sweep 表                       |
@@ -607,7 +618,7 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 基准：24 cm 方布平铺，中心略偏右。任务为捏一角沿对角线弧线放到对角，对折成三角。
 
 - 抓取角序号：四角之一（当前只实现一角）。`cloth.center`：布平移。
-- `grasp.inset`：从角尖向内的捏取距离。`fold_slack`：弧线半径与对角线之比。
+- `goal.fold_fraction`：折痕位置，抓点到折痕的垂直距离 ÷ 布中心到角尖的距离（半对角线 16.97 cm）；1.0 = 角对角对折。`fold_slack`：弧线半径与材料长之比。
 - 布尺寸、网格、粒径不变；布不可旋转。
 
 包络两端：从角尖捏、弧线绷紧、布在基准位 ↔ 向内 2 cm 捏、松紧 0.93、布平移 3 cm。
@@ -626,10 +637,10 @@ rope_winding 的镜像：绳出生时已绕柱 `start_turns` 圈，任务为反�
 
 基准：小支架横一根杆，布带卷在杆上 1.5 圈，尾端垂到桌面。任务为捏桌上的布带末端沿桌面拉，把布全部拉下展平。
 
-- `material_axis`：支架与拉向旋转 90°。`cloth.center`（杆位置）：支架平移。
-- `roll.turns`：1–1.75 圈，圈数多则拉距长。`roll.pitch`：层间距，只允许增大。`bar_height`：杆高。
+- `pull_side`：支架在 −y 侧向 +y 拖，或镜像到 +y 侧向 −y 拖（2026-09-05 起；原「支架与拉向旋转 90°」不采用，沿 +x 拖终点出工作区）。`center_x` / `center_y`（杆位置）：支架朝 / 离机械臂平移、沿拉动方向平移。
+- `roll.turns`：1 / 1.25 / 1.5 圈，圈数多则拉距长；1.75 圈在 28 cm 布上留不下平铺段。`roll.pitch`：层间距，只允许增大，上限随圈数、杆高派生。`bar_height`：杆高。
 
-包络两端：1 圈、支架在基准位 ↔ 1.75 圈（拉距接近单次行程上限）、支架平移 3 cm、杆高 ±8 mm。
+包络两端：1 圈、支架在基准位 ↔ 1.5 圈、层距 0.0158–0.0172（拉距 263 mm）、支架平移 3 cm、杆高 ±8 mm。
 
 ---
 

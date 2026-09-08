@@ -100,13 +100,18 @@ fixtures:
     type: connector
     # enabled: false —— 不生成任何立体，只留坐标；视觉是 connector_target 的地面靶心。
     enabled: false
-    # x 在变体里由 x_frac 派生：x_range 里离插头出生点不到 0.040 的一段不用（插头法兰 0.015 +
-    # 靶心半长 0.020 + 5 mm），frac 按剩余区间的长度映射；基准 frac 0.5 还原 0.075。
-    # 固定布局下就用这里的 x。
+    # x、y 在变体里各由一个 0~1 的 frac 派生（先 y 后 x）：靶心的方框 x_range x y_range 里两种位置不用——
+    # 离插头出生点不到 0.040 的（插头法兰 0.015 + 靶心半长 0.020 + 5 mm），以及「从缠绕出口直线去 C
+    # 会穿过锚点 S 对径射线、闭合计数多 1」的（对径射线是相对柱心的方位角，所以 y 也受它限制：
+    # 端子在柱东北时靶心靠北的那些 y 整行都不行）。按 2 mm 步长扫出可用的 y 区间，y_frac 按长度映射；
+    # 再在该 y 上扫出可用的 x 区间，x_frac 按长度映射。基准 frac 0.5 / 0.5 还原 (0.075, -0.130)。
+    # 固定布局下就用这里的 x、y。
     x: 0.075
     x_frac: 0.5
     x_range: [0.045, 0.105]
     y: -0.130
+    y_frac: 0.5
+    y_range: [-0.160, -0.100]
     z: 0.019
     size: [0.026, 0.040, 0.034]
     color: [0.85, 0.05, 0.05]
@@ -124,10 +129,11 @@ winding:
   direction: ccw
   # null = 轨道方向 = direction。opposite = 强制反向（对照组）；same = 同向（rope_unwinding 的对照组）。
   orbit_direction: null
-  # closure = planner 按闭合计数决定去 C 的路线：从最后一个轨道点直线去 C 若穿过锚点 S 的
-  # 对径射线（闭合计数会多 1），就绕柱的另一侧去（多一个航点 to_C_around）；否则仍是直线。
-  # 基准布局（C 在柱的南侧 290°）走直线；位置随机后由它兜住 C 方位角的约束。
-  to_c_route: closure
+  # straight = 从最后一个轨道点直线去 C。closure（rope_unwinding 用）是在直线会让闭合计数多 1 时
+  # 绕柱另一侧去；本任务不用它：2026-09-05 角点 c1052 实测，绳已缠满三圈时绕远侧等于把缠好的绳
+  # 倒拖近一圈、机械臂又折到底座旁，插头被拽脱手。所以直线是唯一路线，改由布局保证计数：
+  # 靶心位置在变体里派生到「直线去 C 不穿锚点对径射线」的区域（fixtures.C 注释）。
+  to_c_route: straight
   # 夹爪绕柱轨道半径。下限由夹爪体积定：指垫+插头法兰在柱杆外需要 ~0.04。
   # 下限由**手掌碰撞体的实测尺寸**定，不是拍的。读 Genesis 自带的 panda.xml：
   # `hand_c` -> assets/hand.stl，无缩放，包围盒（手心原点系）
@@ -281,7 +287,7 @@ routes:
     # 而绳长必须跟着 winding.turns 与位置走，见 spawn_arc 的注释。
     # 2026-09-05：终点（插头出生点）不再手写 (0.156, -0.157)，改成规则条目 plug_spawn_from
     # （planning/waypoint.py 的 plug_spawn_point）：插头在柱心外 spawn_arc.plug_distance 处、
-    # 方位角 spawn_arc.plug_bearing_deg；若端子 S 在柱的东北（S 方位角 < 147.5°），插头沿圆往回滑，
+    # 方位角 spawn_arc.plug_bearing_deg；若端子 S 在柱的东北（S 方位角 < 154.5°），插头沿圆往回滑，
     # 离「S 对径射线」保持 anchor_lead_deg，出生弧就不会绕住柱（出生闭合计数恒 0）。
     # 基准还原 (0.156, -0.157)。sweep_deg 省略时读 rope.spawn_arc.sweep_deg（不再用 ${…} 插值，
     # 角点门裸加载本文件时解析不了）。
@@ -405,13 +411,13 @@ rope:
   spawn_arc:
     sweep_deg: 200
     # 插头出生点的规则（routes.initial 的 plug_spawn_from 条目）：柱心外 0.2233 m、方位角 307.5°
-    # （还原手写的 (0.156, -0.157)）；离 S 对径射线至少 20°：S 在柱东北（S 方位角 < 147.5°）时
-    # 插头沿圆往回滑，出生弧才不会绕住柱、去 C 的路线才凑得对闭合计数。离线 1536 角点：
-    # 10° 有 48 个角点 planner 找不到去 C 的路线、15° 有 24 个、20° 起全过；27° 时一半的布局滑动
-    # （基准 S 方位角 154.8° 离对径射线正好 27.2°），20° 时约五分之一。
+    # （还原手写的 (0.156, -0.157)）；离 S 对径射线至少 27°：切向离开柱子的那一段（exit_extension
+    # 0.060 在轨道半径 0.140 上是 23°）也不能穿过对径射线，否则无论 C 放哪里闭合计数都多 1
+    # （2026-09-05 角点 c1052：插头滑到离射线 20°，出口在射线外 3°）。27° = 23° + 4° 余量，且正好是
+    # 基准 S 方位角 154.8° 离射线的角度，基准不滑；S 在柱东北（S 方位角 < 154.5°）时插头沿圆往回滑。
     plug_distance: 0.2233
     plug_bearing_deg: 307.5
-    anchor_lead_deg: 20
+    anchor_lead_deg: 27
   endpoint_handle:
     enabled: true
     name: winding_free_end_handle
@@ -721,17 +727,18 @@ variation:
   # 布局：固定端子（锚点）位置 ±0.030
   - {kind: uniform, path: fixtures.S.x, lo: -0.180, hi: -0.120}
   - {kind: uniform, path: fixtures.S.y, lo: 0.070, hi: 0.130}
-  # 布局：放置靶心 y ±0.030；x 抽归一化 x_frac（见 fixtures.C 注释）
+  # 布局：放置靶心。x、y 都抽归一化 frac，再换算到方框里避开插头、且直线去 C 不穿锚点对径射线的位置
+  # （见 fixtures.C 注释；先 y 后 x）
+  - {kind: uniform, path: fixtures.C.y_frac, lo: 0.0, hi: 1.0}
   - {kind: uniform, path: fixtures.C.x_frac, lo: 0.0, hi: 1.0}
-  - {kind: uniform, path: fixtures.C.y, lo: -0.160, hi: -0.100}
   # 布局：圈距。0.008 = 绳直径实测零间隙失败；0.010（圈间净空 2 mm）没实跑过，角点子集先跑；
   # 本任务出生没有螺旋，rope_unwinding 的 tetgen 边界 0.012 不适用
   - {kind: uniform, path: winding.climb_per_turn, lo: 0.010, hi: 0.016}
   # 归一化：首圈高度，区间上限随圈数与圈距变（见 winding.wind_z_start 注释）
   - {kind: uniform, path: winding.wind_z_frac, lo: 0.0, hi: 1.0}
-  # 派生（按序）：wind_z_frac -> wind_z_start；C.x_frac -> C.x（要先有插头出生点）；
+  # 派生（按序）：wind_z_frac -> wind_z_start；C.y_frac -> C.y、C.x_frac -> C.x（要先有插头出生点与缠绕出口）；
   #       sweep_deg 按松弛带中点反解（要先有 C：最紧时刻在 C 上方）。插头出生点是 Layout 规则，不是叶子。
   - {kind: derived, fn: "topogym.tasks.routing.rope_winding:derive_task_cfg"}
-  # 校验：RopeWindingLayout.checks() 十二行（螺旋在柱顶下、最下一圈高于底座、圈间净空、出生弧离柱、
-  #       插头在工作区内、插头离靶心、手掌越柱顶、出生读数 0、自由端全程读数、可达、松弛带、张角范围）
+  # 校验：RopeWindingLayout.checks() 十三行（螺旋在柱顶下、最下一圈高于底座、圈间净空、出生弧离柱、
+  #       插头在工作区内、插头离靶心、手掌越柱顶、出生读数 0、自由端全程读数、去 C 走直线、可达、松弛带、张角范围）
   - {kind: validate, fn: "topogym.tasks.routing.rope_winding:validate_task_cfg"}

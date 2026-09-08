@@ -61,6 +61,12 @@ class BraidLayout:
     # silently overlaps neighbouring crossings once `length` grows (a 5-crossing
     # braid packs its windows ~2.5x tighter than a 2-crossing one).
     crossing_fill: float = 0.8
+    # Where the single crossing of a length-1 word sits along the main axis, as
+    # a fraction of x_start..x_end, or None for the evenly spaced default. Set by
+    # ``swap_crossing_sign``'s layout axis; the swap window is clipped so it stays
+    # inside ``braid_span`` (see ``crossing_window_at``). Only defined for one
+    # crossing: with more, the slots are equal by construction.
+    crossing_frac: float | None = None
 
 
 @dataclass(frozen=True)
@@ -191,6 +197,50 @@ def crossing_window(n_crossings: int, layout: BraidLayout) -> float:
     return float(layout.crossing_fill) * pitch
 
 
+def crossing_position_frac(index: int, n_crossings: int, layout: BraidLayout) -> float:
+    """Main-axis fraction of crossing ``index``: evenly spaced slots, or the
+    layout's ``crossing_frac`` for a one-crossing braid."""
+
+    span_lo, span_hi = (float(layout.braid_span[0]), float(layout.braid_span[1]))
+    if layout.crossing_frac is not None:
+        if int(n_crossings) != 1:
+            raise ValueError(
+                f"BraidLayout.crossing_frac is only defined for one crossing, "
+                f"got {n_crossings}."
+            )
+        frac = float(layout.crossing_frac)
+        if not span_lo < frac < span_hi:
+            raise ValueError(
+                f"crossing_frac {frac:.3f} must lie strictly inside braid_span "
+                f"[{span_lo:.2f}, {span_hi:.2f}]."
+            )
+        return frac
+    return span_lo + (span_hi - span_lo) * ((int(index) + 0.5) / int(n_crossings))
+
+
+def crossing_window_at(frac: float, n_crossings: int, layout: BraidLayout) -> float:
+    """x length of the lane-swap window centred at ``frac``.
+
+    The evenly spaced default (``crossing_window``) already fits its slot. A
+    crossing moved off centre by ``crossing_frac`` keeps the same width where it
+    fits and is clipped where it would run past either end of ``braid_span`` --
+    the anchored lead-in and the straight free tail (where the plug sits) must
+    survive. Clipping narrows the window, so ``verify_braid_spec``'s steepness
+    rule is what bounds how far the crossing may be pushed.
+    """
+
+    total_x = float(layout.x_end) - float(layout.x_start)
+    span_lo, span_hi = (float(layout.braid_span[0]), float(layout.braid_span[1]))
+    full = crossing_window(n_crossings, layout)
+    return float(
+        min(
+            full,
+            2.0 * (float(frac) - span_lo) * total_x,
+            2.0 * (span_hi - float(frac)) * total_x,
+        )
+    )
+
+
 def channel_y_positions(n_strands: int, layout: BraidLayout) -> list[float]:
     """Lane centers, channel 0 at -y, centered on ``layout.center_y``."""
 
@@ -219,7 +269,6 @@ def braid_to_control_points(
     word = tuple(int(letter) for letter in word)
     channel_y = channel_y_positions(n_strands, layout)
     total_x = float(layout.x_end) - float(layout.x_start)
-    half_window = 0.5 * crossing_window(len(word), layout)
 
     # perm[channel] = which strand currently occupies that lane.
     perm = list(range(int(n_strands)))
@@ -229,7 +278,6 @@ def braid_to_control_points(
     }
     crossings: list[BraidCrossing] = []
 
-    span_lo, span_hi = (float(layout.braid_span[0]), float(layout.braid_span[1]))
     for index, letter in enumerate(word):
         generator = abs(letter)
         if not 1 <= generator <= int(n_strands) - 1:
@@ -237,7 +285,8 @@ def braid_to_control_points(
                 f"Braid letter {letter} is out of range for n_strands={n_strands}."
             )
         low = generator - 1  # channels low and low+1 swap
-        frac = span_lo + (span_hi - span_lo) * ((index + 0.5) / len(word))
+        frac = crossing_position_frac(index, len(word), layout)
+        half_window = 0.5 * crossing_window_at(frac, len(word), layout)
         x_center = float(layout.x_start) + frac * total_x
 
         low_strand = perm[low]
@@ -292,10 +341,24 @@ def build_braid_spec(
     seed: int | None = None,
     layout: BraidLayout,
     rng: np.random.Generator | None = None,
+    word=None,
 ) -> BraidSpec:
-    """Sample a braid and lay it out. Deterministic in ``seed`` (or ``rng``)."""
+    """Sample a braid and lay it out. Deterministic in ``seed`` (or ``rng``).
 
-    word = sample_braid_word(n_strands=n_strands, length=length, seed=seed, rng=rng)
+    ``word`` skips the sampling: the caller already holds the letters (a task
+    whose crossing sign is a declared variation axis rather than a seed draw).
+    It must be freely reduced and ``length`` letters long.
+    """
+
+    if word is None:
+        word = sample_braid_word(n_strands=n_strands, length=length, seed=seed, rng=rng)
+    else:
+        word = tuple(int(letter) for letter in word)
+        if len(word) != int(length) or reduce_braid_word(word) != word:
+            raise ValueError(
+                f"build_braid_spec: word {word} is not a freely reduced word of "
+                f"length {length}."
+            )
     control_points, crossings = braid_to_control_points(
         word,
         n_strands=n_strands,
@@ -362,14 +425,17 @@ def verify_braid_spec(
     if reduce_braid_word(spec.word + spec.inverse_word):
         failures.append("inverse_does_not_cancel")
 
-    window = crossing_window(len(spec.crossings), spec.layout)
     if not 0.0 < float(spec.layout.crossing_fill) <= 1.0:
         failures.append(f"crossing_fill_out_of_range:{float(spec.layout.crossing_fill)}")
-    if spec.crossings and window < _MIN_WINDOW_PER_LANE * float(spec.layout.channel_spacing):
-        failures.append(
-            f"crossing_window_too_steep:window={window:.4f}"
-            f"<{_MIN_WINDOW_PER_LANE:.2f}*spacing={float(spec.layout.channel_spacing):.4f}"
-        )
+    for crossing in spec.crossings:
+        # Per crossing: an off-centre crossing (``crossing_frac``) has its window
+        # clipped to ``braid_span``, so it is the clipped width that must stay flat.
+        window = crossing_window_at(crossing.position_frac, len(spec.crossings), spec.layout)
+        if window < _MIN_WINDOW_PER_LANE * float(spec.layout.channel_spacing):
+            failures.append(
+                f"crossing_window_too_steep:crossing={crossing.index}:window={window:.4f}"
+                f"<{_MIN_WINDOW_PER_LANE:.2f}*spacing={float(spec.layout.channel_spacing):.4f}"
+            )
 
     min_lift = 2.0 * float(rope_radius) + float(particle_size)
     if float(spec.layout.over_lift) < min_lift:

@@ -60,6 +60,10 @@ braid:
   # 是「要一处交叉却跑出三处」的原因。三交叉的旧基线现在是 default 档。
   # 离线验证：length=1 在 seed 0~3 上 verify 全绿，crossing_count 均为 1。
   length: 1
+  # 交叉符号（2026-09-07 变体轴）：出生时哪根压在上面。+1 = 出生在 -y 车道那根在上
+  # （braid 字 (+1,)），-1 = 反之。0 = 沿用 seed 的 braid/word 流采样（固定布局跑法与
+  # untangle_continuous 的现状）。这是本任务的防捷径离散轴：画面里只有交叉处本身能看出来。
+  crossing_sign: 0
   # 主轴：-x 端锚在插线板出线口内侧，+x 端自由。
   x_start: -0.225
   x_end: 0.200
@@ -98,6 +102,17 @@ braid:
   # 0.8→0.95：窗口越宽，同样的换道幅度和抬升摊在越长的 x 上，拐角越缓。
   # 实测 p95 转角 len2/3/5 = 6.6/12.0/21.4 度 → 4.4/9.5/19.8 度。
   crossing_fill: 0.95
+  # 交叉点在整条 x 跨度（x_start → x_end）上的比例（2026-09-07 变体轴）。0.475 就是
+  # length=1 的等分公式 0.10 + 0.75 × 0.5，几何逐位不变。换道窗口按位置向 braid_span
+  # 两端裁剪（generation/braid.py 的 crossing_window_at）：0.75 时窗口从 0.303 缩到
+  # 0.089（x_end 0.20），换道俯视角 47°，仍在 59° 的陡峭度门内。
+  # 下限 0.30 由 separate 步的抬升定：x_end 0.20、间距 0.095 时 0.25 要抬 38.5 cm、
+  # 0.30 要抬 36 cm，工作区顶 40 cm；band_untwist 同类估计实测偏差 ±2.6 cm，取 0.30。
+  crossing_frac: 0.475
+  # 管半径的字面量副本 = rope.radius（prefabs.rope_pbd.radius）。变体校验只拿得到
+  # 未解析的 task 配置（rope.radius 是 ${prefabs…} 插值），所以这里再写一份；
+  # builder 建场景时断言两者相等。
+  tube_radius: 0.004
   # 每根绳一个颜色，评测分辨率下要能清晰区分（验收标准 #5）。沿用离散版三色。
   strand_colors:
     - [1.00, 0.06, 0.03]
@@ -192,6 +207,10 @@ rope:
     rho: 700.0
     friction: 1.6
     color: ${prefabs.rope_endpoint_connector.color}
+    # 两个插头的最小出生间距 = 夹爪跨距：再近两个插头挤在一个夹爪跨距里，合爪时分不清
+    # 夹的是哪个。本任务两插头同在 x_end、相距一个 channel_spacing，所以它就是间距轴的
+    # 下界来源（builder 拒建、checks() 的 end_separation 行共用）。原来是代码里的默认值 0.07。
+    min_clearance: 0.070
   # 锚定端粒子选取半径。同离散版：固定"一带"(2~3 圈)粒子而不是单圈，
   # 分散刚体↔PBD 耦合、消掉接缝硬 hinge。
   anchor_radius: 0.012
@@ -334,7 +353,22 @@ pinch:
   # channel_spacing 是 85mm，所以 0.040 略小于半个车道间距，落在两条车道之外、
   # 不会进入另一条车道。n_strands >= 3 时朝外越界可能进入相邻车道，
   # 与 §8 记录的三绳限制一致。
-  lane_overshoot: 0.040
+  #
+  # ---- 本任务 2026-09-06 由 0.040 改为 0.090（变体 sweep 首跑 7/10 的原因）----
+  # 一次交叉之后，另一根绳的尾段就躺在被搬这根的「自家车道」里。被搬的绳从锚点（车道中心）
+  # 直线铺到越界 lane_overshoot 的落点，所以在另一根绳进入这条车道的地方（它换道窗口的末端），
+  # 两绳的直线间距只有 lane_overshoot × (该处 x − 锚点 x) / (落点 x − 锚点 x)。
+  # 默认布局（交叉在 0.475）那一处间距 35 mm；交叉靠锚定端（0.30–0.42）时窗口末端更靠前，
+  # 只剩 21–26 mm，铺下的绳再弓一下就贴上（实测 min_sep 9.7 mm，判据要 ≥ 16 mm）。
+  # 而且铺下的线**不会是直线**：FEM 绳的无应力形状是出生时的 S 形（prefabs.rope_fem.rest_shape:
+  # spawn），松手后换道那一段会朝原来的弯向回弹——交叉 0.30 的角点实测偏离直线 34–38 mm，
+  # 交叉 0.36–0.42 的 seed 15–30 mm，交叉 ≥ 0.47 的 2–21 mm。两次靠张力拉直的尝试（放下后沿车道
+  # 再拖到 97% 伸展；沿可达球面下放让绳全程绷着）都没有改变读数，因为松手就回弹。
+  # 所以余量只能从几何来：0.130 把最紧角（交叉 0.30）的那一处拉到 69 mm，减去 38 mm 回弹仍 ≥ 16；
+  # checks() 的 lane_entry_gap 行守它 ≥ separation_threshold + 两个绳径 = 32 mm（下界，不含回弹）。
+  # cover 步用合成形状复算：最坏抬升 0.360（原 0.399）、落点离对方线身 ≥ 35 mm、都预测到交叉、
+  # 落点 y ≥ −0.216。工作区：车道最外 0.0875 + 0.130 + 法兰 0.015 = 0.2325 < 0.30 − 0.040。
+  lane_overshoot: 0.130
   # ---- 本任务新增 ----
   # cover（第二步）把绳放到**另一根绳自由端再往外** cover_overshoot 处，
   # 而不是放回自己的车道。lane_overshoot 是「躲开」，这个是「压上去」，方向相反。
@@ -469,3 +503,36 @@ settle:
   damp_every: 0
   # 兜底：跑满 steps 还没收敛就报错，而不是把还在摆的绳子交给机械臂。
   require_converged: true
+
+# ---------------------------------------------------------------- 工作区
+# 变体校验函数只拿得到 task 配置，所以工作区盒子在这里再声明一次（来源
+# common_configs/manipulation_space_tabletop_v1.yaml 的 manipulation_space.workspace；
+# 离线门断言两者相等）。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
+  # 手部连杆的最高点：separate 步的抬升 = 下面那根线的顶 + 交叉到插头的弧长 + lift_clearance 不能超过它。
+  z_max: 0.40
+  # 车道（含插头法兰）离工作区 y 边界的最小距离。≥ pinch.place_clearance (0.035)。
+  margin: 0.040
+
+# ---------------------------------------------------------------- 变体（2026-09-07）
+# 逐 episode 随机的轴（generation/layout_randomization.py 读这一段）。每条轴各自区间，
+# 全包络内 checks() 八行都可行（32 角点离线全过），所以没有派生叶子。
+# 三处与 variation_and_difficulty_plan_zh.md §3.4 原表不同：交叉位置下限 0.25 → 0.30
+#（抬升顶），线长上限 0.22 → 0.20（cover 步合成形状最坏抬升 41.9 cm 超顶；插头销尖也只剩
+# 1 mm 到工作区边），间距下限 0.060 → 0.072（两插头 < 0.070 拒建，留 2 mm 不取等）。
+variation:
+  # 防捷径：出生时哪根压在上面
+  - {kind: choice, path: braid.crossing_sign, values: [1, -1]}
+  # 布局：交叉点在 x 跨度上的位置
+  - {kind: uniform, path: braid.crossing_frac, lo: 0.30, hi: 0.75}
+  # 布局（难度候选）：车道间距，越窄两插头越近
+  - {kind: uniform, path: braid.channel_spacing, lo: 0.072, hi: 0.095}
+  # 布局：两根线整体左右平移
+  - {kind: uniform, path: braid.center_y, lo: -0.040, hi: 0.040}
+  # 布局：插头位置即线长
+  - {kind: uniform, path: braid.x_end, lo: 0.16, hi: 0.20}
+  # 校验：checks() 八行（插头间距、换道窗口、自由直段、工作区 x/y、插线板覆盖、抬升高度、
+  #       车道入口间距 lane_entry_gap —— 第八行 2026-09-06 晚 GPU 首跑后加，见任务文档 §3）
+  - {kind: validate, fn: "topogym.tasks.entangle.swap_crossing_sign:validate_task_cfg"}

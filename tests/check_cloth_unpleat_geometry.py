@@ -100,7 +100,11 @@ band_shift = _verifier.band_shift
 
 # `topogym.planning` is NumPy-only, so it imports normally.
 sys.path.insert(0, str(REPO))
-from topogym.planning.cloth_unpleat_planner import pull_waypoints  # noqa: E402
+from topogym.planning.cloth_unpleat_planner import (  # noqa: E402
+    EXTEND_MIN_M,
+    PullExtender,
+    pull_waypoints,
+)
 
 failures: list[str] = []
 
@@ -157,6 +161,9 @@ class _StandInLayout:
 
     def landmarks(self) -> dict:
         return self._marks
+
+    def material_length(self) -> float:
+        return float(self._cfg["cloth"]["material_length"])
 
     def rest_z(self) -> float:
         return self._table_z + float(self._cfg["cloth"]["z"])
@@ -741,6 +748,59 @@ def main(argv=None) -> int:
         "拉到底之后仍在作业区内",
         float(over_wp[-1].position[axis]) < limit,
         f"overpull 终点 {float(over_wp[-1].position[axis]):+.4f} < {limit}",
+    )
+
+    print("\n== 闭环补拉 ==")
+    # The planned pull is the stored material; the corners measured 8-10 mm of a
+    # flat pleat staying folded. The extender is asked with the band in three
+    # states and must: ask for exactly the deficit when the band is short, stop
+    # when the target spread is reached, and never pull past the cap.
+    stand_in = _StandInLayout(cfg)
+    planned = pull_waypoints(stand_in, motion="unfold")
+    target = float(cfg["physical"]["pull_extend_target"])
+    cap_scale = float(cfg["physical"]["pull_extend_max_scale"])
+    recoil = float(cfg["physical"]["pull_extend_recoil_m"])
+    ext = PullExtender(stand_in, rest_nodes, planned, target_recovered=target, max_scale=cap_scale, recoil_m=recoil)
+    rest_span = float(rest_nodes[:, 1].max() - rest_nodes[:, 1].min())
+    material = float(cloth["material_length"])
+    check(
+        "目标铺展长度 = 静置长度 + 目标回收比 × 存料 + 松手回弹量（与判定器同一算术）",
+        abs(ext.target_span - (rest_span + target * (material - rest_span) + recoil)) < 1e-9,
+        f"target_span={ext.target_span * 1e3:.1f}mm",
+    )
+    short = band_nodes(profile_at(flat_polyline(cfg, corners), arcs), cfg)
+    # A band that opened all but 10 mm: shrink its spread by pulling the free
+    # end back 10 mm (the far end is the anchor, so it stays).
+    short_span = float(short[:, 1].max() - short[:, 1].min())
+    residual = 0.010
+    short[:, 1] = short[:, 1].min() + (short[:, 1] - short[:, 1].min()) * (short_span - residual) / short_span
+    room = ext.cap - ext.pulled
+    more = ext(short)
+    deficit = ext.target_span - (short_span - residual)
+    want = min(deficit, room)
+    check(
+        "布带差 10 mm 没拉开时，补拉补差额与上限余量的较小者",
+        more is not None and len(more) == 1 and abs(float(more[0].metadata["extra_mm"]) / 1e3 - want) < 1e-4,
+        f"extra={None if not more else more[0].metadata['extra_mm']}mm，差额 {deficit * 1e3:.1f}mm，上限余量 {room * 1e3:.1f}mm",
+    )
+    check(
+        "补拉段沿拉的方向、贴桌面",
+        more is not None and float(more[0].position[1]) > float(planned[-1].position[1])
+        and abs(float(more[0].position[2]) - float(planned[-1].position[2])) < 1e-9,
+    )
+    done = ext(band_nodes(profile_at(flat_polyline(cfg, corners), arcs), cfg))
+    check("布带铺到材料全长后不再补拉", done is None, f"history={ext.history[-1]}")
+    # The cap: an anchor that slides keeps the spread short for ever; the loop
+    # must still stop at max_scale x stored.
+    ext2 = PullExtender(stand_in, rest_nodes, planned, target_recovered=target, max_scale=cap_scale, recoil_m=recoil)
+    pulls = 0
+    stuck = band_nodes(section, cfg)  # spread never changes
+    while ext2(stuck) is not None and pulls < 50:
+        pulls += 1
+    check(
+        "锚点滑走（铺展长度不变）时补拉停在上限",
+        pulls < 50 and abs(ext2.pulled - marks["stored"] * cap_scale) < EXTEND_MIN_M + 1e-9,
+        f"补了 {pulls} 次，总行程 {ext2.pulled * 1e3:.1f}mm，上限 {marks['stored'] * cap_scale * 1e3:.1f}mm",
     )
 
     print("\n== 变体包络（variation 块）==")

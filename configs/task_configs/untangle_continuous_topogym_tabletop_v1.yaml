@@ -91,6 +91,9 @@ braid:
   # 0.8→0.95：窗口越宽，同样的换道幅度和抬升摊在越长的 x 上，拐角越缓。
   # 实测 p95 转角 len2/3/5 = 6.6/12.0/21.4 度 → 4.4/9.5/19.8 度。
   crossing_fill: 0.95
+  # 管半径的字面量副本 = rope.radius（prefabs.rope_pbd.radius）。共用的 Layout.checks()
+  # 只读字面量叶子（swap_crossing_sign 的变体校验拿到的是未解析配置）；builder 断言相等。
+  tube_radius: 0.004
   # 每根绳一个颜色，评测分辨率下要能清晰区分（验收标准 #5）。沿用离散版三色。
   strand_colors:
     - [1.00, 0.06, 0.03]
@@ -432,3 +435,15 @@ settle:
   damp_every: 0
   # 兜底：跑满 steps 还没收敛就报错，而不是把还在摆的绳子交给机械臂。
   require_converged: true
+
+# ---------------------------------------------------------------- 工作区
+# 变体校验函数只拿得到 task 配置，所以工作区盒子在这里再声明一次（来源
+# common_configs/manipulation_space_tabletop_v1.yaml 的 manipulation_space.workspace；
+# 离线门断言两者相等）。
+workspace:
+  x: [-0.25, 0.25]
+  y: [-0.30, 0.30]
+  # 手部连杆的最高点：separate 步的抬升 = 下面那根线的顶 + 交叉到插头的弧长 + lift_clearance 不能超过它。
+  z_max: 0.40
+  # 车道（含插头法兰）离工作区 y 边界的最小距离。≥ pinch.place_clearance (0.035)。
+  margin: 0.040

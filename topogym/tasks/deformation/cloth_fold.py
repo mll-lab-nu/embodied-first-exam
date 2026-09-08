@@ -21,10 +21,21 @@ shoving the cloth around. See `configs/task_configs/cloth_fold_*.yaml`.
 Judging lives in `topogym/verification/cloth_fold_verifier.py`; the arc the hand
 follows lives in `topogym/planning/cloth_fold_planner.py`. This file only says
 what the scene contains and where its landmarks are.
+
+**Variation (2026-09-06; axis swapped 2026-09-07).** Which corner is taken
+(`grasp.corner`, four names from the arm's point of view), how far along the
+diagonal it is carried (`goal.fold_fraction`) -- both told only by
+`goal.instruction`, because the sheet is plain and square -- where the sheet
+lies (`center_y` drawn, `center_x` derived so the far corner stays inside the
+arm's reach disc) and how taut the arc is (`fold_slack`) are drawn per seed by
+the task yaml's ``variation:`` block. The feasibility rows and the derivation live in
+`_cloth_fold_geometry.py` (numpy only) so the offline gate and the corner
+harness can run them without Genesis.
 """
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -37,9 +48,30 @@ from topogym.supervision.pbd_probe import probe_particles
 from topogym.world import StandardTabletopSceneBuilder, materials, textures
 from topogym.world.rope import TabletopParticleFriction
 
+from ._cloth_fold_geometry import (
+    CORNER_WORDS,
+    EXTENT_WORDS,
+    center_x_from_frac,
+    cloth_fold_checks,
+    corner_name,
+    corner_signs,
+    fold_fraction,
+    grasp_offset,
+    mesh_diagonal,
+)
 
-def cloth_sheet_mesh(size, center, z: float, cols: int, rows: int, path: Path):
+
+def cloth_sheet_mesh(
+    size, center, z: float, cols: int, rows: int, path: Path, *, diagonal: str = "up"
+):
     """A flat rectangular triangle grid with texture coordinates, written as OBJ.
+
+    ``diagonal`` says which way each quad is split: ``"up"`` (lower-left to
+    upper-right, the layout the task was calibrated on) or ``"down"``. It is
+    chosen per fold so the crease crosses the diagonal edges -- see
+    `_cloth_fold_geometry.mesh_diagonal` for the measurement behind that. Only
+    a uniform diagonal keeps Genesis' remesh a clean subdivision (alternating
+    them per quad came back as 4604 particles, order lost).
 
     This is only the CONTROL mesh: Genesis remeshes it isotropically to
     ``PBDOptions.particle_size``, so the simulated particle count is larger. The
@@ -77,6 +109,8 @@ def cloth_sheet_mesh(size, center, z: float, cols: int, rows: int, path: Path):
         ],
         dtype=float,
     )
+    if diagonal not in ("up", "down"):
+        raise ValueError(f"diagonal must be 'up' or 'down', got {diagonal!r}.")
     faces = []
     for row in range(int(rows) - 1):
         for col in range(int(cols) - 1):
@@ -84,8 +118,12 @@ def cloth_sheet_mesh(size, center, z: float, cols: int, rows: int, path: Path):
             lower_right = lower_left + 1
             upper_left = (row + 1) * int(cols) + col
             upper_right = upper_left + 1
-            faces.append([lower_left, lower_right, upper_right])
-            faces.append([lower_left, upper_right, upper_left])
+            if diagonal == "up":
+                faces.append([lower_left, lower_right, upper_right])
+                faces.append([lower_left, upper_right, upper_left])
+            else:
+                faces.append([lower_left, lower_right, upper_left])
+                faces.append([lower_right, upper_right, upper_left])
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for vertex in vertices:
@@ -106,7 +144,10 @@ class ClothFoldLayout:
     """Where the sheet is and where the fold's landmarks are, in world metres."""
 
     task_cfg: Any
-    origin: np.ndarray
+    #: World position of the task frame's origin. Zero when the layout is built
+    #: from the task config alone (offline gate, corner harness): every
+    #: feasibility row is task-frame arithmetic and never needs it.
+    origin: np.ndarray = field(default_factory=lambda: np.zeros(3, dtype=float))
 
     def coordinate_frame(self) -> str:
         return str(self.task_cfg.coordinate_frame)
@@ -127,31 +168,76 @@ class ClothFoldLayout:
     def cloth_centre(self) -> np.ndarray:
         """World (x, y) of the sheet's middle. The fold line passes through it."""
 
-        return np.asarray(self.origin, dtype=float)[:2] + np.asarray(
-            list(self.task_cfg.cloth.center), dtype=float
+        return np.asarray(self.origin, dtype=float)[:2] + np.array(
+            [float(self.task_cfg.cloth.center_x), float(self.task_cfg.cloth.center_y)],
+            dtype=float,
         )
 
     def rest_z(self) -> float:
         return self.world_z(float(self.task_cfg.cloth.z))
 
+    @property
+    def corner(self) -> str:
+        """Which corner is taken: `grasp.corner`, one of the four names."""
+
+        return corner_name(self.task_cfg)
+
+    def corner_signs(self) -> tuple[int, int]:
+        """``(sx, sy)``: which way the grasped corner lies from the sheet's middle."""
+
+        return corner_signs(self.task_cfg)
+
     def _grasp_offset(self) -> np.ndarray:
         """Offset from the sheet's middle to the grasp point, in the plane.
 
-        ``inset`` pulls the point in from the edge so the whole attachment disc
-        lands on material. Centred exactly on a corner, half the disc hangs off
-        the cloth and catches fewer particles on one side, which tilts the patch
-        as soon as it is lifted.
+        Decided by `grasp.corner` alone (the sign pair); the point is the tip
+        itself. Everything else -- the fold line's normal, the put-down point,
+        the arc's radius, the wrist yaw -- is read off this one vector and
+        `goal.fold_fraction`, so a different corner changes nothing else in the
+        layout.
         """
 
-        half = 0.5 * self.cloth_size()
-        inset = float(self.task_cfg.grasp.inset)
-        mode = str(self.task_cfg.grasp.at)
-        if mode == "corner":
-            return np.array([half[0] - inset, half[1] - inset])
-        if mode == "edge_mid":
-            return np.array([half[0] - inset, 0.0])
-        raise ValueError(
-            f"task.grasp.at must be 'corner' or 'edge_mid', got {mode!r}."
+        return grasp_offset(self.task_cfg)
+
+    def with_corner(self, name: str) -> "ClothFoldLayout":
+        """The same layout with a different corner taken.
+
+        For the `fixed_corner` control motion, which plans as if the
+        instruction always named the baseline corner while the judge scores
+        the corner the instruction actually named.
+        """
+
+        view = copy.deepcopy(self.task_cfg)
+        view.grasp.corner = str(name)
+        return ClothFoldLayout(view, np.asarray(self.origin, dtype=float))
+
+    def with_fold_fraction(self, value: float) -> "ClothFoldLayout":
+        """The same layout folded a different distance along the diagonal.
+
+        For the `fixed_fold` control motion, which plans as if the instruction
+        always said corner-to-corner while the judge scores the fold the
+        instruction actually asked for.
+        """
+
+        view = copy.deepcopy(self.task_cfg)
+        view.goal.fold_fraction = float(value)
+        return ClothFoldLayout(view, np.asarray(self.origin, dtype=float))
+
+    def mesh_diagonal(self) -> str:
+        """Which way the control mesh's diagonals run for this corner (see geometry)."""
+
+        return mesh_diagonal(self.task_cfg)
+
+    def fold_fraction(self) -> float:
+        """How far along the diagonal the corner is carried; 1.0 is corner to corner."""
+
+        return fold_fraction(self.task_cfg)
+
+    def instruction(self) -> str:
+        """`goal.instruction` with the corner's name and the fold's extent filled in."""
+
+        return str(self.task_cfg.goal.instruction).format(
+            corner=CORNER_WORDS[self.corner], extent=EXTENT_WORDS[self.fold_fraction()]
         )
 
     def grasp_point(self) -> np.ndarray:
@@ -161,15 +247,29 @@ class ClothFoldLayout:
         return np.array([*(centre + self._grasp_offset()), self.rest_z()])
 
     def fold_target(self) -> np.ndarray:
-        """Where the grasped point has to end up: its mirror across the line."""
+        """Where the grasped point has to end up: its mirror across the fold line.
+
+        Mirroring across a line offset by ``d`` towards the grasped corner puts
+        it at ``centre + (1 - 2f) * offset``: the opposite corner at f = 1, the
+        sheet's middle at f = 0.5.
+        """
 
         centre = self.cloth_centre()
-        return np.array([*(centre - self._grasp_offset()), self.rest_z()])
+        travel = (1.0 - 2.0 * self.fold_fraction()) * self._grasp_offset()
+        return np.array([*(centre + travel), self.rest_z()])
 
     def fold_point(self) -> np.ndarray:
-        """A point ON the fold line. The sheet's middle, by construction."""
+        """A point ON the fold line: the middle, pushed out towards the grasped corner.
 
-        return self.cloth_centre()
+        At `goal.fold_fraction` 1.0 this is the middle itself and the line is
+        the other diagonal -- the layout every reading was calibrated on. Below
+        that the line slides towards the grasped corner by
+        ``material x (1 - fraction)``, so less of the sheet moves.
+        """
+
+        offset = self._grasp_offset()
+        shift = float(np.linalg.norm(offset)) * (1.0 - self.fold_fraction())
+        return self.cloth_centre() + shift * self.fold_normal()
 
     def fold_normal(self) -> np.ndarray:
         """Unit in-plane normal of the fold line, pointing at the half that lifts."""
@@ -178,9 +278,14 @@ class ClothFoldLayout:
         return offset / max(float(np.linalg.norm(offset)), 1e-12)
 
     def material_distance(self) -> float:
-        """Cloth between the fold line and the grasp point, measured flat."""
+        """Cloth between the fold line and the grasp point, measured flat.
 
-        return float(np.linalg.norm(self._grasp_offset()))
+        Shrinks with `goal.fold_fraction`, and the arc radius and the step
+        count follow it: 16.97 / 12.73 / 8.49 cm of material at 1.0 / 0.75 /
+        0.5, and 145 / 109 / 73 steps at the calibrated 3.6 mm a step.
+        """
+
+        return float(np.linalg.norm(self._grasp_offset())) * self.fold_fraction()
 
     def fold_radius(self) -> float:
         """Radius of the arc the hand follows.
@@ -206,11 +311,17 @@ class ClothFoldLayout:
         arc = float(np.pi * self.fold_radius())
         return max(4, int(round(arc / float(self.task_cfg.physical.fold_step_m))))
 
-    def grasp_yaw(self) -> float:
-        """Which way the gripper should face, radians about world Z.
+    def grasp_yaw(self) -> float | None:
+        """Which way the gripper should face, radians about world Z; None = arm's own.
 
-        Along the fold normal, i.e. the direction the held corner travels. Two
-        reasons, and they agree:
+        `grasp.finger_axis: across` (the default) points the tool along the fold
+        normal, i.e. the direction the held corner travels; `arm_default`
+        returns None and leaves the arm's orientation alone -- the fallback
+        when the wrist cannot hold the commanded angle (the four corners ask
+        for +-45 and +-135 degrees, and cloth_unroll measured a 180-degree
+        yaw reversal as 34-43 degrees of wrist tilt).
+
+        Along the fold normal, for two reasons that agree:
 
         - it is how a hand pinches a corner -- fingers across the corner,
           perpendicular to the pull, not at some unrelated angle to it;
@@ -224,13 +335,41 @@ class ClothFoldLayout:
           42 mm off its command with the gripper rolled flat onto the sheet.
         """
 
+        mode = str(self.task_cfg.grasp.finger_axis)
+        if mode == "arm_default":
+            return None
+        if mode != "across":
+            raise ValueError(
+                f"grasp.finger_axis must be 'across' or 'arm_default', got {mode!r}."
+            )
         normal = self.fold_normal()
         return float(np.arctan2(normal[1], normal[0]))
 
+    def checks(self) -> list[tuple[str, float, float, bool]]:
+        """``[(name, measured, limit, ok)]``: what a spawnable, solvable layout needs.
+
+        One list for the randomizer's reject step, the offline gate, the corner
+        harness and the demo's start-up print. Metres; task frame.
+        """
+
+        return cloth_fold_checks(self.task_cfg)
+
+    def validate(self) -> None:
+        """Refuse a layout that fails any check, instead of building it anyway."""
+
+        for name, measured, limit, ok in self.checks():
+            if not ok:
+                raise ValueError(
+                    f"cloth_fold layout check {name} failed: "
+                    f"measured {measured:+.4f} against {limit:+.4f}."
+                )
+
     def summary(self) -> str:
         grasp, target = self.grasp_point(), self.fold_target()
+        yaw = self.grasp_yaw()
         return (
-            f"grasp_at={str(self.task_cfg.grasp.at)} "
+            f"grasp_at={str(self.task_cfg.grasp.at)} corner={self.corner} "
+            f"fold_fraction={self.fold_fraction():.2f} "
             f"grasp=({grasp[0]:+.3f},{grasp[1]:+.3f}) "
             f"target=({target[0]:+.3f},{target[1]:+.3f}) "
             f"fold_line=({self.fold_point()[0]:+.3f},{self.fold_point()[1]:+.3f}) "
@@ -239,7 +378,7 @@ class ClothFoldLayout:
             f"radius_mm={self.fold_radius() * 1e3:.1f} "
             f"arc_mm={np.pi * self.fold_radius() * 1e3:.0f} "
             f"steps={self.fold_steps()} "
-            f"grasp_yaw_deg={np.degrees(self.grasp_yaw()):+.1f} "
+            f"grasp_yaw_deg={'arm_default' if yaw is None else f'{np.degrees(yaw):+.1f}'} "
             f"step_mm={np.pi * self.fold_radius() / self.fold_steps() * 1e3:.2f}"
         )
 
@@ -334,8 +473,12 @@ class ClothFoldSceneBuilder:
         layout = ClothFoldLayout(
             self.task_cfg, np.asarray(tabletop.frames.task_origin, dtype=float)
         )
+        # Before anything is added: a layout that fails a feasibility row is a
+        # config error, not a run to spend a scene build on.
+        _assert_literal_copies(self.task_cfg)
+        layout.validate()
 
-        path = Path(str(cloth_cfg.mesh.output_dir)) / "cloth_fold_sheet.obj"
+        path = Path(str(cloth_cfg.mesh.output_dir)) / f"cloth_fold_sheet_{layout.mesh_diagonal()}.obj"
         vertices, _faces = cloth_sheet_mesh(
             list(cloth_cfg.size),
             layout.cloth_centre(),
@@ -343,6 +486,7 @@ class ClothFoldSceneBuilder:
             int(cloth_cfg.mesh.cols),
             int(cloth_cfg.mesh.rows),
             path,
+            diagonal=layout.mesh_diagonal(),
         )
         cloth = scene.add_entity(
             gs.morphs.Mesh(
@@ -388,6 +532,7 @@ class ClothFoldSceneBuilder:
         print(
             f"cloth_fold scene particles={len(cloth_particles(cloth_scene))} "
             f"{remesh_report(vertices, cloth_particles(cloth_scene))} "
+            f"mesh_diagonal={layout.mesh_diagonal()} "
             f"{layout.summary()}",
             flush=True,
         )
@@ -509,3 +654,47 @@ class ClothFoldSceneBuilder:
                 name="marker_fold_line",
             ),
         )
+
+
+def _assert_literal_copies(task_cfg) -> None:
+    """The yaml's literal copy of the workspace box must still match `common`.
+
+    `checks()` reads `workspace.x / y / z`, and the variation harness loads the
+    task yaml alone, where `${common...}` cannot resolve -- so the task yaml
+    carries literals, and the one place with both in hand asserts they agree.
+    """
+
+    root = task_cfg._get_root() if hasattr(task_cfg, "_get_root") else None
+    common = getattr(root, "common", None) if root is not None else None
+    if common is None:
+        return
+    ws = common.manipulation_space.workspace
+    for axis in ("x", "y", "z"):
+        want = [float(v) for v in ws[axis]]
+        got = [float(v) for v in task_cfg.workspace[axis]]
+        if want != got:
+            raise ValueError(
+                f"cloth_fold: workspace.{axis} {got} != manipulation_space.workspace.{axis} {want}"
+            )
+
+
+def derive_task_cfg(task_cfg) -> None:
+    """Derivation hook named by the task yaml's ``variation:`` block.
+
+    Runs after the axes are drawn and before ``validate_task_cfg``: the sheet's
+    x position from its unit fraction, in the window the drawn corner,
+    `center_y` and `goal.fold_fraction` leave under the reach disc. A
+    ``ValueError`` (empty window) rejects the draw.
+    """
+
+    task_cfg.cloth.center_x = center_x_from_frac(task_cfg, float(task_cfg.cloth.center_x_frac))
+
+
+def validate_task_cfg(task_cfg) -> None:
+    """Validation hook named by the task yaml's ``variation:`` block.
+
+    `layout_randomization.randomize_task_cfg` calls it after each draw; a
+    ``ValueError`` rejects the draw and the whole set of axes is resampled.
+    """
+
+    ClothFoldLayout(task_cfg).validate()

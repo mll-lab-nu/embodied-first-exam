@@ -13,6 +13,12 @@ That failure is pure geometry, so it belongs here rather than in a GPU sweep.
 The scene is stubbed: the planner only ever asks it for a rope radius, the braid
 x_end, the table height and a strand name.
 
+The shape sweep (part 3) runs once on the frozen layout and once per corner of
+the variation envelope's (``x_end``, ``channel_spacing``) box (2026-09-07): the
+cover move's lift grows with rope length and shrinks with lane pitch, and the
+envelope's ``x_end`` ceiling of 0.20 was set where the pessimistic one-bow
+shape still clears the 0.40 workspace ceiling (0.22 needs 0.419).
+
     python tests/check_swap_crossing_sign_planner.py
 
 Prints one line per case and exits non-zero if any expectation misses.
@@ -42,6 +48,16 @@ X_START = -0.225
 X_END = 0.200
 TABLE_Z = 0.0
 RADIUS = 0.004
+# The variation envelope's rope-length and lane-pitch axes (task yaml
+# `variation:` block); the shape sweep visits the four corners of this box. The
+# arc scales with the chord the way the frozen layout's does (0.4376 / 0.4334).
+ENVELOPE_X_END = (0.16, 0.20)
+ENVELOPE_SPACING = (0.072, 0.095)
+ARC_PER_CHORD = ROPE_ARC / 0.4334
+# `pinch.lane_overshoot`: how far past its own lane the separate move lays the
+# first rope (0.040 -> 0.130 on 2026-09-06, see the yaml). The cover move has
+# to reach past a plug that sits this far out.
+LANE_OVERSHOOT = 0.130
 # From the task config's `pinch:` block.
 KNOBS = dict(
     lift_clearance=0.040,
@@ -71,9 +87,10 @@ class _Cfg:
 @dataclass
 class _Layout:
     cfg: _Cfg
+    x_end: float = X_END
 
     def braid_layout(self):
-        return _Braid()
+        return _Braid(x_end=self.x_end)
 
     def world_z(self, z):
         return TABLE_Z + float(z)
@@ -127,20 +144,50 @@ def _polyline(start_xy, end_xy, *, arc, lobes=1, samples=80):
     return np.column_stack([xy, z])
 
 
-def _after_separate(slack: float = ROPE_ARC / 0.4334, lobes: int = 2):
+def _after_separate(
+    slack: float = ARC_PER_CHORD,
+    lobes: int = 2,
+    *,
+    x_end: float = X_END,
+    lane: float = LANE,
+    rope_arc: float = ROPE_ARC,
+):
     """The state move 1 leaves behind, for seed 0's braid.
 
     Word (1,) puts strand 0 on top, so move 1 takes strand 0 off and lays it in
-    its own lane (-42.5 mm) overshot 40 mm further out, away from strand 1.
-    Strand 1 has not moved, so it is still in its braided shape.
+    its own lane (-42.5 mm) overshot `LANE_OVERSHOOT` further out, away from
+    strand 1. Strand 1 has not moved, so it is still in its braided shape.
     """
 
     covered = _polyline(
-        (X_START, -LANE), (X_END - 0.025, -LANE - 0.040), arc=ROPE_ARC, lobes=lobes
+        (X_START, -lane), (x_end - 0.025, -lane - LANE_OVERSHOOT), arc=rope_arc, lobes=lobes
     )
-    chord = float(np.linalg.norm(np.array([X_END - X_START, -2 * LANE])))
-    moved = _polyline((X_START, +LANE), (X_END, -LANE), arc=chord * slack, lobes=lobes)
+    chord = float(np.linalg.norm(np.array([x_end - X_START, -2 * lane])))
+    moved = _polyline((X_START, +lane), (x_end, -lane), arc=chord * slack, lobes=lobes)
     return {0: covered, 1: moved}
+
+
+@dataclass
+class _Corner:
+    """One (x_end, lane pitch) point of the envelope, with the stub scene built for it."""
+
+    x_end: float
+    spacing: float
+
+    @property
+    def lane(self) -> float:
+        return 0.5 * self.spacing
+
+    @property
+    def rope_arc(self) -> float:
+        chord = float(np.linalg.norm(np.array([self.x_end - X_START, self.spacing])))
+        return chord * ARC_PER_CHORD
+
+    def scene(self):
+        return _Scene(layout=_Layout(cfg=_Cfg(rope=_Rope()), x_end=self.x_end), free_end_connectors={})
+
+    def after_separate(self, slack: float, lobes: int):
+        return _after_separate(slack, lobes, x_end=self.x_end, lane=self.lane, rope_arc=self.rope_arc)
 
 
 def _crosses(polylines, anchor_xy, target_xy, covered_index):
@@ -221,46 +268,56 @@ def main() -> int:
     #    The ceiling is the arm's workspace, `common.manipulation_space.workspace.z`
     #    = [0.03, 0.40]. A plan asking for more than 0.40 is not a plan; the IK
     #    will refuse it at runtime and the move will be reported as failed.
-    print("    lobes  slack   crossing@  arc_below_hand  lift    carry_planar  place_gap")
-    lifts = []
-    for lobes in (1, 2, 3):
-        for slack in (1.0097, 1.05):
-            lines = _after_separate(slack, lobes=lobes)
-            planned = plan_cover_move(
-                scene, _State(0, True), lines, moved=1, covered=0, **KNOBS
-            )
-            if planned is None:
-                print(f"    {lobes:<6} {slack:<7.4f} NO CROSSING PREDICTED")
-                failures += 1
-                continue
-            command, _ = planned
-            anchor_xy = lines[1][0, :2]
-            lift = command.lift_z - TABLE_Z
-            lifts.append(lift)
-            carry_planar = float(
-                np.linalg.norm(np.asarray(command.carry[:2]) - anchor_xy)
-            )
-            fraction = 1.0 - command.crossing_arc / float(
-                np.linalg.norm(np.diff(lines[1], axis=0), axis=1).sum()
-            )
-            gap = float(np.linalg.norm(
-                lines[0][:, :2] - np.asarray(command.settle[:2])[None, :], axis=1
-            ).min())
-            if gap < KNOBS["place_clearance"] - 1e-9:
-                failures += 1
-            print(
-                f"    {lobes:<6} {slack:<7.4f} {fraction:<10.2f} "
-                f"{command.crossing_arc * 1000:<15.0f} {lift * 1000:<7.0f} "
-                f"{carry_planar * 1000:<13.0f} {gap * 1000:.0f}mm"
-            )
     ceiling = 0.40
-    worst = max(lifts) if lifts else float("inf")
-    ok = worst <= ceiling
-    failures += 0 if ok else 1
-    print(
-        f"[{'ok' if ok else 'FAIL'}] worst-case lift {worst * 1000:.0f}mm is within the "
-        f"{ceiling * 1000:.0f}mm workspace ceiling"
-    )
+    corners = [_Corner(X_END, 2 * LANE)] + [
+        _Corner(x_end, spacing) for x_end in ENVELOPE_X_END for spacing in ENVELOPE_SPACING
+    ]
+    for corner in corners:
+        print(
+            f"    x_end={corner.x_end:.3f} spacing={corner.spacing:.3f} "
+            f"rope_arc={corner.rope_arc * 1000:.0f}mm"
+        )
+        print("    lobes  slack   crossing@  arc_below_hand  lift    carry_planar  place_gap")
+        lifts = []
+        corner_scene = corner.scene()
+        for lobes in (1, 2, 3):
+            for slack in (1.0097, 1.05):
+                lines = corner.after_separate(slack, lobes)
+                planned = plan_cover_move(
+                    corner_scene, _State(0, True), lines, moved=1, covered=0, **KNOBS
+                )
+                if planned is None:
+                    print(f"    {lobes:<6} {slack:<7.4f} NO CROSSING PREDICTED")
+                    failures += 1
+                    continue
+                command, _ = planned
+                anchor_xy = lines[1][0, :2]
+                lift = command.lift_z - TABLE_Z
+                lifts.append(lift)
+                carry_planar = float(
+                    np.linalg.norm(np.asarray(command.carry[:2]) - anchor_xy)
+                )
+                fraction = 1.0 - command.crossing_arc / float(
+                    np.linalg.norm(np.diff(lines[1], axis=0), axis=1).sum()
+                )
+                gap = float(np.linalg.norm(
+                    lines[0][:, :2] - np.asarray(command.settle[:2])[None, :], axis=1
+                ).min())
+                if gap < KNOBS["place_clearance"] - 1e-9:
+                    failures += 1
+                print(
+                    f"    {lobes:<6} {slack:<7.4f} {fraction:<10.2f} "
+                    f"{command.crossing_arc * 1000:<15.0f} {lift * 1000:<7.0f} "
+                    f"{carry_planar * 1000:<13.0f} {gap * 1000:.0f}mm"
+                )
+        worst = max(lifts) if lifts else float("inf")
+        ok = worst <= ceiling
+        failures += 0 if ok else 1
+        print(
+            f"[{'ok' if ok else 'FAIL'}] x_end={corner.x_end:.3f} spacing={corner.spacing:.3f}: "
+            f"worst-case lift {worst * 1000:.0f}mm is within the "
+            f"{ceiling * 1000:.0f}mm workspace ceiling"
+        )
 
     # 4. The contrast pair differs by which rope goes back on top, and by nothing
     #    else. If both modes picked the same rope the baseline would be vacuous.

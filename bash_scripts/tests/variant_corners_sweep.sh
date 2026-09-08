@@ -14,7 +14,7 @@
 #   oracle   oracle 规则 → 每格必须 success=True，这是「oracle 覆盖包络边界」的直接证据
 #   visual   inspect demo 建场景不步进，录一帧 → 人眼看极端几何有无穿模
 #   对照     linkbar: nearest；diverter: fixed；gate: greedy fixed；band_untwist: wrong_end；
-#            unlink_c_ring: no_align；bar_through_hole: bypass。只记录，不计入退出码
+#            unlink_c_ring: no_align；bar_through_hole: bypass；swap_crossing_sign: restack_same。只记录，不计入退出码
 #
 # 用法：
 #   bash bash_scripts/tests/variant_corners_sweep.sh diverter_route_ball            # oracle 组
@@ -33,6 +33,8 @@
 #   bar_through_hole 64 格（纯刚体）全跑；rope_unwinding 1536 格、每格 8–18 min（FEM 绳），只跑 CORNERS= 子集；
 #   ring_transfer 256 格、每格 5–10 min（FEM 闭合环），只跑 CORNERS= 子集；
 #   cloth_unpleat 192 格、每格分钟级（PBD 布），只跑 CORNERS= 子集。
+#   cloth_fold 96 格、每格预期 20–40 s（PBD 布，4225 粒子），全跑；对照 drag / fixed_corner。
+#   swap_crossing_sign 32 格、每格预计 8–10 min（FEM 绳两步），先跑 CORNERS= 子集；对照 restack_same。
 # ============================================================================
 set -uo pipefail
 
@@ -71,6 +73,15 @@ case "$TASK" in
     ORACLE_ARG=run.oracle_mode=oracle
     CONTROLS=(wrong_end); CONTROL_ARGS=(run.oracle_mode=wrong_end)
     RESULT_KEY="band_untwist_result"; SUCCESS_TOKEN="terminal=True" ;;
+  swap_crossing_sign)
+    # FEM 绳、两步（separate + cover）：每格预计 8–10 min。32 个角点先用 CORNERS= 选子集。
+    # 没有 inspect demo：visual 组就是带录像的 oracle 格（两步走完，视频即证据）。
+    # 对照 restack_same：第二步把同一根放回去，预期 terminal=False（sign_flipped=False）。
+    PHYS=demos.entangle.swap_crossing_sign_physical_pinch_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.oracle_mode=oracle run.viewer=false)
+    ORACLE_ARG=run.oracle_mode=oracle
+    CONTROLS=(restack_same); CONTROL_ARGS=(run.oracle_mode=restack_same)
+    RESULT_KEY="swap_crossing_sign_result"; SUCCESS_TOKEN="terminal=True" ;;
   unlink_c_ring)
     # 纯刚体，32 格，每格秒级到 1–2 min，全跑。
     PHYS=demos.entangle.unlink_c_ring_physical_extract_demo
@@ -110,6 +121,28 @@ case "$TASK" in
     ORACLE_ARG=run.motion=unfold
     CONTROLS=(shove); CONTROL_ARGS=(run.motion=shove)
     RESULT_KEY="cloth_unpleat result"; SUCCESS_TOKEN="unpleated=True" ;;
+  cloth_unroll)
+    # PBD 布：cloth_unpleat 实测一格 19–29 s，本任务行程长一倍，预期半分钟级。96 个角点可以全跑。
+    # 没有 inspect demo：visual 组就是带录像的 oracle 格（unroll 走完，视频即证据）。
+    # 对照 shove：朝横梁推、走满可用余量，预期 unrolled=False；对照 overpull：多拉 1.6 倍，
+    # 预期尾端被扯断（torn=True）判失败。
+    PHYS=demos.deformation.cloth_unroll_physical_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.motion=unroll run.viewer=false)
+    ORACLE_ARG=run.motion=unroll
+    CONTROLS=(shove overpull); CONTROL_ARGS=(run.motion=shove run.motion=overpull)
+    RESULT_KEY="cloth_unroll result"; SUCCESS_TOKEN="unrolled=True" ;;
+  cloth_fold)
+    # PBD 布：cloth_unpleat 实测一格 14–29 s，本任务粒子 4225（两倍）、步数相近，预期 20–40 s。96 个角点可以全跑。
+    # 没有 inspect demo：visual 组就是带录像的 oracle 格（fold 走完，视频即证据）。
+    # 对照 drag：同一条弧线贴桌面拖、不抬，预期 folded=False；对照 fixed_corner：无视指令永远折 far_left，
+    # 预期只有 corner=far_left 的格 folded=True（96 格里 24 格）；对照 fixed_fold：无视指令的折痕位置永远
+    # 角对角折，预期只有 fold_fraction=1.0 的格 folded=True（96 格里 32 格）。
+    PHYS=demos.deformation.cloth_fold_physical_demo
+    INSPECT=$PHYS; INSPECT_ARGS=(run.motion=fold run.viewer=false)
+    ORACLE_ARG=run.motion=fold
+    CONTROLS=(drag fixed_corner fixed_fold)
+    CONTROL_ARGS=(run.motion=drag run.motion=fixed_corner run.motion=fixed_fold)
+    RESULT_KEY="cloth_fold result"; SUCCESS_TOKEN="folded=True" ;;
   rope_winding)
     # FEM 绳：一格 10–40 min（随 turns）。1536 个角点不要全跑，用 CORNERS= 选子集。
     # 没有 inspect demo：visual 组走 physical demo 只抓起插头（max_waypoints=1）。
@@ -119,7 +152,7 @@ case "$TASK" in
     CONTROLS=(wrong_way); CONTROL_ARGS=(task.winding.orbit_direction=opposite)
     RESULT_KEY="rope_winding_physical_handle_demo result"; SUCCESS_TOKEN="task_success=True" ;;
   *)
-    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball|band_untwist|unlink_c_ring|bar_through_hole|rope_unwinding|ring_transfer|rope_winding|cloth_unpleat> [oracle visual 对照组...]" >&2
+    echo "用法：$0 <linkbar_rotate_to_zone|diverter_route_ball|gate_cage_ball|band_untwist|swap_crossing_sign|unlink_c_ring|bar_through_hole|rope_unwinding|ring_transfer|rope_winding|cloth_unpleat|cloth_unroll|cloth_fold> [oracle visual 对照组...]" >&2
     exit 1 ;;
 esac
 
@@ -266,13 +299,19 @@ done
 echo
 echo "==================== 汇总 ===================="
 csv="$OUTDIR/summary.csv"
+# CSV 字段按 RFC 4180 加引号。**必须加**：`name` 是逗号分隔的轴取值串
+# （grasp.corner=far_left,goal.fold_fraction=1.0,…），不加引号时表头 7 列、数据行 11 列，
+# 任何按列解析的读者拿到的都是错位的值（2026-09-08 实测：cloth_fold 的 fixed_fold 列
+# 按列读是 30/96，按每格日志重数是 32/96）。verdict 也可能含逗号——判定器的
+# `gates=` 在多条门同时挂时是逗号连接的。
+csv_field() { printf '"%s"' "${1//\"/\"\"}"; }
 {
   printf 'id,name,margins'
   for group in "${SELECTED[@]}"; do printf ',%s' "$group"; done
   printf '\n'
   for id in "${IDS[@]}"; do
-    printf '%s,%s,%s' "$id" "${NAME[$id]}" "${MARGINS[$id]}"
-    for group in "${SELECTED[@]}"; do printf ',%s' "${VERDICT[${group}_${id}]:-}"; done
+    printf '%s,%s,%s' "$id" "$(csv_field "${NAME[$id]}")" "$(csv_field "${MARGINS[$id]}")"
+    for group in "${SELECTED[@]}"; do printf ',%s' "$(csv_field "${VERDICT[${group}_${id}]:-}")"; done
     printf '\n'
   done
 } > "$csv"

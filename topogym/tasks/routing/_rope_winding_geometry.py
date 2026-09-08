@@ -34,6 +34,7 @@ from ._winding_post_geometry import (
     oracle_view,
     plug_spawn_task_xy,
     post_top_task_z,
+    target_x_windows,
     task_xy,
     workspace_margin,
 )
@@ -94,6 +95,169 @@ def sweep_from_slack(layout, slack: float | None = None) -> float:
         else:
             hi = mid
     return float(0.5 * (lo + hi))
+
+
+def _with_target(layout, x: float | None = None, y: float | None = None):
+    """A copy of the layout with C moved (task-frame x / y) and a straight run to C."""
+
+    import copy
+
+    cfg = copy.deepcopy(layout.cfg)
+    try:
+        from omegaconf import OmegaConf
+
+        if OmegaConf.is_config(cfg):
+            OmegaConf.set_readonly(cfg, False)
+    except ImportError:
+        pass
+    if x is not None:
+        cfg.fixtures.C.x = float(x)
+    if y is not None:
+        cfg.fixtures.C.y = float(y)
+    cfg.winding.to_c_route = "straight"
+    view = copy.copy(layout)
+    object.__setattr__(view, "cfg", cfg)
+    return view
+
+
+def _short_arc_contains(start: float, end: float, bearing: float) -> bool:
+    """Does the short arc from ``start`` to ``end`` (radians) pass through ``bearing``?"""
+
+    span = math.atan2(math.sin(end - start), math.cos(end - start))
+    offset = math.atan2(math.sin(bearing - start), math.cos(bearing - start))
+    if span >= 0.0:
+        return 0.0 <= offset <= span
+    return span <= offset <= 0.0
+
+
+def exit_and_opposite_bearings(layout) -> tuple[float, float]:
+    """Bearings about the post (radians) of the wrap's tangential exit point and
+    of the ray opposite the anchor -- the two that decide whether a straight
+    run to C changes the count. Neither depends on where C is."""
+
+    view = _with_target(layout)
+    spec = WindingSpec.from_config(view.cfg)
+    _, plan = plan_rope_winding_route(view)
+    center = task_xy(view, view.fixture_pos(spec.post))
+    anchor = task_xy(view, view.fixture_pos("S"))
+    exit_point = next(task_xy(view, wp.position) for wp in plan.waypoints if wp.label == "wind_exit")
+    exit_bearing = math.atan2(exit_point[1] - center[1], exit_point[0] - center[0])
+    opposite = math.atan2(anchor[1] - center[1], anchor[0] - center[0]) + math.pi
+    return exit_bearing, opposite
+
+
+def straight_run_clear(layout, target_xy, exit_bearing: float, opposite: float) -> bool:
+    """Does the straight run from the wrap's exit to ``target_xy`` stay clear of the
+    ray opposite the anchor? Seen from the post the segment sweeps the short arc
+    between the two bearings, so it crosses the ray exactly when that arc holds it."""
+
+    center = task_xy(layout, layout.fixture_pos(str(layout.cfg.winding.post)))
+    bearing = math.atan2(float(target_xy[1]) - center[1], float(target_xy[0]) - center[0])
+    return not _short_arc_contains(exit_bearing, bearing, opposite)
+
+
+# Resolution of the scans that find where C may sit.
+TARGET_STEP = 0.002
+
+
+def _x_windows_at(layout, y: float, exit_bearing: float, opposite: float) -> list[tuple[float, float]]:
+    """x intervals at height ``y`` where C keeps clear of the plug spawn AND the
+    straight run to it stays clear of the ray opposite the anchor."""
+
+    view = _with_target(layout, y=y)
+    windows = []
+    for lo, hi in target_x_windows(view):
+        xs = np.arange(lo, hi + 1e-9, TARGET_STEP)
+        if xs[-1] < hi - 1e-9:
+            xs = np.append(xs, hi)
+        start, prev = None, None
+        for x in xs:
+            ok = straight_run_clear(view, (x, y), exit_bearing, opposite)
+            if ok and start is None:
+                start = float(x)
+            elif not ok and start is not None:
+                windows.append((start, float(prev)))
+                start = None
+            prev = x
+        if start is not None:
+            windows.append((start, float(xs[-1])))
+    return [(a, b) for a, b in windows if b > a]
+
+
+def target_y_windows(layout) -> list[tuple[float, float]]:
+    """Where C's y may fall: the yaml's `y_range`, keeping only the heights at
+    which some x in `x_range` both clears the plug spawn and keeps the straight
+    run clear of the ray opposite the anchor.
+
+    The count the verdict reads moves whenever the free end crosses that ray,
+    and the run to C is part of the path. rope_unwinding fixes a wrong straight
+    run by going round the far side of the post; on a WOUND rope that detour
+    drags the wraps backwards most of a turn with the arm folded at its own
+    base (corner c1052, 2026-09-05: the plug was pulled out of the hand). So
+    rope_winding places C where the straight run already counts right. The
+    ray is a bearing about the post, so which heights work depends on the
+    anchor and the post together -- hence y is derived too, before x.
+    """
+
+    lo, hi = (float(v) for v in layout.cfg.fixtures.C.y_range)
+    exit_bearing, opposite = exit_and_opposite_bearings(layout)
+    ys = np.arange(lo, hi + 1e-9, TARGET_STEP)
+    if ys[-1] < hi - 1e-9:
+        ys = np.append(ys, hi)
+    windows, start, prev = [], None, None
+    for y in ys:
+        ok = bool(_x_windows_at(layout, float(y), exit_bearing, opposite))
+        if ok and start is None:
+            start = float(y)
+        elif not ok and start is not None:
+            windows.append((start, float(prev)))
+            start = None
+        prev = y
+    if start is not None:
+        windows.append((start, float(ys[-1])))
+    return [(a, b) for a, b in windows if b > a]
+
+
+def target_x_windows_straight(layout) -> list[tuple[float, float]]:
+    """x intervals for C at its current y (see `target_y_windows`)."""
+
+    exit_bearing, opposite = exit_and_opposite_bearings(layout)
+    return _x_windows_at(layout, float(layout.cfg.fixtures.C.y), exit_bearing, opposite)
+
+
+def _from_frac(windows, frac: float) -> float:
+    total = sum(b - a for a, b in windows)
+    run = float(frac) * total
+    for a, b in windows:
+        if run <= b - a:
+            return float(a + run)
+        run -= b - a
+    return float(windows[-1][1])
+
+
+def target_y_from_frac(layout, frac: float) -> float:
+    windows = target_y_windows(layout)
+    if not windows:
+        plug = plug_spawn_task_xy(layout)
+        raise ValueError(
+            f"target window is empty: with the plug spawning at ({plug[0]:+.3f}, {plug[1]:+.3f}) no "
+            f"(x, y) in the C box keeps clear of it and lets the straight run to C close on the target winding."
+        )
+    return _from_frac(windows, frac)
+
+
+def target_x_from_frac(layout, frac: float) -> float:
+    """Map a unit fraction onto `target_x_windows_straight`, by length."""
+
+    windows = target_x_windows_straight(layout)
+    if not windows:
+        plug = plug_spawn_task_xy(layout)
+        raise ValueError(
+            f"target x window is empty at C.y={float(layout.cfg.fixtures.C.y):+.3f}: with the plug spawning "
+            f"at x={plug[0]:+.3f} no x in {[float(v) for v in layout.cfg.fixtures.C.x_range]} keeps clear "
+            "of it and lets the straight run to C close on the target winding."
+        )
+    return _from_frac(windows, frac)
 
 
 def rope_winding_checks(layout) -> list[tuple[str, float, float, bool]]:
@@ -159,6 +323,8 @@ def rope_winding_checks(layout) -> list[tuple[str, float, float, bool]]:
             abs(spawn_reading + delta - spec.target_winding) < 1e-6,
         )
     )
+    detours = float(sum(1 for l in labels if l == "to_C_around"))
+    rows.append(("run_to_c_is_straight", detours, 0.0, detours == 0.0))
     reach = hand_reach(layout, plan.waypoints)
     max_reach = float(cfg.reach.max_hand_dist)
     rows.append(("hand_reach", reach, max_reach, reach <= max_reach + 1e-9))
@@ -172,9 +338,16 @@ def rope_winding_checks(layout) -> list[tuple[str, float, float, bool]]:
 __all__ = [
     "ARC_POST_CLEARANCE",
     "SWEEP_RANGE_DEG",
+    "TARGET_STEP",
     "WRAP_GAP_MIN",
     "arc_length",
     "rope_winding_checks",
     "spawn_arc_chord",
     "sweep_from_slack",
+    "exit_and_opposite_bearings",
+    "straight_run_clear",
+    "target_x_from_frac",
+    "target_x_windows_straight",
+    "target_y_from_frac",
+    "target_y_windows",
 ]

@@ -171,6 +171,9 @@ done
 echo
 echo "==================== 汇总 ===================="
 csv="$OUTDIR/summary.csv"
+# CSV 字段按 RFC 4180 加引号。判定器的 `gates=` 在多条门同时挂时是逗号连接的，
+# 不加引号会让那一行多出几列、按列解析的读者读到错位的值（2026-09-08）。
+csv_field() { printf '"%s"' "${1//\"/\"\"}"; }
 echo "seed,turns,direction,sweep_deg,post_x,post_y,s_x,s_y,c_x,c_y,climb,wind_z_start,plug_x,plug_y,slack,detour,waypoints,winding,placement_xy,contact_nodes,visual,oracle,wrong_way" > "$csv"
 n_wrong=0; n_wrong_failed=0
 for seed in $SEEDS; do
@@ -181,7 +184,7 @@ for seed in $SEEDS; do
     "$(f climb)" "$(f wind_z_start)" "$(f plug_x)" "$(f plug_y)" "$(f slack)" "$(f detour)" "$(f waypoints)" \
     "${WINDING[$seed]:--}" "${PLACE[$seed]:--}" "${CONTACT[$seed]:--}" \
     "${VISUAL[$seed]:--}" "${ORACLE[$seed]:--}" "${WRONG[$seed]:--}"
-  echo "$seed,$(f turns),$(f direction),$(f sweep_deg),$(f post_x),$(f post_y),$(f s_x),$(f s_y),$(f c_x),$(f c_y),$(f climb),$(f wind_z_start),$(f plug_x),$(f plug_y),$(f slack),$(f detour),$(f waypoints),${WINDING[$seed]:-},${PLACE[$seed]:-},${CONTACT[$seed]:-},${VISUAL[$seed]:-},${ORACLE[$seed]:-},${WRONG[$seed]:-}" >> "$csv"
+  echo "$seed,$(f turns),$(f direction),$(f sweep_deg),$(f post_x),$(f post_y),$(f s_x),$(f s_y),$(f c_x),$(f c_y),$(f climb),$(f wind_z_start),$(f plug_x),$(f plug_y),$(f slack),$(f detour),$(f waypoints),${WINDING[$seed]:-},${PLACE[$seed]:-},${CONTACT[$seed]:-},$(csv_field "${VISUAL[$seed]:-}"),$(csv_field "${ORACLE[$seed]:-}"),$(csv_field "${WRONG[$seed]:-}")" >> "$csv"
   if [[ -n "${WRONG[$seed]:-}" ]]; then
     n_wrong=$((n_wrong + 1)); [[ "${WRONG[$seed]}" == failed* ]] && n_wrong_failed=$((n_wrong_failed + 1))
   fi

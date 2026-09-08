@@ -27,8 +27,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ._rope_winding_geometry import rope_winding_checks, sweep_from_slack
-from ._winding_post_geometry import target_x_from_frac, wind_z_from_frac
+from ._rope_winding_geometry import (
+    rope_winding_checks,
+    sweep_from_slack,
+    target_x_from_frac,
+    target_y_from_frac,
+)
+from ._winding_post_geometry import wind_z_from_frac
 from .cable_routing import (
     CableRoutingLayout,
     CableRoutingScene,
@@ -113,15 +118,16 @@ def derive_task_cfg(task_cfg) -> None:
 
     Runs after the axes are drawn and before ``validate_task_cfg``. Order
     matters: the lowest wrap's height (needs the drawn turn count and climb),
-    then the target's x (needs the plug's spawn point, a rule of the post and
-    the anchor), then the spawn arc's sweep (needs the target: the rope is
-    tightest with the plug held over C). A ``ValueError`` (empty window)
-    rejects the draw.
+    then the target's y and x (need the plug's spawn point and the wrap's
+    exit: C goes where the plug keeps clear of it and the straight run to it
+    closes on the target winding), then the spawn arc's sweep (needs the target: the
+    rope is tightest with the plug held over C). A ``ValueError`` (empty
+    window) rejects the draw.
     """
 
     task_cfg.winding.wind_z_start = wind_z_from_frac(task_cfg, float(task_cfg.winding.wind_z_frac))
-    layout = RopeWindingLayout(task_cfg)
-    task_cfg.fixtures.C.x = target_x_from_frac(layout, float(task_cfg.fixtures.C.x_frac))
+    task_cfg.fixtures.C.y = target_y_from_frac(RopeWindingLayout(task_cfg), float(task_cfg.fixtures.C.y_frac))
+    task_cfg.fixtures.C.x = target_x_from_frac(RopeWindingLayout(task_cfg), float(task_cfg.fixtures.C.x_frac))
     task_cfg.rope.spawn_arc.sweep_deg = sweep_from_slack(RopeWindingLayout(task_cfg))
 
 

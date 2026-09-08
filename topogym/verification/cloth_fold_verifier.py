@@ -11,7 +11,11 @@ so the number can be read against published ones. Scored as a mean AND as the
 fraction of particles further than a tolerance, because a mean hides a lump: a
 sheet 95% perfect with a twentieth of it 60 mm out of place averages 2.6 mm.
 
-**How much of the covered area carries exactly two layers.** Kept alongside for
+**How much of the area that SHOULD carry two layers does.** Normalised by the
+region the moving half's targets land in, not by the whole covered area: a bare
+ratio assumes a corner-to-corner fold, whose geometric ceiling is 0.998, while a
+fold stopped three quarters of the way can only reach 0.385 and one stopped
+halfway 0.143 (measured on the 33x33 rest grid, 2026-09-07). Kept alongside for
 two reasons. The category contract (C1, `task_taxonomy_zh.md` 4.1) requires a
 structural measure beside a morphological one and forbids deciding on a single
 position threshold. And it is the only reading here that does not need particle
@@ -56,19 +60,25 @@ def _xy(nodes) -> np.ndarray:
     return np.asarray(nodes, dtype=float)[:, :2]
 
 
-def occupied_cells(nodes, cell: float) -> set[tuple[int, int]]:
+def occupied_cells(nodes, cell: float, origin=(0.0, 0.0)) -> set[tuple[int, int]]:
     """The ``(x, y)`` cells the cloth covers, on the shared grid.
 
     Every area- and layer-based measure below bins onto this same grid, so they
-    stay comparable with each other and across runs.
+    stay comparable with each other and across runs. ``origin`` is where the
+    grid's corner sits: the world origin by default (cloth_fold, cloth_unroll),
+    or a point anchored to the cloth itself when the same reading has to be
+    taken on a cloth whose position varies (cloth_unpleat, see its evaluator).
     """
 
+    ox, oy = float(origin[0]), float(origin[1])
     return {
-        (int(np.floor(x / cell)), int(np.floor(y / cell))) for x, y in _xy(nodes)
+        (int(np.floor((x - ox) / cell)), int(np.floor((y - oy) / cell))) for x, y in _xy(nodes)
     }
 
 
-def fold_target_cells(rest_nodes, fold_point, fold_normal, cell: float) -> set:
+def fold_target_cells(
+    rest_nodes, fold_point, fold_normal, cell: float, origin=(0.0, 0.0)
+) -> set:
     """Where a finished fold should land: half the cloth's OWN rest outline.
 
     Cut from the rest footprint along the fold line rather than taken from an
@@ -83,20 +93,27 @@ def fold_target_cells(rest_nodes, fold_point, fold_normal, cell: float) -> set:
     along = (_xy(rest_nodes) - np.asarray(fold_point, dtype=float)) @ np.asarray(
         fold_normal, dtype=float
     )
-    return occupied_cells(np.asarray(rest_nodes, dtype=float)[along < 0.0], cell)
+    return occupied_cells(np.asarray(rest_nodes, dtype=float)[along < 0.0], cell, origin)
 
 
-def footprint_iou(nodes, target: set, cell: float) -> float:
-    """Shared cells over cells either one covers. 1.0 identical, 0 no overlap."""
+def footprint_iou(nodes, target: set, cell: float, origin=(0.0, 0.0)) -> float:
+    """Shared cells over cells either one covers. 1.0 identical, 0 no overlap.
+
+    ``origin`` must be the one ``target`` was binned with.
+    """
 
     if not target:
         return float("nan")
-    covered = occupied_cells(nodes, cell)
+    covered = occupied_cells(nodes, cell, origin)
     return len(covered & target) / len(covered | target)
 
 
-def layer_report(nodes, table_z: float, cell: float, particle_size: float) -> dict:
+def layer_report(
+    nodes, table_z: float, cell: float, particle_size: float, origin=(0.0, 0.0)
+) -> dict:
     """How many layers the sheet stacks into, binned into ``(x, y)`` cells.
+
+    ``origin`` places the grid's corner (see `occupied_cells`).
 
     In each cell the particles are sorted by height and split wherever the gap to
     the next one exceeds half a particle; the number of runs is the layer count.
@@ -116,29 +133,34 @@ def layer_report(nodes, table_z: float, cell: float, particle_size: float) -> di
     """
 
     nodes = np.asarray(nodes, dtype=float)
+    ox, oy = float(origin[0]), float(origin[1])
     buckets: dict[tuple[int, int], list[float]] = {}
     for index in range(len(nodes)):
         key = (
-            int(np.floor(nodes[index, 0] / cell)),
-            int(np.floor(nodes[index, 1] / cell)),
+            int(np.floor((nodes[index, 0] - ox) / cell)),
+            int(np.floor((nodes[index, 1] - oy) / cell)),
         )
         buckets.setdefault(key, []).append(float(nodes[index, 2]) - table_z)
 
-    two_layer, over_layer, gaps, most = 0, 0, [], 0
-    for heights in buckets.values():
+    two_layer_keys, over_layer, gaps, most = set(), 0, [], 0
+    for key, heights in buckets.items():
         ordered = np.sort(np.asarray(heights))
         breaks = np.diff(ordered) if len(ordered) > 1 else np.array([])
         wide = breaks[breaks > 0.5 * particle_size]
         count = len(wide) + 1
         most = max(most, count)
         if count == 2:
-            two_layer += 1
+            two_layer_keys.add(key)
             gaps.append(float(wide[0]))
         elif count > 2:
             over_layer += 1
     return {
         "covered_cells": len(buckets),
-        "two_layer_cells": two_layer,
+        "two_layer_cells": len(two_layer_keys),
+        # WHICH cells, so a caller can ask "of the cells that should be doubled,
+        # how many are" rather than only "how many are, anywhere". Additive: the
+        # counts above keep their meaning for cloth_unpleat / cloth_unroll.
+        "two_layer_cell_keys": two_layer_keys,
         # Cells stacked more than two deep: the direct reading of "bunched up"
         # rather than "folded". Diagnostic for now -- whether it deserves a gate
         # of its own is a question for the measured run, not for a guess.
@@ -395,7 +417,7 @@ class ClothFoldThresholds:
                          against published ones. Scored as mean AND a high
                          percentile -- see `particle_error` for why the mean
                          alone is not enough.
-    ``two_layer_frac``   how much of the covered area carries exactly two layers.
+    ``two_layer_frac``   how much of the region that should be doubled is.
                          Kept because the category contract requires a structural
                          measure alongside a morphological one and forbids
                          deciding on a single position threshold (task_taxonomy
@@ -626,7 +648,24 @@ class ClothFoldEvaluator:
             nodes, targets, rest_nodes, fold_point, fold_normal, 4.0 * self.particle_size
         )
         stretch = stretch_report(rest_nodes, nodes)
-        layers = layer_report(nodes, table_z, self.cell, self.particle_size)
+        # The grid is anchored on the resting sheet's own corner, not the world
+        # origin: the sheet's position is a variation axis, and a world-anchored
+        # 8 mm grid changes phase with it -- cloth_unpleat measured the same
+        # physical shape reading 24 versus 6 three-layer cells after a 7.5-cell
+        # shift (2026-09-05). Same rest cloud, same cells, wherever the sheet is.
+        origin = rest_nodes[:, :2].min(axis=0)
+        layers = layer_report(nodes, table_z, self.cell, self.particle_size, origin=origin)
+        # Where the fold is SUPPOSED to double the sheet: the cells the moving
+        # half's targets land in. A bare two_layer / covered ratio silently
+        # assumes a corner-to-corner fold -- its geometric ceiling is 0.998 at
+        # `fold_fraction` 1.0 but only 0.385 at 0.75 and 0.143 at 0.5, so any
+        # short fold would fail a constant gate for a reason that has nothing to
+        # do with how well it was folded. Normalising by the predicted region
+        # asks the same question at every fraction: of the area that should
+        # carry two layers, how much does.
+        doubled = occupied_cells(
+            targets[(_xy(rest_nodes) - fold_point) @ fold_normal > 0.0], self.cell, origin
+        )
         offset, straightness = crease_report(
             nodes, crease_indices(rest_nodes, fold_point, fold_normal), fold_point, fold_normal
         )
@@ -635,14 +674,15 @@ class ClothFoldEvaluator:
             particle_error_mean=err_mean,
             particle_off_target_frac=off_frac,
             two_layer_frac=(
-                layers["two_layer_cells"] / layers["covered_cells"]
-                if layers["covered_cells"]
+                len(layers["two_layer_cell_keys"] & doubled) / len(doubled)
+                if doubled
                 else float("nan")
             ),
             fold_iou=footprint_iou(
                 nodes,
-                fold_target_cells(rest_nodes, fold_point, fold_normal, self.cell),
+                fold_target_cells(rest_nodes, fold_point, fold_normal, self.cell, origin),
                 self.cell,
+                origin,
             ),
             crease_offset=offset,
             crease_straightness=straightness,
