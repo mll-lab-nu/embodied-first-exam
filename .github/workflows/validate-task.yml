@@ -1,0 +1,26 @@
+name: validate-task
+# Oracle must score 1 and the nop agent must score 0 for the given tasks. Pulls the ~20 GB base image,
+# so this runs on demand (workflow_dispatch) or on a self-hosted runner; not on every PR push yet.
+on:
+  workflow_dispatch:
+    inputs:
+      tasks: { description: "space-separated task dirs (default: all)", required: false, default: "" }
+jobs:
+  validate:
+    runs-on: [self-hosted, docker]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv tool install harbor
+      - name: oracle == 1
+        run: |
+          set -e; for t in ${{ inputs.tasks || 'tasks/*/' }}; do
+            harbor run -p "$t" -a oracle -o jobs/validate --job-name "oracle-$(basename $t)"
+            grep -qx 1 jobs/validate/oracle-$(basename $t)/*/verifier/reward.txt || { echo "oracle failed on $t"; exit 1; }
+          done
+      - name: nop == 0
+        run: |
+          set -e; for t in ${{ inputs.tasks || 'tasks/*/' }}; do
+            harbor run -p "$t" -a nop -o jobs/validate --job-name "nop-$(basename $t)"
+            grep -qx 0 jobs/validate/nop-$(basename $t)/*/verifier/reward.txt || { echo "nop passed on $t (verifier too weak)"; exit 1; }
+          done

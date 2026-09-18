@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+/exps/
+/jobs/
+*.log
+.env
+.env.*
+!.env.example
