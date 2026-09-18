@@ -14,9 +14,7 @@ simulator = "robosuite"
 robot = "franka-panda"
 family = "cube_stack"
 tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
-instance_seed = 0
-instance_sha256 = "4e36b819431900a194e9a2ee50fa5307c00504f364655c96570e6dc060062be3"    # sha256 of tests/instance.npz; CI checks it
-image = "robosuite"
+instance_seed = 0                 # scene = environment/instance.npz (frozen MuJoCo state); identity = dataset.toml digest
 expert_time_estimate_hours = 0.5
 
 [verifier]

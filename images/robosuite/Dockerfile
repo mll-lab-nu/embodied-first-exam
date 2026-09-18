@@ -1,5 +1,5 @@
-# rcb-robosuite: shared base image for all robosuite (MuJoCo / Franka) tasks.
-# Task Dockerfiles do `FROM ghcr.io/jameskrw/rcb-robosuite:<images/VERSION>` and only add instance.npz.
+# rcb-robosuite: cap-x robosuite (MuJoCo / Franka) environment. Infrastructure only — contains no benchmark
+# code; tasks `FROM` it and COPY their own tooling. Tag = images/VERSION.
 # Privileged/no-render mode needs no GPU at runtime; osmesa gives optional CPU offscreen rendering.
 # The CUDA *devel* base is only needed because cap-x's editable curobo source requires CUDA_HOME/nvcc
 # while uv resolves package metadata.
@@ -19,7 +19,4 @@ WORKDIR /opt/cap-x
 COPY third_party/cap-x /opt/cap-x
 RUN uv python install 3.10 && uv venv -p 3.10 && uv sync --extra robosuite && rm -rf /root/.cache/uv
 ENV PATH="/opt/cap-x/.venv/bin:${PATH}" MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa
-# rcb tooling (Session / grader) — importable as `rcb` for the agent and the verifier
-COPY rcb /opt/rcb/rcb
-ENV PYTHONPATH="/opt/rcb"
 WORKDIR /app

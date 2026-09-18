@@ -1,5 +1,5 @@
 """
-rcb.traj — frozen-instance / record / deterministic-replay utilities for cap-x robosuite envs.
+rcb_traj.py — task-local tooling: frozen-instance / record / deterministic-replay utilities for cap-x robosuite envs.
 
 Concepts
 --------
@@ -12,14 +12,14 @@ trajectory : the sequence of low-level robosuite actions (T, 9) = 7 joint target
 
 CLI
 ---
-  python -m rcb.traj make-instance --task cube_stack --out inst.npz [--seed 3]
-  python -m rcb.traj run-oracle    --task cube_stack --instance inst.npz --out traj.npz
-  python -m rcb.traj replay        --task cube_stack --instance inst.npz --traj traj.npz [--repeat 3]
-  python -m rcb.traj selftest      --task cube_stack --seed 3     # make-instance + oracle + replay, asserts equality
+  python rcb_traj.py make-instance --task cube_stack --out inst.npz [--seed 3]
+  python rcb_traj.py run-oracle    --task cube_stack --instance inst.npz --out traj.npz
+  python rcb_traj.py replay        --task cube_stack --instance inst.npz --traj traj.npz [--repeat 3]
+  python rcb_traj.py selftest      --task cube_stack --seed 3     # make-instance + oracle + replay, asserts equality
 
 Python (what the agent gets)
 ----------------------------
-  from rcb.traj import Session
+  from rcb_traj import Session
   s = Session("cube_stack", instance="inst.npz")   # starts pyroki IK server if needed
   s.reset()                                       # always back to the frozen instance state
   s.primitives()                                  # dict of privileged primitives (goto_pose, ...)
@@ -44,7 +44,17 @@ import numpy as np
 
 os.environ.setdefault("MUJOCO_GL", "egl")
 
-from rcb.adapters.capx_robosuite import TASKS  # task family registry
+# --------------------------------------------------------------------------- task family registry
+TASKS: dict[str, dict] = {
+    "cube_stack": dict(
+        exec_env="capx.envs.tasks.franka.franka_pick_place.FrankaPickPlaceCodeEnv",
+        low_level="franka_robosuite_cubes_low_level",
+        apis=["FrankaControlPrivilegedApi"],
+        text="Stack the red cube on top of the green cube with the Franka arm, then release it so it stays stacked.",
+        simulator="robosuite", robot="franka-panda", image="robosuite",
+    ),
+}
+
 
 PYROKI_PORT = int(os.environ.get("CAPX_PYROKI_PORT", "8116"))
 
