@@ -13,9 +13,10 @@ bit-exact; there is no learned judge. Simulation substrate: [cap-x](https://gith
 uv tool install harbor            # https://docs.harborframework.com
 export ANTHROPIC_API_KEY=…        # or OPENAI_API_KEY; see .env.example for subscription-login variants
 
-# straight from this repo (private repos use your git/SSH credentials)
-harbor run --repo JamesKrW/robot_coding_bench -a claude-code -m anthropic/claude-fable-5-1 -k 3
-harbor run --repo JamesKrW/robot_coding_bench -a codex       -m openai/gpt-6-astra          -k 3
+# straight from this repo (private: use the SSH URL so your git credentials apply; verified with -a oracle)
+harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git -a claude-code -m anthropic/claude-fable-5-1 -k 3
+harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git -a codex       -m openai/gpt-6-astra          -k 3
+# pin a release: --repo git@github.com:JamesKrW/robot_coding_bench.git@v0.1.0 ; subset: -i 'robosuite-cube-stack-*'
 # or a local checkout / a subset
 harbor run -p tasks -i 'robosuite-cube-stack-*' -a claude-code -m anthropic/claude-sonnet-5
 harbor view jobs
