@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance (cap-x robosuite)."
 keywords = [ "robotics", "manipulation", "code-as-policy", "robosuite", "harbor",]
 [[dataset.authors]]
-name = "Kangrui Wang"
+name = "MLL LAb"
 
 
 [[tasks]]
