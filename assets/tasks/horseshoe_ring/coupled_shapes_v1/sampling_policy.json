@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "scene_scale": 2,
+  "reference_parameters": {
+    "waist_mild": [
+      -0.5,
+      1.05,
+      18.0
+    ],
+    "waist_ellipse": [
+      -0.5,
+      1.15,
+      18.0
+    ],
+    "u_mild": [
+      0.5,
+      1.05,
+      18.0
+    ],
+    "deep_waist": [
+      -1.0,
+      1.05,
+      18.0
+    ],
+    "waist_ellipse_chain17p0": [
+      -0.5,
+      1.15,
+      17.0
+    ],
+    "waist_ellipse_chain17p5": [
+      -0.5,
+      1.15,
+      17.5
+    ],
+    "u_mild_chain17p0": [
+      0.5,
+      1.05,
+      17.0
+    ],
+    "u_mild_chain17p5": [
+      0.5,
+      1.05,
+      17.5
+    ],
+    "deep_waist_chain17p0": [
+      -1.0,
+      1.05,
+      17.0
+    ],
+    "deep_waist_chain17p5": [
+      -1.0,
+      1.05,
+      17.5
+    ]
+  },
+  "parameter_order": [
+    "shape",
+    "ellipse_aspect",
+    "chain_semimajor_mm"
+  ],
+  "proposal_limits": {
+    "shape": [
+      -1,
+      1
+    ],
+    "ellipse_aspect": [
+      1,
+      1.35
+    ],
+    "chain_semimajor_mm": [
+      16,
+      20
+    ]
+  },
+  "proposal_limits_are_solvability_guarantees": false,
+  "requested_reference_margin_mm": 0.1,
+  "requested_sample_margin_mm": 0.05,
+  "chain_links_per_span": 1,
+  "initial_phase_deg": 0,
+  "random_proposal_half_widths": [
+    0.08,
+    0.005,
+    0.45
+  ],
+  "acceptance": "All pairwise continuous clearances remain above requested margin after per-body perturbation bounds; initial topology and final full separation also pass",
+  "qualified_reference_directory": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references",
+  "documentation": "docs/develop/tasks/horseshoe_ring_coupled_shapes_zh.md"
+}

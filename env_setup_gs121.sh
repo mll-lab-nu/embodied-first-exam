@@ -6,7 +6,7 @@
 # the existing .venv or .venv-gs110. The main dependency pins live in:
 #   requirements/uv-topogym-gs121.txt
 #
-# Genesis 1.2.1 (released 2026-07-03) is the latest stable release. Relevant
+# Genesis 1.2.1 is the pinned project baseline. Relevant
 # breaking changes vs the 1.1.0 we currently ship:
 #   - 1.2.0: kinematic trees are parsed depth-first instead of breadth-first;
 #     review any code that relies on robot link/joint ordering.
@@ -19,18 +19,24 @@
 #   bash env_setup_gs121.sh
 #
 # Useful overrides:
-#   CUDA_TAG=cpu bash env_setup_gs121.sh
+#   INSTALL_NYX=0 CUDA_TAG=cpu bash env_setup_gs121.sh
 #   CUDA_TAG=cu124 VENV_DIR=.venv-gs121-cu124 bash env_setup_gs121.sh
 #   OPTIONAL_GROUPS="data dev viz" bash env_setup_gs121.sh
 #   RUN_TOPOGYM_SMOKE=1 bash env_setup_gs121.sh
 #   INSTALL_OPENPI=1 bash env_setup_gs121.sh
+#   INSTALL_NYX=0 bash env_setup_gs121.sh  # optional raster-only .venv-gs121
 # ============================================================================
 
 set -euo pipefail
 
 PYTHON_VER="${PYTHON_VER:-3.11}"
 CUDA_TAG="${CUDA_TAG:-cu126}"
-VENV_DIR="${VENV_DIR:-.venv-gs121}"
+INSTALL_NYX="${INSTALL_NYX:-1}"
+if [[ "$INSTALL_NYX" == "1" ]]; then
+    VENV_DIR="${VENV_DIR:-.venv-gs121-nyx}"
+else
+    VENV_DIR="${VENV_DIR:-.venv-gs121}"
+fi
 TORCH_VERSION="${TORCH_VERSION:-2.12.0}"
 TORCHVISION_VERSION="${TORCHVISION_VERSION:-0.27.0}"
 OPTIONAL_GROUPS="${OPTIONAL_GROUPS:-}"
@@ -44,6 +50,7 @@ INSTALL_OPENPI="${INSTALL_OPENPI:-0}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REQ_FILE="${REQ_FILE:-$SCRIPT_DIR/requirements/uv-topogym-gs121.txt}"
+NYX_REQ_FILE="$SCRIPT_DIR/requirements/uv-topogym-gs121-nyx.txt"
 TOPOGYM_CACHE_ROOT="${TOPOGYM_CACHE_ROOT:-$SCRIPT_DIR/.cache}"
 
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$TOPOGYM_CACHE_ROOT/uv-gs121}"
@@ -81,6 +88,11 @@ if [[ ! -f "$REQ_FILE" ]]; then
     exit 1
 fi
 
+if [[ "$INSTALL_NYX" == "1" && "$CUDA_TAG" == "cpu" ]]; then
+    echo "[gs121][ERROR] Nyx requires CUDA; use the CUDA PyTorch build." >&2
+    exit 1
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
     echo "[gs121] uv not found; installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -99,7 +111,7 @@ else
     echo "[gs121] venv exists; reusing $VENV_DIR"
 fi
 
-PY="$SCRIPT_DIR/$VENV_DIR/bin/python"
+PY="$VENV_DIR/bin/python"
 if [[ ! -x "$PY" ]]; then
     echo "[gs121][ERROR] venv python not executable: $PY" >&2
     exit 1
@@ -112,7 +124,13 @@ echo "[gs121] installing PyTorch first..."
     --index-url "$TORCH_INDEX_URL"
 
 echo "[gs121] installing Genesis/RL baseline..."
-"$UV_BIN" pip install --python "$PY" -r "$REQ_FILE"
+NYX_INSTALL_ARGS=()
+if [[ "$INSTALL_NYX" == "1" ]]; then
+    # Nyx 0.1.4 supports Genesis 1.2.x but requires numpy<2.4. Override only
+    # this Nyx environment; the raster-only gs121 requirements stay unchanged.
+    NYX_INSTALL_ARGS=(-r "$NYX_REQ_FILE" --overrides "$NYX_REQ_FILE")
+fi
+"$UV_BIN" pip install --python "$PY" -r "$REQ_FILE" "${NYX_INSTALL_ARGS[@]}"
 
 install_group() {
     local group="$1"
@@ -215,6 +233,20 @@ print(f"[ok] tensorboard {tensorboard.__version__}")
 PY
 fi
 
+if [[ "$INSTALL_NYX" == "1" && "$RUN_IMPORT_CHECKS" == "1" ]]; then
+    echo "[gs121] checking Nyx plugin and Genesis sensor API imports..."
+    "$PY" - <<'PY'
+from importlib.metadata import version
+from gs_nyx_plugin.nyx_camera_options import NyxCameraOptions
+
+for package in ("genesis-world", "gs-nyx-plugin", "gs-nyx", "numpy"):
+    print(f"[ok] {package}: {version(package)}")
+camera = NyxCameraOptions(res=(512, 512), spp=32)
+print(f"[ok] NyxCameraOptions, res={camera.res}, spp={camera.spp}")
+print("[note] Import success does not validate GPU rendering.")
+PY
+fi
+
 if [[ "$RUN_CPU_SMOKE" == "1" ]]; then
     echo "[gs121] running Genesis CPU smoke..."
     "$PY" -c "import genesis as gs; gs.init(backend=gs.cpu); print('[ok] Genesis CPU:', gs.__version__)"
@@ -257,7 +289,11 @@ if [[ "$RUN_TOPOGYM_SMOKE" == "1" ]]; then
 fi
 
 if [[ "$FREEZE_LOCK" == "1" ]]; then
-    LOCK_FILE="$SCRIPT_DIR/requirements/uv-topogym-gs121.lock.txt"
+    if [[ "$INSTALL_NYX" == "1" ]]; then
+        LOCK_FILE="$SCRIPT_DIR/requirements/uv-topogym-gs121-nyx.lock.txt"
+    else
+        LOCK_FILE="$SCRIPT_DIR/requirements/uv-topogym-gs121.lock.txt"
+    fi
     echo "[gs121] writing resolved lock snapshot: $LOCK_FILE"
     "$UV_BIN" pip freeze --python "$PY" > "$LOCK_FILE"
 fi
@@ -265,6 +301,11 @@ fi
 if [[ "$INSTALL_OPENPI" == "1" ]]; then
     echo "[gs121] installing OpenPI in its separate environment..."
     bash "$SCRIPT_DIR/env_setup_vla_openpi.sh"
+fi
+
+if [[ "$INSTALL_NYX" == "1" ]]; then
+    echo "[gs121] Nyx assets: $PY scripts/prepare_nyx_studio.py"
+    echo "[gs121] GPU render: $PY -m demos.environment_bootstrap.presentation_preview"
 fi
 
 cat <<EOF

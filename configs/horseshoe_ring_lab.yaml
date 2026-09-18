@@ -1,0 +1,35 @@
+defaults:
+  - horseshoe_ring_preview
+  - _self_
+
+task:
+  center_xy_m: [0.03, 0.28]
+
+env:
+  cameras:
+    overview:
+      pos: [0.14, -0.16, 1.33]
+      lookat: [0.03, 0.28, 0.965]
+    top:
+      pos: [0.03, 0.28, 1.58]
+      lookat: [0.03, 0.28, 0.965]
+    detail:
+      pos: [0.20, -0.06, 1.25]
+      lookat: [0.03, 0.28, 0.965]
+    video:
+      pos: [0.14, -0.16, 1.33]
+      lookat: [0.03, 0.28, 0.965]
+    room:
+      res: [1280, 800]
+      pos: [1.12, -1.25, 1.85]
+      lookat: [-0.17, 0.06, 1.12]
+      up: [0, 0, 1]
+      fov: 51
+      near: 0.01
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/horseshoe_ring/lab_initial
+  include_robot: true
+  video_room_fraction: 0.35
+  video_seconds: 8

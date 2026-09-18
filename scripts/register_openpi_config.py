@@ -33,7 +33,7 @@ Usage (from repo root):
     python scripts/register_openpi_config.py --openpi-dir .external/openpi \
         --config-name pi05_topogym_swap --repo-id topogym/swap_smoke
 
-Mirrors the documented block in docs/develop/il_adaptation/pi05_smoke_zh.md §3.
+Mirrors the documented block in legacy/docs/develop/il_adaptation/pi05_smoke_zh.md §3.
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ _MODEL = (
 )
 
 BLOCK_TEMPLATE = '''{begin_marker} by scripts/register_openpi_config.py) ===
-# 详见 docs/develop/il_adaptation/pi05_smoke_zh.md 第 3 节。
+# 详见 legacy/docs/develop/il_adaptation/pi05_smoke_zh.md 第 3 节。
 # LoRA/低显存版：只训适配器，冻结基座（否则全参微调 pi0.5 需 ~50GB，单卡 24GB OOM）。
 _CONFIGS.append(
     TrainConfig(

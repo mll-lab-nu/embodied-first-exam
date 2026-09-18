@@ -1,0 +1,26 @@
+# Shared default for both tabletop solvers and standalone fixture previews.
+renderer:
+  type: nyx
+  show_viewer: false
+  env_map: .external/nyx-assets/studio_small_09_2k.hdr
+  env_intensity: 1.0
+  spp: 32
+  denoise: true
+  lights:
+    # All lights sit below the compact_lab ceiling. Register once per scene.
+    - {type: point, pos: [-0.60, -0.45, 2.40], intensity: 3.0, color: [1.0, 0.98, 0.94], shadow: true}
+    - {type: point, pos: [-0.60, 0.45, 2.40], intensity: 1.0, color: [1.0, 0.98, 0.94], shadow: false}
+    - {type: point, pos: [0.60, -0.45, 2.40], intensity: 1.0, color: [0.96, 0.98, 1.0], shadow: false}
+    - {type: point, pos: [0.60, 0.45, 2.40], intensity: 1.0, color: [0.96, 0.98, 1.0], shadow: false}
+presentation:
+  background: compact_lab  # compact_lab | lab (historical two-wall room) | checker
+  # Common finishes stay separate from env.appearance (task-specific rules).
+  appearance:
+    - {pattern: table, color: [0.83, 0.84, 0.82], metallic: 0.0, roughness: 0.42}
+    - pattern: "table_frame*"
+      color: [1.0, 1.0, 1.0]
+      metallic: 0.0
+      roughness: 0.45
+      diffuse_map: .external/nyx-assets/wood_table_001_diff_1k.png
+      normal_map: .external/nyx-assets/wood_table_001_nor_gl_1k.png
+appearance: []

@@ -1,0 +1,88 @@
+# Current lock-picking task parameters.
+name: staged_lock
+variant: limited_two_retreats
+seed: 0
+geometry:
+  first_x: 0.2
+  center_y: 0.2
+  axis_z: 1.105
+  pitch: 0.085
+  disc_radius: 0.08
+  disc_thickness: 0.01
+  bore_radius: 0.0075
+  slot_radius: 0.045
+  slot_half_deg: 8.0
+  tab_radius: 0.036
+  tab_half_deg: 4.0
+  tab_thickness: 0.005
+  shaft_radius: 0.0065
+  grip_offset: 0.3
+  handle_radius: 0.018
+  slots:
+  - - -60
+    - -30
+    - 0
+  - - -60
+  - - 0
+  initial_disc_deg:
+  - 0
+  - 0
+  - 0
+  initial_key_deg: 0.0
+  endpoint_deg: 0.0
+physics:
+  disc_mass: 0.12
+  key_mass: 0.12
+  disc_damping: 0.03
+  friction: 0.01
+  max_penetration: 0.002
+  contact_timeconst: 0.0025
+  max_key_contact_force: 10.0
+  enable_joint_limit: true
+assist:
+  enabled: true
+  max_grasp_distance: 0.008
+  max_follow_error: 0.012
+initialization:
+  rest_enabled: true
+  spawn_clearance: 0.0001
+  settle_steps: 200
+  hold_steps: 100
+motion:
+  move_steps: 220
+  turn_steps: 240
+  grasp_qpos: 0.01
+  strategy: limited_reindex
+  grasp_roll_bias_deg: 45.0
+  measured_release_gate: true
+success:
+  depth_tolerance: 0.025
+  max_linear_speed: 0.01
+  max_angular_speed: 0.1
+  max_axis_offset: 0.01
+  max_axis_tilt_deg: 3.0
+  hold_steps: 100
+rotor_stops:
+- style: single_ring
+  bounds_deg:
+  - -15
+  - 15
+  ear_phase_deg: -35
+- style: single_ring
+  bounds_deg:
+  - -10
+  - 75
+  ear_phase_deg: -35
+- style: single_ring
+  bounds_deg:
+  - -180
+  - 180
+  ear_phase_deg: -35
+visual:
+  aperture_outline:
+    enabled: true
+    width_m: 0.0015
+    color_rgb:
+    - 1.0
+    - 0.95
+    - 0.0

@@ -1,0 +1,18 @@
+{
+  "anchored_centerlines.json": "d075ab90c4753aa4056934597427a5ab21904b0e474b0642158d40d0a462a0db",
+  "anchored_initial.glb": "194fc2d29b60fef238c88eb298b61acc5a35976f7cabeec4003fa2d8cab8c389",
+  "asset_report.json": "f7ec6832af76e3fd2b6c65436bf38568a8bbfef00cdda2cd97c63694a992764d",
+  "bundle.xml": "cab41aa5f100f4377c323b1d6c820b7a84111708993745183397f072b4f214bc",
+  "bundle_initial.glb": "f1adc04c60e6bc41ce48fe93c2617ba78c721ea8b04daa2d242c0d9551dda006",
+  "bundle_initial.obj": "b0c036fd865029657cd002ba874c5a3a0416f622f3cae50db7a2aeac9c2e5ebb",
+  "centerlines.json": "9672bbbe97bf9a0088b4a35eec0632549a5dfb8aaeff602d720ca99377c3ee81",
+  "cradle.glb": "d3fe83ea3574125843c838068f176ba1a0ecdbeabd5d43bc1a6f671fb17d6f5b",
+  "jacket_end_segment.obj": "af69eef82d3ceeb0cdec6421f3dd441dd9e0f0432bb9b510c9e26c4b2aaa2c27",
+  "jacket_lip.obj": "cf7b1713cccbd9170648e96fe1251b94151f01eb7df142b59599f9db77b010f4",
+  "jacket_segment.obj": "48474db451c9d50310c96aa70b6f1be1b819a0dcbbed2e4d6472e005b3eb58ba",
+  "material.mtl": "0d90fe7d688a6da0b82b0f8053231a1c8986de34aa839f8113ed53a610c09227",
+  "material_0.png": "2ce80bd45db36528485e1e58b7780b8636e9c7593eff6decc39d088ec2a7911a",
+  "ring.glb": "630384f45e483b12169943c42992022a3d00ebe148d98af71223b472c9901555",
+  "ring.obj": "85082d026bd7a4b65ba8c344a020ddee48d1a679b3e93e5dad0325927061d9f6",
+  "ring.urdf": "a716724c7296fd0dee2853340a0ef5d829864cce1b547cbbf3d57b9d296e0f1e"
+}

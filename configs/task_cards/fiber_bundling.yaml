@@ -1,0 +1,77 @@
+schema_version: 1
+task_id: fiber_bundling
+title_zh: 光纤收束
+baseline:
+  variant: anchored_terminal_v2
+  terminal_mode: fixed_world_root_permanently_connected_to_cable
+  slack_lead_length_m: 0.8301357681972314
+  initial_support: fixed_open_u_cradle_contact_only
+  wire_count: 8
+  wire_diameter_m: 0.0024
+  trunk_diameter_m: 0.024
+  trunk_length_m: 0.24
+  wire_length_m: 0.08
+  fan_angle_min_deg: 28
+  fan_angle_max_deg: 50
+  ring_inner_radius_m: 0.0135
+  ring_mode: fixed_closed_ring
+  endpoint_mode: fixed_terminal_tail_passive_slack_lead_front_branched_free_tips
+  initial_route_template: seeded_axial_exit_then_outward_curve
+  seed: 7
+axes:
+- path: wire_count
+  unit: count
+  status: geometry_candidate
+  config_path: task.geometry.fiber_count
+  candidate_range: [4, 16]
+  validated_range: null
+- path: ring_inner_radius_m
+  unit: m
+  status: geometry_candidate
+  config_path: task.geometry.ring_inner_radius_m
+  candidate_range: [0.0128, 0.0150]
+  validated_range: null
+variant_generation:
+  rules: configs/task_variants/fiber_bundling_density_v1.yaml
+  generator: topogym.tasks.fiber_bundling.variants
+  families: [sparse, standard, dense]
+  meaning: visible packing classes; neither certified difficulty nor distinct IK strategies
+  fixed_parameters: [wire_diameter_m, wire_length_m, trunk_diameter_m, fan_angle_min_deg, fan_angle_max_deg, seed]
+  ring_support: thin_copper_rod_v1
+  demo_collection: runs/environment-solvability/fiber_bundling/variant_demos_v1
+  standalone_videos: runs/demos/fiber_bundling
+  qualification: per-instance loading and paired full robot execution; recorded status in runs/environment-solvability/fiber_bundling/variant_demos_v1/status.json
+assets:
+- location: topogym/tasks/fiber_bundling/geometry.py
+  status: local_source
+- location: assets/tasks/fiber_bundling/anchored_v2/geometry/bundle.xml
+  status: local_source
+- location: assets/tasks/fiber_bundling/anchored_v2/geometry/ring.urdf
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid_articulated_capsule_rods
+  qualification: unqualified
+  profile_policy: passive ball joints; zero stiffness; viscous damping; whole cable gravity compensation 1; initial curvature is not a restoring target
+  grasp_model: working trunk links only; fixed attachment; no fiber actuators; contact-triggered assisted grasp; per-instance complete execution evidence
+  material_scope: qualitative persistent bending approximation; no elastic yield law or calibrated copper properties
+  full_path_timestep_convergence: per_instance_report_required; legacy complete demo did not pass strict whole-path convergence
+initialization:
+  description: fixed power terminal with permanent cable attachment and slack lead; working trunk on open cradle; fixed root offsets; seeded random
+    outward curvature after an axial sleeve exit; fan angles specify tip tangents only;
+    separate nonintersecting strands ahead of trunk; ring initially clear
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 1
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Wire intersections at reset
+- Root disks outside trunk end face
+- Polygonal ring aperture smaller than trunk radius
+- Direct grasp or actuation of a fine strand
+- Any native gripper contact with a fine strand (including housing and linkage); checked every physics substep and latched as episode failure
+- Moving the fixed terminal, ring, or cable attachment
+- Rear or middle loop entering the aperture before the branched front
+- Using a detached free-cable demo as evidence for this anchored variant
+success: No forbidden gripper contact during the episode; head-first entry through the aperture; all fine strands and at least 30 mm of the front jacket beyond the ring; trailing cable remains connected to the fixed terminal
+first_probe: Static cradle check and external force on the working trunk; check fixed attachment, root/length constraints and collision penetration

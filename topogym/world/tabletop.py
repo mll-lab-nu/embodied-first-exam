@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import genesis as gs
 import genesis.utils.geom as gu
 import numpy as np
 from omegaconf import OmegaConf
+from topogym.robot.assets import robot_asset
 
 from topogym.core import EntityManifest
 from topogym.world import lighting, materials
@@ -78,6 +79,7 @@ class TabletopBaseScene:
     cameras: dict[str, Any]
     frames: TabletopFrames
     robot_footprint: RobotFootprintCheck
+    presentation: dict = field(default_factory=dict)
 
 
 def tabletop_frames_from_config(env_cfg) -> TabletopFrames:
@@ -140,6 +142,7 @@ class StandardTabletopSceneBuilder:
         show_viewer: bool = False,
         include_robot: bool = True,
         robot_material=None,
+        robot_morph_options: dict | None = None,
         table_material=None,
         static_material=None,
         decoration_material=None,
@@ -168,9 +171,8 @@ class StandardTabletopSceneBuilder:
         renderer = self._select_renderer()
         if renderer is not None:
             scene_kwargs["renderer"] = renderer
-        # Caller wins: an explicit `scene_options["renderer"]` overrides the
-        # n_envs-driven choice, so a spike can pin a renderer without touching
-        # the env config.
+        # Explicit scene options can override Genesis' viewer/calibration
+        # renderer. Nyx RGB sensors are registered separately in finalize().
         if self.scene_options:
             scene_kwargs.update(self.scene_options)
         viewer_kwargs = {
@@ -284,9 +286,10 @@ class StandardTabletopSceneBuilder:
                 "robot",
                 scene.add_entity(
                     gs.morphs.MJCF(
-                        file=self.robot_cfg.robot.asset,
+                        file=robot_asset(self.robot_cfg),
                         pos=tuple(self.env_cfg.robot_mount.pos),
                         euler=tuple(self.env_cfg.robot_mount.euler),
+                        **(robot_morph_options or {}),
                     ),
                     name="robot",
                     **robot_kwargs,
@@ -408,6 +411,11 @@ class StandardTabletopSceneBuilder:
             )
 
     def finalize(self, base_scene: TabletopBaseScene) -> None:
+        from .presentation import prepare_presentation
+
+        base_scene.presentation = prepare_presentation(
+            base_scene.scene, base_scene.manifest, self.env_cfg, base_scene.cameras,
+        )
         base_scene.scene.build(n_envs=self.env_cfg.sim.n_envs)
         for camera in base_scene.cameras.values():
             if getattr(camera, "_attached_link", None) is not None:
@@ -453,27 +461,20 @@ class StandardTabletopSceneBuilder:
         return tabletop_frames_from_config(self.env_cfg)
 
     def _select_renderer(self):
-        """Batch renderer when `sim.n_envs > 0`, Genesis' default otherwise.
-
-        The whole switch is `env.sim.n_envs`. At 0 this returns None and Genesis
-        applies its own default (`Rasterizer`, engine/scene.py:130), so the
-        single-environment path -- every demo, every recording, the viewer -- is
-        bit-for-bit what it was.
-
-        Above 0 the Madrona batch renderer is selected, which draws all
-        environments in one call. That is the right lever here rather than a
-        guess: `tests/render_bench.py` measured frame cost as roughly flat in
-        resolution (1.75 ms fixed + 0.65-1.0 ms per megapixel on a 4090), so a
-        frame is dominated by per-frame setup, and per-frame setup is exactly what
-        batching amortizes across environments.
-
-        Its preconditions are checked HERE rather than left to fail deep inside
-        Genesis, because two of them are things a caller can act on and the
-        engine's own messages arrive after the scene is half-built.
-        """
-
+        """Honor the renderer choice; Nyx sensors are registered at finalize()."""
+        kind = str(getattr(getattr(self.env_cfg, "renderer", None), "type", "auto"))
         n_envs = int(getattr(self.env_cfg.sim, "n_envs", 0) or 0)
-        if n_envs <= 0:
+        if kind not in {"nyx", "rasterizer", "batch", "auto"}:
+            raise ValueError(f"Unknown env.renderer.type={kind!r}; use nyx, rasterizer, batch or auto.")
+        if kind == "nyx":
+            if n_envs != 0:
+                raise ValueError("Shared Nyx cameras require env.sim.n_envs=0; "
+                                 "use env.renderer.type=batch for batched RGB.")
+            if self.env_cfg.get("cameras") and gs.backend != gs.cuda:
+                raise ValueError("Nyx requires env.genesis.backend=cuda and .venv-gs121-nyx; "
+                                 "use env.renderer.type=rasterizer for CPU rendering.")
+            return None  # Viewer/calibration cameras still use Genesis' rasterizer.
+        if kind == "rasterizer" or (kind == "auto" and n_envs <= 0):
             return None
 
         if gs.backend != gs.cuda:
@@ -517,12 +518,19 @@ class StandardTabletopSceneBuilder:
         # migration doc).
         expected = {
             "topogym_tabletop_v1": {"version": "1.3", "substeps": 4},
+            # Same geometry, four times the substeps. cloth_unpleat's cross
+            # layout switches to it (see `cloth_unpleat.apply_layout_solver`):
+            # its nine-layer crossing loses its layer order during the settle at
+            # 4 substeps, whatever the particle size. Declared here rather than
+            # unlocking the preset, so the lock still checks the table geometry.
+            "topogym_tabletop_v1_fine": {"version": "1.3", "substeps": 16},
             # 1.0 ran substeps=1 (the stock IPC coupler's design point); the
             # rigid solver's 10ms substeps let the free-end plugs walk ~21mm
             # per settle. 1.1 returns to substeps=4, with the substep-aware IPC
             # dt patch in genesis_ipc_vertex_constraints keeping IPC on the
             # same clock.
             "topogym_tabletop_fem_v1": {"version": "1.1", "substeps": 4},
+            "topogym_tabletop_aloha_v1": {"version": "1.0", "substeps": 4},
         }.get(preset_id)
         if expected is None:
             raise ValueError(f"Unknown locked tabletop preset {preset_id!r}.")
@@ -531,6 +539,12 @@ class StandardTabletopSceneBuilder:
                 f"Locked {preset_id} requires preset.version={expected['version']}."
             )
         self._expected_substeps = int(expected["substeps"])
+        aloha = preset_id == "topogym_tabletop_aloha_v1"
+        if aloha != (str(self.robot_cfg.robot.name) == "aloha"):
+            raise ValueError("ALOHA requires the paired world_tabletop_aloha_v1 and "
+                             "aloha_position_ik presets; single-arm mounts are incompatible.")
+        if aloha:
+            self._require_close(self.env_cfg.robot_mount.euler, (0, 0, 0), "robot_mount.euler")
 
         self._require_close(
             self.env_cfg.world.table.pos,
@@ -554,17 +568,17 @@ class StandardTabletopSceneBuilder:
         )
         self._require_close(
             self.env_cfg.robot_mount.pos,
-            _V1_ROBOT_MOUNT,
+            (-0.1356786, 0.0, 0.9196429) if aloha else _V1_ROBOT_MOUNT,
             "robot_mount.pos",
         )
         self._require_close(
             self.env_cfg.robot_mount.footprint_min,
-            _V1_FOOTPRINT_MIN,
+            (-0.667, -0.122) if aloha else _V1_FOOTPRINT_MIN,
             "robot_mount.footprint_min",
         )
         self._require_close(
             self.env_cfg.robot_mount.footprint_max,
-            _V1_FOOTPRINT_MAX,
+            (0.667, 0.084) if aloha else _V1_FOOTPRINT_MAX,
             "robot_mount.footprint_max",
         )
         if str(getattr(self.env_cfg.robot_mount, "mobility", "")) != "fixed":

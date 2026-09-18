@@ -1,0 +1,27 @@
+defaults:
+  - interlocked_claws_preview
+  - _self_
+
+task:
+  fixture_mode: reference_contacts
+  max_collision_pairs: 256
+
+robot_control:
+  robot:
+    base_riser_height_m: 0.02
+  controller:
+    # Original actuator force limits remain active. Gains are explicitly tuned
+    # for accurate slow reference tracking with a carried 0.51 kg part per arm.
+    kp: [120000, 120000, 120000, 60000, 60000, 40000, 2000]
+    kv: [1200, 1200, 1200, 600, 600, 400, 124]
+
+env:
+  sim:
+    dt: 0.002
+    substeps: 4
+  renderer:
+    type: rasterizer
+
+run:
+  output: runs/environment-solvability/interlocked_claws/physics_reference_v1
+  record_video: false

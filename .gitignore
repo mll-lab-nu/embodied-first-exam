@@ -1,6 +1,8 @@
 # Virtual environment & caches
 .venv/
 .venv-gs110/
+.venv-gs121/
+.venv-gs121-nyx/
 .cache/
 .external/
 
@@ -17,6 +19,7 @@ dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+__nyx_cache__/
 .ipynb_checkpoints/
 
 # Environment files
@@ -36,3 +39,7 @@ tetgen-tmpfile*
 
 # Weekly report decks (per-week folders with copied demo videos; shared by zip, not git)
 topogym_weekly_report/
+
+# Archived deliverables remain local; source/config/docs in legacy are versioned.
+/legacy/runs/
+/legacy/reports/

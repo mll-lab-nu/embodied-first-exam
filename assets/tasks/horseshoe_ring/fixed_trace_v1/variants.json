@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "base_template": "paired_horseshoes_tutorial_solvable_v3",
+  "units": "template_mm",
+  "scene_scale": 2.0,
+  "allowed_changes": ["chain.link_radii", "chain.wire_radius"],
+  "frozen": ["robot_qpos", "timestamps", "gripper_schedule", "robot_mount", "horseshoes", "target_ring", "body_motion", "five_body_connectivity"],
+  "qualification": "Each discrete candidate requires its own complete geometric and sampled robot checks; no interval or Cartesian-product guarantee",
+  "candidates": [
+    {"id": "slender", "title_zh": "较细链环", "radii": [18, 5], "wire_radius": 0.8},
+    {"id": "shorter", "title_zh": "较短链环", "radii": [17.5, 5], "wire_radius": 0.7},
+    {"id": "longer", "title_zh": "较长链环", "radii": [18.5, 5], "wire_radius": 0.7},
+    {"id": "narrower", "title_zh": "较窄链环", "radii": [18, 4.7], "wire_radius": 0.7},
+    {"id": "wider", "title_zh": "较宽链环", "radii": [18, 5.3], "wire_radius": 0.7},
+    {"id": "compact", "title_zh": "短窄组合", "radii": [17.7, 4.8], "wire_radius": 0.7},
+    {"id": "elongated_wide", "title_zh": "长宽组合", "radii": [18.3, 5.2], "wire_radius": 0.7},
+    {"id": "thicker", "title_zh": "略粗链环", "radii": [18, 5], "wire_radius": 1.1},
+    {"id": "long_control", "title_zh": "仅加长对照", "radii": [19, 5], "wire_radius": 1.0},
+    {"id": "wide_control", "title_zh": "仅加宽对照", "radii": [18, 5.5], "wire_radius": 1.0},
+    {"id": "thick_control", "title_zh": "加粗对照", "radii": [18, 5], "wire_radius": 1.2}
+  ]
+}

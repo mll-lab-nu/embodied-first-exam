@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # ============================================================================
 # 对一个已录好的 episode 数据集（H5）做"值级"完整性检查——不重新跑仿真。
-# 与 verify_dataset_recording.sh 的区别：那个负责"录 + 结构存在性"，本脚本负责
+# 本脚本读取显式指定的数据文件，不启动任务或采集流程。
 # 对一个已有 H5 做更深的"值是否正确"断言（末帧 is_completed、action==下一帧
 # eef、status 一致、子目标边界等），并打印可读 dump。通用，不依赖具体任务。
 #
 # 用法：
 #   bash bash_scripts/tests/inspect_dataset.sh <path/to.h5>
-#   bash bash_scripts/tests/inspect_dataset.sh        # 不给路径则取 runs/dataset_tests 下最新的 *.h5
 #
 # 环境变量：
-#   TOPOGYM_VENV=.venv    未激活 venv 时自动 source 的路径
+#   TOPOGYM_VENV=.venv-gs121-nyx    未激活 venv 时自动 source 的路径
 #
 # 有硬错误则退出码非 0（适合 CI）。
 # ============================================================================
@@ -21,7 +20,7 @@ REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO"
 
 if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  VENV="${TOPOGYM_VENV:-$REPO/.venv}"
+  VENV="${TOPOGYM_VENV:-$REPO/.venv-gs121-nyx}"
   if [[ -f "$VENV/bin/activate" ]]; then
     # shellcheck disable=SC1091
     source "$VENV/bin/activate"
@@ -30,13 +29,8 @@ fi
 
 H5="${1:-}"
 if [[ -z "$H5" ]]; then
-  H5="$(ls -t runs/dataset_tests/*/*.h5 2>/dev/null | head -1 || true)"
-  if [[ -z "$H5" ]]; then
-    echo "[error] 未给 H5 路径，且 runs/dataset_tests 下也没有 *.h5。" >&2
-    echo "  用法: bash bash_scripts/tests/inspect_dataset.sh <path/to.h5>" >&2
-    exit 2
-  fi
-  echo "[inspect] 未给路径，取最新: $H5"
+  echo "用法: bash bash_scripts/tests/inspect_dataset.sh <path/to.h5>" >&2
+  exit 2
 fi
 if [[ ! -s "$H5" ]]; then
   echo "[error] 文件不存在或为空: $H5" >&2

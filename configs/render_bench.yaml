@@ -8,3 +8,10 @@ defaults:
   - override env_configs@env: world_tabletop_v1
   - override run_configs@run: render_bench
   - _self_
+
+# Preserve the historical rasterizer benchmark; override explicitly to time Nyx.
+env:
+  renderer:
+    type: rasterizer
+  presentation:
+    background: checker

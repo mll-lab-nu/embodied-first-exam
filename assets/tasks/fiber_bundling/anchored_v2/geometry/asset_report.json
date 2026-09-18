@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "layout": {
+    "seed": 7,
+    "fiber_count": 8,
+    "trunk_radius_m": 0.012,
+    "trunk_length_m": 0.24,
+    "trunk_segments": 6,
+    "fiber_radius_m": 0.0012,
+    "fiber_length_m": 0.08,
+    "fiber_segments": 10,
+    "fan_angle_min_deg": 28.0,
+    "fan_angle_max_deg": 50.0,
+    "root_spread_m": 0.008,
+    "ring_inner_radius_m": 0.0135,
+    "ring_tube_radius_m": 0.004,
+    "ring_segments": 64,
+    "fiber_damping": 2e-05,
+    "trunk_damping": 0.02,
+    "density_kg_m3": 1100.0
+  },
+  "dynamic_asset": "bundle.xml",
+  "appearance": "black cable jacket, cut sheath and filler, PVC insulated cores, 3 mm stranded copper tips",
+  "visual_only_details": "sheath lip, filler, copper tips; collision envelopes unchanged in radius",
+  "model": "fixed terminal root; passive articulated slack lead, working trunk and fine strands",
+  "gravity_scope": "entire cable, including trunk; world gravity unchanged",
+  "root_constraint": "ball joints with fixed positional offsets on trunk end face",
+  "initial_curve": "axial sleeve exit, then smooth outward bend; initialization only",
+  "shape_retention": "zero spring stiffness; viscous damping; no contact-free gravity sag",
+  "fiber_min_initial_surface_clearance_m": 0.003722934917841436,
+  "ring_min_aperture_radius_m": 0.01347892048359052,
+  "trunk_radial_clearance_m": 0.00147892048359052,
+  "initial_radial_envelope_m": 0.032463560219563814,
+  "graspable_links": [
+    "trunk_00",
+    "trunk_01",
+    "trunk_02",
+    "trunk_03",
+    "trunk_04",
+    "trunk_05"
+  ],
+  "fiber_actuators": 0,
+  "ring": {
+    "mass_kg": 0.04311043202395831,
+    "center_of_mass_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "inertia_kg_m2": [
+      [
+        7.032389223908201e-06,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        7.032389223908201e-06,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.3719894991624735e-05
+      ]
+    ],
+    "collision_shapes": 128
+  },
+  "full_task_qualified": false,
+  "variant": "anchored_terminal_v2",
+  "anchor": {
+    "axis_height_m": 0.24,
+    "ring_distance_from_roots_m": 0.11,
+    "lead_step_m": 0.04,
+    "connector_m": [
+      -0.32,
+      -0.16,
+      0.0
+    ],
+    "cradle_x_m": 0.02
+  },
+  "fixture_spacing": {
+    "cradle_center_to_ring_plane_m": 0.32999999999999996,
+    "cradle_upper_edge_to_ring_plane_m": 0.26499999999999996,
+    "cradle_upper_edge_to_ring_surface_m": 0.26099999999999995,
+    "note": "Axial fixture spacing only; not a swept-volume or robot reachability certificate"
+  },
+  "lead_centerline_m": [
+    [
+      -0.32,
+      -0.16,
+      0.0
+    ],
+    [
+      -0.28,
+      -0.16,
+      0.0
+    ],
+    [
+      -0.24,
+      -0.16,
+      0.0
+    ],
+    [
+      -0.20862668041042864,
+      -0.175752825634108,
+      -0.01473643278275093
+    ],
+    [
+      -0.19175630749054726,
+      -0.2024371282946242,
+      -0.03928660621110268
+    ],
+    [
+      -0.17213427547985777,
+      -0.22843893711623772,
+      -0.062308231229273835
+    ],
+    [
+      -0.1416359019915605,
+      -0.24805081002515839,
+      -0.07867291380978991
+    ],
+    [
+      -0.10426518096836632,
+      -0.2584559449821934,
+      -0.08791336607127387
+    ],
+    [
+      -0.06463385877031773,
+      -0.2599551117014861,
+      -0.09256397732644668
+    ],
+    [
+      -0.025521129247204476,
+      -0.25213736014605365,
+      -0.09365193426150988
+    ],
+    [
+      0.009836918550564068,
+      -0.23395698259308625,
+      -0.09083607633608475
+    ],
+    [
+      0.037664743439259886,
+      -0.2061733874408531,
+      -0.08435520239605851
+    ],
+    [
+      0.05398702084102738,
+      -0.1710594474811579,
+      -0.07538242264799734
+    ],
+    [
+      0.05022005148467364,
+      -0.13306079270348714,
+      -0.0657434265283035
+    ],
+    [
+      0.026472147524693103,
+      -0.10240337207861108,
+      -0.05732986345245502
+    ],
+    [
+      -0.007914756626576142,
+      -0.08410561019239635,
+      -0.04937251399282176
+    ],
+    [
+      -0.04629579352040239,
+      -0.07726855497047645,
+      -0.04047805791437279
+    ],
+    [
+      -0.08078121972320858,
+      -0.0634457802810375,
+      -0.02726125398544188
+    ],
+    [
+      -0.09489440022336036,
+      -0.0302987973147914,
+      -0.011520860118447312
+    ],
+    [
+      -0.08,
+      6.938893903907228e-18,
+      3.469446951953614e-18
+    ],
+    [
+      -0.04,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "lead_length_m": 0.8301357681972314,
+  "lead_segments_m": [
+    0.03999999999999998,
+    0.040000000000000036,
+    0.03807360172991948,
+    0.03999215555951002,
+    0.03988876308813731,
+    0.03978164376177002,
+    0.03987760751680426,
+    0.039931408503388825,
+    0.03990120926016195,
+    0.03985783144996608,
+    0.03985370402667265,
+    0.03974816090689663,
+    0.039382712822249574,
+    0.0396815879910862,
+    0.039756592881884587,
+    0.039987006215573224,
+    0.03943345821253811,
+    0.03931493790765279,
+    0.03567338636301967,
+    0.04,
+    0.04
+  ],
+  "coarse_link_names": [
+    "lead_00",
+    "lead_01",
+    "lead_02",
+    "lead_03",
+    "lead_04",
+    "lead_05",
+    "lead_06",
+    "lead_07",
+    "lead_08",
+    "lead_09",
+    "lead_10",
+    "lead_11",
+    "lead_12",
+    "lead_13",
+    "lead_14",
+    "lead_15",
+    "lead_16",
+    "lead_17",
+    "lead_18",
+    "lead_19",
+    "lead_20",
+    "trunk_00",
+    "trunk_01",
+    "trunk_02",
+    "trunk_03",
+    "trunk_04",
+    "trunk_05"
+  ],
+  "coarse_min_initial_surface_clearance_m": 0.01167338636301967,
+  "terminal_fixed": true,
+  "cable_free_root": false,
+  "reset_support": "open U cradle; contact only, no weld to cable",
+  "success_contract": "fixed terminal and ring; head-first aperture entry; all fine strands and front jacket beyond exit; trailing lead stays attached",
+  "legacy_free_cable_results_apply": false
+}

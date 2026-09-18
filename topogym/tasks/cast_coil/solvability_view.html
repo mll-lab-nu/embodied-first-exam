@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cast Coil · 当前原型怎么解</title>
+<style>
+*{box-sizing:border-box}body{margin:32px auto;max-width:1400px;padding:0 22px;background:#f1f4f7;color:#243547;font:16px/1.65 system-ui,sans-serif}h1{margin-bottom:8px}h2{font-size:21px}section{background:white;border:1px solid #d9e1e8;border-radius:12px;padding:22px;margin:20px 0}.badge{display:inline-block;border-radius:6px;background:#d7f0e5;color:#17543c;padding:5px 12px}.note{color:#5a6d7d}.views{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.view{background:#f8fafc;border:1px solid #dae3eb;border-radius:8px;overflow:hidden}.view h3{margin:12px 16px 0;font-size:17px}canvas{display:block;width:100%;height:auto}button{cursor:pointer;border:1px solid #a9bac8;border-radius:6px;background:white;padding:8px 15px;color:#243547;font:inherit}button:hover{background:#e7eff6}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:15px;margin-top:18px}input[type=range]{flex:1;min-width:160px}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:12px;border-bottom:1px solid #dbe3ea;vertical-align:top}a{color:#076496}code{font-size:.92em}#readout{font-variant-numeric:tabular-nums}.warning{color:#9b3822}.legend span{margin-right:20px}.gold{color:#94721c}.silver{color:#596c7d}@media(max-width:850px){.views{grid-template-columns:1fr}body{padding:0 12px}section{padding:16px}}
+</style>
+<h1>Cast Coil：当前原型有解，按这三步分离</h1>
+<p class="badge">完整连续几何路径已通过复核</p>
+<p>这是现有照片原型的解法。官方八步的准确转轴与位姿仍未验证；此前某类四步候选失败，不等于原型无解。</p>
+<section>
+<h2>拖动查看完整路径</h2>
+<p class="legend"><span class="gold">■ 金件：保持不动</span><span class="silver">■ 银件：移动</span></p>
+<p>三个同步几何视图展示同一条路径。下图默认从两件已整体抬高 <strong id="lift-value"></strong> 后开始；抓取与支撑未模拟。</p>
+<div class="views">
+<div class="view"><h3>斜视</h3><canvas id="oblique" width="640" height="440" aria-label="完整路径的斜视几何图"></canvas></div>
+<div class="view"><h3>正视：x / z</h3><canvas id="front" width="640" height="440" aria-label="完整路径的正视几何图"></canvas></div>
+<div class="view"><h3>背面斜视</h3><canvas id="back" width="640" height="440" aria-label="完整路径的背面几何图"></canvas></div>
+</div>
+<div class="controls"><button id="play">播放</button><input id="scrub" type="range" min="0" max="7" step="0.005" value="0" aria-label="路径进度"><span id="time"></span></div>
+<div class="controls"><button data-t="0">初态</button><button data-t="1.5">左移完成</button><button data-t="4.5">转动完成</button><button data-t="7">完全分离</button><label><input type="checkbox" id="lift" checked> 加入整体抬高</label></div>
+<p id="readout"></p><p id="clearance"></p>
+<p class="note">这是路径说明，未进行物理步进；三个几何观察方向不是机器人正式 demo 的相机录像。</p>
+</section>
+<section><h2>具体怎么操作</h2>
+<p>使用当前默认 3 倍模型。以下数值均为<strong>装配坐标系的毫米</strong>：x / z 在方形正面，y 沿四层排列方向；不是相机画面或世界坐标方向。旋转采用右手规则。</p>
+<table><thead><tr><th>动作</th><th>保持金件不动，操作银件</th></tr></thead><tbody>
+<tr><td>准备</td><td>通过双手、双臂或合适支撑，将两件保持相对初态一起抬高 70 mm。此支撑方案还未完成机器人验证。</td></tr>
+<tr><td>1 · 对齐窗口</td><td>沿 −x 平移 <strong>21.75 mm</strong>，保持原姿态。</td></tr>
+<tr><td>2 · 转过四分之一圈</td><td>绕经过 <strong>(4.5, 0, −31.5) mm</strong>、平行 y 的固定轴转 <strong>−90°</strong>。这不是绕银件质心原地转动；结束时装配原点的相对平移为 (−27, 0, −57.75) mm。</td></tr>
+<tr><td>3 · 拉出</td><td>保持旋转后的姿态，沿 +x 再平移 <strong>207 mm</strong>，到 (180, 0, −57.75) mm。两件完全分开，最终 x 方向分离面间距为 <strong>78 mm</strong>。207 mm 是本条保留路径的行程，不是最小解锁行程。</td></tr>
+</tbody></table>
+<p>缩放前对应左移 7.25 mm、轴心 (1.5, 0, −10.5) mm、最后沿 +x 移动 69 mm；角度不随倍率改变。</p>
+<p class="note">装配坐标的平移不是 URDF 质心平移。完整位姿及单位约定见 <a href="route.json">route.json</a>。</p>
+<details><summary>展开静态逐步图</summary><img src="solution_steps.png" style="width:100%" alt="整体抬高后的初态、左移、转动和最终分离状态"></details>
+</section>
+<section><h2>为什么现在能判定有解</h2>
+<ul><li>三段完整运动均有连续碰撞证书，且连接处没有位姿跳变；终点存在正间距的分离平面。</li>
+<li>独立 FCL 三角网格检查覆盖 3,003 个采样位姿，无相交；它用于交叉复核，连续性结论来自前述证书。</li>
+<li>当前导出场景的 URDF 碰撞盒与本次检查的实体一致。没有修改槽口、缩小碰撞体或关闭碰撞。</li>
+<li>已有默认 1 ms、半时间步 0.5 ms 的三段路径台架结果均通过，几何已核对一致。本次引用旧证据，没有重新运行物理仿真；全套负对照及机器人抓持仍有未通过项。</li></ul>
+<p>贴桌执行本条路径会碰桌：转动中有角点比初始底面低约 <strong>60.17 mm</strong>。考虑初始 0.5 mm 离桌距离，至少需共同抬高约 <strong>59.67 mm</strong> 才不穿桌；70 mm 的方案留下约 <strong>10.33 mm</strong> 几何余量。只看各步终点会漏掉转动中途的最低点。</p>
+<p><a href="result.json">完整数值与连续证书</a> · <a href="artifact_manifest.json">文件校验清单</a> · <a href="assets/assembly.glb">本次检查的装配网格</a></p>
+</section>
+<section><h2>与官方教程的关系</h2>
+<p><a id="official">官方图示</a>要求保持金件 B、移动银件 A：滑开 → 向右转 90° → 下滑 → 上翻 90° → 向右转 90° → 下翻 90° → 向右转 90° → 上移分离。这些是图示方向，不能直接等同于世界坐标轴。</p>
+<p>本地结构的矩形槽口、跨层连接与银件额外凹口仍是照片推断。三段解证明当前模型可解，但尚不能据此称它为商业实物的忠实复刻，也不能把这条路径称为官方八步复现。</p>
+<p>下一阶段可以沿这条已知路径验证真实抓持；如果目标是复现商业谜题，则还需校准槽口与官方动作的转轴映射。</p>
+</section>
+<script>
+const data=__DATA__;
+const $=id=>document.getElementById(id),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,k)=>a.map(v=>v*k),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],mat=(R,p)=>R.map(r=>dot(r,p));
+function rotate(p,axis,a){return add(add(mul(p,Math.cos(a)),mul(cross(axis,p),Math.sin(a))),mul(axis,dot(axis,p)*(1-Math.cos(a))))}
+function state(t){let i=0;while(i<data.motions.length-1&&t>data.motions[i].duration_s){t-=data.motions[i].duration_s;i++}const m=data.motions[i],q=Math.max(0,Math.min(1,t/m.duration_s)),u=q*q*q*(10+q*(-15+q*6));return {i,m,u};}
+function transform(v,s){const m=s.m,p=add(mat(m.start_rotation,mul(v,.001)),m.start_translation);if(m.axis)return mul(add(m.pivot,rotate(sub(p,m.pivot),m.axis,m.angle_rad*s.u)),1000);return mul(add(p,mul(sub(m.end_translation,m.start_translation),s.u)),1000);}
+const views=[['oblique',-70,24],['front',-90,0],['back',65,25]];
+function drawView(id,az,el,points,table,s){const c=$(id),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);az*=Math.PI/180;el*=Math.PI/180;
+ const right=[-Math.sin(az),Math.cos(az),0],up=[-Math.sin(el)*Math.cos(az),-Math.sin(el)*Math.sin(az),Math.cos(el)],eye=[Math.cos(el)*Math.cos(az),Math.cos(el)*Math.sin(az),Math.sin(el)],center=[75,0,-32],scale=1.85;
+ const project=p=>{const q=sub(p,center);return [320+scale*dot(q,right),195-scale*dot(q,up),dot(q,eye)]};
+ function polygon(ps,fill,stroke){ctx.beginPath();ps.forEach((p,i)=>{const q=project(p);if(i)ctx.lineTo(q[0],q[1]);else ctx.moveTo(q[0],q[1])});ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=.4;ctx.stroke()}}
+ const planes=[[-75,-65,table],[250,-65,table],[250,65,table],[-75,65,table]];polygon(planes,'#e5eaf0','#becbd5');
+ let faces=[];points.forEach((vertices,b)=>data.meshes[b].faces.forEach(f=>{const ps=f.map(k=>vertices[k]),normal=cross(sub(ps[1],ps[0]),sub(ps[2],ps[0]));if(dot(normal,eye)<=0)return;const norm=Math.sqrt(dot(normal,normal)),shade=.68+.32*Math.max(0,dot(mul(normal,1/norm),[.3,-.5,.8124])),base=b?[146,164,181]:[183,147,57];faces.push({ps,depth:ps.reduce((sum,p)=>sum+project(p)[2],0)/3,color:'rgb('+base.map(v=>Math.round(v*shade)).join(',')+')'});}));faces.sort((a,b)=>a.depth-b.depth);faces.forEach(f=>polygon(f.ps,f.color,null));
+ if(s.m.axis){const p=mul(s.m.pivot,1000),q=project(p);ctx.beginPath();ctx.arc(q[0],q[1],4,0,2*Math.PI);ctx.fillStyle='#cf453c';ctx.fill();ctx.font='15px system-ui';ctx.fillText('转轴',q[0]+8,q[1]-5)}
+ const axesOrigin=[-60,-47,-75];['x','y','z'].forEach((name,k)=>{const end=axesOrigin.slice();end[k]+=20;const a=project(axesOrigin),b=project(end);ctx.strokeStyle=['#b34d4d','#49846b','#447bbb'][k];ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.font='16px system-ui';ctx.fillText(name,b[0]+3,b[1])});
+}
+let playing=false,last=null;
+function render(){const time=+$('scrub').value,s=state(time),points=[data.meshes[0].vertices,data.meshes[1].vertices.map(v=>transform(v,s))],lift=$('lift').checked?data.table.proposed_common_lift_m:0,table=-(data.table.assembly_origin_above_table_m+lift)*1000,minz=Math.min(...points[1].map(p=>p[2])),clearance=minz-table;
+ views.forEach(v=>drawView(...v,points,table,s));$('time').textContent=time.toFixed(2)+' / '+data.total_seconds.toFixed(2)+' s';$('readout').textContent=['第 1 步：沿 −x 滑动','第 2 步：围绕指定轴心转 −90°','第 3 步：保持姿态沿 +x 拉出'][s.i]+' · 当前段 '+(s.u*100).toFixed(0)+'%';$('clearance').textContent='银件最低点距桌面：'+clearance.toFixed(2)+' mm'+(clearance<0?'，本位姿穿入桌面；请加入整体抬高。':'');$('clearance').className=clearance<0?'warning':'';
+}
+$('scrub').max=data.total_seconds;$('lift-value').textContent=(data.table.proposed_common_lift_m*1000).toFixed(0)+' mm';$('official').href=data.official_url;
+$('scrub').oninput=()=>{playing=false;$('play').textContent='播放';render()};$('lift').onchange=render;
+$('play').onclick=()=>{playing=!playing;if(playing&&+$('scrub').value>=data.total_seconds)$('scrub').value=0;$('play').textContent=playing?'暂停':'播放';last=null};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{playing=false;$('play').textContent='播放';$('scrub').value=b.dataset.t;render()});
+function tick(t){if(playing){if(last!==null)$('scrub').value=Math.min(data.total_seconds,+$('scrub').value+(t-last)/1000);render();if(+$('scrub').value>=data.total_seconds){playing=false;$('play').textContent='播放'}}last=t;requestAnimationFrame(tick)}render();requestAnimationFrame(tick);
+</script></html>

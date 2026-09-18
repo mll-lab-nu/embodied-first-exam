@@ -58,6 +58,15 @@ manipulation_space:
     bars: []
 
 robot_setup:
+  # DROID-compatible end effector, selected once for all shared task scenes.
+  gripper_model: robotiq_2f85
+  # Joint-space controller for the rotary 2F-85 drivers (SI units).
+  robotiq:
+    kp: 5.0
+    kv: 5.0
+    max_driver_torque_nm: 0.30
+    oracle_gripper_settle_s: 3.0
+    oracle_motion_time_scale: 1.5
   mount:
     name: franka_panda
     mobility: fixed

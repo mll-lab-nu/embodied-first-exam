@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "layout": {
+    "seed": 7,
+    "fiber_count": 8,
+    "trunk_radius_m": 0.012,
+    "trunk_length_m": 0.24,
+    "trunk_segments": 6,
+    "fiber_radius_m": 0.0012,
+    "fiber_length_m": 0.08,
+    "fiber_segments": 10,
+    "fan_angle_min_deg": 28.0,
+    "fan_angle_max_deg": 50.0,
+    "root_spread_m": 0.008,
+    "ring_inner_radius_m": 0.0135,
+    "ring_tube_radius_m": 0.004,
+    "ring_segments": 64,
+    "fiber_damping": 2e-05,
+    "trunk_damping": 0.02,
+    "density_kg_m3": 1100.0
+  },
+  "dynamic_asset": "bundle.xml",
+  "appearance": "black cable jacket, cut sheath and filler, PVC insulated cores, 3 mm stranded copper tips",
+  "visual_only_details": "sheath lip, filler, copper tips; collision envelopes unchanged in radius",
+  "model": "passive articulated capsule strands; gravity compensation 1",
+  "gravity_scope": "entire cable, including trunk; world gravity unchanged",
+  "root_constraint": "ball joints with fixed positional offsets on trunk end face",
+  "initial_curve": "axial sleeve exit, then smooth outward bend; initialization only",
+  "shape_retention": "zero spring stiffness; viscous damping; no contact-free gravity sag",
+  "fiber_min_initial_surface_clearance_m": 0.003722934917841436,
+  "ring_min_aperture_radius_m": 0.01347892048359052,
+  "trunk_radial_clearance_m": 0.00147892048359052,
+  "initial_radial_envelope_m": 0.032463560219563814,
+  "graspable_links": [
+    "trunk_00",
+    "trunk_01",
+    "trunk_02",
+    "trunk_03",
+    "trunk_04",
+    "trunk_05"
+  ],
+  "fiber_actuators": 0,
+  "ring": {
+    "mass_kg": 0.04311043202395831,
+    "center_of_mass_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "inertia_kg_m2": [
+      [
+        7.032389223908201e-06,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        7.032389223908201e-06,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.3719894991624735e-05
+      ]
+    ],
+    "collision_shapes": 128
+  },
+  "full_task_qualified": false
+}

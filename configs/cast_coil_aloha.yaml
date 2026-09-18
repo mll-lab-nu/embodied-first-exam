@@ -1,0 +1,31 @@
+defaults:
+  - cast_coil_preview
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - _self_
+
+task:
+  center_xy_m: [-0.1356786, 0.05]
+  yaw_deg: 90
+  initial_floor_clearance_m: 0
+  physics:
+    # Preserve sub-micrometre resting motion at world-space table coordinates.
+    precision: "64"
+    # Static-friction correction during contact, alongside double precision.
+    noslip_iterations: 5
+
+robot_control:
+  controller:
+    # Simulation tracking gains for the 3x metal prototype; original motor
+    # force limits, robot meshes, joint limits and object inertia are retained.
+    kp: [10000, 18000, 14000, 6000, 4000, 2500, 2000]
+    kv: [200, 300, 250, 100, 80, 40, 124]
+
+env:
+  sim:
+    dt: 0.0025
+    substeps: 10
+
+run:
+  output: runs/environment-solvability/cast_coil/aloha_full
+  fps: 20

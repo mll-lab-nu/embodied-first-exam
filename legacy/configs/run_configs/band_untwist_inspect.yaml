@@ -1,0 +1,27 @@
+# band_untwist_inspect_demo 的运行模式参数。
+#
+# 物理与场景参数不在这里，用点路径覆盖：
+#   task.band.shape=twist   task.band.twist.half_angle_deg=40
+#   task.rope.mesh.segment_length=0.004   task.rope.fem.E=200000.0
+
+defaults:
+  - default
+  - _self_
+
+# 把机械臂整个排除在场景外，只看绳。
+no_robot: false
+
+# 沉降之后再静置多少步、每隔多少步读一次交叉序列。这是「形态站不站得住」的读数：
+# 全程交叉序列必须恒等于生成器声明的那个。0 = 不做。
+hold_steps: 300
+hold_every: 25
+
+# 建好场景就停：不沉降、不静置，只步进 final_hold_steps 步让录像器有帧可写。
+# 变体 sweep 的 visual 组用它。
+static_only: false
+final_hold_steps: 20
+
+# --- 变体（2026-09-03）------------------------------------------------------
+randomize_layout: false
+difficulty: envelope
+variant_id: default

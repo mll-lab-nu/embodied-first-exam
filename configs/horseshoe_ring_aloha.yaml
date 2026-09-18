@@ -1,0 +1,38 @@
+defaults:
+  - horseshoe_ring_lab
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - _self_
+
+task:
+  variant: paired_horseshoes_tutorial_solvable_v3
+  template_path: assets/tasks/horseshoe_ring/tutorial_solvable_v3/template.json
+  center_xy_m: [-0.1356786, 0.05]
+  yaw_deg: 0
+  initial_lift_m: 0.1342
+
+env:
+  cameras:
+    oblique:
+      res: [1280, 720]
+      pos: [0.80, -0.95, 1.78]
+      lookat: [-0.1356786, 0.0, 1.12]
+      up: [0, 0, 1]
+      fov: 48
+      near: 0.005
+      far: 12
+    room:
+      res: [1280, 720]
+      pos: [1.45, -1.30, 2.10]
+      lookat: [-0.25, 0.10, 1.10]
+      up: [0, 0, 1]
+      fov: 74
+      near: 0.01
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/horseshoe_ring/aloha_full
+  include_robot: true
+  aloha_low_camera_pitch_offset_deg: 20  # Preserve source mounting position; cover the raised puzzle.
+  fps: 12
+  video_seconds: 69.0833333333  # Saved rehearsal; actual duration is recorded in replay_report.json.

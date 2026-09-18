@@ -1,0 +1,74 @@
+schema_version: 1
+task_id: rope_threading
+title_zh: 绳穿环
+baseline:
+  rope:
+    length_m: 1.1
+    diameter_m: 0.008
+  rings:
+    count: 3
+    centerline_radius_m: 0.075
+    tube_radius_m: 0.006
+    centers_m:
+    - - 0.075
+      - -0.019
+      - 0.331
+    - - 0.01
+      - 0.17
+      - 0.31
+    - - 0.09
+      - 0.315
+      - 0.28
+    plane_normals:
+    - - 1
+      - 0
+      - 0
+    - - 0.8
+      - 0.6
+      - 0
+    - - 0.3
+      - 0.9
+      - 0.316227766
+  route:
+    material_order:
+    - R1-
+    - R2+
+    - R3+
+    orientation_convention: must import reference material direction and signed ring
+      normals
+axes:
+- path: rings.centers_m
+  unit: m
+  status: candidate
+  validated_range: null
+- path: rings.plane_normals
+  unit: unit_vector
+  status: candidate
+  validated_range: null
+assets:
+- location: assets/tasks/rope_threading/wang_reference_v1/reference.json
+  status: local_source
+- location: topogym/tasks/rope_threading/scene.py
+  status: local_source
+- location: https://qinengwang-aiden.github.io/demos/constraint_demos/data/threading/geometry.json
+  status: public_reference
+- location: topogym/world/rope_backends/fem_ipc.py
+  status: local_source
+physics:
+  backend: genesis_1.2.1_fem_ipc
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: unheld rope on tabletop; ring poses expressed in Wang frame before
+    common transform
+robot:
+  family: ALOHA 2 with original dual grippers
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Insufficient rope slack
+- Initial interpenetration
+- Unreachable ring aperture
+first_probe: Single-ring free-end insertion, wall contact and sliding

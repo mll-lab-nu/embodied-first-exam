@@ -9,10 +9,9 @@
 #
 # 用法：
 #   bash bash_scripts/tests/view_dataset.sh <path/to.h5>
-#   bash bash_scripts/tests/view_dataset.sh            # 取 runs/dataset_tests 下最新的 *.h5
 #   FRAMES=all bash bash_scripts/tests/view_dataset.sh <path/to.h5>   # 额外导出每一步的 PNG
 #
-# 环境变量：FPS=10  播放帧率；  FRAMES=all  额外把每帧存成 PNG；  TOPOGYM_VENV=.venv
+# 环境变量：FPS=10  播放帧率；  FRAMES=all  额外把每帧存成 PNG；  TOPOGYM_VENV=.venv-gs121-nyx
 # ============================================================================
 set -uo pipefail
 
@@ -21,7 +20,7 @@ REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO"
 
 if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  VENV="${TOPOGYM_VENV:-$REPO/.venv}"
+  VENV="${TOPOGYM_VENV:-$REPO/.venv-gs121-nyx}"
   if [[ -f "$VENV/bin/activate" ]]; then
     # shellcheck disable=SC1091
     source "$VENV/bin/activate"
@@ -31,12 +30,8 @@ fi
 FPS="${FPS:-10}"
 H5="${1:-}"
 if [[ -z "$H5" ]]; then
-  H5="$(ls -t runs/dataset_tests/*/*.h5 2>/dev/null | head -1 || true)"
-  if [[ -z "$H5" ]]; then
-    echo "[error] 未给 H5 路径，且 runs/dataset_tests 下也没有 *.h5。" >&2
-    exit 2
-  fi
-  echo "[view] 未给路径，取最新: $H5"
+  echo "用法: bash bash_scripts/tests/view_dataset.sh <path/to.h5>" >&2
+  exit 2
 fi
 if [[ ! -s "$H5" ]]; then
   echo "[error] 文件不存在或为空: $H5" >&2

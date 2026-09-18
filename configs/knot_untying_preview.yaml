@@ -1,0 +1,85 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_fem_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - prefab_configs@prefabs: topogym_prefabs_v1
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: trefoil_open_v1
+  origin_xy_m: [0.0, 0.24]
+  geometry:
+    rope_radius_m: 0.004
+    planar_scale_m: 0.032
+    crossing_height_m: 0.008
+    cut_angle_rad: 0.5
+    tail_length_m: 0.18
+    table_clearance_m: 0.001
+    segment_length_m: 0.0025
+    radial_segments: 12
+    handedness: right
+  rope:
+    model: fem_ipc_tube
+    radius: ${task.geometry.rope_radius_m}
+    mesh:
+      maxvolume: 2.0e-8
+    fem:
+      E: ${prefabs.rope_fem.E}
+      nu: ${prefabs.rope_fem.nu}
+      rho: ${prefabs.rope_fem.rho}
+      friction_mu: ${prefabs.rope_fem.friction_mu}
+      # Below both the initial skin gap and the mesh's own primitive spacing.
+      contact_d_hat: 0.0008
+      rest_shape: straight
+      sanity_check_enable: true
+      newton_max_iterations: 100
+      newton_tolerance: 0.01
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+  sim:
+    dt: 0.005
+    substeps: 4
+  cameras:
+    overview:
+      res: [1280, 900]
+      pos: [0.95, -1.10, 1.85]
+      lookat: [-0.15, 0.13, 1.12]
+      up: [0, 0, 1]
+      fov: 43
+      near: 0.005
+      far: 12
+    detail:
+      res: [1280, 900]
+      pos: [0.34, 0.78, 1.40]
+      lookat: [0.0, 0.215, 0.932]
+      up: [0, 0, 1]
+      fov: 35
+      near: 0.005
+      far: 12
+    topdown:
+      res: [1100, 1000]
+      pos: [0.0, 0.20, 1.70]
+      lookat: [0.0, 0.20, 0.93]
+      up: [0, 1, 0]
+      fov: 33
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/knot_untying/trefoil_initial
+  viewer: false
+  settle_steps: 40
+  record_video: true
+  fps: 15
+  video_seconds: 3
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

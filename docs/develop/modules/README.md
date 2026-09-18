@@ -1,31 +1,20 @@
-# TopoGym 模块说明入口
+# 当前模块职责
 
-这份目录以 `overall_module_dict_zh.md` 作为总入口和权威说法。`overall_module_dict_zh.md` 里已经有深入说明的模块（`generation` / `planning` / `supervision` / `runtime`）不在这里重复；其余每个实际代码模块各有一份简单说明：
-
-| 文件 | 对应代码模块 |
+| 模块 | 保留职责 |
 | --- | --- |
-| `module_core.md` | `topogym/core` |
-| `module_world.md` | `topogym/world` |
-| `module_tasks.md` | `topogym/tasks` |
-| `module_primitives.md` | `topogym/primitives` |
-| `module_robot.md` | `topogym/robot` |
-| `module_utils.md` | `topogym/utils` |
-| `module_envs.md` | `topogym/envs` |
-| `module_demos.md` | `demos/`（含各任务迁移状态） |
+| `core` | 配置与实体清单；旧四类任务登记表已归档 |
+| `world` | 桌面、绳与软体后端、接触辅助、Nyx 渲染、封闭实验室与[相机预设](../../../configs/camera_configs/README.md) |
+| `robot` | 机器人资产、Franka IK、Robotiq 开口映射、[ALOHA 双臂控制与接入](dual_arm_aloha_zh.md) |
+| `primitives` | 可复用的抓持、插入、拖动、附件与接触动作 |
+| `tasks/<task_id>` | 当前任务专用的几何、场景、执行器、规划及判定 |
+| `planning` | 通用 subgoal、waypoint 和绳交叉几何；旧任务 planner 已归档 |
+| `generation` | episode 数据结构、确定性随机数、布局随机化与 braid 工具；旧任务 split 注册表已归档 |
+| `runtime` | 通用 episode 运行契约 |
+| `supervision` | 稳定性、粒子与绳诊断；旧任务专用监控已归档 |
+| `data`、`utils` | HDF5 schema/writer、相机和录像工具；旧任务 replay 已归档 |
 
-推荐阅读顺序：
+开锁当前使用的 `runner`、`planner`、`certificate`、`grasp`、`oracle`、`evaluator`、`review`
+全部由 `topogym/tasks/lock_picking/` 持有，避免当前入口依赖历史 demo。
+包入口只导出当前通用契约，不再集中导入旧任务。
 
-1. `overall_module_dict_zh.md`：先看每个代码模块负责什么，以及命名为什么这样定。
-2. 上表里对应你关心的模块的 `module_*.md`：简单版说明 + 关键文件/对象。
-3. `../stable_il_generation_system_devlog_zh.md`：看这次架构整改背后的动机和第二阶段计划。
-4. `legacy_ag_blueprint/`：早期 A-G 系统蓝图草案，**和当前代码模块不是一一对应关系**，只在需要了解"设想中的在线 RL/离线数据/评测全流程"时再看，理解当前代码请以本目录其它文件为准（详见该子目录的 `README.md`）。
-
-当前整改重点不是立刻生成 IL 数据，而是把"稳定、可复现、可按 seed 生成变式"的环境生成系统搭起来。Viewer、录制视频、未来 IL/RL 都应该只是这套系统的下游入口。
-
-## 任务迁移到新架构的状态
-
-已完成第一轮迁移（有 `generation` + `planning`，物理 demo 已切换消费 spec/plan/result）：
-
-- `swap`、`onestroke`、`maze_wall_removal`、`stacked_plate`、`untangle`、`peeling`（`peeling_physical_single_demo.py`）、`cable_routing`（`cable_routing_physical_handle_demo.py`）
-
-`cable_routing` 和 `peeling` 涉及 PBD 绳/布，是 `overall_module_dict_zh.md` 迁移顺序里排最后、风险最高的一档；两个任务各自的主力物理 demo 现在都已完成第一轮迁移，但同任务下的其它 demo（oracle / tabletop baseline / 其它交互手法）还没跟上，见 `module_demos.md`。另外 `topogym/envs` 下的 RL 环境壳目前只覆盖 `swap`/`onestroke`/`maze_wall_removal`/`untangle`，`stacked_plate`/`cable_routing`/`peeling` 还没有对应的 `*_mdp.py`，细节见 `module_envs.md`。
+旧模块说明和早期 A–G 蓝图见 [历史模块文档](../../../legacy/docs/develop/modules/)。

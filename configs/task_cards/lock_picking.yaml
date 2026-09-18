@@ -1,0 +1,59 @@
+schema_version: 1
+task_id: lock_picking
+title_zh: 开锁
+baseline:
+  variant: limited_two_retreats
+  disc_count: 3
+  initial_angles_deg:
+  - 0
+  - 0
+  - 0
+  slot_centers_deg:
+  - - -60
+    - -30
+    - 0
+  - - -60
+  - - 0
+  stop_bounds_deg:
+  - - -15
+    - 15
+  - - -10
+    - 75
+  - - -180
+    - 180
+  source_config: configs/lock_picking_baseline.yaml
+axes:
+- path: initial_angles_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+- path: slot_centers_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+- path: stop_bounds_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+assets:
+- location: configs/lock_picking_baseline.yaml
+  status: local_source
+- location: topogym/tasks/lock_picking/_staged_lock_geometry.py
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: free key on physical V rests; passive discs; third joint continuous
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 1
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Invalid aperture clearance
+- Key initially overlaps fixture
+- Stop geometry incompatible with route
+first_probe: Run migrated lock with contact, physical insertion and release

@@ -1,0 +1,65 @@
+{
+  "rope_length_m": 1.1000000000000008,
+  "rope_diameter_m": 0.008,
+  "source_nodes": 81,
+  "fem_centerline_points": 321,
+  "table_surface_gap_m": 0.00029999999999999623,
+  "minimum_fixture_gap_lower_bound_m": 0.12463237798994241,
+  "minimum_nonlocal_rope_surface_gap_m": 0.026357775183276526,
+  "endpoints_m": [
+    [
+      -0.370326748398095,
+      0.05,
+      0.004300000000000001
+    ],
+    [
+      0.33,
+      0.05000000000000013,
+      0.004299999999999998
+    ]
+  ],
+  "initial_crossings": [],
+  "ring_aperture_diameter_m": 0.138,
+  "source_to_world_translation_m": [
+    0.0,
+    0.0,
+    0.0009
+  ],
+  "target_material_order": [
+    "R1-",
+    "R2+",
+    "R3+"
+  ],
+  "geometry_verified": true,
+  "reference_sha256": "a4b2ea1e5e04ae5f00005dc694f0dd5a9efa262c002ee1e9907ce2ae72763d3c",
+  "ring_collision_model": "nonconvex watertight torus mesh; 64 x 24 by default; aperture preserved",
+  "source_ring_discretization_deviation_bound_m": 0.00014167161636920733,
+  "files": {
+    "R1.glb": "056abd6da80081ae4ea278eaa4c4bc24f2f6dd0514020126c6a3e664a2c42045",
+    "R1.mtl": "80c6c639db3ff3850f925c5ea8724f64f25310356aaf12d557867434ca6fc032",
+    "R1.obj": "b5d3ce05715f5bdf8daecfa939e0fc299dd497c18fcc3198e3d5798cf7bccd55",
+    "R1_base.mtl": "e57a83ce722e638d1b8803a24f06f847bcb515ce2b1ee371edf32aefc56e912a",
+    "R1_base.obj": "e798aebcdcaae5bb6b230bb39b2642ae7d3a5355d71cd00baceccc8b80a2df21",
+    "R1_stand.mtl": "e49b2f6ee9fbbb87aa91675b9a7783692601066738f2d09025f98d40574d7260",
+    "R1_stand.obj": "f4cc43a26f8c5f3c2c2a7bab557379b62aa0acbdf8b9813e1ffce99c1bd86c81",
+    "R2.glb": "e225928e61ae18d496a7ce84852341a5e0e060114d31b28fa186513c57903921",
+    "R2.mtl": "afcc7d212feed808d9d9a7114ab1e3232933689004ea30b165eb2e097e462463",
+    "R2.obj": "66ddcb98a92b5a111387acc312f73ba5ddeb08c9d349306bae241c434988a312",
+    "R2_base.mtl": "e57a83ce722e638d1b8803a24f06f847bcb515ce2b1ee371edf32aefc56e912a",
+    "R2_base.obj": "4d7d0a1045076135e3241a79fc1937b572f361086883b2a00272d5a26154b600",
+    "R2_stand.mtl": "e49b2f6ee9fbbb87aa91675b9a7783692601066738f2d09025f98d40574d7260",
+    "R2_stand.obj": "b433401d7b99458a94a5ae24fed11582744db7d22d5e1de5e2354939fbcb4013",
+    "R3.glb": "df4fc84f8317fca7f58ec1aca5e6e38c4ccd656c9a1f2b87d4c39dffd3f89dae",
+    "R3.mtl": "1b593105f8c89be8c1dc75dfbf4f332378789ada9d4e11fb1ae5191cfc17be57",
+    "R3.obj": "9a8b8cc1f7fadc0131b7387774b21171129c0c71bb84b32c919921175fc835df",
+    "R3_base.mtl": "e57a83ce722e638d1b8803a24f06f847bcb515ce2b1ee371edf32aefc56e912a",
+    "R3_base.obj": "52948164e6344c934dc40e87d2bd329c67a3263eadbd26eecf20e63a4b36d3b0",
+    "R3_stand.mtl": "e49b2f6ee9fbbb87aa91675b9a7783692601066738f2d09025f98d40574d7260",
+    "R3_stand.obj": "74a9700cc2a2fe8c97d09bc476c6f69cc4cb2abd9769cdda522866c4c3542738",
+    "assembly.glb": "afae1835b8c78dd69b72e2409c1daf5997abf55f1ee939352da23b2162a6bc09",
+    "centerline.npy": "2027b30bf30bfffd2bb9d9ced44e30dcfdd6a1f822587797a7afb603cc7d12fd",
+    "material.mtl": "e57a83ce722e638d1b8803a24f06f847bcb515ce2b1ee371edf32aefc56e912a",
+    "rope.glb": "0f60d6a8bce43782acd1fa4cfb777c804400c939892e861cdc526e286e9119fc",
+    "rope.obj": "fac43e16046e84d24caa08f996506023265719c16456ee7137ce136a9080e318"
+  }
+}

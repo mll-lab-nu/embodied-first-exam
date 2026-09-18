@@ -37,6 +37,8 @@ def fabric_weave(
     pattern: str = "plain",
     accent_color=None,
     stripe_pitch_m: float = 0.030,
+    corner_colors=None,
+    corner_size_m: float = 0.0,
     thread_pitch_m: float = 0.002,
     pixels_per_thread: int = 8,
     thread_shading: float = 0.45,
@@ -68,6 +70,13 @@ def fabric_weave(
     landed on. With stripes the two halves visibly meet, and a sheet that has
     been dragged or bunched shows it in the pattern rather than only in the
     numbers.
+
+    ``corner_colors`` paints a square patch of its own colour into each of the
+    four corners, over whatever ``pattern`` produced; ``corner_size_m`` is how
+    far the patch reaches along each of the two edges that meet there. This is
+    what lets an instruction name a corner without a direction word: "the red
+    corner" means the same thing from every camera position, while "the far left
+    corner" does not. Orthogonal to ``pattern``, so the stripes stay.
     """
 
     size_m = np.asarray(size_m, dtype=float)
@@ -112,6 +121,10 @@ def fabric_weave(
         stripe_pitch_m=stripe_pitch_m,
         size_m=size_m,
     )
+    if corner_colors is not None and float(corner_size_m) > 0.0:
+        base = _paint_corners(
+            base, corner_colors, corner_size_m=corner_size_m, size_m=size_m
+        )
     image = np.clip(shade[..., None] * base, 0.0, 1.0)
     rgb = (image * 255.0 + 0.5).astype(np.uint8)
     if preview_path is not None:
@@ -126,18 +139,70 @@ def _base_colour(shape, *, color, pattern, accent_color, stripe_pitch_m, size_m)
     field = np.broadcast_to(base, (*shape, 3)).copy()
     if pattern == "plain":
         return field
-    if pattern != "stripes":
-        raise ValueError(f"pattern must be 'plain' or 'stripes', got {pattern!r}.")
+    if pattern not in ("stripes", "grid"):
+        raise ValueError(f"pattern must be 'plain', 'stripes' or 'grid', got {pattern!r}.")
     if accent_color is None:
-        raise ValueError("pattern='stripes' needs accent_color.")
+        raise ValueError(f"pattern={pattern!r} needs accent_color.")
 
     accent = np.asarray([float(channel) for channel in accent_color], dtype=float)
     # Bands run along one axis at a physical pitch, so their width on screen is
     # set in millimetres like everything else here rather than in pixels.
-    span = float(np.asarray(size_m, dtype=float)[1])
-    position = np.linspace(0.0, span, shape[0], endpoint=False)
-    band = (np.floor(position / float(stripe_pitch_m)).astype(int) % 2) == 1
-    field[band, :, :] = accent
+    size = np.asarray(size_m, dtype=float)
+    position_v = np.linspace(0.0, float(size[1]), shape[0], endpoint=False)
+    band_v = (np.floor(position_v / float(stripe_pitch_m)).astype(int) % 2) == 1
+    if pattern == "stripes":
+        field[band_v, :, :] = accent
+        return field
+    # ``grid``: the same bands along BOTH texture axes, drawn as lines rather
+    # than filled cells so the sheet still reads as one colour. A crease running
+    # along the stripes of a one-axis pattern leaves no mark on it; a grid is cut
+    # by a crease in either direction, which is what a sheet folded once each
+    # way (cloth_unpleat's cross) needs to show both folds.
+    position_u = np.linspace(0.0, float(size[0]), shape[1], endpoint=False)
+    band_u = (np.floor(position_u / float(stripe_pitch_m)).astype(int) % 2) == 1
+    line_v = np.diff(band_v.astype(int), prepend=band_v[0]) != 0
+    line_u = np.diff(band_u.astype(int), prepend=band_u[0]) != 0
+    thick = max(1, shape[0] // 400)      # ~1/400 of the sheet: hairline, not a stripe
+    for k in range(thick):
+        field[np.roll(line_v, k), :, :] = accent
+        field[:, np.roll(line_u, k), :] = accent
+    return field
+
+
+def _paint_corners(field, corner_colors, *, corner_size_m, size_m):
+    """Paint a square patch of its own colour into each of the sheet's corners.
+
+    ``corner_colors`` is a 2x2 nesting indexed ``[v][u]``, index 0 meaning the
+    LOW end of that texture axis -- so ``corner_colors[0][0]`` is the patch at
+    (u minimum, v minimum). Which world corner each of the four is depends on
+    how the mesh laid out its UVs, so that mapping is the caller's business,
+    not this module's.
+
+    Rows run along v and columns along u (`fabric_weave` builds them that way),
+    but the renderer reads v from the BOTTOM of the image upwards: trimesh's UV
+    lookup flips it, so v = 0 lands on the LAST row of the array rather than the
+    first. Everything else here is symmetric in v -- the weave and the stripes
+    both are -- so this is the first place in the module where the flip shows,
+    and it is handled here once rather than at every call site.
+    """
+
+    field = np.asarray(field, dtype=float)
+    height, width = field.shape[0], field.shape[1]
+    span = np.asarray(size_m, dtype=float)
+    # Patch extent in pixels, at least one so a small patch never vanishes.
+    rows = max(1, min(height // 2, int(round(float(corner_size_m) / float(span[1]) * height))))
+    cols = max(1, min(width // 2, int(round(float(corner_size_m) / float(span[0]) * width))))
+    # v index 0 is the array's last rows (see the docstring's flip note).
+    row_slices = (slice(height - rows, height), slice(0, rows))
+    col_slices = (slice(0, cols), slice(width - cols, width))
+    for v_index, row_slice in enumerate(row_slices):
+        for u_index, col_slice in enumerate(col_slices):
+            patch = corner_colors[v_index][u_index]
+            if patch is None:
+                continue
+            field[row_slice, col_slice, :] = np.asarray(
+                [float(channel) for channel in patch], dtype=float
+            )
     return field
 
 

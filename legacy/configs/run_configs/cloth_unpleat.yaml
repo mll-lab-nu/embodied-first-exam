@@ -1,0 +1,41 @@
+# cloth_unpleat_physical_demo 的运行模式参数。
+
+defaults:
+  - default
+  - _self_
+
+# 端头怎么走。三条路径共用同一套测量，所以数字可以直接对比 —— 判据的阈值要卡在
+# 「做对了」和「做错了」之间，只有一边定不出来。做法与 cloth_fold 的标定相同。
+#   unfold   把端头往远离褶皱的方向拉；双褶持续夹持，连续走完两道行程，最后统一松手
+#   shove    往**反方向**拉（朝着褶皱推）。布带堆起来，褶皱一点没放料 ——
+#            一个搬动了同样多布料却做错了的动作
+#   overpull 拉过头，越过「料已经放完」那个点继续走，整条布带开始滑。
+#            它两条门槛都会过 —— 记录它是为了看 band_shift 有多大，
+#            以及确认只读长度的判据分不出它和成功
+#   single_pull  两道褶时只拉第一段，留下另一道没打开的褶。**防捷径对照**：
+#            2026-09-08 会上把「从哪一端拉」移出任务之后，它取代 pull_side 成为
+#            「必须读场景才知道要做几步」的证据。一道褶的布局上它就是任务本身，
+#            sweep 按 N/A 记，不算失败
+motion: unfold
+
+# overpull 比正确行程多走多少倍。
+overpull_scale: 1.6
+
+# 机械臂退开之后再空跑多少步才停止录制（dt=0.01，100 步 = 1 秒）。
+# 让视频最后是一段布已经落定、机械臂已经让开的稳定画面，便于截图看结果。
+# 这是录制上的事不是任务定义，所以在 run 而不在 task —— 松手后的物理沉降是
+# task.physical.release_hold_steps，两者管的不是一回事。
+final_hold_steps: 100
+
+# --- 变体（2026-09-05）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）：
+#   run.randomize_layout=true run.seed=3
+# 默认关 = 确定性布局。demo 建场景后打印 `cloth_unpleat variant seed=…` 与 `cloth_unpleat checks …` 两行。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志的变体标识（角点 sweep 用 corner_<id>）。
+variant_id: default
+
+# Optional phase particle snapshots for diagnosing incomplete pulls and release.
+diagnostics_dir: null

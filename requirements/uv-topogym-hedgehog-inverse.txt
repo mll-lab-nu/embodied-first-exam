@@ -1,0 +1,3 @@
+# In addition to the shared Genesis/Nyx environment and hedgehog planning extras.
+-r uv-topogym-hedgehog-planning.txt
+manifold3d==3.5.3

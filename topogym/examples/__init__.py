@@ -1,2 +1,0 @@
-"""Runnable examples for TopoGym."""
-

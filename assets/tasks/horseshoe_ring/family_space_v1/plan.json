@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "status": "planned_space_with_partial_qualification",
+  "task": "horseshoe_ring",
+  "hierarchy": ["ik_family", "qualified_geometry_and_grasp_anchor", "coupled_geometry_and_trace_sample", "render_appearance"],
+  "nine_pair_sampler_enabled": false,
+  "family_is_discrete": true,
+  "arbitrary_joint_trace_interpolation_allowed": false,
+  "families": [
+    {
+      "id": "F1",
+      "name_zh": "高位回环换抓",
+      "ik_seed": "compact_roll_planned",
+      "signature_zh": "左手释放马蹄后明显抬高并绕回抓环，换抓路线形成较大的回环。",
+      "primary_signature_phase": "left_ring_transfer",
+      "support_hand": "right",
+      "extract_hand": "left",
+      "qualification": "existing_seed_kinematics; existing route separation is strong"
+    },
+    {
+      "id": "F2",
+      "name_zh": "侧向大弧换抓",
+      "ik_seed": "wide_roll_planned",
+      "signature_zh": "侧面扫入，采用较平滑的大弧路线；重点强化右手重新支撑时的外侧通道。",
+      "primary_signature_phase": "right_support_transfer",
+      "support_hand": "right",
+      "extract_hand": "left",
+      "qualification": "existing_seed_kinematics; strengthen separation from F3 before macro release"
+    },
+    {
+      "id": "F3",
+      "name_zh": "分段退让再接近",
+      "ik_seed": "longer_regrasp_planned",
+      "signature_zh": "右手先退让、再调整腕姿并回到支撑抓点，保留分段接近特征；与 F2 使用不同的接近通道。",
+      "primary_signature_phase": "right_support_transfer",
+      "support_hand": "right",
+      "extract_hand": "left",
+      "qualification": "existing_seed_kinematics; strengthen separation from F2 before macro release"
+    }
+  ],
+  "appearances": [
+    {
+      "id": "R",
+      "name_zh": "经典圆环基准",
+      "relative_scale": 1.0,
+      "geometry_reference": "the chosen family existing paired scene",
+      "ellipse_aspect": 1.0,
+      "observable_zh": "保留原经典马蹄与圆形目标环，作为动作比较的共同基准。",
+      "ik_adaptation_zh": "复用该 family 的已验证 IK 种子；若调整宏观路线，则重新验证。"
+    },
+    {
+      "id": "U",
+      "name_zh": "宽体 U 形大轮廓",
+      "relative_scale": 1.18,
+      "geometry_reference": "u_mild_chain17p5",
+      "shape": 0.5,
+      "ellipse_aspect": 1.05,
+      "chain_semimajor_template_mm": 17.5,
+      "observable_zh": "使用较方的 U 形原型并整体增大 18%，同一相机下轮廓体量明显更大；当前 U 形本身仍为温和变形。",
+      "ik_adaptation_zh": "按真实带状表面重建马蹄抓点和夹爪开度，重新求双臂 IK；抓距增大不能靠缩放关节角实现。"
+    },
+    {
+      "id": "E",
+      "name_zh": "椭圆相位调整型",
+      "relative_scale": 1.0,
+      "geometry_reference": "waist_ellipse_chain17p5",
+      "shape": -0.5,
+      "ellipse_aspect": 1.15,
+      "chain_semimajor_template_mm": 17.5,
+      "observable_zh": "目标环具有明确长短轴，并出现有作用的相位调整动作；在目标环正视图中验收椭圆形状。",
+      "ik_adaptation_zh": "重建椭圆表面接触坐标与切向；把额外转环安排到可控制目标环的阶段，必要时增加受支撑的换抓子阶段。"
+    }
+  ],
+  "visual_acceptance": {
+    "status": "proposed_gates_not_yet_human_validated",
+    "macro_route_p95_mm": 50.0,
+    "macro_minimum_distinct_route_fraction": 0.2,
+    "macro_route_comparison": "Remove initial similarity, preserve hand identity, compare equal arc-length samples within corresponding stages",
+    "shape_size_ratio_minimum_difference": 0.15,
+    "ellipse_aspect_minimum_difference": 0.12,
+    "same_cameras_material_and_lighting_required_for_review": true,
+    "required_views": ["cam_high", "cam_low", "target_ring_face_on_detail"],
+    "distinction_must_not_depend_only_on": ["color", "camera_change", "playback_speed", "command_hash", "subpixel_geometry_jitter"],
+    "actual_image_review_required": true
+  },
+  "space_rules": {
+    "macro_invariants": ["support/extract hand identity", "main support handover order", "family approach-side and route signature"],
+    "in_family_trace_changes": ["surface-derived grasp location", "ellipse phase and orientation", "joint branch within limits", "free-hand approach route", "supported ring-adjustment substage", "timing"],
+    "geometry_dimensions_coupled": ["shoe outline", "shoe outer width", "target ellipse semiaxes", "chain semimajor axis", "gripper aperture and reach"],
+    "geometry_limits_policy": "Use only a certificate-backed neighborhood of the chosen family/appearance pair; do not take a Cartesian product of global extrema",
+    "wide_appearance_anchors": "Require independent geometric path plus a newly validated robot pairing before becoming sampleable",
+    "small_geometry_jitter": "May inherit a geometric perturbation bound, but does not inherit robot/grasp validity",
+    "render_only_jitter": ["material color", "roughness", "lighting within observation visibility limits"],
+    "ring_phase_control_rule": "Do not prescribe independent target-ring rotation while both hands are committed to the shoes without a demonstrated control/support mechanism",
+    "inverse_scene_rule": "Infer scene only within a geometry/grasp hypothesis, and require both arms to reconstruct consistent object poses"
+  },
+  "qualification": {
+    "geometry": ["initial chain/eye topology", "continuous all-body collision clearance", "complete target separation", "direct-pull controls"],
+    "robot": ["new shape surface contact frames", "IK and joint limits", "no branch jumps", "hand-object consistency", "gripper width", "robot/puzzle/table collision checks with explicit sampling or continuity scope"],
+    "appearance": ["within-family representative distinction", "macro route signature", "same-view inspection"],
+    "physics": "Separate state; kinematic rehearsal is not a force-driven execution certificate",
+    "admit_rule": "All geometry, robot and appearance gates for the exact pair must pass; record physics status separately"
+  },
+  "random_generation": {
+    "macro_prior": "balanced over released families",
+    "anchor_prior": "balanced over released anchors conditional on family",
+    "joint_proposal": "condition geometry, grasp and trace proposal on the selected paired anchor",
+    "failure_action": "contract or locally replan, otherwise reject; never silently relabel as solved",
+    "deduplicate_by": ["geometry hash", "normalized FK route", "appearance features"],
+    "record_fields": ["family_id", "appearance_anchor_id", "seed_id", "geometry_parameters", "grasp_parameters", "ik_trace", "certificates", "visual_signature", "rejection_reason", "random_seed"],
+    "split_policy": "group descendants by paired anchor/parent trace to avoid near-duplicate train/test leakage"
+  },
+  "milestones": [
+    "Audit and finalize three macro seed route signatures, prioritizing F2/F3 separation",
+    "Qualify F1_U and F1_E, including controlled ellipse phase timing",
+    "Qualify F2_U, F2_E, F3_U and F3_E against their own family seeds",
+    "Release the nine paired anchors only after same-view visual review",
+    "Enable hierarchical random sampling with per-pair validation and balanced coverage"
+  ]
+}

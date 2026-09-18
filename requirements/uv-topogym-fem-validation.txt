@@ -1,0 +1,3 @@
+# Independent swept-surface diagnostics; lives in a separate worker process.
+-r uv-topogym-fem-ipc.txt
+ipctk==1.6.0

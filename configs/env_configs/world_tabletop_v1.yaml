@@ -9,6 +9,10 @@
 # 桌子 x 深度和高度来自 RoboMME/ManiSkill TableSceneBuilder 的 AABB。
 # 原始 y 方向 2.418 m 过宽，TopoGym V1 压缩为 1.200 m。
 
+defaults:
+  - /presentation_configs@_here_: nyx_lab
+  - _self_
+
 preset:
   id: topogym_tabletop_v1
   version: 1.3   # 1.2 -> 1.3: 桌面加大到 [1.5,1.4]（全 task 共用基线变更）
@@ -17,7 +21,7 @@ preset:
   locked: true
 
 genesis:
-  backend: cpu
+  backend: cuda  # Default Nyx renderer requires CUDA.
   precision: "32"
   logging_level: warning
 
@@ -26,10 +30,6 @@ sim:
   dt: 0.01
   substeps: 4
   gravity: [0.0, 0.0, -9.81]
-
-renderer:
-  type: rasterizer
-  show_viewer: false
 
 viewer:
   camera_pos: [1.20, -1.15, 1.65]

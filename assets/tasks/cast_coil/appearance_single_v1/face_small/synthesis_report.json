@@ -1,0 +1,522 @@
+{
+  "kind": "face_small",
+  "parameters": {
+    "face_scale": 0.95,
+    "depth_scale": 1.0,
+    "corner_cut_ratio": 0.0
+  },
+  "seed": "original 2026-09-17_aloha_full; not one of the three inverse-designed variants",
+  "changed_parameters": [
+    "face_scale"
+  ],
+  "geometry": {
+    "template_id": "cast_coil_appearance_face_small_v1",
+    "geometry_status": "single_parameter_appearance_of_verified_original_prototype",
+    "scale": 3.0,
+    "body_count": 2,
+    "bounds_m": [
+      [
+        -0.04845,
+        -0.037125,
+        -0.04845
+      ],
+      [
+        0.04845,
+        0.037125,
+        0.04845
+      ]
+    ],
+    "extent_m": [
+      0.0969,
+      0.07425,
+      0.0969
+    ],
+    "layer_order": [
+      "gold",
+      "silver",
+      "gold",
+      "silver"
+    ],
+    "layer_centers_m": [
+      -0.028125,
+      -0.009375,
+      0.009375,
+      0.028125
+    ],
+    "minimum_initial_clearance_m": 0.0007124999999999944,
+    "no_initial_collision": true,
+    "central_bore_open": true,
+    "tested_bore_half_width_m": 0.0285,
+    "pieces": [
+      {
+        "name": "coil_gold",
+        "watertight": true,
+        "winding_consistent": true,
+        "components": 1,
+        "euler_number": 2,
+        "volume_m3": 0.00020720751328125002,
+        "collision_boxes": 13
+      },
+      {
+        "name": "coil_silver",
+        "watertight": true,
+        "winding_consistent": true,
+        "components": 1,
+        "euler_number": 2,
+        "volume_m3": 0.00020530684828125006,
+        "collision_boxes": 15
+      }
+    ],
+    "passed": true,
+    "measured_replica": false,
+    "extraction_route_verified": false,
+    "turning_windows_verified": false,
+    "qualification": "initial authored solid only; exact commercial shape and disassembly remain unverified"
+  },
+  "route": [
+    {
+      "name": "prototype_slide",
+      "passed": true,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 0.0002,
+      "pose_queries": 65,
+      "certified_intervals": 32,
+      "minimum_sample_sat_gap_m": 0.0007124999999999979,
+      "certified_separation_lower_bound_m": 0.00038964843749999785,
+      "witness": null,
+      "motion": {
+        "name": "prototype_slide",
+        "duration_s": 1.5,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          -0.0206625,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "prototype_quarter_turn",
+      "passed": true,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 0.0002,
+      "pose_queries": 513,
+      "certified_intervals": 256,
+      "minimum_sample_sat_gap_m": 0.0007124999999999979,
+      "certified_separation_lower_bound_m": 0.0003984004079269613,
+      "witness": null,
+      "motion": {
+        "name": "prototype_quarter_turn",
+        "duration_s": 3.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          -0.0206625,
+          0.0,
+          0.0
+        ],
+        "end_translation": null,
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "angle_rad": -1.5707963267948966,
+        "pivot": [
+          0.004275,
+          0.0,
+          -0.029925
+        ]
+      }
+    },
+    {
+      "name": "prototype_extract",
+      "passed": true,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 0.0002,
+      "pose_queries": 325,
+      "certified_intervals": 162,
+      "minimum_sample_sat_gap_m": 0.0007499999999999972,
+      "certified_separation_lower_bound_m": 0.00035624999999998505,
+      "witness": null,
+      "motion": {
+        "name": "prototype_extract",
+        "duration_s": 2.5,
+        "start_rotation": [
+          [
+            2.220446049250313e-16,
+            0.0,
+            -1.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            1.0,
+            0.0,
+            2.220446049250313e-16
+          ]
+        ],
+        "start_translation": [
+          -0.025650000000000006,
+          0.0,
+          -0.054862499999999995
+        ],
+        "end_translation": [
+          0.17099999999999999,
+          0.0,
+          -0.0548625
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    }
+  ],
+  "route_certified": true,
+  "straight_controls": [
+    {
+      "name": "straight_x_-1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 4,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.003000000000000013,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.25,
+        "gap_m": -0.003000000000000013,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_x_-1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          -0.24,
+          -0.0,
+          -0.0
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "straight_x_+1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 4,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.003000000000000013,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.25,
+        "gap_m": -0.003000000000000013,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_x_+1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          0.24,
+          0.0,
+          0.0
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "straight_y_-1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 4,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.014249999999999995,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.25,
+        "gap_m": -0.014249999999999995,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_y_-1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          -0.0,
+          -0.24,
+          -0.0
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "straight_y_+1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 5,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.006750000000000001,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.125,
+        "gap_m": -0.006750000000000001,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_y_+1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          0.0,
+          0.24,
+          0.0
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "straight_z_-1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 5,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.018093750000000006,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.125,
+        "gap_m": -0.018093750000000006,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_z_-1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          -0.0,
+          -0.0,
+          -0.24
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    },
+    {
+      "name": "straight_z_+1",
+      "passed": false,
+      "method": "SAT plus adaptive material-displacement bound",
+      "margin_m": 6e-05,
+      "pose_queries": 4,
+      "certified_intervals": 0,
+      "minimum_sample_sat_gap_m": -0.016237500000000002,
+      "certified_separation_lower_bound_m": null,
+      "witness": {
+        "u": 0.25,
+        "gap_m": -0.016237500000000002,
+        "reason": "sample violates margin"
+      },
+      "motion": {
+        "name": "straight_z_+1",
+        "duration_s": 1.0,
+        "start_rotation": [
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "start_translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end_translation": [
+          0.0,
+          0.0,
+          0.24
+        ],
+        "axis": null,
+        "angle_rad": 0.0,
+        "pivot": null
+      }
+    }
+  ],
+  "all_straight_controls_blocked": true,
+  "mass_ratios": [
+    0.9024999999999999,
+    0.9025
+  ],
+  "controller_retuning_applied": false,
+  "physical_execution_verified": false,
+  "scope": "geometry stage only; downstream robot execution reports are separate"
+}

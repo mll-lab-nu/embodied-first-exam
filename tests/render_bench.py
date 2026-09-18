@@ -31,7 +31,7 @@ is never reported without saying which of the two produced it.
     python -m tests.render_bench run.verbose=true
     python -m tests.render_bench run.res=960 run.bench_frames=60
     bash bash_scripts/tests/render_bench.sh          # 扫分辨率, 每档一个进程
-    python -m tests.render_bench task_configs@task=bar_through_hole_topogym_tabletop_v1
+    python -m tests.render_bench task_configs@task=lock_picking
 
 Batch rendering is NOT exercised here; see the report this accompanies for why
 (it needs `n_envs > 0`, and the task/verifier layer indexes environment 0 in 26

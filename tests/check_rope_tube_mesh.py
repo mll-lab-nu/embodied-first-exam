@@ -24,12 +24,10 @@ What it reports, and why each number is here:
   - built-in twist -- the skin is built on a parallel-transported (Bishop) frame,
     so this must be ~0; a non-zero value means the frame drifted.
 
-    python tests/check_rope_tube_mesh.py
     python tests/check_rope_tube_mesh.py --obj <path> --radial 20
 
-Get the OBJ without running physics:
-
-    python -B -m demos.routing.rope_winding_physical_handle_demo run.build_only=true
+Pass a tube OBJ produced by the shared rope mesh builder. No archived task
+or pre-existing task-specific cache is selected implicitly.
 
 Needs numpy only.
 """
@@ -41,9 +39,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-
-REPO = Path(__file__).resolve().parents[1]
-DEFAULT_OBJ = REPO / ".cache/topogym/meshes/rope_winding/cable_routing_initial_fem_ipc_tube.obj"
 
 # Gates.
 #
@@ -100,12 +95,12 @@ def built_in_twist_deg(skin: np.ndarray, centers: np.ndarray) -> np.ndarray:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--obj", type=Path, default=DEFAULT_OBJ)
+    parser.add_argument("--obj", type=Path, required=True)
     parser.add_argument("--radial", type=int, default=20, help="rope.mesh.radial_segments")
     args = parser.parse_args()
 
     if not args.obj.exists():
-        raise SystemExit(f"{args.obj} not found; build it with run.build_only=true first.")
+        raise SystemExit(f"{args.obj} not found; pass an existing tube OBJ.")
 
     verts = read_obj_vertices(args.obj)
     radial = int(args.radial)

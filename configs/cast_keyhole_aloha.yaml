@@ -1,0 +1,29 @@
+defaults:
+  - cast_keyhole_preview
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - _self_
+
+run:
+  output: runs/environment_bootstrap/cast_keyhole/aloha_current_instance
+  fps: 12
+  aloha_low_camera_pitch_offset_deg: 20
+
+env:
+  cameras:
+    detail:
+      res: [1280, 720]
+      pos: [0.30, -0.62, 1.62]
+      lookat: [-0.1356786, 0.0, 1.20]
+      up: [0, 0, 1]
+      fov: 38
+      near: 0.005
+      far: 12
+    oblique:
+      res: [1280, 720]
+      pos: [0.85, -1.05, 1.85]
+      lookat: [-0.1356786, 0.0, 1.15]
+      up: [0, 0, 1]
+      fov: 48
+      near: 0.005
+      far: 12

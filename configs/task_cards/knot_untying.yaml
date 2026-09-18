@@ -1,0 +1,49 @@
+schema_version: 1
+task_id: knot_untying
+title_zh: 解绳结
+baseline:
+  knot_type: overhand
+  variant: trefoil_open_v1
+  closure_knot: trefoil_3_1
+  handedness: right
+  rope_diameter_m: 0.008
+  loop_size_over_diameter: 8.0
+  free_tail_lengths_m: [0.18, 0.18]
+  rest_shape: straight
+axes:
+- path: handedness
+  unit: enum
+  status: candidate
+  validated_range: null
+- path: loop_size_over_diameter
+  unit: ratio
+  status: candidate
+  validated_range: null
+- path: free_tail_lengths_m
+  unit: m
+  status: candidate
+  validated_range: null
+assets:
+- location: topogym/tasks/knot_untying/geometry.py
+  status: local_source
+- location: assets/tasks/knot_untying/trefoil_v1/geometry/rope.obj
+  status: local_source
+- location: topogym/world/genesis_ipc_vertex_constraints.py
+  status: local_source
+physics:
+  backend: genesis_1.2.1_fem_ipc
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: open Fourier trefoil, three alternating crossings, two free tails; straight material reference
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Initial self-intersection
+- Invalid tetrahedra
+- Unintentional knotted rest shape
+first_probe: Loose-knot settling, gentle tail pull and release

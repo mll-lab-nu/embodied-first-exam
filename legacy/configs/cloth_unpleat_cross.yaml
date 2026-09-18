@@ -1,0 +1,47 @@
+# The fixed, reproducible cross sample: first fold along material y, then fold its
+# stack along x. Same folds the 2026-09-10 GPU acceptance ran, pinned by hand so the
+# regression stays comparable; the randomised crosses live on the main task's
+# `variation:` block (`cloth.pleat.layout: cross`).
+# `grasp: corner` + `repair_corners: true` is what the 2026-09-10 acceptance this
+# entry records actually ran (single layer 1.000, length recovery 0.999, width
+# recovery 0.998). It was written as `edges` until 2026-09-11, which did not
+# reproduce those numbers -- the two-edge sequence is 0/6 across every run it has,
+# the corner path 4/4. The `width` below carries 2*pi*r2 and so moves with
+# `cloth.cross.second_radius_particles`; both are argued in the main task yaml.
+defaults:
+  - cloth_unpleat
+  - _self_
+
+# The solver preset (1 mm particles, 16 substeps, the `topogym_tabletop_v1_fine`
+# lock) is no longer set here: `cloth_unpleat.apply_layout_solver` puts it on
+# whenever the drawn or configured layout is `cross`, so this entry and a seed
+# that draws a cross run under exactly the same solver.
+env:
+  genesis:
+    backend: gpu
+
+task:
+  cloth:
+    pleat:
+      layout: cross
+    material_length: 0.23714159265358978
+    width: 0.23884955592153875
+    center_x: 0.015
+    center_y: -0.040
+    cross:
+      flip: -1
+      grasp: corner
+      corner_path: diagonal
+      repair_corners: true
+      repair_settle_steps: 300
+      first: {lead: 0.130, depth: 0.024, tail: 0.080, radius: 0.0005}
+      # radius 手写，因为这个入口不抽 variation，derive_cross_cfg 不跑。两条半径的
+      # 规则和随机格一样：第一折 = 0.5 × 粒径，第二折 = second_radius_particles × 粒径
+      # （主任务 yaml 里现在是 3.0）。改粒径或那个倍数，这里和上面的 width 都要跟着改。
+      second: {lead: 0.130, depth: 0.020, tail: 0.070, radius: 0.003}
+  grasp:
+    finger_axis: arm_default
+  goal:
+    instruction: "Unfold both perpendicular pleats until the cloth lies flat at its full length and width."
+  # Pinned sample, not a variant: no axes are drawn, the folds above stand as written.
+  variation: []

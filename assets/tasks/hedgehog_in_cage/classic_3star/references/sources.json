@@ -1,0 +1,46 @@
+{
+  "model": "RADEMIC CLASSIC *** ordinary aluminium",
+  "retrieved_date": "2026-09-16",
+  "official_cad_found": false,
+  "sources": [
+    {
+      "url": "https://puzzles.rademic.cz/classic.htm",
+      "role": "manufacturer product specification; ordinary CLASSIC section",
+      "facts": {
+        "outer_diameter_mm": 45,
+        "height_mm": 80,
+        "spike_count": 10,
+        "difficulty_stars": 3
+      }
+    },
+    {
+      "url": "https://help.rademic.cz/",
+      "role": "manufacturer solution index"
+    },
+    {
+      "url": "https://help.rademic.cz/hedgehog_in_the_cage_puzzle_classic_solution_rademic_puzzles_IMG_2432um.jpg",
+      "role": "official CLASSIC three-star solution photograph",
+      "local_file": "classic_solution.jpg",
+      "sha256": "f9146d61df4a189656872ffa8f06d914d5a2e2713c60b6b79757b609899abb69"
+    }
+  ],
+  "asset_note": "Reference photo retained for local engineering review with source attribution. Generated geometry is a provisional TopoGym reconstruction, not a manufacturer-supplied CAD asset.",
+  "variant_registry": [
+    {
+      "id": "classic_3star",
+      "spikes": 10,
+      "status": "provisional reconstruction and static scene"
+    },
+    {
+      "id": "original",
+      "spikes": 12,
+      "status": "planned; official solution found; geometry not implemented"
+    },
+    {
+      "id": "worrall_1896",
+      "spikes": 13,
+      "status": "planned; patent only, no step-by-step solution found",
+      "source_url": "https://patents.google.com/patent/US558009A/en"
+    }
+  ]
+}

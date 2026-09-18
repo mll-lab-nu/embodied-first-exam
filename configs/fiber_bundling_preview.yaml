@@ -1,0 +1,98 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: anchored_terminal_v2
+  geometry:
+    seed: 7
+    fiber_count: 8
+    trunk_radius_m: 0.012
+    trunk_length_m: 0.24
+    trunk_segments: 6
+    fiber_radius_m: 0.0012
+    fiber_length_m: 0.08
+    fiber_segments: 10
+    # Tip tangent angles after the axial exit and gradual bend.
+    fan_angle_min_deg: 28
+    fan_angle_max_deg: 50
+    root_spread_m: 0.008
+    ring_inner_radius_m: 0.0135
+    ring_tube_radius_m: 0.004
+    ring_segments: 64
+    fiber_damping: 0.00002
+    trunk_damping: 0.02
+    density_kg_m3: 1100.0
+  trunk_origin_xy_m: [-0.25, 0.40]
+  axis_height_m: 0.24
+  ring_distance_from_roots_m: 0.11
+  # Move the open support 80 mm toward the terminal/table edge. Ring unchanged.
+  cradle_x_m: 0.02
+  layout_revision: spaced_support_v3
+  contact_model: capsule_closest_points_scale_relative_v1
+
+env:
+  preset:
+    locked: false
+  sim:
+    dt: 0.002
+    substeps: 4
+  cameras:
+    overview:
+      res: [1280, 900]
+      pos: [0.90, -1.20, 1.90]
+      lookat: [-0.17, 0.20, 1.20]
+      up: [0, 0, 1]
+      fov: 42
+      near: 0.005
+      far: 12
+    detail:
+      res: [1280, 900]
+      pos: [0.55, 0.92, 1.60]
+      lookat: [-0.30, 0.30, 1.12]
+      up: [0, 0, 1]
+      fov: 48
+      near: 0.005
+      far: 12
+    axial:
+      res: [1000, 1000]
+      pos: [0.68, 0.425, 1.185]
+      lookat: [0.02, 0.40, 1.16]
+      up: [0, 0, 1]
+      fov: 27
+      near: 0.005
+      far: 12
+    cable_end:
+      res: [1200, 900]
+      pos: [0.20, 0.62, 1.28]
+      lookat: [0.015, 0.40, 1.16]
+      up: [0, 0, 1]
+      fov: 26
+      near: 0.002
+      far: 12
+
+    terminal:
+      res: [1280, 900]
+      pos: [-0.85, 0.75, 1.50]
+      lookat: [-0.62, 0.27, 1.11]
+      up: [0, 0, 1]
+      fov: 40
+      near: 0.002
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/fiber_bundling/anchored_spaced_initial
+  viewer: false
+  settle_steps: 100
+  record_video: true
+  fps: 15
+  video_seconds: 4
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

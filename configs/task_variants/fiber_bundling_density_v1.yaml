@@ -1,0 +1,27 @@
+schema_version: 1
+generator_version: fiber_density_radius_v1
+task_id: fiber_bundling
+base_config: fiber_bundling_copper_preview
+scope: candidate_geometry_only
+# Families describe visible packing, not certified difficulty or distinct IK routes.
+families:
+  sparse:
+    title_zh: 稀疏
+    fiber_counts: [4, 5, 6]
+    representative_count: 4
+  standard:
+    title_zh: 标准
+    fiber_counts: [7, 8, 9, 10]
+    representative_count: 8
+  dense:
+    title_zh: 密集
+    fiber_counts: [11, 12, 13, 14, 15, 16]
+    representative_count: 16
+shared:
+  ring_inner_radius_range_m: [0.0128, 0.0150]
+  representative_ring_radii_m: [0.0128, 0.0135, 0.0150]
+  shape_seed: 7
+  minimum_trunk_radial_clearance_m: 0.0007
+  # Shape seed stays fixed to isolate the two requested axes.
+  randomize_shape: false
+release_policy: geometry candidates require their own contact stability and complete robot execution before qualification

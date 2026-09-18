@@ -347,8 +347,7 @@ class PivotLeverPrimitive:
         """
 
         try:
-            qpos = _as_numpy(controller.robot.get_dofs_position()).reshape(-1)
-            return float(np.mean(qpos[-2:]))
+            return float(np.mean(controller.gripper_qpos()))
         except Exception:  # pragma: no cover - controller shape differs
             return float("nan")
 

@@ -1,0 +1,51 @@
+name: staged_lock
+variant: aligned_entry
+seed: 0
+geometry:
+  first_x: 0.20
+  center_y: 0.20
+  axis_z: 1.105
+  pitch: 0.085
+  disc_radius: 0.080
+  disc_thickness: 0.010
+  bore_radius: 0.014
+  slot_radius: 0.045
+  slot_half_deg: 14.0
+  tab_radius: 0.036
+  tab_half_deg: 4.0
+  tab_thickness: 0.005
+  shaft_radius: 0.0065
+  grip_offset: 0.300
+  handle_radius: 0.018
+  slots: [[0, 90, 210], [30, 150, 270], [0, 180, 300]]
+  initial_disc_deg: [20, -5, -25]
+  initial_key_deg: 0.0
+  endpoint_deg: 0.0
+physics:
+  disc_mass: 0.12
+  key_mass: 0.12
+  disc_damping: 0.008
+  friction: 0.25
+  max_penetration: 0.002
+  contact_timeconst: 0.0025
+  max_key_contact_force: 10.0
+assist:
+  enabled: true
+  max_grasp_distance: 0.008
+  max_follow_error: 0.012
+initialization:
+  rest_enabled: true
+  spawn_clearance: 0.0015
+  settle_steps: 200
+  hold_steps: 100
+motion:
+  move_steps: 150
+  turn_steps: 160
+  grasp_qpos: 0.010
+success:
+  depth_tolerance: 0.025
+  max_linear_speed: 0.01
+  max_angular_speed: 0.10
+  max_axis_offset: 0.010
+  max_axis_tilt_deg: 3.0
+  hold_steps: 100

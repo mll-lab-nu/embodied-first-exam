@@ -1,0 +1,22 @@
+defaults:
+  - staged_lock_two_retreats
+  - _self_
+run:
+  output: runs/environment_bootstrap/lock_picking/baseline
+env:
+  sim:
+    substeps: 8
+task:
+  visual:
+    aperture_outline:
+      enabled: true
+      width_m: 0.0015
+      color_rgb: [1.0, 0.95, 0.0]
+  initialization:
+    # Start near the known V-rest support height, reducing the initial drop
+    # impulse while retaining a free body and the original contact force limit.
+    spawn_clearance: 0.0001
+  motion:
+    measured_release_gate: true
+recording:
+  enabled: false

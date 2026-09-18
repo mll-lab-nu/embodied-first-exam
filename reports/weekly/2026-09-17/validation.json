@@ -1,0 +1,2246 @@
+{
+  "checked_at_utc": "2026-09-17T23:23:06.878435+00:00",
+  "passed": true,
+  "local_reference_count": 385,
+  "video_file_count": 199,
+  "embedded_player_count": 38,
+  "missing_references": [],
+  "failed_probes": [],
+  "archive_mismatches": [],
+  "inspected_task_count": 10,
+  "gate_assessment_count": 50,
+  "inspection_issues": [],
+  "primary_video_archive_hashes": [
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_detail.mp4",
+      "expected_sha256": "e15c9c1bf145951fc0fce95d29567741567055b16af946897d7de867bac0d6d3",
+      "actual_sha256": "e15c9c1bf145951fc0fce95d29567741567055b16af946897d7de867bac0d6d3",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_long_stroke_v1/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_detail.mp4",
+      "expected_sha256": "c991786e9f91639ada4761b76f60c7d99ee05bd25bc5fb8648d27a31458ce942",
+      "actual_sha256": "c991786e9f91639ada4761b76f60c7d99ee05bd25bc5fb8648d27a31458ce942",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_eccentric_window_v1/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_detail.mp4",
+      "expected_sha256": "6a4456abe887fe4a8c8b73eb34afe8d8cfae6d4bbe3e5c25677ce500d2b4fc59",
+      "actual_sha256": "6a4456abe887fe4a8c8b73eb34afe8d8cfae6d4bbe3e5c25677ce500d2b4fc59",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_turnback_v1/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_detail.mp4",
+      "expected_sha256": "48a5a6e7821a96db6f3341fd70054135e051312be1486c768121f22a5f557981",
+      "actual_sha256": "48a5a6e7821a96db6f3341fd70054135e051312be1486c768121f22a5f557981",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F1_A/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_detail.mp4",
+      "expected_sha256": "c8a508059893f0530bf4fdbc09d8545e9c419ef6d958f009571446ee1b601d65",
+      "actual_sha256": "c8a508059893f0530bf4fdbc09d8545e9c419ef6d958f009571446ee1b601d65",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F1_B/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_detail.mp4",
+      "expected_sha256": "8bff7a1310db293feca44b7e7ccb3685b8f971581d82cf06f1057525b42fe23c",
+      "actual_sha256": "8bff7a1310db293feca44b7e7ccb3685b8f971581d82cf06f1057525b42fe23c",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F1_C/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_detail.mp4",
+      "expected_sha256": "bf577fa5f94ce669fcc1682c621c3a6f60783d59513ae0c6d5874850f360af4f",
+      "actual_sha256": "bf577fa5f94ce669fcc1682c621c3a6f60783d59513ae0c6d5874850f360af4f",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F2_A/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_detail.mp4",
+      "expected_sha256": "2f3cad17eed207946ac3133752a699a58993f9c4d315582c9be89f2f90efe6b0",
+      "actual_sha256": "2f3cad17eed207946ac3133752a699a58993f9c4d315582c9be89f2f90efe6b0",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F2_B/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_detail.mp4",
+      "expected_sha256": "333eef0c1f6dde02f514e266adcdf36a5c86bd21929318f45f4b38b57fe66d68",
+      "actual_sha256": "333eef0c1f6dde02f514e266adcdf36a5c86bd21929318f45f4b38b57fe66d68",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F2_C/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_detail.mp4",
+      "expected_sha256": "2ffe614f6a3e01cb035bb84a079cd654ae694cf63ed26b154678287d7566c0e3",
+      "actual_sha256": "2ffe614f6a3e01cb035bb84a079cd654ae694cf63ed26b154678287d7566c0e3",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F3_A/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_detail.mp4",
+      "expected_sha256": "96a47efdcfb813bc52df043120067fef7dbfdf63ecdca8c6ec82ab154bf191ad",
+      "actual_sha256": "96a47efdcfb813bc52df043120067fef7dbfdf63ecdca8c6ec82ab154bf191ad",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F3_B/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_detail.mp4",
+      "expected_sha256": "b67fb3da9d7e0922090fda018b481c7e4cd387f45563d1032b108b429eee647d",
+      "actual_sha256": "b67fb3da9d7e0922090fda018b481c7e4cd387f45563d1032b108b429eee647d",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_F3_C/archive_manifest.json",
+      "video": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_detail.mp4",
+      "expected_sha256": "022560f18bed9dc504f071b0d1e6df0f05d5aa8b9e0d26bca1f9dc834bac5737",
+      "actual_sha256": "022560f18bed9dc504f071b0d1e6df0f05d5aa8b9e0d26bca1f9dc834bac5737",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_aloha_full_front_oblique.mp4",
+      "expected_sha256": "aa67350fe78332d1ff8512e182884fe903070c35cc1e26b8a7bc673d72e8e594",
+      "actual_sha256": "aa67350fe78332d1ff8512e182884fe903070c35cc1e26b8a7bc673d72e8e594",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_inverse_eccentric_turn/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_front_oblique.mp4",
+      "expected_sha256": "76a23af6d7a66b5902941b41f9ead14b993e60a9a5744f831abb7a32d9c624ab",
+      "actual_sha256": "76a23af6d7a66b5902941b41f9ead14b993e60a9a5744f831abb7a32d9c624ab",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_inverse_split_turn_offset/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_front_oblique.mp4",
+      "expected_sha256": "87631ca604acaae6b85b36cf88b65cfca70edf7a05e732c9f1e88d72cbe350c7",
+      "actual_sha256": "87631ca604acaae6b85b36cf88b65cfca70edf7a05e732c9f1e88d72cbe350c7",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_inverse_axial_screw_turn/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_front_oblique.mp4",
+      "expected_sha256": "bdc7956a80e9f760f7f2d05a5c007972abbfce473c36615585ede0c0513f7ad3",
+      "actual_sha256": "bdc7956a80e9f760f7f2d05a5c007972abbfce473c36615585ede0c0513f7ad3",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_appearance_face_small/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_appearance_face_small_front_oblique.mp4",
+      "expected_sha256": "c9b15e662b7945274b204c2dea99a16aa3d12846219fda4c82aba866f88bf4bd",
+      "actual_sha256": "c9b15e662b7945274b204c2dea99a16aa3d12846219fda4c82aba866f88bf4bd",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_appearance_depth_thick/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_front_oblique.mp4",
+      "expected_sha256": "f14289b2e0c618cf01381586da557159a447d0ab06910875df2fe48acb0b4363",
+      "actual_sha256": "f14289b2e0c618cf01381586da557159a447d0ab06910875df2fe48acb0b4363",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/cast_coil/2026-09-17_appearance_corner_cut/archive_manifest.json",
+      "video": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_front_oblique.mp4",
+      "expected_sha256": "579bb365b313f1056900fc4a016f772cb91a55b5b68a48d08ecb27df331ce0cf",
+      "actual_sha256": "579bb365b313f1056900fc4a016f772cb91a55b5b68a48d08ecb27df331ce0cf",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/hedgehog_in_cage/2026-09-16_classic_wood/archive_manifest.json",
+      "video": "runs/demos/hedgehog_in_cage/2026-09-16_classic_wood_extraction_front_oblique.mp4",
+      "expected_sha256": null,
+      "actual_sha256": null,
+      "hash_matches": null
+    },
+    {
+      "manifest": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_eccentric_window_v1/archive_manifest.json",
+      "video": "runs/demos/hedgehog_in_cage/2026-09-17_eccentric_window_v1_front_oblique.mp4",
+      "expected_sha256": "c263db631f6e580cc59ededb90ee5b24349b9bfbcd97e21e9b88f37e54b44cde",
+      "actual_sha256": "c263db631f6e580cc59ededb90ee5b24349b9bfbcd97e21e9b88f37e54b44cde",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/archive_manifest.json",
+      "video": "runs/demos/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1_front_oblique.mp4",
+      "expected_sha256": "b5801ad767728a65b5ea805c7c2b87f7cd78f4e61ffc476a8959667153105518",
+      "actual_sha256": "b5801ad767728a65b5ea805c7c2b87f7cd78f4e61ffc476a8959667153105518",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1/archive_manifest.json",
+      "video": "runs/demos/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1_front_oblique.mp4",
+      "expected_sha256": "b9d90c334ee7697fd476e0a0e2db9b2ffdbfb32021d345335ad73294787cb0d6",
+      "actual_sha256": "b9d90c334ee7697fd476e0a0e2db9b2ffdbfb32021d345335ad73294787cb0d6",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1/archive_manifest.json",
+      "video": "runs/demos/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1_front_oblique.mp4",
+      "expected_sha256": "c9662b5198723a1dcb7e5e4570747b7658f57c0d03924221e11cc1b79052d37b",
+      "actual_sha256": "c9662b5198723a1dcb7e5e4570747b7658f57c0d03924221e11cc1b79052d37b",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/horseshoe_ring/2026-09-16_aloha_full/archive_manifest.json",
+      "video": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_detail.mp4",
+      "expected_sha256": null,
+      "actual_sha256": null,
+      "hash_matches": null
+    },
+    {
+      "manifest": "runs/demo_metadata/horseshoe_ring/2026-09-17_compact_roll_planned_v1/archive_manifest.json",
+      "video": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_detail.mp4",
+      "expected_sha256": null,
+      "actual_sha256": null,
+      "hash_matches": null
+    },
+    {
+      "manifest": "runs/demo_metadata/horseshoe_ring/2026-09-17_wide_roll_planned_v1/archive_manifest.json",
+      "video": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_detail.mp4",
+      "expected_sha256": null,
+      "actual_sha256": null,
+      "hash_matches": null
+    },
+    {
+      "manifest": "runs/demo_metadata/horseshoe_ring/2026-09-17_longer_regrasp_planned_v1/archive_manifest.json",
+      "video": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_detail.mp4",
+      "expected_sha256": null,
+      "actual_sha256": null,
+      "hash_matches": null
+    },
+    {
+      "manifest": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/archive_manifest.json",
+      "video": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_detail.mp4",
+      "expected_sha256": "181820f6145c9a6a1c87f62956ed5ade0a75a033edef976f3bbd3b7513f25499",
+      "actual_sha256": "181820f6145c9a6a1c87f62956ed5ade0a75a033edef976f3bbd3b7513f25499",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1/archive_manifest.json",
+      "video": "runs/demos/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1_front_oblique.mp4",
+      "expected_sha256": "c87000bf946ad2d6c74731df83db5e1569bb0e8d9c923fc762f160de6a09bd92",
+      "actual_sha256": "c87000bf946ad2d6c74731df83db5e1569bb0e8d9c923fc762f160de6a09bd92",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01/archive_manifest.json",
+      "video": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01_front_oblique.mp4",
+      "expected_sha256": "6f69a8ce7cfba577c4f7f623b54f3ceffc7a5ccccc96a3e56fdfc20e1304f8ac",
+      "actual_sha256": "6f69a8ce7cfba577c4f7f623b54f3ceffc7a5ccccc96a3e56fdfc20e1304f8ac",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01/archive_manifest.json",
+      "video": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01_front_oblique.mp4",
+      "expected_sha256": "5753630ab5e8cd6ac3f3f522ae41661e284075b428ed1d40f76563ca79863f29",
+      "actual_sha256": "5753630ab5e8cd6ac3f3f522ae41661e284075b428ed1d40f76563ca79863f29",
+      "hash_matches": true
+    },
+    {
+      "manifest": "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01/archive_manifest.json",
+      "video": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01_front_oblique.mp4",
+      "expected_sha256": "1b4b6f33639b3e0b496b7b764a707222636e78bbac3c5e7bc59ac3dde0d4ee57",
+      "actual_sha256": "1b4b6f33639b3e0b496b7b764a707222636e78bbac3c5e7bc59ac3dde0d4ee57",
+      "hash_matches": true
+    }
+  ],
+  "videos": [
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_aloha_full_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_aloha_full_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_aloha_full_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_aloha_full_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_aloha_full_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_corner_cut_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_depth_thick_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_face_small_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.200000",
+      "nb_frames": "604"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_face_small_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.200000",
+      "nb_frames": "604"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_face_small_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.200000",
+      "nb_frames": "604"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_face_small_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.200000",
+      "nb_frames": "604"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_appearance_face_small_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.200000",
+      "nb_frames": "604"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_axial_screw_turn_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_eccentric_turn_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "30.150000",
+      "nb_frames": "603"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "32.150000",
+      "nb_frames": "643"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "32.150000",
+      "nb_frames": "643"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "32.150000",
+      "nb_frames": "643"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 540,
+      "avg_frame_rate": "20/1",
+      "duration": "32.150000",
+      "nb_frames": "643"
+    },
+    {
+      "path": "runs/demos/cast_coil/2026-09-17_inverse_split_turn_offset_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "32.150000",
+      "nb_frames": "643"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_current_instance_physical_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_eccentric_window_v1_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_A_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_B_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F1_C_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_A_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_B_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F2_C_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.166667",
+      "nb_frames": "290"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_A_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_B_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_F3_C_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_process_grid.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1920,
+      "height": 1080,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_families_v1_shape_grid.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1920,
+      "height": 1440,
+      "avg_frame_rate": "12/1",
+      "duration": "12.000000",
+      "nb_frames": "144"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_long_stroke_v1_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "23.916667",
+      "nb_frames": "287"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/cast_keyhole/2026-09-17_turnback_v1_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "28.333333",
+      "nb_frames": "340"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "176.950000",
+      "nb_frames": "3539"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1_composite.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "176.950000",
+      "nb_frames": "3539"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "176.950000",
+      "nb_frames": "3539"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "176.950000",
+      "nb_frames": "3539"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01_composite.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r12p8mm_hybrid_01_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01_composite.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01_composite.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/fiber_bundling/2026-09-17_sparse_04_r15p0mm_hybrid_01_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 900,
+      "avg_frame_rate": "20/1",
+      "duration": "116.700000",
+      "nb_frames": "2334"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-16_classic_wood_extraction_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "82.200000",
+      "nb_frames": "1644"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-16_classic_wood_extraction_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "82.200000",
+      "nb_frames": "1644"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-16_classic_wood_extraction_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "82.200000",
+      "nb_frames": "1644"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-16_classic_wood_preview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "82.200000",
+      "nb_frames": "1644"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_eccentric_window_v1_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.250000",
+      "nb_frames": "987"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_eccentric_window_v1_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.250000",
+      "nb_frames": "987"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_eccentric_window_v1_three_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1440,
+      "height": 360,
+      "avg_frame_rate": "12/1",
+      "duration": "82.250000",
+      "nb_frames": "987"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_eccentric_window_v1_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.250000",
+      "nb_frames": "987"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.583333",
+      "nb_frames": "991"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.583333",
+      "nb_frames": "991"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1_three_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1440,
+      "height": 360,
+      "avg_frame_rate": "12/1",
+      "duration": "82.583333",
+      "nb_frames": "991"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "82.583333",
+      "nb_frames": "991"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "113.000000",
+      "nb_frames": "1356"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "113.000000",
+      "nb_frames": "1356"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1_three_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1440,
+      "height": 360,
+      "avg_frame_rate": "12/1",
+      "duration": "113.000000",
+      "nb_frames": "1356"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "113.000000",
+      "nb_frames": "1356"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1_agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "90.583333",
+      "nb_frames": "1087"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1_front_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "90.583333",
+      "nb_frames": "1087"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1_three_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1440,
+      "height": 360,
+      "avg_frame_rate": "12/1",
+      "duration": "90.583333",
+      "nb_frames": "1087"
+    },
+    {
+      "path": "runs/demos/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "90.583333",
+      "nb_frames": "1087"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/compact_roll_planned/2026-09-17_compact_roll_planned_v1_kinematic_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/longer_regrasp_planned/2026-09-17_longer_regrasp_planned_v1_kinematic_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/original/2026-09-16_aloha_full_kinematic_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_four_views.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/horseshoe_ring/wide_roll_planned/2026-09-17_wide_roll_planned_v1_kinematic_oblique.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "69.083333",
+      "nb_frames": "829"
+    },
+    {
+      "path": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_cam_high.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "10/1",
+      "duration": "158.600000",
+      "nb_frames": "1586"
+    },
+    {
+      "path": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_cam_left_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "10/1",
+      "duration": "158.600000",
+      "nb_frames": "1586"
+    },
+    {
+      "path": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_cam_low.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "10/1",
+      "duration": "158.600000",
+      "nb_frames": "1586"
+    },
+    {
+      "path": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_cam_right_wrist.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "10/1",
+      "duration": "158.600000",
+      "nb_frames": "1586"
+    },
+    {
+      "path": "runs/demos/interlocked_claws/2026-09-17_reference_full_v1_detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 960,
+      "height": 720,
+      "avg_frame_rate": "10/1",
+      "duration": "158.600000",
+      "nb_frames": "1586"
+    },
+    {
+      "path": "runs/environment-solvability/cast_keyhole/inverse_motion_variants_v1/offset_window/recording/detail.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "12/1",
+      "duration": "24.083333",
+      "nb_frames": "289"
+    },
+    {
+      "path": "runs/environment-solvability/lock_picking/spaced_initial/attempt06/agentview.mp4",
+      "passed": true,
+      "codec_name": "h264",
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "20/1",
+      "duration": "159.350000",
+      "nb_frames": "3187"
+    }
+  ],
+  "scope": "HTML and Markdown local links, ten-task five-gate inspection coverage and source references, all linked camera streams via ffprobe, primary duration and available archive hashes. Existing decode evidence reused; physics and full video decoding not rerun. No browser automation available."
+}

@@ -1,0 +1,64 @@
+defaults:
+  - aloha_observation
+  - _self_
+
+camera_rig:
+  id: aloha_demo
+  preview_cameras: [base_camera, teleoperator, collaborator, overhead, worms_eye, wrist, wrist_right, oblique, front, room]
+
+# Start the interactive viewer at the upstream teleoperator viewpoint too.
+viewer:
+  camera_pos: ${env.cameras.teleoperator.pos}
+  camera_lookat: ${env.cameras.teleoperator.lookat}
+  camera_fov: ${env.cameras.teleoperator.fov}
+
+cameras:
+  # Upstream aloha.xml named demo cameras, translated with the robot adapter.
+  # Source xyaxes are normalized to camera up and viewing direction; MJCF's
+  # default fovy=45 is retained. These are NOT observation sensor viewpoints.
+  teleoperator:
+    label: "官方模型展示位 · teleoperator_pov（操作员侧）"
+    res: [960, 540]
+    pos: [-0.1356786, -1.354, 1.5846429]
+    lookat: [-0.1356786, -0.383857500, 1.342107275]
+    up: [0.0, 0.242535625, 0.970142500]
+    fov: 45
+    near: 0.01
+    far: 10.0
+  collaborator:
+    label: "官方模型展示位 · collaborator_pov（协作者侧）"
+    res: [960, 540]
+    pos: [-0.1356786, 1.5, 1.6996429]
+    lookat: [-0.1356786, 0.529857500, 1.457107275]
+    up: [0.0, -0.242535625, 0.970142500]
+    fov: 45
+    near: 0.01
+    far: 10.0
+  # TopoGym presentation views, kept separate from the official model views.
+  oblique:
+    label: "TopoGym 斜视展示"
+    res: [960, 720]
+    pos: [1.25, -1.50, 1.90]
+    lookat: [-0.1356786, 0.0, 1.15]
+    up: [0.0, 0.0, 1.0]
+    fov: 55
+    near: 0.01
+    far: 10.0
+  front:
+    label: "TopoGym 正视展示"
+    res: [960, 640]
+    pos: [-0.1356786, -1.50, 1.62]
+    lookat: [-0.1356786, 0.0, 1.15]
+    up: [0.0, 0.0, 1.0]
+    fov: 55
+    near: 0.01
+    far: 10.0
+  room:
+    label: "TopoGym 实验室全景"
+    res: [960, 720]
+    pos: [1.55, -1.40, 2.10]
+    lookat: [-0.25, 0.10, 1.10]
+    up: [0, 0, 1]
+    fov: 74
+    near: 0.01
+    far: 12.0

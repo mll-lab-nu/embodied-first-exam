@@ -1,0 +1,670 @@
+{
+  "schema_version": 1,
+  "task_id": "interlocked_claws",
+  "plan_id": "interlocked_claws_family_space_v1",
+  "status": "design_targets_not_nine_verified_instances",
+  "target_family_count": 3,
+  "target_representative_count": 9,
+  "family_variable_kind": "categorical",
+  "hierarchy": [
+    "family_id",
+    "appearance_anchor_id",
+    "coupled_shape_and_relative_motion_parameters",
+    "robot_ik_and_inverse_geometry",
+    "individually_qualified_instance",
+    "render_only_appearance"
+  ],
+  "generator_implemented": false,
+  "random_generation_enabled": false,
+  "qualified_instance_ids": [],
+  "qualification_policy": {
+    "require_all_three_families_before_balanced_release": true,
+    "require_all_nine_anchors_before_continuous_expansion": true,
+    "pregrasped_start": true,
+    "grasp_assistance": "declared ideal rigid grasp for initial implementation",
+    "friction_only_grasp_verified": false,
+    "unknown_is_not_pass": true
+  },
+  "current_evidence": {
+    "baseline_assets": "assets/tasks/interlocked_claws/cspace_claw_wang_v1",
+    "baseline_motion": "assets/tasks/interlocked_claws/cspace_claw_wang_v1/recorded_motion.json",
+    "baseline_review": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/reliability_report.json",
+    "baseline_geometry_certificate": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/evidence/reference_geometry/reference_audit.json",
+    "concept_image": "runs/concept_design/interlocked_claws/2026-09-17_three_structures_v1/three_structures_concept.png",
+    "concept_manifest": "runs/concept_design/interlocked_claws/2026-09-17_three_structures_v1/image_manifest.json",
+    "baseline_reference_execution_passed": true,
+    "baseline_generic_contact_controls_passed": false,
+    "new_family_meshes_created": false,
+    "new_family_ik_solved": false,
+    "note_zh": "原版只在声明的理想辅助抓持与参考动作下完成；受力直拉仍有失败。概念图不能作为最终几何或可解性证据。"
+  },
+  "shared_rules": {
+    "body_count": 2,
+    "connected_components_per_body": 1,
+    "topology_held_fixed_within_each_family": true,
+    "same_robot": "ALOHA 2",
+    "robot_base_riser_height_m": 0.02,
+    "original_actuator_force_limits_retained": true,
+    "density_policy": "Keep declared physical density fixed; recompute mass and inertia from each final solid",
+    "family_identity": "Ordered relative SE(3) motion and functional blocking features, not color, global placement, speed, or an arbitrary IK branch",
+    "instance_identity": "Final geometry + grasp frames + full joint trajectory + collision/solver profile + acceptance evidence",
+    "coordinate_policy": "Family-local intrinsic axes; world placement jointly optimized for both arms",
+    "baseline_preservation": "Original Claw meshes, source trajectory and archived demo remain immutable",
+    "protected_regions": [
+      "grasp interfaces",
+      "load-bearing connections",
+      "functional blockers",
+      "minimum wall thickness",
+      "release and support contact regions"
+    ],
+    "clearance_policy": "Derive margin from independently bounded geometry error, relative tracking error including angular motion, interpolation error and reserve; no generic certified numeric margin exists yet",
+    "final_scope": [
+      "unlock",
+      "separate",
+      "transport both pieces",
+      "place on geometry-compatible supports",
+      "remove both grasp constraints",
+      "open both grippers",
+      "withdraw",
+      "unconstrained stable dwell"
+    ]
+  },
+  "families": [
+    {
+      "id": "A",
+      "key": "claw_weave",
+      "name_zh": "圆杆回钩 · 空间互绕",
+      "base_anchor": "A0",
+      "shape_grammar_zh": "两件分别由连续圆杆和双回弯构成，保留开口端与回钩顺序；改变回弯跨度、高宽比例和前后层次。",
+      "motion_signature_zh": "沿原 Claw 解锁轨迹的关键相对构型顺序，多方向转动、错开、抽离。",
+      "relative_frame": "x=main loop span, y=loop depth, z=loop height; establish from a frozen reference feature frame",
+      "seed": "pinned source reference trajectory; key bottleneck segmentation still needs extraction",
+      "fixed_mechanism": [
+        "two return bends per part",
+        "open-ended connected rod",
+        "source bottleneck traversal order",
+        "no inserted screw-only or two-gate action sequence"
+      ],
+      "motion_parameters": {
+        "keyframe_translation_correction_m": {
+          "candidate_bounds": [
+            -0.04,
+            0.04
+          ],
+          "validated_bounds": null
+        },
+        "keyframe_rotation_correction_deg": {
+          "candidate_bounds": [
+            -20,
+            20
+          ],
+          "validated_bounds": null
+        },
+        "policy": "Corrections apply at certified bottleneck seeds; constrained continuous re-optimization, not independent pose noise"
+      },
+      "appearance_axes": {
+        "span_ratio": {
+          "candidate_bounds": [
+            0.85,
+            1.25
+          ],
+          "validated_bounds": null,
+          "feature_zh": "主回弯横向跨度"
+        },
+        "height_ratio": {
+          "candidate_bounds": [
+            0.95,
+            1.25
+          ],
+          "validated_bounds": null,
+          "feature_zh": "回弯高度"
+        },
+        "return_depth_ratio": {
+          "candidate_bounds": [
+            0.85,
+            1.2
+          ],
+          "validated_bounds": null,
+          "feature_zh": "前后回钩深度"
+        },
+        "rod_radius_ratio": {
+          "candidate_bounds": [
+            0.95,
+            1.1
+          ],
+          "validated_bounds": null,
+          "feature_zh": "圆杆截面半径"
+        }
+      },
+      "coupling_rules": [
+        "Ratios are skeleton design targets, not an affine warp with inherited solvability",
+        "Reconstruct both solids from the realized FK sweep while preserving protected interfaces",
+        "Recompute turning centers, offsets, grasps and support fixtures; never scale stored joint angles"
+      ],
+      "negative_controls": [
+        "six-axis straight separation in the family frame",
+        "omit a bottleneck alignment",
+        "replace a curved transition by a direct shortcut",
+        "constant-orientation translation"
+      ],
+      "representatives": [
+        {
+          "id": "A0",
+          "name_zh": "经典回钩",
+          "visual_zh": "保留原始双回弯圆杆，作为默认实模基准。",
+          "parameters": {
+            "span_ratio": 1,
+            "height_ratio": 1,
+            "return_depth_ratio": 1,
+            "rod_radius_ratio": 1
+          },
+          "ik_id": "A0_source_weave",
+          "ik_zh": "已有原参考全过程 IK 与辅助抓持物理运行。",
+          "evidence_status": "reference_execution_passed_contact_controls_failed",
+          "checks": {
+            "geometry_path": true,
+            "robot_ik": true,
+            "physical_execution": true,
+            "half_timestep": true,
+            "contact_controls": false,
+            "visual_review": true
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "A1",
+          "name_zh": "宽展浅钩",
+          "visual_zh": "两件主回弯显著横向展开，前后层次较浅，装配呈横向宽展开轮廓。",
+          "parameters": {
+            "span_ratio": 1.25,
+            "height_ratio": 1,
+            "return_depth_ratio": 0.85,
+            "rod_radius_ratio": 1
+          },
+          "ik_id": "A1_wide_weave",
+          "ik_zh": "同一关键通过顺序；扩大侧向错开和绕行半径，重新求双臂 IK。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "A2",
+          "name_zh": "高窄深钩",
+          "visual_zh": "主回弯高窄、回钩更深；正面比例和侧面层次都区别于 A0/A1。",
+          "parameters": {
+            "span_ratio": 0.85,
+            "height_ratio": 1.25,
+            "return_depth_ratio": 1.2,
+            "rod_radius_ratio": 1.05
+          },
+          "ik_id": "A2_deep_weave",
+          "ik_zh": "同一通过顺序；增加出平面错开和转向避让，重新求双臂 IK。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "key": "helical_crown",
+      "name_zh": "螺旋冠 · 连续旋转推进",
+      "base_anchor": "B0",
+      "shape_grammar_zh": "橙色三条宽螺旋肋以偏置背梁连为一体；蓝色双层错位翼片与回钩由主梁连为一体。",
+      "motion_signature_zh": "围绕一个共同轴线连续相对旋转并同步轴向推进，到窗口后侧向脱出。",
+      "relative_frame": "z=common screw axis, x/y=radial plane; freeze initial relative orientation for the analytic seed",
+      "seed": null,
+      "fixed_mechanism": [
+        "three connected broad ribs",
+        "two staggered wing tiers",
+        "one dominant relative rotation axis",
+        "simultaneous monotone axial advance and rotation",
+        "side exit after alignment"
+      ],
+      "motion_parameters": {
+        "turn_deg": {
+          "candidate_bounds": [
+            90,
+            120
+          ],
+          "anchor_value": 100,
+          "validated_bounds": null
+        },
+        "base_advance_mm": {
+          "anchor_value": 40,
+          "validated_bounds": null
+        },
+        "formula": "advance_mm = 40 * axial_ratio; equivalent_full_turn_lead_mm = 360 * advance_mm / turn_deg"
+      },
+      "appearance_axes": {
+        "radial_ratio": {
+          "candidate_bounds": [
+            0.85,
+            1.25
+          ],
+          "validated_bounds": null,
+          "feature_zh": "螺旋冠径向尺度与翼片跨度"
+        },
+        "axial_ratio": {
+          "candidate_bounds": [
+            0.8,
+            1.25
+          ],
+          "validated_bounds": null,
+          "feature_zh": "冠体高度、层间距及实际推进量"
+        },
+        "ribbon_width_ratio": {
+          "candidate_bounds": [
+            0.9,
+            1.2
+          ],
+          "validated_bounds": null,
+          "feature_zh": "宽肋与翼片的视觉宽度"
+        }
+      },
+      "coupling_rules": [
+        "Advance, tier spacing, rib pitch and wing positions must change together",
+        "For a proven strictly coaxial ideal path only, S=diag(radial_ratio,radial_ratio,axial_ratio) commutes with Rz; transform both bodies and translations consistently",
+        "Ribbon width changes require inverse recarving; an ideal geometric transform does not certify realized robot FK, contacts or dynamics"
+      ],
+      "negative_controls": [
+        "axial pull with rotation frozen",
+        "rotation with axial translation frozen",
+        "reverse screw handedness",
+        "side exit before the aligned window",
+        "sequential turn-then-push instead of the target coupled motion"
+      ],
+      "representatives": [
+        {
+          "id": "B0",
+          "name_zh": "标准螺旋冠",
+          "visual_zh": "高宽均衡的宽肋冠体与双层错位翼芯。",
+          "parameters": {
+            "radial_ratio": 1,
+            "axial_ratio": 1,
+            "ribbon_width_ratio": 1
+          },
+          "target_motion": {
+            "turn_deg": 100,
+            "advance_mm": 40,
+            "equivalent_full_turn_lead_mm": 144
+          },
+          "ik_id": "B0_screw",
+          "ik_zh": "相对转动 100° 同步推进 40 mm，再侧向脱出；双臂分担转动。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "B1",
+          "name_zh": "矮宽扇翼",
+          "visual_zh": "冠体矮宽、翼片横展且宽肋更饱满，具有扇盘状轮廓。",
+          "parameters": {
+            "radial_ratio": 1.25,
+            "axial_ratio": 0.8,
+            "ribbon_width_ratio": 1.15
+          },
+          "target_motion": {
+            "turn_deg": 100,
+            "advance_mm": 32,
+            "equivalent_full_turn_lead_mm": 115.2
+          },
+          "ik_id": "B1_wide_screw",
+          "ik_zh": "保持同步螺旋动作；候选推进 32 mm，增加径向夹持及手臂避让。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "B2",
+          "name_zh": "细高长冠",
+          "visual_zh": "径向收拢、轴向拉长、层间错位更明显，形成细高塔状轮廓。",
+          "parameters": {
+            "radial_ratio": 0.85,
+            "axial_ratio": 1.25,
+            "ribbon_width_ratio": 0.95
+          },
+          "target_motion": {
+            "turn_deg": 100,
+            "advance_mm": 50,
+            "equivalent_full_turn_lead_mm": 180
+          },
+          "ik_id": "B2_tall_screw",
+          "ik_zh": "保持同步螺旋动作；候选推进 50 mm，扩大轴向分离及放置空间。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "key": "orthogonal_gate",
+      "name_zh": "正交双窗 · 分段换轴翻转",
+      "base_anchor": "C0",
+      "shape_grammar_zh": "两扇近正交厚框经偏置侧梁形成一个阶梯框；另一件为宽片、折弯脊梁及带回唇分叉组成的折翼件。",
+      "motion_signature_zh": "内推到转向腔、第一轴翻转、横移与升降到第二窗、第二轴翻转、退出。",
+      "relative_frame": "x=insertion direction, y=inter-window transfer, z=step height; roll about x then pitch about y for the seed",
+      "seed": null,
+      "fixed_mechanism": [
+        "two connected orthogonal windows",
+        "one asymmetric folded wing with paddle and fork",
+        "two different ordered rotation axes",
+        "intermediate transfer",
+        "no extra moving hinges"
+      ],
+      "motion_parameters": {
+        "first_turn_deg": {
+          "anchor_value": 90,
+          "candidate_bounds": [
+            75,
+            100
+          ],
+          "validated_bounds": null
+        },
+        "second_turn_deg": {
+          "anchor_value": 90,
+          "candidate_bounds": [
+            75,
+            100
+          ],
+          "validated_bounds": null
+        },
+        "base_push_mm": 30,
+        "base_transfer_mm": 40,
+        "base_rise_mm": 25,
+        "formula": "push_mm=30*cavity_depth_ratio; transfer_mm=40*window_offset_ratio; rise_mm=25*step_height_ratio"
+      },
+      "appearance_axes": {
+        "window_width_ratio": {
+          "candidate_bounds": [
+            0.9,
+            1.25
+          ],
+          "validated_bounds": null,
+          "feature_zh": "窗口宽度及相配宽片跨度"
+        },
+        "window_offset_ratio": {
+          "candidate_bounds": [
+            0.85,
+            1.4
+          ],
+          "validated_bounds": null,
+          "feature_zh": "两窗横向错位与桥梁跨度"
+        },
+        "cavity_depth_ratio": {
+          "candidate_bounds": [
+            1,
+            1.35
+          ],
+          "validated_bounds": null,
+          "feature_zh": "转向腔深度与内推距离"
+        },
+        "step_height_ratio": {
+          "candidate_bounds": [
+            1,
+            1.35
+          ],
+          "validated_bounds": null,
+          "feature_zh": "台阶高差与两头竖向间距"
+        }
+      },
+      "coupling_rules": [
+        "Resize both gate openings and the folded wing together; derive transfer and turning-space requirements from final solids",
+        "Nonuniform scaling does not generally commute with two orthogonal rotations; recarve and recertify each candidate",
+        "Update each later pivot after the intervening translation; do not retain an obsolete rotation center"
+      ],
+      "negative_controls": [
+        "direct pull",
+        "omit inward push",
+        "omit first rotation",
+        "omit inter-window transfer",
+        "swap the rotation order",
+        "omit second rotation"
+      ],
+      "representatives": [
+        {
+          "id": "C0",
+          "name_zh": "标准双窗",
+          "visual_zh": "两个近正交厚框与不对称 Z 形折翼，台阶和转向腔比例均衡。",
+          "parameters": {
+            "window_width_ratio": 1,
+            "window_offset_ratio": 1,
+            "cavity_depth_ratio": 1,
+            "step_height_ratio": 1
+          },
+          "target_motion": {
+            "push_mm": 30,
+            "first_turn_deg": 90,
+            "transfer_mm": 40,
+            "rise_mm": 25,
+            "second_turn_deg": 90
+          },
+          "ik_id": "C0_double_gate",
+          "ik_zh": "内推 30 mm、翻转、横移 40 mm 并升高 25 mm、换轴翻转后退出。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "C1",
+          "name_zh": "横向宽跨",
+          "visual_zh": "窗口更宽、桥梁横向拉长，折翼两头跨度同步增加。",
+          "parameters": {
+            "window_width_ratio": 1.25,
+            "window_offset_ratio": 1.4,
+            "cavity_depth_ratio": 1,
+            "step_height_ratio": 1
+          },
+          "target_motion": {
+            "push_mm": 30,
+            "first_turn_deg": 90,
+            "transfer_mm": 56,
+            "rise_mm": 25,
+            "second_turn_deg": 90
+          },
+          "ik_id": "C1_wide_double_gate",
+          "ik_zh": "保留两次换轴翻转，候选窗间横移扩大到 56 mm。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        },
+        {
+          "id": "C2",
+          "name_zh": "高阶深腔",
+          "visual_zh": "台阶更高、转向腔更深，折翼脊梁更长；侧面呈明显高低层次。",
+          "parameters": {
+            "window_width_ratio": 0.95,
+            "window_offset_ratio": 0.9,
+            "cavity_depth_ratio": 1.35,
+            "step_height_ratio": 1.35
+          },
+          "target_motion": {
+            "push_mm": 40.5,
+            "first_turn_deg": 90,
+            "transfer_mm": 36,
+            "rise_mm": 33.75,
+            "second_turn_deg": 90
+          },
+          "ik_id": "C2_deep_double_gate",
+          "ik_zh": "保留顺序，候选内推增至 40.5 mm、升高 33.75 mm；窗间横移为 36 mm。",
+          "evidence_status": "proposed",
+          "checks": {
+            "geometry_path": null,
+            "robot_ik": null,
+            "physical_execution": null,
+            "half_timestep": null,
+            "contact_controls": null,
+            "visual_review": null
+          },
+          "release_eligible": false
+        }
+      ]
+    }
+  ],
+  "visual_acceptance": {
+    "status": "proposed_review_protocol",
+    "normalize_global_rigid_pose_and_uniform_scale_for_intrinsic_shape_comparison": true,
+    "review_views": [
+      "canonical_front",
+      "canonical_side",
+      "canonical_three_quarter",
+      "cam_high",
+      "detail"
+    ],
+    "same_camera_material_lighting_for_anchor_comparison": true,
+    "candidate_ratio_change_minimum": 0.15,
+    "candidate_key_feature_image_displacement_px": 12,
+    "image_reference_width_px": 512,
+    "require_two_views_and_human_review": true,
+    "thresholds_are_screening_targets_not_measured_recognition_rates": true,
+    "excluded_as_sole_difference": [
+      "color",
+      "uniform scale",
+      "camera",
+      "global pose",
+      "playback speed",
+      "triangle count"
+    ],
+    "action_comparison": "Compare phase-aligned relative SE(3) paths resampled by geometric arc length, removing common world motion; assess physical full-scene videos too"
+  },
+  "acceptance_gates": [
+    {
+      "id": "G0",
+      "name": "profile_contact_qualification",
+      "requires": "Independent free-motion, blocked motion and gravity controls; no explosive response or unresolved geometry/contact-proxy disagreement. The existing source profile currently fails."
+    },
+    {
+      "id": "G1",
+      "name": "solid_validity",
+      "requires": "Exactly two connected watertight solids; no self-intersection, full containment, cut-away grasps, disconnected blockers or walls below the declared fabrication/collision limits; recomputed mass and inertia"
+    },
+    {
+      "id": "G2",
+      "name": "relative_path_certificate",
+      "requires": "Initial noninterpenetration, complete separation, conservative continuous clearance under the actual joint-interpolation FK; check all intervals and final exported geometry, not only waypoints"
+    },
+    {
+      "id": "G3",
+      "name": "action_signature_and_negative_controls",
+      "requires": "Target path valid and preregistered shortcut/action-omission controls blocked with actual overlap witnesses; failure to certify is not proof of overlap; no claim of global uniqueness"
+    },
+    {
+      "id": "G4",
+      "name": "robot_grasp_and_environment",
+      "requires": "Both arms reconstruct their piece poses, joint/velocity limits, whole-robot collisions including swept intermediates, table/support clearance, realizable grasp interfaces; record continuous versus sampled scope"
+    },
+    {
+      "id": "G5",
+      "name": "visual_distinction",
+      "requires": "Clearly distinguish all three families and all three same-family anchors under the shared image protocol"
+    },
+    {
+      "id": "G6",
+      "name": "full_dynamics_and_half_step",
+      "requires": "Continuous bounded-control execution from declared start through placement, release, withdrawal and free stable dwell; no post-initialization pose overwrite; retained source force limits; repeat at half timestep with predeclared tolerances"
+    },
+    {
+      "id": "G7",
+      "name": "release_record",
+      "requires": "All prior gates passed with geometry/grasp/trace/profile/code hashes; synchronized full-run videos and immutable evidence; otherwise remain candidate"
+    }
+  ],
+  "sampling_plan": {
+    "mode": "offline_propose_validate_bank_then_online_sample",
+    "family_sampling": "balanced per-family quotas with within-family retries; do not globally reject into an easier-family bias",
+    "anchor_sampling": "balanced over each family's three released anchors",
+    "proposal_domain": "correlated neighborhoods of independently accepted anchors, not Cartesian products of per-axis extrema",
+    "initial_local_perturbation_fraction": 0.03,
+    "initial_local_perturbation_is_proposal_only": true,
+    "provisional_max_attempts_per_requested_instance": 100,
+    "exhausted_behavior": "return explicit no-qualified-instance with rejection reasons; never substitute another family or an unverified model",
+    "render_only_axes": [
+      "color",
+      "roughness",
+      "lighting constrained by observability"
+    ],
+    "render_appearance_shared_across_families": true,
+    "first_expansion_target": "20 separately accepted geometry+IK+physics instances per family after all nine anchors pass; does not certify a continuous region",
+    "split_policy": "Group by functional geometry, parent motion and neighborhood lineage; color-only copies stay in one split",
+    "output_fields": [
+      "family_id",
+      "appearance_anchor_id",
+      "seed",
+      "parameter_schema_version",
+      "proposed_parameters",
+      "realized_parameters",
+      "geometry_sha256",
+      "mass_and_inertia",
+      "grasp_frames",
+      "relative_motion",
+      "full_ik_trace_sha256",
+      "robot_and_support_assets",
+      "collision_profile_sha256",
+      "solver_and_controller_settings",
+      "visual_evidence",
+      "geometric_certificates",
+      "negative_control_witnesses",
+      "physical_state_sha256",
+      "half_step_report",
+      "acceptance_status",
+      "rejection_history"
+    ]
+  },
+  "milestones": [
+    "M0: diagnose/replace the failing nonconvex contact representation and qualify the physical profile; retain the original failed evidence",
+    "M1: independently build and qualify A0, B0 and C0 with clearly distinct relative motions and solid geometry",
+    "M2: build A1/A2/B1/B2/C1/C2; all nine anchors independently pass the same acceptance protocol",
+    "M3: expand local conditional proposal neighborhoods and fill balanced validated banks",
+    "M4: enable the released-instance sampler; consider certificate-backed online synthesis separately"
+  ]
+}

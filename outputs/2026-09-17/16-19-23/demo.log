@@ -1,0 +1,6 @@
+[2026-09-17 16:19:25,953][OpenGL.acceleratesupport][INFO] - No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+[2026-09-17 16:19:29,472][genesis][WARNING] - 'max_FPS' is deprecated and will be removed; it now maps to 'refresh_rate'.
+[2026-09-17 16:19:30,313][genesis][WARNING] - (MJCF) Approximating tendon by joint actuator for `finger_joint1`
+[2026-09-17 16:19:30,313][genesis][WARNING] - (MJCF) Approximating tendon by joint actuator for `finger_joint2`
+[2026-09-17 16:19:33,193][genesis][WARNING] - Neutral robot position (qpos0) exceeds joint limits.
+[2026-09-17 16:19:39,225][genesis][WARNING] - Filtered out geometry pairs causing self-collision for the neutral configuration (qpos0): (6, 23), (6, 24), (7, 20), (7, 21), (7, 22), (7, 23), (7, 24), (7, 25), (8, 20), (8, 21), (14, 16), (20, 22). Consider tuning Morph option 'decompose_robot_error_threshold' or specify dedicated collision meshes. This behavior can be disabled by setting Morph option 'enable_neutral_collision=True'.

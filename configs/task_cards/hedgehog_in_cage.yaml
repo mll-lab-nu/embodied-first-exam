@@ -1,0 +1,48 @@
+schema_version: 1
+task_id: hedgehog_in_cage
+title_zh: 刺球出笼
+baseline:
+  variant_id: classic_3star
+  spike_count: 10
+  scene_scale: 3.0
+  spike_length_ratio: null
+  cage_template_id: classic_3star_reconstruction_v1
+  assembly_pose_id: null
+axes:
+- path: variant_id
+  unit: id
+  status: candidate
+  validated_range: null
+variants:
+- {id: classic_3star, spike_count: 10, status: provisional_reconstruction}
+- {id: original, spike_count: 12, status: planned}
+- {id: worrall_1896, spike_count: 13, status: planned}
+assets:
+- location: assets/tasks/hedgehog_in_cage/classic_3star/template.json
+  status: local_source
+- location: assets/tasks/hedgehog_in_cage/classic_3star/references/sources.json
+  status: local_source
+- location: assets/tasks/hedgehog_in_cage/classic_3star/geometry/cage.urdf
+  status: local_source
+- location: assets/tasks/hedgehog_in_cage/classic_3star/geometry/hedgehog.urdf
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: collision-checked static display pose; no gravity settling or validated assembly/escape route
+  preview_config: configs/hedgehog_in_cage_classic_preview.yaml
+  geometry_status: provisional_reconstruction_not_manufacturer_CAD
+robot:
+  family: Panda + Robotiq 2F-85
+  arms:
+  - 1
+  - 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Spike overlaps bar at reset
+- No known legal assembly/escape path
+first_probe: CLASSIC static scene available; next validate exact geometry, spike/bar contact and a legal extraction route

@@ -1,0 +1,81 @@
+# ============================================================================
+# cloth_unpleat 试验用 robot 配置（2026-09-13）：手臂七个关节的 PD 增益加倍
+# （kp 4500…2000 → 9000…4000，kv 同比），手指增益照 fast_fingers（kp 100→500，kv 10→30）。
+#
+# 为什么：拉布的闭环每补拉一次都要等手臂到位再读跨度，base 增益下跟随滞后的时间常数
+# 约 20 步，所以每次补拉后等 120 步（6 倍）；十字一格要补二十几次，等待占了 episode 一大半。
+# 手臂跟得快，等待才砍得动。手指那两项是另一件事：合拢时指垫离桌面近，base 增益下手指
+# 只能贴着桌面蹭（09-13 实测 60 步只从 0.040 到 0.033）。
+#
+# 与 franka_panda_position_ik.yaml 的关系：完整拷贝，只有 controller.kp / kv 不同。
+# 加载器整份加载、不做合并，所以必须整份复制。**维护提醒**：改动 base 的其它段请同步到本文件。
+# 力上限没动（手臂 87/12 N，手指 100 N）——增益加倍后是否撞力上限、有没有过冲，看 A/B 的
+# follow_error_mm / arm_pos_err_mm / pad_tip_mm。
+# ============================================================================
+
+robot:
+  name: franka_panda
+  asset: xml/franka_emika_panda/panda.xml
+  tool_model: ${common.robot_setup.gripper_model}
+  joint_names:
+    - joint1
+    - joint2
+    - joint3
+    - joint4
+    - joint5
+    - joint6
+    - joint7
+    - finger_joint1
+    - finger_joint2
+  arm_joint_count: 7
+  gripper_joint_count: 2
+  ee_link: hand
+
+home:
+  qpos: ${common.robot_setup.home.qpos}
+  settle_steps: ${common.robot_setup.home.settle_steps}
+
+controller:
+  type: position
+  kp: [9000, 9000, 7000, 7000, 4000, 4000, 4000, 500, 500]
+  kv: [900, 900, 700, 700, 400, 400, 400, 30, 30]
+  force_lower: [-87, -87, -87, -87, -12, -12, -12, -100, -100]
+  force_upper: [87, 87, 87, 87, 12, 12, 12, 100, 100]
+
+ik:
+  enabled: true
+  default_ee_quat: [0.0, 1.0, 0.0, 0.0]
+  # ---------------------------------------------- 求解预算（`continuous_ik` 路径）
+  # 全仓所有物理 demo 共用这条路径，2026-08-24 之前这三项写死在
+  # `topogym/robot/franka.py` 里，从来没人调过。
+  #
+  # 实测：把命令位姿抬高 4mm，手只上去 0.2mm（hand_gap 的 dz 从 −1.0 变成 −4.5mm），
+  # 而同一时刻控制器把 IK 给的关节角追到了 0.5° 以内 —— 两档一样。
+  # 也就是**控制器没问题，是求解停早了**：返回的关节角正解不等于目标位姿。
+  #
+  # 留原值以保持所有已标定任务的行为不变；扫参用点路径覆盖：
+  #   robot_control.ik.max_solver_iters=200
+  max_samples: 1
+  max_solver_iters: 50
+  max_step_size: 0.15
+
+gripper:
+  robotiq: ${common.robot_setup.robotiq}
+  open_qpos: 0.04
+  closed_qpos: 0.00
+
+action_protocol:
+  mode: ee_delta
+  dims: [dx, dy, dz, dyaw, gripper]
+  max_delta_xyz: 0.03
+  max_delta_yaw: 0.20
+  workspace:
+    x: ${common.manipulation_space.workspace.x}
+    y: ${common.manipulation_space.workspace.y}
+    z: ${common.manipulation_space.workspace.z}
+
+control_loop:
+  steps_per_action: 20
+  interpolation: linear
+  use_plan_path: false
+  plan_waypoints: 80

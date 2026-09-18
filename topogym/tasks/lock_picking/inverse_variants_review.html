@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lock-picking · 从成功动作反推三种结构</title>
+<style>
+body{max-width:1200px;margin:32px auto;padding:0 22px;background:#edf2f5;color:#243541;font:16px/1.7 system-ui}
+section{background:white;border-radius:12px;padding:22px;margin:22px 0}h1{font-size:29px}h2{font-size:21px}
+table{width:100%;border-collapse:collapse}th,td{padding:9px;text-align:left;border-bottom:1px solid #dce3e7}
+a{color:#076f91}.notice{background:#fff0ca;padding:16px;border-radius:8px}.scroll{overflow:auto}
+canvas{width:100%;background:#fafcfd;border-radius:8px}select,button{font:inherit;padding:7px 12px}
+input{width:65%;vertical-align:middle}output{font-variant-numeric:tabular-nums}.muted{color:#566974}
+</style>
+<h1>Lock-picking：从成功动作反推三种结构</h1>
+<p>种子为已完成的 <code>handle_clearance</code>：Franka + Robotiq 抓钥匙，两次回退后插入终点。</p>
+<p class="notice">本页三种新结构均通过同轴槽口连续几何检查、必要回退下界和机器人 IK 采样检查。
+新结构尚未验证机器人与场景的碰撞及动力学执行。动画是机构示意，起点为已抓取、已对轴；不是新的机器人实录。</p>
+<section><h2>三个候选</h2><div class="scroll"><table id="summary"><thead><tr>
+<th>候选</th><th>必要回退</th><th>D1 本地槽角</th><th>D1 限位</th><th>D2 本地槽角</th><th>动作变化</th>
+</tr></thead><tbody></tbody></table></div>
+<p>“一次回退”指 <strong>D2 → 仅 D1 → D2</strong>；不用把整把钥匙拔出。三片盘、三片同相凸片和 85 mm 间距均沿用种子。
+D3 和 END 的槽角为 0°。槽口半角 8°、凸片半角 4°，保留 ±4° 的角度余量。</p></section>
+<section><h2>查看槽型与动作</h2><p><select id="variant"></select> <button id="play">播放</button>
+<button id="reset">回到起点</button></p><p><input id="time" type="range" min="0" max="1000" step="0.01" value="0">
+<output id="stamp"></output></p><canvas id="mechanism" width="1160" height="535"></canvas>
+<p id="phase"></p><p class="muted">上排为各盘独立正视图，浅色为实际槽口，黑色为钥匙方向；外侧圆弧为盘角行程。
+下排为深度示意。只有凸片到达盘平面才形成啮合；盘间空隙允许钥匙自由转动。</p></section>
+<section><h2>为什么回退次数由结构决定</h2>
+<p>同时啮合时，钥匙角 θ、D1 盘角 α、D2 盘角 β 满足 θ ≈ α+s₁ ≈ β+s₂。
+因此从动作段直接反推 s₁=θ−α、s₂=θ−β，再由 α 的运动范围反推 D1 外环限位。</p>
+<p>含全部槽隙时，每个 D1 槽对应一个 β 可行区间。区间只与相邻分支相交，形成依次换槽的链；
+初态只能进入第一支，D3 入口只接受最后一支。连边的数量就是必要回退下界，展示的连续路径达到这个下界。</p>
+<pre id="graph"></pre><div class="scroll"><table id="bands"><thead><tr><th>D1 槽</th><th>β 可行区间</th><th>相邻可换分支</th></tr></thead><tbody></tbody></table></div>
+<p>下界限定于同轴、准静态、仅靠钥匙槽壁带动盘的模型，包含盘间自由转动；不声称排除了任意偏轴、冲击或直接拨盘操作。</p></section>
+<section><h2>验证与可复现数据</h2><p id="validation"></p><p id="links"></p>
+<p><a href="summary.json">全部结果</a> · <a href="../../../environment_bootstrap/lock_picking/handle_clearance/index.html">成功种子页面</a></p>
+<p>先改动作，再推结构，再用原机器人模型检查 IK。IK 与 CAD 并非一一对应：该方法给出满足同一动作约束的一组结构。
+原运行使用接触确认后的辅助抓持；本批未重跑抓起、松手、接触力控制。现有物理 oracle 将两次回退写死，1/3 次候选需要扩展后再验收。</p></section>
+<script>
+const variants=__VARIANT_DATA__;
+const pick=document.querySelector('#variant'),slider=document.querySelector('#time'),canvas=document.querySelector('#mechanism'),c=canvas.getContext('2d');
+const palette=['#b68b46','#467997','#b46547','#397665'];let playing=false,last=0;
+variants.forEach((v,i)=>{pick.add(new Option(v.title,i));document.querySelector('#summary tbody').insertAdjacentHTML('beforeend',
+`<tr><td>${v.title}</td><td>${v.necessary_retreats}</td><td>${v.geometry.slots[0].join('°, ')}°</td><td>${v.rotor_stops[0].bounds_deg.join('° ～ ')}°</td><td>${v.geometry.slots[1][0]}°</td><td>复位 ${v.reset_angles_deg.join('° / ')}°</td></tr>`)});
+function line(x1,y1,x2,y2,color,width=2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.strokeStyle=color;c.lineWidth=width;c.stroke()}
+function text(s,x,y,size=16,color='#243541'){c.fillStyle=color;c.font=`${size}px system-ui`;c.fillText(s,x,y)}
+function disc(x,y,slots,angle,color,theta,engaged,bounds){
+ c.fillStyle=color;c.beginPath();c.arc(x,y,75,0,2*Math.PI);c.fill();
+ c.fillStyle='#fafcfd';c.beginPath();c.arc(x,y,9,0,2*Math.PI);c.fill();
+ slots.forEach(s=>{c.beginPath();c.moveTo(x,y);c.arc(x,y,44,(-90+s+angle-8)*Math.PI/180,(-90+s+angle+8)*Math.PI/180);c.closePath();c.fill()});
+ const t=(theta-90)*Math.PI/180;line(x,y,x+64*Math.cos(t),y+64*Math.sin(t),engaged?'#162832':'#96a5ae',engaged?4:2);
+ if(bounds){c.beginPath();c.arc(x,y,88,(-90+bounds[0])*Math.PI/180,(-90+bounds[1])*Math.PI/180);c.strokeStyle='#8a9da8';c.lineWidth=7;c.stroke();
+ let a=(angle-90)*Math.PI/180;c.fillStyle='#d97632';c.beginPath();c.arc(x+88*Math.cos(a),y+88*Math.sin(a),5,0,2*Math.PI);c.fill()}
+}
+function draw(){
+ const v=variants[+pick.value],states=v.keyframes,p=+slider.value/1000*(states.length-1),i=Math.min(Math.floor(p),states.length-2),u=p-i;
+ const a=states[i],b=states[i+1],depth=a.depth+(b.depth-a.depth)*u,theta=a.key_deg+(b.key_deg-a.key_deg)*u,angles=a.disc_deg.map((z,j)=>z+(b.disc_deg[j]-z)*u);
+ c.clearRect(0,0,1160,535);
+ for(let j=0;j<4;j++){
+  let engaged=[0,1,2].some(tab=>Math.abs(depth-tab-j-1)<.0882353);
+  disc(150+j*280,165,j<3?v.geometry.slots[j]:[0],j<3?angles[j]:0,palette[j],theta,engaged,j<3?v.rotor_stops[j].bounds_deg:null);
+  text(j<3?`D${j+1} · 盘角 ${angles[j].toFixed(1)}°`:'END · 固定终点',80+j*280,45);
+  text(engaged?'凸片啮合':'未啮合',110+j*280,285,15,engaged?'#173f43':'#71858f');
+ }
+ const xx=d=>140+(d+2)*135;
+ text('轴向深度 / 机构示意',32,336);line(100,410,1085,410,'#d1dbe0',2);
+ for(let j=0;j<4;j++){c.fillStyle=palette[j];c.fillRect(xx(j+1)-7,365,14,88);text(j<3?`D${j+1}`:'END',xx(j+1)-18,480,14)}
+ line(xx(depth-3.5),411,xx(depth),411,'#344957',7);
+ for(let t=0;t<3;t++)line(xx(depth-t),377,xx(depth-t),410,'#172d3b',8);
+ text(`深度 d=${depth.toFixed(2)}    钥匙 θ=${theta.toFixed(1)}°`,32,520,16);
+ document.querySelector('#stamp').textContent=`${(p/(states.length-1)*100).toFixed(0)}%`;
+ document.querySelector('#phase').textContent=`动作 ${i+1}/${states.length-1}：${b.phase}`;
+}
+function select(){
+ let v=variants[+pick.value],p=v.certificate;
+ document.querySelector('#graph').textContent=v.geometry.slots[0].map(s=>s+'°').join(' → ')+'    最少 '+v.necessary_retreats+' 次回退';
+ document.querySelector('#bands tbody').innerHTML=v.geometry.slots[0].map((s,i)=>`<tr><td>${s}°</td><td>[${p.rotor2_angle_intervals_by_rotor1_slot_deg[i].join('°, ')}°]</td><td>${p.reset_graph[i].map(k=>v.geometry.slots[0][k]+'°').join(' / ')}</td></tr>`).join('');
+ document.querySelector('#validation').textContent=`连续同轴几何：通过；必要回退 ${v.necessary_retreats} 次。IK：${v.ik.samples} 个采样，最大位置误差 ${(v.ik.max_position_error_m*1000).toFixed(4)} mm，最大姿态误差 ${(v.ik.max_rotation_error_rad*180/Math.PI).toFixed(4)}°。`;
+ document.querySelector('#links').innerHTML=[['result.json','候选报告'],['keyframes.json','机构关键状态'],['certificate.json','回退下界'],['ik_trace.json','新关节轨迹'],['inspection_config.yaml','场景检查配置'],['assets/disc0/visual.obj','D1 网格']].map(([f,t])=>`<a href="${v.name}/${f}">${t}</a>`).join(' · ');
+ slider.value=0;draw();
+}
+pick.onchange=select;slider.oninput=()=>{playing=false;document.querySelector('#play').textContent='播放';draw()};
+document.querySelector('#play').onclick=()=>{playing=!playing;if(+slider.value>=1000)slider.value=0;document.querySelector('#play').textContent=playing?'暂停':'播放'};
+document.querySelector('#reset').onclick=()=>{playing=false;document.querySelector('#play').textContent='播放';slider.value=0;draw()};
+function tick(t){if(playing&&last){let v=variants[+pick.value];slider.value=Math.min(1000,+slider.value+(t-last)*1000/((v.keyframes.length-1)*1400));draw();if(+slider.value>=1000){playing=false;document.querySelector('#play').textContent='播放'}}last=t;requestAnimationFrame(tick)}
+select();requestAnimationFrame(tick);
+</script></html>

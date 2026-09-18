@@ -1,0 +1,85 @@
+schema_version: 1
+task_id: cast_keyhole
+title_zh: Cast Keyhole
+baseline:
+  asset_id: cast_keyhole_diagram_prototype_v1
+  initial_relative_pose_id: perpendicular_lower_bore_v1
+  scene_scale: 3.0
+  reference_puzzle: Hanayama Huzzle Cast Keyhole HZ 4-11 / 515061
+  human_reference_solution_documented: true
+  measured_replica: false
+  extraction_route_verified: true
+  extraction_route_scope: exact authored perpendicular_lower_bore_v1, unchanged geometry; not the commercial factory-start trajectory
+  layout:
+    yaw_deg: -12.0
+axes:
+- path: initial_relative_pose_id
+  unit: id
+  status: candidate
+  validated_range: null
+- path: layout.yaw_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+assets:
+- location: https://hanayama-toys.com/product/cast-keyhole/
+  status: manufacturer_reference
+- location: https://www.logicagiochi.com/pub/media/wysiwyg/pdf/473743-Cast-Keyhole-Japan.pdf
+  status: human_solution_reference_not_metric_trajectory
+- location: assets/tasks/cast_keyhole/diagram_reference_v1/template.json
+  status: local_source
+- location: assets/tasks/cast_keyhole/diagram_reference_v1/sources.json
+  status: local_source
+- location: topogym/tasks/cast_keyhole/geometry.py
+  status: local_source
+- location: configs/cast_keyhole_preview.yaml
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  local_probe_status: contact_suite_and_full_route_force_bench_passed
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: Authored perpendicular lower-bore interlock, both long axes along the table; not the factory pose. Free bodies with 0.5 mm floor clearance. This relative initial pose has a certified extraction; official panel correspondence and measured dimensions remain unverified.
+robot:
+  family: Panda + Robotiq 2F-85
+  current_role: stationary bootstrap scale reference
+  planned_manipulation_family: ALOHA dual ViperX300
+  planned_arm_count: 2
+  planned_camera_views: [cam_high, cam_low, cam_left_wrist, cam_right_wrist]
+  selection_reason: Each plate needs independent support; a single arm requires a fixture and additional regrasp clearance.
+  arms:
+  - 1
+  - 2
+  dual_arm_qualified: true
+  dual_arm_qualification_scope: one complete pregrasp execution with simultaneous-contact-gated assisted welds; end separated and held, no pickup/release or friction-only qualification
+  dual_arm_ik_qualified: true
+  dual_arm_ik_scope: pregrasp complete trajectory, sampled robot and interpolated-joint collision checks
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Claiming the photo-derived prototype is measured or reproduces the official factory-start trajectory
+- Slot closed by convexification
+- Treating camera motion or separate-part display resets as disassembly
+first_probe: Inspect the reconstructed fork and closed stepped bore; free settling, then measured turn clearances and official route
+evidence:
+  contact_suite: runs/environment-solvability/cast_keyhole/diagram_reference_v1/contact_qualification.json
+  partial_route: runs/environment-solvability/cast_keyhole/diagram_reference_v1/route_probe/report.json
+  full_route_candidate: runs/environment-solvability/cast_keyhole/diagram_reference_v1/full_route_candidate/certificate.json
+  historical_top_candidate_unresolved_stage: transfer_to_penultimate_notch
+  current_instance_route: runs/environment-solvability/cast_keyhole/diagram_reference_v1/current_instance/certificate.json
+  current_instance_physics: runs/environment-solvability/cast_keyhole/diagram_reference_v1/current_instance/physics_dt1ms/report.json
+  current_instance_ik: runs/environment_bootstrap/cast_keyhole/aloha_current_instance/robot_motion.json
+  current_instance_robot_physics: runs/environment-solvability/cast_keyhole/diagram_reference_v1/current_instance/robot_physics/report.json
+  current_instance_robot_audit: runs/environment-solvability/cast_keyhole/diagram_reference_v1/current_instance/robot_physics/audit.json
+  review: runs/environment-solvability/cast_keyhole/diagram_reference_v1/index.html
+  formal_demo_qualified: true
+  formal_demo_scope: pregrasp current instance, bilateral-contact-gated assisted grasp, separation and held rest; no tabletop pickup or unassisted release
+  archived_physical_demo: runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/recording_qualification.json
+demo_archive:
+  video_directory: runs/demos/cast_keyhole
+  metadata_directory: runs/demo_metadata/cast_keyhole
+  filename_pattern: "<date>_<run_id>_<camera>.mp4"
+  status: complete_scoped_physical_demo_and_kinematic_rehearsal_archived
+  physical_index: runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/index.html
+  kinematic_index: runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_ik/index.html

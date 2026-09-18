@@ -1,0 +1,66 @@
+# ALOHA 2 four-camera observation rig for world_tabletop_aloha_v1.
+# Source: google-deepmind/mujoco_menagerie, revision
+# 8161bba264d7fa7c99ca301e91e7fb44737676ad, aloha/{scene,aloha}.xml.
+# Fixed camera poses: source + [-0.1356786, 0, 0.9196429 - 0.02].
+# This matches the robot adapter's 20 mm lowering; orientations are unchanged.
+# 640x360 keeps the source 1280x720 aspect ratio. Genesis uses square pixels
+# and vertical FOV, so this is not a full calibrated D405 intrinsics model.
+camera_rig:
+  id: aloha_observation
+  observation_cameras: [overhead, worms_eye, wrist, wrist_right]
+  preview_cameras: [base_camera, overhead, worms_eye, wrist, wrist_right]
+
+cameras:
+  overhead:
+    label: "高位观测 · overhead_cam / cam_high"
+    res: [640, 360]
+    pos: [-0.1356786, -0.303794, 1.9248829]
+    lookat: [-0.1356786, 0.118522348, 1.018434389]
+    up: [0.0, 0.906448511, 0.422316348]
+    fov: 58.008335
+    near: 0.01
+    far: 5.0
+  worms_eye:
+    label: "低位观测 · worms_eye_cam / cam_low"
+    description: "此视角面向贴近桌面的操作区；当前 home 姿态的夹爪大部分位于画面上缘之外。"
+    res: [640, 360]
+    pos: [-0.1356786, -0.377167, 0.9312484]
+    lookat: [-0.1356786, 0.618304520, 1.026308658]
+    up: [0.0, -0.095060258, 0.995471520]
+    fov: 58.008335
+    near: 0.01
+    far: 5.0
+  # Preserve existing TopoGym camera keys; `wrist` is the LEFT wrist.
+  wrist:
+    label: "左腕观测 · wrist_cam_left / cam_left_wrist"
+    res: [640, 360]
+    # Fallback world pose when create(include_robot=False).
+    pos: [-0.6, -0.019, 1.25]
+    lookat: [-0.1356786, 0.0, 0.95]
+    up: [0.0, 0.0, 1.0]
+    fov: 58.008335
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: left/gripper_base
+      offset_pos: [0.0, -0.0824748, -0.0095955]
+      offset_lookat: [0.0, 0.340144175, 0.896711954]
+      offset_up: [0.0, -0.906307454, 0.422618975]
+  wrist_right:
+    label: "右腕观测 · wrist_cam_right / cam_right_wrist"
+    res: [640, 360]
+    pos: [0.33, -0.019, 1.25]
+    lookat: [-0.1356786, 0.0, 0.95]
+    up: [0.0, 0.0, 1.0]
+    fov: 58.008335
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: right/gripper_base
+      offset_pos: [0.0, -0.0824748, -0.0095955]
+      offset_lookat: [0.0, 0.340144175, 0.896711954]
+      offset_up: [0.0, -0.906307454, 0.422618975]

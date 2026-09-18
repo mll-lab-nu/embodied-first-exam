@@ -1,0 +1,34 @@
+{
+  "purpose": "Initial environment fork; geometry unchanged; builder renamed",
+  "files": [
+    {
+      "source": "topogym/tasks_legacy/connectivity/_staged_lock_geometry.py",
+      "destination": "topogym/tasks/lock_picking/_staged_lock_geometry.py",
+      "source_sha256": "4626fb55ad22c0b3c42373aac5891c5c96cafcf8e85b364f0d66de1336dea2de",
+      "destination_sha256": "4626fb55ad22c0b3c42373aac5891c5c96cafcf8e85b364f0d66de1336dea2de",
+      "archived_source": "legacy/topogym/tasks_legacy/connectivity/_staged_lock_geometry.py"
+    },
+    {
+      "source": "topogym/tasks_legacy/connectivity/_staged_lock_limits.py",
+      "destination": "topogym/tasks/lock_picking/_staged_lock_limits.py",
+      "source_sha256": "d38c96aa534b9d3aeb8ed514c45124dcada210232942cf5bae6574d9bd667507",
+      "destination_sha256": "d38c96aa534b9d3aeb8ed514c45124dcada210232942cf5bae6574d9bd667507",
+      "archived_source": "legacy/topogym/tasks_legacy/connectivity/_staged_lock_limits.py"
+    },
+    {
+      "source": "topogym/tasks_legacy/connectivity/_staged_lock_ring.py",
+      "destination": "topogym/tasks/lock_picking/_staged_lock_ring.py",
+      "source_sha256": "8b3cea5a4ab0be9915a40bbe352402d9aafc888a1dcd4dcc709a12ec50705fd5",
+      "destination_sha256": "8b3cea5a4ab0be9915a40bbe352402d9aafc888a1dcd4dcc709a12ec50705fd5",
+      "archived_source": "legacy/topogym/tasks_legacy/connectivity/_staged_lock_ring.py"
+    },
+    {
+      "source": "topogym/tasks_legacy/connectivity/staged_lock.py",
+      "destination": "topogym/tasks/lock_picking/scene.py",
+      "source_sha256": "8ef07467ffc3e520e1cb583d76854ed51af041b7aaa034d79d977673025de497",
+      "destination_sha256": "8f6be95ce11312aa6fd828bbeb1473df0b44d8fa4bfd6cd6ffc3cca41a2eba9b",
+      "archived_source": "legacy/topogym/tasks_legacy/connectivity/staged_lock.py"
+    }
+  ],
+  "archive_note": "Original source/destination hashes describe the initial fork, not subsequent edits. Old source is now a read-only archive."
+}

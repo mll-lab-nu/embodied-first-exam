@@ -1,0 +1,85 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: cast_coil_photo_prototype_v1
+  # Authored 34 x 24.75 x 34 mm prototype, enlarged uniformly for inspection.
+  scale: 3.0
+  center_xy_m: [0.06, 0.16]
+  yaw_deg: -12
+  initial_floor_clearance_m: 0.0005
+  seed: 0
+
+robot_control:
+  home:
+    # Park the hand above and behind the puzzle so close-up views remain clear.
+    qpos: [0.0, -0.65, 0.0, -2.35, 0.0, 1.70, -0.7853981634, 0.04, 0.04]
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+  sim:
+    dt: 0.001
+    substeps: 4
+  renderer:
+    type: nyx
+    spp: 32
+  appearance:
+    - {pattern: coil_gold, color: [0.53, 0.39, 0.12], metallic: 0.82, roughness: 0.34}
+    - {pattern: coil_silver, color: [0.39, 0.43, 0.47], metallic: 0.82, roughness: 0.34}
+  cameras:
+    overview:
+      res: [1280, 800]
+      pos: [1.10, -1.35, 1.90]
+      lookat: [-0.17, 0.08, 1.15]
+      up: [0, 0, 1]
+      fov: 40
+      near: 0.005
+      far: 12
+    detail:
+      res: [1000, 1000]
+      pos: [0.30, -0.24, 1.24]
+      lookat: [0.06, 0.16, 0.982]
+      up: [0, 0, 1]
+      fov: 24
+      near: 0.005
+      far: 12
+    opposite:
+      res: [1000, 1000]
+      pos: [-0.19, 0.56, 1.23]
+      lookat: [0.06, 0.16, 0.982]
+      up: [0, 0, 1]
+      fov: 24
+      near: 0.005
+      far: 12
+    video:
+      res: [960, 640]
+      pos: [0.30, -0.24, 1.24]
+      lookat: [0.06, 0.16, 0.982]
+      up: [0, 0, 1]
+      fov: 26
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/cast_coil/assembly_initial
+  viewer: false
+  include_robot: true
+  # Zero means static inspection. A positive duration also checks free settling.
+  settle_seconds: 0.5
+  record_video: true
+  video_seconds: 6
+  fps: 20
+  orbit_degrees: 110
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

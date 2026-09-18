@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "units": "mm",
+  "scale": 3.0,
+  "scope": "Partial geometric route candidates only; no complete official solution or robot commands",
+  "source": "https://www.logicagiochi.com/pub/media/wysiwyg/pdf/473743-Cast-Keyhole-Japan.pdf",
+  "supplementary_photos": "https://puzzlesolverpro.com/how-to-solve-the-hanayama-keyhole-brain-teaser-puzzle/",
+  "correspondence": "Cap-linked start, quarter turn, approach to first notch; panel-by-panel correspondence unverified",
+  "gold_pose": "Canonical XY outline, thickness along Z; gold fixed for geometric analysis",
+  "initial_silver_rotation": [
+    [
+      0,
+      0,
+      -1
+    ],
+    [
+      0,
+      -1,
+      0
+    ],
+    [
+      -1,
+      0,
+      0
+    ]
+  ],
+  "initial_silver_translation_mm": [
+    0,
+    50,
+    0
+  ],
+  "quarter_turn_axis": [
+    1,
+    0,
+    0
+  ],
+  "quarter_turn_pivot_mm": [
+    0,
+    29.5,
+    0
+  ],
+  "quarter_turn_degrees": 90.0,
+  "first_notch_waypoints": [
+    {
+      "translation_mm": [
+        0.0,
+        29.5,
+        20.5
+      ],
+      "yaw_rad": 1.5707963267948966
+    },
+    {
+      "translation_mm": [
+        -6.0791909359165235,
+        26.634795589377163,
+        17.358150131717668
+      ],
+      "yaw_rad": 2.1496205657611305
+    },
+    {
+      "translation_mm": [
+        -8.654251443148514,
+        22.75556859907275,
+        16.259217440636863
+      ],
+      "yaw_rad": 2.453099658987333
+    },
+    {
+      "translation_mm": [
+        -9.380692252089888,
+        19.077878766124556,
+        16.00295091140153
+      ],
+      "yaw_rad": 2.616501268196104
+    },
+    {
+      "translation_mm": [
+        -12.545211594765783,
+        11.130736463106622,
+        16.477854020089676
+      ],
+      "yaw_rad": 3.090894465423309
+    },
+    {
+      "translation_mm": [
+        -13.547690649037355,
+        12.026394820739952,
+        13.805982233293125
+      ],
+      "yaw_rad": 3.141592653589793
+    },
+    {
+      "translation_mm": [
+        -13.15,
+        11.9,
+        11.85
+      ],
+      "yaw_rad": 3.141592653589793
+    }
+  ],
+  "waypoint_rotation": "Rz(yaw_rad) @ Rx(-pi/2)",
+  "complete_route": false,
+  "robot_execution": false
+}

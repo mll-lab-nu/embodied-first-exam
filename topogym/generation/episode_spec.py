@@ -63,6 +63,17 @@ class TaskVariant:
     key: EpisodeKey
     difficulty: str = "default"
     parameters: Mapping[str, Any] = field(default_factory=dict)
+    #: The episode's natural-language instruction, already filled in for this
+    #: seed. It belongs to the variant because for three tasks it varies with a
+    #: sampled axis (cloth_fold's corner, ring_transfer's goal post,
+    #: rope_winding's direction) -- those are the axes the picture cannot show.
+    instruction: str = ""
+    #: The same fact as `instruction`, as an integer, for baselines that take no
+    #: language: which entry of this task's own finite goal list the sentence
+    #: names (linkbar's target colour, red 0 and blue 1). A task whose
+    #: instruction is a constant has one goal and leaves this 0. What the number
+    #: means per task is the task module's `goal.goal_id_fn`.
+    goal_id: int = 0
     notes: str = ""
 
     def parameters_dict(self) -> dict[str, Any]:

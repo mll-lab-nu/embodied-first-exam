@@ -205,6 +205,21 @@ class ClothLinkAttachDragPrimitive:
     #: Steps spent holding the descent's final pose before the attach is checked.
     #: Same reason as `carry_settle_steps`; 0 keeps `cloth_fold`'s behaviour.
     touch_settle_steps: int = 0
+    #: Steps spent holding still AFTER the material is bound and BEFORE the first
+    #: drag waypoint. Nothing physical needs it: the bind is rigid and the arm is
+    #: already parked. It exists for the recording -- without it the fingers close
+    #: and the sheet starts moving in the same breath, which reads as the cloth
+    #: being dragged by the closing fingers rather than held and then pulled
+    #: (2026-09-13 review of the cross videos). 0 keeps every other task as is.
+    attach_hold_steps: int = 0
+    #: Steps spent holding still after EVERY drag waypoint, so the opening
+    #: stroke is a series of short pulls with a pause between them instead of one
+    #: continuous glide. One 100 mm glide on a cross sheet snaps it taut in a
+    #: single motion (2026-09-13 front-camera review, frames 24.5-28.5 s); the
+    #: closed-loop extensions that follow are 5 mm nudges with a settle each and
+    #: read as gentle. This makes the opening stroke behave the same way. 0 keeps
+    #: the continuous glide every other task was calibrated with.
+    segment_settle_steps: int = 0
     #: Set when the caller has already opened the gripper -- typically because it
     #: opened it DURING the scene's settle, so the motion costs no extra steps.
     #: Opening again is harmless but adds `gripper_steps` of an arm doing nothing,
@@ -296,6 +311,7 @@ class ClothLinkAttachDragPrimitive:
         ee_quat=None,
         particles_fn,
         on_phase=None,
+        on_snapshot=None,
         extend=None,
     ) -> ClothAttachDragResult:
         """Attach at ``grasp_point``, carry along ``waypoints``, release, retreat.
@@ -309,15 +325,34 @@ class ClothLinkAttachDragPrimitive:
         reads unfolded instead of trusting a distance computed in advance. The
         default keeps the open-loop behaviour every other caller was calibrated
         with.
+
+        ``on_snapshot`` receives ``carry_settled`` before each extension check,
+        and ``before_release`` / ``detached`` on either side of unbinding without
+        a simulation step between them. It does not alter existing phase labels.
         """
 
         self._phases = []
+        # Preserve the configured tip clearance with the longer 2F-85 pads.
+        # This is local to the run; reusing a primitive must not add it twice.
+        touch_clearance = float(self.touch_clearance) + max(
+            0., float(getattr(controller, "pad_half_height", .0085)) - .0085
+        )
+        if getattr(controller, "is_robotiq", False):
+            touch_clearance = max(touch_clearance, controller.pad_half_height + .003)
+        gripper_steps = (controller.gripper_settle_steps(self.gripper_steps)
+                         if hasattr(controller, "gripper_settle_steps") else int(self.gripper_steps))
+
+        def lowest_pad_z():
+            if hasattr(controller, "lowest_pad_z"):
+                return controller.lowest_pad_z()
+            return float(controller.hand_pos()[2]) - HAND_TO_PAD_TIP_Z
+
         grasp_point = np.asarray(grasp_point, dtype=float)
         if not waypoints:
             raise ValueError("a carry needs at least one waypoint.")
 
         if not self.skip_initial_open:
-            controller.open_gripper(int(self.gripper_steps))
+            controller.open_gripper(gripper_steps)
         self._phases.append("open")
 
         # Down to a hand height that leaves the pads `touch_clearance` above the
@@ -331,7 +366,7 @@ class ClothLinkAttachDragPrimitive:
             z_band=(None if self.attach_z_band is None else float(self.attach_z_band)),
             single=bool(self.attach_single_particle),
         )
-        pad_z = float(nodes[indices, 2].max()) + float(self.touch_clearance)
+        pad_z = float(nodes[indices, 2].max()) + touch_clearance
         touch_hand = self._hand_for_pad(grasp_point, pad_z)
 
         approach_hand = touch_hand.copy()
@@ -348,7 +383,7 @@ class ClothLinkAttachDragPrimitive:
 
         if self.close_before_descend and self.grasp_qpos is not None:
             self._notify(on_phase, "close")
-            controller.set_gripper(float(self.grasp_qpos), steps=int(self.gripper_steps))
+            controller.set_gripper(float(self.grasp_qpos), steps=gripper_steps)
             self._phases.append("close")
 
         self._notify(on_phase, "descend")
@@ -366,7 +401,8 @@ class ClothLinkAttachDragPrimitive:
         # Did the hand actually arrive over the material? Grabbing from further
         # away than this would be a gripper with a magnet, and it would erase
         # "picked up the wrong layer" as a failure mode the benchmark needs.
-        reached = self._pad_for_hand(controller.hand_pos())
+        reached = (controller.grasp_center_pos() if hasattr(controller, "grasp_center_pos")
+                   else self._pad_for_hand(controller.hand_pos()))
         attach_error = float(np.linalg.norm(reached[:2] - grasp_point[:2]))
         if attach_error > float(self.attach_tolerance):
             self._retreat(controller, ee_quat)
@@ -385,8 +421,19 @@ class ClothLinkAttachDragPrimitive:
 
         if self.grasp_qpos is not None and not self.close_before_descend:
             self._notify(on_phase, "close")
-            controller.set_gripper(float(self.grasp_qpos), steps=int(self.gripper_steps))
+            controller.set_gripper(float(self.grasp_qpos), steps=gripper_steps)
             self._phases.append("close")
+            # The finger joints as the solver has them, not as commanded. Logged
+            # because a 2026-09-13 review saw the fingers open through the whole
+            # pull in the recording while this phase was in the log.
+            print(f"cloth_fold gripper_after_close commanded={float(self.grasp_qpos):.4f} "
+                  f"joints={np.round(np.asarray(controller.gripper_qpos()).ravel(), 4).tolist()}", flush=True)
+
+        if getattr(controller, "is_robotiq", False):
+            # The driver linkage extends while closing. Re-command the fixed
+            # approach pose until the heavier tool settles before binding cloth.
+            self._hold(controller, touch_hand, ee_quat,
+                       max(1, int(np.ceil(.8 / float(controller.scene.dt)))))
 
         # Bound BEFORE the solver runs, and where the particles already are, so
         # there is no teleport on the first step: a 13 mm jump in one 10 ms step
@@ -407,13 +454,22 @@ class ClothLinkAttachDragPrimitive:
             print(
                 f"cloth_fold attach particles={len(indices)} "
                 f"attach_error_mm={attach_error * 1e3:.2f} "
-                f"clearance_mm={float(self.touch_clearance) * 1e3:.1f} "
+                f"clearance_mm={touch_clearance * 1e3:.1f} "
                 # Negative = the pad tip is inside the sheet. With the arm outside
                 # the coupler that is free visually and costs nothing physically;
                 # it is the TABLE the tip must stay above.
-                f"pad_tip_mm={(float(controller.hand_pos()[2]) - HAND_TO_PAD_TIP_Z - float(grasp_point[2])) * 1e3:+.1f}",
+                f"pad_tip_mm={(lowest_pad_z() - float(grasp_point[2])) * 1e3:+.1f}",
                 flush=True,
             )
+
+        if int(self.attach_hold_steps) > 0:
+            # Grasped, and visibly not yet moving. Same hold the touch settle
+            # uses, at the same commanded pose, so the arm does not drift.
+            self._notify(on_phase, "attach_hold")
+            self._hold(controller, touch_hand, ee_quat, int(self.attach_hold_steps))
+            self._phases.append("attach_hold")
+            print(f"cloth_fold gripper_after_hold "
+                  f"joints={np.round(np.asarray(controller.gripper_qpos()).ravel(), 4).tolist()}", flush=True)
 
         worst_follow = 0.0
         worst_pad_tip = float("inf")
@@ -442,7 +498,7 @@ class ClothLinkAttachDragPrimitive:
                 # much higher puts the material on the waypoint.
                 commanded = self._hand_for_pad(
                     target,
-                    float(target[2]) + float(self.touch_clearance) + height_trim,
+                    float(target[2]) + touch_clearance + height_trim,
                 )
                 # Before the motion, not after. Setting it after left every glide
                 # filed under the PREVIOUS label: `attach:43` on `cloth_unroll`
@@ -450,6 +506,8 @@ class ClothLinkAttachDragPrimitive:
                 # descent, fixed there 2026-08-24 and missed here.
                 self._notify(on_phase, waypoint.label)
                 self._glide(controller, commanded, ee_quat, steps)
+                if int(self.segment_settle_steps) > 0:
+                    self._hold(controller, commanded, ee_quat, int(self.segment_settle_steps))
                 # How far the held material is from where it was asked to be. With a
                 # link binding this stays near zero; a growing value means the arm
                 # could not reach and the cloth is being stretched to cover it.
@@ -467,7 +525,7 @@ class ClothLinkAttachDragPrimitive:
                 tilt = _quat_angle(controller.hand_quat(), ee_quat) if ee_quat is not None else 0.0
                 worst_pose = max(worst_pose, pose)
                 worst_tilt = max(worst_tilt, tilt)
-                pad_tip = float(reached[2]) - HAND_TO_PAD_TIP_Z - float(target[2])
+                pad_tip = lowest_pad_z() - float(target[2])
                 worst_pad_tip = min(worst_pad_tip, pad_tip)
                 if self.hold_pad_height:
                     # Against the GEOMETRIC target, which does not contain the trim.
@@ -477,7 +535,7 @@ class ClothLinkAttachDragPrimitive:
                     # the first recorded run: `pad_tip_mm` went -1.4 -> +10.7 over
                     # eight segments and the gripper ended up floating above the
                     # sheet. With the trim excluded the loop settles at d and holds.
-                    desired = float(target[2]) + float(self.touch_clearance) + HAND_TO_PAD_Z
+                    desired = float(target[2]) + touch_clearance + HAND_TO_PAD_Z
                     height_trim = float(
                         np.clip(
                             height_trim + (desired - float(reached[2])),
@@ -503,7 +561,7 @@ class ClothLinkAttachDragPrimitive:
                         f"follow_mm={follow * 1e3:.1f} "
                         f"arm_pos_err_mm={pose * 1e3:.1f} "
                         f"arm_gap_mm=({gap[0] * 1e3:+.1f},{gap[1] * 1e3:+.1f},{gap[2] * 1e3:+.1f}) "
-                        f"pad_tip_mm={(reached[2] - HAND_TO_PAD_TIP_Z - float(target[2])) * 1e3:+.1f} "
+                        f"pad_tip_mm={(lowest_pad_z() - float(target[2])) * 1e3:+.1f} "
                         f"held_dz_mm={(float(held[2]) - bind_height) * 1e3:+.1f} "
                         f"trim_mm={height_trim * 1e3:.1f} "
                         f"hand=({reached[0]:+.3f},{reached[1]:+.3f},{reached[2]:+.3f}) "
@@ -515,7 +573,7 @@ class ClothLinkAttachDragPrimitive:
             if int(self.carry_settle_steps) > 0:
                 final = np.asarray(queue[-1].position, dtype=float)
                 commanded = self._hand_for_pad(
-                    final, float(final[2]) + float(self.touch_clearance)
+                    final, float(final[2]) + touch_clearance
                 )
                 self._hold(controller, commanded, ee_quat, int(self.carry_settle_steps))
                 held = np.asarray(particles_fn()[indices].mean(axis=0), dtype=float)
@@ -539,6 +597,7 @@ class ClothLinkAttachDragPrimitive:
             # Closed loop on the material: ask the caller whether the cloth reads
             # done, and drive whatever it hands back. Measured only after the hold
             # above, so the reading is not taken while the arm is still lagging.
+            self._notify(on_snapshot, "carry_settled")
             more = None if extend is None else extend(particles_fn())
             if not more:
                 break
@@ -547,7 +606,17 @@ class ClothLinkAttachDragPrimitive:
             self._phases.append(f"extend_{extensions}")
         self._phases.append("carried")
 
+        self._notify(on_snapshot, "before_release")
         cloth.release_particle(particles_idx_local=[int(i) for i in indices])
+        self._notify(on_snapshot, "detached")
+        # Opening the fingers is what lets go on a real robot. Detaching the
+        # particle constraint is the simulator's half of it and is not an action
+        # the arm can express, so without this the recorded `gripper_action`
+        # closes once and never reopens -- a policy cloned from it would learn to
+        # keep holding. Every rigid primitive already pairs its release with an
+        # open (`gateway_extract.py:540-542`, `axial_insert.py:366-368`,
+        # `gated_insert.py:296-298`); this brings the cloth family in line.
+        controller.open_gripper(gripper_steps)
         self._phases.append("release")
         self._notify(on_phase, "release")
         controller.step(max(0, int(self.release_settle_steps)))
@@ -640,7 +709,8 @@ class ClothLinkAttachDragPrimitive:
 
         start = np.asarray(controller.hand_pos(), dtype=float)
         target = np.asarray(target, dtype=float)
-        steps = max(1, int(steps))
+        steps = max(1, int(np.ceil(steps * float(
+            getattr(controller, "oracle_motion_time_scale", 1.0)))))
         for index in range(1, steps + 1):
             alpha = index / steps
             controller.move_ee_to(

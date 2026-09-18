@@ -3,6 +3,7 @@
 robot:
   name: franka_panda
   asset: xml/franka_emika_panda/panda.xml
+  tool_model: ${common.robot_setup.gripper_model}
   joint_names:
     - joint1
     - joint2
@@ -46,6 +47,7 @@ ik:
   max_step_size: 0.15
 
 gripper:
+  robotiq: ${common.robot_setup.robotiq}
   open_qpos: 0.04
   closed_qpos: 0.00
 

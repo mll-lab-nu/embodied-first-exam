@@ -1,0 +1,52 @@
+schema_version: 1
+task_id: interlocked_claws
+title_zh: 嵌合体脱困
+baseline:
+  asset_id: cspace_claw_wang_v1
+  assembly_pose_id: reference_start
+  layout:
+    yaw_deg: 0.0
+  clearance_offset_m: 0.0
+axes:
+- path: assembly_pose_id
+  unit: id
+  status: candidate
+  validated_range: null
+- path: layout.yaw_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+- path: clearance_offset_m
+  unit: m
+  status: candidate
+  validated_range: null
+assets:
+- location: assets/tasks/interlocked_claws/cspace_claw_wang_v1/reference_scene.json
+  status: local_source
+- location: assets/tasks/interlocked_claws/cspace_claw_wang_v1/piece-0.obj
+  status: local_source
+- location: assets/tasks/interlocked_claws/cspace_claw_wang_v1/piece-1.obj
+  status: local_source
+- location: https://qinengwang-aiden.github.io/demos/constraint_demos/data/claw/manifest.json
+  status: public_reference
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: source ideal pregrasped weld assumption; friction-only grasp not verified
+initialization:
+  description: pregrasped reference assembly; visible placement supports
+robot:
+  family: ALOHA 2 / dual ViperX 300 with original grippers
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Initial interpenetration
+- Reference path blocked by collision approximation
+- Grasp region unreachable
+first_probe: Original mesh and complete source motion imported; continuous interpiece
+  clearance certificate and complete ideal-grasp-assisted reference execution passed
+  at two timesteps. Force-driven straight-pull controls expose nonconvex contact
+  instability and mesh/SDF depth disagreement; retain unqualified status independently
+  of the complete demo. See docs/develop/tasks/interlocked_claws_zh.md.

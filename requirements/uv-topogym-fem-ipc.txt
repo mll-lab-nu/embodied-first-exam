@@ -1,0 +1,3 @@
+# Optional FEM self-contact backend, validated with Genesis 1.2.1.
+# uv pip install --python .venv-gs121-nyx/bin/python -r requirements/uv-topogym-fem-ipc.txt
+pyuipc==0.0.25

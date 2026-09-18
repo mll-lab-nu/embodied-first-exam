@@ -1,0 +1,42 @@
+schema_version: 1
+task_id: buzz_wire_3d
+title_zh: 立体电流棒
+baseline:
+  path_template_id: straight_then_planar_bend_probe
+  wire_radius_m: 0.004
+  loop_centerline_radius_m: 0.024
+  loop_tube_radius_m: 0.004
+  min_curvature_radius_m: 0.1
+  out_of_plane_amplitude_m: 0.0
+axes:
+- path: path_template_id
+  unit: id
+  status: candidate
+  validated_range: null
+- path: min_curvature_radius_m
+  unit: m
+  status: candidate
+  validated_range: null
+- path: out_of_plane_amplitude_m
+  unit: m
+  status: candidate
+  validated_range: null
+assets: []
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: ring prethreaded; dynamic ring/handle; guide fixed; bench actuator
+    disclosed
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 1
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Closed aperture
+- Rail segment seam blocks centered motion
+- Shortcut via open end
+first_probe: Centered travel and deliberate wall-contact comparison

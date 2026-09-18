@@ -1,0 +1,7 @@
+# Shared empty-table scene used to validate the default renderer and cameras.
+defaults:
+  - config
+  - _self_
+env:
+  genesis:
+    backend: cuda

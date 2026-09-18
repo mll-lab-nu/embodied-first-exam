@@ -1,0 +1,612 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="fiber_bundling">
+  <compiler angle="radian" autolimits="true" />
+  <default>
+    <geom density="1100.0" friction="0.35 0.005 0.0001" solref="0.002 1" solimp="0.95 0.99 0.001" />
+  </default>
+  <asset>
+    <mesh name="jacket_lip" file="jacket_lip.obj" />
+    <mesh name="jacket_segment" file="jacket_segment.obj" />
+    <mesh name="jacket_end_segment" file="jacket_end_segment.obj" />
+  </asset>
+  <worldbody>
+    <body name="fixed_terminal" pos="0 0 0">
+      <geom name="terminal_case" type="box" rgba="0.075 0.16 0.18 1" pos="-0.44 -0.16 -0.104" size="0.105 0.09 0.128" />
+      <geom name="terminal_panel" type="box" rgba="0.028 0.036 0.041 1" pos="-0.44 -0.067 -0.105" size="0.085 0.004 0.08" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_label" type="box" rgba="0.7 0.75 0.73 1" pos="-0.44 -0.062 -0.068" size="0.055 0.001 0.0175" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_gland" type="cylinder" rgba="0.14 0.16 0.17 1" fromto="-0.338 -0.16 0 -0.298 -0.16 0" size="0.018" />
+      <geom name="terminal_foot_00" type="box" rgba="0.09 0.1 0.11 1" pos="-0.515 -0.222 -0.236" size="0.0225 0.0175 0.004" />
+      <geom name="terminal_bolt_00" type="sphere" rgba="0.48 0.53 0.55 1" pos="-0.515 -0.061 -0.055" size="0.003" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_foot_01" type="box" rgba="0.09 0.1 0.11 1" pos="-0.515 -0.098 -0.236" size="0.0225 0.0175 0.004" />
+      <geom name="terminal_bolt_01" type="sphere" rgba="0.48 0.53 0.55 1" pos="-0.515 -0.061 -0.155" size="0.003" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_foot_10" type="box" rgba="0.09 0.1 0.11 1" pos="-0.365 -0.222 -0.236" size="0.0225 0.0175 0.004" />
+      <geom name="terminal_bolt_10" type="sphere" rgba="0.48 0.53 0.55 1" pos="-0.365 -0.061 -0.055" size="0.003" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_foot_11" type="box" rgba="0.09 0.1 0.11 1" pos="-0.365 -0.098 -0.236" size="0.0225 0.0175 0.004" />
+      <geom name="terminal_bolt_11" type="sphere" rgba="0.48 0.53 0.55 1" pos="-0.365 -0.061 -0.155" size="0.003" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_led_0" type="box" rgba="0.2 0.65 0.32 1" pos="-0.48 -0.061 -0.125" size="0.0085 0.0015 0.0035" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_led_1" type="box" rgba="0.2 0.65 0.32 1" pos="-0.455 -0.061 -0.125" size="0.0085 0.0015 0.0035" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_led_2" type="box" rgba="0.2 0.65 0.32 1" pos="-0.43 -0.061 -0.125" size="0.0085 0.0015 0.0035" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_led_3" type="box" rgba="0.2 0.65 0.32 1" pos="-0.405 -0.061 -0.125" size="0.0085 0.0015 0.0035" contype="0" conaffinity="0" mass="0" />
+      <geom name="terminal_handle_0" type="box" rgba="0.08 0.09 0.1 1" pos="-0.49 -0.16 0.032" size="0.0075 0.014 0.0225" />
+      <geom name="terminal_handle_1" type="box" rgba="0.08 0.09 0.1 1" pos="-0.39 -0.16 0.032" size="0.0075 0.014 0.0225" />
+      <geom name="terminal_handle_top" type="box" rgba="0.08 0.09 0.1 1" pos="-0.44 -0.16 0.055" size="0.0575 0.014 0.007" />
+      <body name="lead_00" pos="-0.32 -0.16 0" quat="1 0 0 0" gravcomp="1">
+        <geom name="lead_jacket_00" type="capsule" fromto="0 0 0 0.04 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+        <body name="lead_01" pos="0.04 0 0" quat="1 0 0 0" gravcomp="1">
+          <joint name="lead_bend_01" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+          <geom name="lead_jacket_01" type="capsule" fromto="0 0 0 0.04 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+          <body name="lead_02" pos="0.04 0 0" quat="0.953906166364 0.0455175536122 0.192091222517 -0.226035705846" gravcomp="1">
+            <joint name="lead_bend_02" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+            <geom name="lead_jacket_02" type="capsule" fromto="0 0 0 0.0380736017299 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+            <body name="lead_03" pos="0.0380736017299 -2.32549578225e-18 -2.69416795483e-18" quat="0.955193093724 0.13506703907 0.126593703872 -0.230948225366" gravcomp="1">
+              <joint name="lead_bend_03" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+              <geom name="lead_jacket_03" type="capsule" fromto="0 0 0 0.0399921555595 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+              <body name="lead_04" pos="0.0399921555595 1.5201162131e-18 -1.77003675327e-18" quat="0.998884245964 -0.0246207179022 -0.0228437723769 0.0332000824959" gravcomp="1">
+                <joint name="lead_bend_04" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                <geom name="lead_jacket_04" type="capsule" fromto="0 0 0 0.0398887630881 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                <body name="lead_05" pos="0.0398887630881 2.47549848051e-18 -1.95937305674e-19" quat="0.979977446974 -0.0871478609635 -0.0940121214978 0.152352140658" gravcomp="1">
+                  <joint name="lead_bend_05" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                  <geom name="lead_jacket_05" type="capsule" fromto="0 0 0 0.0397816437618 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                  <body name="lead_06" pos="0.0397816437618 -3.51518092315e-18 2.44325565768e-18" quat="0.984313798657 -0.0482555227434 -0.0938431879837 0.141390262632" gravcomp="1">
+                    <joint name="lead_bend_06" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                    <geom name="lead_jacket_06" type="capsule" fromto="0 0 0 0.0398776075168 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                    <body name="lead_07" pos="0.0398776075168 7.04749794293e-19 4.04086197549e-19" quat="0.991475987464 -0.0203350018 -0.0581252379796 0.114818599074" gravcomp="1">
+                      <joint name="lead_bend_07" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                      <geom name="lead_jacket_07" type="capsule" fromto="0 0 0 0.0399314085034 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                      <body name="lead_08" pos="0.0399314085034 2.60769727137e-20 7.80985503197e-19" quat="0.992106360686 -0.00843635475736 -0.0444066666214 0.116969418925" gravcomp="1">
+                        <joint name="lead_bend_08" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                        <geom name="lead_jacket_08" type="capsule" fromto="0 0 0 0.0399012092602 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                        <body name="lead_09" pos="0.0399012092602 -6.28737689396e-19 6.10738482987e-21" quat="0.989191217032 0.00300513393634 -0.0484973447946 0.138346351105" gravcomp="1">
+                          <joint name="lead_bend_09" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                          <geom name="lead_jacket_09" type="capsule" fromto="0 0 0 0.03985783145 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                          <body name="lead_10" pos="0.03985783145 -2.04244503367e-18 -2.16689458293e-19" quat="0.986976866332 0.0180063259911 -0.0457472830621 0.153165347393" gravcomp="1">
+                            <joint name="lead_bend_10" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                            <geom name="lead_jacket_10" type="capsule" fromto="0 0 0 0.0398537040267 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                            <body name="lead_11" pos="0.0398537040267 -1.6977070266e-18 -5.96058567948e-19" quat="0.984123503965 0.0339278921069 -0.0316807060163 0.171307209271" gravcomp="1">
+                              <joint name="lead_bend_11" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                              <geom name="lead_jacket_11" type="capsule" fromto="0 0 0 0.0397481609069 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                              <body name="lead_12" pos="0.0397481609069 -3.50010270967e-18 -1.00598213633e-18" quat="0.9645291263 0.0620627987383 -0.00943364342469 0.256403548929" gravcomp="1">
+                                <joint name="lead_bend_12" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                <geom name="lead_jacket_12" type="capsule" fromto="0 0 0 0.0393827128222 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                <body name="lead_13" pos="0.0393827128222 4.67004973551e-18 -7.50821811352e-19" quat="0.96088345171 0.0631544076228 0.0161517319828 0.269172128167" gravcomp="1">
+                                  <joint name="lead_bend_13" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                  <geom name="lead_jacket_13" type="capsule" fromto="0 0 0 0.0396815879911 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                  <body name="lead_14" pos="0.0396815879911 -2.69368886957e-18 6.27745448999e-19" quat="0.977729040264 0.0432357175385 0.00593282424889 0.205283701618" gravcomp="1">
+                                    <joint name="lead_bend_14" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                    <geom name="lead_jacket_14" type="capsule" fromto="0 0 0 0.0397565928819 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                    <body name="lead_15" pos="0.0397565928819 4.97510043397e-18 -2.19746697616e-18" quat="0.987736441707 0.0329054686757 -0.0112593049934 0.15220768675" gravcomp="1">
+                                      <joint name="lead_bend_15" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                      <geom name="lead_jacket_15" type="capsule" fromto="0 0 0 0.0399870062156 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                      <body name="lead_16" pos="0.0399870062156 -1.66385824968e-18 1.33667538057e-18" quat="0.993039402657 -0.0285671584964 -0.0583947238715 -0.0982177094546" gravcomp="1">
+                                        <joint name="lead_bend_16" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                        <geom name="lead_jacket_16" type="capsule" fromto="0 0 0 0.0394334582125 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                        <body name="lead_17" pos="0.0394334582125 9.3429449941e-19 -4.57070916927e-19" quat="0.92299581536 -0.141105257076 -0.0323801015755 -0.356538301275" gravcomp="1">
+                                          <joint name="lead_bend_17" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                          <geom name="lead_jacket_17" type="capsule" fromto="0 0 0 0.0393149379077 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                          <body name="lead_18" pos="0.0393149379077 1.62001181582e-18 -1.9501787465e-18" quat="0.908302684143 -0.150800276926 0.037747165993 -0.388356359439" gravcomp="1">
+                                            <joint name="lead_bend_18" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                            <geom name="lead_jacket_18" type="capsule" fromto="0 0 0 0.035673386363 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                            <body name="lead_19" pos="0.035673386363 -3.92683811945e-18 -1.18394389896e-18" quat="0.837421209979 -0.0865239223221 0.138946991937 -0.52147201399" gravcomp="1">
+                                              <joint name="lead_bend_19" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                              <geom name="lead_jacket_19" type="capsule" fromto="0 0 0 0.04 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                              <body name="lead_20" pos="0.04 1.44444745829e-34 0" quat="1 -3.76158192263e-33 -4.33680868994e-17 8.67361737988e-17" gravcomp="1">
+                                                <joint name="lead_bend_20" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                <geom name="lead_jacket_20" type="capsule" fromto="0 0 0 0.04 0 0" size="0.012" rgba="0.026 0.029 0.032 1" />
+                                                <body name="trunk_00" pos="0.04 0 0" gravcomp="1" quat="1 -0 -0 -0">
+                                                  <geom name="trunk_shell_00" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                  <geom name="trunk_joint_cover_00" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                  <geom name="jacket_visual_00" type="mesh" mesh="jacket_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                  <body name="trunk_01" pos="0.04 0 0" gravcomp="1">
+                                                    <joint name="trunk_bend_01" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                    <geom name="trunk_shell_01" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                    <geom name="trunk_joint_cover_01" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                    <geom name="jacket_visual_01" type="mesh" mesh="jacket_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                    <body name="trunk_02" pos="0.04 0 0" gravcomp="1">
+                                                      <joint name="trunk_bend_02" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                      <geom name="trunk_shell_02" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                      <geom name="trunk_joint_cover_02" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                      <geom name="jacket_visual_02" type="mesh" mesh="jacket_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                      <body name="trunk_03" pos="0.04 0 0" gravcomp="1">
+                                                        <joint name="trunk_bend_03" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                        <geom name="trunk_shell_03" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                        <geom name="trunk_joint_cover_03" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                        <geom name="jacket_visual_03" type="mesh" mesh="jacket_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                        <body name="trunk_04" pos="0.04 0 0" gravcomp="1">
+                                                          <joint name="trunk_bend_04" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                          <geom name="trunk_shell_04" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                          <geom name="trunk_joint_cover_04" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                          <geom name="jacket_visual_04" type="mesh" mesh="jacket_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                          <body name="trunk_05" pos="0.04 0 0" gravcomp="1">
+                                                            <joint name="trunk_bend_05" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                            <geom name="trunk_shell_05" type="cylinder" fromto="0 0 0 0.04 0 0" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                            <geom name="trunk_joint_cover_05" type="sphere" size="0.012" group="3" rgba="0.026 0.029 0.032 1" />
+                                                            <geom name="jacket_visual_05" type="mesh" mesh="jacket_end_segment" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                            <geom name="jacket_cut_lip" type="mesh" mesh="jacket_lip" pos="0.039 0 0" contype="0" conaffinity="0" mass="0" rgba="0.026 0.029 0.032 1" />
+                                                            <geom name="jacket_inner_filler" type="cylinder" fromto="0.0385 0 0 0.039 0 0" size="0.01026" contype="0" conaffinity="0" mass="0" rgba="0.36 0.35 0.3 1" />
+                                                            <body name="fiber_00_00" pos="0.04 0.008 0" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_00_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_00_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                              <geom name="insulation_00_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                              <body name="fiber_00_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_00_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_00_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                <geom name="insulation_00_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                <body name="fiber_00_02" pos="0.008 0 0" quat="0.999981342711 5.69263884423e-07 -9.32006291003e-05 0.0061078264063" gravcomp="1">
+                                                                  <joint name="fiber_bend_00_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_00_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                  <geom name="insulation_00_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                  <body name="fiber_00_03" pos="0.008 9.53802100924e-21 1.03184092428e-22" quat="0.999315460216 6.70015214776e-05 -0.00162534406595 0.0369589602356" gravcomp="1">
+                                                                    <joint name="fiber_bend_00_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_00_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                    <geom name="insulation_00_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                    <body name="fiber_00_04" pos="0.008 -2.86840468553e-20 -1.54965867974e-21" quat="0.998139933677 0.000467937244675 -0.00424713084399 0.0608146011516" gravcomp="1">
+                                                                      <joint name="fiber_bend_00_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_00_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                      <geom name="insulation_00_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                      <body name="fiber_00_05" pos="0.008 7.08178402726e-20 -1.96580384542e-22" quat="0.997308301459 0.00127341278436 -0.00545242698683 0.0731081479822" gravcomp="1">
+                                                                        <joint name="fiber_bend_00_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_00_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                        <geom name="insulation_00_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                        <body name="fiber_00_06" pos="0.008 4.01417127736e-20 -2.76664516974e-20" quat="0.997266633554 0.00195872446602 -0.00365182640092 0.0737705168867" gravcomp="1">
+                                                                          <joint name="fiber_bend_00_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_00_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                          <geom name="insulation_00_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                          <body name="fiber_00_07" pos="0.008 -7.20884667332e-19 -4.84877119252e-20" quat="0.998013774706 0.00185603815642 0.000736667291322 0.0629644180457" gravcomp="1">
+                                                                            <joint name="fiber_bend_00_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_00_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                            <geom name="insulation_00_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                            <body name="fiber_00_08" pos="0.008 7.30167879025e-19 1.01959627609e-20" quat="0.999136794545 0.000949594496373 0.00565045221542 0.0411440937045" gravcomp="1">
+                                                                              <joint name="fiber_bend_00_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_00_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                              <geom name="insulation_00_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                              <body name="fiber_00_09" pos="0.008 -6.24410710016e-19 3.20183989101e-21" quat="0.999919949192 7.99413036818e-05 0.00870970190341 0.00917768543658" gravcomp="1">
+                                                                                <joint name="fiber_bend_00_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_00_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.62 0.045 0.035 1" />
+                                                                                <geom name="insulation_00_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.62 0.045 0.035 1" />
+                                                                                <geom name="copper_00_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_00_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_01_00" pos="0.04 0.00565685424949 0.00565685424949" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_01_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_01_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                              <geom name="insulation_01_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                              <body name="fiber_01_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_01_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_01_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                <geom name="insulation_01_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                <body name="fiber_01_02" pos="0.008 0 0" quat="0.999990775257 9.21686436663e-06 -0.00309932661454 0.0029738005992" gravcomp="1">
+                                                                  <joint name="fiber_bend_01_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_01_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                  <geom name="insulation_01_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                  <body name="fiber_01_03" pos="0.008 -6.64154272312e-21 -1.83978133433e-22" quat="0.999664624687 0.000439616677296 -0.019360560367 0.0171934170292" gravcomp="1">
+                                                                    <joint name="fiber_bend_01_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_01_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                    <geom name="insulation_01_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                    <body name="fiber_01_04" pos="0.008 -2.73817217674e-20 -2.67491104292e-20" quat="0.999078823392 0.00213799344962 -0.0329705861418 0.0273838288702" gravcomp="1">
+                                                                      <joint name="fiber_bend_01_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_01_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                      <geom name="insulation_01_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                      <body name="fiber_01_05" pos="0.008 -8.64800994001e-20 8.3279073826e-20" quat="0.998604135619 0.00511638920679 -0.0404901227534 0.0335283886395" gravcomp="1">
+                                                                        <joint name="fiber_bend_01_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_01_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                        <geom name="insulation_01_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                        <body name="fiber_01_06" pos="0.008 -8.44499566643e-20 1.68137151434e-19" quat="0.998439188021 0.00876945397905 -0.0409379509124 0.0369644244726" gravcomp="1">
+                                                                          <joint name="fiber_bend_01_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_01_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                          <geom name="insulation_01_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                          <body name="fiber_01_07" pos="0.008 9.79951095337e-20 -2.13667581985e-19" quat="0.998646239231 0.0118774271363 -0.0342410832973 0.0373117114105" gravcomp="1">
+                                                                            <joint name="fiber_bend_01_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_01_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                            <geom name="insulation_01_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                            <body name="fiber_01_08" pos="0.008 1.60919936747e-19 -2.70504069579e-19" quat="0.999164911091 0.0123717653469 -0.0214854510937 0.032477611637" gravcomp="1">
+                                                                              <joint name="fiber_bend_01_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_01_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                              <geom name="insulation_01_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                              <body name="fiber_01_09" pos="0.008 -6.49188694208e-20 2.82669710442e-19" quat="0.999759738579 0.00814413033442 -0.00468118555686 0.0198046650877" gravcomp="1">
+                                                                                <joint name="fiber_bend_01_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_01_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.045 0.23 0.58 1" />
+                                                                                <geom name="insulation_01_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.045 0.23 0.58 1" />
+                                                                                <geom name="copper_01_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_01_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_02_00" pos="0.04 4.89858719659e-19 0.008" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_02_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_02_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                              <geom name="insulation_02_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                              <body name="fiber_02_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_02_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_02_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                <geom name="insulation_02_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                <body name="fiber_02_02" pos="0.008 0 0" quat="0.999991311412 -2.85672703641e-07 -0.00416802145345 -6.85385679365e-05" gravcomp="1">
+                                                                  <joint name="fiber_bend_02_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_02_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                  <geom name="insulation_02_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                  <body name="fiber_02_03" pos="0.008 -2.53772291258e-22 2.56398179947e-22" quat="0.999680860309 -4.02640657335e-05 -0.0252336803797 -0.00119886824356" gravcomp="1">
+                                                                    <joint name="fiber_bend_02_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_02_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                    <geom name="insulation_02_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                    <body name="fiber_02_04" pos="0.008 -4.98947653405e-21 -1.15266330322e-20" quat="0.99913346297 -0.000319252664905 -0.0414989373575 -0.00317166366154" gravcomp="1">
+                                                                      <joint name="fiber_bend_02_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_02_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                      <geom name="insulation_02_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                      <body name="fiber_02_05" pos="0.008 8.7250210198e-21 1.34597922451e-19" quat="0.998751392095 -0.000818936980628 -0.0497711482529 -0.00422124762986" gravcomp="1">
+                                                                        <joint name="fiber_bend_02_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_02_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                        <geom name="insulation_02_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                        <body name="fiber_02_06" pos="0.008 7.96513574564e-21 -3.93890162805e-20" quat="0.998744053214 -0.000940229534105 -0.0499960781665 -0.00313437490728" gravcomp="1">
+                                                                          <joint name="fiber_bend_02_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_02_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                          <geom name="insulation_02_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                          <body name="fiber_02_07" pos="0.008 -1.16876369364e-20 7.81971528277e-20" quat="0.999103037782 2.29076250371e-05 -0.0423452022447 5.6725283079e-05" gravcomp="1">
+                                                                            <joint name="fiber_bend_02_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_02_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                            <geom name="insulation_02_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                            <body name="fiber_02_08" pos="0.008 -1.07465701575e-20 7.87400597878e-19" quat="0.999620836251 0.00195464789974 -0.0271710447983 0.00401215758095" gravcomp="1">
+                                                                              <joint name="fiber_bend_02_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_02_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                              <geom name="insulation_02_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                              <body name="fiber_02_09" pos="0.008 4.03692574533e-21 -2.08735938851e-19" quat="0.999958843021 0.00350245133251 -0.00509940992306 0.00663634811503" gravcomp="1">
+                                                                                <joint name="fiber_bend_02_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_02_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.08 0.34 0.12 1" />
+                                                                                <geom name="insulation_02_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.08 0.34 0.12 1" />
+                                                                                <geom name="copper_02_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_02_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_03_00" pos="0.04 -0.00565685424949 0.00565685424949" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_03_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_03_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                              <geom name="insulation_03_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                              <body name="fiber_03_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_03_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_03_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                <geom name="insulation_03_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                <body name="fiber_03_02" pos="0.008 0 0" quat="0.999987362464 -1.26337425839e-05 -0.00359819215042 -0.00351109179177" gravcomp="1">
+                                                                  <joint name="fiber_bend_03_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_03_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                  <geom name="insulation_03_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                  <body name="fiber_03_03" pos="0.008 -3.05941557723e-21 1.12895544922e-21" quat="0.999540280701 -0.000607426192227 -0.0221662906167 -0.0206764080553" gravcomp="1">
+                                                                    <joint name="fiber_bend_03_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_03_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                    <geom name="insulation_03_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                    <body name="fiber_03_04" pos="0.008 2.0504248093e-20 6.93060147535e-21" quat="0.998737226356 -0.00298921245959 -0.0372666604019 -0.0335591019385" gravcomp="1">
+                                                                      <joint name="fiber_bend_03_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_03_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                      <geom name="insulation_03_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                      <body name="fiber_03_05" pos="0.008 -4.56139988904e-21 2.57586709877e-19" quat="0.998085304012 -0.00716607703602 -0.045445852915 -0.041340630224" gravcomp="1">
+                                                                        <joint name="fiber_bend_03_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_03_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                        <geom name="insulation_03_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                        <body name="fiber_03_06" pos="0.008 6.54774988371e-20 -6.10059867623e-20" quat="0.997857231321 -0.0121152659884 -0.0459549892898 -0.0449700476948" gravcomp="1">
+                                                                          <joint name="fiber_bend_03_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_03_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                          <geom name="insulation_03_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                          <body name="fiber_03_07" pos="0.008 8.6282136935e-20 -5.07488144012e-19" quat="0.998149872743 -0.0159388015135 -0.0389107016115 -0.0439174617768" gravcomp="1">
+                                                                            <joint name="fiber_bend_03_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_03_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                            <geom name="insulation_03_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                            <body name="fiber_03_08" pos="0.008 3.47728158634e-20 -1.51343245045e-19" quat="0.998890780087 -0.0158673081174 -0.0255314348577 -0.03624339698" gravcomp="1">
+                                                                              <joint name="fiber_bend_03_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_03_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                              <geom name="insulation_03_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                              <body name="fiber_03_09" pos="0.008 3.22732762005e-20 2.03150125046e-19" quat="0.999731967763 -0.00941825557505 -0.0076865882861 -0.0197029300917" gravcomp="1">
+                                                                                <joint name="fiber_bend_03_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_03_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.25 0.1 0.045 1" />
+                                                                                <geom name="insulation_03_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.25 0.1 0.045 1" />
+                                                                                <geom name="copper_03_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_03_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_04_00" pos="0.04 -0.008 9.79717439318e-19" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_04_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_04_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                              <geom name="insulation_04_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                              <body name="fiber_04_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_04_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_04_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                <geom name="insulation_04_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                <body name="fiber_04_02" pos="0.008 0 0" quat="0.999989726342 5.17242271704e-09 1.14107220208e-06 -0.00453290297311" gravcomp="1">
+                                                                  <joint name="fiber_bend_04_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_04_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                  <geom name="insulation_04_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                  <body name="fiber_04_03" pos="0.008 -1.50568265154e-20 -3.99119068982e-25" quat="0.999625572148 6.06124529077e-07 1.98619139245e-05 -0.027362659102" gravcomp="1">
+                                                                    <joint name="fiber_bend_04_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_04_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                    <geom name="insulation_04_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                    <body name="fiber_04_04" pos="0.008 2.17578502128e-20 -3.39300565209e-24" quat="0.998976959914 4.26572550686e-06 5.2254122721e-05 -0.0452220169031" gravcomp="1">
+                                                                      <joint name="fiber_bend_04_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_04_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                      <geom name="insulation_04_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                      <body name="fiber_04_05" pos="0.008 -3.29658978618e-19 8.64433865227e-23" quat="0.998478542061 1.1881107138e-05 6.87245297907e-05 -0.0551416011625" gravcomp="1">
+                                                                        <joint name="fiber_bend_04_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_04_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                        <geom name="insulation_04_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                        <body name="fiber_04_06" pos="0.008 -8.51451221054e-20 1.5961365919e-22" quat="0.998364957538 1.90671976049e-05 4.9193352414e-05 -0.0571612524133" gravcomp="1">
+                                                                          <joint name="fiber_bend_04_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_04_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                          <geom name="insulation_04_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                          <body name="fiber_04_07" pos="0.008 8.37349398536e-19 -1.24464991918e-22" quat="0.998685872243 1.93798170593e-05 -4.69108467599e-06 -0.0512496652106" gravcomp="1">
+                                                                            <joint name="fiber_bend_04_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_04_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                            <geom name="insulation_04_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                            <body name="fiber_04_08" pos="0.008 -6.16145812431e-19 2.6622809229e-22" quat="0.999303840375 1.13058564588e-05 -7.03516490361e-05 -0.0373072316734" gravcomp="1">
+                                                                              <joint name="fiber_bend_04_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_04_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                              <geom name="insulation_04_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                              <body name="fiber_04_09" pos="0.008 -7.00189653671e-20 -2.3964899027e-22" quat="0.999884611181 1.76700755549e-06 -0.000116309902406 -0.0151904835791" gravcomp="1">
+                                                                                <joint name="fiber_bend_04_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_04_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.82 0.81 0.74 1" />
+                                                                                <geom name="insulation_04_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.82 0.81 0.74 1" />
+                                                                                <geom name="copper_04_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_04_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_05_00" pos="0.04 -0.00565685424949 -0.00565685424949" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_05_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_05_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                              <geom name="insulation_05_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                              <body name="fiber_05_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_05_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_05_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                <geom name="insulation_05_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                <body name="fiber_05_02" pos="0.008 0 0" quat="0.999982034558 1.79560367569e-05 0.00430655062884 -0.00416939581494" gravcomp="1">
+                                                                  <joint name="fiber_bend_05_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_05_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                  <geom name="insulation_05_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                  <body name="fiber_05_03" pos="0.008 1.44903699802e-20 5.37298388013e-22" quat="0.999339465401 0.000868710689512 0.0268389682888 -0.0244856695928" gravcomp="1">
+                                                                    <joint name="fiber_bend_05_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_05_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                    <geom name="insulation_05_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                    <body name="fiber_05_04" pos="0.008 -2.27310436684e-20 -1.97003814438e-20" quat="0.99819955614 0.004240541907 0.0451087783631 -0.0393047330645" gravcomp="1">
+                                                                      <joint name="fiber_bend_05_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_05_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                      <geom name="insulation_05_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                      <body name="fiber_05_05" pos="0.008 2.050437301e-20 -1.74073355988e-19" quat="0.997374923743 0.00995070534012 0.0537294070154 -0.0475120592345" gravcomp="1">
+                                                                        <joint name="fiber_bend_05_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_05_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                        <geom name="insulation_05_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                        <body name="fiber_05_06" pos="0.008 7.93386217731e-20 2.71804881076e-19" quat="0.997289848851 0.0161575799291 0.0513566732306 -0.0501436147856" gravcomp="1">
+                                                                          <joint name="fiber_bend_05_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_05_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                          <geom name="insulation_05_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                          <body name="fiber_05_07" pos="0.008 2.79472086221e-19 -1.5452399623e-19" quat="0.997979312018 0.0196643443439 0.0388948814735 -0.0462362902905" gravcomp="1">
+                                                                            <joint name="fiber_bend_05_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_05_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                            <geom name="insulation_05_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                            <body name="fiber_05_08" pos="0.008 -4.96629388557e-20 -2.34505886696e-19" quat="0.99911010926 0.0166284647319 0.0194747085546 -0.0335144664506" gravcomp="1">
+                                                                              <joint name="fiber_bend_05_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_05_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                              <geom name="insulation_05_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                              <body name="fiber_05_09" pos="0.008 3.96973935458e-19 -2.69630491626e-19" quat="0.999923477975 0.00548823622601 -0.00317456199814 -0.0106225992379" gravcomp="1">
+                                                                                <joint name="fiber_bend_05_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_05_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.83 0.6 0.045 1" />
+                                                                                <geom name="insulation_05_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.83 0.6 0.045 1" />
+                                                                                <geom name="copper_05_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_05_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_06_00" pos="0.04 -1.46957615898e-18 -0.008" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_06_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_06_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                              <geom name="insulation_06_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                              <body name="fiber_06_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_06_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_06_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                <geom name="insulation_06_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                <body name="fiber_06_02" pos="0.008 0 0" quat="0.999980818168 6.04426708015e-07 0.00619304218995 -9.75958334311e-05" gravcomp="1">
+                                                                  <joint name="fiber_bend_06_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_06_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                  <geom name="insulation_06_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                  <body name="fiber_06_03" pos="0.008 -3.91975141639e-23 -4.77606412848e-21" quat="0.999295370287 8.53131307068e-05 0.0374944829615 -0.00170862309449" gravcomp="1">
+                                                                    <joint name="fiber_bend_06_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_06_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                    <geom name="insulation_06_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                    <body name="fiber_06_04" pos="0.008 3.42173701804e-21 4.96996820143e-20" quat="0.998087184201 0.000681661138486 0.0616515287231 -0.0045384002775" gravcomp="1">
+                                                                      <joint name="fiber_bend_06_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_06_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                      <geom name="insulation_06_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                      <body name="fiber_06_05" pos="0.008 -5.80896120255e-21 8.94082793972e-20" quat="0.997245123753 0.00179192533084 0.0739017766923 -0.00612205491793" gravcomp="1">
+                                                                        <joint name="fiber_bend_06_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_06_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                        <geom name="insulation_06_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                        <body name="fiber_06_06" pos="0.008 1.39460082092e-20 -8.26546212837e-20" quat="0.997232307204 0.00220141707304 0.0741632892997 -0.00476295611384" gravcomp="1">
+                                                                          <joint name="fiber_bend_06_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_06_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                          <geom name="insulation_06_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                          <body name="fiber_06_07" pos="0.008 4.12152640899e-20 8.48543887979e-19" quat="0.998030860953 0.000270180358464 0.0627228018157 -0.000421569185303" gravcomp="1">
+                                                                            <joint name="fiber_bend_06_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_06_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                            <geom name="insulation_06_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                            <body name="fiber_06_08" pos="0.008 -7.92107447906e-21 1.27628595055e-18" quat="0.99917270985 -0.00410957428678 0.0401299581158 0.00515691308251" gravcomp="1">
+                                                                              <joint name="fiber_bend_06_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_06_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                              <geom name="insulation_06_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                              <body name="fiber_06_09" pos="0.008 2.91565787222e-20 1.00771112929e-18" quat="0.999902196064 -0.00786909520414 0.00729883015692 0.00896675669456" gravcomp="1">
+                                                                                <joint name="fiber_bend_06_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_06_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.035 0.038 0.043 1" />
+                                                                                <geom name="insulation_06_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.035 0.038 0.043 1" />
+                                                                                <geom name="copper_06_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_06_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                            <body name="fiber_07_00" pos="0.04 0.00565685424949 -0.00565685424949" quat="1 0 0 0" gravcomp="1">
+                                                              <joint name="fiber_bend_07_00" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                              <geom name="fiber_surface_07_00" type="capsule" fromto="0.003 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                              <geom name="insulation_07_00" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                              <body name="fiber_07_01" pos="0.008 0 0" quat="1 0 0 0" gravcomp="1">
+                                                                <joint name="fiber_bend_07_01" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                <geom name="fiber_surface_07_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                <geom name="insulation_07_01" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                <body name="fiber_07_02" pos="0.008 0 0" quat="0.999990230924 -9.75663998247e-06 0.00320339736798 0.00304568667211" gravcomp="1">
+                                                                  <joint name="fiber_bend_07_02" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                  <geom name="fiber_surface_07_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                  <geom name="insulation_07_02" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                  <body name="fiber_07_03" pos="0.008 1.34501556446e-20 -2.35708834656e-21" quat="0.999642587715 -0.000465719367789 0.020217578519 0.0174851208384" gravcomp="1">
+                                                                    <joint name="fiber_bend_07_03" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                    <geom name="fiber_surface_07_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                    <geom name="insulation_07_03" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                    <body name="fiber_07_04" pos="0.008 -5.07057708706e-20 -1.20610252991e-20" quat="0.999023248928 -0.00224182744962 0.0345313349561 0.0274792506779" gravcomp="1">
+                                                                      <joint name="fiber_bend_07_04" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                      <geom name="fiber_surface_07_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                      <geom name="insulation_07_04" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                      <body name="fiber_07_05" pos="0.008 -3.51718333246e-20 -3.75889383771e-20" quat="0.998556936769 -0.00527712812421 0.0419289041909 0.0331385416591" gravcomp="1">
+                                                                        <joint name="fiber_bend_07_05" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                        <geom name="fiber_surface_07_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                        <geom name="insulation_07_05" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                        <body name="fiber_07_06" pos="0.008 -3.09224774651e-20 1.06234284323e-19" quat="0.998466978316 -0.00884542692186 0.0411175186546 0.0359833474676" gravcomp="1">
+                                                                          <joint name="fiber_bend_07_06" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                          <geom name="fiber_surface_07_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                          <geom name="insulation_07_06" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                          <body name="fiber_07_07" pos="0.008 -3.85457240643e-19 -3.90792417266e-19" quat="0.998779642591 -0.0115658534325 0.0322686998754 0.0355554157308" gravcomp="1">
+                                                                            <joint name="fiber_bend_07_07" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                            <geom name="fiber_surface_07_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                            <geom name="insulation_07_07" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                            <body name="fiber_07_08" pos="0.008 1.59114559077e-19 -8.9099252317e-20" quat="0.999350699505 -0.0112735930927 0.0171865054318 0.0295923897022" gravcomp="1">
+                                                                              <joint name="fiber_bend_07_08" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                              <geom name="fiber_surface_07_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                              <geom name="insulation_07_08" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                              <body name="fiber_07_09" pos="0.008 4.49138068387e-19 -9.17300178137e-20" quat="0.999857866827 -0.00623588502567 -0.00123695904611 0.0156150509176" gravcomp="1">
+                                                                                <joint name="fiber_bend_07_09" type="ball" damping="2e-05" stiffness="0" armature="0.00000001" />
+                                                                                <geom name="fiber_surface_07_09" type="capsule" fromto="0 0 0 0.008 0 0" size="0.0012" group="3" rgba="0.36 0.39 0.42 1" />
+                                                                                <geom name="insulation_07_09" type="cylinder" fromto="0 0 0 0.005 0 0" size="0.0012" contype="0" conaffinity="0" mass="0" rgba="0.36 0.39 0.42 1" />
+                                                                                <geom name="copper_07_0" type="cylinder" fromto="0.005 0 0 0.008 0 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_1" type="cylinder" fromto="0.005 0.000432 0 0.008 0.000432 0" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_2" type="cylinder" fromto="0.005 0.000216 0.000374122974435 0.008 0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_3" type="cylinder" fromto="0.005 -0.000216 0.000374122974435 0.008 -0.000216 0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_4" type="cylinder" fromto="0.005 -0.000432 5.29047417232e-20 0.008 -0.000432 5.29047417232e-20" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_5" type="cylinder" fromto="0.005 -0.000216 -0.000374122974435 0.008 -0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                                <geom name="copper_07_6" type="cylinder" fromto="0.005 0.000216 -0.000374122974435 0.008 0.000216 -0.000374122974435" size="0.00023999999999999998" contype="0" conaffinity="0" mass="0" rgba="0.68 0.32 0.14 1" />
+                                                                              </body>
+                                                                            </body>
+                                                                          </body>
+                                                                        </body>
+                                                                      </body>
+                                                                    </body>
+                                                                  </body>
+                                                                </body>
+                                                              </body>
+                                                            </body>
+                                                          </body>
+                                                        </body>
+                                                      </body>
+                                                    </body>
+                                                  </body>
+                                                  <joint name="trunk_bend_00" type="ball" damping="0.02" stiffness="0" armature="0.000001" />
+                                                </body>
+                                              </body>
+                                            </body>
+                                          </body>
+                                        </body>
+                                      </body>
+                                    </body>
+                                  </body>
+                                </body>
+                              </body>
+                            </body>
+                          </body>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

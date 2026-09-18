@@ -1,0 +1,41 @@
+[
+  {
+    "id": "compact_roll_planned",
+    "tcp_scale": 0.96,
+    "yaw_deg": -3,
+    "translation_m": [
+      0,
+      -0.008,
+      -0.01
+    ],
+    "fold_roll_deg": 2,
+    "ring_grasp_shift_deg": -1,
+    "chain_family": "compact"
+  },
+  {
+    "id": "wide_roll_planned",
+    "tcp_scale": 1.04,
+    "yaw_deg": -3,
+    "translation_m": [
+      0,
+      0.008,
+      -0.012
+    ],
+    "fold_roll_deg": -2,
+    "ring_grasp_shift_deg": 1,
+    "chain_family": "wider"
+  },
+  {
+    "id": "longer_regrasp_planned",
+    "tcp_scale": 1.0,
+    "yaw_deg": -4,
+    "translation_m": [
+      0.008,
+      0,
+      -0.008
+    ],
+    "fold_roll_deg": 3,
+    "ring_grasp_shift_deg": -2,
+    "chain_family": "longer"
+  }
+]

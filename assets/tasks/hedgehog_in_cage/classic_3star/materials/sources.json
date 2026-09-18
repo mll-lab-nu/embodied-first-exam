@@ -1,0 +1,18 @@
+{
+  "maps": [
+    {
+      "file": "light_wood.png",
+      "copied_from": ".external/openpi/third_party/libero/libero/libero/assets/textures/table_light_wood.png",
+      "sha256": "c260c4543647d53da9379078a788d183a334734103739a42dce1a004a2eb0e33"
+    },
+    {
+      "file": "dark_wood.png",
+      "copied_from": ".external/nyx-assets/wood_table_001_diff_1k.png",
+      "sha256": "aef45ab36d9f258b80edf278d417920b7326ad77c341d6618498d4598c59fd2c"
+    }
+  ],
+  "dark_wood_source": "https://polyhaven.com/a/wood_table_001",
+  "dark_wood_license": "CC0",
+  "light_wood_source": "existing LIBERO table_light_wood.png asset",
+  "scope": "rendering appearance; existing geometry and rigid-body physical parameters retained"
+}

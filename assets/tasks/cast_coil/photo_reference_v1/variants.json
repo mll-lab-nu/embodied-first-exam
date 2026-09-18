@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "scope": "whole-assembly similarity transforms of the authored prototype",
+  "geometry_changes": false,
+  "qualification_report": "runs/environment-solvability/cast_coil/photo_reference_v1/result.json",
+  "presets": {
+    "baseline_3x": {"scale": 3.0, "yaw_deg": -12.0},
+    "rotated_30deg": {"scale": 3.0, "yaw_deg": 30.0},
+    "compact_2x": {"scale": 2.0, "yaw_deg": -12.0}
+  },
+  "limits": [
+    "These are candidate presets, not a list of passed physics variants; consult qualification_report for each status.",
+    "No notch, bridge, or section-shape variations are qualified.",
+    "Scaling changes mass by scale cubed and inertia by scale to the fifth power.",
+    "Local bench evidence does not qualify robot grasps or the official tutorial route."
+  ]
+}

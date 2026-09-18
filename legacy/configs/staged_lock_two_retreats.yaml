@@ -1,0 +1,43 @@
+defaults:
+  - staged_lock_policy_views
+  - _self_
+task:
+  variant: limited_two_retreats
+  geometry:
+    slots: [[-60, -30, 0], [-60], [0]]
+    initial_disc_deg: [0, 0, 0]
+    slot_half_deg: 8.0
+    # 13 mm shaft / 15 mm bearing bore: retain coaxial support after release.
+    bore_radius: 0.0075
+  physics:
+    disc_damping: 0.030
+    enable_joint_limit: true
+    # Low-friction mechanism; the oracle drives slot sidewalls. The geometry
+    # certificate excludes deliberate planar-face clutching (see its limits).
+    friction: 0.01
+  rotor_stops:
+    - {style: single_ring, bounds_deg: [-15, 15], ear_phase_deg: -35}
+    - {style: single_ring, bounds_deg: [-10, 75], ear_phase_deg: -35}
+    - {style: single_ring, bounds_deg: [-180, 180], ear_phase_deg: -35}
+  motion:
+    strategy: limited_reindex
+    # Round handle permits a different physical pinch azimuth. This shifts
+    # the wrist's roll range without changing any key/disc acceptance angles.
+    grasp_roll_bias_deg: 45.0
+    turn_steps: 240
+    move_steps: 220
+run:
+  output: runs/staged_lock_task/nyx_two_required_retreats
+env:
+  cameras:
+    wrist:
+      attach:
+        # Fixed bracket counter-rotated around the tool's local z by 45 deg.
+        # These are 3-D camera extrinsics, not an image-space rotation.
+        offset_pos: [-0.077781746, -0.077781746, 0.045]
+        offset_lookat: [0, 0, 0.220]
+        offset_up: [-0.707106781, -0.707106781, 0]
+robot_control:
+  ik:
+    pos_tol: 0.00001
+    rot_tol: 0.0001

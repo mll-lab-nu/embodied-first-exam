@@ -1,0 +1,68 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_aloha_v1
+  - robot_control_configs@robot_control: aloha_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: cspace_claw_wang_v1
+  seed: 0
+  sdf_cell_size_m: 0.0015
+  sdf_max_res: 256
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+    precision: "64"
+  sim:
+    dt: 0.001
+    substeps: 4
+  renderer:
+    type: nyx
+    spp: 24
+  appearance:
+    - {pattern: claw_0, color: [0.741176, 0.396078, 0.243137], metallic: 0.22, roughness: 0.45}
+    - {pattern: claw_1, color: [0.2, 0.533333, 0.611765], metallic: 0.22, roughness: 0.45}
+  cameras:
+    overview:
+      res: [1280, 800]
+      pos: [1.05, -1.50, 2.10]
+      lookat: [-0.1356786, -0.05, 1.23]
+      up: [0, 0, 1]
+      fov: 48
+      near: 0.005
+      far: 12
+    detail:
+      res: [1100, 800]
+      pos: [0.27, -1.10, 1.96]
+      lookat: [-0.12, -0.174, 1.377]
+      up: [0, 0, 1]
+      fov: 34
+      near: 0.005
+      far: 12
+    opposite:
+      res: [1100, 800]
+      pos: [-0.57, 0.70, 1.92]
+      lookat: [-0.12, -0.174, 1.377]
+      up: [0, 0, 1]
+      fov: 34
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/interlocked_claws/reference_initial
+  viewer: false
+  include_robot: true
+  record_video: true
+  video_seconds: 5
+  fps: 18
+  orbit_degrees: 110
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

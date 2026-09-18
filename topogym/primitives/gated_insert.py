@@ -128,6 +128,22 @@ class GatedInsertPrimitive:
     gripper_steps: int
     insert_steps: int
     grasp_qpos: float
+    # The reach from home to the parked plate, on its own clock. It is the one
+    # move that ends beside a plate nothing is holding, and it is the longest:
+    # `_move` spends a fixed number of steps whatever the distance, so a rack
+    # further away is approached FASTER, not for longer. Measured 2026-09-09 on
+    # gate_cage_ball seed 4 (rack 0.558 m from the base, the far corner of the
+    # side-mirror axis): at 30 steps the hand was still closing horizontally as it
+    # reached plate height, the fingertips swept the plate's top edge and shoved it
+    # 10 mm in y -- more than the 3 mm of play the rack jaws allow -- so the gripper
+    # closed on nothing (finger_qpos -0.0010) and only the attachment lifted the
+    # plate. Halving the per-step travel fixed it outright (finger_qpos 0.0075,
+    # plate_yaw 0.04 deg, the healthiest readings in the set).
+    #
+    # A separate knob rather than a bigger `steps_per_phase`: the other four moves
+    # are short, or carry a plate the attachment already holds rigidly, and slowing
+    # all of them would push `time_to_station` up by 1.5 s for nothing.
+    approach_steps: int | None = None
     close_hold_steps: int = 30
     insert_settle_steps: int = 30
     release_hold_steps: int = 60
@@ -136,6 +152,10 @@ class GatedInsertPrimitive:
     max_plate_yaw: float = float(np.deg2rad(2.0))
     max_hover_steps: int = 900
     verbose: bool = False
+
+    @property
+    def approach_move_steps(self) -> int:
+        return int(self.steps_per_phase if self.approach_steps is None else self.approach_steps)
 
     def time_to_station(self, dt: float) -> float:
         """Seconds from the episode's start until the hover phase begins.
@@ -146,9 +166,10 @@ class GatedInsertPrimitive:
         instance is only solvable if its window is still open at this moment.
         """
 
-        moves = 5  # approach, descend, lift, carry, align
+        moves = 4  # descend, lift, carry, align; the approach has its own count
         steps = (
             int(self.gripper_steps)
+            + self.approach_move_steps
             + moves * int(self.steps_per_phase)
             + int(self.gripper_steps)
             + int(self.close_hold_steps)
@@ -187,7 +208,8 @@ class GatedInsertPrimitive:
         completed.append("open")
 
         approach_target = np.array([grasp_xy[0], grasp_xy[1], self.approach_z], dtype=float)
-        self._move(controller, approach_target, quat=ee_quat, start_quat=controller.hand_quat())
+        self._move(controller, approach_target, quat=ee_quat, start_quat=controller.hand_quat(),
+                   steps=self.approach_move_steps)
         completed.append("approach")
 
         self._move(

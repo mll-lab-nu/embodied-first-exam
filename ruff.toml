@@ -1,0 +1,2 @@
+# Historical code is a read-only archive, outside current lint maintenance.
+extend-exclude = ["legacy"]

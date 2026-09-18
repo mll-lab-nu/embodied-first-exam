@@ -1,0 +1,180 @@
+# Independent current baseline; no archived config inheritance.
+defaults:
+  - config
+  - override task_configs@task: lock_picking
+  - override run_configs@run: lock_picking
+  - _self_
+env:
+  appearance:
+  - pattern: lock_disc_1
+    color:
+    - 0.76
+    - 0.53
+    - 0.23
+    metallic: 0.65
+    roughness: 0.4
+  - pattern: lock_disc_2
+    color:
+    - 0.2
+    - 0.43
+    - 0.6
+    metallic: 0.65
+    roughness: 0.4
+  - pattern: lock_disc_3
+    color:
+    - 0.72
+    - 0.34
+    - 0.22
+    metallic: 0.65
+    roughness: 0.4
+  - pattern: lock_key
+    color:
+    - 0.32
+    - 0.35
+    - 0.38
+    metallic: 1.0
+    roughness: 0.28
+    embed_urdf_pbr: true
+  - pattern: lock_endpoint
+    color:
+    - 0.1
+    - 0.34
+    - 0.28
+    metallic: 0.45
+    roughness: 0.45
+  - pattern: lock_goal_label
+    color:
+    - 0.96
+    - 0.96
+    - 0.88
+    metallic: 0.0
+    roughness: 0.65
+  - pattern: lock_goal_bolts
+    color:
+    - 0.58
+    - 0.62
+    - 0.63
+    metallic: 0.8
+    roughness: 0.35
+  preset:
+    locked: false
+  sim:
+    dt: 0.005
+    substeps: 8
+  cameras:
+    front:
+      res:
+      - 1280
+      - 720
+      pos:
+      - 1.2
+      - 0.0
+      - 1.65
+      lookat:
+      - -0.1
+      - 0.1
+      - 1.13
+      fov: 52
+      far: 12.0
+    wrist:
+      res:
+      - 640
+      - 360
+      fov: 78
+      attach:
+        offset_pos:
+        - -0.077781746
+        - -0.077781746
+        - 0.045
+        offset_lookat:
+        - 0
+        - 0
+        - 0.22
+        offset_up:
+        - -0.707106781
+        - -0.707106781
+        - 0
+    side_oblique:
+      res:
+      - 1280
+      - 720
+      pos:
+      - -0.45
+      - -1.18
+      - 1.57
+      lookat:
+      - -0.1
+      - 0.12
+      - 1.25
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 50
+      near: 0.01
+      far: 12.0
+    lock_detail:
+      res:
+      - 960
+      - 540
+      pos:
+      - -0.2
+      - -0.65
+      - 1.36
+      lookat:
+      - 0.32
+      - 0.2
+      - 1.105
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 35
+      near: 0.01
+      far: 12.0
+    agentview:
+      res:
+      - 1280
+      - 720
+      pos:
+      - -0.68
+      - -1.06
+      - 2.02
+      lookat:
+      - -0.1
+      - 0.1
+      - 1.16
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 42
+      near: 0.01
+      far: 12.0
+    front_oblique:
+      res:
+      - 1280
+      - 720
+      pos:
+      - 0.9
+      - -0.3
+      - 1.72
+      lookat:
+      - -0.02
+      - 0.1
+      - 1.14
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 60
+      near: 0.01
+      far: 12.0
+robot_control:
+  ik:
+    max_solver_iters: 200
+    pos_tol: 1.0e-05
+    rot_tol: 0.0001
+recording:
+  fps: 20
+  every_n_steps: 10

@@ -1,0 +1,69 @@
+defaults:
+  - staged_lock_policy_views
+  - _self_
+
+env:
+  sim:
+    dt: 0.01
+    substeps: 4
+  renderer:
+    spp: 24
+  cameras:
+    agentview:
+      pos: [-0.68, -1.06, 2.02]
+      lookat: [-0.12, 0.0, 1.12]
+      fov: 49
+    front_oblique:
+      pos: [0.65, -0.58, 1.62]
+      lookat: [-0.055, 0.0, 1.035]
+      fov: 38
+    wrist:
+      res: [960, 540]
+      fov: 68
+      attach:
+        offset_pos: [0.06, 0.0, 0.02]
+        offset_lookat: [0.0, 0.0, 0.22]
+        offset_up: [1.0, 0.0, 0.0]
+
+install:
+  lip_count: 3
+  center: [-0.055, 0.0]
+  radius: 0.107
+  tube_radius: 0.0045
+  groove_inner: 0.091
+  groove_outer: 0.119
+  floor_z: 0.022
+  wall_z: 0.038
+  lip_top_z: 0.044
+  lip_opening: 0.012
+  lip_arc_deg: 20.0
+  lip_angles_deg: [-90.0, 30.0, 150.0]
+  lip_sides: [inner, inner, inner]
+  spawn_z: 0.050
+  patch_radius: 0.025
+  release_s: 2.0
+  # Numerical demonstration envelope; not a calibrated real-material limit.
+  max_principal_strain: 0.60
+  rope:
+    model: fem_ipc_tube
+    fem:
+      E: 80000.0
+      nu: 0.45
+      rho: 1100.0
+      friction_mu: 0.30
+      contact_d_hat: 0.0005
+      follow_strength: 100.0
+      sanity_check_enable: false
+      newton_max_iterations: 100
+      newton_tolerance: 0.05
+    mesh:
+      maxvolume: 0.00000008
+
+run:
+  output: runs/ring_lip_install/three_inner_lips
+  probe: false
+  render: true
+  fps: 20
+  preview: false
+  tool_tilt_deg: 30.0
+  exterior_cameras: [agentview]

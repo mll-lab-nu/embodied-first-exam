@@ -46,3 +46,18 @@ build_only: false
 # （attachment manager、每个端点一个 connector latch、FEM 的 follow band 同步）。
 # 与真实运动时的速率对比可以分开两件事，判据见 topogym/supervision/step_bench.py。
 bench_steps: 0
+
+# 录制逐帧数据集到该路径（H5）。null = 不录。
+#
+# 放在 default.yaml 而不是各 demo 自己的 run 配置里：36 份 run 配置全部以
+# `defaults: [default, _self_]` 开头，所以这两个键在这里写一次，13 个变体任务的
+# demo 就都能接 `run.record_dataset=...`。此前它们只写在 4 份配置里（rope_winding、
+# rope_unwinding、cable_routing、untangle_handle），对其余 32 份传这个键会直接撞
+# Hydra 的 struct 错误。那 4 份的本地取值因 `_self_` 在后仍然生效
+# （untangle_handle 的 1 是有意的逐步录，不是笔误）。
+record_dataset: null
+
+# 每多少个物理步抓一帧。dt = 0.01，所以 10 = 10 Hz，与
+# scripts/export_h5_lerobot.py 的 --fps 10 一致；换算所需的秒数由 writer 写进
+# H5 的 setup.frame_dt_s，读的人不必再从场外知道 dt。
+dataset_every_n_steps: 10

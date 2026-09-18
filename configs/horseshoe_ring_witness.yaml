@@ -1,0 +1,24 @@
+defaults:
+  - horseshoe_ring_lab
+  - _self_
+
+task:
+  template_path: runs/environment-solvability/horseshoe_ring/straight_r35/template.json
+  center_xy_m: [0.0, 0.38]
+  initial_lift_m: 0.12
+
+env:
+  cameras:
+    overview:
+      pos: [0.28, 0.95, 1.63]
+      lookat: [0.14, 0.34, 1.13]
+      fov: 46
+    video:
+      pos: [0.28, 0.95, 1.63]
+      lookat: [0.14, 0.34, 1.13]
+      fov: 46
+
+run:
+  output: runs/environment_bootstrap/horseshoe_ring/oversized_control
+  witness_dir: runs/environment-solvability/horseshoe_ring/straight_r35
+  video_seconds: 10

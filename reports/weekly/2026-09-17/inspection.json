@@ -1,0 +1,938 @@
+{
+  "gates": [
+    {
+      "id": "G1",
+      "title": "一个基准实例可独立恢复",
+      "criterion": "从保存的参数、资产与明确版本的依赖，在新进程恢复同一初态；不需手改代码或未记录实验文件。核对物体位姿、机器人状态、固定／抓持约束；柔性任务还包括参考网格与初始形状。",
+      "extract": "实例 Spec、资产与依赖清单、保存 / 加载接口。"
+    },
+    {
+      "id": "G2",
+      "title": "任务语义和有效性明确",
+      "criterion": "成功条件与允许辅助明确；正确路径可行，至少一个针对性错误操作确实被阻挡。声明物理有效时，要有 settle 和关键接触检查；通过范围须匹配当前基准。",
+      "extract": "验证协议、成功 / 有效性分离、证据等级、失败分类。"
+    },
+    {
+      "id": "G3",
+      "title": "一个 family 有可用参数邻域",
+      "criterion": "先开放少量有依赖规则的参数；变化后同步生成几何、初态、抓点与所需路径，保留机关约束。少量离散代表不自动证明完整连续参数盒；几何邻域与物理邻域分别声明。",
+      "extract": "参数定义、条件采样、参数到场景 / 动作的任务生成适配器。"
+    },
+    {
+      "id": "G4",
+      "title": "小批量生成不需逐例修补",
+      "criterion": "给定一组实例 seed，自动生成、验证、接受或拒绝；失败样本与原因可追溯；同实例不受批次顺序影响。固定一套规则跑完小批次，不能事后逐例改代码冒充自动化。",
+      "extract": "通用批处理、失败重采样、证据缓存与失效规则。"
+    },
+    {
+      "id": "G5",
+      "title": "参数与难度关系有证据",
+      "criterion": "在统一任务协议、控制器与扰动分布下，比较多个参数点及重复结果，记录成功率、重试、动作成本或容错区间。机制下界可作理论难度特征；单条 demo 长短、外形复杂或家族编号不等于实测难度。",
+      "extract": "难度特征、标定 / 分层评测与课程采样接口；实测前不固化 easy / medium / hard。"
+    }
+  ],
+  "status_labels": {
+    "pass": "达到（限定范围）",
+    "partial": "部分达到",
+    "missing": "尚未达到",
+    "unverified": "尚未验证"
+  },
+  "inspection": {
+    "cast_keyhole": {
+      "title": "Cast Keyhole",
+      "baseline": "当前下孔道基准及 F1/F2/F3 的已验收实例；预抓取 + 接触门控辅助抓持，分离后保持。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "归档包含几何、轨迹、参数及哈希；三个随机样本有临时目录独立重建、完整 geometry.json 哈希一致的记录。",
+          "gap": "该记录只证明几何重建。尚未找到仅从归档输入在新进程加载并核对完整仿真初态的验收；family_seed 仍通过预设 runs 路径取父实例，要明确恢复入口与依赖。",
+          "references": [
+            "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/generator_manifest.json",
+            "topogym/tasks/cast_keyhole/family_variants.py",
+            "topogym/tasks/cast_keyhole/robot_execution.py"
+          ]
+        },
+        "G2": {
+          "status": "pass",
+          "evidence": "分离目标、预抓取和辅助约束明确。九款及三个随机实例有两档步长的物理执行与独立复核；证书保留原路径、直拉或关键动作删减负对照，末态保持检查通过。",
+          "gap": "仅认证声明的辅助抓持任务；不包含自由拾取、解除约束落桌、纯摩擦抓持或全局唯一解。",
+          "references": [
+            "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/generator_manifest.json",
+            "topogym/tasks/cast_keyhole/family_pipeline.py"
+          ]
+        },
+        "G3": {
+          "status": "pass",
+          "evidence": "三个 family 已定义机制参数与外形联动；除九个代表外，三个同时改变 IK 参数和外形的样本通过全链验证，另有退化捷径样本被拒绝。",
+          "gap": "可提炼“提议—验证—拒绝”的小范围生成适配器；尚不能承诺每个参数组合可解，也未测大样本接受率。",
+          "references": [
+            "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/variant_space.json",
+            "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/generator_manifest.json"
+          ]
+        },
+        "G4": {
+          "status": "partial",
+          "evidence": "已有自动 build / geometry / physics / audit / qualify、失败日志、最大尝试次数，以及带几何、轨迹、代码指纹的扫掠缓存；已保存接受与拒绝样本。",
+          "gap": "sample() 使用一个批次 RNG，family 随已接受数量推进；实例 seed 与批次 seed 尚未形成顺序无关的契约。需单例 / 正序 / 逆序 / 分批重跑比对，并确认重试与缓存失效一致。",
+          "references": [
+            "topogym/tasks/cast_keyhole/family_pipeline.py",
+            "topogym/tasks/cast_keyhole/family_variants.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "已有机制必要动作对照与行程参数，但未见统一控制器下的难度标定。",
+          "gap": "需固定外形与抓持协议，比较行程、偏心和折返参数对成功率、容错、重试的影响；三类动作名称不能直接当难度。",
+          "references": [
+            "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/variant_space.json"
+          ]
+        }
+      },
+      "extract_now": "优先提炼 Spec / 证据 schema、条件生成适配器，以及现有验证阶段与缓存指纹；批处理先保留为候选实现。",
+      "next_step": "把一个已归档实例做成独立恢复包并核对初态；再以显式 instance_seed 做批次顺序回归。",
+      "summary": "生成与验证链最接近可复用；G1 的完整恢复和 G4 的顺序无关性仍缺闭环，G5 未标定。"
+    },
+    "cast_coil": {
+      "title": "Cast Coil",
+      "baseline": "3 倍原型及三个反推家族种子；完整拆解、落桌释放、自由静置；新九款可见外形另行判断。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "基线归档有 resolved config、assets/template、source_plan、执行源码和半步证据；runner 显式接收 plan，模板哈希会核对。",
+          "gap": "runner 仍 compose 仓库 preset 并设置固定运行值；没有“归档 Spec → 新进程同初态”的对照记录，不能只据文件齐全算通过。",
+          "references": [
+            "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/archive_manifest.json",
+            "topogym/tasks/cast_coil/robot_demo.py"
+          ]
+        },
+        "G2": {
+          "status": "pass",
+          "evidence": "原型 / 已归档种子有正确连续路径、直拉阻挡证据、接触门控辅助抓持与完整释放静置；基线 validation.complete 和 passed 均为 true，半步复核保留。",
+          "gap": "结论限于已验收实例；新 A1–C3 几何 / IK 证据不继承旧视频的物理资格。",
+          "references": [
+            "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/validation.json",
+            "topogym/tasks/cast_coil/appearance.py",
+            "docs/develop/tasks/cast_coil_family_space_zh.md"
+          ]
+        },
+        "G3": {
+          "status": "partial",
+          "evidence": "机制 θ=3/6/9 mm 的九个代表会联动通道与路径；三种基线单参数外观也有物理 demo。缩放规则会同步平移、转轴和推进量。",
+          "gap": "最新连续 θ / d / δ 候选域尚未完成条件采样器和新外形物理验证；已有几个离散点不能代表任意联合采样都可用。",
+          "references": [
+            "docs/develop/tasks/cast_coil_family_space_zh.md",
+            "topogym/tasks/cast_coil/appearance.py"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "已有各阶段脚本与九个固定代表的实验入口。",
+          "gap": "还没有已验收的按实例 seed 自动提议、重采样、保留拒绝原因且顺序无关的小批量生成闭环。",
+          "references": [
+            "docs/develop/tasks/cast_coil_family_space_zh.md"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "目前证明的是运动参数与结构约束对应。",
+          "gap": "需测 θ、净空、厚度对同一控制器成功率或容错的影响；偏心更大、推进更长不自动等于更难。",
+          "references": [
+            "docs/develop/tasks/cast_coil_family_space_zh.md"
+          ]
+        }
+      },
+      "extract_now": "提炼模板 / 计划配对、几何证书、正反例验证协议；把尺度与轨迹联动封装成任务适配器草案。",
+      "next_step": "先固定一个 family 的小参数邻域，补新外形物理验证，再实现统一 seed 采样与拒绝记录。",
+      "summary": "基准语义和物理证据扎实，参数适配已有雏形；目前仍以代表点实验为主。"
+    },
+    "hedgehog_in_cage": {
+      "title": "Hedgehog in Cage",
+      "baseline": "固定笼、十刺球、S2 抓点；A1/B1/C1 三个父实例，取出后落桌、解除辅助、撤离静置。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "三个 family 的归档保存 motion、IK、笼资产、软件环境、provenance 及两档执行；B 的最终运动参数另存为明确预设。",
+          "gap": "重建代码仍读取 SEED 下的 escape / release 等输入；须把这些依赖纳入恢复入口，核对新进程完整初态，避免误用 B 的探索默认值。",
+          "references": [
+            "docs/develop/tasks/hedgehog_in_cage_family_demos_zh.md",
+            "topogym/tasks/hedgehog_in_cage/family_motion.py",
+            "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/archive_manifest.json"
+          ]
+        },
+        "G2": {
+          "status": "pass",
+          "evidence": "三条匹配路径与完整物理执行通过；六条跨 family 路径碰撞，关键动作删减受阻；抓持、释放和静置范围明确。",
+          "gap": "仅覆盖这三个父实例与声明的辅助抓持。新增六个外观规格不是已验证实例。",
+          "references": [
+            "docs/develop/tasks/hedgehog_in_cage_family_demos_zh.md",
+            "docs/develop/tasks/hedgehog_in_cage_family_space_zh.md"
+          ]
+        },
+        "G3": {
+          "status": "partial",
+          "evidence": "已有三个可解父点与外形增材、保护全机器人扫掠空间的规则；给出了鼓腹 / 八棱收腰条件范围。",
+          "gap": "v2 新六款尚未实现 / 验收，连续动作范围也是提议域。还缺至少一个 family 的小邻域生成与逐实例完整验证。",
+          "references": [
+            "configs/task_variants/hedgehog_in_cage/family_space_v2.json",
+            "docs/develop/tasks/hedgehog_in_cage_family_space_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "父实例有分阶段执行和证据留存。",
+          "gap": "尚无 v2 邻域的自动条件采样、失败保留 / 重采样、顺序无关批次证据；先验收池采样仍是规划。",
+          "references": [
+            "docs/develop/tasks/hedgehog_in_cage_family_space_zh.md"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "A / B / C 有动作区别与负对照，可提出训练顺序假设。",
+          "gap": "没有统一控制器和扰动试验；A 易、B 中、C 难不能作为已经测出的难度标签。",
+          "references": [
+            "docs/develop/tasks/hedgehog_in_cage_family_space_zh.md"
+          ]
+        }
+      },
+      "extract_now": "提炼任务成功 / 释放协议、动作 witness 与证书关联；先建立父实例 Spec，再把保护扫掠空间的外形规则做成候选适配器。",
+      "next_step": "先完成 A2/A3 的生成与复验，获得一个实际可用的 family 外观邻域，再扩到 B/C。",
+      "summary": "父实例已具备清晰验证协议；三类父点尚不足以支撑类内随机生成。"
+    },
+    "horseshoe_ring": {
+      "title": "Horseshoe Ring",
+      "baseline": "tutorial_solvable_v3 及三个 IK 种子；声明范围为运动学取环，完整链动力学尚未认证。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "归档有模板资产、initial_robot_state、完整 motion、几何证据和回放记录。",
+          "gap": "这些支持回放资料完整性，尚无归档输入驱动的新进程初态对照；shape / trace 的父目录依赖须统一记录。",
+          "references": [
+            "runs/demo_metadata/horseshoe_ring/2026-09-16_aloha_full/archive_manifest.json",
+            "topogym/tasks/horseshoe_ring/family_space.py"
+          ]
+        },
+        "G2": {
+          "status": "partial",
+          "evidence": "取环目标、连接拓扑、连续几何通路与全程 IK 预演明确，形状证书核对初态拓扑和完全分离。",
+          "gap": "几何可行性不替代物理有效性；完整装配 settle、关键链环接触、力驱动抓取 / 换抓未闭环，针对性错误动作的阻挡也需统一入协议。",
+          "references": [
+            "topogym/tasks/horseshoe_ring/shape_neighborhood.py",
+            "docs/develop/tasks/horseshoe_ring_family_space_zh.md"
+          ]
+        },
+        "G3": {
+          "status": "partial",
+          "evidence": "旧耦合形状空间已有 seed17 的 12 个、seed29 的 30 个连续几何邻域样本，形状 / 椭圆度 / 链长联合收缩并生成完整物体路径。",
+          "gap": "只到几何层；新九配对的 6 个形状—抓点—机器人 IK 未认证，nine_pair_sampler_enabled=false。不能将 42 个几何样本算作机器人 family 邻域完成。",
+          "references": [
+            "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/samples_seed17/report.json",
+            "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/samples_seed29/report.json",
+            "runs/environment-solvability/horseshoe_ring/family_space_plan_v1/report.json"
+          ]
+        },
+        "G4": {
+          "status": "partial",
+          "evidence": "几何层已有带 seed 的批量采样、邻域证书与代码指纹校验。",
+          "gap": "sampler 使用批次 RNG 和洗牌；失败抛异常且未形成统一逐例拒绝清单；无完整机器人自动批处理与实例顺序无关证据。",
+          "references": [
+            "topogym/tasks/horseshoe_ring/shape_sampler.py",
+            "topogym/tasks/horseshoe_ring/shape_neighborhood.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "F2/F3 的可见路线区别仍需强化。",
+          "gap": "先固定 family 身份与有效执行，再测形状、椭圆度、链长对应的容错和成功率。",
+          "references": [
+            "docs/develop/tasks/horseshoe_ring_family_space_zh.md"
+          ]
+        }
+      },
+      "extract_now": "可先提炼几何层条件采样、扰动证书与缓存失效规则；机器人生成适配器保持未完成状态。",
+      "next_step": "把一个已认证形状样本重新配齐抓点、IK 与物理关键接触检查；优先解决椭圆转相位时的实际控制归属。",
+      "summary": "几何邻域和批量样本已有实物路径证据，机器人与动力学层仍是主要缺口。"
+    },
+    "interlocked_claws": {
+      "title": "Interlocked Claws",
+      "baseline": "A0 原始网格与完整 12 阶段参考路径；预抓取、理想刚性辅助，落架释放静置。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "归档有原始几何、resolved config、实际状态、执行源码与可靠性报告。",
+          "gap": "尚未找到完整场景的新进程恢复对照；physical.py 仍从仓库 compose 默认配置，参考轨迹与碰撞分解需纳入显式依赖包。",
+          "references": [
+            "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/archive_manifest.json",
+            "topogym/tasks/interlocked_claws/physical.py"
+          ]
+        },
+        "G2": {
+          "status": "partial",
+          "evidence": "A0 的完整参考执行、释放静置和步长对照通过；允许的理想辅助抓持已声明。",
+          "gap": "generic_contact_robustness_passed=false，受阻接触对照仍失败。可提炼验证协议，但不能标记一般接触有效性已通过。",
+          "references": [
+            "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/reliability_report.json"
+          ]
+        },
+        "G3": {
+          "status": "missing",
+          "evidence": "A/B/C 三类九个目标的形状与动作依赖已写成计划。",
+          "gap": "A0 之外八款仍未建模 / 认证，尚无一个 family 的可用参数邻域。",
+          "references": [
+            "runs/environment-solvability/interlocked_claws/family_space_plan_v1/plan.json",
+            "docs/develop/tasks/interlocked_claws_family_space_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "现有 family_space 产出规划，不是通过资格验证的任务批量生成器。",
+          "gap": "需在 G2 接触问题和 G3 邻域可用后，补自动接受 / 拒绝、重采样及顺序验证。",
+          "references": [
+            "topogym/tasks/interlocked_claws/family_space.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "暂无变体执行统计。",
+          "gap": "螺旋或换轴的概念复杂度不足以建立参数—难度关系。",
+          "references": [
+            "docs/develop/tasks/interlocked_claws_family_space_zh.md"
+          ]
+        }
+      },
+      "extract_now": "先提炼原资产 / 参考路径 Spec、参考执行与通用接触验收的分层协议，以及受阻失败类型。",
+      "next_step": "修复并复验 A0 的受阻接触，再建立 A family 的一个小形变邻域。",
+      "summary": "有完整参考 demo，但尚未具备可放心扩展的接触有效性和参数族。"
+    },
+    "lock_picking": {
+      "title": "Lock Picking",
+      "baseline": "150 mm 盘距的三齿基准成功执行；F1/F2/F3 × S/M/L 的 v2 九款另有几何 / 解锁 IK 证据。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "基准有 config、layout、frames 和 success 报告；v2 各代表保存检查配置、资产与 IK。",
+          "gap": "family_space 直接取 SOURCE 实验目录中的 config/layout/frames；尚缺独立恢复包、新进程初态对照和依赖缺失时报错的验收。",
+          "references": [
+            "topogym/tasks/lock_picking/family_space.py",
+            "runs/environment-solvability/lock_picking/spaced_initial/result.json"
+          ]
+        },
+        "G2": {
+          "status": "pass",
+          "evidence": "基准 evaluator 分离终点、静止、几何合法、力 / 接触与松手条件；成功报告均通过。机构证书给出正确孔道和必要回退下界，可识别省略回退的无效动作。",
+          "gap": "证书限同轴准静态模型；新九款 robot_scene_collision_verified 与 physical_execution_verified 仍为 false。单视角缺口属于归档层，不应据此否认基准语义已明确。",
+          "references": [
+            "topogym/tasks/lock_picking/evaluator.py",
+            "topogym/tasks/lock_picking/certificate.py",
+            "runs/environment-solvability/lock_picking/spaced_initial/result.json",
+            "runs/environment-solvability/lock_picking/family_space_v2/summary.json"
+          ]
+        },
+        "G3": {
+          "status": "partial",
+          "evidence": "v2 固定三齿，盘距≥150 mm；盘径 / 盘距 / 齿距 / 握柄与动作联动，九代表及 26 个有效边界组合有同轴几何、回退下界和 IK 检查。",
+          "gap": "长钥匙可达余量很小；完整抓起 / 释放、机器人场景碰撞和物理执行未验收。不能把几何 / IK 候选范围当成机器人可用邻域。",
+          "references": [
+            "docs/develop/tasks/lock_picking_family_space_zh.md",
+            "runs/environment-solvability/lock_picking/family_space_v2/summary.json"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "已有固定九点和边界组合生成 / 检查；summary 明示 random_physical_dataset_generator_implemented=false。",
+          "gap": "尚缺适配不同回退次数的完整控制、实例 seed、自动物理接受 / 拒绝与顺序无关批次。",
+          "references": [
+            "runs/environment-solvability/lock_picking/family_space_v2/summary.json"
+          ]
+        },
+        "G5": {
+          "status": "partial",
+          "evidence": "F1/F2/F3 的槽位与限位对应 1/2/3 次必要回退；这是参数→最少关键动作数的理论证据。",
+          "gap": "仅在限定动作模型内成立，尚无统一控制器的成功率 / 重试 / 容错测量。可作为结构难度特征，不能直接宣称 F3 在所有设置都更难。",
+          "references": [
+            "topogym/tasks/lock_picking/certificate.py",
+            "docs/develop/tasks/lock_picking_family_space_zh.md"
+          ]
+        }
+      },
+      "extract_now": "提炼成功 / 有效性 evaluator、回退必要性证书，以及固定三齿、可视盘距的条件参数定义；难度先记录“必要回退次数”。",
+      "next_step": "先补 F1_M/F2_M/F3_M 的全机器人碰撞与物理执行，保留 p≥150 mm，再做批量和难度标定。",
+      "summary": "机构语义与理论动作复杂度最清楚；可用机器人参数邻域和自动批处理仍需完成。"
+    },
+    "fiber_bundling": {
+      "title": "Fiber Bundling",
+      "baseline": "新细铜杆 4 芯 / R=12.8、13.5、15.0 mm 的已验收子集；旧支柱 8 芯严格线形对照失败单列。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "每实例保存完整 config、动态电缆 / 环资产、plan、控制命令、执行源码与两档结果；生成参数含版本与 shape_seed。",
+          "gap": "参数重现已检查，但尚无从归档单独加载、核对固定终端、根部约束与全部线形的完整新进程 reset 对照。",
+          "references": [
+            "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01/archive_manifest.json",
+            "topogym/tasks/fiber_bundling/variants.py"
+          ]
+        },
+        "G2": {
+          "status": "pass",
+          "evidence": "成功是全部细线及前端护套通过，终端 / 环固定，只抓粗护套；禁碰检查有细线触碰失败与粗线不误判对照。新 4 芯三孔径完成加载 / 卸载、全程和严格步长线形检查。",
+          "gap": "只认证这个新支柱已验收子集和辅助夹持协议；旧 8 芯严格线形对照失败，材料也只是保留形变的任务近似。",
+          "references": [
+            "docs/develop/tasks/fiber_bundling_density_radius_zh.md",
+            "topogym/tasks/fiber_bundling/contact_guard.py",
+            "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01/timestep_validation.json"
+          ]
+        },
+        "G3": {
+          "status": "pass",
+          "evidence": "N / R 参数、根间距和实际孔径依赖明确；39 个重置几何点通过，新 4 芯三孔径可由同一整束反馈控制器完成，无固定逐根顺序。",
+          "gap": "可用范围限定为已验证 4 芯孔径子集及逐实例筛选机制；标准 / 密集类和整个连续孔径区间不能自动继承。",
+          "references": [
+            "configs/task_variants/fiber_bundling_density_v1.yaml",
+            "topogym/tasks/fiber_bundling/variants.py",
+            "docs/develop/tasks/fiber_bundling_density_radius_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "partial",
+          "evidence": "已有具名 RNG 流、生成检查、逐实例完整运行 / 复核 / 归档和 workflow 失败记录。本轮 6 个 seed 在两新进程中反向排序并加入无关全局 RNG 调用，参数仍一致。",
+          "gap": "只证明参数层顺序无关；仍需固定数值精度 / 重试策略后，验证一组未挑选 seed 的完整资产与物理接受 / 拒绝批次。代表实验中的精度调整不能算免修补生成已达标。",
+          "references": [
+            "topogym/tasks/fiber_bundling/variants.py",
+            "topogym/tasks/fiber_bundling/variant_demo.py",
+            "reports/weekly/2026-09-17/inspect_probes.json"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "已有完成时长与执行诊断，三类目前只是线数 / 根部间距的几何类别。",
+          "gap": "需固定材料、精度、控制器与初态扰动，交叉比较 N / R 的成功率、接触 / 重试与操作成本；不能将更密或更紧直接标为更难。",
+          "references": [
+            "docs/develop/tasks/fiber_bundling_density_radius_zh.md"
+          ]
+        }
+      },
+      "extract_now": "提炼 N / R 的条件采样、具名 RNG、接触违规与任务成功分离的验证协议；逐实例 runner 可作为批处理候选。",
+      "next_step": "冻结精度选择和失败重试规则，运行同一组 seed 的单例 / 正序 / 逆序完整小批次，并比对资产、初态与接受结果。",
+      "summary": "稀疏子集已有可用生成基础；顺序无关性目前仅在参数层复测通过。"
+    },
+    "rope_threading": {
+      "title": "Rope Threading",
+      "baseline": "三固定环参考场景及当前 physics_v5 的绳 / 单环接触试验。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "有参考几何、场景入口、资产准备、物理 case 配置和诊断轨迹。",
+          "gap": "尚缺统一 Spec / 依赖清单及完整三环初态在新进程恢复的对照；模型输入与参考动作版本需一起冻结。",
+          "references": [
+            "topogym/tasks/rope_threading/prepare_assets.py",
+            "topogym/tasks/rope_threading/scene.py",
+            "runs/environment-solvability/rope_threading/physics_v5/cases.json"
+          ]
+        },
+        "G2": {
+          "status": "partial",
+          "evidence": "允许的抓持与物理检查已定义，单环穿入 / 滑动 / 释放有局部证据，初始穿插已修复。",
+          "gap": "qualification.passed=false、full_demo=false；步长对照失败且完整三环正确路径尚未认证，不能将局部试验当作基准任务有效性通过。",
+          "references": [
+            "runs/environment-solvability/rope_threading/physics_v5/qualification.json",
+            "topogym/tasks/rope_threading/qualification.py"
+          ]
+        },
+        "G3": {
+          "status": "missing",
+          "evidence": "目前主要在建立固定参考基准。",
+          "gap": "尚无经认证的同 family 参数邻域，以及随参数改变的完整抓点 / 穿环 / 换手路径。",
+          "references": [
+            "docs/develop/tasks/rope_threading_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "已有物理 case 调度和失败结果记录。",
+          "gap": "物理测试 suite 不等于任务实例生成批处理；还缺可用邻域、接受 / 拒绝闭环和 seed 顺序测试。",
+          "references": [
+            "topogym/tasks/rope_threading/physics_suite.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "未见有效任务变体的难度实验。",
+          "gap": "先认证三环基准，再测环姿态、净空和换手需求；数值失败不能作为任务更难的证据。",
+          "references": [
+            "runs/environment-solvability/rope_threading/physics_v5/qualification.json"
+          ]
+        }
+      },
+      "extract_now": "可以先提炼参考资产 Spec、局部物理验证协议和数值 / 接触 / 任务失败的分类。",
+      "next_step": "解决步长敏感性并完成三环基准的正确路径与针对性负例，再进入参数生成。",
+      "summary": "先收敛基准有效性；暂不抽象为通用任务生成器。"
+    },
+    "knot_untying": {
+      "title": "Knot Untying",
+      "baseline": "FEM + IPC 开放单结、显式直绳参考态；现有抓持 / 抽绳试验与 v8 展开录制。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "运行目录保存 resolved config、assets、mesh.npz（初始节点 / 参考量）、validation_spec 与 implementation 快照。",
+          "gap": "还未形成独立恢复验收；需核对材料参考态、当前节点、机器人—IPC 对齐、约束及指定软件版本，而不只是恢复可见绳形。",
+          "references": [
+            "topogym/tasks/knot_untying/physics_probe.py",
+            "runs/environment-stability/knot_untying/trefoil_robot_v8/spread_recording_v2/validation_spec.json"
+          ]
+        },
+        "G2": {
+          "status": "partial",
+          "evidence": "已明示接触后辅助抓持、实际释放与静置检查；18 秒抓持试验通过，51 秒 / 63 秒尝试保留了明确未解开结论。",
+          "gap": "P3 网格收敛仍未通过，完整成功解结和最终自由静置验收尚未闭环；投影交叉清零本身不能替代完整成功证据。",
+          "references": [
+            "docs/develop/tasks/knot_untying_recording_attempt_zh.md",
+            "runs/environment-stability/knot_untying/trefoil_v1_eps1mm/result.json"
+          ]
+        },
+        "G3": {
+          "status": "missing",
+          "evidence": "当前仍围绕一个固定结型和初态调试。",
+          "gap": "未建立结圈、尾长等参数改变后同步准备合法初态、抓点与完整解法的可用邻域。",
+          "references": [
+            "docs/develop/tasks/knot_untying_physics_demo_plan_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "已有实验 suite 和过程快照，可记录失败。",
+          "gap": "这些是求解 / 数值试验，不是无逐例修补的可解实例批量生成。",
+          "references": [
+            "topogym/tasks/knot_untying/physics_suite.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "暂无通过基准验收后的参数难度实验。",
+          "gap": "先区分物理分辨率不足和策略失败，再比较松紧、尾长等参数；仿真耗时不是解题难度。",
+          "references": [
+            "docs/develop/tasks/knot_untying_physics_demo_plan_zh.md"
+          ]
+        }
+      },
+      "extract_now": "先提炼柔性体初态 / 参考态 Spec、求解器和接触诊断、失败分类，完整成功判据仍需固化。",
+      "next_step": "完成解结—释放—静置的整次验收，并解决或明确限定网格收敛问题，再扩参数。",
+      "summary": "底层诊断有复用价值，任务有效性和完整基准仍待完成。"
+    },
+    "buzz_wire_3d": {
+      "title": "3D Buzz Wire",
+      "baseline": "现有 planar_bend_fixture_probe；不是完整三维机器人电流棒任务。",
+      "gates": {
+        "G1": {
+          "status": "partial",
+          "evidence": "局部 probe 的 report 记录几何、配置、Genesis 版本和实际物理步数，入口可定位。",
+          "gap": "缺完整三维任务的实例 Spec、资产 / 支架 / 机器人初态与保存加载验收；局部 probe 重跑不能代替完整基准恢复。",
+          "references": [
+            "topogym/tasks/buzz_wire_3d/probe.py",
+            "runs/environment_bootstrap/buzz_wire_3d/bend_contact/report.json"
+          ]
+        },
+        "G2": {
+          "status": "partial",
+          "evidence": "17 秒局部试验的居中通行、故意碰壁、受阻和返回中心通过；无运行中位姿改写。",
+          "gap": "full_task_deployed=false；完整空间路径、机器人抓持、任务成功 / 接触事件及 settle 协议未闭环。",
+          "references": [
+            "runs/environment_bootstrap/buzz_wire_3d/bend_contact/report.json"
+          ]
+        },
+        "G3": {
+          "status": "missing",
+          "evidence": "有轨道半径 / 曲率等早期参数提案。",
+          "gap": "尚无含机器人与环杆完整扫掠的可用三维参数邻域。",
+          "references": [
+            "docs/develop/tasks/ten_task_environment_deployment_plan_zh.md"
+          ]
+        },
+        "G4": {
+          "status": "missing",
+          "evidence": "只有局部试验入口。",
+          "gap": "尚无任务生成、完整验证、拒绝 / 重采样和 seed 契约。",
+          "references": [
+            "topogym/tasks/buzz_wire_3d/probe.py"
+          ]
+        },
+        "G5": {
+          "status": "unverified",
+          "evidence": "局部触壁检测不构成难度标定。",
+          "gap": "需完整有效任务后，测曲率、净空与出平面幅度对同一控制器的表现。",
+          "references": [
+            "runs/environment_bootstrap/buzz_wire_3d/bend_contact/report.json"
+          ]
+        }
+      },
+      "extract_now": "可提炼局部通行 / 受阻接触校准协议与参数记录格式；完整任务适配器先不定型。",
+      "next_step": "建立一个空间轨道的完整机器人基准，并明确轻触事件与到达目标的判据。",
+      "summary": "局部“应通 / 应阻”已有证据，任务层仍处于基准建设。"
+    }
+  },
+  "inspected_at": "2026-09-17 18:17:34 CDT",
+  "scope": "当前现存代码与报告的增补 inspection；原 demo 清单仍保持其 17:30:57 快照。未重跑物理仿真或完整冷启动恢复。",
+  "source_files": [
+    {
+      "path": "configs/task_variants/fiber_bundling_density_v1.yaml",
+      "sha256": "fe1e17620df709da76f2fa9a5a965f6c012d125148f781a856ff420a366fe586"
+    },
+    {
+      "path": "configs/task_variants/hedgehog_in_cage/family_space_v2.json",
+      "sha256": "67653496eb2d7250b7637ed1dbc8cdcc9eaf51abe3e6d91ad94b7ba1af4dc6c5"
+    },
+    {
+      "path": "docs/develop/tasks/cast_coil_family_space_zh.md",
+      "sha256": "de6dd1b02b52f0157eba06e0b423ab68fa639dcaf26c306c4973b4d685b6b6ec"
+    },
+    {
+      "path": "docs/develop/tasks/fiber_bundling_density_radius_zh.md",
+      "sha256": "a160b1cae534a14045c9e70ac5f03b8db59e82c0f482709ff055a0a3aebe11cf"
+    },
+    {
+      "path": "docs/develop/tasks/hedgehog_in_cage_family_demos_zh.md",
+      "sha256": "b4a5251d5281a0ed9d0df1f3515fdb9ad12bb1a10b094ef590aff5b89da256a6"
+    },
+    {
+      "path": "docs/develop/tasks/hedgehog_in_cage_family_space_zh.md",
+      "sha256": "b6d05b2a7104b4d71e72b23e85fb9c1804b17048d2b2addf2a7b696137c364c4"
+    },
+    {
+      "path": "docs/develop/tasks/horseshoe_ring_family_space_zh.md",
+      "sha256": "3a065437d219b0dca949b23227c1aa2eedc568cd0675845525803011026e9649"
+    },
+    {
+      "path": "docs/develop/tasks/interlocked_claws_family_space_zh.md",
+      "sha256": "835469f8b5fab1a488ce5d39db031f2dec4055bc21b6d713ec49353c0c952a3c"
+    },
+    {
+      "path": "docs/develop/tasks/knot_untying_physics_demo_plan_zh.md",
+      "sha256": "c55315388fec8cc3abe1326335ef55d46240a03ed048d4ce82768da49e9493bf"
+    },
+    {
+      "path": "docs/develop/tasks/knot_untying_recording_attempt_zh.md",
+      "sha256": "00ad5b44fb530c3ed5b1d9fd8fc27cd898e77368da824a3ac5c97775a1b4a94c"
+    },
+    {
+      "path": "docs/develop/tasks/lock_picking_family_space_zh.md",
+      "sha256": "b924c9f3c498e0e4ddb13ad25564527770a01ff5826f90b6dc26828ef85dd032"
+    },
+    {
+      "path": "docs/develop/tasks/rope_threading_zh.md",
+      "sha256": "662029fa3053b36d6bac4d5e746311dae69691be5efb36a53f50e9d0eea07fe1"
+    },
+    {
+      "path": "docs/develop/tasks/ten_task_environment_deployment_plan_zh.md",
+      "sha256": "8202050df3fc4e1fb3537890cd460ae687b4408ddb7d8f90426fe236d9ee894f"
+    },
+    {
+      "path": "reports/weekly/2026-09-17/inspect_probes.json",
+      "sha256": "7214ff3e5af6795a21bf0c28a5a0795e0b1adb1cb7bf455220c4485b2aa024e8"
+    },
+    {
+      "path": "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/archive_manifest.json",
+      "sha256": "671fb3c4c92a7b8f36767badcac70412b6abccae03e80021b3200ee2dfa3c552"
+    },
+    {
+      "path": "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/validation.json",
+      "sha256": "c918cfa7b08dad2faa0e12277108a2d437ba0177a6da2d927edbec4bdf6c2077"
+    },
+    {
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/generator_manifest.json",
+      "sha256": "85d36486c2dd95bc8ddc30615ceb125e794dd85b504c6bf21857feda2e2f07b6"
+    },
+    {
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-17_families_v1_generator/variant_space.json",
+      "sha256": "be82ad905bf3addc133da80b57e7fd73b3352936bcc7c3857059ccc5cb7c5cd8"
+    },
+    {
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01/archive_manifest.json",
+      "sha256": "40f7a7357e60d447df13e5d1060c3f364a5d42a151487c38280f4388556fedf6"
+    },
+    {
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-17_sparse_04_r13p5mm_hybrid_01/timestep_validation.json",
+      "sha256": "26b40069b286ff0605903d6ceede355faebb36ac2831949deded2ef5a6e40dbf"
+    },
+    {
+      "path": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/archive_manifest.json",
+      "sha256": "604a0379862ff2b27b3ef6ed6b70efca43f4b9193cca184395f09e3906b17054"
+    },
+    {
+      "path": "runs/demo_metadata/horseshoe_ring/2026-09-16_aloha_full/archive_manifest.json",
+      "sha256": "0ea5c1edb6ed519b756c0b497a5f1117bc8606c7c027344d824cd001b46ba0ba"
+    },
+    {
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/archive_manifest.json",
+      "sha256": "ff330d7e0b63fd99fd1e673d3238f26138271731f26ae238420a3407c2ff7a1b"
+    },
+    {
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/reliability_report.json",
+      "sha256": "3196f00d068d7511271420ac77db9cdc57158a9ca883f4c7d41ac2f4639ba7f5"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/samples_seed17/report.json",
+      "sha256": "ca3c9dea16b577a4d2a683cf139608001938e090279307a9933f3c7bea221110"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/samples_seed29/report.json",
+      "sha256": "0890643910a9e4975c6950c4874ea9ff54b18e008a6890a164066ff293f6c18d"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/family_space_plan_v1/report.json",
+      "sha256": "5e9d2f54be0e5cd5f4c844bcf01f012759dd0e5cb448b8d3285667e7e4322be2"
+    },
+    {
+      "path": "runs/environment-solvability/interlocked_claws/family_space_plan_v1/plan.json",
+      "sha256": "e350df5a38544b36941abb35647d7aed626e24c58b847389a3e2c1b6496dbf19"
+    },
+    {
+      "path": "runs/environment-solvability/lock_picking/family_space_v2/summary.json",
+      "sha256": "50b786ca391b893de121a41083ac1cdf18f2b9d84aa8e452c77f23c3302489f0"
+    },
+    {
+      "path": "runs/environment-solvability/lock_picking/spaced_initial/result.json",
+      "sha256": "1e386a6a25abef65d72a7eef1ff3ef06b003ec543d2ced9c6c91be09a376ef8e"
+    },
+    {
+      "path": "runs/environment-solvability/rope_threading/physics_v5/cases.json",
+      "sha256": "3682b538bba117723cc5cd25832e79d98df662de32ac9f28bfa6482c61f87e15"
+    },
+    {
+      "path": "runs/environment-solvability/rope_threading/physics_v5/qualification.json",
+      "sha256": "b02e19ecd29615099f116e50e96c4b71d369246e1452980a9928fd3f4ae8eef8"
+    },
+    {
+      "path": "runs/environment-stability/knot_untying/trefoil_robot_v8/spread_recording_v2/validation_spec.json",
+      "sha256": "ecf616d1dda09456d5808e70d62f8e01a278fb7b13ea90ef8d85a8827fa09c6c"
+    },
+    {
+      "path": "runs/environment-stability/knot_untying/trefoil_v1_eps1mm/result.json",
+      "sha256": "be0e677a41e2b3b3ebf86c6f749fac6da745b57206d421fe7333c6a7c64d64bd"
+    },
+    {
+      "path": "runs/environment_bootstrap/buzz_wire_3d/bend_contact/report.json",
+      "sha256": "8970ced65e50ee78b8a925d85cefca6c29059acc138559b89dce092bc05bf256"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d/probe.py",
+      "sha256": "9230341e460d22c8b7a194c36926783937bd4e155002fec8f7c028b0be07d0c6"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/appearance.py",
+      "sha256": "c66c22d4303850a7958c62493feb7fa0e3f4d536ccd447c29f4ab8d414713e31"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/robot_demo.py",
+      "sha256": "0980f30101bf306b127e0e3672a186494a31cfdcac9b5fb8a9c8b0946b357d37"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/family_pipeline.py",
+      "sha256": "c04b78c07a4c1ce126ca5be23bdcec57f4958071e1a2199b335c271db7379e72"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/family_variants.py",
+      "sha256": "cde81378614c6213ba564c07df33e29ef6bc704853a91719116ca7962e423c72"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/robot_execution.py",
+      "sha256": "61434984ac9e9c3f808120d06f7eec7c7d194bfc34c452f768bebe1053e3c0a8"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/contact_guard.py",
+      "sha256": "c39d859236054075b1dbbfc90011d525ab90db36834a60cb65ed59da3917e02e"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/variant_demo.py",
+      "sha256": "2d43ceb90ec1acf01dd11e98fc0f8361937065953a554495fa50a1f35c8f4aee"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/variants.py",
+      "sha256": "2786e663b5e547cbfee3ea052e24878d15ea2e7787213f09ad05d97d24f6ba4e"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage/family_motion.py",
+      "sha256": "e526a616cbf8af7824107bb2d6a98ed61e0bc43d22fb221cd907b0bee77c11ff"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/family_space.py",
+      "sha256": "347ba15b7bb10d1acf042bcd186eabf304fd387e24090e9ef3cfd0871ac55df0"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/shape_neighborhood.py",
+      "sha256": "0fe90e8ee788dc355999f078c516b845af251e62aa4e24a6de40ab52b9c2f7a9"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/shape_sampler.py",
+      "sha256": "9fe702ee6f48d7da16a352ea7a43761d0b9f7ee700ed791d3ba796dd7a90b17b"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/family_space.py",
+      "sha256": "950fe0ce48c242f90cc86ef9100b6e81c780a1c1ec9405198fbe87da16193406"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/physical.py",
+      "sha256": "5145c566625e31a6e7f48fff1b49c01cd3abdb35ac03a533e4177703a54fbe7a"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/physics_probe.py",
+      "sha256": "7ed415e562490bb6c5021eb9e6da4551b970b9425f08de276dfaf5d93446b405"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/physics_suite.py",
+      "sha256": "a0f2982434de61ef7ef272fe655a561c54999a33d122471562573165734f9837"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/certificate.py",
+      "sha256": "21238b7cfcad580ae0c7ed8aca93be9cefc6bbb904421f7ba8140f5889e8608e"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/evaluator.py",
+      "sha256": "979b0909ff687ce76d829f36a048a6c2edf5f8261d566ea2cc69431da6897ea0"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/family_space.py",
+      "sha256": "d22a035e4ca2305e3b7db1d379df2ebc603af8b04ae762d44f4d65392bac38af"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/physics_suite.py",
+      "sha256": "aad7525d65b8f0a035a9342bac191fc0d97880a3b1942a22ff2f998b852acdd4"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/prepare_assets.py",
+      "sha256": "cb5b7c0966883fd703a8490730d354059d7108b398720ceec4b1d7d41d1c3c88"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/qualification.py",
+      "sha256": "b50aff1b429d6d24f6c00c9d451b32056e6fdeab3a9c332df538220f127f2809"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/scene.py",
+      "sha256": "c19b750a684921c718865ed4fbc6e2531272853b3de34d3c3ff8cc1db1c1f1a7"
+    }
+  ],
+  "parameter_probe": {
+    "check": "fiber parameter sampling in two independent processes with reversed seed order and unrelated global RNG calls",
+    "seeds": [
+      0,
+      1,
+      2,
+      7,
+      23,
+      42
+    ],
+    "passed": true,
+    "scope": "parameters only; not generated asset equality, simulator reset, or full robot execution",
+    "outputs": [
+      {
+        "0": {
+          "episode_seed": 0,
+          "family_id": "sparse",
+          "fiber_count": 4,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014401711409862464,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "1": {
+          "episode_seed": 1,
+          "family_id": "standard",
+          "fiber_count": 10,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014762852787751482,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "2": {
+          "episode_seed": 2,
+          "family_id": "dense",
+          "fiber_count": 16,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014651781102256225,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "23": {
+          "episode_seed": 23,
+          "family_id": "dense",
+          "fiber_count": 15,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014327454631402932,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "42": {
+          "episode_seed": 42,
+          "family_id": "sparse",
+          "fiber_count": 4,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014254693311565788,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "7": {
+          "episode_seed": 7,
+          "family_id": "standard",
+          "fiber_count": 7,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.01494995651724106,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        }
+      },
+      {
+        "0": {
+          "episode_seed": 0,
+          "family_id": "sparse",
+          "fiber_count": 4,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014401711409862464,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "1": {
+          "episode_seed": 1,
+          "family_id": "standard",
+          "fiber_count": 10,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014762852787751482,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "2": {
+          "episode_seed": 2,
+          "family_id": "dense",
+          "fiber_count": 16,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014651781102256225,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "23": {
+          "episode_seed": 23,
+          "family_id": "dense",
+          "fiber_count": 15,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014327454631402932,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "42": {
+          "episode_seed": 42,
+          "family_id": "sparse",
+          "fiber_count": 4,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.014254693311565788,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        },
+        "7": {
+          "episode_seed": 7,
+          "family_id": "standard",
+          "fiber_count": 7,
+          "generator_version": "fiber_density_radius_v1",
+          "ring_inner_radius_m": 0.01494995651724106,
+          "shape_seed": 7,
+          "variant_rng_version": 1
+        }
+      }
+    ]
+  }
+}

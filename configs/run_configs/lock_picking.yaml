@@ -1,0 +1,21 @@
+# Current lock-picking execution defaults.
+seed: 0
+viewer: false
+keep_open: false
+keep_open_no_step: false
+verbose: false
+build_only: false
+bench_steps: 0
+record_dataset: null
+dataset_every_n_steps: 10
+output: runs/environment_bootstrap/lock_picking/baseline
+inspect_only: false
+oracle_mode: oracle
+record_cameras:
+- agentview
+- wrist
+- front_oblique
+exterior_cameras:
+- agentview
+- front_oblique
+camera_audit_source: null

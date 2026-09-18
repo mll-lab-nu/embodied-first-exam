@@ -1,0 +1,52 @@
+schema_version: 1
+task_id: cast_coil
+title_zh: Cast Coil
+baseline:
+  asset_id: cast_coil_photo_prototype_v1
+  initial_relative_pose_id: alternating_four_layers_v1
+  scene_scale: 3.0
+  layout:
+    center_xy_m: [0.06, 0.16]
+    yaw_deg: -12.0
+axes:
+- path: initial_relative_pose_id
+  unit: id
+  status: candidate
+  validated_range: null
+- path: layout.yaw_deg
+  unit: deg
+  status: candidate
+  validated_range: null
+- path: scene_scale
+  unit: ratio
+  status: candidate
+  validated_range: null
+assets:
+- location: https://hanayama-toys.com/product/cast-coil/
+  status: description_only
+- location: https://store.hanayamatoys.co.jp/items/55630234
+  status: official_assembled_and_separate_piece_photos
+- location: https://www.eureka-puzzle.eu/wp-content/uploads/2022/09/515056-Huzzle-Cast-Coil-Oct-2017.pdf
+  status: illustrated_reference_route_not_replayed
+- location: assets/tasks/cast_coil/photo_reference_v1/template.json
+  status: local_source
+- location: topogym/tasks/cast_coil/geometry.py
+  status: local_source
+- location: assets/tasks/cast_coil/photo_reference_v1/variants.json
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: photo-informed two-body prototype; exact turning windows and reference route remain unverified
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Do not treat the photo prototype as verified commercial puzzle geometry
+- Collision approximation blocks turning window
+first_probe: Map and verify the official eight-step route; local prototype bench evidence is recorded separately

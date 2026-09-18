@@ -1,0 +1,95 @@
+defaults:
+  - config
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - _self_
+
+task:
+  variant: wang_reference_v1
+  robot_coupling: external_articulation
+  robot_rigid_collision:
+    enable_collision: true
+    enable_self_collision: true
+    enable_neutral_collision: true
+    enable_adjacent_collision: false
+  # XY follows the robot's mount. Z aligns the original table's top (-0.0009).
+  origin_xy_m: [-0.1356786, 0.0]
+  geometry:
+    rope_subdivisions: 4
+    radial_segments: 12
+    ring_radial_segments: 24
+  rope:
+    model: fem_ipc_tube
+    radius: 0.004
+    mesh:
+      maxvolume: 2.0e-8
+    fem:
+      E: ${prefabs.rope_fem.E}
+      nu: ${prefabs.rope_fem.nu}
+      rho: ${prefabs.rope_fem.rho}
+      friction_mu: ${prefabs.rope_fem.friction_mu}
+      contact_d_hat: 0.0008
+      # Use the already audited low-speed friction regularization from the
+      # shared FEM rope probes; the 10 mm/s default permits visible creep.
+      contact_eps_velocity: 0.001
+      rest_shape: straight
+      # Fixed stands intentionally intersect their rings/bases; fixed-fixed
+      # contacts are disabled. Rope/fixture clearance is checked before build.
+      sanity_check_enable: false
+      newton_max_iterations: 100
+      newton_tolerance: 0.01
+
+robot_control:
+  robot:
+    # Recover the reference robot/table height; lowering the source bases to
+    # the common table intersects the initial rope with a base flange.
+    base_riser_height_m: 0.0209
+  home:
+    left: [0, -0.96, 1.16, 0, -0.3, 0, 0.037, 0.037]
+    right: [0, -0.96, 1.16, 0, -0.3, 0, 0.037, 0.037]
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+  sim:
+    dt: 0.005
+    substeps: 4
+  cameras:
+    overview:
+      res: [1280, 900]
+      pos: [1.15, -1.25, 1.98]
+      lookat: [-0.135, 0.0, 1.23]
+      up: [0, 0, 1]
+      fov: 50
+      near: 0.005
+      far: 12
+    detail:
+      res: [1280, 900]
+      pos: [0.92, 0.98, 1.75]
+      lookat: [-0.11, 0.05, 1.10]
+      up: [0, 0, 1]
+      fov: 39
+      near: 0.005
+      far: 12
+    topdown:
+      res: [1000, 1000]
+      pos: [-0.15, 0.025, 2.15]
+      lookat: [-0.15, 0.025, 0.92]
+      up: [0, 1, 0]
+      fov: 42
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/rope_threading/wang_initial
+  viewer: false
+  settle_steps: 40
+  record_video: true
+  fps: 15
+  video_seconds: 3
+
+hydra:
+  job:
+    chdir: false

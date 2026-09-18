@@ -10,5 +10,9 @@ defaults:
   - _self_
 
 env:
+  renderer:
+    type: auto
+  presentation:
+    background: checker
   genesis:
     backend: cuda

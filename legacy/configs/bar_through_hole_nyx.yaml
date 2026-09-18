@@ -1,0 +1,29 @@
+# Nyx presentation of the existing bar task. Physical parameters are inherited.
+defaults:
+  - bar_through_hole
+  - _self_
+
+run:
+  viewer: false
+  keep_open: false
+
+env:
+  renderer:
+    spp: 64
+  appearance:
+    # Ordered task rules; shared table finishes come from the presentation preset.
+    - {pattern: "panel_*", color: [0.43, 0.47, 0.51], metallic: 0.65, roughness: 0.33}
+    - {pattern: "panel_plug_*", color: [0.10, 0.11, 0.12], metallic: 0.2, roughness: 0.52}
+    - {pattern: "panel_bolt*", color: [0.65, 0.67, 0.69], metallic: 1.0, roughness: 0.20}
+    - {pattern: "flange_*", color: [0.72, 0.48, 0.12], metallic: 0.7, roughness: 0.28}
+    - {pattern: "near_*", color: [0.29, 0.31, 0.33], metallic: 0.8, roughness: 0.30}
+    - {pattern: bar, color: [0.78, 0.80, 0.82], metallic: 1.0, roughness: 0.23}
+
+recording:
+  enabled: true
+  path: runs/bar_through_hole_nyx_lab/demo.mp4
+  camera: oblique
+  # dt=0.01; sample every 5 steps, play at 20 fps = real simulation time.
+  fps: 20
+  every_n_steps: 5
+  res: [1024, 1024]

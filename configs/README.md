@@ -1,77 +1,33 @@
-# TopoGym Configs
+# 当前配置
 
-Reusable OmegaConf YAML for shared manipulation geometry, scene, robot, task, and
-prefab settings. Keep them Hydra-friendly: small composable sections, no Python
-expressions, explicit numeric lists for vectors/gains.
+`config.yaml` 只组合通用环境、机器人、prefabs、录像与运行参数；任务由具体入口选择。
+旧任务配置位于 [`legacy/configs/`](../legacy/configs/)，不参与当前 Hydra 搜索路径。
 
-All task layouts use the **TopoGym tabletop V1** baseline in the **task frame**
-(`coordinate_frame: task`; origin at table center, `z=0` = tabletop surface). The
-world/physics layer stays in world coordinates. Conversion happens at build time via
-each task layout's `world_z()` (`world_z = task_z + 0.9196429`).
-
-## Layout
-
-- `common_configs/manipulation_space_tabletop_v1.yaml` — shared manipulation-space profile
-  (board footprint, EE workspace, Franka mount, home pose), task frame. Loads as `cfg.common`.
-- `env_configs/world_tabletop_v1.yaml` — Genesis world (table rigid body, physics,
-  frames, cameras, robot mount). World coordinates.
-- `robot_control_configs/` — robot assets, joints, home pose, controllers, IK, gripper.
-- `task_configs/<task>_topogym_tabletop_v1.yaml` — per-task layout, objects, oracle,
-  physical, mdp. Mainline: untangle / untangle_continuous / band_untwist / stacked_plate /
-  cable_routing / bar_through_hole. The swap / onestroke / maze_wall_removal / peeling
-  configs stay for the RL env shells in `topogym/envs/`, though their demos were deleted.
-- `prefab_configs/topogym_prefabs_v1.yaml` — shared modeling props (rope family:
-  PBD params, endpoint connector, fixed terminal, routing post, flush port). Referenced
-  from task configs via `${prefabs.*}`. Loads as `cfg.prefabs`.
-- `recording/` — recording presets (`off`, `default`, `hq`).
-- `run_configs/` — per-run parameters (seed, viewer, diagnostics). Loads as `cfg.run`.
-- `hydra/` — Hydra behaviour presets (`job_logging/quiet`).
-- `<demo>.yaml` — one primary config per demo, composed from `config.yaml`.
-
-The tabletop V1 table depth/height follow the AABB from RoboMME's pinned ManiSkill
-`TableSceneBuilder` (oversized 2.418 m side reduced to 1.200 m); the Panda is moved
-45 mm forward so Genesis 1.1.0's asymmetric `link0.stl` footprint stays on the table.
-The shared builder validates the mount plane is on the tabletop and the footprint stays
-inside the table. See `docs/develop/framework/tabletop_baseline_v1_zh.md`.
-
-## Hydra composition
-
-`config.yaml` is the Hydra base config: it names one option from each group above and
-maps it onto the package the reading code expects (`cfg.env`, `cfg.task`, `cfg.prefabs`,
-...). Each migrated demo has its own primary config `configs/<demo>.yaml` that starts
-from `config.yaml` and overrides only the groups it needs. `run_configs/` holds the
-"how to run this once" parameters (seed, viewer, diagnostics); `configs/hydra/` holds
-logging presets. See `configs/config.yaml` for the override syntax and
-`docs/develop/framework/demo_cli_and_config_zh.md` for why Hydra was introduced.
-
-## Demos
-
-Every demo takes Hydra overrides. The argparse config path was deleted on 2026-08-10
-along with `demos/legacy/`, so there is only one syntax:
+| 入口/配置组 | 用途 |
+| --- | --- |
+| `presentation_preview.yaml` | 无任务物体的共享场景与 RGB/录像/HDF5 检查 |
+| `aloha_lab_preview.yaml` | ALOHA 2 双臂实验室；配对 `world_tabletop_aloha_v1` 和 `aloha_position_ik` |
+| `rope_threading_preview.yaml` | Wang 三环参考基础场景，U 形自由绳 FEM+IPC、侧置支架与 ALOHA 双臂 |
+| `lock_picking_baseline.yaml` | 当前开锁基线，独立加载 `task_configs/lock_picking.yaml` 与 `run_configs/lock_picking.yaml` |
+| `lock_picking_spaced_preview.yaml` | 加宽锁片间距的初态检查；长行程未完成机器人验收 |
+| `hedgehog_in_cage_classic_preview.yaml` | CLASSIC 三星刺猬初态；自身组合共享组 |
+| `horseshoe_ring_preview.yaml` | 完整双马蹄装配初态、三视图和相机绕行；可选重力落桌检查 |
+| `cast_coil_preview.yaml` | 金银卷绕件 3 倍原型、初态预览和自由落桌检查 |
+| `cast_coil_aloha.yaml` | 原型三段解的双臂物理执行；预抓取起点、接触门控辅助抓持、重新设置的位置控制增益与静摩擦修正 |
+| `cast_keyhole_preview.yaml` | Keyhole 开口金叉 / 封闭银孔原型，双自由刚体、相机预览及短时静置 |
+| `task_cards/` | 十项任务固定基线及资产状态，不是 Hydra 主配置 |
+| `presentation_configs/nyx_lab.yaml` | 默认 Nyx、室内灯、封闭实验室、桌面材质 |
+| [`camera_configs/`](camera_configs/README.md) | ALOHA 双臂四路观测和官方模型 demo 视角；合并到 `env.cameras` |
+| `env_configs/` | 刚体/PBD 与 FEM 两个通用世界预设 |
+| `common_configs/`、`robot_control_configs/` | 共用坐标、Franka + Robotiq 2F-85 与控制参数 |
+| `render_bench.yaml`、`batch_render_probe.yaml` | 通用性能测量，显式使用各自对照后端 |
 
 ```bash
-python -m demos.entangle.untangle_continuous_physical_pinch_demo run.viewer=true run.keep_open=true
-python -m demos.entangle.untangle_physical_handle_demo run.viewer=true run.keep_open=true run.verbose=true
-python -m demos.connectivity.stacked_plate_physical_rotate_demo run.viewer=true run.keep_open=true
-python -m demos.routing.cable_routing_physical_handle_demo run.viewer=true run.allow_target_lag=true
-python -m demos.routing.bar_through_hole_physical_insert_demo run.viewer=true run.verbose=true
+.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.lock_picking --cfg job
+.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.lock_picking run.inspect_only=true
+.venv-gs121-nyx/bin/python -m tests.check_configs_compose
 ```
 
-Full list and per-demo primary configs: `demos/README.md`.
-Record every task (multi-camera) via `bash bash_scripts/recordings/record_all_tasks.sh`.
-
-## Checks
-
-```bash
-python tests/check_configs_compose.py   # every config composes, every ${...} resolves
-python tests/check_demo_configs.py      # demo-side wiring; stdlib + PyYAML only
-```
-
-All checks live in `tests/`; `scripts/` holds only the tools that produce an
-artifact. See `tests/README.md`.
-
-## References
-
-- `configs/GEOMETRY_PARAMETERS_zh.md`: where each 3D size/position parameter lives.
-- `docs/develop/framework/genesis_world_coordinates_zh.md`: Genesis world / table / task coordinates.
-- `docs/develop/framework/tabletop_baseline_v1_zh.md`: frozen tabletop V1 baseline and validation.
+任务表面材质写在 `env.appearance`，公共桌面材质写在 `env.presentation.appearance`。
+显式更换渲染器使用 `env.renderer.type=rasterizer`；背景使用 `env.presentation.background=checker`。
+配置修改需检查其当前 consumer；`run.record_dataset` 等通用字段的存在本身不代表每个任务入口已经实现对应能力。

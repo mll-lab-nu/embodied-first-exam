@@ -1,0 +1,59 @@
+# Initial-state inspection variant. Its longer stroke is not robot-qualified.
+defaults:
+  - lock_picking_baseline
+  - _self_
+
+task:
+  geometry:
+    # The same pitch drives rotor positions AND the three key tabs.
+    pitch: 0.150
+    # Preserve 45 mm between the rear tab and handle: 3 * pitch + 0.045.
+    grip_offset: 0.495
+
+env:
+  world:
+    table:
+      # Accommodate the longer base/goal while retaining the existing mount.
+      size: [1.8, 1.4, 0.9196429]
+  cameras:
+    mechanism_overview:
+      res: [1600, 1000]
+      pos: [-0.55, 1.75, 1.55]
+      lookat: [0.40, 0.20, 1.085]
+      up: [0, 0, 1]
+      fov: 28
+      near: 0.005
+      far: 12
+    disc1_face:
+      res: [900, 900]
+      pos: [0.130, 0.200, 1.105]
+      lookat: [0.200, 0.200, 1.105]
+      up: [0, 0, 1]
+      fov: 120
+      near: 0.001
+      far: 12
+    disc2_face:
+      res: [900, 900]
+      pos: [0.280, 0.200, 1.105]
+      lookat: [0.350, 0.200, 1.105]
+      up: [0, 0, 1]
+      fov: 120
+      near: 0.001
+      far: 12
+    disc3_face:
+      res: [900, 900]
+      pos: [0.430, 0.200, 1.105]
+      lookat: [0.500, 0.200, 1.105]
+      up: [0, 0, 1]
+      fov: 120
+      near: 0.001
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/lock_picking/spaced_initial
+  inspect_only: true
+  build_only: false
+  record_cameras: [agentview, wrist, mechanism_overview, disc1_face, disc2_face, disc3_face]
+  exterior_cameras: [agentview, mechanism_overview]
+recording:
+  enabled: false

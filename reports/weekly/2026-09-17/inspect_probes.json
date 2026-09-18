@@ -1,0 +1,127 @@
+{
+  "check": "fiber parameter sampling in two independent processes with reversed seed order and unrelated global RNG calls",
+  "seeds": [
+    0,
+    1,
+    2,
+    7,
+    23,
+    42
+  ],
+  "passed": true,
+  "scope": "parameters only; not generated asset equality, simulator reset, or full robot execution",
+  "outputs": [
+    {
+      "0": {
+        "episode_seed": 0,
+        "family_id": "sparse",
+        "fiber_count": 4,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014401711409862464,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "1": {
+        "episode_seed": 1,
+        "family_id": "standard",
+        "fiber_count": 10,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014762852787751482,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "2": {
+        "episode_seed": 2,
+        "family_id": "dense",
+        "fiber_count": 16,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014651781102256225,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "23": {
+        "episode_seed": 23,
+        "family_id": "dense",
+        "fiber_count": 15,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014327454631402932,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "42": {
+        "episode_seed": 42,
+        "family_id": "sparse",
+        "fiber_count": 4,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014254693311565788,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "7": {
+        "episode_seed": 7,
+        "family_id": "standard",
+        "fiber_count": 7,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.01494995651724106,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      }
+    },
+    {
+      "0": {
+        "episode_seed": 0,
+        "family_id": "sparse",
+        "fiber_count": 4,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014401711409862464,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "1": {
+        "episode_seed": 1,
+        "family_id": "standard",
+        "fiber_count": 10,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014762852787751482,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "2": {
+        "episode_seed": 2,
+        "family_id": "dense",
+        "fiber_count": 16,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014651781102256225,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "23": {
+        "episode_seed": 23,
+        "family_id": "dense",
+        "fiber_count": 15,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014327454631402932,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "42": {
+        "episode_seed": 42,
+        "family_id": "sparse",
+        "fiber_count": 4,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.014254693311565788,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      },
+      "7": {
+        "episode_seed": 7,
+        "family_id": "standard",
+        "fiber_count": 7,
+        "generator_version": "fiber_density_radius_v1",
+        "ring_inner_radius_m": 0.01494995651724106,
+        "shape_seed": 7,
+        "variant_rng_version": 1
+      }
+    }
+  ]
+}

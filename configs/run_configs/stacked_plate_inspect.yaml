@@ -1,9 +1,0 @@
-# stacked_plate_inspect_demo 的运行模式参数。
-
-defaults:
-  - default
-  - _self_
-
-# 把每个盘都吸附到 oracle.target_angle_deg，预览对齐后（扇区重叠）的状态。
-# 属于查看方式而非场景定义，所以在这里而不在 task 配置里。
-rotate_to_target: false

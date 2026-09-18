@@ -1,0 +1,42 @@
+{
+  "template_id": "classic_3star_reconstruction_v1",
+  "scale": 1.0,
+  "geometry_status": "provisional_reconstruction_not_manufacturer_CAD",
+  "cage": {
+    "collision_parts": 718,
+    "mass_kg": 0.07883069959323903,
+    "visual_finish": "wood",
+    "all_parts_watertight": true,
+    "all_parts_convex": true,
+    "mass_model": "density-based additive parts; embedded-root overlap retained"
+  },
+  "hedgehog": {
+    "collision_parts": 11,
+    "mass_kg": 0.012160574470309472,
+    "visual_finish": "wood",
+    "all_parts_watertight": true,
+    "all_parts_convex": true,
+    "mass_model": "density-based additive parts; embedded-root overlap retained"
+  },
+  "initial_pose": {
+    "position_m": [
+      0.0,
+      0.0,
+      -0.009750000000000007
+    ],
+    "quaternion_wxyz": [
+      -0.5426722906959199,
+      -0.6595210949003263,
+      0.5201296092636148,
+      0.001974806217643962
+    ],
+    "minimum_conservative_clearance_m": 0.00032845107409020403,
+    "orientation_trials": 83,
+    "seed": 17,
+    "gravity_settled": false,
+    "assembly_route_verified": false,
+    "clearance_method": "mesh distance to sphere + conservative sampled spike cylinders; half-spacing inflation"
+  },
+  "reference_route_verified": false,
+  "physics_qualified": false
+}

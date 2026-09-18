@@ -1,0 +1,7 @@
+# Optional Nyx profile for env_setup_gs121.sh (INSTALL_NYX=1).
+# Also used as uv --overrides to replace the baseline numpy==2.4.4 pin.
+# Plugin 0.1.4 declares genesis-world>=1.2.0,<1.3.0; 0.1.5/0.1.6 need >=1.3.1.
+genesis-world==1.2.1
+gs-nyx-plugin==0.1.4
+gs-nyx==0.1.3
+numpy==2.3.5

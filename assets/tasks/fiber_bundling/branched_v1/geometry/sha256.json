@@ -1,0 +1,15 @@
+{
+  "asset_report.json": "186dceca7b945e5a09c79f97f5b1ca755c683068aa2b2d726b57546f472ef8b5",
+  "bundle.xml": "00afe9aca4585d3e42836afaedeb811c95ea42269bf4fb63f780e42a09ff5ec0",
+  "bundle_initial.glb": "ed771a682d2b52ddcf9cf574dcc3932ffb029e327c9bffc6827c5da1b659c421",
+  "bundle_initial.obj": "e19fdfa35f44e67a09b98769d5dce93a1b6a6c4b07aed1d6d9fe6dc89fee272a",
+  "centerlines.json": "9672bbbe97bf9a0088b4a35eec0632549a5dfb8aaeff602d720ca99377c3ee81",
+  "jacket_end_segment.obj": "af69eef82d3ceeb0cdec6421f3dd441dd9e0f0432bb9b510c9e26c4b2aaa2c27",
+  "jacket_lip.obj": "cf7b1713cccbd9170648e96fe1251b94151f01eb7df142b59599f9db77b010f4",
+  "jacket_segment.obj": "48474db451c9d50310c96aa70b6f1be1b819a0dcbbed2e4d6472e005b3eb58ba",
+  "material.mtl": "0d90fe7d688a6da0b82b0f8053231a1c8986de34aa839f8113ed53a610c09227",
+  "material_0.png": "2ce80bd45db36528485e1e58b7780b8636e9c7593eff6decc39d088ec2a7911a",
+  "ring.glb": "630384f45e483b12169943c42992022a3d00ebe148d98af71223b472c9901555",
+  "ring.obj": "85082d026bd7a4b65ba8c344a020ddee48d1a679b3e93e5dad0325927061d9f6",
+  "ring.urdf": "a716724c7296fd0dee2853340a0ef5d829864cce1b547cbbf3d57b9d296e0f1e"
+}

@@ -1,0 +1,5 @@
+# Extra CPU geometry dependencies for trajectory-first Cast Keyhole design.
+# Install alongside uv-topogym-gs121-nyx.txt.
+shapely==2.1.2
+mapbox-earcut==2.1.0
+manifold3d==3.5.3

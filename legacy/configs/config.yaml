@@ -1,0 +1,53 @@
+# Hydra 主配置。
+#
+# 为什么引入（见 docs/develop/framework/demo_cli_and_config_zh.md）：
+# demo 的命令行参数与本目录之间此前没有统一约定 —— 97 个参数、32 处手写的
+# OmegaConf.merge、五套并存的覆盖机制。由此产生的失效形态是「参数没生效和参数
+# 生效了，产物长得一模一样」，08-03 至 08-05 期间直接造成三次运行作废。
+#
+# 目录名不改：Hydra 的 config group 名取自目录名，用 defaults 列表的
+# `组名@包名` 语法把它们落到既有的包路径上，因此读取侧代码（cfg.env / cfg.task /
+# cfg.prefabs）与各 yaml 文件都不需要改动。
+#
+# 用法（<类别> = entangle / routing / connectivity）：
+#   python -m demos.<类别>.<demo>                                     # 全部用默认
+#   python -m demos.<类别>.<demo> task.rope.fem.E=200000.0            # 改单个值
+#   python -m demos.<类别>.<demo> env_configs@env=world_tabletop_v1   # 换整组
+#   python -m demos.<类别>.<demo> --cfg job                           # 只打印解析后的配置
+#   python -m demos.<类别>.<demo> -m task.rope.fem.E=1e+5,2e+5        # 扫参
+#
+# 换整组时，键要与下面 defaults 列表里写的完全一致，带上 @包名：
+# `env_configs@env=`、`task_configs@task=`、`run_configs@run=`；
+# recording 组的目录名与包名相同，直接写 `recording=hq`。
+
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_fem_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - task_configs@task: untangle_continuous_topogym_tabletop_v1
+  - prefab_configs@prefabs: topogym_prefabs_v1
+  # 这两个组的目录名没有 _configs 后缀，包名与组名一致，无需 @ 重定向。
+  - recording: "off"
+  - run_configs@run: default
+  # Hydra 默认给 root logger 装 console handler，而 Genesis 自己也在输出，
+  # 于是终端上每条信息出现两遍。改用本仓自带的 quiet，理由与两个 Hydra 预设
+  # 为什么都不合适，见 configs/hydra/job_logging/quiet.yaml 的注释。
+  #
+  # 想要一份有内容的运行存档，需要先把 demo 的 print 改成 logging，那是另一件事。
+  - override hydra/job_logging: quiet
+  - _self_
+
+hydra:
+  job:
+    # 必须显式关掉。version_base>=1.2 时默认已是 false（hydra/core/utils.py:150），
+    # 写出来是因为一旦它为 true，Hydra 会 chdir 到输出目录，
+    # runs/ 与 .cache/topogym/meshes/ 这些相对路径会全部落到别处。
+    chdir: false
+  run:
+    # 放进 runs/ 而不是 Hydra 默认的 outputs/：runs/ 已在 .gitignore 里。
+    # 每次运行会在这里留下 .hydra/config.yaml（完整解析后的配置）与
+    # .hydra/overrides.yaml（本次实际给出的覆盖），这正是此前查不到的东西。
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: runs/hydra/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}

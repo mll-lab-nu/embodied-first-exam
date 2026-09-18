@@ -1,0 +1,71 @@
+schema_version: 1
+task_id: horseshoe_ring
+title_zh: 环环相扣
+baseline:
+  assembly_template_id: paired_horseshoes_photo_prototype_v1
+  scene_scale: 2.0
+  chain:
+    links_per_span: 3
+    link_centerline_radii_m: [0.024, 0.010]
+    tube_radius_m: 0.0028
+  probe:
+    link_count: 3
+    centerline_radius_m: 0.04
+    tube_radius_m: 0.004
+    density_kg_m3: 7800.0
+    initial_center_spacing_m: 0.06
+    segment_count: 48
+axes:
+- path: chain.links_per_span
+  unit: count
+  status: candidate
+  validated_range: null
+- path: chain.tube_radius_m
+  unit: m
+  status: candidate
+  validated_range: null
+- path: assembly_template_id
+  unit: id
+  status: candidate
+  validated_range: null
+assets:
+- location: assets/tasks/horseshoe_ring/photo_reference_v1/template.json
+  status: local_source
+physics:
+  backend: genesis_1.2.1_rigid
+  qualification: unqualified
+  profile_policy: fixed per probe; save actual solver settings with results
+  grasp_model: explicit assisted grasp only after contact, when applicable
+initialization:
+  description: two open horseshoes, two three-link chains, one independent target ring; all nine bodies free; photo-informed prototype
+  preview_config: configs/horseshoe_ring_preview.yaml
+  lab_preview_config: configs/horseshoe_ring_lab.yaml
+  geometry_status: provisional_photo_prototype_not_measured_CAD
+  extraction_route_verified: false
+  solvability_controls:
+    report: runs/environment-solvability/horseshoe_ring/result.json
+    template_radii_mm_with_straight_extraction_witness: [35.0, 36.0]
+    classification: oversized_positive_controls_only
+    original_radius_29mm_status: unknown; safe folding is not complete extraction
+  legacy_probe: three circular links, top link fixed; separate contact regression
+  tutorial_demo:
+    template: assets/tasks/horseshoe_ring/tutorial_solvable_v3/template.json
+    free_bodies: 5
+    full_geometric_extraction_verified: true
+    certificate: runs/environment-solvability/horseshoe_ring/tutorial_solvable_v3/certificate.json
+    demo: runs/environment_bootstrap/horseshoe_ring/aloha_full/index.html
+    robot: ALOHA
+    scope: kinematic_rehearsal_with_sampled_robot_collision_checks
+    dynamic_execution_verified: false
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+- Initial link overlap
+- Link separates through penetration
+- Missing full assembly geometry
+- Target ring accidentally Hopf-linked to a single chain link
+- No validated collision-free extraction route
+first_probe: Five-body tutorial prototype has a certified full extraction and ALOHA four-view kinematic rehearsal; force-driven execution remains unverified

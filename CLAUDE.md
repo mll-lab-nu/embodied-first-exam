@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+项目级完整机器人 demo 保留规则见 [AGENTS.md](AGENTS.md)：每个已完成环境至少在 `runs/demos/` 保留一份独立副本；任务子目录只能直接放 MP4，页面、配置与报告放 `runs/demo_metadata/`，清理与重跑时必须保护。
+
 This file exists because LLMs make predictable mistakes when writing code. Not random mistakes. The same ones, over and over. I've watched it happen enough times to write them down.
 
 These are not suggestions. These are rules. Follow them and you'll produce code that doesn't need to be rewritten. Ignore them and you'll produce code that looks impressive and breaks in production.

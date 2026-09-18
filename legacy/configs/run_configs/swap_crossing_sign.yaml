@@ -1,0 +1,42 @@
+# swap_crossing_sign_physical_pinch_demo 的运行模式参数。
+#
+# 继承 run_configs/default.yaml 的通用字段，再加本 demo 自己的开关。
+# 判据同 default.yaml：同一份 task / env 配置配上不同的 run.*，物理结果应当相同 ——
+# 因此绳子材料、网格、抓取步数不在这里，它们在 task 配置里，
+# 用点路径覆盖，例如 `task.pinch.cover_overshoot=0.09`。
+
+defaults:
+  - default
+  - _self_
+
+# --- 规划器往哪个目标规划（2026-09-11 起同一套搜索、三个目标）---------------
+# 三者构成本任务的对照组（task_taxonomy_zh.md §4 要求每个任务都要有可执行的 contrast pair）：
+#   oracle        每个交叉都翻过来 -> 预期成功
+#   restack_same  先撤光、再原样搭回出生时的交叉 -> 动作一样多、终态等于出生态，预期判 unchanged
+#   flip_nearest  只翻离插头最近的那个 -> 1 个交叉的格就是 oracle，2 个交叉的格预期判 partial_flip
+# 对照组预期是「跑完然后被判失败」，不是「跑不动」——它们是测量。
+oracle_mode: oracle
+
+# --- trace ---------------------------------------------------------------
+# 每步把绳的状态写进一个文本文件。null = 关闭；"auto" = 自动生成带时间戳的
+# 文件名；其他字符串按路径用。
+trace: null
+trace_every: 1
+
+# --- 任务控制 ------------------------------------------------------------
+# 抓放次数上限。null = 出生时规划出的步数 + 1（restack_same 撤光后按搭回的规划重给），
+# 不超过 task.oracle.max_moves（restack_same 再加 4）。
+max_moves: null
+
+# --- 诊断 ----------------------------------------------------------------
+# 非 null 时，每次规划所依据的实测中心线与插头位置存成 <目录>/decision_NN.npz，
+# 终态存成 final.npz——物理与规划对不上时拿它离线重放规划器。
+diagnostics_dir: null
+
+# --- 变体（2026-09-07）------------------------------------------------------
+# 按 seed 在包络内随机布局（task 配置末尾的 variation 块）。默认关 = 确定性布局。
+randomize_layout: false
+# 划档前只有 envelope 一档（全包络）；划档后按 seed % 3 选档，见 variation_axes_plain_zh.md §5。
+difficulty: envelope
+# 写进日志与 episode 元数据的变体标识（角点 sweep 覆盖成 corner_<id>）。
+variant_id: default

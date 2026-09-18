@@ -1,0 +1,84 @@
+schema_version: 2
+task_id: lock_picking
+status: geometry_and_ik_proposal_space
+source: runs/environment_bootstrap/lock_picking/handle_clearance
+visibility_baseline:
+  source_config: configs/lock_picking_spaced_preview.yaml
+  minimum_pitch_mm: 150
+  reference_disc_radius_mm: 80
+  pitch_rule: max(150, 150 * disc_radius_mm / 80)
+  smaller_pitch_allowed: false
+families:
+  - id: F1
+    name: 双槽单回退
+    source_variant: one_retreat
+    required_retreats: 1
+    reset_angles_deg: [30]
+    reset_angle_candidate_bounds_deg: [[28, 34]]
+    pitch_anchors_mm: [150, 150, 180]
+    pitch_candidate_bounds_mm: [150, 180]
+  - id: F2
+    name: 三槽不等角双回退
+    source_variant: two_unequal
+    required_retreats: 2
+    reset_angles_deg: [28, 32]
+    reset_angle_candidate_bounds_deg: [[26, 30], [30, 34]]
+    minimum_reset_difference_deg: 2
+    pitch_anchors_mm: [150, 150, 180]
+    pitch_candidate_bounds_mm: [150, 180]
+  - id: F3
+    name: 四槽三回退
+    source_variant: three_retreats
+    required_retreats: 3
+    reset_angles_deg: [24, 24, 24]
+    reset_angle_candidate_bounds_deg: [[23, 25], [23, 25], [23, 25]]
+    pitch_anchors_mm: [150, 150, 180]
+    pitch_candidate_bounds_mm: [150, 180]
+appearance_anchors:
+  - id: S
+    name: 小盘通视
+    disc_radius_mm: 65
+  - id: M
+    name: 标准基型
+    disc_radius_mm: 80
+  - id: L
+    name: 大盘加宽
+    disc_radius_mm: 95
+shape_candidate_bounds:
+  disc_radius_mm: [65, 95]
+derived_rules:
+  first_coupled_turn_deg: max(reset_angles_deg) / 2
+  d1_slots_deg: -sum(reset_angles_deg) + prefix_sum(reset_angles_deg)
+  d2_slot_deg: -sum(reset_angles_deg)
+  d1_stop_deg: [-max(reset_angles_deg)/2, max(reset_angles_deg)/2]
+  d2_stop_deg: [-10, sum(reset_angles_deg)+15]
+  grip_offset_mm: 3 * pitch_mm + 45
+  key_tab_pitch_mm: pitch_mm
+  fixed_ring_scale: disc_radius_mm / 80
+  full_insertion_travel_mm: 4 * pitch_mm
+fixed_parameters:
+  disc_count: 3
+  tab_count: 3
+  slot_half_deg: 8
+  tab_half_deg: 4
+  shaft_radius_mm: 6.5
+  bore_radius_mm: 7.5
+  tab_radius_mm: 36
+  slot_radius_mm: 45
+  disc_thickness_mm: 10
+  tab_thickness_mm: 5
+  key_handle_radius_mm: 18
+render_only_candidate_parameters:
+  palette_ids: [brass_graphite, ivory_cobalt, graphite_orange]
+  roughness: [0.3, 0.7]
+  metallic: [0.2, 0.85]
+  texture_region_disc_radius_fraction: [0.8, 0.95]
+  physics_materials_change: false
+sampling:
+  family_balanced: true
+  family_mixing: false
+  shape_parameters_jointly_derived: true
+  palette_independent_of_family: true
+  save_rejected_candidates: true
+  per_instance_geometry_and_ik_required: true
+  physical_dataset_generator_enabled: false

@@ -1,0 +1,24 @@
+{
+  "repository": "https://github.com/google-deepmind/mujoco_menagerie",
+  "revision": "8161bba264d7fa7c99ca301e91e7fb44737676ad",
+  "path": "aloha",
+  "sha256": {
+    "aloha.xml": "68430b29719bda1b75e63f540953f81991bc3fd136bdf0a43bbe3e04393b78d3",
+    "joint_position_actuators.xml": "ce843cf0cfecea5ec1f117eb4257d4249dc2296e92e5f2ffb40f2e0178109bc6",
+    "keyframe_ctrl.xml": "960481d23320fb45cd1cdaa75fb48ec69fa0dec46851dabcfac7f00a583c8a45",
+    "LICENSE": "21868447315ac2b10e592d08958c1035b19a32cf39e9165b23033f68390098cb",
+    "README.md": "fd0c71740a6ae730f8a3c600c36c6a322178d5556aabaf9a5c197d2ab9bfb659",
+    "assets/vx300s_1_base.stl": "d100cafe656671ca8fde98fb6a4cf2d1b746995c51c61c25ad9ea2715635d146",
+    "assets/vx300s_2_shoulder.stl": "139745a74055cb0b23430bb5bc032bf68cf7bea5e4975c8f4c04107ae005f7f0",
+    "assets/vx300s_3_upper_arm.stl": "900f236320dd3d500870c5fde763b2d47502d51e043a5c377875e70237108729",
+    "assets/vx300s_4_upper_forearm.stl": "4104fc54bbfb8a9b533029f1e7e3ade3d54d638372b3195daa0c98f57e0295b5",
+    "assets/vx300s_5_lower_forearm.stl": "66814e27fa728056416e25e02e89eb7d34c51d51c51e7c3df873829037ddc6b8",
+    "assets/vx300s_6_wrist.stl": "90eb145c85627968c3776ae6de23ccff7e112c9dd713c46bc9acdfdaa859a048",
+    "assets/vx300s_7_gripper_prop.stl": "4536e8975278953841f25391dccef10907859e69c71b9f06f794fef6dfc5959c",
+    "assets/vx300s_7_gripper_bar.stl": "b76420544e84102b1cd30745f3c6c2675f9bf08a656808101f32b6466a33f2ee",
+    "assets/vx300s_7_gripper_wrist_mount.stl": "50c54e0486d3e349785163dbce209313f7b4b3feadc252ab2e2c9e55a5d0e7ef",
+    "assets/vx300s_8_custom_finger_left.stl": "5853af5b66dd9fc954b6705a883d8569c96536d86775d094f3670befaff67a93",
+    "assets/vx300s_8_custom_finger_right.stl": "9a1bbd942b887f27e2680b4c99dd3b3d2f73578fa9a87cc0f4dd1da3cf88b2e2",
+    "assets/d405_solid.stl": "8a9a84dd9c9a67687e5ad0b37a7ed334dbfea6b0f995fef28524cc8da5f21ed2"
+  }
+}

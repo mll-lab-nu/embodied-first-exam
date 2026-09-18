@@ -1,0 +1,13 @@
+# A new fixture revision; historical previews and IK recordings keep their post.
+defaults:
+  - fiber_bundling_preview
+  - _self_
+
+task:
+  layout_revision: copper_rod_support_v4
+  ring_mount:
+    kind: thin_copper_rod_v1
+    rod_radius_m: 0.0025
+
+run:
+  output: runs/environment_bootstrap/fiber_bundling/copper_rod_initial

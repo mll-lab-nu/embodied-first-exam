@@ -1,0 +1,133 @@
+{
+  "rope_length_m": 1.0737684051204834,
+  "bounds_m": [
+    [
+      -0.16926989403653378,
+      -0.16740654930990012,
+      0.001
+    ],
+    [
+      0.17081126794622015,
+      0.06999985784911698,
+      0.02499871552741134
+    ]
+  ],
+  "endpoints_m": [
+    [
+      0.16681126794622014,
+      -0.16340654930990012,
+      0.005
+    ],
+    [
+      -0.16526989403653378,
+      -0.16286706844150983,
+      0.005
+    ]
+  ],
+  "centerline_points": 431,
+  "crossings": [
+    {
+      "segments": [
+        87,
+        232
+      ],
+      "parameters": [
+        0.7783189542331033,
+        0.21461775032236863
+      ],
+      "xy_m": [
+        0.04156336632893205,
+        -0.023996703003815
+      ],
+      "height_gap_m": 0.011615900625072192,
+      "first_over": false,
+      "sign": 1
+    },
+    {
+      "segments": [
+        122,
+        307
+      ],
+      "parameters": [
+        0.20769170736920073,
+        0.7923082926308459
+      ],
+      "xy_m": [
+        -1.4094628242311558e-18,
+        0.047993558007288384
+      ],
+      "height_gap_m": 0.011616024724852722,
+      "first_over": true,
+      "sign": 1
+    },
+    {
+      "segments": [
+        197,
+        342
+      ],
+      "parameters": [
+        0.7853822496781191,
+        0.22168104576691225
+      ],
+      "xy_m": [
+        -0.04156336632893205,
+        -0.023996703003815012
+      ],
+      "height_gap_m": 0.011615900625072197,
+      "first_over": false,
+      "sign": 1
+    }
+  ],
+  "crossing_count": 3,
+  "over_under": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+  ],
+  "gauss_unsigned": [
+    1,
+    2,
+    3,
+    1,
+    2,
+    3
+  ],
+  "projected_writhe": 3,
+  "diagnostic_closure_crossings": 3,
+  "trefoil_diagram_verified": true,
+  "minimum_nonlocal_centerline_distance_m": 0.01150500201832101,
+  "minimum_nonlocal_surface_gap_m": 0.0035050020183210098,
+  "nearest_nonlocal_segments": [
+    121,
+    308
+  ],
+  "material_neighbour_exclusion_m": 0.012566370614359173,
+  "minimum_bend_radius_m": 0.027109378808360625,
+  "table_surface_clearance_m": 0.001,
+  "parameters": {
+    "rope_radius_m": 0.004,
+    "planar_scale_m": 0.032,
+    "crossing_height_m": 0.008,
+    "cut_angle_rad": 0.5,
+    "tail_length_m": 0.18,
+    "table_clearance_m": 0.001,
+    "segment_length_m": 0.0025,
+    "radial_segments": 12,
+    "handedness": "right"
+  },
+  "knot_type": "open_overhand",
+  "closure_knot": "trefoil_3_1",
+  "physical_components": 1,
+  "physical_endpoints": 2,
+  "rest_shape": "straight",
+  "geometry_verified": true,
+  "physics_qualified": false,
+  "watertight": true,
+  "mesh_vertices": 5174,
+  "mesh_faces": 10344,
+  "scope": "initial_geometry_only",
+  "source": "https://mathworld.wolfram.com/TrefoilKnot.html"
+}

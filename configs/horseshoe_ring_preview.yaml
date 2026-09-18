@@ -1,0 +1,80 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: paired_horseshoes_photo_prototype_v1
+  scale: 2.0
+  template_path: null
+  center_xy_m: [0.03, 0.10]
+  yaw_deg: -12
+  initial_floor_clearance_m: 0.001
+  initial_lift_m: 0.0
+  seed: 0
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+  sim:
+    dt: 0.001
+    substeps: 4
+  renderer:
+    type: nyx
+    spp: 32
+  cameras:
+    overview:
+      res: [1280, 800]
+      pos: [0.14, -0.34, 1.33]
+      lookat: [0.03, 0.10, 0.965]
+      up: [0, 0, 1]
+      fov: 32
+      near: 0.005
+      far: 12
+    top:
+      res: [1280, 800]
+      pos: [0.03, 0.10, 1.58]
+      lookat: [0.03, 0.10, 0.965]
+      up: [0, 1, 0]
+      fov: 28
+      near: 0.005
+      far: 12
+    detail:
+      res: [1000, 800]
+      pos: [0.20, -0.24, 1.25]
+      lookat: [0.03, 0.10, 0.965]
+      up: [0, 0, 1]
+      fov: 29
+      near: 0.005
+      far: 12
+    video:
+      res: [960, 600]
+      pos: [0.14, -0.34, 1.33]
+      lookat: [0.03, 0.10, 0.965]
+      up: [0, 0, 1]
+      fov: 32
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/horseshoe_ring/assembly_initial
+  viewer: false
+  include_robot: false
+  # All puzzle bodies remain free. Zero steps produces an assembly inspection;
+  # a positive value runs and reports a separate gravity-settling check.
+  settle_seconds: 0.0
+  record_video: true
+  video_seconds: 6
+  fps: 20
+  orbit_degrees: 65
+  video_room_fraction: 0.0
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

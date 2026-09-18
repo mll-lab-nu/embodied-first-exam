@@ -67,6 +67,11 @@ class BraidLayout:
     # inside ``braid_span`` (see ``crossing_window_at``). Only defined for one
     # crossing: with more, the slots are equal by construction.
     crossing_frac: float | None = None
+    # Every crossing's position and swap-window width, in word order, for
+    # ``swap_crossing_sign``'s multi-crossing layouts (the task derives both from
+    # its own leaves). None keeps the even slots / ``crossing_frac`` above.
+    crossing_fracs: tuple[float, ...] | None = None
+    crossing_windows: tuple[float, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -202,6 +207,8 @@ def crossing_position_frac(index: int, n_crossings: int, layout: BraidLayout) ->
     layout's ``crossing_frac`` for a one-crossing braid."""
 
     span_lo, span_hi = (float(layout.braid_span[0]), float(layout.braid_span[1]))
+    if layout.crossing_fracs is not None:
+        return float(layout.crossing_fracs[int(index)])
     if layout.crossing_frac is not None:
         if int(n_crossings) != 1:
             raise ValueError(
@@ -229,6 +236,10 @@ def crossing_window_at(frac: float, n_crossings: int, layout: BraidLayout) -> fl
     rule is what bounds how far the crossing may be pushed.
     """
 
+    if layout.crossing_windows is not None:
+        # Given per crossing; look it up by position (both tuples are in word order).
+        index = min(range(len(layout.crossing_fracs)), key=lambda k: abs(layout.crossing_fracs[k] - float(frac)))
+        return float(layout.crossing_windows[index])
     total_x = float(layout.x_end) - float(layout.x_start)
     span_lo, span_hi = (float(layout.braid_span[0]), float(layout.braid_span[1]))
     full = crossing_window(n_crossings, layout)
@@ -436,6 +447,16 @@ def verify_braid_spec(
                 f"crossing_window_too_steep:crossing={crossing.index}:window={window:.4f}"
                 f"<{_MIN_WINDOW_PER_LANE:.2f}*spacing={float(spec.layout.channel_spacing):.4f}"
             )
+    # Check 4's other half, which the list above always promised: consecutive
+    # windows must not overlap. Even slots with crossing_fill <= 1 never do;
+    # per-crossing positions can.
+    total_x = float(spec.layout.x_end) - float(spec.layout.x_start)
+    ordered = sorted(spec.crossings, key=lambda c: c.position_frac)
+    for left, right in zip(ordered, ordered[1:]):
+        left_edge = left.position_frac * total_x + 0.5 * crossing_window_at(left.position_frac, len(spec.crossings), spec.layout)
+        right_edge = right.position_frac * total_x - 0.5 * crossing_window_at(right.position_frac, len(spec.crossings), spec.layout)
+        if left_edge > right_edge + 1e-9:
+            failures.append(f"crossing_windows_overlap:{left.index}-{right.index}")
 
     min_lift = 2.0 * float(rope_radius) + float(particle_size)
     if float(spec.layout.over_lift) < min_lift:

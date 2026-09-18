@@ -144,6 +144,24 @@ class RigidAttachment:
     # its segments. A function of the parent's ACTUAL pose cannot drift out of
     # step with the motion it is cancelling.
     yaw_spin_fn: Callable[[], float] | None = None
+    # Refuse to place the child where solid geometry already is.
+    #
+    # An assisted carry WRITES the child's pose every step, so nothing in the
+    # solver can stop it: a shaft driven at a sealed hole goes straight through
+    # the wall. That is not a scoring problem -- the judge catches it -- it is a
+    # SIMULATION problem, because the picture then shows a blocked hole while the
+    # physics allows the move, and a policy trained from those pictures learns
+    # that sealed holes are passable. Given a clamp, the child stops where the
+    # material is and the parent goes on without it, which is what a jam looks
+    # like.
+    #
+    # Same shape as gate_cage_ball's ball reversal: the solver cannot provide it
+    # (rigid-on-rigid rebound is zero there, pose-writing beats contact here), so
+    # the environment supplies it explicitly rather than pretending it emerges.
+    #
+    # Takes the commanded world position, returns the allowed one. None leaves
+    # every other task bit-for-bit unchanged.
+    clamp_fn: Callable[[Any], Any] | None = None
     active: bool = False
     # Set by `ramp_to`: where `quat` is heading, and how many `sync` calls it has
     # left to get there. Untouched, these stay None/0 and `sync` is bit-for-bit
@@ -254,8 +272,8 @@ class RigidAttachment:
         if self.parent_quat_fn is not None:
             self._advance_ramp(relative=True)
             parent_quat = np.asarray(self.parent_quat_fn(), dtype=float).reshape(4)
-            child_pos = _xyz(self.parent_pos_fn()) + _quat_rotate(
-                parent_quat, self._rel_offset
+            child_pos = self._clamped(
+                _xyz(self.parent_pos_fn()) + _quat_rotate(parent_quat, self._rel_offset)
             )
             child_quat = self.commanded_quat(parent_quat)
             self.entity.set_pos(tuple(child_pos), zero_velocity=True)
@@ -265,7 +283,7 @@ class RigidAttachment:
             return
         self._advance_ramp()
         parent_pos = _xyz(self.parent_pos_fn())
-        child_pos = parent_pos + rotate_z(self.offset, self.yaw)
+        child_pos = self._clamped(parent_pos + rotate_z(self.offset, self.yaw))
         self.entity.set_pos(tuple(child_pos), zero_velocity=True)
         quat = (
             tuple(float(v) for v in self.quat)
@@ -273,6 +291,13 @@ class RigidAttachment:
             else yaw_quat(self.yaw + self.child_yaw_offset)
         )
         self.entity.set_quat(quat, zero_velocity=True, relative=False)
+
+    def _clamped(self, child_pos) -> np.ndarray:
+        """The commanded position, or as far along it as the material allows."""
+
+        if self.clamp_fn is None:
+            return np.asarray(child_pos, dtype=float)
+        return np.asarray(self.clamp_fn(child_pos), dtype=float)
 
     def _advance_ramp(self, *, relative: bool = False) -> None:
         if self._ramp_to is None:
@@ -453,6 +478,7 @@ class AttachmentManager:
         quat=None,
         parent_quat_fn: Callable[[], Any] | None = None,
         yaw_spin_fn: Callable[[], float] | None = None,
+        clamp_fn: Callable[[Any], Any] | None = None,
     ) -> RigidAttachment:
         attachment = RigidAttachment(
             entity=entity,
@@ -463,6 +489,7 @@ class AttachmentManager:
             quat=None if quat is None else tuple(float(v) for v in quat),
             parent_quat_fn=parent_quat_fn,
             yaw_spin_fn=yaw_spin_fn,
+            clamp_fn=clamp_fn,
         )
         self.attachments.append(attachment)
         return attachment

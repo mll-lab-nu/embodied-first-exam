@@ -1,0 +1,6 @@
+defaults:
+  - config
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - override camera_configs@env: aloha_demo
+  - _self_

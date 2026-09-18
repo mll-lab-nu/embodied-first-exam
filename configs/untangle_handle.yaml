@@ -1,7 +1,0 @@
-# untangle_physical_handle_demo（离散版 untangle）的主配置。
-
-defaults:
-  - config
-  - override task_configs@task: untangle_topogym_tabletop_v1
-  - override run_configs@run: untangle_handle
-  - _self_

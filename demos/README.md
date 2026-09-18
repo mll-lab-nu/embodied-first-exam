@@ -1,113 +1,29 @@
-# demos — 可运行的任务演示
+# 当前运行入口
 
-分类与 `topogym/tasks/` 对齐：同一个任务的 demo 和它的场景生成代码在同名的类别目录下。
-2026-08-10 由平铺的 `prototypes/` 改成这个结构，原因见
-[`../docs/develop/framework/task_taxonomy_zh.md`](../docs/develop/framework/task_taxonomy_zh.md) §6.1。
+在仓库根目录用 `.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.<入口>` 执行。
 
-| 目录 | 任务 | demo |
-| --- | --- | --- |
-| `entangle/` | band_untwist | `band_untwist_physical_pinch_demo`（主力）、`band_untwist_inspect_demo`（场景与静置：8 字站不站得住） |
-| | swap_crossing_sign | `swap_crossing_sign_physical_pinch_demo` |
-| | unlink_c_ring | `unlink_c_ring_physical_extract_demo`（主力）、`unlink_c_ring_inspect_demo`（stage-0：场景与静置） |
-| | untangle_continuous | `untangle_continuous_physical_pinch_demo`（主力）、`untangle_continuous_fem_demo`、`untangle_continuous_inspect_demo` |
-| | untangle（离散版） | `untangle_physical_handle_demo` |
-| `connectivity/` | stacked_plate | `stacked_plate_physical_rotate_demo`、`stacked_plate_inspect_demo` |
-| `routing/` | cable_routing | `cable_routing_physical_handle_demo` |
-| | rope_winding | `rope_winding_physical_handle_demo` |
-| | rope_unwinding | `rope_unwinding_physical_handle_demo`（入口；主体复用 rope_winding 的 `run_from_config`） |
-| | bar_through_hole | `bar_through_hole_physical_insert_demo` |
-| | ring_transfer | `ring_transfer_physical_demo` |
+| 入口 | 范围 |
+| --- | --- |
+| `presentation_preview` | 默认 Nyx 封闭实验室、腕部跟随、视频与 HDF5 RGB 检查 |
+| `aloha_lab` | ALOHA 2 双臂相机预设：四路观测、官方模型展示位及实验室展示；可选短时位置保持检查 |
+| `rope_threading` | Wang 三环参考初态：U 形自由绳、三环侧置支架、ALOHA 双臂、七路初态图与短时 FEM 静置；[说明](../docs/develop/tasks/rope_threading_zh.md) |
+| `interlocked_claws` | 原始 Claw 网格、参考互锁初态、ALOHA 双臂姿态与支架；装配／拆件静态检查及相机绕行，未执行物理脱困 |
+| `lock_picking` | 当前开锁物理执行，默认基线配置 |
+| `lock_picking_inspect` | 加宽锁片间距的初态 review；不代表长行程执行通过 |
+| `hedgehog_in_cage` | CLASSIC 三星刺猬初态场景 |
+| `fiber_bundling` | 粗绳分叉细绳与窄环的基础场景、静置检查及 Nyx 预览 |
+| `knot_untying` | 一个松 trefoil / overhand 单结的 FEM 初态、短时静置与 Nyx 预览；依赖 `requirements/uv-topogym-fem-ipc.txt` |
+| `chain_links` | 三只闭合刚体链环的局部接触试验 |
+| `horseshoe_ring` | 双马蹄、两条短链与目标圆环的完整装配初态；实物尺寸和取环路径待验证 |
+| `cast_coil` | 金银方形卷绕件装配、拆件静态检查、绕行视频与自由落桌检查；原型三段解已验证，双臂执行使用下述独立入口 |
+| `cast_keyhole` | 金叉与银色阶梯孔基础场景、拆件轮廓检查、相机绕行及短时自由静置；本地完整解法待验证 |
+| `buzz_wire` | 环杆双向接触夹具试验 |
+| `lock_aperture` | 钥匙和孔槽轮廓的几何初态检查 |
 
-`topogym/tasks/deformation/` 目前是空的，这里不建对应目录。
-
-## 配置方式
-
-全部 demo 用 Hydra，参数是配置路径，没有 `--flag`。
-2026-08-10 起 argparse 配置体系已从仓库删除，`demos/legacy/` 的 5 个 demo 同时删除。
-
-```bash
-python -m demos.entangle.untangle_continuous_physical_pinch_demo
-python -m demos.entangle.untangle_continuous_physical_pinch_demo run.viewer=true run.keep_open=true
-python -m demos.entangle.untangle_continuous_physical_pinch_demo task.rope.mesh.segment_length=0.004
-python -m demos.entangle.untangle_continuous_physical_pinch_demo --cfg job   # 只打印解析后的配置
-python -m demos.entangle.untangle_continuous_physical_pinch_demo -m run.seed=0,1,2   # 扫参
-
-swap_crossing_sign 另有一个选择第二步压哪根绳的开关，两个取值构成它的 contrast pair：
-```bash
-python -m demos.entangle.swap_crossing_sign_physical_pinch_demo                          # oracle：压另一根，符号翻转
-python -m demos.entangle.swap_crossing_sign_physical_pinch_demo run.oracle_mode=restack_same  # 对照：压回同一根，预期失败
-```
-
-band_untwist 的开关是抓哪个绳头，两个取值构成它的 contrast pair：
-```bash
-python -m demos.entangle.band_untwist_physical_pinch_demo                          # oracle：抓压在上面那股的绳头，自交叉 1 -> 0
-python -m demos.entangle.band_untwist_physical_pinch_demo run.oracle_mode=wrong_end  # 对照：抓被压的那股，自交叉 1 -> 2，预期失败
-```
-
-覆盖整组配置用组名：`env_configs@env=world_tabletop_v1`、`recording=hq`、
-`task_configs@task=cable_routing_topogym_tabletop_v1`。
-
-每次运行会在 `runs/hydra/<日期>/<时间>/.hydra/` 留下三份文件：`config.yaml`（本次完整配置）、
-`config_resolved.yaml`（同一份但引用已展开，直接可读）、`overrides.yaml`（本次命令行给的覆盖）。
-它们的用途是事后回答"这次跑用的什么参数"——此前有三次运行因为答不上这个问题而作废。
-
-| demo | 主配置 | 运行模式配置 |
-| --- | --- | --- |
-| `entangle/band_untwist_physical_pinch_demo` | `configs/band_untwist_pinch.yaml` | `configs/run_configs/band_untwist.yaml` |
-| `entangle/band_untwist_inspect_demo` | `configs/band_untwist_inspect.yaml` | `configs/run_configs/band_untwist_inspect.yaml` |
-| `entangle/swap_crossing_sign_physical_pinch_demo` | `configs/swap_crossing_sign_pinch.yaml` | `configs/run_configs/swap_crossing_sign.yaml` |
-| `entangle/untangle_continuous_physical_pinch_demo` | `configs/untangle_continuous_pinch.yaml` | `configs/run_configs/untangle_continuous.yaml` |
-| `entangle/untangle_continuous_fem_demo` | `configs/untangle_continuous_fem.yaml` | `configs/run_configs/untangle_continuous_fem.yaml` |
-| `entangle/untangle_continuous_inspect_demo` | `configs/untangle_continuous_inspect.yaml` | `configs/run_configs/untangle_continuous_inspect.yaml` |
-| `entangle/untangle_physical_handle_demo` | `configs/untangle_handle.yaml` | `configs/run_configs/untangle_handle.yaml` |
-| `connectivity/stacked_plate_physical_rotate_demo` | `configs/stacked_plate_rotate.yaml` | `configs/run_configs/stacked_plate_rotate.yaml` |
-| `connectivity/stacked_plate_inspect_demo` | `configs/stacked_plate_inspect.yaml` | `configs/run_configs/stacked_plate_inspect.yaml` |
-| `routing/cable_routing_physical_handle_demo` | `configs/cable_routing.yaml` | `configs/run_configs/cable_routing.yaml` |
-| `routing/rope_winding_physical_handle_demo` | `configs/rope_winding.yaml` | `configs/run_configs/rope_winding.yaml` |
-| `routing/rope_unwinding_physical_handle_demo` | `configs/rope_unwinding.yaml` | `configs/run_configs/rope_unwinding.yaml` |
-| `routing/bar_through_hole_physical_insert_demo` | `configs/bar_through_hole.yaml` | `configs/run_configs/bar_through_hole.yaml` |
-| `routing/ring_transfer_physical_demo` | `configs/ring_transfer.yaml` | `configs/run_configs/ring_transfer.yaml` |
-
-`tests/fem_ipc_rope_spike.py`（FEM 后端诊断场景）用同一套方式，主配置
-`configs/fem_ipc_rope_spike.yaml`。仓库里的检查与测量都在 `tests/`，见
-[`../tests/README.md`](../tests/README.md)。
-
-## 只验管线，不跑物理
-
-```bash
-python -m demos.entangle.untangle_physical_handle_demo run.build_only=true
-python -m demos.entangle.untangle_physical_handle_demo run.bench_steps=100   # 量一步多少毫秒
-```
-
-走完配置解析、`derive_config`、场景构建、契约校验、primitive 构造就退出，约 90 秒。
-它跳过物理，**不是提速**——完整物理跑仍然是 46 分钟（2026-08-11 实测，untangle 三绳
-FEM+IPC 场景）。
-
-判据：改动只涉及参数怎么传、场景怎么搭，用 `run.build_only=true`；改动涉及物体
-怎么动，跑完整的。八个 demo 都认这个开关，`tests/check_demo_configs.py` 的形态表
-会检查这一点。
-
-`run.bench_steps=N` 把建好的场景空跑 N 步并报每步耗时。场景静止、机械臂不动，量到的是
-一步的地板价。与真实运动时的速率对比可以分开两件事：两者接近说明成本在静止求解（看网格
-与 IPC 预算），运动时明显更慢说明成本来自接触下的 Newton 迭代（IPC 预算是直接旋钮）。
-判据写在 `topogym/supervision/step_bench.py`。
-
-**目前没有已知有效的提速旋钮。** 2026-08-11 实测：静止场景 660 ms/步，其中求解器
-643 ms、每步钩子 17 ms（3%）。把 Newton 上限从 1024 降到 64、把网格从约 3000 个四面体
-降到 2048 个，两者都没有改变耗时。测量过程与已排除的假设见
-[`../docs/develop/physics/fem_ipc_step_cost_zh.md`](../docs/develop/physics/fem_ipc_step_cost_zh.md)。
-
-**不要用降 `env.sim.substeps` 提速。** 它确实是四倍算力（IPC 每 substep 求解一次），
-但 `substeps=1` 已经在 FEM 预设 v1.0 试过并被推翻：刚体子步变 10ms 后，边缘搁置的
-自由端插头走位 21mm/百步。`topogym/world/tabletop.py` 的锁定预设校验会直接拒绝这个
-覆盖。理由写在 `configs/env_configs/world_tabletop_fem_v1.yaml` 文件头。
-
-## 已删除的 legacy demo
-
-2026-08-10 删除 `demos/legacy/`（swap / onestroke / maze_wall_removal / peeling 四个
-demo 加录制批处理 `record_physical_demos`，共 2242 行）。它们是 argparse 配置体系仅剩的
-使用者，而这些任务已不在主线范围。
-
-它们的任务代码 `topogym/tasks/legacy/` 保留：`topogym/envs/` 下的 `swap_mdp.py`、
-`onestroke_mdp.py`、`maze_wall_removal_mdp.py` 三个 RL 环境壳还在用。
-`configs/task_configs/` 下对应的四份任务配置同样保留。
+Hydra 入口可用 `--cfg job` 查看解析配置；argparse 入口用 `--help` 查看选项。
+Cast Coil 双臂执行使用 `python -m topogym.tasks.cast_coil.robot_demo --plan <计划.json> --output <新目录> --record`；
+计划生成、半时间步复核和正式归档命令见 [Cast Coil 文档](../docs/develop/tasks/cast_coil_zh.md#完整双臂物理执行与录制)。
+该流程从预抓取状态开始，接触后采用辅助抓持，最终解除并自由静置。
+结果汇总见 [`runs/environment_bootstrap/index.html`](../runs/environment_bootstrap/index.html)。
+完整机器人多视角演示的 MP4 副本在 [`runs/demos/`](../runs/demos/)，播放页与配套材料见 [`runs/demo_metadata/index.html`](../runs/demo_metadata/index.html)；新 demo 交付前按 [项目规则](../AGENTS.md) 完成复制与检查。
+旧任务入口移到 [`legacy/demos/`](../legacy/demos/)，只读保存。

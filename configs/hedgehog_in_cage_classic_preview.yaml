@@ -1,0 +1,83 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: classic_3star_reconstruction_v1
+  finish: wood
+  # Official outer size 45 x 80 mm; uniform enlargement for the robot scene.
+  scale: 3.0
+  center_xy_m: [0.06, 0.20]
+  yaw_deg: -50
+  mount_height_m: 0.012
+  mount_width_m: 0.22
+  seed: 0
+
+env:
+  preset:
+    # Shared table and mount, custom inspection camera rig.
+    locked: false
+  genesis:
+    backend: cuda
+  renderer:
+    type: nyx
+    spp: 32
+  appearance:
+    - pattern: hedgehog_mount
+      color: [1.0, 1.0, 1.0]
+      metallic: 0.0
+      roughness: 0.67
+      diffuse_map: assets/tasks/hedgehog_in_cage/classic_3star/materials/dark_wood.png
+  cameras:
+    overview:
+      res: [1440, 960]
+      pos: [1.10, -1.35, 1.90]
+      lookat: [-0.19, 0.08, 1.22]
+      up: [0, 0, 1]
+      fov: 40
+      near: 0.01
+      far: 12
+    detail:
+      res: [1200, 1200]
+      pos: [0.43, -0.30, 1.39]
+      lookat: [0.06, 0.20, 1.052]
+      up: [0, 0, 1]
+      fov: 29
+      near: 0.005
+      far: 12
+    opposite:
+      res: [1200, 1200]
+      pos: [-0.24, 0.65, 1.35]
+      lookat: [0.06, 0.20, 1.052]
+      up: [0, 0, 1]
+      fov: 31
+      near: 0.005
+      far: 12
+    video:
+      res: [1280, 720]
+      pos: [1.10, -1.35, 1.90]
+      lookat: [-0.19, 0.08, 1.22]
+      up: [0, 0, 1]
+      fov: 40
+      near: 0.01
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/hedgehog_in_cage/classic_wood
+  viewer: false
+  save_stills: false
+  record_video: true
+  video_seconds: 10
+  fps: 20
+  closeup_fraction: 0.6
+  # Camera motion only. The demo never calls scene.step().
+  orbit_degrees: 45
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

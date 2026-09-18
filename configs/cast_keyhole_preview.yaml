@@ -1,0 +1,84 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: cast_keyhole_diagram_prototype_v1
+  initial_relative_pose_id: perpendicular_lower_bore_v1
+  scale: 3.0
+  center_xy_m: [0.06, 0.16]
+  yaw_deg: -12
+  initial_floor_clearance_m: 0.0005
+  seed: 0
+
+robot_control:
+  home:
+    qpos: [0.0, -0.65, 0.0, -2.35, 0.0, 1.70, -0.7853981634, 0.04, 0.04]
+
+env:
+  preset:
+    locked: false
+  genesis:
+    backend: cuda
+    precision: "64"
+  sim:
+    dt: 0.001
+    substeps: 4
+  renderer:
+    type: nyx
+    spp: 32
+  appearance:
+    - {pattern: keyhole_gold, color: [0.61, 0.43, 0.12], metallic: 0.8, roughness: 0.3}
+    - {pattern: keyhole_silver, color: [0.56, 0.61, 0.66], metallic: 0.8, roughness: 0.3}
+  cameras:
+    overview:
+      res: [1280, 800]
+      pos: [1.10, -1.35, 1.90]
+      lookat: [-0.17, 0.08, 1.15]
+      up: [0, 0, 1]
+      fov: 40
+      near: 0.005
+      far: 12
+    detail:
+      res: [1100, 800]
+      pos: [0.28, -0.32, 1.70]
+      lookat: [0.06, 0.16, 0.953]
+      up: [0, 0, 1]
+      fov: 29
+      near: 0.005
+      far: 12
+    opposite:
+      res: [1100, 800]
+      pos: [-0.14, 0.65, 1.70]
+      lookat: [0.06, 0.16, 0.953]
+      up: [0, 0, 1]
+      fov: 29
+      near: 0.005
+      far: 12
+    video:
+      res: [960, 640]
+      pos: [0.28, -0.32, 1.70]
+      lookat: [0.06, 0.16, 0.953]
+      up: [0, 0, 1]
+      fov: 29
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/cast_keyhole/assembly_initial
+  viewer: false
+  include_robot: true
+  settle_seconds: 0.5
+  record_video: true
+  video_seconds: 6
+  fps: 20
+  orbit_degrees: 110
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

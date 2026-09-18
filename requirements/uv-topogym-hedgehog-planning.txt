@@ -1,0 +1,4 @@
+# Optional collision checking and SE(3) planning for hedgehog_in_cage.
+# Install into the existing Genesis environment.
+python-fcl==0.7.0.11
+ompl==2.0.1

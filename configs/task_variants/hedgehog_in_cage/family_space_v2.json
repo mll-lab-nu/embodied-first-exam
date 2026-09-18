@@ -1,0 +1,478 @@
+{
+  "schema_version": 2,
+  "task_id": "hedgehog_in_cage",
+  "status": "planning_specification_not_executable_random_generator",
+  "supersedes_design": "family_design_v1",
+  "revision_note": "Use the three physically verified family representatives as A1/B1/C1; replace the unverified tall/slender targets by actual parent dimensions. Six added-shape representatives remain proposals.",
+  "factorization": [
+    "one categorical family axis with three values",
+    "conditional relative-motion parameters",
+    "appearance prototype and continuous outer-profile parameters",
+    "independent visual surface parameters"
+  ],
+  "invariants": {
+    "spikes": 10,
+    "grasp_spike": "S2",
+    "fixed_cage": true,
+    "body_height_mm": 240,
+    "robot_scale": 1,
+    "pregrasp_start": true,
+    "contact_triggered_grasp_assistance": true,
+    "release_assistance": true
+  },
+  "families": [
+    {
+      "code": "A",
+      "id": "oblique_gate",
+      "name": "单斜窗绕出",
+      "motion_signature": "侧移配合倾斜 → 穿过单斜窗 → 退出",
+      "parent": {
+        "directory": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1",
+        "source_sha256": {
+          "ik_before_geometry.json": "752492930430a3ba8c44cffb2365b42a06d0aff0d80840c2a8acaecbeecd2e90",
+          "assets/sha256.json": "bc3d1824596c8764e45961207de20d556b30e494123757cd6a287f5f0be5a20a",
+          "certificate.json": "fd91d711b5a8bf6edeea4d0ca7456d85dbfb31ade0077e0ed2e9fbc88abcd338",
+          "robot_audit.json": "41e7a21544ae7d0af961254a4489afc0c38bd9a23f5929a1788f404b89c0173a",
+          "physics/report.json": "729f27ab317ca509e182ec5b0002af6f81b6e3ccb9d14417e9e80edfb2bdf7f9",
+          "physics/audit.json": "b1e4036f3561cae21f3201ca13a355737e808b2995e5fb4f6cc00f7a4daa4fe0",
+          "physics_substeps20/report.json": "f3491a866937ffbec428959a8b4e864e161ab0730c27094117de298848f7ee0d",
+          "physics_substeps20/audit.json": "a777ef61fd5d7df293ade23468d268e0d554c846268c0802302dd33576ae081e",
+          "recording/recording_report.json": "d48764a9b1779f4dd4bccb78725cfb6a07918c7cc4a409853a3caa861e1ac5af"
+        },
+        "physics_verified": true,
+        "planned_object_clearance_lower_bound_mm": 2.3339432217077007,
+        "actual_saved_state_interpolation_clearance_lower_bound_mm": 2.4211607452160457,
+        "parameters": {
+          "side_excursion_m": 0.01,
+          "added_tilt_deg": -4.0
+        }
+      },
+      "body_height_mm": 240.0,
+      "body_outer_radius_mm": 67.5,
+      "ik_policy": "Start with the exact parent object path and certified arm branch; appearance alone does not request a new motion.",
+      "mechanism_invariants": [
+        "offset main throat",
+        "lateral excursion ablation remains blocked"
+      ]
+    },
+    {
+      "code": "B",
+      "id": "staggered_gates",
+      "name": "双门槛换层",
+      "motion_signature": "穿过笼窗 → 换层并侧移 → 越过外侧挡板 → 退出",
+      "parent": {
+        "directory": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1",
+        "source_sha256": {
+          "ik_before_geometry.json": "600b39628e4dbbcaf505725a5277eabb82156a3291688c91aec21d1bd23cf67c",
+          "assets/sha256.json": "0e8bb52f001542c982d6e1af0d4d1642ae0fae3fc3e4e5892c8883a560173456",
+          "certificate.json": "1acc5fef2875ee9ab3f69e7a17c12f1d8b22acb8b5423961c57e68a37d243f4a",
+          "robot_audit.json": "3e6cc675cf64032cab74011255182884aa6756af0e86dd23b8c17072cc318191",
+          "physics/report.json": "cbd47860bca654842bb105c6e5c532c07c86208c9ab8658bd3e7c4b6879f50b0",
+          "physics/audit.json": "4ea0314274867e2d594b5481fcfa08bd0cd523628f3d99af77e004522ab48466",
+          "physics_substeps20/report.json": "04288024361db6e1c9d67c6736d676bb0189726bac38ffb8855fdf2273adbcdb",
+          "physics_substeps20/audit.json": "31eddf1936991acf9f1579cd9d3b41b781d9ecf1ff155825d504c060449e5dc6",
+          "recording/recording_report.json": "673024efde56b4f9593755d499a3775f8cba8bb94d2e2dd768f0fca873940ba1"
+        },
+        "physics_verified": true,
+        "planned_object_clearance_lower_bound_mm": 2.2498722421091104,
+        "actual_saved_state_interpolation_clearance_lower_bound_mm": 2.0949690203320905,
+        "parameters": {
+          "height_adjustment_m": 0.022,
+          "opposed_side_adjustment_m": 0.012,
+          "second_gate_x_m": 0.22,
+          "second_gate_height_m": 0.05,
+          "post_gate_side_m": 0.04,
+          "release_position_xy_m": [
+            0.35,
+            0.085
+          ]
+        }
+      },
+      "body_height_mm": 240.0,
+      "body_outer_radius_mm": 67.5,
+      "ik_policy": "Start with the exact parent object path and certified arm branch; appearance alone does not request a new motion.",
+      "mechanism_invariants": [
+        "inner cage exit plus external baffle at X=220 mm",
+        "inter-gate alignment stage",
+        "outer-gate shortcut collision witness"
+      ]
+    },
+    {
+      "code": "C",
+      "id": "helical_guide",
+      "name": "螺旋导向",
+      "motion_signature": "位置与姿态同步转向 → 沿扭转导向窗推进 → 退出",
+      "parent": {
+        "directory": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1",
+        "source_sha256": {
+          "ik_before_geometry.json": "0a3adbece61e99ef064f4bbb85dd3af5fde7d86c6474e3a6c0d1b1c6b2026c23",
+          "assets/sha256.json": "c219c627dbd75356e5de5d15280a14bf558b3b64d19c54307157d2c948893a2d",
+          "certificate.json": "5e4536201e077b0357265da9812f34dfd2ecd0941f0b9e7ed95abfa85fea165e",
+          "robot_audit.json": "b15051c8a6a1ad9c531c7b7d3a7f08c255038f519ebfb3dd6e7e5e065251b961",
+          "physics/report.json": "9932a851d4590f2894beb250c7be5557a71d84dc4ff3b2eeb5c8d8a0754ff96e",
+          "physics/audit.json": "c2af773433abd04d23abfee62e8756442aa0fce40e2eddf6b172c9933ce2a348",
+          "physics_substeps20/report.json": "4c5554b33c7e5f2b2b97c841bc10146d3378280d614713d1c4651aa13e80def4",
+          "physics_substeps20/audit.json": "fdc070701d59cc1bc9bf74ca1e3910ee6e6bd27eab4cd31496d4705682895ba1",
+          "recording/recording_report.json": "3e998f12f1d89d41b5ccf6766e6f74fc4d339ea9d08fa6838e65b9fb82ea926d"
+        },
+        "physics_verified": true,
+        "planned_object_clearance_lower_bound_mm": 2.5092566725406606,
+        "actual_saved_state_interpolation_clearance_lower_bound_mm": 2.4550935275267434,
+        "parameters": {
+          "added_guide_turn_deg": 36.0,
+          "final_radial_distance_m": 0.2
+        }
+      },
+      "body_height_mm": 240.0,
+      "body_outer_radius_mm": 78.0,
+      "ik_policy": "Start with the exact parent object path and certified arm branch; appearance alone does not request a new motion.",
+      "mechanism_invariants": [
+        "continuous twisted ribs",
+        "positive handedness",
+        "coupled turn-and-advance stage"
+      ]
+    }
+  ],
+  "appearance_anchors": [
+    {
+      "id": "prototype",
+      "name": "原型轮廓",
+      "status": "existing_physical_instance",
+      "feature": "沿用已归档的完整实体；A/B 为直壁主笼，C 为扭带主笼。",
+      "parameters": {
+        "height_mm": 240
+      }
+    },
+    {
+      "id": "barrel",
+      "name": "鼓腹厚框",
+      "status": "design_target_unverified",
+      "feature": "中部明显外鼓，端圈较窄；保留可见开窗及原功能边界。",
+      "parameters": {
+        "height_mm": 240,
+        "radial_addition_at_middle_mm": [
+          12,
+          18
+        ],
+        "radial_addition_at_ends_mm": [
+          0,
+          4
+        ],
+        "middle_to_end_radius_min": 1.12,
+        "nominal_middle_addition_mm": 16,
+        "nominal_end_addition_mm": 3
+      },
+      "construction": "Add connected material outside the immutable parent solid; cosine-squared outer profile; subtract the protected full-execution sweep only from additions."
+    },
+    {
+      "id": "octagonal_waist",
+      "name": "八棱收腰",
+      "status": "design_target_unverified",
+      "feature": "八棱端圈、宽肩窄腰；腰部不向内切入原型，而由外扩肩部形成比例。",
+      "parameters": {
+        "height_mm": 240,
+        "facets": 8,
+        "shoulder_apothem_addition_mm": [
+          12,
+          18
+        ],
+        "waist_apothem_addition_mm": [
+          0,
+          3
+        ],
+        "waist_to_shoulder_apothem_range": [
+          0.8,
+          0.9
+        ],
+        "nominal_shoulder_addition_mm": 16,
+        "nominal_waist_addition_mm": 1,
+        "profile_power": [
+          1.5,
+          2.5
+        ]
+      },
+      "construction": "Use circumscribed polygons (apothem at least parent outer radius). Add only outside the immutable parent solid and protected sweep."
+    }
+  ],
+  "representatives": [
+    {
+      "id": "A1",
+      "family": "oblique_gate",
+      "appearance": "prototype",
+      "feature": "A1：直壁偏置斜窗，保留当前侧移—倾斜解。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/ik_before_geometry.json",
+      "intended_motion": "q_A(s)",
+      "status": "physical_verified",
+      "solvability_certified": true,
+      "physical_verified": true,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 135.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Use existing archived instance."
+    },
+    {
+      "id": "A2",
+      "family": "oblique_gate",
+      "appearance": "barrel",
+      "feature": "A2：鼓腹主笼配单斜窗，中部加厚仍可看见完整出口。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/ik_before_geometry.json",
+      "intended_motion": "q_A(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 167.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    },
+    {
+      "id": "A3",
+      "family": "oblique_gate",
+      "appearance": "octagonal_waist",
+      "feature": "A3：八棱宽肩、收腰轮廓配单斜窗，斜窗功能边缘不变。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/ik_before_geometry.json",
+      "intended_motion": "q_A(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 180.8,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    },
+    {
+      "id": "B1",
+      "family": "staggered_gates",
+      "appearance": "prototype",
+      "feature": "B1：直壁主笼与外置第二挡板，保持先出笼再换层。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1/ik_before_geometry.json",
+      "intended_motion": "q_B(s)",
+      "status": "physical_verified",
+      "solvability_certified": true,
+      "physical_verified": true,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 135.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Use existing archived instance."
+    },
+    {
+      "id": "B2",
+      "family": "staggered_gates",
+      "appearance": "barrel",
+      "feature": "B2：主笼鼓腹，外挡板保留并明确露出，门间连接结构不遮挡出口。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1/ik_before_geometry.json",
+      "intended_motion": "q_B(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 167.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    },
+    {
+      "id": "B3",
+      "family": "staggered_gates",
+      "appearance": "octagonal_waist",
+      "feature": "B3：主笼八棱收腰，外置挡板及间距不变，仍有两个通过阶段。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_b_staggered_gates_v1/ik_before_geometry.json",
+      "intended_motion": "q_B(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 180.8,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    },
+    {
+      "id": "C1",
+      "family": "helical_guide",
+      "appearance": "prototype",
+      "feature": "C1：当前连续扭带笼，保留累计新增 36° 的耦合运动。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1/ik_before_geometry.json",
+      "intended_motion": "q_C(s)",
+      "status": "physical_verified",
+      "solvability_certified": true,
+      "physical_verified": true,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 156.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Use existing archived instance."
+    },
+    {
+      "id": "C2",
+      "family": "helical_guide",
+      "appearance": "barrel",
+      "feature": "C2：扭带向外鼓起，形成鼓腹螺旋笼；导向窗与手性不变。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1/ik_before_geometry.json",
+      "intended_motion": "q_C(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 188.0,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    },
+    {
+      "id": "C3",
+      "family": "helical_guide",
+      "appearance": "octagonal_waist",
+      "feature": "C3：八棱宽肩、窄腰与连续扭带共存；不把导向带离散成第二门槛。",
+      "parent_instance": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1",
+      "ik_reference": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_c_helical_guide_v1/ik_before_geometry.json",
+      "intended_motion": "q_C(s)",
+      "status": "design_target_unverified",
+      "solvability_certified": false,
+      "physical_verified": false,
+      "dimensions": {
+        "body_height_mm": 240,
+        "nominal_body_maximum_diameter_mm": 203.5,
+        "scope": "Main cage body only; B external baffle is additional. Targets apply to the stock profile; final trimmed mesh must meet appearance gates."
+      },
+      "acceptance": "Accept only after final geometry, full robot, mechanism, appearance and complete physical checks; reject if the shape must lose its visible feature."
+    }
+  ],
+  "geometry_contract": {
+    "formula": "G_new = G_parent union A_safe; A_safe is a connected subset of proposed additions outside protected execution sweep S.",
+    "immutable_parent_solid": true,
+    "protected_sweep": "Conservative continuous sweep of ball and ALL robot collision bodies over planned motion, grasp closure, both saved physical runs, placement, gripper opening and retreat; include an explicit 1 mm additional design margin.",
+    "new_material_minimum_design_clearance_mm": 1.0,
+    "must_not_change": [
+      "inner throats",
+      "existing blocking witness material",
+      "B baffle and inter-gate position",
+      "C twist handedness and guide coupling",
+      "ball and grasp geometry",
+      "physics friction or mass of moving bodies"
+    ],
+    "proof_scope": "If A_safe is disjoint from the certified swept volume, the same geometric solution remains. Superset geometry preserves the existing finite collision witnesses. A new physical run is still required; visual separation and structural connectivity are separate acceptance conditions."
+  },
+  "motion_search": {
+    "status": "proposal_ranges_not_certified_boxes",
+    "default": "Freeze parent motion for the first appearance batch.",
+    "oblique_gate": {
+      "side_excursion_mm": [
+        8,
+        12
+      ],
+      "added_tilt_deg": [
+        -5,
+        -3
+      ],
+      "keep_excursion_timing": true
+    },
+    "staggered_gates": {
+      "second_gate_x_mm": [
+        210,
+        230
+      ],
+      "alignment_center_z_mm": [
+        45,
+        55
+      ],
+      "alignment_center_y_mm": [
+        35,
+        45
+      ],
+      "preserve_two_gate_order": true,
+      "retarget_release": true
+    },
+    "helical_guide": {
+      "added_guide_turn_deg": [
+        32,
+        40
+      ],
+      "final_radial_distance_mm": [
+        190,
+        210
+      ],
+      "handedness": "same as parent",
+      "phase_coupling": "fixed parent curve initially"
+    }
+  },
+  "admission": [
+    "current_parent_evidence",
+    "continuous_positive_path_geometry",
+    "all_robot_and_fixture_clearance_including_release",
+    "connected_family_structure",
+    "finite_shortcut_and_cross_family_controls",
+    "same-material_three-view_visual_distinction",
+    "two_complete_physical_runs_with_release",
+    "synchronized_three_camera_demo_for_each_representative"
+  ],
+  "appearance_gate": {
+    "palette": "same neutral material during review",
+    "views": [
+      "front",
+      "side",
+      "oblique"
+    ],
+    "require": "Visible silhouette/profile differences and preserved visible family mechanism; final mesh must meet the ratio, octagonal-face and opening visibility targets. Reject if sweep trimming destroys these features.",
+    "metrics": "R_mid/R_end>=1.12 for barrel; eight discernible facets and waist/shoulder apothem 0.80–0.90 for octagonal waist; mask differences are supporting measurements, not a substitute for inspection."
+  },
+  "randomization_contract": {
+    "family_distribution": "uniform categorical",
+    "appearance_distribution": "uniform among admitted prototypes within family",
+    "continuous_parameters": "joint conditional samples, not an independently certified Cartesian product",
+    "initial_generator_mode": "select from the admitted geometry/motion bank, then vary visual material only",
+    "later_generator_mode": "sample motion only when enabled, solve its branch continuously, infer geometry, apply appearance, validate, reject failures; admit only at explicitly recorded evidence level",
+    "max_proposals_per_request": 50,
+    "on_exhaustion": "return no admissible sample with failure reasons; never return an unverified candidate as solved",
+    "split_group": "family motion parent plus functional geometry; appearance siblings stay in the same train/validation split",
+    "record": [
+      "seed",
+      "schema_version",
+      "family",
+      "appearance",
+      "motion_parameters",
+      "shape_parameters",
+      "visual_parameters",
+      "parent_hashes",
+      "ik_hash",
+      "geometry_hash",
+      "qualification_level",
+      "reports",
+      "failure_reasons"
+    ]
+  },
+  "evidence_levels": [
+    "design_target",
+    "motion_ik_passed",
+    "geometry_witness_certified",
+    "family_and_appearance_passed",
+    "physical_demo_verified"
+  ],
+  "implementation_order": [
+    "Use A1/B1/C1 without regeneration.",
+    "Implement A2/A3 and establish safe appearance additions.",
+    "Apply B2/B3 keeping the external baffle mechanism unchanged.",
+    "Apply C2/C3 keeping the helical guide invariant.",
+    "Admit all nine representatives before expanding continuous functional sampling."
+  ]
+}
