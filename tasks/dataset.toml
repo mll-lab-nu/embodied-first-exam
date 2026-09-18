@@ -6,18 +6,12 @@
 name = "robot-coding-bench/robot-coding-bench"
 version = "0.1.0"
 description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance (cap-x robosuite)."
-authors = [{ name = "Kangrui Wang" }]
-keywords = ["robotics", "manipulation", "code-as-policy", "robosuite", "harbor"]
+keywords = [ "robotics", "manipulation", "code-as-policy", "robosuite", "harbor",]
+[[dataset.authors]]
+name = "Kangrui Wang"
+
 
 [[tasks]]
 name = "robot-coding-bench/robosuite-cube-stack-i00"
-digest = "sha256:f303a2eced2d7f764c5551270be77773dd06bc1207ed02085f56c86a9967546d"
-
-[[tasks]]
-name = "robot-coding-bench/robosuite-cube-stack-i01"
-digest = "sha256:a440353ae41270cd8939040ffa9498d2eefbde4af49eb184f486316520758d2d"
-
-[[tasks]]
-name = "robot-coding-bench/robosuite-cube-stack-i02"
-digest = "sha256:a8db93c101731c59b9fe9f4ca7d8e56fb806dcd3b459ef2d9eff1fbac96ec081"
+digest = "sha256:94abb8ea6211582e94464d7930368522ff554c4cc4925315144b32596537c275"
 

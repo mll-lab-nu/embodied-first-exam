@@ -5,10 +5,10 @@
 - [ ] `bash ci_checks/run_all.sh tasks/<my-task>` passes locally.
 - [ ] `harbor run -p tasks/<my-task> -a oracle` gives reward 1 (paste the job summary below).
 - [ ] `harbor run -p tasks/<my-task> -a nop` gives reward 0.
-- [ ] `tests/instance.npz` was generated once and never regenerated (the sha in `task.toml` matches).
+- [ ] Scene/verifier inputs under `environment/` and `tests/` are final (changing them later = new task).
 - [ ] `instruction.md` states the deliverable and every convention the agent cannot infer (frames, quaternion order, paths).
-- [ ] If this adds a family: the adapter entry, oracle code, and `README.md` Difficulty section are filled in.
-- [ ] If this touches `images/`: `images/VERSION` was bumped and every task Dockerfile re-pinned.
+- [ ] Fresh-process determinism evidence is included for a new simulator/family.
+- [ ] If this touches `images/`: `images/VERSION` was bumped and dependent task Dockerfiles re-pinned.
 
 ## Evidence
 <!-- oracle job summary; optional: one strong-model run and why it failed -->

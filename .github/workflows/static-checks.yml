@@ -1,7 +1,7 @@
 name: static-checks
 on:
   pull_request:
-    paths: ["tasks/**", "ci_checks/**", "images/VERSION"]
+    paths: ["tasks/**", "ci_checks/**"]
   push:
     branches: [main]
 jobs:

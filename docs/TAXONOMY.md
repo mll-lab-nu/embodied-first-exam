@@ -1,12 +1,12 @@
-# Taxonomy (task.toml `[metadata]`)
+# Taxonomy (task.toml `[metadata]`, closed sets — extend by PR)
 
-| Field | Values (closed set, extend by PR) |
+| Field | Values |
 |---|---|
-| `simulator` | `robosuite` · `libero` · `behavior` (planned) |
-| `robot` | `franka-panda` · `r1pro` (planned) |
-| `family` | adapter registry key, e.g. `cube_stack`, `cube_lifting`, `peg_insertion`, `spill_wipe`, `two_arm_lift` |
+| `simulator` | `robosuite` · `libero` · `behavior` · `maniskill` · … |
+| `robot` | `franka-panda` · `r1pro` · … |
+| `family` | free-form slug naming the scene/goal, shared by its instances (e.g. `cube_stack`) |
 | `task_type` | `trajectory` · `policy` |
 | `tier` | `privileged` · `perception` |
-| `image` | key under `images/` (`robosuite`, …) |
+| `instance_seed` | optional, informational |
 
-Task folder slug: `<simulator>-<family-with-dashes>-i<NN>`; `[task].name = "robot-coding-bench/<slug>"`.
+Folder slug: `<simulator>-<family-with-dashes>-i<NN>` for instance tasks; `[task].name = "robot-coding-bench/<slug>"`.

@@ -12,7 +12,7 @@ completed at the end of the replay, else 0. Also leave the script that produced 
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
-from rcb.traj import Session
+from rcb_traj import Session
 s = Session("cube_stack", instance="/app/instance.npz")   # builds the env, starts the IK server if needed
 s.reset()                          # back to the frozen initial state (unlimited)
 p = s.primitives()                 # dict of callables, e.g. p["goto_pose"](pos, quat_wxyz, z_approach=0.1)
@@ -24,7 +24,7 @@ s.replay(actions)                  # resets, replays open-loop, returns status  
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 ```
 CLI equivalent of the grader:
-`python -m rcb.traj replay --task cube_stack --instance /app/instance.npz --traj /app/output/trajectory.npz`
+`python /opt/tools/rcb_traj.py replay --task cube_stack --instance /app/instance.npz --traj /app/output/trajectory.npz`
 
 Optional rendering: `Session("cube_stack", instance=..., enable_render=True)` then `s.low.render()` returns an RGB
 array (software rendering, slow). Coordinates are in the robot base frame; quaternions are WXYZ.

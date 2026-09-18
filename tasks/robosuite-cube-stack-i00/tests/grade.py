@@ -1,6 +1,6 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards.
 
-    python -m rcb.grade --family cube_stack --instance /tests/instance.npz --traj /app/output/trajectory.npz
+    python /tests/grade.py --family cube_stack --instance /tests/instance.npz --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields only — Harbor rejects strings).
 Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND
@@ -28,7 +28,7 @@ def main() -> int:
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0}); return 0
     try:
-        from rcb.traj import Session
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from rcb_traj import Session
         s = Session(a.family, instance=a.instance)
         d = np.load(a.traj, allow_pickle=False)
         if str(d["task"]) != a.family:
