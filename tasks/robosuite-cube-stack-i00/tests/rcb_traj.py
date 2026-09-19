@@ -99,6 +99,10 @@ class Session:
         self.task = task
         self._pyroki = ensure_pyroki_server()
 
+        # cap-x resolves its controller config relative to the repo root; make the Session cwd-independent
+        capx_root = os.environ.get("CAPX_ROOT", "/opt/cap-x")
+        if not os.path.isdir("capx/integrations") and os.path.isdir(capx_root):
+            os.chdir(capx_root)
         import capx.envs.tasks  # noqa: F401  (registers envs/apis)
         from capx.envs.tasks.base import CodeExecEnvConfig
 
