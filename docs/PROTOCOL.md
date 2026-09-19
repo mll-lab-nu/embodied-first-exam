@@ -44,6 +44,10 @@ collects it). The format is defined by the task's `instruction.md` and checked b
 - The verifier's inputs live under `tests/` (copied in after the agent finishes); `instruction.md` never
   references `/tests/`.
 - `solution/solve.sh` (oracle) must score 1 and the `nop` agent must score 0.
+- **Reference solutions live only under `solution/`** (Harbor mounts it at `/solution/` for the oracle agent only).
+  Nothing the agent can reach — the task image, base images, tooling, docs inside the container — may contain
+  a solution or point to one. Lesson from the first agent run: it found cap-x's built-in `oracle_code` through
+  the tooling's `run-oracle` command and replayed it; base images now scrub those strings.
 
 ## 5. Budget reporting
 Report success **and** cost. Harbor records tokens, $, turns and wall-clock; tasks should additionally
