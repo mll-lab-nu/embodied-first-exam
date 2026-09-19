@@ -16,6 +16,7 @@ CLI
   python rcb_traj.py run-oracle    --task cube_stack --instance inst.npz --out traj.npz
   python rcb_traj.py replay        --task cube_stack --instance inst.npz --traj traj.npz [--repeat 3]
   python rcb_traj.py selftest      --task cube_stack --seed 3     # make-instance + oracle + replay, asserts equality
+  python rcb_traj.py render        --task cube_stack --instance inst.npz --traj traj.npz --out replay.mp4 [--wrist]
 
 Python (what the agent gets)
 ----------------------------
@@ -251,6 +252,30 @@ class Session:
             self.low._sim_step_count += 1
         return self.status()
 
+    def render_video(self, actions: np.ndarray, path: str | Path, *, every: int = 5, fps: int = 20,
+                     wrist: bool = False) -> dict[str, Any]:
+        """Replay `actions` from the frozen instance and write a human-viewable MP4 (needs enable_render=True).
+        Frames are taken every `every` sim steps from the scene camera (and the wrist camera if `wrist`).
+        Returns status() plus n_frames. Rendering is for humans; the verdict comes from replay()."""
+        import imageio.v2 as imageio
+        if not getattr(self.env.cfg, "enable_render", False):
+            raise RuntimeError("render_video needs Session(..., enable_render=True)")
+        self.reset()
+        grab = (lambda: np.concatenate([self.low.render(), self.low.render_wrist()], axis=1)) if wrist else self.low.render
+        frames = [grab()]
+        for i, a in enumerate(np.asarray(actions, dtype=np.float64)):
+            self._orig_step(a)
+            self.low._sim_step_count += 1
+            if (i + 1) % every == 0:
+                frames.append(grab())
+        frames.append(grab())
+        path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
+        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
+            for f in frames:
+                w.append_data(np.ascontiguousarray(f))
+        imageio.imwrite(str(path.with_suffix(".last.png")), np.ascontiguousarray(frames[-1]))
+        return {**self.status(), "n_frames": len(frames), "video": str(path)}
+
     def close(self) -> None:
         if self._pyroki is not None:
             self._pyroki.terminate()
@@ -287,6 +312,12 @@ def cmd_replay(a):
                       "deterministic": len({o["state_sha"] for o in outs}) == 1}))
 
 
+def cmd_render(a):
+    s = Session(a.task, instance=a.instance, enable_render=True)
+    out = s.render_video(_load_traj(a.traj), a.out, every=a.every, fps=a.fps, wrist=a.wrist)
+    print(json.dumps(out))
+
+
 def cmd_selftest(a):
     s = Session(a.task)
     s.make_instance(a.seed)
@@ -307,6 +338,7 @@ def main():
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--out", required=True); q.add_argument("--seed", type=int); q.set_defaults(fn=cmd_make_instance)
     q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
     q = sub.add_parser("replay"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_replay)
+    q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=5); q.add_argument("--fps", type=int, default=20); q.add_argument("--wrist", action="store_true"); q.set_defaults(fn=cmd_render)
     q = sub.add_parser("selftest"); q.add_argument("--task", default="cube_stack"); q.add_argument("--seed", type=int, default=0); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_selftest)
     a = p.parse_args(); a.fn(a)
 
