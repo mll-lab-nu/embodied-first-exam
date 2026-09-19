@@ -19,4 +19,7 @@ WORKDIR /opt/cap-x
 COPY third_party/cap-x /opt/cap-x
 RUN uv python install 3.10 && uv venv -p 3.10 && uv sync --extra robosuite && rm -rf /root/.cache/uv
 ENV PATH="/opt/cap-x/.venv/bin:${PATH}" MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa
+# Strip cap-x's built-in reference solutions: an agent found and replayed `env.oracle_code` on the first run.
+COPY images/robosuite/scrub_oracles.py /tmp/scrub_oracles.py
+RUN python /tmp/scrub_oracles.py && rm /tmp/scrub_oracles.py && find /opt/cap-x -name ".git" -prune -exec rm -rf {} + 
 WORKDIR /app

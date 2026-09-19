@@ -1,7 +1,7 @@
 #!/bin/bash
-# Oracle: record cap-x's human-written reference code for cube_stack into a trajectory.
+# Oracle: run the human-written reference solution (kept in solution/, never in the agent image) and record it.
 set -e
 mkdir -p /app/output
 cd /opt/cap-x
-python /opt/tools/rcb_traj.py run-oracle --task cube_stack --instance /app/instance.npz --out /app/output/trajectory.npz
-cp /opt/tools/rcb_traj.py /app/output/gen.py
+python /opt/tools/rcb_traj.py run-oracle --task cube_stack --instance /app/instance.npz --code /solution/oracle_cube_stack.py --out /app/output/trajectory.npz
+cp /solution/oracle_cube_stack.py /app/output/gen.py

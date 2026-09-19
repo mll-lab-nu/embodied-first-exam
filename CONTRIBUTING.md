@@ -14,7 +14,8 @@ the example and changing what you need.
    quaternion order, and the tools; never mentions `/tests/`.
 5. `tests/test.sh` + your verifier: fresh-process verification, `reward.txt` 1/0, numeric-only `reward.json`
    with the field names from PROTOCOL §3. Keep the verifier's inputs (scene copy, tooling) under `tests/`.
-6. `solution/solve.sh`: a human-written oracle that scores 1.
+6. `solution/solve.sh`: a human-written oracle that scores 1. Keep the reference code itself in `solution/` too;
+   never bake it into `environment/` or a base image, and make sure agent-visible tooling does not reference it.
 7. `README.md`: fill **Difficulty**, **Reference solution**, **Verification**.
 8. Check and run:
    ```bash

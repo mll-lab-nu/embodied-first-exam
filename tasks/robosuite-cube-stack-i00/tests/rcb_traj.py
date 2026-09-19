@@ -13,9 +13,9 @@ trajectory : the sequence of low-level robosuite actions (T, 9) = 7 joint target
 CLI
 ---
   python rcb_traj.py make-instance --task cube_stack --out inst.npz [--seed 3]
-  python rcb_traj.py run-oracle    --task cube_stack --instance inst.npz --out traj.npz
+  python rcb_traj.py run-oracle    --task cube_stack --instance inst.npz --code solution/oracle_cube_stack.py --out traj.npz
   python rcb_traj.py replay        --task cube_stack --instance inst.npz --traj traj.npz [--repeat 3]
-  python rcb_traj.py selftest      --task cube_stack --seed 3     # make-instance + oracle + replay, asserts equality
+  python rcb_traj.py selftest      --task cube_stack --seed 3 --code oracle.py   # make-instance + oracle + replay, asserts equality
   python rcb_traj.py render        --task cube_stack --instance inst.npz --traj traj.npz --out replay.mp4 [--wrist]
 
 Python (what the agent gets)
@@ -295,8 +295,9 @@ def cmd_make_instance(a):
 
 def cmd_run_oracle(a):
     s = Session(a.task, instance=a.instance)
+    code = open(a.code).read()
     s.record_start()
-    r = s.exec_code(s.env.oracle_code)
+    r = s.exec_code(code)
     acts = s.record_stop()
     st = s.status()
     s.save_trajectory(acts, a.out, meta={"source": "oracle", "exec": r})
@@ -323,7 +324,7 @@ def cmd_selftest(a):
     s.make_instance(a.seed)
     sha0 = s.state_sha()
     s.reset(); assert s.state_sha() == sha0, "reset() does not restore instance state"
-    s.record_start(); r = s.exec_code(s.env.oracle_code); acts = s.record_stop()
+    s.record_start(); r = s.exec_code(open(a.code).read()); acts = s.record_stop()
     live = s.status()
     rep = [s.replay(acts) for _ in range(a.repeat)]
     ok = live["success"] and all(x["success"] for x in rep) and len({x["state_sha"] for x in rep}) == 1 \
@@ -336,10 +337,10 @@ def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--out", required=True); q.add_argument("--seed", type=int); q.set_defaults(fn=cmd_make_instance)
-    q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
+    q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--code", required=True, help="python file run with primitives in scope"); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
     q = sub.add_parser("replay"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_replay)
     q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=5); q.add_argument("--fps", type=int, default=20); q.add_argument("--wrist", action="store_true"); q.set_defaults(fn=cmd_render)
-    q = sub.add_parser("selftest"); q.add_argument("--task", default="cube_stack"); q.add_argument("--seed", type=int, default=0); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_selftest)
+    q = sub.add_parser("selftest"); q.add_argument("--task", default="cube_stack"); q.add_argument("--code", required=True); q.add_argument("--seed", type=int, default=0); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_selftest)
     a = p.parse_args(); a.fn(a)
 
 
