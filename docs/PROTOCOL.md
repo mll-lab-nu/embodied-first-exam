@@ -33,6 +33,7 @@ collects it). The format is defined by the task's `instruction.md` and checked b
 | `n_actions`, `sim_steps` | length of the deliverable / simulation steps replayed |
 | `final_reward` | the simulator's own dense reward at the end, if any |
 | `missing_trajectory`, `grader_error` | 1 on those failure modes (so failures are diagnosable) |
+| `video_rendered` | 1 if the verifier also wrote a human-viewable `/logs/verifier/replay.mp4` (recommended; never affects the verdict) |
 
 ## 4. Reproducibility rules
 - The verifier must reach the same verdict in a **fresh process** on the same inputs; for physics
