@@ -26,6 +26,16 @@ harbor view jobs
 Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the current tasks need no GPU, so
 the default local Docker sandbox works (Modal too). Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
+To evaluate with DeepSeek V4.1 Flash through OpenRouter while retaining the Codex CLI harness, set
+`OPENROUTER_API_KEY` in `.env` and run:
+
+```bash
+scripts/run_deepseek_openrouter.sh tasks/libero-pick-alphabet-soup-basket-i00 -k 3
+```
+
+The repository-local adapter preserves OpenRouter's nested model ID and maps the OpenRouter credential and endpoint
+to the OpenAI-compatible interface expected by Codex.
+
 ## Layout
 
 ```
