@@ -129,6 +129,25 @@ def compare(nominal, refined, output):
         controlled_position_difference_below_2mm=float(dp.max()) < 0.002,
         controlled_orientation_difference_below_0_1rad=float(dr.max()) < 0.1,
     )
+    if any(r.get("supported_pick_place") for r in reports.values()):
+        checks.update(
+            both_use_supported_pick_place=all(r.get("supported_pick_place") for r in reports.values()),
+            ungrasped_stable_initial_support=all(
+                not r["pregrasp_start"] and r.get("initial_support", {}).get("stable_seconds", 0) >= 1
+                and r["initial_support"]["base_contacts"] > 0
+                and r["initial_support"]["finger_contacts"] == 0
+                for r in reports.values()),
+            placed_on_base_before_release=all(
+                r.get("placement_support_before_release", {}).get("supported_seconds", 0) >= .2
+                and r["placement_support_before_release"]["base_contacts"] > 0
+                and not r["remaining_post_completed_by_gravity"]
+                and r.get("final_base_contacts", 0) > 0
+                for r in reports.values()),
+            all_pick_place_phases_recorded=all(
+                {"supported_start", "approach", "grasp", "pickup", "traverse", "placement", "release", "retreat", "settle"}
+                <= {row["phase"] for row in json.loads((path / "frames.json").read_text())}
+                for path in directories.values()),
+        )
     result = dict(
         passed=all(checks.values()),
         checks=checks,

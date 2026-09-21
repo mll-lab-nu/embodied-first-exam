@@ -206,6 +206,18 @@ def finish_toy_assets(folder, wire):
     if layout.end_stop_shape != "block_mount":
         raise ValueError("Photo-style toy finish requires block mounts")
     layers = plinth_layers(layout.base_size_m)
+    # URDF origin remains at the old deck centre; all physical supports share
+    # the same generator as the IK and full-tool clearance checks.
+    from .supports import support_boxes
+    for layer in layers:
+        layer.apply_translation([0, 0, layout.base_elevation_m])
+    for centre, size, rotation, _ in support_boxes(wire):
+        box = trimesh.creation.box(size)
+        transform = np.eye(4)
+        transform[:3, :3] = rotation.as_matrix()
+        transform[:3, 3] = centre - [0, 0, layout.base_size_m[2] / 2]
+        box.apply_transform(transform)
+        layers.append(box)
     grain_tile = max(layout.base_size_m) * 1.04
     toy_wood(trimesh.util.concatenate(layers), tile=grain_tile).export(
         folder / "base_wood.glb"

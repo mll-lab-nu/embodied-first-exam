@@ -11,7 +11,7 @@
 
 ## 当前状态与边界
 
-正式视频为 8 芯、环内半径 13.5 mm、细铜杆支架，无 UI 三视角各 177 秒。它展示既有完整物理轨迹，末态仍保持辅助夹持；严格全程时间步线形对照未通过，也不为任意随机线数和孔径提供资格。
+正式视频已覆盖稀疏 4 芯、标准 8 芯、密集 16 芯三个代表，环内半径均为 13.5 mm、细铜杆支架，每个变体三路无 UI 完整视频。目录为 `demos/fiber_bundling/varaition_<实例名>/<视角>/`；每个相机叶子目录一份 MP4。8 芯原视频直接迁移，4/16 芯从各自成功物理轨迹补录；均以辅助夹持保持末态。三例的两种时间步均完成穿环，严格全程线形对照仅 4 芯通过；这些代表不为任意随机参数提供资格。
 
 ## 变体与下一步
 
@@ -19,7 +19,9 @@
 
 ## 当前证据
 
-- [2026-09-18_standard_08_r13p5mm_clean_v1](../../../runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1)
+- [稀疏 4 芯](../../../runs/demo_metadata/fiber_bundling/2026-09-21_sparse_04_r13p5mm_clean_v1)：[全景](../../../demos/fiber_bundling/varaition_sparse_04_r13p5mm/agentview/2026-09-21_sparse_04_r13p5mm_clean_v1_agentview.mp4) · [近景](../../../demos/fiber_bundling/varaition_sparse_04_r13p5mm/front_oblique/2026-09-21_sparse_04_r13p5mm_clean_v1_front_oblique.mp4) · [腕部](../../../demos/fiber_bundling/varaition_sparse_04_r13p5mm/wrist/2026-09-21_sparse_04_r13p5mm_clean_v1_wrist.mp4)，各 116.7 秒。
+- [标准 8 芯](../../../runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1)：[全景](../../../demos/fiber_bundling/varaition_standard_08_r13p5mm/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4) · [近景](../../../demos/fiber_bundling/varaition_standard_08_r13p5mm/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4) · [腕部](../../../demos/fiber_bundling/varaition_standard_08_r13p5mm/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4)，各 177 秒。
+- [密集 16 芯](../../../runs/demo_metadata/fiber_bundling/2026-09-21_dense_16_r13p5mm_clean_v1)：[全景](../../../demos/fiber_bundling/varaition_dense_16_r13p5mm/agentview/2026-09-21_dense_16_r13p5mm_clean_v1_agentview.mp4) · [近景](../../../demos/fiber_bundling/varaition_dense_16_r13p5mm/front_oblique/2026-09-21_dense_16_r13p5mm_clean_v1_front_oblique.mp4) · [腕部](../../../demos/fiber_bundling/varaition_dense_16_r13p5mm/wrist/2026-09-21_dense_16_r13p5mm_clean_v1_wrist.mp4)，各 237.15 秒。
 - [2026-09-19_variant_generation_audit](../../../runs/demo_metadata/fiber_bundling/2026-09-19_variant_generation_audit)
 
 运行报告记录有限实例的实际结果；几何、IK、短程协议、完整任务和物理资格分开判定。正在执行的任务以运行目录中的最终报告为准。

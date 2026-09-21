@@ -28,6 +28,15 @@ def minimum_jerk(u, seconds):
     return float(np.clip(u**3*(10-15*u+6*u*u), 0., 1.)), 30*u*u*(1-u)**2/seconds
 
 
+def rotational_gains(model, body, name):
+    # The beads have about 20 times less inertia than the discs. Reusing the
+    # disc's explicit angular damping makes the 1 ms bead controller unstable.
+    if name.startswith('bead'):
+        kp = .3
+        return kp, 2*np.sqrt(kp*float(model.body_inertia[body].max()))
+    return 3., .04
+
+
 class VolumeAudit:
     def __init__(self, model, mesh, spec):
         self.model = model
@@ -182,7 +191,8 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
                 torque=np.zeros(3)
                 if commands[n][1] is not None:
                     angle=(lerps[n]([smooth])[0]*rotation.inv()).as_rotvec()
-                    torque=3.*angle-.04*v[:3]
+                    angular_kp, angular_kd = rotational_gains(model, body, n)
+                    torque=angular_kp*angle-angular_kd*v[:3]
                     torque *= min(1., torque_limit/max(np.linalg.norm(torque), 1e-12))
                     angle_errors[name][n]=max(angle_errors[name][n], float(np.linalg.norm(angle)))
                 data.xfrc_applied[body]=np.r_[force,torque]
@@ -287,6 +297,7 @@ if __name__ == '__main__':
     p.add_argument('--dt',type=float,default=.0005)
     p.add_argument('--rayleigh',type=float,default=.00005)
     p.add_argument('--young',type=float,default=FEMSettings.young_pa)
+    p.add_argument('--bead-mouth-fillet',type=float,default=0.,help='Optional rounded bead bore mouth, metres')
     p.add_argument('--mass-damping',type=float,default=2.)
     p.add_argument('--solver-tolerance',type=float,default=FEMSettings.solver_tolerance)
     p.add_argument('--solver-iterations',type=int,default=FEMSettings.solver_iterations)
@@ -297,7 +308,8 @@ if __name__ == '__main__':
     p.add_argument('--max-settle-extra',type=float,default=30.)
     a=p.parse_args()
     report=execute(a.output,interactive_stages() if a.interactive else json.loads(a.schedule.read_text()),
-        FEMSettings(dt=a.dt,rayleigh_s=a.rayleigh,young_pa=a.young,mass_damping_rate_s_inv=a.mass_damping,
+        FEMSettings(dt=a.dt,rayleigh_s=a.rayleigh,young_pa=a.young,bead_mouth_fillet_m=a.bead_mouth_fillet,
+                    mass_damping_rate_s_inv=a.mass_damping,
                     integrator=a.integrator,solver_tolerance=a.solver_tolerance,
                     solver_iterations=a.solver_iterations,contact_time_s=a.contact_time),
         SlottedPostLayout(slot_width_m=a.slot_width),a.initial_seconds,a.max_settle_extra,

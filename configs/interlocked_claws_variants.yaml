@@ -4,7 +4,7 @@ defaults:
 
 task:
   goal:
-    instruction: Separate the two interlocked rigid pieces and release them on their supports.
+    instruction: Completely separate the two interlocked rigid pieces and hold still briefly. Continued grasping is allowed; placement and release are not required.
   seed_variant:
     family_id: claw_weave
     parameter_mode: fixed

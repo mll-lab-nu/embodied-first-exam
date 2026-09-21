@@ -60,8 +60,17 @@ class BuzzWireLayout:
     post_radius_m: float = 0.0
     post_height_m: float = 0.0
     mount_size_m: tuple = (0.030, 0.030, 0.014)
+    # Raise the deck on wooden feet, independently of the authored maze bends.
+    base_elevation_m: float = 0.0
+    supported_endpoints: bool = False
 
     def validate(self):
+        if not np.isfinite(self.base_elevation_m) or not 0 <= self.base_elevation_m <= 0.15:
+            raise ValueError("Deck elevation must be between zero and 150 mm")
+        if self.supported_endpoints and (
+            self.finish != "toy_wood_copper" or self.end_stop_shape != "block_mount"
+        ):
+            raise ValueError("Supported endpoints require the wooden toy and block mounts")
         if self.finish not in {"legacy", "wood_metal", "toy_wood_copper"}:
             raise ValueError("Unknown buzz-wire finish")
         if not np.isfinite([self.post_radius_m, self.post_height_m]).all() or (
@@ -512,7 +521,8 @@ class SpatialWire:
         for endpoint in (self.rail[0], self.rail[-1]):
             p = endpoint.copy()
             if self.layout.end_stop_shape == "block_mount":
-                p[2] = self.layout.base_size_m[2] + self.layout.mount_size_m[2] / 2
+                p[2] = (self.layout.base_elevation_m + self.layout.base_size_m[2]
+                        + self.layout.mount_size_m[2] / 2)
             segments.append((p, p, self.layout.end_stop_radius_m, "stop"))
         if self.layout.post_radius_m:
             r = self.layout.post_radius_m

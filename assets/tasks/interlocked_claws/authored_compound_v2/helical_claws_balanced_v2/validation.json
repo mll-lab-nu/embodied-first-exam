@@ -1,0 +1,10 @@
+{
+  "model_revision": "helical_claws_balanced_v2",
+  "macro_family": "helical_crown",
+  "representative": "B0",
+  "objective": "separate",
+  "archive": "runs/demo_metadata/interlocked_claws/2026-09-21_balanced_helical_separation_v2",
+  "plan_sha256": "d9b80e655de691af6139827bb8b896f119a585611125932aae660a7b1950a989",
+  "dataset_eligible": false,
+  "random_geometry_qualified": false
+}

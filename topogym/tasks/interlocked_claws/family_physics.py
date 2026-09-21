@@ -92,7 +92,11 @@ def contact_metrics(model,data):
 
 def _run_drop(family,index,dt,output):
     part=family.parts[index]
-    rotation=rot("xyz",[1.0,-1.5,9.]).as_matrix()
+    # Axial handles are not feet. Test the balanced claws lying on their
+    # crowns, which is their intended unconstrained resting orientation.
+    euler=[89.,-1.5,9.] if family.family=="helical_claws_balanced_v2" else [1.0,-1.5,9.]
+    rotation=rot("xyz",euler).as_matrix()
+    duration=20. if family.family=="helical_claws_balanced_v2" else 5.
     bottom=float((part.mesh.vertices@rotation.T)[:,2].min())
     root=base_xml(dt,contact_time(family.family))
     add_part(root,family,index,pose([0,0,-bottom+.002],rotation))
@@ -101,22 +105,23 @@ def _run_drop(family,index,dt,output):
     model=mujoco.MjModel.from_xml_string(xml);data=mujoco.MjData(model)
     mujoco.mj_forward(model,data)
     rows=[];max_depth=max_force=0.;tail=[]
-    for step in range(round(5./dt)+1):
+    for step in range(round(duration/dt)+1):
         metrics=contact_metrics(model,data)
         max_depth=max(max_depth,metrics["table_depth_m"]);max_force=max(max_force,metrics["contact_force_n"])
-        if data.time>=4.5:
+        if data.time>=duration-.5:
             tail.append(data.qvel.copy())
         if step%round(.05/dt)==0:
             rows.append(dict(time_s=float(data.time),qpos=data.qpos.tolist(),qvel=data.qvel.tolist()))
-        if step<round(5./dt):
+        if step<round(duration/dt):
             mujoco.mj_step(model,data);mujoco.mj_forward(model,data)
     speed=float(max(np.linalg.norm(v[:3]) for v in tail))
     angular=float(max(np.linalg.norm(v[3:]) for v in tail))
     passed=bool(np.isfinite(data.qpos).all() and speed<.001 and angular<.02 and max_depth<.0005)
     save(output/f"drop_{index}_states.json",rows)
     return dict(name=f"drop_{index}",passed=passed,max_penetration_m=max_depth,max_contact_force_n=max_force,
+                initial_rotation_xyz_deg=euler,initial_bottom_clearance_m=.002,
                 maximum_tail_speed_m_s=speed,maximum_tail_angular_speed_rad_s=angular,final_qpos=data.qpos.tolist(),
-                pose_writes_after_initialization=False,duration_s=5.)
+                pose_writes_after_initialization=False,duration_s=duration)
 
 
 def _run_drive(family,dt,output,negative=None):

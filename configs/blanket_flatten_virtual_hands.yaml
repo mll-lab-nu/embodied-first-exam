@@ -9,7 +9,16 @@ task:
     end_band_m: 0.015
     corner_radius_m: 0.018
     handoff_in_air: true
-    landing_grip_height_m: 0.035
+    upright_before_release: true
+    upright_seconds: 6.0
+    corner_lay_rotation_deg: -90.0
+    align_corner_grips: true
+    align_while_opening: true
+    alignment_seconds: 4.0
+    opening_peel_m: 0.04
+    lay_track_free_edge: true
+    landing_span_fraction: 0.985
+    landing_grip_height_m: 0.015
     maximum_speed_m_s: 0.20
     slow_stretch: 1.18
     pause_stretch: 1.28
@@ -26,4 +35,4 @@ run:
   mode: external
   include_robot: false
   fps: 10
-  output: runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v5
+  output: runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9

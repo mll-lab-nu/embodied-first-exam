@@ -14,6 +14,7 @@ from scipy.spatial.transform import Rotation, Slerp
 from .dynamics import natural_working_state
 from .geometry import OrbitsLayout
 from .robot_runtime import RobotRuntime
+from .workspace import PAD_CENTER
 
 
 def continue_run(source, folder):
@@ -48,14 +49,17 @@ def continue_run(source, folder):
 
 
 def cartesian_path(runtime, side, point, rotation=None, *, opening=None,
-                   position_step_m=.004, rotation_step_rad=.04):
+                   position_step_m=.004, rotation_step_rad=.04, tool_offset=None):
     """Solve the whole sampled segment before issuing any actuator command."""
     if side not in ('left', 'right'):
         raise ValueError(f'Unknown arm {side}')
     r = runtime
     mujoco.mj_kinematics(r.model, r.data)
-    start = r.data.site_xpos[r.model.site(side+'_tcp').id].copy()
     body = r.model.body(side+'/gripper_link').id
+    offset = PAD_CENTER if tool_offset is None else np.asarray(tool_offset, dtype=float)
+    if offset.shape != (3,) or not np.isfinite(offset).all():
+        raise ValueError('Tool offset must be a finite gripper-local point')
+    start = r.data.xpos[body]+r.data.xmat[body].reshape(3, 3)@offset
     start_rotation = r.checker.yaw*Rotation.from_matrix(r.data.xmat[body].reshape(3, 3))
     rotation = start_rotation if rotation is None else rotation
     point = np.asarray(point, dtype=float)
@@ -64,15 +68,20 @@ def cartesian_path(runtime, side, point, rotation=None, *, opening=None,
                 int(np.ceil(angle/rotation_step_rad)))
     slerp = Slerp([0, 1], Rotation.from_quat([start_rotation.as_quat(), rotation.as_quat()]))
     q = r.data.qpos[:16].copy()
-    q[[6, 7]] = r.data.ctrl[6]
-    q[[14, 15]] = r.data.ctrl[13]
+    finger_commands = {"left": r.data.ctrl[6], "right": r.data.ctrl[13]}
     if opening is not None:
-        q[[6, 7] if side == 'left' else [14, 15]] = opening
+        finger_commands[side] = opening
+    # A squeezed cord keeps the physical jaws wider than the servo target.
+    # Check that measured envelope; retain the squeezing command in playback.
+    for hand, fingers in (("left", [6, 7]), ("right", [14, 15])):
+        q[fingers] = np.maximum(q[fingers], finger_commands[hand])
     result, diagnostics = [], []
     for fraction in np.linspace(0, 1, count+1)[1:]:
         local = start+fraction*(point-start)
-        world = r.checker.yaw.apply(local)+r.checker.origin
-        candidate, pe, re = r.checker.solve(side, world, slerp(fraction), q)
+        desired_rotation = slerp(fraction)
+        world = (r.checker.yaw.apply(local)+r.checker.origin+
+                 desired_rotation.apply(PAD_CENTER-offset))
+        candidate, pe, re = r.checker.solve(side, world, desired_rotation, q)
         if pe > .0005 or re > .005:
             raise ValueError(f'{side} continuous IK at {fraction:.3f}: {pe:.6f} m, {re:.6f} rad')
         if np.max(np.abs(candidate[r.checker.indices[side]]-q[r.checker.indices[side]])) > .2:
@@ -80,21 +89,128 @@ def cartesian_path(runtime, side, point, rotation=None, *, opening=None,
         bad = r.checker.violations(candidate)
         if bad:
             raise ValueError(f'{side} path collision at {fraction:.3f}: {bad}')
-        result.append(candidate.copy())
+        command = candidate.copy()
+        command[[6, 7]] = finger_commands['left']
+        command[[14, 15]] = finger_commands['right']
+        result.append(command)
         diagnostics.append(dict(fraction=float(fraction), position_error_m=pe,
                                 rotation_error_rad=re))
         q = candidate
     return np.asarray(result), diagnostics
 
 
-def move(runtime, phase, side, point, rotation=None, *, seconds=3., opening=None):
-    path, errors = cartesian_path(runtime, side, point, rotation, opening=opening)
+def move(runtime, phase, side, point, rotation=None, *, seconds=3., opening=None,
+         held_point=False):
+    offset = None
+    if held_point:
+        names = ('grasp_bight', 'grasp_fold_0') if side == 'left' else ('grasp_handle', 'grasp_fold_1')
+        active = [runtime.model.equality(name).id for name in names
+                  if runtime.data.eq_active[runtime.model.equality(name).id]]
+        if len(active) != 1:
+            raise ValueError('Held-point motion requires exactly one active grasp on the arm')
+        offset = runtime.model.site_pos[runtime.model.eq_obj1id[active[0]]].copy()
+    path, errors = cartesian_path(runtime, side, point, rotation, opening=opening,
+                                  tool_offset=offset)
     folder = runtime.folder/'planned_paths'; folder.mkdir(exist_ok=True)
     np.savez_compressed(folder/f'{phase}.npz', qpos=path)
     (folder/f'{phase}.json').write_text(json.dumps(dict(side=side, target_task_m=list(point),
-        seconds=seconds, checked_samples=errors, position_sample_spacing_m=.004,
+        seconds=seconds, held_point=held_point, checked_samples=errors, position_sample_spacing_m=.004,
         rotation_sample_spacing_rad=.04, continuous_collision_proof=False), indent=2)+'\n')
     runtime.joint_path(phase, path, seconds, max_penetration_m=.0015)
+
+
+def joint_transfer_path(runtime, side, target, *, seed=0, iterations=3000,
+                        step_rad=.15, sample_rad=.025):
+    """Plan a free-space arm transfer, checking both arms and the fixture.
+
+    This changes the TCP route, so it must not replace a specified threading
+    segment. Cord contacts are checked during native execution, not by FCL.
+    Planning does not change the simulation's qpos, qvel, controls or time.
+    """
+    if side not in ('left', 'right'):
+        raise ValueError(f'Unknown arm {side}')
+    r = runtime
+    indices = r.checker.indices[side]
+    base = r.data.qpos[:16].copy()
+    target = np.asarray(target, dtype=float)
+    if target.shape != (16,) or not np.isfinite(target).all():
+        raise ValueError('Joint transfer target must contain 16 finite joints')
+    start, goal = base[indices], target[indices]
+    low, high = r.checker.limits.T
+    if np.any(goal < low) or np.any(goal > high):
+        raise ValueError('Joint transfer target exceeds arm limits')
+
+    def valid(angles):
+        q = base.copy(); q[indices] = angles
+        return not r.checker.violations(q)
+
+    def edge(a, b):
+        count = max(1, int(np.ceil(np.max(np.abs(b-a))/sample_rad)))
+        return all(valid(a+(b-a)*t) for t in np.linspace(0, 1, count+1)[1:])
+
+    if not valid(start) or not valid(goal):
+        raise ValueError('Joint transfer start or goal collides')
+    path = None
+    if edge(start, goal):
+        path = [start, goal]
+    else:
+        rng = np.random.default_rng(seed)
+        trees = [([start.copy()], [-1]), ([goal.copy()], [-1])]
+
+        def extend(tree, sample):
+            nodes, parents = tree
+            nearest = int(np.argmin(np.linalg.norm(np.asarray(nodes)-sample, axis=1)))
+            delta = sample-nodes[nearest]
+            distance = np.linalg.norm(delta)
+            point = sample.copy() if distance <= step_rad else nodes[nearest]+delta*step_rad/distance
+            if distance < 1e-10:
+                return nearest, True
+            if not edge(nodes[nearest], point):
+                return None, False
+            nodes.append(point); parents.append(nearest)
+            return len(nodes)-1, distance <= step_rad
+
+        def branch(tree, i):
+            result = []
+            while i >= 0:
+                result.append(tree[0][i]); i = tree[1][i]
+            return result[::-1]
+
+        for iteration in range(iterations):
+            first = iteration % 2
+            a, b = trees[first], trees[1-first]
+            sample = b[0][0] if rng.random() < .15 else rng.uniform(low, high)
+            i, _ = extend(a, sample)
+            if i is None:
+                continue
+            for _ in range(100):
+                j, reached = extend(b, a[0][i])
+                if j is None:
+                    break
+                if reached:
+                    pa, pb = branch(a, i), branch(b, j)
+                    path = pa+pb[-2::-1] if first == 0 else pb+pa[-2::-1]
+                    break
+            if path is not None:
+                break
+        if path is None:
+            raise ValueError('No collision-free joint transfer found within the search budget')
+        # Remove unnecessary detours, preserving sampled collision checks.
+        for _ in range(100):
+            if len(path) <= 2:
+                break
+            i, j = sorted(rng.choice(len(path), 2, replace=False))
+            if j > i+1 and edge(path[i], path[j]):
+                path = path[:i+1]+path[j:]
+    result = []
+    for a, b in zip(path[:-1], path[1:]):
+        count = max(1, int(np.ceil(np.max(np.abs(b-a))/sample_rad)))
+        for fraction in np.linspace(0, 1, count+1)[1:]:
+            q = base.copy(); q[indices] = a+fraction*(b-a)
+            q[[6, 7]] = r.data.ctrl[6]
+            q[[14, 15]] = r.data.ctrl[13]
+            result.append(q)
+    return np.asarray(result)
 
 
 def acquire_strand(r, node=100):

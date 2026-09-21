@@ -363,8 +363,11 @@ def render(
         resume_pixel_comparison_maximum_mean_error=resume_maximum_pixel_error,
         renderer="Genesis rasterizer",
         ui_overlays=False,
-        scope="One continuous joint-servo robot execution from pregrasp contact through complete maze, release, retreat and settle; measured full robot and ring states.",
-        pregrasp_start=True,
+        scope=("One continuous joint-servo execution: ungrasped supported start, approach, pickup, full maze, controlled placement, release, retreat and settle; measured full robot and ring states."
+               if report.get("supported_pick_place") else
+               "One continuous joint-servo robot execution from pregrasp contact through complete maze, release, retreat and settle; measured full robot and ring states."),
+        pregrasp_start=report["pregrasp_start"],
+        supported_pick_place=report.get("supported_pick_place", False),
         assisted_grasp=report["assisted_grasp"],
         passive_gripper_joints_reconstructed=False,
         wrist_camera_scope="Position fixed relative to hand; gaze tracks the measured ring center",

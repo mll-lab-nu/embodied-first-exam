@@ -60,7 +60,9 @@ def render(run,output,prefix,cameras=CAMERAS,width=960,height=720):
     finally:
         for writer in writers.values():writer.close()
         renderer.close()
-    manifest=dict(family=report["family"],scope="complete measured physical execution; ideal pregrasp welds released before final settling",
+    scope=("complete measured physical separation; ideal pregrasp welds retained during final hold"
+           if report.get("objective")=="separate" else "complete measured physical execution; ideal pregrasp welds released before final settling")
+    manifest=dict(family=report["family"],scope=scope,
         renderer="MuJoCo EGL",rerender=True,physics_report_sha256=sha(run/"report.json"),states_sha256=sha(run/"states.npz"),
         frames=len(states["qpos"]),fps=report["fps"],duration_s=len(states["qpos"])/report["fps"],
         videos={name:dict(path=str(path.resolve()),sha256=sha(path)) for name,path in paths.items()})

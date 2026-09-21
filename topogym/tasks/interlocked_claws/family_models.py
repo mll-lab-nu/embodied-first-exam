@@ -15,7 +15,7 @@ import trimesh
 
 COLORS = ((.74,.40,.24,1.), (.20,.53,.61,1.))
 DENSITY = 600.
-FAMILIES = ("helical_crown", "orthogonal_gate", "orthogonal_gate_balanced_v2")
+FAMILIES = ("helical_crown", "helical_claws_balanced_v2", "orthogonal_gate", "orthogonal_gate_balanced_v2")
 
 
 def pose(position=(0.,0.,0.), rotation=None):
@@ -153,6 +153,43 @@ class FamilyModel:
                  ("second_window_exit",6.,pose([.32,.32,0],second))]
         return [cage,key],grasps,["right","left"],[.0212,.0212],p0,targets
 
+    def _helical_claws_balanced_v2(self):
+        """Congruent three-start claws, opposed at their open ends.
+
+        Both parts have a base ring, three 205-degree helical fingers and an
+        identical handle. A 180-degree axial offset interleaves the fingers;
+        the upside-down second part retains the same world-space handedness.
+        """
+        import copy
+        items=[];radius=.065
+        for i in range(36):
+            angle=(i+.5)*2*np.pi/36
+            items.append(box([radius*np.cos(angle),radius*np.sin(angle),-.050],
+                             [.020,2*radius*np.tan(np.pi/36)+.002,.012],rot("z",np.rad2deg(angle))))
+        zs=np.linspace(-.046,.036,53)
+        for base_angle in (0.,120.,240.):
+            for lo,hi in zip(zs[:-1],zs[1:]):
+                def center(z):
+                    theta=np.deg2rad(base_angle+2500*z)
+                    return np.array([radius*np.cos(theta),radius*np.sin(theta),z])
+                a,b=center(lo),center(hi)
+                angle=np.deg2rad(base_angle+2500*(lo+hi)/2)
+                radial=np.array([np.cos(angle),np.sin(angle),0.])
+                tangent=(b-a)/np.linalg.norm(b-a)
+                items.append(box((a+b)/2,[.016,np.linalg.norm(b-a)+.0025,.009],
+                                 np.column_stack([radial,tangent,np.cross(radial,tangent)])))
+        for angle in (0.,120.,240.):
+            r=rot("z",angle)
+            items.append(box(r.apply([.032,0,-.050]),[.070,.016,.012],r))
+        items.append(box([0,0,-.098],[.018,.018,.106]))
+        initial_rotation=rot("z",180)*rot("x",180)
+        initial=pose(rotation=initial_rotation)
+        targets=[("coupled_screw_first_100deg",6.,pose([0,0,.040],rot("z",100)*initial_rotation)),
+                 ("coupled_screw_second_100deg",6.,pose([0,0,.080],rot("z",200)*initial_rotation)),
+                 ("separate_tips",2.,pose([0,0,.115],rot("z",200)*initial_rotation))]
+        grasps=[pose([0,0,-.130],rot("y",-90)),pose([0,0,-.130],rot("y",-90))]
+        return [items,copy.deepcopy(items)],grasps,["left","right"],[.0172,.0172],initial,targets
+
     def _orthogonal_gate_balanced_v2(self):
         # Congruent 250 x 190 mm frames with 220 x 160 mm apertures.
         # The complete frame is symmetric under (x,y,z)->(y-.12,x+.12,z).
@@ -187,6 +224,13 @@ class FamilyModel:
         return self.segments[-1].end.copy(),"separated"
 
     def negative_paths(self):
+        if self.family=="helical_claws_balanced_v2":
+            initial=self.initial[1];r=Rotation.from_matrix(initial[:3,:3])
+            return [Segment("pull_without_rotation",4.,initial,pose([0,0,.115],r)),
+                    Segment("turn_without_advance",4.,initial,pose(rotation=rot("z",100)*r)),
+                    Segment("reverse_screw",4.,initial,pose([0,0,.04],rot("z",-100)*r)),
+                    *[Segment(f"premature_side_exit_{axis}_{sign}",4.,initial,
+                              pose(np.eye(3)[axis]*sign*.20,r)) for axis in (0,1) for sign in (-1,1)]]
         if self.family=="helical_crown":
             return [Segment("push_without_rotation",4.,self.initial[1],pose([0,0,.04])),
                     Segment("turn_without_advance",4.,self.initial[1],pose(rotation=rot("z",100))),
@@ -203,7 +247,8 @@ class FamilyModel:
     def save(self, directory):
         directory=Path(directory)
         directory.mkdir(parents=True,exist_ok=False)
-        report=dict(family=self.family,version="balanced_gate_v2" if self.family.endswith("balanced_v2") else "authored_compound_v1",density_kg_m3=DENSITY,
+        version={"orthogonal_gate_balanced_v2":"balanced_gate_v2", "helical_claws_balanced_v2":"balanced_helical_claws_v2"}.get(self.family,"authored_compound_v1")
+        report=dict(family=self.family,version=version,density_kg_m3=DENSITY,
                     visual_collision_union_equivalent=True,parts=[],initial_poses=[t.tolist() for t in self.initial],
                     segments=[dict(name=s.name,duration=s.duration,start=s.start.tolist(),end=s.end.tolist()) for s in self.segments])
         for part,color in zip(self.parts,COLORS):

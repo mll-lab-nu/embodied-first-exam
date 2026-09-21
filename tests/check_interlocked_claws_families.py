@@ -40,6 +40,32 @@ class AuthoredClawChecks(unittest.TestCase):
             reflected.append(tuple(np.round(np.r_[[p[1]-.12,p[0]+.12,p[2]],s[[1,0,2]]],9)))
         self.assertEqual(sorted(original),sorted(reflected))
 
+    def test_balanced_helical_claws_are_congruent_and_need_coupled_motion(self):
+        model=FamilyModel("helical_claws_balanced_v2")
+        a,b=model.parts
+        self.assertEqual(a.boxes,b.boxes)
+        np.testing.assert_allclose(a.mesh.extents,b.mesh.extents,atol=1e-12)
+        self.assertAlmostEqual(a.mesh.mass,b.mesh.mass,places=12)
+        self.assertLess(a.mesh.extents.max(),.264)
+        for part in model.parts:
+            self.assertTrue(part.mesh.contains([part.grasp[:3,3]])[0])
+        audit=geometry_audit(model)
+        self.assertTrue(audit["passed"])
+        self.assertGreater(audit["minimum_sampled_gap_m"],.003)
+        self.assertEqual(len(audit["negative_controls"]),7)
+        self.assertGreater(sum(s.rotation_angle for s in model.segments),np.pi)
+
+    def test_counter_rotation_is_continuous_past_half_turn(self):
+        from topogym.tasks.interlocked_claws.family_robot import assembly_poses
+        from scipy.spatial.transform import Rotation
+        model=FamilyModel("helical_claws_balanced_v2")
+        settings=dict(yaw=0,counter_rotate=-.5,center=[0,-.18,.3],fraction=.5,
+                      axis_rotation_xyz_deg=[0,90,0])
+        poses=[assembly_poses(model,t,settings)[0] for t in np.linspace(0,model.duration,281)]
+        for before,after in zip(poses,poses[1:]):
+            for a,b in zip(before,after):
+                self.assertLess(Rotation.from_matrix(b[:3,:3]@a[:3,:3].T).magnitude(),.02)
+
     def test_changed_geometry_cannot_reuse_old_ik_plan(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);model=FamilyModel("helical_crown")

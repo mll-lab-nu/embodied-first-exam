@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "continuous_pair_path_certified": true,
+  "minimum_sampled_gap_m": 0.0033404380083084037,
+  "certified_intervals": 86,
+  "queries": 175,
+  "failures": [],
+  "negative_controls": [
+    {
+      "name": "pull_without_rotation",
+      "blocked": true,
+      "witness_fraction": 0.27
+    },
+    {
+      "name": "turn_without_advance",
+      "blocked": true,
+      "witness_fraction": 0.42
+    },
+    {
+      "name": "reverse_screw",
+      "blocked": true,
+      "witness_fraction": 0.31
+    },
+    {
+      "name": "premature_side_exit_0_-1",
+      "blocked": true,
+      "witness_fraction": 0.31
+    },
+    {
+      "name": "premature_side_exit_0_1",
+      "blocked": true,
+      "witness_fraction": 0.31
+    },
+    {
+      "name": "premature_side_exit_1_-1",
+      "blocked": true,
+      "witness_fraction": 0.31
+    },
+    {
+      "name": "premature_side_exit_1_1",
+      "blocked": true,
+      "witness_fraction": 0.31
+    }
+  ],
+  "robot_collision_certified": false,
+  "physics_verified": false
+}

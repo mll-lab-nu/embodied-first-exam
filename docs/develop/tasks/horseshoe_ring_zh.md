@@ -11,13 +11,16 @@
 
 ## 当前状态与边界
 
-基础版五视角 113.7 秒；同代码 2 ms / 1 ms 独立完整执行通过。新家族的接近阶段对照只是局部展示。
+基础版五视角 113.7 秒；同代码 2 ms / 1 ms 独立完整执行通过。F1 上方接近、F2 外侧接近、F3 后方接近均已补齐完整五视角，分别 129.7 / 125.8 / 119.7 秒；它们来自原成功物理状态重渲染，仅保留原 2 ms 验收范围。
 
 ## 变体与下一步
 
 三个接近路线家族，围绕已成功中心做小范围条件采样。variant_generator 产生实例，variant_pipeline 做生成、重载、完整物理验收及拒绝重试。三族各有条件域随机实例通过 2 ms，新随机实例仍缺 1 ms 复验；非圆环形状池尚未开放。
 
 ## 当前证据
+
+正式目录：`demos/horseshoe_ring/varaition_baseline/<camera>/`、`varaition_f1/<camera>/`、`varaition_f2/<camera>/`、`varaition_f3/<camera>/`，共 20 份独立 MP4。[全部视角与证据](../../../runs/demo_metadata/horseshoe_ring/2026-09-21_variation_restore_v1/README.md)。F1/F2/F3 低位相机统一移到桌面上方，改善遮挡及落桌画面的可见性；五路使用同一次执行的相同帧与时间戳。
+
 
 - [2026-09-18_gravity_replanned_v1](../../../runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1)
 - [2026-09-18_timestep_validation_v1](../../../runs/demo_metadata/horseshoe_ring/2026-09-18_timestep_validation_v1)

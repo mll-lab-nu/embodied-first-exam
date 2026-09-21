@@ -18,7 +18,7 @@ from .render import sha
 from .scene import BuzzWireSceneBuilder
 
 
-def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
+def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction", stop_after=None):
     import genesis as gs
     from topogym.utils.franka import initialize_franka_controller
     from topogym.robot.gripper import robotiq_joint_targets
@@ -84,6 +84,8 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         "verification.py",
         "family_geometry.py",
         "family_plan.py",
+        "supports.py",
+        "supported_plan.py",
     ):
         shutil.copy2(Path(__file__).with_name(name), implementation / name)
     gs.init(backend=gs.cpu, precision="64", logging_level="warning", seed=0)
@@ -98,18 +100,20 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
     )
     solver = task.scene.sim.rigid_solver
     wand = task.wand
-    frame = plan["frames"][0]
+    supported = plan.get("supported_pick_place")
+    frame = supported["pickup"][0] if supported else plan["frames"][0]
     q = np.asarray(plan["model_qpos"]).copy()
-    q[:7] = frame["arm_qpos"]
+    q[:7] = supported["initial_arm_qpos"] if supported else frame["arm_qpos"]
     for name, value in robotiq_joint_targets(
-        float(cfg.task.geometry.grip_radius_m) + 0.0001
+        supported["open_half_gap_m"] if supported else float(cfg.task.geometry.grip_radius_m) + 0.0001
     ).items():
         name = {
             "right_driver_joint": "finger_joint1",
             "left_driver_joint": "finger_joint2",
         }.get(name, "r85_" + name)
         q[c.robot.get_joint(name).qs_idx_local[0]] = value
-    # Only reset time: initialize the pre-threaded ring and the arm at pregrasp.
+    # Reset only. Supported mode starts with the open arm separated from a
+    # pre-threaded wand resting on physical wood, then uses joint commands only.
     wand.set_pos(frame["position_m"])
     wand.set_quat(frame["quaternion_wxyz"])
     wand.zero_all_dofs_velocity()
@@ -118,7 +122,7 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
     grip_command = (
         0.0  # Bounded closure maintains pressure through wrist reorientation.
     )
-    c.set_gripper(grip_command, steps=0)
+    c.set_gripper(supported["open_half_gap_m"] if supported else grip_command, steps=0)
     fingers = {c.robot.get_link(n).idx for n in ("left_finger", "right_finger")}
     robot_links = {
         link.idx for link in c.robot.links if link.idx != c.robot.base_link_idx
@@ -144,7 +148,7 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
     passive_segments = []
     release_recontacts = 0
     steps = 0
-    phase = "pregrasp_contact"
+    phase = "supported_start" if supported else "pregrasp_contact"
     grasp = False
     rows = []
     event = None
@@ -162,6 +166,9 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
     bilateral_traverse_steps = 0
     total_traverse_steps = 0
     finger_contact_count = 0
+    base_contact_count = 0
+    initial_support = None
+    placement_support = None
     links = set()
     started = time.monotonic()
     target_p = None
@@ -203,6 +210,7 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
                 robot_qpos=array(c.robot.get_qpos()).tolist(),
                 grasp_constraint_active=grasp,
                 finger_contact_count=finger_contact_count,
+                base_contact_count=base_contact_count,
                 linking_number=int(link),
                 linear_speed_m_s=float(np.linalg.norm(array(wand.get_vel()))),
                 angular_speed_rad_s=float(np.linalg.norm(array(wand.get_ang()))),
@@ -223,12 +231,17 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
             finger_contact_count, \
             bilateral_traverse_steps, \
             total_traverse_steps, \
-            release_recontacts
+            release_recontacts, \
+            base_contact_count
         task.scene.step()
         steps += 1
         ct = solver.collider.get_contacts(as_tensor=True, to_torch=True)
         a, b, pen = (array(ct[k]) for k in ("link_a", "link_b", "penetration"))
         active = pen > 0
+        base_contact_count = int(np.sum(active & (
+            ((a == wand.base_link_idx) & (b == task.base.base_link_idx)) |
+            ((b == wand.base_link_idx) & (a == task.base.base_link_idx))
+        )))
         finger_contact_count = sum(
             bool(
                 np.any(
@@ -321,8 +334,38 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         hand_position_correction_m=0.0, hand_orientation_correction_rad=0.0
     )
     result = dict(passed=False, complete=False)
+
+    def free_motion(path):
+        """Move the open arm without moving or constraining the resting wand."""
+        for first, last in zip(path[:-1], path[1:]):
+            qa, qb = np.array(first["arm_qpos"]), np.array(last["arm_qpos"])
+            distance = np.linalg.norm(np.array(first["position_m"])-last["position_m"])
+            duration = max(np.max(abs(qb-qa))/.25, distance/.025, dt)
+            for u in np.linspace(0, 1, max(2, int(np.ceil(duration/dt))+1))[1:]:
+                c.robot.control_dofs_position(qa*(1-u)+qb*u, c.arm_dofs)
+                step()
+
     record()
     try:
+        if supported:
+            # Require a full ungrasped stable window before approaching.
+            stable = 0
+            for _ in range(round(2.0 / dt)):
+                step()
+                quiet = (base_contact_count > 0 and finger_contact_count == 0
+                         and np.linalg.norm(array(wand.get_vel())) < .002
+                         and np.linalg.norm(array(wand.get_ang())) < .02)
+                stable = stable + 1 if quiet else 0
+            initial_support = dict(stable_seconds=stable*dt, base_contacts=base_contact_count,
+                                   finger_contacts=finger_contact_count,
+                                   position_error_m=float(np.linalg.norm(pose()[0]-frame["position_m"])),
+                                   orientation_error_rad=float((pose()[1]*Rotation.from_quat(np.array(frame["quaternion_wxyz"])[[1,2,3,0]]).inv()).magnitude()))
+            if stable*dt < 1 or initial_support["position_error_m"] > .003 or initial_support["orientation_error_rad"] > .06:
+                raise ValueError(f"Initial wand is not stably supported: {initial_support}")
+            phase = "approach"
+            free_motion(supported["approach"])
+            phase = "grasp"
+            c.set_gripper(grip_command, steps=0)
         for _ in range(round(0.3 / dt)):
             step()
             ct = c.robot.get_contacts(with_entity=wand)
@@ -370,7 +413,7 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         retreat_height = float(cfg.robot_demo.get("retreat_height_m", 0.05))
         retreat_seed = arms[-1].copy()
         retreat_p, retreat_r = kin.forward(retreat_seed)
-        for z in np.linspace(0, retreat_height, 31):
+        for z in ([] if supported else np.linspace(0, retreat_height, 31)):
             retreat_seed, pe, re = kin.solve(
                 retreat_p + [0, 0, z], retreat_r, retreat_seed
             )
@@ -416,6 +459,30 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
                 raise ValueError(f"Measured grasp feedback IK failed: {pe=}, {re=}")
             arm_correction = arm - guide
 
+        def held_motion(path, motion_phase):
+            nonlocal phase, target_p, target_r
+            phase = motion_phase
+            for first, last in zip(path[:-1], path[1:]):
+                pa, pb = np.array(first["position_m"]), np.array(last["position_m"])
+                qa, qb = np.array(first["arm_qpos"]), np.array(last["arm_qpos"])
+                ra, rb = Rotation.from_quat(np.array([first["quaternion_wxyz"], last["quaternion_wxyz"]])[:, [1,2,3,0]])
+                duration = max(np.linalg.norm(pb-pa)/.015, (ra.inv()*rb).magnitude()/.25,
+                               np.max(abs(qb-qa))/.25, dt)
+                rotation = Slerp([0, 1], Rotation.from_quat([ra.as_quat(), rb.as_quat()]))
+                for tick, u in enumerate(np.linspace(0,1,max(2,int(np.ceil(duration/dt))+1))[1:]):
+                    target_p, target_r = pa*(1-u)+pb*u, rotation(u)
+                    guide = qa*(1-u)+qb*u
+                    if tick % feedback_stride == 0:
+                        update_feedback(guide)
+                    c.robot.control_dofs_position(np.clip(guide+arm_correction, kin.limits[:,0]+1e-6, kin.limits[:,1]-1e-6), c.arm_dofs)
+                    step()
+                    if np.linalg.norm(pose()[0]-target_p) > .008:
+                        raise ValueError(f"{motion_phase} tracking exceeded 8 mm")
+
+        if supported:
+            held_motion(supported["pickup"], "pickup")
+            if stop_after == "pickup":
+                raise ValueError("Requested pickup-only diagnostic stop")
         phase = "traverse"
         for tick, t in enumerate(
             np.linspace(0, duration, int(np.ceil(duration / dt)) + 1)
@@ -445,11 +512,22 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         final_error = float(np.linalg.norm(pose()[0] - poses[-1]))
         if final_error > 0.004:
             raise ValueError("Goal hold position outside 4 mm")
+        if supported:
+            held_motion(supported["placement"], "placement")
+            supported_steps = 0
+            for _ in range(round(.5 / dt)):
+                step()
+                supported_steps = supported_steps + 1 if base_contact_count else 0
+            placement_support = dict(base_contacts=base_contact_count,
+                                     supported_seconds=supported_steps*dt,
+                                     position_error_m=float(np.linalg.norm(pose()[0]-supported["placement"][-1]["position_m"])))
+            if supported_steps*dt < .2 or placement_support["position_error_m"] > .003:
+                raise ValueError(f"Handle not placed on its support before release: {placement_support}")
         phase = "release"
         if grasp:
             solver.delete_weld_constraint(c.ee_link.idx, wand.base_link_idx)
         grasp = False
-        c.open_gripper(steps=0)
+        c.set_gripper(supported["open_half_gap_m"], steps=0) if supported else c.open_gripper(steps=0)
         for _ in range(round(0.8 / dt)):
             step()
         from .robot_plan import Kinematics
@@ -460,7 +538,9 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         hand_r = Rotation.from_quat(c.hand_quat()[[1, 2, 3, 0]])
         seed = c.arm_qpos()
         phase = "retreat"
-        for u in np.linspace(0, 1, round(1.5 / dt)):
+        if supported:
+            free_motion(supported["retreat"])
+        for u in ([] if supported else np.linspace(0, 1, round(1.5 / dt))):
             arm, pe, re = kin.solve(hand_p + [0, 0, retreat_height * u], hand_r, seed)
             if pe > 1e-5 or re > 1e-4:
                 raise ValueError("Retreat IK failed")
@@ -507,6 +587,9 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
         terminal_reached = endpoint_distance < 0.05 and nearest_end_index >= len(
             fixed_rail
         ) - max(3, round(0.05 / task.route.layout.rail_segment_m))
+        if supported:
+            terminal_reached = bool(base_contact_count and np.linalg.norm(
+                final_position-supported["placement"][-1]["position_m"]) < .003)
         result.update(
             passed=v < 0.002
             and w < 0.02
@@ -526,7 +609,7 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
             terminal_stop_reached=bool(terminal_reached),
             final_distance_to_terminal_stop_m=endpoint_distance,
             robot_release_progress=plan["release_progress"],
-            remaining_post_completed_by_gravity=True,
+            remaining_post_completed_by_gravity=not bool(supported),
             settle_wait_seconds=(steps - settle_start) * dt,
             settled_continuous_seconds=settled_steps * dt,
             settled_window_seconds=float(cfg.robot_demo.settled_window_seconds),
@@ -544,7 +627,11 @@ def execute(plan_dir, output, dt=0.004, substeps=16, grasp_mode="friction"):
             precision_bits=64,
             physics_steps=steps,
             simulated_seconds=steps * dt,
-            pregrasp_start=True,
+            pregrasp_start=not bool(supported),
+            supported_pick_place=bool(supported),
+            initial_support=initial_support,
+            placement_support_before_release=placement_support,
+            final_base_contacts=base_contact_count,
             assisted_grasp=grasp_mode == "contact_weld",
             grasp_method=grasp_mode,
             contact_gate=event,
@@ -599,11 +686,12 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--dt", type=float, default=0.004)
     parser.add_argument("--substeps", type=int, default=16)
+    parser.add_argument("--stop-after", choices=("pickup",))
     parser.add_argument(
         "--grasp-mode", choices=("friction", "contact_weld"), default="friction"
     )
     args = parser.parse_args()
-    execute(args.plan, args.output, args.dt, args.substeps, args.grasp_mode)
+    execute(args.plan, args.output, args.dt, args.substeps, args.grasp_mode, args.stop_after)
 
 
 if __name__ == "__main__":

@@ -129,18 +129,20 @@ class RobotAudit:
         self.kin = kin
         self.signed_distance = signed_distance
         self.route = route
+        from .supports import fixture_boxes
         self.fixed = [
             capsule(origin + rotation.apply(a), origin + rotation.apply(b), rad)
-            for a, b, rad, _ in route.fixed_capsules()
+            for a, b, rad, part in route.fixed_capsules()
+            if not (part == "stop" and route.layout.end_stop_shape == "block_mount")
         ]
-        self.fixed.append(
+        self.fixed.extend(
             fcl.CollisionObject(
-                fcl.Box(*route.layout.base_size_m),
+                fcl.Box(*size),
                 fcl.Transform(
-                    rotation.as_matrix(),
-                    origin + [0, 0, route.layout.base_size_m[2] / 2],
+                    (rotation * rot).as_matrix(), origin + rotation.apply(centre),
                 ),
             )
+            for centre, size, rot, _ in fixture_boxes(route)
         )
         self.fixed_manager = manager(self.fixed)
         self.tool = [

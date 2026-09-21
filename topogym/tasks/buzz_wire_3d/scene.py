@@ -88,6 +88,10 @@ class BuzzWireSceneBuilder:
             if not clearance["passed"]:
                 raise ValueError(f"Unplayable reference route: {clearance}")
             p, q = route.pose(0.0)
+            if layout.supported_endpoints:
+                from .supports import endpoint_pose
+                p, resting = endpoint_pose(route, 0)
+                q = resting.as_quat()[[3, 0, 1, 2]]
         else:
             # Trusted operator loader supplies hash-checked URDFs and a single
             # initial pose. It does not construct or verify a solution route.

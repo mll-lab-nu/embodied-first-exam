@@ -1,7 +1,7 @@
 """ALOHA IK and force-limited execution for authored Claw B0/C0 prototypes.
 
-Pregrasp welds are explicit assistance. The two parts are free bodies with
-compound collision geometry; after release neither has an active constraint.
+Pregrasp welds are explicit assistance. New plans end at stable separation;
+historical placement/release plans retain their recorded objective.
 """
 import argparse
 import json
@@ -23,6 +23,17 @@ from .family_physics import add_part, base_xml, body_pose, quat, values, save, s
 def assembly_poses(family, seconds, settings):
     rel,phase=family.relative_pose(seconds)
     yaw=settings["yaw"]
+    if settings.get("counter_rotate",0):
+        # Accumulate segment rotations without wrapping at +/-180 degrees.
+        remaining=max(0.,seconds);turn=0.
+        for segment in family.segments:
+            u=float(np.clip(remaining/segment.duration,0,1))
+            u=u**3*(10-15*u+6*u*u)
+            delta=Rotation.from_matrix(segment.end[:3,:3]@segment.start[:3,:3].T).as_rotvec()
+            turn+=np.rad2deg(delta[2])*u
+            remaining-=segment.duration
+            if remaining<=0:break
+        yaw+=settings["counter_rotate"]*turn
     if family.family.startswith("orthogonal_gate"):
         yaw*=np.rad2deg(np.arctan2(rel[1,0],rel[0,0]))
     yaw+=settings.get("yaw_offset",0.)
@@ -31,6 +42,8 @@ def assembly_poses(family, seconds, settings):
         u=np.clip((seconds-settings["tilt_x_fade_start_s"])/(settings["tilt_x_fade_end_s"]-settings["tilt_x_fade_start_s"]),0,1)
         tilt_x*=1-u*u*u*(10-15*u+6*u*u)
     R=(rot("z",yaw)*rot("y",settings.get("tilt_y",0))*rot("x",tilt_x)).as_matrix()
+    if "axis_rotation_xyz_deg" in settings:
+        R=rot("xyz",settings["axis_rotation_xyz_deg"]).as_matrix()@R
     shift=np.array([0,settings.get("y_compensation",0)*np.clip((seconds-11)/5,0,1),0])
     compensation=R@(settings["fraction"]*(rel[:3,3]-family.initial[1][:3,3]))
     if not settings.get("compensate_z",True):compensation[2]=0
@@ -46,7 +59,7 @@ def xml_scene(family, initial, dt, asset_dir=None):
     settings=base_xml(dt,contact_time(family.family))
     root.append(settings.find("option"))
     for body in root.findall(".//body"):body.set("gravcomp","1")
-    if family.family.startswith("orthogonal_gate"):
+    if family.family.startswith("orthogonal_gate") or family.family=="helical_claws_balanced_v2":
         # MuJoCo includes this compensation inside the joint actuator force
         # limiter, rather than adding an unlimited passive drive afterward.
         for joint in root.findall("worldbody//joint"):joint.set("actuatorgravcomp","true")
@@ -114,7 +127,12 @@ def robot_support_contacts(model,data,threshold_n=.01):
     return result
 
 
-def build_plan(family_name, settings_path, output, sample_dt=.05, full=True):
+def build_plan(family_name, settings_path, output, sample_dt=.05, full=False, objective=None):
+    objective=objective or ("separate" if family_name=="helical_claws_balanced_v2" or not full else "disassemble_release")
+    if objective not in ("separate","disassemble_release"):raise ValueError(objective)
+    full=objective=="disassemble_release"
+    if family_name=="helical_claws_balanced_v2" and full:
+        raise ValueError("The balanced helical revision is a separation-only task")
     if family_name=="orthogonal_gate_balanced_v2" and full:
         from .family_balanced_robot import build_plan as build_balanced_plan
         return build_balanced_plan(settings_path,output,sample_dt)
@@ -164,7 +182,11 @@ def build_plan(family_name, settings_path, output, sample_dt=.05, full=True):
             tcps=[s.at(min(1,local/4)) for s in segments]
             schedule.append((duration+float(local),last,"open_and_retreat" if local<4 else "free_settle",False,tcps))
         duration+=9.
-    else:released_at=None
+    else:
+        released_at=None
+        for local in np.arange(sample_dt,1.5+sample_dt/2,sample_dt):
+            schedule.append((duration+float(local),last,"separated_hold",True,None))
+        duration+=1.5
     for t,targets,phase,held,override in schedule:
         previous=k.q.copy()
         for i,(part,p) in enumerate(zip(family.parts,targets)):
@@ -184,9 +206,9 @@ def build_plan(family_name, settings_path, output, sample_dt=.05, full=True):
         invalid=[c for c in cs if c["kind"]!="grasp" and c["depth_m"]>.0001]
         if invalid:bad.append(dict(time_s=float(t),phase=phase,contacts=invalid))
         rows.append(dict(time_s=float(t),phase=phase,q=k.q.tolist(),poses=[p.tolist() for p in targets],held=held))
-    report=dict(family=family_name,scope="complete IK with pregrasp and release" if full else "unlock IK only",sample_dt_s=sample_dt,max_position_error_m=max_p,max_angle_error_rad=max_a,
+    report=dict(family=family_name,objective=objective,scope="complete IK with pregrasp and release" if full else "complete separation IK with pregrasp and final hold",sample_dt_s=sample_dt,max_position_error_m=max_p,max_angle_error_rad=max_a,
                 max_joint_step_rad=max_step,collision_frames=len(bad),collision_failures=bad,passed=not bad)
-    save(output/"plan.json",dict(family=family_name,settings=settings,release_time_s=released_at,duration_s=duration,rows=rows,report=report))
+    save(output/"plan.json",dict(family=family_name,objective=objective,settings=settings,release_time_s=released_at,duration_s=duration,rows=rows,report=report))
     save(output/"report.json",report)
     print(json.dumps({k:v for k,v in report.items() if k!="collision_failures"},indent=2))
     return report
@@ -194,6 +216,8 @@ def build_plan(family_name, settings_path, output, sample_dt=.05, full=True):
 
 def execute(plan_path,output,dt=.0005):
     plan_path=Path(plan_path);plan=json.loads(plan_path.read_text())
+    objective=plan.get("objective","disassemble_release")
+    if objective not in ("separate","disassemble_release"):raise ValueError(objective)
     if not plan["report"]["passed"]:raise ValueError("Plan has unresolved collisions")
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     family=FamilyModel(plan["family"])
@@ -216,12 +240,13 @@ def execute(plan_path,output,dt=.0005):
     for j in range(model.njnt):
         if model.jnt_actgravcomp[j]:external_gravity_mask[model.jnt_dofadr[j]]=0
     grasp_ids=[model.equality(f"grasp_{i}").id for i in range(2)]
-    release_times=np.asarray(plan.get("release_times_s",[plan["release_time_s"]]*2),dtype=float)
+    release_times=np.asarray([np.inf]*2 if objective=="separate" else plan.get("release_times_s",[plan["release_time_s"]]*2),dtype=float)
     times=np.array([r["time_s"] for r in plan["rows"]]);qs=np.array([r["q"] for r in plan["rows"]])
     steps=round(plan["duration_s"]/dt);stride=round(.05/dt)
     frames=[];vframes=[];eframes=[];tframes=[];phase_frames=[];tail=[]
     depths={};witnesses={};max_p=max_a=max_q=0.;torque=np.zeros(model.nv);force=np.zeros(model.nu);total_drive=np.zeros(model.nv)
     saturation=np.zeros(model.nv,dtype=int);max_weld_p=max_weld_a=0.;released=False;tail_robot_support=0
+    tail_separation=float("inf")
     for step in range(steps+1):
         t=float(data.time)
         idx=min(np.searchsorted(times,t,side="right")-1,len(times)-2);idx=max(0,idx)
@@ -256,6 +281,12 @@ def execute(plan_path,output,dt=.0005):
                 speeds.append([float(np.linalg.norm(data.qvel[adr:adr+3])),float(np.linalg.norm(data.qvel[adr+3:adr+6]))])
             tail.append(speeds)
             tail_robot_support+=len(robot_support_contacts(model,data))
+            bounds=[]
+            for i,part in enumerate(family.parts):
+                p=body_pose(data,model.body(f"piece_{i}").id)
+                vertices=part.mesh.vertices@p[:3,:3].T+p[:3,3]
+                bounds.append(np.array([vertices.min(0),vertices.max(0)]))
+            tail_separation=min(tail_separation,float(np.maximum(bounds[0][0]-bounds[1][1],bounds[1][0]-bounds[0][1]).max()))
         if step%stride==0:
             frames.append(data.qpos.copy());vframes.append(data.qvel.copy());eframes.append(data.eq_active.copy());tframes.append(t)
             phase_frames.append(plan["rows"][idx]["phase"])
@@ -280,10 +311,13 @@ def execute(plan_path,output,dt=.0005):
         no_simulator_warning=not warnings,
         no_robot_support_in_final_second=tail_robot_support==0,
         total_drive_within_original_limits=all(total_drive[i]<=limit+1e-6 for i,limit in drive_limits))
+    if objective=="separate":
+        for key in ("released","on_table","no_robot_support_in_final_second"):checks.pop(key)
+        checks["separated"]=bool(gap>.02 and tail_separation>.02)
     np.savez_compressed(output/"states.npz",qpos=np.asarray(frames),qvel=np.asarray(vframes),eq_active=np.asarray(eframes),time_s=tframes,phase=phase_frames)
-    report=dict(family=family.family,passed=all(checks.values()),checks=checks,engine="MuJoCo",engine_version=mujoco.__version__,dt_s=dt,contact_time_constant_s=contact_time(family.family),
-        plan_sha256=sha(plan_path),duration_s=plan["duration_s"],frames=len(frames),fps=20,release_time_s=plan["release_time_s"],release_times_s=release_times.tolist(),
-        pregrasp=True,grasp="ideal gripper-to-part weld until release",robot_gravity_compensation=True,
+    report=dict(family=family.family,objective=objective,passed=all(checks.values()),checks=checks,engine="MuJoCo",engine_version=mujoco.__version__,dt_s=dt,contact_time_constant_s=contact_time(family.family),
+        plan_sha256=sha(plan_path),duration_s=plan["duration_s"],frames=len(frames),fps=20,release_time_s=plan["release_time_s"],release_times_s=[None if np.isinf(t) else float(t) for t in release_times],
+        pregrasp=True,grasp="ideal gripper-to-part weld retained during separated hold" if objective=="separate" else "ideal gripper-to-part weld until release",robot_gravity_compensation=True,
         gravity_compensation_inside_actuator_limits=bool(model.jnt_actgravcomp[:16].all()),
         original_joint_force_limits_retained=True,pose_writes_after_initialization=False,final_active_grasps=data.eq_active[grasp_ids].tolist(),
         max_held_position_error_m=max_p,max_held_rotation_error_rad=max_a,max_joint_error_rad=max_q,
@@ -291,7 +325,7 @@ def execute(plan_path,output,dt=.0005):
         max_contact_depth_m=depths,contact_witnesses=witnesses,peak_generalized_actuator_force=torque.tolist(),peak_actuator_output=force.tolist(),
         peak_actuation_plus_gravity_compensation=total_drive.tolist(),drive_limits=drive_limits,
         final_poses=[p.tolist() for p in final],final_bottom_z_m=bottoms,final_pair_clearance_m=gap,
-        maximum_last_second_speed=speeds.tolist(),warnings=warnings)
+        maximum_last_second_speed=speeds.tolist(),minimum_last_second_aabb_separation_m=tail_separation,warnings=warnings)
     report["final_second_robot_support_contact_samples"]=tail_robot_support
     save(output/"report.json",report)
     print(json.dumps(report,indent=2),flush=True)
@@ -302,6 +336,7 @@ if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--family");p.add_argument("--settings");p.add_argument("--output",required=True)
     p.add_argument("--execute");p.add_argument("--dt",type=float,default=.0005)
+    p.add_argument("--objective",choices=("separate","disassemble_release"))
     args=p.parse_args()
-    result=execute(args.execute,args.output,args.dt) if args.execute else build_plan(args.family,args.settings,args.output)
+    result=execute(args.execute,args.output,args.dt) if args.execute else build_plan(args.family,args.settings,args.output,objective=args.objective)
     if not result["passed"]:raise SystemExit(1)

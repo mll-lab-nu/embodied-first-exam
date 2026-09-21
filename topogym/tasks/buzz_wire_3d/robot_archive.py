@@ -145,6 +145,13 @@ def archive(source, suite, run_id):
         "三路视频来自同一次连续物理执行的完整实测状态；包含夹爪被动关节，重渲染没有新增物理执行。"
     )
     nominal = qualification["reports"]["nominal"]
+    supported = nominal.get("supported_pick_place", False)
+    if supported:
+        scope = (
+            "紧凑 3D Buzz Wire：圆环预先穿在起点立柱上，由木质底座支撑，机械臂初始张爪且与工具分离。"
+            "Panda + Robotiq 2F-85 靠近抓起木柄，通过全部关卡，将木柄放到终点木支撑上，确认接触后松爪退开并静置。"
+            "抓持依靠真实接触摩擦，没有焊接、外力或运行中位姿覆盖。三路视频来自同一次连续物理执行的完整状态重渲染。"
+        )
     geometry = json.loads(
         (source / "source_evidence/assets/geometry_report.json").read_text()
     )
@@ -169,7 +176,8 @@ def archive(source, suite, run_id):
         + links
         + "\n\n[稳定性验收](stability_report.json) · [视频检查](archive_validation.json)\n\n"
         "完整配置、资产、轨迹与运行时源码见 `source_evidence/`、`stability/`，核心证据不依赖原始运行目录。"
-        "机器人以预抓取起点开始；不包含从桌面拾取和初始穿环。\n"
+        + ("包含从木质支撑拾取及终点放稳；圆环初始已穿线，不包含初始穿环。\n" if supported else
+           "机器人以预抓取起点开始；不包含从桌面拾取和初始穿环。\n")
     )
     save(
         metadata / "archive_validation.json",
@@ -193,7 +201,8 @@ def archive(source, suite, run_id):
         robot_present=True,
         source_physics_success=True,
         new_physics_execution=False,
-        pregrasp_start=True,
+        pregrasp_start=nominal["pregrasp_start"],
+        supported_pick_place=supported,
         assisted_grasp=report["assisted_grasp"],
         scope=scope,
         duration_s=report["duration_s"],

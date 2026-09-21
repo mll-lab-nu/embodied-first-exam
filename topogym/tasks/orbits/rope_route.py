@@ -1,7 +1,9 @@
 """Execute a recorded material-point route in a fresh rope-only simulation.
 
 Route completion is separate from puzzle removal. Guards remain active during
-the fresh execution, and newly acquired material points use measured positions.
+the fresh execution. Regrasps normally use measured material-point positions;
+recorded-fixture mode instead replays the archived control commands. Neither
+mode restores object positions, velocities or simulation time.
 """
 import argparse
 import hashlib

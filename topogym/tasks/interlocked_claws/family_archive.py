@@ -23,6 +23,9 @@ def archive(plan,run,fine,bench,fine_bench,output):
     if reports[1]["plan_sha256"]!=sha(plan/"plan.json") or reports[2]["plan_sha256"]!=sha(plan/"plan.json"):
         raise ValueError("Physics did not execute the archived plan")
     original=json.loads((plan/"assets/model.json").read_text())
+    for fixture in (bench,fine_bench):
+        snapshot=json.loads((fixture/"assets/model.json").read_text())
+        if snapshot!=original:raise ValueError("Fixture geometry differs from the robot plan")
     fm=FamilyModel(family)
     for p,s in zip(fm.parts,original["parts"]):
         if p.boxes!=s["boxes"] or not np.array_equal(p.grasp,s["grasp"]):raise ValueError("Current model differs from tested prototype")
@@ -73,8 +76,10 @@ def archive(plan,run,fine,bench,fine_bench,output):
     save(output/"refinement_comparison.json",dict(passed=True,coarse_dt_s=reports[1]["dt_s"],fine_dt_s=reports[2]["dt_s"],final_pose_differences=differences,limits=dict(position_m=.003,rotation_rad=.03)))
     source=output/"implementation";source.mkdir()
     for p in Path(__file__).parent.glob("family_*.py"):shutil.copy2(p,source/p.name)
+    scope=("fixed engineered prototype; pregrasp-assisted complete ALOHA separation and stable held finish"
+           if reports[1].get("objective")=="separate" else "fixed engineered prototype; pregrasp-assisted full ALOHA disassembly, placement, release and settling")
     manifest=dict(version="claw_authored_physical_v1",family=family,qualified=True,
-        scope="fixed engineered prototype; pregrasp-assisted full ALOHA disassembly, placement, release and settling",
+        objective=reports[1].get("objective","disassemble_release"),scope=scope,
         engine="MuJoCo",dataset_generated=False,dataset_eligible=False,random_geometry_qualified=False,
         source_directories=dict(plan=str(plan),execution=str(run),refinement=str(fine),bench=str(bench),bench_refinement=str(fine_bench)),
         videos=video_files,relocated_xml=relocated,files={str(p.relative_to(output)):sha(p) for p in sorted(output.rglob("*")) if p.is_file()})

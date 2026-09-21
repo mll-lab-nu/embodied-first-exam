@@ -3,15 +3,30 @@ from collections import Counter
 from pathlib import Path
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from topogym.tasks.slotted_post_ring.fem import FEMSettings, build_model, signed_volumes
+from topogym.tasks.slotted_post_ring.fem import (FEMSettings, build_model, signed_volumes,
+                                              rounded_bead_sections, apply_bead_mouth_fillet)
+from topogym.tasks.slotted_post_ring.geometry import SlottedPostLayout
 
 
 class VolumetricCordChecks(unittest.TestCase):
+    def test_bead_rounding_preserves_bore_and_rejects_a_stopper_that_fits_the_slot(self):
+        layout = SlottedPostLayout(slot_width_m=.036)
+        z, inner, outer, thickness = rounded_bead_sections(.0195, .0045, .00125)
+        self.assertAlmostEqual(inner[len(z)//2], .0045)
+        self.assertGreater(thickness, layout.slot_width_m+.001)
+        self.assertTrue(np.all(inner <= outer+1e-12))
+        self.assertLessEqual(float(np.max(np.hypot(outer, z))), .0195+1e-12)
+        # A 3 mm fillet loses the stopper's blocking property and must fail
+        # before any mesh assets are written, even though the outer radius fits.
+        with self.assertRaisesRegex(ValueError, 'slot-blocking'):
+            apply_bead_mouth_fillet(ET.Element('mujoco'), layout, .003)
+
     @classmethod
     def setUpClass(cls):
         cls.directory=tempfile.TemporaryDirectory()

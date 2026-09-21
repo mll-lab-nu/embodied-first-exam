@@ -40,8 +40,9 @@ class ContractChecks(unittest.TestCase):
         self.assertFalse(spec["perception"]["object_geometry_provided"])
         for private in ("initial_piece_poses", "inverse_grasp", "reference_scene.json", "recorded_motion", "runs/", "source_manifest"):
             self.assertNotIn(private, json.dumps(spec))
-        self.assertIn("松开", spec["task_goal"])
-        self.assertIn("支架", spec["success_rule"])
+        self.assertEqual(spec["objective"], "separate")
+        self.assertEqual(spec["task_spec_version"], 5)
+        self.assertIn("允许保留辅助抓持", spec["success_rule"])
 
     def test_static_seed_hash_mismatch_is_rejected(self):
         with patch("topogym.tasks.interlocked_claws.agent_adapter.REFERENCE_SHA256", "invalid"):
@@ -94,24 +95,24 @@ class EvaluatorChecks(unittest.TestCase):
     def verdict(self):
         return self.adapter._failure_and_goal(self.contacts)
 
-    def test_both_parts_must_be_released_supported_and_separated(self):
+    def test_separation_succeeds_while_held_without_fixture_support(self):
         self.assertEqual(self.verdict(), (None, True))
         self.adapter.registrations = [(20, 10)]
-        self.assertEqual(self.verdict(), (None, False))
+        self.assertEqual(self.verdict(), (None, True))
         self.adapter.registrations = []
         self.contacts["force"][1] = 0
-        self.assertEqual(self.verdict(), (None, False))
+        self.assertEqual(self.verdict(), (None, True))
         self.contacts["force"][1, 2] = -2
         self.blue.pos[0] = .075  # 15 mm surface/AABB gap is insufficient.
         self.assertEqual(self.verdict(), (None, False))
 
-    def test_table_robot_and_downward_forces_cannot_satisfy_support(self):
+    def test_support_source_does_not_change_separation_objective(self):
         for peer in (30, 20):
             self.contacts["link_a"][0] = peer
-            self.assertEqual(self.verdict(), (None, False))
+            self.assertEqual(self.verdict(), (None, True))
         self.contacts["link_a"][0] = 40
         self.contacts["force"][0, 2] = -2
-        self.assertEqual(self.verdict(), (None, False))
+        self.assertEqual(self.verdict(), (None, True))
 
     def test_triangle_intersection_and_full_containment_fail_without_engine_contacts(self):
         self.blue.pos[0] = .05

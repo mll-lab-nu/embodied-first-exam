@@ -10,11 +10,33 @@ import numpy as np
 
 from topogym.tasks.slotted_post_ring.archive import publication_allowed
 from topogym.tasks.slotted_post_ring.fem import FEMSettings, build_model
-from topogym.tasks.slotted_post_ring.fem_fixture import VolumeAudit, minimum_jerk, execute
+from topogym.tasks.slotted_post_ring.fem_fixture import VolumeAudit, minimum_jerk, execute, rotational_gains
+from scipy.spatial.transform import Rotation
 from topogym.tasks.slotted_post_ring.geometry import SlottedPostLayout
 
 
 class FEMRecordingChecks(unittest.TestCase):
+    def test_bead_orientation_control_converges_at_recording_timestep(self):
+        model = mujoco.MjModel.from_xml_string('''<mujoco>
+          <option timestep=".001" gravity="0 0 0"/>
+          <worldbody><body name="bead_right"><freejoint/>
+            <geom type="sphere" size=".0195" mass=".01843857"/>
+          </body></worldbody></mujoco>''')
+        data = mujoco.MjData(model)
+        target = Rotation.from_rotvec([.3, -.2, .1])
+        kp, kd = rotational_gains(model, 1, 'bead_right')
+        for _ in range(1000):
+            mujoco.mj_forward(model, data)
+            current = Rotation.from_quat(data.xquat[1][[1, 2, 3, 0]])
+            error = (target*current.inv()).as_rotvec()
+            velocity = np.zeros(6)
+            mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY, 1, velocity, 0)
+            data.xfrc_applied[1, 3:] = kp*error-kd*velocity[:3]
+            mujoco.mj_step(model, data)
+        self.assertLess(np.linalg.norm(error), 1e-5)
+        self.assertLess(np.linalg.norm(velocity), 1e-4)
+        self.assertFalse(any(w.number for w in data.warning))
+
     def test_streamed_stages_preserve_simulation_time_and_cannot_publish_a_partial_task(self):
         with tempfile.TemporaryDirectory() as temp, redirect_stdout(io.StringIO()):
             report=execute(Path(temp)/'run',iter([['first',.001,{}],['second',.001,{}]]),

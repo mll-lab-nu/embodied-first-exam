@@ -1,6 +1,8 @@
 schema_version: 1
 task_id: interlocked_claws
 title_zh: 嵌合体脱困
+objective: separate
+success: Completely separate both pieces and hold still for one second; continued grasping is allowed.
 variant_generation:
   version: claw_seed_v1
   config: configs/interlocked_claws_variants.yaml

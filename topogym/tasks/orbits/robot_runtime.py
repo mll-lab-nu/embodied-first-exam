@@ -33,6 +33,7 @@ class RobotRuntime:
         self.metrics = []
         self.events = []
         self.step_count = 0
+        self.joint_integral_gain = 0.
         self.record('initial')
 
     def points(self):
@@ -52,7 +53,17 @@ class RobotRuntime:
         if (waypoints.ndim != 2 or waypoints.shape[1] < 16 or len(waypoints) == 0 or
                 not np.isfinite(waypoints).all() or not np.isfinite(seconds) or seconds <= 0):
             raise ValueError('Joint path requires finite waypoints and positive duration')
-        controls = np.vstack([self.data.ctrl, waypoints[:, self.actuated_q]])
+        integral_gain = float(getattr(self, 'joint_integral_gain', 0.))
+        if not np.isfinite(integral_gain) or integral_gain < 0:
+            raise ValueError('Joint integral gain must be finite and nonnegative')
+        arm = np.flatnonzero(~np.isin(self.actuated_q, [6, 7, 14, 15]))
+        start = self.data.ctrl.copy()
+        correction = np.zeros(self.model.nu)
+        if integral_gain:
+            actual = self.data.qpos[self.actuated_q]
+            correction[arm] = np.clip(start[arm]-actual[arm], -.03, .03)
+            start[arm] = actual[arm]
+        controls = np.vstack([start, waypoints[:, self.actuated_q]])
         target = controls[-1]
         steps = round(seconds / self.model.opt.timestep)
         if steps < 1:
@@ -66,7 +77,16 @@ class RobotRuntime:
             progress = u*u*(3-2*u)*(len(controls)-1)
             segment = min(int(progress), len(controls)-2)
             weight = progress-segment
-            self.data.ctrl[:] = (1-weight)*controls[segment]+weight*controls[segment+1]
+            desired = (1-weight)*controls[segment]+weight*controls[segment+1]
+            if integral_gain:
+                correction[arm] += integral_gain*self.model.opt.timestep*(
+                    desired[arm]-self.data.qpos[self.actuated_q[arm]])
+                correction[arm] = np.clip(correction[arm], -.03, .03)
+                self.data.ctrl[:] = np.clip(desired+correction,
+                                           self.model.actuator_ctrlrange[:, 0],
+                                           self.model.actuator_ctrlrange[:, 1])
+            else:
+                self.data.ctrl[:] = desired
             mujoco.mj_step(self.model, self.data)
             self.step_count += 1
             if self.step_count % 10 == 0:
@@ -85,6 +105,7 @@ class RobotRuntime:
             if self.step_count % 50 == 0:
                 self.record(phase)
         metric = dict(phase=phase, time_s=float(self.data.time),
+                      joint_integral_gain=integral_gain,
                       max_penetration_m=depth, robot_contact_pairs=sorted(pairs),
                       max_actuated_joint_error=float(np.max(np.abs(
                           self.data.qpos[self.actuated_q]-target))))
@@ -105,7 +126,10 @@ class RobotRuntime:
         # Preserve commanded squeezing force while changing the arm pose.
         q[[6, 7]] = self.data.ctrl[6]
         q[[14, 15]] = self.data.ctrl[13]
-        return q, self.checker.violations(q)
+        envelope = q.copy()
+        envelope[[6, 7, 14, 15]] = np.maximum(
+            envelope[[6, 7, 14, 15]], self.data.qpos[[6, 7, 14, 15]])
+        return q, self.checker.violations(envelope)
 
     def grasp_contacts(self, side, target, *, node=None):
         """Opposing finger contacts at the requested material point.
@@ -187,6 +211,7 @@ class RobotRuntime:
         np.savez_compressed(path, integration_state=state, state_spec=int(spec),
                             eq_obj2id=self.model.eq_obj2id,
                             site_pos=self.model.site_pos, step_count=self.step_count,
+                            joint_integral_gain=float(getattr(self, 'joint_integral_gain', 0.)),
                             mujoco_version=mujoco.__version__,
                             model_xml_sha256=hashlib.sha256(
                                 (self.folder/'model.xml').read_bytes()).hexdigest())
@@ -207,6 +232,7 @@ class RobotRuntime:
             self.model.site_pos[:] = saved['site_pos']
             mujoco.mj_setState(self.model, self.data, state, spec)
             self.step_count = int(saved['step_count'])
+            self.joint_integral_gain = float(saved['joint_integral_gain']) if 'joint_integral_gain' in saved else 0.
         mujoco.mj_forward(self.model, self.data)
         # Forward recomputes acceleration; preserve the saved warm start too.
         mujoco.mj_setState(self.model, self.data, state, spec)

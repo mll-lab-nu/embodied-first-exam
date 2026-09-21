@@ -50,7 +50,7 @@ class ClawsAdapter(AlohaRigidAdapter):
         super().__init__(task, cfg, ctrl, folder, description=describe_task(cfg),
             grasp_candidates=("claw_0", "claw_1"),
             initial_grasps=(("left", "claw_0"), ("right", "claw_1")),
-            stable_duration=1., success_reason="Claws separated, released and supported on fixtures for 1 s (pilot)")
+            stable_duration=1., success_reason="Claws completely separated and held still for 1 s (pilot v2)")
 
     def _failure_and_goal(self, contacts):
         a, b, pen, force = (contacts[k] for k in ("link_a", "link_b", "penetration", "force"))
@@ -69,8 +69,7 @@ class ClawsAdapter(AlohaRigidAdapter):
             if np.linalg.norm(p-pos) > 1e-6 or min(np.linalg.norm(q-quat), np.linalg.norm(q+quat)) > 1e-6:
                 return "Fixed support fixture moved", False
 
-        poses, bounds, quiet, supported = [], [], True, True
-        norms = np.linalg.norm(force, axis=-1)
+        poses, bounds, quiet = [], [], True
         for name, mesh in zip(("claw_0", "claw_1"), self.meshes):
             body = self.task.bodies[name]
             pos, quat, vel, ang = (array(getattr(body, "get_"+k)()) for k in ("pos", "quat", "vel", "ang"))
@@ -85,12 +84,6 @@ class ClawsAdapter(AlohaRigidAdapter):
             poses.append(pose)
             bounds.append(np.array([vertices.min(0), vertices.max(0)]))
             quiet &= np.linalg.norm(vel) < .005 and np.linalg.norm(ang) < .05
-            link = body.base_link_idx
-            on_fixture = ((a == link) & np.isin(b, list(self.fixtures))) | ((b == link) & np.isin(a, list(self.fixtures)))
-            # Genesis force acts on link_b; magnitudes would accept downward loads.
-            up_force = np.sum(force[on_fixture, 2]*np.where(b[on_fixture] == link, 1., -1.))
-            other = ((a == link) | (b == link)) & ~on_fixture
-            supported &= up_force > .1 and not np.any(norms[other] > .001)
 
         gap = self.collision.clearance(poses)
         if not np.isfinite(gap):
@@ -109,7 +102,7 @@ class ClawsAdapter(AlohaRigidAdapter):
                 if self.meshes[j].contains([local])[0]:
                     return "One puzzle piece is fully contained in the other", False
         separation = np.maximum(bounds[0][0]-bounds[1][1], bounds[1][0]-bounds[0][1]).max()
-        return None, bool(separation > .02 and quiet and supported and not self.registrations)
+        return None, bool(separation > .02 and quiet)
 
 
 def create(asset_dir, *, backend="cpu", renderer="rasterizer", resolution=(640, 360)):

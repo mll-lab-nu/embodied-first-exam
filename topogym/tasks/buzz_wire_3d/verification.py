@@ -23,8 +23,13 @@ class ClearanceOracle:
         self.wire, self.spacing = wire, spacing
         self.fixed = {
             r: cKDTree(p)
-            for r, p in sample_capsules(wire.fixed_capsules(), spacing).items()
+            for r, p in sample_capsules([
+                row for row in wire.fixed_capsules()
+                if not (row[3] == "stop" and wire.layout.end_stop_shape == "block_mount")
+            ], spacing).items()
         }
+        from .supports import fixture_boxes
+        self.boxes = fixture_boxes(wire)
         self.tool = sample_capsules(wire.layout.tool_capsules(), spacing)
         self.radius = max(
             np.linalg.norm(p, axis=1).max() + r for r, p in self.tool.items()
@@ -49,13 +54,11 @@ class ClearanceOracle:
                     tree.query(world)[0].min() - radius - fixed_radius - self.spacing
                 )
                 minimum = min(minimum, float(distance))
-            delta = np.maximum(
-                np.maximum(self.box_low - world, world - self.box_high), 0.0
-            )
-            minimum = min(
-                minimum,
-                float(np.linalg.norm(delta, axis=1).min() - radius - self.spacing / 2),
-            )
+            for centre, size, rot, _ in self.boxes:
+                local = rot.inv().apply(world - centre)
+                delta = np.maximum(abs(local) - size / 2, 0.0)
+                minimum = min(minimum, float(np.linalg.norm(delta, axis=1).min()
+                                            - radius - self.spacing / 2))
         return minimum
 
 

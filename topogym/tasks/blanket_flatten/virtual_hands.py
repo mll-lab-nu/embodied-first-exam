@@ -35,6 +35,50 @@ def bounded_grip_velocity(current, target, dt, maximum_speed):
     return velocity*scale
 
 
+def upright_grip_targets(point_groups, target_span, center_z, fraction):
+    """Turn a two-ended bundle upright while each held patch stays rigid."""
+    if len(point_groups) != 2 or not 0 <= fraction <= 1:
+        raise ValueError('Uprighting requires two grips and a fraction in [0, 1]')
+    centers = [p.mean(axis=0) for p in point_groups]
+    midpoint = np.mean(centers, axis=0)
+    span = np.linalg.norm(centers[1]-centers[0])
+    if span <= 1e-6 or target_span <= 0:
+        raise ValueError('Grip span must be positive')
+    destination = midpoint.copy()
+    destination[2] = center_z
+    scale = 1+fraction*(target_span/span-1)
+    return [rotate_vectors(p-c+(c-midpoint)*scale, [0., 1., 0.], fraction*np.pi/2)
+            +midpoint+(destination-midpoint)*fraction for p, c in zip(point_groups, centers)]
+
+
+def corner_material_rotation(offsets, material_uv):
+    """Fit a rigid wrist turn: material u points down, material v points +y."""
+    uv = material_uv-material_uv.mean(axis=0)
+    if np.linalg.matrix_rank(uv) < 2:
+        raise ValueError('Corner material patch must span two dimensions')
+    target = np.column_stack((np.zeros(len(uv)), uv[:, 1], -uv[:, 0]))
+    left, _, right = np.linalg.svd(offsets.T@target)
+    correction = np.eye(3)
+    correction[-1, -1] = np.linalg.det(right.T@left.T)
+    rotation = right.T@correction@left.T
+    rms = float(np.sqrt(np.mean(np.sum((offsets@rotation.T-target)**2, axis=1))))
+    return rotation, rms
+
+
+def edge_following_lay_targets(offsets, held_y, free_edge_center, material_span,
+                               start_z, landing_z, fraction):
+    """Lower first, then lay along the observed free edge without feeding slack."""
+    if material_span <= 0 or not 0 <= fraction <= 1 or landing_z > start_z:
+        raise ValueError('Invalid laying span, height or progress')
+    height = landing_z+(start_z-landing_z)*np.cos(fraction*np.pi/2)
+    dz = height-free_edge_center[2]
+    reach = np.sqrt(max(0., material_span**2-dz**2))
+    angle = np.arctan2(reach, max(dz, 1e-9))
+    return [rotate_vectors(o, [0., 1., 0.], -angle)+
+            np.array([free_edge_center[0]-reach, y, height])
+            for o, y in zip(offsets, held_y, strict=True)]
+
+
 class VirtualHands:
     def __init__(self, task, cfg, output, restoration):
         self.task, self.cfg, self.output = task, cfg, Path(output)
@@ -199,15 +243,24 @@ class VirtualHands:
                    for o, c, angle in zip(offsets, raised_centers, angles)], float(cfg.untwist_seconds))
         handoff_in_air = bool(cfg.get('handoff_in_air', False))
         if handoff_in_air:
+            upright = bool(cfg.get('upright_before_release', False))
+            if upright:
+                p = probe_particles(self.task.cloth)
+                patches = [p[g['indices']].copy() for g in self.grips]
+                material_span = abs(np.diff([uv[g['indices'], 0].mean() for g in self.grips])[0])
+                self.drive('rotate_bundle_upright_with_two_grips',
+                           lambda t: upright_grip_targets(patches, .985*material_span,
+                                                        self.table_z+length/2+.11, t),
+                           float(cfg.upright_seconds), hold=1.)
             self.release_one(1)
             p = probe_particles(self.task.cloth)
             indices = self.grips[0]['indices']
             c = p[indices].mean(axis=0)
             o = p[indices]-c
             goal = c.copy()
-            goal[2] = self.table_z+length+.07
+            goal[2] = max(c[2], self.table_z+length+.07)
             self.drive('suspend_with_one_end_band', lambda t: [o+c+(goal-c)*t],
-                       float(cfg.suspend_seconds), hold=1.)
+                       1.5 if upright else float(cfg.suspend_seconds), hold=1.)
             if probe_particles(self.task.cloth)[:, 2].min() < self.table_z+.02:
                 raise RuntimeError('Whole strip did not clear the table before corner handoff')
             # Release the broad end band before acquiring the two corner patches;
@@ -235,17 +288,52 @@ class VirtualHands:
         suspended = [np.array([c[0], c[1], self.table_z+length+.05]) for c in centers]
         self.drive('suspend_folded_sheet_vertically', lambda t: [o+c+(goal-c)*t for o, c, goal in zip(offsets, centers, suspended)],
                    1. if handoff_in_air else float(cfg.suspend_seconds), hold=.8)
+        coupled_alignment = False
+        opening_offsets = lambda t: offsets
+        peel = 0.
+        if bool(cfg.get('align_corner_grips', False)):
+            from scipy.spatial.transform import Rotation
+            turns, errors = zip(*(corner_material_rotation(o, uv[i]) for o, i in zip(offsets, groups)))
+            vectors = [Rotation.from_matrix(r).as_rotvec() for r in turns]
+            angles = [np.linalg.norm(v) for v in vectors]
+            axes = [v/a if a > 1e-9 else np.array([1.,0.,0.]) for v, a in zip(vectors, angles)]
+            self.label('corner_orientation_plan', rotation_vectors_deg=np.degrees(vectors).tolist(),
+                       material_frame_fit_rms_m=list(errors))
+            peel = float(cfg.get('opening_peel_m', 0.))
+            coupled_alignment = bool(cfg.get('align_while_opening', False))
+            if coupled_alignment:
+                opening_offsets = lambda t: [rotate_vectors(o, axis, angle*t) for o, axis, angle in zip(offsets, axes, angles)]
+            else:
+                self.drive('align_corner_grips_for_unfolding', lambda t: [rotate_vectors(o, axis, angle*t)+c+
+                           [peel*np.sin(np.pi*t), 0, 0] for o, c, axis, angle in zip(offsets, suspended, axes, angles)],
+                           float(cfg.alignment_seconds), hold=.5)
+                offsets = [o@r.T for o, r in zip(offsets, turns)]
         opened = [np.array([np.mean(centers, axis=0)[0], center_xy[1]+.99*uv[indices, 1].mean(), self.table_z+length+.05])
                   for indices in groups]
-        self.drive('open_suspended_folded_width', lambda t: [o+c+(goal-c)*t for o, c, goal in zip(offsets, suspended, opened)],
+        self.drive('open_suspended_folded_width', lambda t: [o+c+(goal-c)*t+
+                   [peel*np.sin(np.pi*t) if coupled_alignment else 0., 0, 0]
+                   for o, c, goal in zip(opening_offsets(t), suspended, opened)],
                    float(cfg.open_seconds), hold=.8)
+        if coupled_alignment:
+            offsets = [o@r.T for o, r in zip(offsets, turns)]
         raised = [np.array([far_x, c[1], c[2]]) for c in opened]
         self.drive('move_open_sheet_above_landing_edge', lambda t: [o+c+(goal-c)*t for o, c, goal in zip(offsets, opened, raised)],
                    4., hold=.4)
         landing_height = float(cfg.get('landing_grip_height_m', .02))
-        self.drive('lay_open_sheet_on_table', lambda t: [o+np.array([far_x-lay_length*np.sin(t*np.pi/2),
-                   goal[1], self.table_z+landing_height+(length+.05-landing_height)*np.cos(t*np.pi/2)]) for o, goal in zip(offsets, raised)],
-                   float(cfg.lay_seconds), hold=.5)
+        lay_rotation = np.radians(float(cfg.get('corner_lay_rotation_deg', 0.)))
+        if bool(cfg.get('lay_track_free_edge', False)):
+            free_edge = np.flatnonzero(uv[:, 0] >= length/2-.01)
+            span = float(cfg.landing_span_fraction)*(uv[free_edge, 0].mean()-
+                   np.mean([uv[g['indices'], 0].mean() for g in self.grips]))
+            self.label('edge_following_lay_plan', free_edge_particles=free_edge.tolist(),
+                       material_span_m=float(span), selection='observed material edge; position feedback only')
+            self.drive('lay_open_sheet_on_table', lambda t: edge_following_lay_targets(
+                offsets, [c[1] for c in raised], probe_particles(self.task.cloth)[free_edge].mean(axis=0),
+                span, raised[0][2], self.table_z+landing_height, t), float(cfg.lay_seconds), hold=.5)
+        else:
+            self.drive('lay_open_sheet_on_table', lambda t: [rotate_vectors(o, [0., 1., 0.], lay_rotation*t)+np.array([far_x-lay_length*np.sin(t*np.pi/2),
+                       goal[1], self.table_z+landing_height+(length+.05-landing_height)*np.cos(t*np.pi/2)]) for o, goal in zip(offsets, raised)],
+                       float(cfg.lay_seconds), hold=.5)
         self.release()
 
     def save(self, success, error, evidence):

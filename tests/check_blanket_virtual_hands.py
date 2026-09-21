@@ -4,10 +4,50 @@ import unittest
 
 import numpy as np
 
-from topogym.tasks.blanket_flatten.virtual_hands import VirtualHands, bounded_grip_velocity, corner_patch
+from topogym.tasks.blanket_flatten.virtual_hands import VirtualHands, bounded_grip_velocity, corner_patch, upright_grip_targets, corner_material_rotation, edge_following_lay_targets
 
 
 class VirtualHandChecks(unittest.TestCase):
+    def test_laying_tracks_sliding_free_edge_without_exceeding_material_span(self):
+        offsets = [np.array([[0.,-.003,0.],[0.,.003,0.]])]*2
+        pivot = np.array([.35, 0., .002])
+        initial = edge_following_lay_targets(offsets, [-.23,.23], pivot, .58, .65, .015, 0.)
+        self.assertTrue(all(np.allclose(p.mean(axis=0)[[0,2]], [.35,.65]) for p in initial))
+        for t in [.5, .75, 1.]:
+            a = edge_following_lay_targets(offsets, [-.23,.23], pivot, .58, .65, .015, t)
+            b = edge_following_lay_targets(offsets, [-.23,.23], pivot+[.1,0,0], .58, .65, .015, t)
+            for before, after in zip(a,b):
+                self.assertTrue(np.allclose(after-before, [.1,0,0]))
+                self.assertAlmostEqual(np.linalg.norm(before.mean(axis=0)[[0,2]]-pivot[[0,2]]), .58)
+                self.assertAlmostEqual(np.linalg.norm(before[1]-before[0]), .006)
+
+    def test_corner_alignment_corrects_reversed_material_direction_without_reflection(self):
+        from scipy.spatial.transform import Rotation
+        uv = np.array([[0.,0.],[.004,0.],[0.,.004],[.003,.003]])
+        uv -= uv.mean(axis=0)
+        upright = np.c_[np.zeros(len(uv)),uv[:,1],-uv[:,0]]
+        folded = upright@Rotation.from_rotvec([.2,-.6,2.7]).as_matrix().T
+        rotation, error = corner_material_rotation(folded, uv)
+        self.assertLess(error, 1e-12)
+        self.assertAlmostEqual(np.linalg.det(rotation), 1.)
+        self.assertTrue(np.allclose(folded@rotation.T, upright))
+        with self.assertRaises(ValueError):
+            corner_material_rotation(folded, np.zeros_like(uv))
+
+    def test_uprighting_preserves_patch_geometry_and_sets_supported_vertical_span(self):
+        patch = np.array([[0.,-.03,0.],[.01,0.,.002],[0.,.03,0.]])
+        groups = [patch+[-.27,0.,1.2],patch+[.27,0.,1.2]]
+        initial = upright_grip_targets(groups, .57, 1.4, 0.)
+        self.assertTrue(all(np.allclose(a,b) for a,b in zip(initial,groups)))
+        final = upright_grip_targets(groups, .57, 1.4, 1.)
+        centers = np.array([p.mean(axis=0) for p in final])
+        self.assertAlmostEqual(centers[0,2]-centers[1,2], .57)
+        self.assertAlmostEqual(centers[:,2].mean(), 1.4)
+        self.assertAlmostEqual(centers[0,0], centers[1,0])
+        for before, after in zip(groups, final):
+            self.assertTrue(np.allclose(np.linalg.norm(before[:,None]-before,axis=2),
+                                        np.linalg.norm(after[:,None]-after,axis=2)))
+
     def test_velocity_limit_preserves_joint_motion_direction(self):
         p = np.array([[0., 0., 0.], [.02, 0., 0.]])
         target = p+np.array([[1., 2., 3.], [-2., 1., 0.]])

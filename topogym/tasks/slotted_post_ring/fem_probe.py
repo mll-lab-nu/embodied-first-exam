@@ -141,6 +141,7 @@ def main():
     p.add_argument('--segment',type=float,default=FEMSettings.segment_m)
     p.add_argument('--radial-segments',type=int,default=FEMSettings.radial_segments)
     p.add_argument('--young',type=float,default=FEMSettings.young_pa)
+    p.add_argument('--bead-mouth-fillet',type=float,default=0.)
     p.add_argument('--poisson',type=float,default=FEMSettings.poisson)
     p.add_argument('--rayleigh',type=float,default=FEMSettings.rayleigh_s)
     p.add_argument('--mass-damping',type=float,default=FEMSettings.mass_damping_rate_s_inv)
@@ -150,7 +151,7 @@ def main():
     p.add_argument('--contact-time',type=float,default=FEMSettings.contact_time_s)
     a=p.parse_args()
     report=settle(a.output,FEMSettings(dt=a.dt,integrator=a.integrator,segment_m=a.segment,radial_segments=a.radial_segments,
-        young_pa=a.young,poisson=a.poisson,rayleigh_s=a.rayleigh,
+        young_pa=a.young,poisson=a.poisson,rayleigh_s=a.rayleigh,bead_mouth_fillet_m=a.bead_mouth_fillet,
         mass_damping_rate_s_inv=a.mass_damping,solver_tolerance=a.solver_tolerance,
         solver_iterations=a.solver_iterations,contact_time_s=a.contact_time),a.seconds,
         SlottedPostLayout(slot_width_m=a.slot_width))

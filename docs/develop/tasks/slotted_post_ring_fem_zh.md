@@ -4,9 +4,15 @@
 
 新入口是 [`fem_probe.py`](../../../topogym/tasks/slotted_post_ring/fem_probe.py)，模型由 [`fem.py`](../../../topogym/tasks/slotted_post_ring/fem.py) 构造。绳体换为 3D 四面体 FEM，移除全部绳段长度等式约束；珠子、木环、圆片、长槽和基座沿用原先几何。两端只保留绳中心节点到圆片绳结锚点的双向位置连接，允许相对转动。该连接仍是绳结的近似，不是实体绳结。
 
-按最新目录约定，历史和实验录像均放入 `runs/environment_bootstrap/slotted_post_ring/`；`demos/slotted_post_ring/` 只保留一版通过完整流程检查的三视角录像。归档器默认写入开发目录，显式 `--publish` 也必须通过完整流程资格检查。迁移工具会核对哈希、完整解码并更新引用，保留配套证据。
+按最新目录约定，历史和实验录像均放入 `runs/environment_bootstrap/slotted_post_ring/`；`demos/slotted_post_ring/varaition_<id>/` 每个变体只保留最新正式完整流程的独立 MP4。当前 `varaition_clearance36` 的三路仍为旧一维绳外力完整流程，新 FEM 局部试验不替换它。归档器默认写入开发目录，显式 `--publish --variation clearance36` 也必须通过完整流程资格检查。迁移工具会核对哈希、完整解码并更新引用，保留配套证据。
 
 ## 当前结果：材料接入完成，落稳未通过
+
+本轮 FEM 完整流程开发尚未获得最终通过状态。新增连续外力执行器支持逐阶段交互输入，同一个物理状态跨阶段保留，不以检查点拼接完整录像。当前 36 mm 槽宽试验使用 E = 500 kPa、1 ms `discrete` 步长、3 ms Rayleigh 阻尼和 1000 次 Newton/有效矩阵迭代预算；这些是候选参数，尚未取得完整流程的半步长复验或材料标定资格。
+
+可查看本轮同一次执行的 [19.8 秒正面](../../../runs/environment_bootstrap/slotted_post_ring/fem_full_20260921/progress_two_discs_v6/recording/front_oblique.mp4)、[背面](../../../runs/environment_bootstrap/slotted_post_ring/fem_full_20260921/progress_two_discs_v6/recording/rear_oblique.mp4)、[俯视](../../../runs/environment_bootstrap/slotted_post_ring/fem_full_20260921/progress_two_discs_v6/recording/topdown.mp4)：仅覆盖前半段，396 帧、20 fps，三路完整解码与同步检查通过。独立录制帧复核的最小体积比为 0.7676；这不替代每个积分步的审计，也不表示完整解环成功。
+
+急弯诊断分别检查了圆片绳端、珠孔姿态、双端托举及珠子后移。珠子姿态控制使用按其转动惯量设置的阻尼，不能直接使用圆片的角速度阻尼。另提供默认关闭的 `--bead-mouth-fillet .00125` 圆角候选：中心孔径不变，最小轴向厚度 37.141 mm；不足以阻挡长槽的圆角尺寸会被构建器拒绝。圆角试验改变了几何，不能继承原孔口运行的验证结果；当前正式视频未采用该候选。
 
 22 项材料与回归测试通过。Newton 版主步长和半步长均完成 6 秒独立重力运行，接触、体积、绳端、应变及每步求解器收敛检查通过；**两次落稳速度检查均未通过**，因此尚未提升稳定性或完整解环资格。
 

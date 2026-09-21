@@ -32,6 +32,7 @@ class FEMSettings:
     contact_time_s: float = .0003
     solver_tolerance: float = 1e-10
     solver_iterations: int = 100
+    bead_mouth_fillet_m: float = 0.
 
     def validate(self):
         if self.integrator not in ('Euler', 'discrete'):
@@ -51,7 +52,52 @@ class FEMSettings:
             raise ValueError('Nonnegative finite mass-proportional damping required')
         if not np.isfinite(self.friction) or self.friction < 0:
             raise ValueError('Nonnegative finite friction required')
+        if not np.isfinite(self.bead_mouth_fillet_m) or self.bead_mouth_fillet_m < 0:
+            raise ValueError('Nonnegative finite bead mouth fillet required')
         return self
+
+
+def rounded_bead_sections(radius, hole, fillet):
+    """C1 circular mouth fillet, tangent to the central bore and outer sphere.
+
+    The central bore stays unchanged. The removed lip material reduces the
+    bead's axial thickness, which must still block the task's post slot.
+    """
+    if not 0 < fillet < (radius-hole)/2:
+        raise ValueError('Fillet must fit between the bore and sphere')
+    rc = hole+fillet
+    zc = np.sqrt((radius-fillet)**2-rc**2)
+    zmax = zc+fillet
+    tangent = zc*radius/(radius-fillet)
+    positive = np.unique(np.r_[np.linspace(0, zc, 15), tangent,
+                                zc+fillet*np.sin(np.linspace(0, np.pi/2, 25))])
+    z = np.r_[-positive[:0:-1], positive]
+    arc = np.sqrt(np.maximum(0, fillet**2-(abs(z)-zc)**2))
+    inner = np.where(abs(z) <= zc, hole, rc-arc)
+    outer = np.where(abs(z) <= tangent, np.sqrt(radius**2-z*z), rc+arc)
+    return z, inner, outer, float(2*zmax)
+
+
+def apply_bead_mouth_fillet(root, layout, fillet):
+    import trimesh
+    z, inner, outer, thickness = rounded_bead_sections(
+        layout.bead_radius_m, layout.bead_hole_radius_m, fillet)
+    # Both contact surfaces may penetrate by the acceptance tolerance. The
+    # rounded stopper must retain a positive blocking margin even then.
+    if thickness-layout.slot_width_m <= .001:
+        raise ValueError('Rounded bead would lose its slot-blocking clearance')
+    for side in ('left', 'right'):
+        for k in range(16):
+            angles = np.linspace(k*2*np.pi/16, (k+1)*2*np.pi/16, 3)
+            cloud = np.concatenate([np.column_stack([rho*np.cos(a), rho*np.sin(a), z])
+                                    for a in angles for rho in (inner, outer)])
+            mesh = trimesh.convex.convex_hull(cloud)
+            asset = root.find(f"asset/mesh[@name='bead_{side}_wedge_{k}']")
+            asset.set('vertex', values(mesh.vertices)); asset.set('face', values(mesh.faces))
+    return dict(fillet_radius_m=fillet, central_bore_diameter_m=2*layout.bead_hole_radius_m,
+                minimum_axial_thickness_m=thickness,
+                slot_blocking_margin_m=thickness-layout.slot_width_m,
+                geometry_changed=True, physical_dimensions_measured=False)
 
 
 def signed_volumes(vertices, elements):
@@ -152,6 +198,8 @@ def build_model(output, settings=FEMSettings(), layout=SlottedPostLayout(), robo
         friction=settings.friction,contact_time_s=settings.contact_time_s), layout=layout, robot=robot)
     tree = ET.parse(output/'scene.xml')
     root = tree.getroot(); root.set('model', 'slotted_post_ring_volumetric_fem_v1')
+    if settings.bead_mouth_fillet_m:
+        spec['bead_mouth_geometry'] = apply_bead_mouth_fillet(root, layout, settings.bead_mouth_fillet_m)
     root.find('option').set('integrator', settings.integrator)
     # CG exhausted 100 iterations on every late contact step; Newton converges
     # on the same observed states in 9--26 iterations.
