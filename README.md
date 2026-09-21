@@ -23,8 +23,9 @@ harbor run -p tasks -i 'robosuite-*' -a claude-code -m anthropic/claude-sonnet-5
 harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git@v0.1.0 -a oracle
 harbor view jobs
 ```
-Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the current tasks need no GPU, so
-the default local Docker sandbox works (Modal too). Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
+Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`). The robosuite tasks need no GPU, so the
+default local Docker sandbox works (Modal too); RoboTwin tasks need an NVIDIA GPU (CuRobo + Vulkan) and pass it
+through with `environment/docker-compose.yaml` (nvidia-container-toolkit on the host). Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
 ## Layout
 
@@ -35,10 +36,11 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
     ├── environment/  Dockerfile (FROM base image), instance.npz (frozen scene), rcb_traj.py (agent tooling)
     ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
     └── solution/     solve.sh (oracle)
+└── robotwin_2_0_stack_blocks_two/  # RoboTwin 2.0 (SAPIEN + CuRobo, ALOHA dual arm): same shape, + docker-compose.yaml (GPU)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, dataset manifest
 docs/PROTOCOL.md TAXONOMY.md    # the contract and the metadata vocabulary
-third_party/cap-x               # submodule used by images/robosuite
+third_party/cap-x, RoboTwin     # submodules used by images/robosuite and images/robotwin
 CONTRIBUTING.md AGENTS.md       # how to add a task; map for coding agents
 ```
 
@@ -49,6 +51,13 @@ the frozen state as often as it likes, record `(T, 9)` joint-target + gripper ac
 save `/app/output/trajectory.npz`. `tests/grade.py` restores the same state in a fresh process, replays twice
 and passes iff the stack predicate holds and both final-state hashes agree. Verified: oracle 1, nop 0.
 
+## RoboTwin 2.0 tasks (`robotwin_2_0_<task>`)
+RoboTwin's task envs (`/opt/RoboTwin/envs/<task>.py`) keep their scene definition and `check_success`; the expert
+`play_once` is scrubbed from the image. The agent drives RoboTwin's own primitives (`env.grasp_actor`,
+`env.place_actor`, `env.move`, …); `rcb_traj.py` hooks every `scene.step()` and records the (T, 34) drive-target
+rows, which the verifier replays from the scene rebuilt from the RoboTwin seed (initial-state hash checked).
+Verified: oracle 1, nop 0, replay bit-exact across processes.
+
 ## Status
-v0.1 (2026-09): one example task. Next: more instances/families (robosuite), LIBERO-PRO, BEHAVIOR,
-`perception` tier, `policy` task type; then factor shared tooling into kits.
+v0.1 (2026-09): one robosuite example task + one RoboTwin 2.0 task. Next: more instances/families, LIBERO-PRO,
+BEHAVIOR, `perception` tier, `policy` task type; then factor shared tooling into kits.
