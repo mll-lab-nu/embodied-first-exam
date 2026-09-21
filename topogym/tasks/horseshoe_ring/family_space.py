@@ -77,7 +77,7 @@ def build():
         raise ValueError('This exporter requires three distinct families and three appearances')
     OUTPUT.mkdir(parents=True,exist_ok=True)
     shutil.copyfile(SPEC,OUTPUT/'plan.json')
-    shutil.copyfile(ROOT/'docs/develop/tasks/horseshoe_ring_family_space_zh.md',OUTPUT/'README.md')
+    shutil.copyfile(ROOT/'docs/develop/tasks/horseshoe_ring_zh.md',OUTPUT/'README.md')
     seeds={};routes={};pairs=[];rows=[]
     phases=[('right_support_transfer','双臂交接支撑','左臂换抓圆环',1),
             ('left_ring_transfer','左臂换抓圆环','调整圆环并脱出',0)]

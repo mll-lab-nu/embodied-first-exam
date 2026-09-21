@@ -1,4 +1,6 @@
 """Independently retain a verified three-view blanket robot demonstration."""
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -108,7 +110,7 @@ def main():
     now = datetime.now(timezone.utc)
     prefix = f'{now:%Y-%m-%d}_{args.run_id}'
     metadata = ROOT/'runs/demo_metadata/blanket_flatten'/prefix
-    videos = ROOT/'demos/blanket_flatten'
+    videos = demo_video_root(ROOT, "blanket_flatten", cfg.task.variant)
     if metadata.exists():
         raise FileExistsError(metadata)
     videos.mkdir(parents=True, exist_ok=True)

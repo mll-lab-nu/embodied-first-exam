@@ -17,15 +17,25 @@ import numpy as np
 CAMERAS = {
     "overview": dict(lookat=[.10, 0., .15], distance=.92, azimuth=115., elevation=-30.),
     "front": dict(lookat=[.035, 0., .16], distance=.79, azimuth=90., elevation=-12.),
-    "side": dict(lookat=[.035, 0., .16], distance=.81, azimuth=155., elevation=-23.),
+    "side": dict(lookat=[.13, 0., .16], distance=1.0, azimuth=155., elevation=-26.),
     "top": dict(lookat=[.10, 0., .12], distance=.90, azimuth=90., elevation=-89.),
 }
 
+FULL_CAMERAS = {
+    "overview": dict(lookat=[.21, 0., .15], distance=1.10, azimuth=115., elevation=-30.),
+    "front": dict(lookat=[.21, 0., .16], distance=.95, azimuth=90., elevation=-16.),
+    "side": dict(lookat=[.24, 0., .16], distance=1.20, azimuth=155., elevation=-30.),
+    "top": dict(lookat=[.21, 0., .12], distance=1.05, azimuth=90., elevation=-89.),
+}
 
-def render(folder, *, stride=2):
+
+def render(folder, *, stride=2, camera_profile="local"):
     folder = Path(folder)
     if stride < 1:
         raise ValueError("stride must be positive")
+    if camera_profile not in ("local", "full"):
+        raise ValueError("Unknown camera profile")
+    settings_by_camera = FULL_CAMERAS if camera_profile == "full" else CAMERAS
     path = folder / "probe_trajectory.npz"
     with np.load(path) as saved:
         time = saved["time_s"]
@@ -49,15 +59,16 @@ def render(folder, *, stride=2):
                   source_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                   model_sha256=hashlib.sha256((folder / "model.xml").read_bytes()).hexdigest(),
                   simulation_start_s=float(time[0]), simulation_end_s=float(time[-1]),
-                  frames=len(indices), fps=float(fps), cameras=CAMERAS,
+                  frames=len(indices), fps=float(fps), cameras=settings_by_camera,
+                  camera_profile=camera_profile,
                   task_success_claimed=False)
     with ExitStack() as stack:
         renderer = stack.enter_context(mujoco.Renderer(model, height=720, width=1280))
         writers = {name: stack.enter_context(imageio.get_writer(
             output / f"{name}.mp4", fps=fps, codec="libx264", quality=8,
-            macro_block_size=1)) for name in CAMERAS}
+            macro_block_size=1)) for name in settings_by_camera}
         cameras = {}
-        for name, settings in CAMERAS.items():
+        for name, settings in settings_by_camera.items():
             camera = mujoco.MjvCamera()
             camera.lookat[:] = settings["lookat"]
             for key in ("distance", "azimuth", "elevation"):
@@ -75,7 +86,7 @@ def render(folder, *, stride=2):
     report["videos"] = {
         name: dict(path=str((output / f"{name}.mp4").resolve()),
                    sha256=hashlib.sha256((output / f"{name}.mp4").read_bytes()).hexdigest())
-        for name in CAMERAS}
+        for name in settings_by_camera}
     (output / "render_report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(output, flush=True)
     return report
@@ -85,5 +96,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("folder", type=Path)
     parser.add_argument("--stride", type=int, default=2)
+    parser.add_argument("--camera-profile", choices=["local", "full"], default="local")
     args = parser.parse_args()
-    render(args.folder, stride=args.stride)
+    render(args.folder, stride=args.stride, camera_profile=args.camera_profile)

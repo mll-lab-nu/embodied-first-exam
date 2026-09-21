@@ -15,7 +15,7 @@ No API key is required. No model request or Genesis scene is started.
 
   --python PATH   Python executable; relative paths are resolved from the repo root.
                   Default: TOPOGYM_PY or .venv-gs121-nyx/bin/python in the repo.
-  --regression    Also run the existing rollout and Cast Coil task-spec checks.
+  --regression    Also run rollout, workflow-script and Cast Coil task-spec checks.
                   Includes token-budget tests with a local HTTP proxy and mocked API responses.
   -h, --help      Show this help.
 HELP
@@ -116,7 +116,7 @@ PY
 
 if [[ "$rollout_regression" == 1 ]]; then
     printf '[Regression] Running existing offline pipeline checks\n'
-    "$rollout_python" -m unittest tests.check_agent_rollout tests.check_agent_task_spec tests.check_agent_rollout_budget tests.check_agent_rollout_tools -v
+    "$rollout_python" -m unittest tests.check_agent_rollout tests.check_agent_task_spec tests.check_agent_rollout_budget tests.check_agent_rollout_tools tests.check_agent_rollout_workflow -v
 fi
 
 printf '[PASS] Local rollout checks passed; no model API was called.\n'

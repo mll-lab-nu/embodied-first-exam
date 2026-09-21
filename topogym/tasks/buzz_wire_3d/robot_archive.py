@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -68,11 +70,16 @@ def archive(source, suite, run_id):
         ):
             raise ValueError("Video timeline mismatch")
     metadata = ROOT / "runs/demo_metadata/buzz_wire_3d" / run_id
+    video_root = demo_video_root(ROOT, "buzz_wire_3d", report["variant"])
     destinations = {
-        n: ROOT / "demos/buzz_wire_3d" / n / f"{run_id}_{n}.mp4" for n in CAMERAS
+        n: video_root / n / f"{run_id}_{n}.mp4" for n in CAMERAS
     }
     if metadata.exists() or any(p.exists() for p in destinations.values()):
         raise FileExistsError("Use a new archive ID")
+    if any(list(p.parent.glob("*.mp4")) for p in destinations.values()):
+        raise FileExistsError(
+            "Camera directory already has a demo; verify and curate its replacement first"
+        )
     metadata.mkdir(parents=True)
     for folder in ("source_evidence", "assets", "robot_assets"):
         shutil.copytree(source / folder, metadata / folder)
@@ -223,28 +230,40 @@ def archive(source, suite, run_id):
         title=f"3D Buzz Wire · {report['variant']} · 单臂完整动作",
         directory=f"buzz_wire_3d/{run_id}",
         index=f"buzz_wire_3d/{run_id}/README.md",
-        video_directory="../../demos/buzz_wire_3d",
-        video_layout="camera_subdirectories",
+        video_directory=os.path.relpath(video_root, catalog_path.parent),
+        video_layout="variant_camera_subdirectories",
         video_files={
             n: os.path.relpath(p, catalog_path.parent) for n, p in destinations.items()
         },
+        verified_videos=[
+            dict(
+                videos[n],
+                path=str(p.relative_to(ROOT)),
+                full_decode=True,
+                bytes=p.stat().st_size,
+            )
+            for n, p in destinations.items()
+        ],
     )
     catalog["entries"].append(entry)
     catalog["complete_robotics_demo_count"] = sum(
         bool(e.get("counts_as_complete_robotics_demo")) for e in catalog["entries"]
     )
+    catalog["video_count"] = sum(
+        len(e.get("video_files", {})) for e in catalog["entries"]
+    )
     catalog["excluded"] = [
         e for e in catalog.get("excluded", []) if e.get("task_id") != "buzz_wire_3d"
     ]
     catalog.setdefault("task_video_layout", {})["buzz_wire_3d"] = dict(
-        organization="MP4-only camera directories; single-arm and retained fixture versions",
+        organization="Fixed family / camera directories; single-arm and retained fixture versions",
         video_directory="../../demos/buzz_wire_3d",
         metadata_directory="buzz_wire_3d",
         cameras=list(CAMERAS),
         historical_fixture_cameras=["overview", "front_oblique", "topdown"],
     )
     catalog.setdefault("canonical_directory_exceptions", {})["buzz_wire_3d"] = (
-        "demos/buzz_wire_3d/<camera>"
+        "demos/buzz_wire_3d/varaition_<id>/<camera>"
     )
     catalog["updated_at_utc"] = now
     save(catalog_path, catalog)

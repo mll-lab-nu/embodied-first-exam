@@ -89,3 +89,11 @@ ik_design_priorities:
   - Resolve the transition from horizontal steering to eight crossover and vertical valley motion.
   - Keep stage boundaries in saved paths and report failures at their actual stage.
 verification: {geometry: pending, ik: pending, robot_collision: pending, physics: pending}
+
+# Qualification applies only to this 70% fixed representative, not the design ranges above.
+qualified_compact_representative:
+  catalog: fixed_compact_toy_v2.yaml
+  instance_id: F2_compact_toy_s70_v2
+  ik_seed: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_v2/robot_seed.json
+  scope: This compact instance only; original dimensions and other prototypes remain
+    unqualified.

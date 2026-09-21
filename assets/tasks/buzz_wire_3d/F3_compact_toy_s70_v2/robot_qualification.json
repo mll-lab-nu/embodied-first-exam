@@ -1,0 +1,35 @@
+{
+  "instance_id": "F3_compact_toy_s70_v2",
+  "passed": true,
+  "scope": "This fixed compact instance and saved robot policy only. Prethreaded and pregrasp start; full maze, friction grasp, gravity release and settle.",
+  "scene_config_sha256": "8407e651acbb495e3098e33d2c05383ce9ebc8e57d03248d5ae7a1d1be89f3d3",
+  "robot_seed": "robot_seed.json",
+  "robot_seed_sha256": "cb5519f10c0d42d2aaf1f7f9f19657072887844039fec05be664fe4740f9e4c6",
+  "archive": "runs/demo_metadata/buzz_wire_3d/2026-09-21_F3_compact_toy_s70_v2_full",
+  "qualification_report": "runs/demo_metadata/buzz_wire_3d/2026-09-21_F3_compact_toy_s70_v2_full/stability_report.json",
+  "qualification_sha256": "53fe82298b76c6ec68a99b67beff6c2ba84eb4b929b53f9aa22047060af39e8e",
+  "checks": {
+    "both_complete_and_passed": true,
+    "contact_penetration_below_0_5mm": true,
+    "terminal_stops_reached": true,
+    "final_states_settled": true,
+    "settled_for_required_window": true,
+    "half_time_step": true,
+    "same_settings_except_time_step": true,
+    "same_gripper_servo_settings": true,
+    "bilateral_grasp_throughout_traverse": true,
+    "same_robot_plan": true,
+    "same_physical_assets": true,
+    "no_pose_driving": true,
+    "passive_release_energy_bounded": true,
+    "pure_contact_grasps": true,
+    "zero_wire_contacts_while_grasped": true,
+    "controlled_position_difference_below_2mm": true,
+    "controlled_orientation_difference_below_0_1rad": true
+  },
+  "time_steps_s": [
+    0.004,
+    0.002
+  ],
+  "video_duration_s": 98.36
+}

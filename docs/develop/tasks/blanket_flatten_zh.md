@@ -4,7 +4,7 @@
 
 当前实现包括新任务参数卡、独立几何与场景、实际绑定审计、三视角重力过程录制、初态验收、机器人抓角展开控制器和释放后展平判据。完整成功执行以实际运行报告为准，初始化预览仍让机器人停在初始姿态。当前材料是 PBD 单层布面近似，尚不模拟有填充物被芯的体积与压缩特性。
 
-**已归档的基础初态完整演示：**[全景 MP4](../../../demos/blanket_flatten/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4) · [斜侧 MP4](../../../demos/blanket_flatten/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4) · [腕部 MP4](../../../demos/blanket_flatten/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4)。包含悬空出生、重力落桌、机器人辅助抓角展开、释放与撤手静置；这份成功记录使用较简单初态，不代表下述复杂麻花版已完成展平。配套证据保存在 `runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/`，原 `runs/demos/blanket_flatten/` 副本保留备份。
+**已归档的基础初态完整演示：**[全景 MP4](../../../demos/blanket_flatten/varaition_simple_folds/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4) · [斜侧 MP4](../../../demos/blanket_flatten/varaition_simple_folds/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4) · [腕部 MP4](../../../demos/blanket_flatten/varaition_simple_folds/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4)。包含悬空出生、重力落桌、机器人辅助抓角展开、释放与撤手静置；这份成功记录使用较简单初态，不代表下述复杂麻花版已完成展平。配套证据保存在 `runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/`，原 `runs/demos/blanket_flatten/` 副本保留备份。
 
 **新增低高度折叠与卷转初态：**[两档三视角对比播放页](../../../runs/environment_bootstrap/blanket_flatten/fold_roll_comparison_v2/index.html)。包含 3 次交替折叠后接 278° / 382° 连续卷曲，最低点离桌 2.5 / 2 cm。两档已通过初态与额外 10 s 静置复核；尚未在这两种新初态上验证机器人完整展平，不能计为新的完整机器人 demo。
 
@@ -104,7 +104,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatte
 
 物理运行保存解析配置、源码快照、逐步报告和 `physical_trace.npz`。三路 `agentview / front_oblique / wrist` 逐帧回放**同一次真实物理执行**的完整关节与粒子状态，不重建夹爪被动关节；渲染阶段不推进仿真，检查状态误差 ≤1 µm 并记录来源 SHA-256。相机覆盖文件仅调整画面，解析后的机位单独保存为 `render_config.yaml`，不改写物理来源配置。这是已有物理执行的呈现，不代表又完成了一次动力学运行。
 
-正式归档入口会拒绝失败、未松手、动作缺帧、粒子瞬移、少于三路相机或静置不足的记录，并完整解码视频、校验帧数/时长与副本哈希。视频独立复制到 `demos/blanket_flatten/<camera>/`，报告和 Markdown 记录复制到 `runs/demo_metadata/blanket_flatten/`；不新建或更新 HTML。未通过的尝试留在原始运行目录，不能计为完整 demo。
+正式归档入口会拒绝失败、未松手、动作缺帧、粒子瞬移、少于三路相机或静置不足的记录，并完整解码视频、校验帧数/时长与副本哈希。视频独立复制到 `demos/blanket_flatten/varaition_<id>/<camera>/`，报告和 Markdown 记录复制到 `runs/demo_metadata/blanket_flatten/`；不新建或更新 HTML。未通过的尝试留在原始运行目录，不能计为完整 demo。
 
 ## 2026-09-18 基准实测
 

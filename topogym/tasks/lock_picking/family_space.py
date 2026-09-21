@@ -128,7 +128,7 @@ def review(summary, out):
 <section><h2>随机空间</h2><p>离散 family → 条件采样动作角与几何参数 → 反推孔槽 / 限位 → 重建场景与 IK → 检查 family 身份、几何与机器人 → 独立采样材质 → 输出可复现配对。</p>
 <p>三个 family 统一候选盘距 150–180 mm，按盘半径条件筛选；盘径 130–190 mm。F1 复位 28–34°；F2 分别 26–30° / 30–34°，且第二次至少多 2°；F3 每次 23–25°。范围是提案域，每个实例都需要通过筛选。</p>
 <p>__SCAN__</p><p>改变颜色、纹理、metallic、roughness 可以保留既有几何与 IK 证据；改变质量、摩擦、盘径、间距、孔槽等不能继承完整物理执行结论。材质风格跨 family 共用，避免颜色与回退次数绑定。</p>
-<p><a href="summary.json">全部验证结果</a> · <a href="plan.yaml">机器可读规划</a> · <a href="../../../../docs/develop/tasks/lock_picking_family_space_zh.md">详细空间规划</a></p></section></html>'''
+<p><a href="summary.json">全部验证结果</a> · <a href="plan.yaml">机器可读规划</a> · <a href="../../../../docs/develop/tasks/lock_picking_zh.md">详细空间规划</a></p></section></html>'''
     html = html.replace('__ROWS__', ''.join(rows)).replace('__SCAN__',
         f'动作角与盘距的 {scan["checked"]} 个有效边界组合：{scan["passed"]} 个通过同轴几何、回退下界和 IK，{len(scan["failures"])} 个拒绝。边界检查不构成整个连续域的 IK 或碰撞证书。')
     (out / 'index.html').write_text(html)

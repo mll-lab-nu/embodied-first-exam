@@ -318,6 +318,14 @@ class FeedbackThreadingActions(ReferenceThreadingActions):
         result["passed"] = all(result["checks"].values())
         return result
 
+    def close_contact_monitors(self):
+        try:
+            super().close_contact_monitors()
+        finally:
+            guard = getattr(self, "robot_mesh_guard", None)
+            if guard is not None:
+                guard.close()
+
     def observe(self, t, monitor):
         super().observe(t, monitor)
         try:

@@ -29,7 +29,7 @@
 `tests.check_knot_agent` 检查 FEM agent 信息边界、接触自动选带、双手重叠约束拒绝、释放与平面展开判据，以及 IPC 约束容量重叠回归。
 `python -m tests.probe_knot_agent --output 新目录` 是需要 CUDA 的四路协议短测，只有 6 个控制步，不是解结执行。见 [接入文档](../docs/develop/modules/knot_untying_agent_adapter_zh.md)。
 
-`python -m unittest tests.check_lock_picking_variants -v` 检查开锁固定家族接入公共 seed、条件尺寸域、外观流独立、跨调用顺序复现、真实 IK 拒绝与确定性重试、无需原型库的快照恢复及篡改拒绝。256 seed 和九代表的几何／IK 审计入口为 `topogym.tasks.lock_picking.verify_variants`；不步进物理，不生成数据集或 H5。见[生成器说明](../docs/develop/tasks/lock_picking_seed_generator_zh.md)。
+`python -m unittest tests.check_lock_picking_variants -v` 检查开锁固定家族接入公共 seed、条件尺寸域、外观流独立、跨调用顺序复现、真实 IK 拒绝与确定性重试、无需原型库的快照恢复及篡改拒绝。256 seed 和九代表的几何／IK 审计入口为 `topogym.tasks.lock_picking.verify_variants`；不步进物理，不生成数据集或 H5。见[生成器说明](../docs/develop/tasks/lock_picking_zh.md)。
 
 `python -m unittest tests.check_buzz_wire_3d tests.check_buzz_wire_physics tests.check_rigid_bootstrap_geometry -v` 检查空间电流棒的全程连续净空、保持穿环、触壁与错误姿态反例、平面退化、底座碰撞、URDF 碰撞体一致性及配置复现，并回归自由刚体的局部力矩、力矩限幅、录像实测时间轴和碰撞资产一致性；另行运行 `demos.environment_bootstrap.buzz_wire_3d` 检查实际场景加载，见[说明](../docs/develop/tasks/buzz_wire_3d_zh.md)。
 
@@ -135,7 +135,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
 不能把悬挂在已夹住马蹄上的另一只马蹄、无载荷触碰或桌面支撑当作共同夹持。
 完整重力执行由 `topogym.tasks.horseshoe_ring.verify_physical` 独立复核；
 它要求原始初态、初始圆环下落、换抓接触证据、保持链眼连接和无辅助的圆环落桌静置。
-运行方式见 `docs/develop/tasks/horseshoe_ring_physical_ik_zh.md`。
+运行方式见 `docs/develop/tasks/horseshoe_ring_zh.md`。
 
 `check_horseshoe_timestep.py` 检查半时间步对照的条件一致性：拒绝换几何、换控制增益、
 换执行代码或未实际减半时间步的比较；允许各运行按实测状态独立重规划。
@@ -144,7 +144,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
 `check_horseshoe_variant_generator.py` 检查 v2 的公共 seed / EpisodeSpec 接入、固定家族与类内联动参数、
 快照恢复与篡改拒绝、尺寸变化后的初态/折合 IK、保持家族的有界重试，以及物理或家族区分检查失败时禁止放行。
 这里的模拟验收夹具只测试接口，不构成物理成功证据；实际执行与 256 seed 参数检查见
-`docs/develop/tasks/horseshoe_ring_variant_generator_zh.md`。
+`docs/develop/tasks/horseshoe_ring_zh.md`。
 
 `check_horseshoe_ring_gravity_phase.py` 检查自由圆环自转时，重力参考抓点的世界位置和姿态不变，
 同时保留旧基础 runner 的材料相位行为。它不替代完整抓环动力学验收。

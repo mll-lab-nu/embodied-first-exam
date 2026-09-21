@@ -3,9 +3,9 @@
 2026-09-21 的离线候选为 `feedback_handoff_v5_20260921`。
 它覆盖第二环出口接绳、左手退环，以及接回第三环前的参考关节状态。
 **已接入在线执行器，三段整体运动学检查通过；完整物理执行尚未验证。**
-当前连续录制为 `full_feedback_ik_20260921_attempt_4`，正在等待 GPU 显存，尚未开始物理动作。
-等待器确认空闲显存连续两次达到 16,000 MiB 后，会自动从初态执行；
-运行状态以 [driver_status.json](../../../runs/environment-solvability/rope_threading/full_feedback_ik_20260921_attempt_4/driver_status.json)
+当前连续录制为 `full_feedback_ik_20260921_attempt_5`，正在等待 GPU 显存，尚未开始物理动作。
+本版采用 CPU 软件摄像渲染，等待器确认空闲显存连续两次达到 12,000 MiB 后，会自动从初态执行；
+运行状态以 [driver_status.json](../../../runs/environment-solvability/rope_threading/full_feedback_ik_20260921_attempt_5/driver_status.json)
 为准，物理启动后才生成 `progress.json`。无需再手动提交录制命令。
 
 整体预览：[细节](../../../runs/environment-solvability/rope_threading/combined_ik_v3_20260921/combined_kinematic_detail.mp4) ·
@@ -107,11 +107,43 @@ v4 修正了关节分支，v5 增加了实际控制插值下的抓持点与绳�
 退出后实测显卡空闲 8,524 MiB，另外两个计算进程分别占用约 4,168 / 8,245 MiB。
 第四次保持同一模型、求解器、网格、时间步和五路摄像机，等待足够显存后再启动，
 不会停止其他任务；若等待期间 45 份已记录源码发生变化，则停止启动并明确记录原因。
+第四次后来在启动前取消：实测确认 `uipc` 与 `ipctk` 在同一进程加载会发生
+`LoggerLevel is already registered` 冲突。机器人三角网格检查现已隔离到按需启动的 CPU 子进程，
+复用缓存并在退出时关闭；新增测试实际先加载 `uipc`，再验证凸包误报和真实相交。
+本轮 13 项相关测试及 37 项既有回归均通过，共 50 项。
 这些测试和整体运动学预览均不能替代绳体在新轨迹下的实际抓取、穿环和最终静置结果。
 
 本次按用户要求继续完整动作探索，先前迟发微小滑动的正式资格复验仍暂缓。
 执行结束后自动校验五路视频；只有整段动作与终态检查通过才归档完整探索视频。
 完整物理资格是否通过单独记录，不因影片录完而自动升级。
+
+## 接绳表面几何与显存诊断（本轮继续）
+
+新增 [接绳近景](../../../runs/environment-solvability/rope_threading/grasp_geometry_20260921/conditional_grasp_v2_closeup.mp4) ·
+[接绳环境视角](../../../runs/environment-solvability/rope_threading/grasp_geometry_20260921/conditional_grasp_v2_context.mp4)。
+两路均为 7 s / 140 帧 / 20 fps，完整解码、同步与哈希检查通过。橙色局部绳尾是历史实测形状
+经过假设的 6° 刚体转动；画面用圆管表示，接触距离审计使用实际保存的 FEM 表面和机器人原始碰撞三角网格。
+这是条件几何预演，未产生新的实际接触、辅助抓持或穿环成功证据。
+
+在 18–10 mm 的手指**关节开度**范围以 0.1 mm 扫描，11.9–12.5 mm 的七个采样点
+均满足两侧表面距离不超过原有 0.801 mm 门槛，且无三角相交。
+12.5 mm 时两侧距离为 0.633 / 0.785 mm；11.9 mm 时为 0.036 / 0.187 mm。
+低于该区间的静态模型会相交，不能据此预测真实绳体受压后的形变。
+因此仍采用缓慢闭合、双侧接触后停止并记录实测开度的策略，不将某个固定开度当作抓取成功。
+报告见 `grasp_geometry_20260921/report.json`；接触之后的动态保持仍待物理运行。
+
+显存诊断保存在 `memory_diagnostic_20260921/`。无摄像机曾完成 0.005 s，
+软件摄像机版本曾完成 0.05 s / 40 个收敛子步，但首帧渲染失败；这些都是启动探针，不能算完整动作通过。
+无摄像机探针的全部初始网格数组与前次录制逐项相同。
+后续无摄像机对照也失败，追踪记录到 CUB 报 `cudaErrorInvalidDevice` 前已有
+`cudaErrorMemoryAllocation`；GPU 设备计数为 1，独立最小张量计算正常。
+当前约 7.8 GB 空闲显存仍不足，未停止其他任务或降低绳体网格精度。
+
+录制增加 `--record-renderer rasterizer`：配合 `PYOPENGL_PLATFORM=osmesa` 使用 CPU。
+Genesis 1.2.1 的 OSMesa 路径默认声明不支持 FBO，并落入固定 32×32 的旧回读路径。
+当前适配器先在实际 GL 上下文验证完整 FBO，再启用原有按相机分辨率的渲染与回读，
+不修改已安装库。独立 CPU 场景验证得到 320×240 的非空图像，设备为 llvmpipe；
+完整穿环场景的五路动态渲染仍须在新尝试中验证。原生 FEM、控制器、时间步和接触门槛不变。
 
 ## 复现
 

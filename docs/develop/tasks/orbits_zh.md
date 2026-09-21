@@ -50,9 +50,9 @@ v2 采用 `origin_xy_m=[-0.1356786, -0.133]`、`yaw_deg=90`。
 
 保留的 v2 三视角初态（各 8 秒、120 帧、15 fps）：
 
-- [双臂与居中器具全景](../../../demos/orbits/overview/2026-09-20_static_bimanual_v2_overview.mp4)
-- [旋转后斜前近景](../../../demos/orbits/front_oblique/2026-09-20_static_bimanual_v2_front_oblique.mp4)
-- [俯视：两臂之间的完整占地](../../../demos/orbits/topdown/2026-09-20_static_bimanual_v2_topdown.mp4)
+- 双臂与居中器具全景（旧产物已清理：`2026-09-20_static_bimanual_v2_overview.mp4`）
+- 旋转后斜前近景（旧产物已清理：`2026-09-20_static_bimanual_v2_front_oblique.mp4`）
+- 俯视：两臂之间的完整占地（旧产物已清理：`2026-09-20_static_bimanual_v2_topdown.mp4`）
 
 [v2 配置、检查及归档清单](../../../runs/demo_metadata/orbits/2026-09-20_static_bimanual_v2/README.md)。
 
@@ -86,9 +86,9 @@ v2 采用 `origin_xy_m=[-0.1356786, -0.133]`、`yaw_deg=90`。
 
 保留的 v3 三视角初态（各 8 秒、120 帧、15 fps；全景与俯视沿用 v2 相机便于比较尺寸）：
 
-- [全景：器具与双臂比例](../../../demos/orbits/overview/2026-09-20_static_toy_scale_v3_overview.mp4)
-- [拉近的斜前细节](../../../demos/orbits/front_oblique/2026-09-20_static_toy_scale_v3_front_oblique.mp4)
-- [俯视：玩具尺寸与夹爪比例](../../../demos/orbits/topdown/2026-09-20_static_toy_scale_v3_topdown.mp4)
+- 全景：器具与双臂比例（旧产物已清理：`2026-09-20_static_toy_scale_v3_overview.mp4`）
+- 拉近的斜前细节（旧产物已清理：`2026-09-20_static_toy_scale_v3_front_oblique.mp4`）
+- 俯视：玩具尺寸与夹爪比例（旧产物已清理：`2026-09-20_static_toy_scale_v3_topdown.mp4`）
 
 [v3 报告与资产归档](../../../runs/demo_metadata/orbits/2026-09-20_static_toy_scale_v3/README.md)。
 v1、v2 保留，可直接比较实际几何缩放；新预览不替代完整机器人 demo。
@@ -107,9 +107,9 @@ v1、v2 保留，可直接比较实际几何缩放；新预览不替代完整机
 
 v4 三视角各 8 秒、120 帧、15 fps；三台相机采用 v2 的配置，便于与原尺寸直接比较：
 
-- [全景：75% 器具与双臂比例](../../../demos/orbits/overview/2026-09-20_static_scale75_v4_overview.mp4)
-- [75% 斜前近景](../../../demos/orbits/front_oblique/2026-09-20_static_scale75_v4_front_oblique.mp4)
-- [75% 俯视](../../../demos/orbits/topdown/2026-09-20_static_scale75_v4_topdown.mp4)
+- 全景：75% 器具与双臂比例（旧产物已清理：`2026-09-20_static_scale75_v4_overview.mp4`）
+- 75% 斜前近景（旧产物已清理：`2026-09-20_static_scale75_v4_front_oblique.mp4`）
+- 75% 俯视（旧产物已清理：`2026-09-20_static_scale75_v4_topdown.mp4`）
 
 [v4 检查、配置和独立资产](../../../runs/demo_metadata/orbits/2026-09-20_static_scale75_v4/README.md)。
 原尺寸及 35% 视频继续保留。
@@ -127,9 +127,9 @@ v4 三视角各 8 秒、120 帧、15 fps；三台相机采用 v2 的配置，便
 几何检查与 13 项回归通过；三路视频完整解码通过，各 8 秒、120 帧、15 fps。
 范围仍为静态初态和有限接近姿态验证，尚未执行连续运动、物理抓持或解法。
 
-- [俯视：底座两条中心线对齐双臂](../../../demos/orbits/topdown/2026-09-20_static_base_centered_v5_topdown.mp4)
-- [全景：居中后的双臂与器具](../../../demos/orbits/overview/2026-09-20_static_base_centered_v5_overview.mp4)
-- [斜前近景](../../../demos/orbits/front_oblique/2026-09-20_static_base_centered_v5_front_oblique.mp4)
+- [俯视：底座两条中心线对齐双臂](../../../demos/orbits/varaition_base_centered/topdown/2026-09-20_static_base_centered_v5_topdown.mp4)
+- [全景：居中后的双臂与器具](../../../demos/orbits/varaition_base_centered/overview/2026-09-20_static_base_centered_v5_overview.mp4)
+- [斜前近景](../../../demos/orbits/varaition_base_centered/front_oblique/2026-09-20_static_base_centered_v5_front_oblique.mp4)
 
 [v5 配置、可达性和归档证据](../../../runs/demo_metadata/orbits/2026-09-20_static_base_centered_v5/README.md)。
 v1 至 v4 均保留，便于对照尺寸和位置变化。
@@ -278,13 +278,53 @@ v19 的 1671 个记录状态没有机器人与固定器具、自身或桌面的�
 
 原 v1 三路同步初态预览（保留旧摆放供对照；各 8 秒、120 帧、15 fps，非完整机器人 demo）：
 
-- [实验室与双臂全景](../../../demos/orbits/overview/2026-09-20_static_initial_v1_overview.mp4)
-- [四环与黄绳斜前近景](../../../demos/orbits/front_oblique/2026-09-20_static_initial_v1_front_oblique.mp4)
-- [穿套初态俯视](../../../demos/orbits/topdown/2026-09-20_static_initial_v1_topdown.mp4)
+- 实验室与双臂全景（旧产物已清理：`2026-09-20_static_initial_v1_overview.mp4`）
+- 四环与黄绳斜前近景（旧产物已清理：`2026-09-20_static_initial_v1_front_oblique.mp4`）
+- 穿套初态俯视（旧产物已清理：`2026-09-20_static_initial_v1_topdown.mp4`）
 
 配套资产、报告和清单位于
 [`runs/demo_metadata/orbits/2026-09-20_static_initial_v1/`](../../../runs/demo_metadata/orbits/2026-09-20_static_initial_v1/README.md)。
 视频目录只放独立 MP4，不生成 HTML。
+
+## 先验证无机械臂路径（2026-09-21）
+
+按最新要求，当前先开发绳索自主运动的完整解法，再把路径改造成双臂动作。
+完整解套尚未完成；已经核验的无臂 v66 是从自然初态开始的 38 秒连续局部流程。
+它用指定绳段上的位置约束驱动绳索，保留重力、木件碰撞、自碰撞和两端连接；
+木柄是自由刚体。器具仍为 75% 比例，本次规划试验使用 1.1 m 工作绳，
+没有替换机器人场景原有的 1.69788 m 绳索默认值。
+
+- [v66 总览](../../../runs/environment_bootstrap/orbits/solution_development_v1/reference_probe_66/rope_views/overview.mp4)
+- [v66 正面](../../../runs/environment_bootstrap/orbits/solution_development_v1/reference_probe_66/rope_views/front.mp4)
+- [v66 侧面](../../../runs/environment_bootstrap/orbits/solution_development_v1/reference_probe_66/rope_views/side.mp4)
+- [v66 俯视](../../../runs/environment_bootstrap/orbits/solution_development_v1/reference_probe_66/rope_views/top.mp4)
+
+四路均为同一轨迹的状态重渲染，761 帧、20 fps、38.05 秒、1280×720，已完整解码。
+积分期间每 10 步检查的最大接触深度为 0.594 mm，最大控制点误差为 4.047 mm。
+对全部 1521 个保存状态的独立复核确认记录点与模型一致，环的有向穿越数之和均为零；
+绳端连接误差最大 1.156 mm。最终绳索仍被器具约束，不能据此认定完整解套或机器人成功。
+
+新增 `rope_only_demo` 用于复现该局部流程；`rope_render` 输出无臂四视角，
+`rope_audit` 核验记录并单独检查绳索及木柄是否全部移动到器具右侧的分离区域。
+环穿越数、杆轴绕数和仿真稳定性都是诊断信息，不能替代最终脱离检查。
+后续试跑发现，相似的外观可能对应不同绳段形成的小绳套；抓错绳段会让动作返回旧状态，
+或在最低环边缘留下额外绳套。因此更长的试跑暂不作为完整 demo 交付。
+
+迁移到双臂时，需要把每次控制的绳段编号与双手接触点对应起来，
+并在穿环前后安排真实的松手、接取和余绳供给。绳索中心线可以通过的路径，
+还须按夹爪体积和姿态重新规划；此前 v19 的直接抬升路径未通过环口碰撞检查，
+需要从环两侧交接绳段。展圈宽度、木柄活动空间和运动时序也要在加入机械臂后重新验证。
+这里是迁移约束的整理，尚未构成完整 IK 或物理执行验证。
+
+```bash
+# 仅复现已核验的局部前缀；不会声称完成解套。
+.venv-gs121-nyx/bin/python -m topogym.tasks.orbits.rope_only_demo \
+  runs/environment_bootstrap/orbits/rope_prefix_reproduction
+.venv-gs121-nyx/bin/python -m topogym.tasks.orbits.rope_audit \
+  runs/environment_bootstrap/orbits/rope_prefix_reproduction
+MUJOCO_GL=egl .venv-gs121-nyx/bin/python -m topogym.tasks.orbits.rope_render \
+  runs/environment_bootstrap/orbits/rope_prefix_reproduction
+```
 
 ## 复现
 

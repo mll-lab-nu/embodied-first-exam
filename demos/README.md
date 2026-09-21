@@ -1,92 +1,32 @@
-# 当前运行入口
+# 当前 Demo
 
-自 2026-09-19 起，开发进展直接交付相关 MP4 视频链接，不再创建、更新或部署 HTML 展示页。
-完整流程 demo 在本目录对应的 `<task_id>/`（已有多视角任务沿用 `<task_id>/<camera>/`）中迭代，视频目录内的文件只能是 `.mp4`。
-报告、配置、清单等配套材料放在 `runs/demo_metadata/`；本文件下方的 HTML 链接仅为历史记录，不作为后续交付入口。
-具体约定见 [项目规则](../AGENTS.md)。
+视频统一采用 `demos/<task_name>/varaition_<id>/<camera>/<file>.mp4`，沿用用户指定的 `varaition_` 拼写。基础实例也使用具名变体目录；每个变体分别保留，每个相机叶子目录一份独立 MP4，正式完整版优先。源码入口在 `environment_bootstrap/`，开发中尝试留在对应 `runs/`。
 
-Horseshoe Ring 重力修正基础版位于 [`horseshoe_ring/`](horseshoe_ring/)，按
-`cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/`、`detail/` 各保存一份完整 MP4。
-每路 **113.7 秒、1137 帧、10 fps**，来自同一次连续物理执行，无文字或画中画。
-包含翻转、折合、交接、抓环、取出及松爪自由落桌；从预抓持开始，含接触确认后的辅助抓持。
-[五路同步播放与物理验收](../runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1/index.html)。
-后续[同代码 2 ms / 1 ms 完整复验](../runs/demo_metadata/horseshoe_ring/2026-09-18_timestep_validation_v1/index.html)也已通过，
-两次分别独立重规划并完成取环与自由落桌；视频仍对应上面同一次 113.7 秒完整录制。
+例如 Buzz Wire 为 `varaition_f1_vertical_wave/`、`varaition_f2_over_under_eight/`、`varaition_f3_plane_switch/`，各自下分 `agentview/`、`front_oblique/`、`wrist/`。F2 的 `topdown/` 仍是单独标注的静态预览，不加入完整版同步组。迁移核对见[目录清单](../runs/demo_metadata/directory_layout.json)。
 
-2026-09-19 的 Horseshoe v2 新增三个已成功物理实例的接近阶段对照：
-[高位](horseshoe_ring/cam_high/2026-09-19_families_v2_approach_comparison_cam_high.mp4)、
-[低位](horseshoe_ring/cam_low/2026-09-19_families_v2_approach_comparison_cam_low.mp4)。
-每段 9.8 秒，从左到右是高位接近、外侧接近、后撤再接近；这些是局部对照，不计作三份新完整 demo。
-[随机实例生成契约及验收](../docs/develop/tasks/horseshoe_ring_variant_generator_zh.md) 独立于录像与数据 writer，未生成 H5。
+当前正式视频的逐帧计数、完整解码、SHA-256 与同组同步检查见各自归档。Buzz Wire 按 F1/F2/F3 分开保存三路完整版；视频重渲染与物理执行资格分别记录。
 
-Buzz Wire 3D 历史基型单臂视频位于 [`buzz_wire_3d/`](buzz_wire_3d/)，按 `agentview/`、`front_oblique/`、`wrist/` 保存独立 MP4；每路 **91.84 秒、2296 帧、25 fps**。Panda 从预抓取起点以摩擦夹持圆环，走完迷宫并在末端松手、退开和静置。[同步播放与物理证据](../runs/demo_metadata/buzz_wire_3d/2026-09-18_compact_single_arm_v1/index.html)位于 `runs/demo_metadata/`，减半时间步复验通过。旧无机器人台架的 `overview / front_oblique / topdown` 视频及 `runs/demos/buzz_wire_3d/` 副本保留。
-
-2026-09-20 Buzz Wire 新增 70% 尺寸的木质 / 金属场景预览：[基础布局](buzz_wire_3d/front_oblique/2026-09-20_baseline_compact_wood_s70_v1_scene_preview_front_oblique.mp4)、[F2 错层八字](buzz_wire_3d/front_oblique/2026-09-20_F2_compact_wood_s70_v1_scene_preview_front_oblique.mp4)、[F3 换平面](buzz_wire_3d/front_oblique/2026-09-20_F3_compact_wood_s70_v1_scene_preview_front_oblique.mp4)。每个实例有全景、斜前、俯视三路同步视频，各 8 秒 / 120 帧 / 15 fps。**静态场景与材质展示，机械臂停放作尺度参照，不计作完整动作 demo**；新版工具几何通过，机器人连续 IK / 物理执行未验收。[全部视角及验证报告](../runs/demo_metadata/buzz_wire_3d/2026-09-20_compact_wood_s70_scene_preview/README.md)。历史完整执行副本保留。
-
-同日按实物照片再改为 **toy-v2**：削角、分层收边木底座，小方木线脚，铜色轨道、银环木柄，无电子摆设。新版静态预览：[基础](buzz_wire_3d/front_oblique/2026-09-20_baseline_compact_toy_s70_v2_scene_preview_front_oblique.mp4) · [F2](buzz_wire_3d/front_oblique/2026-09-20_F2_compact_toy_s70_v2_scene_preview_front_oblique.mp4) · [F3](buzz_wire_3d/front_oblique/2026-09-20_F3_compact_toy_s70_v2_scene_preview_front_oblique.mp4)。[全部三视角及验证](../runs/demo_metadata/buzz_wire_3d/2026-09-20_photo_toy_s70_v2_scene_preview/README.md)；各路仍为 8 秒 / 120 帧，不计作完整机器人 demo。
-
-2026-09-20 **F2 紧凑玩具版完整单臂 demo** 已通过 4 ms / 2 ms 独立物理执行验收，场景尺寸、摆位与抓持点保持原预览配置。三连回折 → 错层八字 → 竖直 W → 末端松手、撤臂、静置；从预穿环 / 预抓取开始，真实摩擦抓持，受控通行零触线。三路为同一次主运行实测状态重渲染，各 **103.04 秒、2576 帧、25 fps**。
-
-[全景](buzz_wire_3d/agentview/2026-09-20_F2_compact_toy_s70_v2_full_agentview.mp4) · [斜前](buzz_wire_3d/front_oblique/2026-09-20_F2_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](buzz_wire_3d/wrist/2026-09-20_F2_compact_toy_s70_v2_full_wrist.mp4) · [物理验收与归档](../runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full/README.md)。仅覆盖此 F2 实例及策略。
-
-被子展平完整视频位于 [`blanket_flatten/`](blanket_flatten/)，按 `agentview/`、`front_oblique/`、`wrist/` 各保存一份独立 MP4；每路 **32.55 秒、651 帧、20 fps**，包含悬空出生、自然落桌、机器人辅助抓角展开、释放、撤手与静置。[三视角同步播放与物理证据](../runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/index.html)仍保存在 `runs/demo_metadata/`；原 `runs/demos/blanket_flatten/` 副本保留备份。
-
-开锁新外观标准变体位于 [`lock_picking/`](lock_picking/)，按 `agentview/`、`front_oblique/`、`wrist/` 各保存一份完整 MP4；每路 159.35 秒、20 fps，无文字或画中画。标准结构为 150 mm 盘距、三齿、两次必要回退，使用紫色第一锁片与四个锁孔的黄色描边。[三路同步播放与来源记录](../runs/demo_metadata/lock_picking/2026-09-18_standard_150mm_purple_trace_v1/index.html)。视频由成功物理执行的实测状态重渲染，夹爪被动连杆按记录开合量重建，未重跑动力学。
-
-开锁 seed 生成器新增同一斜视相机的三类 M 代表：[F1 一次回退](lock_picking/front_oblique/2026-09-19_F1_M_kinematic_front_oblique.mp4)、[F2 两次回退](lock_picking/front_oblique/2026-09-19_F2_M_kinematic_front_oblique.mp4)、[F3 三次回退](lock_picking/front_oblique/2026-09-19_F3_M_kinematic_front_oblique.mp4)。分别为 11.96 / 17.58 / 21.75 秒、24 fps；均为已对齐起点到插入终点的 **IK 运动学预演**，没有动力学步进，不含抓起／松手，不替代上面的完整基线视频。[生成接口与验证范围](../docs/develop/tasks/lock_picking_seed_generator_zh.md)。
-
-解绳结完整视频位于 [`knot_untying/`](knot_untying/)，按 `cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/`、`detail/` 分视角保存，每路均为同一次执行的完整 75 秒录像。[同步播放页与物理证据](../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)保留在 `runs/demo_metadata/`。
-
-光纤收束当前只保留基础版无 UI 三视角，位于 [`fiber_bundling/`](fiber_bundling/)，按 `agentview/`、`front_oblique/`、`wrist/` 分目录各一份；每路完整 177 秒，无文字、状态栏或画中画。文件名前缀为 `2026-09-18_standard_08_r13p5mm_clean_v1`；[当前视频与历史物理证据](../runs/demo_metadata/fiber_bundling/README.md)。旧 52 份视频已按用户要求删除。
-
-Claw 默认版完整录像已按视角整理到 [`demos/interlocked_claws/`](interlocked_claws/)：
-`cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/`、`detail/` 各有一份 158.6 秒 MP4。
-这是按 2026-09-18 用户要求增加的视频目录；原 `runs/demos/interlocked_claws/` 保留独立备份。
-[五路同步播放与物理证据](../runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/index.html)仍在 `runs/demo_metadata/`。
-
-在仓库根目录用 `.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.<入口>` 执行。
-
-| 入口 | 范围 |
-| --- | --- |
-| `presentation_preview` | 默认 Nyx 封闭实验室、腕部跟随、视频与 HDF5 RGB 检查 |
-| `orbits` | 第 13 项 Orbits 四环阶梯解绳；默认原始尺寸的 75%、旋转 90°，以木底座中心对齐双臂基座中点，22 个接近姿态及四组双臂姿态重新通过 IK / 碰撞检查。ALOHA / Nyx 零物理步初态预览，见[场景与复现](../docs/develop/tasks/orbits_zh.md) |
-| `slotted_post_ring` | 第 12 项长孔立柱解环；历史一维绳模型的 28 mm 原版与 36 mm 候选版通过重力及半步长验证。36 mm 候选版 [147 秒完整外力驱动解环](slotted_post_ring/front_oblique/2026-09-21_clearance36_full_physics_v1_front_oblique.mp4)通过逐步物理检查，三视角已归档；另有 ALOHA 过珠、端片穿槽及交接局部录像，使用预抓取及辅助连接，完整机器人解环仍未通过。新增 [FEM 动态试跑](../runs/environment_bootstrap/slotted_post_ring/historical_demos/front_oblique/2026-09-21_fem_gravity_attempt_v2_front_oblique.mp4)，余振检查未通过。[场景、其他视角与复现](../docs/develop/tasks/slotted_post_ring_zh.md) |
-| `blanket_flatten` | 此入口录制悬空出生、自然落桌与静置；已验证的单臂展平完整流程另用 `topogym.tasks.blanket_flatten.robot_demo`，三视角录制及证据见[任务说明](../docs/develop/tasks/blanket_flatten_zh.md)。 |
-| `aloha_lab` | ALOHA 2 双臂相机预设：四路观测、官方模型展示位及实验室展示；可选短时位置保持检查 |
-| `rope_threading` | Wang 三环参考初态：U 形自由绳、三环侧置支架、ALOHA 双臂、七路初态图与短时 FEM 静置；[说明](../docs/develop/tasks/rope_threading_zh.md) |
-| `interlocked_claws` | 原始 Claw 网格、参考互锁初态、ALOHA 双臂姿态与支架；装配／拆件静态检查及相机绕行，未执行物理脱困 |
-| `lock_picking` | 当前开锁物理执行，默认基线配置 |
-| `lock_picking_inspect` | 加宽锁片间距的初态 review；不代表长行程执行通过 |
-| `hedgehog_in_cage` | CLASSIC 三星刺猬初态场景 |
-| `fiber_bundling` | 粗绳分叉细绳与窄环的基础场景、静置检查及 Nyx 预览 |
-| `knot_untying` | 一个松 trefoil / overhand 单结的 FEM 初态、短时静置与 Nyx 预览；依赖 `requirements/uv-topogym-fem-ipc.txt` |
-| `chain_links` | 三只闭合刚体链环的局部接触试验 |
-| `horseshoe_ring` | v3 基础实例已连续完成重力下双臂交接、取环和自由落桌；含预抓持与接触确认后的辅助抓持。[新 IK 与验收范围](../docs/develop/tasks/horseshoe_ring_physical_ik_zh.md)，旧几何变体需分别重验 |
-| `cast_coil` | 金银方形卷绕件装配、拆件静态检查、绕行视频与自由落桌检查；原型三段解已验证，双臂执行使用下述独立入口 |
-| `cast_keyhole` | 金叉与银色阶梯孔基础场景、拆件轮廓检查、相机绕行及短时自由静置；本地完整解法待验证 |
-| `buzz_wire` | 环杆双向接触夹具试验 |
-| `buzz_wire_3d` | 紧凑低矮单臂场景，真实摩擦抓持、完整迷宫通行、释放 / 静置与减半时间步复验；同步三视角各 91.84 秒。旧照片尺寸台架保留。[说明](../docs/develop/tasks/buzz_wire_3d_zh.md) |
-| `lock_aperture` | 钥匙和孔槽轮廓的几何初态检查 |
-
-Hydra 入口可用 `--cfg job` 查看解析配置；argparse 入口用 `--help` 查看选项。
-Cast Coil 双臂执行使用 `python -m topogym.tasks.cast_coil.robot_demo --plan <计划.json> --output <新目录> --record`；
-计划生成、半时间步复核和正式归档命令见 [Cast Coil 文档](../docs/develop/tasks/cast_coil_zh.md#完整双臂物理执行与录制)。
-该流程从预抓取状态开始，接触后采用辅助抓持，最终解除并自由静置。
-历史结果汇总保留在 `runs/environment_bootstrap/index.html`；后续进展直接提供相关 MP4 链接。
-新完整机器人多视角演示在本目录对应的任务视频子目录中迭代，已有 [`runs/demos/`](../runs/demos/) 副本继续保留；配套材料放在 [`runs/demo_metadata/`](../runs/demo_metadata/)。新 demo 交付前按 [项目规则](../AGENTS.md) 完成复制与检查，不再要求更新 HTML 播放页。
-刺球出笼 CLASSIC wood 基础版按用户要求收录在本目录的 [`hedgehog_in_cage/`](hedgehog_in_cage/)，下分 `agentview/`、`front_oblique/`、`wrist/` 三个视角文件夹。
-2026-09-19 刺球出笼默认家族改为单斜窗、固定六刺侧孔、GEN 风格顶部钥匙孔；新代表沿用上述三视角目录，旧双门／螺旋录像保留。[当前代表视频及生成器说明](../docs/develop/tasks/hedgehog_in_cage_zh.md)。
-Cast Coil 基础装配版收录在本目录的 [`cast_coil/`](cast_coil/)，下分 `cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/`、`front_oblique/` 五个视角文件夹；每路为同一次执行的完整 33.15 秒录像。[同步播放页与执行证据](../runs/demo_metadata/cast_coil/2026-09-17_aloha_full/index.html)保留在原配套目录。
-旧任务入口移到 [`legacy/demos/`](../legacy/demos/)，只读保存。
-
-2026-09-19 Buzz Wire 默认 F2 / F3 工程候选新增主动触碰物理检查录像，每路 7.04 秒、176 帧、25 fps。**无机械臂，有限外力驱动，不是完整单臂通关 demo**；[首轮验收报告](../runs/environment-solvability/buzz_wire_3d/family_physics_20260919/result.md)分别记录工具台架与机器人检查结果。
-
-| 候选 | 全景 MP4 | 斜前 MP4 | 俯视 MP4 |
+| 当前版本 | MP4 直链 | 时长 / 帧数 | 范围与证据 |
 | --- | --- | --- | --- |
-| F2 错层八字多关 | [全景](buzz_wire_3d/overview/2026-09-19_F2_rounded18mm_contact_diagnostic_overview.mp4) | [斜前](buzz_wire_3d/front_oblique/2026-09-19_F2_rounded18mm_contact_diagnostic_front_oblique.mp4) | [俯视](buzz_wire_3d/topdown/2026-09-19_F2_rounded18mm_contact_diagnostic_topdown.mp4) |
-| F3 换平面多关 | [全景](buzz_wire_3d/overview/2026-09-19_F3_rounded18mm_contact_diagnostic_overview.mp4) | [斜前](buzz_wire_3d/front_oblique/2026-09-19_F3_rounded18mm_contact_diagnostic_front_oblique.mp4) | [俯视](buzz_wire_3d/topdown/2026-09-19_F3_rounded18mm_contact_diagnostic_topdown.mp4) |
+| 双爪互锁 A0 原始 Claw | [cam_high](interlocked_claws/varaition_a0_original/cam_high/2026-09-21_reference_full_restored_v1_cam_high.mp4) · [cam_low](interlocked_claws/varaition_a0_original/cam_low/2026-09-21_reference_full_restored_v1_cam_low.mp4) · [cam_left_wrist](interlocked_claws/varaition_a0_original/cam_left_wrist/2026-09-21_reference_full_restored_v1_cam_left_wrist.mp4) · [cam_right_wrist](interlocked_claws/varaition_a0_original/cam_right_wrist/2026-09-21_reference_full_restored_v1_cam_right_wrist.mp4) · [detail](interlocked_claws/varaition_a0_original/detail/2026-09-21_reference_full_restored_v1_detail.mp4) | 158.60 s / 1586 | 原实测状态补录，非新物理执行；预抓取与理想辅助抓持。独立通用接触资格仍有缺口。 [归档](../runs/demo_metadata/interlocked_claws/2026-09-21_variation_layout_v1/README.md) |
+| 双爪互锁 B0 螺旋冠 | [cam_high](interlocked_claws/varaition_b0_helical_crown/cam_high/2026-09-21_helical_crown_restored_v1_cam_high.mp4) · [cam_low](interlocked_claws/varaition_b0_helical_crown/cam_low/2026-09-21_helical_crown_restored_v1_cam_low.mp4) · [cam_left_wrist](interlocked_claws/varaition_b0_helical_crown/cam_left_wrist/2026-09-21_helical_crown_restored_v1_cam_left_wrist.mp4) · [cam_right_wrist](interlocked_claws/varaition_b0_helical_crown/cam_right_wrist/2026-09-21_helical_crown_restored_v1_cam_right_wrist.mp4) · [detail](interlocked_claws/varaition_b0_helical_crown/detail/2026-09-21_helical_crown_restored_v1_detail.mp4) | 37.05 s / 741 | 原实测状态补录，非新物理执行；预抓取与理想辅助抓持。 [归档](../runs/demo_metadata/interlocked_claws/2026-09-21_variation_layout_v1/README.md) |
+| 双爪互锁 C0 紧凑等尺寸双窗 | [cam_high](interlocked_claws/varaition_c0_orthogonal_gate/cam_high/2026-09-19_orthogonal_gate_balanced_physical_v1_cam_high.mp4) · [cam_low](interlocked_claws/varaition_c0_orthogonal_gate/cam_low/2026-09-19_orthogonal_gate_balanced_physical_v1_cam_low.mp4) · [cam_left_wrist](interlocked_claws/varaition_c0_orthogonal_gate/cam_left_wrist/2026-09-19_orthogonal_gate_balanced_physical_v1_cam_left_wrist.mp4) · [cam_right_wrist](interlocked_claws/varaition_c0_orthogonal_gate/cam_right_wrist/2026-09-19_orthogonal_gate_balanced_physical_v1_cam_right_wrist.mp4) · [detail](interlocked_claws/varaition_c0_orthogonal_gate/detail/2026-09-19_orthogonal_gate_balanced_physical_v2_detail.mp4) | 62.05 s / 1241 | 完整辅助抓持拆解、落桌、松手、静置；原视频迁移。 [归档](../runs/demo_metadata/interlocked_claws/2026-09-21_variation_layout_v1/README.md) |
+| 刺球出笼 GEN keyhole v2 | [wrist](hedgehog_in_cage/varaition_gen_keyhole/wrist/2026-09-19_gen_keyhole_v2_wrist.mp4) · [agentview](hedgehog_in_cage/varaition_gen_keyhole/agentview/2026-09-19_gen_keyhole_v2_agentview.mp4) · [front_oblique](hedgehog_in_cage/varaition_gen_keyhole/front_oblique/2026-09-19_gen_keyhole_v2_front_oblique.mp4) | 98.8333 s / 1186 | 最新完整三视角，预抓取、接触后辅助、取出及释放静置。 [证据](../runs/demo_metadata/hedgehog_in_cage/2026-09-19_classic_replacements_v2/gen_keyhole/) |
+| 马蹄环 重力修正版 | [cam_low](horseshoe_ring/varaition_baseline/cam_low/2026-09-18_gravity_replanned_v1_cam_low.mp4) · [cam_high](horseshoe_ring/varaition_baseline/cam_high/2026-09-18_gravity_replanned_v1_cam_high.mp4) · [cam_right_wrist](horseshoe_ring/varaition_baseline/cam_right_wrist/2026-09-18_gravity_replanned_v1_cam_right_wrist.mp4) · [cam_left_wrist](horseshoe_ring/varaition_baseline/cam_left_wrist/2026-09-18_gravity_replanned_v1_cam_left_wrist.mp4) · [detail](horseshoe_ring/varaition_baseline/detail/2026-09-18_gravity_replanned_v1_detail.mp4) | 113.7 s / 1137 | 完整取环与自由落桌，预抓持及接触辅助；独立双步长执行通过。 [证据](../runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1/) |
+| Cast Coil 基础装配 | [cam_low](cast_coil/varaition_baseline_assembly/cam_low/2026-09-17_aloha_full_cam_low.mp4) · [cam_high](cast_coil/varaition_baseline_assembly/cam_high/2026-09-17_aloha_full_cam_high.mp4) · [front_oblique](cast_coil/varaition_baseline_assembly/front_oblique/2026-09-17_aloha_full_front_oblique.mp4) · [cam_right_wrist](cast_coil/varaition_baseline_assembly/cam_right_wrist/2026-09-17_aloha_full_cam_right_wrist.mp4) · [cam_left_wrist](cast_coil/varaition_baseline_assembly/cam_left_wrist/2026-09-17_aloha_full_cam_left_wrist.mp4) | 33.15 s / 663 | 完整装配、放桌与释放静置，预抓取及接触辅助；非官方八步路线复刻。 [证据](../runs/demo_metadata/cast_coil/2026-09-17_aloha_full/) |
+| Cast Keyhole 当前物理实例 | [four_views](cast_keyhole/varaition_baseline/four_views/2026-09-17_current_instance_physical_four_views.mp4) · [cam_low](cast_keyhole/varaition_baseline/cam_low/2026-09-17_current_instance_physical_cam_low.mp4) · [cam_high](cast_keyhole/varaition_baseline/cam_high/2026-09-17_current_instance_physical_cam_high.mp4) · [oblique](cast_keyhole/varaition_baseline/oblique/2026-09-17_current_instance_physical_oblique.mp4) · [cam_right_wrist](cast_keyhole/varaition_baseline/cam_right_wrist/2026-09-17_current_instance_physical_cam_right_wrist.mp4) · [cam_left_wrist](cast_keyhole/varaition_baseline/cam_left_wrist/2026-09-17_current_instance_physical_cam_left_wrist.mp4) · [detail](cast_keyhole/varaition_baseline/detail/2026-09-17_current_instance_physical_detail.mp4) | 23.9167 s / 287 | 完整分离；预抓取及接触辅助，末态双臂持稳，未包含释放。 [证据](../runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/) |
+| 光纤收束 标准 8 芯 | [wrist](fiber_bundling/varaition_standard_08_r13p5mm/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4) · [agentview](fiber_bundling/varaition_standard_08_r13p5mm/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4) · [front_oblique](fiber_bundling/varaition_standard_08_r13p5mm/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4) | 177 s / 3540 | 完整穿环，无 UI；接触后辅助夹持，末态仍夹持；严格全程时间步线形对照未通过。 [证据](../runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/) |
+| 开锁 标准外观 | [wrist](lock_picking/varaition_standard_150mm/wrist/2026-09-18_standard_150mm_purple_trace_v1_wrist.mp4) · [agentview](lock_picking/varaition_standard_150mm/agentview/2026-09-18_standard_150mm_purple_trace_v1_agentview.mp4) · [front_oblique](lock_picking/varaition_standard_150mm/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4) | 159.35 s / 3187 | 成功物理状态重渲染；被动夹爪关节按开合量重建，不增加动力学成功次数。 [证据](../runs/demo_metadata/lock_picking/2026-09-18_standard_150mm_purple_trace_v1/) |
+| Buzz Wire F1 70% 玩具版 | [全景](buzz_wire_3d/varaition_f1_vertical_wave/agentview/2026-09-21_F1_compact_toy_s70_v2_full_agentview.mp4) · [斜前](buzz_wire_3d/varaition_f1_vertical_wave/front_oblique/2026-09-21_F1_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](buzz_wire_3d/varaition_f1_vertical_wave/wrist/2026-09-21_F1_compact_toy_s70_v2_full_wrist.mp4) | 44.60 s / 1115 | 完整真实摩擦抓持通行；预穿环/预抓取，末端释放、撤臂及静置，4/2 ms 验收通过。同次物理状态三视角重渲染。[证据](../runs/demo_metadata/buzz_wire_3d/2026-09-21_F1_compact_toy_s70_v2_full/README.md) |
+| Buzz Wire F2 70% 玩具版 | [全景](buzz_wire_3d/varaition_f2_over_under_eight/agentview/2026-09-20_F2_compact_toy_s70_v2_full_agentview.mp4) · [斜前](buzz_wire_3d/varaition_f2_over_under_eight/front_oblique/2026-09-20_F2_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](buzz_wire_3d/varaition_f2_over_under_eight/wrist/2026-09-20_F2_compact_toy_s70_v2_full_wrist.mp4) | 103.04 s / 2576 | 完整真实摩擦抓持通行；预穿环/预抓取，末端释放、撤臂及静置，4/2 ms 验收通过。同次物理状态三视角重渲染。[证据](../runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full/README.md) |
+| Buzz Wire F3 70% 玩具版 | [全景](buzz_wire_3d/varaition_f3_plane_switch/agentview/2026-09-21_F3_compact_toy_s70_v2_full_agentview.mp4) · [斜前](buzz_wire_3d/varaition_f3_plane_switch/front_oblique/2026-09-21_F3_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](buzz_wire_3d/varaition_f3_plane_switch/wrist/2026-09-21_F3_compact_toy_s70_v2_full_wrist.mp4) | 98.36 s / 2459 | 完整真实摩擦抓持通行；预穿环/预抓取，末端释放、撤臂及静置，4/2 ms 验收通过。同次物理状态三视角重渲染。[证据](../runs/demo_metadata/buzz_wire_3d/2026-09-21_F3_compact_toy_s70_v2_full/README.md) |
+| 解绳结 Trefoil v9 | [cam_low](knot_untying/varaition_trefoil/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) · [cam_high](knot_untying/varaition_trefoil/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) · [cam_right_wrist](knot_untying/varaition_trefoil/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) · [cam_left_wrist](knot_untying/varaition_trefoil/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) · [detail](knot_untying/varaition_trefoil/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4) | 75 s / 1500 | 完整解结、释放静置；P3 网格收敛和通用交接资格仍未齐。 [证据](../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/) |
+| 被子展平 简单初态 | [wrist](blanket_flatten/varaition_simple_folds/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4) · [agentview](blanket_flatten/varaition_simple_folds/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4) · [front_oblique](blanket_flatten/varaition_simple_folds/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4) | 32.55 s / 651 | 简单初态完整流程，含辅助抓持；不代表选定复杂麻花初态成功。 [证据](../runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/) |
+| Orbits 居中场景 v5 | [overview](orbits/varaition_base_centered/overview/2026-09-20_static_base_centered_v5_overview.mp4) · [topdown](orbits/varaition_base_centered/topdown/2026-09-20_static_base_centered_v5_topdown.mp4) · [front_oblique](orbits/varaition_base_centered/front_oblique/2026-09-20_static_base_centered_v5_front_oblique.mp4) | 8 s / 120 | 仅静态初态；最新局部动力学在开发目录，尚无完整机器人解脱。 [证据](../runs/demo_metadata/orbits/2026-09-20_static_base_centered_v5/) |
+| 长孔立柱 36 mm 外力流程 | [topdown](slotted_post_ring/varaition_clearance36/topdown/2026-09-21_clearance36_full_physics_v1_topdown.mp4) · [front_oblique](slotted_post_ring/varaition_clearance36/front_oblique/2026-09-21_clearance36_full_physics_v1_front_oblique.mp4) · [rear_oblique](slotted_post_ring/varaition_clearance36/rear_oblique/2026-09-21_clearance36_full_physics_v1_rear_oblique.mp4) | 147 s / 2940 | 147 秒一维绳外力驱动完整解环；不是机器人执行，也不是新 FEM 模型验收。 [证据](../runs/demo_metadata/slotted_post_ring/2026-09-21_clearance36_full_physics_v1/) |
+| Buzz Wire 接触诊断 | [overview](buzz_wire_3d/varaition_f2_rounded18mm_diagnostic/overview/2026-09-19_F2_rounded18mm_contact_diagnostic_overview.mp4) | 7.04 s / 176 | 开发中的独立视角诊断，非完整流程，不与其他视频拼组。 [证据](../runs/demo_metadata/buzz_wire_3d/2026-09-19_F2_rounded18mm_contact_diagnostic/) |
+| Buzz Wire F2 静态预览 | [topdown](buzz_wire_3d/varaition_f2_over_under_eight/topdown/2026-09-20_F2_compact_toy_s70_v2_scene_preview_topdown.mp4) | 8 s / 120 | 开发中的独立静态俯视，非完整流程，不与其他视频拼组。 [证据](../runs/demo_metadata/buzz_wire_3d/2026-09-20_photo_toy_s70_v2_scene_preview/) |
 
-2026-09-19 新增 Buzz Wire F3 四关单臂完整动作 v3：梳齿 → W → 侧向 Ω → 倾斜螺旋；三路各 106.96 秒、2674 帧、25 fps。预穿环 / 预抓取、实际摩擦夹持、末端释放与静置；4 / 2 ms 独立执行均通过，视频为同一主运行的实测状态重渲染。
+机器可读视频哈希与解码结果：[catalog.json](../runs/demo_metadata/catalog.json)。任务状态见[当前进度](../docs/progress/current_zh.md)。
 
-- [全景](buzz_wire_3d/agentview/2026-09-19_F3_comb_w_omega_coil_v3_agentview.mp4) · [斜前](buzz_wire_3d/front_oblique/2026-09-19_F3_comb_w_omega_coil_v3_front_oblique.mp4) · [腕部](buzz_wire_3d/wrist/2026-09-19_F3_comb_w_omega_coil_v3_wrist.mp4)
-- [物理证据与归档检查](../runs/demo_metadata/buzz_wire_3d/2026-09-19_F3_comb_w_omega_coil_v3/README.md) · [固定工程实例配置](../configs/task_variants/buzz_wire_3d/plane_switch_clearance_v3.yaml)。本结论仅覆盖此实例及控制策略。
+历史版本按本次目录清理要求移除；保留的旧物理报告仍代表当时实例，不将其他版本的视频冒充其证据。

@@ -1,0 +1,71 @@
+schema_version: 1
+task_id: buzz_wire_3d
+catalog_id: fixed_compact_toy_v2
+paths_relative_to: repository_root
+selection_mode: explicit_fixed_instance
+uniform_scale: 0.7
+finish: toy_wood_copper
+robot_scaled: false
+representatives:
+- family: F1
+  family_id: F1_vertical_wave
+  instance_id: F1_compact_toy_s70_v2
+  label_zh: 两座高拱与中央深谷
+  scene_config: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_v2/scene_config.yaml
+  scene_config_sha256: 3c75de868f1144202514fe7420b24379265f1a2cee299cd56bf3fd3bcbadb35f
+  ik_seed: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_v2/robot_seed.json
+  ik_seed_sha256: d756d15a77a74cd9d0311764908b603c44191928cf8d1b27a0b9e4fc05abb4aa
+  qualification: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_v2/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-21_F1_compact_toy_s70_v2_full
+  duration_s: 44.6
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+- family: F2
+  family_id: F2_over_under_eight
+  instance_id: F2_compact_toy_s70_v2
+  label_zh: 三连回折、错层八字、竖直 W
+  scene_config: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_v2/scene_config.yaml
+  scene_config_sha256: aee3a51806a2571740e96ef97addd165bba46445f7d0595bc3e516676ca2754b
+  ik_seed: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_v2/robot_seed.json
+  ik_seed_sha256: a7af08e10640128734119d45b709a341623fa885c210c17ec60df59ff005bef0
+  qualification: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_v2/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full
+  duration_s: 103.04
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+- family: F3
+  family_id: F3_plane_switch
+  instance_id: F3_compact_toy_s70_v2
+  label_zh: 水平梳齿、竖直 W、侧向 Ω、倾斜螺旋
+  scene_config: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_v2/scene_config.yaml
+  scene_config_sha256: 8407e651acbb495e3098e33d2c05383ce9ebc8e57d03248d5ae7a1d1be89f3d3
+  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_v2/robot_seed.json
+  ik_seed_sha256: cb5519f10c0d42d2aaf1f7f9f19657072887844039fec05be664fe4740f9e4c6
+  qualification: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_v2/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-21_F3_compact_toy_s70_v2_full
+  duration_s: 98.36
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+derivation_contract:
+  reference_role: Use the selected family IK and grasp as initialization; never scale
+    joint angles.
+  preserve:
+  - family structure
+  - stage count
+  - stage order
+  - full maze traversal
+  revalidate:
+  - geometry and tool clearance
+  - continuous IK and robot collisions
+  - complete contact-friction execution
+  - release and settle
+  - half-timestep repeat
+  inherit_qualification: false
+  parameter_sampling_implemented: false
+  parameter_ranges_certified: false

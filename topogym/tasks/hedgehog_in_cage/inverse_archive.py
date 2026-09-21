@@ -180,7 +180,7 @@ def archive(folder):
     exclude=shutil.ignore_patterns("attempts", "*.mp4", "*.log", "profile_rejection.json", "index.html")
     shutil.copytree(folder,destination,ignore=exclude)
     sources=destination/"provenance"; sources.mkdir()
-    shutil.copy2(ROOT/"docs/develop/tasks/hedgehog_in_cage_inverse_window_zh.md",destination/"README.md")
+    shutil.copy2(ROOT/"docs/develop/tasks/hedgehog_in_cage_zh.md",destination/"README.md")
     packages={}
     for name in ("genesis-world","torch","numpy","scipy","mujoco","python-fcl","trimesh","manifold3d","omegaconf","imageio","Pillow"):
         try: packages[name]=version(name)

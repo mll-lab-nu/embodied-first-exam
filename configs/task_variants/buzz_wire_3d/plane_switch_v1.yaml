@@ -97,3 +97,11 @@ verified_representatives:
     design_spec: plane_switch_clearance_v3.yaml
     runtime_seed: assets/tasks/buzz_wire_3d/F3_comb_w_omega_coil_clearance_v3/robot_seed.json
     qualification: runs/demo_metadata/buzz_wire_3d/2026-09-19_F3_comb_w_omega_coil_v3/stability_report.json
+
+# Qualification applies only to this 70% fixed representative, not the design ranges above.
+qualified_compact_representative:
+  catalog: fixed_compact_toy_v2.yaml
+  instance_id: F3_compact_toy_s70_v2
+  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_v2/robot_seed.json
+  scope: This compact instance only; original dimensions and other prototypes remain
+    unqualified.

@@ -146,10 +146,13 @@ def main():
     p.add_argument('--mass-damping',type=float,default=FEMSettings.mass_damping_rate_s_inv)
     p.add_argument('--slot-width',type=float,default=.028)
     p.add_argument('--solver-tolerance',type=float,default=FEMSettings.solver_tolerance)
+    p.add_argument('--solver-iterations',type=int,default=FEMSettings.solver_iterations)
+    p.add_argument('--contact-time',type=float,default=FEMSettings.contact_time_s)
     a=p.parse_args()
     report=settle(a.output,FEMSettings(dt=a.dt,integrator=a.integrator,segment_m=a.segment,radial_segments=a.radial_segments,
         young_pa=a.young,poisson=a.poisson,rayleigh_s=a.rayleigh,
-        mass_damping_rate_s_inv=a.mass_damping,solver_tolerance=a.solver_tolerance),a.seconds,
+        mass_damping_rate_s_inv=a.mass_damping,solver_tolerance=a.solver_tolerance,
+        solver_iterations=a.solver_iterations,contact_time_s=a.contact_time),a.seconds,
         SlottedPostLayout(slot_width_m=a.slot_width))
     if not report['passed']:raise SystemExit(1)
 

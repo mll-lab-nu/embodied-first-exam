@@ -89,12 +89,30 @@ def summarize(root):
         rows.append(row)
     historical_complete_count=sum(r["status"]=="archived_complete" for r in rows)
     repo=Path(__file__).resolve().parents[3]
+    current_archives={}
+    for path in sorted((repo/"runs/demo_metadata/fiber_bundling").glob("*/archive_manifest.json")):
+        item=json.loads(path.read_text())
+        if item.get("counts_as_complete_robotics_demo") and all(
+                camera in item.get("videos",{}) and (path.parent/item["videos"][camera]["path"]).is_file()
+                for camera in ("agentview","front_oblique","wrist")):
+            key=(item["fiber_count"],item["ring_inner_radius_m"],item["support"])
+            current_archives[key]=path
     for row in rows:
         if not row.get("metadata"):
             continue
         metadata=repo/row["metadata"]
         manifest_path=metadata/"archive_manifest.json"
+        replacement=current_archives.get((row["fiber_count"],row["ring_inner_radius_m"],row["support"]))
+        if replacement is not None and replacement != manifest_path:
+            row["historical_metadata"]=row["metadata"]
+            metadata=replacement.parent
+            manifest_path=replacement
+            row["metadata"]=str(metadata.relative_to(repo))
         if not manifest_path.exists():
+            row["historical_metadata"]=row.pop("metadata")
+            row["video_files"]={}
+            if row["status"]=="archived_complete":
+                row["status"]="historical_execution_only"
             continue
         manifest=json.loads(manifest_path.read_text())
         if manifest.get("replacement_metadata"):
@@ -104,6 +122,8 @@ def summarize(root):
             manifest=json.loads((metadata/"archive_manifest.json").read_text())
         row["video_files"]={camera:str((metadata/video["path"]).resolve().relative_to(repo))
             for camera,video in manifest.get("videos",{}).items() if (metadata/video["path"]).is_file()}
+        if row["video_files"]:
+            row["strict_timestep_convergence_passed"]=manifest.get("strict_timestep_convergence_passed")
         if not row["video_files"] and manifest.get("video_retention",{}).get("status")=="removed_by_user_request":
             row["status"]="historical_execution_only"
     result=dict(updated_at_utc=datetime.now(timezone.utc).isoformat(),variants=rows,
@@ -111,14 +131,14 @@ def summarize(root):
                 archived_complete_count=sum(r["status"]=="archived_complete" for r in rows),total=len(rows))
     (root/"status.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
     lines=["# 光纤收束：各变体完整穿环记录", "", "旧版完整执行计为一个独立变体；新铜杆版逐实例求解、复核并录制。",
-        "当前正式视频目录：`demos/fiber_bundling/`，按 agentview、front_oblique、wrist 分文件夹；每路只保留基础变体的一份无 UI 完整视频。",
+        "当前正式视频目录：`demos/fiber_bundling/varaition_<实例名>/<视角>/`；各密度家族代表分别保留 agentview、front_oblique、wrist 三路无 UI 完整视频，每个相机叶子目录一份 MP4。",
         "",f"历史完整执行 **{historical_complete_count} / {result['total']}**；当前提供视频的实例 **{result['archived_complete_count']}**。其余旧录像按用户要求移除，物理证据保留。详细状态见 `status.json`。",
         "", "| 实例 | 线数 | 环内半径 mm | 支柱 | 状态 | 严格时间步对照 | 视频 |", "| --- | ---: | ---: | --- | --- | --- | --- |"]
     for row in rows:
         label=row["variant_id"]
         if row.get("metadata"):
             label=f"[{label}](../../../../{row['metadata']}/README.md)"
-        else:
+        elif (root/"instances"/row["variant_id"]).is_dir():
             label=f"[{label}](instances/{row['variant_id']}/)"
         convergence=row.get("strict_timestep_convergence_passed")
         result_label="通过" if convergence is True else "未通过" if convergence is False else "待完成"

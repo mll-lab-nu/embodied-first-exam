@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--preview', action='store_true')
     parser.add_argument('--initialization', action='store_true',
                         help='Render gravity initialization and passive stability, without claiming robot completion')
+    parser.add_argument('--external', action='store_true', help='Render an explicitly labelled no-robot external manipulation')
     parser.add_argument('--camera-overrides', type=Path, help='Camera mapping only; preserves the physical source configuration')
     parser.add_argument('--allow-failed', action='store_true', help='Render a clearly labelled diagnostic attempt')
     parser.add_argument('--output', type=Path, help='Separate output directory for render verification')
@@ -27,6 +28,8 @@ def main():
     parser.add_argument('--include-preparation', action='store_true', help='Include the procedural initial-state construction in a robot video')
     parser.add_argument('--fps', type=int, help='Video frame rate; must divide the recorded frame rate')
     args = parser.parse_args()
+    if args.external and args.initialization:
+        parser.error('--external and --initialization are distinct recording scopes')
     if args.frame_indices and not args.preview:
         parser.error('--frame-indices requires --preview')
     source = args.source.resolve()
@@ -40,11 +43,15 @@ def main():
         and report.get('final_evidence', {}).get('passive_seconds', 0) >= 10
         and report.get('initial_robot_clearance_checks', 0) > 0
         and report.get('minimum_initial_robot_clearance_m', 0) >= .008)
-    source_approved = initial_approved if args.initialization else approved
+    if args.external and report.get('mode') != 'external':
+        raise ValueError('External rendering requires a no-robot external source run')
+    external_review = json.loads((source/'external_review.json').read_text()) if (source/'external_review.json').exists() else {}
+    external_approved = bool(args.external and report.get('success') and external_review.get('external_manipulation_verified'))
+    source_approved = external_approved if args.external else (initial_approved if args.initialization else approved)
     if not source_approved and not args.allow_failed:
         scope = 'accepted initialization with 10 s passive stability' if args.initialization else 'completed robot task'
         raise ValueError(f'Cannot render this attempt as {scope}')
-    cameras = INITIAL_CAMERAS if args.initialization else CAMERAS
+    cameras = INITIAL_CAMERAS if args.initialization or args.external else CAMERAS
     cfg = OmegaConf.load(source/'config.yaml')
     source_fps = int(cfg.run.fps)
     video_fps = source_fps if args.fps is None else args.fps
@@ -76,9 +83,9 @@ def main():
     from topogym.supervision.pbd_probe import probe_particles
     from .scene import BlanketSceneBuilder
     gs.init(backend=gs.cuda, precision=str(cfg.env.genesis.precision), seed=int(cfg.task.geometry.seed), logging_level='warning')
-    task = BlanketSceneBuilder(cfg.env, cfg.task, cfg.robot_control).build(asset_dir=output/'assets')
-    robot = task.tabletop.manifest.get('robot')
-    arm_geoms = [geom for geom in robot.geoms if re.search(r'(?:^|_)link[0-7]$', geom.link.name) and len(geom.mesh.faces)]
+    task = BlanketSceneBuilder(cfg.env, cfg.task, cfg.robot_control).build(asset_dir=output/'assets', include_robot=not args.external)
+    robot = None if args.external else task.tabletop.manifest.get('robot')
+    arm_geoms = [] if robot is None else [geom for geom in robot.geoms if re.search(r'(?:^|_)link[0-7]$', geom.link.name) and len(geom.mesh.faces)]
     arm_samples = []
     if not np.array_equal(trace['faces'], task.faces) or not np.allclose(trace['material_uv'], task.material_uv, atol=1e-7):
         raise ValueError('Rebuilt cloth topology differs from physical recording')
@@ -114,10 +121,18 @@ def main():
             ffmpeg_log_level='error', ffmpeg_params=['-movflags', '+faststart'])) for name in cameras}
         for frame_number, index in enumerate(selected):
             task.cloth.set_particles_pos(trace['positions'][index])
-            robot.set_qpos(trace['robot_qpos'][index], zero_velocity=True)
+            if robot is not None:
+                robot.set_qpos(trace['robot_qpos'][index], zero_velocity=True)
             max_particle_error = max(max_particle_error, float(np.max(np.abs(probe_particles(task.cloth)-trace['positions'][index]))))
-            max_joint_error = max(max_joint_error, float(np.max(np.abs(robot.get_qpos().cpu().numpy()-trace['robot_qpos'][index]))))
-            if not args.initialization:
+            if robot is not None:
+                max_joint_error = max(max_joint_error, float(np.max(np.abs(robot.get_qpos().cpu().numpy()-trace['robot_qpos'][index]))))
+            if args.external:
+                task.scene.clear_debug_objects()
+                for center, color in zip(trace['hand_centers'][index], [(1., .25, .1, 1.), (.15, 1., .3, 1.)]):
+                    if np.isfinite(center).all():
+                        task.scene.draw_debug_sphere(center, radius=.009, color=color)
+                        task.scene.draw_debug_arrow(center+[0, 0, .10], vec=[0, 0, -.08], radius=.003, color=color)
+            if robot is not None and not args.initialization:
                 task.scene.visualizer.update_visual_states(force_render=True)
             if 'wrist' in task.tabletop.cameras:
                 task.tabletop.cameras['wrist'].move_to_attach()
@@ -127,7 +142,7 @@ def main():
                 # the next cameras only change the viewpoint. Re-uploading the
                 # entire scene for every camera is unnecessary. Keep the prior
                 # path for attached robot cameras and other renderer backends.
-                shared_raster = args.initialization and str(cfg.env.renderer.type) == 'rasterizer'
+                shared_raster = (args.initialization or args.external) and str(cfg.env.renderer.type) == 'rasterizer'
                 shared_robot = args.shared_raster_updates and not args.initialization and str(cfg.env.renderer.type) == 'rasterizer'
                 # The rasterizer owns a scene cache separate from visual states.
                 # Refresh that cache on the first camera even if FK was updated.
@@ -137,7 +152,7 @@ def main():
                     writers[name].append_data(rgb)
                 if index in keyframes:
                     Image.fromarray(rgb).save(output/f'{index:05d}_{phases[index]}_{name}.jpg', quality=92)
-            if not args.initialization and not args.preview and (frame_number % video_fps == 0 or index in keyframes):
+            if robot is not None and not args.initialization and not args.preview and (frame_number % video_fps == 0 or index in keyframes):
                 from .robot_clearance import surface_clearance
                 if not arm_geoms:
                     raise ValueError('No arm collision geometry found for motion review')
@@ -150,8 +165,10 @@ def main():
     if max_particle_error > 1e-6 or max_joint_error > 1e-6:
         raise ValueError('Rendered pose differs from measured physical state')
     result = dict(source=str(source), source_success=source_approved,
-        scope='gravity_initialization_and_passive_stability' if args.initialization else 'robot_task',
+        scope='external_manipulation' if args.external else ('gravity_initialization_and_passive_stability' if args.initialization else 'robot_task'),
         full_robot_task_verified=approved, initialization_verified=initial_approved,
+        external_manipulation_verified=external_approved,
+        grip_markers_enabled=bool(args.external and all(camera.debug for camera in task.tabletop.cameras.values())),
         classification='exact_physical_state_replay', render_simulation_steps=0,
         render_source_sha256=hashlib.sha256(render_source).hexdigest(),
         source_physics_steps=report['physics_steps'], preview_only=args.preview,
@@ -176,15 +193,20 @@ def main():
         (output/'robot_motion_review.json').write_text(json.dumps(arm_review, indent=2)+'\n')
         result['arm_clearance_review_passed'] = arm_review['passed']
     (output/'render_report.json').write_text(json.dumps(result, indent=2)+'\n')
-    status = 'accepted robot execution' if approved else ('accepted initialization' if initial_approved else 'failed diagnostic attempt')
+    status = 'accepted external manipulation, not a robot execution' if external_approved else ('accepted robot execution' if approved else ('accepted initialization' if initial_approved else 'failed diagnostic attempt'))
     initialization = ('This is a fresh physical run from the selected landed shape with zero initial velocity; '
                       'it is not a dynamics continuation of the original recording.' if report.get('initial_state_restoration') else
                       'Initial procedural preparation, when present, uses bounded velocity control before release.')
     links = ([f'- [{name}.mp4]({name}.mp4)' for name in cameras] if not args.preview else
              [f'- [{index:05d} {name}]({index:05d}_{phases[index]}_{name}.jpg)' for index in keyframes for name in cameras])
+    marker_description = ('Orange and green markers show the two recorded virtual grip centers.\n'
+                          if result['grip_markers_enabled'] else 'Grip markers are not enabled in these cameras.\n')
+    grasp_description = ('No robot. '+marker_description+
+                         'Velocity-driven fixed material patches use material-coordinate selection; not frictional finger contact.\n'
+                         if args.external else 'Robot grasps use local attachment after bilateral pad proximity checks.\n')
     (output/'README.md').write_text(f'Blanket flatten: {status}.\n\n'+
-        'Exact replay of recorded particle and full robot states; no new physics steps during rendering.\n'+
-        'Robot grasps use local attachment after bilateral pad proximity checks.\n'+initialization+'\n\n'+
+        'Exact replay of recorded states; no new physics steps during rendering.\n'+
+        grasp_description+initialization+'\n\n'+
         '\n'.join(links)+'\n\n[Render evidence](render_report.json)\n')
     print(output, flush=True)
 

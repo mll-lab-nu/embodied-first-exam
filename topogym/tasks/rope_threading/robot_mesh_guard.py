@@ -6,18 +6,45 @@ It is sampled at control frames, not a certificate of continuous robot CCD.
 """
 import mujoco
 import numpy as np
+import multiprocessing as mp
+
+
+def _triangle_worker(connection):
+    """Keep ipctk out of the uipc process: their pybind enums conflict."""
+    try:
+        import ipctk
+        ipctk.set_num_threads(2)
+        cache = {}
+        while True:
+            request = connection.recv()
+            if request is None:
+                break
+            ids, vertices, faces, first = request
+            vertices = np.asfortranarray(vertices)
+            if ids not in cache:
+                edges = np.unique(np.sort(np.vstack([faces[:, :2], faces[:, 1:], faces[:, [0, 2]]]), axis=1), axis=0)
+                mesh = ipctk.CollisionMesh(vertices, np.asfortranarray(edges), np.asfortranarray(faces))
+                mesh.can_collide = ipctk.make_vertex_patches_filter(np.r_[np.zeros(first, dtype=np.int32),
+                    np.ones(len(vertices)-first, dtype=np.int32)])
+                cache[ids] = mesh
+            connection.send(dict(intersects=bool(ipctk.has_intersections(cache[ids], vertices, None))))
+    except (EOFError, BrokenPipeError):
+        pass
+    except BaseException as exc:
+        connection.send(dict(error=f"{type(exc).__name__}: {exc}"))
+    finally:
+        connection.close()
 
 
 class MeasuredRobotMeshGuard:
     def __init__(self, model):
         self.model, self.data = model, mujoco.MjData(model)
-        self.cache = {}
+        self.cache = set()
+        self.process = self.connection = None
         self.frames = self.convex_candidates = self.triangle_checks = self.convex_false_positives = 0
         self.failures = []
 
     def _triangle_intersection(self, ids):
-        import ipctk
-        ipctk.set_num_threads(2)
         model, data = self.model, self.data
         vertices, faces, count, first = [], [], 0, 0
         for g in ids:
@@ -30,15 +57,40 @@ class MeasuredRobotMeshGuard:
             if not first:
                 first = count
         vertices = np.asfortranarray(np.vstack(vertices))
-        if ids not in self.cache:
-            f = np.vstack(faces).astype(np.int32)
-            edges = np.unique(np.sort(np.vstack([f[:, :2], f[:, 1:], f[:, [0, 2]]]), axis=1), axis=0)
-            mesh = ipctk.CollisionMesh(vertices, np.asfortranarray(edges), np.asfortranarray(f))
-            mesh.can_collide = ipctk.make_vertex_patches_filter(np.r_[np.zeros(first, dtype=np.int32),
-                                                                    np.ones(count-first, dtype=np.int32)])
-            self.cache[ids] = mesh
+        if self.process is None:
+            context = mp.get_context("spawn")
+            self.connection, child = context.Pipe()
+            self.process = context.Process(target=_triangle_worker, args=(child,), daemon=True)
+            self.process.start()
+            child.close()
         self.triangle_checks += 1
-        return bool(ipctk.has_intersections(self.cache[ids], vertices, None))
+        faces = None if ids in self.cache else np.vstack(faces).astype(np.int32)
+        try:
+            self.connection.send((ids, vertices, faces, first))
+            if not self.connection.poll(30):
+                raise RuntimeError("Independent robot triangle worker timed out")
+            result = self.connection.recv()
+        except (EOFError, BrokenPipeError) as exc:
+            raise RuntimeError("Independent robot triangle worker disconnected") from exc
+        if "error" in result:
+            raise RuntimeError("Independent robot triangle worker failed: "+result["error"])
+        self.cache.add(ids)
+        return result["intersects"]
+
+    def close(self):
+        if self.process is not None:
+            if self.process.is_alive():
+                try:
+                    self.connection.send(None)
+                except (EOFError, BrokenPipeError):
+                    pass
+                self.process.join(5)
+            if self.process.is_alive():
+                self.process.terminate()
+                self.process.join(5)
+            self.connection.close()
+            self.process = self.connection = None
+            self.cache.clear()
 
     def check(self, qpos, t):
         self.frames += 1
@@ -55,7 +107,11 @@ class MeasuredRobotMeshGuard:
             self.convex_candidates += 1
             meshes = all(self.model.geom_type[g] == mujoco.mjtGeom.mjGEOM_MESH for g in ids)
             if meshes:
-                failure = self._triangle_intersection(ids)
+                try:
+                    failure = self._triangle_intersection(ids)
+                except RuntimeError as exc:
+                    self.failures.append(dict(time_s=float(t), kind="triangle_worker_error", error=str(exc)))
+                    raise
                 if not failure:
                     self.convex_false_positives += 1
             else:
@@ -72,4 +128,5 @@ class MeasuredRobotMeshGuard:
     def report(self):
         return dict(passed=not self.failures, control_frames=self.frames, convex_candidates=self.convex_candidates,
             exact_triangle_pair_checks=self.triangle_checks, convex_false_positives=self.convex_false_positives,
-            failures=self.failures, scope="measured-joint control-frame geometry; not continuous robot CCD")
+            failures=self.failures, triangle_checker_process="isolated CPU worker (uipc/ipctk enum separation)",
+            scope="measured-joint control-frame geometry; not continuous robot CCD")

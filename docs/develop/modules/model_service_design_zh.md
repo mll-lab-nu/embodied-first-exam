@@ -262,10 +262,10 @@ agent 回合数、动作段数、物理步数和 token 预算分别记录；一�
 教程已更新并集中在 [Agent rollout 实用手册](agent_rollout_usage_zh.md)，使用当前工具驱动模式：
 
 1. [本地环境与无模型 smoke 检查](agent_rollout_usage_zh.md)：可直接执行 Bash，无需粘贴长 Python 命令。
-2. [提供模型服务凭据](agent_rollout_usage_zh.md#api-key)：统一用 `TOPOGYM_MODEL_API_KEY` 暂存，启动时映射到对应适配器的认证变量。
-3. [配置 agent](agent_rollout_usage_zh.md#configure-agent)：`access_mode: simulator`、`interaction: tools`、`reset_policy: same_preset`。
-4. [冻结变体](agent_rollout_usage_zh.md#prepare-suite)：所有随机化在评测前完成。
-5. [运行短 evaluation](agent_rollout_usage_zh.md#run-evaluation)：包含 reset、环境调用和跨 episode 总预算。
+2. [提供模型服务凭据](agent_rollout_usage_zh.md#api-key)：执行时隐藏输入，或从 `TOPOGYM_MODEL_API_KEY` 环境变量读取；脚本映射到适配器所需变量。
+3. [配置 agent](agent_rollout_usage_zh.md#configure-agent)：`tests/run_agent_rollout.sh prepare` 自动生成配置并保存预算。
+4. [冻结变体](agent_rollout_usage_zh.md#prepare-suite)：同一 prepare 命令完成所有随机化，也可通过 `--suite` 引用已有冻结变体。
+5. [运行短 evaluation](agent_rollout_usage_zh.md#run-evaluation)：`evaluate` 读取保存参数，结束自动汇总；`report` / `watch` 查看结果和实时 token。
 
 当前可运行示例使用 OpenAI API + Codex 执行后端，需提供 OpenAI Platform key；严格预算代理也只实现了这条接入路径。
 其他模型服务是后续适配目标，不能仅替换 key 或 `model` 就视为接入完成。通用配置设计见第 5 节。

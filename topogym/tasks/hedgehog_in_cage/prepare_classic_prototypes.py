@@ -1,6 +1,8 @@
 """Archive synchronized physical videos and promote the replacement families."""
 from __future__ import annotations
 
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import json
@@ -28,8 +30,8 @@ def archive(folder):
     videos={}
     for camera in ("agentview","front_oblique","wrist"):
         relative=recording["video_files"][camera];video=ROOT/relative
-        if video.parent != ROOT/"demos/hedgehog_in_cage"/camera:
-            raise ValueError("Videos must use the existing per-camera archive")
+        if video.parent != demo_video_root(ROOT, "hedgehog_in_cage", folder.name)/camera:
+            raise ValueError("Videos must use the family / camera archive")
         stream=json.loads(subprocess.check_output(["ffprobe","-v","error","-count_frames","-select_streams","v:0",
             "-show_entries","stream=nb_read_frames,duration,r_frame_rate,width,height","-of","json",str(video)]))["streams"][0]
         subprocess.run(["ffmpeg","-v","error","-i",str(video),"-f","null","-"],check=True)

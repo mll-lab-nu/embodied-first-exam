@@ -3,7 +3,6 @@
 | 工具 | 用途 |
 | --- | --- |
 | `audit_task_assets.py` | 当前十项任务参数卡与资产核对 |
-| `build_bootstrap_review.py` | 从实际报告重建 `runs/environment_bootstrap/index.html` |
 | `calibrate_robotiq_model.py` | 共用 Robotiq 资产与标定工具 |
 | `prepare_nyx_studio.py` | 下载并核验当前渲染使用的 HDRI/纹理 |
 | `export_h5_lerobot.py` | 通用 HDF5 → LeRobot 转换，需 OpenPI/LeRobot 环境 |

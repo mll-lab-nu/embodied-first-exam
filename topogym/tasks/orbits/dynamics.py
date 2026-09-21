@@ -286,7 +286,10 @@ class Probe:
                 self.fold_offsets=state['fold_offsets']
         mujoco.mj_forward(self.model,self.data)
 
-    def move(self,name,bight=None,handle=None,seconds=2.,span=None,anchors=None):
+    def move(self,name,bight=None,handle=None,seconds=2.,span=None,anchors=None,
+             step_callback=None):
+        if step_callback is not None and not callable(step_callback):
+            raise TypeError('step_callback must be callable')
         start=self.data.mocap_pos.copy();target=start.copy()
         if span is not None:
             if self.held_nodes is None:raise ValueError('Spreading requires two material grasps')
@@ -332,6 +335,8 @@ class Probe:
         for i in range(steps):
             u=(i+1)/steps;s=u*u*(3-2*u)
             self.data.mocap_pos[:]=start+s*(target-start)
+            if step_callback is not None:
+                step_callback(self.model,self.data)
             mujoco.mj_step(self.model,self.data)
             self.step_count += 1
             if i%10==0:

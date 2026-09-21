@@ -6,7 +6,7 @@ Agent 接入见 [Knot Untying adapter](../modules/knot_untying_agent_adapter_zh.
 
 实施与结果见 [物理稳定性验收与三视角全过程 demo 计划](knot_untying_physics_demo_plan_zh.md)。已完成 [完整机器人解结录像](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)，实际连续模拟 75 s，保留五路同步视角。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。详细记录见 [抓持与录像复测](knot_untying_recording_attempt_zh.md)。
 
-完整 demo 的 MP4 已按视角独立归档至 `demos/knot_untying/<camera>/`；播放页、报告、轨迹和归档清单保存至 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。
+完整 demo 的 MP4 已按视角独立归档至 `demos/knot_untying/varaition_<id>/<camera>/`；播放页、报告、轨迹和归档清单保存至 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。
 
 本阶段铺设一根绳上只打一次结的场景。采用开放绳的 overhand knot；将自由端从外侧无交叉地闭合后，得到 trefoil / 3₁。物理场景中保留两个自由端，可供后续抓取和退绳。结型参考：[MathWorld](https://mathworld.wolfram.com/TrefoilKnot.html)。
 

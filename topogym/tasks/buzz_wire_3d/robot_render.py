@@ -112,6 +112,7 @@ def render(
     resume=False,
     frame_start=None,
     frame_stop=None,
+    wrist_offset=None,
 ):
     import genesis as gs
 
@@ -157,6 +158,15 @@ def render(
     if not 0 <= lo < hi <= len(rows) or (preview and chunked):
         raise ValueError("Invalid render frame range")
     cfg = OmegaConf.load(source / "config.yaml")
+    if wrist_offset is not None:
+        wrist_offset = np.asarray(wrist_offset, dtype=float)
+        if wrist_offset.shape != (3,) or not np.all(np.isfinite(wrist_offset)):
+            raise ValueError("Wrist camera offset must contain three finite lengths")
+        OmegaConf.update(
+            cfg, "robot_demo.render_wrist_offset_m", wrist_offset.tolist(), force_add=True
+        )
+    else:
+        wrist_offset = np.array([0.070, 0.045, 0.015])
     cfg.env.genesis.backend = "cpu"
     cfg.env.renderer.type = "rasterizer"
     cfg.env.presentation.background = "checker"
@@ -278,7 +288,7 @@ def render(
         if max(peaks.values()) > 1e-7:
             raise ValueError(f"Rendered pose differs from physical state: {peaks}")
         hand_rotation = Rotation.from_quat(c.hand_quat()[[1, 2, 3, 0]])
-        camera_position = c.hand_pos() + hand_rotation.apply([0.070, 0.045, 0.015])
+        camera_position = c.hand_pos() + hand_rotation.apply(wrist_offset)
         task.tabletop.cameras["wrist"].set_pose(
             pos=camera_position, lookat=p, up=hand_rotation.apply([0, 1, 0])
         )
@@ -358,6 +368,7 @@ def render(
         assisted_grasp=report["assisted_grasp"],
         passive_gripper_joints_reconstructed=False,
         wrist_camera_scope="Position fixed relative to hand; gaze tracks the measured ring center",
+        wrist_camera_offset_m=wrist_offset.tolist(),
         partial_frame_range=[lo, hi] if chunked else None,
         rendered_frame_count=len(selected),
     )
@@ -405,7 +416,7 @@ def render(
     return result
 
 
-def parallel_render(source, output, workers=3, resume=False, fps=25):
+def parallel_render(source, output, workers=3, resume=False, fps=25, wrist_offset=None):
     """Render disjoint frame ranges of ONE measured execution, then validate coverage."""
     source, output = Path(source).resolve(), Path(output).resolve()
     physical = json.loads((source / "report.json").read_text())
@@ -426,6 +437,8 @@ def parallel_render(source, output, workers=3, resume=False, fps=25):
             n: sha(source / n) for n in ("report.json", "frames.json", "config.yaml")
         },
     )
+    if wrist_offset is not None:
+        settings["wrist_offset_m"] = list(wrist_offset)
     if output.exists() and any(output.iterdir()) and not resume:
         raise FileExistsError(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -456,6 +469,8 @@ def parallel_render(source, output, workers=3, resume=False, fps=25):
                 "--fps",
                 str(fps),
             ]
+            if wrist_offset is not None:
+                command.extend(["--wrist-offset", *map(str, wrist_offset)])
             if resume and folder.exists() and any(folder.iterdir()):
                 command.append("--resume")
             stream = (output / f"chunk_{index:02d}.log").open("a" if resume else "w")
@@ -611,13 +626,16 @@ def main():
     parser.add_argument("--frame-start", type=int)
     parser.add_argument("--frame-stop", type=int)
     parser.add_argument("--fps", type=int, default=25)
+    parser.add_argument("--wrist-offset", type=float, nargs=3, metavar=("X", "Y", "Z"))
     args = parser.parse_args()
     if args.workers > 1:
         if args.preview or args.frame_start is not None or args.frame_stop is not None:
             parser.error(
                 "Parallel mode cannot be combined with preview or an explicit frame range"
             )
-        parallel_render(args.source, args.output, args.workers, args.resume, args.fps)
+        parallel_render(
+            args.source, args.output, args.workers, args.resume, args.fps, args.wrist_offset
+        )
     else:
         render(
             args.source,
@@ -627,6 +645,7 @@ def main():
             resume=args.resume,
             frame_start=args.frame_start,
             frame_stop=args.frame_stop,
+            wrist_offset=args.wrist_offset,
         )
 
 

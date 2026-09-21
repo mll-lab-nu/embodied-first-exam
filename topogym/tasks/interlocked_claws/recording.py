@@ -52,8 +52,16 @@ def write_page(output, report, videos=None):
 <script>const main=document.getElementById('main'),all=[...document.querySelectorAll('video')];function seek(t){{all.forEach(v=>v.currentTime=t)}}document.getElementById('speed').onchange=e=>all.forEach(v=>v.playbackRate=+e.target.value);all.forEach(v=>v.playbackRate=4);main.onplay=()=>all.filter(v=>v!==main).forEach(v=>{{v.currentTime=main.currentTime;v.play().catch(()=>{{}})}});main.onpause=()=>all.forEach(v=>v.pause());main.onseeking=()=>all.filter(v=>v!==main).forEach(v=>v.currentTime=main.currentTime);</script></html>''')
 
 
-def render(output, physical_source=None, keyframes_only=False):
+def render(output, physical_source=None, keyframes_only=False, cameras=NAMES, video_output=None, prefix=""):
     output=Path(output).resolve()
+    cameras=tuple(cameras)
+    if not cameras or len(set(cameras))!=len(cameras) or any(n not in NAMES for n in cameras):
+        raise ValueError("Choose unique cameras from the standard Claw rig")
+    video_paths={n:(Path(video_output).resolve()/n/f"{prefix+'_' if prefix else ''}{n}.mp4"
+                    if video_output else output/f"{n}.mp4") for n in cameras}
+    if not keyframes_only:
+        for path in video_paths.values():
+            if path.exists():raise FileExistsError(path)
     if (output/"recording_report.json").exists():raise FileExistsError(output)
     output.mkdir(parents=True,exist_ok=True)
     motion=ReferenceMotion()
@@ -93,9 +101,11 @@ def render(output, physical_source=None, keyframes_only=False):
     selected=[rows[i] for i in keys] if keyframes_only else rows
     max_error=0.;seen=set()
     with ExitStack() as stack:
-        writers={} if keyframes_only else {n:stack.enter_context(imageio.get_writer(output/f"{n}.mp4",fps=fps,codec="libx264",quality=8,
-            macro_block_size=1,ffmpeg_params=["-threads","2"],ffmpeg_log_level="error")) for n in NAMES}
-        cameras=stack.enter_context((output/"camera_poses.jsonl").open("w"))
+        if not keyframes_only:
+            for path in video_paths.values():path.parent.mkdir(parents=True,exist_ok=True)
+        writers={} if keyframes_only else {n:stack.enter_context(imageio.get_writer(video_paths[n],fps=fps,codec="libx264",quality=8,
+            macro_block_size=1,ffmpeg_params=["-threads","2","-movflags","+faststart"],ffmpeg_log_level="error")) for n in cameras}
+        camera_log=stack.enter_context((output/"camera_poses.jsonl").open("w"))
         for row in selected:
             robot.set_qpos(np.asarray(row["qpos"]),zero_velocity=True)
             max_error=max(max_error,float(np.max(abs(as_numpy(robot.get_qpos())-row["qpos"]))))
@@ -106,7 +116,7 @@ def render(output, physical_source=None, keyframes_only=False):
             for n in CAMERA_NAMES[2:]:task.cameras[n].move_to_attach()
             for c in task.cameras.values():c.sensor._stale=True
             transforms={}
-            for n in NAMES:
+            for n in cameras:
                 camera=task.cameras[n];pic=Image.fromarray(camera.render()[0]);draw=ImageDraw.Draw(pic)
                 draw.rectangle((0,0,pic.width,42),fill=(18,27,35))
                 draw.text((9,5),f"CLAW | {row['time_s']:.1f}s | {row['phase']} | {n}",fill='white')
@@ -118,17 +128,21 @@ def render(output, physical_source=None, keyframes_only=False):
                 if row["frame"]==len(rows)-1:pic.save(output/f"final_{n}.png")
                 transforms[n]=np.asarray(camera.transform).tolist()
             seen.add(row["phase"])
-            cameras.write(json.dumps(dict(frame=row["frame"],time_s=row["time_s"],source_step=row["step"],transforms=transforms))+"\n")
+            camera_log.write(json.dumps(dict(frame=row["frame"],time_s=row["time_s"],source_step=row["step"],transforms=transforms))+"\n")
             if row["frame"]%100==0 or keyframes_only:print(f"Render {row['frame']}/{len(rows)} {row['phase']}",flush=True)
     if max_error>1e-9:raise ValueError("Renderer changed a recorded state")
     report=dict(classification=classification,frames=len(rows),fps=fps,duration_s=len(rows)/fps,phases=phases,
         source_motion_sha256=motion.sha256,states_sha256=sha(output/"render_states.jsonl"),
         source_physical_states_sha256=None if physical_source is None else physical["states_sha256"],
         render_scene_physics_steps=0,interpolated_physical_states=False,state_restore_max_error=max_error,
-        cameras=list(NAMES),keyframes_only=keyframes_only,source_directory=None if physical_source is None else str(source))
+        cameras=list(cameras),keyframes_only=keyframes_only,source_directory=None if physical_source is None else str(source))
     if not keyframes_only:
         (output/"recording_report.json").write_text(json.dumps(report,indent=2)+"\n")
-        write_page(output,report)
+        manifest=dict(classification=classification,rerender=physical_source is not None,
+            frames=len(rows),fps=fps,duration_s=len(rows)/fps,states_sha256=report["states_sha256"],
+            source_physical_states_sha256=report["source_physical_states_sha256"],
+            videos={n:dict(path=str(path),sha256=sha(path)) for n,path in video_paths.items()})
+        (output/"video_manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print(output,flush=True)
     return report
 
@@ -136,4 +150,6 @@ def render(output, physical_source=None, keyframes_only=False):
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--output",type=Path,required=True)
     p.add_argument("--physical-source",type=Path);p.add_argument("--keyframes-only",action="store_true")
-    a=p.parse_args();render(a.output,a.physical_source,a.keyframes_only)
+    p.add_argument("--cameras",nargs="+",choices=NAMES,default=NAMES)
+    p.add_argument("--video-output",type=Path);p.add_argument("--prefix",default="")
+    a=p.parse_args();render(a.output,a.physical_source,a.keyframes_only,a.cameras,a.video_output,a.prefix)

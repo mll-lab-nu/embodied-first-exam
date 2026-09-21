@@ -2,7 +2,7 @@
 
 状态：已完成并归档 75 s、五路同步视角的完整实验机器人解结。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。按用户要求，不设独立的数学可解性证明阶段。
 
-三叶结 v9 完整录像：[高位](../../../demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) · [低位](../../../demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) · [左腕](../../../demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) · [右腕](../../../demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) · [近景](../../../demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4)。新家族的执行状态见 [家族构造与验收记录](knot_untying_family_space_zh.md)；三叶结抓持与录制的历史复测见 [记录](knot_untying_recording_attempt_zh.md)。`trefoil_initial/preview.mp4` 是初态预览，不覆盖抓取、解结和释放。
+三叶结 v9 完整录像：[高位](../../../demos/knot_untying/varaition_trefoil/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) · [低位](../../../demos/knot_untying/varaition_trefoil/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) · [左腕](../../../demos/knot_untying/varaition_trefoil/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) · [右腕](../../../demos/knot_untying/varaition_trefoil/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) · [近景](../../../demos/knot_untying/varaition_trefoil/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4)。新家族的执行状态见 [家族构造与验收记录](knot_untying_family_space_zh.md)；三叶结抓持与录制的历史复测见 [记录](knot_untying_recording_attempt_zh.md)。`trefoil_initial/preview.mp4` 是初态预览，不覆盖抓取、解结和释放。
 
 ## 本轮结果
 
@@ -179,7 +179,7 @@ P3 的初始对照：
 
 交付五个独立 MP4，以及逐帧时间和阶段索引。依照 2026-09-19 项目规则，直接提供各视角 MP4 链接，不再新增或更新播放网页。物理过程视频覆盖抓取、送绳、退穿、展开、松手和最后静置；相机环绕只保留在现有初态预览中。关键退穿段至少在一个外部视角持续可见。
 
-完整 demo 的视频归档统一按视角放在 `demos/knot_untying/<camera>/`，按 `<date>_<run_id>_<camera>.mp4` 命名。依照 [项目归档规则](../../../AGENTS.md)，各视角目录只保存独立 MP4 文件；播放页、报告、相机标定、轨迹与归档清单放在 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。本轮完整实验录像已独立归档，见上方完整录像链接；P3 与通用交接验收状态不变。
+完整 demo 的视频归档统一按视角放在 `demos/knot_untying/varaition_<id>/<camera>/`，按 `<date>_<run_id>_<camera>.mp4` 命名。依照 [项目归档规则](../../../AGENTS.md)，各视角目录只保存独立 MP4 文件；播放页、报告、相机标定、轨迹与归档清单放在 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。本轮完整实验录像已独立归档，见上方完整录像链接；P3 与通用交接验收状态不变。
 
 产物目录：
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
-from html import escape
 import hashlib
 import json
 import os
@@ -15,6 +14,8 @@ import subprocess
 import numpy as np
 from omegaconf import OmegaConf
 from scipy.spatial.transform import Rotation
+
+from topogym.utils.demo_paths import demo_video_root
 
 from .geometry import CoilAssembly, load_template
 from .inverse_design import TITLES, variant_route
@@ -36,29 +37,6 @@ REQUIRED_PHASES = {
     "retreat",
     "settle",
 }
-LABELS = {
-    "approach_align": "分离零件对齐",
-    "assembly_insert": "移入装配窗口",
-    "assembly_quarter_turn": "回转 90°",
-    "assembly_close": "闭合装配",
-    "place_assembly": "装配整体落桌",
-    "close_grippers": "闭合夹爪",
-    "hold_grasp": "接触确认与辅助抓持",
-    "pregrasp": "路径对齐",
-    "lift": "整体抬升",
-    "prototype_slide": "滑开",
-    "prototype_quarter_turn": "转动 90°",
-    "prototype_extract": "完全分离",
-    "place_silver": "放下银件",
-    "place_gold": "放下金件",
-    "release": "解除辅助并松爪",
-    "retreat": "双臂撤回",
-    "settle": "自由静置",
-    "turn_first_45": "第一次转动 45°",
-    "intermediate_offset": "中间错位 6 mm",
-    "turn_second_45": "第二次转动 45°",
-    "screw_turn": "转动 90°并推进 6 mm",
-}
 
 
 def sha(path):
@@ -67,7 +45,8 @@ def sha(path):
 
 def demo_title(report):
     if report.get("objective") == "assemble":
-        return "Cast Coil · ALOHA 双臂完整装配"
+        family = TITLES.get(report.get("inverse_design_kind"))
+        return "Cast Coil · " + (f"{family} · " if family else "") + "ALOHA 双臂完整装配"
     if report.get("appearance_kind"):
         return "Cast Coil · " + APPEARANCE_TITLES[report["appearance_kind"]]
     if report.get("inverse_design_kind"):
@@ -371,116 +350,46 @@ def audit(source, reference):
     return report, result
 
 
-def write_page(folder, report, videos):
-    kind = report.get("inverse_design_kind")
-    appearance = report.get("appearance_kind")
-    title = demo_title(report)
-    assembling = report.get("objective") == "assemble"
-    scope = (
-        "从已验证 IK 运动变体反推的新结构；几何、质量和惯量按新实体生成。"
-        if kind
-        else "这是现有原型的三段解法，不宣称复现商业谜题的官方八步。"
-    )
-    if appearance:
-        p = report["appearance_parameters"]
-        scope = (
-            "以最初已验证基础版为种子，仅改变一个外观参数，保留三段解法。"
-            f"正面缩放 {p['face_scale']:g}，厚度缩放 {p['depth_scale']:g}，外角切角比例 {p['corner_cut_ratio']:g}。"
-            "几何、质量惯量、抓点和配套轨迹按该参数重新生成；切角为阶梯近似。"
-        )
-    if assembling:
-        gaps = report["initial_xy_surface_gap_m"]
-        scope = (f"任务为从分离初态完成装配：初态 x / y 外包络间隔为 {gaps[0]*1000:.2f} / {gaps[1]*1000:.2f} mm。"
-                 "双臂对齐零件，沿已认证拆解路径的反向插入、回转和闭合，随后一起落桌并释放。")
-    lift = report.get("lift_m", 0.07) * 1000
-    flow = (f"分离零件抓持 → 抬高 {lift:.0f} mm → 对齐、插入、回转与闭合 → 装配整体落桌 → 松爪、撤回与自由静置。"
-            if assembling else f"夹持 → 抬高 {lift:.0f} mm → 完整变体路径 → 分别落桌 → 解除抓持 → 撤回与自由静置。")
-    final_evidence = (f"最终装配相对位置误差 {report['final_relative_position_error_m']*1000:.4f} mm，"
-                      f"相对姿态误差 {np.degrees(report['final_relative_rotation_error_rad']):.4f}°。"
-                      if assembling else f"最终两件的分离面间距 {report['final_separation_m']*1000:.2f} mm。")
-    recording_note = (
-        "视频由一次完整物理运行保存的精确 20 Hz 状态离线渲染，不插值、不修改轨迹；渲染场景不进行物理步进。物理报告与渲染报告分开保留。"
-        if report.get("recording_kind") == "offline_render_of_exact_physical_states"
-        else "所有相机在物理运行期间同步录制。"
-    )
-    evidence_links = (
-        '<a href="physics_result.json">原始物理报告</a> · '
-        '<a href="render_evidence.json">离线渲染一致性</a> · '
-        '<a href="design_evidence/synthesis_report.json">结构生成与负对照</a> · '
-        '<a href="design_evidence/README.md">变体说明</a> · '
-        if (kind or appearance)
-        and report.get("recording_kind") == "offline_render_of_exact_physical_states"
-        else ""
-    )
-    phases = "".join(
-        f'<button onclick="seek({p["time_s"]})">{escape(LABELS.get(p["name"], p["name"]))}</button>'
-        for p in report["phases"]
-        if p["name"] != "pregrasp"
-    )
-    cards = "".join(
-        f'<figure><video class="sync" controls preload="metadata" src="{escape(videos[n])}" '
-        f'poster="pregrasp_{n}.jpg"></video><figcaption>{n}</figcaption></figure>'
-        for n in CAMERAS[:4]
-    )
-    text = f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title}</title><style>body{{max-width:1250px;margin:32px auto;padding:0 20px;font:16px/1.7 system-ui;background:#eef2f6;color:#243443}}
-section{{background:white;padding:22px;border-radius:10px;margin:22px 0}}video,img{{width:100%;border-radius:7px}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}figure{{margin:0}}button{{padding:8px 12px;margin:4px;border:0;border-radius:5px;background:#e0edf5;cursor:pointer}}a{{color:#146293}}.note{{background:#fff1d0;padding:15px;border-radius:8px}}@media(max-width:700px){{.grid{{grid-template-columns:1fr}}}}</style>
-<h1>{title}</h1><p>{flow}</p>
-<p class="note">从明确的张爪预抓取状态开始，金、银件均为自由刚体。四个夹指确认接触后启用两条辅助抓持约束，落桌后解除。
-物理执行由关节控制与物理解算推进，执行期间没有逐帧覆写零件或机器人位姿。{scope}</p><p>{recording_note}</p>
-<section><h2>完整近景</h2><video class="sync" id="main" controls preload="metadata" src="{escape(videos["front_oblique"])}" poster="pregrasp_front_oblique.jpg"></video>
-<div>{phases}</div><p>约 {report["simulated_seconds"]:.1f} 秒，20 fps。所有视角来自同一次连续物理执行。</p></section>
-<section><h2>ALOHA 四路同步相机</h2><button onclick="toggleAll()">全部同步播放 / 暂停</button><div class="grid">{cards}</div></section>
-<section><h2>执行证据</h2><p>{final_evidence}
-记录的最大件间穿透 {report["maximum_interpiece_penetration_m"] * 1000:.4f} mm，机械臂对零件 / 桌面的非抓持穿透 {report["maximum_forbidden_robot_penetration_m"] * 1000:.4f} mm。
-夹指抓持接触的最大数值穿透为 {report.get("maximum_finger_penetration_m", 0) * 1000:.4f} mm，单独报告，不计入非抓持碰撞指标。
-完整路径完成 {report["physics_steps"]:,} 次物理步进；最后自由静置 2 秒。默认与半时间步检查均通过。</p>
-<p>执行期间几何、质量惯量不变，保留机器人力矩上限；初态整体 yaw 为 90°，采用记录在配置中的位置控制增益。未验证纯摩擦抓持的稳定性或真实硬件负载能力。</p>
-<p>{evidence_links}<a href="result.json">执行报告</a> · <a href="validation.json">物理、时间步与视频复核</a> · <a href="config.yaml">完整配置</a> ·
-<a href="states.jsonl">实际状态轨迹</a> · <a href="source_plan.json">完整计划与几何证书</a> · <a href="camera_report.json">相机参数</a></p>
-<img src="settle_front_oblique.jpg" alt="任务完成、松爪和撤回后的实际状态"></section>
-<script>const streams=[...document.querySelectorAll('.sync')],main=document.getElementById('main');
-function seek(t){{streams.forEach(v=>v.currentTime=t)}}
-function toggleAll(){{const go=main.paused,t=main.currentTime;streams.forEach(v=>{{v.currentTime=t;go?v.play():v.pause()}})}}
-main.addEventListener('seeked',()=>streams.filter(v=>v!==main).forEach(v=>{{if(Math.abs(v.currentTime-main.currentTime)>.1)v.currentTime=main.currentTime}}));</script></html>'''
-    (Path(folder) / "index.html").write_text(text)
-
-
-def archive(source, reference, run_id):
+def archive(source, reference, run_id, *, variant_id=None):
     source, reference = Path(source).resolve(), Path(reference).resolve()
     metadata = ROOT / "runs/demo_metadata/cast_coil" / run_id
     if metadata.exists():
         raise FileExistsError("Archive already exists; preserve the validated copy")
     report, validation = audit(source, reference)
-    camera_directories = (
-        report.get("objective") == "assemble"
-        and not report.get("inverse_design_kind")
-        and not report.get("appearance_kind")
-    )
-    video_root = ROOT / (
-        "demos/cast_coil" if camera_directories else "runs/demos/cast_coil"
-    )
-    targets = {
-        name: (video_root / name if camera_directories else video_root)
-        / f"{run_id}_{name}.mp4"
-        for name in CAMERAS
-    }
+    # Keep each resolved structure separate, including generated instances.
+    # A caller may give a stable representative ID for the public directory.
+    variant = variant_id or report.get("geometry_variant")
+    if not variant:
+        variant = (
+            "baseline_assembly"
+            if report.get("objective") == "assemble"
+            else "baseline_disassembly"
+        )
+    elif not variant_id and report.get("objective", "disassemble") != "assemble":
+        variant += "_disassembly"
+    video_root = demo_video_root(ROOT, "cast_coil", variant)
+    targets = {name: video_root / name / f"{run_id}_{name}.mp4" for name in CAMERAS}
+    if any(list(target.parent.glob("*.mp4")) for target in targets.values()):
+        raise FileExistsError(
+            "This variant already has videos; verify and migrate the existing group before replacing it"
+        )
     if any(target.exists() for target in targets.values()):
         raise FileExistsError("Archive already exists; preserve the validated copy")
-    write_page(source, report, {n: f"{n}.mp4" for n in CAMERAS})
     metadata.mkdir(parents=True)
     video_root.mkdir(parents=True, exist_ok=True)
     for item in source.iterdir():
-        if item.suffix == ".mp4":
+        if item.suffix in {".mp4", ".html"}:
             continue
         if item.is_dir():
-            shutil.copytree(item, metadata / item.name)
+            shutil.copytree(
+                item, metadata / item.name, ignore=shutil.ignore_patterns("*.mp4", "*.html")
+            )
         else:
             shutil.copy2(item, metadata / item.name)
     # Keep complete comparison evidence beside the archived run; no dependency
     # on the mutable working directory for the supporting physical result.
     shutil.copytree(
-        reference, metadata / "half_dt", ignore=shutil.ignore_patterns("*.mp4")
+        reference, metadata / "half_dt", ignore=shutil.ignore_patterns("*.mp4", "*.html")
     )
     files = {}
     for name in CAMERAS:
@@ -494,7 +403,6 @@ def archive(source, reference, run_id):
         ):
             raise RuntimeError("Video is not an independent verified copy")
         files[name] = os.path.relpath(target, metadata)
-    write_page(metadata, report, files)
     (metadata / "archive_source.py").write_text(Path(__file__).read_text())
     (metadata / "archive_validation.json").write_text(
         json.dumps(
@@ -514,6 +422,9 @@ def archive(source, reference, run_id):
         task_id="cast_coil",
         variant=report.get("geometry_variant", "photo_reference_v1_baseline_3x"),
         inverse_design_kind=report.get("inverse_design_kind"),
+        variation_directory=video_root.name,
+        video_layout="variant_camera_subdirectories",
+        canonical_video_directory=str(video_root.relative_to(ROOT)),
         appearance_kind=report.get("appearance_kind"),
         appearance_parameters=report.get("appearance_parameters"),
         recording_kind=report.get("recording_kind", "live_physics_recording"),
@@ -543,6 +454,7 @@ def archive(source, reference, run_id):
 
 def update_catalog(metadata, manifest):
     import re
+
     folder = ROOT / "runs/demo_metadata"
     catalog = json.loads((folder / "catalog.json").read_text())
     relative = str(metadata.relative_to(folder))
@@ -551,6 +463,7 @@ def update_catalog(metadata, manifest):
         task_id="cast_coil",
         title=demo_title(manifest),
         variant=manifest["variant"],
+        inverse_design_kind=manifest.get("inverse_design_kind"),
         appearance_kind=manifest.get("appearance_kind"),
         appearance_parameters=manifest.get("appearance_parameters"),
         classification=manifest["classification"],
@@ -561,7 +474,9 @@ def update_catalog(metadata, manifest):
         recording_kind=manifest.get("recording_kind", "live_physics_recording"),
         source_directory=manifest["source_directory"],
         directory=relative,
-        index=f"{relative}/index.html",
+        manifest=f"{relative}/archive_manifest.json",
+        variation_directory=manifest["variation_directory"],
+        video_layout="variant_camera_subdirectories",
         archived_at_utc=manifest["archived_at_utc"],
         video_directory=os.path.relpath(
             os.path.commonpath([
@@ -582,52 +497,42 @@ def update_catalog(metadata, manifest):
     catalog["entries"] = [e for e in catalog["entries"] if e.get("directory") != relative]
     catalog["entries"].append(entry)
     catalog["excluded"] = [
-        e for e in catalog.get("excluded", []) if e["task_id"] != "cast_coil"
+        e for e in catalog.get("excluded", []) if e.get("directory") != relative
     ]
     catalog["complete_robotics_demo_count"] = sum(
         bool(e.get("counts_as_complete_robotics_demo")) for e in catalog["entries"]
     )
+    catalog["video_count"] = sum(len(e.get("video_files", {})) for e in catalog["entries"])
     catalog["archived_at_utc"] = manifest["archived_at_utc"]
     (folder / "catalog.json").write_text(
         json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
     )
-    page = (folder / "index.html").read_text()
-    card = f'<section><h2><a href="{relative}/index.html">{entry["title"]}</a></h2><p><strong>完整物理执行 · 含辅助抓持</strong> · {entry["duration_s"]:.2f} 秒 · 5 路同步相机</p><p>{entry["scope"]}</p><p><a href="{relative}/index.html">打开播放页</a> · <a href="{relative}/archive_manifest.json">文件清单</a></p></section>'
-    pattern = r'<section>(?:(?!</section>).)*href="' + re.escape(relative) + r'/index\.html"(?:(?!</section>).)*</section>'
-    page, replaced = re.subn(pattern, lambda _: card, page, flags=re.S)
-    if not replaced:
-        if "<section><h2>本次暂未收录" in page:
-            page = page.replace("<section><h2>本次暂未收录", card + "<section><h2>本次暂未收录", 1)
-        else:
-            page = page.replace("</html>", card + "</html>", 1)
-
-    page = re.sub(r"<tr><td>cast_coil</td><td>.*?</td></tr>", "", page)
-    date = manifest["archived_at_utc"][:10]
-    page = re.sub(
-        r"\d{4}-\d{2}-\d{2} (?:整理|更新)：\d+ 份(?:三视角|多视角)完整物理执行",
-        f"{date} 更新：{catalog['complete_robotics_demo_count']} 份多视角完整物理执行",
-        page,
-    )
-    page = re.sub(
-        r"当前保留 \d+ 份完整物理执行及 \d+ 份运动学预演",
-        f"当前保留 {catalog['complete_robotics_demo_count']} 份完整物理执行及 {catalog.get('kinematic_preview_count', 0)} 份运动学预演",
-        page,
-    )
-    (folder / "index.html").write_text(page)
-    readme = (folder / "README.md").read_text()
-    row = (
-        f"| {entry['title']} | [打开]({relative}/index.html) | 5 | {entry['scope']} |\n"
-    )
-    row_pattern = r'^\|[^\n]*\]\(' + re.escape(relative) + r'/index\.html\)[^\n]*\n'
-    readme, replaced = re.subn(row_pattern, lambda _: row, readme, flags=re.M)
-    if not replaced:
-        readme = readme.replace("\n\n保留全部既有 MP4", "\n" + row + "\n保留全部既有 MP4", 1)
-    readme = re.sub(r"^- `cast_coil`：.*\n", "", readme, flags=re.MULTILINE)
-    readme = readme.replace(
-        "以下是首次归档时的扫描结论；本次仅调整目录，不重新评估其他 session 的进展。",
-        "以下保留首次归档时的其他任务扫描结论；Cast Coil 已按新完成的物理执行更新收录。",
-    )
-    (folder / "README.md").write_text(readme)
+    # Current navigation uses direct MP4 links, never generated HTML pages.
+    readme_path = ROOT / "demos/README.md"
+    if readme_path.exists():
+        readme = readme_path.read_text()
+        links = " · ".join(
+            f"[{camera}]({os.path.relpath((metadata / video['path']).resolve(), readme_path.parent)})"
+            for camera, video in manifest["videos"].items()
+        )
+        evidence = os.path.relpath(metadata, readme_path.parent)
+        row = (
+            f"| {entry['title']} ({manifest['variation_directory']}) | {links} | "
+            f"{entry['duration_s']:.2f} s | {entry['scope']} [证据]({evidence}/) |\n"
+        )
+        pattern = r"^\|[^\n]*cast_coil/" + re.escape(manifest["variation_directory"]) + r"/[^\n]*\n"
+        readme, replaced = re.subn(pattern, lambda _: row, readme, flags=re.M)
+        if not replaced:
+            lines = readme.splitlines(keepends=True)
+            last_row = max(
+                (i for i, line in enumerate(lines) if line.startswith("|")), default=-1
+            )
+            if last_row >= 0:
+                lines.insert(last_row + 1, row)
+                readme = "".join(lines)
+            else:
+                readme += "\n| 当前版本 | MP4 直链 | 时长 | 范围与证据 |\n| --- | --- | --- | --- |\n" + row
+        readme_path.write_text(readme)
 
 
 if __name__ == "__main__":
@@ -635,5 +540,6 @@ if __name__ == "__main__":
     parser.add_argument("--source", required=True)
     parser.add_argument("--reference", required=True)
     parser.add_argument("--run-id", default="2026-09-17_aloha_full")
+    parser.add_argument("--variant-id", help="Stable public representative ID; defaults to the executed geometry ID")
     args = parser.parse_args()
-    print(archive(args.source, args.reference, args.run_id))
+    print(archive(args.source, args.reference, args.run_id, variant_id=args.variant_id))

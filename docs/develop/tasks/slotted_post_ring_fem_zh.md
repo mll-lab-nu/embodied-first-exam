@@ -79,4 +79,6 @@ MUJOCO_GL=egl .venv-gs121-nyx/bin/python -m topogym.tasks.slotted_post_ring.rend
   --run runs/environment_bootstrap/slotted_post_ring/my_fem_main
 ```
 
-目前完整解环外力执行器和机器人执行器仍是历史一维模型专用；它们明确拒绝 FEM 输入，避免在缺少体积审计时产生错误的通过结果。完整 FEM 解环、机器人操作、网格细化及材料实测标定尚未完成。旧版录像和证据保留为对照。
+历史 `fixture.py` 和机器人执行器仍明确拒绝 FEM 输入。新增 [`fem_fixture.py`](../../../topogym/tasks/slotted_post_ring/fem_fixture.py) 单独执行体积 FEM 的完整动作表：刚体外力驱动、逐步体积/应变/接触审计、阶段检查点和实测状态录像，运行中不改写实体位姿。它的最终通过状态取决于该次完整操作和释放结果，不继承旧版资格。
+
+`discrete` 积分器中的 FEM 有效质量矩阵求解也受 `solver_iterations` 和 `solver_tolerance` 控制；早期大步长试跑的惯性警告来自迭代预算耗尽。配置项依据 [MuJoCo 官方有效矩阵求解实现](https://github.com/google-deepmind/mujoco/blob/main/src/engine/engine_derivative.c) 显式暴露，警告仍使验收失败。试验参数、失败报告和运行开始时源码保留于 `runs/environment_bootstrap/slotted_post_ring/fem_full_20260921/`。机器人操作、网格细化及材料实测标定尚未完成。

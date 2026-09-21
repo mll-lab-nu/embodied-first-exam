@@ -7,7 +7,9 @@ import argparse
 from collections import deque
 from dataclasses import asdict
 import json
+from itertools import chain
 from pathlib import Path
+import shutil
 import time
 
 import mujoco
@@ -15,9 +17,15 @@ import numpy as np
 from scipy.spatial.transform import Rotation, Slerp
 
 from .fem import FEMSettings, build_model, signed_volumes
-from .fixture import cord_disk_crossings, pose
+from .fixture import cord_disk_crossings, interactive_stages, pose
 from .geometry import SlottedPostLayout
-from .physics import contact_summary
+from .physics import capture_sources, contact_summary
+
+
+def minimum_jerk(u, seconds):
+    """Keep endpoint roundoff inside Slerp's closed interpolation interval."""
+    u = float(np.clip(u, 0., 1.))
+    return float(np.clip(u**3*(10-15*u+6*u*u), 0., 1.)), 30*u*u*(1-u)**2/seconds
 
 
 class VolumeAudit:
@@ -92,14 +100,43 @@ class VolumeAudit:
 
 
 def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_extra=30.,
-            force_limit=4., torque_limit=.3):
+            force_limit=4., torque_limit=.3, model_source=None, initial_checkpoint=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    model, data, spec = build_model(output/'model', settings, layout)
+    continuation = None
+    if (model_source is None) != (initial_checkpoint is None):
+        raise ValueError('Checkpoint probes need both model source and checkpoint')
+    if model_source is None:
+        model, data, spec = build_model(output/'model', settings, layout)
+    else:
+        # Development-only continuation; it cannot qualify or publish a full
+        # process. The clean complete recording always starts from assembly.
+        source = Path(model_source)
+        shutil.copytree(source/'model', output/'model')
+        capture_sources(output)
+        spec = json.loads((output/'model/model_spec.json').read_text())
+        settings = FEMSettings(**spec['settings'])
+        layout = SlottedPostLayout(**spec['layout'])
+        model = mujoco.MjModel.from_binary_path(str(output/'model/scene.mjb'))
+        data = mujoco.MjData(model)
+        with np.load(initial_checkpoint) as state:
+            data.qpos[:] = state['qpos']; data.qvel[:] = state['qvel']
+            continuation = dict(source=str(source),checkpoint=str(initial_checkpoint),
+                                checkpoint_time_s=float(state['time_s']),
+                                scope='development-only physical-state continuation')
+        mujoco.mj_forward(model,data)
     mesh = np.load(output/'model/fem_mesh.npz')
     audit = VolumeAudit(model, mesh, spec)
-    schedule = [['initial_gravity', initial_seconds, {}]] + list(schedule)
-    (output/'requested_schedule.json').write_text(json.dumps(schedule, indent=2)+'\n')
+    if initial_seconds < 0:
+        raise ValueError('Initial duration must be nonnegative')
+    prefix = [['initial_gravity', initial_seconds, {}]] if initial_seconds else []
+    streaming = not isinstance(schedule, (list, tuple))
+    requested = [] if streaming else prefix + list(schedule)
+    planned_count = None if streaming else len(requested)
+    stages = chain(prefix, schedule) if streaming else iter(requested)
+    if not streaming and not requested:
+        raise ValueError('At least one stage is required')
+    (output/'requested_schedule.json').write_text(json.dumps(requested, indent=2)+'\n')
     qpos=[]; qvel=[]; times=[]; phases=[]; nodes=[]; actions=[]; metrics=[]
     errors={}; angle_errors={}; executed=[]; stage_results=[]
     max_force=0.; max_torque=0.; steps=0; failure=None
@@ -114,9 +151,12 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
         phases.append(phase); nodes.append(audit.nodes.copy()); actions.append(data.xfrc_applied.copy())
         metrics.append(audit.metrics.copy())
 
-    for name, seconds, commands in schedule:
+    for name, seconds, commands in stages:
         if not np.isfinite(seconds) or seconds <= 0:
             raise ValueError('Each stage needs a positive finite duration')
+        if streaming:
+            requested.append([name,seconds,commands])
+            (output/'requested_schedule.json').write_text(json.dumps(requested,indent=2)+'\n')
         ids={n:model.body(n).id for n in commands}
         starts={n:pose(data, body) for n, body in ids.items()}
         ends={n:(np.asarray(v[0]), Rotation.from_quat(v[1]) if v[1] is not None else starts[n][1])
@@ -128,9 +168,7 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
         extension=max_settle_extra if name == 'release_and_settle' else 0.
         for tick in range(round((seconds+extension)/settings.dt)):
             mujoco.mj_step1(model, data)
-            u=min(1., (tick+1)*settings.dt/seconds)
-            smooth=u**3*(10-15*u+6*u*u)
-            ds=30*u*u*(1-u)**2/seconds
+            smooth,ds=minimum_jerk((tick+1)*settings.dt/seconds,seconds)
             data.xfrc_applied[:]=0
             for n, body in ids.items():
                 actual, rotation=pose(data, body)
@@ -180,13 +218,24 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
                     cord_disk_crossings=cord_disk_crossings(model,data),checks=audit.checks())
         stage_results.append(result)
         print(json.dumps(result),flush=True)
+        # Preserve a playable partial trace if an unexpected later exception
+        # occurs during a long run. It is never marked as a complete process.
+        np.savez_compressed(output/'states.npz',qpos=qpos,qvel=qvel,time_s=times,phase=phases,
+                            cord_nodes=nodes,xfrc_applied=actions)
+        (output/'report.json').write_text(json.dumps(dict(
+            scope='volumetric_fem_force_driven_partial',passed=False,full_process_demo=False,
+            full_robot_demo=False,fps=20,simulated_seconds=float(data.time),
+            completed_stages=stage_results,recording_complete=False),indent=2)+'\n')
         if failure:break
+        if streaming:
+            print(json.dumps(dict(awaiting_next_stage=True,time_s=float(data.time),
+                                  completed_phase=name)),flush=True)
     # Frames occur on the same fixed 20 Hz clock, including the last state.
     record(name)
     ring=data.xpos[model.body('target_ring').id].copy()
     tail_checks,tail_max=audit.tail_checks()
     checks=audit.checks() | tail_checks | dict(
-        completed_schedule=len(executed)==len(schedule) and failure is None,
+        completed_schedule=(planned_count is None or len(executed)==planned_count) and failure is None,
         ring_away_from_post=float(np.linalg.norm(ring[:2])) > .19,
         ring_on_table=bool(abs(ring[2]-.01)<.002),
         cord_clear_of_ring_disk=cord_disk_crossings(model,data)==0,
@@ -194,10 +243,13 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
         tracking=max((v for stage in errors.values() for v in stage.values()),default=0.) < .005,
         rotation_tracking=max((v for stage in angle_errors.values() for v in stage.values()),default=0.) < .10)
     passed=bool(all(checks.values()))
-    report=dict(scope='volumetric_fem_force_driven_full_process',passed=passed,checks=checks,
-        full_process_demo=passed,full_fem_solution_verified=passed,full_robot_demo=False,
+    complete = passed and continuation is None
+    report=dict(scope='volumetric_fem_checkpoint_probe' if continuation else
+                      'volumetric_fem_force_driven_full_process',passed=passed,checks=checks,
+        full_process_demo=complete,full_fem_solution_verified=complete,full_robot_demo=False,
+        continuation=continuation,
         robot_execution=False,external_force_driven=True,pose_writes_after_initialization=False,
-        continuous_episode=True,material_calibrated=False,independent_surface_ccd_verified=False,
+        continuous_episode=continuation is None,material_calibrated=False,independent_surface_ccd_verified=False,
         engine='MuJoCo',engine_version=mujoco.__version__,settings=asdict(settings),layout=asdict(layout),
         fem=spec['fem'],fps=20,simulated_seconds=float(data.time),wall_seconds=time.monotonic()-clock,
         stage_errors_m=errors,stage_rotation_errors_rad=angle_errors,stages=stage_results,
@@ -210,6 +262,8 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
             'rigid_linear_speed_m_s','rigid_angular_speed_rad_s'),tail_max.tolist())),
         max_external_force_n=max_force,max_external_torque_nm=max_torque,
         controller_limits=dict(force_n=force_limit,torque_nm=torque_limit),
+        max_simultaneous_driven_bodies=max(len(stage[2]) for stage in executed),
+        interactive_stages=streaming,simulation_time_pauses_between_commands=streaming,
         audit_frequency='every integration step',failure=failure,warnings=audit.warnings)
     np.savez_compressed(output/'states.npz',qpos=qpos,qvel=qvel,time_s=times,phase=phases,
                         cord_nodes=nodes,xfrc_applied=actions)
@@ -224,18 +278,28 @@ def execute(output, schedule, settings, layout, initial_seconds=4., max_settle_e
 if __name__ == '__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--schedule',type=Path,required=True)
+    stage_input=p.add_mutually_exclusive_group(required=True)
+    stage_input.add_argument('--schedule',type=Path)
+    stage_input.add_argument('--interactive',action='store_true',
+                             help='Read JSON stages from stdin, preserving one continuous MjData episode')
+    p.add_argument('--model-source',type=Path,help='Development checkpoint probe only')
+    p.add_argument('--initial-checkpoint',type=Path)
     p.add_argument('--dt',type=float,default=.0005)
     p.add_argument('--rayleigh',type=float,default=.00005)
+    p.add_argument('--young',type=float,default=FEMSettings.young_pa)
     p.add_argument('--mass-damping',type=float,default=2.)
     p.add_argument('--solver-tolerance',type=float,default=FEMSettings.solver_tolerance)
+    p.add_argument('--solver-iterations',type=int,default=FEMSettings.solver_iterations)
+    p.add_argument('--contact-time',type=float,default=FEMSettings.contact_time_s)
     p.add_argument('--integrator',choices=('Euler','discrete'),default='discrete')
     p.add_argument('--slot-width',type=float,default=.036)
     p.add_argument('--initial-seconds',type=float,default=4.)
     p.add_argument('--max-settle-extra',type=float,default=30.)
     a=p.parse_args()
-    report=execute(a.output,json.loads(a.schedule.read_text()),
-        FEMSettings(dt=a.dt,rayleigh_s=a.rayleigh,mass_damping_rate_s_inv=a.mass_damping,
-                    integrator=a.integrator,solver_tolerance=a.solver_tolerance),
-        SlottedPostLayout(slot_width_m=a.slot_width),a.initial_seconds,a.max_settle_extra)
+    report=execute(a.output,interactive_stages() if a.interactive else json.loads(a.schedule.read_text()),
+        FEMSettings(dt=a.dt,rayleigh_s=a.rayleigh,young_pa=a.young,mass_damping_rate_s_inv=a.mass_damping,
+                    integrator=a.integrator,solver_tolerance=a.solver_tolerance,
+                    solver_iterations=a.solver_iterations,contact_time_s=a.contact_time),
+        SlottedPostLayout(slot_width_m=a.slot_width),a.initial_seconds,a.max_settle_extra,
+        model_source=a.model_source,initial_checkpoint=a.initial_checkpoint)
     if not report['passed']:raise SystemExit(1)

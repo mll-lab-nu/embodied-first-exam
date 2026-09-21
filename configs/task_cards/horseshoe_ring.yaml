@@ -86,7 +86,7 @@ current_runtime:
   links_per_span: 1
   baseline_physics: gravity_and_half_timestep_passed_with_pregrasp_and_contact_gated_assistance
   baseline_evidence: runs/demo_metadata/horseshoe_ring/2026-09-18_timestep_validation_v1/comparison.json
-  baseline_video: demos/horseshoe_ring/detail/2026-09-18_gravity_replanned_v1_detail.mp4
+  baseline_video: demos/horseshoe_ring/varaition_baseline/detail/2026-09-18_gravity_replanned_v1_detail.mp4
 variant_generation:
   config: configs/horseshoe_ring_variants.yaml
   generator: topogym.tasks.horseshoe_ring.variant_generator:create_instance
@@ -100,6 +100,6 @@ variant_generation:
   rng: shared VariantRng v1
   status: three exact physical family representatives; conditional sampler and fail-closed
     qualification implemented
-  documentation: docs/develop/tasks/horseshoe_ring_variant_generator_zh.md
+  documentation: docs/develop/tasks/horseshoe_ring_zh.md
   dataset_writer_integrated: false
   paired_anchors: assets/tasks/horseshoe_ring/family_space_v2/paired_anchors.json

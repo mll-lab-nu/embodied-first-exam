@@ -61,7 +61,7 @@
   --output runs/environment-stability/knot_untying/trefoil_robot_v6/remote_anchor_recording
 ```
 
-前一轮 P3 网格收敛仍未通过，见 [物理计划与报告](knot_untying_physics_demo_plan_zh.md)。本轮没有修改冻结的验收阈值。这些未通过的试录保留在 `runs/environment-stability/`；通过完整执行检查的 v9 已按视角独立归档至 `demos/knot_untying/<camera>/`，并在 `runs/demo_metadata/` 保存配套证据与归档清单。
+前一轮 P3 网格收敛仍未通过，见 [物理计划与报告](knot_untying_physics_demo_plan_zh.md)。本轮没有修改冻结的验收阈值。这些未通过的试录保留在 `runs/environment-stability/`；通过完整执行检查的 v9 已按视角独立归档至 `demos/knot_untying/varaition_<id>/<camera>/`，并在 `runs/demo_metadata/` 保存配套证据与归档清单。
 
 ## 分段补充抽绳试录
 

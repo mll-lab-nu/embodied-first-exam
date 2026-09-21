@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import html
@@ -107,7 +109,7 @@ def archive(source, suite, run_id):
             raise ValueError("Video timeline mismatch: " + name)
     metadata = ROOT / "runs/demo_metadata/buzz_wire_3d" / run_id
     destinations = {
-        n: ROOT / "demos/buzz_wire_3d" / n / f"{run_id}_fixture_{n}.mp4"
+        n: demo_video_root(ROOT, "buzz_wire_3d", report["variant"]) / n / f"{run_id}_fixture_{n}.mp4"
         for n in CAMERAS
     }
     if metadata.exists() or any(p.exists() for p in destinations.values()):

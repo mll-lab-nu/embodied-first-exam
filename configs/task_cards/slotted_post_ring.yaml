@@ -31,6 +31,7 @@ physics:
   fem_migration:
     implementation: topogym/tasks/slotted_post_ring/fem.py
     probe: topogym/tasks/slotted_post_ring/fem_probe.py
+    full_process_executor: topogym/tasks/slotted_post_ring/fem_fixture.py
     material: Saint Venant-Kirchhoff
     material_reference: straight untwisted tube
     physical_young_pa: 100000.0

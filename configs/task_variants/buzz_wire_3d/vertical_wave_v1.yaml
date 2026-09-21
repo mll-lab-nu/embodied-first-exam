@@ -36,3 +36,11 @@ ik_design_priorities:
   - Avoid elbow flipping at crests and wrist saturation at valleys.
   - Plan grip-side orientation jointly with the rail, rather than appending extra wrist spin.
 verification: {geometry: pending, ik: pending, robot_collision: pending, physics: pending}
+
+# Qualification applies only to this 70% fixed representative, not the design ranges above.
+qualified_compact_representative:
+  catalog: fixed_compact_toy_v2.yaml
+  instance_id: F1_compact_toy_s70_v2
+  ik_seed: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_v2/robot_seed.json
+  scope: This compact instance only; original dimensions and other prototypes remain
+    unqualified.

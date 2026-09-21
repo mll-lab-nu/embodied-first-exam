@@ -112,3 +112,6 @@ implementation_gaps:
   - Export candidate configs to BuzzWireLayout and make the planner accept the selected family.
   - Full tool clearance, continuous IK tracking, robot collision checks and physical qualification per instance.
   - Frozen asset catalog and explicit prototype selection; parameter sampling remains opt-in afterwards.
+
+# Current independently qualified compact instances; original design status above is unchanged.
+qualified_fixed_catalog: fixed_compact_toy_v2.yaml

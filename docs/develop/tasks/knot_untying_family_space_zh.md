@@ -208,7 +208,7 @@ PYOPENGL_PLATFORM=egl OMP_NUM_THREADS=2 .venv-gs121-nyx/bin/python \
 
 替换 `--family double_overhand` 使用另一套初态和路线。`family_untying` 强制采用 ALOHA、原生刚体表面审计和 external articulation；不能关掉机器人碰撞后获得成功标签。新家族禁止使用旧 `robot_untying` 控制器；三叶结 v9 继续使用其既有 `remote_adaptive_spread` 路线。
 
-物理报告保留 `passed`、`untying_verified`、`complete_physics_suite_passed` 三种范围。局部执行通过不等于完整套件通过。`robot_preflight_v1.json` 仅检查离散机器人姿态：不模拟绳，不认证连续扫掠碰撞，也不认证后续状态相关换抓。新路线先在当前机器人准备位与参考朝向下自由静置 10 s；重新核查无载绳长、稳定速度、漂移和结图，失败即在抓取前终止。每段按实际绳形定位下穿段与材料余量；换抓必须先松手，再重新确认两指物理接触。录像由同一次物理执行同步采集五路相机，完成后独立归档至 `demos/knot_untying/<camera>/`，不新建 HTML。
+物理报告保留 `passed`、`untying_verified`、`complete_physics_suite_passed` 三种范围。局部执行通过不等于完整套件通过。`robot_preflight_v1.json` 仅检查离散机器人姿态：不模拟绳，不认证连续扫掠碰撞，也不认证后续状态相关换抓。新路线先在当前机器人准备位与参考朝向下自由静置 10 s；重新核查无载绳长、稳定速度、漂移和结图，失败即在抓取前终止。每段按实际绳形定位下穿段与材料余量；换抓必须先松手，再重新确认两指物理接触。录像由同一次物理执行同步采集五路相机，完成后独立归档至 `demos/knot_untying/varaition_<id>/<camera>/`，不新建 HTML。
 
 ## 构造与检查路径
 
@@ -251,11 +251,11 @@ PYOPENGL_PLATFORM=egl OMP_NUM_THREADS=2 .venv-gs121-nyx/bin/python \
 
 | 视角 | 完整 MP4 |
 | --- | --- |
-| `cam_high` | [高位全景](../../../demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) |
-| `cam_low` | [低位全景](../../../demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) |
-| `cam_left_wrist` | [左腕](../../../demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) |
-| `cam_right_wrist` | [右腕](../../../demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) |
-| `detail` | [结区近景](../../../demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4) |
+| `cam_high` | [高位全景](../../../demos/knot_untying/varaition_trefoil/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) |
+| `cam_low` | [低位全景](../../../demos/knot_untying/varaition_trefoil/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) |
+| `cam_left_wrist` | [左腕](../../../demos/knot_untying/varaition_trefoil/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) |
+| `cam_right_wrist` | [右腕](../../../demos/knot_untying/varaition_trefoil/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) |
+| `detail` | [结区近景](../../../demos/knot_untying/varaition_trefoil/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4) |
 
 [实际报告](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/report.json) · [归档清单](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/archive_manifest.json) · [物理计划与验收范围](knot_untying_physics_demo_plan_zh.md)
 

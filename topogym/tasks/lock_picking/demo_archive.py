@@ -1,6 +1,8 @@
 """Archive three clean, complete lock videos under demos/lock_picking/<camera>."""
 from __future__ import annotations
 
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import html
@@ -55,7 +57,7 @@ def archive(source, run_id):
     metadata=ROOT/'runs/demo_metadata/lock_picking'/run_id
     if metadata.exists():
         raise FileExistsError(metadata)
-    video_paths={n:ROOT/'demos/lock_picking'/n/f'{run_id}_{n}.mp4' for n in CAMERAS}
+    video_paths={n:demo_video_root(ROOT, "lock_picking", report["variant"])/n/f'{run_id}_{n}.mp4' for n in CAMERAS}
     if any(p.exists() for p in video_paths.values()):
         raise FileExistsError('An output video already exists')
     metadata.mkdir(parents=True)
@@ -158,7 +160,7 @@ def archive(source, run_id):
     entry={k:manifest[k] for k in ('task_id','variant','classification','counts_as_complete_robotics_demo',
         'counts_as_complete_process_demo','source_physics_success','new_physics_execution','scope','duration_s','cameras','archived_at_utc')}
     entry.update(title='开锁 · 新外观标准变体 · 三视角完整过程',directory=f'lock_picking/{run_id}',
-        index=f'lock_picking/{run_id}/index.html',video_directory='../../demos/lock_picking',
+        index=f'lock_picking/{run_id}/index.html',video_directory=os.path.relpath(next(iter(video_paths.values())).parent.parent,catalog_path.parent),
         video_files={n:os.path.relpath(p,catalog_path.parent) for n,p in video_paths.items()},ui_overlays=False)
     catalog['entries'].append(entry)
     catalog['excluded']=[e for e in catalog['excluded'] if e['task_id']!='lock_picking']

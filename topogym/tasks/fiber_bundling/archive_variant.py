@@ -28,6 +28,7 @@ def main():
     parser.add_argument("source", type=Path)
     parser.add_argument("half_step", type=Path)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--variation", help="Directory identifier; default derives density, wire count and radius")
     args = parser.parse_args()
     if not re.fullmatch(r"[a-zA-Z0-9_-]+", args.run_id):
         parser.error("Use a plain run identifier")
@@ -45,6 +46,11 @@ def main():
     count = int(cfg.task.geometry.fiber_count)
     radius = float(cfg.task.geometry.ring_inner_radius_m)
     support = str(cfg.task.get("ring_mount", {}).get("kind", "legacy_box_v1"))
+    family = "sparse" if count <= 6 else "standard" if count <= 10 else "dense"
+    variation = args.variation or f"{family}_{count:02d}_r{radius*1000:.1f}mm".replace(".", "p")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", variation):
+        parser.error("Use a plain variation identifier")
+    variation_directory = variation if variation.startswith("varaition_") else f"varaition_{variation}"
     variant = f"{support}_{count:02d}cores_r{radius*1000:g}mm"
     title = f"光纤收束 · {count} 芯 · 环内半径 {radius*1000:g} mm"
     plan = report["plan"]
@@ -78,8 +84,8 @@ def main():
         validation[camera] = dict(**stream, fully_decoded=True, sha256=sha(path))
     metadata_root = ROOT/"runs/demo_metadata"
     metadata = metadata_root/"fiber_bundling"/args.run_id
-    videos = ROOT/"demos/fiber_bundling"
-    if metadata.exists() or any((videos/c/f"{args.run_id}_{c}.mp4").exists() for c in validation):
+    videos = ROOT/"demos/fiber_bundling"/variation_directory
+    if metadata.exists() or any(list((videos/c).glob("*.mp4")) for c in validation):
         raise FileExistsError("Archive prefix already exists; preserving the previous recording")
     metadata.mkdir(parents=True)
     videos.mkdir(parents=True, exist_ok=True)
@@ -122,7 +128,8 @@ def main():
     manifest = dict(task_id="fiber_bundling", variant=variant,
         fiber_count=count, ring_inner_radius_m=radius, support=support,
         run_id=args.run_id, source_directory=str(source.relative_to(ROOT)),
-        video_layout="demos/fiber_bundling/<camera>/<original_filename>.mp4",
+        variation_directory=variation_directory,
+        video_layout="demos/fiber_bundling/<varaition_id>/<camera>/<original_filename>.mp4",
         classification="physical_execution_with_grasp_assistance", counts_as_complete_robotics_demo=True,
         strict_timestep_convergence_passed=comparison["passed"],
         scope=scope, recording_range_s=[0.,report["simulated_seconds"]], duration_s=duration,
@@ -135,9 +142,10 @@ def main():
         counts_as_complete_robotics_demo=True, duration_s=duration, cameras=list(cameras), scope=scope,
         source_directory=manifest["source_directory"], directory=f"fiber_bundling/{args.run_id}",
         index=f"fiber_bundling/{args.run_id}/README.md", archived_at_utc=now,
-        video_directory="../../demos/fiber_bundling",
+        variation_directory=variation_directory,
+        video_directory=f"../../demos/fiber_bundling/{variation_directory}",
         ui_overlays=render.get("ui_overlays", True),
-        video_files={c:f"../../demos/fiber_bundling/{c}/{args.run_id}_{c}.mp4" for c in validation})
+        video_files={c:f"../../demos/fiber_bundling/{variation_directory}/{c}/{args.run_id}_{c}.mp4" for c in validation})
     # Serialize our concurrent variant archives; preserve current shared entries.
     with (metadata_root/".fiber_archive.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -146,19 +154,13 @@ def main():
         catalog["entries"].append(entry)
         catalog["excluded"] = [e for e in catalog["excluded"] if e["task_id"] != "fiber_bundling"]
         catalog["complete_robotics_demo_count"] = sum(e.get("counts_as_complete_robotics_demo",False) for e in catalog["entries"])
+        catalog["video_count"] = sum(len(e.get("video_files", {})) for e in catalog["entries"])
         catalog["archived_at_utc"] = now
         (metadata_root/"catalog.json").write_text(json.dumps(catalog, ensure_ascii=False, indent=2)+"\n")
         readme = (metadata_root/"README.md").read_text()
         readme = re.sub(r"^- `fiber_bundling`：.*\n", "", readme, flags=re.MULTILINE)
         readme += f"\n[{title}](fiber_bundling/{args.run_id}/README.md)：{scope}\n"
         (metadata_root/"README.md").write_text(readme)
-        page = (metadata_root/"index.html").read_text()
-        page = re.sub(r"<tr><td>fiber_bundling</td><td>.*?</td></tr>", "", page)
-        primary_camera = "composite" if "composite" in validation else "front_oblique"
-        primary_video = entry["video_files"][primary_camera]
-        section = f'<section><h2>{title}</h2><p>{scope}</p><p><a href="{primary_video}">完整视频</a> · <a href="fiber_bundling/{args.run_id}/README.md">目录与证据</a></p></section>'
-        page = page.replace("</body>", section+"</body>")
-        (metadata_root/"index.html").write_text(page)
     print(json.dumps(dict(videos=str(videos), metadata=str(metadata), manifest=manifest["run_id"])))
 
 

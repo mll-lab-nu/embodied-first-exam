@@ -1,4 +1,6 @@
 """Archive a completed physical knot execution as independent per-view MP4s."""
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -64,7 +66,7 @@ def archive(source, run_id):
     if not validation['passed']:
         raise ValueError('Original videos failed complete decoding or physical clock validation')
     metadata = ROOT/'runs/demo_metadata/knot_untying'/run_id
-    videos = {name: ROOT/'demos/knot_untying'/name/f'{run_id}_{name}.mp4' for name in rig['cameras']}
+    videos = {name: demo_video_root(ROOT, "knot_untying", report["variant"])/name/f'{run_id}_{name}.mp4' for name in rig['cameras']}
     if metadata.exists() or any(path.exists() for path in videos.values()):
         raise FileExistsError('An archive already uses this run ID; existing evidence will not be overwritten')
     # Preserve evidence independently. Live checkpoints and videos have their
@@ -95,7 +97,7 @@ def archive(source, run_id):
         archived_at_utc=datetime.now(timezone.utc).isoformat(),
         classification='physical_execution_with_grasp_assistance', scope=scope,
         simulated_seconds=report['simulated_seconds'], cameras=rig['cameras'],
-        video_layout='one directory per camera', video_files=links,
+        video_layout='varaition_<id> / camera', video_files=links,
         untying_verified=True, complete_physics_suite_passed=report['complete_physics_suite_passed'],
         files_sha256={str(p.relative_to(ROOT)): digest(p) for p in sorted(files)})
     (metadata/'archive_manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')

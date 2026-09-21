@@ -10,7 +10,7 @@
 
 完整 demo（每路 103.04 秒、2576 帧、25 fps，来自同一物理运行的实测状态重渲染）：
 
-[全景](../../../../demos/buzz_wire_3d/agentview/2026-09-20_F2_compact_toy_s70_v2_full_agentview.mp4) · [斜前](../../../../demos/buzz_wire_3d/front_oblique/2026-09-20_F2_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](../../../../demos/buzz_wire_3d/wrist/2026-09-20_F2_compact_toy_s70_v2_full_wrist.mp4)。
+[全景](../../../../demos/buzz_wire_3d/varaition_f2_over_under_eight/agentview/2026-09-20_F2_compact_toy_s70_v2_full_agentview.mp4) · [斜前](../../../../demos/buzz_wire_3d/varaition_f2_over_under_eight/front_oblique/2026-09-20_F2_compact_toy_s70_v2_full_front_oblique.mp4) · [腕部](../../../../demos/buzz_wire_3d/varaition_f2_over_under_eight/wrist/2026-09-20_F2_compact_toy_s70_v2_full_wrist.mp4)。
 
 [验收与归档](../../../../runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full/README.md)。`robot_seed.json` 保存 13549 个通过复核的连续 IK 位姿；`robot_qualification.json` 记录原场景、种子和物理报告哈希。此资格仅适用于该实例及保存策略。
 

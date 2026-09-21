@@ -131,7 +131,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python \
 
 以下仅是**历史 v9 完整环境视频**，不是本轮 adapter 的验证产物，不能给受测 solver 看：
 
-- [历史高位 MP4](../../../demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4)
-- [历史低位 MP4](../../../demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4)
-- [历史左腕 MP4](../../../demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4)
-- [历史右腕 MP4](../../../demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4)
+- [历史高位 MP4](../../../demos/knot_untying/varaition_trefoil/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4)
+- [历史低位 MP4](../../../demos/knot_untying/varaition_trefoil/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4)
+- [历史左腕 MP4](../../../demos/knot_untying/varaition_trefoil/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4)
+- [历史右腕 MP4](../../../demos/knot_untying/varaition_trefoil/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4)

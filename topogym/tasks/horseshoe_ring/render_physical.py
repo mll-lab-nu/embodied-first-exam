@@ -11,13 +11,19 @@ from topogym.world.aloha_cameras import CAMERA_NAMES
 from .gravity_demo import sha
 
 
-def render(source, output, *, fps=10, width=960):
+def render(source, output, *, fps=10, width=960, camera_names=None, camera_overrides=None):
     import genesis as gs
     import imageio.v2 as imageio
     from PIL import Image
     from .scene import build_scene
 
     source, output = Path(source).resolve(), Path(output).resolve()
+    cameras = list(camera_names) if camera_names is not None else [*CAMERA_NAMES, "detail"]
+    if not cameras or len(set(cameras)) != len(cameras) or set(cameras) - {*CAMERA_NAMES, "detail"}:
+        raise ValueError("Select distinct supported cameras")
+    camera_overrides = camera_overrides or {}
+    if set(camera_overrides) - set(cameras):
+        raise ValueError("Camera overrides must belong to selected views")
     report = json.loads((source/"result.json").read_text())
     if not report.get("task_success") or report.get("checkpoint_start") or not report.get("goal", {}).get("passed"):
         raise ValueError("Full videos require a successful continuous physical run including free release")
@@ -45,6 +51,10 @@ def render(source, output, *, fps=10, width=960):
     rig["cam_low"]["fov"] = 66.
     rig["detail"] = dict(res=[width, width*3//4], pos=[.32, -.70, 1.56],
         lookat=[-.06, .015, 1.22], up=[0., 0., 1.], fov=48., near=.005, far=12.)
+    for name, override in camera_overrides.items():
+        if name.endswith("wrist"):
+            raise ValueError("Task-view overrides apply only to fixed cameras; preserve wrist mounts")
+        rig[name].update(override)
     from scipy.spatial.transform import Rotation
     from trimesh.bounds import corners
     from .geometry import HorseshoeAssembly
@@ -53,8 +63,14 @@ def render(source, output, *, fps=10, width=960):
     points = np.concatenate([Rotation.from_quat(np.asarray(frame["bodies"][name]["quat_wxyz"])[[1, 2, 3, 0]])
         .apply(vertices)+frame["bodies"][name]["pos"] for frame in original for name, vertices in local.items()])
     coverage = {}
+    from topogym.world.tabletop import tabletop_frames_from_config
+    table_z = float(tabletop_frames_from_config(cfg.env).table_surface_origin[2])
     for name in ("cam_high", "cam_low", "detail"):
+        if name not in cameras:
+            continue
         camera = rig[name]
+        if camera["pos"][2] <= table_z:
+            raise ValueError(f"{name} is below the tabletop; configure a visible fixed task-view mount")
         forward = np.asarray(camera["lookat"])-camera["pos"]
         forward /= np.linalg.norm(forward)
         right = np.cross(forward, camera["up"])
@@ -71,14 +87,15 @@ def render(source, output, *, fps=10, width=960):
             raise ValueError(f"{name} needs a new task-view mounting pose, not an extreme FOV")
         camera["fov"] = max(camera["fov"], required)
         coverage[name] = dict(required_vertical_fov_deg=required, configured_vertical_fov_deg=camera["fov"],
+            camera_height_above_table_m=float(camera["pos"][2]-table_z),
             scope="All recorded puzzle body bounding boxes; frustum coverage does not certify absence of occlusion")
-    cameras = [*CAMERA_NAMES, "detail"]
     cfg.env.cameras = OmegaConf.create({name: rig[name] for name in cameras})
     cfg.task.template_path = str(source/"input_template.json")
     cfg.env.genesis.backend, cfg.env.renderer.type = "cpu", "rasterizer"
     OmegaConf.save(cfg, output/"render_config.yaml", resolve=True)
     (output/"render_cameras.json").write_text(json.dumps(dict(cameras=rig,
-        adaptation="Upstream ALOHA mounts; fixed-view FOV expanded when necessary to cover the complete measured task",
+        adaptation="Explicit fixed task-view mounts where recorded; FOV expanded to cover the complete measured task",
+        fixed_camera_overrides=camera_overrides,
         fixed_view_coverage=coverage,
         hardware_calibration_equivalent=False), indent=2))
     gs.init(backend=gs.cpu, precision="64", logging_level="warning", seed=0)
@@ -140,8 +157,14 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--fps", type=int, default=10)
     parser.add_argument("--width", type=int, default=960)
+    parser.add_argument("--cameras", nargs="+", choices=[*CAMERA_NAMES, "detail"],
+                        help="Re-render selected views of the same complete recorded execution")
+    parser.add_argument("--camera-overrides", type=Path,
+                        help="JSON mapping fixed camera names to rendering-only mounting overrides")
     args = parser.parse_args()
-    render(args.source, args.output, fps=args.fps, width=args.width)
+    overrides = json.loads(args.camera_overrides.read_text()) if args.camera_overrides else None
+    render(args.source, args.output, fps=args.fps, width=args.width,
+           camera_names=args.cameras, camera_overrides=overrides)
 
 
 if __name__ == "__main__":

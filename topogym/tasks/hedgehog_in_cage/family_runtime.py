@@ -1,5 +1,7 @@
 """Physical execution and recording for three trajectory-first cage families."""
 from __future__ import annotations
+from topogym.utils.demo_paths import demo_video_root
+
 import argparse
 from contextlib import ExitStack
 import json
@@ -371,7 +373,7 @@ def render(folder, backend="cuda", *, video_prefix=None):
         from .geometry import ROOT
         destinations = {}
         for n in names if video_prefix is not None else (*names, "three_views"):
-            destination = (ROOT/"demos/hedgehog_in_cage"/n/f"{video_prefix}_{n}.mp4"
+            destination = (demo_video_root(ROOT, "hedgehog_in_cage", folder.name)/n/f"{video_prefix}_{n}.mp4"
                            if video_prefix is not None else output/f"{n}.mp4")
             if destination.exists(): raise ValueError(f"Preserve existing video: {destination}")
             destination.parent.mkdir(parents=True,exist_ok=True)

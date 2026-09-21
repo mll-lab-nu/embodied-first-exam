@@ -1,0 +1,29 @@
+defaults:
+  - blanket_flatten_gathered_selected_robot
+  - _self_
+
+task:
+  execution:
+    check_every: 100
+  virtual_hands:
+    end_band_m: 0.015
+    corner_radius_m: 0.018
+    handoff_in_air: true
+    landing_grip_height_m: 0.035
+    maximum_speed_m_s: 0.20
+    slow_stretch: 1.18
+    pause_stretch: 1.28
+    minimum_motion_scale: 0.20
+    untwist_lift_m: 0.30
+    end_slack_m: 0.0
+    untwist_seconds: 7.0
+    suspend_seconds: 6.0
+    open_seconds: 5.0
+    lay_seconds: 7.0
+    final_settle_seconds: 10.0
+
+run:
+  mode: external
+  include_robot: false
+  fps: 10
+  output: runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v5

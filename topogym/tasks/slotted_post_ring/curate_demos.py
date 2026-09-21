@@ -17,11 +17,25 @@ def sha(path):
 def curate(keep):
     video_root = ROOT / 'demos/slotted_post_ring'
     history = ROOT / 'runs/environment_bootstrap/slotted_post_ring/historical_demos'
+    keepers = [p for p in video_root.rglob('*.mp4')
+               if p.name == f'{keep}_{p.parent.name}.mp4']
+    if len(keepers) < 3:
+        raise ValueError('Keep at least three existing synchronized views of the replacement')
+    groups = {p.parent.parent for p in keepers}
+    if len(groups) != 1:
+        raise ValueError('Replacement views must belong to one variant')
+    video_root = groups.pop()
+    if video_root.name.startswith('varaition_'):
+        history /= video_root.name
+    affected_versions = {keep}
     mapping = {}
     records = []
     for source in sorted(video_root.rglob('*.mp4')):
-        if source.name.startswith(keep + '_'):
+        if source in keepers:
             continue
+        suffix = f'_{source.parent.name}.mp4'
+        if source.name.endswith(suffix):
+            affected_versions.add(source.name[:-len(suffix)])
         relative = source.relative_to(video_root)
         target = history / relative
         if source.is_symlink():
@@ -58,11 +72,23 @@ def curate(keep):
     # Preserve hashes of relocated videos; refresh hashes for rewritten README links.
     for path in (ROOT/'runs/demo_metadata/slotted_post_ring').glob('*/archive_manifest.json'):
         manifest = json.loads(path.read_text())
+        version = manifest.get('version', manifest.get('run_id'))
+        if version in affected_versions:
+            manifest['published_current_demo'] = version == keep
         for item in manifest.get('evidence', []):
             evidence = path.parent / item['path']
             if str(evidence.relative_to(ROOT)) in changed:
                 item['sha256'] = sha(evidence)
         path.write_text(json.dumps(manifest, indent=2) + '\n')
+    catalog_path = ROOT/'runs/demo_metadata/slotted_post_ring/catalog.json'
+    if catalog_path.exists():
+        catalog = json.loads(catalog_path.read_text())
+        catalog['current_demo_version'] = keep
+        catalog.setdefault('current_demo_versions', {})[video_root.name] = keep
+        for version in catalog['versions']:
+            if version['version'] in affected_versions:
+                version['published_current_demo'] = version['version'] == keep
+        catalog_path.write_text(json.dumps(catalog, indent=2)+'\n')
     log = history / f'migration_keep_{keep}.json'
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_text(json.dumps(dict(keep_version=keep, videos=records,

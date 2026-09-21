@@ -107,6 +107,8 @@ def main():
     parser.add_argument("--qualification", type=Path, help="Passed physics suite summary required before full execution")
     parser.add_argument("--exploratory-reason", help="Explicitly run the full sequence with qualification pending; retain all native checks")
     parser.add_argument("--record", action="store_true")
+    parser.add_argument("--record-renderer", choices=("nyx", "rasterizer"), default="nyx",
+                        help="Camera backend only; rasterizer can use CPU OSMesa to reduce GPU memory")
     parser.add_argument("--fps", type=int, default=20)
     parser.add_argument("--resolution", type=int, nargs=2, default=(960, 540))
     args = parser.parse_args()
@@ -180,8 +182,9 @@ def main():
         with open_dict(cfg.env.cameras):
             cfg.env.cameras["detail"] = dict(res=list(args.resolution), pos=[.92, .98, 1.75],
                 lookat=[-.11, .05, 1.10], up=[0, 0, 1], fov=39, near=.005, far=12.)
-        cfg.env.renderer.type = "nyx"
+        cfg.env.renderer.type = args.record_renderer
         cfg.env.presentation.background = "compact_lab"
+        camera_metadata["recording_renderer"] = args.record_renderer
     OmegaConf.save(cfg, output/"config.yaml", resolve=True)
     files = sorted(Path(__file__).parent.glob("*.py"))
     files += [ROOT/"topogym/tasks/knot_untying"/f for f in
@@ -326,6 +329,8 @@ def main():
                     break
     except Exception as exc:
         failure = f"{type(exc).__name__}: {exc}"
+        import traceback
+        (output/"failure_traceback.txt").write_text(traceback.format_exc())
     finally:
         if hasattr(actions, "close_contact_monitors"):
             actions.close_contact_monitors()

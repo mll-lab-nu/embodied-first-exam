@@ -98,7 +98,7 @@ def main():
                   dataset_frames=2, background_collision_geoms=background_collision_geoms,
                   diagnostic_joint_reset=True, task_rollout_performed=False)
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
-    review_href = escape(os.path.relpath(ROOT / "runs/environment_bootstrap/index.html", output), quote=True)
+    review_href = escape(os.path.relpath(ROOT / "docs/progress/current_zh.md", output), quote=True)
     (output / "index.html").write_text('''<!doctype html><html lang="zh-CN"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>默认实验室与渲染</title>
 <style>body{max-width:1100px;margin:32px auto;padding:0 20px;font:17px/1.7 system-ui;background:#eef2f4;color:#263741}img{max-width:100%}a{color:#126b8b}figure{margin:24px 0}</style>

@@ -14,6 +14,50 @@ PHASE_LABELS = (
     "重新接近绳端", "再次抓取绳端", "拉过第三环出口", "左手松手", "将绳端放回桌面", "最后松手、撤离与静置")
 
 
+def osmesa_framebuffer_compatibility(scene):
+    """Use verified FBO support instead of Genesis 1.2.1's 32-pixel fallback.
+
+    Modern OSMesa supports FBOs, but the bundled platform advertises False.
+    Probe the current context first, then use the existing per-camera FBO
+    renderer/readback. No installed backend files or physical state change.
+    """
+    import os
+    from importlib.metadata import version
+    if os.environ.get("PYOPENGL_PLATFORM") != "osmesa":
+        return None
+    if version("genesis-world") != "1.2.1":
+        raise RuntimeError("OSMesa framebuffer compatibility requires a new Genesis audit")
+    renderer = scene.visualizer._rasterizer._renderer
+    if renderer._platform.supports_framebuffers():
+        return None
+    from OpenGL import GL
+    renderer.make_current()
+    framebuffer = renderbuffer = None
+    try:
+        previous = int(GL.glGetIntegerv(GL.GL_FRAMEBUFFER_BINDING))
+        previous_renderbuffer = int(GL.glGetIntegerv(GL.GL_RENDERBUFFER_BINDING))
+        framebuffer = GL.glGenFramebuffers(1)
+        renderbuffer = GL.glGenRenderbuffers(1)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, framebuffer)
+        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, renderbuffer)
+        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_RGBA8, 16, 16)
+        GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0,
+                                     GL.GL_RENDERBUFFER, renderbuffer)
+        if GL.glCheckFramebufferStatus(GL.GL_FRAMEBUFFER) != GL.GL_FRAMEBUFFER_COMPLETE:
+            raise RuntimeError("OSMesa framebuffer capability probe failed")
+        device = GL.glGetString(GL.GL_RENDERER).decode()
+    finally:
+        if framebuffer is not None:
+            GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, previous)
+            GL.glDeleteFramebuffers(1, [framebuffer])
+        if renderbuffer is not None:
+            GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, previous_renderbuffer)
+            GL.glDeleteRenderbuffers(1, [renderbuffer])
+        renderer.make_uncurrent()
+    renderer._platform.supports_framebuffers = lambda: True
+    return dict(kind="verified OSMesa FBO capability; stock per-camera rendering and readback", renderer=device)
+
+
 def stage_label(stage):
     feedback = dict(pivot="左手固定抓持点微转", transit="右手接近重新观测的绳尾",
         approach="右手对准实测绳端", close="等待双指接触并辅助抓持", dual_hold="双手共同持绳确认",
@@ -37,6 +81,7 @@ class ThreadingRecorder(PhysicalRecorder):
     def __init__(self, task, output, *, fps, dt, metadata):
         import numpy as np
         from scipy.spatial.transform import Rotation
+        metadata = dict(metadata, software_framebuffer_compatibility=osmesa_framebuffer_compatibility(task.scene))
         # The source worm's-eye pose crops the raised ring apertures. Rotate
         # only this optical frame, retaining its original mounting position.
         camera = task.cameras['cam_low']

@@ -27,6 +27,22 @@ def review(source):
     (source/'self_intersection_review.json').write_text(json.dumps(intersections, indent=2)+'\n')
     print('Recorded frames:', len(counts), 'maximum intersecting faces:', max(counts))
 
+    if report.get('mode') == 'external':
+        evidence = report.get('final_evidence') or {}
+        gates = evidence.get('gates') or {}
+        accepted = bool(report.get('success') and report.get('initialization_accepted')
+                        and not report.get('active_grasp_particles') and not report.get('live_particle_position_writes')
+                        and report.get('rest_lengths_unchanged') and report.get('gravity_unchanged')
+                        and report.get('binding', {}).get('passed') and gates and all(gates.values())
+                        and evidence.get('passive_seconds', 0) >= 10 and evidence.get('window_seconds', 0) >= .5
+                        and max(counts) == 0)
+        (source/'external_review.json').write_text(json.dumps(dict(external_manipulation_verified=accepted,
+            full_robot_task_verified=False, approved_for_robot_archive=False,
+            all_recorded_meshes_without_detected_intersection=max(counts) == 0,
+            final_evidence=evidence, manipulation_model=report['manipulation_model']), indent=2)+'\n')
+        print('External manipulation verified:', accepted, '; not a robot execution')
+        return
+
     before_name = ('prepared_longitudinal_gather.npz'
                    if preparation.get('construction') == 'longitudinal_gather'
                    else 'prepared_longitudinal_2.npz')

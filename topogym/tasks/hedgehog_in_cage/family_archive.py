@@ -93,7 +93,7 @@ def archive_one(folder):
         shutil.copy2(Path(__file__).with_name(name),provenance/name)
     for name in ['escape_upper.json','robot_escape_plan.json','robot_escape_plan.npz','robot_release_plan.json','extraction_config.yaml']:
         shutil.copy2(SEED/name,seed/name)
-    shutil.copy2(ROOT/'docs/develop/tasks/hedgehog_in_cage_family_demos_zh.md',provenance/'family_demos_zh.md')
+    shutil.copy2(ROOT/'docs/develop/tasks/hedgehog_in_cage_zh.md',provenance/'family_demos_zh.md')
     for name in ('check_hedgehog_family.py','check_hedgehog_inverse.py'):
         shutil.copy2(ROOT/'tests'/name,provenance/name)
     VIDEO.mkdir(parents=True,exist_ok=True)

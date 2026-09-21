@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 import mujoco
 import numpy as np
 
+from topogym.utils.demo_paths import demo_video_root
+
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -38,11 +40,11 @@ def copy_render_metadata(run, destination):
 
 def publication_allowed(report):
     """A failed probe or partial episode cannot enter the current demo folder."""
-    return bool(report.get('passed') and
+    return bool(report.get('passed') and not report.get('continuation') and
                 (report.get('full_process_demo') or report.get('full_robot_demo')))
 
 
-def archive(run, name, half_step=None, publish=False):
+def archive(run, name, half_step=None, publish=False, variation=None):
     run = Path(run).resolve()
     report = json.loads((run/'report.json').read_text())
     if publish and not publication_allowed(report):
@@ -89,7 +91,8 @@ def archive(run, name, half_step=None, publish=False):
     videos = []
     for camera in render['cameras']:
         source = run/'recording'/f'{camera}.mp4'
-        video_root = (ROOT/'demos/slotted_post_ring' if publish else
+        video_root = (demo_video_root(ROOT, 'slotted_post_ring',
+                                     variation or report.get('variant') or name) if publish else
                       ROOT/'runs/environment_bootstrap/slotted_post_ring/archived_demos')
         target = video_root/camera/f'{name}_{camera}.mp4'
         if target.exists():
@@ -149,7 +152,8 @@ if __name__ == '__main__':
     parser.add_argument('--run', required=True)
     parser.add_argument('--name', required=True)
     parser.add_argument('--half-step')
+    parser.add_argument('--variation', help='Stable variant ID for the published camera directory')
     parser.add_argument('--publish', action='store_true',
                         help='Publish a passed complete process and retire earlier videos')
     args = parser.parse_args()
-    archive(args.run, args.name, args.half_step, args.publish)
+    archive(args.run, args.name, args.half_step, args.publish, args.variation)

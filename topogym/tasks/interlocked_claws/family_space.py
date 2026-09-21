@@ -105,7 +105,7 @@ def export(output=DEFAULT_OUTPUT):
                        for k, a in family["appearance_axes"].items())
         parameter_tables.append(f'<section data-family="{family["id"]}"><h2>{family["id"]} · 候选参数空间</h2><p>{escape(family["motion_signature_zh"])}</p><div class="scroll"><table><tr><th>特征</th><th>参数</th><th>候选倍率</th><th>验证范围</th></tr>{rows}</table></div></section>')
     concept = relative(plan["current_evidence"]["concept_image"])
-    spec = relative("docs/develop/tasks/interlocked_claws_family_space_zh.md")
+    spec = relative("docs/develop/tasks/interlocked_claws_zh.md")
     baseline = relative("runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/reliability.html")
     page = f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Claw · 三个 Family 与九个代表</title><style>

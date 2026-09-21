@@ -31,6 +31,7 @@ class FEMSettings:
     friction: float = .35
     contact_time_s: float = .0003
     solver_tolerance: float = 1e-10
+    solver_iterations: int = 100
 
     def validate(self):
         if self.integrator not in ('Euler', 'discrete'):
@@ -40,6 +41,8 @@ class FEMSettings:
                 raise ValueError(f'{name} must be finite and positive')
         if not isinstance(self.radial_segments, int) or self.radial_segments < 6:
             raise ValueError('At least six vertices per circumference required')
+        if not isinstance(self.solver_iterations, int) or self.solver_iterations < 1:
+            raise ValueError('Positive solver iteration budget required')
         if not 0 <= self.poisson < .5:
             raise ValueError('Poisson ratio must lie in [0, .5)')
         if not np.isfinite(self.rayleigh_s) or self.rayleigh_s < 0:
@@ -154,6 +157,7 @@ def build_model(output, settings=FEMSettings(), layout=SlottedPostLayout(), robo
     # on the same observed states in 9--26 iterations.
     root.find('option').set('solver', 'Newton')
     root.find('option').set('tolerance', str(settings.solver_tolerance))
+    root.find('option').set('iterations', str(settings.solver_iterations))
     root.find('option/flag').set('autoreset', 'disable')
     # With these full-flex nodes, 3.13's Euler implicit-joint-damping path
     # inverts tets even at half dt. Explicit damping is safe for alpha*dt

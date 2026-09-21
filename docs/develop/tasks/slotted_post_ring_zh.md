@@ -22,9 +22,9 @@
 
 录像由本次实测物理状态重渲染，三路均为 960 × 720、20 fps、2940 帧、147 秒，已验证完整解码、同步与 SHA-256：
 
-- [正面](../../../demos/slotted_post_ring/front_oblique/2026-09-21_clearance36_full_physics_v1_front_oblique.mp4)
-- [背面](../../../demos/slotted_post_ring/rear_oblique/2026-09-21_clearance36_full_physics_v1_rear_oblique.mp4)
-- [俯视](../../../demos/slotted_post_ring/topdown/2026-09-21_clearance36_full_physics_v1_topdown.mp4)
+- [正面](../../../demos/slotted_post_ring/varaition_clearance36/front_oblique/2026-09-21_clearance36_full_physics_v1_front_oblique.mp4)
+- [背面](../../../demos/slotted_post_ring/varaition_clearance36/rear_oblique/2026-09-21_clearance36_full_physics_v1_rear_oblique.mp4)
+- [俯视](../../../demos/slotted_post_ring/varaition_clearance36/topdown/2026-09-21_clearance36_full_physics_v1_topdown.mp4)
 
 [验收说明、原始报告及独立资产](../../../runs/demo_metadata/slotted_post_ring/2026-09-21_clearance36_full_physics_v1/README.md)保留状态、外力记录、完整动作表、运行开始时源码、可重载模型和实际相机配置。机器人局部执行和未通过的历史尝试另列于下文。
 
