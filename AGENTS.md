@@ -8,4 +8,6 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
 - `images/<sim>/Dockerfile`: simulator base images, tagged from `images/VERSION`; `scripts/build_images.sh`.
 - `ci_checks/run_all.sh [task dirs]`: contract checks. New check = `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
 - `tasks/dataset.toml`: task manifest; refresh with `cd tasks && harbor add --scan .`.
-- Local docker sandbox has no `[environment].gpus`; the current tasks don't need a GPU.
+- Local docker sandbox has no `[environment].gpus`. robosuite tasks don't need a GPU; RoboTwin tasks pass one through
+  with `environment/docker-compose.yaml` (service `main`, nvidia device reservation) — copy it from
+  `tasks/robotwin_2_0_stack_blocks_two/`.
