@@ -1,0 +1,29 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00"
+description = "HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00."
+authors = [{ name = "pingyue" }]
+keywords = ["robotics", "humanoidbench", "unitree-h1", "locomotion", "code-as-policy", "trajectory", "sit_simple"]
+
+[metadata]
+author_name = "pingyue"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "humanoidbench"
+robot = "unitree-h1"
+family = "sit_simple"             # HumanoidBench env h1-sit_simple-v0; paper category: locomotion
+tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+instance_seed = 0                 # scene = environment/instance.npz (frozen MuJoCo state); identity = dataset.toml digest
+expert_time_estimate_hours = 1.0
+
+[verifier]
+timeout_sec = 900.0
+
+[agent]
+timeout_sec = 3600.0
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 16                         # the deliverable is reachable by search; 1 episode ~= 0.6 s of one core
+memory_mb = 16384

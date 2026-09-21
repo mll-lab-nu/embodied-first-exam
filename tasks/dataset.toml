@@ -15,3 +15,7 @@ name = "MLL Lab"
 name = "robot-coding-bench/robosuite-cube-stack-i00"
 digest = "sha256:94abb8ea6211582e94464d7930368522ff554c4cc4925315144b32596537c275"
 
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00"
+digest = "sha256:f6dd964443765db0b6d90198207f031c5d4abad2802b33d8a33025904aeb0369"
+
