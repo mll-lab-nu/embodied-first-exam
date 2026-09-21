@@ -5,6 +5,7 @@ from typing import Any
 
 import genesis as gs
 import numpy as np
+from omegaconf import OmegaConf
 from scipy.spatial.transform import Rotation
 
 from topogym.world import StandardTabletopSceneBuilder
@@ -36,8 +37,15 @@ class CoilScene:
 def build_scene(cfg, asset_dir, *, render_only=False):
     folder = Path(asset_dir).resolve()
     template_path = cfg.task.get('template_path')
+    template = cfg.task.get('template')
+    if template is not None:
+        template = OmegaConf.to_container(template, resolve=True) if OmegaConf.is_config(template) else template
+        if template_path and load_template(template_path) != template:
+            raise ValueError("Inline instance and template file disagree")
+    else:
+        template = load_template(template_path) if template_path else None
     assembly, report = generate_assets(folder, scale=float(cfg.task.scale),
-        template=load_template(template_path) if template_path else None)
+        template=template)
     if cfg.task.variant != assembly.template["template_id"]:
         raise ValueError("Unknown Cast Coil variant")
     xy = np.asarray(cfg.task.center_xy_m, dtype=float)
@@ -56,12 +64,21 @@ def build_scene(cfg, asset_dir, *, render_only=False):
     rotation = Rotation.from_euler("z", float(cfg.task.yaw_deg), degrees=True)
     bottom = min(b.visual.bounds[0, 2] for b in assembly.bodies)
     origin = np.r_[xy, base.frames.table_surface_origin[2]-bottom+float(cfg.task.initial_floor_clearance_m)]
+    poses = [(rotation, origin)] * 2
+    if cfg.task.get("initial_body_poses") is not None:
+        mount = np.asarray(cfg.env.robot_mount.pos)
+        poses = [(Rotation.from_quat(p["r"]), mount + np.asarray(p["p"])) for p in cfg.task.initial_body_poses]
+        if len(poses) != 2:
+            raise ValueError("Expected two initial body poses")
+    elif cfg.task.get("objective", "disassemble") == "assemble":
+        from .assembly_task import DEFAULT_XY_OFFSET, initial_poses
+        poses = initial_poses(assembly, origin, rotation, cfg.task.get("initial_xy_offset_m", DEFAULT_XY_OFFSET))
     bodies = {}
-    for item in report["bodies"]:
+    for item, (body_rotation, body_origin) in zip(report["bodies"], poses):
         name = item["name"]
         body = base.scene.add_entity(gs.morphs.URDF(
-            file=str(folder/name/f"{name}.urdf"), pos=origin+rotation.apply(item["origin_m"]),
-            quat=rotation.as_quat()[[3, 0, 1, 2]], fixed=False, align=False,
+            file=str(folder/name/f"{name}.urdf"), pos=body_origin+body_rotation.apply(item["origin_m"]),
+            quat=body_rotation.as_quat()[[3, 0, 1, 2]], fixed=False, align=False,
             convexify=False, decimate=False, merge_fixed_links=False,
             collision=not render_only),
             material=gs.materials.Rigid(friction=.35),

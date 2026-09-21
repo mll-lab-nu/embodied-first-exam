@@ -43,7 +43,7 @@
 
 ## 后续候选动作与交付边界
 
-`untying.py` 提供右手固定远尾端、左手抓取材料弧长约 250 mm 的下穿绳段，抬升后向左抽出、放回和释放的候选状态机。抽出下穿绳段的思路参考 [HULK / BRUCE 原始论文](https://arxiv.org/html/2011.04999)；改用远尾端支撑及具体 400 mm 路径是本任务的候选设计，还没有实际解结成功记录。
+`untying.py` 提供右手固定远尾端、左手抓取材料弧长约 250 mm 的下穿绳段，抬升后向左抽出、放回和释放的状态机。抽出下穿绳段的思路参考 [HULK / BRUCE 原始论文](https://arxiv.org/html/2011.04999)；改用远尾端支撑及早期 400 mm 路径是本任务的候选设计。该早期路径未完成解结，后续成功的 v9 在分段抽绳后增加受限展开，见下文。
 
 原邻近支撑方案的 [互碰检查](../../../runs/environment-stability/knot_untying/trefoil_robot_v4/pair_collision_preflight.json) 发现腕部 / 夹爪重叠，因此候选改成远尾端支撑，并将场景沿 x 平移 −110 mm。[新抓点检查](../../../runs/environment-stability/knot_untying/trefoil_robot_v4/remote_anchor_preflight.json) 仅验证可达性与机器人模型互碰，不能替代绳的物理执行。初始双手张爪准备位在构建前声明，视频需明确说明未覆盖中立位到准备位的运动。
 
@@ -61,7 +61,7 @@
   --output runs/environment-stability/knot_untying/trefoil_robot_v6/remote_anchor_recording
 ```
 
-前一轮 P3 网格收敛仍未通过，见 [物理计划与报告](knot_untying_physics_demo_plan_zh.md)。本轮没有修改冻结的验收阈值。所有现有录制片段留在 `runs/environment-stability/`；只有完整过程才进入 `runs/demos/knot_untying/`，并在 `runs/demo_metadata/` 保存配套证据与归档清单。
+前一轮 P3 网格收敛仍未通过，见 [物理计划与报告](knot_untying_physics_demo_plan_zh.md)。本轮没有修改冻结的验收阈值。这些未通过的试录保留在 `runs/environment-stability/`；通过完整执行检查的 v9 已按视角独立归档至 `demos/knot_untying/<camera>/`，并在 `runs/demo_metadata/` 保存配套证据与归档清单。
 
 ## 分段补充抽绳试录
 

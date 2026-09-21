@@ -26,11 +26,17 @@ OUTPUT = ROOT / "runs/environment-solvability/lock_picking/family_space_v2"
 
 
 def candidate(seed, cfg, arm, family, resets, pitch_mm, radius_mm):
+    if not np.all(np.isfinite([pitch_mm, radius_mm, *resets])):
+        raise ValueError('Non-finite variant parameters')
+    if not 65 <= radius_mm <= 95 or pitch_mm > 180:
+        raise ValueError('Parameters outside the declared family proposal domain')
     minimum_pitch = 150. * max(1., radius_mm / 80.)
     if pitch_mm < minimum_pitch - 1e-9:
         raise ValueError(f"Visibility spacing requires at least {minimum_pitch:g} mm")
     if len(resets) != family.required_retreats:
         raise ValueError("Retreat count changed family")
+    if any(not low <= angle <= high for angle, (low, high) in zip(resets, family.reset_angle_candidate_bounds_deg)):
+        raise ValueError('Reset angle outside the declared family proposal domain')
     if family.id == "F2" and resets[1] - resets[0] < family.minimum_reset_difference_deg:
         raise ValueError("F2 requires unequal resets separated by at least 2 degrees")
     states = motion_variant(resets, max(resets) / 2)
@@ -77,7 +83,7 @@ def gallery(results):
         outer = rad * 1.4 * k
         svg += [f'<circle cx="{cx}" cy="{cy}" r="{outer}" fill="#98a4aa"/>',
                 f'<circle cx="{cx}" cy="{cy}" r="{rad*1.0375*k}" fill="#edf2f5"/>',
-                f'<circle cx="{cx}" cy="{cy}" r="{rad*k}" fill="#b58a49"/>',
+                f'<circle cx="{cx}" cy="{cy}" r="{rad*k}" fill="#7547a8"/>',
                 f'<circle cx="{cx}" cy="{cy}" r="{g["bore_radius"]*1000*k}" fill="white"/>']
         for s in g["slots"][0]:
             svg.append(f'<path d="{sector_path(cx, cy, 45*k, s-8, s+8)}" fill="white"/>')
@@ -88,7 +94,7 @@ def gallery(results):
         svg.append('<polyline points="'+' '.join(f'{a:.2f},{b:.2f}' for a,b in points)+'" fill="none" stroke="white" stroke-width="5"/>')
         sx, sy, ks = x + 215, y + 162, .27
         svg.append(f'<line x1="{sx-20}" y1="{sy}" x2="{sx+3*pitch*ks+16}" y2="{sy}" stroke="#697c89" stroke-width="3"/>')
-        for j, color in enumerate(('#b58a49', '#467997', '#b46547', '#397665')):
+        for j, color in enumerate(('#7547a8', '#467997', '#b46547', '#397665')):
             px = sx + j * pitch * ks
             svg.append(f'<rect x="{px-2.4}" y="{sy-rad*ks}" width="4.8" height="{2*rad*ks}" fill="{color}"/>')
             svg.append(f'<text x="{px-7}" y="{sy+rad*ks+18}" font-size="11">{("D"+str(j+1)) if j<3 else "E"}</text>')

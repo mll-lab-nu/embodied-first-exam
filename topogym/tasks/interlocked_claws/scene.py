@@ -34,10 +34,16 @@ class ClawScene:
     def cameras(self):
         return self.tabletop.cameras
 
+    @property
+    def manifest(self):
+        return self.tabletop.manifest
+
 
 def build_scene(cfg, asset_dir):
+    from .variants import assert_runtime_supported
+    assert_runtime_supported(cfg.task)
     folder = Path(asset_dir).resolve()
-    assembly, report = generate_assets(folder)
+    assembly, report = generate_assets(folder, render_variant=cfg.task.get("render_variant"))
     if cfg.task.variant != assembly.reference["asset_id"]:
         raise ValueError("Unknown Claw asset")
     if cfg.robot_control.robot.name != "aloha" or np.any(cfg.env.robot_mount.euler):
@@ -71,7 +77,9 @@ def build_scene(cfg, asset_dir):
             material=gs.materials.Rigid(rho=assembly.reference["density_kg_m3"], friction=.3,
                 sdf_cell_size=float(cfg.task.sdf_cell_size_m), sdf_min_res=32,
                 sdf_max_res=int(cfg.task.sdf_max_res)),
-            surface=gs.surfaces.Default(color=b.color, smooth=True), name=b.name)
+            surface=gs.surfaces.Default(color=b.color, smooth=True,
+                **(dict(metallic=assembly.metallic, roughness=assembly.roughness)
+                   if cfg.task.get("render_variant") else {})), name=b.name)
         bodies[b.name] = base.manifest.add(b.name, body)
     fixtures = []
     for g in assembly.reference["fixtures"]["geoms"]:

@@ -64,6 +64,19 @@ def infer(data, trace, folder):
     stock = gold.union(box(*stock_bounds))
     sweep, sampling = sweep_polygons(trace)
     carved = stock.difference(sweep).simplify(.025, preserve_topology=True)
+    # A larger, explicitly versioned excursion can machine off tiny chips.
+    # They are discarded stock, not extra movable puzzle pieces. Keep only the
+    # grasp-connected component, with a strict bound on discarded material.
+    discarded = 0.
+    if carved.geom_type == "MultiPolygon" and data.get("discard_small_sweep_offcuts", False):
+        anchor = Point(-10.6, -31).buffer(1.0)
+        connected = [p for p in carved.geoms if p.buffer(1e-8).covers(anchor)]
+        if len(connected) != 1:
+            raise ValueError("No unique grasp-connected solid")
+        discarded = carved.area - connected[0].area
+        if discarded > .01 * stock.area:
+            raise ValueError("Sweep disconnected more than 1% of stock")
+        carved = connected[0]
     if carved.geom_type != "Polygon" or len(carved.interiors) or not carved.is_valid:
         raise ValueError(f"Disconnected or invalid gold: {carved.geom_type}")
     if not carved.buffer(1e-8).covers(Point(-10.6, -31).buffer(1.0)):
@@ -83,6 +96,8 @@ def infer(data, trace, folder):
                   gold_area_after_mm2=carved.area,
                   removed_area_mm2=gold.difference(carved).area,
                   added_area_mm2=carved.difference(gold).area)
+    if data.get("discard_small_sweep_offcuts", False):
+        record["discarded_sweep_offcuts_mm2"] = discarded
     save(folder / "geometry.json", record)
     meshes, cells = geometry_from_record(record)
     audits = []

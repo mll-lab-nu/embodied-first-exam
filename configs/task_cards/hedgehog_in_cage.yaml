@@ -46,3 +46,19 @@ rejection_rules:
 - Spike overlaps bar at reset
 - No known legal assembly/escape path
 first_probe: CLASSIC static scene available; next validate exact geometry, spike/bar contact and a legal extraction route
+variant_generator:
+  version: hedgehog_seed_v2
+  entrypoint: topogym.tasks.hedgehog_in_cage.variants
+  scene_loader: topogym.tasks.hedgehog_in_cage.variant_runtime.build_scene
+  configuration: configs/task_variants/hedgehog_in_cage/generator_v2.yaml
+  active_families: [oblique_gate, fixed_side_window, gen_keyhole]
+  retired_families_preserved_for_reload: [staggered_gates, helical_guide]
+  contract: shared VariantRng and EpisodeSpec; sample, materialize, load_instance
+  default_finish: wood
+  fixed_spikes_only: true
+  official_CAD_replica: false
+  distinct_ik_families_proven: false
+  parent_demo_scope: pregrasp, contact-triggered assisted grasp, extraction, placement, release, retreat and free settling
+  random_descendant_physics: not_inherited
+  export_ready: false
+  evidence: runs/demo_metadata/hedgehog_in_cage/2026-09-19_generator_replacements_review_v2/verification.json

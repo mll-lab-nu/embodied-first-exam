@@ -1,0 +1,91 @@
+schema_version: 1
+design_revision: 2
+spec_type: buzz_wire_family_design
+status: proposed
+runtime_ready: false
+family_id: F2_over_under_eight
+label_zh: 折返—错层八字—竖直双谷连续关卡
+contract: family_space_v1.yaml
+default_prototype: F2_comb_eight_w_v2
+supersedes_proposals: [F2_balanced_eight, F2_left_long_eight]
+family_identity:
+  motion: several entry reversals, opposite-turning elevated figure-eight lobes, then additional exit obstacles
+  stage_count_min: 3
+  distinct_motif_count_min: 3
+  eight_stage_required: true
+  eight_projected_lobes: 2
+  eight_projected_crossing_order: lower_then_upper
+  physical_intersections: 0
+  center_junction: false
+  stage_order_is_discrete_prototype_identity: true
+  continuous_grasp_across_stages: true
+
+prototypes:
+  F2_comb_eight_w_v2:
+    stage_order: [entry_comb, layered_eight, front_vertical_w]
+    fixed_structure: {entry_return_count: 3, eight_extent_ratio: 1.0, exit_valley_count: 2}
+    stages:
+      entry_comb:
+        motif: horizontal_parallel_returns
+        sketch_placement: {start_x_m: -0.310, y_min_m: -0.130}
+        plane: xy
+        return_count: 3
+        nominal: {turn_radius_m: 0.035, lane_pitch_m: 0.070, straight_run_m: 0.230, height_m: 0.255}
+      layered_eight:
+        motif: open_over_under_figure_eight
+        sketch_placement: {center_x_m: 0.150, center_y_m: 0.0}
+        plane: xy_with_height_separation
+        nominal: {right_lobe_extent_m: 0.140, depth_span_m: 0.190, crossing_height_gap_m: 0.110, center_height_m: 0.180, end_cut_angle_deg: 18.0}
+      front_vertical_w:
+        motif: two_valleys_and_one_crest
+        sketch_placement: {start_x_m: -0.010}
+        plane: xz
+        valley_count: 2
+        nominal: {turn_radius_m: 0.040, low_height_m: 0.080, high_height_m: 0.245, front_y_m: -0.200}
+    nominal: {connector_handle_m: 0.060, target_playable_length_m: 3.20}
+  F2_arch_eight_s_coil_v2:
+    stage_order: [inclined_arches, asymmetric_eight, low_s, rising_coil]
+    fixed_structure: {entry_peak_count: 2, eight_extent_ratio: 1.20, coil_turns: 0.75}
+    stages:
+      inclined_arches:
+        motif: alternating_inclined_arches
+        plane: tilted_xz
+        nominal: {turn_radius_m: 0.040, low_height_m: 0.100, high_height_m: 0.250, depth_span_m: 0.080}
+      asymmetric_eight:
+        motif: open_over_under_figure_eight
+        plane: xy_with_height_separation
+        nominal: {right_lobe_extent_m: 0.125, depth_span_m: 0.180, crossing_height_gap_m: 0.110, center_height_m: 0.180, end_cut_angle_deg: 18.0}
+      low_s:
+        motif: opposite_curvature_s
+        plane: xy
+        nominal: {turn_radius_m: 0.040, height_m: 0.100}
+      rising_coil:
+        motif: inclined_open_helix
+        plane: tilted
+        nominal: {radius_m: 0.050, axial_advance_m: 0.070, plane_tilt_deg: 30.0}
+    nominal: {connector_handle_m: 0.060, target_playable_length_m: 2.50}
+
+# Template-local deltas; not independent certified sampling boxes.
+tuning_candidates:
+  entry_turn_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005]}
+  entry_run_delta_m: {default: 0.0, bounds: [-0.015, 0.015], applies_to: [F2_comb_eight_w_v2]}
+  eight_extent_delta_m: {default: 0.0, bounds: [-0.005, 0.010]}
+  eight_depth_delta_m: {default: 0.0, bounds: [-0.010, 0.010]}
+  crossing_height_gap_delta_m: {default: 0.0, bounds: [-0.005, 0.015]}
+  exit_turn_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005]}
+  stage_depth_offset_delta_m: {default: 0.0, bounds: [-0.010, 0.010]}
+  coil_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005], applies_to: [F2_arch_eight_s_coil_v2]}
+coupled_constraints:
+  - Lane pitch is derived as twice the entry semicircle radius, never independently compressed.
+  - Preserve every stage, the authored order and the per-stage turn counts.
+  - Eight left extent is derived from the fixed prototype ratio and right extent.
+  - Allocate entry, eight and exit to separate lateral or depth corridors; check their union.
+  - More bends must not be obtained by overlapping wire, shrinking the ring or relaxing robot limits.
+  - Crossing height and lane pitch are design dimensions, not whole-gripper clearance certificates.
+  - Smooth all inter-stage joins and verify tool and hand swept volume across each join.
+  - End posts occur only at the two global ends; no artificial reset or release between stages.
+ik_design_priorities:
+  - Find one continuous grasp and arm branch across the entire multi-stage route.
+  - Resolve the transition from horizontal steering to eight crossover and vertical valley motion.
+  - Keep stage boundaries in saved paths and report failures at their actual stage.
+verification: {geometry: pending, ik: pending, robot_collision: pending, physics: pending}

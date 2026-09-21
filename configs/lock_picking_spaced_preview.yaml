@@ -48,12 +48,20 @@ env:
       fov: 120
       near: 0.001
       far: 12
+    endpoint_face:
+      res: [900, 900]
+      pos: [0.580, 0.200, 1.105]
+      lookat: [0.650, 0.200, 1.105]
+      up: [0, 0, 1]
+      fov: 120
+      near: 0.001
+      far: 12
 
 run:
   output: runs/environment_bootstrap/lock_picking/spaced_initial
   inspect_only: true
   build_only: false
-  record_cameras: [agentview, wrist, mechanism_overview, disc1_face, disc2_face, disc3_face]
+  record_cameras: [agentview, wrist, mechanism_overview, disc1_face, disc2_face, disc3_face, endpoint_face]
   exterior_cameras: [agentview, mechanism_overview]
 recording:
   enabled: false

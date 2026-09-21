@@ -1,0 +1,14 @@
+defaults:
+  - blanket_flatten_gathered_peel_robot
+  - _self_
+
+task:
+  execution:
+    # The 60 cm side runs across the robot, leaving reach margin at all corners.
+    target_center_xy_m: [-0.15, 0.0]
+    target_yaw_deg: 90.0
+    detour_held_motion_around_base: true
+    final_settle_seconds: 10.0
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v10

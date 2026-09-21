@@ -121,7 +121,13 @@ def build_scene(folder, cfg):
     import genesis as gs
     from topogym.world import StandardTabletopSceneBuilder
     folder = Path(folder); assets = folder / "assets"
-    layout = HedgehogLayout(load_template(assets / "template.json"), 3.)
+    template_data = json.loads((assets / "template.json").read_text())
+    if len(template_data["hedgehog"]["spikes"]) == 10:
+        template_data = load_template(assets / "template.json")
+    elif not (len(template_data["hedgehog"]["spikes"]) == 6
+              and template_data["hedgehog"]["spike_shape"] == "cylinder"):
+        raise ValueError("Unsupported fixed-spike prototype")
+    layout = HedgehogLayout(template_data, 3.)
     builder = StandardTabletopSceneBuilder(cfg.env, cfg.robot_control,
         rigid_options=gs.options.RigidOptions(enable_collision=True, enable_self_collision=True,
             enable_joint_limit=True, max_collision_pairs=16384, iterations=100,
@@ -334,7 +340,7 @@ def audit(folder, substeps=10):
     if errors:raise ValueError("Physical state audit failed")
 
 
-def render(folder, backend="cuda"):
+def render(folder, backend="cuda", *, video_prefix=None):
     folder=Path(folder);admitted(folder);physical=folder/"physics"
     audit_result=json.loads((physical/"audit.json").read_text())
     if not audit_result["passed"] or any(sha(physical/n)!=h for n,h in audit_result["source_sha256"].items()):
@@ -362,8 +368,16 @@ def render(folder, backend="cuda"):
     c=initialize_franka_controller(scene=task.scene,manifest=task.manifest,robot_cfg=cfg.robot_control,settle_steps=0)
     names=("agentview","front_oblique","wrist");camera_poses=[];phases=[];kin=Kinematics();max_fk_error=0.
     with ExitStack() as stack:
-        writers={n:stack.enter_context(imageio.get_writer(output/f"{n}.mp4",fps=fps,codec="libx264",quality=7,
-            macro_block_size=1,ffmpeg_params=["-threads","2"],ffmpeg_log_level="error")) for n in (*names,"three_views")}
+        from .geometry import ROOT
+        destinations = {}
+        for n in names if video_prefix is not None else (*names, "three_views"):
+            destination = (ROOT/"demos/hedgehog_in_cage"/n/f"{video_prefix}_{n}.mp4"
+                           if video_prefix is not None else output/f"{n}.mp4")
+            if destination.exists(): raise ValueError(f"Preserve existing video: {destination}")
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            destinations[n]=destination
+        writers={n:stack.enter_context(imageio.get_writer(destination,fps=fps,codec="libx264",quality=7,
+            macro_block_size=1,ffmpeg_params=["-threads","2"],ffmpeg_log_level="error")) for n,destination in destinations.items()}
         for i,row in enumerate(frames):
             c.robot.set_qpos(row["robot_qpos"]);task.ball.set_pos(row["ball_position_m"])
             task.ball.set_quat(np.array(row["ball_quaternion_xyzw"])[[3,0,1,2]])
@@ -378,14 +392,16 @@ def render(folder, backend="cuda"):
                 if changed or i==len(frames)-1:Image.fromarray(rgb).save(output/f'{row["phase"]}_{n}.jpg')
                 tile=Image.fromarray(rgb).resize((480,360));draw=ImageDraw.Draw(tile)
                 draw.rectangle((0,0,480,25),fill=(20,28,35));draw.text((10,6),n,fill="white");grid.paste(tile,(480*j,0))
-            writers["three_views"].append_data(np.asarray(grid));camera_poses.append({n:np.asarray(task.cameras[n].transform).tolist() for n in names})
+            if "three_views" in writers: writers["three_views"].append_data(np.asarray(grid))
+            camera_poses.append({n:np.asarray(task.cameras[n].transform).tolist() for n in names})
             if i%48==0:print(f"Record {i+1}/{len(frames)}: {row['phase']}",flush=True)
     save(output/"camera_poses.json",camera_poses)
     result=dict(passed=True,frames=len(frames),fps=fps,duration_s=len(frames)/fps,phases=phases,
         actual_physics_states=True,kinematic_rehearsal=False,renderer_backend=backend,renderer_type=str(cfg.env.renderer.type),physics_steps=report["physics_steps"],
         rendering_physics_steps=0,maximum_pad_fk_error_m=max_fk_error,loaded_collision_audit=task.loaded_audit,
         source_physical_sha256=audit_result["source_sha256"],render_frames_sha256=sha(output/"render_frames.json"),
-        asset_manifest_sha256=sha(folder/"assets/sha256.json"),pregrasp_start=True,assisted_grasp=True,grasp_released=True)
+        asset_manifest_sha256=sha(folder/"assets/sha256.json"),pregrasp_start=True,assisted_grasp=True,grasp_released=True,
+        video_files={n:str(p.relative_to(ROOT)) for n,p in destinations.items()})
     save(output/"recording_report.json",result);print(json.dumps(result,indent=2),flush=True)
 
 

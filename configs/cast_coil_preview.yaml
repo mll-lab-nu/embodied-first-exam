@@ -6,11 +6,13 @@ defaults:
   - _self_
 
 task:
+  objective: assemble
+  initial_xy_offset_m: [-0.12, 0.18]
   variant: cast_coil_photo_prototype_v1
   # Authored 34 x 24.75 x 34 mm prototype, enlarged uniformly for inspection.
   scale: 3.0
   center_xy_m: [0.06, 0.16]
-  yaw_deg: -12
+  yaw_deg: 90
   initial_floor_clearance_m: 0.0005
   seed: 0
 
@@ -45,25 +47,25 @@ env:
     detail:
       res: [1000, 1000]
       pos: [0.30, -0.24, 1.24]
-      lookat: [0.06, 0.16, 0.982]
+      lookat: [0.00, 0.25, 0.982]
       up: [0, 0, 1]
-      fov: 24
+      fov: 38
       near: 0.005
       far: 12
     opposite:
       res: [1000, 1000]
       pos: [-0.19, 0.56, 1.23]
-      lookat: [0.06, 0.16, 0.982]
+      lookat: [0.00, 0.25, 0.982]
       up: [0, 0, 1]
-      fov: 24
+      fov: 38
       near: 0.005
       far: 12
     video:
       res: [960, 640]
       pos: [0.30, -0.24, 1.24]
-      lookat: [0.06, 0.16, 0.982]
+      lookat: [0.00, 0.25, 0.982]
       up: [0, 0, 1]
-      fov: 26
+      fov: 38
       near: 0.005
       far: 12
 

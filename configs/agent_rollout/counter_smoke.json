@@ -1,0 +1,17 @@
+[
+  {
+    "id": "replay_smoke", "mode": "rgb", "provider": "replay",
+    "decisions": [
+      {"kind": "segment", "code": "env.step({'dx': 1}, steps=2)"},
+      {"kind": "inspect", "paths": ["segment_0.json", "frames/segment_1/front/000002.png"]},
+      {"kind": "segment", "code": "env.step({'dx': 1}, steps=3)"}
+    ]
+  },
+  {
+    "id": "replay_smoke", "mode": "rgb_privileged", "provider": "replay",
+    "decisions": [
+      {"kind": "segment", "code": "env.step({'dx': 1}, steps=2)"},
+      {"kind": "segment", "code": "env.step({'dx': 1}, steps=3)"}
+    ]
+  }
+]

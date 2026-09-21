@@ -2,7 +2,7 @@
 
 状态：已完成并归档 75 s、五路同步视角的完整实验机器人解结。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。按用户要求，不设独立的数学可解性证明阶段。
 
-[完整录像播放](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)。最新录制进展见 [机器人抓持与录制复测](knot_untying_recording_attempt_zh.md)。上一轮的 `trefoil_initial/preview.mp4` 是初态预览，不覆盖抓取、解结和释放。
+三叶结 v9 完整录像：[高位](../../../demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4) · [低位](../../../demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4) · [左腕](../../../demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4) · [右腕](../../../demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4) · [近景](../../../demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4)。新家族的执行状态见 [家族构造与验收记录](knot_untying_family_space_zh.md)；三叶结抓持与录制的历史复测见 [记录](knot_untying_recording_attempt_zh.md)。`trefoil_initial/preview.mp4` 是初态预览，不覆盖抓取、解结和释放。
 
 ## 本轮结果
 
@@ -177,9 +177,9 @@ P3 的初始对照：
 
 五路来自同一次连续 rollout，使用同一组物理时间戳；每次先完成状态步进，再一次性采集全部相机，采集之间不推进仿真。正式录制建议 20 fps，对应 5 ms 控制步每 10 步采一帧，半步长每 20 步采一帧；当前诊断录像为 10 fps、640 × 360。所有相机保存内外参与腕部安装变换。
 
-交付五个独立 MP4、同步播放 / 暂停 / 关键阶段跳转的网页，以及逐帧时间和阶段索引。物理过程视频覆盖抓取、送绳、退穿、展开、松手和最后静置；相机环绕只保留在现有初态预览中。关键退穿段至少在一个外部视角持续可见。
+交付五个独立 MP4，以及逐帧时间和阶段索引。依照 2026-09-19 项目规则，直接提供各视角 MP4 链接，不再新增或更新播放网页。物理过程视频覆盖抓取、送绳、退穿、展开、松手和最后静置；相机环绕只保留在现有初态预览中。关键退穿段至少在一个外部视角持续可见。
 
-完整 demo 的视频归档统一放在 `runs/demos/knot_untying/`，按 `<date>_<run_id>_<camera>.mp4` 命名。依照 [项目归档规则](../../../AGENTS.md)，该目录只保存独立 MP4 文件；播放页、报告、相机标定、轨迹与归档清单放在 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。本轮完整实验录像已独立归档，见上方完整录像链接；P3 与通用交接验收状态不变。
+完整 demo 的视频归档统一按视角放在 `demos/knot_untying/<camera>/`，按 `<date>_<run_id>_<camera>.mp4` 命名。依照 [项目归档规则](../../../AGENTS.md)，各视角目录只保存独立 MP4 文件；播放页、报告、相机标定、轨迹与归档清单放在 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。本轮完整实验录像已独立归档，见上方完整录像链接；P3 与通用交接验收状态不变。
 
 产物目录：
 
@@ -189,24 +189,24 @@ runs/environment-stability/knot_untying/trefoil_v1/
   free_settle/  contact_slide/  lift_release/  feed_release/
   half_step/  refined_mesh/  tighter_solver/  robot_grasp/  perturbations/
   result.json  index.html
-runs/demos/knot_untying/
-  <date>_trefoil_untying_v1_cam_high.mp4
-  <date>_trefoil_untying_v1_cam_low.mp4
-  <date>_trefoil_untying_v1_cam_left_wrist.mp4
-  <date>_trefoil_untying_v1_cam_right_wrist.mp4
-  <date>_trefoil_untying_v1_detail.mp4
+demos/knot_untying/
+  cam_high/<date>_trefoil_untying_v1_cam_high.mp4
+  cam_low/<date>_trefoil_untying_v1_cam_low.mp4
+  cam_left_wrist/<date>_trefoil_untying_v1_cam_left_wrist.mp4
+  cam_right_wrist/<date>_trefoil_untying_v1_cam_right_wrist.mp4
+  detail/<date>_trefoil_untying_v1_detail.mp4
 runs/demo_metadata/knot_untying/<date>_trefoil_untying_v1/
   camera_rig.json  frames.json  trajectory.npz  report.json  index.html
   archive_manifest.json
 ```
 
-归档时复制视频与配套证据，记录原始目录和 SHA-256，核对视频可解码、各路帧数与时长一致、页面链接有效，并更新 `runs/demo_metadata/` 的 `index.html`、`README.md` 和 `catalog.json`。
+归档时复制视频与配套证据，记录原始目录和 SHA-256，核对视频可解码、各路帧数与时长一致、MP4 直链有效，并更新 `runs/demo_metadata/` 的 `README.md` 和 `catalog.json`。上面目录中的已有 `index.html` 仅作为历史产物保留，不再生成或维护。
 
 ## 实施顺序
 
 1. 新增任务专属 `diagnostics.py` 与无渲染 `physics_probe.py`，先把 P1 和 P2 跑通。
 2. 完成 P3、小扰动复查和基线汇总；物理异常定位到材料、初态、网格或求解器，不在调 demo 时混改。
 3. 接入 ALOHA 与显式抓持，完成 P4；再用 `oracle.py` 组织动作状态机，`execute.py` 连续执行，按真实状态转阶段。
-4. 全过程和半步长复核通过后，输出四路 ALOHA 标准相机及近景的同步 demo 与 `review.py` 页面，登记实际通过范围。
+4. 全过程和半步长复核通过后，输出四路 ALOHA 标准相机及近景的同步 demo，以 Markdown / JSON 登记实际通过范围并提供 MP4 直链。
 
 完整验收状态以运行汇总为准。本轮已完成诊断和局部 P1–P3 实验；P3 网格对照及 P4 抓持验收仍未通过，当前完整解结试录仅用于实验，不能据此宣称 P3 或双手交接通过；正式物理验收仍需完成这两项。

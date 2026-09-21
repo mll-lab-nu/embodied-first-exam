@@ -1,0 +1,4 @@
+[
+  {"id": "codex", "mode": "rgb", "interaction": "segments", "provider": "codex", "model": "YOUR_AVAILABLE_CODEX_MODEL", "timeout_s": 600},
+  {"id": "codex", "mode": "rgb_privileged", "interaction": "segments", "provider": "codex", "model": "YOUR_AVAILABLE_CODEX_MODEL", "timeout_s": 600}
+]

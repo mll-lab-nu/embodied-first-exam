@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="hedgehog">
+  <link name="hedgehog">
+    <inertial>
+      <origin xyz="-0.000896137359813 -0.000393580989198 -0.000609415725209" />
+      <mass value="0.0677489575774263" />
+      <inertia ixx="2.662684917317286e-05" iyy="3.086363500098032e-05" izz="2.8339748497185515e-05" ixy="2.389523541788784e-08" ixz="3.6999074195439224e-08" iyz="1.624988854864637e-08" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="hedgehog.glb" />
+      </geometry>
+      <material name="wood">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_000.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_001.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_002.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_003.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_004.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_005.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="hedgehog_collision_006.obj" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

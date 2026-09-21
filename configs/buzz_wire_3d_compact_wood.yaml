@@ -1,0 +1,40 @@
+defaults:
+- buzz_wire_3d_robot
+- _self_
+task:
+  geometry:
+    authored_controls_m: []
+    authored_section_ends: []
+    orientation_knots_wxyz: []
+    center_offset_knots_m: []
+    base_size_m:
+    - 0.5201
+    - 0.3689
+    - 0.017499999999999998
+    clearance_cover_m: 0.00035
+    horizontal_scale: 0.42
+    depth_scale: 0.42
+    height_scale: 0.315
+    wire_radius_m: 0.0014699999999999997
+    loop_radius_m: 0.015399999999999999
+    loop_tube_radius_m: 0.0012599999999999998
+    stem_length_m: 0.01596
+    grip_length_m: 0.03052
+    grip_radius_m: 0.0049
+    grip_half_thickness_m: 0.0034999999999999996
+    end_stop_radius_m: 0.0161
+    end_stop_shape: sphere
+    end_stop_thickness_m: 0.0028
+    rail_segment_m: 0.0034999999999999996
+    witness_step_m: 8.75e-05
+    end_reserve_m: 0.126
+    finish: wood_metal
+    post_radius_m: 0.011
+    post_height_m: 0.04
+robot_demo:
+  instance_id: baseline_compact_wood_s70_v1
+  grip_inset_m: 0.01652
+env:
+  appearance: []
+run:
+  output: runs/environment_bootstrap/buzz_wire_3d/baseline_compact_wood_s70_v1

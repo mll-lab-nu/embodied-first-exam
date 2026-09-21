@@ -1,7 +1,13 @@
 # Cast Keyhole 基础环境
 
+2026-09-19 新增 [agent adapter 与无 HTTP 本地接入](../modules/cast_keyhole_agent_adapter_zh.md)：
+四路初始观测、分段机器人控制、接触触发辅助和私有 SAT 判定；已完成短程物理接口验证，尚非完整 agent 求解资格。
+
 本阶段选用 **Hanayama Huzzle Cast Keyhole 标准版**（HZ 4-11 / 515061），
 设计者 Vesa Timonen，官方难度 4 / 6。目标是建立可复现的几何、双刚体场景及基础检查入口。
+
+2026-09-19：面向逐 episode seed 的三家族随机变体、参数范围与 pipeline 接口，见
+[随机变体生成器 v2](cast_keyhole_variants_zh.md)。该入口与历史展示批处理分开，候选必须逐实例验证；本轮不生成数据集或 H5。
 
 ## 当前实例已找到完整解（2026-09-17）
 
@@ -39,6 +45,11 @@ ALOHA 双臂通过 12 关节耦合 IK，共 270 帧、22.5 秒；两臂分别抓
 
 - [完整物理执行播放页](../../../runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/index.html)
 - [完整 IK 预演播放页](../../../runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_ik/index.html)
+
+2026-09-18 按用户要求，基础物理实例的七个视频按视角迁移至仓库根目录
+`demos/cast_keyhole/{cam_high,cam_low,cam_left_wrist,cam_right_wrist,detail,oblique,four_views}/`。
+文件名仍保留 `2026-09-17_current_instance_physical_` 前缀；播放页、证据与清单保留在原元数据目录。
+所有视角齐全，无需补录；范围仍为预抓取至完全分离并保持，不包含桌面拾取或落桌释放。
 
 ```bash
 .venv-gs121-nyx/bin/python -m topogym.tasks.cast_keyhole.robot_execution \

@@ -1,4 +1,4 @@
-"""Render the assembled prototype, separate part inspection, and gravity probe.
+"""Render the current task reset, separate part inspection, and gravity probe.
 
 The part-inspection poses are explicit display resets, not a solution animation.
 All poses are restored before the optional physical settling check.
@@ -57,6 +57,9 @@ def check_settling(task, cfg):
 
 def write_review(output, report):
     g = report["geometry"]
+    assembling = report.get("objective") == "assemble"
+    intro = ("初态为 x、y 两方向均分离的金、银两件。目标是将两件聚合成四层交替的方形装配，并松手后稳定保持。"
+             if assembling else "金、银两件形成四层交替的方形装配，中央保留通孔。每件是独立自由刚体，内侧缺口和侧桥参与碰撞。")
     parts = ['<!doctype html><html lang="zh-CN"><meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width,initial-scale=1">',
         '<title>Cast Coil · 基础场景</title><style>',
@@ -67,17 +70,17 @@ def write_review(output, report):
         'td,th{border-bottom:1px solid #e1e5ea;padding:10px;text-align:left}table{width:100%;border-collapse:collapse}'
         '@media(max-width:760px){.grid{grid-template-columns:1fr}}</style>',
         '<p><a href="../../index.html">← 环境汇总</a></p><h1>Cast Coil：方形卷绕件基础场景</h1>',
-        '<p>金、银两件形成四层交替的方形装配，中央保留通孔。每件是独立自由刚体，内侧缺口和侧桥参与碰撞。</p>',
+        '<p>'+intro+'</p>',
         '<section class="grid"><figure><a href="initial_detail.png"><img src="initial_detail.png" alt="金银交错装配近景"></a>'
-        '<figcaption>参考图方向：金色前层、银色后层交错排列。</figcaption></figure>'
+        '<figcaption>任务初态：两个独立自由刚体。</figcaption></figure>'
         '<figure><a href="initial_opposite.png"><img src="initial_opposite.png" alt="装配背面"></a>'
-        '<figcaption>反向观察：中央孔和各层侧边连接。</figcaption></figure></section>',
+        '<figcaption>反向观察零件的通孔和侧边连接。</figcaption></figure></section>',
         '<section><img src="initial_overview.png" alt="共享实验室桌面场景"><p>共享 Nyx 实验室和桌面。'
         + ('Panda + Robotiq 2F-85 仅作静止尺度参照。' if report["robot_present"] else '本次未加载机器人。') + '</p></section>',
         '<section><h2>单件结构检查</h2><img src="parts_inspection.png" alt="两件分开展示">'
         '<p>单独重置到分开展示位置，便于检查回折、侧桥与内侧缺口；此图不表示已执行合法拆解路径。</p></section>']
     if report["video_created"]:
-        parts.append('<section><h2>装配绕行观察</h2><video controls loop preload="metadata" '
+        parts.append('<section><h2>初态绕行观察</h2><video controls loop preload="metadata" '
             'poster="initial_detail.png" src="preview.mp4"></video><p>相机绕行，零件保持初态。</p></section>')
     parts.extend(['<section><h2>实现与验证范围</h2><table>',
         f'<tr><td>尺寸</td><td>原型 34 × 24.75 × 34 mm，统一 {g["scale"]:g} 倍；不是实测尺寸</td></tr>',
@@ -85,7 +88,7 @@ def write_review(output, report):
         f'<tr><td>几何检查</td><td>{"通过" if g["passed"] else "未通过"}；每件为连通封闭实体，孔道未被碰撞凸包填平；'
         f'初态最小间隙 {g["minimum_initial_clearance_m"]*1000:.2f} mm</td></tr>',
         '<tr><td>资产状态</td><td>据官方照片与解法图重建的基础原型；内侧槽口尺寸、圆弧和倒角仍需核实</td></tr>',
-        '<tr><td>后续验收</td><td>精确转动窗口、完整滑转解法、双臂抓持与拆解</td></tr></table>',
+        '<tr><td>本页范围</td><td>仅初态检查；完整机器人执行以独立 Demo 与物理报告为准</td></tr></table>',
         f'<p>本次渲染：{escape(report["renderer"])} / {escape(report["backend"])}。</p>',
         '<p><a href="inspection_report.json">场景报告</a> · <a href="assets/geometry_report.json">几何报告</a> · '
         '<a href="config.yaml">配置快照</a> · <a href="assets/template.json">尺寸模板</a> · '
@@ -164,7 +167,7 @@ def main(cfg):
     restore_error = max(float(np.max(np.abs(as_numpy(task.bodies[n].get_qpos())-q))) for n, q in initial.items())
     if restore_error > 1e-7:
         raise RuntimeError("Part inspection did not restore the initial assembly")
-    report = dict(scope="cast_coil_prototype_initial_scene", variant=str(cfg.task.variant),
+    report = dict(scope="cast_coil_prototype_initial_scene", variant=str(cfg.task.variant), objective=cfg.task.get("objective", "disassemble"),
         full_task_deployed=False, measured_replica=False, extraction_route_verified=False,
         turning_windows_verified=False, dual_arm_qualified=False, robot_present=bool(cfg.run.include_robot),
         robot_role="stationary scale reference" if cfg.run.include_robot else None,

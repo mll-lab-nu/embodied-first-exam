@@ -1,0 +1,13 @@
+# Candidate with 50 ms deformation-velocity decay; rigid modes remain free.
+# Phenomenological damping, not calibrated against physical rope.
+defaults:
+  - rope_threading_deformation_damping_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      deformation_damping_rate_s_inv: 20.0
+
+run:
+  output: runs/environment_bootstrap/rope_threading/deformation_damping20_candidate

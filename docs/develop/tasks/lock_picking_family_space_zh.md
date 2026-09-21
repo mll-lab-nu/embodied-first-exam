@@ -2,6 +2,8 @@
 
 当前空间为 **3 个动作 family × 3 个几何外观代表**。钥匙固定为三齿，位置为 `[0,p,2p]`；S/M/L 只改变外盘、外环和符合可视性约束的盘距。
 
+2026-09-19：[接入审查](lock_picking_variant_pipeline_audit_zh.md)之后已补齐[seed 生成器 v1](lock_picking_seed_generator_zh.md)：固定原型选择、尺寸／平移／外观采样、逐实例几何／IK 验证与快照恢复。复位角仍冻结；完整执行和数据 writer 不在本轮范围。成功视频的等角双回退基线不同于本页不等角的 F2_M，验证资格不能混用。
+
 - [新版九宫格与验证结果](../../../runs/environment-solvability/lock_picking/family_space_v2/index.html)
 - [当前机器可读规则，schema_version=2](../../../assets/tasks/lock_picking/family_space_v1/plan.yaml)
 - [已停用的 v1 记录](lock_picking_family_space_v1_zh.md)

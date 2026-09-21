@@ -19,19 +19,21 @@ def rules():
     return OmegaConf.to_container(OmegaConf.load(RULES), resolve=True)
 
 
-def sample_parameters(seed, family_id=None):
+def sample_parameters(seed, family_id=None, *, retry=0):
     if isinstance(seed,bool) or not isinstance(seed,int) or seed < 0:
         raise ValueError("Use a nonnegative integer episode seed")
+    if isinstance(retry, bool) or not isinstance(retry, int) or retry < 0:
+        raise ValueError("Use a nonnegative integer retry")
     spec = rules()
     rng = VariantRng(seed)
     families = list(spec["families"])
     family_id = families[rng.tier(len(families))] if family_id is None else family_id
     if family_id not in families:
         raise ValueError(f"Unknown density family: {family_id}")
-    count = int(rng.stream("fiber_bundling/density/fiber_count").choice(
+    count = int(rng.stream("fiber_bundling/density/fiber_count", retry=retry).choice(
         spec["families"][family_id]["fiber_counts"]))
     low,high = spec["shared"]["ring_inner_radius_range_m"]
-    radius = float(rng.stream("fiber_bundling/ring_inner_radius_m").uniform(low,high))
+    radius = float(rng.stream("fiber_bundling/ring_inner_radius_m", retry=retry).uniform(low,high))
     return dict(family_id=family_id, fiber_count=count, ring_inner_radius_m=radius,
                 shape_seed=spec["shared"]["shape_seed"], episode_seed=seed,
                 generator_version=spec["generator_version"], variant_rng_version=VARIANT_RNG_VERSION)
@@ -45,6 +47,28 @@ def candidate_config(parameters):
     cfg.task.geometry.ring_inner_radius_m = parameters["ring_inner_radius_m"]
     cfg.task.geometry.seed = parameters["shape_seed"]
     return cfg
+
+
+def validate_parameters(parameters):
+    """Validate the declared sampling envelope before creating any output."""
+    spec = rules()
+    family = parameters.get("family_id")
+    if family not in spec["families"]:
+        raise ValueError(f"Unknown density family: {family}")
+    count = parameters.get("fiber_count")
+    if isinstance(count, bool) or not isinstance(count, int) or count not in spec["families"][family]["fiber_counts"]:
+        raise ValueError("Fiber count does not belong to the requested density family")
+    radius = parameters.get("ring_inner_radius_m")
+    lo, hi = spec["shared"]["ring_inner_radius_range_m"]
+    if isinstance(radius, bool) or not isinstance(radius, (int, float)) or not lo <= radius <= hi:
+        raise ValueError("Ring radius lies outside the declared sampling envelope")
+    if (parameters.get("shape_seed") != spec["shared"]["shape_seed"]
+            or isinstance(parameters.get("shape_seed"), bool) or not isinstance(parameters.get("shape_seed"), int)):
+        raise ValueError("This generator freezes the shape seed; use a new generator version to change it")
+    for key, expected in (("generator_version", spec["generator_version"]),
+                          ("variant_rng_version", VARIANT_RNG_VERSION)):
+        if key in parameters and parameters[key] != expected:
+            raise ValueError(f"Unsupported {key}")
 
 
 def inspect_candidate(cfg):
@@ -77,6 +101,7 @@ def inspect_candidate(cfg):
 
 
 def generate_candidate(folder, parameters):
+    validate_parameters(parameters)
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
     cfg = candidate_config(parameters)

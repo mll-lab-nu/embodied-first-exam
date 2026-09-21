@@ -241,12 +241,14 @@ def _animate_fem_follow(coupler_ref, uid: str, env_idx: int, info) -> None:
     assert is_constrained and aim_position
     constrained_view = uipc.view(is_constrained)
     aim_view = uipc.view(aim_position)
+    # Clear capacity first: an inactive overlapping band must not erase an
+    # active neighbour later in the loop. Used by contact-selected grasp banks.
+    for verts in spec.follow_verts:
+        constrained_view.reshape(-1)[verts] = 0
     for band, verts in enumerate(spec.follow_verts):
         if spec.engaged[band] and spec.targets[band] is not None:
             constrained_view.reshape(-1)[verts] = 1
             aim_view.reshape(-1, 3)[verts] = spec.targets[band]
-        else:
-            constrained_view.reshape(-1)[verts] = 0
 
 
 def install() -> None:

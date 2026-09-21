@@ -1,0 +1,31 @@
+defaults:
+  - horseshoe_ring_aloha
+  - _self_
+
+task:
+  goal:
+    instruction: 用双臂取下目标圆环，保留链节连接，将圆环放到桌上并松开。
+  generation:
+    version: horseshoe_physical_families_v2
+    family_id: F1
+    prototype_id: classic_circle
+    parameterization: paired_anchor_neighborhood_v1
+    anchor_parameters: {}
+    jitter: true
+    size_u: 0.5
+    x_u: 0.5
+    y_u: 0.5
+    yaw_u: 0.5
+    route_u: 0.5
+    finish: silver
+    parameters: {}
+  variation:
+    - {kind: choice, path: generation.family_id, values: [F1, F2, F3]}
+    - {kind: uniform, path: generation.size_u, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: generation.x_u, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: generation.y_u, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: generation.yaw_u, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: generation.route_u, lo: 0.0, hi: 1.0}
+    - {kind: choice, path: generation.finish, values: [silver, brass, dark_steel]}
+    - {kind: derived, fn: 'topogym.tasks.horseshoe_ring.variant_generator:derive'}
+    - {kind: validate, fn: 'topogym.tasks.horseshoe_ring.variant_generator:validate_parameters', max_retries: 1}

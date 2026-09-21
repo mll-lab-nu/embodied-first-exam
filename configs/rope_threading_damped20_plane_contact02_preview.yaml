@@ -1,0 +1,13 @@
+# A smaller barrier range for the finer tube surface, including during bending.
+# Both the actual robot grasp gate and fixture contact audit use this distance.
+defaults:
+  - rope_threading_damped20_plane_finer_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      contact_d_hat: 0.0002
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_plane_contact02_candidate

@@ -1,0 +1,66 @@
+{
+  "version": "claw_seed_v1",
+  "task_id": "interlocked_claws",
+  "families": [
+    {
+      "id": "claw_weave",
+      "prototype_id": "A0",
+      "asset_id": "cspace_claw_wang_v1",
+      "geometry_implemented": true,
+      "robot_motion_implemented": true,
+      "motion_signature": "spatial weave, align, extract",
+      "source_directory": "assets/tasks/interlocked_claws/cspace_claw_wang_v1",
+      "source_sha256": {
+        "piece-0.obj": "35e40f140642310e64f587c528213fe60c64202bdababd654013f205b1602ed5",
+        "piece-1.obj": "15305d656b31248c13fad76089683a94f2720ce45ee22d3f4eacb7313eb6658b",
+        "reference_scene.json": "4a73079c08627f96a962c859844029d4c9d794f63a669a37725d5c2856a45d8b",
+        "recorded_motion.json": "81a29452b8eaba16bdd9515c5f36731e33e50ef36b7640d6e53bff977038e727"
+      },
+      "qualification": "assisted_reference_execution_only",
+      "ideal_pair_certificate": {
+        "path": "assets/tasks/interlocked_claws/seed_families_v1/reference_pair_certificate.json",
+        "sha256": "d6f7db0a355591ef223d138620a750c4b23f2e3730271430e41ce1bba22b5652",
+        "scope": "Ideal two-piece continuous path only; no robot or dynamics certificate"
+      },
+      "dataset_eligible": false,
+      "blockers": ["generic_contact_controls_failed"]
+    },
+    {
+      "id": "helical_crown",
+      "prototype_id": "B0",
+      "asset_id": null,
+      "geometry_implemented": false,
+      "robot_motion_implemented": false,
+      "motion_signature": "single-axis coupled twist and advance, then lateral exit",
+      "source_directory": null,
+      "source_sha256": {},
+      "qualification": "design_only",
+      "dataset_eligible": false,
+      "blockers": ["fixed_geometry_missing", "paired_robot_ik_missing", "physics_missing"]
+    },
+    {
+      "id": "orthogonal_gate",
+      "prototype_id": "C0",
+      "asset_id": null,
+      "geometry_implemented": false,
+      "robot_motion_implemented": false,
+      "motion_signature": "push, first-axis turn, transfer, second-axis turn, exit",
+      "source_directory": null,
+      "source_sha256": {},
+      "qualification": "design_only",
+      "dataset_eligible": false,
+      "blockers": ["fixed_geometry_missing", "paired_robot_ik_missing", "physics_missing"]
+    }
+  ],
+  "parameter_modes": {
+    "fixed": "Choose a fixed prototype; randomize render appearance only. No structural resynthesis.",
+    "similarity_candidate": "Uniform scale and common rigid pose applied jointly to both pieces and their desired motion. New robot IK and physics are required."
+  },
+  "candidate_bounds": {
+    "uniform_scale": [0.99, 1.01],
+    "dx_m": [-0.002, 0.002],
+    "dy_m": [-0.002, 0.002],
+    "yaw_deg": [-1.0, 1.0]
+  },
+  "validated_continuous_bounds": null
+}

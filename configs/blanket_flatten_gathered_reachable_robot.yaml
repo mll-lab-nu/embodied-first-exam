@@ -1,0 +1,10 @@
+defaults:
+  - blanket_flatten_gathered_guarded_robot
+  - _self_
+
+task:
+  execution:
+    first_pull_target_xy_m: [-0.22, -0.232]
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v4

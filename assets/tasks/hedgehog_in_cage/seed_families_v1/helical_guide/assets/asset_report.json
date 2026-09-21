@@ -1,0 +1,27 @@
+{
+  "stock_voxels": 49240,
+  "safe_voxels": 46060,
+  "merged_cells": 658,
+  "outer_radius_m": 0.078,
+  "cell_seam_padding_m": 3e-05,
+  "discarded_disconnected_cells": 1,
+  "discarded_disconnected_volume_m3": 9.514189571812715e-08,
+  "positive_material_components": 1,
+  "enclosed_void_shells": 0,
+  "enclosed_void_volume_m3": 0,
+  "family": "helical_guide",
+  "cage": {
+    "collision_parts": 657,
+    "mass_kg": 3.17575118798701,
+    "visual_finish": "wood",
+    "all_parts_watertight": true,
+    "all_parts_convex": true,
+    "mass_model": "density-based additive parts; embedded-root overlap retained"
+  },
+  "connected": true,
+  "watertight": true,
+  "hedgehog_geometry_preserved": true,
+  "maximum_radial_extent_m": 0.07804242640687119,
+  "ik_sha256": "0a3adbece61e99ef064f4bbb85dd3af5fde7d86c6474e3a6c0d1b1c6b2026c23",
+  "sweep_sha256": "cf644716bc7b276a7500d648985d31aabe85bc1c93fcff1643c752eabd09f358"
+}

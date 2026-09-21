@@ -1,0 +1,16 @@
+defaults:
+  - blanket_flatten_gathered_surface_robot
+  - _self_
+
+task:
+  execution:
+    # Free the hanging flap before placing its visible boundary, then work
+    # around the blanket instead of repeatedly pulling the same covered corner.
+    repeat_boundary_corner: false
+    fallback_boundary_radius_m: 0.24
+    boundary_lift_m: 0.16
+    boundary_carry_speed_m_s: 0.04
+    boundary_hang_seconds: 0.6
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v9

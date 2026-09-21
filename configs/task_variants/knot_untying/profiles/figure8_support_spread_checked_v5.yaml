@@ -1,0 +1,16 @@
+# Separate the support hand before the first regrasp, then check the new path.
+task:
+  variant: figure_eight_local_support_v2
+  route_profile: figure8_support_spread_checked_v5
+  reference_yaw_deg: 45.0
+  geometry:
+    planar_scale_m: 0.0325
+    crossing_height_m: 0.010
+  route_settings:
+    support_offset_m: -0.250
+    lateral_clearance_m: 0.10
+    maximum_strokes_per_grasp: 3
+    approach_finger_qpos_m: 0.018
+    track_regrasp_translation: true
+    spread_before_first_regrasp_m: 0.15
+    check_robot_clearance: true

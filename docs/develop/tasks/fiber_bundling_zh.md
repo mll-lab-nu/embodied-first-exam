@@ -1,6 +1,10 @@
 # 光纤收束：固定终端与分叉电缆
 
-2026-09-17 新增[细铜杆支架与线数／孔径三类变体](fiber_bundling_density_radius_zh.md)。九个代表之外增加 5、6 芯过渡实例，并把下面的旧支柱完整 demo 计为一个独立变体；各实例的加载检查、完整执行与视频归档状态见 [variant_demos_v1 记录目录](../../../runs/environment-solvability/fiber_bundling/variant_demos_v1/)。正式视频统一放在 [runs/demos/fiber_bundling](../../../runs/demos/fiber_bundling/)。
+2026-09-19 新增[实例生成与 seed 接入检查](fiber_bundling_variant_pipeline_zh.md)：固定模板和参数采样统一输出完整实例，供后续执行／数据 pipeline 使用；用户已确认稀疏／标准／密集三类按线数划分，不要求 IK 有本质区别。
+
+2026-09-18 当前交付为基础 8 芯、环内半径 13.5 mm、细铜杆支架的无 UI 三视角，各 177 秒，分别放在 [demos/fiber_bundling/agentview](../../../demos/fiber_bundling/agentview/)、[front_oblique](../../../demos/fiber_bundling/front_oblique/)、[wrist](../../../demos/fiber_bundling/wrist/)。由原完整物理轨迹重新渲染，文件名前缀为 `2026-09-18_standard_08_r13p5mm_clean_v1`。旧 52 份视频已按用户要求删除，历史执行证据保留；[当前清单](../../../runs/demo_metadata/fiber_bundling/README.md)。
+
+2026-09-17 新增[细铜杆支架与线数／孔径三类变体](fiber_bundling_density_radius_zh.md)。九个代表之外增加 5、6 芯过渡实例，并把下面的旧支柱完整 demo 计为一个独立变体；各实例的加载检查、完整执行与视频归档状态见 [variant_demos_v1 记录目录](../../../runs/environment-solvability/fiber_bundling/variant_demos_v1/)。正式视频统一放在 [demos/fiber_bundling](../../../demos/fiber_bundling/)。
 
 ## 旧矩形支柱版本：整束反馈 IK 完整机器人解
 
@@ -14,7 +18,7 @@
 
 完整对照的末态局部最大差异 / RMS 为 **0.528 / 0.175 mm**，满足原来的 **2.0 / 0.5 mm** 门槛；全过程同一时间的局部最大差异 / RMS 峰值为 **4.932 / 2.605 mm**，世界坐标最大差异 **3.980 mm**。按动作结束时比较，局部最大差异不超过 0.888 mm，但世界坐标在最后一次按压后的检查阶段达到 2.507 mm，仍超过 2 mm 门槛。因此 `timestep_validation.json` 的整体 `passed=false`，不能宣称完整路径已经通过严格数值收敛验证；没有放宽这些阈值。
 
-正式 MP4 副本在 [runs/demos/fiber_bundling](../../../runs/demos/fiber_bundling/)，先看 `2026-09-17_anchored_ik_hybrid_v1_composite.mp4`。配置、物理报告、两种时间步的完整轨迹及源代码、图像和 SHA-256 清单在 [配套报告目录](../../../runs/demo_metadata/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1/)。归档证明当前模型下的完整机器人执行，严格时间步对照未通过的结果也随归档保留。
+此旧矩形支柱版的视频已按用户要求从正式目录删除。配置、物理报告、两种时间步的完整轨迹及源代码、图像和 SHA-256 清单仍在 [配套报告目录](../../../runs/demo_metadata/fiber_bundling/2026-09-17_anchored_ik_hybrid_v1/)。归档证明当前模型下的完整机器人执行，严格时间步对照未通过的结果也随归档保留；当前视频见页首基础铜杆版目录。
 
 原始完整执行目录：[greedy_hybrid_05_adaptive_clearance](../../../runs/environment-solvability/fiber_bundling/ik_exploration/greedy_hybrid_05_adaptive_clearance/)。[整束包络与实际通过数量曲线](../../../runs/environment-solvability/fiber_bundling/ik_exploration/greedy_hybrid_05_adaptive_clearance/bundle_progress.png) 展示全过程真实采样结果。该次的 Nyx 全景、近景、腕部和合成视频均为 **3539 帧 / 20 fps / 176.95 s**，含末尾 2 s 保持，已完整解码验证；逐帧回放与原始物理中心线最大误差 **0.968 μm**。此前的保存状态续跑诊断不计为完整执行。
 

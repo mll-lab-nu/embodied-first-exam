@@ -2,6 +2,7 @@
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 
 
@@ -86,13 +87,33 @@ def summarize(root):
         elif (instance/"stability").exists():
             row["status"]="load_gate_in_progress"
         rows.append(row)
+    historical_complete_count=sum(r["status"]=="archived_complete" for r in rows)
+    repo=Path(__file__).resolve().parents[3]
+    for row in rows:
+        if not row.get("metadata"):
+            continue
+        metadata=repo/row["metadata"]
+        manifest_path=metadata/"archive_manifest.json"
+        if not manifest_path.exists():
+            continue
+        manifest=json.loads(manifest_path.read_text())
+        if manifest.get("replacement_metadata"):
+            row["historical_metadata"]=row["metadata"]
+            row["metadata"]=manifest["replacement_metadata"]
+            metadata=repo/row["metadata"]
+            manifest=json.loads((metadata/"archive_manifest.json").read_text())
+        row["video_files"]={camera:str((metadata/video["path"]).resolve().relative_to(repo))
+            for camera,video in manifest.get("videos",{}).items() if (metadata/video["path"]).is_file()}
+        if not row["video_files"] and manifest.get("video_retention",{}).get("status")=="removed_by_user_request":
+            row["status"]="historical_execution_only"
     result=dict(updated_at_utc=datetime.now(timezone.utc).isoformat(),variants=rows,
+                historical_archived_complete_count=historical_complete_count,
                 archived_complete_count=sum(r["status"]=="archived_complete" for r in rows),total=len(rows))
     (root/"status.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
     lines=["# 光纤收束：各变体完整穿环记录", "", "旧版完整执行计为一个独立变体；新铜杆版逐实例求解、复核并录制。",
-        "正式视频目录：`runs/demos/fiber_bundling/`。每个前缀提供合成、agentview、front_oblique、wrist 四个 MP4。",
-        "",f"当前已有完整归档 **{result['archived_complete_count']} / {result['total']}**。详细运行状态见 `status.json`。",
-        "", "| 实例 | 线数 | 环内半径 mm | 支柱 | 状态 | 严格时间步对照 | 合成视频 |", "| --- | ---: | ---: | --- | --- | --- | --- |"]
+        "当前正式视频目录：`demos/fiber_bundling/`，按 agentview、front_oblique、wrist 分文件夹；每路只保留基础变体的一份无 UI 完整视频。",
+        "",f"历史完整执行 **{historical_complete_count} / {result['total']}**；当前提供视频的实例 **{result['archived_complete_count']}**。其余旧录像按用户要求移除，物理证据保留。详细状态见 `status.json`。",
+        "", "| 实例 | 线数 | 环内半径 mm | 支柱 | 状态 | 严格时间步对照 | 视频 |", "| --- | ---: | ---: | --- | --- | --- | --- |"]
     for row in rows:
         label=row["variant_id"]
         if row.get("metadata"):
@@ -101,8 +122,11 @@ def summarize(root):
             label=f"[{label}](instances/{row['variant_id']}/)"
         convergence=row.get("strict_timestep_convergence_passed")
         result_label="通过" if convergence is True else "未通过" if convergence is False else "待完成"
-        video=(f"[MP4](../../../../runs/demos/fiber_bundling/{Path(row['metadata']).name}_composite.mp4)"
-               if row.get("metadata") else "待完成")
+        names=dict(agentview="全景",front_oblique="近景",wrist="腕部",composite="合成")
+        video=" · ".join(f"[{names.get(camera,camera)}]({os.path.relpath(repo/path,root.resolve())})"
+                         for camera,path in row.get("video_files",{}).items())
+        if not video:
+            video="旧录像已移除" if row["status"]=="historical_execution_only" else "待完成"
         lines.append(f"| {label} | {row['fiber_count']} | {row['ring_inner_radius_m']*1000:g} | {row['support']} | {row['status']} | {result_label} | {video} |")
     lines += ["", "完整归档要求从初态真实抓取、全程禁碰与固定连接检查、全部细线和前端护套通过；使用接触后辅助夹持时明确标注。",
         "两种时间步均完成与严格线形收敛是独立结论；严格对照未通过时保留报告，不放宽阈值。",

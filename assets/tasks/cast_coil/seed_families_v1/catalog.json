@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "pool_version": "cast_coil_seed_families_v1",
+  "families": [
+    {
+      "family_id": "eccentric_turn",
+      "prototype_id": "eccentric_turn_09mm",
+      "core_template": "eccentric_turn.json",
+      "sha256": "ad3787328100850fedfe5ff1cc2c55814ddcbf04ac51cd0f7a359a6cf01f8ad6",
+      "mechanism_parameters": {
+        "pivot_offset_mm": 9.0
+      },
+      "profile_length_mm": 15.0,
+      "source_template": "runs/environment-solvability/cast_coil/family_space_20260917/eccentric_turn_09mm/template.json",
+      "source_qualification": "historical disassembly geometry and sampled IK; assembly physics not inherited"
+    },
+    {
+      "family_id": "split_turn_offset",
+      "prototype_id": "split_turn_offset_09mm",
+      "core_template": "split_turn_offset.json",
+      "sha256": "a2c34d04ccbd83ad8a3c6e9608e0572836574690e013796ced95275bdcece590",
+      "mechanism_parameters": {
+        "step_height_mm": 9.0
+      },
+      "profile_length_mm": 15.0,
+      "source_template": "runs/environment-solvability/cast_coil/family_space_20260917/split_turn_offset_09mm/template.json",
+      "source_qualification": "historical disassembly geometry and sampled IK; assembly physics not inherited"
+    },
+    {
+      "family_id": "axial_screw_turn",
+      "prototype_id": "axial_screw_turn_09mm",
+      "core_template": "axial_screw_turn.json",
+      "sha256": "12ff0acf13ec2c577c818bee018b751876ce137f650592660960b4109bb0a893",
+      "mechanism_parameters": {
+        "axial_advance_mm": 9.0
+      },
+      "profile_length_mm": 15.0,
+      "source_template": "runs/environment-solvability/cast_coil/family_space_20260917/axial_screw_turn_09mm/template.json",
+      "source_qualification": "historical disassembly geometry and sampled IK; assembly physics not inherited"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-"""Paint aperture contours into the rotor's visual texture, on both faces.
+"""Paint aperture contours into the rotor or goal panel texture, on both faces.
 
 The silhouette uses the same 720 radial samples as disc_assets(). Only the
 solid side of the opening receives paint. No geometry or dynamics is changed.
@@ -16,7 +16,15 @@ from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 
 
-def paint_aperture_outline(urdf_path, g, slots, disc_color, cfg):
+def disc_colors(task_cfg):
+    from ._staged_lock_geometry import DISC_COLORS
+    values = np.asarray(task_cfg.get('visual', {}).get('disc_colors', DISC_COLORS), dtype=float)
+    if values.shape != (3, 3) or not np.all(np.isfinite(values)) or np.any((values < 0) | (values > 1)):
+        raise ValueError('Expected three finite RGB disc colors in [0,1]')
+    return values.tolist()
+
+
+def paint_aperture_outline(urdf_path, g, slots, disc_color, cfg, *, goal_plate=False, finish=None):
     urdf_path = Path(urdf_path)
     if cfg is None or not bool(cfg.get('enabled', False)):
         (urdf_path.parent/'aperture_outline.json').unlink(missing_ok=True)
@@ -68,16 +76,30 @@ def paint_aperture_outline(urdf_path, g, slots, disc_color, cfg):
     uv[:, 1] = 1-(1-uv[:, 1])*strip_height/height
     v = mesh.vertices
     rotor_faces = np.isclose(np.abs(v[:, 0]), g.disc_thickness/2, atol=2e-7, rtol=0)
-    rotor_faces &= np.linalg.norm(v[:, 1:3], axis=1) <= g.disc_radius+1e-7
+    # The square goal's corners lie outside the rotor radius; map its complete
+    # face so triangles do not interpolate between the face and hardware strip.
+    radius = np.max(np.abs(v[:, 1:3]), axis=1) if goal_plate else np.linalg.norm(v[:, 1:3], axis=1)
+    rotor_faces &= radius <= g.disc_radius+1e-7
     if not np.any(rotor_faces):
         raise ValueError('No rotor face vertices found for aperture paint')
     uv[rotor_faces, 0] = (v[rotor_faces, 1]/extent+1)/2
     uv[rotor_faces, 1] = 1-(strip_height+(1-v[rotor_faces, 2]/extent)*size/2)/height
     material.baseColorTexture = atlas
+    if finish is not None:
+        for name, attribute in (('metallic', 'metallicFactor'), ('roughness', 'roughnessFactor')):
+            value = float(finish[name])
+            if not np.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError('Invalid visual finish')
+            setattr(material, attribute, value)
     mesh.visual = TextureVisuals(uv=uv, material=material)
     target = urdf_path.parent/'outlined_visual.glb'
     mesh.export(target, include_normals=True)
     visuals[0].set('filename', str(target.resolve()))
+    # The embedded texture owns both the plate colour and the yellow paint.
+    # A uniform URDF material would tint or replace it on the plain goal mesh.
+    for visual in tree.findall('.//visual'):
+        for finish in visual.findall('material'):
+            visual.remove(finish)
     tree.write(urdf_path, encoding='unicode')
     (urdf_path.parent/'aperture_outline.json').write_text(json.dumps(dict(
         enabled=True, width_m=width, color_rgb=color.tolist(), both_faces=True,

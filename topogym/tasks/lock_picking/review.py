@@ -75,7 +75,7 @@ table{border-collapse:collapse}td,th{border:1px solid #607782;padding:7px 16px;t
         f'{proof["minimum_required_decoupling_retreats"]} 次</p>'
     )
     page += '''<table><tr><th>部件</th><th>转角范围</th><th>盘内锁孔中心角</th></tr>
-<tr><td>D1 / 金色</td><td>−15° ～ +15°</td><td>−60°、−30°、0°</td></tr>
+<tr><td>D1 / 入口锁片</td><td>−15° ～ +15°</td><td>−60°、−30°、0°</td></tr>
 <tr><td>D2 / 蓝色</td><td>−10° ～ +75°</td><td>−60°</td></tr>
 <tr><td>D3 / 棕色</td><td>360° 连续转动</td><td>0°</td></tr></table>
 <p class="note">前两片的固定外环各有一个带端点的弧槽；第三片使用完整环槽。

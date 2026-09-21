@@ -16,10 +16,16 @@ class ThreadingLayout:
     rope_subdivisions: int = 4
     radial_segments: int = 12
     ring_radial_segments: int = 24
+    rope_height_offset_m: float = 0.
+    centerline_interpolation: str = 'linear'
 
     def __post_init__(self):
         if np.asarray(self.translation_m).shape != (3,) or not np.isfinite(self.translation_m).all():
             raise ValueError("translation_m must be a finite 3-vector")
+        if not np.isfinite(self.rope_height_offset_m) or self.rope_height_offset_m < 0:
+            raise ValueError("rope_height_offset_m must be finite and nonnegative")
+        if self.centerline_interpolation not in ('linear', 'circular_arc'):
+            raise ValueError('Unknown centerline interpolation')
         for key, lower in (("rope_subdivisions", 1), ("radial_segments", 8), ("ring_radial_segments", 12)):
             value = getattr(self, key)
             if isinstance(value, bool) or int(value) != value or value < lower:
@@ -43,9 +49,34 @@ class ThreadingLayout:
 
     def centerline(self):
         source = np.asarray(self.reference["rope_nodes_m"])
-        t = np.arange(self.rope_subdivisions)/self.rope_subdivisions
-        points = source[:-1, None, :]+t[None, :, None]*np.diff(source, axis=0)[:, None, :]
-        return self.transform(np.vstack((points.reshape(-1, 3), source[-1])))
+        if self.centerline_interpolation == 'circular_arc':
+            # The public initialization is a planar semicircle. Subdividing
+            # its chords concentrates the same 2.25-degree corners into
+            # shorter FEM elements; instead sample the common smooth arc.
+            xy = source[:, :2]
+            fit = np.linalg.lstsq(np.c_[2*xy, np.ones(len(xy))],
+                                  np.sum(xy*xy, axis=1), rcond=None)[0]
+            center = fit[:2]
+            radius = np.sqrt(fit[2]+center@center)
+            if (np.max(abs(np.linalg.norm(xy-center, axis=1)-radius)) > 1.e-8
+                    or np.ptp(source[:, 2]) > 1.e-10):
+                raise ValueError('Circular interpolation requires a planar circular reference')
+            angles = np.unwrap(np.arctan2(xy[:, 1]-center[1], xy[:, 0]-center[0]))
+            changes = np.diff(angles)
+            if not (np.all(changes > 0) or np.all(changes < 0)):
+                raise ValueError('Circular material coordinates must be monotonic')
+            parameter = np.arange((len(source)-1)*self.rope_subdivisions+1)/self.rope_subdivisions
+            angle = np.interp(parameter, np.arange(len(source)), angles)
+            points = np.c_[center+radius*np.c_[np.cos(angle), np.sin(angle)],
+                           np.full(len(angle), source[0, 2])]
+            points[::self.rope_subdivisions] = source
+        else:
+            t = np.arange(self.rope_subdivisions)/self.rope_subdivisions
+            points = source[:-1, None, :]+t[None, :, None]*np.diff(source, axis=0)[:, None, :]
+            points = np.vstack((points.reshape(-1, 3), source[-1]))
+        result = self.transform(points)
+        result[:, 2] += self.rope_height_offset_m
+        return result
 
     def rings(self):
         return [dict(ring, center_m=self.transform(ring["center_m"]).tolist())
@@ -163,6 +194,7 @@ def inspect_geometry(layout):
         raise ValueError("Initial rope intersects the table, fixtures, itself or a ring aperture")
     return dict(rope_length_m=float(np.linalg.norm(np.diff(p, axis=0), axis=1).sum()),
         rope_diameter_m=2*layout.radius, source_nodes=81, fem_centerline_points=len(p),
+        centerline_interpolation=layout.centerline_interpolation,
         table_surface_gap_m=floor_gap, minimum_fixture_gap_lower_bound_m=min(gaps),
         minimum_nonlocal_rope_surface_gap_m=self_distance-2*layout.radius,
         endpoints_m=p[[0, -1]].tolist(), initial_crossings=crossings,

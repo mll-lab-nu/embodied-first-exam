@@ -1,0 +1,14 @@
+# Compressible effective rope material candidate. Young's modulus, density,
+# damping, friction and numerical acceptance limits remain unchanged.
+# This is not a calibration against hardware.
+defaults:
+  - rope_threading_damped20_plane_contact02_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      nu: 0.30
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_compressible_candidate

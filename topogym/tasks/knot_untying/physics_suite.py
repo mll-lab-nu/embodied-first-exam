@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--friction-eps', type=float, default=.01)
     parser.add_argument('--through', choices=('P1', 'P2', 'P3'), default='P3')
+    parser.add_argument('--family', choices=('overhand_trefoil', 'figure_eight', 'double_overhand'))
     args = parser.parse_args()
     root = args.output.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -43,7 +44,7 @@ def main():
     from .physics_probe import make_config
     from omegaconf import OmegaConf
     template = make_config(argparse.Namespace(dt=.005, x_offset=0., yaw=0., refined=False,
-                                              tighter=False, friction_eps=args.friction_eps))
+                                              tighter=False, friction_eps=args.friction_eps, family=args.family))
     spec = dict(friction_eps_m_s=args.friction_eps, limits=asdict(LIMITS), cases=chosen,
                 robot_grasp_included=False, maximum_concurrent_gpu_cases=1,
                 template_configuration=OmegaConf.to_container(template, resolve=True))
@@ -70,6 +71,8 @@ def main():
                 flags[flags.index('--seconds')+1] = str(baseline['simulated_seconds'])
             command = [sys.executable, '-m', 'topogym.tasks.knot_untying.physics_probe',
                        '--output', str(folder), '--friction-eps', str(args.friction_eps), *flags]
+            if args.family:
+                command += ['--family', args.family]
             (root/'suite_progress.json').write_text(json.dumps(dict(phase=phase, case=name, state='running'))+'\n')
             print(f'{phase}: {name}', flush=True)
             with (folder/'process.log').open('w') as log:

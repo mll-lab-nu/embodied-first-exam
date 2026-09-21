@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "library_version": "hedgehog_fixed_families_v2",
+  "families": [
+    {
+      "family_id": "fixed_side_window",
+      "directory": "fixed_side_window",
+      "prototype_id": "hedgehog_fixed_side_window_fixed_v2",
+      "manifest_sha256": "ba69358aef389745bc56ce3e65c27b4e9d8c5516a7126f447e307254be5ff220"
+    },
+    {
+      "family_id": "gen_keyhole",
+      "directory": "gen_keyhole",
+      "prototype_id": "hedgehog_gen_keyhole_fixed_v2",
+      "manifest_sha256": "b776fc446a6b1a57ce5f4d81a5feca4e960bef8383c99b4566650a44fb625a4e"
+    }
+  ],
+  "retained_family": {
+    "family_id": "oblique_gate",
+    "library": "../seed_families_v1"
+  },
+  "replaced_families": [
+    "staggered_gates",
+    "helical_guide"
+  ],
+  "legacy_library_retained": true
+}

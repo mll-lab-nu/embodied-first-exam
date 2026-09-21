@@ -1,0 +1,52 @@
+schema_version: 1
+task_id: blanket_flatten
+title_zh: 杂乱被子展平
+baseline:
+  variant: suspended_irregular_folds_v1
+  length_m: 0.60
+  width_m: 0.48
+  particle_size_m: 0.008
+  birth_gap_particle_ratio: 4.0
+  fold_count: 5
+  fold_angle_deg: 105.0
+  crease_slant: 0.10
+  drop_clearance_m: 0.10
+  tilt_deg: 40.0
+  stretch_iterations: 24
+  seed: 0
+axes:
+- {path: fold_count, unit: count, status: candidate, validated_range: null}
+- {path: fold_angle_deg, unit: deg, status: candidate, validated_range: null}
+- {path: crease_slant, unit: ratio, status: candidate, validated_range: null}
+- {path: drop_clearance_m, unit: m, status: candidate, validated_range: null}
+assets:
+- {location: topogym/tasks/blanket_flatten/geometry.py, status: local_source}
+physics:
+  backend: genesis_1.2.1_pbd_cloth
+  qualification: unqualified
+  profile_policy: fixed solver settings per run; preserve birth binding and settled-state reports
+  grasp_model: bilateral pad proximity gated local particle-to-link assistance; robot-cloth PBD coupling disabled
+initialization:
+  description: Isometric nonparallel folds suspended with separated layers, audited visual binding, unpinned gravity drop and sustained settling gates
+robot:
+  family: Panda + Robotiq 2F-85
+  arms: 1
+  dual_arm_qualified: false
+  single_arm_qualified: true
+  qualification_scope: seed 1 only; float64 and 16 substeps; parked-arm clearance audited; bilateral pad proximity gated local grasp assistance
+  local_probe_fixture_allowed: false
+recorded_instance:
+  physics_config: configs/blanket_flatten_robot.yaml
+  source: runs/environment_bootstrap/blanket_flatten/robot_clear_home_v1
+  independent_stability: runs/environment_bootstrap/blanket_flatten/stability_clear_home_v1
+  archive: runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/index.html
+  video_directory: demos/blanket_flatten
+  simulated_seconds: 32.5
+  final_coverage_ratio: 0.9985616310400166
+  parameter_space_qualified: false
+rejection_rules:
+- Birth surface intersection or nonadjacent panel gap below four nominal particle sizes
+- Nonlocal visual supports after remeshing or invalid birth reconstruction
+- Table penetration, material overstretch, visual stretching or material leaving the tabletop
+- Settling timeout, automatically flattened initial state, or insufficient covered area
+first_probe: Record separated birth, gravity drop, and settled crumpled state with actual binding and footprint diagnostics

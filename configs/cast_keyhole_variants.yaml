@@ -1,0 +1,30 @@
+# A seed chooses a fixed mechanism and silhouette, then bounded micro-parameters.
+# This config does not run physics or export a dataset.
+defaults:
+  - cast_keyhole_aloha
+  - _self_
+
+task:
+  goal:
+    instruction: Separate the two interlocked keyhole pieces and hold them still.
+  randomization:
+    family: F1
+    style: A
+    width_scale: 1.0
+    height_scale: 1.0
+    lateral_shift_mm: 0.0
+    palette: 0
+    center_dx_m: 0.0
+    center_dy_m: 0.0
+    yaw_deg: 0.0
+  variation:
+    - {kind: choice, path: randomization.family, values: [F1, F2, F3]}
+    - {kind: choice, path: randomization.style, values: [A, B, C]}
+    - {kind: uniform, path: randomization.width_scale, lo: 0.98, hi: 1.02}
+    - {kind: uniform, path: randomization.height_scale, lo: 0.98, hi: 1.02}
+    - {kind: uniform, path: randomization.lateral_shift_mm, lo: -0.3, hi: 0.3}
+    - {kind: choice, path: randomization.palette, values: [0, 1, 2]}
+    - {kind: uniform, path: randomization.center_dx_m, lo: -0.002, hi: 0.002}
+    - {kind: uniform, path: randomization.center_dy_m, lo: -0.002, hi: 0.002}
+    - {kind: uniform, path: randomization.yaw_deg, lo: -1.0, hi: 1.0}
+    - {kind: validate, fn: 'topogym.tasks.cast_keyhole.variants:validate_parameters', max_retries: 0}

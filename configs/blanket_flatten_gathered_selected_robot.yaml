@@ -1,0 +1,17 @@
+defaults:
+  - blanket_flatten_gathered_robot
+  - _self_
+
+task:
+  # Fresh physics from the exact selected landed geometry, at zero velocity.
+  initial_state_recording:
+    path: runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1/physical_trace.npz
+    frame: -1
+  execution:
+    corner_sequence: [[-1, -1], [-1, 1], [1, 1], [1, -1]]
+    skip_buried_corners: true
+    free_speed_m_s: 0.18
+    carry_speed_m_s: 0.085
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v2

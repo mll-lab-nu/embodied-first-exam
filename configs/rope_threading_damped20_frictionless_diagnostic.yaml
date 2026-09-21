@@ -1,0 +1,13 @@
+# Diagnostic only: isolate elastic/fixture response from contact friction.
+# This is not the production threading configuration.
+defaults:
+  - rope_threading_damped20_fine_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      friction_mu: 0.0
+
+run:
+  output: runs/environment-solvability/rope_threading/mesh_contact_diagnostic_v1

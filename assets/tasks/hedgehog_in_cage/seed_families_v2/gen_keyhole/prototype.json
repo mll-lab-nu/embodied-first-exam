@@ -1,0 +1,55 @@
+{
+  "family_id": "gen_keyhole",
+  "prototype_id": "hedgehog_gen_keyhole_fixed_v2",
+  "cage_bounds_m": [
+    [
+      -0.0675,
+      -0.0675,
+      -0.12
+    ],
+    [
+      0.0675,
+      0.0675,
+      0.12
+    ]
+  ],
+  "cage_bottom_m": -0.12,
+  "maximum_cage_radius_m": 0.06750000627324786,
+  "cage_height_m": 0.24,
+  "parent_path_clearance_lower_bound_m": 0.0013627562611962878,
+  "initial_qpos": [
+    0.0461195116380371,
+    0.36405608616602797,
+    0.33183771444266214,
+    -1.4155613912691303,
+    -0.11838493795120672,
+    1.76003907692055,
+    0.03093687040525504,
+    0.6861479351674084,
+    7.190816607844322e-05,
+    0.6860320482328066,
+    -0.6587743490748629,
+    0.6861479351674512,
+    7.190816620267412e-05,
+    0.6860320482327038,
+    -0.6587743490748381
+  ],
+  "initial_ball_pose": [
+    -0.005999999999999903,
+    -2.1455195747684217e-16,
+    0.05499999999999994,
+    -0.560985526796931,
+    0.43045933457687946,
+    0.560985526796931,
+    0.43045933457687924
+  ],
+  "source_archive": "runs/demo_metadata/hedgehog_in_cage/2026-09-19_classic_replacements_v2/gen_keyhole",
+  "source_archive_sha256": "d0485fea2c47e33cac7da4a254120c7070cb0559a4fc8e8697a2fd1689738754",
+  "parent_physically_verified": true,
+  "fixed_grasp": "S2",
+  "spike_count": 6,
+  "all_spikes_fixed": true,
+  "exit_type": "top_keyhole",
+  "official_CAD_replica": false,
+  "distinct_ik_family_proven": false
+}

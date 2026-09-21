@@ -1,0 +1,11 @@
+# Same physical/release limits; the contact probe feeds enough rope to reach the table.
+defaults:
+  - rope_threading_controlled_release_preview
+  - _self_
+
+task:
+  validation:
+    fixture_release_horizontal_offset_m: 0.26
+
+run:
+  output: runs/environment_bootstrap/rope_threading/controlled_place_candidate

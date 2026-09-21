@@ -1,0 +1,35 @@
+defaults:
+  - blanket_flatten_cross_twist
+  - _self_
+
+task:
+  variant: staged_gathered_twist_v4
+  geometry:
+    particle_size_m: 0.004
+    mesh_spacing_m: 0.008
+    drop_clearance_m: 0.14
+  execution:
+    check_every: 40
+  preparation:
+    construction: longitudinal_gather
+    preparation_layer_clearance_m: 0.005
+    maximum_speed_m_s: 0.20
+    between_stage_relax_seconds: 0.15
+    relax_seconds: 0.15
+    gather_seconds: 3.0
+    twist_seconds: 4.0
+    gathered:
+      panel_fractions: [0.10, 0.14, 0.11, 0.16, 0.12, 0.09, 0.14, 0.14]
+      crease_band_m: 0.006
+      pleat_angle_deg: 78.0
+      end_opening_deg: 10.0
+      flare_fraction: 0.15
+      twist_angle_deg: 270.0
+      axial_scale: 0.92
+      centerline_sway_m: 0.006
+  # Keep the existing material integrity and initial-state limits.
+
+run:
+  mode: stability
+  fps: 10
+  output: runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1

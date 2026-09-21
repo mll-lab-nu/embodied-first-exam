@@ -37,6 +37,11 @@ REQUIRED_PHASES = {
     "settle",
 }
 LABELS = {
+    "approach_align": "分离零件对齐",
+    "assembly_insert": "移入装配窗口",
+    "assembly_quarter_turn": "回转 90°",
+    "assembly_close": "闭合装配",
+    "place_assembly": "装配整体落桌",
     "close_grippers": "闭合夹爪",
     "hold_grasp": "接触确认与辅助抓持",
     "pregrasp": "路径对齐",
@@ -61,6 +66,8 @@ def sha(path):
 
 
 def demo_title(report):
+    if report.get("objective") == "assemble":
+        return "Cast Coil · ALOHA 双臂完整装配"
     if report.get("appearance_kind"):
         return "Cast Coil · " + APPEARANCE_TITLES[report["appearance_kind"]]
     if report.get("inverse_design_kind"):
@@ -71,7 +78,11 @@ def demo_title(report):
 def qualify_report(report, *, recording=True):
     """Fail closed on a partial, kinematic, unreleased or unobserved recording."""
     phases = REQUIRED_PHASES
-    if report.get("inverse_design_kind"):
+    assembling = report.get("objective") == "assemble"
+    if assembling:
+        from .assembly_task import required_assembly_phases
+        phases = (REQUIRED_PHASES - {"prototype_slide", "prototype_quarter_turn", "prototype_extract", "place_silver", "place_gold"}) | required_assembly_phases(report.get("inverse_design_kind"))
+    elif report.get("inverse_design_kind"):
         phases = REQUIRED_PHASES - {
             "prototype_slide",
             "prototype_quarter_turn",
@@ -94,7 +105,11 @@ def qualify_report(report, *, recording=True):
         not recording or set(report.get("camera_names", [])) == set(CAMERAS),
         not recording or report.get("video_frames", 0) > 0,
         phases.issubset({p["name"] for p in report.get("phases", [])}),
-        report.get("final_separation_m", 0) > 0.01,
+        (report.get("goal_assembled") is True
+         and report.get("final_relative_position_error_m", 1) < .001
+         and report.get("final_relative_rotation_error_rad", 1) < .02
+         and min(report.get("initial_xy_surface_gap_m", [0])) >= .01)
+        if assembling else report.get("final_separation_m", 0) > 0.01,
         report.get("minimum_sampled_sat_gap_m", -1) > 0,
         report.get("maximum_interpiece_penetration_m", 1) < 0.00015,
         report.get("maximum_forbidden_robot_penetration_m", 1) < 0.00015,
@@ -147,6 +162,21 @@ def audit(source, reference):
     ):
         raise ValueError("Recorded compounds differ from the current geometry")
     rows, half_rows = read_trace(source), read_trace(reference)
+    if report.get("objective", "disassemble") != other.get("objective", "disassemble"):
+        raise ValueError("Timestep runs target different objectives")
+    if report.get("objective") == "assemble":
+        from .assembly_task import goal_metrics, xy_surface_gaps
+        for trace in (rows, half_rows):
+            initial = [(Rotation.from_quat(p["quaternion_xyzw"]), np.asarray(p["origin_m"])) for p in trace[0]["bodies"]]
+            if min(xy_surface_gaps(assembly, initial)) < .01:
+                raise ValueError("Assembly does not begin separated in both x and y")
+            for row in trace:
+                if row["time_s"] < trace[-1]["time_s"] - .5:
+                    continue
+                g, s = row["bodies"]
+                if not goal_metrics(np.asarray(g["origin_m"]), Rotation.from_quat(g["quaternion_xyzw"]),
+                                    np.asarray(s["origin_m"]), Rotation.from_quat(s["quaternion_xyzw"]))["goal_assembled"]:
+                    raise ValueError("Released assembly does not remain aligned in the final observation window")
     render_evidence = None
     if report.get("recording_kind") == "offline_render_of_exact_physical_states":
         raw = json.loads((source / "physics_result.json").read_text())
@@ -311,7 +341,9 @@ def audit(source, reference):
             final_angular_speed_rad_s=0.02,
             timestep_position_difference_m=0.0005,
             timestep_rotation_difference_rad=0.01,
-            minimum_final_separation_m=0.01,
+            minimum_final_separation_m=None if report.get("objective") == "assemble" else .01,
+            maximum_assembled_relative_position_error_m=.001 if report.get("objective") == "assemble" else None,
+            maximum_assembled_relative_rotation_error_rad=.02 if report.get("objective") == "assemble" else None,
             maximum_non_grasp_contact_penetration_m=0.00015,
             maximum_table_penetration_m=0.00015,
             maximum_released_retreat_displacement_m=0.002,
@@ -343,6 +375,7 @@ def write_page(folder, report, videos):
     kind = report.get("inverse_design_kind")
     appearance = report.get("appearance_kind")
     title = demo_title(report)
+    assembling = report.get("objective") == "assemble"
     scope = (
         "从已验证 IK 运动变体反推的新结构；几何、质量和惯量按新实体生成。"
         if kind
@@ -355,7 +388,16 @@ def write_page(folder, report, videos):
             f"正面缩放 {p['face_scale']:g}，厚度缩放 {p['depth_scale']:g}，外角切角比例 {p['corner_cut_ratio']:g}。"
             "几何、质量惯量、抓点和配套轨迹按该参数重新生成；切角为阶梯近似。"
         )
+    if assembling:
+        gaps = report["initial_xy_surface_gap_m"]
+        scope = (f"任务为从分离初态完成装配：初态 x / y 外包络间隔为 {gaps[0]*1000:.2f} / {gaps[1]*1000:.2f} mm。"
+                 "双臂对齐零件，沿已认证拆解路径的反向插入、回转和闭合，随后一起落桌并释放。")
     lift = report.get("lift_m", 0.07) * 1000
+    flow = (f"分离零件抓持 → 抬高 {lift:.0f} mm → 对齐、插入、回转与闭合 → 装配整体落桌 → 松爪、撤回与自由静置。"
+            if assembling else f"夹持 → 抬高 {lift:.0f} mm → 完整变体路径 → 分别落桌 → 解除抓持 → 撤回与自由静置。")
+    final_evidence = (f"最终装配相对位置误差 {report['final_relative_position_error_m']*1000:.4f} mm，"
+                      f"相对姿态误差 {np.degrees(report['final_relative_rotation_error_rad']):.4f}°。"
+                      if assembling else f"最终两件的分离面间距 {report['final_separation_m']*1000:.2f} mm。")
     recording_note = (
         "视频由一次完整物理运行保存的精确 20 Hz 状态离线渲染，不插值、不修改轨迹；渲染场景不进行物理步进。物理报告与渲染报告分开保留。"
         if report.get("recording_kind") == "offline_render_of_exact_physical_states"
@@ -383,20 +425,20 @@ def write_page(folder, report, videos):
     text = f'''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title><style>body{{max-width:1250px;margin:32px auto;padding:0 20px;font:16px/1.7 system-ui;background:#eef2f6;color:#243443}}
 section{{background:white;padding:22px;border-radius:10px;margin:22px 0}}video,img{{width:100%;border-radius:7px}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}figure{{margin:0}}button{{padding:8px 12px;margin:4px;border:0;border-radius:5px;background:#e0edf5;cursor:pointer}}a{{color:#146293}}.note{{background:#fff1d0;padding:15px;border-radius:8px}}@media(max-width:700px){{.grid{{grid-template-columns:1fr}}}}</style>
-<h1>{title}</h1><p>夹持 → 抬高 {lift:.0f} mm → 完整变体路径 → 分别落桌 → 解除抓持 → 撤回与自由静置。</p>
+<h1>{title}</h1><p>{flow}</p>
 <p class="note">从明确的张爪预抓取状态开始，金、银件均为自由刚体。四个夹指确认接触后启用两条辅助抓持约束，落桌后解除。
 物理执行由关节控制与物理解算推进，执行期间没有逐帧覆写零件或机器人位姿。{scope}</p><p>{recording_note}</p>
 <section><h2>完整近景</h2><video class="sync" id="main" controls preload="metadata" src="{escape(videos["front_oblique"])}" poster="pregrasp_front_oblique.jpg"></video>
 <div>{phases}</div><p>约 {report["simulated_seconds"]:.1f} 秒，20 fps。所有视角来自同一次连续物理执行。</p></section>
 <section><h2>ALOHA 四路同步相机</h2><button onclick="toggleAll()">全部同步播放 / 暂停</button><div class="grid">{cards}</div></section>
-<section><h2>执行证据</h2><p>最终两件的分离面间距 {report["final_separation_m"] * 1000:.2f} mm。
+<section><h2>执行证据</h2><p>{final_evidence}
 记录的最大件间穿透 {report["maximum_interpiece_penetration_m"] * 1000:.4f} mm，机械臂对零件 / 桌面的非抓持穿透 {report["maximum_forbidden_robot_penetration_m"] * 1000:.4f} mm。
 夹指抓持接触的最大数值穿透为 {report.get("maximum_finger_penetration_m", 0) * 1000:.4f} mm，单独报告，不计入非抓持碰撞指标。
 完整路径完成 {report["physics_steps"]:,} 次物理步进；最后自由静置 2 秒。默认与半时间步检查均通过。</p>
 <p>执行期间几何、质量惯量不变，保留机器人力矩上限；初态整体 yaw 为 90°，采用记录在配置中的位置控制增益。未验证纯摩擦抓持的稳定性或真实硬件负载能力。</p>
 <p>{evidence_links}<a href="result.json">执行报告</a> · <a href="validation.json">物理、时间步与视频复核</a> · <a href="config.yaml">完整配置</a> ·
 <a href="states.jsonl">实际状态轨迹</a> · <a href="source_plan.json">完整计划与几何证书</a> · <a href="camera_report.json">相机参数</a></p>
-<img src="settle_front_oblique.jpg" alt="分离放置并松爪后的实际状态"></section>
+<img src="settle_front_oblique.jpg" alt="任务完成、松爪和撤回后的实际状态"></section>
 <script>const streams=[...document.querySelectorAll('.sync')],main=document.getElementById('main');
 function seek(t){{streams.forEach(v=>v.currentTime=t)}}
 function toggleAll(){{const go=main.paused,t=main.currentTime;streams.forEach(v=>{{v.currentTime=t;go?v.play():v.pause()}})}}
@@ -407,12 +449,24 @@ main.addEventListener('seeked',()=>streams.filter(v=>v!==main).forEach(v=>{{if(M
 def archive(source, reference, run_id):
     source, reference = Path(source).resolve(), Path(reference).resolve()
     metadata = ROOT / "runs/demo_metadata/cast_coil" / run_id
-    video_root = ROOT / "runs/demos/cast_coil"
-    if metadata.exists() or any(
-        (video_root / f"{run_id}_{n}.mp4").exists() for n in CAMERAS
-    ):
+    if metadata.exists():
         raise FileExistsError("Archive already exists; preserve the validated copy")
     report, validation = audit(source, reference)
+    camera_directories = (
+        report.get("objective") == "assemble"
+        and not report.get("inverse_design_kind")
+        and not report.get("appearance_kind")
+    )
+    video_root = ROOT / (
+        "demos/cast_coil" if camera_directories else "runs/demos/cast_coil"
+    )
+    targets = {
+        name: (video_root / name if camera_directories else video_root)
+        / f"{run_id}_{name}.mp4"
+        for name in CAMERAS
+    }
+    if any(target.exists() for target in targets.values()):
+        raise FileExistsError("Archive already exists; preserve the validated copy")
     write_page(source, report, {n: f"{n}.mp4" for n in CAMERAS})
     metadata.mkdir(parents=True)
     video_root.mkdir(parents=True, exist_ok=True)
@@ -430,7 +484,8 @@ def archive(source, reference, run_id):
     )
     files = {}
     for name in CAMERAS:
-        target = video_root / f"{run_id}_{name}.mp4"
+        target = targets[name]
+        target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source / f"{name}.mp4", target)
         if (
             target.is_symlink()
@@ -455,6 +510,7 @@ def archive(source, reference, run_id):
         + "\n"
     )
     manifest = dict(
+        objective=report.get("objective", "disassemble"),
         task_id="cast_coil",
         variant=report.get("geometry_variant", "photo_reference_v1_baseline_3x"),
         inverse_design_kind=report.get("inverse_design_kind"),
@@ -486,10 +542,12 @@ def archive(source, reference, run_id):
 
 
 def update_catalog(metadata, manifest):
+    import re
     folder = ROOT / "runs/demo_metadata"
     catalog = json.loads((folder / "catalog.json").read_text())
     relative = str(metadata.relative_to(folder))
     entry = dict(
+        objective=manifest.get("objective", "disassemble"),
         task_id="cast_coil",
         title=demo_title(manifest),
         variant=manifest["variant"],
@@ -505,14 +563,23 @@ def update_catalog(metadata, manifest):
         directory=relative,
         index=f"{relative}/index.html",
         archived_at_utc=manifest["archived_at_utc"],
-        video_directory="../demos/cast_coil",
+        video_directory=os.path.relpath(
+            os.path.commonpath([
+                (metadata / v["path"]).resolve().parent
+                for v in manifest["videos"].values()
+            ]),
+            folder,
+        ),
         video_files={
             n: os.path.relpath(metadata / v["path"], folder)
             for n, v in manifest["videos"].items()
         },
     )
+    if entry["objective"] == "assemble":
+        entry["scope"] = "两件在 x、y 均分离的桌面初态；双侧接触后辅助抓持，完成对齐与装配、整体落桌、解除辅助并自由静置。"
     if entry["recording_kind"] == "offline_render_of_exact_physical_states":
         entry["scope"] += "视频为同一次物理执行的精确状态离线渲染。"
+    catalog["entries"] = [e for e in catalog["entries"] if e.get("directory") != relative]
     catalog["entries"].append(entry)
     catalog["excluded"] = [
         e for e in catalog.get("excluded", []) if e["task_id"] != "cast_coil"
@@ -526,10 +593,13 @@ def update_catalog(metadata, manifest):
     )
     page = (folder / "index.html").read_text()
     card = f'<section><h2><a href="{relative}/index.html">{entry["title"]}</a></h2><p><strong>完整物理执行 · 含辅助抓持</strong> · {entry["duration_s"]:.2f} 秒 · 5 路同步相机</p><p>{entry["scope"]}</p><p><a href="{relative}/index.html">打开播放页</a> · <a href="{relative}/archive_manifest.json">文件清单</a></p></section>'
-    page = page.replace(
-        "<section><h2>本次暂未收录", card + "<section><h2>本次暂未收录", 1
-    )
-    import re
+    pattern = r'<section>(?:(?!</section>).)*href="' + re.escape(relative) + r'/index\.html"(?:(?!</section>).)*</section>'
+    page, replaced = re.subn(pattern, lambda _: card, page, flags=re.S)
+    if not replaced:
+        if "<section><h2>本次暂未收录" in page:
+            page = page.replace("<section><h2>本次暂未收录", card + "<section><h2>本次暂未收录", 1)
+        else:
+            page = page.replace("</html>", card + "</html>", 1)
 
     page = re.sub(r"<tr><td>cast_coil</td><td>.*?</td></tr>", "", page)
     date = manifest["archived_at_utc"][:10]
@@ -548,9 +618,10 @@ def update_catalog(metadata, manifest):
     row = (
         f"| {entry['title']} | [打开]({relative}/index.html) | 5 | {entry['scope']} |\n"
     )
-    readme = readme.replace(
-        "\n\n保留全部既有 MP4", "\n" + row + "\n保留全部既有 MP4", 1
-    )
+    row_pattern = r'^\|[^\n]*\]\(' + re.escape(relative) + r'/index\.html\)[^\n]*\n'
+    readme, replaced = re.subn(row_pattern, lambda _: row, readme, flags=re.M)
+    if not replaced:
+        readme = readme.replace("\n\n保留全部既有 MP4", "\n" + row + "\n保留全部既有 MP4", 1)
     readme = re.sub(r"^- `cast_coil`：.*\n", "", readme, flags=re.MULTILINE)
     readme = readme.replace(
         "以下是首次归档时的扫描结论；本次仅调整目录，不重新评估其他 session 的进展。",

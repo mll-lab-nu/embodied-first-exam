@@ -1,0 +1,105 @@
+{
+  "template_id": "gen_keyhole_fixed_six_spikes_v2",
+  "reference_model": "Custom side-window experiment; not official AXIS or GEN CAD",
+  "geometry_status": "custom_geometry_probe_not_manufacturer_CAD",
+  "units": "mm",
+  "cage": {
+    "outer_diameter": 45.0,
+    "height": 80.0,
+    "wall_thickness": 3.0,
+    "collar_height": 10.0,
+    "collar_hole_radius": 7.5,
+    "window_count": 5,
+    "window_centers_deg": [
+      0,
+      72,
+      144,
+      216,
+      288
+    ],
+    "window_widths": [
+      23.0,
+      18.5,
+      18.5,
+      18.5,
+      18.5
+    ],
+    "corner_radius": 4.0,
+    "angular_segments": 180,
+    "corner_policy": "each window has semicircular ends in chord coordinates",
+    "custom_shape": {
+      "keyhole_bulb_radius_m": 0.0475,
+      "slot_width_m": 0.026,
+      "slot_tip_x_m": 0.055,
+      "stem_angle_deg": -56.69642381826812,
+      "bar_count": 6,
+      "bar_twist_deg": 35.0,
+      "side_exit_blocked_by_core": true
+    }
+  },
+  "hedgehog": {
+    "core_radius": 9.0,
+    "spike_radius": 1.8,
+    "spike_shape": "cylinder",
+    "spikes": [
+      {
+        "id": "S1",
+        "direction": [
+          1,
+          0,
+          0
+        ],
+        "exposed_length": 7.5
+      },
+      {
+        "id": "S2",
+        "direction": [
+          -1,
+          0,
+          0
+        ],
+        "exposed_length": 13.0
+      },
+      {
+        "id": "S3",
+        "direction": [
+          0,
+          1,
+          0
+        ],
+        "exposed_length": 5.0
+      },
+      {
+        "id": "S4",
+        "direction": [
+          0,
+          -1,
+          0
+        ],
+        "exposed_length": 8.0
+      },
+      {
+        "id": "S5",
+        "direction": [
+          0,
+          0,
+          1
+        ],
+        "exposed_length": 7.0
+      },
+      {
+        "id": "S6",
+        "direction": [
+          0,
+          0,
+          -1
+        ],
+        "exposed_length": 11.0
+      }
+    ]
+  },
+  "provenance": {
+    "official_facts": [],
+    "note": "Dimensions and six orthogonal spike directions are custom. No bearing mechanism is modeled."
+  }
+}

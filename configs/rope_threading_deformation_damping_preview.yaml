@@ -1,0 +1,12 @@
+# Phenomenological damping of deformation; rigid motion is projected out.
+defaults:
+  - rope_threading_controlled_settle_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      deformation_damping_rate_s_inv: 2.0
+
+run:
+  output: runs/environment_bootstrap/rope_threading/deformation_damping_candidate

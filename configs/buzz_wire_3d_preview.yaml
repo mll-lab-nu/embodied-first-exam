@@ -1,0 +1,76 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: spatial_maze_v2
+  # Put the long side across the table, away from the robot mount footprint.
+  origin_xy_m: [-0.035, 0.0]
+  yaw_deg: 90.0
+  physics:
+    constraint_timeconst: 0.001
+  geometry:
+    template_id: ${task.variant}
+    base_size_m: [1.18, 0.82, 0.045]
+    spiral_exit_roll_deg: 90.0
+    horizontal_scale: 1.0
+    depth_scale: 1.0
+    height_scale: 1.0
+    wire_radius_m: 0.0035
+    loop_radius_m: 0.026
+    loop_tube_radius_m: 0.003
+    loop_segments: 64
+    stem_length_m: 0.038
+    grip_length_m: 0.070
+    grip_radius_m: 0.009
+    end_stop_radius_m: 0.033
+    rail_segment_m: 0.008
+    witness_step_m: 0.002
+    end_reserve_m: 0.10
+
+env:
+  preset:
+    locked: false
+  sim:
+    dt: 0.004
+    substeps: 16
+  cameras:
+    overview:
+      res: [960, 720]
+      pos: [1.1, -1.45, 1.9]
+      lookat: [-0.035, 0.0, 1.20]
+      up: [0, 0, 1]
+      fov: 43
+    front_oblique:
+      res: [960, 720]
+      pos: [-0.95, -1.4, 1.75]
+      lookat: [-0.035, 0.0, 1.20]
+      up: [0, 0, 1]
+      fov: 43
+    topdown:
+      res: [960, 720]
+      pos: [-0.035, 0.0, 2.7]
+      lookat: [-0.035, 0.0, 1.20]
+      up: [0, 1, 0]
+      fov: 43
+  appearance:
+    - {pattern: buzz_base, color: [0.70, 0.50, 0.27], metallic: 0.0, roughness: 0.5}
+
+run:
+  output: runs/environment_bootstrap/buzz_wire_3d/spatial_maze_v2
+  # Geometry inspection is useful even without a local GPU. Set build_scene=true
+  # to load the actual dynamic Genesis scene, and render=true for its cameras.
+  build_scene: false
+  render: false
+  viewer: false
+  include_robot: false
+  smoke_steps: 2
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

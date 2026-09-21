@@ -6,7 +6,9 @@ baseline:
   scene_scale: 2.0
   chain:
     links_per_span: 3
-    link_centerline_radii_m: [0.024, 0.010]
+    link_centerline_radii_m:
+    - 0.024
+    - 0.01
     tube_radius_m: 0.0028
   probe:
     link_count: 3
@@ -37,14 +39,17 @@ physics:
   profile_policy: fixed per probe; save actual solver settings with results
   grasp_model: explicit assisted grasp only after contact, when applicable
 initialization:
-  description: two open horseshoes, two three-link chains, one independent target ring; all nine bodies free; photo-informed prototype
+  description: two open horseshoes, two three-link chains, one independent target
+    ring; all nine bodies free; photo-informed prototype
   preview_config: configs/horseshoe_ring_preview.yaml
   lab_preview_config: configs/horseshoe_ring_lab.yaml
   geometry_status: provisional_photo_prototype_not_measured_CAD
   extraction_route_verified: false
   solvability_controls:
     report: runs/environment-solvability/horseshoe_ring/result.json
-    template_radii_mm_with_straight_extraction_witness: [35.0, 36.0]
+    template_radii_mm_with_straight_extraction_witness:
+    - 35.0
+    - 36.0
     classification: oversized_positive_controls_only
     original_radius_29mm_status: unknown; safe folding is not complete extraction
   legacy_probe: three circular links, top link fixed; separate contact regression
@@ -68,4 +73,33 @@ rejection_rules:
 - Missing full assembly geometry
 - Target ring accidentally Hopf-linked to a single chain link
 - No validated collision-free extraction route
-first_probe: Five-body tutorial prototype has a certified full extraction and ALOHA four-view kinematic rehearsal; force-driven execution remains unverified
+first_probe: Historical photo-prototype controls remain unqualified; the active five-body
+  runtime has a gravity baseline and separate seeded variant qualification. See current_runtime
+  and variant_generation.
+catalog_scope: Frozen photo-prototype proposal (schema 1); current_runtime and variant_generation
+  below describe the active task
+current_runtime:
+  template: assets/tasks/horseshoe_ring/tutorial_solvable_v3/template.json
+  robot: ALOHA
+  arms: 2
+  free_bodies: 5
+  links_per_span: 1
+  baseline_physics: gravity_and_half_timestep_passed_with_pregrasp_and_contact_gated_assistance
+  baseline_evidence: runs/demo_metadata/horseshoe_ring/2026-09-18_timestep_validation_v1/comparison.json
+  baseline_video: demos/horseshoe_ring/detail/2026-09-18_gravity_replanned_v1_detail.mp4
+variant_generation:
+  config: configs/horseshoe_ring_variants.yaml
+  generator: topogym.tasks.horseshoe_ring.variant_generator:create_instance
+  qualifier: topogym.tasks.horseshoe_ring.variant_pipeline:generate_validated
+  family_ids:
+  - F1
+  - F2
+  - F3
+  prototype_ids:
+  - classic_circle
+  rng: shared VariantRng v1
+  status: three exact physical family representatives; conditional sampler and fail-closed
+    qualification implemented
+  documentation: docs/develop/tasks/horseshoe_ring_variant_generator_zh.md
+  dataset_writer_integrated: false
+  paired_anchors: assets/tasks/horseshoe_ring/family_space_v2/paired_anchors.json

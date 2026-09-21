@@ -1,0 +1,127 @@
+{
+  "passed": true,
+  "family": "gen_keyhole",
+  "positive": {
+    "collision_found": false,
+    "minimum_sampled_gap_m": 0.0014627562611962879,
+    "samples": 9967,
+    "witness": {
+      "segment": 74,
+      "pose": [
+        -0.006000000004933554,
+        3.234943071115178e-12,
+        0.12875000000756098,
+        -0.25995500085808193,
+        0.3200365565207876,
+        0.9064079783725619,
+        0.09178549319885271
+      ],
+      "distance_m": 0.0014627562611962879
+    }
+  },
+  "finite_controls": {
+    "straight_lift": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 115,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          -0.006,
+          0.0,
+          0.1006,
+          -0.5609855267969309,
+          0.4304593345768794,
+          0.560985526796931,
+          0.43045933457687946
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_side_pull": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 34,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.0072,
+          0.0,
+          0.055,
+          -0.5609855267969309,
+          0.4304593345768794,
+          0.560985526796931,
+          0.43045933457687946
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lower": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 338,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          -0.006,
+          0.0,
+          -0.07980000000000001,
+          -0.5609855267969309,
+          0.4304593345768794,
+          0.560985526796931,
+          0.43045933457687946
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "direct_to_exit_without_rotation": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 43,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.00740677966101695,
+          0.0,
+          0.06508474576271187,
+          -0.5609855267969309,
+          0.4304593345768794,
+          0.560985526796931,
+          0.43045933457687946
+        ],
+        "distance_m": -1.0
+      }
+    }
+  },
+  "continuous_clearance_lower_bound_m": 0.0013627562611962878,
+  "material_motion_bound_m": 0.0001,
+  "unique_solution_proven": false,
+  "geometry_ablation_controls": {
+    "closed_keyhole_stem": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 490,
+      "witness": {
+        "segment": 3,
+        "pose": [
+          -0.006,
+          0.0,
+          0.1406,
+          -0.2599550008841883,
+          0.32003655652956525,
+          0.9064079783617174,
+          0.09178549320140167
+        ],
+        "distance_m": -1.0
+      }
+    }
+  },
+  "distinct_ik_family_proven": false,
+  "ik_sha256": "16703feded25ede7424f416dcf7ce380fc6ac84ab0ad59210da9df60f5002f3b",
+  "asset_manifest_sha256": "638253ddc586125f3ba2039663bffd01c8c2c3190c2f6c5cdb24bbfbe812f5d9",
+  "source_fingerprints": {
+    "classic_families.py": "62925c45efb4cfa5562b9b27e113d363121d51e383da79d8e210069c2a038194",
+    "plan_escape.py": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e",
+    "geometry.py": "08a381dce0002e749fb94ad04de73a6cce6b9cd3bc2e4bf0fbf460d1df08adc7"
+  }
+}

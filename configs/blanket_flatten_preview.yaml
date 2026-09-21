@@ -1,0 +1,116 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: franka_panda_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: suspended_irregular_folds_v1
+  origin_xy_m: [0.02, 0.08]
+  geometry:
+    length_m: 0.60
+    width_m: 0.48
+    mesh_spacing_m: 0.012
+    particle_size_m: 0.008
+    birth_gap_particle_ratio: 4.0
+    fold_count: 5
+    fold_angle_deg: 105.0
+    fold_angle_jitter_deg: 10.0
+    crease_slant: 0.10
+    drop_clearance_m: 0.10
+    tilt_deg: 40.0
+    yaw_deg: 18.0
+    seed: 0
+    max_attempts: 64
+  color: [0.23, 0.49, 0.67]
+  vis_mode: visual  # particle is available for a separate diagnostic render.
+  stretch_iterations: 24
+  material:
+    rho: 4.0
+    static_friction: 0.4
+    kinetic_friction: 0.4
+    stretch_compliance: 1.0e-7
+    bending_compliance: 1.0e-5
+    stretch_relaxation: 0.3
+    bending_relaxation: 0.0
+    air_resistance: 0.001
+  table_friction:
+    contact_band_m: 0.012
+    static_mu: 0.5
+    kinetic_mu: 0.4
+  initialization:
+    minimum_seconds: 2.0
+    maximum_seconds: 6.0
+    stable_seconds: 0.4
+    maximum_window_drift_m: 0.008
+    sample_every: 10
+    minimum_coverage_ratio: 0.12
+    maximum_coverage_ratio: 0.80
+    maximum_height_m: 0.12
+    mean_speed_m_s: 0.015
+    p99_speed_m_s: 0.05
+    maximum_speed_m_s: 0.4
+    penetration_tolerance_m: 0.001
+    maximum_edge_stretch: 1.30
+    maximum_visual_edge_stretch: 2.5
+  success:
+    # Candidate gates. A full robot execution must release, retreat and sustain these.
+    stable_seconds: 0.5
+    maximum_window_drift_m: 0.008
+    minimum_coverage_ratio: 0.90
+    p95_height_m: 0.014
+    maximum_height_m: 0.025
+    mean_speed_m_s: 0.015
+    p99_speed_m_s: 0.05
+    maximum_speed_m_s: 0.4
+    penetration_tolerance_m: 0.001
+    maximum_edge_stretch: 1.15
+    maximum_visual_edge_stretch: 2.5
+
+robot_control:
+  home:
+    qpos: [0.0, -0.65, 0.0, -2.35, 0.0, 1.70, -0.7853981634, 0.04, 0.04]
+
+env:
+  preset:
+    locked: false
+  sim:
+    dt: 0.005
+    substeps: 8
+  renderer:
+    # Genesis visual mesh is inspected directly; use Nyx separately after PBD support is verified.
+    type: rasterizer
+  cameras:
+    overview:
+      res: [960, 720]
+      pos: [1.25, -1.15, 1.95]
+      lookat: [-0.12, 0.06, 1.15]
+      up: [0, 0, 1]
+      fov: 43
+    detail:
+      res: [800, 720]
+      pos: [0.80, -0.78, 1.85]
+      lookat: [0.02, 0.08, 1.20]
+      up: [0, 0, 1]
+      fov: 48
+    topdown:
+      res: [800, 720]
+      pos: [0.02, 0.08, 2.00]
+      lookat: [0.02, 0.08, 0.92]
+      up: [0, 1, 0]
+      fov: 44
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/seed_0_soft_drop
+  viewer: false
+  include_robot: true
+  render: true
+  record_video: true
+  fps: 20
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

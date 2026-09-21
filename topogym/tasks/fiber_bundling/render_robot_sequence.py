@@ -62,7 +62,11 @@ def main():
     parser.add_argument("--stills-only", action="store_true")
     parser.add_argument("--multiview", action="store_true",
                         help="Also export synchronized agentview/front_oblique/wrist MP4s")
+    parser.add_argument("--clean", action="store_true",
+                        help="Export only three full-frame camera streams, without captions, HUD or picture-in-picture")
     args = parser.parse_args()
+    if args.clean:
+        args.multiview = True
     folder = args.folder.resolve()
     report_bytes = (folder/"report.json").read_bytes()
     trajectory_bytes = (folder/"trajectory.npz").read_bytes()
@@ -102,7 +106,8 @@ def main():
     task = FiberSceneBuilder(cfg.env, cfg.task, cfg.robot_control).build(asset_dir=folder/"playback_assets")
     robot = task.manifest.get("robot")
     font_path = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
-    title, font, small = [ImageFont.truetype(font_path, s) for s in (30, 23, 19)]
+    if not args.clean:
+        title, font, small = [ImageFont.truetype(font_path, s) for s in (30, 23, 19)]
     if args.speed <= 0 or args.fps <= 0:
         parser.error("Positive playback speed and fps required")
     times = data["time_s"]
@@ -115,7 +120,7 @@ def main():
     if args.stills_only:
         indices = np.unique([0, len(times)-1])
     maximum = 0.
-    writer = None if args.stills_only else imageio.get_writer(folder/"demo.mp4", fps=args.fps,
+    writer = None if args.stills_only or args.clean else imageio.get_writer(folder/"demo.mp4", fps=args.fps,
         codec="libx264", quality=8, macro_block_size=1, ffmpeg_log_level="error")
     streams = {"agentview": "overview", "front_oblique": "detail", "wrist": "wrist"} if args.multiview else {}
     view_writers = {name: imageio.get_writer(folder/f"demo_{name}.mp4", fps=args.fps,
@@ -137,6 +142,21 @@ def main():
                           "overview": task.cameras["overview"].render()[0]}
             if args.multiview:
                 raw_frames["wrist"] = task.cameras["wrist"].render()[0]
+            if args.clean:
+                # Write camera RGB directly. No cropping, text, bars, montage
+                # or image overlays are applied in the clean export path.
+                for name, camera_name in streams.items():
+                    rgb = raw_frames[camera_name]
+                    if name in view_writers:
+                        view_writers[name].append_data(rgb)
+                        if j == len(indices)-1:
+                            for _ in range(2*args.fps):
+                                view_writers[name].append_data(rgb)
+                    if j in (0, len(indices)-1):
+                        imageio.imwrite(folder/f"{'initial' if j == 0 else 'final'}_{name}.png", rgb)
+                if j % 30 == 0:
+                    print(f"Rendered clean {j}/{len(indices)}", flush=True)
+                continue
             frame = Image.fromarray(raw_frames["detail"])
             overview = Image.fromarray(raw_frames["overview"]).resize((320, 240))
             frame.paste(overview, (936, 158))
@@ -219,6 +239,8 @@ def main():
         recorded_simulated_seconds=float(times[-1]), source_frames=len(times), rendered_frames=len(indices),
         stills_only=args.stills_only, encoded_frames=0 if args.stills_only else len(indices)+2*args.fps,
         synchronized_camera_streams=list(streams),
+        ui_overlays=not args.clean, picture_in_picture=not args.clean,
+        composite_video_generated=not args.clean and not args.stills_only,
         playback_duration_s=0 if args.stills_only else len(indices)/args.fps+2.,
         full_threading_verified=report["full_threading_verified"], robot_grasp_executed=report["robot_grasp_executed"]), indent=2)+"\n")
 

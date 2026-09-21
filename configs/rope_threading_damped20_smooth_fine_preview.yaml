@@ -1,0 +1,15 @@
+# Finer production candidate with the same smooth source arc and material.
+defaults:
+  - rope_threading_damped20_smooth_preview
+  - _self_
+
+task:
+  geometry:
+    rope_subdivisions: 6
+    radial_segments: 16
+  rope:
+    mesh:
+      maxvolume: 1.0e-8
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_smooth_fine_candidate

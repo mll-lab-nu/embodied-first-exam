@@ -1,1 +1,1 @@
-"""Rigid ring-and-wire environment; first probe uses a planar bend."""
+"""Spatial steady-hand toy; planar contact probe retained as a separate fixture."""

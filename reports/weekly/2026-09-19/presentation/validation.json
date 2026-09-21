@@ -1,0 +1,1137 @@
+{
+  "url": "file:///home/jianwen/topogym/reports/weekly/2026-09-19/presentation/index.html",
+  "browser": "Firefox",
+  "desktop": [
+    {
+      "id": "motivation",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "task-space",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "tasks-rigid",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "tasks-soft",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "demo-coil",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-coil-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-keyhole",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-keyhole-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-horseshoe",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-horseshoe-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-hedgehog",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-hedgehog-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 1
+    },
+    {
+      "id": "demo-lock",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-lock-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 1
+    },
+    {
+      "id": "demo-claws",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-claws-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-buzz",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-buzz-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 1
+    },
+    {
+      "id": "demo-fiber",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-fiber-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 1
+    },
+    {
+      "id": "demo-knot",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-knot-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-rope",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-rope-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-blanket",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 2
+    },
+    {
+      "id": "demo-blanket-wrist",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 1
+    },
+    {
+      "id": "pilot",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "difficulty",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "inputs",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "pipeline",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "metrics",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "policies",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "vla-boost",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "next",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    },
+    {
+      "id": "progress-source",
+      "width": 1550,
+      "height": 871,
+      "overflow": [],
+      "videos": 0
+    }
+  ],
+  "media": [
+    {
+      "id": "demo-coil",
+      "playback": [
+        {
+          "src": "media/coil_base_cam_high.mp4",
+          "time": 0.733601,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/coil_base_cam_low.mp4",
+          "time": 0.732726,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-coil-wrist",
+      "playback": [
+        {
+          "src": "media/coil_base_cam_left_wrist.mp4",
+          "time": 0.72595,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/coil_base_cam_right_wrist.mp4",
+          "time": 0.724936,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-keyhole",
+      "playback": [
+        {
+          "src": "media/keyhole_base_cam_high.mp4",
+          "time": 0.70689,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        },
+        {
+          "src": "media/keyhole_base_cam_low.mp4",
+          "time": 0.707958,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-keyhole-wrist",
+      "playback": [
+        {
+          "src": "media/keyhole_base_cam_left_wrist.mp4",
+          "time": 0.707018,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        },
+        {
+          "src": "media/keyhole_base_cam_right_wrist.mp4",
+          "time": 0.707033,
+          "paused": false,
+          "frames": 9,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-horseshoe",
+      "playback": [
+        {
+          "src": "media/horseshoe_base_cam_high.mp4",
+          "time": 0.723223,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        },
+        {
+          "src": "media/horseshoe_base_cam_low.mp4",
+          "time": 0.725088,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-horseshoe-wrist",
+      "playback": [
+        {
+          "src": "media/horseshoe_base_cam_left_wrist.mp4",
+          "time": 0.728995,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        },
+        {
+          "src": "media/horseshoe_base_cam_right_wrist.mp4",
+          "time": 0.728019,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-hedgehog",
+      "playback": [
+        {
+          "src": "media/hedgehog_side_agentview.mp4",
+          "time": 0.70705,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        },
+        {
+          "src": "media/hedgehog_side_front_oblique.mp4",
+          "time": 0.707075,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-hedgehog-wrist",
+      "playback": [
+        {
+          "src": "media/hedgehog_side_wrist.mp4",
+          "time": 0.707025,
+          "paused": false,
+          "frames": 8,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-lock",
+      "playback": [
+        {
+          "src": "media/lock_base_agentview.mp4",
+          "time": 0.724552,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/lock_base_front_oblique.mp4",
+          "time": 0.723593,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-lock-wrist",
+      "playback": [
+        {
+          "src": "media/lock_base_wrist.mp4",
+          "time": 0.722732,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-claws",
+      "playback": [
+        {
+          "src": "media/claws_a_cam_high.mp4",
+          "time": 0.723113,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        },
+        {
+          "src": "media/claws_a_cam_low.mp4",
+          "time": 0.723487,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-claws-wrist",
+      "playback": [
+        {
+          "src": "media/claws_a_cam_left_wrist.mp4",
+          "time": 0.723968,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        },
+        {
+          "src": "media/claws_a_cam_right_wrist.mp4",
+          "time": 0.72325,
+          "paused": false,
+          "frames": 7,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-buzz",
+      "playback": [
+        {
+          "src": "media/buzz_f3_agentview.mp4",
+          "time": 0.723533,
+          "paused": false,
+          "frames": 18,
+          "error": null
+        },
+        {
+          "src": "media/buzz_f3_front_oblique.mp4",
+          "time": 0.722731,
+          "paused": false,
+          "frames": 18,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-buzz-wrist",
+      "playback": [
+        {
+          "src": "media/buzz_f3_wrist.mp4",
+          "time": 0.728283,
+          "paused": false,
+          "frames": 18,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-fiber",
+      "playback": [
+        {
+          "src": "media/fiber_base_agentview.mp4",
+          "time": 0.723892,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/fiber_base_front_oblique.mp4",
+          "time": 0.722827,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-fiber-wrist",
+      "playback": [
+        {
+          "src": "media/fiber_base_wrist.mp4",
+          "time": 0.72319,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-knot",
+      "playback": [
+        {
+          "src": "media/knot_base_cam_high.mp4",
+          "time": 0.724337,
+          "paused": false,
+          "frames": 14,
+          "error": null
+        },
+        {
+          "src": "media/knot_base_cam_low.mp4",
+          "time": 0.72537,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-knot-wrist",
+      "playback": [
+        {
+          "src": "media/knot_base_cam_left_wrist.mp4",
+          "time": 0.723095,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/knot_base_cam_right_wrist.mp4",
+          "time": 0.724385,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-rope",
+      "playback": [
+        {
+          "src": "media/rope_prefix_cam_high.mp4",
+          "time": 0.72329,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        },
+        {
+          "src": "media/rope_prefix_cam_low.mp4",
+          "time": 0.723253,
+          "paused": false,
+          "frames": 15,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-rope-wrist",
+      "playback": [
+        {
+          "src": "media/rope_prefix_cam_left_wrist.mp4",
+          "time": 0.723574,
+          "paused": false,
+          "frames": 14,
+          "error": null
+        },
+        {
+          "src": "media/rope_prefix_cam_right_wrist.mp4",
+          "time": 0.722711,
+          "paused": false,
+          "frames": 14,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-blanket",
+      "playback": [
+        {
+          "src": "media/blanket_latest_agentview.mp4",
+          "time": 0.727256,
+          "paused": false,
+          "frames": 1,
+          "error": null
+        },
+        {
+          "src": "media/blanket_latest_front_oblique.mp4",
+          "time": 0.725822,
+          "paused": false,
+          "frames": 1,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    },
+    {
+      "id": "demo-blanket-wrist",
+      "playback": [
+        {
+          "src": "media/blanket_latest_wrist.mp4",
+          "time": 0.722542,
+          "paused": false,
+          "frames": 1,
+          "error": null
+        }
+      ],
+      "rate": 2,
+      "seekOk": true
+    }
+  ],
+  "mobile": [
+    {
+      "id": "motivation",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "task-space",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "tasks-rigid",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "tasks-soft",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "demo-coil",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-coil-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-keyhole",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-keyhole-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-horseshoe",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-horseshoe-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-hedgehog",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-hedgehog-wrist",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "demo-lock",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-lock-wrist",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "demo-claws",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-claws-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-buzz",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-buzz-wrist",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "demo-fiber",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-fiber-wrist",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "demo-knot",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-knot-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-rope",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-rope-wrist",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-blanket",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "demo-blanket-wrist",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "pilot",
+      "scrollWidth": 390,
+      "viewport": 390
+    },
+    {
+      "id": "difficulty",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "inputs",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "pipeline",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "metrics",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "policies",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "vla-boost",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "next",
+      "scrollWidth": 378,
+      "viewport": 390
+    },
+    {
+      "id": "progress-source",
+      "scrollWidth": 390,
+      "viewport": 390
+    }
+  ],
+  "laptop": [
+    {
+      "id": "motivation",
+      "overflow": []
+    },
+    {
+      "id": "task-space",
+      "overflow": []
+    },
+    {
+      "id": "tasks-rigid",
+      "overflow": []
+    },
+    {
+      "id": "tasks-soft",
+      "overflow": []
+    },
+    {
+      "id": "demo-coil",
+      "overflow": []
+    },
+    {
+      "id": "demo-coil-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-keyhole",
+      "overflow": []
+    },
+    {
+      "id": "demo-keyhole-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-horseshoe",
+      "overflow": []
+    },
+    {
+      "id": "demo-horseshoe-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-hedgehog",
+      "overflow": []
+    },
+    {
+      "id": "demo-hedgehog-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-lock",
+      "overflow": []
+    },
+    {
+      "id": "demo-lock-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-claws",
+      "overflow": []
+    },
+    {
+      "id": "demo-claws-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-buzz",
+      "overflow": []
+    },
+    {
+      "id": "demo-buzz-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-fiber",
+      "overflow": []
+    },
+    {
+      "id": "demo-fiber-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-knot",
+      "overflow": []
+    },
+    {
+      "id": "demo-knot-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-rope",
+      "overflow": []
+    },
+    {
+      "id": "demo-rope-wrist",
+      "overflow": []
+    },
+    {
+      "id": "demo-blanket",
+      "overflow": []
+    },
+    {
+      "id": "demo-blanket-wrist",
+      "overflow": []
+    },
+    {
+      "id": "pilot",
+      "overflow": []
+    },
+    {
+      "id": "difficulty",
+      "overflow": []
+    },
+    {
+      "id": "inputs",
+      "overflow": []
+    },
+    {
+      "id": "pipeline",
+      "overflow": []
+    },
+    {
+      "id": "metrics",
+      "overflow": []
+    },
+    {
+      "id": "policies",
+      "overflow": []
+    },
+    {
+      "id": "vla-boost",
+      "overflow": []
+    },
+    {
+      "id": "next",
+      "overflow": []
+    },
+    {
+      "id": "progress-source",
+      "overflow": []
+    }
+  ],
+  "wristFullscreen": [
+    {
+      "slide": "demo-coil-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-coil-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-keyhole-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-keyhole-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-horseshoe-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-horseshoe-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-hedgehog-wrist",
+      "active": "video-card",
+      "camera": "wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-lock-wrist",
+      "active": "video-card",
+      "camera": "wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-claws-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-claws-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-buzz-wrist",
+      "active": "video-card",
+      "camera": "wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-fiber-wrist",
+      "active": "video-card",
+      "camera": "wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-knot-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-knot-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-rope-wrist",
+      "active": "video-card",
+      "camera": "cam_left_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-rope-wrist",
+      "active": "video-card",
+      "camera": "cam_right_wrist",
+      "speedVisible": true,
+      "rate": 4
+    },
+    {
+      "slide": "demo-blanket-wrist",
+      "active": "video-card",
+      "camera": "wrist",
+      "speedVisible": true,
+      "rate": 4
+    }
+  ],
+  "mediaPlaybackVerified": 39,
+  "videoFullscreen": {
+    "active": "video-card",
+    "speedVisible": true
+  },
+  "notes": {
+    "open": true,
+    "text": 323
+  },
+  "overview": {
+    "open": true,
+    "entries": 35
+  },
+  "deckFullscreen": "HTML",
+  "mediaCopiesSha256Verified": 39,
+  "wristPagesVerified": 11,
+  "wristVideosFullscreenVerified": 17
+}

@@ -1,4 +1,4 @@
-"""Deterministic open trefoil with two free tails, in metres above a tabletop.
+"""Deterministic open knot templates with two free tails, in metres.
 
 Cut the outer, crossing-free arc of a Fourier trefoil and extend its two ends
 smoothly into the exterior. The diagnostic closure is never a physical strand.
@@ -12,6 +12,13 @@ import numpy as np
 import trimesh
 
 
+FAMILY_KNOTS = {
+    'overhand_trefoil': ('open_overhand', 'trefoil_3_1', 3),
+    'figure_eight': ('open_figure_eight', 'figure_eight_4_1', 4),
+    'double_overhand': ('open_double_overhand', 'cinquefoil_5_1', 5),
+}
+
+
 @dataclass(frozen=True)
 class KnotLayout:
     rope_radius_m: float = .004
@@ -23,15 +30,18 @@ class KnotLayout:
     segment_length_m: float = .0025
     radial_segments: int = 12
     handedness: str = "right"
+    family: str = "overhand_trefoil"
 
     def __post_init__(self):
         for key, value in asdict(self).items():
-            if key == "handedness":
+            if key in ("handedness", "family"):
                 continue
             if not np.isfinite(value) or value <= 0:
                 raise ValueError(f"{key} must be finite and positive")
         if self.handedness not in ("left", "right"):
             raise ValueError("handedness must be left or right")
+        if self.family not in FAMILY_KNOTS:
+            raise ValueError(f"Unknown knot family: {self.family}")
         if not .2 <= self.cut_angle_rad <= .6:
             raise ValueError("Cut must remain within the crossing-free outer arc")
         if isinstance(self.radial_segments, bool) or int(self.radial_segments) != self.radial_segments or self.radial_segments < 8:
@@ -42,13 +52,29 @@ class KnotLayout:
             raise ValueError("Free tails must extend outside the knot")
 
     def centerline(self):
-        t = np.linspace(np.pi+self.cut_angle_rad, 3*np.pi-self.cut_angle_rad, 2401)
         a, h = self.planar_scale_m, self.crossing_height_m
-        core = np.column_stack((a*(np.sin(t)+2*np.sin(2*t)),
-                                a*(np.cos(t)-2*np.cos(2*t)), h*np.sin(3*t)))
+        if self.family == 'overhand_trefoil':
+            # Preserve the original v9 template exactly.
+            t = np.linspace(np.pi+self.cut_angle_rad, 3*np.pi-self.cut_angle_rad, 2401)
+            core = np.column_stack((a*(np.sin(t)+2*np.sin(2*t)),
+                                    a*(np.cos(t)-2*np.cos(2*t)), h*np.sin(3*t)))
+            tangent = np.column_stack((a*(np.cos(t)+4*np.cos(2*t)),
+                                       a*(-np.sin(t)+4*np.sin(2*t)), 3*h*np.cos(3*t)))
+        else:
+            # Cut the exterior bottom arc, leaving the complete knot diagram.
+            # Figure eight: ((2+cos 2t)cos 3t, (2+cos 2t)sin 3t, sin 4t).
+            # Double overhand: a (2,5) torus curve, NOT the 5_2 twist knot.
+            t = np.linspace(self.cut_angle_rad, 2*np.pi-self.cut_angle_rad, 4001)
+            radial_frequency, turns, major, vertical_frequency = (
+                (2, 3, 2, 4) if self.family == 'figure_eight' else (5, 2, 3, 5))
+            radius = major+np.cos(radial_frequency*t)
+            derivative = -radial_frequency*np.sin(radial_frequency*t)
+            core = np.column_stack((a*radius*np.sin(turns*t), -a*radius*np.cos(turns*t),
+                                    h*np.sin(vertical_frequency*t)))
+            tangent = np.column_stack((a*(derivative*np.sin(turns*t)+turns*radius*np.cos(turns*t)),
+                                       a*(-derivative*np.cos(turns*t)+turns*radius*np.sin(turns*t)),
+                                       vertical_frequency*h*np.cos(vertical_frequency*t)))
         core[:, 2] += h+self.rope_radius_m+self.table_clearance_m
-        tangent = np.column_stack((a*(np.cos(t)+4*np.cos(2*t)),
-                                   a*(-np.sin(t)+4*np.sin(2*t)), 3*h*np.cos(3*t)))
 
         def tail(point, direction):
             # A short C1 cubic turn, followed by a straight, graspable free end.
@@ -74,7 +100,7 @@ class KnotLayout:
         samples = np.linspace(0, s[-1], int(np.ceil(s[-1]/self.segment_length_m))+1)
         points = np.column_stack([np.interp(samples, s, raw[:, k]) for k in range(3)])
         # This convention gives positive projected writhe for the right hand.
-        if self.handedness == "left":
+        if (self.handedness == "left") != (self.family == 'double_overhand'):
             points[:, 0] *= -1
         return points
 
@@ -136,6 +162,21 @@ def minimum_nonlocal_distance(points, exclusion_m):
     return best, pair
 
 
+def template_diagram_matches(crossings, family):
+    """Recognize these authored projections; not a general knot invariant."""
+    count = FAMILY_KNOTS[family][2]
+    visits = sorted((hit['segments'][side]+hit['parameters'][side], idx,
+                     hit['first_over'] if side == 0 else not hit['first_over'])
+                    for idx, hit in enumerate(crossings) for side in (0, 1))
+    word = [idx for _, idx, _ in visits]
+    over = [over for _, _, over in visits]
+    alternating = all(a != b for a, b in zip(over, over[1:]))
+    return len(crossings) == count and alternating and (
+        (word == [0, 1, 2, 0, 3, 2, 1, 3] and sum(hit['sign'] for hit in crossings) == 0)
+        if family == 'figure_eight' else
+        (word == list(range(count))*2 and abs(sum(hit['sign'] for hit in crossings)) == count))
+
+
 def inspect_geometry(points, layout):
     p = np.asarray(points)
     if p.ndim != 2 or p.shape[1] != 3 or len(p) < 4 or not np.isfinite(p).all():
@@ -159,6 +200,8 @@ def inspect_geometry(points, layout):
     is_trefoil = (len(crossing) == len(closed_crossing) == 3 and alternating
                   and abs(sum(hit["sign"] for hit in crossing)) == 3
                   and [idx for _, idx, _ in visits] == [0, 1, 2, 0, 1, 2])
+    count = FAMILY_KNOTS[layout.family][2]
+    is_family = len(closed_crossing) == count and template_diagram_matches(crossing, layout.family)
     report = dict(rope_length_m=float(np.linalg.norm(np.diff(p, axis=0), axis=1).sum()),
                   bounds_m=[(p.min(axis=0)-r).tolist(), (p.max(axis=0)+r).tolist()],
                   endpoints_m=p[[0, -1]].tolist(), centerline_points=len(p),
@@ -167,13 +210,14 @@ def inspect_geometry(points, layout):
                   projected_writhe=sum(hit["sign"] for hit in crossing),
                   diagnostic_closure_crossings=len(closed_crossing),
                   trefoil_diagram_verified=is_trefoil,
+                  family=layout.family, knot_diagram_verified=is_family,
                   minimum_nonlocal_centerline_distance_m=distance,
                   minimum_nonlocal_surface_gap_m=distance-2*r,
                   nearest_nonlocal_segments=pair, material_neighbour_exclusion_m=float(np.pi*r),
                   minimum_bend_radius_m=float(radius.min()),
                   table_surface_clearance_m=float(p[:, 2].min()-r))
-    if not is_trefoil:
-        raise ValueError(f"Expected one alternating trefoil diagram: {report}")
+    if not is_family:
+        raise ValueError(f"Expected the {layout.family} template diagram: {report}")
     if distance <= 2*r or radius.min() <= 2*r or report["table_surface_clearance_m"] < 0:
         raise ValueError(f"Tube intersects itself/table or bends too sharply: {report}")
     return report
@@ -201,11 +245,16 @@ def generate_assets(output, layout=None):
     color[vertex_arc > arc[-1]-.025] = [203, 60, 65, 255]
     mesh.visual.vertex_colors = color
     mesh.export(folder/"rope_initial.glb")
-    report.update(parameters=asdict(layout), knot_type="open_overhand", closure_knot="trefoil_3_1",
+    knot_type, closure_knot, _ = FAMILY_KNOTS[layout.family]
+    report.update(parameters=asdict(layout), knot_type=knot_type, closure_knot=closure_knot,
                   physical_components=1, physical_endpoints=2, rest_shape="straight",
                   geometry_verified=True, physics_qualified=False, watertight=True,
                   mesh_vertices=len(vertices), mesh_faces=len(faces),
-                  scope="initial_geometry_only", source="https://mathworld.wolfram.com/TrefoilKnot.html")
+                  scope="initial_geometry_only", source={
+                      'overhand_trefoil': 'https://katlas.org/wiki/3_1',
+                      'figure_eight': 'https://katlas.org/wiki/4_1',
+                      'double_overhand': 'https://katlas.org/wiki/T(5,2)',
+                  }[layout.family])
     (folder/"centerline.json").write_text(json.dumps(dict(points_m=points.tolist(),
         coordinate_frame="local table surface; z up", physical_closed=False), indent=2)+"\n")
     (folder/"asset_report.json").write_text(json.dumps(report, indent=2)+"\n")

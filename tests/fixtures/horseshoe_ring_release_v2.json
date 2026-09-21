@@ -1,0 +1,1349 @@
+{
+  "scope": "Measured pre-release regression states; not standalone solved episodes",
+  "cases": {
+    "f3_first": {
+      "source_directory": "runs/environment-solvability/horseshoe_ring/final_generator_F3_v2/attempt_00",
+      "source_trace_sha256": "4e9d95f3206a5441302505cee9e6dc3ad8ed62bc10d2f8acfd6c2f150927c193",
+      "frame": {
+        "frame": 2126,
+        "step": 53150,
+        "time_s": 106.3,
+        "stage": "confirm_ring_separation",
+        "qpos": [
+          0.10848620125726686,
+          0.761500431040969,
+          -0.5004081775723382,
+          -0.8904902949008311,
+          -1.8560497998382421,
+          0.06365845152827855,
+          0.010837747646462064,
+          0.010839346106857642,
+          -1.0144322311218472,
+          0.061795089960938215,
+          -0.13804914484710248,
+          1.7755561241153108,
+          0.8622095900493125,
+          -0.18215390079423854,
+          0.017728596847517368,
+          0.017728594774345355
+        ],
+        "target_qpos": [
+          0.10848620143365054,
+          0.7614930700905058,
+          -0.5004265083032036,
+          -0.8904724296098042,
+          -1.8560541083515962,
+          0.06365568778676955,
+          0.0098,
+          0.0098,
+          -1.0144322275575726,
+          0.061599786966945805,
+          -0.13828134555985394,
+          1.7758170521027024,
+          0.8622331229602284,
+          -0.18206269007356046,
+          0.015999999999999997,
+          0.015999999999999997
+        ],
+        "bodies": {
+          "horseshoe_left": {
+            "pos": [
+              -0.132580664058489,
+              0.30786371654389943,
+              1.411226518993916
+            ],
+            "quat_wxyz": [
+              0.11613759758492496,
+              -0.5650152987028909,
+              -0.816862632642174,
+              -0.0022825537851271656
+            ],
+            "velocity": [
+              -3.3591627949597666e-05,
+              -7.102642230734108e-07,
+              -5.595051698485155e-05
+            ],
+            "angular_velocity": [
+              -0.0007038706862024691,
+              -0.00019649123343660896,
+              0.00023835370620835749
+            ]
+          },
+          "horseshoe_right": {
+            "pos": [
+              -0.11840882759829119,
+              0.30389823470953964,
+              1.4200576832092933
+            ],
+            "quat_wxyz": [
+              0.8204567094175302,
+              0.008492167878022119,
+              0.14872940696691717,
+              -0.5519585442401984
+            ],
+            "velocity": [
+              2.7922699655921342e-05,
+              2.6566335022165747e-05,
+              0.00013748096309018664
+            ],
+            "angular_velocity": [
+              0.0028883155982734636,
+              0.0008594846175031398,
+              -0.0008074208231583812
+            ]
+          },
+          "chain_upper_1": {
+            "pos": [
+              -0.11473983399459502,
+              0.38742300448454153,
+              1.4081994571996341
+            ],
+            "quat_wxyz": [
+              0.3742780201643599,
+              -0.23541201053604238,
+              -0.6087404826854081,
+              -0.6587352834463642
+            ],
+            "velocity": [
+              0.0011707622972006461,
+              -0.0006890188184740309,
+              -0.0024505765604787223
+            ],
+            "angular_velocity": [
+              -0.1406035098023632,
+              0.09445700370011717,
+              0.09026551867031135
+            ]
+          },
+          "chain_lower_1": {
+            "pos": [
+              -0.19269730610245053,
+              0.35660568690508226,
+              1.4254431630005453
+            ],
+            "quat_wxyz": [
+              0.09484801820647609,
+              0.19860925467106313,
+              -0.29395206863902207,
+              -0.9301346132384002
+            ],
+            "velocity": [
+              0.00020996201371291032,
+              -0.00027711518581036154,
+              -0.0001720658571951856
+            ],
+            "angular_velocity": [
+              -0.006014674792957625,
+              -0.020993850801533105,
+              0.015397412431816866
+            ]
+          },
+          "target_ring": {
+            "pos": [
+              -0.09540771784175198,
+              0.19016423299437224,
+              1.3468639111415057
+            ],
+            "quat_wxyz": [
+              0.5661818110360698,
+              0.11058724826500727,
+              -0.010521070971904552,
+              0.816760628604669
+            ],
+            "velocity": [
+              8.574029892402548e-06,
+              -6.724066428854203e-07,
+              -1.6630407127814112e-05
+            ],
+            "angular_velocity": [
+              -1.2615358180448663e-05,
+              2.621958688513964e-05,
+              9.74029699900886e-06
+            ]
+          }
+        },
+        "active_welds": [
+          [
+            27,
+            31
+          ],
+          [
+            27,
+            32
+          ],
+          [
+            17,
+            35
+          ]
+        ],
+        "chain_link_numbers": [
+          -1,
+          1,
+          -1,
+          1
+        ],
+        "contacts": [
+          [
+            "robot/left/left_finger_link",
+            "target_ring",
+            0.46986114328532996
+          ],
+          [
+            "robot/left/left_finger_link",
+            "target_ring",
+            0.3757924332310051
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.6899173307873709
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.7047909419430908
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            1.633108911607473
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            2.0126317236341964
+          ],
+          [
+            "horseshoe_right",
+            "horseshoe_left",
+            1.1283862160315823
+          ],
+          [
+            "horseshoe_left",
+            "horseshoe_right",
+            0.6988466563574482
+          ],
+          [
+            "horseshoe_left",
+            "chain_upper_1",
+            0.00403337398673066
+          ],
+          [
+            "horseshoe_left",
+            "chain_lower_1",
+            0.07260166838752505
+          ],
+          [
+            "horseshoe_right",
+            "chain_upper_1",
+            0.11562454975026759
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.07233899933308512
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.09277745096061574
+          ]
+        ],
+        "ring_contact_bodies": [
+          "robot/left/left_finger_link",
+          "robot/left/right_finger_link"
+        ],
+        "maximum_penetration_m": 0.00039675293385783286
+      },
+      "robot_control": {
+        "robot": {
+          "name": "aloha",
+          "asset": "assets/robots/aloha/aloha.xml",
+          "tool_model": "aloha",
+          "arm_joint_names": [
+            "waist",
+            "shoulder",
+            "elbow",
+            "forearm_roll",
+            "wrist_angle",
+            "wrist_rotate"
+          ],
+          "finger_joint_names": [
+            "left_finger",
+            "right_finger"
+          ],
+          "arm_joint_limits": [
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.85005,
+              1.25664
+            ],
+            [
+              -1.76278,
+              1.6057
+            ],
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.8675,
+              2.23402
+            ],
+            [
+              -3.14158,
+              3.14158
+            ]
+          ],
+          "ee_link": "gripper_link"
+        },
+        "home": {
+          "left": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "right": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "settle_steps": 100
+        },
+        "controller": {
+          "kp": [
+            10000,
+            18000,
+            14000,
+            6000,
+            4000,
+            2500,
+            2000
+          ],
+          "kv": [
+            200,
+            300,
+            250,
+            100,
+            80,
+            40,
+            124
+          ],
+          "force_limit": [
+            35,
+            144,
+            59,
+            22,
+            35,
+            35,
+            35
+          ]
+        },
+        "gripper": {
+          "open_qpos": 0.037,
+          "closed_qpos": 0.002
+        },
+        "ik": {
+          "max_samples": 1,
+          "max_solver_iters": 100
+        }
+      },
+      "scale": 2.0004232403939093,
+      "mount": [
+        -0.1356786,
+        0.0,
+        0.9196429
+      ],
+      "table_surface": [
+        0.0,
+        0.0,
+        0.9196429
+      ],
+      "template": {
+        "template_id": "paired_horseshoes_tutorial_solvable_v3",
+        "units": "mm",
+        "geometry_status": "Five-body nominal prototype with a certified geometric extraction; not measured commercial CAD",
+        "horseshoe": {
+          "ellipse_radii": [
+            32.0,
+            29.0
+          ],
+          "mouth_half_angle_deg": 24,
+          "band_width": 8.0,
+          "thickness": 4.0,
+          "edge_bevel": 0.7,
+          "eye_offset_x": 8.0,
+          "eye_radii": [
+            7.5,
+            4.8
+          ],
+          "eye_wire_radius": 1.4,
+          "collision_segments": 56,
+          "eye_roll_deg": 90
+        },
+        "chain": {
+          "spans": 2,
+          "links_per_span": 1,
+          "link_radii": [
+            18,
+            5
+          ],
+          "wire_radius": 1.0,
+          "center_spacing": 18.0,
+          "eye_to_link_center": 15,
+          "collision_segments": 40
+        },
+        "target_ring": {
+          "centerline_radius": 31,
+          "wire_radius": 1.4,
+          "initial_tilt_deg": 90,
+          "collision_segments": 64
+        },
+        "density_kg_m3": 7800.0,
+        "unconfirmed": [
+          "Commercial dimensions and material properties require measurement",
+          "Force-driven robot grasp execution and robustness are not certified"
+        ],
+        "references": [
+          {
+            "kind": "user_image",
+            "description": "User-provided photograph: two silver horseshoes, two short chains and a central removable ring"
+          },
+          {
+            "kind": "firsthand_collection",
+            "url": "https://www.cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzHorseShoes.html",
+            "use": "Assembly family and folding principle only; dimensions are not copied from its different versions"
+          },
+          {
+            "kind": "physical_demonstration",
+            "url": "https://www.youtube.com/watch?v=qgI7h2Gyk1w",
+            "use": "Reference manipulation principle; not a verified trajectory for these meshes"
+          },
+          {
+            "kind": "manufacturer_solution_video",
+            "url": "https://www.youtube.com/watch?v=LAE1w1VNIZg",
+            "author": "Professor Puzzle Ltd",
+            "use": "One independent chain link per span; turn, bring horseshoes together, transfer support, remove the ring"
+          }
+        ]
+      }
+    },
+    "f3_retry": {
+      "source_directory": "runs/environment-solvability/horseshoe_ring/final_generator_F3_v2/attempt_01",
+      "source_trace_sha256": "59af3e2738b8cef23129e2c8e4570afa308f66b2e7fa06cd6d5bbdd913bb67a0",
+      "frame": {
+        "frame": 2818,
+        "step": 70450,
+        "time_s": 140.9,
+        "stage": "confirm_ring_separation",
+        "qpos": [
+          0.3641358099751466,
+          0.4424729986155892,
+          -0.4089074249552583,
+          0.9817395372303119,
+          -1.3411859177676109,
+          0.08888979617398561,
+          0.009942190535453338,
+          0.009942190549067151,
+          -0.8569324126824236,
+          -0.22735596155316273,
+          -0.12605683875011456,
+          1.2070086667979756,
+          0.944729467657283,
+          0.874704524493318,
+          0.0177246462614628,
+          0.017724647843350413
+        ],
+        "target_qpos": [
+          0.3641358093823154,
+          0.4424370818022391,
+          -0.40892198645748123,
+          0.9817209722115492,
+          -1.3411924295979707,
+          0.08889221775385375,
+          0.0098,
+          0.0098,
+          -0.8569324665818084,
+          -0.22751240297381917,
+          -0.12628202512724795,
+          1.2072561800748334,
+          0.9445054786911836,
+          0.8747893329776754,
+          0.015999999999999997,
+          0.015999999999999997
+        ],
+        "bodies": {
+          "horseshoe_left": {
+            "pos": [
+              -0.11284598836493114,
+              0.1510766532454021,
+              1.4457868688820297
+            ],
+            "quat_wxyz": [
+              -0.12226054259737154,
+              -0.494585503132874,
+              -0.8480201289869228,
+              0.14594314183133392
+            ],
+            "velocity": [
+              -6.710384876360474e-06,
+              1.1239890029228966e-05,
+              -2.901106351046796e-06
+            ],
+            "angular_velocity": [
+              0.0002079779212661298,
+              3.2691409300100746e-05,
+              1.3897250846765137e-05
+            ]
+          },
+          "horseshoe_right": {
+            "pos": [
+              -0.10120827060864955,
+              0.15492245733800986,
+              1.4577478787868374
+            ],
+            "quat_wxyz": [
+              0.855535735384752,
+              -0.14537661175238364,
+              -0.08761194912637955,
+              -0.48913024094339647
+            ],
+            "velocity": [
+              1.892267186286324e-06,
+              2.3051730977462798e-06,
+              -6.705919558181246e-06
+            ],
+            "angular_velocity": [
+              8.305007820742087e-05,
+              2.1690304906248056e-06,
+              2.3423275837422062e-05
+            ]
+          },
+          "chain_upper_1": {
+            "pos": [
+              -0.1132684563503294,
+              0.23685671006074419,
+              1.4029801066438732
+            ],
+            "quat_wxyz": [
+              0.47401804024389194,
+              -0.09678935303003033,
+              -0.7064801626301773,
+              -0.5165505768783989
+            ],
+            "velocity": [
+              -0.0032279481887221564,
+              0.005134219041324315,
+              0.00020719194037199828
+            ],
+            "angular_velocity": [
+              0.26006858650486286,
+              0.1553103146951869,
+              -0.019004150011664705
+            ]
+          },
+          "chain_lower_1": {
+            "pos": [
+              -0.19095093388404655,
+              0.1994765289806339,
+              1.4202521635017626
+            ],
+            "quat_wxyz": [
+              0.017627694224503044,
+              0.2548943610790766,
+              -0.7071674249845735,
+              -0.6592665334499428
+            ],
+            "velocity": [
+              0.00034803851560537996,
+              -0.0007935842559474255,
+              1.8668796275340537e-05
+            ],
+            "angular_velocity": [
+              0.010086888112109914,
+              0.005644489674092544,
+              0.034373166489980886
+            ]
+          },
+          "target_ring": {
+            "pos": [
+              -0.046148604576905734,
+              0.02924199202639954,
+              1.4557585257337333
+            ],
+            "quat_wxyz": [
+              0.46345036010823193,
+              -0.21128274143764028,
+              -0.013234012711064643,
+              0.8604639607756439
+            ],
+            "velocity": [
+              -8.543479093471774e-06,
+              -6.531435571156096e-06,
+              1.6244205587093304e-05
+            ],
+            "angular_velocity": [
+              1.6384700336750741e-06,
+              -2.2155185077774606e-05,
+              7.187699947913511e-07
+            ]
+          }
+        },
+        "active_welds": [
+          [
+            27,
+            31
+          ],
+          [
+            27,
+            32
+          ],
+          [
+            17,
+            35
+          ]
+        ],
+        "chain_link_numbers": [
+          -1,
+          1,
+          -1,
+          1
+        ],
+        "contacts": [
+          [
+            "target_ring",
+            "robot/left/left_finger_link",
+            0.10400116414699824
+          ],
+          [
+            "robot/left/left_finger_link",
+            "target_ring",
+            0.2705950469883197
+          ],
+          [
+            "target_ring",
+            "robot/left/left_finger_link",
+            0.03580683198739722
+          ],
+          [
+            "target_ring",
+            "robot/left/left_finger_link",
+            0.011784436721648509
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            1.8307258459930764
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            1.602387273345102
+          ],
+          [
+            "horseshoe_right",
+            "horseshoe_left",
+            0.8638066931552896
+          ],
+          [
+            "horseshoe_left",
+            "horseshoe_right",
+            0.3451606568244735
+          ],
+          [
+            "horseshoe_left",
+            "chain_upper_1",
+            0.19167030662798717
+          ],
+          [
+            "horseshoe_left",
+            "chain_lower_1",
+            0.25541531170350046
+          ],
+          [
+            "horseshoe_right",
+            "chain_upper_1",
+            0.23538754677749865
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.010642559109238281
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.14276923045925918
+          ]
+        ],
+        "ring_contact_bodies": [
+          "robot/left/left_finger_link"
+        ],
+        "maximum_penetration_m": 0.0003976024630953281
+      },
+      "robot_control": {
+        "robot": {
+          "name": "aloha",
+          "asset": "assets/robots/aloha/aloha.xml",
+          "tool_model": "aloha",
+          "arm_joint_names": [
+            "waist",
+            "shoulder",
+            "elbow",
+            "forearm_roll",
+            "wrist_angle",
+            "wrist_rotate"
+          ],
+          "finger_joint_names": [
+            "left_finger",
+            "right_finger"
+          ],
+          "arm_joint_limits": [
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.85005,
+              1.25664
+            ],
+            [
+              -1.76278,
+              1.6057
+            ],
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.8675,
+              2.23402
+            ],
+            [
+              -3.14158,
+              3.14158
+            ]
+          ],
+          "ee_link": "gripper_link"
+        },
+        "home": {
+          "left": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "right": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "settle_steps": 100
+        },
+        "controller": {
+          "kp": [
+            10000,
+            18000,
+            14000,
+            6000,
+            4000,
+            2500,
+            2000
+          ],
+          "kv": [
+            200,
+            300,
+            250,
+            100,
+            80,
+            40,
+            124
+          ],
+          "force_limit": [
+            35,
+            144,
+            59,
+            22,
+            35,
+            35,
+            35
+          ]
+        },
+        "gripper": {
+          "open_qpos": 0.037,
+          "closed_qpos": 0.002
+        },
+        "ik": {
+          "max_samples": 1,
+          "max_solver_iters": 100
+        }
+      },
+      "scale": 1.9989319558399625,
+      "mount": [
+        -0.1356786,
+        0.0,
+        0.9196429
+      ],
+      "table_surface": [
+        0.0,
+        0.0,
+        0.9196429
+      ],
+      "template": {
+        "template_id": "paired_horseshoes_tutorial_solvable_v3",
+        "units": "mm",
+        "geometry_status": "Five-body nominal prototype with a certified geometric extraction; not measured commercial CAD",
+        "horseshoe": {
+          "ellipse_radii": [
+            32.0,
+            29.0
+          ],
+          "mouth_half_angle_deg": 24,
+          "band_width": 8.0,
+          "thickness": 4.0,
+          "edge_bevel": 0.7,
+          "eye_offset_x": 8.0,
+          "eye_radii": [
+            7.5,
+            4.8
+          ],
+          "eye_wire_radius": 1.4,
+          "collision_segments": 56,
+          "eye_roll_deg": 90
+        },
+        "chain": {
+          "spans": 2,
+          "links_per_span": 1,
+          "link_radii": [
+            18,
+            5
+          ],
+          "wire_radius": 1.0,
+          "center_spacing": 18.0,
+          "eye_to_link_center": 15,
+          "collision_segments": 40
+        },
+        "target_ring": {
+          "centerline_radius": 31,
+          "wire_radius": 1.4,
+          "initial_tilt_deg": 90,
+          "collision_segments": 64
+        },
+        "density_kg_m3": 7800.0,
+        "unconfirmed": [
+          "Commercial dimensions and material properties require measurement",
+          "Force-driven robot grasp execution and robustness are not certified"
+        ],
+        "references": [
+          {
+            "kind": "user_image",
+            "description": "User-provided photograph: two silver horseshoes, two short chains and a central removable ring"
+          },
+          {
+            "kind": "firsthand_collection",
+            "url": "https://www.cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzHorseShoes.html",
+            "use": "Assembly family and folding principle only; dimensions are not copied from its different versions"
+          },
+          {
+            "kind": "physical_demonstration",
+            "url": "https://www.youtube.com/watch?v=qgI7h2Gyk1w",
+            "use": "Reference manipulation principle; not a verified trajectory for these meshes"
+          },
+          {
+            "kind": "manufacturer_solution_video",
+            "url": "https://www.youtube.com/watch?v=LAE1w1VNIZg",
+            "author": "Professor Puzzle Ltd",
+            "use": "One independent chain link per span; turn, bring horseshoes together, transfer support, remove the ring"
+          }
+        ]
+      }
+    },
+    "f1_reference": {
+      "source_directory": "runs/environment-solvability/horseshoe_ring/final_generator_gravity_phase_v2/attempt_01",
+      "source_trace_sha256": "9ff96d9cfd3f32233b6c1dbde8c695049e10d6b4d86c961bcbe2ac8efe2ea1e1",
+      "frame": {
+        "frame": 2367,
+        "step": 59175,
+        "time_s": 118.35000000000001,
+        "stage": "confirm_ring_separation",
+        "qpos": [
+          0.44271529793448033,
+          0.6805783699676373,
+          -0.451117002574231,
+          1.263259540023876,
+          -0.8561272376915758,
+          0.795737036592925,
+          0.010809947808056395,
+          0.010811096578879598,
+          -1.054772406577636,
+          0.04300439649101178,
+          -0.2099854749646939,
+          1.4541954462229123,
+          1.831214510913638,
+          -0.4480562087644157,
+          0.01781275423844836,
+          0.01781275104881904
+        ],
+        "target_qpos": [
+          0.4427152979735129,
+          0.6805633814431056,
+          -0.4511441896906165,
+          1.2632370240160449,
+          -0.8561433544241239,
+          0.795731450787227,
+          0.0098,
+          0.0098,
+          -1.0547724032501993,
+          0.04287571297390123,
+          -0.21009872772198726,
+          1.4544931538277526,
+          1.831158768056258,
+          -0.44797594085122966,
+          0.015999999999999997,
+          0.015999999999999997
+        ],
+        "bodies": {
+          "horseshoe_left": {
+            "pos": [
+              -0.021047584026768144,
+              0.10248972540771349,
+              1.3288882546428478
+            ],
+            "quat_wxyz": [
+              0.1784767752304512,
+              -0.11665023022911758,
+              -0.9481603994461865,
+              -0.23564936115525753
+            ],
+            "velocity": [
+              7.326384808751181e-06,
+              7.964380713683095e-06,
+              -2.9857612229923478e-05
+            ],
+            "angular_velocity": [
+              1.2628485677429851e-05,
+              -0.0003211881438176428,
+              -9.974566963673632e-05
+            ]
+          },
+          "horseshoe_right": {
+            "pos": [
+              -0.008321280089408661,
+              0.10481357536949376,
+              1.340291262174556
+            ],
+            "quat_wxyz": [
+              0.9472739527488977,
+              0.227189394317544,
+              0.20525748772135913,
+              -0.09447963424687258
+            ],
+            "velocity": [
+              7.57095273253783e-07,
+              7.899202761754079e-07,
+              1.6406481801037155e-05
+            ],
+            "angular_velocity": [
+              0.00023826629793184494,
+              0.0003374959538686077,
+              1.941229988866529e-05
+            ]
+          },
+          "chain_upper_1": {
+            "pos": [
+              -0.09826641243960409,
+              0.12021631496819934,
+              1.3652343614207085
+            ],
+            "quat_wxyz": [
+              0.18317175886959228,
+              0.400477199994932,
+              -0.3589433025164585,
+              -0.8229373151190906
+            ],
+            "velocity": [
+              1.5121948794418377e-05,
+              6.626779450171809e-05,
+              4.172291105564135e-05
+            ],
+            "angular_velocity": [
+              0.008828635396220537,
+              0.008194965442426113,
+              0.0008267251809662951
+            ]
+          },
+          "chain_lower_1": {
+            "pos": [
+              -0.09337127261727668,
+              0.07697379810701062,
+              1.334945340532441
+            ],
+            "quat_wxyz": [
+              0.4197328879059067,
+              0.46033549471488855,
+              0.028537543900452357,
+              -0.7817295847695009
+            ],
+            "velocity": [
+              0.0010649517932020596,
+              -0.0009824963426485014,
+              0.0009753355475763505
+            ],
+            "angular_velocity": [
+              -0.05937333334252168,
+              -0.053252914421265965,
+              0.002244965166699149
+            ]
+          },
+          "target_ring": {
+            "pos": [
+              0.08967730549918818,
+              0.10371719028207456,
+              1.2427459956594995
+            ],
+            "quat_wxyz": [
+              0.11800513474831545,
+              0.177972962420786,
+              -0.2419557528735403,
+              0.9464976632150761
+            ],
+            "velocity": [
+              7.519171577643471e-06,
+              2.748702332987332e-06,
+              -1.609394795162138e-05
+            ],
+            "angular_velocity": [
+              -1.0650266446210105e-05,
+              2.370473921327275e-05,
+              1.5870802653623602e-06
+            ]
+          }
+        },
+        "active_welds": [
+          [
+            27,
+            31
+          ],
+          [
+            27,
+            32
+          ],
+          [
+            17,
+            35
+          ]
+        ],
+        "chain_link_numbers": [
+          -1,
+          1,
+          -1,
+          1
+        ],
+        "contacts": [
+          [
+            "robot/left/left_finger_link",
+            "target_ring",
+            0.018628327865193976
+          ],
+          [
+            "robot/left/left_finger_link",
+            "target_ring",
+            1.166782252499591
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.08985961434939933
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.0941587739433895
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.3147827764468231
+          ],
+          [
+            "robot/left/right_finger_link",
+            "target_ring",
+            0.5226955678018856
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            1.2891262823666845
+          ],
+          [
+            "robot/right/left_finger_link",
+            "horseshoe_left",
+            2.331762393597913
+          ],
+          [
+            "horseshoe_right",
+            "horseshoe_left",
+            0.549868791400273
+          ],
+          [
+            "horseshoe_left",
+            "horseshoe_right",
+            0.608544790460346
+          ],
+          [
+            "horseshoe_left",
+            "chain_upper_1",
+            0.057694574009870075
+          ],
+          [
+            "horseshoe_left",
+            "chain_upper_1",
+            0.1869121197229546
+          ],
+          [
+            "horseshoe_left",
+            "chain_upper_1",
+            0.14553786104733435
+          ],
+          [
+            "horseshoe_left",
+            "chain_lower_1",
+            0.15676030804009278
+          ],
+          [
+            "horseshoe_right",
+            "chain_upper_1",
+            0.12294534413259231
+          ],
+          [
+            "horseshoe_right",
+            "chain_upper_1",
+            0.31473812981252197
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.27168035427835974
+          ],
+          [
+            "horseshoe_right",
+            "chain_lower_1",
+            0.1972790426024712
+          ]
+        ],
+        "ring_contact_bodies": [
+          "robot/left/left_finger_link",
+          "robot/left/right_finger_link"
+        ],
+        "maximum_penetration_m": 0.00039114397697848427
+      },
+      "robot_control": {
+        "robot": {
+          "name": "aloha",
+          "asset": "assets/robots/aloha/aloha.xml",
+          "tool_model": "aloha",
+          "arm_joint_names": [
+            "waist",
+            "shoulder",
+            "elbow",
+            "forearm_roll",
+            "wrist_angle",
+            "wrist_rotate"
+          ],
+          "finger_joint_names": [
+            "left_finger",
+            "right_finger"
+          ],
+          "arm_joint_limits": [
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.85005,
+              1.25664
+            ],
+            [
+              -1.76278,
+              1.6057
+            ],
+            [
+              -3.14158,
+              3.14158
+            ],
+            [
+              -1.8675,
+              2.23402
+            ],
+            [
+              -3.14158,
+              3.14158
+            ]
+          ],
+          "ee_link": "gripper_link"
+        },
+        "home": {
+          "left": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "right": [
+            0,
+            -0.96,
+            1.16,
+            0,
+            -0.3,
+            0,
+            0.0084,
+            0.0084
+          ],
+          "settle_steps": 100
+        },
+        "controller": {
+          "kp": [
+            10000,
+            18000,
+            14000,
+            6000,
+            4000,
+            2500,
+            2000
+          ],
+          "kv": [
+            200,
+            300,
+            250,
+            100,
+            80,
+            40,
+            124
+          ],
+          "force_limit": [
+            35,
+            144,
+            59,
+            22,
+            35,
+            35,
+            35
+          ]
+        },
+        "gripper": {
+          "open_qpos": 0.037,
+          "closed_qpos": 0.002
+        },
+        "ik": {
+          "max_samples": 1,
+          "max_solver_iters": 100
+        }
+      },
+      "scale": 2.0162972655124367,
+      "mount": [
+        -0.1356786,
+        0.0,
+        0.9196429
+      ],
+      "table_surface": [
+        0.0,
+        0.0,
+        0.9196429
+      ],
+      "template": {
+        "template_id": "paired_horseshoes_tutorial_solvable_v3",
+        "units": "mm",
+        "geometry_status": "Five-body nominal prototype with a certified geometric extraction; not measured commercial CAD",
+        "horseshoe": {
+          "ellipse_radii": [
+            32.0,
+            29.0
+          ],
+          "mouth_half_angle_deg": 24,
+          "band_width": 8.0,
+          "thickness": 4.0,
+          "edge_bevel": 0.7,
+          "eye_offset_x": 8.0,
+          "eye_radii": [
+            7.5,
+            4.8
+          ],
+          "eye_wire_radius": 1.4,
+          "collision_segments": 56,
+          "eye_roll_deg": 90
+        },
+        "chain": {
+          "spans": 2,
+          "links_per_span": 1,
+          "link_radii": [
+            18,
+            5
+          ],
+          "wire_radius": 1.0,
+          "center_spacing": 18.0,
+          "eye_to_link_center": 15,
+          "collision_segments": 40
+        },
+        "target_ring": {
+          "centerline_radius": 31,
+          "wire_radius": 1.4,
+          "initial_tilt_deg": 90,
+          "collision_segments": 64
+        },
+        "density_kg_m3": 7800.0,
+        "unconfirmed": [
+          "Commercial dimensions and material properties require measurement",
+          "Force-driven robot grasp execution and robustness are not certified"
+        ],
+        "references": [
+          {
+            "kind": "user_image",
+            "description": "User-provided photograph: two silver horseshoes, two short chains and a central removable ring"
+          },
+          {
+            "kind": "firsthand_collection",
+            "url": "https://www.cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzHorseShoes.html",
+            "use": "Assembly family and folding principle only; dimensions are not copied from its different versions"
+          },
+          {
+            "kind": "physical_demonstration",
+            "url": "https://www.youtube.com/watch?v=qgI7h2Gyk1w",
+            "use": "Reference manipulation principle; not a verified trajectory for these meshes"
+          },
+          {
+            "kind": "manufacturer_solution_video",
+            "url": "https://www.youtube.com/watch?v=LAE1w1VNIZg",
+            "author": "Professor Puzzle Ltd",
+            "use": "One independent chain link per span; turn, bring horseshoes together, transfer support, remove the ring"
+          }
+        ]
+      }
+    }
+  }
+}

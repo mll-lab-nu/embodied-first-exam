@@ -1,0 +1,13 @@
+# Candidate: stabilize the free A tail, lift/shift the first upper strand,
+# then physically release and regrasp the exposed under-strand.
+task:
+  variant: double_overhand_open_v1
+  route_profile: double_overhand_anchored_open_v3
+  reference_yaw_deg: 45.0
+  route_settings:
+    approach_finger_qpos_m: 0.018
+    preopen_upper_with_tail_anchor: true
+    preopen_lift_m: 0.06
+    preopen_shift_m: [0.12, 0.0, 0.0]
+    preopen_anchor_withdraw_m: [0.0, -0.06, 0.07]
+    maximum_regrasps: 4

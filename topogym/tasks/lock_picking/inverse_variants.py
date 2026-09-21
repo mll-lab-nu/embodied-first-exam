@@ -20,7 +20,8 @@ from omegaconf import OmegaConf
 from scipy.spatial.transform import Rotation
 
 from topogym.robot.assets import robot_asset
-from ._staged_lock_geometry import LockGeometry, write_disc, write_endpoint, write_key
+from ._staged_lock_geometry import LockGeometry, write_disc, write_endpoint, write_key, DISC_COLORS, ENDPOINT_COLOR
+from ._aperture_outline import paint_aperture_outline, disc_colors
 from .certificate import certificate
 from .grasp import hand_pose
 
@@ -221,14 +222,18 @@ class ArmIK:
 
 
 def export_assets(g, stops, cfg, folder):
-    colors = ((.76, .53, .23), (.2, .43, .6), (.72, .34, .22))
+    colors = disc_colors(cfg.task)
+    finish = cfg.task.get('visual', {}).get('plate_finish')
+    outline = cfg.task.get('visual', {}).get('aperture_outline')
     floor = float(cfg.env.frames.table_surface.origin[2])
     for i in range(3):
-        write_disc(g, g.slots[i], folder / f"disc{i}", float(cfg.task.physics.disc_mass),
+        path = write_disc(g, g.slots[i], folder / f"disc{i}", float(cfg.task.physics.disc_mass),
                    float(cfg.task.physics.disc_damping), colors[i], stop=stops[i],
                    mount_z=floor + .028 - g.axis_z)
+        paint_aperture_outline(path, g, g.slots[i], colors[i], outline, finish=finish)
     write_key(g, folder / "key", float(cfg.task.physics.key_mass))
-    write_endpoint(g, folder / "endpoint")
+    path = write_endpoint(g, folder / "endpoint")
+    paint_aperture_outline(path, g, (g.endpoint_deg,), ENDPOINT_COLOR, outline, goal_plate=True)
 
 
 def build(source=SOURCE, output=OUTPUT):

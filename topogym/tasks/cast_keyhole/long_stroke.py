@@ -101,6 +101,14 @@ def infer(data,trace,folder):
     stock=gold.union(box(.2,right_bottom,8.2,-6.5))
     stock=stock.difference(box(-5.6,left_top,-.2,-12.5))
     stock=stock.union(box(-5.6,-17.1-extra,-.2,-17.1))
+    # At larger versioned strokes the extended tooth encloses an unused pocket.
+    # Fill stock BEFORE machining, so the full conservative motion sweep still
+    # removes every point needed by the moving piece.
+    pocket_area = 0.
+    if data.get("fill_stock_pockets", False):
+        filled = Polygon(stock.exterior)
+        pocket_area = filled.area - stock.area
+        stock = filled
     sweep,sampling=sweep_polygons(trace)
     carved=stock.difference(sweep).simplify(.025,preserve_topology=True)
     if carved.geom_type!="Polygon" or len(carved.interiors) or not carved.is_valid:
@@ -116,6 +124,8 @@ def infer(data,trace,folder):
         inferred_right_tooth_bottom_mm=right_bottom,inferred_left_tooth_top_mm=left_top,
         gold_area_before_mm2=gold.area,gold_area_after_mm2=carved.area,
         removed_area_mm2=gold.difference(carved).area,added_area_mm2=carved.difference(gold).area)
+    if data.get("fill_stock_pockets", False):
+        record["filled_stock_pockets_mm2"] = pocket_area
     save(folder/"geometry.json",record)
     meshes,cells=geometry_from_record(record);audits=[]
     for name,mesh,parts,euler in zip(("gold","silver"),meshes,cells,(2,0)):

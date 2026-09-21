@@ -1,0 +1,62 @@
+schema_version: 1
+task_id: orbits
+task_number: 13
+title_zh: Orbits 四环阶梯解绳
+reference:
+  url: https://www.youtube.com/watch?v=B-EB9Q-JqXA
+  author: SiamMandalay
+  title: Disentanglement Solution to Orbits puzzle from SiamMandalay®
+  reconstruction: video_reconstruction_v1
+  dimensions: authored metric estimates; video has no measured dimensions
+  ring_count: 4
+baseline:
+  uniform_scale: 0.75
+  dimension_convention: geometry lengths below are nominal; multiply by uniform_scale for the current scene
+  ring_count: 4
+  ring_radius_m: 0.066
+  ring_tube_radius_m: 0.008
+  ring_step_m: 0.068
+  post_radius_m: 0.0048
+  cord_radius_m: 0.0022
+  ball_radius_m: 0.024
+axes:
+  - {path: ring_radius_m, unit: m, status: candidate, validated_range: null}
+  - {path: ring_step_m, unit: m, status: candidate, validated_range: null}
+  - {path: cord_radius_m, unit: m, status: candidate, validated_range: null}
+assets:
+  - {status: local_source, location: topogym/tasks/orbits/geometry.py}
+  - {status: local_source, location: assets/tasks/orbits/video_reconstruction_v1/source.json}
+physics:
+  backend: not_implemented
+  qualification: unqualified
+  profile_policy: fixed initial scene; task collisions disabled; zero simulation steps
+  grasp_model: not_implemented
+initialization:
+  description: four descending fixed wooden rings and five posts; each ring surrounds the preceding taller post; yellow bight surrounds only the last post below the lowest ring; two tails lead to one wooden pull handle
+  terminal_convention: two authored eyes with frozen endpoints; hidden attachment is unresolved in video
+robot:
+  family: ALOHA
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+  - Wrong ring or post count; filled ring aperture; detached ring support
+  - Cord initially surrounds the wrong post or crosses solid wood
+  - Bight starts above the lowest ring or outside the fixture
+  - Video animation or static preview claimed as physical robot execution
+first_probe: implement continuous cord self-contact and handle attachments; verify stable initial contact and one bight-over-ring transition
+scene:
+  config: configs/orbits_preview.yaml
+  entrypoint: demos.environment_bootstrap.orbits
+  status: static_scene_inspection_only
+  physical_execution_verified: false
+  placement:
+    version: static_base_centered_v5
+    uniform_scale: 0.75
+    yaw_deg: 90
+    centering_reference: wooden_base_center
+    origin_xy_m: [-0.1356786, -0.019]
+    common_approach_targets_checked: 11
+    single_arm_poses_checked: 22
+    simultaneous_ring_poses_checked: 4
+    qualification: finite IK and static collision checks only; continuous paths and grasping unverified

@@ -1,0 +1,26 @@
+defaults:
+  - blanket_flatten_robot
+  - _self_
+
+task:
+  variant: suspended_fold_and_roll_v2
+  geometry:
+    fold_count: 3
+    fold_angle_deg: 105.0
+    fold_angle_jitter_deg: 8.0
+    roll_fold_count: 5
+    roll_angle_deg: 54.0
+    roll_angle_jitter_deg: 12.0
+    roll_direction: -1
+    panel_width_jitter: 0.35
+    crease_slant: 0.045
+    drop_clearance_m: 0.025
+    pitch_deg: 155.0
+    tilt_deg: 5.0
+    yaw_deg: 25.0
+    seed: 2
+    max_attempts: 256
+
+run:
+  mode: stability
+  output: runs/environment_bootstrap/blanket_flatten/fold_roll_low_seed2_v2

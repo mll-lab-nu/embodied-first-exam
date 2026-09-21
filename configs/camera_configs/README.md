@@ -3,6 +3,8 @@
 相机配置的统一消费入口是 `cfg.env.cameras`。本目录把可复用视角从环境几何和
 demo 中拆出，Hydra 将所选预设合并到 `env`。
 
+[`blanket_flatten_recording.yaml`](blanket_flatten_recording.yaml) 是被子完整动作回放的斜视机位增量，让悬空出生的整张布面入镜。与源配置合并后仍保留 `agentview / front_oblique / wrist` 三路，使用方式见[被子任务文档](../../docs/develop/tasks/blanket_flatten_zh.md)。
+
 | 位置 | 职责 |
 | --- | --- |
 | [`topogym/world/tabletop.py`](../../topogym/world/tabletop.py) | 创建固定相机；按 `attach.entity/link` 绑定腕部相机 |

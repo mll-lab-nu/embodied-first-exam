@@ -47,9 +47,14 @@ def main():
         version_base=None,
     ):
         cfg = compose(config_name="cast_coil_aloha")
-    cfg.task.center_xy_m = [-0.1356786, 0.05]
-    cfg.task.yaw_deg = 90
+    if plan.get("task_config") is not None:
+        OmegaConf.set_struct(cfg.task, False)
+        cfg.task = OmegaConf.merge(cfg.task, plan["task_config"])
+    cfg.task.yaw_deg = plan.get("yaw_deg", 90)
     cfg.task.initial_floor_clearance_m = 0.0
+    OmegaConf.set_struct(cfg.task, False)
+    cfg.task.objective = plan.get("objective", "disassemble")
+    cfg.task.initial_body_poses = plan.get("initial_poses")
     if "template" in plan:
         (out / "input_template.json").write_text(json.dumps(plan["template"], indent=2))
         OmegaConf.set_struct(cfg.task, False)
@@ -90,6 +95,7 @@ def main():
         "scene.py",
         "inverse_design.py",
         "appearance.py",
+        "assembly_task.py",
     ):
         (out / ("source_" + name)).write_text(
             Path(__file__).with_name(name).read_text()
@@ -403,6 +409,9 @@ def main():
         return frames
 
     try:
+        from topogym.tasks.cast_coil.assembly_task import goal_metrics, xy_surface_gaps
+        result["initial_xy_surface_gap_m"] = xy_surface_gaps(assembly, [(r,p) for p,r in [pose(0),pose(1)]])
+        result["initial_xy_center_delta_m"] = (pose(1)[0]-pose(0)[0])[:2].tolist()
         capture_physical_frame()
         if writers:
             render()
@@ -482,9 +491,12 @@ def main():
         )
         speeds = [float(np.linalg.norm(arr(b.get_vel()))) for b in bodies]
         angular = [float(np.linalg.norm(arr(b.get_ang()))) for b in bodies]
+        metrics = goal_metrics(pg, rg, ps, rs)
+        reached = metrics["goal_assembled"] if cfg.task.objective == "assemble" else separation > .01
+        result.update(metrics)
         result.update(
             success=bool(
-                separation > 0.01 and max(speeds) < 0.001 and max(angular) < 0.02
+                reached and max(speeds) < 0.001 and max(angular) < 0.02
             ),
             complete=True,
             final_separation_m=separation,
@@ -497,12 +509,11 @@ def main():
     finally:
         remaining = active_grasps(solver, bodylinks)
         if remaining:
-            result.update(
-                success=False,
-                complete=False,
-                error="Physical grasp constraints remain active",
-            )
+            result.update(success=False, complete=False,
+                          cleanup_error="Physical grasp constraints remain active")
+            result.setdefault("error", "Physical grasp constraints remain active")
         result.update(
+            objective=cfg.task.objective,
             scope="bimanual pregrasp instance; physical execution with bilateral-contact-gated weld assistance",
             geometry_modified=False,
             geometry_variant=assembly.template["template_id"],
@@ -514,7 +525,7 @@ def main():
             route_phases=[m["name"] for m in plan["geometric_audit"]["route"]],
             backend=args.backend,
             initial_layout_changed=True,
-            initial_yaw_deg=90,
+            initial_yaw_deg=float(cfg.task.yaw_deg),
             live_object_pose_writes=False,
             live_robot_pose_writes=False,
             grasp_assistance="temporary hand/body welds enabled after simultaneous bilateral finger contacts; removed before release",

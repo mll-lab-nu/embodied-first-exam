@@ -1,4 +1,4 @@
-"""Render the complete horseshoe kinematic rehearsal and synchronized ALOHA views."""
+"""Solve with gravity, audit a legacy trace, or explicitly render a rehearsal."""
 import argparse
 from contextlib import ExitStack
 import hashlib
@@ -22,15 +22,50 @@ def main():
     from .scene import build_scene
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("cpu", "cuda"), default="cuda")
-    parser.add_argument("--renderer", choices=("rasterizer", "nyx"), default="nyx")
+    parser.add_argument("--backend", choices=("cpu", "cuda"))
+    parser.add_argument("--renderer", choices=("rasterizer", "nyx"))
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--mode", choices=("physics", "audit", "kinematic"), default="physics",
+                        help="Default: replan and solve with gravity; audit checks the old trace; kinematic is a zero-step rehearsal")
+    parser.add_argument("--dt", type=float, default=.002, help="Time step for the replanned physical solution")
     parser.add_argument("--initial-only", action="store_true")
     parser.add_argument("--keyframes-only", action="store_true")
     parser.add_argument("--motion", type=Path)
     parser.add_argument("--config-path", type=Path, help="Resolved per-instance config for a generated scene")
     parser.add_argument("--camera-only", choices=("cam_low",), help="Update the low view and mosaic of an existing complete export")
     args = parser.parse_args()
+    preview = args.initial_only or args.keyframes_only or args.camera_only
+    args.backend = args.backend or ("cpu" if args.mode == "physics" and not preview else "cuda")
+    args.renderer = args.renderer or ("rasterizer" if args.backend == "cpu" else "nyx")
+    if args.mode == "physics" and not (args.initial_only or args.keyframes_only or args.camera_only):
+        if args.motion or args.config_path:
+            parser.error("The physical solver currently supports the packaged tutorial_solvable_v3 seed; use --mode audit for a custom legacy trace")
+        if args.backend != "cpu" or args.renderer != "rasterizer":
+            parser.error("The qualified physical solver uses --backend cpu --renderer rasterizer")
+        import subprocess
+        import sys
+        output = args.output or ROOT / "runs/environment_bootstrap/horseshoe_ring/aloha_physical"
+        subprocess.run([sys.executable, "-m", "topogym.tasks.horseshoe_ring.physical_demo",
+                        "--output", str(output), "--dt", str(args.dt)], check=True)
+        subprocess.run([sys.executable, "-m", "topogym.tasks.horseshoe_ring.render_physical",
+                        str(output), "--output", str(output / "recording")], check=True)
+        return
+    if args.mode == "audit" and not preview:
+        import subprocess
+        import sys
+        from .gravity_demo import DEFAULT_MOTION
+        output = args.output or ROOT / "runs/environment_bootstrap/horseshoe_ring/aloha_gravity"
+        command = [sys.executable, "-m", "topogym.tasks.horseshoe_ring.gravity_demo",
+                   "--mode", "trace", "--output", str(output), "--backend", args.backend,
+                   "--motion", str(args.motion or DEFAULT_MOTION)]
+        if args.config_path:
+            command += ["--config-path", str(args.config_path)]
+        subprocess.run(command, check=True)
+        # Render actual states even when the old IK trace fails in physics.
+        # A failed audit is never silently replaced with the geometric witness.
+        subprocess.run([sys.executable, "-m", "topogym.tasks.horseshoe_ring.render_gravity",
+                        str(output), "--cameras", "detail", *CAMERA_NAMES], check=True)
+        return
     if args.config_path:
         cfg = OmegaConf.load(args.config_path)
         cfg.env.genesis.backend = args.backend

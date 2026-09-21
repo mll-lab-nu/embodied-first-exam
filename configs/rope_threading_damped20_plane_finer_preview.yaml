@@ -1,0 +1,16 @@
+# Finer candidate after isolating contact and solver parameter sensitivity.
+# Uses the finite-footprint analytic tabletop, with the original coefficients.
+defaults:
+  - rope_threading_damped20_plane_diagnostic
+  - _self_
+
+task:
+  geometry:
+    rope_subdivisions: 8
+    radial_segments: 20
+  rope:
+    mesh:
+      maxvolume: 5.0e-9
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_plane_finer_candidate

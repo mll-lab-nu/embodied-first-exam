@@ -1,0 +1,15 @@
+defaults:
+  - buzz_wire_3d_compact_wood
+  - _self_
+task:
+  geometry:
+    finish: toy_wood_copper
+    end_stop_shape: block_mount
+    end_stop_radius_m: 0.023
+    mount_size_m: [0.030, 0.030, 0.014]
+    post_radius_m: 0.0
+    post_height_m: 0.0
+robot_demo:
+  instance_id: baseline_compact_toy_s70_v2
+run:
+  output: runs/environment_bootstrap/buzz_wire_3d/baseline_compact_toy_s70_v2

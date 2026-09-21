@@ -1,0 +1,429 @@
+{
+  "family": "baseline",
+  "instance_id": "baseline_compact_toy_s70_v2",
+  "scope": "photo-style wooden toy scene; no full robot execution",
+  "passed": true,
+  "geometry": {
+    "schema_version": 1,
+    "template": "spatial_maze_robot_v3",
+    "sections": {
+      "horizontal_switchbacks": {
+        "start_progress": 0.0,
+        "end_progress": 0.6049934045332352
+      },
+      "vertical_switchbacks": {
+        "start_progress": 0.6049934045332352,
+        "end_progress": 0.7169852084092653
+      },
+      "spiral": {
+        "start_progress": 0.7169852084092653,
+        "end_progress": 1.0
+      }
+    },
+    "layout": {
+      "template_id": "spatial_maze_robot_v3",
+      "authored_controls_m": [],
+      "authored_section_ends": [],
+      "orientation_knots_wxyz": [],
+      "center_offset_knots_m": [],
+      "base_size_m": [
+        0.5201,
+        0.3689,
+        0.017499999999999998
+      ],
+      "spiral_exit_roll_deg": 150,
+      "spiral_exit_roll_start": 0.965,
+      "spiral_exit_roll_end": 0.995,
+      "spiral_normal_tilt_deg": 0,
+      "normal_tilt_knots": [
+        [
+          0.0,
+          -5.897341983553968e-06
+        ],
+        [
+          0.0033333333333333335,
+          -0.07963084571322988
+        ],
+        [
+          0.006666666666666667,
+          -10.358781834339279
+        ],
+        [
+          0.01,
+          -18.613323046585677
+        ],
+        [
+          0.04,
+          -20.680496559334976
+        ],
+        [
+          0.12000000000000001,
+          -25.456983431757095
+        ],
+        [
+          0.12666666666666668,
+          -25.635226397855185
+        ],
+        [
+          0.13,
+          -26.02264270103854
+        ],
+        [
+          0.13333333333333333,
+          -26.982102437462217
+        ],
+        [
+          0.1366666666666667,
+          -26.952399563344432
+        ],
+        [
+          0.14,
+          -24.794172950973305
+        ],
+        [
+          0.14333333333333334,
+          -17.412896047088783
+        ],
+        [
+          0.14666666666666667,
+          -5.872783587369756
+        ],
+        [
+          0.15000000000000002,
+          -0.475922069293693
+        ],
+        [
+          0.15333333333333335,
+          -0.011881001108057291
+        ],
+        [
+          0.3433333333333334,
+          -0.011996021121886951
+        ],
+        [
+          0.3466666666666667,
+          -0.7101723778238606
+        ],
+        [
+          0.35000000000000003,
+          -8.779674848777871
+        ],
+        [
+          0.35333333333333333,
+          -20.416900800206403
+        ],
+        [
+          0.3566666666666667,
+          -24.9397166872207
+        ],
+        [
+          0.36000000000000004,
+          -26.747360537629696
+        ],
+        [
+          0.3666666666666667,
+          -27.228817188609902
+        ],
+        [
+          0.42333333333333334,
+          -41.78582287625541
+        ],
+        [
+          0.44333333333333336,
+          -45.96764236418898
+        ],
+        [
+          0.45333333333333337,
+          -47.333461374457926
+        ],
+        [
+          0.46,
+          -49.159752536375166
+        ],
+        [
+          0.4633333333333334,
+          -47.92949388649587
+        ],
+        [
+          0.4666666666666667,
+          -43.35948459621458
+        ],
+        [
+          0.47000000000000003,
+          -31.836536050400134
+        ],
+        [
+          0.4766666666666667,
+          -10.483096470263506
+        ],
+        [
+          0.48000000000000004,
+          -1.8590551931793091
+        ],
+        [
+          0.48333333333333334,
+          -0.06262193070958529
+        ],
+        [
+          0.6566666666666667,
+          -0.20949570744267546
+        ],
+        [
+          0.6633333333333333,
+          -0.8756548756081631
+        ],
+        [
+          0.6766666666666667,
+          -4.438714976593201
+        ],
+        [
+          0.6833333333333333,
+          -5.138799292347733
+        ],
+        [
+          0.6866666666666668,
+          -5.114675622582534
+        ],
+        [
+          0.6900000000000001,
+          -4.405981568152217
+        ],
+        [
+          0.6933333333333334,
+          -1.4747834159091393
+        ],
+        [
+          0.6966666666666667,
+          -0.49306208377798133
+        ],
+        [
+          0.7066666666666667,
+          -0.04279095375283243
+        ],
+        [
+          0.7233333333333334,
+          -0.003994347064759108
+        ],
+        [
+          0.7266666666666667,
+          -0.2783410082991684
+        ],
+        [
+          0.7300000000000001,
+          -6.297876465569295
+        ],
+        [
+          0.7333333333333334,
+          -19.412818920624204
+        ],
+        [
+          0.7366666666666667,
+          -34.88695615951177
+        ],
+        [
+          0.7400000000000001,
+          -51.02858698561409
+        ],
+        [
+          0.7433333333333334,
+          -65.61384284593758
+        ],
+        [
+          0.7466666666666667,
+          -64.32683119622286
+        ],
+        [
+          0.75,
+          -62.257249854165586
+        ],
+        [
+          0.7566666666666667,
+          -57.2966394832973
+        ],
+        [
+          0.7666666666666667,
+          -49.14166026754239
+        ],
+        [
+          0.7733333333333334,
+          -43.15175654614252
+        ],
+        [
+          0.7833333333333334,
+          -33.37814336909536
+        ],
+        [
+          0.81,
+          -5.044804383815254
+        ],
+        [
+          0.8133333333333334,
+          -2.3269605053578166
+        ],
+        [
+          0.8166666666666668,
+          -0.8152365075580204
+        ],
+        [
+          0.8200000000000001,
+          -0.23560358569019157
+        ],
+        [
+          0.8266666666666668,
+          -0.01625287886911561
+        ],
+        [
+          0.9800000000000001,
+          0.13060863322475266
+        ],
+        [
+          0.9833333333333334,
+          20.461560212887587
+        ],
+        [
+          0.9866666666666667,
+          45.4517675702377
+        ],
+        [
+          0.9900000000000001,
+          58.05108385991909
+        ],
+        [
+          0.9933333333333334,
+          65.070715613062
+        ],
+        [
+          0.9966666666666667,
+          65.61384284593758
+        ],
+        [
+          1.0,
+          65.13330508588686
+        ]
+      ],
+      "clearance_cover_m": 0.00035,
+      "middle_handle_roll_deg": 0.0,
+      "upright_handle_pitch_deg": 45,
+      "horizontal_scale": 0.42,
+      "depth_scale": 0.42,
+      "height_scale": 0.315,
+      "vertical_valley_lift_m": 0.0,
+      "wire_radius_m": 0.0014699999999999997,
+      "loop_radius_m": 0.015399999999999999,
+      "loop_tube_radius_m": 0.0012599999999999998,
+      "loop_segments": 64,
+      "stem_length_m": 0.01596,
+      "grip_length_m": 0.03052,
+      "grip_radius_m": 0.0049,
+      "grip_shape": "box",
+      "grip_half_thickness_m": 0.0034999999999999996,
+      "grip_flat_roll_deg": 258.85637123733466,
+      "end_stop_radius_m": 0.023,
+      "end_stop_shape": "block_mount",
+      "end_stop_thickness_m": 0.0028,
+      "rail_segment_m": 0.0034999999999999996,
+      "witness_step_m": 8.75e-05,
+      "end_reserve_m": 0.126,
+      "finish": "toy_wood_copper",
+      "post_radius_m": 0.0,
+      "post_height_m": 0.0,
+      "mount_size_m": [
+        0.03,
+        0.03,
+        0.014
+      ]
+    },
+    "rail_length_m": 1.7751318031242316,
+    "playable_length_m": 1.5231318031242316,
+    "rail_bounds_m": [
+      [
+        -0.2058759119147186,
+        -0.11763695536265036,
+        0.020649999999999998
+      ],
+      [
+        0.19587899895794217,
+        0.10919972277903964,
+        0.1859809695495836
+      ]
+    ],
+    "minimum_sampled_curvature_radius_m": 0.004011198207650685,
+    "rail_segments": 508,
+    "reference_poses": 17409,
+    "loop_inner_radius_m": 0.01414,
+    "nominal_radial_clearance_m": 0.01267,
+    "wand_mass_kg": 0.009702133280981929,
+    "wand_center_of_mass_m": [
+      0.008148161875630408,
+      -7.031514108167438e-19,
+      3.607906311658519e-22
+    ],
+    "wand_inertia_kg_m2": [
+      [
+        9.322080278792638e-07,
+        2.947441952696864e-23,
+        4.1234885827543456e-24
+      ],
+      [
+        2.947441952696864e-23,
+        3.7277506513774107e-06,
+        -1.0115890125776e-09
+      ],
+      [
+        4.1234885827543456e-24,
+        -1.0115890125776e-09,
+        4.632778854491565e-06
+      ]
+    ],
+    "finish": "toy_wood_copper",
+    "component_density_kg_m3": {
+      "grip": 650.0,
+      "loop_and_stem": 7800.0
+    },
+    "mass_model": "capsule mesh components plus exact rectangular grip",
+    "initial_pose": {
+      "position_m": [
+        -0.20579999999999998,
+        -0.11763455869497905,
+        0.14664969746468004
+      ],
+      "quaternion_wxyz": [
+        -0.6515316755992775,
+        0.27478441675393067,
+        0.2747843496930543,
+        0.651531703882294
+      ]
+    },
+    "reference_motion": "piecewise linear position + shortest quaternion SLERP; no physics claim"
+  },
+  "clearance": {
+    "passed": true,
+    "checks": {
+      "continuous_tool_clearance": true,
+      "threaded_throughout": true,
+      "genuinely_spatial": true,
+      "endpoints_captive": true
+    },
+    "scope": "geometric feasibility of full loop + stem + grip against rail + end stops + base",
+    "method": "capsule centreline sample covers + rigid-motion interval displacement bounds",
+    "cover_spacing_m": 0.00035,
+    "reference_poses": 17409,
+    "minimum_pose_clearance_lower_bound_m": 0.0013989619577124584,
+    "adaptive_midpoint_evaluations": 0,
+    "maximum_subdivision_depth": 0,
+    "maximum_interval_displacement_bound_m": 0.0004079304641024109,
+    "minimum_continuous_clearance_lower_bound_m": 0.0013488149825581777,
+    "worst_interval": 17350,
+    "best_fit_plane_rms_m": 0.032749616876288724,
+    "linking_numbers": [
+      1
+    ],
+    "robot_reachability_verified": false,
+    "physical_execution_verified": false,
+    "applies_to": "generated solids and piecewise linear / SLERP witness only; rectangular grips use a conservative enclosing capsule"
+  },
+  "robot_reachability_verified": false,
+  "physical_execution_verified": false,
+  "source_config": "/home/jianwen/topogym/assets/tasks/buzz_wire_3d/baseline_compact_wood_s70_v1/scene_config.yaml",
+  "base_collision": "two convex cut-corner tiers inside conservatively checked full box; block mounts inside checked spheres"
+}

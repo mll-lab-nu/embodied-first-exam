@@ -1,0 +1,15 @@
+# Continue spatial convergence with the same compressible material candidate.
+defaults:
+  - rope_threading_damped20_compressible_preview
+  - _self_
+
+task:
+  geometry:
+    rope_subdivisions: 10
+    radial_segments: 24
+  rope:
+    mesh:
+      maxvolume: 2.5e-9
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_compressible_fine_candidate

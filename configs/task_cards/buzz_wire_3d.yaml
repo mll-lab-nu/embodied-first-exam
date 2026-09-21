@@ -1,6 +1,42 @@
 schema_version: 1
 task_id: buzz_wire_3d
 title_zh: 立体电流棒
+# Preserve the historical planar probe baseline and its parameter contract.
+spatial_scene:
+  template_id: spatial_maze_v2
+  config: configs/buzz_wire_3d_preview.yaml
+  entrypoint: demos.environment_bootstrap.buzz_wire_3d
+  base_size_m: [1.18, 0.82, 0.045]
+  validation_scope: continuous geometry and bounded-wrench rigid fixture dynamics
+  evidence: runs/demo_metadata/buzz_wire_3d/2026-09-18_spatial_maze_fixture_v1/stability_report.json
+  demo: runs/demo_metadata/buzz_wire_3d/2026-09-18_spatial_maze_fixture_v1/index.html
+  control_dt_s: 0.004
+  integration_substeps: 16
+  constraint_timeconst_s: 0.001
+  timestep_refinement_verified: true
+  physical_traversal_verified: true
+  robot_execution_verified: false
+robot_scene:
+  template_id: spatial_maze_robot_v3
+  instance_id: compact_single_arm_v1
+  config: configs/buzz_wire_3d_robot.yaml
+  seed: assets/tasks/buzz_wire_3d/compact_single_arm_v1/robot_seed.json
+  base_size_m: [0.743, 0.527, 0.025]
+  maximum_wire_height_m: 0.26568709935654883
+  evidence: runs/demo_metadata/buzz_wire_3d/2026-09-18_compact_single_arm_v1/stability_report.json
+  demo: runs/demo_metadata/buzz_wire_3d/2026-09-18_compact_single_arm_v1/index.html
+  validation_scope: this compact instance and measured grasp feedback policy only
+  pregrasp_start: true
+  assisted_grasp: false
+  grasp_method: friction
+  robot_execution_verified: true
+  timestep_refinement_verified: true
+  release: after final bend; gravity slide to terminal stop
+  control_dt_s: 0.004
+  integration_substeps: 16
+  constraint_timeconst_s: 0.0005
+  noslip_iterations: 100
+  noslip_tolerance: 1.0e-12
 baseline:
   path_template_id: straight_then_planar_bend_probe
   wire_radius_m: 0.004
@@ -26,10 +62,9 @@ physics:
   backend: genesis_1.2.1_rigid
   qualification: unqualified
   profile_policy: fixed per probe; save actual solver settings with results
-  grasp_model: explicit assisted grasp only after contact, when applicable
+  grasp_model: compact single-arm instance uses contact friction without assisted grasp; legacy probes retain their declared setup
 initialization:
-  description: ring prethreaded; dynamic ring/handle; guide fixed; bench actuator
-    disclosed
+  description: compact single-arm instance starts prethreaded and pregrasped; dynamic ring/handle; guide fixed; historical bench actuator disclosed separately
 robot:
   family: Panda + Robotiq 2F-85
   arms: 1

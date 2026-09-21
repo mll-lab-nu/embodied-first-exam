@@ -1,0 +1,64 @@
+{
+  "version": "cast_keyhole_seed_v2",
+  "families": {
+    "F1": {
+      "directory": "F1",
+      "geometry_sha256": "90ca0ec73617ea5f1e108c9a1bdc6e86416b4464bbff6a490240c0dd6cfd0844",
+      "motion_sha256": "251cd6fb5f8c2ad19353a4753dfdc27b3c8b148e9e71f0ae50dc30cf2f66385d",
+      "styles": [
+        "A",
+        "B",
+        "C"
+      ],
+      "motion_feature": "50.88 mm longitudinal tooth passage"
+    },
+    "F2": {
+      "directory": "F2",
+      "geometry_sha256": "b9a3e81f5cd907b0b6a3660bbd03768e7c54ecd2c8ba108f3e693c3b7a2c0697",
+      "motion_sha256": "4083cbba2a835f8365c066fd27fd646590ee6ada5d6c1546aab10746923fecab",
+      "styles": [
+        "A",
+        "B",
+        "C"
+      ],
+      "motion_feature": "24 mm lateral and 12 mm upward cap detour"
+    },
+    "F3": {
+      "directory": "F3",
+      "geometry_sha256": "f7d0ec58cdbf3870dbb698f7a7d4f039d3e59756b27304c1f5d561efa756ee14",
+      "motion_sha256": "63ca1e47733a3d39e28a908d17fb8e0379d8803d9e08b5ce7bbf98e95d9d4320",
+      "styles": [
+        "A",
+        "B",
+        "C"
+      ],
+      "motion_feature": "25 degree chamber turn followed by 25.5 mm return"
+    }
+  },
+  "files": {
+    "F1/certificate.json": "4e9e56a5f5017f1a3132960e609c997eedb27422a3dd33740e797848b78b2c21",
+    "F1/geometry.json": "90ca0ec73617ea5f1e108c9a1bdc6e86416b4464bbff6a490240c0dd6cfd0844",
+    "F1/ik_proposal.json": "39a98a3a2d822f121d426f8d13976404cda7b124a7a7cbf0b3b9c4687a6c2e02",
+    "F1/proposal.json": "6d7825f71c96c31f87ebdc7562315de26c5b9efa6e5b987e52f8b22e9dec94bd",
+    "F1/robot_motion.json": "251cd6fb5f8c2ad19353a4753dfdc27b3c8b148e9e71f0ae50dc30cf2f66385d",
+    "F2/certificate.json": "a48d4998d0293c49f707f4d89716212a3d31da3da5634a20ed3dec72476ed2b1",
+    "F2/geometry.json": "b9a3e81f5cd907b0b6a3660bbd03768e7c54ecd2c8ba108f3e693c3b7a2c0697",
+    "F2/ik_proposal.json": "0a6c0c56e564382f975fe825a4a4d2f16f4574239030e926f55cf1370ebde7e4",
+    "F2/proposal.json": "79ce580a2b3028ab6703fbc813a78b0d085912d8b10cabc0886cf59d378e15f3",
+    "F2/robot_motion.json": "4083cbba2a835f8365c066fd27fd646590ee6ada5d6c1546aab10746923fecab",
+    "F3/certificate.json": "9625a8905286796aa2206d7c45e2babeded5a0bc441a3c859a2a40e4e685a20d",
+    "F3/geometry.json": "f7d0ec58cdbf3870dbb698f7a7d4f039d3e59756b27304c1f5d561efa756ee14",
+    "F3/ik_proposal.json": "9af31190d4d8e9083d1211bfe95ede54fd3d4487d277d5628c382a242e6780bb",
+    "F3/proposal.json": "1edbd8b25580683d1e65dc4ffcd8850bc7fc4ecaba22bd0893ef120b2f44a033",
+    "F3/robot_motion.json": "63ca1e47733a3d39e28a908d17fb8e0379d8803d9e08b5ce7bbf98e95d9d4320",
+    "baseline_robot_motion.json": "1248b002d4aac66c1a9655113d6bece99f8e02ac239ffbba61146d3aa392bd41"
+  },
+  "macro_design_frozen": true,
+  "qualification_scope": "geometry_and_robot_checked_cores",
+  "all_parameter_combinations_physics_verified": false,
+  "source_directories": {
+    "F1": "/home/jianwen/topogym/runs/environment-solvability/cast_keyhole/generator_v2_probe/F1_v2",
+    "F2": "/home/jianwen/topogym/runs/environment-solvability/cast_keyhole/generator_v2_probe/F2_v2",
+    "F3": "/home/jianwen/topogym/runs/environment-solvability/cast_keyhole/turnback_v1"
+  }
+}

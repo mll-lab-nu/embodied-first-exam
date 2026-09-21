@@ -1,0 +1,2463 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="cage">
+  <link name="cage">
+    <inertial>
+      <origin xyz="0.0541455154143 0.00233239666263 -0.0159880947667" />
+      <mass value="3.0921963715498353" />
+      <inertia ixx="0.030311449641889296" iyy="0.056279719129273355" izz="0.037708179261500045" ixy="-0.0009434150896846576" ixz="0.007013264900179406" iyz="-0.00019865492748965172" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="cage.glb" />
+      </geometry>
+      <material name="wood">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_000.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_001.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_002.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_003.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_004.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_005.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_006.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_007.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_008.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_009.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_010.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_011.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_012.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_013.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_014.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_015.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_016.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_017.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_018.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_019.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_020.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_021.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_022.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_023.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_024.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_025.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_026.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_027.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_028.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_029.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_030.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_031.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_032.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_033.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_034.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_035.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_036.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_037.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_038.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_039.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_040.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_041.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_042.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_043.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_044.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_045.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_046.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_047.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_048.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_049.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_050.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_051.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_052.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_053.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_054.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_055.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_056.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_057.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_058.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_059.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_060.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_061.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_062.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_063.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_064.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_065.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_066.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_067.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_068.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_069.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_070.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_071.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_072.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_073.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_074.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_075.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_076.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_077.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_078.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_079.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_080.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_081.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_082.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_083.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_084.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_085.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_086.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_087.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_088.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_089.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_090.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_091.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_092.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_093.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_094.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_095.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_096.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_097.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_098.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_099.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_100.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_101.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_102.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_103.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_104.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_105.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_106.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_107.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_108.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_109.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_110.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_111.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_112.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_113.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_114.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_115.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_116.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_117.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_118.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_119.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_120.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_121.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_122.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_123.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_124.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_125.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_126.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_127.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_128.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_129.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_130.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_131.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_132.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_133.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_134.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_135.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_136.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_137.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_138.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_139.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_140.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_141.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_142.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_143.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_144.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_145.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_146.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_147.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_148.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_149.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_150.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_151.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_152.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_153.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_154.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_155.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_156.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_157.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_158.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_159.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_160.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_161.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_162.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_163.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_164.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_165.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_166.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_167.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_168.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_169.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_170.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_171.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_172.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_173.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_174.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_175.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_176.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_177.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_178.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_179.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_180.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_181.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_182.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_183.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_184.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_185.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_186.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_187.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_188.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_189.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_190.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_191.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_192.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_193.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_194.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_195.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_196.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_197.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_198.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_199.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_200.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_201.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_202.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_203.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_204.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_205.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_206.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_207.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_208.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_209.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_210.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_211.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_212.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_213.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_214.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_215.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_216.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_217.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_218.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_219.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_220.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_221.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_222.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_223.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_224.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_225.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_226.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_227.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_228.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_229.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_230.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_231.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_232.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_233.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_234.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_235.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_236.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_237.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_238.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_239.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_240.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_241.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_242.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_243.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_244.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_245.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_246.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_247.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_248.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_249.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_250.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_251.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_252.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_253.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_254.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_255.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_256.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_257.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_258.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_259.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_260.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_261.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_262.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_263.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_264.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_265.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_266.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_267.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_268.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_269.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_270.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_271.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_272.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_273.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_274.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_275.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_276.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_277.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_278.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_279.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_280.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_281.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_282.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_283.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_284.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_285.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_286.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_287.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_288.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_289.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_290.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_291.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_292.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_293.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_294.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_295.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_296.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_297.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_298.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_299.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_300.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_301.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_302.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_303.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_304.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_305.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_306.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_307.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_308.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_309.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_310.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_311.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_312.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_313.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_314.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_315.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_316.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_317.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_318.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_319.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_320.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_321.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_322.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_323.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_324.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_325.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_326.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_327.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_328.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_329.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_330.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_331.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_332.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_333.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_334.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_335.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_336.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_337.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_338.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_339.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_340.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_341.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_342.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_343.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_344.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_345.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_346.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_347.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_348.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_349.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_350.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_351.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_352.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_353.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_354.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_355.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_356.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_357.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_358.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_359.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_360.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_361.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_362.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_363.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_364.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_365.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_366.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_367.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_368.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_369.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_370.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_371.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_372.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_373.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_374.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_375.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_376.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_377.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_378.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_379.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_380.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_381.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_382.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_383.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_384.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_385.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_386.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_387.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_388.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_389.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_390.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_391.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_392.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_393.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_394.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_395.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_396.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_397.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_398.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_399.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_400.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_401.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_402.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_403.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_404.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_405.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_406.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_407.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_408.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_409.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_410.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_411.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_412.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_413.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_414.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_415.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_416.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_417.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_418.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_419.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_420.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_421.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_422.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_423.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_424.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_425.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_426.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_427.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_428.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_429.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_430.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_431.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_432.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_433.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_434.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_435.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_436.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_437.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_438.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_439.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_440.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_441.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_442.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_443.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_444.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_445.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_446.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_447.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_448.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_449.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_450.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_451.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_452.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_453.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_454.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_455.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_456.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_457.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_458.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_459.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_460.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_461.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_462.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_463.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_464.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_465.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_466.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_467.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_468.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_469.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_470.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_471.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_472.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_473.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_474.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_475.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_476.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_477.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_478.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_479.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_480.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_481.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_482.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_483.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_484.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_485.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_486.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_487.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="cage_collision_488.obj" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

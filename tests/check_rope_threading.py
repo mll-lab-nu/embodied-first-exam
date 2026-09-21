@@ -13,6 +13,19 @@ from topogym.tasks.rope_threading.reference import REFERENCE
 
 
 class ThreadingChecks(unittest.TestCase):
+    def test_clearance_experiment_moves_only_rope_preserving_shape_and_fixtures(self):
+        base = ThreadingLayout()
+        raised = ThreadingLayout(rope_height_offset_m=.0009)
+        np.testing.assert_allclose(raised.centerline(), base.centerline()+[0, 0, .0009], atol=1e-12)
+        self.assertEqual(base.rings(), raised.rings())
+        with tempfile.TemporaryDirectory() as folder:
+            report = generate_assets(folder, raised)
+            self.assertAlmostEqual(report["table_surface_gap_m"], .0012, places=10)
+            self.assertAlmostEqual(report["rope_length_m"], 1.1, places=10)
+        for offset in (-.001, np.nan, np.inf):
+            with self.assertRaises(ValueError):
+                ThreadingLayout(rope_height_offset_m=offset)
+
     def test_withdrawn_robot_surface_must_clear_finite_aperture(self):
         ring = dict(center_m=[0, 0, 0], normal=[0, 0, 1], radius_m=.075, tube_radius_m=.006)
         faces = np.array([[0, 1, 2]])

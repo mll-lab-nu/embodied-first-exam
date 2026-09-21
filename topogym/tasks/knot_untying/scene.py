@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 
 from .geometry import KnotLayout, generate_assets
+from .families import template_variant
 
 
 def scene_options(backend, rope_cfg):
@@ -52,8 +53,10 @@ class KnotSceneBuilder:
         from topogym.world.genesis_ipc_vertex_constraints import _inverted_tets, _straighten_positions
 
         cfg = self.task_cfg
-        if cfg.variant != "trefoil_open_v1" or cfg.rope.model != "fem_ipc_tube" or cfg.rope.fem.rest_shape != "straight":
-            raise ValueError("Open-trefoil baseline requires FEM+IPC and a straight reference")
+        family = str(cfg.geometry.get('family', 'overhand_trefoil'))
+        if (cfg.variant != template_variant(family, cfg.get('route_profile')) or cfg.rope.model != "fem_ipc_tube"
+                or cfg.rope.fem.rest_shape != "straight"):
+            raise ValueError("Registered open-knot template requires FEM+IPC and a straight reference")
         try:
             import uipc  # noqa: F401
         except ImportError as exc:
@@ -94,7 +97,8 @@ class KnotSceneBuilder:
         path = Path(asset_dir).resolve()/"rope_world.obj"
         write_obj(path, vertices, faces)
         rope = base.manifest.add("knotted_rope", base.scene.add_entity(tube_morph(path, cfg.rope),
-            material=backend.material(), surface=gs.surfaces.Rough(color=(.86, .43, .12)), name="knotted_rope"))
+            material=backend.material(), surface=gs.surfaces.Rough(
+                color=tuple(cfg.get('rope_color_rgb', (.86, .43, .12)))), name="knotted_rope"))
         # The shared legacy patch can fall back to spawn rest on invalid tets.
         # Reject BEFORE build so this task can never quietly accept that fallback.
         spawn = np.asarray(tensor_to_numpy(rope.init_positions), dtype=float)

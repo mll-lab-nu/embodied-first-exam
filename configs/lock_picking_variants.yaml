@@ -1,0 +1,41 @@
+# Geometry/IK instances only: no dataset collection or physics execution.
+defaults:
+  - lock_picking_spaced_preview
+  - _self_
+task:
+  goal:
+    instruction: Insert the key through all three rotors and into the fixed goal aperture.
+  generator:
+    shape: true
+    position: true
+    appearance: true
+    anchor: M
+  randomization:
+    family_id: F1
+    radius_fraction: 0.5
+    pitch_fraction: 0.5
+    dx_m: 0.0
+    dy_m: 0.0
+    dz_m: 0.0
+    palette_id: purple_blue
+    roughness: 0.45
+    metallic: 0.35
+  variation:
+    - {kind: choice, path: randomization.family_id, values: [F1, F2, F3]}
+    - {kind: uniform, path: randomization.radius_fraction, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: randomization.pitch_fraction, lo: 0.0, hi: 1.0}
+    - {kind: uniform, path: randomization.dx_m, lo: -0.005, hi: 0.005}
+    - {kind: uniform, path: randomization.dy_m, lo: -0.005, hi: 0.005}
+    - {kind: uniform, path: randomization.dz_m, lo: -0.002, hi: 0.002}
+    - {kind: choice, path: randomization.palette_id, values: [purple_blue, teal_plum, slate_rust]}
+    - {kind: uniform, path: randomization.roughness, lo: 0.35, hi: 0.6}
+    - {kind: uniform, path: randomization.metallic, lo: 0.2, hi: 0.55}
+    - {kind: derived, fn: 'topogym.tasks.lock_picking.variants:derive'}
+    - {kind: validate, fn: 'topogym.tasks.lock_picking.variants:validate_parameters', max_retries: 0}
+run:
+  output: runs/environment-solvability/lock_picking/generated
+  record_cameras: [agentview, front_oblique, wrist]
+  exterior_cameras: [agentview, front_oblique]
+  inspect_only: true
+recording:
+  enabled: false

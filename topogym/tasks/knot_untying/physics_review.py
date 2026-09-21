@@ -1,6 +1,5 @@
-"""Build a review page from completed evidence, keeping unrun gates explicit."""
+"""Summarize completed evidence in Markdown/JSON, keeping unrun gates explicit."""
 import argparse
-import html
 import json
 from pathlib import Path
 
@@ -159,9 +158,9 @@ def write_review(root):
                         failed.append(key)
                 plot_trace(folder)
                 details = f"{report.get('simulated_seconds', 0):.3f} s; " + (', '.join(failed) or 'Local checks passed')
-                link = f'<a href="{name}/report.json">report</a>'
+                link = f'[report]({name}/report.json)'
                 if (folder/'diagnostics.png').exists():
-                    link += f' · <a href="{name}/diagnostics.png">plot</a>'
+                    link += f' · [plot]({name}/diagnostics.png)'
             else:
                 state = 'running' if (folder/'progress.json').exists() else 'not_run'
                 details, link = '尚无完整验收结果', ''
@@ -169,8 +168,7 @@ def write_review(root):
                     progress = json.loads((folder/'progress.json').read_text())
                     details = f"已观察 {progress['time_s']:.3f} s"
             experiments[name] = dict(phase=phase, status=state)
-            rows.append(f'<tr><td>{phase}</td><td>{name}</td><td class="{state}">{state}</td>'
-                        f'<td>{html.escape(details)}</td><td>{link}</td></tr>')
+            rows.append(f'| {phase} | {name} | {state} | {details.replace(chr(124), "/")} | {link} |')
     comparisons = {}
     for mode in ('free', 'feed'):
         base = root/('free_settle_0' if mode == 'free' else 'feed_release_0')
@@ -191,18 +189,18 @@ def write_review(root):
             plot_trace(folder)
             details = (str(report.get('error')) if report.get('error') else
                        f"{report.get('simulated_seconds', 0):.3f} s; local passed={report.get('passed', False)}")
-            link = f'<a href="{html.escape(folder.name)}/report.json">report</a>'
+            link = f'[report]({folder.name}/report.json)'
             if (folder/'diagnostics.png').exists():
-                link += f' · <a href="{html.escape(folder.name)}/diagnostics.png">plot</a>'
+                link += f' · [plot]({folder.name}/diagnostics.png)'
             auxiliary[folder.name] = dict(completed=True, error=report.get('error'),
                                          local_checks_passed=report.get('passed', False))
         elif (folder/'progress.json').exists():
             details = '运行中'
-            link = f'<a href="{html.escape(folder.name)}/progress.json">progress</a>'
+            link = f'[progress]({folder.name}/progress.json)'
             auxiliary[folder.name] = dict(completed=False)
         else:
             continue
-        auxiliary_rows.append(f'<tr><td>{html.escape(folder.name)}</td><td>{html.escape(str(details))}</td><td>{link}</td></tr>')
+        auxiliary_rows.append(f'| {folder.name} | {str(details).replace(chr(124), "/")} | {link} |')
     result = dict(complete_physics_suite_passed=all(phases.values()), phases=phases,
                   experiments=experiments, comparisons=comparisons,
                   auxiliary_probes=auxiliary,
@@ -218,25 +216,21 @@ def write_review(root):
             detail = f'RMS {rms:.3f} mm / max {maximum:.3f} mm'
         else:
             detail = comparison.get('reason', 'incomplete')
-        comparison_rows.append(f'<tr><td>{name}</td><td class="{state}">{state}</td><td>{html.escape(detail)}</td></tr>')
+        comparison_rows.append(f'| {name} | {state} | {detail} |')
     plot_refinement(root)
-    page = '''<!doctype html><meta charset="utf-8"><title>Trefoil physics qualification</title>
-<style>body{font:16px system-ui;max-width:1300px;margin:40px auto;padding:0 24px;background:#f6f7f9;color:#203040}
-table{border-collapse:collapse;width:100%;background:white}td,th{text-align:left;padding:12px;border-bottom:1px solid #ddd}
-.passed{color:#16803a}.failed{color:#b52525}.running{color:#ae6800}.not_run{color:#777}a{color:#126cb0}</style>
-<h1>三叶结物理验收</h1><p>逐子步原生状态、实际表面连续碰撞与求解收敛检查。
-下表逐项登记实际证据；未运行项目不计为通过。局部夹具测试不认证机器人抓持。</p>
-<p><a href="result.json">汇总 JSON</a></p>'''
-    page += '<p><strong>'+('完整物理验收通过' if result['complete_physics_suite_passed'] else '完整物理验收尚未通过')+'</strong> · '
-    page += ' / '.join(f'{phase}: '+('通过' if value else '未通过 / 未完成') for phase, value in phases.items())+'</p>'
+    page = '# 解绳结物理验收\n\n未运行项目不计为通过。局部夹具测试不认证机器人抓持。\n\n'
+    page += '[汇总 JSON](result.json)\n\n'
+    page += ('完整物理验收通过' if result['complete_physics_suite_passed'] else '完整物理验收尚未通过')+'\n\n'
+    page += ' / '.join(f'{phase}: '+('通过' if value else '未通过 / 未完成') for phase, value in phases.items())+'\n\n'
     if comparison_rows:
-        page += '<h2>数值精度对照</h2><p>所有关键停留态须满足 RMS &lt; 2 mm、max &lt; 5 mm。</p><table>'
-        page += '\n'.join(comparison_rows)+'</table>'
+        page += '## 数值精度对照\n\n所有关键停留态须满足 RMS < 2 mm、max < 5 mm。\n\n'
+        page += '| 对照 | 状态 | 结果 |\n| --- | --- | --- |\n'+'\n'.join(comparison_rows)+'\n\n'
     if (root/'refinement_comparison.png').exists():
-        page += '<p><a href="refinement_comparison.png"><img alt="网格加密对照" style="max-width:100%" src="refinement_comparison.png"></a></p>'
-    page += '<h2>独立物理实验</h2><table><tr><th>阶段</th><th>实验</th><th>状态</th><th>结果</th><th>证据</th></tr>'
-    (root/'index.html').write_text(page+'\n'.join(rows)+'</table><h2>诊断与接入试跑（不替代阶段验收）</h2><table>'
-                                 +'\n'.join(auxiliary_rows)+'</table>\n')
+        page += '[网格加密对照](refinement_comparison.png)\n\n'
+    page += '## 独立物理实验\n\n| 阶段 | 实验 | 状态 | 结果 | 证据 |\n| --- | --- | --- | --- | --- |\n'
+    page += '\n'.join(rows)+'\n\n## 诊断与接入试跑（不替代阶段验收）\n\n'
+    page += '| 实验 | 结果 | 证据 |\n| --- | --- | --- |\n'+'\n'.join(auxiliary_rows)+'\n'
+    (root/'README.md').write_text(page)
     return result
 
 

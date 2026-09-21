@@ -1,0 +1,2950 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="loop_wand">
+  <link name="wand">
+    <visual>
+      <origin xyz="0.0219470319934 0.00107818854363 0" rpy="0 1.57079632679 1.61988371201" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0219470319934 0.00107818854363 0" rpy="0 1.57079632679 1.61988371201" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0217356700778 0.0032241820858 0" rpy="0 1.57079632679 1.71805848243" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0217356700778 0.0032241820858 0" rpy="0 1.57079632679 1.71805848243" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0213149817775 0.00533912499198 0" rpy="0 1.57079632679 1.81623325286" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063926" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0213149817775 0.00533912499198 0" rpy="0 1.57079632679 1.81623325286" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063926" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0206890185507 0.00740264920582 0" rpy="0 1.57079632679 1.91440802328" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0206890185507 0.00740264920582 0" rpy="0 1.57079632679 1.91440802328" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406392" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0198638087655 0.0093948818611 0" rpy="0 1.57079632679 2.01258279371" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063913" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0198638087655 0.0093948818611 0" rpy="0 1.57079632679 2.01258279371" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063913" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0188472996432 0.0112966366683 0" rpy="0 1.57079632679 2.11075756413" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063926" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0188472996432 0.0112966366683 0" rpy="0 1.57079632679 2.11075756413" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063926" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0176492807223 0.013089598689 0" rpy="0 1.57079632679 2.20893233456" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0176492807223 0.013089598689 0" rpy="0 1.57079632679 2.20893233456" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.01628128958 0.0147565007189 0" rpy="0 1.57079632679 2.30710710498" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.01628128958 0.0147565007189 0" rpy="0 1.57079632679 2.30710710498" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0147565007189 0.01628128958 0" rpy="0 1.57079632679 2.4052818754" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0147565007189 0.01628128958 0" rpy="0 1.57079632679 2.4052818754" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.013089598689 0.0176492807223 0" rpy="0 1.57079632679 2.50345664583" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.013089598689 0.0176492807223 0" rpy="0 1.57079632679 2.50345664583" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0112966366683 0.0188472996432 0" rpy="0 1.57079632679 2.60163141625" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063895" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0112966366683 0.0188472996432 0" rpy="0 1.57079632679 2.60163141625" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063895" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0093948818611 0.0198638087655 0" rpy="0 1.57079632679 2.69980618668" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0093948818611 0.0198638087655 0" rpy="0 1.57079632679 2.69980618668" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00740264920582 0.0206890185507 0" rpy="0 1.57079632679 2.7979809571" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00740264920582 0.0206890185507 0" rpy="0 1.57079632679 2.7979809571" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00533912499198 0.0213149817775 0" rpy="0 1.57079632679 2.89615572753" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.00215897767040639" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00533912499198 0.0213149817775 0" rpy="0 1.57079632679 2.89615572753" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.00215897767040639" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0032241820858 0.0217356700778 0" rpy="0 1.57079632679 2.99433049795" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063904" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0032241820858 0.0217356700778 0" rpy="0 1.57079632679 2.99433049795" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063904" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00107818854363 0.0219470319934 0" rpy="0 1.57079632679 3.09250526838" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00107818854363 0.0219470319934 0" rpy="0 1.57079632679 3.09250526838" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="1.34711147906e-18 0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="1.34711147906e-18 0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00107818854363 0.0219470319934 0" rpy="0 1.57079632679 -3.09250526838" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00107818854363 0.0219470319934 0" rpy="0 1.57079632679 -3.09250526838" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="1.34711147906e-18 0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="1.34711147906e-18 0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0032241820858 0.0217356700778 0" rpy="0 1.57079632679 -2.99433049795" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406389" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0032241820858 0.0217356700778 0" rpy="0 1.57079632679 -2.99433049795" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406389" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00215637708725 0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00533912499198 0.0213149817775 0" rpy="0 1.57079632679 -2.89615572753" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406389" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00533912499198 0.0213149817775 0" rpy="0 1.57079632679 -2.89615572753" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406389" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00429198708435 0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00740264920582 0.0206890185507 0" rpy="0 1.57079632679 -2.7979809571" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063974" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00740264920582 0.0206890185507 0" rpy="0 1.57079632679 -2.7979809571" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063974" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0063862628996 0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0093948818611 0.0198638087655 0" rpy="0 1.57079632679 -2.69980618668" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0093948818611 0.0198638087655 0" rpy="0 1.57079632679 -2.69980618668" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00841903551203 0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0112966366683 0.0188472996432 0" rpy="0 1.57079632679 -2.60163141625" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0112966366683 0.0188472996432 0" rpy="0 1.57079632679 -2.60163141625" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0103707282102 0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.013089598689 0.0176492807223 0" rpy="0 1.57079632679 -2.50345664583" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063974" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.013089598689 0.0176492807223 0" rpy="0 1.57079632679 -2.50345664583" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063974" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0122225451264 0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0147565007189 0.01628128958 0" rpy="0 1.57079632679 -2.4052818754" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0147565007189 0.01628128958 0" rpy="0 1.57079632679 -2.4052818754" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0139566522516 0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.01628128958 0.0147565007189 0" rpy="0 1.57079632679 -2.30710710498" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01628128958 0.0147565007189 0" rpy="0 1.57079632679 -2.30710710498" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0155563491861 0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0176492807223 0.013089598689 0" rpy="0 1.57079632679 -2.20893233456" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0176492807223 0.013089598689 0" rpy="0 1.57079632679 -2.20893233456" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.017006229974 0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0188472996432 0.0112966366683 0" rpy="0 1.57079632679 -2.11075756413" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0188472996432 0.0112966366683 0" rpy="0 1.57079632679 -2.11075756413" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0182923314707 0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0198638087655 0.0093948818611 0" rpy="0 1.57079632679 -2.01258279371" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063943" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0198638087655 0.0093948818611 0" rpy="0 1.57079632679 -2.01258279371" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063943" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0194022678157 0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0206890185507 0.00740264920582 0" rpy="0 1.57079632679 -1.91440802328" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0206890185507 0.00740264920582 0" rpy="0 1.57079632679 -1.91440802328" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0203253497152 0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0213149817775 0.00533912499198 0" rpy="0 1.57079632679 -1.81623325286" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063856" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0213149817775 0.00533912499198 0" rpy="0 1.57079632679 -1.81623325286" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063856" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0210526873861 0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0217356700778 0.0032241820858 0" rpy="0 1.57079632679 -1.71805848243" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0217356700778 0.0032241820858 0" rpy="0 1.57079632679 -1.71805848243" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0215772761689 0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0219470319934 0.00107818854363 0" rpy="0 1.57079632679 -1.61988371201" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0219470319934 0.00107818854363 0" rpy="0 1.57079632679 -1.61988371201" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0218940639868 0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.022 2.69422295812e-18 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.022 2.69422295812e-18 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0219470319934 -0.00107818854363 0" rpy="0 1.57079632679 -1.52170894158" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0219470319934 -0.00107818854363 0" rpy="0 1.57079632679 -1.52170894158" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406395" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.022 2.69422295812e-18 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.022 2.69422295812e-18 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0217356700778 -0.0032241820858 0" rpy="0 1.57079632679 -1.42353417116" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0217356700778 -0.0032241820858 0" rpy="0 1.57079632679 -1.42353417116" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063948" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0213149817775 -0.00533912499198 0" rpy="0 1.57079632679 -1.32535940073" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406384" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0213149817775 -0.00533912499198 0" rpy="0 1.57079632679 -1.32535940073" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406384" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0206890185507 -0.00740264920582 0" rpy="0 1.57079632679 -1.22718463031" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406397" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0206890185507 -0.00740264920582 0" rpy="0 1.57079632679 -1.22718463031" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406397" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0198638087655 -0.0093948818611 0" rpy="0 1.57079632679 -1.12900985988" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0198638087655 -0.0093948818611 0" rpy="0 1.57079632679 -1.12900985988" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406393" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0188472996432 -0.0112966366683 0" rpy="0 1.57079632679 -1.03083508946" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0188472996432 -0.0112966366683 0" rpy="0 1.57079632679 -1.03083508946" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0176492807223 -0.013089598689 0" rpy="0 1.57079632679 -0.932660319034" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0176492807223 -0.013089598689 0" rpy="0 1.57079632679 -0.932660319034" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063956" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.01628128958 -0.0147565007189 0" rpy="0 1.57079632679 -0.83448554861" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01628128958 -0.0147565007189 0" rpy="0 1.57079632679 -0.83448554861" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063935" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0147565007189 -0.01628128958 0" rpy="0 1.57079632679 -0.736310778185" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063856" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0147565007189 -0.01628128958 0" rpy="0 1.57079632679 -0.736310778185" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063856" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.013089598689 -0.0176492807223 0" rpy="0 1.57079632679 -0.63813600776" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.013089598689 -0.0176492807223 0" rpy="0 1.57079632679 -0.63813600776" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0112966366683 -0.0188472996432 0" rpy="0 1.57079632679 -0.539961237336" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0112966366683 -0.0188472996432 0" rpy="0 1.57079632679 -0.539961237336" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063865" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0093948818611 -0.0198638087655 0" rpy="0 1.57079632679 -0.441786466911" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063835" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0093948818611 -0.0198638087655 0" rpy="0 1.57079632679 -0.441786466911" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063835" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00740264920582 -0.0206890185507 0" rpy="0 1.57079632679 -0.343611696486" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00740264920582 -0.0206890185507 0" rpy="0 1.57079632679 -0.343611696486" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00533912499198 -0.0213149817775 0" rpy="0 1.57079632679 -0.245436926062" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00533912499198 -0.0213149817775 0" rpy="0 1.57079632679 -0.245436926062" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.0032241820858 -0.0217356700778 0" rpy="0 1.57079632679 -0.147262155637" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0032241820858 -0.0217356700778 0" rpy="0 1.57079632679 -0.147262155637" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00107818854363 -0.0219470319934 0" rpy="0 1.57079632679 -0.0490873852123" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00107818854363 -0.0219470319934 0" rpy="0 1.57079632679 -0.0490873852123" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-4.04133443719e-18 -0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-4.04133443719e-18 -0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00107818854363 -0.0219470319934 0" rpy="0 1.57079632679 0.0490873852123" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00107818854363 -0.0219470319934 0" rpy="0 1.57079632679 0.0490873852123" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="-4.04133443719e-18 -0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-4.04133443719e-18 -0.022 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0032241820858 -0.0217356700778 0" rpy="0 1.57079632679 0.147262155637" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0032241820858 -0.0217356700778 0" rpy="0 1.57079632679 0.147262155637" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00215637708725 -0.0218940639868 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00533912499198 -0.0213149817775 0" rpy="0 1.57079632679 0.245436926062" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406384" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00533912499198 -0.0213149817775 0" rpy="0 1.57079632679 0.245436926062" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406384" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00429198708435 -0.0215772761689 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00740264920582 -0.0206890185507 0" rpy="0 1.57079632679 0.343611696486" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406406" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00740264920582 -0.0206890185507 0" rpy="0 1.57079632679 0.343611696486" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406406" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0063862628996 -0.0210526873861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0093948818611 -0.0198638087655 0" rpy="0 1.57079632679 0.441786466911" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0093948818611 -0.0198638087655 0" rpy="0 1.57079632679 0.441786466911" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.00841903551203 -0.0203253497152 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0112966366683 -0.0188472996432 0" rpy="0 1.57079632679 0.539961237336" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0112966366683 -0.0188472996432 0" rpy="0 1.57079632679 0.539961237336" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0103707282102 -0.0194022678157 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.013089598689 -0.0176492807223 0" rpy="0 1.57079632679 0.63813600776" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.013089598689 -0.0176492807223 0" rpy="0 1.57079632679 0.63813600776" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0122225451264 -0.0182923314707 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0147565007189 -0.01628128958 0" rpy="0 1.57079632679 0.736310778185" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063848" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0147565007189 -0.01628128958 0" rpy="0 1.57079632679 0.736310778185" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704063848" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0139566522516 -0.017006229974 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.01628128958 -0.0147565007189 0" rpy="0 1.57079632679 0.83448554861" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406387" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.01628128958 -0.0147565007189 0" rpy="0 1.57079632679 0.83448554861" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406387" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0155563491861 -0.0155563491861 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0176492807223 -0.013089598689 0" rpy="0 1.57079632679 0.932660319034" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0176492807223 -0.013089598689 0" rpy="0 1.57079632679 0.932660319034" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.017006229974 -0.0139566522516 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0188472996432 -0.0112966366683 0" rpy="0 1.57079632679 1.03083508946" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406383" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0188472996432 -0.0112966366683 0" rpy="0 1.57079632679 1.03083508946" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406383" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0182923314707 -0.0122225451264 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0198638087655 -0.0093948818611 0" rpy="0 1.57079632679 1.12900985988" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0198638087655 -0.0093948818611 0" rpy="0 1.57079632679 1.12900985988" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0194022678157 -0.0103707282102 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0206890185507 -0.00740264920582 0" rpy="0 1.57079632679 1.22718463031" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0206890185507 -0.00740264920582 0" rpy="0 1.57079632679 1.22718463031" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064043" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0203253497152 -0.00841903551203 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0213149817775 -0.00533912499198 0" rpy="0 1.57079632679 1.32535940073" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0213149817775 -0.00533912499198 0" rpy="0 1.57079632679 1.32535940073" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406385" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0210526873861 -0.0063862628996 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0217356700778 -0.0032241820858 0" rpy="0 1.57079632679 1.42353417116" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0217356700778 -0.0032241820858 0" rpy="0 1.57079632679 1.42353417116" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0021589776704064047" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0215772761689 -0.00429198708435 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0219470319934 -0.00107818854363 0" rpy="0 1.57079632679 1.52170894158" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0219470319934 -0.00107818854363 0" rpy="0 1.57079632679 1.52170894158" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.002158977670406391" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0218940639868 -0.00215637708725 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0334 0 0" rpy="0 1.57079632679 0" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0228" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0334 0 0" rpy="0 1.57079632679 0" />
+      <geometry>
+        <cylinder radius="0.0018" length="0.0228" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.022 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0448 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+      <material name="surface_4523ff341b18">
+        <color rgba="0.85 0.62 0.22 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0448 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.0018" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0.0666 0 0" rpy="4.51789596786 0 0" />
+      <geometry>
+        <box size="0.0436 0.014 0.01" />
+      </geometry>
+      <material name="surface_9c07a57a56ef">
+        <color rgba="0.12 0.37 0.6 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0666 0 0" rpy="4.51789596786 0 0" />
+      <geometry>
+        <box size="0.0436 0.014 0.01" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.016504858111 1.66308701623e-18 9.74571772512e-21" />
+      <mass value="0.031032902860005627" />
+      <inertia ixx="5.614300647868531e-06" iyy="3.0221461336868325e-05" izz="3.5585957513359676e-05" ixy="1.0404198028718038e-21" ixz="3.915309888159872e-24" iyz="-1.0185755146302258e-08" />
+    </inertial>
+  </link>
+</robot>

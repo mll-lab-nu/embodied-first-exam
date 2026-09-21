@@ -1,0 +1,87 @@
+schema_version: 1
+task_id: slotted_post_ring
+task_number: 12
+title_zh: 长孔立柱解环
+reference:
+  url: https://www.youtube.com/shorts/yZv8eUWIF-8
+  author: Puzzle guy
+  title: Remove the ring from the puzzle
+  reconstruction: video_reconstruction_v1
+  dimensions: authored metric estimates from visual proportions; not measured CAD
+baseline:
+  slot_width_m: 0.028
+  slot_height_m: 0.204
+  ring_inner_radius_m: 0.051
+  rope_radius_m: 0.0035
+  bead_radius_m: 0.0195
+  disc_radius_m: 0.055
+  disc_thickness_m: 0.011
+axes:
+  - {path: slot_width_m, unit: m, status: candidate, validated_range: null}
+  - {path: ring_inner_radius_m, unit: m, status: candidate, validated_range: null}
+  - {path: rope_radius_m, unit: m, status: candidate, validated_range: null}
+assets:
+  - status: local_source
+    location: topogym/tasks/slotted_post_ring/geometry.py
+  - status: local_source
+    location: assets/tasks/slotted_post_ring/video_reconstruction_v1/source.json
+physics:
+  backend: MuJoCo 3.13.0; rigid bodies and length-constrained 1D flex cord
+  preferred_rope_model: volumetric tetrahedral FEM; see fem_migration for separate qualification
+  fem_migration:
+    implementation: topogym/tasks/slotted_post_ring/fem.py
+    probe: topogym/tasks/slotted_post_ring/fem_probe.py
+    material: Saint Venant-Kirchhoff
+    material_reference: straight untwisted tube
+    physical_young_pa: 100000.0
+    physical_poisson: 0.3
+    density_kg_m3: 700.0
+    mass_damping_rate_s_inv: 2.0
+    stiffness_rayleigh_s: 0.00001
+    material_calibrated: false
+    constitutive_force_checks_verified: true
+    gravity_stability_verified: false
+    gravity_probe_completed: true
+    timestep_shape_comparison_passed: true
+    remaining_failure: final FEM vertex speeds exceed the settling thresholds
+    evidence: runs/demo_metadata/slotted_post_ring/2026-09-21_fem_gravity_attempt_v2
+    full_fem_solution_verified: false
+    robot_execution_verified: false
+  qualification: unqualified
+  profile_policy: original 28mm baseline and full robot execution remain unqualified; separately qualified 36mm force-driven candidate
+  grasp_model: assisted ring/disc welds and bead ball connection; partial pregrasp robot runs only
+  gravity_stability:
+    verified: true
+    duration_s: 10
+    timesteps_s: [0.000125, 0.0000625]
+    evidence: runs/demo_metadata/slotted_post_ring/2026-09-21_gravity_stability_v1
+  full_fixture_candidate:
+    variant: slot_width_36mm_candidate
+    slot_width_m: 0.036
+    verified: true
+    duration_s: 147
+    timestep_s: 0.000125
+    continuous_physical_episode: true
+    external_force_driven: true
+    robot_execution: false
+    full_operation_half_step_verified: false
+    evidence: runs/demo_metadata/slotted_post_ring/2026-09-21_clearance36_full_physics_v1
+initialization:
+  description: closed ring around post foot; one continuous cord passes through slot once and returns outside right rail; two bored beads and two bored terminal discs
+robot:
+  family: ALOHA
+  arms: 2
+  dual_arm_qualified: false
+  local_probe_fixture_allowed: true
+rejection_rules:
+  - Filled or broken ring / post slot
+  - Cord intersects post, ring, base, or itself at initialization
+  - Bead fits the slot or disc fits the ring aperture
+  - Disc cannot fit edgewise in the slot with cord clearance
+  - More than one cord, wrong slot routing, or disconnected visual tube
+first_probe: gravity and half-step passed; partial ALOHA bead repositioning passed every-step audit; 36mm complete force-driven disentangling passed; full robot execution remains unqualified
+scene:
+  config: configs/slotted_post_ring_preview.yaml
+  entrypoint: demos.environment_bootstrap.slotted_post_ring
+  status: static_scene_inspection_only
+  physical_execution_verified: false

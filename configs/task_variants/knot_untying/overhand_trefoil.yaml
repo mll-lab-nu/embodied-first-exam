@@ -1,0 +1,20 @@
+# Fixed easy reference. Difficulty remains a hypothesis pending route comparisons.
+task:
+  variant: trefoil_open_v1
+  family_id: overhand_trefoil
+  difficulty_target: easy
+  origin_xy_m: [-0.11, 0.24]
+  reference_yaw_deg: 0.0
+  rope:
+    fem:
+      contact_eps_velocity: 0.001
+  geometry:
+    family: overhand_trefoil
+    planar_scale_m: 0.032
+    crossing_height_m: 0.008
+    cut_angle_rad: 0.5
+    tail_length_m: 0.18
+  appearance:
+    shape_scale: 1.0
+    yaw_deg: 0.0
+    rope_color: orange

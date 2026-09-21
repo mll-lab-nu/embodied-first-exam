@@ -118,7 +118,7 @@ PYOPENGL_PLATFORM=egl LIBGL_ALWAYS_SOFTWARE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THR
 ```bash
 PYOPENGL_PLATFORM=egl LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONPATH=. \
   .venv-gs121-nyx/bin/python -m topogym.tasks.horseshoe_ring.aloha_demo \
-  --backend cpu --renderer rasterizer \
+  --mode kinematic --backend cpu --renderer rasterizer \
   --config-path runs/environment-solvability/horseshoe_ring/trace_scene_variants_v1/compact_roll_planned/config.yaml \
   --motion runs/environment-solvability/horseshoe_ring/trace_scene_variants_v1/compact_roll_planned/robot_motion.json \
   --output runs/environment-solvability/horseshoe_ring/trace_scene_variants_v1/compact_roll_planned/full_demo_v1

@@ -1,0 +1,6 @@
+# Preserve the authored double-overhand scene; narrow in air before descent.
+task:
+  variant: double_overhand_open_v1
+  route_profile: double_overhand_narrow_v2
+  route_settings:
+    approach_finger_qpos_m: 0.018

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "task_id": "orbits",
+  "task_number": 13,
+  "source_url": "https://www.youtube.com/watch?v=B-EB9Q-JqXA",
+  "title": "Disentanglement Solution to Orbits puzzle from SiamMandalay®",
+  "author": "SiamMandalay",
+  "reference_duration_seconds": 110,
+  "reference_type": "manufacturer rendered solution demonstration",
+  "review_method": "Downloaded 640x480 public reference; inspected frames at 0, 1, 2, 4, 7, 10, 12, 15, 20, 30, 40, 50, 60, 75, 90, 100, 105, 108 seconds.",
+  "identity_note": "User described the family as 九连环; this specific set is Orbits with four wooden rings, not a nine-ring Baguenaudier.",
+  "initial_reference_seconds": 10,
+  "observations": [
+    {
+      "seconds": [
+        0,
+        2
+      ],
+      "description": "Title Orbits; four wooden horizontal rings descend along five upright posts on a rectangular wooden base. One top ball and a yellow cord with a wooden pull handle."
+    },
+    {
+      "seconds": [
+        7,
+        10
+      ],
+      "description": "Assembled starting condition. The yellow bight surrounds the final short support under the lowest ring, and two cord legs extend toward the wooden handle."
+    },
+    {
+      "seconds": [
+        12,
+        30
+      ],
+      "description": "Bight rises through the ring arrangement and passes over the upper ball; cord then traverses successive ring apertures."
+    },
+    {
+      "seconds": [
+        40,
+        90
+      ],
+      "description": "Repeated rearrangements move cord loops among the descending rings. This is visual action evidence, not a verified robot or simulation trajectory."
+    },
+    {
+      "seconds": [
+        100,
+        108
+      ],
+      "description": "Cord is finally pulled clear and lies beside the complete fixed wooden fixture."
+    }
+  ],
+  "initial_topology": {
+    "rings": 4,
+    "posts": 5,
+    "ring_plane": "horizontal, descending in height",
+    "support": "ring i is attached at its outer rim to post i+1; taller post i passes through its aperture",
+    "ball": "on the first, tallest post above the first ring",
+    "cord_components": 1,
+    "cord_endpoints": 2,
+    "bight": "around post 5, below ring 4",
+    "handle": "one wooden terminal handle receiving both cord legs"
+  },
+  "authored_conventions": [
+    "Dimensions are authored at tabletop robot scale from image proportions, not measured from the video.",
+    "The lower rings must clear the earlier taller posts; ring centers are offset from the enclosed posts.",
+    "Two small handle eyes with inserted cord endpoints stand in for the unresolved hidden terminal attachment.",
+    "Cord tails are shortened to fit the robot table and arranged clear of the wood; exact pixel poses are not replicated.",
+    "Wood finish reuses existing project textures and is not a scan of the reference object."
+  ],
+  "uncertainties": [
+    "No measured mass, friction, stiffness, cord length or object dimensions.",
+    "Hidden terminal knots and bore construction are not resolved at reference resolution.",
+    "Initial state is authored, not gravity settled; all task entities are fixed with collisions disabled.",
+    "No dynamic cord solver, self-contact, handle constraints, robot reachability or full solution validated."
+  ],
+  "geometry_config": "configs/orbits_preview.yaml",
+  "generator": "topogym/tasks/orbits/geometry.py",
+  "physics_qualified": false,
+  "product_dimension_reference": {
+    "url": "https://www.siammandalay.com/product/orbits/",
+    "checked_on": "2026-09-20",
+    "description_dimensions_inch": [
+      6,
+      2.25,
+      5.5
+    ],
+    "description_dimensions_mm": [
+      152.4,
+      57.15,
+      139.7
+    ],
+    "unit_note": "Product description uses inches; additional information repeats the same numerals with cm. Description inches are used as the approximate reference, not measured dimensions.",
+    "scope": "Approximate toy-scale match; no measured human-hand or tool-to-hand calibration.",
+    "toy_scale_v3_uniform_scale": 0.35,
+    "toy_scale_v3_base_dimensions_mm": [
+      164.5,
+      63,
+      8.4
+    ],
+    "toy_scale_v3_overall_height_mm": 142.45
+  },
+  "current_scene_scale": {
+    "version": "static_base_centered_v5",
+    "uniform_scale": 0.75,
+    "reason": "User requested 75% of the original geometry, replacing the 35% default.",
+    "base_dimensions_mm": [
+      352.5,
+      135,
+      18
+    ],
+    "overall_height_mm": 305.25,
+    "yaw_deg": 90,
+    "origin_xy_m": [
+      -0.1356786,
+      -0.019
+    ],
+    "centering_reference": "wooden_base_center",
+    "placement_reason": "User requested the wooden fixture to be symmetric about the two robot bases on both planar axes; translate +85.5 mm in world Y from v4."
+  }
+}

@@ -1,0 +1,6 @@
+# Spatial scene inspection adds an offline interactive Plotly viewer.
+-r uv-topogym-gs121.txt
+plotly==5.24.1
+# Compact single-arm IK and full robot/tool collision auditing.
+mujoco==3.13.0
+python-fcl==0.7.0.11

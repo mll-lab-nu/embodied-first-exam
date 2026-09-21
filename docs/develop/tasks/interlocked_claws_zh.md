@@ -1,9 +1,20 @@
 # Claw 互锁件：原始模型、完整参考动作与物理验收
 
+2026-09-19：按尺寸反馈完成 [C0 紧凑全等双窗修订](interlocked_claws_balanced_gate_zh.md)。两窗均为 250 × 190 mm，整体最大尺寸 252 mm；两档完整物理执行、顺序松手和独立静置通过，新增五路 62.05 秒视频。新固定原型另存 `authored_compound_v2`，旧版资产和 seed 映射保持冻结。
+
+2026-09-19：新增[基础变体 agent adapter](../modules/interlocked_claws_agent_adapter_zh.md)，
+复用公共 ALOHA 执行模块，提供本地任务包和可复制 prompt。通过三段 101 步短程接口验证，
+尚未完成该 adapter 的全程自主拆解落架验证，原非凸接触资格限制继续保留。
+
+2026-09-19：[固定 family 与 seed 生成接口审查](interlocked_claws_variant_pipeline_audit_zh.md)。
+旧版已接通 A0 实例采样、实际材质、几何候选与恢复接口，冻结的 `claw_seed_v1` 仍拒绝 B/C。
+随后完成 [B0 螺旋冠、C0 正交双窗的实体、物理求解及五视角 demo](interlocked_claws_authored_physics_zh.md)：
+两者均通过预抓取辅助抓持下的完整执行和半步长复验。新固定原型尚未接入旧 seed API，三族数据集生成保持关闭。
+
 后续变体设计见 [三个动作 family、九个代表构型与随机空间规划](interlocked_claws_family_space_zh.md)。
 该规划区分已有参考执行证据、候选结构和尚未通过的接触可靠性门槛。
 
-本轮对应用户链接第一段 **Unlocking the Claw** 中的两个复杂零件。
+原版 A0 对应用户链接第一段 **Unlocking the Claw** 中的两个复杂零件。
 采用[作者网页](https://qinengwang-aiden.github.io/demos/constraint_demos/)公开的原始 OBJ，
 不是根据视频外形近似建模。来源、哈希和坐标约定见
 [资产说明](../../../assets/tasks/interlocked_claws/cspace_claw_wang_v1/README.md)。
@@ -30,6 +41,12 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
 
 已保留 [158.6 秒完整五路播放页](../../../runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/index.html)
 及 [物理验收报告](../../../runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/reliability.html)。
+2026-09-18 按视角整理到 [`demos/interlocked_claws/`](../../../demos/interlocked_claws/)：
+`cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/`、`detail/` 各一份完整视频，
+均为 1,586 帧、10 fps、158.6 秒；已复核完整解码、同步和 SHA-256，无需补录。
+播放页使用新目录，原 `runs/demos/interlocked_claws/` 保留独立备份；
+[整理与核验记录](../../../runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/camera_directory_validation_20260918.json)保留新旧路径和验证结果。
+
 主运行和半时间步运行均完成全部阶段、解除双侧约束并稳定落架。10 Hz 对齐状态的最大位置差
 为 **0.263887 mm**；主运行与参考动作同一时刻的抓持位置最大偏差 **0.418765 mm**，
 最大姿态偏差 **0.001225 rad**。末态两件间距约 **253.085 mm**。

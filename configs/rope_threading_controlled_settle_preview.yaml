@@ -1,0 +1,12 @@
+# Observe natural decay after placement; no extra damping or velocity resets.
+defaults:
+  - rope_threading_controlled_place_preview
+  - _self_
+
+task:
+  validation:
+    fixture_post_release_s: 24.0
+    final_post_sequence_settle_s: 20.0
+
+run:
+  output: runs/environment_bootstrap/rope_threading/controlled_settle_candidate

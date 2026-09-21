@@ -1,0 +1,30 @@
+{
+  "family": "fixed_side_window",
+  "custom_reference_adaptation": true,
+  "all_spikes_fixed": true,
+  "spike_count": 6,
+  "shape": {
+    "window_width_m": 0.069,
+    "window_height_m": 0.195,
+    "axial_exit_blocked_by_core": true
+  },
+  "bodies": {
+    "cage": {
+      "collision_parts": 792,
+      "mass_kg": 0.6446041809152255,
+      "visual_finish": "wood",
+      "all_parts_watertight": true,
+      "all_parts_convex": true,
+      "mass_model": "density-based additive parts; embedded-root overlap retained"
+    },
+    "hedgehog": {
+      "collision_parts": 7,
+      "mass_kg": 0.07243200555334632,
+      "visual_finish": "wood",
+      "all_parts_watertight": true,
+      "all_parts_convex": true,
+      "mass_model": "density-based additive parts; embedded-root overlap retained"
+    }
+  },
+  "maximum_radial_extent_m": 0.06750000000000002
+}

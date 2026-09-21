@@ -145,7 +145,7 @@ def render(source, output):
                 draw.rectangle((0, 0, picture.width, 52), fill=(16, 25, 34))
                 draw.text(
                     (12, 7),
-                    f"CAST COIL | {report.get('appearance_kind') or report.get('inverse_design_kind') or 'baseline'} | {frame['time_s']:.2f}s | {frame['phase']}",
+                    f"CAST COIL | {report.get('objective', 'disassemble').upper()} | {report.get('appearance_kind') or report.get('inverse_design_kind') or 'baseline'} | {frame['time_s']:.2f}s | {frame['phase']}",
                     fill="white",
                 )
                 draw.text(

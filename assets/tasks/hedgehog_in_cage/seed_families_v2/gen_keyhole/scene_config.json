@@ -1,0 +1,640 @@
+{
+  "common": {
+    "preset": {
+      "id": "topogym_tabletop_v1",
+      "version": 1.3
+    },
+    "manipulation_space": {
+      "name": "topogym_tabletop_v1",
+      "coordinate_frame": "task",
+      "base": {
+        "enabled": false,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "size": [
+          0.7,
+          0.8,
+          0.0
+        ],
+        "color": [
+          0.92,
+          0.92,
+          0.94
+        ]
+      },
+      "board": {
+        "enabled": false,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "size": [
+          0.7,
+          0.8,
+          0.0
+        ],
+        "color": [
+          0.92,
+          0.92,
+          0.94
+        ]
+      },
+      "workspace": {
+        "x": [
+          -0.25,
+          0.25
+        ],
+        "y": [
+          -0.3,
+          0.3
+        ],
+        "z": [
+          0.03,
+          0.4
+        ],
+        "marker_z": 0.003,
+        "marker_width": 0.006,
+        "marker_color": [
+          0.04,
+          0.36,
+          1.0
+        ]
+      },
+      "grid": {
+        "enabled": true,
+        "spacing": 0.1,
+        "line_width": 0.002,
+        "z": 0.002,
+        "color": [
+          0.18,
+          0.28,
+          0.38
+        ]
+      },
+      "reference_objects": {
+        "enabled": false,
+        "start_pos": [
+          -0.22,
+          0.28,
+          0.031
+        ],
+        "gap": 0.055,
+        "cubes": [],
+        "bars": []
+      }
+    },
+    "robot_setup": {
+      "gripper_model": "robotiq_2f85",
+      "robotiq": {
+        "kp": 5.0,
+        "kv": 5.0,
+        "max_driver_torque_nm": 0.3,
+        "oracle_gripper_settle_s": 3.0,
+        "oracle_motion_time_scale": 1.5
+      },
+      "mount": {
+        "name": "franka_panda",
+        "mobility": "fixed",
+        "pos": [
+          -0.57,
+          0.0,
+          0.0
+        ],
+        "euler": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "footprint_min": [
+          -0.154079,
+          -0.094614
+        ],
+        "footprint_max": [
+          0.071567,
+          0.094671
+        ],
+        "edge_margin": 0.01
+      },
+      "home": {
+        "qpos": [
+          0.0,
+          0.3926990817,
+          0.0,
+          -1.9634954085,
+          0.0,
+          2.3561944902,
+          -0.7853981634,
+          0.04,
+          0.04
+        ],
+        "settle_steps": 100
+      }
+    }
+  },
+  "env": {
+    "renderer": {
+      "type": "rasterizer",
+      "show_viewer": false,
+      "env_map": ".external/nyx-assets/studio_small_09_2k.hdr",
+      "env_intensity": 1.0,
+      "spp": 16,
+      "denoise": true,
+      "lights": [
+        {
+          "type": "point",
+          "pos": [
+            -0.6,
+            -0.45,
+            2.4
+          ],
+          "intensity": 3.0,
+          "color": [
+            1.0,
+            0.98,
+            0.94
+          ],
+          "shadow": true
+        },
+        {
+          "type": "point",
+          "pos": [
+            -0.6,
+            0.45,
+            2.4
+          ],
+          "intensity": 1.0,
+          "color": [
+            1.0,
+            0.98,
+            0.94
+          ],
+          "shadow": false
+        },
+        {
+          "type": "point",
+          "pos": [
+            0.6,
+            -0.45,
+            2.4
+          ],
+          "intensity": 1.0,
+          "color": [
+            0.96,
+            0.98,
+            1.0
+          ],
+          "shadow": false
+        },
+        {
+          "type": "point",
+          "pos": [
+            0.6,
+            0.45,
+            2.4
+          ],
+          "intensity": 1.0,
+          "color": [
+            0.96,
+            0.98,
+            1.0
+          ],
+          "shadow": false
+        }
+      ]
+    },
+    "presentation": {
+      "background": "compact_lab",
+      "appearance": [
+        {
+          "pattern": "table",
+          "color": [
+            0.83,
+            0.84,
+            0.82
+          ],
+          "metallic": 0.0,
+          "roughness": 0.42
+        },
+        {
+          "pattern": "table_frame*",
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "metallic": 0.0,
+          "roughness": 0.45,
+          "diffuse_map": ".external/nyx-assets/wood_table_001_diff_1k.png",
+          "normal_map": ".external/nyx-assets/wood_table_001_nor_gl_1k.png"
+        }
+      ]
+    },
+    "appearance": [
+      {
+        "pattern": "hedgehog_mount",
+        "color": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.67,
+        "diffuse_map": "assets/tasks/hedgehog_in_cage/classic_3star/materials/dark_wood.png"
+      }
+    ],
+    "preset": {
+      "id": "topogym_tabletop_v1",
+      "version": 1.3,
+      "builder": "standard_tabletop",
+      "source": "RoboMME/ManiSkill@07be6fbc66350ddca200abfb0a11b692f078f7fd",
+      "locked": false
+    },
+    "genesis": {
+      "backend": "cpu",
+      "precision": "64",
+      "logging_level": "warning"
+    },
+    "sim": {
+      "n_envs": 0,
+      "dt": 0.005,
+      "substeps": 10,
+      "gravity": [
+        0.0,
+        0.0,
+        -9.81
+      ]
+    },
+    "viewer": {
+      "camera_pos": [
+        1.2,
+        -1.15,
+        1.65
+      ],
+      "camera_lookat": [
+        -0.08,
+        0.0,
+        0.98
+      ],
+      "camera_fov": 50,
+      "max_fps": 60
+    },
+    "frames": {
+      "table_surface": {
+        "origin": [
+          0.0,
+          0.0,
+          0.9196429
+        ]
+      },
+      "task": {
+        "origin": [
+          0.0,
+          0.0,
+          0.9196429
+        ]
+      }
+    },
+    "world": {
+      "plane": {
+        "enabled": true
+      },
+      "table": {
+        "pos": [
+          -0.1356786,
+          0.0,
+          0.45982145
+        ],
+        "size": [
+          1.5,
+          1.4,
+          0.9196429
+        ],
+        "color": [
+          0.78,
+          0.8,
+          0.82
+        ],
+        "surface_tolerance": 1e-06
+      },
+      "stage": {
+        "enabled": false,
+        "pos": [
+          0.0,
+          0.0,
+          0.9206429
+        ],
+        "size": [
+          0.7,
+          0.8,
+          0.002
+        ],
+        "color": [
+          0.92,
+          0.92,
+          0.94
+        ]
+      }
+    },
+    "robot_mount": {
+      "name": "franka_panda",
+      "mobility": "fixed",
+      "pos": [
+        -0.57,
+        0.0,
+        0.9196429
+      ],
+      "euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "footprint_min": [
+        -0.154079,
+        -0.094614
+      ],
+      "footprint_max": [
+        0.071567,
+        0.094671
+      ],
+      "edge_margin": 0.01,
+      "surface_tolerance": 1e-06
+    },
+    "cameras": {
+      "agentview": {
+        "res": [
+          960,
+          720
+        ],
+        "pos": [
+          -0.68,
+          -1.06,
+          2.02
+        ],
+        "lookat": [
+          -0.06,
+          0.1,
+          1.18
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 42,
+        "near": 0.01,
+        "far": 12.0
+      },
+      "front_oblique": {
+        "res": [
+          960,
+          720
+        ],
+        "pos": [
+          0.55,
+          -0.18,
+          1.55
+        ],
+        "lookat": [
+          -0.03,
+          0.1,
+          1.12
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 48,
+        "near": 0.01,
+        "far": 12.0
+      },
+      "wrist": {
+        "res": [
+          960,
+          720
+        ],
+        "pos": [
+          0.5,
+          0.0,
+          1.18
+        ],
+        "lookat": [
+          0.62,
+          0.0,
+          0.95
+        ],
+        "up": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "fov": 90,
+        "near": 0.01,
+        "far": 3.0,
+        "attach": {
+          "enabled": true,
+          "entity": "robot",
+          "link": "hand",
+          "offset_pos": [
+            0.05,
+            0.0,
+            0.005
+          ],
+          "offset_lookat": [
+            0.065,
+            0.0,
+            0.17
+          ],
+          "offset_up": [
+            1.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  },
+  "robot_control": {
+    "robot": {
+      "name": "franka_panda",
+      "asset": "xml/franka_emika_panda/panda.xml",
+      "tool_model": "robotiq_2f85",
+      "joint_names": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5",
+        "joint6",
+        "joint7",
+        "finger_joint1",
+        "finger_joint2"
+      ],
+      "arm_joint_count": 7,
+      "gripper_joint_count": 2,
+      "ee_link": "hand"
+    },
+    "home": {
+      "qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634,
+        0.04,
+        0.04
+      ],
+      "settle_steps": 100
+    },
+    "controller": {
+      "type": "position",
+      "kp": [
+        4500,
+        4500,
+        3500,
+        3500,
+        2000,
+        2000,
+        2000,
+        100,
+        100
+      ],
+      "kv": [
+        450,
+        450,
+        350,
+        350,
+        200,
+        200,
+        200,
+        10,
+        10
+      ],
+      "force_lower": [
+        -87,
+        -87,
+        -87,
+        -87,
+        -12,
+        -12,
+        -12,
+        -100,
+        -100
+      ],
+      "force_upper": [
+        87,
+        87,
+        87,
+        87,
+        12,
+        12,
+        12,
+        100,
+        100
+      ]
+    },
+    "ik": {
+      "enabled": true,
+      "default_ee_quat": [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "max_samples": 1,
+      "max_solver_iters": 50,
+      "max_step_size": 0.15
+    },
+    "gripper": {
+      "robotiq": {
+        "kp": 5.0,
+        "kv": 5.0,
+        "max_driver_torque_nm": 0.3,
+        "oracle_gripper_settle_s": 3.0,
+        "oracle_motion_time_scale": 1.5
+      },
+      "open_qpos": 0.04,
+      "closed_qpos": 0.0
+    },
+    "action_protocol": {
+      "mode": "ee_delta",
+      "dims": [
+        "dx",
+        "dy",
+        "dz",
+        "dyaw",
+        "gripper"
+      ],
+      "max_delta_xyz": 0.03,
+      "max_delta_yaw": 0.2,
+      "workspace": {
+        "x": [
+          -0.25,
+          0.25
+        ],
+        "y": [
+          -0.3,
+          0.3
+        ],
+        "z": [
+          0.03,
+          0.4
+        ]
+      }
+    },
+    "control_loop": {
+      "steps_per_action": 20,
+      "interpolation": "linear",
+      "use_plan_path": false,
+      "plan_waypoints": 80
+    }
+  },
+  "task": {
+    "variant": "classic_3star_reconstruction_v1",
+    "finish": "wood",
+    "scale": 3.0,
+    "center_xy_m": [
+      0.06,
+      0.2
+    ],
+    "yaw_deg": -130.0,
+    "mount_height_m": 0.1,
+    "mount_width_m": 0.22,
+    "seed": 0,
+    "physics": {
+      "constraint_timeconst": 0.0012,
+      "friction": 0.3,
+      "iterations": 100,
+      "noslip_iterations": 5
+    },
+    "initial_pose": {
+      "position_m": [
+        0.034,
+        -4.059817334521296e-09,
+        -0.013093779603251927
+      ],
+      "quaternion_wxyz": [
+        -0.08985502802683738,
+        -0.38231459195763656,
+        0.8996677947434726,
+        0.19068163471078864
+      ]
+    }
+  },
+  "run": {
+    "output": ".",
+    "viewer": false,
+    "save_stills": false,
+    "record_video": false,
+    "video_seconds": 10,
+    "fps": 20,
+    "closeup_fraction": 0.6,
+    "orbit_degrees": 45
+  }
+}

@@ -1,0 +1,114 @@
+# Design specification, not a Hydra task config or an executable generator.
+schema_version: 1
+design_revision: 2
+spec_type: buzz_wire_family_design
+status: proposed
+runtime_ready: false
+ik_verified: false
+physical_execution_verified: false
+baseline:
+  instance_id: compact_single_arm_v1
+  config: configs/buzz_wire_3d_robot.yaml
+  planning_evidence: runs/demo_metadata/buzz_wire_3d/2026-09-18_compact_single_arm_v1/source_evidence/planning/plan.json
+  measured_ring_path_height_span_m: 0.0743300325571965
+  evidence_scope: baseline only; none of its qualification transfers to these designs
+
+families:
+  - {family_id: F1_vertical_wave, file: vertical_wave_v1.yaml}
+  - {family_id: F2_over_under_eight, file: over_under_eight_v1.yaml}
+  - {family_id: F3_plane_switch, file: plane_switch_v1.yaml}
+
+selection:
+  mode: fixed_prototype_catalog
+  prototype_selection: explicit_id
+  randomize_parameters: false
+  synthesize_new_structure_per_episode: false
+  prototype_assets_available: false
+  future_freeze_contents: [geometry, grasp_transform, ring_pose_path, continuous_arm_seed, acceptance_report]
+  on_parameter_change: rebuild deterministic template instance and revalidate; never rescale joint angles
+  on_failure: reject with reason; never silently replace the selected family
+
+shared_design:
+  coordinates: toy-local; x and y along base edges; z measured from base bottom on table
+  base_size_m: [0.743, 0.527, 0.025]
+  maximum_wire_height_m: 0.300
+  robot: original Panda + Robotiq 2F-85, fixed mount and original joint limits
+  start: prethreaded ring and pregrasp pose solved for the selected prototype
+  finish: all maze bends traversed; release only on final straight downward post; retreat and settle
+  grasp: contact friction, no weld or externally driven ring
+  rail: one open continuous nonbranching wire with two oversized end stops
+  intermediate_supports: none across the ring or hand swept volume
+  multi_stage_design:
+    applies_to: [F2_over_under_eight, F3_plane_switch]
+    fixed_order_and_stage_count: true
+    no_random_stage_assembly_per_episode: true
+    packing: use lateral, depth and height corridors before reducing local clearance
+    connectors: tangent-continuous transitions; not counted as separate obstacles
+    independent_stage_success_is_not_route_success: true
+  tool:
+    wire_radius_m: 0.0021
+    loop_radius_m: 0.022
+    loop_tube_radius_m: 0.0018
+    end_stop_radius_m: 0.023
+    stem_length_m: 0.0228
+    grip_size_m: [0.0436, 0.014, 0.010]
+  frozen_physics_reference: configs/buzz_wire_3d_robot.yaml
+  physics_note: solver settings initially frozen; geometry changes require their own physical execution
+
+# Candidate bounds only, not a certified Cartesian product. Sampling stays off.
+shared_tuning_candidates:
+  wire_radius_m: {default: 0.0021, bounds: [0.0020, 0.0022]}
+  loop_radius_m: {default: 0.022, bounds: [0.021, 0.023]}
+  origin_dx_m: {default: 0.0, bounds: [-0.015, 0.015]}
+  origin_dy_m: {default: 0.0, bounds: [-0.015, 0.015]}
+  yaw_delta_deg: {default: 0.0, bounds: [-5.0, 5.0]}
+  origin_z: fixed to tabletop; no floating-base jitter
+  ring_initial_pose: derived from selected rail and grasp; no independent pose jitter
+  material_changes: visual only; do not change contact friction or density
+
+design_acceptance_targets:
+  status: proposed screening targets; not measured results
+  # Compare main maze only, excluding identical holds, support approach and release.
+  path_comparison:
+    resampling: normalized arc length; compare baseline and every other family
+    remove_trivial_variation: compare both directions after best rigid alignment, without scale fitting
+    ring_center_rms_difference_m_min: 0.060
+    hand_rotation_difference_deg_min: 45.0
+    fraction_above_rotation_difference_min: 0.25
+    require_translation_and_rotation_checks: true
+    joint_trace: supporting evidence only; a different redundant elbow branch is not a new family
+  visual_comparison:
+    cameras: [agentview, front_oblique, wrist]
+    presentation: same cameras, framing, material, light and speed; no automatic rescaling
+    require_visible_structural_and_motion_difference: true
+  geometry:
+    stage_composition: verify the union of all obstacles, inter-stage joins and endpoint supports
+    reject_skipped_or_degenerate_stages: true
+    tool_continuous_clearance_lower_bound_m_min: 0.001
+    linking_number: 1
+    end_stop_rule: radius greater than polygonal aperture bound for every selected tool
+    crossing_rule: no physical wire intersection; verify entire hand and tool swept volume
+  robot:
+    original_limits: true
+    continuous_ik_branch: true
+    verify_whole_robot_fixture_tool_and_table: true
+    dense_samples_are_not_continuous_collision_proof: true
+    no_prescribed_360_degree_wrist_roll: true
+  physics:
+    require_complete_friction_grasp_execution: true
+    require_half_timestep_repeat: true
+    require_zero_wire_contact_during_controlled_traversal: true
+    require_release_retreat_settling: true
+  recording:
+    video_root: demos/buzz_wire_3d
+    cameras: [agentview, front_oblique, wrist]
+    metadata_root: runs/demo_metadata/buzz_wire_3d
+    new_html_pages: false
+
+implementation_gaps:
+  - Stage-aware route composition and joint validation of every inter-stage transition and cross-stage collision.
+  - New deterministic curve templates and their parameter validation.
+  - Family-specific ring orientation and grasp/arm seeds; do not reuse old tilt knots by progress index.
+  - Export candidate configs to BuzzWireLayout and make the planner accept the selected family.
+  - Full tool clearance, continuous IK tracking, robot collision checks and physical qualification per instance.
+  - Frozen asset catalog and explicit prototype selection; parameter sampling remains opt-in afterwards.

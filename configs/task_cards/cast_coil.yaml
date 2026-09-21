@@ -1,13 +1,16 @@
 schema_version: 1
 task_id: cast_coil
-title_zh: Cast Coil
+title_zh: Cast Coil 双件装配
 baseline:
   asset_id: cast_coil_photo_prototype_v1
-  initial_relative_pose_id: alternating_four_layers_v1
+  initial_relative_pose_id: separated_xy_tabletop_v1
+  goal_relative_pose_id: alternating_four_layers_v1
+  objective: assemble
+  initial_xy_offset_m: [-0.12, 0.18]
   scene_scale: 3.0
   layout:
-    center_xy_m: [0.06, 0.16]
-    yaw_deg: -12.0
+    center_xy_m: [-0.1356786, 0.05]
+    yaw_deg: 90.0
 axes:
 - path: initial_relative_pose_id
   unit: id
@@ -40,13 +43,20 @@ physics:
   profile_policy: fixed per probe; save actual solver settings with results
   grasp_model: explicit assisted grasp only after contact, when applicable
 initialization:
-  description: photo-informed two-body prototype; exact turning windows and reference route remain unverified
+  description: two free rigid pieces rest separately on the table with positive x and y surface gaps; reassemble into the alternating four-layer target and release both pieces
 robot:
-  family: Panda + Robotiq 2F-85
+  family: ALOHA
   arms: 2
-  dual_arm_qualified: false
+  dual_arm_qualified: true
+  qualification_scope: baseline assembly only; bilateral-contact-gated grasp assistance; CPU float64 with default and half timestep
   local_probe_fixture_allowed: true
 rejection_rules:
 - Do not treat the photo prototype as verified commercial puzzle geometry
 - Collision approximation blocks turning window
-first_probe: Map and verify the official eight-step route; local prototype bench evidence is recorded separately
+first_probe: Reverse the certified prototype route after a collision-free approach; verify assembled relative pose after grasp release and free settling
+baseline_evidence:
+  objective: assemble
+  manifest: runs/demo_metadata/cast_coil/2026-09-17_aloha_full/archive_manifest.json
+  physics_report: runs/demo_metadata/cast_coil/2026-09-17_aloha_full/physics_result.json
+  timestep_and_video_validation: runs/demo_metadata/cast_coil/2026-09-17_aloha_full/validation.json
+  parameter_space_qualified: false

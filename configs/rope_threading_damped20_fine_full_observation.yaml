@@ -1,0 +1,8 @@
+# Same validated material, mesh and motion; extend only the final observation.
+defaults:
+  - rope_threading_damped20_compressible_fine_preview
+  - _self_
+
+task:
+  validation:
+    final_post_sequence_settle_s: 60.0

@@ -1,0 +1,69 @@
+defaults:
+  - blanket_flatten_preview
+  - _self_
+
+task:
+  robot_gravity_compensation: 1.0
+  geometry:
+    seed: 1
+  execution:
+    stability_seconds: 10.0
+    final_settle_seconds: 3.0
+    max_pulls: 8
+    target_center_xy_m: [-0.10, 0.0]
+    target_yaw_deg: 0.0
+    grasp_radius_m: 0.014
+    material_patch_radius_m: 0.024
+    contact_tolerance_m: 0.008
+    initial_robot_clearance_m: 0.008
+    lift_m: 0.06
+    travel_height_m: 0.14
+    free_speed_m_s: 0.14
+    carry_speed_m_s: 0.055
+    gripper_seconds: 3.0
+    maximum_tracking_error_m: 0.015
+    # The same material integrity gate is used during passive and active phases.
+    check_every: 10
+
+robot_control:
+  home:
+    qpos: [-0.9, 0.3926990817, 0.0, -1.9634954085, 0.0, 2.3561944902, -0.7853981634, 0.04, 0.04]
+  ik:
+    max_solver_iters: 150
+    pos_tol: 0.0001
+    rot_tol: 0.001
+
+env:
+  genesis:
+    precision: '64'
+  sim:
+    substeps: 16
+  cameras:
+    agentview:
+      res: [960, 720]
+      pos: [1.10, -1.08, 1.85]
+      lookat: [-0.12, 0.07, 1.03]
+      up: [0, 0, 1]
+      fov: 46
+    front_oblique:
+      res: [960, 720]
+      pos: [0.46, 0.96, 1.70]
+      lookat: [-0.12, 0.07, 1.02]
+      up: [0, 0, 1]
+      fov: 47
+    wrist:
+      res: [640, 480]
+      fov: 88
+      attach:
+        enabled: true
+        entity: robot
+        link: hand
+        offset_pos: [0.060, 0.000, 0.005]
+        offset_lookat: [0.070, 0.000, 0.220]
+        offset_up: [1.0, 0.0, 0.0]
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/robot_trial_v1
+  mode: robot  # stability | robot
+  render: false  # Physical states are saved for synchronized replay rendering.
+  record_video: false

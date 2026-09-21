@@ -1,7 +1,43 @@
 # Cast Coil 基础场景
 
+## 固定结构库与随机生成（2026-09-19）
+
+已经实现“预制 family / prototype 选择 + 条件参数随机化”的 seed 入口：固定三族 9 mm 核心，微调尺寸、轮廓、整体位置/yaw 和初始分离间距，并逐实例检查几何与采样双臂 IK。复用现有 RNG，无需修改其 seed 映射；完整配置支持内容指纹校验和恢复。详见[生成规则、运动对照与验证范围](cast_coil_seed_generator_zh.md)。本轮不生成数据集/H5；[此前接入审查](cast_coil_variant_pipeline_audit_zh.md)保留为历史问题记录，物理资格仍按实例单独验收。
+
+## Coding agent 分段交互
+
+已提供任务通用的 [分段交互协议与测试入口](../modules/agent_bridge_zh.md)：持续持有同一个 Genesis 场景，接收动作代码段，逐步保存四路完整 frames，禁止动作撤销和 simulator 回滚。默认累计 token 上限为 2,000,000，下一轮 prompt 自动包含余额。
+Cast Coil adapter 支持 ALOHA 双臂关节/夹爪控制、装配和拆解目标；浏览器可直接与 ChatGPT 手动交换 prompt/代码，也可用 metered OpenAI harness 自动闭环。手动计量仅是估算；当前 adapter 使用 pilot evaluator，不替代本文的完整物理验收。
+
+## 当前默认任务：分离零件装配（2026-09-18）
+
+默认任务改为：金、银两件在桌面上分别放置，在世界 x、y 两方向都留有间隔；机器人抓取后完成对齐、插入、回转与闭合，形成目标四层装配，整体落桌、解除辅助抓持并撤臂。成功条件是释放后的相对装配姿态和静置稳定性，不再以“两件分离”作为成功。
+
+- 仅更新最初 `cast_coil_photo_prototype_v1` 基础变体，几何和材料不变。
+- 两件原点初始偏移为 `(-120,+180) mm`；实际外包络间隙为 **x=83.25 mm、y=78 mm**，两件均落在桌面上。
+- 零件抬升 80 mm，先移至反向路径入口，再沿“移入 207 mm → 回转 90° → 闭合 21.75 mm”的路径装配。
+- 目标为两件局部原点和姿态对齐：释放、撤臂后相对位置误差 <1 mm、相对姿态误差 <0.02 rad，且无辅助约束、无夹指接触，最后静置 2 秒。
+- 2.5 ms / 1.25 ms 两次完整物理执行均通过，10 子步、CPU float64、重力和接触均启用。两次最终装配位置误差分别为 **0.13466 / 0.13242 mm**，两时间步终态单件最大位置差 **0.00178 mm**。
+- 两次件间、跨机械臂和非抓持机器人穿透均为 0；最小实际采样 SAT 间隙分别为 **0.10838 / 0.12046 mm**。夹指抓持数值穿透单独记录为约 0.0254 / 0.0269 mm。
+
+当前播放入口沿用[原 Cast Coil 基础版页面](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full/index.html)。五路完整视频按视角整理到仓库根目录 [`demos/cast_coil/`](../../../demos/cast_coil/)，分别为 `cam_high/`、`cam_low/`、`cam_left_wrist/`、`cam_right_wrist/` 和 `front_oblique/`；每个目录内为 `2026-09-17_aloha_full_<camera>.mp4`，均为 **33.15 秒、663 帧、20 fps**。文件名前缀保留旧日期，实际装配运行日期及 `objective=assemble` 记录在清单；迁移前后视频内容和 SHA-256 不变，无需补录。
+历史拆解录像保留在[独立历史归档](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full_disassembly_retained/index.html)，旧外观对照页继续引用历史拆解，不与新装配录像混播。
+
+本次物理、时间步比较与替换记录位于 `runs/environment-solvability/cast_coil/assembly_baseline_20260918/`。视频为同一次物理执行保存的精确 20 Hz 状态离线 Nyx 渲染，仍使用接触后辅助抓持；不代表纯摩擦抓持或真实硬件验收。
+
+实现入口：`assembly_task.py` 提供分离初态、反向连续路径及装配目标；`robot_plan` 命令默认使用 `--objective assemble`，历史拆解可显式传 `--objective disassemble`；`robot_demo` 根据计划选择初态和成功条件；归档额外复核初态 x/y 间隔及释放后稳定装配。
+
+```bash
+.venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.robot_plan \
+  --objective assemble --output runs/environment-solvability/cast_coil/NEW_ASSEMBLY/plan.json
+```
+
+以下保留此前拆解原型、变体和可解性试验的历史记录；除上述基础版装配外，既有变体的物理录像仍为拆解任务。
+
+## 历史：拆解原型（2026-09-17）
+
 2026-09-17：当前 3 倍原型的完整双臂物理 demo 已通过验收并归档。
-[打开五视角播放页](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full/index.html)，
+[打开历史五视角播放页](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full_disassembly_retained/index.html)，
 MP4 独立副本位于 [`runs/demos/cast_coil/`](../../../runs/demos/cast_coil/)。
 这是预抓取起点、接触后辅助抓持的三段原型解法；完整执行包含解除辅助、撤手和自由静置，不宣称复现商业谜题官方八步。
 
@@ -22,7 +58,7 @@ MP4 独立副本位于 [`runs/demos/cast_coil/`](../../../runs/demos/cast_coil/)
 
 - `topogym/tasks/cast_coil/geometry.py`：参数校验、正交实体布尔构造、网格和碰撞体、质量惯量、资产导出。
 - `topogym/tasks/cast_coil/scene.py`：两个 6 自由度单 link 刚体，载入共享 Nyx / compact_lab 场景。
-- `configs/cast_coil_preview.yaml`：3 倍原型，固定初始装配和四个检查相机；机器人只作尺度参照。
+- `configs/cast_coil_preview.yaml`：3 倍原型、当前任务的分离初态和四个检查相机；机器人只作尺度参照。
 - `topogym/tasks/cast_coil/demo.py`：装配图、背面图、全景、拆件检查图、相机绕行视频和可选落桌检查。
 - `topogym/tasks/cast_coil/verification.py`：连续几何路径证书、错误路径和截面变化对照。
 - `topogym/tasks/cast_coil/physics_probe.py`：真实刚体步进的静置、有限受力及撤去驱动检查。
@@ -155,8 +191,8 @@ PYOPENGL_PLATFORM=egl LIBGL_ALWAYS_SOFTWARE=1 .venv-gs121-nyx/bin/python \
 
 ### 完整 demo 归档
 
-完整机器人 demo 生成后，视频副本统一保存到 `runs/demos/cast_coil/`，文件名使用
-`<date>_<run_id>_<camera>.mp4`；ALOHA 保留同一次完整执行的
+当前基础装配版的视频按视角保存到仓库根目录 `demos/cast_coil/<camera>/`，归档入口自动沿用此布局；历史拆解和其他变体保留 `runs/demos/cast_coil/`。
+文件名使用 `<date>_<run_id>_<camera>.mp4`；ALOHA 保留同一次完整执行的
 `cam_high / cam_low / cam_left_wrist / cam_right_wrist` 四路同步视频，并补充 `front_oblique` 近景。
 播放页、报告、配置、状态与资产放在 `runs/demo_metadata/cast_coil/<date>_<run_id>/`，按仓库 `AGENTS.md` 完成归档检查并更新总目录。
 
@@ -245,7 +281,7 @@ PYOPENGL_PLATFORM=egl LIBGL_ALWAYS_SOFTWARE=1 .venv-gs121-nyx/bin/python \
 | 默认运行的最终 0.5 秒静置窗口 | 最大线速度约 0.000295 mm/s、最大角速度约 0.00000548 rad/s |
 
 完整报告、半时间步状态、执行源码快照、相机参数、资产和 SHA-256 清单均随视频独立保留在
-[`runs/demo_metadata/cast_coil/2026-09-17_aloha_full/`](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full/index.html)。
+[`历史拆解归档`](../../../runs/demo_metadata/cast_coil/2026-09-17_aloha_full_disassembly_retained/index.html)。
 28 项相关回归检查通过。此次验收仅覆盖该原型、布局和辅助抓持流程，旧台架的未通过负对照及官方八步复现仍保留原结论。
 
 `configs/cast_coil_aloha.yaml` 保留 3 倍原型几何、质量与惯量，将整体 yaw 调整为 90°、放在 ALOHA 双臂之间。

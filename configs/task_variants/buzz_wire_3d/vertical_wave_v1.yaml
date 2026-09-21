@@ -1,0 +1,38 @@
+schema_version: 1
+spec_type: buzz_wire_family_design
+status: proposed
+runtime_ready: false
+family_id: F1_vertical_wave
+label_zh: 立体高低双拱
+contract: family_space_v1.yaml
+default_prototype: F1_double_arch
+family_identity:
+  motion: repeated climb, crest, dive, valley and climb; no terminal flat spiral
+  primary_planes: mainly x-z, with authored fore-aft offsets
+  required_height_span_m_min: 0.140
+  peak_count_is_discrete_prototype_identity: true
+  orientation: ring normal follows steep-to-horizontal tangent changes; handle stays in a collision-free side corridor
+
+prototypes:
+  F1_double_arch:
+    fixed_structure: {peak_count: 2, valley_count: 1, depth_pattern: alternating}
+    nominal: {turn_radius_m: 0.055, low_height_m: 0.080, high_height_m: 0.250, depth_span_m: 0.100}
+  F1_triple_arch:
+    fixed_structure: {peak_count: 3, valley_count: 2, depth_pattern: alternating}
+    nominal: {turn_radius_m: 0.050, low_height_m: 0.080, high_height_m: 0.250, depth_span_m: 0.100}
+
+tuning_candidates:
+  turn_radius_delta_m: {default: 0.0, bounds: [-0.004, 0.004]}
+  low_height_delta_m: {default: 0.0, bounds: [-0.005, 0.005]}
+  high_height_delta_m: {default: 0.0, bounds: [-0.010, 0.010]}
+  depth_span_delta_m: {default: 0.0, bounds: [-0.015, 0.015]}
+coupled_constraints:
+  - high_height - low_height >= 0.140 m
+  - high_height - low_height >= 2 * turn_radius + 0.020 m
+  - Entire tool and robot must clear the base at each valley.
+  - Preserve the exact authored peak count and depth ordering; radius changes cannot merge lobes.
+ik_design_priorities:
+  - Choose one continuous branch through both rising and falling sides of each arch.
+  - Avoid elbow flipping at crests and wrist saturation at valleys.
+  - Plan grip-side orientation jointly with the rail, rather than appending extra wrist spin.
+verification: {geometry: pending, ik: pending, robot_collision: pending, physics: pending}

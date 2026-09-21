@@ -1,0 +1,34 @@
+{
+  "family": "gen_keyhole",
+  "custom_reference_adaptation": true,
+  "all_spikes_fixed": true,
+  "spike_count": 6,
+  "shape": {
+    "keyhole_bulb_radius_m": 0.0475,
+    "slot_width_m": 0.026,
+    "slot_tip_x_m": 0.055,
+    "stem_angle_deg": -56.69642381826812,
+    "bar_count": 6,
+    "bar_twist_deg": 35.0,
+    "side_exit_blocked_by_core": true
+  },
+  "bodies": {
+    "cage": {
+      "collision_parts": 611,
+      "mass_kg": 0.35796463828118635,
+      "visual_finish": "wood",
+      "all_parts_watertight": true,
+      "all_parts_convex": true,
+      "mass_model": "density-based additive parts; embedded-root overlap retained"
+    },
+    "hedgehog": {
+      "collision_parts": 7,
+      "mass_kg": 0.0677489575774263,
+      "visual_finish": "wood",
+      "all_parts_watertight": true,
+      "all_parts_convex": true,
+      "mass_model": "density-based additive parts; embedded-root overlap retained"
+    }
+  },
+  "maximum_radial_extent_m": 0.06750000000000002
+}

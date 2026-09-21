@@ -1,0 +1,13 @@
+defaults:
+  - blanket_flatten_gathered_complete_robot
+  - _self_
+
+task:
+  execution:
+    maximum_grasp_occlusion_m: 0.003
+    project_targets_into_workspace: true
+    approach_lane_x_m: -0.10
+    monitor_free_motion_clearance: true
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v8

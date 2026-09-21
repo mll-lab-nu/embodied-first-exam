@@ -1,0 +1,37 @@
+schema_version: 1
+generator_version: hedgehog_seed_v1
+# Fixed family selection is independent of all continuous axes and retries.
+randomization:
+  family_id: oblique_gate
+  radius_fraction: 0.0
+  height_fraction: 0.0
+  center_dx_m: 0.0
+  center_dy_m: 0.0
+  yaw_delta_deg: 0.0
+  cage_wood_tint: 1.0
+  ball_wood_tint: 1.0
+  wood_roughness_delta: 0.0
+variation:
+  - {kind: choice, path: randomization.family_id, values: [oblique_gate, staggered_gates, helical_guide]}
+  - {kind: uniform, path: randomization.radius_fraction, lo: -1.0, hi: 1.0}
+  - {kind: uniform, path: randomization.height_fraction, lo: -1.0, hi: 1.0}
+  - {kind: uniform, path: randomization.center_dx_m, lo: -0.004, hi: 0.004}
+  - {kind: uniform, path: randomization.center_dy_m, lo: -0.004, hi: 0.004}
+  - {kind: uniform, path: randomization.yaw_delta_deg, lo: -2.0, hi: 2.0}
+  - {kind: uniform, path: randomization.cage_wood_tint, lo: 0.90, hi: 1.0}
+  - {kind: uniform, path: randomization.ball_wood_tint, lo: 0.94, hi: 1.0}
+  - {kind: uniform, path: randomization.wood_roughness_delta, lo: -0.05, hi: 0.05}
+  - {kind: derived, fn: 'topogym.tasks.hedgehog_in_cage.variants:derive'}
+  - {kind: validate, fn: 'topogym.tasks.hedgehog_in_cage.variants:validate_parameters', max_retries: 0}
+geometry_policy:
+  clearance_budget_fraction: 0.35
+  maximum_vertex_displacement_m: 0.001
+  cage_scale_origin: bottom_center
+  ball_and_grasp_geometry: fixed
+  mechanism_curve: fixed_per_family
+  extra_appearance_prototypes: excluded_until_separately_qualified
+acceptance:
+  minimum_object_witness_clearance_m: 0.0005
+  maximum_robot_joint_sample_step_rad: 0.01
+  maximum_robot_penetration_m: 0.0001
+  random_descendant_physics: not_inherited

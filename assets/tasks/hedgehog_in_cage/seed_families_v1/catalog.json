@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "library_version": "hedgehog_fixed_families_v1",
+  "families": [
+    {
+      "family_id": "oblique_gate",
+      "directory": "oblique_gate",
+      "prototype_id": "hedgehog_oblique_gate_fixed_v1",
+      "manifest_sha256": "27d48956c24e95efa8661927e5c2bfe1aab96ad6a1738293689c9f51c9bf6c81"
+    },
+    {
+      "family_id": "staggered_gates",
+      "directory": "staggered_gates",
+      "prototype_id": "hedgehog_staggered_gates_fixed_v1",
+      "manifest_sha256": "601230d25c37d8fcc7dd235bb520b9fb19982c84d5fee38b4595523f586792ac"
+    },
+    {
+      "family_id": "helical_guide",
+      "directory": "helical_guide",
+      "prototype_id": "hedgehog_helical_guide_fixed_v1",
+      "manifest_sha256": "11f5857271ca4f3ee0331dfd38f7357b4a3859c220ee25f16932783a17b5faf8"
+    }
+  ]
+}

@@ -52,11 +52,17 @@ def build_scene(cfg, asset_dir):
     bodies = {}
     for item in report["bodies"]:
         name = item["name"]
+        appearance = cfg.task.get("appearance", {})
+        surface = {}
+        if name == "target_ring" and appearance.get("target_ring_rgba") is not None:
+            surface["surface"] = gs.surfaces.Default(color=tuple(appearance["target_ring_rgba"]))
         entity = base.scene.add_entity(gs.morphs.URDF(
             file=str(folder/name/f"{name}.urdf"), pos=origin+rotation.apply(item["origin_m"]),
             quat=rotation.as_quat()[[3, 0, 1, 2]], fixed=False, align=False,
             convexify=True, decimate=False, merge_fixed_links=False),
-            material=gs.materials.Rigid(friction=.3), name=name)
+            # Only the robot has gravity compensation. Puzzle parts, including
+            # the ungrasped target ring and both chain links, always have weight.
+            material=gs.materials.Rigid(friction=.3, gravity_compensation=0.0), name=name, **surface)
         bodies[name] = base.manifest.add(name, entity)
     builder.finalize(base)
     if any(entity.n_dofs != 6 or entity.n_links != 1 for entity in bodies.values()):

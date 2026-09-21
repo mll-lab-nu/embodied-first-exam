@@ -1,0 +1,59 @@
+<robot name="piece_1">
+  <link name="piece_1">
+    <inertial>
+      <origin xyz="-1.5123585945574022e-05 1.5123587354066568e-05 0.03179965960558666" rpy="0 0 0" />
+      <mass value="0.06356510760465524" />
+      <inertia ixx="0.00015863750466979445" iyy="0.00015863750466997047" izz="0.00010682141579127759" ixy="-1.4538794042660676e-11" ixz="-3.0570042070190095e-08" iyz="1.9034054878958245e-08" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="piece_1.obj" />
+      </geometry>
+      <material name="piece_1">
+        <color rgba="0.2 0.53 0.61 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.063" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.018 0.018 0.148" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.02200000000000001 0.038105117766515297 0.0" rpy="0.0 0.0 1.0471975511965976" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.044 5.388445916248354e-18 0.0" rpy="0.0 0.0 3.141592653589793" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.02200000000000001 -0.038105117766515297 0.0" rpy="0.0 0.0 -1.0471975511965976" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="9.769962616701377e-18 0.044 0.012" rpy="0.0 0.0 1.5707963267948963" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.0381051177665153 -0.02200000000000001 0.012000000000000004" rpy="0.0 0.0 -2.617993877991494" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.03810511776651529 -0.02200000000000002 0.012" rpy="0.0 0.0 -0.5235987755982994" />
+      <geometry>
+        <box size="0.092 0.012 0.01" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

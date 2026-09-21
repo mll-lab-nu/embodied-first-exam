@@ -1,0 +1,32 @@
+{
+  "stock_voxels": 41280,
+  "safe_voxels": 38632,
+  "merged_cells": 391,
+  "outer_radius_m": 0.0675,
+  "second_gate": {
+    "stock_voxels": 84460,
+    "safe_voxels": 63992,
+    "merged_cells": 235
+  },
+  "cell_seam_padding_m": 3e-05,
+  "discarded_disconnected_cells": 137,
+  "discarded_disconnected_volume_m3": 0.0002079777577247081,
+  "positive_material_components": 1,
+  "enclosed_void_shells": 1,
+  "enclosed_void_volume_m3": 3.9532390745198875e-10,
+  "family": "staggered_gates",
+  "cage": {
+    "collision_parts": 489,
+    "mass_kg": 3.0921963715498353,
+    "visual_finish": "wood",
+    "all_parts_watertight": true,
+    "all_parts_convex": true,
+    "mass_model": "density-based additive parts; embedded-root overlap retained"
+  },
+  "connected": true,
+  "watertight": true,
+  "hedgehog_geometry_preserved": true,
+  "maximum_radial_extent_m": 0.2433001475544148,
+  "ik_sha256": "600b39628e4dbbcaf505725a5277eabb82156a3291688c91aec21d1bd23cf67c",
+  "sweep_sha256": "23eff451d2d9f6f37527d21b918bf0c1b9fcdad7ada9c5cc7428c09170d81709"
+}

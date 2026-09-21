@@ -1,0 +1,178 @@
+{
+  "rope_length_m": 1.3839719908094823,
+  "bounds_m": [
+    [
+      -0.18346350680501816,
+      -0.16296124496796788,
+      0.001
+    ],
+    [
+      0.18535811851549805,
+      0.09606830947873264,
+      0.024999884638634153
+    ]
+  ],
+  "endpoints_m": [
+    [
+      -0.17946350680501816,
+      -0.15829813086929995,
+      0.005
+    ],
+    [
+      0.18135811851549805,
+      -0.15896124496796787,
+      0.005
+    ]
+  ],
+  "centerline_points": 555,
+  "crossings": [
+    {
+      "segments": [
+        73,
+        296
+      ],
+      "parameters": [
+        0.2096093428306178,
+        0.3554951768837567
+      ],
+      "xy_m": [
+        -0.04584242970944659,
+        -0.06309297035014645
+      ],
+      "height_gap_m": 0.015993971065439167,
+      "first_over": true,
+      "sign": 1
+    },
+    {
+      "segments": [
+        111,
+        349
+      ],
+      "parameters": [
+        0.9194516736479138,
+        0.861366378911338
+      ],
+      "xy_m": [
+        -0.07417760084421467,
+        0.02410003700860909
+      ],
+      "height_gap_m": 0.015997007734269365,
+      "first_over": false,
+      "sign": 1
+    },
+    {
+      "segments": [
+        165,
+        388
+      ],
+      "parameters": [
+        0.42776151684802005,
+        0.5722384831539497
+      ],
+      "xy_m": [
+        -1.5504091066542713e-17,
+        0.0779860606069078
+      ],
+      "height_gap_m": 0.01599249037892279,
+      "first_over": true,
+      "sign": 1
+    },
+    {
+      "segments": [
+        204,
+        442
+      ],
+      "parameters": [
+        0.13863362109087832,
+        0.08054832635329087
+      ],
+      "xy_m": [
+        0.07417760084421461,
+        0.02410003700860903
+      ],
+      "height_gap_m": 0.015997007734269326,
+      "first_over": false,
+      "sign": 1
+    },
+    {
+      "segments": [
+        257,
+        480
+      ],
+      "parameters": [
+        0.6445048231189813,
+        0.7903906571700572
+      ],
+      "xy_m": [
+        0.04584242970944661,
+        -0.06309297035014644
+      ],
+      "height_gap_m": 0.015993971065439185,
+      "first_over": true,
+      "sign": 1
+    }
+  ],
+  "crossing_count": 5,
+  "over_under": [
+    "O",
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O",
+    "U"
+  ],
+  "gauss_unsigned": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "projected_writhe": 5,
+  "diagnostic_closure_crossings": 5,
+  "trefoil_diagram_verified": false,
+  "family": "double_overhand",
+  "knot_diagram_verified": true,
+  "minimum_nonlocal_centerline_distance_m": 0.014816088104484728,
+  "minimum_nonlocal_surface_gap_m": 0.006816088104484728,
+  "nearest_nonlocal_segments": [
+    66,
+    73
+  ],
+  "material_neighbour_exclusion_m": 0.012566370614359173,
+  "minimum_bend_radius_m": 0.02273133366436819,
+  "table_surface_clearance_m": 0.001,
+  "parameters": {
+    "rope_radius_m": 0.004,
+    "planar_scale_m": 0.026,
+    "crossing_height_m": 0.008,
+    "cut_angle_rad": 0.3,
+    "tail_length_m": 0.18,
+    "table_clearance_m": 0.001,
+    "segment_length_m": 0.0025,
+    "radial_segments": 12,
+    "handedness": "right",
+    "family": "double_overhand"
+  },
+  "knot_type": "open_double_overhand",
+  "closure_knot": "cinquefoil_5_1",
+  "physical_components": 1,
+  "physical_endpoints": 2,
+  "rest_shape": "straight",
+  "geometry_verified": true,
+  "physics_qualified": false,
+  "watertight": true,
+  "mesh_vertices": 6662,
+  "mesh_faces": 13320,
+  "scope": "initial_geometry_only",
+  "source": "https://katlas.org/wiki/T(5,2)"
+}

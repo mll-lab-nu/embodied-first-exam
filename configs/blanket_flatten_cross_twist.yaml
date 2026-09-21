@@ -1,0 +1,41 @@
+defaults:
+  - blanket_flatten_robot
+  - _self_
+
+task:
+  variant: staged_corner_cross_twist_v3
+  stretch_iterations: 48
+  origin_xy_m: [0.10, 0.08]
+  geometry:
+    # Flat binding reference only. The assembled structure is later lowered.
+    drop_clearance_m: 0.22
+    seed: 2
+  preparation:
+    servo_gain_s: 14.0
+    maximum_speed_m_s: 0.25
+    transition_band_m: 0.050
+    velocity_projection_strength: 64.0
+    velocity_correction_rate_s: 32.0
+    preparation_layer_clearance_m: 0.010
+    hold_seconds: 0.35
+    maximum_hold_seconds: 2.0
+    target_rms_tolerance_m: 0.015
+    slow_motion_stretch: 1.18
+    pause_motion_stretch: 1.26
+    between_stage_relax_seconds: 0.25
+    folds:
+      - {name: diagonal_corner, normal_xy: [1.0, 1.0], fraction: 0.77, angle_deg: 170.0, seconds: 2.0}
+      - {name: longitudinal_1, normal_xy: [1.0, 0.0], fraction: 0.50, angle_deg: 175.0, seconds: 3.5}
+      - {name: transverse_1, normal_xy: [0.0, 1.0], fraction: 0.50, angle_deg: 165.0, seconds: 3.5, guide_fraction: 0.20}
+      - {name: longitudinal_2, normal_xy: [-1.0, 0.0], fraction: 0.55, angle_deg: 145.0, seconds: 3.0, guide_fraction: 0.20}
+    twist_angle_deg: 240.0
+    twist_axial_scale: 0.70
+    twist_seconds: 4.0
+    twist_end_fraction: 0.18
+    release_clearance_m: 0.020
+    lowering_seconds: 2.0
+    relax_seconds: 0.5
+
+run:
+  mode: stability
+  output: runs/environment_bootstrap/blanket_flatten/corner_cross_twist_v6

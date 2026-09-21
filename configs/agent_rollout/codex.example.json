@@ -1,0 +1,4 @@
+[
+  {"id": "codex", "access_mode": "rgb", "interaction": "tools", "reset_policy": "disabled", "provider": "codex", "model": "YOUR_AVAILABLE_CODEX_MODEL", "timeout_s": 600},
+  {"id": "codex", "access_mode": "simulator", "interaction": "tools", "reset_policy": "same_preset", "provider": "codex", "model": "YOUR_AVAILABLE_CODEX_MODEL", "timeout_s": 600}
+]

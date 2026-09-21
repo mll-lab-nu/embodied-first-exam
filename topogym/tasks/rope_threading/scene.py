@@ -1,5 +1,5 @@
 """Shared ALOHA lab, fixed open rings, and an unpinned FEM rope."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +17,9 @@ class ThreadingScene:
     fixtures: dict
     asset_report: dict
     volume_report: dict
+    damping: Any = None
+    memory_policy: Any = None
+    table_contact: Any = None
 
     @property
     def scene(self):
@@ -57,6 +60,8 @@ class ThreadingSceneBuilder:
         options = backend.scene_options()
         if cfg.rope.fem.get("contact_eps_velocity") is not None:
             options["coupler_options"].contact_eps_velocity = float(cfg.rope.fem.contact_eps_velocity)
+        if cfg.rope.fem.get("linear_system_tolerance") is not None:
+            options["coupler_options"].linear_system_tolerance = float(cfg.rope.fem.linear_system_tolerance)
         builder = StandardTabletopSceneBuilder(self.env_cfg, self.robot_cfg,
             scene_options=options, debug_label="threading_build",
             rigid_options=gs.options.RigidOptions(**OmegaConf.to_container(cfg.robot_rigid_collision, resolve=True))
@@ -106,8 +111,20 @@ class ThreadingSceneBuilder:
         check_self_contact_clearance(radius=layout.radius, radial_segments=layout.radial_segments,
             ring_spacing=float(np.linalg.norm(np.diff(centerline, axis=0), axis=1).min()),
             contact_d_hat=float(cfg.rope.fem.contact_d_hat))
+        morph = tube_morph(asset_dir/"rope.obj", cfg.rope)
+        if layout.rope_height_offset_m:
+            # Mesh the identical source surface, then translate the resulting
+            # volume. A clearance experiment must not also remesh the rope.
+            from topogym.world.rope import make_elastic_tube_mesh, write_obj
+            vertices, faces = make_elastic_tube_mesh(
+                replace(layout, rope_height_offset_m=0.).centerline(),
+                radius=layout.radius, radial_segments=layout.radial_segments)
+            source = asset_dir/"rope_unshifted.obj"
+            write_obj(source, vertices, faces)
+            morph = tube_morph(source, cfg.rope)
+            morph.pos = (0., 0., layout.rope_height_offset_m)
         rope = base.manifest.add("threading_rope", base.scene.add_entity(
-            tube_morph(asset_dir/"rope.obj", cfg.rope), material=backend.material(),
+            morph, material=backend.material(),
             surface=gs.surfaces.Rough(color=(.95, .48, .15)), name="threading_rope"))
         spawn = np.asarray(tensor_to_numpy(rope.init_positions), dtype=float)
         straight = _straighten_positions(spawn, centerline)
@@ -118,6 +135,20 @@ class ThreadingSceneBuilder:
         if pre_build is not None:
             pre_build(base, rope, centerline, backend)
         coupler = base.scene.sim.coupler
+        table_contact = None
+        table_model = cfg.get('table_contact_model', 'triangle_mesh')
+        if table_model == 'analytic_plane':
+            from .table_contact import AnalyticTableContact
+            table_contact = AnalyticTableContact(coupler, rope, base.manifest.get('table'),
+                self.env_cfg.world.table.pos, self.env_cfg.world.table.size)
+        elif table_model != 'triangle_mesh':
+            raise ValueError('Unknown rope/table contact model')
+        damping = None
+        damping_rate = float(cfg.rope.fem.get("deformation_damping_rate_s_inv", 0.))
+        if damping_rate:
+            from .deformation_damping import DeformationDamping
+            damping = DeformationDamping(coupler, rope, straight, damping_rate,
+                                         float(base.scene.sim._substep_dt))
         original_build = coupler.build
         if include_robot:
             def build_at_neutral():
@@ -140,7 +171,13 @@ class ThreadingSceneBuilder:
             builder.finalize(base)
         finally:
             coupler.build = original_build
+            if table_contact is not None:
+                table_contact.finish_build()
+        if damping is not None:
+            damping.start()
+        from .runtime_memory import ForwardOnlyMemory
+        memory_policy = ForwardOnlyMemory(base.scene, rope)
         volume = dict(vertices=len(spawn), tetrahedra=len(rope.elems),
                       inverted_straight_reference_tetrahedra=0, rest_shape="straight",
                       pinned_vertices=0, endpoint_constraints=0)
-        return ThreadingScene(base, layout, rope, backend, fixtures, report, volume)
+        return ThreadingScene(base, layout, rope, backend, fixtures, report, volume, damping, memory_policy, table_contact)

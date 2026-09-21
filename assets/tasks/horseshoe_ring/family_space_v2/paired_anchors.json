@@ -1,0 +1,312 @@
+{
+  "generator_version": "horseshoe_physical_families_v2",
+  "anchors": {
+    "F1": {
+      "parameters": {
+        "family_id": "F1",
+        "prototype_id": "classic_circle",
+        "scale_ratio": 1.0097213886065373,
+        "translation_m": [
+          0.0004545312908081112,
+          -0.0015716515302376152,
+          0.0
+        ],
+        "yaw_deg": -0.05199624716079576,
+        "route_offset_m": [
+          0.0,
+          -0.0011950787164260403,
+          0.0
+        ],
+        "finish": "dark_steel"
+      },
+      "source_instance_id": "horseshoe_ring_v2_744fd8c05b78eb8122b62dd3",
+      "request": {
+        "seed": 42,
+        "attempt": 0,
+        "sampling_seed": 42,
+        "family_id": "F1",
+        "jitter": true
+      },
+      "physical_result_sha256": "f7757430632ed21057438bf103d42217f7b4dd4ae9ddb99a80ec5b70a98c1b8e",
+      "physical_states_sha256": "f539dc0106284e4b7238c4be2aa509efe9482d9cce0deb97c3fc806459731dc1",
+      "verification": {
+        "passed": true,
+        "checks": {
+          "complete": true,
+          "original_start": true,
+          "gravity": true,
+          "no_pose_replay": true,
+          "free_initial_ring": true,
+          "free_chains": true,
+          "states_hash": true,
+          "seed_hash": true,
+          "template_hash": true,
+          "penetration": true,
+          "robot_self_penetration": true,
+          "robot_table_penetration": true,
+          "complete_observations": true,
+          "physical_clock": true,
+          "observation_cadence": true,
+          "chain_connections": true,
+          "no_chain_welds": true,
+          "initial_joints": true,
+          "initial_puzzle": true,
+          "initial_gravity_drop": true,
+          "contact_gated_new_grasps": true,
+          "both_handover_gates": true,
+          "ring_released": true,
+          "ring_table_contact": true,
+          "free_settled_last_second": true,
+          "independent_final_separation": true
+        },
+        "classification": "gravity_and_contact_execution_with_declared_grasp_assistance",
+        "initial_pickup_verified": false,
+        "pure_friction_grasp_verified": false,
+        "source": "/home/jianwen/topogym/runs/environment-solvability/horseshoe_ring/families_physical_v2/F1_jitter01",
+        "source_result_sha256": "f7757430632ed21057438bf103d42217f7b4dd4ae9ddb99a80ec5b70a98c1b8e",
+        "source_states_sha256": "f539dc0106284e4b7238c4be2aa509efe9482d9cce0deb97c3fc806459731dc1",
+        "dt": 0.002,
+        "physics_steps": 63150,
+        "simulated_seconds": 126.3,
+        "maximum_puzzle_penetration_m": 0.00038984344486414006,
+        "initial_ring_drop_m": 0.055595080985397116,
+        "contact_gates": 2,
+        "final_goal": {
+          "separated": true,
+          "separation_m": 0.33939698935355544,
+          "target_bounds_m": [
+            [
+              0.18787298336314812,
+              0.03455511079521072,
+              -5.127089191013772e-05
+            ],
+            [
+              0.3188271212899204,
+              0.16550924872199102,
+              0.005705410493403662
+            ]
+          ],
+          "assembly_bounds_m": [
+            [
+              -0.019894149438492673,
+              -0.021940192020825817,
+              0.3451023998469591
+            ],
+            [
+              0.15495100372332116,
+              0.12928984860718853,
+              0.4189502001818323
+            ]
+          ]
+        },
+        "final_ring_height_m": 0.9224699698007468
+      },
+      "source_directory": "runs/environment-solvability/horseshoe_ring/families_physical_v2/F1_jitter01"
+    },
+    "F2": {
+      "parameters": {
+        "family_id": "F2",
+        "prototype_id": "classic_circle",
+        "scale_ratio": 1.0092016862544801,
+        "translation_m": [
+          0.0025357115049149687,
+          -0.002627847647556033,
+          0.0
+        ],
+        "yaw_deg": -0.7222381691799586,
+        "route_offset_m": [
+          0.0,
+          0.0018052599615105858,
+          0.0
+        ],
+        "finish": "dark_steel"
+      },
+      "source_instance_id": "horseshoe_ring_v2_affc35ee9f580d29d358cf92",
+      "request": {
+        "seed": 43,
+        "attempt": 0,
+        "sampling_seed": 43,
+        "family_id": "F2",
+        "jitter": true
+      },
+      "physical_result_sha256": "f87aacc2502e240e108beedf1fa4fa298a0b15cda4fbb36ed6c387ecfaa76f8c",
+      "physical_states_sha256": "4851a41feef6e80d4b1393542ee1db8880cec169d15e65ba5b8945ad4766c0c1",
+      "verification": {
+        "passed": true,
+        "checks": {
+          "complete": true,
+          "original_start": true,
+          "gravity": true,
+          "no_pose_replay": true,
+          "free_initial_ring": true,
+          "free_chains": true,
+          "states_hash": true,
+          "seed_hash": true,
+          "template_hash": true,
+          "penetration": true,
+          "robot_self_penetration": true,
+          "robot_table_penetration": true,
+          "complete_observations": true,
+          "physical_clock": true,
+          "observation_cadence": true,
+          "chain_connections": true,
+          "no_chain_welds": true,
+          "initial_joints": true,
+          "initial_puzzle": true,
+          "initial_gravity_drop": true,
+          "contact_gated_new_grasps": true,
+          "both_handover_gates": true,
+          "ring_released": true,
+          "ring_table_contact": true,
+          "free_settled_last_second": true,
+          "independent_final_separation": true
+        },
+        "classification": "gravity_and_contact_execution_with_declared_grasp_assistance",
+        "initial_pickup_verified": false,
+        "pure_friction_grasp_verified": false,
+        "source": "/home/jianwen/topogym/runs/environment-solvability/horseshoe_ring/families_physical_v2/F2_jitter01",
+        "source_result_sha256": "f87aacc2502e240e108beedf1fa4fa298a0b15cda4fbb36ed6c387ecfaa76f8c",
+        "source_states_sha256": "4851a41feef6e80d4b1393542ee1db8880cec169d15e65ba5b8945ad4766c0c1",
+        "dt": 0.002,
+        "physics_steps": 60450,
+        "simulated_seconds": 120.9,
+        "maximum_puzzle_penetration_m": 0.0003901453990424828,
+        "initial_ring_drop_m": 0.055572199193609784,
+        "contact_gates": 2,
+        "final_goal": {
+          "separated": true,
+          "separation_m": 0.3624428280403634,
+          "target_bounds_m": [
+            [
+              0.18834192055768528,
+              0.03460591979857462,
+              -5.124238849106219e-05
+            ],
+            [
+              0.31922420363950765,
+              0.16548820288039612,
+              0.005702473021988102
+            ]
+          ],
+          "assembly_bounds_m": [
+            [
+              0.020230862525913038,
+              0.07923653333061074,
+              0.3681453010623515
+            ],
+            [
+              0.18648774414985902,
+              0.2312493161279196,
+              0.4694790868404136
+            ]
+          ]
+        },
+        "final_ring_height_m": 0.9224685153167486
+      },
+      "source_directory": "runs/environment-solvability/horseshoe_ring/families_physical_v2/F2_jitter01"
+    },
+    "F3": {
+      "parameters": {
+        "family_id": "F3",
+        "prototype_id": "classic_circle",
+        "scale_ratio": 1.0,
+        "translation_m": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "yaw_deg": 0.0,
+        "route_offset_m": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "finish": "silver"
+      },
+      "source_instance_id": "horseshoe_ring_v2_211bc18896555ae510284373",
+      "request": {
+        "seed": 19,
+        "attempt": 0,
+        "sampling_seed": 19,
+        "family_id": "F3",
+        "jitter": false
+      },
+      "physical_result_sha256": "967504041b7fcf5720cf81ff82cd64d0d922a6ec1b3db78fe76f69495ee56e58",
+      "physical_states_sha256": "13f35e496135e31d2e6b22c70096b70f9c7d5c37ac8dfe9601708bdf26df4ed9",
+      "verification": {
+        "passed": true,
+        "checks": {
+          "complete": true,
+          "original_start": true,
+          "gravity": true,
+          "no_pose_replay": true,
+          "free_initial_ring": true,
+          "free_chains": true,
+          "states_hash": true,
+          "seed_hash": true,
+          "template_hash": true,
+          "penetration": true,
+          "robot_self_penetration": true,
+          "robot_table_penetration": true,
+          "complete_observations": true,
+          "physical_clock": true,
+          "observation_cadence": true,
+          "chain_connections": true,
+          "no_chain_welds": true,
+          "initial_joints": true,
+          "initial_puzzle": true,
+          "initial_gravity_drop": true,
+          "contact_gated_new_grasps": true,
+          "both_handover_gates": true,
+          "ring_released": true,
+          "ring_table_contact": true,
+          "free_settled_last_second": true,
+          "independent_final_separation": true
+        },
+        "classification": "gravity_and_contact_execution_with_declared_grasp_assistance",
+        "initial_pickup_verified": false,
+        "pure_friction_grasp_verified": false,
+        "source": "/home/jianwen/topogym/runs/environment-solvability/horseshoe_ring/families_physical_v2/F3_anchor01",
+        "source_result_sha256": "967504041b7fcf5720cf81ff82cd64d0d922a6ec1b3db78fe76f69495ee56e58",
+        "source_states_sha256": "13f35e496135e31d2e6b22c70096b70f9c7d5c37ac8dfe9601708bdf26df4ed9",
+        "dt": 0.002,
+        "physics_steps": 60050,
+        "simulated_seconds": 120.10000000000001,
+        "maximum_puzzle_penetration_m": 0.00046058162124715816,
+        "initial_ring_drop_m": 0.05500782131849058,
+        "contact_gates": 2,
+        "final_goal": {
+          "separated": true,
+          "separation_m": 0.29965027698911484,
+          "target_bounds_m": [
+            [
+              0.18826643815147243,
+              0.03470877824189429,
+              -5.077182754912061e-05
+            ],
+            [
+              0.31795617475269106,
+              0.16439851484311951,
+              0.005650481946756467
+            ]
+          ],
+          "assembly_bounds_m": [
+            [
+              -0.04333908526606612,
+              0.057942342048241155,
+              0.30530075893587133
+            ],
+            [
+              0.12999367651233107,
+              0.23291212250606255,
+              0.41330477329502335
+            ]
+          ]
+        },
+        "final_ring_height_m": 0.9224427550596037
+      },
+      "source_directory": "runs/environment-solvability/horseshoe_ring/families_physical_v2/F3_anchor01"
+    }
+  },
+  "scope": "Three exact 2 ms gravity/contact successes with grasp assistance; neighborhoods require fresh validation"
+}

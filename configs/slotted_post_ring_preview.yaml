@@ -1,0 +1,80 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_aloha_v1
+  - robot_control_configs@robot_control: aloha_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: video_reconstruction_v1
+  seed: 0
+  origin_xy_m: [-0.1356786, 0.14]
+  yaw_deg: 0.0
+  geometry:
+    base_width_m: 0.26
+    base_depth_m: 0.19
+    base_height_m: 0.022
+    post_width_m: 0.072
+    post_depth_m: 0.028
+    post_height_m: 0.29
+    slot_width_m: 0.028
+    slot_bottom_m: 0.072
+    slot_top_m: 0.276
+    ring_major_radius_m: 0.061
+    ring_tube_radius_m: 0.010
+    rope_radius_m: 0.0035
+    bead_radius_m: 0.0195
+    bead_hole_radius_m: 0.0045
+    disc_radius_m: 0.055
+    disc_thickness_m: 0.011
+    floor_clearance_m: 0.001
+  # All task entities are fixed for this inspection. No artificial rope solver.
+  mode: static_inspection
+
+env:
+  preset:
+    locked: false
+  renderer:
+    spp: 32
+  cameras:
+    overview:
+      res: [1280, 720]
+      pos: [0.92, -1.25, 1.91]
+      lookat: [-0.1356786, 0.015, 1.08]
+      up: [0, 0, 1]
+      fov: 44
+      near: 0.005
+      far: 12
+    front_oblique:
+      res: [1280, 720]
+      pos: [-0.02, -0.62, 1.48]
+      lookat: [-0.1356786, 0.01, 1.055]
+      up: [0, 0, 1]
+      fov: 47
+      near: 0.005
+      far: 12
+    rear_oblique:
+      res: [1280, 720]
+      pos: [0.19, 0.78, 1.47]
+      lookat: [-0.1356786, 0.015, 1.055]
+      up: [0, 0, 1]
+      fov: 42
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/slotted_post_ring/static_initial_v1
+  viewer: false
+  include_robot: true
+  build_scene: true
+  render: true
+  cameras: [overview, front_oblique, rear_oblique]
+  fps: 15
+  video_seconds: 8
+  orbit_degrees: 12
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

@@ -1,6 +1,18 @@
 schema_version: 1
 task_id: interlocked_claws
 title_zh: 嵌合体脱困
+variant_generation:
+  version: claw_seed_v1
+  config: configs/interlocked_claws_variants.yaml
+  catalog: assets/tasks/interlocked_claws/seed_families_v1/catalog.json
+  sample_entrypoint: topogym.tasks.interlocked_claws.variants:sample
+  materialize_entrypoint: topogym.tasks.interlocked_claws.variants:generate
+  restore_entrypoint: topogym.tasks.interlocked_claws.variants:prepare_episode
+  spec_type: topogym.generation.episode_spec.EpisodeSpec
+  status: candidate_generation_only
+  implemented_families: [claw_weave]
+  unimplemented_families: [helical_crown, orthogonal_gate]
+  dataset_enabled: false
 baseline:
   asset_id: cspace_claw_wang_v1
   assembly_pose_id: reference_start

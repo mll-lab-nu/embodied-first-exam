@@ -1,0 +1,9 @@
+{
+  "status": "awaiting_explicit_destination_authorization",
+  "source_uploaded": false,
+  "deployed": false,
+  "project_id": "appgprj_6aaf48ca87c88191a3ede045b369e2ef",
+  "expected_url": "https://topogym-spatial-constraints-20260919.cream-carp-9848.chatgpt.site",
+  "blocked_action": "Push presentation and videos to newly created private Sites Git repository",
+  "reason": "Automatic approval review requires explicit authorization to transfer internal slides and videos to this specific external destination."
+}

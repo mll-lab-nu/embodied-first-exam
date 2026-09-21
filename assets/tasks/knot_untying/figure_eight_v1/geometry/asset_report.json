@@ -1,0 +1,157 @@
+{
+  "rope_length_m": 1.2410836110943582,
+  "bounds_m": [
+    [
+      -0.1964526685193067,
+      -0.1422513414275672,
+      0.001
+    ],
+    [
+      0.19476231482586023,
+      0.08198857145936762,
+      0.024999991897281724
+    ]
+  ],
+  "endpoints_m": [
+    [
+      0.19076231482586023,
+      -0.1376597176348609,
+      0.005
+    ],
+    [
+      -0.1924526685193067,
+      -0.1382513414275672,
+      0.005
+    ]
+  ],
+  "centerline_points": 498,
+  "crossings": [
+    {
+      "segments": [
+        91,
+        201
+      ],
+      "parameters": [
+        0.0826129893668929,
+        0.6980265514437052
+      ],
+      "xy_m": [
+        0.06499210645898541,
+        1.5752598902147555e-05
+      ],
+      "height_gap_m": 0.013853399474257823,
+      "first_over": true,
+      "sign": -1
+    },
+    {
+      "segments": [
+        125,
+        371
+      ],
+      "parameters": [
+        0.8976715923315692,
+        0.1023284076684201
+      ],
+      "xy_m": [
+        1.474514954580286e-17,
+        0.03899271367181572
+      ],
+      "height_gap_m": 0.013853805137760817,
+      "first_over": false,
+      "sign": 1
+    },
+    {
+      "segments": [
+        166,
+        330
+      ],
+      "parameters": [
+        0.8703624526896188,
+        0.12963754731039998
+      ],
+      "xy_m": [
+        -1.734723475976807e-17,
+        -0.03899100733337062
+      ],
+      "height_gap_m": 0.013853021350305143,
+      "first_over": true,
+      "sign": 1
+    },
+    {
+      "segments": [
+        295,
+        405
+      ],
+      "parameters": [
+        0.3019734485567244,
+        0.9173870106332139
+      ],
+      "xy_m": [
+        -0.06499210645898541,
+        1.5752598902140725e-05
+      ],
+      "height_gap_m": 0.013853399474257821,
+      "first_over": true,
+      "sign": -1
+    }
+  ],
+  "crossing_count": 4,
+  "over_under": [
+    "O",
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O",
+    "U"
+  ],
+  "gauss_unsigned": [
+    1,
+    2,
+    3,
+    1,
+    4,
+    3,
+    2,
+    4
+  ],
+  "projected_writhe": 0,
+  "diagnostic_closure_crossings": 4,
+  "trefoil_diagram_verified": false,
+  "family": "figure_eight",
+  "knot_diagram_verified": true,
+  "minimum_nonlocal_centerline_distance_m": 0.013717183313474185,
+  "minimum_nonlocal_surface_gap_m": 0.005717183313474185,
+  "nearest_nonlocal_segments": [
+    125,
+    371
+  ],
+  "material_neighbour_exclusion_m": 0.012566370614359173,
+  "minimum_bend_radius_m": 0.016835374673659007,
+  "table_surface_clearance_m": 0.001,
+  "parameters": {
+    "rope_radius_m": 0.004,
+    "planar_scale_m": 0.026,
+    "crossing_height_m": 0.008,
+    "cut_angle_rad": 0.3,
+    "tail_length_m": 0.18,
+    "table_clearance_m": 0.001,
+    "segment_length_m": 0.0025,
+    "radial_segments": 12,
+    "handedness": "right",
+    "family": "figure_eight"
+  },
+  "knot_type": "open_figure_eight",
+  "closure_knot": "figure_eight_4_1",
+  "physical_components": 1,
+  "physical_endpoints": 2,
+  "rest_shape": "straight",
+  "geometry_verified": true,
+  "physics_qualified": false,
+  "watertight": true,
+  "mesh_vertices": 5978,
+  "mesh_faces": 11952,
+  "scope": "initial_geometry_only",
+  "source": "https://katlas.org/wiki/4_1"
+}

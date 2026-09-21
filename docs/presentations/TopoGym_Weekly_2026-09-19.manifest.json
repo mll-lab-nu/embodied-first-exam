@@ -1,0 +1,1192 @@
+{
+  "pptx": "/home/jianwen/topogym/docs/presentations/TopoGym_Weekly_2026-09-19.pptx",
+  "slides": [
+    {
+      "number": 1,
+      "title": "TopoGym 研究周报",
+      "section": "WEEKLY RESEARCH UPDATE"
+    },
+    {
+      "number": 2,
+      "title": "11 项任务：四阶段进展总览",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 3,
+      "title": "Cast Coil｜卷绕件装配",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 4,
+      "title": "Cast Keyhole｜钥匙孔拆解",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 5,
+      "title": "Horseshoe Ring｜马蹄环",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 6,
+      "title": "Hedgehog in Cage｜刺球出笼",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 7,
+      "title": "Lock Picking｜开锁",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 8,
+      "title": "Fiber Bundling｜光纤收束",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 9,
+      "title": "Interlocked Claws｜A0 基础变体",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 10,
+      "title": "Knot Untying｜解绳结",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 11,
+      "title": "Buzz Wire 3D｜立体电流棒",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 12,
+      "title": "Rope Threading｜绳穿三环",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 13,
+      "title": "Blanket Flatten｜被子展平",
+      "section": "01 / 任务进展"
+    },
+    {
+      "number": 14,
+      "title": "6 个任务、7 次运行：尚无成功求解",
+      "section": "02 / GPT-6 ASTRA 测试"
+    },
+    {
+      "number": 15,
+      "title": "2M 是目标预算，本批没有实时硬限制",
+      "section": "02 / GPT-6 ASTRA 测试"
+    },
+    {
+      "number": 16,
+      "title": "其余 5 项：自主求解未开始",
+      "section": "02 / GPT-6 ASTRA 测试"
+    },
+    {
+      "number": 17,
+      "title": "问题一：每个收录变体需要怎样的可解性证据？",
+      "section": "03 / REVIEWER 讨论"
+    },
+    {
+      "number": 18,
+      "title": "当前阶段：先建立验收闭环，再 sweep 收录集合",
+      "section": "03 / REVIEWER 讨论"
+    },
+    {
+      "number": 19,
+      "title": "问题二：直接 GPT-6 session 的测试方法合理吗？",
+      "section": "03 / REVIEWER 讨论"
+    },
+    {
+      "number": 20,
+      "title": "正式 benchmark 前，需要 reviewer 评估的四项条件",
+      "section": "03 / REVIEWER 讨论"
+    }
+  ],
+  "hyperlinks": [
+    {
+      "slide": 3,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_high/2026-09-17_aloha_full_cam_high.mp4",
+      "target": "../../demos/cast_coil/cam_high/2026-09-17_aloha_full_cam_high.mp4"
+    },
+    {
+      "slide": 3,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_low/2026-09-17_aloha_full_cam_low.mp4",
+      "target": "../../demos/cast_coil/cam_low/2026-09-17_aloha_full_cam_low.mp4"
+    },
+    {
+      "slide": 3,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_left_wrist/2026-09-17_aloha_full_cam_left_wrist.mp4",
+      "target": "../../demos/cast_coil/cam_left_wrist/2026-09-17_aloha_full_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 3,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_right_wrist/2026-09-17_aloha_full_cam_right_wrist.mp4",
+      "target": "../../demos/cast_coil/cam_right_wrist/2026-09-17_aloha_full_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 3,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/cast_coil/front_oblique/2026-09-17_aloha_full_front_oblique.mp4",
+      "target": "../../demos/cast_coil/front_oblique/2026-09-17_aloha_full_front_oblique.mp4"
+    },
+    {
+      "slide": 3,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/cast_coil_seed_generator_zh.md",
+      "target": "../develop/tasks/cast_coil_seed_generator_zh.md"
+    },
+    {
+      "slide": 4,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_high/2026-09-17_current_instance_physical_cam_high.mp4",
+      "target": "../../demos/cast_keyhole/cam_high/2026-09-17_current_instance_physical_cam_high.mp4"
+    },
+    {
+      "slide": 4,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_low/2026-09-17_current_instance_physical_cam_low.mp4",
+      "target": "../../demos/cast_keyhole/cam_low/2026-09-17_current_instance_physical_cam_low.mp4"
+    },
+    {
+      "slide": 4,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_left_wrist/2026-09-17_current_instance_physical_cam_left_wrist.mp4",
+      "target": "../../demos/cast_keyhole/cam_left_wrist/2026-09-17_current_instance_physical_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 4,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_right_wrist/2026-09-17_current_instance_physical_cam_right_wrist.mp4",
+      "target": "../../demos/cast_keyhole/cam_right_wrist/2026-09-17_current_instance_physical_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 4,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/detail/2026-09-17_current_instance_physical_detail.mp4",
+      "target": "../../demos/cast_keyhole/detail/2026-09-17_current_instance_physical_detail.mp4"
+    },
+    {
+      "slide": 4,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/cast_keyhole_variants_zh.md",
+      "target": "../develop/tasks/cast_keyhole_variants_zh.md"
+    },
+    {
+      "slide": 5,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_high/2026-09-18_gravity_replanned_v1_cam_high.mp4",
+      "target": "../../demos/horseshoe_ring/cam_high/2026-09-18_gravity_replanned_v1_cam_high.mp4"
+    },
+    {
+      "slide": 5,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_low/2026-09-18_gravity_replanned_v1_cam_low.mp4",
+      "target": "../../demos/horseshoe_ring/cam_low/2026-09-18_gravity_replanned_v1_cam_low.mp4"
+    },
+    {
+      "slide": 5,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_left_wrist/2026-09-18_gravity_replanned_v1_cam_left_wrist.mp4",
+      "target": "../../demos/horseshoe_ring/cam_left_wrist/2026-09-18_gravity_replanned_v1_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 5,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_right_wrist/2026-09-18_gravity_replanned_v1_cam_right_wrist.mp4",
+      "target": "../../demos/horseshoe_ring/cam_right_wrist/2026-09-18_gravity_replanned_v1_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 5,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/detail/2026-09-18_gravity_replanned_v1_detail.mp4",
+      "target": "../../demos/horseshoe_ring/detail/2026-09-18_gravity_replanned_v1_detail.mp4"
+    },
+    {
+      "slide": 5,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/horseshoe_ring_variant_generator_zh.md",
+      "target": "../develop/tasks/horseshoe_ring_variant_generator_zh.md"
+    },
+    {
+      "slide": 6,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-16_classic_wood_extraction_agentview.mp4",
+      "target": "../../demos/hedgehog_in_cage/agentview/2026-09-16_classic_wood_extraction_agentview.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-16_classic_wood_extraction_front_oblique.mp4",
+      "target": "../../demos/hedgehog_in_cage/front_oblique/2026-09-16_classic_wood_extraction_front_oblique.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-16_classic_wood_extraction_wrist.mp4",
+      "target": "../../demos/hedgehog_in_cage/wrist/2026-09-16_classic_wood_extraction_wrist.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-17_family_a_oblique_gate_v1_agentview.mp4",
+      "target": "../../demos/hedgehog_in_cage/agentview/2026-09-17_family_a_oblique_gate_v1_agentview.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-17_family_a_oblique_gate_v1_front_oblique.mp4",
+      "target": "../../demos/hedgehog_in_cage/front_oblique/2026-09-17_family_a_oblique_gate_v1_front_oblique.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-17_family_a_oblique_gate_v1_wrist.mp4",
+      "target": "../../demos/hedgehog_in_cage/wrist/2026-09-17_family_a_oblique_gate_v1_wrist.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-19_gen_keyhole_v2_agentview.mp4",
+      "target": "../../demos/hedgehog_in_cage/agentview/2026-09-19_gen_keyhole_v2_agentview.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-19_gen_keyhole_v2_front_oblique.mp4",
+      "target": "../../demos/hedgehog_in_cage/front_oblique/2026-09-19_gen_keyhole_v2_front_oblique.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-19_gen_keyhole_v2_wrist.mp4",
+      "target": "../../demos/hedgehog_in_cage/wrist/2026-09-19_gen_keyhole_v2_wrist.mp4"
+    },
+    {
+      "slide": 6,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/hedgehog_in_cage_zh.md",
+      "target": "../develop/tasks/hedgehog_in_cage_zh.md"
+    },
+    {
+      "slide": 7,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/lock_picking/agentview/2026-09-18_standard_150mm_purple_trace_v1_agentview.mp4",
+      "target": "../../demos/lock_picking/agentview/2026-09-18_standard_150mm_purple_trace_v1_agentview.mp4"
+    },
+    {
+      "slide": 7,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/lock_picking/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4",
+      "target": "../../demos/lock_picking/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4"
+    },
+    {
+      "slide": 7,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/lock_picking/wrist/2026-09-18_standard_150mm_purple_trace_v1_wrist.mp4",
+      "target": "../../demos/lock_picking/wrist/2026-09-18_standard_150mm_purple_trace_v1_wrist.mp4"
+    },
+    {
+      "slide": 7,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/lock_picking_seed_generator_zh.md",
+      "target": "../develop/tasks/lock_picking_seed_generator_zh.md"
+    },
+    {
+      "slide": 8,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4",
+      "target": "../../demos/fiber_bundling/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4"
+    },
+    {
+      "slide": 8,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4",
+      "target": "../../demos/fiber_bundling/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4"
+    },
+    {
+      "slide": 8,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4",
+      "target": "../../demos/fiber_bundling/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4"
+    },
+    {
+      "slide": 8,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/fiber_bundling_variant_pipeline_zh.md",
+      "target": "../develop/tasks/fiber_bundling_variant_pipeline_zh.md"
+    },
+    {
+      "slide": 9,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-17_reference_full_v1_cam_high.mp4",
+      "target": "../../demos/interlocked_claws/cam_high/2026-09-17_reference_full_v1_cam_high.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-17_reference_full_v1_cam_low.mp4",
+      "target": "../../demos/interlocked_claws/cam_low/2026-09-17_reference_full_v1_cam_low.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-17_reference_full_v1_cam_left_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_left_wrist/2026-09-17_reference_full_v1_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-17_reference_full_v1_cam_right_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_right_wrist/2026-09-17_reference_full_v1_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-17_reference_full_v1_detail.mp4",
+      "target": "../../demos/interlocked_claws/detail/2026-09-17_reference_full_v1_detail.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-19_helical_crown_physical_v1_cam_high.mp4",
+      "target": "../../demos/interlocked_claws/cam_high/2026-09-19_helical_crown_physical_v1_cam_high.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-19_helical_crown_physical_v1_cam_low.mp4",
+      "target": "../../demos/interlocked_claws/cam_low/2026-09-19_helical_crown_physical_v1_cam_low.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-19_helical_crown_physical_v1_cam_left_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_left_wrist/2026-09-19_helical_crown_physical_v1_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-19_helical_crown_physical_v1_cam_right_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_right_wrist/2026-09-19_helical_crown_physical_v1_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-19_helical_crown_physical_v2_detail.mp4",
+      "target": "../../demos/interlocked_claws/detail/2026-09-19_helical_crown_physical_v2_detail.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-19_orthogonal_gate_physical_v2_cam_high.mp4",
+      "target": "../../demos/interlocked_claws/cam_high/2026-09-19_orthogonal_gate_physical_v2_cam_high.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-19_orthogonal_gate_physical_v2_cam_low.mp4",
+      "target": "../../demos/interlocked_claws/cam_low/2026-09-19_orthogonal_gate_physical_v2_cam_low.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_left_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_left_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_right_wrist.mp4",
+      "target": "../../demos/interlocked_claws/cam_right_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-19_orthogonal_gate_physical_v2_detail.mp4",
+      "target": "../../demos/interlocked_claws/detail/2026-09-19_orthogonal_gate_physical_v2_detail.mp4"
+    },
+    {
+      "slide": 9,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/interlocked_claws_zh.md",
+      "target": "../develop/tasks/interlocked_claws_zh.md"
+    },
+    {
+      "slide": 10,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4",
+      "target": "../../demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4"
+    },
+    {
+      "slide": 10,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4",
+      "target": "../../demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4"
+    },
+    {
+      "slide": 10,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4",
+      "target": "../../demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4"
+    },
+    {
+      "slide": 10,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4",
+      "target": "../../demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4"
+    },
+    {
+      "slide": 10,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4",
+      "target": "../../demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4"
+    },
+    {
+      "slide": 10,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/knot_untying_family_space_zh.md",
+      "target": "../develop/tasks/knot_untying_family_space_zh.md"
+    },
+    {
+      "slide": 11,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/agentview.mp4",
+      "target": "../../runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/agentview.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/front_oblique.mp4",
+      "target": "../../runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/front_oblique.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/wrist.mp4",
+      "target": "../../runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/wrist.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/buzz_wire_3d/agentview/2026-09-18_compact_single_arm_v1_agentview.mp4",
+      "target": "../../demos/buzz_wire_3d/agentview/2026-09-18_compact_single_arm_v1_agentview.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/buzz_wire_3d/front_oblique/2026-09-18_compact_single_arm_v1_front_oblique.mp4",
+      "target": "../../demos/buzz_wire_3d/front_oblique/2026-09-18_compact_single_arm_v1_front_oblique.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/buzz_wire_3d/wrist/2026-09-18_compact_single_arm_v1_wrist.mp4",
+      "target": "../../demos/buzz_wire_3d/wrist/2026-09-18_compact_single_arm_v1_wrist.mp4"
+    },
+    {
+      "slide": 11,
+      "label": "验证记录 ↗",
+      "source": "runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/result.md",
+      "target": "../../runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/result.md"
+    },
+    {
+      "slide": 12,
+      "label": "高位",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_high.mp4",
+      "target": "../../runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_high.mp4"
+    },
+    {
+      "slide": 12,
+      "label": "低位",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_low.mp4",
+      "target": "../../runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_low.mp4"
+    },
+    {
+      "slide": 12,
+      "label": "左腕",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_left_wrist.mp4",
+      "target": "../../runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_left_wrist.mp4"
+    },
+    {
+      "slide": 12,
+      "label": "右腕",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_right_wrist.mp4",
+      "target": "../../runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_right_wrist.mp4"
+    },
+    {
+      "slide": 12,
+      "label": "近景",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/detail.mp4",
+      "target": "../../runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/detail.mp4"
+    },
+    {
+      "slide": 12,
+      "label": "验证记录 ↗",
+      "source": "docs/develop/tasks/rope_threading_zh.md",
+      "target": "../develop/tasks/rope_threading_zh.md"
+    },
+    {
+      "slide": 13,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/agentview.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/agentview.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/front_oblique.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/front_oblique.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/wrist.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/wrist.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/agentview.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/agentview.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/front_oblique.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/front_oblique.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/wrist.mp4",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/wrist.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "全景",
+      "source": "/home/jianwen/topogym/demos/blanket_flatten/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4",
+      "target": "../../demos/blanket_flatten/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "斜前",
+      "source": "/home/jianwen/topogym/demos/blanket_flatten/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4",
+      "target": "../../demos/blanket_flatten/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "腕部",
+      "source": "/home/jianwen/topogym/demos/blanket_flatten/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4",
+      "target": "../../demos/blanket_flatten/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4"
+    },
+    {
+      "slide": 13,
+      "label": "验证记录 ↗",
+      "source": "runs/environment_bootstrap/blanket_flatten/gathered_robot_study/result.md",
+      "target": "../../runs/environment_bootstrap/blanket_flatten/gathered_robot_study/result.md"
+    },
+    {
+      "slide": 20,
+      "label": "完整周报与 73 个多视角 MP4 ↗",
+      "source": "/home/jianwen/topogym/reports/weekly/2026-09-19/weekly-report.md",
+      "target": "../../reports/weekly/2026-09-19/weekly-report.md"
+    }
+  ],
+  "linked_mp4_unique": 70,
+  "video_embedding": "39 complete H.264 MP4 movies embedded in the PPTX; click in Slide Show to play",
+  "embedded_movies": [
+    {
+      "slide": 3,
+      "shape_id": 10,
+      "group": "coil_base",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_high/2026-09-17_aloha_full_cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/coil_base_cam_high.mp4",
+      "sha256": "77ad03e571534015149f035391d808492b25f0392ab4e6772903ab2361b9ad43",
+      "duration_s": 33.15,
+      "x": 0.9577777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/coil_base_cam_high.jpg"
+    },
+    {
+      "slide": 3,
+      "shape_id": 13,
+      "group": "coil_base",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_low/2026-09-17_aloha_full_cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/coil_base_cam_low.mp4",
+      "sha256": "a4e195edd9cb8261817a60340b9e8fb6fb2d354cfdd04ea60a0de502043cd425",
+      "duration_s": 33.15,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/coil_base_cam_low.jpg"
+    },
+    {
+      "slide": 3,
+      "shape_id": 16,
+      "group": "coil_base",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_left_wrist/2026-09-17_aloha_full_cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/coil_base_cam_left_wrist.mp4",
+      "sha256": "1a09ac02c9fb29f0889c6a9c755362b795c72167cda17edfbec39f4f55461166",
+      "duration_s": 33.15,
+      "x": 0.9577777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/coil_base_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 3,
+      "shape_id": 19,
+      "group": "coil_base",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/demos/cast_coil/cam_right_wrist/2026-09-17_aloha_full_cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/coil_base_cam_right_wrist.mp4",
+      "sha256": "78e28c1d1ac98701f762853265050a83e804e6632d7abfc22c6cfa92ff8fc8bc",
+      "duration_s": 33.15,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/coil_base_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 4,
+      "shape_id": 10,
+      "group": "keyhole_base",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_high/2026-09-17_current_instance_physical_cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/keyhole_base_cam_high.mp4",
+      "sha256": "e74fdab76e9fb36c5858167cd0eceb7be88f5c3c176558500cbe5b35f12e5952",
+      "duration_s": 23.916667,
+      "x": 0.9577777777777776,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/keyhole_base_cam_high.jpg"
+    },
+    {
+      "slide": 4,
+      "shape_id": 13,
+      "group": "keyhole_base",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_low/2026-09-17_current_instance_physical_cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/keyhole_base_cam_low.mp4",
+      "sha256": "d7d6d5e151a77c8aa81d7a13e187aa5a4f02495a68b231113e3ac344110f1f12",
+      "duration_s": 23.916667,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/keyhole_base_cam_low.jpg"
+    },
+    {
+      "slide": 4,
+      "shape_id": 16,
+      "group": "keyhole_base",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_left_wrist/2026-09-17_current_instance_physical_cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/keyhole_base_cam_left_wrist.mp4",
+      "sha256": "e13fe3d69860a9c816f93cdc6ce6b5d3d0cb9c33c6f60205d8ed6d4d4286c000",
+      "duration_s": 23.916667,
+      "x": 0.9577777777777776,
+      "y": 3.9949999999999997,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/keyhole_base_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 4,
+      "shape_id": 19,
+      "group": "keyhole_base",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/demos/cast_keyhole/cam_right_wrist/2026-09-17_current_instance_physical_cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/keyhole_base_cam_right_wrist.mp4",
+      "sha256": "99a815c74e647941481d999e697a9313bbbb6c3f8196fe0b426d885f65033afe",
+      "duration_s": 23.916667,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/keyhole_base_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 5,
+      "shape_id": 10,
+      "group": "horseshoe_base",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_high/2026-09-18_gravity_replanned_v1_cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/horseshoe_base_cam_high.mp4",
+      "sha256": "f6e8e21b88c0058fd386175c2c52148a84fe1dedc2b8717cc69261e43ad2fd87",
+      "duration_s": 113.7,
+      "x": 0.9577777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/horseshoe_base_cam_high.jpg"
+    },
+    {
+      "slide": 5,
+      "shape_id": 13,
+      "group": "horseshoe_base",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_low/2026-09-18_gravity_replanned_v1_cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/horseshoe_base_cam_low.mp4",
+      "sha256": "1b9d9d0a9b4ea5fd0f4f8fe26e7f3202bca39eaeda4058e51970ef33c591c2d6",
+      "duration_s": 113.7,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/horseshoe_base_cam_low.jpg"
+    },
+    {
+      "slide": 5,
+      "shape_id": 16,
+      "group": "horseshoe_base",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_left_wrist/2026-09-18_gravity_replanned_v1_cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/horseshoe_base_cam_left_wrist.mp4",
+      "sha256": "42b501bfd1f8b3c0c1f61b23478209d5affc88c21d2811b96c59f2375933006d",
+      "duration_s": 113.7,
+      "x": 0.9577777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/horseshoe_base_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 5,
+      "shape_id": 19,
+      "group": "horseshoe_base",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/demos/horseshoe_ring/cam_right_wrist/2026-09-18_gravity_replanned_v1_cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/horseshoe_base_cam_right_wrist.mp4",
+      "sha256": "2fa30d195b8d2317eaa77a16ef921dc6125ba8088ee5de4954a84973912b91d3",
+      "duration_s": 113.7,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/horseshoe_base_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 6,
+      "shape_id": 10,
+      "group": "hedgehog_side",
+      "camera": "agentview",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-19_fixed_side_window_v2_agentview.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/hedgehog_side_agentview.mp4",
+      "sha256": "997d236e7819a01ad4ca96030e510985a4a545cd1fb44b684efa52bbbead55e7",
+      "duration_s": 82.25,
+      "x": 1.3133333333333332,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/hedgehog_side_agentview.jpg"
+    },
+    {
+      "slide": 6,
+      "shape_id": 13,
+      "group": "hedgehog_side",
+      "camera": "front_oblique",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-19_fixed_side_window_v2_front_oblique.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/hedgehog_side_front_oblique.mp4",
+      "sha256": "786a5dab54d5ef80f4f216e3e6e120d57aebb353868fa1b4c188c7d7edc65d70",
+      "duration_s": 82.25,
+      "x": 5.253333333333333,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/hedgehog_side_front_oblique.jpg"
+    },
+    {
+      "slide": 6,
+      "shape_id": 16,
+      "group": "hedgehog_side",
+      "camera": "wrist",
+      "source": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-19_fixed_side_window_v2_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/hedgehog_side_wrist.mp4",
+      "sha256": "e43c0d963f2324a89cec1d51b81c391280d9e2a121e6be3ccf7288c7b8c53e8d",
+      "duration_s": 82.25,
+      "x": 1.3133333333333332,
+      "y": 3.9949999999999997,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/hedgehog_side_wrist.jpg"
+    },
+    {
+      "slide": 7,
+      "shape_id": 10,
+      "group": "lock_base",
+      "camera": "agentview",
+      "source": "/home/jianwen/topogym/demos/lock_picking/agentview/2026-09-18_standard_150mm_purple_trace_v1_agentview.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/lock_base_agentview.mp4",
+      "sha256": "22a692fb717851f67726b4518772a47cea54ac1515135a68e7537ec114e8a71d",
+      "duration_s": 159.35,
+      "x": 0.9577777777777776,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/lock_base_agentview.jpg"
+    },
+    {
+      "slide": 7,
+      "shape_id": 13,
+      "group": "lock_base",
+      "camera": "front_oblique",
+      "source": "/home/jianwen/topogym/demos/lock_picking/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/lock_base_front_oblique.mp4",
+      "sha256": "d68099e1bbe63f17c752983c84c18ce130793cfcc2188eccaaf3b60055fe77cc",
+      "duration_s": 159.35,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/lock_base_front_oblique.jpg"
+    },
+    {
+      "slide": 7,
+      "shape_id": 16,
+      "group": "lock_base",
+      "camera": "wrist",
+      "source": "/home/jianwen/topogym/demos/lock_picking/wrist/2026-09-18_standard_150mm_purple_trace_v1_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/lock_base_wrist.mp4",
+      "sha256": "34c400b140dbd2d12e511262356de6f5c522df264604069ced3be82fa878e0b4",
+      "duration_s": 159.35,
+      "x": 0.9577777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/lock_base_wrist.jpg"
+    },
+    {
+      "slide": 8,
+      "shape_id": 10,
+      "group": "fiber_base",
+      "camera": "agentview",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/fiber_base_agentview.mp4",
+      "sha256": "440fd21a50f3515df5123b8c07f6f6726a8e818928be8831dce55861e479c648",
+      "duration_s": 177.0,
+      "x": 1.2422222222222221,
+      "y": 1.9649999999999999,
+      "width": 2.2755555555555556,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/fiber_base_agentview.jpg"
+    },
+    {
+      "slide": 8,
+      "shape_id": 13,
+      "group": "fiber_base",
+      "camera": "front_oblique",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/fiber_base_front_oblique.mp4",
+      "sha256": "28f67672a408a2008f3e6afd0958557d146c7893561fb2e5feaf9efababa0b79",
+      "duration_s": 177.0,
+      "x": 5.182222222222222,
+      "y": 1.9649999999999999,
+      "width": 2.2755555555555556,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/fiber_base_front_oblique.jpg"
+    },
+    {
+      "slide": 8,
+      "shape_id": 16,
+      "group": "fiber_base",
+      "camera": "wrist",
+      "source": "/home/jianwen/topogym/demos/fiber_bundling/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/fiber_base_wrist.mp4",
+      "sha256": "fc1b24ce65473cbb0eb68ffa44aa33093d36bc147718b9f7492b578711a73f2a",
+      "duration_s": 177.0,
+      "x": 1.2422222222222221,
+      "y": 3.9949999999999997,
+      "width": 2.2755555555555556,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/fiber_base_wrist.jpg"
+    },
+    {
+      "slide": 9,
+      "shape_id": 10,
+      "group": "claws_a",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-17_reference_full_v1_cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/claws_a_cam_high.mp4",
+      "sha256": "1877f8d002bc9cfb9d09185d780038635af6abb4056dd070fc33ec02847c4f85",
+      "duration_s": 158.6,
+      "x": 0.9577777777777776,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/claws_a_cam_high.jpg"
+    },
+    {
+      "slide": 9,
+      "shape_id": 13,
+      "group": "claws_a",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-17_reference_full_v1_cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/claws_a_cam_low.mp4",
+      "sha256": "2806f1856cd7b028c2d382f8d0f80dd5f6fbe68cae033e7577de5ce2a286d84d",
+      "duration_s": 158.6,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/claws_a_cam_low.jpg"
+    },
+    {
+      "slide": 9,
+      "shape_id": 16,
+      "group": "claws_a",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-17_reference_full_v1_cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/claws_a_cam_left_wrist.mp4",
+      "sha256": "0ba323839e7128a625ac561536c74dc1aa26094bdb1831751ecb9f823de7ac14",
+      "duration_s": 158.6,
+      "x": 0.9577777777777776,
+      "y": 3.9949999999999997,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/claws_a_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 9,
+      "shape_id": 19,
+      "group": "claws_a",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-17_reference_full_v1_cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/claws_a_cam_right_wrist.mp4",
+      "sha256": "f672ad738094a584ca654a23e3f93fed9f8fb0c15615d65629c5fbe841173d4b",
+      "duration_s": 158.6,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.8444444444444446,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/claws_a_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 10,
+      "shape_id": 10,
+      "group": "knot_base",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/knot_base_cam_high.mp4",
+      "sha256": "38f3f03ef8a40595bc1655ae5f07401857e545c10674224117a20180ed327163",
+      "duration_s": 75.0,
+      "x": 0.9577777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/knot_base_cam_high.jpg"
+    },
+    {
+      "slide": 10,
+      "shape_id": 13,
+      "group": "knot_base",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/knot_base_cam_low.mp4",
+      "sha256": "d24442d3b852f97ec09414f10c621c054b8ad273c82d67d37ff0df856f656678",
+      "duration_s": 75.0,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/knot_base_cam_low.jpg"
+    },
+    {
+      "slide": 10,
+      "shape_id": 16,
+      "group": "knot_base",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/knot_base_cam_left_wrist.mp4",
+      "sha256": "e6eab437c8755b9d559c3bb120ed2e691276bfd7eba9f39294c039edd78c490f",
+      "duration_s": 75.0,
+      "x": 0.9577777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/knot_base_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 10,
+      "shape_id": 19,
+      "group": "knot_base",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/knot_base_cam_right_wrist.mp4",
+      "sha256": "1b059462a6ef5e216fc9dce00b635907db46719b428d8ed4399c81a905a41ecf",
+      "duration_s": 75.0,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/knot_base_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 11,
+      "shape_id": 10,
+      "group": "buzz_f3",
+      "camera": "agentview",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/agentview.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/buzz_f3_agentview.mp4",
+      "sha256": "7e5f40065e537fc824901b023d63a91fcdf9b0bcd6adfe2e960f07e3830cb825",
+      "duration_s": 106.96,
+      "x": 1.3133333333333332,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/buzz_f3_agentview.jpg"
+    },
+    {
+      "slide": 11,
+      "shape_id": 13,
+      "group": "buzz_f3",
+      "camera": "front_oblique",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/front_oblique.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/buzz_f3_front_oblique.mp4",
+      "sha256": "792e29da0f4ebc741121abfaed4a81130fba56a9c625728bcedfe9f3346271bf",
+      "duration_s": 106.96,
+      "x": 5.253333333333333,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/buzz_f3_front_oblique.jpg"
+    },
+    {
+      "slide": 11,
+      "shape_id": 16,
+      "group": "buzz_f3",
+      "camera": "wrist",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/buzz_f3_wrist.mp4",
+      "sha256": "2b285195e9dca23ca3a397d358d402460953d4214f2df8e2cd8e963d513422f7",
+      "duration_s": 106.96,
+      "x": 1.3133333333333332,
+      "y": 3.9949999999999997,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/buzz_f3_wrist.jpg"
+    },
+    {
+      "slide": 12,
+      "shape_id": 10,
+      "group": "rope_prefix",
+      "camera": "cam_high",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_high.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/rope_prefix_cam_high.mp4",
+      "sha256": "eed7a0bc1b03a107b6a5441621a636ce6cf8b28caed6b6239e530a8f8cc44aa5",
+      "duration_s": 29.05,
+      "x": 0.9577777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/rope_prefix_cam_high.jpg"
+    },
+    {
+      "slide": 12,
+      "shape_id": 13,
+      "group": "rope_prefix",
+      "camera": "cam_low",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_low.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/rope_prefix_cam_low.mp4",
+      "sha256": "d13dd062fd544215aefa1d2c433d73772db571161334b7759945db0c5278c725",
+      "duration_s": 29.05,
+      "x": 4.897777777777778,
+      "y": 1.9649999999999999,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/rope_prefix_cam_low.jpg"
+    },
+    {
+      "slide": 12,
+      "shape_id": 16,
+      "group": "rope_prefix",
+      "camera": "cam_left_wrist",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_left_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/rope_prefix_cam_left_wrist.mp4",
+      "sha256": "76a1d535f28b11c7409b8428492107731f8ef02a565f4de46247a6353c90c661",
+      "duration_s": 29.05,
+      "x": 0.9577777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/rope_prefix_cam_left_wrist.jpg"
+    },
+    {
+      "slide": 12,
+      "shape_id": 19,
+      "group": "rope_prefix",
+      "camera": "cam_right_wrist",
+      "source": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_right_wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/rope_prefix_cam_right_wrist.mp4",
+      "sha256": "85323365d748ee57e5f83687164ef4343af1e2367c9035e5a5e14a776bd54811",
+      "duration_s": 29.05,
+      "x": 4.897777777777778,
+      "y": 3.9949999999999997,
+      "width": 2.844444444444444,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/rope_prefix_cam_right_wrist.jpg"
+    },
+    {
+      "slide": 13,
+      "shape_id": 10,
+      "group": "blanket_latest",
+      "camera": "agentview",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/agentview.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/blanket_latest_agentview.mp4",
+      "sha256": "0c7d5e38329e84ffec80b62785678194c9adb8d633fa32bca7fb66f36e61e442",
+      "duration_s": 179.5,
+      "x": 1.3133333333333332,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/blanket_latest_agentview.jpg"
+    },
+    {
+      "slide": 13,
+      "shape_id": 13,
+      "group": "blanket_latest",
+      "camera": "front_oblique",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/front_oblique.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/blanket_latest_front_oblique.mp4",
+      "sha256": "71c1a14fad5401e44072849860ab6e4f41d509719267d64e6802bb85522f8778",
+      "duration_s": 179.5,
+      "x": 5.253333333333333,
+      "y": 1.9649999999999999,
+      "width": 2.1333333333333333,
+      "height": 1.6,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/blanket_latest_front_oblique.jpg"
+    },
+    {
+      "slide": 13,
+      "shape_id": 16,
+      "group": "blanket_latest",
+      "camera": "wrist",
+      "source": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/wrist.mp4",
+      "playback_file": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/media/blanket_latest_wrist.mp4",
+      "sha256": "d5dec4ca18e621400c156ec0d5bfa08b38bec40df10f10af9555397ca38ddbcd",
+      "duration_s": 179.5,
+      "x": 1.3133333333333332,
+      "y": 3.9949999999999997,
+      "width": 2.1333333333333333,
+      "height": 1.5999999999999999,
+      "poster": "/home/jianwen/topogym/docs/presentations/.weekly_2026_09_19/blanket_latest_wrist.jpg"
+    }
+  ],
+  "claws_primary_variant": "A0",
+  "source_report": "/home/jianwen/topogym/reports/weekly/2026-09-19/weekly-report.md",
+  "snapshot_engineering": "2026-09-19 18:27 CDT",
+  "snapshot_agent": "2026-09-19 18:24:55 CDT"
+}

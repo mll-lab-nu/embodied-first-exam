@@ -1,0 +1,31 @@
+defaults:
+  - interlocked_claws_physics
+  - _self_
+
+task:
+  goal:
+    instruction: Separate the two interlocked rigid pieces and release them on their supports.
+  seed_variant:
+    family_id: claw_weave
+    parameter_mode: fixed
+    scale: 1.0
+    dx_m: 0.0
+    dy_m: 0.0
+    yaw_deg: 0.0
+    palette: copper_blue
+    roughness: 0.45
+    metallic: 0.22
+  variation:
+    - {kind: choice, path: seed_variant.family_id, values: [claw_weave, helical_crown, orthogonal_gate]}
+    - {kind: uniform, path: seed_variant.scale, lo: 0.99, hi: 1.01}
+    - {kind: uniform, path: seed_variant.dx_m, lo: -0.002, hi: 0.002}
+    - {kind: uniform, path: seed_variant.dy_m, lo: -0.002, hi: 0.002}
+    - {kind: uniform, path: seed_variant.yaw_deg, lo: -1.0, hi: 1.0}
+    - {kind: choice, path: seed_variant.palette, values: [copper_blue, gold_teal, red_slate, violet_cream]}
+    - {kind: uniform, path: seed_variant.roughness, lo: 0.35, hi: 0.60}
+    - {kind: uniform, path: seed_variant.metallic, lo: 0.10, hi: 0.30}
+    - {kind: derived, fn: 'topogym.tasks.interlocked_claws.variants:derive'}
+    - {kind: validate, fn: 'topogym.tasks.interlocked_claws.variants:validate_parameters', max_retries: 0}
+
+run:
+  record_video: false

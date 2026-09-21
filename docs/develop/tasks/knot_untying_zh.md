@@ -1,8 +1,12 @@
 # 解绳结：一个松 Trefoil 的基础场景
 
+Agent 接入见 [Knot Untying adapter](../modules/knot_untying_agent_adapter_zh.md)：本地文件队列、双臂四图、CUDA FEM 接触辅助与可复制 prompt。该接口的验证状态独立于下述历史 demo。
+
+变体设计见 [固定结型与家族内参数构造方案](knot_untying_family_space_zh.md)：三叶结、开放八字结、双重单结分别作为 easy / medium / hard 的目标代表，每个结型配独立的动作与 IK 路径。三档均要求持续支撑、余量控制和受限方向下的操作；难度须经实际执行及简单路线对照确认，当前 v9 也需补查这一操作要求。新增家族与参数范围目前为设计提案。固定实例可直接选择，参数采样另设入口。
+
 实施与结果见 [物理稳定性验收与三视角全过程 demo 计划](knot_untying_physics_demo_plan_zh.md)。已完成 [完整机器人解结录像](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)，实际连续模拟 75 s，保留五路同步视角。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。详细记录见 [抓持与录像复测](knot_untying_recording_attempt_zh.md)。
 
-完整 demo 的 MP4 已独立归档至 `runs/demos/knot_untying/`；播放页、报告、轨迹和归档清单保存至 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。
+完整 demo 的 MP4 已按视角独立归档至 `demos/knot_untying/<camera>/`；播放页、报告、轨迹和归档清单保存至 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。
 
 本阶段铺设一根绳上只打一次结的场景。采用开放绳的 overhand knot；将自由端从外侧无交叉地闭合后，得到 trefoil / 3₁。物理场景中保留两个自由端，可供后续抓取和退绳。结型参考：[MathWorld](https://mathworld.wolfram.com/TrefoilKnot.html)。
 

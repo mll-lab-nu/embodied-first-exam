@@ -33,6 +33,10 @@ __nyx_cache__/
 # Run outputs & recordings (videos, frames, datasets, logs)
 runs/
 bash_scripts/recordings/
+/demos/hedgehog_in_cage/**/*.mp4
+/demos/interlocked_claws/**/*.mp4
+/demos/cast_coil/**/*.mp4
+/demos/knot_untying/**/*.mp4
 
 # TetGen scratch files (dumped into repo root during soft-body meshing)
 tetgen-tmpfile*
@@ -43,3 +47,14 @@ topogym_weekly_report/
 # Archived deliverables remain local; source/config/docs in legacy are versioned.
 /legacy/runs/
 /legacy/reports/
+
+# Fiber demo videos, grouped by camera as requested.
+/demos/fiber_bundling/**/*.mp4
+
+# Lock-picking standard demo, one complete video per camera.
+/demos/lock_picking/**/*.mp4
+/demos/blanket_flatten/**/*.mp4
+
+# Buzz Wire fixture and compact single-arm videos, organized by camera.
+/demos/buzz_wire_3d/**/*.mp4
+/demos/slotted_post_ring/**/*.mp4

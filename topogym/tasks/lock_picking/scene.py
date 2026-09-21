@@ -8,7 +8,8 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from topogym.world import StandardTabletopSceneBuilder
 from ._staged_lock_geometry import LockGeometry, variant_geometry, write_disc, write_key, write_endpoint, goal_mark_assets, key_rest_layout, write_key_cradle
-from ._aperture_outline import paint_aperture_outline
+from ._aperture_outline import paint_aperture_outline, disc_colors
+from ._staged_lock_geometry import DISC_COLORS, ENDPOINT_COLOR
 
 StagedLockLayout = LockGeometry
 
@@ -109,10 +110,14 @@ class LockPickingSceneBuilder:
     def __init__(self,env_cfg,task_cfg,robot_cfg):
         self.env_cfg,self.task_cfg,self.robot_cfg=env_cfg,task_cfg,robot_cfg
 
-    def build(self,*,show_viewer=False,before_finalize=None,asset_dir=None):
+    def build(self,*,show_viewer=False,before_finalize=None,asset_dir=None,contact_guard=True):
         t=self.task_cfg
+        if t.get('derived_variant') is not None:
+            from .variants import validate_parameters
+            validate_parameters(t)
         g=variant_geometry(LockGeometry.from_config(t.geometry),str(t.variant),int(t.seed))
-        folder=Path(asset_dir or f'.cache/topogym/staged_lock/{t.variant}_{t.seed}').resolve()
+        cache_key=t.get('instance_id',f'{t.variant}_{t.seed}')
+        folder=Path(asset_dir or f'.cache/topogym/staged_lock/{cache_key}').resolve()
         folder.mkdir(parents=True,exist_ok=True)
         builder=StandardTabletopSceneBuilder(self.env_cfg,self.robot_cfg,
             rigid_options=gs.options.RigidOptions(enable_collision=True,enable_self_collision=True,
@@ -124,7 +129,8 @@ class LockPickingSceneBuilder:
         material=gs.materials.Rigid(friction=float(t.physics.friction))
         discs=[]
         floor=float(self.env_cfg.frames.table_surface.origin[2])
-        colors=((.76,.53,.23),(.20,.43,.60),(.72,.34,.22))
+        colors=disc_colors(t)
+        finish=t.get('visual', {}).get('plate_finish')
         stops=t.get('rotor_stops')
         outline=t.get('visual', {}).get('aperture_outline')
         if stops is not None and len(stops)!=3:
@@ -134,7 +140,7 @@ class LockPickingSceneBuilder:
             if stop is not None and not stop.bounds_deg[0] <= g.initial_disc_deg[i] <= stop.bounds_deg[1]:
                 raise ValueError('Initial rotor angle is outside its physical stop range')
             path=write_disc(g,g.slots[i],folder/f'disc{i}',float(t.physics.disc_mass),float(t.physics.disc_damping),colors[i],stop=stop,mount_z=floor+.028-g.axis_z)
-            paint_aperture_outline(path,g,g.slots[i],colors[i],outline)
+            paint_aperture_outline(path,g,g.slots[i],colors[i],outline,finish=finish)
             discs.append(manifest.add(f'lock_disc_{i+1}',scene.add_entity(
                 gs.morphs.URDF(file=str(path),pos=(g.disc_x(i),g.center_y,g.axis_z),fixed=True,
                                convexify=True,decimate=False,merge_fixed_links=False,default_armature=0.),material=material,name=f'lock_disc_{i+1}')))
@@ -145,6 +151,7 @@ class LockPickingSceneBuilder:
                     convexify=True,decimate=False,merge_fixed_links=False),
                     material=gs.materials.Rigid(friction=.3),name=f'lock_stop_frame_{i+1}'))
         path=write_endpoint(g,folder/'endpoint')
+        paint_aperture_outline(path,g,(g.endpoint_deg,),ENDPOINT_COLOR,outline,goal_plate=True)
         endpoint=manifest.add('lock_endpoint',scene.add_entity(gs.morphs.URDF(file=str(path),
             pos=(g.disc_x(3),g.center_y,g.axis_z),fixed=True,convexify=True,decimate=False,merge_fixed_links=False),material=material,name='lock_endpoint'))
         for name,path in goal_mark_assets(g,folder/'endpoint').items():
@@ -209,5 +216,8 @@ class LockPickingSceneBuilder:
         builder.finalize(base)
         for entity,angle in zip(discs,g.initial_disc_deg):
             entity.set_qpos([np.radians(angle)],zero_velocity=True)
-        result.install_contact_guard()
+        # Bridge adapters own a non-throwing, latched guard so the terminal
+        # physics tick can still be photographed. Legacy runners keep theirs.
+        if contact_guard:
+            result.install_contact_guard()
         return result

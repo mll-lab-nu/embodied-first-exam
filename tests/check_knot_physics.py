@@ -4,16 +4,40 @@ import json
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 import numpy as np
 
-from topogym.tasks.knot_untying.diagnostics import SurfaceCCD, signed_tet_volumes
+from topogym.tasks.knot_untying.diagnostics import FemDiagnostics, SurfaceCCD, signed_tet_volumes
 from topogym.tasks.knot_untying.physics_probe import SolverLog
 from topogym.tasks.knot_untying.physics_review import compare_centerlines, evidence_satisfies_case, write_review
 from topogym.tasks.knot_untying.rigid_diagnostics import swept_aabbs_overlap
 
 
 class KnotPhysicsChecks(unittest.TestCase):
+    def test_settle_gate_report_is_not_changed_by_later_loaded_motion(self):
+        monitor = FemDiagnostics.__new__(FemDiagnostics)
+        monitor.window = []
+        monitor.initial = np.zeros((2, 3))
+        monitor.loaded = False
+        monitor.min_J = 1.
+        monitor.count = 0
+        monitor.dt = .00125
+        monitor.elapsed_diagnostics_s = 0.
+        monitor.failures = []
+        monitor.ccd = SimpleNamespace(initial_intersections=False, checks=0, failures=0)
+        monitor.maxima = dict(max_table_penetration_m=0., max_total_length_relative_change=.003,
+                              max_local_axial_strain=.01)
+        gate = monitor.report()
+        monitor.maxima['max_total_length_relative_change'] = .04
+        monitor.failures.append(dict(time_s=30., reason='inverted_tetrahedron'))
+        later = monitor.report()
+        self.assertEqual(gate['extrema']['max_total_length_relative_change'], .003)
+        self.assertEqual(gate['failures'], [])
+        self.assertTrue(gate['checks']['total_length'])
+        self.assertFalse(later['checks']['total_length'])
+        self.assertFalse(later['checks']['finite_no_inversion'])
+
     def test_grasp_distance_detects_edge_contact_without_nearby_vertices(self):
         vertices = np.array([[-1., 0, 0], [1., 0, 0], [1., .01, 0],
                              [0., -1, .0005], [0., 1., .0005], [.01, 1., .0005]])

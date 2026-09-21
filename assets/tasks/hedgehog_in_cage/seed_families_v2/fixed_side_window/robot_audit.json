@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "errors": [],
+  "samples": 1146,
+  "maximum_joint_sample_step_rad": 0.01,
+  "certificate_sha256": "d816ce375af4a250c6f4840f1e0bfd0e72d0c9abb84a317c6c8cc32e87a6bd4c",
+  "ik_sha256": "7544bf9b6383831a29cfd76d03ed371a5237902426b9e3613be28550d6ac01e0"
+}

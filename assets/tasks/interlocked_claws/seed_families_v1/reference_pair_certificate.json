@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "scope": "continuous interpiece surface-clearance bound for source joint-linear playback",
+  "source_motion_sha256": "81a29452b8eaba16bdd9515c5f36731e33e50ef36b7640d6e53bff977038e727",
+  "source_intervals": 3083,
+  "queries": 188563,
+  "certified_leaf_intervals": 94281,
+  "minimum_sampled_clearance_m": 0.00011510934686379344,
+  "minimum_certified_clearance_m": 1.2781727310080555e-08,
+  "failures": [],
+  "straight_translation_controls": [
+    {
+      "axis": "x",
+      "sign": -1,
+      "first_intersection_sample_m": 0.034,
+      "sample_spacing_m": 0.001
+    },
+    {
+      "axis": "x",
+      "sign": 1,
+      "first_intersection_sample_m": 0.017,
+      "sample_spacing_m": 0.001
+    },
+    {
+      "axis": "y",
+      "sign": -1,
+      "first_intersection_sample_m": 0.015,
+      "sample_spacing_m": 0.001
+    },
+    {
+      "axis": "y",
+      "sign": 1,
+      "first_intersection_sample_m": 0.131,
+      "sample_spacing_m": 0.001
+    },
+    {
+      "axis": "z",
+      "sign": -1,
+      "first_intersection_sample_m": 0.006,
+      "sample_spacing_m": 0.001
+    },
+    {
+      "axis": "z",
+      "sign": 1,
+      "first_intersection_sample_m": 0.011,
+      "sample_spacing_m": 0.001
+    }
+  ],
+  "robot_collision_certified": false,
+  "dynamics_certified": false,
+  "wall_seconds": 203.26885603461415
+}

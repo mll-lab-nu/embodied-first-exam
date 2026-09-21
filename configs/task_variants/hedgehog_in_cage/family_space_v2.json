@@ -1,7 +1,15 @@
 {
   "schema_version": 2,
   "task_id": "hedgehog_in_cage",
-  "status": "planning_specification_not_executable_random_generator",
+  "status": "historical_planning_specification_superseded_by_generator_v2",
+  "superseded_by": "configs/task_variants/hedgehog_in_cage/generator_v2.yaml",
+  "executable_subset": {
+    "generator_version": "hedgehog_seed_v1",
+    "configuration": "configs/task_variants/hedgehog_in_cage/generator_v1.yaml",
+    "entrypoint": "topogym.tasks.hedgehog_in_cage.variants",
+    "scope": "A1/B1/C1 fixed prototypes plus bounded dimension, placement and wood appearance sampling; six additional shape anchors remain proposals",
+    "random_descendant_physics": "not_inherited; export_ready remains false until separately executed"
+  },
   "supersedes_design": "family_design_v1",
   "revision_note": "Use the three physically verified family representatives as A1/B1/C1; replace the unverified tall/slender targets by actual parent dimensions. Six added-shape representatives remain proposals.",
   "factorization": [

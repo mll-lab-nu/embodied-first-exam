@@ -1,0 +1,84 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_aloha_v1
+  - robot_control_configs@robot_control: aloha_position_ik
+  - override hydra/job_logging: quiet
+  - _self_
+
+task:
+  variant: video_reconstruction_v1
+  seed: 0
+  # Wooden base center aligned with the ALOHA base midpoint on both XY axes.
+  # Nominal geometry below is uniformly scaled, including cord and handle.
+  scale: 0.75
+  centering_reference: wooden_base_center
+  origin_xy_m: [-0.1356786, -0.019]
+  yaw_deg: 90.0
+  mode: static_inspection
+  geometry:
+    ring_count: 4
+    base_length_m: 0.47
+    base_width_m: 0.18
+    base_height_m: 0.024
+    ring_radius_m: 0.066
+    ring_tube_radius_m: 0.008
+    post_spacing_m: 0.082
+    lowest_ring_z_m: 0.126
+    ring_step_m: 0.068
+    post_radius_m: 0.0048
+    ball_radius_m: 0.024
+    ball_gap_m: 0.021
+    cord_radius_m: 0.0022
+    bight_radius_m: 0.016
+    clearance_m: 0.0018
+    handle_x_m: 0.43
+    handle_length_m: 0.066
+    handle_width_m: 0.037
+    handle_height_m: 0.014
+    handle_eye_radius_m: 0.0038
+
+env:
+  preset:
+    locked: false
+  cameras:
+    overview:
+      res: [1280, 720]
+      pos: [0.75, -1.28, 1.98]
+      lookat: [-0.1356786, -0.019, 1.10]
+      up: [0, 0, 1]
+      fov: 44
+      near: 0.005
+      far: 12
+    front_oblique:
+      res: [1280, 720]
+      pos: [0.80, -0.60, 1.68]
+      lookat: [-0.1356786, -0.06, 1.095]
+      up: [0, 0, 1]
+      fov: 41
+      near: 0.005
+      far: 12
+    topdown:
+      res: [1280, 720]
+      pos: [-0.1356786, -0.019, 2.10]
+      lookat: [-0.1356786, -0.019, 0.94]
+      up: [0, 1, 0]
+      fov: 49
+      near: 0.005
+      far: 12
+
+run:
+  output: runs/environment_bootstrap/orbits/static_base_centered_v5
+  viewer: false
+  include_robot: true
+  build_scene: true
+  render: true
+  cameras: [overview, front_oblique, topdown]
+  fps: 15
+  video_seconds: 8
+  orbit_degrees: 12
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: runs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

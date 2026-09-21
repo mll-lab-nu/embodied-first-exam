@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
 import time
 
@@ -15,7 +16,7 @@ import numpy as np
 from omegaconf import OmegaConf, open_dict
 
 from .diagnostics import FemDiagnostics, LIMITS
-from .geometry import projected_crossings
+from .geometry import FAMILY_KNOTS, projected_crossings, template_diagram_matches
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -84,6 +85,10 @@ def make_config(args):
                       'robot_control_configs@robot_control=aloha_position_ik']
                      if getattr(args, 'robot', 'panda') == 'aloha' else [])
         cfg = compose(config_name='knot_untying_preview', overrides=overrides)
+    if getattr(args, 'family', None):
+        from .families import apply_family
+        apply_family(cfg, args.family, appearance_seed=getattr(args, 'appearance_seed', None),
+                     route_profile=getattr(args, 'route_profile', None))
     cfg.env.cameras = {}
     cfg.env.renderer.type = 'rasterizer'
     cfg.env.presentation.background = 'checker'
@@ -100,7 +105,7 @@ def make_config(args):
     cfg.task.origin_xy_m[0] += args.x_offset
     cfg.task.origin_xy_m[1] += getattr(args, 'y_offset', 0.)
     with open_dict(cfg.task):
-        cfg.task.yaw_deg = args.yaw
+        cfg.task.yaw_deg = float(cfg.task.get('yaw_deg', 0.))+args.yaw
     if args.refined:
         cfg.task.geometry.segment_length_m = .00175
         cfg.task.geometry.radial_segments = 16
@@ -122,9 +127,16 @@ def main():
     parser.add_argument('--seconds', type=float, default=10.)
     parser.add_argument('--extend-to', type=float, help='Continue this same rollout if only settling limits fail')
     parser.add_argument('--mode', choices=('free_settle', 'contact_slide', 'lift_release', 'feed_release',
-                                          'robot_grasp', 'robot_contact', 'untie_fixture', 'robot_untying'), default='free_settle')
+                                          'robot_grasp', 'robot_contact', 'untie_fixture', 'robot_untying',
+                                          'family_untying'), default='free_settle')
     parser.add_argument('--dt', type=float, default=.005)
     parser.add_argument('--seed', type=int, default=7)
+    parser.add_argument('--family', choices=tuple(FAMILY_KNOTS),
+                        help='Select the fixed family scene, including its authored placement')
+    parser.add_argument('--appearance-seed', type=int, help='Optional family appearance sampling')
+    from .families import ROUTE_PROFILES
+    parser.add_argument('--route-profile', choices=tuple(ROUTE_PROFILES),
+                        help='Explicit authored experimental scene/action profile; defaults to original v1')
     parser.add_argument('--x-offset', type=float, default=0.)
     parser.add_argument('--y-offset', type=float, default=0.)
     parser.add_argument('--yaw', type=float, default=0.)
@@ -145,10 +157,20 @@ def main():
     parser.add_argument('--friction-eps', type=float, help='Explicit IPC friction smoothing velocity (m/s)')
     parser.add_argument('--newton-tol', type=float, help='Explicit IPC Newton convergence tolerance')
     parser.add_argument('--record', action='store_true', help='Record synchronized actual robot interaction views')
+    parser.add_argument('--bounded-forward-cache', action='store_true',
+                        help='Reuse unused Genesis 1.2.1 FEM history while preserving frame rollover')
     parser.add_argument('--fps', type=int, default=20)
     parser.add_argument('--resolution', type=int, nargs=2, default=(960, 540))
     args = parser.parse_args()
-    if args.mode in ('robot_grasp', 'robot_untying', 'robot_contact'):
+    if args.appearance_seed is not None and not args.family:
+        parser.error('--appearance-seed requires --family')
+    if args.mode in ('robot_untying', 'untie_fixture') and args.family not in (None, 'overhand_trefoil'):
+        parser.error('This legacy untying controller is only qualified for the trefoil template')
+    if args.mode == 'family_untying':
+        if args.family not in ('figure_eight', 'double_overhand'):
+            parser.error('family_untying requires figure_eight or double_overhand')
+        args.robot_coupling, args.pregrasp_start = 'external_articulation', True
+    if args.mode in ('robot_grasp', 'robot_untying', 'robot_contact', 'family_untying'):
         args.robot, args.audit_rigid, args.without_robot = 'aloha', True, False
     if args.seconds <= 0 or args.dt <= 0:
         raise ValueError('Duration and time step must be positive')
@@ -164,11 +186,13 @@ def main():
     cfg = make_config(args)
     initial_robot_pose = None
     if args.pregrasp_start:
-        if args.mode not in ('robot_untying', 'robot_contact') or args.robot_coupling != 'external_articulation':
-            raise ValueError('Pregrasp start requires external articulation and robot_contact or robot_untying')
+        if args.mode not in ('robot_untying', 'robot_contact', 'family_untying') or args.robot_coupling != 'external_articulation':
+            raise ValueError('Pregrasp start requires external articulation and a robot interaction mode')
         from .untying import configure_untying_start
         from .robot_probe import configure_contact_start
-        initial_robot_pose = (configure_untying_start(cfg) if args.mode == 'robot_untying' else configure_contact_start(cfg))
+        from .family_actions import configure_family_start
+        initial_robot_pose = (configure_family_start(cfg) if args.mode == 'family_untying' else
+                              configure_untying_start(cfg) if args.mode == 'robot_untying' else configure_contact_start(cfg))
     camera_metadata = None
     if args.record:
         if args.robot != 'aloha' or args.without_robot:
@@ -180,7 +204,9 @@ def main():
     from .contact_probe import CrossedStrandActions, build_contact_scene
     from .robot_probe import RobotContactActions, RobotGraspActions
     from .untying import RobotUntyingActions, UntyingFixtureActions
-    actions = (RobotUntyingActions(route=args.untying_route, yaw_deg=args.yaw,
+    from .family_actions import FamilyUntyingActions
+    actions = (FamilyUntyingActions(cfg) if args.mode == 'family_untying' else
+               RobotUntyingActions(route=args.untying_route, yaw_deg=float(cfg.task.get('yaw_deg', 0.)),
                                   spread_span_m=args.spread_span, spread_duration_s=args.spread_duration)
                if args.mode == 'robot_untying' else
                RobotContactActions() if args.mode == 'robot_contact' else
@@ -190,9 +216,23 @@ def main():
                ProbeActions(args.mode) if args.mode != 'free_settle' else None)
     include_robot = not args.without_robot and args.mode != 'contact_slide'
     OmegaConf.save(cfg, output/'config.yaml', resolve=True)
-    source_snapshot = {str(path.relative_to(ROOT)): path.read_bytes()
-                       for path in sorted(Path(__file__).parent.glob('*.py'))}
+    if include_robot and str(cfg.robot_control.robot.name) == 'aloha':
+        from topogym.robot.assets import robot_asset
+        robot_model = Path(robot_asset(cfg.robot_control))
+        robot_snapshot = output/'scene_assets/aloha'
+        shutil.copytree(ROOT/'assets/robots/aloha', robot_snapshot)
+        shutil.copyfile(robot_model, robot_snapshot/'resolved_tabletop_model.xml')
+    source_paths = set(Path(__file__).parent.glob('*.py'))
+    source_paths.update((ROOT/'configs/task_variants/knot_untying').rglob('*.yaml'))
+    source_paths.update(ROOT/path for path in (
+        'topogym/world/genesis_ipc_vertex_constraints.py', 'topogym/world/rope.py',
+        'topogym/primitives/fem_attachment.py', 'topogym/robot/aloha.py', 'topogym/robot/assets.py'))
+    source_paths.update((ROOT/'topogym/world/rope_backends').glob('*.py'))
+    source_snapshot = {str(path.relative_to(ROOT)): path.read_bytes() for path in sorted(source_paths)}
     spec = dict(experiment=args.mode, duration_s=args.seconds, limits=asdict(LIMITS),
+                bounded_forward_cache=args.bounded_forward_cache,
+                family=str(cfg.task.geometry.get('family', 'overhand_trefoil')),
+                variant=str(cfg.task.variant),
                 extend_to_s=args.extend_to,
                 seed=args.seed, include_robot=include_robot,
                 initial_robot_pose=initial_robot_pose,
@@ -229,7 +269,11 @@ def main():
         raise
     monitor = None
     recorder = None
+    memory_policy = None
     try:
+        if args.bounded_forward_cache:
+            from .runtime_memory import ForwardOnlyMemory
+            memory_policy = ForwardOnlyMemory(task.scene, task.rope)
         if include_robot:
             external = cfg.task.get('robot_coupling') == 'external_articulation'
             controller = initialize_robot_controller(scene=task.scene, manifest=task.manifest,
@@ -286,11 +330,19 @@ def main():
                 if recorder:
                     recorder.capture(step+1, (step+1)*args.dt, actions)
                 log.update()
+                if log.warnings:
+                    raise RuntimeError(f'Native solver validation failed: {log.warnings[-1]}')
                 if step % max(1, round(.25/args.dt)) == 0:
                     progress = dict(time_s=(step+1)*args.dt,
+                        stage=getattr(actions, 'stage', 'free_settle'),
+                        grasp_owners=dict(getattr(actions, 'owners', {})),
                         rms_speed=monitor.window[-1][2]['rms_speed_m_s'], min_J=monitor.min_J,
                         crossings=len(projected_crossings(monitor.last_centers)) if args.mode != 'contact_slide' else None,
                         wall_seconds=time.perf_counter()-start)
+                    import torch
+                    progress['torch_cuda_allocated_mib'] = torch.cuda.memory_allocated()/2**20
+                    progress['torch_cuda_reserved_mib'] = torch.cuda.memory_reserved()/2**20
+                    progress['retained_fem_checkpoints'] = len(task.scene.sim.fem_solver._ckpt)
                     print(json.dumps(progress), file=log.progress, flush=True)
                     (output/'progress.json').write_text(json.dumps(progress)+'\n')
                 if step % max(1, round(1./args.dt)) == 0:
@@ -303,6 +355,8 @@ def main():
                         final_nodes=monitor.last_positions, final_velocity=monitor.last_velocity)
                     if hasattr(actions, 'samples'):
                         (output/'partial_contact_trace.json').write_text(json.dumps(actions.samples)+'\n')
+                    if recorder:
+                        recorder.checkpoint()
                 if hasattr(actions, 'finished') and actions.finished((step+1)*args.dt):
                     break
     except Exception as exc:
@@ -316,19 +370,22 @@ def main():
     centers = getattr(monitor, 'last_centers', task.centerline)
     crossings = projected_crossings(centers) if args.mode != 'contact_slide' else []
     report.update(scope='local_fem_physics_only', experiment=args.mode, error=failure,
+        forward_cache=memory_policy.report() if memory_policy else dict(enabled=False),
         initial_robot_pose=initial_robot_pose,
         solver=solver, wall_seconds=time.perf_counter()-start,
         real_time_ratio=monitor.count*monitor.dt/max(1e-9, time.perf_counter()-start),
-        final_crossings=crossings, task_preserved=len(crossings) == 3 and abs(sum(h['sign'] for h in crossings)) == 3,
+        final_crossings=crossings, task_preserved=template_diagram_matches(crossings, task.layout.family),
+        family=task.layout.family, variant=str(cfg.task.variant),
         robot_grasp_qualified=False, complete_physics_suite_passed=False)
     report['actuation'] = actions.report() if actions else dict(kind='none', final_active_constraints=0)
     report['passed'] = bool(failure is None and report['mechanical_checks_passed']
+                            and (memory_policy is None or memory_policy.report()['passed'])
                             and solver['convergence_verified']
                             and (report['task_preserved'] or args.mode != 'free_settle')
                             and report['actuation'].get('passed', True)
                             and report['actuation']['final_active_constraints'] == 0)
     report['robot_grasp_qualified'] = bool(args.mode == 'robot_grasp' and report['passed'])
-    report['untying_verified'] = bool(args.mode == 'robot_untying' and report['passed'] and not crossings)
+    report['untying_verified'] = bool(args.mode in ('robot_untying', 'family_untying') and report['passed'] and not crossings)
     (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     if recorder:
         recorder.close(report)
@@ -339,6 +396,9 @@ def main():
         centerlines=np.array(monitor.centers), initial_centerline=task.centerline,
         final_nodes=getattr(monitor, 'last_positions', monitor.initial),
         final_velocity=getattr(monitor, 'last_velocity', np.zeros_like(monitor.initial)))
+    if getattr(actions, 'samples', None) and 'robot' in actions.samples[0]:
+        from .execution_metrics import export_motion
+        export_motion(output, output)
     print(json.dumps(report, indent=2), flush=True)
     if failure:
         raise SystemExit(failure)

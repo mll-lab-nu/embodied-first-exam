@@ -99,7 +99,7 @@ def main():
             from .render_ready import render_lock
             with render_lock(baseline):
                 if not (baseline/"render_report.json").exists():
-                    run("render_robot_sequence",[baseline,"--backend","cpu","--renderer","rasterizer","--multiview"],
+                    run("render_robot_sequence",[baseline,"--backend","cpu","--renderer","rasterizer","--clean"],
                         attempt/"render.log")
             run_id=args.run_id or f"2026-09-17_{instance.name.replace('.','p')}_{args.attempt}"
             metadata=ROOT/"runs/demo_metadata/fiber_bundling"/run_id

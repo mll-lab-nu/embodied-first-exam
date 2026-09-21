@@ -1,0 +1,110 @@
+{
+  "scope": "reference symbolic sequence only; motor primitives not yet validated",
+  "full_robot_solution": false,
+  "state_order": "ring4 ring3 ring2 ring1; semantic reference labels, not disk-crossing counts",
+  "source": "https://www.youtube.com/watch?v=ZryDkIDJxLQ",
+  "direction": "reverse of the reference assembly",
+  "rule": "Ring1 toggles freely. Ring i>1 toggles only when ring i-1 is on and every smaller ring is off.",
+  "states": [
+    {
+      "index": 0,
+      "state": "1000",
+      "toggle_ring": null,
+      "reference_time_s": 262
+    },
+    {
+      "index": 1,
+      "state": "1001",
+      "toggle_ring": 1,
+      "reference_time_s": 239
+    },
+    {
+      "index": 2,
+      "state": "1011",
+      "toggle_ring": 2,
+      "reference_time_s": 220
+    },
+    {
+      "index": 3,
+      "state": "1010",
+      "toggle_ring": 1,
+      "reference_time_s": 195
+    },
+    {
+      "index": 4,
+      "state": "1110",
+      "toggle_ring": 3,
+      "reference_time_s": 182
+    },
+    {
+      "index": 5,
+      "state": "1111",
+      "toggle_ring": 1,
+      "reference_time_s": 170
+    },
+    {
+      "index": 6,
+      "state": "1101",
+      "toggle_ring": 2,
+      "reference_time_s": 163
+    },
+    {
+      "index": 7,
+      "state": "1100",
+      "toggle_ring": 1,
+      "reference_time_s": 145
+    },
+    {
+      "index": 8,
+      "state": "0100",
+      "toggle_ring": 4,
+      "reference_time_s": 126
+    },
+    {
+      "index": 9,
+      "state": "0101",
+      "toggle_ring": 1,
+      "reference_time_s": 107
+    },
+    {
+      "index": 10,
+      "state": "0111",
+      "toggle_ring": 2,
+      "reference_time_s": 94
+    },
+    {
+      "index": 11,
+      "state": "0110",
+      "toggle_ring": 1,
+      "reference_time_s": 82
+    },
+    {
+      "index": 12,
+      "state": "0010",
+      "toggle_ring": 3,
+      "reference_time_s": 69
+    },
+    {
+      "index": 13,
+      "state": "0011",
+      "toggle_ring": 1,
+      "reference_time_s": 50
+    },
+    {
+      "index": 14,
+      "state": "0001",
+      "toggle_ring": 2,
+      "reference_time_s": 44
+    },
+    {
+      "index": 15,
+      "state": "0000",
+      "toggle_ring": 1,
+      "reference_time_s": 35
+    }
+  ],
+  "manufacturer_video": "https://www.youtube.com/watch?v=B-EB9Q-JqXA",
+  "manufacturer_solution_pdf": "https://ecommerce-static.s3.amazonaws.com/siammandalay/solutions/orbits_solution_printable.pdf",
+  "manufacturer_pdf_sha256": "449fc3ec9237d900c22323205f0f79e342e27577eb53130c9470e26a585cb30c",
+  "manufacturer_removal_step_count": 46
+}

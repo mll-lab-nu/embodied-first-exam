@@ -1,0 +1,485 @@
+{
+  "captured_at_utc": "2026-09-19T23:24:55.119706+00:00",
+  "definition": "Cumulative native input_tokens + output_tokens difference. Cached input and reasoning output are included subsets, never added twice. Closed episodes include final solver response and exclude later user discussion. Active episodes are lower bounds at the snapshot. Read-only audit; no bridge ledger or original result modified.",
+  "episodes": [
+    {
+      "run_id": "cast_coil_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/18/rollout-2026-09-18T15-20-41-01a0b62d-ad4d-75f0-b8bf-3ea24ae07c47.jsonl",
+      "source_log_sha256_at_snapshot": "287d3d76e19db2be79f3f9e5864f6d6f438458c0fd94402b1670dd1933ce9c6d",
+      "start_line": 9,
+      "exclusive_end_line": 448,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": null,
+      "endpoint": {
+        "line": 443,
+        "timestamp": "2026-09-18T20:49:25.358Z",
+        "usage": {
+          "input_tokens": 4383845,
+          "cached_input_tokens": 4248448,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 36879,
+          "reasoning_output_tokens": 19448,
+          "total_tokens": 4420724
+        },
+        "last": {
+          "input_tokens": 95003,
+          "cached_input_tokens": 93440,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 120,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 95123
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 4383845,
+        "cached_input_tokens": 4248448,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 36879,
+        "reasoning_output_tokens": 19448,
+        "total_tokens": 4420724
+      },
+      "first_record_over_2M": {
+        "line": 283,
+        "timestamp": "2026-09-18T20:38:21.350Z",
+        "episode_tokens": 2024796
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 441,
+        "timestamp": "2026-09-18T20:49:25.283Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 2.210362,
+      "session_snapshot": "snapshots/cast_coil_codex_001/session.json",
+      "state": "failed",
+      "segments": 11,
+      "ticks": 3320,
+      "simulation_seconds": 8.3
+    },
+    {
+      "run_id": "cast_coil_codex_002",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/18/rollout-2026-09-18T15-20-41-01a0b62d-ad4d-75f0-b8bf-3ea24ae07c47.jsonl",
+      "source_log_sha256_at_snapshot": "287d3d76e19db2be79f3f9e5864f6d6f438458c0fd94402b1670dd1933ce9c6d",
+      "start_line": 459,
+      "exclusive_end_line": 4891,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": {
+        "line": 454,
+        "timestamp": "2026-09-18T21:33:44.202Z",
+        "usage": {
+          "input_tokens": 4479156,
+          "cached_input_tokens": 4260608,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 37657,
+          "reasoning_output_tokens": 19964,
+          "total_tokens": 4516813
+        },
+        "last": {
+          "input_tokens": 95311,
+          "cached_input_tokens": 12160,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 778,
+          "reasoning_output_tokens": 516,
+          "total_tokens": 96089
+        }
+      },
+      "endpoint": {
+        "line": 4886,
+        "timestamp": "2026-09-19T03:40:36.468Z",
+        "usage": {
+          "input_tokens": 73583926,
+          "cached_input_tokens": 71386880,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 385383,
+          "reasoning_output_tokens": 219015,
+          "total_tokens": 73969309
+        },
+        "last": {
+          "input_tokens": 140290,
+          "cached_input_tokens": 136064,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 369,
+          "reasoning_output_tokens": 222,
+          "total_tokens": 140659
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 69104770,
+        "cached_input_tokens": 67126272,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 347726,
+        "reasoning_output_tokens": 199051,
+        "total_tokens": 69452496
+      },
+      "first_record_over_2M": {
+        "line": 594,
+        "timestamp": "2026-09-18T23:15:38.552Z",
+        "episode_tokens": 2096872
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 4884,
+        "timestamp": "2026-09-19T03:40:36.428Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 34.726248,
+      "session_snapshot": "snapshots/cast_coil_codex_002/session.json",
+      "state": "failed",
+      "segments": 64,
+      "ticks": 29735,
+      "simulation_seconds": 74.3375
+    },
+    {
+      "run_id": "horseshoe_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/18/rollout-2026-09-18T15-20-41-01a0b62d-ad4d-75f0-b8bf-3ea24ae07c47.jsonl",
+      "source_log_sha256_at_snapshot": "287d3d76e19db2be79f3f9e5864f6d6f438458c0fd94402b1670dd1933ce9c6d",
+      "start_line": 5011,
+      "exclusive_end_line": 5156,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": {
+        "line": 5006,
+        "timestamp": "2026-09-19T17:29:28.255Z",
+        "usage": {
+          "input_tokens": 75650158,
+          "cached_input_tokens": 72847616,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 395123,
+          "reasoning_output_tokens": 223714,
+          "total_tokens": 76045281
+        },
+        "last": {
+          "input_tokens": 172789,
+          "cached_input_tokens": 12160,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 558,
+          "reasoning_output_tokens": 462,
+          "total_tokens": 173347
+        }
+      },
+      "endpoint": {
+        "line": 5151,
+        "timestamp": "2026-09-19T18:55:06.737Z",
+        "usage": {
+          "input_tokens": 78451970,
+          "cached_input_tokens": 75442816,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 412534,
+          "reasoning_output_tokens": 233768,
+          "total_tokens": 78864504
+        },
+        "last": {
+          "input_tokens": 216743,
+          "cached_input_tokens": 213632,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 504,
+          "reasoning_output_tokens": 369,
+          "total_tokens": 217247
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 2801812,
+        "cached_input_tokens": 2595200,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17411,
+        "reasoning_output_tokens": 10054,
+        "total_tokens": 2819223
+      },
+      "first_record_over_2M": {
+        "line": 5122,
+        "timestamp": "2026-09-19T18:52:19.226Z",
+        "episode_tokens": 2172308
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 5149,
+        "timestamp": "2026-09-19T18:55:06.651Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 1.4096115,
+      "session_snapshot": "snapshots/horseshoe_codex_001/session.json",
+      "state": "failed",
+      "segments": 2,
+      "ticks": 820,
+      "simulation_seconds": 1.6400000000000001
+    },
+    {
+      "run_id": "cast_keyhole_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/18/rollout-2026-09-18T15-20-41-01a0b62d-ad4d-75f0-b8bf-3ea24ae07c47.jsonl",
+      "source_log_sha256_at_snapshot": "287d3d76e19db2be79f3f9e5864f6d6f438458c0fd94402b1670dd1933ce9c6d",
+      "start_line": 5178,
+      "exclusive_end_line": 6186,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": {
+        "line": 5170,
+        "timestamp": "2026-09-19T19:57:03.143Z",
+        "usage": {
+          "input_tokens": 78669363,
+          "cached_input_tokens": 75454976,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 413320,
+          "reasoning_output_tokens": 234284,
+          "total_tokens": 79082683
+        },
+        "last": {
+          "input_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 11768
+        }
+      },
+      "endpoint": {
+        "line": 6181,
+        "timestamp": "2026-09-19T21:08:34.936Z",
+        "usage": {
+          "input_tokens": 91032476,
+          "cached_input_tokens": 87110528,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 538002,
+          "reasoning_output_tokens": 315781,
+          "total_tokens": 91570478
+        },
+        "last": {
+          "input_tokens": 232112,
+          "cached_input_tokens": 228608,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 261,
+          "reasoning_output_tokens": 144,
+          "total_tokens": 232373
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 12363113,
+        "cached_input_tokens": 11655552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 124682,
+        "reasoning_output_tokens": 81497,
+        "total_tokens": 12487795
+      },
+      "first_record_over_2M": {
+        "line": 5418,
+        "timestamp": "2026-09-19T20:09:15.847Z",
+        "episode_tokens": 2004540
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 6179,
+        "timestamp": "2026-09-19T21:08:34.868Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 6.2438975,
+      "session_snapshot": "snapshots/cast_keyhole_codex_001/session.json",
+      "state": "failed",
+      "segments": 19,
+      "ticks": 9010,
+      "simulation_seconds": 9.01
+    },
+    {
+      "run_id": "hedgehog_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/18/rollout-2026-09-18T15-20-41-01a0b62d-ad4d-75f0-b8bf-3ea24ae07c47.jsonl",
+      "source_log_sha256_at_snapshot": "287d3d76e19db2be79f3f9e5864f6d6f438458c0fd94402b1670dd1933ce9c6d",
+      "start_line": 6238,
+      "exclusive_end_line": null,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": {
+        "line": 6233,
+        "timestamp": "2026-09-19T21:16:10.865Z",
+        "usage": {
+          "input_tokens": 91391391,
+          "cached_input_tokens": 87452160,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 541367,
+          "reasoning_output_tokens": 316185,
+          "total_tokens": 91932758
+        },
+        "last": {
+          "input_tokens": 28099,
+          "cached_input_tokens": 26368,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 207,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 28306
+        }
+      },
+      "endpoint": {
+        "line": 6500,
+        "timestamp": "2026-09-19T21:36:44.422Z",
+        "usage": {
+          "input_tokens": 93477038,
+          "cached_input_tokens": 89353984,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 565192,
+          "reasoning_output_tokens": 326676,
+          "total_tokens": 94042230
+        },
+        "last": {
+          "input_tokens": 87613,
+          "cached_input_tokens": 12160,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 256,
+          "reasoning_output_tokens": 108,
+          "total_tokens": 87869
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 2085647,
+        "cached_input_tokens": 1901824,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 23825,
+        "reasoning_output_tokens": 10491,
+        "total_tokens": 2109472
+      },
+      "first_record_over_2M": {
+        "line": 6494,
+        "timestamp": "2026-09-19T21:36:33.045Z",
+        "episode_tokens": 2021603
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 6498,
+        "timestamp": "2026-09-19T21:36:44.366Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 1.054736,
+      "session_snapshot": "snapshots/hedgehog_codex_001/session.json",
+      "state": "failed",
+      "segments": 7,
+      "ticks": 2010,
+      "simulation_seconds": 10.05
+    },
+    {
+      "run_id": "lock_picking_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/19/rollout-2026-09-19T16-31-43-01a0bb95-0f0a-7ab2-9d2d-d606418e7258.jsonl",
+      "source_log_sha256_at_snapshot": "f85aeddfb34f7828b71f41ba8b6a07048d11686da139a7c1d8f85af0a989cdcf",
+      "start_line": 9,
+      "exclusive_end_line": null,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": null,
+      "endpoint": {
+        "line": 325,
+        "timestamp": "2026-09-19T21:50:38.128Z",
+        "usage": {
+          "input_tokens": 3793543,
+          "cached_input_tokens": 3685760,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 27832,
+          "reasoning_output_tokens": 12625,
+          "total_tokens": 3821375
+        },
+        "last": {
+          "input_tokens": 108392,
+          "cached_input_tokens": 106112,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 185,
+          "reasoning_output_tokens": 77,
+          "total_tokens": 108577
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 3793543,
+        "cached_input_tokens": 3685760,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 27832,
+        "reasoning_output_tokens": 12625,
+        "total_tokens": 3821375
+      },
+      "first_record_over_2M": {
+        "line": 215,
+        "timestamp": "2026-09-19T21:42:48.963Z",
+        "episode_tokens": 2060722
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": {
+        "line": 323,
+        "timestamp": "2026-09-19T21:50:38.071Z"
+      },
+      "closed_episode": true,
+      "usage_scope": "complete episode including final response",
+      "budget_ratio": 1.9106875,
+      "session_snapshot": "snapshots/lock_picking_codex_001/session.json",
+      "state": "failed",
+      "segments": 10,
+      "ticks": 3257,
+      "simulation_seconds": 16.285
+    },
+    {
+      "run_id": "claws_codex_001",
+      "source_log": "/home/jianwen/.codex/sessions/2026/09/19/rollout-2026-09-19T16-36-33-01a0bb99-7c7c-73f3-8d85-3d2fdd48ab6c.jsonl",
+      "source_log_sha256_at_snapshot": "3c6bb7d2fd0e83b583ddbba5a1db452c3654a2cd042a45c6f83b6319cc780851",
+      "start_line": 9,
+      "exclusive_end_line": null,
+      "models_in_source": [
+        "gpt-6-astra"
+      ],
+      "baseline": null,
+      "endpoint": {
+        "line": 1157,
+        "timestamp": "2026-09-19T23:24:11.049Z",
+        "usage": {
+          "input_tokens": 23209093,
+          "cached_input_tokens": 22627584,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 167704,
+          "reasoning_output_tokens": 97673,
+          "total_tokens": 23376797
+        },
+        "last": {
+          "input_tokens": 130939,
+          "cached_input_tokens": 129536,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 697,
+          "reasoning_output_tokens": 307,
+          "total_tokens": 131636
+        }
+      },
+      "episode_usage": {
+        "input_tokens": 23209093,
+        "cached_input_tokens": 22627584,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 167704,
+        "reasoning_output_tokens": 97673,
+        "total_tokens": 23376797
+      },
+      "first_record_over_2M": {
+        "line": 186,
+        "timestamp": "2026-09-19T21:49:14.073Z",
+        "episode_tokens": 2021935
+      },
+      "counter_decreases": [],
+      "delta_last_mismatches": [],
+      "final_response": null,
+      "closed_episode": false,
+      "usage_scope": "ongoing lower bound",
+      "budget_ratio": 11.6883985,
+      "session_snapshot": "snapshots/claws_codex_001/session.json",
+      "state": "ready",
+      "segments": 14,
+      "ticks": 4930,
+      "simulation_seconds": 9.86
+    }
+  ]
+}

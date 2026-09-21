@@ -1,0 +1,16 @@
+# Candidate for a softer rope and an initially inactive table-contact barrier.
+# Free-settle evidence is separate from ring loading / robot qualification.
+defaults:
+  - rope_threading_preview
+  - _self_
+
+task:
+  geometry:
+    # Source skin gap 0.3 mm + this lift = 1.2 mm, above contact_d_hat 0.8 mm.
+    rope_height_offset_m: 0.0009
+  rope:
+    fem:
+      E: 50000.0
+
+run:
+  output: runs/environment_bootstrap/rope_threading/soft_start_candidate

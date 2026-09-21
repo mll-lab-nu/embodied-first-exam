@@ -1,0 +1,14 @@
+# Isolate solver stopping error without changing material/contact parameters.
+# Diagnostic only until the entire qualification suite has passed.
+defaults:
+  - rope_threading_damped20_smooth_fine_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      newton_tolerance: 0.00001
+      linear_system_tolerance: 0.00001
+
+run:
+  output: runs/environment_bootstrap/rope_threading/solver_precise_diagnostic

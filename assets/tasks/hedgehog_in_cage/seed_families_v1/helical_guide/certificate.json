@@ -1,0 +1,144 @@
+{
+  "passed": true,
+  "family": "helical_guide",
+  "positive": {
+    "collision_found": false,
+    "minimum_sampled_gap_m": 0.0026092566725406607,
+    "samples": 14913,
+    "witness": {
+      "segment": 306,
+      "pose": [
+        0.06037965540986557,
+        0.044492155202195585,
+        0.011441576777946327,
+        -0.4431831052749645,
+        -0.8874627072608229,
+        0.04998403131252298,
+        0.11619068393756683
+      ],
+      "distance_m": 0.0026092566725406607
+    }
+  },
+  "continuous_clearance_lower_bound_m": 0.002509256672540661,
+  "material_motion_bound_m": 0.0001,
+  "finite_controls": {
+    "original_route": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 256,
+      "witness": {
+        "segment": 2,
+        "pose": [
+          0.06314316273548985,
+          0.00010378289219491726,
+          -0.005220360981834931,
+          0.38255530163370705,
+          -0.9147170934789616,
+          0.11840140981783599,
+          -0.054084990917009475
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_pull": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 85,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.05839765260768677,
+          0.022571947024993388,
+          -0.008399087261048618,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lift": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 11,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.03399999999999399,
+          -4.059803249199489e-09,
+          -0.00909377960322955,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lower": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 14,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.03399999999999399,
+          -4.059803249199489e-09,
+          -0.01829377960322955,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "advance_without_added_turn": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 574,
+      "witness": {
+        "segment": 3,
+        "pose": [
+          0.06403549916630455,
+          0.017297912271949697,
+          0.024844354725878384,
+          0.4176258868052129,
+          -0.8452472456765513,
+          -0.29480606312304,
+          -0.15567625860181014
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "rotate_first_then_advance": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 161,
+      "witness": {
+        "segment": 1,
+        "pose": [
+          0.0396,
+          -4.059817334521296e-09,
+          -0.013093779603251927,
+          -0.6416154218235981,
+          0.7374932125792372,
+          0.15358228053917777,
+          -0.1443810755676369
+        ],
+        "distance_m": -1.0
+      }
+    }
+  },
+  "unique_solution_proven": false,
+  "ik_sha256": "0a3adbece61e99ef064f4bbb85dd3af5fde7d86c6474e3a6c0d1b1c6b2026c23",
+  "asset_manifest_sha256": "c219c627dbd75356e5de5d15280a14bf558b3b64d19c54307157d2c948893a2d",
+  "source_fingerprints": {
+    "family_motion.py": "e526a616cbf8af7824107bb2d6a98ed61e0bc43d22fb221cd907b0bee77c11ff",
+    "family_geometry.py": "50047930b432e4857031797dbaaf0bcdcb43119ea655710fa26b2718f01dfede",
+    "inverse_window.py": "416a69df0599c1101df85739cddcfd6a102f8312a87cc7dff735ef3f52449590",
+    "geometry.py": "08a381dce0002e749fb94ad04de73a6cce6b9cd3bc2e4bf0fbf460d1df08adc7",
+    "plan_escape.py": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e"
+  }
+}

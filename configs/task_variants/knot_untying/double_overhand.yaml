@@ -1,0 +1,20 @@
+# Open (2,5) torus template / 5_1. Hard is not yet certified.
+task:
+  variant: double_overhand_open_v1
+  family_id: double_overhand
+  difficulty_target: hard
+  origin_xy_m: [-0.11, 0.24]
+  reference_yaw_deg: 90.0
+  rope:
+    fem:
+      contact_eps_velocity: 0.001
+  geometry:
+    family: double_overhand
+    planar_scale_m: 0.026
+    crossing_height_m: 0.008
+    cut_angle_rad: 0.3
+    tail_length_m: 0.18
+  appearance:
+    shape_scale: 1.0
+    yaw_deg: 0.0
+    rope_color: orange

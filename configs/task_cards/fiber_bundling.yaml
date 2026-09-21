@@ -21,25 +21,35 @@ baseline:
 axes:
 - path: wire_count
   unit: count
-  status: geometry_candidate
+  status: candidate
   config_path: task.geometry.fiber_count
   candidate_range: [4, 16]
   validated_range: null
 - path: ring_inner_radius_m
   unit: m
-  status: geometry_candidate
+  status: candidate
   config_path: task.geometry.ring_inner_radius_m
   candidate_range: [0.0128, 0.0150]
   validated_range: null
 variant_generation:
   rules: configs/task_variants/fiber_bundling_density_v1.yaml
   generator: topogym.tasks.fiber_bundling.variants
+  episode_factory: topogym.tasks.fiber_bundling.generation:build_episode
+  instance_writer: topogym.tasks.fiber_bundling.generation:save_instance
+  instance_loader: topogym.tasks.fiber_bundling.generation:load_instance
+  instance_version: fiber_instance_v1
+  modes: [fixed, parameterized]
+  validation_scope: initial_geometry_only; IK and physical acceptance must be run for each generated instance
+  distinct_motion_families_required: false
+  distinct_motion_families_verified: false
+  family_definition_accepted: user confirmed density families on 2026-09-19; distinct IK strategies are not an acceptance criterion
   families: [sparse, standard, dense]
   meaning: visible packing classes; neither certified difficulty nor distinct IK strategies
   fixed_parameters: [wire_diameter_m, wire_length_m, trunk_diameter_m, fan_angle_min_deg, fan_angle_max_deg, seed]
   ring_support: thin_copper_rod_v1
   demo_collection: runs/environment-solvability/fiber_bundling/variant_demos_v1
-  standalone_videos: runs/demos/fiber_bundling
+  standalone_videos: demos/fiber_bundling
+  current_video_delivery: standard 8-core R13.5mm; agentview/front_oblique/wrist, one clean full video per camera without text UI; historical physical evidence retained
   qualification: per-instance loading and paired full robot execution; recorded status in runs/environment-solvability/fiber_bundling/variant_demos_v1/status.json
 assets:
 - location: topogym/tasks/fiber_bundling/geometry.py

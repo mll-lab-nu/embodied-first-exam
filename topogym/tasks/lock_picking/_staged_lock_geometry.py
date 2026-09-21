@@ -9,6 +9,9 @@ import json
 import numpy as np
 import trimesh
 
+DISC_COLORS = ((.46, .28, .66), (.20, .43, .60), (.72, .34, .22))
+ENDPOINT_COLOR = (.10, .34, .28)
+
 
 def angle_error(a, b):
     return abs((a-b+180.) % 360.-180.)
@@ -212,7 +215,7 @@ def write_disc(g, slots, folder, mass, damping, color, fixed=False, stop=None, m
 def write_endpoint(g, folder):
     """Fixed square goal panel, with the original finite-thickness keyhole."""
     visual,collisions=disc_assets(g,(g.endpoint_deg,),folder,goal_plate=True)
-    body=inertial(.2)+mesh_xml(visual,'visual',(.10,.34,.28))+''.join(mesh_xml(p,'collision') for p in collisions)
+    body=inertial(.2)+mesh_xml(visual,'visual',ENDPOINT_COLOR)+''.join(mesh_xml(p,'collision') for p in collisions)
     path=folder/'goal.urdf'
     path.write_text(f'<robot name="endpoint"><link name="disc">{body}</link></robot>')
     return path

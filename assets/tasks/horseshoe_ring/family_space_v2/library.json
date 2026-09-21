@@ -1,0 +1,81 @@
+{
+  "version": "horseshoe_physical_families_v2",
+  "status": "three_physical_representatives_released_with_per_instance_physical_gate",
+  "families": {
+    "F1": {
+      "name_zh": "\u9ad8\u4f4d\u63a5\u8fd1",
+      "signature": "left hand passes above the puzzle before descending to the ring"
+    },
+    "F2": {
+      "name_zh": "\u5916\u4fa7\u63a5\u8fd1",
+      "signature": "left hand sweeps through the positive-Y outer corridor"
+    },
+    "F3": {
+      "name_zh": "\u540e\u64a4\u518d\u63a5\u8fd1",
+      "signature": "left hand retracts through the negative-Y corridor before approaching"
+    }
+  },
+  "prototypes": {
+    "classic_circle": {
+      "template": "assets/tasks/horseshoe_ring/tutorial_solvable_v3/template.json",
+      "initialization_and_guide": "assets/tasks/horseshoe_ring/tutorial_solvable_v3/physical_seed.json",
+      "outline": "fixed classic open horseshoe",
+      "ellipse_aspect": 1.0,
+      "links_per_span": 1,
+      "qualification": "original exact baseline has gravity and half-timestep evidence; changed instances require new verification"
+    }
+  },
+  "deferred_prototypes": {
+    "waisted": "geometric witness only; surface grasp and physical pairing required",
+    "broad_u": "geometric witness only; surface grasp and physical pairing required",
+    "ellipse": "geometric witness only; controlled ring phase and physical pairing required"
+  },
+  "proposal_domain": {
+    "uniform_scale_ratio": [
+      0.99,
+      1.01
+    ],
+    "translation_xy_m": [
+      -0.003,
+      0.003
+    ],
+    "yaw_deg": [
+      -1.0,
+      1.0
+    ],
+    "route_offset_m": [
+      -0.005,
+      0.005
+    ],
+    "certified_continuous_physical_range": false,
+    "coupling": "all puzzle dimensions including chain and target ring scale together; robot stays full size; re-solve pregrasp/fold IK and adapt guide; per-instance physics mandatory",
+    "sampling": "Conditional on each family paired anchor, clipped to these outer limits",
+    "local_half_widths": {
+      "scale_ratio": 0.002,
+      "translation_xy_m": 0.00075,
+      "yaw_deg": 0.15,
+      "route_offset_m": 0.001
+    }
+  },
+  "visual_gate": {
+    "route_p95_mm": 50.0,
+    "minimum_fraction": 0.2,
+    "actual_video_review_required": true,
+    "signature_segment": "entry corridor ending at the designed waypoint; subsequent wrist alignment may adapt"
+  },
+  "acceptance": {
+    "candidate_is_accepted": false,
+    "requirements": [
+      "resolved snapshot integrity",
+      "fresh pregrasp/fold IK",
+      "full gravity/contact execution",
+      "independent physical verification",
+      "family route signature"
+    ],
+    "recommended_additional_check": "matching half timestep",
+    "on_failure": "retain rejected attempt and reason; retry within the same family; bounded exhaustion raises",
+    "split_group": "prototype_id (or family_id for held-out motion); never split near-identical descendants by seed alone"
+  },
+  "paired_anchors": "paired_anchors.json",
+  "family_route_references": "route_references.json"
+}

@@ -1,0 +1,101 @@
+{
+  "passed": true,
+  "complete": true,
+  "outside_margin_before_release_m": 0.022865597975275154,
+  "grasp_released": true,
+  "outside_margin_after_release_m": 0.1808452917746377,
+  "final_linear_speed_m_s": 9.147659425393787e-14,
+  "final_angular_speed_rad_s": 1.694919231497023e-12,
+  "physics_steps": 16439,
+  "simulated_seconds": 82.19500000000001,
+  "dt": 0.005,
+  "substeps": 10,
+  "precision_bits": 64,
+  "backend": "cpu",
+  "pregrasp_start": true,
+  "assisted_grasp": true,
+  "contact_gate": {
+    "physics_step": 1,
+    "finger_links": [
+      25,
+      31
+    ],
+    "simultaneous_contact": true
+  },
+  "live_object_pose_overwrites": false,
+  "live_robot_pose_overwrites": false,
+  "geometry_modified": true,
+  "max_cage_penetration_m": 0.0,
+  "max_robot_fixture_penetration_m": 0.0,
+  "max_all_ball_contact_penetration_m": 0.00023667151810987568,
+  "max_position_tracking_error_m": 0.0030250207626914736,
+  "loaded_collision_audit": [
+    {
+      "name": "cage",
+      "cells": 792,
+      "maximum_bounds_error_m": 7.094017817621534e-09,
+      "solver_to_authored_frame": [
+        [
+          0.9999999999999999,
+          4.0418127008487015e-18,
+          0.0,
+          0.0
+        ],
+        [
+          4.0418127008487015e-18,
+          0.9999999999999999,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "name": "hedgehog",
+      "cells": 7,
+      "maximum_bounds_error_m": 3.911554843916143e-09,
+      "solver_to_authored_frame": [
+        [
+          0.999866143314579,
+          -0.014289868681596027,
+          -0.007968381660884968,
+          -0.0004868872283939866
+        ],
+        [
+          0.013440485500964756,
+          0.9950935665251114,
+          -0.09802115695008312,
+          -0.0010450262463099858
+        ],
+        [
+          0.009329994787198101,
+          0.09790093724473338,
+          0.9951524293714378,
+          -0.0008906473690140344
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "passed": true
+    }
+  ],
+  "asset_manifest_sha256": "5fefe7d00708d3051852118cffb60613b91d5575c5f420d9634ea3abd6f95bb3",
+  "ik_sha256": "7544bf9b6383831a29cfd76d03ed371a5237902426b9e3613be28550d6ac01e0",
+  "runner_sha256": "049e1e105e12a144ab1906940a37360431b054e0e37289d1d3aac69282360f94"
+}

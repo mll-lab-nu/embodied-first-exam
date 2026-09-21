@@ -1,0 +1,21 @@
+defaults:
+  - blanket_flatten_cross_twist_arcs
+  - _self_
+
+task:
+  geometry:
+    particle_size_m: 0.006
+  execution:
+    check_every: 20
+  preparation:
+    shared_tangent: true
+    preparation_layer_clearance_m: 0.0075
+    folds:
+      - {name: diagonal_corner, normal_xy: [1.0, 1.0], fraction: 0.80, angle_deg: 175.0, seconds: 2.0}
+      - {name: longitudinal_1, normal_xy: [1.0, 0.0], fraction: 0.50, angle_deg: 175.0, seconds: 3.5}
+      - {name: transverse_1, normal_xy: [0.0, 1.0], fraction: 0.68, angle_deg: 155.0, seconds: 3.5, guide_fraction: 0.20}
+      - {name: longitudinal_2, normal_xy: [-1.0, 0.0], fraction: 0.50, angle_deg: 145.0, seconds: 3.0, guide_fraction: 0.20}
+    twist_angle_deg: 240.0
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/corner_cross_twist_v9

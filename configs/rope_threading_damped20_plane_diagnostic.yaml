@@ -1,0 +1,11 @@
+# Isolate tabletop surface discretization with unchanged material and friction.
+# Finite table bounds are audited at every native substep.
+defaults:
+  - rope_threading_damped20_smooth_fine_preview
+  - _self_
+
+task:
+  table_contact_model: analytic_plane
+
+run:
+  output: runs/environment_bootstrap/rope_threading/analytic_table_diagnostic

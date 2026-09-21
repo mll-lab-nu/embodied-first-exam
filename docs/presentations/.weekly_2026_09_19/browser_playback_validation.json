@@ -1,0 +1,564 @@
+{
+  "browser": "Firefox headless",
+  "slides": 11,
+  "video_count": 39,
+  "playback_and_seeking_verified": true,
+  "checks": [
+    {
+      "slide": 3,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/coil_base_cam_high.mp4",
+          "duration": 33.15,
+          "currentTime": 1.292515,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        },
+        {
+          "src": ".weekly_2026_09_19/media/coil_base_cam_low.mp4",
+          "duration": 33.15,
+          "currentTime": 1.291144,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        },
+        {
+          "src": ".weekly_2026_09_19/media/coil_base_cam_left_wrist.mp4",
+          "duration": 33.15,
+          "currentTime": 1.294013,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        },
+        {
+          "src": ".weekly_2026_09_19/media/coil_base_cam_right_wrist.mp4",
+          "duration": 33.15,
+          "currentTime": 1.293938,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        }
+      ],
+      "seek": [
+        {
+          "time": 16.575,
+          "expected": 16.575
+        },
+        {
+          "time": 16.575,
+          "expected": 16.575
+        },
+        {
+          "time": 16.575,
+          "expected": 16.575
+        },
+        {
+          "time": 16.575,
+          "expected": 16.575
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 4,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/keyhole_base_cam_high.mp4",
+          "duration": 23.916992,
+          "currentTime": 1.293119,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        },
+        {
+          "src": ".weekly_2026_09_19/media/keyhole_base_cam_low.mp4",
+          "duration": 23.916992,
+          "currentTime": 1.292204,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        },
+        {
+          "src": ".weekly_2026_09_19/media/keyhole_base_cam_left_wrist.mp4",
+          "duration": 23.916992,
+          "currentTime": 1.29382,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 16
+        },
+        {
+          "src": ".weekly_2026_09_19/media/keyhole_base_cam_right_wrist.mp4",
+          "duration": 23.916992,
+          "currentTime": 1.290236,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        }
+      ],
+      "seek": [
+        {
+          "time": 11.958496,
+          "expected": 11.958496
+        },
+        {
+          "time": 11.958496,
+          "expected": 11.958496
+        },
+        {
+          "time": 11.958496,
+          "expected": 11.958496
+        },
+        {
+          "time": 11.958496,
+          "expected": 11.958496
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 5,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/horseshoe_base_cam_high.mp4",
+          "duration": 113.7,
+          "currentTime": 1.28472,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        },
+        {
+          "src": ".weekly_2026_09_19/media/horseshoe_base_cam_low.mp4",
+          "duration": 113.7,
+          "currentTime": 1.284211,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        },
+        {
+          "src": ".weekly_2026_09_19/media/horseshoe_base_cam_left_wrist.mp4",
+          "duration": 113.7,
+          "currentTime": 1.286966,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        },
+        {
+          "src": ".weekly_2026_09_19/media/horseshoe_base_cam_right_wrist.mp4",
+          "duration": 113.7,
+          "currentTime": 1.286347,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        }
+      ],
+      "seek": [
+        {
+          "time": 56.85,
+          "expected": 56.85
+        },
+        {
+          "time": 56.85,
+          "expected": 56.85
+        },
+        {
+          "time": 56.85,
+          "expected": 56.85
+        },
+        {
+          "time": 56.85,
+          "expected": 56.85
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 6,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/hedgehog_side_agentview.mp4",
+          "duration": 82.25,
+          "currentTime": 1.249999,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        },
+        {
+          "src": ".weekly_2026_09_19/media/hedgehog_side_front_oblique.mp4",
+          "duration": 82.25,
+          "currentTime": 1.249999,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        },
+        {
+          "src": ".weekly_2026_09_19/media/hedgehog_side_wrist.mp4",
+          "duration": 82.25,
+          "currentTime": 1.249999,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 15
+        }
+      ],
+      "seek": [
+        {
+          "time": 41.125,
+          "expected": 41.125
+        },
+        {
+          "time": 41.125,
+          "expected": 41.125
+        },
+        {
+          "time": 41.125,
+          "expected": 41.125
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 7,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/lock_base_agentview.mp4",
+          "duration": 159.35,
+          "currentTime": 1.293206,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/lock_base_front_oblique.mp4",
+          "duration": 159.35,
+          "currentTime": 1.292725,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/lock_base_wrist.mp4",
+          "duration": 159.35,
+          "currentTime": 1.290854,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        }
+      ],
+      "seek": [
+        {
+          "time": 79.675,
+          "expected": 79.675
+        },
+        {
+          "time": 79.675,
+          "expected": 79.675
+        },
+        {
+          "time": 79.675,
+          "expected": 79.675
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 8,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/fiber_base_agentview.mp4",
+          "duration": 177,
+          "currentTime": 1.25,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/fiber_base_front_oblique.mp4",
+          "duration": 177,
+          "currentTime": 1.249779,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/fiber_base_wrist.mp4",
+          "duration": 177,
+          "currentTime": 1.249716,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        }
+      ],
+      "seek": [
+        {
+          "time": 88.5,
+          "expected": 88.5
+        },
+        {
+          "time": 88.5,
+          "expected": 88.5
+        },
+        {
+          "time": 88.5,
+          "expected": 88.5
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 9,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/claws_a_cam_high.mp4",
+          "duration": 158.6,
+          "currentTime": 1.287053,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        },
+        {
+          "src": ".weekly_2026_09_19/media/claws_a_cam_low.mp4",
+          "duration": 158.6,
+          "currentTime": 1.286771,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 12
+        },
+        {
+          "src": ".weekly_2026_09_19/media/claws_a_cam_left_wrist.mp4",
+          "duration": 158.6,
+          "currentTime": 1.288479,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        },
+        {
+          "src": ".weekly_2026_09_19/media/claws_a_cam_right_wrist.mp4",
+          "duration": 158.6,
+          "currentTime": 1.287202,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 13
+        }
+      ],
+      "seek": [
+        {
+          "time": 79.3,
+          "expected": 79.3
+        },
+        {
+          "time": 79.3,
+          "expected": 79.3
+        },
+        {
+          "time": 79.3,
+          "expected": 79.3
+        },
+        {
+          "time": 79.3,
+          "expected": 79.3
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 10,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/knot_base_cam_high.mp4",
+          "duration": 75,
+          "currentTime": 1.261051,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        },
+        {
+          "src": ".weekly_2026_09_19/media/knot_base_cam_low.mp4",
+          "duration": 75,
+          "currentTime": 1.260197,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 26
+        },
+        {
+          "src": ".weekly_2026_09_19/media/knot_base_cam_left_wrist.mp4",
+          "duration": 75,
+          "currentTime": 1.257267,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/knot_base_cam_right_wrist.mp4",
+          "duration": 75,
+          "currentTime": 1.259424,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        }
+      ],
+      "seek": [
+        {
+          "time": 37.5,
+          "expected": 37.5
+        },
+        {
+          "time": 37.5,
+          "expected": 37.5
+        },
+        {
+          "time": 37.5,
+          "expected": 37.5
+        },
+        {
+          "time": 37.5,
+          "expected": 37.5
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 11,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/buzz_f3_agentview.mp4",
+          "duration": 106.96,
+          "currentTime": 1.255485,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 32
+        },
+        {
+          "src": ".weekly_2026_09_19/media/buzz_f3_front_oblique.mp4",
+          "duration": 106.96,
+          "currentTime": 1.257129,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 32
+        },
+        {
+          "src": ".weekly_2026_09_19/media/buzz_f3_wrist.mp4",
+          "duration": 106.96,
+          "currentTime": 1.257595,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 32
+        }
+      ],
+      "seek": [
+        {
+          "time": 53.48,
+          "expected": 53.48
+        },
+        {
+          "time": 53.48,
+          "expected": 53.48
+        },
+        {
+          "time": 53.48,
+          "expected": 53.48
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 12,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/rope_prefix_cam_high.mp4",
+          "duration": 29.05,
+          "currentTime": 1.253736,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/rope_prefix_cam_low.mp4",
+          "duration": 29.05,
+          "currentTime": 1.252765,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/rope_prefix_cam_left_wrist.mp4",
+          "duration": 29.05,
+          "currentTime": 1.251448,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        },
+        {
+          "src": ".weekly_2026_09_19/media/rope_prefix_cam_right_wrist.mp4",
+          "duration": 29.05,
+          "currentTime": 1.250919,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 25
+        }
+      ],
+      "seek": [
+        {
+          "time": 14.525,
+          "expected": 14.525
+        },
+        {
+          "time": 14.525,
+          "expected": 14.525
+        },
+        {
+          "time": 14.525,
+          "expected": 14.525
+        },
+        {
+          "time": 14.525,
+          "expected": 14.525
+        }
+      ],
+      "oldVideosReleased": true
+    },
+    {
+      "slide": 13,
+      "playback": [
+        {
+          "src": ".weekly_2026_09_19/media/blanket_latest_agentview.mp4",
+          "duration": 179.5,
+          "currentTime": 1.285063,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 2
+        },
+        {
+          "src": ".weekly_2026_09_19/media/blanket_latest_front_oblique.mp4",
+          "duration": 179.5,
+          "currentTime": 1.284018,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 2
+        },
+        {
+          "src": ".weekly_2026_09_19/media/blanket_latest_wrist.mp4",
+          "duration": 179.5,
+          "currentTime": 1.289824,
+          "paused": false,
+          "error": null,
+          "decodedFrames": 2
+        }
+      ],
+      "seek": [
+        {
+          "time": 89.75,
+          "expected": 89.75
+        },
+        {
+          "time": 89.75,
+          "expected": 89.75
+        },
+        {
+          "time": 89.75,
+          "expected": 89.75
+        }
+      ],
+      "oldVideosReleased": true
+    }
+  ]
+}

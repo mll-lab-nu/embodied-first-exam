@@ -1,0 +1,20 @@
+defaults:
+  - blanket_flatten_fold_roll
+  - _self_
+
+task:
+  geometry:
+    # Finer particles preserve the four-particle separation guard while fitting
+    # an overlapping, greater-than-one-turn curl into the same 60 x 48 cm sheet.
+    particle_size_m: 0.006
+    mesh_spacing_m: 0.009
+    roll_fold_count: 7
+    roll_angle_deg: 55.0
+    roll_angle_jitter_deg: 10.0
+    drop_clearance_m: 0.020
+    pitch_deg: 15.0
+    tilt_deg: 3.0
+    max_attempts: 512
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/fold_spiral_low_seed2_v1

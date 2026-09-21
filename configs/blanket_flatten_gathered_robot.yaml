@@ -1,0 +1,12 @@
+defaults:
+  - blanket_flatten_gathered_twist
+  - _self_
+
+task:
+  execution:
+    verify_stability_before_actions: true
+
+run:
+  mode: robot
+  fps: 20
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v1

@@ -1,0 +1,12 @@
+# Resolve the common smooth initial arc rather than concentrating source-polyline corners.
+# Material, damping, contact, and release conditions retain their existing values.
+defaults:
+  - rope_threading_deformation_damping20_preview
+  - _self_
+
+task:
+  geometry:
+    centerline_interpolation: circular_arc
+
+run:
+  output: runs/environment_bootstrap/rope_threading/damped20_smooth_candidate

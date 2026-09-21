@@ -1,0 +1,55 @@
+{
+  "family_id": "fixed_side_window",
+  "prototype_id": "hedgehog_fixed_side_window_fixed_v2",
+  "cage_bounds_m": [
+    [
+      -0.0675,
+      -0.0675,
+      -0.12
+    ],
+    [
+      0.0675,
+      0.0675,
+      0.135
+    ]
+  ],
+  "cage_bottom_m": -0.12,
+  "maximum_cage_radius_m": 0.0675000059047464,
+  "cage_height_m": 0.255,
+  "parent_path_clearance_lower_bound_m": 0.0034670495225643874,
+  "initial_qpos": [
+    -0.6084384163604869,
+    0.8637491143321487,
+    0.43447806145290985,
+    -1.5924066182661998,
+    1.0560534146254865,
+    1.500202781118223,
+    -0.42045112903356685,
+    0.6861479351674084,
+    7.190816607844322e-05,
+    0.6860320482328066,
+    -0.6587743490748629,
+    0.6861479351674512,
+    7.190816620267412e-05,
+    0.6860320482327038,
+    -0.6587743490748381
+  ],
+  "initial_ball_pose": [
+    0.03399999999999412,
+    -4.0598016733822354e-09,
+    -0.01309377960322844,
+    0.38231459195761514,
+    -0.8996677947434728,
+    -0.19068163471082797,
+    0.0898550280268449
+  ],
+  "source_archive": "runs/demo_metadata/hedgehog_in_cage/2026-09-19_classic_replacements_v2/fixed_side_window",
+  "source_archive_sha256": "67c9631aee87249925450a2849320a6ce36ee61921970084597d7cbb01e94d91",
+  "parent_physically_verified": true,
+  "fixed_grasp": "S2",
+  "spike_count": 6,
+  "all_spikes_fixed": true,
+  "exit_type": "rounded_side_window",
+  "official_CAD_replica": false,
+  "distinct_ik_family_proven": false
+}

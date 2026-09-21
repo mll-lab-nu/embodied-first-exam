@@ -61,11 +61,19 @@ class ClawBody:
 
 
 class ClawAssembly:
-    def __init__(self):
+    def __init__(self, render_variant=None):
         self.reference = reference = load_reference()
+        appearance = render_variant or {}
+        colors = np.asarray(appearance.get("colors", reference["colors_srgb"]), dtype=float)
+        self.metallic = float(appearance.get("metallic", .22))
+        self.roughness = float(appearance.get("roughness", .45))
+        if (colors.shape != (2, 4) or not np.isfinite(colors).all()
+                or np.any(colors < 0) or np.any(colors > 1)
+                or not 0 <= self.metallic <= 1 or not 0 <= self.roughness <= 1):
+            raise ValueError("Invalid Claw render-only material parameters")
         frames = reference_body_poses(reference)
         self.bodies = []
-        for source, color in zip(reference["pieces"], reference["colors_srgb"]):
+        for source, color in zip(reference["pieces"], colors):
             path = ASSET_ROOT / f"piece-{source['id']}.obj"
             if hashlib.sha256(path.read_bytes()).hexdigest() != source["sha256"]:
                 raise ValueError(f"Original mesh checksum mismatch: {path.name}")
@@ -77,7 +85,7 @@ class ClawAssembly:
             mesh.vertices = (mesh.vertices - source["source_origin"]) * source["scale"]
             mesh.density = reference["density_kg_m3"]
             mesh.visual = TextureVisuals(uv=np.zeros((len(mesh.vertices), 2)), material=PBRMaterial(
-                baseColorFactor=color, metallicFactor=.22, roughnessFactor=.45))
+                baseColorFactor=color, metallicFactor=self.metallic, roughnessFactor=self.roughness))
             inverse_grasp = np.asarray(source["inverse_grasp_column_major"]).reshape(4, 4, order="F")
             pose = frames[source["gripper_body"]] @ inverse_grasp
             self.bodies.append(ClawBody(f"claw_{source['id']}", mesh, pose, tuple(color), source))
@@ -118,10 +126,10 @@ def geometry_report(assembly):
         dynamics_qualified=False, full_path_verified=False)
 
 
-def generate_assets(output):
+def generate_assets(output, render_variant=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    assembly = ClawAssembly()
+    assembly = ClawAssembly(render_variant=render_variant)
     report = geometry_report(assembly)
     if not report["passed"]:
         raise ValueError("Reference geometry/initial pose audit failed")

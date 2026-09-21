@@ -13,6 +13,7 @@ from pathlib import Path
 
 import fcl
 from hydra import compose, initialize_config_dir
+from omegaconf import OmegaConf
 import mujoco
 import numpy as np
 from scipy.optimize import least_squares
@@ -129,6 +130,9 @@ class RobotCollision:
                 bad.append(dict(kind="robot_self", depth_m=float(-contact.dist)))
         for i, body in enumerate(self.assembly.bodies):
             rotation, translation = poses[i]
+            bottom = float((rotation.apply(body.visual.vertices)+translation)[:, 2].min())
+            if bottom < -1e-6:
+                bad.append(dict(kind="puzzle_table", part=i, depth_m=-bottom))
             for j, obj in enumerate(self.boxes[i]):
                 obj.setTransform(
                     fcl.Transform(
@@ -161,22 +165,55 @@ class RobotCollision:
         return bad
 
 
-def build(output, template=None):
+def build(output, template=None, *, objective="disassemble", xy_offset=None, task_config=None):
     output = Path(output)
     if output.exists():
         raise FileExistsError("Preserve previous plans; choose a new output filename")
     with initialize_config_dir(config_dir=str(ROOT / "configs"), version_base=None):
         cfg = compose(config_name="cast_coil_aloha")
+    if task_config is not None:
+        OmegaConf.set_struct(cfg.task, False)
+        cfg.task = OmegaConf.merge(cfg.task, task_config)
+        if str(cfg.task.objective) != objective:
+            raise ValueError("Plan objective differs from the resolved instance")
     kinematics = Kinematics(cfg.robot_control)
-    assembly = CoilAssembly(load_template(template) if template else None)
+    inline = cfg.task.get("template")
+    inline = OmegaConf.to_container(inline, resolve=True) if inline is not None else None
+    loaded = load_template(template) if template else inline
+    if template and inline is not None and loaded != inline:
+        raise ValueError("Plan template differs from the resolved instance")
+    assembly = CoilAssembly(loaded)
+    if objective not in ("assemble", "disassemble"):
+        raise ValueError(objective)
+    cfg.task.objective = objective
+    if float(cfg.task.scale) != 3.0:
+        raise ValueError("The robot planner expects 3x assets; use the coupled appearance scales")
+    if xy_offset is not None:
+        if task_config is not None and not np.allclose(xy_offset, cfg.task.initial_xy_offset_m):
+            raise ValueError("Initial separation differs from the resolved instance")
+        cfg.task.initial_xy_offset_m = list(xy_offset)
     audit = geometric_audit(assembly)
     if not audit["prototype_route_certified"]:
         raise RuntimeError("Prototype route no longer certified")
     collision = RobotCollision(kinematics, assembly)
-    yaw = Rotation.from_euler("z", 90, degrees=True)
+    yaw = Rotation.from_euler("z", float(cfg.task.yaw_deg), degrees=True)
+    grasp_reference_yaw = Rotation.from_euler("z", 90, degrees=True)
     design_scale = coordinate_scale(assembly.template)
-    root = np.array([0.0, 0.05, -min(b.visual.bounds[0, 2] for b in assembly.bodies)])
+    root = np.r_[np.asarray(cfg.task.center_xy_m)-np.asarray(cfg.env.robot_mount.pos)[:2],
+                 -min(b.visual.bounds[0, 2] for b in assembly.bodies)]
     lift = (0.08 if "inverse_design" in assembly.template else 0.07) * design_scale[2]
+    initial = [(yaw, root)] * 2
+    if objective == "assemble":
+        from .assembly_task import DEFAULT_XY_OFFSET, initial_poses, motions, xy_surface_gaps, route_lift
+
+        initial = initial_poses(assembly, root, yaw, cfg.task.get("initial_xy_offset_m", DEFAULT_XY_OFFSET) if xy_offset is None else xy_offset)
+        route, certificates = motions(assembly, initial)
+        audit = dict(audit, route=certificates, assembly_route_certified=True,
+                     scope="continuous assembly approach and reversed rigid-piece path; robot and dynamics checked separately")
+        table_certificate = route_lift(assembly, root, yaw, route, nominal=.08*design_scale[2])
+        lift = table_certificate["lift_m"]
+    else:
+        route = assembly_route(assembly)
     rotations = {
         "left": Rotation.from_matrix(
             np.column_stack(([1, 0, 0], [0, 0, -1], [0, 1, 0]))
@@ -201,7 +238,7 @@ def build(output, template=None):
             for side, part in (("right", 0), ("left", 1)):
                 rb, pb = poses[part]
                 error = kinematics.solve(
-                    side, pb + rb.apply(points[side]), rb * yaw.inv() * rotations[side]
+                    side, pb + rb.apply(points[side]), rb * grasp_reference_yaw.inv() * rotations[side]
                 )
                 errors.append(error)
                 if error[0] > 0.0003 or error[1] > 0.003:
@@ -224,10 +261,9 @@ def build(output, template=None):
             )
         print(name, len(frames), flush=True)
 
-    segment("pregrasp", 0.5, lambda u: [(yaw, root)] * 2)
-    segment("lift", 4, lambda u: [(yaw, root + [0, 0, lift * u])] * 2)
+    segment("pregrasp", 0.5, lambda u: initial)
+    segment("lift", 4, lambda u: [(r, p + [0, 0, lift * u]) for r, p in initial])
     raised = root + [0, 0, lift]
-    route = assembly_route(assembly)
     for motion in route:
 
         def pose_at(u, motion=motion):
@@ -245,21 +281,19 @@ def build(output, template=None):
             :, 2
         ].min()
     )
-    segment(
-        "place_silver",
-        2,
-        lambda u: [(yaw, raised), (final_r, final_p - [0, 0, bottom * u])],
-    )
-    final_p = final_p - [0, 0, bottom]
-    segment(
-        "place_gold",
-        3,
-        lambda u: [(yaw, raised - [0, 0, lift * u]), (final_r, final_p)],
-    )
+    if objective == "assemble":
+        segment("place_assembly", 4, lambda u: [(yaw, raised - [0, 0, lift * u])] * 2)
+    else:
+        segment("place_silver", 2, lambda u: [(yaw, raised), (final_r, final_p - [0, 0, bottom * u])])
+        final_p = final_p - [0, 0, bottom]
+        segment("place_gold", 3, lambda u: [(yaw, raised - [0, 0, lift * u]), (final_r, final_p)])
     report = dict(
+        objective=objective,
+        initial_poses=[dict(r=r.as_quat().tolist(), p=p.tolist()) for r, p in initial],
         lift=lift,
         root=root.tolist(),
-        yaw_deg=90,
+        yaw_deg=float(cfg.task.yaw_deg),
+        task_config=OmegaConf.to_container(cfg.task, resolve=True),
         scale=3.0,
         template_sha256=audit["template_sha256"],
         template=assembly.template,
@@ -275,8 +309,11 @@ def build(output, template=None):
         robot_model_sha256=hashlib.sha256(
             Path(robot_asset(cfg.robot_control)).read_bytes()
         ).hexdigest(),
-        scope="pregrasp reset, planned grasp, lift, complete prototype route and placement; no physics",
+        scope=f"pregrasp reset, planned grasp, lift, complete {objective} route and placement; no physics",
     )
+    if objective == "assemble":
+        report["initial_xy_surface_gap_m"] = xy_surface_gaps(assembly, initial)
+        report["route_table_clearance"] = table_certificate
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, separators=(",", ":")) + "\n")
     return report
@@ -286,5 +323,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
     parser.add_argument("--template")
+    parser.add_argument("--objective", choices=("assemble", "disassemble"), default="assemble")
+    parser.add_argument("--xy-offset", nargs=2, type=float)
     args = parser.parse_args()
-    build(args.output, args.template)
+    build(args.output, args.template, objective=args.objective, xy_offset=args.xy_offset)

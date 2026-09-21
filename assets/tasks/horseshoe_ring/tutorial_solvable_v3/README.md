@@ -1,6 +1,7 @@
 # Horseshoe Ring 教程结构可解原型 v3
 
-完整演示：`runs/environment_bootstrap/horseshoe_ring/aloha_full/index.html`。
+旧运动学演示：`runs/environment_bootstrap/horseshoe_ring/aloha_full/index.html`。
+新重力解法：[双臂 IK 与物理验收](../../../../docs/develop/tasks/horseshoe_ring_physical_ik_zh.md)。
 路径及证书：`runs/environment-solvability/horseshoe_ring/tutorial_solvable_v3/`。
 
 结构参考 [Professor Puzzle 官方教程](https://www.youtube.com/watch?v=LAE1w1VNIZg)：
@@ -24,5 +25,9 @@
 尺度及各刚体 COM 线性移动 / 四元数 SLERP 插值；改尺寸后须重新验证。
 更小目标环的有限搜索失败没有被解释为无解。
 
-ALOHA 演示采用预置抓持、逐帧关节与物体位姿回放。换抓支撑是运动学假设，
-没有力驱动夹持、重力执行和抗扰动成功的证据。录像不应计入物理任务成功率。
+旧 ALOHA 演示采用预置抓持、逐帧关节与物体位姿回放。其换抓支撑是运动学假设，
+不能用作力驱动夹持、重力执行和抗扰动成功的证据；旧录像不计入物理任务成功率。
+
+`physical_seed.json` 是新重力执行器使用的初态、折合关节种子和取环几何里程碑，
+不是物理成功证书。新执行器重新求解交接和取环，并以实测接触和自由落桌终态验收；
+入口与证据范围见 [重力下的双臂 IK](../../../../docs/develop/tasks/horseshoe_ring_physical_ik_zh.md)。

@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "errors": [],
+  "source_sha256": {
+    "report.json": "dc04161765ad8c82c319e93182d1a8431ba8460fac131ef1801153210c4151c6",
+    "trajectory.json": "aa78fcc0b98112ae91850250e3719a081650d75092298ad9f860205844ce4eb9"
+  },
+  "states_checked": 9878,
+  "geometric_samples": 13037,
+  "minimum_sampled_clearance_m": 0.0015789371792019845,
+  "continuous_interpolation_clearance_lower_bound_m": 0.0014789371792019845,
+  "material_motion_bound_m": 0.0001,
+  "grasp_constraint_removed": true,
+  "final_2s_drift_m": 7.830836137685328e-14,
+  "final_2s_max_speed_m_s": 8.761439988745914e-14,
+  "final_2s_max_angular_speed_rad_s": 1.4237077996033945e-12,
+  "lowest_point_above_table_m": -5.863189929122825e-07,
+  "scope": "independent convex solid and robot checks; continuity bound applies to interpolation of actual saved states"
+}

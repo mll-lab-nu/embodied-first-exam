@@ -59,19 +59,20 @@ def geometry_checks(cfg):
 
 
 def write_index(output):
-    cards = [('disc1_face', 'D1 · 金色', '三个槽：−60°、−30°、0°；盘角限位 ±15°'),
+    cards = [('disc1_face', 'D1 · 紫色', '三个槽：−60°、−30°、0°；盘角限位 ±15°'),
              ('disc2_face', 'D2 · 蓝色', '一个槽：−60°；盘角限位 −10° 至 +75°'),
-             ('disc3_face', 'D3 · 棕色', '一个槽：0°；连续旋转')]
+             ('disc3_face', 'D3 · 棕色', '一个槽：0°；连续旋转'),
+             ('endpoint_face', '终点 · 绿色', '一个槽：0°；固定方形锁孔，正反两面黄色描边')]
     rows = ''.join(f'<figure><a href="initial_{name}.png"><img src="initial_{name}.png" alt="{title} 锁眼正面"></a>'
                    f'<figcaption><strong>{title}</strong><br>{desc}</figcaption></figure>' for name, title, desc in cards)
     page = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>开锁 · 150 mm 间距初态</title>
-<style>body{margin:0;background:#edf2f5;color:#243746;font:16px/1.75 system-ui}main{max-width:1380px;margin:auto;padding:32px 24px}h1{font-size:30px;margin:0 0 12px}header,section{background:white;padding:24px;border-radius:14px;margin-bottom:22px}a{color:#126b8b}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}figure{margin:0;border:1px solid #d9e4eb;border-radius:10px;overflow:hidden}img{display:block;width:100%;height:auto}figcaption{padding:13px 18px}.wide{max-width:1120px;margin:auto}.note{background:#fff2d5;padding:13px 18px;border-radius:8px}code{overflow-wrap:anywhere;background:#edf2f5;padding:3px 6px}@media(max-width:850px){.grid{grid-template-columns:1fr}main{padding:16px}}</style><main>
+<style>body{margin:0;background:#edf2f5;color:#243746;font:16px/1.75 system-ui}main{max-width:1380px;margin:auto;padding:32px 24px}h1{font-size:30px;margin:0 0 12px}header,section{background:white;padding:24px;border-radius:14px;margin-bottom:22px}a{color:#126b8b}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}figure{margin:0;border:1px solid #d9e4eb;border-radius:10px;overflow:hidden}img{display:block;width:100%;height:auto}figcaption{padding:13px 18px}.wide{max-width:1120px;margin:auto}.note{background:#fff2d5;padding:13px 18px;border-radius:8px}code{overflow-wrap:anywhere;background:#edf2f5;padding:3px 6px}@media(max-width:850px){.grid{grid-template-columns:1fr}main{padding:16px}}</style><main>
 <header><h1>开锁初始态：锁片间距 85 → 150 mm</h1>
 <p>钥匙凸片间距同步改为 150 mm；握柄偏移由 300 改为 495 mm，保留末端凸片后方的 45 mm 余量。所有图片均来自同一个新环境的原始 Genesis 渲染。</p>
 <p><a href="config.yaml">完整实例配置</a> · <a href="assets/">环境 URDF / 网格</a> · <a href="inspection_report.json">初态与几何检查</a> · <a href="../initial_state_review/index.html">85 mm 原实例及最少回退证明</a> · <a href="../../index.html">工程验证汇总</a></p>
 <p class="note">本页完成建场、初态短暂静置与几何核验。加长后的抓取、机器人可达性及全程物理执行尚未验收。近景相机用于人工检查，未定义为策略输入。</p></header>
-<section><h2>先看每一片锁眼</h2><p>锁眼边缘加了 1.5 mm 宽的鲜黄色轮廓。三张原始相机图像都从钥匙入口方向正对盘面；后两张相机位于盘间空隙。透过锁眼可看到后方零件。</p><div class="grid">'''+rows+'''</div></section>
+<section><h2>先看每一片锁眼</h2><p>三个锁片与终点锁孔均带 1.5 mm 宽的鲜黄色描边；第一片为紫色。四张原始相机图像都从钥匙入口方向正对盘面，后三张相机位于盘间空隙。透过锁眼可看到后方零件。</p><div class="grid">'''+rows+'''</div></section>
 <section><h2>增大间距后的完整机构</h2><figure class="wide"><a href="initial_mechanism_overview.png"><img src="initial_mechanism_overview.png" alt="150 mm 间距的完整三锁片机构"></a><figcaption>同一初态的机构斜视图，点击查看原图。</figcaption></figure></section>
 <section><h2>机器人与加长钥匙的初始布局</h2><figure class="wide"><a href="initial_agentview.png"><img src="initial_agentview.png" alt="机器人及初始支撑上的加长钥匙"></a><figcaption>钥匙尚在支撑上；这张图不代表机器人已完成抓取。</figcaption></figure></section>
 <section><h2>环境所在目录</h2><p><code>'''+escape(str(output))+'''</code></p><p>角度约束与原实例相同，模型内最少仍为两次回退；轴向行程由 340 增为 600 mm，需要后续重新验证执行。</p></section></main></html>'''
@@ -95,9 +96,10 @@ def main(cfg):
                   simulated_seconds=float(cfg.env.sim.dt)*int(cfg.task.initialization.settle_steps),
                   full_task_rollout_performed=False, robot_reachability_qualified=False,
                   new_spacing_physics_qualified=False,
-                  aperture_outlines=[json.loads((output/'assets'/f'disc{i}'/'aperture_outline.json').read_text())
-                                     for i in range(3) if (output/'assets'/f'disc{i}'/'aperture_outline.json').exists()],
-                  inspection_cameras=['mechanism_overview','disc1_face','disc2_face','disc3_face'])
+                  aperture_outlines=[json.loads((output/'assets'/name/'aperture_outline.json').read_text())
+                                     for name in ('disc0','disc1','disc2','endpoint')
+                                     if (output/'assets'/name/'aperture_outline.json').exists()],
+                  inspection_cameras=['mechanism_overview','disc1_face','disc2_face','disc3_face','endpoint_face'])
     (output/'inspection_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
     write_index(output)
     print(f'Initial-state review: {output / "index.html"}', flush=True)

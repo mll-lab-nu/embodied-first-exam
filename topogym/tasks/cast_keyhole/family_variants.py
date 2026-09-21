@@ -12,7 +12,7 @@ from pathlib import Path
 import shutil
 
 import numpy as np
-from shapely import affinity, wkb
+from shapely import affinity, wkb, set_precision
 from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
@@ -66,6 +66,16 @@ def parameters(seed=None):
                 lateral_shift_mm=float(rng.uniform(-.5, .5)), palette=int(rng.integers(len(PALETTES))))
 
 
+def normalize_outer_stock(shape):
+    """Remove floating-point slits, while bounding actual material changes."""
+    if shape.minimum_clearance >= 1e-8:
+        return shape
+    normalized = set_precision(shape, 1e-9)
+    if shape.symmetric_difference(normalized).area > 1e-6:
+        raise ValueError("Numerical cleanup changed too much material")
+    return normalized
+
+
 def family_seed(root, family, source_override=None):
     source = Path(source_override) if source_override else ROOT / "runs/environment-solvability/cast_keyhole" / FAMILIES[family]
     geometry, _ = require_variant(source / "geometry.json")
@@ -87,14 +97,22 @@ def family_seed(root, family, source_override=None):
     return source, geometry, trace, sweep, sampling
 
 
-def build(style, root=OUTPUT, instance_id=None, seed=None, source_override=None):
+def build(style, root=OUTPUT, instance_id=None, seed=None, source_override=None, parameters_override=None):
     root = Path(root); family = style[:2]; instance_id = instance_id or style
     folder = root / instance_id
     if (folder / "qualification.json").exists():
         raise ValueError("Refusing to overwrite a qualified instance")
     folder.mkdir(parents=True, exist_ok=True)
     source, original, trace, sweep, sampling = family_seed(root, family, source_override)
-    params = parameters(seed)
+    params = parameters(seed) if parameters_override is None else dict(parameters_override)
+    if set(params) != {"width_scale", "height_scale", "lateral_shift_mm", "palette"}:
+        raise ValueError("Exactly four appearance parameters are required")
+    for key, lo, hi in (("width_scale", .96, 1.04), ("height_scale", .96, 1.04),
+                        ("lateral_shift_mm", -.5, .5)):
+        if not np.isfinite(params[key]) or not lo <= params[key] <= hi:
+            raise ValueError(f"Invalid {key}")
+    if isinstance(params["palette"], bool) or not isinstance(params["palette"], (int, np.integer)) or not 0 <= params["palette"] < len(PALETTES):
+        raise ValueError("Invalid palette")
     gold = Polygon(original["rings_mm"]["gold"][0])
     # Added stock lives outside the original envelope; the moving plate's
     # expanded sweep is removed. Only nonfunctional crown stock may be trimmed.
@@ -115,6 +133,11 @@ def build(style, root=OUTPUT, instance_id=None, seed=None, source_override=None)
             raise ValueError("No unique solid containing the protected seed")
         combined = candidates[0]
     combined = combined.simplify(.015, preserve_topology=True).union(base)
+    if parameters_override is not None and combined.minimum_clearance < 1e-8:
+        # Explicit v2 inputs: eliminate sub-nanometre Boolean slits before the
+        # slab mesher rounds coordinates. This is numerical normalization, not
+        # a relaxed topology check. All protection and collision tests still run.
+        combined = normalize_outer_stock(combined)
     if combined.geom_type != "Polygon" or not combined.is_valid or combined.interiors:
         raise ValueError("Appearance introduced a disconnected solid or extra hole")
     if protected_core.difference(combined).area > 1e-7:
@@ -163,7 +186,7 @@ def build(style, root=OUTPUT, instance_id=None, seed=None, source_override=None)
     return folder
 
 
-def qualify_geometry(folder):
+def qualify_geometry(folder, baseline_seed_path=None):
     folder = Path(folder)
     data = json.loads((folder / "proposal.json").read_text())
     trace = json.loads((folder / "ik_proposal.json").read_text())
@@ -171,7 +194,10 @@ def qualify_geometry(folder):
     meshes, cells = geometry_from_record(record)
     proof = certify_variant(data, trace, record, meshes, cells, folder)
     if record["family"] == "F3":
-        proof["negative_controls"].update(turnback_controls(trace, json.loads(SEED.read_text()), cells))
+        baseline = Path(baseline_seed_path) if baseline_seed_path is not None else SEED
+        if sha(baseline) != data["source_ik_sha256"]:
+            raise ValueError("Baseline IK for mechanism controls changed")
+        proof["negative_controls"].update(turnback_controls(trace, json.loads(baseline.read_text()), cells))
     if not all(n["collision_found"] for n in proof["negative_controls"].values()):
         raise ValueError("Appearance erased a required mechanism")
     proof["protected_functional_core_preserved"] = True

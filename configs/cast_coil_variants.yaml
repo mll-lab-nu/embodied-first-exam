@@ -1,0 +1,31 @@
+# Seeded candidate instances; the original fixed baseline remains available.
+defaults:
+  - cast_coil_aloha
+  - _self_
+
+task:
+  goal:
+    instruction: Assemble the two separated coil pieces, place them on the table and release both.
+  randomization:
+    family_id: eccentric_turn
+    face_scale: 1.0
+    depth_fraction: 0.5
+    profile_delta_mm: 0.0
+    yaw_delta_deg: 0.0
+    center_dx_m: 0.0
+    center_dy_m: 0.0
+    separation_dx_m: 0.0
+    separation_dy_m: 0.0
+  variation:
+    - {kind: choice, path: randomization.family_id, values: [eccentric_turn, split_turn_offset, axial_screw_turn]}
+    - {kind: uniform, path: randomization.face_scale, lo: 0.97, hi: 1.03}
+    - {kind: uniform, path: randomization.depth_fraction, lo: 0.0, hi: 1.0}
+    # 0.75 mm creates a non-manifold corner on the axial core; use the common valid support.
+    - {kind: choice, path: randomization.profile_delta_mm, values: [0.0, 1.5]}
+    - {kind: uniform, path: randomization.yaw_delta_deg, lo: -3.0, hi: 3.0}
+    - {kind: uniform, path: randomization.center_dx_m, lo: -0.005, hi: 0.005}
+    - {kind: uniform, path: randomization.center_dy_m, lo: -0.005, hi: 0.005}
+    - {kind: uniform, path: randomization.separation_dx_m, lo: -0.005, hi: 0.005}
+    - {kind: uniform, path: randomization.separation_dy_m, lo: -0.005, hi: 0.005}
+    - {kind: derived, fn: 'topogym.tasks.cast_coil.variants:derive'}
+    - {kind: validate, fn: 'topogym.tasks.cast_coil.variants:validate_parameters', max_retries: 0}

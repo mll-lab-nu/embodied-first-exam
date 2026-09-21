@@ -1,0 +1,61 @@
+{
+  "version": "claw_authored_compound_v2",
+  "task": "interlocked_claws",
+  "units": "m, kg, s, radians",
+  "scope": "Congruent compact revision of macro family C0; fixed prototype, not a fourth macro family.",
+  "engine": "MuJoCo 3.13.0",
+  "existing_seed_version_unchanged": "claw_seed_v1",
+  "seed_api_integrated": false,
+  "dataset_generated": false,
+  "dataset_eligible": false,
+  "random_geometry_qualified": false,
+  "families": [
+    {
+      "family": "orthogonal_gate_balanced_v2",
+      "macro_family": "orthogonal_gate",
+      "representative": "C0",
+      "revision": "balanced_gate_v2",
+      "previous_revision": "authored_compound_v1/orthogonal_gate",
+      "window_outer_size_m": [
+        0.25,
+        0.19
+      ],
+      "window_aperture_m": [
+        0.22,
+        0.16
+      ],
+      "congruent_windows": true,
+      "frame_extents_m": [
+        0.2520000049844384,
+        0.25200000405311584,
+        0.1899999976158142
+      ],
+      "plan": "orthogonal_gate_balanced_v2/plan.json",
+      "model": "orthogonal_gate_balanced_v2/assets/model.json",
+      "settings": "orthogonal_gate_balanced_v2/settings.json",
+      "physics_dt_s": 0.00025,
+      "refinement_dt_s": 0.000125,
+      "release_times_s": [
+        54.0,
+        34.0
+      ],
+      "duration_s": 62.0,
+      "pregrasp": true,
+      "grasp": "ideal gripper-to-part weld until sequential release",
+      "fixed_prototype_physics_passed": true,
+      "seed_api_integrated": false,
+      "dataset_eligible": false,
+      "verification_directory": "runs/demo_metadata/interlocked_claws/2026-09-19_orthogonal_gate_balanced_physical_v1",
+      "files": {
+        "assets/model.json": "1a450a0809d98b1d5ce53ee6c8bb2696246eb818299f90bb5ee39cf5a5806951",
+        "assets/piece_0.obj": "680f809aba0bb5fdbb6fbdd08c213b09668191d51681ddbee576af1186c912ca",
+        "assets/piece_0.urdf": "71bf2b1375b9dbaec944d6a77c3035ce4bdd2f2bc2131ebf203a4c5fc40e329e",
+        "assets/piece_1.obj": "eb34fe6a809b71bf3cdd4ef0604a6999d6ce7f7632bde1e5d2c5195d9ab7b0ab",
+        "assets/piece_1.urdf": "f110785553dcf30c0b49ddea3ccba590da32301ba16506190009cb99c709c833",
+        "ik_report.json": "52e6e999766d7e473ef4ef9f4a3ecb82e8352bd19839a829dedf730e2e3c3b65",
+        "plan.json": "b2ad53abc87ce2414de22b602724a9b2b2a491a97697b4de51d46a688d9aaf06",
+        "settings.json": "e882c3af6fbced08aed50f4ddad083fe0c2a554b4a304b0e3882cde9e82d044d"
+      }
+    }
+  ]
+}

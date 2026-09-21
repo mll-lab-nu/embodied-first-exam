@@ -1,0 +1,735 @@
+common:
+  preset:
+    id: topogym_tabletop_v1
+    version: 1.3
+  manipulation_space:
+    name: topogym_tabletop_v1
+    coordinate_frame: task
+    base:
+      enabled: false
+      pos:
+      - 0.0
+      - 0.0
+      - 0.0
+      size:
+      - 0.7
+      - 0.8
+      - 0.0
+      color:
+      - 0.92
+      - 0.92
+      - 0.94
+    board:
+      enabled: false
+      pos:
+      - 0.0
+      - 0.0
+      - 0.0
+      size:
+      - 0.7
+      - 0.8
+      - 0.0
+      color:
+      - 0.92
+      - 0.92
+      - 0.94
+    workspace:
+      x:
+      - -0.25
+      - 0.25
+      'y':
+      - -0.3
+      - 0.3
+      z:
+      - 0.03
+      - 0.4
+      marker_z: 0.003
+      marker_width: 0.006
+      marker_color:
+      - 0.04
+      - 0.36
+      - 1.0
+    grid:
+      enabled: true
+      spacing: 0.1
+      line_width: 0.002
+      z: 0.002
+      color:
+      - 0.18
+      - 0.28
+      - 0.38
+    reference_objects:
+      enabled: false
+      start_pos:
+      - -0.22
+      - 0.28
+      - 0.031
+      gap: 0.055
+      cubes: []
+      bars: []
+  robot_setup:
+    gripper_model: robotiq_2f85
+    robotiq:
+      kp: 5.0
+      kv: 5.0
+      max_driver_torque_nm: 0.3
+      oracle_gripper_settle_s: 3.0
+      oracle_motion_time_scale: 1.5
+    mount:
+      name: franka_panda
+      mobility: fixed
+      pos:
+      - -0.57
+      - 0.0
+      - 0.0
+      euler:
+      - 0.0
+      - 0.0
+      - 0.0
+      footprint_min:
+      - -0.154079
+      - -0.094614
+      footprint_max:
+      - 0.071567
+      - 0.094671
+      edge_margin: 0.01
+    home:
+      qpos:
+      - 0.0
+      - 0.3926990817
+      - 0.0
+      - -1.9634954085
+      - 0.0
+      - 2.3561944902
+      - -0.7853981634
+      - 0.04
+      - 0.04
+      settle_steps: 100
+env:
+  renderer:
+    type: rasterizer
+    show_viewer: false
+    env_map: .external/nyx-assets/studio_small_09_2k.hdr
+    env_intensity: 1.0
+    spp: 32
+    denoise: true
+    lights:
+    - type: point
+      pos:
+      - -0.6
+      - -0.45
+      - 2.4
+      intensity: 3.0
+      color:
+      - 1.0
+      - 0.98
+      - 0.94
+      shadow: true
+    - type: point
+      pos:
+      - -0.6
+      - 0.45
+      - 2.4
+      intensity: 1.0
+      color:
+      - 1.0
+      - 0.98
+      - 0.94
+      shadow: false
+    - type: point
+      pos:
+      - 0.6
+      - -0.45
+      - 2.4
+      intensity: 1.0
+      color:
+      - 0.96
+      - 0.98
+      - 1.0
+      shadow: false
+    - type: point
+      pos:
+      - 0.6
+      - 0.45
+      - 2.4
+      intensity: 1.0
+      color:
+      - 0.96
+      - 0.98
+      - 1.0
+      shadow: false
+  presentation:
+    background: checker
+    appearance:
+    - pattern: table
+      color:
+      - 0.83
+      - 0.84
+      - 0.82
+      metallic: 0.0
+      roughness: 0.42
+    - pattern: table_frame*
+      color:
+      - 1.0
+      - 1.0
+      - 1.0
+      metallic: 0.0
+      roughness: 0.45
+      diffuse_map: .external/nyx-assets/wood_table_001_diff_1k.png
+      normal_map: .external/nyx-assets/wood_table_001_nor_gl_1k.png
+  appearance: []
+  preset:
+    id: topogym_tabletop_v1
+    version: 1.3
+    builder: standard_tabletop
+    source: RoboMME/ManiSkill@07be6fbc66350ddca200abfb0a11b692f078f7fd
+    locked: false
+  genesis:
+    backend: cpu
+    precision: '64'
+    logging_level: warning
+  sim:
+    n_envs: 0
+    dt: 0.004
+    substeps: 16
+    gravity:
+    - 0.0
+    - 0.0
+    - -9.81
+  viewer:
+    camera_pos:
+    - 1.2
+    - -1.15
+    - 1.65
+    camera_lookat:
+    - -0.08
+    - 0.0
+    - 0.98
+    camera_fov: 50
+    max_fps: 60
+  frames:
+    table_surface:
+      origin:
+      - 0.0
+      - 0.0
+      - 0.9196429
+    task:
+      origin:
+      - 0.0
+      - 0.0
+      - 0.9196429
+  world:
+    plane:
+      enabled: true
+    table:
+      pos:
+      - -0.1356786
+      - 0.0
+      - 0.45982145
+      size:
+      - 1.5
+      - 1.4
+      - 0.9196429
+      color:
+      - 0.78
+      - 0.8
+      - 0.82
+      surface_tolerance: 1.0e-06
+    stage:
+      enabled: false
+      pos:
+      - 0.0
+      - 0.0
+      - 0.9206429
+      size:
+      - 0.7
+      - 0.8
+      - 0.002
+      color:
+      - 0.92
+      - 0.92
+      - 0.94
+  robot_mount:
+    name: franka_panda
+    mobility: fixed
+    pos:
+    - -0.57
+    - 0.0
+    - 0.9196429
+    euler:
+    - 0.0
+    - 0.0
+    - 0.0
+    footprint_min:
+    - -0.154079
+    - -0.094614
+    footprint_max:
+    - 0.071567
+    - 0.094671
+    edge_margin: 0.01
+    surface_tolerance: 1.0e-06
+  cameras:
+    base_camera:
+      res:
+      - 256
+      - 256
+      pos:
+      - 0.3
+      - 0.0
+      - 1.3196429
+      lookat:
+      - 0.0
+      - 0.0
+      - 0.7196429
+      up:
+      - 0.0
+      - 0.0
+      - 1.0
+      fov: 90
+    oblique:
+      res:
+      - 512
+      - 512
+      pos:
+      - 1.0
+      - -0.8
+      - 1.42
+      lookat:
+      - -0.08
+      - 0.0
+      - 0.98
+      up:
+      - 0.0
+      - 0.0
+      - 1.0
+      fov: 57.2958
+    topdown:
+      res:
+      - 960
+      - 720
+      pos:
+      - -0.035
+      - 0.0
+      - 2.7
+      lookat:
+      - -0.035
+      - 0.0
+      - 1.2
+      up:
+      - 0
+      - 1
+      - 0
+      fov: 43
+    front:
+      res:
+      - 512
+      - 512
+      pos:
+      - 0.42
+      - 0.0
+      - 1.3
+      lookat:
+      - 0.05
+      - 0.0
+      - 0.88
+      up:
+      - 0.0
+      - 0.0
+      - 1.0
+      fov: 78
+      near: 0.01
+      far: 10.0
+    wrist:
+      res:
+      - 256
+      - 256
+      pos:
+      - 0.5
+      - 0.0
+      - 1.18
+      lookat:
+      - 0.62
+      - 0.0
+      - 0.95
+      up:
+      - 0.0
+      - 0.0
+      - 1.0
+      fov: 90
+      near: 0.01
+      far: 3.0
+      attach:
+        enabled: true
+        entity: robot
+        link: hand
+        offset_pos:
+        - 0.05
+        - 0.0
+        - 0.005
+        offset_lookat:
+        - 0.065
+        - 0.0
+        - 0.17
+        offset_up:
+        - 1.0
+        - 0.0
+        - 0.0
+    overview:
+      res:
+      - 960
+      - 720
+      pos:
+      - 1.1
+      - -1.45
+      - 1.9
+      lookat:
+      - -0.035
+      - 0.0
+      - 1.2
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 43
+    front_oblique:
+      res:
+      - 960
+      - 720
+      pos:
+      - -0.95
+      - -1.4
+      - 1.75
+      lookat:
+      - -0.035
+      - 0.0
+      - 1.2
+      up:
+      - 0
+      - 0
+      - 1
+      fov: 43
+robot_control:
+  robot:
+    name: franka_panda
+    asset: xml/franka_emika_panda/panda.xml
+    tool_model: robotiq_2f85
+    joint_names:
+    - joint1
+    - joint2
+    - joint3
+    - joint4
+    - joint5
+    - joint6
+    - joint7
+    - finger_joint1
+    - finger_joint2
+    arm_joint_count: 7
+    gripper_joint_count: 2
+    ee_link: hand
+  home:
+    qpos:
+    - 0.0
+    - 0.3926990817
+    - 0.0
+    - -1.9634954085
+    - 0.0
+    - 2.3561944902
+    - -0.7853981634
+    - 0.04
+    - 0.04
+    settle_steps: 100
+  controller:
+    type: position
+    kp:
+    - 4500
+    - 4500
+    - 3500
+    - 3500
+    - 2000
+    - 2000
+    - 2000
+    - 100
+    - 100
+    kv:
+    - 450
+    - 450
+    - 350
+    - 350
+    - 200
+    - 200
+    - 200
+    - 10
+    - 10
+    force_lower:
+    - -87
+    - -87
+    - -87
+    - -87
+    - -12
+    - -12
+    - -12
+    - -100
+    - -100
+    force_upper:
+    - 87
+    - 87
+    - 87
+    - 87
+    - 12
+    - 12
+    - 12
+    - 100
+    - 100
+  ik:
+    enabled: true
+    default_ee_quat:
+    - 0.0
+    - 1.0
+    - 0.0
+    - 0.0
+    max_samples: 1
+    max_solver_iters: 50
+    max_step_size: 0.15
+  gripper:
+    robotiq:
+      kp: 50.0
+      kv: 5.0
+      max_driver_torque_nm: 2.5
+      oracle_gripper_settle_s: 3.0
+      oracle_motion_time_scale: 1.5
+    open_qpos: 0.04
+    closed_qpos: 0.0
+  action_protocol:
+    mode: ee_delta
+    dims:
+    - dx
+    - dy
+    - dz
+    - dyaw
+    - gripper
+    max_delta_xyz: 0.03
+    max_delta_yaw: 0.2
+    workspace:
+      x:
+      - -0.25
+      - 0.25
+      'y':
+      - -0.3
+      - 0.3
+      z:
+      - 0.03
+      - 0.4
+  control_loop:
+    steps_per_action: 20
+    interpolation: linear
+    use_plan_path: false
+    plan_waypoints: 80
+task:
+  variant: spatial_maze_robot_v3
+  origin_xy_m:
+  - -0.03
+  - 0.0
+  yaw_deg: -90
+  physics:
+    constraint_timeconst: 0.0005
+    noslip_iterations: 100
+    noslip_tolerance: 1.0e-12
+  geometry:
+    template_id: spatial_maze_robot_v3
+    authored_controls_m: []
+    authored_section_ends: []
+    orientation_knots_wxyz: []
+    center_offset_knots_m: []
+    base_size_m:
+    - 0.5201
+    - 0.3689
+    - 0.017499999999999998
+    spiral_exit_roll_deg: 150
+    spiral_exit_roll_start: 0.965
+    spiral_exit_roll_end: 0.995
+    spiral_normal_tilt_deg: 0
+    normal_tilt_knots:
+    - - 0.0
+      - -5.897341983553968e-06
+    - - 0.0033333333333333335
+      - -0.07963084571322988
+    - - 0.006666666666666667
+      - -10.358781834339279
+    - - 0.01
+      - -18.613323046585677
+    - - 0.04
+      - -20.680496559334976
+    - - 0.12000000000000001
+      - -25.456983431757095
+    - - 0.12666666666666668
+      - -25.635226397855185
+    - - 0.13
+      - -26.02264270103854
+    - - 0.13333333333333333
+      - -26.982102437462217
+    - - 0.1366666666666667
+      - -26.952399563344432
+    - - 0.14
+      - -24.794172950973305
+    - - 0.14333333333333334
+      - -17.412896047088783
+    - - 0.14666666666666667
+      - -5.872783587369756
+    - - 0.15000000000000002
+      - -0.475922069293693
+    - - 0.15333333333333335
+      - -0.011881001108057291
+    - - 0.3433333333333334
+      - -0.011996021121886951
+    - - 0.3466666666666667
+      - -0.7101723778238606
+    - - 0.35000000000000003
+      - -8.779674848777871
+    - - 0.35333333333333333
+      - -20.416900800206403
+    - - 0.3566666666666667
+      - -24.9397166872207
+    - - 0.36000000000000004
+      - -26.747360537629696
+    - - 0.3666666666666667
+      - -27.228817188609902
+    - - 0.42333333333333334
+      - -41.78582287625541
+    - - 0.44333333333333336
+      - -45.96764236418898
+    - - 0.45333333333333337
+      - -47.333461374457926
+    - - 0.46
+      - -49.159752536375166
+    - - 0.4633333333333334
+      - -47.92949388649587
+    - - 0.4666666666666667
+      - -43.35948459621458
+    - - 0.47000000000000003
+      - -31.836536050400134
+    - - 0.4766666666666667
+      - -10.483096470263506
+    - - 0.48000000000000004
+      - -1.8590551931793091
+    - - 0.48333333333333334
+      - -0.06262193070958529
+    - - 0.6566666666666667
+      - -0.20949570744267546
+    - - 0.6633333333333333
+      - -0.8756548756081631
+    - - 0.6766666666666667
+      - -4.438714976593201
+    - - 0.6833333333333333
+      - -5.138799292347733
+    - - 0.6866666666666668
+      - -5.114675622582534
+    - - 0.6900000000000001
+      - -4.405981568152217
+    - - 0.6933333333333334
+      - -1.4747834159091393
+    - - 0.6966666666666667
+      - -0.49306208377798133
+    - - 0.7066666666666667
+      - -0.04279095375283243
+    - - 0.7233333333333334
+      - -0.003994347064759108
+    - - 0.7266666666666667
+      - -0.2783410082991684
+    - - 0.7300000000000001
+      - -6.297876465569295
+    - - 0.7333333333333334
+      - -19.412818920624204
+    - - 0.7366666666666667
+      - -34.88695615951177
+    - - 0.7400000000000001
+      - -51.02858698561409
+    - - 0.7433333333333334
+      - -65.61384284593758
+    - - 0.7466666666666667
+      - -64.32683119622286
+    - - 0.75
+      - -62.257249854165586
+    - - 0.7566666666666667
+      - -57.2966394832973
+    - - 0.7666666666666667
+      - -49.14166026754239
+    - - 0.7733333333333334
+      - -43.15175654614252
+    - - 0.7833333333333334
+      - -33.37814336909536
+    - - 0.81
+      - -5.044804383815254
+    - - 0.8133333333333334
+      - -2.3269605053578166
+    - - 0.8166666666666668
+      - -0.8152365075580204
+    - - 0.8200000000000001
+      - -0.23560358569019157
+    - - 0.8266666666666668
+      - -0.01625287886911561
+    - - 0.9800000000000001
+      - 0.13060863322475266
+    - - 0.9833333333333334
+      - 20.461560212887587
+    - - 0.9866666666666667
+      - 45.4517675702377
+    - - 0.9900000000000001
+      - 58.05108385991909
+    - - 0.9933333333333334
+      - 65.070715613062
+    - - 0.9966666666666667
+      - 65.61384284593758
+    - - 1.0
+      - 65.13330508588686
+    clearance_cover_m: 0.00035
+    middle_handle_roll_deg: 0.0
+    upright_handle_pitch_deg: 45
+    horizontal_scale: 0.42
+    depth_scale: 0.42
+    height_scale: 0.315
+    vertical_valley_lift_m: 0.0
+    wire_radius_m: 0.0014699999999999997
+    loop_radius_m: 0.015399999999999999
+    loop_tube_radius_m: 0.0012599999999999998
+    loop_segments: 64
+    stem_length_m: 0.01596
+    grip_length_m: 0.03052
+    grip_radius_m: 0.0049
+    grip_shape: box
+    grip_half_thickness_m: 0.0034999999999999996
+    grip_flat_roll_deg: 258.85637123733466
+    end_stop_radius_m: 0.0161
+    end_stop_shape: sphere
+    end_stop_thickness_m: 0.0028
+    rail_segment_m: 0.0034999999999999996
+    witness_step_m: 8.75e-05
+    end_reserve_m: 0.126
+    finish: wood_metal
+    post_radius_m: 0.011
+    post_height_m: 0.04
+run:
+  output: /home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/compact_wood_20260920/baseline
+  build_scene: false
+  render: false
+  viewer: false
+  include_robot: true
+  smoke_steps: 2
+robot_demo:
+  instance_id: baseline_compact_wood_s70_v1
+  grip_inset_m: 0.01652
+  grasp_tilt_deg: 0
+  grasp_roll_deg: 258.85637123733466
+  plan_samples: 1601
+  release_progress: 0.988
+  retreat_height_m: 0.05
+  max_linear_speed_m_s: 0.035
+  max_angular_speed_rad_s: 0.45
+  max_joint_speed_rad_s: 0.45
+  initial_arm_qpos:
+  - 0.4440837547859882
+  - -0.5930900982504947
+  - 0.47301358182236625
+  - -2.8442380558603975
+  - -0.8157801865581927
+  - 2.6825341197822294
+  - -2.145324772970384

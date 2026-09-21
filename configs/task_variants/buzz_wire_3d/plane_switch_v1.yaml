@@ -1,0 +1,99 @@
+schema_version: 1
+design_revision: 2
+spec_type: buzz_wire_family_design
+status: proposed
+runtime_ready: false
+family_id: F3_plane_switch
+label_zh: 梳齿—竖直 W—侧向 Ω—倾斜螺旋连续关卡
+contract: family_space_v1.yaml
+default_prototype: F3_comb_w_omega_coil_v2
+supersedes_proposals: [F3_xy_yz_xz, F3_xy_xz_yz]
+family_identity:
+  motion: repeated local turns inside four different obstacles with successive plane changes
+  stage_count_min: 4
+  distinct_motif_count_min: 4
+  orientation: horizontal steering, vertical dips, lateral looping, then coupled translation and rotation
+  stage_order_is_discrete_prototype_identity: true
+  continuous_grasp_across_stages: true
+  plane_changes_min: 3
+
+prototypes:
+  F3_comb_w_omega_coil_v2:
+    stage_order: [entry_comb, upright_w, side_omega, tilted_coil]
+    fixed_structure: {entry_return_count: 2, w_valley_count: 2, omega_sweep_deg: 270.0, coil_turns: 0.75}
+    stages:
+      entry_comb:
+        motif: horizontal_parallel_returns
+        sketch_placement: {start_x_m: -0.310, y_min_m: -0.100}
+        plane: xy
+        return_count: 2
+        nominal: {turn_radius_m: 0.040, lane_pitch_m: 0.080, straight_run_m: 0.200, height_m: 0.250}
+      upright_w:
+        motif: two_valleys_and_one_crest
+        sketch_placement: {start_x_m: -0.050}
+        plane: xz
+        valley_count: 2
+        nominal: {turn_radius_m: 0.035, low_height_m: 0.085, high_height_m: 0.255, front_y_m: -0.150}
+      side_omega:
+        motif: open_omega_return
+        sketch_placement: {plane_x_m: 0.230, start_angle_deg: 135.0}
+        plane: yz
+        nominal: {radius_m: 0.060, center_height_m: 0.180, center_y_m: 0.035}
+      tilted_coil:
+        motif: inclined_open_helix
+        sketch_placement: {center_m: [0.235, 0.185, 0.150], start_angle_deg: 180.0}
+        plane: tilted_yz
+        nominal: {radius_m: 0.045, axial_advance_m: 0.070, plane_tilt_deg: 30.0}
+    nominal: {connector_handle_m: 0.055, target_playable_length_m: 2.60}
+  F3_stairs_sidew_omega_s_v2:
+    stage_order: [terraced_z, side_w, tilted_omega, final_s]
+    fixed_structure: {terrace_count: 3, w_valley_count: 2, omega_sweep_deg: 270.0, s_return_count: 2}
+    stages:
+      terraced_z:
+        motif: three_level_zigzag
+        plane: stacked_xy
+        nominal: {turn_radius_m: 0.040, terrace_rise_m: 0.045, straight_run_m: 0.180}
+      side_w:
+        motif: sideways_double_valley
+        plane: yz
+        nominal: {turn_radius_m: 0.035, low_height_m: 0.085, high_height_m: 0.250}
+      tilted_omega:
+        motif: inclined_open_omega
+        plane: tilted_xz
+        nominal: {radius_m: 0.060, plane_tilt_deg: 30.0}
+      final_s:
+        motif: opposite_curvature_s
+        plane: xy
+        nominal: {turn_radius_m: 0.040, height_m: 0.180}
+    nominal: {connector_handle_m: 0.055, target_playable_length_m: 2.40}
+
+tuning_candidates:
+  entry_turn_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005]}
+  entry_run_delta_m: {default: 0.0, bounds: [-0.015, 0.015]}
+  w_turn_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005]}
+  w_high_height_delta_m: {default: 0.0, bounds: [-0.005, 0.010]}
+  omega_radius_delta_m: {default: 0.0, bounds: [-0.005, 0.005]}
+  stage_depth_offset_delta_m: {default: 0.0, bounds: [-0.010, 0.010]}
+  tilted_stage_angle_delta_deg: {default: 0.0, bounds: [-5.0, 5.0]}
+  coil_radius_delta_m: {default: 0.0, bounds: [-0.003, 0.005], applies_to: [F3_comb_w_omega_coil_v2]}
+  terrace_rise_delta_m: {default: 0.0, bounds: [-0.005, 0.005], applies_to: [F3_stairs_sidew_omega_s_v2]}
+coupled_constraints:
+  - Preserve four full obstacles and their authored order; connectors do not count as stages.
+  - Use tangent-continuous joins between different planes; no sharp wire corners.
+  - Preserve all local return counts and the open 270-degree omega, rather than shrinking obstacles into cosmetic waves.
+  - Derive comb lane pitch from its radius and retain clearance at every W valley.
+  - A 270-degree wire arc does not prescribe a 270-degree roll of one wrist joint.
+  - Place stage envelopes in separate corridors and check crossings between different stages.
+  - The short helix remains open, with no intermediate mount crossing the ring path.
+ik_design_priorities:
+  - Jointly select grasp side, ring tilt and one arm branch for all four obstacles.
+  - Check joint 7 margin throughout; baseline already spans about 327 degrees on that joint.
+  - Resolve all stage transitions without resetting pose, changing grasp or stitching independent IK solutions.
+verification: {geometry: pending, ik: pending, robot_collision: pending, physics: pending}
+
+# This separate fixed instance passed; the proposal and tuning domain above remain unqualified.
+verified_representatives:
+  - instance_id: F3_comb_w_omega_coil_clearance_v3_rounded18mm
+    design_spec: plane_switch_clearance_v3.yaml
+    runtime_seed: assets/tasks/buzz_wire_3d/F3_comb_w_omega_coil_clearance_v3/robot_seed.json
+    qualification: runs/demo_metadata/buzz_wire_3d/2026-09-19_F3_comb_w_omega_coil_v3/stability_report.json

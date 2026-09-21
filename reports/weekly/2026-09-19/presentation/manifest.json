@@ -1,0 +1,536 @@
+{
+  "title": "TopoGym — Complex Spatial Constraint Benchmark",
+  "slides": 35,
+  "demo_slides": 22,
+  "overview_demo_slides": 11,
+  "wrist_demo_slides": 11,
+  "single_wrist_slides": 5,
+  "dual_wrist_slides": 6,
+  "simultaneous_video_panes": 2,
+  "available_videos": 39,
+  "source_date": "2026-09-19",
+  "media": {
+    "coil_base": [
+      {
+        "camera": "cam_high",
+        "src": "media/coil_base_cam_high.mp4",
+        "poster": "posters/coil_base_cam_high.jpg",
+        "duration": 33.15,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/coil_base_cam_low.mp4",
+        "poster": "posters/coil_base_cam_low.jpg",
+        "duration": 33.15,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/coil_base_cam_left_wrist.mp4",
+        "poster": "posters/coil_base_cam_left_wrist.jpg",
+        "duration": 33.15,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/coil_base_cam_right_wrist.mp4",
+        "poster": "posters/coil_base_cam_right_wrist.jpg",
+        "duration": 33.15,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "keyhole_base": [
+      {
+        "camera": "cam_high",
+        "src": "media/keyhole_base_cam_high.mp4",
+        "poster": "posters/keyhole_base_cam_high.jpg",
+        "duration": 23.916667,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/keyhole_base_cam_low.mp4",
+        "poster": "posters/keyhole_base_cam_low.jpg",
+        "duration": 23.916667,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/keyhole_base_cam_left_wrist.mp4",
+        "poster": "posters/keyhole_base_cam_left_wrist.jpg",
+        "duration": 23.916667,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/keyhole_base_cam_right_wrist.mp4",
+        "poster": "posters/keyhole_base_cam_right_wrist.jpg",
+        "duration": 23.916667,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "horseshoe_base": [
+      {
+        "camera": "cam_high",
+        "src": "media/horseshoe_base_cam_high.mp4",
+        "poster": "posters/horseshoe_base_cam_high.jpg",
+        "duration": 113.7,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/horseshoe_base_cam_low.mp4",
+        "poster": "posters/horseshoe_base_cam_low.jpg",
+        "duration": 113.7,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/horseshoe_base_cam_left_wrist.mp4",
+        "poster": "posters/horseshoe_base_cam_left_wrist.jpg",
+        "duration": 113.7,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/horseshoe_base_cam_right_wrist.mp4",
+        "poster": "posters/horseshoe_base_cam_right_wrist.jpg",
+        "duration": 113.7,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "hedgehog_side": [
+      {
+        "camera": "agentview",
+        "src": "media/hedgehog_side_agentview.mp4",
+        "poster": "posters/hedgehog_side_agentview.jpg",
+        "duration": 82.25,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "front_oblique",
+        "src": "media/hedgehog_side_front_oblique.mp4",
+        "poster": "posters/hedgehog_side_front_oblique.jpg",
+        "duration": 82.25,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "wrist",
+        "src": "media/hedgehog_side_wrist.mp4",
+        "poster": "posters/hedgehog_side_wrist.jpg",
+        "duration": 82.25,
+        "width": 960,
+        "height": 720
+      }
+    ],
+    "lock_base": [
+      {
+        "camera": "agentview",
+        "src": "media/lock_base_agentview.mp4",
+        "poster": "posters/lock_base_agentview.jpg",
+        "duration": 159.35,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "front_oblique",
+        "src": "media/lock_base_front_oblique.mp4",
+        "poster": "posters/lock_base_front_oblique.jpg",
+        "duration": 159.35,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "wrist",
+        "src": "media/lock_base_wrist.mp4",
+        "poster": "posters/lock_base_wrist.jpg",
+        "duration": 159.35,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "fiber_base": [
+      {
+        "camera": "agentview",
+        "src": "media/fiber_base_agentview.mp4",
+        "poster": "posters/fiber_base_agentview.jpg",
+        "duration": 177.0,
+        "width": 960,
+        "height": 676
+      },
+      {
+        "camera": "front_oblique",
+        "src": "media/fiber_base_front_oblique.mp4",
+        "poster": "posters/fiber_base_front_oblique.jpg",
+        "duration": 177.0,
+        "width": 960,
+        "height": 676
+      },
+      {
+        "camera": "wrist",
+        "src": "media/fiber_base_wrist.mp4",
+        "poster": "posters/fiber_base_wrist.jpg",
+        "duration": 177.0,
+        "width": 960,
+        "height": 676
+      }
+    ],
+    "claws_a": [
+      {
+        "camera": "cam_high",
+        "src": "media/claws_a_cam_high.mp4",
+        "poster": "posters/claws_a_cam_high.jpg",
+        "duration": 158.6,
+        "width": 640,
+        "height": 360
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/claws_a_cam_low.mp4",
+        "poster": "posters/claws_a_cam_low.jpg",
+        "duration": 158.6,
+        "width": 640,
+        "height": 360
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/claws_a_cam_left_wrist.mp4",
+        "poster": "posters/claws_a_cam_left_wrist.jpg",
+        "duration": 158.6,
+        "width": 640,
+        "height": 360
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/claws_a_cam_right_wrist.mp4",
+        "poster": "posters/claws_a_cam_right_wrist.jpg",
+        "duration": 158.6,
+        "width": 640,
+        "height": 360
+      }
+    ],
+    "knot_base": [
+      {
+        "camera": "cam_high",
+        "src": "media/knot_base_cam_high.mp4",
+        "poster": "posters/knot_base_cam_high.jpg",
+        "duration": 75.0,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/knot_base_cam_low.mp4",
+        "poster": "posters/knot_base_cam_low.jpg",
+        "duration": 75.0,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/knot_base_cam_left_wrist.mp4",
+        "poster": "posters/knot_base_cam_left_wrist.jpg",
+        "duration": 75.0,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/knot_base_cam_right_wrist.mp4",
+        "poster": "posters/knot_base_cam_right_wrist.jpg",
+        "duration": 75.0,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "buzz_f3": [
+      {
+        "camera": "agentview",
+        "src": "media/buzz_f3_agentview.mp4",
+        "poster": "posters/buzz_f3_agentview.jpg",
+        "duration": 106.96,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "front_oblique",
+        "src": "media/buzz_f3_front_oblique.mp4",
+        "poster": "posters/buzz_f3_front_oblique.jpg",
+        "duration": 106.96,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "wrist",
+        "src": "media/buzz_f3_wrist.mp4",
+        "poster": "posters/buzz_f3_wrist.jpg",
+        "duration": 106.96,
+        "width": 960,
+        "height": 720
+      }
+    ],
+    "rope_prefix": [
+      {
+        "camera": "cam_high",
+        "src": "media/rope_prefix_cam_high.mp4",
+        "poster": "posters/rope_prefix_cam_high.jpg",
+        "duration": 29.05,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_low",
+        "src": "media/rope_prefix_cam_low.mp4",
+        "poster": "posters/rope_prefix_cam_low.jpg",
+        "duration": 29.05,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_left_wrist",
+        "src": "media/rope_prefix_cam_left_wrist.mp4",
+        "poster": "posters/rope_prefix_cam_left_wrist.jpg",
+        "duration": 29.05,
+        "width": 960,
+        "height": 540
+      },
+      {
+        "camera": "cam_right_wrist",
+        "src": "media/rope_prefix_cam_right_wrist.mp4",
+        "poster": "posters/rope_prefix_cam_right_wrist.jpg",
+        "duration": 29.05,
+        "width": 960,
+        "height": 540
+      }
+    ],
+    "blanket_latest": [
+      {
+        "camera": "agentview",
+        "src": "media/blanket_latest_agentview.mp4",
+        "poster": "posters/blanket_latest_agentview.jpg",
+        "duration": 179.5,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "front_oblique",
+        "src": "media/blanket_latest_front_oblique.mp4",
+        "poster": "posters/blanket_latest_front_oblique.jpg",
+        "duration": 179.5,
+        "width": 960,
+        "height": 720
+      },
+      {
+        "camera": "wrist",
+        "src": "media/blanket_latest_wrist.mp4",
+        "poster": "posters/blanket_latest_wrist.jpg",
+        "duration": 179.5,
+        "width": 640,
+        "height": 480
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "motivation",
+      "chapter": "01 · Motivation",
+      "title": "Complex spatial constraints."
+    },
+    {
+      "id": "task-space",
+      "chapter": "02 · Task space",
+      "title": "从两个维度组织任务"
+    },
+    {
+      "id": "tasks-rigid",
+      "chapter": "03 · Tasks",
+      "title": "候选任务 · 刚性构件为主"
+    },
+    {
+      "id": "tasks-soft",
+      "chapter": "03 · Tasks",
+      "title": "候选任务 · 可形变物体"
+    },
+    {
+      "id": "demo-coil",
+      "chapter": "03 · Demos",
+      "title": "Cast Coil"
+    },
+    {
+      "id": "demo-coil-wrist",
+      "chapter": "03 · Demos",
+      "title": "Cast Coil · Wrist"
+    },
+    {
+      "id": "demo-keyhole",
+      "chapter": "03 · Demos",
+      "title": "Cast Keyhole"
+    },
+    {
+      "id": "demo-keyhole-wrist",
+      "chapter": "03 · Demos",
+      "title": "Cast Keyhole · Wrist"
+    },
+    {
+      "id": "demo-horseshoe",
+      "chapter": "03 · Demos",
+      "title": "Horseshoe Ring"
+    },
+    {
+      "id": "demo-horseshoe-wrist",
+      "chapter": "03 · Demos",
+      "title": "Horseshoe Ring · Wrist"
+    },
+    {
+      "id": "demo-hedgehog",
+      "chapter": "03 · Demos",
+      "title": "Hedgehog in Cage"
+    },
+    {
+      "id": "demo-hedgehog-wrist",
+      "chapter": "03 · Demos",
+      "title": "Hedgehog in Cage · Wrist"
+    },
+    {
+      "id": "demo-lock",
+      "chapter": "03 · Demos",
+      "title": "Lock Picking"
+    },
+    {
+      "id": "demo-lock-wrist",
+      "chapter": "03 · Demos",
+      "title": "Lock Picking · Wrist"
+    },
+    {
+      "id": "demo-claws",
+      "chapter": "03 · Demos",
+      "title": "Interlocked Claws"
+    },
+    {
+      "id": "demo-claws-wrist",
+      "chapter": "03 · Demos",
+      "title": "Interlocked Claws · Wrist"
+    },
+    {
+      "id": "demo-buzz",
+      "chapter": "03 · Demos",
+      "title": "Buzz Wire 3D"
+    },
+    {
+      "id": "demo-buzz-wrist",
+      "chapter": "03 · Demos",
+      "title": "Buzz Wire 3D · Wrist"
+    },
+    {
+      "id": "demo-fiber",
+      "chapter": "03 · Demos",
+      "title": "Fiber Bundling"
+    },
+    {
+      "id": "demo-fiber-wrist",
+      "chapter": "03 · Demos",
+      "title": "Fiber Bundling · Wrist"
+    },
+    {
+      "id": "demo-knot",
+      "chapter": "03 · Demos",
+      "title": "Knot Untying"
+    },
+    {
+      "id": "demo-knot-wrist",
+      "chapter": "03 · Demos",
+      "title": "Knot Untying · Wrist"
+    },
+    {
+      "id": "demo-rope",
+      "chapter": "03 · Demos",
+      "title": "Rope Threading"
+    },
+    {
+      "id": "demo-rope-wrist",
+      "chapter": "03 · Demos",
+      "title": "Rope Threading · Wrist"
+    },
+    {
+      "id": "demo-blanket",
+      "chapter": "03 · Demos",
+      "title": "Blanket Flatten"
+    },
+    {
+      "id": "demo-blanket-wrist",
+      "chapter": "03 · Demos",
+      "title": "Blanket Flatten · Wrist"
+    },
+    {
+      "id": "pilot",
+      "chapter": "04 · Evaluation",
+      "title": "先看已有 pilot，再定义正式评测"
+    },
+    {
+      "id": "difficulty",
+      "chapter": "04 · Evaluation",
+      "title": "3M tokens，能走到哪一档难度？"
+    },
+    {
+      "id": "inputs",
+      "chapter": "04 · Evaluation",
+      "title": "两种输入条件，分别报告"
+    },
+    {
+      "id": "pipeline",
+      "chapter": "04 · Evaluation",
+      "title": "以 segment 为单位，闭环交互"
+    },
+    {
+      "id": "metrics",
+      "chapter": "04 · Evaluation",
+      "title": "固定场景，比较 success rate"
+    },
+    {
+      "id": "policies",
+      "chapter": "05 · Policies",
+      "title": "三类 policy，同一个 harness"
+    },
+    {
+      "id": "vla-boost",
+      "chapter": "05 · Policies",
+      "title": "VLA 提议动作，GPT 继续修订"
+    },
+    {
+      "id": "next",
+      "chapter": "06 · Next decisions",
+      "title": "下一步：收敛任务与评测边界"
+    },
+    {
+      "id": "progress-source",
+      "chapter": "07 · Appendix",
+      "title": "原始四阶段进度图"
+    }
+  ],
+  "pilot_values_tokens": {
+    "cast_coil_codex_001": 4420724,
+    "cast_coil_codex_002": 69452496,
+    "horseshoe_codex_001": 2819223,
+    "cast_keyhole_codex_001": 12487795,
+    "hedgehog_codex_001": 2109472,
+    "lock_picking_codex_001": 3821375,
+    "claws_codex_001": 23376797
+  },
+  "proposed_budget_tokens": 3000000,
+  "strict_3M_results_available": false
+}

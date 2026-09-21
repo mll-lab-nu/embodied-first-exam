@@ -1,0 +1,15 @@
+defaults:
+  - blanket_flatten_gathered_selected_robot
+  - _self_
+
+task:
+  execution:
+    # The identical selected shape already has an independent 10 s check.
+    verify_stability_before_actions: false
+    carry_speed_m_s: 0.055
+    lowering_speed_m_s: 0.035
+    target_release_height_m: 0.020
+    release_guard_stretch: 1.20
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v3

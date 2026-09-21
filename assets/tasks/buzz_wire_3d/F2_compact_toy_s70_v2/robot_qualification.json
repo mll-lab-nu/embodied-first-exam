@@ -1,0 +1,35 @@
+{
+  "instance_id": "F2_compact_toy_s70_v2",
+  "passed": true,
+  "scope": "This original scene geometry, placement, grasp and saved robot policy only. Prethreaded and pregrasp start; full route, contact-friction grasp, gravity release and settle.",
+  "scene_config_sha256": "aee3a51806a2571740e96ef97addd165bba46445f7d0595bc3e516676ca2754b",
+  "robot_seed": "robot_seed.json",
+  "robot_seed_sha256": "a7af08e10640128734119d45b709a341623fa885c210c17ec60df59ff005bef0",
+  "archive": "runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full",
+  "qualification_report": "runs/demo_metadata/buzz_wire_3d/2026-09-20_F2_compact_toy_s70_v2_full/stability_report.json",
+  "qualification_sha256": "b99339a30695ae2341a0adf15c906ab77539bf9410d70dd1b12788b7ea244630",
+  "checks": {
+    "both_complete_and_passed": true,
+    "contact_penetration_below_0_5mm": true,
+    "terminal_stops_reached": true,
+    "final_states_settled": true,
+    "settled_for_required_window": true,
+    "half_time_step": true,
+    "same_settings_except_time_step": true,
+    "same_gripper_servo_settings": true,
+    "bilateral_grasp_throughout_traverse": true,
+    "same_robot_plan": true,
+    "same_physical_assets": true,
+    "no_pose_driving": true,
+    "passive_release_energy_bounded": true,
+    "pure_contact_grasps": true,
+    "zero_wire_contacts_while_grasped": true,
+    "controlled_position_difference_below_2mm": true,
+    "controlled_orientation_difference_below_0_1rad": true
+  },
+  "time_steps_s": [
+    0.004,
+    0.002
+  ],
+  "video_duration_s": 103.04
+}

@@ -1,0 +1,10 @@
+defaults:
+  - blanket_flatten_gathered_reachable_robot
+  - _self_
+
+task:
+  execution:
+    fallback_boundary_radius_m: 0.16
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v5

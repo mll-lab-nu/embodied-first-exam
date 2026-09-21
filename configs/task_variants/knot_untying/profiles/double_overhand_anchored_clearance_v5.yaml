@@ -1,0 +1,15 @@
+# Candidate: observe undergrasp clearance before releasing the physical tail anchor.
+task:
+  variant: double_overhand_open_v1
+  route_profile: double_overhand_anchored_clearance_v5
+  reference_yaw_deg: 45.0
+  route_settings:
+    approach_finger_qpos_m: 0.018
+    preopen_upper_with_tail_anchor: true
+    preopen_lift_m: 0.06
+    preopen_shift_m: [0.12, 0.0, 0.0]
+    preopen_anchor_withdraw_m: [0.0, -0.06, 0.07]
+    preopen_maximum_extra_lift_m: 0.08
+    preopen_regrasp_clearance_m: 0.14
+    maximum_regrasps: 4
+    regrasp_on_material_limits: true

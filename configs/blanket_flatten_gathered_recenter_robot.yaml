@@ -1,0 +1,12 @@
+defaults:
+  - blanket_flatten_gathered_boundary_robot
+  - _self_
+
+task:
+  execution:
+    return_home_between_pulls: true
+    recenter_joint_speed_rad_s: 0.8
+    grasp_workspace_radial_m: [0.285, 0.80]
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_v6

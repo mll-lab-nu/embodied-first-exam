@@ -1,0 +1,25 @@
+{
+  "stock_voxels": 41444,
+  "safe_voxels": 38658,
+  "merged_cells": 328,
+  "outer_radius_m": 0.0675,
+  "cell_seam_padding_m": 3e-05,
+  "positive_material_components": 1,
+  "enclosed_void_shells": 4,
+  "enclosed_void_volume_m3": 4.247669972323184e-09,
+  "family": "oblique_gate",
+  "cage": {
+    "collision_parts": 328,
+    "mass_kg": 2.2422378679556734,
+    "visual_finish": "wood",
+    "all_parts_watertight": true,
+    "all_parts_convex": true,
+    "mass_model": "density-based additive parts; embedded-root overlap retained"
+  },
+  "connected": true,
+  "watertight": true,
+  "hedgehog_geometry_preserved": true,
+  "maximum_radial_extent_m": 0.06754242640687119,
+  "ik_sha256": "752492930430a3ba8c44cffb2365b42a06d0aff0d80840c2a8acaecbeecd2e90",
+  "sweep_sha256": "75018a10adfbaeabcde81645f223d456cbaec243d89ba0181ddcde642670efc3"
+}

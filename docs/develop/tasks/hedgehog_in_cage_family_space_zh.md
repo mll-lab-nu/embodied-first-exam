@@ -1,5 +1,7 @@
 # 刺球出笼：一个动作 family 轴 × 三种外观原型
 
+2026-09-19：本文为历史规划。当前默认生成器保留单斜窗，并以固定六刺侧孔、GEN 风格顶部钥匙孔替换双门、螺旋；接口与 seed 机制保留。参见[当前家族与完整视频](hedgehog_in_cage_zh.md)和[生成器 v2 配置](../../../configs/task_variants/hedgehog_in_cage/generator_v2.yaml)。下文九个外形位置不等于当前已实现的原型池。
+
 2026-09-17，v2。根据已经完成的三个 family 物理 demo 更新本规划。现在有三个已验证父实例；本版将它们直接作为 A1/B1/C1，再为每个 family 确定鼓腹、八棱收腰两个外形代表，共九个位置。新增六个外形仍是待实现、待验收的规格，不能标成已经有解。
 
 [打开 v2 九宫格与证据状态](../../../runs/environment-solvability/hedgehog_in_cage/family_design_v2/index.html) · [三个已验证父 demo](../../../runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_representatives_v1/index.html) · [机器可读参数规格](../../../configs/task_variants/hedgehog_in_cage/family_space_v2.json)

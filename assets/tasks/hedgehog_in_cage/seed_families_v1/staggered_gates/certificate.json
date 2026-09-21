@@ -1,0 +1,126 @@
+{
+  "passed": true,
+  "family": "staggered_gates",
+  "positive": {
+    "collision_found": false,
+    "minimum_sampled_gap_m": 0.0023498722421091103,
+    "samples": 15113,
+    "witness": {
+      "segment": 282,
+      "pose": [
+        0.07756073511124263,
+        0.016035394999506354,
+        -0.005472545656873384,
+        -0.661681101725859,
+        -0.5940206840877199,
+        0.34053613169578134,
+        0.3055367236593408
+      ],
+      "distance_m": 0.0023498722421091103
+    }
+  },
+  "continuous_clearance_lower_bound_m": 0.0022498722421091105,
+  "material_motion_bound_m": 0.0001,
+  "finite_controls": {
+    "original_route": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 446,
+      "witness": {
+        "segment": 3,
+        "pose": [
+          0.06531631105097296,
+          0.001370396487604958,
+          0.016782322782812296,
+          0.4034473785430026,
+          -0.9035097093379478,
+          -0.14394338373827834,
+          -0.013443219733792526
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_pull": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 32,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.04619925280198675,
+          0.0019302576162290059,
+          -0.012146586516519885,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lift": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 19,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.03399999999999399,
+          -4.059803249199489e-09,
+          -0.00589377960322955,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lower": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 12,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.03399999999999399,
+          -4.059803249199489e-09,
+          -0.01749377960322955,
+          0.3823145919576235,
+          -0.8996677947434711,
+          -0.1906816347108218,
+          0.08985502802683994
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "skip_second_gate_alignment": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 2157,
+      "witness": {
+        "segment": 8,
+        "pose": [
+          0.13007868383404864,
+          0.010417872708837655,
+          0.011441576804120798,
+          -0.6957332385691811,
+          -0.7070760795843101,
+          0.01163274270158621,
+          0.12594982225854928
+        ],
+        "distance_m": -1.0
+      }
+    }
+  },
+  "unique_solution_proven": false,
+  "ik_sha256": "600b39628e4dbbcaf505725a5277eabb82156a3291688c91aec21d1bd23cf67c",
+  "asset_manifest_sha256": "0e8bb52f001542c982d6e1af0d4d1642ae0fae3fc3e4e5892c8883a560173456",
+  "source_fingerprints": {
+    "family_motion.py": "e526a616cbf8af7824107bb2d6a98ed61e0bc43d22fb221cd907b0bee77c11ff",
+    "family_geometry.py": "50047930b432e4857031797dbaaf0bcdcb43119ea655710fa26b2718f01dfede",
+    "inverse_window.py": "416a69df0599c1101df85739cddcfd6a102f8312a87cc7dff735ef3f52449590",
+    "geometry.py": "08a381dce0002e749fb94ad04de73a6cce6b9cd3bc2e4bf0fbf460d1df08adc7",
+    "plan_escape.py": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e"
+  }
+}

@@ -1,0 +1,13 @@
+# Bounded demonstration profile. The 33 cm unsupported drop remains unqualified.
+defaults:
+  - rope_threading_soft_start_precise_preview
+  - _self_
+
+task:
+  validation:
+    fixture_release_height_m: 0.08
+    max_unsupported_release_height_m: 0.09
+    max_supported_release_material_span_m: 0.08
+
+run:
+  output: runs/environment_bootstrap/rope_threading/controlled_release_candidate

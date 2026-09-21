@@ -1,0 +1,108 @@
+{
+  "passed": true,
+  "family": "fixed_side_window",
+  "positive": {
+    "collision_found": false,
+    "minimum_sampled_gap_m": 0.0035670495225643872,
+    "samples": 13272,
+    "witness": {
+      "segment": 110,
+      "pose": [
+        0.0679583018602585,
+        0.0011955984819847464,
+        0.027429667327366937,
+        -0.41471112506173036,
+        0.7456893881961407,
+        0.42586021710388444,
+        0.30100680153433707
+      ],
+      "distance_m": 0.0035670495225643872
+    }
+  },
+  "finite_controls": {
+    "straight_lift": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 100,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.034,
+          -4.059817334521296e-09,
+          0.026506220396748076,
+          -0.3823145919576367,
+          0.8996677947434728,
+          0.1906816347107887,
+          -0.0898550280268374
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_side_pull": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 99,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.0732,
+          -4.059817334521296e-09,
+          -0.013093779603251927,
+          -0.3823145919576367,
+          0.8996677947434728,
+          0.1906816347107887,
+          -0.0898550280268374
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "straight_lower": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 52,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.034,
+          -4.059817334521296e-09,
+          -0.03349377960325192,
+          -0.3823145919576367,
+          0.8996677947434728,
+          0.1906816347107887,
+          -0.0898550280268374
+        ],
+        "distance_m": -1.0
+      }
+    },
+    "direct_to_exit_without_rotation": {
+      "collision_found": true,
+      "minimum_sampled_gap_m": -1.0,
+      "samples": 101,
+      "witness": {
+        "segment": 0,
+        "pose": [
+          0.0733063583815029,
+          0.00014584644372191767,
+          -0.00600263613291299,
+          -0.3823145919576367,
+          0.8996677947434728,
+          0.1906816347107887,
+          -0.0898550280268374
+        ],
+        "distance_m": -1.0
+      }
+    }
+  },
+  "continuous_clearance_lower_bound_m": 0.0034670495225643874,
+  "material_motion_bound_m": 0.0001,
+  "unique_solution_proven": false,
+  "geometry_ablation_controls": {},
+  "distinct_ik_family_proven": false,
+  "ik_sha256": "7544bf9b6383831a29cfd76d03ed371a5237902426b9e3613be28550d6ac01e0",
+  "asset_manifest_sha256": "5fefe7d00708d3051852118cffb60613b91d5575c5f420d9634ea3abd6f95bb3",
+  "source_fingerprints": {
+    "classic_families.py": "62925c45efb4cfa5562b9b27e113d363121d51e383da79d8e210069c2a038194",
+    "plan_escape.py": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e",
+    "geometry.py": "08a381dce0002e749fb94ad04de73a6cce6b9cd3bc2e4bf0fbf460d1df08adc7"
+  }
+}

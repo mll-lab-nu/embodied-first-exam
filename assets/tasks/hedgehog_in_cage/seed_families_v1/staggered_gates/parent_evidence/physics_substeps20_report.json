@@ -1,0 +1,108 @@
+{
+  "passed": true,
+  "complete": true,
+  "outside_margin_before_release_m": 0.03138740419994904,
+  "grasp_released": true,
+  "outside_margin_after_release_m": 0.054554612641854044,
+  "final_linear_speed_m_s": 1.7900865624664916e-13,
+  "final_angular_speed_rad_s": 2.8843498576992362e-12,
+  "physics_steps": 22597,
+  "simulated_seconds": 112.985,
+  "dt": 0.005,
+  "substeps": 20,
+  "precision_bits": 64,
+  "backend": "cpu",
+  "pregrasp_start": true,
+  "assisted_grasp": true,
+  "contact_gate": {
+    "physics_step": 1,
+    "finger_links": [
+      25,
+      31
+    ],
+    "simultaneous_contact": true
+  },
+  "live_object_pose_overwrites": false,
+  "live_robot_pose_overwrites": false,
+  "geometry_modified": true,
+  "max_cage_penetration_m": 0.0,
+  "max_robot_fixture_penetration_m": 0.0,
+  "max_all_ball_contact_penetration_m": 0.00018286169504746,
+  "max_position_tracking_error_m": 0.0030058256129285,
+  "loaded_collision_audit": [
+    {
+      "name": "cage",
+      "cells": 489,
+      "maximum_bounds_error_m": 7.0047379008286725e-09,
+      "solver_to_authored_frame": [
+        [
+          0.9999999999999999,
+          4.0418127008487015e-18,
+          0.0,
+          0.0
+        ],
+        [
+          4.0418127008487015e-18,
+          0.9999999999999999,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "name": "hedgehog",
+      "cells": 11,
+      "maximum_bounds_error_m": 3.9115548716717186e-09,
+      "solver_to_authored_frame": [
+        [
+          1.0000000000000007,
+          1.7517533529201157e-18,
+          -3.989666246225796e-18,
+          -0.00041429220442799273
+        ],
+        [
+          1.7517533529201157e-18,
+          1.0000000000000007,
+          -3.7258887747681066e-17,
+          -0.0008892125363330344
+        ],
+        [
+          -3.989666246225796e-18,
+          -3.7258887747681066e-17,
+          1.0000000000000009,
+          -0.0021051433151799176
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "passed": true
+    }
+  ],
+  "asset_manifest_sha256": "0e8bb52f001542c982d6e1af0d4d1642ae0fae3fc3e4e5892c8883a560173456",
+  "ik_sha256": "600b39628e4dbbcaf505725a5277eabb82156a3291688c91aec21d1bd23cf67c",
+  "runner_sha256": "ee6b3694377a1f6f11ceffb3fe33c1b263186f22293864c2aea60ccbb255340a",
+  "runner_module": "family_guided_runtime.py",
+  "controller": "physical_position_control_with_certified_branch_guided_ik",
+  "runtime_dependency_sha256": {
+    "family_runtime.py": "72d828f379feef11e9d41310e4ed6583dbbdd24eec42671804cdf95cf9cd11d3"
+  },
+  "maximum_ik_position_error_m": 6.5494797735753286e-09,
+  "maximum_ik_rotation_error_rad": 1.4890526072926208e-08
+}

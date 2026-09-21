@@ -1,0 +1,1219 @@
+{
+  "checked_at_utc": "2026-09-19T23:26:59.293454+00:00",
+  "all_decode_ok": true,
+  "all_synchronized": true,
+  "videos": [
+    {
+      "path": "/home/jianwen/topogym/demos/blanket_flatten/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4",
+      "size_bytes": 3148593,
+      "sha256": "b7ccdfe58d443cf5ae5329feb0e2edb5979daf4f8738e102c280403ddf2ccc88",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "32.550000",
+        "nb_frames": "651"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/blanket_flatten/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4",
+      "size_bytes": 4691919,
+      "sha256": "bd95f55e16ba291990259205a78c7fa1612c767813802db8dee8dbc28716a012",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "32.550000",
+        "nb_frames": "651"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/blanket_flatten/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4",
+      "size_bytes": 10172758,
+      "sha256": "70e3a521ffa80b99bdc73af45b977f3255e9abc2c0b9e14459fc1f712b482965",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 480,
+        "r_frame_rate": "20/1",
+        "duration": "32.550000",
+        "nb_frames": "651"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/buzz_wire_3d/agentview/2026-09-18_compact_single_arm_v1_agentview.mp4",
+      "size_bytes": 3888079,
+      "sha256": "b078d439c0d58502922efe7e6ac2826775266d28179ba79c6f696d4b8b3be017",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "91.840000",
+        "nb_frames": "2296"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/buzz_wire_3d/front_oblique/2026-09-18_compact_single_arm_v1_front_oblique.mp4",
+      "size_bytes": 4398823,
+      "sha256": "281c422ea47b57c4d625b60461402485a7253e7c9b50b8bc079697ff2a1eef14",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "91.840000",
+        "nb_frames": "2296"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/buzz_wire_3d/wrist/2026-09-18_compact_single_arm_v1_wrist.mp4",
+      "size_bytes": 11474463,
+      "sha256": "a91e4b6dad500933b93387aeadb6a3480b716f1028cdaa78f7c9ab18d758d4a7",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "91.840000",
+        "nb_frames": "2296"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_coil/cam_high/2026-09-17_aloha_full_cam_high.mp4",
+      "size_bytes": 6313345,
+      "sha256": "6d590858864f0cc986601f1c9ec321326635cf0535a6593c113395b1da46e673",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "33.150000",
+        "nb_frames": "663"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_coil/cam_left_wrist/2026-09-17_aloha_full_cam_left_wrist.mp4",
+      "size_bytes": 10906936,
+      "sha256": "eaf5463c3874adfb0f0811851aa909ebcc640af0f06cd7031263a96d5062496f",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "33.150000",
+        "nb_frames": "663"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_coil/cam_low/2026-09-17_aloha_full_cam_low.mp4",
+      "size_bytes": 8368451,
+      "sha256": "3197bbe2973485dfac236e4dc0f62924e88d97a13350825f501b05c3c824a603",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "33.150000",
+        "nb_frames": "663"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_coil/cam_right_wrist/2026-09-17_aloha_full_cam_right_wrist.mp4",
+      "size_bytes": 8295306,
+      "sha256": "861499c0bf4e8f4900db068420406b60659fb3a7e7809bd92524252c27f2d3db",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "33.150000",
+        "nb_frames": "663"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_coil/front_oblique/2026-09-17_aloha_full_front_oblique.mp4",
+      "size_bytes": 13394188,
+      "sha256": "e00f4a69509609b4efbf56e62c59820103c59b364a685118ff13d02c49a301f9",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "33.150000",
+        "nb_frames": "663"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_keyhole/cam_high/2026-09-17_current_instance_physical_cam_high.mp4",
+      "size_bytes": 3734407,
+      "sha256": "a04fa6360fc22ca63876331a7cb2a4248128f364e14b28cff4f11b893316e320",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "23.916667",
+        "nb_frames": "287"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_keyhole/cam_left_wrist/2026-09-17_current_instance_physical_cam_left_wrist.mp4",
+      "size_bytes": 5682269,
+      "sha256": "4e418bfe97f0109ab22519bcdb413ebebc7e3b405c6e0068ca2291f0021266b1",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "23.916667",
+        "nb_frames": "287"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_keyhole/cam_low/2026-09-17_current_instance_physical_cam_low.mp4",
+      "size_bytes": 4489028,
+      "sha256": "0d43648601e200e059974e458009ce7a547d49fc3e0d360ccec70899779fa28a",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "23.916667",
+        "nb_frames": "287"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_keyhole/cam_right_wrist/2026-09-17_current_instance_physical_cam_right_wrist.mp4",
+      "size_bytes": 6413198,
+      "sha256": "731a87f91d6bac2e96c1663feee03c247fea3ce67ebf00c32586d6d34a29f531",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "23.916667",
+        "nb_frames": "287"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/cast_keyhole/detail/2026-09-17_current_instance_physical_detail.mp4",
+      "size_bytes": 5183104,
+      "sha256": "e15c9c1bf145951fc0fce95d29567741567055b16af946897d7de867bac0d6d3",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "23.916667",
+        "nb_frames": "287"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/fiber_bundling/agentview/2026-09-18_standard_08_r13p5mm_clean_v1_agentview.mp4",
+      "size_bytes": 18959975,
+      "sha256": "11ef313338a658db9b861f092b32498990b100255c17fbe3525b41ec1dd787dc",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 900,
+        "r_frame_rate": "20/1",
+        "duration": "177.000000",
+        "nb_frames": "3540"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/fiber_bundling/front_oblique/2026-09-18_standard_08_r13p5mm_clean_v1_front_oblique.mp4",
+      "size_bytes": 34959266,
+      "sha256": "d99aeafdc17311b705721d92519ecabbbcd55c8bd71ef54c88d81b1456a6e759",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 900,
+        "r_frame_rate": "20/1",
+        "duration": "177.000000",
+        "nb_frames": "3540"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/fiber_bundling/wrist/2026-09-18_standard_08_r13p5mm_clean_v1_wrist.mp4",
+      "size_bytes": 19109318,
+      "sha256": "27e81b2e6fb4cee43a5639cff5432b74d0a6cdc2db126265d53b22639502179d",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 900,
+        "r_frame_rate": "20/1",
+        "duration": "177.000000",
+        "nb_frames": "3540"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-16_classic_wood_extraction_agentview.mp4",
+      "size_bytes": 25475416,
+      "sha256": "9b70b0ad8d5cb0dc73b3f102da9a70fd6fe0d59ebcfa198fa0b8be4a14c2549d",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "82.200000",
+        "nb_frames": "1644"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-17_family_a_oblique_gate_v1_agentview.mp4",
+      "size_bytes": 3794937,
+      "sha256": "abb30caafadc25babdac491e3000251ca7f0a4f6b34bd31a7e894d82300b0e30",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.583333",
+        "nb_frames": "991"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-19_fixed_side_window_v2_agentview.mp4",
+      "size_bytes": 3729381,
+      "sha256": "792de149222b74342b11d8d85b6b0f573ee133cb1345923ba1d48e6de7997d1a",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.250000",
+        "nb_frames": "987"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/agentview/2026-09-19_gen_keyhole_v2_agentview.mp4",
+      "size_bytes": 4047696,
+      "sha256": "0d694427579a4bd97b1ef59ff45d3def636ff9bd00c2d77aa79c9a8a5d635133",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "98.833333",
+        "nb_frames": "1186"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-16_classic_wood_extraction_front_oblique.mp4",
+      "size_bytes": 22452570,
+      "sha256": "016c07a5fd0a65cbcbb195682ae9ae84144f9cf0dd49e3ba171375f479e72d15",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "82.200000",
+        "nb_frames": "1644"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-17_family_a_oblique_gate_v1_front_oblique.mp4",
+      "size_bytes": 4418742,
+      "sha256": "b5801ad767728a65b5ea805c7c2b87f7cd78f4e61ffc476a8959667153105518",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.583333",
+        "nb_frames": "991"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-19_fixed_side_window_v2_front_oblique.mp4",
+      "size_bytes": 4104077,
+      "sha256": "4fc49fff3a267a07590a9adfaaa161033f6c75badb8f30abc3dfd8f5f48d012e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.250000",
+        "nb_frames": "987"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/front_oblique/2026-09-19_gen_keyhole_v2_front_oblique.mp4",
+      "size_bytes": 2809255,
+      "sha256": "a5b3ef3b590325ff2ec83014e06bcd8e1c2989c375481856e0241dd41d4860f7",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "98.833333",
+        "nb_frames": "1186"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-16_classic_wood_extraction_wrist.mp4",
+      "size_bytes": 50864735,
+      "sha256": "156f946acc183063ce2c72607a0580972be05cc58cdfe9a77385d5499308090e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "82.200000",
+        "nb_frames": "1644"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-17_family_a_oblique_gate_v1_wrist.mp4",
+      "size_bytes": 7999571,
+      "sha256": "daefbc4429f5771a4d0b325738a97daf08d36350f93608e72840b364f7dbcc6f",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.583333",
+        "nb_frames": "991"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-19_fixed_side_window_v2_wrist.mp4",
+      "size_bytes": 7909089,
+      "sha256": "0ed0179ff080a284fedb5955696d8cbba3a9de7885a98c862995ff862ddc3b5d",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "82.250000",
+        "nb_frames": "987"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/hedgehog_in_cage/wrist/2026-09-19_gen_keyhole_v2_wrist.mp4",
+      "size_bytes": 4989188,
+      "sha256": "6201504741aae78d1f99a5e1bf7a8bf21d6bd6deb8a8e1f94daa5989f27db0f2",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "12/1",
+        "duration": "98.833333",
+        "nb_frames": "1186"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/horseshoe_ring/cam_high/2026-09-18_gravity_replanned_v1_cam_high.mp4",
+      "size_bytes": 7188077,
+      "sha256": "e01f0c04490160b3b1dc559bb027a9c1d3979d736acd7f9ce7aa9367d3c5d271",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "10/1",
+        "duration": "113.700000",
+        "nb_frames": "1137"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/horseshoe_ring/cam_left_wrist/2026-09-18_gravity_replanned_v1_cam_left_wrist.mp4",
+      "size_bytes": 12670924,
+      "sha256": "c9c6f6392346d0b692f5e457ddae4ee6d33471ce50069bfea4205433c881b583",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "10/1",
+        "duration": "113.700000",
+        "nb_frames": "1137"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/horseshoe_ring/cam_low/2026-09-18_gravity_replanned_v1_cam_low.mp4",
+      "size_bytes": 5560593,
+      "sha256": "8cf6cf815c2f03f8168025b6de4e731b845e52078d3cc37eddd105e3039eaf0d",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "10/1",
+        "duration": "113.700000",
+        "nb_frames": "1137"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/horseshoe_ring/cam_right_wrist/2026-09-18_gravity_replanned_v1_cam_right_wrist.mp4",
+      "size_bytes": 10404886,
+      "sha256": "98f237a598efc4704f5c2da3227a54a9d3088518c28b87bb8c85efdd11daa04c",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "10/1",
+        "duration": "113.700000",
+        "nb_frames": "1137"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/horseshoe_ring/detail/2026-09-18_gravity_replanned_v1_detail.mp4",
+      "size_bytes": 10726653,
+      "sha256": "490af9c64b05d35947918300960d6f3176174dbb8ede27c1d50777f5c862fef8",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "10/1",
+        "duration": "113.700000",
+        "nb_frames": "1137"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-17_reference_full_v1_cam_high.mp4",
+      "size_bytes": 22110772,
+      "sha256": "ca40c769478d5650591a946318d5ccefca099487adcc1d4a6e4ac3a7908bc207",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 360,
+        "r_frame_rate": "10/1",
+        "duration": "158.600000",
+        "nb_frames": "1586"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-19_helical_crown_physical_v1_cam_high.mp4",
+      "size_bytes": 5248586,
+      "sha256": "97328f69edd530033f4bd78ee781f1b04f11651aa6955cd53cf6fca3834d6f7c",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "37.050000",
+        "nb_frames": "741"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_high/2026-09-19_orthogonal_gate_physical_v2_cam_high.mp4",
+      "size_bytes": 9550527,
+      "sha256": "275156bbb7d788b090b850316adde6ad0eefca6629184234cc9e8d71342d44d6",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "50.050000",
+        "nb_frames": "1001"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-17_reference_full_v1_cam_left_wrist.mp4",
+      "size_bytes": 24329678,
+      "sha256": "f5defc0e01f2660143ed77dadae7234dc851e7f668ada1d850fb2214c77fb960",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 360,
+        "r_frame_rate": "10/1",
+        "duration": "158.600000",
+        "nb_frames": "1586"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-19_helical_crown_physical_v1_cam_left_wrist.mp4",
+      "size_bytes": 10595028,
+      "sha256": "39e800d13a3fb646361d5f7075062c838a26dc7894ae0d11f75c00d5cb5648fd",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "37.050000",
+        "nb_frames": "741"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_left_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_left_wrist.mp4",
+      "size_bytes": 13736267,
+      "sha256": "2c201ffd3bbcb45579638b5ff6636040956915292d32d7af2d946ed566d27f8e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "50.050000",
+        "nb_frames": "1001"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-17_reference_full_v1_cam_low.mp4",
+      "size_bytes": 21786224,
+      "sha256": "5718567337d74add6f011ede55645c33c61f611409c520265668fd7aaca464a6",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 360,
+        "r_frame_rate": "10/1",
+        "duration": "158.600000",
+        "nb_frames": "1586"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-19_helical_crown_physical_v1_cam_low.mp4",
+      "size_bytes": 5840838,
+      "sha256": "ff4fe5189edf6daf82c1fd4f082e282e01f72e8364f763c1cef0cec773d91d6a",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "37.050000",
+        "nb_frames": "741"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_low/2026-09-19_orthogonal_gate_physical_v2_cam_low.mp4",
+      "size_bytes": 9257260,
+      "sha256": "43cdb826921baf8d88063aa6d2a6ee83944a85887c1b11b1e9145bc484ccb691",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "50.050000",
+        "nb_frames": "1001"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-17_reference_full_v1_cam_right_wrist.mp4",
+      "size_bytes": 24291044,
+      "sha256": "4d93db3566a527850ab1e90b9afa3c6dc82311b140c24c37970a9f7de4039a4f",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 360,
+        "r_frame_rate": "10/1",
+        "duration": "158.600000",
+        "nb_frames": "1586"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-19_helical_crown_physical_v1_cam_right_wrist.mp4",
+      "size_bytes": 11641545,
+      "sha256": "cdc523f442906422a202365ce2f0c1cb57ffe1d898bbc74a20bec2aa7cad7a2c",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "37.050000",
+        "nb_frames": "741"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/cam_right_wrist/2026-09-19_orthogonal_gate_physical_v2_cam_right_wrist.mp4",
+      "size_bytes": 11281747,
+      "sha256": "5fbf295028c20577d4a399aa2e8e778f68604c6699cd6083fe3ca1a9f8848e7e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "50.050000",
+        "nb_frames": "1001"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-17_reference_full_v1_detail.mp4",
+      "size_bytes": 55488652,
+      "sha256": "181820f6145c9a6a1c87f62956ed5ade0a75a033edef976f3bbd3b7513f25499",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "10/1",
+        "duration": "158.600000",
+        "nb_frames": "1586"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-19_helical_crown_physical_v2_detail.mp4",
+      "size_bytes": 9819018,
+      "sha256": "8f969fb8d3985436952faf5a026080d5037c5b82527bb733989bf2f556bf36e2",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "37.050000",
+        "nb_frames": "741"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/interlocked_claws/detail/2026-09-19_orthogonal_gate_physical_v2_detail.mp4",
+      "size_bytes": 9748091,
+      "sha256": "b627ac260d153e96dacf3388534284d42540f78f239c28b0c291f1a264c4524e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "50.050000",
+        "nb_frames": "1001"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/knot_untying/cam_high/2026-09-17_bounded_spread_trefoil_v9_cam_high.mp4",
+      "size_bytes": 3874756,
+      "sha256": "43efb7f6cb12476010e72f13774fad655c0b0c243160d35e6d354d706d2164c3",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "75.000000",
+        "nb_frames": "1500"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/knot_untying/cam_left_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_left_wrist.mp4",
+      "size_bytes": 6985208,
+      "sha256": "8d8e911c6f0f3bb02bfe9fb2871babbb0e9cc75ee5e0a17f1a17f89a99c87de0",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "75.000000",
+        "nb_frames": "1500"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/knot_untying/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4",
+      "size_bytes": 7212720,
+      "sha256": "888ea577c16e387c51a1f31ed297a814f1f79725a7fc7c80b1b83bd420c8e05b",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "75.000000",
+        "nb_frames": "1500"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/knot_untying/cam_right_wrist/2026-09-17_bounded_spread_trefoil_v9_cam_right_wrist.mp4",
+      "size_bytes": 4206333,
+      "sha256": "2bceabc22d7e78e41a02d579fc18e82b6f4335e39c2de8a5b3972ea2b1f892df",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "75.000000",
+        "nb_frames": "1500"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/knot_untying/detail/2026-09-17_bounded_spread_trefoil_v9_detail.mp4",
+      "size_bytes": 5442612,
+      "sha256": "822cb4ed2a2aa82d7470b0162808c6c6baf450fab2baebd0c7037fede2e98589",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "75.000000",
+        "nb_frames": "1500"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/lock_picking/agentview/2026-09-18_standard_150mm_purple_trace_v1_agentview.mp4",
+      "size_bytes": 5920616,
+      "sha256": "621cedaa78da1e25e5450c946885d85b84d90c9accbb77fe9b7a380c1d9a4f2f",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "159.350000",
+        "nb_frames": "3187"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/lock_picking/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4",
+      "size_bytes": 3724706,
+      "sha256": "ea196ec1afeb724e9c707ab5995c69b7a4a2b5845be37f5e70255e19a43ab7fa",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "20/1",
+        "duration": "159.350000",
+        "nb_frames": "3187"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/demos/lock_picking/wrist/2026-09-18_standard_150mm_purple_trace_v1_wrist.mp4",
+      "size_bytes": 6988601,
+      "sha256": "7d00ec236ec868b84e6e80ad5095f74621850f1903d0ca1e7e6f1e69f9e720df",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "159.350000",
+        "nb_frames": "3187"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/agentview.mp4",
+      "size_bytes": 4788432,
+      "sha256": "3fd1904a9b1820a094b682a4782d7f2d876dc9998d4730419766d10ad5433743",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "106.960000",
+        "nb_frames": "2674"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/front_oblique.mp4",
+      "size_bytes": 4988517,
+      "sha256": "c1463b7ceec6164d8a5c119f47934a6c71864d2b485d485ef625a8eab575654b",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "106.960000",
+        "nb_frames": "2674"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/family_solvability_20260919/F3_render_03/wrist.mp4",
+      "size_bytes": 16242707,
+      "sha256": "b45e9c85b411f3fcdd82400567ce5db4b5d5ecd21df0030b952a67866ece5902",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "25/1",
+        "duration": "106.960000",
+        "nb_frames": "2674"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_high.mp4",
+      "size_bytes": 958867,
+      "sha256": "9d12fef10750f76b2858f4ff7682ed83ce24a33dcc8a4a95ebe13046f47efc67",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "29.050000",
+        "nb_frames": "581"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_left_wrist.mp4",
+      "size_bytes": 1070230,
+      "sha256": "770422a92453da0b57a1265dd9fe1a111c6369cfccc348a6c993d431b358b0f3",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "29.050000",
+        "nb_frames": "581"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_low.mp4",
+      "size_bytes": 1214419,
+      "sha256": "22da9a08b2460ea2e35065517db7192ddc575061d274739a60d74ea3b55e5541",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "29.050000",
+        "nb_frames": "581"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/cam_right_wrist.mp4",
+      "size_bytes": 2203714,
+      "sha256": "10d3387f620e1809790989d5efe5a30d96ce3c0a6529b9ecaf20795a1c7f4c43",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "29.050000",
+        "nb_frames": "581"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/detail.mp4",
+      "size_bytes": 1151627,
+      "sha256": "dcb4ff5fb84310721c04840ad448d52a2686a7c97b76ebedbad7fbf164c8440f",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "20/1",
+        "duration": "29.050000",
+        "nb_frames": "581"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/agentview.mp4",
+      "size_bytes": 6159050,
+      "sha256": "9e9804524ffa080a6f33ee6dca24ab1b82c9e3bdfac0bf7a623e5f74c6cad62e",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "2/1",
+        "duration": "179.500000",
+        "nb_frames": "359"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/front_oblique.mp4",
+      "size_bytes": 9280363,
+      "sha256": "7312fec6ac1e08dba17740b7d0f585f36896b61abb846647cba35b3e8eb8edfa",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "2/1",
+        "duration": "179.500000",
+        "nb_frames": "359"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/wrist.mp4",
+      "size_bytes": 18449939,
+      "sha256": "b9a434d23357ddbdddb01ef60112b667452ea1f4bbcc0874e243edbccccd0718",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 480,
+        "r_frame_rate": "2/1",
+        "duration": "179.500000",
+        "nb_frames": "359"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/agentview.mp4",
+      "size_bytes": 13086566,
+      "sha256": "6e30596ad3a13ed08f6fafa7d01b843289a296544958f075102f871276b731d8",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "10/1",
+        "duration": "174.200000",
+        "nb_frames": "1742"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/front_oblique.mp4",
+      "size_bytes": 19407498,
+      "sha256": "fd284147b65843eb249d1007dc467de1337b2fdf3f45aa1622e1d6c362ce6789",
+      "stream": {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 720,
+        "r_frame_rate": "10/1",
+        "duration": "174.200000",
+        "nb_frames": "1742"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    },
+    {
+      "path": "/home/jianwen/topogym/runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/wrist.mp4",
+      "size_bytes": 40555569,
+      "sha256": "cd5fd953141e45792b5837a21291a92b3600e23d1916f9a244dd6b700c20a1b1",
+      "stream": {
+        "codec_name": "h264",
+        "width": 640,
+        "height": 480,
+        "r_frame_rate": "10/1",
+        "duration": "174.200000",
+        "nb_frames": "1742"
+      },
+      "decode_ok": true,
+      "decode_error": ""
+    }
+  ],
+  "groups": [
+    {
+      "id": "coil_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "keyhole_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "horseshoe_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "hedgehog_classic",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "hedgehog_oblique",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "hedgehog_side",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "hedgehog_gen",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "lock_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "fiber_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "claws_a",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "claws_b",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "claws_c",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "knot_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "buzz_base",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "buzz_f3",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "rope_prefix",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "blanket_latest",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "blanket_best",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    },
+    {
+      "id": "blanket_old",
+      "same_frames": true,
+      "same_duration": true,
+      "same_fps": true
+    }
+  ],
+  "elapsed_seconds": 34.19330286979675
+}

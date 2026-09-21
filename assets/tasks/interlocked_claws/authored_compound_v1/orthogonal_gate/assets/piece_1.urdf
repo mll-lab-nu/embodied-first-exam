@@ -1,0 +1,41 @@
+<robot name="piece_1">
+  <link name="piece_1">
+    <inertial>
+      <origin xyz="0.003090382488709835 0.007372618362958418 -0.002749962987555682" rpy="0 0 0" />
+      <mass value="0.09750239587169585" />
+      <inertia ixx="0.00016164364248069177" iyy="0.0006466148362232725" izz="0.0004961810713644996" ixy="-1.3943211931672005e-06" ixz="-8.286180136466426e-07" iyz="-1.9768052678294117e-06" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="piece_1.obj" />
+      </geometry>
+      <material name="piece_1">
+        <color rgba="0.2 0.53 0.61 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.014 0.0 0.0" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.01 0.014 0.21" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.014 0.0 0.0" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.01 0.014 0.21" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.0 0.0 -0.095" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.044 0.014 0.014" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.005 0.012 0.0" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.31 0.018 0.018" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

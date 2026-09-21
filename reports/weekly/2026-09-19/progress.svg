@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="842" viewBox="0 0 1320 842">
+<rect width="1320" height="842" fill="#f7f9fc"/>
+<g font-family="Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<text x="40" y="49" font-size="27" font-weight="700" fill="#12213a">TopoGym · 11 项任务进展</text>
+<text x="40" y="80" font-size="16" fill="#53627a">2026-09-19 18:27 CDT · 里程碑状态，不表示成功率或工时百分比</text>
+<text x="397" y="125" text-anchor="middle" font-size="17" font-weight="600" fill="#233650">1 场景生成</text>
+<text x="623" y="125" text-anchor="middle" font-size="17" font-weight="600" fill="#233650">2 物理稳定与完整 demo</text>
+<text x="849" y="125" text-anchor="middle" font-size="17" font-weight="600" fill="#233650">3 随机生成接口</text>
+<text x="1075" y="125" text-anchor="middle" font-size="17" font-weight="600" fill="#233650">4 逐变体可解与稳定</text>
+<text x="40" y="174" font-size="17" fill="#1e304b">Cast Coil 卷绕件装配</text>
+<rect x="291" y="148" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="173" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="148" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="173" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="148" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="173" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="148" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="173" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="225" font-size="17" fill="#1e304b">Cast Keyhole 钥匙孔拆解</text>
+<rect x="291" y="199" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="224" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="199" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="224" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="199" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="224" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="199" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="224" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="276" font-size="17" fill="#1e304b">Horseshoe Ring 马蹄环</text>
+<rect x="291" y="250" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="275" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="250" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="275" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="250" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="275" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="250" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="275" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="327" font-size="17" fill="#1e304b">Hedgehog in Cage 刺球出笼</text>
+<rect x="291" y="301" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="326" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="301" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="326" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="301" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="326" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="301" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="326" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="378" font-size="17" fill="#1e304b">Lock Picking 开锁</text>
+<rect x="291" y="352" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="377" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="352" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="377" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="352" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="377" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="352" width="213" height="39" rx="6" fill="#e1e6ee"/>
+<text x="1075.5" y="377" text-anchor="middle" font-size="16" fill="#637086">未开始</text>
+<text x="40" y="429" font-size="17" fill="#1e304b">Fiber Bundling 光纤收束</text>
+<rect x="291" y="403" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="428" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="403" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="623.5" y="428" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="743" y="403" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="849.5" y="428" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="969" y="403" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="428" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="480" font-size="17" fill="#1e304b">Interlocked Claws 互锁爪</text>
+<rect x="291" y="454" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="479" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="454" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="479" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="454" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="849.5" y="479" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="969" y="454" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="479" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="531" font-size="17" fill="#1e304b">Knot Untying 解绳结</text>
+<rect x="291" y="505" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="530" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="505" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="623.5" y="530" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="743" y="505" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="849.5" y="530" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="969" y="505" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="530" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="582" font-size="17" fill="#1e304b">Buzz Wire 3D 立体电流棒</text>
+<rect x="291" y="556" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="581" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="556" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="623.5" y="581" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="743" y="556" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="849.5" y="581" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="969" y="556" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="1075.5" y="581" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<text x="40" y="633" font-size="17" fill="#1e304b">Rope Threading 绳穿三环</text>
+<rect x="291" y="607" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="632" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="607" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="623.5" y="632" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="743" y="607" width="213" height="39" rx="6" fill="#e1e6ee"/>
+<text x="849.5" y="632" text-anchor="middle" font-size="16" fill="#637086">未开始</text>
+<rect x="969" y="607" width="213" height="39" rx="6" fill="#e1e6ee"/>
+<text x="1075.5" y="632" text-anchor="middle" font-size="16" fill="#637086">未开始</text>
+<text x="40" y="684" font-size="17" fill="#1e304b">Blanket Flatten 被子展平</text>
+<rect x="291" y="658" width="213" height="39" rx="6" fill="#167b62"/>
+<text x="397.5" y="683" text-anchor="middle" font-size="16" fill="#ffffff">已达当前范围</text>
+<rect x="517" y="658" width="213" height="39" rx="6" fill="#f8d58e"/>
+<text x="623.5" y="683" text-anchor="middle" font-size="16" fill="#65451b">部分 / 验证中</text>
+<rect x="743" y="658" width="213" height="39" rx="6" fill="#e1e6ee"/>
+<text x="849.5" y="683" text-anchor="middle" font-size="16" fill="#637086">未开始</text>
+<rect x="969" y="658" width="213" height="39" rx="6" fill="#e1e6ee"/>
+<text x="1075.5" y="683" text-anchor="middle" font-size="16" fill="#637086">未开始</text>
+<text x="40" y="744" font-size="16" fill="#53627a">绿色按正文指定的基础实例 / 协议范围计；预抓取、辅助抓持与末态保持的限制仍然保留。</text>
+<text x="40" y="777" font-size="16" fill="#53627a">Claws 的物理通过对应 B0/C0；Blanket 按当前选定麻花初态计；所有任务均未完成全量变体验收。</text>
+<text x="40" y="810" font-size="16" fill="#53627a">生成接口已部署 ≠ 已生成数据集 / H5；有限 seed 检查 ≠ 整个连续参数域已证明可解。</text>
+</g></svg>

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "task_id": "slotted_post_ring",
+  "task_number": 12,
+  "source_url": "https://www.youtube.com/shorts/yZv8eUWIF-8",
+  "author": "Puzzle guy",
+  "title": "Remove the ring from the puzzle #shorts",
+  "reference_duration_seconds": 50.6506,
+  "review_method": "Downloaded public video; reviewed frames spanning the full clip and enlarged initial, side, and threading views.",
+  "observations": [
+    {"seconds": [0, 3], "description": "Wooden base and upright with a single elongated slot. Closed target ring surrounds the post foot. One white cord passes through the slot and has two beads and two round terminal discs."},
+    {"seconds": [3, 17], "description": "Lifting the ring over the post leaves it caught on the cord. The beads fit the ring; the larger discs prevent direct removal."},
+    {"seconds": [18, 41], "description": "The ring returns to the post; cord loops are rearranged and the terminal discs are turned edgewise at the long slot."},
+    {"seconds": [42, 50], "description": "The ring lifts over the post with the rearranged cord and clears the bead/loop, ending separate from the puzzle."}
+  ],
+  "initial_topology": {
+    "cord_components": 1,
+    "cord_endpoints": 2,
+    "post_slot_crossings": 1,
+    "return_tail": "around the right side of the post, outside the right rail",
+    "ring": "closed, initially horizontal around the foot of the post",
+    "terminals": "one bored bead and one larger disc at each end"
+  },
+  "uncertainties": [
+    "Absolute dimensions, cord material, mass and friction cannot be measured from this clip.",
+    "Bead sliding freedom and hidden terminal knot construction are not established; constraints must be resolved before dynamics.",
+    "The reconstructed tail poses are authored for inspection, not the result of gravity settling.",
+    "Observed human actions are not a validated robot solution."
+  ],
+  "geometry_config": "configs/slotted_post_ring_preview.yaml",
+  "generator": "topogym/tasks/slotted_post_ring/geometry.py",
+  "physics_qualified": false
+}

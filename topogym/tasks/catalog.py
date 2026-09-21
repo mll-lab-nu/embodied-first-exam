@@ -16,7 +16,7 @@ CARD_ROOT = Path(__file__).resolve().parents[2] / "configs" / "task_cards"
 TASK_IDS = (
     "interlocked_claws", "rope_threading", "lock_picking", "hedgehog_in_cage",
     "fiber_bundling", "horseshoe_ring", "knot_untying", "cast_coil",
-    "cast_keyhole", "buzz_wire_3d",
+    "cast_keyhole", "buzz_wire_3d", "blanket_flatten", "slotted_post_ring", "orbits",
 )
 
 

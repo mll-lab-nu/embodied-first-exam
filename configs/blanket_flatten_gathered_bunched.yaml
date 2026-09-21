@@ -1,0 +1,15 @@
+defaults:
+  - blanket_flatten_gathered_twist
+  - _self_
+
+task:
+  preparation:
+    axial_bunching:
+      pivot_fraction: 0.62
+      left_scale: 0.68
+      right_scale: 0.96
+      end_fraction: 0.10
+      seconds: 2.5
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/photo_gathered_bunched_v2

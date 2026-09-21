@@ -1,0 +1,1012 @@
+{
+  "protocol": "topogym.agent_bridge.v1",
+  "state": "ready",
+  "reason": "",
+  "task": {
+    "robot": {
+      "model": "ALOHA 2 dual-arm (ViperX 300 6DOF derived), native parallel grippers",
+      "arms": [
+        "left",
+        "right"
+      ],
+      "arm_dofs_each": 6,
+      "finger_slide_dofs_each": 2,
+      "arm_joint_order": [
+        "waist",
+        "shoulder",
+        "elbow",
+        "forearm_roll",
+        "wrist_angle",
+        "wrist_rotate"
+      ],
+      "finger_joint_order": [
+        "left_finger",
+        "right_finger"
+      ],
+      "home_qpos": {
+        "left": [
+          0,
+          -0.96,
+          1.16,
+          0,
+          -0.3,
+          0,
+          0.0084,
+          0.0084
+        ],
+        "right": [
+          0,
+          -0.96,
+          1.16,
+          0,
+          -0.3,
+          0,
+          0.0084,
+          0.0084
+        ]
+      },
+      "mount_world": {
+        "name": "aloha",
+        "mobility": "fixed",
+        "pos": [
+          -0.1356786,
+          0.0,
+          0.9196429
+        ],
+        "euler": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "footprint_min": [
+          -0.667,
+          -0.122
+        ],
+        "footprint_max": [
+          0.667,
+          0.084
+        ],
+        "edge_margin": 0.01,
+        "surface_tolerance": 1e-06
+      },
+      "source_base_adapter_z_translation_m": 0.0,
+      "end_effector_link": "{left|right}/gripper_link",
+      "grasp_center_offset_in_ee_m": [
+        0.13,
+        0,
+        -0.003
+      ],
+      "controller": {
+        "kp": [
+          120000,
+          120000,
+          120000,
+          60000,
+          60000,
+          40000,
+          2000
+        ],
+        "kv": [
+          1200,
+          1200,
+          1200,
+          600,
+          600,
+          400,
+          124
+        ],
+        "force_limit": [
+          35,
+          144,
+          59,
+          22,
+          35,
+          35,
+          35
+        ]
+      },
+      "observation_fields": {
+        "arm_qpos": "six joint angles, radians, same order as action",
+        "finger_qpos": "two finger rail displacements, metres, NOT the pad opening",
+        "hand_pos": "gripper_link origin in world metres, NOT fingertip center",
+        "hand_quat_wxyz": "gripper_link to world quaternion, wxyz",
+        "grasp_center_pos": "hand_pos + R(hand_quat_wxyz) @ [0.13, 0, -0.003]"
+      }
+    },
+    "world": {
+      "position_units": "metres",
+      "rotation_units": "radians unless labelled otherwise",
+      "up_axis": "+z",
+      "gravity_m_s2": [
+        0.0,
+        0.0,
+        -9.81
+      ],
+      "table_surface_origin_m": [
+        0.0,
+        0.0,
+        0.9196429
+      ],
+      "task_frame_origin_m": [
+        0.0,
+        0.0,
+        0.9196429
+      ],
+      "task_axes": "parallel to world axes",
+      "table_size_m": [
+        1.5,
+        1.4,
+        0.9196429
+      ]
+    },
+    "control_dt_s": 0.002,
+    "physics_substeps": 4,
+    "action_schema": {
+      "left": "optional {qpos: [6 radians], gripper: single finger rail displacement in metres}",
+      "right": "same as left; both targets applied before stepping",
+      "joint_limits_rad": [
+        [
+          -3.14158,
+          3.14158
+        ],
+        [
+          -1.85005,
+          1.25664
+        ],
+        [
+          -1.76278,
+          1.6057
+        ],
+        [
+          -3.14158,
+          3.14158
+        ],
+        [
+          -1.8675,
+          2.23402
+        ],
+        [
+          -3.14158,
+          3.14158
+        ]
+      ],
+      "gripper_limits_m": [
+        0.002,
+        0.037
+      ]
+    },
+    "action_semantics": "Position targets, not teleportation. Omitted fields retain targets; {} holds. Duration is ticks * control_dt_s; observe actual reached poses. Interpolate large movements.",
+    "example_code": "env.step({}, steps=20)",
+    "cameras": [
+      "cam_high",
+      "cam_low",
+      "cam_left_wrist",
+      "cam_right_wrist"
+    ],
+    "camera_calibration": {
+      "cam_high": {
+        "resolution_px": [
+          640,
+          360
+        ],
+        "vertical_fov_deg": 60.0,
+        "clipping_m": [
+          0.005,
+          12.0
+        ],
+        "K_px": [
+          [
+            311.7691453623979,
+            0,
+            320.0
+          ],
+          [
+            0,
+            311.7691453623979,
+            180.0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "distortion": "none (ideal simulated pinhole)",
+        "camera_cv_axes": "+x right, +y down, +z forward; pixels u right, v down, origin top-left",
+        "projection": "[u,v,1] proportional to K_px @ (T_camera_cv_from_world @ [X,Y,Z,1])[:3]",
+        "calibration_note": "Genesis vertical FOV / square pixels; not real hardware calibration",
+        "motion": "fixed",
+        "T_world_from_camera_cv": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            -0.135
+          ],
+          [
+            0.0,
+            -0.9635179096299405,
+            0.26764386378609456,
+            -0.35
+          ],
+          [
+            0.0,
+            -0.26764386378609456,
+            -0.9635179096299405,
+            2.12
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.135
+          ],
+          [
+            -0.0,
+            -0.9635179096299407,
+            -0.2676438637860946,
+            0.23017372285604146
+          ],
+          [
+            -0.0,
+            0.2676438637860946,
+            -0.9635179096299408,
+            2.136333320740608
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          -0.135,
+          -0.35,
+          2.12
+        ],
+        "forward_world": [
+          -0.0,
+          0.26764386378609456,
+          -0.9635179096299405
+        ],
+        "up_world": [
+          0.0,
+          0.9635179096299405,
+          0.26764386378609456
+        ],
+        "role": "高位俯视：桌面和双臂整体工作区"
+      },
+      "cam_low": {
+        "resolution_px": [
+          640,
+          360
+        ],
+        "vertical_fov_deg": 50.0,
+        "clipping_m": [
+          0.005,
+          12.0
+        ],
+        "K_px": [
+          [
+            386.01124569172055,
+            0,
+            320.0
+          ],
+          [
+            0,
+            386.01124569172055,
+            180.0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "distortion": "none (ideal simulated pinhole)",
+        "camera_cv_axes": "+x right, +y down, +z forward; pixels u right, v down, origin top-left",
+        "projection": "[u,v,1] proportional to K_px @ (T_camera_cv_from_world @ [X,Y,Z,1])[:3]",
+        "calibration_note": "Genesis vertical FOV / square pixels; not real hardware calibration",
+        "motion": "fixed",
+        "T_world_from_camera_cv": [
+          [
+            0.7745321275866415,
+            0.2058843949188487,
+            -0.5980899591742117,
+            0.6
+          ],
+          [
+            0.6325345708624237,
+            -0.2521033407169576,
+            0.7323550520500552,
+            -1.0
+          ],
+          [
+            0.0,
+            -0.9455450922765394,
+            -0.3254911342444689,
+            1.65
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            0.7745321275866414,
+            0.6325345708624238,
+            -2.40231747839803e-17,
+            0.1678152943104389
+          ],
+          [
+            0.20588439491884866,
+            -0.25210334071695756,
+            -0.9455450922765392,
+            1.1845154245880227
+          ],
+          [
+            -0.5980899591742116,
+            0.7323550520500551,
+            -0.32549113424446885,
+            1.6282693990579555
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          0.6,
+          -1.0,
+          1.65
+        ],
+        "forward_world": [
+          -0.5980899591742117,
+          0.7323550520500552,
+          -0.3254911342444689
+        ],
+        "up_world": [
+          -0.2058843949188487,
+          0.2521033407169576,
+          0.9455450922765394
+        ],
+        "role": "斜前低位：悬空零件和固定支架的整体关系"
+      },
+      "cam_left_wrist": {
+        "resolution_px": [
+          640,
+          360
+        ],
+        "vertical_fov_deg": 58.00833537295417,
+        "clipping_m": [
+          0.005,
+          12.0
+        ],
+        "K_px": [
+          [
+            324.6728971962617,
+            0,
+            320.0
+          ],
+          [
+            0,
+            324.6728971962617,
+            180.0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "distortion": "none (ideal simulated pinhole)",
+        "camera_cv_axes": "+x right, +y down, +z forward; pixels u right, v down, origin top-left",
+        "projection": "[u,v,1] proportional to K_px @ (T_camera_cv_from_world @ [X,Y,Z,1])[:3]",
+        "calibration_note": "Genesis vertical FOV / square pixels; not real hardware calibration",
+        "motion": "wrist_attached",
+        "parent_link": "left/gripper_base",
+        "T_parent_link_from_camera_cv": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.9063074544352856,
+            0.4226189750058944,
+            -0.0824748
+          ],
+          [
+            0.0,
+            -0.4226189750058944,
+            0.9063074544352856,
+            -0.0095955
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "world_pose": "Read observation.camera_poses for this frame; mount link differs from hand_pos link",
+        "role": "左腕随动：夹爪附近"
+      },
+      "cam_right_wrist": {
+        "resolution_px": [
+          640,
+          360
+        ],
+        "vertical_fov_deg": 58.00833537295417,
+        "clipping_m": [
+          0.005,
+          12.0
+        ],
+        "K_px": [
+          [
+            324.6728971962617,
+            0,
+            320.0
+          ],
+          [
+            0,
+            324.6728971962617,
+            180.0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "distortion": "none (ideal simulated pinhole)",
+        "camera_cv_axes": "+x right, +y down, +z forward; pixels u right, v down, origin top-left",
+        "projection": "[u,v,1] proportional to K_px @ (T_camera_cv_from_world @ [X,Y,Z,1])[:3]",
+        "calibration_note": "Genesis vertical FOV / square pixels; not real hardware calibration",
+        "motion": "wrist_attached",
+        "parent_link": "right/gripper_base",
+        "T_parent_link_from_camera_cv": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.9063074544352856,
+            0.4226189750058944,
+            -0.0824748
+          ],
+          [
+            0.0,
+            -0.4226189750058944,
+            0.9063074544352856,
+            -0.0095955
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "world_pose": "Read observation.camera_poses for this frame; mount link differs from hand_pos link",
+        "role": "右腕随动：夹爪附近"
+      }
+    },
+    "initial_observation": {
+      "required_cameras": [
+        "cam_high",
+        "cam_low",
+        "cam_left_wrist",
+        "cam_right_wrist"
+      ],
+      "delivery": "all cameras before first action",
+      "format": "synchronized PNGs at tick 0"
+    },
+    "task_id": "interlocked_claws",
+    "task_spec_version": 4,
+    "objective": "disassemble_release",
+    "task_goal": "用双臂将橙色和青蓝色互锁件完全分离，分别放在固定支架上，松开并稳定静置。不得移动或破坏支架。",
+    "initialization": "固定基础实例，双手分别辅助预抓持一件，从悬空互锁初态开始；tick=0 未推进物理。不包含自主接近或初次抓取。当前关节和指轨位移读 observation.robot，home_qpos 仅为通用 home。",
+    "grasp_model": "明确声明的辅助预抓持，不是纯摩擦抓取。增大某手夹爪目标即解除该手辅助；减小目标启用重新抓持尝试，只有力 >0.01 N 的双指简单承载接触路径上的零件才可新建辅助。支架不能抓持；无按名字指定物体、直接附着或物体位姿指令。",
+    "perception": {
+      "object_configuration_source": "current_episode_camera_frames",
+      "reference_images_provided": false,
+      "object_geometry_provided": false
+    },
+    "observation_policy": "四路实时 RGB、对应相机位姿、机器人本体状态和每手辅助状态；无物体真值位姿、网格、目标误差、参考图片或解题轨迹。",
+    "evaluator": "pilot_claw_separation_release_v1",
+    "physics_qualified": false,
+    "success_rule": "两件世界 AABB 至少一轴间隔 >0.02 m；全部辅助解除，每件仅由固定支架承载，合计向上支撑力各 >0.1 N、其他接触力均 <=0.001 N；线速度各 <0.005 m/s、角速度各 <0.05 rad/s，连续保持 1 s。仅分离并抓持不算成功。",
+    "failure_rule": "两件原三角网格接触深度 >0.00015 m 或完整包含；谜题相关接触、机器人自碰撞或机器人/桌面/支架/垫座穿透 >0.001 m；零件掉至桌面下 0.1 m、非有限状态、支架位姿异常；关节跟踪误差 >0.2 rad 持续超过 0.2 s。",
+    "evaluator_limit": "基础实例的 agent 接入试验版。原任务独立非凸接触对照尚未通过，不能据此宣称通用物理资格。每控制步检查原三角网格及原生接触；三角接触深度是局部诊断，不是完整体积穿透距离。不宣称逐子步或连续路径证明；重新抓持、完整自主分离落架与随机变体仍待验证。",
+    "public_assets": []
+  },
+  "tool_policy": {
+    "local_tools": "unrestricted",
+    "reference_access": "task_brief_current_episode_and_general_knowledge",
+    "allow_internet": false,
+    "enforcement": "prompt_policy",
+    "forbidden_references": [
+      "repository implementation source",
+      "existing solutions and demo videos",
+      "other trials and trajectories",
+      "private assets and simulator state",
+      "external object reference images, CAD and precomputed target geometry"
+    ],
+    "network_scope": "solver web/search/download/remote tools; localhost bridge and host model transport are exempt",
+    "environment_access": "actions only through bridge; no reset, rollback, state/evaluator mutation or duplicate episode"
+  },
+  "tick": 4930,
+  "next_segment": 15,
+  "max_segment_steps": 1000,
+  "budget": {
+    "limit": 2000000,
+    "used": 0,
+    "reserved": 0,
+    "remaining": 2000000,
+    "mode": "manual",
+    "exact": false,
+    "over_budget": false,
+    "calls": {}
+  },
+  "observation": {
+    "robot": {
+      "left": {
+        "arm_qpos": [
+          0.3425754222395194,
+          -0.9161925091179236,
+          0.31686477377257727,
+          2.3084697957193114,
+          -0.96051669443662,
+          -2.55111910628452
+        ],
+        "finger_qpos": [
+          0.02198680010061705,
+          0.02198680005743077
+        ],
+        "hand_pos": [
+          -0.4956485122231684,
+          -0.02502139936891555,
+          1.4566189864370132
+        ],
+        "hand_quat_wxyz": [
+          0.9851201716491589,
+          -0.025944147972681297,
+          0.0709736364656055,
+          -0.15436285668110547
+        ],
+        "grasp_center_pos": [
+          -0.3735969851005,
+          -0.06512491557340483,
+          1.4365159340553273
+        ]
+      },
+      "right": {
+        "arm_qpos": [
+          -0.33075017882827107,
+          0.04752902508893445,
+          0.00941894856677105,
+          -1.6290524592981817,
+          -1.5402541308601696,
+          1.0196520142911885
+        ],
+        "finger_qpos": [
+          0.021896586793886452,
+          0.021896587614649948
+        ],
+        "hand_pos": [
+          -0.044091031002727335,
+          0.03700816817319544,
+          1.3422761985212848
+        ],
+        "hand_quat_wxyz": [
+          -0.5582796810990145,
+          0.11596211991428199,
+          -0.2181074407167894,
+          0.7920263434513655
+        ],
+        "grasp_center_pos": [
+          -0.09084060298871871,
+          -0.08388453463230126,
+          1.3318631332901214
+        ]
+      }
+    },
+    "grasp_assistance": {
+      "left": {
+        "active": true,
+        "armed": false
+      },
+      "right": {
+        "active": true,
+        "armed": false
+      }
+    },
+    "camera_poses": {
+      "cam_high": {
+        "T_world_from_camera_cv": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            -0.13500000536441803
+          ],
+          [
+            0.0,
+            -0.9635179042816162,
+            0.26764386892318726,
+            -0.3499999940395355
+          ],
+          [
+            0.0,
+            -0.26764386892318726,
+            -0.9635179042816162,
+            2.119999885559082
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.13500000536441803
+          ],
+          [
+            -0.0,
+            -0.963517911562526,
+            -0.2676438709456623,
+            0.230173712471524
+          ],
+          [
+            -0.0,
+            0.2676438709456623,
+            -0.9635179115625262,
+            2.1363332154823813
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          -0.13500000536441803,
+          -0.3499999940395355,
+          2.119999885559082
+        ],
+        "forward_world": [
+          -0.0,
+          0.26764386892318726,
+          -0.9635179042816162
+        ],
+        "up_world": [
+          0.0,
+          0.9635179042816162,
+          0.26764386892318726
+        ]
+      },
+      "cam_low": {
+        "T_world_from_camera_cv": [
+          [
+            0.7745321393013,
+            0.2058843970298767,
+            -0.5980899333953857,
+            0.6000000238418579
+          ],
+          [
+            0.6325345635414124,
+            -0.252103328704834,
+            0.7323550581932068,
+            -1.0
+          ],
+          [
+            0.0,
+            -0.9455450773239136,
+            -0.32549113035202026,
+            1.649999976158142
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            0.7745321365105671,
+            0.6325345529116988,
+            1.649405981676165e-08,
+            0.16781522532387508
+          ],
+          [
+            0.20588439511294168,
+            -0.25210334768550663,
+            -0.9455451080719739,
+            1.1845154161132667
+          ],
+          [
+            -0.5980899574323695,
+            0.7323550694702678,
+            -0.3254911356885754,
+            1.6282694243151012
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          0.6000000238418579,
+          -1.0,
+          1.649999976158142
+        ],
+        "forward_world": [
+          -0.5980899333953857,
+          0.7323550581932068,
+          -0.32549113035202026
+        ],
+        "up_world": [
+          -0.2058843970298767,
+          0.252103328704834,
+          0.9455450773239136
+        ]
+      },
+      "cam_left_wrist": {
+        "T_world_from_camera_cv": [
+          [
+            -0.30056625604629517,
+            -0.5313665270805359,
+            0.7920287847518921,
+            -0.45959991216659546
+          ],
+          [
+            -0.9510211944580078,
+            0.10407409816980362,
+            -0.291079580783844,
+            -0.030475081875920296
+          ],
+          [
+            0.07224025577306747,
+            -0.8407248258590698,
+            -0.5366219878196716,
+            1.5348087549209595
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            -0.30056625616247223,
+            -0.9510211509301514,
+            0.07224025888509714,
+            -0.27799765416744676
+          ],
+          [
+            -0.5313665062796618,
+            0.10407409178727475,
+            -0.8407247959918573,
+            1.0493074442214163
+          ],
+          [
+            0.7920287276417118,
+            -0.29107954468607883,
+            -0.5366219499975834,
+            1.1787577276398857
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          -0.45959991216659546,
+          -0.030475081875920296,
+          1.5348087549209595
+        ],
+        "forward_world": [
+          0.7920287847518921,
+          -0.291079580783844,
+          -0.5366219878196716
+        ],
+        "up_world": [
+          0.5313665270805359,
+          -0.10407409816980362,
+          0.8407248258590698
+        ]
+      },
+      "cam_right_wrist": {
+        "T_world_from_camera_cv": [
+          [
+            -0.8341001868247986,
+            -0.23917461931705475,
+            -0.4970637559890747,
+            -0.017776526510715485
+          ],
+          [
+            0.2816772162914276,
+            0.5900892615318298,
+            -0.7566059827804565,
+            -0.004477481823414564
+          ],
+          [
+            0.4742729365825653,
+            -0.7710967063903809,
+            -0.424823522567749,
+            1.4131942987442017
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "T_camera_cv_from_world": [
+          [
+            -0.8341001901030737,
+            0.28167722421011426,
+            0.4742729383148482,
+            -0.6838060119656932
+          ],
+          [
+            -0.23917463691398558,
+            0.5900892738605467,
+            -0.7710967359709583,
+            1.0880999307785313
+          ],
+          [
+            -0.4970637466386897,
+            -0.7566059650200821,
+            -0.4248235274199411,
+            0.5881344305967592
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "position_world_m": [
+          -0.017776526510715485,
+          -0.004477481823414564,
+          1.4131942987442017
+        ],
+        "forward_world": [
+          -0.4970637559890747,
+          -0.7566059827804565,
+          -0.424823522567749
+        ],
+        "up_world": [
+          0.23917461931705475,
+          -0.5900892615318298,
+          0.7710967063903809
+        ]
+      }
+    }
+  },
+  "latest_manifest": "segment_014/manifest.json",
+  "segments": [
+    {
+      "segment": 1,
+      "manifest": "segment_001/manifest.json",
+      "status": "ready",
+      "executed_steps": 380
+    },
+    {
+      "segment": 2,
+      "manifest": "segment_002/manifest.json",
+      "status": "ready",
+      "executed_steps": 500
+    },
+    {
+      "segment": 3,
+      "manifest": "segment_003/manifest.json",
+      "status": "ready",
+      "executed_steps": 590
+    },
+    {
+      "segment": 4,
+      "manifest": "segment_004/manifest.json",
+      "status": "ready",
+      "executed_steps": 90
+    },
+    {
+      "segment": 5,
+      "manifest": "segment_005/manifest.json",
+      "status": "ready",
+      "executed_steps": 120
+    },
+    {
+      "segment": 6,
+      "manifest": "segment_006/manifest.json",
+      "status": "ready",
+      "executed_steps": 100
+    },
+    {
+      "segment": 7,
+      "manifest": "segment_007/manifest.json",
+      "status": "ready",
+      "executed_steps": 170
+    },
+    {
+      "segment": 8,
+      "manifest": "segment_008/manifest.json",
+      "status": "ready",
+      "executed_steps": 270
+    },
+    {
+      "segment": 9,
+      "manifest": "segment_009/manifest.json",
+      "status": "ready",
+      "executed_steps": 270
+    },
+    {
+      "segment": 10,
+      "manifest": "segment_010/manifest.json",
+      "status": "ready",
+      "executed_steps": 200
+    },
+    {
+      "segment": 11,
+      "manifest": "segment_011/manifest.json",
+      "status": "ready",
+      "executed_steps": 290
+    },
+    {
+      "segment": 12,
+      "manifest": "segment_012/manifest.json",
+      "status": "ready",
+      "executed_steps": 450
+    },
+    {
+      "segment": 13,
+      "manifest": "segment_013/manifest.json",
+      "status": "ready",
+      "executed_steps": 750
+    },
+    {
+      "segment": 14,
+      "manifest": "segment_014/manifest.json",
+      "status": "ready",
+      "executed_steps": 750
+    }
+  ],
+  "no_rollback": true,
+  "success_within_budget": false
+}

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import hashlib
 import fcntl
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -61,7 +62,8 @@ def main():
             or render["max_replay_centerline_error_m"] > 2e-6):
         raise ValueError("Require three synchronized views of the exact physical recording")
     validation = {}
-    for camera in (*cameras, "composite"):
+    exported_cameras = (*cameras, "composite") if render.get("composite_video_generated", True) else cameras
+    for camera in exported_cameras:
         path = source/("demo.mp4" if camera == "composite" else f"demo_{camera}.mp4")
         stream = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-count_frames",
             "-select_streams", "v:0", "-show_entries", "stream=width,height,avg_frame_rate,nb_read_frames,duration",
@@ -76,8 +78,8 @@ def main():
         validation[camera] = dict(**stream, fully_decoded=True, sha256=sha(path))
     metadata_root = ROOT/"runs/demo_metadata"
     metadata = metadata_root/"fiber_bundling"/args.run_id
-    videos = ROOT/"runs/demos/fiber_bundling"
-    if metadata.exists() or any((videos/f"{args.run_id}_{c}.mp4").exists() for c in validation):
+    videos = ROOT/"demos/fiber_bundling"
+    if metadata.exists() or any((videos/c/f"{args.run_id}_{c}.mp4").exists() for c in validation):
         raise FileExistsError("Archive prefix already exists; preserving the previous recording")
     metadata.mkdir(parents=True)
     videos.mkdir(parents=True, exist_ok=True)
@@ -102,24 +104,30 @@ def main():
     video_records = {}
     for camera in validation:
         old = source/("demo.mp4" if camera == "composite" else f"demo_{camera}.mp4")
-        new = videos/f"{args.run_id}_{camera}.mp4"
+        new = videos/camera/f"{args.run_id}_{camera}.mp4"
+        new.parent.mkdir(exist_ok=True)
         shutil.copy2(old, new)
         if sha(new) != validation[camera]["sha256"]:
             raise ValueError("Archive copy checksum mismatch")
-        video_records[camera] = dict(path=f"../../../demos/fiber_bundling/{new.name}", sha256=sha(new))
+        video_records[camera] = dict(path=os.path.relpath(new, metadata), sha256=sha(new))
     duration = render["playback_duration_s"]
     convergence = "严格全程时间步线形对照通过。" if comparison["passed"] else "严格全程时间步线形对照未通过，瞬时差异保存在验证报告中。"
     scope = "从场景初态执行抓取、整束接触收束和全部穿环；只操纵粗护套，接触后辅助夹持，末态保持夹持。无固定逐根顺序；两种时间步均完整完成任务。"+convergence
+    if not render.get("ui_overlays", True):
+        title += " · 无 UI 三视角"
+        scope += "视频直接输出三个相机的完整画面，无文字、状态栏或画中画；由已记录的完整物理执行重新渲染。"
     links = "\n".join(f"- [{c}]({r['path']})" for c,r in video_records.items())
     (metadata/"README.md").write_text(f"# 固定终端电缆：完整机器人穿环\n\n{scope}\n\n实际仿真 {report['simulated_seconds']:.3f} s；视频 {duration:.2f} s，含末尾 2 s 保持。视频从同一次物理执行的保存状态渲染，未插值或拼接不同执行。\n\n{links}\n\n[物理报告](report.json) · [减半时间步报告](half_step/report.json) · [时间步对照](timestep_validation.json) · [视频检查](video_validation.json) · [配置](config.yaml)\n\n本目录保存独立的资产、配置、源代码、轨迹、指令与稳定性证据。plan.json 中原始路径保留作来源记录；核心证据与视频不依赖原始运行目录。结论限定于当前初态和离散物理模型，不等于真实铜线材料标定或纯摩擦夹持验证。\n")
     now = datetime.now(timezone.utc).isoformat()
     manifest = dict(task_id="fiber_bundling", variant=variant,
         fiber_count=count, ring_inner_radius_m=radius, support=support,
         run_id=args.run_id, source_directory=str(source.relative_to(ROOT)),
+        video_layout="demos/fiber_bundling/<camera>/<original_filename>.mp4",
         classification="physical_execution_with_grasp_assistance", counts_as_complete_robotics_demo=True,
         strict_timestep_convergence_passed=comparison["passed"],
         scope=scope, recording_range_s=[0.,report["simulated_seconds"]], duration_s=duration,
         cameras=list(cameras), videos=video_records, archived_at_utc=now,
+        ui_overlays=render.get("ui_overlays", True),
         metadata_sha256={str(p.relative_to(metadata)):sha(p) for p in sorted(metadata.rglob("*")) if p.is_file()})
     (metadata/"archive_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+"\n")
     entry = dict(task_id="fiber_bundling", title=title,
@@ -127,8 +135,9 @@ def main():
         counts_as_complete_robotics_demo=True, duration_s=duration, cameras=list(cameras), scope=scope,
         source_directory=manifest["source_directory"], directory=f"fiber_bundling/{args.run_id}",
         index=f"fiber_bundling/{args.run_id}/README.md", archived_at_utc=now,
-        video_directory="../demos/fiber_bundling",
-        video_files={c:f"../demos/fiber_bundling/{args.run_id}_{c}.mp4" for c in validation})
+        video_directory="../../demos/fiber_bundling",
+        ui_overlays=render.get("ui_overlays", True),
+        video_files={c:f"../../demos/fiber_bundling/{c}/{args.run_id}_{c}.mp4" for c in validation})
     # Serialize our concurrent variant archives; preserve current shared entries.
     with (metadata_root/".fiber_archive.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -145,7 +154,9 @@ def main():
         (metadata_root/"README.md").write_text(readme)
         page = (metadata_root/"index.html").read_text()
         page = re.sub(r"<tr><td>fiber_bundling</td><td>.*?</td></tr>", "", page)
-        section = f'<section><h2>{title}</h2><p>{scope}</p><p><a href="../demos/fiber_bundling/{args.run_id}_composite.mp4">完整视频</a> · <a href="fiber_bundling/{args.run_id}/README.md">目录与证据</a></p></section>'
+        primary_camera = "composite" if "composite" in validation else "front_oblique"
+        primary_video = entry["video_files"][primary_camera]
+        section = f'<section><h2>{title}</h2><p>{scope}</p><p><a href="{primary_video}">完整视频</a> · <a href="fiber_bundling/{args.run_id}/README.md">目录与证据</a></p></section>'
         page = page.replace("</body>", section+"</body>")
         (metadata_root/"index.html").write_text(page)
     print(json.dumps(dict(videos=str(videos), metadata=str(metadata), manifest=manifest["run_id"])))

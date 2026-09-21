@@ -47,7 +47,7 @@ def main():
                 status["status"]="rendering"
                 status_path.write_text(json.dumps(status,indent=2)+"\n")
                 command=[sys.executable,"-m","topogym.tasks.fiber_bundling.render_robot_sequence",
-                    str(baseline),"--backend","cpu","--renderer","rasterizer","--multiview"]
+                    str(baseline),"--backend","cpu","--renderer","rasterizer","--clean"]
                 env=dict(os.environ,OPENBLAS_NUM_THREADS="1",OMP_NUM_THREADS="1",PYOPENGL_PLATFORM="egl")
                 subprocess.run(command,env=env,check=True)
         status["status"]="rendered"

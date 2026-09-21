@@ -1,0 +1,301 @@
+{
+  "scope": "Private fixed initialization only; no solution or action trajectory.",
+  "schema_version": 1,
+  "template_sha256": "9ba9a58c8541ccbcdf442a944cef26f1a58701c3fa5ed08fa9182bb22fd941a9",
+  "task": {
+    "variant": "classic_3star_reconstruction_v1",
+    "finish": "wood",
+    "scale": 3.0,
+    "center_xy_m": [
+      0.06,
+      0.2
+    ],
+    "yaw_deg": -130.0,
+    "mount_height_m": 0.1,
+    "mount_width_m": 0.22,
+    "seed": 0,
+    "physics": {
+      "constraint_timeconst": 0.0012,
+      "friction": 0.3,
+      "iterations": 100,
+      "noslip_iterations": 5
+    },
+    "initial_pose": {
+      "position_m": [
+        0.034,
+        -4.059817334521296e-09,
+        -0.013093779603251927
+      ],
+      "quaternion_wxyz": [
+        -0.08985502802683738,
+        -0.38231459195763656,
+        0.8996677947434726,
+        0.19068163471078864
+      ]
+    }
+  },
+  "robot_control": {
+    "robot": {
+      "name": "franka_panda",
+      "asset": "xml/franka_emika_panda/panda.xml",
+      "tool_model": "robotiq_2f85",
+      "joint_names": [
+        "joint1",
+        "joint2",
+        "joint3",
+        "joint4",
+        "joint5",
+        "joint6",
+        "joint7",
+        "finger_joint1",
+        "finger_joint2"
+      ],
+      "arm_joint_count": 7,
+      "gripper_joint_count": 2,
+      "ee_link": "hand"
+    },
+    "home": {
+      "qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634,
+        0.04,
+        0.04
+      ],
+      "settle_steps": 100
+    },
+    "controller": {
+      "type": "position",
+      "kp": [
+        4500,
+        4500,
+        3500,
+        3500,
+        2000,
+        2000,
+        2000,
+        100,
+        100
+      ],
+      "kv": [
+        450,
+        450,
+        350,
+        350,
+        200,
+        200,
+        200,
+        10,
+        10
+      ],
+      "force_lower": [
+        -87,
+        -87,
+        -87,
+        -87,
+        -12,
+        -12,
+        -12,
+        -100,
+        -100
+      ],
+      "force_upper": [
+        87,
+        87,
+        87,
+        87,
+        12,
+        12,
+        12,
+        100,
+        100
+      ]
+    },
+    "ik": {
+      "enabled": true,
+      "default_ee_quat": [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      "max_samples": 1,
+      "max_solver_iters": 50,
+      "max_step_size": 0.15
+    },
+    "gripper": {
+      "robotiq": {
+        "kp": 5.0,
+        "kv": 5.0,
+        "max_driver_torque_nm": 0.3,
+        "oracle_gripper_settle_s": 3.0,
+        "oracle_motion_time_scale": 1.5
+      },
+      "open_qpos": 0.04,
+      "closed_qpos": 0.0
+    },
+    "action_protocol": {
+      "mode": "ee_delta",
+      "dims": [
+        "dx",
+        "dy",
+        "dz",
+        "dyaw",
+        "gripper"
+      ],
+      "max_delta_xyz": 0.03,
+      "max_delta_yaw": 0.2,
+      "workspace": {
+        "x": [
+          -0.25,
+          0.25
+        ],
+        "y": [
+          -0.3,
+          0.3
+        ],
+        "z": [
+          0.03,
+          0.4
+        ]
+      }
+    },
+    "control_loop": {
+      "steps_per_action": 20,
+      "interpolation": "linear",
+      "use_plan_path": false,
+      "plan_waypoints": 80
+    }
+  },
+  "robot_mount": {
+    "name": "franka_panda",
+    "mobility": "fixed",
+    "pos": [
+      -0.57,
+      0.0,
+      0.9196429
+    ],
+    "euler": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "footprint_min": [
+      -0.154079,
+      -0.094614
+    ],
+    "footprint_max": [
+      0.071567,
+      0.094671
+    ],
+    "edge_margin": 0.01,
+    "surface_tolerance": 1e-06
+  },
+  "cameras": {
+    "agentview": {
+      "res": [
+        960,
+        720
+      ],
+      "pos": [
+        -0.68,
+        -1.06,
+        2.02
+      ],
+      "lookat": [
+        -0.06,
+        0.1,
+        1.18
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "fov": 42,
+      "near": 0.01,
+      "far": 12.0
+    },
+    "front_oblique": {
+      "res": [
+        960,
+        720
+      ],
+      "pos": [
+        0.9,
+        -0.3,
+        1.72
+      ],
+      "lookat": [
+        -0.02,
+        0.1,
+        1.17
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "fov": 60,
+      "near": 0.01,
+      "far": 12.0
+    },
+    "wrist": {
+      "res": [
+        960,
+        720
+      ],
+      "pos": [
+        0.5,
+        0.0,
+        1.18
+      ],
+      "lookat": [
+        0.62,
+        0.0,
+        0.95
+      ],
+      "up": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "fov": 90,
+      "near": 0.01,
+      "far": 3.0,
+      "attach": {
+        "enabled": true,
+        "entity": "robot",
+        "link": "hand",
+        "offset_pos": [
+          0.05,
+          0.0,
+          0.005
+        ],
+        "offset_lookat": [
+          0.065,
+          0.0,
+          0.17
+        ],
+        "offset_up": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "arm_qpos": [
+    -0.6084387898445129,
+    0.8637475967407227,
+    0.4344783425331116,
+    -1.5924090147018433,
+    1.0560539960861206,
+    1.500203251838684,
+    -0.4204520285129547
+  ]
+}

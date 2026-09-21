@@ -293,11 +293,11 @@ class FemDiagnostics:
             settled_drift=drift < LIMITS.settled_drift_m)
         return dict(checks=checks, mechanical_checks_passed=all(checks.values()),
             limits=asdict(LIMITS), substeps_observed=self.count, simulated_seconds=self.count*self.dt,
-            min_J=self.min_J, extrema=self.maxima, tail_window_rms_speed_m_s=window_rms,
+            min_J=self.min_J, extrema=dict(self.maxima), tail_window_rms_speed_m_s=window_rms,
             final_J_quantiles=dict(zip(('min', 'p01', 'median', 'p99', 'max'),
                                       getattr(self, 'last_J_quantiles', []))),
             tail_window_max_speed_m_s=window_max, tail_window_drift_m=drift,
-            diagnostics_wall_seconds=self.elapsed_diagnostics_s, failures=self.failures,
+            diagnostics_wall_seconds=self.elapsed_diagnostics_s, failures=[dict(f) for f in self.failures],
             ccd_method=getattr(self.ccd, 'method', 'ipctk 1.6.0; actual FEM surface; linear sweep at every IPC substep'),
             rigid_ccd_queries=getattr(self.ccd, 'rigid_queries', None),
             rigid_pairs_rejected_by_swept_aabb=getattr(self.ccd, 'separated_pairs', None),

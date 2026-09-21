@@ -1,6 +1,5 @@
-"""Build a review page from completed or explicitly incomplete physics evidence."""
+"""Build a Markdown review from completed or explicitly incomplete physics evidence."""
 import argparse
-import html
 import json
 from pathlib import Path
 
@@ -22,6 +21,7 @@ def build(folder):
         if not root.is_dir() or not (root/"validation_spec.json").exists():
             continue
         report = json.loads((root/"report.json").read_text()) if (root/"report.json").exists() else {}
+        progress = json.loads((root/"progress.json").read_text()) if (root/"progress.json").exists() else {}
         trace = root/("trace.json" if (root/"trace.json").exists() else "partial_trace.json")
         status = "通过" if report.get("passed") else "未通过" if report else "未完成"
         error = report.get("error") or ", ".join(k for k, v in report.get("checks", {}).items() if not v)
@@ -32,9 +32,9 @@ def build(folder):
             status = "初始化失败"
         action = ", ".join(k for k, v in report.get("actuation", {}).get("checks", {}).items() if not v)
         link = f'{root.name}/report.json' if report else f'{root.name}/process.log'
-        rows.append(f'<tr><td><a href="{link}">{html.escape(root.name)}</a></td><td>{status}</td>'
-            f'<td>{report.get("simulated_seconds", 0):.3f}</td><td>{html.escape(error or "")}'
-            f'{html.escape("; "+action if action else "")}</td></tr>')
+        reason = ((error or "")+("; "+action if action else "")).replace("|", "/").replace("\n", " ")
+        rows.append(f'| [{root.name}]({link}) | {status} | '
+                    f'{report.get("simulated_seconds", progress.get("time_s", 0)):.3f} | {reason} |')
         if trace.exists():
             samples = json.loads(trace.read_text())
             if samples:
@@ -65,7 +65,8 @@ def build(folder):
         with np.load(trajectory_path) as data:
             times, centerlines = data["times"], data["centerlines"]
         fig = plt.figure(figsize=(12, 7), constrained_layout=True)
-        requested = [0., 3., 7., 11., 12.7, float(times[-1])]
+        actuation = json.loads((ring_root/"validation_spec.json").read_text()).get("actuation") or {}
+        requested = [0., 3., 7., 11., float(actuation.get("release_s", 12.))+.7, float(times[-1])]
         for j, target in enumerate(requested):
             axis = fig.add_subplot(2, 3, j+1, projection="3d")
             i = int(np.argmin(abs(times-target)))
@@ -87,9 +88,11 @@ def build(folder):
     compared = free_a.is_file() and free_b.is_file()
     if compared:
         with np.load(free_a) as data:
-            ta, ca = data["times"], data["centerlines"][:, ::4]
+            ca = data["centerlines"]
+            ta, ca = data["times"], ca[:, np.rint(np.linspace(0, ca.shape[1]-1, 81)).astype(int)]
         with np.load(free_b) as data:
-            tb, cb = data["times"], data["centerlines"][:, ::4]
+            cb = data["centerlines"]
+            tb, cb = data["times"], cb[:, np.rint(np.linspace(0, cb.shape[1]-1, 81)).astype(int)]
         times, aa, bb = paired_material_samples(free_a.parent, free_b.parent)
         distances = np.linalg.norm(aa-bb, axis=2)*1000
         rms = np.sqrt(np.mean(distances**2, axis=1))
@@ -112,32 +115,15 @@ def build(folder):
         plt.close(fig)
     missing = [name for name, case in qualification["cases"].items() if not case["passed"]]
     status = "局部物理资格检查通过；完整执行另见录像报告" if qualification["passed"] else "物理验收尚未通过，不能开始正式完整 demo"
-    body = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>绳穿三环 · 物理验收</title><style>body{font:16px/1.7 system-ui;max-width:1200px;margin:30px auto;padding:24px;background:#f4f6f8;color:#203040}
-table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #d4dde3;padding:10px;text-align:left}img{width:100%}a{color:#1265a0}</style>
-<h1>绳穿三环 · 物理验收</h1>'''
-    body += '<p><strong>'+status+'</strong></p><p>尚未通过的必需项目：'+html.escape(", ".join(missing) or "无")+'</p>'
-    for name, comparison in qualification["comparisons"].items():
-        if comparison.get("numerical_difference_within_limits") is False:
-            body += ('<p><strong>已发现数值超差：</strong>'+html.escape(name)
-                +f' 在 {comparison["maximum_rms_time_s"]:.3f} s 的逐帧 RMS 差异为 '
-                +f'{comparison["maximum_frame_rms_m"]*1000:.3f} mm（门槛 2 mm），'
-                +f'最大单点差异 {comparison["maximum_point_distance_m"]*1000:.3f} mm（门槛 5 mm）。')
-            if not comparison["both_runs_completed_and_passed"]:
-                body += (f'对照使用已保存的共同前 {comparison["sampled_seconds"]:.2f} s；'
-                         '至少一组运行未完成或未通过，不能据此宣称完整对照通过。已保存前缀的超差足以拒绝当前资格。</p>')
-            else:
-                body += '</p>'
-    body += '''<p>静置、环接触、步长减半、网格细化和机器人抓取分别保留证据。
-每个原生 IPC 子步核对表面连续碰撞、四面体体积、绳长、局部应变和桌面穿透。
-静置末两秒要求漂移 &lt; 2 mm，最大速度 &lt; 5 mm/s、RMS 速度 &lt; 1 mm/s。
-加载绳长变化 &lt; 5%，局部轴向应变 &lt; 20%；数值比较要求逐帧 RMS &lt; 2 mm、任一点 &lt; 5 mm。</p>
-<p>已修复初态底座法兰与绳端穿插：恢复参考机器人/桌面相对高度，增加 20.9 mm 实体垫座。
-原 10 mm/s 摩擦速度正则化在五秒静置中产生 2.567 mm 尾窗漂移；改用已校验的 1 mm/s 参数后
-静置尾窗漂移为 0.416 mm。此处的通过仅限数值测试，不等于真实绳材或硬件实验验证。</p>
-<table><thead><tr><th>测试证据</th><th>状态</th><th>实际模拟秒数</th><th>失败 / 未完成原因</th></tr></thead><tbody>'''
-    body += ''.join(rows)+'</tbody></table>'
-    body += '<h2>数值对照</h2><table><tr><th>对照</th><th>状态</th><th>逐帧最大 RMS</th><th>任一点最大差异</th></tr>'
+    lines = ["# 绳穿三环 · 物理验收", "", status, "",
+        "尚未通过的必需项目："+(", ".join(missing) or "无"), "",
+        "每个原生 IPC 子步核对表面连续碰撞、四面体体积、绳长、局部应变和桌面穿透。"
+        "静置末两秒要求漂移 < 2 mm、最大速度 < 5 mm/s、RMS 速度 < 1 mm/s。"
+        "加载绳长变化 < 5%、局部轴向应变 < 20%；数值比较逐帧 RMS < 2 mm、任一点 < 5 mm。", "",
+        "| 测试证据 | 状态 | 实际模拟秒数 | 失败 / 未完成原因 |",
+        "|---|---|---:|---|", *rows, "",
+        "| 数值对照 | 状态 | 逐帧最大 RMS | 任一点最大差异 | 共同区间 |",
+        "|---|---|---:|---:|---:|"]
     for name, comparison in qualification["comparisons"].items():
         computed = "comparison_samples" in comparison
         status = "通过" if comparison["passed"] else "未通过" if computed else "等待完整测试"
@@ -145,20 +131,23 @@ table{border-collapse:collapse;width:100%;background:white}th,td{border:1px soli
             status = "已观测前缀超差" if not comparison["numerical_difference_within_limits"] else "前缀在限值内；未完成"
         rms = f'{comparison["maximum_frame_rms_m"]*1000:.3f} mm' if computed else "—"
         maximum = f'{comparison["maximum_point_distance_m"]*1000:.3f} mm' if computed else "—"
-        body += f'<tr><td>{html.escape(name)}</td><td>{status}</td><td>{rms}</td><td>{maximum}</td></tr>'
-    body += '</table>'
-    if compared:
-        body += '<h2>时间步对照的起始接触响应</h2><p>相同场景、相同物理参数，仅减半子步。上图放大初始 0.3 s；下图按相同物理时间比较 81 个材料节点。</p><img src="time_step_comparison.png" alt="两种时间步的竖直弹起与绳形误差">'
-    if curves:
-        body += '<h2>原生物理状态曲线</h2><img src="physics_metrics.png" alt="物理时间对应的速度、绳长、局部应变和体积比曲线">'
-    if trajectory_path.exists():
-        body += '<h2>加载测试的实际绳中心线</h2><p>从本次原生 FEM 状态读取；下图不是原视频绳轨迹的回放。</p><img src="ring_contact_states.png" alt="抬升、穿环、滑动和释放的实际绳中心线">'
-    body += '''<p><a href="qualification.json">资格检查及证据哈希</a> ·
-<a href="../reference_motion_v1/reference_summary.json">公开参考动作的 51 个阶段</a> ·
-<a href="../physics_v4/free_baseline/report.json">修正摩擦前的失败静置报告</a></p>
-<p>公开参考仅提供控制目标。绳体不得按原轨迹回写；接触后辅助抓持、释放和失败均须如实记录。
-初态相机环绕、局部加载试验和参考轨迹自身都不算完整机器人 demo。</p></html>'''
-    (folder/"index.html").write_text(body)
+        duration = f'{comparison["sampled_seconds"]:g} s' if computed else "—"
+        lines += [f'| {name} | {status} | {rms} | {maximum} | {duration} |']
+    lines += [""]
+    for name, comparison in qualification["comparisons"].items():
+        if max(comparison.get('unpaired_tail_seconds', [0.])) > 1e-8:
+            lines += [f"{name} 仅对照共同前 {comparison['sampled_seconds']:g} s；分别观察至 "
+                + " / ".join(f"{t:g} s" for t in comparison['trajectory_end_times_s'])
+                + "。额外静置尾段只检验该次稳定性，未计为配对数值对照。", ""]
+    for filename, label in (("time_step_comparison.png", "时间步对照"),
+                            ("physics_metrics.png", "原生物理状态曲线"),
+                            ("ring_contact_states.png", "实际绳中心线")):
+        if (folder/filename).is_file():
+            lines += [f"![{label}]({filename})", ""]
+    lines += ["[资格检查及证据哈希](qualification.json)。每次运行的参数、限制和完整失败记录保存在各自目录。", "",
+        "公开参考仅提供控制目标，绳体未按原轨迹回写；双指接触后采用辅助抓持。"
+        "材料和耗散参数未经实物标定。局部加载与前段动作通过不等于完整机器人执行通过。", ""]
+    (folder/"README.md").write_text("\n".join(lines))
     return qualification
 
 
@@ -167,7 +156,7 @@ def main():
     parser.add_argument("folder", type=Path)
     args = parser.parse_args()
     result = build(args.folder)
-    print(json.dumps(dict(passed=result["passed"], page=str(args.folder/"index.html"))))
+    print(json.dumps(dict(passed=result["passed"], review=str(args.folder/"README.md"))))
 
 
 if __name__ == "__main__":

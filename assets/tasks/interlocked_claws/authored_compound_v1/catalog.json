@@ -1,0 +1,68 @@
+{
+  "version": "claw_authored_compound_v1",
+  "task": "interlocked_claws",
+  "units": "m, kg, s, radians",
+  "engine": "MuJoCo 3.13",
+  "scope": "Frozen engineered B0/C0 prototypes and pregrasp-assisted full robot plans; fixed prototypes only.",
+  "existing_seed_version_unchanged": "claw_seed_v1",
+  "random_geometry_qualified": false,
+  "seed_api_integrated": false,
+  "dataset_generated": false,
+  "dataset_eligible": false,
+  "families": [
+    {
+      "family": "helical_crown",
+      "representative": "B0",
+      "plan": "helical_crown/plan.json",
+      "model": "helical_crown/assets/model.json",
+      "settings": "helical_crown/settings.json",
+      "source_plan": "runs/environment-solvability/interlocked_claws/family_physics_20260919_v5/helical_crown/robot_plan_v3",
+      "physics_dt_s": 0.0005,
+      "refinement_dt_s": 0.00025,
+      "pregrasp": true,
+      "grasp": "ideal gripper-to-part weld until release",
+      "fixed_prototype_physics_passed": true,
+      "random_geometry_qualified": false,
+      "seed_api_integrated": false,
+      "dataset_eligible": false,
+      "verification_directory": "runs/demo_metadata/interlocked_claws/2026-09-19_helical_crown_physical_v1",
+      "files": {
+        "assets/model.json": "0569f45d8f7b32b3775b4dae200dc2044a7ef47c8c39de09ed1ecd2eab6fdcff",
+        "assets/piece_0.obj": "144a344b6035e51970ad98e126f3074c377df7f6eaf63c8ce31617d8c602d31a",
+        "assets/piece_0.urdf": "6cd53fa084d808eafe6dc92a61cfb2ea59fdaad49dba2457d047fb7312bcd4e5",
+        "assets/piece_1.obj": "6db58b1974c55aa1802d8ef77cf004789874a63c283311722fab0f433061d5fa",
+        "assets/piece_1.urdf": "9e068eab982b4e6989dcac617f0af56b3155dc6e77141c6eef3e081d49483a1a",
+        "ik_report.json": "175621e911e27d99a76f9b7a56eb45d82efd6c5f602400cc75597d440e43c56b",
+        "plan.json": "7fc72e6cd88e530b039970072f82a25deb564ce9b4bf1f0492c5bdd83d26a2b4",
+        "settings.json": "7be3df7b84eacc9b0fa1cb639dea45bf4383f5bcd674e349b7c054cd37fde045"
+      }
+    },
+    {
+      "family": "orthogonal_gate",
+      "representative": "C0",
+      "plan": "orthogonal_gate/plan.json",
+      "model": "orthogonal_gate/assets/model.json",
+      "settings": "orthogonal_gate/settings.json",
+      "source_plan": "runs/environment-solvability/interlocked_claws/family_physics_20260919_v14/orthogonal_gate/robot_plan_v3",
+      "physics_dt_s": 0.00025,
+      "refinement_dt_s": 0.000125,
+      "pregrasp": true,
+      "grasp": "ideal gripper-to-part weld until release",
+      "fixed_prototype_physics_passed": true,
+      "random_geometry_qualified": false,
+      "seed_api_integrated": false,
+      "dataset_eligible": false,
+      "verification_directory": "runs/demo_metadata/interlocked_claws/2026-09-19_orthogonal_gate_physical_v1",
+      "files": {
+        "assets/model.json": "9daef03b439a1438d1f6fda1f67c6006a0e3b6d100aadb39e7069fe1a37af07b",
+        "assets/piece_0.obj": "ed76063701eab5f96210ae7b19e5119cc4419b763fa2947a16236831f5fee946",
+        "assets/piece_0.urdf": "97e8bf6d000a877e83f247e236146873aae2c5b0b6b58439172a22dbb2f74d16",
+        "assets/piece_1.obj": "4675bafbb980ad800432428f5435888a3dca6a867e65eb84331d2a92bf97d62e",
+        "assets/piece_1.urdf": "79ebbeface038933395c891ebbdbd1cea43b6ccd964b0edd95efe29d6860c14c",
+        "ik_report.json": "e6c2da92b067e8ca5cb36819a5d4900c7049a78642896e3fa9538295e430380a",
+        "plan.json": "be8aa6e22d3b05c4fc8be92b80aa09cebdb2999f1fef2f426a50ac79b3abdff0",
+        "settings.json": "9a5c77aace9f9c27f9d11c2f29341d50c081c5a194889cbd7107d86a600bf43a"
+      }
+    }
+  ]
+}

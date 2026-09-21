@@ -1,0 +1,14 @@
+# Diagnostic candidate: resolve Newton velocities down to the friction scale.
+# Qualification must be repeated before using this profile for a full demo.
+defaults:
+  - rope_threading_soft_start_preview
+  - _self_
+
+task:
+  rope:
+    fem:
+      newton_tolerance: 0.001
+      newton_max_iterations: 200
+
+run:
+  output: runs/environment_bootstrap/rope_threading/soft_start_precise_candidate

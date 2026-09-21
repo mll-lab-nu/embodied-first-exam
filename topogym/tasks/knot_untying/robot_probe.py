@@ -147,7 +147,7 @@ class RobotGraspActions:
         for checker in self.contact_checkers.values():
             checker.close()
 
-    def close(self, side, band, t, start):
+    def close(self, side, band, t, start, *, start_qpos=None):
         arm = self.controller.arms[side]
         if band in self.owners:
             arm.set_gripper(self.closed[side])
@@ -166,15 +166,20 @@ class RobotGraspActions:
             arm.set_gripper(self.closed[side])
             self.events.append(dict(time_s=t, event='contact_then_assisted_grasp', band=band,
                                     owner=side, native_finger_gaps_m=gaps))
-        else:
+        elif start_qpos is None:
             arm.set_gripper(.037-.025*float(smoothstep((t-start)/1.6)))
+        else:
+            arm.set_gripper(start_qpos+(.012-start_qpos)*float(smoothstep((t-start)/1.6)))
 
-    def release(self, side, t):
+    def release(self, side, t, *, open_qpos=None):
         for band in [i for i, owner in self.owners.items() if owner == side]:
             self.bands[band].release()
             del self.owners[band]
             self.events.append(dict(time_s=t, event='release_band', band=band, owner=side))
-        self.controller.arms[side].open_gripper()
+        if open_qpos is None:
+            self.controller.arms[side].open_gripper()
+        else:
+            self.controller.arms[side].set_gripper(open_qpos)
 
     def update(self, t):
         if t < 10.:
