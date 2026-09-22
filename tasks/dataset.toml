@@ -17,5 +17,25 @@ digest = "sha256:7265a29dceb6c47543f34f05daefba9cea52831cb1b6cdd868648cdfb1b9357
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_two"
-digest = "sha256:e38bc3c8c4819b3126693503f557c566ff60fb7b4ba4b7a9ded53129a2f967c3"
+digest = "sha256:068d8b1db634be663f21d855b98b8971195cd64112a18c8001183082b355cc33"
+
+[[tasks]]
+name = "robot-coding-bench/robotwin_2_0_open_microwave"
+digest = "sha256:d06629a99f95ad4e8cd96945fb7ac192286f9946216c1b7ebb08cb7df0aa6720"
+
+[[tasks]]
+name = "robot-coding-bench/robotwin_2_0_place_can_basket"
+digest = "sha256:b17fef31249a5e93f923eb146fba4cc2c8c17ec72f5141e018f6c8395310cdcd"
+
+[[tasks]]
+name = "robot-coding-bench/robotwin_2_0_put_bottles_dustbin"
+digest = "sha256:894bb0e4aca569626dd48aec4427e8d053a2fcfe2d5c6de91f637679ed27d457"
+
+[[tasks]]
+name = "robot-coding-bench/robotwin_2_0_scan_object"
+digest = "sha256:bd7bd46f6058ef4184fb810e04c3d82943313544b7694b3f83157860f7f0c64d"
+
+[[tasks]]
+name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-limited"
+digest = "sha256:750ef781bf9b1c6c239020045272761b2e73dc2665933b7624dfae40a4c27bec"
 

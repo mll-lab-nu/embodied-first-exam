@@ -3,7 +3,7 @@
     python /tests/grade.py --family stack_blocks_two --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
-human-viewable replay video /logs/verifier/replay.mp4 (head camera) plus replay.last.png.
+human-viewable replay video /logs/verifier/replay.mp4 (3x2 grid: world, observer, head / front, left wrist, right wrist) plus replay.last.png.
 Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND
 all final-state hashes to agree (bit-exact determinism), so a lucky non-deterministic run cannot pass.
 """
@@ -27,8 +27,21 @@ def main() -> int:
     ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-every", type=int, default=10); ap.add_argument("--video-fps", type=int, default=25)
     a = ap.parse_args()
+    # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
+    cost = {"agent_sessions": 0, "agent_resets": 0, "agent_sim_steps": 0, "agent_records": 0, "agent_replays": 0}
+    try:
+        for line in open("/app/output/rcb_session_log.jsonl"):
+            e = json.loads(line); ev = e.get("ev")
+            if ev == "session_start": cost["agent_sessions"] += 1
+            elif ev == "reset": cost["agent_resets"] += 1
+            elif ev == "session_end": cost["agent_sim_steps"] += int(e.get("sim_steps", 0))
+            elif ev == "record": cost["agent_records"] += 1
+            elif ev == "replay": cost["agent_replays"] += 1
+    except (OSError, ValueError):
+        pass
+    os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0}); return 0
+        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from rcb_traj import Session
         d = np.load(a.traj, allow_pickle=False)
@@ -41,13 +54,13 @@ def main() -> int:
         deterministic = len({o["state_sha"] for o in outs}) == 1
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
-               "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0}
+               "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
         if not a.no_video:
             try:
                 s.close()
                 sv = Session(a.family, instance=a.instance, enable_render=True)
-                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=a.video_every, fps=a.video_fps)
+                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=a.video_every, fps=a.video_fps)  # 6-view grid
                 out["video_rendered"] = 1
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)

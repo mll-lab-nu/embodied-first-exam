@@ -36,7 +36,8 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
     ├── environment/  Dockerfile (FROM base image), instance.npz (frozen scene), rcb_traj.py (agent tooling)
     ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
     └── solution/     solve.sh (oracle)
-└── robotwin_2_0_stack_blocks_two/  # RoboTwin 2.0 (SAPIEN + CuRobo, ALOHA dual arm): same shape, + docker-compose.yaml (GPU)
+└── robotwin_2_0_<task>/        # RoboTwin 2.0 (SAPIEN + CuRobo, ALOHA dual arm): same shape, + docker-compose.yaml (GPU);
+                                #   stack_blocks_two, put_bottles_dustbin, open_microwave, place_can_basket, scan_object
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, dataset manifest
 docs/PROTOCOL.md TAXONOMY.md    # the contract and the metadata vocabulary
@@ -56,8 +57,9 @@ RoboTwin's task envs (`/opt/RoboTwin/envs/<task>.py`) keep their scene definitio
 `play_once` is scrubbed from the image. The agent drives RoboTwin's own primitives (`env.grasp_actor`,
 `env.place_actor`, `env.move`, …); `rcb_traj.py` hooks every `scene.step()` and records the (T, 34) drive-target
 rows, which the verifier replays from the scene rebuilt from the RoboTwin seed (initial-state hash checked).
-Verified: oracle 1, nop 0, replay bit-exact across processes.
+New RoboTwin task: `scripts/robotwin_expert_sweep.py` (pick a seed the expert passes) then `scripts/robotwin_mk_task.py`.
+Verified for all five: oracle 1, nop 0, replay bit-exact across processes.
 
 ## Status
-v0.1 (2026-09): one robosuite example task + one RoboTwin 2.0 task. Next: more instances/families, LIBERO-PRO,
+v0.1 (2026-09): one robosuite example task + five RoboTwin 2.0 tasks (one easy, four hard: handover, articulated, multi-object, bimanual tool use). Next: more instances/families, LIBERO-PRO,
 BEHAVIOR, `perception` tier, `policy` task type; then factor shared tooling into kits.
