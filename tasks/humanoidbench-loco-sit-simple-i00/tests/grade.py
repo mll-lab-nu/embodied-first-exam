@@ -1,6 +1,10 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards.
 
-    python /tests/grade.py --family sit_simple --instance /tests/instance.npz --traj /app/output/trajectory.npz
+    python /tests/grade.py --family <family> --instance /tests/instance.npz --traj /app/output/trajectory.npz
+
+Scoring happens here and nowhere else: the task image has upstream's reward functions deleted, and this
+process patches the one this task needs back in (rcb_rewards.py) before it replays anything. Harbor only
+copies tests/ into the container once the agent has finished, so the formula is never readable by it.
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of PROTOCOL.md §3 -- Harbor turns
 every key into a leaderboard metric, so HumanoidBench's own numbers go to diagnostics.json instead), and a
@@ -34,8 +38,15 @@ def main() -> int:
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0}); return 0
     try:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from rcb_hb import GL_BACKEND, Session
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        # The image has no reward function -- put this task's back before anything opens a Session,
+        # because Session decides whether it can score by inspecting the class. See rcb_rewards.py.
+        from rcb_rewards import restore
+        restored = restore()
+        from rcb_hb import GL_BACKEND, Session
         s = Session(a.family, instance=a.instance)
+        if not s.scored:
+            write(False, {"success": 0, "grader_error": 1, "rewards_not_restored": 1}); return 0
         d = np.load(a.traj, allow_pickle=False)
         if str(d["task"]) != a.family:
             write(False, {"success": 0, "wrong_family": 1, "grader_error": 0}); return 0
@@ -61,7 +72,8 @@ def main() -> int:
                        "sim_steps_total": outs[-1]["sim_steps_total"],
                        "resets": outs[-1]["resets"],
                        "replay_seconds": round(t_replay, 2),
-                       "render_seconds": 0.0}
+                       "render_seconds": 0.0,
+                       "rewards_restored": restored}
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
         if not a.no_video:
             try:

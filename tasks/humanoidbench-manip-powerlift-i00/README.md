@@ -1,0 +1,83 @@
+# humanoidbench-manip-powerlift-i00
+
+| | |
+|---|---|
+| Simulator / robot | HumanoidBench (MuJoCo + dm_control) / Unitree H1 humanoid with two Shadow dexterous hands, 61 position-controlled joints |
+| Family / instance | `powerlift` (`h1hand-powerlift-v0`, paper category *manipulation*) / seed 00 |
+| Capability class | C5 · whole-body power and momentum (see `local_docs/plan/06-task-selection.md`) |
+| Task type / tier | trajectory / privileged |
+| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.5` |
+| Agent budget | 3600.0 s, 16 CPUs; GPU optional (see below) |
+
+## Difficulty
+The pass mark is a **threshold on the whole episode's return** (`>= 800` over 1000 steps), not a
+predicate on the final state.
+
+- **🚩 Kept precisely because it is the task RL cannot do.** Upstream shapes the lift with
+  `tolerance(height, bounds=(1.9, 2.1), margin=2)`, and `margin=2` makes that Gaussian nearly flat: the
+  dumbbell on the floor scores ~0.19 of the term, at 1.5 m only ~0.6. The gradient barely points upward,
+  which is why FastTD3 reaches 41% — **less than holding the starting pose would score if the robot could
+  stay upright**. A later paper excludes the task on exactly these grounds.
+  An agent that is *told the goal in words* has no such problem. This is the cleanest separation in the
+  subset between "follows a gradient" and "understands an objective", and it only works because the
+  scoring formula is no longer readable — see local_docs/plan/07-open-questions.md.
+- **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
+  a mass against gravity through a long range of motion. Holding the start pose collapses at step 382
+  under the dumbbell's weight — the only task in the subset where the give-away floor ends by being
+  crushed rather than by falling over.
+- **61 actuators**, because the dumbbell needs hands to grip.
+
+**Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
+trajectory scores **20.39 / 800** (the episode terminates at step 71 of 1000). Holding the starting
+pose instead — the floor a competent agent gets before writing a controller — scores **9.8%** of the
+bar; that is the number this task was selected on (`local_docs/plan/06-task-selection.md` §B5).
+**External evidence**: published RL results reach **41%** of the bar (paper 286, FastTD3 325, bar
+800) — training runs of millions of environment steps, not a one-hour coding session, so treat it as
+proof that the task *has* a solution rather than as a target.
+
+**The agent does not see the reward function.** It is deleted from the image and restored only
+inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
+numbers above are comparable with the paper while the agent works from the task statement and the
+physical state alone.
+
+## Reference solution
+No reference solution, on purpose. Requiring one would cap the benchmark at what we can already
+solve, which systematically removes the interesting tasks — see `local_docs/plan/01-design.md` §D.
+`solution/solve.sh` exists because the Harbor task contract requires it and exits non-zero with that
+explanation. What replaces an oracle is the floor above: the task is known to be unreachable by
+doing nothing, and known to be solvable by *something*.
+
+## GPU
+The task runs CPU-only by default and passing never depends on a GPU: MuJoCo physics has no GPU
+path, so the only thing a GPU accelerates is offscreen rendering (osmesa ~130 ms/frame, egl ~0.4
+ms). It is therefore opt-in, in two independent layers:
+
+| layer | who decides | how |
+|---|---|---|
+| does the container *see* a GPU | you, per run | `--extra-docker-compose environment/gpu.docker-compose.yaml` |
+| which GL backend the process uses | `rcb_hb.py`, automatically | `_resolve_gl_backend()` |
+
+`_resolve_gl_backend()` honours an explicit `MUJOCO_GL` and otherwise requires **both**
+`/dev/nvidiactl` (the device, from `NVIDIA_VISIBLE_DEVICES`) **and** an NVIDIA EGL vendor ICD under
+`/usr/share/glvnd/egl_vendor.d/` (the GL libraries, which the runtime mounts only when
+`NVIDIA_DRIVER_CAPABILITIES` includes `graphics`). Requiring both is what separates "has a GPU" from
+"can render on it": a CUDA-only container has the device node and would still fail with *an OpenGL
+platform library has not been loaded*. The chosen backend is reported in
+`/logs/verifier/diagnostics.json`.
+
+The overlay is deliberately not named `docker-compose.yaml`, which Harbor would auto-load — an
+unsatisfiable device reservation stops the container from starting at all on a machine without a
+GPU.
+
+## Verification
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz` in a fresh process,
+twice; pass iff every replay's episode return reaches `success_bar` **and** the final-state hashes
+agree (bit-exact determinism). `tests/grade.py` also writes `/logs/verifier/replay.mp4` and, because
+Harbor promotes every `reward.json` key to a leaderboard metric, keeps the per-task numbers
+(`episode_return`, `success_bar`) in `/logs/verifier/diagnostics.json`.
+
+## Provenance
+Generated by `scripts/humanoidbench/gen_tasks.py` from `scripts/humanoidbench/subset.toml`.
+Everything in this directory except `environment/instance.npz` is reproducible with `gen_tasks.py
+render powerlift`; the instance is reproducible with `gen_tasks.py instance powerlift` (seed 0, sha
+`9bc0690a75d6`).

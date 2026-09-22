@@ -16,6 +16,8 @@ the example and changing what you need.
    with the field names from PROTOCOL §3. Keep the verifier's inputs (scene copy, tooling) under `tests/`.
 6. `solution/solve.sh`: a human-written oracle that scores 1. Keep the reference code itself in `solution/` too;
    never bake it into `environment/` or a base image, and make sure agent-visible tooling does not reference it.
+   If the task is graded by a formula that ships with the simulator (a dense reward), that formula is an
+   answer key too: work through [docs/LEAKAGE.md](docs/LEAKAGE.md) before you assume it is gone.
 7. `README.md`: fill **Difficulty**, **Reference solution**, **Verification**.
 8. Check and run:
    ```bash

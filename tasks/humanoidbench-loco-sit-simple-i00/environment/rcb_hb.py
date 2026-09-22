@@ -7,26 +7,26 @@ Concepts
 --------
 instance    the frozen scene, saved as .npz: the MuJoCo state (qpos, qvel, time, qacc_warmstart) plus
             the task state that lives outside it -- goals drawn at reset, subtask counters, and the
-            model arrays a task writes its target into. reset(seed=) reproduces the +-0.01 qpos noise
-            but not the task-level draws (upstream takes those from the global np.random), so only the
-            snapshot pins a scene.
+            model arrays a task writes its target into. Upstream draws the latter from the global
+            np.random, which reset(seed=) does not reach, so make_instance() seeds both generators and
+            the snapshot restores both; an instance is therefore reproducible from its seed and pins
+            the scene for the agent and the verifier alike.
 trajectory  (T, nu) normalised joint-position targets in [-1, 1], one row per control step (50 Hz).
             Replayed open-loop from the same instance it reproduces bit-for-bit (CPU MuJoCo).
 success     [HB] episode_return >= task.success_bar -- a threshold on the accumulated dense reward,
-            not a predicate on the final state.
+            not a predicate on the final state. NOT computed here: the image ships no reward function
+            (see below), so scoring happens in the verifier.
 
 CLI
 ---
-  python rcb_hb.py make-instance --task sit_simple --out inst.npz [--seed 0]
-  python rcb_hb.py run-oracle    --task sit_simple --instance inst.npz --code gen.py --out traj.npz
-  python rcb_hb.py replay        --task sit_simple --instance inst.npz --traj traj.npz [--repeat 2]
-  python rcb_hb.py render        --task sit_simple --instance inst.npz --traj traj.npz --out replay.mp4
-  python rcb_hb.py selftest      --task sit_simple --code gen.py [--seed 0] [--repeat 3]
+  python rcb_hb.py run-oracle --instance inst.npz --code gen.py --out traj.npz
+  python rcb_hb.py replay     --instance inst.npz --traj traj.npz [--repeat 2]
+  python rcb_hb.py render     --instance inst.npz --traj traj.npz --out replay.mp4
 
 Python API
 ----------
   from rcb_hb import Session
-  s = Session("sit_simple", instance="/app/instance.npz")
+  s = Session(instance="/app/instance.npz")   # which task and env this is comes from the instance
   s.reset()                                  # back to the frozen state (unlimited)
   obs = s.obs()                              # state vector: qpos + qvel
   with s.recording() as rec:                 # [HB] context manager, not record_start/record_stop
@@ -36,6 +36,18 @@ Python API
               break
   s.replay(rec.actions)                      # self-check: resets, replays open-loop, returns status()
   s.save_trajectory(rec.actions, "/app/output/trajectory.npz")
+
+Scoring is not visible from here
+--------------------------------
+`s.scored` is False and `s.step()` returns `None` for the reward. HumanoidBench's reward functions are
+dense and hand-tuned, so reading one turns a control problem into an algebra problem -- the formula is
+therefore removed from the image and restored only inside the verifier, after the agent is finished.
+
+What you have instead is the full physical state: `s.obs()` is qpos + qvel (plus this task's goal, where
+the task has one), and the MuJoCo model is right there in `s.model`. Everything the reward could tell you
+-- how fast the centre of mass is moving, how upright the torso is, how far the hand is from the target
+-- is computable from that, and `instruction.md` says which of those things the task is judged on. Define
+the measure you think the task calls for, and optimise against it.
 """
 from __future__ import annotations
 
@@ -53,14 +65,13 @@ import numpy as np
 
 
 # --- the part of a task's state that does NOT live in (qpos, qvel) -----------------------------------
-# Upstream keeps some of it on the Task object and some in `model`: goals drawn at reset (push, reach),
-# a destination and a target orientation written into the model (package, cube), a placement permutation
-# (bookshelf_hard), and counters that reset_model simply forgets to clear (spoon's step_counter, truck's
-# package lists). None of it is reachable from a qpos/qvel snapshot, and the goals are drawn from the
-# LEGACY GLOBAL np.random, which gym's reset(seed=) does not touch. Without freezing it, the agent and
-# the verifier solve different problems, and a second rollout in one process is scored by a different
-# reward function than the first. Snapshotting vars(task) covers all 32 tasks with no per-task code --
-# for the tasks that were already correct it is simply a no-op.
+# Upstream keeps some of it on the Task object and some in `model`: a goal drawn at reset, a destination
+# or target orientation written into the model, a placement permutation, and counters that reset_model
+# forgets to clear. None of it is reachable from a qpos/qvel snapshot, and the random draws come from the
+# LEGACY GLOBAL np.random, which gym's reset(seed=) does not touch. Without freezing it, this session and
+# the verifier would solve different problems, and a second rollout in one process would be scored by a
+# different reward function than the first. Snapshotting vars(task) covers that with no special-casing;
+# where the environment was already well behaved it is simply a no-op.
 _TASK_STATE_SKIP = ("_env", "robot", "unwrapped")   # back-references to the env, not state
 
 
@@ -119,16 +130,6 @@ GL_BACKEND = _resolve_gl_backend()
 os.environ["MUJOCO_GL"] = GL_BACKEND
 os.environ["PYOPENGL_PLATFORM"] = GL_BACKEND
 
-# --------------------------------------------------------------------------- task registry
-# family name -> HumanoidBench env id. Adding a family is one line.
-TASKS: dict[str, str] = {
-    "stand": "h1-stand-v0",
-    "walk": "h1-walk-v0",
-    "run": "h1-run-v0",
-    "sit_simple": "h1-sit_simple-v0",
-    "crawl": "h1-crawl-v0",
-    "pole": "h1-pole-v0",
-}
 
 
 class _Recording:
@@ -158,11 +159,28 @@ class _Recording:
 class Session:
     """One HumanoidBench environment pinned to one frozen scene instance."""
 
-    def __init__(self, task: str, instance: str | Path | None = None, enable_render: bool = False):
-        if task not in TASKS:
-            raise KeyError(f"unknown task {task!r}; known: {sorted(TASKS)}")
-        self.task = task
-        self.env_id = TASKS[task]
+    def __init__(self, task: str | None = None, instance: str | Path | None = None,
+                 enable_render: bool = False, env_id: str | None = None):
+        """Open the environment this instance belongs to.
+
+        The instance file records which HumanoidBench task and env id it was drawn from, so normally
+        neither has to be passed: `Session(instance="/app/instance.npz")` is enough. Passing `task` as
+        well turns it into an assertion -- that is what the verifier does, so a trajectory produced for
+        one task cannot be graded against another's scene.
+
+        `env_id` is only for creating an instance from scratch, when there is no file to read it from.
+        """
+        if instance is not None:
+            d = np.load(instance, allow_pickle=False)
+            file_task, file_env = str(d["task"]), str(d["env_id"])
+            if task is not None and task != file_task:
+                raise ValueError(f"instance is for task {file_task!r}, session asked for {task!r}")
+            if env_id is not None and env_id != file_env:
+                raise ValueError(f"instance is for env {file_env!r}, session asked for {env_id!r}")
+            task, env_id = file_task, file_env
+        if task is None or env_id is None:
+            raise ValueError("pass instance=..., or both task= and env_id= to build a fresh scene")
+        self.task, self.env_id = task, env_id
 
         import gymnasium as gym
         import humanoid_bench  # noqa: F401  (registers every robot x task env id)
@@ -177,6 +195,12 @@ class Session:
         self.nu = int(self.model.nu)
         self.max_steps = int(self.env.spec.max_episode_steps)
         self.success_bar = float(self.low.task.success_bar)
+        # [HB] Whether this process can score at all. The image deletes every Task subclass's get_reward
+        # (images/humanoidbench/scrub_oracles.py), which leaves upstream's base returning (0, {}); the
+        # verifier patches the real one back before opening its Session. Detecting it beats a flag file:
+        # there is exactly one truth, and it is the object that would do the scoring.
+        from humanoid_bench.tasks import Task as _Task
+        self.scored = type(self.low.task).get_reward is not _Task.get_reward
 
         self.instance_state: np.ndarray | None = None
         self.instance_extra: dict[str, Any] | None = None   # task state + the model arrays tasks write
@@ -260,7 +284,22 @@ class Session:
         self._last_info = {}
 
     def make_instance(self, seed: int | None = None) -> np.ndarray:
-        self.env.reset(seed=seed)          # HumanoidBench perturbs qpos by +-0.01 here
+        """Draw a scene and freeze it. Reproducible: the same seed gives the same instance anywhere.
+
+        Two RNGs have to be pinned, not one. `reset(seed=)` seeds gymnasium's per-instance generator,
+        which is what perturbs every qpos by +-0.01. Task-level draws -- a goal position, a destination,
+        a target orientation, a placement order -- come from the LEGACY GLOBAL np.random instead, which
+        `reset(seed=)` does not touch; without seeding it
+        here, make_instance() returns a different scene in every process and an instance file could only
+        ever be copied, never regenerated. The global state is saved and restored so that seeding it is
+        invisible to whatever else the caller is doing with numpy's random module.
+        """
+        rng_state = np.random.get_state()
+        try:
+            np.random.seed(0 if seed is None else seed)
+            self.env.reset(seed=seed)
+        finally:
+            np.random.set_state(rng_state)
         self.instance_state = self._snapshot()
         self.instance_extra = self._snapshot_extra()   # raises if a task keeps unserialisable state
         self._restore_bookkeeping()
@@ -320,18 +359,22 @@ class Session:
     def obs(self) -> np.ndarray:
         return self.low.task.get_obs()
 
-    def step(self, action) -> tuple[np.ndarray, float, bool]:
+    def step(self, action) -> tuple[np.ndarray, float | None, bool]:
         """One control step at 50 Hz. `action` is (nu,) and is clipped to [-1, 1].
-        Returns (obs, reward, done)."""
+
+        Returns (obs, reward, done). **`reward` is None unless this process can score** -- see the module
+        docstring; inside the agent's container it always is. `obs` and `done` are always real.
+        """
         a = np.clip(np.asarray(action, dtype=np.float32).reshape(self.nu), -1.0, 1.0)
         if self._recording is not None:
             self._recording.append(a)
         obs, r, term, trunc, info = self.env.step(a)
-        self._ret += float(r)
+        if self.scored:
+            self._ret += float(r)
         self._steps += 1
         self._sim_steps_total += 1
         self._last_info = info
-        return obs, float(r), bool(term or trunc)
+        return obs, (float(r) if self.scored else None), bool(term or trunc)
 
     @contextlib.contextmanager
     def recording(self):
@@ -352,18 +395,29 @@ class Session:
 
     # ---- status / replay ---------------------------------------------------
     def status(self) -> dict[str, Any]:
-        """[HB] success is a threshold on the episode return, not an end-state predicate."""
-        flag = self._last_info.get("success")
-        return {
-            "success": bool(self._ret >= self.success_bar),
-            "episode_return": float(self._ret),
-            "success_bar": self.success_bar,
+        """What this process can honestly say about the episode just run.
+
+        [HB] `scored` is False in the agent's container, and then the scoring fields are absent rather
+        than zero -- a missing key is a question you cannot answer, a zero is a wrong answer. What stays
+        is what is observable either way: how many steps ran, and the hash of the state they ended in
+        (which is what makes an open-loop replay checkable without a reward).
+        """
+        out = {
+            "scored": self.scored,
             "sim_steps": int(self._steps),
-            "final_reward": float(self._last_info.get("per_timestep_reward", 0.0)),
-            "task_success_flag": (None if flag is None else bool(flag)),
             "state_sha": self.state_sha(),
             "sim_steps_total": int(self._sim_steps_total),
             "resets": int(self._resets),
+        }
+        if not self.scored:
+            return out
+        flag = self._last_info.get("success")
+        return out | {
+            "success": bool(self._ret >= self.success_bar),
+            "episode_return": float(self._ret),
+            "success_bar": self.success_bar,
+            "final_reward": float(self._last_info.get("per_timestep_reward", 0.0)),
+            "task_success_flag": (None if flag is None else bool(flag)),
         }
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
@@ -450,7 +504,7 @@ def _record(s: Session, code_path: str) -> tuple[np.ndarray | None, dict]:
 
 
 def cmd_make_instance(a) -> int:
-    s = Session(a.task)
+    s = Session(a.task, env_id=a.env_id)
     s.make_instance(a.seed)
     s.save_instance(a.out, a.seed)
     print(json.dumps({"instance": a.out, "sha": s.state_sha(), "env_id": s.env_id, "nu": s.nu,
@@ -459,25 +513,32 @@ def cmd_make_instance(a) -> int:
 
 
 def cmd_run_oracle(a) -> int:
-    s = Session(a.task, instance=a.instance)
+    s = Session(a.task, instance=a.instance)  # task is optional; when given it asserts
     acts, r = _record(s, a.code)
     if acts is None:
         print(json.dumps({"error": r["error"]}), file=sys.stderr)
         return 1
     s.save_trajectory(acts, a.out, meta={"source": Path(a.code).name})
+    # status() drops the scoring fields where there is no reward function, so this prints fewer keys
+    # inside the task image than it does verifier-side. The trajectory is written either way.
     print(json.dumps({"out": a.out, "n_actions": len(acts), **s.replay(acts)}))
     return 0
 
 
 def cmd_replay(a) -> int:
+    """Replay a trajectory `--repeat` times and report what this process can see.
+
+    Determinism is the part that is always available, and it is the part worth checking before
+    submitting: identical state_sha across repeats means the grader's replay will land where yours did.
+    The scoring fields appear only when this process can score (see Session.status).
+    """
     s = Session(a.task, instance=a.instance)
     outs = [s.replay(_load_traj(a.traj)) for _ in range(a.repeat)]
-    print(json.dumps({
-        "all_success": all(o["success"] for o in outs),
-        "deterministic": len({o["state_sha"] for o in outs}) == 1,
-        "returns": [o["episode_return"] for o in outs],
-        **outs[0],
-    }))
+    out = {"deterministic": len({o["state_sha"] for o in outs}) == 1, **outs[0]}
+    if s.scored:
+        out |= {"all_success": all(o["success"] for o in outs),
+                "returns": [o["episode_return"] for o in outs]}
+    print(json.dumps(out))
     return 0
 
 
@@ -488,8 +549,16 @@ def cmd_render(a) -> int:
 
 
 def cmd_selftest(a) -> int:
-    """make-instance -> run the script -> replay N times; asserts success and bit-exact determinism."""
-    s = Session(a.task)
+    """make-instance -> run the script -> replay N times; asserts success and bit-exact determinism.
+
+    A development command: asserting success needs a reward function, which the task image does not have
+    (see the module docstring). Run it where the verifier's restore has happened, or outside the image.
+    """
+    s = Session(a.task, env_id=a.env_id)
+    if not s.scored:
+        print(json.dumps({"PASS": False, "error": "this process cannot score; selftest needs a reward "
+                                                  "function (see rcb_rewards.py)"}))
+        return 1
     s.make_instance(a.seed)
     acts, r = _record(s, a.code)
     if acts is None:
@@ -507,25 +576,28 @@ def main() -> int:
     p = argparse.ArgumentParser(prog="rcb_hb.py")
     sub = p.add_subparsers(dest="cmd", required=True)
 
+    # --task is optional wherever an --instance is given: the instance names its own task, and passing
+    # it anyway turns it into an assertion (which is what the verifier wants).
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True)
-    q.add_argument("--out", required=True); q.add_argument("--seed", type=int, default=0)
-    q.set_defaults(fn=cmd_make_instance)
+    q.add_argument("--env-id", required=True); q.add_argument("--out", required=True)
+    q.add_argument("--seed", type=int, default=0); q.set_defaults(fn=cmd_make_instance)
 
-    q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True)
+    q = sub.add_parser("run-oracle"); q.add_argument("--task")
     q.add_argument("--instance", required=True); q.add_argument("--code", required=True)
     q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
 
-    q = sub.add_parser("replay"); q.add_argument("--task", required=True)
+    q = sub.add_parser("replay"); q.add_argument("--task")
     q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_replay)
 
-    q = sub.add_parser("render"); q.add_argument("--task", required=True)
+    q = sub.add_parser("render"); q.add_argument("--task")
     q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=5)
     q.add_argument("--fps", type=int, default=20); q.set_defaults(fn=cmd_render)
 
     q = sub.add_parser("selftest"); q.add_argument("--task", required=True)
-    q.add_argument("--code", required=True); q.add_argument("--seed", type=int, default=0)
+    q.add_argument("--env-id", required=True); q.add_argument("--code", required=True)
+    q.add_argument("--seed", type=int, default=0)
     q.add_argument("--repeat", type=int, default=3); q.set_defaults(fn=cmd_selftest)
 
     a = p.parse_args()

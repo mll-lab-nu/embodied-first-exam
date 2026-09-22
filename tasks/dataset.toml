@@ -13,9 +13,101 @@ name = "MLL Lab"
 
 [[tasks]]
 name = "robot-coding-bench/robosuite-cube-stack-i00"
-digest = "sha256:94abb8ea6211582e94464d7930368522ff554c4cc4925315144b32596537c275"
+digest = "sha256:7265a29dceb6c47543f34f05daefba9cea52831cb1b6cdd868648cdfb1b9357e"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00"
-digest = "sha256:f6dd964443765db0b6d90198207f031c5d4abad2802b33d8a33025904aeb0369"
+digest = "sha256:608d8d1b797c846f5f3ccdb3780f02331485f4805a426aa2e243c5fe70b07f63"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00"
+digest = "sha256:d68ddc601565646f4bdb2d11f148b3b475b49dfb57eb2bfefd43aae632889053"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-balance-simple-i00"
+digest = "sha256:e92190babff267f6606d0ef7852468c892c3e31c4f21639525746dfd1e322dc2"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-hurdle-i00"
+digest = "sha256:026dc201b15b9c8adb0a2784d69882c34f73bc1d33d59c4b4bd21c0f36d35afc"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-maze-i00"
+digest = "sha256:9a321e76c510ec99d92462bd497a017beb4cdf356b6666be606444164e26c93e"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-reach-i00"
+digest = "sha256:82c5e0c3d502399aabcde97bad41a9189395077af6839af3f88e2503ab7bcb99"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-stair-i00"
+digest = "sha256:1afc82a43799c9782d77bb4d3fced72c16c19fe41e9422f0bfcf37d7ac032681"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-walk-i00"
+digest = "sha256:f2689f070feb0b4d4e7e532fbe549cf4cef91a83de98a552033ca0839dff1a01"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-cabinet-i00"
+digest = "sha256:ef1438445793df9c18c5d88d2fbfaaa6741f540cb7ae2abe0336b9900f1e97ab"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-door-i00"
+digest = "sha256:ccf6b67d8110d991257adce8b83d6874f97686cddc9e28c2a675f01c237d40e4"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-highbar-simple-i00"
+digest = "sha256:cdfde9eb35c189771fb59c91dedc0b633722707f6f101f4e6a923a3a33177a6c"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-insert-normal-i00"
+digest = "sha256:81fe0328c18b406ad01d5548cb8b7713204d96aad2398ac0b8a60e1bdb011e78"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-push-i00"
+digest = "sha256:7cb7dcbf321d74bef9cc930554a2aaa1f2623a101ebef8b80571937ad33e7f36"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-window-i00"
+digest = "sha256:72187c4d113102d2916beb472e63969f5aec17b47091d4803ac25c89eb1d9675"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-sit-hard-i00"
+digest = "sha256:cc6a21c4a9ed3a4f4b45d3e9325e248c1c4654e064db82974f830866fa0f6a46"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-basketball-i00"
+digest = "sha256:720a2569bf88d16be9665a9188a56586a316155dab820feb5a4b9866659185f6"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-bookshelf-simple-i00"
+digest = "sha256:409963320129ab154fa6d3515a2ba2c069614be3a0987fd352a662a7e2ab417f"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-cube-i00"
+digest = "sha256:d99d741549e7091a681b2a5e989cb340cb4ab3b4c06a96d51de5cf02e4f5845d"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-kitchen-i00"
+digest = "sha256:7c2128bffadea0a3f3e5a7fe76f33e9a1ff81f51ee57e93edfe55f034ed55cc5"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-package-i00"
+digest = "sha256:01e3d033e52214669223d9aeb0b602df489516bd6f028a7607c3e19a9c8edd9d"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-powerlift-i00"
+digest = "sha256:c6989e92b82b68ec9c6d81cf34e267c654437d6876d4e8abb3246e41235fc49a"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-room-i00"
+digest = "sha256:9f6bf92c6131f2b59861fe472691c7e6dac05bec58cae1567de2e2f5f3ddcc90"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-spoon-i00"
+digest = "sha256:6db0d7ce179f292469493cbf5371d73a29ba26ae5c76290ea129d15e8d630f93"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-truck-i00"
+digest = "sha256:d08525ac7e9d836571487792d1f7a8e8543a62a05aa8dbef13f90a8a41ba34c7"
 

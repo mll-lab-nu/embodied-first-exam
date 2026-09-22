@@ -22,6 +22,10 @@ collects it). The format is defined by the task's `instruction.md` and checked b
 | `trajectory` | a replayable action sequence for **this** frozen scene instance | open-loop replay in a fresh process |
 | `policy` | code that solves held-out instances of the family | success rate over N instances |
 
+**`instruction.md` must tell the agent to save the deliverable as soon as it has any version, to overwrite
+it as it improves, and must state the wall-clock budget.** The timeout arrives without warning, so an agent
+that saves only at the end scores 0 and measures nothing.
+
 ## 3. Verifier output
 `tests/test.sh` writes `/logs/verifier/reward.txt` (`1` or `0`) and `/logs/verifier/reward.json` with
 **numeric fields only** (Harbor rejects strings). Field names, so results are comparable across tasks:
@@ -48,6 +52,17 @@ collects it). The format is defined by the task's `instruction.md` and checked b
   Nothing the agent can reach — the task image, base images, tooling, docs inside the container — may contain
   a solution or point to one. Lesson from the first agent run: it found cap-x's built-in `oracle_code` through
   the tooling's `run-oracle` command and replayed it; base images now scrub those strings.
+- **A grader that ships with the simulator is an answer key too** (a dense reward, a success predicate):
+  with it the task is to invert an expression rather than to control a robot. Delete it from the base
+  image, ship it only under `tests/`, and patch it back inside the verifier, so the score still comes from
+  upstream's own code. `instruction.md` must then describe the scoring in prose — what is measured, how the
+  terms combine, order-of-magnitude targets, what ends the episode — with no tolerance parameters or exact
+  weights.
+- **Deleting an answer key only counts if the agent cannot fetch another copy**: the network, an earlier
+  Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. Tasks set `[agent] network_mode =
+  "allowlist"` with `allowed_hosts = []` (the model endpoint is opted in per run with
+  `--allow-agent-host <host>`) and `[verifier] network_mode = "no-network"`.
+  Method and checklist: [docs/LEAKAGE.md](LEAKAGE.md).
 
 ## 5. Budget reporting
 Report success **and** cost. Harbor records tokens, $, turns and wall-clock; tasks should additionally
@@ -57,3 +72,9 @@ budgets (align `--ak reasoning_effort`, `max_turns`, budget caps and `[agent].ti
 ## 6. Metadata
 See `docs/TAXONOMY.md`: `simulator`, `robot`, `family`, `task_type`, `tier` (`privileged` = state-based
 perception allowed; `perception` = RGB-D only), `expert_time_estimate_hours`, author fields.
+
+`tier` describes *observation* only, so it cannot express the two other things an agent may or may not
+see: the simulator's white-box model, and the scoring function. Until there are fields for them
+(`model_visibility` / `reward_visibility`, proposed in `local_docs/plan/04-framework-suggestions.md`),
+a task states both in its `README.md`. The HumanoidBench tasks are `model_visibility = white_box`,
+`reward_visibility = black_box`.
