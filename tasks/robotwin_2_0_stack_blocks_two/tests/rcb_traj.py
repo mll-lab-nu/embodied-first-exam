@@ -20,7 +20,7 @@ CLI
   python rcb_traj.py run-oracle    --task stack_blocks_two --instance inst.json --code solution/oracle.py --out traj.npz
   python rcb_traj.py replay        --task stack_blocks_two --instance inst.json --traj traj.npz [--repeat 2]
   python rcb_traj.py selftest      --task stack_blocks_two --seed 0 --code oracle.py   # make-instance + oracle + replay
-  python rcb_traj.py render        --task stack_blocks_two --instance inst.json --traj traj.npz --out replay.mp4
+  python rcb_traj.py render        --task stack_blocks_two --instance inst.json --traj traj.npz --out replay.mp4 [--cameras head_camera,front_camera]
 
 Python (what the agent gets)
 ----------------------------
@@ -46,14 +46,31 @@ from typing import Any, Callable
 import numpy as np
 
 ROBOTWIN_ROOT = os.environ.get("ROBOTWIN_ROOT", "/opt/RoboTwin")
+# Interaction log: every Session (any process) appends one line per session start/reset/record/replay/exit, with the
+# physics steps consumed, to RCB_SESSION_LOG (default /app/output/rcb_session_log.jsonl, collected with the artifacts).
+# It records the agent's whole debugging history, not just the trajectory it hands in (the verifier reports it as
+# cost: agent_sessions / agent_resets / agent_sim_steps). Set RCB_SESSION_LOG="" to disable (the verifier does).
+SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
+
+
+def _slog(ev: str, **kw) -> None:
+    if not SESSION_LOG:
+        return
+    try:
+        os.makedirs(os.path.dirname(SESSION_LOG), exist_ok=True)
+        with open(SESSION_LOG, "a") as f:
+            f.write(json.dumps({"ts": time.time(), "pid": os.getpid(), "ev": ev, **kw}) + "\n")
+    except OSError:
+        pass
 
 # --------------------------------------------------------------------------- task family registry
+# Any RoboTwin task name (envs/<name>.py) is accepted; entries here only add the human-readable goal text.
 TASKS: dict[str, dict] = {
     "stack_blocks_two": dict(
         text="Stack the green block on top of the red block (either arm may be used), then open both grippers.",
-        embodiment="aloha-agilex",
     ),
 }
+DEFAULT_EMBODIMENT = "aloha-agilex"
 
 # RoboTwin task config (env_cfg/task_config/demo_clean.yml without data collection / domain randomisation).
 BASE_ARGS: dict[str, Any] = {
@@ -123,11 +140,11 @@ class _SceneProxy:
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, seed: int = 0,
                  embodiment: str | None = None, enable_render: bool = False, render_shader: str = "default"):
-        if task not in TASKS:
-            raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
+        if not os.path.isfile(os.path.join(ROBOTWIN_ROOT, "envs", f"{task}.py")):
+            raise KeyError(f"unknown RoboTwin task {task!r} (no envs/{task}.py)")
         self.task = task
-        self.spec = TASKS[task]
-        self.embodiment = embodiment or self.spec["embodiment"]
+        self.spec = TASKS.get(task, {"text": f"RoboTwin 2.0 task {task}"})
+        self.embodiment = embodiment or DEFAULT_EMBODIMENT
         self.seed = int(seed)
         self.expected_sha: str | None = None
         self.enable_render = enable_render
@@ -141,6 +158,10 @@ class Session:
         self._sim_steps = 0
         self._resets = 0
         self._joints = None
+        self._total_steps = 0
+        _slog("session_start", task=task, seed=self.seed, render=enable_render)
+        import atexit
+        atexit.register(lambda: _slog("session_end", task=task, resets=self._resets, sim_steps=self._total_steps + self._sim_steps))
         if instance is not None:
             self.load_instance(instance)
         else:
@@ -176,6 +197,8 @@ class Session:
         self._joints = list(r.left_arm_joints) + [g[0] for g in r.left_gripper] + \
             list(r.right_arm_joints) + [g[0] for g in r.right_gripper]
         self._entities = [r.left_entity] + ([r.right_entity] if r.right_entity is not r.left_entity else [])
+        self._total_steps += self._sim_steps
+        _slog("reset", task=self.task, n=self._resets + 1, sim_steps_before=self._sim_steps)
         self._sim_steps = 0
         self._resets += 1
         sha = self.state_sha()
@@ -248,6 +271,7 @@ class Session:
     def record_stop(self) -> np.ndarray:
         acts = np.array(self._recording or [], dtype=np.float64).reshape(-1, self.action_dim)
         self._recording = None
+        _slog("record", task=self.task, n_actions=int(len(acts)), success=bool(self.env.check_success()))
         return acts
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
@@ -266,20 +290,43 @@ class Session:
             raise ValueError(f"actions must be (T, {self.action_dim}), got {acts.shape}")
         for row in acts:
             self.step(row)
-        return self.status()
+        st = self.status(); _slog("replay", task=self.task, n_actions=int(len(acts)), success=st["success"]); return st
 
-    def render_frame(self, camera: str = "head_camera") -> np.ndarray:
-        self.env._update_render(); self.env.cameras.update_picture()
-        return np.asarray(self.env.cameras.get_rgb()[camera]["rgb"])
+    # Cameras: RoboTwin's head_camera / front_camera / left_camera / right_camera (wrist) plus the free third-person
+    # observer_camera (front, wide) and world_camera1 (diagonal from above) that RoboTwin adds to every scene.
+    VIDEO_CAMERAS: tuple[str, ...] = ("world_camera1", "observer_camera", "head_camera", "front_camera", "left_camera", "right_camera")
+
+    def render_frame(self, camera: str = "head_camera", size: tuple[int, int] | None = None) -> np.ndarray:
+        """RGB (H, W, 3) uint8 from one camera; `size=(w, h)` resizes. See VIDEO_CAMERAS for the names."""
+        cams = self.env.cameras
+        self.env._update_render()
+        if hasattr(cams, camera):  # free cameras: observer_camera, world_camera1, ...
+            cam = getattr(cams, camera); cam.take_picture()
+            img = (np.asarray(cam.get_picture("Color"))[..., :3] * 255).clip(0, 255).astype(np.uint8)
+        else:
+            cams.update_picture(); img = np.asarray(cams.get_rgb()[camera]["rgb"])[..., :3]
+        if size is not None and (img.shape[1], img.shape[0]) != tuple(size):
+            from PIL import Image
+            img = np.asarray(Image.fromarray(np.ascontiguousarray(img)).resize(size, Image.BILINEAR))
+        return img
+
+    def render_grid(self, cameras: tuple[str, ...] = VIDEO_CAMERAS, cols: int = 3, size: tuple[int, int] = (320, 240)) -> np.ndarray:
+        """One image tiling `cameras` (row-major, `cols` per row; each resized to `size`)."""
+        tiles = [self.render_frame(c, size=size) for c in cameras]
+        while len(tiles) % cols:
+            tiles.append(np.zeros_like(tiles[0]))
+        rows = [np.concatenate(tiles[i:i + cols], axis=1) for i in range(0, len(tiles), cols)]
+        return np.concatenate(rows, axis=0)
 
     def render_video(self, actions: np.ndarray, path: str | Path, *, every: int = 10, fps: int = 25,
-                     cameras: tuple[str, ...] = ("head_camera",)) -> dict[str, Any]:
-        """Replay `actions` from the frozen instance and write a human-viewable MP4 (needs enable_render=True)."""
+                     cameras: tuple[str, ...] = VIDEO_CAMERAS, cols: int = 3, size: tuple[int, int] = (320, 240)) -> dict[str, Any]:
+        """Replay `actions` from the frozen instance and write a human-viewable MP4 (needs enable_render=True):
+        a grid of `cameras` (default: world, observer, head / front, left wrist, right wrist), one frame every `every` steps."""
         import imageio.v2 as imageio
         if not self.enable_render:
             raise RuntimeError("render_video needs Session(..., enable_render=True)")
         self.reset()
-        grab = lambda: np.concatenate([self.render_frame(c) for c in cameras], axis=1)
+        grab = lambda: self.render_grid(cameras, cols=cols, size=size)
         frames = [grab()]
         for i, row in enumerate(np.asarray(actions, dtype=np.float64)):
             self.step(row)
@@ -314,12 +361,20 @@ def cmd_make_instance(a):
 
 
 def cmd_run_oracle(a):
+    """Run the reference code and record it. CuRobo planning is not deterministic run-to-run, so the expert can
+    fail a plan on some attempts; like an agent, the oracle may reset and retry (up to --retries) and keeps the
+    first attempt that completes the task. Replay of the recorded attempt is deterministic regardless."""
     s = Session(a.task, instance=a.instance)
-    s.record_start(); t0 = time.time()
-    r = s.exec_code(open(a.code).read())
-    acts = s.record_stop(); st = s.status()
-    s.save_trajectory(acts, a.out, meta={"source": "oracle", "exec": r, "wall_s": time.time() - t0})
-    print(json.dumps({"traj": a.out, "n_actions": int(len(acts)), "exec": r, **st}))
+    code = open(a.code).read(); t0 = time.time(); attempts = []
+    for i in range(max(1, a.retries)):
+        if i:
+            s.reset()
+        s.record_start(); r = s.exec_code(code); acts = s.record_stop(); st = s.status()
+        attempts.append({"exec": r, "success": st["success"], "n_actions": int(len(acts))})
+        if st["success"]:
+            break
+    s.save_trajectory(acts, a.out, meta={"source": "oracle", "attempts": attempts, "wall_s": time.time() - t0})
+    print(json.dumps({"traj": a.out, "n_actions": int(len(acts)), "attempts": len(attempts), "exec": r, **st}))
 
 
 def cmd_replay(a):
@@ -332,8 +387,8 @@ def cmd_replay(a):
 
 def cmd_render(a):
     s = Session(a.task, instance=a.instance, enable_render=True)
-    print(json.dumps(s.render_video(_load_traj(a.traj), a.out, every=a.every, fps=a.fps,
-                                    cameras=tuple(a.cameras.split(",")))))
+    cams = tuple(a.cameras.split(",")) if a.cameras else Session.VIDEO_CAMERAS
+    print(json.dumps(s.render_video(_load_traj(a.traj), a.out, every=a.every, fps=a.fps, cameras=cams, cols=a.cols)))
 
 
 def cmd_selftest(a):
@@ -355,9 +410,9 @@ def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--out", required=True); q.add_argument("--seed", type=int, default=0); q.set_defaults(fn=cmd_make_instance)
-    q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
+    q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.add_argument("--retries", type=int, default=5); q.set_defaults(fn=cmd_run_oracle)
     q = sub.add_parser("replay"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--repeat", type=int, default=2); q.set_defaults(fn=cmd_replay)
-    q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=10); q.add_argument("--fps", type=int, default=25); q.add_argument("--cameras", default="head_camera"); q.set_defaults(fn=cmd_render)
+    q = sub.add_parser("render"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True); q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=10); q.add_argument("--fps", type=int, default=25); q.add_argument("--cameras", default="", help="comma list; default = all six views"); q.add_argument("--cols", type=int, default=3); q.set_defaults(fn=cmd_render)
     q = sub.add_parser("selftest"); q.add_argument("--task", default="stack_blocks_two"); q.add_argument("--code", required=True); q.add_argument("--seed", type=int, default=0); q.add_argument("--repeat", type=int, default=2); q.add_argument("--out"); q.set_defaults(fn=cmd_selftest)
     a = p.parse_args(); a.fn(a)
 
