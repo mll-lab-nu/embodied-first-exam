@@ -1,7 +1,8 @@
 # maze — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** walk the
-robot through the maze, turning at each corner, without hitting the walls.
+robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner,
+without hitting the walls.
 
 This is a *fixed scene instance*: the maze layout and the robot's initial pose never change between
 resets. You may reset and retry as many times as you want. Your deliverable is **one replayable
@@ -12,8 +13,10 @@ HumanoidBench scores a *whole episode*, not a final state: you pass iff the summ
 over the episode reaches `s.success_bar` (**1200** here, out of 1000 steps). Most of the bar is not
 accumulated, it is jumped to: reaching a checkpoint pays a one-off bonus, and the bonuses grow with
 how many you have already reached, so the later corners are worth far more than the first. Between
-checkpoints you earn only a small proximity term. Touching a wall multiplies the whole step down to
-a fraction. Walking correctly but never reaching a checkpoint leaves the episode far below the bar.
+checkpoints each step pays a small amount for posture, for moving in the current corridor's
+direction and for nearing the next checkpoint; touching a wall multiplies that per-step amount down
+to a fraction (the bonuses are not reduced). Walking correctly but never reaching a checkpoint
+leaves the episode below the bar.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

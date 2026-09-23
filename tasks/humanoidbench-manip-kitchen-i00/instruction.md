@@ -1,8 +1,9 @@
 # kitchen — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** complete the four kitchen tasks, in order. The goal configuration of each
-appliance is part of the observation.
+via Python. **Task:** complete the four kitchen tasks, in order: microwave, kettle, bottom burner,
+light switch. Their goal configurations are not part of the observation; they are defined in the
+task's source (`OBS_ELEMENT_GOALS` in `humanoid_bench/envs/kitchen.py`), which is in the image.
 
 This is a *fixed scene instance*: the kitchen, the appliances and the robot's initial pose never
 change between resets. You may reset and retry as many times as you want. Your deliverable is **one

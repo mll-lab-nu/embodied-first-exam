@@ -13,7 +13,8 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 700` over 1000 steps), not a
 predicate on the final state.
 
-- **A multiplicative gate, not a penalty.** Contact with a barrier discounts the whole step by ×0.1.
+- **A multiplicative gate, not a penalty.** Contact with the side or back walls discounts the whole step
+  by ×0.1 (the hurdles themselves are not gated).
   Approaches that trade a little contact for a lot of speed do not work here; the gate has to be
   respected exactly.
 - **Running, not walking.** The speed term is scaled to 5 m/s, so a comfortable walking gait leaves most

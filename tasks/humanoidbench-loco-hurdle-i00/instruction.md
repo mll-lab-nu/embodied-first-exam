@@ -1,7 +1,8 @@
 # hurdle — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** run the
-robot forward and clear the hurdles in its path without hitting them.
+robot forward down the walled track and over the hurdles, without touching the side or back walls
+and without falling.
 
 This is a *fixed scene instance*: the hurdles and the robot's initial pose never change between
 resets. You may reset and retry as many times as you want. Your deliverable is **one replayable
@@ -13,7 +14,9 @@ over the episode reaches `s.success_bar` (**700** here, out of 1000 steps). Forw
 upright and low actuator force, multiplied together — but the speed target is a sprint rather than a
 walk, several times higher than on flat ground. On top of that, touching any barrier's collision
 geometry multiplies that entire step down to a small fraction of its value: contact is a gate to be
-respected, not a penalty to be traded off.
+respected, not a penalty to be traded off. Only the walls that line the track on both sides and
+behind the start count as barriers here; the hurdles themselves carry no such penalty, but they are
+solid and have to be cleared.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

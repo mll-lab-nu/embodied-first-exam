@@ -16,9 +16,8 @@ predicate on the final state.
 - **Discrete, step-function reward.** Checkpoint bonuses (n×100 for the n-th) dominate the 1200 bar, so
   the return is nearly binary per corner: you either reach a checkpoint or you get none of its value.
   There is no gradient leading to the first corner beyond a proximity term worth a fraction of a step.
-- **Four turns, so the gait has to be steerable.** `door` has one discrete act; this has four, and each
-  needs the walking controller to change heading and then re-stabilise — a stronger requirement than
-  walking in a straight line.
+- **Two turns, so the gait has to be steerable.** Each needs the walking controller to change heading
+  and then re-stabilise — a stronger requirement than walking in a straight line.
 - **Wall contact is a ×0.1 gate**, so cutting corners is not a viable shortcut.
 - **Planning cannot see far enough.** A receding-horizon planner optimising the per-step return has no
   signal pointing at a checkpoint bonus dozens of steps away, which is why this survives the approach

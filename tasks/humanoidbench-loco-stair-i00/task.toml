@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/humanoidbench-loco-stair-i00"
-description = "HumanoidBench stair: produce one replayable trajectory that walks the Unitree H1 up a staircase, frozen scene instance 00."
+description = "HumanoidBench stair: produce one replayable trajectory that walks the Unitree H1 over a row of staircases, frozen scene instance 00."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "stair"]
 

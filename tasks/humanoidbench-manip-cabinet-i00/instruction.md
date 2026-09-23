@@ -1,10 +1,11 @@
 # cabinet — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** open the cabinet's compartments in order: the hinged door, then the drawer,
-then the double doors (placing the cube inside), then the flip-up lid.
+via Python. **Task:** open the cabinet's compartments in order: slide open the sliding door, then
+pull out the drawer, then open one of the double doors and lift the cube from the drawer into that
+compartment, then open the flip-up door and lift the cube from behind the double doors up into it.
 
-This is a *fixed scene instance*: the cabinet, the cube and the robot's initial pose never change
+This is a *fixed scene instance*: the cabinet, the cubes and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one
 replayable trajectory**, not a general policy.
 
@@ -49,7 +50,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("cabinet", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (213,) = qpos(109) + qvel(104), robot + cabinet + cube state
+obs = s.obs()                      # (213,) = qpos(109) + qvel(104), robot + cabinet + four cubes state
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted

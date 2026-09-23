@@ -24,9 +24,9 @@ predicate on the final state.
   so a planner optimising the next few dozen steps sees nothing but wasted effort. This is the clearest
   structural reason the task survives the CEM-MPC approach that solved `walk`.
 - **This is the subset's ceiling, and it is kept on purpose.** A benchmark whose every task is solved
-  saturates the moment models improve. Note the evidence here is the thinnest of the subset: the 5%
-  comes from the weakest baseline in the paper, and the current state of the art never ran this task,
-  so "very hard" is a reasonable prior but not an established fact.
+  saturates the moment models improve. Note the evidence here is the thinnest of the subset: neither upstream's
+  curves (which cover only `highbar_hard`, whose best final return is 12 of 750) nor FastTD3 (h1hand only)
+  report this family, so "very hard" is a reasonable prior but not an established fact.
 - **Cleanest determinism in the subset**: 19 DoF, no objects, and upstream forces the reset noise to
   zero for this family — see the caveat below.
 
@@ -38,9 +38,10 @@ to generate; that is upstream behaviour, not a defect in the instance.
 trajectory scores **0.08 / 750**. Holding the starting pose instead — the floor a competent agent
 gets before writing a controller — scores **0.0%** of the bar; that is the number this task was
 selected on (`local_docs/plan/06-task-selection.md` §B5). **External evidence**: published RL
-results reach **5%** of the bar (paper PPO 37 of 750; FastTD3 never ran this h1-only family) —
-training runs of millions of environment steps, not a one-hour coding session, so treat it as proof
-that the task *has* a solution rather than as a target.
+results reach **an unknown fraction** of the bar (neither upstream's curves (which cover only
+highbar_hard) nor FastTD3 (h1hand only) report this family) — training runs of millions of
+environment steps, not a one-hour coding session, so treat it as proof that the task *has* a
+solution rather than as a target.
 
 **The agent does not see the reward function.** It is deleted from the image and restored only
 inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the

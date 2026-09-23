@@ -29,9 +29,9 @@ trajectory scores **-253.71 / 700**. The box starts 0.257 m from the target in t
 Holding the starting pose instead — the floor a competent agent gets before writing a controller —
 scores **-31.0%** of the bar; that is the number this task was selected on
 (`local_docs/plan/06-task-selection.md` §B5). **External evidence**: published RL results reach
-**110%** of the bar (paper 37, FastTD3 770, bar 700) — training runs of millions of environment
-steps, not a one-hour coding session, so treat it as proof that the task *has* a solution rather
-than as a target.
+**110%** of the bar (FastTD3 770, bar 700; the paper's often-quoted 37 is a PPO curve upstream's
+logs reuse across 17 tasks) — training runs of millions of environment steps, not a one-hour coding
+session, so treat it as proof that the task *has* a solution rather than as a target.
 
 **The agent does not see the reward function.** It is deleted from the image and restored only
 inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the

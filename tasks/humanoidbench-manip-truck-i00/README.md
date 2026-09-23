@@ -16,12 +16,12 @@ predicate on the final state.
 - **🔑 The only long-horizon task in the subset that runs on the 19-DoF `h1`.** Before it, C9 was
   `cabinet` alone at 61 actuators, which made the whole class expensive to attempt. This is the cheap
   entry point to state-machine tasks, and that is the single biggest reason it was added.
-- **The highest bar in the benchmark (3000)** and the widest per-step range, because the multiplier
-  structure means a good step is worth several times an ordinary one.
+- **A high bar (3000) and a wide per-step range**, because the multiplier structure means a good step
+  is worth several times an ordinary one.
 - **Progress must be *held*, not just achieved.** The progress terms are paid per step, so the return
   rewards an efficient pipeline — approach, lift, deliver, repeat — rather than one lucky delivery.
-- **18.9% give-away is the second highest in the scored subset**, because a base amount is paid for any
-  step spent upright. It stays well inside the 40% threshold, but it is the reason the bar is so high.
+- **18.9% give-away is the third highest in the scored subset** (after `spoon` and `insert_normal`),
+  because a base amount is paid for any step spent upright. It stays well inside the 40% threshold.
 - 📌 Upstream's `info["success"]` for this task is correct (0 until every package is delivered, then 1);
   an earlier note in our docs claiming it was hard-coded to 0 was wrong. We score `episode_return`
   regardless.

@@ -13,9 +13,10 @@ over the episode reaches `s.success_bar` (**12000** here, out of 1000 steps). Th
 here is much larger than in the rest of HumanoidBench, so compare against this task's own bar and
 nothing else. There are two tiers, both paid *per step* rather than once on arrival: a moderate
 amount while the hand is within about a metre of the target, and a considerably larger amount on top
-while it is within a few centimetres. Staying upright pays a little as well. Reaching the loose tier
-and holding it for the whole episode falls short of the bar — a meaningful fraction of the episode
-has to be spent inside the tight one.
+while it is within a few centimetres. Staying upright is paid every step as well, about as much as
+the loose tier, and fast joint motion costs a little. Reaching the loose tier and holding it for the
+whole episode falls short of the bar — a meaningful fraction of the episode has to be spent inside
+the tight one.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

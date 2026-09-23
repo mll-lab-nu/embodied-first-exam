@@ -15,7 +15,7 @@ standing steadily and getting both hands to the ball; after it, the dominant ter
 ball is to the hoop. Sinking it pays a bonus worth hundreds of steps and ends the episode
 immediately. Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus
 is not optional — no amount of good positioning reaches the bar without it. The episode also ends if
-the robot falls or drops below a height.
+the ball drops low or the robot falls.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

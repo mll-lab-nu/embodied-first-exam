@@ -13,15 +13,14 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 600` over 1000 steps), not a
 predicate on the final state.
 
-- **The only manipulation task in the subset that runs on the 19-DoF `h1`.** The door has 2 DoF and no
-  dexterous hands are involved, so the agent manipulates with its forearms. That makes it the cheapest
-  possible probe of "locomotion plus a discrete act" — everything else in that family costs 61 DoF.
-- **Two skills in sequence, with a hard dependency.** The passage term cannot be earned before the door
-  is open, and the door cannot be opened from where the robot starts. A plan that optimises either half
-  alone stalls at its own ceiling.
-- **The lowest bar in the benchmark (600) with the clearest partial-credit gradient.** That combination
-  is deliberate: it is the task most likely to distinguish an agent that gets *part* of a multi-stage
-  problem right from one that gets none of it.
+- **Runs on the 19-DoF `h1`.** The door has 2 DoF and no dexterous hands are involved, so the agent
+  works the handle and the door with its forearms.
+- **Two skills in sequence.** The door opens towards the robot, so it has to be pulled round while the
+  robot steps out of its way. Without opening it the other terms fall short of the bar, and the passage
+  term pays in full only once the torso is well past the doorway.
+- **Partial credit is real.** Opening the door without getting through already earns a large share of
+  each step, which is meant to distinguish an agent that gets *part* of a multi-stage problem right from
+  one that gets none of it.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **30.86 / 600** (the episode terminates at step 292 of 1000). Holding the starting

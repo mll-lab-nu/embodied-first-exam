@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/humanoidbench-manip-insert-normal-i00"
-description = "HumanoidBench insert_normal: produce one replayable trajectory that inserts two pegs into their holes with the Unitree H1's hands, frozen scene instance 00."
+description = "HumanoidBench insert_normal: produce one replayable trajectory that fits a bar's two ends into two small sockets with the Unitree H1's hands, frozen scene instance 00."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1hand", "manipulation", "insert_normal"]
 

@@ -1,8 +1,7 @@
 # highbar_simple — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** the robot
-starts hanging from a high bar. Swing up: get inverted and drive the feet as high as you can,
-without letting go.
+starts hanging from a high bar. Swing up: get inverted and drive the feet as high as you can.
 
 This is a *fixed scene instance*: the bar, the grip and the robot's initial hanging pose never
 change between resets. You may reset and retry as many times as you want. Your deliverable is **one
@@ -14,8 +13,9 @@ over the episode reaches `s.success_bar` (**750** here, out of 1000 steps). Thre
 requirements: how far the torso is towards *inverted*, how high the feet are, and low actuator
 force. Read the first one carefully — it rewards being upside down, so hanging the right way up
 scores nothing at all no matter how steady it is, and doing nothing earns essentially zero for the
-whole episode. The feet-height term saturates only when the feet are well above the bar. The episode
-ends the moment the head drops below a height that amounts to having let go.
+whole episode. The feet-height term saturates only when the feet are well above the bar. On this
+robot the forearms are fixed to the bar, so it cannot fall off; the episode still ends if the head
+drops too low, which an inverted hang under the bar can do.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

@@ -19,15 +19,12 @@ predicate on the final state.
 - **The support is unstable.** The board pivots on a sphere, so the contact geometry moves in response
   to the robot's own actions — an open-loop plan that ignores the coupling diverges, while a feedback
   controller recorded open-loop reproduces exactly (MuJoCo on CPU is bit-exact).
-- **The failure mode is orthogonal to the rest of the subset.** Everything else fails by scoring too
-  little per step; this fails by not surviving. Keeping it means a model cannot clear the subset with a
-  single strategy.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **37.05 / 800** (the episode terminates at step 62 of 1000). Holding the starting
 pose instead — the floor a competent agent gets before writing a controller — scores **7.0%** of the
 bar; that is the number this task was selected on (`local_docs/plan/06-task-selection.md` §B5).
-**External evidence**: published RL results reach **98.5%** of the bar (paper 64, FastTD3 788, bar
+**External evidence**: published RL results reach **98.6%** of the bar (paper 64, FastTD3 788, bar
 800) — training runs of millions of environment steps, not a one-hour coding session, so treat it as
 proof that the task *has* a solution rather than as a target.
 

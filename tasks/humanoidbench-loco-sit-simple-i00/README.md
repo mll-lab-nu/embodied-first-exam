@@ -17,7 +17,8 @@ predicate on the final state.
   standing, so the agent has to sit *early* and then stay still — a partial credit landscape, not a
   goal test.
 - **Doing nothing already gets 85% of the bar.** An all-zero action commands the mid-point of every
-  actuator's range, which folds the robot into a crouch it survives for the full episode: **637.6 /
+  actuator's range, which slumps the robot back against the chair's backrest with the pelvis just above
+  the seat, and it stays there for the full episode: **637.6 /
   750**, measured. Holding the *starting* pose instead scores 468.12 (62.4%). That is the single clearest
   reason this task is a fixture and not a scored task — the gap a solution has to close is small enough
   that almost anything coherent closes it.

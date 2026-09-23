@@ -13,13 +13,15 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 350` over 500 steps), not a
 predicate on the final state.
 
-- **Centimetre tolerances with nothing to brace against.** In C6 the object rests on a table or a
-  wall; here both objects are held, so every error is the robot's own and there is no environment
-  contact to absorb it.
-- **Two hands that have to agree.** The two pegs are scored together, so the solution is a coordinated
-  bimanual motion rather than two independent arm trajectories.
-- **The product structure punishes partial solutions.** Getting the blocks near their targets while the
-  pegs are low, or lifting the pegs while the blocks drift, both give a near-zero step.
+- **Millimetre clearance.** Each socket's opening is 4 cm across and the bar is 3.6 cm thick, so an end
+  has 2 mm to spare on each side.
+- **Two sockets scored together.** Both are scored at the target height.
+- **⚠️ By the formula no insertion is needed.** Holding both sockets at 1.1 m directly above the bar's
+  ends (about 14 cm away), with the bar left on the table, scores about 0.83 a step against the 0.7 the
+  bar needs, because the ends-to-sockets term is a broad linear tolerance.
+- **The product structure scales partial solutions.** Progress on either group is multiplied by the
+  other, so fitting the bar with the sockets left low, or lifting the sockets without the bar in them,
+  earns only part of a step.
 - **Cleanest engineering of the 61-DoF tasks**: all of its state lives in `(qpos, qvel)`, so the frozen
   instance needs no special handling.
 

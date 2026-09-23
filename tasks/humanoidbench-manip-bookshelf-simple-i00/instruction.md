@@ -12,10 +12,12 @@ trajectory**, not a general policy.
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**2000** here, out of 1000 steps). Only the object you are
-currently on is scored: each step pays for standing steadily and for that object's progress towards
-its assigned slot, and finishing it moves the scoring on to the next one. So the return is cut into
-five plateaus and stalling on the first caps the episode low. The episode ends early if the torso
-drops, or if the object currently being scored falls.
+currently on is scored: each step pays for standing steadily, for a hand being near that object and
+for its progress towards its assigned slot. Placing it pays a one-off bonus that grows with how many
+you have placed — together the bonuses are most of the bar — and moves the scoring on to the next
+one. So the return is cut into five plateaus and stalling on the first caps the episode low. The
+episode ends early if the torso drops or if the object currently being scored falls, and it ends
+once all five are placed.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -49,7 +51,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("bookshelf_simple", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (308,) = qpos(160) + qvel(147) + the index of the object currently being scored(1)
+obs = s.obs()                      # (308,) = qpos(160) + qvel(147) + the (negative) body index of the object currently being scored(1)
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted

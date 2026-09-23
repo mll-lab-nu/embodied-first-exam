@@ -12,7 +12,9 @@ HumanoidBench scores a *whole episode*, not a final state: you pass iff the summ
 over the episode reaches `s.success_bar` (**800** here, out of 1000 steps). A good step asks for
 only three things — low actuator force, staying upright, and near-zero horizontal velocity — so
 scoring well for one step is not the difficulty. The difficulty is that the episode ends the moment
-anything other than the board touches the ground, and every step after that is worth nothing.
+the pelvis drops too low, anything but the rolling sphere touches the ground — the board included —
+or the sphere touches anything other than the ground and the board, and every step after that is
+worth nothing.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

@@ -1,9 +1,9 @@
 # stair — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** walk the
-robot up the staircase and keep climbing, without falling.
+robot forward over the stairs, up each flight and down the other side, without falling.
 
-This is a *fixed scene instance*: the staircase and the robot's initial pose never change between
+This is a *fixed scene instance*: the stairs and the robot's initial pose never change between
 resets. You may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.
 
@@ -11,10 +11,11 @@ trajectory**, not a general policy.
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**700** here, out of 1000 steps). The same three
 multiplied requirements as walking on the flat — forward speed, staying upright, low actuator force
-— with one change that matters: "upright" is measured as the head's height *above the feet*, not
-above the ground, because absolute height rises as you climb and so cannot be the yardstick.
-Termination is also different: the episode ends when the torso tips past a shallow angle, rather
-than when it drops to a fixed height.
+— with one change that matters: the height part of "upright" is measured as the head's height *above
+the feet*, not above the ground, because the ground rises and falls under you and so cannot be the
+yardstick, and the torso tilt it accepts is looser than on the flat. Termination is also different:
+the episode ends only when the torso tips close to horizontal, rather than when it drops to a fixed
+height.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

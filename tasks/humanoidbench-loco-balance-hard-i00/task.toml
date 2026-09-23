@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00"
-description = "HumanoidBench balance_hard: produce one replayable trajectory that keeps the Unitree H1 standing on a board balanced on a rolling cylinder, frozen scene instance 00."
+description = "HumanoidBench balance_hard: produce one replayable trajectory that keeps the Unitree H1 standing on a board balanced on a rolling sphere, frozen scene instance 00."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "balance_hard"]
 

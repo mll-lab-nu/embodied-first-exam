@@ -22,6 +22,10 @@ predicate on the final state.
   placing a cube inside) third in the chain, so it is only reached after two successes.
 - **The current state of the art reaches 9.7% of the bar** — with `highbar_simple` and `kitchen` this is
   the subset's deliberate ceiling.
+- **⚠️ At cb11890 the bar cannot be reached.** Every stage's step pays at most 1 and the four stage bonuses
+  total 1000, so a 1000-step episode returns at most about 2000 of the 2500. The `lambda: 1000` fifth
+  stage is never scored, because `get_terminated()` ends the episode on the step the fourth stage
+  completes. No trajectory can pass this task as it is scored now.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **10.43 / 2500**. Holding the starting pose instead — the floor a competent agent

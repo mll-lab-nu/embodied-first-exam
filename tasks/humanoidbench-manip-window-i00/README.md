@@ -13,15 +13,16 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 650` over 1000 steps), not a
 predicate on the final state.
 
-- **The only tool-use task in the subset, and the only one requiring sustained contact.** The tool is
-  not the goal, it is the means: the robot has to grasp it, then control the *tool's* contact with a
-  surface while moving. Losing the grip ends the episode.
+- **Tool use with sustained contact.** With `spoon`, one of the two tool-use tasks in the subset, and
+  the one scored on the tool's contact with a surface. The tool is not the goal, it is the means: the
+  robot has to grasp it, then control the *tool's* contact with a surface while moving. Losing the grip
+  ends the episode.
 - **61 actuators.** Two Shadow hands take the action from 19 numbers to 61 — the same capability class
   as `push` at triple the search dimension, which is exactly why both are kept.
-- **A zero-valued contact gate.** Wiping without touching the glass scores nothing at all for that
-  term, so approximate solutions collapse rather than degrade.
-- **An all-zero trajectory terminates at step 17**, the fastest failure in the subset: the tool is
-  dropped almost immediately.
+- **A zero-valued contact gate.** Wiping without touching the glass scores nothing for the contact half
+  of the reward.
+- **An all-zero trajectory terminates at step 17**, tied with `cube` for the fastest failure in the
+  subset: the tool is dropped almost immediately.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **1.56 / 650** (the episode terminates at step 17 of 1000). Holding the starting

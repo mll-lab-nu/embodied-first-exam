@@ -16,17 +16,17 @@ predicate on the final state.
 - **A gait plus a terrain constraint.** Everything that makes `walk` hard applies, and on top of it the
   foot placement has to match the step geometry. The failure mode is different too: `walk` fails by
   never starting, `stair` fails by losing footing part-way up.
-- **The uprightness termination is tight.** `torso_upright < 0.1` ends the episode instantly, and on
-  stairs the torso pitches every time a foot lands on a riser.
-- **This is the closest task in the whole benchmark to its own bar.** The best published result misses
-  it by 1.4%, which makes it the cleanest possible test of whether an agent is a little better or a
+- **The uprightness termination is lenient.** `torso_upright < 0.1` ends the episode only once the torso
+  is close to horizontal (more than about 84° from vertical).
+- **One of the two tasks closest to their own bar.** The best published result misses it by 1.5%
+  (`balance_simple`: 1.4%), which makes it a clean test of whether an agent is a little better or a
   little worse than the state of the art rather than hopelessly far from it.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **8.63 / 700** (the episode terminates at step 66 of 1000). Holding the starting
 pose instead — the floor a competent agent gets before writing a controller — scores **1.9%** of the
 bar; that is the number this task was selected on (`local_docs/plan/06-task-selection.md` §B5).
-**External evidence**: published RL results reach **98.6%** of the bar (paper 134, FastTD3 690, bar
+**External evidence**: published RL results reach **98.5%** of the bar (paper 134, FastTD3 690, bar
 700) — training runs of millions of environment steps, not a one-hour coding session, so treat it as
 proof that the task *has* a solution rather than as a target.
 

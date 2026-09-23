@@ -1,7 +1,7 @@
 # door — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** walk to
-the door, press the handle, push the door open, and walk through it.
+the door, press the handle, pull the door open towards the robot, and walk through it.
 
 This is a *fixed scene instance*: the door and the robot's initial pose never change between resets.
 You may reset and retry as many times as you want. Your deliverable is **one replayable
@@ -13,7 +13,7 @@ over the episode reaches `s.success_bar` (**600** here, out of 1000 steps). This
 sum rather than a product, so partial credit is real: getting the door open and getting the torso
 past the doorway are the two large terms, with reaching for the handle, moving the handle, and
 posture as small ones. Opening the door and never walking through still earns a substantial share of
-each step — but both large terms have to be earned to clear the bar. The episode ends if the torso
+each step, and the bar cannot be reached without opening the door. The episode ends if the torso
 drops.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would

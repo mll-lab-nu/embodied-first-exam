@@ -1,7 +1,7 @@
 # package — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** walk to
-the package, pick it up, carry it to the destination marker and put it down there.
+the package, pick it up, carry it to the destination marker and set it down there, standing upright.
 
 This is a *fixed scene instance*: the package's starting position, the destination and the robot's
 initial pose never change between resets. Both positions are part of the observation. You may reset

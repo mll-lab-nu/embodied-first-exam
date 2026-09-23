@@ -9,11 +9,11 @@ trajectory**, not a general policy.
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
-over the episode reaches `s.success_bar` (**750** here, out of 1000 steps). A weighted sum of five
-things: how close the pelvis is to seat height, whether the robot is over the seat rather than
-beside it, staying upright, a seated joint posture, and not moving once seated. Every step spent not
-yet sitting forfeits the reward that step could have paid, so both *how fast* and *how steadily* the
-robot sits matter.
+over the episode reaches `s.success_bar` (**750** here, out of 1000 steps). A product: the average
+of two seat terms — how close the pelvis is to seat height, and whether the robot is over the seat
+rather than beside it — multiplied by staying upright, a seated posture (the head's height above the
+torso), not moving, and low actuator force. Every step spent not yet sitting forfeits the reward
+that step could have paid, so both *how fast* and *how steadily* the robot sits matter.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -47,7 +47,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("sit_simple", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (51,) = qpos(26) + qvel(25), robot + chair state
+obs = s.obs()                      # (51,) = qpos(26) + qvel(25), robot state only
 obs, r, done = s.step(action)      # action: (19,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted

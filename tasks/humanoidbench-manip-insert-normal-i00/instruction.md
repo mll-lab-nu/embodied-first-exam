@@ -1,21 +1,22 @@
 # insert_normal — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** each hand holds a block with a peg. Insert each peg into its matching hole
-without dropping anything.
+via Python. **Task:** a bar and two small open sockets lie on the table in front of the robot. Fit
+each end of the bar into the socket of the matching colour, then lift the assembly to about 1.1 m
+and hold it there, without dropping anything.
 
-This is a *fixed scene instance*: the blocks, the holes and the robot's initial pose never change
+This is a *fixed scene instance*: the bar, the two sockets and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one
 replayable trajectory**, not a general policy.
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**350** here, out of 500 steps). The step is a product of
-two groups: one covering posture and how close the blocks are to their targets, the other covering
-the height of the pegs and how well the hands are holding the tools. Because the groups multiply,
-doing one of them well is worth close to nothing while the other is near zero — both have to come
-along together. The episode ends the moment either peg drops below a height, which a dropped part
-does immediately. The episode limit here is 500 steps, not 1000.
+two groups: one covering posture and how close each end of the bar is to its socket, the other
+covering how high the sockets are and whether a hand is at a socket. Because the groups multiply,
+doing one of them well is worth little while the other is near zero — both have to come along
+together. The episode ends the moment the bar or either socket drops below a height, which a dropped
+part does immediately, or the torso does. The episode limit here is 500 steps, not 1000.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -49,7 +50,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("insert_normal", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (190,) = qpos(97) + qvel(93), robot + both blocks state
+obs = s.obs()                      # (190,) = qpos(97) + qvel(93), robot + bar + both sockets state
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 500 — the episode limit, and the longest trajectory accepted

@@ -18,13 +18,15 @@ predicate on the final state.
   fixed by the environment rather than chosen by the agent. 40 steps per revolution at 50 Hz is 1.25
   revolutions a second.
 - **🚩 The published best is *below* the give-away floor.** FastTD3 reaches 369/650; holding the starting
-  pose scores 375.67 — the hand starts near the handle and the spoon starts in the cup, so three of the
-  four terms are already largely paid. That is the sharpest illustration in the subset of why completion
+  pose scores 375.67 — standing and a hand near the handle pay for it, although the spoon starts on the
+  table beside the cup. That is the sharpest illustration in the subset of why completion
   rate alone is the wrong selection criterion (06-task-selection.md §B4).
-- **⚠️ The highest give-away in the scored subset: 57.8% of the bar.** It is kept because the remaining
-  42% is structurally unlike anything else here, but it is the first task that should be reconsidered if
-  agents turn out to clear the bar by standing still and jiggling. The `verify` threshold carries an
-  explicit exemption for it, so this is recorded in code and not just in prose.
+- **⚠️ The highest give-away in the scored subset: 57.8% of the bar.** It was kept on the argument that
+  the remaining 42% is periodic tracking, but by the formula it is not: the circling term's tolerance
+  (0.15 m) is wider than the circle's radius (0.06 m), so a spoon held still at the centre of the cup
+  scores about 0.84 a step against the 0.65 the bar needs. What remains is getting the spoon into the
+  cup, which makes this the first task to reconsider. The `verify` threshold carries an explicit
+  exemption for it, so this is recorded in code and not just in prose.
 - **61 actuators**, and the grip has to survive a sustained oscillation.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero

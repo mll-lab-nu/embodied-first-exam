@@ -13,8 +13,8 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 1200` over 500 steps), not a
 predicate on the final state.
 
-- **The most all-or-nothing task in the subset.** The +1000 for sinking the ball is the bar; per-step
-  reward caps near 1 against a bar of 1200 over 500 steps. An agent either scores the basket or lands
+- **All-or-nothing.** The +1000 for sinking the ball is most of the 1200 bar; per-step reward caps
+  near 1 over 500 steps. An agent either scores the basket or lands
   near zero, with no gradient in between beyond ball-to-hoop distance.
 - **A moving target with a deadline.** The ball arrives at 7.5 m/s. There is no "approach carefully"
   phase — the catch either happens in the right handful of steps or the episode is over (holding the

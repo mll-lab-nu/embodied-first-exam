@@ -1,8 +1,8 @@
 # cube — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** each hand holds a cube. Rotate both cubes to the goal orientation without
-dropping them.
+via Python. **Task:** a cube starts just above and in front of each palm. Rotate both cubes to the
+goal orientation without dropping them.
 
 This is a *fixed scene instance*: the cubes' starting orientations, the goal orientation and the
 robot's initial pose never change between resets. You may reset and retry as many times as you want.
@@ -86,7 +86,7 @@ the fingers, 20 per Shadow hand — `lh_A_*` then `rh_A_*`. A constant action co
 gravity and contact.
 
 The goal orientation is not in `(qpos, qvel)` — upstream writes it into the MuJoCo model
-(`body_quat`), drawn once when the environment is created. It is frozen into this instance, so it is
+(`body_quat`), drawn from the global `np.random` at reset. It is frozen into this instance, so it is
 the same in your container and the verifier's, and it does not move between resets.
 
 Optional rendering: `Session("cube", instance=..., enable_render=True)` then

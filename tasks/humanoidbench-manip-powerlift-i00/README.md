@@ -13,18 +13,16 @@
 The pass mark is a **threshold on the whole episode's return** (`>= 800` over 1000 steps), not a
 predicate on the final state.
 
-- **🚩 Kept precisely because it is the task RL cannot do.** Upstream shapes the lift with
-  `tolerance(height, bounds=(1.9, 2.1), margin=2)`, and `margin=2` makes that Gaussian nearly flat: the
-  dumbbell on the floor scores ~0.19 of the term, at 1.5 m only ~0.6. The gradient barely points upward,
-  which is why FastTD3 reaches 41% — **less than holding the starting pose would score if the robot could
-  stay upright**. A later paper excludes the task on exactly these grounds.
-  An agent that is *told the goal in words* has no such problem. This is the cleanest separation in the
-  subset between "follows a gradient" and "understands an objective", and it only works because the
-  scoring formula is no longer readable — see local_docs/plan/07-open-questions.md.
+- **🚩 Kept although RL does poorly on it.** Upstream shapes the lift with
+  `tolerance(height, bounds=(1.9, 2.1), margin=2)`, a broad Gaussian: the dumbbell on the floor already
+  scores ~0.19 of the term, and at 1.5 m ~0.91. FastTD3 reaches 41% — **less than holding the starting
+  pose would score if the robot stayed standing** (about 0.35 a step). The hypothesis behind keeping it is
+  that an agent *told the goal in words* is not held back the way RL is — see
+  local_docs/plan/07-open-questions.md.
 - **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
-  a mass against gravity through a long range of motion. Holding the start pose collapses at step 382
-  under the dumbbell's weight — the only task in the subset where the give-away floor ends by being
-  crushed rather than by falling over.
+  a mass against gravity through a long range of motion — the dumbbell weighs about 104 kg, twice the
+  robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
+  episode ends at step 382, when the pelvis sinks below the 0.2 m termination height.
 - **61 actuators**, because the dumbbell needs hands to grip.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero

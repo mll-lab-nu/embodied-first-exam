@@ -14,8 +14,8 @@ The pass mark is a **threshold on the whole episode's return** (`>= 800` over 10
 predicate on the final state.
 
 - **Same reward function as `balance_simple`, three times the gap to the bar.** The published best goes
-  from 98.5% to 31% with no change to the scoring code — only the support changes, from a board on a
-  fixed pivot to a board on a free-rolling cylinder (task DoF 7 → 14). That is the point of keeping
+  from 98.6% to 31% with no change to the scoring code — only the support changes, from a board on a
+  fixed pivot to a board on a free-rolling sphere (task DoF 7 → 14). That is the point of keeping
   both: it isolates how much of a task's difficulty is the reward and how much is the physics, and it
   is the one place where "same reward function" was not grounds for cutting the second task.
 - **The support drifts.** A rolling fulcrum integrates the robot's errors instead of merely reflecting

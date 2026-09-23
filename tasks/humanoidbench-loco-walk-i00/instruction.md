@@ -11,9 +11,10 @@ trajectory**, not a general policy.
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**700** here, out of 1000 steps). Each step is judged on
 three things at once — how fast the centre of mass is moving forward, how upright the robot is, and
-how little actuator force it is using — and they multiply, so a step that fails any one of them is
-worth almost nothing however good the other two are. The forward-speed target is on the order of 1
-m/s. The episode ends early if the torso drops near the ground.
+how little actuator force it is using — and they multiply. Not being upright is what makes a step
+worth nothing; standing still keeps only a small fraction of a step's value, and heavy actuator
+force costs part of it. The forward-speed target is on the order of 1 m/s. The episode ends early if
+the torso drops near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

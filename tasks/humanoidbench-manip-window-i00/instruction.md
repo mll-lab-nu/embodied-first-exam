@@ -1,8 +1,9 @@
 # window — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** pick up the wiping tool and wipe the window with it, moving steadily up and
-down.
+via Python. **Task:** grasp the wiping tool — it starts in the air just in front of the hands and
+falls within the first second unless it is held — and wipe the window with it, moving steadily up
+and down.
 
 This is a *fixed scene instance*: the window, the tool and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one
@@ -10,12 +11,11 @@ replayable trajectory**, not a general policy.
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
-over the episode reaches `s.success_bar` (**650** here, out of 1000 steps). Two requirements gate
-everything else, and both are factors rather than bonuses. The tool has to be in contact with the
-glass — while it is not, that factor is zero and the step is worth nothing — and the wiping motion
-is scored against a target vertical speed, so neither holding the tool still against the glass nor
-waving it through the air earns anything. The episode ends immediately if the torso drops or the
-tool falls, i.e. if it is dropped.
+over the episode reaches `s.success_bar` (**650** here, out of 1000 steps). A large share of each
+step is paid only while the tool is in contact with the glass — while it is not, that share is zero,
+so the bar cannot be reached without contact. The rest pays for moving the tool vertically at a
+target speed, for keeping both hands near the tool, and for standing. The episode ends immediately
+if the torso drops or the tool falls, i.e. if it is dropped.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -49,7 +49,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("window", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (171,) = qpos(87) + qvel(84), robot + tool + window state
+obs = s.obs()                      # (171,) = qpos(87) + qvel(84), robot + tool state (the tool's free joint and its wiper's ball joint)
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted

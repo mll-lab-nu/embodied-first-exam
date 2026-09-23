@@ -12,10 +12,9 @@ replayable trajectory**, not a general policy.
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**800** here, out of 1000 steps). A weighted sum of two
 things: a small share for standing steadily, and the bulk for how high the dumbbell is, measured
-against a target band a little above two metres. Be warned that the height term is shaped very
-flatly — the dumbbell sitting on the floor already earns a noticeable fraction of it, and lifting it
-halfway adds less than you would expect. Clearing the bar means actually getting it up near the band
-and keeping it there for most of the episode, not improving the height a little.
+against a target band around two metres. Be warned that the height term is broad — the dumbbell
+sitting on the floor already earns a noticeable fraction of it. Clearing the bar means lifting it
+high and keeping it there for most of the episode, not improving the height a little.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

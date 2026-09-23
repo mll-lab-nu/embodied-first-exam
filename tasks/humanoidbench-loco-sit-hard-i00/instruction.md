@@ -1,8 +1,9 @@
 # sit_hard — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** the robot
-starts away from the chair and facing a random direction. Turn to face the chair, walk to it, sit
-down, and stay seated upright and still.
+starts a short walk in front of the chair, its heading turned by a random angle of up to about 100°
+from facing straight away from it. Get to the chair, sit down on it, and stay seated upright and
+still.
 
 This is a *fixed scene instance*: the chair, and the robot's starting position and heading, never
 change between resets — but that heading is *not* the one `sit_simple` starts from. Read it out of
@@ -11,11 +12,12 @@ trajectory**, not a general policy.
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
-over the episode reaches `s.success_bar` (**750** here, out of 1000 steps). A weighted sum of five
-things: how close the pelvis is to seat height, whether the robot is over the seat rather than
-beside it, staying upright, a seated joint posture, and not moving once seated. Every step spent not
-yet sitting forfeits the reward that step could have paid, so sitting *early* matters as much as
-sitting well. The episode ends if the torso drops near the ground.
+over the episode reaches `s.success_bar` (**750** here, out of 1000 steps). A product: the average
+of two seat terms — how close the pelvis is to seat height, and whether the robot is over the seat
+rather than beside it — multiplied by staying upright, a seated posture (the head's height above the
+torso), not moving, and low actuator force. Every step spent not yet sitting forfeits the reward
+that step could have paid, so sitting *early* matters as much as sitting well. The episode ends if
+the torso drops near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

@@ -11,11 +11,12 @@ never change between resets. You may reset and retry as many times as you want. 
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
 over the episode reaches `s.success_bar` (**3000** here, out of 1000 steps). Each step is your
 uprightness multiplied by a base amount plus three progress terms: how close the robot is to a
-package still on the truck, whether a package has been picked up, and how close a picked-up package
-is to the table. Because uprightness is a *factor*, falling over costs you the whole step rather
-than one term of it. Finishing every package pays a one-off bonus and ends the episode. The bar —
-3000 over 1000 steps — is the highest in the benchmark, and reaching it means keeping several of
-those progress terms paid for most of the episode, not just completing the job once.
+package still on the truck, how close it is to a package it has picked up, and how close a picked-up
+package is to the table. On top of that, lifting a package off the truck and placing one on the
+table each pay a one-off bonus (taken back if a package comes off the table again), and delivering
+the last package pays a larger one and ends the episode. Uprightness is a *factor*, so lying down
+costs a large part of every step. The bar is 3000 over 1000 steps; the one-off bonuses are most of
+it but not all, so the rest has to come from the per-step terms before the last delivery.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -49,7 +50,7 @@ cheap — a few hundred KB and well under a second.
 from rcb_hb import Session
 s = Session("truck", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
-obs = s.obs()                      # (116,) = qpos(61) + qvel(55), robot + truck + packages
+obs = s.obs()                      # (116,) = qpos(61) + qvel(55), robot + packages state
 obs, r, done = s.step(action)      # action: (19,) normalised joint-position targets in [-1, 1], 50 Hz
                                    # r is None here (see Scoring); obs and done are real
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted

@@ -1,8 +1,8 @@
 # spoon — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** take hold of the spoon and stir with it: keep the spoon in the cup and move
-its head around a small circle, continuously, for the whole episode.
+via Python. **Task:** take hold of the spoon, put it in the cup and stir: move its head around a
+small circle, continuously, for the rest of the episode.
 
 This is a *fixed scene instance*: the cup, the spoon and the robot's initial pose never change
 between resets. You may reset and retry as many times as you want. Your deliverable is **one
@@ -13,10 +13,10 @@ HumanoidBench scores a *whole episode*, not a final state: you pass iff the summ
 over the episode reaches `s.success_bar` (**650** here, out of 1000 steps). A weighted sum of four
 things: standing steadily, getting a hand to the spoon's handle, keeping the spoon's head inside the
 cup, and — the largest single term — keeping that head close to a target point that **travels around
-a small circle at a fixed rate, completing a revolution every 40 steps**. The first three are
-largely satisfied by the starting arrangement; the gap to the bar is almost entirely the circling
-term, so what this task asks for is periodic tracking rather than reaching a pose. The episode ends
-if the torso drops.
+a small circle at a fixed rate, completing a revolution every 40 steps**. Standing and a hand near
+the handle are largely paid just by holding the start pose, but the spoon starts on the table beside
+the cup, so the other two terms pay nothing until it is in the cup. The episode ends if the torso
+drops.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are

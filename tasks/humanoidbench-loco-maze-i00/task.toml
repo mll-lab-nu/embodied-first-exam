@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/humanoidbench-loco-maze-i00"
-description = "HumanoidBench maze: produce one replayable trajectory that walks the Unitree H1 through a maze, frozen scene instance 00."
+description = "HumanoidBench maze: produce one replayable trajectory that walks the Unitree H1 along a maze's corridors from checkpoint to checkpoint, frozen scene instance 00."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "maze"]
 
