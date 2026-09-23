@@ -26,7 +26,7 @@ harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git@v0.1.0 -a oracl
 harbor view jobs
 ```
 Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the unlimited tasks need no GPU, so
-the default local Docker sandbox works (Modal too). The limited task reserves one for its simulator sidecar. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
+the default local Docker sandbox works (Modal too). The limited tasks reserve one for their simulator sidecar. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
 Through OpenRouter (`OPENROUTER_API_KEY` in `.env`), with the Codex or the Claude Code harness:
 
@@ -51,7 +51,8 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 │   ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
 │   └── solution/     solve.sh (oracle)
 ├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
-└── humanoidbench-loco-sit-simple-i00-limited/   # limited mode (docs/LIMITED_MODE_1_1.md), hand-maintained
+└── humanoidbench-loco-*-i00-limited/   # limited mode (docs/LIMITED_MODE_1_1.md): sit_simple, walk, stair, hurdle,
+                                #   balance_simple; hand-maintained
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,

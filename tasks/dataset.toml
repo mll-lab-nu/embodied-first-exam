@@ -115,3 +115,19 @@ digest = "sha256:9647b85850910a9b82d28a5f62a50d5df62e519d734673f98131e3f292a2e22
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-limited"
 digest = "sha256:7f862992070f959f1a30d64bff537e7331e2dd3cef3105e1d16d172b9d86c1a3"
 
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-balance-simple-i00-limited"
+digest = "sha256:75ce8b1aae4844f7a1a407d562c61ed5a411656ea43b9c2ea2e75f060cc63046"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-limited"
+digest = "sha256:e2a06ce810d63589e1dae4e589e9fe18f26cf610a9a12a992e573921534d0da9"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-stair-i00-limited"
+digest = "sha256:e1410e46c6ca50d1e1a6b39b2b0b5edc6fcaaca1336a24da1fbd74f96d98c5af"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-walk-i00-limited"
+digest = "sha256:b11eff977bb99c4fb073cfd2f0d569433298828aa5038e985a44335be77f10ed"
+
