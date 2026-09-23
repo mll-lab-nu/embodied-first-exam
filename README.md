@@ -25,19 +25,21 @@ harbor run -p tasks -i 'robosuite-*' -a claude-code -m anthropic/claude-sonnet-5
 harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git@v0.1.0 -a oracle
 harbor view jobs
 ```
-Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the current tasks need no GPU, so
-the default local Docker sandbox works (Modal too). Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
+Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the unlimited tasks need no GPU, so
+the default local Docker sandbox works (Modal too). The limited task reserves one for its simulator sidecar. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
-To evaluate with DeepSeek V4.1 Flash through OpenRouter while retaining the Codex CLI harness, set
-`OPENROUTER_API_KEY` in `.env` and run:
+Through OpenRouter (`OPENROUTER_API_KEY` in `.env`), with the Codex or the Claude Code harness:
 
 ```bash
-scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00 -k 3
-RCB_MODEL=openrouter/<provider>/<model> scripts/run_deepseek_openrouter.sh <task>   # any OpenRouter model
+scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00 -k 3                 # Codex, DeepSeek V4.1 Flash
+RCB_MODEL=openrouter/<provider>/<model> scripts/run_deepseek_openrouter.sh <task>   # Codex, any OpenRouter model
+PYTHONPATH=. harbor run -p <task> -a harbor_agents.claude_code_openrouter:ClaudeCodeOpenRouter \
+  -m openrouter/anthropic/claude-opus-5.5 --env-file .env --allow-agent-host openrouter.ai        # Claude Code
 ```
 
-The repository-local adapter preserves OpenRouter's nested model ID and maps the OpenRouter credential and endpoint
-to the OpenAI-compatible interface expected by Codex.
+The adapters in `harbor_agents/` map the OpenRouter key, endpoint and nested model ID to what each harness
+expects, and switch off the harness's own web tools: the provider runs those, past the task's network
+allowlist (`docs/LEAKAGE.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live`.
 
 ## Layout
 
@@ -48,12 +50,15 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 │   ├── environment/  Dockerfile (FROM base image), instance.npz (frozen scene), rcb_traj.py (agent tooling)
 │   ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
 │   └── solution/     solve.sh (oracle)
-└── humanoidbench-*/            # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
+├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
+└── humanoidbench-loco-sit-simple-i00-limited/   # limited mode (docs/LIMITED_MODE_1_1.md), hand-maintained
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
                                 #   cross-task leaks, reward leaks, dataset manifest
-docs/PROTOCOL.md TAXONOMY.md    # the contract and the metadata vocabulary
+docs/                           # PROTOCOL (the contract), TAXONOMY (metadata vocabulary), LEAKAGE (where answer
+                                #   keys survive), LIMITED_MODE_1_1 (robot as a service)
+harbor_agents/                  # Harbor adapters for running Codex / Claude Code through OpenRouter
 third_party/cap-x               # submodule used by images/robosuite
 CONTRIBUTING.md AGENTS.md       # how to add a task; map for coding agents
 ```

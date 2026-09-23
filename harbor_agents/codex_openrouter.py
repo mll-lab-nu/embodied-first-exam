@@ -36,6 +36,13 @@ class CodexOpenRouter(Codex):
 
     MODEL_CONNECTION = ModelConnectionSpec(default_provider="openrouter")
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # Codex sends a live `web_search` tool by default, and OpenRouter runs it server-side: the traffic
+        # goes to the model API host the agent must reach, so the task's allowlist cannot stop it, and it
+        # found hidden reward constants (docs/LEAKAGE.md). `--ak web_search=live` turns it back on.
+        kwargs.setdefault("web_search", "disabled")
+        super().__init__(*args, **kwargs)
+
     @property
     def model_connection(self) -> ResolvedModelConnection:
         connection = super().model_connection

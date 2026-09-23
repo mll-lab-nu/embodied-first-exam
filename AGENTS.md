@@ -8,6 +8,12 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
   `scripts/<sim>/subset.toml` (which tasks and why) plus `templates/` and `shared/`; `check-tooling-sync.sh`
   fails the build if a copy drifts. **Edit the source and re-render — never a file under `tasks/`.**
   HumanoidBench works this way; `tasks/robosuite-cube-stack-i00/` predates it and is still hand-maintained.
+- Limited mode (robot as a service, `docs/LIMITED_MODE_1_1.md`): `tasks/*-limited/` are hand-maintained
+  copies of kangrui's RoboTwin limited task, not rendered yet. The simulator, tooling and reward run in the
+  `sim` sidecar from `environment/sim/` (compose volume, never COPYed into the agent image) -- the one place
+  under `environment/` the formula may live; the checks know it from `mode = "limited"`. The agent-facing API
+  is documented in `environment/rcb_client.py`'s docstring, the full reference; `instruction.md` points to it
+  and keeps only task facts (task, rules, scoring prose, measured costs, actuator order).
 - 🚩 **The scoring formula must never reach `environment/`.** HumanoidBench grades on a dense reward, and
   a dense reward is the answer key — `images/humanoidbench/scrub_oracles.py` deletes every `get_reward()`
   from the base image, `scripts/humanoidbench/rewards.json` keeps them, and `render` copies one family's
@@ -18,7 +24,8 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
   tolerance parameters or exact weights (the rule is written at the top of `subset.toml`);
   `ci_checks/check-no-reward-leak.sh` enforces both directions. Deleting it only works while the agent
   cannot fetch it back, so `task.toml` sets `[agent] network_mode = "allowlist"` with an empty list; the
-  model API is opted into per run with `harbor run --allow-agent-host openrouter.ai`.
+  model API is opted into per run with `harbor run --allow-agent-host openrouter.ai`, and the `harbor_agents/`
+  adapters switch off the harness's own web tools, which the provider runs past that allowlist.
   **Before you hide anything from the agent, read `docs/LEAKAGE.md`** — it is the checklist of the places
   an answer key survives (dead code, constants, `__pycache__`, Docker layers, `.git`, the network), each
   entry written from one we actually shipped. Also `docs/PROTOCOL.md` §4, `local_docs/plan/07-open-questions.md` §1.
@@ -28,4 +35,5 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
 - `images/<sim>/Dockerfile`: simulator base images, tagged from `images/VERSION`; `scripts/build_images.sh`.
 - `ci_checks/run_all.sh [task dirs]`: contract checks. New check = `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
 - `tasks/dataset.toml`: task manifest; refresh with `cd tasks && harbor add --scan .`.
-- Local docker sandbox has no `[environment].gpus`; the current tasks don't need a GPU.
+- Local docker sandbox has no `[environment].gpus`; unlimited tasks don't need a GPU, limited ones reserve it on
+  the sidecar in `environment/docker-compose.yaml` (images are rendered there).

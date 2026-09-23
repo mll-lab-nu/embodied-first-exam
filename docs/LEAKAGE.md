@@ -17,6 +17,8 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 | Earlier Docker layers | a layer is an immutable tarball; a later `rm` does not unwrite it | download and remove in the **same `RUN`**; verify with `docker save` |
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |
 | The network | upstream is public and pinned, one `curl` away | `[agent] network_mode = "allowlist"`, never `public` |
+| The model API | the harness's web search runs on the provider, reached through the one allowed host: codex's default live `web_search` and Claude Code's `WebSearch`, both executed by OpenRouter | the `harbor_agents/` adapters switch them off; to audit a harness, point it at a local fake API and read the request's `tools` |
+| The model's memory | the benchmark's source is public, so it is in pretraining data: Opus 5.5 recalled H1's 19 actuator ranges exactly and the sit reward's seat-height band, with no tool | nothing in the harness removes it; report it with the result |
 | Package metadata | `*.egg-info/SOURCES.txt` lists files you deleted | generate metadata after the removal |
 | Sibling tasks | one task's `tests/` must not carry another's answer | ship one task's answer per task |
 

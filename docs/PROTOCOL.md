@@ -14,6 +14,8 @@ in the task directory and is `COPY`ed by its Dockerfile. Base images under `imag
 ## 2. Deliverable
 The agent writes its result under `/app/output/` (declared as `artifacts = ["/app/output/"]` so Harbor
 collects it). The format is defined by the task's `instruction.md` and checked by its verifier.
+In limited mode (`mode = "limited"`, `docs/LIMITED_MODE_1_1.md`) the deliverable is the episode itself: the
+simulator sidecar records it as the trajectory, and `/app/output/` only keeps the agent's script.
 
 `task_type` (metadata) says what kind of deliverable it is:
 

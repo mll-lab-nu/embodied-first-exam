@@ -111,3 +111,7 @@ digest = "sha256:c91b9809ef3ce342eb8ab15e1f51450b46fdf3e3e621b0d316acd552f20b54c
 name = "robot-coding-bench/humanoidbench-manip-truck-i00"
 digest = "sha256:9647b85850910a9b82d28a5f62a50d5df62e519d734673f98131e3f292a2e221"
 
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-limited"
+digest = "sha256:7f862992070f959f1a30d64bff537e7331e2dd3cef3105e1d16d172b9d86c1a3"
+
