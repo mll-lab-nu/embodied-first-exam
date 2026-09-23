@@ -3,8 +3,9 @@
 Can a coding agent be a roboticist? **robot_coding_bench** is a [Harbor](https://github.com/harbor-framework/harbor)
 benchmark: each task drops an agent (Claude Code, Codex, …) into a container with a robot simulator and a
 Python tool API and asks for a deliverable — in the current tasks, **one replayable trajectory** that completes
-a manipulation goal in a **frozen scene instance**. The verifier replays it in a fresh process; scoring is
-binary with numeric diagnostics, no learned judge.
+a manipulation goal in a **frozen scene instance**. The verifier replays it in a fresh process **in its own
+sandbox** (the agent's container, which the agent controls as root, is gone by then); scoring is binary with
+numeric diagnostics, no learned judge.
 
 The repo is deliberately minimal: it adds a thin **contract** ([docs/PROTOCOL.md](docs/PROTOCOL.md)) on top of
 the plain Harbor task format, and every task is **self-contained**. Shared kits will be factored out once
@@ -34,7 +35,7 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 └── robosuite-cube-stack-i00/   # the example: self-contained
     ├── instruction.md task.toml README.md
     ├── environment/  Dockerfile (FROM base image), instance.npz (frozen scene), rcb_traj.py (agent tooling)
-    ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
+    ├── tests/        Dockerfile (separate verifier sandbox), test.sh, grade.py, rcb_traj.py, instance.npz (verifier's own copies)
     └── solution/     solve.sh (oracle)
 └── robotwin_2_0_<task>/        # RoboTwin 2.0 (SAPIEN + CuRobo, ALOHA dual arm): same shape, + docker-compose.yaml (GPU);
                                 #   stack_blocks_two, put_bottles_dustbin, open_microwave, place_can_basket, scan_object

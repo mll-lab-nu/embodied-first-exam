@@ -13,27 +13,27 @@ name = "MLL Lab"
 
 [[tasks]]
 name = "robot-coding-bench/robosuite-cube-stack-i00"
-digest = "sha256:7265a29dceb6c47543f34f05daefba9cea52831cb1b6cdd868648cdfb1b9357e"
+digest = "sha256:925152592fd872fc56a56f0b23696abd67317786e76e17965fa6dd22842659da"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_two"
-digest = "sha256:068d8b1db634be663f21d855b98b8971195cd64112a18c8001183082b355cc33"
+digest = "sha256:367daf79f69bb9786669031c350d5e0d465703fb6f32bcc8150d822c0a693898"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_open_microwave"
-digest = "sha256:d06629a99f95ad4e8cd96945fb7ac192286f9946216c1b7ebb08cb7df0aa6720"
+digest = "sha256:a264be747343ae92c433da0f53a95749064894293733789b1ef65f5de433271d"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_can_basket"
-digest = "sha256:b17fef31249a5e93f923eb146fba4cc2c8c17ec72f5141e018f6c8395310cdcd"
+digest = "sha256:af21f9a59ec4b540ecf121fa2c2be87d0947a9afab362230f86050888991ad23"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_put_bottles_dustbin"
-digest = "sha256:894bb0e4aca569626dd48aec4427e8d053a2fcfe2d5c6de91f637679ed27d457"
+digest = "sha256:e044cc139a8431a3cd16a9e6afd6e194cde5e08ebdaaa3c79187fea9cc233765"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_scan_object"
-digest = "sha256:bd7bd46f6058ef4184fb810e04c3d82943313544b7694b3f83157860f7f0c64d"
+digest = "sha256:d6a23be2231e87c73cb0a6f334ed8033f83f2607d2b4c0d209b38d2563fd69e7"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-limited"
