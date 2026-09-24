@@ -24,38 +24,38 @@ return. Empty: not run yet. "All-zero" is what the all-zero action scores on the
 
 ## Limited mode
 
-| # | task | robot | class | bar | all-zero | limited task | GPT-6 Luna | GPT-6 Sol |
-|---|---|---|---|---|---|---|---|---|
-| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ready | ✅ 750.6 · $0.02 | ✅ 750.2 · $0.39 |
-| 2 | balance_simple | h1 | C3 | 800 | 37.1 | ready | | |
-| 3 | walk | h1 | C1 | 700 | 6.6 | ready | | |
-| 4 | stair | h1 | C2 | 700 | 8.6 | ready | | |
-| 5 | hurdle | h1 | C2 | 700 | 17.9 | ready | | |
-| 6 | balance_hard | h1 | C3 | 800 | 29.0 | to build | | |
-| 7 | door | h1 | C4 | 600 | 30.9 | to build | | |
-| 8 | maze | h1 | C4 | 1200 | 120.6 | to build | | |
-| 9 | highbar_simple | h1 | C5 | 750 | 0.1 | to build | | |
-| 10 | basketball | h1 | C5 | 1200 | 10.8 | to build | | |
-| 11 | push | h1 | C6 | 700 | −253.7 | to build | | |
-| 12 | reach | h1 | C8 | 12000 | 275.2 | to build | | |
-| 13 | sit_hard | h1 | C8 | 750 | 13.6 | to build | | |
-| 14 | package | h1 | C8 | 1500 | −2192.0 | to build | | |
-| 15 | truck | h1 | C9 | 3000 | 544.4 | to build | | |
-| 16 | powerlift | h1hand | C5 | 800 | 20.4 | to build | | |
-| 17 | window | h1hand | C6 | 650 | 1.6 | to build | | |
-| 18 | spoon | h1hand | C6 | 650 | 7.5 | to build | | |
-| 19 | insert_normal | h1hand | C7 | 350 | 2.5 | to build | | |
-| 20 | cube | h1hand | C7 | 370 | 5.0 | to build | | |
-| 21 | room | h1hand | C8 | 400 | 8.8 | to build | | |
-| 22 | cabinet | h1hand | C9 | 2500 | 10.4 | to build | | |
-| 23 | kitchen | h1hand | C9 | 4 | 0.0 | to build | | |
-| 24 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | to build | | |
+| # | task | robot | class | bar | all-zero | GPT-6 Luna | GPT-6 Sol |
+|---|---|---|---|---|---|---|---|
+| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.6 · $0.02 | ✅ 750.2 · $0.39 |
+| 2 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 71.1 · $0.08 | |
+| 3 | walk | h1 | C1 | 700 | 6.6 | ❌ 31.0 · $0.05 | |
+| 4 | stair | h1 | C2 | 700 | 8.6 | ❌ 22.6 · $0.07 | |
+| 5 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 21.7 · $0.11 | |
+| 6 | balance_hard | h1 | C3 | 800 | 29.0 | | |
+| 7 | door | h1 | C4 | 600 | 30.9 | | |
+| 8 | maze | h1 | C4 | 1200 | 120.6 | | |
+| 9 | highbar_simple | h1 | C5 | 750 | 0.1 | | |
+| 10 | basketball | h1 | C5 | 1200 | 10.8 | | |
+| 11 | push | h1 | C6 | 700 | −253.7 | | |
+| 12 | reach | h1 | C8 | 12000 | 275.2 | | |
+| 13 | sit_hard | h1 | C8 | 750 | 13.6 | | |
+| 14 | package | h1 | C8 | 1500 | −2192.0 | | |
+| 15 | truck | h1 | C9 | 3000 | 544.4 | | |
+| 16 | powerlift | h1hand | C5 | 800 | 20.4 | | |
+| 17 | window | h1hand | C6 | 650 | 1.6 | | |
+| 18 | spoon | h1hand | C6 | 650 | 7.5 | | |
+| 19 | insert_normal | h1hand | C7 | 350 | 2.5 | | |
+| 20 | cube | h1hand | C7 | 370 | 5.0 | | |
+| 21 | room | h1hand | C8 | 400 | 8.8 | | |
+| 22 | cabinet | h1hand | C9 | 2500 | 10.4 | | |
+| 23 | kitchen | h1hand | C9 | 4 | 0.0 | | |
+| 24 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | | |
 
 Classes (`scripts/humanoidbench/subset.toml`): C1 flat gait · C2 constrained gait · C3 stabilisation · C4 navigation ·
 C5 whole-body power · C6 bimanual manipulation · C7 in-hand precision · C8 mobile manipulation · C9 long-horizon.
 h1 has 19 actuators, h1hand 61 (hands included).
 
-Order: the five limited tasks that exist, then the rest by robot (h1 first, as built) and by class.
+Order: the five locomotion twins that came first, then the rest by robot (h1 first) and by class.
 
 ## Full mode
 Not run yet in the standard config; its table goes here when we start.
