@@ -1,6 +1,6 @@
 # Limited 模式（"机器人即服务"）是怎么做的
 
-英文设计与协议：`LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`（协议版本 `rcb-limited/1.0`）。
+英文设计与协议：`LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`（协议版本 `rcb-limited/2.0`，v2 设计见 `LIMITED_MODE_V2_DESIGN.zh.md`）。
 第一个实例：`tasks/robotwin_2_0_stack_blocks_two-limited/`，与 unlimited 版共用同一个冻结实例（seed 60417）。
 
 ## 1. 两种模式的区别
@@ -29,11 +29,11 @@ PoC（`docs/limited_mode/gym-sidecar-poc/`）在 `public` 与 `no-network` 下 o
 
 ## 3. 服务端（`environment/sim/server.py`）
 - 基于现有 `rcb_traj.Session` 建场景（seed、instance.json 只在 sidecar 里），启动即 `record_start()`，整个 episode 全程录制。
-- 接口只有四个：`GET /spec`（动作布局、关节限位、相机名单等静态事实）、`GET /observe`（免费，不计步）、`POST /step`、`GET /status`。
+- 接口只有四个：`GET /spec`（动作类型、维度、关节限位、相机名单、预算）、`POST /observe`（`seconds=0` 取当前帧免费；`seconds>0` 保持上一指令并观看一段时间，返回视频）、`POST /submit`（一批低层动作：`joint_position` 按 `dt` 以 250 Hz 线性插值流式执行，或 `ee_pose` 逐行 CuRobo 规划；返回执行视频/帧/本体感知）、`GET /status`。返回体是二进制 RCB1 帧（mp4 / 原始数组），不用 base64，也不会自动进入模型上下文；agent 用 `rcb_client.py` 的 `submit()/get_obs()` 拿到 `Result` 对象后自行决定存哪里、看哪几帧。
   **严格 gym 契约：模型对世界的一切认识只来自 obs。** 相机标定（RoboTwin `get_obs()` 自带的每相机 `intrinsic_cv / extrinsic_cv / cam2world_gl`）
   放在 obs 的 `cameras` 字段里而不是 spec 里；任务可用 `RCB_OBS_CALIBRATION=0` 关掉，得到纯像素版本。
   其它一律 404（包括 `/reset`）。
-- `/step` 直接调用 RoboTwin 的 `take_action(action, action_type)`：
+- （v1 的 `/step` 已退役，以下为 v1 实现细节，v2 中 `joint_position` 直接写驱动目标、`ee_pose` 走 CuRobo）`/step` 直接调用 RoboTwin 的 `take_action(action, action_type)`：
   - `qpos`：14 维 = 左臂 6 关节 + 左夹爪 + 右臂 6 关节 + 右夹爪（弧度；夹爪 0 闭 1 开），服务端做时间最优插值再走物理；
   - `ee`：16 维 = 左 xyz + wxyz 四元数 + 夹爪 + 右同样，世界系；CuRobo 只对桌面避障（不知道物体），某臂规划失败则原地不动并在
     `plan` 字段里报告。`ee` 目标与观测里的 `endpose` 同一约定（ALOHA 上偏移为 0），观测到的位姿可以直接当目标。

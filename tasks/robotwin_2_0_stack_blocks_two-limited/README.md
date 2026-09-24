@@ -10,6 +10,6 @@ measure the cost of losing resets, privileged state and planning primitives.
 | | |
 |---|---|
 | tier / mode | perception / limited (RGB + proprioception, no reset) |
-| action space | native RoboTwin `take_action`: `qpos` (14) or `ee` (16) |
-| oracle | `solution/`: replays the unlimited expert's joint targets as `qpos` actions (no privileged info at run time) |
+| action space | `rcb-limited/2.0`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` frames or a watch window; binary RCB1 responses |
+| oracle | `solution/`: streams the unlimited expert's joint targets (every 25 physics steps, dt = 0.1 s, linear interpolation) as `joint_position` chunks |
 | verification | `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4` |
