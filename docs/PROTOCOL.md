@@ -49,11 +49,12 @@ collects it). The format is defined by the task's `instruction.md` and checked b
   `/tests/` is copied in, so an agent that is root there can patch the task's `check_success` (or the interpreter) —
   a do-nothing trajectory then scores 1. The same cheat scores 0 under the separate sandbox. `ci_checks/check-verifier-isolation.sh`
   enforces this. `instruction.md` never references `/tests/`.
-- **The agent has no open egress.** `[agent] network_mode = "allowlist"` with only the model-API hosts
-  (`chatgpt.com`, `*.openai.com`, `*.anthropic.com`, `openrouter.ai`). Reason: the reference solutions we scrub from the
-  image are public upstream (RoboTwin's `play_once` on GitHub, this repo's `solution/`), so an agent with `curl` could
-  fetch them; measured 2026-09-24: under the allowlist Codex (ChatGPT login) still reaches its model while GitHub and PyPI
-  return nothing, and the limited-mode sidecar stays reachable. The same CI check enforces it.
+- **Agent egress is a per-run choice, default open.** Harbor's default is `public`; the reference solutions we scrub
+  from the agent image are public upstream (RoboTwin's `play_once` on GitHub, this repo's `solution/`), so a run that
+  must rule out "the agent fetched the answer" flips every task to model-APIs-only with
+  `scripts/set_agent_egress.py allowlist` (and back with `public`). Measured 2026-09-24: under that allowlist Codex
+  (ChatGPT login) still reaches its model while GitHub and PyPI return nothing, and the limited-mode sidecar stays
+  reachable; an empty allowlist breaks the agent. CI only checks that an allowlist, when set, lists hosts.
 - `solution/solve.sh` (oracle) must score 1 and the `nop` agent must score 0.
 - **Reference solutions live only under `solution/`** (Harbor mounts it at `/solution/` for the oracle agent only).
   Nothing the agent can reach — the task image, base images, tooling, docs inside the container — may contain
