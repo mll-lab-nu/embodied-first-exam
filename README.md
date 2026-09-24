@@ -70,7 +70,7 @@ expert passes) → `scripts/robotwin_mk_task.py` → `scripts/robotwin_mk_limite
 | actions | primitives / low-level step | RoboTwin's native `take_action`: `qpos` (14) or `ee` (16), through a small HTTP client |
 | deliverable | the (T, 34) trajectory the agent saves | the same (T, 34) trajectory, recorded by the service |
 | verifier | separate container, two fresh replays + six-view video | separate container over the service's own record (already replay-checked) |
-Design, protocol and results: `docs/LIMITED_MODE.md`, `docs/LIMITED_MODE_PROTOCOL.md` (`rcb-limited/1.0`), `docs/LIMITED_MODE.zh.md`;
+Design, protocol and results: `docs/LIMITED_MODE.md`, `docs/LIMITED_MODE_PROTOCOL.md` (`rcb-limited/2.0`: `submit` chunks of low-level actions, `observe` frames or a watch window, binary RCB1 responses; design in `docs/LIMITED_MODE_V2_DESIGN.zh.md`), `docs/LIMITED_MODE.zh.md`;
 v2 design (two operations `submit` / `get_obs`, low-level action chunks, videos returned as binary): `docs/LIMITED_MODE_V2_DESIGN.zh.md`.
 
 ## Anti-cheat design (what an agent can and cannot touch)
@@ -102,7 +102,7 @@ scripts/make_two_mode_report_zh.py exps/jobs <job-u> <job-l> <report_dir> [batch
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
-separate verifiers. Results so far: `docs/results/`.
+separate verifiers. Results so far: `docs/results/`; each RoboTwin task also carries `results/<agent-slug>/README.md` (replay video, last frame, reward fields, cost, failure analysis) written by `scripts/write_task_results.py`.
 
 ## Status
 v0.1 (2026-09): one robosuite example task + 22 RoboTwin 2.0 tasks in both modes. First batch (Codex + GPT-6 Luna, 21 tasks): unlimited 11/21, limited 1/21 — see `docs/results/`. Next: more instances/families, LIBERO-PRO,
