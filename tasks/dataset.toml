@@ -185,7 +185,7 @@ digest = "sha256:a1c25e0c89a2c657be8845d8769fa590d1a49d3776ea0a5e34b38b645a83dcf
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_scan_object-limited"
-digest = "sha256:523f8a405afeeb1fe842417fb0d0906d4450e1c685a8af18de2f07969d06ce00"
+digest = "sha256:2c14a3e00c8335e8d895932287db62def7004b25eaba7cac411238e2040ac2a3"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_shake_bottle-limited"
