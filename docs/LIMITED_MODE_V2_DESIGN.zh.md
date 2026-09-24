@@ -119,7 +119,23 @@ client 侧 `Result` 对象把 parts 解成 `bytes` / `numpy` 数组，提供 `.s
 和 `.show(camera, k)`（取第 k 帧）；**存不存、存哪里、看哪几张，都是 agent 代码的决定**。服务端在自己的 `/data/`
 里另存一份完整记录给 verifier，agent 看不到。
 
-### 3.4 故意不提供的
+### 3.4 agent 怎么调用（写在 instruction 里）
+
+对，就是靠 instruction 告诉模型怎么和 service 交流，模型自己写代码调。三种方式都行，说的是同一个协议：
+
+1. **Python client（推荐）**：`/opt/tools/rcb_client.py`，`from rcb_client import Robot; r = Robot()`，
+   `res = r.submit("ee_pose", actions, dt=0.05)`，`obs = r.get_obs()`；返回 `Result` 对象，`res.last["head_camera"]` 是
+   numpy 数组，`res.save("/app/runs/003")` 落盘，`res.video["head_camera"]` 是 mp4 字节。
+2. **自己发 HTTP**：`POST http://sim:8000/submit`（出口管控下 `localhost:8000`），请求/响应体都是 RCB1 帧；
+   `/opt/tools/rcb1.py` 提供 `encode(meta, parts)` / `decode(bytes)`，也可以按 §3.3 的格式自己写十几行解析。
+3. **curl**：`curl -s -X POST --data-binary @req.rcb1 http://sim:8000/submit -o res.rcb1 && python -m rcb1 unpack res.rcb1 out/`
+   把 mp4、JPEG、npy 解到目录里；`GET /spec` 直接返回 JSON。
+
+instruction 里给出：service 地址、`spec` 的内容（动作类型/维度/限位/相机）、两个操作的参数和返回、RCB1 帧格式、
+`rcb_client.py` 的用法示例、以及规则（无 reset、episode 何时结束、时间预算、什么都不会自动进上下文——想看图要自己读）。
+模型用哪种方式、把结果存在哪、看几帧，都由它自己决定；服务端只认协议。
+
+### 3.5 故意不提供的
 
 `reset`、`check_success`、`get_state`。`spec` 保留为只读端点（动作类型/维度/限位/相机名单），client 启动时读一次。
 
@@ -154,7 +170,7 @@ client 侧 `Result` 对象把 parts 解成 `bytes` / `numpy` 数组，提供 `.s
 4. **独立 verifier**：Harbor 先停 agent 容器，collect 钩子在 sim 里发信号等 `finalized`，产物按原路径拷进 verifier 容器；
    `success = live_success ∧ replay_success ∧ deterministic`，reward.json 字段与 unlimited 一致，视频拷到 `/logs/verifier/`。
 
-agent 容器从头到尾没有仿真器，`/robot_media` 只读、`/data` 根本不可见；要篡改验证必须攻进 sidecar。unlimited 模式同样在独立容器里评分
+agent 容器从头到尾没有仿真器，服务端的 `/data` 对它不可见；要篡改验证必须攻进 sidecar。unlimited 模式同样在独立容器里评分
 （2026-09-23 的 42 个 trial 全部 `verifier_environment_mode = separate`，CI `check-verifier-isolation.sh` 强制）。
 
 ## 7. episode 什么时候停
