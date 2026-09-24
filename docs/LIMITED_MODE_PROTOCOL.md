@@ -1,123 +1,80 @@
-# Limited-mode protocol `rcb-limited/1.0` (robot as a service)
+# Limited-mode protocol `rcb-limited/2.0` (robot as a service)
 
-The agent talks to a **sim service** it cannot open, through JSON over HTTP. There is **no reset**: one trial =
-one episode, exactly like one attempt on a real robot. There is **no step limit**; the agent's wall-clock budget
-(`[agent].timeout_sec`) is the only limit, and the step count is reported as cost. Nothing the agent can call
-reveals object poses, scene files, seeds or the success predicate.
+The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit**;
+the agent's wall-clock budget is the only limit; actions and simulated time are reported as cost. Nothing the agent can
+call reveals object poses, scene files, seeds or the success predicate. Videos, frames, depth and proprioception come
+back as **binary** in the response body (RCB1 frames, below), never base64; the agent's code decides what to keep.
 
-Base URL: `http://sim:8000` (compose network) or `http://localhost:8000` (Harbor egress control puts the service
-in the agent's network namespace). The client library tries both. All bodies are JSON; images are base64 PNG.
+Base URL: `http://sim:8000` (compose network) or `http://localhost:8000` (Harbor egress control puts the service in the
+agent's network namespace); the client tries both. The socket opens only when the scene is ready (~1 min); until then
+connections are refused and the client retries.
 
 ## Endpoints
-| method | path | purpose |
-|---|---|---|
-| GET | `/spec` | static description: robot, action types, joint names/limits, cameras, budgets |
-| GET | `/observe` | current observation without acting (allowed at any time, does not count as a step) |
-| POST | `/step` | execute one action, return the next observation |
-| GET | `/status` | `{step, physics_steps, done, reason, elapsed_s}` |
-
+| method | path | body | response |
+|---|---|---|---|
+| GET | `/spec` | — | JSON: action types (dims, layouts, limits, semantics), cameras, proprio layout, budgets |
+| GET | `/status` | — | JSON: `{step, calls, physics_steps, done, reason, elapsed_s}` |
+| POST | `/observe` | RCB1 or JSON `{cameras, seconds, video_fps, include_depth, video}` | RCB1 |
+| POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim) | RCB1 |
 Anything else (including `/reset`, `/state`, `/success`) returns **404**.
 
-## `GET /spec` response
-```json
-{
- "protocol": "rcb-limited/1.0",
- "simulator": "robotwin-2.0", "robot": "aloha-agilex",
- "task_text": "Stack the green block on top of the red block ...",
- "action_types": ["qpos", "ee"],
- "qpos": {"dim": 14,
-          "layout": ["fl_joint1","fl_joint2","fl_joint3","fl_joint4","fl_joint5","fl_joint6","left_gripper",
-                     "fr_joint1","fr_joint2","fr_joint3","fr_joint4","fr_joint5","fr_joint6","right_gripper"],
-          "units": "rad for joints; gripper in [0,1], 0 = closed, 1 = open",
-          "limits": {"fl_joint1": [-3.1416, 3.1416], "...": "..."}},
- "ee": {"dim": 16,
-        "layout": ["l_x","l_y","l_z","l_qw","l_qx","l_qy","l_qz","left_gripper",
-                   "r_x","r_y","r_z","r_qw","r_qx","r_qy","r_qz","right_gripper"],
-        "frame": "world: origin at the table centre on the floor plane, +z up, robot base at y = -0.65 facing +y, table top at z ~= 0.74",
-        "quaternion": "wxyz, unit norm",
-        "note": "same convention as observation.endpose.left/right, so an observed pose is a valid target. NOT the fingertip: this is RoboTwin's end-effector frame, 0.12 m behind the gripper centre along the approach axis on ALOHA-AgileX (gripper_bias 0.12); to put the fingers at p command p - 0.12*approach_axis"},
- "cameras": {"head_camera": {"mounted": "static", "rgb": true, "depth": false, "calibration_in_obs": true},
-             "front_camera": {...}, "left_camera": {"mounted": "left wrist", ...}, "right_camera": {...}},
- "physics_hz": 250,
- "budget": {"reset": 0, "steps": null, "wall_clock_s": 3600}
-}
+## RCB1 frame
 ```
-`limits` are the ranges the service will accept. (The ALOHA URDF only carries placeholder ±10 rad limits; the
-service reports ±π for those joints, matching RoboTwin's own joint-legality rule.)
-
-## Observation (returned by `/observe` and `/step`)
-```json
-{
- "step": 12, "physics_steps": 3480, "time_s": 13.92,
- "images": {"head_camera": "<base64 PNG RGB>", "front_camera": "...", "left_camera": "...", "right_camera": "..."},
- "cameras": {"head_camera": {"intrinsic_cv": [[3x3]], "extrinsic_cv": [[3x4]], "cam2world_gl": [[4x4]]}, "...": "..."},   // RoboTwin's per-camera
-                                                                                      // calibration, exactly as in its get_obs(); the whole key is omitted when the task sets RCB_OBS_CALIBRATION=0
- "depth":  {"head_camera": "<base64 float16 little-endian HxW metres>"},            // only if the task enables depth
- "joint":  {"left_arm": [6 floats], "left_gripper": 0.98, "right_arm": [6 floats], "right_gripper": 1.0,
-            "vector": [14 floats]},                                                   // measured positions, qpos layout
- "endpose": {"left": [x,y,z,qw,qx,qy,qz], "right": [x,y,z,qw,qx,qy,qz]},              // ee layout, world frame
- "done": false, "reason": null,                                                       // see episode semantics
- "time_left_s": 3412.6                                                                // wall-clock budget left
-}
+"RCB1" (4 B) | header_len uint32 LE (4 B) | header JSON (UTF-8) | blob_0 | blob_1 | …
+header = {"v": 1, "meta": {...}, "parts": [{"name","kind","len", ...}, ...]}       # blobs in this order, no gaps
+kinds: "mp4" (fps, n) · "array" (dtype, shape; C-order raw bytes) · "jpeg" · "json" · "bytes"
 ```
-Everything the model learns comes from observations (strict gym contract); `/spec` only describes the action space and
-static robot facts. Images are what RoboTwin's cameras render (`get_obs()`), nothing more. The per-camera calibration
-(`cameras`) is part of RoboTwin's native observation — a real robot ships calibrated cameras too — and a task may
-switch it off (`RCB_OBS_CALIBRATION=0`) for a pixels-only variant. No object poses, no segmentation unless a
-`perception`-tier task variant explicitly enables it in `/spec`.
+Response parts: `video/<cam>` (mp4), `frames/<cam>` (uint8 [N,H,W,3]), `last/<cam>` (uint8 [H,W,3], always), `depth/<cam>`
+(float16 [N,H,W], if requested), `proprio` (float32 [N,30], one row per video frame). Requests over 64 MB → 413/400; a
+response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `rcb1.py` (encode/decode, `python -m rcb1
+unpack f dir`) is shipped with the client.
 
-## `POST /step`
-Request:
-```json
-{"type": "qpos", "action": [14 floats]}          or          {"type": "ee", "action": [16 floats]}
-```
-Semantics (identical to RoboTwin's policy evaluator `take_action(action, action_type)`):
-- `qpos`: the service plans a time-optimal interpolation (TOPP) from the current joints to the target and steps the
-  physics until it is reached (typically 50–300 physics steps); the grippers interpolate linearly alongside. If TOPP
-  fails or the target equals the current joints, RoboTwin holds the arm for 50 physics steps; the response reports it
-  as `"plan": {"left": "TOPP ... -> arm held 50 steps", ...}` instead of `"Success"`.
-- `ee`: the service runs CuRobo to a collision-free path **against the table only** (objects are not in its
-  world model) for each arm and executes it; grippers as above. If a plan fails for an arm, that arm holds
-  position for 50 physics steps and the response carries `"plan": {"left": "Success", "right": "failed"}`.
-- One request = one step, whatever the number of physics steps consumed (`physics_steps` is also reported).
+## `meta` (in every response)
+`step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [14
+joint names incl. grippers, l_x..l_qz, r_x..r_qz, left_gripper_cmd, right_gripper_cmd], "now": [30 floats]}`, `cameras`
+(RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the whole key omitted when the task sets
+`RCB_OBS_CALIBRATION=0`), `done`, `reason`. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
+[{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
 
-Response: the observation (above) plus
-```json
-{"ok": true, "plan": {"left": "Success", "right": "Success"}, "done": false, "reason": null}
-```
+## `/submit` semantics
+- `joint_position` (14 = 6 joints + gripper per arm; rad; gripper 0 closed..1 open): rows are `dt` seconds apart
+  (`1/250 ≤ dt ≤ 0.5`); the service streams drive targets at 250 Hz with `interpolate = "linear"` (default) or `"hold"`
+  between rows, exactly as a real controller consumes a chunk. Out-of-limit values are clipped and reported (continuous
+  joints have `null` limits and are never clipped). A chunk may cover at most `max_chunk_s` (10 s). Rows may carry 14
+  extra columns (28 in all) = joint velocity feed-forward in rad/s, held over the row; without them the service uses the
+  central difference of the streamed targets. (An expert record replayed at `dt = 1/250` with its velocities is exact.)
+- `ee_pose` (16 = xyz + wxyz + gripper per arm, world frame): each row is planned by CuRobo against the table only and
+  executed; `dt` is ignored (the planner sets the duration); a failed plan holds that arm for 50 physics steps and is
+  reported in `plan`. The pose is RoboTwin's end-effector frame, **0.12 m behind the gripper centre** along the approach
+  axis (same as the `proprio` end-effector poses). At most 50 rows per submit.
+- Not yet: `joint_delta`, `joint_velocity`, `ee_delta`, `joint_torque` (listed under `spec.action_types.not_yet`).
+- Video is captured every `250/video_fps` physics steps from the requested cameras, plus the first and last frame.
+- After the chunk the task predicate is evaluated; the first success ends the episode (`done`, `reason = "success"`).
+  The chunk is appended to the recorded `(T, 34)` trajectory and to `episode.jsonl`.
 
-Errors (no physics executed):
+## `/observe` semantics
+`seconds = 0` (default) returns the current frames, free (no physics). `seconds > 0` (≤ `max_watch_s`, 30) holds the last
+command, advances physics and returns the video; the predicate is checked afterwards. Watching costs no budget beyond
+the wall clock; the simulated time is recorded as cost.
+
+## Errors (no physics executed)
 | code | when |
 |---|---|
-| 400 | wrong `type`, wrong dimension, NaN/inf, joint or gripper value outside `spec.limits`, non-unit quaternion |
-| 409 | episode already finished (`done` = true); the trial is over, nothing else can be done |
-| (connection refused) | service still loading (CuRobo warm-up on start, ~1 min): the socket opens only when the scene is ready; the client retries |
-| 413 | request body over 1 MB |
+| 400 | wrong type/dim, NaN/inf, `dt` or `seconds` out of range, chunk too long, bad interpolate/video value, malformed body |
+| 409 | episode already finished (`done`); the trial is over |
+| 413 | body over 64 MB |
+| 500 | simulator error; the episode ends with `reason = "error"` |
 
 ## Episode semantics
-- The service starts the episode when the container starts (seed hidden inside the service); the agent's first
-  `/observe` is the initial scene.
-- After every step the service evaluates the task's own `check_success()` (never exposed). The first success ends
-  the episode: `done = true, reason = "success"`. Otherwise the episode ends when Harbor's agent phase ends
-  (`reason = "timeout"`), or on an unrecoverable simulator error (`reason = "error"`). At episode end the predicate
-  is evaluated once more, so a success that materialised after the last step (an object settling) still counts.
-- `elapsed_s` in `final.json` is the episode's wall clock from service-ready to episode end (not including finalize).
-- No reset. A dropped object, a collision, a crashed agent script: all count, as on hardware.
+The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
+when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end. No reset.
 
 ## Evidence and grading (agent never sees this)
-The service appends one line per event to `/data/episode.jsonl`:
-```json
-{"ts": ..., "ev": "start", "task": "stack_blocks_two", "seed": 60417, "state_sha": "..."}
-{"ts": ..., "ev": "observe", "step": 0}
-{"ts": ..., "ev": "step", "step": 1, "type": "qpos", "action": [...], "physics_steps": 212, "plan": {...}, "success": false}
-{"ts": ..., "ev": "end", "reason": "success", "step": 37, "physics_steps": 9120, "elapsed_s": 412.3}
-```
-A `[[verifier.collect]]` hook asks the service to write `/data/final.json` (`success`, `steps`, `physics_steps`,
-`elapsed_s`, `reason`) and to render `/data/replay.mp4` from its own frame buffer (six-view grid). Both are
-collected as sidecar artifacts and graded in a **separate verifier sandbox**: `reward.txt` = 1 iff
-`final.json.success`; `reward.json` carries `success`, `n_actions` (= steps), `sim_steps` (= physics steps),
-`elapsed_s`, `video_rendered` — the same field names as unlimited mode (PROTOCOL §3), so results are comparable.
+`/data/episode.jsonl` (one record per call: type, rows, dt, cameras, note, clipped, plan, physics steps, success),
+`/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (T, 34), a fresh replay
+(`replay_success`, `deterministic`), `replay.mp4` (six-view), `final.json`. The collect hook signals the service by PID
+after the agent container is stopped; a separate verifier grades `final.json`: `success = live ∧ replay ∧ deterministic`,
+reward fields as in PROTOCOL §3.
 
 ## Versioning
-`protocol` in `/spec` is the contract version. Adding fields is backward compatible; changing a layout, a frame,
-or the episode semantics bumps the major version. Tasks record the version in `task.toml` `[metadata].protocol`.
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1.
