@@ -21,6 +21,9 @@ the example and changing what you need.
 6. `solution/solve.sh`: a human-written oracle that scores 1. Keep the reference code itself in `solution/` too;
    never bake it into `environment/` or a base image, and make sure agent-visible tooling does not reference it.
 7. `README.md`: fill **Difficulty**, **Reference solution**, **Verification**.
+   Agent runs go under `results/<agent-slug>/` inside the task directory (`README.md` with result, cost, the verifier's
+   `replay.mp4` / `replay.last.png` and an analysis; `scripts/write_task_results.py` writes them from a Harbor job).
+   Adding results changes the task digest in `dataset.toml`; re-scan.
 8. Check and run:
    ```bash
    bash ci_checks/run_all.sh tasks/<your-task>

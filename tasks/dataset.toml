@@ -37,7 +37,7 @@ digest = "sha256:0cdfe7c4e8a32129468f47a6881a6ee8ef79c9a7f04cb9a2a758f2f81976a44
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-limited"
-digest = "sha256:fb8eedbe5f40e0bb96c20e82eb92f03a37888c0fc117ca8f700f227dbc69c7a8"
+digest = "sha256:1917bc2d580c1a9c012b406790a75f5ee997cb88493560c94fcdc108d1620ecb"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_adjust_bottle"
