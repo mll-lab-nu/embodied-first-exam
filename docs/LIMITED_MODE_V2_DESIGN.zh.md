@@ -43,7 +43,7 @@ submit(
   interpolate: "hold" | "linear" = "linear",
   cameras:     string[] = ["head_camera"],
   video_fps:   number = 10,
-  return:      "keyframes" | "video_url" | "both" = "both",
+  return:      "keyframes" | "path" | "both" = "both",   # keyframes 进模型上下文；path 是 agent 容器里只读挂载的本地文件
   max_keyframes: int = 8,
   note:        string = ""       # agent 的意图说明，原样进日志
 ) -> {
@@ -53,8 +53,9 @@ submit(
   plan:     {left: status, right: status} # 仅 ee_* 类型
   proprio_end: {joint_pos, joint_vel, gripper, ee_pose_left, ee_pose_right},
   done: bool, reason: null | "success" | "timeout" | "error",
-  video_url: "http://<service>/media/<chunk_id>.mp4",   # 同一服务只读提供
-  keyframes: [image × ≤max_keyframes]                     # MCP 图片块（JPEG），均匀抽取
+  video_path: "/robot_media/<chunk_id>.mp4",             # sim 写入的共享卷，在 agent 容器里以只读方式挂载
+  frames_dir: "/robot_media/<chunk_id>/",                 # 可选：按 video_fps 抽好的 JPEG 序列，供 agent 自己写代码分析
+  keyframes: [image × ≤max_keyframes]                     # MCP 图片块（JPEG 320×240），均匀抽取，直接进模型上下文
 }
 ```
 
@@ -71,16 +72,29 @@ get_obs(
   seconds: number = 0,           # 0：当前帧；>0：保持当前指令、让物理走这么久并录像
   video_fps: number = 10,
   include_depth: bool = false,
-  return: "keyframes" | "video_url" | "both" = "keyframes",
+  return: "keyframes" | "path" | "both" = "keyframes",
   max_keyframes: int = 8
-) -> { obs_id, sim_time_s, proprio, cameras: {name: {intrinsic, cam2world}}, keyframes | video_url, done, reason }
+) -> { obs_id, sim_time_s, proprio, cameras: {name: {intrinsic, cam2world}}, keyframes | video_path | frames_dir, done, reason }
 ```
 
-`seconds = 0` 免费（不走物理）。`seconds > 0` 时机器人保持原指令不动、世界继续演化（物体掉落、稳定），返回视频；
-这段时间计入仿真时间，但不算动作。除图像外只返回本体信息和相机标定（RoboTwin 观测原生字段，可用开关关掉）；
+`seconds = 0` 免费（不走物理）。`seconds > 0` 时机器人保持原指令不动、世界继续演化（物体掉落、稳定），返回视频。
+等待**不扣任何预算**：真机上等待也只花墙钟时间，而且"松手后等它落稳再看"是正当操作。它只被**记录**为仿真时间
+（PROTOCOL §5 要求把 sim_steps 当成本上报，便于横向比较），并有单次上限（默认 30 s）防止一次调用挂几分钟。除图像外只返回本体信息和相机标定（RoboTwin 观测原生字段，可用开关关掉）；
 **永远不返回物体状态**。"看未来"必须真的花掉那段时间，而且会被记录。
 
-### 3.3 故意不提供的
+### 3.3 工具结果怎么到达模型（直接进上下文 vs 落盘）
+
+两条路同时提供，各管一种用途：
+
+| 内容 | 走哪里 | 给谁用 |
+|---|---|---|
+| 关键帧（默认 ≤ 8 张，320×240 JPEG，约 15 KB/张）、本体信息、`done`、裁剪/规划状态 | **MCP 返回值，直接进模型上下文**（MCP 图片块） | 模型"看一眼就决定" |
+| 完整视频 mp4、按帧抽好的 JPEG 序列、深度 | **落盘到共享卷 `/robot_media/`**：sim 容器可写，agent 容器**只读**挂载，返回值里给本地路径 | agent 自己写代码分析（抽帧、测位置、跟踪） |
+
+这样不需要 agent 通过网络下载（也就不依赖 `sim` 还是 `localhost` 的主机名问题），不会把视频塞进上下文，
+而只读挂载保证 agent 改不了这些证据。`max_keyframes=0` 可以完全不往上下文放图。
+
+### 3.4 故意不提供的
 
 `reset`、`check_success`、`get_state`、可调用的 `spec`（规格是静态 MCP 资源 `robot://spec` + 工具描述）。
 
@@ -151,6 +165,7 @@ name = "robot"
 transport = "streamable-http"
 url = "http://localhost:8000/mcp"     # 待 PoC 确认 public / no-network 两种模式都通
 ```
+compose 里新增一个命名卷 `robot_media`：sim 挂 `/robot_media`（读写），main 挂 `/robot_media:ro`（只读）。
 其余沿用 v1：`environment/docker-compose.yaml` 里 sim sidecar + GPU 预留、`artifacts` 来自 `service = "sim"`、
 `[[verifier.collect]]` 用 pid 文件发 SIGUSR1、`[verifier] environment_mode = "separate"` + `tests/Dockerfile`。
 
@@ -163,9 +178,13 @@ url = "http://localhost:8000/mcp"     # 待 PoC 确认 public / no-network 两�
 4. 协议升到 `rcb-limited/2.0`；HTTP 的 `/observe` `/step` 退役，两个工具成为全部接口。
 5. 重跑 21 个 limited 任务，与 v1 对比。
 
-## 11. 已知风险 / 待定
+## 11. 已决定的几个点
 
-- MCP 返回大量图片会撑爆上下文：关键帧默认 ≤ 8 张、320×240，mp4 按需下载到 agent 容器自行抽帧。
-- `joint_torque` 在 SAPIEN 里要关掉臂关节 PD 驱动，重力补偿是否保留需要决定（建议保留，与真机的重力补偿控制器一致）。
-- `seconds>0` 的 `get_obs` 让 agent 可以"白等"物理时间，需要计入预算或设上限。
-- limited 的 qpos 重放 oracle 对个别任务（scan_object）不成立；v2 的 oracle 用分段 `submit` 重放专家目标，同样要逐任务验证。
+| 问题 | 决定 | 理由 |
+|---|---|---|
+| 图片会不会撑爆上下文 | 关键帧默认 ≤ 8 张、320×240 JPEG（约 15 KB/张，一次调用 ≈ 0.1 MB）；`max_keyframes=0` 可关；完整视频只落盘不进上下文 | 模型需要的是"看一眼"，精细分析交给 agent 自己写代码读 `/robot_media/` |
+| 视频直接返回还是存本地 | 两者：关键帧进上下文，mp4/帧序列写到共享卷、agent 只读挂载、返回本地路径 | 不依赖网络主机名，证据不可篡改，agent 可编程分析 |
+| `get_obs(seconds>0)` 白等要不要计预算 | **不计预算，只记录**（sim_time 作为成本字段上报），单次上限 30 s | 真机上等待就是墙钟时间；松手后等物体落稳属于正当操作；上限防止一次挂几分钟 |
+| `joint_torque` 模式下重力补偿 | **保留**服务端重力补偿，agent 给的是补偿之外的力矩 | 与真机的重力补偿控制器一致；否则第一段力矩指令就会让臂砸下来 |
+| oracle 怎么验证 | 每个任务用分段 `submit` 重放专家关节目标（`joint_position`，dt=物理步长×K），逐任务跑 gate；不通过的任务标"无已验证 oracle"保留（如 v1 的 scan_object） | oracle 是 verifier 的正例测试，不是任务的一部分 |
+| `done=success` 要不要告诉 agent | 默认告诉 | 真机上操作员看得见结果；要更严只需一个开关 |
