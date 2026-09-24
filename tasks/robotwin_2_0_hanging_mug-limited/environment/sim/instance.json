@@ -1,0 +1,8 @@
+{
+ "task": "hanging_mug",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "7929c65b1fe0",
+ "text": "Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack.",
+ "n_active_joints": 16
+}

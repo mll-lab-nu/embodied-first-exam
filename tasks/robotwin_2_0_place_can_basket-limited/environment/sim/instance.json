@@ -1,0 +1,8 @@
+{
+ "task": "place_can_basket",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "78d4c27dd675",
+ "text": "Put the can into the basket, then lift the basket with the other arm and hold it up: the basket must end at least 2 cm above its start height and upright, with the can inside it (touching the basket, not the table).",
+ "n_active_joints": 16
+}

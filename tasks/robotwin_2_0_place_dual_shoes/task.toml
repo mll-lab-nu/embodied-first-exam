@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robotwin_2_0_place_dual_shoes"
+description = "RoboTwin 2.0 place_dual_shoes (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left. Frozen scene instance (RoboTwin seed 60417)."
+authors = [{ name = "kangrui" }]
+keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "place_dual_shoes"]
+
+[metadata]
+author_name = "kangrui"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "robotwin"            # RoboTwin 2.0 = SAPIEN 3 / PhysX + CuRobo
+robot = "aloha-agilex"
+family = "place_dual_shoes"
+tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+instance_seed = 60417             # scene = environment/instance.json (RoboTwin seed + expected initial-state hash); identity = dataset.toml digest
+expert_time_estimate_hours = 0.5
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 3600.0
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0
