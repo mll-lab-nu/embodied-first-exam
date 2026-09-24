@@ -29,7 +29,10 @@ for mode, job in (("unlimited", ju), ("limited", jl)):
               "agent_resets": rw.get("agent_resets"), "agent_sim_steps": rw.get("agent_sim_steps"),
               "exception": ((r.get("exception_info") or {}).get("exception_type")), "trial": str(trial)}
         json.dump(info, open(d/"agent_summary.json","w"), indent=1)
-        rows.setdefault(name,{})[mode]=info
+        prev=rows.setdefault(name,{}).get(mode)
+        if prev and (prev.get("started_at") or "") > (r.get("started_at") or ""):   # several trials of one task: keep the latest
+            continue
+        info["started_at"]=r.get("started_at"); rows[name][mode]=info
 L=[f"# RoboTwin 2.0 × Codex (GPT-6 Luna, ChatGPT subscription) — unlimited vs limited\n", f"Collected {dt.date.today().isoformat()} from `{ju}` and `{jl}`. Videos and rewards per task under `<task>/<mode>/`.\n",
    "| task | unlimited | agent s | tokens in/out | actions | limited | agent s | tokens in/out | actions |","|---|---|---|---|---|---|---|---|---|"]
 def cell(i):

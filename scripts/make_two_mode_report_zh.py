@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """中文报告：Codex + GPT-6 Luna 在 RoboTwin 2.0 任务上 unlimited vs limited，两种模式带视频（GIF 预览 + mp4 链接）。
-usage: make_two_mode_report_zh.py <jobs_dir> <unlimited_job> <limited_job> <report_dir> [<oracle_gate_job_limited>]"""
+usage: make_two_mode_report_zh.py <jobs_dir> <unlimited_job> <limited_job> <report_dir> [<batch_plan.json>]
+The task-list state file (difficulty) is read from RCB_TASKLIST_STATE if set."""
 import json, pathlib, shutil, subprocess, sys, datetime as dt, glob
 jobs, ju, jl, rep = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib.Path(sys.argv[4])
-plan = json.load(open(pathlib.Path(jobs).parent / "batch_plan_2026-09-23.json"))
+PLAN = sys.argv[5] if len(sys.argv) > 5 else str(pathlib.Path(jobs).parent / "batch_plan_2026-09-23.json")
+plan = json.load(open(PLAN))
 import yaml
-STATE = pathlib.Path("/home/user/data/projects/robot_os_world_all/robotic-code-agent-task-list/state/tasks/robotwin-2.yml")
+STATE = pathlib.Path(__import__("os").environ.get("RCB_TASKLIST_STATE", "/home/user/data/projects/robot_os_world_all/robotic-code-agent-task-list/state/tasks/robotwin-2.yml"))
 DIFF = {t: (b or {}).get("difficulty", "unrated") for t, b in (yaml.safe_load(open(STATE)) or {}).items()} if STATE.exists() else {}
 ZH_DIFF = {"easy": "易", "medium": "中", "hard": "难", "extreme": "极难", "unrated": "未评"}
 # 失败分析（人工阅读 agent transcript / verifier 输出后写的；U = unlimited，L = limited）
@@ -132,7 +134,7 @@ L.append("**limited（只有 RGB + 本体，无 reset，ee/qpos 原生动作）*
          "2. **末端与夹爪接触点的偏移**：agent 把 ee 位姿当夹爪中心，实际指尖在别处，多次“闭合-抬起”后物体留在桌上（shake_bottle、open_laptop、place_object_stand）。\n"
          "3. **规划器拒绝靶点**：ee 模式下 CuRobo 只对桌面避障，靠近桌面或远处的目标被拒（dump_bin_bigbin 14 次、pick_dual_bottles 12 次、rotate_qrcode 9 次），agent 需要自己拆短路点，浪费步数。\n"
          "4. **没有成功信号就停手**：episode 不自动结束，模型在 4–9 分钟、几十个动作后主动停止（“无法从图像确认”），远低于 1 小时预算；只有 place_dual_shoes（26 分钟）和 put_bottles_dustbin（16 分钟）坚持较久。\n"
-         "7. **最接近成功的**：place_can_basket（罐子确实抓起来了，放偏）、put_bottles_dustbin（交接卡在可达边界）、place_phone_stand（手机靠在支架旁）。最终 limited 1/21。\n"
+         "5b. **最接近成功的**：place_can_basket（罐子确实抓起来了，放偏）、put_bottles_dustbin（交接卡在可达边界）、place_phone_stand（手机靠在支架旁）。最终 limited 1/21。\n"
          "5. **视野遮挡**：举起物体后从两台固定相机里消失（move_can_pot、place_object_stand），模型不敢再动。\n"
          "6. **唯一成功 open_microwave**：门把手大、位置好估，且“拉一下看一眼”正好适合 ee 分步控制——这恰是 unlimited 里模型 4 分钟就放弃的任务。\n")
 L.append("## 逐任务（左 unlimited，右 limited）\n")

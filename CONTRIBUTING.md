@@ -16,7 +16,8 @@ the example and changing what you need.
    with the field names from PROTOCOL §3. Keep the verifier's inputs (scene copy, tooling) under `tests/`, add a
    `tests/Dockerfile` that bakes them into `/tests/` on top of the same base image (+ `tests/docker-compose.yaml` if
    replay needs the GPU), and set `[verifier] environment_mode = "separate"` in `task.toml` — the verifier must not
-   run in the agent's container (PROTOCOL §4).
+   run in the agent's container (PROTOCOL §4). Copy the `[agent] network_mode = "allowlist"` block too: agents must
+   not be able to fetch the public reference solutions.
 6. `solution/solve.sh`: a human-written oracle that scores 1. Keep the reference code itself in `solution/` too;
    never bake it into `environment/` or a base image, and make sure agent-visible tooling does not reference it.
 7. `README.md`: fill **Difficulty**, **Reference solution**, **Verification**.

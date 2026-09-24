@@ -42,7 +42,7 @@ client 解码成 numpy 数组和 mp4 字节，agent 代码决定保存到哪个�
 client.submit(
   action_type: "joint_position" | "joint_delta" | "joint_velocity" | "joint_torque" | "ee_pose" | "ee_delta",
   actions:     number[][],       # T × dim，dim 按类型见 §4
-  dt:          number = 0.02,    # 相邻两行的时间间隔（秒）；夹在 [1/物理频率, 0.5]
+  dt:          number = 0.02,    # 相邻两行的时间间隔（秒）；允许范围 [1/物理频率, 0.5]，越界整段拒绝（§5）
   interpolate: "hold" | "linear" = "linear",
   cameras:     string[] = ["head_camera","front_camera","left_camera","right_camera"],
   video_fps:   number = 10,
@@ -57,14 +57,16 @@ client.submit(
   video: {camera: bytes(mp4)},                 # video="mp4"/"both"
   frames: {camera: uint8[N,H,W,3]},            # video="frames"/"both"
   last:   {camera: uint8[H,W,3]},              # 总是有：每个相机最后一帧
-  proprio: float32[N, 16+14]                   # 每个视频帧时刻的关节/夹爪/末端位姿
+  proprio: float32[N, 30]                      # 每个视频帧时刻：14 关节角（含夹爪）+ 左右末端位姿 2×(xyz+wxyz)=14 + 左右夹爪开度 2
 ).save(dir) -> 写成 meta.json / <cam>.mp4 / frames/<cam>/*.jpg / last/<cam>.jpg / proprio.npy
 ```
 
 语义：服务端按物理频率（250 Hz）把这些行"流"下去，行与行之间保持或线性插值——就是真机控制器接收一段动作 chunk 的方式。
+录制的轨迹每步除驱动目标外增加一列"控制模式"和（力矩模式下）逐关节 qf，这样六种类型都能逐步回放核验。
 夹爪是向量的一部分（每臂最后一维，0 闭 1 开）。`joint_torque` 绕过 PD 驱动直接 `set_qf`，是"力"的选项；
 `ee_pose / ee_delta` 经服务端 IK/规划器（CuRobo，只对桌面避障），逐臂报告规划状态。
-执行完后服务端调任务的 `check_success()`；第一次为真即结束 episode。这段动作同时追加进录制的 (T,34) 轨迹（交付物）和 `episode.jsonl`。
+执行完后服务端调任务的 `check_success()`；第一次为真即结束 episode。`get_obs(seconds>0)` 结束时也检查一次，
+episode 因超时/agent 退出而结束时再检查一次——物体在等待期间落稳而成功的情况不会漏掉。这段动作同时追加进录制的 (T,34) 轨迹（交付物）和 `episode.jsonl`。
 
 ### 3.2 `get_obs` —— 看一眼，或者看几秒
 
@@ -144,9 +146,9 @@ instruction 里给出：service 地址、`spec` 的内容（动作类型/维度/
 | 类型 | 维度（ALOHA-AgileX） | 单位 | 执行方式 |
 |---|---|---|---|
 | `joint_position` | 14 = 每臂 6 关节 + 1 夹爪 | rad，夹爪 0..1 | 驱动目标，250 Hz 插值 |
-| `joint_delta` | 14 | 相对上一次指令的增量 | 累加后同上 |
+| `joint_delta` | 14 | 相对上一次指令的增量（第一行相对当前指令目标） | 累加后同上 |
 | `joint_velocity` | 14 | rad/s | 每物理步积分，限速裁剪 |
-| `joint_torque` | 12（+2 夹爪目标） | N·m | 每步 `set_qf`，臂关节驱动关闭 |
+| `joint_torque` | 12（+2 夹爪目标） | N·m | 每步 `set_qf`（叠加在服务端重力补偿之上），臂关节驱动关闭；**轨迹记录改为逐步 qf**，回放照样确定 |
 | `ee_pose` | 16 = (xyz, wxyz, 夹爪) × 2 | m，单位四元数 | 每行规划再执行 |
 | `ee_delta` | 16 | m / 小旋转向量 | 叠加到上一次末端指令 |
 
@@ -160,14 +162,14 @@ instruction 里给出：service 地址、`spec` 的内容（动作类型/维度/
 - 预算：服务端执行墙钟预算（到时 `timeout`）；可选的仿真时间上限写在 spec。
 - 体积：单次响应上限（默认 256 MB），超过则服务端自动降级为 mp4 + last 帧并在 meta 里说明；`seconds` 单次上限 30 s。
 
-## 6. 正确性怎么验证（MCP 不改变这一链条）
+## 6. 正确性怎么验证（与 v1 相同的链条）
 
 1. **成功判定在服务端**：每次 `submit` 后调任务自己的 `check_success()`，agent 只看到 `done` 标志。
 2. **过程全录**：每个调用（参数、裁剪、规划状态、末态本体、`note`、目录名）写 `episode.jsonl`；
    每个物理步的驱动目标录成 (T,34) 轨迹——与 unlimited 交付的是同一种东西。
 3. **episode 结束后服务端自检**：从冻结实例**重新回放**这条轨迹，得到 `replay_success` 与终态哈希一致性 `deterministic`；
    渲染六视角 `replay.mp4`；写 `final.json`（含 `finalized: true`）。
-4. **独立 verifier**：Harbor 先停 agent 容器，collect 钩子在 sim 里发信号等 `finalized`，产物按原路径拷进 verifier 容器；
+4. **独立 verifier**：Harbor 先停 agent 容器，collect 钩子在 sim 里发信号（信号处理器只起线程、不拿锁，避免与正在执行的 `submit` 死锁）等 `finalized`，产物按原路径拷进 verifier 容器；
    `success = live_success ∧ replay_success ∧ deterministic`，reward.json 字段与 unlimited 一致，视频拷到 `/logs/verifier/`。
 
 agent 容器从头到尾没有仿真器，服务端的 `/data` 对它不可见；要篡改验证必须攻进 sidecar。unlimited 模式同样在独立容器里评分
@@ -177,7 +179,7 @@ agent 容器从头到尾没有仿真器，服务端的 `/data` 对它不可见�
 
 | 触发 | 谁决定 | 结果 |
 |---|---|---|
-| 某次 `submit` 后 `check_success` 为真 | 服务端 | `done=success`，之后的 `submit` 返回"已结束" |
+| 某次 `submit`（或 `get_obs(seconds>0)`）后 `check_success` 为真 | 服务端 | `done=success`，之后的 `submit` 返回"已结束" |
 | agent 墙钟预算用完（`[agent].timeout_sec`） | Harbor | 杀 agent → collect 钩子 → `done=timeout` |
 | 仿真报错 | 服务端 | `done=error` |
 | agent 自己结束（模型给出最终回复、不再调工具） | 模型 | Harbor 结束 agent 阶段 → 同上收尾，未成功即 0 |

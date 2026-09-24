@@ -46,6 +46,22 @@ from typing import Any, Callable
 import numpy as np
 
 ROBOTWIN_ROOT = os.environ.get("ROBOTWIN_ROOT", "/opt/RoboTwin")
+# Interaction log: every Session (any process) appends one line per session start/reset/record/replay/exit, with the
+# physics steps consumed, to RCB_SESSION_LOG (default /app/output/rcb_session_log.jsonl, collected with the artifacts).
+# It records the agent's whole debugging history, not just the trajectory it hands in (the verifier reports it as
+# cost: agent_sessions / agent_resets / agent_sim_steps). Set RCB_SESSION_LOG="" to disable (the verifier does).
+SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
+
+
+def _slog(ev: str, **kw) -> None:
+    if not SESSION_LOG:
+        return
+    try:
+        os.makedirs(os.path.dirname(SESSION_LOG), exist_ok=True)
+        with open(SESSION_LOG, "a") as f:
+            f.write(json.dumps({"ts": time.time(), "pid": os.getpid(), "ev": ev, **kw}) + "\n")
+    except OSError:
+        pass
 
 # --------------------------------------------------------------------------- task family registry
 # Any RoboTwin task name (envs/<name>.py) is accepted; entries here only add the human-readable goal text.
@@ -142,6 +158,10 @@ class Session:
         self._sim_steps = 0
         self._resets = 0
         self._joints = None
+        self._total_steps = 0
+        _slog("session_start", task=task, seed=self.seed, render=enable_render)
+        import atexit
+        atexit.register(lambda: _slog("session_end", task=task, resets=self._resets, sim_steps=self._total_steps + self._sim_steps))
         if instance is not None:
             self.load_instance(instance)
         else:
@@ -177,6 +197,8 @@ class Session:
         self._joints = list(r.left_arm_joints) + [g[0] for g in r.left_gripper] + \
             list(r.right_arm_joints) + [g[0] for g in r.right_gripper]
         self._entities = [r.left_entity] + ([r.right_entity] if r.right_entity is not r.left_entity else [])
+        self._total_steps += self._sim_steps
+        _slog("reset", task=self.task, n=self._resets + 1, sim_steps_before=self._sim_steps)
         self._sim_steps = 0
         self._resets += 1
         sha = self.state_sha()
@@ -249,6 +271,7 @@ class Session:
     def record_stop(self) -> np.ndarray:
         acts = np.array(self._recording or [], dtype=np.float64).reshape(-1, self.action_dim)
         self._recording = None
+        _slog("record", task=self.task, n_actions=int(len(acts)), success=bool(self.env.check_success()))
         return acts
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
@@ -267,7 +290,7 @@ class Session:
             raise ValueError(f"actions must be (T, {self.action_dim}), got {acts.shape}")
         for row in acts:
             self.step(row)
-        return self.status()
+        st = self.status(); _slog("replay", task=self.task, n_actions=int(len(acts)), success=st["success"]); return st
 
     # Cameras: RoboTwin's head_camera / front_camera / left_camera / right_camera (wrist) plus the free third-person
     # observer_camera (front, wide) and world_camera1 (diagonal from above) that RoboTwin adds to every scene.
