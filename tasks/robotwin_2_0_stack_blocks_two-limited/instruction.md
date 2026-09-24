@@ -26,8 +26,11 @@ obs["done"], obs["reason"], obs["plan"]   # episode over? why? planner status pe
 ```
 Semantics (identical to RoboTwin's policy evaluator): a `qpos` step moves the joints to the target along a
 time-optimal path; an `ee` step plans with CuRobo against the table only (it does not know about objects) and
-executes; a failed plan leaves that arm where it is and reports it in `obs["plan"]`. One `step` = one action,
+executes; a failed plan leaves that arm where it is and reports it in `obs["plan"]` (also for `qpos` when the
+interpolator has nothing to do). One `step` = one action,
 however many physics steps it takes. `ee` targets use the same frame and convention as `obs["endpose"]`, so an
-observed pose is a valid target. Cameras: `obs["cameras"][cam]` carries RoboTwin's per-camera `intrinsic_cv` and
+observed pose is a valid target. **The `ee` point is not the fingertip**: it is RoboTwin's end-effector frame, 0.12 m
+behind the gripper centre along the approach axis; to put the fingers at a world point p, command p minus 0.12 m along
+the approach direction. Cameras: `obs["cameras"][cam]` carries RoboTwin's per-camera `intrinsic_cv` and
 `cam2world_gl` (the head camera looks down at the table from the front; the wrist cameras look along the grippers). Table top is at z ≈ 0.74 m,
 blocks are 5 cm cubes.

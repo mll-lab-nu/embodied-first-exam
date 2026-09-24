@@ -1,7 +1,7 @@
 # Two evaluation modes: unlimited vs limited ("robot as a service")
 
 Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/1.0). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1
-in both `public` and `no-network` agent policies). No RoboTwin task is converted yet.
+in both `public` and `no-network` agent policies). 22 RoboTwin tasks have limited twins (`tasks/robotwin_2_0_*-limited`).
 
 ## Mode 1 — unlimited (what every current task is)
 Agent and simulator live in the same container. The agent may reset without limit, read privileged state
@@ -24,7 +24,7 @@ happens from the service's own log, in a verifier sandbox the agent never ran in
 
 PoC findings (`gym-sidecar-poc`, oracle probes recorded in `artifacts/app/output/probe.txt` of the jobs):
 - from `main`, `/data` and `/srv` of the sidecar do not exist, `ps` shows only main's own process;
-- an undocumented endpoint returns 501/404; the third `reset()` is refused with HTTP 429 by the service;
+- an undocumented endpoint returns 501/404; in the PoC the third `reset()` is refused with HTTP 429 (the real tasks have no reset at all: 404);
 - the separate verifier receives `/data/episode.jsonl` + `/data/final.json` (written by the collect hook) and scores
   from them; the agent's container is already gone;
 - gotcha: do **not** put `expose:`/`ports:` on the sidecar — it conflicts with the shared network namespace that
