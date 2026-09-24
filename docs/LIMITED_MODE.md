@@ -1,6 +1,6 @@
 # Two evaluation modes: unlimited vs limited ("robot as a service")
 
-Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/1.0). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1
+Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/2.0: `submit` action chunks + `observe`, binary RCB1 responses; 1.0's `/step` is retired). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1
 in both `public` and `no-network` agent policies). 22 RoboTwin tasks have limited twins (`tasks/robotwin_2_0_*-limited`).
 
 ## Mode 1 — unlimited (what every current task is)

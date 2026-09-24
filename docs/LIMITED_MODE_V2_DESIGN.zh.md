@@ -1,6 +1,10 @@
 # Limited 模式 v2 设计文档：两个统一接口（submit / get_obs）驱动仿真器/真机
 
-状态：2026-09-24，设计稿，未实现。v1（HTTP client：observe/step）的实现与协议见 `LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`。
+状态：2026-09-24 **已实现**（`joint_position`、`ee_pose` 两种类型；`joint_delta/joint_velocity/ee_delta/joint_torque` 仍待做），协议 `rcb-limited/2.0`，见 `LIMITED_MODE_PROTOCOL.md`。原设计稿正文保留如下。
+
+实现时的两个发现（都已修）：
+- 连续关节（腕部滚转，limits 为 ±inf）不能按 ±π 裁剪，否则专家轨迹会被改写（place_dual_shoes 的右腕转到 −3.97 rad）。spec 里连续关节的 limit 为 `null`，不裁剪。
+- 只给位置目标时，服务用目标序列的中心差分做速度前馈；这与专家规划器自带的速度曲线有差别（rms ≈ 0.1 rad/s），scan_object 这种 2.5 cm 容差的任务会因此失败。`joint_position` 因而允许可选的 14 列速度前馈（每行 28 列）；专家记录以 `dt = 1/250` 加速度前馈回放即为精确回放。19 个任务的 oracle 用 K=25（0.1 s 一行、无速度）即可，place_dual_shoes / scan_object 用 K=1 + 速度；open_microwave 用 K=1 不带速度（专家轨迹本身处在成功边缘：带记录速度回放反而差一点，中心差分前馈通过，两次验证）。v1（HTTP client：observe/step）的实现与协议见 `LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`。
 **决定：不用 MCP。** 曾考虑把两个操作做成 MCP 工具（`LIMITED_MODE_MCP_PLAN.md`），但工具返回值会直接进模型上下文，
 图片/视频一多就把上下文撑爆；改为**纯 client/service**：service 把结果（视频、帧、本体数据）作为**二进制**直接返回给
 client，client 解成内存里的对象；coding agent 自己用代码决定存到哪、看哪几帧、跑什么分析——什么都不会自动进上下文。
