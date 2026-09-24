@@ -1,0 +1,8 @@
+{
+ "task": "shake_bottle",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "94d2b70548b4",
+ "text": "Shake the bottle with proper arm.",
+ "n_active_joints": 16
+}

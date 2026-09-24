@@ -1,0 +1,8 @@
+{
+ "task": "pick_dual_bottles",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "6b351fd18ce5",
+ "text": "Pick up one bottle with one arm, and pick up another bottle with the other arm.",
+ "n_active_joints": 16
+}

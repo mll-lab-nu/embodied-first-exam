@@ -1,0 +1,12 @@
+# RoboTwin needs the NVIDIA GPU (CuRobo planning on CUDA, SAPIEN rendering on Vulkan). Harbor's local docker
+# sandbox rejects [environment].gpus, but merging this onto the main service passes the device through.
+services:
+  main:
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
