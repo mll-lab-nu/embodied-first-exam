@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Generate tasks/robotwin_2_0_<task>-limited/ from an existing unlimited task + the stack_blocks_two-limited template.
-usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz>   (needs numpy: run inside the rcb-robotwin image, e.g.
+usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz> [K=25]   (needs numpy: run inside the rcb-robotwin image, e.g.
        docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/jameskrw/rcb-robotwin:0.1.1 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
-The limited oracle replays the unlimited oracle's joint targets (every 25 physics steps) as `qpos` actions."""
+The limited oracle replays the unlimited oracle's joint targets (every K physics steps, default 25) as `qpos` actions."""
 import pathlib, re, shutil, sys, json
 import numpy as np
 root = pathlib.Path(__file__).resolve().parents[1]
 task, traj = sys.argv[1], sys.argv[2]
+K = int(sys.argv[3]) if len(sys.argv) > 3 else 25   # physics steps per qpos action; finer for timing-sensitive tasks
 src = root / "tasks/robotwin_2_0_stack_blocks_two-limited"; unl = root / f"tasks/robotwin_2_0_{task}"; dst = root / f"tasks/robotwin_2_0_{task}-limited"
 assert unl.is_dir(), unl
 if dst.exists(): shutil.rmtree(dst)
@@ -35,7 +36,7 @@ ins = re.sub(r"Table top is at z ≈ 0\.74 m,\nblocks are 5 cm cubes\.", "Table 
 rd = (dst / "README.md").read_text().replace("robotwin_2_0_stack_blocks_two-limited", f"robotwin_2_0_{task}-limited").replace("`robotwin_2_0_stack_blocks_two`", f"`robotwin_2_0_{task}`").replace("RoboTwin seed 60417", f"RoboTwin seed {seed}")
 (dst / "README.md").write_text(rd)
 # oracle: subsample the unlimited oracle trajectory (T,34) -> (N,14) qpos actions
-A = np.load(traj)["actions"]; K = 25; idx = list(range(K - 1, len(A), K))
+A = np.load(traj)["actions"]; idx = list(range(K - 1, len(A), K))
 if not idx or idx[-1] != len(A) - 1: idx.append(len(A) - 1)
 Q = np.stack([np.concatenate([A[i, 0:6], [A[i, 32]], A[i, 8:14], [A[i, 33]]]) for i in idx])
 np.save(dst / "solution/oracle_qpos.npy", Q)
