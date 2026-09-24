@@ -1,0 +1,8 @@
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: python:3.12-slim
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py

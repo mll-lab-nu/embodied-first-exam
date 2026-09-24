@@ -1,0 +1,8 @@
+{
+ "task": "dump_bin_bigbin",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "1bc96914f586",
+ "text": "Grab the small bin and pour the balls into the big bin.",
+ "n_active_joints": 16
+}

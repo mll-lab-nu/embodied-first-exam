@@ -1,0 +1,8 @@
+{
+ "task": "press_stapler",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "e139fa29c545",
+ "text": "Use one arm to press the stapler.",
+ "n_active_joints": 16
+}

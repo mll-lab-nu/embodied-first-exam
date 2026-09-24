@@ -13,10 +13,17 @@ the example and changing what you need.
 4. `instruction.md`: human-written; states the deliverable under `/app/output/`, the action layout, frames,
    quaternion order, and the tools; never mentions `/tests/`.
 5. `tests/test.sh` + your verifier: fresh-process verification, `reward.txt` 1/0, numeric-only `reward.json`
-   with the field names from PROTOCOL §3. Keep the verifier's inputs (scene copy, tooling) under `tests/`.
+   with the field names from PROTOCOL §3. Keep the verifier's inputs (scene copy, tooling) under `tests/`, add a
+   `tests/Dockerfile` that bakes them into `/tests/` on top of the same base image (+ `tests/docker-compose.yaml` if
+   replay needs the GPU), and set `[verifier] environment_mode = "separate"` in `task.toml` — the verifier must not
+   run in the agent's container (PROTOCOL §4). Agent egress stays Harbor-default (public); `scripts/set_agent_egress.py`
+   flips all tasks to model-APIs-only for runs where fetching the public reference solutions must be ruled out.
 6. `solution/solve.sh`: a human-written oracle that scores 1. Keep the reference code itself in `solution/` too;
    never bake it into `environment/` or a base image, and make sure agent-visible tooling does not reference it.
 7. `README.md`: fill **Difficulty**, **Reference solution**, **Verification**.
+   Agent runs go under `results/<agent-slug>/` inside the task directory (`README.md` with result, cost, the verifier's
+   `replay.mp4` / `replay.last.png` and an analysis; `scripts/write_task_results.py` writes them from a Harbor job).
+   Adding results changes the task digest in `dataset.toml`; re-scan.
 8. Check and run:
    ```bash
    bash ci_checks/run_all.sh tasks/<your-task>
@@ -31,8 +38,9 @@ the example and changing what you need.
 - Determinism is on you: `selftest`-style evidence (live run == replay, repeated) is required for a new
   simulator or family. For MuJoCo see the example's `_snapshot/_restore/_restore_wrapper_bookkeeping`.
 - Pin everything (`FROM` tag, pip versions). No network fetches at verification time.
-- Agents run as root inside the container; assume they can edit anything under `/app` and `/opt`. Only
-  `/tests/` is trustworthy, and it is copied in after the agent finishes.
+- Agents run as root inside their container; assume they can edit anything under `/app` and `/opt`, including the
+  simulator and the task's success predicate. That is why the verifier runs in a separate sandbox built from
+  `tests/Dockerfile`; only the declared artifacts cross over.
 
 ## Repairs
 Fix PRs explain which agent behaviour the change closes and include before/after runs. Pass rates alone are
