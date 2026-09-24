@@ -59,6 +59,7 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
                                 #   balance_simple; hand-maintained
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
 scripts/limited_report/         # one HTML report per limited-mode trial (report.py; replay_episodes.py runs in the sim image)
+results/<benchmark>/            # what agents scored: README.md (standard-config table) + runs.csv (one line per trial)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
                                 #   cross-task leaks, reward leaks, dataset manifest
