@@ -5,7 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
 tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=("$root"/tasks/*/)
 for t in "${tasks[@]}"; do
   t="${t%/}"; [ -f "$t/task.toml" ] || continue
-  for c in check-task-structure check-task-fields check-dockerfile check-instruction; do
+  for c in check-task-structure check-task-fields check-dockerfile check-instruction check-verifier-isolation; do
     bash "$root/ci_checks/$c.sh" "$t" || rc=1
   done
 done

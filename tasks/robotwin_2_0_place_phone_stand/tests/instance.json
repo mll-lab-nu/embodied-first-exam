@@ -1,0 +1,8 @@
+{
+ "task": "place_phone_stand",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "67b7932ce329",
+ "text": "Pick up the phone and put it on the phone stand.",
+ "n_active_joints": 16
+}

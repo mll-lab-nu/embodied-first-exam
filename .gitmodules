@@ -1,3 +1,6 @@
 [submodule "third_party/cap-x"]
 	path = third_party/cap-x
 	url = https://github.com/capgym/cap-x.git
+[submodule "third_party/RoboTwin"]
+	path = third_party/RoboTwin
+	url = https://github.com/RoboTwin-Platform/RoboTwin.git

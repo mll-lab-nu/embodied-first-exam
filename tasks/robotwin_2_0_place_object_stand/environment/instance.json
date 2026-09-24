@@ -1,0 +1,8 @@
+{
+ "task": "place_object_stand",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "44250d2d7e60",
+ "text": "Use appropriate arm to place the object on the stand.",
+ "n_active_joints": 16
+}

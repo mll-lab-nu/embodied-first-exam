@@ -19,11 +19,16 @@ expert_time_estimate_hours = 0.5
 
 [verifier]
 timeout_sec = 900.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
 timeout_sec = 3600.0
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
 
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0
