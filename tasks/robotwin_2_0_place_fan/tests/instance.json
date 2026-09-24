@@ -1,0 +1,8 @@
+{
+ "task": "place_fan",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "b3f461d73e84",
+ "text": "Grab the fan and place it on a colored mat, and make sure the fan is facing the robot.",
+ "n_active_joints": 16
+}
