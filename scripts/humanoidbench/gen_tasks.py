@@ -13,17 +13,19 @@ everything the tasks have in common, and `shared/` holds the one real copy of `r
     ./gen_tasks.py measure [family ...]   # read bars/dims/floors into facts.json  (needs mujoco)
     ./gen_tasks.py instance [family ...]  # write environment/ + tests/ instance.npz (needs mujoco)
     ./gen_tasks.py verify [family ...]    # re-measure and fail on drift           (needs mujoco)
+    ./gen_tasks.py measure-limited [family ...]  # check + time the limited twins' sim service (needs a GPU)
 
 `render` is deliberately the only command that writes into tasks/, and it is idempotent: run it after
 editing a template or a prose field and every task picks the change up at once.
 
-Needs Python 3.11+ (tomllib). The three simulator commands need `humanoid_bench` importable -- inside the
+Needs Python 3.11+ (tomllib). The simulator commands need `humanoid_bench` importable -- inside the
 base image, or in a venv built the way images/humanoidbench/Dockerfile builds one.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -131,14 +133,39 @@ def actuator_layout(names: list[str]) -> str:
                    "there depends on whether that pose is stable under gravity and contact.")
 
 
-def rewrap(md: str, width: int = 100) -> str:
+def rewrap(md: str, width: int = 100, items: bool = False) -> str:
     """Re-flow ordinary prose paragraphs to a fixed width.
 
     Prose arrives here from several fields of different shapes, so without this the generated markdown is
     ragged in a way that makes real diffs hard to see. Only plain paragraphs are touched: fenced code,
-    tables, headings, lists and block quotes are emitted exactly as written.
+    tables, headings, lists and block quotes are emitted exactly as written. `items=True` (the limited-mode
+    templates, whose rules are a list with per-task clauses) also re-flows each `- ` list item, and never
+    breaks a line inside `inline code`.
     """
     STRUCTURAL = re.compile(r"\s*([-*+]\s|\d+\.\s|\||>|```)")
+
+    def fill(text: str, indent: str = "") -> str:
+        text = " ".join(text.split())
+        if items:   # keep `reason = "success"` on one line
+            text = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), text)
+        return textwrap.fill(text, width, subsequent_indent=indent, break_long_words=False,
+                             break_on_hyphens=False).replace("\0", " ")
+
+    def fill_items(lines: list[str]) -> str:
+        out, item = [], None
+        for ln in lines + [""]:
+            if item is not None and ln.startswith("  "):
+                item += " " + ln
+                continue
+            if item is not None:
+                out.append(fill(item, "  "))
+                item = None
+            if ln.startswith("- "):
+                item = ln
+            elif ln:
+                out.append(ln)
+        return "\n".join(out)
+
     out, fenced = [], False
     for block in md.split("\n\n"):
         if fenced or block.startswith("```"):
@@ -146,13 +173,15 @@ def rewrap(md: str, width: int = 100) -> str:
             out.append(block)
             continue
         lines = block.split("\n")
+        if items and any(ln.startswith("- ") for ln in lines) and not any(ln.startswith(("|", "```")) for ln in lines):
+            out.append(fill_items(lines))
+            continue
         if any(STRUCTURAL.match(ln) or ln.startswith(("    ", "\t")) for ln in lines):
             out.append(block)                       # tables and lists have layout we must not reflow
             continue
         head = [ln for ln in lines if ln.startswith("#")]   # a heading glued to its paragraph
-        body = " ".join(" ".join(lines[len(head):]).split())
-        out.append("\n".join(head + ([textwrap.fill(body, width, break_long_words=False,
-                                                    break_on_hyphens=False)] if body else [])))
+        body = " ".join(lines[len(head):])
+        out.append("\n".join(head + ([fill(body)] if body.strip() else [])))
     return "\n\n".join(out)
 
 
@@ -229,6 +258,97 @@ def render(t: dict, defaults: dict, facts: dict) -> Path:
     (out / "tests" / "rewards.json").write_text(
         json.dumps(load_rewards()[t["family"]], indent=1, sort_keys=True) + "\n")
 
+    for rel in ("tests/test.sh", "solution/solve.sh"):
+        (out / rel).chmod(0o755)
+    return out
+
+
+# --------------------------------------------------------------------------- limited mode
+# The limited-mode twin (docs/LIMITED_MODE_1_1.md): same instance, same success rule, but the simulator runs
+# in a `sim` sidecar and the agent only has an HTTP client. Rendered for every task with a [task.limited]
+# table; its measured numbers (facts.json "limited") come from `measure-limited`, which needs a GPU.
+LIMITED_TEMPLATES = HERE / "templates" / "limited"
+LIMITED_SHARED = HERE / "shared" / "limited"
+
+
+def limited_dir_name(t: dict, instance_tag: str) -> str:
+    return task_dir_name(t, instance_tag) + "-limited"
+
+
+def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
+    """What the sidecar mounts at /srv: the adapter, the tooling, this family's reward (the one place under
+    environment/ it may live -- the agent's image never sees this directory) and the unlimited twin's
+    instance, byte for byte."""
+    dest.mkdir(parents=True, exist_ok=True)
+    for src in ("server.py", "rcb_service.py"):
+        shutil.copyfile(LIMITED_SHARED / src, dest / src)
+    for src in ("rcb_hb.py", "rcb_rewards.py"):
+        shutil.copyfile(HERE / "shared" / src, dest / src)
+    (dest / "rewards.json").write_text(json.dumps(load_rewards()[t["family"]], indent=1, sort_keys=True) + "\n")
+    shutil.copyfile(instance_path(t, defaults), dest / "instance.npz")
+    return dest
+
+
+def limited_actuator_layout(names: list[str], joints: list[str]) -> str:
+    """actuator_layout(), plus where the agent reads the order and how obs["proprio"] lines up with it: on h1
+    the joints are the actuators; on h1hand some finger actuators drive two coupled joints."""
+    head, tail = actuator_layout(names).split(" A constant action", 1)
+    if joints == names:
+        ref = ' (`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order).'
+    else:
+        ref = (f' (`spec()["qpos"]["layout"]`). `obs["proprio"]` measures joints, not actuators: {len(joints)} '
+               f'of them, in `spec()["proprio"]["joints"]` order.')
+    return head.rstrip(".") + ref + " A constant action" + tail
+
+
+def compose_line(name: str, value: str, comment: str) -> str:
+    """One sim env line with its comment in the file's comment column (empty value: no line at all)."""
+    if not value:
+        return ""
+    lines = textwrap.wrap(" ".join(comment.split()), 54)
+    first = f'      {name}: "{value}"'.ljust(55)
+    return "\n".join([f"{first}# {lines[0]}"] + [f"{'':55}# {ln}" for ln in lines[1:]]) + "\n"
+
+
+def limited_context(t: dict, defaults: dict, facts: dict) -> dict:
+    L, lf = t["limited"], facts["limited"]
+    one = lambda s: " ".join(s.split())
+    stmt = one(L.get("task_statement", t["task_statement"]))
+    ms = lf["step_ms"]
+    return context(t, defaults, facts) | {
+        "robot": t["robot"],
+        "limited_task_statement": stmt,
+        "limited_task_text": stmt[0].upper() + stmt[1:],
+        "limited_ends": f", {one(L['ends'])}" if L.get("ends") else "",
+        "limited_hidden": one(L["hidden"]),
+        "limited_tier": one(L["tier"]),
+        "limited_scoring_note": one(L.get("scoring_note", t["scoring_note"])),
+        "limited_camera_note": one(L["camera_note"]),
+        "limited_expert_hours": 2 * t["expert_hours"],   # the unlimited estimate, doubled: no search, no state
+        "limited_actuator_layout": limited_actuator_layout(facts["actuator_names"], lf["joints"]),
+        "room_camera_pose_line": compose_line("RCB_ROOM_CAMERA_POSE", L.get("room_camera_pose", ""),
+                                              L.get("room_camera_comment", "")),
+        "image_hw": "×".join(map(str, lf["image_hw"])),
+        "control_hz": lf["control_hz"],
+        "robot_seconds": f"{facts['max_steps'] / lf['control_hz']:g}",
+        "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
+    }
+
+
+def render_limited(t: dict, defaults: dict, facts: dict) -> Path:
+    ctx = limited_context(t, defaults, facts)
+    out = TASKS_DIR / limited_dir_name(t, defaults["instance_tag"])
+    for sub in ("environment", "tests", "solution"):
+        (out / sub).mkdir(parents=True, exist_ok=True)
+    for name, rel in [("instruction.md", "instruction.md"), ("README.md", "README.md"), ("task.toml", "task.toml"),
+                      ("docker-compose.yaml", "environment/docker-compose.yaml"),
+                      ("Dockerfile", "environment/Dockerfile"), ("tests.Dockerfile", "tests/Dockerfile"),
+                      ("test.sh", "tests/test.sh"), ("solve.sh", "solution/solve.sh")]:
+        text = fill((LIMITED_TEMPLATES / name).read_text(), ctx)
+        (out / rel).write_text((rewrap(text, 110, items=True) if rel.endswith(".md") else text).rstrip("\n") + "\n")
+    write_sim_dir(t, defaults, out / "environment" / "sim")
+    shutil.copyfile(LIMITED_SHARED / "rcb_client.py", out / "environment" / "rcb_client.py")
+    shutil.copyfile(LIMITED_SHARED / "grade.py", out / "tests" / "grade.py")
     for rel in ("tests/test.sh", "solution/solve.sh"):
         (out / rel).chmod(0o755)
     return out
@@ -359,7 +479,47 @@ def cmd_render(args) -> int:
         sys.exit(f"no measurements for {missing}; run `gen_tasks.py measure` first (needs mujoco)")
     for t in select(args.families, tasks):
         print("rendered", render(t, defaults, facts[t["family"]]).relative_to(ROOT))
+        if "limited" not in t:
+            continue
+        if "limited" not in facts[t["family"]]:
+            sys.exit(f"no limited-mode measurements for {t['family']}; run `gen_tasks.py measure-limited` first (needs a GPU)")
+        print("rendered", render_limited(t, defaults, facts[t["family"]]).relative_to(ROOT))
     return 0
+
+
+def cmd_measure_limited(args) -> int:
+    """Start each limited twin's sim service from a scratch copy of its sidecar directory and run
+    limited_probe.py against it: contract checks (spec, images, proprio, the all-zero episode's return equals
+    facts.json's nop_return, reset, batching, the success path through finalize), the images at t=0 (into
+    --images), and the per-step cost through the real HTTP client. Records facts.json "limited"."""
+    import subprocess
+    import tempfile
+    defaults, tasks = load_subset()
+    facts = load_facts()
+    rc = 0
+    for t in select(args.families, tasks):
+        if "limited" not in t:
+            continue
+        fam = t["family"]
+        with tempfile.TemporaryDirectory() as tmp:
+            sim = write_sim_dir(t, defaults, Path(tmp) / "sim")
+            env = {**os.environ, "RCB_TASK": fam, "RCB_INSTANCE": str(sim / "instance.npz"),
+                   "RCB_ROOM_CAMERA_POSE": t["limited"].get("room_camera_pose", ""), "RCB_DATA": f"{tmp}/data",
+                   "RCB_FACTS": json.dumps(facts[fam]), "RCB_IMAGES": str(Path(args.images) / fam)}
+            p = subprocess.run([sys.executable, str(HERE / "limited_probe.py"), str(sim)], env=env,
+                               capture_output=True, text=True)
+        print(p.stderr[-4000:] if p.returncode else "", end="")
+        lines = [ln for ln in p.stdout.splitlines() if ln.startswith("{")]
+        if p.returncode or not lines:
+            print(f"FAIL {fam}: probe exited {p.returncode}\n{p.stdout[-3000:]}"); rc = 1; continue
+        res = json.loads(lines[-1])
+        print("\n".join(ln for ln in p.stdout.splitlines() if ln.startswith(("PASS", "FAIL"))))
+        if res["failed"]:
+            print(f"FAIL {fam}: {res['failed']}"); rc = 1; continue
+        facts[fam]["limited"] = res["facts"]
+        print(f"ok   {fam}: {json.dumps(res['facts'], default=str)[:200]}")
+    FACTS.write_text(json.dumps(dict(sorted(facts.items())), indent=1, sort_keys=True) + "\n")
+    return rc
 
 
 def cmd_measure(args) -> int:
@@ -440,11 +600,13 @@ def main() -> int:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     for name, fn in [("status", cmd_status), ("render", cmd_render), ("measure", cmd_measure),
-                     ("instance", cmd_instance), ("verify", cmd_verify)]:
+                     ("instance", cmd_instance), ("verify", cmd_verify), ("measure-limited", cmd_measure_limited)]:
         q = sub.add_parser(name)
         q.add_argument("families", nargs="*", help="default: every task in subset.toml")
         if name == "instance":
             q.add_argument("--force", action="store_true", help="redraw an instance that already exists")
+        if name == "measure-limited":
+            q.add_argument("--images", default="/tmp/rcb-limited-images", help="where the t=0 camera images go")
         q.set_defaults(fn=fn)
     a = p.parse_args()
     return a.fn(a)

@@ -29,6 +29,7 @@ from rcb_rewards import restore  # noqa: E402
 restore()  # the scoring formula lives in this sidecar only, and must be back before a Session is opened
 from rcb_hb import GL_BACKEND, Session  # noqa: E402
 from rcb_service import Service  # noqa: E402
+from humanoid_bench.tasks import Task  # noqa: E402
 
 # HumanoidBench's own non-privileged sensors (humanoid_bench/wrappers.py, ObservationWrapper): `image` renders
 # these two head cameras; `proprio` is the robot's joint angles and velocities, without the root pose.
@@ -55,6 +56,9 @@ class HumanoidBench:
         self.robot, m = self.s.low.robot, self.s.model
         assert m.jnt_type[0] == mujoco.mjtJoint.mjJNT_FREE and m.body(int(m.jnt_bodyid[0])).name == "pelvis"
         self.joints = [m.joint(j).name for j in range(m.njnt) if 7 <= m.jnt_qposadr[j] < self.robot.dof]
+        # reach and push override upstream's Task.render() to draw their goal as a marker; every image here goes
+        # through the same viewer, so running that hook puts the goal in the head and room cameras too.
+        self._marks = type(self.s.low.task).render is not Task.render
         self.cameras = CAMERAS + (("room_camera",) if room_camera else ())
         self._room = (room_pose or self._frozen_camera(self.s.low.camera_name or "cam_default")) if room_camera else None
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
@@ -71,6 +75,8 @@ class HumanoidBench:
 
     def _render(self, camera: str) -> np.ndarray:
         r = self.s.low.mujoco_renderer
+        if self._marks and (r.viewer is None or not r.viewer._markers):
+            self.s.low.task.render()                                  # adds the marker, which the viewer keeps
         if camera != "room_camera":
             return r.render("rgb_array", camera_name=camera)
         cam = r.viewer.cam                                            # the viewer exists: __init__ rendered once

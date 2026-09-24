@@ -1,0 +1,31 @@
+# Limited mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# GPU on sim: MuJoCo physics is CPU either way, but every image the agent asks for is rendered here, and EGL on the
+# GPU takes ~0.5 ms a frame against ~130 ms for CPU osmesa. `graphics` is the capability that mounts the EGL ICD.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/jameskrw/rcb-humanoidbench:0.1.5
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py
+    environment:
+      RCB_TASK: package
+      RCB_INSTANCE: /srv/instance.npz
+      RCB_TASK_TEXT: "Walk to the package, pick it up, carry it to the destination marker and set it down there, standing upright."
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor, so one run can set them on the command
+      # line (`RCB_RESET_BUDGET=3 harbor run ...`) without editing this file. The sim logs what it got (/spec).
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, as on a real robot; N: N resets
+      RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: head-camera RGB + joint angles/velocities; 0: images only
+      RCB_OBS_IMU: "${RCB_OBS_IMU:-0}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
+      RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room
+      RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

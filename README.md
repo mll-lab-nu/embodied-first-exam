@@ -55,8 +55,7 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 │   ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
 │   └── solution/     solve.sh (oracle)
 ├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
-└── humanoidbench-loco-*-i00-limited/   # limited mode (docs/LIMITED_MODE_1_1.md): sit_simple, walk, stair, hurdle,
-                                #   balance_simple; hand-maintained
+└── humanoidbench-*-i00-limited/ # the limited-mode twin of each (docs/LIMITED_MODE_1_1.md), also generated
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
 scripts/limited_report/         # one HTML report per limited-mode trial (report.py; replay_episodes.py runs in the sim image)
 results/<benchmark>/            # what agents scored: README.md (standard-config table) + runs.csv (one line per trial)

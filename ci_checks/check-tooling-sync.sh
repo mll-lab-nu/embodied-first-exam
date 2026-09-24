@@ -11,7 +11,9 @@ pairs="rcb_hb.py:environment/rcb_hb.py rcb_hb.py:tests/rcb_hb.py grade.py:tests/
 # Limited mode (docs/LIMITED_MODE_1_1.md): the tooling runs only in the sim sidecar, from environment/sim/, and the
 # verifier just reads that sidecar's log -- so the copies to keep in sync live there, next to the one instance.
 limited=$(grep -c '^mode *= *"limited"' "$t/task.toml")
-[ "$limited" -gt 0 ] && pairs="rcb_hb.py:environment/sim/rcb_hb.py rcb_rewards.py:environment/sim/rcb_rewards.py"
+[ "$limited" -gt 0 ] && pairs="rcb_hb.py:environment/sim/rcb_hb.py rcb_rewards.py:environment/sim/rcb_rewards.py
+  limited/server.py:environment/sim/server.py limited/rcb_service.py:environment/sim/rcb_service.py
+  limited/rcb_client.py:environment/rcb_client.py limited/grade.py:tests/grade.py"
 for pair in $pairs; do
   src="$shared/${pair%%:*}"; dst="$t/${pair#*:}"
   [ -f "$src" ] || continue
@@ -19,4 +21,8 @@ for pair in $pairs; do
 done
 [ "$limited" -gt 0 ] || cmp -s "$t/environment/instance.npz" "$t/tests/instance.npz" || {
   echo "FAIL $t: tests/instance.npz is not a byte copy of environment/instance.npz"; rc=1; }
+# ... and a limited twin runs its unlimited twin's scene, byte for byte
+twin="${t%-limited}"
+[ "$limited" -gt 0 ] && [ -f "$twin/environment/instance.npz" ] && ! cmp -s "$twin/environment/instance.npz" "$t/environment/sim/instance.npz" && {
+  echo "FAIL $t: environment/sim/instance.npz is not a byte copy of $(basename "$twin")/environment/instance.npz"; rc=1; }
 exit $rc

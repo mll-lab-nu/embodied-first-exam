@@ -15,8 +15,8 @@ on it, upright and still, for the whole episode.
   depending on the task's configuration that can also include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py`
-  for the record.
+  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
+  the record.
 - Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
 
 ## Scoring
@@ -36,12 +36,13 @@ from rcb_client import Robot
 r = Robot()                  # connects; r.spec() lists what this run provides
 obs = r.step("qpos", a)      # a: 19 position targets in [-1, 1] = one 50 Hz control step
 ```
-Measured cost per control step here: about 1.3 ms sent one at a time, 4.3 ms one at a time with both
-head-camera images, 0.5 ms in batches of 10 or more without images.
+Measured cost per control step here: about 1.3 ms sent one at a time, 4.4 ms one at a time with
+both head-camera images, 0.6 ms in batches of 10 or more without images.
 
 The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`,
 `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`,
 `torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
-`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow` (`spec()["qpos"]["layout"]`;
-`obs["proprio"]` measures the same joints in the same order). A constant action commands joint *targets*, not
-a pose: whether the robot stays there depends on whether that pose is stable under gravity and contact.
+`right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`
+(`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order). A constant action
+commands joint *targets*, not a pose: whether the robot stays there depends on whether that pose is stable
+under gravity and contact.

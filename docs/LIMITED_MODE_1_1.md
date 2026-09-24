@@ -15,7 +15,8 @@ is simulator-agnostic, `environment/sim/server.py` is the HumanoidBench adapter.
 
 Sensors are adapter config, not protocol (HumanoidBench: `RCB_OBS_PROPRIO` / `RCB_OBS_IMU` /
 `RCB_OBS_ROOM_CAMERA`, defaults 1/0/0). Every knob is `${NAME:-default}` in the compose file, so a run sets it
-from the shell (`RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`); the sim logs the resulting `/spec`.
+from the shell (`RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`); the sim logs the resulting `/spec`. Where
+`room_camera` stands is per task and fixed in the compose file (`RCB_ROOM_CAMERA_POSE`).
 
 At the end of an episode the agent gets only `done` + `reason` (`success | failed | timeout | error`),
 never a reward or a return.
@@ -40,5 +41,6 @@ in batches of 10 or more.
 - **Shared**: `rcb_service.py`, `rcb_client.py`, `tests/`, the agent Dockerfile, the `task.toml` blocks.
   **Per simulator**: one adapter implementing the `Sim` contract in `rcb_service.py` (both `Session` classes
   already cover most of it). **Per task**: compose env and `instruction.md` (task facts only).
-- **Next**: RoboTwin swaps its `server.py` for `rcb_service.py` + an adapter; HumanoidBench moves this task
-  into `templates/` + `shared/` and renders the other families.
+- **Done for HumanoidBench**: `gen_tasks.py` renders the limited twin of all 24 tasks from `templates/limited/`,
+  `shared/limited/` and each task's `[task.limited]` table. **Next**: RoboTwin swaps its `server.py` for
+  `rcb_service.py` + an adapter.

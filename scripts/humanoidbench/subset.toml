@@ -61,6 +61,21 @@
 #   too much. `difficulty` has no such limit -- it renders into README.md, which never enters the image.
 # ======================================================================================================
 
+# ==== [task.limited] ==================================================================================
+#   Each task's limited-mode twin (tasks/*-limited/, docs/LIMITED_MODE_1_1.md): the same instance and
+#   success rule, but the agent sees only head-camera RGB and joint angles/velocities (plus an IMU and
+#   room_camera when a run turns them on), through an HTTP client. Its prose, per task:
+#     ends            how the episode can end early other than by success ("when the robot falls (...)");
+#                     leave it out if it cannot
+#     hidden          what the agent is not given, read after "Not ": "where the robot is in the room, not ..."
+#     tier            the same for task.toml and README.md: "no root pose, no ..."
+#     camera_note     README.md: what the head cameras and room_camera see
+#     task_statement, scoring_note   only where the unlimited wording leans on privileged state
+#     room_camera_pose, room_camera_comment   a fixed free camera ("lookat_x,y,z,distance,azimuth,elevation")
+#                     for tasks that leave the default one's view (the recording camera frozen at t=0)
+#   The SAY / DO NOT rule above applies to every one of them.
+# ======================================================================================================
+
 [defaults]
 seed = 0
 instance_tag = "00"
@@ -114,6 +129,14 @@ was to optimise the formula directly, which measures reading comprehension of a 
 control. Re-run under the scrubbed image, the same approach needs the agent to *write* the objective
 first -- see local_docs/plan/06-task-selection.md §B6.'''
 
+[task.limited]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not how fast it is moving"
+tier = "no root pose, no base velocity"
+camera_note = "the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
+
 # =====================================================================================================
 # C2 · constrained gait (terrain / obstacles)
 # =====================================================================================================
@@ -148,6 +171,14 @@ difficulty = '''- **A gait plus a terrain constraint.** Everything that makes `w
   (`balance_simple`: 1.4%), which makes it a clean test of whether an agent is a little better or a
   little worse than the state of the art rather than hopelessly far from it.'''
 
+[task.limited]
+ends = "when the robot falls (its torso tips close to horizontal)"
+hidden = "where the robot is in the room, not the stairs' geometry"
+tier = "no root pose, no stair geometry"
+camera_note = "the head cameras see the first flight of stairs straight ahead. `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
+
 [[task]]
 family = "hurdle"
 role = "scored"
@@ -179,6 +210,14 @@ difficulty = '''- **A multiplicative gate, not a penalty.** Contact with the sid
 - **The only task in the subset that requires leaving the ground.** Clearing a hurdle needs a ballistic
   phase with the right take-off timing — a qualitatively different motion from the contact-scheduled
   gaits of `walk` and `stair`, which is why both are kept.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is on the track, not where the hurdles and walls are"
+tier = "no root pose, no hurdle or wall positions"
+camera_note = "the head cameras see the walled track and the line of hurdles ahead. `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
 
 # =====================================================================================================
 # C3 · quasi-static posture and stabilisation
@@ -212,6 +251,12 @@ difficulty = '''- **A survival problem, not a scoring problem.** Per-step reward
   controller recorded open-loop reproduces exactly (MuJoCo on CPU is bit-exact).
 '''
 
+[task.limited]
+ends = "when the robot falls, or anything but the fulcrum under the board touches the ground (see Scoring)"
+hidden = "where the robot is in the room, not the board's pose"
+tier = "no root pose, no board pose"
+camera_note = "the head cameras see floor and horizon only; the board under the feet never enters their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot from outside."
+
 [[task]]
 family = "balance_hard"
 role = "scored"
@@ -242,6 +287,12 @@ difficulty = '''- **Same reward function as `balance_simple`, three times the ga
   them, so a correction that works once stops working a second later; there is no fixed operating point
   to stabilise around.
 - **An all-zero trajectory terminates at step 44**, earlier than on the simple board.'''
+
+[task.limited]
+ends = "when the robot falls, or anything but the roller under the board touches the ground (see Scoring)"
+hidden = "where the robot is in the room, not the board's or the roller's pose"
+tier = "no root pose, no board or roller pose"
+camera_note = "the head cameras see floor and horizon only; the board and the roller under the feet never enter their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot on the board from outside."
 
 # =====================================================================================================
 # C4 · navigation and passage
@@ -275,6 +326,14 @@ difficulty = '''- **Runs on the 19-DoF `h1`.** The door has 2 DoF and no dextero
 - **Partial credit is real.** Opening the door without getting through already earns a large share of
   each step, which is meant to distinguish an agent that gets *part* of a multi-stage problem right from
   one that gets none of it.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the door's or the handle's angle"
+tier = "no root pose, no door or handle state"
+camera_note = "the head cameras see the door right in front of the robot. `room_camera` (off by default) looks at the doorway from the side (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the door and the floor beyond it stay in frame from x = -0.5 to 4 m."
+room_camera_pose = "1.8,0,0.9,7,105,-25"
+room_camera_comment = "room_camera beside the doorway: the robot, the door and the floor beyond it stay in frame from x=-0.5 to 4 m"
 
 [[task]]
 family = "maze"
@@ -310,6 +369,14 @@ difficulty = '''- **Discrete, step-function reward.** Checkpoint bonuses (n×100
 - **Planning cannot see far enough.** A receding-horizon planner optimising the per-step return has no
   signal pointing at a checkpoint bonus dozens of steps away, which is why this survives the approach
   that solved `walk`.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the maze, not where the checkpoints are"
+tier = "no root pose, no checkpoint positions"
+camera_note = "the head cameras see the corridor ahead. `room_camera` (off by default) looks straight down on the whole maze (`RCB_ROOM_CAMERA_POSE` in the compose file): every corridor and the robot are in frame."
+room_camera_pose = "3,3,0,15,0,-89"
+room_camera_comment = "room_camera straight above the maze: every corridor and the robot are in frame"
 
 # =====================================================================================================
 # C5 · whole-body power and momentum
@@ -357,6 +424,12 @@ caveat = '''⚠️ **This family can only ever have one instance.** `HighBarBase
 environment's `randomness` to 0, so every reset produces the identical pose. There is no `i01`/`i02` to
 generate; that is upstream behaviour, not a defect in the instance.'''
 
+[task.limited]
+ends = "when the robot's head drops too low"
+hidden = "the robot's orientation in the room"
+tier = "no root pose"
+camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot hanging from the bar."
+
 [[task]]
 family = "basketball"
 role = "scored"
@@ -396,6 +469,12 @@ difficulty = '''- **All-or-nothing.** The +1000 for sinking the ball is most of 
   part of the environment's behaviour is a pointer that advances — frozen into the instance, restored on
   every reset (`Session._restore_extra`).'''
 
+[task.limited]
+ends = "when the ball goes through the hoop, when the ball drops low, or when the robot falls"
+hidden = "where the robot is in the room, not where the ball or the hoop is"
+tier = "no root pose, no ball state"
+camera_note = "the head cameras see the hoop ahead. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot, the incoming ball and the hoop."
+
 [[task]]
 family = "powerlift"
 role = "scored"
@@ -428,6 +507,12 @@ difficulty = '''- **🚩 Kept although RL does poorly on it.** Upstream shapes t
   robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
   episode ends at step 382, when the pelvis sinks below the 0.2 m termination height.
 - **61 actuators**, because the dumbbell needs hands to grip.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not the dumbbell's pose"
+tier = "no root pose, no dumbbell pose"
+camera_note = "the head cameras see floor and horizon only; the dumbbell at the feet is out of their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the dumbbell."
 
 # =====================================================================================================
 # C6 · standing bimanual manipulation
@@ -470,6 +555,13 @@ difficulty = '''- **All-or-nothing reward with an actively hostile shape.** An a
   instance freezes it; without that the agent and the verifier would be solving different problems.'''
 instance_note = "the box starts 0.257 m from the target in this instance"
 
+[task.limited]
+task_statement = "push the box on the table to the target position, marked in the scene by a small red cube."
+ends = "when the box reaches the target"
+hidden = "where the robot is in the room, not where the hand or the box is, not the target's coordinates"
+tier = "no root pose, no hand, box or target position"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+
 [[task]]
 family = "window"
 role = "scored"
@@ -500,6 +592,12 @@ difficulty = '''- **Tool use with sustained contact.** With `spoon`, one of the 
   of the reward.
 - **An all-zero trajectory terminates at step 17**, tied with `cube` for the fastest failure in the
   subset: the tool is dropped almost immediately.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low), or when the tool drops"
+hidden = "where the robot is in the room, not the tool's pose"
+tier = "no root pose, no tool pose"
+camera_note = "the head cameras see the window. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the window, the wiping tool and the robot."
 
 [[task]]
 family = "spoon"
@@ -552,6 +650,12 @@ difficulty = '''- **Periodic end-effector tracking — the only instance of it i
   exemption for it, so this is recorded in code and not just in prose.
 - **61 actuators**, and the grip has to survive a sustained oscillation.'''
 
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the spoon's pose, not the moving target point"
+tier = "no root pose, no spoon pose, no target point"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the cup, the spoon and the robot. The stirring target point is not drawn: it would sit inside the cup."
+
 # =====================================================================================================
 # C7 · in-hand precision
 # =====================================================================================================
@@ -591,6 +695,12 @@ difficulty = '''- **Millimetre clearance.** Each socket's opening is 4 cm across
 - **Cleanest engineering of the 61-DoF tasks**: all of its state lives in `(qpos, qvel)`, so the frozen
   instance needs no special handling.'''
 
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low), or when the bar or either socket drops"
+hidden = "where the robot is in the room, not the poses of the bar and the sockets"
+tier = "no root pose, no bar or socket poses"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the bar and both sockets."
+
 [[task]]
 family = "cube"
 role = "scored"
@@ -628,6 +738,12 @@ difficulty = '''- **The only true in-hand reorientation in the benchmark.** Both
   be rotating towards different targets.
 - **One instance only**: `env.py` forces `randomness = 0` for this family, as it does for
   `bookshelf_*` and `kitchen`.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low), or when either cube drops"
+hidden = "where the robot is in the room, not the cubes' orientations, not the goal orientation"
+tier = "no root pose, no cube poses, no goal orientation"
+camera_note = "the head cameras see the cube above one palm. `room_camera` (the recording camera frozen at its starting pose; off by default) sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`)."
 
 # =====================================================================================================
 # C8 · mobile manipulation
@@ -677,6 +793,12 @@ than by crossing the room. Any `i01`/`i02` must be filtered to a comparable dist
 recorded here.'''
 instance_note = "the target sits 0.704 m from the left hand at the frozen pose"
 
+[task.limited]
+task_statement = "bring the robot's left hand to the target point, marked in the scene by a small red cube, and keep it there for as much of the episode as possible."
+hidden = "where the robot is in the room, not where its hand is, not the target's coordinates"
+tier = "no root pose, no hand or target position"
+camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+
 [[task]]
 family = "sit_hard"
 role = "scored"
@@ -717,6 +839,13 @@ difficulty = '''- **🚩 The task where completion rate lies hardest.** Publishe
 - **Shares its reward function with the `sit_simple` fixture**, and that is the second demonstration
   after `balance_*` that the same formula can be two different problems: the fixture gives away 62.4% of
   its bar, this gives away 1.7%.'''
+
+[task.limited]
+task_statement = "the robot starts a short walk in front of the chair, its heading turned by a random angle of up to about 100° from facing straight away from it. Get to the chair, sit down on it, and stay seated upright and still."
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the chair's pose"
+tier = "no root pose, no chair pose"
+camera_note = "the head cameras see floor and horizon only; the chair is out of their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the chair."
 
 [[task]]
 family = "package"
@@ -762,6 +891,12 @@ caveat = '''⚠️ **Instances of this family are not interchangeable.** The pac
 each drawn uniformly from a ±2 m box, so the distance between them can be 0.2 m or 5.6 m. Any `i01`/`i02`
 must be filtered to a comparable distance band (2.0-3.0 m suggested) and the band recorded here.'''
 
+[task.limited]
+ends = "when the package reaches the destination"
+hidden = "where the robot is in the room, not where the package or the destination is"
+tier = "no root pose, no package or destination position"
+camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot, the package and the destination (the cyan ball, part of the upstream scene)."
+
 [[task]]
 family = "room"
 role = "scored"
@@ -793,6 +928,14 @@ difficulty = '''- **The only task in the benchmark whose objective is a statisti
 - **Mobile manipulation without a script.** The robot must walk to each object, pick or push it, and
   return; the order is the agent's to choose, and a bad order costs the whole episode.
 - **Holding the start pose lasts 123 steps** and earns 5% of the bar, so nothing is given away.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not where the objects are"
+tier = "no root pose, no object positions"
+camera_note = "the head cameras see a bookshelf and a table. `room_camera` (off by default) looks down on the whole room (`RCB_ROOM_CAMERA_POSE` in the compose file): all six objects and the robot are in frame."
+room_camera_pose = "0.3,0,0,11,0,-70"
+room_camera_comment = "room_camera above the room: all six objects and the robot are in frame"
 
 # =====================================================================================================
 # C9 · long-horizon multi-subtask
@@ -837,6 +980,12 @@ difficulty = '''- **A state machine, not a controller.** The code that solves th
   stage is never scored, because `get_terminated()` ends the episode on the step the fourth stage
   completes. No trajectory can pass this task as it is scored now.'''
 
+[task.limited]
+ends = "when the last compartment is done"
+hidden = "where the robot is in the room, not the cabinet's or the cubes' state"
+tier = "no root pose, no cabinet or cube state"
+camera_note = "the head cameras see the top of the cabinet close up. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the cabinet and the robot."
+
 [[task]]
 family = "truck"
 role = "scored"
@@ -876,6 +1025,12 @@ difficulty = '''- **🔑 The only long-horizon task in the subset that runs on t
 - 📌 Upstream's `info["success"]` for this task is correct (0 until every package is delivered, then 1);
   an earlier note in our docs claiming it was hard-coded to 0 was wrong. We score `episode_return`
   regardless.'''
+
+[task.limited]
+ends = "when the last package is on the table"
+hidden = "where the robot is in the room, not where the packages are"
+tier = "no root pose, no package positions"
+camera_note = "the head cameras see the packages stacked in the truck. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the truck, its ramp, the table and the robot."
 
 [[task]]
 family = "kitchen"
@@ -920,6 +1075,13 @@ difficulty = '''- **🔑 The only task in the benchmark with a genuinely sparse 
   `diagnostics.json` — but do not compare 4 against another task's 700.
 - **One instance only**: `env.py` forces `randomness = 0` for this family.'''
 
+[task.limited]
+task_statement = "complete the four kitchen tasks, in order: open the microwave door, move the kettle from its burner to the one behind it, turn the bottom burner's knob, and flip the light switch."
+ends = "when all four are complete"
+hidden = "where the robot is in the room, not the appliances' joint positions"
+tier = "no root pose, no appliance state"
+camera_note = "the head cameras see the stove, the microwave and the wall cabinets. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the kitchen and the robot."
+
 [[task]]
 family = "bookshelf_simple"
 role = "scored"
@@ -960,6 +1122,12 @@ difficulty = '''- **Five subtasks, the longest chain in the subset** (`cabinet` 
   state" objection to it is gone — the permutation lives in `vars(task)` and `body_pos`, both frozen —
   so if a second instance of this class is ever wanted, `hard` is ready.
 - **One instance only**: `env.py` forces `randomness = 0` for this family.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low), when the object being placed drops, or once all five are placed"
+hidden = "where the robot is in the room, not where the objects or their places are"
+tier = "no root pose, no object positions"
+camera_note = "the head cameras see the inside of one shelf. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the bookshelf and the robot."
 
 # =====================================================================================================
 # Template / CI fixture — deliberately easy, NOT part of the scored subset
@@ -1034,3 +1202,10 @@ deterministic and costs one episode.
 ⚠️ The oracle searches against the reward function, which the task image no longer has. It runs with the
 verifier's restore path (`tests/rcb_rewards.py`) or outside the container; it is a development tool and a
 CI fixture, not something an agent could reproduce from inside.'''
+
+[task.limited]
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the chair's pose"
+tier = "no root pose, no chair pose"
+camera_note = "the chair is behind the robot and never enters the head cameras' view (floor and horizon only); `room_camera` (the recording camera frozen at its starting pose) sees both."
+

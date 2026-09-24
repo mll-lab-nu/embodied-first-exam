@@ -13,6 +13,8 @@ Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in t
 | `extract_rewards.py` | regenerates `rewards.json`, by running the real `scrub_oracles.py` against a copy of upstream and diffing — so what the image loses and what the verifier restores cannot drift. One-off; needs an image whose rewards are *not* scrubbed |
 | `measure_baselines.py` | the `nop` / `hold` floors for all 32 upstream families, including the ones outside the subset — the evidence for which families deserve a slot (`06-task-selection.md` §B5) |
 | `templates/` | everything the tasks have in common, with `{{placeholders}}` |
+| `templates/limited/`, `shared/limited/` | the same for each task's limited-mode twin (`tasks/*-limited/`, `docs/LIMITED_MODE_1_1.md`): the sim sidecar's adapter and service, the agent's client, the verifier. Per-task prose is the task's `[task.limited]` table in `subset.toml` |
+| `limited_probe.py` | what `measure-limited` runs against a twin's sim service: contract checks, the all-zero return against `facts.json`, the t=0 camera images, and the per-step cost the instruction quotes |
 | `gen_tasks.py` | the generator |
 
 ```bash
@@ -21,12 +23,15 @@ Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in t
 ./gen_tasks.py measure               # refresh facts.json                       (needs mujoco)
 ./gen_tasks.py instance [--force]    # draw and freeze the scenes               (needs mujoco)
 ./gen_tasks.py verify                # re-measure; fail on drift, on a passing nop, on non-determinism
+./gen_tasks.py measure-limited       # check + time each limited twin's sim service (needs a GPU: --gpus all)
 ```
 
 ## Adding a task
 
-1. Add a `[[task]]` block to `subset.toml`. Its `env_id` lives there and nowhere else.
-2. `./gen_tasks.py measure <family> && ./gen_tasks.py instance <family> && ./gen_tasks.py render <family>`
+1. Add a `[[task]]` block to `subset.toml`, with its `[task.limited]` table. Its `env_id` lives there and nowhere else.
+2. `./gen_tasks.py measure <family> && ./gen_tasks.py instance <family>`, then `./gen_tasks.py measure-limited <family>`
+   (with a GPU: `docker run --gpus all -e NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility ...`), then
+   `./gen_tasks.py render <family>`
 3. `./gen_tasks.py verify <family>`, then `ci_checks/run_all.sh` and `cd tasks && harbor add --scan .`
 
 Everything except `status` needs a simulator, and the simulator lives in the image, so run them there:
@@ -41,8 +46,9 @@ floor measured any other way would not be the number the verifier produces.
 
 ## Changing something that every task shares
 
-Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All twenty-four directories move together —
-that is the whole point, and `ci_checks/check-tooling-sync.sh` is what stops them from drifting apart.
+Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All forty-eight directories (24 tasks, two modes)
+move together — that is the whole point, and `ci_checks/check-tooling-sync.sh` is what stops them from drifting
+apart.
 
 ## Why the instance files are guarded
 
