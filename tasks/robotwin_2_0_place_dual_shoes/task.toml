@@ -23,6 +23,8 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 
 [agent]
 timeout_sec = 3600.0
+network_mode = "allowlist"      # model API only: the scrubbed reference solutions are public upstream (PROTOCOL §4)
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 [environment]
 build_timeout_sec = 3600.0

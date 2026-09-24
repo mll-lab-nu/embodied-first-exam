@@ -1,6 +1,7 @@
 """rcb-limited/1.0 sim service for RoboTwin 2.0 (see docs/LIMITED_MODE_PROTOCOL.md).
 Owns the scene and the seed. Exposes only /spec, /observe, /step, /status. Logs to /data/episode.jsonl, keeps
-/data/final.json current, writes /data/replay.mp4 (six-view grid, one frame per step) on episode end or SIGUSR1."""
+/data/final.json current, writes /data/replay.mp4 (six-view grid, rendered from the replayed trajectory at the end;
+the in-episode frame grab is only a fallback) on episode end or SIGUSR1."""
 from __future__ import annotations
 import base64, io, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -21,8 +22,8 @@ def log(ev: dict) -> None:
 
 
 def write_final() -> None:
-    json.dump({"success": bool(E["success"]), "steps": E["step"], "physics_steps": int(S._sim_steps) if E["ready"] else 0,
-               "elapsed_s": round(time.time() - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
+    json.dump({"success": bool(E["success"]), "steps": E["step"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
+               "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
                "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
                "deterministic": E.get("deterministic"), "video": bool(E.get("video"))},
               open(os.path.join(DATA, "final.json"), "w"))
@@ -67,7 +68,10 @@ def start_finalize() -> None:
 
 def finish(reason: str) -> None:
     if E["done"]: return
-    E["done"] = True; E["reason"] = reason
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_physics_steps"] = int(S._sim_steps)
+    if not E["success"]:  # a success that materialised while waiting (object settling) counts at episode end
+        try: E["success"] = bool(ENV.check_success())
+        except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "physics_steps": int(S._sim_steps), "elapsed_s": round(time.time() - E["t0"], 1), "success": bool(E["success"])})
     write_final(); start_finalize()
 
@@ -105,20 +109,22 @@ def cam_spec() -> dict:
     out = {}
     ENV._update_render(); ENV.cameras.update_picture()
     for name, cfg in ENV.cameras.get_config().items():
-        K = np.asarray(cfg.get("intrinsic_cv", np.zeros((3, 3))))
         out[name] = {"mounted": {"left_camera": "left wrist", "right_camera": "right wrist"}.get(name, "static"),
                      "rgb": True, "depth": False, "calibration_in_obs": OBS_CALIBRATION}
     return out
 
 
 SPEC = {
-    "protocol": PROTOCOL, "simulator": "robotwin-2.0", "robot": ENV.robot.__class__.__name__ and "aloha-agilex", "task_text": TASK_TEXT,
+    "protocol": PROTOCOL, "simulator": "robotwin-2.0", "robot": os.environ.get("RCB_EMBODIMENT", "aloha-agilex"), "task_text": TASK_TEXT,
     "action_types": ["qpos", "ee"],
     "qpos": {"dim": 14, "layout": L_ARM + ["left_gripper"] + R_ARM + ["right_gripper"],
              "units": "rad for joints; gripper in [0,1], 0 = closed, 1 = open", "limits": LIMITS},
     "ee": {"dim": 16, "layout": ["l_x", "l_y", "l_z", "l_qw", "l_qx", "l_qy", "l_qz", "left_gripper", "r_x", "r_y", "r_z", "r_qw", "r_qx", "r_qy", "r_qz", "right_gripper"],
            "frame": "world: origin at the table centre on the floor plane, +z up, robot base at y = -0.65 facing +y, table top at z ~= 0.74",
-           "quaternion": "wxyz, unit norm", "note": "same convention as observation.endpose.left/right, so an observed pose is a valid target"},
+           "quaternion": "wxyz, unit norm",
+           "note": ("same convention as observation.endpose.left/right, so an observed pose is a valid target. This point is RoboTwin's "
+                    "end-effector frame: on the gripper's approach axis, 0.12 m BEHIND the gripper centre (TCP) for ALOHA-AgileX "
+                    "(gripper_bias 0.12). To put the fingers at a world point p, command p - 0.12 * approach_axis.")},
     "cameras": None, "physics_hz": 250, "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
 }
 
@@ -133,12 +139,14 @@ def observation() -> dict:
     images = {k: b64png(np.asarray(v["rgb"])) for k, v in o["observation"].items() if isinstance(v, dict) and "rgb" in v}
     calib = {k: cam_calib({kk: vv for kk, vv in v.items() if kk != "rgb"}) for k, v in o["observation"].items() if isinstance(v, dict)} if OBS_CALIBRATION else {}
     ja = o["joint_action"]; ep = o["endpose"]
-    return {"step": E["step"], "physics_steps": int(S._sim_steps), "time_s": round(time.time() - E["t0"], 2), "images": images, "cameras": calib,
+    out = {"step": E["step"], "physics_steps": int(S._sim_steps), "time_s": round(time.time() - E["t0"], 2), "images": images, "cameras": calib,
             "joint": {"left_arm": [float(x) for x in ja["left_arm"]], "left_gripper": float(ja["left_gripper"]),
                       "right_arm": [float(x) for x in ja["right_arm"]], "right_gripper": float(ja["right_gripper"]),
                       "vector": [float(x) for x in ja["vector"]]},
             "endpose": {"left": [float(x) for x in ep["left_endpose"]], "right": [float(x) for x in ep["right_endpose"]]},
-            "done": E["done"], "reason": E["reason"]}
+            "done": E["done"], "reason": E["reason"], "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1))}
+    if not OBS_CALIBRATION: out.pop("cameras", None)
+    return out
 
 
 def grab_frame() -> None:
@@ -175,12 +183,24 @@ def do_step(typ: str, v: np.ndarray) -> dict:
         def wl(*a, **k): r = lp(*a, **k); plan["left"] = r.get("status", "?") if isinstance(r, dict) else "?"; return r
         def wr(*a, **k): r = rp(*a, **k); plan["right"] = r.get("status", "?") if isinstance(r, dict) else "?"; return r
         ROBOT.left_plan_path, ROBOT.right_plan_path = wl, wr
+    else:  # qpos: RoboTwin's take_action swallows TOPP failures and holds the arm for 50 steps; expose that
+        lt, rt = ROBOT.left_mplib_planner.TOPP, ROBOT.right_mplib_planner.TOPP
+        def mk(orig, side):
+            def w(*a, **k):
+                try:
+                    r = orig(*a, **k); n = int(r[1].shape[0]) if r and hasattr(r[1], "shape") else 0
+                    plan[side] = "Success" if n > 0 else "TOPP empty (target == current?) -> arm held 50 steps"
+                    return r
+                except Exception as exc:  # noqa
+                    plan[side] = f"TOPP failed ({type(exc).__name__}) -> arm held 50 steps"; raise
+            return w
+        ROBOT.left_mplib_planner.TOPP, ROBOT.right_mplib_planner.TOPP = mk(lt, "left"), mk(rt, "right")
     try:
         before = int(S._sim_steps)
         ENV.take_action(v, action_type=typ)
     finally:
         if typ == "ee": ROBOT.left_plan_path, ROBOT.right_plan_path = lp, rp
-    if typ == "qpos": plan = {"left": "Success", "right": "Success"}
+        else: ROBOT.left_mplib_planner.TOPP, ROBOT.right_mplib_planner.TOPP = lt, rt
     E["step"] += 1
     succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
     log({"ev": "step", "step": E["step"], "type": typ, "action": [round(float(x), 5) for x in v], "physics_steps": int(S._sim_steps) - before, "plan": plan, "success": succ})
@@ -202,9 +222,12 @@ class H(BaseHTTPRequestHandler):
         return self._send(404, {"error": "no such endpoint"})
     def do_POST(self):
         if self.path != "/step": return self._send(404, {"error": "no such endpoint"})
-        n = int(self.headers.get("Content-Length", 0))
+        try: n = int(self.headers.get("Content-Length", 0))
+        except ValueError: return self._send(400, {"error": "bad Content-Length"})
+        if n > 1_000_000: return self._send(413, {"error": "request too large"})
         try: body = json.loads(self.rfile.read(n) or b"{}")
         except Exception: return self._send(400, {"error": "invalid JSON"})
+        if not isinstance(body, dict): return self._send(400, {"error": "body must be a JSON object"})
         typ = body.get("type"); v = validate(typ, body.get("action", []))
         if isinstance(v, str): return self._send(400, {"error": v})
         with LOCK:
@@ -217,17 +240,22 @@ class H(BaseHTTPRequestHandler):
             obs = observation(); obs.update(ok=True, plan=plan); return self._send(200, obs)
 
 
-def on_usr1(*_):  # collect hook: end the episode (if still running) and produce the deliverables
-    if not E["done"]:
-        with LOCK: finish("timeout")
-    else:
-        start_finalize()
+def _end_from_signal():
+    with LOCK:  # may wait for a running /step to finish; that is fine in a worker thread
+        if not E["done"]:
+            finish("timeout")
+        else:
+            start_finalize()
+
+
+def on_usr1(*_):  # collect hook. Signals run on the main (HTTP) thread, which may be holding LOCK inside do_step:
+    threading.Thread(target=_end_from_signal, daemon=True).start()   # so never lock here (review finding: deadlock)
 signal.signal(signal.SIGUSR1, on_usr1)
 
 SPEC["cameras"] = cam_spec()
 log({"ev": "start", "task": TASK, "seed": S.seed, "state_sha": S.state_sha(), "protocol": PROTOCOL}); grab_frame(); write_final()
 S.record_start()  # the whole episode is recorded as a (T, 34) trajectory; no reset ever happens
-E["ready"] = True
+E["ready"] = True; E["t0"] = time.time()   # episode clock starts when the service is ready, not at import
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))  # the collect hook signals this PID
 print("rcb-limited sim ready", flush=True)
 HTTPServer(("0.0.0.0", 8000), H).serve_forever()

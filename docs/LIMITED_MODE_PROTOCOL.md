@@ -35,7 +35,7 @@ Anything else (including `/reset`, `/state`, `/success`) returns **404**.
                    "r_x","r_y","r_z","r_qw","r_qx","r_qy","r_qz","right_gripper"],
         "frame": "world: origin at the table centre on the floor plane, +z up, robot base at y = -0.65 facing +y, table top at z ~= 0.74",
         "quaternion": "wxyz, unit norm",
-        "note": "same convention as observation.endpose.left/right, so an observed pose is a valid target"},
+        "note": "same convention as observation.endpose.left/right, so an observed pose is a valid target. NOT the fingertip: this is RoboTwin's end-effector frame, 0.12 m behind the gripper centre along the approach axis on ALOHA-AgileX (gripper_bias 0.12); to put the fingers at p command p - 0.12*approach_axis"},
  "cameras": {"head_camera": {"mounted": "static", "rgb": true, "depth": false, "calibration_in_obs": true},
              "front_camera": {...}, "left_camera": {"mounted": "left wrist", ...}, "right_camera": {...}},
  "physics_hz": 250,
@@ -51,12 +51,13 @@ service reports ±π for those joints, matching RoboTwin's own joint-legality ru
  "step": 12, "physics_steps": 3480, "time_s": 13.92,
  "images": {"head_camera": "<base64 PNG RGB>", "front_camera": "...", "left_camera": "...", "right_camera": "..."},
  "cameras": {"head_camera": {"intrinsic_cv": [[3x3]], "extrinsic_cv": [[3x4]], "cam2world_gl": [[4x4]]}, "...": "..."},   // RoboTwin's per-camera
-                                                                                      // calibration, exactly as in its get_obs(); omitted when the task sets RCB_OBS_CALIBRATION=0
+                                                                                      // calibration, exactly as in its get_obs(); the whole key is omitted when the task sets RCB_OBS_CALIBRATION=0
  "depth":  {"head_camera": "<base64 float16 little-endian HxW metres>"},            // only if the task enables depth
  "joint":  {"left_arm": [6 floats], "left_gripper": 0.98, "right_arm": [6 floats], "right_gripper": 1.0,
             "vector": [14 floats]},                                                   // measured positions, qpos layout
  "endpose": {"left": [x,y,z,qw,qx,qy,qz], "right": [x,y,z,qw,qx,qy,qz]},              // ee layout, world frame
- "done": false, "reason": null                                                        // see episode semantics
+ "done": false, "reason": null,                                                       // see episode semantics
+ "time_left_s": 3412.6                                                                // wall-clock budget left
 }
 ```
 Everything the model learns comes from observations (strict gym contract); `/spec` only describes the action space and
@@ -72,7 +73,9 @@ Request:
 ```
 Semantics (identical to RoboTwin's policy evaluator `take_action(action, action_type)`):
 - `qpos`: the service plans a time-optimal interpolation (TOPP) from the current joints to the target and steps the
-  physics until it is reached (typically 50–300 physics steps); the grippers interpolate linearly alongside.
+  physics until it is reached (typically 50–300 physics steps); the grippers interpolate linearly alongside. If TOPP
+  fails or the target equals the current joints, RoboTwin holds the arm for 50 physics steps; the response reports it
+  as `"plan": {"left": "TOPP ... -> arm held 50 steps", ...}` instead of `"Success"`.
 - `ee`: the service runs CuRobo to a collision-free path **against the table only** (objects are not in its
   world model) for each arm and executes it; grippers as above. If a plan fails for an arm, that arm holds
   position for 50 physics steps and the response carries `"plan": {"left": "Success", "right": "failed"}`.
@@ -88,14 +91,17 @@ Errors (no physics executed):
 |---|---|
 | 400 | wrong `type`, wrong dimension, NaN/inf, joint or gripper value outside `spec.limits`, non-unit quaternion |
 | 409 | episode already finished (`done` = true); the trial is over, nothing else can be done |
-| 503 | service still loading (CuRobo warm-up on start, ~1 min); retry |
+| (connection refused) | service still loading (CuRobo warm-up on start, ~1 min): the socket opens only when the scene is ready; the client retries |
+| 413 | request body over 1 MB |
 
 ## Episode semantics
 - The service starts the episode when the container starts (seed hidden inside the service); the agent's first
   `/observe` is the initial scene.
 - After every step the service evaluates the task's own `check_success()` (never exposed). The first success ends
   the episode: `done = true, reason = "success"`. Otherwise the episode ends when Harbor's agent phase ends
-  (`reason = "timeout"`), or on an unrecoverable simulator error (`reason = "error"`).
+  (`reason = "timeout"`), or on an unrecoverable simulator error (`reason = "error"`). At episode end the predicate
+  is evaluated once more, so a success that materialised after the last step (an object settling) still counts.
+- `elapsed_s` in `final.json` is the episode's wall clock from service-ready to episode end (not including finalize).
 - No reset. A dropped object, a collision, a crashed agent script: all count, as on hardware.
 
 ## Evidence and grading (agent never sees this)

@@ -34,10 +34,12 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 280); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json"
-timeout_sec = 600
+timeout_sec = 900
 
 [agent]
 timeout_sec = 3600.0
+network_mode = "allowlist"      # model API only: the scrubbed reference solutions are public upstream (PROTOCOL §4)
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 [environment]
 build_timeout_sec = 1800.0

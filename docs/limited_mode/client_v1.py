@@ -25,13 +25,13 @@ class Robot:
         while time.time() - t0 < timeout:
             for b in [c for c in cands if c]:
                 try:
-                    r = requests.get(b + "/spec", timeout=5)
+                    r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503:
                         last = "warming up"; break
                     r.raise_for_status(); self.base = b; self._spec = r.json()
                     assert self._spec.get("protocol") == PROTOCOL, self._spec.get("protocol")
                     return
-                except requests.exceptions.ConnectionError as e:
+                except requests.exceptions.RequestException as e:  # connection refused (not ready yet), timeouts, resets
                     last = e
             time.sleep(2)
         raise RuntimeError(f"sim service unavailable: {last}")
@@ -49,10 +49,10 @@ class Robot:
         return obs
 
     def observe(self) -> dict:
-        r = requests.get(self.base + "/observe"); r.raise_for_status(); return self._decode(r.json())
+        r = requests.get(self.base + "/observe", timeout=(5, 600)); r.raise_for_status(); return self._decode(r.json())
 
     def step(self, type: str, action) -> dict:
-        r = requests.post(self.base + "/step", json={"type": type, "action": [float(x) for x in np.asarray(action).reshape(-1)]})
+        r = requests.post(self.base + "/step", json={"type": type, "action": [float(x) for x in np.asarray(action).reshape(-1)]}, timeout=(5, 900))
         if r.status_code == 409:
             raise EpisodeOver(r.json().get("reason"))
         if r.status_code == 400:
@@ -60,4 +60,4 @@ class Robot:
         r.raise_for_status(); return self._decode(r.json())
 
     def status(self) -> dict:
-        r = requests.get(self.base + "/status"); r.raise_for_status(); return r.json()
+        r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()
