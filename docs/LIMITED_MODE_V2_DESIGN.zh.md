@@ -2,8 +2,8 @@
 
 状态：2026-09-24，设计稿，未实现。v1（HTTP client：observe/step）的实现与协议见 `LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`。
 **决定：不用 MCP。** 曾考虑把两个操作做成 MCP 工具（`LIMITED_MODE_MCP_PLAN.md`），但工具返回值会直接进模型上下文，
-图片/视频一多就把上下文撑爆；改为**纯 client/service**：service 把所有结果（视频、帧、本体数据）写进一个文件夹，
-client 只返回路径和一小段 JSON，coding agent 自己决定怎么看视频或图片（抽几帧、读哪几张、跑什么分析）。
+图片/视频一多就把上下文撑爆；改为**纯 client/service**：service 把结果（视频、帧、本体数据）作为**二进制**直接返回给
+client，client 解成内存里的对象；coding agent 自己用代码决定存到哪、看哪几帧、跑什么分析——什么都不会自动进上下文。
 
 ## 1. 目标
 
@@ -11,16 +11,16 @@ client 只返回路径和一小段 JSON，coding agent 自己决定怎么看视�
 `submit`（提交一段低层动作，执行并录像）和 `get_obs`（拿当前画面，或看未来几秒的视频）。
 没有 reset、没有特权状态、没有成功谓词。同一套接口将来由真机侧进程提供，agent 侧不变。
 
-与 v1 的区别：v1 的 `step` 一次一个动作、观测以 base64 图片塞在 JSON 里返回；v2 的 `submit` 一次一段低层动作序列，
-所有图像/视频**不再放进返回值**，而是写到 agent 容器只读挂载的文件夹 `/robot_media/`，返回值只有路径和数字。
-agent 侧仍是一个小的 Python client（`rcb_client.py`，两个函数），底层是 HTTP/JSON；服务端、录制、验证、隔离全部沿用 v1。
+与 v1 的区别：v1 的 `step` 一次一个动作、观测以 base64 图片塞在 JSON 里返回（体积 ×1.33，解析慢）；v2 的 `submit`
+一次一段低层动作序列，返回**执行视频**，`get_obs` 返回**帧或视频**，全部走一个简单的二进制帧协议（§3.3），
+client 解码成 numpy 数组和 mp4 字节，agent 代码决定保存到哪个目录、看哪几帧。服务端、录制、验证、隔离全部沿用 v1。
 
 ## 2. 系统结构（一次 trial 里的三个容器）
 
 ```
  agent 阶段 ─────────────────────────────────────────────────────────────────
    main（agent 容器）                         sim（sidecar 容器）
-   Python + rcb_client.py；没有仿真器          rcb-robotwin 镜像 + server.py（HTTP 服务，写 /robot_media）
+   Python + rcb_client.py；没有仿真器          rcb-robotwin 镜像 + server.py（HTTP + RCB1 二进制帧）
    agent 代码调 client.submit / client.get_obs ──▶  持有 seed、场景、check_success；
                                                  执行动作、录轨迹、写日志、出视频
  ── main 停止 ──▶ collect 钩子在 sim 里收尾（回放核验、渲染、final.json）──▶ 产物拷出
@@ -31,7 +31,8 @@ agent 侧仍是一个小的 Python client（`rcb_client.py`，两个函数），
 - `main` 是 Harbor 保留的 agent 服务名；`sim` 是 compose 里的 sidecar，文件系统、进程与 main 隔离，只有网络可达。
 - GPU 预留在 `sim` 上。出口管控（`[agent] network_mode = no-network/allowlist`）下 main 和 sim 共享网络命名空间，
   服务地址是 `localhost:8000`；公网模式下是 `sim:8000`。client 两个都试（v1 已验证）。
-- 共享卷 `robot_media`：sim 读写、main 只读挂到 `/robot_media`。所有视频/帧/深度都在这里，agent 读得到、改不了。
+- 没有共享卷：结果在响应体里回来；agent 想留就自己存（`obs.save("/app/runs/17")`）。服务端在自己的 `/data/` 里保留
+  一份完整记录（agent 不可见），随 sidecar 产物交给 verifier。
 
 ## 3. 两个操作（client 函数 = HTTP 端点）
 
@@ -45,17 +46,19 @@ client.submit(
   interpolate: "hold" | "linear" = "linear",
   cameras:     string[] = ["head_camera","front_camera","left_camera","right_camera"],
   video_fps:   number = 10,
-  save_frames: bool = True,      # 除 mp4 外再按 video_fps 存 JPEG 序列
+  video:       "mp4" | "frames" | "both" | "none" = "mp4",   # 想要什么形式的图像；none = 只要数字
   note:        string = ""       # agent 的意图说明，原样进日志
-) -> {                            # 只有数字和路径，没有图像
-  chunk_id, executed_rows, sim_time_s, physics_steps,
-  clipped:  [{row, index, reason}],       # 被限位裁剪的元素，全部列出
-  rejected: {row, reason} | null,         # 整段被拒（见 §5），此时什么都没执行
-  plan:     {left: status, right: status} # 仅 ee_* 类型
-  proprio_end: {joint_pos, joint_vel, gripper, ee_pose_left, ee_pose_right},
-  done: bool, reason: null | "success" | "timeout" | "error",
-  dir: "/robot_media/000017_submit/"      # 见 §3.3 的目录内容
-}
+) -> Result(                       # client 解码后的对象（§3.3）
+  meta: {chunk_id, executed_rows, sim_time_s, physics_steps,
+         clipped: [{row, index, reason}],      # 被限位裁剪的元素，全部列出
+         rejected: {row, reason} | null,       # 整段被拒（见 §5），此时什么都没执行
+         plan: {left, right},                  # 仅 ee_* 类型
+         proprio_end: {...}, done, reason, time_left_s},
+  video: {camera: bytes(mp4)},                 # video="mp4"/"both"
+  frames: {camera: uint8[N,H,W,3]},            # video="frames"/"both"
+  last:   {camera: uint8[H,W,3]},              # 总是有：每个相机最后一帧
+  proprio: float32[N, 16+14]                   # 每个视频帧时刻的关节/夹爪/末端位姿
+).save(dir) -> 写成 meta.json / <cam>.mp4 / frames/<cam>/*.jpg / last/<cam>.jpg / proprio.npy
 ```
 
 语义：服务端按物理频率（250 Hz）把这些行"流"下去，行与行之间保持或线性插值——就是真机控制器接收一段动作 chunk 的方式。
@@ -70,8 +73,10 @@ client.get_obs(
   cameras: string[] = ["head_camera","front_camera","left_camera","right_camera"],
   seconds: number = 0,           # 0：当前帧；>0：保持当前指令、让物理走这么久并录像
   video_fps: number = 10,
-  include_depth: bool = false
-) -> { obs_id, sim_time_s, proprio, cameras: {name: {intrinsic, cam2world}}, done, reason, dir: "/robot_media/000018_obs/" }
+  include_depth: bool = false,
+  video: "mp4" | "frames" | "both" = "frames"
+) -> Result(meta: {obs_id, sim_time_s, proprio, cameras: {name: {intrinsic, cam2world}}, done, reason, time_left_s},
+            frames / video, last, depth: {camera: float16[N,H,W]}, proprio)
 ```
 
 `seconds = 0` 免费（不走物理）。`seconds > 0` 时机器人保持原指令不动、世界继续演化（物体掉落、稳定），返回视频。
@@ -79,25 +84,40 @@ client.get_obs(
 （PROTOCOL §5 要求把 sim_steps 当成本上报，便于横向比较），并有单次上限（默认 30 s）防止一次调用挂几分钟。除图像外只返回本体信息和相机标定（RoboTwin 观测原生字段，可用开关关掉）；
 **永远不返回物体状态**。"看未来"必须真的花掉那段时间，而且会被记录。
 
-### 3.3 结果放哪、agent 怎么看
+### 3.3 传输协议：RCB1 二进制帧
 
-返回值里**没有图像**，只有数字和一个目录路径。每次调用在共享卷里生成一个目录（编号递增，便于按时间排序）：
+要求：一次响应里同时带一段 JSON 元数据和多块大二进制（mp4、图像数组、深度、本体数组），双方零依赖能解，
+可以边生成边流式发送，同一格式将来可跑在真机的 TCP/WebSocket 上。不用 base64（v1 的做法，体积 ×1.33、解析慢），
+不用 gRPC/protobuf（要代码生成，且图像数组还是得裸传）。
 
 ```
-/robot_media/000017_submit/
-  meta.json            # 与返回值相同的 JSON（chunk_id、裁剪、规划状态、proprio_end、done…）
-  head_camera.mp4      # 每个请求的相机一个 mp4（seconds=0 的 get_obs 只有单帧 jpg）
-  front_camera.mp4  left_camera.mp4  right_camera.mp4
-  frames/head_camera/000.jpg 001.jpg …      # save_frames=True 时按 video_fps 抽好的帧
-  frames/<camera>/…
-  depth/<camera>/000.npy …                  # include_depth=True 时
-  last/head_camera.jpg …                    # 每个相机的最后一帧，最常用
-  proprio.jsonl        # 每个视频帧对应时刻的关节/夹爪/末端位姿
+RCB1 帧 = magic "RCB1"(4B) | header_len uint32 LE (4B) | header JSON (UTF-8) | blob_0 | blob_1 | …
+header = {
+  "v": 1,
+  "meta": {...},                                  # 上面 Result.meta 的全部字段
+  "parts": [                                      # blob 按顺序排列，长度在这里，client 直接切片
+    {"name": "video/head_camera",  "kind": "mp4",   "len": 812345, "fps": 10, "n": 43},
+    {"name": "frames/head_camera", "kind": "array", "len": 9953280, "dtype": "uint8",   "shape": [43,240,320,3]},
+    {"name": "last/left_camera",   "kind": "jpeg",  "len": 18211},
+    {"name": "depth/head_camera",  "kind": "array", "len": ...,     "dtype": "float16", "shape": [43,240,320]},
+    {"name": "proprio",            "kind": "array", "len": ...,     "dtype": "float32", "shape": [43,30]}
+  ]
+}
 ```
+- 请求也是 RCB1：`submit` 的 `actions` 作为一个 `float32 [T,dim]` 的 array part 发送，header 里放其余参数；
+  几千行动作只有几十 KB，且不经过 JSON 数字解析。
+- HTTP 承载：`POST /submit`、`POST /observe`，`Content-Type: application/x-rcb1`，HTTP/1.1 keep-alive；
+  服务端用 chunked transfer 先发 header 再依次发 blob，client 可以先拿到 meta 再等视频。
+- 数组用 C 序 raw bytes（等价于 `np.ndarray.tobytes()`），client 端 `np.frombuffer(...).reshape(shape)`，零拷贝。
+- 图像默认 320×240（RoboTwin D435 配置）；`frames` 形式的 43 帧 ×4 相机约 40 MB，`mp4` 形式约 1 MB——
+  agent 按需选；默认 `submit` 回 mp4、`get_obs(seconds=0)` 回 frames（单帧）。
+- 可选压缩：`kind: "jpeg-seq"`（一串 JPEG，header 给每帧偏移）在帧数多时比 raw 数组小 20 倍，比 mp4 更易随机访问。
+- 备选方案：`msgpack` + 二进制 ext（同样零拷贝，多一个依赖）；HTTP `multipart/mixed`（标准但数组要额外元数据）。
+  三者服务端都能同时支持，`Accept` 头选择；v2 默认 RCB1。
 
-agent 容器把 `/robot_media` **只读**挂载：coding agent 自己决定看什么——直接把 `last/head_camera.jpg` 读进上下文、
-用 ffmpeg 抽几帧、写 OpenCV 代码测位置、或者根本不看。上下文里放几张图由 agent 控制，不由服务端决定。
-只读挂载保证 agent 改不了证据；service 端同样的目录被完整保留并随 sidecar 产物拷给 verifier。
+client 侧 `Result` 对象把 parts 解成 `bytes` / `numpy` 数组，提供 `.save(dir)`（写 meta.json、mp4、JPEG、npy）
+和 `.show(camera, k)`（取第 k 帧）；**存不存、存哪里、看哪几张，都是 agent 代码的决定**。服务端在自己的 `/data/`
+里另存一份完整记录给 verifier，agent 看不到。
 
 ### 3.4 故意不提供的
 
@@ -122,7 +142,7 @@ agent 容器把 `/robot_media` **只读**挂载：coding agent 自己决定看�
 - 逐元素裁剪：关节/速度/力矩限位、夹爪范围，记入 `clipped`。
 - 工作空间：`ee_*` 目标被规划器拒绝时该臂原地不动，返回规划状态（与 RoboTwin `take_action` 一致）。
 - 预算：服务端执行墙钟预算（到时 `timeout`）；可选的仿真时间上限写在 spec。
-- 磁盘：共享卷按 episode 计，每次调用几 MB；服务端可设总量上限（如 5 GB），超出后不再存 frames 只存 mp4。
+- 体积：单次响应上限（默认 256 MB），超过则服务端自动降级为 mp4 + last 帧并在 meta 里说明；`seconds` 单次上限 30 s。
 
 ## 6. 正确性怎么验证（MCP 不改变这一链条）
 
@@ -164,29 +184,17 @@ Harbor 对 agent 的运行就是一次 `codex exec "<instruction>"`（Claude Cod
 
 ## 9. Harbor 接线
 
-不需要 `[[mcp_servers]]`。在 v1 的 compose 上新增一个命名卷：
-
-```yaml
-services:
-  main:
-    depends_on: [sim]
-    volumes: [robot_media:/robot_media:ro]      # agent 只读
-  sim:
-    image: ghcr.io/jameskrw/rcb-robotwin:0.1.1
-    volumes: [./sim:/srv:ro, robot_media:/robot_media]
-    deploy: {resources: {reservations: {devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]}}}
-volumes:
-  robot_media: {}
-```
-其余沿用 v1：`artifacts` 来自 `service = "sim"`（`/data/*` 和 `/robot_media` 的 meta/last 帧）、`[[verifier.collect]]` 用 pid
-文件发 SIGUSR1、`[verifier] environment_mode = "separate"` + `tests/Dockerfile`、`[agent] network_mode` 按需收紧。
+与 v1 相同，不需要 `[[mcp_servers]]`，也不需要共享卷：sim sidecar + GPU 预留、`artifacts` 来自 `service = "sim"`
+（`/data/*`：episode.jsonl、trajectory.npz、final.json、replay.mp4、以及每次调用的 meta 与 last 帧）、
+`[[verifier.collect]]` 用 pid 文件发 SIGUSR1、`[verifier] environment_mode = "separate"` + `tests/Dockerfile`、
+`[agent] network_mode` 按需收紧。agent 镜像只多一个 `rcb_client.py`（依赖 numpy、requests）。
 
 ## 10. 实施顺序（待批准）
 
-1. 服务端：`server.py` 加 `/submit`（先 `joint_position`、`ee_pose`，再 `joint_delta`、`joint_velocity`、`ee_delta`、`joint_torque`）
-   和新版 `/observe`（`seconds`、`include_depth`），每次调用写 `/robot_media/NNNNNN_<kind>/`。
-2. client：`rcb_client.py` 两个函数 + `spec()`，返回值原样透传，不解码任何图像。
-3. compose：共享卷；instruction 写清目录结构和"自己决定看什么"。
+1. 协议：`rcb1.py`（encode/decode，服务端和 client 共用同一文件，无依赖）+ 单元测试（往返、流式、大数组）。
+2. 服务端：`server.py` 加 `/submit`（先 `joint_position`、`ee_pose`，再 `joint_delta`、`joint_velocity`、`ee_delta`、`joint_torque`）
+   和新版 `/observe`（`seconds`、`include_depth`、`video`），用 RCB1 回包；每次调用在 `/data/calls/` 留 meta + last 帧。
+3. client：`rcb_client.py` 两个函数 + `spec()` + `Result.save/show`；instruction 写清"返回的是内存对象，存哪看啥你自己决定"。
 4. PoC：`stack_blocks_two-limited`，oracle 改为把专家关节目标分几段 `submit`；跑 oracle/nop gate 和一次 Codex。
 5. 协议升到 `rcb-limited/2.0`；v1 的 `/step`（base64 图片版）退役。
 6. 重跑 21 个 limited 任务，与 v1 对比。
@@ -195,8 +203,9 @@ volumes:
 
 | 问题 | 决定 | 理由 |
 |---|---|---|
-| 用不用 MCP | **不用**。纯 client/service，结果落盘到只读共享卷 | MCP 返回值直接进上下文，图片/视频会撑爆；落盘后 agent 自己决定看多少 |
-| 图像怎么给模型 | 服务端一张都不塞；agent 想看就自己把 `last/<cam>.jpg` 或抽的帧读进上下文 | 上下文成本由 agent 控制，也更像真机（相机数据在磁盘/话题上，不在对话里） |
+| 用不用 MCP | **不用**。纯 client/service | MCP 返回值直接进上下文，图片/视频会撑爆 |
+| 结果怎么回来 | 视频/图像/数组作为**二进制**在响应体里回来（RCB1 帧，§3.3），client 解成内存对象 | 不走 base64、不走共享卷；agent 代码决定存哪、看哪几帧，什么都不会自动进上下文 |
+| 传输格式 | 自定义 RCB1（magic + JSON header + 裸 blob），HTTP chunked 承载；备选 msgpack / multipart 由 `Accept` 选 | 零依赖、零拷贝、可流式、真机可直接复用在 TCP/WebSocket 上 |
 | `get_obs(seconds>0)` 白等要不要计预算 | **不计预算，只记录**（sim_time 作为成本字段上报），单次上限 30 s | 真机上等待就是墙钟时间；松手后等物体落稳属于正当操作；上限防止一次挂几分钟 |
 | `joint_torque` 模式下重力补偿 | **保留**服务端重力补偿，agent 给的是补偿之外的力矩 | 与真机的重力补偿控制器一致；否则第一段力矩指令就会让臂砸下来 |
 | oracle 怎么验证 | 每个任务用分段 `submit` 重放专家关节目标（`joint_position`，dt=物理步长×K），逐任务跑 gate；不通过的任务标"无已验证 oracle"保留（如 v1 的 scan_object） | oracle 是 verifier 的正例测试，不是任务的一部分 |
