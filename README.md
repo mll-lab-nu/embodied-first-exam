@@ -41,6 +41,10 @@ The adapters in `harbor_agents/` map the OpenRouter key, endpoint and nested mod
 expects, and switch off the harness's own web tools: the provider runs those, past the task's network
 allowlist (`docs/LEAKAGE.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live`.
 
+After a limited-mode run, `python3 scripts/limited_report/report.py jobs/<job>` writes one HTML report per trial
+(`<trial>/report/index.html`): every episode replayed, scored and rendered, cost, the images the agent looked at, and
+its full trajectory.
+
 ## Layout
 
 ```
@@ -54,6 +58,7 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 └── humanoidbench-loco-*-i00-limited/   # limited mode (docs/LIMITED_MODE_1_1.md): sit_simple, walk, stair, hurdle,
                                 #   balance_simple; hand-maintained
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
+scripts/limited_report/         # one HTML report per limited-mode trial (report.py; replay_episodes.py runs in the sim image)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
                                 #   cross-task leaks, reward leaks, dataset manifest
