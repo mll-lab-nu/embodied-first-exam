@@ -1,5 +1,5 @@
 """Verifier-side, inside the sim image: replay and score every episode of one limited HumanoidBench trial, and
-render each. Run by report.py; by hand:
+render each. Run by collect.py; by hand:
   python replay_episodes.py <trial_dir> <task_sim_dir> <out_dir>   -> <out_dir>/episodes.json, <out_dir>/episodes/epN.mp4
 The sidecar logs each action rounded to 5 decimals, so an earlier episode's replay is approximate; the graded (last)
 episode is replayed from the exact trajectory.npz. None of this was visible to the agent."""

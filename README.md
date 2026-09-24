@@ -39,11 +39,13 @@ PYTHONPATH=. harbor run -p <task> -a harbor_agents.claude_code_openrouter:Claude
 
 The adapters in `harbor_agents/` map the OpenRouter key, endpoint and nested model ID to what each harness
 expects, and switch off the harness's own web tools: the provider runs those, past the task's network
-allowlist (`docs/LEAKAGE.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live`.
+allowlist (`docs/LEAKAGE.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live` or
+`--ak reasoning_effort=medium`. The standard configs and their commands are in `results/<benchmark>/README.md`.
 
-After a limited-mode run, `python3 scripts/limited_report/report.py jobs/<job>` writes one HTML report per trial
-(`<trial>/report/index.html`): every episode replayed, scored and rendered, cost, the images the agent looked at, and
-its full trajectory.
+After a run, in either mode, `python3 scripts/results/build.py --add jobs/<job>` appends its line to
+`results/<benchmark>/runs.csv`, measures the trial (the bill, every tool call and image; in limited mode every episode
+replayed, scored and rendered) and writes the results pages to `jobs/results/<benchmark>/` -- an overview, one page
+per task, one per run.
 
 ## Layout
 
@@ -57,8 +59,8 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 ├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
 └── humanoidbench-*-i00-limited/ # the limited-mode twin of each (docs/LIMITED_MODE_1_1.md), also generated
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
-scripts/limited_report/         # one HTML report per limited-mode trial (report.py; replay_episodes.py runs in the sim image)
-results/<benchmark>/            # what agents scored: README.md (standard-config table) + runs.csv (one line per trial)
+scripts/results/                # the results pages: build.py (+ common, data, calls, charts, pages), collect.py (one trial, measured)
+results/<benchmark>/            # what agents scored: README.md (standard configs, table per model and mode) + runs.csv (one line per trial)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
                                 #   cross-task leaks, reward leaks, dataset manifest
