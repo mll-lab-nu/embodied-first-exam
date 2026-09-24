@@ -17,8 +17,9 @@ measure the cost of losing resets, privileged state and the ability to search.
 | verification | `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4` |
 | code | copied from `robotwin_2_0_stack_blocks_two-limited` (dev/kangrui) and split: `sim/rcb_service.py` is simulator-agnostic, `sim/server.py` is the HumanoidBench adapter. See `docs/LIMITED_MODE_1_1.md` |
 
-Note: the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` (the
-recording camera frozen at its starting pose; off by default) sees the robot from outside.
+Note: the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` (off
+by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose
+file): the robot stays in frame from x = 0 to 20 m.
 
 Hand-maintained: not rendered by `scripts/humanoidbench/gen_tasks.py` (yet).
 

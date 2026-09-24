@@ -30,8 +30,8 @@ all black (SAPIEN/Vulkan is unaffected). Its SIGUSR1 handler also takes the lock
 `HTTPServer.service_actions`.
 
 ## Cost (HumanoidBench sit_simple, RTX 4090, EGL)
-0.39 ms/step physics · 1.35 ms/step one action per request · 6.5 ms/step with both images · ~0.6 ms/step in
-batches of 10 or more.
+0.39 ms/step physics · 1.2 ms/step one action per request · 4.3 ms/step with both head-camera images · ~0.5 ms/step
+in batches of 10 or more.
 
 ## Making it repo-wide (later)
 - **One directory per (task, mode) is what Harbor needs**: the agent image, compose, verifier, `task.toml` and

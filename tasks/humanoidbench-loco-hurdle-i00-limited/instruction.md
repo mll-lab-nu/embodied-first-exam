@@ -39,8 +39,8 @@ from rcb_client import Robot
 r = Robot()                  # connects; r.spec() lists what this run provides
 obs = r.step("qpos", a)      # a: 19 position targets in [-1, 1] = one 50 Hz control step
 ```
-Measured cost per control step here: about 1.4 ms sent one at a time, 6.5 ms one at a time with both images,
-0.6 ms in batches of 10 or more without images.
+Measured cost per control step here: about 1.4 ms sent one at a time, 6.5 ms one at a time with both
+head-camera images, 0.6 ms in batches of 10 or more without images.
 
 The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_roll`, `left_hip_pitch`,
 `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`,

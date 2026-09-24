@@ -9,6 +9,8 @@ Settings come from environment/docker-compose.yaml:
   RCB_OBS_PROPRIO          1 (default): images + joint proprioception; 0: images only
   RCB_OBS_IMU              0 (default); 1: + a pelvis IMU (angular velocity, gravity direction)
   RCB_OBS_ROOM_CAMERA      0 (default); 1: + `room_camera`, a camera fixed in the room
+  RCB_ROOM_CAMERA_POSE     where it stands, "lookat_x,lookat_y,lookat_z,distance,azimuth,elevation" (a MuJoCo free
+                           camera, metres and degrees); empty (default): the recording camera frozen at t=0
 """
 from __future__ import annotations
 
@@ -45,7 +47,7 @@ class HumanoidBench:
     pose, object or goal state, or the reward -- the reward is live here only so the service can judge."""
 
     def __init__(self, task: str | None, instance: str, *, proprio: bool = True, imu: bool = False,
-                 room_camera: bool = False, task_text: str = ""):
+                 room_camera: bool = False, room_pose: tuple | None = None, task_text: str = ""):
         self.s = Session(task, instance=instance, enable_render=True)
         if not self.s.scored:
             raise RuntimeError("the reward was not restored: this service could not judge success")
@@ -54,7 +56,7 @@ class HumanoidBench:
         assert m.jnt_type[0] == mujoco.mjtJoint.mjJNT_FREE and m.body(int(m.jnt_bodyid[0])).name == "pelvis"
         self.joints = [m.joint(j).name for j in range(m.njnt) if 7 <= m.jnt_qposadr[j] < self.robot.dof]
         self.cameras = CAMERAS + (("room_camera",) if room_camera else ())
-        self._room = self._frozen_camera(self.s.low.camera_name or "cam_default") if room_camera else None
+        self._room = (room_pose or self._frozen_camera(self.s.low.camera_name or "cam_default")) if room_camera else None
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
 
     def _frozen_camera(self, name: str, dist: float = 3.0) -> tuple:
@@ -143,8 +145,12 @@ class HumanoidBench:
 
 if __name__ == "__main__":
     env = os.environ.get
+    pose = [float(v) for v in env("RCB_ROOM_CAMERA_POSE", "").split(",") if v.strip()]
+    if pose and len(pose) != 6:
+        raise SystemExit("RCB_ROOM_CAMERA_POSE needs 6 numbers: lookat_x,lookat_y,lookat_z,distance,azimuth,elevation")
     sim = HumanoidBench(env("RCB_TASK"), env("RCB_INSTANCE", "/srv/instance.npz"),
                         proprio=env("RCB_OBS_PROPRIO", "1") == "1", imu=env("RCB_OBS_IMU", "0") == "1",
-                        room_camera=env("RCB_OBS_ROOM_CAMERA", "0") == "1", task_text=env("RCB_TASK_TEXT", ""))
+                        room_camera=env("RCB_OBS_ROOM_CAMERA", "0") == "1",
+                        room_pose=(np.array(pose[:3]), *pose[3:]) if pose else None, task_text=env("RCB_TASK_TEXT", ""))
     Service(sim, reset_budget=int(env("RCB_RESET_BUDGET", "0")),
             wall_clock_s=float(env("RCB_WALL_CLOCK_S", "3600"))).serve(8000)
