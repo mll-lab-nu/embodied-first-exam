@@ -1,0 +1,8 @@
+{
+ "task": "handover_mic",
+ "seed": 28831,
+ "embodiment": "aloha-agilex",
+ "state_sha": "843ea0357251",
+ "text": "Use one arm to grasp the microphone on the table and handover it to the other arm.",
+ "n_active_joints": 16
+}

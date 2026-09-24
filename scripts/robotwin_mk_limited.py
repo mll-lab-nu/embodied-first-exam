@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate tasks/robotwin_2_0_<task>-limited/ from an existing unlimited task + the stack_blocks_two-limited template.
-usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz>
+usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz>   (needs numpy: run inside the rcb-robotwin image, e.g.
+       docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/jameskrw/rcb-robotwin:0.1.1 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
 The limited oracle replays the unlimited oracle's joint targets (every 25 physics steps) as `qpos` actions."""
 import pathlib, re, shutil, sys, json
 import numpy as np
