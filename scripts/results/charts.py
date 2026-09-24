@@ -186,7 +186,8 @@ def agent_timeline(s: dict) -> str:
             cams.append(v["camera"])
     lg = ("<span>一行一类；一次调用做了几件事，就在几行里各出现一次</span>"
           + ("<span>看图按相机着色：" + "".join(f'<span style="margin-left:6px"><b class="sw-{c}"></b>{CAMS.get(c, c)}</span>' for c in cams) + "</span>" if cams else "")
-          + '<span><i class="sw-ep"></i>竖虚线 = reset，下一段 episode 开始（和上图对齐）</span><span>点一条看这次调用的命令和输出</span>')
+          + ('<span><i class="sw-ep"></i>竖虚线 = reset，下一段 episode 开始（和上图对齐）</span>' if len(s["episodes"]) > 1 else "")
+          + "<span>点一条看这次调用的命令和输出</span>")
     return f'{clock_svg(s, X, rows, svg, H)}<div class="legend">{lg}</div>'
 
 

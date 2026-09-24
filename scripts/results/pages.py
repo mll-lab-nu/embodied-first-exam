@@ -149,7 +149,8 @@ def run_kpis(r: dict, task: dict) -> str:
     res = s["result"]
     prog = d.get("prog")
     limited = s["mode"] == "limited"
-    k = [kpi("结果", "通过" if d["pass"] else "未通过", WHY.get(res["why"], res["why"]), cls="ok" if d["pass"] else "bad"),
+    why = "交的轨迹回放两次都到了及格线" if res["why"] == "success" and not limited else WHY.get(res["why"], res["why"])
+    k = [kpi("结果", "通过" if d["pass"] else "未通过", why, cls="ok" if d["pass"] else "bad"),
          kpi("被评分段回报" if limited else "交的轨迹回放的回报", f'{num(d["score"])} <small>/ {num(d["bar"], 0)}</small>',
              f"离及格线 {prog:.3f}（全零 = 0，及格 = 1）" if prog is not None else "", bar=(prog or 0, "ok" if d["pass"] else "bad"))]
     if limited:
