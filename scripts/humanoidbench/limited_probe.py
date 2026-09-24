@@ -9,7 +9,8 @@ In process, through rcb_service.Service (no HTTP):
   proprio     obs["proprio"] is the robot's joint slice of qpos / qvel
   nop         the all-zero episode ends where facts.json says and returns facts.json's nop_return: the formula in
               the sidecar is upstream's
-  reset       back to the frozen start; a batch is bit-identical to the same actions one at a time
+  reset       back to the frozen start, every camera's image included; a batch is bit-identical to the same actions
+              one at a time
   success     with the bar lowered in this process only, the episode ends as a success and finalize saves,
               replays (success, deterministic) and renders a video that is not black
 Then through the real HTTP service and the shipped client: ms per control step one at a time, one at a time with
@@ -78,13 +79,15 @@ check("nop", code == 200 and o["executed"] == facts["nop_steps"] and round(ret, 
 
 svc.do_reset({"images": False})
 ok_start = sim.state_sha() == start
+again = svc.observation(list(sim.cameras))["images"]           # the same start, so the same pictures (goal marker too)
+drift = {c: int((np.abs(png(again[c]).astype(int) - png(b).astype(int)).sum(-1) > 12).sum()) for c, b in obs["images"].items()}
 A = np.clip(np.random.default_rng(0).normal(0, 0.1, (min(40, facts["nop_steps"] - 1), nu)), -1, 1)
 for a in A:
     svc.do_step({"type": "qpos", "action": a.tolist(), "images": False})
 one_by_one = sim.state_sha()
 svc.do_reset({"images": False})
 svc.do_step({"type": "qpos", "actions": A.tolist(), "images": False})
-check("reset", ok_start and sim.state_sha() == one_by_one, steps=len(A))
+check("reset", ok_start and not any(drift.values()) and sim.state_sha() == one_by_one, steps=len(A), pixels_changed=drift)
 
 svc.do_reset({"images": False})
 bar, sim.s.success_bar = sim.s.success_bar, (facts["nop_return"] / 2 if facts["nop_return"] > 0 else -1e9)

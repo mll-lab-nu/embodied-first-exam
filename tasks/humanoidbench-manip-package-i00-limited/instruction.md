@@ -2,7 +2,8 @@
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open. You get one client. **Task:** walk to the package, pick it up,
-carry it to the destination marker and set it down there, standing upright.
+carry it to the destination, marked in the scene by a translucent cyan ball, and set it down there, standing
+upright.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the package

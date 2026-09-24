@@ -560,7 +560,9 @@ task_statement = "push the box on the table to the target position, marked in th
 ends = "when the box reaches the target"
 hidden = "where the robot is in the room, not where the hand or the box is, not the target's coordinates"
 tier = "no root pose, no hand, box or target position"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the table from its far side, facing the robot (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+room_camera_pose = "0.55,0.1,1.0,3,180,-45"
+room_camera_comment = "room_camera across the table, facing the robot: the box and the target on the tabletop, the robot behind them"
 
 [[task]]
 family = "window"
@@ -654,7 +656,9 @@ difficulty = '''- **Periodic end-effector tracking — the only instance of it i
 ends = "when the robot falls (its pelvis drops too low)"
 hidden = "where the robot is in the room, not the spoon's pose, not the moving target point"
 tier = "no root pose, no spoon pose, no target point"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the cup, the spoon and the robot. The stirring target point is not drawn: it would sit inside the cup."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the cup, the spoon and both hands; the robot below its chest is out of frame. The stirring target point is not drawn: it would sit inside the cup."
+room_camera_pose = "0.75,0.05,0.9,1.3,-135,-45"
+room_camera_comment = "room_camera close over the tabletop: the cup, the spoon and both hands"
 
 # =====================================================================================================
 # C7 · in-hand precision
@@ -699,7 +703,9 @@ difficulty = '''- **Millimetre clearance.** Each socket's opening is 4 cm across
 ends = "when the robot falls (its pelvis drops too low), or when the bar or either socket drops"
 hidden = "where the robot is in the room, not the poses of the bar and the sockets"
 tier = "no root pose, no bar or socket poses"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the table, the bar and both sockets."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bar, both sockets and both hands; the robot below its chest is out of frame."
+room_camera_pose = "0.71,0.01,0.96,1.3,-129,-45"
+room_camera_comment = "room_camera close over the tabletop: the bar, both sockets and both hands"
 
 [[task]]
 family = "cube"
@@ -743,7 +749,9 @@ difficulty = '''- **The only true in-hand reorientation in the benchmark.** Both
 ends = "when the robot falls (its pelvis drops too low), or when either cube drops"
 hidden = "where the robot is in the room, not the cubes' orientations, not the goal orientation"
 tier = "no root pose, no cube poses, no goal orientation"
-camera_note = "the head cameras see the cube above one palm. `room_camera` (the recording camera frozen at its starting pose; off by default) sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`)."
+camera_note = "the head cameras see the cube above one palm. `room_camera` (off by default) looks at the hands close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`); the legs are out of frame."
+room_camera_pose = "0.47,0,1.25,0.9,-129,-25"
+room_camera_comment = "room_camera close on the hands: both cubes and the floating goal orientation"
 
 # =====================================================================================================
 # C8 · mobile manipulation
@@ -797,7 +805,9 @@ instance_note = "the target sits 0.704 m from the left hand at the frozen pose"
 task_statement = "bring the robot's left hand to the target point, marked in the scene by a small red cube, and keep it there for as much of the episode as possible."
 hidden = "where the robot is in the room, not where its hand is, not the target's coordinates"
 tier = "no root pose, no hand or target position"
-camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+camera_note = "the head cameras see floor and horizon only. `room_camera` (off by default) stands in front of the robot, facing it (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+room_camera_pose = "0.15,0.35,1.0,2.8,180,-12"
+room_camera_comment = "room_camera in front of the robot, facing it: the target cube is beside its left arm"
 
 [[task]]
 family = "sit_hard"
@@ -892,10 +902,13 @@ each drawn uniformly from a ±2 m box, so the distance between them can be 0.2 m
 must be filtered to a comparable distance band (2.0-3.0 m suggested) and the band recorded here.'''
 
 [task.limited]
+task_statement = "walk to the package, pick it up, carry it to the destination, marked in the scene by a translucent cyan ball, and set it down there, standing upright."
 ends = "when the package reaches the destination"
 hidden = "where the robot is in the room, not where the package or the destination is"
 tier = "no root pose, no package or destination position"
-camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot, the package and the destination (the cyan ball, part of the upstream scene)."
+camera_note = "the head cameras see floor and horizon only. `room_camera` (off by default) stands straight in front of the robot, facing it, and looks down on it (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the package and the destination (the cyan ball, part of the upstream scene) are all in frame."
+room_camera_pose = "0.1,0.35,0.6,3.0,180,-60"
+room_camera_comment = "room_camera straight in front of the robot, looking down on it: the robot, the package and the cyan destination"
 
 [[task]]
 family = "room"
@@ -1030,7 +1043,9 @@ difficulty = '''- **🔑 The only long-horizon task in the subset that runs on t
 ends = "when the last package is on the table"
 hidden = "where the robot is in the room, not where the packages are"
 tier = "no root pose, no package positions"
-camera_note = "the head cameras see the packages stacked in the truck. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the truck, its ramp, the table and the robot."
+camera_note = "the head cameras see the packages stacked in the truck. `room_camera` (off by default) looks into the truck through its open side (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the truck's bed, its ramp, the table and the robot."
+room_camera_pose = "4.5,-0.6,1.2,9,-25,-22"
+room_camera_comment = "room_camera looking into the truck through its open side: the bed, the ramp, the table and the robot"
 
 [[task]]
 family = "kitchen"
@@ -1127,7 +1142,9 @@ difficulty = '''- **Five subtasks, the longest chain in the subset** (`cabinet` 
 ends = "when the robot falls (its pelvis drops too low), when the object being placed drops, or once all five are placed"
 hidden = "where the robot is in the room, not where the objects or their places are"
 tier = "no root pose, no object positions"
-camera_note = "the head cameras see the inside of one shelf. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the bookshelf and the robot."
+camera_note = "the head cameras see the inside of one shelf. `room_camera` (off by default) looks at the shelves from behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it and the robot."
+room_camera_pose = "0.85,-0.1,0.9,3.2,35,-20"
+room_camera_comment = "room_camera behind the robot's right shoulder: every shelf, and the places the objects go, in view"
 
 # =====================================================================================================
 # Template / CI fixture — deliberately easy, NOT part of the scored subset

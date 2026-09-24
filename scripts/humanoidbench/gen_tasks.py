@@ -306,8 +306,10 @@ def compose_line(name: str, value: str, comment: str) -> str:
     if not value:
         return ""
     lines = textwrap.wrap(" ".join(comment.split()), 54)
-    first = f'      {name}: "{value}"'.ljust(55)
-    return "\n".join([f"{first}# {lines[0]}"] + [f"{'':55}# {ln}" for ln in lines[1:]]) + "\n"
+    first = f'      {name}: "{value}"'
+    col = max(55, len(first) + 2)                     # a long value pushes the comment out, never into it
+    first = first.ljust(col)
+    return "\n".join([f"{first}# {lines[0]}"] + [f"{'':{col}}# {ln}" for ln in lines[1:]]) + "\n"
 
 
 def limited_context(t: dict, defaults: dict, facts: dict) -> dict:

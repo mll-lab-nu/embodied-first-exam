@@ -20,6 +20,8 @@ services:
       RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: head-camera RGB + joint angles/velocities; 0: images only
       RCB_OBS_IMU: "${RCB_OBS_IMU:-0}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room
+      RCB_ROOM_CAMERA_POSE: "4.5,-0.6,1.2,9,-25,-22"   # room_camera looking into the truck through its open
+                                                       # side: the bed, the ramp, the table and the robot
       RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:

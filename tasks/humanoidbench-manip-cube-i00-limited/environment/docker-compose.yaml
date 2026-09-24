@@ -20,6 +20,8 @@ services:
       RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: head-camera RGB + joint angles/velocities; 0: images only
       RCB_OBS_IMU: "${RCB_OBS_IMU:-0}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room
+      RCB_ROOM_CAMERA_POSE: "0.47,0,1.25,0.9,-129,-25"  # room_camera close on the hands: both cubes and the
+                                                        # floating goal orientation
       RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:

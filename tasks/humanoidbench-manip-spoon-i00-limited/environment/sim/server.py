@@ -75,8 +75,12 @@ class HumanoidBench:
 
     def _render(self, camera: str) -> np.ndarray:
         r = self.s.low.mujoco_renderer
-        if self._marks and (r.viewer is None or not r.viewer._markers):
-            self.s.low.task.render()                                  # adds the marker, which the viewer keeps
+        if self._marks:
+            if r.viewer is None or not r.viewer._markers:
+                self.s.low.task.render()                              # adds the marker, which the viewer keeps
+            for mk in r.viewer._markers:                              # and, like that hook on every call, puts it on the
+                if mk["objid"] == 789:                                # goal: a reset gives task.goal a new array (push's
+                    mk["pos"] = self.s.low.task.goal                  # reset_model first rewrites the old one in place)
         if camera != "room_camera":
             return r.render("rgb_array", camera_name=camera)
         cam = r.viewer.cam                                            # the viewer exists: __init__ rendered once

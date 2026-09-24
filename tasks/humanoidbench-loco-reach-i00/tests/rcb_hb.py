@@ -204,6 +204,7 @@ class Session:
 
         self.instance_state: np.ndarray | None = None
         self.instance_extra: dict[str, Any] | None = None   # task state + the model arrays tasks write
+        self._geom_rgba: np.ndarray | None = None           # the model's colours at the frozen start
         self._recording: _Recording | None = None
         self._ret = 0.0            # accumulated reward since the last reset
         self._steps = 0
@@ -243,6 +244,8 @@ class Session:
     def _restore_extra(self) -> None:
         """Must run between env.reset() and mj_forward: reset() redraws the goal and leaves accumulated
         counters alone, and body_pos feeds the kinematics that mj_forward is about to recompute."""
+        if self._geom_rgba is not None:              # maze recolours its checkpoints in the model as they are
+            self.model.geom_rgba[:] = self._geom_rgba   # passed, and upstream's reset leaves them as they were
         if self.instance_extra is None:
             return                                   # instance predates this field; nothing to restore
         vars(self.low.task).update(_task_state_loads(self.instance_extra["task_state"]))
@@ -336,6 +339,7 @@ class Session:
              "body_quat": np.array(d["body_quat"], dtype=np.float64)}
             if "task_state" in d.files else None
         )
+        self._geom_rgba = self.model.geom_rgba.copy()   # nothing has stepped yet: the scene as it starts
         self.reset()
 
     def state_sha(self) -> str:
