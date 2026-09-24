@@ -1,0 +1,8 @@
+{
+ "task": "move_can_pot",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "5a444d958b32",
+ "text": "There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot.",
+ "n_active_joints": 16
+}
