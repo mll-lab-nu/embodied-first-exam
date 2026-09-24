@@ -1,4 +1,4 @@
-# Limited mode v2 — two MCP tools between the agent and the robot service (design, not built)
+# Limited mode v2 — two MCP tools (superseded 2026-09-24: decided NOT to use MCP; see LIMITED_MODE_V2_DESIGN.zh.md — plain client/service, media written to a read-only shared volume, the agent decides what to look at)
 
 Status 2026-09-24: plan only. Supersedes the HTTP client of `rcb-limited/1.0` for the agent-facing side; the
 sidecar / separate-verifier / evidence design of `LIMITED_MODE.md` stays.
