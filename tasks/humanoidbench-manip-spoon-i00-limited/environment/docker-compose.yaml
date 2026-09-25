@@ -22,7 +22,6 @@ services:
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room
       RCB_ROOM_CAMERA_POSE: "0.75,0.05,0.9,1.3,-135,-45"  # room_camera close over the tabletop: the cup, the
                                                           # spoon and both hands
-      RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:
       resources:

@@ -9,7 +9,7 @@ Calls. spec() was fetched when connecting; every other call is one HTTP request.
                                       range (each actuator's rad at -1 and +1), units; control_hz;
                                       max_episode_steps; "proprio" (joints, each one's axis) / "imu" (its frame)
                                       (None if absent); "cameras" {name: {"hw", "fovy_deg", "pose", ...}};
-                                      "budget" {"reset": resets allowed, "wall_clock_s"}
+                                      "budget" {"reset": resets allowed}
     r.observe(images=True)            the current observation; simulated time does not move
     r.step(type, a, images=True)      a is one action, shape (D,), or a batch, shape (K, D): K control steps
                                       in order, in one request, with the same physics as K single steps. obs

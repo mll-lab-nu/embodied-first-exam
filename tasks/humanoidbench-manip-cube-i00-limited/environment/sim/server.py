@@ -204,5 +204,4 @@ if __name__ == "__main__":
                         proprio=env("RCB_OBS_PROPRIO", "1") == "1", imu=env("RCB_OBS_IMU", "0") == "1",
                         room_camera=env("RCB_OBS_ROOM_CAMERA", "0") == "1",
                         room_pose=(np.array(pose[:3]), *pose[3:]) if pose else None, task_text=env("RCB_TASK_TEXT", ""))
-    Service(sim, reset_budget=int(env("RCB_RESET_BUDGET", "0")),
-            wall_clock_s=float(env("RCB_WALL_CLOCK_S", "3600"))).serve(8000)
+    Service(sim, reset_budget=int(env("RCB_RESET_BUDGET", "0"))).serve(8000)

@@ -23,7 +23,6 @@ services:
       RCB_ROOM_CAMERA_POSE: "1.8,0,0.9,7,105,-25"      # room_camera beside the doorway: the robot, the door
                                                        # and the floor beyond it stay in frame from x=-0.5 to 4
                                                        # m
-      RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:
       resources:

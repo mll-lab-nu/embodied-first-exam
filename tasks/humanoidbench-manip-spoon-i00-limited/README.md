@@ -11,7 +11,7 @@ measure the cost of losing resets, privileged state and the ability to search.
 |---|---|
 | tier / mode | perception / limited: head-camera RGB + joint angles/velocities (HumanoidBench's own `image` + `proprio` sensors); no root pose, no spoon pose, no target point, no reward; no reset by default |
 | action space | HumanoidBench's own: 61 normalised position targets, 50 Hz; one per request or a batch of K |
-| knobs (compose env) | `RCB_RESET_BUDGET` (0), `RCB_OBS_PROPRIO` (1; 0 = images only), `RCB_OBS_IMU` (0), `RCB_OBS_ROOM_CAMERA` (0), `RCB_WALL_CLOCK_S` (3600). Per run from the shell: `RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`; the start line of `episode.jsonl` records the resulting `/spec` |
+| knobs (compose env) | `RCB_RESET_BUDGET` (0), `RCB_OBS_PROPRIO` (1; 0 = images only), `RCB_OBS_IMU` (0), `RCB_OBS_ROOM_CAMERA` (0). Per run from the shell: `RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`; the start line of `episode.jsonl` records the resulting `/spec` |
 | agent API | `environment/rcb_client.py`: its docstring is the full reference; `instruction.md` points to it and keeps only task facts |
 | reference solution | none, on purpose; the nop agent scores 0 |
 | verification | `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4` |

@@ -51,7 +51,7 @@ class Service:
     simulator's GL context belongs to the thread that made it (MuJoCo renders black frames from any other
     thread). One thread, so no locks."""
 
-    def __init__(self, sim: Sim, *, reset_budget: int = 0, wall_clock_s: float = 3600.0):
+    def __init__(self, sim: Sim, *, reset_budget: int = 0):
         os.makedirs(DATA, exist_ok=True)
         self.sim, self.reset_budget = sim, int(reset_budget)
         self.t0 = time.time()
@@ -65,7 +65,7 @@ class Service:
         self.stopping = False    # SIGUSR1 seen: stop mid-batch, then wrap up
         self.result: dict = {}   # what finalize() found
         self.spec = {"protocol": PROTOCOL, **sim.spec(), "batch": True,
-                     "budget": {"reset": self.reset_budget, "steps": None, "wall_clock_s": wall_clock_s}}
+                     "budget": {"reset": self.reset_budget, "steps": None}}
 
     # ------------------------------------------------------------------ evidence
     def log(self, ev: str, **kw) -> None:
@@ -139,6 +139,8 @@ class Service:
             if success or done:
                 self.end_episode("success" if success else "failed")
                 break
+        if cams:   # the images this answer carries (an observe logs its own)
+            self.log("images", step=self.step, images=cams)
         self.write_final()
         return 200, {**self.observation(cams), **info, "ok": True, "executed": executed}
 
@@ -151,6 +153,8 @@ class Service:
         self.sim.reset(); self.resets += 1
         self.step, self.done, self.reason = 0, False, None
         self.log("reset", resets=self.resets, state_sha=self.sim.state_sha()); self.write_final()
+        if cams:
+            self.log("images", step=0, images=cams)
         return 200, {**self.observation(cams), "ok": True}
 
     # ------------------------------------------------------------------ the end

@@ -23,7 +23,6 @@ services:
       RCB_ROOM_CAMERA_POSE: "0.55,0.1,1.0,3,180,-45"   # room_camera across the table, facing the robot: the
                                                        # box and the target on the tabletop, the robot behind
                                                        # them
-      RCB_WALL_CLOCK_S: "${RCB_WALL_CLOCK_S:-3600}"     # reported in /spec only; the agent timeout enforces it
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:
       resources:
