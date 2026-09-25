@@ -36,16 +36,16 @@ scores on the same instance.
 
 | # | task | robot | class | bar | all-zero | GPT-6 Luna · limited | GPT-6 Luna · full | GPT-6 Sol · limited | GPT-6 Sol · full |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.8 · $0.03 | ✅ 905.1 · $0.39 |  |  |
-| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 38.5 · $0.08 | ❌ 159.8 · $0.61 | ❌ 19.5 · $0.28 | ✅ 862.3 · $7.79 |
-| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 14.6 · $0.26 | ❌ 132.0 · $0.68 |  |  |
-| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 65.5 · $0.06 | ❌ 108.4 · $0.32 |  |  |
-| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 23.5 · $0.19 | ❌ 223.3 · $0.48 | ❌ 110.1 · $3.18 | ❌ 416.0 · $5.32 |
-| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 156.6 · $0.26 | ❌ 327.9 · $0.46 |  |  |
-| 7 | push | h1 | C6 | 700 | −253.7 | ❌ −213.9 · $0.60 | ✅ 986.8 · $0.53 |  |  |
-| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 29.8 · $0.34 | ❌ 224.2 · $0.32 | ❌ 5.5 · $0.31 | ❌ 314.7 · $13.37 |
-| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −2068.6 · $0.18 | ❌ −767.4 · $0.49 | ❌ −2172.9 · $0.80 | ❌ 701.8 · $4.65 |
-| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 6.9 · $0.49 | ❌ 798.2 · $0.42 | ❌ 567.2 · $6.72 | ❌ 717.6 · $6.35 |
+| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.2 · $0.04 | ✅ 954.1 · $0.41 |  |  |
+| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 8.4 · $0.08 | ❌ 158.0 · $0.37 | ❌ 19.5 · $0.28 | ✅ 862.3 · $7.79 |
+| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 10.0 · $0.23 | ❌ 38.8 · $0.52 |  |  |
+| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 62.4 · $0.13 | ❌ 139.2 · $0.29 |  |  |
+| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 133.5 · $0.48 | ❌ 209.9 · $0.44 | ❌ 110.1 · $3.18 | ❌ 416.0 · $5.32 |
+| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 53.7 · $0.44 | ❌ 258.5 · $0.48 |  |  |
+| 7 | push | h1 | C6 | 700 | −253.7 | ✅ 987.0 · $0.26 | ✅ 991.8 · $0.44 |  |  |
+| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 58.0 · $0.22 | ❌ 252.5 · $0.46 | ❌ 5.5 · $0.31 | ❌ 314.7 · $13.37 |
+| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −4347.9 · $0.22 | ❌ 875.1 · $0.44 | ❌ −2172.9 · $0.80 | ❌ 701.8 · $4.65 |
+| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 34.7 · $0.26 | ❌ 806.5 · $0.57 | ❌ 567.2 · $6.72 | ❌ 717.6 · $6.35 |
 | 11 | stair | h1 | C2 | 700 | 8.6 | ❌ 33.0 · $0.18 | ❌ 162.2 · $0.57 |  |  |
 | 12 | balance_hard | h1 | C3 | 800 | 29.0 | ❌ 40.6 · $0.11 | ❌ 45.5 · $0.49 |  |  |
 | 13 | maze | h1 | C4 | 1200 | 120.6 | ❌ 142.5 · $0.34 | ❌ 386.7 · $0.76 |  |  |
@@ -65,6 +65,8 @@ Classes (`scripts/humanoidbench/subset.toml`): C1 flat gait · C2 constrained ga
 C5 whole-body power · C6 bimanual manipulation · C7 in-hand precision · C8 mobile manipulation · C9 long-horizon.
 h1 has 19 actuators, h1hand 61 (hands included).
 
-Order: rows 1–10 are the first round, one task per class plus the fixture, run in both modes, and again after the
-task text changed in 06b0ab3 (`runs.csv` keeps both); the rest by robot (h1 first) and by class. GPT-6 Sol ran
-five of the tasks GPT-6 Luna failed in both modes, one per class: walk, door, cube, package, bookshelf_simple.
+Order: rows 1–10 are the first round, one task per class plus the fixture, run in both modes, again after the
+task text changed in 06b0ab3, and a third time on e95d382 (limited-mode rules and `spec()`'s robot facts, image
+0.1.6); `runs.csv` keeps all three. The rest are ordered by robot (h1 first) and by class. GPT-6 Sol ran five of
+the tasks GPT-6 Luna failed in both modes, one per class: walk, door, cube, package, bookshelf_simple. Rows 1–10's
+Luna cells are e95d382 runs; every other cell is on 06b0ab3.
