@@ -39,7 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 VERSION = 3   # of summary.json; build.py re-collects a trial whose summary is older
 # words that should not show up in what the agent wrote or ran: the answer key, upstream's code, the network
-LEAK = re.compile(r"curl |wget |pip (install|download)|github|raw\.githubusercontent|humanoid_?bench|\bmujoco\b|dm_control|"
+LEAK = re.compile(r"curl |wget |pip (install|download)|github|raw\.githubusercontent|humanoid[-_]?bench|\bmujoco\b|dm_control|"
                   r"get_reward|rewards\.tolerance|_STAND_HEIGHT|_WALK_SPEED|_RUN_SPEED|stand_reward|small_control|dont_move", re.I)
 GENERATED_BY = "scripts/results/collect.py"
 

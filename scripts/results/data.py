@@ -140,7 +140,7 @@ def add_run(job: str, note: str, tasks: list) -> None:
                     "resets": sp["reset_budget"] if limited else "", "obs": obs,
                     "result": "pass" if res["success"] else "fail", "score": f"{res['return']:.2f}" if res["return"] is not None else "",
                     "bar": f"{res['bar']:g}" if res["bar"] is not None else "", "resets_used": res["resets"] if limited else "",
-                    "agent_min": f"{(s['a1'] - s['a0']) / 60:.1f}", "cost_usd": f"{cost:.4g}" if cost is not None else "",
+                    "agent_min": f"{(s['a1'] - s['a0']) / 60:.1f}", "cost_usd": f"{cost:.5g}" if cost is not None else "",
                     "requests": len(s["requests"]), "job": rel_job, "note": note})
     with open(f"{RESULTS}/runs.csv", "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(csv.DictReader(open(f"{RESULTS}/runs.csv")).fieldnames), lineterminator="\n")
