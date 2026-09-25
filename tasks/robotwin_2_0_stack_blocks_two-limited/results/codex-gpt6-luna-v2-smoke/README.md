@@ -1,4 +1,4 @@
-# Codex CLI + GPT-6 Luna (ChatGPT subscription), limited mode v2 (rcb-limited/2.0) — robotwin_2_0_stack_blocks_two-limited
+# Codex CLI + GPT-6 Luna (ChatGPT subscription), limited mode v2 smoke run (rcb-limited/2.0) — robotwin_2_0_stack_blocks_two-limited
 
 Run: Harbor job `v2-codex-stack-limited`, trial `robotwin_2_0_stack_blocks_two-li__AqMXJyG`, 2026-09-24. Mode: **limited (robot as a service)**.
 
