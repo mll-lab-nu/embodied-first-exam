@@ -53,8 +53,11 @@
 #            MAGNITUDE of a target ("about 1 m/s", "close to two metres"), what terminates the episode,
 #            and the episode length when it is not 1000.
 #   DO NOT   paste tolerance parameters (`bounds=`, `margin=`, `value_at_margin=`), the exact weight on
-#            each term, or what a trivial policy scores. Those are the answer key: with them the task is
-#            to invert an expression, without them it is to control a robot.
+#            each term, the reward's per-step scale ("a step is worth around 1"), or what a particular
+#            policy scores ("doing nothing earns essentially zero", "opening the door alone earns a
+#            substantial share"). Those are the answer key: with them the task is to invert an expression,
+#            without them it is to control a robot. Saying what the pass mark REQUIRES is fine ("the bar
+#            cannot be reached without opening the door").
 #
 #   The test to apply: could a competent engineer, told only this, build a sensible measure of their own
 #   and optimise it? If yes it is enough. Could they skip the robot and solve for the numbers? Then it is
@@ -105,8 +108,8 @@ task_statement = "walk the robot forward and keep walking, without falling."
 scene_note = "flat ground, and the robot's initial pose never changes between resets."
 scoring_note = '''Each step is judged on three things at once — how fast the centre of mass is moving
 forward, how upright the robot is (head at standing height, torso vertical), and how little actuator
-force it is using — and they multiply. Not being upright is what makes a step worth nothing; standing
-still keeps only a small fraction of a step's value, and heavy actuator force costs part of it. The
+force it is using — and they multiply. Not being upright is what makes a step worth nothing; heavy
+actuator force costs part of it. The
 forward-speed target is on the order of 1 m/s.'''
 ends_note = "The episode ends early if the pelvis drops near the ground."
 obs_layout = "qpos(26) + qvel(25), robot state only"
@@ -323,8 +326,8 @@ task_statement = "walk to the door, press the handle, pull the door open towards
 scene_note = "the door and the robot's initial pose never change between resets."
 scoring_note = '''This one is a weighted sum rather than a product, so partial credit is real: getting
 the door open and getting the torso past the doorway are the two large terms, with reaching for the
-handle, moving the handle, and posture as small ones. Opening the door and never walking through still
-earns a substantial share of each step, and the bar cannot be reached without opening the door.'''
+handle, moving the handle, and posture as small ones. The bar cannot be reached without opening the
+door.'''
 ends_note = "The episode ends early if the pelvis drops too low."
 obs_layout = "qpos(28) + qvel(27), robot + door + handle state"
 task_notes = ""
@@ -411,8 +414,8 @@ as high as you can.'''
 scene_note = "the bar, the grip and the robot's initial hanging pose never change between resets."
 scoring_note = '''Three multiplied requirements: how far the torso is towards *inverted*, how high the
 feet are, and low actuator force. Read the first one carefully — it rewards being upside down, so hanging
-the right way up scores nothing at all no matter how steady it is, and doing nothing earns essentially
-zero for the whole episode. The feet-height term saturates only when the feet are well above the bar. On
+the right way up scores nothing at all no matter how steady it is. The feet-height term saturates only
+when the feet are well above the bar. On
 this robot the forearms are fixed to the bar, so it cannot fall off.'''
 ends_note = "The episode still ends if the head drops too low, which an inverted hang under the bar can do."
 obs_layout = "qpos(26) + qvel(25), robot state only"
@@ -462,8 +465,7 @@ scoring_note = '''Scoring runs in two stages and switches by itself the first ti
 ball. Before that it rewards standing steadily and getting both hands to the ball; after it, the dominant
 term is how close the ball is to the hoop. Sinking it pays a one-off bonus that covers most of the bar
 but not all of it, and ends the episode immediately, so the rest has to be earned per step before the
-ball goes in. Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus is
-not optional — no amount of good positioning reaches the bar without it.'''
+ball goes in. That bonus is not optional: no amount of good positioning reaches the bar without it.'''
 ends_note = "The episode also ends if the ball drops low or the robot falls."
 obs_layout = "qpos(33) + qvel(31), robot + ball state"
 task_notes = '''Which stage the scoring is in — reaching for the ball, or putting it through the hoop —
@@ -506,8 +508,8 @@ task_statement = '''lift the dumbbell from the floor to overhead — close to tw
 there.'''
 scene_note = "the dumbbell, its weight and the robot's initial pose never change between resets."
 scoring_note = '''A weighted sum of two things: a small share for standing steadily, and the bulk for how
-high the dumbbell is, measured against a target band around two metres. Be warned that the height term
-is broad — the dumbbell sitting on the floor already earns a noticeable fraction of it. Clearing the bar
+high the dumbbell is, measured against a target band around two metres. Be warned that the height term is
+broad. Clearing the bar
 means lifting it high and keeping it there for most of the episode, not improving the height a little.'''
 ends_note = "The episode ends early if the pelvis drops near the ground."
 obs_layout = "qpos(83) + qvel(81), robot + dumbbell state"
@@ -549,8 +551,8 @@ task_statement = "push the box on the table to the target position marked in the
 scene_note = '''the box's starting position, the target position and the robot's initial pose never change
 between resets. The target is part of the observation — read it from `s.obs()`.'''
 scoring_note = '''Every step here is *negative*: it costs the box's distance to the target, plus a smaller
-charge for the left hand's distance to the box. The only positive term is a one-off bonus, worth more
-than a thousand ordinary steps, paid when the box lands within a few centimetres of the target — and that
+charge for the left hand's distance to the box. The only positive term is a one-off bonus, paid when the
+box lands within a few centimetres of the target — and that
 also ends the episode. So the bar is not reached by scoring well for a long time; it is reached by
 finishing, and finishing *early*, because every extra step subtracts.'''
 obs_layout = "qpos(26) + qvel(25) + left-hand xyz(3) + target xyz(3) + box xyz(3) + box velocity(3)"
@@ -595,8 +597,7 @@ scene_note = "the window, the tool and the robot's initial pose never change bet
 scoring_note = '''A large share of each step is paid only while the tool is in contact with the glass —
 while it is not, that share is zero, so the bar cannot be reached without contact. The rest pays for
 moving the tool vertically at a target speed on the order of half a metre per second, for keeping both
-hands near the tool, and for standing with the head about 40 cm from where it started (standing in place
-earns none of that share).'''
+hands near the tool, and for standing with the head about 40 cm from where it started.'''
 ends_note = "The episode ends immediately if the pelvis drops or the tool falls, i.e. if it is dropped."
 obs_layout = "qpos(87) + qvel(84), robot + tool state (the tool's free joint and its wiper's ball joint)"
 task_notes = ""
@@ -641,8 +642,7 @@ scoring_note = '''A weighted sum of four things: standing steadily, getting a ha
 keeping the spoon's head inside the cup, and — the largest single term — keeping that head close to a
 target point that **travels around a small circle at a fixed rate, completing a revolution every 40
 steps** (centred in the cup just above its floor, counter-clockwise seen from above, starting on the
-side away from the robot). Standing and a hand near the handle are largely paid just by
-holding the start pose, but the spoon starts on the table beside the cup, so the other two terms pay
+side away from the robot). The spoon starts on the table beside the cup, so the last two terms pay
 nothing until it is in the cup.'''
 ends_note = "The episode ends if the pelvis drops too low."
 obs_layout = "qpos(83) + qvel(81) + the stirring target point xyz(3) -- it moves, read it every step"
@@ -790,11 +790,10 @@ task_statement = '''bring the robot's left hand to the target point and keep it 
 episode as possible.'''
 scene_note = '''the target point and the robot's initial pose never change between resets. The target is
 part of the observation — read it from `s.obs()`.'''
-scoring_note = '''The per-step scale here is much larger than in the rest of HumanoidBench, so compare
-against this task's own bar and nothing else. There are two tiers, both paid *per step* rather than once
+scoring_note = '''There are two tiers, both paid *per step* rather than once
 on arrival: a moderate amount while the hand is within about a metre of the target, and a considerably
 larger amount on top while it is within a few centimetres. Staying upright is paid every step as well,
-about as much as the loose tier, and fast joint motion costs a little.
+and fast joint motion costs a little.
 Reaching the loose tier and holding it for the whole episode falls short of the bar — a meaningful
 fraction of the episode has to be spent inside the tight one.'''
 obs_layout = "qpos(26) + qvel(25) + left-hand xyz(3) + target xyz(3)"
@@ -1166,7 +1165,7 @@ difficulty = '''- **Five subtasks, the longest chain in the subset** (`cabinet` 
 - **One instance only**: `env.py` forces `randomness = 0` for this family.'''
 
 [task.limited]
-task_statement = "put each of the five red-tinted objects onto its place on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and darkest last."
+task_statement = "put each of the five red-tinted objects (the other seven are grey) onto its place on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and darkest last."
 ends = "when the robot falls (its pelvis drops too low), when the object being placed goes below about half a metre, once all five are placed"
 hidden = "where the robot is in the room, not where the objects or their places are"
 tier = "no root pose, no object positions"

@@ -19,6 +19,8 @@ from typing import Any
 from harbor.agents.installed.codex import Codex
 from harbor.agents.model_connection import ModelConnectionSpec, ResolvedModelConnection
 
+from harbor_agents.limited import end_trial
+
 
 class _OpenRouterModelName(str):
     """Make Harbor's final-component split retain OpenRouter's nested ID."""
@@ -87,3 +89,4 @@ class CodexOpenRouter(Codex):
             await super().run(instruction, environment, context)
         finally:
             self.model_name = original_model_name
+            await end_trial(environment)

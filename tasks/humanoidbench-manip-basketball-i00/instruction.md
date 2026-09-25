@@ -9,14 +9,14 @@ times as you want. Your deliverable is **one replayable trajectory**, not a gene
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
-over the episode reaches `s.success_bar` (**1200** here, out of 500 steps). Scoring runs in two
-stages and switches by itself the first time the robot contacts the ball. Before that it rewards
-standing steadily and getting both hands to the ball; after it, the dominant term is how close the
-ball is to the hoop. Sinking it pays a one-off bonus that covers most of the bar but not all of it,
-and ends the episode immediately, so the rest has to be earned per step before the ball goes in.
-Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus is not
-optional — no amount of good positioning reaches the bar without it. The episode also ends if the
-ball drops low or the robot falls.
+over the episode reaches `s.success_bar`, **1200** here: a total of rewards, not a number of steps
+(an episode is at most 500 steps). Scoring runs in two stages and switches by itself the first time
+the robot contacts the ball. Before that it rewards standing steadily and getting both hands to the
+ball; after it, the dominant term is how close the ball is to the hoop. Sinking it pays a one-off
+bonus that covers most of the bar but not all of it, and ends the episode immediately, so the rest
+has to be earned per step before the ball goes in. That bonus is not optional: no amount of good
+positioning reaches the bar without it. The episode also ends if the ball drops low or the robot
+falls.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -34,16 +34,16 @@ reads your work afterwards, so keep them short and factual rather than long.
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | the trajectory, written with `Session.save_trajectory(...)` (below). Replayed open-loop from the same initial state in a fresh process and scored 1 if the replayed episode reaches the bar, else 0 |
-| `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it |
+| `trajectory.npz` | the trajectory, written with `Session.save_trajectory(...)` (below). Replayed open-loop from the same initial state in a fresh process and scored 1 if the replayed episode reaches the pass mark, else 0 |
+| `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it — reading nothing but `/app/instance.npz` and files under `/app/output/` |
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py`
 and `NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget (1 h) and it
 ends without warning; a run that ends with no file scores zero no matter how good the policy in your
 scratch directory was. Do not stop early: you cannot see the score here, so a trajectory that looks
-good may still fall short of the bar — keep improving it until the time is up. Saving is cheap — a
-few hundred KB and well under a second.
+good may still fall short of the pass mark — keep improving it until the time is up. Saving is cheap
+— a few hundred KB and well under a second.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -52,8 +52,7 @@ s = Session("basketball", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
 obs = s.obs()                      # (64,) = qpos(33) + qvel(31), robot + ball state
 obs, r, done = s.step(action)      # action: (19,) normalised joint-position targets in [-1, 1], 50 Hz
-                                   # r is None here (see Scoring); obs and done are real, except where
-                                   # the task notes below say otherwise
+                                   # r is None here (see Scoring); obs and done are real, except where noted below
 s.max_steps                        # 500 — the episode limit, and the longest trajectory accepted
 s.low                              # the raw HumanoidBench env (s.low.model / s.low.data) for closed-loop control
 

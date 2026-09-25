@@ -6,8 +6,9 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
   one carries its own tooling (`environment/rcb_*.py`) and verifier (`tests/grade.py`).
 - Those copies are generated, not hand-written. `scripts/<sim>/gen_tasks.py` renders a whole task dir from
   `scripts/<sim>/subset.toml` (which tasks and why) plus `templates/` and `shared/`; `check-tooling-sync.sh`
-  fails the build if a copy drifts. **Edit the source and re-render — never a file under `tasks/`.**
-  HumanoidBench works this way; `tasks/robosuite-cube-stack-i00/` predates it and is still hand-maintained.
+  fails the build if a copy drifts, `check-generated-tasks.sh` if a task was not re-rendered. **Edit the
+  source and re-render — never a file under `tasks/`.** HumanoidBench works this way;
+  `tasks/robosuite-cube-stack-i00/` predates it and is still hand-maintained.
 - Limited mode (robot as a service, `docs/LIMITED_MODE_1_1.md`): every HumanoidBench task has a
   `tasks/*-limited/` twin, rendered by the same generator from `templates/limited/`, `shared/limited/` and the
   task's `[task.limited]` table (`gen_tasks.py measure-limited` checks and times its sim service; needs a GPU).
@@ -15,7 +16,8 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
   COPYed into the agent image) -- the one place under `environment/` the formula may live; the checks know it
   from `mode = "limited"`. The agent-facing API is documented in `environment/rcb_client.py`'s docstring, the
   full reference; `instruction.md` points to it and keeps only task facts (task, rules, scoring prose, measured
-  costs, actuator order).
+  costs, actuator order). Anything that belongs to the robot or the run (reset budget, sensors, servo ranges,
+  axes, camera poses) is in `spec()`, not in the text.
 - 🚩 **The scoring formula must never reach `environment/`.** HumanoidBench grades on a dense reward, and
   a dense reward is the answer key — `images/humanoidbench/scrub_oracles.py` deletes every `get_reward()`
   from the base image, `scripts/humanoidbench/rewards.json` keeps them, and `render` copies one family's

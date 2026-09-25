@@ -125,9 +125,15 @@ def actuator_layout(names: list[str]) -> str:
     body, hands = names[:hand_at], names[hand_at:]
     listed = ", ".join(f"`{n}`" for n in body)
     if hands:
+        per = len(hands) // 2
+        wrist = [n[3:] for n in hands[:per] if "WRJ" in n]      # each hand opens with its wrist, e.g. A_WRJ2, A_WRJ1
+        coupled = [n[3:] for n in hands[:per] if n.endswith("J0")]   # Shadow's J0 = one tendon over two joints
         text = (f"The {len(names)} actuators are position servos. The first {len(body)} are the body, in "
-                f"this order: {listed}. The remaining {len(hands)} are the fingers, {len(hands) // 2} per "
-                f"Shadow hand — `lh_A_*` then `rh_A_*`.")
+                f"this order: {listed}. The remaining {len(hands)} are the two Shadow hands, {per} each — "
+                f"`lh_A_*` then `rh_A_*`; each hand's first {len(wrist)} are its wrist "
+                f"({', '.join(f'`*_{w}`' for w in wrist)}) and the other {per - len(wrist)} its fingers, where each "
+                f"of the {len(coupled)} `*J0` ones ({', '.join(f'`*_{c}`' for c in coupled)}) drives a tendon that "
+                f"moves two finger joints together.")
     else:
         text = f"The {len(names)} actuators are position servos, in this order: {listed}."
     return text + (" A constant action commands joint *targets*, not a pose: whether the robot stays "
@@ -222,6 +228,8 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "image_tag": image_tag(),
         "keywords": ", ".join(f'"{k}"' for k in keywords),
         "actuator_layout": actuator_layout(facts["actuator_names"]),
+        # the step() comment points to the task notes only where a task has them
+        "step_caveat": ", except where noted below" if t.get("task_notes", "").strip() else "",
         "difficulty": difficulty,
         "nop_note": nop_note,
         "oracle_file": t.get("oracle", ""),
@@ -232,6 +240,13 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "episode_seconds": f"{facts['episode_seconds']:g}",
     }
     return ctx
+
+
+def stated(path: Path, text: str, ctx: dict) -> None:
+    """instruction.md is the agent's only account of the pass mark (the verifier reads upstream's own), so a
+    template that stops stating it must not render."""
+    if path.name == "instruction.md" and f"**{ctx['success_bar']}**" not in text:
+        sys.exit(f"{path.relative_to(ROOT)} must state the pass mark, **{ctx['success_bar']}**")
 
 
 def render(t: dict, defaults: dict, facts: dict) -> Path:
@@ -246,6 +261,7 @@ def render(t: dict, defaults: dict, facts: dict) -> Path:
                       ("gpu.docker-compose.yaml", "environment/gpu.docker-compose.yaml"),
                       ("test.sh", "tests/test.sh")]:
         text = fill((HERE / "templates" / name).read_text(), ctx)
+        stated(out / rel, text, ctx)
         (out / rel).write_text((rewrap(text) if rel.endswith(".md") else text).rstrip("\n") + "\n")
 
     solve = "solve.oracle.sh" if t.get("oracle") else "solve.none.sh"
@@ -294,15 +310,17 @@ def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
 
 
 def limited_actuator_layout(names: list[str], joints: list[str]) -> str:
-    """actuator_layout(), plus where the agent reads the order and how obs["proprio"] lines up with it: on h1
-    the joints are the actuators; on h1hand some finger actuators drive two coupled joints."""
+    """actuator_layout(), plus where the agent reads the order and the servo ranges, and how obs["proprio"] lines up
+    with it: on h1 the joints are the actuators; on h1hand some finger actuators drive two coupled joints."""
     head, tail = actuator_layout(names).split(" A constant action", 1)
     if joints == names:
         ref = ' (`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order).'
     else:
         ref = (f' (`spec()["qpos"]["layout"]`). `obs["proprio"]` measures joints, not actuators: {len(joints)} '
                f'of them, in `spec()["proprio"]["joints"]` order.')
-    return head.rstrip(".") + ref + " A constant action" + tail
+    scale = (' An action value of −1 or +1 commands one end of that servo\'s range, `spec()["qpos"]["range"]` in '
+             'radians, and the scale is linear, so 0 is mid-range, not 0 rad.')
+    return head.rstrip(".") + ref + scale + " A constant action" + tail
 
 
 def compose_line(name: str, value: str, comment: str) -> str:
@@ -351,6 +369,7 @@ def render_limited(t: dict, defaults: dict, facts: dict) -> Path:
                       ("Dockerfile", "environment/Dockerfile"), ("tests.Dockerfile", "tests/Dockerfile"),
                       ("test.sh", "tests/test.sh"), ("solve.sh", "solution/solve.sh")]:
         text = fill((LIMITED_TEMPLATES / name).read_text(), ctx)
+        stated(out / rel, text, ctx)
         (out / rel).write_text((rewrap(text, 110, items=True) if rel.endswith(".md") else text).rstrip("\n") + "\n")
     write_sim_dir(t, defaults, out / "environment" / "sim")
     shutil.copyfile(LIMITED_SHARED / "rcb_client.py", out / "environment" / "rcb_client.py")

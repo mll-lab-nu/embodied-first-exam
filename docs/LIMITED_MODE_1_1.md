@@ -22,7 +22,15 @@ At the end of an episode the agent gets only `done` + `reason` (`success | faile
 never a reward or a return.
 
 The agent-facing API is documented in one place, `rcb_client.py`'s docstring: every call, `images=`, the
-observation fields, the errors. `instruction.md` points to it and keeps only task facts.
+observation fields, the errors. `instruction.md` points to it and keeps only task facts: the task, the rules,
+the scoring prose. Anything that belongs to the robot or to the run, the agent reads from `spec()`: the reset
+budget, which sensors are on, and what a real robot's documentation would give. The HumanoidBench adapter reads
+those facts off the model: each servo's range in radians, each joint's axis, the IMU's frame, and each camera's
+field of view and pose.
+
+The trial ends when the agent's session does. The collect hook's SIGUSR1 comes only once the verifier starts,
+about 12 s later, so the repo's agent adapters send it themselves when the session ends
+(`harbor_agents/limited.py`). Otherwise a script the agent left running keeps driving the robot in that gap.
 
 ## Fixed from 1.0
 1.0 renders the replay video on a background thread; GL contexts are per thread, so MuJoCo videos come out

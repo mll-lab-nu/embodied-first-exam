@@ -39,7 +39,8 @@ PYTHONPATH=. harbor run -p <task> -a harbor_agents.claude_code_openrouter:Claude
 
 The adapters in `harbor_agents/` map the OpenRouter key, endpoint and nested model ID to what each harness
 expects, and switch off the harness's own web tools: the provider runs those, past the task's network
-allowlist (`docs/LEAKAGE.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live` or
+allowlist (`docs/LEAKAGE.md`). In limited mode they also end the trial when the agent's session ends
+(`docs/LIMITED_MODE_1_1.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live` or
 `--ak reasoning_effort=medium`. The standard configs and their commands are in `results/<benchmark>/README.md`.
 
 After a run, in either mode, `python3 scripts/results/build.py --add jobs/<job>` appends its line to

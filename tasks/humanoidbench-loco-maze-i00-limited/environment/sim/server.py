@@ -61,6 +61,7 @@ class HumanoidBench:
         self._marks = type(self.s.low.task).render is not Task.render
         self.cameras = CAMERAS + (("room_camera",) if room_camera else ())
         self._room = (room_pose or self._frozen_camera(self.s.low.camera_name or "cam_default")) if room_camera else None
+        self._axes, self._camera_facts = self._hardware()
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
 
     def _frozen_camera(self, name: str, dist: float = 3.0) -> tuple:
@@ -72,6 +73,38 @@ class HumanoidBench:
         mujoco.mj_forward(m, d)                                       # a scratch copy: the live sim is untouched
         c = m.camera(name).id; fwd = -d.cam_xmat[c].reshape(3, 3)[:, 2]
         return d.cam_xpos[c] + dist * fwd, dist, math.degrees(math.atan2(fwd[1], fwd[0])), math.degrees(math.asin(fwd[2]))
+
+    def _hardware(self) -> tuple[list, dict]:
+        """What a real robot's documentation gives, read off the model: each joint's axis and each head camera's
+        pose in the pelvis frame with every joint at 0, and where room_camera stands in the robot's starting
+        frame (origin on the floor under the pelvis at t = 0, x the way the robot faces then, z up)."""
+        m, r3 = self.s.model, lambda v: [round(float(x), 3) for x in v]
+        d = mujoco.MjData(m)
+        d.qpos[:] = m.qpos0
+        d.qpos[7:self.robot.dof] = 0                                  # a scratch copy: the live sim is untouched
+        mujoco.mj_forward(m, d)
+        pelvis = m.body("pelvis").id
+        R, p = d.xmat[pelvis].reshape(3, 3), d.xpos[pelvis]
+        axes = [r3(R.T @ d.xaxis[m.joint(n).id]) for n in self.joints]
+        cams = {}
+        for c in CAMERAS:
+            i, C = m.camera(c).id, d.cam_xmat[m.camera(c).id].reshape(3, 3)   # a camera looks down its -z
+            cams[c] = {"fovy_deg": round(float(m.cam_fovy[i]), 1),
+                       "pose": {"frame": "pelvis, every joint at 0", "position_m": r3(R.T @ (d.cam_xpos[i] - p)),
+                                "forward": r3(R.T @ -C[:, 2]), "up": r3(R.T @ C[:, 1])}}
+        if self._room is not None:
+            lookat, dist, az, el = self._room
+            a, e = math.radians(az), math.radians(el)                 # MuJoCo's free camera, as the viewer places it
+            fwd = np.array([math.cos(e) * math.cos(a), math.cos(e) * math.sin(a), math.sin(e)])
+            up = np.array([-math.sin(e) * math.cos(a), -math.sin(e) * math.sin(a), math.cos(e)])
+            x0, R0 = self.s.data.xpos[pelvis], self.s.data.xmat[pelvis].reshape(3, 3)
+            yaw = math.atan2(R0[1, 0], R0[0, 0])
+            Y = np.array([[math.cos(yaw), -math.sin(yaw), 0], [math.sin(yaw), math.cos(yaw), 0], [0, 0, 1]])
+            cams["room_camera"] = {"fovy_deg": round(float(m.vis.global_.fovy), 1), "pose": {
+                "frame": "the robot's start: origin on the floor under the pelvis at t = 0, x the way it faces, z up",
+                "position_m": r3(Y.T @ (np.asarray(lookat) - dist * fwd - [x0[0], x0[1], 0])),
+                "forward": r3(Y.T @ fwd), "up": r3(Y.T @ up)}}
+        return axes, cams
 
     def _render(self, camera: str) -> np.ndarray:
         r = self.s.low.mujoco_renderer
@@ -95,17 +128,26 @@ class HumanoidBench:
 
     def spec(self) -> dict:
         m = self.s.model
+        tendons = any(m.actuator_trntype[i] == mujoco.mjtTrn.mjTRN_TENDON for i in range(self.s.nu))
         return {
             "simulator": "humanoidbench", "robot": self.s.env_id.split("-")[0], "task_text": self.task_text,
             "action_types": ["qpos"],
+            # HumanoidBench's action space: each value maps linearly onto the actuator's ctrlrange (Task.step)
             "qpos": {"dim": self.s.nu, "layout": [m.actuator(i).name for i in range(self.s.nu)], "limits": [-1.0, 1.0],
-                     "units": "position-servo targets, normalised to [-1, 1] per actuator (HumanoidBench's action space)"},
+                     "range": [[round(float(lo), 4), round(float(hi), 4)] for lo, hi in m.actuator_ctrlrange[:self.s.nu]],
+                     "units": "position-servo targets: -1 and +1 command the two ends of the actuator's range (rad), "
+                              "linearly, so 0 is mid-range, not 0 rad" + ("; a tendon actuator's range is the summed "
+                                                                          "angle of the two joints it moves" if tendons else "")},
             "control_hz": round(1 / self.s.low.dt), "max_episode_steps": self.s.max_steps,
-            "proprio": {"joints": self.joints, "units": "joint_pos rad, joint_vel rad/s"} if self.proprio else None,
-            "imu": {"mounted": "pelvis", "gyro": "angular velocity, rad/s, pelvis frame",
-                    "gravity": "unit gravity direction, pelvis frame"} if self.imu else None,
+            "proprio": {"joints": self.joints, "units": "joint_pos rad, joint_vel rad/s", "axis": self._axes,
+                        "axis_frame": "the joint's rotation axis in the pelvis frame, every joint at 0; a positive "
+                                      "angle turns the joint's child link about it by the right-hand rule"}
+            if self.proprio else None,
+            "imu": {"mounted": "pelvis", "frame": "pelvis: x forward, y left, z up",
+                    "gyro": "angular velocity, rad/s, pelvis frame",
+                    "gravity": "unit gravity direction, pelvis frame: (0, 0, -1) when upright"} if self.imu else None,
             "cameras": {c: {"mounted": "room (fixed)" if c == "room_camera" else "head", "rgb": True, "depth": False,
-                            "hw": self.image_hw} for c in self.cameras},
+                            "hw": self.image_hw, **self._camera_facts[c]} for c in self.cameras},
             "gl_backend": GL_BACKEND,
         }
 

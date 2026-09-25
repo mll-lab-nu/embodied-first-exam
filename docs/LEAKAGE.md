@@ -90,7 +90,8 @@ tooling should report that scoring is unavailable rather than return a zero.
 
 - **Say** which quantities are judged and how they combine, the order of magnitude of a target, what ends
   the episode.
-- **Do not say** tolerance parameters, exact weights, or what a trivial policy scores.
+- **Do not say** tolerance parameters, exact weights, the reward's per-step scale, or what any particular
+  policy scores. What the pass mark *requires* is fine.
 
 The test: *an engineer reading only this should be able to build a reasonable objective and optimise it,
 and should not be able to skip the robot and solve for the number.* If a task proves unsolvable because

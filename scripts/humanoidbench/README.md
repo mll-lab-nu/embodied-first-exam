@@ -37,7 +37,7 @@ Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in t
 Everything except `status` needs a simulator, and the simulator lives in the image, so run them there:
 
 ```bash
-sg docker -c "docker run --rm -v \$PWD:/repo -w /repo ghcr.io/jameskrw/rcb-humanoidbench:0.1.4 \
+sg docker -c "docker run --rm -v \$PWD:/repo -w /repo ghcr.io/jameskrw/rcb-humanoidbench:$(cat images/VERSION) \
   python scripts/humanoidbench/gen_tasks.py verify"
 ```
 
@@ -48,7 +48,8 @@ floor measured any other way would not be the number the verifier produces.
 
 Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All forty-eight directories (24 tasks, two modes)
 move together — that is the whole point, and `ci_checks/check-tooling-sync.sh` is what stops them from drifting
-apart.
+apart. `ci_checks/check-generated-tasks.sh` fails when `tasks/` is not what `render` writes from today's sources, so
+a bar in `facts.json` or a sentence in `subset.toml` cannot change without the instructions following.
 
 ## Why the instance files are guarded
 

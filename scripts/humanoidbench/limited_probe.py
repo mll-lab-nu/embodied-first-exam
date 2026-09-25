@@ -5,12 +5,13 @@ RCB_IMAGES (where the t=0 images go).
 
 In process, through rcb_service.Service (no HTTP):
   spec        the actuators in facts.json's order, the episode length
-  images      every camera at t=0 is neither black nor flat
+  hardware    every actuator has a range, every joint an axis, every camera a field of view and a pose
+  images      every camera at t=0 is neither black nor flat; room_camera stands where spec() says
   proprio     obs["proprio"] is the robot's joint slice of qpos / qvel
   nop         the all-zero episode ends where facts.json says and returns facts.json's nop_return: the formula in
               the sidecar is upstream's
   reset       back to the frozen start, every camera's image included; a batch is bit-identical to the same actions
-              one at a time
+              one at a time; the servo targets are the actions mapped linearly onto spec()'s ranges
   success     with the bar lowered in this process only, the episode ends as a success and finalize saves,
               replays (success, deterministic) and renders a video that is not black
 Then through the real HTTP service and the shipped client: ms per control step one at a time, one at a time with
@@ -57,6 +58,10 @@ sp, nu = svc.spec, sim.s.nu
 check("spec", sp["qpos"]["layout"] == facts["actuator_names"] and sp["max_episode_steps"] == facts["max_steps"],
       nu=nu, control_hz=sp["control_hz"], max_steps=sp["max_episode_steps"], cameras=list(sp["cameras"]),
       joints=len(sp["proprio"]["joints"]), gl=sp["gl_backend"], camera_name=sim.s.low.camera_name, room=sim._room)
+hw = sp["qpos"]["range"], sp["proprio"]["axis"], sp["cameras"]
+check("hardware", len(hw[0]) == nu and len(hw[1]) == len(sp["proprio"]["joints"])
+      and all(abs(np.linalg.norm(a) - 1) < 1e-2 for a in hw[1]) and bool(sp["imu"]["frame"])
+      and all({"fovy_deg", "pose"} <= set(v) for v in hw[2].values()), cameras={c: v["pose"] for c, v in hw[2].items()})
 start = sim.state_sha()
 
 obs = svc.observation(list(sim.cameras))
@@ -66,6 +71,15 @@ for cam, b in obs["images"].items():
     Image.fromarray(img).save(f"{images_dir}/t0_{cam}.png")
     stats[cam] = [list(img.shape), round(float(img.mean()), 1), round(float(img.std()), 1)]
 check("images", all(v[1] > 5 and v[2] > 2 for v in stats.values()), stats=stats)
+# room_camera was rendered last: the viewer's own camera must sit where spec() says, read back into the world
+gl, pose = sim.s.low.mujoco_renderer.viewer.scn.camera, sp["cameras"]["room_camera"]["pose"]
+pel = sim.s.model.body("pelvis").id
+x0, yaw = sim.s.data.xpos[pel], np.arctan2(sim.s.data.xmat[pel][3], sim.s.data.xmat[pel][0])
+Y = np.array([[np.cos(yaw), -np.sin(yaw), 0], [np.sin(yaw), np.cos(yaw), 0], [0, 0, 1]])
+seen = (np.array(gl[0].pos) + np.array(gl[1].pos)) / 2, np.array(gl[0].forward)
+said = Y @ pose["position_m"] + [x0[0], x0[1], 0], Y @ pose["forward"]
+check("room_camera pose", np.allclose(seen[0], said[0], atol=5e-3) and np.allclose(seen[1], said[1], atol=5e-3),
+      seen=[v.round(3).tolist() for v in seen], said=[v.round(3).tolist() for v in said])
 dof = sim.robot.dof
 jp, jv = np.array(obs["proprio"]["joint_pos"]), np.array(obs["proprio"]["joint_vel"])
 check("proprio", len(jp) == len(sp["proprio"]["joints"]) == dof - 7 and np.allclose(jp, sim.s.data.qpos[7:dof])
@@ -85,6 +99,8 @@ A = np.clip(np.random.default_rng(0).normal(0, 0.1, (min(40, facts["nop_steps"] 
 for a in A:
     svc.do_step({"type": "qpos", "action": a.tolist(), "images": False})
 one_by_one = sim.state_sha()
+lo, hi = np.array(sp["qpos"]["range"]).T
+check("range", np.allclose(sim.s.data.ctrl[:nu], lo + (A[-1] + 1) / 2 * (hi - lo), atol=1e-3))
 svc.do_reset({"images": False})
 svc.do_step({"type": "qpos", "actions": A.tolist(), "images": False})
 check("reset", ok_start and not any(drift.values()) and sim.state_sha() == one_by_one, steps=len(A), pixels_changed=drift)

@@ -5,30 +5,35 @@ simulator runs in a service you cannot open. You get one client. **Task:** run t
 walled track and over the hurdles, without touching the side or back walls and without falling.
 
 ## Rules (real-robot rules)
-- **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops near the ground), after 1000 control steps (20 s of robot time), when your time is
-  up, or on a simulator error.
+- **Episodes.** The first episode starts when the service comes up. An episode ends when the task succeeds,
+  when the robot falls (its pelvis drops near the ground), after 1000 control steps (20 s of robot time), when
+  your time is up, or on a simulator error.
+- **Resets and grading.** `spec()["budget"]["reset"]` is how many times this run lets you call `reset()`
+  (every observation carries `resets_left`). A reset starts a new episode from the same starting state and
+  gives up the one in progress. The run passes the moment an episode reaches the pass mark, which also ends
+  the run; otherwise it fails when an episode ends with no reset left, or when your time is up.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is on the track, not where the hurdles and walls are,
   not the reward: the service judges the episode and only tells you that it ended and why (`obs["done"]`,
   `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this
-  run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
-  the room.
+  run provides, and the robot's own facts you need to read it: each actuator's range, each joint's axis, the
+  IMU's frame, each camera's field of view and pose. Depending on the task's configuration that can also
+  include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
-  script you drive the robot with at `/app/output/gen.py` for the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
-  ending your session earlier does the same, so do not stop early.
+  script that drove the last episode at `/app/output/gen.py` for the record, complete and runnable.
+- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way,
+  so do not stop early: while time and resets remain, another episode can still pass.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**700** (out of 1000 steps). Forward speed, staying upright (head at standing height, torso vertical) and low
-actuator force, multiplied together — but the speed target is a sprint rather than a walk, on the order of 5
-m/s. On top of that, touching any barrier's collision geometry multiplies that entire step down to a small
-fraction of its value: contact is a gate to be respected, not a penalty to be traded off. Only the walls that
-line the track on both sides and behind the start count as barriers here; the hurdles themselves carry no such
-penalty, but they are solid and have to be cleared. The service ends the episode the moment the pass mark is
-reached (`reason = "success"`).
+**700**: a total of rewards, not a number of steps (an episode is at most 1000 steps). Forward speed, staying
+upright (head at standing height, torso vertical) and low actuator force, multiplied together — but the speed
+target is a sprint rather than a walk, on the order of 5 m/s. On top of that, touching any barrier's collision
+geometry multiplies that entire step down to a small fraction of its value: contact is a gate to be respected,
+not a penalty to be traded off. Only the walls that line the track on both sides and behind the start count as
+barriers here; the hurdles themselves carry no such penalty, but they are solid and have to be cleared. The
+service ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,
@@ -46,6 +51,7 @@ The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_r
 `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`,
 `torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
 `right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`
-(`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order). A constant action
-commands joint *targets*, not a pose: whether the robot stays there depends on whether that pose is stable
-under gravity and contact.
+(`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order). An action value of
+−1 or +1 commands one end of that servo's range, `spec()["qpos"]["range"]` in radians, and the scale is
+linear, so 0 is mid-range, not 0 rad. A constant action commands joint *targets*, not a pose: whether the
+robot stays there depends on whether that pose is stable under gravity and contact.

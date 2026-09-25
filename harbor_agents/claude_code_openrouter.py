@@ -15,6 +15,8 @@ from typing import Any
 from harbor.agents.installed.claude_code import ClaudeCode
 from harbor.agents.model_connection import ModelConnectionSpec
 
+from harbor_agents.limited import end_trial
+
 OPENROUTER_ANTHROPIC_URL = "https://openrouter.ai/api"  # Claude Code appends /v1/messages
 
 
@@ -35,6 +37,12 @@ class ClaudeCodeOpenRouter(ClaudeCode):
                 "ClaudeCodeOpenRouter model must be openrouter/<provider>/<model>, "
                 "for example openrouter/anthropic/claude-opus-5.5"
             )
+
+    async def run(self, instruction, environment, context) -> None:
+        try:
+            await super().run(instruction, environment, context)
+        finally:
+            await end_trial(environment)
 
     def _resolved_model_name(self) -> str | None:
         return self.model_name.removeprefix("openrouter/") if self.model_name else None

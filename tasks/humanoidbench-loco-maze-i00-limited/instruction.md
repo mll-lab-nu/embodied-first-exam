@@ -7,30 +7,36 @@ checkpoint is a small ball about 1 m up; from the first step on, the next one to
 already reached are green.
 
 ## Rules (real-robot rules)
-- **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops near the ground), after 1000 control steps (20 s of robot time), when your time is
-  up, or on a simulator error.
+- **Episodes.** The first episode starts when the service comes up. An episode ends when the task succeeds,
+  when the robot falls (its pelvis drops near the ground), after 1000 control steps (20 s of robot time), when
+  your time is up, or on a simulator error.
+- **Resets and grading.** `spec()["budget"]["reset"]` is how many times this run lets you call `reset()`
+  (every observation carries `resets_left`). A reset starts a new episode from the same starting state and
+  gives up the one in progress. The run passes the moment an episode reaches the pass mark, which also ends
+  the run; otherwise it fails when an episode ends with no reset left, or when your time is up.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the maze, not where the checkpoints are, not
   the reward: the service judges the episode and only tells you that it ended and why (`obs["done"]`,
   `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this
-  run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
-  the room.
+  run provides, and the robot's own facts you need to read it: each actuator's range, each joint's axis, the
+  IMU's frame, each camera's field of view and pose. Depending on the task's configuration that can also
+  include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
-  script you drive the robot with at `/app/output/gen.py` for the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
-  ending your session earlier does the same, so do not stop early.
+  script that drove the last episode at `/app/output/gen.py` for the record, complete and runnable.
+- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way,
+  so do not stop early: while time and resets remain, another episode can still pass.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**1200** (out of 1000 steps). Most of the bar is not accumulated, it is jumped to: reaching a checkpoint pays
-a one-off bonus, and the bonuses grow with how many you have already reached, so the later corners are worth
-far more than the first. Between checkpoints each step pays a small amount for posture, for moving in the
-current corridor's direction (the speed target is on the order of 2 m/s) and for nearing the next checkpoint;
-touching a wall multiplies that per-step amount down to a fraction (the bonuses are not reduced). Walking
-correctly but never reaching a checkpoint leaves the episode below the bar. The service ends the episode the
-moment the pass mark is reached (`reason = "success"`).
+**1200**: a total of rewards, not a number of steps (an episode is at most 1000 steps). Most of the bar is not
+accumulated, it is jumped to: reaching a checkpoint pays a one-off bonus, and the bonuses grow with how many
+you have already reached, so the later corners are worth far more than the first. Between checkpoints each
+step pays a small amount for posture, for moving in the current corridor's direction (the speed target is on
+the order of 2 m/s) and for nearing the next checkpoint; touching a wall multiplies that per-step amount down
+to a fraction (the bonuses are not reduced). Walking correctly but never reaching a checkpoint leaves the
+episode below the bar. The service ends the episode the moment the pass mark is reached
+(`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,
@@ -48,6 +54,7 @@ The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_r
 `left_knee`, `left_ankle`, `right_hip_yaw`, `right_hip_roll`, `right_hip_pitch`, `right_knee`, `right_ankle`,
 `torso`, `left_shoulder_pitch`, `left_shoulder_roll`, `left_shoulder_yaw`, `left_elbow`,
 `right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`
-(`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order). A constant action
-commands joint *targets*, not a pose: whether the robot stays there depends on whether that pose is stable
-under gravity and contact.
+(`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order). An action value of
+−1 or +1 commands one end of that servo's range, `spec()["qpos"]["range"]` in radians, and the scale is
+linear, so 0 is mid-range, not 0 rad. A constant action commands joint *targets*, not a pose: whether the
+robot stays there depends on whether that pose is stable under gravity and contact.

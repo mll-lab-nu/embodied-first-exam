@@ -10,4 +10,5 @@ for t in "${tasks[@]}"; do
   done
 done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
+bash "$root/ci_checks/check-generated-tasks.sh" || rc=1
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc
