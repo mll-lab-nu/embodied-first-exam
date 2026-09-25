@@ -13,7 +13,7 @@ services:
     environment:
       RCB_TASK: bookshelf_simple
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Put each of the five objects onto its assigned place on the bookshelf, one at a time, in order."
+      RCB_TASK_TEXT: "Put each of the five red-tinted objects onto its place on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and darkest last."
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor, so one run can set them on the command
       # line (`RCB_RESET_BUDGET=3 harbor run ...`) without editing this file. The sim logs what it got (/spec).
       RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, as on a real robot; N: N resets

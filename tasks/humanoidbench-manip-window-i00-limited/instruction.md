@@ -7,26 +7,26 @@ is held — and wipe the window with it, moving steadily up and down.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops too low), or when the tool drops, after 1000 control steps (20 s of robot time),
-  when your time is up, or on a simulator error.
+  falls (its pelvis drops too low), when the tool drops, after 1000 control steps (20 s of robot time), when
+  your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the tool's pose, not the reward:
   the service judges the episode and only tells you that it ended and why (`obs["done"]`, `obs["reason"]`:
   `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this run provides;
   depending on the task's configuration that can also include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **650** (out of 1000 steps). A large share of each step is paid only while the tool is in contact with the
 glass — while it is not, that share is zero, so the bar cannot be reached without contact. The rest pays for
-moving the tool vertically at a target speed, for keeping both hands near the tool, and for standing. The
-episode ends immediately if the torso drops or the tool falls, i.e. if it is dropped. The service ends the
-episode the moment the pass mark is reached (`reason = "success"`).
+moving the tool vertically at a target speed on the order of half a metre per second, for keeping both hands
+near the tool, and for standing with the head about 40 cm from where it started (standing in place earns none
+of that share). The service ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

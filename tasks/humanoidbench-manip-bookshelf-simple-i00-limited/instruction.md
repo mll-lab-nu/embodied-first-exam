@@ -2,12 +2,13 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open. You get one client. **Task:** put
-each of the five objects onto its assigned place on the bookshelf, one at a time, in order.
+each of the five red-tinted objects onto its place on the bookshelf, shown as a translucent copy of it in the
+same colour, one at a time, palest first and darkest last.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops too low), when the object being placed drops, or once all five are placed, after
-  1000 control steps (20 s of robot time), when your time is up, or on a simulator error.
+  falls (its pelvis drops too low), when the object being placed goes below about half a metre, once all five
+  are placed, after 1000 control steps (20 s of robot time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not where the objects or their places
   are, not the reward: the service judges the episode and only tells you that it ended and why (`obs["done"]`,
@@ -15,10 +16,10 @@ each of the five objects onto its assigned place on the bookshelf, one at a time
   run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
   the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
@@ -26,9 +27,7 @@ HumanoidBench scores the *whole episode*, not a final state: it passes iff the s
 steadily, for a hand being near that object and for its progress towards its assigned slot. Placing it pays a
 one-off bonus that grows with how many you have placed — together the bonuses are most of the bar — and moves
 the scoring on to the next one. So the return is cut into five plateaus and stalling on the first caps the
-episode low. The episode ends early if the torso drops or if the object currently being scored falls, and it
-ends once all five are placed. The service ends the episode the moment the pass mark is reached
-(`reason = "success"`).
+episode low. The service ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

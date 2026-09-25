@@ -1,8 +1,9 @@
 # room — instance 00
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo)
-via Python. **Task:** six objects are scattered around the room. Tidy up: gather them together, so
-they end up close to one another rather than spread out.
+via Python. **Task:** six loose objects — a chair, a trophy, a pair of headphones, two packages and
+a snow globe — are scattered around the room (the table and the bookshelf are fixed). Tidy up:
+gather them together, so they end up close to one another rather than spread out.
 
 This is a *fixed scene instance*: the objects' starting positions and the robot's initial pose never
 change between resets. You may reset and retry as many times as you want. Your deliverable is **one
@@ -14,19 +15,17 @@ over the episode reaches `s.success_bar` (**400** here, out of 1000 steps). Unus
 gives you no target positions at all. The dominant term measures how *spread out* the six objects
 are — the variance of their horizontal coordinates — and rewards making that small; a smaller term
 pays for standing steadily. Any arrangement that brings the objects close together scores, wherever
-in the room you do it. The episode ends if the torso drops near the ground.
+in the room you do it. The episode ends if the pelvis drops near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
-done. That is on purpose — HumanoidBench's rewards are dense and hand-tuned, so having the formula
-turns the job into inverting an expression instead of controlling a robot.
+done.
 
 You do have the complete physical state: `s.obs()`, and the MuJoCo model and data behind it
 (`s.low.model`, `s.low.data`). Everything the reward could tell you is computable from those: how
 fast the centre of mass is moving, how upright the torso is, what the actuator forces are, how far a
-hand is from a target. The paragraph above says what this episode is judged on. Build the measure
-you think it calls for and optimise against that; as a sanity check, your measure should improve
-when the robot visibly does the task better.
+hand is from a target. Build your own measure of what the episode is judged on (above) and optimise
+against it; as a sanity check, it should improve when the robot visibly does the task better.
 
 ## Deliverable
 Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human
@@ -38,10 +37,12 @@ reads your work afterwards, so keep them short and factual rather than long.
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it |
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you
-have a better one.** You have a wall-clock budget (1 h) and it ends without warning; a run that ends
-with no file scores zero no matter how good the policy in your scratch directory was. Saving is
-cheap — a few hundred KB and well under a second.
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py`
+and `NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget (1 h) and it
+ends without warning; a run that ends with no file scores zero no matter how good the policy in your
+scratch directory was. Do not stop early: you cannot see the score here, so a trajectory that looks
+good may still fall short of the bar — keep improving it until the time is up. Saving is cheap — a
+few hundred KB and well under a second.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -50,7 +51,8 @@ s = Session("room", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
 obs = s.obs()                      # (229,) = qpos(118) + qvel(111), robot + all six objects
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
-                                   # r is None here (see Scoring); obs and done are real
+                                   # r is None here (see Scoring); obs and done are real, except where
+                                   # the task notes below say otherwise
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted
 s.low                              # the raw HumanoidBench env (s.low.model / s.low.data) for closed-loop control
 
@@ -85,5 +87,5 @@ the fingers, 20 per Shadow hand — `lh_A_*` then `rh_A_*`. A constant action co
 gravity and contact.
 
 Optional rendering: `Session("room", instance=..., enable_render=True)` then
-`s.render_video(actions, "/app/output/replay.mp4")`. It picks the GL backend for you — GPU if this
+`s.render_video(actions, "/tmp/replay.mp4")`. It picks the GL backend for you — GPU if this
 container has one, CPU software rendering (~130 ms/frame) otherwise.

@@ -13,6 +13,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 | Dead code | unreachable ≠ unreadable | scan the whole package, not the import graph |
 | Constants the grader read | a constant whose only reader was the grader still describes it | no module-level name may be write-only afterwards |
 | Attributes set at construction | weights in `__init__` are not "functions with a matching name" | enumerate instance attributes at runtime |
+| Helpers the grader called | not named like the grader, so the name match keeps them: HumanoidBench maze's `update_move_direction` returns the checkpoint bonus (still in the 0.1.5 image) | list what every removed method calls |
 | Compiled bytecode | `*.pyc` built before the removal keeps the old code | clear caches *before* removing, assert after |
 | Earlier Docker layers | a layer is an immutable tarball; a later `rm` does not unwrite it | download and remove in the **same `RUN`**; verify with `docker save` |
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |
@@ -37,7 +38,9 @@ following a hand-written list that rots.
 
 **A. Falls through to a safe base.** Delete an override when the language guarantees a harmless
 replacement — removing a subclass method when the base returns a neutral value. Correctness comes from the
-language, not our judgement, so over-matching is cheap. Assert it: the package must still import and run.
+language, not our judgement, so over-matching is cheap. Assert it: the package must still import and run,
+and the same actions must give the same observations and terminations as with the grader restored — upstream
+sometimes advances task state inside it (HumanoidBench: a stirring target's phase, the current checkpoint).
 
 **B. Dead *because of* the removal.** Delete a definition when **both** hold: something we removed read it,
 **and** nothing that remains reads it. Without the first you delete upstream's own unused code and

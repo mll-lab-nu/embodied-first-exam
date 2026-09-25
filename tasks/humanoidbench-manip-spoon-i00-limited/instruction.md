@@ -16,19 +16,20 @@ of the episode.
   exactly what this run provides; depending on the task's configuration that can also include a pelvis IMU and
   a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **650** (out of 1000 steps). A weighted sum of four things: standing steadily, getting a hand to the spoon's
 handle, keeping the spoon's head inside the cup, and — the largest single term — keeping that head close to a
-target point that **travels around a small circle at a fixed rate, completing a revolution every 40 steps**.
-Standing and a hand near the handle are largely paid just by holding the start pose, but the spoon starts on
-the table beside the cup, so the other two terms pay nothing until it is in the cup. The episode ends if the
-torso drops. The service ends the episode the moment the pass mark is reached (`reason = "success"`).
+target point that **travels around a small circle at a fixed rate, completing a revolution every 40 steps**
+(centred in the cup just above its floor, counter-clockwise seen from above, starting on the side away from
+the robot). Standing and a hand near the handle are largely paid just by holding the start pose, but the spoon
+starts on the table beside the cup, so the other two terms pay nothing until it is in the cup. The service
+ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

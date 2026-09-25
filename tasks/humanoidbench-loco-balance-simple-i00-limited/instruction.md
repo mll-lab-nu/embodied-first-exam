@@ -6,7 +6,7 @@ on it, upright and still, for the whole episode.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls, or anything but the fulcrum under the board touches the ground (see Scoring), after 1000 control
+  falls, when anything but the fulcrum under the board touches the ground (see Scoring), after 1000 control
   steps (20 s of robot time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the board's pose, not the reward:
@@ -14,18 +14,19 @@ on it, upright and still, for the whole episode.
   `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this run provides;
   depending on the task's configuration that can also include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**800** (out of 1000 steps). A good step asks for only three things — low actuator force, staying upright, and
-near-zero horizontal velocity — so scoring well for one step is not the difficulty. The difficulty is that the
-episode ends the moment the pelvis drops too low, anything but the fulcrum sphere touches the ground — the
-board included — or the sphere touches anything other than the ground and the board, and every step after that
-is worth nothing. The service ends the episode the moment the pass mark is reached (`reason = "success"`).
+**800** (out of 1000 steps). A good step asks for only three things, multiplied together — low actuator force,
+staying upright (head at full standing height on the board, torso vertical), and near-zero horizontal velocity
+— so scoring well for one step is not the difficulty. The difficulty is that the episode ends the moment the
+pelvis drops too low, anything but the fulcrum sphere touches the ground — the board included — or the sphere
+touches anything other than the ground and the board, and every step after that is worth nothing. The service
+ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

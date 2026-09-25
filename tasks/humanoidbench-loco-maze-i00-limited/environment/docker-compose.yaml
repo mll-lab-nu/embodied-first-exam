@@ -13,7 +13,7 @@ services:
     environment:
       RCB_TASK: maze
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls."
+      RCB_TASK_TEXT: "Walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls. Each checkpoint is a small ball about 1 m up; from the first step on, the next one to reach is red and those already reached are green."
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor, so one run can set them on the command
       # line (`RCB_RESET_BUDGET=3 harbor run ...`) without editing this file. The sim logs what it got (/spec).
       RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, as on a real robot; N: N resets

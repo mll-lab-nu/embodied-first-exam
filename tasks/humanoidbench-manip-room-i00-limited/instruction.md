@@ -2,8 +2,9 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open. You get one client. **Task:** six
-objects are scattered around the room. Tidy up: gather them together, so they end up close to one another
-rather than spread out.
+loose objects — a chair, a trophy, a pair of headphones, two packages and a snow globe — are scattered around
+the room (the table and the bookshelf are fixed). Tidy up: gather them together, so they end up close to one
+another rather than spread out.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
@@ -16,18 +17,18 @@ rather than spread out.
   run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
   the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **400** (out of 1000 steps). Unusually, this task gives you no target positions at all. The dominant term
 measures how *spread out* the six objects are — the variance of their horizontal coordinates — and rewards
 making that small; a smaller term pays for standing steadily. Any arrangement that brings the objects close
-together scores, wherever in the room you do it. The episode ends if the torso drops near the ground. The
-service ends the episode the moment the pass mark is reached (`reason = "success"`).
+together scores, wherever in the room you do it. The service ends the episode the moment the pass mark is
+reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

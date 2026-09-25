@@ -15,20 +15,20 @@ walled track and over the hurdles, without touching the side or back walls and w
   run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
   the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**700** (out of 1000 steps). Forward speed, staying upright and low actuator force, multiplied together — but
-the speed target is a sprint rather than a walk, several times higher than on flat ground. On top of that,
-touching any barrier's collision geometry multiplies that entire step down to a small fraction of its value:
-contact is a gate to be respected, not a penalty to be traded off. Only the walls that line the track on both
-sides and behind the start count as barriers here; the hurdles themselves carry no such penalty, but they are
-solid and have to be cleared. The service ends the episode the moment the pass mark is reached
-(`reason = "success"`).
+**700** (out of 1000 steps). Forward speed, staying upright (head at standing height, torso vertical) and low
+actuator force, multiplied together — but the speed target is a sprint rather than a walk, on the order of 5
+m/s. On top of that, touching any barrier's collision geometry multiplies that entire step down to a small
+fraction of its value: contact is a gate to be respected, not a penalty to be traded off. Only the walls that
+line the track on both sides and behind the start count as barriers here; the hurdles themselves carry no such
+penalty, but they are solid and have to be cleared. The service ends the episode the moment the pass mark is
+reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

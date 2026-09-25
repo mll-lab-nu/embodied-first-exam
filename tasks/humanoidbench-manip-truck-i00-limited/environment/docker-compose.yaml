@@ -13,7 +13,7 @@ services:
     environment:
       RCB_TASK: truck
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Unload the packages from the truck and put them on the table — all of them."
+      RCB_TASK_TEXT: "Unload the five loose packages from the truck (the wall of boxes behind them is fixed) and put them on the table — all of them."
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor, so one run can set them on the command
       # line (`RCB_RESET_BUDGET=3 harbor run ...`) without editing this file. The sim logs what it got (/spec).
       RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, as on a real robot; N: N resets

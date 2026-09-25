@@ -75,6 +75,19 @@ import numpy as np
 _TASK_STATE_SKIP = ("_env", "robot", "unwrapped")   # back-references to the env, not state
 
 
+def _unscored_bookkeeping(task) -> None:
+    """[HB] Bookkeeping that upstream does only inside get_reward(), which the image deletes, but that the agent
+    can otherwise see: a `step_counter` that moves a target in the observation, and a checkpoint pointer and
+    heading that `update_move_direction()` advances (recolouring the checkpoints). Neither is the formula, so
+    where this process cannot score, step() does it here and the agent sees what the verifier's replay sees.
+    The other progress get_reward() keeps (which object is current, what is done) is the bonus test itself and
+    stays out; instruction.md says where it does not advance."""
+    if hasattr(task, "update_move_direction"):
+        task.update_move_direction()
+    if hasattr(task, "step_counter"):
+        task.step_counter += 1
+
+
 def _task_state_dumps(state: dict) -> str:
     """Serialise to JSON, never pickle: an instance file is data the verifier loads with
     allow_pickle=False, and it must stay that way -- a pickle in that position is code execution."""
@@ -375,6 +388,8 @@ class Session:
         obs, r, term, trunc, info = self.env.step(a)
         if self.scored:
             self._ret += float(r)
+        else:
+            _unscored_bookkeeping(self.low.task)
         self._steps += 1
         self._sim_steps_total += 1
         self._last_info = info

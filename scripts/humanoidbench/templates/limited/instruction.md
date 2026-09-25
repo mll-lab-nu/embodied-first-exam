@@ -7,8 +7,8 @@ simulator runs in a service you cannot open. You get one client. **Task:** {{lim
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds{{limited_ends}}, after {{max_steps}} control steps ({{robot_seconds}} s of robot time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, {{image_hw}}) and its own joint angles and joint velocities. Not {{limited_hidden}}, not the reward: the service judges the episode and only tells you that it ended and why (`obs["done"]`, `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for the record.
-- Wall-clock budget: {{agent_timeout_hours}} h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: {{agent_timeout_hours}} h. It ends without warning, and the episode is graded as it stands at that moment; ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches

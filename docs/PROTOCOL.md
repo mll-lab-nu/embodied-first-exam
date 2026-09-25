@@ -25,8 +25,10 @@ simulator sidecar records it as the trajectory, and `/app/output/` only keeps th
 | `policy` | code that solves held-out instances of the family | success rate over N instances |
 
 **`instruction.md` must tell the agent to save the deliverable as soon as it has any version, to overwrite
-it as it improves, and must state the wall-clock budget.** The timeout arrives without warning, so an agent
-that saves only at the end scores 0 and measures nothing.
+it as it improves, and must state the wall-clock budget and tell it not to stop early.** The timeout
+arrives without warning, so an agent that saves only at the end scores 0 and measures nothing; and one that
+cannot see its score tends to stop long before the budget (5 of 10 full-mode runs of GPT-6 Luna stopped,
+unsolved, after 23–46 of 60 min).
 
 ## 3. Verifier output
 `tests/test.sh` writes `/logs/verifier/reward.txt` (`1` or `0`) and `/logs/verifier/reward.json` with

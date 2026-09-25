@@ -15,18 +15,18 @@ pull the door open towards the robot, and walk through it.
   run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
   the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **600** (out of 1000 steps). This one is a weighted sum rather than a product, so partial credit is real:
 getting the door open and getting the torso past the doorway are the two large terms, with reaching for the
 handle, moving the handle, and posture as small ones. Opening the door and never walking through still earns a
-substantial share of each step, and the bar cannot be reached without opening the door. The episode ends if
-the torso drops. The service ends the episode the moment the pass mark is reached (`reason = "success"`).
+substantial share of each step, and the bar cannot be reached without opening the door. The service ends the
+episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

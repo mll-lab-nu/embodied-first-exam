@@ -4,7 +4,7 @@ You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (Hum
 it were real hardware**: the simulator runs in a service you cannot open. You get one client. **Task:** open
 the cabinet's compartments in order: slide open the sliding door, then pull out the drawer, then open one of
 the double doors and lift the cube from the drawer into that compartment, then open the flip-up door and lift
-the cube from behind the double doors up into it.
+the cube that started behind the double doors (not the one you put there) up into it.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the last
@@ -17,19 +17,19 @@ the cube from behind the double doors up into it.
   exactly what this run provides; depending on the task's configuration that can also include a pelvis IMU and
   a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **2500** (out of 1000 steps). Only the compartment you are currently on is scored. Each step pays a small
 share for standing steadily and the bulk for progress on that one compartment; completing it pays a one-off
 bonus and moves the scoring on to the next. Those bonuses grow with how many you have finished, and together
-they are a large fraction of the bar — so stalling on the first compartment caps the episode at a small
-fraction of it, however cleanly that compartment is opened. The service ends the episode the moment the pass
-mark is reached (`reason = "success"`).
+they are a large fraction of the bar — so stalling on the first compartment caps the episode well short of it,
+however cleanly that compartment is opened. The service ends the episode the moment the pass mark is reached
+(`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

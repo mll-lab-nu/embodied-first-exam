@@ -7,27 +7,26 @@ it. Get to the chair, sit down on it, and stay seated upright and still.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops too low), after 1000 control steps (20 s of robot time), when your time is up, or on
-  a simulator error.
+  falls (its pelvis drops below about half its standing height, not far below its height when seated), after
+  1000 control steps (20 s of robot time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the chair's pose, not the reward:
   the service judges the episode and only tells you that it ended and why (`obs["done"]`, `obs["reason"]`:
   `"success"`, or `"failed"` when it ended without success). `spec()` lists exactly what this run provides;
   depending on the task's configuration that can also include a pelvis IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**750** (out of 1000 steps). A product: the average of two seat terms — how close the pelvis is to seat
-height, and whether the robot is over the seat rather than beside it — multiplied by staying upright, a seated
-posture (the head's height above the torso), not moving, and low actuator force. Every step spent not yet
-sitting forfeits the reward that step could have paid, so sitting *early* matters as much as sitting well. The
-episode ends if the torso drops near the ground. The service ends the episode the moment the pass mark is
-reached (`reason = "success"`).
+**750** (out of 1000 steps). A product: the average of two seat terms — how close the pelvis is to the height
+it has when seated, and whether the robot is over the seat rather than beside it — multiplied by staying
+upright, a seated posture (the head's height above the torso), not moving, and low actuator force. Every step
+spent not yet sitting forfeits the reward that step could have paid, so sitting *early* matters as much as
+sitting well. The service ends the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

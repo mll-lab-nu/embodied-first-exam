@@ -7,7 +7,7 @@ the matching colour, then lift the assembly to about 1.1 m and hold it there, wi
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops too low), or when the bar or either socket drops, after 500 control steps (10 s of
+  falls (its pelvis drops too low), when the bar or either socket drops, after 500 control steps (10 s of
   robot time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the poses of the bar and the
@@ -16,19 +16,18 @@ the matching colour, then lift the assembly to about 1.1 m and hold it there, wi
   exactly what this run provides; depending on the task's configuration that can also include a pelvis IMU and
   a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **350** (out of 500 steps). The step is a product of two groups: one covering posture and how close each end
-of the bar is to its socket, the other covering how high the sockets are and whether a hand is at a socket.
-Because the groups multiply, doing one of them well is worth little while the other is near zero — both have
-to come along together. The episode ends the moment the bar or either socket drops below a height, which a
-dropped part does immediately, or the torso does. The episode limit here is 500 steps, not 1000. The service
-ends the episode the moment the pass mark is reached (`reason = "success"`).
+of the bar is to its socket, the other covering how high the sockets are and whether a hand is at a socket
+(the left hand at the dark one, or the right hand at the light one). Because the groups multiply, doing one of
+them well is worth little while the other is near zero — both have to come along together. The service ends
+the episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

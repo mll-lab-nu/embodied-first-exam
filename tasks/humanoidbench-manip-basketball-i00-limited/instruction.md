@@ -6,8 +6,8 @@ Catch it, then throw it through the hoop.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the ball
-  goes through the hoop, when the ball drops low, or when the robot falls, after 500 control steps (10 s of
-  robot time), when your time is up, or on a simulator error.
+  goes through the hoop, when the ball drops low, when the robot falls, after 500 control steps (10 s of robot
+  time), when your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not where the ball or the hoop is,
   not the reward: the service judges the episode and only tells you that it ended and why (`obs["done"]`,
@@ -15,20 +15,20 @@ Catch it, then throw it through the hoop.
   run provides; depending on the task's configuration that can also include a pelvis IMU and a camera fixed in
   the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **1200** (out of 500 steps). Scoring runs in two stages and switches by itself the first time the robot
 contacts the ball. Before that it rewards standing steadily and getting both hands to the ball; after it, the
-dominant term is how close the ball is to the hoop. Sinking it pays a bonus worth hundreds of steps and ends
-the episode immediately. Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that
-bonus is not optional — no amount of good positioning reaches the bar without it. The episode also ends if the
-ball drops low or the robot falls. The service ends the episode the moment the pass mark is reached
-(`reason = "success"`).
+dominant term is how close the ball is to the hoop. Sinking it pays a one-off bonus that covers most of the
+bar but not all of it, and ends the episode immediately, so the rest has to be earned per step before the ball
+goes in. Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus is not
+optional — no amount of good positioning reaches the bar without it. The service ends the episode the moment
+the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

@@ -12,7 +12,8 @@ everything the tasks have in common, and `shared/` holds the one real copy of `r
     ./gen_tasks.py render [family ...]    # write/refresh task dirs, minus instances (no simulator)
     ./gen_tasks.py measure [family ...]   # read bars/dims/floors into facts.json  (needs mujoco)
     ./gen_tasks.py instance [family ...]  # write environment/ + tests/ instance.npz (needs mujoco)
-    ./gen_tasks.py verify [family ...]    # re-measure and fail on drift           (needs mujoco)
+    ./gen_tasks.py verify [family ...]    # re-measure and fail on drift, or if the agent's container
+                                          # behaves differently from the verifier's  (needs mujoco)
     ./gen_tasks.py measure-limited [family ...]  # check + time the limited twins' sim service (needs a GPU)
 
 `render` is deliberately the only command that writes into tasks/, and it is idempotent: run it after
@@ -49,8 +50,8 @@ CATEGORY_LONG = {"loco": "locomotion", "manip": "manipulation"}
 
 # Prose fields that land in the middle of a sentence. They are written across several lines in
 # subset.toml for readability, so their line breaks are collapsed before substitution.
-INLINE_FIELDS = ("one_liner", "task_statement", "scene_note", "scoring_note", "obs_layout", "evidence",
-                 "instance_note", "completion_rate", "capability_class")
+INLINE_FIELDS = ("one_liner", "task_statement", "scene_note", "scoring_note", "ends_note", "obs_layout",
+                 "evidence", "instance_note", "completion_rate", "capability_class")
 
 NO_ORACLE = """No reference solution, on purpose. Requiring one would cap the benchmark at what we can
 already solve, which systematically removes the interesting tasks — see `local_docs/plan/01-design.md`
@@ -203,6 +204,9 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         **{k: (" ".join(v.split()) if k in INLINE_FIELDS and isinstance(v, str) else v)
            for k, v in t.items() if isinstance(v, (str, int, float))},
         **facts,
+        # How the episode ends early closes the scoring prose in full mode; limited mode lists [task.limited] ends
+        # in its Rules instead, so its scoring prose leaves this out rather than say it twice.
+        "scoring_note": " ".join((t["scoring_note"] + " " + t.get("ends_note", "")).split()),
         "task_dir": task_dir_name(t, tag),
         "instance_tag": tag,
         "seed": defaults["seed"],
@@ -449,6 +453,39 @@ def write_instance(t: dict, defaults: dict, force: bool = False) -> str | None:
     return sha
 
 
+# One process per side, because restore() patches the classes for the whole process. The same random actions go in;
+# out comes a hash of every observation and termination until the episode ends or 150 steps pass.
+VIEW_PROBE = """
+import hashlib, json, sys
+import numpy as np
+sys.path.insert(0, sys.argv[1])
+if sys.argv[4] == "verifier":
+    from rcb_rewards import restore
+    restore(json.load(open(sys.argv[5])))
+from rcb_hb import Session
+s, h, rng = Session(sys.argv[2], instance=sys.argv[3]), hashlib.sha1(), np.random.default_rng(0)
+for _ in range(150):
+    obs, _, done = s.step(rng.uniform(-0.3, 0.3, s.nu))
+    h.update(np.asarray(obs, dtype=np.float64).tobytes() + bytes([done]))
+    if done:
+        break
+print(h.hexdigest())
+"""
+
+
+def views_agree(family: str, instance: Path) -> bool:
+    """The agent's container has no reward function and the verifier's has one; nothing else may differ. Upstream
+    advances some task state inside the reward function, which is what rcb_hb._unscored_bookkeeping() is for."""
+    import subprocess
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json") as f:
+        json.dump(load_rewards()[family], f)
+        f.flush()
+        return len({subprocess.run([sys.executable, "-c", VIEW_PROBE, str(HERE / "shared"), family, str(instance), side,
+                                    f.name], capture_output=True, text=True, check=True).stdout
+                    for side in ("agent", "verifier")}) == 1
+
+
 # --------------------------------------------------------------------------- commands
 def cmd_status(args) -> int:
     defaults, tasks = load_subset()
@@ -590,10 +627,14 @@ def cmd_verify(args) -> int:
         parts = sum(int(n) for n in re.findall(r"\((\d+)\)", t["obs_layout"]))
         if parts != fresh["obs_dim"]:
             print(f"FAIL {fam}: obs_layout sums to {parts}, observation is {fresh['obs_dim']}"); rc = 1
+        agree = views_agree(fam, instance_path(t, defaults))
+        if not agree:
+            print(f"FAIL {fam}: the same actions give the agent different observations or terminations than the "
+                  f"verifier"); rc = 1
         if (not drift and not fresh["nop_passes"] and not fresh["hold_passes"] and give_away <= limit
-                and fresh["deterministic"] and parts == fresh["obs_dim"]):
+                and fresh["deterministic"] and parts == fresh["obs_dim"] and agree):
             print(f"ok   {fam}: nop {fresh['nop_return']}/{fresh['success_bar']:g}, "
-                  f"hold {give_away:.1%} of bar, deterministic, obs {fresh['obs_dim']}")
+                  f"hold {give_away:.1%} of bar, deterministic, obs {fresh['obs_dim']}, agent sees what the verifier sees")
     return rc
 
 

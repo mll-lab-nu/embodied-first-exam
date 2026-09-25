@@ -14,21 +14,20 @@ over the episode reaches `s.success_bar` (**1200** here, out of 1000 steps). Mos
 accumulated, it is jumped to: reaching a checkpoint pays a one-off bonus, and the bonuses grow with
 how many you have already reached, so the later corners are worth far more than the first. Between
 checkpoints each step pays a small amount for posture, for moving in the current corridor's
-direction and for nearing the next checkpoint; touching a wall multiplies that per-step amount down
-to a fraction (the bonuses are not reduced). Walking correctly but never reaching a checkpoint
-leaves the episode below the bar.
+direction (the speed target is on the order of 2 m/s) and for nearing the next checkpoint; touching
+a wall multiplies that per-step amount down to a fraction (the bonuses are not reduced). Walking
+correctly but never reaching a checkpoint leaves the episode below the bar. The episode ends early
+if the pelvis drops near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
-done. That is on purpose — HumanoidBench's rewards are dense and hand-tuned, so having the formula
-turns the job into inverting an expression instead of controlling a robot.
+done.
 
 You do have the complete physical state: `s.obs()`, and the MuJoCo model and data behind it
 (`s.low.model`, `s.low.data`). Everything the reward could tell you is computable from those: how
 fast the centre of mass is moving, how upright the torso is, what the actuator forces are, how far a
-hand is from a target. The paragraph above says what this episode is judged on. Build the measure
-you think it calls for and optimise against that; as a sanity check, your measure should improve
-when the robot visibly does the task better.
+hand is from a target. Build your own measure of what the episode is judged on (above) and optimise
+against it; as a sanity check, it should improve when the robot visibly does the task better.
 
 ## Deliverable
 Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human
@@ -40,10 +39,12 @@ reads your work afterwards, so keep them short and factual rather than long.
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it |
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you
-have a better one.** You have a wall-clock budget (1 h) and it ends without warning; a run that ends
-with no file scores zero no matter how good the policy in your scratch directory was. Saving is
-cheap — a few hundred KB and well under a second.
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py`
+and `NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget (1 h) and it
+ends without warning; a run that ends with no file scores zero no matter how good the policy in your
+scratch directory was. Do not stop early: you cannot see the score here, so a trajectory that looks
+good may still fall short of the bar — keep improving it until the time is up. Saving is cheap — a
+few hundred KB and well under a second.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -52,7 +53,8 @@ s = Session("maze", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
 obs = s.obs()                      # (51,) = qpos(26) + qvel(25), robot state only
 obs, r, done = s.step(action)      # action: (19,) normalised joint-position targets in [-1, 1], 50 Hz
-                                   # r is None here (see Scoring); obs and done are real
+                                   # r is None here (see Scoring); obs and done are real, except where
+                                   # the task notes below say otherwise
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted
 s.low                              # the raw HumanoidBench env (s.low.model / s.low.data) for closed-loop control
 
@@ -86,8 +88,9 @@ the robot stays there depends on whether that pose is stable under gravity and c
 
 The direction the robot should currently be heading, and which checkpoint it is working towards, are
 part of the task's internal state — they advance as checkpoints are reached and are frozen into this
-instance at their initial values, so every reset starts you at the first corner.
+instance at their initial values, so every reset starts you at the first checkpoint, where the robot
+stands.
 
 Optional rendering: `Session("maze", instance=..., enable_render=True)` then
-`s.render_video(actions, "/app/output/replay.mp4")`. It picks the GL backend for you — GPU if this
+`s.render_video(actions, "/tmp/replay.mp4")`. It picks the GL backend for you — GPU if this
 container has one, CPU software rendering (~130 ms/frame) otherwise.

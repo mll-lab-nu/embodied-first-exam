@@ -15,20 +15,19 @@ target position, marked in the scene by a small red cube.
   lists exactly what this run provides; depending on the task's configuration that can also include a pelvis
   IMU and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
-**700** (out of 500 steps). Unlike the rest of the subset every step here is *negative*: it costs the box's
-distance to the target, plus a smaller charge for the hand's distance to the box. The only positive term is a
-one-off bonus, worth more than a thousand ordinary steps, paid when the box lands within a few centimetres of
-the target — and that also ends the episode. So the bar is not reached by scoring well for a long time; it is
-reached by finishing, and finishing *early*, because every extra step subtracts. Note the episode limit here
-is 500 steps, not 1000. The service ends the episode the moment the pass mark is reached
-(`reason = "success"`).
+**700** (out of 500 steps). Every step here is *negative*: it costs the box's distance to the target, plus a
+smaller charge for the left hand's distance to the box. The only positive term is a one-off bonus, worth more
+than a thousand ordinary steps, paid when the box lands within a few centimetres of the target — and that also
+ends the episode. So the bar is not reached by scoring well for a long time; it is reached by finishing, and
+finishing *early*, because every extra step subtracts. The service ends the episode the moment the pass mark
+is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

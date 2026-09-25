@@ -12,22 +12,21 @@ HumanoidBench scores a *whole episode*, not a final state: you pass iff the summ
 over the episode reaches `s.success_bar` (**1200** here, out of 500 steps). Scoring runs in two
 stages and switches by itself the first time the robot contacts the ball. Before that it rewards
 standing steadily and getting both hands to the ball; after it, the dominant term is how close the
-ball is to the hoop. Sinking it pays a bonus worth hundreds of steps and ends the episode
-immediately. Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus
-is not optional — no amount of good positioning reaches the bar without it. The episode also ends if
-the ball drops low or the robot falls.
+ball is to the hoop. Sinking it pays a one-off bonus that covers most of the bar but not all of it,
+and ends the episode immediately, so the rest has to be earned per step before the ball goes in.
+Since a step is otherwise worth around 1 and the bar is 1200 over 500 steps, that bonus is not
+optional — no amount of good positioning reaches the bar without it. The episode also ends if the
+ball drops low or the robot falls.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
-done. That is on purpose — HumanoidBench's rewards are dense and hand-tuned, so having the formula
-turns the job into inverting an expression instead of controlling a robot.
+done.
 
 You do have the complete physical state: `s.obs()`, and the MuJoCo model and data behind it
 (`s.low.model`, `s.low.data`). Everything the reward could tell you is computable from those: how
 fast the centre of mass is moving, how upright the torso is, what the actuator forces are, how far a
-hand is from a target. The paragraph above says what this episode is judged on. Build the measure
-you think it calls for and optimise against that; as a sanity check, your measure should improve
-when the robot visibly does the task better.
+hand is from a target. Build your own measure of what the episode is judged on (above) and optimise
+against it; as a sanity check, it should improve when the robot visibly does the task better.
 
 ## Deliverable
 Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human
@@ -39,10 +38,12 @@ reads your work afterwards, so keep them short and factual rather than long.
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it |
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you
-have a better one.** You have a wall-clock budget (1 h) and it ends without warning; a run that ends
-with no file scores zero no matter how good the policy in your scratch directory was. Saving is
-cheap — a few hundred KB and well under a second.
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py`
+and `NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget (1 h) and it
+ends without warning; a run that ends with no file scores zero no matter how good the policy in your
+scratch directory was. Do not stop early: you cannot see the score here, so a trajectory that looks
+good may still fall short of the bar — keep improving it until the time is up. Saving is cheap — a
+few hundred KB and well under a second.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -51,7 +52,8 @@ s = Session("basketball", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
 obs = s.obs()                      # (64,) = qpos(33) + qvel(31), robot + ball state
 obs, r, done = s.step(action)      # action: (19,) normalised joint-position targets in [-1, 1], 50 Hz
-                                   # r is None here (see Scoring); obs and done are real
+                                   # r is None here (see Scoring); obs and done are real, except where
+                                   # the task notes below say otherwise
 s.max_steps                        # 500 — the episode limit, and the longest trajectory accepted
 s.low                              # the raw HumanoidBench env (s.low.model / s.low.data) for closed-loop control
 
@@ -84,9 +86,10 @@ The 19 actuators are position servos, in this order: `left_hip_yaw`, `left_hip_r
 the robot stays there depends on whether that pose is stable under gravity and contact.
 
 Which stage the scoring is in — reaching for the ball, or putting it through the hoop — is part of
-the task's internal state. It advances on first contact with the ball and is frozen into this
-instance at the start, so every reset begins before the catch.
+the task's internal state, frozen into this instance before the catch. Only the scoring code
+advances it (on first contact with the ball), so in this container it stays in the first stage; the
+grader's replay advances it.
 
 Optional rendering: `Session("basketball", instance=..., enable_render=True)` then
-`s.render_video(actions, "/app/output/replay.mp4")`. It picks the GL backend for you — GPU if this
+`s.render_video(actions, "/tmp/replay.mp4")`. It picks the GL backend for you — GPU if this
 container has one, CPU software rendering (~130 ms/frame) otherwise.

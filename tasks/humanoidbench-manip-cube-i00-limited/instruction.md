@@ -2,12 +2,13 @@
 
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open. You get one client. **Task:** a cube
-starts just above and in front of each palm. Rotate both cubes to the goal orientation without dropping them.
+starts just above and in front of each palm. Rotate both cubes, without dropping them, to the goal
+orientation: that of the translucent cube with the same faces floating above and between the hands.
 
 ## Rules (real-robot rules)
 - **Episodes.** The episode starts when the service comes up and ends when the task succeeds, when the robot
-  falls (its pelvis drops too low), or when either cube drops, after 500 control steps (10 s of robot time),
-  when your time is up, or on a simulator error.
+  falls (its pelvis drops too low), when either cube drops, after 500 control steps (10 s of robot time), when
+  your time is up, or on a simulator error.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the cubes' orientations, not the
   goal orientation, not the reward: the service judges the episode and only tells you that it ended and why
@@ -15,19 +16,20 @@ starts just above and in front of each palm. Rotate both cubes to the goal orien
   exactly what this run provides; depending on the task's configuration that can also include a pelvis IMU and
   a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
-- There is nothing to hand in: the service records the episode as the trajectory and grades it (the
-  deliverable is the episode itself). Leave the script you drive the robot with at `/app/output/gen.py` for
-  the record.
-- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment.
+- There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
+  script you drive the robot with at `/app/output/gen.py` for the record.
+- Wall-clock budget: 1 h. It ends without warning, and the episode is graded as it stands at that moment;
+  ending your session earlier does the same, so do not stop early.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
 **370** (out of 500 steps). A weighted sum: the largest term is how closely each cube's orientation matches
 the goal, averaged over the two hands; then how close each hand is to its cube; then a small share for
 standing steadily without moving. The orientation term is sharp — it falls away quickly as the orientation
-drifts, so approximate alignment earns much less than it looks like it should. The episode ends the moment
-either cube drops below a height, or the torso does. 500 steps, not 1000. The service ends the episode the
-moment the pass mark is reached (`reason = "success"`).
+drifts, so approximate alignment earns much less than it looks like it should — and it compares orientations
+as quaternions, sign included: of the two ways to turn a cube onto the goal, only one scores, because the
+other ends at the same orientation with the opposite sign, which counts as far off. The service ends the
+episode the moment the pass mark is reached (`reason = "success"`).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/1.1`)
 The client is your whole interface to the robot, and its docstring is the full reference: every call,

@@ -5,9 +5,10 @@ via Python. **Task:** put each of the five objects onto its assigned place on th
 a time, in order.
 
 This is a *fixed scene instance*: the objects, their assigned destinations and the robot's initial
-pose never change between resets. The destination of the object you are currently on is shown in the
-scene. You may reset and retry as many times as you want. Your deliverable is **one replayable
-trajectory**, not a general policy.
+pose never change between resets. The five objects in play are tinted red, palest first and darkest
+last (the other seven are grey), and each one's destination is shown from the start as a translucent
+copy of it in the same colour. You may reset and retry as many times as you want. Your deliverable
+is **one replayable trajectory**, not a general policy.
 
 ## Scoring
 HumanoidBench scores a *whole episode*, not a final state: you pass iff the summed per-step reward
@@ -16,20 +17,18 @@ currently on is scored: each step pays for standing steadily, for a hand being n
 for its progress towards its assigned slot. Placing it pays a one-off bonus that grows with how many
 you have placed — together the bonuses are most of the bar — and moves the scoring on to the next
 one. So the return is cut into five plateaus and stalling on the first caps the episode low. The
-episode ends early if the torso drops or if the object currently being scored falls, and it ends
-once all five are placed.
+episode ends early if the pelvis drops too low or if the object currently being scored goes below
+about half a metre, and it ends once all five are placed.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
-done. That is on purpose — HumanoidBench's rewards are dense and hand-tuned, so having the formula
-turns the job into inverting an expression instead of controlling a robot.
+done.
 
 You do have the complete physical state: `s.obs()`, and the MuJoCo model and data behind it
 (`s.low.model`, `s.low.data`). Everything the reward could tell you is computable from those: how
 fast the centre of mass is moving, how upright the torso is, what the actuator forces are, how far a
-hand is from a target. The paragraph above says what this episode is judged on. Build the measure
-you think it calls for and optimise against that; as a sanity check, your measure should improve
-when the robot visibly does the task better.
+hand is from a target. Build your own measure of what the episode is judged on (above) and optimise
+against it; as a sanity check, it should improve when the robot visibly does the task better.
 
 ## Deliverable
 Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human
@@ -41,10 +40,12 @@ reads your work afterwards, so keep them short and factual rather than long.
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`** — not a paraphrase of it |
 | `NOTES.md` | **at most 20 lines**: what your final approach is and why it works, plus the approaches you tried that failed and what each one told you about the task. No narration of your session, no restating this file |
 
-**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you
-have a better one.** You have a wall-clock budget (1 h) and it ends without warning; a run that ends
-with no file scores zero no matter how good the policy in your scratch directory was. Saving is
-cheap — a few hundred KB and well under a second.
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py`
+and `NOTES.md` to match) whenever you have a better one.** You have a wall-clock budget (1 h) and it
+ends without warning; a run that ends with no file scores zero no matter how good the policy in your
+scratch directory was. Do not stop early: you cannot see the score here, so a trajectory that looks
+good may still fall short of the bar — keep improving it until the time is up. Saving is cheap — a
+few hundred KB and well under a second.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -53,7 +54,8 @@ s = Session("bookshelf_simple", instance="/app/instance.npz")
 s.reset()                          # back to the frozen initial state (unlimited)
 obs = s.obs()                      # (308,) = qpos(160) + qvel(147) + the (negative) body index of the object currently being scored(1)
 obs, r, done = s.step(action)      # action: (61,) normalised joint-position targets in [-1, 1], 50 Hz
-                                   # r is None here (see Scoring); obs and done are real
+                                   # r is None here (see Scoring); obs and done are real, except where
+                                   # the task notes below say otherwise
 s.max_steps                        # 1000 — the episode limit, and the longest trajectory accepted
 s.low                              # the raw HumanoidBench env (s.low.model / s.low.data) for closed-loop control
 
@@ -88,9 +90,11 @@ the fingers, 20 per Shadow hand — `lh_A_*` then `rh_A_*`. A constant action co
 gravity and contact.
 
 Which object is currently being scored, and which five of the candidate objects are in play, are
-part of the task's internal state; they are frozen into this instance, so the assignment does not
-change between resets or between your container and the verifier's.
+part of the task's internal state, frozen into this instance. Only the scoring code moves on to the
+next object, so in this container the observation's last entry never changes and `done` only ever
+checks the first object (placing all five does not end the episode here); the grader's replay moves
+on as each object is placed.
 
 Optional rendering: `Session("bookshelf_simple", instance=..., enable_render=True)` then
-`s.render_video(actions, "/app/output/replay.mp4")`. It picks the GL backend for you — GPU if this
+`s.render_video(actions, "/tmp/replay.mp4")`. It picks the GL backend for you — GPU if this
 container has one, CPU software rendering (~130 ms/frame) otherwise.
