@@ -30,21 +30,22 @@ The analysis on a task page is `<trial>/report/notes.md`, written after reading 
 
 ## Results
 
-A cell is ✅ or ❌ with the graded return (limited: the last episode; full: the submitted trajectory, replayed) and
-the model cost. Empty: not run yet. "All-zero" is what the all-zero action scores on the same instance.
+A cell is the latest standard-config run: ✅ or ❌ with the graded return (limited: the last episode; full: the
+submitted trajectory, replayed) and the model cost. Empty: not run yet. "All-zero" is what the all-zero action
+scores on the same instance.
 
 | # | task | robot | class | bar | all-zero | GPT-6 Luna · limited | GPT-6 Luna · full |
 |---|---|---|---|---|---|---|---|
-| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.6 · $0.08 | ✅ 977.8 · $0.02 |
-| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 7.6 · $0.13 | ❌ 149.6 · $0.14 |
-| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 12.4 · $0.16 | ❌ 12.6 · $0.46 |
-| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 64.2 · $0.07 | ❌ 130.8 · $0.33 |
-| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 7.8 · $0.36 | ❌ 182.2 · $0.19 |
-| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 47.6 · $0.16 | ❌ 333.4 · $0.19 |
-| 7 | push | h1 | C6 | 700 | −253.7 | ❌ −237.5 · $0.43 | ✅ 948.1 · $0.03 |
-| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 15.2 · $0.22 | ❌ 247.6 · $0.35 |
-| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −1838.9 · $0.10 | ❌ 359.7 · $0.22 |
-| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 257.1 · $0.35 | ❌ 740.0 · $0.41 |
+| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.8 · $0.03 | ✅ 905.1 · $0.39 |
+| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 38.5 · $0.08 | ❌ 159.8 · $0.61 |
+| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 14.6 · $0.26 | ❌ 132.0 · $0.68 |
+| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 65.5 · $0.06 | ❌ 108.4 · $0.32 |
+| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 23.5 · $0.19 | ❌ 223.3 · $0.48 |
+| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 156.6 · $0.26 | ❌ 327.9 · $0.46 |
+| 7 | push | h1 | C6 | 700 | −253.7 | ❌ −213.9 · $0.60 | ✅ 986.8 · $0.53 |
+| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 29.8 · $0.34 | ❌ 224.2 · $0.32 |
+| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −2068.6 · $0.18 | ❌ −767.4 · $0.49 |
+| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 6.9 · $0.49 | ❌ 798.2 · $0.42 |
 | 11 | stair | h1 | C2 | 700 | 8.6 | | |
 | 12 | balance_hard | h1 | C3 | 800 | 29.0 | | |
 | 13 | maze | h1 | C4 | 1200 | 120.6 | | |
@@ -64,5 +65,5 @@ Classes (`scripts/humanoidbench/subset.toml`): C1 flat gait · C2 constrained ga
 C5 whole-body power · C6 bimanual manipulation · C7 in-hand precision · C8 mobile manipulation · C9 long-horizon.
 h1 has 19 actuators, h1hand 61 (hands included).
 
-Order: rows 1–10 are the first round, one task per class plus the fixture, run in both modes; the rest by robot (h1
-first) and by class.
+Order: rows 1–10 are the first round, one task per class plus the fixture, run in both modes, and again after the
+task text changed in 06b0ab3 (`runs.csv` keeps both); the rest by robot (h1 first) and by class.

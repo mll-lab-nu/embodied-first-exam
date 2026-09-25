@@ -159,9 +159,10 @@ def check_readme(tasks: list, cols: list) -> None:
                 if cell:
                     print(f"README: {t['task']} / {' · '.join(col)} says {cell!r}, runs.csv has no standard-config run")
                 continue
-            if len(mine) == 1:   # a cell is runs.csv's score and cost, rounded half up, with the table's minus sign
-                r = mine[0]
-                score = half_up(r["score"], "0.1").replace("-", "−") if r["score"] else "—"
-                want = f"{'✅' if r['result'] == 'pass' else '❌'} {score} · ${half_up(r['cost_usd'] or 0, '0.01')}"
-                if cell != want:
-                    print(f"README: {t['task']} / {' · '.join(col)} says {cell!r}, runs.csv gives {want!r}")
+            # a cell is the latest standard-config run's score and cost (as the pages' main run), rounded half up,
+            # with the table's minus sign
+            r = mine[-1]
+            score = half_up(r["score"], "0.1").replace("-", "−") if r["score"] else "—"
+            want = f"{'✅' if r['result'] == 'pass' else '❌'} {score} · ${half_up(r['cost_usd'] or 0, '0.01')}"
+            if cell != want:
+                print(f"README: {t['task']} / {' · '.join(col)} says {cell!r}, runs.csv gives {want!r}")
