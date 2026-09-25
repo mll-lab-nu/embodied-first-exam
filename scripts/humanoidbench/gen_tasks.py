@@ -387,6 +387,20 @@ def _small(extra: dict | None) -> dict:
     return {} if extra is None else _json.loads(extra["task_state"])
 
 
+def unresolved_calls(family: str) -> list[str]:
+    """What the restored formula calls on self that the task class does not have. The all-zero episode cannot find
+    these: truck's formula calls `upon_table()` only once a package has been lifted."""
+    import ast
+    import importlib
+    rec = load_rewards()[family]
+    mod, cls = rec["task_class"].rsplit(".", 1)
+    klass = getattr(importlib.import_module(mod), cls)
+    called = {n.func.attr for m in rec["methods"] for n in ast.walk(ast.parse(m["source"]))
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+              and isinstance(n.func.value, ast.Name) and n.func.value.id == "self"}
+    return sorted(n for n in called if not hasattr(klass, n))
+
+
 def measure_one(family: str, env_id: str, instance: Path | None = None, seed: int = 0) -> dict:
     """Everything about a task that the simulator, not a human, is the authority on.
 
@@ -405,6 +419,9 @@ def measure_one(family: str, env_id: str, instance: Path | None = None, seed: in
     # not be the number the verifier will produce.
     from rcb_rewards import restore
     restore(load_rewards()[family])
+    if missing := unresolved_calls(family):
+        raise RuntimeError(f"{family}: the restored formula calls {missing} on self, which neither the image nor "
+                           f"rewards.json provides")
     from measure_baselines import hold_action      # one definition of "stand still", shared
     from rcb_hb import Session
 

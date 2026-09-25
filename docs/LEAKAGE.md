@@ -11,9 +11,9 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 | Place | Why it is still readable | Check |
 |---|---|---|
 | Dead code | unreachable ≠ unreadable | scan the whole package, not the import graph |
-| Constants the grader read | a constant whose only reader was the grader still describes it | no module-level name may be write-only afterwards |
+| Constants the grader read | a constant whose only reader was the grader still describes it; so does a comment on one that stays (`# Horizontal speeds above which move reward is 1.`) | no module-level name may be write-only afterwards; no comment may mention the reward |
 | Attributes set at construction | weights in `__init__` are not "functions with a matching name" | enumerate instance attributes at runtime |
-| Helpers the grader called | not named like the grader, so the name match keeps them: HumanoidBench maze's `update_move_direction` returns the checkpoint bonus (still in the 0.1.5 image) | list what every removed method calls |
+| Helpers the grader called | not named like the grader, so the name match keeps them: HumanoidBench maze's `update_move_direction` returned the checkpoint bonus, truck's `upon_table` held the table test (both until the 0.1.6 image) | list what every removed method calls; delete what nothing else calls, keep only the effect of what the tooling still calls |
 | Compiled bytecode | `*.pyc` built before the removal keeps the old code | clear caches *before* removing, assert after |
 | Earlier Docker layers | a layer is an immutable tarball; a later `rm` does not unwrite it | download and remove in the **same `RUN`**; verify with `docker save` |
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |

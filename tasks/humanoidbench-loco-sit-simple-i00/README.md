@@ -6,7 +6,7 @@
 | Family / instance | `sit_simple` (`h1-sit_simple-v0`, paper category *locomotion*) / seed 00 |
 | Capability class | fixture (C3 · quasi-static stabilisation, too easy to score) (see `local_docs/plan/06-task-selection.md`) |
 | Task type / tier | trajectory / privileged |
-| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.5` |
+| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.6` |
 | Agent budget | 3600.0 s, 16 CPUs; GPU optional (see below) |
 
 ## Difficulty

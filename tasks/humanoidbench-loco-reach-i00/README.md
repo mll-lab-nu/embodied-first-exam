@@ -6,7 +6,7 @@
 | Family / instance | `reach` (`h1-reach-v0`, paper category *locomotion*) / seed 00 |
 | Capability class | C8 · mobile manipulation (see `local_docs/plan/06-task-selection.md`) |
 | Task type / tier | trajectory / privileged |
-| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.5` |
+| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.6` |
 | Agent budget | 3600.0 s, 16 CPUs; GPU optional (see below) |
 
 ## Difficulty

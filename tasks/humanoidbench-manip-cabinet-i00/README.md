@@ -6,7 +6,7 @@
 | Family / instance | `cabinet` (`h1hand-cabinet-v0`, paper category *manipulation*) / seed 00 |
 | Capability class | C9 · long-horizon multi-subtask (see `local_docs/plan/06-task-selection.md`) |
 | Task type / tier | trajectory / privileged |
-| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.5` |
+| Base image | `ghcr.io/jameskrw/rcb-humanoidbench:0.1.6` |
 | Agent budget | 3600.0 s, 16 CPUs; GPU optional (see below) |
 
 ## Difficulty

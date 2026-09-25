@@ -6,7 +6,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/jameskrw/rcb-humanoidbench:0.1.5
+    image: ghcr.io/jameskrw/rcb-humanoidbench:0.1.6
     volumes:
       - ./sim:/srv:ro
     command: python /srv/server.py

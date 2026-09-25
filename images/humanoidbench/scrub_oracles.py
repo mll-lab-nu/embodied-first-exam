@@ -17,6 +17,9 @@ WHAT GOES
   gone and reports no return (shared/rcb_hb.py), so the agent is told plainly rather than fed a zero.
   The constants and weights need the two rules in drop_dead_globals / prune_reward_params, because a
   name match cannot tell a scoring parameter from a description of the task.
+  The helpers the formula called are not named *reward* either, so they are settled by what still calls
+  them (drop_dead_helpers / drop_unread_returns), and a comment that mentions the reward goes with it
+  (drop_reward_comments).
 
 WHAT STAYS
   `get_terminated` (an agent discovers it in one rollout -- dynamics, not scoring), `get_obs`,
@@ -36,10 +39,12 @@ TWO PHASES, because `verify` imports the package it checks:
 See docs/LEAKAGE.md for the general checklist this implements.
 """
 import ast
+import io
 import pathlib
 import re
 import shutil
 import sys
+import tokenize
 
 ROOT = pathlib.Path("/opt/humanoid-bench")
 PKG = ROOT / "humanoid_bench"
@@ -56,42 +61,173 @@ REWARD_METHOD = re.compile(r"reward", re.I)
 # first version of this script only scanned envs/ and left it behind.
 KEEP = {PKG / "tasks.py", PKG / "wrappers.py"}
 
+# The tooling every task ships, COPYed in for the scrub (see the Dockerfile). It reads the package like any
+# other code: rcb_hb.py calls `update_move_direction()` for the bookkeeping upstream does only inside
+# get_reward, so that helper must survive even though nothing in the package calls it any more.
+TOOLING = [pathlib.Path("/tmp/rcb_hb.py")]
+
 
 def reward_modules() -> list[pathlib.Path]:
     return [f for f in sorted(PKG.rglob("*.py")) if f not in KEEP]
 
 
-def scrub_rewards(path: pathlib.Path) -> tuple[list[str], set[str]]:
+def scrub_rewards(path: pathlib.Path) -> tuple[list[str], set[str], dict[str, bool]]:
     """Delete every reward-shaped method from one module.
 
-    Returns (qualnames removed, names those methods read) -- the second half is what drop_dead_globals
-    needs to tell a constant that existed for the formula from one that is merely unused.
+    Returns (qualnames removed, names those methods read, what they called on self) -- the second half is
+    what drop_dead_globals needs to tell a constant that existed for the formula from one that is merely
+    unused, the third what the helper rules need.
 
     Line-based rather than ast.unparse-based on purpose: unparsing rewrites the whole file (dropping
     comments and normalising formatting), which would make the diff against upstream unreadable and hide
     what else we changed. Cutting the exact line spans keeps every other byte identical.
     """
+    return _cut_methods(path, lambda name: bool(REWARD_METHOD.search(name)))
+
+
+def _cut_methods(path: pathlib.Path, pick) -> tuple[list[str], set[str], dict[str, bool]]:
     src = path.read_text()
     lines = src.split("\n")
-    cuts, removed, read = [], [], set()
+    cuts, removed, read, calls = [], [], set(), {}
     for node in ast.walk(ast.parse(src)):
         if not isinstance(node, ast.ClassDef):
             continue
         for m in node.body:
-            if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)) and REWARD_METHOD.search(m.name):
+            if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)) and pick(m.name):
                 start = min([d.lineno for d in m.decorator_list] + [m.lineno])
                 cuts.append((start - 1, m.end_lineno))
                 removed.append(f"{path.stem}.{node.name}.{m.name}")
                 read |= _loaded_names(m)
+                _merge(calls, _self_calls(m))
     if not cuts:
-        return [], set()
+        return [], set(), {}
     drop = {i for a, b in cuts for i in range(a, b)}
     path.write_text("\n".join(l for i, l in enumerate(lines) if i not in drop))
-    return removed, read
+    return removed, read, calls
 
 
 def _loaded_names(tree: ast.AST) -> set[str]:
     return {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+
+
+def _merge(into: dict[str, bool], more: dict[str, bool]) -> None:
+    for k, v in more.items():
+        into[k] = into.get(k, False) or v
+
+
+def _self_calls(tree: ast.AST) -> dict[str, bool]:
+    """{name: is the return value used?} for every `self.name(...)` under `tree`. A call that is a statement
+    of its own throws its value away; any other call may use it."""
+    alone = {id(n.value) for n in ast.walk(tree) if isinstance(n, ast.Expr)}
+    out: dict[str, bool] = {}
+    for n in ast.walk(tree):
+        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and isinstance(n.func.value, ast.Name) and n.func.value.id == "self"):
+            _merge(out, {n.func.attr: id(n) not in alone})
+    return out
+
+
+def surviving_uses() -> dict[str, bool]:
+    """{name: may its return value be used?} for every attribute that the rest of the package (KEEP included)
+    or the tooling still touches. `x.name(...)` as a statement of its own throws the value away, any other
+    use of `x.name` may keep it, and a string equal to the name (hasattr, getattr) reaches it without a value."""
+    missing = [str(t) for t in TOOLING if not t.is_file()]
+    if missing:
+        raise SystemExit(f"tooling not found: {missing} -- without it a helper it calls would look dead")
+    out: dict[str, bool] = {}
+    for f in [*sorted(PKG.rglob("*.py")), *TOOLING]:
+        tree = ast.parse(f.read_text())
+        alone = {id(n.value) for n in ast.walk(tree) if isinstance(n, ast.Expr)}
+        called = {id(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)}
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute):
+                _merge(out, {n.func.attr: id(n) not in alone})
+            elif isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Load) and id(n) not in called:
+                _merge(out, {n.attr: True})
+            elif isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value.isidentifier():
+                _merge(out, {n.value: False})
+    return out
+
+
+def drop_dead_helpers(path: pathlib.Path, dead: set[str]) -> tuple[list[str], set[str], dict[str, bool]]:
+    """Delete the methods named in `dead`: helpers the formula called that nothing surviving calls. Dead because of
+    the removal, and still readable -- truck's `upon_table()` is the placement test the table bonus is paid on,
+    down to the coordinates. Returns what scrub_rewards returns, so what only these read can go next."""
+    return _cut_methods(path, lambda name: name in dead)
+
+
+def _value_return(s: ast.AST) -> bool:
+    return isinstance(s, ast.Return) and s.value is not None
+
+
+def _own(stmts: list[ast.stmt]):
+    """Every node under these statements, except inside a nested function or lambda."""
+    todo = list(stmts)
+    while todo:
+        n = todo.pop()
+        yield n
+        todo += [c for c in ast.iter_child_nodes(n)
+                 if not isinstance(c, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda))]
+
+
+def drop_unread_returns(path: pathlib.Path, names: set[str]) -> list[str]:
+    """Keep what a helper does, drop what it returns, for the helpers named in `names`: the formula called them
+    for their value, and surviving code calls them only for their effect. Maze's `update_move_direction()`
+    advances the checkpoint and recolours it -- dynamics the tooling replays every step -- and returned the
+    bonus for reaching it. A `return <value>` that ends the method goes, as does an `if` at the end that did
+    nothing but return one, and then any local that only fed them; any other one loses its value.
+    Returns the qualnames cut."""
+    src = path.read_text()
+    lines = src.split("\n")
+    drop, edits, cut = set(), {}, []                        # edits: line index -> its replacement
+    for cls in (n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.ClassDef)):
+        for m in cls.body:
+            if not isinstance(m, ast.FunctionDef) or m.name not in names:
+                continue
+            body, gone = list(m.body), []
+            while body and (_value_return(body[-1]) or isinstance(body[-1], ast.If) and not body[-1].orelse
+                            and all(_value_return(s) for s in body[-1].body)):
+                gone.append(body.pop())
+            loads = {n.id for n in _own(body) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+            gone += [s for s in body if isinstance(s, ast.Assign) and len(s.targets) == 1
+                     and isinstance(s.targets[0], ast.Name) and s.targets[0].id not in loads
+                     and isinstance(s.value, (ast.Name, ast.Attribute, ast.Constant))]
+            rest = [s for s in body if s not in gone]
+            returns = [n for n in _own(rest) if _value_return(n)]
+            if not (gone or returns):
+                continue
+            for r in returns:                               # keep the line, lose the value
+                edits[r.lineno - 1] = lines[r.lineno - 1][: r.col_offset] + "return"
+                drop |= set(range(r.lineno, r.end_lineno))
+            if not rest:                                    # a body cannot be empty
+                first = min(gone, key=lambda s: s.lineno)
+                edits[first.lineno - 1] = lines[first.lineno - 1][: first.col_offset] + "pass"
+            drop |= {i for s in gone for i in range(s.lineno - 1, s.end_lineno)} - edits.keys()
+            cut.append(f"{path.stem}.{cls.name}.{m.name}")
+    if cut:
+        lines = [edits.get(i, l) for i, l in enumerate(lines)]
+        path.write_text("\n".join(l for i, l in enumerate(lines) if i not in drop))
+    return cut
+
+
+def drop_reward_comments(path: pathlib.Path) -> int:
+    """Delete comments that mention the reward: they outlive what they described. `# Horizontal speeds above
+    which move reward is 1.` still sits on `_WALK_SPEED` -- the task's target speed, which stays -- and says
+    where the speed term saturates. Returns how many went."""
+    src = path.read_text()
+    lines = src.split("\n")
+    hits = [t for t in tokenize.generate_tokens(io.StringIO(src).readline)
+            if t.type == tokenize.COMMENT and REWARD_METHOD.search(t.string)]
+    drop = set()
+    for t in hits:
+        row, col = t.start[0] - 1, t.start[1]
+        if lines[row][:col].strip():
+            lines[row] = lines[row][:col].rstrip()          # an inline comment: the code before it stays
+        else:
+            drop.add(row)
+    if hits:
+        path.write_text("\n".join(l for i, l in enumerate(lines) if i not in drop))
+    return len(hits)
 
 
 def package_names() -> set[str]:
@@ -207,12 +343,31 @@ def delete() -> int:
     for cache in ROOT.rglob("__pycache__"):
         shutil.rmtree(cache, ignore_errors=True)
 
-    removed_methods, removed_params, removed_globals = [], [], []
+    removed_methods, removed_params, removed_globals, removed_helpers, cut_helpers = [], [], [], [], []
     formula_read: dict[pathlib.Path, set[str]] = {}
+    formula_calls: dict[str, bool] = {}
     for f in reward_modules():
-        names, read = scrub_rewards(f)
+        names, read, calls = scrub_rewards(f)
         removed_methods += names
         formula_read[f] = read
+        _merge(formula_calls, calls)
+    # The helpers those methods called on self, settled by what still calls them: nothing (drop_dead_helpers,
+    # repeated, since a helper can be all that called another), or only for their effect (drop_unread_returns).
+    pending = dict(formula_calls)
+    while pending:
+        uses, more = surviving_uses(), {}
+        for f in reward_modules():
+            names, read, calls = drop_dead_helpers(f, {n for n in pending if n not in uses})
+            removed_helpers += names
+            formula_read[f] = formula_read.get(f, set()) | read
+            _merge(more, calls)
+        _merge(formula_calls, more)
+        pending = more
+    uses = surviving_uses()
+    for f in reward_modules():
+        cut_helpers += drop_unread_returns(f, {n for n, used in formula_calls.items()
+                                               if used and n in uses and not uses[n]})
+    comments = sum(drop_reward_comments(f) for f in reward_modules())
     # Order matters: both of these ask "does anything still read this?", which is only true once the
     # reward methods -- the things that read them -- are gone. `live` is package-wide, KEEP included,
     # because a constant may be imported by another module.
@@ -226,6 +381,9 @@ def delete() -> int:
           f"{len({m.split('.')[0] for m in removed_methods})} modules")
     for m in removed_methods:
         print(f"  - {m}")
+    print(f"scrubbed helpers: removed {removed_helpers or 'nothing'}, returned values cut from "
+          f"{cut_helpers or 'nothing'}")
+    print(f"scrubbed comments that mention the reward: {comments}")
     print(f"scrubbed reward params: {removed_params or 'nothing'}")
     print(f"scrubbed dead constants: {len(removed_globals)} -> {removed_globals}")
     return 0
@@ -247,6 +405,12 @@ def verify() -> int:
             if isinstance(node, ast.ClassDef):
                 leftovers += [f"reward: {f.relative_to(PKG)}::{node.name}.{m.name}" for m in node.body
                               if isinstance(m, ast.FunctionDef) and REWARD_METHOD.search(m.name)]
+
+    # No comment may still talk about the reward.
+    for f in reward_modules():
+        leftovers += [f"reward comment: {f.relative_to(PKG)}:{t.start[0]}"
+                      for t in tokenize.generate_tokens(io.StringIO(f.read_text()).readline)
+                      if t.type == tokenize.COMMENT and REWARD_METHOD.search(t.string)]
 
     # Pruning again must be a no-op: it recomputes "which keys does surviving code read?" from the file in
     # front of it, so anything it still finds is a scoring weight we left behind.

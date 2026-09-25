@@ -43,7 +43,8 @@ def restore(spec: dict | str | Path = None) -> list[str]:
 
       module_globals  constants the scrub found to be write-only once the formula was gone, e.g.
                       `_STAND_HEIGHT = 1.65`. They go back FIRST, because the methods close over them.
-      methods         the reward functions themselves.
+      methods         the reward functions themselves, and the helpers the scrub deleted or cut down
+                      with them (truck's `upon_table`, maze's `update_move_direction`) as upstream wrote them.
       params          scoring weights the constructor assigns (push only) -- see _reinstate.
 
     Everything is compiled against the *defining module's own namespace*, so it closes over exactly what

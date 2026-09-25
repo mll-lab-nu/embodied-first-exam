@@ -26,6 +26,10 @@ WHAT IS TAKEN
                       `Push.__init__` sets `self.reward_dict = {"hand_dist": 0.1, "target_dist": 1,
                       "success": 1000, "terminate": True}`. `get_terminated` reads `["terminate"]`, so
                       that key stays; the three weights come here.
+      helpers         methods the formula called that the scrub deletes or cuts down, in their original
+                      form: truck's `upon_table` (nothing else calls it) and maze's
+                      `update_move_direction` (the image keeps what it does, not the bonus it returned).
+                      They go into "methods" beside the reward functions, and restore() treats them alike.
 
     Rather than re-deriving which of those the scrub will take -- two implementations of one rule drift --
     this runs the real images/humanoidbench/scrub_oracles.py against a COPY of the package and diffs.
@@ -74,6 +78,7 @@ def _scrubbed_copy() -> pathlib.Path:
     shutil.copytree(UPSTREAM, tmp, symlinks=True)
     scrub.ROOT, scrub.PKG = tmp, tmp / "humanoid_bench"
     scrub.KEEP = {scrub.PKG / p.name for p in scrub.KEEP}
+    scrub.TOOLING = [pathlib.Path("scripts/humanoidbench/shared/rcb_hb.py").resolve()]
     scrub.delete()
     return tmp
 
@@ -82,6 +87,22 @@ def _module_constants(path: pathlib.Path) -> dict[str, tuple[int, int]]:
     tree = ast.parse(path.read_text())
     return {n.targets[0].id: (n.lineno, n.end_lineno) for n in tree.body
             if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name)}
+
+
+def _class_methods(path: pathlib.Path) -> dict[tuple[str, str], str]:
+    """{(class, method): its AST dump} for every method in the module -- comments do not count."""
+    tree = ast.parse(path.read_text())
+    return {(c.name, m.name): ast.dump(m) for c in ast.walk(tree) if isinstance(c, ast.ClassDef)
+            for m in c.body if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+
+def _assigns_reward_dict(path: pathlib.Path, cls: str, method: str) -> bool:
+    tree = ast.parse(path.read_text())
+    for c in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == cls):
+        for m in (x for x in c.body if isinstance(x, ast.FunctionDef) and x.name == method):
+            return any(isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.value, ast.Dict)
+                       and REWARD_METHOD.search(getattr(n.targets[0], "attr", "") or "") for n in ast.walk(m))
+    return False
 
 
 def _reward_dicts(path: pathlib.Path) -> dict[tuple[str, str], dict]:
@@ -100,10 +121,11 @@ def _reward_dicts(path: pathlib.Path) -> dict[tuple[str, str], dict]:
     return out
 
 
-def scrub_diff() -> tuple[dict, dict]:
-    """What the scrub removes, keyed by module: (constants as source lines, reward params as values)."""
+def scrub_diff() -> tuple[dict, dict, dict]:
+    """What the scrub removes, keyed by module: (constants as source lines, reward params as values, the
+    (class, method) pairs of helpers it deletes or changes -- reward-shaped methods are reward_methods()'s)."""
     scrubbed = _scrubbed_copy()
-    consts, params = {}, {}
+    consts, params, helpers = {}, {}, {}
     for before in sorted((UPSTREAM / "humanoid_bench").rglob("*.py")):
         after = scrubbed / before.relative_to(UPSTREAM)
         if not after.is_file():
@@ -120,8 +142,15 @@ def scrub_diff() -> tuple[dict, dict]:
             dropped = {k: v for k, v in full.items() if k not in kept.get((cls, attr), {})}
             if dropped:
                 params.setdefault(mod, []).append({"cls": cls, "attr": attr, "values": dropped})
+        # A method that assigns a reward-shaped dict changed because prune_reward_params cut its weights,
+        # which `params` above already carries -- Push.__init__, whose zero-argument super() could not be
+        # restored by exec anyway.
+        now = _class_methods(after)
+        if changed := {k for k, v in _class_methods(before).items() if now.get(k) != v
+                       and not REWARD_METHOD.search(k[1]) and not _assigns_reward_dict(before, *k)}:
+            helpers[mod] = changed
     shutil.rmtree(scrubbed.parent, ignore_errors=True)
-    return consts, params
+    return consts, params, helpers
 
 
 def reward_methods(cls) -> dict[str, object]:
@@ -147,23 +176,29 @@ def defining_class(cls, name: str):
     raise LookupError(f"{cls.__name__}.{name} not found on any base")
 
 
-def extract(family: str, consts: dict, params: dict) -> dict:
+def extract(family: str, consts: dict, params: dict, helpers: dict) -> dict:
     from humanoid_bench.env import TASKS
 
     cls = TASKS[family]
     methods = reward_methods(cls)
     if not methods:
         raise LookupError(f"{family}: no reward method found on {cls.__name__}")
+    owned = [(defining_class(cls, name), name, fn) for name, fn in methods.items()]
+    # ... and the helpers the scrub took from any class this one inherits from, as upstream wrote them
+    owned += [(base, name, vars(base)[name]) for base in cls.__mro__
+              for c, name in sorted(helpers.get(base.__module__, ())) if c == base.__qualname__]
 
     entries = []
-    for name, fn in sorted(methods.items()):
-        owner = defining_class(cls, name)
+    for owner, name, fn in sorted(owned, key=lambda o: (o[1], o[0].__qualname__)):
+        source = textwrap.dedent(inspect.getsource(fn)).rstrip("\n")
+        if "super()" in source:   # restore() compiles it outside the class body, where super() has no __class__
+            raise ValueError(f"{owner.__qualname__}.{name} calls super() and cannot be restored by restore()")
         entries.append({
             "module": owner.__module__,
             "cls": owner.__qualname__,
             "name": name,
             # getsource keeps the class-body indentation; exec() needs the def at column 0.
-            "source": textwrap.dedent(inspect.getsource(fn)).rstrip("\n"),
+            "source": source,
         })
     # Whatever the scrub also takes from the modules these methods live in has to come back with them.
     modules = sorted({e["module"] for e in entries})
@@ -182,11 +217,11 @@ def main() -> int:
 
     from humanoid_bench.env import TASKS
 
-    consts, params = scrub_diff()
+    consts, params, helpers = scrub_diff()
     out = {}
     for family in sorted(TASKS):
         try:
-            out[family] = extract(family, consts, params)
+            out[family] = extract(family, consts, params, helpers)
         except Exception as e:
             print(f"{family}: {type(e).__name__}: {e}", file=sys.stderr)
             return 1

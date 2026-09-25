@@ -36,9 +36,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # with the scoring constants and weights only it read. A dense reward IS the answer key; with it in hand
 # an agent inverts an expression instead of controlling a robot. The formulas live in
 # scripts/humanoidbench/rewards.json and are patched back only inside the verifier, which Harbor starts
-# after the agent is done.
+# after the agent is done. rcb_hb.py (the tooling every task ships) comes along because the scrub keeps the
+# helpers it calls: it is a reader of the package like any other.
 ARG HB_COMMIT=cb1189039151c8aadaaa987b442da54383c87fab
-COPY images/humanoidbench/no-torch.patch images/humanoidbench/scrub_oracles.py /tmp/
+COPY images/humanoidbench/no-torch.patch images/humanoidbench/scrub_oracles.py scripts/humanoidbench/shared/rcb_hb.py /tmp/
 RUN git clone https://github.com/carlosferrazza/humanoid-bench.git /opt/humanoid-bench && \
     git -C /opt/humanoid-bench checkout --detach ${HB_COMMIT} && \
     git -C /opt/humanoid-bench apply /tmp/no-torch.patch && \
@@ -55,7 +56,7 @@ RUN pip install --no-cache-dir \
 # The other half of the scrub: assert nothing survived and the package still steps. Separate from `delete`
 # because it imports the package, which needs the install above -- and a separate layer is fine here,
 # since by now there is nothing left to leak.
-RUN MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python /tmp/scrub_oracles.py verify && rm /tmp/scrub_oracles.py
+RUN MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python /tmp/scrub_oracles.py verify && rm /tmp/scrub_oracles.py /tmp/rcb_hb.py
 
 # libglvnd finds a vendor driver through an ICD manifest. The NVIDIA container toolkit injects
 # libEGL_nvidia.so.0 whenever NVIDIA_DRIVER_CAPABILITIES includes `graphics`, but on hosts whose driver
