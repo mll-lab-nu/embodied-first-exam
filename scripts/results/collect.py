@@ -37,11 +37,12 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
-VERSION = 3   # of summary.json; build.py re-collects a trial whose summary is older
+VERSION = 4   # of summary.json; build.py re-collects a trial whose summary is older
 # words that should not show up in what the agent wrote or ran: the answer key, upstream's code, the network
-LEAK = re.compile(r"curl |wget |pip (install|download)|github|raw\.githubusercontent|humanoid[-_]?bench|\bmujoco\b|dm_control|"
+LEAK = re.compile(r"\bcurl\s+(?:-|\S*[:/])|wget |pip (install|download)|github|raw\.githubusercontent|humanoid[-_]?bench|\bmujoco\b|dm_control|"
                   r"get_reward|rewards\.tolerance|_STAND_HEIGHT|_WALK_SPEED|_RUN_SPEED|stand_reward|small_control|dont_move", re.I)
 GENERATED_BY = "scripts/results/collect.py"
+TOOL = r"(?<![\w.])tools\.(\w+)\("   # a codex tool in code mode (not itertools.product)
 
 
 def ts(s: str) -> float:
@@ -55,7 +56,9 @@ def jload(path, default=None):
 # ------------------------------------------------------------------------------------------------ inputs
 def sidecar(trial: str):
     """The sim service's own log: the spec it served, and one record per episode (when it started, its last step,
-    when and how it ended; `end` None = reset by the agent, or still running when the agent stopped)."""
+    when and how it ended; `end` None = reset by the agent, or still running when the agent stopped). Images: an
+    observe logs the cameras it returned; a step or reset that returned images logs an `images` event (services
+    before that logged only observe's)."""
     events = [json.loads(line) for line in open(f"{trial}/artifacts/data/episode.jsonl")]
     start = next((e for e in events if e["ev"] == "start"), {})
     new = lambda i, t: {"ep": i, "t0": t, "t_last": None, "t_end": None, "steps": 0, "observes": 0, "observe_images": 0,
@@ -68,6 +71,8 @@ def sidecar(trial: str):
         elif e["ev"] == "observe":
             c["observes"] += 1; c["observe_images"] += bool(e.get("images")); c["t_last"] = e["ts"]
             c["cameras"].update(e.get("images") or [])
+        elif e["ev"] == "images":
+            c["cameras"].update(e["images"])
         elif e["ev"] == "end":
             c["end"], c["end_step"], c["t_end"] = e["reason"], e["step"], e["ts"]
         elif e["ev"] == "reset":
@@ -98,7 +103,7 @@ def call_label(code: str) -> str:
     views = re.findall(r'view_image\(\{path:\s*"([^"]+)"', code)
     if views:
         return "view image " + ", ".join(views)
-    tools = re.findall(r"tools\.(\w+)\(", code)
+    tools = re.findall(TOOL, code)
     return ", ".join(dict.fromkeys(tools)) if tools else ""
 
 
@@ -119,7 +124,7 @@ def codex_session(trial: str):
                     msgs.append((t, txt)); timeline.append({"t": t, "kind": "msg", "text": txt})
             elif typ in ("custom_tool_call", "function_call"):
                 code = p.get("input") or p.get("arguments") or ""
-                used = re.findall(r"tools\.(\w+)\(", code)   # codex's code mode: one call can run several tools
+                used = re.findall(TOOL, code)   # codex's code mode: one call can run several tools
                 calls.update(used or [p.get("name") or "other"])
                 paths = re.findall(r'view_image\(\{path:\s*"([^"]+)"', code)
                 if paths:
@@ -214,11 +219,15 @@ def replay(trial: str, task_dir: str, out: str) -> tuple[list, str | None]:
     return jload(f"{out}/episodes.json", []), None
 
 
-def robot_during(events: list, t0: float, t1: float) -> dict:
-    """What the sim service did while one tool call ran: control steps, observations (with images), resets."""
-    ev = [e for e in events if t0 - 0.05 <= e["ts"] <= t1 + 0.05]
-    return {"steps": sum(e["ev"] == "step" for e in ev), "observes": sum(e["ev"] == "observe" for e in ev),
-            "images": sum(len(e.get("images") or []) for e in ev if e["ev"] == "observe"), "resets": sum(e["ev"] == "reset" for e in ev)}
+def robot_during(events: list, t0: float, t1: float, t_next: float) -> dict:
+    """What the sim service did while one tool call ran (control steps, observations, images, resets), and
+    `after`: the steps and resets logged once it returned, before the agent's next call began -- a process the
+    call left running in the background."""
+    count = lambda ev: {"steps": sum(e["ev"] == "step" for e in ev), "observes": sum(e["ev"] == "observe" for e in ev),
+                        "images": sum(len(e.get("images") or []) for e in ev if e["ev"] in ("observe", "images")),
+                        "resets": sum(e["ev"] == "reset" for e in ev)}
+    after = count([e for e in events if t1 + 0.05 < e["ts"] < t_next - 0.05])
+    return count([e for e in events if t0 - 0.05 <= e["ts"] <= t1 + 0.05]) | {"after": {k: after[k] for k in ("steps", "resets")}}
 
 
 def png_size(raw: bytes) -> list | None:
@@ -226,14 +235,15 @@ def png_size(raw: bytes) -> list | None:
 
 
 def camera_of(path: str | None, size: list | None, cameras: dict) -> str:
-    """Which camera an image the model looked at came from, as far as its file name says; a picture of another size
-    than the cameras' is something the agent made (a montage, a crop)."""
+    """Which camera an image the model looked at came from, when its file name says so ("room", "left_eye",
+    "right-cam", ...; a bare "left" may be a direction, as in left_turn10.png, so it says nothing); a picture of
+    another size than the cameras' is something the agent made (a montage, a crop)."""
     hw = next(iter(cameras.values()), {}).get("hw") if cameras else None
     if size and hw and size != [hw[1], hw[0]]:
         return "made"
     name = os.path.basename(path or "").lower()
-    for cam, key in (("room_camera", "room"), ("left_eye_camera", "left"), ("right_eye_camera", "right")):
-        if key in name:
+    for cam, key in (("room_camera", r"room"), ("left_eye_camera", r"left[_-]?(?:eye|cam)"), ("right_eye_camera", r"right[_-]?(?:eye|cam)")):
+        if re.search(key, name):
             return cam
     return "unknown"
 
@@ -351,6 +361,7 @@ def collect(trial: str, args) -> dict:
     leaks = [[x["t"], x["kind"], LEAK.search(x["text"]).group(0), x["text"][:240]] for x in timeline
              if x["kind"] in ("msg", "call") and LEAK.search(x["text"])]
 
+    call_list = [x for x in timeline if x["kind"] == "call"]
     episodes = []
     for e in eps:
         r = by_ep.get(e["ep"], {})
@@ -371,7 +382,8 @@ def collect(trial: str, args) -> dict:
                                          "harbor_usd": (res.get("agent_result") or {}).get("cost_usd"), "parts": parts, "long_context": long_ctx},
         "calls": [{"t0": x["t"], "t1": x["done"], "tools": x["tools"], "label": call_label(x["text"])[:300],
                    "cmds": [c[:800] for c in x["cmds"]], "exit": x.get("exit", []), "out": x.get("out", ""),
-                   "robot": robot_during(events, x["t"], x["done"])} for x in timeline if x["kind"] == "call"],
+                   "robot": robot_during(events, x["t"], x["done"], nxt)}
+                  for x, nxt in zip(call_list, [c["t"] for c in call_list[1:]] + [float("inf")])],
         "tool_counts": dict(calls.most_common()),
         "msgs": [[t, txt] for t, txt in msgs], "views": views, "spikes": spikes, "leaks": leaks,
     }

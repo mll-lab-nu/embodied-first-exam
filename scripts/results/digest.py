@@ -32,24 +32,30 @@ def digest(trial: str) -> str:
     a0, r, rq = s["a0"], s["result"], s["requests"]
     cost = (s["billed"]["usd"] if s["billed"]["found"] else s["billed"]["harbor_usd"]) or 0
     at = lambda t: f"{(t - a0) / 60:5.2f}"
+    num = lambda v: f"{v:.2f}" if isinstance(v, float) else v
     L = [f"# {meta['family']} · {s['mode']} mode · {s['model']} (effort {s['effort']})", "",
-         (f"- result: {'PASS' if r['success'] else 'FAIL'} ({r['why']}); graded return {r['return']} / bar {r['bar']}; "
+         (f"- result: {'PASS' if r['success'] else 'FAIL'} ({r['why']}); graded return {num(r['return'])} / bar {num(r['bar'])}; "
           f"the all-zero action scores {f.get('nop_return')} ({f.get('nop_steps')} steps); episode limit {f.get('max_steps')} steps"),
          (f"- agent time {(s['a1'] - a0) / 60:.1f} / {(s['budget_s'] or 0) / 60:.0f} min{' (stopped by the timeout)' if r.get('timed_out') else ''}; "
           f"cost ${cost:.4f}; {len(rq)} requests; {sum(x['in'] + x['out'] for x in rq):,} tokens; "
           f"{len(s['calls'])} tool calls; {len(s['views'])} images viewed")]
     if s["mode"] == "limited":
+        eps = s["episodes"]
+        top = next((e for e in eps if e["ep"] == r["best_ep"]), None)
+        longest = max(eps, key=lambda e: e["steps"], default=None)
         L += [(f"- resets used {r['resets']} / {s['spec']['reset_budget']}; control steps sent {r['steps']}; graded episode "
-               f"ep{r['graded_ep']}; best ep{r['best_ep']} ({r['best_return']})"), "",
+               f"ep{r['graded_ep']}; highest return ep{r['best_ep']} ({num(r['best_return'])}"
+               + (f", {top['steps']} steps" if top else "") + ")"
+               + (f"; longest ep{longest['ep']} ({longest['steps']} steps, return {num(longest.get('return'))})" if longest else "")), "",
               "## Episodes (return and displacement from the verifier-side replay, which the agent never saw)", "",
               "| ep | start min | steps | ended | return | max_dx m | final_dx m | final_z m | images viewed |",
               "|---|---|---|---|---|---|---|---|---|"]
         L += [(f"| {e['ep']} | {at(e['t0'] or a0)} | {e['steps']} | {e['end'] or 'reset by the agent, or running'} | "
-               f"{e.get('return')} | {e.get('max_dx')} | {e.get('final_dx')} | {e.get('final_z')} | {e.get('views')} |")
+               f"{num(e.get('return'))} | {e.get('max_dx')} | {e.get('final_dx')} | {e.get('final_z')} | {e.get('views')} |")
               for e in s["episodes"]]
     else:
         d = collect.jload(f"{trial}/verifier/diagnostics.json", {})
-        L.append(f"- submitted trajectory: {r['steps']} actions; verifier replays: returns {d.get('episode_return')}, "
+        L.append(f"- submitted trajectory: {r['steps']} actions; verifier replays: returns {[num(x) for x in d.get('episode_return') or []]}, "
                  f"deterministic {r['grading'].get('deterministic')}")
         for name in ("NOTES.md", "gen.py"):
             p = f"{trial}/artifacts/app/output/{name}"
@@ -62,13 +68,15 @@ def digest(trial: str) -> str:
     L += ["", "## The session, in order", ""]
     ep_of = lambda t: max([e["ep"] for e in s["episodes"] if (e["t0"] or a0) <= t] or [0])
     items = sorted([(t, "msg", txt) for t, txt in s["msgs"]] + [(c["t0"], "call", c) for c in s["calls"]], key=lambda z: z[0])
-    for t, kind, x in items:
-        tag = f"[{at(t)} min" + (f" · ep{ep_of(t)}" if s["episodes"] else "") + "]"
+    for t, kind, x in items:   # a call belongs to the episode running when it returned (a reset inside it starts that one)
+        tag = f"[{at(t)} min" + (f" · ep{ep_of(t if kind == 'msg' else x['t1'])}" if s["episodes"] else "") + "]"
         if kind == "msg":
             L.append(f"{tag} SAYS: {x}")
             continue
         rb = x.get("robot") or {}
-        robot = f" · robot {rb.get('steps', 0)} steps, {rb.get('resets', 0)} resets" if rb.get("steps") or rb.get("resets") else ""
+        bg = rb.get("after") or {}
+        robot = (f" · robot {rb.get('steps', 0)} steps, {rb.get('resets', 0)} resets" if rb.get("steps") or rb.get("resets") else "") + (
+            f" · then in the background {bg.get('steps', 0)} steps, {bg.get('resets', 0)} resets" if bg.get("steps") or bg.get("resets") else "")
         cmd = "\n".join(x.get("cmds") or [x.get("label") or ""])
         L.append(f"{tag} CALL ({' + '.join(kind_label(k, s) for k in tool_kinds(x))}; {x['t1'] - x['t0']:.1f} s{robot}; "
                  f"exit {x.get('exit')}):\n    " + cmd[:1500].replace("\n", "\n    ") + ("\n    ...(command truncated)" if len(cmd) > 1500 else ""))

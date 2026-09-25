@@ -85,6 +85,9 @@ def call_tip(i: int, c: dict, s: dict) -> str:
     bad = [e for e in c.get("exit") or [] if e != 0]
     robot = (f"机器人 {r.get('steps', 0)} 步" + (f"、reset {r['resets']} 次" if r.get("resets") else "")
              + (f"、取图 {r['images']} 张" if r.get("images") else "")) if "robot" in ks else ""
+    bg = r.get("after") or {}
+    if bg.get("steps") or bg.get("resets"):   # a process this call left running
+        robot += ("；" if robot else "") + f"返回后后台又走 {bg.get('steps', 0)} 步" + (f"、reset {bg['resets']} 次" if bg.get("resets") else "")
     return tip(f"#{i + 1} · {(c['t0'] - a0) / 60:.2f} min · " + " + ".join(kind_label(x, s) for x in ks),
                f"用时 {c['t1'] - c['t0']:.2f} s" + (f" · {robot}" if robot else "") + (f" · 退出码 {bad}" if bad else ""),
                "命令：" + cmd if cmd else "", "输出：" + out if out else "", "点击看完整命令和输出")
