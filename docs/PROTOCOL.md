@@ -60,8 +60,8 @@ unsolved, after 23–46 of 60 min).
   with it the task is to invert an expression rather than to control a robot. Delete it from the base
   image, ship it only under `tests/`, and patch it back inside the verifier, so the score still comes from
   upstream's own code. `instruction.md` must then describe the scoring in prose — what is measured, how the
-  terms combine, order-of-magnitude targets, what ends the episode — with no tolerance parameters or exact
-  weights.
+  terms combine, order-of-magnitude targets, what ends the episode — with no tolerance parameters, exact
+  weights, per-step scale, or what any particular policy scores.
 - **Deleting an answer key only counts if the agent cannot fetch another copy**: the network, an earlier
   Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. Tasks set `[agent] network_mode =
   "allowlist"` with `allowed_hosts = []` (the model endpoint is opted in per run with
