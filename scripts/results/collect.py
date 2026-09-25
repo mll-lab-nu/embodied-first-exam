@@ -9,12 +9,7 @@ bill, looked up per generation; every tool call and every image the model looked
 replayed and scored verifier-side from the sim service's log (replay_episodes.py, in the task's sim image), each with
 a video. A full-mode trial has no such log (the simulator runs inside the agent's own process): its result is the
 verifier's replay of the submitted trajectory. The lookups and the replay are cached in report/,
-so a rerun takes seconds. The strategy summary is prose, not a measurement: <trial>/report/notes.md (Markdown),
-whose optional phase table colours the timeline (episode ranges, one per line):
-  <!-- phases
-  0-2 标定
-  3-13 站姿与平衡
-  -->
+so a rerun takes seconds. The analysis is prose, not a measurement: <trial>/report/notes.md (NOTES_GUIDE.md).
 It also puts two files where `harbor view` looks for them -- agent/recording.mp4 (the graded replay, "Recording"
 tab) and analysis.json (the summary and the checks, "Analysis" tab); neither overwrites a file it did not write.
   --no-replay   skip the replay (it needs docker and the sim image; on this machine docker may need `sg docker`)

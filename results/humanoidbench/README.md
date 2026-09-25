@@ -24,8 +24,9 @@ sg docker -c 'RCB_MODEL=openrouter/openai/gpt-6-luna scripts/run_deepseek_openro
 python3 scripts/results/build.py --add jobs/hb-limited-walk-codex-gpt6luna-medium-60min-reset50-imu-roomcam
 ```
 
-The analysis on a task page is `<trial>/report/notes.md`, written after reading the run (a phase table at its top
-colours the limited timeline; see `scripts/results/collect.py`).
+The analysis on a task page is `<trial>/report/notes.md`, written after reading the run:
+`python3 scripts/results/digest.py jobs/<job>` puts it on one page, and
+[`scripts/results/NOTES_GUIDE.md`](../../scripts/results/NOTES_GUIDE.md) says what goes in it.
 
 ## Results
 

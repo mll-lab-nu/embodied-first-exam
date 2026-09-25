@@ -9,7 +9,8 @@ tasks/<task>.html   each column's main run (its latest standard-config run) in d
                     other run of the task
 runs/<job>.html     one page per run, shorter, plus the full trajectory and Harbor's records
 Runs are runs.csv's rows. A run whose job is still under jobs/ is measured by collect.py, once: the result is cached
-in <trial>/report/summary.json (--refresh measures again), and <trial>/report/notes.md is its analysis.
+in <trial>/report/summary.json (--refresh measures again), and <trial>/report/notes.md is its analysis, written
+from digest.py's one-page view of the trial as NOTES_GUIDE.md says.
 Modules: common (paths, standard configs, labels, formatting), data (README, runs.csv, summaries), calls (tool calls),
 charts (SVG), pages (HTML); site.css and site.js are copied next to the pages.
   --cameras DIR   the t=0 images `gen_tasks.py measure-limited --images DIR` wrote, copied in for the task pages
