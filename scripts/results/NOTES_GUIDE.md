@@ -16,6 +16,10 @@ write it after reading the run; everything else on the pages is measured.
   `agent/trajectory.json`, the agent's files, and images if you can view them (`report/episodes/*.png`,
   `report/agent_views/`, `verifier/replay.last.png`).
 - Look at the leak-check flags and say what the agent actually read (upstream source, our tooling, the network).
+- An episode that `failed` is a fall only if the robot was down: the digest's `head_h` (the head above the lower
+  foot at the end) of 1 m or more means it was still up when the episode ended (it crossed the task's end line in a
+  crouch, a lean or a seat on the floor, or a tool or an object dropped), and a robot lying with its pelvis above
+  the fall line runs on to the step limit. `progress` says how far a multi-stage task got.
 - Never guess at the reward formula's internals, and do not discuss whether the task is solvable.
 - About 30–45 lines of plain Markdown: headings, bullets, **bold**, `code`, tables if needed.
 

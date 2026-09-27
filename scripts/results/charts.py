@@ -5,13 +5,16 @@ import math
 import os
 import datetime as dt
 
-from common import CAMS, CLOCK, KIND, PHASE_COLORS, TOOLS, clip_text, esc, num, tip, tok, url, usd
+from common import CAMS, CLOCK, KIND, PHASE_COLORS, TOOLS, UP_M, clip_text, esc, num, progress_text, tip, tok, url, usd
 from calls import call_tip, kind_label, tool_kinds
 
 
 def ep_kind(e: dict, last: bool, max_steps: int | None) -> str:
     if e["end"] == "failed" and max_steps and (e["end_step"] or 0) >= max_steps:
-        return "steplimit"
+        h = e.get("final_head_h")
+        return "downlimit" if h is not None and h < UP_M else "steplimit"   # lying or sitting is no fall to the task
+    if e["end"] == "failed" and (e.get("final_head_h") or 0) >= UP_M:
+        return "endup"   # ended without a fall: a tool or an object dropped, or the robot left its seat
     if e["end"] in KIND:
         return e["end"]
     return "running" if last else "reset"
@@ -44,7 +47,9 @@ def ep_tip(e: dict, s: dict, kind: str) -> str:
     graded = e["ep"] == s["result"]["graded_ep"]
     return tip(f"ep{e['ep']}{' · 被评分' if graded else ''} · {KIND[kind][0]}",
                f"{e['steps']} 步 · 回报 {num(e.get('return'))}" + (f" · 骨盆最远前进 {num(e.get('max_dx'))} m" if e.get("max_dx") is not None else ""),
-               f"{(e['t0'] - a0) / 60 if e['t0'] else 0:.2f}–{(t1 - a0) / 60 if t1 else 0:.2f} min" + (f" · 看了 {e['views']} 张图" if e.get("views") else ""))
+               f"{(e['t0'] - a0) / 60 if e['t0'] else 0:.2f}–{(t1 - a0) / 60 if t1 else 0:.2f} min" + (f" · 看了 {e['views']} 张图" if e.get("views") else ""),
+               (f"结束时头比脚高 {e['final_head_h']:.2f} m（{'没倒' if e['final_head_h'] >= UP_M else '已倒或坐在地上'}）" if e.get("final_head_h") is not None else "")
+               + (f" · {progress_text(e.get('progress'))}" if progress_text(e.get("progress")) else ""))
 
 
 def mini_timeline(s: dict, span_s: float, w: int = 220, h: int = 14) -> str:
@@ -125,8 +130,8 @@ def robot_timeline(s: dict, phases: list, page_dir: str) -> str:
             name = "读文档、准备" if kind == "prelude" else "收尾"
             svg.append(f'<rect x="{x0:.2f}" y="{y}" width="{w:.2f}" height="{TH}" rx="3" class="e-{kind}" data-tip="{tip(name, f"{(t1 - t0) / 60:.1f} min")}"/>')
             continue
-        vid = e.get("video")
-        attrs = f' data-video="{esc(url(s, os.path.join(s["trial_dir"], "report", vid), page_dir))}" data-label="ep{e["ep"]}"' if vid else ""
+        vid = url(s, os.path.join(s["trial_dir"], "report", e["video"]), page_dir) if e.get("video") else ""
+        attrs = f' data-video="{esc(vid)}" data-label="ep{e["ep"]}"' if vid else ""
         g = " graded" if e["ep"] == graded and not after else ""
         svg.append(f'<rect x="{x0:.2f}" y="{y}" width="{w:.2f}" height="{TH}" rx="2" class="{KIND[kind][1]}{" after" if after else ""}{g}{" click" if vid else ""}"'
                    f' data-tip="{ep_tip(e, s, kind)}"{attrs}/>')
@@ -178,7 +183,7 @@ def agent_timeline(s: dict) -> str:
                     svg.append(f'<rect x="{x0 + 3 * j:.2f}" y="{top[k]}" width="3" height="{RH}" rx="1" class="cam-{v["camera"]}" data-call="{i}" data-tip="{vt}"/>')
                 continue
             svg.append(f'<rect x="{x0:.2f}" y="{top[k]}" width="{w:.2f}" height="{RH}" rx="1" fill="{TOOLS[k][1]}" data-call="{i}" data-tip="{t}"/>')
-    for t, txt in s["msgs"]:
+    for t, txt, *_ in s["msgs"]:   # [t, text, ep, step]
         svg.append(f'<circle cx="{X(t):.1f}" cy="{top["msg"] + RH / 2}" r="3.6" class="msg" data-tip="{tip(f"{(t - a0) / 60:.2f} min", txt[:320] + ("…" if len(txt) > 320 else ""))}"/>')
     cams = []
     for v in s["views"]:
@@ -193,7 +198,7 @@ def agent_timeline(s: dict) -> str:
 
 def episode_chart(s: dict, task: dict, page_dir: str) -> str:
     """Per episode: the return (with the all-zero line and, where it fits, the pass mark), how many steps it
-    lasted, and how far forward the pelvis got."""
+    lasted, and (gait tasks) how far forward the pelvis got."""
     eps = s["episodes"]; n = len(eps)
     W, L, R = 1160, 64, 150
     P = W - L - R; bw = min(P / max(n, 1), 40)
@@ -207,7 +212,8 @@ def episode_chart(s: dict, task: dict, page_dir: str) -> str:
         hi = max(hi, bar)
     pad = (hi - lo) * 0.08 or 1
     lo, hi = lo - (pad if lo < 0 else 0), hi + pad
-    show_dx = any(abs(e.get("max_dx") or 0) >= 0.25 for e in eps)
+    # world +x is forward only for the gait tasks (C1, C2); elsewhere (sit_hard's chair is behind) the row would mislead
+    show_dx = task.get("cls") in ("C1", "C2") and any(abs(e.get("max_dx") or 0) >= 0.25 for e in eps)
     rows = [("回报", 150, lo, hi, lambda e: e.get("return"))]
     smax = max([e["steps"] for e in eps] + [task.get("nop_steps") or 0]) * 1.12 or 1
     rows.append(("撑了多少步", 86, 0, smax, lambda e: e["steps"]))
@@ -235,8 +241,8 @@ def episode_chart(s: dict, task: dict, page_dir: str) -> str:
             kind = ep_kind(e, i == n - 1, ms)
             x = L + i * bw + bw * 0.14; w = bw * 0.72
             y0, y1 = sorted((Y(0 if a <= 0 <= b else a), Y(v)))
-            vid = e.get("video")
-            attrs = f' data-video="{esc(url(s, os.path.join(s["trial_dir"], "report", vid), page_dir))}" data-label="ep{e["ep"]}"' if vid else ""
+            vid = url(s, os.path.join(s["trial_dir"], "report", e["video"]), page_dir) if e.get("video") else ""
+            attrs = f' data-video="{esc(vid)}" data-label="ep{e["ep"]}"' if vid else ""
             svg.append(f'<rect x="{x:.1f}" y="{y0:.1f}" width="{w:.1f}" height="{max(y1 - y0, 0.8):.1f}" rx="1.5" '
                        f'class="{KIND[kind][1]}{" graded" if e["ep"] == graded else ""}{" click" if vid else ""}" data-tip="{ep_tip(e, s, kind)}"{attrs}/>')
         if title == "回报":

@@ -21,7 +21,7 @@ except ModuleNotFoundError:   # Python < 3.11
 
 import collect
 from calls import kind_label, tool_kinds
-from common import HB, REPO, pretty_output
+from common import HB, REPO, UP_M, pretty_output
 from data import summary
 
 
@@ -39,19 +39,28 @@ def digest(trial: str) -> str:
          (f"- agent time {(s['a1'] - a0) / 60:.1f} / {(s['budget_s'] or 0) / 60:.0f} min{' (stopped by the timeout)' if r.get('timed_out') else ''}; "
           f"cost ${cost:.4f}; {len(rq)} requests; {sum(x['in'] + x['out'] for x in rq):,} tokens; "
           f"{len(s['calls'])} tool calls; {len(s['views'])} images viewed")]
+    if r.get("progress"):
+        L.append(f"- multi-stage progress at the end of the graded replay: {json.dumps(r['progress'])}")
     if s["mode"] == "limited":
         eps = s["episodes"]
         top = next((e for e in eps if e["ep"] == r["best_ep"]), None)
         longest = max(eps, key=lambda e: e["steps"], default=None)
         L += [(f"- resets used {r['resets']} / {s['spec']['reset_budget']}; control steps sent {r['steps']}; graded episode "
-               f"ep{r['graded_ep']}; highest return ep{r['best_ep']} ({num(r['best_return'])}"
+               f"ep{r['graded_ep']}; highest return ep{r['best_ep']} ({'' if top and top.get('exact') else '≈'}{num(r['best_return'])}"
                + (f", {top['steps']} steps" if top else "") + ")"
-               + (f"; longest ep{longest['ep']} ({longest['steps']} steps, return {num(longest.get('return'))})" if longest else "")), "",
+               + (f"; longest ep{longest['ep']} ({longest['steps']} steps, return {'' if longest.get('exact') else '≈'}{num(longest.get('return'))})" if longest else "")), "",
               "## Episodes (return and displacement from the verifier-side replay, which the agent never saw)", "",
-              "| ep | start min | steps | ended | return | max_dx m | final_dx m | final_z m | images viewed |",
-              "|---|---|---|---|---|---|---|---|---|"]
-        L += [(f"| {e['ep']} | {at(e['t0'] or a0)} | {e['steps']} | {e['end'] or 'reset by the agent, or running'} | "
-               f"{num(e.get('return'))} | {e.get('max_dx')} | {e.get('final_dx')} | {e.get('final_z')} | {e.get('views')} |")
+              "Each replay is checked against the live run; ≈ marks one that does not end where the live episode did "
+              "(a log from before the service recorded end states rounds actions to 5 decimals: only its graded episode is exact).", "",
+              "head_h is the head's height above the lower foot when the episode ended (about 1.6 standing, under 1 sitting "
+              f"on the floor or lying): a `failed` episode with head_h {UP_M:g} or more ended without a fall (a tool or an object "
+              "dropped). progress: how far a multi-stage task got.", "",
+              "| ep | start min | steps | ended | return | max_dx m | final_dx m | final_z m | head_h m | progress | images viewed |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
+        up = lambda e: e["end"] == "failed" and (e.get("final_head_h") or 0) >= UP_M
+        L += [(f"| {e['ep']} | {at(e['t0'] or a0)} | {e['steps']} | {e['end'] or 'reset by the agent, or running'}{' (robot still up)' if up(e) else ''} | "
+               f"{'' if e.get('exact') or e.get('return') is None else '≈'}{num(e.get('return'))} | {e.get('max_dx')} | {e.get('final_dx')} | {e.get('final_z')} | "
+               f"{e.get('final_head_h')} | {json.dumps(e['progress']) if e.get('progress') else ''} | {e.get('views')} |")
               for e in s["episodes"]]
     else:
         d = collect.jload(f"{trial}/verifier/diagnostics.json", {})
@@ -67,11 +76,15 @@ def digest(trial: str) -> str:
     L += ["", "## Leak check flags (collect.py's grep: a flag asks for a look, it is not proof)", ""] + (flags or ["- none"])
     L += ["", "## The session, in order", ""]
     ep_of = lambda t: max([e["ep"] for e in s["episodes"] if (e["t0"] or a0) <= t] or [0])
-    items = sorted([(t, "msg", txt) for t, txt in s["msgs"]] + [(c["t0"], "call", c) for c in s["calls"]], key=lambda z: z[0])
+    items = sorted([(t, "msg", txt) for t, txt, *_ in s["msgs"]] + [(t, "think", txt) for t, txt, *_ in s.get("thinking") or []]
+                   + [(c["t0"], "call", c) for c in s["calls"]], key=lambda z: z[0])
     for t, kind, x in items:   # a call belongs to the episode running when it returned (a reset inside it starts that one)
-        tag = f"[{at(t)} min" + (f" · ep{ep_of(t if kind == 'msg' else x['t1'])}" if s["episodes"] else "") + "]"
+        tag = f"[{at(t)} min" + (f" · ep{ep_of(x['t1'] if kind == 'call' else t)}" if s["episodes"] else "") + "]"
         if kind == "msg":
             L.append(f"{tag} SAYS: {x}")
+            continue
+        if kind == "think":   # Claude Code's thinking, in the clear (codex's reasoning is encrypted)
+            L.append(f"{tag} THINKS: {x[:1500]}")
             continue
         rb = x.get("robot") or {}
         bg = rb.get("after") or {}

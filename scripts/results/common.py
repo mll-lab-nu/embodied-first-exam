@@ -12,6 +12,9 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 BENCH = "humanoidbench"
 RESULTS = os.path.join(REPO, "results", BENCH)
 OUT = os.path.join(REPO, "jobs", "results", BENCH)
+ANALYSIS = os.path.join(RESULTS, "analysis")   # the hand-written analysis: overview.md, <task>.md
+# where the pages go; build.py --bundle points it at another directory and names the only trial files the pages take
+SITE = {"out": OUT, "bundle": False, "media": set()}
 HB = os.path.join(REPO, "scripts", "humanoidbench")
 STANDARD = {   # runs.csv columns a run must match, per mode, to count in the tables
     "limited": {"budget_min": "60", "resets": "50", "obs": "head+joints+imu+room", "effort": "medium"},
@@ -19,7 +22,10 @@ STANDARD = {   # runs.csv columns a run must match, per mode, to count in the ta
 MODELS = {"openai/gpt-6-luna": "GPT-6 Luna", "openai/gpt-6-sol": "GPT-6 Sol", "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash",
           "anthropic/claude-opus-5.5": "Claude Opus 5.5"}
 CAMS = {"left_eye_camera": "左眼", "right_eye_camera": "右眼", "room_camera": "外部相机", "made": "拼图/处理过", "unknown": "相机不明"}
-KIND = {"failed": ("倒下 / 失败", "e-failed"), "steplimit": ("步数到上限", "e-timeout"), "success": ("成功", "e-success"),
+UP_M = 1.0   # an episode's end: the head this far above the lower foot (m, replay_episodes.py's final_head_h) or more
+             # means the robot was still up (~1.6 standing, ~1.3 crouched; under 1 sitting on the floor or lying)
+KIND = {"failed": ("倒下 / 失败", "e-failed"), "endup": ("结束了但没倒", "e-endup"), "steplimit": ("步数到上限", "e-timeout"),
+        "downlimit": ("步数到上限但已倒", "e-downlimit"), "success": ("成功", "e-success"),
         "timeout": ("时间到", "e-running"), "error": ("仿真出错", "e-error"), "reset": ("agent 主动 reset", "e-reset"),
         "running": ("agent 停下时还在跑", "e-running")}
 WHY = {"success": "达到及格线，服务结束了这一段", "timeout": "时间用完（agent 超时）", "resets_used_up": "reset 用完，最后一段结束后停下",
@@ -41,6 +47,14 @@ NET = {"pip", "pip3", "curl", "wget", "git", "apt", "apt-get", "conda", "uv", "n
 PHASE_COLORS = ["#4f7cff", "#14a38b", "#f08c2e", "#a55eea", "#e0508a", "#5a9e2f", "#c49a1c", "#3aa0d8", "#7a6ff0", "#d9603b"]
 RUN_COLORS = ["#4f46e5", "#e5484d", "#14a38b", "#f08c2e", "#a55eea", "#0ea5e9", "#c49a1c", "#e0508a", "#5a9e2f", "#64748b"]
 esc = html.escape
+
+
+def progress_text(p: dict | None) -> str:
+    """How far a multi-stage task got (rcb_rewards.progress, after the replay), in words; "" for the others."""
+    say = {"current_subtask": lambda v: f"柜子做完 {v - 1}/4 格", "task_index": lambda v: f"放好 {v}/5 个物体",
+           "maze_stage": lambda v: f"到过 {v}/4 个检查点（含起点）", "stage": lambda v: f"阶段 {v}",
+           "tasks_to_complete": lambda v: f"厨房四项还剩 {len(v)} 项", "packages_on_table": lambda v: f"{v} 个包裹上了桌"}
+    return "；".join(say[k](v) for k, v in (p or {}).items() if k in say)
 
 
 def num(v, nd=2) -> str:
@@ -77,7 +91,10 @@ def clip_text(s: str, width: float, size: float = 11) -> str:
 
 
 def stamp(path: str) -> str:
-    """?v=<content hash>, so a browser never keeps showing its cached copy of a file that changed under the same name."""
+    """?v=<content hash>, so a browser never keeps showing its cached copy of a file that changed under the same name.
+    A bundle's files are served by name only: none."""
+    if SITE["bundle"]:
+        return ""
     with open(path, "rb") as f:
         return "?v=" + hashlib.sha1(f.read()).hexdigest()[:8]
 
@@ -88,10 +105,13 @@ def rel(path: str, page_dir: str) -> str:
 
 def url(s: dict, path: str, page_dir: str) -> str:
     """A trial's file as the pages link it: hard-linked into media/<job>/ (a copy across filesystems), so the site
-    needs nothing outside jobs/results/<bench>/ -- a server rooted there (python -m http.server) serves it all."""
+    needs nothing outside jobs/results/<bench>/ -- a server rooted there (python -m http.server) serves it all.
+    In a bundle, a file it does not take is "" (no link)."""
+    if SITE["bundle"] and path not in SITE["media"]:
+        return ""
     if not os.path.isfile(path):
         return rel(path, page_dir)
-    dst = os.path.join(OUT, "media", s["job"], os.path.relpath(path, s["trial_dir"]))
+    dst = os.path.join(SITE["out"], "media", s["job"], os.path.relpath(path, s["trial_dir"]))
     if not os.path.exists(dst) or not os.path.samefile(dst, path):
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         if os.path.lexists(dst):

@@ -52,7 +52,24 @@ def load_tasks():
     return tasks, cols
 
 
-def load_runs(refresh: bool) -> list[dict]:
+TEXTS = {   # the task text a run had, by the commit its job name ends with (a job name without one says it in its note;
+            # textN: a working tree not committed when run)
+    "070fdcf": ("第 1 版", "09-24", "第一版说明"),
+    "06b0ab3": ("第 2 版", "09-24", "逐个任务对照上游核对说明：agent 看到的就是评分用的"),
+    "e95d382": ("第 3 版", "09-25", "及格线写成奖励的总和；limited 从 spec() 读机器人事实；镜像 0.1.6 清理得更彻底"),
+    "8e09011": ("第 4 版", "09-25", "spec() 去掉 wall_clock_s；服务记下每次 step、reset 返回的图"),
+    "text5": ("第 5 版", "09-26", "说明写明倒了不一定结束；spec() 写明坐标轴和关节、IMU 的正负号；时钟从 agent 的第一次请求算起；"
+                                "头部相机近裁剪面 1 cm；maze 写明起点就是第一个检查点（跑的时候未提交，后来随 e897737 提交，那里 cube 已是第 6 版；job 名以 -text5 结尾）"),
+    "text6": ("第 6 版", "09-27", "只改 cube：每台相机 512×512（原来 256×256），说明里的图像尺寸和每步耗时随之更新（即 e897737）"),
+}
+
+
+def text_of(r: dict) -> str | None:
+    m = re.search(r"-([0-9a-f]{7}|text\d+)$", r["job"].split(" ")[0]) or re.search(r"task text of (\w{7})", r["note"])
+    return m.group(1) if m else None
+
+
+def load_runs(refresh: bool, video: bool = True) -> list[dict]:
     runs = []
     for i, r in enumerate(csv.DictReader(open(f"{RESULTS}/runs.csv"))):
         r = dict(r)
@@ -60,22 +77,24 @@ def load_runs(refresh: bool) -> list[dict]:
         r["standard"] = r["mode"] in STANDARD and all(r[k] == v for k, v in STANDARD[r["mode"]].items())
         r["model_name"] = MODELS.get(r["model"], r["model"].split("/")[-1])
         r["col"] = (r["model_name"], r["mode"])
+        r["text"] = text_of(r)
         job = r["job"].split(" ")[0]
         path = os.path.join(REPO, job) if job.startswith("jobs/") else None
         trials = collect.trials_under([path]) if path and os.path.isdir(path) else []
         if len(trials) > 1:
             print(f"note: {job} has {len(trials)} trials; the page shows the first")
-        r["s"] = summary(trials[0], refresh) if trials else None
+        r["s"] = summary(trials[0], refresh, video) if trials else None
         r["id"] = os.path.basename(job) if trials else None
         runs.append(r)
     return runs
 
 
-def summary(trial: str, refresh: bool) -> dict:
+def summary(trial: str, refresh: bool, video: bool = True) -> dict:
+    """The trial's report/summary.json, measured first if it is missing or older; `video` off: none rendered yet."""
     s = collect.jload(f"{trial}/report/summary.json")
     if refresh or not s or s.get("version") != collect.VERSION:
         print(f"measuring {os.path.relpath(trial, REPO)}")
-        s = collect.collect(trial, argparse.Namespace(no_replay=False, no_billing=False, no_harbor=False))
+        s = collect.collect(trial, argparse.Namespace(no_replay=False, no_billing=False, no_harbor=False, no_video=not video))
     return s
 
 
@@ -121,7 +140,7 @@ def derive(r: dict, task: dict | None) -> dict:
     return d
 
 
-def add_run(job: str, note: str, tasks: list) -> None:
+def add_run(job: str, note: str, tasks: list, video: bool = True) -> None:
     """Append one runs.csv line per trial of `job`, every column but the note measured from the trial."""
     rows = list(csv.DictReader(open(f"{RESULTS}/runs.csv")))
     rel_job = "jobs/" + os.path.basename(os.path.abspath(job.rstrip("/")))
@@ -130,12 +149,13 @@ def add_run(job: str, note: str, tasks: list) -> None:
     by_dir = {os.path.basename(d or ""): t["task"] for t in tasks for d in (t["dir"], t["full_dir"])}
     new = []
     for trial in collect.trials_under([job]):
-        s = summary(trial, False); res, sp = s["result"], s["spec"]
+        s = summary(trial, False, video); res, sp = s["result"], s["spec"]
         cost = s["billed"]["usd"] if s["billed"]["found"] else s["billed"]["harbor_usd"]
         limited = s["mode"] == "limited"
-        obs = ("head+joints" + ("+imu" if sp["imu"] else "") + ("+room" if "room_camera" in sp["cameras"] else "")) if limited else "state"
+        obs = ("head+joints" + ("+imu" if sp["imu"] else "") + ("+depth" if sp.get("depth") else "")
+               + ("+room" if "room_camera" in sp["cameras"] else "")) if limited else "state"
         new.append({"date": dt.datetime.fromtimestamp(s["a0"]).strftime("%Y-%m-%d"), "task": by_dir.get(s["task_name"], s["task_name"]),
-                    "mode": s["mode"], "agent": "codex" if "codex" in s["agent"].lower() else s["agent"],
+                    "mode": s["mode"], "agent": "codex" if "codex" in s["agent"].lower() else "claude-code" if "claude" in s["agent"].lower() else s["agent"],
                     "model": s["model"].split("openrouter/", 1)[-1], "effort": s["effort"] or "", "budget_min": f"{(s['budget_s'] or 0) / 60:g}",
                     "resets": sp["reset_budget"] if limited else "", "obs": obs,
                     "result": "pass" if res["success"] else "fail", "score": f"{res['return']:.2f}" if res["return"] is not None else "",

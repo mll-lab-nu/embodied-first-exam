@@ -7,12 +7,16 @@ that has no summary yet, so it is rarely needed by hand):
 Writes <trial>/report/summary.json -- everything that can be measured -- and the media next to it: the OpenRouter
 bill, looked up per generation; every tool call and every image the model looked at; in limited mode, every episode
 replayed and scored verifier-side from the sim service's log (replay_episodes.py, in the task's sim image), each with
-a video. A full-mode trial has no such log (the simulator runs inside the agent's own process): its result is the
-verifier's replay of the submitted trajectory. The lookups and the replay are cached in report/,
-so a rerun takes seconds. The analysis is prose, not a measurement: <trial>/report/notes.md (NOTES_GUIDE.md).
+a video, and the whole session as one (session_video.py: the episodes back to back, idle time cut). A full-mode trial
+has no such log (the simulator runs inside the agent's own process): its result is the verifier's replay of the
+submitted trajectory. The lookups, the replay and the session video are cached in report/, so a rerun takes seconds.
+The analysis is prose, not a measurement: <trial>/report/notes.md (NOTES_GUIDE.md).
 It also puts two files where `harbor view` looks for them -- agent/recording.mp4 (the graded replay, "Recording"
 tab) and analysis.json (the summary and the checks, "Analysis" tab); neither overwrites a file it did not write.
-  --no-replay   skip the replay (it needs docker and the sim image; on this machine docker may need `sg docker`)
+  --no-replay   skip the replay and the session video (they need docker and the sim image; on this machine docker may
+                need `sg docker`)
+  --no-video    replay and score every episode but render nothing: no episode videos, no session video (a later run
+                without it renders them; the scores are kept)
   --no-billing  skip OpenRouter (it needs OPENROUTER_API_KEY, from the environment or the repo's .env)
   --no-harbor   do not write agent/recording.mp4 or analysis.json into the trial dir
 """
@@ -35,9 +39,11 @@ import time
 import urllib.error
 import urllib.request
 
+import attempts
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
-VERSION = 4   # of summary.json; build.py re-collects a trial whose summary is older
+VERSION = 7   # of summary.json; build.py re-collects a trial whose summary is older
 # words that should not show up in what the agent wrote or ran: the answer key, upstream's code, the network
 LEAK = re.compile(r"\bcurl\s+(?:-|\S*[:/])|wget |pip (install|download)|github|raw\.githubusercontent|humanoid[-_]?bench|\bmujoco\b|dm_control|"
                   r"get_reward|rewards\.tolerance|_STAND_HEIGHT|_WALK_SPEED|_RUN_SPEED|stand_reward|small_control|dont_move", re.I)
@@ -92,6 +98,16 @@ def unquote(js: str) -> str:
         return js
 
 
+def viewed(code: str) -> tuple[list[str], bool]:
+    """The image files a codex call views, in order, and whether that is certain: the literal paths it passes to
+    view_image, or else, when it views in a loop (`for (const path of [...]) tools.view_image({path})`), every image
+    path the code names -- right only when there are as many as images came back."""
+    literal = re.findall(r'view_image\(\{path:\s*"([^"]+)"', code)
+    if literal or "view_image" not in code:
+        return literal, True
+    return list(dict.fromkeys(re.findall(r'"([^"\s]+\.(?:png|jpe?g))"', code))), False
+
+
 def call_label(code: str) -> str:
     """One line for a step's tool calls: the shell command, the file patched, or the image viewed."""
     cmds = [unquote(c) for c in re.findall(r'cmd:\s*"((?:[^"\\]|\\.)*)"', code)]
@@ -100,7 +116,7 @@ def call_label(code: str) -> str:
     files = re.findall(r"\*\*\* (?:Add|Update|Delete) File: ([^\\\n]+)", code)
     if files:
         return "patch " + ", ".join(dict.fromkeys(f.strip() for f in files))
-    views = re.findall(r'view_image\(\{path:\s*"([^"]+)"', code)
+    views = viewed(code)[0]
     if views:
         return "view image " + ", ".join(views)
     tools = re.findall(TOOL, code)
@@ -126,9 +142,9 @@ def codex_session(trial: str):
                 code = p.get("input") or p.get("arguments") or ""
                 used = re.findall(TOOL, code)   # codex's code mode: one call can run several tools
                 calls.update(used or [p.get("name") or "other"])
-                paths = re.findall(r'view_image\(\{path:\s*"([^"]+)"', code)
+                paths, sure = viewed(code)
                 if paths:
-                    pending[p.get("call_id")] = paths
+                    pending[p.get("call_id")] = (paths, sure)
                 cmds = [unquote(c) for c in re.findall(r'cmd:\s*"((?:[^"\\]|\\.)*)"', code)]
                 entry = {"t": t, "kind": "call", "text": code, "cmds": cmds, "tools": used or [p.get("name") or "other"], "done": t}
                 open_calls[p.get("call_id")] = entry; timeline.append(entry)
@@ -137,7 +153,8 @@ def codex_session(trial: str):
                 items = output if isinstance(output, list) else [{"type": "text", "text": str(output)}]
                 text = "".join(o.get("text", "") for o in items if isinstance(o, dict))
                 imgs = [o for o in items if isinstance(o, dict) and o.get("type") == "input_image"]
-                paths = pending.pop(p.get("call_id"), [])
+                paths, sure = pending.pop(p.get("call_id"), ([], True))
+                paths = paths if sure or len(paths) == len(imgs) else []
                 for k, o in enumerate(imgs):
                     views.append({"t": t, "path": paths[k] if k < len(paths) else None, "detail": o.get("detail"),
                                   "b64": o["image_url"].split(",", 1)[1]})
@@ -146,6 +163,70 @@ def codex_session(trial: str):
                     c["exit"] = [int(x) for x in re.findall(r'"exit_code":\s*(-?\d+)', text)]
                     c["out"] = text[:600]
                 timeline.append({"t": t, "kind": "out", "text": text + (f"\n[{len(imgs)} image(s)]" if imgs else "")})
+    return reqs, msgs, timeline, views, calls
+
+
+WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
+
+
+def claude_session(trial: str):
+    """Claude Code's session log, in codex_session's shape: one request per assistant message (the log repeats a
+    message once per content block), its text, its tool calls (a shell command, a file written or read, an image
+    read), and the images it read. Tool names are mapped onto codex's where calls.py classifies by them."""
+    reqs, msgs, timeline, views, calls, open_calls, seen = [], [], [], [], collections.Counter(), {}, set()
+    files = sorted(glob.glob(f"{trial}/agent/sessions/projects/**/*.jsonl", recursive=True))
+    for f in files:
+        for line in open(f):
+            e = json.loads(line)
+            m = e.get("message") or {}
+            if e.get("type") not in ("assistant", "user") or not isinstance(m.get("content"), list):
+                continue
+            t = ts(e["timestamp"])
+            if e["type"] == "assistant":
+                u = m.get("usage") or {}
+                if m.get("id") and m["id"] not in seen:
+                    seen.add(m["id"])
+                    cached, write = u.get("cache_read_input_tokens") or 0, u.get("cache_creation_input_tokens") or 0
+                    reqs.append({"id": m["id"], "t": t, "input_tokens": (u.get("input_tokens") or 0) + cached + write,
+                                 "cached_input_tokens": cached, "cache_write_input_tokens": write,
+                                 "output_tokens": u.get("output_tokens") or 0})
+                for c in m["content"]:
+                    if c.get("type") == "thinking" and (c.get("thinking") or "").strip():
+                        timeline.append({"t": t, "kind": "think", "text": c["thinking"].strip()})
+                    elif c.get("type") == "text" and c.get("text", "").strip():
+                        msgs.append((t, c["text"].strip())); timeline.append({"t": t, "kind": "msg", "text": c["text"].strip()})
+                    elif c.get("type") == "tool_use":
+                        name, inp = c.get("name") or "other", c.get("input") or {}
+                        cmd = inp.get("command")
+                        path = inp.get("file_path") or inp.get("notebook_path")
+                        tools = ["apply_patch"] if name in WRITE_TOOLS else [name]
+                        cmds = [cmd] if cmd else [f"cat {path}"] if name == "Read" and path else \
+                               [f"grep {inp.get('pattern', '')}"] if name in ("Grep", "Glob") else []
+                        label = cmd or (f"patch {path}" if name in WRITE_TOOLS else f"read {path}" if path else name)
+                        writes = ([{"path": path, "content": inp.get("content") or ""}] if name == "Write" else
+                                  [{"path": path, "old": e.get("old_string") or "", "new": e.get("new_string") or ""}
+                                   for e in (inp.get("edits") or [inp])] if name in ("Edit", "MultiEdit") else []) if path else []
+                        entry = {"t": t, "kind": "call", "text": cmd or json.dumps(inp)[:4000], "cmds": cmds, "tools": tools,
+                                 "done": t, "label": label, "path": path, "writes": writes}
+                        calls.update([name]); open_calls[c.get("id")] = entry; timeline.append(entry)
+            else:
+                for c in m["content"]:
+                    if c.get("type") != "tool_result":
+                        continue
+                    body = c.get("content")
+                    items = body if isinstance(body, list) else [{"type": "text", "text": str(body or "")}]
+                    text = "".join(i.get("text", "") for i in items if isinstance(i, dict))
+                    imgs = [i for i in items if isinstance(i, dict) and i.get("type") == "image"]
+                    entry = open_calls.pop(c.get("tool_use_id"), None)
+                    for i in imgs:
+                        views.append({"t": t, "path": entry and entry.get("path"), "detail": None, "b64": (i.get("source") or {}).get("data", "")})
+                    if entry:
+                        entry["done"], entry["out"] = t, text[:600]
+                        entry["exit"] = [1] if c.get("is_error") else []
+                        if imgs:
+                            entry["tools"] = ["view_image"]
+                    timeline.append({"t": t, "kind": "out", "text": text + (f"\n[{len(imgs)} image(s)]" if imgs else "")})
+    timeline.sort(key=lambda x: x["t"])
     return reqs, msgs, timeline, views, calls
 
 
@@ -199,24 +280,42 @@ def docker(cmd: list[str]) -> subprocess.CompletedProcess:
     return r
 
 
-def replay(trial: str, task_dir: str, out: str) -> tuple[list, str | None]:
-    cached = jload(f"{out}/episodes.json")
-    if cached is not None:
-        return cached, None
+def in_sim_image(task_dir: str, mounts: list[str], argv: list[str], gpu: bool = False) -> str | None:
+    """Run one of this directory's tools (mounted at /tool) in the task's sim image, as this user: the error, or None."""
     compose = open(f"{task_dir}/environment/docker-compose.yaml").read()
     m = re.search(r"^\s*sim:\s*\n\s*image:\s*(\S+)", compose, re.M)
     if not m:
-        return [], "no sim image in the task's docker-compose.yaml"
+        return "no sim image in the task's docker-compose.yaml"
     base = ["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp",
-            "-v", f"{trial}:/trial:ro", "-v", f"{task_dir}/environment/sim:/srv:ro", "-v", f"{HERE}:/tool:ro", "-v", f"{out}:/out"]
-    run = [m.group(1), "python", "/tool/replay_episodes.py", "/trial", "/srv", "/out"]
-    gpu = ["--gpus", "all", "-e", "NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility"]
-    r = docker(base[:3] + gpu + base[3:] + run)
-    if r.returncode:   # no GPU here: the image falls back to CPU rendering, slower but the same pictures
+            "-v", f"{HERE}:/tool:ro"] + [x for v in mounts for x in ("-v", v)]
+    run = [m.group(1), "python"] + argv
+    gpus = ["--gpus", "all", "-e", "NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility"] if gpu else []
+    r = docker(base[:3] + gpus + base[3:] + run)
+    if r.returncode and gpus:   # no GPU here: the image falls back to CPU rendering, slower but the same pictures
         r = docker(base + run)
-    if r.returncode:
-        return [], (r.stderr or r.stdout).strip()[-1500:]
-    return jload(f"{out}/episodes.json", []), None
+    return (r.stderr or r.stdout).strip()[-1500:] if r.returncode else None
+
+
+def replay(trial: str, task_dir: str, out: str, render: bool = True) -> tuple[list, str | None]:
+    """report/episodes.json, made once: every episode replayed and scored (replay_episodes.py), rendered unless
+    `render` is off. A cache from before the end-state fields is scored again; its videos are kept."""
+    cached = jload(f"{out}/episodes.json")
+    played = [r for r in cached or [] if r.get("n_actions")]
+    scored = cached is not None and all("final_head_h" in r for r in played)
+    rendered = cached is not None and all(r.get("video") for r in played)
+    if scored and (rendered or not render):
+        return cached, None
+    again = ["--no-render"] if not render or rendered else []   # re-score only: the videos are there, or not wanted
+    err = in_sim_image(task_dir, [f"{trial}:/trial:ro", f"{task_dir}/environment/sim:/srv:ro", f"{out}:/out"],
+                       ["/tool/replay_episodes.py", "/trial", "/srv", "/out"] + again, gpu=not again)
+    return (cached or [], err) if err else (jload(f"{out}/episodes.json", []), None)
+
+
+def session(task_dir: str, out: str) -> str | None:
+    """report/session.mp4, the whole session as one video (session_video.py, from summary.json), made once: the error, or None."""
+    if os.path.exists(f"{out}/session.mp4"):
+        return None
+    return in_sim_image(task_dir, [f"{out}:/out"], ["/tool/session_video.py", "/out"])
 
 
 def robot_during(events: list, t0: float, t1: float, t_next: float) -> dict:
@@ -270,14 +369,15 @@ def collect(trial: str, args) -> dict:
     final = jload(f"{trial}/artifacts/data/final.json", {})
     reward = jload(f"{trial}/verifier/reward.json", {})
     diag = jload(f"{trial}/verifier/diagnostics.json", {})
-    reqs, msgs, timeline, views, calls = codex_session(trial)
+    claude = bool(glob.glob(f"{trial}/agent/sessions/projects/**/*.jsonl", recursive=True))
+    reqs, msgs, timeline, views, calls = (claude_session if claude else codex_session)(trial)
     bill = billing(reqs, model, f"{out}/billing.json") if not args.no_billing else jload(f"{out}/billing.json", {"generations": {}, "pricing": None})
     if not limited:
         replayed, replay_err = [], None
     elif args.no_replay:
         replayed, replay_err = jload(f"{out}/episodes.json", []), "skipped (--no-replay)"
     else:
-        replayed, replay_err = replay(trial, task_dir, out)
+        replayed, replay_err = replay(trial, task_dir, out, render=not args.no_video)
     by_ep = {r["ep"]: r for r in replayed}
 
     # what the agent said and ran, and the images it looked at, placed in the episode running at that moment
@@ -292,10 +392,12 @@ def collect(trial: str, args) -> dict:
             for c in x["cmds"]:
                 ep_did[ep_at(x["done"])].append([x["t"], "cmd", c[:600]])
     state = [(e["ts"], e.get("step", 0)) for e in events if e["ev"] in ("step", "observe", "reset")]
+
+    def step_at(t: float) -> int | None:   # the robot's step, in the episode running at time t
+        before = [s for s in state if s[0] <= t]
+        return before[-1][1] if before else (0 if limited else None)
     for n, v in enumerate(views, 1):
-        v["n"], v["ep"] = n, ep_at(v["t"])
-        before = [s for s in state if s[0] <= v["t"]]
-        v["step"] = before[-1][1] if before else (0 if limited else None)
+        v["n"], v["ep"], v["step"] = n, ep_at(v["t"]), step_at(v["t"])
         v["file"] = f"agent_views/{n:02d}_{os.path.basename(v['path'] or 'image.png')}"
         raw = base64.b64decode(v.pop("b64"))
         with open(os.path.join(out, v["file"]), "wb") as f:
@@ -336,13 +438,14 @@ def collect(trial: str, args) -> dict:
             why = "timeout"
         elif budget_r is not None and n_resets >= budget_r and graded["end"]:
             why = "resets_used_up"
-        elif graded["end"]:
+        elif graded["end"] and not (graded["t_end"] and graded["t_end"] > a1):   # an end after the session is the wrap-up's
             why = "quit_after_end"
         else:
             why = "quit_mid_episode"
         result = {"success": success, "graded_ep": graded["ep"], "return": g_rep.get("return"), "bar": g_rep.get("bar") or best.get("bar"),
                   "best_ep": best.get("ep"), "best_return": best.get("return"), "why": why, "exception": exc, "timed_out": timed_out,
                   "resets": n_resets, "steps": sum(e["ev"] == "step" for e in events), "grading": grading,
+                  "progress": g_rep.get("progress"),
                   "final": {k: final.get(k) for k in ("reason", "elapsed_s", "replay_success", "deterministic", "video")}}
         video = "artifacts/data/replay.mp4"
     else:   # the verifier replayed the one trajectory the agent submitted
@@ -351,7 +454,7 @@ def collect(trial: str, args) -> dict:
                "grader_error" if reward.get("grader_error") else "below_bar")
         result = {"success": success, "graded_ep": None, "return": rets[0] if rets else None, "bar": diag.get("success_bar"),
                   "best_ep": None, "best_return": None, "why": why, "exception": exc, "timed_out": timed_out,
-                  "resets": None, "steps": reward.get("n_actions"), "grading": grading, "final": {}}
+                  "resets": None, "steps": reward.get("n_actions"), "grading": grading, "progress": diag.get("progress"), "final": {}}
         video = "verifier/replay.mp4"
     spikes, prev = [], None
     for r in reqs:
@@ -359,13 +462,15 @@ def collect(trial: str, args) -> dict:
             spikes.append([r["t"], prev, r["input_tokens"]])
         prev = r.get("input_tokens") or prev
     leaks = [[x["t"], x["kind"], LEAK.search(x["text"]).group(0), x["text"][:240]] for x in timeline
-             if x["kind"] in ("msg", "call") and LEAK.search(x["text"])]
+             if x["kind"] in ("msg", "think", "call") and LEAK.search(x["text"])]
 
     call_list = [x for x in timeline if x["kind"] == "call"]
+    robots = [robot_during(events, x["t"], x["done"], nxt) for x, nxt in zip(call_list, [c["t"] for c in call_list[1:]] + [float("inf")])]
     episodes = []
     for e in eps:
         r = by_ep.get(e["ep"], {})
-        episodes.append({**e, **{k: r.get(k) for k in ("return", "max_dx", "final_dx", "final_z", "video", "poster", "exact")},
+        episodes.append({**e, **{k: r.get(k) for k in ("return", "max_dx", "final_dx", "final_z", "final_upright", "final_head_h",
+                                                        "progress", "video", "poster", "exact")},
                          "views": sum(v["ep"] == e["ep"] for v in views), "did": ep_did.get(e["ep"], [])})
     summary = {
         "version": VERSION, "generated_by": GENERATED_BY, "trial": res.get("trial_name"), "trial_dir": trial,
@@ -373,21 +478,25 @@ def collect(trial: str, args) -> dict:
         "task_dir": task_dir, "mode": "limited" if limited else "full", "model": model, "agent": agent_name,
         "effort": ((cfg.get("agent") or {}).get("kwargs") or {}).get("reasoning_effort"), "a0": a0, "a1": a1, "budget_s": budget_s,
         "stages": {k: span(k) for k in ("environment_setup", "agent_setup", "agent_execution", "verifier")} | {"trial": [ts(res["started_at"]), ts(res["finished_at"])]},
-        "spec": {"reset_budget": budget_r, "proprio": bool(spec.get("proprio")), "imu": bool(spec.get("imu")),
+        "spec": {"reset_budget": budget_r, "proprio": bool(spec.get("proprio")), "imu": bool(spec.get("imu")), "depth": bool(spec.get("depth")),
                  "cameras": list((spec.get("cameras") or {}).keys()), "control_hz": spec.get("control_hz"),
                  "max_steps": spec.get("max_episode_steps"), "task_text": spec.get("task_text")},
         "result": result, "video": video if os.path.exists(f"{trial}/{video}") else None,
         "episodes": episodes, "replay_error": replay_err,
         "requests": requests, "billed": {"usd": sum(r["cost"] or 0 for r in requests), "found": sum(g is not None for g in gens),
                                          "harbor_usd": (res.get("agent_result") or {}).get("cost_usd"), "parts": parts, "long_context": long_ctx},
-        "calls": [{"t0": x["t"], "t1": x["done"], "tools": x["tools"], "label": call_label(x["text"])[:300],
-                   "cmds": [c[:800] for c in x["cmds"]], "exit": x.get("exit", []), "out": x.get("out", ""),
-                   "robot": robot_during(events, x["t"], x["done"], nxt)}
-                  for x, nxt in zip(call_list, [c["t"] for c in call_list[1:]] + [float("inf")])],
+        "calls": [{"t0": x["t"], "t1": x["done"], "tools": x["tools"], "label": (x.get("label") or call_label(x["text"]))[:300],
+                   "cmds": [c[:800] for c in x["cmds"]], "exit": x.get("exit", []), "out": x.get("out", ""), "robot": r,
+                   **({"attempt": a} if a else {})}
+                  for x, r, a in zip(call_list, robots, attempts.describe(call_list, robots))],
         "tool_counts": dict(calls.most_common()),
-        "msgs": [[t, txt] for t, txt in msgs], "views": views, "spikes": spikes, "leaks": leaks,
+        "msgs": [[t, txt, ep_at(t), step_at(t)] for t, txt in msgs],
+        "thinking": [[x["t"], x["text"], ep_at(x["t"]), step_at(x["t"])] for x in timeline if x["kind"] == "think"],   # Claude Code only; codex's is encrypted
+        "views": views, "spikes": spikes, "leaks": leaks,
     }
     json.dump(summary, open(f"{out}/summary.json", "w"), ensure_ascii=False, indent=1)
+    if limited and not (args.no_replay or args.no_video) and any(e.get("video") for e in episodes) and (err := session(task_dir, out)):
+        print(f"{trial}: no session video: {err}", file=sys.stderr)
     if not args.no_harbor:
         harbor_files(trial, summary, os.path.join(out, "notes.md"))
     return summary
@@ -442,6 +551,7 @@ def main():
     ap.add_argument("--no-replay", action="store_true")
     ap.add_argument("--no-billing", action="store_true")
     ap.add_argument("--no-harbor", action="store_true")
+    ap.add_argument("--no-video", action="store_true")
     args = ap.parse_args()
     trials = trials_under(args.paths)
     if not trials:
