@@ -8,7 +8,7 @@
 - **防泄漏守住了**：full 的 agent 常去读已删掉 reward 的上游源码，多次 pip、HuggingFace、GitHub 请求都被网络白名单挡下；拦不住的只有模型记忆（Opus 凭记忆复述过 reward 的结构）。
 
 ## GPT-6 Luna
-24 个任务两种模式都跑了；limited 又按第 5 版说明（未提交，job 名以 `-text5` 结尾）重跑了一轮，下面 limited 的数字取这一轮，cube 取每台相机 512×512 的 `-text6`。数字只算 23 个计分任务；sit_simple 是夹具，两种模式都过。
+24 个任务两种模式都跑了；limited 又按第 5 版说明（job 名以 `-text5` 结尾，之后随 e897737 提交）重跑了一轮，下面 limited 的数字取这一轮，cube 取每台相机 512×512 的 `-text6`。数字只算 23 个计分任务；sit_simple 是夹具，两种模式都过。
 ### limited
 - **过了 sit_hard，丢了 push**：sit_hard 第一次在 limited 过线（750.81，向左后方小步退到座面上方再分两段坐下，过线的是最后一批脚本里一个没试过的髋横滚值）；push 这次一次没推动箱子（−215.53）。其余离及格线超过 0.2 的只有 bookshelf_simple 0.32（站满 1000 步，没挪动物体），中位数 0.03，和上一版一样。
 - **说明的改动读进去了，控制没变**：IMU 的前后左右这次多数读对（walk、door、truck、kitchen、spoon、basketball 上一版都读反过），但反馈的正负号仍是正反各试一次；关节轴的正负号和相机的 right 轴几乎只打印、不进代码（insert_normal 例外，按轴把 torso 当偏航轴用，上一版到第 44 分钟才改过来）。

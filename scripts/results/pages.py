@@ -15,7 +15,7 @@ import collect
 
 from common import (BENCH, CAMS, HERE, KIND, MODELS, REPO, RUN_COLORS, SITE, STANDARD, TOOLS, UP_M, WHY, esc, num, pretty_output,
                     progress_text, stamp, tip, tok, url, usd)
-from data import TEXTS, notes_of
+from data import RETIRED, TEXTS, notes_of
 from widgets import kpi, md, pcell, stackbar, status_chip
 from calls import kind_label, tool_kind, tool_sequence, tool_summary, tool_table
 from charts import agent_timeline, cost_chart, ep_kind, episode_chart, hbars, line_chart, mini_timeline, reset_series, robot_timeline, stage_chart, strip_chart
@@ -464,7 +464,6 @@ def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_
         v = TEXTS.get(r["text"])
         name = (f'<b>{esc(v[0] if v else r["text"] or "?")}</b> <span class="mut">说明 {esc(r["text"] or "")}</span>' if by_text else
                 f'<b>{esc(r["model_name"])}</b>') + (f' <span class="chip acc">{"本轮" if by_text else "主运行"}</span>' if r in mains else "")
-        note = re.sub(r"\s*\(task text of \w+\)", "", r["note"]) if by_text else r["note"]
         chips = f'<div class="row" style="margin-top:3px">{config_chips(r)}</div>'
         link = f'<a href="../runs/{r["id"]}.html">{name}</a>' if r["id"] and not SITE["bundle"] else name
         res = status_chip(r) if r["result"] in ("pass", "fail") else f'<span class="chip na">{esc(r["result"])}</span>'
@@ -476,7 +475,7 @@ def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_
                        tip("花费和 tokens", usd(d["cost"]), f"{d['tokens']:,} tokens（缓存命中 {d['tok_cached'] / max(d['tok_in'], 1):.0%}）") if d.get("tokens") else "")
         v = lambda x: "" if x is None else x
         rows.append(f'<tr class="{"main" if r in mains else "" if s else "dim"}"><td class="run">{link}{"" if by_text else chips}'
-                    f'<div class="mut" style="font-size:12px;margin-top:3px;max-width:420px">{esc(r["date"])} · {esc(note)}{"" if s else "（原始数据已删）"}</div></td>'
+                    f'<div class="mut" style="font-size:12px;margin-top:3px;max-width:420px">{esc(r["date"])} · {esc(r["note"])}{"" if s else "（原始数据已删）"}</div></td>'
                     f'<td>{res}</td><td data-v="{v(prog)}" style="min-width:190px">{prog_c}</td>'
                     f'<td data-v="{v(used)}">{reset_c}</td><td data-v="{v(amin)}">{time_c}</td><td data-v="{v(d["cost"])}" style="min-width:150px">{cost_c}</td>'
                     f'<td class="sess" style="min-width:186px">{mini_timeline(s, (d["budget_min"] or 60) * 60, 180) if s else ""}</td></tr>')
@@ -518,16 +517,19 @@ def overview(tasks: list, cols: list, runs: list) -> str:
     H.append(ana)
     H.append('<div class="sect" id="matrix"><h2>结果总表</h2><span class="mut">每格是那一列在那个任务上的主运行：条长 = 离及格线（全零动作 = 0，及格 = 1），数字 = 回报</span></div>')
     H.append(f'<div class="panel">{matrix(tasks, cols)}</div>')
+    retired = "、".join(TEXTS[k][0] for k in RETIRED)
     H.append('<div class="sect" id="texts"><h2>说明的版本</h2><span class="mut">任务说明改过几次，每次运行用的是它跑的时候那一版；主运行用各列最新的一版，'
-             '旧版的运行在各任务页的"历次运行"里</span></div>')
+             f'更早的运行在各任务页的"历次运行"里；{retired}的运行已移出，只留结论</span></div>')
     rows = []
     for k, (name, date, what) in TEXTS.items():
         rs = [r for r in runs if r["text"] == k]
         by = collections.Counter(col_name(r["col"]) for r in rs)
         n_main = sum(r["text"] == k for t in tasks for r in t["main"].values())
+        ran = (f'<td colspan="3" class="mut" style="font-size:12.5px;max-width:460px">已移出，结论：{esc(RETIRED[k])}</td>' if k in RETIRED else
+               f'<td class="n">{len(rs)}</td><td class="mut" style="font-size:12.5px">{esc(" · ".join(f"{c} {n}" for c, n in by.items()))}</td>'
+               f'<td class="n">{n_main}</td>')
         rows.append(f'<tr><td style="white-space:nowrap"><b>{esc(name)}</b></td><td><code>{k}</code></td><td class="n">{date}</td><td style="max-width:420px">{esc(what)}</td>'
-                    f'<td class="n">{len(rs)}</td><td class="mut" style="font-size:12.5px">{esc(" · ".join(f"{c} {n}" for c, n in by.items()))}</td>'
-                    f'<td class="n">{n_main}</td></tr>')
+                    f'{ran}</tr>')
     H.append('<div class="panel"><div class="tw"><table class="plain"><thead><tr><th>版本</th><th>commit</th><th class="n">日期</th><th>改了什么</th>'
              '<th class="n">运行</th><th>各列的运行数</th><th class="n">其中主运行</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table></div></div>")
     have = [c for c in cols if any(r["standard"] and r["col"] == c for r in runs)] or cols[:1]

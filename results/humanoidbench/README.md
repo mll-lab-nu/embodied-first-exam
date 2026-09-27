@@ -1,8 +1,9 @@
 # HumanoidBench results
 
 What coding agents score on the 24 selected HumanoidBench tasks (23 scored + the `sit_simple` fixture), in both
-modes. [`runs.csv`](runs.csv) keeps one line per trial, whatever the model or config; the table below shows the
-standard config only.
+modes. [`runs.csv`](runs.csv) keeps one line per trial on task text 3 (e95d382) or later, whatever the model or
+config; the table below shows the standard config only. The two earlier texts are summed up under
+[Earlier versions](#earlier-versions).
 
 ## Standard config
 
@@ -68,16 +69,28 @@ Classes (`scripts/humanoidbench/subset.toml`): C1 flat gait · C2 constrained ga
 C5 whole-body power · C6 bimanual manipulation · C7 in-hand precision · C8 mobile manipulation · C9 long-horizon.
 h1 has 19 actuators, h1hand 61 (hands included).
 
-Order: rows 1–10 are the first round, one task per class plus the fixture, run in both modes, again after the
-task text changed in 06b0ab3, and a third time on e95d382 (limited-mode rules and `spec()`'s robot facts, image
-0.1.6); `runs.csv` keeps all three. The rest are ordered by robot (h1 first) and by class. GPT-6 Sol ran five of
-the tasks GPT-6 Luna failed in both modes, one per class: walk, door, cube, package, bookshelf_simple. Rows 1–10's
-Luna cells are e95d382 runs; every other cell (Luna on rows 11–24, all Sol cells) is on 8e09011, which differs for the
-agent only in `spec()` no longer listing `wall_clock_s`. Claude Opus 5.5 ran Sol's five tasks in limited mode only, through Claude Code
-(`harbor_agents/claude_code_openrouter.py`, 2.1.283, effort medium), on 8e09011's tasks with the sidecar logging
-exact actions (uncommitted when run). Round 7 re-ran GPT-6 Luna in limited mode on every task with the task text
-in the working tree (job names end in `-text5`; committed afterwards in e897737, cube there at text 6: the rules say a fallen robot's episode runs on,
-`spec()` names the axes and signs, the service clock starts at the agent's first request, the head cameras' near
-plane is 1 cm); cube's cell is `-text6`, the same with every camera at 512×512. Its non-standard extras, listed on
-the task pages: depth from the head cameras on 10 tasks (`-depth-text5`) and 100 resets on the 16 tasks whose
-`-text5` run used its 50 with 20 minutes or more left (`-reset100-...-text5`).
+Order: rows 1–10 are the first round, one task per class plus the fixture; the rest are ordered by robot (h1 first)
+and by class. GPT-6 Sol ran five of the tasks GPT-6 Luna failed in both modes, one per class: walk, door, cube,
+package, bookshelf_simple. Claude Opus 5.5 ran the same five in limited mode only, through Claude Code
+(`harbor_agents/claude_code_openrouter.py`, 2.1.283, effort medium), with the sidecar logging exact actions
+(uncommitted when run).
+
+Which text each cell ran on: Luna's full cells are e95d382 (text 3) on rows 1–10 and 8e09011 (text 4, which differs
+for the agent only in `spec()` no longer listing `wall_clock_s`) on rows 11–24; the Sol and Opus cells are 8e09011.
+Luna's limited cells are round 7, on the task text in the working tree (job names end in `-text5`; committed
+afterwards in e897737, cube there at text 6): the rules say a fallen robot's episode runs on, `spec()` names the axes
+and signs, the service clock starts at the agent's first request, the head cameras' near plane is 1 cm. Cube's cell
+is `-text6`, the same with every camera at 512×512. `runs.csv` also keeps the limited runs these replaced (e95d382 on
+rows 1–10, 8e09011 on rows 11–24) and round 7's non-standard extras, listed on the task pages: depth from the head
+cameras on 10 tasks (`-depth-text5`) and 100 resets on the 16 tasks whose `-text5` run used its 50 with 20 minutes or
+more left (`-reset100-...-text5`).
+
+## Earlier versions
+
+The runs on the first two task texts were taken out of these results; their rows are in `runs.csv` at 884d59e. What they showed, and
+what the next text changed:
+
+| text | runs | passed | what it showed → the next text |
+|---|---|---|---|
+| 1 · 070fdcf | Luna, rows 1–10, both modes: 20, $4.39 | Luna limited 1 (sit_simple), full 2 (sit_simple, push) | full beat limited on all ten; the instructions differed from upstream's scoring in places and left out facts (speed targets, head height); five full runs stopped unsolved after 23–46 min → 06b0ab3 checks every text against upstream and says not to stop early |
+| 2 · 06b0ab3 | Luna, all 24, both modes; Sol, five tasks, both modes: 58, $66.07 | Luna limited 1 (sit_simple), full 3 (sit_simple, push, reach); Sol full 1 (walk, 862.3), limited 0 | "800 out of 1000 steps" was read as surviving 800 steps; every limited run spent resets finding the action scale, and several read the IMU, a joint or a camera backwards; the 0.1.5 image still gave the reward away through its helpers and comments → e95d382 states the pass mark as a total of rewards, puts the robot's facts in `spec()`, ships image 0.1.6 |

@@ -18,4 +18,3 @@
 ## 改进意见
 - **我们这边没发现问题**：两份说明都准确写了及格线 4（四项各 1、无部分分），"左下旋钮"也与场景一致；失败在 agent：limited 这轮抓握/拉门失败，full 存档回退且四项没串起来。
 - **已跑：开 depth 的 limited**：同样配置加两个头部相机的 `obs["depth"]`（米），44.8/60 min 打完 50 次 reset，$0.5905，回报仍 0.00：agent 确实用了深度（"the microwave is about 1.4–1.5 m from the head... the arm is only about 0.4 m"），比不开深度的同批次跑法（11 min 靠头部相机目视才发现）更快戳穿房间相机的二维重叠错觉，但抓握和拉扯路径的问题没被解决，门还是没拉开。
-- **换模型跑 kitchen**：目前只有 Luna 跑过；补一次 Sol 或 Opus 的 limited，才看得出"抓不稳把手"是不是共同卡点。
