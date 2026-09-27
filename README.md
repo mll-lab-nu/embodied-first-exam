@@ -26,7 +26,10 @@ harbor run --repo git@github.com:JamesKrW/robot_coding_bench.git@v0.1.0 -a oracl
 harbor view jobs
 ```
 Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the unlimited tasks need no GPU, so
-the default local Docker sandbox works (Modal too). The limited tasks reserve one for their simulator sidecar. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
+the default local Docker sandbox works (Modal too). The limited tasks reserve one for their simulator sidecar; run at
+most 8 of them at once on one GPU (`-n 8`, counting other runs' trials on it). Each instruction quotes a step's cost
+measured alone: on an RTX 4090 a step with both head-camera images took 5.8 ms alone, 6.7 ms with 8 trials stepping
+at once, 7.6 ms with 10 and 80–150 ms with 12. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
 Through OpenRouter (`OPENROUTER_API_KEY` in `.env`), with the Codex or the Claude Code harness:
 

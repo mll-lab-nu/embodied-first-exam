@@ -38,7 +38,7 @@
 ## 模型对比
 - **limited 只有 Opus 站住**：它用上了相机位姿和运动学，也是唯一高于全零动作的 limited run；Luna、Sol 始终没站住，只在倒下时碰到包裹。
 - **full 两家对 bonus 的取舍相反**：Luna 第 96 步触发终止、回放 875，Sol 刻意避开终止、回放 −337；两家都没算过一个合成的总分。
-- **limited 都没用满时间**：Sol 8.8 min、Luna 10.3 min 用完 reset，Opus 11.5 min 自己停下，三个 run 结束时都还剩 30 min 以上。
+- **limited 都没用满时间**：Sol 8.8 min、Luna 10.2 min 用完 reset，Opus 11.5 min 自己停下，三个 run 结束时都还剩 30 min 以上。
 
 ## 改进意见
 - **题面和 spec 没发现问题**：说明写对了 1500 和"bonus 不够"，Opus 靠 `spec()` 的相机位姿把包裹和球定到约 1 cm；失败在侧向行走和接触包裹。

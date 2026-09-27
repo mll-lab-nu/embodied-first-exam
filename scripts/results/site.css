@@ -143,6 +143,8 @@ table.matrix td{min-width:140px}table.matrix td.task,table.matrix td.n{min-width
 .player{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:16px;align-items:start}
 .player video{width:100%;display:block;border-radius:10px;background:#000}
 .player select{margin-top:6px;max-width:100%;font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.vh{margin:18px 0 8px;font-size:15px}.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.vgrid figure{margin:0}
+.vgrid video{width:100%;aspect-ratio:16/9;display:block;border-radius:10px;background:#000}.vgrid figcaption{font-size:12.5px;color:var(--mut);margin-top:5px}
 .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
 .picks figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
 .picks figure:hover{border-color:var(--acc)}.picks img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover;background:#000}

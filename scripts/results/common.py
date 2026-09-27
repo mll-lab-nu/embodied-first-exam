@@ -21,6 +21,7 @@ STANDARD = {   # runs.csv columns a run must match, per mode, to count in the ta
     "full": {"budget_min": "60", "resets": "", "obs": "state", "effort": "medium"}}
 MODELS = {"openai/gpt-6-luna": "GPT-6 Luna", "openai/gpt-6-sol": "GPT-6 Sol", "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash",
           "anthropic/claude-opus-5.5": "Claude Opus 5.5"}
+OBS = {"imu": "IMU", "room": "外部相机", "depth": "深度"}   # runs.csv obs parts beyond the head cameras and joints
 CAMS = {"left_eye_camera": "左眼", "right_eye_camera": "右眼", "room_camera": "外部相机", "made": "拼图/处理过", "unknown": "相机不明"}
 UP_M = 1.0   # an episode's end: the head this far above the lower foot (m, replay_episodes.py's final_head_h) or more
              # means the robot was still up (~1.6 standing, ~1.3 crouched; under 1 sitting on the floor or lying)

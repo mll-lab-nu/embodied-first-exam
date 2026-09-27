@@ -13,7 +13,7 @@ import datetime as dt
 import analysis
 import collect
 
-from common import (BENCH, CAMS, HERE, KIND, MODELS, REPO, RUN_COLORS, SITE, STANDARD, TOOLS, UP_M, WHY, esc, num, pretty_output,
+from common import (BENCH, CAMS, HERE, KIND, MODELS, OBS, REPO, RUN_COLORS, SITE, STANDARD, TOOLS, UP_M, WHY, esc, num, pretty_output,
                     progress_text, stamp, tip, tok, url, usd)
 from data import RETIRED, TEXTS, notes_of
 from widgets import kpi, md, pcell, stackbar, status_chip
@@ -44,7 +44,7 @@ def config_chips(r: dict) -> str:
     if r["mode"] == "limited":
         obs = r["obs"].split("+")
         c += [f'<span class="chip">reset {r["resets"]}</span>', f'<span class="chip">{"IMU" if "imu" in obs else "无 IMU"}</span>',
-              f'<span class="chip">{"外部相机" if "room" in obs else "无外部相机"}</span>']
+              f'<span class="chip">{"外部相机" if "room" in obs else "无外部相机"}</span>'] + (['<span class="chip">深度</span>'] if "depth" in obs else [])
     else:
         c.append('<span class="chip">reset 不限 · 完整状态</span>')
     if r["standard"]:
@@ -438,7 +438,7 @@ def task_page(task: dict, cols: list) -> str:
         for c, rs in history:
             H.append(f'<h3>{esc(col_name(c))}</h3>{compare_table(rs, latest, page_dir, sort=False, by_text=True)}')
         if odd:
-            H.append(f'<h3>非标准配置</h3>{compare_table(odd, [], page_dir)}')
+            H.append(f'<h3>对照实验（非标准配置）</h3>{compare_table(odd, [], page_dir)}')
     have = [c for c in cols if c in mains]
     if have:
         H.append('<div class="sect" id="runs-main"><h2>主运行</h2><span class="mut">每一列最新的标准配置运行，上面分析里的数字取自它们</span></div>')
@@ -511,7 +511,8 @@ def overview(tasks: list, cols: list, runs: list) -> str:
          + f'<span class="chip">经 OpenRouter</span><span class="chip">effort {lim["effort"]}</span><span class="chip">{lim["budget_min"]} min</span>'
          f'<span class="chip">limited：{lim["resets"]} 次 reset · IMU · 外部相机</span><span class="chip">full：reset 不限 · 完整状态</span><span class="chip">无 reward</span></div>']
     shared = [t for t in tasks if len({c[0] for c in t["main"]}) > 1]
-    ana, toc = analysis.overview_block(tasks, cols, {"模型对比": matrix(shared, cols) if shared else ""})
+    ana, toc = analysis.overview_block(tasks, cols, {"模型对比": (matrix(shared, cols) if shared else "") + session_compare(shared, cols),
+                                                     "对照实验": variants_table(tasks)})
     toc += [("matrix", "结果总表"), ("texts", "说明的版本"), ("cols", "每一列")]
     H.append('<nav class="toc">' + "".join(f'<a href="#{k}">{esc(v)}</a>' for k, v in toc) + "</nav>")
     H.append(ana)
@@ -670,6 +671,65 @@ def agent_notes(s: dict) -> str:
 
 def col_name(col: tuple) -> str:
     return f"{col[0]} · {col[1]}"
+
+
+def variant(r: dict) -> str:
+    """How a run differs from its mode's standard config, in a few words ("reset 100", "深度")."""
+    std = STANDARD[r["mode"]]
+    bits = [f"reset {r['resets']}"] if r["resets"] != std["resets"] else []
+    return " · ".join(bits + [OBS.get(o, o) for o in r["obs"].split("+") if o not in std["obs"].split("+")]) or "其他"
+
+
+def variants_table(tasks: list) -> str:
+    """Each task's non-standard runs next to the standard run they differ from (same column, same task text): a column
+    per variant, a cell per run with the graded return, the best episode, resets used and time."""
+    rows, names = [], []
+    for t in tasks:
+        base, by = None, {}
+        for r in t["runs"]:
+            b = None if r["standard"] or not r["s"] else next(
+                (b for b in reversed(t["runs"]) if b["standard"] and b["s"] and b["col"] == r["col"] and b["text"] == r["text"]), None)
+            if b:
+                base, by[variant(r)] = b, r
+                names += [] if variant(r) in names else [variant(r)]
+        if base:
+            rows.append((t, base, by))
+    if not rows:
+        return ""
+
+    def cell(r):
+        if not r:
+            return '<td><span class="faint">—</span></td>'
+        d, res = r["d"], r["s"]["result"]
+        sub = ([f"最好一局 {num(res['best_return'], 1)}"] if res.get("best_return") is not None else []) + [
+            f"reset {d['resets_used']}/{d['resets']}", f"{d['agent_min']:.0f} min"]
+        return (f'<td data-v="{d["score"]}"><b class="{"ok" if d["pass"] else ""}">{"✓ " if d["pass"] else ""}{num(d["score"], 1)}</b>'
+                f'<div class="mut" style="font-size:12px">{" · ".join(sub)}</div></td>')
+    body = "".join(f'<tr><td class="task"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a></td>{cell(base)}{"".join(cell(by.get(v)) for v in names)}</tr>'
+                   for t, base, by in rows)
+    return ('<div class="tw"><table class="data"><thead><tr><th>任务</th><th>标准配置</th>' + "".join(f"<th>{esc(v)}</th>" for v in names)
+            + f"</tr></thead><tbody>{body}</tbody></table></div>")
+
+
+def session_compare(tasks: list, cols: list) -> str:
+    """Each task on which two models or more have a limited main run whose whole-session video this site carries: those
+    videos side by side, each with its run's numbers."""
+    H = []
+    for t in tasks:
+        vids = []
+        for c in cols:
+            r = t["main"].get(c)
+            path = os.path.join(r["s"]["trial_dir"], "report", "session.mp4") if r and c[1] == "limited" else ""
+            if path and os.path.exists(path) and (src := url(r["s"], path, SITE["out"])):
+                vids.append((r, src, url(r["s"], path[:-3] + "jpg", SITE["out"])))
+        if len(vids) < 2:
+            continue
+        figs = "".join(
+            f'<figure><video src="{esc(src)}" poster="{esc(poster)}" controls muted preload="none"></video><figcaption><b>{esc(r["model_name"])}</b> · '
+            f'{esc(TEXTS[r["text"]][0] if r["text"] in TEXTS else "")} · {"通过 " if r["d"]["pass"] else "回报 "}{num(r["d"]["score"], 1)} · '
+            f'reset {r["d"]["resets_used"]}/{r["d"]["resets"]} · {r["d"]["agent_min"]:.0f} min</figcaption></figure>' for r, src, poster in vids)
+        H.append(f'<h3 class="vh"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a> · 各模型最新的 limited 运行，整段录像</h3><div class="vgrid">{figs}</div>')
+    return "".join(H)
 
 
 def matrix(tasks: list, cols: list) -> str:

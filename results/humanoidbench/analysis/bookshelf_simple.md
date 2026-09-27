@@ -33,9 +33,9 @@
 - **高估用时后自己收尾**：3.92 min 以为 "about 27 minutes used"；6.08 min 从 `elapsed_s` 426 s 得知时间还多，只再试 1 局就在 6.67 min 结束会话。
 
 ## 模型对比
-- **站姿是分水岭**：Opus 用 IMU 反馈、Sol limited 固定踝角、两个 full 在仿真里扫目标，都站满 1000 步；只有 Luna limited 一直用会倒的初始目标。
-- **没人抓起 trophy，回报挤在一起**：站满 1000 步、不挪物体约 700（Opus 709、Sol limited 706）；full 贴近或推动 trophy 只多出 100–150。
-- **收尾差别大**：Opus 6.7 min 就放弃，Luna limited 被自己的循环在 35.4 min 耗光 reset，另外三局都干到 57–60 min。
+- **这回都站住了**：Opus 用 IMU 反馈、Sol limited 固定踝角、Luna limited 这一轮也靠 IMU 反馈，两个 full 在仿真里扫目标，都站满 1000 步。
+- **没人抓起 trophy，回报挤在一起**：站满 1000 步、不挪物体约 650–710（Luna limited 650、Sol limited 706、Opus 709）；full 贴近或推动 trophy 只多出 100–150。
+- **收尾差别大**：Opus 6.7 min 就放弃，另外四个都干到 57–60 min。
 
 ## 改进意见
 - **已改：服务计时从 agent 第一次请求开始算**：原来从服务启动算，这三局早 52–96 s；Sol 在 59.91 min 读到 3639 s 就说 "just past the stated one hour window"。
