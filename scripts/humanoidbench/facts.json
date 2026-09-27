@@ -655,8 +655,8 @@
   "limited": {
    "control_hz": 50,
    "image_hw": [
-    256,
-    256
+    512,
+    512
    ],
    "joints": [
     "left_hip_yaw",
@@ -730,9 +730,9 @@
     "rh_THJ1"
    ],
    "step_ms": {
-    "batch": 1.45,
-    "images": 5.97,
-    "single": 2.24
+    "batch": 1.42,
+    "images": 14.78,
+    "single": 2.19
    }
   },
   "max_steps": 500,

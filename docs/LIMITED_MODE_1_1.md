@@ -14,9 +14,12 @@ is simulator-agnostic, `environment/sim/server.py` is the HumanoidBench adapter.
 | reset budget | `RCB_RESET_BUDGET` in `docker-compose.yaml`, default 0 | the agent reads it in `spec()["budget"]["reset"]` and `obs["resets_left"]`; each reset restarts the recording; the trial ends at the first success; the last episode is graded |
 
 Sensors are adapter config, not protocol (HumanoidBench: `RCB_OBS_PROPRIO` / `RCB_OBS_IMU` /
-`RCB_OBS_ROOM_CAMERA`, defaults 1/0/0). Every knob is `${NAME:-default}` in the compose file, so a run sets it
-from the shell (`RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`); the sim logs the resulting `/spec`. Where
-`room_camera` stands is per task and fixed in the compose file (`RCB_ROOM_CAMERA_POSE`).
+`RCB_OBS_ROOM_CAMERA` / `RCB_OBS_DEPTH`, defaults 1/0/0/0; depth comes with each head-camera image, in metres). Every knob is `${NAME:-default}` in the compose file, so a run sets it
+from the shell (`RCB_RESET_BUDGET=3 RCB_OBS_IMU=1 harbor run ...`) or from a profile, compose overrides that
+`harbor run -c` merges in: `scripts/humanoidbench/configs/limited.yaml` (reset 50, IMU, room camera: the standard
+run), `limited-depth.yaml` (the same plus depth). The sim logs the resulting `/spec`. Where `room_camera` stands and,
+where a task needs more pixels, the image size are per task and fixed in the compose file (`RCB_ROOM_CAMERA_POSE`,
+`RCB_IMAGE_HW`: cube 512, the rest upstream's 256).
 
 At the end of an episode the agent gets only `done` + `reason` (`success | failed | timeout | error`),
 never a reward or a return.
@@ -25,8 +28,9 @@ The agent-facing API is documented in one place, `rcb_client.py`'s docstring: ev
 observation fields, the errors. `instruction.md` points to it and keeps only task facts: the task, the rules,
 the scoring prose. Anything that belongs to the robot or to the run, the agent reads from `spec()`: the reset
 budget, which sensors are on, and what a real robot's documentation would give. The HumanoidBench adapter reads
-those facts off the model: each servo's range in radians, each joint's axis, the IMU's frame, and each camera's
-field of view and pose.
+those facts off the model: each servo's range in radians, each joint's axis, the IMU's frame and which way each
+reading goes, and each camera's field of view and pose (position; forward, up and right axes). The service's clock
+(`time_s`, `elapsed_s`) starts at the agent's first request, not when the service came up about a minute earlier.
 
 The trial ends when the agent's session does. The collect hook's SIGUSR1 comes only once the verifier starts,
 about 12 s later, so the repo's agent adapters send it themselves when the session ends

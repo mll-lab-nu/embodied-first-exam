@@ -173,7 +173,7 @@ class Session:
     """One HumanoidBench environment pinned to one frozen scene instance."""
 
     def __init__(self, task: str | None = None, instance: str | Path | None = None,
-                 enable_render: bool = False, env_id: str | None = None):
+                 enable_render: bool = False, env_id: str | None = None, image_hw: int | None = None):
         """Open the environment this instance belongs to.
 
         The instance file records which HumanoidBench task and env id it was drawn from, so normally
@@ -182,6 +182,7 @@ class Session:
         one task cannot be graded against another's scene.
 
         `env_id` is only for creating an instance from scratch, when there is no file to read it from.
+        `image_hw` is the side of every rendered image in pixels (None: upstream's 256).
         """
         if instance is not None:
             d = np.load(instance, allow_pickle=False)
@@ -201,7 +202,8 @@ class Session:
         # [HB] HumanoidEnv defaults to render_mode="rgb_array" and Task.__init__ then builds an offscreen
         # viewer eagerly, so even a physics-only gym.make() would need a GL context. render_mode=None
         # skips the viewer entirely and is markedly faster.
-        self.env = gym.make(self.env_id, render_mode="rgb_array" if enable_render else None)
+        self.env = gym.make(self.env_id, render_mode="rgb_array" if enable_render else None,
+                            **({"width": image_hw, "height": image_hw} if image_hw else {}))
         self.enable_render = enable_render
         self.low = self.env.unwrapped
         self.model, self.data = self.low.model, self.low.data

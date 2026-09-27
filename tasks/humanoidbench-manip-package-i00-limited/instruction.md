@@ -8,7 +8,9 @@ upright.
 ## Rules (real-robot rules)
 - **Episodes.** The first episode starts when the service comes up. An episode ends when the task succeeds,
   when the package reaches the destination, after 1000 control steps (20 s of robot time), when your time is
-  up, or on a simulator error.
+  up, or on a simulator error. Nothing else ends it: a robot that has fallen without meeting one of these
+  (lying on its side, sitting, face down) goes on until step 1000, so an episode that is still running does
+  not mean the robot is still up.
 - **Resets and grading.** `spec()["budget"]["reset"]` is how many times this run lets you call `reset()`
   (every observation carries `resets_left`). A reset starts a new episode from the same starting state and
   gives up the one in progress. The run passes the moment an episode reaches the pass mark, which also ends
@@ -19,7 +21,7 @@ upright.
   (`obs["done"]`, `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists
   exactly what this run provides, and the robot's own facts you need to read it: each actuator's range, each
   joint's axis, the IMU's frame, each camera's field of view and pose. Depending on the task's configuration
-  that can also include a pelvis IMU and a camera fixed in the room.
+  that can also include a pelvis IMU, depth from the head cameras and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
   script that drove the last episode at `/app/output/gen.py` for the record, complete and runnable.

@@ -1,7 +1,7 @@
 """Checks and times one limited twin's sim service; `gen_tasks.py measure-limited` runs it inside the base image
 with a GPU, against a scratch copy of the sidecar directory (argv[1]). Settings come from the environment:
-RCB_TASK, RCB_INSTANCE, RCB_ROOM_CAMERA_POSE, RCB_DATA, RCB_FACTS (that family's facts.json entry, as JSON) and
-RCB_IMAGES (where the t=0 images go).
+RCB_TASK, RCB_INSTANCE, RCB_ROOM_CAMERA_POSE, RCB_IMAGE_HW, RCB_DATA, RCB_FACTS (that family's facts.json entry, as
+JSON) and RCB_IMAGES (where the t=0 images go).
 
 In process, through rcb_service.Service (no HTTP):
   spec        the actuators in facts.json's order, the episode length
@@ -52,7 +52,8 @@ def png(b64):
 
 pose = [float(v) for v in env("RCB_ROOM_CAMERA_POSE", "").split(",") if v.strip()]
 sim = server.HumanoidBench(task, env("RCB_INSTANCE"), proprio=True, imu=True, room_camera=True,
-                           room_pose=(np.array(pose[:3]), *pose[3:]) if pose else None, task_text="probe")
+                           room_pose=(np.array(pose[:3]), *pose[3:]) if pose else None, task_text="probe",
+                           image_hw=int(env("RCB_IMAGE_HW") or 0) or None)
 svc = Service(sim, reset_budget=10)
 sp, nu = svc.spec, sim.s.nu
 check("spec", sp["qpos"]["layout"] == facts["actuator_names"] and sp["max_episode_steps"] == facts["max_steps"],

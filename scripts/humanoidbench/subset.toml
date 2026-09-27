@@ -386,7 +386,7 @@ difficulty = '''- **Discrete, step-function reward.** Checkpoint bonuses (n×100
   that solved `walk`.'''
 
 [task.limited]
-task_statement = "walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls. Each checkpoint is a small ball about 1 m up; from the first step on, the next one to reach is red and those already reached are green."
+task_statement = "walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls. Each checkpoint is a small ball about 1 m up; from the first step on, the next one to reach is red and those already reached are green. The robot starts on the first checkpoint, so that ball is green from the first step, and every reset starts there again."
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is in the maze, not where the checkpoints are"
 tier = "no root pose, no checkpoint positions"
@@ -770,6 +770,8 @@ tier = "no root pose, no cube poses, no goal orientation"
 camera_note = "the head cameras see the cube above one palm. `room_camera` (off by default) looks at the hands close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`); the legs are out of frame."
 room_camera_pose = "0.47,0,1.25,0.9,-129,-25"
 room_camera_comment = "room_camera close on the hands: both cubes and the floating goal orientation"
+image_hw = 512
+image_hw_comment = "every camera at 512×512, not upstream's 256: at 256 a cube in room_camera is 15-35 px across"
 
 # =====================================================================================================
 # C8 · mobile manipulation

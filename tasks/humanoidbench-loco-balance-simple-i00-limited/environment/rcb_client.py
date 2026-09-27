@@ -7,8 +7,9 @@
 Calls. spec() was fetched when connecting; every other call is one HTTP request.
     r.spec()                          static facts: action types; "qpos": dim, layout (actuator order), limits,
                                       range (each actuator's rad at -1 and +1), units; control_hz;
-                                      max_episode_steps; "proprio" (joints, each one's axis) / "imu" (its frame)
-                                      (None if absent); "cameras" {name: {"hw", "fovy_deg", "pose", ...}};
+                                      max_episode_steps; "proprio" (joints, each one's axis) / "imu" (its frame) /
+                                      "depth" (its units and range) (None if absent); "cameras" {name: {"hw",
+                                      "fovy_deg", "pose", "depth", ...}};
                                       "budget" {"reset": resets allowed}
     r.observe(images=True)            the current observation; simulated time does not move
     r.step(type, a, images=True)      a is one action, shape (D,), or a batch, shape (K, D): K control steps
@@ -17,20 +18,23 @@ Calls. spec() was fetched when connecting; every other call is one HTTP request.
                                       than K if the episode ended). type is one of spec()["action_types"].
     r.reset(images=True)              back to the same starting state, a new episode; spec()["budget"]["reset"]
                                       times in all. Only the last episode is graded.
-    r.status()                        step, steps, resets_left, done, reason, over, elapsed_s; no observation
+    r.status()                        step, steps, resets_left, done, reason, over, elapsed_s (seconds since your
+                                      first request, as time_s); no observation
 
 images= on observe/step/reset: True (every camera in spec()["cameras"]) | False (none) | a list of camera
 names, e.g. ["left_eye_camera"]. Images cost time; ask for them when you look.
 
 obs, a dict:
     obs["images"][camera]             uint8 array, H x W x 3, for the cameras asked for
+    obs["depth"][camera]              float32 array, H x W, metres (0 = nothing in range), pixel for pixel with
+                                      that image, for each head camera asked for, if spec()["depth"] is not None
     obs["proprio"]                    {"joint_pos", "joint_vel"} in spec()["proprio"]["joints"] order, if the
                                       robot has it
     obs["imu"]                        {"gyro", "gravity"}, if spec()["imu"] is not None
     obs["step"]                       control steps in the current episode
     obs["done"], obs["reason"]        episode over? why: "success" | "failed" (ended without success) |
                                       "timeout" | "error"
-    obs["resets_left"], obs["time_s"] resets still allowed; seconds since the service started
+    obs["resets_left"], obs["time_s"] resets still allowed; seconds since your first request to the service
 
 Errors:
     ValueError     refused, nothing moved: wrong length, outside the limits, NaN, unknown type or camera
@@ -81,8 +85,8 @@ class Robot:
         from PIL import Image
         for k, v in list(obs.get("images", {}).items()):
             obs["images"][k] = np.asarray(Image.open(io.BytesIO(base64.b64decode(v))).convert("RGB"))
-        for k, v in list(obs.get("depth", {}).items()):
-            d = obs["depth"][k]; obs["depth"][k] = np.frombuffer(base64.b64decode(v), dtype="<f2").reshape(d["h"], d["w"]) if isinstance(d, dict) else v
+        for k, v in list(obs.get("depth", {}).items()):   # a 16-bit PNG in millimetres
+            obs["depth"][k] = np.asarray(Image.open(io.BytesIO(base64.b64decode(v)))).astype(np.float32) / 1000.0
         return obs
 
     @staticmethod

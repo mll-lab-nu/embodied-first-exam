@@ -228,8 +228,9 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "image_tag": image_tag(),
         "keywords": ", ".join(f'"{k}"' for k in keywords),
         "actuator_layout": actuator_layout(facts["actuator_names"]),
-        # the step() comment points to the task notes only where a task has them
-        "step_caveat": ", except where noted below" if t.get("task_notes", "").strip() else "",
+        # the step() comment points to the task notes only where they say this container differs ("in this
+        # container ...": state only the scoring code advances); notes that only add facts are no exception
+        "step_caveat": ", except where noted below" if "in this container" in " ".join(t.get("task_notes", "").split()) else "",
         "difficulty": difficulty,
         "nop_note": nop_note,
         "oracle_file": t.get("oracle", ""),
@@ -352,6 +353,7 @@ def limited_context(t: dict, defaults: dict, facts: dict) -> dict:
         "limited_actuator_layout": limited_actuator_layout(facts["actuator_names"], lf["joints"]),
         "room_camera_pose_line": compose_line("RCB_ROOM_CAMERA_POSE", L.get("room_camera_pose", ""),
                                               L.get("room_camera_comment", "")),
+        "image_hw_line": compose_line("RCB_IMAGE_HW", str(L.get("image_hw", "")), L.get("image_hw_comment", "")),
         "image_hw": "×".join(map(str, lf["image_hw"])),
         "control_hz": lf["control_hz"],
         "robot_seconds": f"{facts['max_steps'] / lf['control_hz']:g}",
@@ -579,7 +581,8 @@ def cmd_measure_limited(args) -> int:
         with tempfile.TemporaryDirectory() as tmp:
             sim = write_sim_dir(t, defaults, Path(tmp) / "sim")
             env = {**os.environ, "RCB_TASK": fam, "RCB_INSTANCE": str(sim / "instance.npz"),
-                   "RCB_ROOM_CAMERA_POSE": t["limited"].get("room_camera_pose", ""), "RCB_DATA": f"{tmp}/data",
+                   "RCB_ROOM_CAMERA_POSE": t["limited"].get("room_camera_pose", ""),
+                   "RCB_IMAGE_HW": str(t["limited"].get("image_hw", "")), "RCB_DATA": f"{tmp}/data",
                    "RCB_FACTS": json.dumps(facts[fam]), "RCB_IMAGES": str(Path(args.images) / fam)}
             p = subprocess.run([sys.executable, str(HERE / "limited_probe.py"), str(sim)], env=env,
                                capture_output=True, text=True)

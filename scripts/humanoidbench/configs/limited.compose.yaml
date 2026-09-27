@@ -1,0 +1,7 @@
+# The standard limited configuration, as a compose override on the sim sidecar of any limited HumanoidBench task.
+services:
+  sim:
+    environment:
+      RCB_RESET_BUDGET: "50"
+      RCB_OBS_IMU: "1"
+      RCB_OBS_ROOM_CAMERA: "1"

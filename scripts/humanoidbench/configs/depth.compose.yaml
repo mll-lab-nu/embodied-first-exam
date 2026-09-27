@@ -1,0 +1,5 @@
+# Adds depth from the head cameras (RCB_OBS_DEPTH, off by default).
+services:
+  sim:
+    environment:
+      RCB_OBS_DEPTH: "1"

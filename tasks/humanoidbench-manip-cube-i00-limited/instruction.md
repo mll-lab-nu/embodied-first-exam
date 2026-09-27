@@ -8,18 +8,20 @@ orientation: that of the translucent cube with the same faces floating above and
 ## Rules (real-robot rules)
 - **Episodes.** The first episode starts when the service comes up. An episode ends when the task succeeds,
   when the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps (10 s of
-  robot time), when your time is up, or on a simulator error.
+  robot time), when your time is up, or on a simulator error. Nothing else ends it: a robot that has fallen
+  without meeting one of these (lying on its side, sitting, face down) goes on until step 500, so an episode
+  that is still running does not mean the robot is still up.
 - **Resets and grading.** `spec()["budget"]["reset"]` is how many times this run lets you call `reset()`
   (every observation carries `resets_left`). A reset starts a new episode from the same starting state and
   gives up the one in progress. The run passes the moment an episode reaches the pass mark, which also ends
   the run; otherwise it fails when an episode ends with no reset left, or when your time is up.
-- **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256) and its own
+- **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 512×512) and its own
   joint angles and joint velocities. Not where the robot is in the room, not the cubes' orientations, not the
   goal orientation, not the reward: the service judges the episode and only tells you that it ended and why
   (`obs["done"]`, `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists
   exactly what this run provides, and the robot's own facts you need to read it: each actuator's range, each
   joint's axis, the IMU's frame, each camera's field of view and pose. Depending on the task's configuration
-  that can also include a pelvis IMU and a camera fixed in the room.
+  that can also include a pelvis IMU, depth from the head cameras and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
   script that drove the last episode at `/app/output/gen.py` for the record, complete and runnable.
@@ -46,7 +48,7 @@ from rcb_client import Robot
 r = Robot()                  # connects; r.spec() lists what this run provides
 obs = r.step("qpos", a)      # a: 61 position targets in [-1, 1] = one 50 Hz control step
 ```
-Measured cost per control step here: about 2.2 ms sent one at a time, 6.0 ms one at a time with
+Measured cost per control step here: about 2.2 ms sent one at a time, 14.8 ms one at a time with
 both head-camera images, 1.4 ms in batches of 10 or more without images.
 
 The 61 actuators are position servos. The first 21 are the body, in this order: `left_hip_yaw`,

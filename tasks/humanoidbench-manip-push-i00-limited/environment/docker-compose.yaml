@@ -20,6 +20,7 @@ services:
       RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: head-camera RGB + joint angles/velocities; 0: images only
       RCB_OBS_IMU: "${RCB_OBS_IMU:-0}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room
+      RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-0}"              # 1: + depth (m) from both head cameras, as from the H1's head RGB-D camera
       RCB_ROOM_CAMERA_POSE: "0.55,0.1,1.0,3,180,-45"   # room_camera across the table, facing the robot: the
                                                        # box and the target on the tabletop, the robot behind
                                                        # them

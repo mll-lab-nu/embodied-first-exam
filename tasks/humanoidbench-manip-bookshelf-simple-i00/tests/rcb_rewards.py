@@ -74,6 +74,28 @@ def restore(spec: dict | str | Path = None) -> list[str]:
     return done
 
 
+# How far a multi-stage task got: upstream's own bookkeeping, which only the scoring code advances (so it stays
+# frozen in the agent's container). Read after a replay, for the diagnostics; it never enters the verdict.
+PROGRESS = ("current_subtask", "task_index", "maze_stage", "stage", "tasks_to_complete", "packages_on_table")
+
+
+def progress(task) -> dict:
+    """{attribute: value} for the PROGRESS attributes `task` (a Session's `low.task`) has: a number or a name as
+    it is, a list as its length (packages on the table), a dict as its sorted keys (kitchen's chores left)."""
+    out = {}
+    for k in PROGRESS:
+        v = getattr(task, k, None)
+        if isinstance(v, dict):
+            out[k] = sorted(map(str, v))
+        elif isinstance(v, (list, tuple)):
+            out[k] = len(v)
+        elif isinstance(v, str):
+            out[k] = v
+        elif v is not None:
+            out[k] = int(v)
+    return out
+
+
 if __name__ == "__main__":
     for name in restore():
         print(f"restored {name}")

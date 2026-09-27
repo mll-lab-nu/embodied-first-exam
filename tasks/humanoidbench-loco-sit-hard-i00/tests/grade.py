@@ -41,7 +41,7 @@ def main() -> int:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         # The image has no reward function -- put this task's back before anything opens a Session,
         # because Session decides whether it can score by inspecting the class. See rcb_rewards.py.
-        from rcb_rewards import restore
+        from rcb_rewards import progress, restore
         restored = restore()
         from rcb_hb import GL_BACKEND, Session
         s = Session(a.family, instance=a.instance)
@@ -74,6 +74,8 @@ def main() -> int:
                        "replay_seconds": round(t_replay, 2),
                        "render_seconds": 0.0,
                        "rewards_restored": restored}
+        if prog := progress(s.low.task):   # where the last replay left a multi-stage task (cabinet, kitchen, maze, ...)
+            diagnostics["progress"] = prog
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
         if not a.no_video:
             try:

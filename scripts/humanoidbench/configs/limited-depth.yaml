@@ -1,0 +1,5 @@
+# The standard limited run plus depth from the head cameras.
+environment:
+  extra_docker_compose:
+    - scripts/humanoidbench/configs/limited.compose.yaml
+    - scripts/humanoidbench/configs/depth.compose.yaml

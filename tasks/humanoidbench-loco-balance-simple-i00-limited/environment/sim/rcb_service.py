@@ -9,9 +9,9 @@ What 1.1 adds to 1.0 -- each optional, a 1.0 client never notices (docs/LIMITED_
   images        "images": true | false | [camera, ...] on /step and /reset, ?images=... on /observe
   reset budget  POST /reset, allowed `reset_budget` times (default 0: one episode, as on a real robot)
 
-Evidence, where the agent cannot reach it: /data/episode.jsonl (one line per event), /data/final.json (kept
-current; "finalized": true once the collect hook's SIGUSR1 has been handled), /data/trajectory.npz and
-/data/replay.mp4 (the graded episode, replayed from the frozen instance).
+Evidence, where the agent cannot reach it: /data/episode.jsonl (one line per event; every action exact, so any
+episode replays from it), /data/final.json (kept current; "finalized": true once the collect hook's SIGUSR1 has been
+handled), /data/trajectory.npz and /data/replay.mp4 (the graded episode, replayed from the frozen instance).
 """
 from __future__ import annotations
 
@@ -54,7 +54,8 @@ class Service:
     def __init__(self, sim: Sim, *, reset_budget: int = 0):
         os.makedirs(DATA, exist_ok=True)
         self.sim, self.reset_budget = sim, int(reset_budget)
-        self.t0 = time.time()
+        self.t0 = None           # the clock starts at the agent's first request: the service comes up about a minute
+                                 # before the agent does, and its elapsed_s was being read as the agent's own budget
         self.step = 0            # actions in the current episode
         self.steps = 0           # actions over the whole trial (reported as cost)
         self.resets = 0
@@ -67,6 +68,14 @@ class Service:
         self.spec = {"protocol": PROTOCOL, **sim.spec(), "batch": True,
                      "budget": {"reset": self.reset_budget, "steps": None}}
 
+    def clock(self) -> float:
+        """Seconds since the agent's first request (0 before it)."""
+        return 0.0 if self.t0 is None else time.time() - self.t0
+
+    def first_request(self) -> None:
+        if self.t0 is None:
+            self.t0 = time.time(); self.log("first_request")
+
     # ------------------------------------------------------------------ evidence
     def log(self, ev: str, **kw) -> None:
         with open(os.path.join(DATA, "episode.jsonl"), "a") as f:
@@ -75,7 +84,7 @@ class Service:
     def write_final(self) -> None:
         with open(os.path.join(DATA, "final.json"), "w") as f:
             json.dump({"success": self.success, "reason": self.reason, "done": self.done, "over": self.over,
-                       "steps": self.steps, "resets": self.resets, "elapsed_s": round(time.time() - self.t0, 1),
+                       "steps": self.steps, "resets": self.resets, "elapsed_s": round(self.clock(), 1),
                        "finalized": False, **self.result}, f)
 
     # ------------------------------------------------------------------ endpoints
@@ -94,12 +103,12 @@ class Service:
 
     def observation(self, cameras: list[str]) -> dict:
         return {**self.sim.observe(cameras), "step": self.step, "done": self.done, "reason": self.reason,
-                "resets_left": self.reset_budget - self.resets, "time_s": round(time.time() - self.t0, 2)}
+                "resets_left": self.reset_budget - self.resets, "time_s": round(self.clock(), 2)}
 
     def status(self) -> dict:
         return {"step": self.step, "steps": self.steps, "resets": self.resets,
                 "resets_left": self.reset_budget - self.resets, "done": self.done, "reason": self.reason,
-                "over": self.over, "elapsed_s": round(time.time() - self.t0, 1)}
+                "over": self.over, "elapsed_s": round(self.clock(), 1)}
 
     def do_observe(self, images) -> tuple[int, dict]:
         cams = self.cameras(images)
@@ -135,7 +144,7 @@ class Service:
                 traceback.print_exc(); self.log("error", error=repr(exc)); self.end_episode("error")
                 return 500, {"error": "simulator error", "detail": repr(exc)[:200]}
             executed += 1; self.step += 1; self.steps += 1
-            self.log("step", step=self.step, type=typ, action=[round(float(x), 5) for x in a], success=success, **info)
+            self.log("step", step=self.step, type=typ, action=a.tolist(), success=success, **info)
             if success or done:
                 self.end_episode("success" if success else "failed")
                 break
@@ -150,9 +159,10 @@ class Service:
             return 409, {"error": "trial finished", "reason": self.reason}
         if self.resets >= self.reset_budget:
             return 429, {"error": "reset budget exhausted", "budget": self.reset_budget}
+        end_sha = self.sim.state_sha()   # where the episode this reset ends was left: its replay must land there
         self.sim.reset(); self.resets += 1
         self.step, self.done, self.reason = 0, False, None
-        self.log("reset", resets=self.resets, state_sha=self.sim.state_sha()); self.write_final()
+        self.log("reset", resets=self.resets, state_sha=self.sim.state_sha(), end_sha=end_sha); self.write_final()
         if cams:
             self.log("images", step=0, images=cams)
         return 200, {**self.observation(cams), "ok": True}
@@ -163,7 +173,7 @@ class Service:
         self.done, self.reason = True, reason
         self.success = self.success or reason == "success"
         self.log("end", reason=reason, step=self.step, steps=self.steps, resets=self.resets,
-                 elapsed_s=round(time.time() - self.t0, 1))
+                 elapsed_s=round(self.clock(), 1))
         if reason != "failed" or self.resets >= self.reset_budget:
             self.finish()
 
@@ -227,6 +237,7 @@ class Service:
                     self._send(400, {"error": str(exc)})
 
             def do_GET(self):
+                svc.first_request()
                 url = urlparse(self.path)
                 if url.path == "/spec":
                     return self._send(200, svc.spec)
@@ -237,6 +248,7 @@ class Service:
                 self._send(404, {"error": "no such endpoint"})
 
             def do_POST(self):
+                svc.first_request()
                 fn = {"/step": svc.do_step, "/reset": svc.do_reset}.get(urlparse(self.path).path)
                 if fn is None:
                     return self._send(404, {"error": "no such endpoint"})

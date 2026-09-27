@@ -1,0 +1,5 @@
+# Harbor job config for the standard limited run: `harbor run -c scripts/humanoidbench/configs/limited.yaml -p <task>-limited ...`
+# (paths are relative to the repo root, where scripts/run_deepseek_openrouter.sh runs harbor).
+environment:
+  extra_docker_compose:
+    - scripts/humanoidbench/configs/limited.compose.yaml
