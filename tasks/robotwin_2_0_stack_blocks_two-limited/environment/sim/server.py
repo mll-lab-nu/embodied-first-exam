@@ -2,14 +2,18 @@
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for
-success + determinism and renders the six-view /data/replay.mp4. Nothing about objects ever leaves this process."""
+success + determinism and renders the six-view /data/replay.mp4. While the episode runs it also records /data/live.mp4 (rcb_live.py: frames only
+while physics runs, skipped while nothing moves), saves each call's actions under /data/calls/, and appends the
+trajectory to /data/trajectory_live.f64 after every call (crash-safe). Nothing about objects ever leaves this process."""
 from __future__ import annotations
 import io, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the service records the episode itself (rcb_live, trajectory); no per-rollout agent traces
 import rcb1  # noqa: E402
+import rcb_live  # noqa: E402
 
 PROTOCOL = "rcb-limited/2.0"
 DATA = "/data"; os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -31,13 +35,17 @@ def write_final() -> None:
     json.dump({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
                "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
                "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
-               "deterministic": E.get("deterministic"), "video": bool(E.get("video"))},
+               "deterministic": E.get("deterministic"), "video": bool(E.get("video")),
+               **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error") if k in E}},
               open(os.path.join(DATA, "final.json"), "w"))
 
 
 def finalize() -> None:
     with LOCK:
         try:
+            try: E.update(LIVE.close())
+            except Exception as exc: E["live_error"] = repr(exc)  # noqa
+            flush_traj()
             acts = S.record_stop(); live_sha = S.state_sha()
             S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "limited-mode episode (v2)", "steps": E["step"], "reason": E["reason"]})
             E["n_actions"] = int(len(acts))
@@ -227,7 +235,7 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: Recorder, cli
     else: V = np.zeros_like(Q); V[1:-1] = (Q[2:] - Q[:-2]) / (2 * dt_step); V[-1] = (Q[-1] - Q[-2]) / dt_step
     for i in range(1, len(Q)):
         apply_joint_target(Q[i], V[i])
-        S.step(); rec.tick()
+        S.step(); LIVE.tick(); rec.tick()
         if E["done"]: return
 
 
@@ -248,8 +256,16 @@ def run_ee_pose(A: np.ndarray, rec: Recorder, plan: list) -> None:
             if rok and ri_ < rn and (not lok or ri_ / rn <= li / max(1, ln)): ROBOT.set_arm_joints(rp["position"][ri_], rp["velocity"][ri_], "right"); ri_ += 1
             a = (k + 1) / n
             ROBOT.set_gripper(gl0 + (gl - gl0) * a, "left"); ROBOT.set_gripper(gr0 + (gr - gr0) * a, "right")
-            S.step(); rec.tick()
+            S.step(); LIVE.tick(); rec.tick()
             if E["done"]: return
+
+
+def flush_traj() -> None:
+    """Append the rows recorded since the last flush to /data/trajectory_live.f64 (raw float64, 34 per row)."""
+    rows = S._recording or []; k = E.get("flushed", 0)
+    if len(rows) > k:
+        with open(os.path.join(DATA, "trajectory_live.f64"), "ab") as f: f.write(np.asarray(rows[k:], dtype=np.float64).tobytes())
+        E["flushed"] = len(rows)
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
@@ -266,6 +282,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = Recorder(cams, fps, depth); clipped: list = []; plan: list = []
+    note = (meta.get("note") or "").replace("\n", " ")[:40]
+    LIVE.set_label(E["calls"] + 1, f"submit {typ} x{A.shape[0]}" + (f" dt={dt:g}" if typ == "joint_position" else "") + (f"  [{note}]" if note else ""))
     before = int(S._sim_steps); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan)
@@ -277,6 +295,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
+    try: np.save(os.path.join(DATA, "calls", f"{E['calls']:06d}", "actions.npy"), A.astype(np.float32))
+    except Exception: pass  # noqa
+    flush_traj()
     if succ: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
@@ -288,15 +309,16 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     rec = Recorder(cams, fps, depth); before = int(S._sim_steps); rec.tick(force=True)
     if seconds > 0 and not E["done"]:
+        LIVE.set_label(E["calls"] + 1, f"observe watch {seconds:g}s")
         for _ in range(int(seconds * PHYS_HZ)):
-            S.step(); rec.tick()
+            S.step(); LIVE.tick(); rec.tick()
         rec.tick(force=True)
         succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
         if succ: finish("success")
     E["calls"] += 1
     out = {**meta_common(), "obs_id": E["calls"], "seconds": seconds, "physics_steps_watch": int(S._sim_steps) - before, "ok": True}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "physics_steps": int(S._sim_steps) - before})
-    if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
+    if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec); flush_traj()
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
@@ -363,6 +385,7 @@ signal.signal(signal.SIGUSR1, on_usr1)
 log({"ev": "start", "task": TASK, "seed": S.seed, "state_sha": S.state_sha(), "protocol": PROTOCOL}); write_final()
 S.record_start()
 E["ready"] = True; E["t0"] = time.time()
+LIVE = rcb_live.LiveRecorder(S, DATA, t0=E["t0"]); LIVE.open()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print("rcb-limited/2.0 sim ready", flush=True)
 HTTPServer(("0.0.0.0", 8000), H).serve_forever()
