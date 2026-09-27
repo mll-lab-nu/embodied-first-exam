@@ -1,4 +1,4 @@
-"""rcb-limited/2.0 sim service for RoboTwin 2.0 (see docs/LIMITED_MODE_PROTOCOL.md, docs/LIMITED_MODE_V2_DESIGN.zh.md).
+"""rcb-limited/2.1 sim service for RoboTwin 2.0 (see docs/LIMITED_MODE_PROTOCOL.md, docs/LIMITED_MODE_V2_DESIGN.zh.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for
@@ -15,7 +15,7 @@ os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the service records the episode itself
 import rcb1  # noqa: E402
 import rcb_live  # noqa: E402
 
-PROTOCOL = "rcb-limited/2.0"
+PROTOCOL = "rcb-limited/2.1"
 DATA = "/data"; os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TASK = os.environ.get("RCB_TASK", "stack_blocks_two"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 TASK_TEXT = json.load(open(INSTANCE)).get("text", TASK)
@@ -92,6 +92,23 @@ def joint_limits() -> dict:
     return out
 LIMITS = joint_limits(); LIM_ARR = np.array([LIMITS[n] or [-np.inf, np.inf] for n in L_ARM + R_ARM], dtype=np.float64)  # (12, 2)
 
+_EE = lambda p: [f"{p}_x", f"{p}_y", f"{p}_z", f"{p}_qw", f"{p}_qx", f"{p}_qy", f"{p}_qz"]
+PROPRIO_GROUPS = {   # name: (first column, n, meaning)
+    "joint_cmd": (0, 14, "commanded joint targets (6 + gripper command per arm), same layout as joint_position"),
+    "ee_pose": (14, 14, "measured end-effector frame pose per arm (xyz + wxyz), 0.12 m behind the gripper centre; valid ee_pose target"),
+    "gripper_cmd": (28, 2, "commanded gripper value per arm (0 closed .. 1 open)"),
+    "joint_pos": (30, 14, "measured joint positions (encoders) + measured gripper opening in the command's units; a gripper "
+                          "closed on an object stops above 0"),
+    "joint_vel": (44, 12, "measured arm joint velocities, rad/s"),
+    "tcp_pose": (56, 14, "measured gripper-centre (TCP) pose per arm, xyz + wxyz: where the fingers are"),
+    "joint_effort": (70, 12, "drive-effort estimate per arm joint, stiffness*(target-q) + damping*(v_target-qd) (motor-current analogue; "
+                             "rises when the arm pushes against something)"),
+}
+PROPRIO_LAYOUT = (L_ARM + ["left_gripper"] + R_ARM + ["right_gripper"] + _EE("l") + _EE("r") + ["left_gripper_cmd", "right_gripper_cmd"]
+                  + [f"{n}_meas" for n in L_ARM] + ["left_gripper_meas"] + [f"{n}_meas" for n in R_ARM] + ["right_gripper_meas"]
+                  + [f"{n}_vel" for n in L_ARM + R_ARM] + _EE("l_tcp") + _EE("r_tcp") + [f"{n}_effort" for n in L_ARM + R_ARM])
+assert len(PROPRIO_LAYOUT) == 82
+
 SPEC = {
     "protocol": PROTOCOL, "simulator": "robotwin-2.0", "robot": os.environ.get("RCB_EMBODIMENT", "aloha-agilex"), "task_text": TASK_TEXT,
     "physics_hz": PHYS_HZ, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "cameras": {c: {"rgb": True, "depth": c in ("head_camera", "front_camera", "left_camera", "right_camera"),
@@ -108,15 +125,53 @@ SPEC = {
                     "semantics": "each row is planned by CuRobo (table-only collision) and executed; `dt` is ignored (the planner sets the duration); a failed plan holds that arm and is reported in plan[]",
                     "note": "same convention as proprio endpose: RoboTwin's end-effector frame, 0.12 m BEHIND the gripper centre (TCP) along the approach axis; to put the fingers at p command p - 0.12*approach_axis"},
         "not_yet": ["joint_delta", "joint_velocity", "ee_delta", "joint_torque"]},
-    "proprio_layout": L_ARM + ["left_gripper"] + R_ARM + ["right_gripper"] + ["l_x", "l_y", "l_z", "l_qw", "l_qx", "l_qy", "l_qz", "r_x", "r_y", "r_z", "r_qw", "r_qx", "r_qy", "r_qz"] + ["left_gripper_cmd", "right_gripper_cmd"],
+    "proprio_layout": PROPRIO_LAYOUT,
+    "proprio_groups": PROPRIO_GROUPS,
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
 }
+
+
+# ---- proprioception (what a real arm reports: encoders, gripper position, forward kinematics, motor effort)
+def _arm_io(side: str):
+    ent = ROBOT.left_entity if side == "left" else ROBOT.right_entity
+    act = ent.get_active_joints(); joints = ROBOT.left_arm_joints if side == "left" else ROBOT.right_arm_joints
+    finger = (ROBOT.left_gripper if side == "left" else ROBOT.right_gripper)[0]           # (joint, multiplier, bias)
+    scale = ROBOT.left_gripper_scale if side == "left" else ROBOT.right_gripper_scale
+    return ent, [act.index(j) for j in joints], act.index(finger[0]), finger, scale
+ARM_IO = {s_: _arm_io(s_) for s_ in ("left", "right")}
+
+
+def _drive_gain(j, name):
+    for a in (name, f"get_{name}"):
+        v = getattr(j, a, None)
+        if v is not None:
+            try: return float(v() if callable(v) else v)
+            except Exception: pass  # noqa
+    return float("nan")
+
+
+def _measured(side: str):
+    """Measured joint positions/velocities (encoders), measured gripper opening in the command's [0,1] units (from the
+    finger joint), and a drive-effort estimate k*(target-q) + d*(v_target-qd) per arm joint (a motor-current analogue)."""
+    ent, idx, fidx, finger, scale = ARM_IO[side]
+    q = np.asarray(ent.get_qpos(), dtype=np.float64); qd = np.asarray(ent.get_qvel(), dtype=np.float64)
+    joints = ROBOT.left_arm_joints if side == "left" else ROBOT.right_arm_joints
+    eff = []
+    for j, i in zip(joints, idx):
+        tgt = float(np.asarray(j.get_drive_target()).reshape(-1)[0]); vt = float(np.asarray(j.get_drive_velocity_target()).reshape(-1)[0])
+        eff.append(_drive_gain(j, "stiffness") * (tgt - q[i]) + _drive_gain(j, "damping") * (vt - qd[i]))
+    real = (q[fidx] - finger[2]) / finger[1]; g = (real - scale[0]) / (scale[1] - scale[0])
+    return q[idx], qd[idx], float(np.clip(g, -0.2, 1.2)), eff
 
 
 def proprio_row() -> np.ndarray:
     lj = ROBOT.get_left_arm_jointState(); rj = ROBOT.get_right_arm_jointState()
     le = ENV.get_arm_pose("left"); re_ = ENV.get_arm_pose("right")
-    return np.array(list(lj[:-1]) + [lj[-1]] + list(rj[:-1]) + [rj[-1]] + list(le) + list(re_) + [ROBOT.left_gripper_val, ROBOT.right_gripper_val], dtype=np.float32)
+    base = list(lj[:-1]) + [lj[-1]] + list(rj[:-1]) + [rj[-1]] + list(le) + list(re_) + [ROBOT.left_gripper_val, ROBOT.right_gripper_val]
+    lq, lqd, lg, leff = _measured("left"); rq, rqd, rg, reff = _measured("right")
+    lt = ROBOT.get_left_tcp_pose(); rt = ROBOT.get_right_tcp_pose()
+    ext = list(lq) + [lg] + list(rq) + [rg] + list(lqd) + list(rqd) + list(lt) + list(rt) + list(leff) + list(reff)
+    return np.array(base + ext, dtype=np.float32)
 
 
 def calib() -> dict:
@@ -127,6 +182,20 @@ def calib() -> dict:
 CALIB = calib() if OBS_CALIBRATION else {}
 
 
+DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense
+_RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
+
+
+def _depth_noise(d: np.ndarray) -> np.ndarray:
+    """Optional stereo-camera-like depth: noise grows with distance squared, 1% dropouts (0 = no reading). Off by default."""
+    if DEPTH_NOISE != "realsense": return d
+    z = d.astype(np.float32); valid = z > 0
+    unit = 1000.0 if float(np.nanmax(z) if z.size else 0) > 20 else 1.0          # RoboTwin depth is in mm
+    zm = z / unit; noisy = zm + _RNG.normal(0.0, 1.0, z.shape).astype(np.float32) * (0.002 + 0.0025 * zm * zm)
+    noisy[_RNG.random(z.shape) < 0.01] = 0.0; noisy[~valid] = 0.0
+    return noisy * unit
+
+
 def grab(cameras: list[str], depth: bool) -> tuple[dict, dict]:
     imgs = {c: S.render_frame(c) for c in cameras}
     dep = {}
@@ -134,7 +203,7 @@ def grab(cameras: list[str], depth: bool) -> tuple[dict, dict]:
         try:
             ENV._update_render(); ENV.cameras.update_picture(); dd = ENV.cameras.get_depth()
             for c in cameras:
-                if c in dd: dep[c] = np.asarray(dd[c]["depth"], dtype=np.float16)
+                if c in dd: dep[c] = _depth_noise(np.asarray(dd[c]["depth"], dtype=np.float32)).astype(np.float16)
         except Exception:  # noqa
             traceback.print_exc()
     return imgs, dep
@@ -173,7 +242,7 @@ class Recorder:
                 out.append(rcb1.array_part(f"frames/{c}", fr))
             if len(fr): out.append(rcb1.array_part(f"last/{c}", fr[-1]))
             if self.dep[c]: out.append(rcb1.array_part(f"depth/{c}", np.stack(self.dep[c])))
-        out.append(rcb1.array_part("proprio", np.stack(self.prop) if self.prop else np.zeros((0, 30), np.float32)))
+        out.append(rcb1.array_part("proprio", np.stack(self.prop) if self.prop else np.zeros((0, len(PROPRIO_LAYOUT)), np.float32)))
         return out
 
 
