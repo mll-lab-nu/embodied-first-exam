@@ -1,4 +1,4 @@
-# Limited-mode protocol `rcb-limited/2.0` (robot as a service)
+# Limited-mode protocol `rcb-limited/2.1` (robot as a service)
 
 The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit**;
 the agent's wall-clock budget is the only limit; actions and simulated time are reported as cost. Nothing the agent can
@@ -30,8 +30,7 @@ response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `r
 unpack f dir`) is shipped with the client.
 
 ## `meta` (in every response)
-`step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [14
-joint names incl. grippers, l_x..l_qz, r_x..r_qz, left_gripper_cmd, right_gripper_cmd], "now": [30 floats]}`, `cameras`
+`step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [82 names], "now": [82 floats]}` (groups below), `cameras`
 (RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the whole key omitted when the task sets
 `RCB_OBS_CALIBRATION=0`), `done`, `reason`. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
 [{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
@@ -92,5 +91,23 @@ While the episode runs the service writes, next to the evidence above:
 All four are collected as sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to
 `replay.mp4` and reports `live_video`, `live_frames`. `replay.mp4` stays the authoritative video (a fresh replay).
 
+## Proprioception (2.1)
+82 columns, grouped in `spec.proprio_groups` (first column, count, meaning). 2.0's 30 columns are unchanged at 0–29;
+2.1 appends what a real arm reports and 2.0 lacked:
+| columns | group | source |
+|---|---|---|
+| 0–13 | `joint_cmd` | commanded drive targets + gripper command |
+| 14–27 | `ee_pose` | measured end-effector link pose (RoboTwin ee frame, 0.12 m behind the TCP) |
+| 28–29 | `gripper_cmd` | commanded gripper value |
+| 30–43 | `joint_pos` | measured joint positions (articulation qpos) + measured gripper opening, from the finger joint mapped to the command's [0,1] units (clipped to [-0.2, 1.2]); the grasp signal a real gripper gives |
+| 44–55 | `joint_vel` | measured arm joint velocities |
+| 56–69 | `tcp_pose` | measured gripper-centre pose (RoboTwin `get_*_tcp_pose`) |
+| 70–81 | `joint_effort` | stiffness·(target−q) + damping·(v_target−q̇) per arm joint: the PD drive's effort, a motor-current analogue |
+Not exposed (simulator privilege): object poses, segmentation, contact forces on objects, the success predicate.
+
+Depth (`include_depth`, head/front/wrist cameras) is exact by default. `RCB_DEPTH_NOISE=realsense` (task env) adds
+stereo-camera-like noise, σ = 2 mm + 2.5 mm·z² (z in m), and 1 % dropouts (0 = no reading), seeded by
+`RCB_DEPTH_NOISE_SEED`; it never affects physics.
+
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1.
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise; the 2.x client accepts both.
