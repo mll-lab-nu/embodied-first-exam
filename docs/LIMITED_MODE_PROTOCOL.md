@@ -76,5 +76,21 @@ when the agent phase ends (`timeout`) or on an error. The predicate is evaluated
 after the agent container is stopped; a separate verifier grades `final.json`: `success = live ∧ replay ∧ deterministic`,
 reward fields as in PROTOCOL §3.
 
+## Live recording (sidecar only; the agent sees none of it)
+While the episode runs the service writes, next to the evidence above:
+- `live.mp4`: six-view grid (world / observer / head · front / left wrist / right wrist, 213×160 tiles) with a status bar
+  (call id, what the agent sent, simulated and wall-clock time). A frame every `250 / RCB_LIVE_FPS` physics steps
+  (default 10 per simulated second), **only while physics runs** (a `/submit` chunk or an `/observe` watch window), so
+  the agent's thinking time takes no frames. With `RCB_LIVE=moving` (default) frames are also skipped while nothing in
+  the scene moves (max change of all poses / joint states below `RCB_LIVE_MOVE_EPS`, 1e-3). `RCB_LIVE=active` records
+  every sample; `off` disables it. Fragmented MP4: the file stays playable if the container dies mid-episode.
+- `live_timeline.jsonl`: one line per frame `{frame, wall_s, sim_step, sim_s, call, label}`, so any frame maps back to
+  the call in `episode.jsonl`.
+- `calls/NNNNNN/actions.npy`: the exact action array of every `/submit` (float32, as sent).
+- `trajectory_live.f64`: the recorded (T, 34) trajectory appended after every call (raw float64), crash-safe
+  counterpart of `trajectory.npz`.
+All four are collected as sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to
+`replay.mp4` and reports `live_video`, `live_frames`. `replay.mp4` stays the authoritative video (a fresh replay).
+
 ## Versioning
 `protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1.
