@@ -3,7 +3,7 @@
  "category": "hammer",
  "object": "claw_hammer",
  "task": "swing_down",
- "text": "Pick up the claw hammer and move it through the demonstrated swing-down motion: bring the hammer to each goal pose in order (the green marker shows the current goal).",
+ "text": "Pick up the claw hammer and move it through the demonstrated motion (a downward hammer swing): bring it to each goal pose in order (the green marker shows the current goal).",
  "start_pose": [
   0.09076502773615436,
   0.08070982635558854,
