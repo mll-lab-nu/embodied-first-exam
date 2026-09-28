@@ -16,7 +16,7 @@ TRACE_DIR = "/app/output/rcb_trace"
 os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the verifier's own sessions must not be traced
 
 
-def render_agent_traces(family: str, instance: str, max_videos: int = 6, budget_s: float = 420.0) -> dict:
+def render_agent_traces(family: str, instance: str, max_videos: int = 6, budget_s: float = 420.0, sv=None) -> dict:
     """Reconstruct videos of the agent's own rollouts from its self-reported traces (never affects the verdict).
     Writes /logs/verifier/agent_sessions/index.json (every trace) and NN_<name>.mp4 for the last `max_videos`
     rollouts (kind == rollout, >= 50 steps). A trace replays exactly only if the agent drove the robot through the
@@ -38,10 +38,11 @@ def render_agent_traces(family: str, instance: str, max_videos: int = 6, budget_
     out["agent_traces"] = len(idx); out["agent_trace_steps"] = int(sum(e["steps"] for e in idx))
     t_first = min((e["t_start"] for e in idx), default=0.0)
     pick = [e for e in idx if e["kind"] == "rollout" and e["task"] == family and e["steps"] >= 50][-max_videos:]
-    t0 = _t.time(); sv = None
+    t0 = _t.time()
     try:
         from rcb_traj import Session
-        inst = json.load(open(instance)); sv = Session(family, instance=instance, enable_render=True)
+        inst = json.load(open(instance))
+        if sv is None: sv = Session(family, instance=instance, enable_render=True)   # reuse the replay-video session: one simulator per process (GPU memory)
         for k, e in enumerate(pick):
             if _t.time() - t0 > budget_s: break
             A = np.load(os.path.join(TRACE_DIR, e["file"]), allow_pickle=False)["actions"].astype(np.float64)
@@ -111,10 +112,11 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
+        render_sv = None
         if not a.no_video:
             try:
                 s.close()
-                sv = Session(a.family, instance=a.instance, enable_render=True)
+                sv = Session(a.family, instance=a.instance, enable_render=True); render_sv = sv
                 sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=a.video_every, fps=a.video_fps)  # 6-view grid
                 out["video_rendered"] = 1
             except Exception:  # noqa: BLE001
@@ -122,7 +124,7 @@ def main() -> int:
         write(ok, out)
         if not a.no_video:  # after the verdict is on disk: reconstruct the agent's own rollouts (self-reported, may be slow)
             try:
-                out.update(render_agent_traces(a.family, a.instance)); write(ok, out)
+                out.update(render_agent_traces(a.family, a.instance, sv=render_sv)); write(ok, out)
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
     except Exception:  # noqa: BLE001
