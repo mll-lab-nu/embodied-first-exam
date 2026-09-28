@@ -9,6 +9,7 @@ artifacts = [
   { source = "/data/live_timeline.jsonl", service = "sim" },
   { source = "/data/trajectory_live.f64", service = "sim" },
   { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
   "/app/output/",
 ]
 
