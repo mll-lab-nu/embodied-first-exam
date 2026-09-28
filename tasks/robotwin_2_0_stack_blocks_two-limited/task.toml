@@ -5,6 +5,11 @@ artifacts = [
   { source = "/data/trajectory.npz", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/live.mp4", service = "sim" },
+  { source = "/data/live_timeline.jsonl", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
   "/app/output/",
 ]
 

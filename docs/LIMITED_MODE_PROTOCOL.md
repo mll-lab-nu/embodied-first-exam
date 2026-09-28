@@ -1,4 +1,4 @@
-# Limited-mode protocol `rcb-limited/2.0` (robot as a service)
+# Limited-mode protocol `rcb-limited/2.1` (robot as a service)
 
 The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit**;
 the agent's wall-clock budget is the only limit; actions and simulated time are reported as cost. Nothing the agent can
@@ -30,8 +30,7 @@ response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `r
 unpack f dir`) is shipped with the client.
 
 ## `meta` (in every response)
-`step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [14
-joint names incl. grippers, l_x..l_qz, r_x..r_qz, left_gripper_cmd, right_gripper_cmd], "now": [30 floats]}`, `cameras`
+`step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [82 names], "now": [82 floats]}` (groups below), `cameras`
 (RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the whole key omitted when the task sets
 `RCB_OBS_CALIBRATION=0`), `done`, `reason`. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
 [{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
@@ -76,5 +75,44 @@ when the agent phase ends (`timeout`) or on an error. The predicate is evaluated
 after the agent container is stopped; a separate verifier grades `final.json`: `success = live ∧ replay ∧ deterministic`,
 reward fields as in PROTOCOL §3.
 
+## Live recording (sidecar only; the agent sees none of it)
+- `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each
+  frame stamped `wall mm:ss  sim s  #call what-the-agent-sent`. Frames are sampled every `250 / RCB_LIVE_FPS` physics
+  steps (default 10 per simulated second) **only inside calls that ran physics** (a `/submit` chunk or an `/observe`
+  watch window), so the agent's thinking time takes no frames; with `RCB_LIVE_FILTER=moving` (default) frames are also
+  skipped while nothing moves (max change of all poses / joint states below `RCB_LIVE_MOVE_EPS`, 1e-3).
+- Capture (`RCB_LIVE`): **`replay`** (default) logs only call boundaries during the episode (no cost to the agent) and
+  renders `live.mp4` at episode end from the recorded trajectory; the simulation is bit-exact deterministic, so it is the
+  same motion. `realtime` renders while the episode runs (the video survives a crash, but each frame costs ~150 ms of
+  the agent's wall clock: a 10 s chunk took 20.6 s instead of 5.1 s). `off` disables it.
+- `live_segments.jsonl` (per call: call, label, physics-step range, wall-clock start/end) and `live_timeline.jsonl`
+  (per frame: frame, wall_s, sim_step, call, label) map every frame back to `episode.jsonl`.
+- `calls/NNNNNN/actions.npy`: the exact action array of every `/submit` (float32, as sent).
+- `trajectory_live.f64`: the recorded (T, 34) trajectory appended after every call (raw float64). With
+  `live_segments.jsonl` it is enough to render the video offline if the container dies before the end.
+- `startups.jsonl`: one line per service start. The sidecar restarts on a crash while starting
+  (`restart: on-failure:3`); once an episode has started a restarted service refuses to build a new scene (no reset),
+  marks the episode `reason = sim_crashed` and the verifier reports `infra_error = 1`.
+All are sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to `replay.mp4` (which stays the
+authoritative video) and reports `live_video`, `live_frames`, `sim_startups`, `infra_error`.
+
+## Proprioception (2.1)
+82 columns, grouped in `spec.proprio_groups` (first column, count, meaning). 2.0's 30 columns are unchanged at 0–29;
+2.1 appends what a real arm reports and 2.0 lacked:
+| columns | group | source |
+|---|---|---|
+| 0–13 | `joint_cmd` | commanded drive targets + gripper command |
+| 14–27 | `ee_pose` | measured end-effector link pose (RoboTwin ee frame, 0.12 m behind the TCP) |
+| 28–29 | `gripper_cmd` | commanded gripper value |
+| 30–43 | `joint_pos` | measured joint positions (articulation qpos) + measured gripper opening, from the finger joint mapped to the command's [0,1] units (clipped to [-0.2, 1.2]); the grasp signal a real gripper gives |
+| 44–55 | `joint_vel` | measured arm joint velocities |
+| 56–69 | `tcp_pose` | measured gripper-centre pose (RoboTwin `get_*_tcp_pose`) |
+| 70–81 | `joint_effort` | stiffness·(target−q) + damping·(v_target−q̇) per arm joint: the PD drive's effort, a motor-current analogue |
+Not exposed (simulator privilege): object poses, segmentation, contact forces on objects, the success predicate.
+
+Depth (`include_depth`, head/front/wrist cameras) is exact by default. `RCB_DEPTH_NOISE=realsense` (task env) adds
+stereo-camera-like noise, σ = 2 mm + 2.5 mm·z² (z in m), and 1 % dropouts (0 = no reading), seeded by
+`RCB_DEPTH_NOISE_SEED`; it never affects physics.
+
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1.
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise; the 2.x client accepts both.
