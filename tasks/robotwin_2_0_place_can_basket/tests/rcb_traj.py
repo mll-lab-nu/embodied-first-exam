@@ -51,6 +51,11 @@ ROBOTWIN_ROOT = os.environ.get("ROBOTWIN_ROOT", "/opt/RoboTwin")
 # It records the agent's whole debugging history, not just the trajectory it hands in (the verifier reports it as
 # cost: agent_sessions / agent_resets / agent_sim_steps). Set RCB_SESSION_LOG="" to disable (the verifier does).
 SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
+# Agent trace: every rollout (reset -> next reset / exit) of every Session dumps its per-step drive targets (float32,
+# same (T, 34) layout as a trajectory) to RCB_AGENT_TRACE_DIR/<pid>_<n>.npz; the verifier renders the last few as
+# videos of what the agent tried. Self-reported like the session log. RCB_AGENT_TRACE_DIR="" disables it.
+TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
+TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
 
 
 def _slog(ev: str, **kw) -> None:
@@ -160,9 +165,11 @@ class Session:
         self._resets = 0
         self._joints = None
         self._total_steps = 0
+        self._trace: list | None = None; self._trace_kind = "rollout"; self._trace_t0 = time.time()
         _slog("session_start", task=task, seed=self.seed, render=enable_render)
         import atexit
         atexit.register(lambda: _slog("session_end", task=task, resets=self._resets, sim_steps=self._total_steps + self._sim_steps))
+        atexit.register(self._trace_dump)
         if instance is not None:
             self.load_instance(instance)
         else:
@@ -185,6 +192,7 @@ class Session:
         """Rebuild the frozen instance: RoboTwin re-seeds numpy, re-creates the scene, places the objects and
         settles them. Then the physics-step hook is (re)installed. Verifies the initial-state hash if known."""
         import sapien
+        self._trace_dump()
         self._recording = None
         if self.enable_render:
             sapien.render.set_camera_shader_dir(self.render_shader)
@@ -202,6 +210,7 @@ class Session:
         _slog("reset", task=self.task, n=self._resets + 1, sim_steps_before=self._sim_steps)
         self._sim_steps = 0
         self._resets += 1
+        self._trace = [] if TRACE_DIR else None; self._trace_t0 = time.time()
         sha = self.state_sha()
         if self.expected_sha is not None and sha != self.expected_sha:
             raise RuntimeError(f"instance state hash {sha} != expected {self.expected_sha}: non-deterministic rebuild")
@@ -210,8 +219,10 @@ class Session:
     def _on_step(self) -> None:
         for e in self._entities:  # gravity/coriolis compensation, as RoboTwin does before every joint command
             e.set_qf(e.compute_passive_force(gravity=True, coriolis_and_centrifugal=True))
-        if self._recording is not None:
-            self._recording.append(self._current_row())
+        if self._recording is not None or self._trace is not None:
+            row = self._current_row()
+            if self._recording is not None: self._recording.append(row)
+            if self._trace is not None: self._trace.append(row.astype(np.float32))
         self._sim_steps += 1
 
     def _current_row(self) -> np.ndarray:
@@ -285,7 +296,7 @@ class Session:
                 "resets": int(self._resets), "state_sha": self.state_sha()}
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
-        self.reset()
+        self.reset(); self._trace_kind = "replay"
         acts = np.asarray(actions, dtype=np.float64)
         if acts.ndim != 2 or acts.shape[1] != self.action_dim:
             raise ValueError(f"actions must be (T, {self.action_dim}), got {acts.shape}")
@@ -326,7 +337,7 @@ class Session:
         import imageio.v2 as imageio
         if not self.enable_render:
             raise RuntimeError("render_video needs Session(..., enable_render=True)")
-        self.reset()
+        self.reset(); self._trace_kind = "render"
         grab = lambda: self.render_grid(cameras, cols=cols, size=size)
         frames = [grab()]
         for i, row in enumerate(np.asarray(actions, dtype=np.float64)):
@@ -341,7 +352,25 @@ class Session:
         imageio.imwrite(str(path.with_suffix(".last.png")), np.ascontiguousarray(frames[-1][..., :3]))
         return {**self.status(), "n_frames": len(frames), "video": str(path)}
 
+    def _trace_dump(self) -> None:
+        """Write the current rollout's trace (if any) and start none; never raises."""
+        tr, kind = self._trace, self._trace_kind; self._trace = None; self._trace_kind = "rollout"
+        if not tr or not TRACE_DIR: return
+        try:
+            os.makedirs(TRACE_DIR, exist_ok=True)
+            ents = [e for e in os.scandir(TRACE_DIR) if e.name.endswith(".npz")]
+            if len(ents) >= TRACE_MAX_FILES or sum(e.stat().st_size for e in ents) >= TRACE_MAX_BYTES:
+                _slog("trace_dropped", task=self.task, n_steps=len(tr)); return
+            try: ok = bool(self.env.check_success())
+            except Exception: ok = False  # noqa: BLE001 — e.g. at interpreter exit
+            path = os.path.join(TRACE_DIR, f"{os.getpid()}_{self._resets:05d}.npz")
+            np.savez_compressed(path, actions=np.stack(tr), task=self.task, seed=self.seed, instance_sha=self.expected_sha or "",
+                                kind=kind, t_start=self._trace_t0, t_end=time.time(), success=ok)
+        except Exception:  # noqa: BLE001 — tracing must never break the agent's run
+            pass
+
     def close(self) -> None:
+        self._trace_dump()
         try:
             self.env.close_env(clear_cache=True)
         except Exception:  # noqa: BLE001
