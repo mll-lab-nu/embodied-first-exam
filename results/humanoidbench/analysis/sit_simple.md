@@ -4,16 +4,19 @@
 ### limited
 - **一个 episode 里边看边调**：从第一步起用 `spec()` 的 `range` 把弧度换成动作，每段 20–40 步 ramp 后看 IMU 和房间图；第 80 步已坐上椅子，此后不 reset、原地改姿势，第 825 步到线（750.08），用时 2.4 min、$0.0227。
 - **伸髋试错一次**：坐上后 gravity x −0.37（后仰），前伸手臂也没改善；它为减后仰把髋伸到 −0.55，gravity x 反到 −0.545，改屈髋到 −1.10、−1.25 后回到 −0.05，第 400 步起固定目标保持。
-- **比上一轮（第 3 版）省了 3 次 reset**：回报 750.24 → 750.08，reset 3 → 0，用时 7.5 → 2.4 min，看图 21 → 6 张；上一轮开头说 "upright beside the chair"、试后撤步两次侧翻，这轮一开始就说 "the chair close behind the standing robot"。
-- **第 5 版的改动**：读 gravity 时写明了方向（"backward lean"、"on its forward axis"，上一轮只说 "tilted about 45°"），与新写的 "x > 0 leaning forward" 一致；关节轴、IMU 符号、相机位姿仍只打印，代码只用 `range`；没有摔倒，新的结束规则没派上用场；`time_s` 从第一次请求起算（0.51 min 时第 0 步 24.01 s），它全程没看时间。
+- **一开始就认对方位**：开头就说 "the chair close behind the standing robot"，全程只看了 6 张图。
+- **读数对上了 spec 的符号**：gravity 方向说 "backward lean"、"on its forward axis"，与 spec 里 "x > 0 leaning forward" 一致；关节轴、IMU 符号、相机位姿仍只打印，代码只用 `range`；没有摔倒，新的结束规则没派上用场；`time_s` 从第一次请求起算（0.51 min 时第 0 步 24.01 s），它全程没看时间。
 ### full
 - **扫恒定目标、照说明建代理分**：读出椅子在身后 x −0.25；代理分取两项座面的平均，乘直立、头高、静止、低力，另乘一个椅子接触项。
 - **坐下本身不难**：1.02 min 扫的 8 组髋/膝/踝目标全都坐住 1000 步（骨盆 z 0.706–0.729），2.54 min 它说 "A symmetric crouch already settles on the chair"。
 - **之后只在微调**：腿 60 步 ramp、手臂延后收拢，再加 0.005 rad 级单关节偏移；35 min 定稿后没再改，最后 10.5 min 里 8 min 在 sleep。
-- **代理分偏保守**：自估 817.09，回放 954.11；交卷时它说 "I can’t confirm whether it reaches the 750 pass mark"。
+- **代理分偏保守**：自估 817.09，回放 954.11；交卷时它说 "I can't confirm whether it reaches the 750 pass mark"。
 ### 两种模式
 - **坐的位置和手臂不同**：limited 骨盆末态 x 位移 −0.15、z 0.71，full 为 (−0.288, 0.014, 0.726)；limited 手臂前伸，full 收臂把保持力降到约 9 N。
 - **坐稳后都不用反馈**：两边保持段都是固定目标；limited 靠 IMU 和画面判断坐正，full 2.5 min 就有能坐住的姿势，其余时间在抬代理分。
 
 ## 改进意见
-- **我们这边没发现问题**：说明准确写了 750 和"两项座面取平均"，full 照此建了代理分；limited 用对了 `range` 和 IMU 符号，两种模式都过了。
+- **说明和设置没发现问题**：说明准确写了 750 和"两项座面取平均"，full 照此建了代理分；limited 用对了 `range` 和 IMU 符号，两种模式都过了。
+
+## 和旧版比
+- **第 3 → 5 版**：回报 750.24 → 750.08（reset 3 → 0，用时 7.5 → 2.4 min）；第 3 版开头以为站在椅子旁边，后撤步侧翻两次，第 5 版一开始就认出椅子在身后。

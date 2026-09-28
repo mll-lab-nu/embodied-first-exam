@@ -52,22 +52,17 @@ def load_tasks():
     return tasks, cols
 
 
-TEXTS = {   # the task text a run had, by the commit its job name ends with (textN: a working tree not committed when run)
-    "070fdcf": ("第 1 版", "09-24", "第一版说明"),
-    "06b0ab3": ("第 2 版", "09-24", "逐个任务对照上游核对说明：agent 看到的就是评分用的"),
-    "e95d382": ("第 3 版", "09-25", "及格线写成奖励的总和；limited 从 spec() 读机器人事实；镜像 0.1.6 清理得更彻底"),
-    "8e09011": ("第 4 版", "09-25", "spec() 去掉 wall_clock_s；服务记下每次 step、reset 返回的图"),
-    "text5": ("第 5 版", "09-26", "说明写明倒了不一定结束；spec() 写明坐标轴和关节、IMU 的正负号；时钟从 agent 的第一次请求算起；"
-                                "头部相机近裁剪面 1 cm；maze 写明起点就是第一个检查点（跑的时候未提交，后来随 e897737 提交，那里 cube 已是第 6 版；job 名以 -text5 结尾）"),
-    "text6": ("第 6 版", "09-27", "只改 cube：每台相机 512×512（原来 256×256），说明里的图像尺寸和每步耗时随之更新（即 e897737）"),
+TEXTS = {   # the task text a run had, by what its job name ends with: (name, date, commit). textN: a working tree not
+            # committed when run; text5 and text6 went into e897737, which has cube at text 6. What each version changed
+            # and why: results/<bench>/analysis/overview.md, "各版的改动".
+    "070fdcf": ("第 1 版", "09-24", "070fdcf"),
+    "06b0ab3": ("第 2 版", "09-24", "06b0ab3"),
+    "e95d382": ("第 3 版", "09-25", "e95d382"),
+    "8e09011": ("第 4 版", "09-25", "8e09011"),
+    "text5": ("第 5 版", "09-26", "e897737"),
+    "text6": ("第 6 版", "09-27", "e897737"),
 }
-RETIRED = {   # versions whose runs were taken out of runs.csv (their rows are in git at 884d59e): what they showed
-    "070fdcf": "Luna 跑第 1–10 行两种模式，20 次 $4.39：limited 过 1（sit_simple），full 过 2（sit_simple、push），10 个任务 full 都高于 limited。"
-               "说明有几处和上游评分不一致、漏了速度目标和头部高度，full 有 5 次没解出就在 23–46 min 停下 → 第 2 版逐个对照上游改说明，并写明不要提前停",
-    "06b0ab3": "Luna 跑 24 个任务两种模式、Sol 跑 5 个任务两种模式，58 次 $66.07：Luna limited 过 1（sit_simple）、full 过 3（sit_simple、push、reach）；"
-               "Sol full 过 1（walk 862.3）、limited 0。\"800 out of 1000 steps\" 被读成撑满 800 步；limited 每次都花 reset 摸动作尺度，"
-               "好几次把 IMU、关节或相机读反；0.1.5 镜像里 reward 的辅助函数和注释仍透露了 reward → 第 3 版",
-}
+RETIRED = {"070fdcf", "06b0ab3"}   # versions whose runs were taken out of runs.csv (their rows are in git at 884d59e)
 
 
 def text_of(r: dict) -> str | None:

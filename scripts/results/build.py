@@ -19,9 +19,10 @@ and site.js are copied next to the pages.
   --cameras DIR   the t=0 images `gen_tasks.py measure-limited --images DIR` wrote, copied in for the task pages
   --no-video      a trial measured now gets its episodes replayed and scored but no videos (a later build without it
                   renders them)
-  --bundle DIR    the overview and the task pages only, in DIR, small enough to publish as one artifact (tens of MB):
-                  no run pages, no per-call tables or galleries, and of the media only each main run's graded video
-                  (limited: the graded episode; full: the replay) -- plus the whole-session video of each --session JOB
+  --bundle DIR    a copy to publish as one artifact (about 100 MB, over more than one publish): the overview, the
+                  task pages, and a page per main run with only its trajectory (no images); no per-call tables or
+                  galleries, and of the media only each main run's graded video (limited: the graded episode; full:
+                  the replay) -- plus the whole-session video of each --session JOB
 The analysis on the overview and at the top of each task page is results/<bench>/analysis/ (analysis.py).
 Everything a page shows is under jobs/results/humanoidbench/ (the trials' videos and images are hard-linked into
 media/), so `python -m http.server` there serves it all. Not in git.
@@ -65,7 +66,7 @@ def main():
     if args.bundle:
         SITE.update(out=os.path.abspath(args.bundle), bundle=True, media=bundle_media(tasks, args.session))
     out = SITE["out"]
-    for d in ("tasks", "media") if args.bundle else ("tasks", "runs", "media"):   # runs.csv as it is now: nothing left from runs no longer in it
+    for d in ("tasks", "runs", "media"):   # runs.csv as it is now: nothing left from runs no longer in it
         shutil.rmtree(f"{out}/{d}", ignore_errors=True)
         os.makedirs(f"{out}/{d}")
     os.makedirs(f"{out}/assets", exist_ok=True)
@@ -84,19 +85,19 @@ def main():
     open(f"{out}/index.html", "w").write(overview(tasks, cols, runs))
     for t in tasks:
         open(f"{out}/tasks/{t['task']}.html", "w").write(task_page(t, cols))
-    for r in runs:
-        if r["s"] and r["task"] in tasks_by and not args.bundle:
-            open(f"{out}/runs/{r['id']}.html", "w").write(run_page(r, tasks_by[r["task"]]))
+    paged = [r for r in runs if r["s"] and r["task"] in tasks_by and (not args.bundle or r in tasks_by[r["task"]]["main"].values())]
+    for r in paged:
+        open(f"{out}/runs/{r['id']}.html", "w").write(run_page(r, tasks_by[r["task"]]))
     check_readme(tasks, cols)
     size = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(out) for f in fs)
-    print(f"{out}/index.html: {len(tasks)} tasks, {0 if args.bundle else sum(1 for r in runs if r['s'])} runs with pages, "
+    print(f"{out}/index.html: {len(tasks)} tasks, {len(paged)} runs with pages, "
           f"{len(runs)} in runs.csv; {size / 1e6:.1f} MB")
 
 
 def bundle_media(tasks: list, sessions: list) -> set:
     """The trial files a bundle takes: each main run's graded video and its poster, and the whole-session video of the
     runs named (by job) in `sessions`."""
-    keep = set()
+    keep, named = set(), {os.path.basename(j.rstrip("/")) for j in sessions}
     for t in tasks:
         for r in t["main"].values():
             s, base = r["s"], os.path.join(r["s"]["trial_dir"], "report")
@@ -106,7 +107,9 @@ def bundle_media(tasks: list, sessions: list) -> set:
                 continue
             e = next((e for e in s["episodes"] if e["ep"] == s["result"]["graded_ep"] and e.get("video")), None)
             keep |= {os.path.join(base, e["video"]), os.path.join(base, e.get("poster") or "")} if e else set()
-            if os.path.basename(s["job"]) in {os.path.basename(j.rstrip("/")) for j in sessions}:
+        for r in t["runs"]:
+            if r["s"] and os.path.basename(r["s"]["job"]) in named:
+                base = os.path.join(r["s"]["trial_dir"], "report")
                 keep |= {os.path.join(base, "session.mp4"), os.path.join(base, "session.jpg")}
     return keep
 

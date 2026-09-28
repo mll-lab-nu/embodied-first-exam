@@ -3,7 +3,8 @@
 A file is Markdown: an optional **一句话** paragraph, then `## ` sections. A section named after a model ("GPT-6 Luna")
 holds `### limited`, `### full` and `### 两种模式`; each mode's card opens with its measured numbers (on a task page its
 main run, on the overview the column over every task it ran), so the prose only has to say why. Any other section
-(总体结论, 模型对比, 改进意见) is shown as written, in the file's order; the overview can append a table to one."""
+(总体结论, 模型对比, 对照实验, 各版的改动; a task's 改进意见 and 和旧版比, the latter kept small) is shown as written, in
+the file's order; the overview can append a table to one."""
 from __future__ import annotations
 
 import os
@@ -16,6 +17,7 @@ from widgets import md, pcell, status_chip
 
 MODE = {"limited": "limited · 模拟真机", "full": "full · 完整状态"}
 ACROSS = "两种模式"
+MINOR = {"和旧版比"}   # sections kept small: a task's comparison with its earlier runs
 ENDED = {"success": "通过", "resets_used_up": "reset 用完", "timeout": "时间用完", "quit_after_end": "自己停下",
          "quit_mid_episode": "自己停下"}
 
@@ -87,7 +89,7 @@ def model_panel(model: str, cards: list, sec: dict | None) -> str:
 
 
 def section_panel(sec: dict, key: str, extra: str = "") -> str:
-    cls = " advice" if "改进" in sec["title"] else ""
+    cls = " advice" if "改进" in sec["title"] else " minor" if sec["title"] in MINOR else ""
     return f'<div class="panel sec{cls}" id="{key}"><div class="hd"><h2>{esc(sec["title"])}</h2></div><div class="notes">{md(sec["body"])}</div>{extra}</div>'
 
 

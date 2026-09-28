@@ -5,6 +5,7 @@ import hashlib
 import html
 import json
 import os
+import re
 import shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -126,7 +127,7 @@ def url(s: dict, path: str, page_dir: str) -> str:
 
 def pretty_output(text: str) -> str:
     """codex wraps each command's result in JSON ({"exit_code":..,"output":".."}, or a Promise.allSettled entry):
-    show the output itself, with its line breaks."""
+    show the output itself, with its line breaks and without terminal colour codes."""
     lines = []
     for line in text.splitlines():
         try:
@@ -140,4 +141,4 @@ def pretty_output(text: str) -> str:
             lines.append(d)
         else:
             lines.append(line)
-    return "\n".join(lines)
+    return re.sub(r"\x1b(\[[0-9;?]*[A-Za-z])?", "", "\n".join(lines))
