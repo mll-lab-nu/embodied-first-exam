@@ -43,6 +43,8 @@ def _refuse_restart_after_start() -> None:
     while True: time.sleep(3600)
 _refuse_restart_after_start()
 with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
+if os.environ.get("RCB_TEST_CRASH_ONCE") and sum(1 for _ in open(os.path.join(DATA, "startups.jsonl"))) == 1:
+    sys.exit("RCB_TEST_CRASH_ONCE: simulated startup crash")   # test hook for the restart path (never set in tasks)
 
 
 def log(ev: dict) -> None:
