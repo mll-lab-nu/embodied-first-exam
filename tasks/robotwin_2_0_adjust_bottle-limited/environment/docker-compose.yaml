@@ -9,6 +9,7 @@ services:
       - ./sim:/srv:ro
     working_dir: /opt/RoboTwin
     command: python /srv/server.py
+    restart: on-failure:3          # a crash while starting (e.g. GPU memory) retries; a started episode is never restarted (server.py)
     environment:
       RCB_TASK: adjust_bottle
       RCB_INSTANCE: /srv/instance.json
