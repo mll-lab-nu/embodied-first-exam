@@ -2,8 +2,8 @@
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for
-success + determinism and renders the six-view /data/replay.mp4. While the episode runs it also records /data/live.mp4 (rcb_live.py: frames only
-while physics runs, skipped while nothing moves), saves each call's actions under /data/calls/, and appends the
+success + determinism and renders the six-view /data/replay.mp4. It also produces /data/live.mp4 (rcb_live.py: call-stamped frames only
+while physics runs, skipped while nothing moves; by default rendered from the trajectory at the end), saves each call's actions under /data/calls/, and appends the
 trajectory to /data/trajectory_live.f64 after every call (crash-safe). Nothing about objects ever leaves this process."""
 from __future__ import annotations
 import io, json, math, os, signal, sys, threading, time, traceback
@@ -74,6 +74,8 @@ def finalize() -> None:
                 S.render_video(acts, os.path.join(DATA, "replay.mp4"), every=max(10, len(acts) // 600), fps=25); E["video"] = True
             except Exception:  # noqa
                 traceback.print_exc()
+            try: E.update(LIVE.render_from_trajectory(acts))   # labelled live.mp4 (replay mode: rendered now, zero cost during the episode)
+            except Exception as exc: E["live_error"] = repr(exc)  # noqa
         except Exception as exc:  # noqa
             traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
         E["finalized"] = True; write_final()
@@ -375,7 +377,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = int(S._sim_steps); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan)
-    rec.tick(force=True)
+    rec.tick(force=True); LIVE.end_call()
     E["step"] += int(A.shape[0]); E["calls"] += 1
     succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(A.shape[0]), "physics_steps_chunk": int(S._sim_steps) - before,
@@ -400,7 +402,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         LIVE.set_label(E["calls"] + 1, f"observe watch {seconds:g}s")
         for _ in range(int(seconds * PHYS_HZ)):
             S.step(); LIVE.tick(); rec.tick()
-        rec.tick(force=True)
+        rec.tick(force=True); LIVE.end_call()
         succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
         if succ: finish("success")
     E["calls"] += 1

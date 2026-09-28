@@ -76,20 +76,25 @@ after the agent container is stopped; a separate verifier grades `final.json`: `
 reward fields as in PROTOCOL §3.
 
 ## Live recording (sidecar only; the agent sees none of it)
-While the episode runs the service writes, next to the evidence above:
-- `live.mp4`: six-view grid (world / observer / head · front / left wrist / right wrist, 213×160 tiles) with a status bar
-  (call id, what the agent sent, simulated and wall-clock time). A frame every `250 / RCB_LIVE_FPS` physics steps
-  (default 10 per simulated second), **only while physics runs** (a `/submit` chunk or an `/observe` watch window), so
-  the agent's thinking time takes no frames. With `RCB_LIVE=moving` (default) frames are also skipped while nothing in
-  the scene moves (max change of all poses / joint states below `RCB_LIVE_MOVE_EPS`, 1e-3). `RCB_LIVE=active` records
-  every sample; `off` disables it. Fragmented MP4: the file stays playable if the container dies mid-episode.
-- `live_timeline.jsonl`: one line per frame `{frame, wall_s, sim_step, sim_s, call, label}`, so any frame maps back to
-  the call in `episode.jsonl`.
+- `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each
+  frame stamped `wall mm:ss  sim s  #call what-the-agent-sent`. Frames are sampled every `250 / RCB_LIVE_FPS` physics
+  steps (default 10 per simulated second) **only inside calls that ran physics** (a `/submit` chunk or an `/observe`
+  watch window), so the agent's thinking time takes no frames; with `RCB_LIVE_FILTER=moving` (default) frames are also
+  skipped while nothing moves (max change of all poses / joint states below `RCB_LIVE_MOVE_EPS`, 1e-3).
+- Capture (`RCB_LIVE`): **`replay`** (default) logs only call boundaries during the episode (no cost to the agent) and
+  renders `live.mp4` at episode end from the recorded trajectory; the simulation is bit-exact deterministic, so it is the
+  same motion. `realtime` renders while the episode runs (the video survives a crash, but each frame costs ~150 ms of
+  the agent's wall clock: a 10 s chunk took 20.6 s instead of 5.1 s). `off` disables it.
+- `live_segments.jsonl` (per call: call, label, physics-step range, wall-clock start/end) and `live_timeline.jsonl`
+  (per frame: frame, wall_s, sim_step, call, label) map every frame back to `episode.jsonl`.
 - `calls/NNNNNN/actions.npy`: the exact action array of every `/submit` (float32, as sent).
-- `trajectory_live.f64`: the recorded (T, 34) trajectory appended after every call (raw float64), crash-safe
-  counterpart of `trajectory.npz`.
-All four are collected as sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to
-`replay.mp4` and reports `live_video`, `live_frames`. `replay.mp4` stays the authoritative video (a fresh replay).
+- `trajectory_live.f64`: the recorded (T, 34) trajectory appended after every call (raw float64). With
+  `live_segments.jsonl` it is enough to render the video offline if the container dies before the end.
+- `startups.jsonl`: one line per service start. The sidecar restarts on a crash while starting
+  (`restart: on-failure:3`); once an episode has started a restarted service refuses to build a new scene (no reset),
+  marks the episode `reason = sim_crashed` and the verifier reports `infra_error = 1`.
+All are sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to `replay.mp4` (which stays the
+authoritative video) and reports `live_video`, `live_frames`, `sim_startups`, `infra_error`.
 
 ## Proprioception (2.1)
 82 columns, grouped in `spec.proprio_groups` (first column, count, meaning). 2.0's 30 columns are unchanged at 0–29;
