@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import base64
 import io
+import itertools
 import math
 import os
 import sys
@@ -74,7 +75,7 @@ class HumanoidBench:
         self._marks = type(self.s.low.task).render is not Task.render
         self.cameras = CAMERAS + (("room_camera",) if room_camera else ())
         self._room = (room_pose or self._frozen_camera(self.s.low.camera_name or "cam_default")) if room_camera else None
-        self._axes, self._camera_facts = self._hardware()
+        self._axes, self._anchors, self._links, self._camera_facts = self._hardware()
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
 
     def _frozen_camera(self, name: str, dist: float = 3.0) -> tuple:
@@ -87,10 +88,12 @@ class HumanoidBench:
         c = m.camera(name).id; fwd = -d.cam_xmat[c].reshape(3, 3)[:, 2]
         return d.cam_xpos[c] + dist * fwd, dist, math.degrees(math.atan2(fwd[1], fwd[0])), math.degrees(math.asin(fwd[2]))
 
-    def _hardware(self) -> tuple[list, dict]:
-        """What a real robot's documentation gives, read off the model: each joint's axis and each head camera's
-        pose in the pelvis frame with every joint at 0, and where room_camera stands in the robot's starting
-        frame (origin on the floor under the pelvis at t = 0, x the way the robot faces then, z up)."""
+    def _hardware(self) -> tuple[list, list, dict, dict]:
+        """What a real robot's documentation (its URDF) gives, read off the model: each joint's axis and a point on
+        it, each link's parent, mass and centre of mass, each foot's collision shape as a box, and each head
+        camera's pose, all in the pelvis frame with every joint at 0; and where room_camera stands in the robot's
+        starting frame (origin on the floor under the pelvis at t = 0, x the way the robot faces then, z up). The
+        robot is the pelvis's subtree: the scene's objects are subtrees of their own, so none of them is here."""
         m, r3 = self.s.model, lambda v: [round(float(x), 3) for x in v]
         d = mujoco.MjData(m)
         d.qpos[:] = m.qpos0
@@ -99,6 +102,20 @@ class HumanoidBench:
         pelvis = m.body("pelvis").id
         R, p = d.xmat[pelvis].reshape(3, 3), d.xpos[pelvis]
         axes = [r3(R.T @ d.xaxis[m.joint(n).id]) for n in self.joints]
+        anchors = [r3(R.T @ (d.xanchor[m.joint(n).id] - p)) for n in self.joints]
+        robot = [b for b in range(m.nbody) if m.body_rootid[b] == pelvis]
+
+        def box(b):   # the link's colliding geoms' bounding boxes, corner by corner, in the pelvis frame
+            pts = [d.geom_xpos[g] + d.geom_xmat[g].reshape(3, 3) @ (m.geom_aabb[g, :3] + m.geom_aabb[g, 3:] * np.array(c))
+                   for g in range(m.ngeom) if m.geom_bodyid[g] == b and (m.geom_contype[g] or m.geom_conaffinity[g])
+                   for c in itertools.product((-1, 1), repeat=3)]
+            q = np.array([R.T @ (x - p) for x in pts])
+            return [r3(q.min(0)), r3(q.max(0))]
+        links = {"frame": "pelvis (x forward, y left, z up), every joint at 0", "names": [m.body(b).name for b in robot],
+                 "parent": [None if b == pelvis else m.body(int(m.body_parentid[b])).name for b in robot],
+                 "mass_kg": [round(float(m.body_mass[b]), 3) for b in robot], "com_m": [r3(R.T @ (d.xipos[b] - p)) for b in robot],
+                 "feet": {m.body(b).name: box(b) for b in robot if "ankle" in m.body(b).name},
+                 "feet_units": "each foot's collision shape as a box: [min xyz, max xyz], m"}
         cams = {}
         for c in CAMERAS:
             i, C = m.camera(c).id, d.cam_xmat[m.camera(c).id].reshape(3, 3)   # a camera looks down its -z
@@ -118,7 +135,7 @@ class HumanoidBench:
                 "frame": "the robot's start: origin on the floor under the pelvis at t = 0, x the way it faces, y left, z up",
                 "position_m": r3(Y.T @ (np.asarray(lookat) - dist * fwd - [x0[0], x0[1], 0])),
                 "forward": r3(Y.T @ fwd), "up": r3(Y.T @ up), "right": r3(Y.T @ np.cross(fwd, up))}}
-        return axes, cams
+        return axes, anchors, links, cams
 
     def _render(self, camera: str) -> np.ndarray:
         r = self.s.low.mujoco_renderer
@@ -179,13 +196,15 @@ class HumanoidBench:
             "proprio": {"joints": self.joints, "units": "joint_pos rad, joint_vel rad/s", "axis": self._axes,
                         "axis_frame": "the joint's rotation axis in the pelvis frame, every joint at 0; a positive "
                                       "angle turns the joint's child link about it by the right-hand rule: about an axis "
-                                      "near +y (left), a link hanging below the joint swings backward"}
+                                      "near +y (left), a link hanging below the joint swings backward",
+                        "position_m": self._anchors, "position_frame": "a point on that axis (the joint's centre), m, same frame"}
             if self.proprio else None,
             "imu": {"mounted": "pelvis", "frame": "pelvis: x forward, y left, z up",
                     "gyro": "angular velocity, rad/s, pelvis frame, right-hand rule: y > 0 while pitching forward "
                             "(nose down), x > 0 while rolling to the right, z > 0 while turning left",
                     "gravity": "unit gravity direction, pelvis frame: (0, 0, -1) when upright; it tips toward the way "
                                "the pelvis leans: x > 0 leaning forward, y > 0 leaning left"} if self.imu else None,
+            "links": self._links,
             "cameras": {c: {"mounted": "room (fixed)" if c == "room_camera" else "head", "rgb": True,
                             "depth": self.depth and c in CAMERAS, "hw": self.image_hw, **self._camera_facts[c]} for c in self.cameras},
             "depth": {"cameras": list(CAMERAS), "units": "metres along the camera's forward axis (planar depth, as an RGB-D "

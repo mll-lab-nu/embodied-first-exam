@@ -19,9 +19,10 @@ the matching colour, then lift the assembly to about 1.1 m and hold it there, wi
   joint angles and joint velocities. Not where the robot is in the room, not the poses of the bar and the
   sockets, not the reward: the service judges the episode and only tells you that it ended and why
   (`obs["done"]`, `obs["reason"]`: `"success"`, or `"failed"` when it ended without success). `spec()` lists
-  exactly what this run provides, and the robot's own facts you need to read it: each actuator's range, each
-  joint's axis, the IMU's frame, each camera's field of view and pose. Depending on the task's configuration
-  that can also include a pelvis IMU, depth from the head cameras and a camera fixed in the room.
+  exactly what this run provides, and the robot's own facts, as its URDF would give them: each actuator's
+  range, each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the
+  IMU's frame, each camera's field of view and pose. Depending on the task's configuration that can also
+  include a pelvis IMU, depth from the head cameras and a camera fixed in the room.
 - Simulated time only moves when you step: between requests the robot waits, frozen, while you think.
 - There is nothing to hand in: the service records the episode as the trajectory and grades it. Leave the
   script that drove the last episode at `/app/output/gen.py` for the record, complete and runnable.

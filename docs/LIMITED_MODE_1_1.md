@@ -27,9 +27,10 @@ never a reward or a return.
 The agent-facing API is documented in one place, `rcb_client.py`'s docstring: every call, `images=`, the
 observation fields, the errors. `instruction.md` points to it and keeps only task facts: the task, the rules,
 the scoring prose. Anything that belongs to the robot or to the run, the agent reads from `spec()`: the reset
-budget, which sensors are on, and what a real robot's documentation would give. The HumanoidBench adapter reads
-those facts off the model: each servo's range in radians, each joint's axis, the IMU's frame and which way each
-reading goes, and each camera's field of view and pose (position; forward, up and right axes). The service's clock
+budget, which sensors are on, and what a real robot's documentation (its URDF) would give. The HumanoidBench adapter
+reads those facts off the model: each servo's range in radians, each joint's axis and position, each link's mass and
+centre of mass, the feet's collision boxes, the IMU's frame and which way each reading goes, and each camera's field of
+view and pose (position; forward, up and right axes). The service's clock
 (`time_s`, `elapsed_s`) starts at the agent's first request, not when the service came up about a minute earlier.
 
 The trial ends when the agent's session does. The collect hook's SIGUSR1 comes only once the verifier starts,

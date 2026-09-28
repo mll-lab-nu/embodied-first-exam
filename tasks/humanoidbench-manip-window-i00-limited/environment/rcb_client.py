@@ -7,9 +7,10 @@
 Calls. spec() was fetched when connecting; every other call is one HTTP request.
     r.spec()                          static facts: action types; "qpos": dim, layout (actuator order), limits,
                                       range (each actuator's rad at -1 and +1), units; control_hz;
-                                      max_episode_steps; "proprio" (joints, each one's axis) / "imu" (its frame) /
-                                      "depth" (its units and range) (None if absent); "cameras" {name: {"hw",
-                                      "fovy_deg", "pose", "depth", ...}};
+                                      max_episode_steps; "proprio" (joints, each one's axis and position) / "imu"
+                                      (its frame) / "depth" (its units and range) (None if absent); "links" (each
+                                      link's parent, mass and centre of mass; the feet's collision boxes);
+                                      "cameras" {name: {"hw", "fovy_deg", "pose", "depth", ...}};
                                       "budget" {"reset": resets allowed}
     r.observe(images=True)            the current observation; simulated time does not move
     r.step(type, a, images=True)      a is one action, shape (D,), or a batch, shape (K, D): K control steps

@@ -17,7 +17,7 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
   from `mode = "limited"`. The agent-facing API is documented in `environment/rcb_client.py`'s docstring, the
   full reference; `instruction.md` points to it and keeps only task facts (task, rules, scoring prose, measured
   costs, actuator order). Anything that belongs to the robot or the run (reset budget, sensors, servo ranges,
-  axes, camera poses) is in `spec()`, not in the text.
+  axes, joint positions, link masses, camera poses) is in `spec()`, not in the text.
 - 🚩 **The scoring formula must never reach `environment/`.** HumanoidBench grades on a dense reward, and
   a dense reward is the answer key — `images/humanoidbench/scrub_oracles.py` deletes every `get_reward()`
   from the base image, `scripts/humanoidbench/rewards.json` keeps them, and `render` copies one family's
