@@ -92,6 +92,19 @@ v2 design (two operations `submit` / `get_obs`, low-level action chunks, videos 
   `/app/output/rcb_session_log.jsonl`; the verifier reports it as `agent_*` cost fields flagged `agent_cost_self_reported`
   (the agent owns that file). In limited mode the equivalent log is the sidecar's and is evidence.
 
+## Recordings
+
+- **Limited:** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
+  each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
+  costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
+  and a crash-safe trajectory. Details: `docs/LIMITED_MODE_PROTOCOL.md` (Live recording). Protocol 2.1 also gives the
+  agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
+- **Unlimited:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
+  rollout's per-step drive targets to `/app/output/rcb_trace/` (`RCB_AGENT_TRACE_DIR`, capped at 300 files / 400 MB),
+  and the verifier, after writing the verdict, reconstructs videos of the agent's last six rollouts into
+  `agent_sessions/` with an `index.json` of all of them (`agent_traces`, `agent_trace_steps`, `agent_trace_videos`
+  in reward.json). Self-reported: an agent that teleports objects through `exec_code` will not replay faithfully.
+
 ## Running a two-mode batch
 ```bash
 harbor run -p tasks -i robotwin_2_0_<t1> -i robotwin_2_0_<t2> -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-u>
