@@ -29,8 +29,11 @@ ACTUATOR_NAMES = [f"{s}/{j}" for s in ("left", "right") for j in ("waist", "shou
 N = len(ACTUATOR_NAMES)                            # 14
 CAMERAS = ("overhead_cam", "teleoperator_pov", "wrist_cam_left", "wrist_cam_right")
 
-SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
-TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
+# Written under Harbor's agent-log mount (/logs/agent, collected even if the agent tidies /app/output; one run deleted
+# its /app/output copies) when it exists, else under /app/output.
+_LOGDIR = "/logs/agent/rcb" if os.path.isdir("/logs/agent") else "/app/output"
+SESSION_LOG = os.environ.get("RCB_SESSION_LOG", f"{_LOGDIR}/rcb_session_log.jsonl")
+TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", f"{_LOGDIR}/rcb_trace")
 TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
 
 

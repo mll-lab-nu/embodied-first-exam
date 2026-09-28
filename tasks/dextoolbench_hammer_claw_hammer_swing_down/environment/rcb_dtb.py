@@ -43,8 +43,11 @@ INIT_Q = np.concatenate([IIWA_INIT, np.zeros(22)])
 CAMERAS = ("front", "side", "top", "oblique")
 
 # Session log (self-reported debugging footprint, like the RoboTwin tooling) and per-rollout traces.
-SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
-TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
+# Written under Harbor's agent-log mount (/logs/agent, collected even if the agent tidies /app/output; one run deleted
+# its /app/output copies) when it exists, else under /app/output.
+_LOGDIR = "/logs/agent/rcb" if os.path.isdir("/logs/agent") else "/app/output"
+SESSION_LOG = os.environ.get("RCB_SESSION_LOG", f"{_LOGDIR}/rcb_session_log.jsonl")
+TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", f"{_LOGDIR}/rcb_trace")
 TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
 
 
