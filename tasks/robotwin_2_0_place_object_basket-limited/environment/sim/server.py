@@ -57,7 +57,7 @@ def write_final() -> None:
                "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
                "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
                "deterministic": E.get("deterministic"), "video": bool(E.get("video")),
-               **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error") if k in E}},
+               **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error", "live_truncated") if k in E}},
               open(os.path.join(DATA, "final.json"), "w"))
 
 
@@ -72,6 +72,7 @@ def finalize() -> None:
             E["n_actions"] = int(len(acts))
             rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["deterministic"] = rep["state_sha"] == live_sha
             log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
+            write_final()   # the verdict is on disk before any video is rendered (videos never gate grading)
             try:
                 S.render_video(acts, os.path.join(DATA, "replay.mp4"), every=max(10, len(acts) // 600), fps=25); E["video"] = True
             except Exception:  # noqa
