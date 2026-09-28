@@ -19,6 +19,25 @@ from pathlib import Path
 from typing import Any
 import numpy as np
 
+
+def _pick_gl() -> None:
+    """Rendering backend: EGL (GPU) if it works here, else OSMesa (CPU). Checked once per process, before mujoco is
+    imported; an explicit RCB_MUJOCO_GL wins. Physics never depends on it."""
+    if os.environ.get("RCB_MUJOCO_GL"):
+        os.environ["MUJOCO_GL"] = os.environ["PYOPENGL_PLATFORM"] = os.environ["RCB_MUJOCO_GL"]; return
+    if os.environ.get("_RCB_GL_CHECKED"): return
+    import subprocess
+    probe = ("import mujoco; m = mujoco.MjModel.from_xml_string('<mujoco><worldbody><geom size=\\'.1\\'/></worldbody></mujoco>'); "
+             "d = mujoco.MjData(m); mujoco.mj_forward(m, d); r = mujoco.Renderer(m, 240, 320); r.update_scene(d); r.render(); r.render()")
+    env = {**os.environ, "MUJOCO_GL": "egl", "PYOPENGL_PLATFORM": "egl"}
+    try: ok = subprocess.run([sys.executable, "-c", probe], env=env, capture_output=True, timeout=60).returncode == 0
+    except Exception: ok = False
+    gl = "egl" if ok else "osmesa"
+    os.environ["MUJOCO_GL"] = os.environ["PYOPENGL_PLATFORM"] = gl; os.environ["_RCB_GL_CHECKED"] = gl
+
+
+_pick_gl()
+
 ROOT = Path(os.environ.get("RCB_MJ_ROOT", "/opt/rcb_mj"))
 SIM_DT = 1.0 / 600.0
 CONTROL_DT = 1.0 / 60.0
@@ -41,6 +60,29 @@ ACTUATOR_NAMES = IIWA_ACTS + HAND_ACTS
 N = len(JOINT_NAMES)                                   # 29
 INIT_Q = np.concatenate([IIWA_INIT, np.zeros(22)])
 CAMERAS = ("front", "side", "top", "oblique")
+
+
+def _props() -> dict:
+    """Table props per tool category, positions relative to the table's centre (SimToolReal's table URDFs, @313d5ae):
+    hammer = table_narrow_nail (one 3 x 3 x 6 cm nail), eraser / marker = table_narrow_whiteboard (a 2 x 40 x 40 cm board
+    standing at the table's +x edge), spatula = table_narrow_bowl_plate (YCB 024_bowl and 029_plate; their meshes are
+    not in the SimToolReal repository, so here a primitive plate and bowl of YCB's size stand in), brush / screwdriver =
+    the plain table."""
+    import math, mujoco
+    B, C = mujoco.mjtGeom.mjGEOM_BOX, mujoco.mjtGeom.mjGEOM_CYLINDER
+    grey, white, ceramic = (0.5, 0.5, 0.5, 1), (0.95, 0.95, 0.95, 1), (0.85, 0.85, 0.8, 1)
+    board = [{"name": "whiteboard", "type": B, "size": (0.01, 0.2, 0.2), "pos": (0.325, 0.0, 0.35), "rgba": white}]
+    bowl = [{"name": "bowl_base", "type": C, "size": (0.045, 0.004), "pos": (-0.15, 0.1, 0.154), "rgba": ceramic}]
+    for k in range(12):
+        a = 2 * math.pi * k / 12
+        bowl.append({"name": f"bowl_wall_{k}", "type": B, "size": (0.004, 0.022, 0.026), "pos": (-0.15 + 0.07 * math.cos(a), 0.1 + 0.07 * math.sin(a), 0.176),
+                     "euler": (0.0, 0.35, a), "rgba": ceramic})
+    plate = [{"name": "plate", "type": C, "size": (0.13, 0.008), "pos": (0.1, 0.05, 0.158), "rgba": ceramic}]
+    return {"hammer": [{"name": "nail", "type": B, "size": (0.015, 0.015, 0.03), "pos": (-0.16, 0.06, 0.175), "rgba": grey}],
+            "eraser": board, "marker": board, "spatula": bowl + plate}
+
+
+PROPS: dict = {}
 
 # Session log (self-reported debugging footprint, like the RoboTwin tooling) and per-rollout traces.
 # Written under Harbor's agent-log mount (/logs/agent, collected even if the agent tidies /app/output; one run deleted
@@ -86,6 +128,7 @@ def _lookat(pos, target, up=(0, 0, 1)):
 
 def build_model(category: str, obj: str, start_p7, goal_p7):
     import mujoco
+    if not PROPS: PROPS.update(_props())
     spec = mujoco.MjSpec.from_file(str(ROOT / "menagerie/kuka_iiwa_14/scene.xml"))
     spec.option.timestep = SIM_DT
     hand = mujoco.MjSpec.from_file(str(ROOT / "simtoolreal/assets/urdf/left_sharpa_ha4/left_sharpa_ha4_v2_1_offset.xml"))
@@ -101,6 +144,11 @@ def build_model(category: str, obj: str, start_p7, goal_p7):
     t = spec.worldbody.add_body(); t.name = "table"; t.pos = np.array([0.0, 0.0, 0.38])
     g = t.add_geom(); g.name = "table_geom"; g.type = mujoco.mjtGeom.mjGEOM_BOX; g.size = np.array([0.475 / 2, 0.4 / 2, 0.3 / 2])
     g.rgba = np.array([1.0, 1.0, 1.0, 1.0]); g.friction = fr.copy()
+    for pr in PROPS.get(category, ()):                  # the category's table props (SimToolReal's table_narrow_*.urdf)
+        pg = t.add_geom(); pg.name = pr["name"]; pg.type = pr["type"]; pg.size = np.array((list(pr["size"]) + [0.0, 0.0])[:3], float); pg.pos = np.array(pr["pos"], float)
+        if "euler" in pr:
+            pg.alt.type = mujoco.mjtOrientation.mjORIENTATION_EULER; pg.alt.euler = np.array(pr["euler"], float)
+        pg.rgba = np.array(pr["rgba"], float); pg.friction = fr.copy()
     mesh_dir = ROOT / f"simtoolreal/assets/urdf/dextoolbench/{category}/{obj}/{obj}_collision"
     meshes = sorted(mesh_dir.glob("decomp_*.obj")); assert meshes, f"no collision meshes in {mesh_dir}"
     for name, color, p7, movable, contacts in (("object", (0.5, 0.5, 0.5, 1.0), start_p7, True, True), ("goal_object", (0.0, 1.0, 0.0, 1.0), goal_p7, False, False)):
