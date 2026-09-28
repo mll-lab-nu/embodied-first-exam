@@ -193,9 +193,9 @@ digest = "sha256:6d4b9544efd8fc7b26006dae749be215cb6a72adfb4cde76140187e0b313d18
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_down"
-digest = "sha256:b71eb6fe542d2a5a46d023754b039df304ddc086d28b3847da38ab5aebdf59fa"
+digest = "sha256:bf37ecf73182e845ba0d964158ea48b4a56d0d2a794e87fe4b61eb17731e38aa"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion"
-digest = "sha256:ae9e1c383a9ad00c8c5f8ed05498773b4a5542bdbfcb2f22d721969e3a45e4c8"
+digest = "sha256:149a0d13dd86f80465f5420cf82105e6221f20082cb29388f207ebfff68fd64c"
 

@@ -1,5 +1,5 @@
 schema_version = "1.3"
-artifacts = ["/app/output/"]
+artifacts = ["/app/output/", "/logs/agent/rcb/"]
 
 [task]
 name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion"

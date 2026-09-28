@@ -16,7 +16,7 @@ def write(ok: bool, out: dict) -> None:
 def cost() -> dict:
     c = {"agent_sessions": 0, "agent_resets": 0, "agent_cost_self_reported": 1}
     try:
-        for i, line in enumerate(open("/app/output/rcb_session_log.jsonl")):
+        for i, line in enumerate(open(next((f for f in ("/logs/agent/rcb/rcb_session_log.jsonl", "/app/output/rcb_session_log.jsonl") if os.path.exists(f)), "/app/output/rcb_session_log.jsonl"))):
             if i > 200_000 or len(line) > 10_000: break
             try:
                 ev = json.loads(line).get("ev"); c["agent_sessions"] += ev == "session_start"; c["agent_resets"] += ev == "reset"
@@ -42,7 +42,7 @@ def main() -> int:
         try: s.render_video(A, f"{LOG}/replay.mp4", every=2, fps=25); out["video_rendered"] = 1
         except Exception: traceback.print_exc(file=sys.stderr)
         try:
-            files = sorted(glob.glob("/app/output/rcb_trace/*.npz"), key=os.path.getmtime)[:2000]; idx = []
+            files = sorted((glob.glob("/logs/agent/rcb/rcb_trace/*.npz") + glob.glob("/app/output/rcb_trace/*.npz")), key=os.path.getmtime)[:2000]; idx = []
             for f in files:
                 try:
                     t = np.load(f, allow_pickle=False)["actions"]
