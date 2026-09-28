@@ -15,7 +15,8 @@ Two capture modes (RCB_LIVE):
                     agent's wall clock: a 10 s chunk takes ~4x longer).
   off               No live.mp4.
 Other knobs: RCB_LIVE_FILTER = moving | all, RCB_LIVE_FPS (default 10 frames per simulated second),
-RCB_LIVE_SIZE (per-camera tile, default 213x160), RCB_LIVE_MOVE_EPS (default 1e-3), RCB_LIVE_MAX_FRAMES (default 3000).
+RCB_LIVE_SIZE (per-camera tile, default 213x160), RCB_LIVE_MOVE_EPS (default 1e-3), RCB_LIVE_MAX_FRAMES (default 1500), RCB_LIVE_BUDGET_S (replay mode:
+rendering stops after this many seconds and the video ends there, default 240; live_truncated reports it).
 
 Files: live.mp4 (fragmented MP4), live_timeline.jsonl (one line per frame: frame, wall_s, sim_step, sim_s, call, label),
 live_segments.jsonl (one line per call: call, label, step0, step1, wall0, wall1).
@@ -67,7 +68,8 @@ class LiveRecorder:
         self.fps = max(1, int(float(os.environ.get("RCB_LIVE_FPS", "10"))))
         w, h = (int(x) for x in os.environ.get("RCB_LIVE_SIZE", "213x160").lower().split("x"))
         self.size = (w, h); self.eps = float(os.environ.get("RCB_LIVE_MOVE_EPS", "1e-3"))
-        self.max_frames = int(os.environ.get("RCB_LIVE_MAX_FRAMES", "3000"))
+        self.max_frames = int(os.environ.get("RCB_LIVE_MAX_FRAMES", "1500"))
+        self.budget_s = float(os.environ.get("RCB_LIVE_BUDGET_S", "240"))   # replay mode: stop rendering after this long
         self.every = max(1, PHYS_HZ // self.fps)
         self.path = os.path.join(data_dir, "live.mp4"); self.tl_path = os.path.join(data_dir, "live_timeline.jsonl")
         self.seg_path = os.path.join(data_dir, "live_segments.jsonl")
@@ -140,7 +142,7 @@ class LiveRecorder:
 
     def info(self) -> dict:
         return {"live_video": self.n_frames > 0 and self.error is None, "live_frames": self.n_frames, "live_skipped": self.n_skipped,
-                "live_mode": self.mode, "live_fps": self.fps, "live_error": self.error}
+                "live_mode": self.mode, "live_fps": self.fps, "live_error": self.error, "live_truncated": bool(getattr(self, "truncated", False))}
 
     def render_from_trajectory(self, acts: np.ndarray) -> dict:
         """Replay mode: rebuild the episode from the recorded trajectory and render the labelled video.
@@ -160,7 +162,9 @@ class LiveRecorder:
                 span = max(1, sg["step1"] - sg["step0"]); return sg["wall0"] + (sg["wall1"] - sg["wall0"]) * (step - sg["step0"]) / span
             w.add(self.S.render_grid(CAMS, cols=3, size=self.size), _text(0, "start", 0, 0.0)); self._log(0, 0.0, 0, "start")
             if self.filter == "moving": self._last = self.S._state_vector()
+            t_start = time.time(); self.truncated = False
             for i, row in enumerate(np.asarray(acts, dtype=np.float64)):
+                if time.time() - t_start > self.budget_s: self.truncated = True; break
                 self.S.step(row); step = i + 1
                 if step % every and step != len(acts): continue
                 sg = seg_at(step)
