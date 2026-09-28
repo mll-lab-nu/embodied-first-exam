@@ -26,6 +26,25 @@ LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "frames": [], "error": None}
 
 
+def _refuse_restart_after_start() -> None:
+    """No reset, ever: if an episode already started in this trial (the container crashed and compose restarted it),
+    do not build a new scene. Mark the episode as failed, keep the PID file for the collect hook, and idle."""
+    ep = os.path.join(DATA, "episode.jsonl")
+    try: started = any('"ev": "start"' in l for l in open(ep))
+    except OSError: return
+    if not started: return
+    with open(ep, "a") as f: f.write(json.dumps({"ts": time.time(), "ev": "restart_refused", "reason": "sim_crashed"}) + "\n")
+    try: prev = json.load(open(os.path.join(DATA, "final.json")))
+    except Exception: prev = {}  # noqa
+    prev.update({"success": False, "done": True, "reason": "sim_crashed", "finalized": True, "protocol": PROTOCOL})
+    json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
+    open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
+    signal.signal(signal.SIGUSR1, lambda *_: None); print("episode already started once; restart refused", flush=True)
+    while True: time.sleep(3600)
+_refuse_restart_after_start()
+with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
+
+
 def log(ev: dict) -> None:
     with open(os.path.join(DATA, "episode.jsonl"), "a") as f:
         f.write(json.dumps({"ts": time.time(), **ev}) + "\n")
