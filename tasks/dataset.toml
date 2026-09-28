@@ -191,3 +191,11 @@ digest = "sha256:69fdf617541b291147ecff86036fe65541e7649b3b71fa513d1c631ba087209
 name = "robot-coding-bench/robotwin_2_0_shake_bottle-limited"
 digest = "sha256:6d4b9544efd8fc7b26006dae749be215cb6a72adfb4cde76140187e0b313d181"
 
+[[tasks]]
+name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_down"
+digest = "sha256:b71eb6fe542d2a5a46d023754b039df304ddc086d28b3847da38ab5aebdf59fa"
+
+[[tasks]]
+name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion"
+digest = "sha256:ae9e1c383a9ad00c8c5f8ed05498773b4a5542bdbfcb2f22d721969e3a45e4c8"
+

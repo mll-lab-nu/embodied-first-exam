@@ -61,6 +61,23 @@ rows, which the verifier replays from the scene rebuilt from the RoboTwin seed (
 22 tasks (`tasks/dataset.toml`), each with a `-limited` twin. New task: `scripts/robotwin_expert_sweep.py` (pick a seed the
 expert passes) → `scripts/robotwin_mk_task.py` → `scripts/robotwin_mk_limited.py` (run inside the image; needs numpy).
 
+## MuJoCo tasks (pilots: `dextoolbench_*`, `mujoco_playground_*`)
+Plain MuJoCo 3.3.7 on CPU (bit-exact replay), EGL rendering on the GPU. Base image `images/mujoco/` (run
+`images/mujoco/prepare_assets.sh` first: pinned MuJoCo Menagerie / MuJoCo Playground / SimToolReal assets, no policies).
+- `dextoolbench_hammer_claw_hammer_swing_down`: DexToolBench (SimToolReal, 24 tasks upstream) with the KUKA iiwa +
+  Sharpa HA4 hand; the MuJoCo scene reproduces SimToolReal's sim2sim scene bit-exactly (same final state hash for its
+  pretrained policy). Reward = DexToolBench task progress (goals within 1.5 cm keypoint tolerance / goals). Oracle =
+  the pretrained policy's recorded targets (`scripts/dtb_mk_oracle.py`); agent egress is closed because that policy is
+  publicly downloadable.
+- `mujoco_playground_aloha_single_peg_insertion`: MuJoCo Playground's ALOHA 2 peg insertion with a seeded reset;
+  binary success from Playground's insertion geometry; scripted IK oracle.
+
+## Agent logs and timelines
+Harbor keeps, per trial, `agent/codex.txt` (every message, command and output), `agent/trajectory.json` and the raw
+Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detailed` to also keep reasoning summaries
+(otherwise reasoning is stored encrypted). `scripts/agent_timeline.py <trial_dir>` merges the agent's messages,
+reasoning summaries, tool calls, images and token use with the robot service's log into one `analysis/timeline.md`.
+
 ## Two evaluation modes
 | | **unlimited** (`robotwin_2_0_<task>`) | **limited** (`robotwin_2_0_<task>-limited`, "robot as a service") |
 |---|---|---|
