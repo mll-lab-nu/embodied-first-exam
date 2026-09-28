@@ -1,5 +1,5 @@
-"""AlohaSinglePegInsertion verifier (separate sandbox): replay /app/output/trajectory.npz twice from the frozen
-instance; success = peg tip within 5 mm of the socket axis and >= 25 % inside it at the end of the trajectory, in both
+"""MuJoCo Playground ALOHA verifier (separate sandbox): replay /app/output/trajectory.npz twice from the frozen
+instance; success = the environment's success check (rcb_aloha.Session.check) at the end of the trajectory, in both
 replays with bit-identical final states. Renders /logs/verifier/replay.mp4 and the agent's own rollouts
 (self-reported traces, agent_sessions/)."""
 import glob, json, os, sys, traceback
@@ -35,9 +35,10 @@ def main() -> int:
         if A.ndim != 2 or A.shape[1] != ra.N or len(A) > ra.MAX_STEPS or not np.all(np.isfinite(A)):
             write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(A.shape[0]) if A.ndim == 2 else 0, "grader_error": 0, **c}); return 0
         s = ra.Session("/tests/instance.json", enable_render=True)
-        r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"]; ok = bool(det and r1["inserted"])
-        out = {"success": int(ok), "inserted": int(bool(r1["inserted"])), "deterministic": int(det), "tip_to_axis_m": r1["tip_to_axis_m"], "axial_t": r1["axial_t"],
-               "socket_z": r1["socket_z"], "peg_z": r1["peg_z"], "n_actions": int(len(A)), "video_rendered": 0, "grader_error": 0, **c}
+        r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"]; ok = bool(det and r1["success"])
+        fields = {k: (int(v) if isinstance(v, bool) else v) for k, v in r1.items() if k not in ("success", "state_sha", "steps") and isinstance(v, (bool, int, float))}
+        out = {"success": int(ok), "live_check_success": int(bool(r1["success"])), "deterministic": int(det), **fields,
+               "n_actions": int(len(A)), "video_rendered": 0, "grader_error": 0, **c}
         write(ok, out)
         try: s.render_video(A, f"{LOG}/replay.mp4", every=2, fps=25); out["video_rendered"] = 1
         except Exception: traceback.print_exc(file=sys.stderr)
@@ -53,7 +54,7 @@ def main() -> int:
                 od = f"{LOG}/agent_sessions"; os.makedirs(od, exist_ok=True); meta = []
                 for k, (f, n) in enumerate([x for x in idx if x[1] >= 25][-6:]):
                     r = s.render_video(np.load(f)["actions"], f"{od}/{k:02d}_{os.path.basename(f)[:-4]}.mp4", every=4, fps=12)
-                    meta.append({"trace": os.path.basename(f), "steps": n, "inserted": r["inserted"]}); out["agent_trace_videos"] += 1
+                    meta.append({"trace": os.path.basename(f), "steps": n, "success": r["success"]}); out["agent_trace_videos"] += 1
                 json.dump({"self_reported": True, "traces": [os.path.basename(f) for f, _ in idx], "videos": meta}, open(f"{od}/index.json", "w"), indent=1)
         except Exception: traceback.print_exc(file=sys.stderr)
         write(ok, out)
