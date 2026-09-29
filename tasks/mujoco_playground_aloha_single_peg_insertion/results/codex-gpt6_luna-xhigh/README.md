@@ -1,17 +1,17 @@
-# Codex CLI + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — mujoco_playground_aloha_single_peg_insertion
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — mujoco_playground_aloha_single_peg_insertion
 
-Run: Harbor job `mj-pilot-gpt6luna-xhigh`, trial `mujoco_playground_aloha_single_p__uB6CoBh`, 2026-09-28. Mode: **unlimited**.
+Run: Harbor job `mj-gpt6luna-xhigh`, trial `mujoco_playground_aloha_single_p__WAgjxHD`, 2026-09-29. Mode: **unlimited**.
 
 | | |
 |---|---|
-| result | **1 (success)** |
-| agent time | 3017 s |
-| actions / physics steps | 917 / — |
-| tokens in / out | 7528592 / 110182 |
-| verifier | `{"success": 1, "inserted": 1, "deterministic": 1, "tip_to_axis_m": 0.00158, "axial_t": 0.699, "socket_z": 0.1118, "peg_z": 0.1124, "n_actions": 917, "video_rendered": 1, "grader_error": 0, "agent_resets": 0, "agent_cost_self_reported": 1, "agent_traces": 0, "agent_trace_videos": 0}` |
+| result | **0** |
+| agent time | 3600 s |
+| actions / physics steps | 995 / — |
+| tokens in / out | 7499064 / 182554 |
+| verifier | `{"success": 0, "live_check_success": 0, "deterministic": 1, "inserted": 0, "tip_to_axis_m": 0.14928, "axial_t": 1.6873, "socket_z": 0.0923, "peg_z": 0.0108, "time_s": 19.9, "n_actions": 995, "video_rendered": 1, "grader_error": 0, "agent_resets": 145, "agent_cost_self_reported": 1, "agent_traces": 104, "agent_trace_videos": 1, "agent_trace_videos_skipped_budget": 1}` |
 | verifier sandbox | separate |
 
-Debugging footprint (self-reported by the agent's tooling log): 0 sessions, 0 resets, None physics steps.
+Debugging footprint (self-reported by the agent's tooling log): 70 sessions, 145 resets, None physics steps.
 
 ## Replay (verifier's six-camera video)
 
@@ -19,12 +19,8 @@ Debugging footprint (self-reported by the agent's tooling log): 0 sessions, 0 re
 
 [replay.mp4](replay.mp4) — top: world / observer / head; bottom: front / left wrist / right wrist.
 
-## Analysis
-
-【成功，第一次就做成】50 分钟、66 次工具调用。推理摘要显示它自己发现了关键难点：夹爪高度/指尖偏移、夹爪被桌面卡住、**没有重力补偿导致的下垂**（“Checking gravity torque offset”），做法与 oracle 相同：双臂自上而下抓取、IK、动态视觉伺服把销尖对准插座轴线。最后它把轨迹**截在第一次满足插入条件的时刻**（917 步，t = 0.699，接近 0.75 的上限）——当前判定只看最终状态，这是合规的；如果要更严格，可以要求末尾保持插入 ≥ 1 s。同样在结束前删了会话日志。
-
 ## Agent's last messages
 
-- The final approach is colliding with the socket because the peg arrives before it is centered, and the jaws lose it when it drops near the table. I’m changing the final pose to a shallow insertion that still satisfies the verifier, and keeping both parts supported above the table so the peg can approach without touching the socket walls.
-- The socket first moves to a clear staging pose, then advances along the peg axis. The replay now passes: the tip is 4.08 mm from the axis at `t=0.662`. I’m tightening that distance margin and cleaning the debug images from the output folder.
-- Saved the trajectory and generator:  - [trajectory.npz](/app/output/trajectory.npz) — shape `(917, 14)`, seed `60417` - [gen.py](/app/output/gen.py)  Fresh replay passed: tip-to-axis distance **1.58 mm**, axial parameter **t = 0.699**. Both are within the success limits.
+- I confirmed the left arm can lift the socket, but neither arm has a stable side grasp on the small peg from the frozen table pose. I’m testing contact strategies that can raise the peg’s tip enough to enter the socket while preserving the required final geometry.
+- The peg’s tip can be brought close enough to the socket axis by pressing it against the table, but a long push makes it drop before it enters. I’m checking whether the socket can be set down in a stable pose so the final alignment can happen in a shorter, controlled sequence.
+- I’m continuing from the latest placement and pusher experiments. I’ll tune the final contact sequence against the frozen replay, then save the verified actions and the generator script.
