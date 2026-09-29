@@ -1,0 +1,55 @@
+{
+  "reference_puzzle": "Hanayama Huzzle Cast Keyhole HZ 4-11 / 515061",
+  "designer": "Vesa Timonen",
+  "difficulty": "4 / 6",
+  "checked_on": "2026-09-17",
+  "human_solution_documented": true,
+  "simulated_replica_solution_verified": false,
+  "sources": [
+    {
+      "url": "https://www.huzzle.eu/wp-content/uploads/2018/01/515061-Huzzle-Cast-Keyhole-Oct-2017.pdf",
+      "publisher": "Huzzle / Hanayama, European distribution by Eureka",
+      "use": "Primary solution diagram, downloaded and visually inspected on 2026-09-17: 16 panels, quarter turn in panel 1, half-turn labels in panels 4, 8 and 14, separation in panel 16; no metric poses or manufacturing dimensions",
+      "sha256": "93ee98b4ce4cb48846820d1e2ddaa1e3c40fc226d52e7a8e1ca720936a5ac62c"
+    },
+    {
+      "url": "https://hanayama-toys.com/product/cast-keyhole/",
+      "publisher": "Hanayama",
+      "use": "Identity, two-piece 3D groove maze, designer and level; no measured geometry"
+    },
+    {
+      "url": "https://hanayama-toys.com/wp-content/uploads/2018/06/Keyhole-2-800x800.jpg",
+      "publisher": "Hanayama",
+      "use": "Separated front silhouettes: open gold fork, closed silver stepped aperture with external foot recess; proportions only"
+    },
+    {
+      "url": "https://hanayama-toys.com/wp-content/uploads/2018/06/Keyhole-800x800.jpg",
+      "publisher": "Hanayama",
+      "use": "Reference interlocked assembly; reconstruction pose is authored, not a measured factory pose"
+    },
+    {
+      "url": "https://www.logicagiochi.com/pub/media/wysiwyg/pdf/473743-Cast-Keyhole-Japan.pdf",
+      "publisher": "Hanayama instruction sheet, hosted by Logica Giochi",
+      "use": "Two pages, 16 illustrated stages ending in two separated pieces; includes translations, 90-degree and 180-degree rotations; no continuous metric poses"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=Du0JUir_9tA",
+      "publisher": "Puzzle Master",
+      "use": "Additional published human solution demonstration, 2022-12-31; not transcribed as a simulation trajectory"
+    }
+  ],
+  "authored_assumptions": [
+    "26 x 69 mm envelope, 3 mm uniform thickness, 6600 kg/m3 nominal zinc-alloy density",
+    "Outline coordinates inferred from the manufacturer front photo; not dimensional metrology or CAD",
+    "Circular upper returns, sharp slot corners, no edge bevels or cast draft",
+    "Perpendicular lower-bore initial pose and uniform scene scale are engineering choices; not the factory starting pose"
+  ],
+  "qualification_gates": [
+    "Obtain measured thickness, groove widths, bevels and exact turn clearances",
+    "Validate the continuous official route against the exported collision solids",
+    "Check blocked pulls, allowed slides, timestep sensitivity and robot grasps"
+  ],
+  "authored_current_instance_solution_verified": true,
+  "authored_current_instance_solution_scope": "perpendicular_lower_bore_v1, unchanged geometry, 28 continuously certified intervals; not commercial factory-start replication",
+  "authored_current_instance_evidence": "runs/environment-solvability/cast_keyhole/diagram_reference_v1/current_instance/certificate.json"
+}

@@ -1,0 +1,67 @@
+# Interlocked Claws family replay rig. The historical MuJoCo family runs keep
+# their z=0 plane, so these fixed views are authored in that source frame rather
+# than the shared tabletop frame; wrist cameras follow the ALOHA gripper links.
+camera_rig:
+  id: claws_family_v1
+  recording_cameras: [cam_high, cam_low, cam_left_wrist, cam_right_wrist, detail]
+  # First matching rule replaces the detail pose; exact family before prefix.
+  detail_overrides:
+    - family: orthogonal_gate_balanced_v2
+      camera: {pos: [0.50, -1.02, 0.91], lookat: [0.02, -0.12, 0.18], fov: 43}
+    - family_prefix: orthogonal_gate
+      camera: {pos: [0.75, -1.30, 1.00], lookat: [0.03, -0.20, 0.22], fov: 45}
+cameras:
+  cam_high:
+    res: [960, 720]
+    pos: [0.85, -1.30, 1.15]
+    lookat: [0.0, -0.10, 0.22]
+    up: [0, 0, 1]
+    fov: 43
+    near: 0.005
+    far: 12.0
+  cam_low:
+    res: [960, 720]
+    pos: [0.15, -1.50, 0.68]
+    lookat: [0.0, -0.08, 0.24]
+    up: [0, 0, 1]
+    fov: 42
+    near: 0.005
+    far: 12.0
+  detail:
+    res: [960, 720]
+    pos: [0.38, -0.85, 0.78]
+    lookat: [0.0, -0.12, 0.16]
+    up: [0, 0, 1]
+    fov: 43
+    near: 0.005
+    far: 12.0
+  cam_left_wrist:
+    res: [960, 720]
+    pos: [0, 0, 1]
+    lookat: [0, 0, 0]
+    up: [0, 0, 1]
+    fov: 76
+    near: 0.005
+    far: 12.0
+    attach:
+      enabled: true
+      entity: robot
+      link: left/gripper_link
+      offset_pos: [0.015, -0.105, 0.105]
+      offset_lookat: [0.24, 0.0, -0.01]
+      offset_up: [0, 0, 1]
+  cam_right_wrist:
+    res: [960, 720]
+    pos: [0, 0, 1]
+    lookat: [0, 0, 0]
+    up: [0, 0, 1]
+    fov: 76
+    near: 0.005
+    far: 12.0
+    attach:
+      enabled: true
+      entity: robot
+      link: right/gripper_link
+      offset_pos: [0.015, -0.105, 0.105]
+      offset_lookat: [0.24, 0.0, -0.01]
+      offset_up: [0, 0, 1]

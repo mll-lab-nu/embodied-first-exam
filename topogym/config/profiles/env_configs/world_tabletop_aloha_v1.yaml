@@ -1,0 +1,18 @@
+defaults:
+  - world_tabletop_v1
+  - /camera_configs@_here_: aloha_observation
+  - _self_
+
+preset:
+  id: topogym_tabletop_aloha_v1
+  version: 1.0
+  source: mujoco_menagerie/aloha@8161bba264d7fa7c99ca301e91e7fb44737676ad
+robot_mount:
+  name: aloha
+  mobility: fixed
+  pos: [-0.1356786, 0.0, 0.9196429]
+  euler: [0.0, 0.0, 0.0]
+  # Conservative union of BOTH unscaled source base meshes, in mount frame.
+  footprint_min: [-0.667, -0.122]
+  footprint_max: [0.667, 0.084]
+  edge_margin: 0.01

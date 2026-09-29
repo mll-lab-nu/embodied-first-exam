@@ -1,0 +1,12 @@
+{
+  "task_id": "blanket_flatten",
+  "robot_id": "aloha",
+  "variation_id": "medium",
+  "seed": 0,
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "enable_rgb": true,
+  "render_backend": "nyx"
+}

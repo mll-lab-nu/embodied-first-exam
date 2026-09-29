@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "shared_entries": [
+    "topogym/tasks/cast_coil/robot_demo.py",
+    "topogym/tasks/interlocked_claws/family_render.py",
+    "topogym/tasks/interlocked_claws/recording_adapter.py",
+    "topogym/agent_rollout/media.py",
+    "topogym/tasks/cast_coil/recording_adapter.py",
+    "topogym/tasks/buzz_wire_3d/recording_adapter.py",
+    "topogym/tasks/orbits/motion_render.py",
+    "topogym/tasks/slotted_post_ring/archive.py",
+    "topogym/tasks/slotted_post_ring/curate_demos.py",
+    "topogym/tasks/slotted_post_ring/recording_adapter.py",
+    "topogym/tasks/orbits/recording_adapter.py",
+    "topogym/tasks/orbits/robot_recording.py",
+    "topogym/tasks/blanket_flatten/recording_adapter.py",
+    "topogym/tasks/blanket_flatten/preview.py",
+    "topogym/tasks/blanket_flatten/archive.py",
+    "topogym/tasks/blanket_flatten/bimanual.py",
+    "topogym/tasks/lock_picking/recording_adapter.py",
+    "topogym/tasks/lock_picking/runner.py",
+    "topogym/tasks/lock_picking/demo_archive.py",
+    "topogym/tasks/rope_threading/recording_adapter.py",
+    "topogym/tasks/knot_untying/recording_adapter.py",
+    "topogym/tasks/cast_keyhole/recording_adapter.py",
+    "topogym/tasks/fiber_bundling/recording_adapter.py",
+    "topogym/tasks/hedgehog_in_cage/recording_adapter.py",
+    "topogym/tasks/hedgehog_in_cage/extract.py",
+    "topogym/tasks/horseshoe_ring/recording_adapter.py"
+  ],
+  "exceptions": {}
+}

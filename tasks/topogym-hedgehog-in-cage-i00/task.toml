@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "topogym/topogym-hedgehog-in-cage-i00"
+description = "TopoGym hedgehog_in_cage (panda_robotiq, Genesis): produce one replayable trajectory. Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the green dashed goal area and hold it still briefly. Keep all cage components outside the area on the puzzle/system side. Holding the target with the gripper is allowed. Frozen scene instance (variation hedgehog_in_cage_easy, seed 0)."
+authors = [{ name = "jianwen" }]
+keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "hedgehog_in_cage"]
+
+[metadata]
+author_name = "jianwen"
+task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+robot = "panda_robotiq"
+family = "hedgehog_in_cage"
+tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+instance_seed = 0                 # scene = environment/instance.json (variation hedgehog_in_cage_easy, eval index 0); identity = dataset.toml digest
+expert_time_estimate_hours = 2.0
+
+[verifier]
+timeout_sec = 17100.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 5400.0             # TopoGym budget: 1.5 h of wall clock
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

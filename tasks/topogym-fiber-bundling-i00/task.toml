@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "topogym/topogym-fiber-bundling-i00"
+description = "TopoGym fiber_bundling (panda_robotiq, Genesis): produce one replayable trajectory. Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, tip first and in tip-to-root material order, until all roots and the front sheath have passed and cleared the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not completion. Keep the completed configuration stable. Frozen scene instance (variation fiber_bundling_medium, seed 0)."
+authors = [{ name = "jianwen" }]
+keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "fiber_bundling"]
+
+[metadata]
+author_name = "jianwen"
+task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+robot = "panda_robotiq"
+family = "fiber_bundling"
+tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+instance_seed = 0                 # scene = environment/instance.json (variation fiber_bundling_medium, eval index 0); identity = dataset.toml digest
+expert_time_estimate_hours = 2.0
+
+[verifier]
+timeout_sec = 17100.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 5400.0             # TopoGym budget: 1.5 h of wall clock
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

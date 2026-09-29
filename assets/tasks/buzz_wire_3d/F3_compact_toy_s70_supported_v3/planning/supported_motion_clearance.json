@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "phases": {
+    "approach": {
+      "samples": 76,
+      "continuous_wire_clearance_lower_bound_m": null,
+      "sampled_tool_fixture_separation_m": -9.75781955236954e-17,
+      "passed": true
+    },
+    "pickup": {
+      "samples": 126,
+      "continuous_wire_clearance_lower_bound_m": 0.004780924950678674,
+      "sampled_tool_fixture_separation_m": -9.75781955236954e-17,
+      "passed": true
+    },
+    "placement": {
+      "samples": 155,
+      "continuous_wire_clearance_lower_bound_m": 0.002515406329831077,
+      "sampled_tool_fixture_separation_m": -9.86623976961809e-17,
+      "passed": true
+    },
+    "retreat": {
+      "samples": 76,
+      "continuous_wire_clearance_lower_bound_m": null,
+      "sampled_tool_fixture_separation_m": -9.86623976961809e-17,
+      "passed": true
+    }
+  },
+  "scope": "Continuous capsule-cover clearance against conductive wire; exact fixture collisions sampled at every endpoint-motion knot. Wooden seat contact is intentional; live dynamics verifies placement."
+}

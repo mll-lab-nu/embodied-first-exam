@@ -1,0 +1,9 @@
+{
+  "source": "/home/jianwen/topogym/assets/tasks/buzz_wire_3d/F2_compact_toy_s70_supported_v3/planning",
+  "elevation_m": 0.04,
+  "mount_height_m": 0.044,
+  "origin_x_shift_m": -0.03,
+  "origin_y_shift_m": 0.025,
+  "use_original_reference_seeds": false,
+  "maze_rigidly_elevated": false
+}

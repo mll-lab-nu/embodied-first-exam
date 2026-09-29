@@ -3,6 +3,7 @@
 .venv-gs110/
 .venv-gs121/
 .venv-gs121-nyx/
+.venv-harbor/
 .cache/
 .external/
 
@@ -22,8 +23,11 @@ dist/
 __nyx_cache__/
 .ipynb_checkpoints/
 
-# Environment files
+# Environment files (same public example exception as robot_coding_bench)
 .env
+.env.*
+!.env.example
+.secrets/
 
 # Editor / OS
 .vscode/
@@ -31,12 +35,16 @@ __nyx_cache__/
 .DS_Store
 
 # Run outputs & recordings (videos, frames, datasets, logs)
+*.log
+/outputs/
+/MUJOCO_LOG.TXT
 runs/
+task_rollouts/
+# Retired generated Harbor tasks; current tasks/ stays versioned.
+/harbor_tasks/
+# Full local proof evidence; small catalogs/manifests/docs remain versionable.
+/solvability_proof/*/*/evidence/
 bash_scripts/recordings/
-/demos/hedgehog_in_cage/**/*.mp4
-/demos/interlocked_claws/**/*.mp4
-/demos/cast_coil/**/*.mp4
-/demos/knot_untying/**/*.mp4
 
 # TetGen scratch files (dumped into repo root during soft-body meshing)
 tetgen-tmpfile*
@@ -47,14 +55,18 @@ topogym_weekly_report/
 # Archived deliverables remain local; source/config/docs in legacy are versioned.
 /legacy/runs/
 /legacy/reports/
+/legacy/harbor_tasks/
+# Outputs preserved by the 2026-09-29 cleanup; archived source/docs stay versionable.
+/legacy/cleanup_20260929/harbor_tasks/
+/legacy/cleanup_20260929/reports/
+/legacy/cleanup_20260929/outputs/
+/legacy/cleanup_20260929/MUJOCO_LOG.TXT
+# Full local hash inventory; the small archive manifest remains versionable.
+/legacy/cleanup_20260929/files.jsonl
 
-# Fiber demo videos, grouped by camera as requested.
-/demos/fiber_bundling/**/*.mp4
+# Published demos, task results, source/config/docs remain versionable.
+!/demos/**/*.mp4
 
-# Lock-picking standard demo, one complete video per camera.
-/demos/lock_picking/**/*.mp4
-/demos/blanket_flatten/**/*.mp4
-
-# Buzz Wire fixture and compact single-arm videos, organized by camera.
-/demos/buzz_wire_3d/**/*.mp4
-/demos/slotted_post_ring/**/*.mp4
+# Harbor runs (robot_coding_bench layout): job outputs and local credentials stay out of git
+/jobs/
+/exps/

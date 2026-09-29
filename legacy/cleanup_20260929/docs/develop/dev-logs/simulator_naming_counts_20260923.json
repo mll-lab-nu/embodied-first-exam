@@ -1,0 +1,3145 @@
+{
+  "snapshot_utc": "2026-09-23T15:28:27.206360+00:00",
+  "scope": "current topogym package including redundants; excluding caches and historical snapshots",
+  "file_count": 501,
+  "python_file_count": 496,
+  "python_functional": 391,
+  "python_redundant": 105,
+  "declarations": 3326,
+  "public_nonnested_declarations": 2528,
+  "statistics": [
+    {
+      "group": "adapter",
+      "tokens": [
+        "adapter"
+      ],
+      "functional_paths": 26,
+      "redundant_paths": 1,
+      "classes": 13,
+      "functions_methods": 0,
+      "file_paths": [
+        "topogym/envs/adapters/base.py",
+        "topogym/envs/adapters/buzz_wire_3d.py",
+        "topogym/envs/adapters/cast_coil.py",
+        "topogym/envs/adapters/cast_keyhole.py",
+        "topogym/envs/adapters/fem_robot.py",
+        "topogym/envs/adapters/hedgehog_in_cage.py",
+        "topogym/envs/adapters/horseshoe_ring.py",
+        "topogym/envs/adapters/interlocked_claws.py",
+        "topogym/envs/adapters/knot_untying.py",
+        "topogym/envs/adapters/lock_picking.py",
+        "topogym/envs/adapters/rigid_robot.py",
+        "topogym/recording/adapters/__init__.py",
+        "topogym/recording/adapters/genesis.py",
+        "topogym/recording/task_adapters/blanket_flatten.py",
+        "topogym/recording/task_adapters/buzz_wire_3d.py",
+        "topogym/recording/task_adapters/cast_coil.py",
+        "topogym/recording/task_adapters/cast_keyhole.py",
+        "topogym/recording/task_adapters/fiber_bundling.py",
+        "topogym/recording/task_adapters/hedgehog_in_cage.py",
+        "topogym/recording/task_adapters/horseshoe_ring.py",
+        "topogym/recording/task_adapters/interlocked_claws.py",
+        "topogym/recording/task_adapters/knot_untying.py",
+        "topogym/recording/task_adapters/lock_picking.py",
+        "topogym/recording/task_adapters/orbits.py",
+        "topogym/recording/task_adapters/rope_threading.py",
+        "topogym/recording/task_adapters/slotted_post_ring.py",
+        "topogym/redundants/mujoco/recording/adapters/mujoco.py"
+      ]
+    },
+    {
+      "group": "binding",
+      "tokens": [
+        "binding"
+      ],
+      "functional_paths": 0,
+      "redundant_paths": 0,
+      "classes": 15,
+      "functions_methods": 4,
+      "file_paths": []
+    },
+    {
+      "group": "scene / world / env / task",
+      "tokens": [
+        "env",
+        "environment",
+        "scene",
+        "task",
+        "world"
+      ],
+      "functional_paths": 206,
+      "redundant_paths": 29,
+      "classes": 32,
+      "functions_methods": 69,
+      "file_paths": [
+        "topogym/agents/rollout/env_sdk.py",
+        "topogym/assets/variants/horseshoe_ring/trace_scene_variants.py",
+        "topogym/config/task_specs/buzz_wire_3d.py",
+        "topogym/config/task_specs/cast_coil.py",
+        "topogym/config/task_specs/cast_keyhole.py",
+        "topogym/config/task_specs/hedgehog_in_cage.py",
+        "topogym/config/task_specs/horseshoe_ring.py",
+        "topogym/config/task_specs/interlocked_claws.py",
+        "topogym/config/task_specs/knot_untying.py",
+        "topogym/config/task_specs/lock_picking.py",
+        "topogym/config/tasks/cast_keyhole/family_catalog.py",
+        "topogym/config/tasks/fiber_bundling/run_config.py",
+        "topogym/envs/adapters/base.py",
+        "topogym/envs/adapters/buzz_wire_3d.py",
+        "topogym/envs/adapters/cast_coil.py",
+        "topogym/envs/adapters/cast_keyhole.py",
+        "topogym/envs/adapters/fem_robot.py",
+        "topogym/envs/adapters/hedgehog_in_cage.py",
+        "topogym/envs/adapters/horseshoe_ring.py",
+        "topogym/envs/adapters/interlocked_claws.py",
+        "topogym/envs/adapters/knot_untying.py",
+        "topogym/envs/adapters/lock_picking.py",
+        "topogym/envs/adapters/rigid_robot.py",
+        "topogym/envs/episode_runner.py",
+        "topogym/envs/execution/blanket_flatten/execution.py",
+        "topogym/envs/execution/buzz_wire_3d/robot_runtime.py",
+        "topogym/envs/execution/cast_keyhole/robot_execution.py",
+        "topogym/envs/execution/cast_keyhole/variant_runner.py",
+        "topogym/envs/execution/cast_keyhole/variant_runtime.py",
+        "topogym/envs/execution/fiber_bundling/robot_sequence.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_guided_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/inverse_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/variant_runtime.py",
+        "topogym/envs/execution/horseshoe_ring/physical_motion.py",
+        "topogym/envs/execution/lock_picking/runner.py",
+        "topogym/envs/initialization/blanket_flatten/initial_state.py",
+        "topogym/envs/initialization/blanket_flatten/preparation.py",
+        "topogym/envs/protocol.py",
+        "topogym/envs/task_support/cast_coil/assembly_task.py",
+        "topogym/evaluation/tasks/blanket_flatten/bimanual_review.py",
+        "topogym/evaluation/tasks/blanket_flatten/diagnostics.py",
+        "topogym/evaluation/tasks/blanket_flatten/review_preparation.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/qualification.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/robot_verify.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/verification.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/verify_physics.py",
+        "topogym/evaluation/tasks/cast_coil/qualify.py",
+        "topogym/evaluation/tasks/cast_coil/verification.py",
+        "topogym/evaluation/tasks/cast_keyhole/family_suite.py",
+        "topogym/evaluation/tasks/cast_keyhole/physical_audit.py",
+        "topogym/evaluation/tasks/cast_keyhole/qualify.py",
+        "topogym/evaluation/tasks/fiber_bundling/anchored_verifier.py",
+        "topogym/evaluation/tasks/fiber_bundling/assess_anchored.py",
+        "topogym/evaluation/tasks/fiber_bundling/assess_ik.py",
+        "topogym/evaluation/tasks/fiber_bundling/assess_passage.py",
+        "topogym/evaluation/tasks/fiber_bundling/assess_sequence.py",
+        "topogym/evaluation/tasks/fiber_bundling/assess_stability.py",
+        "topogym/evaluation/tasks/fiber_bundling/audit_robot_contacts.py",
+        "topogym/evaluation/tasks/fiber_bundling/contact_guard.py",
+        "topogym/evaluation/tasks/fiber_bundling/summarize_ik.py",
+        "topogym/evaluation/tasks/fiber_bundling/validation.py",
+        "topogym/evaluation/tasks/fiber_bundling/variant_progress.py",
+        "topogym/evaluation/tasks/hedgehog_in_cage/audit.py",
+        "topogym/evaluation/tasks/hedgehog_in_cage/variant_validation.py",
+        "topogym/evaluation/tasks/horseshoe_ring/trace_scene_verification.py",
+        "topogym/evaluation/tasks/horseshoe_ring/variant_audit.py",
+        "topogym/evaluation/tasks/horseshoe_ring/verify_gravity.py",
+        "topogym/evaluation/tasks/horseshoe_ring/verify_physical.py",
+        "topogym/evaluation/tasks/interlocked_claws/reference_audit.py",
+        "topogym/evaluation/tasks/interlocked_claws/reliability.py",
+        "topogym/evaluation/tasks/interlocked_claws/verification.py",
+        "topogym/evaluation/tasks/knot_untying/diagnostics.py",
+        "topogym/evaluation/tasks/knot_untying/physics_review.py",
+        "topogym/evaluation/tasks/knot_untying/rigid_diagnostics.py",
+        "topogym/evaluation/tasks/lock_picking/evaluator.py",
+        "topogym/evaluation/tasks/lock_picking/verify_variants.py",
+        "topogym/evaluation/tasks/orbits/grasp_audit.py",
+        "topogym/evaluation/tasks/orbits/passage_audit.py",
+        "topogym/evaluation/tasks/orbits/reference_audit.py",
+        "topogym/evaluation/tasks/orbits/rope_audit.py",
+        "topogym/evaluation/tasks/orbits/trajectory_audit.py",
+        "topogym/evaluation/tasks/orbits/verification.py",
+        "topogym/evaluation/tasks/rope_threading/diagnostics.py",
+        "topogym/evaluation/tasks/rope_threading/physics_review.py",
+        "topogym/evaluation/tasks/rope_threading/qualification.py",
+        "topogym/evaluation/tasks/rope_threading/startup_diagnostics.py",
+        "topogym/evaluation/tasks/rope_threading/startup_review.py",
+        "topogym/evaluation/tasks/slotted_post_ring/review_fem.py",
+        "topogym/evaluation/tasks/slotted_post_ring/topology.py",
+        "topogym/policies/tasks/blanket_flatten/bimanual.py",
+        "topogym/policies/tasks/blanket_flatten/bimanual_full.py",
+        "topogym/policies/tasks/blanket_flatten/grasp_sites.py",
+        "topogym/policies/tasks/blanket_flatten/robot_demo.py",
+        "topogym/policies/tasks/buzz_wire_3d/family_plan.py",
+        "topogym/policies/tasks/buzz_wire_3d/home_plan.py",
+        "topogym/policies/tasks/buzz_wire_3d/supported_plan.py",
+        "topogym/policies/tasks/cast_coil/robot_demo.py",
+        "topogym/policies/tasks/cast_keyhole/aloha_demo.py",
+        "topogym/policies/tasks/cast_keyhole/family_pipeline.py",
+        "topogym/policies/tasks/cast_keyhole/variant_pose.py",
+        "topogym/policies/tasks/fiber_bundling/sequential.py",
+        "topogym/policies/tasks/hedgehog_in_cage/extract.py",
+        "topogym/policies/tasks/hedgehog_in_cage/family_motion.py",
+        "topogym/policies/tasks/hedgehog_in_cage/plan_escape.py",
+        "topogym/policies/tasks/hedgehog_in_cage/plan_release.py",
+        "topogym/policies/tasks/horseshoe_ring/aloha_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/family_routes.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_extraction.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_place.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_plan.py",
+        "topogym/policies/tasks/horseshoe_ring/shape_bridge.py",
+        "topogym/policies/tasks/horseshoe_ring/variant_pipeline.py",
+        "topogym/policies/tasks/horseshoe_ring/witness_motion.py",
+        "topogym/policies/tasks/interlocked_claws/physical.py",
+        "topogym/policies/tasks/knot_untying/family_actions.py",
+        "topogym/policies/tasks/knot_untying/home_start.py",
+        "topogym/policies/tasks/knot_untying/untying.py",
+        "topogym/policies/tasks/lock_picking/oracle.py",
+        "topogym/policies/tasks/lock_picking/planner.py",
+        "topogym/policies/tasks/orbits/continuous_motion.py",
+        "topogym/policies/tasks/orbits/robot_pickup.py",
+        "topogym/policies/tasks/orbits/rope_route.py",
+        "topogym/policies/tasks/orbits/solution_plan.py",
+        "topogym/policies/tasks/rope_threading/feedback_actions.py",
+        "topogym/policies/tasks/rope_threading/reference_actions.py",
+        "topogym/recording/task_adapters/blanket_flatten.py",
+        "topogym/recording/task_adapters/buzz_wire_3d.py",
+        "topogym/recording/task_adapters/cast_coil.py",
+        "topogym/recording/task_adapters/cast_keyhole.py",
+        "topogym/recording/task_adapters/fiber_bundling.py",
+        "topogym/recording/task_adapters/hedgehog_in_cage.py",
+        "topogym/recording/task_adapters/horseshoe_ring.py",
+        "topogym/recording/task_adapters/interlocked_claws.py",
+        "topogym/recording/task_adapters/knot_untying.py",
+        "topogym/recording/task_adapters/lock_picking.py",
+        "topogym/recording/task_adapters/orbits.py",
+        "topogym/recording/task_adapters/rope_threading.py",
+        "topogym/recording/task_adapters/slotted_post_ring.py",
+        "topogym/recording/tasks/blanket_flatten/archive.py",
+        "topogym/recording/tasks/buzz_wire_3d/archive.py",
+        "topogym/recording/tasks/buzz_wire_3d/robot_archive.py",
+        "topogym/recording/tasks/cast_coil/robot_archive.py",
+        "topogym/recording/tasks/cast_keyhole/archive_demo.py",
+        "topogym/recording/tasks/cast_keyhole/eccentric_window_archive.py",
+        "topogym/recording/tasks/cast_keyhole/family_variants_archive.py",
+        "topogym/recording/tasks/cast_keyhole/long_stroke_archive.py",
+        "topogym/recording/tasks/cast_keyhole/physical_recording.py",
+        "topogym/recording/tasks/cast_keyhole/turnback_archive.py",
+        "topogym/recording/tasks/cast_keyhole/variant_archive.py",
+        "topogym/recording/tasks/fiber_bundling/archive_variant.py",
+        "topogym/recording/tasks/fiber_bundling/render_ready.py",
+        "topogym/recording/tasks/hedgehog_in_cage/family_archive.py",
+        "topogym/recording/tasks/hedgehog_in_cage/inverse_archive.py",
+        "topogym/recording/tasks/hedgehog_in_cage/prepare_classic_prototypes.py",
+        "topogym/recording/tasks/horseshoe_ring/archive_physical.py",
+        "topogym/recording/tasks/horseshoe_ring/archive_timestep.py",
+        "topogym/recording/tasks/horseshoe_ring/variant_video.py",
+        "topogym/recording/tasks/interlocked_claws/archive.py",
+        "topogym/recording/tasks/interlocked_claws/family_archive.py",
+        "topogym/recording/tasks/interlocked_claws/family_render.py",
+        "topogym/recording/tasks/knot_untying/archive_demo.py",
+        "topogym/recording/tasks/lock_picking/demo_archive.py",
+        "topogym/recording/tasks/orbits/motion_render.py",
+        "topogym/recording/tasks/orbits/robot_recording.py",
+        "topogym/recording/tasks/rope_threading/archive.py",
+        "topogym/recording/tasks/slotted_post_ring/archive.py",
+        "topogym/recording/tasks/slotted_post_ring/curate_demos.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_balanced_robot.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_physics.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_robot.py",
+        "topogym/redundants/mujoco/tasks/orbits/dynamics.py",
+        "topogym/redundants/mujoco/tasks/orbits/robot_dynamics.py",
+        "topogym/redundants/mujoco/tasks/orbits/robot_runtime.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fem.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_fixture.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_grasp.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_probe.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fixture.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/physics.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/probe.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/robot.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/robot_sequence.py",
+        "topogym/redundants/mujoco/world/mujoco_presentation.py",
+        "topogym/redundants/package_markers/tasks/blanket_flatten/__init__.py",
+        "topogym/redundants/package_markers/tasks/buzz_wire_3d/__init__.py",
+        "topogym/redundants/package_markers/tasks/cast_coil/__init__.py",
+        "topogym/redundants/package_markers/tasks/cast_keyhole/__init__.py",
+        "topogym/redundants/package_markers/tasks/fiber_bundling/__init__.py",
+        "topogym/redundants/package_markers/tasks/hedgehog_in_cage/__init__.py",
+        "topogym/redundants/package_markers/tasks/horseshoe_ring/__init__.py",
+        "topogym/redundants/package_markers/tasks/interlocked_claws/__init__.py",
+        "topogym/redundants/package_markers/tasks/knot_untying/__init__.py",
+        "topogym/redundants/package_markers/tasks/lock_picking/__init__.py",
+        "topogym/redundants/package_markers/tasks/orbits/__init__.py",
+        "topogym/redundants/package_markers/tasks/rope_threading/__init__.py",
+        "topogym/redundants/package_markers/tasks/slotted_post_ring/__init__.py",
+        "topogym/tasks/__init__.py",
+        "topogym/tasks/blanket_flatten.py",
+        "topogym/tasks/buzz_wire_3d.py",
+        "topogym/tasks/cast_coil.py",
+        "topogym/tasks/cast_keyhole.py",
+        "topogym/tasks/fiber_bundling.py",
+        "topogym/tasks/hedgehog_in_cage.py",
+        "topogym/tasks/horseshoe_ring.py",
+        "topogym/tasks/interlocked_claws.py",
+        "topogym/tasks/knot_untying.py",
+        "topogym/tasks/lock_picking.py",
+        "topogym/tasks/orbits.py",
+        "topogym/tasks/rope_threading.py",
+        "topogym/tasks/slotted_post_ring.py",
+        "topogym/world/__init__.py",
+        "topogym/world/closed_band.py",
+        "topogym/world/genesis_ipc_vertex_constraints.py",
+        "topogym/world/genesis_memory.py",
+        "topogym/world/lab_layout.py",
+        "topogym/world/manifest.py",
+        "topogym/world/nyx_lab.py",
+        "topogym/world/physics/buzz_wire_3d/physics.py",
+        "topogym/world/physics/fiber_bundling/contact_precision.py",
+        "topogym/world/physics/fiber_bundling/numerics.py",
+        "topogym/world/physics/knot_untying/ipc_compat.py",
+        "topogym/world/physics/knot_untying/runtime_memory.py",
+        "topogym/world/physics/rope_threading/deformation_damping.py",
+        "topogym/world/physics/rope_threading/mesh_resolution.py",
+        "topogym/world/physics/rope_threading/runtime_memory.py",
+        "topogym/world/physics/rope_threading/table_contact.py",
+        "topogym/world/rope.py",
+        "topogym/world/rope_backends/__init__.py",
+        "topogym/world/rope_backends/fem_ipc.py",
+        "topogym/world/rope_backends/pbd.py",
+        "topogym/world/scenes/buzz_wire_3d/agent_scene.py",
+        "topogym/world/signatures.py",
+        "topogym/world/tabletop.py"
+      ]
+    },
+    {
+      "group": "runtime / runner / execution / session",
+      "tokens": [
+        "execution",
+        "runner",
+        "runtime",
+        "session"
+      ],
+      "functional_paths": 20,
+      "redundant_paths": 2,
+      "classes": 7,
+      "functions_methods": 9,
+      "file_paths": [
+        "topogym/agents/bridge/session.py",
+        "topogym/agents/rollout/runtime.py",
+        "topogym/agents/rollout/tool_runtime.py",
+        "topogym/data/exporters/knot_untying/execution_metrics.py",
+        "topogym/envs/episode_runner.py",
+        "topogym/envs/execution/blanket_flatten/execution.py",
+        "topogym/envs/execution/buzz_wire_3d/robot_runtime.py",
+        "topogym/envs/execution/cast_keyhole/robot_execution.py",
+        "topogym/envs/execution/cast_keyhole/variant_runner.py",
+        "topogym/envs/execution/cast_keyhole/variant_runtime.py",
+        "topogym/envs/execution/fiber_bundling/robot_sequence.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_guided_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/inverse_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/variant_runtime.py",
+        "topogym/envs/execution/horseshoe_ring/physical_motion.py",
+        "topogym/envs/execution/lock_picking/runner.py",
+        "topogym/recording/session.py",
+        "topogym/redundants/mujoco/tasks/orbits/robot_runtime.py",
+        "topogym/redundants/package_markers/runtime/__init__.py",
+        "topogym/world/physics/knot_untying/runtime_memory.py",
+        "topogym/world/physics/rope_threading/runtime_memory.py"
+      ]
+    },
+    {
+      "group": "config / spec / schema / contract / protocol",
+      "tokens": [
+        "config",
+        "contract",
+        "protocol",
+        "schema",
+        "spec"
+      ],
+      "functional_paths": 24,
+      "redundant_paths": 0,
+      "classes": 2,
+      "functions_methods": 29,
+      "file_paths": [
+        "topogym/config/agent_profiles.py",
+        "topogym/config/agent_suite.py",
+        "topogym/config/catalog.py",
+        "topogym/config/config.py",
+        "topogym/config/episode_spec.py",
+        "topogym/config/layout_randomization.py",
+        "topogym/config/registry.py",
+        "topogym/config/task_specs/buzz_wire_3d.py",
+        "topogym/config/task_specs/cast_coil.py",
+        "topogym/config/task_specs/cast_keyhole.py",
+        "topogym/config/task_specs/hedgehog_in_cage.py",
+        "topogym/config/task_specs/horseshoe_ring.py",
+        "topogym/config/task_specs/interlocked_claws.py",
+        "topogym/config/task_specs/knot_untying.py",
+        "topogym/config/task_specs/lock_picking.py",
+        "topogym/config/tasks/cast_keyhole/family_catalog.py",
+        "topogym/config/tasks/fiber_bundling/run_config.py",
+        "topogym/config/variant_episode.py",
+        "topogym/data/h5_schema.py",
+        "topogym/envs/protocol.py",
+        "topogym/recording/config.py",
+        "topogym/recording/contracts.py",
+        "topogym/robot/aloha_contract.py",
+        "topogym/robot/panda_contract.py"
+      ]
+    },
+    {
+      "group": "registry / catalog / factory / builder",
+      "tokens": [
+        "builder",
+        "catalog",
+        "factory",
+        "registry"
+      ],
+      "functional_paths": 4,
+      "redundant_paths": 0,
+      "classes": 11,
+      "functions_methods": 10,
+      "file_paths": [
+        "topogym/config/catalog.py",
+        "topogym/config/registry.py",
+        "topogym/config/tasks/cast_keyhole/family_catalog.py",
+        "topogym/robot/factory.py"
+      ]
+    },
+    {
+      "group": "policy / planner / controller / solver",
+      "tokens": [
+        "controller",
+        "planner",
+        "policy",
+        "solver"
+      ],
+      "functional_paths": 79,
+      "redundant_paths": 0,
+      "classes": 6,
+      "functions_methods": 9,
+      "file_paths": [
+        "topogym/agents/bridge/tool_policy.py",
+        "topogym/policies/primitives/axial_insert.py",
+        "topogym/policies/primitives/cloth_link_attach_drag.py",
+        "topogym/policies/primitives/gated_insert.py",
+        "topogym/policies/primitives/gateway_extract.py",
+        "topogym/policies/primitives/handle_drag.py",
+        "topogym/policies/primitives/pbd_particle_pinch.py",
+        "topogym/policies/primitives/pick_place.py",
+        "topogym/policies/primitives/pivot_lever.py",
+        "topogym/policies/primitives/rim_rotate.py",
+        "topogym/policies/primitives/rope_endpoint_drag.py",
+        "topogym/policies/script_policy.py",
+        "topogym/policies/subgoal.py",
+        "topogym/policies/tasks/blanket_flatten/bimanual.py",
+        "topogym/policies/tasks/blanket_flatten/bimanual_full.py",
+        "topogym/policies/tasks/blanket_flatten/grasp_sites.py",
+        "topogym/policies/tasks/blanket_flatten/robot_demo.py",
+        "topogym/policies/tasks/buzz_wire_3d/family_plan.py",
+        "topogym/policies/tasks/buzz_wire_3d/home_plan.py",
+        "topogym/policies/tasks/buzz_wire_3d/supported_plan.py",
+        "topogym/policies/tasks/cast_coil/robot_demo.py",
+        "topogym/policies/tasks/cast_keyhole/aloha_demo.py",
+        "topogym/policies/tasks/cast_keyhole/family_pipeline.py",
+        "topogym/policies/tasks/cast_keyhole/variant_pose.py",
+        "topogym/policies/tasks/fiber_bundling/sequential.py",
+        "topogym/policies/tasks/hedgehog_in_cage/extract.py",
+        "topogym/policies/tasks/hedgehog_in_cage/family_motion.py",
+        "topogym/policies/tasks/hedgehog_in_cage/plan_escape.py",
+        "topogym/policies/tasks/hedgehog_in_cage/plan_release.py",
+        "topogym/policies/tasks/horseshoe_ring/aloha_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/family_routes.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_extraction.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_place.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_plan.py",
+        "topogym/policies/tasks/horseshoe_ring/shape_bridge.py",
+        "topogym/policies/tasks/horseshoe_ring/variant_pipeline.py",
+        "topogym/policies/tasks/horseshoe_ring/witness_motion.py",
+        "topogym/policies/tasks/interlocked_claws/physical.py",
+        "topogym/policies/tasks/knot_untying/family_actions.py",
+        "topogym/policies/tasks/knot_untying/home_start.py",
+        "topogym/policies/tasks/knot_untying/untying.py",
+        "topogym/policies/tasks/lock_picking/oracle.py",
+        "topogym/policies/tasks/lock_picking/planner.py",
+        "topogym/policies/tasks/orbits/continuous_motion.py",
+        "topogym/policies/tasks/orbits/robot_pickup.py",
+        "topogym/policies/tasks/orbits/rope_route.py",
+        "topogym/policies/tasks/orbits/solution_plan.py",
+        "topogym/policies/tasks/rope_threading/feedback_actions.py",
+        "topogym/policies/tasks/rope_threading/reference_actions.py",
+        "topogym/policies/waypoint.py",
+        "topogym/solvers/collision/blanket_flatten/robot_clearance.py",
+        "topogym/solvers/collision/cast_keyhole/collision.py",
+        "topogym/solvers/collision/horseshoe_ring/robot_clearance.py",
+        "topogym/solvers/collision/interlocked_claws/collision.py",
+        "topogym/solvers/collision/knot_untying/robot_clearance.py",
+        "topogym/solvers/collision/rope_threading/robot_mesh_guard.py",
+        "topogym/solvers/geometry/buzz_wire_3d/family_witness.py",
+        "topogym/solvers/geometry/cast_coil/solvability.py",
+        "topogym/solvers/geometry/cast_keyhole/instance_solution.py",
+        "topogym/solvers/geometry/cast_keyhole/solution.py",
+        "topogym/solvers/geometry/horseshoe_ring/independent_motion.py",
+        "topogym/solvers/geometry/horseshoe_ring/solvability.py",
+        "topogym/solvers/geometry/lock_picking/certificate.py",
+        "topogym/solvers/kinematics/blanket_flatten/bimanual_kinematics.py",
+        "topogym/solvers/kinematics/buzz_wire_3d/robot_plan.py",
+        "topogym/solvers/kinematics/cast_coil/robot_plan.py",
+        "topogym/solvers/kinematics/cast_keyhole/robot_motion.py",
+        "topogym/solvers/kinematics/hedgehog_in_cage/plan_robot.py",
+        "topogym/solvers/kinematics/horseshoe_ring/robot_motion.py",
+        "topogym/solvers/kinematics/knot_untying/control.py",
+        "topogym/solvers/kinematics/orbits/robot_retarget.py",
+        "topogym/solvers/kinematics/orbits/workspace.py",
+        "topogym/solvers/kinematics/rope_threading/feedback_ik_plan.py",
+        "topogym/solvers/kinematics/rope_threading/feedback_paths.py",
+        "topogym/solvers/kinematics/rope_threading/ik_plan.py",
+        "topogym/solvers/kinematics/rope_threading/reference_ik.py",
+        "topogym/solvers/validation/knot_untying/family_preflight.py",
+        "topogym/solvers/validation/rope_threading/reference_preflight.py"
+      ]
+    },
+    {
+      "group": "variant / variation / family / instance",
+      "tokens": [
+        "family",
+        "instance",
+        "variant",
+        "variation"
+      ],
+      "functional_paths": 57,
+      "redundant_paths": 13,
+      "classes": 12,
+      "functions_methods": 37,
+      "file_paths": [
+        "topogym/assets/generators/buzz_wire_3d/family_geometry.py",
+        "topogym/assets/generators/hedgehog_in_cage/family_geometry.py",
+        "topogym/assets/generators/interlocked_claws/family_models.py",
+        "topogym/assets/loaders/cast_keyhole/variant_assets.py",
+        "topogym/assets/variants/buzz_wire_3d/compact.py",
+        "topogym/assets/variants/cast_coil/inverse_design.py",
+        "topogym/assets/variants/cast_coil/variants.py",
+        "topogym/assets/variants/cast_keyhole/eccentric_window.py",
+        "topogym/assets/variants/cast_keyhole/family_variants.py",
+        "topogym/assets/variants/cast_keyhole/inverse_variants.py",
+        "topogym/assets/variants/cast_keyhole/long_stroke.py",
+        "topogym/assets/variants/cast_keyhole/turnback.py",
+        "topogym/assets/variants/cast_keyhole/variants.py",
+        "topogym/assets/variants/fiber_bundling/generation.py",
+        "topogym/assets/variants/fiber_bundling/variants.py",
+        "topogym/assets/variants/hedgehog_in_cage/classic_families.py",
+        "topogym/assets/variants/hedgehog_in_cage/inverse_window.py",
+        "topogym/assets/variants/hedgehog_in_cage/variants.py",
+        "topogym/assets/variants/horseshoe_ring/fixed_trace_variants.py",
+        "topogym/assets/variants/horseshoe_ring/shape_neighborhood.py",
+        "topogym/assets/variants/horseshoe_ring/shape_sampler.py",
+        "topogym/assets/variants/horseshoe_ring/trace_scene_variants.py",
+        "topogym/assets/variants/horseshoe_ring/variant_generator.py",
+        "topogym/assets/variants/interlocked_claws/variants.py",
+        "topogym/assets/variants/knot_untying/families.py",
+        "topogym/assets/variants/lock_picking/inverse_variants.py",
+        "topogym/assets/variants/lock_picking/variants.py",
+        "topogym/config/tasks/cast_keyhole/family_catalog.py",
+        "topogym/config/variant_episode.py",
+        "topogym/envs/execution/cast_keyhole/variant_runner.py",
+        "topogym/envs/execution/cast_keyhole/variant_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_guided_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/family_runtime.py",
+        "topogym/envs/execution/hedgehog_in_cage/variant_runtime.py",
+        "topogym/evaluation/tasks/cast_keyhole/family_suite.py",
+        "topogym/evaluation/tasks/fiber_bundling/variant_progress.py",
+        "topogym/evaluation/tasks/hedgehog_in_cage/variant_validation.py",
+        "topogym/evaluation/tasks/horseshoe_ring/variant_audit.py",
+        "topogym/evaluation/tasks/lock_picking/verify_variants.py",
+        "topogym/policies/tasks/buzz_wire_3d/family_plan.py",
+        "topogym/policies/tasks/cast_keyhole/family_pipeline.py",
+        "topogym/policies/tasks/cast_keyhole/variant_pose.py",
+        "topogym/policies/tasks/hedgehog_in_cage/family_motion.py",
+        "topogym/policies/tasks/horseshoe_ring/family_routes.py",
+        "topogym/policies/tasks/horseshoe_ring/variant_pipeline.py",
+        "topogym/policies/tasks/knot_untying/family_actions.py",
+        "topogym/recording/tasks/cast_keyhole/family_variants_archive.py",
+        "topogym/recording/tasks/cast_keyhole/variant_archive.py",
+        "topogym/recording/tasks/fiber_bundling/archive_variant.py",
+        "topogym/recording/tasks/hedgehog_in_cage/family_archive.py",
+        "topogym/recording/tasks/horseshoe_ring/variant_video.py",
+        "topogym/recording/tasks/interlocked_claws/family_archive.py",
+        "topogym/recording/tasks/interlocked_claws/family_render.py",
+        "topogym/redundants/experiments/fiber_bundling/refined_variant_trial.py",
+        "topogym/redundants/experiments/fiber_bundling/variant_demo.py",
+        "topogym/redundants/experiments/fiber_bundling/variant_trial.py",
+        "topogym/redundants/experiments/horseshoe_ring/family_space.py",
+        "topogym/redundants/experiments/horseshoe_ring/shape_variants.py",
+        "topogym/redundants/experiments/interlocked_claws/family_space.py",
+        "topogym/redundants/experiments/lock_picking/family_space.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_balanced_robot.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_physics.py",
+        "topogym/redundants/mujoco/tasks/interlocked_claws/family_robot.py",
+        "topogym/redundants/presentation/fiber_bundling/plot_variants.py",
+        "topogym/redundants/presentation/hedgehog_in_cage/family_review.py",
+        "topogym/redundants/presentation/lock_picking/inverse_variants_review.html",
+        "topogym/solvers/geometry/buzz_wire_3d/family_witness.py",
+        "topogym/solvers/geometry/cast_keyhole/instance_solution.py",
+        "topogym/solvers/validation/knot_untying/family_preflight.py",
+        "topogym/utils/variant_rng.py"
+      ]
+    },
+    {
+      "group": "preset / profile / template / layout",
+      "tokens": [
+        "layout",
+        "preset",
+        "profile",
+        "template"
+      ],
+      "functional_paths": 4,
+      "redundant_paths": 0,
+      "classes": 15,
+      "functions_methods": 24,
+      "file_paths": [
+        "topogym/assets/generators/buzz_wire_3d/templates.py",
+        "topogym/config/agent_profiles.py",
+        "topogym/config/layout_randomization.py",
+        "topogym/world/lab_layout.py"
+      ]
+    },
+    {
+      "group": "episode / run / rollout / trial / segment",
+      "tokens": [
+        "episode",
+        "rollout",
+        "run",
+        "segment",
+        "trial"
+      ],
+      "functional_paths": 15,
+      "redundant_paths": 4,
+      "classes": 17,
+      "functions_methods": 63,
+      "file_paths": [
+        "topogym/agents/rollout/__init__.py",
+        "topogym/agents/rollout/__main__.py",
+        "topogym/agents/rollout/agents.py",
+        "topogym/agents/rollout/budget_proxy.py",
+        "topogym/agents/rollout/env_sdk.py",
+        "topogym/agents/rollout/episode.py",
+        "topogym/agents/rollout/isolation.py",
+        "topogym/agents/rollout/runtime.py",
+        "topogym/agents/rollout/token_budget.py",
+        "topogym/agents/rollout/tool_runtime.py",
+        "topogym/config/episode_spec.py",
+        "topogym/config/tasks/fiber_bundling/run_config.py",
+        "topogym/config/variant_episode.py",
+        "topogym/data/episode_dataset_writer.py",
+        "topogym/envs/episode_runner.py",
+        "topogym/redundants/experiments/cast_coil/official_trial.py",
+        "topogym/redundants/experiments/fiber_bundling/refined_variant_trial.py",
+        "topogym/redundants/experiments/fiber_bundling/snapshot_trial.py",
+        "topogym/redundants/experiments/fiber_bundling/variant_trial.py"
+      ]
+    },
+    {
+      "group": "step / tick / frame",
+      "tokens": [
+        "frame",
+        "step",
+        "tick"
+      ],
+      "functional_paths": 0,
+      "redundant_paths": 1,
+      "classes": 4,
+      "functions_methods": 49,
+      "file_paths": [
+        "topogym/redundants/benchmarks/step_bench.py"
+      ]
+    },
+    {
+      "group": "state / snapshot / checkpoint / restore",
+      "tokens": [
+        "checkpoint",
+        "restore",
+        "snapshot",
+        "state"
+      ],
+      "functional_paths": 1,
+      "redundant_paths": 1,
+      "classes": 1,
+      "functions_methods": 66,
+      "file_paths": [
+        "topogym/envs/initialization/blanket_flatten/initial_state.py",
+        "topogym/redundants/experiments/fiber_bundling/snapshot_trial.py"
+      ]
+    },
+    {
+      "group": "replay / resume / render / record",
+      "tokens": [
+        "record",
+        "recorder",
+        "recording",
+        "render",
+        "replay",
+        "resume"
+      ],
+      "functional_paths": 59,
+      "redundant_paths": 4,
+      "classes": 7,
+      "functions_methods": 59,
+      "file_paths": [
+        "topogym/recording/__init__.py",
+        "topogym/recording/__main__.py",
+        "topogym/recording/adapters/__init__.py",
+        "topogym/recording/adapters/genesis.py",
+        "topogym/recording/agent_media.py",
+        "topogym/recording/archive.py",
+        "topogym/recording/config.py",
+        "topogym/recording/contracts.py",
+        "topogym/recording/demo_paths.py",
+        "topogym/recording/encoding.py",
+        "topogym/recording/media.py",
+        "topogym/recording/migration.py",
+        "topogym/recording/replay.py",
+        "topogym/recording/session.py",
+        "topogym/recording/sources.py",
+        "topogym/recording/task_adapters/blanket_flatten.py",
+        "topogym/recording/task_adapters/buzz_wire_3d.py",
+        "topogym/recording/task_adapters/cast_coil.py",
+        "topogym/recording/task_adapters/cast_keyhole.py",
+        "topogym/recording/task_adapters/fiber_bundling.py",
+        "topogym/recording/task_adapters/hedgehog_in_cage.py",
+        "topogym/recording/task_adapters/horseshoe_ring.py",
+        "topogym/recording/task_adapters/interlocked_claws.py",
+        "topogym/recording/task_adapters/knot_untying.py",
+        "topogym/recording/task_adapters/lock_picking.py",
+        "topogym/recording/task_adapters/orbits.py",
+        "topogym/recording/task_adapters/rope_threading.py",
+        "topogym/recording/task_adapters/slotted_post_ring.py",
+        "topogym/recording/tasks/blanket_flatten/archive.py",
+        "topogym/recording/tasks/buzz_wire_3d/archive.py",
+        "topogym/recording/tasks/buzz_wire_3d/robot_archive.py",
+        "topogym/recording/tasks/cast_coil/robot_archive.py",
+        "topogym/recording/tasks/cast_keyhole/archive_demo.py",
+        "topogym/recording/tasks/cast_keyhole/eccentric_window_archive.py",
+        "topogym/recording/tasks/cast_keyhole/family_variants_archive.py",
+        "topogym/recording/tasks/cast_keyhole/long_stroke_archive.py",
+        "topogym/recording/tasks/cast_keyhole/physical_recording.py",
+        "topogym/recording/tasks/cast_keyhole/turnback_archive.py",
+        "topogym/recording/tasks/cast_keyhole/variant_archive.py",
+        "topogym/recording/tasks/fiber_bundling/archive_variant.py",
+        "topogym/recording/tasks/fiber_bundling/render_ready.py",
+        "topogym/recording/tasks/hedgehog_in_cage/family_archive.py",
+        "topogym/recording/tasks/hedgehog_in_cage/inverse_archive.py",
+        "topogym/recording/tasks/hedgehog_in_cage/prepare_classic_prototypes.py",
+        "topogym/recording/tasks/horseshoe_ring/archive_physical.py",
+        "topogym/recording/tasks/horseshoe_ring/archive_timestep.py",
+        "topogym/recording/tasks/horseshoe_ring/variant_video.py",
+        "topogym/recording/tasks/interlocked_claws/archive.py",
+        "topogym/recording/tasks/interlocked_claws/family_archive.py",
+        "topogym/recording/tasks/interlocked_claws/family_render.py",
+        "topogym/recording/tasks/knot_untying/archive_demo.py",
+        "topogym/recording/tasks/lock_picking/demo_archive.py",
+        "topogym/recording/tasks/orbits/motion_render.py",
+        "topogym/recording/tasks/orbits/robot_recording.py",
+        "topogym/recording/tasks/rope_threading/archive.py",
+        "topogym/recording/tasks/slotted_post_ring/archive.py",
+        "topogym/recording/tasks/slotted_post_ring/curate_demos.py",
+        "topogym/recording/timeline.py",
+        "topogym/recording/validation.py",
+        "topogym/redundants/compatibility/recording/compatibility.py",
+        "topogym/redundants/compatibility/recording/compatibility_recorder.py",
+        "topogym/redundants/compatibility/utils/recording.py",
+        "topogym/redundants/mujoco/recording/adapters/mujoco.py"
+      ]
+    },
+    {
+      "group": "validate / verify / audit / review / qualify",
+      "tokens": [
+        "audit",
+        "qualification",
+        "qualify",
+        "review",
+        "validate",
+        "validation",
+        "verification",
+        "verify"
+      ],
+      "functional_paths": 35,
+      "redundant_paths": 8,
+      "classes": 7,
+      "functions_methods": 109,
+      "file_paths": [
+        "topogym/evaluation/tasks/blanket_flatten/bimanual_review.py",
+        "topogym/evaluation/tasks/blanket_flatten/review_preparation.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/qualification.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/robot_verify.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/verification.py",
+        "topogym/evaluation/tasks/buzz_wire_3d/verify_physics.py",
+        "topogym/evaluation/tasks/cast_coil/qualify.py",
+        "topogym/evaluation/tasks/cast_coil/verification.py",
+        "topogym/evaluation/tasks/cast_keyhole/physical_audit.py",
+        "topogym/evaluation/tasks/cast_keyhole/qualify.py",
+        "topogym/evaluation/tasks/fiber_bundling/audit_robot_contacts.py",
+        "topogym/evaluation/tasks/fiber_bundling/validation.py",
+        "topogym/evaluation/tasks/hedgehog_in_cage/audit.py",
+        "topogym/evaluation/tasks/hedgehog_in_cage/variant_validation.py",
+        "topogym/evaluation/tasks/horseshoe_ring/trace_scene_verification.py",
+        "topogym/evaluation/tasks/horseshoe_ring/variant_audit.py",
+        "topogym/evaluation/tasks/horseshoe_ring/verify_gravity.py",
+        "topogym/evaluation/tasks/horseshoe_ring/verify_physical.py",
+        "topogym/evaluation/tasks/interlocked_claws/reference_audit.py",
+        "topogym/evaluation/tasks/interlocked_claws/verification.py",
+        "topogym/evaluation/tasks/knot_untying/physics_review.py",
+        "topogym/evaluation/tasks/lock_picking/verify_variants.py",
+        "topogym/evaluation/tasks/orbits/grasp_audit.py",
+        "topogym/evaluation/tasks/orbits/passage_audit.py",
+        "topogym/evaluation/tasks/orbits/reference_audit.py",
+        "topogym/evaluation/tasks/orbits/rope_audit.py",
+        "topogym/evaluation/tasks/orbits/trajectory_audit.py",
+        "topogym/evaluation/tasks/orbits/verification.py",
+        "topogym/evaluation/tasks/rope_threading/physics_review.py",
+        "topogym/evaluation/tasks/rope_threading/qualification.py",
+        "topogym/evaluation/tasks/rope_threading/startup_review.py",
+        "topogym/evaluation/tasks/slotted_post_ring/review_fem.py",
+        "topogym/recording/validation.py",
+        "topogym/redundants/presentation/cast_keyhole/review.py",
+        "topogym/redundants/presentation/fiber_bundling/review.py",
+        "topogym/redundants/presentation/hedgehog_in_cage/family_review.py",
+        "topogym/redundants/presentation/horseshoe_ring/inverse_review.py",
+        "topogym/redundants/presentation/horseshoe_ring/shape_review.py",
+        "topogym/redundants/presentation/horseshoe_ring/trace_review.py",
+        "topogym/redundants/presentation/lock_picking/inverse_variants_review.html",
+        "topogym/redundants/presentation/slotted_post_ring/review.py",
+        "topogym/solvers/validation/knot_untying/family_preflight.py",
+        "topogym/solvers/validation/rope_threading/reference_preflight.py"
+      ]
+    },
+    {
+      "group": "geometry / model / asset",
+      "tokens": [
+        "asset",
+        "geometry",
+        "model"
+      ],
+      "functional_paths": 72,
+      "redundant_paths": 0,
+      "classes": 4,
+      "functions_methods": 58,
+      "file_paths": [
+        "topogym/assets/generators/blanket_flatten/gathered_geometry.py",
+        "topogym/assets/generators/blanket_flatten/geometry.py",
+        "topogym/assets/generators/braid.py",
+        "topogym/assets/generators/buzz_wire_3d/appearance.py",
+        "topogym/assets/generators/buzz_wire_3d/family_geometry.py",
+        "topogym/assets/generators/buzz_wire_3d/geometry.py",
+        "topogym/assets/generators/buzz_wire_3d/supports.py",
+        "topogym/assets/generators/buzz_wire_3d/templates.py",
+        "topogym/assets/generators/cast_coil/appearance.py",
+        "topogym/assets/generators/cast_coil/geometry.py",
+        "topogym/assets/generators/cast_keyhole/geometry.py",
+        "topogym/assets/generators/fiber_bundling/anchored_geometry.py",
+        "topogym/assets/generators/fiber_bundling/geometry.py",
+        "topogym/assets/generators/fiber_bundling/prepare_assets.py",
+        "topogym/assets/generators/fiber_bundling/ring_mount.py",
+        "topogym/assets/generators/hedgehog_in_cage/appearance.py",
+        "topogym/assets/generators/hedgehog_in_cage/family_geometry.py",
+        "topogym/assets/generators/hedgehog_in_cage/geometry.py",
+        "topogym/assets/generators/hedgehog_in_cage/prepare_assets.py",
+        "topogym/assets/generators/hedgehog_in_cage/prepare_prototypes.py",
+        "topogym/assets/generators/horseshoe_ring/geometry.py",
+        "topogym/assets/generators/interlocked_claws/family_models.py",
+        "topogym/assets/generators/interlocked_claws/geometry.py",
+        "topogym/assets/generators/knot_untying/geometry.py",
+        "topogym/assets/generators/knot_untying/prepare_assets.py",
+        "topogym/assets/generators/lock_picking/_aperture_outline.py",
+        "topogym/assets/generators/lock_picking/_staged_lock_geometry.py",
+        "topogym/assets/generators/lock_picking/_staged_lock_limits.py",
+        "topogym/assets/generators/lock_picking/_staged_lock_ring.py",
+        "topogym/assets/generators/orbits/geometry.py",
+        "topogym/assets/generators/rope_threading/geometry.py",
+        "topogym/assets/generators/rope_threading/prepare_assets.py",
+        "topogym/assets/generators/slotted_post_ring/geometry.py",
+        "topogym/assets/loaders/cast_keyhole/variant_assets.py",
+        "topogym/assets/loaders/interlocked_claws/reference.py",
+        "topogym/assets/loaders/rope_threading/reference.py",
+        "topogym/assets/loaders/rope_threading/reference_motion.py",
+        "topogym/assets/manifests/lock_picking/source_manifest.json",
+        "topogym/assets/robot.py",
+        "topogym/assets/textures.py",
+        "topogym/assets/variants/buzz_wire_3d/compact.py",
+        "topogym/assets/variants/cast_coil/inverse_design.py",
+        "topogym/assets/variants/cast_coil/variants.py",
+        "topogym/assets/variants/cast_keyhole/eccentric_window.py",
+        "topogym/assets/variants/cast_keyhole/family_variants.py",
+        "topogym/assets/variants/cast_keyhole/inverse_variants.py",
+        "topogym/assets/variants/cast_keyhole/long_stroke.py",
+        "topogym/assets/variants/cast_keyhole/turnback.py",
+        "topogym/assets/variants/cast_keyhole/variants.py",
+        "topogym/assets/variants/fiber_bundling/generation.py",
+        "topogym/assets/variants/fiber_bundling/variants.py",
+        "topogym/assets/variants/hedgehog_in_cage/classic_families.py",
+        "topogym/assets/variants/hedgehog_in_cage/inverse_window.py",
+        "topogym/assets/variants/hedgehog_in_cage/variants.py",
+        "topogym/assets/variants/horseshoe_ring/fixed_trace_variants.py",
+        "topogym/assets/variants/horseshoe_ring/shape_neighborhood.py",
+        "topogym/assets/variants/horseshoe_ring/shape_sampler.py",
+        "topogym/assets/variants/horseshoe_ring/trace_scene_variants.py",
+        "topogym/assets/variants/horseshoe_ring/variant_generator.py",
+        "topogym/assets/variants/interlocked_claws/variants.py",
+        "topogym/assets/variants/knot_untying/families.py",
+        "topogym/assets/variants/lock_picking/inverse_variants.py",
+        "topogym/assets/variants/lock_picking/variants.py",
+        "topogym/solvers/geometry/buzz_wire_3d/family_witness.py",
+        "topogym/solvers/geometry/cast_coil/solvability.py",
+        "topogym/solvers/geometry/cast_keyhole/instance_solution.py",
+        "topogym/solvers/geometry/cast_keyhole/solution.py",
+        "topogym/solvers/geometry/horseshoe_ring/independent_motion.py",
+        "topogym/solvers/geometry/horseshoe_ring/solvability.py",
+        "topogym/solvers/geometry/lock_picking/certificate.py",
+        "topogym/utils/geometry/rigid_geometry.py",
+        "topogym/utils/geometry/rope_crossings.py"
+      ]
+    },
+    {
+      "group": "manifest / source / signature",
+      "tokens": [
+        "manifest",
+        "signature",
+        "source"
+      ],
+      "functional_paths": 3,
+      "redundant_paths": 0,
+      "classes": 2,
+      "functions_methods": 48,
+      "file_paths": [
+        "topogym/assets/manifests/lock_picking/source_manifest.json",
+        "topogym/recording/sources.py",
+        "topogym/world/manifest.py"
+      ]
+    },
+    {
+      "group": "demo / probe / preview",
+      "tokens": [
+        "demo",
+        "preview",
+        "probe"
+      ],
+      "functional_paths": 10,
+      "redundant_paths": 39,
+      "classes": 5,
+      "functions_methods": 18,
+      "file_paths": [
+        "topogym/evaluation/diagnostics/pbd_probe.py",
+        "topogym/policies/tasks/blanket_flatten/robot_demo.py",
+        "topogym/policies/tasks/cast_coil/robot_demo.py",
+        "topogym/policies/tasks/cast_keyhole/aloha_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/aloha_demo.py",
+        "topogym/policies/tasks/horseshoe_ring/physical_demo.py",
+        "topogym/recording/demo_paths.py",
+        "topogym/recording/tasks/cast_keyhole/archive_demo.py",
+        "topogym/recording/tasks/knot_untying/archive_demo.py",
+        "topogym/recording/tasks/lock_picking/demo_archive.py",
+        "topogym/redundants/checks/fiber_bundling/contact_rule_probe.py",
+        "topogym/redundants/experiments/blanket_flatten/preview.py",
+        "topogym/redundants/experiments/buzz_wire_3d/preview.py",
+        "topogym/redundants/experiments/buzz_wire_3d/probe.py",
+        "topogym/redundants/experiments/cast_coil/demo.py",
+        "topogym/redundants/experiments/cast_coil/physics_probe.py",
+        "topogym/redundants/experiments/cast_keyhole/demo.py",
+        "topogym/redundants/experiments/cast_keyhole/physics_probe.py",
+        "topogym/redundants/experiments/cast_keyhole/route_probe.py",
+        "topogym/redundants/experiments/cast_keyhole/trajectory_probe.py",
+        "topogym/redundants/experiments/fiber_bundling/anchored_probe.py",
+        "topogym/redundants/experiments/fiber_bundling/capsule_contact_probe.py",
+        "topogym/redundants/experiments/fiber_bundling/demo.py",
+        "topogym/redundants/experiments/fiber_bundling/ik_turn_probe.py",
+        "topogym/redundants/experiments/fiber_bundling/probe.py",
+        "topogym/redundants/experiments/fiber_bundling/variant_demo.py",
+        "topogym/redundants/experiments/hedgehog_in_cage/demo.py",
+        "topogym/redundants/experiments/hedgehog_in_cage/side_window_probe.py",
+        "topogym/redundants/experiments/horseshoe_ring/chain_probe.py",
+        "topogym/redundants/experiments/horseshoe_ring/demo.py",
+        "topogym/redundants/experiments/horseshoe_ring/gravity_demo.py",
+        "topogym/redundants/experiments/horseshoe_ring/witness_demo.py",
+        "topogym/redundants/experiments/interlocked_claws/contact_probe.py",
+        "topogym/redundants/experiments/interlocked_claws/demo.py",
+        "topogym/redundants/experiments/knot_untying/contact_probe.py",
+        "topogym/redundants/experiments/knot_untying/demo.py",
+        "topogym/redundants/experiments/knot_untying/physics_probe.py",
+        "topogym/redundants/experiments/knot_untying/probe_actions.py",
+        "topogym/redundants/experiments/knot_untying/robot_probe.py",
+        "topogym/redundants/experiments/orbits/bimanual_bight_demo.py",
+        "topogym/redundants/experiments/orbits/grasp_demo.py",
+        "topogym/redundants/experiments/orbits/preview.py",
+        "topogym/redundants/experiments/orbits/rope_only_demo.py",
+        "topogym/redundants/experiments/rope_threading/contact_probe.py",
+        "topogym/redundants/experiments/rope_threading/demo.py",
+        "topogym/redundants/experiments/rope_threading/physics_probe.py",
+        "topogym/redundants/experiments/slotted_post_ring/preview.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_probe.py",
+        "topogym/redundants/mujoco/tasks/slotted_post_ring/probe.py"
+      ]
+    },
+    {
+      "group": "result / status / verdict / success",
+      "tokens": [
+        "result",
+        "status",
+        "success",
+        "verdict"
+      ],
+      "functional_paths": 0,
+      "redundant_paths": 0,
+      "classes": 14,
+      "functions_methods": 1,
+      "file_paths": []
+    },
+    {
+      "group": "backend / device / engine",
+      "tokens": [
+        "backend",
+        "device",
+        "engine"
+      ],
+      "functional_paths": 3,
+      "redundant_paths": 0,
+      "classes": 2,
+      "functions_methods": 1,
+      "file_paths": [
+        "topogym/world/rope_backends/__init__.py",
+        "topogym/world/rope_backends/fem_ipc.py",
+        "topogym/world/rope_backends/pbd.py"
+      ]
+    }
+  ],
+  "duplicate_public_classes": {
+    "Episode": [
+      {
+        "path": "topogym/agents/rollout/episode.py",
+        "line": 101
+      },
+      {
+        "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/robot_sequence.py",
+        "line": 49
+      }
+    ],
+    "GenerationRejected": [
+      {
+        "path": "topogym/assets/variants/fiber_bundling/generation.py",
+        "line": 50
+      },
+      {
+        "path": "topogym/assets/variants/hedgehog_in_cage/variants.py",
+        "line": 357
+      }
+    ],
+    "Kinematics": [
+      {
+        "path": "topogym/assets/variants/hedgehog_in_cage/inverse_window.py",
+        "line": 41
+      },
+      {
+        "path": "topogym/solvers/kinematics/buzz_wire_3d/robot_plan.py",
+        "line": 32
+      },
+      {
+        "path": "topogym/solvers/kinematics/cast_coil/robot_plan.py",
+        "line": 32
+      },
+      {
+        "path": "topogym/solvers/kinematics/cast_keyhole/robot_motion.py",
+        "line": 33
+      },
+      {
+        "path": "topogym/solvers/kinematics/horseshoe_ring/robot_motion.py",
+        "line": 26
+      }
+    ],
+    "RobotAudit": [
+      {
+        "path": "topogym/envs/execution/hedgehog_in_cage/family_runtime.py",
+        "line": 41
+      },
+      {
+        "path": "topogym/envs/execution/hedgehog_in_cage/inverse_runtime.py",
+        "line": 39
+      },
+      {
+        "path": "topogym/solvers/kinematics/buzz_wire_3d/robot_plan.py",
+        "line": 127
+      }
+    ],
+    "StabilityLimits": [
+      {
+        "path": "topogym/evaluation/diagnostics/stability.py",
+        "line": 8
+      },
+      {
+        "path": "topogym/evaluation/tasks/knot_untying/diagnostics.py",
+        "line": 15
+      }
+    ],
+    "CompoundCollision": [
+      {
+        "path": "topogym/evaluation/tasks/cast_coil/verification.py",
+        "line": 29
+      },
+      {
+        "path": "topogym/solvers/collision/cast_keyhole/collision.py",
+        "line": 16
+      }
+    ],
+    "Motion": [
+      {
+        "path": "topogym/evaluation/tasks/cast_coil/verification.py",
+        "line": 60
+      },
+      {
+        "path": "topogym/solvers/collision/cast_keyhole/collision.py",
+        "line": 62
+      }
+    ],
+    "PhysicsSettings": [
+      {
+        "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/physics.py",
+        "line": 39
+      },
+      {
+        "path": "topogym/world/physics/buzz_wire_3d/physics.py",
+        "line": 39
+      }
+    ],
+    "RobotClearance": [
+      {
+        "path": "topogym/solvers/collision/horseshoe_ring/robot_clearance.py",
+        "line": 12
+      },
+      {
+        "path": "topogym/solvers/kinematics/cast_keyhole/robot_motion.py",
+        "line": 83
+      }
+    ],
+    "ForwardOnlyMemory": [
+      {
+        "path": "topogym/world/physics/knot_untying/runtime_memory.py",
+        "line": 11
+      },
+      {
+        "path": "topogym/world/physics/rope_threading/runtime_memory.py",
+        "line": 5
+      }
+    ]
+  },
+  "source_files": [
+    {
+      "path": "topogym/__init__.py",
+      "sha256": "95550d019a2651bdee9630ebd8d8ec1683a9f418b767718611153df5ea396719"
+    },
+    {
+      "path": "topogym/agents/bridge/__init__.py",
+      "sha256": "3cb929960858f665e840a251a777aaa1f5c4bdca3304c69c7a83820376f09eab"
+    },
+    {
+      "path": "topogym/agents/bridge/__main__.py",
+      "sha256": "c59936409405bf9e90fe80fa38df0bbd68f1c960dc4050f7611e2cab7359ec89"
+    },
+    {
+      "path": "topogym/agents/bridge/budget.py",
+      "sha256": "c4f9cccd61fc4a00e1f70577f8f12b9d0540ac742002b739d57d5f1805e98bd8"
+    },
+    {
+      "path": "topogym/agents/bridge/client.py",
+      "sha256": "31e8fa22a62e5beb1620db504750172c6fd9f51bb7ce4f2e0b1857aa72abce23"
+    },
+    {
+      "path": "topogym/agents/bridge/dashboard.html",
+      "sha256": "dab56dca95a05dcd7c69394ec1bd3150539ba3e6cdd941daba08f9c394d4347a"
+    },
+    {
+      "path": "topogym/agents/bridge/local.py",
+      "sha256": "5c15d5b3e8697344b62d3f2c134c006b2d9328ef1da0126a67412afae5897406"
+    },
+    {
+      "path": "topogym/agents/bridge/openai_harness.py",
+      "sha256": "16a87d18db6a96288a13fbde537c4dce58ba66f88bcaa5a243950429600ccf86"
+    },
+    {
+      "path": "topogym/agents/bridge/package.py",
+      "sha256": "776f6e126f32632f0e7c70f144c8d2df35c053261a4778aebd1f571a59c06b81"
+    },
+    {
+      "path": "topogym/agents/bridge/server.py",
+      "sha256": "7a2f1b74d3fe14f6aa7f1f344b0d7045ef9831530d223c5aacdfad073c36bc4b"
+    },
+    {
+      "path": "topogym/agents/bridge/session.py",
+      "sha256": "774abb43d9a1c814bcdb9dfaedde8187990240fe4ae2f58fbd251c17d91a5dcd"
+    },
+    {
+      "path": "topogym/agents/bridge/tool_policy.py",
+      "sha256": "0a789ff32c28990e90f27c8b4c154e5abbb7ea2fd197bf17017db288e15d78d9"
+    },
+    {
+      "path": "topogym/agents/rollout/__init__.py",
+      "sha256": "573f54d0a7a2acc1b2854a3b138e46c5662f62ddec6df3385a552b7dee0f8f51"
+    },
+    {
+      "path": "topogym/agents/rollout/__main__.py",
+      "sha256": "3132ed59017bb32d3373fb0ee035eabaa1d64aea0db03018fe1c5ce10e4fa282"
+    },
+    {
+      "path": "topogym/agents/rollout/agents.py",
+      "sha256": "e5a4aa6cb0760a3c94e76bc726647d2886e17e86b535333b8806023041435603"
+    },
+    {
+      "path": "topogym/agents/rollout/budget_proxy.py",
+      "sha256": "77f54d6f3a64418055345a0056af94d55459c681dd76b96c50c6867deb0ed65a"
+    },
+    {
+      "path": "topogym/agents/rollout/env_sdk.py",
+      "sha256": "2a0c0b939ad93edb756a85ae5b1c0c6217e0889647b574a082079f94b542a3d5"
+    },
+    {
+      "path": "topogym/agents/rollout/episode.py",
+      "sha256": "65ce4754a7b7f7fd59ad3441cb16a75073aed9c43e75af627c09266e95511df4"
+    },
+    {
+      "path": "topogym/agents/rollout/isolation.py",
+      "sha256": "ca8c3b3e49d8043eca6fdfcad7bb51a86a42bbd42ec13742fa041a545b6bf5c7"
+    },
+    {
+      "path": "topogym/agents/rollout/runtime.py",
+      "sha256": "a7d1185c23f9ea40d10d96720dbe9bb182e08ba4ff8bd84060e3b39c552ffd78"
+    },
+    {
+      "path": "topogym/agents/rollout/token_budget.py",
+      "sha256": "b1e46f0501a6fc0e190dcb5cfcb7ce10ea8961f06c17842e3b8d73f820823284"
+    },
+    {
+      "path": "topogym/agents/rollout/tool_runtime.py",
+      "sha256": "2d5730916e6a06a854ee4e76bb9bdd1a4bbef23daf5f8b39154a1766ad82ba49"
+    },
+    {
+      "path": "topogym/assets/generators/blanket_flatten/gathered_geometry.py",
+      "sha256": "29cac3e059c7cad70419562035a2f88c4a28c989171c2053ba10e1bd555795b1"
+    },
+    {
+      "path": "topogym/assets/generators/blanket_flatten/geometry.py",
+      "sha256": "9bb7af6f7e9c70d7a3a817dafbeb090b37c8a43a68cb35c4a5aaa0185616e9c2"
+    },
+    {
+      "path": "topogym/assets/generators/braid.py",
+      "sha256": "be450c18c0cba74146d72f283a0b3a27fe37e1c5cb5015e5d1c4c9af2ae2d9f0"
+    },
+    {
+      "path": "topogym/assets/generators/buzz_wire_3d/appearance.py",
+      "sha256": "d72067b24680ab8036fdd0e3d586dccbb65aad66673a2621b4702d21f5dd7910"
+    },
+    {
+      "path": "topogym/assets/generators/buzz_wire_3d/family_geometry.py",
+      "sha256": "ff028f2b2efdbbf3ea03c656eb19977bd1fb98b651c0b2e47a8ff9fc54f1c7ac"
+    },
+    {
+      "path": "topogym/assets/generators/buzz_wire_3d/geometry.py",
+      "sha256": "376200aa942954030552f4813f20c3f0b4feefcb2a90723befd0a3e4a0a1d30a"
+    },
+    {
+      "path": "topogym/assets/generators/buzz_wire_3d/supports.py",
+      "sha256": "38184b4596b95ab50113ad241c8a187bd11f116cbbd8f7fcc3ded25a3fbfd166"
+    },
+    {
+      "path": "topogym/assets/generators/buzz_wire_3d/templates.py",
+      "sha256": "1ac4646bb435a8368b3d46a841d6f132c1b12cb961f6af58bfa5fbf11495d7e4"
+    },
+    {
+      "path": "topogym/assets/generators/cast_coil/appearance.py",
+      "sha256": "c66c22d4303850a7958c62493feb7fa0e3f4d536ccd447c29f4ab8d414713e31"
+    },
+    {
+      "path": "topogym/assets/generators/cast_coil/geometry.py",
+      "sha256": "5aaffc19a712b94e4a753c92fe79d41e92c6ca89254e6ead1e28bd66b9cfd281"
+    },
+    {
+      "path": "topogym/assets/generators/cast_keyhole/geometry.py",
+      "sha256": "8cc976d7dcfd727a3fa2f7cfa0704498f499368dd0909e850f3faa5e3406e0f8"
+    },
+    {
+      "path": "topogym/assets/generators/fiber_bundling/anchored_geometry.py",
+      "sha256": "571329527a117a8a46f20c6104845f980da45a349a78e0bcb296648e39cc9a02"
+    },
+    {
+      "path": "topogym/assets/generators/fiber_bundling/geometry.py",
+      "sha256": "db5c597c3167dbebbbb3b10178e8ad2e1da067b2e40ab318daeec083c5f44ba8"
+    },
+    {
+      "path": "topogym/assets/generators/fiber_bundling/prepare_assets.py",
+      "sha256": "61f1c8b312b1c364deaca5393ba457ccc952c515c197938b7f44f709603d39ab"
+    },
+    {
+      "path": "topogym/assets/generators/fiber_bundling/ring_mount.py",
+      "sha256": "6e4d5b13081e1987f5106c0470b1fa5a279dede204b85db37923d1d211526b07"
+    },
+    {
+      "path": "topogym/assets/generators/hedgehog_in_cage/appearance.py",
+      "sha256": "31a0eaeab9993cfd9c8e998c385c96d688cf0b2d751576367c38e0f04020b36b"
+    },
+    {
+      "path": "topogym/assets/generators/hedgehog_in_cage/family_geometry.py",
+      "sha256": "50047930b432e4857031797dbaaf0bcdcb43119ea655710fa26b2718f01dfede"
+    },
+    {
+      "path": "topogym/assets/generators/hedgehog_in_cage/geometry.py",
+      "sha256": "08a381dce0002e749fb94ad04de73a6cce6b9cd3bc2e4bf0fbf460d1df08adc7"
+    },
+    {
+      "path": "topogym/assets/generators/hedgehog_in_cage/prepare_assets.py",
+      "sha256": "14b86696b5bdf49352164c4660265f89dd3b831772474bb7857c379c5f8ce08f"
+    },
+    {
+      "path": "topogym/assets/generators/hedgehog_in_cage/prepare_prototypes.py",
+      "sha256": "73b99605907b782d61cc69df61c9efe0b63c3e5640f0029e6f9300f9bdcda598"
+    },
+    {
+      "path": "topogym/assets/generators/horseshoe_ring/geometry.py",
+      "sha256": "71e93b0a477d45b9e7cdd5cc370bc394cb092c543d7c41122e2ec5bd9524dc2d"
+    },
+    {
+      "path": "topogym/assets/generators/interlocked_claws/family_models.py",
+      "sha256": "4c2360b10082a3879268fb0b330fbb25bf6db12356ffa6211a6a566e4ca52452"
+    },
+    {
+      "path": "topogym/assets/generators/interlocked_claws/geometry.py",
+      "sha256": "b3f42bcf2806c67896b2ed23ee7cebfc01830c4a44132957819820d3ba3270fc"
+    },
+    {
+      "path": "topogym/assets/generators/knot_untying/geometry.py",
+      "sha256": "efe369ba0d0280b64cfee87816a5b5cfd73c4c567d46cd3467a72bfc43cd6b35"
+    },
+    {
+      "path": "topogym/assets/generators/knot_untying/prepare_assets.py",
+      "sha256": "c89d475e98a42d107ee7816fab40a5a8c83c13662a385a95ea7548161a43be15"
+    },
+    {
+      "path": "topogym/assets/generators/lock_picking/_aperture_outline.py",
+      "sha256": "873dc7b0cb4ec147664d3833dad45caa81d432902f557b02fbab9afe40d92676"
+    },
+    {
+      "path": "topogym/assets/generators/lock_picking/_staged_lock_geometry.py",
+      "sha256": "5956458e034e191437097185301918aca636fadc117553178b59bb61f8d494a6"
+    },
+    {
+      "path": "topogym/assets/generators/lock_picking/_staged_lock_limits.py",
+      "sha256": "d38c96aa534b9d3aeb8ed514c45124dcada210232942cf5bae6574d9bd667507"
+    },
+    {
+      "path": "topogym/assets/generators/lock_picking/_staged_lock_ring.py",
+      "sha256": "8b3cea5a4ab0be9915a40bbe352402d9aafc888a1dcd4dcc709a12ec50705fd5"
+    },
+    {
+      "path": "topogym/assets/generators/orbits/geometry.py",
+      "sha256": "728d6a46a07a3651c0f67890761728b75db33198916baedc642bc991caa97def"
+    },
+    {
+      "path": "topogym/assets/generators/rope_threading/geometry.py",
+      "sha256": "df420d1b81743f5e45496b93d86fb201f38e0d9667e3b72b43c7e21f77d30811"
+    },
+    {
+      "path": "topogym/assets/generators/rope_threading/prepare_assets.py",
+      "sha256": "cb5b7c0966883fd703a8490730d354059d7108b398720ceec4b1d7d41d1c3c88"
+    },
+    {
+      "path": "topogym/assets/generators/slotted_post_ring/geometry.py",
+      "sha256": "6484c0f3075d47b2631c5e523e44dd2f2679f894df3f72ba7b272f48e0c64d6f"
+    },
+    {
+      "path": "topogym/assets/loaders/cast_keyhole/variant_assets.py",
+      "sha256": "55d08ebd5ad0b1ebea1cf62d4a659660b28ac90de669d4eb576cb0d4cbf02ac8"
+    },
+    {
+      "path": "topogym/assets/loaders/interlocked_claws/reference.py",
+      "sha256": "37216b34ca194262b38bacbabb34333ae9acfc6e130125023c8ab7a3093f25dc"
+    },
+    {
+      "path": "topogym/assets/loaders/rope_threading/reference.py",
+      "sha256": "3c1c1a76ff7edf7a6cb088cf19cd3b967b68817ddcc769f203b6e4b0ab39dfb9"
+    },
+    {
+      "path": "topogym/assets/loaders/rope_threading/reference_motion.py",
+      "sha256": "c0481d8fadc57db21306a6c11cc22b19e1292e82456f52245c1791a59d0b69db"
+    },
+    {
+      "path": "topogym/assets/manifests/lock_picking/source_manifest.json",
+      "sha256": "6a18e58ae63b2c79972c99a1358b06a00ff6e17a52ce7a0fb131d5cd43805518"
+    },
+    {
+      "path": "topogym/assets/robot.py",
+      "sha256": "b6cc684d2912e68e4c6e15545063050ce6e6bccf7f6434570e02839aa97056b2"
+    },
+    {
+      "path": "topogym/assets/textures.py",
+      "sha256": "a70e214f1aae913fa60221ef9222fcbdc2bfe2f5d0aab3515a438bf4eead3c1f"
+    },
+    {
+      "path": "topogym/assets/variants/buzz_wire_3d/compact.py",
+      "sha256": "2b62317694cf5ac0de86fd4a5a94bf7932ea07b23254c61ff1b6d7df0cce1fb2"
+    },
+    {
+      "path": "topogym/assets/variants/cast_coil/inverse_design.py",
+      "sha256": "234194c1046f9ef4b86b9e0c95111276d17f375148665fa8fbd0a9671b8fd80a"
+    },
+    {
+      "path": "topogym/assets/variants/cast_coil/variants.py",
+      "sha256": "3dbd0759a4932b15fa85ae987502836740318208b512af69d4493e30998806f1"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/eccentric_window.py",
+      "sha256": "369b37b21c2e7464c85809cdcea4f312d1c03384361fd4f528da03e7098b0202"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/family_variants.py",
+      "sha256": "30d95fca8e58c5c95a324750c376b7bd033a7ba489fc9ce0553576045db90637"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/inverse_variants.py",
+      "sha256": "1ff19215599460d7455bcb5c1488b6d9a70aadc7fd5220850e6fe007b3db519c"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/long_stroke.py",
+      "sha256": "96da4d94f38d4d2a10605061e88b4934fc79251814f50237c8cfdb53da504a74"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/turnback.py",
+      "sha256": "018cf4ec9707da279d942a8673793c6e2c7ecf2551ffbe7175009be2a24faac4"
+    },
+    {
+      "path": "topogym/assets/variants/cast_keyhole/variants.py",
+      "sha256": "ef785b99b670395bbf78f0f8beb02799a46a3352e6c1f97a1894214d38b757c9"
+    },
+    {
+      "path": "topogym/assets/variants/fiber_bundling/generation.py",
+      "sha256": "d950cb1c29373499bec404afc8f578274143a2ad7d17345fd7f11857c4e20bd2"
+    },
+    {
+      "path": "topogym/assets/variants/fiber_bundling/variants.py",
+      "sha256": "0de438e262a8fb9c4b832105659ba2458594089e69152469d54d1d1957e0b4f5"
+    },
+    {
+      "path": "topogym/assets/variants/hedgehog_in_cage/classic_families.py",
+      "sha256": "62925c45efb4cfa5562b9b27e113d363121d51e383da79d8e210069c2a038194"
+    },
+    {
+      "path": "topogym/assets/variants/hedgehog_in_cage/inverse_window.py",
+      "sha256": "416a69df0599c1101df85739cddcfd6a102f8312a87cc7dff735ef3f52449590"
+    },
+    {
+      "path": "topogym/assets/variants/hedgehog_in_cage/variants.py",
+      "sha256": "05b97cc1ddcb789170cb4d73ddf0e4eb56c8f9f063d34cc79918f8076a0e979e"
+    },
+    {
+      "path": "topogym/assets/variants/horseshoe_ring/fixed_trace_variants.py",
+      "sha256": "2482947c88b406303e91be7b0e71e0c1257331be1671f07a3cbac075af196a83"
+    },
+    {
+      "path": "topogym/assets/variants/horseshoe_ring/shape_neighborhood.py",
+      "sha256": "0fe90e8ee788dc355999f078c516b845af251e62aa4e24a6de40ab52b9c2f7a9"
+    },
+    {
+      "path": "topogym/assets/variants/horseshoe_ring/shape_sampler.py",
+      "sha256": "9fe702ee6f48d7da16a352ea7a43761d0b9f7ee700ed791d3ba796dd7a90b17b"
+    },
+    {
+      "path": "topogym/assets/variants/horseshoe_ring/trace_scene_variants.py",
+      "sha256": "f59fed655d363607abc3fed6180d89586107a4967c9dfdf4902c10e040dbf298"
+    },
+    {
+      "path": "topogym/assets/variants/horseshoe_ring/variant_generator.py",
+      "sha256": "a972666596c8f62748f9879a9f9e85755391ed7ae567bfc8ad41762773f84674"
+    },
+    {
+      "path": "topogym/assets/variants/interlocked_claws/variants.py",
+      "sha256": "ea33b9f0cd8ada5f9dd2f8de642ef9aff2076fa5a73b717954a458c1624e715e"
+    },
+    {
+      "path": "topogym/assets/variants/knot_untying/families.py",
+      "sha256": "cf5621d65a379756c7c91bc5da21157b372dae32a5b5ce35f9eb893c88a5c132"
+    },
+    {
+      "path": "topogym/assets/variants/lock_picking/inverse_variants.py",
+      "sha256": "8f6a7e5b11987be59f859b49787c9efeb469ddcf15c0370976b884ffed743b38"
+    },
+    {
+      "path": "topogym/assets/variants/lock_picking/variants.py",
+      "sha256": "f18e69c3011ffc2bbfb546739b60a97bb64dcbe6f34011bbebc2ec2a32dd4055"
+    },
+    {
+      "path": "topogym/config/agent_profiles.py",
+      "sha256": "134cb11cb74a4badd6f14392264cd1b133d6a1c0fb26a66ceaa252e1fbf63f20"
+    },
+    {
+      "path": "topogym/config/agent_suite.py",
+      "sha256": "15c6580c4d3d4a7a42aa3e2f105ea364c3230d4f5284aeee5aa2ac43c6e64dff"
+    },
+    {
+      "path": "topogym/config/catalog.py",
+      "sha256": "a1b34f8aa0bb8535bc8a10bf4cb41cbf0ccdfb2a04917e770e49d802aff5b452"
+    },
+    {
+      "path": "topogym/config/config.py",
+      "sha256": "737b12e13eb2f1c84a557ad5a5386904a9d8b1c29deb67ad2e25da970d320f59"
+    },
+    {
+      "path": "topogym/config/episode_spec.py",
+      "sha256": "96f5a43b45cfb521a5ecb3374b4569c8b5ba3d448145b360dfb7a0def8e76808"
+    },
+    {
+      "path": "topogym/config/layout_randomization.py",
+      "sha256": "96535d19fc2c19f103601d3ebbef00e5ecdc29b6bf415c656439c0c7b45f1977"
+    },
+    {
+      "path": "topogym/config/registry.py",
+      "sha256": "f8b98a38b4b0271a0cb060023d56ceca98aadc6dc2e6c10043eefc91ac7351a7"
+    },
+    {
+      "path": "topogym/config/task_specs/buzz_wire_3d.py",
+      "sha256": "2c72838063cf4a00d99d33701232e2a2bf6489fbf37016f8b65e032366859a4f"
+    },
+    {
+      "path": "topogym/config/task_specs/cast_coil.py",
+      "sha256": "4f26f7daec826ad782df80504c1008988600a6adbfc65fd528080d5d4c8e9521"
+    },
+    {
+      "path": "topogym/config/task_specs/cast_keyhole.py",
+      "sha256": "44be6e308562a3dcc3fc16a36f03096a8f5e9d55b3af7240099a9d150ab405ec"
+    },
+    {
+      "path": "topogym/config/task_specs/hedgehog_in_cage.py",
+      "sha256": "f4f5cd2f63eac1252770e55192f5295c3dc4436a3d3e34b4ef945421badd94a8"
+    },
+    {
+      "path": "topogym/config/task_specs/horseshoe_ring.py",
+      "sha256": "a422927b0c13fbf9c8d01b6f5679a53e98fb6057acf1f0b40b9759d05c125db0"
+    },
+    {
+      "path": "topogym/config/task_specs/interlocked_claws.py",
+      "sha256": "3c5f1209eae5188966b7376970cbf8211a35cdc4e90813533b74c2afc77dc823"
+    },
+    {
+      "path": "topogym/config/task_specs/knot_untying.py",
+      "sha256": "1ea4762bdaa02bab3339193b3f27a95975fc9fdefcef2d35b17ace6749080ddf"
+    },
+    {
+      "path": "topogym/config/task_specs/lock_picking.py",
+      "sha256": "14fb116e6398fe9a47694fd73eca191f330aff73ccb89be34f21b10d19ce46d2"
+    },
+    {
+      "path": "topogym/config/tasks/cast_keyhole/family_catalog.py",
+      "sha256": "564ddcc7ba39f0aadc82334bd766370f117366ea9987379b5a88816418846f2c"
+    },
+    {
+      "path": "topogym/config/tasks/fiber_bundling/run_config.py",
+      "sha256": "c91196fb12076f9e2dcbd0efd2bf25f095f92e5ca54981619f78d271b576b413"
+    },
+    {
+      "path": "topogym/config/variant_episode.py",
+      "sha256": "f6645ae3f68f713082c1208be8af98a6805661f3e136925cdcdf33472ad92839"
+    },
+    {
+      "path": "topogym/data/__init__.py",
+      "sha256": "62fea40e7d172f8de525aa9df3a24de5de5949dc93ad1d06b0a81a9e89eaa820"
+    },
+    {
+      "path": "topogym/data/episode_dataset_writer.py",
+      "sha256": "eef53f1b08ee4493725e8793a7235f6fb005aff025ac6bbf6066ebf299890b78"
+    },
+    {
+      "path": "topogym/data/exporters/horseshoe_ring/ik_trace.py",
+      "sha256": "bf51ac8feecc3c08ecc20a32b205fd7661c1e953ddf2dca10fc1c8407e221e9c"
+    },
+    {
+      "path": "topogym/data/exporters/knot_untying/execution_metrics.py",
+      "sha256": "902a4a5b6687c281155bff05507d79ff8b16693e444a2b7c0acb3519523b5fa8"
+    },
+    {
+      "path": "topogym/data/h5_schema.py",
+      "sha256": "75134ca728fecab8ef344ac769adefc732ae7fef3dcc35b516f151b0840e004a"
+    },
+    {
+      "path": "topogym/envs/adapters/base.py",
+      "sha256": "5342319ed9832ea6ce6f037210a543b4ba266f9fc49a9b241bcee63b1a31990d"
+    },
+    {
+      "path": "topogym/envs/adapters/buzz_wire_3d.py",
+      "sha256": "e6b5bb07623d2f4fe3759b2d55ef3bf5fd18170374676a78b6c7b2f697bff998"
+    },
+    {
+      "path": "topogym/envs/adapters/cast_coil.py",
+      "sha256": "5d7286533682301db579ef74b2174ff369e5550150add8323f25e11ce3087846"
+    },
+    {
+      "path": "topogym/envs/adapters/cast_keyhole.py",
+      "sha256": "cae074c25a59010c20943eb44639e1f87c28911c1b5b322d4359e75beb045089"
+    },
+    {
+      "path": "topogym/envs/adapters/fem_robot.py",
+      "sha256": "6b1d1d48bb30438a5867d36a7c9e67d3f0adee86d7039e5c90e17a5a4a9922e2"
+    },
+    {
+      "path": "topogym/envs/adapters/hedgehog_in_cage.py",
+      "sha256": "4360f4c38fdbb40a9ee640f1b038a2a8ed9900c6188def0fbee1ed85f492b8e1"
+    },
+    {
+      "path": "topogym/envs/adapters/horseshoe_ring.py",
+      "sha256": "0f31921a9b96e7a82ef2fd6366d59ffe8f9d2a548f5b2d02419fc9cb345786e9"
+    },
+    {
+      "path": "topogym/envs/adapters/interlocked_claws.py",
+      "sha256": "6bd32f0b9a28adcc38a8b625228ee7bcf52a4691e8b35b0c3eef06376461e606"
+    },
+    {
+      "path": "topogym/envs/adapters/knot_untying.py",
+      "sha256": "8825e2158ba3ea58f2b6f2f4f024c61e2fdd150d252126c7c28a4d5e6332837d"
+    },
+    {
+      "path": "topogym/envs/adapters/lock_picking.py",
+      "sha256": "e2312468aece7878cf72ff868b3c784903011ff1b8f214563b78aaf2a9090108"
+    },
+    {
+      "path": "topogym/envs/adapters/rigid_robot.py",
+      "sha256": "d2b0551760a6ab36af866765f52e41519f46da68ac9b61dfc7b99d854319754e"
+    },
+    {
+      "path": "topogym/envs/episode_runner.py",
+      "sha256": "db564265b7d3df5a12b03e62d5c02c62c832153f0898443f4eff7d9973c361a8"
+    },
+    {
+      "path": "topogym/envs/execution/blanket_flatten/execution.py",
+      "sha256": "6c941af609d470f2f5d3280e2bf25c6a73a4cf937fab67c157c651610b7bf585"
+    },
+    {
+      "path": "topogym/envs/execution/buzz_wire_3d/robot_runtime.py",
+      "sha256": "6543a5a531374b91973be65b8a7e1d9ec3418b72aae0f932d492cc2d3da3587a"
+    },
+    {
+      "path": "topogym/envs/execution/cast_keyhole/robot_execution.py",
+      "sha256": "61434984ac9e9c3f808120d06f7eec7c7d194bfc34c452f768bebe1053e3c0a8"
+    },
+    {
+      "path": "topogym/envs/execution/cast_keyhole/variant_runner.py",
+      "sha256": "981ea125847fe3705d335fef696aeff48dd29c21b344bf300834b177a101ce58"
+    },
+    {
+      "path": "topogym/envs/execution/cast_keyhole/variant_runtime.py",
+      "sha256": "ebad9d065ad60460829f757fc64ed53f9602fe0b1900557f52d9155ca32b19f2"
+    },
+    {
+      "path": "topogym/envs/execution/fiber_bundling/robot_sequence.py",
+      "sha256": "514d998fa37afc4d50c314fc4315b669c0662d6248c60382cf724b013c423e85"
+    },
+    {
+      "path": "topogym/envs/execution/hedgehog_in_cage/family_guided_runtime.py",
+      "sha256": "ee6b3694377a1f6f11ceffb3fe33c1b263186f22293864c2aea60ccbb255340a"
+    },
+    {
+      "path": "topogym/envs/execution/hedgehog_in_cage/family_runtime.py",
+      "sha256": "84b6a8eb3aad49e7445a90bc8d07f2ad6f6a831482824c4866f132ec72fd029c"
+    },
+    {
+      "path": "topogym/envs/execution/hedgehog_in_cage/inverse_runtime.py",
+      "sha256": "447b773a8f735450d9d9382255a3f369139e6f15c5567cfbd5f058b4c636d659"
+    },
+    {
+      "path": "topogym/envs/execution/hedgehog_in_cage/variant_runtime.py",
+      "sha256": "76da227a5216519df314101ccb60eef22b0cbc14eea2ff4cec0ce50703024486"
+    },
+    {
+      "path": "topogym/envs/execution/horseshoe_ring/physical_motion.py",
+      "sha256": "d4f77be2d377d0a4d8ac9d2aa584e3afdbcb7ed1c9c97ab87c567540cb5b7312"
+    },
+    {
+      "path": "topogym/envs/execution/lock_picking/runner.py",
+      "sha256": "54991a9b4d1d286c3f0299dbd3af5cb3b05918cadc351a1ad8d1a8fcf8f7d431"
+    },
+    {
+      "path": "topogym/envs/initialization/blanket_flatten/initial_state.py",
+      "sha256": "9c77a29ad514d5de34943be67ab54877db9506e952b445d1d66c50a2037c7fc7"
+    },
+    {
+      "path": "topogym/envs/initialization/blanket_flatten/preparation.py",
+      "sha256": "73329d88d284f83e03bf1c22c6cecff7ddbd2a55e90f154d9aba50c3236adc0f"
+    },
+    {
+      "path": "topogym/envs/protocol.py",
+      "sha256": "2eb0a50ae91383824433a19157bd6fd9dc769bec998a426240a8680aaf9cbbac"
+    },
+    {
+      "path": "topogym/envs/task_support/cast_coil/assembly_task.py",
+      "sha256": "33a5e9b0eee1ac6d8057f8880a3d0cebd5e5eee85eeec25a5ea2aa0a9aa3075d"
+    },
+    {
+      "path": "topogym/evaluation/agents/evaluate.py",
+      "sha256": "064af8cefb1b4e61d04e610ffff94942c8d103d700002ce4aeceb97a7577e24e"
+    },
+    {
+      "path": "topogym/evaluation/agents/initial.py",
+      "sha256": "6b80db1fea132c0f13d23302257c29fb2cb110a2be4b84e6e73adb52aaa727c6"
+    },
+    {
+      "path": "topogym/evaluation/diagnostics/pbd_probe.py",
+      "sha256": "c32c5101b6cea2746c9a1ea5f7e94ea6d25027eca5831ef00fbba4c6605a4925"
+    },
+    {
+      "path": "topogym/evaluation/diagnostics/rope_stability.py",
+      "sha256": "32ba202cfafe65d5095e304a72dda87d25b9e843ae3ab6b796b18375b7b861f7"
+    },
+    {
+      "path": "topogym/evaluation/diagnostics/rope_trace.py",
+      "sha256": "c220d643932ab5e67068179f757266a6541b698ad88e701c60714705db7516f4"
+    },
+    {
+      "path": "topogym/evaluation/diagnostics/stability.py",
+      "sha256": "6a7b8c960f6ee634d327869601c641055b4fcd26a3188410c0a5a076f6f97a5e"
+    },
+    {
+      "path": "topogym/evaluation/tasks/blanket_flatten/bimanual_review.py",
+      "sha256": "94b49fabc4f809e33ffc33a63b069688056393b41a439bd8856919a146615d42"
+    },
+    {
+      "path": "topogym/evaluation/tasks/blanket_flatten/diagnostics.py",
+      "sha256": "70a53d2af663eea5e65cd55665baeb1e7b66f69839659dc1f4187ea9660d0ff9"
+    },
+    {
+      "path": "topogym/evaluation/tasks/blanket_flatten/review_preparation.py",
+      "sha256": "57b248e9c0ba3f014a9785af2e4eb21100af121bab5202db8b023ecd841ba199"
+    },
+    {
+      "path": "topogym/evaluation/tasks/buzz_wire_3d/qualification.py",
+      "sha256": "582522c0d70a878bfc3befcef215e8530438a52215ffc363cf0797fee8f29592"
+    },
+    {
+      "path": "topogym/evaluation/tasks/buzz_wire_3d/robot_verify.py",
+      "sha256": "378f9cdb99ae5eecafd1988ff7eca5b822e2cc26f728d15ba4dcdea251b3b970"
+    },
+    {
+      "path": "topogym/evaluation/tasks/buzz_wire_3d/verification.py",
+      "sha256": "4054b87dd90883acf62d07b5cb55150567db21ca6641042af6e836ad4ae53fcf"
+    },
+    {
+      "path": "topogym/evaluation/tasks/buzz_wire_3d/verify_physics.py",
+      "sha256": "7ca995a15380c802f5ce4f9164ea9e9cf1780d2cc7d7a1d19bc7c24c9842f7eb"
+    },
+    {
+      "path": "topogym/evaluation/tasks/cast_coil/qualify.py",
+      "sha256": "7fe9f6e5634a00b69ace01deca22b9ddacafe985b2da589c87b3c0be9d008d85"
+    },
+    {
+      "path": "topogym/evaluation/tasks/cast_coil/verification.py",
+      "sha256": "92a155fc2a65c47620eb4f7a029e120b9045dccdf73be726339b4c85836aa163"
+    },
+    {
+      "path": "topogym/evaluation/tasks/cast_keyhole/family_suite.py",
+      "sha256": "a0b8b015625a4bd09d08711c4966ef32089259f9f55e0f42d21103a7579db829"
+    },
+    {
+      "path": "topogym/evaluation/tasks/cast_keyhole/physical_audit.py",
+      "sha256": "0de61160c137a944094cd783fb14fdf1aac9b005aca54c7603b15b0c66b0861c"
+    },
+    {
+      "path": "topogym/evaluation/tasks/cast_keyhole/qualify.py",
+      "sha256": "67ba4fe4bfdc70659fd51d078f55daf4559351aacedf91b4c9c5ae6da72f9533"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/anchored_verifier.py",
+      "sha256": "fb18e44f09e810330ee570d91f5344219c109665097931fdef5dfe3e1efe7170"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/assess_anchored.py",
+      "sha256": "cae8a94a1debbefc87d6f7af8de26bdd6991fe156155d89601fe04a1b0517ac3"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/assess_ik.py",
+      "sha256": "69903aaf4efd022c10f60dd5f4c4494bfe693cfc483f748078216bda720128d8"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/assess_passage.py",
+      "sha256": "f698f23f95ae10821cfb5d694d30fad83c4fd187c534d69e04614d306b441d29"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/assess_sequence.py",
+      "sha256": "5b572c32f02fb39b2bce7b85dbd831799552791ae1a896b0ddd0c93d763ad49d"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/assess_stability.py",
+      "sha256": "03b6102a93a3de88ab81e3f52c2948bd86142fb71d416f0952b2d11b2e95a487"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/audit_robot_contacts.py",
+      "sha256": "44b03e04bbd29a81bf93fa9357de4e979dd807958bf65fe1b03532ebd429d2f1"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/contact_guard.py",
+      "sha256": "c39d859236054075b1dbbfc90011d525ab90db36834a60cb65ed59da3917e02e"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/summarize_ik.py",
+      "sha256": "2cb393dc34598aa17ee95bfe5cfad63b0ba675d43e0aa8e2f649fc7a2679d933"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/validation.py",
+      "sha256": "8b1bfaa96b03d52efeb905f3d85ec2c6256c6de48e58281aa2865125b317a032"
+    },
+    {
+      "path": "topogym/evaluation/tasks/fiber_bundling/variant_progress.py",
+      "sha256": "4fdb346199f6717f472aeb14a71d975cabcda650bd51c20f9cc77b898b6afecd"
+    },
+    {
+      "path": "topogym/evaluation/tasks/hedgehog_in_cage/audit.py",
+      "sha256": "a19b500dd9836abe09b8233f33631da33ac4bdfb5bcf93152f3569e3654d4a1a"
+    },
+    {
+      "path": "topogym/evaluation/tasks/hedgehog_in_cage/variant_validation.py",
+      "sha256": "883747504aaa00fb72cb49e20eb96c717c63e3116ac88e4c0a8391bb4597901c"
+    },
+    {
+      "path": "topogym/evaluation/tasks/horseshoe_ring/trace_scene_verification.py",
+      "sha256": "99301f73c09941bae24e53bf7a396d3f39322ef0d0f3e0f9843d9a896ae290ad"
+    },
+    {
+      "path": "topogym/evaluation/tasks/horseshoe_ring/variant_audit.py",
+      "sha256": "0bcf42fb8bbc5aeb4d2121d44e86c68008d06ee425f167331be7b70b5090db3e"
+    },
+    {
+      "path": "topogym/evaluation/tasks/horseshoe_ring/verify_gravity.py",
+      "sha256": "03716d70e5e2283df49c132c97e2a556d4e789068f79013b24df00f441160762"
+    },
+    {
+      "path": "topogym/evaluation/tasks/horseshoe_ring/verify_physical.py",
+      "sha256": "2db09d3cf80f1a05c017774d8266b68ab960c98880f89b4c4d50b02b78bead90"
+    },
+    {
+      "path": "topogym/evaluation/tasks/interlocked_claws/reference_audit.py",
+      "sha256": "6b8c15529c56a61a360293fd1cdbce12ea19fbb6c8499744189e851896c1674b"
+    },
+    {
+      "path": "topogym/evaluation/tasks/interlocked_claws/reliability.py",
+      "sha256": "9234838afc146b983adc263a23fd9974f853cff37725c6d856a14612ad30fb47"
+    },
+    {
+      "path": "topogym/evaluation/tasks/interlocked_claws/verification.py",
+      "sha256": "4ee48ea976b5d92cae12949b79a74b557e7241e0e4af6630cb1ef6adceb68b8a"
+    },
+    {
+      "path": "topogym/evaluation/tasks/knot_untying/diagnostics.py",
+      "sha256": "75ca704ffdab7c65b77c9db5a108a7144bffa11065fe15f5fbf0eab4011f972c"
+    },
+    {
+      "path": "topogym/evaluation/tasks/knot_untying/physics_review.py",
+      "sha256": "85071c70ae87c23f768ddcacaa2299e9240437ccbeb17561960b9295a9ac0e54"
+    },
+    {
+      "path": "topogym/evaluation/tasks/knot_untying/rigid_diagnostics.py",
+      "sha256": "41de0a56879cc5d77a0a3772431b05cbaa2cd3ffba993a2a5d869ca582bbc134"
+    },
+    {
+      "path": "topogym/evaluation/tasks/lock_picking/evaluator.py",
+      "sha256": "979b0909ff687ce76d829f36a048a6c2edf5f8261d566ea2cc69431da6897ea0"
+    },
+    {
+      "path": "topogym/evaluation/tasks/lock_picking/verify_variants.py",
+      "sha256": "83a61f809b60394251f6f0ed64cdc7d13ba3107ae493ef1d200c2d2b3d3b2f4e"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/grasp_audit.py",
+      "sha256": "50ef7a6b5470359bb4ee679953b865a9133cd86d35e86dd39dfbc12539b24f41"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/passage_audit.py",
+      "sha256": "d5c09f2ca9c4eca3ae9f9e37e32e5abb5539d72db8f2f3c06f0e166c5aa14c77"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/reference_audit.py",
+      "sha256": "8b75e7c9dd5a1d3934d21b74e15cd27381ce64d3837d6a614a6e145aebca4e42"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/rope_audit.py",
+      "sha256": "b6fff36531c402e90bb8db296636a2c545737f879a2a14dd6111d374e2784e9c"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/trajectory_audit.py",
+      "sha256": "5c4d2f9d6acfc352f7bbc2e96a21d75897388a964e108cd703b1530fc6736abe"
+    },
+    {
+      "path": "topogym/evaluation/tasks/orbits/verification.py",
+      "sha256": "239439f00f3e7c5ec5c81a327c831ea6c84cf3b653c236559f17acc004ad0bc0"
+    },
+    {
+      "path": "topogym/evaluation/tasks/rope_threading/diagnostics.py",
+      "sha256": "8d23e9cdfcaaad732277d51ea75634c9dc59e5aa23c7b088800f03f4e17d1c05"
+    },
+    {
+      "path": "topogym/evaluation/tasks/rope_threading/physics_review.py",
+      "sha256": "1420a4f67e3a7b80acaa16825f4af98546f1bcadc56b23fff083a39d494f8719"
+    },
+    {
+      "path": "topogym/evaluation/tasks/rope_threading/qualification.py",
+      "sha256": "e4a7f319b2c722a5c251102c2ff7f54b82c8f88e0954cf6672cd7e7c339acb2a"
+    },
+    {
+      "path": "topogym/evaluation/tasks/rope_threading/startup_diagnostics.py",
+      "sha256": "5eb6f7cfd53a772dbbcb38613cff9478ded95e921d82169fed8f5f9d9cf2f951"
+    },
+    {
+      "path": "topogym/evaluation/tasks/rope_threading/startup_review.py",
+      "sha256": "5683e705c7f40657a5b465b51b80fddf82fddd4e019ac326cadaf67b264bfa42"
+    },
+    {
+      "path": "topogym/evaluation/tasks/slotted_post_ring/review_fem.py",
+      "sha256": "15ea575d758a1cf3e45be8facaf0c05ad4de9ec0f602903c9917f64ccb91a8f8"
+    },
+    {
+      "path": "topogym/evaluation/tasks/slotted_post_ring/topology.py",
+      "sha256": "8e51615c95dd096bf67c33b2a72d43e6f425d5f5cad863c75720d4a0eab479cd"
+    },
+    {
+      "path": "topogym/policies/primitives/axial_insert.py",
+      "sha256": "30449d16449a573b98f5fe38f2f68ac62dd1fdc5957949a3afafb4c5c52799f1"
+    },
+    {
+      "path": "topogym/policies/primitives/cloth_link_attach_drag.py",
+      "sha256": "91ebedf5bb5b53d38cd25d7a1776c86fa94a3f3e0c26d5b7898907d4120ccb77"
+    },
+    {
+      "path": "topogym/policies/primitives/gated_insert.py",
+      "sha256": "a7e358064c559d9da6cebf629b4bdbcb237494dbc6fd420c8bad4bdaf24f5e22"
+    },
+    {
+      "path": "topogym/policies/primitives/gateway_extract.py",
+      "sha256": "a2859f8f5689c72ad3c8a1644b23e1ae948c0a332ab4365d9c08a82889da7c5c"
+    },
+    {
+      "path": "topogym/policies/primitives/handle_drag.py",
+      "sha256": "a876d390655338e61ecf6e0e6b2910a2cdab8a143237de927179aa8768c2af1b"
+    },
+    {
+      "path": "topogym/policies/primitives/pbd_particle_pinch.py",
+      "sha256": "70a138e8a347410fae467ddb6656c21be299c8bbd2703c5ad4069c2fa1641899"
+    },
+    {
+      "path": "topogym/policies/primitives/pick_place.py",
+      "sha256": "a2e2c1877f8b9e93051dac8a23201635695243ab6af5c60a6b5c8ef548d3d658"
+    },
+    {
+      "path": "topogym/policies/primitives/pivot_lever.py",
+      "sha256": "ec3f8194a4d393e1b9534a21c81aa389ea1009d332b2c93ce429762deb4e3804"
+    },
+    {
+      "path": "topogym/policies/primitives/rim_rotate.py",
+      "sha256": "b3f57e8a5deb50af17f87a3ae457ad0d139d891c4a14bde65709fafc64a3b50f"
+    },
+    {
+      "path": "topogym/policies/primitives/rope_endpoint_drag.py",
+      "sha256": "8c027ed1647426131336db3882a100a01a5f0d59c09ef96c56b694b48b61bb2e"
+    },
+    {
+      "path": "topogym/policies/script_policy.py",
+      "sha256": "9212c9ed4e40b4da5696e5861054a673ee2fdc521a35b47f80740c416f774d9d"
+    },
+    {
+      "path": "topogym/policies/subgoal.py",
+      "sha256": "2622bc4fded3cf8d5f17ab0ed4d8dcb858597615db1c7449cf14d77fa4a3a490"
+    },
+    {
+      "path": "topogym/policies/tasks/blanket_flatten/bimanual.py",
+      "sha256": "8c2241a0bdf7362b1eff659c75c7a747f189faacaeb1ed7966b898ee58f19b9b"
+    },
+    {
+      "path": "topogym/policies/tasks/blanket_flatten/bimanual_full.py",
+      "sha256": "0b969d7307a5e0a39d14b80024f92a44ad4ff3170d5bcbdd702840dac2760a4d"
+    },
+    {
+      "path": "topogym/policies/tasks/blanket_flatten/grasp_sites.py",
+      "sha256": "badd9958b99987bc81fc1303e85f5f1c7ba117bfbd6d65e18158194b7167df83"
+    },
+    {
+      "path": "topogym/policies/tasks/blanket_flatten/robot_demo.py",
+      "sha256": "46d0dc7d7ca29c24014d9a5cdc587f4769461a78a5e7fc119311db9cefa4c30c"
+    },
+    {
+      "path": "topogym/policies/tasks/buzz_wire_3d/family_plan.py",
+      "sha256": "34d9ceca45d41f331f9a199d2910cf62362cb0a5565ac50c29df07e1c537c2fa"
+    },
+    {
+      "path": "topogym/policies/tasks/buzz_wire_3d/home_plan.py",
+      "sha256": "8aba56ffed3fa17dd50db693a0220a55dd835be5500d58a5dde4aa3845661ca6"
+    },
+    {
+      "path": "topogym/policies/tasks/buzz_wire_3d/supported_plan.py",
+      "sha256": "ef2c06fec7403fdc2ab3ef92492ce520323793787487065d2d612c2b10bd0e44"
+    },
+    {
+      "path": "topogym/policies/tasks/cast_coil/robot_demo.py",
+      "sha256": "76db04ea7e6b75012aee5e208fbf783a346e8b559ed52a53fb5032d618cf6527"
+    },
+    {
+      "path": "topogym/policies/tasks/cast_keyhole/aloha_demo.py",
+      "sha256": "cd2b48516fe159e1a3e45b0b60e7ac5d1828bf42f1303cbd650c17f11cd118d8"
+    },
+    {
+      "path": "topogym/policies/tasks/cast_keyhole/family_pipeline.py",
+      "sha256": "f74a9a10ec2f68279970bf12836bc7be8b2ef0ac4cb67e903e5ff0390fc83a3e"
+    },
+    {
+      "path": "topogym/policies/tasks/cast_keyhole/variant_pose.py",
+      "sha256": "d19c07761a9f9d932764cc270c4a14f550e3a3450b576a9e60dd6e7a4033e3a6"
+    },
+    {
+      "path": "topogym/policies/tasks/fiber_bundling/sequential.py",
+      "sha256": "79e241f7b842bfc31520355a5c9b1d6acceeb19bed281f53c309e8f261d58136"
+    },
+    {
+      "path": "topogym/policies/tasks/hedgehog_in_cage/extract.py",
+      "sha256": "5c2e73dbe9cb4f8442194399666815d70f97efb6dd81acfc9934b1e5cbbf649b"
+    },
+    {
+      "path": "topogym/policies/tasks/hedgehog_in_cage/family_motion.py",
+      "sha256": "e526a616cbf8af7824107bb2d6a98ed61e0bc43d22fb221cd907b0bee77c11ff"
+    },
+    {
+      "path": "topogym/policies/tasks/hedgehog_in_cage/plan_escape.py",
+      "sha256": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e"
+    },
+    {
+      "path": "topogym/policies/tasks/hedgehog_in_cage/plan_release.py",
+      "sha256": "e7e97b3eb857e5df9b55327d0cc5a87b16e1d9fa73c5c84ffb58e06267957fc8"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/aloha_demo.py",
+      "sha256": "611188d79aa9f53b4d0cd525623e87496a892ecee3cf1979ae35a9f23ffef295"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/family_routes.py",
+      "sha256": "e6c58093b02b6a2b4de3587b85fb40f302718b339eb791933c88f3fc78210443"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/physical_demo.py",
+      "sha256": "1dee6b338a809dc5b076bbd9d9b9b463c9b43d0326aa652ae30f821901cc90b0"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/physical_extraction.py",
+      "sha256": "bcc15ca0e9090377ccabb690b2b61291c2d3ebcbc9c12d2dc5210e0e9392d404"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/physical_place.py",
+      "sha256": "c20d206f010bdb5d7b1ec0d505fd4fd9dbba02204c52994d2737378ea3d9eac3"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/physical_plan.py",
+      "sha256": "fd9fc77414018e51528229c3bad6bafe55085c082dbb7e33fc60c7f76ef047cf"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/shape_bridge.py",
+      "sha256": "014f8fecbc1d7844b40f019f4ad15920a38fc1b1c667950947266f9e0d071605"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/variant_pipeline.py",
+      "sha256": "6f1a1748b4b472515752168a054eec84be68a15846e266e5a631f1be68c422a0"
+    },
+    {
+      "path": "topogym/policies/tasks/horseshoe_ring/witness_motion.py",
+      "sha256": "078d33a691a14c18d8fc568ac1ddc8f89f877de9d0f1551e79ebe62e7aaed0c8"
+    },
+    {
+      "path": "topogym/policies/tasks/interlocked_claws/physical.py",
+      "sha256": "5145c566625e31a6e7f48fff1b49c01cd3abdb35ac03a533e4177703a54fbe7a"
+    },
+    {
+      "path": "topogym/policies/tasks/knot_untying/family_actions.py",
+      "sha256": "ce45de81955a63c0e9fe55cb2d6d1b953aa1d0929430b83005c7aa3af4e7bacc"
+    },
+    {
+      "path": "topogym/policies/tasks/knot_untying/home_start.py",
+      "sha256": "c289a08a4cb25f20b939e9a18d29caaed61da5b992186184300c27de19dd1acf"
+    },
+    {
+      "path": "topogym/policies/tasks/knot_untying/untying.py",
+      "sha256": "ea469493f2fcdb00f74726466700538e55c55ad6555484ba6a45ee0c811809e0"
+    },
+    {
+      "path": "topogym/policies/tasks/lock_picking/oracle.py",
+      "sha256": "7dc14f1cc04db066b5f66da63494f2320b31e6c7df8642668fb019b23c16f37d"
+    },
+    {
+      "path": "topogym/policies/tasks/lock_picking/planner.py",
+      "sha256": "88900acc7d9a59bfb895c12ec4a01eddd9a3d802b8125dbbe1b3dccbd2a70a03"
+    },
+    {
+      "path": "topogym/policies/tasks/orbits/continuous_motion.py",
+      "sha256": "62fc5e7ba1aecc293f01b0486c991e291331076a2b05ac3c2a65cb01a82f4470"
+    },
+    {
+      "path": "topogym/policies/tasks/orbits/robot_pickup.py",
+      "sha256": "dc4e851a0e5c94f4c7fb4f46e9d295536cb0869c1ef29304d4994cbc2da4c8de"
+    },
+    {
+      "path": "topogym/policies/tasks/orbits/rope_route.py",
+      "sha256": "36ec781501adf68dfb4f96d0ef8f1279073608b8f88a5feb535a08214333c641"
+    },
+    {
+      "path": "topogym/policies/tasks/orbits/solution_plan.py",
+      "sha256": "c9aadcd3b0254e6d661602bb87c27ca03994d87f58ef99c717745c7bdd4f4527"
+    },
+    {
+      "path": "topogym/policies/tasks/rope_threading/feedback_actions.py",
+      "sha256": "0000c790236b91787c022a232f076e5f3208fe3d28dc4fcc60d85ce7ce27049a"
+    },
+    {
+      "path": "topogym/policies/tasks/rope_threading/reference_actions.py",
+      "sha256": "24c5f8d00ec5897e7d4e7716fe7052ee4676a5c0d516d800622625dbf415cb9a"
+    },
+    {
+      "path": "topogym/policies/waypoint.py",
+      "sha256": "5935a23c7bf80c74a811b88190eff8f9d525a41093d21d4f52e759d810bd43d7"
+    },
+    {
+      "path": "topogym/recording/__init__.py",
+      "sha256": "aeced309e984a4ceb369eb2e5d3780ec207344cf6153a466aa38be99aed23794"
+    },
+    {
+      "path": "topogym/recording/__main__.py",
+      "sha256": "fd653d20ef0c3962c77050ff5c741af58d7bbed2558d8c13950e8f92311d5582"
+    },
+    {
+      "path": "topogym/recording/adapters/__init__.py",
+      "sha256": "2d87d9d422bfc99848263f2b5d9631be8da2270b2baf043e8fc507d05719f6c8"
+    },
+    {
+      "path": "topogym/recording/adapters/genesis.py",
+      "sha256": "34416a07178cb10b90aa1557af3f1e70f4a2bbdb0e88aabaa65297a098aebb89"
+    },
+    {
+      "path": "topogym/recording/agent_media.py",
+      "sha256": "15abdff2ba4452362295307c6f72fd77258a9ad124459fbdd4120366c56e44be"
+    },
+    {
+      "path": "topogym/recording/archive.py",
+      "sha256": "e31c71f07220258188bf1def89243fcaf509925f4e62099de1eea288a1c19eb1"
+    },
+    {
+      "path": "topogym/recording/config.py",
+      "sha256": "fe2eb5be0544a3fdfd02cd2bbfcc552280354a74ff0b288f61bbbd069c91b7bb"
+    },
+    {
+      "path": "topogym/recording/contracts.py",
+      "sha256": "59b3f63fba72fc4d325042969d68fabeadc3668721a7f4ce238bdf63a2bb5c4e"
+    },
+    {
+      "path": "topogym/recording/demo_paths.py",
+      "sha256": "c13aeb29e0178db458018abd435cffe122e758ac4241de457edce4d7f4b96b8a"
+    },
+    {
+      "path": "topogym/recording/encoding.py",
+      "sha256": "a4d46b2656a8459c1c807d67755105ff8418ff20b2025386c4a1f0f35c426e3e"
+    },
+    {
+      "path": "topogym/recording/media.py",
+      "sha256": "2aaa9489dea04e0c35a32431cd5a9775a4a714299551c7026f69e05747566abc"
+    },
+    {
+      "path": "topogym/recording/migration.py",
+      "sha256": "568b0196c25da7a97ae8d01e569fb77ff059e754db64106c2fe76abe54230843"
+    },
+    {
+      "path": "topogym/recording/replay.py",
+      "sha256": "edad2a3fbf7c2b505e19d5d3475719a20d08b4a9318c8e51303e29dc7ded7f9d"
+    },
+    {
+      "path": "topogym/recording/session.py",
+      "sha256": "b575d792553861864d969d3bd196062d6530d7cf5167ea7055bf52c10cd01396"
+    },
+    {
+      "path": "topogym/recording/sources.py",
+      "sha256": "8d3b12f4ff3650e58b5abf89519de7f33d57e0b6a3c521b462fd39d44c039808"
+    },
+    {
+      "path": "topogym/recording/task_adapters/blanket_flatten.py",
+      "sha256": "1f361a0702a88065c0be7ab024443fe2672fae748584f5a5461f1ed625e831cc"
+    },
+    {
+      "path": "topogym/recording/task_adapters/buzz_wire_3d.py",
+      "sha256": "361fc29af232d9eb9bac32c1b55c1f2f1d3e044218104bda5af9c7abb1f7bbe7"
+    },
+    {
+      "path": "topogym/recording/task_adapters/cast_coil.py",
+      "sha256": "371a32a73b1a9c2f0e22380337fb4283db8e7eabf0934297c5ba5972d86eace8"
+    },
+    {
+      "path": "topogym/recording/task_adapters/cast_keyhole.py",
+      "sha256": "c69f4b0cd37f3434408a009723c7b22e06ccbb3dc28e6624618de581ca4ad949"
+    },
+    {
+      "path": "topogym/recording/task_adapters/fiber_bundling.py",
+      "sha256": "262d6725c3acd3e7fd47056c2bc7e4a807947448ceb5209b111d775264ad8c2c"
+    },
+    {
+      "path": "topogym/recording/task_adapters/hedgehog_in_cage.py",
+      "sha256": "59aeefe01769e6822618260b4818300c05f05f7489469f9056930f912b772859"
+    },
+    {
+      "path": "topogym/recording/task_adapters/horseshoe_ring.py",
+      "sha256": "86d37aa1f03f83f18c98eb611752bd856e370ee3d6376ade0d657d4171941c24"
+    },
+    {
+      "path": "topogym/recording/task_adapters/interlocked_claws.py",
+      "sha256": "8451f4f69c7069731f7b97e53d53f0b2ce4cfcba4074bf0638e2aaaa72a0a72a"
+    },
+    {
+      "path": "topogym/recording/task_adapters/knot_untying.py",
+      "sha256": "787be0b604fe655ca194a286e04ae4016853ba986cf7117c51489dd590f6bc56"
+    },
+    {
+      "path": "topogym/recording/task_adapters/lock_picking.py",
+      "sha256": "648d8973b78e30f4f164eb71b1e2b174da413cb100ae87a33e95efb78743d595"
+    },
+    {
+      "path": "topogym/recording/task_adapters/orbits.py",
+      "sha256": "419e779aa2db61b008fa85c9481bdcae6a0c59d35611406c2e40fe5725d491e8"
+    },
+    {
+      "path": "topogym/recording/task_adapters/rope_threading.py",
+      "sha256": "0b1402935cd3713fccdd8a3cb13b35b6851972301f8e1dd0a60ee5c4e2657641"
+    },
+    {
+      "path": "topogym/recording/task_adapters/slotted_post_ring.py",
+      "sha256": "1070cb08726b3ce1db75fb23e177d787be6fb5e121ce62334b651c6072010793"
+    },
+    {
+      "path": "topogym/recording/tasks/blanket_flatten/archive.py",
+      "sha256": "4c4dc6c3f78e6d6015924a16e4c8094bb741e887d86c7065580ee856dfc79ab0"
+    },
+    {
+      "path": "topogym/recording/tasks/buzz_wire_3d/archive.py",
+      "sha256": "71408fb9824a083649988b36cda0c6adf02ec237deac153699b9ede890b1bb36"
+    },
+    {
+      "path": "topogym/recording/tasks/buzz_wire_3d/robot_archive.py",
+      "sha256": "8c47b06bcbfd05859de850e2d381c4105cf19e98c4fe148dda935aa8db53bfff"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_coil/robot_archive.py",
+      "sha256": "900920edc6ee3db7b495446ca98a4e13cf0a1fd31c458f2e700fe439f73a0f24"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/archive_demo.py",
+      "sha256": "5c2e76bfdf3404d6974c1d2b91e92308004f8a14b83f14dc3b1c46975ee908b3"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/eccentric_window_archive.py",
+      "sha256": "619db2ff3a5dd63d93316e24c542f07d75e80caf2fbe2564372e1a0dbaf51e50"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/family_variants_archive.py",
+      "sha256": "0e94e0ac84dfad4cb134a8f3e3972addd26cf7085214b1b3512d3d658b0fa1f6"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/long_stroke_archive.py",
+      "sha256": "97b1a60d426ed9ea9c37fb5f10c5c0303a979f17288b1dbf7fc9bde390ee7f4f"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/physical_recording.py",
+      "sha256": "33d2198dd2a8d23cc2122e61366d7636cb0fca35bdad5baf3d7e23ed9a46b693"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/turnback_archive.py",
+      "sha256": "05130498de2d6cb9c63f29e557649bde00506e18029138d350646155a5cf9027"
+    },
+    {
+      "path": "topogym/recording/tasks/cast_keyhole/variant_archive.py",
+      "sha256": "a615bba8e936d6afc6ae9fff73ba03bdf3a056c0a5b27bdb3cd681f298ae5949"
+    },
+    {
+      "path": "topogym/recording/tasks/fiber_bundling/archive_variant.py",
+      "sha256": "382653b955de38295c0f81dcf6e663b1476d655ad0ef49a5694621ec569c8bd8"
+    },
+    {
+      "path": "topogym/recording/tasks/fiber_bundling/render_ready.py",
+      "sha256": "002128eb461c6d9b2f990b5dcd71eab9cb9adfaa1ee0c0836d3bdb40d51769e7"
+    },
+    {
+      "path": "topogym/recording/tasks/hedgehog_in_cage/family_archive.py",
+      "sha256": "4d949739e3a337559fca6ebe470d06ed4ea7bb8d6c7d701e0e8fba7bfc4d576c"
+    },
+    {
+      "path": "topogym/recording/tasks/hedgehog_in_cage/inverse_archive.py",
+      "sha256": "1ed39e6e5362371a27cf0892d81d3083c4b85eaff883e10ea0a4979ab04764ce"
+    },
+    {
+      "path": "topogym/recording/tasks/hedgehog_in_cage/prepare_classic_prototypes.py",
+      "sha256": "a4255de08559a28a3ac1a360a511567b20eb1637d64f38777f8c09d5c1b0db10"
+    },
+    {
+      "path": "topogym/recording/tasks/horseshoe_ring/archive_physical.py",
+      "sha256": "6df1a6877c79810a5a440a8aaf08e52e8e14dc9b2f6b6a8024f9635f3c740715"
+    },
+    {
+      "path": "topogym/recording/tasks/horseshoe_ring/archive_timestep.py",
+      "sha256": "ee019ac8ed9be647b82aef711e96d9355d322e3a6bb119239dcc4d1b707fe747"
+    },
+    {
+      "path": "topogym/recording/tasks/horseshoe_ring/variant_video.py",
+      "sha256": "0b4d36e43a24e1bdb2f318300c1338509250bf57e24578a0091419840100fda2"
+    },
+    {
+      "path": "topogym/recording/tasks/interlocked_claws/archive.py",
+      "sha256": "3f91e0874dd713500907d45549d10ab540b192c8148de57017144665e18e7a4a"
+    },
+    {
+      "path": "topogym/recording/tasks/interlocked_claws/family_archive.py",
+      "sha256": "2edda878e64375bb27c5ad971895dd33fc61d6f788fee442f6c6000e191dcc72"
+    },
+    {
+      "path": "topogym/recording/tasks/interlocked_claws/family_render.py",
+      "sha256": "5eab152379592f33e882d2f055532581ddcf34ff1d7a9d10a9e2d74ef906db39"
+    },
+    {
+      "path": "topogym/recording/tasks/knot_untying/archive_demo.py",
+      "sha256": "fb9c2ee63d4619ef9d64645565bd2abd7935e0303bd220150a1ba5fdc6f0bdce"
+    },
+    {
+      "path": "topogym/recording/tasks/lock_picking/demo_archive.py",
+      "sha256": "79d38f6fb85175f9fc1865cc4d83c39912324bcc306fbce887c38f8a3e812672"
+    },
+    {
+      "path": "topogym/recording/tasks/orbits/motion_render.py",
+      "sha256": "4fea5413b5272724eb43344ef81968d6ee18bb127ef4bc41be024081d7fc8a85"
+    },
+    {
+      "path": "topogym/recording/tasks/orbits/robot_recording.py",
+      "sha256": "1e35e31ad43fccca1f4936ff4f61ca5e7b83447fe50288a88097a229cd875365"
+    },
+    {
+      "path": "topogym/recording/tasks/rope_threading/archive.py",
+      "sha256": "845175750c8c9e2f7b8c2dd146027e7394e0da840377d9add33465cac89c9339"
+    },
+    {
+      "path": "topogym/recording/tasks/slotted_post_ring/archive.py",
+      "sha256": "8f42b34bcca3d66176d356f1cb6a98b71a0392a931a0bf511de8acd202a8817c"
+    },
+    {
+      "path": "topogym/recording/tasks/slotted_post_ring/curate_demos.py",
+      "sha256": "ee0462537a71e072a725463e49f60475630c20c9754d88bcbf5fbf16fa1deada"
+    },
+    {
+      "path": "topogym/recording/timeline.py",
+      "sha256": "7b0701d53f454d13db889d76c4c4030d5d55f381134ec08ccdfa6b69b0393e88"
+    },
+    {
+      "path": "topogym/recording/validation.py",
+      "sha256": "ef0fddd085ad25100d90f18978cafea56898a59ad3058f2b0e10ff1e5120e365"
+    },
+    {
+      "path": "topogym/redundants/benchmarks/step_bench.py",
+      "sha256": "bb860bf60672e6f06355d020c4b8359214a10278d763fb8fd8545dae4c5f8275"
+    },
+    {
+      "path": "topogym/redundants/checks/fiber_bundling/contact_rule_probe.py",
+      "sha256": "cf1eaa9ca1c1d671afbeff02652ff87da483e3b1df42742b97b03444a19272fa"
+    },
+    {
+      "path": "topogym/redundants/compatibility/recording/compatibility.py",
+      "sha256": "66759f7f81c9c20a82916081225b6a0eed0d53f8f5dea9502f7e9b7f93f888c7"
+    },
+    {
+      "path": "topogym/redundants/compatibility/recording/compatibility_recorder.py",
+      "sha256": "2bc3c8fec698df9fd54db651f8c077ee9d1549dc3c454124c06482c7cbd44507"
+    },
+    {
+      "path": "topogym/redundants/compatibility/utils/franka.py",
+      "sha256": "315e05302ad531a94495b213c3ea352662661a64efac4873a6accb333329f71f"
+    },
+    {
+      "path": "topogym/redundants/compatibility/utils/recording.py",
+      "sha256": "24005e428787a18600a4fa9717a22cebcb512fa9b9477e104a2c7cf53c55e9b7"
+    },
+    {
+      "path": "topogym/redundants/experiments/blanket_flatten/preview.py",
+      "sha256": "c2bb28ca63c0dddedc5dab25cebb5b65a58f089092bf69eaf4ae9883af8ea195"
+    },
+    {
+      "path": "topogym/redundants/experiments/blanket_flatten/virtual_hands.py",
+      "sha256": "aa3bd0a0db03f6540e43740ea8db901e69d4d78965f3554d7aa877f1a51e5f51"
+    },
+    {
+      "path": "topogym/redundants/experiments/buzz_wire_3d/preview.py",
+      "sha256": "6332c2df5296681418eb5b7ea817e253a4d8ba048f59cca530842da93bab6b85"
+    },
+    {
+      "path": "topogym/redundants/experiments/buzz_wire_3d/probe.py",
+      "sha256": "1d2a9653088fa492d96a27ff2dd7d1245022a4ce80de0e0776b617cc1ef35906"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_coil/demo.py",
+      "sha256": "8a9804ac95a67c86f05cbff55d7e15faec66aa1923758837a7a5e61834181ef5"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_coil/official_trial.py",
+      "sha256": "2c6caa0d76f18c8cee8d1797a1906b01a8ae5f47eb11d1018e731ad08ed651e3"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_coil/physics_probe.py",
+      "sha256": "17a13881fcaba94c384355514ab47032f36c6b37ce46a6b86f53a228c51a4d2f"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_keyhole/demo.py",
+      "sha256": "b19621acc6736539efc470a96f4da4ec892afc653de078c662816cfa1a278cff"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_keyhole/physics_probe.py",
+      "sha256": "85a476a73efe8a4d74afd1dde5e66757c867e105e65d14d8e63904016bb79c35"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_keyhole/route_probe.py",
+      "sha256": "5e3f51703bc039686cf57934bb1b2894b4ff23ac27d9a1d37abc7018af6d3fea"
+    },
+    {
+      "path": "topogym/redundants/experiments/cast_keyhole/trajectory_probe.py",
+      "sha256": "aab3105a0904772b63c1e3a3eae808420b7404eeb545547ebe189d4a8c0df864"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/anchored_probe.py",
+      "sha256": "2426adf220eaa3825d56125e83ca24c8e68dcedcf04ee5029d6a00c56701516c"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/capsule_contact_probe.py",
+      "sha256": "53e9c8bc2155fbcf0dd13ffa224f2e2491ecf4c1e3e1833c1eaaefe21aeae325"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/demo.py",
+      "sha256": "49beed1f8449e53d989895717d2c2f6fa0a3d378f577951fc9a4f0bfa35cd3f4"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/ik_search.py",
+      "sha256": "31bfdcf73ce77ee773dc9e5a4bf444a38ab50f7cfb18f6639233251525fefff5"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/ik_turn_probe.py",
+      "sha256": "765f9fe6dea68981c76af66d55962adcdda76f487eeee895b9be11cc096f5ca6"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/parallel_recheck.py",
+      "sha256": "aa27326b7d7a7183be6e5a9ecbd03e87e88412875ed44f2738d97de6c2136829"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/probe.py",
+      "sha256": "167a7dfa2fe10f55549a58e743febb0c6f2ea89ee25359da44f886017f1636b4"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/refined_variant_trial.py",
+      "sha256": "c94417c656dd137369afd605a4dc1bade1c34d1753ae6fe5b14f63e8c515c90d"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/single_strand.py",
+      "sha256": "d55f3ba820d8a63d80e6f9498d451dacbf0acd133c024839224c608a109d7c51"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/snapshot_trial.py",
+      "sha256": "9dd6f5a51305f6572d22440dfba8e67459b72e783f01156fb60f36826b99c82d"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/variant_demo.py",
+      "sha256": "caec228fea2f1e9aab2e31e288b5ed7b9593f482dd7dca26836b9bd0ec0043f6"
+    },
+    {
+      "path": "topogym/redundants/experiments/fiber_bundling/variant_trial.py",
+      "sha256": "9157255aa6d45d733b0b61b6693cf2218e8a9e6253e156bd457895542d31aeee"
+    },
+    {
+      "path": "topogym/redundants/experiments/hedgehog_in_cage/demo.py",
+      "sha256": "422afd4e80192db1ab5a3987a2c84767ce8efadc558ee36f75443599fff7d1d8"
+    },
+    {
+      "path": "topogym/redundants/experiments/hedgehog_in_cage/side_window_probe.py",
+      "sha256": "11d4037568dafec30f50b561af6f7e0bc16a95b9ad2ef8ea80cf6cfcbb65da3a"
+    },
+    {
+      "path": "topogym/redundants/experiments/hedgehog_in_cage/stability.py",
+      "sha256": "20e208f430d852ba2a9a4c7c7aeb9692db0db3ad97c84dd0a0bf70a581c76c72"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/chain_probe.py",
+      "sha256": "c7523ce48c662bc9d760f9e807325dafdb0d54a94c0c843bd2513e2c5347f494"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/demo.py",
+      "sha256": "61bc153a2d40ec691c60a76d1cf914ecb44c7ba20243231b0dfb6055d6461817"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/experiments.py",
+      "sha256": "575759fc5792447d1bd83b3b8e56b98d7f7b45ebfec226c8289ebfb7489a8411"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/family_space.py",
+      "sha256": "e1fc0b00b56f18469f2245a28970d7bfb0bdfb708743d665176cc3e70bdda6c3"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/gravity_demo.py",
+      "sha256": "40563f3b1e731295c64e223f32cf26afc3122fb1531acaa1ef8c87c03fc499fb"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/shape_variants.py",
+      "sha256": "638db60e829d266e3f2c035f60f7fa06aa0993292e91e2461365b2f7c4b6604b"
+    },
+    {
+      "path": "topogym/redundants/experiments/horseshoe_ring/witness_demo.py",
+      "sha256": "2ce2296d7676a68b0e13f2763601da6701a79980821fc04a2296ffce7ebbaec4"
+    },
+    {
+      "path": "topogym/redundants/experiments/interlocked_claws/contact_probe.py",
+      "sha256": "e53b9e85d1a0624642332dfd0cccf19ad298dd740ae1013d4919af8aafb1544b"
+    },
+    {
+      "path": "topogym/redundants/experiments/interlocked_claws/demo.py",
+      "sha256": "1f1fd588a1f82af01b0e8ac1d99cdf8855a43ab168f3a5fa37b2e56d9cced937"
+    },
+    {
+      "path": "topogym/redundants/experiments/interlocked_claws/family_space.py",
+      "sha256": "0962c94f6e1eea5a3d41b4769f1e8614749da5ad7d92c85fe97cdd4f71963a39"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/contact_probe.py",
+      "sha256": "f16ac98d434598b28a53f7b123cfe955bc43a92745cbc7b7b1b8496a8b856082"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/demo.py",
+      "sha256": "1a4483b14966f205df972d41c23deec61ea24d28dc661f1c47b00a8de9eb9058"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/physics_probe.py",
+      "sha256": "fe567e014b96f83c9f51a2bcf7510058e12703ba9ccc5396de4a91aaa8a089ce"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/physics_suite.py",
+      "sha256": "3cb4aec66336fd89ce0e7f9bb6a97efb759b8bbaf8e93e6bcc83ca60e6161c45"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/probe_actions.py",
+      "sha256": "3662eb1f2e6fb064aca7589aae4650d09c82c1473dcec14e1016fc009adab9fe"
+    },
+    {
+      "path": "topogym/redundants/experiments/knot_untying/robot_probe.py",
+      "sha256": "4dd2cd517c92a4bf2f8e347d59d695bcbeb88605f358d2254085b86ea5f88538"
+    },
+    {
+      "path": "topogym/redundants/experiments/lock_picking/family_space.py",
+      "sha256": "1de35223277d03c1872ddd49f89e0be7868abde44d7e2e947348dcda87fd928d"
+    },
+    {
+      "path": "topogym/redundants/experiments/orbits/bimanual_bight_demo.py",
+      "sha256": "7d4a1b40b4c7ac4c1496717e20ce63278b72cb6b3f1efffefe528002405a80cf"
+    },
+    {
+      "path": "topogym/redundants/experiments/orbits/grasp_demo.py",
+      "sha256": "893f66396a89ccc701fb9ed28e0dafa25c1632f53a622bc4a91cb71bd6041cee"
+    },
+    {
+      "path": "topogym/redundants/experiments/orbits/preview.py",
+      "sha256": "9429b5582f5cb71e400443d494bb7721bb91c6ae25d929bec1bf7297a008d78f"
+    },
+    {
+      "path": "topogym/redundants/experiments/orbits/rope_only_demo.py",
+      "sha256": "6f2883b0b5aae38e2f7a77c9b4d773f5d70bc286c58c444fcc2ac005100df202"
+    },
+    {
+      "path": "topogym/redundants/experiments/orbits/two_control_route.py",
+      "sha256": "52a60701c0c4bd0a4794c88615eb89633b50ce1983373961bccd14aae0300204"
+    },
+    {
+      "path": "topogym/redundants/experiments/rope_threading/contact_probe.py",
+      "sha256": "c61f0c722f9a0460442c662adf79b54bdfcf1f2518a6985cad0a9ac723c3a103"
+    },
+    {
+      "path": "topogym/redundants/experiments/rope_threading/demo.py",
+      "sha256": "c7db7be1d0490b49eb2e08280ddeb179cdf17f003880b9dd01535b3e9a8e7341"
+    },
+    {
+      "path": "topogym/redundants/experiments/rope_threading/physics_probe.py",
+      "sha256": "b8c77a51f6499fdc810c990e00ae58288996b471d8152860055592d511449353"
+    },
+    {
+      "path": "topogym/redundants/experiments/rope_threading/physics_suite.py",
+      "sha256": "c5db1ce94dead410f1073fdce9ad0aa4ded4fcc25457c85d9baba8e110d82b78"
+    },
+    {
+      "path": "topogym/redundants/experiments/rope_threading/startup_study.py",
+      "sha256": "e0b3266232da93ebb612ff0cd98cf05d055465303f27ef462cf4e5b3bb102b12"
+    },
+    {
+      "path": "topogym/redundants/experiments/slotted_post_ring/preview.py",
+      "sha256": "7d5899d254e3eddf42fbb7881bbdcb45a0fed86ba1b6681ff9dce8c4f7364123"
+    },
+    {
+      "path": "topogym/redundants/mujoco/recording/adapters/mujoco.py",
+      "sha256": "a490046d21c72c76913cc523aff38af1dce62b7b221cf284a9a1e21ec8a1baf8"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/interlocked_claws/family_balanced_robot.py",
+      "sha256": "2a427730224a68f3feef0c65066963b55d39b569fc9d39fb8a179350b74f49bd"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/interlocked_claws/family_physics.py",
+      "sha256": "6815d8d24648eb88b5dab2fe903ec172c38a8faa288ddc56c30546a91a3bb20e"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/interlocked_claws/family_robot.py",
+      "sha256": "27e95d90a08bd425a4a299e508b6f2785af586f98c7bd4b6f899790fb7d7e5ac"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/orbits/dynamics.py",
+      "sha256": "ede0977edbdd1af361e078f3f1f3c62607bc255989aebabba8f176ffb3639372"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/orbits/robot_dynamics.py",
+      "sha256": "c73fed78358e0e16df4b1637725c236efe5fda1b90f4149737e3bf1b49df4e40"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/orbits/robot_runtime.py",
+      "sha256": "cc4440f5465f8d2c4d1bbadde0fd252aa50e6951c53a9ace506a73434b453709"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/fem.py",
+      "sha256": "7578c5e49f0660f41a2078e62b8f5d437fee54b897e506c8ce08a09c8b2ddfd0"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_fixture.py",
+      "sha256": "1a5cbfc4e3414faa9f035f01499bda73d47bcca23902b2fb631bf7ae66f498e8"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_grasp.py",
+      "sha256": "63dcf16b3d5a7f77424c130853dd882fc2110f9e5c93813d75d355d3c0bc6d98"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/fem_probe.py",
+      "sha256": "0a3f15d4c51b820ae5888c6084050f1fe17f53632875efada84eed5ed4ddd7cb"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/fixture.py",
+      "sha256": "352fad3605351632a838d34f0ad26e2edd61f18c9e3234f218a2eba0d7dda440"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/physics.py",
+      "sha256": "4f87fb853c43328e3c44e4d7043d13d856c4ea46bbd2889bc526f92f4f9198de"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/probe.py",
+      "sha256": "015ba6eb25e886065211b99068b53580fcf52f91ca52f2bf1a0830b1a2100ad7"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/robot.py",
+      "sha256": "9732d60e9559e1643d83f757bf00134165ffc128fd52454e4de6c55ef3af057f"
+    },
+    {
+      "path": "topogym/redundants/mujoco/tasks/slotted_post_ring/robot_sequence.py",
+      "sha256": "fc83765ecf1711c6f1e3b86c64ee55567630eb1daf3744785247532ee54bb350"
+    },
+    {
+      "path": "topogym/redundants/mujoco/world/mujoco_presentation.py",
+      "sha256": "8adf3b6bd7f13462f895b594324306aea8d5c550b3fd77a5fed2b7d9e21f857c"
+    },
+    {
+      "path": "topogym/redundants/package_markers/core/__init__.py",
+      "sha256": "c3af321617ad527213c04fca8937ac3662d8111863137777d246d51a0872d33f"
+    },
+    {
+      "path": "topogym/redundants/package_markers/generation/__init__.py",
+      "sha256": "ba176cdec980ee3b8661d78b16db97beef5ee316513853125d17b3d79ab0f34a"
+    },
+    {
+      "path": "topogym/redundants/package_markers/planning/__init__.py",
+      "sha256": "eb71f75082c06a22db847d7911a6252bab91df0dcbd3b1a38498b6270ed6e48f"
+    },
+    {
+      "path": "topogym/redundants/package_markers/primitives/__init__.py",
+      "sha256": "52688af6448f9e8cbaabf641549af003edd820bfe41e609fc51948397aa2d6ca"
+    },
+    {
+      "path": "topogym/redundants/package_markers/runtime/__init__.py",
+      "sha256": "4d6f912158c611d7f05b6055bc9173dc24fb4cde20f09a6d1796978aea1b52c0"
+    },
+    {
+      "path": "topogym/redundants/package_markers/supervision/__init__.py",
+      "sha256": "5341f4bebf60ecbcdc93cf4fab33b3aaf3eca7c6e6090826cb76ece00cf462f9"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/blanket_flatten/__init__.py",
+      "sha256": "0e124a07efb0dd1e6673714ff6ddecb672ef908d62d5fc1b46a56d7f112fe3f2"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/buzz_wire_3d/__init__.py",
+      "sha256": "134b8d1ff0f31b0988184911700c5e1aceaea3cd141a6b9db83b6682c0db2813"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/cast_coil/__init__.py",
+      "sha256": "258d19c3e9f80fa43945726c6303f93e9af597acca66d7b574f562a479cab14e"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/cast_keyhole/__init__.py",
+      "sha256": "7cc5734a5c744738d2ae1ee0f15ca2404724ac58c821e7f1be1d5686a24453e2"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/fiber_bundling/__init__.py",
+      "sha256": "513cdf9c8747c2a718be4de2f6bf2dd6a383940d155ef63a8b34d50377409fc6"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/hedgehog_in_cage/__init__.py",
+      "sha256": "add7d50c3ab31b2cce051695166e509f4071320a92faf8d628e81e58d11a9bf7"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/horseshoe_ring/__init__.py",
+      "sha256": "2789e6ef5cf18e771db5f196fafdaa5aa81b33cebcfafde939f3423d84e961b3"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/interlocked_claws/__init__.py",
+      "sha256": "5f919ac4a57ca2f69323a2cc89f762c4b5c842402a5513cfc82bec1790f586ae"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/knot_untying/__init__.py",
+      "sha256": "42983b917a75ff939fc8f20d0b9d375a3409ad9298ac34aac9eb12c2b0240028"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/lock_picking/__init__.py",
+      "sha256": "cfe4697707c411f33bc9bfb6df34f585a49378d215be3162b4452b7c4e392591"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/orbits/__init__.py",
+      "sha256": "86df1aee73837ccea8c4f6a26786b67f2295e1ba1ec4cb68beae6639fbe8e3fc"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/rope_threading/__init__.py",
+      "sha256": "af042381924cc21b8fd3935c049ac5c421a58da83fb8ec39fd38a190ed105fdb"
+    },
+    {
+      "path": "topogym/redundants/package_markers/tasks/slotted_post_ring/__init__.py",
+      "sha256": "1e13ca6a56ce3f6ab74d16d784d6ed9dbcf5bb2a99242d161836797739aa07b0"
+    },
+    {
+      "path": "topogym/redundants/presentation/cast_coil/solvability_view.html",
+      "sha256": "c8d62addbdb8dd6f01af93cbc4ba881e932fae97088b78fee19f2eaa232f11c3"
+    },
+    {
+      "path": "topogym/redundants/presentation/cast_keyhole/review.py",
+      "sha256": "43b486dbc2a5fbd682b0800ecc3210089bc3d5acf21e2924801ddad81e11c1dc"
+    },
+    {
+      "path": "topogym/redundants/presentation/cast_keyhole/solution_diagnostics.py",
+      "sha256": "4319e80645d8ff402ff2b8c62f51ffa13ac6074ad3134b8c734880b37f26a83c"
+    },
+    {
+      "path": "topogym/redundants/presentation/fiber_bundling/plot_variants.py",
+      "sha256": "3fc6618de4f958670ae1f09f3dda2202dadf5e683a83a2d66c10e70bf8810346"
+    },
+    {
+      "path": "topogym/redundants/presentation/fiber_bundling/review.py",
+      "sha256": "885c1b2a716b069781b3215cf9fe5fbd50668e4c2ef778d657d9899ee38bb867"
+    },
+    {
+      "path": "topogym/redundants/presentation/hedgehog_in_cage/family_review.py",
+      "sha256": "98cc9ba0980f29979f289e4061e42c8e226e5ea17cddfef06263817fe2609974"
+    },
+    {
+      "path": "topogym/redundants/presentation/horseshoe_ring/inverse_review.py",
+      "sha256": "f6f96e1345039fc3ef22666248a432468755d8314b078934f9597d928608a4e2"
+    },
+    {
+      "path": "topogym/redundants/presentation/horseshoe_ring/shape_review.py",
+      "sha256": "d211d276c10cce9c40c0014fce5fe228c90ba114952216754840df69925abc47"
+    },
+    {
+      "path": "topogym/redundants/presentation/horseshoe_ring/shape_viewer.html",
+      "sha256": "e370447c70261506820a629d962c7bdc82f2840dac38749795d52ac808b11aa5"
+    },
+    {
+      "path": "topogym/redundants/presentation/horseshoe_ring/trace_review.py",
+      "sha256": "434828782d80f1ad535242ed12ba36ff0d4aacfe3f4192c7366169b7ee6b8580"
+    },
+    {
+      "path": "topogym/redundants/presentation/lock_picking/inverse_variants_review.html",
+      "sha256": "2b1d34121d402cd9b3cb7d540dde5117b8a2f2d4bc6fe5371fcba852605ba9f7"
+    },
+    {
+      "path": "topogym/redundants/presentation/slotted_post_ring/review.py",
+      "sha256": "f39883f5ce01c82a385295e920fbcd80b2f08fb24866336e6fd582346deb4a29"
+    },
+    {
+      "path": "topogym/robot/__init__.py",
+      "sha256": "d9f06d1f8c3a4203a1a0dbca06a54427c80b12571da7a79861e447202c55dfc3"
+    },
+    {
+      "path": "topogym/robot/aloha.py",
+      "sha256": "ee92265e8b900475ba84ffb2c007390ff5a8a700003eddda06b8a44af65ba932"
+    },
+    {
+      "path": "topogym/robot/aloha_contract.py",
+      "sha256": "7b68111a99994eb5385fbaccd0ff5a880b60d0997ae7b4f4c63827350e43d2a9"
+    },
+    {
+      "path": "topogym/robot/factory.py",
+      "sha256": "85202d8e25ff1f901f0ac0a41e43711b612040581fbe3b5aec01fffe116ff49a"
+    },
+    {
+      "path": "topogym/robot/franka.py",
+      "sha256": "5ba4251d2d752f6e7cd398f36a1b9b8ec5ef9509ec854faf2f1edf0375299de3"
+    },
+    {
+      "path": "topogym/robot/grasp_constraints.py",
+      "sha256": "50612dd88a43da28210fae27433404e05c9812df2df891ec43dd9133da90666c"
+    },
+    {
+      "path": "topogym/robot/grasping/attachment.py",
+      "sha256": "d7d1ac8fce8607750188611ae3593db56c7bbdc1cca9df204fadc599b08f9431"
+    },
+    {
+      "path": "topogym/robot/grasping/cast_coil/robot_grasp.py",
+      "sha256": "adb3b4e15baf341611483aa60c562dc039ac74994b77a729a5dde6cea20e5c73"
+    },
+    {
+      "path": "topogym/robot/grasping/connector_latch.py",
+      "sha256": "996c0308d361c323aa3000a21bd8ae627423718a8c057737218e6b6c602cd6dc"
+    },
+    {
+      "path": "topogym/robot/grasping/fem_attachment.py",
+      "sha256": "64b84062770621ccd20d8e5a3f6b17732a05452257e5c0a79ecfc62ecd34be53"
+    },
+    {
+      "path": "topogym/robot/grasping/lock_picking/grasp.py",
+      "sha256": "63f97871179b44a008917f71f2b4864f80b42cc24f7f493455636b49ca6be41d"
+    },
+    {
+      "path": "topogym/robot/grasping/physical_contact.py",
+      "sha256": "0a9cae42d33d7a5aa889f2ae1fb9a7079c312037e7acf3245d9ea382320b3525"
+    },
+    {
+      "path": "topogym/robot/gripper.py",
+      "sha256": "e70c919bef622523b73d47a0fa173e190f95bc075de50279e22b2124c3210150"
+    },
+    {
+      "path": "topogym/robot/panda_contract.py",
+      "sha256": "876d5cb1a37f95ea23e11ddaad5aee19dbe53ff7ae1dd9a7ceab83299ef62250"
+    },
+    {
+      "path": "topogym/sensors/aloha_cameras.py",
+      "sha256": "8f09e5953914f89b8eb7133bf78c7b05122f1f644883a61a75e5df334dc93113"
+    },
+    {
+      "path": "topogym/sensors/camera_info.py",
+      "sha256": "7427e751116942697148d0600a6a0705f290c8fae226c726a9adaf3440eefda3"
+    },
+    {
+      "path": "topogym/sensors/cameras.py",
+      "sha256": "6f82a74a575e2eb05cf206765140606353cf3628f3c881aa0bdb8f9761084a5e"
+    },
+    {
+      "path": "topogym/sensors/hud.py",
+      "sha256": "1f1ffaf8bbd99e3aa0f3d6236aac72bab4196f8d9d4b4df658a8c941b532ee32"
+    },
+    {
+      "path": "topogym/sensors/lighting.py",
+      "sha256": "a8f990f969b620ffc836cbb757e74c2821713b0855198231de740c24c5dda25b"
+    },
+    {
+      "path": "topogym/sensors/materials.py",
+      "sha256": "fee8e8a8b989e04370dd3b7bc1e1088f44f9fa82f5cabe7160a5c0b472f381a9"
+    },
+    {
+      "path": "topogym/sensors/nyx.py",
+      "sha256": "fb6b57bd199724232c197e94917d8e528f4461b83f4d4333a80133132b957090"
+    },
+    {
+      "path": "topogym/sensors/presentation.py",
+      "sha256": "2fbb1d79a242ac2d5f45d84f403b3392149d38643fba7fc4fe5b917521ad83a5"
+    },
+    {
+      "path": "topogym/solvers/collision/blanket_flatten/robot_clearance.py",
+      "sha256": "a3cb776be91aed9beae31af492a3cf549fe1e5849996bf147c313ea23db602cd"
+    },
+    {
+      "path": "topogym/solvers/collision/cast_keyhole/collision.py",
+      "sha256": "bf886a0096febbf618be5e1b5f79a887ee3d74ffb0973097fec66e01ca08710f"
+    },
+    {
+      "path": "topogym/solvers/collision/horseshoe_ring/robot_clearance.py",
+      "sha256": "847895444f6e89f48a1140c825efeeecea0995b5d86c5a2a1f6621c318462843"
+    },
+    {
+      "path": "topogym/solvers/collision/interlocked_claws/collision.py",
+      "sha256": "115a6b661d4495f44f4b95e4017ed907144183f311a745b3e7421441d218bafd"
+    },
+    {
+      "path": "topogym/solvers/collision/knot_untying/robot_clearance.py",
+      "sha256": "ab5ef4e115db11bda67562f3898cda5ec5553fbc21d151b833cbd17cc40edac6"
+    },
+    {
+      "path": "topogym/solvers/collision/rope_threading/robot_mesh_guard.py",
+      "sha256": "6451725fac1a44cd589f5f9734b9fa24d4666c3df01d7a37c7d323f3daf6452e"
+    },
+    {
+      "path": "topogym/solvers/geometry/buzz_wire_3d/family_witness.py",
+      "sha256": "d854fb5f318b2c8d32d11ed660f25a8614884a4b343a284bb6c3af418a6a315a"
+    },
+    {
+      "path": "topogym/solvers/geometry/cast_coil/solvability.py",
+      "sha256": "a6bf5eebea382390ae392a4a03adc8566f6051801a1313adc6e84a6aadf0e399"
+    },
+    {
+      "path": "topogym/solvers/geometry/cast_keyhole/instance_solution.py",
+      "sha256": "4350eec1e8b4e403e0ef91454fb2d090ac1ca4e8f8338ea4a747e24a29900067"
+    },
+    {
+      "path": "topogym/solvers/geometry/cast_keyhole/solution.py",
+      "sha256": "b53ee04aae008450f2248daa1305467149c03970e3815ef123fd06f71f09b149"
+    },
+    {
+      "path": "topogym/solvers/geometry/horseshoe_ring/independent_motion.py",
+      "sha256": "cd31bf021159ca55c4fa4dd8c330dc7177432cf3bc233460ae32f5005a7ca4e8"
+    },
+    {
+      "path": "topogym/solvers/geometry/horseshoe_ring/solvability.py",
+      "sha256": "2fc9659bd8ea4ec82163ac63be43ffecf2dc01b6e83f1c7eb40610b2326f55d7"
+    },
+    {
+      "path": "topogym/solvers/geometry/lock_picking/certificate.py",
+      "sha256": "21238b7cfcad580ae0c7ed8aca93be9cefc6bbb904421f7ba8140f5889e8608e"
+    },
+    {
+      "path": "topogym/solvers/kinematics/blanket_flatten/bimanual_kinematics.py",
+      "sha256": "86f6732371b7ac30a7d2271ce0fb1d031b3ec65ba7323913c8f544d4ee1d9672"
+    },
+    {
+      "path": "topogym/solvers/kinematics/buzz_wire_3d/robot_plan.py",
+      "sha256": "2952addce636c0804688b04c976b8d35297a15fb277b6cf9981f06bb35d1a600"
+    },
+    {
+      "path": "topogym/solvers/kinematics/cast_coil/robot_plan.py",
+      "sha256": "3687e46f7899e2f961835c90b103129384042f40ce9c45be94745a32997f1fc4"
+    },
+    {
+      "path": "topogym/solvers/kinematics/cast_keyhole/robot_motion.py",
+      "sha256": "90078227059780cdb02b8566962a51a9e0cd7031943e8de333318eaaffc08724"
+    },
+    {
+      "path": "topogym/solvers/kinematics/hedgehog_in_cage/plan_robot.py",
+      "sha256": "56861febf42895f23f4f4122cf1013d31da55a6aafaad2cc237d04c87df4be7f"
+    },
+    {
+      "path": "topogym/solvers/kinematics/horseshoe_ring/robot_motion.py",
+      "sha256": "33217abc42e37e9953e3a98ab221b1bad5cf9ab4414010f69901c8f3e26509a9"
+    },
+    {
+      "path": "topogym/solvers/kinematics/knot_untying/control.py",
+      "sha256": "034a8b431f557b669d2407dd8ac9c45461c53461720a78b4238841b17017dab5"
+    },
+    {
+      "path": "topogym/solvers/kinematics/orbits/robot_retarget.py",
+      "sha256": "c2d83495de06450176a43c95a06eb1982d067486636987ccc89785a5bf988edf"
+    },
+    {
+      "path": "topogym/solvers/kinematics/orbits/workspace.py",
+      "sha256": "24516962f5a28ecf1999721737e6c1136a06a64a4495174b0e660f378b476bf1"
+    },
+    {
+      "path": "topogym/solvers/kinematics/rope_threading/feedback_ik_plan.py",
+      "sha256": "8382f9ca88833c431e9252be5c0caead48363f7ab0f1cd6cfc90b89f13b0480f"
+    },
+    {
+      "path": "topogym/solvers/kinematics/rope_threading/feedback_paths.py",
+      "sha256": "436fed4355df492b89663826d52c407b98b40beb38e4c94b2d6b4107d77b8a07"
+    },
+    {
+      "path": "topogym/solvers/kinematics/rope_threading/ik_plan.py",
+      "sha256": "2625f999010bcb2d2f636842e63fccdf81fea24a860d4dd51cef399302fe8e32"
+    },
+    {
+      "path": "topogym/solvers/kinematics/rope_threading/reference_ik.py",
+      "sha256": "3b87ec74a0ebebd422ab35819ced469b9c1c551ac01a96560538dba14c2b0b35"
+    },
+    {
+      "path": "topogym/solvers/validation/knot_untying/family_preflight.py",
+      "sha256": "a75fcc7aad3adb5eb99c05d2c755c0e1fda7b243429478483d42499f1c207109"
+    },
+    {
+      "path": "topogym/solvers/validation/rope_threading/reference_preflight.py",
+      "sha256": "2e47e5041d0bfd77e590bb129055455b590310c476dc9d336ddfaf9921e06fd0"
+    },
+    {
+      "path": "topogym/tasks/__init__.py",
+      "sha256": "35b47fc062d39261863a83c5decf6e0a8fba2484e244ef3c9d77ac451eabee9c"
+    },
+    {
+      "path": "topogym/tasks/blanket_flatten.py",
+      "sha256": "322a553d700a69447de3be5654991042e4f289c36d30402cae11cb3a5b980001"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d.py",
+      "sha256": "dc5e1ac95ff713f85b09a868fe9ab0e8f444768b15e3b025975362de19f8dc37"
+    },
+    {
+      "path": "topogym/tasks/cast_coil.py",
+      "sha256": "525dca20d9a854c27ed38ec94e85823521b2dce5e3cb0ee509d3e800b2695bc2"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole.py",
+      "sha256": "f723e01d097f6b54dbcf603ebb1a7f4b83f6cb002bec0d7df5b77fb6ae42de36"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling.py",
+      "sha256": "ffd3472514a243710b7b3ec79b94b22276c53c54d9de427b7160c56d1d485c4c"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage.py",
+      "sha256": "3d3c070a58192a6ede88b3d54addd1304798b6de5cfaddf2b9402e59aadb587c"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring.py",
+      "sha256": "73097a4b7116987382fafa5353eab640f0aec730acfc23302f2c145013df0e4a"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws.py",
+      "sha256": "e16ba14a56f2dbfe3ccb6d158fc12f2e9f0d0c053609140402026205a2656cd7"
+    },
+    {
+      "path": "topogym/tasks/knot_untying.py",
+      "sha256": "d31ba8347a84e4e2feddd5ac232b90b24c44d5290c55eb35aafec88d34ebefbb"
+    },
+    {
+      "path": "topogym/tasks/lock_picking.py",
+      "sha256": "4905e6a73f6517a811e9d49a4e3f01e9e0851e6daa40f6ecfc274783a729cbdc"
+    },
+    {
+      "path": "topogym/tasks/orbits.py",
+      "sha256": "3f5e4090b36affd8477fe4a0698797920cfb49bd1f4f82fa36b86c115cd56c8d"
+    },
+    {
+      "path": "topogym/tasks/rope_threading.py",
+      "sha256": "2aff513255944263b72ef01278038b6baeba0033d7c50dcecea09f5e5a29035c"
+    },
+    {
+      "path": "topogym/tasks/slotted_post_ring.py",
+      "sha256": "4f2ec8972e4c2e0a74f4189c1c1ae83caece84cf5eb4b29d8d82cf16fe60a59d"
+    },
+    {
+      "path": "topogym/utils/__init__.py",
+      "sha256": "3ca130c955c6400777648913a22a2490858accba5813a5befcb5837d8414e4d3"
+    },
+    {
+      "path": "topogym/utils/geometry/rigid_geometry.py",
+      "sha256": "e622a73237b27db9a0aba40f34ff2e29179a5135ab11d9bffb4ea5a1a514fdf1"
+    },
+    {
+      "path": "topogym/utils/geometry/rope_crossings.py",
+      "sha256": "414d47f1f58100b2adf41eddb95871a5e06ecf268715ca9b879f2589b2717204"
+    },
+    {
+      "path": "topogym/utils/io.py",
+      "sha256": "704af764df287b101eec8d208579520ba95e753d8faa13c035632037c062e32a"
+    },
+    {
+      "path": "topogym/utils/variant_rng.py",
+      "sha256": "1fdcad46e20b1527c52267a92b98b9ab4ec116398191b17baca7013b1951ff96"
+    },
+    {
+      "path": "topogym/world/__init__.py",
+      "sha256": "88ecf5733776d98d72187c0e8804b10fea1b5becf49b82b68c6da5a4bb11ba9f"
+    },
+    {
+      "path": "topogym/world/closed_band.py",
+      "sha256": "f4ebc2c6ed2d4bf4292edc06ae84a5ca4b9d9b1a71a33f21b96910038cb537c5"
+    },
+    {
+      "path": "topogym/world/genesis_ipc_vertex_constraints.py",
+      "sha256": "c86943f9a5d97d1a08ed121dfc119d452ea6abe0ff74c3fd09b51b8fe7e99297"
+    },
+    {
+      "path": "topogym/world/genesis_memory.py",
+      "sha256": "4afeac1a84e7b12b4da5499cc3736c2941e94aba99fce790b1bbb53087dedcac"
+    },
+    {
+      "path": "topogym/world/lab_layout.py",
+      "sha256": "3f8973db4810c4562a73d374ff28375a62157f949e8914f1e77521ad49d47734"
+    },
+    {
+      "path": "topogym/world/manifest.py",
+      "sha256": "204f2d0a4df63dc0269392a90ac30eb942bc6eee40cb5c81223381207f569bdb"
+    },
+    {
+      "path": "topogym/world/nyx_lab.py",
+      "sha256": "433f008f03bbbb1746033312cfffcaa075de602e1648e47828155ff350e82d5d"
+    },
+    {
+      "path": "topogym/world/physics/buzz_wire_3d/physics.py",
+      "sha256": "bc5f759b43b431be8f17670f1dacdffa19eda190a4a0e3166ec19139597aa05e"
+    },
+    {
+      "path": "topogym/world/physics/fiber_bundling/contact_precision.py",
+      "sha256": "f3678ea3fa5b4e182e6c7be6a0c240ae49078e8d08e6ebae3144de5640d89264"
+    },
+    {
+      "path": "topogym/world/physics/fiber_bundling/numerics.py",
+      "sha256": "4f668a6683f5a99ab249a045e519d156fc44c7a180390efc3e5ff125270189e2"
+    },
+    {
+      "path": "topogym/world/physics/knot_untying/ipc_compat.py",
+      "sha256": "00d03d473a84daa0eeb5fedaf533f3c6154a04e3f112c9e5eae569e8438393cd"
+    },
+    {
+      "path": "topogym/world/physics/knot_untying/runtime_memory.py",
+      "sha256": "c232a391680253f71f9ad9917c35378f6d982d01544cd0a0a0aa3ce101e02810"
+    },
+    {
+      "path": "topogym/world/physics/rope_threading/deformation_damping.py",
+      "sha256": "359a1cc404d67e83ed386195a2c94c9954d6ed7439b72f9c3c13ba853651a8d6"
+    },
+    {
+      "path": "topogym/world/physics/rope_threading/mesh_resolution.py",
+      "sha256": "71b940a38c011f3920fc8b68ca7dbdff088a3019bdd8871eb8082db2b7e47a68"
+    },
+    {
+      "path": "topogym/world/physics/rope_threading/runtime_memory.py",
+      "sha256": "e83f33659c995388d93389f8b6b4f8fe331bbbb1550b3e127eecbbe77a8ffbe0"
+    },
+    {
+      "path": "topogym/world/physics/rope_threading/table_contact.py",
+      "sha256": "d518cb302f7d9f07b77c36eb42194ba76214d00f6dd3e836ee46b836d0b3e605"
+    },
+    {
+      "path": "topogym/world/rope.py",
+      "sha256": "b5893362268754bb465165b56e755df8afdab59b34c72412b5ffe0766d0c1694"
+    },
+    {
+      "path": "topogym/world/rope_backends/__init__.py",
+      "sha256": "675cb7d19323f4acf483121ba56345ab6f56c2d0a4a51946a6bdd432247e3eb8"
+    },
+    {
+      "path": "topogym/world/rope_backends/fem_ipc.py",
+      "sha256": "ac675857738dde0af4ef5ef95202509790a7aa7dab63fa059dcf8c408f6ed114"
+    },
+    {
+      "path": "topogym/world/rope_backends/pbd.py",
+      "sha256": "0f69c1052667d51bce83138810fe46a54d16adcbacbf384e2f2f58764ed235f5"
+    },
+    {
+      "path": "topogym/world/scenes/buzz_wire_3d/agent_scene.py",
+      "sha256": "4cbb8fb3c86204a672d52b54e60d3d05134326a4ea419366c7491ecac598d80e"
+    },
+    {
+      "path": "topogym/world/signatures.py",
+      "sha256": "e6252b9229bcee10cc5f90f532680efea6b752189c0d24fdc70dd50ee3900b86"
+    },
+    {
+      "path": "topogym/world/tabletop.py",
+      "sha256": "476a5530efab87cc2ba75d0e57d30e77377a83c3c06f873888dbf1abcf25fc75"
+    }
+  ],
+  "verification": {
+    "all_input_file_hashes_unchanged": true,
+    "file_entries_covered": 501,
+    "ast_declarations_covered": 3326,
+    "local_links_checked": 623,
+    "missing_links": 0,
+    "runtime_tests": "not run; static naming audit only"
+  }
+}

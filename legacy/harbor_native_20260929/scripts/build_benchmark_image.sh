@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+image_tag="${1:-topogym-simulator:20260929}"
+docker build --file "$project_root/docker/Dockerfile.simulator" --tag "$image_tag" "$project_root"
+docker image inspect --format '{{.Id}}' "$image_tag"

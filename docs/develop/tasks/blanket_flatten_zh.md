@@ -1,10 +1,44 @@
 # 杂乱被子展平（blanket_flatten）
 
+**2026-09-29 三档场景布设（seed=0 已验收）：** easy / medium / hard 已统一为相同八面板纵向聚褶，目标扭转角分别为 **0° / 135° / 270°**，实现见 [gathered.py](../../../topogym/tasks/blanket_flatten/gathered.py)。布料尺寸 0.60 × 0.48 m、粒径 8 mm、网格 12 mm、褶角 72°、轴向比例 0.92、中心 XY=(-0.1356786, 0.15) m，材质和桌面摩擦共用。难度标签仍是设计目标，不能从目标角度推导实际解题难度。旧五折保留为 `simple_folds` / `five_folds`，旧折卷保留为 `fold_roll`；历史视频与物理身份不改。
+
+按本轮用户要求先补布设、暂缓粒子运动问题，新三档采用显式 `scene_layout` 初态范围：仍从平坦材料出生建立真实绑定，使用现有速度控制物理聚褶、扭转、放桌和撤控，保存包含实际速度的完整数值状态。材料完整性、视觉完整性、桌内位置、落桌高度、非局部粒子间隙及非展平形状必须通过；仅静稳速度／漂移资格待验。`qualification.passed=false` 的场景包不会被默认 `released_stable` 接口接受，任务终态也不放宽。准备过程不是机器人解法。**0°/135°/270° 是受控构形目标，释放后会松弛，不能作为最终保存形态的实测扭转角；实际形态以三档初始画面和粒子状态为准。**
+
+固定代表用 `configs/task_variants/blanket_flatten/{easy,medium,hard}_scene.json`，标准入口为 `topogym.make("blanket_flatten", variation_id="easy", seed=0)`（另两档替换 variation_id）。正式 reset 导入初态后从 tick 0 开始，不执行准备步，也不清零布料速度。未准备的 seed 明确要求生成对应状态包，不能静默改 seed 或借用 seed=0。状态严格绑定 CUDA、float64、2.5 ms、4 子步、ALOHA 和源码／资产身份；变更物理配置需要重新准备。
+
+复现时在仓库根目录执行，输出目录必须不存在，建议固定数值库线程数：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+PYTHONPATH=. TOPOGYM_ASSET_ROOT="$PWD/assets" PYOPENGL_PLATFORM=egl \
+.venv-gs121-nyx/bin/python scripts/prepare_blanket_initial_states.py \
+  --tier easy --seed 0 --acceptance scene_layout --output <新候选目录>
+
+PYTHONPATH=. .venv-gs121-nyx/bin/python scripts/install_blanket_initial_state.py \
+  --candidate <候选目录>
+
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=. \
+.venv-gs121-nyx/bin/python scripts/test_blanket_initialization.py \
+  --candidate <候选目录> --checks scene-layout --output <新验收目录>
+```
+
+默认准备仍要求完整 `released_stable` 资格；`scene_layout` 是本轮显式选择。新状态包不能覆盖已冻结同版本／档位／seed。三档 CUDA/Nyx 的零推进恢复、动作／回溯检查各 1 passed，相关回归 46 passed。初态覆盖率依次为 64.13% / 48.09% / 27.77%。RGB 重复 reset 仍有像素差异，未声明逐像素一致；粒子位置／速度精确恢复。运行证据集中在 [三档布设验收](../../../runs/test_results/blanket_three_tiers_20260929_01/README.md)，下述 2026-09-26 及更早进展为历史记录。
+
+**2026-09-26 当前框架进展：** 已实现平坦出生绑定、离线准备与冻结初态导入。单折工程候选通过撤控稳定性检查，完整恢复和录像见[验收证据](../../../runs/test_results/blanket_initialization_20260926_01/README.md)及[工程计划实施记录](blanket_frozen_initialization_plan_20260926_zh.md#8-本轮实现与真实证据)。八面板聚褶仍有局部接触抖动，默认 easy/medium/hard 尚未切换。下文旧场景、命令、静置门槛和 Rasterizer 录像属于历史实现，不能当作当前标准 Env 的行为或本轮通过结果。
+
 目标是让机械臂把刚掀起、落桌后杂乱堆叠的被子展开并整理平整。初始化先构造悬空复杂布面，确保材料与视觉绑定可靠，再完全释放给重力落桌。基础版直接以层间分离的布面出生；交叉折叠与整团扭转版先在展开状态建立绑定，再受控构造叠层。**机械臂任务从落桌静置验收之后开始。**
 
 当前实现包括新任务参数卡、独立几何与场景、实际绑定审计、三视角重力过程录制、初态验收、机器人抓角展开控制器和释放后展平判据。完整成功执行以实际运行报告为准，初始化预览仍让机器人停在初始姿态。当前材料是 PBD 单层布面近似，尚不模拟有填充物被芯的体积与压缩特性。
 
 **已归档的基础初态完整演示：**[全景 MP4](../../../demos/blanket_flatten/varaition_simple_folds/agentview/2026-09-18_single_arm_clear_home_v1_agentview.mp4) · [斜侧 MP4](../../../demos/blanket_flatten/varaition_simple_folds/front_oblique/2026-09-18_single_arm_clear_home_v1_front_oblique.mp4) · [腕部 MP4](../../../demos/blanket_flatten/varaition_simple_folds/wrist/2026-09-18_single_arm_clear_home_v1_wrist.mp4)。包含悬空出生、重力落桌、机器人辅助抓角展开、释放与撤手静置；这份成功记录使用较简单初态，不代表下述复杂麻花版已完成展平。配套证据保存在 `runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/`，原 `runs/demos/blanket_flatten/` 副本保留备份。
+
+**复杂麻花初态的无机械臂展平已通过：**`gathered_virtual_hands_v9` 用最多两个理想抓区完成解扭、展开、铺放与松手静置，末态覆盖率约 100%。详见文末「无机械臂双抓点」的物理证据与三视角视频；这不增加机器人成功实例数。
+
+**七次抓放后的后续整理也已通过：**`gathered_two_hand_relay_v2` 用两个局部角点抓区悬垂展开、重新铺放，覆盖率从 75.70% 提高到 99.988%，松手后自由静置 10 s。可直接看[斜侧视频](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/detail.mp4)；下文「七次抓放后的继续整理」列出三路视频与验证范围。这是从保存形状开始的新无臂物理运行。
+
+**此前 ALOHA 视频只是七次抓放后的局部整理试验，尚未展平。** `aloha_refinement_v4` 已实际执行双臂接近、夹取、掀层、空中平移、释放和失败后的静置，公共 `topogym.recording.prepare/session` 在线录制四路。当前瓶颈是第二个角仍被覆盖，见下文「ALOHA 双臂与公共录制」。可先看[全景视频](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/cam_high.mp4)。
+
+**从指定原始麻花落桌状态开始的 ALOHA 两轮尝试也已完成录制，但都未跑通。** 两轮均从默认 neutral pose 连续接近，公共 record 保存四路。第二轮把整张布抬离桌面后仍触发解扭拉伸保护，尚未进入解折层、铺平和最终静置；当前推荐看[第二轮全景](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2/recording/videos/cam_high.mp4)，细节见「从原始拧转落桌状态开始的 ALOHA 尝试」。这些失败录像不放入正式 `demos/`。
 
 **新增低高度折叠与卷转初态：**[两档三视角对比播放页](../../../runs/environment_bootstrap/blanket_flatten/fold_roll_comparison_v2/index.html)。包含 3 次交替折叠后接 278° / 382° 连续卷曲，最低点离桌 2.5 / 2 cm。两档已通过初态与额外 10 s 静置复核；尚未在这两种新初态上验证机器人完整展平，不能计为新的完整机器人 demo。
 
@@ -58,15 +92,15 @@ uv pip install --python .venv-gs121-nyx/bin/python -r requirements/uv-topogym-bl
 
 PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.blanket_flatten
 
-# 只检查物理，不渲染或放置机器人
+# 只检查物理，不录制或放置机器人
 PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.preview \
-  run.render=false run.record_video=false run.include_robot=false \
+  run.render=false run.include_robot=false \
   task.geometry.seed=1 run.output=runs/environment_bootstrap/blanket_flatten/seed_1_probe
 
 .venv-gs121-nyx/bin/python -m unittest tests.check_blanket_flatten tests.check_configs_compose -v
 ```
 
-默认产物在 [`runs/environment_bootstrap/blanket_flatten/seed_0_soft_drop/`](../../../runs/environment_bootstrap/blanket_flatten/seed_0_soft_drop/index.html)：`birth_*` / `settled_*` 静帧、三路同步 `drop_*.mp4`、`report.json`、解析配置、带材料坐标及绑定表的 `particle_trace.npz`、出生 OBJ 和材质。预览采用 Genesis rasterizer，直接检查 PBD 的原生 visual 网格，并复用实验室内部点光源照亮褶皱。`task.vis_mode=particle` 可生成粒子诊断版本，使用单独输出目录保留对照。
+默认产物在 `runs/environment_bootstrap/blanket_flatten/seed_0_soft_drop/`：`report.json`、解析配置、带材料坐标及绑定表的 `particle_trace.npz`、出生 OBJ 和材质，以及由共享录制模块 `topogym.recording` 在 `recording/` 下生成的 `agentview / front_oblique / wrist` 三路同步视频、逐步状态、事件（`birth`、`initial_state_accepted/rejected`）和验证抽样图。落桌是真实物理步进，录制走 `lab_default_v1` 实验室预设，`task_result.execution_kind=gravity_settle_preview`，不计为机器人任务。预览采用 Genesis rasterizer，直接检查 PBD 的原生 visual 网格，并复用实验室内部点光源照亮褶皱。`task.vis_mode=particle` 可生成粒子诊断版本，使用单独输出目录保留对照。
 
 这些是初始化过程视频，不是完整机器人 demo，不归入正式机器人视频档案。新版本请指定新的 `run.output`，以保留已有检查结果。
 
@@ -91,10 +125,10 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatte
 .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.robot_demo \
   task.geometry.seed=1 run.output=runs/environment_bootstrap/blanket_flatten/robot_example
 
-# 从该次物理状态生成三路同步视频。失败运行须显式传 --allow-failed，仅供诊断。
-.venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.render_execution \
-  runs/environment_bootstrap/blanket_flatten/robot_example \
-  --camera-overrides configs/camera_configs/blanket_flatten_recording.yaml
+# 冻结该次物理状态为共享回放来源，并经公共 replay 生成三路同步视频（输出 <run>/render，来源在 <run>/render_source）。
+# 失败运行须显式传 --allow-failed，仅供诊断。
+.venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.recording_adapter \
+  runs/environment_bootstrap/blanket_flatten/robot_example
 
 # 仅当完整执行、独立静置和全部视频通过后才可正式收录。
 .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.archive \
@@ -102,7 +136,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatte
   --stability runs/environment_bootstrap/blanket_flatten/stability_example --run-id single_arm_v1
 ```
 
-物理运行保存解析配置、源码快照、逐步报告和 `physical_trace.npz`。三路 `agentview / front_oblique / wrist` 逐帧回放**同一次真实物理执行**的完整关节与粒子状态，不重建夹爪被动关节；渲染阶段不推进仿真，检查状态误差 ≤1 µm 并记录来源 SHA-256。相机覆盖文件仅调整画面，解析后的机位单独保存为 `render_config.yaml`，不改写物理来源配置。这是已有物理执行的呈现，不代表又完成了一次动力学运行。
+物理运行保存解析配置、源码快照、逐步报告和 `physical_trace.npz`。`recording_adapter.snapshot` 把粒子、全部关节状态和验收报告冻结成带 SHA-256 的 `source_manifest.json`，`BlanketBinding.restore` 逐帧恢复并返回重建误差，公共 `replay(restore_tolerance=1e-6)` 负责取帧、编码与验证，`replay_report.json` 记录零积分与恢复误差；机械臂 0–7 连杆与布面的净空在恢复时按每秒和阶段切换抽样，写入 `robot_motion_review.json`。三路 `agentview / front_oblique / wrist` 来自 `lab_franka_v1` 预设，[`blanket_flatten_recording.yaml`](../../../configs/camera_configs/blanket_flatten_recording.yaml) 只抬高斜视机位；不重建夹爪被动关节，不改写物理来源配置。这是已有物理执行的呈现，不代表又完成了一次动力学运行。
 
 正式归档入口会拒绝失败、未松手、动作缺帧、粒子瞬移、少于三路相机或静置不足的记录，并完整解码视频、校验帧数/时长与副本哈希。视频独立复制到 `demos/blanket_flatten/varaition_<id>/<camera>/`，报告和 Markdown 记录复制到 `runs/demo_metadata/blanket_flatten/`；不新建或更新 HTML。未通过的尝试留在原始运行目录，不能计为完整 demo。
 
@@ -206,10 +240,9 @@ RTX 4090 / Genesis 1.2.1，机器人在场但未操纵。三路视频来自同�
   --config-name blanket_flatten_fold_spiral \
   run.output=runs/environment_bootstrap/blanket_flatten/spiral_example
 
-# --initialization 明确使用初态资格检查与全景/近景/俯视相机。
-PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.render_execution \
-  runs/environment_bootstrap/blanket_flatten/spiral_example --initialization \
-  --camera-overrides configs/camera_configs/blanket_flatten_initialization.yaml
+# 来源 report.mode=stability 时自动使用初态资格检查；视角固定为共享三路。
+PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.recording_adapter \
+  runs/environment_bootstrap/blanket_flatten/spiral_example
 ```
 
 三路初态视频使用同一次连续物理运行的真实粒子和全部关节轨迹，渲染不推进仿真；粒子和关节逐帧回读误差均为 0。每路为 249 帧、20 fps、12.45 s，包含出生帧展示周期。两档分别完整解码三路视频，核对帧数、时长及 SHA-256；播放页支持方案切换、同步播放、慢放、拖动和出生/静置末帧对照。这些产物保留在初态运行目录，不覆盖根目录 `demos/blanket_flatten/` 中已验证的旧版完整机器人 demo。几何、绑定、执行反例与配置解析共 **14 项检查通过**。
@@ -266,9 +299,8 @@ OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
   runs/environment_bootstrap/blanket_flatten/cross_twist_example
 
 PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python \
-  -m topogym.tasks.blanket_flatten.render_execution \
-  runs/environment_bootstrap/blanket_flatten/cross_twist_example --initialization \
-  --camera-overrides configs/camera_configs/blanket_flatten_preparation.yaml
+  -m topogym.tasks.blanket_flatten.recording_adapter \
+  runs/environment_bootstrap/blanket_flatten/cross_twist_example
 ```
 
 阶段播放页提供从头查看、跳到整团扭转后、从自由落桌开始，以及三视角同步和慢放；关键静帧对应斜折、两次纵折、横折、整团扭转及释放。失败记录只能通过 `--allow-failed` 明确标为诊断预览。
@@ -309,7 +341,7 @@ OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
 
 选定的是 `photo_gathered_twist_v1` 的落桌形状：[初态全景](../../../runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1/render/overview.mp4) · [初态侧视](../../../runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1/render/detail.mp4) · [初态俯视](../../../runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1/render/topdown.mp4)。它保留 8 个不等宽纵向面板和整束扭转，与此前已归档的简单初态完整 demo 不同。
 
-**独立物理稳定性复核通过；复杂初态的完整展平目前尚未通过。** `gathered_selected_stability_v1` 在 2.4 s 初态验收后自由静置 10.0 s，稳定窗口最大位移 0.1431 mm；全程最大材料 / 视觉边长比为 1.09435 / 1.01251，没有桌外粒子或非有限位置。125 个保存帧的三角面自交检查未检出相交。末态覆盖率 19.3335%，最高点 53.881 mm。见[稳定性报告](../../../runs/environment_bootstrap/blanket_flatten/gathered_selected_stability_v1/report.json)和[逐帧自交检查](../../../runs/environment_bootstrap/blanket_flatten/gathered_selected_stability_v1/self_intersection_review.json)。离散帧检查不是连续碰撞证明。
+**独立物理稳定性复核通过；复杂初态的完整机器人展平尚未通过。下节双抓点外力版已完成展平。** `gathered_selected_stability_v1` 在 2.4 s 初态验收后自由静置 10.0 s，稳定窗口最大位移 0.1431 mm；全程最大材料 / 视觉边长比为 1.09435 / 1.01251，没有桌外粒子或非有限位置。125 个保存帧的三角面自交检查未检出相交。末态覆盖率 19.3335%，最高点 53.881 mm。见[稳定性报告](../../../runs/environment_bootstrap/blanket_flatten/gathered_selected_stability_v1/report.json)和[逐帧自交检查](../../../runs/environment_bootstrap/blanket_flatten/gathered_selected_stability_v1/self_intersection_review.json)。离散帧检查不是连续碰撞证明。
 
 现在可看的较长动作诊断为 `gathered_robot_v8`：[全景](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/agentview.mp4) · [斜侧](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/front_oblique.mp4) · [腕部](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/wrist.mp4)。三路各 1742 帧、10 fps、174.2 s，均已完整解码、核对同步和 SHA-256。它连续记录七次抓放，包括两次拉伸保护释放，覆盖率达到 75.7%，仍有被覆盖的角；第八次接近时因重复选回已展开的角而主动结束，**属于未完成诊断，不计为成功 demo**。3510 个保存帧未检出布面自交；臂部 link0–7 的离散复核最小净空 81.71 mm。详情见[执行报告](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/report.json)、[臂部复核](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/robot_motion_review.json)及[视频核验](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/render/video_verification.json)。
 
@@ -323,6 +355,119 @@ OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
 
 v10 的三路采样诊断也已完成：[全景](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/agentview.mp4) · [斜侧](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/front_oblique.mp4) · [腕部](../../../runs/environment_bootstrap/blanket_flatten/gathered_robot_v10/render/wrist.mp4)。每路 359 帧、2 fps、179.5 s，覆盖动作前一秒至停止时刻，完整解码、同步及哈希核验通过；粒子和关节回读误差为 0，臂部离散复核最小净空 124.80 mm。它是失败诊断，低帧率也不适合判断快速瞬间的接触细节；原始 20 fps 状态轨迹仍完整保留。
 
-本次已完成所选初态的独立稳定性验证，并保留实际动作诊断；**仍未生成成功的复杂初态完整展平 demo**。后续需要单独解决解扭、覆盖层打开与释放前拉伸控制。相关自动检查共 34 项测试、142 个子检查通过，不能替代实际任务成功。
+上述机器人试验已完成所选初态的独立稳定性验证，并保留实际动作诊断；**仍未生成成功的复杂初态完整机器人展平 demo**。相关自动检查共 34 项测试、142 个子检查通过，不能替代实际任务成功。
 
-各版视频分别由同一次实测粒子及全部关节状态重渲染，渲染不推进物理。源轨迹 20 fps，v8 / v9 视频规则采样为 10 fps，v10 为 2 fps，均保留末帧并覆盖整段执行时间。归档要求完整动作通过、松手后的终态稳定、独立初态稳定性一致、逐帧自交检查完整、臂部复核通过、画面复核通过，以及三视角解码与同步通过。成功视频只写入 `demos/blanket_flatten/{agentview,front_oblique,wrist}/`，其他证据写入 `runs/demo_metadata/blanket_flatten/`；本次未覆盖既有简单初态的成功副本。
+各版视频分别由同一次实测粒子及全部关节状态重渲染，渲染不推进物理。源轨迹 20 fps，v8 / v9 视频规则采样为 10 fps，v10 为 2 fps，均保留末帧并覆盖整段执行时间。归档要求完整动作通过、松手后的终态稳定、独立初态稳定性一致、逐帧自交检查完整、臂部复核通过、画面复核通过，以及三视角解码与同步通过。成功视频写入 `demos/blanket_flatten/varaition_<id>/<camera>/`，其他证据写入 `runs/demo_metadata/blanket_flatten/`；本次未覆盖既有简单初态的成功副本。
+
+## 从原始拧转落桌状态开始的 ALOHA 尝试
+
+`blanket_flatten_aloha_full` / `bimanual_full.py` 单独接入完整流程尝试，起点固定为 `photo_gathered_twist_v1/physical_trace.npz` 第 234 帧，并核对源 SHA-256。仅在初始化时把原始布形平移到 ALOHA 两臂之间；材料、拓扑、视觉绑定和高度不变，布速归零，之后由物理与实际关节伺服推进。它不是旧 `gathered_robot_v8` 局部整理录像的延长或拼接。
+
+机器人采用上游 ALOHA neutral pose，公共 `recording.prepare(preset="lab_default_v1")` / `session` 连续记录默认姿态、接近及后续动作，保留 `cam_high / cam_low / cam_left_wrist / cam_right_wrist`。阶段规划是两端局部抓取、抬升解扭、释放重抓、逐层展开、铺放、全部松手后 10 s 静置。每次抓取仍使用双侧指垫距离门控的局部 link 附着，不能称为纯摩擦夹持。
+
+初始 CPU 检查找到一组可达解：布中心平移到 `[-0.1356786, 0.20]`，长轴沿世界 X；沿长轴方向接近两端最高的可见局部布片，抬高 20 cm，两端计划转角约 +197° / −135°。两端共同增加 30°，保留相对解扭量并避开右腕限位。默认姿态到解扭末端共 1303 个采样状态通过 IK、关节限位和机器人碰撞检查；接近阶段非手指与初始布面的离散最小净空约 72 mm。这只验证运动学，不能证明局部抓点足以带动整束布解扭。
+
+第一轮 `aloha_full_twist_v1` 连续执行 **36.865 s**，完成默认姿态接近、两端局部抓取、20 cm 抬升及大部分反向转腕，未进入解折层阶段。36.595 s 时材料边长比升至 1.268814，触发 1.25 的释放保护；随后自由下落在 36.865 s 达到 1.302076，超过原有 1.30 完整性上限，停止。不能称为物理稳定或完整任务成功。
+
+[全景 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v1/recording/videos/cam_high.mp4) · [低位 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v1/recording/videos/cam_low.mp4) · [左腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v1/recording/videos/cam_left_wrist.mp4) · [右腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v1/recording/videos/cam_right_wrist.mp4)。四路均为 640×360、5 fps、185 帧、37.0 s，公共校验通过完整解码与同步。186 个保存布网格未检出三角面自交，非手指机器人/布面离散最小净空 69.879 mm；这些检查不能抵消材料拉伸超限。
+
+低位图像和轨迹确认，抬升后仍有布层处于桌面接触高度。22.4–36.4 s 内，实际左右腕绕长轴分别转约 +169.1° / −115.6°，整个端部截面的拟合转角只变化约 8.4° / 9.3°。当前抓到的是表面局部布片，不能把理想双手的整条、多层端带约束等同于实际夹爪；截面拟合只是形状统计，不是精确扭转量。证据见同目录 `untwist_diagnostic.json`。
+
+第二轮 `aloha_full_twist_v2` 连续执行 **34.655 s**，仍从相同原始布形及默认 home 开始，抬升改为 36 cm。27.875 s 时整张布的最低点离桌 **76.80 mm**，通过至少 15 mm 的离桌门槛；根据实测悬空形状重规划为约 **+183.39° / −88.49°**，绕实际局部夹点反向转腕。这次在 34.26 s 达到边长比 1.250215 并释放；下落又在 34.655 s 达到 1.301460，停止。仍未进入解折层、铺平与最终自由静置，不能标为稳定或成功。末帧覆盖率 16.88%，布料仍在下落，不是稳定末态。
+
+[第二轮全景 MP4（推荐）](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2/recording/videos/cam_high.mp4) · [低位 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2/recording/videos/cam_low.mp4) · [左腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2/recording/videos/cam_left_wrist.mp4) · [右腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2/recording/videos/cam_right_wrist.mp4)。四路均为 640×360、5 fps、174 帧、34.8 s，解码和同步检查通过。高举阶段低位镜头会裁到夹爪，`visual_review.json` 如实标记该取景限制；全景可看到完整布面。
+
+第二轮 175 个保存网格未检出自交，非手指机器人/布面离散最小净空 70.396 mm，最高已完成段的 TCP 误差 0.286 mm。独立 `initial_identity_review.json` 核对原始布形第 234 帧、刚性平移、默认关节姿态和视频第 0 步，粒子首帧坐标误差仅 1.48e-8 m，关节误差为零。实际腕部转角与整个端部截面拟合角仍明显不同，说明两处表面局部抓持不能直接等同于此前理想双手的整条多层端带抓持。该结果只否定当前抓法与动作策略，没有证明 ALOHA 硬件无法完成任务。
+
+实现已经接入后续逐层抓取、展开、铺放和 10 s 最终静置，但这两轮都没有走到这些阶段，尚无本初态的实际验证。松手后的关节伺服撤手已加入并通过模型预检，同样没有在本轮执行到。下一步需要改变多层布束的抓取/分段换抓策略。45 项相关自动检查通过；失败录像、完整轨迹及检查证据均留在各自 `runs` 目录。
+
+复现时必须指定新目录：
+
+```bash
+PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.bimanual_full \
+  --config-name blanket_flatten_aloha_full_high_lift \
+  run.output=runs/environment_bootstrap/blanket_flatten/aloha_full_twist_new
+```
+
+## ALOHA 双臂与公共录制
+
+入口为 [`bimanual.py`](../../../topogym/tasks/blanket_flatten/bimanual.py) 与 [`blanket_flatten_aloha_refine.yaml`](../../../configs/blanket_flatten_aloha_refine.yaml)。本次从 `gathered_robot_v8` 七次抓放后的保存形状开始新仿真，布初速度为零；初始摆位在桌面内整体转 **90°**，参考中心从 `[-0.10, 0]` 移到 `[-0.1356786, 0.10]`，变换矩阵写入报告。出生网格、粒子材料身份和视觉支撑保持原样，只在首次物理步前恢复一次转向后的布形。机器人从配置中已检查的桌面上方 **12 cm** 开爪待机姿态开始。这不是旧单臂运行的动力学续接，也不代表原始麻花初态的完整机器人流程。
+
+左右臂先同时提交关节目标，再推进共同物理步。每段运动先检查采样 IK、限位和模型碰撞，执行后核对实际末端误差。抓取点使用材料坐标候选和实测遮挡检查；夹爪必须接近、闭合，两侧指面距离和局部材料范围通过后，才将小块布绑定到**实际夹爪连杆**。运行中不写机器人关节位置或布粒子位置，不修改材料静长。PBD 的机器人软体接触力耦合仍关闭，因此这是**局部绑定辅助抓持**，不是纯摩擦夹持或视觉策略验证。
+
+`aloha_refinement_v4` 的 **19.55 s / 3910 步**连续试验完成：右臂夹住外露角附近 10 个粒子，左臂夹住覆盖层附近 28 个粒子；左臂抬起约 7 cm，保持高度向内继续平移约 3.5 cm，松开覆盖层，再检查目标角。目标角的顶部遮挡由 **9.63 mm** 变成 **27.51 mm**，仍不能按当前从上向下接近的策略夹取；17.55 s 时结束换抓尝试，释放剩余抓持并自由仿真 **2 s**。最终覆盖率 **74.206%**，低于初始约 **75.71%**，最高点 **27.919 mm**，没有达到平整目标，也未进入后续悬垂展开和反馈铺放阶段。配置中的后续动作实现尚未通过机器人完整执行验证。
+
+本轮全程最大材料 / 视觉边长比分别为 **1.151315 / 1.018848**，没有非有限位置、桌外粒子或穿桌；99 个保存粒子网格未检出自交。已完成运动段的最大末端位置误差 **0.756 mm**，最大姿态误差 **0.110°**；782 次实测关节姿态的模型碰撞检查未触发停止，模型测得非基座几何离桌最小 **2.663 mm**。这些都是该次诊断的离散检查，不构成连续碰撞证明或完整物理资格。见[物理报告](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/report.json)、[自交复核](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/self_intersection_review.json)和[双臂运动复核](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/bimanual_motion_review.json)。
+
+前置试验均保留：v1 因改变出生参考位置导致支撑索引不一致，在执行前被拒绝；v2 在闭合时检测到两指约 0.334 mm 穿入，随后按原模型指面几何将本任务的闭合导轨位置改为 **0.0105 m**，没有放宽碰撞门槛；v3 成功双臂抓取和掀层，但主动回落覆盖层时在材料边长比 **1.265618** 触发释放。v4 改为空中移开后释放，避免了该次拉伸停止，仍未解决被覆盖角的换抓。
+
+视频目录是 `runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/`：
+
+- [高位全景 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/cam_high.mp4)
+- [低位侧视 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/cam_low.mp4)
+- [左腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/cam_left_wrist.mp4)
+- [右腕 MP4](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/videos/cam_right_wrist.mp4)
+
+四路均为 **640×360、5 fps、98 帧、19.6 s**，来自同一次在线执行，通过公共模块的完整解码、同步、时间映射和哈希核验。共享实验室和桌面兼容，保留该 PBD 任务原有光栅渲染器；使用公共 `prepare/session`，没有任务私有视频 writer。阶段事件和全部机器人关节状态在公共录制目录，布粒子状态另存 `physical_trace.npz`。默认 binding 明确保留 `render_state_complete=false`、`physics_resume_supported=false`，不冒充通用软体离线恢复。见[录制验收](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/validation.json)和[画面复核](../../../runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4/recording/visual_review.json)。本次没有进入正式 `demos/`，已有简单版不变。
+
+相关控制、初态恢复、双臂配置和公共录制检查共 **40 项通过**。用新目录重试：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYOPENGL_PLATFORM=egl \
+  .venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.bimanual \
+  run.output=runs/environment_bootstrap/blanket_flatten/aloha_refinement_new
+```
+
+## 七次抓放后的继续整理（2026-09-21）
+
+**后续双角点整理已通过。** `gathered_two_hand_relay_v2` 从 `gathered_robot_v8` 七次抓放后的保存形状开始，用两个半径 **18 mm** 的局部角区完成悬垂展开、重新铺放与松手静置。全程 **37.02 s**，27.02 s 释放全部抓持，再自由静置 **10 s**；覆盖率从 **75.70% 提高到 99.988%**，高度 95 分位 **2.00 mm**，最高点 **5.963 mm**。全程最大材料 / 视觉边长比分别为 **1.20742 / 1.04006**，无非有限位置、桌外粒子或穿桌，视觉绑定的非局部支撑数为 0。372 个保存网格均未检出自交；最终稳定窗持续 8.52 s，最大位移 **3.303 mm**。这是一次固定形状的通过记录，离散自交复核不是连续碰撞证明。
+
+入口是 [`blanket_flatten_virtual_hands_relay.yaml`](../../../configs/blanket_flatten_virtual_hands_relay.yaml)。动作依次为：抓同一短边的两个角 → 提至约 65 cm 高，让整片布脱离桌面 → 配合抓区转向展开宽度 → 按自由下边缘的实测位置逐步铺回桌面 → 松手静置。全过程只有两个局部抓区，**没有整条边夹持或粒子位置动画**。抓区仍按材料坐标直接选择，未验证手指接近、夹取或机器人可达；这验证了理想双手操作下的后续可展平性，不能计为完整机器人成功。见[物理报告](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/report.json)、[外力复核](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/external_review.json)及[逐帧自交检查](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/self_intersection_review.json)。
+
+视频目录：`runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/`。三视角：[全景 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/overview.mp4) · [斜侧 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/detail.mp4) · [俯视 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/topdown.mp4)。每路 **187 帧 / 5 fps / 37.4 s**，覆盖同一次后续整理的全部物理记录，完整解码、同步与哈希核验通过，粒子回读误差为 0，初态、悬垂、铺放、松手和三视角终态画面复核通过。见[视频核验](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/video_verification.json)及[画面复核](../../../runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2/render/visual_review.json)。本次从旧记录第 3509 帧形状、零初速度开始，**不是旧七次抓放的动力学续接，也未拼接旧视频**。它保留在开发运行目录，没有替换正式机器人 demo。
+
+七次抓放只完成粗展开，不能作为平整终态。新增试验配置 [`blanket_flatten_gathered_refine_robot.yaml`](../../../configs/blanket_flatten_gathered_refine_robot.yaml) 在七次粗拉之后继续根据布形选点，最多允许 32 次动作；已放好的角不再反复优先选取。后续目标收紧为覆盖率至少 **98%**、高度 95 分位不超过 **6 mm**、最高点不超过 **12 mm**，最后释放全部抓区、自由静置 **10 s**。材料、重力、1.20 拉伸保护释放和 1.30 硬失败门槛不变。这仍是试验策略，未取得完整机器人成功记录。
+
+`gathered_refinement_probe_v1` 从 `gathered_robot_v8` 七次抓放后的末帧形状重新开始：第一次追加布边整理将覆盖率从 **75.71% 提高到 88.99%**，最高点降至 **15.16 mm**，但仍有两个角被覆盖；第二次抬拉内部褶皱没有继续改善。1145 个保存网格未检出自交。`probe_v2` 改抓附近边带后仍约 88.5%，两个角未露出；704 个保存网格未检出自交。`probe_v3` 试着把覆盖层向内掀起 8 cm，回落时在材料边长比 **1.20084** 触发保护释放，覆盖率降至 **82.44%**，两个角仍未露出；536 个保存网格未检出自交。不能把这些局部试验记为成功展平。
+
+上述单臂局部试验恢复的是粒子形状和零初速度，机械臂另从 home 开始，**不是旧七次抓放轨迹的动力学续接**，也没有与旧视频拼接。运行报告标记 `execution_scope=refinement_diagnostic`，即使局部平整条件通过，也不能自动成为复杂麻花初态的完整机器人 demo。
+
+[`blanket_flatten_virtual_hands_refine.yaml`](../../../configs/blanket_flatten_virtual_hands_refine.yaml) 保留双抓区局部掀层试验：一手抬住覆盖层，再抓住反折角展开。`gathered_two_hand_refinement_v1` 因翻转方向导致材料边长比 1.30040 而停止；修正方向后的 v2 在持续悬空张力下回落超时；v3 改为边展开边落桌后完成第一处折角，但第二处在边长比 1.30146 时被拒绝。它们均未通过，最终采用上面的整片悬垂、反馈铺放流程。相关自动检查共 **50 项测试、153 个子检查通过**。
+
+## 无机械臂双抓点：先解扭，再展开折层（2026-09-21）
+
+**`gathered_virtual_hands_v9` 已完成选定复杂初态的双抓点外力展平。** 同一次连续物理运行共 54.38 s，44.38 s 时释放全部抓区，再自由静置 10 s。最终覆盖率从 19.33% 提升至约 100%，最高点与 95 分位高度均为 2.00 mm；最大材料 / 视觉边长比均收敛至约 1.000。全程最大材料边长比 1.25657，低于原有 1.30 硬门槛；最大视觉边长比 1.05533，未出现非有限位置、桌外粒子或穿桌。稳定窗持续 9.38 s，窗内最大位移 6.526 mm，小于 8 mm 门槛。545 个保存网格均未检出三角面自交。见[物理报告](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/report.json)、[外力资格复核](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/external_review.json)及[逐帧自交检查](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/self_intersection_review.json)。这是该实例的一次通过记录，尚未完成重复执行、半步长或随机初态的资格验证；离散自交检查不构成连续碰撞保证。
+
+视频目录：`runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/`。三视角：[全景 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/overview.mp4) · [斜侧 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/detail.mp4) · [俯视 MP4](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/topdown.mp4)。每路 273 帧、5 fps、54.6 s，完整解码、同组同步、源文件和视频 SHA-256 核验均通过，粒子状态回读误差为 0。已复核初态、解扭、悬垂展开、释放和三视角终态关键帧，未见撕裂或绑定错位；松手后抓区标记消失。见[视频核验](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/video_verification.json)和[关键帧画面复核](../../../runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/render/visual_review.json)。这些是外力操作视频，未替换正式机器人 demo。
+
+入口为 [`virtual_hands.py`](../../../topogym/tasks/blanket_flatten/virtual_hands.py) 与 [`blanket_flatten_virtual_hands.yaml`](../../../configs/blanket_flatten_virtual_hands.yaml)。沿用选定的 `photo_gathered_twist_v1` 落桌形状，首次步进前恢复一次位置并设零速度。开始后仅给抓区施加受限速度，未再次写入布粒子位置；重力、PBD 材料、静长、拓扑及视觉绑定均保持原样。
+
+任意时刻最多两个抓区。首先夹持两端各 15 mm 的材料带，包含折叠后多个层；随后换成同一短边上两个半径 18 mm 的局部角区。抓区是外部驱动的固定粒子约束，按材料坐标直接选择，换抓没有模拟手指接近和接触。这验证理想双手操作下的可展开性，**不能计为机器人或纯摩擦抓持成功**。
+
+动作顺序为：
+
+1. 抬高两端约 30 cm，两端分别反向旋转约 168° / 166°，先消除整束扭转。
+2. 保持两端支撑将长条转为竖直，再松开下端，避免直接释放水平布束造成下坠冲击。
+3. 在空中换抓上边两个角；一边纠正角区朝向，一边向两侧展开折层。
+4. 将展开的布移到铺放区域，依据自由下边缘的实测位置调整落桌轨迹，避免固定轨迹在布边滑动后重新堆出褶皱。
+5. 松开所有抓区，继续自由仿真 10 s，按原有覆盖率、高度、材料完整性和稳定窗口验收。
+
+物理状态以 10 fps 保存。三视角由同一次状态记录重渲染，渲染不推进物理；橙色、绿色箭头仅标示两个抓区。外力结果单独写入 `external_review.json`，始终保留 `full_robot_task_verified=false`；逐帧自交检查、MP4 完整解码和同步检查与动作验收分别记录。
+
+对照试验解释了本版动作顺序：水平布束直接松开一端会产生下坠冲击；固定角区朝向单独外拉，或先原地转角再外拉，都会使局部边过度拉伸。v8 将转向和外拉同步后已能悬垂展开，但固定铺放轨迹因下边缘滑动而重新堆出褶皱，在材料边长比 1.31596 时停止；v9 改用下边缘位置反馈后通过全部原有门槛。此前记录均保留为失败诊断，不计成功次数。相关自动检查共 **42 项测试、150 个子检查通过**。
+
+复现时使用新的输出目录：
+
+```bash
+OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
+  -m topogym.tasks.blanket_flatten.virtual_hands \
+  run.output=runs/environment_bootstrap/blanket_flatten/virtual_hands_example
+
+.venv-gs121-nyx/bin/python -m topogym.tasks.blanket_flatten.review_preparation \
+  runs/environment_bootstrap/blanket_flatten/virtual_hands_example
+
+# 无机器人外力运行没有腕相机，当前共享 Franka 预设无法回放；保留物理轨迹与报告，视频待单独预设。
+PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python \
+  -m topogym.tasks.blanket_flatten.recording_adapter \
+  runs/environment_bootstrap/blanket_flatten/virtual_hands_example --fps 5
+```

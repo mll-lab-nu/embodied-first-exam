@@ -1,0 +1,11 @@
+id: formal_demo_v1
+minimum_views: 3
+tasks:
+  buzz_wire_3d:
+    allowed_variants: [f1_vertical_wave, f2_over_under_eight, f3_plane_switch]
+    qualification: buzz_wire_home_timestep_v1
+  cast_keyhole:
+    allowed_variants: [f1_long_stroke, f2_eccentric_window, f3_turnback]
+  cast_coil:
+    # Preserve the task's existing half-dt convergence and geometry qualification.
+    qualification: cast_coil_timestep_v1

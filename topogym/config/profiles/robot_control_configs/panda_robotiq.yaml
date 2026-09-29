@@ -1,0 +1,27 @@
+robot:
+  name: panda_robotiq
+  asset: xml/franka_emika_panda/panda.xml
+  asset_root: null
+  tool_model: robotiq_2f85
+  arm_joint_names: [joint1, joint2, joint3, joint4, joint5, joint6, joint7]
+  arm_joint_limits:
+    - [-2.8973, 2.8973]
+    - [-1.7628, 1.7628]
+    - [-2.8973, 2.8973]
+    - [-3.0718, -0.0698]
+    - [-2.8973, 2.8973]
+    - [-0.0175, 3.7525]
+    - [-2.8973, 2.8973]
+  ee_link: hand
+home:
+  # Last two coordinates are Robotiq rotary drivers, not Panda finger metres.
+  arm: [0, 0.3926990817, 0, -1.9634954085, 0, 2.3561944902, -0.7853981634, 0, 0]
+  settle_steps: 0
+controller:
+  kp: [4500, 4500, 3500, 3500, 2000, 2000, 2000, 5, 5]
+  kv: [450, 450, 350, 350, 200, 200, 200, 5, 5]
+  force_limit: [87, 87, 87, 87, 12, 12, 12, 0.30, 0.30]
+gripper:
+  native_unit: rad
+  open_qpos: 0.0
+  closed_qpos: 0.8

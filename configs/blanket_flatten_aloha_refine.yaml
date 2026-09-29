@@ -1,0 +1,60 @@
+defaults:
+  - blanket_flatten_virtual_hands_relay
+  - override env_configs@env: world_tabletop_aloha_v1
+  - override robot_control_configs@robot_control: aloha_position_ik
+  - _self_
+
+task:
+  # Keep the original flat binding reference exactly; place only the restored
+  # state below. Changing this origin can change Genesis support identities.
+  initial_state_recording:
+    placement:
+      yaw_deg: 90.0
+      source_center_xy_m: [-0.10, 0.0]
+      target_center_xy_m: [-0.1356786, 0.10]
+  execution:
+    check_every: 40
+  bimanual:
+    control_steps: 5
+    free_speed_m_s: 0.12
+    carry_speed_m_s: 0.045
+    angular_speed_rad_s: 0.35
+    maximum_tracking_error_m: 0.015
+    maximum_tracking_rotation_rad: 0.15
+    ik_position_tolerance_m: 0.001
+    ik_rotation_tolerance_rad: 0.02
+    grasp_radius_m: 0.012
+    contact_tolerance_m: 0.008
+    maximum_occlusion_m: 0.003
+    approach_height_m: 0.10
+    pinch_height_offset_m: 0.003
+    peel_height_m: 0.07
+    cover_shift_m: 0.06
+    cover_release_height_m: 0.07
+    maximum_cover_peels: 1
+    suspension_height_m: 0.55
+    release_stretch: 1.25
+    final_settle_seconds: 10.0
+    maximum_seconds: 120.0
+
+robot_control:
+  gripper:
+    # Task-specific rail position, not aperture. The source custom finger
+    # surfaces meet around 8.3 mm; 2 mm commands overlap their physical tips.
+    closed_qpos: 0.0105
+  home:
+    # Checked open-gripper ready poses 12 cm above the tabletop. This is the
+    # declared initial joint state, before simulation and before any grasp.
+    left: [-0.4112647402, 0.0134450582, 0.3005850818, 0.0, 1.2567661868, -0.4112647402, 0.037, 0.037]
+    right: [0.5740380894, -0.1242326336, 0.4589933443, 0.0, 1.2360356161, 0.5740380894, 0.037, 0.037]
+  controller:
+    kp: [800, 1600, 1200, 600, 400, 300, 2000]
+    kv: [45, 80, 70, 35, 25, 15, 124]
+
+run:
+  include_robot: true
+  mode: robot
+  scope: bimanual_refinement_diagnostic
+  fps: 5
+  recording_size: [640, 360]
+  output: runs/environment_bootstrap/blanket_flatten/aloha_refinement_v4

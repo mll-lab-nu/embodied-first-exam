@@ -1,0 +1,1384 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-09-28T22:14:27.244119+00:00",
+  "scope": "Local report/source inspection and prioritization; no new physical execution or terminal changes",
+  "scan": {
+    "roots": [
+      "runs",
+      "task_rollouts"
+    ],
+    "json_paths_discovered": 23095,
+    "reports_scanned": 2410,
+    "report_names": [
+      "report.json",
+      "run_report.json",
+      "summary.json",
+      "audit.json",
+      "validation.json",
+      "certificate.json",
+      "evidence_audit.json"
+    ],
+    "excluded_path_components": [
+      "source_snapshot",
+      "snapshots",
+      "source",
+      "arrays",
+      "scene",
+      "assets"
+    ],
+    "large_reports_skipped": [],
+    "task_success_true_report_hits": 53,
+    "positive_hits": [
+      {
+        "path": "task_rollouts/cast_coil_assist_20260927/recording_05/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/cast_coil_assist_20260927/recording_05/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/segment_history_v2_prepare_20260928/cube_pick_place/rollout_0001/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/usage_muse_prepare_20260928T173447980566784Z/cube_pick_place/rollout_0001/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/cast_coil_assist_20260927/investigation_06/substep_replay/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/cast_coil_assist_20260927/investigation_06/substep_replay/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002/run_report.json",
+        "task_success_fields": {
+          "segments[1].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/hard_fast_05/audit.json",
+        "task_success_fields": {
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/hard_fast_05/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/hard_fast_05/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/summary.json",
+        "task_success_fields": {
+          "cases.easy.task_success": true,
+          "cases.medium.task_success": true,
+          "cases.hard.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/fiber_medium_cli_20260928/report.json",
+        "task_success_fields": {
+          "prior_pick_archive.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_cube_04/case_0_seed_0/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_cube_04/case_0_seed_0/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/easy_fast_03/audit.json",
+        "task_success_fields": {
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/easy_fast_03/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/easy_fast_03/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/medium_fast_05/audit.json",
+        "task_success_fields": {
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/medium_fast_05/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_coil_ik_20260928/medium_fast_05/run_report.json",
+        "task_success_fields": {
+          "segments[0].feedback.task_success": true,
+          "task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_0/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_0/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_4/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_4/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/grasp_assist_robot_20260926_02/evidence/trail/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/grasp_assist_robot_20260926_02/evidence/report.json",
+        "task_success_fields": {
+          "segments[1].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_split/trail/report.json",
+        "task_success_fields": {
+          "segments[1].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_split/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[1].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_2/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_2/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_3/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_3/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_1/trail/report.json",
+        "task_success_fields": {
+          "segments[0].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/segments_20260925_acceptance_02/cube_seed_1/report.json",
+        "task_success_fields": {
+          "task_result.task_success": true,
+          "segments[0].feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_38_easy_qualified/report.json",
+        "task_success_fields": {
+          "segments[8].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_38_easy_qualified/run_report.json",
+        "task_success_fields": {
+          "segments[7].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_35_medium_qualified/report.json",
+        "task_success_fields": {
+          "segments[6].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_35_medium_qualified/run_report.json",
+        "task_success_fields": {
+          "segments[5].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_37_hard_qualified/report.json",
+        "task_success_fields": {
+          "segments[8].result.feedback.task_success": true
+        }
+      },
+      {
+        "path": "runs/test_results/cast_keyhole_policy_20260928/trial_37_hard_qualified/run_report.json",
+        "task_success_fields": {
+          "segments[7].feedback.task_success": true,
+          "task_result.task_success": true
+        }
+      }
+    ],
+    "note": "Hits include duplicate summaries/segments and references to other tasks; not physical-success counts. Selected archived source/evidence reports were inspected separately."
+  },
+  "accepted_formal_task_proofs_unchanged": 6,
+  "new_formal_task_proofs_admitted": 0,
+  "additional_directly_admissible_current_formal_tasks_found": 0,
+  "tasks": [
+    {
+      "task": "cast_keyhole",
+      "status": "accepted",
+      "suggested_priority": null,
+      "note": "3 frozen default-instance Task success proofs already archived",
+      "variants": [
+        {
+          "variation_id": "cast_keyhole_easy",
+          "family_id": "long_stroke",
+          "model_revision": "seed_families_v2"
+        },
+        {
+          "variation_id": "cast_keyhole_medium",
+          "family_id": "eccentric_window",
+          "model_revision": "seed_families_v2"
+        },
+        {
+          "variation_id": "cast_keyhole_hard",
+          "family_id": "turnback",
+          "model_revision": "seed_families_v2"
+        }
+      ]
+    },
+    {
+      "task": "cast_coil",
+      "status": "accepted",
+      "suggested_priority": null,
+      "note": "3 frozen default-instance Task success proofs already archived",
+      "variants": [
+        {
+          "variation_id": "cast_coil_easy",
+          "family_id": "baseline_assembly",
+          "model_revision": "reference_v1"
+        },
+        {
+          "variation_id": "cast_coil_medium",
+          "family_id": "axial_screw_turn",
+          "model_revision": "seed_families_v1_9mm",
+          "template_resource": "variations/cast_coil/axial_screw_turn.json"
+        },
+        {
+          "variation_id": "cast_coil_hard",
+          "family_id": "split_turn_offset",
+          "model_revision": "seed_families_v1_9mm",
+          "template_resource": "variations/cast_coil/split_turn_offset.json"
+        }
+      ]
+    },
+    {
+      "task": "lock_picking",
+      "status": "current_policy_requires_terminal_work",
+      "suggested_priority": 1,
+      "note": "medium: route completed; coaxial=false, raw goal not reached, rotor qualification incomplete; fresh success run required",
+      "variants": [
+        {
+          "variation_id": "lock_picking_easy",
+          "family_id": "F1",
+          "model_revision": "seed_families_v1"
+        },
+        {
+          "variation_id": "lock_picking_medium",
+          "family_id": "standard_150mm",
+          "model_revision": "historical_physics_v2"
+        },
+        {
+          "variation_id": "lock_picking_hard",
+          "family_id": "F3",
+          "model_revision": "seed_families_v1"
+        }
+      ]
+    },
+    {
+      "task": "fiber_bundling",
+      "status": "historical_policy_migration",
+      "suggested_priority": 2,
+      "note": "4/8/16 strand legacy successes; current terminal enabled; migrate policy and verify current substep contact contract",
+      "variants": [
+        {
+          "variation_id": "fiber_bundling_easy",
+          "family_id": "4_strands",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "fiber_bundling_medium",
+          "family_id": "8_strands",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "fiber_bundling_hard",
+          "family_id": "16_strands",
+          "model_revision": "simulator_v1"
+        }
+      ]
+    },
+    {
+      "task": "buzz_wire_3d",
+      "status": "historical_policy_migration",
+      "suggested_priority": 3,
+      "note": "3 home-start friction successes on old layouts; current layouts raised 40 mm; new IK and terminal qualification required",
+      "variants": [
+        {
+          "variation_id": "buzz_wire_3d_easy",
+          "family_id": "F1_triple",
+          "model_revision": "F1_triple_compact_toy_s70_home_lab_v1_raised40mm"
+        },
+        {
+          "variation_id": "buzz_wire_3d_medium",
+          "family_id": "F2",
+          "model_revision": "F2_compact_toy_s70_home_lab_v4_raised40mm"
+        },
+        {
+          "variation_id": "buzz_wire_3d_hard",
+          "family_id": "F3",
+          "model_revision": "F3_compact_toy_s70_home_lab_v4_raised40mm"
+        }
+      ]
+    },
+    {
+      "task": "horseshoe_ring",
+      "status": "object_route_to_robot",
+      "suggested_priority": 4,
+      "note": "current 3 shapes have geometric certificates but explicitly no robot/dynamic qualification",
+      "variants": [
+        {
+          "variation_id": "horseshoe_ring_easy",
+          "family_id": "waist_mild",
+          "model_revision": "coupled_shapes_v1",
+          "template_resource": "variations/horseshoe_ring/waist_mild.json"
+        },
+        {
+          "variation_id": "horseshoe_ring_medium",
+          "family_id": "u_mild",
+          "model_revision": "coupled_shapes_v1",
+          "template_resource": "variations/horseshoe_ring/u_mild.json"
+        },
+        {
+          "variation_id": "horseshoe_ring_hard",
+          "family_id": "waist_ellipse",
+          "model_revision": "coupled_shapes_v1",
+          "template_resource": "variations/horseshoe_ring/waist_ellipse.json"
+        }
+      ]
+    },
+    {
+      "task": "hedgehog_in_cage",
+      "status": "variant_specific_route_and_grasp_work",
+      "suggested_priority": null,
+      "note": "medium search has no complete route; old easy/hard routes need current-model and goal-region validation",
+      "variants": [
+        {
+          "variation_id": "hedgehog_in_cage_easy",
+          "family_id": "classic_3star",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "hedgehog_in_cage_medium",
+          "family_id": "elliptical_windows",
+          "model_revision": "ellipse_dark_wood_v1"
+        },
+        {
+          "variation_id": "hedgehog_in_cage_hard",
+          "family_id": "gen_keyhole",
+          "model_revision": "fixed_v2"
+        }
+      ]
+    },
+    {
+      "task": "interlocked_claws",
+      "status": "variant_specific_route_and_grasp_work",
+      "suggested_priority": null,
+      "note": "current medium route unverified; 3 variants failed pure-friction holding diagnostics; historical assisted runs differ",
+      "variants": [
+        {
+          "variation_id": "interlocked_claws_easy",
+          "family_id": "helical_claws_balanced_v2",
+          "model_revision": "pregrasp_v1"
+        },
+        {
+          "variation_id": "interlocked_claws_medium",
+          "family_id": "acute_windows_opposed",
+          "model_revision": "opposed_pregrasp_v1"
+        },
+        {
+          "variation_id": "interlocked_claws_hard",
+          "family_id": "claw_weave",
+          "model_revision": "pregrasp_v1"
+        }
+      ]
+    },
+    {
+      "task": "blanket_flatten",
+      "status": "historical_policy_and_soft_grasp_migration",
+      "suggested_priority": null,
+      "note": "old simple-fold success disables robot-soft coupling; current grab/place fixture is not task solved",
+      "variants": [
+        {
+          "variation_id": "blanket_flatten_easy",
+          "family_id": "simple_folds",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "blanket_flatten_medium",
+          "family_id": "fold_roll",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "blanket_flatten_hard",
+          "family_id": "gathered_twist",
+          "model_revision": "simulator_v1"
+        }
+      ]
+    },
+    {
+      "task": "knot_untying",
+      "status": "historical_partial_qualification_migration",
+      "suggested_priority": null,
+      "note": "old Trefoil untying success starts at hover, not home; full physics and grasp qualification false; Trefoil is now medium",
+      "variants": [
+        {
+          "variation_id": "knot_untying_easy",
+          "family_id": "two_overlap_loop",
+          "model_revision": "two_overlap_v1_fem_soft50_fine_v1"
+        },
+        {
+          "variation_id": "knot_untying_medium",
+          "family_id": "overhand_trefoil",
+          "model_revision": "simulator_v1_fem_soft50_fine_v1"
+        },
+        {
+          "variation_id": "knot_untying_hard",
+          "family_id": "figure_eight",
+          "model_revision": "local_curve_v2_fem_soft50_fine_v1"
+        }
+      ]
+    },
+    {
+      "task": "rope_threading",
+      "status": "complete_robot_route_missing",
+      "suggested_priority": null,
+      "note": "66.115 s historical attempt fails IK; later named feedback attempts inspected are incomplete",
+      "variants": [
+        {
+          "variation_id": "rope_threading_easy",
+          "family_id": "two_rings",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "rope_threading_medium",
+          "family_id": "wang_reference_v1",
+          "model_revision": "simulator_v1_fem_soft50_fine_v1"
+        },
+        {
+          "variation_id": "rope_threading_hard",
+          "family_id": "three_tight_rings",
+          "model_revision": "simulator_v1"
+        }
+      ]
+    },
+    {
+      "task": "slotted_post_ring",
+      "status": "complete_robot_route_missing",
+      "suggested_priority": null,
+      "note": "full external-force route and partial robot actions only",
+      "variants": [
+        {
+          "variation_id": "slotted_post_ring_easy",
+          "family_id": "large_ring",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "slotted_post_ring_medium",
+          "family_id": "middle_ring",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "slotted_post_ring_hard",
+          "family_id": "original_scale",
+          "model_revision": "simulator_v1_fem_soft50_fine_v1"
+        }
+      ]
+    },
+    {
+      "task": "orbits",
+      "status": "complete_robot_route_missing",
+      "suggested_priority": null,
+      "note": "93-action external route uses up to 4 control points; full bimanual execution missing",
+      "variants": [
+        {
+          "variation_id": "orbits_easy",
+          "family_id": "2_rings",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "orbits_medium",
+          "family_id": "3_rings",
+          "model_revision": "simulator_v1"
+        },
+        {
+          "variation_id": "orbits_hard",
+          "family_id": "four_rings_compact",
+          "model_revision": "compact_external_handle_v1_fem_soft50_fine_v1"
+        }
+      ]
+    }
+  ],
+  "lock_source_checks": [
+    {
+      "run": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium",
+      "status": "route_completed",
+      "task_success": false,
+      "task_instance_id": "017411a0da1e4097a18808517e073533ed4b4e5e5ff0b9c893e2e0153dd09798",
+      "saved_states": 1565,
+      "physics_ticks": 1564,
+      "existing_evidence_audit_passed": true,
+      "independent_goal_check": {
+        "reached": false,
+        "failure": null,
+        "metrics": {
+          "disc_angles_deg": [
+            1.2737933544971776,
+            60.91236467860408,
+            0.5526625155357603
+          ],
+          "key_depth": 4.057853698730469,
+          "key_tilt_deg": 0.01996150294168305,
+          "coaxial": false,
+          "shaft_in_goal": true,
+          "leading_tab_inserted": true,
+          "clearance_issues": [],
+          "physical_rotor_frames": true,
+          "rotor_mechanism_runtime_verified": false,
+          "evaluation_status": "available",
+          "thresholds_calibrated": false,
+          "goal_evaluation_complete": false
+        },
+        "formal_success": false,
+        "goal_complete": false,
+        "resting_insertion_observed": true,
+        "radial_offsets_m": [
+          0.0010029079360932835,
+          0.0010026197476872556,
+          0.000999851848407582,
+          0.0009997449089612176,
+          0.0009995224529023806,
+          0.00099959763600176,
+          0.0010019224397695837,
+          0.001002179131279535
+        ],
+        "shaft_within_bores_with_contact_tolerance": true,
+        "contact_tolerance_m": 0.0002
+      },
+      "source_manifest_files_verified": 470,
+      "source_manifest_mismatches": [],
+      "selected_source_matches_current": {
+        "topogym/tasks/lock_picking/common.py": true,
+        "topogym/tasks/lock_picking/lock_picking_medium.py": true,
+        "topogym/planning/lock_picking/lock_picking_medium_planning.py": true,
+        "scripts/run_lock_picking_policy.py": true,
+        "topogym/robot/control.py": false
+      }
+    },
+    {
+      "run": "task_rollouts/lock_assist_20260927/lock_picking/trail_13_medium",
+      "status": "route_completed",
+      "task_success": false,
+      "task_instance_id": "017411a0da1e4097a18808517e073533ed4b4e5e5ff0b9c893e2e0153dd09798",
+      "saved_states": 1568,
+      "physics_ticks": 1567,
+      "existing_evidence_audit_passed": true,
+      "independent_goal_check": {
+        "reached": false,
+        "failure": null,
+        "metrics": {
+          "disc_angles_deg": [
+            1.1976956556331269,
+            60.802255198994295,
+            0.41178506142748716
+          ],
+          "key_depth": 4.059354782104492,
+          "key_tilt_deg": 0.019850002686465106,
+          "coaxial": false,
+          "shaft_in_goal": true,
+          "leading_tab_inserted": true,
+          "clearance_issues": [],
+          "physical_rotor_frames": true,
+          "rotor_mechanism_runtime_verified": false,
+          "evaluation_status": "available",
+          "thresholds_calibrated": false,
+          "goal_evaluation_complete": false
+        },
+        "formal_success": false,
+        "goal_complete": false,
+        "resting_insertion_observed": true,
+        "radial_offsets_m": [
+          0.0010030454509460994,
+          0.0010027770227109842,
+          0.0010002721770337778,
+          0.0010001830264228435,
+          0.00100019490881114,
+          0.0010002857556876436,
+          0.0010028142702891401,
+          0.0010030843819633668
+        ],
+        "shaft_within_bores_with_contact_tolerance": true,
+        "contact_tolerance_m": 0.0002
+      },
+      "source_manifest_files_verified": 470,
+      "source_manifest_mismatches": [],
+      "selected_source_matches_current": {
+        "topogym/tasks/lock_picking/common.py": true,
+        "topogym/tasks/lock_picking/lock_picking_medium.py": true,
+        "topogym/planning/lock_picking/lock_picking_medium_planning.py": true,
+        "scripts/run_lock_picking_policy.py": true,
+        "topogym/robot/control.py": false
+      }
+    }
+  ],
+  "cube_fixture_successes": [
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    },
+    {
+      "run": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008",
+      "task_success": true,
+      "existing_evidence_audit_passed": true,
+      "counts_toward_13_tasks": false,
+      "needs_frozen_task_per_tick_reevaluation_for_same_archive_standard": true
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/report.json",
+      "bytes": 466074,
+      "sha256": "c52f34d3a24450c763b34dc7e6ac3df44ad5a0b041321584ce332b630345e79e"
+    },
+    {
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F1_triple_home_lab_v1_full/evidence/source/evidence/qualification.json",
+      "bytes": 12630,
+      "sha256": "d5241e720d391ddd03fe689718ce9275f20da6f81909a5b0906faa8cf0bd7730"
+    },
+    {
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F2_home_lab_v4_full/evidence/source/evidence/qualification.json",
+      "bytes": 12632,
+      "sha256": "83f3bd8f0b4eb37e3bf1c4a5083cf0bd1600a26e22e8b02b315edfdace1870dd"
+    },
+    {
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F3_home_lab_v4_full/evidence/source/evidence/qualification.json",
+      "bytes": 12494,
+      "sha256": "4ffeb6b116c04dfa138ec2a55dbbcc5bbfedd957ad1b40b63e2443c351414286"
+    },
+    {
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/report.json",
+      "bytes": 314970,
+      "sha256": "8ca4a2329ef94163dde83528755fe2a6582fcbbe3c9e5e2662c42e6d5dba236e"
+    },
+    {
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-21_dense_16_r13p5mm_clean_v1/report.json",
+      "bytes": 678094,
+      "sha256": "bb80cfac008e6e044b01f88f7a408fc1aead86d9d452058f8e2b6f601b621387"
+    },
+    {
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-21_sparse_04_r13p5mm_clean_v1/report.json",
+      "bytes": 139364,
+      "sha256": "2dcb01c258ab1db31486e55fc26bbaa8f87c1b1acc3a846dad03b258094df532"
+    },
+    {
+      "path": "runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/report.json",
+      "bytes": 9688,
+      "sha256": "17601f5e769e66d596cc69bf0c709e7032fc76518f97db2718a6529116decb3c"
+    },
+    {
+      "path": "runs/demo_metadata/orbits/2026-09-22_rope_video_full_v2/README.md",
+      "bytes": 4078,
+      "sha256": "6ff37a16ab4ad3c98c1761e1282e7cdb10b24953b672f957d5273baebc3eff7a"
+    },
+    {
+      "path": "runs/demo_metadata/slotted_post_ring/2026-09-21_clearance36_full_physics_v1/README.md",
+      "bytes": 2653,
+      "sha256": "84cd5018741b02ce0f653086ab40814c08e26a5e7225129b93e08dc5c07c739c"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/u_mild/certificate.json",
+      "bytes": 1288305,
+      "sha256": "0c28f5a048b2be7dd50f1e77ffdf73388c2f481dfe6350084e8db4d5105e820f"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/waist_ellipse/certificate.json",
+      "bytes": 1423661,
+      "sha256": "f2f37c56f6747a2865cc7e01122208274e8f4d86ffdc5f710ebcc9b9e06b7115"
+    },
+    {
+      "path": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/waist_mild/certificate.json",
+      "bytes": 1092088,
+      "sha256": "e8fec40186752ba17f8770c363aae6c4afe621dd20d2a2c84bd8b676482fddaf"
+    },
+    {
+      "path": "runs/environment-solvability/rope_threading/full_ik_v3_20260921_attempt_1/report.json",
+      "bytes": 29230,
+      "sha256": "046d812274cf2100f211febb3cb6631d1889b49516c024ec013a923e4b011b2b"
+    },
+    {
+      "path": "runs/test_results/fiber_medium_cli_20260928/report.json",
+      "bytes": 2489,
+      "sha256": "1319f0ec538c6f84bf5f4c0fe017c8cbee78a3fa2b4942109509113e972f191d"
+    },
+    {
+      "path": "runs/test_results/hedgehog_claws_policy_20260927/README.md",
+      "bytes": 9576,
+      "sha256": "e8c4fb7d9942e5a66584ac6288f990853eef241d2d6753aad2a4eff0be564195"
+    },
+    {
+      "path": "runs/test_results/soft_grasp_20260927_pbd_robot_09_rgb/README.md",
+      "bytes": 1625,
+      "sha256": "465803f70d680a983c151bcb43326606de59b7668718eeb96609af151f30411e"
+    },
+    {
+      "path": "scripts/run_lock_picking_policy.py",
+      "bytes": 16529,
+      "sha256": "589c550257b8bba957db75eccf8371f94b44bea5feddadbe35fdb339f1539b75"
+    },
+    {
+      "path": "solvability_proof/cast_coil/README.md",
+      "bytes": 487,
+      "sha256": "10c92675ba0aed8fba2162cb301482f2166fd7f92e4d73386e047a818d07aa4d"
+    },
+    {
+      "path": "solvability_proof/cast_keyhole/README.md",
+      "bytes": 472,
+      "sha256": "7174a00e67fccd5e1de20b3dd89b8c5422d291359d81789b7aa38a0c55c918c3"
+    },
+    {
+      "path": "solvability_proof/catalog.json",
+      "bytes": 2093,
+      "sha256": "9b2169ef84e6db75a106d4772467f2d54a0f5cbe0d8de80c824cff3239931c30"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/evidence_audit.json",
+      "bytes": 17760,
+      "sha256": "359c88f269c977206c66c2a9d569adb21e8bcdd6db33c93654d97b76543eef64"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/full_solve.mp4",
+      "bytes": 16821450,
+      "sha256": "ca8040b8d8c052515035f3a506c123308f677b1acce8cb390a27fb8314197920"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/run_report.json",
+      "bytes": 312720,
+      "sha256": "acc8aa8587729bcddea5d588750d3d89eb28217fb871d562ea7e8998f25f9db9"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/run_source_manifest.json",
+      "bytes": 55921,
+      "sha256": "fd992be8d74327aa43e21128daef78785f84fe333b3f4f850807685e8f6a4c98"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_13_medium/evidence_audit.json",
+      "bytes": 17622,
+      "sha256": "efdc897a3d1792905c88eb463fd6e0e7c17f83bc253906cc6bef4a1d660583a1"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_13_medium/run_report.json",
+      "bytes": 307296,
+      "sha256": "aa664ea54940f6c987b42d064282cfcdf56c27404ac85c285bb408e8df986fa5"
+    },
+    {
+      "path": "task_rollouts/lock_assist_20260927/lock_picking/trail_13_medium/run_source_manifest.json",
+      "bytes": 55921,
+      "sha256": "fd992be8d74327aa43e21128daef78785f84fe333b3f4f850807685e8f6a4c98"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001/offline_audit.json",
+      "bytes": 645,
+      "sha256": "ecc0f3f8a53999c736f418236f9bfa708e3a50c9673202b4dcf05d1834a73857"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001/run_report.json",
+      "bytes": 8557,
+      "sha256": "c280c7d48bc8ad1846fea102a86a55b22b36e7d6b665b4499c26807783c60e39"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_pick_place/rollout_0001/run_source_manifest.json",
+      "bytes": 50513,
+      "sha256": "ae19d1a490d6b5758cd8b99ad7c39ed92c8986025c383fdb265798727a193620"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001/offline_audit.json",
+      "bytes": 645,
+      "sha256": "0249d7d945942808701c2b1716094c6c35b7907380131b6fb44d77db4f8ba63d"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001/run_report.json",
+      "bytes": 8532,
+      "sha256": "890549b8f4cced7c28ba568af04b6baf5266f0310beeaebfcfb788a82c232bcd"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0001/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "32dc39369b244ca904f9b9d8a05654efdc193723bde61a25ac460dec0976b752"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002/offline_audit.json",
+      "bytes": 645,
+      "sha256": "80022631afa6fe6ceb0974020c8396fcacbf37c27e700f8192daea9f48540e52"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002/run_report.json",
+      "bytes": 12809,
+      "sha256": "d972665f84f2ea01c4901cb47e1bfafcb0f58ea91490a7754251cbb65bfda5c1"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0002/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "27fd1695d970f5d7dab7a433a461579a93eb5b92f7df6f23fcc984a0181a37d2"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005/offline_audit.json",
+      "bytes": 645,
+      "sha256": "1c513cf8f47e11f4a2a4fab2f5df3b76e18910652f5859b2df0036114deb8931"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005/run_report.json",
+      "bytes": 8559,
+      "sha256": "e4961e37aa131ec6cdfb050292b27d396ddb0ec69536136aa3a4f1f323247739"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0005/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "a76985e2ea34057cd8db6aabace915f66fd1eb95d7849096de801487bc23fba5"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006/offline_audit.json",
+      "bytes": 645,
+      "sha256": "2b75f94e0dc0e0d439134ddac7cd331ed1f7fa86f83066f5baeb1f3dec98801f"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006/run_report.json",
+      "bytes": 8531,
+      "sha256": "091b9b80172344df82733102f4225d5a5352028e80e2551b02b90d383b0eb403"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0006/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "a76985e2ea34057cd8db6aabace915f66fd1eb95d7849096de801487bc23fba5"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007/offline_audit.json",
+      "bytes": 644,
+      "sha256": "4825ad1311528069061ca95f1819537a402f44139d727f47069cc308b7eff420"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007/run_report.json",
+      "bytes": 8529,
+      "sha256": "b5a448b5f1253398b95d6791c6688b142db8bd855933dff143c388df729e4209"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0007/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "a76985e2ea34057cd8db6aabace915f66fd1eb95d7849096de801487bc23fba5"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008/offline_audit.json",
+      "bytes": 645,
+      "sha256": "89236159edda32b2000795a71daf650989bbb8840731fc899ddb7e6362bc1018"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008/run_report.json",
+      "bytes": 8554,
+      "sha256": "2c71817b5f13ca77ff21ca5fb346e56b0833813c4e3c4db7e63e3f0ae7427d67"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/cube_transfer/rollout_0008/run_source_manifest.json",
+      "bytes": 50634,
+      "sha256": "a76985e2ea34057cd8db6aabace915f66fd1eb95d7849096de801487bc23fba5"
+    },
+    {
+      "path": "task_rollouts/scripted_policy_pick_place_20260926/validation_summary.json",
+      "bytes": 7002,
+      "sha256": "5cf89d9e228ef946f97b5a165abc900d2388240d92aeb83b896f7c42bce3edbe"
+    },
+    {
+      "path": "topogym/config/registry.py",
+      "bytes": 8126,
+      "sha256": "c0034727d48f5860a62662138633c5c7fde819925bf3f9cfdb23f166e419786a"
+    },
+    {
+      "path": "topogym/planning/lock_picking/lock_picking_medium_planning.py",
+      "bytes": 17212,
+      "sha256": "84ba91b69f96d27ca62f90ae27d3023339a0a01aa98455d237444bb1e31b32e1"
+    },
+    {
+      "path": "topogym/robot/control.py",
+      "bytes": 6186,
+      "sha256": "6bbd5fbb46f8dda4bef24e19ad7a37756c496abf593a70ad8d08e0b9fdfd9f86"
+    },
+    {
+      "path": "topogym/tasks/blanket_flatten/blanket_flatten_easy.py",
+      "bytes": 353,
+      "sha256": "8f1fe484f0f18f8cafc6c6cb8a08e65222955215f08ddad3c1c938a1d93e5253"
+    },
+    {
+      "path": "topogym/tasks/blanket_flatten/blanket_flatten_hard.py",
+      "bytes": 1318,
+      "sha256": "7688f3a84d0127539a4ee49bd632794cd9d19c59aeb1cc3a360c6bc2a171175d"
+    },
+    {
+      "path": "topogym/tasks/blanket_flatten/blanket_flatten_medium.py",
+      "bytes": 868,
+      "sha256": "cf04b5a99e62374da527b19633a2858399b8dbdeb437c5d1184d1f535cb48cc9"
+    },
+    {
+      "path": "topogym/tasks/blanket_flatten/common.py",
+      "bytes": 11207,
+      "sha256": "caa9bbc47657c8b10677f04a34bb2b8069fb39e6d70018ba6c7cf3aed086ea25"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d/buzz_wire_3d_easy.py",
+      "bytes": 706,
+      "sha256": "298a9d9245168f51398586909dcc0fa630ceb6b81846e4f55be9eb6299fac7dd"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d/buzz_wire_3d_hard.py",
+      "bytes": 678,
+      "sha256": "8337ce52ba113cacab16694146fc2466799b650523b28d9ac6ac2ef21199629b"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d/buzz_wire_3d_medium.py",
+      "bytes": 683,
+      "sha256": "059acb887c45e1baf9c4eb92fd34df32e251beb877c08ac08f65e2967f5a0739"
+    },
+    {
+      "path": "topogym/tasks/buzz_wire_3d/common.py",
+      "bytes": 12379,
+      "sha256": "993683765549f690c6e757be42d707fdae944f1e2d51bb3383ecc5085295ebe7"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/cast_coil_easy.py",
+      "bytes": 340,
+      "sha256": "1ba6dc3f2e98055b5fcd9e4b04d34b2b2efa7453775cef9b533a7954f68f7ae4"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/cast_coil_hard.py",
+      "bytes": 419,
+      "sha256": "8af7f44996ed9ef5a545a840705edec8bfe139ee0c0d41665ee3e3db0523fd7b"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/cast_coil_medium.py",
+      "bytes": 422,
+      "sha256": "6051bfc6216e9d49caf61b54570ebf9c883ff9396c5609255c243a52a7caee8c"
+    },
+    {
+      "path": "topogym/tasks/cast_coil/common.py",
+      "bytes": 6310,
+      "sha256": "409975b1a78e3f21543da0b35d7ec8bb3732cf080bb42ced8a5f398c75510a66"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/cast_keyhole_easy.py",
+      "bytes": 403,
+      "sha256": "bf8e8f3ccd5d5b3d182cb1bb8a227c02710f02bf074bc5f6b783f57b336e1653"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/cast_keyhole_hard.py",
+      "bytes": 397,
+      "sha256": "47f7be2864fca39f20bbc27dccf67851d00e7479f8ec1fe845f21d82b243e61a"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/cast_keyhole_medium.py",
+      "bytes": 419,
+      "sha256": "df09c0a2fd498ad670f01a441447e5275975e51122f773cec98e8284700a0466"
+    },
+    {
+      "path": "topogym/tasks/cast_keyhole/common.py",
+      "bytes": 4923,
+      "sha256": "8e883344ceb2544e5e7d0945aa87d95e71106a4c43c087f13852f4fc27a49ebd"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/common.py",
+      "bytes": 12534,
+      "sha256": "7c90b5a5f2f4d4a9078cf0c5dfda633b23373ca6008bb8d5ae3638ae0fefdea3"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/fiber_bundling_easy.py",
+      "bytes": 600,
+      "sha256": "01181e2eceb326f683504bfc772ada2cc901a20c5de8cd6a882d7197d4124b8d"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/fiber_bundling_hard.py",
+      "bytes": 603,
+      "sha256": "2d024ca07c014f6a8a5f0b7abda801f22ad376db1bf77f3cb9cfdfe0b72d9488"
+    },
+    {
+      "path": "topogym/tasks/fiber_bundling/fiber_bundling_medium.py",
+      "bytes": 606,
+      "sha256": "d4fd87d237cccc2a12a46fee2df910c02e879fb5ca652c27eeffa633c0e23445"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage/common.py",
+      "bytes": 5262,
+      "sha256": "3f958d1131f37815b7b790b2a4c2f3f62d0653e719f9936e7108ec3aec019357"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easy.py",
+      "bytes": 352,
+      "sha256": "c3d18e9278db5c07365087d90999f6afceee6e7faa6a17c0c433e58cd6ae048d"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_hard.py",
+      "bytes": 898,
+      "sha256": "22693ab29a2d807528bf73f282fa7498ed31e4726b2cae5bdc7424bb674553c4"
+    },
+    {
+      "path": "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_medium.py",
+      "bytes": 1134,
+      "sha256": "8cf5fe0dcaae4da76b00e69b404a85cbe47a82e21cadfa3105c425ed43981ca5"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/common.py",
+      "bytes": 4962,
+      "sha256": "99f2a7cb72beac3602c92ee5cdd70f63059e617871da587867edef78dc3cc89a"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/horseshoe_ring_easy.py",
+      "bytes": 375,
+      "sha256": "87ff45ab6f2df467995c69b5a40d911a17d0a49ee004b2a211a7418f620e69ae"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/horseshoe_ring_hard.py",
+      "bytes": 384,
+      "sha256": "86f3af7f8c29efca35dbe1adea781e86f2ea9c79798a7c6038b698c2d16db91f"
+    },
+    {
+      "path": "topogym/tasks/horseshoe_ring/horseshoe_ring_medium.py",
+      "bytes": 371,
+      "sha256": "153b6785923fbbdfdf1103d76612164f2ac63a4623fa7165a19e3859bcc0a30c"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/common.py",
+      "bytes": 9474,
+      "sha256": "24e66a05a0755992bdaa027d16d28c174063cbfeb964de92a9131e2acfa240e2"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/interlocked_claws_easy.py",
+      "bytes": 400,
+      "sha256": "26efad0216798f917c02b9ee00f56e469f829caf42588ce888db7a5e83dfaea1"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/interlocked_claws_hard.py",
+      "bytes": 319,
+      "sha256": "86ece1590886eb16993b5328c01647c717cb16cbcb6c95738c57ab83a97816b3"
+    },
+    {
+      "path": "topogym/tasks/interlocked_claws/interlocked_claws_medium.py",
+      "bytes": 408,
+      "sha256": "18f210a7bec7de7747a9e83c977cd6d2d6bcbe32c684ad46e60c8f3d69f1c037"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/common.py",
+      "bytes": 3881,
+      "sha256": "d562e0811380b5b0cbba73bfda98c3e3f24e58d08774f870ace308b55c4be817"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/knot_untying_easy.py",
+      "bytes": 562,
+      "sha256": "cfca2d14b328bf71520b28f4180b4b0f780effac82e2283f870868019b38a5a6"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/knot_untying_hard.py",
+      "bytes": 659,
+      "sha256": "9605aada870012d7af129ed4767504f9bf99897780f0fc93767fdb2245736999"
+    },
+    {
+      "path": "topogym/tasks/knot_untying/knot_untying_medium.py",
+      "bytes": 566,
+      "sha256": "1185b3f050a8234819f37a913c2bc78650f8de2169fdf5894b7ea6eb0731788e"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/common.py",
+      "bytes": 13008,
+      "sha256": "8147749c00be736e38052a4c483598ba87bb199a882fb3c8188ffdc62ef36162"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/lock_picking_easy.py",
+      "bytes": 1185,
+      "sha256": "68a160a9b8bafac6bf50bfd99f0cd5ee78dc118d68e721646c1acedabdbbe6ec"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/lock_picking_hard.py",
+      "bytes": 1199,
+      "sha256": "ca5f5adbed31a029bad4d9ddc4f3d455bf5814bd41cb66d64439fe7a4f618215"
+    },
+    {
+      "path": "topogym/tasks/lock_picking/lock_picking_medium.py",
+      "bytes": 1263,
+      "sha256": "6c6f6abaaeb8a0537414ce47df9072fafc18693bf306738f2381ebf258262070"
+    },
+    {
+      "path": "topogym/tasks/orbits/common.py",
+      "bytes": 9576,
+      "sha256": "b14c07c84b102f203b7d75ac4425abbe644bab8d3012b873fffd403142bd849b"
+    },
+    {
+      "path": "topogym/tasks/orbits/orbits_easy.py",
+      "bytes": 468,
+      "sha256": "a1688a2db1b763c57f9db820ea389a1c17703efd1d1f0b999299498ef14c0f9f"
+    },
+    {
+      "path": "topogym/tasks/orbits/orbits_hard.py",
+      "bytes": 692,
+      "sha256": "eee5948183dbdcc8707d1842423ec765b2db5e144bfe6ae302112ca7366a3740"
+    },
+    {
+      "path": "topogym/tasks/orbits/orbits_medium.py",
+      "bytes": 474,
+      "sha256": "4e83e4c9ef8b5b49e551ada23c7685e6e82049ac9de66c555b807f8072d5735f"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/common.py",
+      "bytes": 5654,
+      "sha256": "11668e345eae5147de87b271c4936b109ed481c9c508dd22497b82756d10df2b"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/rope_threading_easy.py",
+      "bytes": 489,
+      "sha256": "885f19e9468316cb8d6f80fa5182b120fca5eba024a9ebce0e86548aae08bdbc"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/rope_threading_hard.py",
+      "bytes": 505,
+      "sha256": "bc5798ee4bcb53689c19dbcba8a8b62c960a7fdd50832a718eba3f0b39c94ce6"
+    },
+    {
+      "path": "topogym/tasks/rope_threading/rope_threading_medium.py",
+      "bytes": 344,
+      "sha256": "7dd87293055df4350c29d32552727a1dddc922b20fc7460791d1379ee01227c5"
+    },
+    {
+      "path": "topogym/tasks/slotted_post_ring/common.py",
+      "bytes": 4602,
+      "sha256": "b177a3ae636c0adabc1a71a2aef6ff823b16ba981bc79eee3316cf73da38e875"
+    },
+    {
+      "path": "topogym/tasks/slotted_post_ring/slotted_post_ring_easy.py",
+      "bytes": 541,
+      "sha256": "c8eeb85d10f0652fa3a1e298a5006818941576ff0db24e40c884eb0db9e20d70"
+    },
+    {
+      "path": "topogym/tasks/slotted_post_ring/slotted_post_ring_hard.py",
+      "bytes": 344,
+      "sha256": "01e2f62d5e8ac5290a4f58f37d593fd69e2487ba360733564da1558d31bdd738"
+    },
+    {
+      "path": "topogym/tasks/slotted_post_ring/slotted_post_ring_medium.py",
+      "bytes": 549,
+      "sha256": "b20b4e3d1cf3b686c7d32df49719c22bc23d4beb3e84539fb8851e719e5d2c35"
+    }
+  ],
+  "validation_scope": "Hashes here identify selected reports/current sources, not a fresh full-payload audit of every historical run. Only the two Lock frozen source manifests were fully rehashed this turn."
+}

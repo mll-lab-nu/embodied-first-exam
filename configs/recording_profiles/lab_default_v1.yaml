@@ -1,0 +1,5 @@
+schema_version: 1
+id: lab_default_v1
+robots:
+  franka_panda: lab_franka_v1
+  aloha: lab_aloha_v1

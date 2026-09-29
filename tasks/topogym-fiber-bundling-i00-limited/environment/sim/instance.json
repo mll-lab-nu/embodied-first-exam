@@ -1,0 +1,419 @@
+{
+ "task": "fiber_bundling",
+ "topogym_task": "fiber_bundling",
+ "variation_id": "fiber_bundling_medium",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, tip first and in tip-to-root material order, until all roots and the front sheath have passed and cleared the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not completion. Keep the completed configuration stable.",
+ "simulator": {
+  "task_id": "fiber_bundling",
+  "robot_id": "panda_robotiq",
+  "variation_id": "fiber_bundling_medium",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "ab3e89516a6738f7",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "fiber_bundle": {
+   "position": [
+    -0.1,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.645,
+     -0.52195,
+     0.91964
+    ],
+    [
+     0.21778,
+     -0.21767,
+     1.22164
+    ]
+   ],
+   "size": [
+    0.86278,
+    0.30428,
+    0.302
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "bundling_ring": {
+   "position": [
+    0.25,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    0.707107,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    1.5708,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.246,
+     -0.2715,
+     1.13814
+    ],
+    [
+     0.254,
+     -0.2285,
+     1.18114
+    ]
+   ],
+   "size": [
+    0.008,
+    0.043,
+    0.043
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_base": {
+   "position": [
+    -0.08,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.155,
+     -0.305,
+     0.91964
+    ],
+    [
+     -0.005,
+     -0.195,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.15,
+    0.11,
+    0.012
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_post": {
+   "position": [
+    -0.08,
+    -0.25,
+    1.03364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.092,
+     -0.263,
+     0.93164
+    ],
+    [
+     -0.068,
+     -0.237,
+     1.13564
+    ]
+   ],
+   "size": [
+    0.024,
+    0.026,
+    0.204
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_pad": {
+   "position": [
+    -0.08,
+    -0.25,
+    1.14364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.271,
+     1.13964
+    ],
+    [
+     -0.015,
+     -0.229,
+     1.14764
+    ]
+   ],
+   "size": [
+    0.13,
+    0.042,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_left": {
+   "position": [
+    -0.08,
+    -0.271,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.276,
+     1.13564
+    ],
+    [
+     -0.015,
+     -0.266,
+     1.17364
+    ]
+   ],
+   "size": [
+    0.13,
+    0.01,
+    0.038
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_right": {
+   "position": [
+    -0.08,
+    -0.229,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.234,
+     1.13564
+    ],
+    [
+     -0.015,
+     -0.224,
+     1.17364
+    ]
+   ],
+   "size": [
+    0.13,
+    0.01,
+    0.038
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_base": {
+   "position": [
+    0.25,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.2,
+     -0.315,
+     0.91964
+    ],
+    [
+     0.3,
+     -0.185,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.1,
+    0.13,
+    0.012
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_post": {
+   "position": [
+    0.25,
+    -0.25,
+    1.03489
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.244,
+     -0.258,
+     0.93164
+    ],
+    [
+     0.256,
+     -0.242,
+     1.13814
+    ]
+   ],
+   "size": [
+    0.012,
+    0.016,
+    0.2065
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

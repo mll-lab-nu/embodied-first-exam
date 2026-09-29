@@ -1,0 +1,457 @@
+{
+ "task": "rope_threading",
+ "topogym_task": "rope_threading",
+ "variation_id": "rope_threading_medium",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Thread the rope through the cyan ring, then the green ring, then the purple ring, following the rope from its material start to material end. Pass fully through each aperture without extra crossings, intersecting ring material, or damaging the rope. Keep the threaded rope still.",
+ "simulator": {
+  "task_id": "rope_threading",
+  "robot_id": "aloha",
+  "variation_id": "rope_threading_medium",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "c77b36526625a31b",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "rope": {
+   "material": "fem",
+   "position": [
+    0.04649,
+    -0.0341,
+    0.92453
+   ],
+   "bounds": [
+    [
+     -0.26078,
+     -0.33067,
+     0.92054
+    ],
+    [
+     0.18494,
+     0.36554,
+     0.92854
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 33031
+  },
+  "R1": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.15636,
+     0.07212,
+     1.17114
+    ],
+    [
+     0.00053,
+     0.12294,
+     1.33314
+    ]
+   ],
+   "size": [
+    0.15689,
+    0.05082,
+    0.162
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.01043,
+     0.07316,
+     0.92514
+    ],
+    [
+     -0.00051,
+     0.08307,
+     1.25714
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.332
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.05058,
+     0.04361,
+     0.92024
+    ],
+    [
+     0.03964,
+     0.11262,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.35286,
+     0.04976,
+     1.15014
+    ],
+    [
+     -0.20174,
+     0.11755,
+     1.31214
+    ]
+   ],
+   "size": [
+    0.15112,
+    0.06779,
+    0.162
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.21265,
+     0.10664,
+     0.92514
+    ],
+    [
+     -0.20274,
+     0.11655,
+     1.23614
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.311
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2528,
+     0.0771,
+     0.92024
+    ],
+    [
+     -0.16259,
+     0.1461,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.44837,
+     0.12853,
+     1.124
+    ],
+    [
+     -0.34493,
+     0.26839,
+     1.27828
+    ]
+   ],
+   "size": [
+    0.10345,
+    0.13987,
+    0.15428
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.36028,
+     0.25609,
+     0.92514
+    ],
+    [
+     -0.35037,
+     0.26601,
+     1.20614
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.281
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.40043,
+     0.22655,
+     0.92024
+    ],
+    [
+     -0.31022,
+     0.29555,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

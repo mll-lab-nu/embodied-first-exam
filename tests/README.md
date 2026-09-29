@@ -1,158 +1,144 @@
-# 当前检查
+# 模拟器核心测试
 
-`bash tests/check_agent_rollout_setup.sh` 是 evaluation 前的 Linux 环境检查入口：检查 Python 依赖、
-`codex / bwrap / ffmpeg / ffprobe`、本机代理端口和隔离环境中 Codex 的初次调用及续轮参数。
-默认使用仓库的 `.venv-gs121-nyx/bin/python`；可用 `--python /path/to/python` 指定环境。
-加 `--regression` 会继续运行 `tests.check_agent_rollout`、`tests.check_agent_task_spec` 和
-`tests.check_agent_rollout_budget`、`tests.check_agent_rollout_tools`；使用本机 HTTP 代理与真实 Codex CLI，API 响应全部模拟，
-验证逐请求输入计数、输出缩限、未知 usage 停止和密钥隔离，需允许本机临时端口。
-检查失败返回非零退出码；不需要 API key、不调用模型或启动 Genesis 场景。
-完整用法见[用户教程](../docs/develop/modules/model_service_design_zh.md#openai-api-evaluation)。
+2026-09-29：Harbor 层的检查不在这里，在 `ci_checks/`（`bash ci_checks/run_all.sh`），用法见 [Harbor 手册](../docs/rcb/README.md)。更早两版 Harbor 层的测试（`tests/harbor`、`tests/usage`、`tests/benchmark`、`tests/benchmark_host`）已移入 `legacy/`。本地 SegmentRunner 合同测试保留。
 
-`python -m unittest tests.check_agent_rollout -v` 检查固定变体、RGB / privileged 信息边界、连续分段 MP4、初态复验、预算和 Codex 目录隔离。模型传输使用模拟响应，不调用付费 API；见[视频 rollout 管线](../docs/develop/modules/agent_rollout_pipeline_zh.md)。
+用户已授权核心环境验收及实际录像。当前新合同为管理方 reset、操作方无 reset、特权仅在当前 episode 截断回溯，以及 Nyx + compact_lab、双臂 4 路/单臂 3 路、848×480、30 fps。实际结果见[本轮报告](../docs/develop/dev-logs/simulator_public_api_implementation_20260924_zh.md)。
 
-`python -m unittest tests.check_agent_rollout_tools -v` 检查新 SDK 的 RGB/simulator 权限、固定初态 reset、
-跨 episode 预算、请求去重与 revision、失败恢复及真实 Codex 终端调用；模型响应全部模拟。
-`bash tests/run_agent_rollout_tools_smoke.sh --task cast_coil --output runs/agent_rollouts/NEW_NAME`
-会运行真实 Genesis CPU 场景、查询/重置并保存四视角视频，不调用模型。
-使用 `--task counter` 可先做合成环境检查；输出目录必须全新。实操见 [rollout 手册](../docs/develop/modules/agent_rollout_usage_zh.md)。
+逐文件目的和设备条件见 [测试脚本说明](../docs/develop/dev-logs/simulator_test_scripts_zh.md)。
 
-`python -m unittest tests.check_orbits tests.check_task_baseline_catalog tests.check_configs_compose`
-检查第 13 项 Orbits 的四环五杆、固定连接、孔洞与绳初态间隙、末端杆绕数、资产重载、
-目录和 Hydra 配置；不代表绳动力学或完整解法通过。见[场景说明](../docs/develop/tasks/orbits_zh.md)。
+默认配置排除 `genesis` 和 `hdf5` 标记，用于后续按层选择；未选择的能力不算验证通过。真实物理集合使用下面的入口，逐任务保存报告、源码快照和实际场景 MP4。
 
-`python -m unittest tests.check_orbits_robot` 检查 Orbits 原生动力学模型与 IK 的坐标一致性、
-双侧指尖接触门槛、错误绳段拒绝、无瞬移的辅助抓持、两臂独立换抓和释放、
-完整检查点恢复、自然绳圈与双端连接，以及不可达路径在规划失败后不改变物理状态。
-接触状态来自局部夹持抬升测试；这些检查不代表完整解环成功。
+- `architecture/`：活动包边界、单一物理时钟、任务登记、延期代码隔离。
+- `unit/`：配置、任务定义、判据和可恢复任务状态。
+- `contracts/`：使用假 World 检查真正 Env 的生命周期和当前 episode 的单条有效 tick 历史；不证明物理有效性。
+- `integration/`：真实 Genesis 世界、机器人、任务接入、PBD、FEM/IPC、任意历史状态续跑和渲染；需要明确的运行设备。
+- `recording_data/`：不可变观测、分支视频时间线、真实命令与数据连接。
+- `conftest.py`：公共假 World / Robot / Task 夹具，无 agent fixture。
 
-`tests.check_knot_agent` 检查 FEM agent 信息边界、接触自动选带、双手重叠约束拒绝、释放与平面展开判据，以及 IPC 约束容量重叠回归。
-`python -m tests.probe_knot_agent --output 新目录` 是需要 CUDA 的四路协议短测，只有 6 个控制步，不是解结执行。见 [接入文档](../docs/develop/modules/knot_untying_agent_adapter_zh.md)。
-
-`python -m unittest tests.check_lock_picking_variants -v` 检查开锁固定家族接入公共 seed、条件尺寸域、外观流独立、跨调用顺序复现、真实 IK 拒绝与确定性重试、无需原型库的快照恢复及篡改拒绝。256 seed 和九代表的几何／IK 审计入口为 `topogym.tasks.lock_picking.verify_variants`；不步进物理，不生成数据集或 H5。见[生成器说明](../docs/develop/tasks/lock_picking_zh.md)。
-
-`python -m unittest tests.check_buzz_wire_3d tests.check_buzz_wire_physics tests.check_rigid_bootstrap_geometry -v` 检查空间电流棒的全程连续净空、保持穿环、触壁与错误姿态反例、平面退化、底座碰撞、URDF 碰撞体一致性及配置复现，并回归自由刚体的局部力矩、力矩限幅、录像实测时间轴和碰撞资产一致性；另行运行 `demos.environment_bootstrap.buzz_wire_3d` 检查实际场景加载，见[说明](../docs/develop/tasks/buzz_wire_3d_zh.md)。
-
-`.venv-gs121-nyx/bin/python -m unittest tests.check_blanket_flatten tests.check_blanket_execution -v` 检查被子连续网格、等距折叠、层间三角面净空、材料坐标重建、展平反例、持续静置窗口，以及失败/未释放/瞬移/不完整视频不能归档。实际重力下落另用 `python -m demos.environment_bootstrap.blanket_flatten`；完整物理尝试和三视角录制见[任务文档](../docs/develop/tasks/blanket_flatten_zh.md)。
-
-`python -m unittest tests.check_agent_bridge -v` 检查独立 coding-agent 接口的不可回滚执行、全帧反馈、幂等请求、token 计量和 HTTP / 模拟模型闭环；HTTP 检查需要本机临时端口。真实环境与手动/API 测试方法见 [agent bridge](../docs/develop/modules/agent_bridge_zh.md)。
-`.venv-gs121-nyx/bin/python -m unittest tests.check_agent_task_spec -v` 离线检查文字目标、ALOHA 关节/夹爪单位、相机投影/随动外参及物体真值不泄漏，不启动或推进 Genesis。
-
-`tests.check_horseshoe_agent` 检查 Horseshoe 接触辅助、连续稳定判定、动作和信息边界；
-`tests.check_agent_local` 用真实本地常驻进程检查任务包、图像下载、幂等和关闭，不需要 HTTP socket。
-`python -m tests.probe_horseshoe_agent --output 新目录` 是可选的真实 Genesis 短程冒烟，非完整取环验证；
-使用 `.venv-gs121-nyx/bin/python` 及 headless 渲染环境，见 [接入说明](../docs/develop/modules/horseshoe_agent_adapter_zh.md)。
-
-`tests.check_keyhole_agent` 检查共享机器人 runtime、统一注册、公开信息边界，以及 SAT 包含碰撞和分离保持判据。
-`python -m tests.probe_rigid_agent --task cast_keyhole --output 新目录` 用同一公共协议执行三段真实物理短程检查；
-`--task horseshoe_ring` 复验共享模块对原任务的兼容。探针仅保持、小幅运动和单手释放，不加载解题轨迹。
-
-`tests.check_claws_agent` 检查 Claw 静态初态哈希、公共 ALOHA 复用、信息边界、原三角网格相交/包含，
-以及双件释放、向上支架承载和连续静置判定。`tests.probe_rigid_agent --task interlocked_claws --output 新目录`
-验证保持 50 步、小幅运动 50 步和左手释放命令 1 步；不代表完整拆解或重新抓持验证。
-见 [Interlocked Claws adapter](../docs/develop/modules/interlocked_claws_agent_adapter_zh.md)。
-
-`tests.check_hedgehog_agent` 检查 Panda 七关节／半开口单位、三路初态要求、控制器无隐藏步进、信息边界和取出后释放静置判据。
-`python -m tests.probe_rigid_agent --task hedgehog_in_cage --output 新目录` 连续执行 80 步保持、20 步小幅运动和 1 步开口指令；
-只验证辅助解除，不代表完全张爪或完成取出。见 [Hedgehog adapter](../docs/develop/modules/hedgehog_agent_adapter_zh.md)。
-
-`tests.check_lock_agent` 检查 Lock Picking 公开信息边界、END／松手判定、连续转角、过载失败锁存和偏轴接近不误判。
-`python -m tests.probe_rigid_agent --task lock_picking --output 新目录` 检查 home 初态、保持、微动和无附着开口命令，未执行抓起或插入。
-见 [Lock Picking adapter](../docs/develop/modules/lock_picking_agent_adapter_zh.md)。
-
-`tests.check_buzz_wire_agent` 检查静态资产哈希、无参考轨迹依赖、公共 Panda 信息边界、纯摩擦模式不启用附着，
-以及穿环连续性、通行禁碰、末端释放承载、机械能和静置判据。
-`python -m tests.probe_rigid_agent --task buzz_wire_3d --output 新目录` 验证 80 步保持、20 步微动和 1 步张爪指令；
-核对双指真实接触、无辅助、三路逐步图像和幂等。只验证短程接口，未验证完整释放或通行。
-见 [Buzz Wire 3D adapter](../docs/develop/modules/buzz_wire_agent_adapter_zh.md)。
+旧 agent 相关测试保存在 `legacy/cleanup_20260929/topogym/agents/deferred/tests/`，不在默认测试范围内。历史 demo 成功不能替代新核心测试证据。
 
 ```bash
-.venv-gs121-nyx/bin/python -m unittest discover -s tests -p 'check_*.py'
-.venv-gs121-nyx/bin/python -m tests.check_rope_tube_mesh --obj <tube.obj> --radial 20
-bash tests/check_genesis_ipc_patch.sh
+# 本仓库已准备过的 HDRI/木纹资源；全新安装也可用 prepare_nyx_studio.py 下载至默认缓存。
+export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"
+.venv-gs121-nyx/bin/python scripts/test_base_tasks.py --device cuda --steps 200 \
+  --output runs/test_results/nyx_base_acceptance_local
 ```
 
-单元检查覆盖当前配置解析、任务卡、归档后的导入和资产路径、开锁几何与回退证书、
-松手接触门槛、刚体夹具几何、共用 Robotiq 接口、Nyx 相机与 RGB 录制协议。
-`check_rope_tube_mesh` 是可复用绳网格的独立命令检查；IPC 检查需要支持该后端的环境。
+从仓库根目录执行，输出目录必须尚不存在。Nyx 要求 CUDA、gs-nyx 0.1.3、gs-nyx-plugin 0.1.4；FEM 另要求 Genesis 1.2.1、pyuipc 0.0.25、TetGen 0.8.2（`fem` 安装组）。可用 `CUDA_TAG=cu126 INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx OPTIONAL_GROUPS="video test" bash env_setup_gs121.sh` 准备依赖。
 
-GPU 实际渲染与数据入口：
+默认 200 个控制步对应 5 秒主连续片段，另有多次回溯、续跑与 seed 重建片段；不代表完整任务成功。`runtime_evidence.py` 检查实际相机为 `NyxCamera`，在 report 和录像 manifest 记录 renderer、background、材质应用结果及相机类型。只跑少量代表任务可加 `--steps 3 --tasks cast_coil blanket_flatten rope_threading`。纯 CPU 物理测试应关闭 RGB；本入口始终生成真实 Nyx 录像，因此只接受 CUDA。
+
+
+接口、G2 生命周期、相机标定、输出一致性和 wheel 安装验证使用同一证据驱动：
 
 ```bash
-.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.presentation_preview
-.venv-gs121-nyx/bin/python -m demos.environment_bootstrap.aloha_lab --check-steps 100
+.venv-gs121-nyx/bin/python scripts/test_base_tasks.py \
+  --checks interfaces stability cameras outputs installation --timeout 3600 \
+  --output runs/test_results/simulator_interfaces_local
 ```
 
-`check_aloha_shared` 覆盖双臂模型来源、源物理参数、双底座占地和左右臂命令隔离。
-ALOHA demo 只验收静态集成及可选短时保持；双臂任务执行与双臂数据 schema 尚未验收。
+`--visual-asset-root` 指定 HDRI/材质目录；本仓库驱动默认 `.external/nyx-assets`。每种机制逐 tick 完整保存会产生较大内存与时间成本。快速回归可显式缩短 steps，报告会保留真实物理时长；短程通过不能替代长时稳定性验证。
 
-`render_bench.py` / `batch_render_probe.py` 及对应 shell 脚本继续用于公共渲染性能检查。
-旧任务测试在 [`legacy/tests/`](../legacy/tests/)；一次性 `*_spike.py`、`study_*`、`diagnose_*` 已清理。
-测试通过范围以具体检查为准，不代表十项任务均完成物理验收。
+## Scripted policy 管理调度验收
 
-Horseshoe Ring 连续路径检查使用 `python-fcl`；缺少该依赖的环境会明确跳过这六项：
+首选流程为 `obs → policy.act(obs) → env.step(action)`，由 `SegmentRunner.run_policy()` 管理段。新增合同测试位于 `test_scripted_policy_execution.py`、`test_policy_observation_access.py`、`test_cube_pick_place_policy.py`；真实集成入口 `integration/test_policy_cube_transfer.py` 导入同一个冻结运行驱动，不复制策略逻辑。
 
 ```bash
-PYTHONPATH=. .venv-gs121/bin/python -m unittest discover -s tests -p 'check_horseshoe*.py' -v
+.venv-gs121-nyx/bin/python scripts/test_scripted_policy_rollout.py \
+  --experiment scripted_policy_pick_place_20260926 --case pick_place --seed 0
+.venv-gs121-nyx/bin/python scripts/test_scripted_policy_rollout.py \
+  --experiment scripted_policy_suite_20260926 --suite
 ```
 
-`check_cast_coil` / `check_cast_coil_verification` 覆盖原型实体、质量惯量、连续碰撞证书、
-控制速度、错误路径和不完整报告拒绝。CUDA 受力台架另行执行：
+每次新建 `task_rollouts/<experiment_content>_<experiment_date>/<task_name>/rollout_0001/` 等递增目录，runner 直接写入该目录。包含源码与资产哈希、初末帧、三视角及拼屏 MP4、逐 tick／控制步／policy 日志和报告。样板使用 unlimited 的 `world` 观测；成功表示独立 Task 判据通过，不表示 limited 视觉策略通过。长流程默认使用显式 25 ms tick／decimation 1／40 solver substeps，不改变库默认值。实际结果见[本轮实施记录](../docs/develop/dev-logs/scripted_policy_execution_implementation_20260926_zh.md)。
+
+## Segment 与低层方块 policy 验收
+
+`tests/contracts/test_segment_execution.py` 与 `test_segment_artifact_access.py` 验证真实 Env 编排的段边界、终态、幂等、异常前缀、重入与权限；`tests/recording_data/test_segment_recording.py` 使用合成 RGB 和真实编码器验证短段、零步、末帧与合成视频，不计为 Genesis/Nyx 渲染验收。`tests/contracts/test_cube_transfer_task.py` 独立验证物体历史判据。
 
 ```bash
-.venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.qualify --run-physics
+.venv-gs121-nyx/bin/python -m pytest tests/contracts tests/recording_data -q
+.venv-gs121-nyx/bin/python scripts/test_policy_cube_transfer.py \
+  --output runs/test_results/cube_transfer_new --seeds 0 1 2 3 4 \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40
+.venv-gs121-nyx/bin/python scripts/test_policy_cube_transfer.py \
+  --output runs/test_results/cube_transfer_split_new --seeds 0 --split \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40
+.venv-gs121-nyx/bin/python scripts/test_policy_cube_transfer.py \
+  --output runs/test_results/segment_panda_joint_new --case interfaces \
+  --seeds 0 --robot panda_robotiq --mode JOINT_ABS
 ```
 
-该命令保存默认及半时间步的全部通过/失败结果；不代表官方八步解法或机器人抓持已通过。
+输出路径必须不存在。脚本先复制源码/配置/资源为独立快照并记录哈希，再从快照启动子进程，建场景前就写报告；保留失败证据，不自动以原工作树覆盖快照。完整接口矩阵对应 ALOHA/Panda × 四种 control_mode，集成测试见 `tests/integration/test_simulator_segments.py`。方块测试见 `test_policy_cube_transfer.py`，测试 Task 仅在测试进程临时注册，不进入生产任务列表。Nyx 资产使用既有 `scripts/prepare_nyx_studio.py` 准备；CPU 合同/编码通过不代表 GPU 物理闭环通过。正式结果见 segment 实施记录。
 
-`check_cast_coil_inverse` 复核三个运动反推结构的连续无碰撞路径、旧路径阻挡、
-螺旋运动位移界、变体中间步骤不可跳过，以及离线物理视频的原始状态哈希、步号和释放证据。
-完整机器人执行与半时间步对照仍由各 demo 的 `validation.json` 单独记录。
+方块长流程命令显式采用 25 ms physics tick / decimation 1 / solver_substeps 40，以保留 40 Hz 控制和 0.625 ms 求解子步，同时减少完整快照次数；这不改变库默认值，也不把该配置的通过结果称为默认 2.5 ms tick 的通过结果。默认时序由短程接口测试单独验收。
 
-`check_cast_coil_appearance` 检查基础版的三个单参数外观模板、质量变化、全路径仿射对应关系和连续解锁证书，防止只缩放端点或误用运动反推变体作为种子。
-
-`check_cast_coil_official_trial` 验证官方指导试验使用的加速碰撞计算、步骤连续性，
-以及“第 3 步已完全分离、随后空中转动”候选必须被拒绝。
-
-`check_cast_coil_solvability` 检查旋转中途的桌面碰撞、已知解法的整体抬升余量，
-以及模板未变但 URDF 碰撞体已变时必须拒绝复用旧证据。
-
-`check_cast_coil_robot` 检查 float32 仿真关节状态输入后的逆运动学数值精度，
-以及部分流程、缺少相机、未释放辅助约束、运动学回放或曾经穿透时不得归档为完整机器人 demo。
-完整双臂物理执行与录制分别使用 `topogym.tasks.cast_coil.robot_plan`、`robot_demo`、`robot_archive`，
-具体命令和辅助抓持范围见 `docs/develop/tasks/cast_coil_zh.md`。
-
-`check_cast_keyhole` 检查开口金叉与封闭银孔、实际碰撞槽口、质量惯量、无穿透候选初态及导出契约；
-使用已安装的 `python-fcl`。实际 GPU 检查入口如下，包含逐块碰撞加载核对和 0.5 秒自由静置：
+可一次展开完整清单；`--jobs` 表示独立 simulator 进程数，需要为每个进程预留 GPU/内存。默认单进程串行，各进程仍只创建一个 Env：
 
 ```bash
-PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.cast_keyhole
+# 五个 seed、单段/两段、空抓反例、两机器人四模式；这里所有 case 使用显式长流程时序。
+.venv-gs121-nyx/bin/python scripts/test_policy_cube_transfer.py \
+  --output runs/test_results/segment_suite_new --suite --jobs 1 \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40
+# 默认时序的原 20 控制步/0.5 秒接口矩阵，保留原跟踪容差。
+.venv-gs121-nyx/bin/python scripts/test_policy_cube_transfer.py \
+  --output runs/test_results/segment_default_matrix_new --matrix --jobs 1 \
+  --tracking-hold-seconds 0
 ```
 
-官方实物有公开解法；本地尺寸为照片重建，完整拆解路径尚未验证。
+接口测试独立保存 `segment_checks_passed`、`original_short_tracking_passed` 与 `tracking_passed`。默认最多另执行 2.5 秒由测试 policy 提交的 `{}` 保持动作以检查最终跟踪；新增保持段不会改变原 0.5 秒测量结果，`--tracking-hold-seconds 0` 禁用它。原始失败和阈值始终保留，不能用后续收敛冒充原短程测试通过。suite 还比较 seed 0 的单段/两段运行初始物理状态哈希。
 
-`check_horseshoe_physical_grasp` 检查有载荷的双指垫接触路径：两只马蹄须位于指垫之间，
-不能把悬挂在已夹住马蹄上的另一只马蹄、无载荷触碰或桌面支撑当作共同夹持。
-完整重力执行由 `topogym.tasks.horseshoe_ring.verify_physical` 独立复核；
-它要求原始初态、初始圆环下落、换抓接触证据、保持链眼连接和无辅助的圆环落桌静置。
-运行方式见 `docs/develop/tasks/horseshoe_ring_zh.md`。
+已完成验收采用单进程串行。多批同时启动时，显存需求按全部活跃 worker 累加；本次六个实例并发曾发生显存不足，失败记录保留。默认时序的完整原短程矩阵命令可能因 Panda 夹爪未在 0.5 秒内到位而返回失败，该资格与段执行/日志/录像分别报告。
+# Blanket 冻结初态验收
 
-`check_horseshoe_timestep.py` 检查半时间步对照的条件一致性：拒绝换几何、换控制增益、
-换执行代码或未实际减半时间步的比较；允许各运行按实测状态独立重规划。
-运行：`PYTHONPATH=. .venv-gs121-nyx/bin/python -m pytest -q tests/check_horseshoe_timestep.py`。
+`test_pbd_initial_state.py` 检查数值格式、损坏与布局拒绝；`test_env_initial_state.py` 检查零预运行导入顺序、失败不发布 episode、权限和 reset warmup 冲突。真实 Genesis/Nyx 检查由以下入口复制源码快照后执行；它不等于机器人可解性验证。
 
-`check_horseshoe_variant_generator.py` 检查 v2 的公共 seed / EpisodeSpec 接入、固定家族与类内联动参数、
-快照恢复与篡改拒绝、尺寸变化后的初态/折合 IK、保持家族的有界重试，以及物理或家族区分检查失败时禁止放行。
-这里的模拟验收夹具只测试接口，不构成物理成功证据；实际执行与 256 seed 参数检查见
-`docs/develop/tasks/horseshoe_ring_zh.md`。
+已通过离线稳定检查的单折对照配置、完整录像与跨进程验收见[2026-09-26 证据](../runs/test_results/blanket_initialization_20260926_01/README.md)。八面板默认准备参数尚未合格；需要复现正例时使用该说明中的完整参数，不能把下方通用 CLI 示例当成稳定候选。
 
-`check_horseshoe_ring_gravity_phase.py` 检查自由圆环自转时，重力参考抓点的世界位置和姿态不变，
-同时保留旧基础 runner 的材料相位行为。它不替代完整抓环动力学验收。
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  TOPOGYM_ASSET_ROOT=/home/jianwen/topogym/assets PYTHONPATH=. \
+  .venv-gs121-nyx/bin/python scripts/prepare_blanket_initial_states.py \
+  --output runs/test_results/blanket_candidate_new
 
-`check_horseshoe_ring_release.py` 用保留的两个 F3 失败末态检查：原落桌点仍因 IK 不可达被拒绝，
-邻近位置能得到通过原门槛的携环路径；已成功的 F1 原位置与路径保持不变。
-夹具位于 `tests/fixtures/horseshoe_ring_release_v2.json`，测试不依赖原始运行目录，也不把规划当作物理成功。
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=. \
+  .venv-gs121-nyx/bin/python scripts/test_blanket_initialization.py \
+  --candidate runs/test_results/blanket_candidate_new \
+  --output runs/test_results/blanket_acceptance_new
+```
 
-`check_buzz_wire_robot.py` 检查紧凑单臂实例的完整倾斜环净空、平面握柄 URDF 可加载性与保守包络、最终直立段释放条件、姿态输入拒绝和原始机器人关节限位。实际动力学与步长复验见 Buzz Wire 任务归档。
+准备参数默认值只代表候选，不保证释放后保持褶皱；只有生成 `state/manifest.json` 且准备报告通过，才运行恢复验收。输出目录必须不存在，GPU 测试串行。开发探索中的 CLI 参数、结果和失败录像保存在各次 `report.json`；三档默认值不由该脚本自动切换。
 
-`check_buzz_wire_families.py` 检查 F2 / F3 的关卡顺序、两端支撑、工具尺寸保持、姿态插值与非法输入；包含两个端点均无碰撞、旋转中途却撞障碍的反例，防止把离散姿态误报为连续通路。联合运行 `tests.check_buzz_wire_3d tests.check_buzz_wire_physics tests.check_buzz_wire_robot tests.check_buzz_wire_families`。
+Harbor 任务检查使用 `.venv-harbor/bin` 中的 Python/CLI，执行 `bash ci_checks/run_all.sh`；当前协议和运行方式见[Harbor 手册](../docs/rcb/README.md)。本地 SegmentRunner 合同测试仍在 `tests/contracts/`。两版旧 Harbor 专属测试和运行记录均已归档。
+
+## 自动柔体 grasp assist
+
+新增 `unit/test_soft_grasp.py`、`unit/test_grasp_geometry.py`；真实材料机制测试在 `integration/test_soft_grasp_mechanism.py`，Panda 两段抓放在 `integration/test_grasp_pbd.py` 与 `test_grasp_ipc.py`。机制使用标准 Env/SegmentRunner 的独立双夹爪场景；机器人使用 Nyx 与默认 home。它们不声明任何正式拓扑 Task solved。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/test_grasp_assist.py --device cpu --case pbd-mechanism --output runs/test_results/pbd_assist_new
+.venv-gs121-nyx/bin/python scripts/test_grasp_assist.py --device cuda --case fem-mechanism --output runs/test_results/fem_assist_new
+.venv-gs121-nyx/bin/python scripts/test_grasp_assist.py --device cuda --case pbd-robot --output runs/test_results/pbd_robot_new
+.venv-gs121-nyx/bin/python scripts/test_grasp_assist.py --device cuda --case fem-robot --output runs/test_results/fem_robot_new
+.venv-gs121-nyx/bin/python scripts/test_grasp_assist.py --device cuda --case fem-robot --fem-rope-profile v13_material_mesh --output runs/test_results/fem_v13_robot_new
+```
+
+输出目录须不存在；GPU case 串行运行。每次保存源码快照、引擎版本/哈希、生成资产、报告与 rollout 证据；原生异常不会被后续成功覆盖。模型限制和实际通过范围见 [grasp 用法](../docs/develop/modules/grasp_assist_zh.md)及[实施记录](../docs/develop/modules/soft_grasp_assist_engineering_plan_20260927_zh.md)。
+
+`v13_material_mesh` 现为四类 FEM 绳任务及 `fem-robot` 的共享默认配方。独立机器人夹具保留 160 mm 长、8 mm 直径，采用历史 Rope Threading v13 的 `E=50 kPa / nu=.30 / rho=650`、24 边表面采样、约 1.375 mm 轴向间隔、TetGen 请求体积 `2.5e-9 m³` 与 0.2 mm IPC 接触距离。资产报告记录实际四面体体积与数量；历史专用 20/s 形变阻尼未移植，因此不是原 1.1 m 场景的完整复现。机器人策略和 assist 配置相同，但细网格下实际选区长度需从绑定索引实测。
+
+柔体机器人 case 可加 `--lift-height-m .10`，将默认 55 mm 抬升改为 100 mm，以检查下垂绳端完全离桌时的行为；策略参数进入报告与 submission hash。不同抬升高度不能混称为相同动作的单变量对照。
+
+## Orbits 三档初态稳定性
+
+```bash
+.venv-gs121-nyx/bin/python scripts/test_orbits_stability.py \
+  --tiers easy medium hard --duration 10 --window 2 \
+  --output runs/test_results/orbits_stability_new
+```
+
+固定源码快照、独立进程串行执行，默认等待至少 12 GiB 空闲显存（可用 `--min-free-gib`、
+`--gpu-wait-timeout` 指定）。标准 Env、ALOHA home、FEM/IPC、Nyx/compact_lab；
+共享录制保存四路实际视频，逐 tick 检查连接、形变、支撑和受困关系，末 2 s 检查静稳。
+`--dt .00125` 可进行半步长复验。构造失败、原生进程中止、资源等待超时均保存并如实标记，
+不视为静稳通过。静稳结论独立于任务解法及难度资格。三档当前证据见[任务说明](../docs/develop/tasks/orbits_zh.md)。

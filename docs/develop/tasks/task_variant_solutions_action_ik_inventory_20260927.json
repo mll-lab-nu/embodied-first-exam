@@ -1,0 +1,923 @@
+{
+  "recorded_at_utc": "2026-09-28T04:09:25.039516+00:00",
+  "repo_head": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+  "scope": "read-only research inventory; dirty worktree source identity, not runtime qualification",
+  "files": {
+    "topogym/config/variation_records.py": "c01ac4a2e217482c88620a5ccf5bab7311b4f639d6364a899aba9a3852a0b80a",
+    "topogym/planning/__init__.py": "a649dd8f3c9ff2bac29d9ea87f94b96c6cc56686ee30a003ae0a01605b7bbc8f",
+    "topogym/planning/base.py": "529c283f17b3a7259a99d716ba99993bacb20439ca4323d6f7343c338fe67d51",
+    "topogym/planning/cast_coil/__init__.py": "f306302bfd3aa18e8da5587069a86a13fc1a4684b048a5bb96b5dae14552bd88",
+    "topogym/planning/cast_coil/baseline.py": "e2290667649c84a2a75819fc64287aaef6c8dd8e8b6d10c7850ddcac7b95cd71",
+    "topogym/planning/examples/__init__.py": "e83092c9e6a490d68243b73bb7237f99ce430e9f2a64245a48a3dcdd8dd9d08d",
+    "topogym/planning/examples/cube_pick_place.py": "2f9a9fc8faa7040736d9cf083a97496995c236986e0db8184b422715cddf1316",
+    "topogym/planning/hedgehog_in_cage/__init__.py": "8101251070f60a92a74fee7858a48392315016982aea140c8782dabb229f6c20",
+    "topogym/planning/hedgehog_in_cage/hedgehog_in_cage_medium_planning.py": "63c3c2d29d74471cf084a1de606cc0686bbdb607859d3a51ee2202ffe0ef93e4",
+    "topogym/planning/interlocked_claws/__init__.py": "02c0ee1bdf57aed2c66a81ffe3852350987dfe8b9e501b926f5b340abe6a76ad",
+    "topogym/planning/interlocked_claws/interlocked_claws_medium_planning.py": "e029387fa60805f893e460f3c0b7fbd0fd055780c4d3799f626bc0831bee5f27",
+    "topogym/planning/lock_picking/__init__.py": "325b6d9a0d8a477bfe6663d35197bf3272dd1054b6959614f5b6f557c27cbc58",
+    "topogym/planning/lock_picking/lock_picking_medium_planning.py": "84ba91b69f96d27ca62f90ae27d3023339a0a01aa98455d237444bb1e31b32e1",
+    "topogym/planning/motions/cast_coil.py": "1cff5ac079f6ec6018fdae8d6005ab3a32bddc210d4a29775564b7894e809d7e",
+    "topogym/planning/rigid_reference/__init__.py": "873bf54faf45c0efe32b27c5800995d8c4884e47c98040556e32f1846514d591",
+    "topogym/planning/rigid_reference/feedback.py": "2c922e64b78822194876cba429ba128e47f222e7a129bcc27d0f004f14ef7c74",
+    "topogym/planning/rigid_reference/geometry.py": "2ba912b65106936f4cc8ef85443c39c7652bcced496555693810672671d37670",
+    "topogym/planning/rigid_reference/rrt.py": "b16154420d2a2dbfd178ad2db1d0d92280f33113c41380f94c1a2367c4a6234e",
+    "topogym/planning/rigid_reference/search.py": "f9d831a15aa5a1f27bb288c84e277d10b7ac64eee5019814092b10dbb36bc49c",
+    "topogym/robot/control.py": "8a861af755bcfcdc84686d8da502fc90eaca8857a84351697862e67f7b00f538",
+    "topogym/simulator/config.py": "c957368bc27d5373e9bac53deff58c30d07f77f2897c296717dd8ec9ffd75885",
+    "topogym/solvers/genesis_kinematics.py": "aacddd2f3a2a665decc191f26b5757db8e972b5dc896ba5d05ffd2692a0bc1b5",
+    "topogym/tasks/blanket_flatten/blanket_flatten_corner_cross_twist.py": "4335af6c384ef8ccf54a86c6d1c387d999f96c0f678cd164724c2cce86f6ef9b",
+    "topogym/tasks/blanket_flatten/blanket_flatten_easy.py": "8f1fe484f0f18f8cafc6c6cb8a08e65222955215f08ddad3c1c938a1d93e5253",
+    "topogym/tasks/blanket_flatten/blanket_flatten_fold_spiral.py": "fbabf9865a2cf29559a8dfbab49c68827efd3b47ec44a89a72756c58e701cb6e",
+    "topogym/tasks/blanket_flatten/blanket_flatten_hard.py": "7688f3a84d0127539a4ee49bd632794cd9d19c59aeb1cc3a360c6bc2a171175d",
+    "topogym/tasks/blanket_flatten/blanket_flatten_medium.py": "cf04b5a99e62374da527b19633a2858399b8dbdeb437c5d1184d1f535cb48cc9",
+    "topogym/tasks/blanket_flatten/blanket_flatten_three_folds.py": "8b44042c4a5316385ed1f41380f1a426340d225b5de100c80f31db03294f46ce",
+    "topogym/tasks/blanket_flatten/common.py": "caa9bbc47657c8b10677f04a34bb2b8069fb39e6d70018ba6c7cf3aed086ea25",
+    "topogym/tasks/buzz_wire_3d/buzz_wire_3d_easy.py": "298a9d9245168f51398586909dcc0fa630ceb6b81846e4f55be9eb6299fac7dd",
+    "topogym/tasks/buzz_wire_3d/buzz_wire_3d_hard.py": "8337ce52ba113cacab16694146fc2466799b650523b28d9ac6ac2ef21199629b",
+    "topogym/tasks/buzz_wire_3d/buzz_wire_3d_medium.py": "059acb887c45e1baf9c4eb92fd34df32e251beb877c08ac08f65e2967f5a0739",
+    "topogym/tasks/buzz_wire_3d/common.py": "993683765549f690c6e757be42d707fdae944f1e2d51bb3383ecc5085295ebe7",
+    "topogym/tasks/cast_coil/cast_coil_easy.py": "1ba6dc3f2e98055b5fcd9e4b04d34b2b2efa7453775cef9b533a7954f68f7ae4",
+    "topogym/tasks/cast_coil/cast_coil_hard.py": "8af7f44996ed9ef5a545a840705edec8bfe139ee0c0d41665ee3e3db0523fd7b",
+    "topogym/tasks/cast_coil/cast_coil_medium.py": "6051bfc6216e9d49caf61b54570ebf9c883ff9396c5609255c243a52a7caee8c",
+    "topogym/tasks/cast_coil/common.py": "409975b1a78e3f21543da0b35d7ec8bb3732cf080bb42ced8a5f398c75510a66",
+    "topogym/tasks/cast_keyhole/cast_keyhole_easy.py": "bf8e8f3ccd5d5b3d182cb1bb8a227c02710f02bf074bc5f6b783f57b336e1653",
+    "topogym/tasks/cast_keyhole/cast_keyhole_hard.py": "47f7be2864fca39f20bbc27dccf67851d00e7479f8ec1fe845f21d82b243e61a",
+    "topogym/tasks/cast_keyhole/cast_keyhole_medium.py": "df09c0a2fd498ad670f01a441447e5275975e51122f773cec98e8284700a0466",
+    "topogym/tasks/cast_keyhole/common.py": "2b58a8201f6099792fa52d07df5a9fff614ed07a3f03b80a4282ec4c9cc9ce1e",
+    "topogym/tasks/fiber_bundling/common.py": "5f2006a54211cd8dd77ea2a2efb165ddf2ee00024a28d3a608a63fc8c613dcde",
+    "topogym/tasks/fiber_bundling/fiber_bundling_easy.py": "01181e2eceb326f683504bfc772ada2cc901a20c5de8cd6a882d7197d4124b8d",
+    "topogym/tasks/fiber_bundling/fiber_bundling_hard.py": "2d024ca07c014f6a8a5f0b7abda801f22ad376db1bf77f3cb9cfdfe0b72d9488",
+    "topogym/tasks/fiber_bundling/fiber_bundling_medium.py": "d4fd87d237cccc2a12a46fee2df910c02e879fb5ca652c27eeffa633c0e23445",
+    "topogym/tasks/hedgehog_in_cage/common.py": "3f958d1131f37815b7b790b2a4c2f3f62d0653e719f9936e7108ec3aec019357",
+    "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easy.py": "c3d18e9278db5c07365087d90999f6afceee6e7faa6a17c0c433e58cd6ae048d",
+    "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_hard.py": "22693ab29a2d807528bf73f282fa7498ed31e4726b2cae5bdc7424bb674553c4",
+    "topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_medium.py": "8cf5fe0dcaae4da76b00e69b404a85cbe47a82e21cadfa3105c425ed43981ca5",
+    "topogym/tasks/horseshoe_ring/common.py": "99f2a7cb72beac3602c92ee5cdd70f63059e617871da587867edef78dc3cc89a",
+    "topogym/tasks/horseshoe_ring/horseshoe_ring_easy.py": "87ff45ab6f2df467995c69b5a40d911a17d0a49ee004b2a211a7418f620e69ae",
+    "topogym/tasks/horseshoe_ring/horseshoe_ring_hard.py": "86f3af7f8c29efca35dbe1adea781e86f2ea9c79798a7c6038b698c2d16db91f",
+    "topogym/tasks/horseshoe_ring/horseshoe_ring_medium.py": "153b6785923fbbdfdf1103d76612164f2ac63a4623fa7165a19e3859bcc0a30c",
+    "topogym/tasks/interlocked_claws/common.py": "24e66a05a0755992bdaa027d16d28c174063cbfeb964de92a9131e2acfa240e2",
+    "topogym/tasks/interlocked_claws/interlocked_claws_easy.py": "26efad0216798f917c02b9ee00f56e469f829caf42588ce888db7a5e83dfaea1",
+    "topogym/tasks/interlocked_claws/interlocked_claws_hard.py": "86ece1590886eb16993b5328c01647c717cb16cbcb6c95738c57ab83a97816b3",
+    "topogym/tasks/interlocked_claws/interlocked_claws_medium.py": "18f210a7bec7de7747a9e83c977cd6d2d6bcbe32c684ad46e60c8f3d69f1c037",
+    "topogym/tasks/knot_untying/common.py": "d562e0811380b5b0cbba73bfda98c3e3f24e58d08774f870ace308b55c4be817",
+    "topogym/tasks/knot_untying/knot_untying_double_overhand.py": "4879c9dc270e249286f309aad6d83982f2da826cd0914631923b2d338db34c89",
+    "topogym/tasks/knot_untying/knot_untying_easy.py": "cfca2d14b328bf71520b28f4180b4b0f780effac82e2283f870868019b38a5a6",
+    "topogym/tasks/knot_untying/knot_untying_hard.py": "9605aada870012d7af129ed4767504f9bf99897780f0fc93767fdb2245736999",
+    "topogym/tasks/knot_untying/knot_untying_medium.py": "1185b3f050a8234819f37a913c2bc78650f8de2169fdf5894b7ea6eb0731788e",
+    "topogym/tasks/lock_picking/common.py": "8147749c00be736e38052a4c483598ba87bb199a882fb3c8188ffdc62ef36162",
+    "topogym/tasks/lock_picking/lock_picking_easy.py": "68a160a9b8bafac6bf50bfd99f0cd5ee78dc118d68e721646c1acedabdbbe6ec",
+    "topogym/tasks/lock_picking/lock_picking_hard.py": "ca5f5adbed31a029bad4d9ddc4f3d455bf5814bd41cb66d64439fe7a4f618215",
+    "topogym/tasks/lock_picking/lock_picking_medium.py": "6c6f6abaaeb8a0537414ce47df9072fafc18693bf306738f2381ebf258262070",
+    "topogym/tasks/orbits/common.py": "b14c07c84b102f203b7d75ac4425abbe644bab8d3012b873fffd403142bd849b",
+    "topogym/tasks/orbits/orbits_easy.py": "a1688a2db1b763c57f9db820ea389a1c17703efd1d1f0b999299498ef14c0f9f",
+    "topogym/tasks/orbits/orbits_hard.py": "eee5948183dbdcc8707d1842423ec765b2db5e144bfe6ae302112ca7366a3740",
+    "topogym/tasks/orbits/orbits_medium.py": "4e83e4c9ef8b5b49e551ada23c7685e6e82049ac9de66c555b807f8072d5735f",
+    "topogym/tasks/orbits/orbits_reference85.py": "76cce8f9803e3cd486c522a4d2c86ebb9acbd755eea694a866dab1584fd3c368",
+    "topogym/tasks/placement.py": "e9d64588d71ea42ebcdf7c857b9f5eb3edb3badc7f22d021b8c4fa2f52e9df94",
+    "topogym/tasks/rope_threading/common.py": "11668e345eae5147de87b271c4936b109ed481c9c508dd22497b82756d10df2b",
+    "topogym/tasks/rope_threading/rope_threading_easy.py": "885f19e9468316cb8d6f80fa5182b120fca5eba024a9ebce0e86548aae08bdbc",
+    "topogym/tasks/rope_threading/rope_threading_hard.py": "bc5798ee4bcb53689c19dbcba8a8b62c960a7fdd50832a718eba3f0b39c94ce6",
+    "topogym/tasks/rope_threading/rope_threading_medium.py": "7dd87293055df4350c29d32552727a1dddc922b20fc7460791d1379ee01227c5",
+    "topogym/tasks/scene_presets.py": "1f5dd7a0975c872c050d53d492dc531ca1d77f9fa2028ce7b5e9bfec45fc58dc",
+    "topogym/tasks/slotted_post_ring/common.py": "b177a3ae636c0adabc1a71a2aef6ff823b16ba981bc79eee3316cf73da38e875",
+    "topogym/tasks/slotted_post_ring/slotted_post_ring_clearance36.py": "e038053cda75cc6b2065ea24d298a1583c957a4691bd49abd51fb563c5db2504",
+    "topogym/tasks/slotted_post_ring/slotted_post_ring_easy.py": "c8eeb85d10f0652fa3a1e298a5006818941576ff0db24e40c884eb0db9e20d70",
+    "topogym/tasks/slotted_post_ring/slotted_post_ring_hard.py": "01e2f62d5e8ac5290a4f58f37d593fd69e2487ba360733564da1558d31bdd738",
+    "topogym/tasks/slotted_post_ring/slotted_post_ring_medium.py": "b20b4e3d1cf3b686c7d32df49719c22bc23d4beb3e84539fb8851e719e5d2c35"
+  },
+  "variations": [
+    {
+      "task_id": "orbits",
+      "variation_id": "orbits_reference85",
+      "difficulty": null,
+      "family_id": "reference85",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.orbits.orbits_reference85:OrbitsReference85Task",
+      "aliases": [
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "compatibility"
+    },
+    {
+      "task_id": "cast_keyhole",
+      "variation_id": "cast_keyhole_easy",
+      "difficulty": "easy",
+      "family_id": "long_stroke",
+      "model_revision": "seed_families_v2",
+      "implementation": "topogym.tasks.cast_keyhole.cast_keyhole_easy:CastKeyholeEasyTask",
+      "aliases": [
+        "base",
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "cast_keyhole",
+      "variation_id": "cast_keyhole_medium",
+      "difficulty": "medium",
+      "family_id": "eccentric_window",
+      "model_revision": "seed_families_v2",
+      "implementation": "topogym.tasks.cast_keyhole.cast_keyhole_medium:CastKeyholeMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "cast_keyhole",
+      "variation_id": "cast_keyhole_hard",
+      "difficulty": "hard",
+      "family_id": "turnback",
+      "model_revision": "seed_families_v2",
+      "implementation": "topogym.tasks.cast_keyhole.cast_keyhole_hard:CastKeyholeHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "cast_coil",
+      "variation_id": "cast_coil_easy",
+      "difficulty": "easy",
+      "family_id": "baseline_assembly",
+      "model_revision": "reference_v1",
+      "implementation": "topogym.tasks.cast_coil.cast_coil_easy:CastCoilEasyTask",
+      "aliases": [
+        "easy",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "cast_coil",
+      "variation_id": "cast_coil_medium",
+      "difficulty": "medium",
+      "family_id": "axial_screw_turn",
+      "model_revision": "seed_families_v1_9mm",
+      "implementation": "topogym.tasks.cast_coil.cast_coil_medium:CastCoilMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "cast_coil",
+      "variation_id": "cast_coil_hard",
+      "difficulty": "hard",
+      "family_id": "split_turn_offset",
+      "model_revision": "seed_families_v1_9mm",
+      "implementation": "topogym.tasks.cast_coil.cast_coil_hard:CastCoilHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "variation_id": "horseshoe_ring_easy",
+      "difficulty": "easy",
+      "family_id": "waist_mild",
+      "model_revision": "coupled_shapes_v1",
+      "implementation": "topogym.tasks.horseshoe_ring.horseshoe_ring_easy:HorseshoeRingEasyTask",
+      "aliases": [
+        "base",
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "variation_id": "horseshoe_ring_medium",
+      "difficulty": "medium",
+      "family_id": "u_mild",
+      "model_revision": "coupled_shapes_v1",
+      "implementation": "topogym.tasks.horseshoe_ring.horseshoe_ring_medium:HorseshoeRingMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "variation_id": "horseshoe_ring_hard",
+      "difficulty": "hard",
+      "family_id": "waist_ellipse",
+      "model_revision": "coupled_shapes_v1",
+      "implementation": "topogym.tasks.horseshoe_ring.horseshoe_ring_hard:HorseshoeRingHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "variation_id": "hedgehog_in_cage_easy",
+      "difficulty": "easy",
+      "family_id": "classic_3star",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_easy:HedgehogInCageEasyTask",
+      "aliases": [
+        "easy",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "variation_id": "hedgehog_in_cage_medium",
+      "difficulty": "medium",
+      "family_id": "elliptical_windows",
+      "model_revision": "ellipse_dark_wood_v1",
+      "implementation": "topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_medium:HedgehogInCageMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "variation_id": "hedgehog_in_cage_hard",
+      "difficulty": "hard",
+      "family_id": "gen_keyhole",
+      "model_revision": "fixed_v2",
+      "implementation": "topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_hard:HedgehogInCageHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "lock_picking",
+      "variation_id": "lock_picking_medium",
+      "difficulty": "medium",
+      "family_id": "standard_150mm",
+      "model_revision": "historical_physics_v2",
+      "implementation": "topogym.tasks.lock_picking.lock_picking_medium:LockPickingMediumTask",
+      "aliases": [
+        "medium",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "lock_picking",
+      "variation_id": "lock_picking_easy",
+      "difficulty": "easy",
+      "family_id": "F1",
+      "model_revision": "seed_families_v1",
+      "implementation": "topogym.tasks.lock_picking.lock_picking_easy:LockPickingEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "lock_picking",
+      "variation_id": "lock_picking_hard",
+      "difficulty": "hard",
+      "family_id": "F3",
+      "model_revision": "seed_families_v1",
+      "implementation": "topogym.tasks.lock_picking.lock_picking_hard:LockPickingHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "fiber_bundling",
+      "variation_id": "fiber_bundling_easy",
+      "difficulty": "easy",
+      "family_id": "4_strands",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.fiber_bundling.fiber_bundling_easy:FiberBundlingEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "fiber_bundling",
+      "variation_id": "fiber_bundling_medium",
+      "difficulty": "medium",
+      "family_id": "8_strands",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.fiber_bundling.fiber_bundling_medium:FiberBundlingMediumTask",
+      "aliases": [
+        "medium",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "fiber_bundling",
+      "variation_id": "fiber_bundling_hard",
+      "difficulty": "hard",
+      "family_id": "16_strands",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.fiber_bundling.fiber_bundling_hard:FiberBundlingHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "buzz_wire_3d",
+      "variation_id": "buzz_wire_3d_easy",
+      "difficulty": "easy",
+      "family_id": "F1_triple",
+      "model_revision": "F1_triple_compact_toy_s70_home_lab_v1_raised40mm",
+      "implementation": "topogym.tasks.buzz_wire_3d.buzz_wire_3d_easy:BuzzWire3DEasyTask",
+      "aliases": [
+        "base",
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "buzz_wire_3d",
+      "variation_id": "buzz_wire_3d_medium",
+      "difficulty": "medium",
+      "family_id": "F2",
+      "model_revision": "F2_compact_toy_s70_home_lab_v4_raised40mm",
+      "implementation": "topogym.tasks.buzz_wire_3d.buzz_wire_3d_medium:BuzzWire3DMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "buzz_wire_3d",
+      "variation_id": "buzz_wire_3d_hard",
+      "difficulty": "hard",
+      "family_id": "F3",
+      "model_revision": "F3_compact_toy_s70_home_lab_v4_raised40mm",
+      "implementation": "topogym.tasks.buzz_wire_3d.buzz_wire_3d_hard:BuzzWire3DHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "interlocked_claws",
+      "variation_id": "interlocked_claws_easy",
+      "difficulty": "easy",
+      "family_id": "helical_claws_balanced_v2",
+      "model_revision": "pregrasp_v1",
+      "implementation": "topogym.tasks.interlocked_claws.interlocked_claws_easy:InterlockedClawsEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "interlocked_claws",
+      "variation_id": "interlocked_claws_medium",
+      "difficulty": "medium",
+      "family_id": "acute_windows_opposed",
+      "model_revision": "opposed_pregrasp_v1",
+      "implementation": "topogym.tasks.interlocked_claws.interlocked_claws_medium:InterlockedClawsMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "interlocked_claws",
+      "variation_id": "interlocked_claws_hard",
+      "difficulty": "hard",
+      "family_id": "claw_weave",
+      "model_revision": "pregrasp_v1",
+      "implementation": "topogym.tasks.interlocked_claws.interlocked_claws_hard:InterlockedClawsHardTask",
+      "aliases": [
+        "hard",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "knot_untying",
+      "variation_id": "knot_untying_easy",
+      "difficulty": "easy",
+      "family_id": "two_overlap_loop",
+      "model_revision": "two_overlap_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.knot_untying.knot_untying_easy:KnotUntyingEasyTask",
+      "aliases": [
+        "easy",
+        "two_overlap_loop",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "knot_untying",
+      "variation_id": "knot_untying_medium",
+      "difficulty": "medium",
+      "family_id": "overhand_trefoil",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.knot_untying.knot_untying_medium:KnotUntyingMediumTask",
+      "aliases": [
+        "medium",
+        "overhand_trefoil"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "knot_untying",
+      "variation_id": "knot_untying_hard",
+      "difficulty": "hard",
+      "family_id": "figure_eight",
+      "model_revision": "local_curve_v2_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.knot_untying.knot_untying_hard:KnotUntyingHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "knot_untying",
+      "variation_id": "knot_untying_double_overhand",
+      "difficulty": null,
+      "family_id": "double_overhand",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.knot_untying.knot_untying_double_overhand:KnotUntyingDoubleOverhandTask",
+      "aliases": [
+        "double_overhand"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "experimental"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_easy",
+      "difficulty": "easy",
+      "family_id": "simple_folds",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_easy:BlanketFlattenEasyTask",
+      "aliases": [
+        "five_folds",
+        "easy",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_medium",
+      "difficulty": "medium",
+      "family_id": "fold_roll",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_medium:BlanketFlattenMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_hard",
+      "difficulty": "hard",
+      "family_id": "gathered_twist",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_hard:BlanketFlattenHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "blocked",
+      "reason": "The traced gathered target requires staged PBD preparation with flat material rest coordinates. The current simulator has no qualified episode-zero preparation adapter; loading a twisted OBJ would change the rest shape.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_three_folds",
+      "difficulty": null,
+      "family_id": "three_folds",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_three_folds:BlanketFlattenThreeFoldsTask",
+      "aliases": [
+        "three_folds"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "experimental"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_fold_spiral",
+      "difficulty": null,
+      "family_id": "fold_spiral",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_fold_spiral:BlanketFlattenFoldSpiralTask",
+      "aliases": [],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "experimental"
+    },
+    {
+      "task_id": "blanket_flatten",
+      "variation_id": "blanket_flatten_corner_cross_twist",
+      "difficulty": null,
+      "family_id": "corner_cross_twist",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.blanket_flatten.blanket_flatten_corner_cross_twist:BlanketFlattenCornerCrossTwistTask",
+      "aliases": [],
+      "status": "blocked",
+      "reason": "The traced crossing/twist preparation has no stable simulator initial-state adapter.",
+      "validation": "not_runtime_validated",
+      "pool": "experimental"
+    },
+    {
+      "task_id": "rope_threading",
+      "variation_id": "rope_threading_medium",
+      "difficulty": "medium",
+      "family_id": "wang_reference_v1",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.rope_threading.rope_threading_medium:RopeThreadingMediumTask",
+      "aliases": [
+        "medium",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "rope_threading",
+      "variation_id": "rope_threading_easy",
+      "difficulty": "easy",
+      "family_id": "two_rings",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.rope_threading.rope_threading_easy:RopeThreadingEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "planned",
+      "reason": "No frozen ring layout and matching initial rope/threading contract exists for this proposed setting.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "rope_threading",
+      "variation_id": "rope_threading_hard",
+      "difficulty": "hard",
+      "family_id": "three_tight_rings",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.rope_threading.rope_threading_hard:RopeThreadingHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "planned",
+      "reason": "No frozen ring layout and matching initial rope/threading contract exists for this proposed setting.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "slotted_post_ring",
+      "variation_id": "slotted_post_ring_hard",
+      "difficulty": "hard",
+      "family_id": "original_scale",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.slotted_post_ring.slotted_post_ring_hard:SlottedPostRingHardTask",
+      "aliases": [
+        "hard",
+        "base"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "slotted_post_ring",
+      "variation_id": "slotted_post_ring_easy",
+      "difficulty": "easy",
+      "family_id": "large_ring",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.slotted_post_ring.slotted_post_ring_easy:SlottedPostRingEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "planned",
+      "reason": "No frozen ring diameter with verified top extraction and end-disc retention exists; clearance36 changes the post slot, not the target ring.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "slotted_post_ring",
+      "variation_id": "slotted_post_ring_medium",
+      "difficulty": "medium",
+      "family_id": "middle_ring",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.slotted_post_ring.slotted_post_ring_medium:SlottedPostRingMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "planned",
+      "reason": "No frozen ring diameter with verified top extraction and end-disc retention exists; clearance36 changes the post slot, not the target ring.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "slotted_post_ring",
+      "variation_id": "slotted_post_ring_clearance36",
+      "difficulty": null,
+      "family_id": "clearance36",
+      "model_revision": "simulator_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.slotted_post_ring.slotted_post_ring_clearance36:SlottedPostRingClearance36Task",
+      "aliases": [],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "experimental"
+    },
+    {
+      "task_id": "orbits",
+      "variation_id": "orbits_easy",
+      "difficulty": "easy",
+      "family_id": "2_rings",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.orbits.orbits_easy:OrbitsEasyTask",
+      "aliases": [
+        "easy"
+      ],
+      "status": "planned",
+      "reason": "Orbits geometry and cord topology currently require four rings; the proposed reduced-ring construction is missing.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "orbits",
+      "variation_id": "orbits_medium",
+      "difficulty": "medium",
+      "family_id": "3_rings",
+      "model_revision": "simulator_v1",
+      "implementation": "topogym.tasks.orbits.orbits_medium:OrbitsMediumTask",
+      "aliases": [
+        "medium"
+      ],
+      "status": "planned",
+      "reason": "Orbits geometry and cord topology currently require four rings; the proposed reduced-ring construction is missing.",
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    },
+    {
+      "task_id": "orbits",
+      "variation_id": "orbits_hard",
+      "difficulty": "hard",
+      "family_id": "four_rings_compact",
+      "model_revision": "compact_external_handle_v1_fem_soft50_fine_v1",
+      "implementation": "topogym.tasks.orbits.orbits_hard:OrbitsHardTask",
+      "aliases": [
+        "hard"
+      ],
+      "status": "integrated",
+      "reason": null,
+      "validation": "not_runtime_validated",
+      "pool": "tier"
+    }
+  ],
+  "verified_at_utc": "2026-09-28T04:23:08.172333+00:00",
+  "document": "docs/develop/tasks/task_variant_solutions_action_ik_zh.md",
+  "document_sha256": "c2f73454ba502f6244ca96c992e1d809408dfceb7db1bd3a3ca4f6cc9a7102fd",
+  "hash_scope": "files contains the 82 implementation sources selected for this research; linked_file_sha256 records local files cited by the document. Directory references are not recursively hashed. This is source identity, not runtime validation.",
+  "coverage": {
+    "task_count": 13,
+    "variation_count": 45,
+    "pool_counts": {
+      "compatibility": 1,
+      "tier": 39,
+      "experimental": 5
+    },
+    "status_counts": {
+      "integrated": 37,
+      "blocked": 2,
+      "planned": 6
+    },
+    "tier_status_counts": {
+      "integrated": 32,
+      "blocked": 1,
+      "planned": 6
+    },
+    "variation_sections": {
+      "orbits_reference85": "task_variant_solutions_action_ik_zh.md#orbits",
+      "cast_keyhole_easy": "task_variant_solutions_action_ik_zh.md#keyhole",
+      "cast_keyhole_medium": "task_variant_solutions_action_ik_zh.md#keyhole",
+      "cast_keyhole_hard": "task_variant_solutions_action_ik_zh.md#keyhole",
+      "cast_coil_easy": "task_variant_solutions_action_ik_zh.md#coil",
+      "cast_coil_medium": "task_variant_solutions_action_ik_zh.md#coil",
+      "cast_coil_hard": "task_variant_solutions_action_ik_zh.md#coil",
+      "horseshoe_ring_easy": "task_variant_solutions_action_ik_zh.md#horseshoe",
+      "horseshoe_ring_medium": "task_variant_solutions_action_ik_zh.md#horseshoe",
+      "horseshoe_ring_hard": "task_variant_solutions_action_ik_zh.md#horseshoe",
+      "hedgehog_in_cage_easy": "task_variant_solutions_action_ik_zh.md#hedgehog",
+      "hedgehog_in_cage_medium": "task_variant_solutions_action_ik_zh.md#hedgehog",
+      "hedgehog_in_cage_hard": "task_variant_solutions_action_ik_zh.md#hedgehog",
+      "lock_picking_medium": "task_variant_solutions_action_ik_zh.md#lock",
+      "lock_picking_easy": "task_variant_solutions_action_ik_zh.md#lock",
+      "lock_picking_hard": "task_variant_solutions_action_ik_zh.md#lock",
+      "fiber_bundling_easy": "task_variant_solutions_action_ik_zh.md#fiber",
+      "fiber_bundling_medium": "task_variant_solutions_action_ik_zh.md#fiber",
+      "fiber_bundling_hard": "task_variant_solutions_action_ik_zh.md#fiber",
+      "buzz_wire_3d_easy": "task_variant_solutions_action_ik_zh.md#buzz",
+      "buzz_wire_3d_medium": "task_variant_solutions_action_ik_zh.md#buzz",
+      "buzz_wire_3d_hard": "task_variant_solutions_action_ik_zh.md#buzz",
+      "interlocked_claws_easy": "task_variant_solutions_action_ik_zh.md#claws",
+      "interlocked_claws_medium": "task_variant_solutions_action_ik_zh.md#claws",
+      "interlocked_claws_hard": "task_variant_solutions_action_ik_zh.md#claws",
+      "knot_untying_easy": "task_variant_solutions_action_ik_zh.md#knot",
+      "knot_untying_medium": "task_variant_solutions_action_ik_zh.md#knot",
+      "knot_untying_hard": "task_variant_solutions_action_ik_zh.md#knot",
+      "knot_untying_double_overhand": "task_variant_solutions_action_ik_zh.md#knot",
+      "blanket_flatten_easy": "task_variant_solutions_action_ik_zh.md#blanket",
+      "blanket_flatten_medium": "task_variant_solutions_action_ik_zh.md#blanket",
+      "blanket_flatten_hard": "task_variant_solutions_action_ik_zh.md#blanket",
+      "blanket_flatten_three_folds": "task_variant_solutions_action_ik_zh.md#blanket",
+      "blanket_flatten_fold_spiral": "task_variant_solutions_action_ik_zh.md#blanket",
+      "blanket_flatten_corner_cross_twist": "task_variant_solutions_action_ik_zh.md#blanket",
+      "rope_threading_medium": "task_variant_solutions_action_ik_zh.md#rope",
+      "rope_threading_easy": "task_variant_solutions_action_ik_zh.md#rope",
+      "rope_threading_hard": "task_variant_solutions_action_ik_zh.md#rope",
+      "slotted_post_ring_hard": "task_variant_solutions_action_ik_zh.md#slotted",
+      "slotted_post_ring_easy": "task_variant_solutions_action_ik_zh.md#slotted",
+      "slotted_post_ring_medium": "task_variant_solutions_action_ik_zh.md#slotted",
+      "slotted_post_ring_clearance36": "task_variant_solutions_action_ik_zh.md#slotted",
+      "orbits_easy": "task_variant_solutions_action_ik_zh.md#orbits",
+      "orbits_medium": "task_variant_solutions_action_ik_zh.md#orbits",
+      "orbits_hard": "task_variant_solutions_action_ik_zh.md#orbits"
+    }
+  },
+  "checks": {
+    "registry_read_statically_with_ast": true,
+    "source_snapshot_drift": [],
+    "all_45_entries_mapped_to_sections": true,
+    "local_link_targets_exist": true,
+    "numbered_task_sections": 13,
+    "new_simulation_runs": 0
+  },
+  "linked_file_sha256": {
+    "assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation/robot_plan.py": "a2fa4a9747d153c672cd42f30a5db66f1c55503067f635169a2eb35b10b8c4e4",
+    "assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/plan.json": "6e8fb7415eca723796a20d32712408e4e5aca0829a6d10b4b23c280dc5883f6f",
+    "assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/robot_seed.json": "1d210d171e73c37e7f9cafc78585ee31402def5e6e01b6f56aa64484cb44e61a",
+    "assets/tasks/cast_keyhole/seed_families_v2/F1/robot_motion.json": "251cd6fb5f8c2ad19353a4753dfdc27b3c8b148e9e71f0ae50dc30cf2f66385d",
+    "assets/tasks/cast_keyhole/seed_families_v2/F2/robot_motion.json": "4083cbba2a835f8365c066fd27fd646590ee6ada5d6c1546aab10746923fecab",
+    "assets/tasks/cast_keyhole/seed_families_v2/F3/robot_motion.json": "63ca1e47733a3d39e28a908d17fb8e0379d8803d9e08b5ce7bbf98e95d9d4320",
+    "configs/task_variants/orbits/rope_video_solution_v2.json": "ff8bf6c3ed89f882bb2a300e7fc2331614f758589e71a149e5278a75a1b76b5d",
+    "docs/develop/modules/simulator_api_zh.md": "0b996bcae83dcb04f35e377f90e9590204d8da99c89e3b6c1b1796496bff7ec7",
+    "docs/develop/tasks/blanket_flatten_zh.md": "f4db3cacf4b66b62c2ff7d40151c98f18d7d22bd791ecd6b0bdd11fd5c53ef7b",
+    "docs/develop/tasks/buzz_wire_3d_zh.md": "23e7cb5429a5d66823c518ebf00ad40d43d4f12677b1541dc827120cfeadab14",
+    "docs/develop/tasks/horseshoe_existing_candidates_tier_review_20260925_zh.md": "0139998aa0bc2f0167e12e57ab2bd02ce837d4bfa8bf193fd0ab6bc2212d537e",
+    "docs/develop/tasks/knot_untying_family_space_zh.md": "7c29fc832c056f123aa8ac750b1e44d3b5170826d6c326e1a47112de9471599e",
+    "docs/develop/tasks/orbits_zh.md": "335b02f52e7fc0b7419ff0b5707939f7080f0c93f5fc0579d848dcad5a2e3ddc",
+    "docs/develop/tasks/planner_oracle_inventory_20260925_zh.md": "ead09151225c7138a9733fcab6d7220e7c7d7381ee050275b6d3afc62d909f78",
+    "docs/develop/tasks/rope_threading_feedback_ik_zh.md": "4cd60758b04102d0f0d6be914f9521c9c96b1bfd6aa8b715a2307efa74a719d8",
+    "docs/develop/tasks/slotted_post_ring_fem_zh.md": "f052aa7e34cbb31ce24b2a5156d5a2b27f92112dadb8719dcee75d5664b92c29",
+    "docs/develop/tasks/slotted_post_ring_zh.md": "1b73725d27ccc223fb7b6cb6266c77c7df2ed9a48b346b9222846fd71dd68cdc",
+    "runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/source/ik_search.py": "31bfdcf73ce77ee773dc9e5a4bf444a38ab50f7cfb18f6639233251525fefff5",
+    "runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/source/robot_sequence.py": "fdf0b9789e83343463cec923aad62bb4f0facfef464bf8cdd98d9dec6cd73869",
+    "runs/demo_metadata/orbits/2026-09-22_rope_video_full_v2/evidence/source/reference/orbits_solution_printable.pdf": "449fc3ec9237d900c22323205f0f79e342e27577eb53130c9470e26a585cb30c",
+    "runs/environment_bootstrap/orbits/solution_development_v1/reference/symbolic_solution.json": "b42325989bd0c999a93abed74e44754a9db15c2ef23d1fc6b403c0dcb8e7146c",
+    "runs/test_results/hedgehog_claws_policy_20260927/README.md": "e8c4fb7d9942e5a66584ac6288f990853eef241d2d6753aad2a4eff0be564195",
+    "task_rollouts/cast_coil_assist_20260927/investigation_06/README.md": "279bc1897d69db3d50e1c6aeeede5bebc7e0a01dbdc20bc101d651b9762388c7",
+    "task_rollouts/cast_coil_assist_20260927/investigation_07_geometry/README.md": "56ed02b51c97ad5b82ab8cc875f87c52a113a4573537aad3a20a3fee57afbd29",
+    "task_rollouts/lock_assist_20260927/README.md": "2fa075576d1a394344091f38fb22e4e61e8bdbf499e49bfc7a9a46dfb6c802e6",
+    "topogym/assets/geometry/knot_untying.py": "aea3ea3fa1b085a214a9824050dfc9cf5f716520be1307e1156a02976fe725e2",
+    "topogym/assets/resources/variations/cast_coil/axial_screw_turn.json": "12ff0acf13ec2c577c818bee018b751876ce137f650592660960b4109bb0a893",
+    "topogym/assets/resources/variations/cast_coil/split_turn_offset.json": "a2c34d04ccbd83ad8a3c6e9608e0572836574690e013796ced95275bdcece590",
+    "topogym/config/variation_records.py": "c01ac4a2e217482c88620a5ccf5bab7311b4f639d6364a899aba9a3852a0b80a",
+    "topogym/planning/base.py": "529c283f17b3a7259a99d716ba99993bacb20439ca4323d6f7343c338fe67d51",
+    "topogym/planning/cast_coil/baseline.py": "e2290667649c84a2a75819fc64287aaef6c8dd8e8b6d10c7850ddcac7b95cd71",
+    "topogym/planning/hedgehog_in_cage/hedgehog_in_cage_medium_planning.py": "63c3c2d29d74471cf084a1de606cc0686bbdb607859d3a51ee2202ffe0ef93e4",
+    "topogym/planning/interlocked_claws/interlocked_claws_medium_planning.py": "e029387fa60805f893e460f3c0b7fbd0fd055780c4d3799f626bc0831bee5f27",
+    "topogym/planning/lock_picking/lock_picking_medium_planning.py": "84ba91b69f96d27ca62f90ae27d3023339a0a01aa98455d237444bb1e31b32e1",
+    "topogym/planning/motions/cast_coil.py": "1cff5ac079f6ec6018fdae8d6005ab3a32bddc210d4a29775564b7894e809d7e",
+    "topogym/planning/rigid_reference/search.py": "f9d831a15aa5a1f27bb288c84e277d10b7ac64eee5019814092b10dbb36bc49c",
+    "topogym/robot/control.py": "8a861af755bcfcdc84686d8da502fc90eaca8857a84351697862e67f7b00f538",
+    "topogym/solvers/genesis_kinematics.py": "aacddd2f3a2a665decc191f26b5757db8e972b5dc896ba5d05ffd2692a0bc1b5",
+    "topogym/tasks/blanket_flatten/blanket_flatten_fold_spiral.py": "fbabf9865a2cf29559a8dfbab49c68827efd3b47ec44a89a72756c58e701cb6e",
+    "topogym/tasks/blanket_flatten/blanket_flatten_medium.py": "cf04b5a99e62374da527b19633a2858399b8dbdeb437c5d1184d1f535cb48cc9",
+    "topogym/tasks/blanket_flatten/common.py": "caa9bbc47657c8b10677f04a34bb2b8069fb39e6d70018ba6c7cf3aed086ea25",
+    "topogym/tasks/cast_keyhole/common.py": "2b58a8201f6099792fa52d07df5a9fff614ed07a3f03b80a4282ec4c9cc9ce1e",
+    "topogym/tasks/fiber_bundling/common.py": "5f2006a54211cd8dd77ea2a2efb165ddf2ee00024a28d3a608a63fc8c613dcde",
+    "topogym/tasks/interlocked_claws/common.py": "24e66a05a0755992bdaa027d16d28c174063cbfeb964de92a9131e2acfa240e2",
+    "topogym/tasks/knot_untying/common.py": "d562e0811380b5b0cbba73bfda98c3e3f24e58d08774f870ace308b55c4be817",
+    "topogym/tasks/lock_picking/lock_picking_easy.py": "68a160a9b8bafac6bf50bfd99f0cd5ee78dc118d68e721646c1acedabdbbe6ec",
+    "topogym/tasks/lock_picking/lock_picking_hard.py": "ca5f5adbed31a029bad4d9ddc4f3d455bf5814bd41cb66d64439fe7a4f618215",
+    "topogym/tasks/lock_picking/lock_picking_medium.py": "6c6f6abaaeb8a0537414ce47df9072fafc18693bf306738f2381ebf258262070",
+    "topogym/tasks/rope_threading/common.py": "11668e345eae5147de87b271c4936b109ed481c9c508dd22497b82756d10df2b"
+  },
+  "linked_directories": [
+    "runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1"
+  ],
+  "external_sources": [
+    "https://arxiv.org/abs/2107.08942",
+    "https://arxiv.org/abs/2403.13177",
+    "https://flingbot.cs.columbia.edu/",
+    "https://genesis-world.readthedocs.io/en/v1.2.2/user_guide/robot_control/advanced_ik.html",
+    "https://help.rademic.cz/",
+    "https://puzzles.rademic.cz/gallery.htm",
+    "https://rlab.cs.dartmouth.edu/publications/Wang2015b.pdf",
+    "https://www.eureka-puzzle.eu/product/huzzle-cast-keyhole/",
+    "https://www.eureka-puzzle.eu/wp-content/uploads/2022/09/515056-Huzzle-Cast-Coil-Oct-2017.pdf",
+    "https://www.ime.usp.br/~logprob/articles/fishermansAIJ-15.pdf",
+    "https://www.siammandalay.com/pages/solutions",
+    "https://www.siammandalay.com/products/orbits",
+    "https://xinyazhang.gitlab.io/puzzletunneldiscovery/",
+    "https://xinyazhang.gitlab.io/puzzletunneldiscovery/assets/MainPaper.pdf"
+  ]
+}

@@ -1,0 +1,214 @@
+{
+ "task": "hedgehog_in_cage",
+ "topogym_task": "hedgehog_in_cage",
+ "variation_id": "hedgehog_in_cage_easy",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the green dashed goal area and hold it still briefly. Keep all cage components outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
+ "simulator": {
+  "task_id": "hedgehog_in_cage",
+  "robot_id": "panda_robotiq",
+  "variation_id": "hedgehog_in_cage_easy",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "b000ec9ccb17ffa9",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "hedgehog_mount": {
+   "position": [
+    -0.13568,
+    0.05,
+    0.93964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26068,
+     -0.075,
+     0.91964
+    ],
+    [
+     -0.01068,
+     0.175,
+     0.95964
+    ]
+   ],
+   "size": [
+    0.25,
+    0.25,
+    0.04
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "hedgehog_cage": {
+   "position": [
+    -0.13568,
+    0.05,
+    1.07964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.20318,
+     -0.0175,
+     0.95964
+    ],
+    [
+     -0.06818,
+     0.1175,
+     1.19964
+    ]
+   ],
+   "size": [
+    0.135,
+    0.135,
+    0.24
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "hedgehog_ball": {
+   "position": [
+    -0.13568,
+    0.05,
+    1.05039
+   ],
+   "orientation_wxyz": [
+    0.542672,
+    0.659521,
+    -0.52013,
+    -0.001975
+   ],
+   "euler_xyz": [
+    2.09078,
+    -0.5967,
+    -0.98268
+   ],
+   "bounds": [
+    [
+     -0.19346,
+     0.00339,
+     0.9928
+    ],
+    [
+     -0.05687,
+     0.10731,
+     1.12539
+    ]
+   ],
+   "size": [
+    0.13659,
+    0.10392,
+    0.13259
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26012,
+     -0.35788,
+     0.91984
+    ],
+    [
+     -0.01124,
+     -0.109,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.24888,
+    0.24888,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

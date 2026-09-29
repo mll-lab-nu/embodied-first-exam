@@ -1,0 +1,26 @@
+# Build context of images/topogym (scripts/build_images.sh builds from the repository root): only what the image COPYs.
+**
+!requirements/
+!requirements/uv-topogym-gs121.txt
+!requirements/uv-topogym-gs121-nyx.txt
+!assets/
+!assets/robots/
+!assets/robots/**
+!scripts/
+!scripts/prepare_nyx_studio.py
+!images/topogym/prune.py
+!topogym/
+!topogym/**
+# no solutions in any image (images/topogym/prune.py removes them again after COPY)
+topogym/agents
+topogym/planning
+topogym/data
+topogym/**/deferred
+topogym/**/legacy
+topogym/**/redundants
+topogym/**/rollout_simulation
+**/*.md
+**/__pycache__/**
+**/*.pyc
+**/.env*
+**/.secrets/**

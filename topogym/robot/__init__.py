@@ -1,7 +1,4 @@
-"""Robot controllers and robot-specific helpers."""
+"""Robot commands and state without a simulation loop."""
+from topogym.robot.joint_position import JointPositionRobot, RobotState, make_robot
 
-from .franka import FrankaPositionIKController
-from .aloha import AlohaDualArmController
-from .factory import initialize_robot_controller
-
-__all__ = ["FrankaPositionIKController", "AlohaDualArmController", "initialize_robot_controller"]
+__all__ = ["JointPositionRobot", "RobotState", "make_robot"]

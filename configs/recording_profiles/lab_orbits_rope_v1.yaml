@@ -1,0 +1,9 @@
+schema_version: 1
+id: lab_orbits_rope_v1
+robot: none
+presentation: nyx_lab
+camera_preset: orbits_rope_v1
+encoding: default
+cameras: [overview, front_oblique, side, topdown]
+aliases: {}
+archive_policy: external_physics_v1

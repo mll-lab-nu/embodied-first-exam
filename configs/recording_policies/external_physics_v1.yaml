@@ -1,0 +1,11 @@
+# Explicit development collection; never confers formal robot qualification.
+id: external_physics_v1
+minimum_views: 4
+tasks:
+  orbits:
+    allowed_variants: [rope_only]
+    qualification: orbits_video_reference_v1
+  slotted_post_ring:
+    allowed_variants: [clearance36]
+    minimum_views: 3
+    qualification: slotted_post_volumetric_fem_v1

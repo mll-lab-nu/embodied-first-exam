@@ -1,1 +1,5 @@
-"""Crumpled blanket initialization and flattening diagnostics; no eager physics imports."""
+"""blanket_flatten settings; the original class remains a compatible import."""
+
+from .common import BlanketFlattenTask
+
+__all__ = ["BlanketFlattenTask"]

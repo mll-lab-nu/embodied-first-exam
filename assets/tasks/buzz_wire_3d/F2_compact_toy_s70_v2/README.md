@@ -4,7 +4,7 @@
 
 `scene_config.yaml` 可独立加载。2026-09-20 本实例已通过完整连续 IK、4 ms / 2 ms 摩擦抓持物理执行及末端释放 / 静置；场景尺寸、摆位和抓持点保持原配置。预穿环 / 预抓取起点，不含桌面拾取及初始穿环。
 
-运行：`PYOPENGL_PLATFORM=egl PYTHONPATH=. .venv-gs121-nyx/bin/python demos/environment_bootstrap/buzz_wire_3d_compact_wood.py --style toy-v2 --family F2 --output runs/environment_bootstrap/buzz_wire_3d/F2_toy_v2_review --render`。
+运行：`PYOPENGL_PLATFORM=egl PYTHONPATH=. .venv-gs121-nyx/bin/python demos/environment_bootstrap/buzz_wire_3d_compact_wood.py --style toy-v2 --family F2 --output runs/environment_bootstrap/buzz_wire_3d/F2_toy_v2_review`。
 
 [预览与验证](../../../../runs/demo_metadata/buzz_wire_3d/2026-09-20_photo_toy_s70_v2_scene_preview/README.md)。
 

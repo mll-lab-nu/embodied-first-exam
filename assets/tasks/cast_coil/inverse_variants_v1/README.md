@@ -21,22 +21,20 @@
   --template assets/tasks/cast_coil/inverse_variants_v1/eccentric_turn/template.json \
   --output runs/environment-solvability/cast_coil/NEW_RUN/robot_plan.json
 PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.robot_demo \
-  --backend cpu --save-render-states \
+  --backend cpu --record \
   --plan runs/environment-solvability/cast_coil/NEW_RUN/robot_plan.json \
   --output runs/environment-solvability/cast_coil/NEW_RUN/physical
 PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.robot_demo \
   --backend cpu --dt 0.00125 \
   --plan runs/environment-solvability/cast_coil/NEW_RUN/robot_plan.json \
   --output runs/environment-solvability/cast_coil/NEW_RUN/half_dt
-PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.render_physical_trace \
-  --source runs/environment-solvability/cast_coil/NEW_RUN/physical \
-  --output runs/environment_bootstrap/cast_coil/NEW_RUN
-.venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.robot_archive \
-  --source runs/environment_bootstrap/cast_coil/NEW_RUN \
-  --reference runs/environment-solvability/cast_coil/NEW_RUN/half_dt \
-  --run-id NEW_DATE_NEW_RUN
+.venv-gs121-nyx/bin/python -m topogym.tasks.cast_coil.recording_adapter \
+  --run runs/environment-solvability/cast_coil/NEW_RUN/physical \
+  --reference runs/environment-solvability/cast_coil/NEW_RUN/half_dt
+.venv-gs121-nyx/bin/python -m topogym.recording archive \
+  runs/environment-solvability/cast_coil/NEW_RUN/physical/recording
 ```
 
-物理执行为 CPU 双精度、有接触门控辅助抓持的关节控制，从张爪预抓取开始，覆盖抬升、解锁、分离落桌、解除辅助、撤手、自由静置。Nyx 视频用同一次物理执行的精确 20 Hz 状态离线渲染，不插值、不推进渲染场景的物理；不是纯 IK 轨迹预演。未证明纯摩擦抓持、真实机器人负载能力或商业原版的官方八步解法。
+物理执行为 CPU 双精度、有接触门控辅助抓持的关节控制，从张爪预抓取开始，覆盖抬升、解锁、分离落桌、解除辅助、撤手、自由静置。五路视频由公共录制模块在同一次物理执行中同步取帧（`--record`），需要重渲染时用 `python -m topogym.recording replay --source .../recording/source_manifest.json`，不插值、不推进渲染场景的物理；不是纯 IK 轨迹预演。未证明纯摩擦抓持、真实机器人负载能力或商业原版的官方八步解法。
 
 视频保留在 `runs/demos/cast_coil/2026-09-17_inverse_<kind>_<camera>.mp4`；配套页面与独立证据位于 `runs/demo_metadata/cast_coil/2026-09-17_inverse_<kind>/`。

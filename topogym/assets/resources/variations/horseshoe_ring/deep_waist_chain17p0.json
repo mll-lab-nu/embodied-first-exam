@@ -1,0 +1,79 @@
+{
+  "template_id": "horseshoe_coupled_shape_candidate_v1",
+  "units": "mm",
+  "geometry_status": "Coupled shape proposal; requires its own complete path certificate",
+  "horseshoe": {
+    "ellipse_radii": [
+      32.0,
+      34.55
+    ],
+    "mouth_half_angle_deg": 24,
+    "band_width": 8.0,
+    "thickness": 4.0,
+    "edge_bevel": 0.7,
+    "eye_offset_x": 8.0,
+    "eye_radii": [
+      7.5,
+      4.8
+    ],
+    "eye_wire_radius": 1.4,
+    "collision_segments": 56,
+    "eye_roll_deg": 90,
+    "terminal_tip_mm": [
+      29.233454644563228,
+      11.795362649198205
+    ],
+    "outline_power": 2.0,
+    "waist_depth": 4.0
+  },
+  "chain": {
+    "spans": 2,
+    "links_per_span": 1,
+    "link_radii": [
+      17.0,
+      5.0
+    ],
+    "wire_radius": 0.7,
+    "center_spacing": 18.0,
+    "eye_to_link_center": 15,
+    "collision_segments": 40
+  },
+  "target_ring": {
+    "centerline_radius": 31,
+    "wire_radius": 1.4,
+    "initial_tilt_deg": 90,
+    "collision_segments": 64,
+    "centerline_radii": [
+      35.08632563307487,
+      33.41554822197607
+    ],
+    "initial_phase_deg": 0.0
+  },
+  "density_kg_m3": 7800.0,
+  "unconfirmed": [
+    "Commercial dimensions and material properties require measurement",
+    "Force-driven robot grasp execution and robustness are not certified"
+  ],
+  "references": [
+    {
+      "kind": "user_image",
+      "description": "User-provided photograph: two silver horseshoes, two short chains and a central removable ring"
+    },
+    {
+      "kind": "firsthand_collection",
+      "url": "https://www.cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzHorseShoes.html",
+      "use": "Assembly family and folding principle only; dimensions are not copied from its different versions"
+    },
+    {
+      "kind": "physical_demonstration",
+      "url": "https://www.youtube.com/watch?v=qgI7h2Gyk1w",
+      "use": "Reference manipulation principle; not a verified trajectory for these meshes"
+    },
+    {
+      "kind": "manufacturer_solution_video",
+      "url": "https://www.youtube.com/watch?v=LAE1w1VNIZg",
+      "author": "Professor Puzzle Ltd",
+      "use": "One independent chain link per span; turn, bring horseshoes together, transfer support, remove the ring"
+    }
+  ]
+}

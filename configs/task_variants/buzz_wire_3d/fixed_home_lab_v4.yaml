@@ -1,0 +1,123 @@
+schema_version: 2
+task_id: buzz_wire_3d
+catalog_id: fixed_home_lab_v4
+paths_relative_to: repository_root
+selection_mode: explicit_fixed_instance
+uniform_scale: 0.7
+finish: toy_wood_copper
+robot_scaled: false
+representatives:
+- family: F1
+  family_id: F1_vertical_wave
+  instance_id: F1_triple_compact_toy_s70_v1
+  label_zh: 三座高拱与两个深谷
+  scene_config: assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/scene_config.yaml
+  scene_config_sha256: caa0edf8536218044cccefb81592869a6e36dd8a2a7d79f672b31db4aea26ac5
+  ik_seed: assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/robot_seed.json
+  ik_seed_sha256: 07ba87acf3117d451ede9cfe5150c540a80111d6d0cf4423d18428642462ef39
+  full_plan: assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/planning
+  qualification: assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-22_F1_triple_home_lab_v1_full
+  duration_s: 96.56666666666666
+  base_elevation_m: 0.025
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+  bundle_id: F1_triple_compact_toy_s70_home_lab_v1
+  qualified_run_id: F1_triple_home_lab_v1_full
+  execution_id: ab2302ba5c474933ab8400730e636485
+  home_start: true
+  continuous_home_approach: true
+  world_origin_xy_m:
+  - -0.05
+  - 0.07
+  recording_module: topogym.recording
+  previous_representative: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_home_lab_v4
+- family: F2
+  family_id: F2_over_under_eight
+  instance_id: F2_compact_toy_s70_supported_v3
+  label_zh: 三连回折、错层八字、竖直 W
+  scene_config: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/scene_config.yaml
+  scene_config_sha256: 064fbda07c1ece6ed88e70fbd97d34176f7bae8671684fcea8da859e5ee32a1d
+  ik_seed: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/robot_seed.json
+  ik_seed_sha256: 1d210d171e73c37e7f9cafc78585ee31402def5e6e01b6f56aa64484cb44e61a
+  full_plan: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning
+  qualification: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-22_F2_home_lab_v4_full
+  duration_s: 136.63333333333333
+  base_elevation_m: 0.04
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+  bundle_id: F2_compact_toy_s70_home_lab_v4
+  qualified_run_id: F2_home_lab_v4_full
+  execution_id: be19abd22078491cb89badce50094339
+  home_start: true
+  continuous_home_approach: true
+  world_origin_xy_m:
+  - -0.009999999999999995
+  - 0.025
+  recording_module: topogym.recording
+- family: F3
+  family_id: F3_plane_switch
+  instance_id: F3_compact_toy_s70_supported_v3
+  label_zh: 水平梳齿、竖直 W、侧向 Ω、倾斜螺旋
+  scene_config: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_home_lab_v4/scene_config.yaml
+  scene_config_sha256: 5839dd1a66eecce74bb38cc1aeb1482bd65dd3b2d812e9086a2c2d6aea8a3ab1
+  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_home_lab_v4/robot_seed.json
+  ik_seed_sha256: c36386a8a2dffc3127c362b94ae2960650d67cc53ac0a2e7f9d5aa29f64c8739
+  full_plan: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_home_lab_v4/planning
+  qualification: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_home_lab_v4/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-22_F3_home_lab_v4_full
+  duration_s: 131.46666666666667
+  base_elevation_m: 0.025
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+  bundle_id: F3_compact_toy_s70_home_lab_v4
+  qualified_run_id: F3_home_lab_v4_full
+  execution_id: ad9b9712e6364da5a53f32ba4e694b10
+  home_start: true
+  continuous_home_approach: true
+  world_origin_xy_m:
+  - -0.009999999999999995
+  - 0.0
+  recording_module: topogym.recording
+derivation_contract:
+  reference_role: Use family maze IK, grasp and supported endpoint guides as initialization;
+    never scale joint angles.
+  preserve:
+  - configured robot default home and collision-free continuous approach
+  - family structure
+  - stage count and order
+  - supported ungrasped start
+  - full maze traversal
+  - placement on wooden support before opening
+  revalidate:
+  - home posture, open gripper aperture and entire approach
+  - geometry and full-tool clearance
+  - continuous IK and robot collisions for every phase
+  - complete contact-friction execution
+  - supported pickup and controlled placement
+  - release and settle
+  - half-timestep repeat
+  inherit_qualification: false
+  parameter_sampling_implemented: false
+  parameter_ranges_certified: false
+recording:
+  module: topogym.recording
+  preset: lab_default_v1
+  background: compact_lab
+  home_start: true

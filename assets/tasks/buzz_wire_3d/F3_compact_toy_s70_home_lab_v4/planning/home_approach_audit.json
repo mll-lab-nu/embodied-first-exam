@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "samples": 298,
+  "max_joint_sample_spacing_rad": 0.01,
+  "home_arm_qpos": [
+    0.0,
+    0.3926990817,
+    0.0,
+    -1.9634954085,
+    0.0,
+    2.3561944902,
+    -0.7853981634
+  ],
+  "home_open_half_gap_m": 0.04,
+  "planner": "dense straight joint path or deterministic RRT with checked shortcuts",
+  "collision_scope": "Sampled full robot, self, table, toy and stationary tool; dynamic execution required"
+}

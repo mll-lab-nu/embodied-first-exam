@@ -1,1 +1,5 @@
-"""Three fixed rings and one free rope, reconstructed from the public demo."""
+"""rope_threading settings; the original class remains a compatible import."""
+
+from .common import RopeThreadingTask
+
+__all__ = ["RopeThreadingTask"]

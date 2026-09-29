@@ -1,0 +1,34 @@
+defaults:
+  - blanket_flatten_aloha_refine
+  - _self_
+
+task:
+  initial_state_recording:
+    path: runs/environment_bootstrap/blanket_flatten/photo_gathered_twist_v1/physical_trace.npz
+    frame: -1
+    placement:
+      yaw_deg: 0.0
+      source_center_xy_m: [0.10, 0.08]
+      target_center_xy_m: [-0.1356786, 0.20]
+  initialization:
+    maximum_coverage_ratio: 0.45
+  bimanual:
+    maximum_seconds: 240.0
+    end_band_m: 0.02
+    untwist_lift_m: 0.20
+    untwist_common_rotation_deg: 30.0
+    untwist_step_deg: 15.0
+    maximum_cover_peels: 6
+    fold_rounds: 12
+    unfold_target_fraction: 0.96
+    unfold_lift_m: 0.10
+
+robot_control:
+  home:
+    # Exact upstream ALOHA neutral pose; the approach is executed on camera.
+    left: [0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084]
+    right: [0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084]
+
+run:
+  scope: bimanual_full_task_attempt
+  output: runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v1

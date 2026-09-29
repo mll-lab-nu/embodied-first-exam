@@ -1,0 +1,26 @@
+# Fixed views for the explicitly robot-free Orbits reference reconstruction.
+cameras:
+  overview:
+    res: [1280, 720]
+    pos: [-0.21, -0.91, 0.69]
+    lookat: [0.30, 0, 0.15]
+    up: [0, 0, 1]
+    fov: 45
+  front_oblique:
+    res: [1280, 720]
+    pos: [0.30, -0.99, 0.45]
+    lookat: [0.30, 0, 0.16]
+    up: [0, 0, 1]
+    fov: 45
+  side:
+    res: [1280, 720]
+    pos: [-0.61, -0.64, 0.74]
+    lookat: [0.30, 0, 0.15]
+    up: [0, 0, 1]
+    fov: 45
+  topdown:
+    res: [1280, 720]
+    pos: [0.30, -0.001, 1.24]
+    lookat: [0.30, 0, 0.10]
+    up: [0, 1, 0]
+    fov: 45

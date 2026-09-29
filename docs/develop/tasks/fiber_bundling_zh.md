@@ -1,13 +1,22 @@
 # 光纤收束
 
-更新：2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-09-28（terminal）；历史 demo 状态为 2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
 
 ## 任务与实现
 
 固定电源终端和被动细线保持连续，机器人只操作粗护套，使分叉端先进入闭环并完成整束穿环；需要逐步检查细线禁碰、抓持及受载稳定性。
 
-源码：[generation.py](../../../topogym/tasks/fiber_bundling/generation.py) · [robot_sequence.py](../../../topogym/tasks/fiber_bundling/robot_sequence.py) · [ik_search.py](../../../topogym/tasks/fiber_bundling/ik_search.py) · [variant_trial.py](../../../topogym/tasks/fiber_bundling/variant_trial.py) · [variant_demo.py](../../../topogym/tasks/fiber_bundling/variant_demo.py)。
-参数入口：[任务卡](../../../configs/task_cards/fiber_bundling.yaml)；场景入口：`python -m demos.environment_bootstrap.fiber_bundling`（仓库根目录的 `.venv-gs121-nyx/bin/python`）。
+当前源码：[任务与判据](../../../topogym/tasks/fiber_bundling/common.py) · [几何生成](../../../topogym/assets/geometry/fiber_bundling.py) · [穿孔历史](../../../topogym/utils/geometry/passage.py) · [子步接触](../../../topogym/world/physics/rigid_contacts.py)。参数与成功定义见[任务卡](../../../configs/task_cards/fiber_bundling.yaml)，统一运行入口见 [Simulator API](../modules/simulator_api_zh.md)。旧 bootstrap、robot_sequence 和 recording_adapter 不再是当前入口。
+
+## 当前自动终态
+
+`terminal_v3_fiber_contacts` 对 base/easy/medium/hard 启用 `goal_complete=True`。所有细芯必须按尖端到根部的材料顺序穿过环的入口和出口，全部留在出口侧，前护套端面独立穿孔并清出；实际弯折角不超过 60°，连续满足默认 0.5 s。允许保持粗护套抓持。前护套采用 [2026-09-25 设计 §5.3](terminal_judgement_engineering_plan_20260925_zh.md#53-fiber-bundling) 的端面通过条件；旧任务卡的额外 30 mm 深度不用于本版本，历史验收记录不追溯修改。
+
+每个刚体 solver 子步收集 native narrowphase 接触，几何角色按 MJCF 所属 link、局部位姿、形状和尺寸在 build 前匹配。Genesis 会复用 primitive mesh 的 metadata 名称，不能把该名称或导入顺序作为身份。机器人描述中的夹爪根 link 覆盖全部后代，包括手指、外壳、连杆；机械臂保持独立分类。任何夹爪—细芯接触（包括零力接触）立即失败，复用 Task/Env 的终止锁存，公共失败码为 `task_failed`，管理方原因是 `fiber_gripper_contact`。接触摘要缺失或任一子步、细芯/机器人几何覆盖不完整时，当前分支不确认成功；回溯到缺口前可恢复完整覆盖。
+
+`goal_complete` 表示实现启用，不表示机器人已经完成任务或 60° 等阈值已完成物理标定；`thresholds_calibrated=False` 保留。穿孔轨迹仍采用 physics tick 采样与线性插值，子步接触也不声称连续时间 CCD。成功时 Task 输出 `task_success=True`、`terminated=True`、`reward=1`，Harbor 还会独立检查运行证据和预算。
+
+2026-09-28 验证：80 项相关测试通过；全量 unit/contracts/architecture 为 555 通过、3 项既有失败，三项均在恢复本轮改动前的独立基线中复现。easy/medium/hard（seed=0，Panda + Robotiq）的 9 项 CUDA/Nyx 机制测试全部通过：每档出生与 80 ticks、夹爪轻碰细芯即失败、轻碰护套继续运行，以及各自的回溯。接触探针包含管理方位姿干预；成功路径测试使用合成状态，本轮没有新增完整机器人穿环成功或阈值标定。源码快照、修改坐标、哈希、逐项报告及三视角录像见[本轮验证报告](../../../runs/test_results/fiber_terminal_delivery_20260928/README.md)。Harbor 使用旧镜像时须重建才能载入此实现。
 
 ## 当前状态与边界
 
@@ -26,9 +35,9 @@
 
 运行报告记录有限实例的实际结果；几何、IK、短程协议、完整任务和物理资格分开判定。正在执行的任务以运行目录中的最终报告为准。
 
-## 生成入口
+## 历史生成入口（已退役）
 
-输出必须使用新目录；接受目录以结果文件为准，不能假定总是 `attempt_00`。
+以下命令仅记录旧 demo 的来源，当前工作区已移除该入口，不能作为现有三档运行方式。
 
 ```bash
 .venv-gs121-nyx/bin/python -m topogym.tasks.fiber_bundling.generation \

@@ -1,0 +1,23 @@
+defaults:
+  - blanket_flatten_virtual_hands
+  - _self_
+
+task:
+  initial_state_recording:
+    path: runs/environment_bootstrap/blanket_flatten/gathered_robot_v8/physical_trace.npz
+    frame: -1
+  initialization:
+    maximum_coverage_ratio: 1.05
+  virtual_hands:
+    refine_corners: true
+    refinement_rounds: 6
+    maximum_speed_m_s: 0.12
+    minimum_motion_scale: 0.2
+  success:
+    minimum_coverage_ratio: 0.98
+    p95_height_m: 0.006
+    maximum_height_m: 0.012
+
+run:
+  scope: refinement_diagnostic
+  output: runs/environment_bootstrap/blanket_flatten/gathered_two_hand_refinement_v1

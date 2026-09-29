@@ -1,0 +1,140 @@
+# Standard dual-arm rig: 848 x 480, 30 fps. Wrist mounting uses the source model.
+camera_rig:
+  id: aloha_observation
+  source_frame_origin_m:
+  - -0.1356786
+  - 0
+  - 0.8996429
+  focal_m:
+  - 0.00193
+  - 0.00193
+  sensor_m:
+  - 0.003896
+  - 0.00214
+  observation_cameras:
+  - cam_high
+  - cam_low
+  - cam_left_wrist
+  - cam_right_wrist
+  preview_cameras:
+  - cam_high
+  - cam_low
+  - cam_left_wrist
+  - cam_right_wrist
+  record_fps: 30
+cameras:
+  cam_high:
+    label: "\u9AD8\u4F4D\u89C2\u6D4B \xB7 overhead_cam / cam_high"
+    res:
+    - 848
+    - 480
+    pos:
+    - -0.1356786
+    - -0.42
+    - 1.68
+    lookat:
+    - -0.1
+    - 0.0
+    - 0.97
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 54.0
+    near: 0.01
+    far: 5.0
+  cam_low:
+    label: "\u4F4E\u4F4D\u89C2\u6D4B \xB7 worms_eye_cam / cam_low"
+    description: "\u6B64\u89C6\u89D2\u9762\u5411\u8D34\u8FD1\u684C\u9762\u7684\u64CD\
+      \u4F5C\u533A\uFF1B\u5F53\u524D home \u59FF\u6001\u7684\u5939\u722A\u5927\u90E8\
+      \u5206\u4F4D\u4E8E\u753B\u9762\u4E0A\u7F18\u4E4B\u5916\u3002"
+    res:
+    - 848
+    - 480
+    pos:
+    - -0.1356786
+    - -0.62
+    - 1.12
+    lookat:
+    - -0.1
+    - 0.02
+    - 1.0
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 56.0
+    near: 0.01
+    far: 5.0
+  cam_left_wrist:
+    label: "\u5DE6\u8155\u89C2\u6D4B \xB7 wrist_cam_left / cam_left_wrist"
+    res:
+    - 848
+    - 480
+    pos:
+    - -0.6
+    - -0.019
+    - 1.25
+    lookat:
+    - -0.1356786
+    - 0.0
+    - 0.95
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 58.008335
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: left/gripper_base
+      offset_pos:
+      - 0.0
+      - -0.0824748
+      - -0.0095955
+      offset_lookat:
+      - 0.0
+      - 0.340144175
+      - 0.896711954
+      offset_up:
+      - 0.0
+      - -0.906307454
+      - 0.422618975
+  cam_right_wrist:
+    label: "\u53F3\u8155\u89C2\u6D4B \xB7 wrist_cam_right / cam_right_wrist"
+    res:
+    - 848
+    - 480
+    pos:
+    - 0.33
+    - -0.019
+    - 1.25
+    lookat:
+    - -0.1356786
+    - 0.0
+    - 0.95
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 58.008335
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: right/gripper_base
+      offset_pos:
+      - 0.0
+      - -0.0824748
+      - -0.0095955
+      offset_lookat:
+      - 0.0
+      - 0.340144175
+      - 0.896711954
+      offset_up:
+      - 0.0
+      - -0.906307454
+      - 0.422618975

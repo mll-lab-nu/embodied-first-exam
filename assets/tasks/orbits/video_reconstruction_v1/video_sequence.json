@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "reference_video_url": "https://www.youtube.com/watch?v=B-EB9Q-JqXA",
+  "reference_video_sha256": "8c130138756f417a8315f87c0fe5aec6f7c9ae4f93ebb3b6f735a6c4d2c026b9",
+  "duration_s": 110.243467,
+  "timing": "Approximate visually reviewed intervals, not exact frame annotations.",
+  "review_images": [
+    "manufacturer_10to40",
+    "manufacturer_34to64",
+    "manufacturer_66to108",
+    "detail_32to38",
+    "detail_46to54"
+  ],
+  "authority": "The user-selected manufacturer video is primary; its PDF is supplementary.",
+  "full_simulation_match_qualified": false,
+  "observed_constraints": [
+    "Four rings and five posts; fixture remains fixed.",
+    "The wooden handle is not threaded through any ring.",
+    "Third-ring lift near 34 s passes the R3-left / R2-right overlap.",
+    "The loop goes around, not through, the R4 rim near 53 s and R3 rim near 75 s.",
+    "Finish requires the whole cord and attached handle separated, not just a projected winding change."
+  ],
+  "stages": [
+    {
+      "id": "initial",
+      "reference_time_s": [
+        10,
+        11
+      ],
+      "pdf_steps": [],
+      "description_zh": "初态：绳弯位于最低环下方，木柄在器具外侧"
+    },
+    {
+      "id": "lift_ring4_over_ball",
+      "reference_time_s": [
+        11,
+        18
+      ],
+      "pdf_steps": [
+        1,
+        2,
+        3
+      ],
+      "description_zh": "从第四环提起绳圈，越过顶球并在第一环外下放"
+    },
+    {
+      "id": "first_ring_return_1",
+      "reference_time_s": [
+        18,
+        24
+      ],
+      "pdf_steps": [
+        4,
+        5,
+        6
+      ],
+      "description_zh": "从第一环左侧送入新绳弯，翻过顶球，回落到下一层"
+    },
+    {
+      "id": "first_ring_release_1",
+      "reference_time_s": [
+        24,
+        32
+      ],
+      "pdf_steps": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "description_zh": "将下方绳弯提过上部环孔，向左翻套并向右放下"
+    },
+    {
+      "id": "lift_ring3_left_over_ball",
+      "reference_time_s": [
+        32,
+        38
+      ],
+      "pdf_steps": [
+        11,
+        12,
+        13
+      ],
+      "description_zh": "从第三环左侧、第二环右侧的重叠开口提圈，再越过顶球"
+    },
+    {
+      "id": "first_ring_return_2",
+      "reference_time_s": [
+        38,
+        42
+      ],
+      "pdf_steps": [
+        14,
+        15,
+        16,
+        17
+      ],
+      "description_zh": "在第一环再次送入绳弯、过球并回落"
+    },
+    {
+      "id": "clear_upper_rings_to_ring4",
+      "reference_time_s": [
+        42,
+        51
+      ],
+      "pdf_steps": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "description_zh": "回穿第一环并翻套，把绳弯放到最低环下方；木柄不穿环"
+    },
+    {
+      "id": "lift_outside_ring4",
+      "reference_time_s": [
+        51,
+        56
+      ],
+      "pdf_steps": [
+        24
+      ],
+      "description_zh": "展开整个下层绳圈，从第四环外侧向上越过环缘"
+    },
+    {
+      "id": "lift_ring3_right_over_ball",
+      "reference_time_s": [
+        56,
+        60
+      ],
+      "pdf_steps": [
+        25
+      ],
+      "description_zh": "将绳弯从第三环右侧提起，越过顶球后向左下放"
+    },
+    {
+      "id": "first_ring_return_3",
+      "reference_time_s": [
+        60,
+        64
+      ],
+      "pdf_steps": [
+        26,
+        27,
+        28
+      ],
+      "description_zh": "再次完成第一环送圈、过球和回落"
+    },
+    {
+      "id": "clear_upper_rings_to_ring3",
+      "reference_time_s": [
+        64,
+        70
+      ],
+      "pdf_steps": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "description_zh": "提圈、翻套并下放，将绳圈移到第三环下方"
+    },
+    {
+      "id": "lift_outside_ring3_and_ring2",
+      "reference_time_s": [
+        70,
+        82
+      ],
+      "pdf_steps": [
+        35,
+        36,
+        37
+      ],
+      "description_zh": "从第三环外侧展开提圈，经第二环右侧上提并越过顶球"
+    },
+    {
+      "id": "first_ring_return_4",
+      "reference_time_s": [
+        82,
+        88
+      ],
+      "pdf_steps": [
+        38,
+        39,
+        40
+      ],
+      "description_zh": "最后一次送入第一环，过球并回落"
+    },
+    {
+      "id": "last_first_ring_release",
+      "reference_time_s": [
+        88,
+        100
+      ],
+      "pdf_steps": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "description_zh": "绕开第二环，从第一环回穿，翻套并越过顶球向右释放"
+    },
+    {
+      "id": "extract_and_rest",
+      "reference_time_s": [
+        100,
+        110
+      ],
+      "pdf_steps": [],
+      "description_zh": "绳索与木柄完全脱离器具，放到桌面；末段为镜头展示"
+    }
+  ]
+}

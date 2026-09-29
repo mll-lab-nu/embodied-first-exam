@@ -1,0 +1,308 @@
+{
+ "task": "horseshoe_ring",
+ "topogym_task": "horseshoe_ring",
+ "variation_id": "horseshoe_ring_easy",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
+ "simulator": {
+  "task_id": "horseshoe_ring",
+  "robot_id": "aloha",
+  "variation_id": "horseshoe_ring_easy",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "3f75c29d85d7bfb4",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "horseshoe_left": {
+   "position": [
+    -0.24345,
+    0.05001,
+    0.92757
+   ],
+   "orientation_wxyz": [
+    0.99958,
+    -0.0,
+    -0.028996,
+    -5e-06
+   ],
+   "euler_xyz": [
+    -0.0,
+    -0.058,
+    -1e-05
+   ],
+   "bounds": [
+    [
+     -0.31283,
+     -0.01889,
+     0.91964
+    ],
+    [
+     -0.14869,
+     0.1189,
+     0.94445
+    ]
+   ],
+   "size": [
+    0.16414,
+    0.13779,
+    0.0248
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "horseshoe_right": {
+   "position": [
+    -0.02789,
+    0.05018,
+    0.92757
+   ],
+   "orientation_wxyz": [
+    0.999579,
+    2.8e-05,
+    0.028996,
+    -0.000949
+   ],
+   "euler_xyz": [
+    0.0,
+    0.058,
+    -0.0019
+   ],
+   "bounds": [
+    [
+     -0.12269,
+     -0.01872,
+     0.91964
+    ],
+    [
+     0.04149,
+     0.11908,
+     0.94445
+    ]
+   ],
+   "size": [
+    0.16419,
+    0.13779,
+    0.0248
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "chain_upper_1": {
+   "position": [
+    -0.12831,
+    0.07054,
+    0.92696
+   ],
+   "orientation_wxyz": [
+    0.996557,
+    0.017504,
+    0.004587,
+    -0.080916
+   ],
+   "euler_xyz": [
+    0.03415,
+    0.01197,
+    -0.16183
+   ],
+   "bounds": [
+    [
+     -0.16523,
+     0.05772,
+     0.92501
+    ],
+    [
+     -0.09139,
+     0.08336,
+     0.92891
+    ]
+   ],
+   "size": [
+    0.07384,
+    0.02564,
+    0.0039
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "chain_lower_1": {
+   "position": [
+    -0.12973,
+    0.02988,
+    0.92797
+   ],
+   "orientation_wxyz": [
+    0.995374,
+    -0.036004,
+    -0.014967,
+    0.087803
+   ],
+   "euler_xyz": [
+    -0.07439,
+    -0.02348,
+    0.17684
+   ],
+   "bounds": [
+    [
+     -0.16655,
+     0.01681,
+     0.92545
+    ],
+    [
+     -0.0929,
+     0.04294,
+     0.93049
+    ]
+   ],
+   "size": [
+    0.07364,
+    0.02613,
+    0.00504
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "target_ring": {
+   "position": [
+    -0.06353,
+    0.05286,
+    0.93378
+   ],
+   "orientation_wxyz": [
+    0.760993,
+    -0.034262,
+    0.647682,
+    0.014942
+   ],
+   "euler_xyz": [
+    -0.2038,
+    1.40806,
+    -0.13397
+   ],
+   "bounds": [
+    [
+     -0.13547,
+     -0.01669,
+     0.91964
+    ],
+    [
+     0.0084,
+     0.1224,
+     0.94791
+    ]
+   ],
+   "size": [
+    0.14387,
+    0.13909,
+    0.02827
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2534,
+     -0.37744,
+     0.91984
+    ],
+    [
+     -0.01796,
+     -0.142,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.23544,
+    0.23544,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

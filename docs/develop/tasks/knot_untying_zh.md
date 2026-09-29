@@ -1,10 +1,13 @@
 # 解绳结：一个松 Trefoil 的基础场景
 
-Agent 接入见 [Knot Untying adapter](../modules/knot_untying_agent_adapter_zh.md)：本地文件队列、双臂四图、CUDA FEM 接触辅助与可复制 prompt。该接口的验证状态独立于下述历史 demo。
+> **2026-09-27 更新：** 正式 easy 为两次重叠单绳圈；medium 为原 easy 的 overhand_trefoil；hard 为原 medium 的 figure_eight。double_overhand 已移到实验附表。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。
+
+
+Agent 接入见 [Knot Untying adapter](../../../legacy/cleanup_20260929/docs/develop/modules/knot_untying_agent_adapter_zh.md)：本地文件队列、双臂四图、CUDA FEM 接触辅助与可复制 prompt。该接口的验证状态独立于下述历史 demo。
 
 变体设计见 [固定结型与家族内参数构造方案](knot_untying_family_space_zh.md)：三叶结、开放八字结、双重单结分别作为 easy / medium / hard 的目标代表，每个结型配独立的动作与 IK 路径。三档均要求持续支撑、余量控制和受限方向下的操作；难度须经实际执行及简单路线对照确认，当前 v9 也需补查这一操作要求。新增家族与参数范围目前为设计提案。固定实例可直接选择，参数采样另设入口。
 
-实施与结果见 [物理稳定性验收与三视角全过程 demo 计划](knot_untying_physics_demo_plan_zh.md)。已完成 [完整机器人解结录像](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)，实际连续模拟 75 s，保留五路同步视角。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。详细记录见 [抓持与录像复测](knot_untying_recording_attempt_zh.md)。
+实施与结果见 [物理稳定性验收与三视角全过程 demo 计划](../../../legacy/cleanup_20260929/docs/develop/tasks/knot_untying_physics_demo_plan_zh.md)。已完成 [完整机器人解结录像](../../../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/index.html)，实际连续模拟 75 s，保留五路同步视角。从双手张爪准备位开始，双指接触后使用显式辅助抓持；松手时解除全部约束。本次轨迹的局部物理检查通过，P3 网格收敛及通用双手交接验收仍未通过。详细记录见 [抓持与录像复测](../../../legacy/cleanup_20260929/docs/develop/tasks/knot_untying_recording_attempt_zh.md)。
 
 完整 demo 的 MP4 已按视角独立归档至 `demos/knot_untying/varaition_<id>/<camera>/`；播放页、报告、轨迹和归档清单保存至 `runs/demo_metadata/knot_untying/<date>_<run_id>/`。
 
@@ -44,7 +47,7 @@ uv pip install --python .venv-gs121-nyx/bin/python -r requirements/uv-topogym-fe
 .venv-gs121-nyx/bin/python -m unittest tests.check_knot_untying
 ```
 
-默认输出 [trefoil_initial/index.html](../../../runs/environment_bootstrap/knot_untying/trefoil_initial/index.html)，包含 Nyx 实验室全景、俯视、近景、相机环绕视频以及自由静置前后状态。视频只绕初始结形移动相机。`run.record_video=false` 可跳过视频；`run.settle_steps=0` 仅建场与渲染，不会声明静置通过。
+默认输出 [trefoil_initial/index.html](../../../runs/environment_bootstrap/knot_untying/trefoil_initial/index.html)，包含 Nyx 实验室全景、俯视、近景静态图以及自由静置前后状态；不再生成相机环绕视频。`run.settle_steps=0` 仅建场与渲染，不会声明静置通过。
 
 `inspection_report.json` 保存实际求解参数、体网格检查、模拟时长与初末状态；`settle_trace.json` 逐步记录位移与交叉数，`settle_states.npz` 保留实际顶点与中心线。直绳参考态若会翻转四面体，任务在构建前拒绝，不能静默改成结形参考态。
 

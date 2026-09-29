@@ -13,7 +13,7 @@
 ```bash
 PYOPENGL_PLATFORM=egl PYTHONPATH=. .venv-gs121-nyx/bin/python \
   -m demos.environment_bootstrap.buzz_wire_3d_compact_wood \
-  --family F3 --style toy-v2 --render \
+  --family F3 --style toy-v2 \
   --output runs/environment_bootstrap/buzz_wire_3d/F3_toy_v2_review
 ```
 

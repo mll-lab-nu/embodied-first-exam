@@ -1,0 +1,88 @@
+schema_version: 2
+task_id: buzz_wire_3d
+catalog_id: fixed_supported_toy_v3
+paths_relative_to: repository_root
+selection_mode: explicit_fixed_instance
+uniform_scale: 0.7
+finish: toy_wood_copper
+robot_scaled: false
+representatives:
+- family: F1
+  family_id: F1_vertical_wave
+  instance_id: F1_compact_toy_s70_supported_v3
+  label_zh: 两座高拱与中央深谷
+  scene_config: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_supported_v3/scene_config.yaml
+  scene_config_sha256: 8fe993cab7434320673af2d57eb29aeadec9aef8268e2e4bceb57eb41900bdca
+  ik_seed: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_supported_v3/robot_seed.json
+  ik_seed_sha256: 9f4e006a13cecaa241e06081e8506b12f92d5737ca3221d704e748865e0a641a
+  full_plan: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_supported_v3/planning
+  qualification: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_supported_v3/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-21_F1_supported_pick_place_v3_full
+  duration_s: 58.92
+  base_elevation_m: 0.025
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+- family: F2
+  family_id: F2_over_under_eight
+  instance_id: F2_compact_toy_s70_supported_v3
+  label_zh: 三连回折、错层八字、竖直 W
+  scene_config: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_supported_v3/scene_config.yaml
+  scene_config_sha256: 0f119e8b6be31b2f038a96075f5cd36d4332281d42a6a6bb3bb29be1b84ae814
+  ik_seed: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_supported_v3/robot_seed.json
+  ik_seed_sha256: df78b789e3e9cd5ebed808494d02c9ff9b0602898a41e3acd7ee1fecfd64a28b
+  full_plan: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_supported_v3/planning
+  qualification: assets/tasks/buzz_wire_3d/F2_compact_toy_s70_supported_v3/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-21_F2_supported_pick_place_v3_full
+  duration_s: 117.84
+  base_elevation_m: 0.04
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+- family: F3
+  family_id: F3_plane_switch
+  instance_id: F3_compact_toy_s70_supported_v3
+  label_zh: 水平梳齿、竖直 W、侧向 Ω、倾斜螺旋
+  scene_config: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_supported_v3/scene_config.yaml
+  scene_config_sha256: 5839dd1a66eecce74bb38cc1aeb1482bd65dd3b2d812e9086a2c2d6aea8a3ab1
+  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_supported_v3/robot_seed.json
+  ik_seed_sha256: f0159cd6ad6e6f310a7532ecca5b494d16ebc6c6becfaf6be2f5af8226fbfa73
+  full_plan: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_supported_v3/planning
+  qualification: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_supported_v3/robot_qualification.json
+  archive: runs/demo_metadata/buzz_wire_3d/2026-09-21_F3_supported_pick_place_v3_full
+  duration_s: 120.2
+  base_elevation_m: 0.025
+  geometry_verified: true
+  continuous_ik_verified: true
+  physical_execution_verified: true
+  half_timestep_verified: true
+  supported_initial_state: true
+  physical_pickup_and_placement: true
+  pregrasp_start: false
+derivation_contract:
+  reference_role: Use family maze IK, grasp and supported endpoint guides as initialization;
+    never scale joint angles.
+  preserve:
+  - family structure
+  - stage count and order
+  - supported ungrasped start
+  - full maze traversal
+  - placement on wooden support before opening
+  revalidate:
+  - geometry and full-tool clearance
+  - continuous IK and robot collisions for every phase
+  - complete contact-friction execution
+  - supported pickup and controlled placement
+  - release and settle
+  - half-timestep repeat
+  inherit_qualification: false
+  parameter_sampling_implemented: false
+  parameter_ranges_certified: false

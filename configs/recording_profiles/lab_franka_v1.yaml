@@ -1,0 +1,11 @@
+schema_version: 1
+id: lab_franka_v1
+robot: franka_panda
+robot_preset: franka_panda_position_ik
+world: world_tabletop_v1
+presentation: nyx_lab
+camera_preset: franka_demo_v1
+encoding: default
+cameras: [agentview, front_oblique, wrist]
+aliases: {}
+archive_policy: formal_demo_v1

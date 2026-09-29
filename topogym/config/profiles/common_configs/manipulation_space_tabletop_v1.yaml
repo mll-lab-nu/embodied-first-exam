@@ -1,0 +1,88 @@
+# TopoGym tabletop V1 的共享几何参数。
+#
+# 这里描述“任务坐标系”里的通用操作空间。V1 约定：
+# - 单位都是米；
+# - task 坐标原点在桌面中心，z=0 是桌面表面；
+# - pos 表示物体中心，不是左下角或底面；
+# - size 表示完整长宽高，不是半尺寸。
+
+preset:
+  id: topogym_tabletop_v1
+  version: 1.3
+
+manipulation_space:
+  name: topogym_tabletop_v1
+  coordinate_frame: task
+
+  # 通用底板：贴着桌面的一层很薄的视觉/碰撞底板。
+  # z=0.001 且 height=0.002，所以底面在桌面 z=0，顶面在 z=0.002。
+  base:
+    enabled: false
+    pos: [0.00, 0.00, 0.000]
+    size: [0.70, 0.80, 0.000]
+    color: [0.92, 0.92, 0.94]
+
+  # 通用棋盘/任务板：大多数任务直接复用这个 footprint。
+  # z=0.0055 且 height=0.007，所以底面落在 base 顶面 z=0.002，顶面为 z=0.009。
+  board:
+    enabled: false
+    pos: [0.00, 0.00, 0.000]
+    size: [0.70, 0.80, 0.000]
+    color: [0.92, 0.92, 0.94]
+
+  # 末端执行器候选工作区，使用 task 坐标。
+  # x 越大越远离 robot base，y 是左右方向，z 是离桌面高度。
+  # 这些边界用于 demo/可视化，不等同于已严格验证的 IK reachable set。
+  workspace:
+    x: [-0.25, 0.25]
+    y: [-0.30, 0.30]
+    z: [0.03, 0.40]
+    marker_z: 0.003
+    marker_width: 0.006
+    marker_color: [0.04, 0.36, 1.00]
+
+  # basic_env_demo 里的参考网格线，帮助肉眼估计尺度。
+  grid:
+    enabled: true
+    spacing: 0.10
+    line_width: 0.002
+    z: 0.002
+    color: [0.18, 0.28, 0.38]
+
+  # V1 默认不显示参考物体；如需肉眼比对 30/40/50 mm 物体，可临时打开。
+  reference_objects:
+    enabled: false
+    start_pos: [-0.22, 0.28, 0.031]
+    gap: 0.055
+    cubes: []
+    bars: []
+
+robot_setup:
+  # DROID-compatible end effector, selected once for all shared task scenes.
+  gripper_model: robotiq_2f85
+  # Joint-space controller for the rotary 2F-85 drivers (SI units).
+  robotiq:
+    kp: 5.0
+    kv: 5.0
+    max_driver_torque_nm: 0.30
+    oracle_gripper_settle_s: 3.0
+    oracle_motion_time_scale: 1.5
+  mount:
+    name: franka_panda
+    mobility: fixed
+    # Franka 安装位，写在 table/task 平面内：z=0 表示底座安装面在桌面上。
+    # env_configs/world_tabletop_v1.yaml 会把 z 加到世界桌面高度 0.9196429。
+    # RoboMME 原始 x=-0.615；Genesis 1.1.0 的 link0 碰撞脚印不对称，
+    # 为避免底座越过桌子后沿，V1 前移 45 mm 到 x=-0.570。
+    pos: [-0.570, 0.00, 0.00]
+    euler: [0.0, 0.0, 0.0]
+    # Genesis 1.1.0 link0.stl 相对 MJCF 安装原点的 XY footprint。
+    # builder 会检查 footprint 加上 mount.pos 后严格落在桌面范围内。
+    footprint_min: [-0.154079, -0.094614]
+    footprint_max: [0.071567, 0.094671]
+    edge_margin: 0.01
+
+  # RoboMME/ManiSkill panda_wristcam 的确定性 home pose；最后两维是夹爪开合。
+  home:
+    qpos: [0.0, 0.3926990817, 0.0, -1.9634954085, 0.0, 2.3561944902, -0.7853981634, 0.04, 0.04]
+    settle_steps: 100

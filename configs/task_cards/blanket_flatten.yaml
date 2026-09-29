@@ -2,6 +2,23 @@ schema_version: 1
 task_id: blanket_flatten
 title_zh: 杂乱被子展平
 baseline:
+  variant: gathered_scene_v1
+  length_m: 0.60
+  width_m: 0.48
+  particle_size_m: 0.008
+  mesh_spacing_m: 0.012
+  center_xy_m: [-0.1356786, 0.15]
+  panel_fractions: [0.10, 0.14, 0.11, 0.16, 0.12, 0.09, 0.14, 0.14]
+  pleat_angle_deg: 72.0
+  crease_band_m: 0.012
+  axial_scale: 0.92
+  representative_seed: 0
+tiers:
+  easy: {twist_angle_deg: 0.0}
+  medium: {twist_angle_deg: 135.0}
+  hard: {twist_angle_deg: 270.0}
+difficulty_qualification: design_targets_only
+historical_baseline:
   variant: suspended_irregular_folds_v1
   length_m: 0.60
   width_m: 0.48
@@ -15,25 +32,26 @@ baseline:
   stretch_iterations: 24
   seed: 0
 axes:
-- {path: fold_count, unit: count, status: candidate, validated_range: null}
-- {path: fold_angle_deg, unit: deg, status: candidate, validated_range: null}
-- {path: crease_slant, unit: ratio, status: candidate, validated_range: null}
-- {path: drop_clearance_m, unit: m, status: candidate, validated_range: null}
+- {path: gathered_profile.twist_angle_deg, unit: deg, status: scene_layout, values: [0, 135, 270], validated_range: null}
 assets:
-- {location: topogym/tasks/blanket_flatten/geometry.py, status: local_source}
+- {location: topogym/assets/geometry/blanket_gathered.py, status: local_source}
+- {location: topogym/tasks/blanket_flatten/gathered.py, status: local_source}
 physics:
   backend: genesis_1.2.1_pbd_cloth
   qualification: unqualified
   profile_policy: fixed solver settings per run; preserve birth binding and settled-state reports
   grasp_model: bilateral pad proximity gated local particle-to-link assistance; robot-cloth PBD coupling disabled
 initialization:
-  description: Isometric nonparallel folds suspended with separated layers, audited visual binding, unpinned gravity drop and sustained settling gates
+  description: Flat material birth with audited binding, staged physical pleating and twisting, table placement, release, then numeric frozen-state restore before tick zero
+  acceptance: scene_layout
+  particle_motion_qualification: deferred
+  geometry_material_binding_checks: required
 robot:
-  family: Panda + Robotiq 2F-85
-  arms: 1
+  family: ALOHA
+  arms: 2
   dual_arm_qualified: false
-  single_arm_qualified: true
-  qualification_scope: seed 1 only; float64 and 16 substeps; parked-arm clearance audited; bilateral pad proximity gated local grasp assistance
+  single_arm_qualified: false
+  qualification_scope: Current gathered tiers have no robot solve qualification; the retained historical record below used Panda and seed 1
   local_probe_fixture_allowed: false
 recorded_instance:
   physics_config: configs/blanket_flatten_robot.yaml
@@ -45,8 +63,9 @@ recorded_instance:
   final_coverage_ratio: 0.9985616310400166
   parameter_space_qualified: false
 rejection_rules:
-- Birth surface intersection or nonadjacent panel gap below four nominal particle sizes
+- Invalid flat material birth or material-coordinate binding
 - Nonlocal visual supports after remeshing or invalid birth reconstruction
 - Table penetration, material overstretch, visual stretching or material leaving the tabletop
-- Settling timeout, automatically flattened initial state, or insufficient covered area
-first_probe: Record separated birth, gravity drop, and settled crumpled state with actual binding and footprint diagnostics
+- Automatically flattened initial state or insufficient covered area
+- Settling timeout is a rejection for released_stable acceptance; scene_layout explicitly defers speed and drift qualification
+first_probe: Record flat birth, staged physical construction and released layout; verify frozen reset and report motion separately

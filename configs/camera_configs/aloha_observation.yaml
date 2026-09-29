@@ -7,6 +7,9 @@
 # and vertical FOV, so this is not a full calibrated D405 intrinsics model.
 camera_rig:
   id: aloha_observation
+  source_frame_origin_m: [-0.1356786, 0, 0.8996429]
+  focal_m: [0.00193, 0.00193]
+  sensor_m: [0.003896, 0.002140]
   observation_cameras: [overhead, worms_eye, wrist, wrist_right]
   preview_cameras: [base_camera, overhead, worms_eye, wrist, wrist_right]
 

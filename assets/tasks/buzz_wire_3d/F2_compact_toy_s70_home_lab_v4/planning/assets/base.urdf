@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="toy_plinth">
+  <link name="base">
+    <visual>
+      <geometry>
+        <mesh filename="base_wood.glb" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_0.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_1.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_2.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_3.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_4.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_5.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_6.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_7.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_8.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_9.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_10.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_11.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <geometry>
+        <mesh filename="base_collision_12.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.2030564116349979 -0.15151182343504951 0.09841530696952651" />
+      <geometry>
+        <sphere radius="0.003" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.19707965121372695 -0.15075450258710651 0.09841530696952651" />
+      <geometry>
+        <sphere radius="0.003" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.21831329999379726 -0.12927689160457354 0.09866546938633379" />
+      <geometry>
+        <sphere radius="0.003" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.21549996589409004 -0.12394957039749162 0.09866546938633379" />
+      <geometry>
+        <sphere radius="0.003" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.20689500909670214 -0.15845402241053372 0.12312009844763323" />
+      <geometry>
+        <sphere radius="0.003" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

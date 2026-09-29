@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "description": "Retired selection names stay unavailable; selected base aliases are stable.",
+  "source_manifest_sha256": "250d0a3a638ede19f2c69e8b2c80f55fc94625b8047e1cbd36ced5cea817111c",
+  "retired_variations": [
+    {
+      "task_id": "cast_keyhole",
+      "names": [
+        "cast_keyhole_legacy_reference"
+      ]
+    },
+    {
+      "task_id": "buzz_wire_3d",
+      "names": [
+        "buzz_wire_3d_legacy_spatial_maze"
+      ]
+    },
+    {
+      "task_id": "cast_coil",
+      "names": [
+        "cast_coil_eccentric_turn"
+      ]
+    },
+    {
+      "task_id": "cast_coil",
+      "names": [
+        "cast_coil_face_small"
+      ]
+    },
+    {
+      "task_id": "cast_coil",
+      "names": [
+        "cast_coil_depth_thick"
+      ]
+    },
+    {
+      "task_id": "cast_coil",
+      "names": [
+        "cast_coil_corner_cut"
+      ]
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "names": [
+        "hedgehog_in_cage_fixed_side_window"
+      ]
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "names": [
+        "hedgehog_in_cage_staggered_gates"
+      ]
+    },
+    {
+      "task_id": "hedgehog_in_cage",
+      "names": [
+        "hedgehog_in_cage_helical_guide"
+      ]
+    },
+    {
+      "task_id": "lock_picking",
+      "names": [
+        "lock_picking_two_unequal"
+      ]
+    },
+    {
+      "task_id": "buzz_wire_3d",
+      "names": [
+        "buzz_wire_3d_double_arch"
+      ]
+    },
+    {
+      "task_id": "interlocked_claws",
+      "names": [
+        "interlocked_claws_helical_crown"
+      ]
+    },
+    {
+      "task_id": "interlocked_claws",
+      "names": [
+        "interlocked_claws_orthogonal_gate"
+      ]
+    },
+    {
+      "task_id": "knot_untying",
+      "names": [
+        "knot_untying_figure_eight_original",
+        "figure_eight"
+      ]
+    },
+    {
+      "task_id": "knot_untying",
+      "names": [
+        "knot_untying_left_overhand",
+        "left_overhand"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_reference"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_deep_waist"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_deep_waist_chain17p0"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_deep_waist_chain17p5"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_u_mild"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_u_mild_chain17p0"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_u_mild_chain17p5"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_waist_ellipse"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_waist_ellipse_chain17p0"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_waist_ellipse_chain17p5"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_waist_mild"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_slender"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_shorter"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_longer"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_narrower"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_wider"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_compact"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_elongated_wide"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_thicker"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_long_control"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_wide_control"
+      ]
+    },
+    {
+      "task_id": "horseshoe_ring",
+      "names": [
+        "horseshoe_ring_chain_thick_control"
+      ]
+    }
+  ],
+  "base_redirects": {
+    "cast_keyhole": "cast_keyhole_easy",
+    "buzz_wire_3d": "buzz_wire_3d_easy",
+    "horseshoe_ring": "horseshoe_ring_easy"
+  }
+}

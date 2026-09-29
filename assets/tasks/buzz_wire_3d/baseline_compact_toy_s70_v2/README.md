@@ -4,6 +4,6 @@
 
 `scene_config.yaml` 可独立加载；几何通行通过，新版完整 IK / 物理执行未验收。
 
-运行：`PYOPENGL_PLATFORM=egl PYTHONPATH=. .venv-gs121-nyx/bin/python demos/environment_bootstrap/buzz_wire_3d_compact_wood.py --style toy-v2 --family baseline --output runs/environment_bootstrap/buzz_wire_3d/baseline_toy_v2_review --render`。
+运行：`PYOPENGL_PLATFORM=egl PYTHONPATH=. .venv-gs121-nyx/bin/python demos/environment_bootstrap/buzz_wire_3d_compact_wood.py --style toy-v2 --family baseline --output runs/environment_bootstrap/buzz_wire_3d/baseline_toy_v2_review`。
 
 [预览与验证](../../../../runs/demo_metadata/buzz_wire_3d/2026-09-20_photo_toy_s70_v2_scene_preview/README.md)。

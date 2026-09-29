@@ -1,0 +1,20 @@
+# Existing task views, with the shared collision-free laboratory presentation.
+cameras:
+  front_oblique:
+    res: [960, 720]
+    pos: [0.45, -0.83, 0.63]
+    lookat: [0, -0.07, 0.13]
+    up: [0, 0, 1]
+    fov: 43
+  rear_oblique:
+    res: [960, 720]
+    pos: [0.40, 0.65, 0.62]
+    lookat: [0, -0.07, 0.14]
+    up: [0, 0, 1]
+    fov: 45
+  topdown:
+    res: [960, 720]
+    pos: [0.01, -0.08, 1.1]
+    lookat: [0, -0.075, 0.07]
+    up: [0, 1, 0]
+    fov: 40

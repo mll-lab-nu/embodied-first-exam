@@ -1,0 +1,13 @@
+defaults:
+  - blanket_flatten_aloha_full
+  - _self_
+
+task:
+  bimanual:
+    untwist_lift_m: 0.36
+    untwist_common_rotation_deg: 75.0
+    plan_after_lift: true
+    minimum_clearance_before_untwist_m: 0.015
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/aloha_full_twist_v2

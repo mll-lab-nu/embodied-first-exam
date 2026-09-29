@@ -1,4 +1,42 @@
-# 绳穿三环：基础场景
+# 绳穿环：Easy / Medium / Hard 场景
+
+## 当前三档场景（2026-09-29）
+
+三档均已接入统一 `topogym.make("rope_threading", variation_id=...)`，本轮先完成场景布设。
+`base` 继续选择 medium，原 medium 的配置、实例身份、三环几何和绳初态保持一致。
+
+| 档位 | 目标环／材料顺序 | 净孔径 | 场景差异 |
+|---|---|---|---|
+| easy／`two_rings` | R1− → R2+ | 138 mm | 保留青、绿两环，移除紫环 R3 及其支架、底座 |
+| medium／`wang_reference_v1` | R1− → R2+ → R3+ | 138 mm | 沿用原三环参考与默认实验室放置 |
+| hard／`three_tight_rings` | R1− → R2+ → R3+ | 100 mm | 三环中心、法向、顺序和 12 mm 环管外径不变，支架与底座沿径向内移 19 mm，保持与环连接 |
+
+三档共用 1.1 m 长、8 mm 直径的绳及完整 U 形初态；材料、FEM 网格和 IPC 接触参数不变。
+绳两端自由，初始穿越为空；任务整体沿用 `translation_m=[-0.1156786, 0.03, 0.0015]`、`yaw_deg=75`，
+由统一场景放置到实验桌。easy/hard 的环选择及内半径不能通过参数覆盖悄悄变成另一档。
+100 mm 是本轮冻结的场景候选尺寸，难度递增、连续机器人可达与完整解法仍待验证。
+
+资产重复构建、封闭通孔、支架连接、绳初态间隙和 FEM 正体积已检查；
+[资产检查报告](../../../runs/test_results/rope_threading_scenes_20260929/assets/report.json)与
+[Medium 一致性记录](../../../runs/test_results/rope_threading_scenes_20260929/medium_regression.json)保留具体证据。
+[三档几何对照图](../../../runs/test_results/rope_threading_scenes_20260929/scene_geometry.png)直接绘制本轮导出的模型，不包含机器人或动力学。
+31 项相关检查通过；Nyx 首轮建场因并行任务占用显存而在 CUDA 分配阶段中止，
+[首次运行报告](../../../runs/test_results/rope_threading_scenes_20260929/preview.md)和
+[限时等待显存后的重试](../../../runs/test_results/rope_threading_scenes_20260929/preview_retry.md)分别保留，
+不能把静态图当成 Nyx／物理通过证据。完整交付索引见[场景验收记录](../../../runs/test_results/rope_threading_scenes_20260929/README.md)。
+新场景不继承历史三环的解法或物理资格，`goal_complete=False`。
+
+复现三档场景验收（使用新的输出目录）：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/record_initial_scenes.py \
+  --variations rope_threading_easy rope_threading_medium rope_threading_hard \
+  --seconds 0.5 --timeout 1800 --min-free-gpu-mib 14000 \
+  --output runs/test_results/rope_threading_scenes_repeat \
+  --index runs/test_results/rope_threading_scenes_repeat/preview.md
+```
+
+## 原三环参考与历史执行记录
 
 目标参考为 [Wang 的三环演示](https://qinengwang-aiden.github.io/demos/constraint_demos/?demo=threading)。
 已提供离线资产、共享 ALOHA 双臂实验室与原生子步物理审计入口。
@@ -122,7 +160,7 @@ CPU 复现中，更换为上一帧实测关节作为初值、将迭代上限从 
 
 这是**有条件的离线规划**：左手转动后的绳尾形状仍为预测，必须重新观测再规划右手；
 尚未接入在线执行器，也没有新的物理录制。37 s 双视角预演不包含绳体动力学或实际接触。
-详见[新 IK 动作、门控与验收边界](rope_threading_feedback_ik_zh.md)。
+详见[新 IK 动作、门控与验收边界](../../../legacy/cleanup_20260929/docs/develop/tasks/rope_threading_feedback_ik_zh.md)。
 预演：[细节](../../../runs/environment-solvability/rope_threading/feedback_handoff_v5_20260921/kinematic_detail.mp4) ·
 [全景](../../../runs/environment-solvability/rope_threading/feedback_handoff_v5_20260921/kinematic_overview.mp4)。
 
@@ -181,9 +219,9 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
 ```
 
 默认输出 `runs/environment_bootstrap/rope_threading/wang_initial/index.html`。
-保存三路展示视角、ALOHA 四路相机初态、相机环绕视频、静置前后状态、
-解析后的配置、世界坐标资产及 JSON 报告。环绕只移动相机，不能当作机器人执行。
-可用 `run.record_video=false` 省略视频，`run.settle_steps=0` 仅建场，
+保存三路展示视角、ALOHA 四路相机初态、静置前后状态、
+解析后的配置、世界坐标资产及 JSON 报告。预览入口只输出静态图，不再生成环绕视频，
+不能当作机器人执行；`run.settle_steps=0` 仅建场，
 `run.output=<新目录>` 保留多次运行。
 
 几何回归包含原尺寸与材料顺序、坐标变换、源布局正间隙、封闭体网格、
@@ -233,7 +271,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
 这段 12 s 视频使用两次运行保存的 0–0.2 s 中心线状态，50 倍慢放，末帧停留 2 s；
 空间图 Z 方向放大 10 倍，数值和坐标刻度仍是真实毫米。它是诊断可视化，不是当时的相机录屏。
 所有配对帧使用同一物理时刻，20 ms 采样间不插值；视频第 3 秒对应物理 0.06 s 的 RMS 峰值。
-`bounce_video.py` 可在 CPU 上生成视频，`manifest.json` 保存源轨迹哈希、时间映射和解码核对。
+生成该视频的诊断脚本已随录制代码收敛移除；保留的 `manifest.json` 记录源轨迹哈希、时间映射和解码核对。
 `qualification.json` 明确标注“不完整共同前缀”与超差，包含各次运行的配置和轨迹哈希。
 未运行的 `ring_halfdt / ring_refined / robot_prefix` 保持待验收；没有生成或归档完整 MP4。
 
@@ -341,7 +379,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.
   runs/environment-solvability/rope_threading/new_soft_start \
   --variants gap12_soft50 --seconds 3
 .venv-gs121-nyx/bin/python -m demos.environment_bootstrap.rope_threading \
-  --config-name rope_threading_soft_start_preview run.record_video=false
+  --config-name rope_threading_soft_start_preview
 ```
 
 较低 E 对实际夹持、悬空和穿环负载的影响仍需单独验收，不能用自由静置数据代替。
@@ -719,7 +757,7 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python -m topogym.tasks.rope_threading
 
 ## 2026-09-21：三段 IK 串联与反馈执行
 
-新方案已接入完整执行器，详见 [反馈 IK 说明](rope_threading_feedback_ik_zh.md)。
+新方案已接入完整执行器，详见 [反馈 IK 说明](../../../legacy/cleanup_20260929/docs/develop/tasks/rope_threading_feedback_ik_zh.md)。
 第二环接绳时暂停参考时钟，按当前绳端与尾段方向重规划；确认双指接触和右手辅助抓持后才释放左手。
 之后接回第三环，继续放置、退手、解除全部抓持与静置。
 

@@ -1,0 +1,22 @@
+# Fixed exterior views extracted from lock_picking_baseline; wrist remains the
+# robot/gripper's existing calibrated camera, never overwritten by this preset.
+camera_rig:
+  id: franka_demo_v1
+  recording_cameras: [agentview, front_oblique, wrist]
+cameras:
+  agentview:
+    res: [1280, 720]
+    pos: [-0.68, -1.06, 2.02]
+    lookat: [-0.1, 0.1, 1.16]
+    up: [0, 0, 1]
+    fov: 42
+    near: 0.01
+    far: 12.0
+  front_oblique:
+    res: [1280, 720]
+    pos: [0.9, -0.3, 1.72]
+    lookat: [-0.02, 0.1, 1.14]
+    up: [0, 0, 1]
+    fov: 60
+    near: 0.01
+    far: 12.0

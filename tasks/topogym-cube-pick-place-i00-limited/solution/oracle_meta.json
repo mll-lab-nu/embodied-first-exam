@@ -1,0 +1,6 @@
+{
+ "K": 1,
+ "interpolate": "hold",
+ "rows": 281,
+ "source": "topogym-cube-pick-place-i00 solution/solve.sh (run-oracle)"
+}

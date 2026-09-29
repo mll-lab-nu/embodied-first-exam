@@ -1,0 +1,416 @@
+{
+ "task": "slotted_post_ring",
+ "topogym_task": "slotted_post_ring",
+ "variation_id": "slotted_post_ring_hard",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Free the removable metal ring from the slotted post and cord assembly. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the post, cord, beads, discs and other puzzle components outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
+ "simulator": {
+  "task_id": "slotted_post_ring",
+  "robot_id": "aloha",
+  "variation_id": "slotted_post_ring_hard",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "ba5292dc1f166142",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "base": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.15,
+     -0.055,
+     0.91964
+    ],
+    [
+     0.11,
+     0.135,
+     0.94164
+    ]
+   ],
+   "size": [
+    0.26,
+    0.19,
+    0.022
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.056,
+     0.026,
+     0.94164
+    ],
+    [
+     0.016,
+     0.054,
+     1.23164
+    ]
+   ],
+   "size": [
+    0.072,
+    0.028,
+    0.29
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "target_ring": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.091,
+     -0.031,
+     0.94264
+    ],
+    [
+     0.051,
+     0.111,
+     0.96264
+    ]
+   ],
+   "size": [
+    0.142,
+    0.142,
+    0.02
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "cord": {
+   "material": "fem",
+   "position": [
+    0.00769,
+    -0.06479,
+    0.97394
+   ],
+   "bounds": [
+    [
+     -0.11701,
+     -0.2436,
+     0.9316
+    ],
+    [
+     0.09318,
+     0.09714,
+     1.01842
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 24290
+  },
+  "bead_left": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.1095,
+     -0.21649,
+     0.92064
+    ],
+    [
+     -0.0705,
+     -0.1775,
+     0.95964
+    ]
+   ],
+   "size": [
+    0.039,
+    0.03899,
+    0.039
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "bead_right": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.03858,
+     -0.20266,
+     0.92064
+    ],
+    [
+     0.07758,
+     -0.16367,
+     0.95964
+    ]
+   ],
+   "size": [
+    0.039,
+    0.03899,
+    0.039
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "disc_left": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.167,
+     -0.339,
+     0.92064
+    ],
+    [
+     -0.057,
+     -0.229,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.11,
+    0.11,
+    0.011
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "disc_right": {
+   "position": [
+    -0.02,
+    0.04,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.029,
+     -0.335,
+     0.92064
+    ],
+    [
+     0.139,
+     -0.225,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.11,
+    0.11,
+    0.011
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.25258,
+     0.169,
+     0.91984
+    ],
+    [
+     -0.01877,
+     0.40281,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.23381,
+    0.23381,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

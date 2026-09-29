@@ -1,1 +1,5 @@
-"""One open overhand knot, derived from a trefoil; no backend initialization."""
+"""knot_untying settings; the original class remains a compatible import."""
+
+from .common import KnotUntyingTask
+
+__all__ = ["KnotUntyingTask"]

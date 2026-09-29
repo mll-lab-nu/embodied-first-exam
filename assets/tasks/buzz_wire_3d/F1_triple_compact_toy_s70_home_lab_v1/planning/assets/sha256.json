@@ -1,0 +1,14 @@
+{
+  "wire.urdf": "42278393fdeb4fa13e4fbef888a479de1f171d65dff6e290395b175666fa37c0",
+  "wand.urdf": "74142c4a1d7c207e32318cb2491ad8424559618834082235ec1fee66e108a17a",
+  "reference_path.npz": "9320628b0b1519b0ab5aa97cde6bbbacf0c13fa5b135c7be800e4d62fb135bdc",
+  "geometry_report.json": "55a1d621eac8b0296c6b02845f623ec45399c2b7dac9cce234c944eb3bb5fd0d",
+  "base_wood.glb": "ce8a4e5e7087b96825f9b5b4a8950c389266783a43a97868c8b0031d2c268529",
+  "handle_wood.glb": "6db97a0404e7ac4269aad1ddce18cff0ccd92c75846a0a47b086ba98d70cda8e",
+  "posts_wood.glb": "5c7d179839276ea532cdc4be9507a6d05d7aac03187b4e6e3142f25e7904ad05",
+  "rail_metal.glb": "adfb16b407078d5ace825bcca58a6cde5501a42938a3dc9afc62d4727a365d8e",
+  "ring_steel.glb": "017bc754da78ae77fbbb6e660bc46efe8748c60aaffbcbe36d1abb90da8337c9",
+  "base.urdf": "fb9ca518e658d51b8d4b912ad27e39ecbcba9a7e85015ae0292d7f08e2658982",
+  "base_collision_0.obj": "5ec4553f71aaa4f1267223cd0c6fd8d254529f51eeb0de57094288f1f7eddda2",
+  "base_collision_1.obj": "c98a4623710b059327ad0430d68ea3be3e26a4d5517277570573eea322af9ca2"
+}

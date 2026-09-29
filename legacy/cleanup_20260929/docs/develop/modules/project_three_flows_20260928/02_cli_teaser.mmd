@@ -1,0 +1,29 @@
+flowchart LR
+  CLI["上方完整 run 命令<br/>harbor_runners.run.main()<br/>build_parser().parse_args()<br/>config_from_args()"]
+  EXP["--experiment cast_coil_rollout<br/>config.load_config()<br/>defaults.yaml + cast_coil_rollout.yaml<br/>取得 instruction 与 simulator 配置"]
+  MODEL["--model-name openrouter/meta/muse-spark-1.3-contributor<br/>prepare 内 endpoints.resolve_model()<br/>providers.yaml → URL / 协议<br/>opencode.create_delegate() / bind() 绑定模型"]
+  MODE["--mode limited<br/>config_from_args() → config.validate()<br/>禁用特权并清空 state_fields<br/>policy_observation.resolve_profile() → project_observation()"]
+  INSTANCE["--difficulty medium · --seeds 0<br/>config.expand() → resolve_instances()<br/>variation_records.py → cast_coil_medium<br/>worker.main(): env.reset(seed=0)"]
+  SCHEDULE["--attempts 1 · --concurrency 1<br/>prepare(): JobConfig.n_attempts / n_concurrent_trials<br/>Job.run()：1 个实例 × 1 次尝试<br/>最多同时运行 1 个 trial"]
+  BUDGET["--input-token-limit 10000000<br/>--output-token-limit 3000000<br/>run.apply_usage_args() → usage.json<br/>UsagePipeline / UsageLedger：每 trial 结算"]
+  TIME["--timeout-sec 86400<br/>prepare(): task.toml 的 agent.timeout_sec<br/>Trial._run_agent_phase()<br/>asyncio.wait_for()：agent 最长 24 小时"]
+  INITIAL["--initial-observation-steps 5<br/>prepare(): instance.json<br/>worker.main() → SegmentRunner.__init__()<br/>_initialize()：5 次保持动作，生成 segment_0"]
+  DEVICE["--gpu-devices 0 · --image topogym-rollout:opencode-v1<br/>prepare(): Compose device_ids + task.toml image<br/>preflight.check() 校验镜像<br/>DockerEnvironment.start() 启动 GPU 0 容器"]
+  PREP["harbor_runners.task_generator.prepare()<br/>冻结 job.json / Harbor task set<br/>run.launch() → preflight.check()<br/>harbor run --config job.json"]
+  TRIAL["Harbor Job.run()<br/>SingleStepTrial._run_agent()<br/>Trial._run_agent_phase()"]
+  INSTRUCTION["instruction 参数<br/>Task.instruction 读取 instruction.md<br/>任务目标 + 通用操作教程 + 最终权限"]
+  ENVIRONMENT["environment 参数<br/>Harbor agent_environment<br/>容器 exec / upload / download 句柄<br/>容器内 worker 持有仿真 Env"]
+  CONTEXT["context 参数<br/>Harbor AgentContext()<br/>本次 agent 的结果与 token 统计"]
+  CORE["UsageAgent.run(instruction, environment, context)<br/>建立本 trial 的网关与预算监控<br/>await self.delegate.run(...)<br/>回填 context.n_input_tokens / n_output_tokens"]
+  OPENCODE["Harbor OpenCode.run(...)<br/>通过 environment.exec() 启动 OpenCode CLI<br/>调用 Muse Spark、读图、写 policy、submit<br/>进入 1.1 的连续 rollout"]
+
+  CLI --> EXP & MODEL & MODE & INSTANCE & SCHEDULE & BUDGET & TIME & INITIAL & DEVICE
+  EXP & MODEL & MODE & INSTANCE & SCHEDULE & BUDGET & TIME & INITIAL & DEVICE --> PREP
+  PREP --> TRIAL
+  PREP -->|"生成的 instruction.md"| INSTRUCTION
+  TRIAL --> ENVIRONMENT & CONTEXT
+  TRIAL -->|"await agent.run(...)"| CORE
+  INSTRUCTION --> CORE
+  ENVIRONMENT --> CORE
+  CONTEXT --> CORE
+  CORE --> OPENCODE

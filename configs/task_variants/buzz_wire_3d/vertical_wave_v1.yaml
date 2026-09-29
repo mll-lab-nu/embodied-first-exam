@@ -3,9 +3,9 @@ spec_type: buzz_wire_family_design
 status: proposed
 runtime_ready: false
 family_id: F1_vertical_wave
-label_zh: 立体高低双拱
+label_zh: 立体高低三拱
 contract: family_space_v1.yaml
-default_prototype: F1_double_arch
+default_prototype: F1_triple_arch
 family_identity:
   motion: repeated climb, crest, dive, valley and climb; no terminal flat spiral
   primary_planes: mainly x-z, with authored fore-aft offsets
@@ -39,8 +39,13 @@ verification: {geometry: pending, ik: pending, robot_collision: pending, physics
 
 # Qualification applies only to this 70% fixed representative, not the design ranges above.
 qualified_compact_representative:
-  catalog: fixed_compact_toy_v2.yaml
-  instance_id: F1_compact_toy_s70_v2
-  ik_seed: assets/tasks/buzz_wire_3d/F1_compact_toy_s70_v2/robot_seed.json
-  scope: This compact instance only; original dimensions and other prototypes remain
-    unqualified.
+  bundle_id: F1_triple_compact_toy_s70_home_lab_v1
+  prototype: F1_triple_arch
+  home_start: true
+  catalog: fixed_home_lab_v4.yaml
+  instance_id: F1_triple_compact_toy_s70_v1
+  ik_seed: assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/robot_seed.json
+  world_shift_from_double_arch_m: {x: -0.02, y: 0.07}
+  previous_representative: F1_compact_toy_s70_home_lab_v4
+  scope: This compact triple-arch instance only; original dimensions and the
+    double-arch prototype remain unqualified after the switch.

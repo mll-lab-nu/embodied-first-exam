@@ -7,18 +7,10 @@ import genesis as gs
 import genesis.utils.geom as gu
 import numpy as np
 from omegaconf import OmegaConf
-from topogym.robot.assets import robot_asset
+from topogym.assets.robot import robot_asset
 
-from topogym.core import EntityManifest
-from topogym.world import lighting, materials
-
-
-_V1_TABLE_POS = (-0.1356786, 0.0, 0.45982145)
-_V1_TABLE_SIZE = (1.5, 1.4, 0.9196429)
-_V1_SURFACE_ORIGIN = (0.0, 0.0, 0.9196429)
-_V1_ROBOT_MOUNT = (-0.570, 0.0, 0.9196429)
-_V1_FOOTPRINT_MIN = (-0.154079, -0.094614)
-_V1_FOOTPRINT_MAX = (0.071567, 0.094671)
+from topogym.world.entities import EntityRegistry
+from topogym.world.visuals import lighting, surfaces
 
 
 def _vec3(value, name: str) -> np.ndarray:
@@ -75,12 +67,11 @@ class RobotFootprintCheck:
 @dataclass
 class TabletopBaseScene:
     scene: Any
-    manifest: EntityManifest
+    entity_registry: EntityRegistry
     cameras: dict[str, Any]
     frames: TabletopFrames
     robot_footprint: RobotFootprintCheck
     presentation: dict = field(default_factory=dict)
-
 
 def tabletop_frames_from_config(env_cfg) -> TabletopFrames:
     """Resolve standard tabletop frames without constructing a Genesis scene."""
@@ -109,7 +100,7 @@ def tabletop_frames_from_config(env_cfg) -> TabletopFrames:
 
 
 class StandardTabletopSceneBuilder:
-    """Build the frozen table, robot mount, and camera rig shared by tasks."""
+    """Build the configured tabletop, robot mount, and camera rig shared by tasks."""
 
     def __init__(
         self,
@@ -159,7 +150,6 @@ class StandardTabletopSceneBuilder:
         deformable-vs-rigid contact, so the two can be tuned independently.
         """
         self._debug("validate_begin")
-        self._validate_locked_preset()
         frames = self._frames()
         footprint = self._validate_geometry(frames)
         self._debug("validate_done")
@@ -197,8 +187,9 @@ class StandardTabletopSceneBuilder:
             show_viewer=show_viewer,
             **scene_kwargs,
         )
+        self._scene_under_construction = scene
         self._debug("scene_construct_done")
-        manifest = EntityManifest()
+        entity_registry = EntityRegistry()
 
         # ``static_material`` covers the fixed rigids the builder creates itself
         # (ground plane, stage). Under the IPC coupler these must be declared
@@ -215,7 +206,7 @@ class StandardTabletopSceneBuilder:
 
         if bool(self.env_cfg.world.plane.enabled):
             self._debug("ground_add_begin")
-            manifest.add(
+            entity_registry.add(
                 "ground",
                 scene.add_entity(gs.morphs.Plane(), name="ground", **static_kwargs),
             )
@@ -224,7 +215,7 @@ class StandardTabletopSceneBuilder:
         table_cfg = self.env_cfg.world.table
         self._debug("table_add_begin")
         table_kwargs = {} if table_material is None else {"material": table_material}
-        manifest.add(
+        entity_registry.add(
             "table",
             scene.add_entity(
                 gs.morphs.Box(
@@ -232,39 +223,18 @@ class StandardTabletopSceneBuilder:
                     size=tuple(table_cfg.size),
                     fixed=True,
                 ),
-                surface=materials.plastic("table", table_cfg.color),
+                surface=surfaces.plastic("table", table_cfg.color),
                 name="table",
                 **table_kwargs,
             ),
         )
         self._debug("table_add_done")
-        if static_material is not None:
-            # Rigid shadow of the table, for FEM/IPC scenes. The visible table is
-            # coup_type='ipc_only' so the ropes rest on it through IPC -- but the
-            # rigid collider skips every pair involving an ipc_only link
-            # (collider.py:401), so rigid-only bodies (the free-end connectors,
-            # needs_coup=False) would fall straight through it: measured 291m of
-            # free fall over one 800-step settle. This invisible twin restores
-            # the rigid-solver contact exactly; IPC never sees it.
-            manifest.add(
-                "table_rigid_shadow",
-                scene.add_entity(
-                    gs.morphs.Box(
-                        pos=tuple(table_cfg.pos),
-                        size=tuple(table_cfg.size),
-                        fixed=True,
-                        visualization=False,
-                    ),
-                    material=gs.materials.Rigid(needs_coup=False),
-                    name="table_rigid_shadow",
-                ),
-            )
-        self._add_table_frame(scene, manifest, table_cfg, frames)
+        self._add_table_frame(scene, entity_registry, table_cfg, frames)
 
         stage_cfg = getattr(self.env_cfg.world, "stage", None)
         if stage_cfg is not None and bool(getattr(stage_cfg, "enabled", True)):
             self._debug("stage_add_begin")
-            manifest.add(
+            entity_registry.add(
                 "stage",
                 scene.add_entity(
                     gs.morphs.Box(
@@ -272,7 +242,7 @@ class StandardTabletopSceneBuilder:
                         size=tuple(stage_cfg.size),
                         fixed=True,
                     ),
-                    surface=materials.plastic("stage", stage_cfg.color),
+                    surface=surfaces.plastic("stage", stage_cfg.color),
                     name="stage",
                     **static_kwargs,
                 ),
@@ -282,7 +252,7 @@ class StandardTabletopSceneBuilder:
         if include_robot:
             self._debug("robot_add_begin")
             robot_kwargs = {} if robot_material is None else {"material": robot_material}
-            manifest.add(
+            entity_registry.add(
                 "robot",
                 scene.add_entity(
                     gs.morphs.MJCF(
@@ -302,32 +272,21 @@ class StandardTabletopSceneBuilder:
         if camera_cfgs is not None:
             for camera_name, camera_cfg in camera_cfgs.items():
                 self._debug(f"camera_add_begin:{camera_name}")
-                camera = scene.add_camera(
-                    res=tuple(camera_cfg.res),
-                    pos=tuple(camera_cfg.pos),
-                    lookat=tuple(camera_cfg.lookat),
-                    up=tuple(camera_cfg.up),
-                    fov=float(camera_cfg.fov),
-                    near=float(getattr(camera_cfg, "near", 0.1)),
-                    far=float(getattr(camera_cfg, "far", 20.0)),
-                    debug=bool(getattr(camera_cfg, "debug", False)),
-                    GUI=False,
-                )
-                attach_cfg = getattr(camera_cfg, "attach", None)
-                if attach_cfg is not None and bool(getattr(attach_cfg, "enabled", True)):
-                    self._attach_camera(camera_name, camera, attach_cfg, manifest, include_robot)
+                from topogym.sensors.cameras import create_camera
+                camera = create_camera(scene, camera_cfg, entity_registry,
+                                       name=str(camera_name), include_robot=include_robot)
                 cameras[str(camera_name)] = camera
                 self._debug(f"camera_add_done:{camera_name}")
 
         return TabletopBaseScene(
             scene=scene,
-            manifest=manifest,
+            entity_registry=entity_registry,
             cameras=cameras,
             frames=frames,
             robot_footprint=footprint,
         )
 
-    def _add_table_frame(self, scene, manifest: EntityManifest, table_cfg, frames: TabletopFrames) -> None:
+    def _add_table_frame(self, scene, entity_registry: EntityRegistry, table_cfg, frames: TabletopFrames) -> None:
         """Add a purely-decorative border rim around the table top perimeter.
 
         Applies to every task that builds through this shared tabletop. The rim
@@ -396,11 +355,11 @@ class StandardTabletopSceneBuilder:
                          (size_x, side_thickness, size_z)),
                     ]
                 )
-        surface = materials.plastic("frame", color)
+        surface = surfaces.plastic("frame", color)
         decoration_kwargs = getattr(self, "_decoration_kwargs", {})
         for label, pos, size in bars:
             name = f"table_frame_{label}"
-            manifest.add(
+            entity_registry.add(
                 name,
                 scene.add_entity(
                     gs.morphs.Box(pos=pos, size=size, fixed=True, collision=False),
@@ -411,222 +370,30 @@ class StandardTabletopSceneBuilder:
             )
 
     def finalize(self, base_scene: TabletopBaseScene) -> None:
-        from .presentation import prepare_presentation
+        from topogym.world.visuals.presentation import prepare_presentation
 
         base_scene.presentation = prepare_presentation(
-            base_scene.scene, base_scene.manifest, self.env_cfg, base_scene.cameras,
+            base_scene.scene, base_scene.entity_registry, self.env_cfg, base_scene.cameras,
         )
         base_scene.scene.build(n_envs=self.env_cfg.sim.n_envs)
         for camera in base_scene.cameras.values():
             if getattr(camera, "_attached_link", None) is not None:
                 camera.move_to_attach()
 
-    def _attach_camera(
-        self,
-        camera_name: str,
-        camera,
-        attach_cfg,
-        manifest: EntityManifest,
-        include_robot: bool,
-    ) -> None:
-        entity_name = str(getattr(attach_cfg, "entity", "robot"))
-        if entity_name == "robot" and not include_robot:
-            self._debug(f"camera_attach_skipped:{camera_name}:robot_not_included")
-            return
-
-        entity = manifest.get(entity_name)
-        link_name = str(getattr(attach_cfg, "link", "hand"))
-        link = entity.get_link(link_name)
-
-        if hasattr(attach_cfg, "offset_T"):
-            offset_T = _matrix4(attach_cfg.offset_T, f"cameras.{camera_name}.attach.offset_T")
-        else:
-            offset_pos = _vec3(
-                getattr(attach_cfg, "offset_pos", [0.0, 0.0, 0.0]),
-                f"cameras.{camera_name}.attach.offset_pos",
-            )
-            offset_lookat = _vec3(
-                getattr(attach_cfg, "offset_lookat", [0.1, 0.0, 0.0]),
-                f"cameras.{camera_name}.attach.offset_lookat",
-            )
-            offset_up = _vec3(
-                getattr(attach_cfg, "offset_up", [0.0, 0.0, 1.0]),
-                f"cameras.{camera_name}.attach.offset_up",
-            )
-            offset_T = gu.pos_lookat_up_to_T(offset_pos, offset_lookat, offset_up)
-
-        camera.attach(link, offset_T)
-
     def _frames(self) -> TabletopFrames:
         return tabletop_frames_from_config(self.env_cfg)
 
     def _select_renderer(self):
-        """Honor the renderer choice; Nyx sensors are registered at finalize()."""
-        kind = str(getattr(getattr(self.env_cfg, "renderer", None), "type", "auto"))
+        """Nyx supplies RGB; Genesis cameras retain poses and calibration only."""
+        kind = str(getattr(getattr(self.env_cfg, "renderer", None), "type", "nyx"))
         n_envs = int(getattr(self.env_cfg.sim, "n_envs", 0) or 0)
-        if kind not in {"nyx", "rasterizer", "batch", "auto"}:
-            raise ValueError(f"Unknown env.renderer.type={kind!r}; use nyx, rasterizer, batch or auto.")
-        if kind == "nyx":
-            if n_envs != 0:
-                raise ValueError("Shared Nyx cameras require env.sim.n_envs=0; "
-                                 "use env.renderer.type=batch for batched RGB.")
-            if self.env_cfg.get("cameras") and gs.backend != gs.cuda:
-                raise ValueError("Nyx requires env.genesis.backend=cuda and .venv-gs121-nyx; "
-                                 "use env.renderer.type=rasterizer for CPU rendering.")
-            return None  # Viewer/calibration cameras still use Genesis' rasterizer.
-        if kind == "rasterizer" or (kind == "auto" and n_envs <= 0):
-            return None
-
-        if gs.backend != gs.cuda:
-            raise ValueError(
-                f"sim.n_envs={n_envs} selects the batch renderer, which requires the "
-                f"CUDA backend, but gs.init ran with {gs.backend}. Set "
-                "env.genesis.backend=cuda, or keep n_envs=0 for the single-environment "
-                "path."
-            )
-        try:
-            import gs_madrona  # noqa: F401
-        except ImportError as exc:
-            raise ValueError(
-                "The batch renderer needs `gs_madrona`, which is Linux x86-64 only. "
-                "Keep sim.n_envs=0 on this machine."
-            ) from exc
-
-        # Madrona renders every camera into one batch, so they must agree on size.
-        # Left to Genesis this surfaces as a ValueError unpacking a set, after the
-        # scene is built.
-        sizes = {
-            name: tuple(int(v) for v in camera.res)
-            for name, camera in self.env_cfg.cameras.items()
-        }
-        if len(set(sizes.values())) > 1:
-            raise ValueError(
-                "The batch renderer requires every camera to share one resolution; "
-                f"got {sizes}. Override the odd ones out, or drop them from "
-                "env.cameras for batched runs."
-            )
-        return gs.renderers.BatchRenderer()
-
-    def _validate_locked_preset(self) -> None:
-        preset_cfg = getattr(self.env_cfg, "preset", None)
-        if preset_cfg is None or not bool(getattr(preset_cfg, "locked", False)):
-            return
-        preset_id = str(getattr(preset_cfg, "id", ""))
-        # Geometry is shared between the two baselines; only the solver timing
-        # differs (the IPC coupler advances once per substep with the full
-        # sim.dt, i.e. it is built for substeps=1 -- see the rope backend
-        # migration doc).
-        expected = {
-            "topogym_tabletop_v1": {"version": "1.3", "substeps": 4},
-            # Same geometry, four times the substeps. cloth_unpleat's cross
-            # layout switches to it (see `cloth_unpleat.apply_layout_solver`):
-            # its nine-layer crossing loses its layer order during the settle at
-            # 4 substeps, whatever the particle size. Declared here rather than
-            # unlocking the preset, so the lock still checks the table geometry.
-            "topogym_tabletop_v1_fine": {"version": "1.3", "substeps": 16},
-            # 1.0 ran substeps=1 (the stock IPC coupler's design point); the
-            # rigid solver's 10ms substeps let the free-end plugs walk ~21mm
-            # per settle. 1.1 returns to substeps=4, with the substep-aware IPC
-            # dt patch in genesis_ipc_vertex_constraints keeping IPC on the
-            # same clock.
-            "topogym_tabletop_fem_v1": {"version": "1.1", "substeps": 4},
-            "topogym_tabletop_aloha_v1": {"version": "1.0", "substeps": 4},
-        }.get(preset_id)
-        if expected is None:
-            raise ValueError(f"Unknown locked tabletop preset {preset_id!r}.")
-        if str(getattr(preset_cfg, "version", "")) != expected["version"]:
-            raise ValueError(
-                f"Locked {preset_id} requires preset.version={expected['version']}."
-            )
-        self._expected_substeps = int(expected["substeps"])
-        aloha = preset_id == "topogym_tabletop_aloha_v1"
-        if aloha != (str(self.robot_cfg.robot.name) == "aloha"):
-            raise ValueError("ALOHA requires the paired world_tabletop_aloha_v1 and "
-                             "aloha_position_ik presets; single-arm mounts are incompatible.")
-        if aloha:
-            self._require_close(self.env_cfg.robot_mount.euler, (0, 0, 0), "robot_mount.euler")
-
-        self._require_close(
-            self.env_cfg.world.table.pos,
-            _V1_TABLE_POS,
-            "world.table.pos",
-        )
-        self._require_close(
-            self.env_cfg.world.table.size,
-            _V1_TABLE_SIZE,
-            "world.table.size",
-        )
-        self._require_close(
-            self.env_cfg.frames.table_surface.origin,
-            _V1_SURFACE_ORIGIN,
-            "frames.table_surface.origin",
-        )
-        self._require_close(
-            self.env_cfg.frames.task.origin,
-            _V1_SURFACE_ORIGIN,
-            "frames.task.origin",
-        )
-        self._require_close(
-            self.env_cfg.robot_mount.pos,
-            (-0.1356786, 0.0, 0.9196429) if aloha else _V1_ROBOT_MOUNT,
-            "robot_mount.pos",
-        )
-        self._require_close(
-            self.env_cfg.robot_mount.footprint_min,
-            (-0.667, -0.122) if aloha else _V1_FOOTPRINT_MIN,
-            "robot_mount.footprint_min",
-        )
-        self._require_close(
-            self.env_cfg.robot_mount.footprint_max,
-            (0.667, 0.084) if aloha else _V1_FOOTPRINT_MAX,
-            "robot_mount.footprint_max",
-        )
-        if str(getattr(self.env_cfg.robot_mount, "mobility", "")) != "fixed":
-            raise ValueError(
-                "Locked topogym_tabletop_v1 requires robot_mount.mobility=fixed."
-            )
-        self._require_close(self.env_cfg.sim.gravity, (0.0, 0.0, -9.81), "sim.gravity")
-        if abs(float(self.env_cfg.sim.dt) - 0.01) > 1e-12:
-            raise ValueError("Locked topogym_tabletop_v1 requires sim.dt=0.01.")
-        if int(self.env_cfg.sim.substeps) != self._expected_substeps:
-            raise ValueError(
-                f"Locked preset requires sim.substeps={self._expected_substeps}."
-            )
-
-        base_camera = self.env_cfg.cameras.base_camera
-        if tuple(int(value) for value in base_camera.res) != (256, 256):
-            raise ValueError(
-                "Locked topogym_tabletop_v1 requires base_camera.res=[256, 256]."
-            )
-        self._require_close(
-            base_camera.pos,
-            (0.30, 0.00, 1.3196429),
-            "cameras.base_camera.pos",
-        )
-        self._require_close(
-            base_camera.lookat,
-            (0.00, 0.00, 0.7196429),
-            "cameras.base_camera.lookat",
-        )
-        if abs(float(base_camera.fov) - 90.0) > 1e-9:
-            raise ValueError(
-                "Locked topogym_tabletop_v1 requires base_camera.fov=90."
-            )
-
-    @staticmethod
-    def _require_close(actual, expected, name: str, *, atol: float = 1e-7) -> None:
-        actual_array = np.asarray(list(actual), dtype=float)
-        expected_array = np.asarray(list(expected), dtype=float)
-        if actual_array.shape != expected_array.shape or not np.allclose(
-            actual_array,
-            expected_array,
-            rtol=0.0,
-            atol=atol,
-        ):
-            raise ValueError(
-                f"Locked topogym_tabletop_v1 requires {name}="
-                f"{expected_array.tolist()}; got {actual_array.tolist()}."
-            )
+        if kind != "nyx":
+            raise ValueError("Simulator RGB requires env.renderer.type=nyx")
+        if n_envs != 0:
+            raise ValueError("The shared simulator currently requires env.sim.n_envs=0")
+        if self.env_cfg.get("cameras") and gs.backend != gs.cuda:
+            raise ValueError("Nyx RGB requires CUDA; disable RGB for CPU physics")
+        return None  # Nyx sensors are registered in finalize(), before build().
 
     def _validate_geometry(self, frames: TabletopFrames) -> RobotFootprintCheck:
         table_cfg = self.env_cfg.world.table

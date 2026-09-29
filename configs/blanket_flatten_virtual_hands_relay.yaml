@@ -1,0 +1,12 @@
+defaults:
+  - blanket_flatten_virtual_hands_refine
+  - _self_
+
+task:
+  virtual_hands:
+    refine_corners: false
+    corner_grips_only: true
+    maximum_speed_m_s: 0.20
+
+run:
+  output: runs/environment_bootstrap/blanket_flatten/gathered_two_hand_relay_v2

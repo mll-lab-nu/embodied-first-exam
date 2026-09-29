@@ -100,8 +100,10 @@ verified_representatives:
 
 # Qualification applies only to this 70% fixed representative, not the design ranges above.
 qualified_compact_representative:
-  catalog: fixed_compact_toy_v2.yaml
-  instance_id: F3_compact_toy_s70_v2
-  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_v2/robot_seed.json
+  bundle_id: F3_compact_toy_s70_home_lab_v4
+  home_start: true
+  catalog: fixed_home_lab_v4.yaml
+  instance_id: F3_compact_toy_s70_supported_v3
+  ik_seed: assets/tasks/buzz_wire_3d/F3_compact_toy_s70_home_lab_v4/robot_seed.json
   scope: This compact instance only; original dimensions and other prototypes remain
     unqualified.

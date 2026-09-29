@@ -1,0 +1,396 @@
+{
+  "passed": true,
+  "checks": {
+    "both_complete_and_passed": true,
+    "contact_penetration_below_0_5mm": true,
+    "terminal_stops_reached": true,
+    "final_states_settled": true,
+    "settled_for_required_window": true,
+    "half_time_step": true,
+    "same_settings_except_time_step": true,
+    "same_gripper_servo_settings": true,
+    "bilateral_grasp_throughout_traverse": true,
+    "same_robot_plan": true,
+    "same_physical_assets": true,
+    "no_pose_driving": true,
+    "passive_release_energy_bounded": true,
+    "pure_contact_grasps": true,
+    "zero_wire_contacts_while_grasped": true,
+    "controlled_position_difference_below_2mm": true,
+    "controlled_orientation_difference_below_0_1rad": true,
+    "both_use_supported_pick_place": true,
+    "ungrasped_stable_initial_support": true,
+    "placed_on_base_before_release": true,
+    "all_pick_place_phases_recorded": true,
+    "both_record_default_home_and_continuous_approach": true,
+    "no_robot_recontact_after_release": true
+  },
+  "scope": "This compact single-arm instance and recorded policy only; nominal/refined contact dynamics, full maze, release and settle.",
+  "comparison_scope": "Matched route progress while grasped; pickup and supported placement are checked for stable completion independently.",
+  "maximum_controlled_position_difference_m": 7.950781222052545e-05,
+  "maximum_controlled_orientation_difference_rad": 0.0009645226207073754,
+  "comparison_progress_range": [
+    0.0003503689032427216,
+    0.9995854099790519
+  ],
+  "reports": {
+    "nominal": {
+      "passed": true,
+      "complete": true,
+      "grasp_released": true,
+      "final_linear_speed_m_s": 2.3961747357527162e-06,
+      "final_angular_speed_rad_s": 0.001038625092660281,
+      "goal_position_error_m": 9.047955097220869e-06,
+      "terminal_stop_reached": true,
+      "final_distance_to_terminal_stop_m": 0.038738728760748097,
+      "robot_release_progress": 1.0,
+      "remaining_post_completed_by_gravity": false,
+      "settle_wait_seconds": 4.968,
+      "settled_continuous_seconds": 1.032,
+      "settled_window_seconds": 1.0,
+      "settle_max_seconds": 24.0,
+      "task_id": "buzz_wire_3d",
+      "instance_id": "F1_triple_compact_toy_s70_v1",
+      "dt": 0.004,
+      "substeps": 16,
+      "precision_bits": 64,
+      "physics_steps": 24140,
+      "simulated_seconds": 96.56,
+      "pregrasp_start": false,
+      "supported_pick_place": true,
+      "home_start": true,
+      "home_approach_completed": true,
+      "retreat_from_measured": false,
+      "configured_home_arm_qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634
+      ],
+      "initial_arm_qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634
+      ],
+      "initial_support": {
+        "stable_seconds": 2.0,
+        "base_contacts": 4,
+        "finger_contacts": 0,
+        "position_error_m": 1.1941789798547091e-07,
+        "orientation_error_rad": 8.882222767189634e-06
+      },
+      "placement_support_before_release": {
+        "base_contacts": 3,
+        "supported_seconds": 0.3,
+        "contact_search_descent_m": 7.500000000000001e-05,
+        "position_error_m": 5.129540803436455e-05
+      },
+      "grasp_engagement_half_gap_m": 0.004895168942877679,
+      "final_base_contacts": 3,
+      "assisted_grasp": false,
+      "grasp_method": "friction",
+      "contact_gate": {
+        "physics_step": 7179,
+        "time_s": 28.716,
+        "simultaneous_bilateral_contact": true,
+        "finger_link_ids": [
+          25,
+          31
+        ]
+      },
+      "live_object_pose_overwrites": false,
+      "live_robot_pose_overwrites": false,
+      "object_external_wrenches": false,
+      "robot_gravity_compensation": 1.0,
+      "automatic_neutral_self_collision_filter": false,
+      "noslip_iterations": 100,
+      "noslip_tolerance": 1e-12,
+      "max_contacts": 512,
+      "gripper_half_gap_command_m": 0.0,
+      "gripper_driver_kp": 50.0,
+      "gripper_driver_kv": 5.0,
+      "gripper_max_driver_torque_nm": 2.5,
+      "controller": "bounded joint position servos with measured grasp pose feedback at 50 Hz",
+      "feedback_maxima": {
+        "hand_position_correction_m": 0.0008310776371063304,
+        "hand_orientation_correction_rad": 0.004154543160860972
+      },
+      "feedback_rate_hz": 50,
+      "retreat_height_m": 0.05,
+      "passive_release_energy": {
+        "initial_j": 0.008932770988106591,
+        "maximum_j": 0.008932795529883979,
+        "tolerance_j": 0.001
+      },
+      "passive_release_segments": [
+        {
+          "initial_j": 0.008932770988106591,
+          "maximum_j": 0.008932795529883979,
+          "tolerance_j": 0.001
+        }
+      ],
+      "release_recontact_events": 0,
+      "angular_speed_limits_rad_s": {
+        "grasped": 30,
+        "released": 150
+      },
+      "controller_force_lower": [
+        -87,
+        -87,
+        -87,
+        -87,
+        -12,
+        -12,
+        -12,
+        -2.5,
+        -2.5
+      ],
+      "controller_force_upper": [
+        87,
+        87,
+        87,
+        87,
+        12,
+        12,
+        12,
+        2.5,
+        2.5
+      ],
+      "bilateral_traverse_contact_steps": 12450,
+      "total_traverse_steps": 12450,
+      "maxima": {
+        "robot_fixture_penetration_m": 0.0,
+        "robot_self_penetration_m": 0.0,
+        "wand_penetration_m": 0.0003251181125941689,
+        "tracking_error_m": 0.003422473087435628,
+        "angular_error_rad": 0.04455910687823864,
+        "linear_speed_m_s": 0.035397101592823534,
+        "angular_speed_rad_s": 0.44944043414170937
+      },
+      "peak_events": {
+        "wand_penetration_m": {
+          "value": 0.0003251181125941689,
+          "phase": "pickup",
+          "time_s": 29.568,
+          "progress": 0.0,
+          "link_ids": [
+            31,
+            36
+          ]
+        },
+        "linear_speed_m_s": {
+          "value": 0.035397101592823534,
+          "phase": "traverse",
+          "time_s": 51.816,
+          "progress": 0.39983873256892816
+        },
+        "angular_speed_rad_s": {
+          "value": 0.44944043414170937,
+          "phase": "traverse",
+          "time_s": 81.872,
+          "progress": 0.9784500328040838
+        }
+      },
+      "traverse_wire_contact_steps": 0,
+      "recorded_linking_numbers": [
+        1
+      ],
+      "full_passive_robot_qpos_recorded": true,
+      "plan_sha256": "3b8e19df50e310c25d8796cc08d248cc321c683a2c322bcb5b34677538ddfb20",
+      "contact_measurement_scope": "contacts sampled after each outer physics step; not a substep penetration bound"
+    },
+    "refined": {
+      "passed": true,
+      "complete": true,
+      "grasp_released": true,
+      "final_linear_speed_m_s": 9.458580477439362e-07,
+      "final_angular_speed_rad_s": 0.0004473052630503185,
+      "goal_position_error_m": 9.19749231495896e-06,
+      "terminal_stop_reached": true,
+      "final_distance_to_terminal_stop_m": 0.038738553225972645,
+      "robot_release_progress": 1.0,
+      "remaining_post_completed_by_gravity": false,
+      "settle_wait_seconds": 4.0200000000000005,
+      "settled_continuous_seconds": 4.0200000000000005,
+      "settled_window_seconds": 1.0,
+      "settle_max_seconds": 24.0,
+      "task_id": "buzz_wire_3d",
+      "instance_id": "F1_triple_compact_toy_s70_v1",
+      "dt": 0.002,
+      "substeps": 16,
+      "precision_bits": 64,
+      "physics_steps": 47380,
+      "simulated_seconds": 94.76,
+      "pregrasp_start": false,
+      "supported_pick_place": true,
+      "home_start": true,
+      "home_approach_completed": true,
+      "retreat_from_measured": false,
+      "configured_home_arm_qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634
+      ],
+      "initial_arm_qpos": [
+        0.0,
+        0.3926990817,
+        0.0,
+        -1.9634954085,
+        0.0,
+        2.3561944902,
+        -0.7853981634
+      ],
+      "initial_support": {
+        "stable_seconds": 2.0,
+        "base_contacts": 4,
+        "finger_contacts": 0,
+        "position_error_m": 3.3131438530397805e-08,
+        "orientation_error_rad": 8.617409651276053e-06
+      },
+      "placement_support_before_release": {
+        "base_contacts": 3,
+        "supported_seconds": 0.3,
+        "contact_search_descent_m": 7.500000000000001e-05,
+        "position_error_m": 4.943994504726628e-05
+      },
+      "grasp_engagement_half_gap_m": 0.004894857687283735,
+      "final_base_contacts": 3,
+      "assisted_grasp": false,
+      "grasp_method": "friction",
+      "contact_gate": {
+        "physics_step": 14052,
+        "time_s": 28.104,
+        "simultaneous_bilateral_contact": true,
+        "finger_link_ids": [
+          25,
+          31
+        ]
+      },
+      "live_object_pose_overwrites": false,
+      "live_robot_pose_overwrites": false,
+      "object_external_wrenches": false,
+      "robot_gravity_compensation": 1.0,
+      "automatic_neutral_self_collision_filter": false,
+      "noslip_iterations": 100,
+      "noslip_tolerance": 1e-12,
+      "max_contacts": 512,
+      "gripper_half_gap_command_m": 0.0,
+      "gripper_driver_kp": 50.0,
+      "gripper_driver_kv": 5.0,
+      "gripper_max_driver_torque_nm": 2.5,
+      "controller": "bounded joint position servos with measured grasp pose feedback at 50 Hz",
+      "feedback_maxima": {
+        "hand_position_correction_m": 0.0008303636064655825,
+        "hand_orientation_correction_rad": 0.003866587286335771
+      },
+      "feedback_rate_hz": 50,
+      "retreat_height_m": 0.05,
+      "passive_release_energy": {
+        "initial_j": 0.008932768361787042,
+        "maximum_j": 0.008932805389106964,
+        "tolerance_j": 0.001
+      },
+      "passive_release_segments": [
+        {
+          "initial_j": 0.008932768361787042,
+          "maximum_j": 0.008932805389106964,
+          "tolerance_j": 0.001
+        }
+      ],
+      "release_recontact_events": 0,
+      "angular_speed_limits_rad_s": {
+        "grasped": 30,
+        "released": 150
+      },
+      "controller_force_lower": [
+        -87,
+        -87,
+        -87,
+        -87,
+        -12,
+        -12,
+        -12,
+        -2.5,
+        -2.5
+      ],
+      "controller_force_upper": [
+        87,
+        87,
+        87,
+        87,
+        12,
+        12,
+        12,
+        2.5,
+        2.5
+      ],
+      "bilateral_traverse_contact_steps": 24898,
+      "total_traverse_steps": 24898,
+      "maxima": {
+        "robot_fixture_penetration_m": 0.0,
+        "robot_self_penetration_m": 0.0,
+        "wand_penetration_m": 0.00032490075836129687,
+        "tracking_error_m": 0.003459864730260761,
+        "angular_error_rad": 0.04512304316666184,
+        "linear_speed_m_s": 0.03567714476455284,
+        "angular_speed_rad_s": 0.45695902334734756
+      },
+      "peak_events": {
+        "wand_penetration_m": {
+          "value": 0.00032490075836129687,
+          "phase": "pickup",
+          "time_s": 28.946,
+          "progress": 0.0,
+          "link_ids": [
+            31,
+            36
+          ]
+        },
+        "linear_speed_m_s": {
+          "value": 0.03567714476455284,
+          "phase": "traverse",
+          "time_s": 63.378,
+          "progress": 0.6084095695757359
+        },
+        "angular_speed_rad_s": {
+          "value": 0.45695902334734756,
+          "phase": "traverse",
+          "time_s": 81.136,
+          "progress": 0.9784889359618265
+        }
+      },
+      "traverse_wire_contact_steps": 0,
+      "recorded_linking_numbers": [
+        1
+      ],
+      "full_passive_robot_qpos_recorded": true,
+      "plan_sha256": "3b8e19df50e310c25d8796cc08d248cc321c683a2c322bcb5b34677538ddfb20",
+      "contact_measurement_scope": "contacts sampled after each outer physics step; not a substep penetration bound"
+    }
+  },
+  "runs": {
+    "nominal": {
+      "directory": "nominal",
+      "report_sha256": "73baab4ff5dfa51a020850de264a5aa4a9ade3dc037c7a9068ba7f7316de45f1",
+      "frames_sha256": "003024f993180d5a2d3540e14cb86d3a4eec7d9f8f48cd6970637c0d1d6173e0",
+      "original_directory": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/F1_triple_20260922/F1/full03_nominal"
+    },
+    "refined": {
+      "directory": "refined",
+      "report_sha256": "3d3aa1b4883b0f0e59de4f3ffb5df6a7205347382631ce98fb2e57f32a30db13",
+      "frames_sha256": "1e7cb4106a40537c7de960727fe70435b5a25307670712f70ecffd718e071bc0",
+      "original_directory": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/F1_triple_20260922/F1/full03_refined"
+    }
+  }
+}

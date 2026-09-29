@@ -83,3 +83,19 @@ demo_archive:
   status: complete_scoped_physical_demo_and_kinematic_rehearsal_archived
   physical_index: runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/index.html
   kinematic_index: runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_ik/index.html
+
+success: Place the entire silver keyhole piece wholly inside the green dashed area and hold still for the instance stability duration; keep all remaining puzzle parts on the system side. Continued grasping is allowed.
+
+terminal:
+  revision: placement_region_v1
+  implementation: topogym.tasks.placement.PlacementGoalMixin
+  goal_complete: false
+  qualification: pending_real_placement_and_reachability
+  target_selection: ['keyhole_silver']
+  extent: all_visual_and_collision_geometry_or_all_FEM_vertices
+  region: fixed_at_reset_from_actual_table_and_instance_geometry
+  numeric_region_metadata: owner_evidence
+  limited_policy_input: visible_green_boundary_and_static_instruction
+  holding_allowed: true
+  thresholds_calibrated: false
+  historical_success_labels_apply_to_previous_rules: true

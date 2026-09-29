@@ -1,0 +1,828 @@
+{
+  "schema_version": 1,
+  "pool_version": "lock_picking_fixed_families_v1",
+  "families": [
+    {
+      "family_id": "F1",
+      "family_name": "双槽单回退",
+      "reset_angles_deg": [
+        30
+      ],
+      "necessary_retreats": 1,
+      "geometry": {
+        "first_x": 0.2,
+        "center_y": 0.2,
+        "axis_z": 1.105,
+        "pitch": 0.15,
+        "disc_radius": 0.08,
+        "disc_thickness": 0.01,
+        "bore_radius": 0.0075,
+        "slot_radius": 0.045,
+        "slot_half_deg": 8.0,
+        "tab_radius": 0.036,
+        "tab_half_deg": 4.0,
+        "tab_thickness": 0.005,
+        "shaft_radius": 0.0065,
+        "grip_offset": 0.495,
+        "handle_radius": 0.018,
+        "slots": [
+          [
+            -30.0,
+            0.0
+          ],
+          [
+            -30.0
+          ],
+          [
+            0.0
+          ]
+        ],
+        "initial_disc_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "initial_key_deg": 0.0,
+        "endpoint_deg": 0.0
+      },
+      "rotor_stops": [
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -15.0,
+            15.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -10.0,
+            45.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -180,
+            180
+          ],
+          "ear_phase_deg": -35
+        }
+      ],
+      "keyframes": [
+        {
+          "phase": "对轴起点",
+          "depth": 0.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "盘外转至入口方向",
+          "depth": 0.0,
+          "key_deg": -30,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D1",
+          "depth": 1.0,
+          "key_deg": -30,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D2",
+          "depth": 2.0,
+          "key_deg": -30,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -15.0,
+          "disc_deg": [
+            15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 1 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -15.0,
+          "disc_deg": [
+            15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 30°",
+          "depth": 1.0,
+          "key_deg": -45.0,
+          "disc_deg": [
+            -15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -45.0,
+          "disc_deg": [
+            -15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 30°",
+          "depth": 1.5,
+          "key_deg": -15.0,
+          "disc_deg": [
+            -15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -15.0,
+          "disc_deg": [
+            -15.0,
+            15.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动对准 D3 / END",
+          "depth": 2.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            30.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D3",
+          "depth": 3.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            30.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入固定终点",
+          "depth": 4.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            30.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "family_id": "F2",
+      "family_name": "三槽不等角双回退",
+      "reset_angles_deg": [
+        28,
+        32
+      ],
+      "necessary_retreats": 2,
+      "geometry": {
+        "first_x": 0.2,
+        "center_y": 0.2,
+        "axis_z": 1.105,
+        "pitch": 0.15,
+        "disc_radius": 0.08,
+        "disc_thickness": 0.01,
+        "bore_radius": 0.0075,
+        "slot_radius": 0.045,
+        "slot_half_deg": 8.0,
+        "tab_radius": 0.036,
+        "tab_half_deg": 4.0,
+        "tab_thickness": 0.005,
+        "shaft_radius": 0.0065,
+        "grip_offset": 0.495,
+        "handle_radius": 0.018,
+        "slots": [
+          [
+            -60.0,
+            -32.0,
+            0.0
+          ],
+          [
+            -60.0
+          ],
+          [
+            0.0
+          ]
+        ],
+        "initial_disc_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "initial_key_deg": 0.0,
+        "endpoint_deg": 0.0
+      },
+      "rotor_stops": [
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -16.0,
+            16.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -10.0,
+            75.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -180,
+            180
+          ],
+          "ear_phase_deg": -35
+        }
+      ],
+      "keyframes": [
+        {
+          "phase": "对轴起点",
+          "depth": 0.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "盘外转至入口方向",
+          "depth": 0.0,
+          "key_deg": -60,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D1",
+          "depth": 1.0,
+          "key_deg": -60,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D2",
+          "depth": 2.0,
+          "key_deg": -60,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -44.0,
+          "disc_deg": [
+            16.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 1 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -44.0,
+          "disc_deg": [
+            16.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 28°",
+          "depth": 1.0,
+          "key_deg": -72.0,
+          "disc_deg": [
+            -12.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -72.0,
+          "disc_deg": [
+            -12.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 28°",
+          "depth": 1.5,
+          "key_deg": -44.0,
+          "disc_deg": [
+            -12.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -44.0,
+          "disc_deg": [
+            -12.0,
+            16.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -16.0,
+          "disc_deg": [
+            16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 2 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -16.0,
+          "disc_deg": [
+            16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 32°",
+          "depth": 1.0,
+          "key_deg": -48.0,
+          "disc_deg": [
+            -16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -48.0,
+          "disc_deg": [
+            -16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 32°",
+          "depth": 1.5,
+          "key_deg": -16.0,
+          "disc_deg": [
+            -16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -16.0,
+          "disc_deg": [
+            -16.0,
+            44.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动对准 D3 / END",
+          "depth": 2.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D3",
+          "depth": 3.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入固定终点",
+          "depth": 4.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            60.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "family_id": "F3",
+      "family_name": "四槽三回退",
+      "reset_angles_deg": [
+        24,
+        24,
+        24
+      ],
+      "necessary_retreats": 3,
+      "geometry": {
+        "first_x": 0.2,
+        "center_y": 0.2,
+        "axis_z": 1.105,
+        "pitch": 0.15,
+        "disc_radius": 0.08,
+        "disc_thickness": 0.01,
+        "bore_radius": 0.0075,
+        "slot_radius": 0.045,
+        "slot_half_deg": 8.0,
+        "tab_radius": 0.036,
+        "tab_half_deg": 4.0,
+        "tab_thickness": 0.005,
+        "shaft_radius": 0.0065,
+        "grip_offset": 0.495,
+        "handle_radius": 0.018,
+        "slots": [
+          [
+            -72.0,
+            -48.0,
+            -24.0,
+            0.0
+          ],
+          [
+            -72.0
+          ],
+          [
+            0.0
+          ]
+        ],
+        "initial_disc_deg": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "initial_key_deg": 0.0,
+        "endpoint_deg": 0.0
+      },
+      "rotor_stops": [
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -12.0,
+            12.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -10.0,
+            87.0
+          ],
+          "ear_phase_deg": -35
+        },
+        {
+          "style": "single_ring",
+          "bounds_deg": [
+            -180,
+            180
+          ],
+          "ear_phase_deg": -35
+        }
+      ],
+      "keyframes": [
+        {
+          "phase": "对轴起点",
+          "depth": 0.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "盘外转至入口方向",
+          "depth": 0.0,
+          "key_deg": -72,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D1",
+          "depth": 1.0,
+          "key_deg": -72,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D2",
+          "depth": 2.0,
+          "key_deg": -72,
+          "disc_deg": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -60.0,
+          "disc_deg": [
+            12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 1 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -60.0,
+          "disc_deg": [
+            12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 24°",
+          "depth": 1.0,
+          "key_deg": -84.0,
+          "disc_deg": [
+            -12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -84.0,
+          "disc_deg": [
+            -12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 24°",
+          "depth": 1.5,
+          "key_deg": -60.0,
+          "disc_deg": [
+            -12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -60.0,
+          "disc_deg": [
+            -12.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -36.0,
+          "disc_deg": [
+            12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 2 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -36.0,
+          "disc_deg": [
+            12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 24°",
+          "depth": 1.0,
+          "key_deg": -60.0,
+          "disc_deg": [
+            -12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -60.0,
+          "disc_deg": [
+            -12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 24°",
+          "depth": 1.5,
+          "key_deg": -36.0,
+          "disc_deg": [
+            -12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -36.0,
+          "disc_deg": [
+            -12.0,
+            36.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动至 D1 上限",
+          "depth": 2.0,
+          "key_deg": -12.0,
+          "disc_deg": [
+            12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "第 3 次回退到 D1",
+          "depth": 1.0,
+          "key_deg": -12.0,
+          "disc_deg": [
+            12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "仅 D1 复位 24°",
+          "depth": 1.0,
+          "key_deg": -36.0,
+          "disc_deg": [
+            -12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "前进到盘间空隙",
+          "depth": 1.5,
+          "key_deg": -36.0,
+          "disc_deg": [
+            -12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "空隙中钥匙转回 24°",
+          "depth": 1.5,
+          "key_deg": -12.0,
+          "disc_deg": [
+            -12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "重新进入 D2",
+          "depth": 2.0,
+          "key_deg": -12.0,
+          "disc_deg": [
+            -12.0,
+            60.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "联动对准 D3 / END",
+          "depth": 2.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            72.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入 D3",
+          "depth": 3.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            72.0,
+            0.0
+          ]
+        },
+        {
+          "phase": "进入固定终点",
+          "depth": 4.0,
+          "key_deg": 0.0,
+          "disc_deg": [
+            0.0,
+            72.0,
+            0.0
+          ]
+        }
+      ]
+    }
+  ],
+  "ik_reference": {
+    "phase": "entry_align",
+    "robot_qpos": [
+      0.05893615260720253,
+      0.0847967192530632,
+      0.9157787561416626,
+      -2.974200487136841,
+      -2.171813488006592,
+      1.5809780359268188,
+      -0.13436779379844666,
+      0.47095954418182373,
+      3.4351187423453666e-06,
+      0.4700704514980316,
+      -0.45203015208244324,
+      0.4709605574607849,
+      3.0478813641821034e-06,
+      0.4701117277145386,
+      -0.45177724957466125
+    ],
+    "hand_pos": [
+      -0.2879616618156433,
+      0.19996243715286255,
+      1.1048980951309204
+    ]
+  },
+  "provenance": {
+    "summary_sha256": "50b786ca391b893de121a41083ac1cdf18f2b9d84aa8e452c77f23c3302489f0",
+    "physical_frames_sha256": "1cd9f49b097a6104a8b75362fc9c5e9f3ef92ab1b328f4483324d8fc20764411",
+    "scope": "Fixed mechanisms and aligned solving witnesses; not physical qualification"
+  }
+}

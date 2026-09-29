@@ -62,3 +62,19 @@ variant_generator:
   random_descendant_physics: not_inherited
   export_ready: false
   evidence: runs/demo_metadata/hedgehog_in_cage/2026-09-19_generator_replacements_review_v2/verification.json
+
+success: Place the hedgehog ball including every spike wholly inside the green dashed area and hold still for the instance stability duration; keep all remaining puzzle parts on the system side. Continued grasping is allowed.
+
+terminal:
+  revision: placement_region_v1
+  implementation: topogym.tasks.placement.PlacementGoalMixin
+  goal_complete: false
+  qualification: pending_real_placement_and_reachability
+  target_selection: ['hedgehog_ball']
+  extent: all_visual_and_collision_geometry_or_all_FEM_vertices
+  region: fixed_at_reset_from_actual_table_and_instance_geometry
+  numeric_region_metadata: owner_evidence
+  limited_policy_input: visible_green_boundary_and_static_instruction
+  holding_allowed: true
+  thresholds_calibrated: false
+  historical_success_labels_apply_to_previous_rules: true

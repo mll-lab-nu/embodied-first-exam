@@ -1,0 +1,39 @@
+experiment: cube_pick_place_rollout
+attempts: 1
+concurrency: 1
+timeout_sec: 1800
+usage:
+  mode: observed
+  scope: trial
+  limits:
+    input_tokens: 3000000
+    output_tokens: 1000000
+  on_usage_unavailable: fail
+  watchdog_interval_ms: 100
+  stop_grace_ms: 1000
+instances:
+- name: cube-pick-place-seed0
+  fixture: cube_pick_place
+  evaluation: task_success
+  mode: unlimited
+  state_fields:
+  - world
+  initial_observation_steps: 5
+  instruction: |-
+    Pick up the cube, hold it at least 5 cm above the table for at least 0.2 s,
+    place it back at its original position, open the gripper, withdraw at least
+    5 cm and let it settle. Merely reaching or closing the gripper is not completion.
+  simulator:
+    task_id: cube_pick_place
+    robot_id: panda_robotiq
+    variation_id: base
+    seed: 0
+    control_mode: EE_ABS
+    enable_privileged: true
+    compute_backend: cuda
+    render_backend: nyx
+    enable_rgb: true
+    physics_dt_s: 0.025
+    solver_substeps: 40
+    control_decimation: 1
+    max_physics_steps: 1000

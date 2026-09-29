@@ -1,0 +1,88 @@
+{
+ "task": "blanket_flatten",
+ "topogym_task": "blanket_flatten",
+ "variation_id": "blanket_flatten_easy",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Unfold and spread the blanket flat on the table. Remove folds, rolls and self-overlaps so the fabric covers its unfolded footprint without excessive stretching. Release the blanket, withdraw the grippers and let it settle flat and still on the tabletop.",
+ "simulator": {
+  "task_id": "blanket_flatten",
+  "robot_id": "aloha",
+  "variation_id": "blanket_flatten_easy",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "d006f4510c92b71d",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "blanket": {
+   "material": "particle",
+   "position": [
+    -0.13647,
+    0.14976,
+    0.92852
+   ],
+   "bounds": [
+    [
+     -0.43446,
+     -0.01959,
+     0.92364
+    ],
+    [
+     0.16162,
+     0.30964,
+     0.9563
+    ]
+   ],
+   "velocity": [
+    -3e-05,
+    0.00018,
+    -0.00014
+   ],
+   "n_points": 8181
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

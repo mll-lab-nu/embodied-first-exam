@@ -1,0 +1,144 @@
+{
+ "task": "cast_coil",
+ "topogym_task": "cast_coil",
+ "variation_id": "cast_coil_easy",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both pieces, withdraw the grippers and leave the assembled puzzle stable on the table.",
+ "simulator": {
+  "task_id": "cast_coil",
+  "robot_id": "aloha",
+  "variation_id": "cast_coil_easy",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "4a47e98a8f7b9220",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "coil_gold": {
+   "position": [
+    -0.1263,
+    0.04804,
+    0.97399
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    -0.0,
+    0.707107
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.15405,
+     -0.001,
+     0.92014
+    ],
+    [
+     -0.09855,
+     0.101,
+     1.02214
+    ]
+   ],
+   "size": [
+    0.0555,
+    0.102,
+    0.102
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "coil_silver": {
+   "position": [
+    -0.26523,
+    0.23288,
+    0.96947
+   ],
+   "orientation_wxyz": [
+    0.5,
+    0.5,
+    -0.5,
+    0.5
+   ],
+   "euler_xyz": [
+    1.5708,
+    -1.5708,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2928,
+     0.179,
+     0.92014
+    ],
+    [
+     -0.2373,
+     0.281,
+     1.02214
+    ]
+   ],
+   "size": [
+    0.0555,
+    0.102,
+    0.102
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

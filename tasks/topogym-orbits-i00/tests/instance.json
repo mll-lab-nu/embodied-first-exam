@@ -1,0 +1,621 @@
+{
+ "task": "orbits",
+ "topogym_task": "orbits",
+ "variation_id": "orbits_reference85",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Free the complete cord and wooden handle from the fixed ring-and-post assembly. Place the entire cord and handle inside the green dashed goal area and hold them still briefly. Keep the rings, posts and other fixed components outside the area on the puzzle/system side. Holding the target is allowed; placing only the handle in the area is not completion.",
+ "simulator": {
+  "task_id": "orbits",
+  "robot_id": "aloha",
+  "variation_id": "orbits_reference85",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx"
+ },
+ "state_sha": "1f69f1d0fa833044",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  9.9e-05
+ ],
+ "objects": {
+  "base": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.21218,
+     -0.19975,
+     0.91964
+    ],
+    [
+     -0.05918,
+     0.19975,
+     0.94004
+    ]
+   ],
+   "size": [
+    0.153,
+    0.3995,
+    0.0204
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_1": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.1887,
+     1.19334
+    ],
+    [
+     -0.07278,
+     -0.0629,
+     1.20694
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_2": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.119,
+     1.13554
+    ],
+    [
+     -0.07278,
+     0.0068,
+     1.14914
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_3": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.0493,
+     1.07774
+    ],
+    [
+     -0.07278,
+     0.0765,
+     1.09134
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_4": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     0.0204,
+     1.01994
+    ],
+    [
+     -0.07278,
+     0.1462,
+     1.03354
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_1": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     -0.14348,
+     0.93919
+    ],
+    [
+     -0.1316,
+     -0.13532,
+     1.24519
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.306
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_2": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     -0.07378,
+     0.93919
+    ],
+    [
+     -0.1316,
+     -0.06562,
+     1.20014
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.26095
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_3": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     -0.00408,
+     0.93919
+    ],
+    [
+     -0.1316,
+     0.00408,
+     1.14234
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.20315
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_4": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     0.06562,
+     0.93919
+    ],
+    [
+     -0.1316,
+     0.07378,
+     1.08454
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.14535
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_5": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     0.13532,
+     0.93919
+    ],
+    [
+     -0.1316,
+     0.14348,
+     1.02674
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.08755
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "stopper_ball": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.15608,
+     -0.1598,
+     1.22479
+    ],
+    [
+     -0.11528,
+     -0.119,
+     1.26559
+    ]
+   ],
+   "size": [
+    0.0408,
+    0.0408,
+    0.0408
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "handle": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.1514,
+     0.33745,
+     0.92117
+    ],
+    [
+     -0.11995,
+     0.39355,
+     0.93307
+    ]
+   ],
+   "size": [
+    0.03145,
+    0.0561,
+    0.0119
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "cord": {
+   "material": "fem",
+   "position": [
+    -0.13568,
+    0.24317,
+    0.93525
+   ],
+   "bounds": [
+    [
+     -0.15454,
+     0.12396,
+     0.92118
+    ],
+    [
+     -0.11681,
+     0.35037,
+     0.94701
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 16656
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.33668,
+     -0.63575,
+     0.91984
+    ],
+    [
+     0.06532,
+     -0.23375,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.402,
+    0.402,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

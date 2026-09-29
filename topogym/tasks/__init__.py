@@ -1,6 +1,5 @@
-"""Environment implementations for TopoGym's redesigned suite and new tasks.
+"""Task entities, initial conditions and goals; Env and World own execution.
 
-Each task will own its geometry, configuration, and scene construction.
-Historical implementations are archived under ``legacy/topogym/tasks_legacy/``. Importing this
-package does not load historical tasks or initialize a physics backend.
+Import concrete definitions through the shared registry. Importing this package
+does not initialize a physics device, create a scene or load inactive tasks.
 """

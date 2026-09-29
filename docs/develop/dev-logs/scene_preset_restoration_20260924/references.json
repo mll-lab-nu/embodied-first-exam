@@ -1,0 +1,244 @@
+[
+  {
+    "name": "horseshoe",
+    "source": "demos/horseshoe_ring/varaition_f1/cam_low/2026-09-21_F1_full_v1_cam_low.mp4",
+    "requested_video_time_s": 8,
+    "image": "horseshoe.png",
+    "scope": "最新 F1 实测状态重渲染；外观/场景参考",
+    "source_sha256": "80cc2b13873de5cf675a0c358d15beb41c895a881651d8c90cc020fda75fe717",
+    "image_sha256": "ec0cd324da5e13822b853601c73bbdef9b4d0854f390ec94a07a1a97ef55fa26",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 540,
+          "avg_frame_rate": "10/1"
+        }
+      ],
+      "format": {
+        "duration": "129.700000"
+      }
+    }
+  },
+  {
+    "name": "hedgehog",
+    "source": "demos/hedgehog_in_cage/varaition_oblique_gate/front_oblique/2026-09-21_oblique_gate_restored_v1_front_oblique.mp4",
+    "requested_video_time_s": 2,
+    "image": "hedgehog.png",
+    "scope": "单斜窗完整状态重渲染；深浅木质参考",
+    "source_sha256": "ab4ef930bfa11bf656ef5e3974fa27d5564df30aec4c5a25d02d50db561232dc",
+    "image_sha256": "b632461cbcf36fbe71c0a8c7d03d76436123a45fbc1187eac7473292cd26c42b",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 720,
+          "avg_frame_rate": "12/1"
+        }
+      ],
+      "format": {
+        "duration": "82.584000"
+      }
+    }
+  },
+  {
+    "name": "buzz_wire",
+    "source": "demos/buzz_wire_3d/varaition_f1_vertical_wave/front_oblique/F1_triple_home_lab_v1_full.mp4",
+    "requested_video_time_s": 2,
+    "image": "buzz_wire.png",
+    "scope": "最新三拱 F1；木底座、铜线、银环木柄和支撑参考",
+    "source_sha256": "4c83a87f619b473bfe5b05271f1346229db0594042a7abf7bd790196ea3a3523",
+    "image_sha256": "16251d85c0156bc1da4d62fc8cbc867a0dba622810bef10b9bae476c5eb8ea53",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "avg_frame_rate": "30/1"
+        }
+      ],
+      "format": {
+        "duration": "96.567000"
+      }
+    }
+  },
+  {
+    "name": "buzz_wire_pickup",
+    "source": "demos/buzz_wire_3d/varaition_f1_vertical_wave/front_oblique/F1_triple_home_lab_v1_full.mp4",
+    "requested_video_time_s": 15,
+    "image": "buzz_wire_pickup.png",
+    "scope": "同次完整物理执行；拾取阶段位置参考，非新尺寸验收",
+    "source_sha256": "4c83a87f619b473bfe5b05271f1346229db0594042a7abf7bd790196ea3a3523",
+    "image_sha256": "8382d67e65bca08ca2e20f60742c760f65d6ee6a185eb7bbb38fdddf84893d8f",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "avg_frame_rate": "30/1"
+        }
+      ],
+      "format": {
+        "duration": "96.567000"
+      }
+    }
+  },
+  {
+    "name": "lock_picking",
+    "source": "demos/lock_picking/varaition_standard_150mm/front_oblique/2026-09-18_standard_150mm_purple_trace_v1_front_oblique.mp4",
+    "requested_video_time_s": 2,
+    "image": "lock_picking.png",
+    "scope": "最新完整物理流程版本；较新的 F1/F3 只有运动学预演",
+    "source_sha256": "ea196ec1afeb724e9c707ab5995c69b7a4a2b5845be37f5e70255e19a43ab7fa",
+    "image_sha256": "1f6a3843993f6b59f52839a28631781470099f6e4360de0e3f3f4979760941e3",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "159.350000"
+      }
+    }
+  },
+  {
+    "name": "fiber_bundling",
+    "source": "demos/fiber_bundling/varaition_dense_16_r13p5mm/front_oblique/2026-09-21_dense_16_r13p5mm_clean_v1_front_oblique.mp4",
+    "requested_video_time_s": 2,
+    "image": "fiber_bundling.png",
+    "scope": "密集 16 芯实测状态重渲染；终端盒、黑色护套和彩线参考",
+    "source_sha256": "e1147eb6b8350a0b95e0f908e2c68fda1c15a4454b3c5c7901035bfc274bbac9",
+    "image_sha256": "4932a8c0bfa68212e4c83236db273548570cd4494e6f9224e21c34bac84abd91",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 900,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "237.150000"
+      }
+    }
+  },
+  {
+    "name": "rope_threading",
+    "source": "runs/environment-solvability/rope_threading/physics_soft50_damped20_compressible_fine_v13/robot_prefix_attempt_2/detail.mp4",
+    "requested_video_time_s": 2,
+    "image": "rope_threading.png",
+    "scope": "demos 中没有可用视频；借用现存机器人前缀诊断，不是完整成功演示",
+    "source_sha256": "dcb4ff5fb84310721c04840ad448d52a2686a7c97b76ebedbad7fbf164c8440f",
+    "image_sha256": "38d80b180a221c76004884c531123024d43571cd076092539ad2b2b19d50ab08",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 540,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "29.050000"
+      }
+    }
+  },
+  {
+    "name": "knot_untying",
+    "source": "demos/knot_untying/varaition_trefoil/cam_low/2026-09-17_bounded_spread_trefoil_v9_cam_low.mp4",
+    "requested_video_time_s": 2,
+    "image": "knot_untying.png",
+    "scope": "当前归档 Trefoil 完整流程；仅作为配色参考",
+    "source_sha256": "888ea577c16e387c51a1f31ed297a814f1f79725a7fc7c80b1b83bd420c8e05b",
+    "image_sha256": "e85ee8ef8f03c68ab80d0644a1ed8c84299dd17610b47136c10cade27ac47a7e",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 540,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "75.000000"
+      }
+    }
+  },
+  {
+    "name": "orbits",
+    "source": "demos/orbits/varaition_rope_only/front_oblique/rope_video_full_v2.mp4",
+    "requested_video_time_s": 2,
+    "image": "orbits.png",
+    "scope": "最新无臂外力流程 v2；木质与绳配色参考，不代表双臂可达",
+    "source_sha256": "d6a8fb25346642e0e786c219b0068692700a0a7d5d200f20539a033904430003",
+    "image_sha256": "dd5f71f95f955e946c9070ffe732a1673acc0ee1d3fdd95e20951bea76530772",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "213.000000"
+      }
+    }
+  },
+  {
+    "name": "orbits_centered",
+    "source": "demos/orbits/varaition_base_centered/overview/2026-09-20_static_base_centered_v5_overview.mp4",
+    "requested_video_time_s": 2,
+    "image": "orbits_centered.png",
+    "scope": "较早居中静态场景；只用于朝向/布局参考",
+    "source_sha256": "37d9aa2b9abb31958f40c487f266ded36bd7eb666812eb575bdaa399d1529d04",
+    "image_sha256": "f49bde9051c50f988a52f2de817e46bab15735ba91031044293dc8c8ab0a0ecc",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "avg_frame_rate": "15/1"
+        }
+      ],
+      "format": {
+        "duration": "8.000000"
+      }
+    }
+  },
+  {
+    "name": "slotted_post_ring",
+    "source": "demos/slotted_post_ring/varaition_clearance36/front_oblique/2026-09-21_clearance36_full_physics_v1_front_oblique.mp4",
+    "requested_video_time_s": 2,
+    "image": "slotted_post_ring.png",
+    "scope": "36 mm 外力完整流程；外观参考，旧一维绳不等于当前 FEM 验收",
+    "source_sha256": "bc926d93db7749672417856efa65c763b22b0e8f2b47b1f7d7b0e46b00aef43a",
+    "image_sha256": "1ec9de090b371936bc8122b3d4217ae7e0c07ef1c1dff9190da6bda364cb13c2",
+    "probe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 720,
+          "avg_frame_rate": "20/1"
+        }
+      ],
+      "format": {
+        "duration": "147.000000"
+      }
+    }
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checked_at_utc": "2026-09-28T21:58:37.263099+00:00",
+  "archive_manifest_sha256": "27ddf654424c5e6cb5470ca65808d3a32ca89587574da61c4b0c6aa2d310c39c",
+  "summary_sha256": "99132a9d8459129d2be529f25e8ab1e56db85ab2866745613a81ced356e0e639",
+  "file_count": 8170,
+  "total_bytes": 10976057141,
+  "accepted_success_and_audit": 3,
+  "qualification_prerequisites": 3,
+  "checks": [
+    "Every copied file SHA-256 and byte size equal original",
+    "Independent destination inode; no symlinks or hardlinks",
+    "Every run frozen source file matches run_source_manifest.json",
+    "Accepted Task success and independent audit passed",
+    "Audited numerical evidence hashes and Coil array chunks match",
+    "Qualification prerequisite failures retained without promotion"
+  ],
+  "fresh_physics_executions": 0,
+  "fresh_task_reevaluations": 0
+}

@@ -1,0 +1,3010 @@
+{
+  "schema_version": 1,
+  "checked_on": "2026-09-25",
+  "scope": "Directly linked Python sources and explicitly identified Git sources in planner_oracle_inventory_20260925_zh.md; not a dependency-closure or runtime test",
+  "runtime_executed": false,
+  "git_commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+  "validation": {
+    "local_links_checked": 106,
+    "missing_targets": [],
+    "invalid_line_anchors": [],
+    "python_sources_parsed": 54
+  },
+  "sources": [
+    {
+      "storage": "working_tree_snapshot",
+      "path": "topogym/planning/motions/cast_coil.py",
+      "sha256": "1cff5ac079f6ec6018fdae8d6005ab3a32bddc210d4a29775564b7894e809d7e",
+      "symbols": [
+        {
+          "name": "ScrewMotion",
+          "line": 11,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "variant_route",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sample_route",
+          "line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prototype_route",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__post_init__",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "point_speed_bound",
+          "line": 24,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-19_seed_generator_v2/sources/family_variants.py",
+      "sha256": "30d95fca8e58c5c95a324750c376b7bd033a7ba489fc9ce0553576045db90637",
+      "symbols": [
+        {
+          "name": "ellipse",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "envelope",
+          "line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "parameters",
+          "line": 60,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "normalize_outer_stock",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "family_seed",
+          "line": 79,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "qualify_geometry",
+          "line": 189,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "overview",
+          "line": 212,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 236,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-19_seed_generator_v2/sources/robot_motion.py",
+      "sha256": "90078227059780cdb02b8566962a51a9e0cd7031943e8de333318eaaffc08724",
+      "symbols": [
+        {
+          "name": "Kinematics",
+          "line": 33,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "balanced_pose",
+          "line": 63,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bodies_from_fk",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotClearance",
+          "line": 83,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "solve_frame",
+          "line": 134,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "solve_coupled",
+          "line": 144,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 160,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 34,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "solve",
+          "line": 50,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 85,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "convex",
+          "line": 103,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "violations",
+          "line": 107,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "residual",
+          "line": 148,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "residual",
+          "line": 52,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-19_seed_generator_v2/sources/robot_execution.py",
+      "sha256": "61434984ac9e9c3f808120d06f7eec7c7d194bfc34c452f768bebe1053e3c0a8",
+      "symbols": [
+        {
+          "name": "run",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 128,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "state",
+          "line": 70,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-19_seed_generator_v2/sources/family_pipeline.py",
+      "sha256": "c04b78c07a4c1ce126ca5be23bdcec57f4958071e1a2199b335c271db7379e72",
+      "symbols": [
+        {
+          "name": "command",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "geometry",
+          "line": 32,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "physics",
+          "line": 37,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "audit",
+          "line": 46,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "qualify_physics",
+          "line": 52,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "parallel",
+          "line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "validate",
+          "line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sampled_family_seed",
+          "line": 133,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sample",
+          "line": 149,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 184,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_keyhole/2026-09-17_current_instance_physical/evidence/runner_sources/robot_execution.py",
+      "sha256": "c7d000e8f0969d9ddd195309be2ded8a9347218d9111124b0e1b4484732cd122",
+      "symbols": [
+        {
+          "name": "run",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 114,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "state",
+          "line": 59,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_coil/2026-09-17_aloha_full/execution_source.py",
+      "sha256": "225a792d9b2a22f7c64dd859fa4d8aeefe812fe87a8fda06fd4639428a5eaf62",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "arr",
+          "line": 107,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rot",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 176,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture_physical_frame",
+          "line": 180,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 190,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 230,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "phase_to",
+          "line": 334,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait",
+          "line": 340,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command",
+          "line": 344,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 348,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "adjust_plan",
+          "line": 370,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_coil/2026-09-21_variation_restore_v1/axial_screw_turn/physics/execution_source.py",
+      "sha256": "acf082bab8ebf2b2ba56285ed832de43cac1782c3b3a85dbfd70c367e4981077",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "arr",
+          "line": 109,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rot",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 178,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture_physical_frame",
+          "line": 182,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 192,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 232,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "phase_to",
+          "line": 336,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait",
+          "line": 342,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command",
+          "line": 346,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 350,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "adjust_plan",
+          "line": 372,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_coil/2026-09-21_variation_restore_v1/split_turn_offset/physics/execution_source.py",
+      "sha256": "acf082bab8ebf2b2ba56285ed832de43cac1782c3b3a85dbfd70c367e4981077",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "arr",
+          "line": 109,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rot",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 178,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture_physical_frame",
+          "line": 182,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 192,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 232,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "phase_to",
+          "line": 336,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait",
+          "line": 342,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command",
+          "line": 346,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 350,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "adjust_plan",
+          "line": 372,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/cast_coil/2026-09-21_variation_restore_v1/eccentric_turn/physics/execution_source.py",
+      "sha256": "acf082bab8ebf2b2ba56285ed832de43cac1782c3b3a85dbfd70c367e4981077",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "arr",
+          "line": 109,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "rot",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 178,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture_physical_frame",
+          "line": 182,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 192,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 232,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "phase_to",
+          "line": 336,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait",
+          "line": 342,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command",
+          "line": 346,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 350,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "adjust_plan",
+          "line": 372,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1/physical_demo.py",
+      "sha256": "d3a4596ff084c57392353cf34388515cbac2771654e0ae83190bdd941711bda1",
+      "symbols": [
+        {
+          "name": "extract_ring",
+          "line": 15,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 64,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 84,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1/execution_source.py",
+      "sha256": "f21d25784006c8c6e6c5863949cfa928f2684fba3afa6c6d4a67d016795a7d5e",
+      "symbols": [
+        {
+          "name": "PhysicalMotion",
+          "line": 22,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "body_pose",
+          "line": 109,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hand_pose",
+          "line": 113,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 118,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp_connected",
+          "line": 122,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "replace_grasps",
+          "line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture",
+          "line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 194,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "joint_segment",
+          "line": 229,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hold",
+          "line": 240,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cartesian",
+          "line": 243,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "follow_old_fold",
+          "line": 261,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "transform_pair",
+          "line": 271,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "goal_state",
+          "line": 288,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish",
+          "line": 308,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "visit",
+          "line": 136,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/horseshoe_ring/2026-09-21_variation_restore_v1/F2_source/family_routes.py",
+      "sha256": "e6c58093b02b6a2b4de3587b85fb40f302718b339eb791933c88f3fc78210443",
+      "symbols": [
+        {
+          "name": "plan",
+          "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 38,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/provenance/family_motion.py",
+      "sha256": "e526a616cbf8af7824107bb2d6a98ed61e0bc43d22fb221cd907b0bee77c11ff",
+      "symbols": [
+        {
+          "name": "proposal",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "generate",
+          "line": 51,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 89,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/hedgehog_in_cage/2026-09-17_family_a_oblique_gate_v1/provenance/family_runtime.py",
+      "sha256": "72d828f379feef11e9d41310e4ed6583dbbdd24eec42671804cdf95cf9cd11d3",
+      "symbols": [
+        {
+          "name": "admitted",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotAudit",
+          "line": 40,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "plan_audit",
+          "line": 102,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_scene",
+          "line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "audit",
+          "line": 296,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 337,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 392,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "depth",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 202,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 203,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 209,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "drive_hand",
+          "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 232,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/variant_checks/hedgehog_in_cage/2026-09-19_replacements_v2/gen_keyhole_fixed/generator_source/family_runtime.py",
+      "sha256": "049e1e105e12a144ab1906940a37360431b054e0e37289d1d3aac69282360f94",
+      "symbols": [
+        {
+          "name": "admitted",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotAudit",
+          "line": 40,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "plan_audit",
+          "line": 102,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_scene",
+          "line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 177,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "audit",
+          "line": 302,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 343,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 408,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "depth",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 208,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 209,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 215,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "drive_hand",
+          "line": 230,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 238,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/lock_picking/2026-09-18_standard_150mm_purple_trace_v1/source_evidence/physical_controller.py",
+      "sha256": "26faab8e71d0e7f16a2dd8337c8806539d04105c3df47ca42bb5fb47df420091",
+      "symbols": [
+        {
+          "name": "state",
+          "line": 46,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contact_diagnostics",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture",
+          "line": 66,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 73,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose_control",
+          "line": 81,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_hand",
+          "line": 105,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_key",
+          "line": 118,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "snapshot",
+          "line": 155,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-21_sparse_04_r13p5mm_clean_v1/source/robot_sequence.py",
+      "sha256": "fdf0b9789e83343463cec923aad62bb4f0facfef464bf8cdd98d9dec6cd73869",
+      "symbols": [
+        {
+          "name": "smooth",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bundle_fit",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp_health",
+          "line": 45,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "touching_grasp_fingers",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotSequence",
+          "line": 64,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "main",
+          "line": 538,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 165,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 176,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 183,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_phase",
+          "line": 257,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hold",
+          "line": 268,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command_hand",
+          "line": 274,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_hand",
+          "line": 290,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close_and_attach",
+          "line": 306,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "calibrate_grasp",
+          "line": 334,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp",
+          "line": 344,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_cable",
+          "line": 374,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare",
+          "line": 408,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare_orbit",
+          "line": 433,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record_preparation",
+          "line": 462,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "align_and_check_bundle",
+          "line": 476,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 490,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_report",
+          "line": 518,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/source/robot_sequence.py",
+      "sha256": "fdf0b9789e83343463cec923aad62bb4f0facfef464bf8cdd98d9dec6cd73869",
+      "symbols": [
+        {
+          "name": "smooth",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bundle_fit",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp_health",
+          "line": 45,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "touching_grasp_fingers",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotSequence",
+          "line": 64,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "main",
+          "line": 538,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 165,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 176,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 183,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_phase",
+          "line": 257,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hold",
+          "line": 268,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command_hand",
+          "line": 274,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_hand",
+          "line": 290,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close_and_attach",
+          "line": 306,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "calibrate_grasp",
+          "line": 334,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp",
+          "line": 344,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_cable",
+          "line": 374,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare",
+          "line": 408,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare_orbit",
+          "line": 433,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record_preparation",
+          "line": 462,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "align_and_check_bundle",
+          "line": 476,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 490,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_report",
+          "line": 518,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/fiber_bundling/2026-09-21_dense_16_r13p5mm_clean_v1/source/robot_sequence.py",
+      "sha256": "514d998fa37afc4d50c314fc4315b669c0662d6248c60382cf724b013c423e85",
+      "symbols": [
+        {
+          "name": "smooth",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bundle_fit",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp_health",
+          "line": 45,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "touching_grasp_fingers",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "RobotSequence",
+          "line": 64,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "main",
+          "line": 544,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 182,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 189,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_phase",
+          "line": 263,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hold",
+          "line": 274,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command_hand",
+          "line": 280,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_hand",
+          "line": 296,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close_and_attach",
+          "line": 312,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "calibrate_grasp",
+          "line": 340,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp",
+          "line": 350,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_cable",
+          "line": 380,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare",
+          "line": 414,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare_orbit",
+          "line": 439,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record_preparation",
+          "line": 468,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "align_and_check_bundle",
+          "line": 482,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 496,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish_report",
+          "line": 524,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F1_triple_home_lab_v1_full/evidence/source/evidence/nominal/implementation/robot_runtime.py",
+      "sha256": "6543a5a531374b91973be65b8a7e1d9ec3418b72aae0f932d492cc2d3da3587a",
+      "symbols": [
+        {
+          "name": "execute",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 882,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 219,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mechanical_energy",
+          "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 234,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 265,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "free_motion",
+          "line": 393,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update_feedback",
+          "line": 536,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "held_motion",
+          "line": 571,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F2_home_lab_v4_full/evidence/source/evidence/nominal/implementation/robot_runtime.py",
+      "sha256": "ffd80d866d501b258294fd0930bd5a6aa79bd0e845a1ab53647c1caef68506c6",
+      "symbols": [
+        {
+          "name": "execute",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 882,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 219,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mechanical_energy",
+          "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 234,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 265,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "free_motion",
+          "line": 393,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update_feedback",
+          "line": 536,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "held_motion",
+          "line": 571,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-22_F3_home_lab_v4_full/evidence/source/evidence/nominal/implementation/robot_runtime.py",
+      "sha256": "bb22fd71df50f29e11817f3db57b84c67312419b8793b4d751e402bdb3bb4c1c",
+      "symbols": [
+        {
+          "name": "execute",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 847,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 205,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mechanical_energy",
+          "line": 210,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "record",
+          "line": 220,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 251,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "free_motion",
+          "line": 379,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update_feedback",
+          "line": 509,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "held_motion",
+          "line": 544,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/buzz_wire_3d/2026-09-18_spatial_maze_fixture_v1/source_evidence/implementation/physics.py",
+      "sha256": "8fef3295838ab191aaaebfc0da744560faa873eae8eef274ed2f2f570c4c9e39",
+      "symbols": [
+        {
+          "name": "array",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 34,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "PhysicsSettings",
+          "line": 39,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "load_config",
+          "line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "setup",
+          "line": 69,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "phase_plan",
+          "line": 84,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "reference",
+          "line": 105,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wrench_command",
+          "line": 125,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 367,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "measured",
+          "line": 184,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-21_balanced_helical_separation_v2/implementation/family_balanced_robot.py",
+      "sha256": "2a427730224a68f3feef0c65066963b55d39b569fc9d39fb8a179350b74f49bd",
+      "symbols": [
+        {
+          "name": "build_plan",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "append",
+          "line": 28,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-21_balanced_helical_separation_v2/implementation/family_robot.py",
+      "sha256": "27e95d90a08bd425a4a299e508b6f2785af586f98c7bd4b6f899790fb7d7e5ac",
+      "symbols": [
+        {
+          "name": "assembly_poses",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "xml_scene",
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_initial",
+          "line": 90,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 98,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "robot_support_contacts",
+          "line": 118,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_plan",
+          "line": 130,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 217,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-19_orthogonal_gate_balanced_physical_v1/implementation/family_balanced_robot.py",
+      "sha256": "2a427730224a68f3feef0c65066963b55d39b569fc9d39fb8a179350b74f49bd",
+      "symbols": [
+        {
+          "name": "build_plan",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "append",
+          "line": 28,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-19_orthogonal_gate_balanced_physical_v1/implementation/family_robot.py",
+      "sha256": "28926dd51b35866afb893fb5d6ceacf6d211f3d29d501a6013ccde4e74d2f1b0",
+      "symbols": [
+        {
+          "name": "assembly_poses",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "xml_scene",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_initial",
+          "line": 77,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 85,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "robot_support_contacts",
+          "line": 105,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_plan",
+          "line": 117,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 195,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/implementation/physical.py",
+      "sha256": "5145c566625e31a6e7f48fff1b49c01cd3abdb35ac03a533e4177703a54fbe7a",
+      "symbols": [
+        {
+          "name": "run",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "poses_and_state",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture",
+          "line": 93,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-17_reference_full_v1/implementation/reference.py",
+      "sha256": "37216b34ca194262b38bacbabb34333ae9acfc6e130125023c8ab7a3093f25dc",
+      "symbols": [
+        {
+          "name": "ReferenceMotion",
+          "line": 15,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "control",
+          "line": 33,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sample",
+          "line": 47,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-19_helical_crown_physical_v1/implementation/family_robot.py",
+      "sha256": "c9ddee21ed44a5ae39ee5fcd17f4331792bc1d2059fc885e604d22c53c68aa8d",
+      "symbols": [
+        {
+          "name": "assembly_poses",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "xml_scene",
+          "line": 35,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_initial",
+          "line": 67,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 75,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_plan",
+          "line": 95,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 182,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/interlocked_claws/2026-09-19_orthogonal_gate_physical_v1/implementation/family_robot.py",
+      "sha256": "48a138822fa7ccbdc33ea8e9e4085c2c7111bde86fab63a678e8d02d9c97c768",
+      "symbols": [
+        {
+          "name": "assembly_poses",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "xml_scene",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set_initial",
+          "line": 77,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 85,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "robot_support_contacts",
+          "line": 105,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_plan",
+          "line": 117,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 192,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/implementation/topogym/tasks/knot_untying/untying.py",
+      "sha256": "ea469493f2fcdb00f74726466700538e55c55ad6555484ba6a45ee0c811809e0",
+      "symbols": [
+        {
+          "name": "grasp_indices",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "declare_bands",
+          "line": 30,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "initial_centerline",
+          "line": 36,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "configure_untying_start",
+          "line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "UntyingFixtureActions",
+          "line": 66,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "RobotUntyingActions",
+          "line": 124,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 70,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "specification",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "declare",
+          "line": 81,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 84,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observe",
+          "line": 108,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 114,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "draw_distance",
+          "line": 160,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "start_spread",
+          "line": 201,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "right_displacement",
+          "line": 221,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finished",
+          "line": 225,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "specification",
+          "line": 228,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "declare",
+          "line": 262,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 267,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observe",
+          "line": 329,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 334,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/implementation/topogym/tasks/knot_untying/control.py",
+      "sha256": "a9bae5e8eef5c7f30da7d9425ec2bc90c6578d67562a3565b5eafa687b6e5117",
+      "symbols": [
+        {
+          "name": "BoundedAlohaIK",
+          "line": 15,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "configure_initial_hover",
+          "line": 76,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "solve",
+          "line": 55,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "residual",
+          "line": 58,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/implementation/topogym/tasks/knot_untying/physics_probe.py",
+      "sha256": "9994542be5bbf6162ed12df93ae00349ca81e59f963c28a696067381704052d9",
+      "symbols": [
+        {
+          "name": "SolverLog",
+          "line": 24,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "make_config",
+          "line": 80,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 119,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__enter__",
+          "line": 32,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 46,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__exit__",
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 74,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment-stability/knot_untying/families_20260919/figure_eight/robot_v11_home_support_reanchor/implementation/topogym/tasks/knot_untying/family_actions.py",
+      "sha256": "ce45de81955a63c0e9fe55cb2d6d1b953aa1d0929430b83005c7aa3af4e7bacc",
+      "symbols": [
+        {
+          "name": "FamilyRoute",
+          "line": 19,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "route_for_config",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "material_arc",
+          "line": 97,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "support_material_site",
+          "line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "first_under_grasp",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "initial_grasp_sites",
+          "line": 146,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "configure_family_start",
+          "line": 158,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "FamilyUntyingActions",
+          "line": 170,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "specification",
+          "line": 207,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "declare",
+          "line": 263,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "configure",
+          "line": 283,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 293,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "approach",
+          "line": 297,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release",
+          "line": 303,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_transition",
+          "line": 308,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_hold",
+          "line": 315,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_record_motion",
+          "line": 320,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_pull_band_candidates",
+          "line": 324,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_choose_pull_band",
+          "line": 341,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_finish_or_extend_opening",
+          "line": 350,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_choose_support_band",
+          "line": 406,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_start_lateral_clearance",
+          "line": 417,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_checked_regrasp_candidate",
+          "line": 446,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_prepare_grasp",
+          "line": 477,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_track_regrasp_translation",
+          "line": 520,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_begin_support_reanchor_if_needed",
+          "line": 545,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_start_draw",
+          "line": 575,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_held_band_reached_underpass",
+          "line": 627,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_begin_regrasp",
+          "line": 639,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_begin_release",
+          "line": 683,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_preserve_support_height",
+          "line": 702,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_check_support_clearance",
+          "line": 710,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_advance",
+          "line": 716,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 900,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observe",
+          "line": 980,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finished",
+          "line": 1028,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 1031,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/source_snapshot/robot_demo.py",
+      "sha256": "b4b2f59f6fe1766f72985981e9c8b22952cc69fe458ed6da2400eb8bc248cbcb",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 11,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/source_snapshot/execution.py",
+      "sha256": "e5622bca85d8759307e6f26e2bc362237eeec7a13ebd89c1293fe8b849b48f48",
+      "symbols": [
+        {
+          "name": "array",
+          "line": 12,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Execution",
+          "line": 16,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "time",
+          "line": 36,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "label",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture",
+          "line": 44,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 51,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait",
+          "line": 89,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "initialize",
+          "line": 93,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check_robot_clearance",
+          "line": 111,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tcp",
+          "line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 125,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "hold_tcp",
+          "line": 142,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "select_corner",
+          "line": 147,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pull",
+          "line": 152,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "flatten",
+          "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "final_check",
+          "line": 237,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 255,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment_bootstrap/blanket_flatten/gathered_virtual_hands_v9/source_snapshot/virtual_hands.py",
+      "sha256": "910fef778179ecdc667ee60645d8a6785b43e0a0235240bdf830299bfa8ed9fc",
+      "symbols": [
+        {
+          "name": "corner_patch",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "bounded_grip_velocity",
+          "line": 32,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "upright_grip_targets",
+          "line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "corner_material_rotation",
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "edge_following_lay_targets",
+          "line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "VirtualHands",
+          "line": 82,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "main",
+          "line": 362,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "time",
+          "line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "label",
+          "line": 104,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "capture",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 120,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp",
+          "line": 148,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release",
+          "line": 165,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release_one",
+          "line": 173,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "drive",
+          "line": 180,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "settle",
+          "line": 203,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "unfold",
+          "line": 222,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "save",
+          "line": 339,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment-solvability/rope_threading/full_feedback_ik_20260921_attempt_3/implementation/topogym/tasks/rope_threading/reference_actions.py",
+      "sha256": "24c5f8d00ec5897e7d4e7716fe7052ee4676a5c0d516d800622625dbf415cb9a",
+      "symbols": [
+        {
+          "name": "ending_lift",
+          "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "ReferenceThreadingActions",
+          "line": 24,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "specification",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "configure",
+          "line": 87,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release",
+          "line": 93,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "declare",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_sample",
+          "line": 119,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_acquire",
+          "line": 136,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release_aperture",
+          "line": 168,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "task_clearance",
+          "line": 172,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 175,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observe",
+          "line": 242,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finished",
+          "line": 260,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 263,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment-solvability/rope_threading/full_feedback_ik_20260921_attempt_3/implementation/topogym/tasks/rope_threading/feedback_actions.py",
+      "sha256": "e722a81b95c59bb84e33e7336c80f7f726d237532c4df5fc140983f1fe4a8e4d",
+      "symbols": [
+        {
+          "name": "FeedbackThreadingActions",
+          "line": 15,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "specification",
+          "line": 33,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release_aperture",
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "task_clearance",
+          "line": 61,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "configure",
+          "line": 67,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_qpos",
+          "line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_model_point",
+          "line": 77,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_snapshot",
+          "line": 80,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_record",
+          "line": 91,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_begin_path",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_command",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_settled",
+          "line": 119,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_expect_event",
+          "line": 131,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_follow_bands",
+          "line": 137,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_join_qpos",
+          "line": 143,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_next_stage",
+          "line": 151,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "update",
+          "line": 242,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "report",
+          "line": 308,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "observe",
+          "line": 321,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/slotted_post_ring/2026-09-21_partial_robot_disc_handoff_v1/source_code/robot_sequence.py",
+      "sha256": "a8b2242796988ae3b5c22f1e4d1722bf7e3a158355331b4936f5e5ff542a254c",
+      "symbols": [
+        {
+          "name": "Episode",
+          "line": 26,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "main",
+          "line": 213,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "body_pose",
+          "line": 67,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tcp",
+          "line": 71,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "relative_grasp",
+          "line": 75,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "contacts",
+          "line": 79,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "audit",
+          "line": 91,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "grasp",
+          "line": 162,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "release",
+          "line": 180,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "finish",
+          "line": 186,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/demo_metadata/slotted_post_ring/2026-09-21_clearance36_full_physics_v1/source_code/fixture.py",
+      "sha256": "2e736bbc97ebcc9bc84e458b1ab02e635105a2f06884980ba7463a67a417499f",
+      "symbols": [
+        {
+          "name": "pose",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cord_disk_crossings",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "route",
+          "line": 35,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 115,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "interactive_stages",
+          "line": 269,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment_bootstrap/orbits/solution_development_v1/rope_video_full_v2/source/source_snapshot/orbits_build_video_route_v2.py",
+      "sha256": "b14c8f81cce7f59324d68527c65b0074d32eab51da0165dd4247fd9c1f75a4e7",
+      "symbols": []
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment_bootstrap/orbits/solution_development_v1/rope_video_full_v2/source/source_snapshot/topogym/tasks/orbits/rope_route.py",
+      "sha256": "36ec781501adf68dfb4f96d0ef8f1279073608b8f88a5feb535a08214333c641",
+      "symbols": [
+        {
+          "name": "execute",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "callback",
+          "line": 138,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "working_tree_snapshot",
+      "path": "runs/environment_bootstrap/orbits/solution_development_v1/rope_video_full_v2/source/source_snapshot/topogym/tasks/orbits/rope_only_demo.py",
+      "sha256": "6f2883b0b5aae38e2f7a77c9b4d773f5d70bc286c58c444fcc2ac005100df202",
+      "symbols": [
+        {
+          "name": "run_prefix",
+          "line": 13,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 76,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/hedgehog_in_cage/extract.py",
+      "sha256": "266aeca221e90534aa7163a408f400c63e6c8eba9f677fb5bee11820d2e8a5da",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pose",
+          "line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 103,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "drive_hand",
+          "line": 144,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move_ball",
+          "line": 154,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/hedgehog_in_cage/plan_escape.py",
+      "sha256": "d8933b87e72992bee2601d73c70291ec71afc569c43acc7b9288ec31b6104b7e",
+      "symbols": [
+        {
+          "name": "CollisionOracle",
+          "line": 15,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "interpolate",
+          "line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "search",
+          "line": 48,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "distance",
+          "line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "values",
+          "line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "valid",
+          "line": 61,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/hedgehog_in_cage/plan_robot.py",
+      "sha256": "56861febf42895f23f4f4122cf1013d31da55a6aafaad2cc237d04c87df4be7f",
+      "symbols": [
+        {
+          "name": "hand_in_ball",
+          "line": 13,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 21,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "forbidden_contacts",
+          "line": 62,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/hedgehog_in_cage/plan_release.py",
+      "sha256": "e7e97b3eb857e5df9b55327d0cc5a87b16e1d9fa73c5c84ffb58e06267957fc8",
+      "symbols": [
+        {
+          "name": "main",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "check",
+          "line": 40,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/hedgehog_in_cage/classic_families.py",
+      "sha256": "62925c45efb4cfa5562b9b27e113d363121d51e383da79d8e210069c2a038194",
+      "symbols": [
+        {
+          "name": "gen_cage",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "assets",
+          "line": 60,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 111,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "robot_plan",
+          "line": 145,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "stable_release",
+          "line": 189,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "controls",
+          "line": 217,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "certify",
+          "line": 226,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/lock_picking/runner.py",
+      "sha256": "37019e57608d264db1929aad981b419362aa2d623cfec156c3fc0af35965eb0d",
+      "symbols": [
+        {
+          "name": "media_index",
+          "line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "move",
+          "line": 60,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "open_before_withdrawal",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "execute",
+          "line": 106,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 188,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 441,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "render",
+          "line": 218,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "snapshot",
+          "line": 235,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "frame_bounds",
+          "line": 239,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "arm_framing",
+          "line": 259,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "mechanism_framing",
+          "line": 262,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "aperture_framing",
+          "line": 266,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "camera_rig",
+          "line": 280,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "step",
+          "line": 343,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/lock_picking/planner.py",
+      "sha256": "88900acc7d9a59bfb895c12ec4a01eddd9a3d802b8125dbbe1b3dccbd2a70a03",
+      "symbols": [
+        {
+          "name": "next_entry_angle",
+          "line": 6,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "insertion_window",
+          "line": 15,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "storage": "git_object",
+      "commit": "cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
+      "path": "topogym/tasks/lock_picking/oracle.py",
+      "sha256": "7dc14f1cc04db066b5f66da63494f2320b31e6c7df8642668fb019b23c16f37d",
+      "symbols": [
+        {
+          "name": "execute_reindex",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "command",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "common",
+          "line": 72,
+          "kind": "FunctionDef"
+        }
+      ]
+    }
+  ]
+}

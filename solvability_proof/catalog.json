@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "archived_at_utc": "2026-09-28T21:58:18.193182+00:00",
+  "scope": "Accepted finite-instance Task success proofs in the unified Env; original source/config identities retained",
+  "accepted_proofs": 6,
+  "tasks": [
+    {
+      "task": "cast_keyhole",
+      "batch": "2026-09-28",
+      "accepted_proofs": 3,
+      "readme": "cast_keyhole/2026-09-28/README.md",
+      "summary": "cast_keyhole/2026-09-28/summary.json",
+      "manifest": "cast_keyhole/2026-09-28/archive_manifest.json",
+      "validation": "cast_keyhole/2026-09-28/archive_validation.json",
+      "manifest_sha256": "27ddf654424c5e6cb5470ca65808d3a32ca89587574da61c4b0c6aa2d310c39c",
+      "evidence_files": 8170,
+      "evidence_bytes": 10976057141
+    },
+    {
+      "task": "cast_coil",
+      "batch": "2026-09-28",
+      "accepted_proofs": 3,
+      "readme": "cast_coil/2026-09-28/README.md",
+      "summary": "cast_coil/2026-09-28/summary.json",
+      "manifest": "cast_coil/2026-09-28/archive_manifest.json",
+      "validation": "cast_coil/2026-09-28/archive_validation.json",
+      "manifest_sha256": "df3c20769782d18192fc1700b9e1844b3e9bfe11e657f90e4670e5694ec9e50f",
+      "evidence_files": 22452,
+      "evidence_bytes": 2919218662
+    }
+  ],
+  "shared_scope": {
+    "seed": 0,
+    "robot": "aloha",
+    "action": "EE_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false
+  },
+  "limitations": [
+    "One default-parameter seed per variant, not a parameter-domain guarantee",
+    "Contact-triggered assisted grasp, not friction-only",
+    "40 Hz Task/assist checks, not default 400 Hz validation",
+    "Numerical tick evidence, not continuous-time/all-substep nonpenetration qualification",
+    "Archive verification adds no physical success execution",
+    "Runtime dependencies/virtual environment are not bundled; original provenance paths are preserved verbatim"
+  ]
+}

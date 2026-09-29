@@ -1,0 +1,33 @@
+# ALOHA 2 / dual ViperX 300, original grippers and 14 actuators / 16 DoFs.
+robot:
+  name: aloha
+  asset: assets/robots/aloha/aloha.xml
+  asset_root: null  # Explicit external robot asset directory; null uses environment/development defaults.
+  tool_model: aloha
+  arm_joint_names: [waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate]
+  finger_joint_names: [left_finger, right_finger]
+  arm_joint_limits:
+    - [-3.14158, 3.14158]
+    - [-1.85005, 1.25664]
+    - [-1.76278, 1.6057]
+    - [-3.14158, 3.14158]
+    - [-1.8675, 2.23402]
+    - [-3.14158, 3.14158]
+  ee_link: gripper_link
+home:
+  # Upstream neutral_pose. Each side: six arm angles + two finger displacements.
+  left: [0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084]
+  right: [0, -0.96, 1.16, 0, -0.3, 0, 0.0084, 0.0084]
+  settle_steps: 100
+controller:
+  # Original position actuator gains; joint damping stays in the source MJCF.
+  kp: [43, 265, 227, 78, 37, 10.4, 2000]
+  kv: [0, 0, 0, 0, 0, 0, 124]
+  force_limit: [35, 144, 59, 22, 35, 35, 35]
+gripper:
+  # Finger displacement along the rail, NOT a Robotiq half-aperture command.
+  open_qpos: 0.037
+  closed_qpos: 0.002
+ik:
+  max_samples: 1
+  max_solver_iters: 100

@@ -1,0 +1,9 @@
+{
+  "source": "/home/jianwen/topogym/runs/environment-solvability/buzz_wire_3d/F1_triple_20260922/F1/full01_plan",
+  "elevation_m": 0.025,
+  "mount_height_m": 0.044,
+  "origin_x_shift_m": -0.1,
+  "origin_y_shift_m": 0.07,
+  "use_original_reference_seeds": false,
+  "maze_rigidly_elevated": true
+}

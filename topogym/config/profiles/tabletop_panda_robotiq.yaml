@@ -1,0 +1,14 @@
+defaults:
+  - common_configs@common: manipulation_space_tabletop_v1
+  - env_configs@env: world_tabletop_v1
+  - robot_control_configs@robot_control: panda_robotiq
+  - camera_configs@env: panda_robotiq_observation
+  - _self_
+env:
+  genesis:
+    backend: cuda
+    precision: '64'
+  sim:
+    n_envs: 0
+    dt: 0.0025
+    substeps: 4

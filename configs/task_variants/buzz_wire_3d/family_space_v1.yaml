@@ -33,8 +33,8 @@ shared_design:
   base_size_m: [0.743, 0.527, 0.025]
   maximum_wire_height_m: 0.300
   robot: original Panda + Robotiq 2F-85, fixed mount and original joint limits
-  start: prethreaded ring and pregrasp pose solved for the selected prototype
-  finish: all maze bends traversed; release only on final straight downward post; retreat and settle
+  start: prethreaded ring on endpoint wooden support; robot initially ungrasped
+  finish: all maze bends traversed; place on endpoint wooden support, confirm contact, release, retreat and settle
   grasp: contact friction, no weld or externally driven ring
   rail: one open continuous nonbranching wire with two oversized end stops
   intermediate_supports: none across the ring or hand swept volume
@@ -63,7 +63,7 @@ shared_tuning_candidates:
   origin_dy_m: {default: 0.0, bounds: [-0.015, 0.015]}
   yaw_delta_deg: {default: 0.0, bounds: [-5.0, 5.0]}
   origin_z: fixed to tabletop; no floating-base jitter
-  ring_initial_pose: derived from selected rail and grasp; no independent pose jitter
+  ring_initial_pose: derived from selected rail and endpoint wooden support; initially ungrasped, no independent pose jitter
   material_changes: visual only; do not change contact friction or density
 
 design_acceptance_targets:
@@ -96,6 +96,7 @@ design_acceptance_targets:
     no_prescribed_360_degree_wrist_roll: true
   physics:
     require_complete_friction_grasp_execution: true
+    require_supported_pickup_and_placement: true
     require_half_timestep_repeat: true
     require_zero_wire_contact_during_controlled_traversal: true
     require_release_retreat_settling: true
@@ -114,4 +115,4 @@ implementation_gaps:
   - Frozen asset catalog and explicit prototype selection; parameter sampling remains opt-in afterwards.
 
 # Current independently qualified compact instances; original design status above is unchanged.
-qualified_fixed_catalog: fixed_compact_toy_v2.yaml
+qualified_fixed_catalog: fixed_home_lab_v4.yaml

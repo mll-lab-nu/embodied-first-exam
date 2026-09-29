@@ -1,0 +1,35 @@
+# Default to an integrated variation; unavailable sweep selections fail at prepare.
+experiment: lock_picking_rollout
+attempts: 1
+concurrency: 1
+timeout_sec: 3600
+usage:
+  mode: observed
+  scope: trial
+  limits: {input_tokens: 10000000, output_tokens: 3000000}
+instances:
+  - name: lock-picking-medium-seed0
+    evaluation: task_success
+    mode: limited
+    state_fields: []
+    initial_observation_steps: 5
+    instruction: |-
+      Insert the tabbed key through the lock plates. Rotate and translate the key
+      to negotiate the rotor slots until its leading tab clears the final plate and
+      the shaft reaches the insertion goal. Keep the key aligned with the bores;
+      the rotor pins must remain constrained by their physical slots. Do not force
+      the key or tabs through solid plates. Hold the completed configuration still.
+    simulator:
+      task_id: lock_picking
+      robot_id: auto
+      variation_id: medium
+      seed: 0
+      control_mode: EE_ABS
+      enable_privileged: false
+      compute_backend: cuda
+      render_backend: nyx
+      enable_rgb: true
+      physics_dt_s: 0.0025
+      solver_substeps: 4
+      control_decimation: 10
+      max_physics_steps: 10000

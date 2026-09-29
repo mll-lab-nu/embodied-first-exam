@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "task": "cast_keyhole",
+  "batch": "2026-09-28",
+  "accepted_proofs": 3,
+  "cases": [
+    {
+      "variation": "easy",
+      "run": "trial_38_easy_qualified",
+      "path": "evidence/runs/trial_38_easy_qualified",
+      "role": "accepted_success",
+      "report": "evidence/runs/trial_38_easy_qualified/run_report.json",
+      "audit": "evidence/runs/trial_38_easy_qualified/independent_goal_audit.json",
+      "source_manifest": "evidence/runs/trial_38_easy_qualified/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "report_status": "passed",
+      "instance_id": "cb6291687b4c7cb5d2ca9141fd95eb7a58e54113f59fbded64caa7fc8b2cbfe6",
+      "seed": 0,
+      "report_sha256": "6a4952f7790fcae46fd7d1c7119ed531283d3347eb2d23ce829ba55c649d68c3",
+      "audit_sha256": "9001a4d4e50c07134de6f96847f7c470b7d0197553c2cea68bd9b4c6274954d3",
+      "simulation_time_s": 488.65000000000003,
+      "states": 19547
+    },
+    {
+      "variation": "medium",
+      "run": "trial_35_medium_qualified",
+      "path": "evidence/runs/trial_35_medium_qualified",
+      "role": "accepted_success",
+      "report": "evidence/runs/trial_35_medium_qualified/run_report.json",
+      "audit": "evidence/runs/trial_35_medium_qualified/independent_goal_audit.json",
+      "source_manifest": "evidence/runs/trial_35_medium_qualified/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "report_status": "passed",
+      "instance_id": "d980a35ca41b430215215d33be4c148ac098de6fd434df8ab297765adf7d9a94",
+      "seed": 0,
+      "report_sha256": "f79644d337c40feab0647a3242bab2f8002fd326ba2eaf2c01ebba9204755f81",
+      "audit_sha256": "7cbaf12567973c8245f3bd7118c0ff0a8d1555b6738daeea093eba8f3bcdc983",
+      "simulation_time_s": 459.6,
+      "states": 18385
+    },
+    {
+      "variation": "hard",
+      "run": "trial_37_hard_qualified",
+      "path": "evidence/runs/trial_37_hard_qualified",
+      "role": "accepted_success",
+      "report": "evidence/runs/trial_37_hard_qualified/run_report.json",
+      "audit": "evidence/runs/trial_37_hard_qualified/independent_goal_audit.json",
+      "source_manifest": "evidence/runs/trial_37_hard_qualified/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "report_status": "passed",
+      "instance_id": "e937ddb61b958624642284c91ba4b55bafd1b15ce6dad31d342fbe20f408f46e",
+      "seed": 0,
+      "report_sha256": "255e97041d8897d303305f133af030cb70b0fafdb2a90d787fe5748fcc183d08",
+      "audit_sha256": "6a7781dfe11ead765f2372c504ff145a3b3a41ac5385cabac573545cf664bbc7",
+      "simulation_time_s": 537.275,
+      "states": 21492
+    }
+  ],
+  "qualification_prerequisites": [
+    {
+      "variation": "easy",
+      "run": "trial_36_easy_goal_clearance",
+      "path": "evidence/qualification/trial_36_easy_goal_clearance",
+      "role": "qualification_prerequisite",
+      "report": "evidence/qualification/trial_36_easy_goal_clearance/run_report.json",
+      "audit": "evidence/qualification/trial_36_easy_goal_clearance/independent_goal_audit.json",
+      "source_manifest": "evidence/qualification/trial_36_easy_goal_clearance/run_source_manifest.json",
+      "task_success": false,
+      "independent_audit_passed": false,
+      "report_status": "failed",
+      "instance_id": "311104c2805ca3d27ba30298064322a1b4ca4ee3f342a028e0c29ec28dacaaf7",
+      "seed": 0,
+      "report_sha256": "d8a2dd33636fec8872edd40fcd871ab20bae33abdcad895592a819396f6fab85",
+      "audit_sha256": "0300df3d363b07fdbec524459bc65d5a9a4681626be17d4f15306536887cfc2b",
+      "qualification_gaps": [
+        "No actual Task success"
+      ]
+    },
+    {
+      "variation": "medium",
+      "run": "trial_27_medium_pid",
+      "path": "evidence/qualification/trial_27_medium_pid",
+      "role": "qualification_prerequisite",
+      "report": "evidence/qualification/trial_27_medium_pid/run_report.json",
+      "audit": "evidence/qualification/trial_27_medium_pid/independent_goal_audit.json",
+      "source_manifest": "evidence/qualification/trial_27_medium_pid/run_source_manifest.json",
+      "task_success": false,
+      "independent_audit_passed": false,
+      "report_status": "failed",
+      "instance_id": "2ac47dc557c99d5ad7b7d1c0f9c25825bba7f2094353bcfe32389cd9be8be20d",
+      "seed": 0,
+      "report_sha256": "eb4d7f8389fad89189abf126dd4dc27ad06e0ba3a2394a26ab8775361797ffc3",
+      "audit_sha256": "a2e0a99b4f741c52d4c7c058c76ec669599fc5d6f4118f43a788d2c485f795e0",
+      "qualification_gaps": [
+        "No actual Task success"
+      ]
+    },
+    {
+      "variation": "hard",
+      "run": "trial_33_hard_packed",
+      "path": "evidence/qualification/trial_33_hard_packed",
+      "role": "qualification_prerequisite",
+      "report": "evidence/qualification/trial_33_hard_packed/run_report.json",
+      "audit": "evidence/qualification/trial_33_hard_packed/independent_goal_audit.json",
+      "source_manifest": "evidence/qualification/trial_33_hard_packed/run_source_manifest.json",
+      "task_success": false,
+      "independent_audit_passed": false,
+      "report_status": "failed",
+      "instance_id": "bc0c03cc5570c4d5a0a443f228023cb9db4efa64a26fe473c177fc72decb4e3c",
+      "seed": 0,
+      "report_sha256": "b154188231452d4a4c66b90eceb79bf0ab490a6a767a2fc3c89fa698075eb4ad",
+      "audit_sha256": "af3f5c47400524eed43e4aae0692736fe5d897f5f485aa4cb23c9bed8b1dce95",
+      "qualification_gaps": [
+        "No actual Task success"
+      ]
+    }
+  ],
+  "original_summary": "evidence/proof_summary.json",
+  "original_run_root": "runs/test_results/cast_keyhole_policy_20260928",
+  "note": "All copied evidence retains original bytes and provenance paths; use the archive paths in this summary for local access."
+}

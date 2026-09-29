@@ -1,1 +1,0 @@
-Native measured state at 2.0 s of Orbits robot_grasp_lift_04. Both jaws contact the cord at node114 (left) and handle (right) after a 0.5 s unassisted hold. Used to reject grasp assistance on unrelated material points. This fixture is not a full solution or a task-success certificate. Generated with topogym.tasks.orbits.grasp_demo, scale0.75, node spacing0.0075 m.

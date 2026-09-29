@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": {
+    "continuous_tool_clearance": true,
+    "threaded_throughout": true,
+    "genuinely_spatial": true,
+    "endpoints_captive": true
+  },
+  "scope": "geometric feasibility of full loop + stem + grip against rail + end stops + base",
+  "method": "capsule centreline sample covers + rigid-motion interval displacement bounds",
+  "cover_spacing_m": 0.00035,
+  "reference_poses": 2887,
+  "minimum_pose_clearance_lower_bound_m": 0.008078518116735885,
+  "adaptive_midpoint_evaluations": 0,
+  "maximum_subdivision_depth": 0,
+  "maximum_interval_displacement_bound_m": 0.0010995337793627202,
+  "minimum_continuous_clearance_lower_bound_m": 0.007311547201318801,
+  "worst_interval": 1573,
+  "best_fit_plane_rms_m": 0.02574955326247897,
+  "linking_numbers": [
+    1
+  ],
+  "robot_reachability_verified": false,
+  "physical_execution_verified": false,
+  "applies_to": "generated solids and piecewise linear / SLERP witness only; rectangular grips use a conservative enclosing capsule"
+}

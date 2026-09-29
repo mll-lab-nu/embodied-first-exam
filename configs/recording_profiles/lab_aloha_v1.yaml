@@ -1,0 +1,15 @@
+schema_version: 1
+id: lab_aloha_v1
+robot: aloha
+robot_preset: aloha_position_ik
+world: world_tabletop_aloha_v1
+presentation: nyx_lab
+camera_preset: aloha_observation
+encoding: default
+cameras: [cam_high, cam_low, cam_left_wrist, cam_right_wrist]
+aliases:
+  cam_high: overhead
+  cam_low: worms_eye
+  cam_left_wrist: wrist
+  cam_right_wrist: wrist_right
+archive_policy: formal_demo_v1

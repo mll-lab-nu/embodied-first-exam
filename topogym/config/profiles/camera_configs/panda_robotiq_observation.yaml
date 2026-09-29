@@ -1,0 +1,81 @@
+camera_rig:
+  id: panda_robotiq_observation
+  observation_cameras:
+  - agentview
+  - front_oblique
+  - wrist
+  record_fps: 30
+cameras:
+  agentview:
+    res:
+    - 848
+    - 480
+    pos:
+    - 0.65
+    - -0.55
+    - 1.43
+    lookat:
+    - -0.04
+    - 0.0
+    - 1.0
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 52.0
+    near: 0.01
+    far: 5.0
+  front_oblique:
+    res:
+    - 848
+    - 480
+    pos:
+    - 0.4
+    - 0.52
+    - 1.35
+    lookat:
+    - -0.04
+    - 0.0
+    - 1.0
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 52.0
+    near: 0.01
+    far: 5.0
+  wrist:
+    res:
+    - 848
+    - 480
+    pos:
+    - 0.5
+    - 0.0
+    - 1.18
+    lookat:
+    - 0.62
+    - 0.0
+    - 0.95
+    up:
+    - 0.0
+    - 0.0
+    - 1.0
+    fov: 65.0
+    near: 0.01
+    far: 3.0
+    attach:
+      enabled: true
+      entity: robot
+      link: hand
+      offset_pos:
+      - 0.05
+      - 0.0
+      - 0.005
+      offset_lookat:
+      - 0.065
+      - 0.0
+      - 0.17
+      offset_up:
+      - 1.0
+      - 0.0
+      - 0.0

@@ -1,0 +1,145 @@
+{
+ "task": "cube_pick_place",
+ "topogym_task": "cube_pick_place",
+ "variation_id": "base",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Pick up the cube, hold it at least 5 cm above the table for at least 0.2 s, place it back at its original position, open the gripper, withdraw at least 5 cm and let it settle. Merely reaching or closing the gripper is not completion.",
+ "simulator": {
+  "task_id": "cube_pick_place",
+  "robot_id": "panda_robotiq",
+  "variation_id": "base",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx",
+  "physics_dt_s": 0.025,
+  "solver_substeps": 40,
+  "control_decimation": 1,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "cube",
+     "link": "box_baselink",
+     "radius_m": 0.04
+    }
+   ]
+  }
+ },
+ "state_sha": "32dfc1d5b4328685",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "cube": {
+   "position": [
+    -0.09863,
+    -0.1023,
+    0.93964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    -0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.11863,
+     -0.1223,
+     0.91964
+    ],
+    [
+     -0.07863,
+     -0.0823,
+     0.95964
+    ]
+   ],
+   "size": [
+    0.04,
+    0.04,
+    0.04
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "target_marker": {
+   "position": [
+    -0.09863,
+    -0.1023,
+    0.92014
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.12863,
+     -0.1323,
+     0.91964
+    ],
+    [
+     -0.06863,
+     -0.0723,
+     0.92064
+    ]
+   ],
+   "size": [
+    0.06,
+    0.06,
+    0.001
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

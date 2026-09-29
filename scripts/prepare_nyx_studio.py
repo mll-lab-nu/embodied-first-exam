@@ -1,15 +1,20 @@
-"""Download the CC0 studio HDRI and wood maps for TopoGym's Nyx demo.
+"""Download the CC0 studio HDRI and wood maps for TopoGym's runtime Nyx RGB.
 
 Source: https://polyhaven.com/a/studio_small_09 (Sergej Majboroda).
 """
 
 import hashlib
+import os
 from pathlib import Path
 import urllib.request
 
 
 def main():
-    root = Path(__file__).resolve().parents[1] / ".external" / "nyx-assets"
+    # Keep this installation-independent path contract aligned with Nyx's
+    # asset_path(); the download utility does not import the simulator engine.
+    cache = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))).expanduser()
+    root = Path(os.environ.get("TOPOGYM_VISUAL_ASSET_ROOT", str(cache / "topogym/visuals/nyx")))
+    root = root.expanduser().resolve()
     root.mkdir(parents=True, exist_ok=True)
     path = root / "studio_small_09_2k.hdr"
     expected = "36724313c0fc66dab126ff90f081b85a0b1ef47be65eda1417bd20b033f0573f"

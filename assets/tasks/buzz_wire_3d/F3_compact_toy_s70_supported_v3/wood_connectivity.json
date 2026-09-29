@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "solids": 12,
+  "connected_to_deck": 12,
+  "disconnected": [],
+  "tolerance_m": 2e-06,
+  "scope": "Independent FCL connectivity of exported convex wooden collision solids, including feet, supports and end mounts; no floating dock parts."
+}

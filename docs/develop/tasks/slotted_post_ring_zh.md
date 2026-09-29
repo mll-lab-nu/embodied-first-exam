@@ -1,10 +1,40 @@
 # 第 12 项：长孔立柱解环
 
+> **2026-09-29 更新：** Easy / Medium / Hard 已有独立可构建场景，当前物理途径为 Genesis FEM/IPC。几何与相关回归通过；长时稳定性因 CUDA 显存不足及原生 IPC `cudaErrorInvalidDevice` 阻塞，未通过。见[本轮证据与复跑说明](../../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。下文 2026-09-21 的 MuJoCo 一维绳与 FEM 试验是历史版本，不能授予当前场景资格。
+
+## 当前三档场景与稳定性验收
+
+| 档位 | 家族 | 环内径 | 环外径 | 柱截面径向净空 | 端盘阻挡直径余量 |
+|---|---|---:|---:|---:|---:|
+| Easy | `large_ring` | 108 mm | 148 mm | 15.374 mm | 2 mm |
+| Medium | `middle_ring` | 105 mm | 145 mm | 13.874 mm | 5 mm |
+| Hard（兼容 `base`） | `original_scale` | 102 mm | 142 mm | 12.374 mm | 8 mm |
+
+三档共享 28 mm 槽、20 mm 环管直径、110 mm 端盘、7 mm 绳径，以及一次穿槽、右柱外侧返回的连续绳路。端盘限制了可扩大的环径范围，因此这是小幅净空分级，不是已标定的操作难度；较大环也减小了侧立穿槽的高度余量。36 mm 槽仍是独立实验入口，未用于替代 Easy 或 Medium。
+
+两端永久连接到端盘，绳结止挡属于同一 FEM 绳体；珠、盘、环均为自由刚体，只有底座和立柱固定。场景中心为 `[-0.02, 0.04] m`，机器人从 ALOHA home 开始，未启用辅助抓持。材料沿用共享 `stable_neohookean`，E=50 kPa、ν=0.30、ρ=650 kg/m³，`v13_material_mesh` 细网格与 0.2 mm IPC 接触距离；未改动公共材料来强行落稳。
+
+静态检查覆盖封闭网格、真实孔洞、绳—实体与自碰净空、过柱截面与端盘限位关系，以及同 seed 重新生成资产的字节复现。过柱截面关系仅说明绳路允许时裸环可越柱顶；不代表绳与机器人同时存在时的完整解脱路径。
+
+[`validate_slotted_post_scenes.py`](../../../scripts/validate_slotted_post_scenes.py) 冻结源码后，为三档各执行一次主步长 2.5 ms 和半步长 1.25 ms，均为 4 个求解子步、25 ms 控制周期、seed=0、10 s 连续 home hold。通过现有 `Env`、`SceneEvidence` 与公共 `RecordingSession` 保存四路 Nyx / compact_lab 实际录像、配置、资产、逐 tick 指标和状态样本。
+
+每个 Env 物理 tick 检查有限状态、IPC 有效性、FEM 最小体积比 ≥0.2、两端连接误差 ≤0.5 mm、刚体接触穿透 ≤1 mm、全体任务几何处于桌面范围且无超过 0.1 mm 的桌面穿透。末两秒要求 FEM 最大 / RMS 速度 ≤5 / 1 mm/s，动态刚体线速度 ≤2 mm/s、角速度 ≤0.03 rad/s，所有绳顶点及动态刚体网格顶点漂移 ≤2 mm。两次运行都通过后，比较对应末态顶点，最大差异须 ≤2 mm。IPC 有效性与现有接触诊断不等于独立表面 CCD 证书；采样覆盖物理 tick，不宣称覆盖每个原生求解子步。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/validate_slotted_post_scenes.py \
+  --output runs/test_results/slotted_post_tiers_NEW --seconds 10
+```
+
+当前 `goal_complete=False` 保持不变。场景、静置稳定性、机器人可达/抓持、完整解环、随机参数资格分别记录。
+
+本轮主步长 Easy 审计到 0.1675 s、Medium 到 0.085 s，Easy 半步长到 0.0225 s；均因 CUDA OOM 退出。已提交 tick 内的连接、体积与桌面支撑检查通过，但未进入末两秒落稳窗口。Hard 的本轮短程复验及无 RGB 重试还出现 IPC 原生 `cudaErrorInvalidDevice`，未得到有效物理序列。未修改材料、放宽门槛或清除其他会话 GPU 作业；全部原日志和源码快照保留。Easy/Medium 已录片段仅为失败尝试的场景诊断，四视角链接与配置见本轮证据页。
+
+
 任务 ID：`slotted_post_ring`。来源是用户指定的 [Puzzle guy 视频](https://www.youtube.com/shorts/yZv8eUWIF-8)，约 50.65 秒。`video_reconstruction_v1` 保留基础几何、穿绳初态和共享 Nyx / `compact_lab` / ALOHA 双臂场景。**2026-09-21：28 mm 原版与 36 mm 候选版均通过 10 秒重力落稳及半步长复验；36 mm 候选版通过 147 秒连续外力驱动的完整解环检查，三视角录像已归档。完整机器人解环仍未通过。**
 
 ## 147 秒完整物理流程：36 mm 候选版，通过
 
-**材料版本说明：本节及下列历史录像使用一维长度约束绳，不是 FEM。按用户要求，后续绳模型转向三维体积 FEM，当前接入及验证范围见 [FEM 绳说明](slotted_post_ring_fem_zh.md)。新材料不能继承旧模型的通过状态。**
+**材料版本说明：本节及下列历史录像使用一维长度约束绳，不是 FEM。按用户要求，后续绳模型转向三维体积 FEM，当前接入及验证范围见 [FEM 绳说明](../../../legacy/cleanup_20260929/docs/develop/tasks/slotted_post_ring_fem_zh.md)。新材料不能继承旧模型的通过状态。**
 
 `clearance36_full_physics_v1` 从重力落稳后的初态开始，连续完成移珠、端片侧穿柱槽、支撑绳尾并提环越柱顶、木环侧穿柱槽、再次过珠、搬离、放桌面及释放。最后 26 秒全部外力解除，待最后两秒速度达标后结束。无中途任务实体位姿写入、状态重置或不同运行拼接。
 
@@ -84,8 +114,9 @@
   --output runs/environment_bootstrap/slotted_post_ring/my_gravity_probe --seconds 10
 .venv-gs121-nyx/bin/python -m topogym.tasks.slotted_post_ring.probe \
   --output runs/environment_bootstrap/slotted_post_ring/my_half_step --dt .0000625 --seconds 10
-MUJOCO_GL=egl .venv-gs121-nyx/bin/python -m topogym.tasks.slotted_post_ring.render_physics \
-  --run runs/environment_bootstrap/slotted_post_ring/my_gravity_probe
+MUJOCO_GL=egl .venv-gs121-nyx/bin/python -m topogym.tasks.slotted_post_ring.recording_adapter \
+  --run runs/environment_bootstrap/slotted_post_ring/my_gravity_probe \
+  --output runs/environment_bootstrap/slotted_post_ring/my_gravity_probe/recording --diagnostic
 .venv-gs121-nyx/bin/python -m unittest tests.check_slotted_post_ring_physics
 ```
 

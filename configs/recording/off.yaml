@@ -1,10 +1,5 @@
-# 录制配置组。代码读的是 cfg.recording，字段与
-# topogym/utils/recording.py 的 recording_config_from_args 一一对应。
-#
-# 2026-08-10：这三个文件此前从未被加载 —— 实际默认值在
-# topogym/utils/recording.py:12 的 DEFAULT_RECORDING_CONFIG 里，两边已经分叉
-# （yaml 写 fps 60、缺 every_n_steps；Python 是 fps 30、有 every_n_steps）。
-# 这里按 Python 侧的实际取值对齐，使接入 Hydra 后行为不变。
+# Legacy stride recorder settings; off.yaml is the shared default source.
+# New physical-time recordings use configs/recording_profiles/.
 enabled: false
 path: null
 camera: oblique

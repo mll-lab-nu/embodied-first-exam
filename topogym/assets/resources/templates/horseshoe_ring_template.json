@@ -1,0 +1,43 @@
+{
+  "template_id": "paired_horseshoes_photo_prototype_v1",
+  "units": "mm",
+  "geometry_status": "parameterized photo-informed prototype; not measured CAD",
+  "horseshoe": {
+    "ellipse_radii": [32.0, 29.0],
+    "mouth_half_angle_deg": 42.0,
+    "band_width": 8.0,
+    "thickness": 4.0,
+    "edge_bevel": 0.7,
+    "eye_offset_x": 8.0,
+    "eye_radii": [7.5, 4.8],
+    "eye_wire_radius": 1.4,
+    "collision_segments": 56
+  },
+  "chain": {
+    "spans": 2,
+    "links_per_span": 3,
+    "link_radii": [12.0, 5.0],
+    "wire_radius": 1.4,
+    "center_spacing": 18.0,
+    "eye_to_link_center": 11.0,
+    "collision_segments": 40
+  },
+  "target_ring": {
+    "centerline_radius": 29.0,
+    "wire_radius": 1.8,
+    "initial_tilt_deg": 55.0,
+    "collision_segments": 64
+  },
+  "density_kg_m3": 7800.0,
+  "unconfirmed": [
+    "Exact commercial model and all metric dimensions",
+    "Exact link count and terminal-eye construction in the supplied photograph",
+    "Nail-hole details and measured mass/inertia",
+    "Collision-free extraction route for this parameter set"
+  ],
+  "references": [
+    {"kind": "user_image", "description": "User-provided photograph: two silver horseshoes, two short chains and a central removable ring"},
+    {"kind": "firsthand_collection", "url": "https://www.cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzHorseShoes.html", "use": "Assembly family and folding principle only; dimensions are not copied from its different versions"},
+    {"kind": "physical_demonstration", "url": "https://www.youtube.com/watch?v=qgI7h2Gyk1w", "use": "Reference manipulation principle; not a verified trajectory for these meshes"}
+  ]
+}

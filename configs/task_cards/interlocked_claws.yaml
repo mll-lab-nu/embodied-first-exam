@@ -2,7 +2,7 @@ schema_version: 1
 task_id: interlocked_claws
 title_zh: 嵌合体脱困
 objective: separate
-success: Completely separate both pieces and hold still for one second; continued grasping is allowed.
+success: Place the entire brown claw piece wholly inside the green dashed area and hold still for the instance stability duration; keep all remaining puzzle parts on the system side. Continued grasping is allowed.
 variant_generation:
   version: claw_seed_v1
   config: configs/interlocked_claws_variants.yaml
@@ -64,3 +64,17 @@ first_probe: Original mesh and complete source motion imported; continuous inter
   at two timesteps. Force-driven straight-pull controls expose nonconvex contact
   instability and mesh/SDF depth disagreement; retain unqualified status independently
   of the complete demo. See docs/develop/tasks/interlocked_claws_zh.md.
+
+terminal:
+  revision: placement_region_v1
+  implementation: topogym.tasks.placement.PlacementGoalMixin
+  goal_complete: false
+  qualification: pending_real_placement_and_reachability
+  target_selection: ['assembly.bodies[0].name']
+  extent: all_visual_and_collision_geometry_or_all_FEM_vertices
+  region: fixed_at_reset_from_actual_table_and_instance_geometry
+  numeric_region_metadata: owner_evidence
+  limited_policy_input: visible_green_boundary_and_static_instruction
+  holding_allowed: true
+  thresholds_calibrated: false
+  historical_success_labels_apply_to_previous_rules: true

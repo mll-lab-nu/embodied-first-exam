@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Generate tasks/topogym-<family>-i<NN>/ (unlimited) from the topogym-cube-pick-place-i00 template (TopoGym tasks only).
+Adapted from robot_coding_bench's scripts/robowits_mk_task.py (fa59c1a6).
+usage: scripts/topogym_mk_task.py <family> [--eval-index 0] [--oracle <oracle.py>] [--instance <instance.json>]
+                                  [--difficulty "<paragraph>"] [--python <simulator python>]
+  <family>      a key of rcb_topogym.TASKS (the folder slug becomes topogym-<family-with-dashes>-i<NN>)
+  --oracle      the human-written reference solution; copied to solution/oracle_<family>.py and recorded by solution/solve.sh.
+                Without it solve.sh says there is none and the oracle agent scores 0
+  --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
+  --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
+Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
+The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
+change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh)."""
+import argparse, json, os, pathlib, shutil, subprocess, sys
+
+sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
+root = pathlib.Path(__file__).resolve().parents[1]
+TEMPLATE = root / "tasks/topogym-cube-pick-place-i00"
+SHARED = ["environment/rcb_topogym.py", "environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
+          "tests/docker-compose.yaml", "tests/grade.py"]
+IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
+BUDGET_S = 5400
+
+
+def run_tool(python, *args) -> dict:
+    env = dict(os.environ, RCB_SESSION_LOG="", PYTHONPATH=str(TEMPLATE / "environment"))
+    p = subprocess.run([python, str(TEMPLATE / "environment/rcb_topogym.py"), *map(str, args)], env=env, capture_output=True, text=True)
+    lines = [l for l in p.stdout.splitlines() if l.startswith("{")]
+    if p.returncode or not lines:
+        err = p.stderr[p.stderr.rfind("Traceback"):] if "Traceback" in p.stderr else p.stderr[-3000:]
+        sys.exit(f"rcb_topogym.py {args[0]} failed (rc={p.returncode}):\n{err[-4000:]}")
+    return json.loads(lines[-1])
+
+
+def robot_words(d: dict) -> str:
+    return d["robot_spec"]["description"].split(" (TopoGym")[0]
+
+
+def layout_words(d: dict) -> str:
+    parts = []
+    for arm in d["arms"]:
+        n = sum(1 for x in d["action_layout"] if not x.endswith("_gripper") and x in d["kinematics"]["joint_names"]
+                and any(j["name"] == x and j["group"] == f"arm_{arm}" for j in d["robot_spec"]["joints"]))
+        lo, hi = d["limits"][d["action_layout"].index(f"{arm}_gripper")]
+        parts.append(f"arm `{arm}`: {n} joint targets (rad), then `{arm}_gripper` = opening width (m, {lo:g} closed .. {hi:g} open)")
+    return "; ".join(parts)
+
+
+def objects_words(d: dict) -> str:
+    out = []
+    for n, o in d["objects"].items():
+        if o.get("material") in ("particle", "fem"):
+            out.append(f"`{n}` (deformable, {o['material']})")
+        else:
+            out.append(f"`{n}`" + (" (fixed)" if o.get("fixed") else ""))
+    return ", ".join(out) or "see `s.objects()`"
+
+
+def conventions(d: dict, fam: str) -> str:
+    rs = d["robot_spec"]; arm = d["arms"][0]; tcp = rs["tcp"][d["kinematics"]["tcp_frames"][0]]
+    base = ", ".join(f"{v:.3f}" for v in rs["base"]["pose"][:3])
+    table = f", table top at z = {d['table_z']:.3f}" if d.get("table_z") else ""
+    return f"""## Conventions
+- World frame: robot base at ({base}){table}, +z up. Quaternions are **WXYZ**.
+- Action ({len(d['action_layout'])}): {layout_words(d)}; absolute position targets tracked by PD controllers, out-of-limit
+  values clipped. `s.hold_action()` is the no-op.
+- Control runs at {d['control_hz']:g} Hz ({d['physics_substeps']} physics step(s) per control step). There is no step budget; your
+  wall-clock budget is {BUDGET_S // 60} min ({BUDGET_S} s). One control step takes about {d['sec_per_step']:.1f} s of wall clock here (the
+  simulator keeps a full checkpoint of every physics step), so budget your experiments.
+- Grippers: {d['grasp_rules']}.
+- Tool frame (TCP, the ee pose and IK frame): {tcp['definition'].split(': ', 1)[1] if ': ' in tcp['definition'] else tcp['definition']}
+  `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
+- The task succeeds once its predicate has held continuously for {d['stable_duration_s']:g} s; that, or one of its failure predicates,
+  ends the simulated episode: later steps are recorded but no longer move the scene (`s.status()["episode_end"]`), and
+  `s.reset()` starts over.
+- One `Session` per process (Genesis initialises once). Do not call `s.close()` before writing every output.
+"""
+
+
+def instruction(fam: str, text: str, d: dict) -> str:
+    arm, cam = d["arms"][0], list(d["cameras"])[0]
+    W, H = d["cameras"][cam]["image_size"]
+    pred = d["predicate"] or "# (source not available)"
+    return f"""# TopoGym · {fam} — frozen instance
+
+You control a simulated robot (**{robot_words(d)}**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
+**Task:** {text}
+
+The scene objects are the task's entities (`s.objects()`: {objects_words(d)}). The success predicate is
+`{d['task_class']}.evaluate_state` (module `{d['task_module']}`); the task succeeds once it holds continuously for
+{d['stable_duration_s']:g} s:
+```python
+{pred.rstrip()}
+```
+
+This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
+and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+
+## Deliverable
+Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
+It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_topogym import Session
+s = Session("{fam}", instance="/app/instance.json")   # builds the frozen scene (instance.json) and compiles kernels
+s.reset()                          # back to the frozen initial state (unlimited; a restore of the first recorded state)
+p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
+s.objects()                        # objects: name -> position, orientation_wxyz, euler_xyz, bounds, size, velocity
+p["move_ee"]("{arm}", pos, quat_wxyz, linear=3)   # IK on the robot's model to a TCP pose, then joint interpolation
+p["move_joints"]("{arm}", q_arm); p["set_gripper"]("{arm}", 0.0); p["open_gripper"]("{arm}"); p["hold"](10)
+s.ee_pose("{arm}"); s.joint_positions(); s.ik("{arm}", pos, quat_wxyz)    # kinematics helpers (arms: {d['arms']})
+s.render_frame("{cam}")         # RGB uint8 ({H}, {W}, 3) from one camera (s.VIDEO_CAMERAS); s.render_grid()
+s.render_depth("{cam}")         # float32 ({H}, {W}) z-depth in metres (0 = no reading), pixel-aligned with render_frame
+s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
+s.robot_spec()                     # joints (limits), grippers (the grasping rule), PD gains, tool frames {d['kinematics']['tcp_frames']}
+s.kinematics({{"op": "fk", "q": q}})   # stateless FK / IK on the robot's model; {{"op": "ik", "targets": {{"{d['kinematics']['tcp_frames'][0]}": pose7}}, "seed": q}}
+s.joint_velocities(); s.joint_efforts(); s.gripper_width("{arm}")   # measured state in action layout (efforts: the PD drives')
+s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object's pose / AABB; the state hash that replays compare
+p["object_in_hand"]("{arm}"); p["set_joint_targets"](row, steps=1); p["gripper_quat"](yaw, approach)   # help(p[...])
+s.step(action)                     # one low-level action ({len(d['action_layout'])} entries, below) = one control step (1/{d['control_hz']:g} s)
+s.record_start(); ...; actions = s.record_stop()   # (T, {len(d['action_layout'])}) actions, one row per control step
+s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}}
+s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.save_trajectory(actions, "/app/output/trajectory.npz")
+s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
+```
+The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
+are yours to build from them.
+
+CLI equivalent of the grader:
+`python /opt/tools/rcb_topogym.py replay --task {fam} --instance /app/instance.json --traj /app/output/trajectory.npz`
+
+{conventions(d, fam)}"""
+
+
+def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, difficulty: str, oracle: bool) -> str:
+    ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
+           f"trajectory." if oracle else
+           "None yet: `solution/solve.sh` says so and exits 1 (the oracle agent scores 0). A reference solution must be\n"
+           "written for this instance (assisted grasping, if the family enables it, is the same for the oracle and the agent).")
+    return f"""# {slug}
+
+| | |
+|---|---|
+| Simulator / robot | TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB) / {d['robot_spec']['name']} ({robot_words(d)}) |
+| Family / instance | `{fam}` / variation `{variation}`, seed {seed} (eval index {ei}), frozen in `environment/instance.json` |
+| Task type / tier | trajectory / privileged |
+| Base image | `{IMAGE}` (built locally with `scripts/build_images.sh topogym`; needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
+| Grasping | {d['grasp_rules'].split(':')[0]} |
+| Agent budget | {BUDGET_S} s |
+
+## Goal
+{text}
+
+## Difficulty
+{difficulty}
+
+## Reference solution
+{ref}
+
+## Verification
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
+task's predicate holds after every replay (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. The physics runs on the
+GPU, which is not bit-deterministic: the final-state hashes (`deterministic`) and the rebuilt frozen scene
+(`instance_ok`) are reported, not required (robot_coding_bench's GPU-backend rule).
+"""
+
+
+def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, hours: float) -> str:
+    # The verifier replays the trajectory 3 times (2 checks + the video) at the simulator's speed: at most the agent's
+    # budget each, since the agent's own run took at least that long.
+    vt = 3 * BUDGET_S + 900
+    return f"""schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "topogym/{slug}"
+description = {json.dumps(f"TopoGym {fam} ({d['robot_spec']['name']}, Genesis): produce one replayable trajectory. {text} Frozen scene instance (variation {variation}, seed {seed}).")}
+authors = [{{ name = "jianwen" }}]
+keywords = ["robotics", "topogym", "genesis", "{d['robot_spec']['name']}", "code-as-policy", "trajectory", "{fam}"]
+
+[metadata]
+author_name = "jianwen"
+task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+robot = "{d['robot_spec']['name']}"
+family = "{fam}"
+tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+instance_seed = {seed}                 # scene = environment/instance.json (variation {variation}, eval index {ei}); identity = dataset.toml digest
+expert_time_estimate_hours = {hours}
+
+[verifier]
+timeout_sec = {float(vt)}
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = {float(BUDGET_S)}             # TopoGym budget: 1.5 h of wall clock
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+"""
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("family"); ap.add_argument("--eval-index", type=int, default=0); ap.add_argument("--oracle", default=None)
+    ap.add_argument("--instance", default=None); ap.add_argument("--difficulty", default=None)
+    ap.add_argument("--hours", type=float, default=None, help="expert_time_estimate_hours")
+    ap.add_argument("--python", default=str(root / ".venv-gs121-nyx/bin/python"))
+    ap.add_argument("--reuse-describe", action="store_true", help="re-render the texts from runs/task_build/<slug>/describe.json (no GPU)")
+    a = ap.parse_args()
+    sys.path.insert(0, str(TEMPLATE / "environment"))
+    import rcb_topogym as M                 # the registry only (no simulator import)
+    fam = a.family; spec = M.TASKS[fam]
+    slug = f"topogym-{fam.replace('_', '-')}-i{a.eval_index:02d}"
+    dst = root / "tasks" / slug
+    for d in ("environment", "tests", "solution"):
+        (dst / d).mkdir(parents=True, exist_ok=True)
+    if dst != TEMPLATE:
+        for f in SHARED:
+            shutil.copy(TEMPLATE / f, dst / f)
+        for f in dst.glob("solution/oracle_*.py"):
+            f.unlink()
+    shutil.copy(dst / "environment/rcb_topogym.py", dst / "tests/rcb_topogym.py")
+    inst_path = dst / "environment/instance.json"
+    if a.instance:
+        if pathlib.Path(a.instance).resolve() != inst_path.resolve():
+            shutil.copy(a.instance, inst_path)
+    else:
+        run_tool(a.python, "make-instance", "--task", fam, "--eval-index", a.eval_index, "--out", inst_path)
+    shutil.copy(inst_path, dst / "tests/instance.json")
+    inst = json.loads(inst_path.read_text())
+    assert inst["task"] == fam and int(inst["eval_index"]) == a.eval_index, (inst["task"], inst["eval_index"])
+    build = root / "runs/task_build" / slug; build.mkdir(parents=True, exist_ok=True)
+    if a.reuse_describe:
+        d = json.loads((build / "describe.json").read_text())
+    else:
+        d = run_tool(a.python, "describe", "--task", fam, "--instance", inst_path)
+        (build / "describe.json").write_text(json.dumps(d, indent=1))
+    if a.oracle:
+        if pathlib.Path(a.oracle).resolve() != (dst / f"solution/oracle_{fam}.py").resolve():
+            shutil.copy(a.oracle, dst / f"solution/oracle_{fam}.py")
+        solve = ("#!/bin/bash\n# Oracle: run the human-written reference solution (kept in solution/, never in the agent image) and record it.\n"
+                 "set -e\nmkdir -p /app/output\n"
+                 f"python /opt/tools/rcb_topogym.py run-oracle --task {fam} --instance /app/instance.json --code /solution/oracle_{fam}.py --out /app/output/trajectory.npz\n"
+                 f"cp /solution/oracle_{fam}.py /app/output/gen.py\n")
+    else:   # no reference solution: the oracle agent says so and scores 0
+        solve = (f"#!/bin/bash\n# No reference solution for this family yet: the oracle agent scores 0.\necho 'no reference solution for {fam}' >&2\nexit 1\n")
+    (dst / "solution/solve.sh").write_text(solve); (dst / "solution/solve.sh").chmod(0o755)
+    (dst / "tests/test.sh").write_text(
+        "#!/bin/bash\n# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.\n"
+        "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/rcb/PROTOCOL.md).\nmkdir -p /logs/verifier\n"
+        "# Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent\n"
+        "# left there (a planted reward, a symlink) can count. rm never follows symlinks.\n"
+        "find /logs/verifier -mindepth 1 -maxdepth 1 ! -name test-stdout.txt -exec rm -rf {} +\n"
+        f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
+        "  2> /logs/verifier/grade.log\n")
+    (dst / "tests/test.sh").chmod(0o755)
+    difficulty = a.difficulty or (f"{robot_words(d).capitalize()} with a {len(d['action_layout'])}-D joint-target action space at {d['control_hz']:g} Hz; "
+                                  f"success needs the task's predicate (above) held for {d['stable_duration_s']:g} s. Grasping: "
+                                  f"{d['grasp_rules'].split(':')[0]}.")
+    hours = a.hours if a.hours is not None else (0.5 if spec.get("fixture") else 2.0)
+    (dst / "instruction.md").write_text(instruction(fam, spec["text"], d))
+    (dst / "README.md").write_text(readme(slug, fam, spec["text"], d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle)))
+    (dst / "task.toml").write_text(task_toml(slug, fam, spec["text"], d, a.eval_index, inst["variation_id"], inst["seed"], hours))
+    print("generated", slug, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
+
+
+if __name__ == "__main__":
+    main()

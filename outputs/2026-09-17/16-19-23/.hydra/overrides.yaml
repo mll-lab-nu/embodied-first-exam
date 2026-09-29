@@ -1,5 +1,0 @@
-- env.genesis.backend=cpu
-- env.renderer.type=rasterizer
-- run.output=runs/environment_bootstrap/fiber_bundling/2026-09-17_density_radius_v1/dense_16_r13.5mm/scene_preview
-- run.settle_steps=50
-- run.record_video=false

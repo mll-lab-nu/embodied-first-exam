@@ -27,5 +27,5 @@
 ```
 
 之后使用 `robot_demo --backend cpu --save-render-states` 保存一次物理执行的精确状态；另用 `--dt 0.00125` 完整重跑。
-默认步长为 0.0025 秒、10 子步、双精度。`render_physical_trace` 根据实际状态生成五路 Nyx 视频，不插值、不执行渲染场景物理步进。
+默认步长为 0.0025 秒、10 子步、双精度。五路 Nyx 视频由公共录制模块生成：`robot_demo --record` 在线录制，或对已冻结来源运行 `python -m topogym.recording replay`；均不插值、不执行渲染场景物理步进。
 `robot_archive` 在物理、时间步和视频解码检查通过后，将独立 MP4 放到 `runs/demos/cast_coil/`，证据保存到 `runs/demo_metadata/cast_coil/`。

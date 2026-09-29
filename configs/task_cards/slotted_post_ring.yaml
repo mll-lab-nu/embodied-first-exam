@@ -22,10 +22,29 @@ axes:
   - {path: rope_radius_m, unit: m, status: candidate, validated_range: null}
 assets:
   - status: local_source
-    location: topogym/tasks/slotted_post_ring/geometry.py
+    location: topogym/assets/geometry/slotted_post_ring.py
   - status: local_source
     location: assets/tasks/slotted_post_ring/video_reconstruction_v1/source.json
 physics:
+  backend: Genesis 1.2.1 FEM / IPC
+  rope_material: stable_neohookean
+  young_pa: 50000.0
+  poisson: 0.30
+  density_kg_m3: 650.0
+  rope_mesh_profile: v13_material_mesh
+  contact_d_hat_m: 0.0002
+  material_calibrated: false
+  qualification: initial_scene_stability_blocked_cuda
+  evidence: runs/test_results/slotted_post_tiers_20260929_review/README.md
+  validator: scripts/validate_slotted_post_scenes.py
+  full_fem_solution_verified: false
+  robot_execution_verified: false
+variants:
+  easy: {family: large_ring, ring_inner_diameter_m: 0.108, ring_major_radius_m: 0.064, slot_width_m: 0.028}
+  medium: {family: middle_ring, ring_inner_diameter_m: 0.105, ring_major_radius_m: 0.0625, slot_width_m: 0.028}
+  hard: {family: original_scale, ring_inner_diameter_m: 0.102, ring_major_radius_m: 0.061, slot_width_m: 0.028}
+  difficulty_calibrated: false
+historical_physics_20260921:
   backend: MuJoCo 3.13.0; rigid bodies and length-constrained 1D flex cord
   preferred_rope_model: volumetric tetrahedral FEM; see fem_migration for separate qualification
   fem_migration:
@@ -80,9 +99,31 @@ rejection_rules:
   - Bead fits the slot or disc fits the ring aperture
   - Disc cannot fit edgewise in the slot with cord clearance
   - More than one cord, wrong slot routing, or disconnected visual tube
-first_probe: gravity and half-step passed; partial ALOHA bead repositioning passed every-step audit; 36mm complete force-driven disentangling passed; full robot execution remains unqualified
+first_probe: current FEM tiers require independent gravity and half-step validation; historical MuJoCo results do not qualify current scenes
 scene:
+  entrypoint: topogym.make('slotted_post_ring', variation_id='easy|medium|hard')
+  preset: lab_tasks_v1
+  center_xy_m: [-0.02, 0.04]
+  status: three_tiers_integrated_stability_blocked_cuda
+  physical_execution_verified: false
+historical_scene:
   config: configs/slotted_post_ring_preview.yaml
   entrypoint: demos.environment_bootstrap.slotted_post_ring
   status: static_scene_inspection_only
   physical_execution_verified: false
+
+success: Place the entire removable ring wholly inside the green dashed area and hold still for the instance stability duration; keep all remaining puzzle parts on the system side. Continued grasping is allowed.
+
+terminal:
+  revision: placement_region_v1
+  implementation: topogym.tasks.placement.PlacementGoalMixin
+  goal_complete: false
+  qualification: pending_real_placement_and_reachability
+  target_selection: ['target_ring']
+  extent: all_visual_and_collision_geometry_or_all_FEM_vertices
+  region: fixed_at_reset_from_actual_table_and_instance_geometry
+  numeric_region_metadata: owner_evidence
+  limited_policy_input: visible_green_boundary_and_static_instruction
+  holding_allowed: true
+  thresholds_calibrated: false
+  historical_success_labels_apply_to_previous_rules: true

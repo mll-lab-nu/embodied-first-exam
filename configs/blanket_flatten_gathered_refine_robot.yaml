@@ -1,0 +1,30 @@
+defaults:
+  - blanket_flatten_gathered_surface_robot
+  - _self_
+
+task:
+  execution:
+    # Seven coarse pulls are followed by observed fold/cover refinement.
+    max_pulls: 32
+    refinement_after_pulls: 7
+    final_settle_seconds: 10.0
+    refinement:
+      strategy: corner_layers
+      maximum_step_m: 0.09
+      release_height_m: 0.006
+      settle_seconds: 1.5
+      grasp:
+        grasp_radius_m: 0.010
+        material_patch_radius_m: 0.014
+        lift_m: 0.06
+        carry_speed_m_s: 0.04
+        hang_seconds: 0.4
+        peel_lead_fraction: 0.5
+  success:
+    minimum_coverage_ratio: 0.98
+    p95_height_m: 0.006
+    maximum_height_m: 0.012
+
+run:
+  scope: full_task
+  output: runs/environment_bootstrap/blanket_flatten/gathered_robot_refine_v12

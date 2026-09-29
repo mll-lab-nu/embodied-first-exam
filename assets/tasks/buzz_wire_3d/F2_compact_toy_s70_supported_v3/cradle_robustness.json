@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "complete": true,
+  "scope": "Three supported-rest trials at the nominal physics settings; reset wand pose and velocity between the first two trials in one scene, then use a fresh scene for the larger perturbation. These are not complete robot executions.",
+  "conditions": [
+    {
+      "condition": "exact",
+      "seconds": 30,
+      "base_contacts": 5,
+      "dp": 2.52996051397988e-06,
+      "dr": 0.0003191623381130378,
+      "v": 5.5220280740496774e-08,
+      "w": 8.13422406425686e-06,
+      "maxpen": 2.7694476225704253e-07,
+      "longest_quiet_s": 19.62,
+      "passed": true
+    },
+    {
+      "condition": "actual_release",
+      "seconds": 30,
+      "base_contacts": 3,
+      "dp": 2.9560742019098263e-06,
+      "dr": 0.0006668199697719566,
+      "v": 3.245551938379238e-05,
+      "w": 0.0032349572764784223,
+      "maxpen": 1.6829698876878242e-06,
+      "longest_quiet_s": 30.0,
+      "passed": true
+    },
+    {
+      "condition": "small_offset",
+      "seconds": 30,
+      "base_contacts": 5,
+      "dp": 7.923347904595575e-05,
+      "dr": 0.011125751557444332,
+      "v": 2.848157113842837e-10,
+      "w": 1.8546674710449135e-08,
+      "maxpen": 7.473666398562229e-06,
+      "longest_quiet_s": 6.336,
+      "passed": true
+    }
+  ],
+  "dt": 0.004,
+  "substeps": 16,
+  "precision_bits": 64,
+  "physical_assets_signature_sha256": "6f4510db9b079e89fec74efa60d8cd8d17b82f4e764b190227d6d01a2c9fe582",
+  "source_trials": [
+    "cradle_probe04",
+    "cradle_probe05"
+  ],
+  "screen_note": "The larger perturbation was observed for the full 30 seconds in a fresh scene; the earlier ten-second screen was inconclusive.",
+  "scene_groups": [
+    [
+      "exact",
+      "actual_release"
+    ],
+    [
+      "small_offset"
+    ]
+  ]
+}

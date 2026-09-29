@@ -1,0 +1,47 @@
+{
+  "verified_utc": "2026-09-23T15:16:59.941145+00:00",
+  "original_file_count": 1098,
+  "noncache_file_count": 502,
+  "code_file_count": 500,
+  "moved_noncache_files": 465,
+  "unchanged_location_noncache_files": 37,
+  "relocated_cache_files": 596,
+  "missing_files": 0,
+  "content_changes": 0,
+  "mode_changes": 0,
+  "overwritten_files": 0,
+  "new_package_files": [
+    "topogym/README.md",
+    "topogym/redundants/README.md"
+  ],
+  "new_executable_source_files": 0,
+  "python_ast_parsed": 496,
+  "task_entry_files": [
+    "topogym/tasks/blanket_flatten.py",
+    "topogym/tasks/buzz_wire_3d.py",
+    "topogym/tasks/cast_coil.py",
+    "topogym/tasks/cast_keyhole.py",
+    "topogym/tasks/fiber_bundling.py",
+    "topogym/tasks/hedgehog_in_cage.py",
+    "topogym/tasks/horseshoe_ring.py",
+    "topogym/tasks/interlocked_claws.py",
+    "topogym/tasks/knot_untying.py",
+    "topogym/tasks/lock_picking.py",
+    "topogym/tasks/orbits.py",
+    "topogym/tasks/rope_threading.py",
+    "topogym/tasks/slotted_post_ring.py"
+  ],
+  "direct_mujoco_files_preserved": 60,
+  "runtime_tests": "Not run: imports, module strings and resource paths deliberately unchanged during move-only stage",
+  "git_index": "Not staged or reset by this operation",
+  "documentation_checks": {
+    "local_links_checked": 19152,
+    "missing_links_in_migration_reports_and_package_readmes": 0,
+    "trailing_whitespace": 0,
+    "unclosed_fenced_blocks": 0,
+    "preexisting_unrelated_missing_navigation_targets": [
+      "docs/develop/visual/default_nyx_lab_zh.md",
+      "docs/develop/visual/nyx_gs121_setup_zh.md"
+    ]
+  }
+}

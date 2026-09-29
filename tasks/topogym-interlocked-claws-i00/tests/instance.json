@@ -1,0 +1,218 @@
+{
+ "task": "interlocked_claws",
+ "topogym_task": "interlocked_claws",
+ "variation_id": "interlocked_claws_hard",
+ "seed": 0,
+ "eval_index": 0,
+ "text": "Separate the brown claw piece from the other claw. Place the entire brown piece inside the green dashed goal area and hold it still briefly. Keep the other piece outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
+ "simulator": {
+  "task_id": "interlocked_claws",
+  "robot_id": "aloha",
+  "variation_id": "interlocked_claws_hard",
+  "seed": 0,
+  "control_mode": "JOINT_ABS",
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "enable_rgb": true,
+  "enable_depth": true,
+  "enable_privileged": true,
+  "compute_backend": "cuda",
+  "render_backend": "nyx",
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "claw_0",
+     "link": "claw_0",
+     "center_m": [
+      0.10054823505668979,
+      -0.22702961844955039,
+      0.02044362069039546
+     ],
+     "radius_m": 0.03
+    },
+    {
+     "entity": "claw_1",
+     "link": "claw_1",
+     "center_m": [
+      0.01826686440145814,
+      -0.008599103317365964,
+      0.12688552258425648
+     ],
+     "radius_m": 0.03
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "close"
+  }
+ },
+ "state_sha": "e66c779fdc48d3d0",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  -0.11984,
+  -0.665958,
+  0.772355,
+  -0.098332,
+  -0.416839,
+  -1.418696,
+  0.027763,
+  -0.202659,
+  -0.066851,
+  0.399645,
+  -1.134118,
+  -1.690417,
+  0.027611,
+  0.027763
+ ],
+ "objects": {
+  "claw_0": {
+   "position": [
+    -0.05342,
+    -0.17359,
+    1.43164
+   ],
+   "orientation_wxyz": [
+    -0.096135,
+    -0.722665,
+    -0.673485,
+    -0.122191
+   ],
+   "euler_xyz": [
+    2.83284,
+    -0.04713,
+    1.50771
+   ],
+   "bounds": [
+    [
+     -0.27578,
+     -0.17218,
+     1.30352
+    ],
+    [
+     -0.07817,
+     -0.01037,
+     1.40268
+    ]
+   ],
+   "size": [
+    0.19761,
+    0.1618,
+    0.09916
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "claw_1": {
+   "position": [
+    -0.04853,
+    -0.25516,
+    1.34695
+   ],
+   "orientation_wxyz": [
+    0.597404,
+    -0.544204,
+    0.424599,
+    0.408248
+   ],
+   "euler_xyz": [
+    -1.4168,
+    1.25858,
+    0.08357
+   ],
+   "bounds": [
+    [
+     -0.17636,
+     -0.2852,
+     1.30195
+    ],
+    [
+     0.00988,
+     -0.10815,
+     1.40106
+    ]
+   ],
+   "size": [
+    0.18624,
+    0.17706,
+    0.09911
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.28867,
+     0.104,
+     0.91984
+    ],
+    [
+     0.01731,
+     0.40998,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.30598,
+    0.30598,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {}
+}

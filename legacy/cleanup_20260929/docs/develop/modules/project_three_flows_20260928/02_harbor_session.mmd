@@ -1,0 +1,95 @@
+flowchart TB
+  USER["[参与者 / 实验用户]<br/>topogym-harbor run<br/>model-name, api-key, difficulty, seeds, attempts<br/>预算、并发、时限；mode/state-fields 可覆盖实验 YAML"]
+  ENTRY["[宿主 CLI / harbor_runners.run]<br/>main() → config_from_args() → prepare()<br/>input_key() / credential_environment()<br/>output: frozen run + 私有子进程凭据环境"]
+  LAUNCH["[宿主启动 / run + preflight]<br/>launch() → check() / verify_frozen()<br/>Popen: harbor run --config job.json"]
+  HARBOR["[第三方调度 / Harbor]<br/>Job.run(); Trial._prepare() / _run_agent_phase()<br/>instances × attempts；并发上限 concurrency"]
+  DOCKER["[容器基础设施 / Docker + NVIDIA runtime]<br/>DockerEnvironment.start() → Compose up<br/>共享镜像 + 冻结配置只读挂载 + GPU<br/>Harbor egress-control sidecar 管理阶段网络"]
+  WORKER["[容器 root / rollout.worker]<br/>main(): make(); reset(); SegmentRunner()<br/>RolloutSession(); serve(agent.sock/admin.sock)<br/>一个 Env、一个 episode、segment_0"]
+  READY["[启动门槛 / Harbor healthcheck]<br/>topogym-rollout ready --check-initial<br/>check_initial(): 校验初段、视频、日志和 SHA-256"]
+  ADAPTER["[宿主包装 agent / usage_adapter]<br/>UsageAgent.setup() / run()<br/>setup: 安装固定 OpenCode<br/>run: no-network；每 trial 创建 UsagePipeline"]
+  PIPE["[宿主计量服务 / usage.pipeline + service]<br/>UsagePipeline.start(routes, credential_resolver)<br/>UsageService + GatewaySource + Gateway<br/>output: socket_path, trial token, route binding"]
+  BIND["[宿主适配 / agents.opencode]<br/>create_delegate() → IsolatedOpenCode<br/>bind(connection, relay_url, trial_token)<br/>OPENCODE_CONFIG_CONTENT：model + small_model"]
+  AGENT["[容器 agent UID 10001 / OpenCode CLI]<br/>OpenCode.run(instruction, environment, context)<br/>读图/读日志、调用模型、写 policy、执行工具<br/>output: policy.py、工具调用、原生日志"]
+  RELAY["[容器 root / usage.relay]<br/>main(); watch_budget()<br/>localhost HTTP ↔ 只读挂载的 Unix socket<br/>budget.json 连续刷新"]
+  GW["[宿主网关 / usage.gateway]<br/>Gateway.handle()<br/>验证 trial token、冻结模型、协议和端点<br/>prepare_request() → ledger.admit()/mark_sent()"]
+  PROVIDER["[外部参与者 / 模型 provider]<br/>Chat Completions / Messages / Responses<br/>input: prompt、历史、图片、tools、output cap<br/>output: 模型响应 / SSE + provider usage"]
+  RECEIPT["[协议计量 / usage.sources]<br/>ChatUsage / MessagesUsage / ResponsesUsage.feed()<br/>output: UsageEvent(request_id, input, output, final)"]
+  LEDGER["[宿主权威账本 / usage.ledger + store]<br/>UsageService.record() → UsageLedger.record()<br/>SQLite 事务结算；budget.check()<br/>input/output 分额度，全 trial 共账"]
+  BUDGET["[预算导出 / usage.publisher]<br/>UsagePublisher.publish()/finalize()<br/>usage/ledger.sqlite + events.jsonl + snapshot.json<br/>binding.json；失败时 stop.json"]
+  ADMIN["[参与者 / 宿主实验管理者]<br/>usage-status / usage-update<br/>update_limits(expected_revision, limits, actor, reason)"]
+  STOP["[强停管理 / supervisor + UsageAgent]<br/>cancel_requests(); stop_trial()<br/>终止 agent；admin.sock budget_stop → proxy.cancel()<br/>无法确认停止时关闭 trial 容器并标记证据缺失"]
+  READ["[容器 agent / rollout.client + history]<br/>history / logs / video / frames<br/>HistoryReader.index()/page()/video()/frames()<br/>output: 历史、MP4 路径、按需 PNG 抽帧"]
+  SUBMIT["[容器 agent / rollout.client]<br/>submit → call() → agent.sock<br/>source_utf8, filename, create_policy, parameters<br/>episode_id + request_id"]
+  DISPATCH["[容器 root / worker + protocol]<br/>RolloutSession.dispatch() → validate_submit()<br/>哈希、幂等、串行队列；execute_next()<br/>submission.json + accepted/running receipt"]
+  PROXY["[容器 policy UID 10002 / policy_process]<br/>RemotePolicyProxy → child_main() / restrict_process()<br/>JSON/array 管道 RPC；create_policy(**parameters)<br/>initialize / act / on_segment_end"]
+  CORE["[容器 root + GPU / 图 1 的执行内核]<br/>SegmentRunner.run_policy(policy=proxy)<br/>Env、Task、Robot、Genesis、Nyx、recording<br/>output: 封存 segment result + logs + videos"]
+  PUBLIC["[公开发布 / rollout.public_artifacts]<br/>PublicArtifacts.publish() / _export()<br/>核验权限与哈希，复制到 /rollout<br/>result 最后发布；更新 history.json / session.json"]
+  LOOP{"agent 再提交一段<br/>还是结束？"}
+  FINISH["[root 管理与 verifier / rollout.verify + worker]<br/>finalize() → admin finish → cancel()/finish()<br/>runner.close(); session_final.json + usage_final.json<br/>score(); seal_archive()"]
+  RESULT["[第三方采集 / Harbor artifact hooks]<br/>_collect_artifacts_phased() 下载 rollout / worker.log<br/>output: trial/artifacts；root hook 已先完成封存"]
+  VERIFY["[第三方正式验证 / Harbor SingleStepTrial]<br/>_run_verifier() → tests/test.sh → topogym-rollout-verify<br/>复核已封存 session；reward.txt / verification.json<br/>stop environment；保存 Harbor trial result.json"]
+  COLLECT["[宿主归档 / collect + rollout_output_report + hooks]<br/>collect() / verify_archive() → summarize() → cleanup()<br/>完整归档后清理本 run 的停止容器/网络<br/>失败保留容器，collect --recover 可重试采集"]
+  OUT["[产物消费者 / 用户与评测]<br/>runs/harbor/R：summary、index、trial logs、usage<br/>task_rollouts/R/task/rollout_N：完整 session 证据<br/>task_success / reward / budget_qualified 分开阅读"]
+
+  USER --> ENTRY
+  ENTRY -->|"图 3 的 frozen run；key 仅进子进程环境"| LAUNCH
+  LAUNCH -->|"job.json"| HARBOR
+  HARBOR -->|"task.toml + Compose + 镜像"| DOCKER
+  DOCKER -->|"instance.json / usage.json"| WORKER
+  WORKER -->|"初始段公开产物 + agent socket"| READY
+  READY -->|"Harbor run_healthcheck() 通过"| ADAPTER
+  ADAPTER -->|"trial identity、limits、冻结 route；真实 key"| PIPE
+  PIPE -->|"启动容器 relay；socket_path + token"| RELAY
+  RELAY -->|"ready 文件：localhost port"| BIND
+  PIPE -->|"route binding + trial token"| BIND
+  BIND -->|"配置 overlay + 固定版本 + instruction"| AGENT
+  AGENT -->|"HTTP：trial token + 模型请求"| RELAY
+  RELAY -->|"Unix socket：请求原协议透传"| GW
+  PIPE -.->|"创建并持有 Gateway"| GW
+  GW -->|"替换真实上游 key；限制 output cap"| PROVIDER
+  PROVIDER -->|"JSON / SSE response"| GW
+  GW -->|"响应数据中的 usage"| RECEIPT
+  GW -->|"模型响应经 relay 返回"| RELAY
+  RELAY -->|"响应 / SSE"| AGENT
+  RECEIPT --> LEDGER
+  LEDGER -->|"快照 / 连续审计"| BUDGET
+  LEDGER -.->|"remaining 供下个请求 admission"| GW
+  ADMIN -->|"原子调额；revision 检查"| LEDGER
+  LEDGER -->|"超额、额度耗尽、usage 缺失或冲突"| STOP
+  BUDGET -.->|"relay 查询 /budget"| RELAY
+  STOP -.->|"关网关和模型 admission"| GW
+  STOP -.->|"SIGKILL agent UID"| AGENT
+  STOP -.->|"独立 root admin socket"| WORKER
+  AGENT --> READ
+  READ -->|"历史、图片与反馈进入下一轮模型上下文"| AGENT
+  AGENT -->|"保存 policy.py，运行提交工具"| SUBMIT
+  SUBMIT -->|"topogym.rollout.v1 消息"| DISPATCH
+  DISPATCH -->|"冻结源码；创建隔离策略进程"| PROXY
+  DISPATCH -->|"request/hash/profile + proxy"| CORE
+  CORE -->|"context / obs"| PROXY
+  PROXY -->|"action 或 None"| CORE
+  CORE --> PUBLIC
+  PUBLIC -->|"result_path + history + receipt"| SUBMIT
+  PUBLIC -->|"已完成产物"| READ
+  SUBMIT -->|"--wait 或 result 查询"| AGENT
+  AGENT --> LOOP
+  LOOP -->|"继续且 episode 非终态"| READ
+  LOOP -->|"结束；结算 usage；Harbor root collect hook 调 finalize"| FINISH
+  STOP -->|"封存可得证据，预算失败不可复活"| FINISH
+  WORKER -.->|"维持同一 RolloutSession"| FINISH
+  BUDGET -->|"final usage + events + binding"| FINISH
+  FINISH --> RESULT
+  HARBOR -.->|"_run_collect_hooks()，先封存再下载"| FINISH
+  RESULT --> VERIFY
+  VERIFY --> COLLECT
+  COLLECT --> OUT
+  classDef host fill:#e8f0fe,stroke:#4169a1,color:#15263d
+  classDef runtime fill:#e6f4ea,stroke:#42835a,color:#173c23
+  classDef external fill:#f0e8fa,stroke:#8655ac,color:#362148
+  classDef artifact fill:#fff4dc,stroke:#ad8130,color:#493719
+  classDef failure fill:#fde8e8,stroke:#b95151,color:#542222
+  class ENTRY,LAUNCH,HARBOR,DOCKER,ADAPTER,PIPE,BIND,GW,RECEIPT,LEDGER,COLLECT host
+  class WORKER,READY,RELAY,READ,SUBMIT,DISPATCH,CORE,PUBLIC,FINISH,VERIFY runtime
+  class USER,ADMIN,PROVIDER,AGENT,PROXY external
+  class BUDGET,RESULT,OUT artifact
+  class STOP failure

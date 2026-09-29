@@ -83,5 +83,17 @@ rejection_rules:
 - Moving the fixed terminal, ring, or cable attachment
 - Rear or middle loop entering the aperture before the branched front
 - Using a detached free-cable demo as evidence for this anchored variant
-success: No forbidden gripper contact during the episode; head-first entry through the aperture; all fine strands and at least 30 mm of the front jacket beyond the ring; trailing cable remains connected to the fixed terminal
+success: Complete episode gripper-contact coverage with no gripper touching any fine strand; every fine strand passes tip-to-root through the aperture and remains on the exit side; the front sheath face also passes through the aperture and clears the exit; bend angles stay within the configured limit for the confirmation window; trailing cable remains connected to the fixed terminal
+terminal_evaluation:
+  revision: terminal_v3_fiber_contacts
+  goal_complete: true
+  contract: docs/develop/tasks/terminal_judgement_engineering_plan_20260925_zh.md#53-fiber-bundling
+  front_sheath_rule: front_face_passage_and_radius_adjusted_exit_clearance
+  historical_depth_rule: the older 30_mm jacket criterion is superseded here by the 2026-09-25 terminal front-face contract; historical demos keep their original acceptance records
+  maximum_bend_deg: 60
+  stable_duration_s: 0.5
+  thresholds_calibrated: false
+  contact_scope: native rigid narrowphase after every solver substep; includes gripper fingers, housing and linkage; no continuous-time CCD claim
+  missing_contact_coverage: unavailable_until_rewind_before_the_gap
+  physical_qualification: per_instance_evidence_required; goal_complete describes rule implementation, not a solved robot policy
 first_probe: Static cradle check and external force on the working trunk; check fixed attachment, root/length constraints and collision penetration
