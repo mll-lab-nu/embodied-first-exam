@@ -3,21 +3,20 @@
 # WHY THIS FILE EXISTS
 #   HumanoidBench registers 32 tasks (31 classes). Keeping all of them would buy duplicates (`stair` and `slide`
 #   are the same reward function, byte for byte) and give-away scores (`pole` hands you 71% of its bar for
-#   standing to attention). local_docs/plan/06-task-selection.md groups the 32 into 9 capability classes
-#   and keeps 23; this file is that decision in machine-readable form, and it drives the generator.
+#   standing to attention). The 32 fall into 9 capability classes (`capability_class`), and 23 are kept
+#   (docs/benchmarks/humanoidbench.md); this file is that decision in machine-readable form, and it drives
+#   the generator.
 #
 # WHAT IT DRIVES
 #   scripts/humanoidbench/gen_tasks.py turns each [[task]] here into a complete Harbor task directory
 #   under tasks/, using templates/ for the boilerplate and shared/ for the tooling. Everything the tasks
 #   have in common is written once, so `rcb_hb.py` and `grade.py` are byte-identical across all of them
-#   (ci_checks/check-tooling-sync.sh enforces it).
+#   (ci_checks/check-tooling-sync.sh and check-generated-tasks.sh enforce it).
 #
 # HOW TO ADD A TASK
-#   1. add a [[task]] block here (env_id lives here and nowhere else -- the shipped tooling reads it
-#      out of the instance file, so a task directory never learns that other tasks exist)
-#   2. `gen_tasks.py render <family>` then `gen_tasks.py instance <family>` (needs mujoco)
-#   3. `gen_tasks.py measure <family>` -- records the simulator's own numbers into facts.json
-#   4. `ci_checks/run_all.sh` and `cd tasks && harbor add --scan .`
+#   Add a [[task]] block here (env_id lives here and nowhere else -- the shipped tooling reads it out of
+#   the instance file, so a task directory never learns that other tasks exist), then follow README.md
+#   "Adding a task": measure, instance, measure-limited, render, verify.
 #
 # ROLE
 #   scored     part of the benchmark
@@ -88,6 +87,12 @@ instance_tag = "00"
 agent_timeout = 3600.0
 verifier_timeout = 900.0
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory"]
+cpus = 16                   # the full-mode agent's container: searching is what it is for
+# The only hosts the agent may reach, both modes: the model APIs (Codex with a ChatGPT login, the OpenAI and
+# Anthropic APIs, OpenRouter). Upstream is a public commit, so anything more lets the agent fetch back the
+# reward the image deletes (docs/LEAKAGE.md).
+agent_allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com",
+                       "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 # =====================================================================================================
 # C1 · flat-ground periodic gait
@@ -123,7 +128,7 @@ difficulty = '''- **The reward is a three-way product**: `small_control × stand
   gains anything. A search that only accepts locally improving actions structurally never takes that
   step. Planning with a horizon *can*, which is exactly what happened below.
 - **Nothing is given away**: the published random-policy baseline is 2.38/700, and holding the starting
-  pose scores 11.84 — the lowest give-away in the subset.
+  pose scores 11.84 (1.7% of the bar).
 
 **Measured with a real agent** (`mini-swe-agent` + `claude-sonnet-5`, one attempt, full 1 h budget,
 ~$6, 200 steps): **passed, 784.54 / 700**, deterministic replay. What it reported trying, in order:
@@ -135,7 +140,7 @@ CEM-MPC against the task's own reward, which cleared the bar.
 🚩 **That run had the reward function.** It is the reason the image no longer does: the winning approach
 was to optimise the formula directly, which measures reading comprehension of a dense reward rather than
 control. Re-run under the scrubbed image, the same approach needs the agent to *write* the objective
-first -- see local_docs/plan/06-task-selection.md §B6.'''
+first.'''
 
 [task.limited]
 ends = "when the robot falls (its pelvis drops near the ground)"
@@ -518,12 +523,11 @@ difficulty = '''- **🚩 Kept although RL does poorly on it.** Upstream shapes t
   `tolerance(height, bounds=(1.9, 2.1), margin=2)`, a broad Gaussian: the dumbbell on the floor already
   scores ~0.19 of the term, and at 1.5 m ~0.91. FastTD3 reaches 41% — **less than holding the starting
   pose would score if the robot stayed standing** (about 0.35 a step). The hypothesis behind keeping it is
-  that an agent *told the goal in words* is not held back the way RL is — see
-  local_docs/plan/07-open-questions.md.
+  that an agent *told the goal in words* is not held back the way RL is.
 - **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
   a mass against gravity through a long range of motion — the dumbbell weighs about 104 kg, twice the
   robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
-  episode ends at step 382, when the pelvis sinks below the 0.2 m termination height.
+  episode ends at step 378, when the pelvis sinks below the 0.2 m termination height.
 - **61 actuators**, because the dumbbell needs hands to grip.'''
 
 [task.limited]
@@ -629,10 +633,11 @@ status = "verified"
 expert_hours = 4.0
 completion_rate = "57%"
 evidence = "paper 322, FastTD3 369, bar 650"
-# The one task allowed past the 40% give-away limit of §B1. Holding the start pose pays for standing and
-# for a hand near the handle; the spoon starts on the table beside the cup. The exemption was granted on
-# the argument that the remaining gap is periodic tracking, but a spoon held still in the cup clears the
-# bar (see `difficulty`), so it needs revisiting. Raise this only with a measurement, never to make a task fit.
+# The one task allowed past the 40% give-away limit `gen_tasks.py verify` enforces. Holding the start pose
+# pays for standing and for a hand near the handle; the spoon starts on the table beside the cup. The
+# exemption was granted on the argument that the remaining gap is periodic tracking, but a spoon held still
+# in the cup clears the bar (see `difficulty`), so it needs revisiting. Raise this only with a measurement,
+# never to make a task fit.
 hold_threshold = 0.60
 one_liner = "stirs a cup with a spoon held by the Unitree H1"
 task_statement = '''take hold of the spoon, put it in the cup and stir: move its head around a small
@@ -655,9 +660,9 @@ difficulty = '''- **Periodic end-effector tracking — the only instance of it i
   fixed by the environment rather than chosen by the agent. 40 steps per revolution at 50 Hz is 1.25
   revolutions a second.
 - **🚩 The published best is *below* the give-away floor.** FastTD3 reaches 369/650; holding the starting
-  pose scores 375.67 — standing and a hand near the handle pay for it, although the spoon starts on the
+  pose scores 375.45 — standing and a hand near the handle pay for it, although the spoon starts on the
   table beside the cup. That is the sharpest illustration in the subset of why completion
-  rate alone is the wrong selection criterion (06-task-selection.md §B4).
+  rate alone is the wrong selection criterion.
 - **⚠️ The highest give-away in the scored subset: 57.8% of the bar.** It was kept on the argument that
   the remaining 42% is periodic tracking, but by the formula it is not: the circling term's tolerance
   (0.15 m) is wider than the circle's radius (0.06 m), so a spoon held still at the centre of the cup
@@ -757,7 +762,7 @@ difficulty = '''- **The only true in-hand reorientation in the benchmark.** Both
   cube ends the episode; holding the start pose lasts only 84 steps.
 - **Goal state outside `(qpos, qvel)`.** Upstream puts the target orientation in `model.body_quat[-1]`,
   drawn from the global `np.random` that `reset(seed=)` does not reach. The instance snapshot covers
-  `body_quat` for exactly this task (see 06-task-selection.md §F1); without it, agent and verifier would
+  `body_quat` for exactly this task; without it, agent and verifier would
   be rotating towards different targets.
 - **One instance only**: `env.py` forces `randomness = 0` for this family, as it does for
   `bookshelf_*` and `kitchen`.'''
@@ -858,7 +863,7 @@ instance (they are part of `qpos`), so they are the same in your container and t
 difficulty = '''- **🚩 The task where completion rate lies hardest.** Published RL reaches 108% of the bar, which reads
   as "solved" — but holding the starting pose collapses at step 130 for 1.7% of the bar. Nothing is
   given away here; the 108% says a solution exists, not that it is easy. Selecting on completion rate
-  alone would have cut this task, which is the case study behind 06-task-selection.md §B4.
+  alone would have cut this task.
 - **Locomotion and a terminal posture in one episode, with a turn first.** The start heading is drawn
   from ±1.8 rad (up to ±103°), so the robot has to stabilise, turn, walk to the chair and then *stop
   being a walker* and become a static pose. That transition — handing off from a limit cycle to a fixed
@@ -870,7 +875,6 @@ difficulty = '''- **🚩 The task where completion rate lies hardest.** Publishe
   its bar, this gives away 1.7%.'''
 
 [task.limited]
-task_statement = "the robot starts a short walk in front of the chair, its heading turned by a random angle of up to about 100° from facing straight away from it. Get to the chair, sit down on it, and stay seated upright and still."
 ends = "when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated)"
 hidden = "where the robot is in the room, not the chair's pose"
 tier = "no root pose, no chair pose"
@@ -915,7 +919,7 @@ difficulty = '''- **The hardest task in HumanoidBench by published result**: −
   dynamics), carry it while balancing the load, place it. Failing any one caps the episode at the
   previous stage's plateau.
 - **Goal state outside `(qpos, qvel)`.** `model.body_pos[-1]` holds the destination, drawn from the
-  global `np.random`; the instance snapshot covers it (06-task-selection.md §F1).'''
+  global `np.random`; the instance snapshot covers it.'''
 caveat = '''⚠️ **Instances of this family are not interchangeable.** The package and the destination are
 each drawn uniformly from a ±2 m box, so the distance between them can be 0.2 m or 5.6 m. Any `i01`/`i02`
 must be filtered to a comparable distance band (2.0-3.0 m suggested) and the band recorded here.'''
@@ -1105,11 +1109,11 @@ difficulty = '''- **🔑 The only task in the benchmark with a genuinely sparse 
   all-or-nothing ones like `push` and `basketball`, has *some* continuous term pointing the way. Here the
   return is an integer in 0..4 and nothing separates "nearly opened the microwave" from "did not move".
   That makes it the one task where search against the task's own signal is useless — there is no signal
-  until the first success — and the strongest single answer to the concern in §B6 that dense shaping
-  makes tasks planner-solvable.
+  until the first success — and the strongest single answer to the concern that dense shaping makes
+  tasks planner-solvable.
 - **Nobody has scored a single point.** The paper reports 0/4 and the current state of the art never ran
   this family. This is the subset's hardest deliberate ceiling; we expect it to stay at zero for a while
-  and that is the point (06-task-selection.md §B3).
+  and that is the point.
 - **Different scale, same verdict.** `success_bar = 4` counts subtasks rather than summing a dense
   reward. It does not affect grading — the verifier writes a binary `success` and per-task numbers go to
   `diagnostics.json` — but do not compare 4 against another task's 700.
@@ -1223,7 +1227,7 @@ published SAC baseline (861), which needs millions of environment steps.
 
 🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement that
 led to the reward function being removed from the image entirely
-(`images/humanoidbench/scrub_oracles.py`, and local_docs/plan/07-open-questions.md §1). The 979.03 is
+(`images/humanoidbench/scrub_oracles.py`, `docs/LEAKAGE.md`). The 979.03 is
 therefore a number from the old, reward-visible setup and is not reproducible as-is.
 
 So this instance is **easier than it looks**, and honestly so: `sit_simple` rewards a static seated pose,

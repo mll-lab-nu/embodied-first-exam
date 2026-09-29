@@ -4,7 +4,7 @@ The action sequence beside this file was produced by training-free CEM-MPC (cros
 sampling over spline-parameterised action sequences, replanned every 3 steps against the simulator
 itself), then recorded as an open-loop trajectory. HumanoidBench ships no reference solutions of its
 own -- it is an RL benchmark, so upstream's "solutions" are training curves, not runnable code.
-Regenerating it takes ~4 minutes on 32 cores; see README.md.
+cem_mpc.py beside this file regenerates it.
 
 Stepping the actions through the session is what records them, so this file is a replay, not a search:
 the oracle is deterministic and costs one episode.

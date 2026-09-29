@@ -75,6 +75,13 @@ import numpy as np
 _TASK_STATE_SKIP = ("_env", "robot", "unwrapped")   # back-references to the env, not state
 
 
+def _task_state(task) -> dict[str, Any]:
+    """vars(task) minus the back-references and anything reward-shaped (a name containing "reward", the scrub's own
+    rule): the instance ships into the agent's image, and push keeps its scoring weights in `reward_dict`, which the
+    image strips and only the verifier puts back (rcb_rewards.py)."""
+    return {k: v for k, v in vars(task).items() if k not in _TASK_STATE_SKIP and "reward" not in k.lower()}
+
+
 def _unscored_bookkeeping(task) -> None:
     """[HB] Bookkeeping that upstream does only inside get_reward(), which the image deletes, but that the agent
     can otherwise see: a `step_counter` that moves a target in the observation, and a checkpoint pointer and
@@ -138,11 +145,10 @@ def _resolve_gl_backend() -> str:
     return "egl" if ok else "osmesa"
 
 
-# MuJoCo reads this once, at `import mujoco`, so it has to be settled before any Session is built.
+# MuJoCo reads this once, at `import mujoco`, so import this module before anything imports mujoco.
 GL_BACKEND = _resolve_gl_backend()
 os.environ["MUJOCO_GL"] = GL_BACKEND
 os.environ["PYOPENGL_PLATFORM"] = GL_BACKEND
-
 
 
 class _Recording:
@@ -185,8 +191,8 @@ class Session:
         `image_hw` is the side of every rendered image in pixels (None: upstream's 256).
         """
         if instance is not None:
-            d = np.load(instance, allow_pickle=False)
-            file_task, file_env = str(d["task"]), str(d["env_id"])
+            inst = np.load(instance, allow_pickle=False)
+            file_task, file_env = str(inst["task"]), str(inst["env_id"])
             if task is not None and task != file_task:
                 raise ValueError(f"instance is for task {file_task!r}, session asked for {task!r}")
             if env_id is not None and env_id != file_env:
@@ -229,7 +235,12 @@ class Session:
 
         self.env.reset(seed=0)     # one reset so the gym wrappers start in a legal state
         if instance is not None:
-            self.load_instance(instance)
+            self.instance_state = np.array(inst["state"], dtype=np.float64)
+            self.instance_extra = {"task_state": str(inst["task_state"]),
+                                   "body_pos": np.array(inst["body_pos"], dtype=np.float64),
+                                   "body_quat": np.array(inst["body_quat"], dtype=np.float64)}
+            self._geom_rgba = self.model.geom_rgba.copy()   # nothing has stepped yet: the scene as it starts
+            self.reset()
 
     # ---- instances ---------------------------------------------------------
     def _snapshot(self) -> np.ndarray:
@@ -249,9 +260,7 @@ class Session:
         body_quat[-1]. Copying the whole array is a few KB and keeps this free of per-task knowledge.
         """
         return {
-            "task_state": _task_state_dumps(
-                {k: v for k, v in vars(self.low.task).items() if k not in _TASK_STATE_SKIP}
-            ),
+            "task_state": _task_state_dumps(_task_state(self.low.task)),
             "body_pos": np.asarray(self.model.body_pos, dtype=np.float64).copy(),
             "body_quat": np.asarray(self.model.body_quat, dtype=np.float64).copy(),
         }
@@ -261,8 +270,6 @@ class Session:
         counters alone, and body_pos feeds the kinematics that mj_forward is about to recompute."""
         if self._geom_rgba is not None:              # maze recolours its checkpoints in the model as they are
             self.model.geom_rgba[:] = self._geom_rgba   # passed, and upstream's reset leaves them as they were
-        if self.instance_extra is None:
-            return                                   # instance predates this field; nothing to restore
         vars(self.low.task).update(_task_state_loads(self.instance_extra["task_state"]))
         self.model.body_pos[:] = self.instance_extra["body_pos"]
         self.model.body_quat[:] = self.instance_extra["body_quat"]
@@ -289,17 +296,9 @@ class Session:
         self._restore_bookkeeping()
 
     def _restore_bookkeeping(self) -> None:
-        """[HB] Much lighter than robosuite's: no controllers to re-anchor and no cached observables.
-        The one thing that does need clearing is gymnasium TimeLimit's step counter, or the episode
-        truncates early after a few resets."""
-        env = self.env
-        while env is not self.low:
-            if hasattr(env, "_elapsed_steps"):
-                env._elapsed_steps = 0
-            env = getattr(env, "env", self.low)
-        self._ret = 0.0
-        self._steps = 0
-        self._last_info = {}
+        """[HB] Much lighter than robosuite's: no controllers to re-anchor and no cached observables, and gymnasium's
+        TimeLimit counter is zeroed by the env.reset() every restore starts with. Only this session's own counters."""
+        self._ret, self._steps, self._last_info = 0.0, 0, {}
 
     def make_instance(self, seed: int | None = None) -> np.ndarray:
         """Draw a scene and freeze it. Reproducible: the same seed gives the same instance anywhere.
@@ -328,34 +327,16 @@ class Session:
         goal, so this has to cover the extra as well -- state_sha() hashes the live pose and is a
         different question (it is what the determinism check compares)."""
         h = hashlib.sha1(np.ascontiguousarray(self.instance_state).tobytes())
-        if self.instance_extra is not None:
-            h.update(self.instance_extra["task_state"].encode())
-            for k in ("body_pos", "body_quat"):
-                h.update(np.ascontiguousarray(self.instance_extra[k]).tobytes())
+        h.update(self.instance_extra["task_state"].encode())
+        for k in ("body_pos", "body_quat"):
+            h.update(np.ascontiguousarray(self.instance_extra[k]).tobytes())
         return h.hexdigest()[:12]
 
     def save_instance(self, path: str | Path, seed: int | None = None) -> None:
         if self.instance_state is None:
             raise RuntimeError("call make_instance() first")
-        extra = self.instance_extra or {}
         np.savez(path, state=self.instance_state, task=self.task, env_id=self.env_id,
-                 seed=-1 if seed is None else seed, sha=self.instance_sha(), **extra)
-
-    def load_instance(self, path: str | Path) -> None:
-        d = np.load(path, allow_pickle=False)
-        if str(d["task"]) != self.task:
-            raise ValueError(f"instance is for task {d['task']}, session is {self.task}")
-        self.instance_state = np.array(d["state"], dtype=np.float64)
-        # Instances written before the task-state fields existed simply lack them; such a task either
-        # has no state outside (qpos, qvel) or needs regenerating.
-        self.instance_extra = (
-            {"task_state": str(d["task_state"]),
-             "body_pos": np.array(d["body_pos"], dtype=np.float64),
-             "body_quat": np.array(d["body_quat"], dtype=np.float64)}
-            if "task_state" in d.files else None
-        )
-        self._geom_rgba = self.model.geom_rgba.copy()   # nothing has stepped yet: the scene as it starts
-        self.reset()
+                 seed=-1 if seed is None else seed, sha=self.instance_sha(), **self.instance_extra)
 
     def state_sha(self) -> str:
         return hashlib.sha1(np.ascontiguousarray(self._snapshot()).tobytes()).hexdigest()[:12]
@@ -367,7 +348,7 @@ class Session:
         "this attempt again", so the actions recorded so far are dropped and recording continues.
         """
         if self.instance_state is None:
-            raise RuntimeError("no instance loaded; call make_instance() or load_instance()")
+            raise RuntimeError("no instance: open the Session with instance=..., or call make_instance()")
         if self._recording is not None:
             self._recording.clear()
         self._resets += 1
@@ -396,6 +377,15 @@ class Session:
         self._sim_steps_total += 1
         self._last_info = info
         return obs, (float(r) if self.scored else None), bool(term or trunc)
+
+    @contextlib.contextmanager
+    def _not_recording(self):
+        """A self-check or a video is not part of the take: suspend recording for its duration."""
+        rec, self._recording = self._recording, None
+        try:
+            yield
+        finally:
+            self._recording = rec
 
     @contextlib.contextmanager
     def recording(self):
@@ -432,13 +422,11 @@ class Session:
         }
         if not self.scored:
             return out
-        flag = self._last_info.get("success")
         return out | {
             "success": bool(self._ret >= self.success_bar),
             "episode_return": float(self._ret),
             "success_bar": self.success_bar,
             "final_reward": float(self._last_info.get("per_timestep_reward", 0.0)),
-            "task_success_flag": (None if flag is None else bool(flag)),
         }
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
@@ -447,15 +435,12 @@ class Session:
         Safe to call from inside a `with recording()` block: a self-check is not part of the take,
         so recording is suspended for the duration.
         """
-        rec, self._recording = self._recording, None
-        try:
+        with self._not_recording():
             self.reset()
             for a in np.asarray(actions, dtype=np.float64):
                 if self.step(a)[2]:
                     break
             return self.status()
-        finally:
-            self._recording = rec
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
         if self.instance_state is None:
@@ -471,26 +456,27 @@ class Session:
             actions=acts,
             task=self.task,
             env_id=self.env_id,
-            instance_sha=hashlib.sha1(np.ascontiguousarray(self.instance_state).tobytes()).hexdigest()[:12],
+            instance_sha=self.instance_sha(),
             action_layout=f"{self.nu} normalised joint-position targets in [-1,1], one row per 50 Hz step",
             meta=json.dumps(meta or {}),
         )
 
     def render_video(self, actions: np.ndarray, path: str | Path, *, every: int = 5, fps: int = 20) -> dict[str, Any]:
-        """Replay and write an MP4. Needs Session(..., enable_render=True).
+        """Replay and write an MP4. Needs Session(..., enable_render=True). Like replay(), not part of a take.
         Rendering is for humans; the verdict always comes from replay()."""
         import imageio.v2 as imageio
         if not self.enable_render:
             raise RuntimeError("render_video needs Session(..., enable_render=True)")
-        self.reset()
-        frames = [self.env.render()]
-        for i, a in enumerate(np.asarray(actions, dtype=np.float64)):
-            done = self.step(a)[2]
-            if (i + 1) % every == 0:
-                frames.append(self.env.render())
-            if done:
-                break
-        frames.append(self.env.render())
+        with self._not_recording():
+            self.reset()
+            frames = [self.env.render()]
+            for i, a in enumerate(np.asarray(actions, dtype=np.float64)):
+                done = self.step(a)[2]
+                if (i + 1) % every == 0:
+                    frames.append(self.env.render())
+                if done:
+                    break
+            frames.append(self.env.render())
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
@@ -522,15 +508,6 @@ def _record(s: Session, code_path: str) -> tuple[np.ndarray | None, dict]:
     with s.recording() as rec:
         r = s.exec_code(Path(code_path).read_text())
     return (rec.actions if r["ok"] else None), r
-
-
-def cmd_make_instance(a) -> int:
-    s = Session(a.task, env_id=a.env_id)
-    s.make_instance(a.seed)
-    s.save_instance(a.out, a.seed)
-    print(json.dumps({"instance": a.out, "sha": s.state_sha(), "env_id": s.env_id, "nu": s.nu,
-                      "max_steps": s.max_steps, "success_bar": s.success_bar, "gl_backend": GL_BACKEND}))
-    return 0
 
 
 def cmd_run_oracle(a) -> int:
@@ -569,40 +546,12 @@ def cmd_render(a) -> int:
     return 0
 
 
-def cmd_selftest(a) -> int:
-    """make-instance -> run the script -> replay N times; asserts success and bit-exact determinism.
-
-    A development command: asserting success needs a reward function, which the task image does not have
-    (see the module docstring). Run it where the verifier's restore has happened, or outside the image.
-    """
-    s = Session(a.task, env_id=a.env_id)
-    if not s.scored:
-        print(json.dumps({"PASS": False, "error": "this process cannot score; selftest needs a reward "
-                                                  "function (see rcb_rewards.py)"}))
-        return 1
-    s.make_instance(a.seed)
-    acts, r = _record(s, a.code)
-    if acts is None:
-        print(json.dumps({"PASS": False, "error": r["error"]}))
-        return 1
-    outs = [s.replay(acts) for _ in range(a.repeat)]
-    ok = all(o["success"] for o in outs) and len({o["state_sha"] for o in outs}) == 1
-    print(json.dumps({"PASS": bool(ok), "n_actions": len(acts), "success_bar": s.success_bar,
-                      "returns": [o["episode_return"] for o in outs],
-                      "shas": sorted({o["state_sha"] for o in outs})}))
-    return 0 if ok else 1
-
-
 def main() -> int:
     p = argparse.ArgumentParser(prog="rcb_hb.py")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     # --task is optional wherever an --instance is given: the instance names its own task, and passing
     # it anyway turns it into an assertion (which is what the verifier wants).
-    q = sub.add_parser("make-instance"); q.add_argument("--task", required=True)
-    q.add_argument("--env-id", required=True); q.add_argument("--out", required=True)
-    q.add_argument("--seed", type=int, default=0); q.set_defaults(fn=cmd_make_instance)
-
     q = sub.add_parser("run-oracle"); q.add_argument("--task")
     q.add_argument("--instance", required=True); q.add_argument("--code", required=True)
     q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
@@ -615,11 +564,6 @@ def main() -> int:
     q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)
     q.add_argument("--out", required=True); q.add_argument("--every", type=int, default=5)
     q.add_argument("--fps", type=int, default=20); q.set_defaults(fn=cmd_render)
-
-    q = sub.add_parser("selftest"); q.add_argument("--task", required=True)
-    q.add_argument("--env-id", required=True); q.add_argument("--code", required=True)
-    q.add_argument("--seed", type=int, default=0)
-    q.add_argument("--repeat", type=int, default=3); q.set_defaults(fn=cmd_selftest)
 
     a = p.parse_args()
     return a.fn(a)

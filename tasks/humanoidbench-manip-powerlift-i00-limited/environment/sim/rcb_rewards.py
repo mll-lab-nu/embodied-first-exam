@@ -1,9 +1,9 @@
-"""Put this task's scoring formula back, verifier-side.
+"""Put this task's scoring formula back, where the scoring happens: the full-mode verifier (tests/) and the
+limited-mode sim sidecar (environment/sim/).
 
-This file and the rewards.json beside it are the ONLY copies of the formula that reach the container, and
-Harbor copies tests/ in after the agent has finished (local_docs/1-harbor/01-concepts.md, T8) -- so it is
-never readable while there is anyone to read it. The image itself has the formula deleted; see
-images/humanoidbench/scrub_oracles.py for why.
+This file and the rewards.json beside it are the only copies of the formula a task carries, and the agent can
+read neither place: the full-mode verifier runs in its own container once the agent's is gone, and the agent
+cannot open the sidecar. The image itself has the formula deleted; see images/humanoidbench/scrub_oracles.py.
 
 Patching it back, rather than keeping a private reimplementation, is what keeps our scores comparable with
 the paper and with FastTD3: the verifier runs upstream's exact expression, byte for byte as it was lifted
@@ -23,7 +23,8 @@ def _reinstate(cls, attr: str, values: dict) -> None:
 
     `Push.__init__` sets `self.reward_dict = {...}`; the image keeps only the keys that non-scoring code
     reads (`terminate`, which `get_terminated` uses) and the weights live here. They are per-instance, so
-    they go back through the constructor -- restore() runs before any Session exists, by contract.
+    they go back through the constructor -- restore() runs before any Session exists, by contract. (A frozen
+    instance never carries them: rcb_hb leaves reward-shaped attributes out of its snapshot.)
     """
     original = cls.__init__
 

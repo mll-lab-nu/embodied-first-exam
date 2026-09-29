@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Two trivial-policy floors for every HumanoidBench family -- the evidence behind
-local_docs/plan/06-task-selection.md §B4.
+"""Two trivial-policy floors for every HumanoidBench family -- the evidence behind which families
+subset.toml keeps.
 
 This deliberately covers all 32 upstream families, not just the ones in subset.toml: the whole point is
 to decide which families deserve a slot, so it has to see the ones currently outside it. gen_tasks.py
@@ -14,7 +14,7 @@ measure is the per-task counterpart that records the same numbers against a FROZ
 
 `hold` is the number that decides whether a task is too easy: it is what any competent agent collects
 for free before writing a line of code. The two disagree a lot and in both directions -- sit_simple
-scores 637 on nop and 468 on hold, spoon scores 7 on nop and 376 on hold -- so a family is judged on
+scores 637 on nop and 468 on hold, spoon scores 7 on nop and 375 on hold -- so a family is judged on
 max(nop, hold), and "how many steps it survived" is read alongside (`stand` holds only 8.4% of its bar
 AND falls at step 96, which is a very different task from one that coasts to 1000).
 
@@ -22,7 +22,7 @@ The image has no reward function (images/humanoidbench/scrub_oracles.py), so thi
 rewards.json first -- the same table and the same code path the verifier uses, so the floors reported here
 are the floors the verifier would produce.
 
-    docker run --rm -v "$PWD:/out" -w /out ghcr.io/jameskrw/rcb-humanoidbench:0.1.4 \
+    docker run --rm -v "$PWD:/out" -w /out ghcr.io/jameskrw/rcb-humanoidbench:$(cat ../../images/VERSION) \
         python /out/measure_baselines.py --out /out/baselines.json
 """
 from __future__ import annotations
@@ -59,15 +59,18 @@ def _rollout(env, action, max_steps: int) -> tuple[float, int]:
 
 
 def hold_action(u) -> np.ndarray:
-    """The action that commands every actuator to the joint angle it already has.
+    """The action that commands every actuator to the position it already has.
 
-    actuator_trnid[:, 0] is the joint each actuator drives; jnt_qposadr maps that to its qpos slot.
+    actuator_trnid[:, 0] is what each actuator drives: a joint (read its qpos slot) or, for the Shadow hand's
+    coupled finger actuators, a tendon (read its length, the summed angle of the two joints it moves).
     The inverse of unnormalize_action() is 2*(q - low)/(high - low) - 1.
     """
-    m = u.model
+    import mujoco
+    m, d = u.model, u.data
     lo = np.asarray(u.action_low, dtype=np.float64)
     hi = np.asarray(u.action_high, dtype=np.float64)
-    q0 = u.data.qpos[m.jnt_qposadr[m.actuator_trnid[:, 0]]]
+    q0 = np.array([d.ten_length[i] if t == mujoco.mjtTrn.mjTRN_TENDON else d.qpos[m.jnt_qposadr[i]]
+                   for t, i in zip(m.actuator_trntype, m.actuator_trnid[:, 0])])
     return np.clip(2.0 * (q0 - lo) / np.maximum(hi - lo, 1e-9) - 1.0, -1.0, 1.0)
 
 

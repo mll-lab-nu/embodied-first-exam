@@ -16,7 +16,7 @@ ability to search.
 | agent API | `environment/rcb_client.py`: its docstring is the full reference; `instruction.md` points to it and keeps only task facts |
 | reference solution | none, on purpose; the nop agent scores 0 |
 | verification | `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4` |
-| code | copied from `robotwin_2_0_stack_blocks_two-limited` (dev/kangrui) and split: `sim/rcb_service.py` is simulator-agnostic, `sim/server.py` is the HumanoidBench adapter. See `docs/LIMITED_MODE_1_1.md` |
+| code | `sim/server.py` is the HumanoidBench adapter; `sim/rcb_service.py`, `tests/grade.py` and the client's code are shared by every simulator (`scripts/limited/`). See `docs/LIMITED_MODE_1_1.md` |
 
 Note: the head cameras see the inside of one shelf. `room_camera` (off by default) looks at the shelves from
 behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the

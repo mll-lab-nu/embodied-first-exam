@@ -23,14 +23,16 @@ import math
 import os
 import sys
 
-import mujoco
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# rcb_hb first: it picks MuJoCo's GL backend, which `import mujoco` binds once per process. Imported after it, the
+# depth renderer's context ended up inside the viewer's and head-camera images came back as another camera's.
+from rcb_hb import GL_BACKEND, Session  # noqa: E402
+import mujoco  # noqa: E402
 from rcb_rewards import restore  # noqa: E402
 
 restore()  # the scoring formula lives in this sidecar only, and must be back before a Session is opened
-from rcb_hb import GL_BACKEND, Session  # noqa: E402
 from rcb_service import Service  # noqa: E402
 from humanoid_bench.tasks import Task  # noqa: E402
 
@@ -78,14 +80,15 @@ class HumanoidBench:
         self._axes, self._anchors, self._links, self._camera_facts = self._hardware()
         self.image_hw = list(self._render(CAMERAS[0]).shape[:2])   # also warms up the GL context
 
-    def _frozen_camera(self, name: str, dist: float = 3.0) -> tuple:
+    def _frozen_camera(self, name: str) -> tuple:
         """`room_camera`: the task's recording camera (which follows the robot) frozen where it is at the
         instance's initial state -- a tripod in the room. Kept as free-camera parameters for the shared
         offscreen viewer; pixel-identical to the recording camera at t=0 (checked on sit_simple)."""
         m = self.s.model
         d = mujoco.MjData(m); d.qpos[:], d.qvel[:] = self.s.data.qpos, self.s.data.qvel
         mujoco.mj_forward(m, d)                                       # a scratch copy: the live sim is untouched
-        c = m.camera(name).id; fwd = -d.cam_xmat[c].reshape(3, 3)[:, 2]
+        c, dist = m.camera(name).id, 3.0                              # the free camera orbits a point 3 m ahead
+        fwd = -d.cam_xmat[c].reshape(3, 3)[:, 2]
         return d.cam_xpos[c] + dist * fwd, dist, math.degrees(math.atan2(fwd[1], fwd[0])), math.degrees(math.asin(fwd[2]))
 
     def _hardware(self) -> tuple[list, list, dict, dict]:

@@ -482,7 +482,7 @@
   "env_id": "h1hand-cabinet-v0",
   "episode_seconds": 1.24,
   "hold_passes": false,
-  "hold_return": 193.28,
+  "hold_return": 193.39,
   "hold_steps": 1000,
   "instance_sha": "c275a53d5c7b",
   "limited": {
@@ -1033,7 +1033,7 @@
   "env_id": "h1hand-insert_normal-v0",
   "episode_seconds": 0.64,
   "hold_passes": false,
-  "hold_return": 90.2,
+  "hold_return": 90.33,
   "hold_steps": 500,
   "instance_sha": "89e30b25f94d",
   "limited": {
@@ -1766,8 +1766,8 @@
   "env_id": "h1hand-powerlift-v0",
   "episode_seconds": 1.17,
   "hold_passes": false,
-  "hold_return": 78.53,
-  "hold_steps": 382,
+  "hold_return": 77.92,
+  "hold_steps": 378,
   "instance_sha": "9bc0690a75d6",
   "limited": {
    "control_hz": 50,
@@ -1891,7 +1891,7 @@
   "hold_passes": false,
   "hold_return": -216.83,
   "hold_steps": 500,
-  "instance_sha": "602fd73b3ee0",
+  "instance_sha": "1760350843b4",
   "limited": {
    "control_hz": 50,
    "image_hw": [
@@ -1942,12 +1942,6 @@
      1.0
     ],
     "dtype": "float64"
-   },
-   "reward_dict": {
-    "hand_dist": 0.1,
-    "success": 1000,
-    "target_dist": 1,
-    "terminate": true
    }
   }
  },
@@ -2428,7 +2422,7 @@
   "env_id": "h1hand-spoon-v0",
   "episode_seconds": 1.26,
   "hold_passes": false,
-  "hold_return": 375.67,
+  "hold_return": 375.45,
   "hold_steps": 1000,
   "instance_sha": "11a38054aebb",
   "limited": {
@@ -2832,8 +2826,8 @@
   "env_id": "h1hand-window-v0",
   "episode_seconds": 1.46,
   "hold_passes": false,
-  "hold_return": 9.1,
-  "hold_steps": 35,
+  "hold_return": 8.95,
+  "hold_steps": 34,
   "instance_sha": "260f3f1c4cff",
   "limited": {
    "control_hz": 50,

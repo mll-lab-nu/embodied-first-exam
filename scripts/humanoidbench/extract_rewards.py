@@ -7,8 +7,8 @@ WHY
     to control a robot, it has to invert an expression. We measured that happening: an agent quoted
     `bounds=(0.68, 0.72)` back to us and cleared the bar in 26 steps.
     So the formula leaves the image (images/humanoidbench/scrub_oracles.py deletes it) and lives here
-    instead. gen_tasks.py copies the entry for one family into that task's tests/, which Harbor only
-    mounts after the agent is done, and grade.py puts it back before scoring.
+    instead. gen_tasks.py copies the entry for one family into that task's tests/, which the verifier's
+    own container is built from, and grade.py puts it back before scoring.
 
 WHAT IS TAKEN
     Every `*reward*` method reachable on the family's Task class -- get_reward, plus cabinet's four
@@ -36,7 +36,7 @@ WHAT IS TAKEN
     Whatever the image loses is exactly what rewards.json gains.
 
     Not get_terminated, get_obs or success_bar either: an agent discovers termination in one rollout,
-    and the bar is the target rather than the formula. See local_docs/plan/07-open-questions.md §1.
+    and the bar is the target rather than the formula. See docs/LEAKAGE.md.
 
 RUN
     Needs an image whose rewards are NOT yet scrubbed, which no current tag is -- build one by commenting

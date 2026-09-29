@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The scoring formula must not reach the agent. It is deleted from the base image
-# (images/humanoidbench/scrub_oracles.py) and shipped only in tests/, which Harbor copies in after the
-# agent has finished -- so this check is what stops it from creeping back through a task directory.
+# (images/humanoidbench/scrub_oracles.py) and shipped only in tests/, which the verifier's own container is
+# built from -- so this check is what stops it from creeping back through a task directory.
 #
 # Four things are verified:
 #   1. tests/ HAS the formula for this family, and only this family -- otherwise the verifier cannot score

@@ -65,7 +65,7 @@ The trajectory is replayed **open-loop**, but nothing stops you from *generating
 CPU is bit-exact, so an action sequence recorded from a feedback controller reproduces exactly when
 replayed. Use whatever you like — hand-tuned poses, a feedback controller, sampling-based search,
 optimisation. One {{max_steps}}-step episode costs about {{episode_seconds}} s of a single core and the
-container has 16, so large-scale search inside the container is affordable; `s.low.data` can be
+container has {{cpus}}, so large-scale search inside the container is affordable; `s.low.data` can be
 snapshotted and restored if you want to branch rollouts.
 
 {{actuator_layout}}

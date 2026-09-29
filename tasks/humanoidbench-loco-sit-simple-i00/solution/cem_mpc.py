@@ -1,6 +1,7 @@
 """Provenance for sit_simple_actions.npy: the training-free search that produced it.
 
-    python cem_mpc.py h1-sit_simple-v0 --out sit_simple_actions.npy        # ~2.5 min on 32 cores
+    # inside the base image, from the task dir: tests/ has the reward the image deletes (rcb_rewards.py)
+    PYTHONPATH=tests python solution/cem_mpc.py h1-sit_simple-v0 --out sit_simple_actions.npy   # ~2.5 min, 32 cores
 
 solve.sh does NOT run this -- it replays the recorded .npy, so the oracle costs one episode and is
 deterministic. This file is here so the reference solution can be regenerated and audited -- it re-runs
@@ -28,6 +29,9 @@ import gymnasium as gym                      # noqa: E402
 import humanoid_bench                        # noqa: E402,F401  (registers the env ids)
 import mujoco                                # noqa: E402
 from humanoid_bench.env import TASKS         # noqa: E402
+from rcb_rewards import restore              # noqa: E402
+
+restore()   # the image has no reward function; without it every rollout would score 0 (forked workers inherit this)
 
 P = argparse.ArgumentParser()
 P.add_argument("env_id")

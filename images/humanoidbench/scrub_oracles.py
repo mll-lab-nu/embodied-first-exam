@@ -10,7 +10,7 @@ WHAT GOES
   every get_reward()     THE SCORING FORMULA, plus the constants and weights that exist only to
   outside KEEP           parameterise it. Reading `Sit.get_reward()` turns "sit on the chair" into
                          "put qpos[2] in [0.68, 0.72]" -- control becomes inversion of an expression, and
-                         we measured an agent doing exactly that (local_docs/plan/07-open-questions.md §1).
+                         we measured an agent doing exactly that (docs/LEAKAGE.md).
 
   Deleting the methods is enough because upstream's own `Task.get_reward()` returns `(0, {})`: the base
   takes over, every environment still steps, and nothing else changes. `Session` sees the override is
@@ -27,8 +27,8 @@ WHAT STAYS
 
 THE FORMULA IS NOT LOST
   scripts/humanoidbench/rewards.json holds it -- built by running THIS script against a copy and diffing,
-  so the two sides cannot drift. gen_tasks.py ships one family's entry in that task's tests/, which Harbor
-  copies in only after the agent has finished, and grade.py patches it back before scoring. The verifier
+  so the two sides cannot drift. gen_tasks.py ships one family's entry in that task's tests/, which the
+  verifier's own container is built from, and grade.py patches it back before scoring. The verifier
   therefore runs upstream's exact code and our numbers stay comparable with the paper.
 
 TWO PHASES, because `verify` imports the package it checks:

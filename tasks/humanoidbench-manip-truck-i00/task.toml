@@ -24,9 +24,16 @@ expert_time_estimate_hours = 5.0
 
 [verifier]
 timeout_sec = 900.0
-# grade.py replays locally against the frozen instance; it has no reason to reach the network, and the
-# reward formula is live in this process, so deny it outright.
+# grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §4): the agent's container,
+# where it was root, is gone by then, and only /app/output/ crosses over. It replays locally and the reward
+# formula is live in it, so it gets no network either.
+environment_mode = "separate"
 network_mode = "no-network"
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 8192
 
 [agent]
 timeout_sec = 3600.0
@@ -34,11 +41,9 @@ timeout_sec = 3600.0
 # can fetch it back -- upstream is pinned at a public commit, so one `curl raw.githubusercontent.com/...`
 # or `pip download humanoid-bench` restores the whole answer key. Measured: with the default `public`
 # baseline an agent-phase curl pulled basic_locomotion_envs.py and found 5 `def get_reward`.
-# Deny by default. The model API is opted into per run -- `harbor run --allow-agent-host openrouter.ai`
-# -- which Harbor merges only when the phase is already an allowlist (trial/network_policy.py
-# merge_extra_allowlists warns and ignores the flag under `public`, which is how this was found).
+# So the agent reaches the model APIs and nothing else (subset.toml [defaults] agent_allowed_hosts).
 network_mode = "allowlist"
-allowed_hosts = []
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 [environment]
 build_timeout_sec = 1800.0

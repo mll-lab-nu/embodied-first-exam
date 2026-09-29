@@ -11,6 +11,9 @@ import pathlib, re, sys
 KEY = lambda text, k: (re.search(rf'^{k} *= *"([^"]*)"', text, re.M) or [None, None])[1]
 
 task_dir = pathlib.Path(sys.argv[1])
+sim = KEY((task_dir / "task.toml").read_text(), "simulator")
+if not (task_dir.resolve().parent.parent / "scripts" / str(sim) / "gen_tasks.py").is_file():
+    sys.exit(0)   # hand-maintained tasks share tooling that may name a default task; generated ones must not
 families = {toml.parent.name: KEY(toml.read_text(), "family")
             for toml in task_dir.parent.glob("*/task.toml")}
 own = families.get(task_dir.name)

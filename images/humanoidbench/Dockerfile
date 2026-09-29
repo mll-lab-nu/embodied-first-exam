@@ -35,8 +35,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # curves under logs/ and its training harnesses, and -- the important one -- every get_reward() together
 # with the scoring constants and weights only it read. A dense reward IS the answer key; with it in hand
 # an agent inverts an expression instead of controlling a robot. The formulas live in
-# scripts/humanoidbench/rewards.json and are patched back only inside the verifier, which Harbor starts
-# after the agent is done. rcb_hb.py (the tooling every task ships) comes along because the scrub keeps the
+# scripts/humanoidbench/rewards.json and are patched back only inside the verifier, which runs in a
+# container of its own once the agent's is gone. rcb_hb.py (the tooling every task ships) comes along because the scrub keeps the
 # helpers it calls: it is a reader of the package like any other.
 ARG HB_COMMIT=cb1189039151c8aadaaa987b442da54383c87fab
 COPY images/humanoidbench/no-torch.patch images/humanoidbench/scrub_oracles.py scripts/humanoidbench/shared/rcb_hb.py /tmp/

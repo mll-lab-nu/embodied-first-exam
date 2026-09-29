@@ -5,8 +5,9 @@ Harbor tasks are self-contained by design: each one carries its own copy of the 
 the frozen scene. Copying by hand is how thirteen tasks end up with eleven slightly different verifiers,
 so the copies are made here instead. `subset.toml` holds what a human decided (which tasks, why, how to
 describe them), `facts.json` holds what the simulator says (bars, dimensions, floors), `templates/` holds
-everything the tasks have in common, and `shared/` holds the one real copy of `rcb_hb.py` and `grade.py`.
-`ci_checks/check-tooling-sync.sh` fails the build if a task directory drifts from any of it.
+everything the tasks have in common, `shared/` the one real copy of the tooling and the verifier, and
+`oracles/<family>/` a task's reference solution, where it has one. `ci_checks/check-generated-tasks.sh` fails
+the build if a task directory is not what `render` writes from these.
 
     ./gen_tasks.py status                 # what exists, what is verified          (no simulator needed)
     ./gen_tasks.py render [family ...]    # write/refresh task dirs, minus instances (no simulator)
@@ -16,8 +17,8 @@ everything the tasks have in common, and `shared/` holds the one real copy of `r
                                           # behaves differently from the verifier's  (needs mujoco)
     ./gen_tasks.py measure-limited [family ...]  # check + time the limited twins' sim service (needs a GPU)
 
-`render` is deliberately the only command that writes into tasks/, and it is idempotent: run it after
-editing a template or a prose field and every task picks the change up at once.
+`render` writes everything in tasks/ but the instances, which only `instance` draws, and it is idempotent:
+run it after editing a template or a prose field and every task picks the change up at once.
 
 Needs Python 3.11+ (tomllib). The simulator commands need `humanoid_bench` importable -- inside the
 base image, or in a venv built the way images/humanoidbench/Dockerfile builds one.
@@ -50,14 +51,13 @@ CATEGORY_LONG = {"loco": "locomotion", "manip": "manipulation"}
 
 # Prose fields that land in the middle of a sentence. They are written across several lines in
 # subset.toml for readability, so their line breaks are collapsed before substitution.
-INLINE_FIELDS = ("one_liner", "task_statement", "scene_note", "scoring_note", "ends_note", "obs_layout",
-                 "evidence", "instance_note", "completion_rate", "capability_class")
+INLINE_FIELDS = ("one_liner", "task_statement", "scene_note", "obs_layout", "evidence", "instance_note",
+                 "completion_rate", "capability_class")
 
 NO_ORACLE = """No reference solution, on purpose. Requiring one would cap the benchmark at what we can
-already solve, which systematically removes the interesting tasks — see `local_docs/plan/01-design.md`
-§D. `solution/solve.sh` exists because the Harbor task contract requires it and exits non-zero with that
-explanation. What replaces an oracle is the floor above: the task is known to be unreachable by doing
-nothing, and known to be solvable by *something*."""
+already solve, which systematically removes the interesting tasks. `solution/solve.sh` exists because the
+Harbor task contract requires it and exits non-zero with that explanation. What replaces an oracle is the
+floor above: the task is known to be unreachable by doing nothing, and known to be solvable by *something*."""
 
 
 # --------------------------------------------------------------------------- source of truth
@@ -115,7 +115,11 @@ def fill(template: str, ctx: dict) -> str:
     return out
 
 
-def actuator_layout(names: list[str]) -> str:
+CONSTANT_ACTION = ("A constant action commands joint *targets*, not a pose: whether the robot stays there depends "
+                   "on whether that pose is stable under gravity and contact.")
+
+
+def actuator_order(names: list[str]) -> str:
     """Describe the action vector from the model's own actuator names.
 
     Written from the model rather than by hand because the naive description is wrong: h1hand does not
@@ -136,8 +140,7 @@ def actuator_layout(names: list[str]) -> str:
                 f"moves two finger joints together.")
     else:
         text = f"The {len(names)} actuators are position servos, in this order: {listed}."
-    return text + (" A constant action commands joint *targets*, not a pose: whether the robot stays "
-                   "there depends on whether that pose is stable under gravity and contact.")
+    return text
 
 
 def rewrap(md: str, width: int = 100, items: bool = False) -> str:
@@ -151,7 +154,7 @@ def rewrap(md: str, width: int = 100, items: bool = False) -> str:
     """
     STRUCTURAL = re.compile(r"\s*([-*+]\s|\d+\.\s|\||>|```)")
 
-    def fill(text: str, indent: str = "") -> str:
+    def wrap(text: str, indent: str = "") -> str:
         text = " ".join(text.split())
         if items:   # keep `reason = "success"` on one line
             text = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), text)
@@ -165,7 +168,7 @@ def rewrap(md: str, width: int = 100, items: bool = False) -> str:
                 item += " " + ln
                 continue
             if item is not None:
-                out.append(fill(item, "  "))
+                out.append(wrap(item, "  "))
                 item = None
             if ln.startswith("- "):
                 item = ln
@@ -175,20 +178,18 @@ def rewrap(md: str, width: int = 100, items: bool = False) -> str:
 
     out, fenced = [], False
     for block in md.split("\n\n"):
-        if fenced or block.startswith("```"):
-            fenced = fenced != (block.count("```") % 2 == 1)
-            out.append(block)
-            continue
         lines = block.split("\n")
-        if items and any(ln.startswith("- ") for ln in lines) and not any(ln.startswith(("|", "```")) for ln in lines):
+        if fenced or block.startswith("```"):
+            out.append(block)                       # inside a code fence, or opening one
+        elif items and any(ln.startswith("- ") for ln in lines) and not any(ln.startswith(("|", "```")) for ln in lines):
             out.append(fill_items(lines))
-            continue
-        if any(STRUCTURAL.match(ln) or ln.startswith(("    ", "\t")) for ln in lines):
-            out.append(block)                       # tables and lists have layout we must not reflow
-            continue
-        head = [ln for ln in lines if ln.startswith("#")]   # a heading glued to its paragraph
-        body = " ".join(lines[len(head):])
-        out.append("\n".join(head + ([fill(body)] if body.strip() else [])))
+        elif any(STRUCTURAL.match(ln) or ln.startswith(("    ", "\t")) for ln in lines):
+            out.append(block)                       # tables, lists and fences have layout we must not reflow
+        else:
+            head = [ln for ln in lines if ln.startswith("#")]   # a heading glued to its paragraph
+            body = " ".join(lines[len(head):])
+            out.append("\n".join(head + ([wrap(body)] if body.strip() else [])))
+        fenced = fenced != (block.count("```") % 2 == 1)   # a fence may open mid-block, under a heading
     return "\n\n".join(out)
 
 
@@ -221,13 +222,15 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         # hour searching and timed out with nothing under /app/output/ -- a zero that measures our task
         # description, not the task.
         "agent_timeout_hours": f"{float(t.get('agent_timeout', defaults['agent_timeout'])) / 3600:g}",
+        "cpus": defaults["cpus"],
+        "allowed_hosts": ", ".join(f'"{h}"' for h in defaults["agent_allowed_hosts"]),
         "verifier_timeout": t.get("verifier_timeout", defaults["verifier_timeout"]),
         "robot_label": robot_label,
         "robot_slug": robot_slug,
         "paper_category_long": CATEGORY_LONG[t["paper_category"]],
         "image_tag": image_tag(),
         "keywords": ", ".join(f'"{k}"' for k in keywords),
-        "actuator_layout": actuator_layout(facts["actuator_names"]),
+        "actuator_layout": f"{actuator_order(facts['actuator_names'])} {CONSTANT_ACTION}",
         # the step() comment points to the task notes only where they say this container differs ("in this
         # container ...": state only the scoring code advances); notes that only add facts are no exception
         "step_caveat": ", except where noted below" if "in this container" in " ".join(t.get("task_notes", "").split()) else "",
@@ -250,37 +253,43 @@ def stated(path: Path, text: str, ctx: dict) -> None:
         sys.exit(f"{path.relative_to(ROOT)} must state the pass mark, **{ctx['success_bar']}**")
 
 
+def write_templates(out: Path, templates: Path, pairs: list[tuple[str, str]], ctx: dict, md_width: int = 100,
+                    items: bool = False) -> None:
+    """Fill each template into its place in the task dir (markdown re-flowed; scripts made executable)."""
+    for name, rel in pairs:
+        text = fill((templates / name).read_text(), ctx)
+        stated(out / rel, text, ctx)
+        (out / rel).parent.mkdir(parents=True, exist_ok=True)
+        (out / rel).write_text((rewrap(text, md_width, items) if rel.endswith(".md") else text).rstrip("\n") + "\n")
+        if rel.endswith(".sh"):
+            (out / rel).chmod(0o755)
+
+
+def write_rewards(family: str, path: Path) -> None:
+    """This task's scoring formula, and only this task's: one family per file means no task ever ships another
+    task's formula (check-no-cross-task-leak.sh)."""
+    path.write_text(json.dumps(load_rewards()[family], indent=1, sort_keys=True) + "\n")
+
+
 def render(t: dict, defaults: dict, facts: dict) -> Path:
     ctx = context(t, defaults, facts)
     out = TASKS_DIR / ctx["task_dir"]
-    (out / "environment").mkdir(parents=True, exist_ok=True)
-    (out / "tests").mkdir(parents=True, exist_ok=True)
-    (out / "solution").mkdir(parents=True, exist_ok=True)
-
-    for name, rel in [("task.toml", "task.toml"), ("instruction.md", "instruction.md"),
-                      ("README.md", "README.md"), ("Dockerfile", "environment/Dockerfile"),
-                      ("gpu.docker-compose.yaml", "environment/gpu.docker-compose.yaml"),
-                      ("test.sh", "tests/test.sh")]:
-        text = fill((HERE / "templates" / name).read_text(), ctx)
-        stated(out / rel, text, ctx)
-        (out / rel).write_text((rewrap(text) if rel.endswith(".md") else text).rstrip("\n") + "\n")
-
-    solve = "solve.oracle.sh" if t.get("oracle") else "solve.none.sh"
-    (out / "solution" / "solve.sh").write_text(fill((HERE / "templates" / solve).read_text(), ctx))
-
+    write_templates(out, HERE / "templates", [
+        ("task.toml", "task.toml"), ("instruction.md", "instruction.md"), ("README.md", "README.md"),
+        ("Dockerfile", "environment/Dockerfile"), ("gpu.docker-compose.yaml", "environment/gpu.docker-compose.yaml"),
+        ("test.sh", "tests/test.sh"), ("solve.oracle.sh" if t.get("oracle") else "solve.none.sh", "solution/solve.sh")], ctx)
     for src, rel in [("rcb_hb.py", "environment/rcb_hb.py"), ("rcb_hb.py", "tests/rcb_hb.py"),
                      ("grade.py", "tests/grade.py"), ("rcb_rewards.py", "tests/rcb_rewards.py")]:
         shutil.copyfile(HERE / "shared" / src, out / rel)
-
-    # This task's scoring formula, and only this task's. It goes to tests/ alone -- Harbor copies that in
-    # after the agent is done -- so the image the agent works in has no reward function at all
-    # (images/humanoidbench/scrub_oracles.py). One family per file also means no task ever ships another
-    # task's formula, which is what check-no-cross-task-leak.sh checks.
-    (out / "tests" / "rewards.json").write_text(
-        json.dumps(load_rewards()[t["family"]], indent=1, sort_keys=True) + "\n")
-
-    for rel in ("tests/test.sh", "solution/solve.sh"):
-        (out / rel).chmod(0o755)
+    # The formula goes to tests/ alone, which the verifier's own container is built from: the image the agent
+    # works in has no reward function at all (images/humanoidbench/scrub_oracles.py).
+    write_rewards(t["family"], out / "tests" / "rewards.json")
+    if t.get("oracle"):                             # the reference solution: solution/ only, never the image
+        for f in sorted((HERE / "oracles" / t["family"]).iterdir()):
+            shutil.copyfile(f, out / "solution" / f.name)
+    # The verifier's image copies all of tests/ (the instance there comes from `instance`, not from here).
+    ctx["tests_files"] = " ".join(sorted(p.name for p in (out / "tests").iterdir() if p.name != "Dockerfile"))
+    write_templates(out, HERE / "templates", [("tests.Dockerfile", "tests/Dockerfile")], ctx)
     return out
 
 
@@ -306,15 +315,14 @@ def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
     shutil.copyfile(LIMITED_COMMON / "rcb_service.py", dest / "rcb_service.py")
     for src in ("rcb_hb.py", "rcb_rewards.py"):
         shutil.copyfile(HERE / "shared" / src, dest / src)
-    (dest / "rewards.json").write_text(json.dumps(load_rewards()[t["family"]], indent=1, sort_keys=True) + "\n")
+    write_rewards(t["family"], dest / "rewards.json")
     shutil.copyfile(instance_path(t, defaults), dest / "instance.npz")
     return dest
 
 
 def limited_actuator_layout(names: list[str], joints: list[str]) -> str:
-    """actuator_layout(), plus where the agent reads the order and the servo ranges, and how obs["proprio"] lines up
+    """The actuator order, plus where the agent reads it and the servo ranges, and how obs["proprio"] lines up
     with it: on h1 the joints are the actuators; on h1hand some finger actuators drive two coupled joints."""
-    head, tail = actuator_layout(names).split(" A constant action", 1)
     if joints == names:
         ref = ' (`spec()["qpos"]["layout"]`; `obs["proprio"]` measures the same joints in the same order).'
     else:
@@ -322,7 +330,12 @@ def limited_actuator_layout(names: list[str], joints: list[str]) -> str:
                f'of them, in `spec()["proprio"]["joints"]` order.')
     scale = (' An action value of −1 or +1 commands one end of that servo\'s range, `spec()["qpos"]["range"]` in '
              'radians, and the scale is linear, so 0 is mid-range, not 0 rad.')
-    return head.rstrip(".") + ref + scale + " A constant action" + tail
+    return actuator_order(names).rstrip(".") + ref + scale + " " + CONSTANT_ACTION
+
+
+def yaml_str(value: str) -> str:
+    """A compose value, quoted: a JSON string is a YAML one, and `$$` keeps compose from interpolating `$`."""
+    return json.dumps(value, ensure_ascii=False).replace("$", "$$")
 
 
 def compose_line(name: str, value: str, comment: str) -> str:
@@ -330,7 +343,7 @@ def compose_line(name: str, value: str, comment: str) -> str:
     if not value:
         return ""
     lines = textwrap.wrap(" ".join(comment.split()), 54)
-    first = f'      {name}: "{value}"'
+    first = f"      {name}: {yaml_str(value)}"
     col = max(55, len(first) + 2)                     # a long value pushes the comment out, never into it
     first = first.ljust(col)
     return "\n".join([f"{first}# {lines[0]}"] + [f"{'':{col}}# {ln}" for ln in lines[1:]]) + "\n"
@@ -342,13 +355,12 @@ def limited_context(t: dict, defaults: dict, facts: dict) -> dict:
     stmt = one(L.get("task_statement", t["task_statement"]))
     ms = lf["step_ms"]
     return context(t, defaults, facts) | {
-        "robot": t["robot"],
         "limited_task_statement": stmt,
-        "limited_task_text": stmt[0].upper() + stmt[1:],
+        "limited_task_text": yaml_str(stmt[0].upper() + stmt[1:]),
         "limited_ends": f", {one(L['ends'])}" if L.get("ends") else "",
         "limited_hidden": one(L["hidden"]),
         "limited_tier": one(L["tier"]),
-        "limited_scoring_note": one(L.get("scoring_note", t["scoring_note"])),
+        "limited_scoring_note": one(t["scoring_note"]),
         "limited_camera_note": one(L["camera_note"]),
         "limited_expert_hours": 2 * t["expert_hours"],   # the unlimited estimate, doubled: no search, no state
         "limited_actuator_layout": limited_actuator_layout(facts["actuator_names"], lf["joints"]),
@@ -365,31 +377,18 @@ def limited_context(t: dict, defaults: dict, facts: dict) -> dict:
 def render_limited(t: dict, defaults: dict, facts: dict) -> Path:
     ctx = limited_context(t, defaults, facts)
     out = TASKS_DIR / limited_dir_name(t, defaults["instance_tag"])
-    for sub in ("environment", "tests", "solution"):
-        (out / sub).mkdir(parents=True, exist_ok=True)
-    for name, rel in [("instruction.md", "instruction.md"), ("README.md", "README.md"), ("task.toml", "task.toml"),
-                      ("docker-compose.yaml", "environment/docker-compose.yaml"),
-                      ("Dockerfile", "environment/Dockerfile"), ("tests.Dockerfile", "tests/Dockerfile"),
-                      ("test.sh", "tests/test.sh"), ("solve.sh", "solution/solve.sh")]:
-        text = fill((LIMITED_TEMPLATES / name).read_text(), ctx)
-        stated(out / rel, text, ctx)
-        (out / rel).write_text((rewrap(text, 110, items=True) if rel.endswith(".md") else text).rstrip("\n") + "\n")
+    write_templates(out, LIMITED_TEMPLATES, [
+        ("instruction.md", "instruction.md"), ("README.md", "README.md"), ("task.toml", "task.toml"),
+        ("docker-compose.yaml", "environment/docker-compose.yaml"), ("Dockerfile", "environment/Dockerfile"),
+        ("tests.Dockerfile", "tests/Dockerfile"), ("test.sh", "tests/test.sh"), ("solve.sh", "solution/solve.sh")],
+        ctx, md_width=110, items=True)
     write_sim_dir(t, defaults, out / "environment" / "sim")
     shutil.copyfile(LIMITED_SHARED / "rcb_client.py", out / "environment" / "rcb_client.py")
     shutil.copyfile(LIMITED_COMMON / "grade.py", out / "tests" / "grade.py")
-    for rel in ("tests/test.sh", "solution/solve.sh"):
-        (out / rel).chmod(0o755)
     return out
 
 
 # --------------------------------------------------------------------------- simulator-backed commands
-def _small(extra: dict | None) -> dict:
-    """The frozen task state, minus the two whole-model arrays -- those are kilobytes of mostly zeros
-    and are already covered by instance_sha."""
-    import json as _json
-    return {} if extra is None else _json.loads(extra["task_state"])
-
-
 def unresolved_calls(family: str) -> list[str]:
     """What the restored formula calls on self that the task class does not have. The all-zero episode cannot find
     these: truck's formula calls `upon_table()` only once a package has been lifted."""
@@ -437,16 +436,17 @@ def measure_one(family: str, env_id: str, instance: Path | None = None, seed: in
     facts = {"env_id": s.env_id, "nu": s.nu, "obs_dim": int(s.obs().shape[0]), "nq": int(s.model.nq),
              "nv": int(s.model.nv), "success_bar": s.success_bar, "max_steps": s.max_steps,
              "instance_sha": s.instance_sha(), "actuator_names": names,
-             # The part of the scene that is NOT in (qpos, qvel): goals drawn at reset, subtask
-             # pointers, counters. Recorded so that a change to it shows up as drift like anything else.
-             "task_state": _small(s.instance_extra)}
+             # The part of the scene that is NOT in (qpos, qvel): goals drawn at reset, subtask pointers,
+             # counters. Recorded so that a change to it shows up as drift like anything else (the two
+             # whole-model arrays are left out: kilobytes of mostly zeros, already covered by instance_sha).
+             "task_state": json.loads(s.instance_extra["task_state"])}
 
     # Two floors every task must clear to be worth scoring, measured on the frozen instance because that
     # is the episode the agent and the verifier see.
     #   nop   all-zero action -- every joint commanded to the MIDPOINT of its range, which is not "still"
     #   hold  the action that holds the instance's own joint angles -- what standing to attention scores
-    # hold is the one that decides whether a task is too easy (06-task-selection.md §B1): it is what a
-    # competent agent collects before writing a controller, and it is not always the lower of the two.
+    # hold is the one that decides whether a task is too easy (the give-away limit `verify` enforces): it is
+    # what a competent agent collects before writing a controller, and it is not always the lower of the two.
     nop = np.zeros((s.max_steps, s.nu))
     first = s.replay(nop)
     t0 = time.perf_counter(); second = s.replay(nop); elapsed = time.perf_counter() - t0
@@ -552,16 +552,15 @@ def cmd_status(args) -> int:
 def cmd_render(args) -> int:
     defaults, tasks = load_subset()
     facts = load_facts()
-    missing = [t["family"] for t in select(args.families, tasks) if t["family"] not in facts]
-    if missing:
+    chosen = select(args.families, tasks)
+    if missing := [t["family"] for t in chosen if t["family"] not in facts]:
         sys.exit(f"no measurements for {missing}; run `gen_tasks.py measure` first (needs mujoco)")
-    for t in select(args.families, tasks):
+    if missing := [t["family"] for t in chosen if "limited" in t and "limited" not in facts[t["family"]]]:
+        sys.exit(f"no limited-mode measurements for {missing}; run `gen_tasks.py measure-limited` first (needs a GPU)")
+    for t in chosen:
         print("rendered", render(t, defaults, facts[t["family"]]).relative_to(ROOT))
-        if "limited" not in t:
-            continue
-        if "limited" not in facts[t["family"]]:
-            sys.exit(f"no limited-mode measurements for {t['family']}; run `gen_tasks.py measure-limited` first (needs a GPU)")
-        print("rendered", render_limited(t, defaults, facts[t["family"]]).relative_to(ROOT))
+        if "limited" in t:
+            print("rendered", render_limited(t, defaults, facts[t["family"]]).relative_to(ROOT))
     return 0
 
 
@@ -605,8 +604,9 @@ def cmd_measure(args) -> int:
     defaults, tasks = load_subset()
     facts = load_facts()
     for t in select(args.families, tasks):
-        facts[t["family"]] = measure_one(t["family"], t["env_id"], instance_path(t, defaults),
-                                         defaults["seed"])
+        # a merge, not a replacement: "limited" comes from measure-limited, which needs a GPU
+        facts[t["family"]] = facts.get(t["family"], {}) | measure_one(t["family"], t["env_id"],
+                                                                      instance_path(t, defaults), defaults["seed"])
         print(json.dumps({t["family"]: facts[t["family"]]}, default=str)[:160])
     FACTS.write_text(json.dumps(dict(sorted(facts.items())), indent=1, sort_keys=True) + "\n")
     print("wrote", FACTS.relative_to(ROOT))
@@ -636,43 +636,37 @@ def cmd_verify(args) -> int:
     rc = 0
     for t in select(args.families, tasks):
         fam = t["family"]
-        fresh = measure_one(fam, t["env_id"], instance_path(t, defaults), defaults["seed"])
         old = facts.get(fam)
         if old is None:
             print(f"FAIL {fam}: never measured"); rc = 1; continue
+        fresh = measure_one(fam, t["env_id"], instance_path(t, defaults), defaults["seed"])
         # episode_seconds is wall clock: it differs between machines and between runs on one machine, so
-        # it is refreshed rather than asserted. Everything else is a property of the task and must hold.
-        drift = {k: (old.get(k), v) for k, v in fresh.items()
-                 if k != "episode_seconds" and old.get(k) != v}
-        if drift:
-            print(f"FAIL {fam}: facts.json is stale: {drift}"); rc = 1
-        if fresh["nop_passes"]:
-            print(f"FAIL {fam}: an all-zero trajectory reaches the bar"); rc = 1
-        if fresh["hold_passes"]:
-            print(f"FAIL {fam}: holding the starting pose reaches the bar"); rc = 1
-        # 06-task-selection.md §B1: a task that gives away 40% of its bar for standing still cannot
-        # separate a good agent from a lazy one. Two exceptions, both explicit: `spoon` carries a higher
-        # `hold_threshold` in subset.toml with the reason written next to it, and a `fixture` is exempt
-        # because being too easy is the whole reason it is kept.
+        # it is not asserted. Everything else is a property of the task and must hold.
+        drift = {k: (old.get(k), v) for k, v in fresh.items() if k != "episode_seconds" and old.get(k) != v}
+        # A task that gives away 40% of its bar for standing still cannot separate a good agent from a
+        # lazy one. Two exceptions, both explicit: `spoon` carries a higher `hold_threshold` in subset.toml
+        # with the reason written next to it, and a `fixture` is exempt because being too easy is the whole
+        # reason it is kept.
         give_away = fresh["hold_return"] / fresh["success_bar"]
         limit = float(t.get("hold_threshold", 0.40)) if t["role"] == "scored" else float("inf")
-        if give_away > limit:
-            print(f"FAIL {fam}: holding the starting pose gives away {give_away:.1%} of the bar "
-                  f"(limit {limit:.0%})"); rc = 1
-        if not fresh["deterministic"]:
-            print(f"FAIL {fam}: replaying the same actions twice gave different final states"); rc = 1
         # obs_layout is the only prose the agent relies on numerically, so check it adds up. It cannot be
         # checked against nq/nv: several tasks expose only the robot's slice of them (push has nq=33 and
         # publishes qpos(26)), so the invariant is that the parts it names sum to the real width.
         parts = sum(int(n) for n in re.findall(r"\((\d+)\)", t["obs_layout"]))
-        if parts != fresh["obs_dim"]:
-            print(f"FAIL {fam}: obs_layout sums to {parts}, observation is {fresh['obs_dim']}"); rc = 1
-        agree = views_agree(fam, instance_path(t, defaults))
-        if not agree:
-            print(f"FAIL {fam}: the same actions give the agent different observations or terminations than the "
-                  f"verifier"); rc = 1
-        if (not drift and not fresh["nop_passes"] and not fresh["hold_passes"] and give_away <= limit
-                and fresh["deterministic"] and parts == fresh["obs_dim"] and agree):
+        failures = [msg for bad, msg in [
+            (drift, f"facts.json is stale: {drift}"),
+            (fresh["nop_passes"], "an all-zero trajectory reaches the bar"),
+            (fresh["hold_passes"], "holding the starting pose reaches the bar"),
+            (give_away > limit, f"holding the starting pose gives away {give_away:.1%} of the bar (limit {limit:.0%})"),
+            (not fresh["deterministic"], "replaying the same actions twice gave different final states"),
+            (parts != fresh["obs_dim"], f"obs_layout sums to {parts}, observation is {fresh['obs_dim']}"),
+            (not views_agree(fam, instance_path(t, defaults)),
+             "the same actions give the agent different observations or terminations than the verifier")] if bad]
+        for msg in failures:
+            print(f"FAIL {fam}: {msg}")
+        if failures:
+            rc = 1
+        else:
             print(f"ok   {fam}: nop {fresh['nop_return']}/{fresh['success_bar']:g}, "
                   f"hold {give_away:.1%} of bar, deterministic, obs {fresh['obs_dim']}, agent sees what the verifier sees")
     return rc
