@@ -1,0 +1,1327 @@
+<title>TopoGym × VLA</title>
+<meta name="description" content="TopoGym 代码库概览、VLA 接入点与接口设计、模型选型">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --surface:#FFFFFF; --surface-2:#EBEFF3; --ink:#16202A; --muted:#5A6573; --line:#D3DAE2;
+  --gym:#2C5D8F; --gym-soft:#E1EAF4; --vla:#0D7866; --vla-soft:#DBF0EA; --proto:#A36A0E; --proto-soft:#F5E9D3;
+  --bad:#B0402E; --bad-soft:#F6E0DB; --ok:#2F7D3A; --s1:#2a78d6; --s2:#eb6834;
+  --sans:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans","Noto Sans SC",sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1318; --surface:#151C23; --surface-2:#1C252E; --ink:#E3E8EE; --muted:#95A2B1; --line:#2B3643;
+    --gym:#86B5E4; --gym-soft:#1B2A3A; --vla:#58C7B2; --vla-soft:#142F2A; --proto:#E3AB55; --proto-soft:#33281A;
+    --bad:#E3826F; --bad-soft:#3A221D; --ok:#7CC487; --s1:#3987e5; --s2:#d95926;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1318; --surface:#151C23; --surface-2:#1C252E; --ink:#E3E8EE; --muted:#95A2B1; --line:#2B3643;
+  --gym:#86B5E4; --gym-soft:#1B2A3A; --vla:#58C7B2; --vla-soft:#142F2A; --proto:#E3AB55; --proto-soft:#33281A;
+  --bad:#E3826F; --bad-soft:#3A221D; --ok:#7CC487; --s1:#3987e5; --s2:#d95926;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;margin:0}
+.page{display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px;max-width:1220px;margin:0 auto;padding-inline:24px;padding-block:32px 80px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px}
+nav.toc .brand{font-family:var(--cond);font-weight:600;font-size:15px;letter-spacing:.02em;margin-bottom:14px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink);border-left-color:var(--gym);outline:none}
+nav.toc a.sub{padding-left:24px;font-size:12.5px}
+main{min-width:0;max-width:960px}
+header.hero{padding-block:8px 28px;border-bottom:1px solid var(--line);margin-bottom:36px}
+.eyebrow{font-family:var(--cond);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-size:40px;line-height:1.15;margin:10px 0 12px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+h1 .x{color:var(--proto);font-weight:500;padding-inline:.12em}
+.lede{font-size:16.5px;color:var(--muted);max-width:68ch;margin:0}
+h2{font-size:26px;line-height:1.3;margin:64px 0 8px;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .num{font-family:var(--mono);font-size:14px;color:var(--muted);font-weight:500}
+h3{font-size:18px;margin:36px 0 10px;text-wrap:balance}
+p{margin:0 0 12px;max-width:72ch}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+p code,td code,li code{background:var(--surface-2);padding:1px 5px;border-radius:4px}
+a{color:var(--gym)}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:26px}
+.summary .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.summary .k{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.summary .card p{font-size:14px;margin:0;color:var(--ink)}
+.k.gym{color:var(--gym)} .k.vla{color:var(--vla)} .k.proto{color:var(--proto)}
+figure{margin:22px 0 26px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 18px 12px}
+figure .scroll{overflow-x:auto}
+figure svg{display:block;width:100%;height:auto;min-width:640px}
+figcaption{font-size:13px;color:var(--muted);margin-top:10px;max-width:none}
+figcaption b{color:var(--ink);font-weight:600}
+.tbl{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.55}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--surface-2);font-weight:600;font-size:12.5px;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.num{font-variant-numeric:tabular-nums}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6;margin:14px 0 22px}
+pre .c{color:var(--muted)} pre .kw{color:var(--gym);font-weight:500} pre .s{color:var(--vla)} pre .h{color:var(--proto);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:1px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);white-space:nowrap;line-height:1.7}
+.chip.aloha{color:var(--gym);border-color:color-mix(in srgb,var(--gym) 35%,transparent);background:var(--gym-soft)}
+.chip.panda{color:var(--vla);border-color:color-mix(in srgb,var(--vla) 35%,transparent);background:var(--vla-soft)}
+.chip.proof{color:var(--proto);border-color:color-mix(in srgb,var(--proto) 40%,transparent);background:var(--proto-soft)}
+.chip.no{opacity:.75}
+/* task grid */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.filters button{font:inherit;font-size:12.5px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters button:focus-visible{outline:2px solid var(--gym);outline-offset:2px}
+.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.task{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.task .name{font-family:var(--mono);font-size:13px;font-weight:500}
+.task .zh{font-size:13px;color:var(--muted)}
+.task .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+/* tree */
+.tree{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.tree pre{margin:0}
+.tree .d{color:var(--gym);font-weight:500}.tree .n{color:var(--muted)}.tree .star{color:var(--proto)}
+/* vector strip */
+.strip{display:flex;gap:3px;flex-wrap:nowrap;margin:8px 0 4px;min-width:600px}
+.strip div{flex:1;text-align:center;font-family:var(--mono);font-size:11px;padding:8px 0;border-radius:4px;background:var(--gym-soft);color:var(--gym);border:1px solid color-mix(in srgb,var(--gym) 30%,transparent)}
+.strip div.g{background:var(--proto-soft);color:var(--proto);border-color:color-mix(in srgb,var(--proto) 40%,transparent);flex:1.15}
+.strip div.r{background:var(--vla-soft);color:var(--vla);border-color:color-mix(in srgb,var(--vla) 30%,transparent)}
+.strip-legend{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);min-width:600px}
+.strip-wrap{overflow-x:auto;padding-bottom:4px}
+.strip-title{font-size:13px;font-weight:600;margin-top:14px}
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:stretch;margin:18px 0}
+.stage{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 12px;margin-right:22px;font-size:12.5px;line-height:1.55;display:flex;flex-direction:column;gap:4px}
+.stage:last-child{margin-right:0}
+.stage:not(:last-child)::after{content:"";position:absolute;right:-17px;top:50%;width:0;height:0;border-left:9px solid var(--muted);border-top:6px solid transparent;border-bottom:6px solid transparent;transform:translateY(-50%)}
+.stage .who{font-family:var(--cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.stage.g .who{color:var(--gym)} .stage.v .who{color:var(--vla)} .stage.p .who{color:var(--proto)}
+.stage .t{font-weight:600;font-size:13.5px}
+.stage code{font-size:11.5px}
+/* switcher */
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.switch button{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.switch button[aria-pressed="true"]{border-color:var(--vla);background:var(--vla-soft);color:var(--vla);font-weight:600}
+.switch button:focus-visible{outline:2px solid var(--vla);outline-offset:2px}
+.derived{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:10px}
+.derived div{background:var(--surface-2);border-radius:6px;padding:8px 10px;font-size:12.5px}
+.derived .lab{color:var(--muted);font-size:11.5px;display:block}
+.derived .val{font-family:var(--mono);font-size:12.5px;word-break:break-word}
+.note{font-size:12.5px;color:var(--muted);margin-top:8px}
+/* svg classes */
+svg text{font-family:var(--sans);fill:var(--ink)}
+svg .lbl{font-size:12px} svg .sm{font-size:10.5px;fill:var(--muted)} svg .ttl{font-size:13px;font-weight:600}
+svg .mono{font-family:var(--mono);font-size:11px}
+svg .layer{font-family:var(--cond);font-size:11px;letter-spacing:.08em;fill:var(--muted);font-weight:600}
+svg .box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+svg .box2{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+svg .gbox{fill:var(--gym-soft);stroke:var(--gym);stroke-width:1.2}
+svg .vbox{fill:var(--vla-soft);stroke:var(--vla);stroke-width:1.2}
+svg .pbox{fill:var(--proto-soft);stroke:var(--proto);stroke-width:1.2}
+svg .bbox{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.2}
+svg .dash{stroke-dasharray:5 4}
+svg .ln{stroke:var(--muted);stroke-width:1.3;fill:none}
+svg .ln-g{stroke:var(--gym);stroke-width:1.6;fill:none}
+svg .ln-v{stroke:var(--vla);stroke-width:1.8;fill:none}
+svg .ln-p{stroke:var(--proto);stroke-width:1.8;fill:none}
+svg .ln-b{stroke:var(--bad);stroke-width:1.4;fill:none}
+svg .ah{fill:var(--muted)} svg .ah-v{fill:var(--vla)} svg .ah-p{fill:var(--proto)} svg .ah-g{fill:var(--gym)}
+svg .tc-g{fill:var(--gym)} svg .tc-v{fill:var(--vla)} svg .tc-p{fill:var(--proto)} svg .tc-b{fill:var(--bad)}
+svg .cell{fill:var(--vla);opacity:.9} svg .cell-off{fill:var(--line)} svg .tick{fill:var(--gym-soft);stroke:var(--gym);stroke-width:1}
+svg .model .mb{fill:var(--surface);stroke:var(--line);stroke-width:1.2;transition:fill .2s,stroke .2s}
+svg .model .conn{stroke:var(--line);stroke-width:1.2;fill:none;stroke-dasharray:4 4;transition:stroke .2s}
+svg .model.on .mb{fill:var(--vla-soft);stroke:var(--vla);stroke-width:1.8}
+svg .model.on .conn{stroke:var(--vla);stroke-width:2.2;stroke-dasharray:none}
+svg .model text{transition:fill .2s}
+svg .model:not(.on) text{fill:var(--muted)}
+@media (prefers-reduced-motion: reduce){svg .model .mb,svg .model .conn,svg .model text{transition:none}}
+/* vla cards */
+.vla-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin:14px 0 20px}
+.vcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.vcard.pick{border-color:var(--vla);box-shadow:0 0 0 1px var(--vla) inset}
+.vcard .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.vcard .nm{font-weight:700;font-size:16px}
+.vcard .org{font-size:12px;color:var(--muted)}
+.vcard .role{font-size:12px;font-weight:600;color:var(--vla)}
+.vcard .role.alt{color:var(--proto)}
+.vcard dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;margin:4px 0 0;font-size:12.5px}
+.vcard dt{color:var(--muted)} .vcard dd{margin:0}
+.vcard p{font-size:13px;margin:4px 0 0}
+/* phases + calc */
+.phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:4px}
+.phase .p{font-family:var(--mono);font-size:12px;color:var(--proto);font-weight:500}
+.phase .t{font-weight:600;font-size:14px}
+.phase .done{color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:auto}
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;margin:16px 0}
+.calc label{display:grid;grid-template-columns:minmax(0,1fr) 92px;align-items:center;gap:10px;font-size:13px;margin-bottom:8px}
+.calc input{font:inherit;font-family:var(--mono);font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.calc input:focus-visible{outline:2px solid var(--gym);outline-offset:1px}
+.calc .out{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.calc .big{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.calc .big small{font-size:14px;color:var(--muted);font-weight:500}
+.calc .row{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--proto);width:0}
+.callout{border-left:3px solid var(--proto);background:var(--proto-soft);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13.5px;margin:14px 0}
+.callout.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (max-width:1080px){
+  .page{grid-template-columns:minmax(0,1fr);gap:0;padding-inline:16px}
+  nav.toc{position:static;display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+  nav.toc .brand{display:none}
+  nav.toc a{border-left:none;white-space:nowrap;padding:4px 10px;background:var(--surface);border:1px solid var(--line);border-radius:999px}
+  nav.toc a.sub{display:none}
+}
+@media (max-width:760px){
+  h1{font-size:30px}
+  .summary{grid-template-columns:minmax(0,1fr)}
+  .flow{grid-template-columns:minmax(0,1fr);gap:18px}
+  .stage{margin-right:0}
+  .stage:not(:last-child)::after{right:50%;top:auto;bottom:-15px;transform:translateX(50%) rotate(90deg)}
+  .phases{grid-template-columns:minmax(0,1fr)}
+  .calc{grid-template-columns:minmax(0,1fr)}
+}
+/* v2 additions */
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.gallery figure{margin:0;padding:0;overflow:hidden;border-radius:8px}
+.gallery img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:var(--surface-2)}
+.gallery figcaption{padding:8px 10px;margin:0;display:flex;justify-content:space-between;gap:6px;align-items:center;font-size:12.5px;color:var(--ink)}
+.gallery figcaption span.n{font-family:var(--mono);font-size:12px}
+.robots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0 18px}
+.robot{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.robot img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.robot .body{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.robot .nm{font-weight:700;font-size:16px}
+.robot dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;margin:0;font-size:13px}
+.robot dt{color:var(--muted)} .robot dd{margin:0}
+.views{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:6px;margin:6px 0}
+.views.two{grid-template-columns:1.6fr 1fr}
+.views div{position:relative}
+.views img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px}
+.views span{position:absolute;left:6px;bottom:6px;font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.62);color:#fff;padding:1px 6px;border-radius:4px}
+.hl{background:var(--vla-soft);color:var(--vla);border-radius:3px;padding:0 3px;font-weight:500}
+.io-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+.io-grid .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.io-grid h4{margin:0 0 8px;font-size:14px}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sw-group{margin-top:12px}
+.sw-group .gt{font-family:var(--cond);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.sw-group .gt.gym{color:var(--gym)} .sw-group .gt.vla{color:var(--vla)}
+.hop{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--proto-soft);color:var(--proto);font-size:11.5px;font-weight:700;font-family:var(--mono)}
+svg .hopc{fill:var(--proto-soft);stroke:var(--proto);stroke-width:1.2}
+svg .frame{fill:none;stroke:var(--line);stroke-width:1.2}
+svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
+@media (max-width:760px){
+  .gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .robots,.io-grid,.pair{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<div class="page">
+<nav class="toc" aria-label="目录">
+  <div class="brand">TopoGym × VLA</div>
+  <a href="#s0">结论速览</a>
+  <a href="#s1">1 代码库</a>
+  <a class="sub" href="#s1-tasks">任务一览</a>
+  <a class="sub" href="#s1-robots">两种机器人</a>
+  <a class="sub" href="#s1-map">分层与文件</a>
+  <a class="sub" href="#s1-run">一个控制步</a>
+  <a href="#s2">2 VLA 从哪里接入</a>
+  <a class="sub" href="#s2-wf">整体流程</a>
+  <a class="sub" href="#s2-code">评测伪代码</a>
+  <a class="sub" href="#s2-seq">时序</a>
+  <a href="#s3">3 接口设计</a>
+  <a class="sub" href="#s3-nm">两层映射</a>
+  <a class="sub" href="#s3-deploy">部署形态</a>
+  <a class="sub" href="#s3-rec">录像</a>
+  <a class="sub" href="#s3-proto">标准协议</a>
+  <a class="sub" href="#s3-arch">总体架构与 I/O</a>
+  <a class="sub" href="#s3-dec">待确认决策</a>
+  <a href="#s4">4 VLA 选型</a>
+  <a href="#s5">5 落地与成本</a>
+</nav>
+
+<main>
+<header class="hero" id="s0">
+  <div class="eyebrow">设计文档 · 2026-09-29 · 第 2 版</div>
+  <h1>TopoGym<span class="x">×</span>VLA</h1>
+  <p class="lede">TopoGym 仿真器概览，VLA 从哪里接入、接口怎么设计，以及首批评测哪几个 VLA。左边是 Gym，右边是 VLA，中间只有一个三类数据结构的协议。</p>
+  <div class="summary">
+    <div class="card"><span class="k gym">代码库</span><p>Genesis 1.2.1 上的机器人拓扑操作仿真器，13 类任务。9 个任务用 ALOHA 双臂，4 个用 Panda 单臂。VLA 在评测循环的 <code>agent.act(obs)</code> 处接入。</p></div>
+    <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧按机器人写 2 个适配器，VLA 侧按模型写子类（2 + N）。录像在 Gym 侧完成，不需要 Harbor。</p></div>
+    <div class="card"><span class="k vla">选型</span><p id="summary-pick">每个系列选一个：π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5；备选 MolmoAct2、G0.5。π0.7、π*0.6、Gemini Robotics 2 更新，但未开放权重，无法微调评测。</p></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+<h2><span class="num">01</span>TopoGym 代码库</h2>
+<p>TopoGym 是基于 Genesis 1.2.1 的机器人拓扑操作仿真器：解环、分离互锁件、穿绳、解结、铺布。<code>topogym/</code> 包提供 gym 式接口 <code>make → reset(seed) → interaction() → step(action)</code>。物理由 Genesis 计算（刚体、PBD 布料、FEM/IPC 柔体），RGB 由 Nyx 渲染（<code>compact_lab</code> 场景，848×480）。</p>
+<p class="note">仓库中另有 Harbor 层（<code>tasks/</code> 等目录），用于评测写代码控制机器人的 LLM agent。它与 VLA 接入是并行的两条线，本文只在讨论部署形态时提到它。</p>
+
+<h3 id="s1-tasks">任务一览</h3>
+<div class="gallery">
+  <figure><img src="img/cast_coil_high.jpg" alt="cast_coil：ALOHA 双臂装配两件金属解环，俯视 cam_high" loading="lazy"><figcaption><span class="n">cast_coil</span><span class="chip aloha">ALOHA · 刚体</span></figcaption></figure>
+  <figure><img src="img/interlocked_claws_high.jpg" alt="interlocked_claws：ALOHA 双臂分离两件互锁爪" loading="lazy"><figcaption><span class="n">interlocked_claws</span><span class="chip aloha">ALOHA · 刚体</span></figcaption></figure>
+  <figure><img src="img/horseshoe_ring_high.jpg" alt="horseshoe_ring：ALOHA 双臂从马蹄链上取下圆环" loading="lazy"><figcaption><span class="n">horseshoe_ring</span><span class="chip aloha">ALOHA · 刚体</span></figcaption></figure>
+  <figure><img src="img/knot_untying_high.jpg" alt="knot_untying：ALOHA 双臂解开柔性绳结" loading="lazy"><figcaption><span class="n">knot_untying</span><span class="chip aloha">ALOHA · FEM 柔体</span></figcaption></figure>
+  <figure><img src="img/hedgehog_agentview.jpg" alt="hedgehog_in_cage：Panda 把刺球从笼中取出" loading="lazy"><figcaption><span class="n">hedgehog_in_cage</span><span class="chip panda">Panda · 刚体</span></figcaption></figure>
+  <figure><img src="img/fiber_bundling_agentview.jpg" alt="fiber_bundling：Panda 抓粗护套，让光纤穿过铜环" loading="lazy"><figcaption><span class="n">fiber_bundling</span><span class="chip panda">Panda · 带关节刚体</span></figcaption></figure>
+</div>
+<p class="note">截帧自 <code>demos/</code> 中已归档的完整机器人演示视频，部分为早期渲染配置（背景与当前 <code>compact_lab</code> 不同）。</p>
+<div class="filters" role="group" aria-label="筛选任务">
+  <button type="button" data-f="all" aria-pressed="true">全部 13</button>
+  <button type="button" data-f="aloha" aria-pressed="false">ALOHA 9</button>
+  <button type="button" data-f="panda" aria-pressed="false">Panda 4</button>
+  <button type="button" data-f="rigid" aria-pressed="false">刚体</button>
+  <button type="button" data-f="soft" aria-pressed="false">布料 / 柔体</button>
+  <button type="button" data-f="proof" aria-pressed="false">有可解证据</button>
+</div>
+<div class="tasks" id="tasks"></div>
+<p class="note">"可解证据"指 <code>solvability_proof/</code> 中从 home 姿态连续执行到 <code>task_success=True</code> 并独立复核的实例，其运行配置（CPU、25 ms tick、<code>EE_ABS</code>、辅助抓持、无 RGB）与 VLA 评测不同。"指令"表示任务类定义了英文 <code>instruction</code>；13 个中 5 个有。</p>
+
+<h3 id="s1-robots">两种机器人</h3>
+<div class="robots">
+  <div class="robot">
+    <img src="img/cast_coil_high.jpg" alt="ALOHA 双臂俯视" loading="lazy">
+    <div class="body">
+      <span class="nm">ALOHA 双臂 <span class="chip aloha">9 个任务</span></span>
+      <dl>
+        <dt>手臂</dt><dd>2 × 6 关节：waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate</dd>
+        <dt>夹爪</dt><dd>平行夹爪 <code>gripper_position_m</code>：0.037 全开 / 0.002 全闭</dd>
+        <dt>相机</dt><dd><code>cam_high</code> <code>cam_low</code> <code>cam_left_wrist</code> <code>cam_right_wrist</code></dd>
+        <dt>动作</dt><dd>分组 <code>left</code> / <code>right</code>；扁平后 14 维</dd>
+        <dt>任务</dt><dd>cast_coil、cast_keyhole、horseshoe_ring、interlocked_claws、blanket_flatten、rope_threading、knot_untying、orbits、slotted_post_ring</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="robot">
+    <img src="img/buzz_wire_agentview.jpg" alt="Panda 单臂 agentview" loading="lazy">
+    <div class="body">
+      <span class="nm">Franka Panda + Robotiq 2F-85 <span class="chip panda">4 个任务</span></span>
+      <dl>
+        <dt>手臂</dt><dd>1 × 7 关节</dd>
+        <dt>夹爪</dt><dd>Robotiq 驱动关节 <code>gripper_position_rad</code>：0.0 全开 / 0.8 全闭</dd>
+        <dt>相机</dt><dd><code>agentview</code> <code>front_oblique</code> <code>wrist</code></dd>
+        <dt>动作</dt><dd>分组 <code>arm</code>；扁平后 8 维</dd>
+        <dt>任务</dt><dd>buzz_wire_3d、hedgehog_in_cage、lock_picking、fiber_bundling</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+<p>两种机器人不需要选不同的 VLA。首选模型都是跨本体模型（预训练数据含多种机器人），同一个模型按机器人各微调一个 checkpoint 即可；机器人之间的差别由 Gym 侧的 <code>EmbodimentAdapter</code> 处理。各模型对 ALOHA 与 Franka 的支持见<a href="#s4-emb">第 4 节</a>。</p>
+
+<h3 id="s1-map">分层结构与文件</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 880 340" role="img" aria-label="TopoGym 分层结构：评测脚本作为管理方调用 make 与 Env；VLAAgent 作为操作方经 Interaction 执行 step；Env 调度 config、tasks、robot、world、sensors，底层是 Genesis 物理与 Nyx 渲染">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="a1v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-v"/></marker>
+  </defs>
+  <text class="layer" x="0" y="42">调用方</text>
+  <text class="layer" x="0" y="132">公共接口</text>
+  <text class="layer" x="0" y="224">仿真核心</text>
+  <text class="layer" x="0" y="310">引擎</text>
+  <rect class="box" x="120" y="16" width="370" height="44" rx="6"/>
+  <text class="ttl" x="305" y="36" text-anchor="middle">评测脚本 run_eval.py（管理方）</text>
+  <text class="sm" x="305" y="52" text-anchor="middle">make · reset(seed) · close · 记结果</text>
+  <rect class="vbox" x="520" y="16" width="350" height="44" rx="6"/>
+  <text class="ttl tc-v" x="695" y="36" text-anchor="middle">VLAAgent → VLA 服务（操作方）</text>
+  <text class="sm" x="695" y="52" text-anchor="middle">只拿到 interaction 句柄：step · observe</text>
+  <rect class="gbox" x="120" y="100" width="172" height="56" rx="6"/>
+  <text class="ttl" x="206" y="123" text-anchor="middle">make / env_list</text>
+  <text class="sm" x="206" y="143" text-anchor="middle">SimulatorConfig</text>
+  <rect class="gbox" x="312" y="100" width="172" height="56" rx="6"/>
+  <text class="ttl" x="398" y="123" text-anchor="middle">Env（管理方）</text>
+  <text class="sm" x="398" y="143" text-anchor="middle">reset(seed) · close</text>
+  <rect class="gbox" x="504" y="100" width="172" height="56" rx="6"/>
+  <text class="ttl" x="590" y="123" text-anchor="middle">Interaction（操作方）</text>
+  <text class="sm" x="590" y="143" text-anchor="middle">step · observe，无 reset</text>
+  <rect class="gbox" x="696" y="100" width="174" height="56" rx="6"/>
+  <text class="ttl" x="783" y="123" text-anchor="middle">frame sink / 录像</text>
+  <text class="sm" x="783" y="143" text-anchor="middle">RecordingSession · SegmentRunner</text>
+  <line class="ln" x1="206" y1="60" x2="206" y2="98" marker-end="url(#a1)"/>
+  <line class="ln" x1="398" y1="60" x2="398" y2="98" marker-end="url(#a1)"/>
+  <text class="sm" x="406" y="84">reset(seed)</text>
+  <line class="ln-v" x1="590" y1="60" x2="590" y2="98" marker-end="url(#a1v)"/>
+  <text class="sm tc-v" x="598" y="84">act → step</text>
+  <line class="ln dash" x1="783" y1="60" x2="783" y2="98" marker-end="url(#a1)"/>
+  <text class="sm" x="791" y="84">可选</text>
+  <rect class="box" x="120" y="192" width="134" height="56" rx="6"/>
+  <text class="ttl" x="187" y="215" text-anchor="middle">config/</text>
+  <text class="sm" x="187" y="235" text-anchor="middle">hydra · 注册表</text>
+  <rect class="box" x="274" y="192" width="134" height="56" rx="6"/>
+  <text class="ttl" x="341" y="215" text-anchor="middle">tasks/</text>
+  <text class="sm" x="341" y="235" text-anchor="middle">13 任务 · 判据</text>
+  <rect class="box" x="428" y="192" width="134" height="56" rx="6"/>
+  <text class="ttl" x="495" y="215" text-anchor="middle">robot/</text>
+  <text class="sm" x="495" y="235" text-anchor="middle">4 种控制模式</text>
+  <rect class="box" x="582" y="192" width="134" height="56" rx="6"/>
+  <text class="ttl" x="649" y="215" text-anchor="middle">world/</text>
+  <text class="sm" x="649" y="235" text-anchor="middle">建场景 · 推进 · 回溯</text>
+  <rect class="box" x="736" y="192" width="134" height="56" rx="6"/>
+  <text class="ttl" x="803" y="215" text-anchor="middle">sensors/</text>
+  <text class="sm" x="803" y="235" text-anchor="middle">观测 · 相机标定</text>
+  <line class="ln" x1="398" y1="156" x2="398" y2="174"/>
+  <line class="ln" x1="187" y1="174" x2="803" y2="174"/>
+  <line class="ln" x1="187" y1="174" x2="187" y2="190" marker-end="url(#a1)"/>
+  <line class="ln" x1="341" y1="174" x2="341" y2="190" marker-end="url(#a1)"/>
+  <line class="ln" x1="495" y1="174" x2="495" y2="190" marker-end="url(#a1)"/>
+  <line class="ln" x1="649" y1="174" x2="649" y2="190" marker-end="url(#a1)"/>
+  <line class="ln" x1="803" y1="174" x2="803" y2="190" marker-end="url(#a1)"/>
+  <text class="sm" x="410" y="169">reset 建场景 / step 推进</text>
+  <rect class="box2" x="120" y="284" width="540" height="44" rx="6"/>
+  <text class="ttl" x="390" y="311" text-anchor="middle">Genesis 1.2.1 · 刚体 / PBD 布料 / FEM-IPC 柔体 · CUDA</text>
+  <rect class="box2" x="680" y="284" width="190" height="44" rx="6"/>
+  <text class="ttl" x="775" y="311" text-anchor="middle">Nyx · compact_lab</text>
+  <line class="ln" x1="649" y1="248" x2="649" y2="282" marker-end="url(#a1)"/>
+  <text class="sm" x="557" y="270">唯一 scene.step</text>
+  <line class="ln" x1="803" y1="248" x2="803" y2="282" marker-end="url(#a1)"/>
+  <text class="sm" x="811" y="270">渲染</text>
+</svg>
+</div>
+<figcaption><b>图 1。</b>评测脚本是管理方，持有 <code>Env</code>；VLA 经 <code>VLAAgent</code> 只拿到 <code>Interaction</code> 句柄（绿色箭头）。<code>world/</code> 是唯一调用 Genesis <code>scene.step</code> 的模块（有架构测试约束）。</figcaption>
+</figure>
+
+<div class="tree">
+<pre><span class="d">topogym/</span>                      <span class="n">仓库根</span>
+├── <span class="d">topogym/</span>  <span class="star">★</span>                <span class="n">仿真器包（242 个 .py，约 3 万行）</span>
+│   ├── <span class="d">simulator/</span>            <span class="n">make · Env · Interaction · 特权回溯 · 历史 · SegmentRunner</span>
+│   ├── <span class="d">config/</span>               <span class="n">hydra 场景/相机/机器人 profile · 任务注册表</span>
+│   ├── <span class="d">world/</span>                <span class="n">GenesisWorld：建场景、推进物理、保存/恢复状态</span>
+│   ├── <span class="d">robot/</span>                <span class="n">ALOHA / Panda 描述 · control.py 四种控制模式换算</span>
+│   ├── <span class="d">sensors/</span>              <span class="n">observation.py 观测组装 · Nyx RGB · 相机标定</span>
+│   ├── <span class="d">tasks/</span>                <span class="n">13 个任务：declare 资产 → bind → update 判据 → observe</span>
+│   ├── <span class="d">planning/</span>             <span class="n">7 类任务的脚本化参考解（演示数据来源）</span>
+│   ├── <span class="d">recording/</span> <span class="d">data/</span>     <span class="n">RecordingSession 录像 · Transition → JSONL/HDF5</span>
+│   └── <span class="d">solvers/</span> <span class="d">evaluation/</span> <span class="d">assets/</span> <span class="d">utils/</span>
+├── <span class="d">configs/</span>  <span class="d">assets/</span>        <span class="n">任务变体 yaml、task_cards/ · 机器人模型与任务几何</span>
+├── <span class="d">tests/</span>                    <span class="n">106 个 test_*.py：contracts / integration / unit / architecture</span>
+├── <span class="d">scripts/</span>                  <span class="n">50 个脚本</span>
+├── <span class="d">solvability_proof/</span> <span class="d">demos/</span>  <span class="n">可解证据 · 正式演示 MP4</span>
+├── <span class="d">docs/</span>                     <span class="n">develop/ · progress/ · vla_doc/（现有 VLA 调用手册）· vla_integration/（本文）</span>
+├── <span class="d">tasks/</span> <span class="d">images/</span> <span class="d">harbor_agents/</span> <span class="d">ci_checks/</span>   <span class="n">Harbor 层（coding agent 评测，与本文并行）</span>
+└── <span class="d">legacy/</span>                   <span class="n">归档实现，活动代码不导入</span></pre>
+</div>
+
+<h3 id="s1-run">一个控制步</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 214" role="img" aria-label="一个控制步：compile_action 换算动作，apply_action 下发目标，然后执行 10 个 2.5 ms 物理 tick，每个 tick 推进物理、更新任务判据并保存历史，最后 Nyx 渲染观测并返回筛选后的 info">
+  <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
+  <rect class="gbox" x="4" y="40" width="138" height="74" rx="6"/>
+  <text class="ttl" x="73" y="64" text-anchor="middle">compile_action</text>
+  <text class="sm" x="73" y="84" text-anchor="middle">4 种模式 → 关节目标</text>
+  <text class="sm tc-b" x="73" y="101" text-anchor="middle">越界 → ValueError</text>
+  <line class="ln" x1="142" y1="77" x2="160" y2="77" marker-end="url(#a2)"/>
+  <rect class="box" x="162" y="40" width="102" height="74" rx="6"/>
+  <text class="ttl" x="213" y="70" text-anchor="middle">apply_action</text>
+  <text class="sm" x="213" y="90" text-anchor="middle">下发 PD 目标</text>
+  <line class="ln" x1="264" y1="77" x2="282" y2="77" marker-end="url(#a2)"/>
+  <rect class="box2" x="284" y="22" width="386" height="112" rx="8"/>
+  <text class="lbl" x="298" y="42">× control_decimation = 10 个物理 tick（每个 2.5 ms）</text>
+  <g id="ticks"></g>
+  <text class="sm" x="298" y="108">每 tick：world.advance → task.update（判据）→ 保存历史 → 终止 / 超时检查</text>
+  <text class="sm" x="298" y="124">任务提前终止时跳出循环</text>
+  <line class="ln" x1="670" y1="77" x2="688" y2="77" marker-end="url(#a2)"/>
+  <rect class="box" x="690" y="40" width="100" height="74" rx="6"/>
+  <text class="ttl" x="740" y="64" text-anchor="middle">observe</text>
+  <text class="sm" x="740" y="84" text-anchor="middle">Nyx 渲染全部相机</text>
+  <text class="sm" x="740" y="100" text-anchor="middle">+ 本体感知</text>
+  <line class="ln" x1="790" y1="77" x2="808" y2="77" marker-end="url(#a2)"/>
+  <rect class="gbox" x="810" y="40" width="86" height="74" rx="6"/>
+  <text class="ttl" x="853" y="64" text-anchor="middle">返回</text>
+  <text class="sm" x="853" y="84" text-anchor="middle">obs · done</text>
+  <text class="sm" x="853" y="100" text-anchor="middle">public_info</text>
+  <line class="ln" x1="298" y1="156" x2="661" y2="156"/>
+  <line class="ln" x1="298" y1="150" x2="298" y2="162"/><line class="ln" x1="661" y1="150" x2="661" y2="162"/>
+  <text class="lbl" x="480" y="176" text-anchor="middle">仿真时间 25 ms（40 Hz）</text>
+  <line class="ln-p" x1="4" y1="194" x2="896" y2="194"/>
+  <line class="ln-p" x1="4" y1="188" x2="4" y2="200"/><line class="ln-p" x1="896" y1="188" x2="896" y2="200"/>
+  <text class="lbl tc-p" x="450" y="210" text-anchor="middle">墙钟 6–10 s / 控制步（cast_coil，RTX 4090，GPU 与其他进程共用时测得）</text>
+</svg>
+</div>
+<figcaption><b>图 2。</b><code>step()</code> 的内部顺序。按 6–10 s/步计，默认 25 s episode（1000 步）约 2–3 小时。</figcaption>
+</figure>
+<div class="tbl"><table>
+<thead><tr><th>现有事实</th><th>对 VLA 接口的影响</th></tr></thead>
+<tbody>
+<tr><td>一个进程只能有一个活跃 <code>Env</code>（Genesis 全局状态）</td><td>多任务评测逐个 <code>with make()</code>，或开多个仿真进程</td></tr>
+<tr><td>关节或夹爪越界时 <code>step</code> 抛 <code>ValueError</code>，不自动截断</td><td>适配器必须截断</td></tr>
+<tr><td>夹爪是原生关节坐标（米 / 弧度），不是开口宽度</td><td>适配器负责归一化与反归一化</td></tr>
+<tr><td>13 个任务中只有 5 个有英文 <code>instruction</code></td><td>需要一份版本化的 instruction 文件</td></tr>
+<tr><td><code>SegmentRunner.run_policy</code> 已定义策略协议 <code>initialize(context)</code> / <code>act(obs)</code></td><td>VLAAgent 实现这个协议，普通循环与完整证据录制都能用</td></tr>
+<tr><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 <code>simulator/</code>、<code>tasks/</code></td><td>VLA 代码放在仓库根 <code>vla/</code>，不放进 <code>topogym/</code> 包</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+<h2><span class="num">02</span>VLA 从哪里接入</h2>
+<p>VLA 只在两处接入：<b>训练时</b>读取从 TopoGym 导出的数据集；<b>评测时</b>在每个控制步的 <code>agent.act(obs)</code> 里被调用。建场景、推进物理、判定成败、录像、记结果都由 Gym 侧完成。</p>
+
+<h3 id="s2-wf">整体流程</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 196" role="img" aria-label="整体流程六步：参考解生成演示、导出 LeRobot 数据集、微调、起策略服务、评测与录像、结果；其中微调、起服务、评测三步有 VLA 参与">
+  <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
+  <g>
+    <rect class="gbox" x="6" y="44" width="132" height="92" rx="8"/>
+    <text class="mono tc-g" x="18" y="64">1</text><text class="ttl" x="72" y="84" text-anchor="middle">生成演示</text>
+    <text class="sm" x="72" y="104" text-anchor="middle">planning/ 参考解</text><text class="sm" x="72" y="120" text-anchor="middle">评测配置 + RGB</text>
+    <rect class="gbox" x="155" y="44" width="132" height="92" rx="8"/>
+    <text class="mono tc-g" x="167" y="64">2</text><text class="ttl" x="221" y="84" text-anchor="middle">导出数据集</text>
+    <text class="sm" x="221" y="104" text-anchor="middle">export_lerobot.py</text><text class="sm" x="221" y="120" text-anchor="middle">同一 Adapter</text>
+    <rect class="vbox" x="304" y="44" width="132" height="92" rx="8"/>
+    <text class="mono tc-v" x="316" y="64">3</text><text class="ttl" x="370" y="84" text-anchor="middle">微调</text>
+    <text class="sm" x="370" y="104" text-anchor="middle">各模型官方仓库</text><text class="sm" x="370" y="120" text-anchor="middle">或 LeRobot</text>
+    <rect class="vbox" x="453" y="44" width="132" height="92" rx="8"/>
+    <text class="mono tc-v" x="465" y="64">4</text><text class="ttl" x="519" y="84" text-anchor="middle">起策略服务</text>
+    <text class="sm" x="519" y="104" text-anchor="middle">serve.py</text><text class="sm" x="519" y="120" text-anchor="middle">BaseVLA 子类</text>
+    <rect class="vbox" x="602" y="44" width="132" height="92" rx="8" style="fill:var(--gym-soft)"/>
+    <text class="mono tc-v" x="614" y="64">5</text><text class="ttl" x="668" y="84" text-anchor="middle">评测 + 录像</text>
+    <text class="sm" x="668" y="104" text-anchor="middle">run_eval.py</text><text class="sm tc-v" x="668" y="120" text-anchor="middle">act → infer</text>
+    <rect class="gbox" x="751" y="44" width="132" height="92" rx="8"/>
+    <text class="mono tc-g" x="763" y="64">6</text><text class="ttl" x="817" y="84" text-anchor="middle">结果</text>
+    <text class="sm" x="817" y="104" text-anchor="middle">results.jsonl</text><text class="sm" x="817" y="120" text-anchor="middle">每 episode MP4</text>
+  </g>
+  <line class="ln" x1="138" y1="90" x2="153" y2="90" marker-end="url(#a3)"/>
+  <line class="ln" x1="287" y1="90" x2="302" y2="90" marker-end="url(#a3)"/>
+  <line class="ln" x1="436" y1="90" x2="451" y2="90" marker-end="url(#a3)"/>
+  <line class="ln" x1="585" y1="90" x2="600" y2="90" marker-end="url(#a3)"/>
+  <line class="ln" x1="734" y1="90" x2="749" y2="90" marker-end="url(#a3)"/>
+  <line class="ln-v" x1="304" y1="30" x2="734" y2="30"/>
+  <line class="ln-v" x1="304" y1="26" x2="304" y2="34"/><line class="ln-v" x1="734" y1="26" x2="734" y2="34"/>
+  <text class="lbl tc-v" x="519" y="20" text-anchor="middle">VLA 参与</text>
+  <line class="ln" x1="6" y1="156" x2="436" y2="156"/>
+  <text class="sm" x="221" y="176" text-anchor="middle">离线，每个任务 / 模型做一次</text>
+  <line class="ln" x1="453" y1="156" x2="883" y2="156"/>
+  <text class="sm" x="668" y="176" text-anchor="middle">在线，每个 episode 重复</text>
+</svg>
+</div>
+<figcaption><b>图 3。</b>蓝色步骤在 Gym 环境（<code>.venv-gs121-nyx</code>）中运行，绿色步骤在模型各自的环境中运行。第 5 步两者都参与：评测进程驱动循环，每隔 <code>execute_steps</code> 个控制步向模型服务请求一次动作块。</figcaption>
+</figure>
+
+<h3 id="s2-code">评测主循环（伪代码）</h3>
+<p>下面三段是完整链路。绿色高亮是 VLA 介入的位置，其余都是 TopoGym 已有接口。</p>
+<pre><span class="c"># ── ① Gym 环境：vla/gym/run_eval.py（管理方） ──</span>
+client = WebsocketClient(args.policy)                  <span class="c"># 连接 VLA 服务</span>
+spec   = client.spec                                   <span class="hl">← 握手：服务端发来 PolicySpec</span>
+cfg = dict(robot_id=spec.embodiment,                   <span class="c"># aloha / panda_robotiq</span>
+           control_mode=MODE[spec.action_space],       <span class="c"># joint_abs → JOINT_ABS，ee_abs → EE_ABS</span>
+           observation_mode=OBS[spec.action_space],    <span class="c"># ee_abs 时切到 EE，拿 TCP 位姿</span>
+           control_decimation=int(400 / spec.control_hz))  <span class="c"># 物理 tick 400 Hz；50 Hz → 8</span>
+agent = VLAAgent(client, instruction=INSTRUCTIONS[args.task])
+
+<span class="kw">with</span> topogym.make(args.task, variation_id=args.variation, **cfg) <span class="kw">as</span> env:
+    <span class="kw">for</span> seed <span class="kw">in</span> args.seeds:
+        env.reset(seed=seed)                           <span class="c"># 管理方：重建场景</span>
+        actor = env.interaction()                      <span class="c"># 操作方句柄：只有 step / observe</span>
+        agent.initialize({<span class="s">"action_spec"</span>: actor.action_spec})   <span class="hl">← client.reset(seed)：服务端清状态、设随机种子</span>
+        <span class="kw">with</span> episode_recorder(env, out / f<span class="s">"seed_{seed}"</span>, enabled=args.record):   <span class="c"># 见 3.3，可关</span>
+            obs = actor.observe()
+            <span class="kw">while True</span>:
+                action = agent.act(obs)                <span class="hl">← VLA 介入：队列空时 client.infer(Observation) → ActionChunk</span>
+                obs, _, terminated, truncated, info = actor.step(action)
+                <span class="kw">if</span> terminated <span class="kw">or</span> truncated: <span class="kw">break</span>
+        write_result(seed, classify(info))             <span class="c"># success / task_failure / time_limit / unevaluated …</span>
+
+<span class="c"># ── ② Gym 环境：vla/gym/agent.py ──</span>
+<span class="kw">def</span> act(self, obs):
+    <span class="kw">if not</span> self.queue:
+        o = self.adapter.observation(obs, self.instruction)   <span class="c"># TopoGym obs → Observation（选相机、缩放、拼 state）</span>
+        chunk = self.client.infer(o)                          <span class="hl">← 网络调用：一次推理，返回 (H, D)</span>
+        self.queue.extend(chunk.actions[:self.spec.execute_steps])
+    <span class="kw">return</span> self.adapter.action(self.queue.popleft())       <span class="c"># (D,) → 截断 → 动作字典</span>
+
+<span class="c"># ── ③ VLA 环境：vla/models/serve.py ──</span>
+vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"cuda"</span>)
+<span class="kw">async def</span> handler(ws):
+    <span class="kw">await</span> ws.send(pack(vla.spec))                              <span class="c"># 握手</span>
+    <span class="kw">async for</span> msg <span class="kw">in</span> ws:
+        req = unpack(msg)
+        <span class="kw">if</span> req[<span class="s">"type"</span>] == <span class="s">"reset"</span>: vla.reset(seed=req[<span class="s">"seed"</span>]); <span class="kw">await</span> ws.send(pack({<span class="s">"ok"</span>: True})); <span class="kw">continue</span>
+        chunk = vla.infer(Observation(**req[<span class="s">"obs"</span>]))         <span class="hl">← 模型专属预处理 → 前向 → 后处理</span>
+        <span class="kw">await</span> ws.send(pack({<span class="s">"actions"</span>: chunk.actions}))</pre>
+
+<h3 id="s2-seq">一个 episode 的时序</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 530" role="img" aria-label="一个 episode 的时序：连接时服务端发送 PolicySpec；EvalRunner 按 spec 调用 make 与 reset；initialize 时向服务端发送 reset；每个控制步 EvalRunner 调用 act，队列为空时 VLAAgent 经 PolicyClient 向服务端请求动作块；然后 EvalRunner 调用 step；结束后记录结果" id="seqsvg">
+  <defs>
+    <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="a4v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah-v"/></marker>
+  </defs>
+  <g id="seq"></g>
+</svg>
+</div>
+<figcaption><b>图 4。</b>实线为调用，虚线为返回。绿色是 VLA 相关的消息：连接握手、<code>reset</code>、以及队列为空时的一次 <code>infer</code>。其余 <code>execute_steps − 1</code> 个控制步不经过网络。</figcaption>
+</figure>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+<h2><span class="num">03</span>接口设计</h2>
+<div class="tbl"><table>
+<thead><tr><th>目标</th><th>可检验的标准</th></tr></thead>
+<tbody>
+<tr><td>Modular</td><td>Gym 侧代码不 import 任何模型库；VLA 侧代码不 import Genesis / topogym</td></tr>
+<tr><td>Scalable</td><td>加一个 VLA = 1 个子类 + 1 个依赖环境；加一个机器人 = 1 个适配器；加一个任务 = 1 条 instruction</td></tr>
+<tr><td>可切换</td><td>同一评测命令只改 <code>--policy ws://host:port</code></td></tr>
+<tr><td>训练 / 评测一致</td><td>数据导出与在线评测共用同一个适配器</td></tr>
+<tr><td>Simple</td><td>协议 3 个数据类；不引入插件框架</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-nm">两层映射：2 + N（已确认）</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 250" role="img" aria-label="左：2 个机器人与 5 个模型直接两两适配，需要 10 份代码；右：2 个机器人各 1 个适配器接到标准协议，5 个模型各 1 个子类接到标准协议，共 7 份">
+  <text class="ttl" x="12" y="20">直接两两适配：2 × 5 = 10 份</text>
+  <rect class="gbox" x="20" y="60" width="90" height="36" rx="6"/><text class="lbl" x="65" y="83" text-anchor="middle">ALOHA</text>
+  <rect class="gbox" x="20" y="150" width="90" height="36" rx="6"/><text class="lbl" x="65" y="173" text-anchor="middle">Panda</text>
+  <rect class="vbox" x="300" y="36" width="100" height="28" rx="5"/><text class="sm" x="350" y="54" text-anchor="middle">模型 1</text>
+  <rect class="vbox" x="300" y="76" width="100" height="28" rx="5"/><text class="sm" x="350" y="94" text-anchor="middle">模型 2</text>
+  <rect class="vbox" x="300" y="116" width="100" height="28" rx="5"/><text class="sm" x="350" y="134" text-anchor="middle">模型 3</text>
+  <rect class="vbox" x="300" y="156" width="100" height="28" rx="5"/><text class="sm" x="350" y="174" text-anchor="middle">模型 4</text>
+  <rect class="vbox" x="300" y="196" width="100" height="28" rx="5"/><text class="sm" x="350" y="214" text-anchor="middle">模型 5</text>
+  <path class="ln-b" d="M110,78 L300,50"/><path class="ln-b" d="M110,78 L300,90"/><path class="ln-b" d="M110,78 L300,130"/><path class="ln-b" d="M110,78 L300,170"/><path class="ln-b" d="M110,78 L300,210"/>
+  <path class="ln-b" d="M110,168 L300,50"/><path class="ln-b" d="M110,168 L300,90"/><path class="ln-b" d="M110,168 L300,130"/><path class="ln-b" d="M110,168 L300,170"/><path class="ln-b" d="M110,168 L300,210"/>
+  <text class="sm" x="12" y="244">每条线 = 一份同时处理机器人细节和模型细节的代码</text>
+  <line class="ln dash" x1="450" y1="10" x2="450" y2="240"/>
+  <text class="ttl tc-v" x="478" y="20">经过标准协议：2 + 5 = 7 份</text>
+  <rect class="gbox" x="480" y="60" width="72" height="36" rx="6"/><text class="lbl" x="516" y="83" text-anchor="middle">ALOHA</text>
+  <rect class="gbox" x="480" y="150" width="72" height="36" rx="6"/><text class="lbl" x="516" y="173" text-anchor="middle">Panda</text>
+  <path class="ln-g" d="M552,78 L620,110"/><path class="ln-g" d="M552,168 L620,136"/>
+  <text class="sm tc-g" x="560" y="72">适配器</text><text class="sm tc-g" x="560" y="194">适配器</text>
+  <rect class="pbox" x="620" y="36" width="56" height="188" rx="6"/>
+  <text class="lbl tc-p" x="648" y="134" text-anchor="middle" transform="rotate(-90 648 130)">标准协议</text>
+  <path class="ln-v" d="M676,130 L780,50"/><path class="ln-v" d="M676,130 L780,90"/><path class="ln-v" d="M676,130 L780,130"/><path class="ln-v" d="M676,130 L780,170"/><path class="ln-v" d="M676,130 L780,210"/>
+  <rect class="vbox" x="780" y="36" width="104" height="28" rx="5"/><text class="sm" x="832" y="54" text-anchor="middle">子类 1</text>
+  <rect class="vbox" x="780" y="76" width="104" height="28" rx="5"/><text class="sm" x="832" y="94" text-anchor="middle">子类 2</text>
+  <rect class="vbox" x="780" y="116" width="104" height="28" rx="5"/><text class="sm" x="832" y="134" text-anchor="middle">子类 3</text>
+  <rect class="vbox" x="780" y="156" width="104" height="28" rx="5"/><text class="sm" x="832" y="174" text-anchor="middle">子类 4</text>
+  <rect class="vbox" x="780" y="196" width="104" height="28" rx="5"/><text class="sm" x="832" y="214" text-anchor="middle">子类 5</text>
+  <text class="sm" x="478" y="244">机器人细节只在适配器里；模型细节只在子类里</text>
+</svg>
+</div>
+<figcaption><b>图 5。</b>"TopoGym ⇄ 标准格式"依赖机器人，"标准格式 ⇄ 模型张量"依赖模型，两者分开写。</figcaption>
+</figure>
+
+<h3 id="s3-deploy">部署形态：模型与环境怎么分开</h3>
+<p>三种做法的差别在进程边界放在哪里、谁驱动循环。</p>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 262" role="img" aria-label="三种部署形态：A 同一进程加载仿真与模型，依赖冲突；B 模型做服务端，多个仿真 worker 共享一个模型服务，评测进程驱动循环；C 环境做服务端，策略进程驱动循环，即 Harbor limited 的形态">
+  <defs>
+    <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="a6v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-v"/></marker>
+  </defs>
+  <text class="ttl" x="12" y="20">A. 进程内</text>
+  <rect class="box dash" x="12" y="34" width="264" height="150" rx="8"/>
+  <text class="sm" x="22" y="52">一个 Python 进程 / 一张 GPU</text>
+  <rect class="gbox" x="28" y="66" width="104" height="52" rx="6"/>
+  <text class="lbl" x="80" y="88" text-anchor="middle">Genesis</text><text class="sm" x="80" y="105" text-anchor="middle">Py3.12 · Nyx</text>
+  <rect class="bbox" x="156" y="66" width="104" height="52" rx="6"/>
+  <text class="lbl" x="208" y="88" text-anchor="middle">VLA 模型</text><text class="sm" x="208" y="105" text-anchor="middle">JAX / torch 版本</text>
+  <line class="ln-b" x1="132" y1="92" x2="156" y2="92"/>
+  <text class="lbl tc-b" x="144" y="146" text-anchor="middle">依赖冲突 · 显存竞争</text>
+  <text class="sm" x="144" y="164" text-anchor="middle">每个仿真进程各加载一份模型</text>
+  <text class="sm" x="12" y="210">代码最少；只用于单元测试和占位策略</text>
+  <text class="ttl tc-v" x="306" y="20">B. 模型做服务端（推荐）</text>
+  <rect class="gbox" x="306" y="36" width="122" height="40" rx="6"/><text class="sm" x="367" y="60" text-anchor="middle" style="fill:var(--ink)">仿真 worker 1 · GPU0</text>
+  <rect class="gbox" x="306" y="88" width="122" height="40" rx="6"/><text class="sm" x="367" y="112" text-anchor="middle" style="fill:var(--ink)">仿真 worker 2 · GPU1</text>
+  <rect class="gbox" x="306" y="140" width="122" height="40" rx="6"/><text class="sm" x="367" y="164" text-anchor="middle" style="fill:var(--ink)">仿真 worker 3 · GPU2</text>
+  <rect class="vbox" x="478" y="36" width="118" height="144" rx="8"/>
+  <text class="lbl" x="537" y="94" text-anchor="middle">VLA 服务</text><text class="sm" x="537" y="112" text-anchor="middle">1 份显存</text><text class="sm" x="537" y="128" text-anchor="middle">:8000</text>
+  <line class="ln-v" x1="430" y1="56" x2="476" y2="80" marker-end="url(#a6v)"/>
+  <line class="ln-v" x1="430" y1="108" x2="476" y2="108" marker-end="url(#a6v)"/>
+  <line class="ln-v" x1="430" y1="160" x2="476" y2="136" marker-end="url(#a6v)"/>
+  <text class="sm" x="306" y="210">评测进程驱动循环：reset、seed、录像、打分都在 Gym 侧</text>
+  <text class="sm" x="306" y="226">N 个仿真进程共享 1 个模型服务</text>
+  <text class="sm" x="306" y="242">openpi、vla-eval、XPolicyLab、RoboArena 均用此形态</text>
+  <text class="ttl" x="630" y="20">C. 环境做服务端（Harbor limited 式）</text>
+  <rect class="box" x="630" y="36" width="112" height="144" rx="8"/>
+  <text class="lbl" x="686" y="94" text-anchor="middle">策略进程</text><text class="sm" x="686" y="112" text-anchor="middle">驱动循环</text>
+  <rect class="box2" x="782" y="36" width="112" height="144" rx="8"/>
+  <text class="lbl" x="838" y="94" text-anchor="middle">仿真服务</text><text class="sm" x="838" y="112" text-anchor="middle">get_obs / submit</text>
+  <line class="ln" x1="744" y1="108" x2="780" y2="108" marker-end="url(#a6)" marker-start="url(#a6)"/>
+  <text class="sm" x="762" y="128" text-anchor="middle">HTTP</text>
+  <text class="sm" x="630" y="210">策略侧驱动循环；reset / 录像 / 打分</text>
+  <text class="sm" x="630" y="226">要放进服务内部；为 coding agent 的</text>
+  <text class="sm" x="630" y="242">隔离与防作弊设计</text>
+</svg>
+</div>
+<figcaption><b>图 6。</b>B 与 C 都把模型和环境分开，区别在谁驱动循环。VLA 评测选 B：episode 生命周期（reset、seed、超时、录像、打分）集中在评测进程；仿真慢、推理快，多个仿真进程可以共享一个模型服务。</figcaption>
+</figure>
+
+<p><b>Client–Server 的代价。</b>延迟不是主要问题；主要代价是多一个进程要管理。</p>
+<div class="tbl"><table>
+<thead><tr><th>环节</th><th>耗时</th><th>发生频率</th><th>来源</th></tr></thead>
+<tbody>
+<tr><td>msgpack 序列化（3 张 224×224 图 + state，约 0.45 MB）</td><td class="num">约 1 ms</td><td>每次推理</td><td>估算</td></tr>
+<tr><td>传输：同机 localhost</td><td class="num">&lt; 1 ms</td><td>每次推理</td><td>估算</td></tr>
+<tr><td>传输：同机房 1 GbE</td><td class="num">约 4 ms</td><td>每次推理</td><td>估算（0.45 MB ÷ 125 MB/s）</td></tr>
+<tr><td>传输：跨地域（RTT 30 ms）</td><td class="num">约 40 ms</td><td>每次推理</td><td>估算</td></tr>
+<tr><td>模型推理（约 3B，单卡）</td><td class="num">0.1–0.5 s</td><td>每次推理</td><td>各模型 README 量级</td></tr>
+<tr><td>仿真一个控制步</td><td class="num">6–10 s</td><td>每个控制步</td><td><code>docs/vla_doc</code> 实测</td></tr>
+</tbody></table></div>
+<p>每次推理之间有 <code>execute_steps</code>（例如 10）个控制步，即 60–100 s 仿真墙钟；通信开销在同机房部署下低于 0.01%。不需要异步推理或 real-time chunking，同步阻塞调用即可。</p>
+<div class="tbl"><table>
+<thead><tr><th>代价</th><th>处理</th></tr></thead>
+<tbody>
+<tr><td>多一个进程要启动和管理</td><td><code>run_eval</code> 启动时等服务 <code>/healthz</code> 就绪；服务日志单独保存</td></tr>
+<tr><td>服务崩溃或超时</td><td><code>infer</code> 设超时；失败记为 <code>policy_error</code>，不计为任务失败，可重连后重跑该 seed</td></tr>
+<tr><td>两侧协议版本不一致</td><td><code>PolicySpec</code> 带 <code>protocol_version</code>，握手时校验</td></tr>
+<tr><td>跨进程调试不便</td><td>同一个 <code>BaseVLA</code> 子类可经 <code>LocalClient</code> 在同进程运行（依赖允许时）；服务端可加回放模式，按数据集动作回放来检查 Gym 侧</td></tr>
+<tr><td>模型采样有随机性（flow matching 噪声）</td><td><code>reset</code> 消息带 seed，服务端设随机种子，保证可复现</td></tr>
+</tbody></table></div>
+
+<p><b>传输协议。</b>选 WebSocket + msgpack。</p>
+<div class="tbl"><table>
+<thead><tr><th>方案</th><th>谁在用</th><th>优点</th><th>缺点</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>HTTP + JSON（FastAPI）</td><td>OpenVLA-OFT、X-VLA、MolmoAct2 自带服务</td><td>简单，curl 可调试</td><td>数组要 base64 或 JSON 编码，体积和耗时增加；无连接状态，握手和 reset 需额外约定</td><td>不选</td></tr>
+<tr><td><b>WebSocket + msgpack</b></td><td>openpi、vla-eval、XPolicyLab</td><td>长连接，连接时下发 <code>PolicySpec</code>；二进制数组；<code>openpi-client</code> 很小，可装进 Genesis 环境</td><td>消息类型需要自己约定（本方案只有 3 种）</td><td><b>选用</b></td></tr>
+<tr><td>gRPC</td><td>LeRobot async inference</td><td>强类型 schema</td><td>需要 protobuf 代码生成，两侧依赖更重</td><td>不选</td></tr>
+<tr><td>ZMQ REQ/REP</td><td>Isaac-GR00T 官方服务</td><td>延迟低</td><td>无握手 / 健康检查约定</td><td>不选；GR00T 子类内部可直接调用其策略对象</td></tr>
+</tbody></table></div>
+
+<p><b>能否复用 Harbor？</b>Harbor limited 模式属于形态 C。它的价值在于隔离：agent 看不到仿真内部、证据由服务持有、验证在独立沙箱重放。VLA 只能看到适配器给它的输入，不存在这类作弊路径，所以不需要这层隔离。需要的录像功能在 Gym 侧就有，见下节。</p>
+
+<h3 id="s3-rec">录像：在 Gym 侧完成，不需要 Harbor</h3>
+<div class="tbl"><table>
+<thead><tr><th>方式</th><th>输出</th><th>额外开销</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td><code>RecordingSession</code> + <code>env.add_frame_sink</code></td><td>每个相机一个 MP4、帧索引、清单</td><td>只有视频编码；复用观测时已渲染的同一帧，不额外渲染</td><td>默认：每个 episode 录像</td></tr>
+<tr><td><code>SegmentRunner.run_policy(policy=VLAAgent)</code></td><td>各相机 MP4 + 拼接视频 + 逐 tick 日志 + 完整状态</td><td>大：cast_coil 仿真 1 s 约 280 MB 日志，单步 8.9 s（普通循环 6.5 s）</td><td>抽少量 episode 做诊断</td></tr>
+</tbody></table></div>
+<pre><span class="c"># episode_recorder 的实现（示意，未运行）：Env 每次 step 结束时把 SensorFrame 推给 sink</span>
+<span class="kw">from</span> topogym.recording.session <span class="kw">import</span> RecordingSession
+
+<span class="kw">with</span> RecordingSession(out / f<span class="s">"seed_{seed}"</span>, fps=30, metadata=dict(env.episode_metadata)) <span class="kw">as</span> rec:
+    stop = env.add_frame_sink(rec.append)      <span class="c"># 与观测共用同一份 Nyx 渲染结果</span>
+    rec.append(env.sensor_frame())             <span class="c"># 初始帧</span>
+    outcome = run_episode(actor, agent)        <span class="c"># 评测循环不变</span>
+    stop()
+    rec.finish({<span class="s">"outcome"</span>: outcome})         <span class="c"># 视频完成不代表任务成功，结果单独写入</span></pre>
+<p class="note"><code>VLAAgent</code> 实现了 <code>initialize</code> / <code>act</code>，可以原样交给 <code>SegmentRunner.run_policy</code>；<code>mode="limited"</code> 时策略拿不到任务真值（<code>task</code> 字段被去掉）。</p>
+
+<h3 id="s3-proto">标准协议：3 个数据类</h3>
+<pre><span class="c"># vla/protocol/types.py —— Gym 与 VLA 两侧共享，只依赖 numpy</span>
+<span class="kw">@dataclass</span>(frozen=True)
+<span class="kw">class</span> <span class="h">PolicySpec</span>:                    <span class="c"># 服务端在连接建立时发给客户端</span>
+    protocol_version: int              <span class="c"># 握手时校验</span>
+    name: str                          <span class="c"># "pi05_topogym_cast_coil"</span>
+    embodiment: str                    <span class="c"># "aloha" | "panda_robotiq"</span>
+    cameras: tuple[str, ...]           <span class="c"># 标准相机名，如 ("cam_high", "cam_left_wrist", "cam_right_wrist")</span>
+    image_size: tuple[int, int]        <span class="c"># (H, W)；缩放由 Gym 侧完成，减少传输</span>
+    action_space: str                  <span class="c"># "joint_abs" | "ee_abs"</span>
+    control_hz: float                  <span class="c"># 训练数据的控制频率</span>
+    chunk_size: int                    <span class="c"># 每次推理输出的步数 H</span>
+    execute_steps: int                 <span class="c"># 每块执行前几步后重新推理</span>
+
+<span class="kw">@dataclass</span>(frozen=True)
+<span class="kw">class</span> <span class="h">Observation</span>:
+    images: dict[str, np.ndarray]      <span class="c"># 相机名 → (H, W, 3) uint8</span>
+    state: np.ndarray                  <span class="c"># (D,) float32，排列见下</span>
+    instruction: str
+    episode_id: str
+    step: int
+
+<span class="kw">@dataclass</span>(frozen=True)
+<span class="kw">class</span> <span class="h">ActionChunk</span>:
+    actions: np.ndarray                <span class="c"># (H, D) float32，与 state 同一排列，绝对目标</span></pre>
+<div class="strip-title">ALOHA · joint_abs · D = 14</div>
+<div class="strip-wrap">
+<div class="strip" aria-label="ALOHA 14 维：左臂 6 关节、左夹爪、右臂 6 关节、右夹爪">
+  <div>waist</div><div>shoulder</div><div>elbow</div><div>fore_roll</div><div>wr_angle</div><div>wr_rot</div><div class="g">L 夹爪</div>
+  <div class="r">waist</div><div class="r">shoulder</div><div class="r">elbow</div><div class="r">fore_roll</div><div class="r">wr_angle</div><div class="r">wr_rot</div><div class="g">R 夹爪</div>
+</div>
+<div class="strip-legend"><span>0 ←── 左臂（rad）──→ 5 · 6</span><span>7 ←── 右臂（rad）──→ 12 · 13</span></div>
+</div>
+<div class="strip-title">Panda + Robotiq · joint_abs · D = 8</div>
+<div class="strip-wrap">
+<div class="strip" style="min-width:420px;max-width:520px" aria-label="Panda 8 维：7 关节加夹爪">
+  <div>q0</div><div>q1</div><div>q2</div><div>q3</div><div>q4</div><div>q5</div><div>q6</div><div class="g">夹爪</div>
+</div>
+</div>
+<div class="tbl"><table>
+<thead><tr><th>约定</th><th>内容</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>夹爪</td><td>归一化开度 <code>[0,1]</code>，1 = 全开</td><td>与 ALOHA / ACT / RoboTwin 数据一致；适配器负责与 0.037/0.002 m、0.0/0.8 rad 互换</td></tr>
+<tr><td>绝对目标</td><td>标准动作一律是绝对值；模型内部预测的相对量由 VLA 子类换算</td><td>openpi 的 delta 参考点是推理时刻的 state；TopoGym <code>JOINT_DELTA</code> 的参考点是每步提交前的实测值，二者不同，在 Gym 侧换算会出错</td></tr>
+<tr><td>EE 空间</td><td><code>ee_abs</code>：每臂 <code>[xyz 3, rot6d 6, 夹爪 1]</code>，TopoGym 世界系、TCP 点；ALOHA 20 维，Panda 10 维</td><td>给默认输出末端位姿的模型用；Gym 侧对应 <code>EE_ABS</code>（内部做 IK）</td></tr>
+<tr><td>相机</td><td>ALOHA 默认 <code>cam_high</code> + 两个腕部；Panda 默认 <code>agentview</code> + <code>wrist</code></td><td>与 openpi ALOHA 和 RoboTwin 2.0 的相机组合一致</td></tr>
+</tbody></table></div>
+
+<h3 id="s3-arch">总体架构与各环节的输入输出（点击切换 VLA）</h3>
+<p>图中 ①–⑥ 与下表对应。切换模型时，左侧 Gym 侧代码不变，只有 <code>EvalRunner</code> 按新的 <code>PolicySpec</code> 改 <code>make</code> 参数；模型专属的处理全部在第 ④ 步、子类内部。</p>
+<div class="switch" role="group" aria-label="切换 VLA" id="switch"></div>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 400" role="img" aria-label="总体架构：左侧 Gym 进程包含 EvalRunner、Env、VLAAgent（EmbodimentAdapter、动作块队列、PolicyClient）；中间是 vla_protocol；右侧是多个 VLA 服务，当前选中的一个与 PolicyClient 相连；①到⑥标出数据流" id="archsvg">
+  <defs>
+    <marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+    <marker id="a7g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah-g"/></marker>
+    <marker id="a7p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah-p"/></marker>
+  </defs>
+  <text class="layer" x="10" y="16">GYM 进程 · .venv-gs121-nyx</text>
+  <rect class="box dash" x="10" y="24" width="390" height="366" rx="10"/>
+  <rect class="box2" x="28" y="40" width="354" height="44" rx="6"/>
+  <text class="ttl" x="44" y="60">EvalRunner（管理方）</text>
+  <text class="sm" x="44" y="76">按 PolicySpec 设置 make；task × variation × seed</text>
+  <rect class="gbox" x="28" y="110" width="112" height="262" rx="6"/>
+  <text class="ttl" x="84" y="136" text-anchor="middle">Env</text>
+  <text class="sm" x="84" y="154" text-anchor="middle">interaction()</text>
+  <text class="sm" x="84" y="170" text-anchor="middle">step / observe</text>
+  <text class="sm" x="84" y="340" text-anchor="middle">Genesis · Nyx</text>
+  <line class="ln" x1="84" y1="84" x2="84" y2="108" marker-end="url(#a7)"/>
+  <text class="sm" x="92" y="100">make / reset</text>
+  <rect class="box" x="160" y="110" width="222" height="270" rx="8"/>
+  <text class="ttl" x="176" y="130">VLAAgent</text>
+  <text class="sm" x="176" y="146">initialize / act</text>
+  <rect class="gbox" x="176" y="158" width="190" height="62" rx="6"/>
+  <text class="lbl" x="271" y="180" text-anchor="middle">EmbodimentAdapter</text>
+  <text class="sm" x="271" y="197" text-anchor="middle">obs → Observation</text>
+  <text class="sm" x="271" y="211" text-anchor="middle">row → 动作字典</text>
+  <rect class="box2" x="176" y="236" width="190" height="44" rx="6"/>
+  <text class="lbl" x="271" y="256" text-anchor="middle">动作块队列</text>
+  <text class="sm" x="271" y="272" text-anchor="middle">取前 execute_steps 步</text>
+  <rect class="pbox" x="176" y="300" width="190" height="56" rx="6"/>
+  <text class="lbl" x="271" y="322" text-anchor="middle">PolicyClient</text>
+  <text class="sm" x="271" y="340" text-anchor="middle">Websocket / Local</text>
+  <!-- flows -->
+  <line class="ln-g" x1="140" y1="176" x2="174" y2="176" marker-end="url(#a7g)"/>
+  <line class="ln-g" x1="176" y1="206" x2="142" y2="206" marker-end="url(#a7g)"/>
+  <path class="ln-g" d="M190,220 V326 H174" marker-end="url(#a7g)" style="display:none"/>
+  <line class="ln" x1="271" y1="236" x2="271" y2="222" marker-end="url(#a7)"/>
+  <line class="ln-p" x1="366" y1="328" x2="412" y2="328" marker-end="url(#a7p)"/>
+  <line class="ln-p" x1="414" y1="258" x2="368" y2="258" marker-end="url(#a7p)"/>
+  <!-- hop badges -->
+  <g><circle class="hopc" cx="157" cy="164" r="9"/><text class="mono tc-p" x="157" y="168" text-anchor="middle">1</text></g>
+  <g><circle class="hopc" cx="366" cy="178" r="9"/><text class="mono tc-p" x="366" y="182" text-anchor="middle">2</text></g>
+  <g><circle class="hopc" cx="389" cy="316" r="9"/><text class="mono tc-p" x="389" y="320" text-anchor="middle">3</text></g>
+  <g><circle class="hopc" cx="389" cy="246" r="9"/><text class="mono tc-p" x="389" y="250" text-anchor="middle">5</text></g>
+  <g><circle class="hopc" cx="157" cy="218" r="9"/><text class="mono tc-p" x="157" y="222" text-anchor="middle">6</text></g>
+  <!-- protocol band -->
+  <rect class="pbox" x="414" y="24" width="72" height="366" rx="8"/>
+  <text class="ttl tc-p" x="450" y="200" text-anchor="middle" transform="rotate(-90 450 200)">vla_protocol</text>
+  <text class="sm" x="450" y="44" text-anchor="middle">Spec</text>
+  <text class="sm" x="450" y="350" text-anchor="middle">Obs →</text>
+  <text class="sm" x="450" y="366" text-anchor="middle">← Chunk</text>
+  <text class="layer" x="506" y="16">VLA 服务 · 每个模型独立环境</text>
+  <g id="models"></g>
+</svg>
+</div>
+<figcaption><b>图 7。</b>② 发生在适配器内部（TopoGym 原生观测 → 标准 <code>Observation</code>），④ 发生在选中模型的子类内部。下方面板随所选模型更新。</figcaption>
+<div class="pair">
+  <div class="sw-group"><div class="gt gym">Gym 侧：EvalRunner 按 PolicySpec 自动设置</div><div class="derived" id="derived"></div></div>
+  <div class="sw-group"><div class="gt vla">模型侧：④ 子类内部处理</div><div class="derived" id="inner"></div></div>
+</div>
+<p class="note" id="derived-note"></p>
+</figure>
+
+<div class="tbl"><table>
+<thead><tr><th style="width:4.5em">环节</th><th>ALOHA（例：cast_coil）</th><th>Panda（例：buzz_wire_3d）</th></tr></thead>
+<tbody>
+<tr><td><span class="hop">1</span> Env → Agent<br><span class="muted">TopoGym 原生观测</span></td>
+<td><code>rgb</code>：4 × (480, 848, 3) uint8<br><code>robot.left / right</code>：<code>joint_position_rad</code> (6,)、<code>joint_velocity_rad_s</code> (6,)、<code>finger_position_m</code> (2,)<br><code>state</code>：episode_id、physics_step、sim_time_s …<br><code>task</code>：任务测量量（<b>不传给 VLA</b>）</td>
+<td><code>rgb</code>：3 × (480, 848, 3) uint8<br><code>robot.arm</code>：<code>joint_position_rad</code> (7,)、<code>joint_velocity_rad_s</code> (7,)、<code>finger_position_rad</code> (2,)<br><code>state</code>、<code>task</code> 同左</td></tr>
+<tr><td><span class="hop">2</span> Adapter<br><span class="muted">→ 标准 Observation</span></td>
+<td><code>images</code>：<code>cam_high</code>、<code>cam_left_wrist</code>、<code>cam_right_wrist</code> 缩放到 <code>spec.image_size</code><br><code>state</code> (14,) float32：<code>[左 6 关节, 左开度, 右 6 关节, 右开度]</code>；开度 = (finger₀ − 0.002) / 0.035<br><code>instruction</code>：来自 <code>instructions.yaml</code></td>
+<td><code>images</code>：<code>agentview</code>、<code>wrist</code><br><code>state</code> (8,) float32：<code>[7 关节, 开度]</code>；开度 = 1 − finger₀ / 0.8<br><code>instruction</code> 同左</td></tr>
+<tr><td><span class="hop">3</span> 传输</td><td colspan="2">msgpack 二进制，<code>{"type": "infer", "obs": {...}}</code>，约 0.45 MB（3 张 224×224）；每 <code>execute_steps</code> 个控制步一次</td></tr>
+<tr><td><span class="hop">4</span> 子类内部</td><td colspan="2">模型专属：图像预处理、state 归一化或补零、prompt 格式、前向（flow matching 去噪 / 自回归解码）、反归一化、相对量 → 绝对量。见上方面板与<a href="#s4-io">第 4 节</a></td></tr>
+<tr><td><span class="hop">5</span> 返回</td><td><code>ActionChunk.actions</code> (H, 14) float32：绝对关节目标 + 开度；<code>ee_abs</code> 时为 (H, 20)</td><td>(H, 8)；<code>ee_abs</code> 时为 (H, 10)</td></tr>
+<tr><td><span class="hop">6</span> Agent → Env<br><span class="muted">TopoGym 动作字典</span></td>
+<td><code>JOINT_ABS</code>：<code>{"left": {"joint_position_rad": [6], "gripper_position_m": 0.002 + 0.035·开度}, "right": {...}}</code><br><code>EE_ABS</code>：每臂 <code>position_world_m</code> [3] + <code>orientation_wxyz</code> [4] + 夹爪</td>
+<td><code>JOINT_ABS</code>：<code>{"arm": {"joint_position_rad": [7], "gripper_position_rad": 0.8·(1 − 开度)}}</code><br><code>EE_ABS</code> 同左</td></tr>
+</tbody></table></div>
+
+<p><b>VLA 实际看到的输入</b>（默认相机组合，缩放前）：</p>
+<div class="io-grid">
+  <div class="panel"><h4>ALOHA · 3 路</h4>
+    <div class="views"><div><img src="img/cast_coil_high.jpg" alt="cam_high 俯视" loading="lazy"><span>cam_high</span></div><div><img src="img/cast_coil_lwrist.jpg" alt="cam_left_wrist 左腕" loading="lazy"><span>cam_left_wrist</span></div><div><img src="img/cast_coil_rwrist.jpg" alt="cam_right_wrist 右腕" loading="lazy"><span>cam_right_wrist</span></div></div>
+    <p class="note">+ state (14,) + "Assemble the two metal pieces into the four-layer coil, then release them."</p></div>
+  <div class="panel"><h4>Panda · 2 路</h4>
+    <div class="views two"><div><img src="img/buzz_wire_agentview.jpg" alt="agentview 第三人称" loading="lazy"><span>agentview</span></div><div><img src="img/buzz_wire_wrist.jpg" alt="wrist 腕部" loading="lazy"><span>wrist</span></div></div>
+    <p class="note">+ state (8,) + "Guide the metal loop along the entire wire without touching it, …"</p></div>
+</div>
+
+<h3>一次 act() 与动作块</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 150" role="img" aria-label="动作块时间线：每次推理输出 50 步，只执行前 10 步，然后在第 10、20 步重新推理">
+  <text class="lbl" x="4" y="36">推理 #1</text><text class="lbl" x="4" y="66">推理 #2</text><text class="lbl" x="4" y="96">推理 #3</text>
+  <g id="chunks"></g>
+  <line class="ln" x1="100" y1="118" x2="820" y2="118"/>
+  <line class="ln" x1="100" y1="114" x2="100" y2="122"/><text class="sm" x="100" y="136" text-anchor="middle">0</text>
+  <line class="ln" x1="200" y1="114" x2="200" y2="122"/><text class="sm" x="200" y="136" text-anchor="middle">10</text>
+  <line class="ln" x1="300" y1="114" x2="300" y2="122"/><text class="sm" x="300" y="136" text-anchor="middle">20</text>
+  <line class="ln" x1="400" y1="114" x2="400" y2="122"/><text class="sm" x="400" y="136" text-anchor="middle">30</text>
+  <line class="ln" x1="600" y1="114" x2="600" y2="122"/><text class="sm" x="600" y="136" text-anchor="middle">50</text>
+  <line class="ln" x1="800" y1="114" x2="800" y2="122"/><text class="sm" x="800" y="136" text-anchor="middle">70</text>
+  <text class="sm" x="830" y="122">控制步</text>
+  <rect class="cell" x="640" y="10" width="10" height="10"/><text class="sm" x="656" y="19">执行</text>
+  <rect class="cell-off" x="700" y="10" width="10" height="10"/><text class="sm" x="716" y="19">预测但丢弃</text>
+</svg>
+</div>
+<figcaption><b>图 8。</b><code>chunk_size=50</code>、<code>execute_steps=10</code> 时，每 10 个控制步请求一次模型。仿真代价远大于推理，精细任务可以把 <code>execute_steps</code> 调小、更频繁地重推理。</figcaption>
+</figure>
+
+<h3>代码骨架与目录</h3>
+<pre><span class="c"># ── Gym 侧：vla/gym/embodiment.py ── 每个机器人一个，纯 numpy</span>
+<span class="kw">class</span> <span class="h">EmbodimentAdapter</span>:
+    <span class="kw">def</span> __init__(self, action_spec: dict, spec: PolicySpec): ...
+    <span class="kw">def</span> observation(self, obs: dict, instruction: str) -> Observation: ...   <span class="c"># ②</span>
+    <span class="kw">def</span> action(self, row: np.ndarray) -> dict: ...                         <span class="c"># ⑥ 截断 + 夹爪反归一化</span>
+
+<span class="c"># ── VLA 侧：vla/models/base.py ── 不依赖 topogym / Genesis</span>
+<span class="kw">class</span> <span class="h">BaseVLA</span>(ABC):
+    spec: PolicySpec
+    <span class="kw">@abstractmethod</span>
+    <span class="kw">def</span> load(self, checkpoint: str, device: str) -> None: ...
+    <span class="kw">@abstractmethod</span>
+    <span class="kw">def</span> infer(self, obs: Observation) -> ActionChunk: ...                   <span class="c"># ④</span>
+    <span class="kw">def</span> reset(self, seed: int) -> None:                                   <span class="c"># 清内部状态、设随机种子</span>
+        ...</pre>
+<pre><span class="h">vla/</span>                              <span class="c"># 新顶层目录，不放进 topogym/ 包</span>
+├── <span class="h">protocol/</span>                     <span class="c"># types.py + wire.py；两侧都安装（numpy + msgpack）</span>
+├── <span class="kw">gym/</span>                          <span class="c"># 只在 Gym 环境安装</span>
+│   ├── embodiment.py  agent.py  client.py
+│   ├── run_eval.py               <span class="c"># task × variation × seed → results.jsonl / MP4</span>
+│   └── export_lerobot.py         <span class="c"># Transition → LeRobot 数据集（复用 embodiment.py）</span>
+├── <span class="s">models/</span>                       <span class="c"># 每个模型一个子目录 = 一个独立环境（pyproject 或 Dockerfile）</span>
+│   ├── base.py  serve.py
+│   ├── pi05/                     <span class="c"># OpenpiVLA：import openpi 策略对象</span>
+│   ├── groot/                    <span class="c"># GR00TVLA：Isaac-GR00T</span>
+│   ├── xvla/                     <span class="c"># XVLAVLA：X-VLA 仓库</span>
+│   └── dm05/                     <span class="c"># DM05VLA：opendm</span>
+├── configs/  instructions.yaml  eval/*.yaml
+└── tests/                        <span class="c"># 协议往返、适配器数值、LocalClient 端到端</span></pre>
+
+<h3>训练数据与评测同构</h3>
+<p>VLA 在 TopoGym 上零样本基本不可用，需要用 TopoGym 自己的演示微调。<code>export_lerobot.py</code> 读取 Env 的 <code>Transition</code>，经<b>同一个</b> <code>EmbodimentAdapter</code> 转成 LeRobot 数据集；state 排列、夹爪归一化、相机名、图像尺寸、控制频率只在一处定义。导出时同时写关节目标和 TCP 位姿两列（TCP 由 FK 计算），关节空间模型和末端空间模型共用同一批演示。</p>
+<div class="tbl"><table>
+<thead><tr><th>模型</th><th>训练数据格式</th><th>从主格式（LeRobot v2.1）转换</th></tr></thead>
+<tbody>
+<tr><td>π0.5</td><td>LeRobot v2.x（openpi 固定的旧版 LeRobot）</td><td>直接使用；用 <code>compute_norm_stats.py</code> 算统计量</td></tr>
+<tr><td>GR00T N1.7</td><td>GR00T 版 LeRobot v2 + <code>meta/modality.json</code></td><td>补 <code>modality.json</code>，重算 <code>stats.json</code> 与 <code>relative_stats.json</code></td></tr>
+<tr><td>X-VLA-0.9B</td><td>自定义 handler + <code>meta.json</code></td><td>基于仓库的 LeRobot v2.1 handler；state 与动作取 TCP 列（EE6D）</td></tr>
+<tr><td>DM0.5</td><td>OpenDM JSONL（每 episode 一个文件）</td><td>转换脚本逐帧写出图像路径、14 维 state、prompt</td></tr>
+</tbody></table></div>
+<div class="callout bad">演示来源是 <code>topogym/planning/</code> 中 7 类任务的脚本化参考解，需要在与评测相同的配置（CUDA、RGB、<code>control_decimation</code>、辅助抓持设置）下重新执行并渲染。现有 <code>solvability_proof/</code> 是 CPU、无 RGB、25 ms tick，不能直接当训练数据。</div>
+
+<h3 id="s3-dec">待确认决策</h3>
+<div class="tbl"><table>
+<thead><tr><th>决策</th><th>建议</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>VLA 代码位置</td><td>仓库根 <code>vla/</code></td><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 simulator / tasks</td></tr>
+<tr><td>控制频率</td><td>ALOHA 50 Hz（<code>control_decimation=8</code>）或保持 40 Hz</td><td><code>400 / control_hz</code> 必须为整数；仿真墙钟主要由仿真时长决定</td></tr>
+<tr><td>辅助抓持</td><td>数据生成与评测统一开或统一关</td><td>开与不开的成绩不能比较；现有可解证据均开启</td></tr>
+<tr><td>instruction</td><td>新建 <code>vla/configs/instructions.yaml</code>，补齐 8 个任务</td><td>13 个任务中只有 5 个有 <code>instruction</code></td></tr>
+<tr><td>首批任务</td><td>cast_coil、cast_keyhole（ALOHA）；buzz_wire_3d（Panda）</td><td>刚体、有参考解；FEM 任务显存与耗时更高且无可解证据</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+<h2><span class="num">04</span>VLA 选型</h2>
+<p>选型标准：<b>热度高、最新、最强、开源权重、每个系列只选一个</b>。LeRobot 是否集成不作为依据；每个模型用它自己的官方推理代码接入（各一个子类），保证复现精度。资料核对日期 2026-09-29（GitHub / Hugging Face API、源码、arXiv、官方排行榜）。</p>
+
+<div class="vla-grid">
+  <div class="vcard pick">
+    <div class="top"><span class="nm">π0.5</span><span class="org">Physical Intelligence</span></div>
+    <span class="role">π 系列 · 主力</span>
+    <dl><dt>发布</dt><dd>论文 2025-04；开源权重 2025-09</dd><dt>规模</dt><dd>约 3.3B · PaliGemma + flow-matching 动作专家</dd><dt>热度</dt><dd>14k stars · 2,005 引用</dd><dt>微调</dt><dd>LoRA &gt; 22.5 GB，4090 可跑</dd></dl>
+    <p>π0.7、π*0.6 未开源，π0.5 是这个系列最新的开源版本。第三方评测的开源 VLA 中，它在 RoboTwin 2.0 与 RoboDojo 上都最高；BEHAVIOR 2026 官方基线。预训练含 ALOHA（Trossen）、AgileX 与 Franka。</p>
+  </div>
+  <div class="vcard pick">
+    <div class="top"><span class="nm">GR00T N1.7</span><span class="org">NVIDIA</span></div>
+    <span class="role">NVIDIA 系列 · 下载量最高</span>
+    <dl><dt>发布</dt><dd>2026-03（GTC）；正式版 2026-07</dd><dt>规模</dt><dd>3.1B · Cosmos-Reason2-2B + flow-matching DiT</dd><dt>热度</dt><dd>HF 月下载 137k（开源 VLA 第一）· 8.1k stars</dd><dt>微调</dt><dd>≥ 40 GB，无 LoRA</dd></dl>
+    <p>BEHAVIOR 2026 官方基线。预训练没有 ALOHA 类数据（最接近的是 YAM 双臂），ALOHA 要按新本体从头训投影层；第三方 RoboDojo 成绩偏低（1.3%）。GitHub 与 HF 上的许可证表述不一致，商用前需确认。</p>
+  </div>
+  <div class="vcard pick">
+    <div class="top"><span class="nm">X-VLA-0.9B</span><span class="org">清华 AIR</span></div>
+    <span class="role">X-VLA · 小模型 / 末端空间</span>
+    <dl><dt>发布</dt><dd>2025-09；ICLR 2026</dd><dt>规模</dt><dd>0.9B · Florence-2 + soft prompt + flow matching</dd><dt>热度</dt><dd>736 stars · 323 引用</dd><dt>许可</dt><dd>代码与权重均 Apache-2.0</dd></dl>
+    <p>第三方评测中仅次于 π0.5（RoboTwin 2.0 平均 44.5，RoboDojo 6.5%）。预训练含 AgileX 双臂与 DROID Franka，有 RoboTwin2 与叠布 checkpoint。动作空间是绝对末端位姿，接入时走 <code>EE_ABS</code>。</p>
+  </div>
+  <div class="vcard pick">
+    <div class="top"><span class="nm">DM0.5</span><span class="org">Dexmal 原力灵机</span></div>
+    <span class="role">2026 新模型 · 自报最强</span>
+    <dl><dt>发布</dt><dd>2026-07</dd><dt>规模</dt><dd>5.8B · Gemma3-4B + 680M flow-matching 动作专家</dd><dt>热度</dt><dd>2.2k stars（发布 12 周）</dd><dt>许可</dt><dd>代码 Apache-2.0；权重 Gemma</dd></dl>
+    <p>RoboDojo 第 1（19.3%）、RoboTwin 2.0 93.6 / 93.3，均为作者自报。预训练含 AgileX ALOHA 与 Franka，有官方 ALOHA checkpoint。没有论文，成绩需要我们自己的评测来检验。</p>
+  </div>
+  <div class="vcard">
+    <div class="top"><span class="nm">备选</span><span class="org">替换其中一个时使用</span></div>
+    <span class="role alt">MolmoAct2 · G0.5</span>
+    <p><b>MolmoAct2</b>（Ai2，2026-05）：权重、数据、代码全开源（Apache-2.0）；原生输出绝对关节，有 14 维双臂 YAM 与 8 维 DROID Franka checkpoint，与本方案的标准格式最贴合；第三方 RoboDojo 成绩低（0.38%）。<b>G0.5</b>（Galaxea，2026-06）：RoboDojo 自报第 2（14.9%），有 RoboTwin 与 DROID checkpoint；许可证禁止商用，权重需申请。</p>
+  </div>
+  <div class="vcard">
+    <div class="top"><span class="nm">本轮移除</span><span class="org">相对第 1 版</span></div>
+    <span class="role alt">π0-FAST · SmolVLA</span>
+    <p><b>π0-FAST</b> 与 π0.5 同属 π 系列，按"每个系列选一个"移除。<b>SmolVLA</b> 容易上手，但第三方 RoboDojo 仅 1.8%，不满足"最强"。</p>
+  </div>
+</div>
+
+<h3>最新最强、但无法使用的模型</h3>
+<div class="tbl"><table>
+<thead><tr><th>模型</th><th>时间</th><th>状态（2026-09-29）</th></tr></thead>
+<tbody>
+<tr><td>π0.7</td><td>2026-04</td><td>无权重、无代码；openpi 最近一次提交（2026-08）只是文档修复</td></tr>
+<tr><td>π*0.6</td><td>2025-11</td><td>无权重；openpi 权重桶里没有，issue #791 无官方答复</td></tr>
+<tr><td>Gemini Robotics 2 / On-Device 2</td><td>2026-07</td><td>只对受邀合作方开放；Gemini Robotics ER 2 可经 API 使用，但它做推理与规划，不输出电机控制</td></tr>
+<tr><td>GR00T N2</td><td>2026-03 宣布</td><td>计划年底开放，目前未发布</td></tr>
+</tbody></table></div>
+<p class="note">这些模型无法在 TopoGym 上微调或评测。它们开放后，按第 3 节加一个子类即可接入。</p>
+
+<h3>热度与成绩</h3>
+<div class="tbl"><table>
+<thead><tr><th>模型（最新开源版）</th><th>发布</th><th>GitHub stars</th><th>HF 月下载</th><th>引用</th><th>RoboTwin 2.0 平均</th><th>RoboDojo 成功率</th><th>其他</th></tr></thead>
+<tbody>
+<tr><td><b>π0.5</b></td><td>2025-09</td><td class="num">14,042</td><td class="num">17,280*</td><td class="num">2,005</td><td class="num">58.4（榜方）</td><td class="num">6.9%（榜方）</td><td>BEHAVIOR 2026 基线；RoboArena 1608</td></tr>
+<tr><td><b>GR00T N1.7</b></td><td>2026-03</td><td class="num">8,147</td><td class="num">137,065</td><td class="num">1,390†</td><td>不在榜</td><td class="num">1.3%（榜方）</td><td>BEHAVIOR 2026 基线</td></tr>
+<tr><td><b>X-VLA-0.9B</b></td><td>2025-09</td><td class="num">736</td><td class="num">11,031</td><td class="num">323</td><td class="num">44.5（榜方）</td><td class="num">6.5%（榜方）</td><td>ICLR 2026</td></tr>
+<tr><td><b>DM0.5</b></td><td>2026-07</td><td class="num">2,185</td><td class="num">665</td><td>无论文</td><td>93.5（自报，不在官方榜）</td><td class="num">19.3%（自报）</td><td>RoboChallenge Table30v2 43%</td></tr>
+<tr><td>MolmoAct2</td><td>2026-05</td><td class="num">782</td><td class="num">21,411</td><td class="num">49</td><td>不在榜</td><td class="num">0.38%（榜方）</td><td>全开源</td></tr>
+<tr><td>G0.5</td><td>2026-06</td><td class="num">802</td><td>需申请，不计数</td><td class="num">13</td><td>93.3（自报）</td><td class="num">14.9%（自报）</td><td>非商用</td></tr>
+<tr><td>GigaBrain-0.7</td><td>2026-08</td><td class="num">2,661</td><td class="num">2,812</td><td class="num">4</td><td class="num">67.3（作者提交）</td><td>–</td><td>观察名单</td></tr>
+<tr><td>Xiaomi-Robotics-1</td><td>2026-07</td><td class="num">712</td><td>不计数</td><td class="num">27</td><td>R0：40.5</td><td class="num">13.9%（自报）</td><td>只输出末端增量；观察名单</td></tr>
+</tbody></table></div>
+<p class="note">* π0.5 官方权重放在 GCS，HF 不计数，此处为 <code>lerobot/pi05_base</code> 镜像的下载量。† GR00T N1 论文的引用数。"榜方"指由排行榜团队用统一流程评测，"自报"指作者自己提交或论文中报告。HF 下载量只统计仓库指定的文件，需申请或没有 config.json 的仓库显示为 0，跨仓库不完全可比。</p>
+
+<h3 id="s4-emb">两种机器人：要不要选不同的 VLA</h3>
+<p>不需要。四个模型都是跨本体模型，预训练数据同时覆盖双臂和 Franka（GR00T 缺 ALOHA 类数据）。做法是同一个模型按机器人各微调一个 checkpoint，也可以两种机器人混合训练一个。</p>
+<div class="tbl"><table>
+<thead><tr><th>模型</th><th>ALOHA 类预训练数据</th><th>官方 ALOHA 类 checkpoint</th><th>Franka 预训练数据</th><th>官方 Franka checkpoint</th><th>跨本体机制</th></tr></thead>
+<tbody>
+<tr><td><b>π0.5</b></td><td>有：Trossen ALOHA、AgileX（base 自带 trossen 归一化统计量）</td><td>无 π0.5 版（只有 π0 有）</td><td>有：DROID；base 自带 FR3 + Robotiq 统计量</td><td>pi05_droid、pi05_droid_jointpos、pi05_libero</td><td>state / 动作补零到 32 维 + 每机器人一套归一化统计量</td></tr>
+<tr><td><b>GR00T N1.7</b></td><td>无；最接近的是 XDOF（YAM 双臂）</td><td>无</td><td>有：DROID</td><td>GR00T-N1.7-DROID、-LIBERO</td><td>每个本体一组输入 / 输出投影层（32 个槽）；新本体用槽 10，预训练未用过</td></tr>
+<tr><td><b>X-VLA-0.9B</b></td><td>有：robomind-agilex</td><td>X-VLA-RoboTwin2（仿真）、X-VLA-SoftFold（真机叠布）</td><td>有：DROID、robomind-franka</td><td>Libero、Calvin、VLABench（均为末端空间）</td><td>每个 domain 一组 soft prompt（30 个槽），约占参数 0.04%</td></tr>
+<tr><td><b>DM0.5</b></td><td>有：AgileX ALOHA</td><td>DM05-robotwin2（绝对关节）、DM05-Table30v2-ALOHA（相对关节）</td><td>有：Franka Panda</td><td>DM05-libero（仿真）</td><td>prompt 中写机器人类型与控制模式 + 每机器人归一化 + 补零到 32 维</td></tr>
+</tbody></table></div>
+
+<h3 id="s4-io">各模型的输入与输出（第 ④ 步子类内部）</h3>
+<p>Gym 侧给每个模型的都是同一个标准 <code>Observation</code>（第 3 节）。下表是各子类内部要把它变成什么样，以及模型输出什么，子类再换回标准 <code>ActionChunk</code>。</p>
+<div class="tbl"><table>
+<thead><tr><th></th><th>π0.5</th><th>GR00T N1.7</th><th>X-VLA-0.9B</th><th>DM0.5</th></tr></thead>
+<tbody>
+<tr><td>相机</td><td>固定 3 槽：base、left_wrist、right_wrist。ALOHA 用 <code>cam_high</code> + 两腕，<code>cam_low</code> 丢弃；Panda：agentview → base，wrist → left_wrist，右槽补零</td><td>任意路数，可带历史帧（DROID：2 路 × 2 帧）</td><td>最多 3 路；第 1 路与文本一起进 VLM，其余只过视觉编码器</td><td>任意路数，按名字标注（默认 Head / Left wrist / Right wrist）</td></tr>
+<tr><td>图像预处理</td><td>保持比例缩放 + 黑边到 224×224，像素到 [-1, 1]</td><td>保持比例，短边 256，裁剪 95%</td><td>直接缩放到 224×224，ImageNet 均值方差</td><td>补成正方形后缩放到 448×448，像素到 [-1, 1]</td></tr>
+<tr><td>state 输入</td><td>分位数归一化 → 256 档离散 → 以文本写进 prompt</td><td>分位数归一化，连续值补零到 132 维，经本体专属 MLP</td><td>20 维绝对末端位姿（每臂 xyz + rot6d + 夹爪），原始单位，不归一化</td><td>分位数归一化 → 256 档离散 → 写进 prompt</td></tr>
+<tr><td>语言</td><td><code>Task: {指令}, State: {…};\nAction:</code></td><td>小写、去标点，放进 Qwen3-VL 对话模板</td><td>BART 分词，≤ 50 token</td><td><code>Robot: Aloha / Control mode: joint / Overall speed / Task: …</code></td></tr>
+<tr><td>输出 H × D</td><td>50 × 32，ALOHA 取前 14</td><td>≤ 40 × 132，按本体切片</td><td>30 × 20</td><td>50 × 32，ALOHA 取前 14</td></tr>
+<tr><td>动作表示</td><td>12 个臂关节为相对推理时刻 state 的增量，夹爪绝对</td><td>按键配置：相对 / 绝对 × 末端（xyz + rot6d）/ 关节；ALOHA 建议臂关节相对、夹爪绝对</td><td>绝对末端位姿；夹爪二值，1 = 闭合</td><td>相对关节（Table30v2-ALOHA）或绝对关节（robotwin2）</td></tr>
+<tr><td>解码</td><td>flow matching 10 步</td><td>flow matching 4 步</td><td>flow matching 10 步</td><td>flow matching 10 步</td></tr>
+<tr><td>子类换回标准格式</td><td>加回 state 得绝对关节；夹爪换算</td><td>处理器已返回绝对值；按键拼成 14 维</td><td>返回 <code>ee_abs</code>（20 维）；夹爪开度 = 1 − 输出</td><td>相对时加回 state；取前 14 维</td></tr>
+<tr><td>参考频率</td><td>ALOHA 50 Hz；DROID 15 Hz</td><td>DROID 15 Hz</td><td>chunk 按时间定义（RoboTwin2：30 步 = 1 s）</td><td>ALOHA 20 Hz（执行 25 步）</td></tr>
+<tr><td>推理</td><td>&gt; 8 GB；π0 在 4090 上 73 ms（π0.5 未公布）</td><td>≥ 16 GB；H100 86 ms</td><td>4090 约 114 ms（第三方测得）</td><td>4090 约 10 Hz（官方博客）</td></tr>
+<tr><td>微调</td><td>LoRA &gt; 22.5 GB；全量 &gt; 70 GB</td><td>默认冻结 VLM，≥ 40 GB；无 LoRA</td><td>全量或 LoRA（r = 8）；显存未公布</td><td>24 GB 卡用 LoRA；全量建议 8 卡</td></tr>
+<tr><td>官方服务</td><td>WebSocket + msgpack，:8000</td><td>ZMQ，:5555</td><td>FastAPI <code>POST /act</code></td><td>HTTP <code>POST /v1/infer</code></td></tr>
+<tr><td>训练数据格式</td><td>LeRobot v2.x（openpi 固定的旧版）</td><td>GR00T 版 LeRobot v2 + <code>meta/modality.json</code></td><td>自定义 handler（仓库有 LeRobot v2.1 handler）</td><td>OpenDM JSONL（每 episode 一个文件）</td></tr>
+</tbody></table></div>
+<div class="callout">四个模型的官方服务协议各不相同（WebSocket、ZMQ、两种 HTTP）。本方案不直接连它们的服务：每个子类在模型自己的环境里 import 官方推理对象，统一由 <code>serve.py</code> 以 WebSocket + msgpack 对外提供。Gym 侧因此只需要一种客户端。</div>
+
+<h3>发布时间线</h3>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 900 262" role="img" aria-label="2024-10 至 2026-09 的主要 VLA 发布时间线，分为首选、其他开源、闭源三行；首选为 π0.5、X-VLA、GR00T N1.7、DM0.5">
+  <text class="layer" x="0" y="64">首选</text>
+  <text class="layer" x="0" y="134">其他开源</text>
+  <text class="layer" x="0" y="204">闭源</text>
+  <line x1="70" y1="60" x2="870" y2="60" style="stroke:var(--line);stroke-width:1.3"/>
+  <line x1="70" y1="130" x2="870" y2="130" style="stroke:var(--line);stroke-width:1.3"/>
+  <line x1="70" y1="200" x2="870" y2="200" style="stroke:var(--line);stroke-width:1.3"/>
+  <line class="ln" x1="70" y1="232" x2="870" y2="232"/>
+  <line class="ln" x1="70" y1="228" x2="70" y2="236"/><text class="sm" x="70" y="252" text-anchor="middle">2024-10</text>
+  <line class="ln" x1="169" y1="228" x2="169" y2="236"/><text class="sm" x="169" y="252" text-anchor="middle">2025-01</text>
+  <line class="ln" x1="268" y1="228" x2="268" y2="236"/><text class="sm" x="268" y="252" text-anchor="middle">04</text>
+  <line class="ln" x1="367" y1="228" x2="367" y2="236"/><text class="sm" x="367" y="252" text-anchor="middle">07</text>
+  <line class="ln" x1="466" y1="228" x2="466" y2="236"/><text class="sm" x="466" y="252" text-anchor="middle">10</text>
+  <line class="ln" x1="565" y1="228" x2="565" y2="236"/><text class="sm" x="565" y="252" text-anchor="middle">2026-01</text>
+  <line class="ln" x1="664" y1="228" x2="664" y2="236"/><text class="sm" x="664" y="252" text-anchor="middle">04</text>
+  <line class="ln" x1="763" y1="228" x2="763" y2="236"/><text class="sm" x="763" y="252" text-anchor="middle">07</text>
+  <line class="ln-p" x1="860" y1="20" x2="860" y2="236" style="stroke-dasharray:3 3"/>
+  <text class="sm tc-p" x="856" y="16" text-anchor="end">今天 09-29</text>
+  <circle cx="291" cy="60" r="6" class="tc-v"/><text class="lbl" x="291" y="44" text-anchor="middle">π0.5</text>
+  <circle cx="460" cy="60" r="6" class="tc-v"/><text class="lbl" x="460" y="84" text-anchor="middle">X-VLA</text>
+  <circle cx="648" cy="60" r="6" class="tc-v"/><text class="lbl" x="648" y="44" text-anchor="middle">GR00T N1.7</text>
+  <circle cx="772" cy="60" r="6" class="tc-v"/><text class="lbl" x="772" y="84" text-anchor="middle">DM0.5</text>
+  <circle cx="103" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="103" y="116" text-anchor="middle">π0</text>
+  <circle cx="186" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="186" y="150" text-anchor="middle">π0-FAST</text>
+  <circle cx="232" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="236" y="116" text-anchor="middle">OpenVLA-OFT</text>
+  <circle cx="337" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="337" y="150" text-anchor="middle">SmolVLA</text>
+  <circle cx="532" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="532" y="116" text-anchor="middle">GR00T N1.6</text>
+  <circle cx="702" cy="130" r="5" class="tc-p"/><text class="sm" x="702" y="116" text-anchor="middle">MolmoAct2</text>
+  <circle cx="730" cy="130" r="5" class="tc-p"/><text class="sm" x="730" y="150" text-anchor="middle">G0.5</text>
+  <circle cx="793" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="793" y="116" text-anchor="middle">Xiaomi-R1</text>
+  <circle cx="812" cy="130" r="5" style="fill:var(--muted)"/><text class="sm" x="812" y="150" text-anchor="middle">GigaBrain-0.7</text>
+  <circle cx="248" cy="200" r="5" class="tc-b"/><text class="sm" x="248" y="186" text-anchor="middle">Gemini Robotics</text>
+  <circle cx="517" cy="200" r="5" class="tc-b"/><text class="sm" x="517" y="186" text-anchor="middle">π*0.6</text>
+  <circle cx="648" cy="200" r="5" style="fill:var(--surface);stroke:var(--bad);stroke-width:1.6"/><text class="sm" x="640" y="220" text-anchor="middle">GR00T N2（已宣布，未开放）</text>
+  <circle cx="681" cy="200" r="5" class="tc-b"/><text class="sm" x="690" y="186" text-anchor="middle">π0.7</text>
+  <circle cx="795" cy="200" r="5" class="tc-b"/><text class="sm" x="795" y="186" text-anchor="middle">Gemini Robotics 2</text>
+</svg>
+</div>
+<figcaption><b>图 9。</b>π0.5 按论文日期标注（开源权重 2025-09）。橙色为备选，红色为闭源，空心点为已宣布未开放。</figcaption>
+</figure>
+
+<h3>RoboTwin 2.0：与 TopoGym ALOHA 任务最接近的公开基准</h3>
+<p>Aloha-AgileX 双臂、14 维关节、头部 + 两腕相机，50 个任务。Easy 为无随机化，Hard 为域随机化。下图取官方榜（2026-09-24）；DM0.5（93.6 / 93.3）与 G0.5（93.3）的自报成绩不在官方榜上，GR00T N1.7 未参评。</p>
+<figure>
+<div class="scroll">
+<svg id="rtchart" viewBox="0 0 900 382" role="img" aria-label="RoboTwin 2.0 官方榜成功率：ME-Dex-1.0 Easy 89.58 Hard 68.12；GigaBrain-0.7 66.8 与 67.9；π0.5 70.7 与 46.0；X-VLA 68.0 与 20.9；Xiaomi-R0 62.9 与 18.2；π0 46.42 与 16.34；ACT 29.74 与 1.74"></svg>
+</div>
+<div id="rt-tip" class="note" aria-live="polite" style="min-height:1.6em"></div>
+<details><summary class="note" style="cursor:pointer">表格视图</summary>
+<div class="tbl"><table><thead><tr><th>模型</th><th>Easy %</th><th>Hard %</th></tr></thead><tbody id="rt-table"></tbody></table></div>
+</details>
+<figcaption><b>图 10。</b>加粗为本次首选。所有模型的 Hard 成绩都低于 Easy。π0.5 为多任务联合训练成绩，π0 为单任务微调成绩，两者训练设置不同。来源：robotwin-platform.github.io/leaderboard。</figcaption>
+</figure>
+
+<h3>不选的模型</h3>
+<div class="tbl"><table>
+<thead><tr><th>原因</th><th>模型</th></tr></thead>
+<tbody>
+<tr><td>闭源</td><td>π0.7、π*0.6、Gemini Robotics 系列、GR00T N2（未发布）、GO-2（权重未确认）</td></tr>
+<tr><td>同系列只留一个</td><td>π0、π0-FAST（保留 π0.5）；GR00T N1 / N1.5 / N1.6（保留 N1.7）；Xiaomi-R0（R1 在观察名单）</td></tr>
+<tr><td>已被取代或较弱</td><td>OpenVLA、Octo、RDT-1B、CogACT、DexVLA、UniVLA、EO-1、SmolVLA、OpenVLA-OFT</td></tr>
+<tr><td>许可或算力</td><td>GO-1（CC BY-NC-SA）、InternVLA-A1.5（CC BY-NC-SA）、DreamZero（14B、权重非商用）、Cosmos3-Nano-Policy（16B）</td></tr>
+<tr><td>观察名单</td><td>GigaBrain-0.7（RoboTwin 作者提交 67.3）、Xiaomi-Robotics-1（只输出末端增量，需额外控制器）、LingBot-VLA 2.0：发布时间短，第三方评测少</td></tr>
+</tbody></table></div>
+<p class="note">未核实项：X-VLA 的显存需求；DM0.5 的显存与 ALOHA checkpoint 的图像分辨率；GR00T N1.7 推理时的图像处理细节（配置与 README 表述不一致）；π0.5 在 4090 上的推理耗时；TopoGym ALOHA 的关节零位、符号是否与真实 ALOHA 一致（决定 openpi 的 <code>adapt_to_pi</code> 是否关闭）。</p>
+
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+<h2><span class="num">05</span>落地顺序与评测成本</h2>
+<div class="phases">
+  <div class="phase"><span class="p">P0</span><span class="t">协议 + 适配</span><span>protocol、EmbodimentAdapter、VLAAgent、LocalClient、单测</span><span class="done">占位策略跑通 cast_coil 40 步，结果与 vla_eval_demo.py 一致</span></div>
+  <div class="phase"><span class="p">P1</span><span class="t">服务 + 录像</span><span>serve.py、WebsocketClient、episode_recorder、第一个子类</span><span class="done">远程往返；ActionChunk 形状与数值检查；每 episode 有 MP4</span></div>
+  <div class="phase"><span class="p">P2</span><span class="t">数据</span><span>参考解在评测配置下生成 RGB 演示，导出 LeRobot</span><span class="done">首批任务各档演示数达到目标</span></div>
+  <div class="phase"><span class="p">P3</span><span class="t">首个模型</span><span>微调 + 评测</span><span class="done">成功率与结果分布</span></div>
+  <div class="phase"><span class="p">P4</span><span class="t">扩展</span><span>其余模型各一个子类，同数据同矩阵</span><span class="done">模型间对比表</span></div>
+</div>
+<h3>评测成本估算</h3>
+<p>仿真是瓶颈。按 <code>docs/vla_doc</code> 的实测（6–10 s/控制步，GPU 共用），估算一个评测矩阵需要的 GPU·h。独占 GPU 时的吞吐需要重新实测。</p>
+<div class="calc">
+  <div>
+    <label for="c-models">模型数<input id="c-models" type="number" min="1" max="20" value="4"></label>
+    <label for="c-tasks">任务数<input id="c-tasks" type="number" min="1" max="13" value="3"></label>
+    <label for="c-seeds">每任务 seed 数<input id="c-seeds" type="number" min="1" max="500" value="20"></label>
+    <label for="c-sim">每 episode 仿真时长（s）<input id="c-sim" type="number" min="1" max="600" value="25"></label>
+    <label for="c-hz">控制频率（Hz）<input id="c-hz" type="number" min="1" max="400" value="40"></label>
+    <label for="c-wall">每控制步墙钟（s）<input id="c-wall" type="number" min="0.1" max="60" step="0.5" value="8"></label>
+  </div>
+  <div class="out" aria-live="polite">
+    <div class="row">episode 总数 <b id="o-eps">–</b></div>
+    <div class="row">每 episode ≈ <b id="o-per">–</b> h</div>
+    <div class="big" id="o-total">– <small>GPU·h</small></div>
+    <div class="bar"><span id="o-bar"></span></div>
+    <div class="row" id="o-days">–</div>
+  </div>
+</div>
+<p class="note">假设渲染与物理都按控制步计；实际每控制步耗时随任务（刚体 / FEM）与 <code>control_decimation</code> 变化。模型服务可被多个仿真进程共享，不计入此处 GPU·h。</p>
+</section>
+
+<footer>
+  源文件：<code>docs/vla_integration/index.html</code>、<code>README.md</code>（分支 <code>dev/pingyue</code>）。仓库事实核对自 <code>topogym/simulator/</code>、<code>topogym/robot/control.py</code>、<code>topogym/sensors/observation.py</code>、<code>topogym/recording/session.py</code>、<code>topogym/simulator/rollout_simulation/policy.py</code>、<code>docs/vla_doc/README.md</code>（2026-09-29）。
+</footer>
+</main>
+</div>
+
+<script>
+(function(){
+  var ns="http://www.w3.org/2000/svg";
+  function el(tag,attrs,text){var e=document.createElementNS(ns,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e}
+
+  // ---- tasks ----
+  var TASKS=[
+    ["cast_coil","双件交替四层装配","aloha","rigid",1,0],
+    ["cast_keyhole","钥匙孔解锁分离","aloha","rigid",1,0],
+    ["horseshoe_ring","马蹄环取环","aloha","rigid",0,0],
+    ["interlocked_claws","双爪互锁分离","aloha","rigid",0,0],
+    ["blanket_flatten","被子展平","aloha","soft",0,0],
+    ["rope_threading","绳穿环","aloha","soft",0,1],
+    ["knot_untying","解绳结","aloha","soft",0,1],
+    ["orbits","阶梯解绳","aloha","soft",0,0],
+    ["slotted_post_ring","长孔立柱解环","aloha","soft",0,0],
+    ["buzz_wire_3d","立体电流棒","panda","rigid",0,1],
+    ["hedgehog_in_cage","刺球出笼","panda","rigid",0,0],
+    ["lock_picking","开锁","panda","rigid",0,1],
+    ["fiber_bundling","光纤收束","panda","rigid",0,1]
+  ];
+  var PHYS={"blanket_flatten":"PBD 布料","lock_picking":"带关节刚体","fiber_bundling":"带关节刚体"};
+  var grid=document.getElementById("tasks");
+  grid.innerHTML=TASKS.map(function(t){
+    var phys=PHYS[t[0]]||(t[3]==="rigid"?"刚体":"FEM/IPC");
+    return '<div class="task" data-robot="'+t[2]+'" data-phys="'+t[3]+'" data-proof="'+t[4]+'">'+
+      '<span class="name">'+t[0]+'</span><span class="zh">'+t[1]+'</span><div class="chips">'+
+      '<span class="chip '+t[2]+'">'+(t[2]==="aloha"?"ALOHA":"Panda")+'</span>'+
+      '<span class="chip">'+phys+'</span>'+
+      (t[4]?'<span class="chip proof">可解证据</span>':'')+
+      (t[5]?'<span class="chip">指令</span>':'<span class="chip no">无指令</span>')+
+      '</div></div>';
+  }).join("");
+  var fbtns=document.querySelectorAll(".filters button");
+  fbtns.forEach(function(b){b.addEventListener("click",function(){
+    fbtns.forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+    var f=b.dataset.f;
+    grid.querySelectorAll(".task").forEach(function(e){
+      e.hidden=!(f==="all"||e.dataset.robot===f||e.dataset.phys===f||(f==="proof"&&e.dataset.proof==="1"));
+    });
+  })});
+
+  // ---- physics ticks (fig 2) ----
+  var tk=document.getElementById("ticks");
+  for(var i=0;i<10;i++){
+    tk.appendChild(el("rect",{"class":"tick",x:298+i*37,y:56,width:30,height:30,rx:4}));
+    tk.appendChild(el("text",{"class":"mono",x:313+i*37,y:75,"text-anchor":"middle"},String(i+1)));
+  }
+
+  // ---- sequence diagram (fig 4) ----
+  var sq=document.getElementById("seq");
+  var LANES={R:[80,"EvalRunner","管理方","box2"],E:[240,"Env / actor","TopoGym","gbox"],A:[410,"VLAAgent","Adapter + 队列","gbox"],C:[590,"PolicyClient","vla_protocol","pbox"],S:[790,"VLA 服务","BaseVLA 子类","vbox"]};
+  sq.appendChild(el("rect",{"class":"frame",x:26,y:262,width:864,height:232,rx:6}));
+  sq.appendChild(el("text",{"class":"sm",x:34,y:276},"loop · 每个控制步，直到 terminated / truncated"));
+  sq.appendChild(el("rect",{"class":"frame",x:360,y:304,width:524,height:128,rx:6,style:"stroke-dasharray:5 4"}));
+  sq.appendChild(el("text",{"class":"sm",x:368,y:318},"队列为空时（每 execute_steps 步一次）"));
+  Object.keys(LANES).forEach(function(k){
+    var L=LANES[k];
+    sq.appendChild(el("line",{"class":"life",x1:L[0],y1:50,x2:L[0],y2:500}));
+    sq.appendChild(el("rect",{"class":L[3],x:L[0]-68,y:8,width:136,height:42,rx:6}));
+    sq.appendChild(el("text",{"class":"ttl",x:L[0],y:26,"text-anchor":"middle"},L[1]));
+    sq.appendChild(el("text",{"class":"sm",x:L[0],y:42,"text-anchor":"middle"},L[2]));
+  });
+  var MSG=[
+    ["C","S",76,"ws 连接","v"],["S","C",98,"PolicySpec","vr"],
+    ["R","E",130,"make(task, **cfg)","c"],
+    ["R","E",160,"reset(seed)","c"],["E","R",180,"obs₀","r"],
+    ["R","A",210,"initialize(action_spec)","c"],["A","C",230,"reset(seed)","v"],["C","S",248,"reset","v"],
+    ["R","A",296,"act(obs)","c"],
+    ["A","A",330,"adapter.observation(obs)","self"],
+    ["A","C",358,"infer(Observation)","v"],["C","S",374,"msgpack ≈ 0.45 MB","v"],
+    ["S","S",386,"④ 模型前向","selfv"],
+    ["S","C",410,"ActionChunk (H, D)","vr"],["C","A",424,"动作块 → 队列","vr"],
+    ["A","R",446,"action 字典","r"],
+    ["R","E",466,"step(action)","c"],["E","R",484,"obs, terminated, truncated, info","r"]
+  ];
+  MSG.forEach(function(m){
+    var x1=LANES[m[0]][0], x2=LANES[m[1]][0], y=m[2], k=m[4];
+    var vla=k.charAt(0)==="v"||k==="selfv";
+    var cls=vla?"ln-v":"ln", mk=vla?"url(#a4v)":"url(#a4)";
+    if(k==="self"||k==="selfv"){
+      sq.appendChild(el("path",{"class":cls,d:"M"+x1+","+y+" h26 v12 h-24","marker-end":mk}));
+      sq.appendChild(el("text",{"class":"sm"+(vla?" tc-v":""),x:x1+32,y:y+10},m[3]));
+      return;
+    }
+    var dir=x2>x1?1:-1;
+    var a={"class":cls,x1:x1,y1:y,x2:x2-dir*2,y2:y,"marker-end":mk};
+    if(k==="r"||k==="vr") a.style="stroke-dasharray:5 4";
+    sq.appendChild(el("line",a));
+    sq.appendChild(el("text",{"class":"sm"+(vla?" tc-v":""),x:(x1+x2)/2,y:y-5,"text-anchor":"middle"},m[3]));
+  });
+  sq.appendChild(el("text",{"class":"sm",x:LANES.R[0]-54,y:520},"结束：classify(info) → results.jsonl，录像 finish"));
+
+  // ---- chunk timeline (fig 8) ----
+  var g=document.getElementById("chunks");
+  for(var r=0;r<3;r++){
+    for(var j=0;j<50;j++){
+      var x=100+r*100+j*10; if(x>810) break;
+      g.appendChild(el("rect",{x:x+1,y:26+r*30,width:8,height:14,rx:1.5,"class":j<10?"cell":"cell-off"}));
+    }
+  }
+
+  // ---- model switcher (fig 7) ----
+  var MODELS=[
+    {name:"π0.5",cls:"OpenpiVLA",stack:"openpi（JAX / PyTorch）",robot:"aloha",mode:"JOINT_ABS",obs:"JOINT",dec:"8（50 Hz）",cams:"cam_high, cam_left_wrist, cam_right_wrist",img:"224×224",chunk:"50 / 10",
+     inner:[["图像","3 槽，保持比例 + 黑边，[-1, 1]"],["state","分位数归一化 → 256 档 → 写进 prompt"],["输出","50 × 32 → 取前 14"],["动作","臂关节增量 + 夹爪绝对 → 加回 state"],["解码","flow matching 10 步"]],
+     note:"π0.5 预测相对推理时刻 state 的关节增量；子类加回该 state，返回绝对关节目标。openpi 的 adapt_to_pi 是否关闭，取决于 TopoGym ALOHA 的关节符号是否与真实 ALOHA 一致。"},
+    {name:"GR00T N1.7",cls:"GR00TVLA",stack:"Isaac-GR00T",robot:"aloha（NEW_EMBODIMENT）",mode:"JOINT_ABS",obs:"JOINT",dec:"10（40 Hz）",cams:"cam_high, cam_left_wrist, cam_right_wrist",img:"256×452（保持 848×480 比例）",chunk:"40 / 10",
+     inner:[["图像","任意路数，短边 256，裁剪 95%"],["state","分位数归一化，补零到 132，本体专属 MLP"],["输出","≤ 40 × 132 → 按键切片"],["动作","臂关节相对 + 夹爪绝对（modality 配置）"],["解码","flow matching 4 步"]],
+     note:"ALOHA 用 NEW_EMBODIMENT（投影层槽 10，预训练未用过，需要从头训练）。GR00T 处理器直接返回绝对值，子类只需按 modality 键拼成 14 维。"},
+    {name:"X-VLA-0.9B",cls:"XVLAVLA",stack:"X-VLA",robot:"aloha",mode:"EE_ABS",obs:"EE",dec:"10（40 Hz）",cams:"cam_high, cam_left_wrist, cam_right_wrist",img:"224×224",chunk:"30 / 10",
+     inner:[["图像","≤ 3 路，直接缩放，ImageNet 归一化"],["state","20 维绝对末端位姿（原始单位）"],["输出","30 × 20 绝对 EE6D"],["动作","夹爪二值 1 = 闭合 → 开度 = 1 − 输出"],["解码","flow matching 10 步"]],
+     note:"X-VLA 预训练的动作空间是末端位姿，子类声明 action_space = ee_abs，EvalRunner 因此把 control_mode 切到 EE_ABS（TopoGym 内部做 IK），observation_mode 切到 EE。Gym 侧其余代码不变。"},
+    {name:"DM0.5",cls:"DM05VLA",stack:"opendm",robot:"aloha",mode:"JOINT_ABS",obs:"JOINT",dec:"20（20 Hz）",cams:"cam_high, cam_left_wrist, cam_right_wrist",img:"448×448",chunk:"50 / 25",
+     inner:[["图像","补成正方形 → 448×448，[-1, 1]"],["state","分位数归一化 → 256 档 → 写进 prompt"],["prompt","Robot: Aloha · Control mode: joint · Task"],["输出","50 × 32 → 取前 14"],["解码","flow matching 10 步"]],
+     note:"官方 ALOHA checkpoint 用相对关节、每块执行 25 步（20 Hz）。子类直接调用 opendm 推理对象，不经过它的 HTTP 服务；训练数据需要转成 OpenDM JSONL。"}
+  ];
+  var mg=document.getElementById("models"), sw=document.getElementById("switch"), dv=document.getElementById("derived"), inn=document.getElementById("inner"), dn=document.getElementById("derived-note");
+  var n=MODELS.length, top=34, h=Math.min(70,(356-(n-1)*12)/n);
+  MODELS.forEach(function(m,k){
+    var y=top+k*(h+12), cy=y+h/2, gg=el("g",{"class":"model"});
+    gg.appendChild(el("path",{"class":"conn",d:"M486,328 C506,328 506,"+cy+" 526,"+cy}));
+    gg.appendChild(el("rect",{"class":"mb",x:526,y:y,width:364,height:h,rx:6}));
+    gg.appendChild(el("text",{"class":"ttl",x:542,y:y+22},m.name));
+    gg.appendChild(el("text",{"class":"sm",x:542,y:y+39},m.cls+" · "+m.stack));
+    gg.appendChild(el("text",{"class":"sm",x:542,y:y+55},"④ "+m.inner[0][1]));
+    mg.appendChild(gg);
+  });
+  sw.innerHTML=MODELS.map(function(m,k){return '<button type="button" aria-pressed="false" data-k="'+k+'">'+m.name+'</button>'}).join("");
+  function cell(a,b){return '<div><span class="lab">'+a+'</span><span class="val">'+b+'</span></div>'}
+  function select(k){
+    var m=MODELS[k];
+    sw.querySelectorAll("button").forEach(function(b,i){b.setAttribute("aria-pressed",i===k?"true":"false")});
+    mg.querySelectorAll(".model").forEach(function(e,i){e.classList.toggle("on",i===k)});
+    dv.innerHTML=[["robot_id",m.robot],["control_mode",m.mode],["observation_mode",m.obs],["control_decimation",m.dec],["cameras",m.cams],["image_size",m.img],["chunk / execute",m.chunk]].map(function(r){return cell(r[0],r[1])}).join("");
+    inn.innerHTML=m.inner.map(function(r){return cell(r[0],r[1])}).join("");
+    dn.textContent=m.note;
+  }
+  sw.querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){select(+b.dataset.k)})});
+  select(0);
+
+  // ---- RoboTwin 2.0 chart (fig 10) ----
+  var RT=[["ME-Dex-1.0（榜首）",89.58,68.12,0],["GigaBrain-0.7",66.8,67.9,0],["π0.5",70.7,46.0,1],["X-VLA",68.0,20.9,1],["Xiaomi-R0",62.9,18.2,0],["π0",46.42,16.34,0],["ACT",29.74,1.74,0]];
+  var svg=document.getElementById("rtchart"), X0=190, W=620, BH=13, GAP=2, GROUP=46, TOP=40;
+  function sx(v){return X0+v/100*W}
+  function bar(x,y,w,hh){ if(w<4) return '<rect x="'+x+'" y="'+y+'" width="'+Math.max(w,1)+'" height="'+hh+'"/>';
+    return '<path d="M'+x+','+y+' h'+(w-4)+' a4,4 0 0 1 4,4 v'+(hh-8)+' a4,4 0 0 1 -4,4 h'+(-(w-4))+' z"/>'; }
+  var s='';
+  [0,25,50,75,100].forEach(function(t){s+='<line x1="'+sx(t)+'" y1="'+(TOP-8)+'" x2="'+sx(t)+'" y2="'+(TOP+RT.length*GROUP-8)+'" style="stroke:var(--line);stroke-width:1"/>'+
+    '<text class="sm" x="'+sx(t)+'" y="'+(TOP+RT.length*GROUP+8)+'" text-anchor="middle">'+t+'%</text>'});
+  s+='<rect x="'+X0+'" y="6" width="12" height="12" rx="2" style="fill:var(--s1)"/><text class="sm" x="'+(X0+18)+'" y="16">Easy（无随机化）</text>'+
+     '<rect x="'+(X0+140)+'" y="6" width="12" height="12" rx="2" style="fill:var(--s2)"/><text class="sm" x="'+(X0+158)+'" y="16">Hard（域随机化）</text>';
+  RT.forEach(function(r,i){
+    var y=TOP+i*GROUP;
+    s+='<text class="lbl" x="'+(X0-12)+'" y="'+(y+BH+4)+'" text-anchor="end" style="'+(r[3]?'font-weight:600':'fill:var(--muted)')+'">'+r[0]+'</text>';
+    [[r[1],"var(--s1)","Easy"],[r[2],"var(--s2)","Hard"]].forEach(function(b,j){
+      var by=y+j*(BH+GAP), w=sx(b[0])-X0;
+      s+='<g class="rtbar" data-t="'+r[0]+' · '+b[2]+' '+b[0]+'%" style="fill:'+b[1]+'">'+bar(X0,by,w,BH)+
+         '<rect x="'+X0+'" y="'+(by-1)+'" width="'+W+'" height="'+(BH+2)+'" style="fill:transparent"/></g>'+
+         '<text class="sm" x="'+(sx(b[0])+6)+'" y="'+(by+BH-2)+'" style="fill:var(--ink)">'+b[0]+'</text>';
+    });
+  });
+  svg.innerHTML=s;
+  var tip=document.getElementById("rt-tip");
+  svg.querySelectorAll(".rtbar").forEach(function(gb){
+    gb.addEventListener("mouseenter",function(){tip.textContent=gb.dataset.t;gb.style.opacity=.85});
+    gb.addEventListener("mouseleave",function(){tip.textContent="";gb.style.opacity=1});
+  });
+  document.getElementById("rt-table").innerHTML=RT.map(function(r){return '<tr><td>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">'+r[2]+'</td></tr>'}).join("");
+
+  // ---- cost calculator ----
+  function v(id){var x=parseFloat(document.getElementById(id).value);return isFinite(x)&&x>0?x:0}
+  function calc(){
+    var eps=v("c-models")*v("c-tasks")*v("c-seeds");
+    var per=v("c-sim")*v("c-hz")*v("c-wall")/3600;
+    var tot=eps*per;
+    document.getElementById("o-eps").textContent=eps.toLocaleString("zh-CN");
+    document.getElementById("o-per").textContent=per.toFixed(2);
+    document.getElementById("o-total").innerHTML=Math.round(tot).toLocaleString("zh-CN")+' <small>GPU·h</small>';
+    document.getElementById("o-bar").style.width=Math.min(100,tot/2000*100)+"%";
+    document.getElementById("o-days").textContent="单卡串行约 "+(tot/24).toFixed(1)+" 天；8 卡并行约 "+(tot/24/8).toFixed(1)+" 天（条带满格 = 2000 GPU·h）";
+  }
+  document.querySelectorAll(".calc input").forEach(function(i){i.addEventListener("input",calc)});
+  calc();
+})();
+</script>
