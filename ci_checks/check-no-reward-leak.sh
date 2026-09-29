@@ -22,9 +22,11 @@ import json, pathlib, re, sys
 task = pathlib.Path(sys.argv[1])
 toml = (task / "task.toml").read_text()
 KEY = lambda k: (re.search(rf'^{k} *= *"([^"]*)"', toml, re.M) or [None, None])[1]
-if KEY("simulator") != "humanoidbench":
-    sys.exit(0)
+sim = KEY("simulator")
+if not (task.resolve().parent.parent / "scripts" / str(sim) / "gen_tasks.py").is_file():
+    sys.exit(0)                     # hand-maintained tasks (no generator) are out of scope, as in check-tooling-sync
 rc = 0
+hb = sim == "humanoidbench"         # checks 1-3 are HumanoidBench's dense reward; KinDER's is -1 a step, nothing to hide
 limited = KEY("mode") == "limited"
 home = task / ("environment/sim" if limited else "tests")          # where the formula has to be
 agent_side = [f for f in sorted((task / "environment").rglob("*"))
@@ -32,12 +34,11 @@ agent_side = [f for f in sorted((task / "environment").rglob("*"))
 
 # 1. the scoring half must carry exactly this family's formula
 spec_path = home / "rewards.json"
-if not spec_path.is_file():
+if hb and not spec_path.is_file():
     print(f"FAIL {task}: {spec_path.relative_to(task)} is missing -- nothing could score"); sys.exit(1)
-spec = json.loads(spec_path.read_text())
-if not spec.get("methods"):
+if hb and not json.loads(spec_path.read_text()).get("methods"):
     print(f"FAIL {task}: {spec_path.relative_to(task)} carries no reward method"); rc = 1
-if not (home / "rcb_rewards.py").is_file():
+if hb and not (home / "rcb_rewards.py").is_file():
     print(f"FAIL {task}: {home.relative_to(task)}/rcb_rewards.py is missing -- nothing would restore the formula"); rc = 1
 
 # 2. the agent's half must not, whether as the file itself or as pasted source
@@ -53,8 +54,8 @@ if limited:  # ... and the sidecar's directory must not be copied into the agent
 
 # 3. tolerance parameters are the answer key; describing the scoring in prose is not
 FORMULA = re.compile(r"\b(?:bounds|margin|value_at_margin)\s*=|\brewards\.tolerance\s*\(|\bdef\s+get_reward")
-for rel in ["instruction.md", *(str(f.relative_to(task)) for f in agent_side
-                               if f.is_file() and f.suffix in (".py", ".md", ".txt", ".yaml", ""))]:
+for rel in ([] if not hb else ["instruction.md", *(str(f.relative_to(task)) for f in agent_side
+                                                   if f.is_file() and f.suffix in (".py", ".md", ".txt", ".yaml", ""))]):
     f = task / rel
     if not f.is_file():
         continue

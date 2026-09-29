@@ -6,7 +6,7 @@ that has no summary yet, so it is rarely needed by hand):
 
 Writes <trial>/report/summary.json -- everything that can be measured -- and the media next to it: the OpenRouter
 bill, looked up per generation; every tool call and every image the model looked at; in limited mode, every episode
-replayed and scored verifier-side from the sim service's log (replay_episodes.py, in the task's sim image), each with
+replayed verifier-side from the sim service's log (the benchmark's scripts/<bench>/replay.py, in the task's sim image), each with
 a video, and the whole session as one (session_video.py: the episodes back to back, idle time cut). A full-mode trial
 has no such log (the simulator runs inside the agent's own process): its result is the verifier's replay of the
 submitted trajectory. The lookups, the replay and the session video are cached in report/, so a rerun takes seconds.
@@ -40,13 +40,15 @@ import urllib.error
 import urllib.request
 
 import attempts
+import bench
+from bench import B
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 VERSION = 7   # of summary.json; build.py re-collects a trial whose summary is older
-# words that should not show up in what the agent wrote or ran: the answer key, upstream's code, the network
-LEAK = re.compile(r"\bcurl\s+(?:-|\S*[:/])|wget |pip (install|download)|github|raw\.githubusercontent|humanoid[-_]?bench|\bmujoco\b|dm_control|"
-                  r"get_reward|rewards\.tolerance|_STAND_HEIGHT|_WALK_SPEED|_RUN_SPEED|stand_reward|small_control|dont_move", re.I)
+# words that should not show up in what the agent wrote or ran: the network, and (Bench.leak_words) the benchmark's
+# own code and answer key
+NET_WORDS = r"\bcurl\s+(?:-|\S*[:/])|wget |pip (install|download)|github|raw\.githubusercontent"
 GENERATED_BY = "scripts/results/collect.py"
 TOOL = r"(?<![\w.])tools\.(\w+)\("   # a codex tool in code mode (not itertools.product)
 
@@ -284,7 +286,7 @@ def docker(cmd: list[str]) -> subprocess.CompletedProcess:
 
 
 def in_sim_image(task_dir: str, mounts: list[str], argv: list[str], gpu: bool = False) -> str | None:
-    """Run one of this directory's tools (mounted at /tool) in the task's sim image, as this user: the error, or None."""
+    """Run a tool in the task's sim image, as this user (this directory is mounted at /tool): the error, or None."""
     compose = open(f"{task_dir}/environment/docker-compose.yaml").read()
     m = re.search(r"^\s*sim:\s*\n\s*image:\s*(\S+)", compose, re.M)
     if not m:
@@ -300,17 +302,18 @@ def in_sim_image(task_dir: str, mounts: list[str], argv: list[str], gpu: bool = 
 
 
 def replay(trial: str, task_dir: str, out: str, render: bool = True) -> tuple[list, str | None]:
-    """report/episodes.json, made once: every episode replayed and scored (replay_episodes.py), rendered unless
-    `render` is off. A cache from before the end-state fields is scored again; its videos are kept."""
+    """report/episodes.json, made once: every episode replayed (the benchmark's scripts/<bench>/replay.py), rendered
+    unless `render` is off. A cache from before `exact` is replayed again; its videos are kept."""
     cached = jload(f"{out}/episodes.json")
     played = [r for r in cached or [] if r.get("n_actions")]
-    scored = cached is not None and all("final_head_h" in r for r in played)
+    scored = cached is not None and all("exact" in r for r in played)
     rendered = cached is not None and all(r.get("video") for r in played)
     if scored and (rendered or not render):
         return cached, None
     again = ["--no-render"] if not render or rendered else []   # re-score only: the videos are there, or not wanted
-    err = in_sim_image(task_dir, [f"{trial}:/trial:ro", f"{task_dir}/environment/sim:/srv:ro", f"{out}:/out"],
-                       ["/tool/replay_episodes.py", "/trial", "/srv", "/out"] + again, gpu=not again)
+    err = in_sim_image(task_dir, [f"{trial}:/trial:ro", f"{task_dir}/environment/sim:/srv:ro", f"{out}:/out",
+                                  f"{B.scripts}/replay.py:/bench/replay.py:ro"],   # alone: nothing beside it on sys.path
+                       ["/bench/replay.py", "/trial", "/srv", "/out"] + again, gpu=not again)
     return (cached or [], err) if err else (jload(f"{out}/episodes.json", []), None)
 
 
@@ -318,7 +321,7 @@ def session(task_dir: str, out: str) -> str | None:
     """report/session.mp4, the whole session as one video (session_video.py, from summary.json), made once: the error, or None."""
     if os.path.exists(f"{out}/session.mp4"):
         return None
-    return in_sim_image(task_dir, [f"{out}:/out"], ["/tool/session_video.py", "/out"])
+    return in_sim_image(task_dir, [f"{out}:/out"], ["/tool/session_video.py", "/out", B.name])
 
 
 def robot_during(events: list, t0: float, t1: float, t_next: float) -> dict:
@@ -337,17 +340,14 @@ def png_size(raw: bytes) -> list | None:
 
 
 def camera_of(path: str | None, size: list | None, cameras: dict) -> str:
-    """Which camera an image the model looked at came from, when its file name says so ("room", "left_eye",
-    "right-cam", ...; a bare "left" may be a direction, as in left_turn10.png, so it says nothing); a picture of
-    another size than the cameras' is something the agent made (a montage, a crop)."""
+    """Which camera an image the model looked at came from, when its file name says so (the benchmark's camera_files:
+    "room", "left_eye", "right-cam", ...; a bare "left" may be a direction, as in left_turn10.png, so it says nothing);
+    a picture of another size than the cameras' is something the agent made (a montage, a crop)."""
     hw = next(iter(cameras.values()), {}).get("hw") if cameras else None
     if size and hw and size != [hw[1], hw[0]]:
         return "made"
     name = os.path.basename(path or "").lower()
-    for cam, key in (("room_camera", r"room"), ("left_eye_camera", r"left[_-]?(?:eye|cam)"), ("right_eye_camera", r"right[_-]?(?:eye|cam)")):
-        if re.search(key, name):
-            return cam
-    return "unknown"
+    return next((cam for cam, key in B.camera_files if re.search(key, name)), "unknown")
 
 
 # ------------------------------------------------------------------------------------------------ the summary
@@ -434,7 +434,7 @@ def collect(trial: str, args) -> dict:
     if limited:
         n_resets = sum(e["ev"] == "reset" for e in events)
         graded = eps[-1]; g_rep = by_ep.get(graded["ep"], {})
-        best = max(replayed, key=lambda r: r.get("return", -1e18), default={})
+        best = max((r for r in replayed if r.get("return") is not None), key=lambda r: r["return"], default={})
         if graded["end"] == "success":
             why = "success"
         elif timed_out:
@@ -464,16 +464,16 @@ def collect(trial: str, args) -> dict:
         if prev and r.get("input_tokens", 0) > 1.8 * prev and r["input_tokens"] - prev > 15000:
             spikes.append([r["t"], prev, r["input_tokens"]])
         prev = r.get("input_tokens") or prev
-    leaks = [[x["t"], x["kind"], LEAK.search(x["text"]).group(0), x["text"][:240]] for x in timeline
-             if x["kind"] in ("msg", "think", "call") and LEAK.search(x["text"])]
+    leak = re.compile(NET_WORDS + (f"|{B.leak_words}" if B.leak_words else ""), re.I)
+    leaks = [[x["t"], x["kind"], leak.search(x["text"]).group(0), x["text"][:240]] for x in timeline
+             if x["kind"] in ("msg", "think", "call") and leak.search(x["text"])]
 
     call_list = [x for x in timeline if x["kind"] == "call"]
     robots = [robot_during(events, x["t"], x["done"], nxt) for x, nxt in zip(call_list, [c["t"] for c in call_list[1:]] + [float("inf")])]
     episodes = []
     for e in eps:
         r = by_ep.get(e["ep"], {})
-        episodes.append({**e, **{k: r.get(k) for k in ("return", "max_dx", "final_dx", "final_z", "final_upright", "final_head_h",
-                                                        "progress", "video", "poster", "exact")},
+        episodes.append({**e, **{k: r.get(k) for k in B.episode_fields},
                          "views": sum(v["ep"] == e["ep"] for v in views), "did": ep_did.get(e["ep"], [])})
     summary = {
         "version": VERSION, "generated_by": GENERATED_BY, "trial": res.get("trial_name"), "trial_dir": trial,
@@ -515,15 +515,17 @@ def harbor_files(trial, s, notes) -> list:
     if not os.path.exists(path) or (jload(path, {}) or {}).get("generated_by") == GENERATED_BY:
         r = s["result"]
         fmt = lambda v: "—" if v is None else f"{v:,.2f}"
-        head = (f"**{'PASS' if r['success'] else 'FAIL'}** · {s['mode']} mode · graded return {fmt(r['return'])} / {fmt(r['bar'])} · "
+        head = (f"**{'PASS' if r['success'] else 'FAIL'}** · {s['mode']} mode · "
+                + (f"graded return {fmt(r['return'])} / {fmt(r['bar'])} · " if B.scored else "")
                 + (f"{len(s['episodes'])} episodes · " if s["episodes"] else "")
                 + f"agent {(s['a1'] - s['a0']) / 60:.1f} min · ${s['billed']['usd'] or s['billed']['harbor_usd'] or 0:.4f}")
         if s["episodes"]:
             g = s["episodes"][-1]
-            graded = (f"Episode {g['ep']} (the last) was graded: {g['steps']} steps, ended {g['end'] or 'by the agent'}, "
-                      f"return {fmt(r['return'])}, pass mark {fmt(r['bar'])}")
+            graded = (f"Episode {g['ep']} (the last) was graded: {g['steps']} steps, ended {g['end'] or 'by the agent'}"
+                      + (f", return {fmt(r['return'])}, pass mark {fmt(r['bar'])}" if B.scored else ""))
         else:
-            graded = (f"The submitted trajectory ({r['steps'] or 0} actions) replayed to return {fmt(r['return'])}, pass mark {fmt(r['bar'])}"
+            graded = ((f"The submitted trajectory ({r['steps'] or 0} actions) replayed "
+                       + (f"to return {fmt(r['return'])}, pass mark {fmt(r['bar'])}" if B.scored else "to " + ("success" if r["success"] else "failure")))
                       if r["why"] != "no_trajectory" else "No trajectory.npz was submitted")
         body = open(notes).read() if os.path.exists(notes) else "(No strategy summary yet: report/notes.md)"
         flagged = s["spikes"] or s["leaks"]
@@ -532,7 +534,8 @@ def harbor_files(trial, s, notes) -> list:
                           "explanation": "Flagged for a human look (not necessarily a leak): "
                           + "; ".join([f"{(t - s['a0']) / 60:.2f} min {w}" for t, _, w, _ in s["leaks"][:5]]
                                       + [f"{(t - s['a0']) / 60:.2f} min input {a:,} → {b:,}" for t, a, b in s["spikes"]])
-                          if flagged else "No input-token jumps, no suspicious words in what the agent wrote or ran (LEAK in scripts/results/collect.py)"},
+                          if flagged else "No input-token jumps, no suspicious words in what the agent wrote or ran "
+                                          "(NET_WORDS in scripts/results/collect.py, the benchmark's leak_words)"},
             "graded": {"outcome": "pass" if r["success"] else "fail", "explanation": graded},
         }
         json.dump({"trial_name": s["trial"], "summary": head + "\n\n" + body, "checks": checks,
@@ -562,6 +565,7 @@ def main():
     for t in trials:
         if not os.path.exists(f"{t}/result.json"):
             print(f"skip {t}: no result.json (still running?)"); continue
+        bench.use(bench.of_trial(t))
         s = collect(t, args)
         print(f"{t}/report/summary.json: {s['mode']} mode, {len(s['episodes'])} episodes, {len(s['requests'])} requests"
               + (f"; replay: {s['replay_error']}" if s["replay_error"] else ""))

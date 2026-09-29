@@ -4,67 +4,34 @@ from __future__ import annotations
 import argparse
 import csv
 import decimal
-import glob
-import json
 import os
 import re
 import sys
 import datetime as dt
 
-try:
-    import tomllib
-except ModuleNotFoundError:   # Python < 3.11
-    import tomli as tomllib
-
 import collect
+from bench import B
 
-from common import HB, MODELS, REPO, RESULTS, STANDARD
+from common import MODELS, REPO
 
 
 def load_tasks():
-    """The README's table gives the order and the columns, one per model and mode ("GPT-6 Luna · limited");
-    subset.toml, facts.json and the task dirs the rest."""
-    readme = open(f"{RESULTS}/README.md").read()
+    """results/<bench>/README.md's `## Results` table gives the tasks, their order and the columns (the headers that
+    name a model and a mode, "GPT-6 Luna · limited"); the task dirs give the statement, the adapter the rest."""
+    readme = open(f"{B.results}/README.md").read()
     sec = readme.split("## Results", 1)[1].split("\n## ", 1)[0]
     rows = [line for line in sec.splitlines() if line.startswith("|")]
     head = [c.strip() for c in rows[0].strip().strip("|").split("|")]
-    cols = [tuple(h.rsplit(" · ", 1)) for h in head[6:]]
-    legend = dict(re.findall(r"(C\d+) ([^·.\n]+?)(?= ·|\.)", readme.split("Classes", 1)[1].split("\n\n", 1)[0]))
-    subset = tomllib.load(open(f"{HB}/subset.toml", "rb"))
-    by_fam = {t["family"]: t for t in subset["task"]}
-    facts = json.load(open(f"{HB}/facts.json"))
+    cols = [tuple(h.rsplit(" · ", 1)) for h in head if " · " in h]
     tasks = []
     for line in rows[2:]:
         c = [x.strip() for x in line.strip().strip("|").split("|")]
-        fam = c[1]; t = by_fam.get(fam, {}); f = facts.get(fam, {})
-        d = sorted(glob.glob(f"{REPO}/tasks/humanoidbench-*-{fam.replace('_', '-')}-i00-limited"))
-        d = d[0] if d else None
-        instr = open(f"{d}/instruction.md").read() if d else ""
-        m = re.search(r"\*\*Task:\*\*\s*(.+?)\n\n", instr, re.S)
-        compose = open(f"{d}/environment/docker-compose.yaml").read() if d else ""
-        pose = re.search(r'RCB_ROOM_CAMERA_POSE:\s*"([^"]*)"', compose)
-        tasks.append({"n": int(c[0]), "task": fam, "robot": c[2], "cls": c[3], "readme": dict(zip(head, c)),
-                      "cls_name": legend.get(c[3], "fixture" if c[3] == "fixture" else ""), "cls_long": (t.get("capability_class") or "").split("·", 1)[-1].strip(), "one_liner": t.get("one_liner", ""),
-                      "bar": f.get("success_bar"), "nop": f.get("nop_return"), "nop_steps": f.get("nop_steps"),
-                      "max_steps": f.get("max_steps"), "hold": f.get("hold_return"), "dir": d, "full_dir": d[:-len("-limited")] if d else None,
-                      "statement": " ".join(m.group(1).split()) if m else "", "pose": pose.group(1) if pose else "",
-                      "camera_note": (t.get("limited") or {}).get("camera_note", ""), "runs": [], "main": {}})
+        fam, row = c[1], dict(zip(head, c))
+        d, fd = B.task_dir(fam, True), B.task_dir(fam, False)     # a task may have no limited twin
+        m = re.search(r"\*\*Task:\*\*\s*(.+?)\n\n", open(f"{d or fd}/instruction.md").read(), re.S) if d or fd else None
+        tasks.append({"n": int(c[0]), "task": fam, "readme": row, "dir": d, "full_dir": fd,
+                      "statement": " ".join(m.group(1).split()) if m else "", "runs": [], "main": {}, **B.task_info(fam, row, readme)})
     return tasks, cols
-
-
-TEXTS = {   # the task text a run had, by what its job name ends with: (name, date, commit). text5 and text6 were a
-            # working tree, committed afterwards in e897737 (cube there at text 6); text7 is ef883ec. What each version
-            # changed and why: results/<bench>/analysis/overview.md, "各版的改动".
-    "070fdcf": ("第 1 版", "09-24", "070fdcf"),
-    "06b0ab3": ("第 2 版", "09-24", "06b0ab3"),
-    "e95d382": ("第 3 版", "09-25", "e95d382"),
-    "8e09011": ("第 4 版", "09-25", "8e09011"),
-    "text5": ("第 5 版", "09-26", "e897737"),
-    "text6": ("第 6 版", "09-27", "e897737"),
-    "text7": ("第 7 版", "09-28", "ef883ec"),
-}
-RETIRED = {"070fdcf", "06b0ab3", "e95d382", "8e09011", "text5", "text6"}   # versions whose runs were taken out of
-# runs.csv: texts 1-2's rows are in git at 884d59e, texts 3-6's at c9449ce
 
 
 def text_of(r: dict) -> str | None:
@@ -74,10 +41,10 @@ def text_of(r: dict) -> str | None:
 
 def load_runs(refresh: bool, video: bool = True) -> list[dict]:
     runs = []
-    for i, r in enumerate(csv.DictReader(open(f"{RESULTS}/runs.csv"))):
+    for i, r in enumerate(csv.DictReader(open(f"{B.results}/runs.csv"))):
         r = dict(r)
         r["i"] = i
-        r["standard"] = r["mode"] in STANDARD and all(r[k] == v for k, v in STANDARD[r["mode"]].items())
+        r["standard"] = r["mode"] in B.standard and all(r[k] == v for k, v in B.standard[r["mode"]].items())
         r["model_name"] = MODELS.get(r["model"], r["model"].split("/")[-1])
         r["col"] = (r["model_name"], r["mode"])
         r["text"] = text_of(r)
@@ -138,14 +105,14 @@ def derive(r: dict, task: dict | None) -> dict:
             if v is not None and (d["score" if k == "score" else "cost"] or 0) and abs(v - d["score" if k == "score" else "cost"]) > (0.02 if k == "score" else 0.002):
                 print(f"warning: runs.csv row {r['i'] + 2} ({r['task']}, {r['model_name']}) has {k} {v}, the trial says "
                       f"{d['score' if k == 'score' else 'cost']:.4f}")
-    nop = task["nop"] if task else None
+    nop = (task or {}).get("nop")   # a scored benchmark's all-zero return: progress runs from it (0) to the bar (1)
     d["prog"] = ((d["score"] - nop) / (d["bar"] - nop)) if None not in (d["score"], nop, d["bar"]) and d["bar"] != nop else None
     return d
 
 
 def add_run(job: str, note: str, tasks: list, video: bool = True) -> None:
     """Append one runs.csv line per trial of `job`, every column but the note measured from the trial."""
-    rows = list(csv.DictReader(open(f"{RESULTS}/runs.csv")))
+    rows = list(csv.DictReader(open(f"{B.results}/runs.csv")))
     rel_job = "jobs/" + os.path.basename(os.path.abspath(job.rstrip("/")))
     if any(r["job"].split(" ")[0] == rel_job for r in rows):
         sys.exit(f"{rel_job} is already in runs.csv")
@@ -155,8 +122,7 @@ def add_run(job: str, note: str, tasks: list, video: bool = True) -> None:
         s = summary(trial, False, video); res, sp = s["result"], s["spec"]
         cost = s["billed"]["usd"] if s["billed"]["found"] else s["billed"]["harbor_usd"]
         limited = s["mode"] == "limited"
-        obs = ("head+joints" + ("+imu" if sp["imu"] else "") + ("+depth" if sp.get("depth") else "")
-               + ("+room" if "room_camera" in sp["cameras"] else "")) if limited else "state"
+        obs = B.obs(sp) if limited else "state"
         new.append({"date": dt.datetime.fromtimestamp(s["a0"]).strftime("%Y-%m-%d"), "task": by_dir.get(s["task_name"], s["task_name"]),
                     "mode": s["mode"], "agent": "codex" if "codex" in s["agent"].lower() else "claude-code" if "claude" in s["agent"].lower() else s["agent"],
                     "model": s["model"].split("openrouter/", 1)[-1], "effort": s["effort"] or "", "budget_min": f"{(s['budget_s'] or 0) / 60:g}",
@@ -165,8 +131,8 @@ def add_run(job: str, note: str, tasks: list, video: bool = True) -> None:
                     "bar": f"{res['bar']:g}" if res["bar"] is not None else "", "resets_used": res["resets"] if limited else "",
                     "agent_min": f"{(s['a1'] - s['a0']) / 60:.1f}", "cost_usd": f"{cost:.5g}" if cost is not None else "",
                     "requests": len(s["requests"]), "job": rel_job, "note": note})
-    with open(f"{RESULTS}/runs.csv", "a", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(csv.DictReader(open(f"{RESULTS}/runs.csv")).fieldnames), lineterminator="\n")
+    with open(f"{B.results}/runs.csv", "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(csv.DictReader(open(f"{B.results}/runs.csv")).fieldnames), lineterminator="\n")
         for r in new:
             w.writerow(r); print("runs.csv +", ",".join(str(v) for v in r.values()))
 
@@ -186,6 +152,6 @@ def check_readme(tasks: list, cols: list) -> None:
             # with the table's minus sign
             r = mine[-1]
             score = half_up(r["score"], "0.1").replace("-", "−") if r["score"] else "—"
-            want = f"{'✅' if r['result'] == 'pass' else '❌'} {score} · ${half_up(r['cost_usd'] or 0, '0.01')}"
+            want = f"{'✅' if r['result'] == 'pass' else '❌'}{' ' + score if B.scored else ''} · ${half_up(r['cost_usd'] or 0, '0.01')}"
             if cell != want:
                 print(f"README: {t['task']} / {' · '.join(col)} says {cell!r}, runs.csv gives {want!r}")

@@ -13,7 +13,7 @@ Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in t
 | `extract_rewards.py` | regenerates `rewards.json`, by running the real `scrub_oracles.py` against a copy of upstream and diffing — so what the image loses and what the verifier restores cannot drift. One-off; needs an image whose rewards are *not* scrubbed |
 | `measure_baselines.py` | the `nop` / `hold` floors for all 32 upstream families, including the ones outside the subset — the evidence for which families deserve a slot (`06-task-selection.md` §B5) |
 | `templates/` | everything the tasks have in common, with `{{placeholders}}` |
-| `templates/limited/`, `shared/limited/` | the same for each task's limited-mode twin (`tasks/*-limited/`, `docs/LIMITED_MODE_1_1.md`): the sim sidecar's adapter and service, the agent's client, the verifier. Per-task prose is the task's `[task.limited]` table in `subset.toml` |
+| `templates/limited/`, `shared/limited/` | the same for each task's limited-mode twin (`tasks/*-limited/`, `docs/LIMITED_MODE_1_1.md`): the sim sidecar's adapter and the agent's client (its docstring is the API reference); the service, the verifier and the client's code are shared by every simulator, in `scripts/limited/`. Per-task prose is the task's `[task.limited]` table in `subset.toml` |
 | `limited_probe.py` | what `measure-limited` runs against a twin's sim service: contract checks, the all-zero return against `facts.json`, the t=0 camera images, and the per-step cost the instruction quotes |
 | `gen_tasks.py` | the generator |
 

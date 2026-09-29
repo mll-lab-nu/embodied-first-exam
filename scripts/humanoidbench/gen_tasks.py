@@ -290,6 +290,7 @@ def render(t: dict, defaults: dict, facts: dict) -> Path:
 # table; its measured numbers (facts.json "limited") come from `measure-limited`, which needs a GPU.
 LIMITED_TEMPLATES = HERE / "templates" / "limited"
 LIMITED_SHARED = HERE / "shared" / "limited"
+LIMITED_COMMON = ROOT / "scripts" / "limited"      # simulator-agnostic: the sim service and the verifier
 
 
 def limited_dir_name(t: dict, instance_tag: str) -> str:
@@ -301,8 +302,8 @@ def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
     environment/ it may live -- the agent's image never sees this directory) and the unlimited twin's
     instance, byte for byte."""
     dest.mkdir(parents=True, exist_ok=True)
-    for src in ("server.py", "rcb_service.py"):
-        shutil.copyfile(LIMITED_SHARED / src, dest / src)
+    shutil.copyfile(LIMITED_SHARED / "server.py", dest / "server.py")
+    shutil.copyfile(LIMITED_COMMON / "rcb_service.py", dest / "rcb_service.py")
     for src in ("rcb_hb.py", "rcb_rewards.py"):
         shutil.copyfile(HERE / "shared" / src, dest / src)
     (dest / "rewards.json").write_text(json.dumps(load_rewards()[t["family"]], indent=1, sort_keys=True) + "\n")
@@ -375,7 +376,7 @@ def render_limited(t: dict, defaults: dict, facts: dict) -> Path:
         (out / rel).write_text((rewrap(text, 110, items=True) if rel.endswith(".md") else text).rstrip("\n") + "\n")
     write_sim_dir(t, defaults, out / "environment" / "sim")
     shutil.copyfile(LIMITED_SHARED / "rcb_client.py", out / "environment" / "rcb_client.py")
-    shutil.copyfile(LIMITED_SHARED / "grade.py", out / "tests" / "grade.py")
+    shutil.copyfile(LIMITED_COMMON / "grade.py", out / "tests" / "grade.py")
     for rel in ("tests/test.sh", "solution/solve.sh"):
         (out / rel).chmod(0o755)
     return out

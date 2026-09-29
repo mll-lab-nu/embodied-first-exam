@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""The results pages, built from results/<bench>/ (README.md's table, runs.csv) and the trials under jobs/:
-  python3 scripts/results/build.py [--refresh] [--cameras DIR]        # -> jobs/results/humanoidbench/index.html
-  python3 scripts/results/build.py --add jobs/<job> [--note "..."]    # after a run: its runs.csv line, then the pages
+"""The results pages of each benchmark, from results/<bench>/ (README.md's table, runs.csv) and the trials under jobs/:
+  python3 scripts/results/build.py [--bench NAME] [--refresh] [--cameras DIR]   # -> jobs/results/<bench>/index.html
+  python3 scripts/results/build.py --add jobs/<job> [--note "..."]             # after a run: its runs.csv line, then the pages
 
+Without --bench it builds every benchmark with an adapter (benches/<name>.py, see bench.py) and a results/<name>/;
+--add builds the job's own benchmark.
 index.html          every task: run or not, the result, money, tokens, time, per column of the README's table (a model
                     in a mode, "GPT-6 Luna · limited"); limited next to full; charts across the runs
 tasks/<task>.html   the task's analysis, this round's runs (each column's main run: its latest standard-config run)
@@ -11,12 +13,13 @@ runs/<job>.html     one page per run, shorter, plus the full trajectory and Harb
 Runs are runs.csv's rows. A run whose job is still under jobs/ is measured by collect.py, once: the result is cached
 in <trial>/report/summary.json (--refresh measures again), and <trial>/report/notes.md is its analysis, written
 from digest.py's one-page view of the trial as NOTES_GUIDE.md says.
-Modules: common (paths, standard configs, labels, formatting), data (README, runs.csv, summaries), calls (tool calls),
-attempts (what each robot command changed, for collect.py),
+Modules: bench (the adapter every benchmark implements; benches/ has them), common (formatting, labels), data (README,
+runs.csv, summaries), calls (tool calls), attempts (what each robot command changed, for collect.py),
 charts (SVG), widgets (small HTML pieces, Markdown), analysis (the hand-written analysis), pages (the pages); site.css
 and site.js are copied next to the pages.
-  python3 scripts/results/build.py --bundle DIR [--session JOB ...]   # a small copy to publish: see below
-  --cameras DIR   the t=0 images `gen_tasks.py measure-limited --images DIR` wrote, copied in for the task pages
+  python3 scripts/results/build.py --bench NAME --bundle DIR [--session JOB ...]   # a small copy to publish: see below
+  --cameras DIR   the t=0 images of each task's cameras, DIR/<task>/t0_<camera>.png (a benchmark's gen_tasks.py
+                  writes them with --images), copied in for the task pages
   --no-video      a trial measured now gets its episodes replayed and scored but no videos (a later build without it
                   renders them)
   --bundle DIR    a copy to publish as one artifact (about 100 MB, over more than one publish): the overview, the
@@ -24,7 +27,7 @@ and site.js are copied next to the pages.
                   galleries, and of the media only each main run's graded video (limited: the graded episode; full:
                   the replay) -- plus the whole-session video of each --session JOB
 The analysis on the overview and at the top of each task page is results/<bench>/analysis/ (analysis.py).
-Everything a page shows is under jobs/results/humanoidbench/ (the trials' videos and images are hard-linked into
+Everything a page shows is under jobs/results/<bench>/ (the trials' videos and images are hard-linked into
 media/), so `python -m http.server` there serves it all. Not in git.
 """
 from __future__ import annotations
@@ -33,21 +36,38 @@ import argparse
 import os
 import shutil
 
-from common import HERE, OUT, SITE
+import bench
+import collect
+from bench import B
+from common import HERE, SITE
 from data import add_run, check_readme, derive, load_runs, load_tasks
 from pages import overview, run_page, task_page
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--refresh", action="store_true", help="measure every trial again (collect.py), not only new ones")
-    ap.add_argument("--cameras", help="a `gen_tasks.py measure-limited --images` directory: <task>/t0_<camera>.png")
-    ap.add_argument("--add", metavar="JOB", help="first append JOB's trial(s) to runs.csv, measured (then build as usual)")
+    which = ap.add_mutually_exclusive_group()
+    which.add_argument("--bench", help="build only this benchmark (default: every one with results/<bench>/)")
+    which.add_argument("--add", metavar="JOB", help="first append JOB's trial(s) to runs.csv, measured (then build its benchmark)")
     ap.add_argument("--note", default="", help="with --add: the note column (one line, English)")
+    ap.add_argument("--refresh", action="store_true", help="measure every trial again (collect.py), not only new ones")
+    ap.add_argument("--cameras", help="a gen_tasks.py --images directory: <task>/t0_<camera>.png")
     ap.add_argument("--no-video", action="store_true", help="trials measured now: no episode or session videos yet")
     ap.add_argument("--bundle", metavar="DIR", help="write the small copy to publish (overview and task pages) to DIR instead")
     ap.add_argument("--session", metavar="JOB", action="append", default=[], help="with --bundle: also take this run's whole-session video")
     args = ap.parse_args()
+    if args.bundle and not args.bench:
+        raise SystemExit("--bundle writes one benchmark's pages: name it with --bench")
+    trials = collect.trials_under([args.add]) if args.add else []
+    if args.add and not trials:
+        raise SystemExit(f"no trial under {args.add}")
+    for name in [bench.of_trial(trials[0])] if trials else [args.bench] if args.bench else bench.names():
+        bench.use(name)
+        build(args)
+
+
+def build(args) -> None:
+    """One benchmark's pages (bench.use() chose it)."""
     tasks, cols = load_tasks()
     if args.add:
         add_run(args.add, args.note, tasks, video=not args.no_video)
@@ -74,14 +94,14 @@ def main():
         shutil.copyfile(os.path.join(HERE, f), os.path.join(out, "assets", f))
     if args.cameras:
         for t in tasks:
-            for c in ("left_eye_camera", "right_eye_camera", "room_camera"):
+            for c in B.cameras:
                 src = os.path.join(args.cameras, t["task"], f"t0_{c}.png")
                 if os.path.exists(src):
                     os.makedirs(os.path.join(out, "assets", "cameras", t["task"]), exist_ok=True)
                     shutil.copyfile(src, os.path.join(out, "assets", "cameras", t["task"], f"{c}.png"))
-    elif args.bundle and os.path.isdir(f"{OUT}/assets/cameras"):   # the ones the last full build copied in
+    elif args.bundle and os.path.isdir(f"{B.out}/assets/cameras"):   # the ones the last full build copied in
         shutil.rmtree(f"{out}/assets/cameras", ignore_errors=True)
-        shutil.copytree(f"{OUT}/assets/cameras", f"{out}/assets/cameras")
+        shutil.copytree(f"{B.out}/assets/cameras", f"{out}/assets/cameras")
     open(f"{out}/index.html", "w").write(overview(tasks, cols, runs))
     for t in tasks:
         open(f"{out}/tasks/{t['task']}.html", "w").write(task_page(t, cols))

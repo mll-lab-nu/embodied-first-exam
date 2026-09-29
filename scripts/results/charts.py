@@ -5,15 +5,15 @@ import math
 import os
 import datetime as dt
 
-from common import CAMS, CLOCK, KIND, PHASE_COLORS, TOOLS, UP_M, clip_text, esc, num, progress_text, tip, tok, url, usd
+from bench import B
+from common import CLOCK, KIND, PHASE_COLORS, TOOLS, clip_text, esc, num, tip, tok, url, usd
 from calls import call_tip, kind_label, tool_kinds
 
 
 def ep_kind(e: dict, last: bool, max_steps: int | None) -> str:
     if e["end"] == "failed" and max_steps and (e["end_step"] or 0) >= max_steps:
-        h = e.get("final_head_h")
-        return "downlimit" if h is not None and h < UP_M else "steplimit"   # lying or sitting is no fall to the task
-    if e["end"] == "failed" and (e.get("final_head_h") or 0) >= UP_M:
+        return "downlimit" if B.down(e) is True else "steplimit"   # lying or sitting is no fall to the task
+    if e["end"] == "failed" and B.down(e) is False:
         return "endup"   # ended without a fall: a tool or an object dropped, or the robot left its seat
     if e["end"] in KIND:
         return e["end"]
@@ -45,11 +45,10 @@ def blocks(s: dict) -> list[tuple]:
 def ep_tip(e: dict, s: dict, kind: str) -> str:
     a0 = s["a0"]; t1 = e["t_end"] or e["t_last"]
     graded = e["ep"] == s["result"]["graded_ep"]
-    return tip(f"ep{e['ep']}{' · 被评分' if graded else ''} · {KIND[kind][0]}",
-               f"{e['steps']} 步 · 回报 {num(e.get('return'))}" + (f" · 骨盆最远前进 {num(e.get('max_dx'))} m" if e.get("max_dx") is not None else ""),
+    numbers, more = B.ep_lines(e)
+    return tip(f"ep{e['ep']}{' · 被评分' if graded else ''} · {KIND[kind][0]}", numbers,
                f"{(e['t0'] - a0) / 60 if e['t0'] else 0:.2f}–{(t1 - a0) / 60 if t1 else 0:.2f} min" + (f" · 看了 {e['views']} 张图" if e.get("views") else ""),
-               (f"结束时头比脚高 {e['final_head_h']:.2f} m（{'没倒' if e['final_head_h'] >= UP_M else '已倒或坐在地上'}）" if e.get("final_head_h") is not None else "")
-               + (f" · {progress_text(e.get('progress'))}" if progress_text(e.get("progress")) else ""))
+               more)
 
 
 def mini_timeline(s: dict, span_s: float, w: int = 220, h: int = 14) -> str:
@@ -178,9 +177,9 @@ def agent_timeline(s: dict) -> str:
         for k in kinds[i]:
             if k == "view" and views.get(i):
                 for j, v in enumerate(views[i]):   # the images this call showed, each in its camera's colour
-                    vt = tip(f"看图 #{v['n']} · {CAMS.get(v['camera'], v['camera'])}", f"ep{v['ep']} 第 {v['step']} 步 · {(v['t'] - a0) / 60:.2f} min",
+                    vt = tip(f"看图 #{v['n']} · {B.cam_label(v['camera'])}", f"ep{v['ep']} 第 {v['step']} 步 · {(v['t'] - a0) / 60:.2f} min",
                              os.path.basename(v["path"] or ""), "点击看这次调用")
-                    svg.append(f'<rect x="{x0 + 3 * j:.2f}" y="{top[k]}" width="3" height="{RH}" rx="1" class="cam-{v["camera"]}" data-call="{i}" data-tip="{vt}"/>')
+                    svg.append(f'<rect x="{x0 + 3 * j:.2f}" y="{top[k]}" width="3" height="{RH}" rx="1" class="cam-{B.cam_color(v["camera"])}" data-call="{i}" data-tip="{vt}"/>')
                 continue
             svg.append(f'<rect x="{x0:.2f}" y="{top[k]}" width="{w:.2f}" height="{RH}" rx="1" fill="{TOOLS[k][1]}" data-call="{i}" data-tip="{t}"/>')
     for t, txt, *_ in s["msgs"]:   # [t, text, ep, step]
@@ -190,15 +189,16 @@ def agent_timeline(s: dict) -> str:
         if v["camera"] not in cams:
             cams.append(v["camera"])
     lg = ("<span>一行一类；一次调用做了几件事，就在几行里各出现一次</span>"
-          + ("<span>看图按相机着色：" + "".join(f'<span style="margin-left:6px"><b class="sw-{c}"></b>{CAMS.get(c, c)}</span>' for c in cams) + "</span>" if cams else "")
+          + ("<span>看图按相机着色：" + "".join(f'<span style="margin-left:6px"><b class="sw-{B.cam_color(c)}"></b>{B.cam_label(c)}</span>' for c in cams) + "</span>" if cams else "")
           + ('<span><i class="sw-ep"></i>竖虚线 = reset，下一段 episode 开始（和上图对齐）</span>' if len(s["episodes"]) > 1 else "")
           + "<span>点一条看这次调用的命令和输出</span>")
     return f'{clock_svg(s, X, rows, svg, H)}<div class="legend">{lg}</div>'
 
 
 def episode_chart(s: dict, task: dict, page_dir: str) -> str:
-    """Per episode: the return (with the all-zero line and, where it fits, the pass mark), how many steps it
-    lasted, and (gait tasks) how far forward the pelvis got."""
+    """Per episode: the return where the benchmark scores one (with the all-zero line and, where it fits, the pass
+    mark), how many steps it lasted, and the benchmark's own rows (HumanoidBench's gait tasks: how far forward the
+    pelvis got)."""
     eps = s["episodes"]; n = len(eps)
     W, L, R = 1160, 64, 150
     P = W - L - R; bw = min(P / max(n, 1), 40)
@@ -212,14 +212,10 @@ def episode_chart(s: dict, task: dict, page_dir: str) -> str:
         hi = max(hi, bar)
     pad = (hi - lo) * 0.08 or 1
     lo, hi = lo - (pad if lo < 0 else 0), hi + pad
-    # world +x is forward only for the gait tasks (C1, C2); elsewhere (sit_hard's chair is behind) the row would mislead
-    show_dx = task.get("cls") in ("C1", "C2") and any(abs(e.get("max_dx") or 0) >= 0.25 for e in eps)
-    rows = [("回报", 150, lo, hi, lambda e: e.get("return"))]
+    rows = [("回报", 150, lo, hi, lambda e: e.get("return"))] if B.scored else []
     smax = max([e["steps"] for e in eps] + [task.get("nop_steps") or 0]) * 1.12 or 1
     rows.append(("撑了多少步", 86, 0, smax, lambda e: e["steps"]))
-    if show_dx:
-        dxs = [e.get("max_dx") or 0 for e in eps]
-        rows.append(("骨盆最远前进 (m)", 86, min(0, min(dxs)) * 1.1, max(0.3, max(dxs)) * 1.12, lambda e: e.get("max_dx")))
+    rows += B.episode_rows(task, eps)
     svg, y = [], 8
     for title, h, a, b, get in rows:
         Y = lambda v: y + h - (v - a) / ((b - a) or 1) * h

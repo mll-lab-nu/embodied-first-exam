@@ -1,10 +1,10 @@
 """Verifier-side, inside the sim image (for imageio, PIL and a font): one limited-mode session as one video, idle time
-cut -- every episode's replay (replay_episodes.py) back to back, and beside it where the session is: the episode and
-how it ended; the command driving the robot (which one, what changed since the one before, as attempts.py read it
-from the agent's log, and what the agent did off camera in between); the last thing the agent said or thought; the
-last image the model looked at; and the whole session on one strip (episodes above, the agent's tool calls below, the
-moment marked) with its colours explained. Run by collect.py once summary.json is written (not with --no-video):
-  python session_video.py <report_dir>   -> <report_dir>/session.mp4, session.jpg
+cut -- every episode's replay (the benchmark's scripts/<name>/replay.py) back to back, and beside it where the session
+is: the episode and how it ended; the command driving the robot (which one, what changed since the one before, as
+attempts.py read it from the agent's log, and what the agent did off camera in between); the last thing the agent said
+or thought; the last image the model looked at; and the whole session on one strip (episodes above, the agent's tool
+calls below, the moment marked) with its colours explained. Run by collect.py once summary.json is written (not with --no-video):
+  python session_video.py <report_dir> <benchmark>   -> <report_dir>/session.mp4, session.jpg
 Reads summary.json and the files it names, nothing else (no simulator, no model); it shows no score."""
 from __future__ import annotations
 
@@ -13,21 +13,21 @@ import collections
 import functools
 import json
 import os
-import re
 import sys
 import textwrap
 
 import imageio.v2 as imageio
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bench  # noqa: E402
+from bench import B  # noqa: E402
 from calls import tool_kinds  # noqa: E402
 from charts import ep_kind  # noqa: E402
-from common import TOOLS, UP_M  # noqa: E402
+from common import TOOLS  # noqa: E402
 
 W, H, FPS = 1280, 720, 25   # the robot, H x H, on the left; the panel on the right
-EVERY = 2                   # replay_episodes.py renders a frame every 2nd control step
 PAD, PW = 28, W - H - 2 * 28   # the panel's margin and text width
 HOLD = 3 * FPS              # an image the model looked at stays up at most this long
 TAIL = FPS // 2             # an episode's last frames say how it ended
@@ -87,16 +87,16 @@ def clip(d: ImageDraw.ImageDraw, text: str, f, width: float) -> str:
 
 
 def ending(e: dict, s: dict) -> tuple[str, str]:
-    """How an episode ended, and whether the robot was still up then (replay_episodes.py's final_head_h): an episode
-    can end without a fall (a tool dropped) and a fallen robot can run to the step limit."""
+    """How an episode ended, and whether the robot was still up then (where the benchmark says, Bench.down): an
+    episode can end without a fall (a tool dropped) and a fallen robot can run to the step limit."""
     n, ms = len(s["episodes"]), s["spec"]["max_steps"]
     kind = ep_kind(e, e["ep"] == n - 1, ms)   # "endup" once the replay knows the robot was still up
     label, color = ENDED.get(kind, (kind, MUTED))
-    up = e.get("final_head_h")
-    if up is not None and kind == "failed":
+    down = B.down(e)
+    if down is not None and kind == "failed":
         label = "fell"
-    elif up is not None and kind in ("steplimit", "downlimit", "running", "reset", "timeout"):
-        label += " · robot up" if up >= UP_M else " · robot down"
+    elif down is not None and kind in ("steplimit", "downlimit", "running", "reset", "timeout"):
+        label += " · robot down" if down else " · robot up"
     return label, color
 
 
@@ -176,7 +176,7 @@ def panel(s: dict, e: dict, step: int, ending_now: bool, view: tuple | None, wor
     now = when(e, step)
     img = Image.new("RGB", (W - H, H), BG)
     d, y = ImageDraw.Draw(img), 18
-    family = re.sub(r"^humanoidbench-(loco|manip)-|-i\d+-limited$", "", s["task_name"]).replace("-", "_")
+    family = B.family(s["task_name"])
     d.text((PAD, y), clip(d, f"{family} · limited · {s['model'].split('/')[-1]}", font(15), PW), font=font(15), fill=MUTED); y += 24
     d.text((PAD, y), f"ep{e['ep']}", font=font(36, True), fill=FG)
     d.text((PAD + d.textlength(f"ep{e['ep']} ", font=font(36, True)), y + 14), f"of {n}" + ("   ★ graded" if graded else ""),
@@ -255,9 +255,10 @@ def main(report: str) -> None:
     part = f"{report}/session.part.mp4"     # session.mp4 appears only once whole: collect.py caches it by existence
     with imageio.get_writer(part, fps=FPS, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
         for e in (e for e in s["episodes"] if e.get("video")):
-            clip_ = imageio.mimread(os.path.join(report, e["video"]), memtest=False)
+            clip_ = imageio.get_reader(os.path.join(report, e["video"]), format="FFMPEG")
+            n = clip_.count_frames()   # frame by frame: a whole clip of 640x480 frames can take a GB
             for j, frame in enumerate(clip_):
-                step = e["steps"] if j == len(clip_) - 1 else j * EVERY
+                step = e["steps"] if j == n - 1 else j * e.get("video_every", B.video_every)
                 at = (e["ep"], step, float("inf"))
                 if (v := seen(at)) is not shown[0]:
                     shown = (v, k)
@@ -268,16 +269,18 @@ def main(report: str) -> None:
                     first.setdefault(id(c), e["ep"])
                 cmd = (c, c["t1"] < when(e, step), first[id(c)], before[id(c)], gaps[id(c)], len(cmds)) if c else None
                 out = Image.new("RGB", (W, H), BG)
-                out.paste(Image.fromarray(frame).resize((H, H), Image.BICUBIC), (0, 0))
-                out.paste(panel(s, e, step, j >= len(clip_) - TAIL, view, (wd[0], wd[1], wd[4]) if wd else None, cmd, bar, key), (H, 0))
+                out.paste(ImageOps.pad(Image.fromarray(frame), (H, H), Image.BICUBIC, color=BG), (0, 0))   # square, or letterboxed
+                out.paste(panel(s, e, step, j >= n - TAIL, view, (wd[0], wd[1], wd[4]) if wd else None, cmd, bar, key), (H, 0))
                 w.append_data(np.asarray(out))
-                if e["ep"] == s["result"]["graded_ep"] and j == int(0.6 * (len(clip_) - 1)):
+                if e["ep"] == s["result"]["graded_ep"] and j == int(0.6 * (n - 1)):
                     poster = out   # as the episodes' posters: late in the graded episode, before its end
                 k += 1
+            clip_.close()
     (poster or out).save(f"{report}/session.jpg", quality=90)
     os.replace(part, f"{report}/session.mp4")
     print(json.dumps({"session": "session.mp4", "frames": k, "seconds": round(k / FPS, 1)}))
 
 
 if __name__ == "__main__":
+    bench.use(sys.argv[2])
     main(sys.argv[1])

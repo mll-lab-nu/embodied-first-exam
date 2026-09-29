@@ -6,7 +6,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
 for gen in "$root"/scripts/*/gen_tasks.py; do
   sim=$(basename "$(dirname "$gen")"); tmp=$(mktemp -d)
   mkdir -p "$tmp/scripts" "$tmp/images"
-  cp -r "$root/scripts/$sim" "$tmp/scripts/"; cp -r "$root/tasks" "$tmp/"; cp "$root/images/VERSION" "$tmp/images/"
+  cp -r "$root/scripts/$sim" "$root/scripts/limited" "$tmp/scripts/"; cp -r "$root/tasks" "$tmp/"
+  cp "$root/images/VERSION" "$tmp/images/"
   if ! out=$(python3 "$tmp/scripts/$sim/gen_tasks.py" render 2>&1); then
     echo "FAIL scripts/$sim/gen_tasks.py render: $out"; rc=1
   else

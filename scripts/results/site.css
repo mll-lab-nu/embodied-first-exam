@@ -101,21 +101,21 @@ svg [data-tip]:hover{filter:brightness(1.12)}svg .click{cursor:pointer}
 .e-error{fill:var(--e-error)}.e-running{fill:var(--e-running)}.e-prelude{fill:var(--e-prelude)}.e-wrapup{fill:var(--e-wrapup)}.e-unused{fill:var(--e-unused)}
 .after{opacity:.32}.graded{stroke:var(--ink);stroke-width:1.6}
 .gen{fill:var(--gen)}.tool{fill:var(--tool)}
-.cam-room_camera{fill:var(--cam-room);stroke:var(--cam-room)}.cam-left_eye_camera{fill:var(--cam-left);stroke:var(--cam-left)}
-.cam-right_eye_camera{fill:var(--cam-right);stroke:var(--cam-right)}.cam-made{fill:var(--cam-made);stroke:var(--cam-made)}.cam-unknown{fill:var(--cam-unknown);stroke:var(--cam-unknown)}
+.cam-room{fill:var(--cam-room);stroke:var(--cam-room)}.cam-left{fill:var(--cam-left);stroke:var(--cam-left)}
+.cam-right{fill:var(--cam-right);stroke:var(--cam-right)}.cam-made{fill:var(--cam-made);stroke:var(--cam-made)}.cam-unknown{fill:var(--cam-unknown);stroke:var(--cam-unknown)}
 .msg{fill:var(--acc)}
 svg [data-call]{cursor:pointer}svg rect.hl{stroke:var(--ink);stroke-width:1.6}svg g.hl rect.fr{stroke:var(--ink);stroke-width:2.6}tr.hl>td{background:var(--soft)}
 svg .ep-line{stroke:var(--mut);stroke-width:1;stroke-dasharray:2 3;opacity:.55}.legend i.sw-ep{display:inline-block;width:0;height:11px;border-left:1.5px dashed var(--mut)}
 .sw-failed{background:var(--e-failed)}.sw-endup{background:var(--e-endup)}.sw-reset{background:var(--e-reset)}.sw-success{background:var(--e-success)}.sw-timeout{background:var(--e-timeout)}.sw-downlimit{background:var(--e-downlimit)}
 .sw-error{background:var(--e-error)}.sw-running{background:var(--e-running)}.sw-prelude{background:var(--e-prelude)}.sw-wrapup{background:var(--e-wrapup)}.sw-unused{background:var(--e-unused);outline:1px solid var(--line)}
-.sw-gen{background:var(--gen)}.sw-tool{background:var(--tool)}.sw-room_camera{background:var(--cam-room)}.sw-left_eye_camera{background:var(--cam-left)}
-.sw-right_eye_camera{background:var(--cam-right)}.sw-made{background:var(--cam-made)}.sw-unknown{background:var(--cam-unknown)}
+.sw-gen{background:var(--gen)}.sw-tool{background:var(--tool)}.sw-room{background:var(--cam-room)}.sw-left{background:var(--cam-left)}
+.sw-right{background:var(--cam-right)}.sw-made{background:var(--cam-made)}.sw-unknown{background:var(--cam-unknown)}
 .sw-cached{background:var(--tok-cached)}.sw-uncached{background:var(--tok-uncached)}.sw-out{background:var(--tok-out)}
 .i-cached{background:var(--tok-cached)}.i-uncached{background:var(--tok-uncached)}.i-out{background:var(--tok-out)}
 .i-gen{background:var(--gen)}.i-tool{background:var(--tool)}.i-other{background:var(--e-prelude)}
 /* task header */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}
-.cams{display:flex;gap:8px}.cams figure{margin:0;text-align:center}.cams img{width:132px;height:132px;border-radius:10px;display:block;image-rendering:auto;background:#000;border:1px solid var(--line)}
+.cams{display:flex;gap:8px}.cams figure{margin:0;text-align:center}.cams img{width:132px;height:132px;object-fit:contain;border-radius:10px;display:block;image-rendering:auto;background:#000;border:1px solid var(--line)}
 .cams figcaption{font-size:11.5px;color:var(--mut);margin-top:3px}
 .statement{font-size:14.5px;margin:10px 0 0;max-width:760px}
 /* the analysis (analysis.py): a panel per model, a card per mode opening with its numbers */
@@ -148,7 +148,7 @@ table.matrix td{min-width:140px}table.matrix td.task,table.matrix td.n{min-width
 .vgrid video{width:100%;aspect-ratio:16/9;display:block;border-radius:10px;background:#000}.vgrid figcaption{font-size:12.5px;color:var(--mut);margin-top:5px}
 .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
 .picks figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
-.picks figure:hover{border-color:var(--acc)}.picks img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover;background:#000}
+.picks figure:hover{border-color:var(--acc)}.picks img{width:100%;display:block;aspect-ratio:1/1;object-fit:contain;background:#000}
 .picks figcaption{font-size:11.5px;padding:4px 7px;color:var(--mut)}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .gal figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}

@@ -13,9 +13,9 @@ import datetime as dt
 import analysis
 import collect
 
-from common import (BENCH, CAMS, HERE, KIND, MODELS, OBS, REPO, RUN_COLORS, SITE, STANDARD, TOOLS, UP_M, WHY, esc, num, pretty_output,
-                    progress_text, stamp, tip, tok, url, usd)
-from data import RETIRED, TEXTS, notes_of
+from bench import B
+from common import HERE, KIND, MODELS, REPO, RUN_COLORS, SENSORS, SITE, TOOLS, esc, num, pretty_output, stamp, tip, tok, url, usd
+from data import notes_of
 from widgets import kpi, md, pcell, stackbar, status_chip
 from calls import kind_label, tool_kind, tool_sequence, tool_summary, tool_table
 from charts import agent_timeline, cost_chart, ep_kind, episode_chart, hbars, line_chart, mini_timeline, reset_series, robot_timeline, stage_chart, strip_chart
@@ -28,13 +28,18 @@ def page(title: str, body: str, depth: int, crumbs=()) -> str:
             f"<title>{esc(title)}</title>"
             '<script>try{var t=localStorage.getItem("rcb-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>'
             f'<link rel="stylesheet" href="{up}assets/site.css{stamp(os.path.join(HERE, "site.css"))}"><script src="{up}assets/site.js{stamp(os.path.join(HERE, "site.js"))}"></script></head><body>'
-            f'<header class="top"><div class="wrap"><a class="brand" href="{up}index.html">HumanoidBench 结果</a><nav class="crumbs">{nav}</nav>'
+            f'<header class="top"><div class="wrap"><a class="brand" href="{up}index.html">{esc(B.title)} 结果</a><nav class="crumbs">{nav}</nav>'
             '<button class="theme" onclick="toggleTheme()">◐ 深浅</button></div></header>'
             f'<main class="wrap">{body}<div class="foot">由 <code>scripts/results/build.py</code> 生成于 {dt.datetime.now():%Y-%m-%d %H:%M}；'
-            f"数据：<code>results/{BENCH}/runs.csv</code>、各 trial 的 <code>report/summary.json</code> 和 <code>notes.md</code>；分析：<code>results/{BENCH}/analysis/</code>。"
+            f"数据：<code>results/{B.name}/runs.csv</code>、各 trial 的 <code>report/summary.json</code> 和 <code>notes.md</code>；分析：<code>results/{B.name}/analysis/</code>。"
             + ("这是精简版（<code>--bundle</code>）：总览、任务页和主运行的完整轨迹（不带图），每次运行只带被评分段的视频；其余在本地站点。" if SITE["bundle"] else "")
             + "</div></main>"
             '<div id="tip"></div></body></html>')
+
+
+def std_sensors() -> list[str]:
+    """The optional sensors (common.SENSORS) of the standard limited config, in its order."""
+    return [p for p in B.standard["limited"]["obs"].split("+") if p in SENSORS]
 
 
 def config_chips(r: dict) -> str:
@@ -42,9 +47,9 @@ def config_chips(r: dict) -> str:
     if r.get("effort"):
         c.append(f'<span class="chip">effort {esc(r["effort"])}</span>')
     if r["mode"] == "limited":
-        obs = r["obs"].split("+")
-        c += [f'<span class="chip">reset {r["resets"]}</span>', f'<span class="chip">{"IMU" if "imu" in obs else "无 IMU"}</span>',
-              f'<span class="chip">{"外部相机" if "room" in obs else "无外部相机"}</span>'] + (['<span class="chip">深度</span>'] if "depth" in obs else [])
+        obs, std = r["obs"].split("+"), std_sensors()
+        c += ([f'<span class="chip">reset {r["resets"]}</span>'] + [f'<span class="chip">{SENSORS[p][0 if p in obs else 1]}</span>' for p in std]
+              + [f'<span class="chip">{SENSORS[p][0]}</span>' for p in SENSORS if p in obs and p not in std])
     else:
         c.append('<span class="chip">reset 不限 · 完整状态</span>')
     if r["standard"]:
@@ -64,15 +69,17 @@ def tok_stack(d: dict, top: float) -> str:
 
 def run_command(task: dict, model: str, mode: str) -> str:
     """The standard-config run of one task in one mode, then its line in runs.csv and the pages."""
-    std = STANDARD[mode]
+    std = B.standard[mode]
     slug = re.sub(r"[^a-z0-9]", "", model.split("/")[-1].lower())
     fam = task["task"].replace("_", "-")
     if mode == "limited":
-        d, env = task["dir"], f"RCB_RESET_BUDGET={std['resets']} RCB_OBS_IMU=1 RCB_OBS_ROOM_CAMERA=1 "
-        job = f"hb-limited-{fam}-codex-{slug}-{std['effort']}-{std['budget_min']}min-reset{std['resets']}-imu-roomcam"
+        on = std_sensors()
+        d, env = task["dir"], f"RCB_RESET_BUDGET={std['resets']} " + "".join(f"{SENSORS[p][2]} " for p in on)
+        job = (f"{B.short}-limited-{fam}-codex-{slug}-{std['effort']}-{std['budget_min']}min-reset{std['resets']}"
+               + "".join(f"-{SENSORS[p][3]}" for p in on))
     else:
         d, env = task["full_dir"], ""
-        job = f"hb-full-{fam}-codex-{slug}-{std['effort']}-{std['budget_min']}min"
+        job = f"{B.short}-full-{fam}-codex-{slug}-{std['effort']}-{std['budget_min']}min"
     d = os.path.relpath(d, REPO) if d else f"tasks/<{fam}>"
     return (f"sg docker -c '{env}RCB_MODEL=openrouter/{model} scripts/run_deepseek_openrouter.sh {d} --job-name {job} "
             f"--ak reasoning_effort={std['effort']}'\npython3 scripts/results/build.py --add jobs/{job}")
@@ -83,11 +90,13 @@ def run_kpis(r: dict, task: dict) -> str:
     res = s["result"]
     prog = d.get("prog")
     limited = s["mode"] == "limited"
-    why = "交的轨迹回放两次都到了及格线" if res["why"] == "success" and not limited else WHY.get(res["why"], res["why"])
-    why += f"；{progress_text(res.get('progress'))}" if progress_text(res.get("progress")) else ""
-    k = [kpi("结果", "通过" if d["pass"] else "未通过", why, cls="ok" if d["pass"] else "bad"),
-         kpi("被评分段回报" if limited else "交的轨迹回放的回报", f'{num(d["score"])} <small>/ {num(d["bar"], 0)}</small>',
-             f"离及格线 {prog:.3f}（全零 = 0，及格 = 1）" if prog is not None else "", bar=(prog or 0, "ok" if d["pass"] else "bad"))]
+    why = (("交的轨迹回放两次都到了及格线" if B.scored else "交的轨迹回放两次都达成了目标") if res["why"] == "success" and not limited
+           else B.why_text(res["why"]))
+    why += f"；{B.progress_text(res.get('progress'))}" if B.progress_text(res.get("progress")) else ""
+    k = [kpi("结果", "通过" if d["pass"] else "未通过", why, cls="ok" if d["pass"] else "bad")]
+    if B.scored:
+        k.append(kpi("被评分段回报" if limited else "交的轨迹回放的回报", f'{num(d["score"])} <small>/ {num(d["bar"], 0)}</small>',
+                     f"离及格线 {prog:.3f}（全零 = 0，及格 = 1）" if prog is not None else "", bar=(prog or 0, "ok" if d["pass"] else "bad")))
     if limited:
         k.append(kpi("reset", f'{d["resets_used"]} <small>/ {d["resets"]}</small>', f"{len(s['episodes'])} 段 episode，{res['steps']:,} 步",
                      bar=(d["resets_used"] / d["resets"] if d["resets"] else 1, "warn" if d["resets"] and d["resets_used"] >= d["resets"] else "")))
@@ -102,7 +111,7 @@ def run_kpis(r: dict, task: dict) -> str:
               extra=stackbar([(d["tok_cached"], "i-cached", tip("命中缓存的输入", f"{d['tok_cached']:,}")),
                               (d["tok_in"] - d["tok_cached"], "i-uncached", tip("未缓存的输入", f"{d['tok_in'] - d['tok_cached']:,}")),
                               (d["tok_out"], "i-out", tip("输出", f"{d['tok_out']:,}"))], lg=True)),
-          kpi("看过的图", str(d["views"]), " · ".join(f"{CAMS.get(c, c)} {n}" for c, n in _count(v["camera"] for v in s["views"])) or "一张没看")]
+          kpi("看过的图", str(d["views"]), " · ".join(f"{B.cam_label(c)} {n}" for c, n in _count(v["camera"] for v in s["views"])) or "一张没看")]
     return '<div class="kpis">' + "".join(k) + "</div>"
 
 
@@ -131,17 +140,18 @@ def video_panel(s: dict, page_dir: str) -> str:
         if not vid or not os.path.exists(vid) or not url(s, vid, page_dir):
             return "<p class='mut'>没有视频。</p>"
         what = "验证端在新进程里回放 agent 交的 trajectory.npz" if s["mode"] == "full" else "sidecar 录的被评分段"
+        said = (f"回报 {num(s['result']['return'])} · 及格线 {num(s['result']['bar'], 0)}" if B.scored
+                else "达成了目标" if s["result"]["success"] else "没达成目标")
         return (f'<div class="player"><video class="pv" src="{esc(url(s, vid, page_dir))}" controls loop muted preload="metadata"></video>'
-                f"<div><div style='font-weight:600'>{what}</div><p class='mut' style='font-size:12.5px'>回报 {num(s['result']['return'])} · "
-                f"及格线 {num(s['result']['bar'], 0)}</p></div></div>")
+                f"<div><div style='font-weight:600'>{what}</div><p class='mut' style='font-size:12.5px'>{said}</p></div></div>")
     n, ms = len(s["episodes"]), s["spec"]["max_steps"]
-    cap = lambda e: (f"ep{e['ep']}{'（被评分）' if e['ep'] == s['result']['graded_ep'] else ''} · {e['steps']} 步 · 回报 {num(e.get('return'))} · "
-                     f"{KIND[ep_kind(e, e['ep'] == n - 1, ms)][0]}")
+    cap = lambda e: (f"ep{e['ep']}{'（被评分）' if e['ep'] == s['result']['graded_ep'] else ''} · {e['steps']} 步 · "
+                     + (f"回报 {num(e.get('return'))} · " if B.scored else "") + KIND[ep_kind(e, e['ep'] == n - 1, ms)][0])
     src = lambda e: esc(url(s, os.path.join(base, e["video"]), page_dir))
     graded = next((e for e in eps if e["ep"] == s["result"]["graded_ep"]), eps[-1])
     picks, seen = [], set()
-    for e, why in ([(graded, "被评分段")] + [(e, f"回报第 {k} 高") for k, e in enumerate(sorted(eps, key=lambda e: -(e.get("return") or -1e18))[:3], 1)]
-                   + [(max(eps, key=lambda e: e["steps"]), "撑得最久")]):
+    top = [(e, f"回报第 {k} 高") for k, e in enumerate(sorted(eps, key=lambda e: -(e.get("return") or -1e18))[:3], 1)] if B.scored else []
+    for e, why in [(graded, "被评分段")] + top + [(max(eps, key=lambda e: e["steps"]), "撑得最久")]:
         if e["ep"] not in seen and len(picks) < 5:
             picks.append((e, why)); seen.add(e["ep"])
     opts = "".join(f'<option value="{src(e)}"{" selected" if e is graded else ""}>{esc(cap(e))}</option>' for e in eps)
@@ -155,7 +165,7 @@ def video_panel(s: dict, page_dir: str) -> str:
     k = sum(bool(e.get("exact")) for e in eps)
     return (f'<div class="player"><video class="pv" src="{src(graded)}" poster="{esc(url(s, os.path.join(base, graded.get("poster") or ""), page_dir))}" controls loop muted preload="metadata"></video>'
             f'<div><div class="pcap" style="font-weight:600">{esc(cap(graded))}</div><select class="pick" onchange="play(this.value, null, this)">{opts}</select>'
-            "<p class='mut' style='font-size:12.5px'>每段都是验证端事后回放重渲染的（25 fps，实时速度）"
+            f"<p class='mut' style='font-size:12.5px'>每段都是验证端事后回放重渲染的（{B.video_note}）"
             + ("；这个精简版只带被评分段，其他段和整段录像在本地站点。" if SITE["bundle"] and len(eps) < len(s["episodes"]) else "；点时间轴或柱状图里的任一段也会在这里播放。")
             + f"{k}/{len(eps)} 段与现场 bit-exact（重放的终态与 sidecar 记下的一致）"
             + ("" if k == len(eps) else "；其余与现场的终态对不上，是近似回放（旧版 sidecar 的日志里动作只留 5 位小数，必然如此）") + "。</p>"
@@ -167,17 +177,18 @@ def views_gallery(s: dict, page_dir: str) -> str:
         return "<p class='mut'>模型一张图都没看。</p>"
     base = os.path.join(s["trial_dir"], "report")
     a0 = s["a0"]
+    where = lambda v: "" if v["ep"] is None else f" · ep{v['ep']} 第 {v['step']} 步"   # noqa: E731  (None: before any step)
     return '<div class="gal">' + "".join(
         f'<figure><a href="{esc(url(s, os.path.join(base, v["file"]), page_dir))}"><img loading="lazy" src="{esc(url(s, os.path.join(base, v["file"]), page_dir))}" alt=""></a>'
-        f'<figcaption><span class="dot" style="background:var(--cam-{v["camera"].split("_")[0] if v["camera"] in ("room_camera",) else {"left_eye_camera": "left", "right_eye_camera": "right"}.get(v["camera"], v["camera"])})"></span>'
-        f'#{v["n"]} · {CAMS.get(v["camera"], v["camera"])} · {(v["t"] - a0) / 60:.2f} min · ep{v["ep"]} 第 {v["step"]} 步<br>{esc(os.path.basename(v["path"] or ""))}</figcaption></figure>'
+        f'<figcaption><span class="dot" style="background:var(--cam-{B.cam_color(v["camera"])})"></span>'
+        f'#{v["n"]} · {B.cam_label(v["camera"])} · {(v["t"] - a0) / 60:.2f} min{where(v)}<br>{esc(os.path.basename(v["path"] or ""))}</figcaption></figure>'
         for v in s["views"]) + "</div>"
 
 
 def episode_table(s: dict, page_dir: str) -> str:
     a0, n, ms = s["a0"], len(s["episodes"]), s["spec"]["max_steps"]
     base = os.path.join(s["trial_dir"], "report")
-    rows = []
+    rows, cols = [], B.episode_columns()
     for e in s["episodes"]:
         did = e.get("did") or []
         said = ""
@@ -191,14 +202,12 @@ def episode_table(s: dict, page_dir: str) -> str:
         video = f'<a href="#" data-video="{esc(url(s, os.path.join(base, e["video"]), page_dir))}" data-label="ep{e["ep"]}" onclick="return false">▶</a>' if e.get("video") else "—"
         rows.append(f'<tr{" class=graded" if e["ep"] == s["result"]["graded_ep"] else ""}><td><b>{e["ep"]}</b></td><td class="n">{(e["t0"] - a0) / 60 if e["t0"] else 0:.2f}</td>'
                     f'<td class="n">{e["steps"]}</td><td><span class="legend"><span><b class="{KIND[kind][1].replace("e-", "sw-")}"></b>{KIND[kind][0]}</span></span></td>'
-                    f'<td class="n">{num(e.get("return"))}</td><td class="n">{num(e.get("max_dx"))}</td><td class="n">{num(e.get("final_dx"))}</td>'
-                    f'<td class="n">{num(e.get("final_head_h"))}</td><td class="mut" style="white-space:nowrap">{esc(progress_text(e.get("progress")))}</td>'
-                    f'<td class="n">{e.get("views") or 0}</td><td>{video}</td><td style="max-width:520px">{said}</td></tr>')
-    return ('<div class="tw"><table class="plain"><thead><tr><th>ep</th><th class="n">开始 (min)</th><th class="n">步数</th><th>怎么结束</th><th class="n">回报</th>'
-            '<th class="n">最远前进 (m)</th><th class="n">最终 x (m)</th><th class="n">结束时头比脚高 (m)</th><th>进度</th><th class="n">看图</th><th>视频</th>'
-            '<th>这段里它说了什么、跑了什么</th></tr></thead><tbody>'
-            + "".join(rows) + "</tbody></table></div><p class='mut' style='font-size:12.5px'>回报、位移和姿态来自验证端事后回放，agent 看不到。"
-            f"x 是骨盆沿世界 x 轴的位移，只在行走类任务里是前进方向；头比脚高 {UP_M:g} m 以上算没倒（站着约 1.6 m，坐在地上或躺下不到 1 m）。</p>")
+                    + "".join(cell(e) for _, cell in cols)
+                    + f'<td class="n">{e.get("views") or 0}</td><td>{video}</td><td style="max-width:520px">{said}</td></tr>')
+    note = B.episode_note()
+    return ('<div class="tw"><table class="plain"><thead><tr><th>ep</th><th class="n">开始 (min)</th><th class="n">步数</th><th>怎么结束</th>'
+            + "".join(head for head, _ in cols) + '<th class="n">看图</th><th>视频</th><th>这段里它说了什么、跑了什么</th></tr></thead><tbody>'
+            + "".join(rows) + "</tbody></table></div>" + (f"<p class='mut' style='font-size:12.5px'>{note}</p>" if note else ""))
 
 
 def leak_panel(s: dict) -> str:
@@ -377,7 +386,7 @@ def records_html(s: dict, page_dir: str) -> str:
         parts.append(f"<details class='step'><summary>/app/output 里的全部文件 <span class='mut'>· {len(outs)}</span></summary><p>"
                      + "<br>".join(f"<a href='{esc(url(s, p, page_dir))}'>{esc(os.path.relpath(p, f'{trial}/artifacts/app/output'))}</a> "
                                    f"<span class='mut'>{os.path.getsize(p):,} B</span>" for p in outs) + "</p></details>")
-    parts += ["<h3>验证</h3>", block("reward.json", f"{trial}/verifier/reward.json"), block("diagnostics.json（回报、及格线、回放用时）", f"{trial}/verifier/diagnostics.json"),
+    parts += ["<h3>验证</h3>", block("reward.json", f"{trial}/verifier/reward.json"), block(f"diagnostics.json（{B.diag_what}）", f"{trial}/verifier/diagnostics.json"),
               block("test-stdout.txt", f"{trial}/verifier/test-stdout.txt"),
               block("grade.log", f"{trial}/verifier/grade.log")]
     parts += ["<h3>Harbor</h3>", block("result.json（各阶段时间、token、异常）", f"{trial}/result.json"), block("config.json", f"{trial}/config.json"),
@@ -398,22 +407,16 @@ def task_page(task: dict, cols: list) -> str:
     page_dir = os.path.join(SITE["out"], "tasks")
     runs, mains = task["runs"], task["main"]
     H = []
-    cls = task["cls"] if task["cls_name"] in ("", task["cls"]) else f'{task["cls"]} · {task["cls_name"]}'
-    chips = [f'<span class="chip">{esc(task["robot"])}</span>', f'<span class="chip" data-tip="{tip(task["cls_long"] or cls, task["one_liner"])}">{esc(cls)}</span>',
-             f'<span class="chip">及格线 {num(task["bar"], 0)}</span>', f'<span class="chip">全零动作 {num(task["nop"])}</span>',
-             f'<span class="chip">{task["max_steps"]} 步 / episode</span>']
+    chips, notes = B.hero(task)
     cams = ""
     cam_dir = os.path.join(SITE["out"], "assets", "cameras", task["task"])
     if os.path.isdir(cam_dir):
-        shots = [(c, stamp(os.path.join(cam_dir, f"{c}.png"))) for c in ("left_eye_camera", "right_eye_camera", "room_camera")
-                 if os.path.exists(os.path.join(cam_dir, f"{c}.png"))]
+        shots = [(c, stamp(os.path.join(cam_dir, f"{c}.png"))) for c in B.cameras if os.path.exists(os.path.join(cam_dir, f"{c}.png"))]
         cams = '<div class="cams">' + "".join(
-            f'<figure><a href="../assets/cameras/{task["task"]}/{c}.png{v}"><img src="../assets/cameras/{task["task"]}/{c}.png{v}" alt=""></a><figcaption>{CAMS[c]} · t=0</figcaption></figure>'
+            f'<figure><a href="../assets/cameras/{task["task"]}/{c}.png{v}"><img src="../assets/cameras/{task["task"]}/{c}.png{v}" alt=""></a><figcaption>{B.cam_label(c)} · t=0</figcaption></figure>'
             for c, v in shots) + "</div>"
-    pose = f"外部相机位姿 <code>{esc(task['pose'])}</code>（lookat x,y,z · 距离 · 方位角 · 俯仰角）" if task["pose"] else "外部相机：录像相机在 t=0 的位姿"
     H.append(f'<div class="hero"><div><div class="mut">#{task["n"]}</div><h1>{esc(task["task"])}</h1><div class="row">{"".join(chips)}</div>'
-             f'<p class="statement"><b>任务：</b>{esc(task["statement"])}</p><p class="mut" style="font-size:12.5px;margin:6px 0 0">limited 模式的相机（t=0 的三张图在右边）：{pose}</p>'
-             f'<p class="mut" style="font-size:12.5px;margin:2px 0 0;max-width:760px">{esc(task["camera_note"])}</p></div>{cams}</div>')
+             f'<p class="statement"><b>任务：</b>{esc(task["statement"])}</p>{notes}</div>{cams}</div>')
     H.append('<div class="sect" id="analysis"><h2>分析</h2><span class="mut">每个模型分开写；每种模式先给主运行的数字，再说原因</span></div>')
     H.append(analysis.task_block(task, cols))
     todo = [c for c in cols if c not in mains]
@@ -429,7 +432,7 @@ def task_page(task: dict, cols: list) -> str:
             rs = [mains[c] for c in cols if c in mains and c[1] == mode]
             if rs:
                 H.append(f'<h3>{esc(analysis.MODE[mode])}</h3>{compare_table(rs, [], page_dir, sort=False)}')
-    order = list(TEXTS)
+    order = list(B.texts)
     history = [(c, sorted((r for r in runs if r["standard"] and r["col"] == c),
                           key=lambda r: (order.index(r["text"]) if r["text"] in order else len(order), r["date"], r["i"]))) for c in cols]
     history = [(c, rs) for c, rs in history if len(rs) > 1]
@@ -453,7 +456,7 @@ def task_page(task: dict, cols: list) -> str:
             more = f' · <a href="../runs/{main["id"]}.html">{"完整轨迹：每一步的命令、脚本和输出" if SITE["bundle"] else "完整轨迹和 Harbor 记录"} →</a>'
             H.append(f'<section data-pane="main:{k}" class="{"on" if k == 0 else ""}"><p class="mut" style="margin:0 0 12px">{config_chips(main)} · {date}{more}</p>'
                      f'{run_detail(main, task, page_dir, phases, rest, full=True)}</section>')
-    return page(f"{task['task']} · HumanoidBench", "".join(H), 1, [(task["task"], None)])
+    return page(f"{task['task']} · {B.title}", "".join(H), 1, [(task["task"], None)])
 
 
 def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_text: bool = False) -> str:
@@ -463,14 +466,14 @@ def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_
     rows = []
     for r in sorted(runs, key=lambda r: (r not in mains, not r["standard"], r["mode"], r["date"], r["i"])) if sort else runs:
         d, s = r["d"], r["s"]
-        v = TEXTS.get(r["text"])
+        v = B.texts.get(r["text"])
         name = (f'<b>{esc(v[0] if v else r["text"] or "?")}</b> <span class="mut">说明 {esc(r["text"] or "")}</span>' if by_text else
                 f'<b>{esc(r["model_name"])}</b>') + (f' <span class="chip acc">{"本轮" if by_text else "主运行"}</span>' if r in mains else "")
         chips = f'<div class="row" style="margin-top:3px">{config_chips(r)}</div>'
         link = f'<a href="../runs/{r["id"]}.html">{name}</a>' if r["id"] and not SITE["bundle"] else name
         res = status_chip(r) if r["result"] in ("pass", "fail") else f'<span class="chip na">{esc(r["result"])}</span>'
         prog, used, amin = d.get("prog"), d["resets_used"], d["agent_min"]
-        prog_c = pcell(prog, ("—" if prog is None else f"{prog:.3f}") + f" <small>{num(d['score'])}/{num(d['bar'], 0)}</small>", "ok" if d["pass"] else "bad")
+        prog_c = pcell(prog, ("—" if prog is None else f"{prog:.3f}") + f" <small>{num(d['score'])}/{num(d['bar'], 0)}</small>", "ok" if d["pass"] else "bad") if B.scored else ""
         reset_c = pcell((used or 0) / d["resets"] if d["resets"] else None, f"{'—' if used is None else used}/{d['resets']}", "warn") if r["mode"] == "limited" else "<span class='mut'>不限</span>"
         time_c = pcell(amin / d["budget_min"] if amin else None, f"{amin:.1f} min" if amin else "—")
         cost_c = pcell((d["cost"] or 0) / top_cost if d["cost"] is not None else None, usd(d["cost"]) + (f" <small>{tok(d['tokens'])}</small>" if d.get("tokens") else ""), "na",
@@ -478,11 +481,11 @@ def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_
         v = lambda x: "" if x is None else x
         rows.append(f'<tr class="{"main" if r in mains else "" if s else "dim"}"><td class="run">{link}{"" if by_text else chips}'
                     f'<div class="mut" style="font-size:12px;margin-top:3px;max-width:420px">{esc(r["date"])} · {esc(r["note"])}{"" if s else "（原始数据已删）"}</div></td>'
-                    f'<td>{res}</td><td data-v="{v(prog)}" style="min-width:190px">{prog_c}</td>'
-                    f'<td data-v="{v(used)}">{reset_c}</td><td data-v="{v(amin)}">{time_c}</td><td data-v="{v(d["cost"])}" style="min-width:150px">{cost_c}</td>'
+                    f'<td>{res}</td>' + (f'<td data-v="{v(prog)}" style="min-width:190px">{prog_c}</td>' if B.scored else "")
+                    + f'<td data-v="{v(used)}">{reset_c}</td><td data-v="{v(amin)}">{time_c}</td><td data-v="{v(d["cost"])}" style="min-width:150px">{cost_c}</td>'
                     f'<td class="sess" style="min-width:186px">{mini_timeline(s, (d["budget_min"] or 60) * 60, 180) if s else ""}</td></tr>')
-    return ('<div class="panel"><div class="tw"><table class="data"><thead><tr><th>运行</th><th>结果</th><th data-sort>离及格线 <span class="faint">回报/及格线</span></th>'
-            '<th data-sort>reset</th><th data-sort>agent 用时</th><th data-sort>花费 <span class="faint">tokens</span></th><th>会话（整个预算）</th></tr></thead><tbody>'
+    return ('<div class="panel"><div class="tw"><table class="data"><thead><tr><th>运行</th><th>结果</th>'
+            + ('<th data-sort>离及格线 <span class="faint">回报/及格线</span></th>' if B.scored else "") + '<th data-sort>reset</th><th data-sort>agent 用时</th><th data-sort>花费 <span class="faint">tokens</span></th><th>会话（整个预算）</th></tr></thead><tbody>'
             + "".join(rows) + "</tbody></table></div></div>")
 
 
@@ -509,23 +512,23 @@ def run_page(r: dict, task: dict) -> str:
 
 
 def overview(tasks: list, cols: list, runs: list) -> str:
-    lim = STANDARD["limited"]
-    H = ['<h1>HumanoidBench 结果</h1><p class="sub">coding agent 在 24 个选出来的 HumanoidBench 任务上的表现（23 个计分 + sit_simple 夹具）。'
-         "两种模式：limited 模拟真机，只给真机本来就有的信息（见下面的表），reset 有上限；full 里它有完整的物理状态，reset 不限，"
-         "交一条轨迹由验证端回放打分。两种都没有 reward。</p>"
+    lim = B.standard["limited"]
+    sensors = "".join(f" · {SENSORS[p][0]}" for p in std_sensors())
+    H = [f'<h1>{esc(B.title)} 结果</h1>{B.intro(tasks)}'
          '<div class="row" style="margin-bottom:16px"><span class="chip acc">标准配置</span>'
          + "".join(f'<span class="chip">{esc(m)} · {esc(a)}</span>' for m, a in dict((r["model_name"], r["agent"]) for r in runs if r["standard"]).items())
          + f'<span class="chip">经 OpenRouter</span><span class="chip">effort {lim["effort"]}</span><span class="chip">{lim["budget_min"]} min</span>'
-         f'<span class="chip">limited：{lim["resets"]} 次 reset · IMU · 外部相机</span><span class="chip">full：reset 不限 · 完整状态</span><span class="chip">无 reward</span></div>']
+         f'<span class="chip">limited：{lim["resets"]} 次 reset{sensors}</span><span class="chip">full：reset 不限 · 完整状态</span><span class="chip">无 reward</span></div>']
     H.append(limited_info())
     shared = [t for t in tasks if len({c[0] for c in t["main"]}) > 1]
     ana, toc = analysis.overview_block(tasks, cols, {"总体结论": session_passes(tasks),
                                                      "模型对比": (matrix(shared, cols) if shared else "") + session_compare(shared, cols),
-                                                     "对照实验": variants_table(tasks), "各版的改动": versions_table(tasks, runs)})
+                                                     "对照实验": variants_table(tasks), "各版的改动": versions_table(tasks, runs) if B.texts else ""})
     toc += [("matrix", "结果总表"), ("cols", "每一列")]
     H.append('<nav class="toc">' + "".join(f'<a href="#{k}">{esc(v)}</a>' for k, v in toc) + "</nav>")
     H.append(ana)
-    H.append('<div class="sect" id="matrix"><h2>结果总表</h2><span class="mut">每格是那一列在那个任务上的主运行：条长 = 离及格线（全零动作 = 0，及格 = 1），数字 = 回报</span></div>')
+    H.append('<div class="sect" id="matrix"><h2>结果总表</h2><span class="mut">每格是那一列在那个任务上的主运行'
+             + ('：条长 = 离及格线（全零动作 = 0，及格 = 1），数字 = 回报' if B.scored else '：通过或未通过') + '</span></div>')
     H.append(f'<div class="panel">{matrix(tasks, cols)}</div>')
     have = [c for c in cols if any(r["standard"] and r["col"] == c for r in runs)] or cols[:1]
     H.append('<div class="sect" id="cols"><h2>每一列</h2><span class="mut">一个模型在一种模式下，每个任务最新的标准配置运行</span></div>')
@@ -552,7 +555,7 @@ def overview(tasks: list, cols: list, runs: list) -> str:
             last = kpi("reset 用完", f'{out_of} <small>/ {len(done)}</small>', "reset 用完才停下的运行")
         else:
             late = sum(1 for _, r in done if r["s"] and r["s"]["result"].get("timed_out"))
-            last = kpi("用满 60 min", f'{late} <small>/ {len(done)}</small>', "到时被停的运行（轨迹照样打分）")
+            last = kpi(f"用满 {B.standard['full']['budget_min']} min", f'{late} <small>/ {len(done)}</small>', "到时被停的运行（轨迹照样打分）")
         P = [f'<section data-pane="m:{k}" class="{"on" if k == 0 else ""}">', '<div class="kpis">',
              kpi("已跑", f'{len(done)} <small>/ {len(tasks)}</small>', f"通过 {n_pass} · 未通过 {len(done) - n_pass} · 未跑 {len(tasks) - len(done)}", wide=True, extra=f'<div class="seg">{seg}</div>'),
              kpi("通过", f'{n_pass} <small>/ {len(done)}</small>', "跑过的任务里", cls="ok" if n_pass else ""),
@@ -561,8 +564,8 @@ def overview(tasks: list, cols: list, runs: list) -> str:
              kpi("agent 用时", f'{amin:.1f} <small>min</small>', f"每次用了预算的 {min(used):.0%}–{max(used):.0%}" if used else ""), last, "</div>"]
         if nxt and not SITE["bundle"]:
             cmd = run_command(nxt, mid, mode)
-            P.append(f'<div class="panel"><div class="next"><div><div class="mut" style="font-size:12.5px">下一个（按表格顺序）</div><div class="big">#{nxt["n"]} {esc(nxt["task"])}'
-                     f' <span class="chip">{esc(nxt["robot"])}</span> <span class="chip">{esc(nxt["cls"])} · {esc(nxt["cls_name"])}</span></div></div>'
+            P.append(f'<div class="panel"><div class="next"><div><div class="mut" style="font-size:12.5px">下一个（按表格顺序）</div><div class="big">#{nxt["n"]} {esc(nxt["task"])}</div>'
+                     f'{B.task_label(nxt, full=False)}</div>'
                      f'<div class="cmd" style="flex:1;min-width:320px"><pre>{esc(cmd)}</pre><button class="btn" data-copy="{esc(cmd)}">复制</button></div></div></div>')
         P.append(main_table(tasks, per, mode))
         if live:
@@ -593,7 +596,7 @@ def overview(tasks: list, cols: list, runs: list) -> str:
                      + '<div class="legend">' + "".join(f'<span><b style="background:{v[1]}"></b>{label(kk)}</span>' for kk, v in TOOLS.items()
                                                        if mode == "limited" or kk != "robot") + "</div></div>")
             if mode == "limited":
-                P.append(f'<div class="panel"><div class="hd"><h2>每段 episode 撑了多少步</h2><span class="mut">一个点一段，◆ 被评分段，竖线 = 全零动作</span></div>{strip_chart(order, tasks_by)}</div>')
+                P.append(f'<div class="panel"><div class="hd"><h2>每段 episode 撑了多少步</h2><span class="mut">一个点一段，◆ 被评分段{"，竖线 = 全零动作" if any(t.get("nop_steps") for t in tasks) else ""}</span></div>{strip_chart(order, tasks_by)}</div>')
             P.append("</div>")
         P.append("</section>")
         H.append("".join(P))
@@ -609,11 +612,12 @@ def overview(tasks: list, cols: list, runs: list) -> str:
             link = f'<a href="runs/{r["id"]}.html">{esc(r["model_name"])}</a>' if r["id"] and not SITE["bundle"] else esc(r["model_name"])
             rows.append(f'<tr class="{"" if r["s"] else "dim"}"><td class="n">{esc(r["date"])}</td><td class="task"><a href="tasks/{r["task"]}.html">{esc(r["task"])}</a></td>'
                         f'<td>{link}</td><td style="min-width:290px"><div class="row" style="gap:4px">{config_chips(r)}</div></td><td>{status_chip(r) if r["result"] in ("pass", "fail") else esc(r["result"])}</td>'
-                        f'<td class="n">{num(d["score"])}</td><td class="n">{usd(d["cost"])}</td><td class="n">{num(d["agent_min"], 1)}</td>'
+                        + (f'<td class="n">{num(d["score"])}</td>' if B.scored else "") + f'<td class="n">{usd(d["cost"])}</td><td class="n">{num(d["agent_min"], 1)}</td>'
                         f'<td class="mut" style="font-size:12.5px;max-width:380px">{esc(r["note"])}</td></tr>')
-        H.append('<div class="panel"><div class="tw"><table class="data"><thead><tr><th>日期</th><th>任务</th><th>模型</th><th>配置</th><th>结果</th><th class="n">回报</th>'
-                 '<th class="n">花费</th><th class="n">min</th><th>备注</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table></div></div>")
-    return page("HumanoidBench 结果", "".join(H), 0)
+        H.append('<div class="panel"><div class="tw"><table class="data"><thead><tr><th>日期</th><th>任务</th><th>模型</th><th>配置</th><th>结果</th>'
+                 + ('<th class="n">回报</th>' if B.scored else "") + '<th class="n">花费</th><th class="n">min</th><th>备注</th></tr></thead><tbody>'
+                 + "".join(rows) + "</tbody></table></div></div>")
+    return page(f"{B.title} 结果", "".join(H), 0)
 
 
 def main_table(tasks: list, per: dict, mode: str) -> str:
@@ -625,20 +629,25 @@ def main_table(tasks: list, per: dict, mode: str) -> str:
     for t in tasks:
         r = per[t["task"]]
         head = (f'<td class="n" data-v="{t["n"]}">{t["n"]}</td><td class="task"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a>'
-                f'<div class="mut" data-tip="{tip(t["cls"] + " · " + t["cls_long"], t["one_liner"])}">{esc(t["robot"])} · {esc(t["cls"])}{"" if t["cls_name"] in ("", t["cls"]) else " " + esc(t["cls_name"])}</div></td>')
+                f'{B.task_label(t)}</td>')
         if not r:
+            what = (f"及格线 {num(t['bar'], 0)} · 全零动作 {num(t['nop'])}" if B.scored
+                    else f"{t['max_steps']} 步 / episode" if t.get("max_steps") else "")
             rows.append(f'<tr class="dim">{head}<td data-v="-1">{status_chip(None)}</td>'
-                        f'<td class="sub" colspan="{6 if limited else 5}" data-v="">及格线 {num(t["bar"], 0)} · 全零动作 {num(t["nop"])}</td></tr>')
+                        f'<td class="sub" colspan="{(5 if limited else 4) + B.scored}" data-v="">{what}</td></tr>')
             continue
         d, s = r["d"], r["s"]
-        prog = d.get("prog")
-        how = tip("离及格线", f"({num(d['score'])} − 全零 {num(t['nop'])}) / (及格线 {num(t['bar'], 0)} − 全零)")
-        prog_c = pcell(prog, ("—" if prog is None else f"{prog:.3f}") + f" <small>{num(d['score'])}/{num(d['bar'], 0)}</small>", "ok" if d["pass"] else "bad", how)
+        prog_c = ""
+        if B.scored:
+            prog = d.get("prog")
+            how = tip("离及格线", f"({num(d['score'])} − 全零 {num(t['nop'])}) / (及格线 {num(t['bar'], 0)} − 全零)")
+            prog_c = (f'<td data-v="{"" if prog is None else prog}" style="min-width:200px">'
+                      + pcell(prog, ("—" if prog is None else f"{prog:.3f}") + f" <small>{num(d['score'])}/{num(d['bar'], 0)}</small>",
+                              "ok" if d["pass"] else "bad", how) + "</td>")
         used = f"{d['resets_used']}/{d['resets']}"
         reset_c = f'<td data-v="{d["resets_used"]}">{pcell(d["resets_used"] / d["resets"] if d["resets"] else 1, used, "warn")}</td>' if limited else ""
         time_c = pcell(d["agent_min"] / d["budget_min"], f"{d['agent_min']:.1f} min")
-        rows.append(f"<tr>{head}<td data-v=\"{1 if d['pass'] else 0}\">{status_chip(r)}</td>"
-                    f'<td data-v="{"" if prog is None else prog}" style="min-width:200px">{prog_c}</td>'
+        rows.append(f"<tr>{head}<td data-v=\"{1 if d['pass'] else 0}\">{status_chip(r)}</td>{prog_c}"
                     f'{reset_c}<td data-v="{d["agent_min"]}">{time_c}</td>'
                     f'<td data-v="{d["cost"]}">{pcell(d["cost"] / top_cost, usd(d["cost"]), "na")}</td>'
                     f'<td data-v="{d.get("tokens") or ""}">{tok_stack(d, top_tok)}</td>'
@@ -651,8 +660,9 @@ def main_table(tasks: list, per: dict, mode: str) -> str:
         lg = ('<div class="legend" style="margin:10px 2px 0"><span><b class="sw-running"></b>agent 运行</span><span><b class="sw-unused"></b>没用到的预算</span>'
               "<span>会话列：整个预算；full 模式没有 episode 日志</span></div>")
     reset_h = "<th data-sort>reset</th>" if limited else ""
+    prog_h = '<th data-sort>离及格线 <span class="faint">全零=0，及格=1 · 回报/及格线</span></th>' if B.scored else ""
     return ('<div class="panel"><div class="tw"><table class="data"><thead><tr><th class="n" data-sort="asc">#</th><th data-sort="asc">任务</th><th data-sort>状态</th>'
-            f'<th data-sort>离及格线 <span class="faint">全零=0，及格=1 · 回报/及格线</span></th>{reset_h}<th data-sort>agent 用时</th>'
+            f'{prog_h}{reset_h}<th data-sort>agent 用时</th>'
             '<th data-sort>花费</th><th data-sort>tokens</th><th>会话（整个预算）</th></tr></thead><tbody>' + "".join(rows) + f"</tbody></table></div>{lg}</div>")
 
 
@@ -663,35 +673,22 @@ def agent_notes(s: dict) -> str:
     return md(open(p, errors="replace").read()) if os.path.exists(p) else ""
 
 
-def limited_info(eg: str = "bookshelf_simple") -> str:
-    """What a limited run gives the model (rcb_client.py's docstring, the logged spec()), each with its real-robot
-    counterpart and an example from task `eg`: a fold under the overview's intro."""
+def limited_info() -> str:
+    """What a limited run gives the model (the benchmark's rows, from rcb_client.py's docstring and the logged spec()),
+    each with its real-robot counterpart and an example from its `info_example` task: a fold under the overview's intro."""
+    eg = B.info_example
+
     def cam(c):
         f = f"assets/cameras/{eg}/{c}.png"
         return f'<img class="eg" src="{f}" alt="">' if os.path.exists(os.path.join(SITE["out"], f)) else "—"
-    rows = [
-        ("任务说明", "任务目标；episode 什么时候结束（过线、摔倒、步数到顶、时间到）；及格线，以及回报由哪几项组成（文字描述，没有公式和代码）",
-         "真机任务本来就有的要求", "<code>passes iff the summed per-step reward reaches 2000</code>"),
-        ("头部相机", "左右眼两张 RGB，256×256（cube 512×512），视场 45°；要了才给（<code>images=</code>）", "H1 头上的相机", cam("left_eye_camera")),
-        ("外部相机", "房间里固定的一台 RGB，尺寸同上，位置按任务定", "实验室里架的相机", cam("room_camera")),
-        ("关节角和角速度", "每个关节的角度（rad）和角速度（rad/s）：19 个，带灵巧手的任务 69 个", "关节编码器",
-         '<code>obs["proprio"]["joint_pos"]</code>：69 个数'),
-        ("骨盆 IMU", "角速度和重力方向，骨盆坐标系", "机身 IMU", "站直时 <code>gravity</code> ≈ (0, 0, −1)，前倾时 x &gt; 0"),
-        ("<code>spec()</code>", "每个驱动器 ±1 对应的角度，每个关节的转轴和位置，每个连杆的质量和质心，两脚的碰撞框，"
-         "IMU 坐标系和各读数的正负号，每台相机的视场和位姿；控制频率 50 Hz、每局步数上限、reset 次数", "真机说明书和 URDF 里本来就有",
-         "<code>left_knee</code> −0.26 … 2.05 rad；躯干 17.79 kg；外部相机在起点坐标系的 (−1.61, −1.83, 1.99) m"),
-        ("每步的状态", "这一局走了几步；结束没有、为什么（success / failed / timeout / error）；还剩几次 reset；从第一次请求起过了几秒",
-         "控制器本来就知道", '第 50 局第 1000 步：<code>done=True, reason="failed", resets_left=0</code>（站满 1000 步，没放上物体）'),
-        ("深度（只在对照实验）", "两台头部相机逐像素的深度，米", "H1 头上的 RGB-D 相机", "—"),
-        ("不给", "reward 和回报；机器人在房间里的位置和朝向；物体的位姿；接触力；仿真器本身", "真机上没有", "只能从相机、关节和 IMU 推"),
-    ]
+    rows, footer = B.limited_info(cam)
+    if not rows:
+        return ""
     body = "".join(f"<tr><td><b>{a}</b></td><td>{b}</td><td class=\"mut\">{c}</td><td>{d}</td></tr>" for a, b, c, d in rows)
     return ('<details class="fold"><summary>limited 给模型什么<span class="mut">看得到的、spec() 里的、不给的，例子取自 '
             f'{esc(eg)}</span></summary><div class="tw"><table class="plain info"><thead><tr><th>信息</th><th>给什么</th><th>真机上对应</th>'
             f'<th>例子（{esc(eg)}）</th></tr></thead><tbody>{body}</tbody></table></div>'
-            '<p class="mut" style="font-size:12.5px;margin:8px 0 0">能做的只有 <code>step</code>（每个驱动器一个 [−1, 1] 的位置目标，一次是 50 Hz 的一步，'
-            "可以批量）和 <code>reset</code>（50 次，回到同一起始状态）。任一局过线就通过，否则记最后一局；墙钟 60 分钟，请求之间仿真时间不走。"
-            "每个任务 t=0 的三张相机画面在任务页顶部。</p></details>")
+            f'<p class="mut" style="font-size:12.5px;margin:8px 0 0">{footer}</p></details>')
 
 
 def col_name(col: tuple) -> str:
@@ -699,12 +696,12 @@ def col_name(col: tuple) -> str:
 
 
 def versions_table(tasks: list, runs: list) -> str:
-    """Each version of the task text: its commit, date, and the runs made on it, per column (a RETIRED one's were taken out)."""
+    """Each version of the task text: its commit, date, and the runs made on it, per column (a retired one's were taken out)."""
     rows = []
-    for k, (name, date, commit) in TEXTS.items():
+    for k, (name, date, commit) in B.texts.items():
         by = collections.Counter(col_name(r["col"]) for r in runs if r["text"] == k)
         n_main = sum(r["text"] == k for t in tasks for r in t["main"].values())
-        ran = ('<td class="mut">已移出</td><td></td>' if k in RETIRED else
+        ran = ('<td class="mut">已移出</td><td></td>' if k in B.retired else
                f'<td class="mut" style="font-size:12.5px">{esc(" · ".join(f"{c} {n}" for c, n in by.items()))}</td><td class="n">{n_main}</td>')
         tag = "" if commit == k else f' <span class="faint">job 名 -{esc(k)}</span>'
         rows.append(f'<tr><td style="white-space:nowrap"><b>{esc(name)}</b></td><td><code>{esc(commit)}</code>{tag}</td><td class="n">{date}</td>{ran}</tr>')
@@ -714,14 +711,15 @@ def versions_table(tasks: list, runs: list) -> str:
 
 def variant(r: dict) -> str:
     """How a run differs from its mode's standard config, in a few words ("reset 100", "深度")."""
-    std = STANDARD[r["mode"]]
+    std = B.standard[r["mode"]]
     bits = [f"reset {r['resets']}"] if r["resets"] != std["resets"] else []
-    return " · ".join(bits + [OBS.get(o, o) for o in r["obs"].split("+") if o not in std["obs"].split("+")]) or "其他"
+    return " · ".join(bits + [SENSORS[o][0] if o in SENSORS else o for o in r["obs"].split("+") if o not in std["obs"].split("+")]) or "其他"
 
 
 def variants_table(tasks: list) -> str:
     """Each task's non-standard runs next to the standard run they differ from (same column, same task text): a column
-    per variant, a cell per run with the graded return, the best episode, resets used and time."""
+    per variant, a cell per run with its result (a scored benchmark's: the graded return and the best episode's), resets
+    used and time."""
     rows, names = [], []
     for t in tasks:
         base, by = None, {}
@@ -742,7 +740,9 @@ def variants_table(tasks: list) -> str:
         d, res = r["d"], r["s"]["result"]
         sub = ([f"最好一局 {num(res['best_return'], 1)}"] if res.get("best_return") is not None else []) + [
             f"reset {d['resets_used']}/{d['resets']}", f"{d['agent_min']:.0f} min"]
-        return (f'<td data-v="{d["score"]}"><b class="{"ok" if d["pass"] else ""}">{"✓ " if d["pass"] else ""}{num(d["score"], 1)}</b>'
+        head = (f'<b class="{"ok" if d["pass"] else ""}">{"✓ " if d["pass"] else ""}{num(d["score"], 1)}</b>' if B.scored
+                else status_chip(r))
+        return (f'<td data-v="{d["score"] if B.scored else int(d["pass"])}">{head}'
                 f'<div class="mut" style="font-size:12px">{" · ".join(sub)}</div></td>')
     body = "".join(f'<tr><td class="task"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a></td>{cell(base)}{"".join(cell(by.get(v)) for v in names)}</tr>'
                    for t, base, by in rows)
@@ -759,10 +759,12 @@ def session_video(r: dict) -> tuple:
 
 def session_fig(r: dict, vid: tuple, lead: str) -> str:
     """One whole-session video with its run's numbers under it, headed by `lead` (HTML)."""
-    extra = "" if r["standard"] else f" · {esc(variant(r))}"
-    return (f'<figure><video src="{esc(vid[0])}" poster="{esc(vid[1])}" controls muted preload="none"></video><figcaption><b>{lead}</b> · '
-            f'{esc(TEXTS[r["text"]][0] if r["text"] in TEXTS else "")}{extra} · {"通过 " if r["d"]["pass"] else "回报 "}{num(r["d"]["score"], 1)} · '
-            f'reset {r["d"]["resets_used"]}/{r["d"]["resets"]} · {r["d"]["agent_min"]:.0f} min</figcaption></figure>')
+    d = r["d"]
+    what = ([B.texts[r["text"]][0]] if r["text"] in B.texts else []) + ([] if r["standard"] else [variant(r)])
+    got = (("通过 " if d["pass"] else "回报 ") + num(d["score"], 1)) if B.scored else ("通过" if d["pass"] else "未通过")
+    bits = [f"<b>{lead}</b>", *map(esc, what), got, f'reset {d["resets_used"]}/{d["resets"]}', f'{d["agent_min"]:.0f} min']
+    return (f'<figure><video src="{esc(vid[0])}" poster="{esc(vid[1])}" controls muted preload="none"></video><figcaption>'
+            + " · ".join(bits) + "</figcaption></figure>")
 
 
 def session_compare(tasks: list, cols: list) -> str:
@@ -787,11 +789,13 @@ def session_passes(tasks: list) -> str:
             m = t["main"].get(r["col"])
             if m and r["s"] and r["d"]["pass"] and (r is m or (not r["standard"] and r["text"] == m["text"])) and (v := session_video(r)):
                 figs.append(session_fig(r, v, f'<a href="tasks/{t["task"]}.html">{esc(t["task"])}</a> · {esc(r["model_name"])}'))
-    return f'<h3 class="vh">过线的 limited 运行，整段录像</h3><div class="vgrid">{"".join(figs)}</div>' if figs else ""
+    return (f'<h3 class="vh">{"过线" if B.scored else "通过"}的 limited 运行，整段录像</h3><div class="vgrid">{"".join(figs)}</div>'
+            if figs else "")
 
 
 def matrix(tasks: list, cols: list) -> str:
-    """Every task (a row) in every column that ran any of them: the main run's return, and how far it got towards the bar."""
+    """Every task (a row) in every column that ran any of them: the main run's result (a scored benchmark's: its return,
+    and how far it got towards the bar)."""
     have = [c for c in cols if any(c in t["main"] for t in tasks)]
     rows = []
     for t in tasks:
@@ -801,12 +805,17 @@ def matrix(tasks: list, cols: list) -> str:
             if not r:
                 cells.append('<td data-v=""><span class="faint">未跑</span></td>'); continue
             d = r["d"]
+            if not B.scored:
+                cells.append(f'<td data-v="{int(d["pass"])}">{status_chip(r)}</td>'); continue
             prog = "—" if d["prog"] is None else f"{d['prog']:.3f}"
             t_ = tip(col_name(c), f"回报 {num(d['score'])} / {num(d['bar'], 0)}", f"离及格线 {prog}")
             cells.append(f'<td data-v="{"" if d["prog"] is None else d["prog"]}">'
                          + pcell(d["prog"], ("✓ " if d["pass"] else "") + num(d["score"], 1), "ok" if d["pass"] else "bad", t_) + "</td>")
-        rows.append(f'<tr><td class="n" data-v="{t["n"]}">{t["n"]}</td><td class="task"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a><div class="mut">{esc(t["robot"])} · {esc(t["cls"])}</div></td>'
-                    f'<td class="n" data-v="{t["bar"]}">{num(t["bar"], 0)}</td><td class="n" data-v="{t["nop"]}">{num(t["nop"], 1)}</td>{"".join(cells)}</tr>')
+        facts = (f'<td class="n" data-v="{t["bar"]}">{num(t["bar"], 0)}</td><td class="n" data-v="{t["nop"]}">{num(t["nop"], 1)}</td>'
+                 if B.scored else "")
+        rows.append(f'<tr><td class="n" data-v="{t["n"]}">{t["n"]}</td><td class="task"><a href="tasks/{t["task"]}.html">{esc(t["task"])}</a>'
+                    f'{B.task_label(t, full=False)}</td>{facts}{"".join(cells)}</tr>')
     head = "".join(f'<th data-sort style="min-width:150px">{esc(c[0])}<div class="faint">{esc(c[1])}</div></th>' for c in have)
-    return ('<div class="tw"><table class="data matrix"><thead><tr><th class="n" data-sort="asc">#</th><th data-sort="asc">任务</th><th class="n" data-sort>及格线</th>'
-            f'<th class="n" data-sort>全零动作</th>{head}</tr></thead><tbody>' + "".join(rows) + "</tbody></table></div>")
+    facts_h = '<th class="n" data-sort>及格线</th><th class="n" data-sort>全零动作</th>' if B.scored else ""
+    return ('<div class="tw"><table class="data matrix"><thead><tr><th class="n" data-sort="asc">#</th><th data-sort="asc">任务</th>'
+            f'{facts_h}{head}</tr></thead><tbody>' + "".join(rows) + "</tbody></table></div>")

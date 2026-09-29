@@ -11,7 +11,8 @@ import os
 import re
 import statistics
 
-from common import ANALYSIS, WHY, esc, num, usd
+from bench import B
+from common import esc, num, usd
 from data import notes_of
 from widgets import md, pcell, status_chip
 
@@ -24,7 +25,7 @@ ENDED = {"success": "通过", "resets_used_up": "reset 用完", "timeout": "时�
 
 def load(name: str) -> tuple[str | None, list[dict]]:
     """analysis/<name>.md as (its 一句话 paragraph, [{"title", "body", "subs": {title: body}}]); (None, []) if absent."""
-    path = os.path.join(ANALYSIS, f"{name}.md")
+    path = os.path.join(B.analysis, f"{name}.md")
     if not os.path.exists(path):
         return None, []
     head, *parts = re.split(r"^## +", open(path).read(), flags=re.M)
@@ -38,23 +39,24 @@ def load(name: str) -> tuple[str | None, list[dict]]:
 
 
 def run_facts(r: dict) -> str:
-    """One run's numbers, as its card opens: how far towards the bar, the return, resets, time, cost, how it ended."""
+    """One run's numbers, as its card opens: (scored) how far towards the bar and the return; resets, time, cost, how
+    it ended."""
     d, res = r["d"], r["s"]["result"]
     prog = d.get("prog")
-    ended = ENDED.get(res["why"], WHY.get(res["why"], res["why"])) if r["mode"] == "limited" else \
-        "通过" if d["pass"] else "用满 60 min" if res.get("timed_out") else "自己结束"
-    bits = [f"回报 <b>{num(d['score'], 1)}</b> / {num(d['bar'], 0)}"]
+    ended = ENDED.get(res["why"], B.why_text(res["why"])) if r["mode"] == "limited" else \
+        "通过" if d["pass"] else f"用满 {B.standard['full']['budget_min']} min" if res.get("timed_out") else "自己结束"
+    bits = [f"回报 <b>{num(d['score'], 1)}</b> / {num(d['bar'], 0)}"] if B.scored else []
     if r["mode"] == "limited":
         bits.append(f"reset {d['resets_used']}/{d['resets']}")
     bits += [f"{d['agent_min']:.1f} min", usd(d["cost"]), ended]
-    return (f'<div class="facts">{pcell(prog, "离及格线 " + ("—" if prog is None else f"{prog:.2f}"), "ok" if d["pass"] else "bad")}'
-            + "".join(f"<span>{b}</span>" for b in bits) + "</div>")
+    lead = pcell(prog, "离及格线 " + ("—" if prog is None else f"{prog:.2f}"), "ok" if d["pass"] else "bad") if B.scored else ""
+    return f'<div class="facts">{lead}' + "".join(f"<span>{b}</span>" for b in bits) + "</div>"
 
 
 def col_facts(tasks: list, col: tuple) -> str:
-    """A column over every scored task it ran (each task's main run; not the fixture): passes, the median distance to the
-    bar, time, cost, endings."""
-    runs = [t["main"][col] for t in tasks if col in t["main"] and t["cls"] != "fixture"]
+    """A column over every scored task it ran (each task's main run; not the fixture, not a screening task): passes, the
+    median distance to the bar, time, cost, endings."""
+    runs = [t["main"][col] for t in tasks if col in t["main"] and not t.get("fixture") and not t.get("screening")]
     if not runs:
         return ""
     progs = [r["d"]["prog"] for r in runs if r["d"].get("prog") is not None]
@@ -66,12 +68,12 @@ def col_facts(tasks: list, col: tuple) -> str:
             ends[e] = ends.get(e, 0) + 1
         ended = " · ".join(f"{k} {v}" for k, v in sorted(ends.items(), key=lambda kv: -kv[1]))
     else:
-        ended = f"用满 60 min {sum(bool(r['s']['result'].get('timed_out')) for r in runs)}"
+        ended = f"用满 {B.standard['full']['budget_min']} min {sum(bool(r['s']['result'].get('timed_out')) for r in runs)}"
     med = statistics.median(progs) if progs else None
-    bits = [f"<b>{n_pass}/{len(runs)}</b> 通过", f"离及格线中位数 {num(med)}",
-            f"平均 {statistics.mean(r['d']['agent_min'] for r in runs):.0f} min", f"共 {usd(sum(r['d']['cost'] or 0 for r in runs))}", ended]
-    return (f'<div class="facts">{pcell(med, f"{len(runs)} 个计分任务", "ok" if n_pass == len(runs) else "bad")}'
-            + "".join(f"<span>{b}</span>" for b in bits) + "</div>")
+    bits = ([f"<b>{n_pass}/{len(runs)}</b> 通过"] + ([f"离及格线中位数 {num(med)}"] if B.scored else [])
+            + [f"平均 {statistics.mean(r['d']['agent_min'] for r in runs):.0f} min", f"共 {usd(sum(r['d']['cost'] or 0 for r in runs))}", ended])
+    lead = pcell(med if B.scored else n_pass / len(runs), f"{len(runs)} 个计分任务", "ok" if n_pass == len(runs) else "bad")
+    return f'<div class="facts">{lead}' + "".join(f"<span>{b}</span>" for b in bits) + "</div>"
 
 
 def mode_card(mode: str, facts: str, chip: str, text: str | None, ok: bool | None) -> str:

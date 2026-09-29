@@ -1,6 +1,6 @@
 """Verifier-side, inside the sim image: replay and score every episode of one limited HumanoidBench trial, and
-render each. Run by collect.py; by hand:
-  python replay_episodes.py <trial_dir> <task_sim_dir> <out_dir> [--no-render]
+render each. Run by scripts/results/collect.py; by hand:
+  python replay.py <trial_dir> <task_sim_dir> <out_dir> [--no-render]
       -> <out_dir>/episodes.json, <out_dir>/episodes/epN.mp4 (--no-render: scores only, and keeps the videos an
          earlier episodes.json in <out_dir> names)
 Each episode also records how the robot was left (final_head_h: the head's height above the lower foot, m, about

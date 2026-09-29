@@ -16,11 +16,11 @@ write it after reading the run; everything else on the pages is measured.
   `agent/trajectory.json`, the agent's files, and images if you can view them (`report/episodes/*.png`,
   `report/agent_views/`, `verifier/replay.last.png`).
 - Look at the leak-check flags and say what the agent actually read (upstream source, our tooling, the network).
-- An episode that `failed` is a fall only if the robot was down: the digest's `head_h` (the head above the lower
-  foot at the end) of 1 m or more means it was still up when the episode ended (it crossed the task's end line in a
-  crouch, a lean or a seat on the floor, or a tool or an object dropped), and a robot lying with its pelvis above
-  the fall line runs on to the step limit. `progress` says how far a multi-stage task got.
-- Never guess at the reward formula's internals, and do not discuss whether the task is solvable.
+- HumanoidBench: an episode that `failed` is a fall only if the robot was down: the digest's `head_h` (the head above
+  the lower foot at the end) of 1 m or more means it was still up when the episode ended (it crossed the task's end
+  line in a crouch, a lean or a seat on the floor, or a tool or an object dropped), and a robot lying with its pelvis
+  above the fall line runs on to the step limit. `progress` says how far a multi-stage task got.
+- Never guess at the internals of the reward or the goal check, and do not discuss whether the task is solvable.
 - About 30–45 lines of plain Markdown: headings, bullets, **bold**, `code`, tables if needed.
 
 ## Layout
@@ -36,16 +36,16 @@ was doing; inclusive episode ranges covering 0 to the last episode; names of at 
 
 Then, both modes:
 
-    **一句话**：<2–3 sentences: the approach, the result (graded return against the bar and the all-zero action),
-    the main reason it passed or failed, time used and cost.>
+    **一句话**：<2–3 sentences: the approach, the result (a scored benchmark's: the graded return against the bar and
+    the all-zero action), the main reason it passed or failed, time used and cost.>
 
     ### 做了什么
     - **<episodes or minutes>（<how long>，<phase>）**：what it tried, what it saw (its own words, in English quotes),
       what it concluded. 4–8 bullets, in time order.
 
     ### 被评分的那一段        (full mode: ### 交的轨迹)
-    - limited: what the last (graded) episode ran, how many steps, how it ended, its return.
-    - full: how the submitted trajectory was made (read gen.py), its length, the replayed return; what its NOTES.md claims.
+    - limited: what the last (graded) episode ran, how many steps, how it ended (and its return).
+    - full: how the submitted trajectory was made (read gen.py), its length, the replayed result; what its NOTES.md claims.
 
     ### 为什么没过            (or: ### 怎么过的)
     - 2–4 bullets, each with its evidence.
