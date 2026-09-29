@@ -113,7 +113,8 @@ class HumanoidBench:
             return [r3(q.min(0)), r3(q.max(0))]
         links = {"frame": "pelvis (x forward, y left, z up), every joint at 0", "names": [m.body(b).name for b in robot],
                  "parent": [None if b == pelvis else m.body(int(m.body_parentid[b])).name for b in robot],
-                 "mass_kg": [round(float(m.body_mass[b]), 3) for b in robot], "com_m": [r3(R.T @ (d.xipos[b] - p)) for b in robot],
+                 "mass_kg": [round(float(m.body_mass[b]), 3) for b in robot],   # a massless link (the bare H1's hands):
+                 "com_m": [r3(R.T @ ((d.xipos[b] if m.body_mass[b] > 0 else d.xpos[b]) - p)) for b in robot],   # its origin
                  "feet": {m.body(b).name: box(b) for b in robot if "ankle" in m.body(b).name},
                  "feet_units": "each foot's collision shape as a box: [min xyz, max xyz], m"}
         cams = {}
