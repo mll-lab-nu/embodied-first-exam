@@ -3,11 +3,14 @@ score the benchmark's task progress (goals reached / goals, 1.5 cm keypoint tole
 reward.txt = progress when both replays agree bit-exactly (else 0); success = every goal reached.
 Also renders /logs/verifier/replay.mp4 (front / side / top / oblique) and, after the verdict, videos of the agent's own
 rollouts from its self-reported traces (agent_sessions/)."""
-import glob, json, os, sys, traceback
+import glob, json, math, os, sys, time, traceback
 import numpy as np
 os.environ["RCB_SESSION_LOG"] = ""; os.environ["RCB_AGENT_TRACE_DIR"] = ""
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
+# Videos come after the verdict and must end well inside the verifier timeout, even on software rendering (~1.3 s a
+# frame): the replay video has at most MAX_FRAMES frames, agent-rollout videos start only while under the budget.
+T0 = time.time(); RENDER_BUDGET_S = float(os.environ.get("RCB_RENDER_BUDGET_S", "600")); MAX_FRAMES = 400
 
 
 def write(reward: float, out: dict) -> None:
@@ -46,7 +49,7 @@ def main() -> int:
                "video_rendered": 0, "grader_error": 0, **c}
         write(prog, out)
         try:
-            s.render_video(A, f"{LOG}/replay.mp4", every=2, fps=30); out["video_rendered"] = 1
+            s.render_video(A, f"{LOG}/replay.mp4", every=max(2, math.ceil(len(A) / MAX_FRAMES)), fps=30); out["video_rendered"] = 1
         except Exception: traceback.print_exc(file=sys.stderr)
         try:  # agent rollouts (self-reported traces): last 6 with >= 30 control steps
             files = sorted((glob.glob("/logs/agent/rcb/rcb_trace/*.npz") + glob.glob("/app/output/rcb_trace/*.npz")), key=os.path.getmtime)[:2000]; od = f"{LOG}/agent_sessions"; idx = []
@@ -59,7 +62,8 @@ def main() -> int:
             if idx:
                 os.makedirs(od, exist_ok=True); meta = []
                 for k, (f, n) in enumerate([x for x in idx if x[1] >= 30][-6:]):
-                    r = s.render_video(np.load(f)["actions"], f"{od}/{k:02d}_{os.path.basename(f)[:-4]}.mp4", every=4, fps=15)
+                    if time.time() - T0 > RENDER_BUDGET_S: out["agent_trace_videos_skipped_budget"] = 1; break
+                    r = s.render_video(np.load(f)["actions"], f"{od}/{k:02d}_{os.path.basename(f)[:-4]}.mp4", every=max(4, math.ceil(n / MAX_FRAMES)), fps=15)
                     meta.append({"trace": os.path.basename(f), "steps": n, "reached": r["reached"]}); out["agent_trace_videos"] += 1
                 json.dump({"self_reported": True, "traces": [os.path.basename(f) for f, _ in idx], "videos": meta}, open(f"{od}/index.json", "w"), indent=1)
         except Exception: traceback.print_exc(file=sys.stderr)
