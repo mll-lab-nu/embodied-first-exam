@@ -32,6 +32,6 @@ Run: Harbor job `v2-codex-stack-limited`, trial `robotwin_2_0_stack_blocks_two-l
   offset is horizontal). Once corrected, the right gripper lifted the green cube, but the first release landed beside the
   red cube and the budget ran out during the second pickup.
 - **Outcome:** `live_success 0`; the episode is complete and deterministic (replay matches), video rendered.
-- **Compared with v1** (same agent family, GPT-6 Astra, `results/codex-gpt6-astra/`, which succeeded): the v2 protocol
+- **Compared with v1** (same agent family, GPT-6 Astra, `results/codex-gpt6_astra-medium/`, which succeeded): the v2 protocol
   did not make the task harder in itself; the difference is a slower agent loop plus a longer misreading of the tool
   frame. Chunked `joint_position` submits and `seconds>0` watch windows would have cut the per-motion overhead.
