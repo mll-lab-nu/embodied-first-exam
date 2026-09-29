@@ -137,7 +137,7 @@ scripts/make_two_mode_report_zh.py exps/jobs <job-u> <job-l> <report_dir> [batch
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
-separate verifiers. Results so far: `docs/results/`; each RoboTwin task also carries `results/<agent-slug>/README.md` (replay video, last frame, reward fields, cost, failure analysis) written by `scripts/write_task_results.py`.
+separate verifiers. Results so far: `docs/results/`; each RoboTwin task also carries `results/<run id>/README.md` (replay video, last frame, reward fields, cost, failure analysis) written by `scripts/write_task_results.py`. Folder names are run ids, `<harness>-<model>-<effort>` (e.g. `codex-gpt6_luna-xhigh`, the same id as on the task-list site and the Hugging Face dataset); a run's earlier protocol versions and side experiments sit in subfolders (`prev_rcb_limited_2_0/`, `ablation_persist/`, ...) (run id naming, 2026-09-29).
 
 ## Status
 v0.1 (2026-09): one robosuite example task + 22 RoboTwin 2.0 tasks in both modes. First batch (Codex + GPT-6 Luna, 21 tasks): unlimited 11/21, limited 1/21 — see `docs/results/`. Next: more instances/families, LIBERO-PRO,

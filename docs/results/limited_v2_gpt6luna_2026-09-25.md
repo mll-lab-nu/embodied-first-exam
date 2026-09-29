@@ -1,7 +1,7 @@
 # Limited mode v2 (rcb-limited/2.0): Codex + GPT-6 Luna, 22 tasks, 60 min — 2026-09-25
 
 Harbor job `v2-gpt6luna-limited` (one trial per task, ChatGPT subscription, separate verifier). Chinese report with videos:
-`private/reports/260925/README.md` (outside this repo); per-task folders: `tasks/robotwin_2_0_<task>-limited/results/codex-gpt6-luna-v2/`.
+`private/reports/260925/README.md` (outside this repo); per-task folders: `tasks/robotwin_2_0_<task>-limited/results/codex-gpt6_luna-medium/prev_rcb_limited_2_0/`.
 
 **Result: 4/22** (move_can_pot, open_microwave, press_stapler, shake_bottle). Same model on the v1 protocol (2026-09-23): 1/21 limited, 11/21 unlimited.
 
