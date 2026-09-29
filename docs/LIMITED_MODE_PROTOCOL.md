@@ -114,5 +114,15 @@ Depth (`include_depth`, head/front/wrist cameras) is exact by default. `RCB_DEPT
 stereo-camera-like noise, σ = 2 mm + 2.5 mm·z² (z in m), and 1 % dropouts (0 = no reading), seeded by
 `RCB_DEPTH_NOISE_SEED`; it never affects physics.
 
+## MuJoCo tasks (DexToolBench, MuJoCo Playground)
+Same endpoints and RCB1 frames, served by `images/mujoco/limited/server_mj.py`. Differences: one action type,
+`joint_position` with the task's own actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt`
+is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or linear interpolation per control step.
+Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
+`meta.task` carries the task definition (DexToolBench: current goal pose, index, steps left on it; Playground: the
+target) and `meta.cameras` each camera's intrinsics and camera-to-world pose. DexToolBench episodes end when all goals
+are reached or a goal times out; Playground episodes run to the end of the agent phase and the final state is graded.
+The service replays the recorded episode in a fresh simulator at the end (`deterministic`: same final state hash).
+
 ## Versioning
 `protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise; the 2.x client accepts both.
