@@ -2,8 +2,8 @@
 
 What coding agents score on the 24 selected HumanoidBench tasks (23 scored + the `sit_simple` fixture), in both
 modes. [`runs.csv`](runs.csv) keeps one line per trial on the current task text, text 7 (ef883ec; job names end in
-`-text7`), all in the standard config below. The earlier texts are summed up under
-[Earlier versions](#earlier-versions).
+`-text7`; later commits changed no instruction and no score), all in the standard config below. The earlier texts
+are summed up under [Earlier versions](#earlier-versions).
 
 ## Standard config
 
@@ -17,12 +17,12 @@ run, `--add` appends its line to `runs.csv` (every column but the note measured)
 (`jobs/results/humanoidbench/index.html`, not in git: an overview, one page per task, one per run):
 
 ```bash
-sg docker -c 'RCB_RESET_BUDGET=50 RCB_OBS_IMU=1 RCB_OBS_ROOM_CAMERA=1 RCB_MODEL=openrouter/openai/gpt-6-luna \
+RCB_RESET_BUDGET=50 RCB_OBS_IMU=1 RCB_OBS_ROOM_CAMERA=1 RCB_MODEL=openrouter/openai/gpt-6-luna \
   scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00-limited \
-  --job-name hb-limited-walk-codex-gpt6luna-medium-60min-reset50-imu-roomcam --ak reasoning_effort=medium'
-sg docker -c 'RCB_MODEL=openrouter/openai/gpt-6-luna scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00 \
-  --job-name hb-full-walk-codex-gpt6luna-medium-60min --ak reasoning_effort=medium'
-python3 scripts/results/build.py --add jobs/hb-limited-walk-codex-gpt6luna-medium-60min-reset50-imu-roomcam
+  --job-name hb-limited-walk-codex-gpt6luna-medium-60min-reset50-imu-roomcam-text7 --ak reasoning_effort=medium
+RCB_MODEL=openrouter/openai/gpt-6-luna scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00 \
+  --job-name hb-full-walk-codex-gpt6luna-medium-60min-text7 --ak reasoning_effort=medium
+python3 scripts/results/build.py --add jobs/hb-limited-walk-codex-gpt6luna-medium-60min-reset50-imu-roomcam-text7
 ```
 
 The limited knobs can also come from a profile instead of the shell: `-c scripts/humanoidbench/configs/limited.yaml`
@@ -36,7 +36,9 @@ The analysis on a task page is `<trial>/report/notes.md`, written after reading 
 
 A cell is the latest standard-config run: ✅ or ❌ with the graded return (limited: the last episode; full: the
 submitted trajectory, replayed) and the model cost. Empty: not run yet. "All-zero" is what the all-zero action
-scores on the same instance.
+scores on the same instance. Run ids, as on the team site and the Hugging Face dataset
+(`<harness>-<model>-<effort>`): GPT-6 Luna `codex-gpt6_luna-medium`, GPT-6 Sol `codex-gpt6_sol-medium`, Claude Opus 5.5
+`claude_code-claude_opus5_5-medium`.
 
 | # | task | robot | class | bar | all-zero | GPT-6 Luna · limited | GPT-6 Luna · full | GPT-6 Sol · limited | GPT-6 Sol · full | Claude Opus 5.5 · limited | Claude Opus 5.5 · full |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -86,5 +88,5 @@ c9449ce (texts 3–6). What they showed, and what the next text changed:
 | 2 · 06b0ab3 | Luna, all 24, both modes; Sol, five tasks, both modes: 58, $66.07 | Luna limited 1 (sit_simple), full 3 (sit_simple, push, reach); Sol full 1 (walk, 862.3), limited 0 | "800 out of 1000 steps" was read as surviving 800 steps; every limited run spent resets finding the action scale, and several read the IMU, a joint or a camera backwards; the 0.1.5 image still gave the reward away through its helpers and comments → e95d382 states the pass mark as a total of rewards, puts the robot's facts in `spec()`, ships image 0.1.6 |
 | 3 · e95d382 | Luna, rows 1–10, both modes: 20, $6.78 | Luna limited 2 (sit_simple, push), full 2 (sit_simple, push) | `spec()` listed a `wall_clock_s` beside the service's own clock, and agents misjudged the time left → 8e09011 drops it; the service keeps every image it returns |
 | 4 · 8e09011 | Luna, rows 11–24, both modes; Sol, five tasks, both modes; Opus, the same five, limited: 43, $97.48 | Luna full 2 (reach, sit_hard); Sol full 1 (cube); limited 0 | an episode lying or sitting short of the bar ran on to step 1000, and runs took such a controller for a good one; the IMU's fore-aft and the images' left-right were often read backwards; the service clock started 52–96 s before the agent's first request → text 5 says an episode still running may have fallen, `spec()` gives each reading's sign and each camera's right axis, the clock starts at the first request, the head cameras' near plane is 1 cm, maze names its start |
-| 5 · e897737 (`-text5`) | Luna, all 24, limited, plus 16 with 100 resets and 10 with head depth: 50, $18.32 | limited 2 (sit_simple, sit_hard), and push with 100 resets | the IMU was mostly read the right way round; more resets or depth changed little; cube's faces were 10–15 px at 256×256 → text 6 renders cube's cameras at 512×512 |
+| 5 · e897737 (`-text5`) | Luna, all 24, limited, plus 16 with 100 resets and 10 with head depth: 50, $18.32 | limited 2 (sit_simple, sit_hard), and push with 100 resets | the IMU was mostly read the right way round; more resets or depth changed little (with depth on, the service then rendered some room-camera images and depth maps wrong; fixed 2026-09-29); cube's faces were 10–15 px at 256×256 → text 6 renders cube's cameras at 512×512 |
 | 6 · e897737 (`-text6`) | Luna, cube, limited: 1, $0.24 | none | the letters on the faces became readable, but the robot still fell; Sol's full cube run on text 4 stood by keeping its centre of mass over the feet, which a limited run could not compute → text 7 (ef883ec) adds each joint's position, each link's mass and centre of mass and the feet's boxes to `spec()` |

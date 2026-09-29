@@ -1,9 +1,9 @@
 # Limited mode 1.1
 
-Extends kangrui's `rcb-limited/1.0` (dev/kangrui): the simulator runs in a `sim` sidecar the agent cannot open,
-the agent only has an HTTP client, and the sidecar records, replays and grades the episode.
-Reference implementation: `tasks/humanoidbench-loco-sit-simple-i00-limited/` — `environment/sim/rcb_service.py`
-is simulator-agnostic, `environment/sim/server.py` is the HumanoidBench adapter.
+Extends `rcb-limited/1.0`, the RoboTwin limited twins' first protocol (they have since moved to 2.x): the
+simulator runs in a `sim` sidecar the agent cannot open, the agent only has an HTTP client, and the sidecar
+records, replays and grades the episode. Code: `scripts/limited/` (service, verifier, client) plus one adapter
+per simulator, `scripts/<sim>/shared/limited/server.py`.
 
 ## What 1.1 adds (all optional; 1.0 clients are unaffected)
 
@@ -43,11 +43,7 @@ all black (SAPIEN/Vulkan is unaffected). Its SIGUSR1 handler also takes the lock
 1.1 keeps everything on the main thread: the signal sets a flag; wrap-up and finalize run in
 `HTTPServer.service_actions`.
 
-## Cost (HumanoidBench sit_simple, RTX 4090, EGL)
-0.39 ms/step physics · 1.2 ms/step one action per request · 4.3 ms/step with both head-camera images · ~0.5 ms/step
-in batches of 10 or more.
-
-## Making it repo-wide (later)
+## Across simulators
 - **One directory per (task, mode) is what Harbor needs**: the agent image, compose, verifier, `task.toml` and
   instruction all differ. Keep one source per task and generate both, as `scripts/humanoidbench/gen_tasks.py`
   already does. Pick the mode at run time: `harbor run -p tasks -i '*-limited'` (or `-x '*-limited'`).
@@ -56,5 +52,4 @@ in batches of 10 or more.
   already cover most of it). **Per task**: compose env and `instruction.md` (task facts only).
 - **Done for HumanoidBench and KinDER**: each `gen_tasks.py` renders the limited twins (KinDER: its 3D tasks, one adapter per robot) from its
   `templates/limited/` and `shared/limited/` (the adapter, the client's docstring) plus `scripts/limited/`, which
-  holds what every simulator shares: `rcb_service.py`, the verifier and the client's code. **Next**: RoboTwin swaps
-  its `server.py` for `rcb_service.py` + an adapter.
+  holds what every simulator shares: `rcb_service.py`, the verifier and the client's code.

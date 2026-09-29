@@ -63,9 +63,10 @@ unsolved, after 23–46 of 60 min).
   terms combine, order-of-magnitude targets, what ends the episode — with no tolerance parameters, exact
   weights, per-step scale, or what any particular policy scores.
 - **Deleting an answer key only counts if the agent cannot fetch another copy**: the network, an earlier
-  Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. Tasks set `[agent] network_mode =
-  "allowlist"` with `allowed_hosts = []` (the model endpoint is opted in per run with
-  `--allow-agent-host <host>`) and `[verifier] network_mode = "no-network"`.
+  Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. The HumanoidBench tasks let the agent
+  reach the model APIs and nothing else (`[agent] network_mode = "allowlist"`, the hosts in
+  `scripts/humanoidbench/subset.toml`), and grade in a container of their own with no network
+  (`[verifier] environment_mode = "separate"` built from `tests/Dockerfile`, `network_mode = "no-network"`).
   Method and checklist: [docs/LEAKAGE.md](LEAKAGE.md).
 
 ## 5. Budget reporting
@@ -76,9 +77,3 @@ budgets (align `--ak reasoning_effort`, `max_turns`, budget caps and `[agent].ti
 ## 6. Metadata
 See `docs/TAXONOMY.md`: `simulator`, `robot`, `family`, `task_type`, `tier` (`privileged` = state-based
 perception allowed; `perception` = RGB-D only), `expert_time_estimate_hours`, author fields.
-
-`tier` describes *observation* only, so it cannot express the two other things an agent may or may not
-see: the simulator's white-box model, and the scoring function. Until there are fields for them
-(`model_visibility` / `reward_visibility`, proposed in `local_docs/plan/04-framework-suggestions.md`),
-a task states both in its `README.md`. The HumanoidBench tasks are `model_visibility = white_box`,
-`reward_visibility = black_box`.

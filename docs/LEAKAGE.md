@@ -12,13 +12,13 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 |---|---|---|
 | Dead code | unreachable ≠ unreadable | scan the whole package, not the import graph |
 | Constants the grader read | a constant whose only reader was the grader still describes it; so does a comment on one that stays (`# Horizontal speeds above which move reward is 1.`) | no module-level name may be write-only afterwards; no comment may mention the reward |
-| Attributes set at construction | weights in `__init__` are not "functions with a matching name" | enumerate instance attributes at runtime |
+| Attributes set at construction | weights in `__init__` are not "functions with a matching name", and a snapshot of the object keeps them: HumanoidBench push's frozen instance carried its reward weights until 2026-09-29 | enumerate instance attributes at runtime; leave them out of anything saved from one |
 | Helpers the grader called | not named like the grader, so the name match keeps them: HumanoidBench maze's `update_move_direction` returned the checkpoint bonus, truck's `upon_table` held the table test (both until the 0.1.6 image) | list what every removed method calls; delete what nothing else calls, keep only the effect of what the tooling still calls |
 | Compiled bytecode | `*.pyc` built before the removal keeps the old code | clear caches *before* removing, assert after |
 | Earlier Docker layers | a layer is an immutable tarball; a later `rm` does not unwrite it | download and remove in the **same `RUN`**; verify with `docker save` |
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |
-| The network | upstream is public and pinned, one `curl` away | `[agent] network_mode = "allowlist"`, never `public` |
-| The model API | the harness's web search runs on the provider, reached through the one allowed host: codex's default live `web_search` and Claude Code's `WebSearch`, both executed by OpenRouter | the `harbor_agents/` adapters switch them off; to audit a harness, point it at a local fake API and read the request's `tools` |
+| The network | upstream is public and pinned, one `curl` away | `[agent] network_mode = "allowlist"` of the model-API hosts |
+| The model API | the harness's web search runs on the provider, reached through an allowed model-API host: codex's default live `web_search` and Claude Code's `WebSearch`, both executed by OpenRouter | the `harbor_agents/` adapters switch them off; to audit a harness, point it at a local fake API and read the request's `tools` |
 | The model's memory | the benchmark's source is public, so it is in pretraining data: Opus 5.5 recalled H1's 19 actuator ranges exactly and the sit reward's seat-height band, with no tool | nothing in the harness removes it; report it with the result |
 | Package metadata | `*.egg-info/SOURCES.txt` lists files you deleted | generate metadata after the removal |
 | Sibling tasks | one task's `tests/` must not carry another's answer | ship one task's answer per task |
@@ -69,7 +69,8 @@ pass mark, the scene layout, and constants surviving code reads. These *describe
 
 ## 3. Giving it back to the verifier
 
-Harbor copies `tests/` in only after the agent finishes, which is what makes a shared container safe.
+The verifier runs in a container of its own, built from `tests/` (`[verifier] environment_mode = "separate"`):
+the agent's container, where it was root, is gone by then, and only the declared deliverable crosses over.
 
 | Stage | What it does |
 |---|---|
@@ -77,13 +78,13 @@ Harbor copies `tests/` in only after the agent finishes, which is what makes a s
 | once, offline | lift what was removed into a committed data file, by diffing against a real removal |
 | render | copy **one task's** entry into that task's `tests/` |
 | verify | restore, then assert the restore worked — a failed restore is a grader error, never a 0 |
-| CI | `tests/` has it, `environment/` does not, `instruction.md` quotes no parameters, `[agent]` is off the network |
+| CI | `tests/` has it, `environment/` does not, `instruction.md` quotes no parameters, `[agent]` is on an allowlist |
 
 Restore code against the **defining module's own namespace** so it closes over what it did upstream. Agent
 tooling should report that scoring is unavailable rather than return a zero.
 
 *Worked example:* HumanoidBench's grader is a dense reward — `images/humanoidbench/scrub_oracles.py`
-(remove), `scripts/humanoidbench/extract_rewards.py` (diff), `shared/rcb_rewards.py` (restore),
+(remove), `scripts/humanoidbench/extract_rewards.py` (diff), `scripts/humanoidbench/shared/rcb_rewards.py` (restore),
 `ci_checks/check-no-reward-leak.sh` (enforce).
 
 ## 4. The task statement is then the only account

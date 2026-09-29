@@ -28,8 +28,8 @@ harbor view jobs
 Tasks `FROM` published base images (`ghcr.io/jameskrw/rcb-<sim>:<tag>`); the unlimited tasks need no GPU, so
 the default local Docker sandbox works (Modal too). The limited tasks reserve one for their simulator sidecar; run at
 most 8 of them at once on one GPU (`-n 8`, counting other runs' trials on it). Each instruction quotes a step's cost
-measured alone: on an RTX 4090 a step with both head-camera images took 5.8 ms alone, 6.7 ms with 8 trials stepping
-at once, 7.6 ms with 10 and 80–150 ms with 12. Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
+measured alone; on an RTX 4090 it grew about 15% with 8 trials stepping at once, 30% with 10 and 14–26× with 12.
+Once on Harbor Hub: `harbor run -d robot-coding-bench/robot-coding-bench@0.1.0 …`.
 
 Through OpenRouter (`OPENROUTER_API_KEY` in `.env`), with the Codex or the Claude Code harness:
 
@@ -72,7 +72,7 @@ scripts/results/                # the results pages: build.py (+ common, data, c
 results/<benchmark>/            # what agents scored: README.md (standard configs, table per model and mode) + runs.csv (one line per trial)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
-                                #   cross-task leaks, reward leaks, dataset manifest
+                                #   cross-task leaks, reward leaks, generated tasks, dataset manifest
 docs/                           # PROTOCOL (the contract), TAXONOMY (metadata vocabulary), LEAKAGE (where answer
                                 #   keys survive), LIMITED_MODE_1_1 (robot as a service), benchmarks/ (one short page each)
 harbor_agents/                  # Harbor adapters for running Codex / Claude Code through OpenRouter
@@ -84,7 +84,8 @@ CONTRIBUTING.md AGENTS.md       # how to add a task; map for coding agents
 23 scored tasks across nine capability classes (periodic gait, constrained gait, quasi-static
 stabilisation, navigation, whole-body power, standing manipulation, in-hand precision, mobile
 manipulation, long-horizon multi-subtask), 14 of them on the 19-DoF Unitree H1 and 9 on the 61-DoF
-hand version. Which tasks and why: `local_docs/plan/06-task-selection.md`.
+hand version. Which tasks and why: [`docs/benchmarks/humanoidbench.md`](docs/benchmarks/humanoidbench.md), and in
+full `scripts/humanoidbench/subset.toml`.
 
 Two properties worth knowing before you read a task:
 
@@ -92,10 +93,10 @@ Two properties worth knowing before you read a task:
   starting pose earns — and none of the scored tasks gives away more than 40% of its bar that way
   (`spoon` is the one documented exception at 58%). Two tasks score *negative* for a blank submission.
 - **The agent does not see the reward function.** It is deleted from the base image and restored only
-  inside the verifier, so the score still comes from upstream's exact expression — comparable with the
-  paper and with FastTD3 — while the agent works from the task statement and the physical state. The
-  agent phase is also off the network, because upstream is a public pinned commit. See
-  [`docs/LEAKAGE.md`](docs/LEAKAGE.md) and `docs/PROTOCOL.md` §4.
+  inside the verifier, which runs in its own container, so the score still comes from upstream's exact
+  expression — comparable with the paper and with FastTD3 — while the agent works from the task statement
+  and the physical state. The agent reaches the model APIs and nothing else, because upstream is a public
+  pinned commit. See [`docs/LEAKAGE.md`](docs/LEAKAGE.md) and `docs/PROTOCOL.md` §4.
 
 ## The example task (`robosuite-cube-stack-i00`)
 Franka Panda in robosuite/MuJoCo via [cap-x](https://github.com/capgym/cap-x) primitives
@@ -105,8 +106,8 @@ save `/app/output/trajectory.npz`. `tests/grade.py` restores the same state in a
 and passes iff the stack predicate holds and both final-state hashes agree. Verified: oracle 1, nop 0.
 
 ## Status
-v0.1 (2026-09): one robosuite example task plus **23 scored HumanoidBench tasks** (+1 CI fixture), all
-verified end to end — `nop` scores 0, the oracle fixture scores 1, and the verifier's numbers are
+v0.1 (2026-09): one robosuite example task plus **23 scored HumanoidBench tasks** (+1 CI fixture) in both
+modes, all verified end to end — `nop` scores 0, the oracle fixture scores 1, and the verifier's numbers are
 bit-identical to the host's. Next: more instances per family (`i01`, `i02`) to separate "solved it" from
 "memorised this scene", `g1` as a torque-control counterpart to the position-controlled H1, then
 LIBERO-PRO / BEHAVIOR, the `perception` tier and the `policy` task type; then factor shared tooling

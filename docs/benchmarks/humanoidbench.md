@@ -48,15 +48,15 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | kitchen | h1hand | ✅ | |
 
 Why: one task per reward function, and holding still must earn under 40% of the bar, so passing takes control, not
-a pose; the 23 cover 9 capability classes. Source: `scripts/humanoidbench/subset.toml` (the generator's input);
-reasoning: `local_docs/plan/06-task-selection.md`.
+a pose; the 23 cover 9 capability classes. Source, with the reasoning per task: `scripts/humanoidbench/subset.toml`
+(the generator's input).
 
 ## Modes (standard config: Codex via OpenRouter, effort medium, 60 min)
 
 | mode | the agent gets | resets | delivers |
 |---|---|---|---|
 | limited | head cameras, joint angles/velocities, IMU, room camera; no reward | 50 | the graded episodes themselves |
-| full | the simulator and its full state; no reward, offline | unlimited | one replayable trajectory |
+| full | the simulator and its full state; no reward | unlimited | one replayable trajectory |
 
 Limited mode, what the agent can and cannot access:
 
@@ -70,8 +70,8 @@ Limited mode, what the agent can and cannot access:
 ## Run
 
 ```bash
-sg docker -c 'RCB_RESET_BUDGET=50 RCB_OBS_IMU=1 RCB_OBS_ROOM_CAMERA=1 RCB_MODEL=openrouter/openai/gpt-6-luna \
-  scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00-limited --ak reasoning_effort=medium'
+RCB_RESET_BUDGET=50 RCB_OBS_IMU=1 RCB_OBS_ROOM_CAMERA=1 RCB_MODEL=openrouter/openai/gpt-6-luna \
+  scripts/run_deepseek_openrouter.sh tasks/humanoidbench-loco-walk-i00-limited --ak reasoning_effort=medium
 python3 scripts/results/build.py --add jobs/<job>     # log the run, rebuild the results pages
 ```
 
@@ -80,11 +80,11 @@ python3 scripts/results/build.py --add jobs/<job>     # log the run, rebuild the
 | model | limited | full |
 |---|---|---|
 | GPT-6 Luna | 0/23 | 3/23 (push, reach, sit_hard) |
-| GPT-6 Sol | 1/5 (push) | 0/1 (walk) |
+| GPT-6 Sol | 1/5 (push) | 1/2 (sit_hard; only walk and sit_hard run) |
 | Claude Opus 5.5 | 2/5 (push, sit_hard) | 4/5 (all but cube) |
 
-- limited is stuck at standing, not at information: no run produced a forward gait; more resets, depth or the link
-  masses did not change that.
+- limited is stuck at standing, not at information: no run produced a forward gait; more resets or the link masses
+  did not change that.
 - full wins on state and unlimited retries; Luna's self-made proxy scores mislead it, Opus plans on the full model.
 
 Per task: `results/humanoidbench/README.md`; analysis: `results/humanoidbench/analysis/overview.md`;
