@@ -52,17 +52,19 @@ def load_tasks():
     return tasks, cols
 
 
-TEXTS = {   # the task text a run had, by what its job name ends with: (name, date, commit). textN: a working tree not
-            # committed when run; text5 and text6 went into e897737, which has cube at text 6. What each version changed
-            # and why: results/<bench>/analysis/overview.md, "各版的改动".
+TEXTS = {   # the task text a run had, by what its job name ends with: (name, date, commit). text5 and text6 were a
+            # working tree, committed afterwards in e897737 (cube there at text 6); text7 is ef883ec. What each version
+            # changed and why: results/<bench>/analysis/overview.md, "各版的改动".
     "070fdcf": ("第 1 版", "09-24", "070fdcf"),
     "06b0ab3": ("第 2 版", "09-24", "06b0ab3"),
     "e95d382": ("第 3 版", "09-25", "e95d382"),
     "8e09011": ("第 4 版", "09-25", "8e09011"),
     "text5": ("第 5 版", "09-26", "e897737"),
     "text6": ("第 6 版", "09-27", "e897737"),
+    "text7": ("第 7 版", "09-28", "ef883ec"),
 }
-RETIRED = {"070fdcf", "06b0ab3"}   # versions whose runs were taken out of runs.csv (their rows are in git at 884d59e)
+RETIRED = {"070fdcf", "06b0ab3", "e95d382", "8e09011", "text5", "text6"}   # versions whose runs were taken out of
+# runs.csv: texts 1-2's rows are in git at 884d59e, texts 3-6's at c9449ce
 
 
 def text_of(r: dict) -> str | None:

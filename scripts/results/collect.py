@@ -119,6 +119,9 @@ def call_label(code: str) -> str:
     views = viewed(code)[0]
     if views:
         return "view image " + ", ".join(views)
+    keys = re.findall(r'write_stdin\(\{[^}]*?chars:\s*"((?:[^"\\]|\\.)*)"', code)
+    if keys:   # what it typed into a running command: "" only polls it, "\u0003" is Ctrl-C
+        return "write_stdin " + ", ".join(json.dumps(unquote(k)) for k in keys)
     tools = re.findall(TOOL, code)
     return ", ".join(dict.fromkeys(tools)) if tools else ""
 
