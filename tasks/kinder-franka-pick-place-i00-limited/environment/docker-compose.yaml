@@ -1,0 +1,28 @@
+# Limited mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# GPU on sim: KinDER's physics is CPU either way, but every image the agent asks for is rendered here (egl ~1 ms a
+# frame, CPU osmesa ~50 ms). `graphics` is the capability that mounts the EGL driver.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/jameskrw/rcb-kinder:0.1.6
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TASK_TEXT: "Get the small dark-red cube on the desk into a rectangle on the desk top that is not marked: x from 0.299 to 0.498 m and y from 0.103 to 0.252 m in the arm's base frame (`spec()[\"base_frame\"]`)."
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor, so one run can set them on the command
+      # line (`RCB_RESET_BUDGET=3 harbor run ...`) without editing this file. The sim logs what it got (/spec).
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, as on a real robot; N: N resets
+      RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room, never overhead
+      RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-0}"              # 1: + depth (m) with each robot_wrist image (RGB-D)
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

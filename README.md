@@ -62,16 +62,19 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 │   ├── tests/        test.sh, grade.py (verifier), rcb_traj.py, instance.npz (verifier's own copies)
 │   └── solution/     solve.sh (oracle)
 ├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
-└── humanoidbench-*-i00-limited/ # the limited-mode twin of each (docs/LIMITED_MODE_1_1.md), also generated
-scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/
+├── humanoidbench-*-i00-limited/ # the limited-mode twin of each (docs/LIMITED_MODE_1_1.md), also generated
+└── kinder-*-i00[-limited]/     # 6 KinDER tasks in both modes + 24 screening tasks (docs/benchmarks/kinder.md), generated
+scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/;
+                                #   replay.py re-plays a limited run's episodes for the results pages
+scripts/limited/                # the simulator-agnostic half of limited mode: sim service, verifier, client code
 scripts/results/                # the results pages: build.py (+ common, data, calls, charts, pages), collect.py (one trial, measured),
-                                #   digest.py + NOTES_GUIDE.md (a run's analysis)
+                                #   digest.py + NOTES_GUIDE.md (a run's analysis); benches/<benchmark>.py: what differs per benchmark
 results/<benchmark>/            # what agents scored: README.md (standard configs, table per model and mode) + runs.csv (one line per trial)
 images/<sim>/Dockerfile         # base images = simulator installs only; scripts/build_images.sh, push_images.sh
 ci_checks/                      # contract checks: structure, fields, pinned FROM, instruction, tooling sync,
                                 #   cross-task leaks, reward leaks, dataset manifest
 docs/                           # PROTOCOL (the contract), TAXONOMY (metadata vocabulary), LEAKAGE (where answer
-                                #   keys survive), LIMITED_MODE_1_1 (robot as a service)
+                                #   keys survive), LIMITED_MODE_1_1 (robot as a service), benchmarks/ (one short page each)
 harbor_agents/                  # Harbor adapters for running Codex / Claude Code through OpenRouter
 third_party/cap-x               # submodule used by images/robosuite
 CONTRIBUTING.md AGENTS.md       # how to add a task; map for coding agents

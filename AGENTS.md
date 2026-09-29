@@ -7,10 +7,11 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
 - Those copies are generated, not hand-written. `scripts/<sim>/gen_tasks.py` renders a whole task dir from
   `scripts/<sim>/subset.toml` (which tasks and why) plus `templates/` and `shared/`; `check-tooling-sync.sh`
   fails the build if a copy drifts, `check-generated-tasks.sh` if a task was not re-rendered. **Edit the
-  source and re-render — never a file under `tasks/`.** HumanoidBench works this way;
+  source and re-render — never a file under `tasks/`.** HumanoidBench and KinDER work this way;
   `tasks/robosuite-cube-stack-i00/` predates it and is still hand-maintained.
-- Limited mode (robot as a service, `docs/LIMITED_MODE_1_1.md`): every HumanoidBench task has a
-  `tasks/*-limited/` twin, rendered by the same generator from `templates/limited/`, `shared/limited/` and the
+- Limited mode (robot as a service, `docs/LIMITED_MODE_1_1.md`): every HumanoidBench task and every KinDER 3D task (not the 2D ones,
+  whose only sensor would be a map of the scene) has a `tasks/*-limited/` twin, rendered by the same generator from `templates/limited/`, `shared/limited/`,
+  `scripts/limited/` (the service, verifier and client code every simulator shares) and, for HumanoidBench, the
   task's `[task.limited]` table (`gen_tasks.py measure-limited` checks and times its sim service; needs a GPU).
   The simulator, tooling and reward run in the `sim` sidecar from `environment/sim/` (compose volume, never
   COPYed into the agent image) -- the one place under `environment/` the formula may live; the checks know it

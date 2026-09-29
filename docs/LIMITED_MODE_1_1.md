@@ -54,6 +54,7 @@ in batches of 10 or more.
 - **Shared**: `rcb_service.py`, `rcb_client.py`, `tests/`, the agent Dockerfile, the `task.toml` blocks.
   **Per simulator**: one adapter implementing the `Sim` contract in `rcb_service.py` (both `Session` classes
   already cover most of it). **Per task**: compose env and `instruction.md` (task facts only).
-- **Done for HumanoidBench**: `gen_tasks.py` renders the limited twin of all 24 tasks from `templates/limited/`,
-  `shared/limited/` and each task's `[task.limited]` table. **Next**: RoboTwin swaps its `server.py` for
-  `rcb_service.py` + an adapter.
+- **Done for HumanoidBench and KinDER**: each `gen_tasks.py` renders the limited twins (KinDER: its 3D tasks, one adapter per robot) from its
+  `templates/limited/` and `shared/limited/` (the adapter, the client's docstring) plus `scripts/limited/`, which
+  holds what every simulator shares: `rcb_service.py`, the verifier and the client's code. **Next**: RoboTwin swaps
+  its `server.py` for `rcb_service.py` + an adapter.

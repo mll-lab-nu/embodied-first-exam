@@ -1,0 +1,121 @@
+"""rcb-limited/1.1 client: the robot's whole API, and this docstring is its full reference
+(installed at /opt/tools/rcb_client.py, which is on PYTHONPATH).
+
+    from rcb_client import Robot, EpisodeOver, ResetDenied
+    r = Robot()      # finds the service (SIM_URL, sim:8000, localhost:8000) and waits while it warms up
+
+Calls. spec() was fetched when connecting; every other call is one HTTP request.
+    r.spec()                          static facts: action types; "delta": dim, layout (what each value moves), low
+                                      and high (None: unbounded), units; control_hz; max_episode_steps; "proprio"
+                                      (each field's units); "odometry" (its frame; a mobile base) or "base_frame"
+                                      (an arm fixed in place); "arm" (each joint's axis, position and limits, and
+                                      what else the robot's documentation gives); "cameras" {name: {"hw",
+                                      "fovy_deg", "pose", "depth", ...}}; "depth" (which cameras, units, range; None
+                                      if absent); "budget" {"reset": resets allowed}
+    r.observe(images=True)            the current observation; simulated time does not move
+    r.step(type, a, images=True)      a is one action, shape (D,), or a batch, shape (K, D): K control steps
+                                      in order, in one request, with the same physics as K single steps. obs
+                                      comes after the last step run; obs["executed"] says how many ran (fewer
+                                      than K if the episode ended). type is one of spec()["action_types"].
+    r.reset(images=True)              back to the same starting state, a new episode; spec()["budget"]["reset"]
+                                      times in all. Only the last episode is graded.
+    r.status()                        step, steps, resets_left, done, reason, over, elapsed_s (seconds since your
+                                      first request, as time_s); no observation
+
+images= on observe/step/reset: True (every camera in spec()["cameras"]) | False (none) | a list of camera
+names, e.g. ["robot_wrist"]. Images cost time; ask for them when you look.
+
+obs, a dict:
+    obs["images"][camera]             uint8 array, H x W x 3, for the cameras asked for
+    obs["depth"][camera]              float32 array, H x W, metres (0 = nothing in range), pixel for pixel with
+                                      that image, for each camera in spec()["depth"]["cameras"] asked for, if
+                                      spec()["depth"] is not None
+    obs["proprio"]                    the robot's own readings, the fields spec()["proprio"] lists with their
+                                      units and frame (TidyBot++: "base_pose", "base_vel", "arm_pos", "arm_vel",
+                                      "gripper_pos", "gripper_vel")
+    obs["step"]                       control steps in the current episode
+    obs["done"], obs["reason"]        episode over? why: "success" | "failed" (ended without success) |
+                                      "timeout" | "error"
+    obs["resets_left"], obs["time_s"] resets still allowed; seconds since your first request to the service
+
+Errors:
+    ValueError     refused, nothing moved: wrong length, outside the limits, NaN, unknown type or camera
+                   (in a batch, one bad row refuses the whole batch)
+    EpisodeOver    step() after the episode ended (the message says if a reset is left), or reset() after the
+                   trial ended
+    ResetDenied    reset() with no resets left
+"""
+from __future__ import annotations
+import base64, io, os, time
+import numpy as np
+import requests
+
+PROTOCOL = "rcb-limited/1."   # any 1.x service; 1.1 only adds optional fields
+
+
+class EpisodeOver(RuntimeError):
+    pass
+
+
+class ResetDenied(RuntimeError):
+    pass
+
+
+class Robot:
+    def __init__(self, base: str | None = None, timeout: float = 600.0):
+        cands = [base or os.environ.get("SIM_URL"), "http://sim:8000", "http://localhost:8000"]
+        t0 = time.time(); last = None
+        while time.time() - t0 < timeout:
+            for b in [c for c in cands if c]:
+                try:
+                    r = requests.get(b + "/spec", timeout=5)
+                    if r.status_code == 503:
+                        last = "warming up"; break
+                    r.raise_for_status(); self.base = b; self._spec = r.json()
+                    assert str(self._spec.get("protocol")).startswith(PROTOCOL), self._spec.get("protocol")
+                    return
+                except requests.exceptions.ConnectionError as e:
+                    last = e
+            time.sleep(2)
+        raise RuntimeError(f"sim service unavailable: {last}")
+
+    def spec(self) -> dict:
+        return self._spec
+
+    @staticmethod
+    def _decode(obs: dict) -> dict:
+        from PIL import Image
+        for k, v in list(obs.get("images", {}).items()):
+            obs["images"][k] = np.asarray(Image.open(io.BytesIO(base64.b64decode(v))).convert("RGB"))
+        for k, v in list(obs.get("depth", {}).items()):   # a 16-bit PNG in millimetres
+            obs["depth"][k] = np.asarray(Image.open(io.BytesIO(base64.b64decode(v)))).astype(np.float32) / 1000.0
+        return obs
+
+    @staticmethod
+    def _check(r: requests.Response) -> dict:
+        if r.status_code == 409:
+            d = r.json(); left = d.get("resets_left") or 0
+            raise EpisodeOver(f"{d.get('reason')}" + (f" ({left} reset(s) left: call reset())" if left else ""))
+        if r.status_code == 429:
+            raise ResetDenied(r.json().get("error"))
+        if r.status_code == 400:
+            raise ValueError(r.json().get("error"))
+        r.raise_for_status(); return Robot._decode(r.json())
+
+    def observe(self, images=True) -> dict:
+        q = "" if images is True else "?images=" + ("0" if images is False else ",".join(images))
+        return self._check(requests.get(self.base + "/observe" + q))
+
+    def step(self, type: str, action, images=True) -> dict:
+        a = np.asarray(action, dtype=np.float64)
+        if not np.all(np.isfinite(a)):
+            raise ValueError("action contains NaN/inf")   # JSON cannot carry them; the service would refuse them too
+        body = {"type": type, "images": images if isinstance(images, bool) else list(images)}
+        body["actions" if a.ndim == 2 else "action"] = a.tolist()
+        return self._check(requests.post(self.base + "/step", json=body))
+
+    def reset(self, images=True) -> dict:
+        return self._check(requests.post(self.base + "/reset", json={"images": images if isinstance(images, bool) else list(images)}))
+
+    def status(self) -> dict:
+        r = requests.get(self.base + "/status"); r.raise_for_status(); return r.json()
