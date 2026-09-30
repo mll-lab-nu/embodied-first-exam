@@ -14,7 +14,7 @@ services:
       RCB_TOOL: rcb_dtb
       RCB_INSTANCE: /srv/instance.json
       RCB_DTB_GOAL_TIMEOUT_S: "0"
-      RCB_MAX_CONTROL_STEPS: "36000"
+      RCB_MAX_CONTROL_STEPS: "360000"
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
     shm_size: "4gb"

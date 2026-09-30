@@ -29,7 +29,7 @@ TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "rcb_dtb"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 # Episode cap in control steps (0 = none). Set where nothing else ends the episode, e.g. DexToolBench without its per-goal
-# time limit (the limited twins: RCB_DTB_GOAL_TIMEOUT_S=0, RCB_MAX_CONTROL_STEPS=36000 = 10 min of robot time).
+# time limit (the limited twins: RCB_DTB_GOAL_TIMEOUT_S=0, RCB_MAX_CONTROL_STEPS=360000 = 100 min of robot time).
 MAX_CONTROL_STEPS = int(os.environ.get("RCB_MAX_CONTROL_STEPS", "0"))
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
