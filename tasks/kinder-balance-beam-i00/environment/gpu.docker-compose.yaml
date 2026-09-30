@@ -4,7 +4,7 @@
 #
 # Not named docker-compose.yaml on purpose: Harbor loads that name automatically, and a device reservation the host
 # cannot meet stops the container from starting. Passing or failing never depends on it: physics is CPU; the GPU only
-# speeds up images (s.images(), the verifier's video). `graphics` is the capability that mounts the EGL driver.
+# speeds up images (s.images(), s.render_video()). `graphics` is the capability that mounts the EGL driver.
 services:
   main:
     environment:

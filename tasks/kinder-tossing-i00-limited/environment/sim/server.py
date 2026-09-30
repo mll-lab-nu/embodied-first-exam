@@ -8,19 +8,16 @@ Settings come from environment/docker-compose.yaml:
   RCB_TASK_TEXT           one sentence for /spec
   RCB_RESET_BUDGET        resets allowed (default 0: one episode, as on a real robot)
   RCB_OBS_ROOM_CAMERA     0 (default); 1: + `room_camera`, fixed in the room (MuJoCo: KinDER's `task_view` camera,
-                          which instance.json moves where upstream mounts it on the ceiling; PyBullet: KinDER's view)
+                          moved by instance.json where upstream's looks down from overhead; PyBullet: KinDER's view)
   RCB_OBS_DEPTH           0 (default); 1: + depth with each robot_wrist image, as from the Gen3 wrist's RealSense
                           D410 (TidyBot++'s base camera is an RGB webcam)
 
-What the agent gets is what the real robot reports: its own cameras, its joint encoders and, on a mobile base, the
-base's odometry.
+What the agent gets is what the real robot reports: its own cameras, its joint encoders and the base's odometry.
   TidyBot     KinDER's Dynamic3D TidyBot++ (MuJoCo): holonomic base, Kinova Gen3 arm, Robotiq 2F-85 gripper; its base
               and wrist cameras.
-  Franka      KinDER's desk-mounted Franka FR3 (MuJoCo) with the same gripper. The model has no camera on the robot:
-              robot_wrist is TidyBot++'s wrist camera, mounted as there relative to the gripper.
   Kinova      KinDER's Kinematic3D robot (PyBullet): the same base, arm and gripper, kinematic; TidyBot++'s base and
               wrist cameras on the same links (the wrist one 3 cm forward, clear of this model's camera housing),
-              near-clipped at 1 cm.
+              near-clipped at 1 cm. A move it refuses (a collision) comes back as info["blocked"].
 Odometry is kept in the frame the base starts in, so no world coordinate reaches the agent; actions arrive in that
 frame and are turned into KinDER's world-frame action here. The trajectory, the replay and the log's `step` actions
 keep the two apart: /data/trajectory.npz is in KinDER's own (world) frame, episode.jsonl has what the agent sent.
@@ -93,16 +90,21 @@ def depth_spec() -> dict:
 
 class _Robot:
     """What every adapter shares: one frozen Session, the actions of the episode in progress (KinDER's own frame), the
-    observation's images and depth, the replay. A subclass says which robot (`robot_type`, its type in KinDER's state),
-    which cameras are its own, how to render one, its proprioception, and how an agent's action becomes KinDER's."""
+    observation's images and depth, the replay, and a base that moves: odometry in the frame it starts in, and its moves
+    turned from that frame into KinDER's world frame. KinDER bounds each world axis per step; a move within that bound
+    in any direction (a disc) stays inside them whatever the start heading. A subclass says which robot (`robot_type`,
+    its type in KinDER's state), which cameras are its own, how to render one, and its proprioception."""
     robot_type = ""
     own: tuple[str, ...] = ()
+    base_step = BASE_STEP_M
 
     def __init__(self, s: Session, *, room_camera: bool = False, depth: bool = False, task_text: str = ""):
         self.s = s
         self.depth, self.task_text, self._acts = depth, task_text, []
         self.cameras = self.own + (("room_camera",) if room_camera else ())
         self.dim = self.s.action_space.shape[0]
+        f = self._robot()
+        self._start = f["pos_base_x"], f["pos_base_y"], f["pos_base_rot"]   # the odometry frame, every episode
 
     def _robot(self) -> dict[str, float]:
         """The robot's features in KinDER's state, by name."""
@@ -123,14 +125,23 @@ class _Robot:
         obs["proprio"] = self._proprio()
         return obs
 
+    def _odom_pose(self, f: dict) -> list[float]:
+        x0, y0, th0 = self._start
+        return [*(rot(-th0) @ (np.array([f["pos_base_x"], f["pos_base_y"]]) - [x0, y0])).tolist(),
+                wrap(f["pos_base_rot"] - th0)]
+
     def _world(self, a: np.ndarray) -> np.ndarray:
-        return np.array(a, dtype=np.float64)
+        w = np.array(a, dtype=np.float64)
+        w[:2] = rot(self._start[2]) @ a[:2]
+        return w
 
     def validate(self, typ: str, a: np.ndarray) -> str | None:
         if typ != "delta":
             return "type must be 'delta'"
         if a.shape[0] != self.dim:
             return f"a delta action has {self.dim} values"
+        if math.hypot(a[0], a[1]) > self.base_step + 1e-9:
+            return f"base_x, base_y together must be at most {self.base_step} m"
         try:
             self.s.check_action(self._world(a))
         except ValueError as exc:
@@ -164,37 +175,13 @@ class _Robot:
         self.s.render_video(actions, path)      # the view that frames the task (MuJoCo: task_view)
 
 
-class _MobileBase(_Robot):
-    """A base that moves: odometry in the frame it starts in, and its moves turned from that frame into KinDER's world
-    frame. KinDER bounds each world axis per step; a move within that bound in any direction (a disc) stays inside
-    them whatever the start heading."""
-    base_step = BASE_STEP_M
-
-    def __init__(self, s: Session, **kw):
-        super().__init__(s, **kw)
-        f = self._robot()
-        self._start = f["pos_base_x"], f["pos_base_y"], f["pos_base_rot"]   # the odometry frame, every episode
-
-    def _odom_pose(self, f: dict) -> list[float]:
-        x0, y0, th0 = self._start
-        return [*(rot(-th0) @ (np.array([f["pos_base_x"], f["pos_base_y"]]) - [x0, y0])).tolist(),
-                wrap(f["pos_base_rot"] - th0)]
-
-    def _world(self, a: np.ndarray) -> np.ndarray:
-        w = np.array(a, dtype=np.float64)
-        w[:2] = rot(self._start[2]) @ a[:2]
-        return w
-
-    def validate(self, typ: str, a: np.ndarray) -> str | None:
-        if typ == "delta" and a.shape[0] == self.dim and math.hypot(a[0], a[1]) > self.base_step + 1e-9:
-            return f"base_x, base_y together must be at most {self.base_step} m"
-        return super().validate(typ, a)
-
-
-class TidyBot(_MobileBase):
+class TidyBot(_Robot):
     """One frozen KinDER (Dynamic3D, TidyBot++) instance behind the rcb_service.Sim contract. The agent never gets an
     object's pose, a goal region's coordinates or the goal check -- only that an episode ended and why."""
     robot_type, own = "mujoco_tidybot_robot", CAMERAS
+    # where the finger pads meet when the gripper closes on nothing, in the frame of the arm's last link (measured on
+    # tidybot.xml; open, the pads' centre is 1.3 cm nearer the wrist). Upstream's pinch_site sits 2.4 cm short of it.
+    PINCH = np.array([0.0, 0.0, -0.2054])
 
     def __init__(self, s: Session, **kw):
         super().__init__(s, **kw)
@@ -214,13 +201,18 @@ class TidyBot(_MobileBase):
             i = m.camera(c).id
             return pose(R @ (d.cam_xpos[i] - p), R, d.cam_xmat[i].reshape(3, 3))
 
+        last = m.body("robot_bracelet_link").id
         arm = {"joints": list(ARM_JOINTS),
                "axis": [r3(d.xaxis[m.joint(j).id]) for j in ARM_JOINTS],
                "position_m": [r3(d.xanchor[m.joint(j).id]) for j in ARM_JOINTS],
                "limits_rad": [r3(m.jnt_range[m.joint(j).id]) if m.jnt_limited[m.joint(j).id] else None for j in ARM_JOINTS],
                "torque_limit_nm": [round(float(m.actuator(j).ctrlrange[1]), 1) for j in ARM_JOINTS],
+               "end_effector": {"position_m": r3(d.xpos[last] + d.xmat[last].reshape(3, 3) @ self.PINCH),
+                                "fixed_to": "the arm's last link"},
                "frame": BASE_FRAME + ", every arm joint at 0; a positive angle turns the child link about the axis by "
-                                     "the right-hand rule; limits_rad None: the joint turns without limit"}
+                                     "the right-hand rule; limits_rad None: the joint turns without limit; end_effector: "
+                                     "where the finger pads meet when the gripper closes on nothing (open, their centre "
+                                     "is 1.3 cm nearer the wrist)"}
         cams = {c: {"mounted": "base" if c == "robot_base" else "wrist (the arm's last link: it moves with the arm)",
                     "fovy_deg": round(float(m.cam_fovy[m.camera(c).id]), 1),
                     "pose": {"frame": BASE_FRAME + ", every arm joint at 0", **cam(c)}} for c in CAMERAS}
@@ -270,99 +262,17 @@ class TidyBot(_MobileBase):
                 "base_vel": [*(rot(-th0) @ [f["vel_base_x"], f["vel_base_y"]]).tolist(), f["vel_base_rot"]],
                 "arm_pos": [f[f"pos_arm_joint{i}"] for i in range(1, 8)],
                 "arm_vel": [f[f"vel_arm_joint{i}"] for i in range(1, 8)],
-                **mujoco_gripper(self.s)}
+                **self._gripper()}
+
+    def _gripper(self) -> dict[str, float]:
+        """The fingers' measured position, not KinDER's `pos_gripper` (which is the last command, 0 or 1 at once)."""
+        m, j = self.s.model, self.s.model.joint(GRIPPER_JOINT)
+        closed = float(m.jnt_range[j.id][1])
+        return {"gripper_pos": float(self.s.data.qpos[m.jnt_qposadr[j.id]]) / closed,
+                "gripper_vel": float(self.s.data.qvel[m.jnt_dofadr[j.id]]) / closed}
 
 
-def mujoco_gripper(s: Session) -> dict[str, float]:
-    """The fingers' measured position, not KinDER's `pos_gripper` (which is the last command, 0 or 1 at once)."""
-    m, j = s.model, s.model.joint(GRIPPER_JOINT)
-    closed = float(m.jnt_range[j.id][1])
-    return {"gripper_pos": float(s.data.qpos[m.jnt_qposadr[j.id]]) / closed,
-            "gripper_vel": float(s.data.qvel[m.jnt_dofadr[j.id]]) / closed}
-
-
-class Franka(_Robot):
-    """KinDER's desk-mounted Franka FR3 with a Robotiq 2F-85. Its model has no camera on the robot, so robot_wrist is
-    rendered from TidyBot++'s wrist camera mount: where tidybot.xml puts that camera relative to the same gripper's base
-    body. Its frame is the arm's base (fixed): the goal, if unmarked, is stated in it."""
-    robot_type, own = "mujoco_fr3_robot", ("robot_wrist",)
-    joints = tuple(f"robot_fr3_joint{i}" for i in range(1, 8))
-    base_body, gripper_body = "robot_fr3_link0", "robot_gripper_base"
-    # TidyBot++'s robot_wrist camera in its gripper base's frame (tidybot.xml), and its field of view
-    WRIST_P = np.array([0.05639, 0.0, -0.00302])
-    WRIST_R = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, -1.0]])
-    WRIST_FOVY = 41.8379
-
-    def __init__(self, s: Session, **kw):
-        super().__init__(s, **kw)
-        self._facts = self._hardware()
-
-    def _wrist(self, d) -> tuple[np.ndarray, np.ndarray]:
-        i = self.s.model.body(self.gripper_body).id
-        R = d.xmat[i].reshape(3, 3)
-        return d.xpos[i] + R @ self.WRIST_P, R @ self.WRIST_R
-
-    def _hardware(self) -> dict:
-        """As TidyBot's, in the arm's base frame (x forward, y left, z up, origin at the arm's base on the desk)."""
-        m = self.s.model
-        d = mujoco.MjData(m)
-        for j in self.joints:
-            d.qpos[m.jnt_qposadr[m.joint(j).id]] = 0.0
-        mujoco.mj_forward(m, d)
-        b = m.body(self.base_body).id
-        Rb, pb = d.xmat[b].reshape(3, 3).T, d.xpos[b].copy()
-        frame = "the arm's base frame: x forward, y left, z up, origin at the bottom of the arm's base"
-        arm = {"joints": [f"arm_{i}" for i in range(1, 8)],
-               "axis": [r3(Rb @ d.xaxis[m.joint(j).id]) for j in self.joints],
-               "position_m": [r3(Rb @ (d.xanchor[m.joint(j).id] - pb)) for j in self.joints],
-               "limits_rad": [r3(m.jnt_range[m.joint(j).id]) for j in self.joints],
-               "frame": frame + ", every arm joint at 0 (outside some joints' limits: a reference pose only); a "
-                                "positive angle turns the child link about the axis by the right-hand rule"}
-        p, R = self._wrist(d)
-        cams = {"robot_wrist": {"mounted": "wrist (on the gripper: it moves with the arm)", "fovy_deg": round(self.WRIST_FOVY, 1),
-                                "pose": {"frame": frame + ", every arm joint at 0", **pose(Rb @ (p - pb), Rb, R)}}}
-        if "room_camera" in self.cameras:
-            i = m.camera(ROOM).id
-            cams["room_camera"] = {"mounted": "room (fixed)", "fovy_deg": round(float(m.cam_fovy[i]), 1),
-                                   "pose": {"frame": frame, **pose(Rb @ (d.cam_xpos[i] - pb), Rb, d.cam_xmat[i].reshape(3, 3))}}
-        return {"arm": arm, "cameras": cams, "frame": frame}
-
-    def spec(self) -> dict:
-        lo = self.s.action_space.low.astype(float); hi = self.s.action_space.high.astype(float)
-        return {
-            "simulator": "kinder", "robot": "Franka FR3 7-DoF arm fixed to a desk, Robotiq 2F-85 gripper",
-            "task_text": self.task_text, "action_types": ["delta"],
-            "delta": {"dim": self.dim, "layout": [*(f"arm_{i}" for i in range(1, 8)), "gripper"],
-                      "low": r3(lo), "high": r3(hi),
-                      "units": "arm_i: radians added to joint i's measured angle, which becomes its new target; "
-                               "gripper: 0 = open, 1 = closed (a command, not a change)"},
-            "control_hz": 10, "max_episode_steps": self.s.max_steps,
-            "proprio": {"arm_pos": "7 joint angles, rad (arm joint order)", "arm_vel": "7 joint velocities, rad/s",
-                        "gripper_pos": "the fingers' position: 0 open, 1 at their closed limit (short of 1 when they "
-                                       "close on an object)", "gripper_vel": "gripper_pos per second"},
-            "base_frame": self._facts["frame"],
-            "arm": self._facts["arm"],
-            "cameras": {c: {**self._facts["cameras"][c], "rgb": True, "hw": list(CAMERA_HW),
-                            "depth": self.depth and c in DEPTH} for c in self.cameras},
-            "depth": depth_spec() if self.depth else None,
-            "gl_backend": GL_BACKEND,
-        }
-
-    def _images(self, cameras: list[str], depth: bool) -> dict[str, np.ndarray]:
-        out = {}
-        for c in cameras:
-            out[c] = self.s.image_from(*self._wrist(self.s.data), self.WRIST_FOVY, depth=depth) if c == "robot_wrist" \
-                else self.s.images([ROOM], depth=depth)[ROOM]
-        return out
-
-    def _proprio(self) -> dict:
-        f = self._robot()
-        return {"arm_pos": [f[f"pos_arm_joint{i}"] for i in range(1, 8)],
-                "arm_vel": [f[f"vel_arm_joint{i}"] for i in range(1, 8)], **mujoco_gripper(self.s)}
-
-
-
-class Kinova(_MobileBase):
+class Kinova(_Robot):
     """KinDER's Kinematic3D robot (PyBullet): a TidyBot++ base and Kinova Gen3 arm with a Robotiq 2F-85, moved
     kinematically. Its cameras are TidyBot++'s, as tidybot.xml mounts them: the base camera on the base, the wrist camera
     on the Gen3's bracelet link, whose frames the two models share (the shoulder joint and the gripper sit at the same
@@ -389,8 +299,21 @@ class Kinova(_MobileBase):
         self._frames: dict = {}                 # this state's renders: {camera: (rgb, depth)}, one draw for both
 
     def apply(self, typ: str, a: np.ndarray) -> tuple[bool, bool, dict]:
+        """As the base's, and whether KinDER refused the move: the pose it was sent to differs from the one it was in
+        (from the action KinDER receives, in its dtype; the arm's targets clipped to its limits, as KinDER does), yet
+        the robot did not move at all."""
         self._frames = {}
-        return super().apply(typ, a)
+        q0, arm = self._pose(), self.env.robot.arm
+        w = self._world(a).astype(self.s.action_space.dtype).astype(np.float64)
+        target = np.concatenate([q0[:3] + w[:3], np.clip(q0[3:] + w[3:10], arm.joint_lower_limits[:7],
+                                                           arm.joint_upper_limits[:7])])
+        done, success, _ = super().apply(typ, a)
+        return done, success, {"blocked": bool(np.any(target != q0) and np.array_equal(self._pose(), q0))}
+
+    def _pose(self) -> np.ndarray:
+        """The base's (x, y, yaw) and the arm's 7 joint angles, as the simulator holds them."""
+        b = self.env.robot.get_base()
+        return np.array([b.x, b.y, b.rot, *self.env.robot.arm.get_joint_positions()[:7]], dtype=np.float64)
 
     def reset(self) -> None:
         self._frames = {}
@@ -424,7 +347,8 @@ class Kinova(_MobileBase):
 
     def _draw(self, c: str) -> tuple[np.ndarray, np.ndarray]:
         """One camera's RGB and depth (metres, planar), drawn once. room_camera: KinDER's own view (render()'s),
-        drawn at the robot cameras' size (at KinDER's 360 x 640 one pixel of PrplLab3D's changes from draw to draw)."""
+        drawn at the robot cameras' size (at KinDER's own 360 x 640, a scene's image can change by a pixel from draw to
+        draw)."""
         import pybullet as pb
         H, W = CAMERA_HW
         cid = self.env.physics_client_id
@@ -502,11 +426,6 @@ class Kinova(_MobileBase):
         lo = self.s.action_space.low.astype(float); hi = self.s.action_space.high.astype(float)
         mag, cfg = self.base_step, self.env.config
         z = 2 * np.asarray(cfg.end_effector_viz_half_extents) * 100
-        # PrplLab3D overrides where an object may be let go: anywhere
-        anywhere = next(c for c in type(self.env).__mro__ if "_get_surfaces_supporting_object" in vars(c)) \
-            is not next(c for c in type(self.env).__mro__ if c.__name__ == "ObjectCentricKinematic3DRobotEnv")
-        release = "anywhere" if anywhere else f"only if the object is within {cfg.min_placement_dist * 1000:g} mm of a " \
-                                               "surface it can rest on; otherwise it stays held"
         return {
             "simulator": "kinder", "robot": "TidyBot++-style mobile manipulator, kinematic (PyBullet): base, Kinova "
                                             "Gen3 7-DoF arm, Robotiq 2F-85 gripper",
@@ -519,11 +438,13 @@ class Kinova(_MobileBase):
                                "joint i's angle; gripper: below -0.5 closes, above 0.5 opens, in between leaves it. "
                                "Closing takes hold of an object only if exactly one object touches the grasp zone, a "
                                f"{z[0]:g} x {z[1]:g} x {z[2]:g} cm box at the arm's end-effector point (arm.end_effector); "
-                               f"otherwise the fingers do not move. Opening lets go of what it holds {release}. The "
-                               "robot is kinematic: a step moves it there at once, and a step that would bring the arm "
-                               "or what it holds into collision is not carried out (the robot stays where it was); the "
-                               + ("base is checked for collisions too" if cfg.check_base_collisions else
-                                  "base is not checked for collisions")},
+                               f"otherwise the fingers do not move. Opening lets go of what it holds only if the object is "
+                               f"within {cfg.min_placement_dist * 1000:g} mm of a surface it can rest on; otherwise it "
+                               "stays held. The robot is kinematic: a step moves it there at once, and a step that would "
+                               "bring the arm or what it holds into collision is not carried out: the robot stays where "
+                               "it was, the answer says blocked: true, and a batch stops there. That holds for a base "
+                               "move too, which carries the arm along; " + ("the base itself is checked for collisions too"
+                               if cfg.check_base_collisions else "the base itself is not checked for collisions")},
             "control_hz": None, "max_episode_steps": self.s.max_steps,
             "proprio": {"base_pose": "[x m, y m, yaw rad], odometry frame", "arm_pos": "7 joint angles, rad (arm joint "
                         "order)", "gripper_pos": "the fingers' position: 0 open, 1 at their closed limit (short of 1 "
@@ -544,7 +465,7 @@ class Kinova(_MobileBase):
                 "gripper_pos": f["finger_state"] / self.FINGERS_CLOSED}
 
 
-ROBOTS = {cls.robot_type: cls for cls in (TidyBot, Franka, Kinova)}
+ROBOTS = {cls.robot_type: cls for cls in (TidyBot, Kinova)}
 
 
 def make(instance: str, **kw) -> _Robot:

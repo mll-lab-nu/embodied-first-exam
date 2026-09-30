@@ -248,7 +248,7 @@ def run_detail(r: dict, task: dict, page_dir: str, phases: list, notes_rest: str
                  f'<span><b class="sw-uncached"></b>未缓存 {tok(d["tok_in"] - d["tok_cached"])}</span>'
                  f'<span><b class="sw-out"></b>输出 {tok(d["tok_out"])}（推理 {tok(d["tok_reason"])}）</span></div></div>')
         if limited:
-            curve = line_chart([reset_series(r, "var(--acc)", "这次")], d["budget_min"], max(d["resets"], 1), "agent 时间 (min)", "已用 reset",
+            curve = line_chart([reset_series(r, "var(--acc)", "这次")], d["budget_min"], max(d["resets"], 1), "agent 时间 (min)",
                                h=210, caps=[(d["resets"], f"上限 {d['resets']} 次")])
             side = f'<div class="panel"><div class="hd"><h2>reset 与时间</h2><span class="mut">reset 用了多少（纵轴）随 agent 时间（横轴）</span></div>{curve}</div>'
         else:
@@ -431,7 +431,7 @@ def task_page(task: dict, cols: list) -> str:
         for mode in ("limited", "full"):
             rs = [mains[c] for c in cols if c in mains and c[1] == mode]
             if rs:
-                H.append(f'<h3>{esc(analysis.MODE[mode])}</h3>{compare_table(rs, [], page_dir, sort=False)}')
+                H.append(f'<h3>{esc(analysis.MODE[mode])}</h3>{compare_table(rs, [], sort=False)}')
     order = list(B.texts)
     history = [(c, sorted((r for r in runs if r["standard"] and r["col"] == c),
                           key=lambda r: (order.index(r["text"]) if r["text"] in order else len(order), r["date"], r["i"]))) for c in cols]
@@ -441,9 +441,9 @@ def task_page(task: dict, cols: list) -> str:
         H.append('<div class="sect" id="runs-history"><h2>历次运行</h2><span class="mut">每一列（模型 · 模式）按说明的版本从旧到新；'
                  '标"本轮"的是上面的主运行。各版改了什么见总览的"各版的改动"</span></div>')
         for c, rs in history:
-            H.append(f'<h3>{esc(col_name(c))}</h3>{compare_table(rs, latest, page_dir, sort=False, by_text=True)}')
+            H.append(f'<h3>{esc(col_name(c))}</h3>{compare_table(rs, latest, sort=False, by_text=True)}')
         if odd:
-            H.append(f'<h3>对照实验（非标准配置）</h3>{compare_table(odd, [], page_dir)}')
+            H.append(f'<h3>对照实验（非标准配置）</h3>{compare_table(odd, [])}')
     have = [c for c in cols if c in mains]
     if have:
         H.append('<div class="sect" id="runs-main"><h2>主运行</h2><span class="mut">每一列最新的标准配置运行，上面分析里的数字取自它们</span></div>')
@@ -459,7 +459,7 @@ def task_page(task: dict, cols: list) -> str:
     return page(f"{task['task']} · {B.title}", "".join(H), 1, [(task["task"], None)])
 
 
-def compare_table(runs: list, mains: list, page_dir: str, sort: bool = True, by_text: bool = False) -> str:
+def compare_table(runs: list, mains: list, sort: bool = True, by_text: bool = False) -> str:
     """One row per run; `sort` off keeps the given order (the models in the README's column order); `by_text`:
     the runs of one column, each named by its task text's version instead of its model."""
     top_cost = max((r["d"]["cost"] or 0 for r in runs), default=1) or 1
@@ -575,7 +575,7 @@ def overview(tasks: list, cols: list, runs: list) -> str:
             if mode == "limited":
                 cap = int(lim["resets"])
                 P.append(f'<div class="panel"><div class="hd"><h2>reset 用得有多快</h2><span class="mut">每条线一个任务：已用 reset 随 agent 时间</span></div>'
-                         f'{line_chart([reset_series(r, cols_c[r["task"]], r["task"]) for r in order], float(lim["budget_min"]), cap, "agent 时间 (min)", "已用 reset", h=230, caps=[(cap, f"上限 {cap} 次")])}</div>')
+                         f'{line_chart([reset_series(r, cols_c[r["task"]], r["task"]) for r in order], float(lim["budget_min"]), cap, "agent 时间 (min)", h=230, caps=[(cap, f"上限 {cap} 次")])}</div>')
             P.append('<div class="panel"><div class="hd"><h2>时间花在哪</h2><span class="mut">等模型生成 · 跑工具 · 其他</span></div>'
                      + hbars([(r["task"], f"tasks/{r['task']}.html", [(r["d"]["gen_s"], "gen", tip("等模型生成", f"{r['d']['gen_s'] / 60:.1f} min")),
                                                                       (r["d"]["tool_s"], "tool", tip("跑工具", f"{r['d']['tool_s'] / 60:.1f} min")),

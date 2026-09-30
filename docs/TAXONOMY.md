@@ -2,8 +2,8 @@
 
 | Field | Values |
 |---|---|
-| `simulator` | `robosuite` · `humanoidbench` · `libero` · `behavior` · `maniskill` · … |
-| `robot` | `franka-panda` · `unitree-h1` · `unitree-h1hand` (H1 with two Shadow hands) · `r1pro` · … |
+| `simulator` | `robosuite` · `humanoidbench` · `kinder` · `libero` · `behavior` · `maniskill` · … |
+| `robot` | `franka-panda` · `unitree-h1` · `unitree-h1hand` (H1 with two Shadow hands) · `tidybot-plus-plus` · `r1pro` · … |
 | `family` | free-form slug naming the scene/goal, shared by its instances (e.g. `cube_stack`) |
 | `task_type` | `trajectory` · `policy` |
 | `tier` | `privileged` · `perception` |

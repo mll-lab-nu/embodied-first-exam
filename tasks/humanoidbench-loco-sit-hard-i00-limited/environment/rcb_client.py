@@ -73,8 +73,8 @@ class Robot:
                     r.raise_for_status(); self.base = b; self._spec = r.json()
                     assert str(self._spec.get("protocol")).startswith(PROTOCOL), self._spec.get("protocol")
                     return
-                except requests.exceptions.ConnectionError as e:
-                    last = e
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                    last = e   # not up yet, or busy with a long request
             time.sleep(2)
         raise RuntimeError(f"sim service unavailable: {last}")
 

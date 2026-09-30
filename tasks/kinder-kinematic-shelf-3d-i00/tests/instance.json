@@ -1,6 +1,0 @@
-{
- "env_id": "kinder/KinematicShelf3D-o3-v0",
- "seed": 0,
- "max_steps": 3000,
- "scene_sha": "236beed58060b2a9"
-}

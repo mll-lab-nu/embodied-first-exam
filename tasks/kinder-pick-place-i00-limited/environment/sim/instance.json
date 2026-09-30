@@ -1,6 +1,0 @@
-{
- "env_id": "kinder/PickPlace3D-o1-v0",
- "seed": 0,
- "max_steps": 1000,
- "scene_sha": "1e9c171487e2cf04"
-}

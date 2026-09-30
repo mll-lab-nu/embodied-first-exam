@@ -1,7 +1,8 @@
 # Limited mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
-# GPU on sim: KinDER's physics is CPU either way, but every image the agent asks for is rendered here (egl ~1 ms a
-# frame, CPU osmesa ~50 ms). `graphics` is the capability that mounts the EGL driver.
+# GPU on sim, MuJoCo tasks only: KinDER's physics is CPU either way, but every image the agent asks for is rendered
+# here (egl ~1 ms a frame, CPU osmesa ~50 ms); `graphics` is the capability that mounts the EGL driver. PyBullet draws
+# its images on the CPU, so its tasks reserve none.
 services:
   main:
     depends_on: [sim]

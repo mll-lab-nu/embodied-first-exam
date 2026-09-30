@@ -1,16 +1,15 @@
 # KinDER subset -- the single source for every tasks/kinder-* directory (`gen_tasks.py render` writes them).
 #
-# Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator), the ones whose goal a camera can see
-# or a sentence can name, one variant each (docs/benchmarks/kinder.md); the section at the end adds the rest of KinDER
-# for screening. Each of the six ships twice: full mode
-# (tasks/kinder-<family>-i00: the simulator and its state, one replayable trajectory) and limited mode
-# (-limited: the robot as a service, its own sensors only).
+# Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
+# sentence can name, and (the section at the end) the families a screening of all of KinDER found hard, one variant
+# each (docs/benchmarks/kinder.md). Each ships twice: full mode (tasks/kinder-<family>-i00: the simulator and its
+# state, one replayable trajectory) and limited mode (-limited: the robot as a service, its own sensors only).
 #
 # task_statement is all an agent is told about the goal, in both modes, so it must name the goal exactly as KinDER
 # checks it (the task JSON's goal_state): which objects, which place, and when it counts. It says what is visible;
 # never how to do it.
 #
-# Every task is set in KinDER's MimicLabs lab (rcb_kinder.SCENE_BG: images only, the physics is the same bit for bit).
+# Every MuJoCo task is set in KinDER's MimicLabs lab (rcb_kinder.SCENE_BG: images only, the physics is the same bit for bit).
 # task_view is the camera limited mode serves as room_camera; a task sets it here only where upstream's own looks
 # down from high overhead, which would hand the agent a map: a camera where a lab would put one instead, looking
 # down less than 45 degrees.
@@ -21,6 +20,11 @@ seed = 0                  # KinDER draws the scene from this seed; the instance 
 max_steps = 1000          # upstream's episode length for these tasks (TidyBot3DConfig.horizon): 100 s at 10 Hz
 agent_timeout_sec = 3600
 verifier_timeout_sec = 900
+# The only hosts the agent may reach, both modes: the model APIs (Codex with a ChatGPT login, the OpenAI and
+# Anthropic APIs, OpenRouter). KinDER and its baselines are public: anything more lets a limited-mode agent install the
+# simulator it is not given, and either mode fetch upstream's planners (docs/LEAKAGE.md).
+agent_allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com",
+                       "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 [[task]]
 family = "tossing"
@@ -73,12 +77,11 @@ of the brown cupboard, which has three compartments one above another. The task 
 that compartment's floor."""
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Screening (09-29): every other KinDER family, to see which are hard. One variant each: the hardest that upstream's
-# baselines (kinder-baselines) configure, else the family's hardest with at most 10 objects. The 3D ones have a limited
-# twin too (the 2D worlds have no sensor that is not a map); `limited_statement` is its goal sentence where the full
-# one names the goal by world coordinates or state names, and must name the same goal. Where upstream sets no
-# episode length (2D, PyBullet), max_steps is its baselines' evaluation horizon for the variant, else their default
-# 3000. Left out: LimbRepositioning3D, whose IKFast module cannot be built in the image (no distutils).
+# From the screening (09-29, GPT-6 Luna once per mode on every KinDER family): the ones it failed in limited mode. The
+# variant is the hardest that upstream's baselines (kinder-baselines) configure. Where upstream sets no episode length
+# (PyBullet), max_steps is its baselines' evaluation horizon for the variant, else their default 3000.
+# `limited_statement` is the limited twin's goal sentence where the full one names the goal by world coordinates or
+# state names, and must name the same goal.
 
 [[task]]
 family = "constrained-cupboard"
@@ -95,17 +98,6 @@ their distance from where the centre of the robot's base starts, nearest first, 
 4th and 1st cupboard of the row, counted from the robot's left as it faces the row at the start. The task succeeds the
 moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and
 within the cupboard's 10 cm width and 30 cm depth."""
-
-[[task]]
-family = "rearrange"
-env_id = "kinder/Rearrange3D-o2-put_the_boxed_drink_on_the_left_and_the_can_on_the_right_side_of_the_bowl-v0"
-expert_hours = 3.0
-task_statement = """put the boxed drink (the small grey carton with an orange top) and the red can on either side of the
-red bowl on the kitchen island, along the island's length: the carton on the bowl's side toward the robot's right as it
-faces the island at the start (the side the can now stands on), the can on the side toward its left. The task succeeds
-the moment the carton's centre is 4 to 13 cm from the bowl's centre toward that right side and the can's centre 4 to
-13 cm toward the left side, each within 6 cm of the bowl's centre across the island and between 1 cm below and 5 cm
-above it, all measured along the bowl's own axes, which start aligned with the island."""
 
 [[task]]
 family = "sweep-simple"
@@ -125,44 +117,6 @@ and the yellow one into the yellow bin. The task succeeds the moment every cube'
 colour, at least 1 cm from each of its inner walls, at least 1 cm below its rim and at least 0.5 cm above its floor."""
 
 [[task]]
-family = "pick-place"
-env_id = "kinder/PickPlace3D-o1-v0"
-expert_hours = 2.0
-task_statement = """get the small dark-red cube on the floor in front of the robot into a square on the floor that is not
-marked: x from 0.95 to 1.25 m and y from 0.35 to 0.65 m in KinDER's world frame (the frame of the state's positions;
-about 1.3 m ahead of the robot's start and 0.4 m to its left). The task succeeds the moment the cube's centre is inside
-that square and at most 10 cm above the floor."""
-limited_statement = """get the small dark-red cube on the floor in front of the robot into a square on the floor that is not
-marked: 30 cm on a side, its centre 1.286 m ahead of where the robot starts and 0.408 m to its left, its sides turned
-2.3° clockwise from the robot's start heading (in the odometry frame). The task succeeds the moment the cube's centre
-is inside that square and at most 10 cm above the floor."""
-
-[[task]]
-family = "franka-pick-place"
-env_id = "kinder/FrankaPickPlace3D-o1-v0"
-expert_hours = 2.0
-task_statement = """get the small dark-red cube on the desk into a rectangle on the desk top that is not marked: x from
-0.45 to 0.65 m and y from 0.12 to 0.27 m in KinDER's world frame (the frame of the state's positions; the arm stands at
-x 0.15, y 0.02 facing +x, so the rectangle lies about 20 cm to the arm's left of the cube and 15 cm nearer the arm). The
-task succeeds the moment the cube's centre is inside that rectangle and at most 20 cm above the desk top (z from 0.754
-to 0.954 m)."""
-limited_statement = """get the small dark-red cube on the desk into a rectangle on the desk top that is not marked: x from
-0.299 to 0.498 m and y from 0.103 to 0.252 m in the arm's base frame (`spec()["base_frame"]`). The task succeeds the moment
-the cube's centre is inside that rectangle and at most 20 cm above the desk top."""
-
-[[task]]
-family = "base-motion-3d"
-env_id = "kinder/BaseMotion3D-v0"
-max_steps = 100
-expert_hours = 1.0
-task_statement = """drive the robot's base to the small red ball (`target`) that hovers 0.2 m above the floor.
-The task succeeds the moment the base's position (`robot`'s `pos_base_x`, `pos_base_y`) is less than 5 cm from the
-ball's centre, measured horizontally; the base's heading is not checked."""
-limited_statement = """drive the robot's base to the small red ball that hovers 0.2 m above the floor. The task
-succeeds the moment the centre of the base is less than 5 cm from the ball's centre, measured horizontally; the base's
-heading is not checked."""
-
-[[task]]
 family = "obstruction-3d"
 env_id = "kinder/Obstruction3D-o4-v0"
 max_steps = 3000
@@ -176,31 +130,6 @@ limited_statement = """put the purple block on the thin purple pad on the wooden
 sit on the pad and the fourth is elsewhere on the table. The task succeeds the moment the robot holds nothing, the
 block's underside is within 5 mm of the pad's top surface, and all four of its bottom corners lie within the pad's
 outline enlarged by 5 mm on every side."""
-
-[[task]]
-family = "table-3d"
-env_id = "kinder/Table3D-o3-v0"
-max_steps = 3000
-expert_hours = 2.0
-task_statement = """pick up one of the three small purple cubes (`cube0`, `cube1`, `cube2`) from the wooden table (`table`).
-The task succeeds the moment the robot is holding a cube whose centre is more than 0.1 m above the table top, that is,
-higher than 0.5 m above the floor."""
-limited_statement = """pick up one of the three small purple cubes from the wooden table. The task succeeds the moment the robot
-is holding a cube whose centre is more than 0.1 m above the table top, that is, higher than 0.5 m above the floor."""
-
-[[task]]
-family = "transport-3d"
-env_id = "kinder/Transport3D-o2-v0"
-max_steps = 1200
-expert_hours = 4.0
-task_statement = """put the yellow cube (`cube0`) and the dark grey metal cube (`cube1`), both on the floor, and the
-open-topped box with a blue flower print (`box0`) onto the wooden table (`table`, top 0.4 m above the floor). The task
-succeeds the moment the gripper is fully open (`finger_state` at most 0.01) and the centres of both cubes and of the
-box are each at least 0.3 m above the floor and at least 0.2 m from the gripper's end-effector point."""
-limited_statement = """put the yellow cube and the dark grey metal cube, both on the floor, and the open-topped box with a blue
-flower print onto the wooden table (its top 0.4 m above the floor). The task succeeds the moment the gripper is fully
-open (`gripper_pos` at most 0.0125) and the centres of both cubes and of the box are each at least 0.3 m above the floor
-and at least 0.2 m from the arm's end-effector point (`spec()["arm"]["end_effector"]`)."""
 
 [[task]]
 family = "packing-3d"
@@ -217,151 +146,3 @@ peg on top, into the purple tray in the middle of the table. The task succeeds t
 every part rests in the tray: its flat body (peg excluded) lies within the tray's inner outline, its underside is
 within 5 mm of the tray floor's height and its top is no more than 5 mm above the tray's rim, it is within 5 mm of the
 tray without penetrating it, and no two parts (pegs included) overlap."""
-
-[[task]]
-family = "kinematic-shelf-3d"
-env_id = "kinder/KinematicShelf3D-o3-v0"
-max_steps = 3000
-expert_hours = 3.0
-task_statement = """put the three small book-textured blocks lying on the floor, red (`cube0`), blue (`cube1`) and cream
-(`cube2`), on the dark-wood bookshelf standing against the wall next to the white door (`shelf`). The task succeeds the
-moment the gripper is fully open (`finger_state` at most 0.01) and every block's centre is at least 0.224 m above the
-floor."""
-limited_statement = """put the three small book-textured blocks lying on the floor, red, blue and cream, on the
-dark-wood bookshelf standing against the wall next to the white door. The task succeeds the moment the gripper is fully
-open (`gripper_pos` at most 0.0125) and every block's centre is at least 0.224 m above the floor."""
-
-[[task]]
-family = "cylinder-shelf-3d"
-env_id = "kinder/KinematicCylinderShelf3D-o3-v0"
-max_steps = 3000
-expert_hours = 3.5
-task_statement = """put the three upright cylinders standing on the floor, red (`cylinder0`, 20 cm tall), blue (`cylinder1`,
-15 cm) and green (`cylinder2`, 17.5 cm), all 3 cm in radius, on the dark-wood bookshelf against the wall next to the
-white door (`shelf`). The task succeeds the moment the gripper is fully open (`finger_state` at most 0.01) and every
-cylinder's centre is within the shelf's footprint (x 1.699 to 2.301 m, y 2.273 to 2.527 m) and within 5 cm of the
-height it has standing upright on one of the shelf's four boards (board tops at 0.026, 0.293, 0.560 and 0.826 m)."""
-limited_statement = """put the three upright cylinders standing on the floor, red (20 cm tall), blue (15 cm) and green
-(17.5 cm), all 3 cm in radius, on the dark-wood bookshelf against the wall next to the white door. The task succeeds
-the moment the gripper is fully open (`gripper_pos` at most 0.0125) and every cylinder's centre is within the shelf's
-outline seen from above (0.60 m wide between its side supports, 0.25 m deep) and within 5 cm of the height it has standing upright on
-one of the shelf's four boards (board tops 0.026, 0.293, 0.560 and 0.826 m above the floor)."""
-
-[[task]]
-family = "prpl-lab-3d"
-env_id = "kinder/PrplLab3D-o2-v0"
-max_steps = 700
-expert_hours = 2.5
-task_statement = """put the two small orange blocks lying on the floor (`cube0`, `cube1`) on the kitchen counter in front of
-the robot (`prpl_lab`), whose top is 0.828 m above the floor. The task succeeds the moment neither block is held and
-each block's centre is at least 0.778 m above the floor (5 cm below the countertop's top surface)."""
-limited_statement = """put the two small orange blocks lying on the floor on the kitchen counter in front of the robot, whose top
-is 0.828 m above the floor. The task succeeds the moment neither block is held and each block's centre is at least
-0.778 m above the floor (5 cm below the countertop's top surface)."""
-
-[[task]]
-family = "dyn-obstruction-2d"
-env_id = "kinder/DynObstruction2D-o3-v0"
-max_steps = 3000
-expert_hours = 3.0
-task_statement = """put the tall purple block (`target_block`) standing on the grey table onto the purple patch set into the
-table left of centre (`target_surface`); three red blocks (`obstruction0`–`obstruction2`) stand on the table,
-`obstruction0` partly on the patch. The task succeeds on the first step that starts from a state in which the purple
-block's two lowest corners both lie between the patch's left and right edges and no higher than 0.025 above its top face
-(y ≤ 0.125; the patch and table top are at y = 0.1), whether or not the gripper still holds the block."""
-
-[[task]]
-family = "dyn-push-pull-hook-2d"
-env_id = "kinder/DynPushPullHook2D-o5-v0"
-max_steps = 500
-expert_hours = 4.0
-task_statement = """get the orange square block (`target_block`), which sits among five brown blocks
-(`obstruction0`–`obstruction4`) in the brown upper half of the room, to the thin black wall (`middle_wall`) that runs
-across the whole room between that half and the orange lower half, where the robot starts; a brown L-shaped hook
-(`hook`) lies in the lower half. The task succeeds on the first step that starts from a state in which any part of the
-orange block overlaps the black wall (the strip 1.725 ≤ y ≤ 1.775)."""
-
-[[task]]
-family = "dyn-push-t-2d"
-env_id = "kinder/DynPushT2D-t1-v0"
-max_steps = 3000
-robot = "a simulated 2D dot robot (KinDER / Pymunk physics) via Python: a small kinematic circle that pushes"
-expert_hours = 3.0
-task_statement = """push the grey T-shaped block (`tblock`) with the blue dot robot (`robot`) onto the light-green T drawn on
-the floor (`goal_tblock`), which nothing collides with. The task succeeds on the first step that starts from a state in
-which the grey T's x and y (the middle of the top edge of its crossbar) are each within 0.03 of the green T's and its
-angle is within 8° of the green T's −179.0°, the angles being compared as stored in [−180°, 180°] without wrap-around,
-so the grey T's must lie between −180° and −171.0°."""
-
-[[task]]
-family = "dyn-scoop-pour-2d"
-env_id = "kinder/DynScoopPour2D-o10-v0"
-max_steps = 3000
-expert_hours = 4.0
-task_statement = """move the five small orange circles (`small_circle0`–`small_circle4`) and five small purple squares
-(`small_square0`–`small_square4`) heaped on the floor left of the black wall to its right; the wall (`middle_wall`)
-rises from the floor to half the room's height, the small objects cannot be gripped, and a brown L-shaped hook (`hook`)
-lies on the floor on the right. The task succeeds on the first step that starts from a state in which at least 5 of the
-10 objects each have their centre right of the wall's centre line (x > 1.75) and below half the wall's height
-(y < 0.75) and are nearly at rest (speed below 0.01)."""
-
-[[task]]
-family = "motion-2d"
-env_id = "kinder/Motion2D-p5-v0"
-max_steps = 3000
-expert_hours = 1.5
-task_statement = """drive the robot into the purple square on the right (`target_region`); between them five thin black walls
-(`obstacle0`–`obstacle9`) cross the room from top to bottom, each with one gap. The task succeeds the moment the centre
-of the robot's round base (`robot` x, y) is inside the square (2.201 ≤ x ≤ 2.451, 1.845 ≤ y ≤ 2.095)."""
-
-[[task]]
-family = "stick-button-2d"
-env_id = "kinder/StickButton2D-b10-v0"
-max_steps = 3000
-expert_hours = 2.5
-task_statement = """press all ten red buttons (`button0`–`button9`): six are on the white floor and four on the black table
-that fills the upper half of the scene; a brown stick (`stick`) stands at the far left, reaching from the floor up
-across the table's edge. A button turns green, and stays green, the first time the stick or any part of the robot
-overlaps it (base, arm, gripper, and the suction area in front of the gripper while the vacuum is on); the task
-succeeds the moment all ten are green."""
-
-[[task]]
-family = "obstruction-2d"
-env_id = "kinder/Obstruction2D-o4-v0"
-max_steps = 3000
-expert_hours = 2.0
-task_statement = """put the purple block (`target_block`) resting on the grey table onto the purple patch set into the table
-left of centre (`target_surface`); four red blocks (`obstruction0`–`obstruction3`) stand on the table, `obstruction0`
-and `obstruction3` on the patch. The task succeeds the moment the purple block's two lowest corners both lie between
-the patch's left and right edges and no higher than 0.025 above its top face (y ≤ 0.125; the patch and table top are
-at y = 0.1), whether or not the vacuum still holds the block."""
-
-[[task]]
-family = "cluttered-retrieval-2d"
-env_id = "kinder/ClutteredRetrieval2D-o10-v0"
-max_steps = 3000
-expert_hours = 3.0
-task_statement = """move the purple square block (`target_block`), which sits among ten red blocks
-(`obstruction0`–`obstruction9`) in the upper-right corner, into the brown square near the bottom (`target_region`). The
-task succeeds the moment all four corners of the purple block (0.14 on a side) are inside the brown square (0.21 on a
-side, tilted 7.3° clockwise)."""
-
-[[task]]
-family = "cluttered-storage-2d"
-env_id = "kinder/ClutteredStorage2D-b7-v0"
-max_steps = 3000
-expert_hours = 3.5
-task_statement = """put all seven thin blue blocks (`block0`–`block6`) into the shelf, the translucent purple opening at the
-left end of the black band along the top of the room (`shelf`); three already lie in it and four lie on the open floor.
-The task succeeds the moment all four corners of every block (each 0.28 by 0.04) are inside the purple opening (0.9525
-wide, 0.375 deep)."""
-
-[[task]]
-family = "push-pull-hook-2d"
-env_id = "kinder/PushPullHook2D-v0"
-max_steps = 3000
-expert_hours = 3.0
-task_statement = """move the blue button (`movable_button`) on the black table that fills the upper half of the scene onto
-the fixed red button just above and left of it (`target_button`); a brown L-shaped hook (`hook`) lies across the table's
-lower edge at the left, and the robot starts on the white floor. The task succeeds the moment the two buttons' centres
-are less than 0.1 apart (each has radius 0.05), when both turn green."""

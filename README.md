@@ -63,7 +63,7 @@ tasks/                          # Harbor tasks, one dir each, + dataset.toml (al
 │   └── solution/     solve.sh (oracle)
 ├── humanoidbench-*-i00/        # 23 scored tasks + 1 fixture, all generated -- do not edit by hand
 ├── humanoidbench-*-i00-limited/ # the limited-mode twin of each (docs/LIMITED_MODE_1_1.md), also generated
-└── kinder-*-i00[-limited]/     # 6 KinDER tasks in both modes + 24 screening tasks (docs/benchmarks/kinder.md), generated
+└── kinder-*-i00[-limited]/     # 10 scored KinDER tasks + 1 fixture, both modes (docs/benchmarks/kinder.md), generated
 scripts/<sim>/                  # the generator: subset.toml (which tasks and why) + templates/ + shared/;
                                 #   replay.py re-plays a limited run's episodes for the results pages
 scripts/limited/                # the simulator-agnostic half of limited mode: sim service, verifier, client code

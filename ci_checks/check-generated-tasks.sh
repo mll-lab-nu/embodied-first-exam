@@ -15,6 +15,11 @@ for gen in "$root"/scripts/*/gen_tasks.py; do
       -e "s|^Only in $tmp/(.*): (.*)$|FAIL \1/\2 is missing|")
     [ -n "$stale" ] && { echo "$stale"
       echo "FAIL tasks/ is not what scripts/$sim/gen_tasks.py renders: run its \`render\`, then \`harbor add --scan .\` in tasks/"; rc=1; }
+    rendered=$(sed -n 's|^rendered tasks/||p' <<<"$out")   # a family taken out of subset.toml leaves its dirs behind
+    for d in "$root"/tasks/"$sim"-*/; do
+      [ -d "$d" ] || continue; d=$(basename "$d")
+      grep -qxF "$d" <<<"$rendered" || { echo "FAIL tasks/$d: scripts/$sim/gen_tasks.py no longer renders it"; rc=1; }
+    done
   fi
   rm -rf "$tmp"
 done

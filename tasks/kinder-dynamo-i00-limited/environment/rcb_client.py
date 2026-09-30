@@ -7,16 +7,17 @@
 Calls. spec() was fetched when connecting; every other call is one HTTP request.
     r.spec()                          static facts: action types; "delta": dim, layout (what each value moves), low
                                       and high (None: unbounded), units; control_hz; max_episode_steps; "proprio"
-                                      (each field's units); "odometry" (its frame; a mobile base) or "base_frame"
-                                      (an arm fixed in place); "arm" (each joint's axis, position and limits, and
-                                      what else the robot's documentation gives); "cameras" {name: {"hw",
+                                      (each field's units); "odometry" (its frame); "arm" (each joint's axis,
+                                      position and limits; "end_effector", the point the gripper grasps at; what
+                                      else the robot's documentation gives); "cameras" {name: {"hw",
                                       "fovy_deg", "pose", "depth", ...}}; "depth" (which cameras, units, range; None
                                       if absent); "budget" {"reset": resets allowed}
     r.observe(images=True)            the current observation; simulated time does not move
     r.step(type, a, images=True)      a is one action, shape (D,), or a batch, shape (K, D): K control steps
                                       in order, in one request, with the same physics as K single steps. obs
                                       comes after the last step run; obs["executed"] says how many ran (fewer
-                                      than K if the episode ended). type is one of spec()["action_types"].
+                                      than K if the episode ended or a step was blocked). type is one of
+                                      spec()["action_types"].
     r.reset(images=True)              back to the same starting state, a new episode; spec()["budget"]["reset"]
                                       times in all. Only the last episode is graded.
     r.status()                        step, steps, resets_left, done, reason, over, elapsed_s (seconds since your
@@ -33,6 +34,8 @@ obs, a dict:
     obs["proprio"]                    the robot's own readings, the fields spec()["proprio"] lists with their
                                       units and frame (TidyBot++: "base_pose", "base_vel", "arm_pos", "arm_vel",
                                       "gripper_pos", "gripper_vel")
+    obs["blocked"]                    a kinematic robot only: the last step run was not carried out (it would
+                                      have collided), so the robot stayed where it was and a batch stopped there
     obs["step"]                       control steps in the current episode
     obs["done"], obs["reason"]        episode over? why: "success" | "failed" (ended without success) |
                                       "timeout" | "error"
@@ -74,8 +77,8 @@ class Robot:
                     r.raise_for_status(); self.base = b; self._spec = r.json()
                     assert str(self._spec.get("protocol")).startswith(PROTOCOL), self._spec.get("protocol")
                     return
-                except requests.exceptions.ConnectionError as e:
-                    last = e
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                    last = e   # not up yet, or busy with a long request
             time.sleep(2)
         raise RuntimeError(f"sim service unavailable: {last}")
 

@@ -54,9 +54,9 @@ def run_facts(r: dict) -> str:
 
 
 def col_facts(tasks: list, col: tuple) -> str:
-    """A column over every scored task it ran (each task's main run; not the fixture, not a screening task): passes, the
-    median distance to the bar, time, cost, endings."""
-    runs = [t["main"][col] for t in tasks if col in t["main"] and not t.get("fixture") and not t.get("screening")]
+    """A column over every scored task it ran (each task's main run; not the fixture): passes, the median distance to
+    the bar, time, cost, endings."""
+    runs = [t["main"][col] for t in tasks if col in t["main"] and not t.get("fixture")]
     if not runs:
         return ""
     progs = [r["d"]["prog"] for r in runs if r["d"].get("prog") is not None]

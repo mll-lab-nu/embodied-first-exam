@@ -265,7 +265,7 @@ def episode_chart(s: dict, task: dict, page_dir: str) -> str:
     return f'<svg class="chart" viewBox="0 0 {W} {y - 4}">{"".join(svg)}</svg>'
 
 
-def line_chart(series: list, x_max: float, y_max: float, x_label: str, y_label: str, h: int = 250, caps: list = (),
+def line_chart(series: list, x_max: float, y_max: float, x_label: str, h: int = 250, caps: list = (),
                W: int = 560, R: int = 104) -> str:
     """Step lines: series = [(label, colour, [(x, y), ...], tip)]; caps = [(y, label)] drawn as dashed lines."""
     L, T, B = 40, 16, 30

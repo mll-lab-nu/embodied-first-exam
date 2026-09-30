@@ -42,9 +42,7 @@ import urllib.request
 import attempts
 import bench
 from bench import B
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(os.path.dirname(HERE))
+from common import HERE, REPO
 VERSION = 7   # of summary.json; build.py re-collects a trial whose summary is older
 # words that should not show up in what the agent wrote or ran: the network, and (Bench.leak_words) the benchmark's
 # own code and answer key

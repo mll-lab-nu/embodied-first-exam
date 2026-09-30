@@ -82,10 +82,6 @@ def fit(text: str, f, width: float) -> str:
     return text[:lo] + "…"
 
 
-def clip(d: ImageDraw.ImageDraw, text: str, f, width: float) -> str:
-    return fit(text, f, width)
-
-
 def ending(e: dict, s: dict) -> tuple[str, str]:
     """How an episode ended, and whether the robot was still up then (where the benchmark says, Bench.down): an
     episode can end without a fall (a tool dropped) and a fallen robot can run to the step limit."""
@@ -177,7 +173,7 @@ def panel(s: dict, e: dict, step: int, ending_now: bool, view: tuple | None, wor
     img = Image.new("RGB", (W - H, H), BG)
     d, y = ImageDraw.Draw(img), 18
     family = B.family(s["task_name"])
-    d.text((PAD, y), clip(d, f"{family} · limited · {s['model'].split('/')[-1]}", font(15), PW), font=font(15), fill=MUTED); y += 24
+    d.text((PAD, y), fit(f"{family} · limited · {s['model'].split('/')[-1]}", font(15), PW), font=font(15), fill=MUTED); y += 24
     d.text((PAD, y), f"ep{e['ep']}", font=font(36, True), fill=FG)
     d.text((PAD + d.textlength(f"ep{e['ep']} ", font=font(36, True)), y + 14), f"of {n}" + ("   ★ graded" if graded else ""),
            font=font(18), fill=GOLD if graded else MUTED); y += 50
@@ -187,7 +183,7 @@ def panel(s: dict, e: dict, step: int, ending_now: bool, view: tuple | None, wor
     y += 30
     if ending_now:
         label, color = ending(e, s)
-        label = clip(d, label, font(18, True), PW - 24)
+        label = fit(label, font(18, True), PW - 24)
         d.rounded_rectangle((PAD, y, PAD + d.textlength(label, font=font(18, True)) + 24, y + 30), 6, fill=color)
         d.text((PAD + 12, y + 5), label, font=font(18, True), fill="#ffffff")
     y += 42
@@ -196,8 +192,8 @@ def panel(s: dict, e: dict, step: int, ending_now: bool, view: tuple | None, wor
         a, mono = c["attempt"], font(14, mono=True)
         eps = f"ep{first}" + (f"–{e['ep']}" if first != e["ep"] else "")
         head = f"ROBOT COMMAND {a['n']} OF {total}  ·  {clock(c['t0'])}  ·  {eps}" + ("  ·  left running" if background else "")
-        d.text((PAD, y), clip(d, head, font(13, True), PW), font=font(13, True), fill=MUTED); y += 20
-        d.text((PAD, y), clip(d, a["runs"], mono, PW), font=mono, fill=FG); y += 22
+        d.text((PAD, y), fit(head, font(13, True), PW), font=font(13, True), fill=MUTED); y += 20
+        d.text((PAD, y), fit(a["runs"], mono, PW), font=mono, fill=FG); y += 22
         note = ("the first command that moved the robot" if prev is None else f"same as command {a['n'] - 1}: a re-run"
                 if a.get("same") else f"changed since command {a['n'] - 1}:" if a.get("changes") else "")
         if note:
@@ -206,9 +202,9 @@ def panel(s: dict, e: dict, step: int, ending_now: bool, view: tuple | None, wor
             color = GREEN if kind == "+" or text.startswith("+ ") else RED if kind == "-" or text.startswith("− ") else \
                 MUTED if kind == "…" else FG
             text = {"+": "+ ", "-": "− "}.get(kind, "") + text
-            d.text((PAD + 10, y), clip(d, text, mono, PW - 10), font=mono, fill=color); y += 19
+            d.text((PAD + 10, y), fit(text, mono, PW - 10), font=mono, fill=color); y += 19
         if gap:
-            d.text((PAD, y + 2), clip(d, gap, font(13), PW), font=font(13), fill=MUTED); y += 21
+            d.text((PAD, y + 2), fit(gap, font(13), PW), font=font(13), fill=MUTED); y += 21
     y = max(y + 12, 330)
     if words:
         t, text, kind = words

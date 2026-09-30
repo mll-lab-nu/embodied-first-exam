@@ -1,7 +1,7 @@
 # {{task_dir}}
 
 KinDER `{{env_id}}` ({{category}}), seed {{seed}}, full mode: the agent has the simulator and its state and
-hands in one trajectory, replayed open-loop in a fresh process.{{twin_note}}
+hands in one trajectory, replayed open-loop in a fresh process. Its limited-mode twin is `{{twin}}`.
 
 Task: {{task_statement}}
 

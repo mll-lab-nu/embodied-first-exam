@@ -45,7 +45,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -58,114 +58,6 @@
   "nop_success": false,
   "obs_dim": 86,
   "scene_sha": "5c735e4b67ebf792"
- },
- "base-motion-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   1.0
-  ],
-  "action_low": [
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.base_motion3d:BaseMotion3DEnv",
-  "episode_seconds": 0.1,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 0.9,
-    "images": 373.2,
-    "single": 3.6
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 22,
-  "scene_sha": "30e074641aaee4f6"
- },
- "cluttered-retrieval-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.clutteredretrieval2d:ClutteredRetrieval2DEnv",
-  "episode_seconds": 6.4,
-  "nop_success": false,
-  "obs_dim": 129,
-  "scene_sha": "b65c4a9e8574cb03"
- },
- "cluttered-storage-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.clutteredstorage2d:ClutteredStorage2DEnv",
-  "episode_seconds": 6.2,
-  "nop_success": false,
-  "obs_dim": 98,
-  "scene_sha": "c20aa4c69fd7e92f"
  },
  "constrained-cupboard": {
   "action_dim": 11,
@@ -227,156 +119,6 @@
   "obs_dim": 195,
   "scene_sha": "e6d140c0e59ca1af"
  },
- "cylinder-shelf-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   1.0
-  ],
-  "action_low": [
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.cylinder_shelf3d:CylinderShelf3DEnv",
-  "episode_seconds": 2.3,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 0.9,
-    "images": 328.5,
-    "single": 1.7
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 62,
-  "scene_sha": "e4e3d687ba4cd990"
- },
- "dyn-obstruction-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | dgripper | Change in gripper gap (positive is open) | -0.020 | 0.020 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   0.02
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   -0.02
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic2d.dyn_obstruction2d:DynObstruction2DEnv",
-  "episode_seconds": 9.6,
-  "nop_success": false,
-  "obs_dim": 98,
-  "scene_sha": "c86820da904807dd"
- },
- "dyn-push-pull-hook-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.065 | 0.065 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | dgripper | Change in gripper gap (positive is open) | -0.020 | 0.020 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.0654,
-   0.1,
-   0.02
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.0654,
-   -0.1,
-   -0.02
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic2d.dyn_pushpullhook2d:DynPushPullHook2DEnv",
-  "episode_seconds": 1.3,
-  "nop_success": false,
-  "obs_dim": 130,
-  "scene_sha": "908b9980e706d14c"
- },
- "dyn-push-t-2d": {
-  "action_dim": 2,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Delta x position for robot (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Delta y position for robot (positive is up) | -0.050 | 0.050 |\n",
-  "action_high": [
-   0.05,
-   0.05
-  ],
-  "action_low": [
-   -0.05,
-   -0.05
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic2d.dyn_pusht2d:DynPushT2DEnv",
-  "episode_seconds": 0.9,
-  "nop_success": false,
-  "obs_dim": 45,
-  "scene_sha": "17a6b362620b7a53"
- },
- "dyn-scoop-pour-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.030 | 0.030 |\n| 1 | dy | Change in robot y position (positive is up) | -0.030 | 0.030 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.098 | 0.098 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.080 | 0.080 |\n| 4 | dgripper | Change in gripper gap (positive is open) | -0.015 | 0.015 |\n",
-  "action_high": [
-   0.03,
-   0.03,
-   0.0981,
-   0.08,
-   0.015
-  ],
-  "action_low": [
-   -0.03,
-   -0.03,
-   -0.0981,
-   -0.08,
-   -0.015
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic2d.dyn_scooppour2d:DynScoopPour2DEnv",
-  "episode_seconds": 8.8,
-  "nop_success": false,
-  "obs_dim": 180,
-  "scene_sha": "a0f9b45c2d9fecc4"
- },
  "dynamo": {
   "action_dim": 11,
   "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
@@ -423,7 +165,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -436,167 +178,6 @@
   "nop_success": false,
   "obs_dim": 70,
   "scene_sha": "56eb0ac29841eb83"
- },
- "franka-pick-place": {
-  "action_dim": 8,
-  "action_doc": "Actions: arm joints (7), gripper pos (1)",
-  "action_high": [
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic3d.envs:Franka3DEnv",
-  "episode_seconds": 7.9,
-  "limited": {
-   "cameras": [
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 6.1,
-    "images": 25.3,
-    "single": 7.5
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 42,
-  "scene_sha": "77afd37232eb3f37"
- },
- "kinematic-shelf-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   1.0
-  ],
-  "action_low": [
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.shelf3d:Shelf3DEnv",
-  "episode_seconds": 2.3,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 0.9,
-    "images": 332.1,
-    "single": 1.7
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 62,
-  "scene_sha": "236beed58060b2a9"
- },
- "motion-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.motion2d:Motion2DEnv",
-  "episode_seconds": 7.8,
-  "nop_success": false,
-  "obs_dim": 119,
-  "scene_sha": "b97f4ad7cae56ab3"
- },
- "obstruction-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.obstruction2d:Obstruction2DEnv",
-  "episode_seconds": 7.8,
-  "nop_success": false,
-  "obs_dim": 69,
-  "scene_sha": "b19f1004663481b4"
  },
  "obstruction-3d": {
   "action_dim": 11,
@@ -718,210 +299,6 @@
   "obs_dim": 67,
   "scene_sha": "cb3b6618c0d8b1df"
  },
- "pick-place": {
-  "action_dim": 11,
-  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
-  "action_high": [
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
-  "episode_seconds": 5.6,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 4.8,
-    "images": 48.2,
-    "single": 5.8
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 38,
-  "scene_sha": "1e9c171487e2cf04"
- },
- "prpl-lab-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   1.0
-  ],
-  "action_low": [
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.prpl3d:PrplLab3DEnv",
-  "episode_seconds": 1.0,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 1.3,
-    "images": 419.1,
-    "single": 2.2
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 50,
-  "scene_sha": "99d245ef94ef9078"
- },
- "push-pull-hook-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.pushpullhook2d:PushPullHook2DEnv",
-  "episode_seconds": 4.7,
-  "nop_success": false,
-  "obs_dim": 38,
-  "scene_sha": "8c9375ad3ad6b599"
- },
- "rearrange": {
-  "action_dim": 11,
-  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
-  "action_high": [
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
-  "episode_seconds": 22.3,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_long_base_move": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 20.2,
-    "images": 41.0,
-    "single": 21.8
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 115,
-  "scene_sha": "77567aaa8d871f77"
- },
  "scoop-pour": {
   "action_dim": 11,
   "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
@@ -968,7 +345,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1028,7 +405,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1088,7 +465,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1101,30 +478,6 @@
   "nop_success": false,
   "obs_dim": 157,
   "scene_sha": "7a08c148b6764152"
- },
- "stick-button-2d": {
-  "action_dim": 5,
-  "action_doc": "The entries of an array in this Box space correspond to the following action features:\n| **Index** | **Feature** | **Description** | **Min** | **Max** |\n| --- | --- | --- | --- | --- |\n| 0 | dx | Change in robot x position (positive is right) | -0.050 | 0.050 |\n| 1 | dy | Change in robot y position (positive is up) | -0.050 | 0.050 |\n| 2 | dtheta | Change in robot angle in radians (positive is ccw) | -0.196 | 0.196 |\n| 3 | darm | Change in robot arm length (positive is out) | -0.100 | 0.100 |\n| 4 | vac | Directly sets the vacuum (0.0 is off, 1.0 is on) | 0.000 | 1.000 |\n",
-  "action_high": [
-   0.05,
-   0.05,
-   0.1963,
-   0.1,
-   1.0
-  ],
-  "action_low": [
-   -0.05,
-   -0.05,
-   -0.1963,
-   -0.1,
-   0.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic2d.stickbutton2d:StickButton2DEnv",
-  "episode_seconds": 15.2,
-  "nop_success": false,
-  "obs_dim": 109,
-  "scene_sha": "cfcb76217fb3fc9e"
  },
  "sweep-into-drawer": {
   "action_dim": 11,
@@ -1172,7 +525,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1232,7 +585,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1245,66 +598,6 @@
   "nop_success": false,
   "obs_dim": 243,
   "scene_sha": "17b695b0565fb8df"
- },
- "table-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   0.4,
-   1.0
-  ],
-  "action_low": [
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -0.4,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.table3d:Table3DEnv",
-  "episode_seconds": 2.3,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 0.8,
-    "images": 446.8,
-    "single": 1.7
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 67,
-  "scene_sha": "6b747c7d57055c2d"
  },
  "tossing": {
   "action_dim": 18,
@@ -1366,7 +659,7 @@
     640
    ],
    "images_rendered": true,
-   "refuses_long_base_move": true,
+   "refuses_out_of_range_action": true,
    "repeat_images_identical": true,
    "reset_images_identical": true,
    "reset_proprio_identical": true,
@@ -1379,65 +672,5 @@
   "nop_success": false,
   "obs_dim": 61,
   "scene_sha": "7120e0dcae528199"
- },
- "transport-3d": {
-  "action_dim": 11,
-  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
-  "action_high": [
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   0.2,
-   1.0
-  ],
-  "action_low": [
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -0.2,
-   -1.0
-  ],
-  "deterministic": true,
-  "entry_point": "kinder.envs.kinematic3d.transport3d:Transport3DEnv",
-  "episode_seconds": 0.9,
-  "limited": {
-   "cameras": [
-    "robot_base",
-    "robot_wrist",
-    "room_camera"
-   ],
-   "depth_rendered": true,
-   "finalize_deterministic": true,
-   "finalize_video": true,
-   "image_hw": [
-    480,
-    640
-   ],
-   "images_rendered": true,
-   "refuses_out_of_range_action": true,
-   "repeat_images_identical": true,
-   "reset_images_identical": true,
-   "reset_proprio_identical": true,
-   "step_ms": {
-    "batch": 0.9,
-    "images": 381.1,
-    "single": 1.8
-   }
-  },
-  "nop_success": false,
-  "obs_dim": 67,
-  "scene_sha": "1b159a7e09b462f7"
  }
 }

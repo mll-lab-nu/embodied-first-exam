@@ -109,7 +109,7 @@ check("reset", ok_start and not any(drift.values()) and sim.state_sha() == one_b
 svc.do_reset({"images": False})
 bar, sim.s.success_bar = sim.s.success_bar, (facts["nop_return"] / 2 if facts["nop_return"] > 0 else -1e9)
 code, o = svc.do_step({"type": "qpos", "actions": np.zeros((facts["max_steps"], nu)).tolist(), "images": False})
-svc.between_requests()                          # what the HTTP loop does: finalize on the main thread
+svc.on_sigusr1(); svc.between_requests()        # the collect hook's signal, then the HTTP loop: finalize
 fin = json.load(open(f"{env('RCB_DATA')}/final.json"))
 vid = False
 if fin.get("video"):

@@ -2,16 +2,19 @@
 
 Started as a copy of robotwin_2_0_stack_blocks_two-limited/environment/sim/server.py (rcb-limited/1.0, on
 dev/kangrui) and split along one line: everything simulator-specific comes in through an adapter object
-(the `Sim` contract below), so this file imports no simulator and can move to a shared place unchanged.
+(the `Sim` contract below), so this file imports no simulator and every simulator's sidecar shares it.
 
 What 1.1 adds to 1.0 -- each optional, a 1.0 client never notices (docs/LIMITED_MODE_1_1.md):
   batch step    POST /step {"type", "actions": [[...], ...]}: K actions, in order, in one request
   images        "images": true | false | [camera, ...] on /step and /reset, ?images=... on /observe
   reset budget  POST /reset, allowed `reset_budget` times (default 0: one episode, as on a real robot)
+  blocked       a batch stops at a step the robot could not carry out (the adapter's info["blocked"], in the answer)
 
 Evidence, where the agent cannot reach it: /data/episode.jsonl (one line per event; every action exact, so any
 episode replays from it), /data/final.json (kept current; "finalized": true once the collect hook's SIGUSR1 has been
-handled), /data/trajectory.npz and /data/replay.mp4 (the graded episode, replayed from the frozen instance).
+handled), /data/trajectory.npz and /data/replay.mp4 (the graded episode, replayed from the frozen instance). The
+replay and the video wait for SIGUSR1, when the agent is gone: made earlier, they would hold the one thread for
+minutes while the agent is still asking.
 """
 from __future__ import annotations
 
@@ -36,7 +39,8 @@ class Sim:
     def spec(self) -> dict: ...                                            # static facts for /spec (action types, layouts, limits, cameras)
     def observe(self, cameras: list[str]) -> dict: ...                     # JSON-ready observation, images for exactly `cameras`
     def validate(self, type: str, action: np.ndarray) -> str | None: ...   # why the action is illegal, or None
-    def apply(self, type: str, action: np.ndarray) -> tuple[bool, bool, dict]: ...  # one action -> (done, success, info)
+    def apply(self, type: str, action: np.ndarray) -> tuple[bool, bool, dict]: ...  # one action -> (done, success, info);
+                                                                           # info["blocked"]: the robot could not carry it out
     def reset(self) -> None: ...                                           # back to the frozen instance; the take restarts
     def actions(self) -> np.ndarray: ...                                   # (T, D) applied since the last reset: the deliverable
     def state_sha(self) -> str: ...
@@ -82,10 +86,12 @@ class Service:
             f.write(json.dumps({"ts": time.time(), "ev": ev, **kw}) + "\n")
 
     def write_final(self) -> None:
-        with open(os.path.join(DATA, "final.json"), "w") as f:
+        path = os.path.join(DATA, "final.json")
+        with open(path + ".tmp", "w") as f:   # then renamed: the collect hook never reads half a file
             json.dump({"success": self.success, "reason": self.reason, "done": self.done, "over": self.over,
                        "steps": self.steps, "resets": self.resets, "elapsed_s": round(self.clock(), 1),
                        "finalized": False, **self.result}, f)
+        os.replace(path + ".tmp", path)
 
     # ------------------------------------------------------------------ endpoints
     def cameras(self, want) -> list[str]:
@@ -117,8 +123,9 @@ class Service:
 
     def do_step(self, body: dict) -> tuple[int, dict]:
         """One action ("action": [D numbers]) or a batch ("actions": [[D numbers], ...]), run in order. A batch
-        is validated whole before any of it runs, and stops early when the episode ends. The observation is
-        taken after the last action run; `executed` says how many that was."""
+        is validated whole before any of it runs, and stops early when the episode ends or an action is blocked
+        (the robot could not carry it out: a real controller stops its queue there too). The observation is taken
+        after the last action run; `executed` says how many that was."""
         typ, cams = body.get("type"), self.cameras(body.get("images"))
         try:
             acts = np.asarray(body["actions"] if "actions" in body else [body.get("action")], dtype=np.float64)
@@ -147,6 +154,8 @@ class Service:
             self.log("step", step=self.step, type=typ, action=a.tolist(), success=success, **info)
             if success or done:
                 self.end_episode("success" if success else "failed")
+                break
+            if info.get("blocked"):
                 break
         if cams:   # the images this answer carries (an observe logs its own)
             self.log("images", step=self.step, images=cams)
@@ -178,7 +187,7 @@ class Service:
             self.finish()
 
     def finish(self) -> None:
-        """Nothing more can be done; the evidence follows as soon as the current request is answered."""
+        """Nothing more can be done; the evidence follows when the agent is gone (SIGUSR1)."""
         if not self.over:
             self.over = True; self.write_final()
 
@@ -210,18 +219,20 @@ class Service:
 
     def between_requests(self) -> None:
         """Called by the HTTP server's loop on the main thread, after every request and every 0.5 s."""
-        if self.stopping and not self.over:
-            if not self.done:
-                self.end_episode("timeout")   # a running episode ends here ...
-            self.finish()                     # ... and so does a failed one that still had resets left
-        if self.over and not self.result:
-            self.finalize()
+        if not self.stopping or self.result:
+            return
+        if not self.done:
+            self.end_episode("timeout")       # a running episode ends here ...
+        self.finish()                         # ... and so does a failed one that still had resets left
+        self.finalize()
 
     # ------------------------------------------------------------------ HTTP
     def serve(self, port: int = 8000) -> None:
         svc = self
 
         class Handler(BaseHTTPRequestHandler):
+            timeout = 120   # seconds a client may stall mid-request before it is dropped: one thread serves them all
+
             def log_message(self, *a):
                 pass
 

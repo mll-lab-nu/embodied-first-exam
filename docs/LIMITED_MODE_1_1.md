@@ -9,7 +9,7 @@ per simulator, `scripts/<sim>/shared/limited/server.py`.
 
 | feature | how | semantics |
 |---|---|---|
-| batch step | `r.step("qpos", A)`, A of shape (K, D) | runs in order; a bad row rejects the whole batch; stops at episode end (`obs["executed"]`); same physics as K single steps |
+| batch step | `r.step("qpos", A)`, A of shape (K, D) | runs in order; a bad row rejects the whole batch; stops at episode end, or at a step the robot could not carry out (`obs["executed"]`; a kinematic robot's refused move: `obs["blocked"]`); same physics as K single steps |
 | images on demand | `images=True \| False \| ["cam"]` on `step`/`reset`, `?images=` on `/observe` | proprioception is always included |
 | reset budget | `RCB_RESET_BUDGET` in `docker-compose.yaml`, default 0 | the agent reads it in `spec()["budget"]["reset"]` and `obs["resets_left"]`; each reset restarts the recording; the trial ends at the first success; the last episode is graded |
 
@@ -41,7 +41,7 @@ about 12 s later, so the repo's agent adapters send it themselves when the sessi
 1.0 renders the replay video on a background thread; GL contexts are per thread, so MuJoCo videos come out
 all black (SAPIEN/Vulkan is unaffected). Its SIGUSR1 handler also takes the lock, which can deadlock mid-request.
 1.1 keeps everything on the main thread: the signal sets a flag; wrap-up and finalize run in
-`HTTPServer.service_actions`.
+`HTTPServer.service_actions`, only after the signal, so the service keeps answering while the agent is still there.
 
 ## Across simulators
 - **One directory per (task, mode) is what Harbor needs**: the agent image, compose, verifier, `task.toml` and
@@ -50,6 +50,6 @@ all black (SAPIEN/Vulkan is unaffected). Its SIGUSR1 handler also takes the lock
 - **Shared**: `rcb_service.py`, `rcb_client.py`, `tests/`, the agent Dockerfile, the `task.toml` blocks.
   **Per simulator**: one adapter implementing the `Sim` contract in `rcb_service.py` (both `Session` classes
   already cover most of it). **Per task**: compose env and `instruction.md` (task facts only).
-- **Done for HumanoidBench and KinDER**: each `gen_tasks.py` renders the limited twins (KinDER: its 3D tasks, one adapter per robot) from its
+- **Done for HumanoidBench and KinDER**: each `gen_tasks.py` renders the limited twins (KinDER: one adapter per robot) from its
   `templates/limited/` and `shared/limited/` (the adapter, the client's docstring) plus `scripts/limited/`, which
   holds what every simulator shares: `rcb_service.py`, the verifier and the client's code.

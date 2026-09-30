@@ -11,7 +11,7 @@ instance    instance.json: which KinDER environment, the seed its procedural gen
 scene       MuJoCo tasks (KinDER's Dynamic3D) stand in KinDER's MimicLabs lab (upstream's scene_bg): textured floor,
             walls and furniture. It changes the images; the physics only where upstream says so (Dynamo3D: the lab's
             walls are solid, like the room walls they stand in for). Every task's t=0 state and replayed trajectories
-            are bit-identical either way. The 2D and PyBullet (Kinematic3D) tasks have upstream's one scene.
+            are bit-identical either way. The PyBullet (Kinematic3D) tasks have upstream's one scene.
 trajectory  (T, D) actions, one row per control step (10 Hz in MuJoCo), in KinDER's own action space
             (`s.action_space`). Replayed open-loop from the instance, it reproduces bit for bit (on the CPU).
 success     KinDER's own goal check -- the environment's `terminated` -- at any step within the episode. The episode
@@ -31,7 +31,7 @@ Python API
   s.replay(rec.actions)                   # self-check: from the frozen scene, open-loop
   s.save_trajectory(rec.actions, "/app/output/trajectory.npz")
   s.env                                   # the KinDER environment itself, with state access (get_state/set_state)
-  s.images(["task_view"])                 # {camera: H x W x 3 uint8}; s.cameras lists them (2D, PyBullet: "render")
+  s.images(["task_view"])                 # {camera: H x W x 3 uint8}; s.cameras lists them (PyBullet: "render")
 
 CLI
 ---
@@ -87,31 +87,6 @@ if _display is None:
     del os.environ["DISPLAY"]
 
 
-def _ordered_pymunk_adds() -> None:
-    """Pymunk defers what is added during a physics step (a 2D gripper grasping mid-step) in a set, and adds it after
-    the step in the set's order, which follows memory addresses: a two-shape hook then enters the space in either
-    order, and the same actions replay to different states, in one process as in two. Insertion order instead."""
-    import pymunk
-
-    assert isinstance(pymunk.Space()._add_later, set), "pymunk changed how it defers adds: revisit this patch"
-
-    class _InOrder(dict):
-        def update(self, objs) -> None:        # what Space.add calls while the step holds the lock
-            for o in objs:
-                self[o] = None
-
-    init = pymunk.Space.__init__
-
-    def __init__(self, *args, **kwargs) -> None:
-        init(self, *args, **kwargs)
-        self._add_later = _InOrder()
-
-    pymunk.Space.__init__ = __init__
-
-
-_ordered_pymunk_adds()
-
-
 class _Recording:
     def __init__(self) -> None:
         self._rows: list[np.ndarray] = []
@@ -165,11 +140,9 @@ class Session:
             raise ValueError(f"an action has {self.action_space.shape[0]} values, got shape {a.shape}")
         if not np.all(np.isfinite(a)):
             raise ValueError("action contains NaN/inf")
-        low, high = self.action_space.low, self.action_space.high
-        # the 2D environments assert their bounds exactly, on the value step() sends them (cast to the space's dtype)
-        c, tol = (a, 1e-6) if self.mujoco else (a.astype(self.action_space.dtype), 0.0)
-        if np.any(c < low - tol) or np.any(c > high + tol):
-            bad = [i for i in range(a.size) if not low[i] - tol <= c[i] <= high[i] + tol]
+        low, high, tol = self.action_space.low, self.action_space.high, 1e-6
+        if np.any(a < low - tol) or np.any(a > high + tol):
+            bad = [i for i in range(a.size) if not low[i] - tol <= a[i] <= high[i] + tol]
             raise ValueError(f"action values {bad} are outside the action space's bounds")
         return a
 
@@ -232,8 +205,8 @@ class Session:
 
     def images(self, cameras: list[str], hw: tuple[int, int] = CAMERA_HW, depth: bool = False) -> dict[str, np.ndarray]:
         """RGB (uint8, H x W x 3) or, with depth=True, depth in metres (float32, H x W) from the named cameras. One
-        renderer serves both: with a second one (a second EGL context) the two hand each other's frames back. The 2D
-        and PyBullet environments render one view, "render", RGB only, at upstream's size."""
+        renderer serves both: with a second one (a second EGL context) the two hand each other's frames back. The
+        PyBullet environments render one view, "render", RGB only, at upstream's size."""
         if not self.mujoco:
             if depth or set(cameras) - {"render"}:
                 raise ValueError('this environment renders one RGB view, "render"')
@@ -247,25 +220,6 @@ class Session:
             r.update_scene(self.data, camera=c)
             out[c] = r.render()
         return out
-
-    def image_from(self, pos, R, fovy_deg: float, hw: tuple[int, int] = CAMERA_HW, depth: bool = False) -> np.ndarray:
-        """As images(), from a camera the model does not have (MuJoCo only): at `pos`, turned by `R` (its columns: the
-        image's right, its up, and the way the camera looks from, as MuJoCo's cameras), `fovy_deg` field of view."""
-        import math
-        r = self._renderer(hw)
-        if depth:
-            r.enable_depth_rendering()
-        else:
-            r.disable_depth_rendering()
-        r.update_scene(self.data)                  # the free camera, then moved: near and far stay the model's, which
-        top_over_near = math.tan(math.radians(fovy_deg) / 2)      # depth rendering converts with
-        for gc in r.scene.camera:
-            gc.pos[:], gc.forward[:], gc.up[:] = pos, -np.asarray(R)[:, 2], np.asarray(R)[:, 1]
-            gc.frustum_center, gc.frustum_top = 0.0, gc.frustum_near * top_over_near
-            gc.frustum_bottom, gc.frustum_width = -gc.frustum_top, gc.frustum_top * hw[1] / hw[0]
-        if self.model.vis.headlight.active:     # the headlight rides with the camera, as it does on a model camera
-            r.scene.lights[0].pos[:], r.scene.lights[0].dir[:] = pos, -np.asarray(R)[:, 2]
-        return r.render()
 
     # ------------------------------------------------------------------ trajectories
     def check_trajectory(self, actions) -> np.ndarray:
@@ -320,7 +274,7 @@ class Session:
                 frames.append(self.images([camera])[camera])
             if success:
                 break
-        h, w = (n // 2 * 2 for n in frames[0].shape[:2])    # H.264 wants even sides; some 2D views are odd (875 x 875)
+        h, w = (n // 2 * 2 for n in frames[0].shape[:2])    # H.264 wants even sides
         imageio.mimwrite(path, [f[:h, :w] for f in frames], fps=fps, macro_block_size=1)
         imageio.imwrite(str(Path(path).with_suffix(".last.png")), frames[-1])
         return {"frames": len(frames), "success": success, "every": every}

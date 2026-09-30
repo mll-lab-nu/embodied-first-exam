@@ -20,7 +20,7 @@ keywords = ["robotics", "kinder", "pybullet", "kinova", "mobile-manipulation", "
 author_name = "pingyue"
 task_type = "trajectory"
 simulator = "kinder"
-robot = "kinematic3d"
+robot = "tidybot-plus-plus"
 family = "obstruction-3d"
 tier = "perception"                # robot-camera RGB + joint encoders + base odometry; no object pose, no goal check
 mode = "limited"
@@ -36,14 +36,14 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 280); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json"
-timeout_sec = 600
+timeout_sec = 750                  # both waits: 90 x 2 s for the service, 280 x 2 s for the finalize
 
 [agent]
 timeout_sec = 3600.0
-# The agent container holds no simulator, but upstream is public: keep the agent phase off the network like every task
-# here (model API opted in per run: --allow-agent-host <host>).
+# The agent container holds no simulator, but upstream is public: the agent reaches the model APIs and nothing else
+# (subset.toml agent_allowed_hosts).
 network_mode = "allowlist"
-allowed_hosts = []
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
 
 [environment]
 build_timeout_sec = 1800.0

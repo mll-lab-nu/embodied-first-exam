@@ -73,7 +73,7 @@ class Bench:
     def task_info(self, family: str, row: dict, readme: str) -> dict:
         """What the pages know of a task beyond its name, statement and directories: its README row's own columns
         (`row`, by header) and whatever this benchmark keeps elsewhere. Keys the generic pages read: max_steps and
-        fixture and screening (neither counted) when present; a scored benchmark's bar and nop (the all-zero action's return), always,
+        fixture (not counted) when present; a scored benchmark's bar and nop (the all-zero action's return), always,
         and nop_steps (how long the all-zero action lasts)."""
         return {}
 
