@@ -11,7 +11,7 @@
 | TopoGym 是什么 | 基于 Genesis 1.2.1 的机器人拓扑操作仿真器，13 类任务（解环、分离互锁件、穿绳、解结、铺布）。9 个任务用 ALOHA 双臂，4 个用 Panda 单臂 |
 | VLA 从哪里接入 | 训练时读取从 TopoGym 导出的数据集；评测时在每个控制步的 `agent.act(obs)` 里被调用。其余（建场景、推进物理、判定、录像）都在 Gym 侧 |
 | 两种机器人要不要不同 VLA | 不需要。四个首选都是跨本体模型，同一个模型按机器人各微调一个 checkpoint |
-| 接口形态 | 模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧按机器人写 2 个适配器，VLA 侧按模型写子类（2 + N） |
+| 接口形态 | 模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧一个通用适配器（每种机器人只有一行常量），VLA 侧按模型写子类 |
 | 延迟 | 通信约 1–5 ms / 次推理（同机或同机房），仿真 6–10 s / 控制步；通信开销可以忽略 |
 | 传输协议 | WebSocket + msgpack（与 openpi 相同） |
 | 录像 | 在 Gym 侧用 `RecordingSession` + `env.add_frame_sink` 完成，不需要 Harbor |
@@ -217,7 +217,7 @@ EvalRunner        Env/actor        VLAAgent          PolicyClient        VLA 服
 
 | 映射 | 依赖于 | 写在哪 | 数量 |
 |---|---|---|---|
-| TopoGym obs/action ⇄ 标准 `Observation` / `ActionChunk` | 机器人 | Gym 侧 `EmbodimentAdapter` | 每个机器人 1 个（2 个） |
+| TopoGym obs/action ⇄ 标准 `Observation` / `ActionChunk` | 机器人 | Gym 侧适配器 | 一个通用类，由 `action_spec` 驱动；每种机器人只有夹爪开 / 合值和默认相机两项常量 |
 | 标准 `Observation` / `ActionChunk` ⇄ 模型张量 | 模型 | VLA 侧 `BaseVLA` 子类 | 每个模型 1 个 |
 
 2 个机器人 × 5 个模型直接两两适配要 10 份代码；经过标准协议是 2 + 5 = 7 份。
@@ -288,7 +288,7 @@ with RecordingSession(out / f"seed_{seed}", fps=30, metadata=dict(env.episode_me
 ### 3.5 标准协议：3 个数据类
 
 ```python
-# vla/protocol/types.py —— Gym 与 VLA 两侧共享，只依赖 numpy
+# vla/protocol.py —— Gym 与 VLA 两侧共享，只依赖 numpy + msgpack
 @dataclass(frozen=True)
 class PolicySpec:                      # 服务端在连接建立时发给客户端
     protocol_version: int
@@ -353,7 +353,7 @@ class ActionChunk:
 ### 3.7 代码骨架与目录
 
 ```python
-# vla/gym/embodiment.py —— 每个机器人一个，纯 numpy
+# vla/gym/adapter.py —— 两种机器人共用，由 action_spec 驱动
 class EmbodimentAdapter:
     def __init__(self, action_spec: dict, spec: PolicySpec): ...
     def observation(self, obs: dict, instruction: str) -> Observation: ...   # ②
@@ -370,26 +370,25 @@ class BaseVLA(ABC):
 ```
 
 ```text
-vla/                              新顶层目录，不放进 topogym/ 包
-├── protocol/                     types.py + wire.py；两侧都安装（numpy + msgpack）
-├── gym/                          只在 Gym 环境安装
-│   ├── embodiment.py  agent.py  client.py
-│   ├── run_eval.py               task × variation × seed → results.jsonl / MP4
-│   └── export_lerobot.py         Transition → LeRobot 数据集（复用 embodiment.py）
-├── models/                       每个子目录 = 一个独立环境（pyproject 或 Dockerfile）
-│   ├── base.py  serve.py
-│   ├── pi05/                     OpenpiVLA：import openpi 策略对象
-│   ├── groot/                    GR00TVLA：Isaac-GR00T
-│   ├── xvla/                     XVLAVLA：X-VLA 仓库
-│   └── dm05/                     DM05VLA：opendm
-├── configs/  instructions.yaml  eval/*.yaml
-└── tests/                        协议往返、适配器数值、LocalClient 端到端
+vla/                              只改这个目录
+├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
+├── protocol.py                   PolicySpec / Observation / ActionChunk + msgpack 编解码（两侧共用）
+├── gym/                          只在 Gym 环境使用
+│   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
+│   ├── agent.py  client.py       VLAAgent；WebsocketClient / LocalClient
+│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
+├── models/                       只在各模型环境使用
+│   ├── base.py  serve.py  dummy.py
+│   └── pi05/ groot/ molmoact2/ xvla/     每个目录：model.py + setup.sh（建环境、下载 checkpoint）
+├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
+├── scripts/setup_gym.sh
+└── tests/
 ```
 
 | 扩展操作 | 需要改的地方 |
 |---|---|
 | 加一个 VLA | `vla/models/<name>/`：一个 `BaseVLA` 子类 + 依赖文件；`REGISTRY` 加一行 |
-| 加一个机器人 | `vla/gym/embodiment.py` 加一个适配；标准排列表加一行 |
+| 加一个机器人 | `vla/gym/adapter.py` 的常量表加一行（夹爪开 / 合值、默认相机）；标准排列表加一行 |
 | 加一个任务 | `configs/instructions.yaml` 加一条 |
 | 换评测模型 | `--policy ws://host:port` |
 

@@ -255,7 +255,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <p class="lede">TopoGym 仿真器概览，VLA 从哪里接入、接口怎么设计，以及首批评测哪几个 VLA。左边是 Gym，右边是 VLA，中间只有一个三类数据结构的协议。</p>
   <div class="summary">
     <div class="card"><span class="k gym">代码库</span><p>Genesis 1.2.1 上的机器人拓扑操作仿真器，13 类任务。9 个任务用 ALOHA 双臂，4 个用 Panda 单臂。VLA 在评测循环的 <code>agent.act(obs)</code> 处接入。</p></div>
-    <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧按机器人写 2 个适配器，VLA 侧按模型写子类（2 + N）。录像在 Gym 侧完成，不需要 Harbor。</p></div>
+    <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧一个通用适配器（每种机器人只有一行常量），VLA 侧按模型写子类。录像在 Gym 侧完成，不需要 Harbor。</p></div>
     <div class="card"><span class="k vla">选型</span><p id="summary-pick">每个系列选一个：π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5。只评测阶段按 checkpoint 匹配：Panda 用 π0.5 / GR00T / MolmoAct2 的 DROID 版，ALOHA 用 π0.5-base 与 X-VLA-RoboTwin2。π0.7 等更新的模型未开放权重。</p></div>
   </div>
 </header>
@@ -612,7 +612,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
   <text class="sm" x="478" y="244">机器人细节只在适配器里；模型细节只在子类里</text>
 </svg>
 </div>
-<figcaption><b>图 5。</b>"TopoGym ⇄ 标准格式"依赖机器人，"标准格式 ⇄ 模型张量"依赖模型，两者分开写。</figcaption>
+<figcaption><b>图 5。</b>"TopoGym ⇄ 标准格式"依赖机器人，"标准格式 ⇄ 模型张量"依赖模型，两者分开写。实现上两个适配器是同一个类：臂顺序、关节名、限位、夹爪字段都从 <code>action_spec</code> 读取，每种机器人只有夹爪开 / 合值和默认相机两项常量。</figcaption>
 </figure>
 
 <h3 id="s3-deploy">部署形态：模型与环境怎么分开</h3>
@@ -715,7 +715,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <p class="note"><code>VLAAgent</code> 实现了 <code>initialize</code> / <code>act</code>，可以原样交给 <code>SegmentRunner.run_policy</code>；<code>mode="limited"</code> 时策略拿不到任务真值（<code>task</code> 字段被去掉）。</p>
 
 <h3 id="s3-proto">标准协议：3 个数据类</h3>
-<pre><span class="c"># vla/protocol/types.py —— Gym 与 VLA 两侧共享，只依赖 numpy</span>
+<pre><span class="c"># vla/protocol.py —— Gym 与 VLA 两侧共享，只依赖 numpy + msgpack</span>
 <span class="kw">@dataclass</span>(frozen=True)
 <span class="kw">class</span> <span class="h">PolicySpec</span>:                    <span class="c"># 服务端在连接建立时发给客户端</span>
     protocol_version: int              <span class="c"># 握手时校验</span>
@@ -878,7 +878,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 </figure>
 
 <h3>代码骨架与目录</h3>
-<pre><span class="c"># ── Gym 侧：vla/gym/embodiment.py ── 每个机器人一个，纯 numpy</span>
+<pre><span class="c"># ── Gym 侧：vla/gym/adapter.py ── 两种机器人共用，由 action_spec 驱动</span>
 <span class="kw">class</span> <span class="h">EmbodimentAdapter</span>:
     <span class="kw">def</span> __init__(self, action_spec: dict, spec: PolicySpec): ...
     <span class="kw">def</span> observation(self, obs: dict, instruction: str) -> Observation: ...   <span class="c"># ②</span>
@@ -893,20 +893,19 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
     <span class="kw">def</span> infer(self, obs: Observation) -> ActionChunk: ...                   <span class="c"># ④</span>
     <span class="kw">def</span> reset(self, seed: int) -> None:                                   <span class="c"># 清内部状态、设随机种子</span>
         ...</pre>
-<pre><span class="h">vla/</span>                              <span class="c"># 新顶层目录，不放进 topogym/ 包</span>
-├── <span class="h">protocol/</span>                     <span class="c"># types.py + wire.py；两侧都安装（numpy + msgpack）</span>
-├── <span class="kw">gym/</span>                          <span class="c"># 只在 Gym 环境安装</span>
-│   ├── embodiment.py  agent.py  client.py
-│   ├── run_eval.py               <span class="c"># task × variation × seed → results.jsonl / MP4</span>
-│   └── export_lerobot.py         <span class="c"># Transition → LeRobot 数据集（复用 embodiment.py）</span>
-├── <span class="s">models/</span>                       <span class="c"># 每个模型一个子目录 = 一个独立环境（pyproject 或 Dockerfile）</span>
-│   ├── base.py  serve.py
-│   ├── pi05/                     <span class="c"># OpenpiVLA：import openpi 策略对象</span>
-│   ├── groot/                    <span class="c"># GR00TVLA：Isaac-GR00T</span>
-│   ├── xvla/                     <span class="c"># XVLAVLA：X-VLA 仓库</span>
-│   └── dm05/                     <span class="c"># DM05VLA：opendm</span>
-├── configs/  instructions.yaml  eval/*.yaml
-└── tests/                        <span class="c"># 协议往返、适配器数值、LocalClient 端到端</span></pre>
+<pre>vla/                              只改这个目录
+├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
+├── protocol.py                   PolicySpec / Observation / ActionChunk + msgpack 编解码（两侧共用）
+├── gym/                          只在 Gym 环境使用
+│   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
+│   ├── agent.py  client.py       VLAAgent；WebsocketClient / LocalClient
+│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
+├── models/                       只在各模型环境使用
+│   ├── base.py  serve.py  dummy.py
+│   └── pi05/ groot/ molmoact2/ xvla/     每个目录：model.py + setup.sh（建环境、下载 checkpoint）
+├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
+├── scripts/setup_gym.sh
+└── tests/</pre>
 
 <h3>训练数据与评测同构</h3>
 <p>VLA 在 TopoGym 上零样本基本不可用，需要用 TopoGym 自己的演示微调。<code>export_lerobot.py</code> 读取 Env 的 <code>Transition</code>，经<b>同一个</b> <code>EmbodimentAdapter</code> 转成 LeRobot 数据集；state 排列、夹爪归一化、相机名、图像尺寸、控制频率只在一处定义。导出时同时写关节目标和 TCP 位姿两列（TCP 由 FK 计算），关节空间模型和末端空间模型共用同一批演示。</p>
