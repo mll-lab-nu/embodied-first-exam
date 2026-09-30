@@ -1,0 +1,25 @@
+# X-VLA-0.9B RoboTwin2 checkpoint (AgileX/ARX arms in RoboTwin 2.0) on the TopoGym ALOHA, end-effector space.
+class_path: vla.models.xvla.model.XVLA
+checkpoint: 2toINF/X-VLA-RoboTwin2    # cached under ~/.cache/huggingface
+port: 8004
+spec:
+  name: xvla_robotwin2
+  embodiment: aloha
+  cameras: [cam_high, cam_left_wrist, cam_right_wrist]   # -> head, left wrist, right wrist views
+  state_keys: [ee]
+  action_space: ee_abs
+  control_hz: 16.667                # one action per saved RoboTwin frame: 15 steps of 1/250 s; "30 Hz" is a label
+  chunk_size: 30
+  execute_steps: 30                 # the official RoboTwin client executes the whole chunk
+model:
+  revision: a157c580cfe6f9f445614490f3bec1b2f9ef9f18
+  domain_id: 6                      # robotwin2 (datasets/domain_config.py)
+  # Arm base frames [x, y, z, yaw_deg] (x forward, z up). TopoGym: assets/robots/aloha/aloha.xml base_link
+  # poses plus the robot mount (-0.1356786, 0, 0.9196429). RoboTwin: aloha-agilex fl/fr_base_link.
+  topogym_bases:
+    left: [-0.6046786, -0.019, 0.9396429, 0.0]
+    right: [0.3333214, -0.019, 0.9396429, 180.0]
+  robotwin_bases:
+    left: [-0.2970, -0.4195, 0.7820, 91.146]
+    right: [0.3063, -0.4185, 0.7810, 90.573]
+  tcp_offset_m: 0.12                # RoboTwin TCP = link6 origin + 0.12 m along link6 x (gripper_bias)

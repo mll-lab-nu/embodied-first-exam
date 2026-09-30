@@ -4,6 +4,7 @@
 # 3) install per the official README, plus omegaconf; 4) download the checkpoints to the official default cache;
 # 5) import check. The TopoGym environment is not touched.
 set -euo pipefail
+export GIT_LFS_SKIP_SMUDGE=1  # LFS files (demo data, test artifacts) are not needed for inference
 
 MODEL="${1:-}"
 VLA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,7 +18,7 @@ case "$MODEL" in
         REPO=https://github.com/Physical-Intelligence/openpi
         COMMIT=215abfb217dbac7d5f1273282331b9b1866c0479
         PYTHON=3.11
-        install() { (cd "$REPO_DIR" && GIT_LFS_SKIP_SMUDGE=1 UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --frozen --no-dev); }
+        install() { (cd "$REPO_DIR" && UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --frozen --no-dev); }
         download() {  # into ~/.cache/openpi (OPENPI_DATA_HOME)
             "$PY" -c "from openpi.shared.download import maybe_download
 for name in ('pi05_droid_jointpos', 'pi05_base'): print(maybe_download(f'gs://openpi-assets/checkpoints/{name}'))"
@@ -30,7 +31,8 @@ for name in ('pi05_droid_jointpos', 'pi05_base'): print(maybe_download(f'gs://op
         install() { (cd "$REPO_DIR" && UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --python "$PYTHON" --frozen); }
         download() {  # into ~/.cache/huggingface; the Cosmos-Reason2-2B backbone is gated: request access first
             "$PY" -c "from huggingface_hub import snapshot_download
-for repo in ('nvidia/GR00T-N1.7-DROID', 'nvidia/Cosmos-Reason2-2B'): print(snapshot_download(repo))"
+print(snapshot_download('nvidia/GR00T-N1.7-DROID', revision='05e7cc97e40dbd33b0890c35cc0214fcb0547ab5'))
+print(snapshot_download('nvidia/Cosmos-Reason2-2B'))"
         }
         ;;
     molmoact2)
