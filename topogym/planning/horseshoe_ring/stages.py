@@ -5,6 +5,7 @@ as a complete proof; a selected recipe must run continuously from home.
 """
 from copy import deepcopy
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -18,7 +19,7 @@ from .oracle import load_reference, expand_coupled_plan
 from .policy import HorseshoePolicy
 
 
-TRACKER_FIELDS=('grip','bias','angle_bias','held_entities','offsets')
+TRACKER_FIELDS=('grip','bias','angle_bias','held_entities','offsets','support_hold')
 
 
 class ContinuationPolicy(HorseshoePolicy):
@@ -28,7 +29,10 @@ class ContinuationPolicy(HorseshoePolicy):
 
     def actions(self):
         for name,value in self.tracker.items():setattr(self,name,deepcopy(value))
-        yield from getattr(self,self.operation)()
+        if self.operation=='withdraw_one':
+            self.withdrawal_finished=yield from self.withdraw_ring_once(self.withdrawal_stage_index)
+        else:
+            yield from getattr(self,self.operation)()
 
 
 def stages(env, context):
@@ -103,7 +107,7 @@ def stages(env, context):
         return Stage('prefix','grasp',dict(parameters=parameters),lambda row:CheckedJointPolicy(policy,env._robot),
                      lambda row:dict(default_home=row['state']['physics_step']==0),common,holding,200.)
 
-    def continuation(operation, budget):
+    def continuation(operation, budget, *, stage_index=None):
         def build(parameters):
             attempt[0]+=1
             checker=HorseshoeIK(env)
@@ -111,15 +115,22 @@ def stages(env, context):
                 reference=shared['reference'],fold_end_index=shared['fold_end_index'])
             values=dict(parameters);limit=float(values.pop('contact_limit_m',.0008))
             if not 0<limit<=.001:raise ValueError('Stage contact limit must be at most 1 mm')
-            tracker={name:deepcopy(getattr(shared['previous'],name)) for name in TRACKER_FIELDS}
+            replan=bool(values.pop('replan',False))
+            if operation=='withdraw_one' and not replan and shared.get('guide_state') is not None:
+                planner.withdrawal_stage_state=deepcopy(shared['guide_state'])
+            tracker={name:deepcopy(getattr(shared['previous'],name)) for name in TRACKER_FIELDS
+                     if hasattr(shared['previous'],name)}
             policy=ContinuationPolicy(shared['grasps'],operation=operation,tracker=tracker,planner=planner,
-                withdrawal_mode='joint-staged',withdrawal_parameters=values if operation=='withdraw_ring' else None)
-            if operation!='withdraw_ring' and values:raise ValueError('Unexpected placement parameters')
+                withdrawal_mode='joint-staged',withdrawal_parameters=values if operation=='withdraw_one' else None)
+            policy.withdrawal_stage_index=stage_index
+            policy.withdrawal_finished=None
+            policy.replanned=replan or shared.get('guide_state') is None
+            if operation!='withdraw_one' and values:raise ValueError('Unexpected placement parameters')
             holder[0]=policy
             def invariant(row):return dict(common(row,limit),**holding(row))
             def exit(row):
                 result=holding(row)
-                if operation=='withdraw_ring':result['withdrawal_completed']=policy.phase=='ring_withdrawal_complete'
+                if operation=='withdraw_one':result['short_stage_completed']=policy.withdrawal_finished is not None
                 if operation=='verify_goal':result['raw_goal_stable']=policy.phase=='raw_goal_complete' or row['task']['result']['task_success']
                 return result
             return Stage(operation,'interaction',dict(parameters=parameters),lambda row:CheckedJointPolicy(policy,env._robot),
@@ -127,13 +138,28 @@ def stages(env, context):
         return build
 
     try:
-        yield Step('prefix',(),prefix)
+        input_file=os.environ.get('TOPOGYM_HORSESHOE_ORACLE_INPUTS')
+        prefix_candidates=(json.loads(Path(input_file).read_text()),) if input_file else ()
+        yield Step('prefix',prefix_candidates,prefix)
         shared['previous']=holder[0]
-        candidates=tuple(dict(passive_contact_names=names,stage_motion_m=.004,speed_m_s=.002,
-                              tracking_m=.0015,maximum_stages=300,contact_limit_m=.0008)
-                         for names in (['horseshoe_left'],['horseshoe_left','chain_upper_1']))
-        yield Step('withdraw',candidates,continuation('withdraw_ring',800.))
-        shared['previous']=holder[0]
+        parameters=dict(passive_contact_names=['horseshoe_left'],stage_motion_m=.004,speed_m_s=.002,
+                        tracking_m=.0015,maximum_stages=300,contact_limit_m=.0008,search_seed=922)
+        stagnant=0
+        for index in range(300):
+            old=shared.get('guide_state')
+            candidates=(dict(parameters,replan=stagnant>=3),
+                        dict(parameters,replan=True,speed_m_s=.001,stage_motion_m=.002,
+                             search_seed=int(parameters['search_seed'])+1),
+                        dict(parameters,replan=True,passive_contact_names=['horseshoe_left','chain_upper_1'],
+                             search_seed=int(parameters['search_seed'])+2))
+            yield Step(f'withdraw_{index:03}',candidates,continuation('withdraw_one',50.,stage_index=index))
+            policy=holder[0];shared['previous']=policy
+            shared['guide_state']=deepcopy(getattr(policy.planner,'withdrawal_stage_state',None))
+            parameters.update(policy.withdrawal_parameters)
+            new=shared['guide_state']
+            stagnant=stagnant+1 if not policy.replanned and old and new and old['index']==new['index'] else 0
+            if policy.withdrawal_finished:break
+        else:raise ValueError('Withdrawal exhausted 300 measured short stages')
         yield Step('place_ring',({},),continuation('place_ring',500.))
         shared['previous']=holder[0]
         yield Step('place_remainder',({},),continuation('place_remainder',120.))

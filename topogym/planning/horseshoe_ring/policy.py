@@ -18,7 +18,8 @@ class HorseshoePolicy:
         self.fold_tracking_m=float(fold_tracking_m)
         self.withdrawal_mode=withdrawal_mode
         self.withdrawal_parameters=dict(speed_m_s=.004,tracking_m=.0015,stage_motion_m=.012,
-            maximum_stages=200,passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
+            maximum_stages=200,search_seed=922,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
         if withdrawal_parameters:
             unknown=set(withdrawal_parameters)-self.withdrawal_parameters.keys()
             if unknown:raise ValueError(f'Unknown withdrawal parameters: {unknown}')
@@ -227,26 +228,34 @@ class HorseshoePolicy:
         # The right arm's last fold joint target does not hold the support
         # body against changing contact loads. Keep its measured pose under
         # the same ordinary-action feedback as the ring throughout withdrawal.
-        support=self.bodies()['right']
-        self.offsets['right']=relative_pose(support,self.tcp()['right'])
-        self.bias['right'][:]=0.;self.angle_bias['right'][:]=0.
+        self.support_hold=None
+        for stage in range(int(self.withdrawal_parameters['maximum_stages'])):
+            if (yield from self.withdraw_ring_once(stage)):return
+        raise RuntimeError('Ring withdrawal exhausted its measured-state stage budget')
+
+    def withdraw_ring_once(self, stage):
+        """One measured short stage, also used by the existing rewind workflow."""
+        if getattr(self,'support_hold',None) is None:
+            self.support_hold=self.bodies()['right']
+            self.offsets['right']=relative_pose(self.support_hold,self.tcp()['right'])
+            self.bias['right'][:]=0.;self.angle_bias['right'][:]=0.
         params=self.withdrawal_parameters
         self.planner.withdrawal_parameters=params
-        for stage in range(int(params['maximum_stages'])):
-            self.phase=f'plan_ring_stage_{stage}'
-            plan=self.planner.withdrawal_stage(self.obs)
-            if plan.get('separated'):
-                self.phase='ring_withdrawal_settle';yield from self.hold(2.)
-                self.phase='ring_withdrawal_complete'
-                return
-            for index,row in enumerate(plan['poses'][1:]):
-                target=body_pose(row);current=self.bodies()['left']
-                motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
-                yield from self.follow_bodies({'left':target,'right':support},max(.5,float(motion/params['speed_m_s'])),
-                    f'withdraw_ring_stage_{stage}_{index}',tracking_m=params['tracking_m'])
-            yield from self.follow_bodies({'left':target,'right':support},.25,
-                f'settle_ring_stage_{stage}',tracking_m=params['tracking_m'])
-        raise RuntimeError('Ring withdrawal exhausted its measured-state stage budget')
+        self.planner.withdrawal_use_joint=self.withdrawal_mode=='joint-staged'
+        self.phase=f'plan_ring_stage_{stage}'
+        plan=self.planner.withdrawal_stage(self.obs)
+        if plan.get('separated'):
+            self.phase='ring_withdrawal_settle';yield from self.hold(2.)
+            self.phase='ring_withdrawal_complete'
+            return True
+        for index,row in enumerate(plan['poses'][1:]):
+            target=body_pose(row);current=self.bodies()['left']
+            motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
+            yield from self.follow_bodies({'left':target,'right':self.support_hold},max(.5,float(motion/params['speed_m_s'])),
+                f'withdraw_ring_stage_{stage}_{index}',tracking_m=params['tracking_m'])
+        yield from self.follow_bodies({'left':target,'right':self.support_hold},.25,
+            f'settle_ring_stage_{stage}',tracking_m=params['tracking_m'])
+        return False
 
     def place_in_goal(self):
         yield from self.place_ring()

@@ -21,6 +21,12 @@ from topogym.utils.io import write_json_atomic
 def audit_run(root, *, prefix=False):
     root=Path(root).resolve()
     report=json.loads((root/'run_report.json').read_text())
+    runtime=root/'horseshoe_runtime_identity.json'
+    if runtime.exists():
+        metadata=json.loads(runtime.read_text())
+        for key in ('instance_id','seed'):
+            if key in report and report[key]!=metadata[key]:raise ValueError(f'Conflicting runtime {key}')
+        report={**metadata,**report}
     config=report['config']
     task,_,_,_,identity=freeze_scene('horseshoe_ring',config['variation_id'],report['seed'],root/'audit_assets')
     if identity['instance_id']!=report['instance_id']:
@@ -104,8 +110,10 @@ def audit_run(root, *, prefix=False):
     if last is None:raise ValueError('Empty physical evidence')
     if not prefix and count!=report['physics_steps']+1:failures.append(dict(reason='missing_physics_ticks'))
     # Check actual first action evidence against the declared ALOHA home.
-    steps=root/'segments/segment_1/steps.jsonl'
-    with steps.open() as stream:first=json.loads(next(stream))
+    step_files=sorted((root/'segments').glob('segment_*/steps.jsonl'),
+                      key=lambda p:int(p.parent.name.rsplit('_',1)[1]))
+    if not step_files:raise ValueError('Missing robot/action evidence')
+    with step_files[0].open() as stream:first=json.loads(next(stream))
     from topogym.config.scene import load_scene_config
     from topogym.simulator import SimulatorConfig
     scene=load_scene_config(SimulatorConfig(task_id='horseshoe_ring',robot_id='aloha',enable_rgb=False,compute_backend='cpu'))
@@ -113,18 +121,24 @@ def audit_run(root, *, prefix=False):
                 for s in ('left','right'))
     limits=np.asarray(scene.robot_control.robot.arm_joint_limits)
     maximum_joint_limit_residue=0.
-    with steps.open() as stream:
-        for line in stream:
-            row=json.loads(line)
-            if prefix and row['state']['physics_step']>last['state']['physics_step']:break
-            for side,state in row.get('robot',{}).items():
-                q=np.asarray(state['joint_position_rad'])
-                residue=float(np.maximum(limits[:,0]-q,q-limits[:,1]).max())
-                maximum_joint_limit_residue=max(maximum_joint_limit_residue,residue)
-                if residue>1e-6:
-                    failures.append(dict(tick=row['state']['physics_step'],reason='observed_joint_limit_violation',
-                                         side=side,violation_rad=residue))
-    native=bool(report['task_success'])
+    last_robot_tick=None
+    for steps in step_files:
+        with steps.open() as stream:
+            for line in stream:
+                if prefix and not line.endswith('\n'):break
+                row=json.loads(line)
+                if prefix and row['state']['physics_step']>last['state']['physics_step']:break
+                last_robot_tick=row['state']['physics_step']
+                for side,state in row.get('robot',{}).items():
+                    q=np.asarray(state['joint_position_rad'])
+                    residue=float(np.maximum(limits[:,0]-q,q-limits[:,1]).max())
+                    maximum_joint_limit_residue=max(maximum_joint_limit_residue,residue)
+                    if residue>1e-6:
+                        failures.append(dict(tick=row['state']['physics_step'],reason='observed_joint_limit_violation',
+                                             side=side,violation_rad=residue))
+    if last_robot_tick!=last['state']['physics_step']:
+        failures.append(dict(reason='missing_final_robot_observation',last_robot_tick=last_robot_tick))
+    native=bool(report.get('task_success',False))
     raw=best_stable+1e-12>=float(task.config['stable_duration_s'])
     qualified=not prefix and source_valid and home_ok and not failures and not lost and raw and acquisition_valid and bool(acquired)
     result=dict(schema_version=1,source_snapshot_valid=source_valid,from_default_home=home_ok,

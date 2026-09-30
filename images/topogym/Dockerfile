@@ -5,7 +5,9 @@
 ARG UIPC_BUILDER=sameli/manylinux_2_34_x86_64_cuda_12.8@sha256:0b99ea5d0e32f5ad49b02de2663520f17a8dafc8739365cd7463a82ed3f0590a
 FROM ${UIPC_BUILDER} AS uipc-compile
 ENV PATH=/opt/python/cp311-cp311/bin:$PATH
-RUN yum install -y git curl zip unzip tar gzip
+# CUDA is already pinned in the builder; generic tools need only OS repos.
+# Avoid unrelated NVIDIA repo metadata failures (e.g. stale repodata URLs).
+RUN yum --disablerepo='cuda*' install -y git curl zip unzip tar gzip
 COPY requirements/uipc-build.lock /recipe/uipc-build.lock
 RUN python -m pip install --require-hashes -r /recipe/uipc-build.lock
 COPY images/topogym/build_uipc.sh images/topogym/verify_uipc_wheel.py /recipe/

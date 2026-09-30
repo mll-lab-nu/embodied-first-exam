@@ -24,7 +24,8 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
     prefix=checker.contact_escape() if passive_contact_names else [checker.start]
     start=checker.seed.copy()
     if len(prefix)>1:start=np.asarray(checker.check(prefix[-1])['qpos'])
-    rng=np.random.default_rng(922);phase='search'
+    search_seed=int(getattr(planner,'withdrawal_parameters',{}).get('search_seed',922))
+    rng=np.random.default_rng(search_seed);phase='search'
     op,orr=checker.offset;queries=0;cache={};began=time.monotonic()
     passive_loops={}
     ring_loop=planner.task.assembly.loops['target_ring']

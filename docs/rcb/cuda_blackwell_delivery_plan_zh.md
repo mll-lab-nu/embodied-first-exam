@@ -271,3 +271,11 @@ PyTorch 官方提供 2.11.0 / torchvision 0.26.0 的 cu130 wheel，因此无需�
 证据：[总报告](../../runs/test_results/cuda128_delivery_20260930/delivery-summary.json)、[Cast Coil 短视频](../../runs/test_results/cuda128_delivery_20260930/physics-smoke/cast_coil/smoke/segments/segment_0/videos/combined.mp4)、[Rope Threading 短视频](../../runs/test_results/cuda128_delivery_20260930/physics-smoke/rope_threading/smoke/segments/segment_0/videos/combined.mp4)。视频每路 3 帧、0.1 秒，仅展示短检查，不是成功演示。
 
 仍需在 R580+ / RTX PRO 6000 Blackwell 实机分别验收两套栈，并按 9.4 固定动作做旧/新材料数值与速度对比；本轮没有完成这些对比，也没有进行 13 项任务的全部物理资格检查或模型 rollout。
+
+### 10.5 首次工具安装遇到 NVIDIA 软件源 404
+
+另一台机器的冷构建在 `yum install -y git curl zip unzip tar gzip` 失败：启用的 `cuda-rhel9-x86_64` 源返回 repodata 文件 404，导致并行的 Python 依赖下载被取消。这发生在 IPC 编译和 GPU 检查之前，日志不能据此判断 GPU/CUDA 不兼容；404 的上游或缓存具体原因未确认。
+
+已将该步骤改为 `yum --disablerepo='cuda*' install -y git curl zip unzip tar gzip`。固定 builder 已带 CUDA 工具链，这里仅安装通用工具，无需访问 CUDA 软件源。两套固定 builder 均用 `--no-cache` 验证工具安装及 `git` / `curl` / `nvcc` 版本检查通过，分别约 23 / 24 秒；没有为此重做完整 IPC 编译或物理验收。证据：`runs/test_results/cuda_repo_bootstrap_20260930/`。
+
+远端使用包含此修复的源码后，重新执行 `check --cuda-flavor cu128`（或所选 cu130）。无需删除 Docker 缓存；如果失败来自正式实验且已经冻结 manifest，源码变更后使用新的 run ID，避免旧快照继续使用旧 Dockerfile。
