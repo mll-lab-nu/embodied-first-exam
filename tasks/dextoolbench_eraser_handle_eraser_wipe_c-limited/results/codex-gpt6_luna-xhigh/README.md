@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_eraser_handle_eraser_wipe_c-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_eraser_handle_eraser_wipe_c-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_eraser_handle_erase__g4ZAQjJ`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_eraser_handle_erase__pLP8dRe`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 1509 s |
+| agent time | 3602 s |
 | actions / physics steps | — / — |
-| tokens in / out | 4129779 / 43180 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 23, "elapsed_s": 1448.9, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 31, "failed_on_timeout": 1}` |
+| tokens in / out | 34129881 / 147582 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 13848, "calls": 230, "elapsed_s": 3691.0, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 31, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_eraser_handle_erase__g
 
 ## Agent's last messages
 
-- The hand’s fingers are now closing over the target area, but the eraser has not yet visibly separated from the table. I’ve identified a small arm-joint movement that changes the hand height, so I’m tightening the grasp and testing a short lift while checking whether the object follows.
-- The service has ended the episode at goal 0: the eraser never left the table, and the goal timed out. I’m preserving the controller and the camera/action record now; the benchmark will grade this trajectory as recorded.
-- The episode ended at goal 0 after a timeout. No goals were reached, so the recorded reward is **0/31**. The eraser never visibly left the table.  I left the attempted controller and its action list in [gen.py](/app/output/gen.py). The service metadata and action log are in [latest.json](/app/output/record/latest.json) and [events.json](/app/output/record/events.json); camera snapshots are also saved under `/app/output/record/`.
+- I’m continuing from the current live pose and checking the actual loop position against the fingertips. The previous attempts have not registered a lift, so I’m switching to a small, observable repositioning attempt before spending more steps on another grasp.
+- The hand has curled at the current alignment, but the eraser is still visibly on the table. I’m testing a small elbow lift while watching the eraser; if it stays fixed, I’ll treat that as a failed grasp and use the images to reposition the hand.
+- The side views place the open fingertips a few centimeters from the loop. I’m shifting the wrist across that gap toward the eraser’s goal-facing edge, then I’ll close and check for actual object motion before lifting again.

@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_marker_sharpie_marker_draw_smile-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_marker_sharpie_marker_draw_smile-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__kYmsoYY`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__igaPu8P`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 946 s |
+| agent time | 3602 s |
 | actions / physics steps | — / — |
-| tokens in / out | 3211220 / 45223 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 45, "elapsed_s": 997.8, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 36, "failed_on_timeout": 1}` |
+| tokens in / out | 18355117 / 130942 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 6951, "calls": 295, "elapsed_s": 3689.4, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 36, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__k
 
 ## Agent's last messages
 
-- The first lift checks showed the marker stayed on the table. The hand was already curled before it reached the object, so I’m changing the sequence: open the fingers, position them around the marker, then close and test the lift. The marker has shifted slightly from contact, but it remains on the table.
-- I’ve used nearly all of the first goal’s 10 second allowance. The marker still appears on the table after the last lift attempt, so this run is unlikely to score a reached goal. I’m saving the action sequence and camera based control notes in `gen.py`, then I’ll let the goal timer close the episode and capture the final service status.
-- The episode ended at goal 0 after 600 control steps with a goal timeout. The marker remained on the table, so **0/36 goals were reached**.  I saved the attempted controller sequence in [gen.py](/app/output/gen.py) and the final service record in [meta.json](/app/output/episode_final/meta.json).
+- The quick joint moves showed that frames captured at the end of a command can lag the arm state. I’ve returned to the starting joint pose and am letting each small move settle before measuring it; this should give a usable camera-based motion map without contacting the marker.
+- The arm is now directly over the marker, with the open fingertips at tabletop height. I’ll curl the hand gradually around it and check the camera view before lifting, since the marker is still resting on the table.
+- The first lowering attempt reached the tabletop before the fingers could curl, so the marker stayed put. I’ve reopened and lifted the hand clear; I’m going to try the intermediate height where the fingers can close around the marker without pressing into the table.
