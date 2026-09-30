@@ -1,7 +1,7 @@
 # Limited-mode protocol `rcb-limited/2.1` (robot as a service)
 
-The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit**;
-the agent's wall-clock budget is the only limit; actions and simulated time are reported as cost. Nothing the agent can
+The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit** (except a technical episode cap where a
+task states one, e.g. DexToolBench's 360,000 control steps); the agent's wall-clock budget is the real limit; actions and simulated time are reported as cost. Nothing the agent can
 call reveals object poses, scene files, seeds or the success predicate. Videos, frames, depth and proprioception come
 back as **binary** in the response body (RCB1 frames, below), never base64; the agent's code decides what to keep.
 
@@ -25,7 +25,7 @@ header = {"v": 1, "meta": {...}, "parts": [{"name","kind","len", ...}, ...]}    
 kinds: "mp4" (fps, n) · "array" (dtype, shape; C-order raw bytes) · "jpeg" · "json" · "bytes"
 ```
 Response parts: `video/<cam>` (mp4), `frames/<cam>` (uint8 [N,H,W,3]), `last/<cam>` (uint8 [H,W,3], always), `depth/<cam>`
-(float16 [N,H,W], if requested), `proprio` (float32 [N,30], one row per video frame). Requests over 64 MB → 413/400; a
+(float16 [N,H,W], if requested), `proprio` (float32 [N, len(proprio layout)], one row per video frame: 82 columns on RoboTwin, 3 x actuators on MuJoCo). Requests over 64 MB → 413/400; a
 response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `rcb1.py` (encode/decode, `python -m rcb1
 unpack f dir`) is shipped with the client.
 
@@ -37,7 +37,7 @@ unpack f dir`) is shipped with the client.
 
 ## `/submit` semantics
 - `joint_position` (14 = 6 joints + gripper per arm; rad; gripper 0 closed..1 open): rows are `dt` seconds apart
-  (`1/250 ≤ dt ≤ 0.5`); the service streams drive targets at 250 Hz with `interpolate = "linear"` (default) or `"hold"`
+  (`1/250 ≤ dt ≤ 0.5`, a multiple of the 1/250 s physics step: 0.004, 0.008, 0.02, …; anything else is rejected, never rounded); the service streams drive targets at 250 Hz with `interpolate = "linear"` (default) or `"hold"`
   between rows, exactly as a real controller consumes a chunk. Out-of-limit values are clipped and reported (continuous
   joints have `null` limits and are never clipped). A chunk may cover at most `max_chunk_s` (10 s). Rows may carry 14
   extra columns (28 in all) = joint velocity feed-forward in rad/s, held over the row; without them the service uses the
@@ -59,7 +59,7 @@ the wall clock; the simulated time is recorded as cost.
 ## Errors (no physics executed)
 | code | when |
 |---|---|
-| 400 | wrong type/dim, NaN/inf, `dt` or `seconds` out of range, chunk too long, bad interpolate/video value, malformed body |
+| 400 | wrong type/dim, NaN/inf, `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more than 3000 frames in one response (cameras × fps × seconds, depth counts double), malformed body |
 | 409 | episode already finished (`done`); the trial is over |
 | 413 | body over 64 MB |
 | 500 | simulator error; the episode ends with `reason = "error"` |
@@ -67,6 +67,16 @@ the wall clock; the simulated time is recorded as cost.
 ## Episode semantics
 The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
 when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end. No reset.
+
+**Service crashes (no reset, no lost episode).** Every executed physics step is journaled (`trajectory_live.f64`) and every
+completed call logs a checkpoint (step count + state hash) in `episode.jsonl`. If the service dies mid-episode, compose
+restarts it (`restart: on-failure:3`) and it **resumes the same episode**: it replays the journal up to the last checkpoint,
+checks the state hash, and continues. The call that was in flight is lost as a whole (its caller got a connection error or
+5xx, not a result, so nothing is learned); `spec.on_service_error` tells the agent to check `GET /status` before continuing.
+More than 2 crashes end the episode: `reason = sim_crashed_on_call` if every crash happened while serving a call (counted as
+the agent's failure), else `sim_crashed` (`infra_error = 1`). A verdict already written is never overwritten. A crash before
+the service is ready is a plain restart; a scene build that hangs is killed by a startup watchdog (`RCB_STARTUP_TIMEOUT_S`,
+300 s) so compose retries it.
 
 ## Evidence and grading (agent never sees this)
 `/data/episode.jsonl` (one record per call: type, rows, dt, cameras, note, clipped, plan, physics steps, success),
@@ -90,9 +100,8 @@ reward fields as in PROTOCOL §3.
 - `calls/NNNNNN/actions.npy`: the exact action array of every `/submit` (float32, as sent).
 - `trajectory_live.f64`: the recorded (T, 34) trajectory appended after every call (raw float64). With
   `live_segments.jsonl` it is enough to render the video offline if the container dies before the end.
-- `startups.jsonl`: one line per service start. The sidecar restarts on a crash while starting
-  (`restart: on-failure:3`); once an episode has started a restarted service refuses to build a new scene (no reset),
-  marks the episode `reason = sim_crashed` and the verifier reports `infra_error = 1`.
+- `startups.jsonl`: one line per service start; `resumed` / `restart_refused` events in `episode.jsonl` record crash
+  recovery (see Episode semantics).
 All are sidecar artifacts; the verifier copies `live.mp4` and `live_timeline.jsonl` next to `replay.mp4` (which stays the
 authoritative video) and reports `live_video`, `live_frames`, `sim_startups`, `infra_error`.
 
@@ -119,9 +128,13 @@ Same endpoints and RCB1 frames, served by `images/mujoco/limited/server_mj.py`. 
 `joint_position` with the task's own actuator layout (DexToolBench 29, ALOHA 14, Panda 8), rows `dt` apart where `dt`
 is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or linear interpolation per control step.
 Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
-`meta.task` carries the task definition (DexToolBench: current goal pose, index, steps left on it; Playground: the
-target) and `meta.cameras` each camera's intrinsics and camera-to-world pose. DexToolBench episodes end when all goals
-are reached or a goal times out; Playground episodes run to the end of the agent phase and the final state is graded.
+`meta.task` carries the task definition (DexToolBench: current goal pose and index; Playground: the target) and
+`meta.cameras` each camera's intrinsics and camera-to-world pose. DexToolBench's own eval gives each goal 10 s; here the
+limited twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
+robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the unlimited tasks give each goal 30 s
+(replayed offline, free resets). DexToolBench episodes end when all goals are reached, at the cap, or when the agent's
+time is up; Playground episodes run to the end of the agent phase and the final state is graded. The MuJoCo service
+journals and resumes exactly as above (journal `record.f64`).
 The service replays the recorded episode in a fresh simulator at the end (`deterministic`: same final state hash).
 
 ## Versioning

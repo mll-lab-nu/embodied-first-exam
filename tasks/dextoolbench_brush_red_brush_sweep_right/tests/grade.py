@@ -1,5 +1,5 @@
 """DexToolBench verifier (separate sandbox): replay /app/output/trajectory.npz twice from the frozen start state and
-score the benchmark's task progress (goals reached / goals, 1.5 cm keypoint tolerance, 10 s per goal).
+score the benchmark's task progress (goals reached / goals, 1.5 cm keypoint tolerance, 30 s per goal (upstream 10 s)).
 reward.txt = progress when both replays agree bit-exactly (else 0); success = every goal reached.
 Also renders /logs/verifier/replay.mp4 (front / side / top / oblique) and, after the verdict, videos of the agent's own
 rollouts from its self-reported traces (agent_sessions/)."""

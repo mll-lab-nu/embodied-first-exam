@@ -1,0 +1,8 @@
+{
+ "task": "place_empty_cup",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "cebe865d8ce1",
+ "text": "Use an arm to place the empty cup on the coaster.",
+ "n_active_joints": 16
+}

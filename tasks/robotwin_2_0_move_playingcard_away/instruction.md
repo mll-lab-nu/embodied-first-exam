@@ -1,0 +1,53 @@
+# RoboTwin 2.0 · move_playingcard_away — frozen instance
+
+You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
+planning) via Python. **Task:** Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table.
+
+The scene objects are attributes of the task env (`env.playingcards`, `env.playingcards_id`, `env.target_pose`; see `load_actors` in
+`/opt/RoboTwin/envs/move_playingcard_away.py`). RoboTwin's success predicate is `check_success` in that file:
+```python
+def check_success(self):
+        playingcards_pose = self.playingcards.get_pose().p
+        edge_x = 0.23
+
+        return (np.all(abs(playingcards_pose[0]) > abs(edge_x)) and self.robot.is_left_gripper_open()
+                and self.robot.is_right_gripper_open())
+```
+
+This is a *fixed scene instance*: object poses never change between resets. You may reset and retry as many
+times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+
+## Deliverable
+Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
+It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_traj import Session
+s = Session("move_playingcard_away", instance="/app/instance.json")   # rebuilds the scene, loads the CuRobo planner (~1 min first time)
+s.reset()                          # back to the frozen initial state (unlimited; each reset rebuilds the scene, a few seconds)
+env = s.env                        # the RoboTwin task env (envs/move_playingcard_away.py + envs/_base_task.py under /opt/RoboTwin)
+env.robot                          # Robot: get_left_tcp_pose(), get_left_arm_jointState(), left_plan_path(pose), ...
+s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s)
+s.status()                         # {'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str}
+s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
+s.save_trajectory(actions, "/app/output/trajectory.npz")
+```
+RoboTwin's planning primitives on `env` (see `envs/_base_task.py`; read the docstrings):
+`env.move(actions1, actions2=None)` executes action lists built by `env.grasp_actor(actor, arm_tag, pre_grasp_dis, grasp_dis, contact_point_id, ...)`,
+`env.place_actor(actor, arm_tag, target_pose, functional_point_id, pre_dis, dis, is_open, constrain, ...)`,
+`env.move_by_displacement(arm_tag, x, y, z, quat, move_axis)`, `env.move_to_pose(arm_tag, target_pose)`,
+`env.open_gripper(arm_tag)`, `env.close_gripper(arm_tag)`, `env.back_to_origin(arm_tag)`; `ArmTag("left"|"right")`,
+`Action`, and `GRASP_DIRECTION_DIC` from `envs.utils` / `envs._GLOBAL_CONFIGS`. Objects are RoboTwin `Actor`s
+(`.get_pose()`, `.get_functional_point(i)`, `.get_contact_point(i)`; articulated ones also `.get_qpos()`).
+Every physics step these primitives take is recorded while recording is on; `env.plan_success`
+turns False when a plan fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the
+recorded layout (`s.action_layout`: 16 joint drive position targets, 16 velocity targets, left/right gripper
+command 0 = closed / 1 = open).
+
+CLI equivalent of the grader:
+`python /opt/tools/rcb_traj.py replay --task move_playingcard_away --instance /app/instance.json --traj /app/output/trajectory.npz`
+
+Coordinates are in the world frame (table centre at the origin, +z up, the robot at y = -0.65 facing +y);
+quaternions are WXYZ. Rendering (optional, slow): `Session(..., enable_render=True)` then `s.render_frame("head_camera")`.
