@@ -196,23 +196,37 @@ for _name, _t in TASKS.items():
     _t.update(simulator_name="topogym", image="topogym")
 
 
-def simulator_config(task: str, eval_index: int) -> dict:
+def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
+                     seed: int | None = None, task_parameters: dict | None = None) -> dict:
     """The full SimulatorConfig of eval index `eval_index` of `task`, as instance.json stores it."""
     spec = TASKS[task]
-    if not 0 <= eval_index < len(spec["instances"]):
-        raise ValueError(f"{task} has eval indices 0..{len(spec['instances']) - 1}")
-    inst = spec["instances"][eval_index]
+    if variation_id is not None or seed is not None:
+        if variation_id is None or seed is None or eval_index is not None:
+            raise ValueError("supply variation_id AND seed, or eval_index, exclusively")
+        inst = dict(variation_id=variation_id, seed=seed)
+    else:
+        if eval_index is None or not 0 <= eval_index < len(spec["instances"]):
+            raise ValueError(f"{task} has eval indices 0..{len(spec['instances']) - 1}")
+        inst = spec["instances"][eval_index]
+    from topogym.config.registry import variation_registration
+    if spec["fixture"]:
+        _register_cube()
+    resolved = variation_registration(spec["task_id"], inst["variation_id"], inst["seed"])
     cfg = {**dict(task_id=spec["task_id"], robot_id=spec["robot"], variation_id=inst["variation_id"], seed=int(inst["seed"])),
            **_COMMON, **spec["simulator"]}
     assist = spec["grasp_assist"]
     if assist == "recommended":
         from dataclasses import asdict
         from importlib import import_module
-        found = import_module(f"topogym.tasks.{spec['task_id']}.common").recommended_grasp_assist(inst["variation_id"], int(inst["seed"]))
+        found = import_module(f"topogym.tasks.{spec['task_id']}.common").recommended_grasp_assist(resolved["variation_id"], int(inst["seed"]))
         assist = None if found is None else json.loads(json.dumps(asdict(found)))
     if assist:
         cfg["grasp_assist"] = assist
-    return cfg
+    if task_parameters:
+        cfg["task_parameters"] = task_parameters
+    from topogym.simulator.config import SimulatorConfig
+    from topogym.utils.io import to_jsonable
+    return to_jsonable(SimulatorConfig(**cfg))  # validate and freeze defaults before construction
 
 
 def _log(*a: Any) -> None:
@@ -670,6 +684,7 @@ def _plain(v):
 
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
+                 variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
                  strict: bool = False, max_steps: int | None = None, backend: str = DEFAULT_BACKEND):
         if task not in TASKS:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
@@ -678,16 +693,20 @@ class Session:
         self.task, self.spec = task, TASKS[task]
         inst = None
         if instance is not None:
+            if any(x is not None for x in (eval_index, variation_id, seed, task_parameters)):
+                raise ValueError("frozen instance cannot be combined with scene overrides")
             inst = json.load(open(instance))
             if inst.get("task") != task:
                 raise ValueError(f"instance task {inst.get('task')} != session task {task}")
-            eval_index = int(inst["eval_index"])
+            eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
-        elif eval_index is None:
-            raise ValueError("need instance=path or eval_index=<index into the family's instances>")
+            cfg["task_parameters"] = dict(cfg.get("task_parameters", {}))
+            dependency = cfg["task_parameters"].get("initial_state_path")
+            if dependency and not Path(dependency).is_absolute():
+                cfg["task_parameters"]["initial_state_path"] = str(Path(instance).resolve().parent / dependency)
         else:
-            cfg = simulator_config(task, int(eval_index))
-        self.eval_index, self.max_steps, self.backend = int(eval_index), int(max_steps or MAX_STEPS), backend
+            cfg = simulator_config(task, eval_index, variation_id=variation_id, seed=seed, task_parameters=task_parameters)
+        self.eval_index, self.max_steps, self.backend = eval_index, int(max_steps or MAX_STEPS), backend
         self.config = cfg
         if self.spec["fixture"]:
             _register_cube()
@@ -843,7 +862,8 @@ class Session:
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
         np.savez(path, actions=np.asarray(actions, dtype=np.float32), task=self.task, topogym_task=self.config["task_id"],
-                 variation_id=self.config["variation_id"], eval_index=self.eval_index, instance_sha=self.instance_sha,
+                 variation_id=self.config["variation_id"], eval_index=-1 if self.eval_index is None else self.eval_index,
+                 scene_seed=int(self.config["seed"]), instance_sha=self.instance_sha,
                  action_dim=self.action_dim, action_layout=np.array(self.action_layout), meta=json.dumps(meta or {}))
 
     def replay(self, actions: np.ndarray) -> dict[str, Any]:
@@ -1331,13 +1351,31 @@ def _source() -> dict:
 
 
 def cmd_make_instance(a) -> None:
-    s = Session(a.task, eval_index=a.eval_index)
+    params = json.loads(Path(a.task_parameters).read_text()) if a.task_parameters else None
+    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed, task_parameters=params)
     import genesis as gs
     out = {"task": a.task, "topogym_task": s.config["task_id"], "variation_id": s.config["variation_id"], "seed": s.config["seed"],
            "eval_index": s.eval_index, "text": s.spec["text"], "simulator": s.config, "state_sha": s.instance_sha,
            "action_dim": s.action_dim, "action_layout": s.action_layout, "control_hz": s.control_hz, "backend": s.backend,
            "reset_joint_targets": [round(float(x), 6) for x in s.joint_positions()], "objects": s.objects(),
-           "genesis_version": gs.__version__, "topogym_source": _source()}
+           "genesis_version": gs.__version__, "topogym_source": _source(),
+           "resolved_variation_id": s.env._variation["variation_id"],
+           "scene_variation": s.env._scene_variation,
+           "effective_task_parameters": s.env._task.config,
+           "evaluable_for_task_success": bool(getattr(s.env._task, "goal_complete", True))}
+    # Package numeric Blanket state alongside each instance, including its hashes.
+    dependency = s.config.get("task_parameters", {}).get("initial_state_path")
+    if dependency:
+        import shutil
+        source = Path(dependency).resolve().parent
+        target = Path(a.out).resolve().parent / "instance_assets" / "initial_state"
+        if source != target:
+            shutil.copytree(source, target, dirs_exist_ok=True)
+        relative = "instance_assets/initial_state/" + Path(dependency).name
+        out["simulator"]["task_parameters"]["initial_state_path"] = relative
+        out["effective_task_parameters"]["initial_state_path"] = relative
+    from topogym.utils.io import to_jsonable
+    out = to_jsonable(out)
     Path(a.out).write_text(json.dumps(out, indent=1))
     print(json.dumps({"instance": a.out, "state_sha": s.instance_sha}), flush=True)
     s.close()
@@ -1425,10 +1463,43 @@ def cmd_selftest(a) -> None:
     sys.exit(0 if ok else 1)
 
 
+def cmd_smoke(a) -> None:
+    """Short real build/action/reset/replay and RGB evidence; no solvability claim."""
+    out = Path(a.out_dir); out.mkdir(parents=True, exist_ok=True)
+    s = Session(a.task, instance=a.instance, strict=True)
+    from topogym.recording.segment import SegmentMedia, save_rgb
+    media = None
+    try:
+        s.record_start()
+        save_rgb(out, "initial_rgb", s.env.sensor_frame())
+        media = SegmentMedia(out, 0, s.env.sensor_frame())
+        for _ in range(3):
+            s.step(s.hold_action())
+            if not np.isfinite(s.joint_positions()).all():
+                raise ValueError("non-finite robot state")
+            media.append(s.env.sensor_frame())
+        recording = media.finish(); media = None
+        actions = s.record_stop()
+        s.save_trajectory(actions, str(out / "trajectory.npz"))
+        status = s.status()
+        if status.get("episode_end") not in (None, "success"):
+            raise ValueError(f"short hold ended with {status['episode_end']}")
+        result = dict(passed=True, scope="short_build_action_reset_rgb", control_steps=len(actions),
+                      instance_matches=s.instance_matches, status=status, replay=s.replay(actions),
+                      evaluable_for_task_success=bool(getattr(s.env._task, "goal_complete", False)), recording=recording)
+        (out / "smoke.json").write_text(json.dumps(result, indent=2))
+        print(json.dumps(result))
+    finally:
+        if media is not None:
+            media.abort()
+        s.close()
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
-    q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int, required=True)
+    q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int)
+    q.add_argument("--variation"); q.add_argument("--scene-seed", type=int); q.add_argument("--task-parameters")
     q.add_argument("--out", required=True); q.set_defaults(fn=cmd_make_instance)
     q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True)
     q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
@@ -1440,6 +1511,8 @@ def main() -> None:
     q.add_argument("--cameras", default=None); q.add_argument("--cols", type=int, default=3); q.set_defaults(fn=cmd_render)
     q = sub.add_parser("describe"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True)
     q.set_defaults(fn=cmd_describe)
+    q = sub.add_parser("smoke"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True)
+    q.add_argument("--out-dir", required=True); q.set_defaults(fn=cmd_smoke)
     q = sub.add_parser("selftest"); q.add_argument("--task", default="cube_pick_place"); q.add_argument("--eval-index", type=int, default=0)
     q.add_argument("--code", required=True); q.add_argument("--out-dir", required=True); q.set_defaults(fn=cmd_selftest)
     a = p.parse_args(); a.fn(a)

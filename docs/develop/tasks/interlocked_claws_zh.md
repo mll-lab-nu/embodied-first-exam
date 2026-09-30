@@ -1,5 +1,7 @@
 # 双爪互锁
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 下一轮开发要求：[medium 锐角双窗 scripted policy 与全流程验收](hedgehog_claws_scripted_policy_plan_20260927_zh.md)。沿用原夹爪已持件且中央互锁的 segment0，验证两窗连续通路与两次定向机制；完整验收区分分离里程碑和当前目标区终态，尚未新增完整成功记录。
 
 > **2026-09-27 更新：** 三档 segment0 已由原 ALOHA 夹爪分别夹住独立 claw，并保持中央互锁；medium 为相对夹爪、55° 锐角双窗和 J 钩；hard 增加平整握柄面。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。

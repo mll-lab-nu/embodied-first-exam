@@ -1,5 +1,7 @@
 # 三档场景描述与变体部署记录
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 **2026-09-29 Blanket 场景范围更新：** 三个难度类已改为共用聚褶构造，构形目标角 0° / 135° / 270°，`gathered_scene_v1`。采用平坦出生与物理构形的冻结状态，按用户要求显式暂缓粒子静稳资格，保留材料／绑定／落桌检查；实际释放后形态会松弛。旧五折、折卷分别保留为 `simple_folds` / `five_folds` 和 `fold_roll` 实验入口。具体初态、seed 范围、调用和验证见 [Blanket 当前说明](blanket_flatten_zh.md) 与 [本轮证据](../../../runs/test_results/blanket_three_tiers_20260929_01/README.md)。下文 32/39 及旧 Blanket 家族是 9 月 25 日核对快照，不是本轮最新统计。
 
 **2026-09-29 Rope 场景补齐：**Easy 已接入 R1/R2、138 mm 净孔；Medium 保留原三环、138 mm 净孔；Hard 已接入同位置三环、100 mm 净孔，支架同步内移。绳初态和材料共用，三档资产重复构建通过。见 [Rope 当前说明](rope_threading_zh.md)及[三档预览与报告](../../../runs/test_results/rope_threading_scenes_20260929/preview.md)。以下全局数量与缺口清点保留其标注日期的历史口径，Rope 的占位描述由本条和更新后的场景行覆盖；场景接入不代表解法或难度已验收。

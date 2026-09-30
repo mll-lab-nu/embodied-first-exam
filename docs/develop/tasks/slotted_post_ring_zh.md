@@ -1,5 +1,7 @@
 # 第 12 项：长孔立柱解环
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 > **2026-09-29 更新：** Easy / Medium / Hard 已有独立可构建场景，当前物理途径为 Genesis FEM/IPC。几何与相关回归通过；长时稳定性因 CUDA 显存不足及原生 IPC `cudaErrorInvalidDevice` 阻塞，未通过。见[本轮证据与复跑说明](../../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。下文 2026-09-21 的 MuJoCo 一维绳与 FEM 试验是历史版本，不能授予当前场景资格。
 
 ## 当前三档场景与稳定性验收
@@ -16,7 +18,7 @@
 
 静态检查覆盖封闭网格、真实孔洞、绳—实体与自碰净空、过柱截面与端盘限位关系，以及同 seed 重新生成资产的字节复现。过柱截面关系仅说明绳路允许时裸环可越柱顶；不代表绳与机器人同时存在时的完整解脱路径。
 
-[`validate_slotted_post_scenes.py`](../../../scripts/validate_slotted_post_scenes.py) 冻结源码后，为三档各执行一次主步长 2.5 ms 和半步长 1.25 ms，均为 4 个求解子步、25 ms 控制周期、seed=0、10 s 连续 home hold。通过现有 `Env`、`SceneEvidence` 与公共 `RecordingSession` 保存四路 Nyx / compact_lab 实际录像、配置、资产、逐 tick 指标和状态样本。
+[`validate_slotted_post_scenes.py`](../../../legacy/research_tools_20260929/scripts/validate_slotted_post_scenes.py) 冻结源码后，为三档各执行一次主步长 2.5 ms 和半步长 1.25 ms，均为 4 个求解子步、25 ms 控制周期、seed=0、10 s 连续 home hold。通过现有 `Env`、`SceneEvidence` 与公共 `RecordingSession` 保存四路 Nyx / compact_lab 实际录像、配置、资产、逐 tick 指标和状态样本。
 
 每个 Env 物理 tick 检查有限状态、IPC 有效性、FEM 最小体积比 ≥0.2、两端连接误差 ≤0.5 mm、刚体接触穿透 ≤1 mm、全体任务几何处于桌面范围且无超过 0.1 mm 的桌面穿透。末两秒要求 FEM 最大 / RMS 速度 ≤5 / 1 mm/s，动态刚体线速度 ≤2 mm/s、角速度 ≤0.03 rad/s，所有绳顶点及动态刚体网格顶点漂移 ≤2 mm。两次运行都通过后，比较对应末态顶点，最大差异须 ≤2 mm。IPC 有效性与现有接触诊断不等于独立表面 CCD 证书；采样覆盖物理 tick，不宣称覆盖每个原生求解子步。
 

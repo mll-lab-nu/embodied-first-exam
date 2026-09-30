@@ -1,5 +1,7 @@
 # 绳穿环：Easy / Medium / Hard 场景
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 ## 当前三档场景（2026-09-29）
 
 三档均已接入统一 `topogym.make("rope_threading", variation_id=...)`，本轮先完成场景布设。

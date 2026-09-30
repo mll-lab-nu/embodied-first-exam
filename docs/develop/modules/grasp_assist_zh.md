@@ -1,5 +1,7 @@
 # 公共自动抓持辅助：刚体、FEM IPC 与 PBD
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 2026-09-26。对应 [assist 工程计划 §9](../tasks/assist_integration_engineering_plan_20260925_zh.md#9-blanket-初始化之外可以独立推进的-assist2026-09-26-复核)。
 
 2026-09-27：按 [柔体开发计划](soft_grasp_assist_engineering_plan_20260927_zh.md)接入 `ipc_soft_band_v1` 和 `pbd_local_patch_v1`。两者复用当前 Env、自动 manager、SegmentRunner 和 recording；实际资格与剩余限制见计划的实施记录，不继承历史任务成功标签。
@@ -112,7 +114,7 @@ GPU case 应串行运行。mechanism 是显式机械夹具、无 RGB；robot 默
 
 ## 验收入口与剩余工作
 
-[test_grasp_assist.py](../../../scripts/test_grasp_assist.py) 在独立源码副本中执行，记录源码哈希、引擎身份、pytest 日志、失败与逐 tick 数据：
+[test_grasp_assist.py](../../../legacy/research_tools_20260929/scripts/test_grasp_assist.py) 在独立源码副本中执行，记录源码哈希、引擎身份、pytest 日志、失败与逐 tick 数据：
 
 ```bash
 .venv-gs121-nyx/bin/python scripts/test_grasp_assist.py \

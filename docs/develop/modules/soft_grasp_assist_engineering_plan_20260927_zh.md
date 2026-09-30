@@ -1,5 +1,7 @@
 # FEM IPC 绳与 PBD 布的公共自动抓持开发计划
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 2026-09-27。状态：**两种柔体后端已实现；独立双夹爪机制、标准 Panda 的两种材料完整 rollout 与 Nyx 录像已通过。实际范围见 §10；多层布、完整 ALOHA 双臂与 T10 等未验收项单列，下面的完整矩阵不是全通过声明。**
 
 ## 1. 开发结论与任务边界
@@ -26,7 +28,7 @@
 | [grasp_manager.py](../../../topogym/world/physics/grasp_manager.py)、[grasp_rigid.py](../../../topogym/world/physics/grasp_rigid.py) | 已有动作意图、连续准入、事件与恢复框架；manager 的 link key、`relative_error` 和 `ideal_six_dof_weld` 读数仍带刚体假设，需要扩展。 |
 | [utils/grasp.py](../../../topogym/utils/grasp.py) | 已有 `material_patch` 交集选片；缺材料区域声明、柔体候选分组、表面邻近门控与区域重叠协议。 |
 | [ipc.py](../../../topogym/world/physics/ipc.py) | 当前 `SoftVertexStitch` 是建场时的永久端点连接；已有 native dump 和数值 geometry 属性恢复基础，没有临时手部约束生命周期。 |
-| [fem.py](../../../topogym/world/physics/fem.py)、[FEM checkpoint 探针](../../../tests/integration/test_genesis_fem_ipc.py) | 有 FEM 材料坐标、短管建模及永久连接测试素材，可提取为独立绳夹具；现有端点探针不是动态抓持验收。 |
+| [fem.py](../../../topogym/world/physics/fem.py)、[FEM checkpoint 探针](../../../legacy/research_tools_20260929/tests/integration/test_genesis_fem_ipc.py) | 有 FEM 材料坐标、短管建模及永久连接测试素材，可提取为独立绳夹具；现有端点探针不是动态抓持验收。 |
 | 已安装 Genesis 1.2.1 的 `PBDBaseEntity.fix_particles_to_link / release_particle`（布实体继承） | 有真实附着／释放入口，保存实际 link 局部偏移；仍需核对原生数组、碰撞范围和释放速度，不能只设置 Python `active`。 |
 | [world/state.py](../../../topogym/world/state.py) | 已捕获 solver/coupler 数组；新增 Python 状态要显式保存。新增模块不自动进入数组遍历白名单，必须逐字段审计恢复覆盖。 |
 

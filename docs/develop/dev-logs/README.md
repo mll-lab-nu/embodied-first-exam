@@ -1,5 +1,9 @@
 # 开发分析与重构记录
 
+2026-09-29：本目录历史记录涉及的独立研究、诊断与测试入口已按用户授权移入
+[统一归档](../../../legacy/research_tools_20260929/README.md)。历史操作命令不作为当前入口；
+原路径可通过归档 `manifest.json` 查询，当前入口见 [scripts/README](../../../scripts/README.md)。
+
 - [Scripted policy 调度与方块 rollout 实施记录](scripted_policy_execution_implementation_20260926_zh.md)：用户已授权本地被动策略实现与真实 Genesis/Nyx 验收；源码迁入 rollout_simulation，输出遵循 task_rollouts 下的实验／任务／rollout 层级。下文的暂停记录保留原日期，不适用于本次已授权验收。
 
 - [Task成功判据、四种操作模式与可解性验证计划](task_success_control_and_solvability_plan_20260924_zh.md)：逐项核对13任务；Coil保留两件分离初态、以操作拼装完成为目标，规划零奖励占位、统一成功规则、共享机械臂操作及可重复的机器人成功见证；本轮仅文档，GPU继续暂停。

@@ -1,5 +1,7 @@
 # Cast Keyhole 三档 policy 与实际可解性验证
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 本目录实现当前 `cast_keyhole_easy / medium / hard` 的被动状态反馈 policy。
 执行由公共 `SegmentRunner.run_policy` 完成：policy 只能读获准的当前观测、返回
 ALOHA `EE_ABS` action；没有物体位姿写入、物理推进、reset 或 attach/detach。

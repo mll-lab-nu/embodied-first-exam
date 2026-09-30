@@ -4,7 +4,8 @@ Each step wraps an existing BuzzWirePolicy part or recipes helper and plans at
 the step's actual start state (after any diagnostic rewind). Budgets are about
 twice the simulated duration the same stage took in buzz_easy_dev06 and
 buzz_easy_continuous_20260929_02. Passing steps are not a proof; the continuous
-run still needs native success and scripts/audit_buzz_wire_policy.py.
+run still needs native success and independent audit (the historical audit tool
+is archived under legacy/research_tools_20260929/scripts/).
 """
 import json
 from pathlib import Path

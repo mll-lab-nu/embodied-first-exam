@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate tasks/topogym-<family>-i<NN>/ (unlimited) from the topogym-cube-pick-place-i00 template (TopoGym tasks only).
+"""Generate self-contained unlimited tasks from harbor_templates/topogym (TopoGym tasks only).
 Adapted from robot_coding_bench's scripts/robowits_mk_task.py (fa59c1a6).
-usage: scripts/topogym_mk_task.py <family> [--eval-index 0] [--oracle <oracle.py>] [--instance <instance.json>]
+usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded --scene-seed N | --instance <instance.json>]
                                   [--difficulty "<paragraph>"] [--python <simulator python>]
   <family>      a key of rcb_topogym.TASKS (the folder slug becomes topogym-<family-with-dashes>-i<NN>)
   --oracle      the human-written reference solution; copied to solution/oracle_<family>.py and recorded by solution/solve.sh.
@@ -10,16 +10,18 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0] [--oracle <oracle.py
   --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
 Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
 The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
-change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh)."""
+change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh).
+Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 root = pathlib.Path(__file__).resolve().parents[1]
-TEMPLATE = root / "tasks/topogym-cube-pick-place-i00"
-SHARED = ["environment/rcb_topogym.py", "environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
+TEMPLATE = root / "harbor_templates/topogym/unlimited"
+TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
+SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
-BUDGET_S = 5400
+BUDGET_S = 21600
 
 
 def startup_instruction(fam: str, *, limited: bool = False) -> str:
@@ -58,8 +60,16 @@ def startup_instruction(fam: str, *, limited: bool = False) -> str:
 
 
 def run_tool(python, *args) -> dict:
-    env = dict(os.environ, RCB_SESSION_LOG="", PYTHONPATH=str(TEMPLATE / "environment"))
-    p = subprocess.run([python, str(TEMPLATE / "environment/rcb_topogym.py"), *map(str, args)], env=env, capture_output=True, text=True)
+    env = dict(os.environ, RCB_SESSION_LOG="", PYTHONPATH=str(root))
+    cmd = [python, str(TOOL), *map(str, args)]
+    if os.environ.get("TOPOGYM_TOOL_IMAGE"):
+        mount = os.environ["TOPOGYM_RUN_ROOT"]
+        cmd = ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", "all",
+               "--label", "topogym.difficulty-run=" + os.environ["TOPOGYM_RUN_ID"],
+               "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
+               "-v", f"{mount}:{mount}", "-w", mount, os.environ["TOPOGYM_TOOL_IMAGE"],
+               "python", str(TOOL), *map(str, args)]
+    p = subprocess.run(cmd, env=env, capture_output=True, text=True)
     lines = [l for l in p.stdout.splitlines() if l.startswith("{")]
     if p.returncode or not lines:
         err = p.stderr[p.stderr.rfind("Traceback"):] if "Traceback" in p.stderr else p.stderr[-3000:]
@@ -233,7 +243,7 @@ timeout_sec = {float(vt)}
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
-timeout_sec = {float(BUDGET_S)}             # TopoGym budget: 1.5 h of wall clock
+timeout_sec = {float(BUDGET_S)}             # Agent wall-clock budget; verifier has its own budget
 # egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
 
 [environment]
@@ -247,18 +257,35 @@ build_timeout_sec = 1800.0
 
 
 def main() -> None:
+    global BUDGET_S, IMAGE
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("family"); ap.add_argument("--eval-index", type=int, default=0); ap.add_argument("--oracle", default=None)
+    ap.add_argument("family"); ap.add_argument("--eval-index", type=int); ap.add_argument("--oracle", default=None)
+    ap.add_argument("--variation"); ap.add_argument("--scene-seed", type=int); ap.add_argument("--task-parameters")
+    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "tasks")
+    ap.add_argument("--build-root", type=pathlib.Path, default=root / "runs/task_build")
+    ap.add_argument("--slug"); ap.add_argument("--image", default=IMAGE)
+    ap.add_argument("--agent-wall-clock-s", type=int, default=BUDGET_S)
     ap.add_argument("--instance", default=None); ap.add_argument("--difficulty", default=None)
     ap.add_argument("--hours", type=float, default=None, help="expert_time_estimate_hours")
     ap.add_argument("--python", default=str(root / ".venv-gs121-nyx/bin/python"))
     ap.add_argument("--reuse-describe", action="store_true", help="re-render the texts from runs/task_build/<slug>/describe.json (no GPU)")
     a = ap.parse_args()
-    sys.path.insert(0, str(TEMPLATE / "environment"))
+    if not 0 < a.agent_wall_clock_s <= 21600:
+        ap.error("--agent-wall-clock-s must be in 1..21600")
+    if a.variation is not None or a.scene_seed is not None:
+        if a.variation is None or a.scene_seed is None or a.eval_index is not None or a.instance:
+            ap.error("--variation and --scene-seed must be paired, without --eval-index/--instance")
+    elif not a.instance and a.eval_index is None:
+        a.eval_index = 0  # old invocations retain i00 behavior
+    BUDGET_S, IMAGE = a.agent_wall_clock_s, a.image
+    sys.path.insert(0, str(TOOL.parent))
     import rcb_topogym as M                 # the registry only (no simulator import)
     fam = a.family; spec = M.TASKS[fam]
-    slug = f"topogym-{fam.replace('_', '-')}-i{a.eval_index:02d}"
-    dst = root / "tasks" / slug
+    slug = a.slug or f"topogym-{fam.replace('_', '-')}-i{a.eval_index or 0:02d}"
+    import re
+    if not re.fullmatch(r"topogym-[a-z0-9-]+", slug):
+        ap.error("invalid task slug")
+    dst = a.tasks_root.resolve() / slug
     for d in ("environment", "tests", "solution"):
         (dst / d).mkdir(parents=True, exist_ok=True)
     if dst != TEMPLATE:
@@ -266,17 +293,32 @@ def main() -> None:
             shutil.copy(TEMPLATE / f, dst / f)
         for f in dst.glob("solution/oracle_*.py"):
             f.unlink()
+    shutil.copy(TOOL, dst / "environment/rcb_topogym.py")
+    for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+        p = dst / rel
+        p.write_text(re.sub(r"^FROM .*", f"FROM {IMAGE}", p.read_text(), flags=re.M))
     shutil.copy(dst / "environment/rcb_topogym.py", dst / "tests/rcb_topogym.py")
     inst_path = dst / "environment/instance.json"
     if a.instance:
         if pathlib.Path(a.instance).resolve() != inst_path.resolve():
             shutil.copy(a.instance, inst_path)
+        assets = pathlib.Path(a.instance).parent / "instance_assets"
+        if assets.is_dir() and assets.resolve() != (dst / "environment/instance_assets").resolve():
+            shutil.copytree(assets, dst / "environment/instance_assets", dirs_exist_ok=True)
     else:
-        run_tool(a.python, "make-instance", "--task", fam, "--eval-index", a.eval_index, "--out", inst_path)
+        selection = ["--variation", a.variation, "--scene-seed", a.scene_seed] if a.variation else ["--eval-index", a.eval_index]
+        if a.task_parameters:
+            selection += ["--task-parameters", a.task_parameters]
+        run_tool(a.python, "make-instance", "--task", fam, *selection, "--out", inst_path)
+    assets = dst / "environment/instance_assets"
+    assets.mkdir(exist_ok=True)
+    shutil.copytree(assets, dst / "tests/instance_assets", dirs_exist_ok=True)
     shutil.copy(inst_path, dst / "tests/instance.json")
     inst = json.loads(inst_path.read_text())
-    assert inst["task"] == fam and int(inst["eval_index"]) == a.eval_index, (inst["task"], inst["eval_index"])
-    build = root / "runs/task_build" / slug; build.mkdir(parents=True, exist_ok=True)
+    if inst["task"] != fam or (a.eval_index is not None and inst["eval_index"] != a.eval_index):
+        raise ValueError("frozen instance task/eval-index mismatch")
+    a.eval_index = inst["eval_index"]
+    build = a.build_root.resolve() / slug; build.mkdir(parents=True, exist_ok=True)
     if a.reuse_describe:
         d = json.loads((build / "describe.json").read_text())
     else:

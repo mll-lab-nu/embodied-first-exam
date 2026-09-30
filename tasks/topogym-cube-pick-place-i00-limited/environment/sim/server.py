@@ -67,7 +67,8 @@ def write_final() -> None:
                "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
                "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
                "video_done": bool(E.get("video_done"))},
-              open(os.path.join(DATA, "final.json"), "w"))
+              open(os.path.join(DATA, "final.json.tmp"), "w"))
+    os.replace(os.path.join(DATA, "final.json.tmp"), os.path.join(DATA, "final.json"))
 
 
 def finalize() -> None:
@@ -166,7 +167,7 @@ SPEC = {
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "21600"))},
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -237,6 +238,9 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded control step. True when the episode must stop (runaway guard, or the task's own failure predicate)."""
+    if deadline_reached():
+        finish("timeout")
+        return True
     guard = S.step(a); rec.tick()
     if guard: finish("step_guard")
     elif S.episode_end not in (None, "success"): finish("task_failed")
@@ -348,6 +352,10 @@ def _end_from_signal():
     else: start_finalize()
 
 
+def deadline_reached():
+    return E["ready"] and not E["done"] and time.monotonic() >= E["deadline"]
+
+
 def on_usr1(*_):
     JOBS.put(_end_from_signal)              # handled by the main thread between simulator jobs
 signal.signal(signal.SIGUSR1, on_usr1)
@@ -355,6 +363,7 @@ signal.signal(signal.SIGUSR1, on_usr1)
 log({"ev": "start", "task": TASK, "eval_index": S.eval_index, "state_sha": S.state_sha(), "protocol": PROTOCOL}); write_final()
 S.record_start()
 E["ready"] = True; E["t0"] = time.time()
+E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"]
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready", flush=True)
 L.check_spec(SPEC)
@@ -362,6 +371,8 @@ threading.Thread(target=L.serve, daemon=True, args=(L.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
     kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log),)).start()
 while True:                                 # the main thread: simulator jobs in order; signals are handled between them
+    if deadline_reached():
+        finish("timeout")
     try:
         job = JOBS.get(timeout=0.5)
     except queue.Empty:

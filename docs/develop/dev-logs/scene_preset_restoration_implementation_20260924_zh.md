@@ -14,7 +14,7 @@
 | [`topogym/tasks/horseshoe_ring.py`](../../../topogym/tasks/horseshoe_ring.py) | 仅对 `target_ring` 的 URDF visual 应用现有铜色 PBR 工具并记录外观元数据；马蹄与链条保留原色；物理声明未调整 |
 | [`topogym/tasks/lock_picking.py`](../../../topogym/tasks/lock_picking.py) | 三块转盘和终点板接入已有 `paint_aperture_outline`；正反面沿孔外实体侧描线，随所属盘运动；生成报告的资产引用转为相对路径 |
 | [`topogym/tasks/orbits.py`](../../../topogym/tasks/orbits.py) | 区分底座中心与整体 AABB 中心；对各零件的视觉/碰撞资产、合并预览、绳中心线及 FEM 初始顶点使用同一旋转；保留材料坐标、四面体连接及端点身份；记录两种中心、长轴和世界包围盒，刷新生成资产哈希 |
-| [`tests/unit/test_scene_presets.py`](../../../tests/unit/test_scene_presets.py) | 更新 Orbits 默认布局断言，增加整套网格/FEM 同步变换及旧中心参数兼容用例；现有跨目录资产复现检查加入 Horseshoe、Orbits。**该文件 21 项检查全部通过** |
+| [`tests/unit/test_scene_presets.py`](../../../legacy/research_tools_20260929/tests/unit/test_scene_presets.py) | 更新 Orbits 默认布局断言，增加整套网格/FEM 同步变换及旧中心参数兼容用例；现有跨目录资产复现检查加入 Horseshoe、Orbits。**该文件 21 项检查全部通过** |
 | 本报告、原计划及[视频 README](../../../runs/test_results/base_acceptance_final/README.md) | 记录实际验证结果；README 新增三项新预设的短程录像和 PNG，原较长视频链接按历史版本保留 |
 
 改动限于 **4 个产品文件、1 个测试文件和 3 个文档文件**。复用现有材质工具及 Lock 几何描线函数，未改公共 API、机器人、世界/物理模块或几何生成器。

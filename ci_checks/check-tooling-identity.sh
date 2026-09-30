@@ -16,7 +16,7 @@
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-python3 - "${1:-$root/tasks}" <<'PY'
+python3 - "${1:-$root/tasks}" "$root" <<'PY'
 import collections, hashlib, os, sys
 tasks = sys.argv[1]
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "topogym": "rcb_topogym.py"}
@@ -51,7 +51,18 @@ bad = [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p i
 bad += [f"rcb-limited/2.2 layer: {len(v)} versions of {role} across {', '.join(LAYER_BENCH)}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for role, v in sorted(layer.items()) if len(v) > 1]
 import json, subprocess
-root = os.path.dirname(os.path.abspath(tasks))
+root = sys.argv[2]
+template = os.path.join(root, "harbor_templates", "topogym")
+canonical = {"rcb_topogym.py": "common/rcb_topogym.py",
+             "unlimited tests/grade.py": "unlimited/tests/grade.py"}
+canonical.update({"limited " + rel: "limited/" + rel for rel in SHARED
+                  if os.path.isfile(os.path.join(template, "limited", rel))})
+for role, rel in canonical.items():
+    with open(os.path.join(template, rel), "rb") as f:
+        expected = hashlib.sha256(f.read()).hexdigest()[:16]
+    for actual, path in seen.get("topogym", {}).get(role, {}).items():
+        if actual != expected:
+            bad.append(f"{path}: differs from public template {rel}")
 vendor = json.load(open(os.path.join(root, "ci_checks", "rcb_vendor.json")))
 for rel in vendor["verbatim"]:
     p = os.path.join(root, rel)

@@ -1,5 +1,7 @@
 # 被动策略与参考运动
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 当前已验收的可解性证明统一保存于 [solvability_proof/](../../solvability_proof/README.md)。[Cast Keyhole](../../solvability_proof/cast_keyhole/README.md) 与 [Cast Coil](../../solvability_proof/cast_coil/README.md) 均完成三档默认参数、seed 0 的实际 Task success 和独立逐 tick 复核，包含冻结 policy/IK 源码与完整 action/状态证据；使用显式 CPU 25 ms tick / 40 子步、接触触发的辅助抓持，无 RGB/视频。下方 9 月 27 日 Coil 记录保留原批次范围。
 
 **分段可解性验证流程**（`solvability.py` + `scripts/run_solvability_workflow.py`，2026-09-29）把一局拆成若干段（空手移动、抓取、持工具交互、松手、静置），每段有入口检查、逐物理 tick 的不变量检查（例如工具／机械臂不碰导线、接触统计完整）、出口检查和仿真时长上限，下一段总是从上一段结束时的实际状态重新规划。诊断模式在同一个存活的 Env 里运行：某段失败就回溯到这一段的起点，换下一个候选参数；候选用完则保持 Env 存活，等待 `control/next.json` 提交的新参数（只收 JSON 参数，不热加载代码）。每段选中的参数写入 `qualification/selection.json`，正式模式用 `--selection` 从 home 连续执行、不回溯。一次零回溯、从出生态开始且原生 success 的诊断运行，本身就是连续执行证据，状态记为 `native_success_pending_independent_audit`。无论哪种，仍须任务自己的独立审计通过才计入 `solvability_proof`；局部段通过、只读路径检查通过都不算证明。任务接入方式是 `factory(env, context)` 逐步产出 `Step(name, candidates, build)`，Buzz 的实现见 `buzz_wire_3d/stages.py`。

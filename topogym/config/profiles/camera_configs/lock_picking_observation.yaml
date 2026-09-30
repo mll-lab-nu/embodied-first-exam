@@ -1,0 +1,16 @@
+# World metres; vertical FOV in degrees. Three default tiers, seed 0.
+# Geometry/frustum and aperture-face ray checks only; Nyx review pending.
+camera_rig:
+  id: lock_picking_observation_v2
+cameras:
+  agentview:
+    # Whole puzzle, including the resting key and final plate.
+    pos: [0.75, -0.82, 1.30]
+    lookat: [0.058, -0.171, 0.921]
+    fov: 38.4
+  front_oblique:
+    # Opposite (-x, +y) side of the mechanism from agentview (+x, -y).
+    # Frame all three discs and the final plate closely; key tray may crop.
+    pos: [-0.35, 0.35, 1.30]
+    lookat: [0.192, -0.268, 1.032]
+    fov: 29.5

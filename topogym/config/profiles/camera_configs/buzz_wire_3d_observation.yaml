@@ -1,0 +1,15 @@
+# World metres; vertical FOV in degrees. Three default tiers, seed 0.
+# Geometry/frustum checks only; robot occlusion and Nyx review pending.
+camera_rig:
+  id: buzz_wire_3d_observation_v1
+cameras:
+  agentview:
+    # Positive-x/negative-y upper corner: top plus both vertical route planes.
+    pos: [0.42, -0.80, 1.48]
+    lookat: [-0.047, -0.289, 1.021]
+    fov: 41.9
+  front_oblique:
+    # Opposite x side supplies a complementary view of bends and crossings.
+    pos: [-0.55, -0.78, 1.48]
+    lookat: [-0.114, -0.292, 1.019]
+    fov: 43.3

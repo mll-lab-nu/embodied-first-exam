@@ -1,5 +1,11 @@
 # 开锁
 
+2026-09-29 相机：Panda 默认使用任务专属主机位，完整覆盖钥匙、三张圆盘与终点板；`front_oblique` 从机构另一侧放大圆盘孔槽区域。v2 两机位分别位于机构的 (+x, -y) 与 (-x, +y) 两侧。
+[相机配置](../../../topogym/config/profiles/camera_configs/lock_picking_observation.yaml) ·
+[最新两侧投影与检查](../../../runs/test_results/task_camera_study_20260929/opposite_sides_v2/README.md) ·
+[Nyx 补拍命令](../../../runs/test_results/task_camera_study_20260929/README.md)。
+当前通过几何取景及孔槽表面采样遮挡检查，尚未取得新机位 Nyx 初始化帧。
+
 > 2026-09-27 用户授权恢复历史物理配置：medium 更新为 `historical_physics_v2`，保留当前实验室摆位，恢复 150 mm 盘距、495 mm 握柄偏移、7.5 mm 孔半径与历史两次回退槽形。公共机构恢复转盘／钥匙质量 0.12 kg、盘阻尼 0.03、接触摩擦 0.01、铰链附加惯量 0、接触时间常数 0.0025 s；参数计入实例身份。当前完整机器人验收以[本轮报告](../../../task_rollouts/lock_assist_20260927/README.md)为准，历史成功不自动继承。2026-09-26 的场景资产字节一致结论仅适用于当时版本。
 
 场景入口核对：2026-09-26；下方历史演示记录：2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。

@@ -1,5 +1,7 @@
 # 初始化场景反馈与答复（2026-09-27）
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 下一轮工作：[Hedgehog / Claws 新机制 scripted policy 开发与全流程验收](hedgehog_claws_scripted_policy_plan_20260927_zh.md)，细化两个 medium 的阶段策略、几何与抓持前置检查、机制反例、当前目标区终态合同和完整录像交付；当前为需求文档，未新增完整解题资格。
 
 本页对应本轮的数量疑问及 8 条场景反馈。历史反馈的核对依据是当时的 Task 定义、资产生成代码、冻结资产和 9 月 27 日初始化录制报告。历史录制状态截点为 **2026-09-27 18:24 UTC（Chicago 13:24）**；后台队列后续状态以[录像索引](../../../runs/test_results/base_acceptance_final/README.md)和[汇总报告](../../../runs/test_results/initial_scenes_20260927_01/summary.json)为准。
@@ -316,7 +318,7 @@ medium 的生成方法会先构造环形笼体和侧窗，再削去与预设解�
 
 Claws 首次验证发现现有落地区域选择器只尝试紧邻物体的候选区域，物体改为机器人正前方预抓持后，该区域与机器人安装底座范围重叠而被整侧拒绝。已补充沿分离方向外移至底座之外的选择逻辑，保留原有分离边界和终点规则；这一修复不修改夹爪建模。
 
-本轮新增几何检查见 [测试文件](../../../tests/unit/test_initial_scene_feedback.py)，已有相关测试结果见 [日志](../../../runs/test_results/scene_feedback_development_20260927/unit_existing.log)，新增检查结果见 [日志](../../../runs/test_results/scene_feedback_development_20260927/unit_feedback.log)。实时媒体与失败诊断统一链接到 [39 项正式初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。
+本轮新增几何检查见 [测试文件](../../../legacy/research_tools_20260929/tests/unit/test_initial_scene_feedback.py)，已有相关测试结果见 [日志](../../../runs/test_results/scene_feedback_development_20260927/unit_existing.log)，新增检查结果见 [日志](../../../runs/test_results/scene_feedback_development_20260927/unit_feedback.log)。实时媒体与失败诊断统一链接到 [39 项正式初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。
 
 
 ### 9.1 当前真实首帧与录像

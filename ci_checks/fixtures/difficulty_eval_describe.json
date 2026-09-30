@@ -1,0 +1,1045 @@
+{
+ "sec_per_step": 0.73,
+ "cameras": {
+  "cam_high": {
+   "intrinsic_cv": [
+    [
+     471.0265213,
+     0.0,
+     424.0
+    ],
+    [
+     0.0,
+     471.0265213,
+     240.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "extrinsic_cv": [
+    [
+     0.9964112,
+     -0.0846442,
+     0.0,
+     0.0996411
+    ],
+    [
+     -0.0727839,
+     -0.8567953,
+     -0.5104941,
+     0.4879009
+    ],
+    [
+     0.0432104,
+     0.5086621,
+     -0.8598812,
+     1.6641012
+    ]
+   ],
+   "cam2world_gl": [
+    [
+     0.9964113,
+     0.0727839,
+     -0.0432104,
+     -0.1356786
+    ],
+    [
+     -0.0846442,
+     0.8567953,
+     -0.5086621,
+     -0.42
+    ],
+    [
+     0.0,
+     0.5104942,
+     0.8598812,
+     1.6799999
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "image_size": [
+    848,
+    480
+   ],
+   "mount": {
+    "type": "static",
+    "extrinsic_cv": [
+     [
+      0.9964112,
+      -0.0846442,
+      -0.0,
+      0.0996411
+     ],
+     [
+      -0.0727839,
+      -0.8567953,
+      -0.5104942,
+      0.4879009
+     ],
+     [
+      0.0432104,
+      0.5086621,
+      -0.8598812,
+      1.6641013
+     ]
+    ],
+    "cam2world_gl": [
+     [
+      0.9964112,
+      0.0727839,
+      -0.0432104,
+      -0.1356786
+     ],
+     [
+      -0.0846442,
+      0.8567953,
+      -0.5086621,
+      -0.42
+     ],
+     [
+      0.0,
+      0.5104942,
+      0.8598812,
+      1.68
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "moves": false,
+   "depth_range_m": [
+    0.01,
+    5.0
+   ]
+  },
+  "cam_low": {
+   "intrinsic_cv": [
+    [
+     451.3743517,
+     0.0,
+     424.0
+    ],
+    [
+     0.0,
+     451.3743517,
+     240.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "extrinsic_cv": [
+    [
+     0.9984497,
+     -0.0556614,
+     -0.0,
+     0.1009582
+    ],
+    [
+     -0.0102424,
+     -0.1837272,
+     -0.9829239,
+     0.9855742
+    ],
+    [
+     0.0547109,
+     0.9814001,
+     -0.1840125,
+     0.8219852
+    ]
+   ],
+   "cam2world_gl": [
+    [
+     0.9984497,
+     0.0102424,
+     -0.0547109,
+     -0.1356786
+    ],
+    [
+     -0.0556614,
+     0.1837272,
+     -0.9814001,
+     -0.62
+    ],
+    [
+     0.0,
+     0.9829239,
+     0.1840125,
+     1.12
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "image_size": [
+    848,
+    480
+   ],
+   "mount": {
+    "type": "static",
+    "extrinsic_cv": [
+     [
+      0.9984497,
+      -0.0556614,
+      0.0,
+      0.1009582
+     ],
+     [
+      -0.0102424,
+      -0.1837272,
+      -0.9829239,
+      0.9855742
+     ],
+     [
+      0.0547109,
+      0.9814001,
+      -0.1840125,
+      0.8219852
+     ]
+    ],
+    "cam2world_gl": [
+     [
+      0.9984497,
+      0.0102424,
+      -0.0547109,
+      -0.1356786
+     ],
+     [
+      -0.0556614,
+      0.1837272,
+      -0.9814001,
+      -0.62
+     ],
+     [
+      0.0,
+      0.9829239,
+      0.1840125,
+      1.12
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "moves": false,
+   "depth_range_m": [
+    0.01,
+    5.0
+   ]
+  },
+  "cam_left_wrist": {
+   "intrinsic_cv": [
+    [
+     432.8971996,
+     0.0,
+     424.0
+    ],
+    [
+     0.0,
+     432.8971996,
+     240.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "extrinsic_cv": [
+    [
+     8.01e-05,
+     -0.9999997,
+     -0.0007923,
+     -0.0180012
+    ],
+    [
+     -0.3292761,
+     0.0007217,
+     -0.9442334,
+     1.0834972
+    ],
+    [
+     0.9442337,
+     0.0003365,
+     -0.3292759,
+     0.8394737
+    ]
+   ],
+   "cam2world_gl": [
+    [
+     8.01e-05,
+     0.3292761,
+     -0.9442337,
+     -0.4358881
+    ],
+    [
+     -0.9999997,
+     -0.0007217,
+     -0.0003365,
+     -0.0190657
+    ],
+    [
+     -0.0007923,
+     0.9442334,
+     0.3292759,
+     1.2994785
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "image_size": [
+    848,
+    480
+   ],
+   "mount": {
+    "type": "link",
+    "parent_link": "left/gripper_base",
+    "link_T_cam_cv": [
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.9063075,
+      0.422619,
+      -0.0824748
+     ],
+     [
+      0.0,
+      -0.422619,
+      0.9063075,
+      -0.0095955
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "moves": true,
+   "depth_range_m": [
+    0.01,
+    3.0
+   ]
+  },
+  "cam_right_wrist": {
+   "intrinsic_cv": [
+    [
+     432.8971996,
+     0.0,
+     424.0
+    ],
+    [
+     0.0,
+     432.8971996,
+     240.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "extrinsic_cv": [
+    [
+     -8.01e-05,
+     0.9999997,
+     -0.0007923,
+     0.0199771
+    ],
+    [
+     0.3292761,
+     -0.0007217,
+     -0.9442334,
+     1.1728213
+    ],
+    [
+     -0.9442337,
+     -0.0003365,
+     -0.3292759,
+     0.5832363
+    ]
+   ],
+   "cam2world_gl": [
+    [
+     -8.01e-05,
+     -0.3292761,
+     0.9442337,
+     0.1645309
+    ],
+    [
+     0.9999997,
+     0.0007217,
+     0.0003365,
+     -0.0189343
+    ],
+    [
+     -0.0007923,
+     0.9442334,
+     0.3292759,
+     1.2994785
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "image_size": [
+    848,
+    480
+   ],
+   "mount": {
+    "type": "link",
+    "parent_link": "right/gripper_base",
+    "link_T_cam_cv": [
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.9063075,
+      0.422619,
+      -0.0824748
+     ],
+     [
+      0.0,
+      -0.422619,
+      0.9063075,
+      -0.0095955
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "moves": true,
+   "depth_range_m": [
+    0.01,
+    3.0
+   ]
+  }
+ },
+ "robot_spec": {
+  "name": "aloha",
+  "description": "two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base (TopoGym, Genesis 1.2.1)",
+  "base": {
+   "type": "fixed",
+   "pose": [
+    -0.1356786,
+    0.0,
+    0.9196429,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "note": "world pose of the kinematic root link world (x y z qw qx qy qz)"
+  },
+  "joints": [
+   {
+    "name": "left/waist",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/shoulder",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.85005,
+     1.25664
+    ],
+    "velocity_limit": null,
+    "effort_limit": 144.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/elbow",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.76278,
+     1.6057
+    ],
+    "velocity_limit": null,
+    "effort_limit": 59.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/forearm_roll",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 22.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/wrist_angle",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.8675,
+     2.23402
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/wrist_rotate",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "left/left_finger",
+    "type": "prismatic",
+    "unit": "m",
+    "position_limits": [
+     0.002,
+     0.037
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "gripper_left",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp; the gripper action is the opening width, converted to this coordinate"
+   },
+   {
+    "name": "right/waist",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/shoulder",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.85005,
+     1.25664
+    ],
+    "velocity_limit": null,
+    "effort_limit": 144.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/elbow",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.76278,
+     1.6057
+    ],
+    "velocity_limit": null,
+    "effort_limit": 59.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/forearm_roll",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 22.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/wrist_angle",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -1.8675,
+     2.23402
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/wrist_rotate",
+    "type": "revolute",
+    "unit": "rad",
+    "position_limits": [
+     -3.14158,
+     3.14158
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "arm_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp"
+   },
+   {
+    "name": "right/left_finger",
+    "type": "prismatic",
+    "unit": "m",
+    "position_limits": [
+     0.002,
+     0.037
+    ],
+    "velocity_limit": null,
+    "effort_limit": 35.0,
+    "group": "gripper_right",
+    "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: the drive force clamp; the gripper action is the opening width, converted to this coordinate"
+   }
+  ],
+  "grippers": {
+   "left": {
+    "joints": [
+     "left/left_finger",
+     "left/right_finger"
+    ],
+    "opening_m": [
+     0.0,
+     0.057378001511096954
+    ],
+    "tcp_frame": "left_tcp",
+    "command": "joint_position entry left_gripper (index 6) and the ee_pose left_gripper entry: the target opening width in metres, 0 = closed .. 0.057378 = open (the nominal gap between the finger pads), converted to the gripper's native drive coordinate; it switches at the row (no interpolation). Grasping: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it"
+   },
+   "right": {
+    "joints": [
+     "right/left_finger",
+     "right/right_finger"
+    ],
+    "opening_m": [
+     0.0,
+     0.057378001511096954
+    ],
+    "tcp_frame": "right_tcp",
+    "command": "joint_position entry right_gripper (index 13) and the ee_pose right_gripper entry: the target opening width in metres, 0 = closed .. 0.057378 = open (the nominal gap between the finger pads), converted to the gripper's native drive coordinate; it switches at the row (no interpolation). Grasping: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it"
+   }
+  },
+  "controller": {
+   "type": "joint position PD per DoF (Genesis), gravity included in the simulation",
+   "control_hz": 40.0,
+   "physics_hz": 400.0,
+   "gains": {
+    "left/waist": {
+     "stiffness": 43.0,
+     "damping": 0.0
+    },
+    "left/shoulder": {
+     "stiffness": 265.0,
+     "damping": 0.0
+    },
+    "left/elbow": {
+     "stiffness": 227.0,
+     "damping": 0.0
+    },
+    "left/forearm_roll": {
+     "stiffness": 78.0,
+     "damping": 0.0
+    },
+    "left/wrist_angle": {
+     "stiffness": 37.0,
+     "damping": 0.0
+    },
+    "left/wrist_rotate": {
+     "stiffness": 10.4,
+     "damping": 0.0
+    },
+    "left/left_finger": {
+     "stiffness": 2000.0,
+     "damping": 124.0
+    },
+    "right/waist": {
+     "stiffness": 43.0,
+     "damping": 0.0
+    },
+    "right/shoulder": {
+     "stiffness": 265.0,
+     "damping": 0.0
+    },
+    "right/elbow": {
+     "stiffness": 227.0,
+     "damping": 0.0
+    },
+    "right/forearm_roll": {
+     "stiffness": 78.0,
+     "damping": 0.0
+    },
+    "right/wrist_angle": {
+     "stiffness": 37.0,
+     "damping": 0.0
+    },
+    "right/wrist_rotate": {
+     "stiffness": 10.4,
+     "damping": 0.0
+    },
+    "right/left_finger": {
+     "stiffness": 2000.0,
+     "damping": 124.0
+    }
+   },
+   "note": "targets are applied at the 40 Hz control rate and held over 10 physics step(s)"
+  },
+  "tcp": {
+   "left_tcp": {
+    "parent_link": "left/gripper_link",
+    "link_T_frame": [
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.13
+     ],
+     [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      1.0,
+      -0.003
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ],
+    "definition": "the left gripper's tool frame (TCP): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.011]. The ee_pose action, the proprio tcp pose and the IK use this frame."
+   },
+   "right_tcp": {
+    "parent_link": "right/gripper_link",
+    "link_T_frame": [
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.13
+     ],
+     [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      1.0,
+      -0.003
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ],
+    "definition": "the right gripper's tool frame (TCP): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.011]. The ee_pose action, the proprio tcp pose and the IK use this frame."
+   }
+  }
+ },
+ "kinematics": {
+  "endpoint": "/kinematics",
+  "stateless": true,
+  "joint_names": [
+   "left/waist",
+   "left/shoulder",
+   "left/elbow",
+   "left/forearm_roll",
+   "left/wrist_angle",
+   "left/wrist_rotate",
+   "right/waist",
+   "right/shoulder",
+   "right/elbow",
+   "right/forearm_roll",
+   "right/wrist_angle",
+   "right/wrist_rotate"
+  ],
+  "frame": "world",
+  "quaternion_order": "wxyz",
+  "links": [
+   "world",
+   "left/base_link",
+   "left/shoulder_link",
+   "left/upper_arm_link",
+   "left/upper_forearm_link",
+   "left/lower_forearm_link",
+   "left/wrist_link",
+   "left/gripper_link",
+   "left/gripper_base",
+   "right/base_link",
+   "right/shoulder_link",
+   "right/upper_arm_link",
+   "right/upper_forearm_link",
+   "right/lower_forearm_link",
+   "right/wrist_link",
+   "right/gripper_link",
+   "right/gripper_base",
+   "left_tcp",
+   "right_tcp"
+  ],
+  "tcp_frames": [
+   "left_tcp",
+   "right_tcp"
+  ],
+  "ee_frames": [
+   "left_tcp",
+   "right_tcp"
+  ],
+  "ik_targets": [
+   "left_tcp",
+   "right_tcp"
+  ],
+  "ik": {
+   "solver": "bounded least squares over the robot's Genesis forward kinematics, started from the seed (default: the reset pose)",
+   "joints": "the arm joints of each arm whose TCP is a target; the other arms keep their seed",
+   "collision": "none",
+   "tol_pos_m": 0.002,
+   "tol_rot_rad": 0.02,
+   "max_iters": 200
+  },
+  "note": "q = the arm joints of every arm (the order of joint_names, as proprio); the finger joints do not move any listed frame"
+ },
+ "arms": [
+  "left",
+  "right"
+ ],
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "limits": [
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   -1.8500499725341797,
+   1.2566399574279785
+  ],
+  [
+   -1.762779951095581,
+   1.6057000160217285
+  ],
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   -1.8674999475479126,
+   2.2340199947357178
+  ],
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   0.0,
+   0.057378001511096954
+  ],
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   -1.8500499725341797,
+   1.2566399574279785
+  ],
+  [
+   -1.762779951095581,
+   1.6057000160217285
+  ],
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   -1.8674999475479126,
+   2.2340199947357178
+  ],
+  [
+   -3.141580104827881,
+   3.141580104827881
+  ],
+  [
+   0.0,
+   0.057378001511096954
+  ]
+ ],
+ "control_hz": 40.0,
+ "physics_substeps": 10,
+ "table_z": 0.9196429,
+ "objects": {
+  "coil_gold": {
+   "position": [
+    -0.1263,
+    0.04804,
+    0.97399
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    -0.0,
+    0.707107
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.15405,
+     -0.001,
+     0.92014
+    ],
+    [
+     -0.09855,
+     0.101,
+     1.02214
+    ]
+   ],
+   "size": [
+    0.0555,
+    0.102,
+    0.102
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "coil_silver": {
+   "position": [
+    -0.26523,
+    0.23288,
+    0.96947
+   ],
+   "orientation_wxyz": [
+    0.5,
+    0.5,
+    -0.5,
+    0.5
+   ],
+   "euler_xyz": [
+    1.5708,
+    -1.5708,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2928,
+     0.179,
+     0.92014
+    ],
+    [
+     -0.2373,
+     0.281,
+     1.02214
+    ]
+   ],
+   "size": [
+    0.0555,
+    0.102,
+    0.102
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  }
+ },
+ "predicate": "    def evaluate_state(self, state):\n        poses, bounds, quiet, failure = self.rigid_measurements(state)\n        if failure:\n            return False, failure, {}\n        gold, silver = \"coil_gold\", \"coil_silver\"\n        pg, rg = poses[gold]; ps, rs = poses[silver]\n        pg = pg-rg.apply(self.body_origins[gold])\n        ps = ps-rs.apply(self.body_origins[silver])\n        position_error = float(np.linalg.norm(ps-pg))\n        rotation_error = float((rg.inv()*rs).magnitude())\n        separation = float(np.max(np.maximum(bounds[silver][0]-bounds[gold][1],\n                                             bounds[gold][0]-bounds[silver][1])))\n        reached = (position_error < .001 and rotation_error < .02) if self.config[\"objective\"] == \"assemble\" else separation > .01\n        released = self.released(state)\n        bottoms = [bounds[name][0][2]-self.table_height_m for name in (gold, silver)]\n        near_table = (min(bottoms) if self.config[\"objective\"] == \"assemble\" else max(bottoms)) <= self.config[\"terminal\"][\"table_clearance_m\"]\n        on_table = near_table and min(bottoms) >= -.001\n        if hasattr(self, \"table_xy_bounds\"):\n            lo, hi = self.table_xy_bounds\n            on_table &= all(np.all(bounds[n][1][:2] >= lo) and np.all(bounds[n][0][:2] <= hi) for n in (gold, silver))\n        return bool(reached and quiet and released and on_table), None, dict(\n            relative_position_error_m=position_error, relative_rotation_error_rad=rotation_error,\n            conservative_separation_m=separation, released=released, quiet=quiet,\n            near_table=bool(on_table), minimum_table_gap_m=float(min(bottoms)))\n",
+ "task_class": "CastCoilEasyTask",
+ "task_module": "topogym.tasks.cast_coil.cast_coil_easy",
+ "stable_duration_s": 0.5,
+ "grasp_rules": "physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it",
+ "grasp_assist": null
+}

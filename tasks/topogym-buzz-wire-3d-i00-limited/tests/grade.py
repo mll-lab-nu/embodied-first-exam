@@ -14,8 +14,9 @@ d = json.load(open(p))
 for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
     if os.path.exists(f"/data/{f}"): shutil.copy(f"/data/{f}", f"{LOG}/{f}")
 gpu = True  # CUDA physics: determinism reported, not required
-ok = bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu)
+valid = bool(d.get("finalized")) and d.get("replay_success") is not None and os.path.isfile("/data/trajectory.npz")
+ok = valid and bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu)
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
            "deterministic": int(bool(d.get("deterministic"))), "gpu_backend": int(gpu), "finalized": int(bool(d.get("finalized"))),
            "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0), "physics_steps": int(d.get("physics_steps") or 0),
-           "steps": int(d.get("steps") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0})
+           "steps": int(d.get("steps") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": int(not valid)})

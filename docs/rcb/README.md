@@ -1,5 +1,7 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 2026-09-29。对齐基准是 robot_coding_bench（下称“参考仓库”）服务器上最新的 `origin/dev/qineng@fa59c1a6`。参考仓库的 `main`（`fa2d613a`）是更早的祖先提交，不作为基准。
 
 ## 0. 结论
@@ -563,7 +565,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 - `planning/solvability.py` 回到某个阶段开始前的 tick，这个阶段作为一个 segment 执行；
 - `scripts/run_rigid_reference_policy.py` 回到 `runner.initial`，即这局的第一个 tick。
 
-需要回退到任意 tick 的代码，显式设 `history_storage="memory"`。已有测试通过 `tests/conftest.py` 继续用 `"memory"`。
+需要回退到任意 tick 的代码，显式设 `history_storage="memory"`。历史测试通过公共 conftest 选择 `"memory"`；该独立测试套件现已[归档](../../legacy/research_tools_20260929/tests/conftest.py)，当前 rollout 默认值不受其修改。
 
 **效果。** 下表是每个控制步的耗时。数据来自生成任务时 `describe` 在 3 个保持步上测的平均值；测量时另一个会话的 GPU 作业也在跑，而且两个生成同时运行，所以数字偏保守。参考仓库 RoboWits 约 700 步/秒。
 
@@ -641,3 +643,75 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 3. float32 动作在上下限处被误报为裁剪：上下限改存 float32 精确值。
 4. FEM 状态无法写盘，内存历史又每步增长：改为 `"segment"` 历史模式后，一局只存一份检查点（5.2）。
 5. GPU 由多个会话共用，几个 Genesis 进程同时跑会显存不足：验收作业改为按顺序执行，并请其他会话暂缓 GPU 任务。
+
+## 8. 难度评测入口
+
+主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 是 7 行兼容启动入口，只选择解释器并透传参数。配置在
+[`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。
+`--samples-per-difficulty 3` 或 `5` 可扩展样本；三档和双模式固定，每个实例/模式只跑一次。
+
+先只抽样和冻结当前源码，不启动 GPU 或模型：
+
+```bash
+cd /home/jianwen/topogym
+bash bash_scripts/run_difficulty_trials.sh --list-tasks
+bash bash_scripts/run_difficulty_trials.sh --phase plan --run-id difficulty-eval-20260929
+```
+
+也可直接使用 `.venv-gs121-nyx/bin/python scripts/difficulty_eval.py`，后面的参数完全相同。
+Bash 默认使用 `.venv-gs121-nyx/bin/python`，可通过 `TOPOGYM_EVAL_PYTHON` 指定解释器。
+抽样与 manifest 仍由 `sample_difficulty_instances.py` 负责，Python 调度器直接调用其共享函数；任务生成和结果分类继续复用现有工具。
+
+订阅方式延续此前 Luna 的 agent/model 配置；实际模型访问资格由账户决定：
+
+```bash
+bash bash_scripts/run_difficulty_trials.sh \
+  --phase all --run-id difficulty-eval-20260929 --resume \
+  --auth subscription --model openai/gpt-6-luna \
+  --agent-arg version=0.157.0 --agent-arg reasoning_effort=max
+```
+
+API 方式无需手工 `export OPENAI_API_KEY`。`--api-key` 不带值时从当前终端隐藏读取：
+
+```bash
+bash bash_scripts/run_difficulty_trials.sh \
+  --phase all --run-id difficulty-api-20260929 \
+  --tasks 8-9 --samples-per-difficulty 3 \
+  --model 'openai/<model-id>' --api-key
+```
+
+也支持 `--api-key='实际 key'`，但这种形式可能进入调用方 shell 历史及进程参数；脚本不会把它写入 manifest、Harbor 参数或配置。
+凭据优先级为显式/隐藏输入 > `--env-file` 所选值 > `--api-key-env` 所指环境变量；显式空值失败。
+`--api-key` 自动选择 API 模式；不使用它时需明确 `--auth subscription|api-key`。
+订阅默认读取 `${CODEX_HOME:-$HOME/.codex}/auth.json`，也可指定 `--auth-json`；不会修改宿主登录。
+OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`，脚本选择现有 CodexOpenRouter 适配器并映射 `OPENROUTER_API_KEY`。
+`--agent-arg` 首版开放 `version`、`reasoning_effort`，拒绝通过该参数旁路认证或预算。
+
+- `--tasks` 默认全部，支持 `8`、`8-9`、`cast_coil` 和逗号混合；编号见 `--list-tasks`。
+- `--phase plan|prepare|preflight|run|collect|all`：依次抽样、建镜像/任务、短物理检查、模型执行、汇总。独立调用后续阶段使用相同 run-id 加 `--resume`。
+- `--phase all` 在 prepare 和 preflight 各阶段结束时检查全部计划实例；任一实例未通过就返回非零退出码，保留日志和汇总，不进入下一阶段，也不启动模型 canary 或正式 trial。单独 `--phase run` 同样检查全部实例已准备并通过预检，不能绕过此守卫。修复后用同一 run-id 加 `--resume` 继续。
+- 终端实时输出带时间戳的五阶段标题（planning / preparing / preflight / running / collecting）；逐实例/试验显示任务名、进度编号、难度、sample、seed、模式和 attempt。恢复时标注跳过项，等待 GPU 时每 30 秒提示一次；模型运行时显示对应详细日志路径，结束后输出 trial 状态与汇总路径。
+- `--agent-wall-clock-s` 默认 21600，上限 21600。unlimited verifier 为 `3B+900`；limited collection 为 `600+2(B+600)`（奇数 B 向上对齐 2 秒轮询）。评分时间独立于 agent，不用外层 6 小时 timeout 杀掉整个 Harbor job。
+- `--concurrency` 首版只接受 1；运行目录及 GPU 调度各有锁。默认等待 GPU 0 最多 600 秒、要求空闲显存至少 12000 MiB 且 GPU 利用率低于 10%；可用 `--gpu-wait-s` / `--gpu-min-free-mb` 调整。
+- 每次 run 先做独立认证/工具/图像 canary，不计入 78 次正式试验。该检查要求模型查看已记录相机图、通过工具写出确认；不是机器人任务成功证明。canary 或基础设施失败会暂停后续队列。
+- `--resume` 只启动从未开始的 job，不重用中断的 limited episode。显式 `--resume --rerun-incomplete` 才给中断/基础设施错误创建新 attempt，旧 job 保留。
+- SIGINT/SIGTERM 和 CPU/内存 90% 保护只清理本次拥有的进程组及带本次标签的容器，不终止其他任务。
+
+每个 run 的实际源码和机器人资源复制到 `runs/difficulty_trials/<run-id>/source/`，按哈希构建独立镜像。
+真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。
+`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本仍与公共模板同步。
+
+`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
+汇总保留所有 attempt，按每个计划 trial 的最后一次 attempt 判断批次完成。缺轨迹为 `invalid_submission`，基础设施错误为 `infra_failed`，判据未完成为 `not_evaluable`，三者均不进入已有效评分场景的 solved/unsolved 比率。
+
+开发验证命令：
+
+```bash
+.venv-gs121-nyx/bin/python ci_checks/test-difficulty-eval.py
+PATH="$PWD/.venv-gs121-nyx/bin:$PATH" bash ci_checks/run_all.sh
+```
+
+这套 CPU 合同测试覆盖双入口兼容、默认值、抽样稳定性、预算、任务包、运行锁、资源停止，以及模拟 Harbor 进程下的认证/中断/恢复，不调用真实模型、不证明物理正确。
+Python 调度器拆分后的 14 项测试全部通过，日志在 `runs/test_results/difficulty_eval_refactor_20260929/contracts.final.log`。
+加入全批准备/预检守卫后，17 项测试全部通过，覆盖部分准备失败、部分预检失败时零模型启动，以及补齐预检后恢复；日志在 `runs/test_results/difficulty_eval_guard_20260929/contracts.log`。
+本轮只确认默认清单确实是 39 个实例、78 trials；GPU 只读检查时已有其他进程占用约 21.5/24.6 GB，因此未启动本批真实物理检查或付费模型 trial。

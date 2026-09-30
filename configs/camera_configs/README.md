@@ -1,5 +1,17 @@
 # 相机视角预设
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
+当前 `SimulatorConfig` / `topogym.make()` 的活动配置在
+[`topogym/config/profiles/camera_configs/`](../../topogym/config/profiles/camera_configs/)，
+由 [`load_scene_config`](../../topogym/config/scene.py) 加载；下文根目录 Hydra 预设供历史配置入口使用。
+Panda 的 Lock Picking 与 Buzz Wire 已分别使用
+[`lock_picking_observation.yaml`](../../topogym/config/profiles/camera_configs/lock_picking_observation.yaml) 和
+[`buzz_wire_3d_observation.yaml`](../../topogym/config/profiles/camera_configs/buzz_wire_3d_observation.yaml)。
+它们覆盖两个固定机位，继承 848×480、30 fps 与 wrist 标定；viewer 跟随主机位。
+当前为三档默认几何检查通过的候选，Nyx 实帧尚待 GPU 复核。
+[参数、对比图及初始化补拍命令](../../runs/test_results/task_camera_study_20260929/README.md)。
+
 相机配置的统一消费入口是 `cfg.env.cameras`。本目录把可复用视角从环境几何和
 demo 中拆出，Hydra 将所选预设合并到 `env`。
 

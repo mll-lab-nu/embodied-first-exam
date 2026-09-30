@@ -1,5 +1,7 @@
 # 当前模拟器模块：源码功能、输入输出与运行链
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 2026-09-29 新增 [按 seed 的场景随机变体](scene_variation_zh.md)：`variation_id="seeded"` 由 seed%3 选难度档，再按同一 seed 抽 2–3 个位置/朝向/颜色变量（`tasks/scene_variation.py`）；显式档名的标称场景与 `instance_id` 不变。Blanket 的抽样在冻结存档之前。
 
 2026-09-29：当前 Harbor 入口为 [Harbor 手册](../../rcb/README.md)。旧 runner、usage 与三条流程说明已移入 [归档](../../../legacy/cleanup_20260929/README.md)，归档与本轮检查见 [维护记录](../../maintenance/legacy_cleanup_20260929_zh.md)。
@@ -293,11 +295,11 @@ Lock/Fiber的`rigid_articulated`指多个刚体通过关节相连，仍由Genesi
 |---|---|---|
 | [scene_presets.py](../../../topogym/tasks/scene_presets.py) `defaults(task_id, **parameters)` | 基础参数 → 深拷贝并应用PRESETS后的defaults | 部分Task共享当前摆位/外观默认值；增加scene_preset_id |
 | 同文件`record_preset(task, folder)` | Task与目录 → preset身份字典；写scene_preset.json | Task.declare记录生成参数和视觉角色；不读取历史demo运行源码 |
-| [task_variations/__init__.py](../../../topogym/tasks/task_variations/__init__.py) `available_variations(task_id)` | task_id → `("base", ...VARIATIONS名字)` | 校验任务后读取同名变体文件；没有VARIATIONS则仅base |
+| [task_variations/__init__.py](../../../legacy/research_tools_20260929/topogym/tasks/task_variations/__init__.py) `available_variations(task_id)` | task_id → `("base", ...VARIATIONS名字)` | 校验任务后读取同名变体文件；没有VARIATIONS则仅base |
 | 同文件`resolve_variation(task_id, variation_id, overrides, seed)` | 变体与覆盖参数 → 独立参数dict | 顶层同名dict做一层update；当前seed形参未参与采样，不是通用随机场景生成器 |
-| [knot_untying.py](../../../topogym/tasks/task_variations/knot_untying.py) | `VARIATIONS`常量 | figure_eight、double_overhand、left_overhand几何差异；没有另一套执行函数 |
-| [blanket_flatten.py](../../../topogym/tasks/task_variations/blanket_flatten.py) | `VARIATIONS`常量 | three_folds、five_folds参数差异；不实现独立Env |
-| [cast_coil.py](../../../topogym/tasks/task_variations/cast_coil.py) `family_parameter/coordinate_scale/corner_cuts/create_template` | 家族名/参数/模板尺寸 → 派生量、缩放、切削块或模板dict | 被Coil建模/运动工具使用；当前没有VARIATIONS，不能把KINDS/PRESETS直接当成make可选变体 |
+| [knot_untying.py](../../../legacy/research_tools_20260929/topogym/tasks/task_variations/knot_untying.py) | `VARIATIONS`常量 | figure_eight、double_overhand、left_overhand几何差异；没有另一套执行函数 |
+| [blanket_flatten.py](../../../legacy/research_tools_20260929/topogym/tasks/task_variations/blanket_flatten.py) | `VARIATIONS`常量 | three_folds、five_folds参数差异；不实现独立Env |
+| [cast_coil.py](../../../legacy/research_tools_20260929/topogym/tasks/task_variations/cast_coil.py) `family_parameter/coordinate_scale/corner_cuts/create_template` | 家族名/参数/模板尺寸 → 派生量、缩放、切削块或模板dict | 被Coil建模/运动工具使用；当前没有VARIATIONS，不能把KINDS/PRESETS直接当成make可选变体 |
 
 家族级参数化solution、seed自动适配和可解性覆盖仍见后续计划；这些能力没有因为当前存在变体文件就自动实现。
 
@@ -578,7 +580,7 @@ Lock/Fiber的`rigid_articulated`指多个刚体通过关节相连，仍由Genesi
 |---|---|---|
 | [box_compounds.py](../../../topogym/solvers/collision/box_compounds.py) `box_corners(boxes)` | `[N,2,3]`局部盒上下界 → 全部角点 | 位移上界/间隙检查使用 |
 | 同文件`BoxCompoundCollision(fixed_boxes, moving_boxes).gap(rotation, translation)` | 两组盒、`R[3,3]/t[3]` → 有符号SAT间隙m | 正值为分离下界；不是一般精确表面距离 |
-| [convex_compounds.py](../../../topogym/solvers/collision/convex_compounds.py) `ConvexCompoundCollision(fixed, moving).gap(R,t)` | 封闭凸网格集合及变换 → SAT间隙m | 包含关系按重叠处理；`_data/_directions`准备面法线和边轴 |
+| [convex_compounds.py](../../../legacy/research_tools_20260929/topogym/solvers/collision/convex_compounds.py) `ConvexCompoundCollision(fixed, moving).gap(R,t)` | 封闭凸网格集合及变换 → SAT间隙m | 包含关系按重叠处理；`_data/_directions`准备面法线和边轴 |
 | [triangle_meshes.py](../../../topogym/solvers/collision/triangle_meshes.py) `TriangleMeshPair(meshes).clearance(poses)` | 两三角网格、两个4×4变换 → 表面距离或-1 | -1仅表示相交，**不是穿透深度估计** |
 | 同类`contact_depth()` | 上次查询所设姿态 → 最大三角接触深度 | FCL接触输出；缓冲饱和明确报错 |
 | 同文件`surface_clearance(positions, faces, obstacle_meshes)` | 动态表面与命名障碍网格 → 最小表面距离 | 不以“所有顶点离得远”代替三角面距离 |
@@ -785,10 +787,10 @@ Lock/Fiber的`rigid_articulated`指多个刚体通过关节相连，仍由Genesi
 
 | 位置 | 功能 | 与本页范围的关系 |
 |---|---|---|
-| [scripts/test_base_tasks.py](../../../scripts/test_base_tasks.py) | 批量选择任务/机制检查、隔离执行、汇总报告 | 测试驱动，不是第二个环境实现 |
-| [tests/runtime_evidence.py](../../../tests/runtime_evidence.py) | 记录真实测试源码/配置/状态、接入公共录像及证据 | 外层消费者；不把测试记录函数当作操作方API |
-| [tests/integration](../../../tests/integration) | 基础环境、接口、生命周期、相机等真实引擎用例 | 用例入口与结果见下方测试说明；本次未执行 |
-| [scripts/inventory_sources.py](../../../scripts/inventory_sources.py) | 静态文件/AST/hash清单生成 | 文件级索引补充；不检查物理可运行性 |
+| [scripts/test_base_tasks.py](../../../legacy/research_tools_20260929/scripts/test_base_tasks.py) | 批量选择任务/机制检查、隔离执行、汇总报告 | 测试驱动，不是第二个环境实现 |
+| [tests/runtime_evidence.py](../../../legacy/research_tools_20260929/tests/runtime_evidence.py) | 记录真实测试源码/配置/状态、接入公共录像及证据 | 外层消费者；不把测试记录函数当作操作方API |
+| [tests/integration](../../../legacy/research_tools_20260929/tests/integration) | 基础环境、接口、生命周期、相机等真实引擎用例 | 用例入口与结果见下方测试说明；本次未执行 |
+| [scripts/inventory_sources.py](../../../legacy/research_tools_20260929/scripts/inventory_sources.py) | 静态文件/AST/hash清单生成 | 文件级索引补充；不检查物理可运行性 |
 
 活动包外的全部工程/测试脚本和历史副本仍见[完整脚本清单](../../../legacy/cleanup_20260929/docs/develop/dev-logs/script_inventory_zh.md)，本页聚焦活动Simulator如何连接和运行，不把runs中保存的旧源码当成当前依赖。
 

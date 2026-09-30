@@ -1,202 +1,210 @@
-"""最小 VLA 评测示例：make → reset(seed) → act(obs) → step(action)，逐 episode 记录结果。
+"""π0.5 → Harbor Session：图像/状态 → 动作块 → 在线录像和 trajectory.npz。
 
-模型调用是占位函数 VLAPolicy._infer：它把当前关节状态重复成一个动作块，机器人只是保持姿态，
-用来验证 obs → 模型输入 → 动作块 → action 字典 → env.step 这条链路能跑通。
-接入真实模型时只需替换 _infer。
-
-从仓库根目录运行（需要 CUDA；输出目录必须尚不存在）：
-    export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"
-    .venv-gs121-nyx/bin/python docs/vla_doc/vla_eval_demo.py --task cast_coil --seeds 0 1 \
-        --max-control-steps 40 --output runs/vla_eval/demo_01
-加 --record 改走 SegmentRunner，每个 episode 额外写出多视角 MP4 和逐 tick 日志。
+前提：openpi 服务已适配 TopoGym ALOHA 的关节顺序、符号和米制夹爪宽度，
+返回绝对关节目标 (H, 14)。不能直接套用任意官方 ALOHA/DROID/LIBERO checkpoint。
+完整服务配置约定和运行命令见同目录 README.md。本脚本不训练或下载模型。
 """
+from __future__ import annotations
+
 import argparse
-from collections import deque
 import hashlib
+import importlib.util
 import json
+import os
 from pathlib import Path
+import sys
 import time
 
 import numpy as np
-from PIL import Image
-
-import topogym
-
-# 夹爪原生坐标的（全开, 全闭）值。来源：
-#   aloha:         robot_control_configs/aloha_position_ik.yaml 的 gripper.open_qpos / closed_qpos，单位米（手指导轨位置）
-#   panda_robotiq: robot/panda_robotiq/description.py 的 GraspDescription，单位弧度（Robotiq 驱动关节角）
-GRIPPER_OPEN_CLOSED = {"aloha": (0.037, 0.002), "panda_robotiq": (0.0, 0.8)}
-
-# 喂给模型的相机及顺序；名字来自 config/profiles/camera_configs/*_observation.yaml
-CAMERAS = {"aloha": ("cam_high", "cam_left_wrist", "cam_right_wrist"),
-           "panda_robotiq": ("agentview", "wrist")}
-
-# 示例文字，不是项目的正式任务指令；项目目前没有逐任务的语言指令字段，评测方需要自己定并固定下来
-PROMPTS = {"cast_coil": "Assemble the two metal pieces into the four-layer coil, then release them."}
 
 
-class VLAPolicy:
-    """act(obs) 每次返回一个控制步的 action 字典。
-
-    模型的扁平向量约定（本示例自定，接真实模型时按模型的训练约定改）：
-    按 action_spec["arms"] 的顺序，每条臂 = 各关节角(rad) + 1 个归一化夹爪开度（0 全闭，1 全开）。
-    ALOHA 是 [左 6 + 左夹爪, 右 6 + 右夹爪] 共 14 维；Panda 是 7 + 1 共 8 维。
-    """
-
-    def __init__(self, prompt, image_size=(224, 224), execute_steps=10):
-        self.prompt = prompt
-        self.image_size = image_size
-        self.execute_steps = execute_steps   # 每个动作块执行前几步后重新推理
-        self.queue = deque()
-
-    def initialize(self, context):
-        # 普通循环和 SegmentRunner 都会在 episode 开始时调用；context 里有 action_spec
-        spec = context["action_spec"]
-        self.arms = tuple(spec["arms"])
-        self.groups = spec["groups"]
-        self.open_m, self.closed_m = GRIPPER_OPEN_CLOSED[spec["robot_id"]]
-        self.cameras = CAMERAS[spec["robot_id"]]
-        self.queue.clear()
-
-    def act(self, obs):
-        if not self.queue:
-            chunk = self._infer(self.images(obs), self.state(obs), self.prompt)
-            self.queue.extend(chunk[:self.execute_steps])
-        return self.to_action(self.queue.popleft())
-
-    def images(self, obs):
-        # obs["rgb"][cam] 是 480×848×3 uint8
-        return {cam: np.asarray(Image.fromarray(np.asarray(obs["rgb"][cam])).resize(self.image_size, Image.BILINEAR))
-                for cam in self.cameras}
-
-    def state(self, obs):
-        parts = []
-        for arm in self.arms:
-            robot = obs["robot"][arm]
-            fingers = robot["finger_position_m"] if "finger_position_m" in robot else robot["finger_position_rad"]
-            parts += [np.asarray(robot["joint_position_rad"]), [self.opening(fingers[0])]]
-        return np.concatenate(parts).astype(np.float32)
-
-    def opening(self, native):
-        return float(np.clip((native - self.closed_m) / (self.open_m - self.closed_m), 0., 1.))
-
-    def to_action(self, row):
-        action, i = {}, 0
-        for arm in self.arms:
-            group = self.groups[arm]
-            n = len(group["arm_joint_names"])
-            limits = np.asarray(group["joint_limits_rad"])
-            q = np.clip(row[i:i + n], limits[:, 0], limits[:, 1])
-            g = float(np.clip(row[i + n], 0., 1.))
-            action[arm] = {"joint_position_rad": q.tolist(),
-                           group["gripper_field"]: self.closed_m + g * (self.open_m - self.closed_m)}
-            i += n + 1
-        return action
-
-    def _infer(self, images, state, prompt):
-        # 占位：真实实现把 images / state / prompt 发给模型服务，返回 (H, D) 的动作块
-        return np.tile(state, (10, 1))
+CAMERAS = ("cam_high", "cam_left_wrist", "cam_right_wrist")
+ACTION_LAYOUT = [
+    f"{arm}/{joint}" if joint != "gripper" else f"{arm}_gripper"
+    for arm in ("left", "right")
+    for joint in ("waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate", "gripper")
+]
 
 
-def classify(info):
-    """把 step 返回的公开 info 归成一种结果。"""
-    if info["task_outcome"] == "success":
-        return "success"
-    if info["task_outcome"] == "failure":
-        return "task_failure"
-    if info["termination_reason"] == "time_limit":
-        return "time_limit" if info["evaluation_status"] == "available" else "unevaluated"
-    return "unfinished"
+def write_json(path, value):
+    Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
 
-def run_episode(env, policy, seed):
-    start = time.monotonic()
-    env.reset(seed=seed)                     # 管理方：重建场景
-    reset_s = time.monotonic() - start
-    actor = env.interaction()                # 操作方句柄；reset 后旧句柄失效
-    policy.initialize({"action_spec": actor.action_spec})
-    obs = actor.observe()
-    steps, info = 0, None
+def sha256(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
-    def finish(**row):
-        return dict(row, reset_wall_s=round(reset_s, 2),
-                    rollout_wall_s=round(time.monotonic() - start - reset_s, 2))
 
-    while True:
+def load_session(adapter):
+    """使用选中 Harbor task 自带的实现，不复制 Session 或创建新 Env 接口。"""
+    spec = importlib.util.spec_from_file_location("vla_harbor_adapter", adapter)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module.Session
+
+
+def observation(session, prompt):
+    from openpi_client import image_tools
+
+    # AlohaInputs 接收 CHW uint8；取图不推进物理。模型只收到 RGB、本体状态和指令。
+    images = {
+        camera: np.ascontiguousarray(
+            image_tools.resize_with_pad(session.render_frame(camera), 224, 224).transpose(2, 0, 1)
+        )
+        for camera in CAMERAS
+    }
+    return {
+        "images": images,
+        "state": np.asarray(session.joint_positions(), dtype=np.float32),
+        "prompt": prompt,
+    }
+
+
+def action_chunk(response):
+    actions = np.asarray(response["actions"], dtype=np.float32)
+    if actions.ndim != 2 or actions.shape[0] == 0 or actions.shape[1] != 14:
+        raise ValueError(f"Expected non-empty (H, 14) actions, got {actions.shape}")
+    if not np.isfinite(actions).all():
+        raise ValueError("Model actions contain NaN or infinity")
+    # 不自行归一化或将 delta 当 absolute；单位转换由已适配的模型服务完成。
+    return actions
+
+
+def run_episode(session, policy, *, prompt, execute_steps, max_control_steps, output, record):
+    """使用当前冻结实例运行一次闭环；Session 构造时已经恢复起点。"""
+    started = time.monotonic()
+    calls, steps = 0, 0
+    phase = "setup"
+    result = {"stop_reason": "control_step_limit", "error": None}
+    session.record_start()  # 记录动作，与是否录像独立
+    try:
+        policy.reset()
+        if record:
+            # Harbor 已有在线录像；不重放，不增加额外 step。
+            # every=1 保留每个控制步（含终止步），视频 fps 与控制频率一致。
+            session.start_video(output / "live.mp4", fps=round(session.control_hz), every=1)
+        while steps < max_control_steps:
+            phase = "observation"
+            obs = observation(session, prompt)
+            phase = "inference"
+            calls += 1
+            response = policy.infer(obs)
+            phase = "action_validation"
+            actions = action_chunk(response)
+            count = min(execute_steps, len(actions), max_control_steps - steps)
+            phase = "execution"
+            for action in actions[:count]:
+                guard_reached = session.step(action)
+                steps += 1
+                # step() 的布尔返回值是 runaway guard，不是任务成功/失败。
+                if session.episode_end is not None or guard_reached:
+                    result["stop_reason"] = session.episode_end or "session_step_guard"
+                    break
+            if session.episode_end is not None or guard_reached:
+                break
+            # 丢弃 chunk 剩余部分，重新取观测并推理。
+    except Exception as error:
+        result.update(stop_reason="error", error=repr(error), error_phase=phase)
+    finally:
+        # 推理/动作出错也尽量封口视频、保留已提交轨迹。清理错误同样写入结果。
+        cleanup_errors = []
+        if record:
+            try:
+                session.stop_video()
+            except Exception as error:
+                cleanup_errors.append(f"stop_video: {error!r}")
         try:
-            action = policy.act(obs)
-        except Exception as error:           # 策略自身出错
-            return finish(outcome="policy_error", control_steps=steps, error=repr(error))
+            actions = session.record_stop()
+            session.save_trajectory(actions, output / "trajectory.npz", meta={"prompt": prompt})
+            result["recorded_action_rows"] = len(actions)
+        except Exception as error:
+            cleanup_errors.append(f"save_trajectory: {error!r}")
         try:
-            obs, reward, terminated, truncated, info = actor.step(action)
-        except ValueError as error:          # 非法动作：物理未推进，episode 仍可用；这里直接判负
-            return finish(outcome="invalid_action", control_steps=steps, error=str(error))
-        except RuntimeError as error:        # 环境故障：Env 已 faulted，只能 reset
-            return finish(outcome="env_error", control_steps=steps, error=str(error))
-        steps += 1
-        if terminated or truncated:
-            return finish(outcome=classify(info), control_steps=steps, task_success=info["task_success"],
-                          failure_code=info.get("failure_code"), sim_time_s=info["sim_time_s"])
-
-
-def run_episode_recorded(env, policy, seed, output, source_sha256):
-    from topogym.simulator import SegmentRunner
-    start = time.monotonic()
-    env.reset(seed=seed)
-    reset_s = time.monotonic() - start
-    # 输出目录必须尚不存在；SegmentRunner 接管这个 episode 的 step，并写录像与日志
-    with SegmentRunner(env, output / f"seed_{seed}") as runner:
-        result = runner.run_policy(request_id=f"seed-{seed}", policy=policy,
-                                   submission_hash=source_sha256, mode="limited")
-    feedback = result["feedback"]
-    outcome = (classify(feedback) if result["reason"] in {"env_terminal", "env_time_limit"}
-               else result["reason"])
-    # 每个相机一个 MP4，另有横向拼接的 combined.mp4
-    videos = output / f"seed_{seed}" / "segments" / f"segment_{result['segment_id']}" / "videos"
-    return dict(outcome=outcome, control_steps=result["control_steps"], task_success=feedback.get("task_success"),
-                failure_code=feedback.get("failure_code"), segment_status=result["status"],
-                reset_wall_s=round(reset_s, 2), rollout_wall_s=round(time.monotonic() - start - reset_s, 2),
-                videos=sorted(p.relative_to(output).as_posix() for p in videos.glob("*.mp4")))
+            result["harbor_status"] = session.status()
+        except Exception as error:
+            cleanup_errors.append(f"status: {error!r}")
+        result.update(control_steps=steps, inference_calls=calls,
+                      rollout_wall_s=round(time.monotonic() - started, 3), cleanup_errors=cleanup_errors)
+        write_json(output / "result.json", result)
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--task", default="cast_coil")
-    parser.add_argument("--variation", default="base")
-    parser.add_argument("--seeds", type=int, nargs="+", default=[0])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--task-dir", type=Path, required=True,
+                        help="Harbor unlimited task 目录，使用其 environment/rcb_topogym.py 和 instance.json")
+    parser.add_argument("--policy-host", default="localhost")
+    parser.add_argument("--policy-port", type=int, default=8001)
+    parser.add_argument("--policy-id", required=True, help="模型配置、checkpoint 标识/哈希，用于复现")
+    parser.add_argument("--policy-hz", type=float, required=True, help="模型动作行的训练/适配频率，须等于 Session 控制频率")
+    parser.add_argument("--prompt", help="默认使用冻结 instance.json 的 text")
+    parser.add_argument("--execute-steps", type=int, default=10)
     parser.add_argument("--max-control-steps", type=int, default=400)
+    parser.add_argument("--record", action="store_true", help="调用 Harbor start_video/stop_video 在线录像")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--record", action="store_true")
     args = parser.parse_args()
-    args.output.mkdir(parents=True)          # 已存在就报错，不覆盖旧结果
+    if args.execute_steps < 1 or args.max_control_steps < 1:
+        parser.error("execute-steps and max-control-steps must be positive")
+    if not np.isfinite(args.policy_hz) or args.policy_hz <= 0:
+        parser.error("policy-hz must be finite and positive")
 
-    control_decimation = 10                  # 每个控制步 10 个物理 tick（2.5 ms）= 25 ms
-    policy = VLAPolicy(PROMPTS[args.task])
-    source_sha256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-    rows = []
-    with topogym.make(args.task, variation_id=args.variation,
-                      control_mode="JOINT_ABS", observation_mode="JOINT",
-                      control_decimation=control_decimation,
-                      max_physics_steps=args.max_control_steps * control_decimation) as env:
-        for seed in args.seeds:
-            start = time.monotonic()
-            row = (run_episode_recorded(env, policy, seed, args.output, source_sha256) if args.record
-                   else run_episode(env, policy, seed))
-            row.update(task=args.task, variation=args.variation, seed=seed,
-                       wall_time_s=round(time.monotonic() - start, 2))
-            rows.append(row)
-            print(json.dumps(row, ensure_ascii=False), flush=True)
-            with open(args.output / "results.jsonl", "a") as f:
-                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    environment = args.task_dir.resolve() / "environment"
+    adapter, instance_path = environment / "rcb_topogym.py", environment / "instance.json"
+    if not adapter.is_file() or not instance_path.is_file():
+        parser.error(f"Missing Harbor adapter/instance in {environment}; select an unlimited task directory")
+    instance = json.loads(instance_path.read_text())
+    if instance.get("action_layout") != ACTION_LAYOUT:
+        parser.error("This π0.5 example supports the ALOHA 14-dimensional action layout only")
+    if not np.isclose(args.policy_hz, instance["control_hz"], rtol=0, atol=1e-6):
+        parser.error("policy-hz differs from the frozen instance; adapt the model timing first")
+    prompt = args.prompt if args.prompt is not None else instance.get("text")
+    if not isinstance(prompt, str) or not prompt.strip():
+        parser.error("Supply --prompt or an instance with non-empty text")
 
-    outcomes = [row["outcome"] for row in rows]
-    summary = dict(task=args.task, variation=args.variation, episodes=len(rows),
-                   success_rate=outcomes.count("success") / len(rows),
-                   outcomes={name: outcomes.count(name) for name in sorted(set(outcomes))},
-                   source_sha256=source_sha256)
-    (args.output / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
-    print(json.dumps(summary, ensure_ascii=False))
+    from openpi_client import websocket_client_policy
+
+    args.output.mkdir(parents=True, exist_ok=False)
+    # Session 在 import 时读取日志位置，保持本次运行产物在 output 下。
+    os.environ["RCB_SESSION_LOG"] = str(args.output.resolve() / "rcb_session_log.jsonl")
+    os.environ["RCB_SESSION_LOG_KEEP"] = ""
+    Session = load_session(adapter)
+    run = {
+        "task_dir": str(args.task_dir.resolve()), "task": instance["task"],
+        "instance_sha256": sha256(instance_path), "adapter_sha256": sha256(adapter),
+        "demo_sha256": sha256(__file__), "policy_id": args.policy_id, "policy_hz": args.policy_hz,
+        "policy_host": args.policy_host, "policy_port": args.policy_port,
+        "prompt": prompt, "execute_steps": args.execute_steps, "max_control_steps": args.max_control_steps,
+        "record": args.record, "model_cameras": CAMERAS,
+        "model_contract": "ALOHA CHW uint8 RGB; state/actions in Harbor layout, rad + gripper width m; absolute targets",
+    }
+    write_json(args.output / "run.json", run)
+    (args.output / "instance.json").write_bytes(instance_path.read_bytes())
+    # 先连接模型再建场景，避免等待模型时占用仿真显存。
+    policy = websocket_client_policy.WebsocketClientPolicy(host=args.policy_host, port=args.policy_port)
+    write_json(args.output / "policy_metadata.json", policy.get_server_metadata())
+    session = Session(instance["task"], instance=instance_path, strict=True)
+    try:
+        if session.action_layout != ACTION_LAYOUT or not np.isclose(
+            session.control_hz, args.policy_hz, rtol=0, atol=1e-6
+        ):
+            raise ValueError("Live Session layout/timing differs from the declared policy contract")
+        if args.record and not np.isclose(session.control_hz, round(session.control_hz), rtol=0, atol=1e-6):
+            raise ValueError("This example's every-step video requires an integer control_hz")
+        missing = set(CAMERAS) - set(session.VIDEO_CAMERAS)
+        if missing:
+            raise ValueError(f"Missing ALOHA cameras: {sorted(missing)}")
+        write_json(args.output / "session.json", {
+            "config": session.config, "action_layout": session.action_layout, "control_hz": session.control_hz,
+            "instance_sha": session.instance_sha, "instance_exact": session.instance_exact,
+            "instance_matches": session.instance_matches,
+        })
+        result = run_episode(session, policy, prompt=prompt, execute_steps=args.execute_steps,
+                             max_control_steps=args.max_control_steps, output=args.output, record=args.record)
+    finally:
+        session.close()
+    print(json.dumps(result, ensure_ascii=False))
+    return 1 if result["error"] or result["cleanup_errors"] else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,5 +1,7 @@
 # Scripted policy 由 simulator 调度的工程计划
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 > 2026-09-28 接口更新：任务文字统一放在各 rollout YAML 的 instruction，生成 instruction.md；spec/context/profile 格式为 v2，policy obs 不再包含 task.instruction。旧文中的 observation_profile.task_instruction 已移除。当前用法见 [Harbor runner](../../../harbor_runners/README.md)。
 
 日期：2026-09-26。状态：**用户已授权实施；单输入调度、权限投影、目录迁移和方块样板已完成，本轮真实验收通过。** 最新资格与视频见[实施记录](../dev-logs/scripted_policy_execution_implementation_20260926_zh.md)。§1 保留批准实施前的草稿基线；其余章节说明确认的设计。

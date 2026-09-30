@@ -1,5 +1,7 @@
 # 按 seed 的场景随机变体（`variation_id="seeded"`）
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 日期：2026-09-29。计划与用户决定见 `~/.claude/plans/federated-leaping-eich.md`。
 
 ## 1. 一个具体例子

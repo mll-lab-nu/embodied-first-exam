@@ -1,5 +1,7 @@
 # 现有 Task 变体解法与 action / IK 采样路线
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 研究核对日期：2026-09-27；执行补充：2026-09-28。最初的独立解法研究依据**当时工作区源码、随包路线、历史运行证据和联网查阅的一手资料**整理，当时未执行新的机器人仿真或改动任务、物理、控制器。后续实际执行结果在各任务节单独注明日期、配置与证据；其中 Cast Coil 三档已完成本文要求的 policy / IK / Task success 验收。其余标为“建议”的内容仍是待实现／验证路线。
 
 覆盖当前注册的 **13 个任务、45 个具名入口**：39 个三档入口，以及 5 个实验入口、1 个兼容入口。三档中 32 个 integrated、6 个 planned、1 个 blocked；全部入口合计 37 个 integrated、6 个 planned、2 个 blocked。`integrated` 只说明构造接入。身份来自 [variation_records.py](../../../topogym/config/variation_records.py)，完整入口和源码 SHA-256 保存在[研究清单](task_variant_solutions_action_ik_inventory_20260927.json)。工作区有未提交改动，不能仅用 Git HEAD 代表本次阅读的源码。
@@ -241,7 +243,7 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 Task success；无回溯重跑与独立审计尚未完成。** 已实现
 [观测驱动 policy 与 IK／避障规划](../../../topogym/planning/buzz_wire_3d/README.md)、
 [无视频执行入口](../../../scripts/run_buzz_wire_policy.py)和
-[逐 tick 独立审计](../../../scripts/audit_buzz_wire_policy.py)。当前使用 Panda Robotiq、
+[逐 tick 独立审计](../../../legacy/research_tools_20260929/scripts/audit_buzz_wire_policy.py)。当前使用 Panda Robotiq、
 默认参数 seed 0、CPU 双精度、25 ms tick／40 子步、接触后辅助抓持。
 easy 已实测完成走线、多次换抓、释放与静止，开发末态位置误差 3.61 mm、角度误差 4.71°。
 medium 已实际走至后半段，hard 正在加密检查反向搜索所得路线。所有运行均关闭 RGB／录像。
@@ -258,7 +260,7 @@ medium 已实际走至后半段，hard 正在加密检查反向搜索所得路�
 
 **建议参数化。** 以导线弧长 `s` 作为阶段进度，环中心在导线局部邻域中选取，环面法向近似对齐当地切线；再采样切向周围的工具 roll，给手柄和机器人留余量。它是路径生成启发式，弯曲处必须用完整环和手柄形状验碰，不能只检查中心点或一段切线。采用连续运输的局部标架或连续姿态插值，避免拐点处法向突然翻转。
 
-**实际可回收输入。** [F2 历史规划代码](../../../assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation/robot_plan.py)、[规划结果](../../../assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/plan.json)和[完整机器人种子](../../../assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/robot_seed.json)可作为每族迁移范式：历史 IK 用前一关节解为初值，以末端残差与微弱关节连续项求解，再另做机器人／导线／支撑碰撞检查。历史工具依赖旧 MuJoCo 运动学；迁移的是目标和审计方法，执行接回当前 Genesis 接口。
+**实际可回收输入。** [F2 历史规划代码](../../../legacy/research_tools_20260929/assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation/robot_plan.py)、[规划结果](../../../assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/plan.json)和[完整机器人种子](../../../assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/robot_seed.json)可作为每族迁移范式：历史 IK 用前一关节解为初值，以末端残差与微弱关节连续项求解，再另做机器人／导线／支撑碰撞检查。历史工具依赖旧 MuJoCo 运动学；迁移的是目标和审计方法，执行接回当前 Genesis 接口。
 
 **反馈与坑。** 持续维护当前弧长邻域，不能在八字交会处每步全局取最近线点而跳段。最窄处减速并根据实测工具位姿调整；环外缘、手柄、夹指、腕壳都纳入检查。到终点不算结束，需对准托架、释放、由实测 q 重求撤臂路径。F2 历史上已出现负载反馈改变冗余分支，名义撤臂关节路径因此不能直接接上的问题。
 

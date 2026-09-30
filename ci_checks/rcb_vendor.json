@@ -16,7 +16,6 @@
   "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   "scripts/log_mirror.py": "scripts/log_mirror.py",
   "scripts/account_failure_check.py": "scripts/account_failure_check.py",
-  "scripts/scan_secrets.py": "scripts/scan_secrets.py",
   "scripts/set_agent_egress.py": "scripts/set_agent_egress.py",
   "ci_checks/run_all.sh": "ci_checks/run_all.sh",
   "ci_checks/check-task-structure.sh": "ci_checks/check-task-structure.sh",
@@ -35,7 +34,15 @@
   "docs/rcb/TAXONOMY.md": "docs/TAXONOMY.md",
   "docs/rcb/LIMITED_MODE_PROTOCOL.md": "docs/LIMITED_MODE_PROTOCOL.md",
   "tasks/topogym-cube-pick-place-i00-limited/tests/test.sh": "tasks/robowits-stack-cubes-i00-limited/tests/test.sh",
-  "tasks/topogym-cube-pick-place-i00-limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-limited/tests/Dockerfile"
+  "tasks/topogym-cube-pick-place-i00-limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-limited/tests/Dockerfile",
+  "harbor_templates/topogym/limited/environment/rcb_client.py": "tasks/robowits-stack-cubes-i00-limited/environment/rcb_client.py",
+  "harbor_templates/topogym/limited/environment/rcb1.py": "tasks/robowits-stack-cubes-i00-limited/environment/rcb1.py",
+  "harbor_templates/topogym/limited/environment/sim/rcb1.py": "tasks/robowits-stack-cubes-i00-limited/environment/sim/rcb1.py",
+  "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "tasks/robowits-stack-cubes-i00-limited/environment/sim/rcb_limited.py",
+  "harbor_templates/topogym/limited/solution/oracle_replay.py": "tasks/robowits-stack-cubes-i00-limited/solution/oracle_replay.py",
+  "harbor_templates/topogym/limited/solution/solve.sh": "tasks/robowits-stack-cubes-i00-limited/solution/solve.sh",
+  "harbor_templates/topogym/limited/tests/test.sh": "tasks/robowits-stack-cubes-i00-limited/tests/test.sh",
+  "harbor_templates/topogym/limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-limited/tests/Dockerfile"
  },
  "adapted": {
   "ci_checks/check-task-fields.sh": "ci_checks/check-task-fields.sh",
@@ -47,7 +54,8 @@
   "scripts/write_task_results.py": "scripts/write_task_results.py",
   "scripts/regrade_trials.sh": "scripts/regrade_trials.sh",
   "scripts/collect_batch_results.py": "scripts/collect_batch_results.py",
-  "scripts/make_two_mode_report_zh.py": "scripts/make_two_mode_report_zh.py"
+  "scripts/make_two_mode_report_zh.py": "scripts/make_two_mode_report_zh.py",
+  "scripts/scan_secrets.py": "scripts/scan_secrets.py"
  },
  "blobs": {
   "tasks/topogym-cube-pick-place-i00-limited/environment/rcb_client.py": "78a1f73788e0d76bd2c4cfdcfe9d0115ffcf84d2",
@@ -92,6 +100,14 @@
   "scripts/write_task_results.py": "97ee513f66cf57430e1071b0cfeed7216553fe3c",
   "scripts/regrade_trials.sh": "9e2828911128d2732c9dd71c9360cf6a745b1af8",
   "scripts/collect_batch_results.py": "423d0bd68bacfee54ce49c3104fecceb6f695c69",
-  "scripts/make_two_mode_report_zh.py": "0ebf58e7a5471a5a78aeecd96d7244256a42175b"
+  "scripts/make_two_mode_report_zh.py": "0ebf58e7a5471a5a78aeecd96d7244256a42175b",
+  "harbor_templates/topogym/limited/environment/rcb_client.py": "78a1f73788e0d76bd2c4cfdcfe9d0115ffcf84d2",
+  "harbor_templates/topogym/limited/environment/rcb1.py": "6938c57e3863e021256d17e19c9dd8b4f8638c27",
+  "harbor_templates/topogym/limited/environment/sim/rcb1.py": "6938c57e3863e021256d17e19c9dd8b4f8638c27",
+  "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "8b16eb07914b611e02f6d340c8c5de2dc4ca2a73",
+  "harbor_templates/topogym/limited/solution/oracle_replay.py": "14e7673ad6a9c793ec852918c82492bb00d785c1",
+  "harbor_templates/topogym/limited/solution/solve.sh": "8ed118420d284637ea1fd0561e4f01835990cc2e",
+  "harbor_templates/topogym/limited/tests/test.sh": "03696b8be8f48baea2efed1fc766b5fa1a2688ed",
+  "harbor_templates/topogym/limited/tests/Dockerfile": "56c0f87f61f5acd700482d5c3868b2b3fb3d5a2e"
  }
 }

@@ -1,0 +1,346 @@
+{
+  "archive": "legacy/research_tools_20260929",
+  "entries": [
+    {
+      "source": "scripts/audit_buzz_wire_policy.py",
+      "destination": "legacy/research_tools_20260929/scripts/audit_buzz_wire_policy.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/audit_cast_coil_policy.py",
+      "destination": "legacy/research_tools_20260929/scripts/audit_cast_coil_policy.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/audit_cast_keyhole_policy.py",
+      "destination": "legacy/research_tools_20260929/scripts/audit_cast_keyhole_policy.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/finalize_buzz_wire_execution.py",
+      "destination": "legacy/research_tools_20260929/scripts/finalize_buzz_wire_execution.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/check_fiber_keyframes.py",
+      "destination": "legacy/research_tools_20260929/scripts/check_fiber_keyframes.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/inspect_blanket_preparation.py",
+      "destination": "legacy/research_tools_20260929/scripts/inspect_blanket_preparation.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/check_variation_assets.py",
+      "destination": "legacy/research_tools_20260929/scripts/check_variation_assets.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/probe_release_scenes.py",
+      "destination": "legacy/research_tools_20260929/scripts/probe_release_scenes.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/record_initial_scenes.py",
+      "destination": "legacy/research_tools_20260929/scripts/record_initial_scenes.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/render_seeded_initial_frames.py",
+      "destination": "legacy/research_tools_20260929/scripts/render_seeded_initial_frames.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/inventory_sources.py",
+      "destination": "legacy/research_tools_20260929/scripts/inventory_sources.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_base_tasks.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_base_tasks.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_variation_runtime.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_variation_runtime.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_scene_presets.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_scene_presets.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_blanket_initialization.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_blanket_initialization.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_orbits_stability.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_orbits_stability.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/test_grasp_assist.py",
+      "destination": "legacy/research_tools_20260929/scripts/test_grasp_assist.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/validate_slotted_post_scenes.py",
+      "destination": "legacy/research_tools_20260929/scripts/validate_slotted_post_scenes.py",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/run_pending_simulator_checks.sh",
+      "destination": "legacy/research_tools_20260929/scripts/run_pending_simulator_checks.sh",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "scripts/run_rgb_repro_checks.sh",
+      "destination": "legacy/research_tools_20260929/scripts/run_rgb_repro_checks.sh",
+      "category": "research_or_validation_entrypoint",
+      "kind": "file"
+    },
+    {
+      "source": "topogym/recording/sequence.py",
+      "destination": "legacy/research_tools_20260929/topogym/recording/sequence.py",
+      "category": "unused_runtime_or_compatibility",
+      "kind": "file"
+    },
+    {
+      "source": "topogym/solvers/collision/convex_compounds.py",
+      "destination": "legacy/research_tools_20260929/topogym/solvers/collision/convex_compounds.py",
+      "category": "unused_runtime_or_compatibility",
+      "kind": "file"
+    },
+    {
+      "source": "topogym/tasks/task_variations",
+      "destination": "legacy/research_tools_20260929/topogym/tasks/task_variations",
+      "category": "unused_runtime_or_compatibility",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/check_scene_variation.py",
+      "destination": "legacy/research_tools_20260929/tests/check_scene_variation.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/orbits_stability_evidence.py",
+      "destination": "legacy/research_tools_20260929/tests/orbits_stability_evidence.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/release_scene_audit.py",
+      "destination": "legacy/research_tools_20260929/tests/release_scene_audit.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/rgb_repro_evidence.py",
+      "destination": "legacy/research_tools_20260929/tests/rgb_repro_evidence.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/runtime_evidence.py",
+      "destination": "legacy/research_tools_20260929/tests/runtime_evidence.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/scene_preset_diagnostics.py",
+      "destination": "legacy/research_tools_20260929/tests/scene_preset_diagnostics.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/scene_preset_evidence.py",
+      "destination": "legacy/research_tools_20260929/tests/scene_preset_evidence.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/scene_preset_pickup.py",
+      "destination": "legacy/research_tools_20260929/tests/scene_preset_pickup.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/slotted_scene_stability.py",
+      "destination": "legacy/research_tools_20260929/tests/slotted_scene_stability.py",
+      "category": "research_evidence_helper",
+      "kind": "file"
+    },
+    {
+      "source": "tests/unit",
+      "destination": "legacy/research_tools_20260929/tests/unit",
+      "category": "independent_regression_suite",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/contracts",
+      "destination": "legacy/research_tools_20260929/tests/contracts",
+      "category": "independent_regression_suite",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/architecture",
+      "destination": "legacy/research_tools_20260929/tests/architecture",
+      "category": "independent_regression_suite",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/recording_data",
+      "destination": "legacy/research_tools_20260929/tests/recording_data",
+      "category": "independent_regression_suite",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/integration",
+      "destination": "legacy/research_tools_20260929/tests/integration",
+      "category": "independent_regression_suite",
+      "kind": "directory"
+    },
+    {
+      "source": "tests/conftest.py",
+      "destination": "legacy/research_tools_20260929/tests/conftest.py",
+      "category": "independent_regression_suite",
+      "kind": "file"
+    },
+    {
+      "source": "assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/planning/implementation",
+      "destination": "legacy/research_tools_20260929/assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/planning/implementation",
+      "category": "historical_buzz_source",
+      "kind": "directory"
+    },
+    {
+      "source": "assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation",
+      "destination": "legacy/research_tools_20260929/assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation",
+      "category": "historical_buzz_source",
+      "kind": "directory"
+    },
+    {
+      "source": "scripts/README.md",
+      "destination": "legacy/research_tools_20260929/scripts/README.md",
+      "category": "original_documentation_replaced_by_active_index",
+      "kind": "file"
+    },
+    {
+      "source": "tests/README.md",
+      "destination": "legacy/research_tools_20260929/tests/README.md",
+      "category": "original_documentation_replaced_by_active_index",
+      "kind": "file"
+    }
+  ],
+  "resource_check": {
+    "cpu_percent": 4.54,
+    "memory_percent": 22.92
+  },
+  "active_candidate_processes": [],
+  "git_status_before": " M configs/camera_configs/README.md\n M configs/task_cards/fiber_bundling.yaml\n M docs/develop/tasks/buzz_wire_3d_zh.md\n M docs/develop/tasks/fiber_bundling_zh.md\n M docs/develop/tasks/lock_picking_zh.md\n M docs/vla_doc/README.md\n M docs/vla_doc/vla_eval_demo.py\n M tests/unit/test_initial_scene_feedback.py\n M tests/unit/test_terminal_fiber_bundling.py\n M topogym/assets/geometry/hedgehog_ellipse.py\n M topogym/config/scene.py\n M topogym/config/variation_records.py\n M topogym/planning/buzz_wire_3d/README.md\n M topogym/planning/hedgehog_in_cage/hedgehog_in_cage_medium_planning.py\n M topogym/planning/rigid_reference/search.py\n M topogym/tasks/fiber_bundling/common.py\n M topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_medium.py\n?? docs/rcb/difficulty_sweep_delivery_plan_zh.md\n?? docs/rcb/local_difficulty_trials_plan_zh.md\n?? scripts/render_seeded_initial_frames.py\n?? topogym/config/profiles/camera_configs/buzz_wire_3d_observation.yaml\n?? topogym/config/profiles/camera_configs/lock_picking_observation.yaml\n",
+  "retained": [
+    "tasks/",
+    "images/",
+    "harbor_agents/",
+    "ci_checks/",
+    "topogym/simulator/rollout_simulation/",
+    "topogym/planning/",
+    "tests/fixtures/",
+    "runs/",
+    "task_rollouts/",
+    "solvability_proof/",
+    "scripts/test_policy_cube_transfer.py",
+    "scripts/test_scripted_policy_rollout.py",
+    "scripts/compile_buzz_wire_actions.py",
+    "scripts/prepare_blanket_initial_states.py",
+    "scripts/install_blanket_initial_state.py",
+    "scripts/import_rope_threading_reference.py",
+    "scripts/prepare_nyx_studio.py",
+    "docs/vla_doc/vla_eval_demo.py"
+  ],
+  "status": "complete",
+  "resources_at_move": {
+    "cpu_percent": 4.39,
+    "memory_percent": 22.88
+  },
+  "moved": [
+    "scripts/audit_buzz_wire_policy.py",
+    "scripts/audit_cast_coil_policy.py",
+    "scripts/audit_cast_keyhole_policy.py",
+    "scripts/finalize_buzz_wire_execution.py",
+    "scripts/check_fiber_keyframes.py",
+    "scripts/inspect_blanket_preparation.py",
+    "scripts/check_variation_assets.py",
+    "scripts/probe_release_scenes.py",
+    "scripts/record_initial_scenes.py",
+    "scripts/render_seeded_initial_frames.py",
+    "scripts/inventory_sources.py",
+    "scripts/test_base_tasks.py",
+    "scripts/test_variation_runtime.py",
+    "scripts/test_scene_presets.py",
+    "scripts/test_blanket_initialization.py",
+    "scripts/test_orbits_stability.py",
+    "scripts/test_grasp_assist.py",
+    "scripts/validate_slotted_post_scenes.py",
+    "scripts/run_pending_simulator_checks.sh",
+    "scripts/run_rgb_repro_checks.sh",
+    "topogym/recording/sequence.py",
+    "topogym/solvers/collision/convex_compounds.py",
+    "topogym/tasks/task_variations",
+    "tests/check_scene_variation.py",
+    "tests/orbits_stability_evidence.py",
+    "tests/release_scene_audit.py",
+    "tests/rgb_repro_evidence.py",
+    "tests/runtime_evidence.py",
+    "tests/scene_preset_diagnostics.py",
+    "tests/scene_preset_evidence.py",
+    "tests/scene_preset_pickup.py",
+    "tests/slotted_scene_stability.py",
+    "tests/unit",
+    "tests/contracts",
+    "tests/architecture",
+    "tests/recording_data",
+    "tests/integration",
+    "tests/conftest.py",
+    "assets/tasks/buzz_wire_3d/F1_triple_compact_toy_s70_home_lab_v1/planning/implementation",
+    "assets/tasks/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/planning/implementation",
+    "scripts/README.md",
+    "tests/README.md"
+  ],
+  "file_count": 270,
+  "source_file_count": 157,
+  "files_manifest_sha256": "77870670b4bf2ef50d90e8672a709fee6a59778fc5e2f46bade713390e813d1e",
+  "validation_report": "runs/test_results/research_tools_archive_20260929/report.json",
+  "maintenance_note": "docs/maintenance/research_tools_archive_20260929_zh.md",
+  "shared_code_extracted": {
+    "source": "tests/integration/test_policy_action_receiver.py",
+    "retained_at": "tests/fixtures/control_targets.py",
+    "functions": [
+      "rotation",
+      "targets_and_action"
+    ],
+    "verification": "AST-equivalent"
+  }
+}

@@ -21,13 +21,20 @@ class FiberBundlingTask(TaskDefinition):
     instruction = ('Manipulate only the thick sheath. Pass every fiber tip first through the copper ring '
                    'in material order, without sharp bends, until the roots and front sheath have passed. '
                    'Any gripper contact with a fine strand fails the task; keep the rear terminal anchored.')
-    terminal_revision = "terminal_v3_fiber_contacts"
+    terminal_revision = "terminal_v4_fiber_ring_plane"
     physics_model = "rigid_articulated"
     goal_complete = True
     defaults = defaults(task_id,
         geometry={}, anchor={}, center_xy_m=[-0.1, -0.25], stable_duration_s=0.5,
-        terminal=dict(maximum_bend_deg=60., aperture_margin_m=.0001)
+        terminal=dict(maximum_bend_deg=60.)
     )
+    # Passage is judged where a point crosses the ring's own plane. There a strand
+    # centre is either in the hole (<= aperture - fiber radius) or outside the ring
+    # (>= outer radius + fiber radius); in between it would be inside the tube.
+    # The tube centreline radius splits that impossible band, so strands guided in
+    # by the curved front of the tube still count and bypasses outside never do.
+    # Both passage boundaries sit on the ring plane, RING_PLANE_M apart.
+    RING_PLANE_M = 1e-6
 
     def declare(self, asset_dir, table_height_m):
         preset = record_preset(self, asset_dir)
@@ -218,12 +225,13 @@ class FiberBundlingTask(TaskDefinition):
         q = np.asarray(ring["quaternion_wxyz"], float)
         normal = Rotation.from_quat(q[[1,2,3,0]]).apply([0.,0.,1.])
         cfg = self.config["terminal"]
-        radius = self.layout.minimum_aperture_radius-self.layout.fiber_radius_m-cfg["aperture_margin_m"]
+        radius = self.layout.minimum_aperture_radius+self.layout.ring_tube_radius_m
         half = self.layout.ring_tube_radius_m+self.layout.fiber_radius_m
         completed, next_strands, bends = [], [], []
         for path, old in zip(paths, history["strands"]):
-            done, new, _ = advance_passage(path, old, center, normal, radius, half)
-            completed.append(done)
+            done, new, _ = advance_passage(path, old, center, normal, radius, self.RING_PLANE_M)
+            # Passed stations must also be clear of the tube on the exit side.
+            completed.append(bool(done and np.all((path-center) @ normal > half)))
             next_strands.append(new)
             tangents = np.diff(path, axis=0)
             lengths = np.linalg.norm(tangents, axis=1)
@@ -236,8 +244,7 @@ class FiberBundlingTask(TaskDefinition):
         front = self._front_point(state)
         front_clear = np.dot(front-center, normal)-self.layout.trunk_radius_m > self.layout.ring_tube_radius_m
         front_passed, front_history, _ = advance_passage([front], history["front"], center, normal,
-            self.layout.minimum_aperture_radius-self.layout.trunk_radius_m-cfg["aperture_margin_m"],
-            self.layout.ring_tube_radius_m+self.layout.trunk_radius_m)
+                                                         radius, self.RING_PLANE_M)
         reached = (contact_coverage and all(completed) and front_passed and front_clear
                    and maximum <= cfg["maximum_bend_deg"])
         return bool(reached), None, dict(strands_complete=completed, maximum_bend_deg=maximum,

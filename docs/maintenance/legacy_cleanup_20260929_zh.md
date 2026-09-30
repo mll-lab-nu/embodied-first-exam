@@ -6,7 +6,7 @@
 
 - [迁移清单](../../legacy/cleanup_20260929/manifest.json)逐项记录原路径和新路径；`legacy/cleanup_20260929/files.jsonl` 保存逐文件 SHA-256、inode、大小、mtime、权限及软链接目标。
 - 同一文件系统内 rename，避免复制大产物。移动后重新核对全部 303,859 个文件的元数据，并重新计算 223 个文档、源码、配置与 research 文件的哈希；均一致。
-- 从旧 manifest 提取 37 项旧变体名称与默认入口映射，保存到 [`tests/fixtures/retired_variations.json`](../../tests/fixtures/retired_variations.json)。[现行回归测试](../../tests/unit/test_task_variations.py)不再读取 legacy，也不导入旧源码。
+- 从旧 manifest 提取 37 项旧变体名称与默认入口映射，保存到 [`tests/fixtures/retired_variations.json`](../../tests/fixtures/retired_variations.json)。[现行回归测试](../../legacy/research_tools_20260929/tests/unit/test_task_variations.py)不再读取 legacy，也不导入旧源码。
 - 更新活动文档中的 135 个迁移链接，全部目标存在；同时清理入口 README 中旧 runner 命令，当前 Harbor 指向 [`docs/rcb/`](../rcb/README.md)。归档原件正文和历史 manifest 不改写，通过外层迁移清单定位。
 - `.gitignore` 继续保留归档源码和文档的版本化能力，排除本轮归档的生成任务、报告、运行产物及 122 MiB 逐文件清单。没有执行提交、暂存或 `git rm --cached`。
 - 归档前发现的 5 个旧 worker、1 个周报 shell 和 1 个 HTTP server 都已处于 stopped 状态；本轮没有恢复或终止这些进程。它们不再应使用原路径恢复旧服务。

@@ -85,10 +85,11 @@ rejection_rules:
 - Using a detached free-cable demo as evidence for this anchored variant
 success: Complete episode gripper-contact coverage with no gripper touching any fine strand; every fine strand passes tip-to-root through the aperture and remains on the exit side; the front sheath face also passes through the aperture and clears the exit; bend angles stay within the configured limit for the confirmation window; trailing cable remains connected to the fixed terminal
 terminal_evaluation:
-  revision: terminal_v3_fiber_contacts
+  revision: terminal_v4_fiber_ring_plane
   goal_complete: true
   contract: docs/develop/tasks/terminal_judgement_engineering_plan_20260925_zh.md#53-fiber-bundling
-  front_sheath_rule: front_face_passage_and_radius_adjusted_exit_clearance
+  passage_rule: every station crosses the ring's own plane tip-to-root within the tube centreline radius (aperture + tube radius, 17.48 mm) and ends more than tube + fiber radius past it; v3 judged the narrowest aperture 5.2 mm before the ring and rejected strands the curved ring front guides into the hole (2026-09-29, docs/develop/tasks/fiber_bundling_zh.md)
+  front_sheath_rule: front_face_ring_plane_passage_and_tube_clear_exit
   historical_depth_rule: the older 30_mm jacket criterion is superseded here by the 2026-09-25 terminal front-face contract; historical demos keep their original acceptance records
   maximum_bend_deg: 60
   stable_duration_s: 0.5

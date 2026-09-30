@@ -105,7 +105,7 @@ def run_case(output, *, case="cube", seed=0, split=False, robot="panda_robotiq",
                         report["segments"] = to_jsonable(segments)
                         report["task_expectation_passed"] = env._task.result.task_success == (case == "cube")
                     else:
-                        from integration.test_policy_action_receiver import targets_and_action, rotation
+                        from fixtures.control_targets import targets_and_action, rotation
                         import numpy as np
                         goals, action = targets_and_action(env, mode)
                         first = actor.run_segment(request_id="one", actions=[action]+[{}]*9)

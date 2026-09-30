@@ -1,4 +1,4 @@
-"""hedgehog_in_cage: oblique_gate. Difficulty is a design target, not a qualification."""
+"""hedgehog_in_cage: waisted windows. Difficulty is a design target, not a qualification."""
 
 from .common import HedgehogInCageTask
 from topogym.tasks.base import merge_parameters
@@ -8,8 +8,8 @@ class HedgehogInCageMediumTask(HedgehogInCageTask):
     variant_parameters = {'scale': 3.0, 'finish': 'wood'}
     defaults = merge_parameters(HedgehogInCageTask.defaults, variant_parameters)
     variation_id = 'hedgehog_in_cage_medium'
-    family_id = 'elliptical_windows'
-    model_revision = 'ellipse_dark_wood_v1'
+    family_id = 'waisted_windows'
+    model_revision = 'waisted4_dark_wood_v1'
     difficulty = 'medium'
     fixed_parameters = ('scale', 'finish')
 
@@ -20,5 +20,5 @@ class HedgehogInCageMediumTask(HedgehogInCageTask):
     cage_convexify = False
 
     def build_assets(self, folder):
-        from topogym.assets.geometry.hedgehog_ellipse import build_ellipse_cage
-        return build_ellipse_cage(folder, self.asset_resource)
+        from topogym.assets.geometry.hedgehog_ellipse import build_waisted_cage
+        return build_waisted_cage(folder, self.asset_resource)

@@ -142,6 +142,59 @@ def test_incomplete_or_wrong_passage_never_terminates_successfully(case):
         assert not result.terminated and not result.task_success
 
 
+def shift_strands(state, y):
+    for name, link in state["articulations"]["fiber_bundle"]["links"].items():
+        if name.startswith("fiber_"):
+            link["position_m"][1] = y
+
+
+def settle(task, state, ticks=7):
+    for _ in range(ticks):
+        move(state, 0)
+        result = task.update(state, .1)
+        if result.terminated:
+            break
+    return result
+
+
+def test_strand_guided_in_by_the_ring_front_counts():
+    # The tip crosses the old entry plane (6 mm before the ring plane) 52 mm off
+    # axis, beyond the old 48.9 mm limit but inside the tube centreline (55 mm),
+    # then reaches the ring plane in the hole: a real passage, formerly rejected.
+    task, state = fixture()
+    shift_strands(state, .052)
+    task.initialize(state)
+    move(state, .057)  # tip at 3 mm before the ring plane
+    task.update(state, .1)
+    shift_strands(state, .03)
+    move(state, 0)
+    task.update(state, .1)
+    move(state, .2)
+    task.update(state, .1)
+    assert settle(task, state).task_success
+
+
+def test_ring_plane_crossing_outside_or_wrapping_back_never_counts():
+    task, state = fixture()
+    shift_strands(state, .06)  # beyond the tube centreline: outside the hole
+    task.initialize(state)
+    move(state, .2)
+    task.update(state, .1)
+    result = settle(task, state)
+    assert not result.task_success and result.metrics["strands_complete"] == [False, False]
+    task, state = fixture()
+    task.initialize(state)
+    move(state, .2)  # through the hole
+    task.update(state, .1)
+    shift_strands(state, .2)
+    move(state, -.2)  # back to the entry side around the outside
+    task.update(state, .1)
+    move(state, .2)  # forward again outside the ring
+    task.update(state, .1)
+    result = settle(task, state)
+    assert not result.task_success and not any(result.metrics["strands_complete"])
+
+
 def touch(*, fiber_role="fiber_strand", part="gripper", reverse=False):
     event = dict(role_a="robot", role_b=fiber_role, robot_part_a=part,
                  robot_part_b=None, touching=True, substep=0, force_n=0., penetration_m=0.)
@@ -251,7 +304,7 @@ def test_real_declared_assets_have_complete_strand_roles_and_consistent_metadata
     spec = task.declare(tmp_path, .75)
     assert spec.metadata["goal_evaluation_complete"] is True
     assert task.terminal_metadata()["goal_complete"] is True
-    assert task.terminal_revision == "terminal_v3_fiber_contacts"
+    assert task.terminal_revision == "terminal_v4_fiber_ring_plane"
     entity = next(e for e in spec.entities if e.name == "fiber_bundle")
     strands = {name for name,role in entity.contact_roles.items() if role == "fiber_strand"}
     assert strands == {f"fiber_surface_{i:02d}_{j:02d}" for i in range(count) for j in range(task.layout.fiber_segments)}

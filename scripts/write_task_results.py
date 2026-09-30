@@ -8,6 +8,7 @@ TopoGym (adapted from robot_coding_bench fa59c1a6): topogym task names and the v
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 root = pathlib.Path(__file__).resolve().parents[1]
+tasks_root = pathlib.Path(sys.argv[sys.argv.index("--tasks-root") + 1]) if "--tasks-root" in sys.argv else root / "tasks"
 base = pathlib.Path(sys.argv[sys.argv.index("--out") + 1]) if "--out" in sys.argv else root / "jobs" / "results" / job
 analysis = {}
 if "--analysis" in sys.argv:
@@ -27,7 +28,7 @@ n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
     r = json.load(open(trial / "result.json")); task = r["task_name"].split("/")[-1]
-    tdir = root / "tasks" / task
+    tdir = tasks_root / task
     if not tdir.is_dir(): continue
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
     ar = r.get("agent_result") or {}; limited = task.endswith("-limited"); fam = task.replace("topogym-", "").replace("-limited", "")

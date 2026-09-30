@@ -6,8 +6,9 @@
 Loads the secrets INSIDE this process and never prints them: the named variables from the .env files (default: the
 repo's ../.env and OPENROUTER_API_KEY) and, with --codex-auth, the tokens of a Codex ChatGPT login (auth.json). It
 reports only which files contain one (and how many times). With --redact every occurrence is replaced with
-[REDACTED-<NAME>] in place. Binary files (videos, npz) are scanned too, as bytes."""
-import argparse, json, pathlib, sys
+[REDACTED-<NAME>] in place. Large binary media/physics archives are excluded.
+Adapted from robot_coding_bench fa59c1a6: process-local key input for difficulty evaluations."""
+import argparse, json, os, pathlib, sys
 
 
 def load_env(path: str) -> dict:
@@ -30,9 +31,10 @@ ap.add_argument("--env-file", action="append", help="repeatable (default: <repo>
 ap.add_argument("--var", action="append", help="repeatable (default: OPENROUTER_API_KEY)")
 ap.add_argument("--codex-auth", action="append", default=[], help="a Codex auth.json whose login tokens are secrets too")
 ap.add_argument("--redact", action="store_true")
+ap.add_argument("--process-env", action="store_true", help="load selected --var values from this process, without writing a dotenv file")
 a = ap.parse_args()
-env = {}
-for f in a.env_file or [str(pathlib.Path(__file__).resolve().parents[2] / ".env")]:
+env = dict(os.environ) if a.process_env else {}
+for f in a.env_file or ([] if a.process_env else [str(pathlib.Path(__file__).resolve().parents[2] / ".env")]):
     if pathlib.Path(f).is_file():
         env.update(load_env(f))
 secrets = {n: env[n].encode() for n in (a.var or ["OPENROUTER_API_KEY"]) if env.get(n)}
@@ -46,8 +48,11 @@ for f in a.codex_auth:
 if not secrets:
     sys.exit("no secret loaded (check --env-file / --var / --codex-auth); nothing to scan for")
 hits = scanned = 0
-for p in pathlib.Path(a.dir).rglob("*"):
+target = pathlib.Path(a.dir)
+for p in ([target] if target.is_file() else target.rglob("*")):
     if not p.is_file() or p.is_symlink():
+        continue
+    if p.suffix.lower() in {".mp4", ".png", ".jpg", ".jpeg", ".npz", ".npy", ".stl", ".glb", ".blend"}:
         continue
     scanned += 1
     try:

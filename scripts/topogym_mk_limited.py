@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Generate tasks/topogym-<family>-i<NN>-limited/ from an existing unlimited task + the topogym-cube-pick-place-i00-limited
-template. Adapted from robot_coding_bench's scripts/robowits_mk_limited.py (fa59c1a6).
+"""Generate a limited twin from an unlimited task and harbor_templates/topogym/limited.
+Adapted from robot_coding_bench's scripts/robowits_mk_limited.py (fa59c1a6).
 usage: scripts/topogym_mk_limited.py <family> <oracle_traj.npz | -> ["<goal in words>"] ["<objects paragraph>"] [--eval-index 0] [--K 1]
   <oracle_traj.npz>  the unlimited oracle's trajectory (its solution/solve.sh output); the limited oracle streams its rows ("-": none)
   "<goal in words>"  the unlimited task's success conditions stated in words (default: the family's task text): the limited
@@ -16,23 +16,33 @@ sys.dont_write_bytecode = True        # importing the task's tooling must not le
 from topogym_mk_task import startup_instruction
 
 root = pathlib.Path(__file__).resolve().parents[1]
-TEMPLATE = root / "tasks/topogym-cube-pick-place-i00-limited"
+TEMPLATE = root / "harbor_templates/topogym/limited"
 SHARED = ["environment/Dockerfile", "environment/rcb_client.py", "environment/rcb1.py", "environment/sim/rcb1.py",
           "environment/sim/rcb_limited.py", "environment/sim/server.py", "tests/Dockerfile", "tests/grade.py", "tests/test.sh"]
 ORACLE_FILES = ["solution/solve.sh", "solution/oracle_replay.py"]
-BUDGET_S = 5400
+BUDGET_S = 21600
 
 
 def main() -> None:
+    global BUDGET_S
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("family"); ap.add_argument("traj"); ap.add_argument("goal", nargs="?"); ap.add_argument("objects", nargs="?")
     ap.add_argument("--eval-index", type=int, default=0); ap.add_argument("--K", type=int, default=1)
+    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "tasks")
+    ap.add_argument("--build-root", type=pathlib.Path, default=root / "runs/task_build")
+    ap.add_argument("--unlimited-task", type=pathlib.Path)
+    ap.add_argument("--agent-wall-clock-s", type=int, default=BUDGET_S)
     a = ap.parse_args()
     fam = a.family
     slug = f"topogym-{fam.replace('_', '-')}-i{a.eval_index:02d}"
-    unl = root / "tasks" / slug; dst = root / "tasks" / f"{slug}-limited"
+    if not 0 < a.agent_wall_clock_s <= 21600:
+        ap.error("--agent-wall-clock-s must be in 1..21600")
+    BUDGET_S = a.agent_wall_clock_s
+    unl = a.unlimited_task.resolve() if a.unlimited_task else a.tasks_root.resolve() / slug
+    slug = unl.name
+    dst = a.tasks_root.resolve() / f"{slug}-limited"
     assert unl.is_dir(), unl
-    d = json.loads((root / "runs/task_build" / slug / "describe.json").read_text())
+    d = json.loads((a.build_root / slug / "describe.json").read_text())
     sys.path.insert(0, str(unl / "environment"))
     import rcb_topogym as M
     goal = a.goal or M.TASKS[fam]["text"]
@@ -46,6 +56,12 @@ def main() -> None:
     (dst / "tests/test.sh").chmod(0o755)
     # sim sidecar gets this task's instance + the unlimited task's tooling copy
     shutil.copy(unl / "environment/instance.json", dst / "environment/sim/instance.json")
+    assets = unl / "environment/instance_assets"
+    if assets.is_dir():
+        shutil.copytree(assets, dst / "environment/sim/instance_assets", dirs_exist_ok=True)
+    import tomllib
+    if tomllib.loads((unl / "task.toml").read_text())["agent"]["timeout_sec"] != BUDGET_S:
+        raise ValueError("limited/unlimited wall-clock budgets must match")
     shutil.copy(unl / "environment/rcb_topogym.py", dst / "environment/sim/rcb_topogym.py")
     img = re.search(r"^FROM\s+(\S+)", (unl / "environment/Dockerfile").read_text(), re.M).group(1)   # same base image as the twin
     compose = (TEMPLATE / "environment/docker-compose.yaml").read_text()
@@ -171,7 +187,7 @@ unlimited task to measure the cost of losing resets, privileged state and the to
     hours = float(re.search(r"expert_time_estimate_hours = ([0-9.]+)", unl_toml).group(1)) * 1.5
     # collect: the service replays the episode once for the grading record, then once more for the video; each replay takes
     # at most as long as the agent's own episode (the budget), so wait up to that long for each.
-    polls = (BUDGET_S + 600) // 2
+    polls = (BUDGET_S + 601) // 2
     collect = ("for i in $(seq 1 300); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); "
                f"for i in $(seq 1 {polls}); do grep -q '\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; sleep 2; done; "
                f"for i in $(seq 1 {polls}); do grep -q '\\\"video_done\\\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json")
@@ -219,7 +235,7 @@ command = "{collect}"
 timeout_sec = {600 + 2 * 2 * polls}                # service up (<= 10 min), replay (grading record), then the video: each at most one episode
 
 [agent]
-timeout_sec = {float(BUDGET_S)}             # TopoGym budget: 1.5 h of wall clock
+timeout_sec = {float(BUDGET_S)}             # Agent wall-clock budget
 # egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
 
 [environment]

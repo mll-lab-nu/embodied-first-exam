@@ -103,7 +103,7 @@ flowchart TD
 
 以下接入数量保留原源码核对时的快照，不代表下文计划中的家族适配已经实现。
 
-- [`tasks/task_variations/__init__.py`](../../../topogym/tasks/task_variations/__init__.py) 只读取各文件的 `VARIATIONS`。当前 Knot有3项具名变体，Blanket有2项；其余只开放base。
+- [`tasks/task_variations/__init__.py`](../../../legacy/research_tools_20260929/topogym/tasks/task_variations/__init__.py) 只读取各文件的 `VARIATIONS`。当前 Knot有3项具名变体，Blanket有2项；其余只开放base。
 - `tasks/task_variations/cast_coil.py` 虽有大量几何派生代码和 `KINDS/PRESETS`，**没有 `VARIATIONS`**，因此这些名字还不是 `make(..., variation_id=...)` 可直接选择的运行变体。
 - 目前共18个可选择的 task/variation 配对：13个base、3个Knot、2个Blanket；Blanket的 `five_folds` 与当前base折数相同，18不等于18种不同几何难度。
 - 不把[变体难度审阅](../../../legacy/cleanup_20260929/docs/develop/tasks/variant_difficulty_review_20260924_zh.md)中的历史家族、候选难度或旧demo直接填成当前已接入、已可解。
@@ -183,7 +183,7 @@ RoboWits公开README列出同名四种控制模式，并说明其关节增量模
 ### 5.2 当前planner现状与应该保留的边界
 
 - 活动 `planning/` 只有 [`motions/cast_coil.py`](../../../topogym/planning/motions/cast_coil.py)，提供物体相对运动段和采样，没有完整机器人执行器，也不是所有任务的planner。
-- 并行场景会话新增 [`tests/scene_preset_pickup.py`](../../../tests/scene_preset_pickup.py)：包含Buzz/Lock的拾取规划、碰撞查询和物理拾放诊断。它只覆盖局部拾取，仍读取Env私有对象；本轮只登记，不移动或改写。对方完成后再提取真正共用的部分。
+- 并行场景会话新增 [`tests/scene_preset_pickup.py`](../../../legacy/research_tools_20260929/tests/scene_preset_pickup.py)：包含Buzz/Lock的拾取规划、碰撞查询和物理拾放诊断。它只覆盖局部拾取，仍读取Env私有对象；本轮只登记，不移动或改写。对方完成后再提取真正共用的部分。
 - 历史Task文档中的 `tasks/<name>/planner.py` 等路径不少已过时。算法可以静态审阅后迁入活动模块，但不能运行时从 `runs/legacy` 动态加载源码，也不恢复每个任务自己的环境循环。
 - Planner不能读取 `task_success` 后直接写回成功标记；Task判据也不检查“参考脚本是否走到最后一行”。二者必须相互独立。
 

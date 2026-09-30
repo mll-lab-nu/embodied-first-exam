@@ -1,7 +1,15 @@
 # Buzz Wire 3D policy 与实际验收
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 当前范围是注册的 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0。
-**已通过实际成功与独立审计 1/3：easy；medium / hard 仍在验证。**
+**关键姿态与历史走线夹持检查 3/3；含终态动作的分段证据 2/3（easy、hard）；连续完整 Task 成功与独立审计仍为 1/3（easy）。**
+最新结果见 [`buzz_three_tier_component_proof_20260929_01`](../../../runs/test_results/buzz_three_tier_component_proof_20260929_01/README.md)。
+Hard 新补的局部转正、释放和静置通过，最终误差 **0.057 mm / 8.146°**，持续满足终态 **5.95 s**。
+Medium 的终态转正仍未通过；三档完整可解性不能标为全部通过。
+局部实验将历史工具静置姿态作为显式初态，机器人从默认 home 开始；历史走线与局部实验的机器人状态没有连续衔接，不能计作新的完整 Task 成功。
+本轮仿真和查询进程均已退出。使用 `segment` 检查点，无视频；达到 90% 内存或 CPU 使用率时暂停本轮进程。
+
 easy 的本次证据为
 [`buzz_easy_continuous_20260929_02`](../../../runs/test_results/buzz_easy_continuous_20260929_02/)：
 从默认 home 连续执行 211.55 秒，共 8463 个状态，无回溯、无工具触线、无机器人触线，
@@ -11,7 +19,7 @@ easy 的本次证据为
 228.775 s / 792.100 s，未取得最终成功。数值日志不能当作可恢复的物理 checkpoint；
 它们的 `interruption_status.json` 记录这一范围，不能称为仍在后台运行。
 
-## 关键姿态与夹持证据复核（2026-09-29 后续）
+## 关键姿态与夹持证据复核（2026-09-29，终态局部实验之前）
 
 按最新验证范围，复用已有物理执行，只补当前场景的少量关键姿态检查，不生成视频。
 结果见 [`buzz_fast_feasibility_20260929_01`](../../../runs/test_results/buzz_fast_feasibility_20260929_01/README.md)：
@@ -21,7 +29,7 @@ easy 的本次证据为
 - medium 已有无回溯走线前缀及后续成功释放分支，最后偏离目标 **8.8 mm / 42.3°**，终点修正抓取未通过。hard 最后位置误差 **0.051 mm**，朝向仍偏 **25.4°**。两档完整 Task success 仍未取得。
 - 当前碰撞资产与旧执行匹配，源码差异单列；旧物理证据不改标为当前源码的新完整执行。关键点检查不覆盖点间路径、自碰撞和释放动力学，不扩大到其他 seed。
 
-后续局部执行使用 **`history_storage="segment"`**：episode 起点与分段起点保存完整 checkpoint，其他 tick 保留轻量记录。
+上述阶段之后的局部执行使用 **`history_storage="segment"`**：episode 起点与分段起点保存完整 checkpoint，其他 tick 保留轻量记录。
 旧 staged 输入显式写了 `memory`，不要直接沿用；本次另存了
 [`continuation_configs/`](../../../runs/test_results/buzz_fast_feasibility_20260929_01/continuation_configs/)
 三份 segment 配置，原执行配置保持其历史身份。资源监控每秒采样，达到 90% 暂停本轮工作进程；本轮内存峰值 28.8%，CPU 触发暂停后已恢复并完成。

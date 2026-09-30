@@ -13,7 +13,7 @@ from topogym.utils.grasp import GraspAssistConfig, GraspTarget, SoftGraspTarget
 # "segment" (default): a complete checkpoint at the episode start and at each SegmentRunner segment start, a light
 # record (tick identity, robot targets, task state) at every other tick; rewind reaches only those checkpoints.
 # "memory" / "disk": a complete checkpoint at every physics tick (in memory / pickled to a private temporary
-# directory); rewind reaches any tick. Tests that rewind to arbitrary ticks select "memory" (tests/conftest.py).
+# directory); rewind reaches any tick. Callers that rewind to arbitrary ticks select "memory".
 DEFAULT_HISTORY_STORAGE = "segment"
 HISTORY_STORAGES = {"segment", "memory", "disk"}
 

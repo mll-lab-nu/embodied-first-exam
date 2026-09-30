@@ -1,5 +1,7 @@
 # Assist 接入标准 simulator：工程评估与分步计划
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 日期：2026-09-25；2026-09-26 开始实施。前文保留调查当时的判断；最新部署范围与验证边界见 §10 及[公共模块说明](../modules/grasp_assist_zh.md)。
 
 关联：[历史 assist 与外部 agent 环境调查](../../../legacy/cleanup_20260929/docs/develop/tasks/assist_grasp_recovery_and_agent_contract_review_20260925_zh.md)、[各变体历史 planner 清单](../../../legacy/cleanup_20260929/docs/develop/tasks/planner_oracle_inventory_20260925_zh.md)、[标准执行与证据计划](../../../legacy/cleanup_20260929/docs/develop/tasks/planner_recovery_and_standard_execution_plan_20260925_zh.md)、[action 接收端测试](../../../runs/test_results/action_receiver_20260925_02/README.md)。

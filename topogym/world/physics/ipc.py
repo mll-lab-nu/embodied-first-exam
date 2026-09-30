@@ -26,7 +26,7 @@ def require_episode_checkpoint(compute_backend="cuda"):
 
     if not torch.cuda.is_available():
         raise RuntimeError(
-            "FEM/IPC CUDA device is unavailable; run scripts/test_base_tasks.py on a CUDA host"
+            "FEM/IPC CUDA device is unavailable; use a CUDA-capable host with compute_backend='cuda'"
         )
 
 

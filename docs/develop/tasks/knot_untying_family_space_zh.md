@@ -1,5 +1,7 @@
 # 解绳结变体：固定结型与家族内参数
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 **2026-09-22 最新状态：八字结已完成两次真实换抓，仍未完整解结；双重单结 v8 正在连续试录。** 八字结 [v9 报告](../../../runs/environment-stability/knot_untying/families_20260919/figure_eight/robot_v9_pitched_regrasp/report.json)记录在 74.350 s 用 -30° 姿态抓住 band 60，116.320 s 再抓住 band 38，均由双指原生接触触发辅助抓持。B 端原先的首下穿交叉已退出；随后仍有四处投影交叉。129.000 s 的下一段抽拉被材料余量检查拒绝：两抓点之间仅有 299.783 mm 材料，不能继续拉远。103,200 个 IPC 子步全部收敛，最大 Newton 次数 65；最小 det(F) 0.71379，最大局部应变 9.521%，最大总长度变化 1.362%，最大抓持跟随误差 0.618 mm，桌面穿透为零。未完成释放和静置，不能记作整个物理检查或任务通过。五路局部录像均为 2,580 帧 / 129 s，完整解码与同步通过，直链见 [试录记录](../../../runs/environment-stability/knot_untying/families_20260919/README.md)。
 
 下一轮 [v11 队列](../../../runs/environment-stability/knot_untying/families_20260919/figure_eight/robot_v11_launch_queue.json)使用 `figure8_support_reanchor_v7`。在新的下穿抓点使支撑材料跨度小于 0.50 m 时，左手保持实际抓持，右手解除旧抓持、张爪退出，再根据当前绳形重新抓住对侧自由尾段；随后才继续退穿。117.005 s 的 [记录状态 CPU 预检](../../../runs/environment-stability/knot_untying/families_20260919/figure_eight/robot_v9_pitched_regrasp/support_reanchor_recorded_state_cpu.json)通过 70 mm 退出和 A 端抓取的离散路径检查，新的材料跨度为约 914 mm。它没有执行释放、接触或 FEM 回放；实际换抓仍待验证。 另一个 [冻结绳形的后续路径检查](../../../runs/environment-stability/knot_untying/families_20260919/figure_eight/support_reanchor_v7_late_route_cpu.json)覆盖新的支撑抬升、送绳、侧移及四段抽拉：500 mm 总抓持行程内，离散机器人/桌面间隙、IK 和材料跨度均可行；它不预测运动后的绳形。

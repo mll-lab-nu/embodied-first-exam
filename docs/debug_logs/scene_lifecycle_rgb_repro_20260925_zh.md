@@ -17,7 +17,7 @@
 
 ### 2.1 Hedgehog + Panda/Robotiq：连续重建
 
-实际入口：[test_lifecycle_stability.py](../../tests/integration/test_lifecycle_stability.py)。以下为测试语义的伪代码，省略证据接口和断言细节：
+实际入口：[test_lifecycle_stability.py](../../legacy/research_tools_20260929/tests/integration/test_lifecycle_stability.py)。以下为测试语义的伪代码，省略证据接口和断言细节：
 
 ```python
 env = Env(task="hedgehog_in_cage", robot="panda_robotiq", max_physics_steps=17)
@@ -50,7 +50,7 @@ Env.reset
 
 ### 2.2 同进程跨 Task 切换
 
-实际入口：[test_task_switch_runtime.py](../../tests/integration/test_task_switch_runtime.py)：
+实际入口：[test_task_switch_runtime.py](../../legacy/research_tools_20260929/tests/integration/test_task_switch_runtime.py)：
 
 ```python
 for task in ["cast_coil", "rope_threading", "blanket_flatten",
@@ -70,7 +70,7 @@ for task in ["cast_coil", "rope_threading", "blanket_flatten",
 
 ## 3. RGB 失败实际比较了什么
 
-入口：[test_base_task_runtime.py](../../tests/integration/test_base_task_runtime.py) 的 `seed_A_B_A` 阶段。原失败批次在实际推进阶段用了 3 个 control step，随后还执行了中间状态回溯、继续积分、同 tick 缓存检查和初态恢复：
+入口：[test_base_task_runtime.py](../../legacy/research_tools_20260929/tests/integration/test_base_task_runtime.py) 的 `seed_A_B_A` 阶段。原失败批次在实际推进阶段用了 3 个 control step，随后还执行了中间状态回溯、继续积分、同 tick 缓存检查和初态恢复：
 
 ```python
 obs_a, info_a = env.reset(seed=0)
@@ -122,7 +122,7 @@ assert every_camera_array_equal(rgb_a, obs_a_again["rgb"])
 
 ## 4. 本次补充的采集
 
-[rgb_repro_evidence.py](../../tests/rgb_repro_evidence.py) 已接入原生命周期用例，在第二次 seed=0 的 `evidence.sample` 之后、资产和 RGB 断言之前采集所有相机。保留原严格相等断言，不加容差、不跳过失败相机。录像仍由公共 `RuntimeEvidence` / `RecordingSession` 生成，诊断只保存已有 observation 数组，不新增渲染调用或物理步进。
+[rgb_repro_evidence.py](../../legacy/research_tools_20260929/tests/rgb_repro_evidence.py) 已接入原生命周期用例，在第二次 seed=0 的 `evidence.sample` 之后、资产和 RGB 断言之前采集所有相机。保留原严格相等断言，不加容差、不跳过失败相机。录像仍由公共 `RuntimeEvidence` / `RecordingSession` 生成，诊断只保存已有 observation 数组，不新增渲染调用或物理步进。
 
 每任务在 `rgb_repro/` 下生成：
 

@@ -1,5 +1,7 @@
 # Cast Coil：2026-09-28 验收批次
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 **3/3 实际 `Task.task_success=True`，独立逐 tick 复核全部通过，共 20,461 个状态。** [逐变体索引](summary.json) · [完整证据清单与哈希](archive_manifest.json) · [归档检查](archive_validation.json)。
 
 | 变体 | 仿真时间 | 最终相对位置误差 | 实际运行 | 独立复核 |

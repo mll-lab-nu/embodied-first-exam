@@ -1,5 +1,7 @@
 # Hedgehog / Claws 新机制：scripted policy 开发与全流程验收
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 日期：2026-09-27。状态：**已开展首轮实施；P0、反馈执行器、几何搜索与抓持诊断已接入，P1/T2 未通过，尚无新的完整解题成功记录。** 用户确认首批只做两个 medium，easy / hard 做回归。实际结果见[首轮实施与证据](../../../runs/test_results/hedgehog_claws_policy_20260927/README.md)。承接[初始化场景反馈与开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)。
 
 下一轮优先完成 **Hedgehog medium 椭圆窗**、**Interlocked Claws medium 锐角双窗与 J 钩**的可执行 scripted policy，并从各自规定的 segment0 连续运行到任务结束。先核验几何通路和真实夹爪的可操作性，再开发反馈控制与完整验收；不能预设当前几何一定有解，也不能用末态成功掩盖中间卡滞、穿透或突跳。

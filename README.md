@@ -142,7 +142,7 @@ ci_checks/                         # structure, verifier isolation, tooling, man
 docs/rcb/                          # CLI guide, protocol, limited protocol, taxonomy
 topogym/                           # simulator: config, Env, world, robot, tasks, sensors
 assets/                            # robot models and authored task assets
-tests/                             # simulator contracts, unit and real runtime tests
+tests/                             # shared fixtures for local rollouts; independent suites are archived
 solvability_proof/ demos/            # proof catalogs and recorded demonstrations
 jobs/ runs/ task_rollouts/          # local execution evidence (gitignored)
 legacy/                            # archived implementations; outside active runtime
@@ -274,7 +274,7 @@ two-mode rerun remain unvalidated.** Simulator lifecycle checks and standalone s
 not establish a benchmark success rate. FEM tasks remain substantially slower than rigid tasks.
 
 For simulator development, start with the [module map](docs/develop/modules/README.md),
-[tests and Nyx setup](tests/README.md), [current progress](docs/progress/current_zh.md),
+[local rollout entrypoints and fixtures](tests/README.md), [current progress](docs/progress/current_zh.md),
 [solvability proofs](solvability_proof/README.md), [demo catalog](demos/README.md) and
 [development rules](AGENTS.md). The management `Env` is separate from episode-bound interaction
 handles; Harbor's unlimited `Session` supplies its own reset wrapper. Default

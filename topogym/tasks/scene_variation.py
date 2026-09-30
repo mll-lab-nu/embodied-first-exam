@@ -26,7 +26,7 @@ SCENE_VARIATION_VERSION = 1
 # task_id -> axes shared by its three tiers (each offset applies to the tier's own default).
 AXES = {
     "horseshoe_ring": (
-        # Goal region pinned to -y; bounds keep the reach proxy within +2 cm (tests/check_scene_variation.py).
+        # Goal region pinned to -y; bounds keep the reach proxy within +2 cm (historical scene-variation geometry audit).
         dict(path="center_xy_m", kind="offset", range=[[-.03, .04], [-.01, .03]]),
         dict(path="yaw_deg", kind="offset", range=[-10., 10.]),
         # Silver would match the horseshoes; keep the ring distinguishable.

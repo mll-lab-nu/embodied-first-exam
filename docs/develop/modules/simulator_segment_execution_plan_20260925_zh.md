@@ -1,5 +1,7 @@
 # Simulator action segment 执行、录制与特权日志工程计划
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 日期：2026-09-25。状态：本地接口、逐 tick 证据、录制封装与测试场景已实现，并完成本轮分层验收。以下保留设计要求；具体配置、源码快照、跟踪资格及资源限制以[实施记录](../dev-logs/simulator_segment_implementation_20260925_zh.md)为准，不继承其他会话的通过结论。
 
 2026-09-26 后续实现：首选由管理方 `SegmentRunner.run_policy()` 调度 `act(obs)`，policy 只产出低层动作；执行代码集中到 `topogym/simulator/rollout_simulation/`，保留根层公开导出与原直接交互接口。输出根采用 `task_rollouts/<experiment_content>_<experiment_date>/<task_name>/rollout_<编号>/`，覆盖本文原先的路径示例。新接口、limited 观测范围和真实方块样板见[后续计划](scripted_policy_execution_plan_20260926_zh.md)、[本地 API](simulator_api_zh.md)与[新一轮实施记录](../dev-logs/scripted_policy_execution_implementation_20260926_zh.md)。下文的 2026-09-25 源码坐标和验收记录保留原日期。

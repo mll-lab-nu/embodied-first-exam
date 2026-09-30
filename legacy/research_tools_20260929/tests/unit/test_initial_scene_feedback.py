@@ -25,19 +25,20 @@ def test_easy_loop_two_clear_crossings():
     assert report['gauss_unsigned'] == [1,2,2,1]
 
 
-def test_ellipse_lift_and_closed_end_geometry(tmp_path):
+def test_waisted_window_lift_and_closed_end_geometry(tmp_path):
     task = task_definition('hedgehog_in_cage','medium')(seed=0)
     cage, ball, bottom, report = task.build_assets(tmp_path)
     collider = trimesh.collision.CollisionManager(); collider.add_object('cage',cage)
     initial = report['initial_pose']
+    band = report['window_band_center_m']
     rotation = Rotation.from_quat(np.asarray(initial['quaternion_wxyz'])[[1,2,3,0]])
     ball.vertices = rotation.apply(ball.vertices)
-    for z in np.linspace(initial['position_m'][2],0,31):
+    for z in np.linspace(initial['position_m'][2],band,31):
         candidate=ball.copy();candidate.apply_translation([0,0,z])
         assert not collider.in_collision_single(candidate)
-    # A core-sized sphere fits the window at its waist, but cannot cross at
+    # A core-sized sphere fits the window at its wide band, but cannot cross at
     # its initial height, nor through the closed top or bottom.
-    for xyz, expected in [([0,-.086,0],False),([0,-.086,-.055],True),([0,0,.12],True),([0,0,-.12],True)]:
+    for xyz, expected in [([0,-.086,band],False),([0,-.086,-.055],True),([0,0,.12],True),([0,0,-.12],True)]:
         sphere=trimesh.creation.icosphere(subdivisions=3,radius=.027)
         sphere.apply_translation(xyz)
         assert collider.in_collision_single(sphere) == expected

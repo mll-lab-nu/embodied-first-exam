@@ -3,6 +3,12 @@
 from pathlib import Path
 
 
+_TASK_CAMERA_PROFILES = {
+    "lock_picking": "lock_picking_observation",
+    "buzz_wire_3d": "buzz_wire_3d_observation",
+}
+
+
 def load_scene_config(config):
     from hydra import compose, initialize_config_dir
     from omegaconf import OmegaConf
@@ -17,6 +23,17 @@ def load_scene_config(config):
     root = Path(__file__).parent / "profiles"
     with initialize_config_dir(config_dir=str(root.resolve()), version_base="1.3"):
         scene = compose(config_name=f"tabletop_{robot_id}")
+    # Task framing is calibrated for the standard Panda scene. Keep the robot's
+    # resolution, wrist mount and observation keys when merging fixed views.
+    camera_profile = _TASK_CAMERA_PROFILES.get(config.task_id)
+    if camera_profile is not None and robot_id == "panda_robotiq":
+        scene.env = OmegaConf.merge(
+            scene.env, OmegaConf.load(root / "camera_configs" / f"{camera_profile}.yaml")
+        )
+        primary = scene.env.cameras.agentview
+        scene.env.viewer.camera_pos = primary.pos
+        scene.env.viewer.camera_lookat = primary.lookat
+        scene.env.viewer.camera_fov = primary.fov
     scene.env.genesis.backend = config.compute_backend
     scene.env.genesis.precision = config.precision
     scene.env.sim.dt = config.physics_dt_s

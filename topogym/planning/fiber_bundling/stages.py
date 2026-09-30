@@ -6,7 +6,7 @@ within COMB_TARGET_M of the sheath axis, verify, then feed along the ring axis
 until the native Task succeeds. Each step plans read-only at its actual start
 state; every tick checks contact coverage and that the Task has not failed
 (a gripper-strand touch fails it at once). plan_* are shared with the
-zero-physics check scripts/check_fiber_keyframes.py.
+historical zero-physics check archived under legacy/research_tools_20260929/scripts/.
 """
 import numpy as np
 

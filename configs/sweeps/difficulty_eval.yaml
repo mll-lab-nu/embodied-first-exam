@@ -1,0 +1,22 @@
+# All 13 tasks, 3 fixed difficulties, 2 fixed modes, one trial per sample/mode.
+schema_version: 1
+task_ids:
+  - interlocked_claws
+  - rope_threading
+  - lock_picking
+  - hedgehog_in_cage
+  - fiber_bundling
+  - horseshoe_ring
+  - knot_untying
+  - cast_coil
+  - cast_keyhole
+  - buzz_wire_3d
+  - blanket_flatten
+  - slotted_post_ring
+  - orbits
+difficulties: [easy, medium, hard]
+modes: [unlimited, limited]
+samples_per_difficulty: 1
+sampling_seed: 20260929
+agent_wall_clock_s: 21600
+concurrency: 1

@@ -14,6 +14,6 @@ if m.get("task_type") not in ("trajectory", "policy"): fail("task_type must be t
 if m.get("tier") not in ("privileged", "perception"): fail("tier must be privileged|perception")
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
-elif d["agent"]["timeout_sec"] > 14400: fail("[agent].timeout_sec > 4h cap")
+elif d["agent"]["timeout_sec"] > 21600: fail("[agent].timeout_sec > 6h cap")
 sys.exit(rc)
 PY

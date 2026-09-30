@@ -1,5 +1,7 @@
 # 刺球出笼
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 下一轮开发要求：[medium 椭圆窗 scripted policy 与全流程验收](hedgehog_claws_scripted_policy_plan_20260927_zh.md)。包含 home 接近、真实抓取、抬升定向、完整出笼、当前目标区终态及机制反例；尚未新增完整成功记录。
 
 > **2026-09-27 更新：** medium 已改为深色实木、六个均匀纵向椭圆窗（58×224 mm）的笼体，复用原刺球；原 oblique_gate 描述属于旧版。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。

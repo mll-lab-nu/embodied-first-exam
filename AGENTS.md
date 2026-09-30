@@ -1,5 +1,12 @@
 # TopoGym 项目规则
 
+## 研究与测试工具归档（用户 2026-09-29 本轮授权）
+
+- 已将本轮列出的独立研究／诊断／验收脚本、无运行调用方的兼容模块、独立回归套件及两套 Buzz Wire 历史规划源码移入 `legacy/research_tools_20260929/`；映射和原始哈希见该目录 `manifest.json`、`files.jsonl`。
+- `tests/` 当前保留 rollout 共用的 `fixtures/`，控制目标辅助函数从旧 integration 测试提取到 `tests/fixtures/control_targets.py`。旧测试及证据工具路径不再是活动入口，不从 legacy 导入运行代码。
+- 保留 rollout 的初态／资源准备、动作编译、本地执行、Harbor 构建／运行／评分工具，以及 `runs/`、`task_rollouts/`、`solvability_proof/` 原有证据。本节覆盖下文要求使用已归档脚本或测试路径的历史操作说明。
+- 当前入口见 `scripts/README.md`、`tests/README.md` 与 `docs/rcb/README.md`。迁移验证及边界见 `docs/maintenance/research_tools_archive_20260929_zh.md`。
+
 ## 旧实现归档（用户 2026-09-29 授权）
 
 - 已将旧 Harbor、旧 research 候选与包内旧 Task 入口移入 `legacy/cleanup_20260929/`；具体原路径、新路径及哈希见该目录的 `manifest.json`、`files.jsonl`。下方历史段落提到的 `topogym/agents/deferred/` 等旧位置已失效，不恢复到活动包。

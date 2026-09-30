@@ -1,34 +1,36 @@
-# 辅助工具
+# 当前运行工具
 
-2026-09-29：Harbor 层已按 robot_coding_bench 重建，用法、生成器（`topogym_mk_task.py`、`topogym_mk_limited.py`）和批量脚本见 [Harbor 手册](../docs/rcb/README.md)。更早的两版 Harbor 层在 `legacy/harbor_20260929/` 和 `legacy/harbor_native_20260929/`，不再使用。
+2026-09-29：独立研究、诊断、初态预览、验收与源码盘点脚本已移入
+[研究工具归档](../legacy/research_tools_20260929/README.md)。原始内容与路径映射保留在归档中，
+当前 rollout 和 Harbor 不导入归档代码。
 
-- `record_initial_scenes.py`：固定当前源码快照，按注册表串行调用共享场景验收入口，录制所有已接入变体的短程初态；`--index` 更新统一 PNG/MP4 索引，未开发变体留空，失败保留报告。默认 4 个控制步，使用 Genesis CUDA + Nyx，不执行解题策略。
-- `prepare_nyx_studio.py`：显式下载并核验 Nyx 所需 HDRI/纹理；无 RGB 的核心使用不需要运行它。
-- `prepare_blanket_initial_states.py`：管理侧离线制作 Blanket 初态；平坦绑定、受控聚褶／扭转、放桌、撤控静置，经标准 World 和 Nyx 录制。`--tier easy|medium|hard` 选择统一聚褶 0°/135°/270°；默认要求完整静稳资格，显式 `--acceptance scene_layout` 只暂缓运动资格，保留材料、绑定和落桌检查，不将 `qualification.passed` 改为 true。准备时建议设置 `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`，避免稀疏投影的数值库线程争用。
-- `install_blanket_initial_state.py --candidate <目录>`：核验准备完成的三档代表，将其完整数值包注册为包内资源；不覆盖已有版本或借用其他 seed。新增 seed 需先独立准备。机器人解法及难度排序未因此获得资格。
-- `prepare_blanket_initial_states.py --particle-diagnostics`：可选只读逐 tick 粒子诊断；保存原始粒子 ID、材料条带、真实 visual 支持表与权重、free 标志、速度热点、约束拉伸及几何接触候选，不改变准备或物理参数。
-- `inspect_blanket_preparation.py --run <run> --output <new_dir> --last-seconds 2`：分析已有平坦出生准备轨迹并生成材料坐标热点图。旧日志没有保存的真实 binding／接触力明确标为不可用，不从当前位置猜测绑定。
-- `test_blanket_initialization.py`：复制独立源码快照，以新进程验证冻结初态的零推进 reset、状态／RGB 对照、两段连续执行与回溯。`--checks scene-layout` 验证三档场景的精确粒子恢复、短程自由运行、关节动作与回溯，并记录 RGB 差异，不宣称静稳或解题成功。
-- `inventory_sources.py`：只读取文本、AST 和哈希，生成全仓脚本清单；不导入项目或执行测试。
-- `test_policy_cube_transfer.py`：复制独立源码快照后运行低层 segment 真实验收，包含方块搬运、空抓反例及两机器人四模式接口矩阵；每例保存 Nyx 视频、日志和报告。命令与时序区别见[测试说明](../tests/README.md#segment-与低层方块-policy-验收)。
-- `test_scripted_policy_rollout.py`：新 `act(obs)` 样板的管理方入口；分配 `task_rollouts/<experiment_content>_<experiment_date>/<task_name>/rollout_<编号>/`，冻结源码后执行原位拾起放下、横向搬运、两段衔接或空抓对照。`--suite` 串行运行完整清单；不覆盖旧编号。用法见[样板说明](../topogym/planning/README.md)。
-- `import_rope_threading_reference.py`：离线读取外部示例的 `geometry.json`、`manifest.json`、`phase-000.bin`，校验哈希，从几何和首帧位姿提取有序绳节点、环/支架参数及来源，输出参考 JSON。
+## Rollout 准备
 
-Rope 工具仅在重新提取或更新来源数据时手动使用，不自动下载、不运行来源引擎、不生成完整轨迹或 Genesis checkpoint。正常任务读取包内已有 `topogym/assets/resources/templates/rope_threading_reference.json`，不调用转换工具。若更新该包资源，还需同步维护 catalog 哈希。
+- `prepare_nyx_studio.py`：准备并核验运行时 Nyx HDRI 和纹理；镜像构建也会调用。
+- `prepare_blanket_initial_states.py`、`install_blanket_initial_state.py`：离线准备并安装 Blanket 初态资源。
+- `import_rope_threading_reference.py`：从外部参考数据提取 Rope 几何与初态参数。
+- `compile_buzz_wire_actions.py`：将已选研究轨迹编译为后续 Buzz rollout 可读取的动作文件；编译本身不授予成功资格。
 
-调用格式如下，**本轮未执行**：
+## 本地 Rollout
 
-```bash
-python scripts/import_rope_threading_reference.py \
-  --geometry /path/to/geometry.json \
-  --manifest /path/to/manifest.json \
-  --phase /path/to/phase-000.bin \
-  --output /path/to/reference.json
-```
+- `run_buzz_wire_policy.py`、`run_cast_coil_policy.py`、`run_cast_keyhole_policy.py`、`run_lock_picking_policy.py`：冻结源码并执行各任务策略。
+- `run_hedgehog_policy.py`、`run_interlocked_claws_policy.py`、`run_rigid_reference_policy.py`：几何准备及已开放的反馈策略流程。
+- `run_solvability_workflow.py`：按阶段执行候选策略与可解性研究；独立审计工具已归档，原有证据保留。
+- `test_scripted_policy_rollout.py`：`act(obs)` 样板执行入口，输出至 `task_rollouts/`。
+- `test_policy_cube_transfer.py`：低层方块执行与控制模式矩阵入口；其 `snapshot()` 被多个 rollout 管理脚本复用。
 
-[转换含义与当前精简范围](../docs/develop/dev-logs/simulator_simplification_20260923_zh.md)。旧 OpenPI/API 工具已归档到 `legacy/cleanup_20260929/topogym/agents/deferred/tools/`，当前不接入或运行。
+以上两个 `test_` 命名脚本保留实际执行职责；共享夹具在 [tests/fixtures/](../tests/fixtures/)，不依赖已归档的测试套件。
+用法见 [本地策略说明](../topogym/planning/README.md) 与 [本地执行入口](../tests/README.md)。
 
-- 当前 Harbor 的安装、镜像、任务生成和检查统一见[使用手册](../docs/rcb/README.md)；旧 runner 脚本已归档，不再作为可执行入口。
+## Harbor 构建、运行及结果处理
 
-- `test_grasp_assist.py`：同一快照验收入口支持 `mechanism`、`robot-cube`、`pbd-mechanism`、`fem-mechanism`、`pbd-robot`、`fem-robot`；柔体 case 使用独立材料夹具和已有 scripted policy/SegmentRunner。FEM 与 RGB 要求 CUDA，GPU case 串行；配置、源码、生成资产哈希和真实失败日志落盘。详见[用法与模型限制](../docs/develop/modules/grasp_assist_zh.md)。
-  `fem-robot` 默认使用共享 `v13_material_mesh` 软绳材料和细网格，与四类正式 FEM 绳任务一致；`--fem-rope-profile baseline` 显式保留旧粗硬试件作对照。历史专用形变阻尼未迁入。
+- `sample_difficulty_instances.py`：13 项编号选择器、每难度随机抽样、源码快照及冻结 manifest；默认全任务、每档 1 个样本。
+- `difficulty_eval.py`：难度评测调度；解析参数、准备任务、物理 preflight、认证 canary、逐次 `harbor run`、中断处理和恢复；默认 agent 预算 21600 秒，使用公共 `harbor_templates/topogym/`。
+- `../bash_scripts/run_difficulty_trials.sh`：兼容启动入口，仅选择 Python 解释器并透传参数给 `difficulty_eval.py`；原有命令保持可用。
+- `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
+- `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
+- `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。
+- `account_failure_check.py`、`log_mirror.py`、`mem_guard.py`、`scan_secrets.py`：账号异常检测、日志镜像、资源监控与产物密钥检查。
+- `collect_batch_results.py`、`write_task_results.py`、`make_two_mode_report_zh.py`：收集结果并生成报告。
+
+完整命令见 [Harbor 手册](../docs/rcb/README.md)。任务静态检查仍为 `bash ci_checks/run_all.sh`。

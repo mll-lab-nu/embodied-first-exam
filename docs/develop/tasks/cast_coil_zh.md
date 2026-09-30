@@ -1,12 +1,14 @@
 # Cast Coil
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 更新：2026-09-28。全项目进度见[当前进度](../../progress/current_zh.md)，历史视频直链见[Demo 目录](../../../demos/README.md)。
 
 ## 当前三档 policy 与可解性验收
 
 按 [action / IK 计划](task_variant_solutions_action_ik_zh.md#coil)，本轮验收要求是具名变体的 policy 经 `SegmentRunner → Env.step → Genesis IK → 物理执行` 达到真实 `task_success`。关闭 RGB 和视频，保留全部当前配置 tick 的状态、动作、冻结源码和资产哈希。使用 unlimited 对象状态及自动 `contact_weld_v1` 抓持，不能称为纯摩擦抓持证明。
 
-当前入口：[CastCoilPolicy](../../../topogym/planning/cast_coil/policy.py)、[执行 CLI](../../../scripts/run_cast_coil_policy.py)、[独立复核 CLI](../../../scripts/audit_cast_coil_policy.py)。从默认 home 接近桌面自由零件，双指接触后取得自动抓持；以实测对象/TCP 关系执行装配，放桌、解除辅助、撤手，等待原 Task 的释放与稳定判据。
+当前入口：[CastCoilPolicy](../../../topogym/planning/cast_coil/policy.py)、[执行 CLI](../../../scripts/run_cast_coil_policy.py)、[独立复核 CLI](../../../legacy/research_tools_20260929/scripts/audit_cast_coil_policy.py)。从默认 home 接近桌面自由零件，双指接触后取得自动抓持；以实测对象/TCP 关系执行装配，放桌、解除辅助、撤手，等待原 Task 的释放与稳定判据。
 
 | 注册入口 | 几何／反向装配路线 |
 |---|---|

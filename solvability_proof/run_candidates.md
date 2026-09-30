@@ -1,5 +1,7 @@
 # 现有 run 与下一批可解性证明候选
 
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+
 核对日期：2026-09-28。范围为当前 13 个正式 Task，另列 Cube 等机制样板。检查现有报告、冻结源码、当前变体/终态与 policy 入口；本次未运行新仿真，未修改成功判据，也未增加已验收数量。[机器记录与所读证据哈希](run_candidates.json)。
 
 **除已归档的 Keyhole / Coil 六个实例，本轮未找到可以直接按当前正式 Task 的 success 标准追加的其他任务。** 最有复用价值的是 **Lock medium、Fiber 三档、Buzz Wire 三档、Horseshoe 三档**。它们距离新证明的缺口不同；建议首先处理 Lock medium 的终态诊断，再从 Fiber easy 开始迁移。

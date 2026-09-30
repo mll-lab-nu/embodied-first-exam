@@ -85,7 +85,7 @@ def search_geometry(task_id, variant, seed, output, *, samples=128, rrt_iteratio
     if variant not in {"medium", task_id+"_medium"}:
         report.update(status="unsupported_search_variant", geometry_path_verified=False)
         return report
-    expected = {"hedgehog_in_cage": "ellipse_dark_wood_v1", "interlocked_claws": "opposed_pregrasp_wide2_v1"}
+    expected = {"hedgehog_in_cage": "waisted4_dark_wood_v1", "interlocked_claws": "opposed_pregrasp_wide2_v1"}
     if task.model_revision != expected[task_id]:
         raise ValueError("New model revision requires a new search domain")
     moving_name = "hedgehog_ball" if task_id == "hedgehog_in_cage" else "piece_1"
@@ -117,21 +117,25 @@ def search_geometry(task_id, variant, seed, output, *, samples=128, rrt_iteratio
         return report
     rng = np.random.default_rng(seed)
     if task_id == "hedgehog_in_cage":
-        report["search_domain"] = dict(windows_deg=list(range(-90, 270, 60)),
-            height_range_m=[-.025, .025], orientation="uniform SO(3), plus authored orientation",
+        # Window angles and the wide-band height come from the frozen asset report.
+        asset_report = spec.metadata["asset_report"]
+        windows = np.asarray(asset_report["window_centers_deg"], float)
+        band = float(asset_report["window_band_center_m"])
+        report["search_domain"] = dict(windows_deg=windows.tolist(),
+            height_range_m=[band-.025, band+.025], orientation="uniform SO(3), plus authored orientation",
             route="lift at axis; reorient at axis; straight radial exit", radial_exit_m=.22,
             excluded="joint lift/rotation during exit; robot/gripper; placement transport")
-        for angle in np.deg2rad(np.arange(-90, 270, 60)):
+        for angle in np.deg2rad(windows):
             radial = np.array([np.cos(angle), np.sin(angle), 0.])
-            for label, z in (("no_lift", initial[0][2]), ("top_narrow", .065), ("lift_only", 0.)):
+            for label, z in (("no_lift", initial[0][2]), ("top_narrow", .095), ("lift_only", band)):
                 a = (np.array([0., 0., z]), initial[1])
                 result = check_path(checker, [initial, a, (a[0]+.22*radial, a[1])])
                 report["mechanism_evidence"][f"{label}_{round(np.rad2deg(angle))}"] = result
         for i in range(samples):
-            angle = np.deg2rad(-90+60*(i % 6))
+            angle = np.deg2rad(windows[i % len(windows)])
             radial = np.array([np.cos(angle), np.sin(angle), 0.])
-            z = 0. if i < 6 else rng.uniform(-.025, .025)
-            r = initial[1] if i < 6 else Rotation.random(random_state=rng)
+            z = band if i < len(windows) else rng.uniform(band-.025, band+.025)
+            r = initial[1] if i < len(windows) else Rotation.random(random_state=rng)
             high = (np.array([0., 0., z]), initial[1])
             aligned = (high[0], r)
             end = (high[0]+.22*radial, r)
@@ -209,9 +213,9 @@ def search_geometry(task_id, variant, seed, output, *, samples=128, rrt_iteratio
     if report["route"] is None and rrt_iterations:
         from .rrt import connect_search
         if task_id == "hedgehog_in_cage":
-            start = (np.zeros(3), initial[1])
-            goal = (np.array([0., -.23, 0.]), initial[1])
-            lower, upper = [-.05, -.23, -.07], [.05, .03, .05]
+            start = (np.array([0., 0., band]), initial[1])
+            goal = (np.array([0., -.23, band]), initial[1])
+            lower, upper = [-.05, -.23, band-.07], [.05, .03, band+.05]
             def sample(rng):
                 return rng.uniform(lower, upper), Rotation.random(random_state=rng)
             prefix = [initial, start]
