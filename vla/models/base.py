@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import importlib
 
 import cv2
+import numpy as np
 
 from vla.protocol import ActionChunk, Observation, PolicySpec
 
@@ -31,15 +32,27 @@ class BaseVLA(ABC):
         """Start an episode: clear history frames and seed sampling."""
 
     def camera_images(self, obs: Observation) -> list:
-        """The frames of ``spec.cameras`` in the order of the model's image slots. With ``model.image_hw`` set they
-        are resized to it first, with ``model.image_interpolation``, as the model's official client does."""
+        """The frames of ``spec.cameras`` in the order of the model's image slots. With ``model.image_aspect``
+        [width, height] set they keep only their center at the aspect ratio of the training frames; with
+        ``model.image_hw`` set they are then resized to it, with ``model.image_interpolation``, as the model's official
+        client does."""
         images = [obs.images[camera] for camera in self.spec.cameras]
         options = self.config.get("model") or {}
+        if "image_aspect" in options:
+            images = [center_crop(image, *options["image_aspect"]) for image in images]
         if "image_hw" not in options:
             return images
         height, width = options["image_hw"]
         flag = INTERPOLATIONS[options["image_interpolation"]]
         return [cv2.resize(image, (width, height), interpolation=flag) for image in images]
+
+
+def center_crop(image, width, height):
+    """The largest centered part of ``image`` with the aspect ratio width:height."""
+    rows, cols = image.shape[:2]
+    keep_rows, keep_cols = min(rows, round(cols * height / width)), min(cols, round(rows * width / height))
+    top, left = (rows - keep_rows) // 2, (cols - keep_cols) // 2
+    return np.ascontiguousarray(image[top:top + keep_rows, left:left + keep_cols])
 
 
 def load_model(config) -> BaseVLA:

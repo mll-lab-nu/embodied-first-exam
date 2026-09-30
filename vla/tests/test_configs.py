@@ -36,6 +36,11 @@ def test_model_configs_define_a_policy_spec_for_their_robot(path):
     assert spec.embodiment == path.parent.name and 1 <= spec.execute_steps <= spec.chunk_size
 
 
+@pytest.mark.parametrize("name", ["pi05_base_trossen", "xvla_robotwin2"])
+def test_aloha_models_see_the_4_to_3_frames_they_were_trained_on(name):
+    assert list(load_yaml(CONFIGS / "models/aloha" / f"{name}.yaml").model.image_aspect) == [4, 3]
+
+
 @pytest.mark.parametrize("path", EVAL_CONFIGS, ids=lambda path: path.stem)
 def test_eval_configs_name_their_task_and_a_policy_address(path):
     cfg = load_yaml(path)

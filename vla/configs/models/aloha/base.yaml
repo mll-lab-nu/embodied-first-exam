@@ -2,3 +2,6 @@
 spec:
   embodiment: aloha
   cameras: [cam_high, cam_left_wrist, cam_right_wrist]
+model:
+  image_aspect: [4, 3]              # TopoGym renders 16:9 (848x480); ALOHA training frames are 4:3 (real ALOHA
+                                    # 640x480, RoboTwin 320x240), so the models see the centered 640x480

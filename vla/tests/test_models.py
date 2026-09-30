@@ -47,6 +47,19 @@ def test_camera_images_follow_the_slot_order_and_resize_as_configured():
     assert [image.shape for image in resized] == [(180, 320, 3)] * 2 and [image[0, 0, 0] for image in resized] == [2, 1]
 
 
+def test_camera_images_keep_the_center_at_the_training_aspect_ratio_before_resizing():
+    image = np.zeros((480, 848, 3), np.uint8)
+    image[:, [103, 744]] = 9  # just outside the centered 640 columns
+    image[:, [104, 743]] = 7  # their first and last column
+    cfg = config()
+    cfg["model"] = dict(image_aspect=[4, 3])
+    cropped, = HoldVLA(cfg).camera_images(Observation({"agentview": image}, {}, "go", "e", 0))
+    assert cropped.shape == (480, 640, 3) and cropped[0, 0, 0] == cropped[0, -1, 0] == 7 and 9 not in cropped
+    cfg["model"].update(image_hw=[240, 320], image_interpolation="area")
+    resized, = HoldVLA(cfg).camera_images(Observation({"agentview": image}, {}, "go", "e", 0))
+    assert resized.shape == (240, 320, 3)
+
+
 def test_load_model_instantiates_class_path_and_spec():
     model = load_model(config(chunk_size=6))
     assert isinstance(model, HoldVLA) and model.spec.chunk_size == 6 and model.spec.cameras == ("agentview",)

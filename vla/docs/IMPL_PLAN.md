@@ -376,7 +376,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
    - 结论：π0.5 DROID、GR00T、MolmoAct2 的输入输出都是闭合度 [0, 1]（1 = 闭合），子类用 `1 − 开度`；π0.5 DROID 与 GR00T 按官方客户端在 0.5 处二值化，MolmoAct2 截到 [0, 1] 后保持连续。π0.5 ALOHA 用归一化手指位置（1 = 全开），与标准开度同义，输出实际范围约 0.55–1.03，由适配器截到 [0, 1]。X-VLA 输出 g（1 = 闭合），按官方客户端 g > 0.7 为闭合。
    - TopoGym Robotiq 的开度按驱动关节角换算（0 rad 全开、0.8 rad 全闭），DROID 按开口宽度换算，两者只近似线性。
 3. **相机**：TopoGym 的 agentview / wrist 与 DROID 真机相机的位置和视角差异。零样本对此敏感，只记录，不调整。
-   - 记录：TopoGym 各相机 848×480（16:9）。DROID 训练图像 320×180（16:9），GR00T、MolmoAct2 的官方客户端先缩放到该尺寸，子类照做；π0.5 由自身流程加黑边缩到 224。RoboTwin 训练图像 320×240（4:3），X-VLA 处理器直接压缩成 224×224。相机位置与视角未调整。
+   - 记录：TopoGym 各相机 848×480（16:9）。DROID 训练图像 320×180（16:9），GR00T、MolmoAct2 的官方客户端先缩放到该尺寸，子类照做；π0.5 由自身流程加黑边缩到 224。RoboTwin 训练图像 320×240（4:3），X-VLA 处理器直接压缩成 224×224。ALOHA 训练图像都是 4:3，两个 ALOHA 模型先居中裁成 640×480（`model.image_aspect`），再走官方缩放。相机位置与视角未调整。
 4. **X-VLA 坐标系**：标准 `ee` 用 TopoGym 世界系，X-VLA 训练数据用什么坐标系要核对。若需要各臂基座在世界系的位姿，`action_spec` 里没有，需找来源；若需要改 `vla/` 以外的代码，先问用户。
    - 结论：X-VLA 用 RoboTwin 世界系中 URDF link6 原点的位姿（RoboTwin TCP 在其 x 方向 0.12 m 处），rot6d 为 X-VLA 约定且训练和官方客户端都把 wxyz 四元数按 xyzw 读取。TopoGym 两臂相对放置，RoboTwin 两臂并排，所以每臂按自身基座映射（`vla/models/xvla/frames.py`；第二轮起高度改为相对桌面，见第 13 节）。TopoGym 基座位姿在仿真中实测：左 (−0.6047, −0.019, 0.9196)、偏航 0°，右 (0.3333, −0.019, 0.9196)、偏航 180°，写入 `xvla_robotwin2.yaml`；手爪坐标轴（x 前向、y 基座左、z 上）与 link6 一致。未改 `vla/` 以外的代码。
 5. **跟踪特性**：P1 / P3 测到的"目标 − 实测"与真机数据集中的量级对比。ALOHA 用源 MJCF 的位置执行器增益；Panda 的增益与 DROID 真机控制器是否一致尚未核对。
@@ -419,3 +419,4 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | 2026-09-30 | 四个模型的调用方式逐项对照官方代码复查（`runs/test_results/20260930_vla_round2_audit/audit.md`）：调用路径一致。修正两处与训练机器人的对应关系：DROID 模型的关节 7 按 45° 安装差换算（`models/droid.py`）；X-VLA 高度改为相对桌面。其余差异（π0.5 ALOHA 夹爪标定与起始姿态、GR00T eef_9d 欧拉角约定、X-VLA 的 IK 失败处理与 proprio 来源）待用户决定 |
 | 2026-09-30 | 按用户第三轮决定：π0.5 ALOHA 夹爪改为按 openpi 的连杆模型换算，模型全闭/全开对应 TopoGym 全闭/全开（`models/pi05/gripper.py`）；X-VLA 按 RoboTwin 官方评测执行，每个目标保持到 TCP 进入 5 mm 以内（最多多 10 步；实测 TopoGym ALOHA 稳态误差 1.6–4.5 mm），IK 达不到容差的目标跳过并计数；`PolicySpec` 增加 `reach_tolerance_m`，协议版本升为 2；删除 `.venv-gs121-nyx` |
 | 2026-09-30 | 第三轮独立审查：跳过改为逐臂（与 RoboTwin 相同，另一条臂照常执行）；末端相关测试改用 ALOHA 双臂并按内容拒绝，审查列出的 4 种错误都能被测出；每个目标只换算一次动作（截断按行计）；`PolicySpec` 拒绝缺少 ee 状态的 `ee_abs` / `reach_tolerance_m`；夹爪超过连杆最大角时保持全开；报告中跳过数保留两位有效数字 |
+| 2026-09-30 | ALOHA 模型的画面先居中裁成 4:3（848×480 → 640×480）再按官方方式缩放：TopoGym 渲染 16:9，真实 ALOHA 与 RoboTwin 的训练画面都是 4:3；π0.5 加黑边后画面内容为 224×168，与训练相同（`model.image_aspect`，`BaseVLA.camera_images`） |
