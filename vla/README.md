@@ -59,7 +59,9 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | `pi05_base_trossen` | `vla-pi05` | 关节 → 绝对关节 | 50 Hz → 8 | 50 / 25 |
 | `xvla_robotwin2` | `vla-xvla` | 末端位姿 → 绝对末端位姿（TopoGym 用 IK 求关节） | 16.7 Hz → 24 | 30 / 30 |
 
-X-VLA 的末端位姿按每条手臂分别换算：水平方向和朝向保持相对各自基座不变，高度保持相对桌面不变（RoboTwin 的基座比桌面高 4.2 cm，TopoGym 的基座就在桌面上）。
+X-VLA 的末端位姿按每条手臂分别换算：水平方向和朝向保持相对各自基座不变，高度保持相对桌面不变（RoboTwin 的基座比桌面高 4.2 cm，TopoGym 的基座就在桌面上）。执行方式与 RoboTwin 官方评测一致：每个目标保持到两个 TCP 都进入 5 mm 以内（最多多保持 10 个控制步），IK 达不到容差的目标跳过并计入 `skipped_actions`。
+
+π0.5 ALOHA 的夹爪按 openpi 自己的连杆模型换算（`models/pi05/gripper.py`），模型的全闭和全开对应 TopoGym 的全闭和全开。
 
 块长、执行步数和夹爪阈值都取自各模型的官方推理示例或评测客户端。执行步数可以用 `run.execute_steps` 覆盖。每个包装层的 docstring 写明了官方入口、输入输出和单位。四个模型的调用方式已逐项对照官方代码核对，结论见 `runs/test_results/20260930_vla_round2_audit/audit.md`。
 
@@ -96,9 +98,9 @@ seed_<seed>/videos/*.mp4   每路相机一个 MP4（30 fps），另有 frame_map
 
 多次评测的对比表：`python -m vla.gym.report runs/test_results/<目录> ...`。
 
-- `outcome` 取值：`success`、`task_failure`、`time_limit`（到时限，任务判定未成功）、`unevaluated`（到时限，任务无法判定）、`unfinished`、`invalid_action`（如末端目标超出 IK 容差，物理未推进）、`policy_error`（模型出错、动作块形状不对或含 NaN、连接断开）、`env_error`。
+- `outcome` 取值：`success`、`task_failure`、`time_limit`（到时限，任务判定未成功）、`unevaluated`（到时限，任务无法判定）、`unfinished`、`invalid_action`（关节动作被 TopoGym 拒绝，物理未推进；末端目标超出 IK 容差时跳过，不结束 episode）、`policy_error`（模型出错、动作块形状不对或含 NaN、连接断开）、`env_error`。
 - 跟踪误差：每一步取"发出的手臂目标 − 下一次测量"的 L2 范数，多条手臂取最大值，不含夹爪。单位由 `tracking_error_unit` 给出：关节动作为 rad，末端动作为 m。
-- `clipped_actions`：关节超出限位、或夹爪开度超出 [0, 1] 而被截断的动作行数。
+- `clipped_actions`：关节超出限位、或夹爪开度超出 [0, 1] 而被截断的动作行数。`skipped_actions`：因超出 IK 容差而跳过的末端目标数。
 
 ## 6. 测试
 
@@ -108,6 +110,5 @@ conda activate topogym && python -m pytest vla/tests -q     # 不需要 GPU
 
 ## 7. 已知问题
 
-- π0.5 ALOHA 夹爪：openpi 的官方换算把模型的"全闭"映射到 ALOHA 归一化关节值 0.553，在 TopoGym 手指导轨上对应每指 21 mm，因此夹不住薄零件。另外，home 夹爪开度约 0.18（接近闭合），会被编码成训练中没有的状态 token。目前按官方变换原样保留。
 - 起始姿态：各任务从 TopoGym 的 home 姿态开始，与各模型训练数据的复位姿态不同。
 - 仿真速度：每控制步的墙钟时间见 `docs/IMPL_PLAN.md` 第 13 节。
