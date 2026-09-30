@@ -59,7 +59,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | `pi05_base_trossen` | `vla-pi05` | 关节 → 绝对关节 | 50 Hz → 8 | 50 / 25 |
 | `xvla_robotwin2` | `vla-xvla` | 末端位姿 → 绝对末端位姿（TopoGym 用 IK 求关节） | 16.7 Hz → 24 | 30 / 30 |
 
-X-VLA 的末端位姿按每条手臂分别换算：水平方向和朝向保持相对各自基座不变，高度保持相对桌面不变（RoboTwin 的基座比桌面高 4.2 cm，TopoGym 的基座就在桌面上）。执行方式与 RoboTwin 官方评测一致：每个目标保持到两个 TCP 都进入 5 mm 以内（最多多保持 10 个控制步），IK 达不到容差的目标跳过并计入 `skipped_actions`。
+X-VLA 的末端位姿按每条手臂分别换算：水平方向和朝向保持相对各自基座不变，高度保持相对桌面不变（RoboTwin 的基座比桌面高 4.2 cm，TopoGym 的基座就在桌面上）。执行方式与 RoboTwin 官方评测一致：每个目标保持到两个 TCP 都进入 5 mm 以内（最多多保持 10 个控制步）；目标超出 IK 容差时，只让到不了的那条臂保持实测位姿，另一条臂照常执行，计入 `skipped_actions`。
 
 π0.5 ALOHA 的夹爪按 openpi 自己的连杆模型换算（`models/pi05/gripper.py`），模型的全闭和全开对应 TopoGym 的全闭和全开。
 

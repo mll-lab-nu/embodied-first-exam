@@ -87,35 +87,67 @@ def test_execute_steps_must_fit_the_chunk(action_spec, execute_steps):
         agent_for(Recorder(config(15, 8)), action_spec, execute_steps)
 
 
-
-def ee_chunk():
-    """Two EE targets 10 cm apart with identity orientation and different gripper openings."""
-    return np.array([[0.5, 0.0, 1.2, 1, 0, 0, 0, 1, 0, 1.0], [0.6, 0.0, 1.2, 1, 0, 0, 0, 1, 0, 0.0]], np.float32)
-
-
-def ee_robot(position):
-    return {"arm": {"tcp_position_world_m": np.array(position), "tcp_orientation_wxyz": np.array([1.0, 0, 0, 0]),
-                    "finger_position_rad": np.array([0.4, 0.4])}}
+@pytest.fixture(scope="module")
+def aloha_spec():
+    with topogym.make("cast_coil") as env:
+        return env.action_spec
 
 
-def test_an_ee_target_is_held_until_reached_or_for_at_most_max_hold_steps(action_spec):
-    agent = agent_for(Recorder(config(2, 2, "ee_abs", 0.005), ee_chunk()), action_spec, 2)
+def aloha_config():
+    return dict(spec=dict(name="hold", embodiment="aloha", cameras=["cam_high"], state_keys=["ee"],
+                          action_space="ee_abs", control_hz=16.667, chunk_size=2, execute_steps=2,
+                          reach_tolerance_m=0.005))
+
+
+def ee_row(left, right):
+    """Both arms' targets with identity orientation; the left gripper open, the right one closed."""
+    return np.r_[left, 1, 0, 0, 0, 1, 0, 1.0, right, 1, 0, 0, 0, 1, 0, 0.0].astype(np.float32)
+
+
+ROWS = np.stack([ee_row([0.5, 0.0, 1.2], [-0.5, 0.0, 1.2]), ee_row([0.6, 0.0, 1.2], [-0.6, 0.0, 1.2])])
+RGB = {"cam_high": np.zeros((480, 848, 3), np.uint8)}
+
+
+def aloha_robot(left, right):
+    return {arm: {"tcp_position_world_m": np.array(position, float), "tcp_orientation_wxyz": np.array([1.0, 0, 0, 0]),
+                  "finger_position_m": np.array([0.02, 0.02])} for arm, position in (("left", left), ("right", right))}
+
+
+def targets(action):
+    return [action["left"]["position_world_m"], action["right"]["position_world_m"]]
+
+
+def test_a_target_is_held_until_both_arms_reach_it_and_each_target_gets_its_own_hold_budget(aloha_spec):
+    agent = agent_for(Recorder(aloha_config(), ROWS), aloha_spec, 2)
     agent.reset(0, "go", "e")
-    rgb = {"agentview": np.zeros((480, 848, 3), np.uint8)}
-    far = [agent.act(rgb, ee_robot([0.0, 0.0, 1.0]))["arm"]["position_world_m"] for _ in range(MAX_HOLD_STEPS + 2)]
-    np.testing.assert_allclose(far, [[0.5, 0.0, 1.2]] * (MAX_HOLD_STEPS + 1) + [[0.6, 0.0, 1.2]], atol=1e-6)
+    left_only = aloha_robot([0.5, 0.0, 1.2], [0.0, 0.0, 1.0])  # the right arm is far from both targets
+    executed = [targets(agent.act(RGB, left_only)) for _ in range(2 * (MAX_HOLD_STEPS + 1) + 1)]
+    expected = [ROWS[0]] * (MAX_HOLD_STEPS + 1) + [ROWS[1]] * (MAX_HOLD_STEPS + 1) + [ROWS[0]]
+    np.testing.assert_allclose(executed, [[row[:3], row[10:13]] for row in expected], atol=1e-6)
+    assert agent.inference_calls == 2
     agent.reset(0, "go", "e")
-    first = agent.act(rgb, ee_robot([0.0, 0.0, 1.0]))["arm"]["position_world_m"]
-    reached = agent.act(rgb, ee_robot([0.502, 0.0, 1.2]))["arm"]["position_world_m"]
-    np.testing.assert_allclose([first, reached], [[0.5, 0.0, 1.2], [0.6, 0.0, 1.2]], atol=1e-6)
+    agent.act(RGB, left_only)
+    reached = aloha_robot([0.502, 0.0, 1.2], [-0.5, 0.003, 1.2])
+    np.testing.assert_allclose(targets(agent.act(RGB, reached)), [ROWS[1][:3], ROWS[1][10:13]], atol=1e-6)
 
 
-def test_a_skipped_ee_target_holds_the_measured_pose_with_its_gripper_and_moves_on(action_spec):
-    agent = agent_for(Recorder(config(2, 2, "ee_abs", 0.005), ee_chunk()), action_spec, 2)
+def test_a_rejected_target_is_skipped_for_the_unreachable_arm_only(aloha_spec):
+    agent = agent_for(Recorder(aloha_config(), ROWS), aloha_spec, 2)
     agent.reset(0, "go", "e")
-    rgb, robot = {"agentview": np.zeros((480, 848, 3), np.uint8)}, ee_robot([0.0, 0.0, 1.0])
-    agent.act(rgb, robot)
-    hold = agent.skip(robot)
-    np.testing.assert_allclose(hold["arm"]["position_world_m"], [0.0, 0.0, 1.0], atol=1e-6)
-    assert hold["arm"]["gripper_position_rad"] == 0.0 and agent.skipped == 1
-    np.testing.assert_allclose(agent.act(rgb, robot)["arm"]["position_world_m"], [0.6, 0.0, 1.2], atol=1e-6)
+    robot = aloha_robot([0.45, 0.0, 1.2], [0.0, 0.0, 1.0])
+    tried = []
+
+    def step(action):  # the right target is unreachable; any action that holds the right arm is accepted
+        tried.append(targets(action))
+        if not np.allclose(action["right"]["position_world_m"], [0.0, 0.0, 1.0]):
+            raise ValueError("Unreachable EE pose")
+        return "stepped"
+
+    agent.act(RGB, robot)
+    action, result = agent.skip(robot, step)
+    assert result == "stepped" and agent.skipped == 1 and len(tried) == 2  # hold left (rejected), hold right
+    np.testing.assert_allclose(targets(action), [[0.5, 0.0, 1.2], [0.0, 0.0, 1.0]], atol=1e-6)
+    assert action["left"]["gripper_position_m"] == 0.037 and action["right"]["gripper_position_m"] == 0.002
+    moved = aloha_robot([0.5, 0.0, 1.2], [0.0, 0.0, 1.0])  # the left arm reached its target; the right one held
+    np.testing.assert_allclose(targets(agent.act(RGB, moved)), [ROWS[1][:3], ROWS[1][10:13]], atol=1e-6)
+

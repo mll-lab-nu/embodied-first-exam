@@ -20,14 +20,14 @@ class VLAAgent:
             raise ValueError(f"execute_steps must be in [1, {client.spec.chunk_size}], got {execute_steps}")
         self.client, self.adapter, self.execute_steps = client, adapter, execute_steps
         self.queue = deque()
-        self.instruction = self.episode_id = self.row = None
+        self.instruction = self.episode_id = self.row = self.action = None
         self.step = self.inference_calls = self.holds = self.skipped = 0
 
     def reset(self, seed, instruction, episode_id):
         """Start an episode; ``episode_id`` is the Env's (obs["state"]["episode_id"])."""
         self.client.reset(seed)
         self.queue.clear()
-        self.instruction, self.episode_id, self.row = instruction, episode_id, None
+        self.instruction, self.episode_id, self.row, self.action = instruction, episode_id, None, None
         self.step = self.inference_calls = self.holds = self.skipped = 0
 
     def act(self, rgb, robot):
@@ -45,15 +45,28 @@ class VLAAgent:
                 if actions.shape != expected or not np.isfinite(actions).all():
                     raise PolicyError(f"Expected a finite {expected} action chunk, got {actions.shape}")
                 self.queue.extend(actions[:self.execute_steps])
-            self.row, self.holds = self.queue.popleft(), 0
+            self.row = self.queue.popleft()
+            self.action, self.holds = self.adapter.action(self.row), 0
         self.step += 1
-        return self.adapter.action(self.row)
+        return self.action
 
-    def skip(self, robot):
-        """The Env rejected the current ee target (beyond its IK tolerance): drop the target and return an action
-        that holds the arms at their measured poses with its gripper openings, as RoboTwin's evaluation skips a
-        target it cannot plan."""
-        action = self.adapter.hold(self.row, robot)
-        self.row, self.skipped = None, self.skipped + 1
-        self.step += 1
-        return action
+    def skip(self, robot, step):
+        """The Env rejected this step's ee action (a target beyond its IK tolerance). As RoboTwin skips only the arm
+        it cannot plan, the targets of one arm at a time, then of all arms, are replaced by the measured poses (the
+        gripper commands stay) until ``step`` accepts the action, which then stays the current target. Returns the
+        accepted action and ``step``'s result."""
+        self.skipped += 1
+        clipped = self.adapter.clipped  # candidates change only ee poses, which are never clipped
+        arms = list(self.adapter.arms)
+        for held in [[arm] for arm in arms] + ([arms] if len(arms) > 1 else []):
+            row = self.adapter.hold(self.row, robot, held)
+            action = self.adapter.action(row)
+            try:
+                result = step(action)
+            except ValueError as error:
+                rejected = error
+                continue
+            self.adapter.clipped = clipped
+            self.row, self.action, self.holds = row, action, 0
+            return action, result
+        raise rejected

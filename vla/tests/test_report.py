@@ -32,3 +32,10 @@ def test_rows_written_before_tracking_error_unit_are_reported_without_a_unit(tmp
     del old["tracking_error_unit"], old["skipped_actions"]
     write_run(tmp_path / "old", [old])
     assert "| 0.049 | 0 | 0 |" in table([tmp_path / "old"]).splitlines()[2]
+
+
+def test_rare_skips_are_not_rounded_away(tmp_path):
+    rows = [row("xvla_robotwin2", "time_limit", 500, 0.01, "m") for _ in range(3)]
+    rows[0]["skipped_actions"] = 1
+    write_run(tmp_path / "x", rows)
+    assert "| 0 | 0.33 | 1.0 |" in table([tmp_path / "x"]).splitlines()[2]

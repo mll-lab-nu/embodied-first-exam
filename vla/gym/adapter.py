@@ -4,8 +4,8 @@ Per arm, in ``action_spec["arms"]`` order (ALOHA: left, right):
   joint / joint_abs: [q_1 .. q_n, opening]                   rad
   ee / ee_abs:       [x, y, z, r_1 .. r_6, opening]          TopoGym world frame, m
 r_1..r_6 are the first two rotation-matrix columns, [R11, R21, R31, R12, R22, R32]. Opening is in [0, 1],
-1 = fully open. Joints and openings are clipped before stepping; EE poses are not (IK failure is an
-invalid action).
+1 = fully open. Joints and openings are clipped before stepping; EE poses are not (a target beyond the Env's IK
+tolerance is rejected, and VLAAgent.skip holds that arm).
 """
 from __future__ import annotations
 
@@ -68,11 +68,13 @@ class Adapter:
         return all(np.linalg.norm(row[start:start + 3] - robot[arm]["tcp_position_world_m"]) <= tolerance
                    for arm, start in zip(self.arms, starts))
 
-    def hold(self, row, robot):
-        """An ee action that keeps every arm at its measured pose, with the gripper openings of ``row``."""
-        held = self.state("ee", robot)
-        held[self.openings] = row[self.openings]
-        return self.action(held)
+    def hold(self, row, robot, arms):
+        """The ee ``row`` with the pose targets of ``arms`` replaced by their measured poses; openings stay."""
+        held, measured = np.array(row), self.state("ee", robot)
+        for arm, opening, size in zip(self.arms, self.openings, self.pose_sizes):
+            if arm in arms:
+                held[opening - size:opening] = measured[opening - size:opening]
+        return held
 
     def action(self, row):
         action, start, clipped = {}, 0, False

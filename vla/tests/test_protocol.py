@@ -49,3 +49,9 @@ def test_spec_survives_the_wire():
 def test_spec_rejects_other_protocol_version():
     with pytest.raises(ValueError, match="protocol"):
         PolicySpec(**SPEC, protocol_version=PROTOCOL_VERSION + 1)
+
+
+@pytest.mark.parametrize("changes", [dict(reach_tolerance_m=0.005), dict(action_space="ee_abs")])
+def test_spec_rejects_settings_that_need_the_ee_state_without_it(changes):
+    with pytest.raises(ValueError, match="ee"):
+        PolicySpec(**dict(SPEC, **changes))

@@ -76,8 +76,8 @@ class RejectingEnv(FaultingEnv):
         return self.observe(), 0.0, False, len(self.actions) == 3, info
 
 
-def episode(env, video_dir=None, config=CONFIG):
-    model = HoldVLA(config)
+def episode(env, video_dir=None):
+    model = HoldVLA(CONFIG)
     return run_episode(env, LocalClient(model), model.spec, 0, "go", 4, video_dir)
 
 
@@ -94,13 +94,37 @@ def test_recording_fault_still_returns_the_row(action_spec, tmp_path):
     assert manifest["recording_status"] == "incomplete"
 
 
+class FarVLA(HoldVLA):
+    """Targets 10 cm in front of the measured TCP, which FarTargetEnv cannot reach."""
 
-def test_an_unreachable_ee_target_is_skipped_and_counted(action_spec):
-    env = RejectingEnv(action_spec)
+    def infer(self, obs):
+        chunk = super().infer(obs)
+        chunk.actions[:, 0] += 0.1
+        return chunk
+
+
+class FarTargetEnv(RejectingEnv):
+    """Rejects any EE target more than 1 mm from the measured TCP (as an IK miss); stops after 3 accepted steps."""
+
+    def step(self, action):
+        self.actions.append(action)
+        if np.linalg.norm(np.subtract(action["arm"]["position_world_m"], [0.5, 0.0, 1.2])) > 1e-3:
+            raise ValueError("Unreachable EE pose: position residual=0.1 m, orientation=0 rad")
+        accepted = sum(np.linalg.norm(np.subtract(a["arm"]["position_world_m"], [0.5, 0.0, 1.2])) <= 1e-3
+                       for a in self.actions)
+        info = dict(task_outcome="ongoing", termination_reason="time_limit", evaluation_status="available")
+        return self.observe(), 0.0, False, accepted == 3, info
+
+
+def test_an_unreachable_ee_target_is_skipped_by_holding_the_arm(action_spec):
+    env = FarTargetEnv(action_spec)
     spec = dict(CONFIG["spec"], state_keys=["ee"], action_space="ee_abs", reach_tolerance_m=0.005)
-    row = episode(env, config=dict(spec=spec))
-    assert row["outcome"] == "time_limit" and row["skipped_actions"] == 1 and row["control_steps"] == 2
-    np.testing.assert_allclose(env.actions[1]["arm"]["position_world_m"], [0.5, 0.0, 1.2], atol=1e-6)  # held
+    model = FarVLA(dict(spec=spec))
+    row = run_episode(env, LocalClient(model), model.spec, 0, "go", 4, None)
+    assert row["outcome"] == "time_limit" and row["skipped_actions"] == 3 and row["control_steps"] == 3
+    positions = [action["arm"]["position_world_m"] for action in env.actions]
+    np.testing.assert_allclose(positions[0::2], [[0.6, 0.0, 1.2]] * 3, atol=1e-6)  # the model's targets
+    np.testing.assert_allclose(positions[1::2], [[0.5, 0.0, 1.2]] * 3, atol=1e-6)  # the holds that ran
 
 
 def test_a_rejected_joint_action_ends_the_episode_as_invalid(action_spec):

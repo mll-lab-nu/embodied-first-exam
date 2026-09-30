@@ -14,3 +14,7 @@ def test_actions_map_pis_closed_and_open_onto_topogym_closed_and_open():
     # openpi outputs 0.553378, 0.790087 and 1.026701 for model values 0, 0.5 and 0.9998 (its q99).
     np.testing.assert_allclose(from_openpi_gripper(np.array([0.553378, 0.790087, 1.026701])), [0.0, 0.705561, 0.999387],
                                atol=1e-5)
+
+
+def test_actions_beyond_the_linkage_limit_stay_fully_open():
+    np.testing.assert_allclose(from_openpi_gripper(np.array([1.2, 1.5])), [1.0, 1.0], atol=1e-9)

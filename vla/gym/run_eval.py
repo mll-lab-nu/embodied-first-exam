@@ -108,11 +108,10 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                 action = agent.act(obs["rgb"], robot)
                 try:
                     obs, _, terminated, truncated, info = actor.step(action)
-                except ValueError:  # rejected before physics; an ee target beyond IK tolerance is skipped
+                except ValueError:  # rejected before physics; an ee target beyond IK tolerance is skipped per arm
                     if spec.action_space != "ee_abs":
                         raise
-                    action = agent.skip(robot)
-                    obs, _, terminated, truncated, info = actor.step(action)
+                    action, (obs, _, terminated, truncated, info) = agent.skip(robot, actor.step)
                 errors.append(tracking_error(action, obs["robot"], spec.action_space))
                 if terminated or truncated:
                     outcome = classify(info)

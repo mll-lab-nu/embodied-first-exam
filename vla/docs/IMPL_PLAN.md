@@ -103,7 +103,7 @@ vla/
 
 ```python
 # vla/protocol.py —— 两侧共用
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 @dataclass(frozen=True)
 class PolicySpec:              # 服务端连接后第一条消息；内容来自模型配置的 spec 段
@@ -113,8 +113,9 @@ class PolicySpec:              # 服务端连接后第一条消息；内容来�
     state_keys: tuple[str, ...]  # ("joint",) | ("ee",) | ("joint", "ee")
     action_space: str          # "joint_abs" | "ee_abs"
     control_hz: float          # 训练数据的控制频率
-    chunk_size: int            # H：每次推理预测的控制步数
-    execute_steps: int         # k：执行前 k 步后重新推理，其余丢弃；取官方示例值
+    chunk_size: int            # H：每次推理预测的目标数
+    execute_steps: int         # k：执行前 k 个目标后重新推理，其余丢弃；取官方示例值
+    reach_tolerance_m: float = 0.0  # ee_abs：每个目标保持到各 TCP 进入该距离内（最多多 10 步）；0 = 每个目标一步
     protocol_version: int = PROTOCOL_VERSION
 
 @dataclass(frozen=True)
@@ -161,7 +162,7 @@ RemoteClient(address) / LocalClient(model)            # 都有 .spec、.reset(se
 - **开度** ∈ [0, 1]，1 = 全开。计算方法：`clip((原生值 − 全闭) / (全开 − 全闭), 0, 1)`。
   - 观测的原生值取 `finger_position_*[0]`。
   - 全开 / 全闭沿用 `vla_eval_demo.py` 的 `GRIPPER_OPEN_CLOSED`：aloha `(0.037, 0.002)` m，panda_robotiq `(0.0, 0.8)` rad。
-- **动作截断**：关节截断到 `joint_limits_rad`，开度截断到 [0, 1]；`ee` 不截断，IK 失败会记为 `invalid_action`。截断次数写进结果。
+- **动作截断**：关节截断到 `joint_limits_rad`，开度截断到 [0, 1]；`ee` 不截断。末端目标超出 Env 的 IK 容差时，按 RoboTwin 的做法逐臂跳过：先试只让一条臂保持实测位姿，再试所有臂，计入 `skipped_actions`。截断次数写进结果。
 - 模型自己的约定由模型子类换算，包括相对 / 绝对、夹爪方向、坐标系。
 
 **线协议**（标准库 `multiprocessing.connection`，`Listener` / `Client`，不设 authkey，默认只监听 localhost）：
@@ -204,7 +205,8 @@ with topogym.make(cfg.task.id, **make_args) as env:
             robot = env.tick_record()["robot"] if needs_joint_and_ee else obs["robot"]
             action = agent.act(obs["rgb"], robot)              # PolicyError → policy_error
             obs, _, terminated, truncated, info = actor.step(action)
-                                                               # ValueError → invalid_action；RuntimeError → env_error
+            # ValueError：ee_abs 时 agent.skip(robot, actor.step) 逐臂保持实测位姿后重试；关节动作记 invalid_action
+            # RuntimeError → env_error
             # 跟踪误差：发出的臂目标 − 下一次观测的实测值（关节 rad 或 TCP 位置 m），不含夹爪
             if terminated or truncated:
                 outcome = classify(info); break                # classify 照搬 vla_eval_demo.py
@@ -216,7 +218,7 @@ with topogym.make(cfg.task.id, **make_args) as env:
   - 任务：`task`、`variation`、`seed`、`model`（spec.name）、`instruction_version`；
   - 结果：`outcome`、`task_success`、`failure_code`、`sim_time_s`；
   - 控制：`control_steps`、`inference_calls`、`execute_steps`、`control_decimation`、`control_hz_actual`；
-  - 诊断：`tracking_error_mean`、`tracking_error_max`、`tracking_error_unit`（rad / m）、`clipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`。
+  - 诊断：`tracking_error_mean`、`tracking_error_max`、`tracking_error_unit`（rad / m）、`clipped_actions`、`skipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`。
 - **`outcome` 取值**：`success`、`task_failure`、`time_limit`、`unevaluated`、`unfinished`、`invalid_action`、`policy_error`、`env_error`。
 - **`summary.json`**：成功率、各类结果计数、完整配置快照、`git rev-parse HEAD`。
 - **`report.md`**：一行 Markdown 汇总；`python -m vla.gym.report <目录>...` 把多个输出目录汇成对比表。
@@ -416,3 +418,4 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | 2026-09-30 | 按用户第二轮意见：环境改为 conda（`topogym`、`vla-<model>`，设 `PYTHONNOUSERSITE=1`）；端口改为运行时参数；配置按机器人分目录，用 `_base_` 继承；指令移到 `gym/instructions.py`；episode id 用 Env 的；RemoteClient 不设超时；`run_eval` 自动补渲染环境变量；新增 `report.md` 与 `python -m vla.gym.report`；`BaseVLA.camera_images` 统一相机顺序和缩放 |
 | 2026-09-30 | 四个模型的调用方式逐项对照官方代码复查（`runs/test_results/20260930_vla_round2_audit/audit.md`）：调用路径一致。修正两处与训练机器人的对应关系：DROID 模型的关节 7 按 45° 安装差换算（`models/droid.py`）；X-VLA 高度改为相对桌面。其余差异（π0.5 ALOHA 夹爪标定与起始姿态、GR00T eef_9d 欧拉角约定、X-VLA 的 IK 失败处理与 proprio 来源）待用户决定 |
 | 2026-09-30 | 按用户第三轮决定：π0.5 ALOHA 夹爪改为按 openpi 的连杆模型换算，模型全闭/全开对应 TopoGym 全闭/全开（`models/pi05/gripper.py`）；X-VLA 按 RoboTwin 官方评测执行，每个目标保持到 TCP 进入 5 mm 以内（最多多 10 步；实测 TopoGym ALOHA 稳态误差 1.6–4.5 mm），IK 达不到容差的目标跳过并计数；`PolicySpec` 增加 `reach_tolerance_m`，协议版本升为 2；删除 `.venv-gs121-nyx` |
+| 2026-09-30 | 第三轮独立审查：跳过改为逐臂（与 RoboTwin 相同，另一条臂照常执行）；末端相关测试改用 ALOHA 双臂并按内容拒绝，审查列出的 4 种错误都能被测出；每个目标只换算一次动作（截断按行计）；`PolicySpec` 拒绝缺少 ee 状态的 `ee_abs` / `reach_tolerance_m`；夹爪超过连杆最大角时保持全开；报告中跳过数保留两位有效数字 |

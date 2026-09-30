@@ -29,6 +29,7 @@ def to_openpi_gripper(opening):
 
 
 def from_openpi_gripper(value):
-    """openpi's ALOHA gripper action (normalized joint) -> TopoGym opening; values beyond [0, 1] are clipped later."""
-    angle = np.asarray(value) * (JOINT_OPEN - JOINT_CLOSED) + JOINT_CLOSED
+    """openpi's ALOHA gripper action (normalized joint) -> TopoGym opening. Angles past the linkage's widest point
+    (pi/2) stay fully open; commands below pi's closed angle give negative openings, which the adapter clips."""
+    angle = np.minimum(np.asarray(value) * (JOINT_OPEN - JOINT_CLOSED) + JOINT_CLOSED, np.pi / 2)
     return (finger(angle) - FINGER_CLOSED) / (FINGER_OPEN - FINGER_CLOSED)

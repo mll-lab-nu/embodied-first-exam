@@ -37,7 +37,7 @@ def summary_row(rows):
         f'{first["control_hz_actual"]:g}', first["execute_steps"], f'v{first["instruction_version"]}',
         f'{episode_mean("control_steps"):.0f}', f'{episode_mean("inference_calls"):.0f}',
         f'{mean(errors):.3g} {first.get("tracking_error_unit", "")}'.strip() if errors else "-",
-        f'{episode_mean("clipped_actions"):.0f}', f'{mean([row.get("skipped_actions", 0) for row in rows]):.0f}',
+        f'{episode_mean("clipped_actions"):.0f}', f'{mean([row.get("skipped_actions", 0) for row in rows]):.2g}',
         f'{episode_mean("rollout_wall_s") / 60:.1f}'])
 
 

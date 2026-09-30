@@ -29,14 +29,16 @@ class PolicySpec:
     state_keys: tuple[str, ...]   # ("joint",) | ("ee",) | ("joint", "ee")
     action_space: str             # "joint_abs" | "ee_abs"
     control_hz: float             # control frequency of the training data
-    chunk_size: int               # H: control steps predicted per inference
-    execute_steps: int            # k: steps executed before the next inference
+    chunk_size: int               # H: targets predicted per inference
+    execute_steps: int            # k: targets executed before the next inference
     reach_tolerance_m: float = 0.0  # ee_abs: hold each target until every TCP is this close (0 = one step each)
     protocol_version: int = PROTOCOL_VERSION
 
     def __post_init__(self):
         object.__setattr__(self, "cameras", tuple(self.cameras))
         object.__setattr__(self, "state_keys", tuple(self.state_keys))
+        if (self.reach_tolerance_m or self.action_space == "ee_abs") and "ee" not in self.state_keys:
+            raise ValueError(f"{self.name}: ee_abs and reach_tolerance_m need the ee state (state_keys)")
         if self.protocol_version != PROTOCOL_VERSION:
             raise ValueError(f"Model server speaks protocol version {self.protocol_version}, "
                              f"this side speaks {PROTOCOL_VERSION}")
