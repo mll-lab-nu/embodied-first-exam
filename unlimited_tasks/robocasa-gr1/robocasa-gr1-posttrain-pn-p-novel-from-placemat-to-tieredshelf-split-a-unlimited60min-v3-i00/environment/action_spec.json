@@ -1,0 +1,434 @@
+{
+  "action_dim": 24,
+  "control_hz": 20,
+  "action_parts": {
+    "left": [
+      6,
+      12
+    ],
+    "left_gripper": [
+      18,
+      24
+    ],
+    "right": [
+      0,
+      6
+    ],
+    "right_gripper": [
+      12,
+      18
+    ]
+  },
+  "lower": [
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0
+  ],
+  "upper": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+  ],
+  "controller_configs": {
+    "type": "WHOLE_BODY_MINK_IK",
+    "composite_controller_specific_configs": {
+      "ref_name": [
+        "gripper0_right_grip_site",
+        "gripper0_left_grip_site"
+      ],
+      "interpolation": null,
+      "actuation_part_names": [
+        "torso",
+        "right",
+        "left"
+      ],
+      "max_dq": 4,
+      "ik_pseudo_inverse_damping": 0.05,
+      "ik_integration_dt": 0.1,
+      "ik_input_type": "absolute",
+      "ik_input_ref_frame": "base",
+      "ik_input_rotation_repr": "axis_angle",
+      "verbose": false,
+      "ik_posture_weights": {
+        "robot0_torso_waist_yaw": 50.0,
+        "robot0_torso_waist_pitch": 100.0,
+        "robot0_torso_waist_roll": 200.0,
+        "robot0_l_shoulder_pitch": 4.0,
+        "robot0_r_shoulder_pitch": 4.0,
+        "robot0_l_shoulder_roll": 3.0,
+        "robot0_r_shoulder_roll": 3.0,
+        "robot0_l_shoulder_yaw": 2.0,
+        "robot0_r_shoulder_yaw": 2.0
+      },
+      "ik_hand_pos_cost": 1.0,
+      "ik_hand_ori_cost": 0.5,
+      "use_joint_angle_action_input": false
+    },
+    "body_parts": {
+      "right": {
+        "type": "JOINT_POSITION",
+        "input_max": 1,
+        "input_min": -1,
+        "input_type": "absolute",
+        "output_max": 0.5,
+        "output_min": -0.5,
+        "kd": 200,
+        "kv": 200,
+        "kp": 1000,
+        "velocity_limits": [
+          -1,
+          1
+        ],
+        "kp_limits": [
+          0,
+          1000
+        ],
+        "interpolation": null,
+        "ramp_ratio": 0.2,
+        "gripper": {
+          "type": "GRIP",
+          "use_action_scaling": false
+        }
+      },
+      "left": {
+        "type": "JOINT_POSITION",
+        "input_max": 1,
+        "input_min": -1,
+        "input_type": "absolute",
+        "output_max": 0.5,
+        "output_min": -0.5,
+        "kd": 200,
+        "kv": 200,
+        "kp": 1000,
+        "velocity_limits": [
+          -1,
+          1
+        ],
+        "kp_limits": [
+          0,
+          1000
+        ],
+        "interpolation": null,
+        "ramp_ratio": 0.2,
+        "gripper": {
+          "type": "GRIP",
+          "use_action_scaling": false
+        }
+      },
+      "torso": {
+        "type": "JOINT_POSITION",
+        "input_max": 1,
+        "input_min": -1,
+        "input_type": "absolute",
+        "output_max": 0.5,
+        "output_min": -0.5,
+        "kd": 200,
+        "kv": 200,
+        "kp": 1000,
+        "velocity_limits": [
+          -1,
+          1
+        ],
+        "kp_limits": [
+          0,
+          1000
+        ],
+        "interpolation": null,
+        "ramp_ratio": 0.2
+      },
+      "head": {
+        "type": "JOINT_POSITION",
+        "input_max": 1,
+        "input_min": -1,
+        "input_type": "absolute",
+        "output_max": 0.5,
+        "output_min": -0.5,
+        "kd": 200,
+        "kv": 200,
+        "kp": 1000,
+        "velocity_limits": [
+          -1,
+          1
+        ],
+        "kp_limits": [
+          0,
+          1000
+        ],
+        "interpolation": null,
+        "ramp_ratio": 0.2
+      }
+    }
+  },
+  "pose_convention": "Observed body state: world metres / WXYZ. Actions: see action_frame and channels.",
+  "instruction": "pick the tomato from the placemat and place it in the tiered shelf",
+  "native_advertised_limits": {
+    "lower": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0
+    ],
+    "upper": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "unbounded_value": null
+  },
+  "action_frame": "robot base; absolute XYZ and axis-angle; not world coordinates",
+  "hand_semantics": "Unscaled Fourier commands, each in [-3,3]; use the six channels in listed order. Not binary grips.",
+  "channels": [
+    {
+      "index": 0,
+      "name": "right_x",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 1,
+      "name": "right_y",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 2,
+      "name": "right_z",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 3,
+      "name": "right_rx",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 4,
+      "name": "right_ry",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 5,
+      "name": "right_rz",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 6,
+      "name": "left_x",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 7,
+      "name": "left_y",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 8,
+      "name": "left_z",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 9,
+      "name": "left_rx",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 10,
+      "name": "left_ry",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 11,
+      "name": "left_rz",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 12,
+      "name": "right_little",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 13,
+      "name": "right_ring",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 14,
+      "name": "right_middle",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 15,
+      "name": "right_index",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 16,
+      "name": "right_thumb_flexion",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 17,
+      "name": "right_thumb_rotation",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 18,
+      "name": "left_little",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 19,
+      "name": "left_ring",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 20,
+      "name": "left_middle",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 21,
+      "name": "left_index",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 22,
+      "name": "left_thumb_flexion",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 23,
+      "name": "left_thumb_rotation",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    }
+  ],
+  "schema": "rcb-casa-effective-action-spec-v2"
+}

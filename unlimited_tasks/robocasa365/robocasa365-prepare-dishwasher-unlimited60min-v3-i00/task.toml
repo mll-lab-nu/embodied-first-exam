@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-prepare-dishwasher-unlimited60min-v3-i00"
+description = "Open the dishwasher door and pull out the top rack."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-prepare-dishwasher-privileged-i00"
+source_digest = "33227c33049ff479f8b6d52bd8a5a17eaa49a37278317ede35fb6faf05d3bb93"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "PrepareDishwasher"
+upstream_commit = "4f8a2980def75a55dff96b990745b83540425f09"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+reference_method = "demo_joint"
+robot = "panda_omron"
+family = "prepare_dishwasher"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

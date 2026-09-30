@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tiered-shelf-unlimited60min-v3-i03"
+description = "pick the croissant from the tray and place it in the tiered shelf"
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa-gr1", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa-gr1-tray-to-tiered-shelf-privileged-i03"
+source_digest = "d4efce5bc29785368d5fe468dcf85f99269d43f5bd92f135b99b0ce21071efa0"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa-gr1"
+observation_mode = "privileged"
+controller_mode = "mink_24"
+environment_id = "gr1_unified/PosttrainPnPNovelFromTrayToTieredshelfSplitA_GR1ArmsAndWaistFourierHands_Env"
+robot = "gr1"
+family = "tray_to_tiered_shelf"
+tier = "privileged"
+instance_index = 3
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

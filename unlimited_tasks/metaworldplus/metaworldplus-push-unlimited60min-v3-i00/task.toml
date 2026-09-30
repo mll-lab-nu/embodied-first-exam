@@ -1,0 +1,35 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/metaworldplus-push-unlimited60min-v3-i00"
+description = "Push the block to the target. Fixed Meta-World v3 privileged-state instance."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "metaworldplus", "trajectory", "privileged"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "metaworld"
+benchmark = "metaworldplus"
+upstream_version = "3.1.1"
+environment_id = "push-v3"
+reward_version = "v2"
+observation_mode = "privileged"
+derived_from = "robot-coding-bench/metaworldplus-push-privileged-i00"
+source_tree_sha256 = "c785b70b7beee04f03699a7389601f88aec1d2c22638987b81c70e6fe918291a"
+robot = "sawyer"
+family = "push"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 0.5
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

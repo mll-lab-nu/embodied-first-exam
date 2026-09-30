@@ -1,0 +1,48 @@
+{
+  "provenance": "independent Harbor Codex agent trial",
+  "job": "robocasa-codex-reference",
+  "trial": "robocasa-kitchen-navigation-i00__zkFKbec",
+  "agent": {
+    "name": "codex",
+    "version": "0.155.1",
+    "model_info": {
+      "name": "gpt-6-astra",
+      "provider": "openai"
+    }
+  },
+  "agent_result": {
+    "n_input_tokens": 278751,
+    "n_cache_tokens": 260736,
+    "n_output_tokens": 1687,
+    "cost_usd": 0.5252359999999999,
+    "model_usage": {
+      "openai/gpt-6-astra": {
+        "n_input_tokens": 278751,
+        "n_cache_tokens": 260736,
+        "n_output_tokens": 1687,
+        "cost_usd": 0.5252359999999999
+      }
+    },
+    "rollout_details": null,
+    "metadata": null
+  },
+  "started_at": "2026-09-19T15:26:28.458657Z",
+  "finished_at": "2026-09-19T15:30:17.024862Z",
+  "agent_execution": {
+    "started_at": "2026-09-19T15:28:00.373060Z",
+    "finished_at": "2026-09-19T15:29:48.149688Z"
+  },
+  "rewards": {
+    "success": 1,
+    "deterministic": 1,
+    "n_actions": 378,
+    "sim_steps": 378,
+    "physics_steps": 9450,
+    "replay_count": 2,
+    "final_reward": 0,
+    "position_error": 0.10798426049718683,
+    "orientation_cos": 0.9999996602802462,
+    "grader_error": 0
+  },
+  "exception_info": null
+}

@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-load-dishwasher-unlimited60min-v3-i00"
+description = "Pick up the cup and bowl from the counter, place them in the dishwasher, and close the dishwasher door."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-load-dishwasher-privileged-i00"
+source_digest = "9f7d2bbbdd0f3eff7701169f829dcfae7307a5f027509c7499de6cb28beb5102"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+environment_id = "LoadDishwasher"
+robot = "panda_omron"
+family = "load_dishwasher"
+tier = "privileged"
+instance_index = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

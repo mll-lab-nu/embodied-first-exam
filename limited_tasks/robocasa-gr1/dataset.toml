@@ -1,0 +1,136 @@
+[dataset]
+name = "robot-coding-bench/limited-robocasa-gr1-60min-v3"
+version = "0.3.0"
+description = "Canonical two-mode tasks; consult suites/two-modes.json for readiness."
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-limited60min-v3-i00"
+digest = "sha256:520ebd259e89c00f59692383c8bde93748eab446112e582e3a1b706286e510c6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-limited60min-v3-i02"
+digest = "sha256:5bb8eb38ce1efddc4e4eece0cec2da84ee7bde73de960a4113a68d623b8227f8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-limited60min-v3-i03"
+digest = "sha256:73e7a47ba7d586e330c7801a7f43bc5c773baf784e14414135858bb3b54d2b58"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-limited60min-v3-i04"
+digest = "sha256:0539bd8b369b487c41ff9719af54665d937c32b72f8c448cc06aef7fc5924b61"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-limited60min-v3-i00"
+digest = "sha256:1a58ed4754ea11192b634093d72e26c28990df5b1508d110ace14fe4af2760f8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-limited60min-v3-i01"
+digest = "sha256:74be32a4bc9ff18e6360ad89670d84927a47801575a25801c53886552c908181"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-limited60min-v3-i02"
+digest = "sha256:f34aa499c214128ed70df05026ab4f4345c6c1beb9d58d8dd12be74fe92fc92e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-limited60min-v3-i00"
+digest = "sha256:92a912a9a4d94ebd92b572ebd21858eff90183bdf7866c6a3412d40b48f4d24a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-limited60min-v3-i03"
+digest = "sha256:f0ce71f8ace04e328c901f53eeefe2e2480df34fe9491679bc4ad6f0e90c752f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-limited60min-v3-i04"
+digest = "sha256:4be04dbc48f04da19259844530174e677ae6be5cf849145ec30daabdeaeb2d9c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-pn-p-can-to-drawer-close-limited60min-v3-i00"
+digest = "sha256:8d637b167ce194804b8f4fbca4bb1772c4c8a13dda9dab0baafd5f5e4d2b10d2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-pn-p-milk-to-microwave-close-limited60min-v3-i00"
+digest = "sha256:730b2d14d33f95370d02e5216a642b6bf54464a0eb78ca9b0da6425de8141681"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-pn-p-potato-to-microwave-close-limited60min-v3-i00"
+digest = "sha256:569f2aa42abf95fe417e98c498f0c39a9827d804f45c6811d86a3c58c816d407"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-pn-p-wine-to-cabinet-close-limited60min-v3-i00"
+digest = "sha256:7f38fd68ff6cee672f05dc8f67e86be466212f17a511cb2e488fa9248474698a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-cuttingboard-to-basket-split-a-limited60min-v3-i00"
+digest = "sha256:807b75b9f38c4135f47c5cfd1219f0db6e23f4b50f577700984b747e9496dfcd"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-cuttingboard-to-cardboardbox-split-a-limited60min-v3-i00"
+digest = "sha256:41a6c39ae66c0238f655211ae8b0bf913034bc08fb1c606776f1d5f8c733e1a6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-cuttingboard-to-pan-split-a-limited60min-v3-i00"
+digest = "sha256:ae8f51997bc7ba7479ba8af6c741ab48695b5e02e568c67d0e9b374f6b0310d6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-cuttingboard-to-pot-split-a-limited60min-v3-i00"
+digest = "sha256:340480205e9c2e7b7ee4b3d468617ff7e0176d8ebb955586845a0690a82500c0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-cuttingboard-to-tieredbasket-split-a-limited60min-v3-i00"
+digest = "sha256:36589246700d496325702f5e5ee104b44212e5a20dbd2d0588a99e8c43e9eaa1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-placemat-to-basket-split-a-limited60min-v3-i00"
+digest = "sha256:0125cbd74c78bf50b806098933946feb17bdc3719d1a7f7103bfcaeb3946aac7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-placemat-to-bowl-split-a-limited60min-v3-i00"
+digest = "sha256:7d5068eaacd92d118e144bd11cc53ee7b5750da80cf56ed949bd2e750c5e5ad3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-placemat-to-plate-split-a-limited60min-v3-i00"
+digest = "sha256:aac74a51890bee2b85c815b8801dbae032b039ee8bb4709b0d0f8f4b24c659aa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-placemat-to-tieredshelf-split-a-limited60min-v3-i00"
+digest = "sha256:a8fa475aebecb6b304e4dc284cda8d1928d70be73b16c3c732af23a8b8a87539"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-plate-to-bowl-split-a-limited60min-v3-i00"
+digest = "sha256:22d62034492816b8dedb653440d91794ba11280661322c19c2944cf3ff9c983e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-plate-to-cardboardbox-split-a-limited60min-v3-i00"
+digest = "sha256:83db55ec805e0576520734481cc7e1b92a67524f3b0502c8c3a6c59ec2572f2e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-plate-to-pan-split-a-limited60min-v3-i00"
+digest = "sha256:a636ab9ca099fcce890d63a564c9811717223bcab55c268ed41c90a7e70b7466"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-tray-to-cardboardbox-split-a-limited60min-v3-i00"
+digest = "sha256:96e8cc67770b1661adcc69c6563edef206685c9ccf6f1621ddf58b00299bd3c9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-tray-to-plate-split-a-limited60min-v3-i00"
+digest = "sha256:44a4959368d028650c376164569b6ab5f63328c6e07e7cde9c07b5cab02081bd"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-tray-to-pot-split-a-limited60min-v3-i00"
+digest = "sha256:c2ccf161826ad69edca3c4735684fa89122952f1fb185fa6c4b9f18d5dbc6b23"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-posttrain-pn-p-novel-from-tray-to-tieredbasket-split-a-limited60min-v3-i00"
+digest = "sha256:f74f55bc39060360e137b2505c939aaf142592be3026eaa77e4c6c435a47b3b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tiered-shelf-limited60min-v3-i00"
+digest = "sha256:1140bab2e3391afc0121c4354f63ebe786d503567fe913b4b093d5200fdbeddf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tiered-shelf-limited60min-v3-i02"
+digest = "sha256:006b6a0658761c9f3fb693e3b00052fe035c786bc8a3b6c5d50b221f1e7558a2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tiered-shelf-limited60min-v3-i03"
+digest = "sha256:610826f53b33de7aaf4c2743428776a92ed1fe4c8edc616167d102b9925abd29"

@@ -1,0 +1,19 @@
+# Minimal simulator + official SkillLib runtime; no model/training installation.
+mujoco==3.2.2
+dm-control==1.0.22
+numpy==1.26.4
+scipy==1.14.0
+open3d==0.18.0
+opencv-python-headless==4.11.0.86
+gym==0.26.2
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+rtree==1.2.0
+plotly==5.24.1
+colorlog==6.9.0
+colorama==0.4.6
+openai==1.109.1
+h5py==3.11.0
+PyYAML==6.0.2
+pytest==8.3.5
+gdown==5.2.0

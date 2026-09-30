@@ -1,0 +1,2 @@
+FROM ghcr.io/jameskrw/rcb-robocasa365-runtime:0.1.0
+COPY assets/ /opt/robocasa/robocasa/models/assets/

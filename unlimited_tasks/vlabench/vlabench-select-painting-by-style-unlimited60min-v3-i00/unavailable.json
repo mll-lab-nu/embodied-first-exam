@@ -1,0 +1,6 @@
+{
+  "source": "staging/coverage/vlabench/vlabench-select-painting-by-style-i00",
+  "reason": "missing_frozen_instance",
+  "seed": 0,
+  "instance_sha256": null
+}

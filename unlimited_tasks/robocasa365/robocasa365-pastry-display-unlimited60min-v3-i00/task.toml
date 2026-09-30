@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-pastry-display-unlimited60min-v3-i00"
+description = "Place the pastries on the plates."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-pastry-display-privileged-i00"
+source_digest = "0f0f08477bbc87ae7fbbf0035bf129a8fe8418aa50f49e5edc4a1ba2c8b60405"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "PastryDisplay"
+upstream_commit = "4f8a2980def75a55dff96b990745b83540425f09"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+reference_method = "demo_joint"
+robot = "panda_omron"
+family = "pastry_display"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

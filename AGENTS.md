@@ -1,11 +1,15 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
+Read `README.md`, `docs/TWO_MODES.md` and `docs/PROTOCOL.md` first.
 
-- Tasks are self-contained Harbor task dirs under `tasks/`. To keep maximum flexibility there is currently
-  no shared Python package: the example `tasks/robosuite-cube-stack-i00/` carries its own tooling
-  (`environment/rcb_traj.py`) and verifier (`tests/grade.py`, `tests/rcb_traj.py`). To add a task, copy it.
-- `images/<sim>/Dockerfile`: simulator base images, tagged from `images/VERSION`; `scripts/build_images.sh`.
-- `ci_checks/run_all.sh [task dirs]`: contract checks. New check = `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
-- `tasks/dataset.toml`: task manifest; refresh with `cd tasks && harbor add --scan .`.
-- Local docker sandbox has no `[environment].gpus`; the current tasks don't need a GPU.
+- Active tasks are self-contained Harbor task dirs in `limited_tasks/<benchmark>/` and `unlimited_tasks/<benchmark>/`
+  (benchmarks: metaworldplus, robocasa, robocasa365, robocasa-gr1, vlabench). `suites/two-modes.json` is the registry;
+  each mode/benchmark folder has its own `dataset.toml`.
+- Run tasks only through `scripts/two_modes/run.py` (`list`, `smoke`, `run`); a plain `harbor run -p` skips the trusted
+  network rules and the limited episode lifecycle.
+- `ci_checks/run_all.sh [task dirs]`: contract checks plus `scripts/two_modes/check.py`. New check =
+  `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
+- A task's content is frozen by its registry fingerprints and dataset digest. Changing it is a new task version:
+  refresh deliberately with `scripts/two_modes/check.py --freeze`, never to silence a failing check.
+- Unlimited: no step or reset cap, 3600 s of agent time. Limited: one episode with its protocol step cap, no reset.
+- `images/<sim>/`: simulator base images (not in a public registry; build locally, see README). No GPU needed.

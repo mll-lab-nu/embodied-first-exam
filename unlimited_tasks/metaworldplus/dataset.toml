@@ -1,0 +1,284 @@
+[dataset]
+name = "robot-coding-bench/unlimited-metaworldplus-60min-v3"
+version = "0.3.0"
+description = "Canonical two-mode tasks; consult suites/two-modes.json for readiness."
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-unlimited60min-v3-i00"
+digest = "sha256:4523a80c1928b68c0a0733638db8e800b282aa89b2a8578fe57e2582fd6bfc79"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-unlimited60min-v3-i01"
+digest = "sha256:bc9aed5f9a70b926fd0000f3bc3bfcfee34e6c05696d50ec943f50bde15cb4cc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-unlimited60min-v3-i02"
+digest = "sha256:577fe3483c04211c1665ba57e1d697349dc9fc208b24d1eb81a34e9f0aa20270"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-unlimited60min-v3-i00"
+digest = "sha256:6730bfa892a1941a8ffbd5c2804f4e1c5cfc62865062de62740b8195106083cb"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-unlimited60min-v3-i00"
+digest = "sha256:3a118569b38d860308a6808e6f7ab4232ab85a7143da27f50cd9f970bf87830f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-unlimited60min-v3-i00"
+digest = "sha256:52754ad03d1564da00a928b49ff09067874aacc121739c87e8acd9d8a5413128"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-unlimited60min-v3-i00"
+digest = "sha256:33d92221464b9316557c752f2e8f7bedbfc56016c3614dabdd62462b0054b583"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-unlimited60min-v3-i00"
+digest = "sha256:ff4c28a07cb6b1ca2e1dbe3b79d5698a9bc7fa9947ab12a66f235f1dc0a11cd5"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-unlimited60min-v3-i00"
+digest = "sha256:55436b75e48e6ee288562f51040fda873853eb76ad15f4c97dc469b471070e14"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-unlimited60min-v3-i00"
+digest = "sha256:5c379682eeb6cee3072344fa1c0b3015ab76b009eb0489d12bd2c1ef02a648f6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-unlimited60min-v3-i01"
+digest = "sha256:217c9413f23ce666ec37812563e327c96ace242ab618c4ddcdbbcffa6e04abd1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-unlimited60min-v3-i02"
+digest = "sha256:fc3c9d8b188560ca2d539a0905a35e4b21475d5a086777afd49b39543b32469c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-unlimited60min-v3-i00"
+digest = "sha256:e3180841454f561ab7382f57e4e0e50d19c26c0eea49445439058b90ca56be58"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-unlimited60min-v3-i00"
+digest = "sha256:7e48900ef25f1d4647f5442cc15dfd4d50c99c36a79b7ea01642960ee955f47e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-unlimited60min-v3-i00"
+digest = "sha256:5fda0bde494c110ca81432f649eab8b59c0ca45795f32388080fb8df5041340a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-unlimited60min-v3-i00"
+digest = "sha256:583889f82c2439d1800cbe48a8bec6b92b2d493f5d0eb16ae7f722325ac9a9ec"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-unlimited60min-v3-i00"
+digest = "sha256:3d87fe36d937e124157288be7cc2f6845dc8ab6cccf043fa5edcb64c5446f1f8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-unlimited60min-v3-i00"
+digest = "sha256:71a824583ff03dfd8604a82b90aa24ca71d4e9174e917f5d57a9674ee5dc6fc0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-unlimited60min-v3-i00"
+digest = "sha256:ac3c7630be40f5caf0670ff40f50ee17f23525d65a47ed0a70bcbe8a78d8b386"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-unlimited60min-v3-i00"
+digest = "sha256:f0d70ee0272b65a748e4892414fe4850d218daa37918e126274ee7f495d56471"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-unlimited60min-v3-i01"
+digest = "sha256:9bd838301a827dee7c6ded5c19990027e4946968bfcb84bb3516771b088de4e1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-unlimited60min-v3-i02"
+digest = "sha256:271da18edce9dffe2d816864c62e812c0f6e1d93c822bd62a5fc0cb0963ece54"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-unlimited60min-v3-i00"
+digest = "sha256:2937b51b9fc6386e2f07140905705c5c74a63aeeec68ec331d7bd95387e22d67"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-unlimited60min-v3-i00"
+digest = "sha256:3d34673d77f63dde2d27f5cfced72d4a0cd34a301e0738d2b9fa23411179f4ec"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-unlimited60min-v3-i00"
+digest = "sha256:ac3146fd9afa9df88e4ad2163de84553bc2ed4d9bd9dbd51ad01cc4814f56dcd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-unlimited60min-v3-i01"
+digest = "sha256:9c07b0ebfac2427794d532623f1c9b826d0c20d8c82199a4a6853d7808fc1719"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-unlimited60min-v3-i02"
+digest = "sha256:efd62860ba499faeab06c02774985e2e012fcac1410210fd6b845594b4769918"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-unlimited60min-v3-i00"
+digest = "sha256:4e02b262dc99ce2dbad6bc57c45778a2f91914ae6ea6e815adf0156b9b37d1f3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-unlimited60min-v3-i00"
+digest = "sha256:a98b91bfa6afefb7fcbe5e80dc465ab771d750e03d5a6f4dfd7d8d7e5e3d33e1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-unlimited60min-v3-i00"
+digest = "sha256:72bacd22e6374839154507c67d3915ed42e6e41eecdae38ccdf406e5f9aa4a32"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-unlimited60min-v3-i01"
+digest = "sha256:741eb18849782706febeb9951e82e894ed1bd29451016c5bfb1c04a322e684df"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-unlimited60min-v3-i02"
+digest = "sha256:b45dfb624bf7c4d70afe6db9db3fe32148d3f01f4fe80ac6e48f0d062d70eb2b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-unlimited60min-v3-i00"
+digest = "sha256:c2d93f84b12ac3f5ef9b36431576cc7846d97f7f7f4eb504e67bc3c27a156093"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-unlimited60min-v3-i00"
+digest = "sha256:be81fcaddc4a88fd9711e9910d56d9e9103c35943419187d9fcd8927176f4818"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-unlimited60min-v3-i00"
+digest = "sha256:4b6434572bf3543f25d7d0bcdb17819e13308bc45f25bf8669fbf2d8d5ab6d99"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-unlimited60min-v3-i00"
+digest = "sha256:12d080c46ba0e83ce7ed60350cb774efc21f37b0a6c336e92505c3b32ecec1c5"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-unlimited60min-v3-i00"
+digest = "sha256:8bc6c1a1e59b9fe27f0ed1686eae006b3308952a5ca4203c47e865eda1f2f40a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-unlimited60min-v3-i00"
+digest = "sha256:850421f9219fece3a07a897525d6a5331f9c46b43528f648b20c29c9892f2469"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-unlimited60min-v3-i00"
+digest = "sha256:bc2553ff86ff72467f1773ef88365c47ac9a6c7b6d1da8f2e9c475a745b66ac2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-unlimited60min-v3-i01"
+digest = "sha256:0b0a950b1e44db5abf00d436fc90f054dbb3ad22b4f20d1a8101088053f46ae8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-unlimited60min-v3-i02"
+digest = "sha256:50bb3cbd2a69d87f351b99a2c7f184998d05ad8e2e56f091d7130c23b7f1a5dc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-unlimited60min-v3-i00"
+digest = "sha256:af36c4d0555cde85035591c14a493443e2dcc7a9b95405ae29cbeb5f0f263166"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-unlimited60min-v3-i00"
+digest = "sha256:b0199fb216f3085c5cbaf85c3808e9e04aee30fd73b2a2e2819eb2d094a748ee"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-unlimited60min-v3-i00"
+digest = "sha256:52b34d05f77f458f58cc7bbc79ddd9677f75748e36b3a770b6e8dbf78f764759"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-unlimited60min-v3-i01"
+digest = "sha256:a1771922629aa966fde8b3964f5355c02e604ac1f75d08b615651978836982db"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-unlimited60min-v3-i02"
+digest = "sha256:46cfc323b3fe5ab8f3952ca45817572bf195ffd5c703dcaacd09ba36ed19fa36"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-unlimited60min-v3-i00"
+digest = "sha256:9f9f5d6d910256adf4bc9831a44f3c1c886da78c51eb7dd8de55754805c93ed3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-unlimited60min-v3-i00"
+digest = "sha256:7dcf03ece0638d03a53c88f5e04574fcc89e3cccab4fb31f443aade44c13de03"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-unlimited60min-v3-i00"
+digest = "sha256:cfbd47169c990855798ebd6be689052ad34061c438b22e7510aaf73219eaa630"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-unlimited60min-v3-i00"
+digest = "sha256:eecce019c81bd3ed419b29b9dca27f4787941d0f30d65662d59f91a2e85d80b0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-unlimited60min-v3-i00"
+digest = "sha256:3b7ea4d41f4c23c953d158facee8985c9584a417d3b55e4d6131eff40afa4ff2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-unlimited60min-v3-i00"
+digest = "sha256:ad5b6f600577f43fb9fcafcea042e08049a90cbc6eea7504837a8b1b3f6dcf62"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-unlimited60min-v3-i00"
+digest = "sha256:1db83c32863d35ac143bb392c9d4fdf3b3ac76ccc8783e185e7418f90a02c9e6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-unlimited60min-v3-i01"
+digest = "sha256:2b3b08620c4de229a9afe2eef705894891d65e9d12efe80f82fdcfc0861891b5"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-unlimited60min-v3-i02"
+digest = "sha256:157ff2568591e554433187e1a6ccfdea5078d0764656026139bfb5320abe1ff6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-unlimited60min-v3-i00"
+digest = "sha256:b63c8199a0923acf9738330b6c97b42a6a52195ac13b75b7c55d3da80b8826bf"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-unlimited60min-v3-i00"
+digest = "sha256:8ebf9197560d9d79bd4b62fb927aae4e5cf3b25d34e11109a250c469c8f64643"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-unlimited60min-v3-i00"
+digest = "sha256:1a934aadd69e93427f6e55cc2250b8a57d627e808a6dc71377b3e059093d77da"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-unlimited60min-v3-i00"
+digest = "sha256:7a15204a4419daacc9d03d62f78d847bafb670d1bf1dbf0cf8be46cc5d1fd35f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-unlimited60min-v3-i00"
+digest = "sha256:ff345ddb84849ccb1901ad5f92fb91b254a6dd74a6ae0aa869cde0fc6865bf49"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-unlimited60min-v3-i01"
+digest = "sha256:b4876ec3a3478fa9d56264c4c23bff93688d80cccbf0176f217a7947011635a8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-unlimited60min-v3-i02"
+digest = "sha256:3c922104ee192dd0bfcc41d4b389c6f13785260b71efc36d61c73c821d003548"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-unlimited60min-v3-i03"
+digest = "sha256:b936f7aaac5e62f129d780d3f4c42d0e3ea1e336585f4321e599b643c9efaef6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-unlimited60min-v3-i00"
+digest = "sha256:b86faacf5cb499f27a00279fe4751930f0e9be88bd5220a0fbdce73d41745566"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-unlimited60min-v3-i01"
+digest = "sha256:fcaa7ccd99d0ad2744740bc7aa9f84163a2a4311e04789a0fa72cf459c696ca9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-unlimited60min-v3-i02"
+digest = "sha256:1f482639a2b9dbbfa98b5fa348154b7df3e3039f1e79c2ce256e43463b671cbb"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-unlimited60min-v3-i00"
+digest = "sha256:f67d2d5f1b5cdcf02250943da9ef14ec32a3170c0fe1a60ef683b2d9b111145a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-unlimited60min-v3-i00"
+digest = "sha256:31780a3b16d2e44005ee970b57541fcc57b88ccb3a3722ca22ac444145b3bffc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-unlimited60min-v3-i00"
+digest = "sha256:3b4660a7ae3f2233338c1a00c8a89810fbebda892256c1620b03a5e920d91cc5"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-unlimited60min-v3-i00"
+digest = "sha256:87a0394748274bc9ac8509b118e100c79a880c30c44b9d6bd1f83211917a7479"

@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-assemble-cooking-array-unlimited60min-v3-i00"
+description = "Move the shrimp onto the pan on the stove. Then move the syrup bottle and broccoli from the cabinet to the counter where the plate is."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-assemble-cooking-array-privileged-i00"
+source_digest = "281b59031d8801324db07d6cd0f1ed5d5acbc63fdb4aa27c913461cea52c0a06"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "AssembleCookingArray"
+upstream_commit = "4f8a2980def75a55dff96b990745b83540425f09"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+reference_method = "demo_feedback"
+robot = "panda_omron"
+family = "assemble_cooking_array"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

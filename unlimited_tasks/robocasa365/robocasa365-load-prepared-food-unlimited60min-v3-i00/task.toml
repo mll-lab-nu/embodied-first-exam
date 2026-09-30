@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-load-prepared-food-unlimited60min-v3-i00"
+description = "Place the tupperware on the second highest shelf of the fridge. Make space for the tupperware among the existing items by rearranging them on the shelves if needed. Close the fridge door when finished."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-load-prepared-food-privileged-i00"
+source_digest = "42452e1bc7dfcbb229610f38da01096bc190533c1e24225ca740414f10909dc4"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "LoadPreparedFood"
+upstream_commit = "4f8a2980def75a55dff96b990745b83540425f09"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+reference_method = "demo_joint"
+robot = "panda_omron"
+family = "load_prepared_food"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

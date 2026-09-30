@@ -1,0 +1,5 @@
+# Build the legacy simulator base first using images/robocasa/Dockerfile (0.1.0).
+# Both sources are the existing pinned simulator/asset builds; no benchmark code.
+FROM ghcr.io/jameskrw/rcb-robocasa-gr1:0.1.1 AS legacy_objects
+FROM ghcr.io/jameskrw/rcb-robocasa:0.1.0
+COPY --from=legacy_objects /opt/robocasa/robocasa/models/assets/objects /opt/robocasa/robocasa/models/assets/objects

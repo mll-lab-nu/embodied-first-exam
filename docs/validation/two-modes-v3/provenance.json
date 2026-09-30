@@ -1,0 +1,35 @@
+{
+  "created_at": "2026-09-29T23:59:31.999413+00:00",
+  "git_head": "79e6f2dcc4836d9006f3365c27dcfb432dbd20e7",
+  "harbor_version": "0.23.0",
+  "files_sha256": {
+    "docs/PROTOCOL.md": "f9ebceef243c24b635a4b8e1a6f25d0a7740ed5fed062985e40ac41fcd0b9e09",
+    "docs/TWO_MODES.md": "1f1e0430601a634dc43c560bf67ffbf0630e64581e0ae0df661e304874f24378",
+    "docs/prompts/metaworldplus_codex_luna_high_two_modes.md": "69f800aecb70bdf0cc8d354f224d69783368f0e4b25d243221efae04f07e6158",
+    "scripts/two_modes/catalog.py": "7fa27a958d2c5be982de814d5f45935b851e7c7e16b5bc199879a83b872a6ab0",
+    "scripts/two_modes/check.py": "1aa939e2686b7335805b44903242d9898d76c442a16e2cc06c5a8d08fba8bab0",
+    "scripts/two_modes/common.py": "eaddb2d62633e108689f320a466417940006c6987d649c5295b869d973d59328",
+    "scripts/two_modes/episode_clock.py": "dc00b787227f78ff0a519d3eed07bacbfb8d1ff73544dcf8783386f34093d6e8",
+    "scripts/two_modes/lifecycle.py": "1851efceea7ed9c7ffc63705ee787598cd8c0c6c26d45c57c37f92b03cfb0bd7",
+    "scripts/two_modes/long_episode_smoke.py": "6d6caa2d68f8c00642a422e4341a9cee914fd065440e8f83f9ede31f6c004372",
+    "scripts/two_modes/migrate.py": "aba2358987236cbd51bf81b42b5c06b2d6882db6d23029d36c2be9bd69f4ffdb",
+    "scripts/two_modes/prepare.py": "1450214df27552db5533239523f04eeb5b19f144797cd0a0d490c7b48d4d1525",
+    "scripts/two_modes/public_probe.py": "ee5773008dc596fbfed6452a4374485cb3004cfa8fd500cefe5f62ccf14e07cb",
+    "scripts/two_modes/report.py": "dbf72807ed001e64becb645244694cbb6fc53515d0db0ab61542d00080dc0f32",
+    "scripts/two_modes/resolve.py": "d475e7f8cf969f809410fc0fb9c429c667e031ac703e911da380da8ee7197128",
+    "scripts/two_modes/run.py": "a578e6faa545d74abec701ea9b4f07a4c6ef1dbe323dc7292002590edc9942c6",
+    "scripts/two_modes/test_contract.py": "de2672c12ee54de8079f3b7dd4105dd4bf242698d1989188d848f0628a8f7e86",
+    "scripts/two_modes/warm_session.py": "8485a302beeed03a369702d2854cc3fd4114249f15c2b54c0a51827dff72d13d"
+  },
+  "images": {
+    "ghcr.io/jameskrw/rcb-metaworldplus:0.1.0": "[] sha256:67c9df5c177e7dcc91e85094302480d604abb6485933ecb0002b0c8d324a0a4d",
+    "ghcr.io/jameskrw/rcb-vlabench:0.1.1": "[] sha256:025a34da6ea5eaa0ad6a6b2e9a294ac8980ea1fa69ae5566b0c8d49a2f86bb32",
+    "ghcr.io/jameskrw/rcb-robocasa:0.1.1": "[] sha256:44ddc4f56f7af76e60992f557b18dc512022a1f691b061c99153a063a1bc4a33",
+    "ghcr.io/jameskrw/rcb-robocasa:0.1.0": "[] sha256:48855d9bc6bf80d31cb2368400808aa4f8bd1d08a53a932f26cf2c2a907decdf",
+    "ghcr.io/jameskrw/rcb-robocasa365:0.1.0": "[] sha256:6769a97820a46dc880c0000a9049ebec9135d02d40ee8f024ad05cb1fb02fe93",
+    "ghcr.io/jameskrw/rcb-robocasa-gr1:0.1.1": "[] sha256:04041bbb580cf1a70c368e95148f9fdd6e3ac9e3e91fd681b511ec20f3f4439f"
+  },
+  "task_fingerprints": "../../../suites/two-modes.json",
+  "model_evaluation_run": false,
+  "notes": "Working tree contains pre-existing uncommitted work; git HEAD alone is not the executable revision. Registry fingerprints bind all current task files."
+}

@@ -1,0 +1,45 @@
+services:
+  main:
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    depends_on:
+      codex-egress:
+        condition: service_healthy
+    environment:
+      HTTP_PROXY: http://codex-egress:3128
+      HTTPS_PROXY: http://codex-egress:3128
+      NO_PROXY: sim,localhost,127.0.0.1
+      http_proxy: http://codex-egress:3128
+      https_proxy: http://codex-egress:3128
+      no_proxy: sim,localhost,127.0.0.1
+  harbor-docker-egress-control-sidecar:
+    networks:
+    - episode
+  codex-egress:
+    build:
+      context: ${CONTEXT_DIR}/codex-egress
+    networks:
+    - episode
+    - codex_external
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    read_only: true
+    cpus: 0.25
+    mem_limit: 128m
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import socket; socket.create_connection(('localhost',3128),timeout=2).close()
+      interval: 2s
+      timeout: 5s
+      retries: 30
+networks:
+  episode:
+    internal: true
+  codex_external: {}

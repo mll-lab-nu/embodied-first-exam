@@ -1,0 +1,280 @@
+[dataset]
+name = "robot-coding-bench/limited-metaworldplus-60min-v3"
+version = "0.3.0"
+description = "Canonical two-mode tasks; consult suites/two-modes.json for readiness."
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-limited60min-v3-i00"
+digest = "sha256:832390cbc927ef68fd4906482383ead70f9de3ed3872354060216136007af661"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-limited60min-v3-i01"
+digest = "sha256:fa0f15da6ee3fb932a9a8b4bcbde08d39a10d1e117b87a7de89d353295c0a74e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-limited60min-v3-i02"
+digest = "sha256:443af3f849bf36a121e5c0a7f7b1a56984644c20288d985536ac373d1b6ed346"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-limited60min-v3-i00"
+digest = "sha256:4ffe22bb483ae9cd0257b56b29ade4ab8bbf72d60a79810da487d431386c6e25"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-limited60min-v3-i00"
+digest = "sha256:adc1c4a99f9f0d4bbec26ba942ee92fce81be3a84347daa06ae3411a30fd396b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-limited60min-v3-i00"
+digest = "sha256:e85d6533273b107b8bd88e51d158bf70960a03e2e7d47e7178c80e4109b05198"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-limited60min-v3-i00"
+digest = "sha256:220ddd8d4055fabf3ca0bded0d581996438ae54a5e7f809623a84d3abcc3e459"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-limited60min-v3-i00"
+digest = "sha256:90545c2dc1f31546fd8088f1bbccb3fbd15b633a77377d721b544c018703ea72"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-limited60min-v3-i00"
+digest = "sha256:eeb50560682a8a115a25e3a8de335e825b165c1f7b57618d813b5a8eb9a75032"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-limited60min-v3-i00"
+digest = "sha256:ccb7911acd812283af02f5aa8f8856f47d28eb41f0286e144485283ab4279539"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-limited60min-v3-i01"
+digest = "sha256:de4131925a259439e87ba10a4444b3ea5565260f9e71e1dc1cd989c8e94f5ed1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-limited60min-v3-i02"
+digest = "sha256:7c4690b6440a082504df99cd441afbd2b5fababaf793b12e59022fab218b2566"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-limited60min-v3-i00"
+digest = "sha256:7399b20e33877498df4aaf8366910d6648fc20365a39360856459cfdb1b7b527"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-limited60min-v3-i00"
+digest = "sha256:91304fc871bf6ef90b8b80854f047188ac989dccfebc28fa042fb20c08c30e3c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-limited60min-v3-i00"
+digest = "sha256:7c3bec37b127b1d7f7b5195ec464c5e31c94607d7bfd1d2e9b913a31349750d4"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-limited60min-v3-i00"
+digest = "sha256:9c154b3967157515255bb57bf6a64e320eb5957217429a04f039e474f84455d2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-limited60min-v3-i00"
+digest = "sha256:6fce36aec87bb55030c843ee7fbb6fd65ca5710e1571c352d89533b67f55ca3f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-limited60min-v3-i00"
+digest = "sha256:1e7fe0b6409f908a1a5446a507d89bd97e2e84558e8bccd3eea66a737e4cc92b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-limited60min-v3-i00"
+digest = "sha256:73ac031d6cda9332637241fc4ebce329b6c59855bb3d6a0b406a36314d514a74"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-limited60min-v3-i00"
+digest = "sha256:622d7de5c360f08fec8af2433fa4e527b5c2c0387f59f8b9060439986f5208cb"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-limited60min-v3-i01"
+digest = "sha256:1f48c70e5fe73668416a75f9c2e089f232cd783bb6762a779a0ece68d7c232aa"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-limited60min-v3-i02"
+digest = "sha256:85faf1a449ebdf6e31fe7007b6dd7c64a65e72e715448a4cb213bba7f7e201db"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-limited60min-v3-i00"
+digest = "sha256:5caa50a41c062ca3eea0b6c00e93e7815d9ed726a1153eb812244d7128879eef"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-limited60min-v3-i00"
+digest = "sha256:7d3c6ecb8d237b613f6f5567931c480be2fa78e57a87e4f927eb89049454c1b6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-limited60min-v3-i00"
+digest = "sha256:0d4d4c485599e408087502222af4df11a3e826208f24c89cf6b1e515ed219e70"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-limited60min-v3-i01"
+digest = "sha256:2a05d02823461bf25c58fce10d899f7631c589c2b2bdbdac7f19382fe22d363b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-limited60min-v3-i02"
+digest = "sha256:1771158ee60d3a30fbef2a5f7c3fa8dc8c49e1bfca3cf82a1c7daa473d3b7e7e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-limited60min-v3-i00"
+digest = "sha256:f3c334a9ff850a6877919ae9a46287ff134b87335fa2329137a11dbb78bee32a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-limited60min-v3-i00"
+digest = "sha256:0eed5561bcdcb6a1dfaddff2124f96b2aadb7b222e0237dbc6aaeedd534c3190"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-limited60min-v3-i00"
+digest = "sha256:a9199b662da7dc0ae67e123538b6701201539b2d6393b3dfc462eb66d8f67528"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-limited60min-v3-i01"
+digest = "sha256:df0a31b33a1c8908084df3ceaeec7ecd67a5062f07898662325cba0ec2823db3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-limited60min-v3-i02"
+digest = "sha256:bc3459d96ef2906a6c64d13d01aee94a0d3047a81a4bf7518c417107895890aa"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-limited60min-v3-i00"
+digest = "sha256:90622355b21d887dd741847bd899ca7514aaa00d8da004b490011275eb4e44ee"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-limited60min-v3-i00"
+digest = "sha256:ae079d859527f3fbfa53015d7d58f1c569d548bfd2e2af4b03440092f486202a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-limited60min-v3-i00"
+digest = "sha256:70d7a147bb2c4c066019e2481a65079902feeed9e826a55f26e60a47ba33ce81"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-limited60min-v3-i00"
+digest = "sha256:0549e101e570d67a4f3e076b17594ba2b3b7d4f7dcd9c17f3f1d325cd1aa6e2e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-limited60min-v3-i00"
+digest = "sha256:2af9609674d0e9d7b17c315b4f9dac3dca703b717ce9123d336dd2fd7e8d5427"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-limited60min-v3-i00"
+digest = "sha256:7bdca738406fa42e338ed3ebe9426387c386550338882c6949ff1726f436d1de"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-limited60min-v3-i00"
+digest = "sha256:e713efd5041644beab23e6b6c32a60e099c909b510b72fed59c9c18b1e180b7e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-limited60min-v3-i01"
+digest = "sha256:c6443cc1b26156d4a4db44f6602643ea82de7d369653f6a727d6e722bfcea3a6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-limited60min-v3-i02"
+digest = "sha256:887e7c485821592e4668fd7a412f077983ce36be22c3e3d58aeb3d1b23117faf"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-limited60min-v3-i00"
+digest = "sha256:3ae005c2c1c9dfa240a27d090ef89b972874e1154f9488d80bb04645930acfc8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-limited60min-v3-i00"
+digest = "sha256:6a147d20e7c402b356817bdc85e75afc30d2e052eeb48a32d8be4b5b5b5cdd2a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-limited60min-v3-i00"
+digest = "sha256:0263f28b587da078a3e17de064e7bfac61ad5eaf82960864fd1ac69a86ffd657"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-limited60min-v3-i01"
+digest = "sha256:066a53d1459a066775957fcf789c7a1cfa40ef5b4195d22c0f88dc75c63cb91c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-limited60min-v3-i02"
+digest = "sha256:3008b48dfc5f998c631639d1127f79df293908be7ce539cfec53d0543b87191a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-limited60min-v3-i00"
+digest = "sha256:91f44d636650b4333cd2b0b721aa529027c0a0c924dbd68cd542c590baabdd06"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-limited60min-v3-i00"
+digest = "sha256:1dc060c7adeb8133ad4a1fc4113b18f0b187ccd82238825bd7805fb0e57276af"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-limited60min-v3-i00"
+digest = "sha256:0850b270e00fb1dd611bd9cb0df9be8b8d8d19913e7cc98c039fd84cd5f89778"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-limited60min-v3-i00"
+digest = "sha256:731b778061290e505161bd16837aa49256aa429a405ccf9b62c4e6a1f4fee551"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-limited60min-v3-i00"
+digest = "sha256:5ab4a80bd48d0d22a74f761e455a311724f63f2eab2a72838f9062d0ad34d70e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-limited60min-v3-i00"
+digest = "sha256:e3c1efa4b948d1e3dd9813c8e9c2c4611bc16b602b6c4eea3a212e1a81be77b4"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-limited60min-v3-i00"
+digest = "sha256:bb276894d1cfa838615802f37a3f55e0bc0c6290a27f9fe85ffccda6f34a5df3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-limited60min-v3-i01"
+digest = "sha256:8c7398c0fb649a97ad74686f9b2adc9a29f92a06395bf41daa80b3b0d68c9456"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-limited60min-v3-i02"
+digest = "sha256:79603764cce9931451e4c7a653ff8a3e5f42faeeba9f9ddd126952afcb1d6208"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-limited60min-v3-i00"
+digest = "sha256:1fbe2ae10c07c9e8d0024f39cdbb209f46cb49bb8af8b7931ab92a3691b99181"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-limited60min-v3-i00"
+digest = "sha256:4b9116c7945eab7eb8e35c0b2458b5c3fbcd9e28c3269cdab18d4223953ec687"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-limited60min-v3-i00"
+digest = "sha256:d433c268f05cf63667ebaf505f0b796e09867b15e308417efcf87c1a2801f259"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-limited60min-v3-i00"
+digest = "sha256:c92f55e9c4034198496b0e6a309bbc76c5ea6965a42033d750966482a2617f7d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-limited60min-v3-i00"
+digest = "sha256:8341608fe64d597907dc6295c78c35c6c4129fc5b473f0629c9e3d09cc96f773"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-limited60min-v3-i01"
+digest = "sha256:7918390b5bae42539561927994416a9fd72661ed9f75f99eed890ef180bd7283"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-limited60min-v3-i02"
+digest = "sha256:15ab7365a7febc4fe9839111543d3216403ef586d47e0e5ea87a212dd6920466"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-limited60min-v3-i03"
+digest = "sha256:cad8d2048d0c067259fc64ee9eff2c7be02f8c11b3f98742a24427b643c527ad"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-limited60min-v3-i00"
+digest = "sha256:13550964403f8240bbbf6f0ead43c508edd7744bcd2c8eaafb036a3ec5b1b854"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-limited60min-v3-i01"
+digest = "sha256:d9a914fd6dc6fbd9ea71f6d340867c4bfcfb7eccf00d9da10d6d1b9c6b5914c6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-limited60min-v3-i02"
+digest = "sha256:581757766eae0e360df0f373e9b47f425313eac02310886e58e460fe8fe9526b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-limited60min-v3-i00"
+digest = "sha256:8e0676c2fe2962e02d2c490a147c577695d7d4639d8c6d4f7f6b7ed2d6822ba9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-limited60min-v3-i00"
+digest = "sha256:49dddce1ff4b52ade667670d1c0f9708c4b2318c4ab23d06f77b3c50aa107d84"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-limited60min-v3-i00"
+digest = "sha256:4e4bf4f89b500c307839fa77c2e972408f8c272a49a782f77308004b3dcaf628"

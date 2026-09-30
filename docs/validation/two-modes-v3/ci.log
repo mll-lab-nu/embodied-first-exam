@@ -1,0 +1,162 @@
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-cluster-dessert-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-find-fruit-to-make-juice-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-insert-power-cord-to-make-juice-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-plug-cord-and-heat-food-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-put-box-on-painting-semantic-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-replace-wilted-flower-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-billiards-semantic-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-drink-spatial-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-select-painting-by-style-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-set-dining-chopstick-left-hand-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-simple-cuestick-use-unlimited60min-v3-i00: missing solution/solve.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing task.toml
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing instruction.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing README.md
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing environment/Dockerfile
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing tests/test.sh
+FAIL coverage: unlimited_tasks/vlabench/vlabench-weight-qa-unlimited60min-v3-i00: missing solution/solve.sh
+{
+  "counts": [
+    {
+      "benchmark": "metaworldplus",
+      "mode": "limited",
+      "status": "configured",
+      "count": 69
+    },
+    {
+      "benchmark": "metaworldplus",
+      "mode": "limited",
+      "status": "unavailable",
+      "count": 1
+    },
+    {
+      "benchmark": "metaworldplus",
+      "mode": "unlimited",
+      "status": "configured",
+      "count": 70
+    },
+    {
+      "benchmark": "robocasa",
+      "mode": "limited",
+      "status": "configured",
+      "count": 30
+    },
+    {
+      "benchmark": "robocasa",
+      "mode": "unlimited",
+      "status": "configured",
+      "count": 30
+    },
+    {
+      "benchmark": "robocasa-gr1",
+      "mode": "limited",
+      "status": "configured",
+      "count": 33
+    },
+    {
+      "benchmark": "robocasa-gr1",
+      "mode": "unlimited",
+      "status": "configured",
+      "count": 33
+    },
+    {
+      "benchmark": "robocasa365",
+      "mode": "limited",
+      "status": "configured",
+      "count": 263
+    },
+    {
+      "benchmark": "robocasa365",
+      "mode": "unlimited",
+      "status": "configured",
+      "count": 263
+    },
+    {
+      "benchmark": "vlabench",
+      "mode": "limited",
+      "status": "configured",
+      "count": 91
+    },
+    {
+      "benchmark": "vlabench",
+      "mode": "limited",
+      "status": "unavailable",
+      "count": 13
+    },
+    {
+      "benchmark": "vlabench",
+      "mode": "unlimited",
+      "status": "configured",
+      "count": 91
+    },
+    {
+      "benchmark": "vlabench",
+      "mode": "unlimited",
+      "status": "unavailable",
+      "count": 13
+    }
+  ],
+  "errors": [],
+  "model_evaluation_run": false
+}

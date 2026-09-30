@@ -1,0 +1,32 @@
+{
+  "metaworld": {
+    "commit": "59fc34d7768af9785e4688c3e1db671424f4a6c3",
+    "remote": "https://github.com/Farama-Foundation/Metaworld.git",
+    "python": "3.11.13",
+    "mujoco": "3.3.0",
+    "version": "3.1.1",
+    "reward_version": "v2"
+  },
+  "robocasa365": {
+    "commit": "4f8a2980def75a55dff96b990745b83540425f09",
+    "remote": "https://github.com/robocasa/robocasa.git",
+    "robosuite_commit": "5ce6643f3092639d08f7b0f90ed1c6a84f50552c",
+    "python": "3.11.13",
+    "mujoco": "3.3.1",
+    "version": "1.0.1",
+    "robosuite": "1.5.2"
+  },
+  "robocasa-gr1": {
+    "commit": "4840e671596f93ca03651524b9f72ffb1aadfeff",
+    "remote": "https://github.com/robocasa/robocasa-gr1-tabletop-tasks.git",
+    "robosuite_commit": "51cc01785bab80ffeed20da15e67d7dd4140e76a",
+    "asset_commit": "1b018839a6da865dffecd3185fe054211bc71270",
+    "python": "3.10.18",
+    "mujoco": "3.2.6",
+    "version": "0.2.0",
+    "robosuite": "1.5.1",
+    "mink_runtime": "0.0.13",
+    "mink_final": "0.0.5",
+    "demo_revision": "09c6de8af50168090e7e9cc01e1ec3bce788de24"
+  }
+}

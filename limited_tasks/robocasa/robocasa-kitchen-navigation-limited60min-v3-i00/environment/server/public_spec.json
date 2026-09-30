@@ -1,0 +1,17 @@
+{
+  "action_shape": [
+    3
+  ],
+  "action_lower": [
+    -1.0,
+    -1.0,
+    -1.0
+  ],
+  "action_upper": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "action_semantics": "base-local x/y/yaw; native base mode, 20 Hz",
+  "control_hz": 20
+}

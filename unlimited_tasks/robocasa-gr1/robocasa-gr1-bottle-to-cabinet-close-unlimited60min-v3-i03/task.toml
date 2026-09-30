@@ -1,0 +1,34 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-unlimited60min-v3-i03"
+description = "pick up the bottled water, place it into the cabinet and close the cabinet"
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa-gr1", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-privileged-i03"
+source_digest = "7a65f933316df6c44217f0a8f0d46fa3e9964409cc6876b12b29adb4e20daed3"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa-gr1"
+observation_mode = "privileged"
+controller_mode = "mink_24"
+environment_id = "gr1_unified/PnPBottleToCabinetClose_GR1ArmsAndWaistFourierHands_Env"
+robot = "gr1"
+family = "bottle_to_cabinet_close"
+tier = "privileged"
+instance_index = 3
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

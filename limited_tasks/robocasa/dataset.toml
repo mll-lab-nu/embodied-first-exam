@@ -1,0 +1,124 @@
+[dataset]
+name = "robot-coding-bench/limited-robocasa-60min-v3"
+version = "0.3.0"
+description = "Canonical two-mode tasks; consult suites/two-modes.json for readiness."
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-arrange-vegetables-limited60min-v3-i00"
+digest = "sha256:c732884960f6e7c6d6042cefccef20fe5a38f097a35ff5ecb284b174c0ef96f1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-double-door-limited60min-v3-i00"
+digest = "sha256:eb46f1babee1583beb00338d2f65db31ccd9e6e4655db6033f905d7a9b05e6be"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-drawer-limited60min-v3-i00"
+digest = "sha256:f2dd1859d4242854b5befda2105712dd9967d51caa644685b725b9f5d6fde82d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-single-door-limited60min-v3-i00"
+digest = "sha256:3a06032038eb137a03038daf9d49ed8d4565a251f29aa2bdd9663306a1e15cfa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-press-button-limited60min-v3-i00"
+digest = "sha256:d4bc0b28301c3f3535b034ebd5af01b5620ca8e54d86c2fccf58674439ae4951"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-serve-mug-limited60min-v3-i00"
+digest = "sha256:220b5ef5972c928812e5162d15b9cfda34211e399ebf0bcbab91c31e791a3b32"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-setup-mug-limited60min-v3-i00"
+digest = "sha256:2b6253c11bf2dd4e7ab1dc3a4b5a0ffb146c49761ac25d1351fa201996543512"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-kitchen-navigation-limited60min-v3-i00"
+digest = "sha256:6d2ec84a3d25657c5cb93286dbfd236b412edd37bbb783c170821416dab089ef"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-microwave-thawing-limited60min-v3-i00"
+digest = "sha256:6b784d7996b047f6e320aa2ee1120672c7075ad47cdc842146ced9dae44ccaf2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-double-door-limited60min-v3-i00"
+digest = "sha256:d4260cf06fa019db6e6e77a8b84957bbd50d7a661372cfb84f58fb52505eb7fc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-drawer-limited60min-v3-i00"
+digest = "sha256:619ae5358f6e2b491e4de16934d9860b3ac3a248066064a4d4b3abb4d22ab395"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-single-door-limited60min-v3-i00"
+digest = "sha256:58122e364c76e60cc2f2239f17afd632d6b0918a63bb9a151cb5310db13bf9c1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-cab-to-counter-limited60min-v3-i00"
+digest = "sha256:52adb34877caaadc6e1a969de0b1f9a27a518a0bda5061aacaadbe199c66ee18"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-counter-to-cab-limited60min-v3-i00"
+digest = "sha256:0da8464cce775a438d04d05d2073c1d63c2f39e71c207a10c71842001e2065b6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-counter-to-microwave-limited60min-v3-i00"
+digest = "sha256:0a94737fd72c34c59461e7c6f806c324903ccfc907485fd5932b2ade571dd7cc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-counter-to-sink-limited60min-v3-i00"
+digest = "sha256:5229622d702a50a8d3fb9b955fcaa66a13fb4bf559574296263ec755cd8f7726"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-counter-to-stove-limited60min-v3-i00"
+digest = "sha256:d4b52df2377d34d98adada604d5d247f494dcd2f21b1a0cdf6f02f9df7092bc7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-microwave-to-counter-limited60min-v3-i00"
+digest = "sha256:f018ae586391dc6c080f58f3dd509d67d690912b3f39f27e27cdfe0f2f45590c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-sink-to-counter-limited60min-v3-i00"
+digest = "sha256:5d04fe9cec03885749f2f09e77fb92ed9122c9902bd16c1897206bb9e2c0ee06"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pn-p-stove-to-counter-limited60min-v3-i00"
+digest = "sha256:7687d2e45523b4e07bc8989cb03f99608bccd27ddea2cd2fbd37b90d7cbd379c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pre-soak-pan-limited60min-v3-i00"
+digest = "sha256:30e108c78917c8437d85cbfcb37d05774ef5ee0d258fa7ad2073c8d22b635b64"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-prepare-coffee-limited60min-v3-i00"
+digest = "sha256:544a27302f57d67515b3544fdce46c12c670f1f57c06152f7be65b946c6c993e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-restock-pantry-limited60min-v3-i00"
+digest = "sha256:63ea69f82e9977a160aeda0d444b9e01f2f787b8453331eb2d3555dbcf9e171e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-microwave-limited60min-v3-i00"
+digest = "sha256:d9a25e19e3a623c220645334290b4618cab56cad0bd0da399c3b84e331693a42"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-sink-faucet-limited60min-v3-i00"
+digest = "sha256:70ebb75c6c04f370d698e42f0e32ae305430cee383d4cce6f276b8336d3373c0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-stove-limited60min-v3-i00"
+digest = "sha256:8617eb5ea77e296cebabeb7178fd5919c1f0d7a784a448fb58a02982f3e2fa2f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-microwave-limited60min-v3-i00"
+digest = "sha256:3cc8262a31c51e8549f006f5a3731445f0e8ff5733f504548a3fe85761f321c2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-sink-faucet-limited60min-v3-i00"
+digest = "sha256:89d12e84e3d49339e31e670bac7f42233272065ea23b528f29b13eff3d1c923a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-stove-limited60min-v3-i00"
+digest = "sha256:0d5377b3a3709b09eb96058115c81e489f88cb4686f837177730ff75b00efa39"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-sink-spout-limited60min-v3-i00"
+digest = "sha256:b76bd2691200236796a913a3eb84034e740390191ccdc393922272595140bbc1"

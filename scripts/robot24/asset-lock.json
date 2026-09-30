@@ -1,0 +1,104 @@
+{
+  "365": [
+    {
+      "name": "textures",
+      "url": "https://utexas.box.com/shared/static/4i85ileasdvstmlln5sbvzptz7keuoy1.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets",
+      "sha256": "ba3a4dcef96e199cbd601c7cdb7eb46077fb6672611b7ac74c25a191bf0be392",
+      "bytes": 543180421,
+      "success": true
+    },
+    {
+      "name": "generative_textures",
+      "url": "https://utexas.box.com/shared/static/ebaad09k82tmfmlq6ohdkmrh8izl9vn5.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets",
+      "sha256": "bc05095af306222d9a799a9b0b5b16662aa546998622ee8fd3072566ea4c31ec",
+      "bytes": 1184675536,
+      "success": true
+    },
+    {
+      "name": "fixtures_lightwheel",
+      "url": "https://utexas.box.com/shared/static/idbncsadpnaz1jfl4i6m8qejawk7p9pi.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets",
+      "sha256": "62c1c87776edda9b7c42dda7b00781a1e5a7f90acc3e49d06c39c9545cbd6c3e",
+      "bytes": 529745465,
+      "success": true
+    },
+    {
+      "name": "objaverse",
+      "url": "https://utexas.box.com/shared/static/03eionyo8fk3a9dsksq9jb8du5lqfw8h.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets/objects",
+      "sha256": "66a7eebef3bac855301964d35d905fc2cb44d691f007f97af08d96e83db5cc08",
+      "bytes": 2163884721,
+      "success": true
+    },
+    {
+      "name": "aigen_objs",
+      "url": "https://utexas.box.com/shared/static/nwi1vrn5pgbo95kushkasa3nx1i012ff.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets/objects",
+      "sha256": "1f88792322ccce79f775e88482626c324c6e07d002adf23320a124b72764dd19",
+      "bytes": 5773223039,
+      "success": true
+    },
+    {
+      "name": "objects_lightwheel",
+      "url": "https://utexas.box.com/shared/static/vckqvvkh1z8t69k8qcpcmee6k66stii4.zip",
+      "destination": ".cache/robot24/robocasa365/robocasa/models/assets/objects",
+      "sha256": "a1db739b0e80fc4d56d4be27d89dba3aa60000e9648c5607874700e0f14b7955",
+      "bytes": 791939656,
+      "success": true
+    }
+  ],
+  "gr1": [
+    {
+      "name": "lightwheel",
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/lightwheel.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets/objects",
+      "sha256": "8e42a0c835a205d7a0e7c33b5c33ab160b220fa9343b50c16526b7c712a2b6e2",
+      "bytes": 213480699,
+      "success": true
+    },
+    {
+      "name": "sketchfab",
+      "url": "https://huggingface.co/datasets/nvidia/PhysicalAI-DigitalCousin-Assets/resolve/1b018839a6da865dffecd3185fe054211bc71270/sketchfab.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets/objects",
+      "sha256": "12af71e68a5c748f8531ce20c9db0ae9ed71ab1d46265388e05155a5b5352b5d",
+      "bytes": 56844370,
+      "success": true
+    }
+  ],
+  "gr1-legacy": [
+    {
+      "name": "textures",
+      "url": "https://utexas.box.com/shared/static/otdsyfjontk17jdp24bkhy2hgalofbh4.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets",
+      "sha256": "d36bf23cec4ce33c83eb59dfd34faeb13d8f45f9844866a654569659fc9be23d",
+      "bytes": 538397915,
+      "success": true
+    },
+    {
+      "name": "fixtures",
+      "url": "https://utexas.box.com/shared/static/pobhbsjyacahg2mx8x4rm5fkz3wlmyzp.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets",
+      "sha256": "27905b494e7bf12826a8d67c167c73d95eade467841f5d2ddbdd87efc15b4c5a",
+      "bytes": 472441720,
+      "success": true
+    },
+    {
+      "name": "objaverse",
+      "url": "https://utexas.box.com/shared/static/ejt1kc2v5vhae1rl4k5697i4xvpbjcox.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets/objects",
+      "sha256": "519f989588c7e67f818ee823e1abeb7e08a34d9ec4977395a712dc8ce80c284c",
+      "bytes": 2115607481,
+      "success": true
+    },
+    {
+      "name": "aigen_objs",
+      "url": "https://utexas.box.com/shared/static/os3hrui06lasnuvwqpmwn0wcrduh6jg3.zip",
+      "destination": ".cache/robot24/robocasa-gr1/robocasa/models/assets/objects",
+      "sha256": "b6368da1f855b4844085794532965988fb4f6bfe71f4a1fead84002ef7fa0e5a",
+      "bytes": 5799370473,
+      "success": true
+    }
+  ]
+}

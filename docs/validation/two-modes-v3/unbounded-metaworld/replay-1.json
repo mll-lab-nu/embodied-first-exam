@@ -1,0 +1,28 @@
+{
+  "success": 0,
+  "final_success": 0,
+  "initial_success": 0,
+  "n_actions": 501,
+  "sim_steps": 501,
+  "physics_steps": 2505,
+  "control_hz": 80.0,
+  "final_reward": 0.05200779022001928,
+  "state_sha": "e1d51fdb0c0efe4c8a88687c5f4905b5129cfe514b4173bd6def884e0ec3414d",
+  "integration_sha": "91bf8323a286b7c5803641f8eb92c23b8a35e0c6640e929d324d1d36015a5b1e",
+  "budget": {
+    "wall_seconds": 0.28590445197187364,
+    "tool_calls": 503,
+    "resets": 1,
+    "sim_steps": 501,
+    "physics_steps": 2505
+  },
+  "info": {
+    "success": 0.0,
+    "near_object": 0.0,
+    "grasp_success": 0.0,
+    "grasp_reward": 0.02600389511000964,
+    "in_place_reward": 0.15733088823613106,
+    "obj_to_target": 0.21873787494084448,
+    "unscaled_reward": 0.05200779022001928
+  }
+}

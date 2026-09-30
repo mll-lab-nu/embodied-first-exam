@@ -1,0 +1,43 @@
+schema_version = "1.4"
+artifacts = [{source="/app/output/",destination="agent-output"}, {source="/recorded/",destination="trusted-recording",service="sim"}]
+[task]
+name = "robot-coding-bench/robocasa365-prepare-broiling-station-limited60min-v3-i00"
+description = "Limited isolated single continuous RoboCasa episode."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "limited", "trajectory"]
+[metadata]
+experiment_mode = "limited-60min-v3"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "PrepareBroilingStation"
+family = "prepare_broiling_station"
+robot = "panda_omron"
+tier = "perception"
+observation_mode = "limited"
+instance_seed = 0
+derived_from = "robot-coding-bench/robocasa365-prepare-broiling-station-privileged-i00"
+source_digest = "83276d1300b0cf027313ef950e218e3ec849809c63a37fe992fa26e693569604"
+expert_time_estimate_hours = 1.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 1
+memory_mb = 2048
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]
+
+[verifier]
+timeout_sec = 2000.0
+environment_mode = "separate"
+[[verifier.collect]]
+service = "sim"
+command = "python /private/control.py seal"
+timeout_sec = 120.0
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+network_mode = "no-network"

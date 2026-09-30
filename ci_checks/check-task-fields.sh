@@ -11,7 +11,11 @@ for k in ["author_name", "task_type", "simulator", "robot", "family", "tier", "e
     if k not in m: fail(f"[metadata].{k} missing")
 if m.get("task_type") not in ("trajectory", "policy"): fail("task_type must be trajectory|policy")
 if m.get("tier") not in ("privileged", "perception"): fail("tier must be privileged|perception")
-if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
+artifacts = d.get("artifacts", [])
+if not any(a == "/app/output/" or (isinstance(a, dict)
+           and a.get("source") == "/app/output/" and a.get("service") in (None, "main"))
+           for a in artifacts):
+    fail('top-level artifacts must include the agent container\'s "/app/output/"')
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
 elif d["agent"]["timeout_sec"] > 14400: fail("[agent].timeout_sec > 4h cap")
 sys.exit(rc)

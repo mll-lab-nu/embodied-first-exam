@@ -1,0 +1,14 @@
+{
+  "python": "3.10.18",
+  "base": "docker.io/library/python:3.10.18-slim-bookworm",
+  "base_digest": "sha256:445b9efb2c047a7ccdb30d293fd6b1aa0f62a55062dc2b69051df91e10848749",
+  "vlabench_commit": "cf588fe60c0c7282174fe979f5913170cfe69017",
+  "rrt_commit": "14e47963780affe3ff3bb9fc33a4b14e1a733e85",
+  "assets_repository": "https://huggingface.co/datasets/lerobot/vlabench-assets",
+  "assets_commit": "08d7a4479a55c8fbb89ac0fd6fcf06e53d65b4a4",
+  "mujoco": "3.2.2",
+  "dm_control": "1.0.22",
+  "open3d": "0.18.0",
+  "rendering": "OSMesa CPU",
+  "evaluation": "privileged-state coding-agent evaluation"
+}

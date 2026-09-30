@@ -2,9 +2,8 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
-/exps/
 /jobs/
-*.log
+/.cache/
 .env
 .env.*
 !.env.example

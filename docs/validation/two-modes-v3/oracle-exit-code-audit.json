@@ -1,0 +1,7 @@
+{
+  "harbor_version": "0.23.0",
+  "source": "harbor.agents.oracle.OracleAgent.run",
+  "finding": "Harbor writes agent/exit-code.txt only when return_code != 0. A missing file with a completed oracle log and no trial exception signifies zero, rather than missing evidence.",
+  "affected_validation": "Initial added acceptance check wrongly rejected missing exit-code.txt. Receipt verdicts recalculated from the preserved raw Harbor trial and oracle logs; no simulator, task success or replay data changed.",
+  "nonzero_exit_behavior": "Always reject baseline admission, even if it already saved a successful trajectory."
+}

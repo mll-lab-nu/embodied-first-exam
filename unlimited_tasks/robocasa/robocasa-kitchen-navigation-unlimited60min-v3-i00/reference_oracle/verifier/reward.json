@@ -1,0 +1,1 @@
+{"success": 1, "deterministic": 1, "n_actions": 156, "sim_steps": 156, "physics_steps": 3900, "replay_count": 2, "final_reward": 0.0, "position_error": 0.14259914783458216, "orientation_cos": 0.999915703697793, "grader_error": 0}

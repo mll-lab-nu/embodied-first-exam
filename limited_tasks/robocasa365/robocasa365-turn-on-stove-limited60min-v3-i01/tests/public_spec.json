@@ -1,0 +1,161 @@
+{
+  "action_shape": [
+    13
+  ],
+  "action_lower": [
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0
+  ],
+  "action_upper": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "channels": [
+    {
+      "index": 0,
+      "name": "arm_joint_1",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 1,
+      "name": "arm_joint_2",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 2,
+      "name": "arm_joint_3",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 3,
+      "name": "arm_joint_4",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 4,
+      "name": "arm_joint_5",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 5,
+      "name": "arm_joint_6",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 6,
+      "name": "arm_joint_7",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 7,
+      "name": "grip",
+      "unit": "normalised_grip",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 8,
+      "name": "base_x",
+      "unit": "normalised_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 9,
+      "name": "base_y",
+      "unit": "normalised_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 10,
+      "name": "base_yaw",
+      "unit": "normalised_yaw_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 11,
+      "name": "torso",
+      "unit": "normalised_torso",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 12,
+      "name": "hybrid_mode",
+      "unit": "mode",
+      "lower": -1.0,
+      "upper": 1.0
+    }
+  ],
+  "action_parts": {
+    "right": [
+      0,
+      7
+    ],
+    "right_gripper": [
+      7,
+      8
+    ],
+    "base": [
+      8,
+      11
+    ],
+    "torso": [
+      11,
+      12
+    ],
+    "hybrid_mode": [
+      12,
+      13
+    ]
+  },
+  "action_frame": "absolute arm joint positions; base controls in robot base frame",
+  "control_hz": 20,
+  "hybrid_mode": {
+    "index": 12,
+    "lower": -1,
+    "upper": 1,
+    "default": -1,
+    "positive": "base mode; arm goal tracks the moving base using the desired goal",
+    "nonpositive": "arm mode; arm goal updates from achieved pose"
+  },
+  "gripper_semantics": "Positive closes, negative opens."
+}

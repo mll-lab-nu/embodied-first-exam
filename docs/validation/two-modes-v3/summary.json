@@ -1,0 +1,119 @@
+{
+  "counts": [
+    {
+      "benchmark": "vlabench",
+      "families": 96,
+      "instances": 104,
+      "unlimited_configured": 91,
+      "limited_configured": 91,
+      "unavailable_unlimited": 13,
+      "unavailable_limited": 13
+    },
+    {
+      "benchmark": "metaworldplus",
+      "families": 50,
+      "instances": 70,
+      "unlimited_configured": 70,
+      "limited_configured": 69,
+      "unavailable_unlimited": 0,
+      "unavailable_limited": 1
+    },
+    {
+      "benchmark": "robocasa",
+      "families": 30,
+      "instances": 30,
+      "unlimited_configured": 30,
+      "limited_configured": 30,
+      "unavailable_unlimited": 0,
+      "unavailable_limited": 0
+    },
+    {
+      "benchmark": "robocasa365",
+      "families": 256,
+      "instances": 263,
+      "unlimited_configured": 263,
+      "limited_configured": 263,
+      "unavailable_unlimited": 0,
+      "unavailable_limited": 0
+    },
+    {
+      "benchmark": "robocasa-gr1",
+      "families": 24,
+      "instances": 33,
+      "unlimited_configured": 33,
+      "limited_configured": 33,
+      "unavailable_unlimited": 0,
+      "unavailable_limited": 0
+    }
+  ],
+  "configured_modes": 973,
+  "unavailable_mode_records": 27,
+  "smoke_admitted_modes": 11,
+  "model_requests": 0,
+  "physical_instance_aliases": [
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "09af98cce1cedb91af23c5bac9a616ffb4bcc0d6f029242deb55651f358bcc38",
+      "task_ids": [
+        "robot-coding-bench/vlabench-complex-seesaw-use-i00",
+        "robot-coding-bench/vlabench-complex-seesaw-use-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "c13cc4892dfbb05e81c906a673cc1259af4d3f7f1b6f38cec82764fe2e8c9595",
+      "task_ids": [
+        "robot-coding-bench/vlabench-find-unseen-object-i00",
+        "robot-coding-bench/vlabench-find-unseen-object-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "a517539d5ab533cc1f60cdd3b4d5e3e39f6f63e8d18255c61bca2fad327ad0a3",
+      "task_ids": [
+        "robot-coding-bench/vlabench-hammer-loose-nail-i00",
+        "robot-coding-bench/vlabench-hammer-loose-nail-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "3577be5ce5aa7ca58a2bfef2611115a0fcc8202ce4cba8025f041c2ba077e739",
+      "task_ids": [
+        "robot-coding-bench/vlabench-heat-food-i00",
+        "robot-coding-bench/vlabench-heat-food-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "25ba3041843252591f9eced392f7a9210c67fd3f9d6bfe0bcd8f6109cf76600f",
+      "task_ids": [
+        "robot-coding-bench/vlabench-insert-flower-i00",
+        "robot-coding-bench/vlabench-insert-flower-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "bbabe8e56d823ab512bcd0bd20481a24289c71857e0063c12950bd58ac7ac901",
+      "task_ids": [
+        "robot-coding-bench/vlabench-select-fruit-i00",
+        "robot-coding-bench/vlabench-select-fruit-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "af9374b0bd5dfe1457e4f1a90dc336efb03fe8d9bfc9c7f6a5d16508c2227793",
+      "task_ids": [
+        "robot-coding-bench/vlabench-select-toy-i00",
+        "robot-coding-bench/vlabench-select-toy-sensor-only-i00"
+      ]
+    },
+    {
+      "benchmark": "vlabench",
+      "instance_sha256": "048926eef0174a6ea745edf1ae7dc832da1f41982a3632a2c5ee6a17a05759d9",
+      "task_ids": [
+        "robot-coding-bench/vlabench-set-dining-table-i00",
+        "robot-coding-bench/vlabench-set-dining-table-sensor-only-i00"
+      ]
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 ## What
-<!-- New instance(s) of an existing family / new family / new simulator adapter / task repair -->
+<!-- New instance(s) / task repair / runner or lifecycle change; name the benchmark(s) and mode(s) -->
 
 ## Checklist
-- [ ] `bash ci_checks/run_all.sh tasks/<my-task>` passes locally.
-- [ ] `harbor run -p tasks/<my-task> -a oracle` gives reward 1 (paste the job summary below).
-- [ ] `harbor run -p tasks/<my-task> -a nop` gives reward 0.
-- [ ] Scene/verifier inputs under `environment/` and `tests/` are final (changing them later = new task).
+- [ ] `bash ci_checks/run_all.sh` passes locally (per-task contract checks and `scripts/two_modes/check.py`).
+- [ ] `run.py smoke --benchmark <b> --task <task> --output jobs/<new-dir>` passes oracle and nop in both modes
+      (paste `summary.json` below).
+- [ ] Changed task content is a new task version: its registry fingerprints and dataset digest were refreshed on purpose
+      (`scripts/two_modes/check.py --freeze`), not to silence a check.
 - [ ] `instruction.md` states the deliverable and every convention the agent cannot infer (frames, quaternion order, paths).
-- [ ] Fresh-process determinism evidence is included for a new simulator/family.
 - [ ] If this touches `images/`: `images/VERSION` was bumped and dependent task Dockerfiles re-pinned.
 
 ## Evidence
-<!-- oracle job summary; optional: one strong-model run and why it failed -->
+<!-- smoke summary.json; optional: one model run and why it failed -->

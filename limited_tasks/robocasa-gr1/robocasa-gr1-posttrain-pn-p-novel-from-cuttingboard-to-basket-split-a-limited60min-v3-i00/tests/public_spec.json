@@ -1,0 +1,248 @@
+{
+  "action_shape": [
+    24
+  ],
+  "action_lower": [
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0,
+    -3.0
+  ],
+  "action_upper": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+  ],
+  "channels": [
+    {
+      "index": 0,
+      "name": "right_x",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 1,
+      "name": "right_y",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 2,
+      "name": "right_z",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 3,
+      "name": "right_rx",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 4,
+      "name": "right_ry",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 5,
+      "name": "right_rz",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 6,
+      "name": "left_x",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 7,
+      "name": "left_y",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 8,
+      "name": "left_z",
+      "unit": "m",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 9,
+      "name": "left_rx",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 10,
+      "name": "left_ry",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 11,
+      "name": "left_rz",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 12,
+      "name": "right_little",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 13,
+      "name": "right_ring",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 14,
+      "name": "right_middle",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 15,
+      "name": "right_index",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 16,
+      "name": "right_thumb_flexion",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 17,
+      "name": "right_thumb_rotation",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 18,
+      "name": "left_little",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 19,
+      "name": "left_ring",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 20,
+      "name": "left_middle",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 21,
+      "name": "left_index",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 22,
+      "name": "left_thumb_flexion",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    },
+    {
+      "index": 23,
+      "name": "left_thumb_rotation",
+      "unit": "unscaled_hand_command",
+      "lower": -3.0,
+      "upper": 3.0
+    }
+  ],
+  "action_parts": {
+    "left": [
+      6,
+      12
+    ],
+    "left_gripper": [
+      18,
+      24
+    ],
+    "right": [
+      0,
+      6
+    ],
+    "right_gripper": [
+      12,
+      18
+    ]
+  },
+  "action_frame": "robot base; absolute XYZ and axis-angle; not world coordinates",
+  "control_hz": 20,
+  "hand_semantics": "Unscaled Fourier commands, each in [-3,3]; use the six channels in listed order. Not binary grips."
+}

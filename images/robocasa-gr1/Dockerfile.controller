@@ -1,0 +1,5 @@
+FROM ghcr.io/jameskrw/rcb-robocasa-gr1:0.1.0
+# Robosuite wheels omit their optional upstream controller examples.
+RUN mkdir -p /usr/local/lib/python3.10/site-packages/robosuite/examples/third_party_controller && curl -fL https://raw.githubusercontent.com/ARISE-Initiative/robosuite/51cc01785bab80ffeed20da15e67d7dd4140e76a/robosuite/examples/third_party_controller/mink_controller.py -o /usr/local/lib/python3.10/site-packages/robosuite/examples/third_party_controller/mink_controller.py
+RUN pip install --no-deps mink==0.0.5
+RUN python -c "from robosuite.examples.third_party_controller.mink_controller import WholeBodyMinkIK"

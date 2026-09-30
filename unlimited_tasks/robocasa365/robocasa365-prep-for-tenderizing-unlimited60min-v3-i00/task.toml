@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+[task]
+name = "robot-coding-bench/robocasa365-prep-for-tenderizing-unlimited60min-v3-i00"
+description = "Open the cabinet, retrieve the rolling pin, and place it next to the meat on the cutting board to prepare for tenderizing."
+authors = [{name="MLL Lab"}]
+keywords = ["robotics", "robocasa365", "privileged", "trajectory"]
+[metadata]
+experiment_mode = "unlimited-60min-v3"
+derived_from = "robot-coding-bench/robocasa365-prep-for-tenderizing-privileged-i00"
+source_digest = "75e84ec89134d2ddb23ea6443d9d5bb146e4bb3aea23e07e5db425315545b971"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "robocasa"
+benchmark = "robocasa365"
+environment_id = "PrepForTenderizing"
+upstream_commit = "4f8a2980def75a55dff96b990745b83540425f09"
+observation_mode = "privileged"
+controller_mode = "joint_position_13"
+reference_method = "demo_joint"
+robot = "panda_omron"
+family = "prep_for_tenderizing"
+tier = "privileged"
+instance_seed = 0
+expert_time_estimate_hours = 1.0
+[verifier]
+timeout_sec = 7500.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]

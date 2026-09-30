@@ -1,7 +1,7 @@
 name: static-checks
 on:
   pull_request:
-    paths: ["tasks/**", "ci_checks/**"]
+    paths: ["limited_tasks/**", "unlimited_tasks/**", "suites/**", "scripts/two_modes/**", "ci_checks/**"]
   push:
     branches: [main]
 jobs:
@@ -11,5 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Static checks on all tasks
+      - uses: astral-sh/setup-uv@v5
+      - run: uv tool install harbor==0.23.0
+      - name: Contract checks on all limited and unlimited tasks, and the two-mode registry
         run: bash ci_checks/run_all.sh

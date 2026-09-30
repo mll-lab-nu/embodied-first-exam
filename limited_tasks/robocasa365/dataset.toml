@@ -1,0 +1,1056 @@
+[dataset]
+name = "robot-coding-bench/limited-robocasa365-60min-v3"
+version = "0.3.0"
+description = "Canonical two-mode tasks; consult suites/two-modes.json for readiness."
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-lemon-to-fish-limited60min-v3-i00"
+digest = "sha256:a00ad260f8fa1c9e718b1f2f826abbc150c91f34899b17f56253842b2789de71"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-marshmallow-limited60min-v3-i00"
+digest = "sha256:6e5abe82356a668f32349e40969229a97c476890e798a34f52a2a5c529275219"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-sugar-cubes-limited60min-v3-i00"
+digest = "sha256:cc96be08c206ec5b9dadd6e092c36d3298a891273b3fdbc00e017b8283588464"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-sweetener-limited60min-v3-i00"
+digest = "sha256:d56c5faf822b6f0f6d6df6cad113cb6d72f620f8abdb99c7878ab43a5647cc1c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-adjust-heat-limited60min-v3-i00"
+digest = "sha256:355436eb3c199becaf6f9db488bca69ae1339671f8a886ebdd74d202cb966a5b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-adjust-toaster-oven-temperature-limited60min-v3-i00"
+digest = "sha256:5df1e8c5577bb01f66994d3be70e60ed846fe7b7272d7f7391941096ad8ed79b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-adjust-water-temperature-limited60min-v3-i00"
+digest = "sha256:6ce693b02f1771f146ed62e38dc7961df15d95add6a5c7729dd1e4268c6b20ce"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-afterwash-sorting-limited60min-v3-i00"
+digest = "sha256:e95e0cae40e2689b77000da5d414919118e25c7ba26d0e1953b356894884e239"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-air-dry-fruit-limited60min-v3-i00"
+digest = "sha256:84d778f6121c7229a02a548d467ccda9ce42c94b30cf63f113253b98794824b6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-align-silverware-limited60min-v3-i00"
+digest = "sha256:2dce54769e9450efb06cea066f82a6631c8e7ccfefdf688c9ca26654b2b0668b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-arrange-bread-basket-limited60min-v3-i00"
+digest = "sha256:1c31977e0df6b80534fd289931540ced6503db0f4cc96cfcb989e4013f37aedf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-arrange-drinkware-limited60min-v3-i00"
+digest = "sha256:1fc814b7782b8ee796ba050d57b4ba2bad0b45dbeb77707893d8f478a12205de"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-arrange-tea-accompaniments-limited60min-v3-i00"
+digest = "sha256:243bac3f2f74bd695e5476b0e3441a85b30b8d28b90dd8159ff4fd4fdf3df96b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-arrange-tea-limited60min-v3-i00"
+digest = "sha256:331c2cc387611089cee7158fa45bad8cf96d23436f06af19bcb418fd9527e3de"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-arrange-vegetables-limited60min-v3-i00"
+digest = "sha256:528da76957215a037dffd04c672dcbc3230a4ce243df0edc78f8370d3628e7e1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-assemble-cooking-array-limited60min-v3-i00"
+digest = "sha256:97821866b666864a5a55dab75d91efc45330265d47647a9087d79b7cf8fc96b8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-balanced-meal-prep-limited60min-v3-i00"
+digest = "sha256:7e28e3fd6aaf66473f2036d20961507734f8540347d00c45ede5d161284fdd3f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-beverage-organization-limited60min-v3-i00"
+digest = "sha256:28330630c97d6f2f62d39f3137d3b6357c8b66c178cf161af39c622e54083401"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-beverage-sorting-limited60min-v3-i00"
+digest = "sha256:2a545638fda1a1332acaffcd04bfd0cc4318bbe7eeed2d3dd79e8f3f9bef2433"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bowl-and-cup-limited60min-v3-i00"
+digest = "sha256:717402f4e5cb333ab574cdc377da401a2d13aac8a5a9c65574761edcafb9aa8a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bread-and-cheese-limited60min-v3-i00"
+digest = "sha256:6bbcedc6e8c2dfdadf90b099554a62513c5133273600f2ed24923ae23f41a3a1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bread-selection-limited60min-v3-i00"
+digest = "sha256:5f4ce0e31fb40125667528f0b325be400026227f760fc140f6f0717c58d52e3d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bread-setup-slicing-limited60min-v3-i00"
+digest = "sha256:7182fc1e647ec39bd093e8a7fe4ff16605aa5052f0ef9bcead64d5d693d82688"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-build-appetizer-plate-limited60min-v3-i00"
+digest = "sha256:bcfecf9ade191cc4f8156e5953dd87ec5ae889074dbab6680165c058683607b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-butter-on-pan-limited60min-v3-i00"
+digest = "sha256:2a6f0548f8593c9dd6e9704cca47ed60460027c0a6c52bff53cdd0c14a6a6d3a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-candle-cleanup-limited60min-v3-i00"
+digest = "sha256:f3b8af70cf1493a8a64f44f35bb04d41f92eea3585d51416d5d0f9959d8fe7e6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-categorize-condiments-limited60min-v3-i00"
+digest = "sha256:bf1fbe8eff04faeb00fde7148e9775321727b023b0b04692bd95ac1f84ef9bb2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cereal-and-bowl-limited60min-v3-i00"
+digest = "sha256:e33a813b9944c1ee904262d99f80e2965c74d4f5315f406e7e40390a77976914"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cheesy-bread-limited60min-v3-i00"
+digest = "sha256:988424d7b767b49151ae08b13ffb137db42dddcd64473eab7f1c9a27bb6ceb6f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-choose-measuring-cup-limited60min-v3-i00"
+digest = "sha256:633d0862f6621a2403de7d0a203b2a53a217c09e18885688cc6ef48d2103217c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-choose-ripe-fruit-limited60min-v3-i00"
+digest = "sha256:f1fe52a5eb1c1fcb6ee0718a5da1fbf66043eb565b2ec52091fc332481a27138"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clean-board-limited60min-v3-i00"
+digest = "sha256:4e117803e8053f5b439e86a8c34e1514055e6cb8a6f10f94aecdfe1be36b8883"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clean-microwave-limited60min-v3-i00"
+digest = "sha256:4b22849ad6a74a5c5c236a2cdaabae060cb6b8721861f35a4d9b74f4c573147d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-clutter-limited60min-v3-i00"
+digest = "sha256:a15eac0b72bff7bd2e9606ba8df585e90dd5c1c17bb2653b8a9d971cf95fa7ed"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-cutting-board-limited60min-v3-i00"
+digest = "sha256:11f6bc647e5bd268531f495038c09b5a257cd3ea9413a381eae2c1f20316fbc1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-food-waste-limited60min-v3-i00"
+digest = "sha256:071adf3ac28ef0d0a23be50085576c0bc12c01de9c8cda2be4a5d893767b30bf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-receptacles-for-cleaning-limited60min-v3-i00"
+digest = "sha256:cd90ff1e70af88c71d5802bab7b95d7ef1e0337e565b25d668b026c132584369"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-sink-area-limited60min-v3-i00"
+digest = "sha256:8787f72f53a7141475d8d8b6e4be3099bb852d861f9a976c8ccbc1ea2f1349d3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-sink-limited60min-v3-i00"
+digest = "sha256:b141d637f787271b6debc1d8be952eb5d9482f33df0e748f398d64a2ba8f449b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-sink-space-limited60min-v3-i00"
+digest = "sha256:7494c40445ba34594730c93b9ebf7470e2f59ba988ec79e5d11fcf94693f9754"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-blender-lid-limited60min-v3-i00"
+digest = "sha256:9c9ef0518e41757e85daf52709b5e19e6ae29938684272aabc84e04f481a0f95"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-cabinet-limited60min-v3-i00"
+digest = "sha256:3ba15a68a279adfdfb959a999a24931b4a4a1f383965b4c722112eb9de644d7e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-dishwasher-limited60min-v3-i00"
+digest = "sha256:b1ec10092ce241d60464d4a58b3b57256ae00414b4dccb2e056a2e642d5dffbe"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-drawer-limited60min-v3-i00"
+digest = "sha256:5fa60cb4dbcd116bbfe875bb391a7bf38f35516e9966da2fca783f306a83e96a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-electric-kettle-lid-limited60min-v3-i00"
+digest = "sha256:43ebe7bf6053afff39491be0c90434d74bc0aab565f4e3b4d911b4e27bb01108"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-fridge-drawer-limited60min-v3-i00"
+digest = "sha256:58dd0eb00c13ed432ef8114cb43f5563d7cacbaaa9a4bbe6bbdda71d7727dd5a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-fridge-limited60min-v3-i00"
+digest = "sha256:d451d19e4c4741702f1caeab3e8e2a1e831b6ffbd7f91cb0714a7a628b9c3e64"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-microwave-limited60min-v3-i00"
+digest = "sha256:ebcbebe47711e912e3f20b89a5b3e7ac863e6e3474043b7c867ba2ed44e71346"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-oven-limited60min-v3-i00"
+digest = "sha256:3a8a4b4b6e633dd53710c1e0d83467f9c2e8aa5152dc98128d52f76e16adf9ca"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-stand-mixer-head-limited60min-v3-i00"
+digest = "sha256:f233b733b2044f3483cf34f76cb449b944875b597c46dd0d3262ba5b6d3fe686"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-toaster-oven-door-limited60min-v3-i00"
+digest = "sha256:4c5a2bfbf1b548c91df738f040601349704dde4a96e15a643ad3c9a2c5c0b812"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-coffee-serve-mug-limited60min-v3-i00"
+digest = "sha256:0a5da61e394d7bf86679173ef92b34aec7f151744e271c337ed45a483a9e8e3c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-coffee-setup-mug-limited60min-v3-i00"
+digest = "sha256:4e2e0c78aa92fbbe481c5a917de63f79f9676ab1c88a7504f7f5ed9c82d5f7e7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-colorful-salsa-limited60min-v3-i00"
+digest = "sha256:d42702671cea31c5ec167f6f6d8d1958f274006c72bddd86617c90c9c2cd8358"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-condiment-collection-limited60min-v3-i00"
+digest = "sha256:79edff994d3155a7f28f814ecf8b4a393ae77a332a44141fb61a5406c273a78e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cookie-dough-prep-limited60min-v3-i00"
+digest = "sha256:ac17949d93119530cb9389ce60a11875018bfe69212dce549418f5fbd3fb19ed"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cool-baked-cake-limited60min-v3-i00"
+digest = "sha256:aa36af9752ec5a05a23aa3986720ac5e83e81f00fc2446263393dea0b76e0a06"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cool-kettle-limited60min-v3-i00"
+digest = "sha256:765722245140ba7ac9870efd24deb862132b518579e1749e05ee249e253bed89"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cupcake-cleanup-limited60min-v3-i00"
+digest = "sha256:a54f13fb9a0aae574d1960b42f3160958ca95def5e34522ac989307c47b7d8c1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cut-buffet-pizza-limited60min-v3-i00"
+digest = "sha256:7f401ebaa37a65228767829c732b6df37064bbea3fefcecd15e0f5bf9565e085"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-date-night-limited60min-v3-i00"
+digest = "sha256:f3d0c30c7c77d756cae5396ee0054c3b0c902958899f3ece5e9bd2f7c0e10f2b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-defrost-by-category-limited60min-v3-i00"
+digest = "sha256:2c05e11738809169d4e4f6384e43dcd64227ab4183bce5946464d3ceacd52ddb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-deliver-brewed-coffee-limited60min-v3-i00"
+digest = "sha256:5e15c0e3a40ef727eed3d0fb43490749867316b023ce38a21f034cc30bba46b5"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-deliver-straw-limited60min-v3-i00"
+digest = "sha256:2c885cabb12636b4dc8d5e092e1e5d3cea9cbb13e3ebb9ffb33cd248f4a6c3ab"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dessert-assembly-limited60min-v3-i00"
+digest = "sha256:51e060b5a496b605ae88f300f9933c9e17853cbc436cfb29a38e05abb556663c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dessert-upgrade-limited60min-v3-i00"
+digest = "sha256:fe01d38806ee24c200fa0c8aabdfe616447e5abc2f76e8ec47cc701e2fb34907"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-display-meat-variety-limited60min-v3-i00"
+digest = "sha256:081ffb4f3063bb2bb793f01bb38dc3753059d071af918a1b5774242f2cadd565"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-distribute-chicken-limited60min-v3-i00"
+digest = "sha256:96c3527513bf8e3acc50d70f519f70902ad93b1d4b3e7d0799403de4c5a3ba93"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-divide-basins-limited60min-v3-i00"
+digest = "sha256:62ca2d5e8cdfc38c27a8c7e397cc6509f84eaac3b8e3f08ff15ac3ef245d9ed1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drain-veggies-limited60min-v3-i00"
+digest = "sha256:406bd86798848bebb876f2e60c6da6ef0b1ceadc323000cd189e8f315250300b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drinkware-consolidation-limited60min-v3-i00"
+digest = "sha256:2f4015dbbf0aee1ce43b592b23cb6a542f5a063da0cd243b0a6881ec215153ae"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dry-drinkware-limited60min-v3-i00"
+digest = "sha256:e5fadcacef4e24a1db2f74d1a4536c0823a64c84a15b535beda74739d57a7449"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dump-leftovers-limited60min-v3-i00"
+digest = "sha256:dad517214f45fbd4dae85e0eda6fd94213fb29cea975abd3a22cbdd583599db6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-fill-blender-jug-limited60min-v3-i00"
+digest = "sha256:ef135af8c5fa2e69dab19e98c39004c30ff912f6ded1ced105a1c6305dbf44e4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-fill-kettle-limited60min-v3-i00"
+digest = "sha256:8cf0b5ad0f992ab04cf9eea0f55d06268188c1309874d47a3f220e94823a1c86"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-food-cleanup-limited60min-v3-i00"
+digest = "sha256:309ba2ee0e425d1d51019dc2fdaa26a652c5608be3ee7c0907175d7bb2e61df8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-freeze-bottled-waters-limited60min-v3-i00"
+digest = "sha256:98fcaa4b8e6812b3570f6bbda5d63fb4e795eab6dc0b8b6d9e87cb1c15313b48"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-freeze-cooked-food-limited60min-v3-i00"
+digest = "sha256:107aab5eaa5528a4ef268e607120791f84aa6574bc592dde6cacd0c8e316f2d6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-fresh-produce-organization-limited60min-v3-i00"
+digest = "sha256:505f33c47c1c34b31d04a556601a830f60ccc8a711a7907667400d8b744bde3d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-frying-pan-adjustment-limited60min-v3-i00"
+digest = "sha256:fb71fd8ab72218d70693fdab7052d15a342ec3db560e4da8ee75e2fe2ae3bb6a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-garnish-cupcake-limited60min-v3-i00"
+digest = "sha256:dde18bd55c4c98c0ff588809776429e041ddaeff58078a2cfe30d07a418a7409"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-gather-marinade-ingredients-limited60min-v3-i00"
+digest = "sha256:d342501f9ce66c93df4e386f1a149b2d9a4c7e39e222663d9714cb30cc024b9a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-gather-tableware-limited60min-v3-i00"
+digest = "sha256:c26cf2c311d14948ac42c6b34710e9feecf6b168f1a99d0308ead568d0d95da8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-gather-vegetables-limited60min-v3-i00"
+digest = "sha256:b810ade28d1e679c3a3659e7951953212772206a679f3b45c5228eb2680ab2c6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-get-toasted-bread-limited60min-v3-i00"
+digest = "sha256:eb33363c4ff076ee3549b7f8f2ba01468e6deec6b85438bcfc2ba0230e164f40"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-heat-kebab-sandwich-limited60min-v3-i00"
+digest = "sha256:b9c821334bc788160a422c5678bd9ee5e2e49c525e3f4654b1dd6c2ba50593d6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-heat-mug-limited60min-v3-i00"
+digest = "sha256:ffc95c074479e501b4358cf7ef20be7f6f82707ec6f3ed40213c9cb82ca3248f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-heat-multiple-water-limited60min-v3-i00"
+digest = "sha256:5a8d26ff01e8cc3391f86804e17546e017c31ab1f1f8142b7f26b10a0c12efc4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-juice-fruit-reamer-limited60min-v3-i00"
+digest = "sha256:9900def2c4e72946a7024da97a654ae387205bca3c792f1437b62a958f1ab539"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-kettle-boiling-limited60min-v3-i00"
+digest = "sha256:a4d6be8756f27fe54d8f0bce62e856d5114d74cda3fc3aaf33e16beec0b68334"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-lemon-seasoning-fish-limited60min-v3-i00"
+digest = "sha256:73fd352781f37d2f113596ceee214eefd8e931ad342699587ac69839a799bb5d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-line-up-condiments-limited60min-v3-i00"
+digest = "sha256:6fc79a78cdbe76b0aa7887c00c4cc9a09bb949b9a08e0dfb084093eb65a92705"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-load-condiments-in-fridge-limited60min-v3-i00"
+digest = "sha256:0b1f65751c0322b8eda0cb34395d43c0a1efb3dabf5883caa06d1345934c7f78"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-load-dishwasher-limited60min-v3-i00"
+digest = "sha256:588ff9f577a987c43efc0fb3bdde22a80d32c8aac3e1eb861f579b04ae2eb225"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-load-dishwasher-limited60min-v3-i01"
+digest = "sha256:10997bdc7173c2cd9a21f97c816fc6153c9242895b73dfbd3984f87868c24f9b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-load-fridge-fifo-limited60min-v3-i00"
+digest = "sha256:f982738fb2c86b92a36c666e09c700257101b89a51a6592476246bd4585c65c8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-load-prepared-food-limited60min-v3-i00"
+digest = "sha256:b8a2b5af18a8544fc30a40c330d91fd16d42110152d19e87f3b19fe9db3ceb6e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-lower-heat-limited60min-v3-i00"
+digest = "sha256:9f8f217aae7921361777564fbf676281b7ed0c878ce26568b0aa0d087319566a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-fruit-bowl-limited60min-v3-i00"
+digest = "sha256:c2e0e6526b13e179bb3ab51d5accc5fb1e000cefdf6028dcc5c14247dbd29171"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-ice-lemonade-limited60min-v3-i00"
+digest = "sha256:84d55fa552aef78ce6b4b55ebe7ae6c54d10d2017dcca3ada497504b241f1290"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-iced-coffee-limited60min-v3-i00"
+digest = "sha256:8440288d3a0fc37077f048e9232841cdd7c6d5a2814d8251de74b1a3cb584fcf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-loaded-potato-limited60min-v3-i00"
+digest = "sha256:5b3d6af3a5de571b8833c059a21c0c291e9648a7d81eb82f9046b4b6ec40608b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-maximize-freezer-space-limited60min-v3-i00"
+digest = "sha256:3e1d8299a87570f8b603d59e9bfd0843cdc3101332b825be0d6a6218e828e056"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-meal-prep-staging-limited60min-v3-i00"
+digest = "sha256:f48479687ac4e2d8e9a4e7c0cb617e849b686a463f2ce6de439f6a5bfabd0054"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-meat-skewer-assembly-limited60min-v3-i00"
+digest = "sha256:4ec76eca970ce73fe508772868574aed9282e2d4e2ebbfd13d337b564112e0f3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-meat-transfer-limited60min-v3-i00"
+digest = "sha256:17072f67b3d085e8287c5f124a278ffe053223b55c72b6801714a0ff99e385b4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-microwave-defrost-meat-limited60min-v3-i00"
+digest = "sha256:b9c5e46133b5ceb06ebac6688a8a6b46fbcddc922fbafaff1d3202627d4d0603"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-microwave-thawing-limited60min-v3-i00"
+digest = "sha256:ca4a352f27bba89d84cca702ab231a08185fc38b7af390315dd7cb5568c3d1e0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-mixed-fruit-platter-limited60min-v3-i00"
+digest = "sha256:55d468dd5911a862bfe3114c8ac81b4c74fa92fcbb8efac605ee6a345eecd122"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-move-freezer-to-fridge-limited60min-v3-i00"
+digest = "sha256:900dfb3e3c4d92861e10f0fecdecf850618f6bd1194baf6c7c0457e7c401744e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-move-fridge-to-freezer-limited60min-v3-i00"
+digest = "sha256:45165a5f51993ffdc9350a9e36608dd95ffd645284e33f08fd76a8d64496107e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-move-to-counter-limited60min-v3-i00"
+digest = "sha256:1bff718800f5da4f89b32abfde80e63583bc53e33dcf34bbc89a181c6786bf8b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-move-to-freezer-drawer-limited60min-v3-i00"
+digest = "sha256:9dca080e49544ce7830ab443d77f1155e9c6e9f9ddc4d2ad3f55e83c09354099"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-navigate-kitchen-limited60min-v3-i00"
+digest = "sha256:3820f1bef22656b6431d60b4e72f0b42edb6ab02c2bbbfb89b4c4a97df1b64c8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-blender-lid-limited60min-v3-i00"
+digest = "sha256:3f3da5021f3d921da49e0c5c7a5f6415a351f50dbae385fb3e707d220fd238dd"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-cabinet-limited60min-v3-i00"
+digest = "sha256:2dd9a0f24ceb06affcbc157722d275382b2e86f4634e8811be0d236cd20e7d73"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-dishwasher-limited60min-v3-i00"
+digest = "sha256:dc3c18127172341c9641e7f9fdff9123ebc088a8a6f5ac51b6b524422b06b29f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-drawer-limited60min-v3-i00"
+digest = "sha256:b2869b9fcc11ef0fa1d6e82bd257deddc71cecda7d8e89222a768ab4726396b2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-drawer-limited60min-v3-i01"
+digest = "sha256:ddc4b7067010e40998fb2477808c5146efbb72b1db162cd77bf43e6e96cb6bf4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-drawer-limited60min-v3-i02"
+digest = "sha256:bf1a1e858e7792195f32757418f57e3bd09807de81d92df0f814ad0124be5618"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-electric-kettle-lid-limited60min-v3-i00"
+digest = "sha256:2c7df1cc8b80db3f27ed8449e0adbdc341db56db27fea381c61f2976f4af9401"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-fridge-drawer-limited60min-v3-i00"
+digest = "sha256:d53e27a646f58bba06af3c8d91a0bf5e0a5a80b51cca84c83469625c98552e3f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-fridge-limited60min-v3-i00"
+digest = "sha256:9034b5d73b3ac86733e00a15aa56654f14454fbf08328a994fae148325828194"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-microwave-limited60min-v3-i00"
+digest = "sha256:f64a2b70a4e788fa7dba6464414f4489b5480d1ce71836aa1e25d582d29d2eb6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-oven-limited60min-v3-i00"
+digest = "sha256:b31ac28db495736f35593c6b4473c98dba485d3a82c19b8f6a321038833b5c5c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-stand-mixer-head-limited60min-v3-i00"
+digest = "sha256:6bd0404b344b1382b7c0df2cda016c5a9aa381af353806157c4a7af46a410500"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-toaster-oven-door-limited60min-v3-i00"
+digest = "sha256:216b4e54f5c08f2e2b6e99e9a7464257a25c15b693b8231858f660c157f1c4ef"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-baking-ingredients-limited60min-v3-i00"
+digest = "sha256:18cdad0645daa74aaa50abe98cef97bc9d2e30e97d38dd80935b86c2024fa63e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-cleaning-supplies-limited60min-v3-i00"
+digest = "sha256:8aa6baf9ff15b0f60cb804692799c587beba667f911ac49292554421c804250d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-coffee-condiments-limited60min-v3-i00"
+digest = "sha256:84036843aed798ee9288868dcf8283aaf3f2d6b77552c3f0cf4db9dbba5a7ac6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-condiments-limited60min-v3-i00"
+digest = "sha256:fc8bbeca4e476092eb0c0a434fb517c27b3bcc2e606437408edf3bf7a594643a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-metallic-utensils-limited60min-v3-i00"
+digest = "sha256:2783be3f68c5c8359ff2e47fa53925dc8e23ddabc41d6b9afa32e72088144756"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-mugs-by-handle-limited60min-v3-i00"
+digest = "sha256:60f62caf1874e5390329837c21003a029f47a08feb6c534c55ba27f0164a4f72"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-vegetables-limited60min-v3-i00"
+digest = "sha256:7be05a95400c63a8febc371a105ddf67f674cc402546e407eefefffea9f34051"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-oven-broil-fish-limited60min-v3-i00"
+digest = "sha256:bdd22717c6b46b04147f91ff5cc1881960af8df1aca945174ab193a02a76c88c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pack-dessert-limited60min-v3-i00"
+digest = "sha256:6b8a439488fc0da9269e2f562769e3a0a83f3f0b9cbbf65a70a46e25d2a33a8b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pack-food-by-temp-limited60min-v3-i00"
+digest = "sha256:f6a5ff7ce47e890da7d4407283c7f29e259ac65978a102c7d2a671e1e6c34e21"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pan-transfer-limited60min-v3-i00"
+digest = "sha256:d88ee7468d6c386b340d08247f51bd44c19a9e90725ff7d32c90605dd99d21d0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pastry-display-limited60min-v3-i00"
+digest = "sha256:c31e652d3d3611ebc1aba2eccbdf6b43188c11808da35e9f50d87a8e82b2c529"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-cabinet-to-counter-limited60min-v3-i00"
+digest = "sha256:4dc308c913b5922ebae2b4f4f0e53d79fd0d609e6fe9131d3f61da32521cda30"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-blender-limited60min-v3-i00"
+digest = "sha256:0fcfe1064b815abd2170cabc9571851915d81c9d1567e191ffa178bb16bf6b57"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-cabinet-limited60min-v3-i00"
+digest = "sha256:d8e7ff8681ca5c8c52f22053aea3f4265448242c05a951e0960e5bc1fffff7b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-cabinet-limited60min-v3-i02"
+digest = "sha256:84a1b8f343bdd0e9a3ee5888fbf148c18e6fade54a2dec259f436a656927353b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-drawer-limited60min-v3-i00"
+digest = "sha256:b079e89f14b88cd144c351a12986a6dfad757a20bf98f62f58d8c99a136d2416"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-microwave-limited60min-v3-i00"
+digest = "sha256:d7dca9dd6ed6487581f903c3447ff954c52856196e4684f492e05c540a91ab3f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-oven-limited60min-v3-i00"
+digest = "sha256:bf6c53f1012da2a2c8dc01ddedbc62500efeba2d92410c9e7510d52ef5e04e28"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-sink-limited60min-v3-i00"
+digest = "sha256:650e58c8359c47faa5b66c2a2384c147348fd3b304a76ee12b72f5b7f65a004f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-stove-limited60min-v3-i00"
+digest = "sha256:e1337491ce6f14c37d6a74e49be1644c00b5b6ec01cb9295616eb27a9a3fb6b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-counter-to-toaster-oven-limited60min-v3-i00"
+digest = "sha256:2b1c2ea65eb418b470e562a605a7999365734faba15d02caace8104625aaa725"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-drawer-to-counter-limited60min-v3-i00"
+digest = "sha256:ac3e32bfc365bd0f7bbb4f511c828aa242e82dfcbf363b5ccf74d1b0ae4cd4cf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-fridge-drawer-to-shelf-limited60min-v3-i00"
+digest = "sha256:d5ed33d58402b568278ad1e97bd2364d45e26116cdcd9307787b3f045e9b9fc0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-fridge-shelf-to-drawer-limited60min-v3-i00"
+digest = "sha256:441a72585337bc0919e1f5856862c28aafb02ee0f7ef8f2191bf645b43501f96"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-microwave-to-counter-limited60min-v3-i00"
+digest = "sha256:6bfd6db576eadc6330cf399518b4524911d8b8773d78a5dce69830c35598d5a6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-sink-to-counter-limited60min-v3-i00"
+digest = "sha256:7f33c2dc6877480087a3bb3d00fa5780681d6b9482564ea974533b5d31e59065"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-stove-to-counter-limited60min-v3-i00"
+digest = "sha256:f3f0e81a5c2aec0a38d1e0e81d1aaaf94f6985e441ba44d8cda3cd5fa791ad0d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-toaster-oven-to-counter-limited60min-v3-i00"
+digest = "sha256:a20ff6e5be22c8d78d44ea91219d04914755bc1c1628d1f7f8cb2ab95f86615a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-toaster-to-counter-limited60min-v3-i00"
+digest = "sha256:c4f90f75adae6efa9897ec7cc039a704e8f40f0441be2df4906944e790779abc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-beverages-together-limited60min-v3-i00"
+digest = "sha256:d8acec1836f63b008a0a26375c37b2e5db5b9356901bae2437a5bf4775996a70"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-dishes-by-sink-limited60min-v3-i00"
+digest = "sha256:c17b04fd40c8f114987d72c6b88400bb444b86b6de10775abb6cd360920094ec"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-ice-in-cup-limited60min-v3-i00"
+digest = "sha256:122a761d0aced1f44f9ba21f17599c2319dd23abe62f9bac42c4c58c0cd7bfc3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-microwave-safe-item-limited60min-v3-i00"
+digest = "sha256:146ae93800e40562c3b90d9185d612ff94c7abe49269903b2970a1822914d43a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-straw-limited60min-v3-i00"
+digest = "sha256:694b0cd15912c15af2700a2e3fe83157371aefed191e3b759cea485647656475"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-place-veggies-in-drawer-limited60min-v3-i00"
+digest = "sha256:eb68fcea552cbc86baf3d09ae7e141183c3e879c27f231e54e0bd19f691fda55"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-plate-steak-meal-limited60min-v3-i00"
+digest = "sha256:1acf5b43a0a8ccd0cbf40b3bb06afa920dbf6c2ad72e556e6433068702619cfe"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-portion-fruit-bowl-limited60min-v3-i00"
+digest = "sha256:faef40f9f01c1bbb47dc732a92d99010d9d81d65b72eec01cd3da0754cb729b4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-portion-in-tupperware-limited60min-v3-i00"
+digest = "sha256:dd3483996d60c3b4adc751a6c909f927cb0d4a4f135e6a8c840e057434243643"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-portion-yogurt-limited60min-v3-i00"
+digest = "sha256:2055158cb2c3e7722af065cd33cf166ed1765db870f509c1ef0077212284538e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pre-rinse-station-limited60min-v3-i00"
+digest = "sha256:701aef3e11d21b66478584b40fde4d50b75e411db7ff3cd8135d3cd7d1647254"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pre-soak-pan-limited60min-v3-i00"
+digest = "sha256:a46932f30d40612748df7f0afa57916117940ef0a0ecea358091b98c0160b7d8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-preheat-oven-limited60min-v3-i00"
+digest = "sha256:830a6a12b86b2f8bcaae15efa1ab80924dbd2958e2b9049269fe60100af9bca3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-for-sanitizing-limited60min-v3-i00"
+digest = "sha256:8d6c3c23b504ea8a119de5d2650411f5dafa37238477fb40197248c8a35827b1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-for-tenderizing-limited60min-v3-i00"
+digest = "sha256:e1b795fa2003dd0efe6f04e37b1f51d0f063208332f0ea7072661627288a196c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-marinating-meat-limited60min-v3-i00"
+digest = "sha256:7b162082d4904b8e321c96c049c8426834fa5897731d96ec52f1dabacea69313"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-broiling-station-limited60min-v3-i00"
+digest = "sha256:a8595abe5811bfd645738c2968d9f6a3bce78e96ed7e846c899964f90e2325fb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-cheese-station-limited60min-v3-i00"
+digest = "sha256:d80ed11e14314147677f25463a54ae469a8362f77b5a94edf1d6822c541b838f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-coffee-limited60min-v3-i00"
+digest = "sha256:569d3efcd315576ed6868fe1d60ea10017f9b9a63f2bb3a3724771726a9464f6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-coffee-limited60min-v3-i02"
+digest = "sha256:a67013a122204000b29604162d770f09856738e7b679ec0d69f5dfe6a5082d13"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-dishwasher-limited60min-v3-i00"
+digest = "sha256:5b82a169c79aaf1e0e52ce8c05b9b3bb26df7c9c98b500cf3a8fe10540fe62b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-smoothie-limited60min-v3-i00"
+digest = "sha256:1d8daf8d90c65399a0f7f26130fe9cf8073552aeb4089381486d5a459fceaba0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-storing-leftovers-limited60min-v3-i00"
+digest = "sha256:a2df8da0fcd1f69813234f4abb7cc5d00204d96d25f5c064eaa28dd365f91461"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prepare-toast-limited60min-v3-i00"
+digest = "sha256:b5c24b60784aafd216f534259cdca726cad8c89144b45cdc1bac5f72d59aa159"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-press-chicken-limited60min-v3-i00"
+digest = "sha256:57f350a235cd10415049d9a896d7a077e7d421d60c479a8f048223d5e4ce0d6a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prewash-food-sorting-limited60min-v3-i00"
+digest = "sha256:95ba5cbec6a3344fd8aaf8d7147c7523a5d80f990d092720b0fa0b2cf5b258b0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-quick-thaw-limited60min-v3-i00"
+digest = "sha256:f4c729f126820fdbbc0aefbbb35a62f8dbbcd3e0f45ee8352b189e232fdeb1d1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-rearrange-fridge-items-limited60min-v3-i00"
+digest = "sha256:2167da28a32eadf1ac191ccc792ec99d3fd7aa3cef75d97d426cf8e9ec8cf2b6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-recycle-bottles-by-size-limited60min-v3-i00"
+digest = "sha256:62bba1a5fd4f48e6eed1d6223ab046da04feb79641e433391288113be8873a6e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-recycle-soda-cans-limited60min-v3-i00"
+digest = "sha256:cea291241b28cf51e8f92c0e03014373fac3999c85f3b41eae6a59a0c1422e8f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-recycle-stacked-yogurt-limited60min-v3-i00"
+digest = "sha256:0f7c04bf6458f1c475906f599a3537930e6051f0b99d47d4894d8a32f5e1b1d1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-refill-condiment-station-limited60min-v3-i00"
+digest = "sha256:74f42659980c0dcde9cfa83f1488a385f41d03e072ffff82aa7741d8ba5bd99c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-reheat-meal-limited60min-v3-i00"
+digest = "sha256:26495e8821e2eee15f17cf654c2f5041b4364db9bea77bb9ff4639d83a640496"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-remove-broiled-fish-limited60min-v3-i00"
+digest = "sha256:fe5682390f1129acfe466d0e08b14ca88f0f390e2103e8bc525c4a3e66c5b706"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-remove-cutting-board-items-limited60min-v3-i00"
+digest = "sha256:007c537a80e06a0c5aa4400abc92cf22cbeb5bc8d31b6768b21f6ee04f0e690b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-reorganize-frozen-vegetables-limited60min-v3-i00"
+digest = "sha256:2068ef3a225d7553078740354ae8feded99c813a04bf428e2e46af3188b2d3bf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-reset-cabinet-doors-limited60min-v3-i00"
+digest = "sha256:97176c1817674fd054f2096b08a7623fbb90f5b27e2b37c4923530ebc5707cc3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-restock-canned-food-limited60min-v3-i00"
+digest = "sha256:6d19f382e3642d07383c051bfe4244b04042ee49ae12a49630e643c12c1eff70"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-restock-pantry-limited60min-v3-i00"
+digest = "sha256:c707f2d1eab195e48bbac58c4cf9c1c1242d42a8298e836fa40f74e9f433091a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-retrieve-meat-limited60min-v3-i00"
+digest = "sha256:3d878a3298f12f89f838348c626e61f659186392a1605d92d7275b3b448a1e53"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-return-heated-food-limited60min-v3-i00"
+digest = "sha256:f6583488554c5954e4df3533894e255c0e94d535526ccc995166fda6cbf332ae"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-return-washing-supplies-limited60min-v3-i00"
+digest = "sha256:e7cebc6ee9ab7f0c71f12b78ecf90892599cb32f2f493ee148a7130768f35e9e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-rinse-bowls-limited60min-v3-i00"
+digest = "sha256:b06f78cee3dc668452cf2df61f0ac0a87bf99f2e6061ef7f04c523f487c5eb10"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-rinse-sink-basin-limited60min-v3-i00"
+digest = "sha256:1cb1cfce7532e00768949c3c419f9f2ed5a631f46c3bdb83e888ff6d3b6de75f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-rotate-pan-limited60min-v3-i00"
+digest = "sha256:c3bf1b057cbf3bcd4286892a0dbe24397bf44da8b4fb1d81ddda5d1a80206a22"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sanitize-prep-cutting-board-limited60min-v3-i00"
+digest = "sha256:8179cff5112ca39d06b689a9a5685e9e8fbdf739ed18d49f9f4044c6b78951cb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-scale-portioning-limited60min-v3-i00"
+digest = "sha256:0b840fcc70e424daa63d5c0911abff5e38d55fa176ea2452d51c0eb7bcee47eb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-scrub-bowl-limited60min-v3-i00"
+digest = "sha256:19d3d994ffad47edb09ada5c51dedfe9562634913fbd7b878a0675d4833d7d86"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-scrub-cutting-board-limited60min-v3-i00"
+digest = "sha256:5332724eb17410c3860a56fc0d4c0860988399ed56592fb008531685b1d8e552"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-searing-meat-limited60min-v3-i00"
+digest = "sha256:60b08b80fc394fea913ce1eb73c87913a0367ceb1deee59165ac663f271ea8b8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-seasoning-spice-setup-limited60min-v3-i00"
+digest = "sha256:193ed3809c5d7c3ecdcbaa71e20335b39c1cf5ebe7a138eab1ea23bbe696d635"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-seasoning-steak-limited60min-v3-i00"
+digest = "sha256:e305a365c7686488f1780c8ba05686d82d13d17e63ecacaafba458f99b684c80"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-separate-freezer-rack-limited60min-v3-i00"
+digest = "sha256:4f7af4cf00a97f61b0e2f00544c9412eba6935b85db5a01f45d0218e5fe14898"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-serve-steak-limited60min-v3-i00"
+digest = "sha256:4ff36438dc8447c1a5ea90be6a28678ed17e938a79e542e4c195e5f175c1afa6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-serve-tea-limited60min-v3-i00"
+digest = "sha256:fe52491bced639c091b7307341e9987e0bfe904f2d2f40bdfc5c4257595fe1e9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-serve-warm-croissant-limited60min-v3-i00"
+digest = "sha256:50a5329a68ac284266847fe384917993117ee8873ccc3a785dc4c1a995bb4b34"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-set-up-cutting-station-limited60min-v3-i00"
+digest = "sha256:d99676c95b6e55f5b047fc3abab8fc0cc606a8ced60e3ab8db99bb3654e51077"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-set-up-spice-station-limited60min-v3-i00"
+digest = "sha256:760b76107d4930f53592bc3efecf5d40d99e9d1fa94c063b318b0488937e8a7b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-setup-butter-plate-limited60min-v3-i00"
+digest = "sha256:18e754a65995b126bcbcfbef74e6f316646e501d5c25a66f970300b12921cb22"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-setup-fruit-bowl-limited60min-v3-i00"
+digest = "sha256:f72f5aa82f37f7da0115f33b3d2cdb27ec913b6da965bde4fd5b84d46254dcae"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-setup-frying-limited60min-v3-i00"
+digest = "sha256:d93eb0992a754f017776c1e474da825ed04e20b5cdf5650a29594559eded1c3b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-shake-pan-limited60min-v3-i00"
+digest = "sha256:06da55156eaf2beb8bf5002fd0ae2451baebf346f6b0702d3e635c46b32bc10b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-simmering-sauce-limited60min-v3-i00"
+digest = "sha256:49ed5e906048ee5aa054bb8a7a45b40e28e45836e58c2f8ced287705de4089c3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-size-sorting-limited60min-v3-i00"
+digest = "sha256:580b3705e9bdea39fdf519075f2088dc79b64708a444445a506f99d0a7597ca3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-slide-dishwasher-rack-limited60min-v3-i00"
+digest = "sha256:b53f8018d63bceb52c28e1b64f0c2f1a5c65f7889229fcd0a4712527002ae3ed"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-slide-oven-rack-limited60min-v3-i00"
+digest = "sha256:88296d03db9b5d89479a49f93c4c2dfb8ac10981f6cfd45e4310a3de1d5af51a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-slide-toaster-oven-rack-limited60min-v3-i00"
+digest = "sha256:c042470e2ec5690e2debe808c6dfb32c87c9604623402b933e435e3daa4853a9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-snack-sorting-limited60min-v3-i00"
+digest = "sha256:01a083de8009529d26632b33f04ac3c6eb929b2dee0ab9687c2acb412a3ecdae"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-soak-sponge-limited60min-v3-i00"
+digest = "sha256:b8d831f1843d4e2f58d3fc5fa1731173bbd3019b931ebaa5875a2294518b10f5"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-spicy-marinade-limited60min-v3-i00"
+digest = "sha256:0cb90f082fcfa07de910a9fff7129e57a5008f8e02a85e0ac4e14acaa28b7f2d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-stack-bowls-in-sink-limited60min-v3-i00"
+digest = "sha256:b237701d1cbeb663be802623f4bfd6ea7d38dd8889ba2aece0e29dce926a919e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-stack-cans-limited60min-v3-i00"
+digest = "sha256:82f4dc4d869a6e6a07cad1c650638415ac985e7e86d1ca3251713d4c38170cca"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-start-coffee-machine-limited60min-v3-i00"
+digest = "sha256:25d05d5bb545c6519260fb830f8016d1c8e691e1aabb130165299c69edbc8dab"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-start-electric-kettle-limited60min-v3-i00"
+digest = "sha256:e66c9a3f8cdc112208c6d9d324b884f6f1016e45625e7954b2ec47890c17b268"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-stocking-breakfast-foods-limited60min-v3-i00"
+digest = "sha256:2c281b05168d40367cae1905541ca79a47b01b89966cf8f9d07692c234d0d048"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-store-leftovers-by-type-limited60min-v3-i00"
+digest = "sha256:b9686ebc3923bcba4626c07a413949a0893411d3f966da571059a2a3c3d6ff4b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-store-leftovers-in-bowl-limited60min-v3-i00"
+digest = "sha256:ced1325f0788adde8e7ab39924d87255ef07f2f8c8a8d6e0c07718a8d5e1989d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-strainer-setup-limited60min-v3-i00"
+digest = "sha256:6b2feeb6664784db64187c3616ac6f11936f9a315fb65bfc461295b5f749175e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sweet-savory-toast-setup-limited60min-v3-i00"
+digest = "sha256:c4d63ff9944ad3caa8289cee02dad631cab45d1f9244054a4e5fcb81396dc617"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sweeten-coffee-limited60min-v3-i00"
+digest = "sha256:ac86264e0ece486505da48c13ac5bdae1c824fc00343eb54d0fc7ce66159a899"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sweeten-hot-chocolate-limited60min-v3-i00"
+digest = "sha256:bef3b06ad9cfab55cbb202917324bc808336770e90864093fbddbd9dce2a1277"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-thaw-in-sink-limited60min-v3-i00"
+digest = "sha256:16fd229a8b6d1104d08cccdb7c466e82d1f9c671b83a6352f876ed7b4badcb2f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-tilt-pan-limited60min-v3-i00"
+digest = "sha256:7847544f05cbc14106e499eaab714d3d5f97f6476c49077d15c662cf8f7d8260"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-toast-bagel-limited60min-v3-i00"
+digest = "sha256:e9f293644f37cc21ecb073ebe144d60d5ec15f96489ada262cb3c5f5b990b382"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-toast-baguette-limited60min-v3-i00"
+digest = "sha256:5c77e4ee8c89dc8aa9b90b236a2fb046b67839a582fd8cafdf5812a0e6e86eda"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-toast-on-correct-rack-limited60min-v3-i00"
+digest = "sha256:c9abfb9e4c0c6cba21f4928ac4c9e0468530d44bc272c23b9a0c7b890c8ebc45"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-tong-buffet-setup-limited60min-v3-i00"
+digest = "sha256:35b2e94bfc7f0a5da4f1830cebeba2bec5b8ccfa7bd0617977ed4da2278232c5"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-microwave-limited60min-v3-i00"
+digest = "sha256:1de2886b1edc41f43de01f2cca8da30eadd920d85095c6c8c706f7149fb08dec"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-simmered-sauce-heat-limited60min-v3-i00"
+digest = "sha256:ccc9a4a5420437eb3a55a656c4edbb5b60631e177c7d1e8bb13de08c7dba591c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-sink-faucet-limited60min-v3-i00"
+digest = "sha256:34b7e424135b5b759874a85e2fadeccedcbcc7226f961ffef6868d0f30253081"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-stove-limited60min-v3-i00"
+digest = "sha256:66f6c08d376a8b4650e82724ccda2b37959630551b347ee26f93989118148e12"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-electric-kettle-limited60min-v3-i00"
+digest = "sha256:c0bf6c1ffdbcf94c63e85b828668c92548acb051c6c49630175aabc3070eac94"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-microwave-limited60min-v3-i00"
+digest = "sha256:9f9730406dc80d09d9c23f11f9167c222b3ee571dbfac94fdd7b202c6e4105c1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-sink-faucet-limited60min-v3-i00"
+digest = "sha256:814fefbc8cd891aeed2167d750864dd220e00ab0f6d38b7f733d3f33bc9843b7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-stove-limited60min-v3-i00"
+digest = "sha256:59785284014ebbcc930e41b112e8c5a5ebbca9644697c7da38682007e893b790"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-stove-limited60min-v3-i01"
+digest = "sha256:3a4454cda63e1e99ead07d33e627f9e2af7019e2fcbbb5af61d55a5457eb02e3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-stove-limited60min-v3-i02"
+digest = "sha256:62ce50f72dd2d7b71b0a28005a6051437ca5b96263981cfcf3abecfc2fc20cd8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-toaster-oven-limited60min-v3-i00"
+digest = "sha256:51d8db96df1100efcc7f5a4e174eafd327b8bdc7c783e0f17119c94be34f64e0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-toaster-limited60min-v3-i00"
+digest = "sha256:42be0bafe0cb5379e043cb36bfc3ee30d2eea682af02a5855ed829aa152b4438"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-sink-spout-limited60min-v3-i00"
+digest = "sha256:93df220bd7fb8461a6b2f798d0de5c031502f347cfe486ae11d9b7b19bfabefa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-warm-croissant-limited60min-v3-i00"
+digest = "sha256:a3a8adebe79ebbf1445a8c5f2dfd7f94bbe434e405f6311b0964b40e7750cb6a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-wash-fish-limited60min-v3-i00"
+digest = "sha256:ec29f76ed4dc030017658e2ad09948e70966f67e54178271f218d7cabcaf8400"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-wash-fruit-colander-limited60min-v3-i00"
+digest = "sha256:f5003e94378b90a294dd56006927e70a40a35d8fa15d27863d30287ded7941b7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-wash-lettuce-limited60min-v3-i00"
+digest = "sha256:040c5070cb7726efe2c2b8542b7cce6d8d4672aa71d013eb0167ede4a9ae0d94"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-weigh-ingredients-limited60min-v3-i00"
+digest = "sha256:b58fda83072d4976f711a1e6922f5e0c8b83485a2fb1372c8718c5983c2401dd"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-yogurt-delight-prep-limited60min-v3-i00"
+digest = "sha256:fd124f501625e2d215004f98850d1dfde65675888d890241f3d6c85e51bec826"

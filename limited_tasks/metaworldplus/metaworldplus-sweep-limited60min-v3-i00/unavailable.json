@@ -1,0 +1,6 @@
+{
+  "source": "tasks/metaworldplus-sweep-privileged-i00",
+  "reason": "target_not_observable_without_privileged_state",
+  "seed": 0,
+  "instance_sha256": "5a14be6f66287e0310dc156e7134da250ff77be4868eab7211a42dd2d0d6d77f"
+}

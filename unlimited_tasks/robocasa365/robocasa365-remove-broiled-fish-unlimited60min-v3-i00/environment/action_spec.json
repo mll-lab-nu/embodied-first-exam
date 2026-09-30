@@ -1,0 +1,360 @@
+{
+  "action_dim": 13,
+  "control_hz": 20,
+  "action_parts": {
+    "base": [
+      8,
+      11
+    ],
+    "right": [
+      0,
+      7
+    ],
+    "right_gripper": [
+      7,
+      8
+    ],
+    "torso": [
+      11,
+      12
+    ],
+    "hybrid_mode": [
+      12,
+      13
+    ]
+  },
+  "lower": [
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -10.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0
+  ],
+  "upper": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "controller_configs": {
+    "type": "HYBRID_MOBILE_BASE",
+    "composite_controller_specific_configs": {
+      "left_offset": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "right_offset": [
+        -0.15,
+        0.0,
+        0.35
+      ],
+      "left2arm_transform": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "right2arm_transform": [
+        [
+          0,
+          0.7071068,
+          0.7071068,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0.7071068,
+          -0.7071068,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "left2finger_transform": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "right2finger_transform": [
+        [
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "body_part_ordering": [
+        "right",
+        "right_gripper",
+        "base",
+        "torso"
+      ]
+    },
+    "body_parts": {
+      "right": {
+        "type": "JOINT_POSITION",
+        "input_type": "absolute",
+        "input_min": [
+          -10.0,
+          -10.0,
+          -10.0,
+          -10.0,
+          -10.0,
+          -10.0,
+          -10.0
+        ],
+        "input_max": [
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0,
+          10.0
+        ],
+        "kp": 1000,
+        "damping_ratio": 1,
+        "impedance_mode": "fixed",
+        "interpolation": null,
+        "gripper": {
+          "type": "GRIP"
+        }
+      },
+      "torso": {
+        "type": "JOINT_POSITION",
+        "interpolation": "null",
+        "kp": 2000
+      },
+      "base": {
+        "type": "JOINT_VELOCITY_LEGACY",
+        "interpolation": "null"
+      }
+    }
+  },
+  "pose_convention": "Observed body state: world metres / WXYZ. Actions: see action_frame and channels.",
+  "instruction": "Take the fish from the oven and place it on the plate on the counter.",
+  "native_advertised_limits": {
+    "lower": [
+      -10.0,
+      -10.0,
+      -10.0,
+      -10.0,
+      -10.0,
+      -10.0,
+      -10.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0,
+      -1.0
+    ],
+    "upper": [
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "unbounded_value": null
+  },
+  "action_frame": "absolute arm joint positions; base controls in robot base frame",
+  "hybrid_mode": {
+    "index": 12,
+    "lower": -1,
+    "upper": 1,
+    "default": -1,
+    "positive": "base mode; arm goal tracks the moving base using the desired goal",
+    "nonpositive": "arm mode; arm goal updates from achieved pose"
+  },
+  "gripper_semantics": "Positive closes, negative opens.",
+  "channels": [
+    {
+      "index": 0,
+      "name": "arm_joint_1",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 1,
+      "name": "arm_joint_2",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 2,
+      "name": "arm_joint_3",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 3,
+      "name": "arm_joint_4",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 4,
+      "name": "arm_joint_5",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 5,
+      "name": "arm_joint_6",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 6,
+      "name": "arm_joint_7",
+      "unit": "rad",
+      "lower": -10.0,
+      "upper": 10.0
+    },
+    {
+      "index": 7,
+      "name": "grip",
+      "unit": "normalised_grip",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 8,
+      "name": "base_x",
+      "unit": "normalised_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 9,
+      "name": "base_y",
+      "unit": "normalised_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 10,
+      "name": "base_yaw",
+      "unit": "normalised_yaw_velocity",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 11,
+      "name": "torso",
+      "unit": "normalised_torso",
+      "lower": -1.0,
+      "upper": 1.0
+    },
+    {
+      "index": 12,
+      "name": "hybrid_mode",
+      "unit": "mode",
+      "lower": -1.0,
+      "upper": 1.0
+    }
+  ],
+  "schema": "rcb-casa-effective-action-spec-v2"
+}

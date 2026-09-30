@@ -1,0 +1,2 @@
+FROM ghcr.io/jameskrw/rcb-robocasa365:0.1.0
+RUN pip install --no-cache-dir pandas==2.2.3 pyarrow==19.0.1

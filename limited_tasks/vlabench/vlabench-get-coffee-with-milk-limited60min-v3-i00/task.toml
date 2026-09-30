@@ -1,0 +1,37 @@
+schema_version = "1.4"
+artifacts = [{source="/app/output/",destination="agent-output"}, {source="/recorded/",destination="trusted-recording",service="sim"}]
+[task]
+name = "robot-coding-bench/vlabench-get-coffee-with-milk-limited60min-v3-i00"
+description = "Limited single-episode VLABench with protected recording and independent replay."
+authors = [{name="MLL Lab"}]
+[metadata]
+experiment_mode = "limited-60min-v3"
+author_name = "MLL Lab"
+task_type = "trajectory"
+simulator = "vlabench"
+robot = "franka"
+family = "get_coffee_with_milk"
+tier = "perception"
+observation_mode = "limited"
+expert_time_estimate_hours = 2.0
+[agent]
+timeout_sec = 3600.0
+[environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 4096
+network_mode = "allowlist"
+allowed_hosts = ["sim", "codex-egress"]
+
+[verifier]
+environment_mode = "separate"
+timeout_sec = 2000.0
+[[verifier.collect]]
+service = "sim"
+command = "python /private/control.py seal"
+timeout_sec = 120.0
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 2
+memory_mb = 8192
+network_mode = "no-network"
