@@ -111,17 +111,18 @@ def main() -> int:
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
-        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
+        write(ok, out)   # the verdict is on disk before any video: a render that hangs past the verifier timeout cannot cost the score
+        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png, at most ~1500 frames
         render_sv = None
         if not a.no_video:
             try:
                 s.close()
                 sv = Session(a.family, instance=a.instance, enable_render=True); render_sv = sv
-                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=a.video_every, fps=a.video_fps)  # 6-view grid
-                out["video_rendered"] = 1
+                every = max(a.video_every, -(-len(acts) // 1500))
+                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=every, fps=a.video_fps)  # 6-view grid
+                out["video_rendered"] = 1; write(ok, out)
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
-        write(ok, out)
         if not a.no_video:  # after the verdict is on disk: reconstruct the agent's own rollouts (self-reported, may be slow)
             try:
                 out.update(render_agent_traces(a.family, a.instance, sv=render_sv)); write(ok, out)
