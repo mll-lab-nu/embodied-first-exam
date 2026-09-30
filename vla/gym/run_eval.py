@@ -3,13 +3,15 @@
     python -m vla.gym.run_eval --config vla/configs/eval/<name>.yaml [dotted.key=value ...]
 
 Writes <run.output>/results.jsonl (one row per episode) and summary.json, and with run.record one MP4 per
-camera under seed_<seed>/videos/. The output directory must not exist yet.
+camera under seed_<seed>/videos/. The output directory must not exist yet; a null run.output means
+runs/test_results/<YYYYMMDD>_vla_<model>_<task>, so switching models changes only policy.address.
 """
 from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
 from dataclasses import asdict
+from datetime import date
 import json
 from pathlib import Path
 import subprocess
@@ -50,6 +52,12 @@ def make_args(cfg, spec):
                 observation_mode="EE" if spec.state_keys == ("ee",) else "JOINT",
                 control_decimation=round(1 / (spec.control_hz * dt)),
                 max_physics_steps=round(cfg.task.sim_seconds / dt), **env)
+
+
+def output_dir(cfg, spec):
+    if cfg.run.output:
+        return Path(cfg.run.output)
+    return Path("runs/test_results") / f"{date.today():%Y%m%d}_vla_{spec.name}_{cfg.task.id}"
 
 
 def tracking_error(action, robot, action_space):
@@ -120,7 +128,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
 def evaluate(cfg, client):
     """Run every seed with one Env; write results.jsonl and summary.json into cfg.run.output."""
     spec = client.spec
-    output = Path(cfg.run.output)
+    output = output_dir(cfg, spec)
     output.mkdir(parents=True)  # never overwrite earlier results
     instructions = OmegaConf.load(VLA_DIR / "configs/instructions.yaml")
     instruction = instructions.tasks[cfg.task.id]

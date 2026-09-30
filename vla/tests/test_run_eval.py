@@ -1,8 +1,11 @@
-"""run_eval pieces that need no GPU: outcome classes, make arguments and tracking error."""
+"""run_eval pieces that need no GPU: outcome classes, make arguments, output path and tracking error."""
+from datetime import date
+from pathlib import Path
+
 import pytest
 from omegaconf import OmegaConf
 
-from vla.gym.run_eval import classify, make_args, tracking_error
+from vla.gym.run_eval import classify, make_args, output_dir, tracking_error
 from vla.protocol import PolicySpec
 
 
@@ -47,3 +50,10 @@ def test_tracking_error_is_the_worst_arm_distance_without_gripper():
     action = {"arm": {"position_world_m": [1.0, 2.0, 3.0], "orientation_wxyz": [1, 0, 0, 0]}}
     robot = {"arm": {"tcp_position_world_m": [1.0, 2.0, 2.9]}}
     assert tracking_error(action, robot, "ee_abs") == pytest.approx(0.1)
+
+
+def test_output_defaults_to_date_model_and_task():
+    cfg = OmegaConf.create(dict(task=dict(id="buzz_wire_3d"), run=dict(output=None)))
+    assert output_dir(cfg, spec()) == Path(f"runs/test_results/{date.today():%Y%m%d}_vla_m_buzz_wire_3d")
+    cfg.run.output = "runs/test_results/mine"
+    assert output_dir(cfg, spec()) == Path("runs/test_results/mine")

@@ -1,0 +1,15 @@
+# First-batch ALOHA evaluation. Switch models with policy.address only:
+# pi05_base_trossen localhost:8001, xvla_robotwin2 localhost:8004.
+policy:
+  address: localhost:8001
+  local: null                   # or a model config path, run in process via LocalClient (HoldVLA)
+task:
+  id: cast_coil
+  variation: base
+  seeds: [0, 1, 2]
+  sim_seconds: 60
+run:
+  execute_steps: null           # null = PolicySpec.execute_steps
+  record: true
+  output: null                  # null = runs/test_results/<YYYYMMDD>_vla_<model>_<task>
+env: {}                         # passed to topogym.make; grasp assist stays off (default)

@@ -10,5 +10,5 @@ task:
 run:
   execute_steps: null           # null = PolicySpec.execute_steps
   record: true
-  output: runs/test_results/20260930_vla_smoke_hold_buzz_wire
+  output: null                  # null = runs/test_results/<YYYYMMDD>_vla_<model>_<task>
 env: {}                         # passed to topogym.make; grasp assist stays off (default)

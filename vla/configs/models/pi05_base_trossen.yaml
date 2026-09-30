@@ -1,7 +1,7 @@
 # pi0.5 base checkpoint with the Trossen ALOHA norm stats on the TopoGym ALOHA.
 class_path: vla.models.pi05.model.Pi05
 checkpoint: gs://openpi-assets/checkpoints/pi05_base   # cached under ~/.cache/openpi
-port: 8000
+port: 8001
 spec:
   name: pi05_base_trossen
   embodiment: aloha
