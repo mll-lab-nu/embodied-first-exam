@@ -49,8 +49,22 @@ unsolved, after 23–46 of 60 min).
   `qacc_warmstart`, then re-anchor controllers and refresh cached observables). The example task
   replays twice and requires identical final-state hashes.
 - `environment/Dockerfile` must `FROM` a registry image with a pinned tag or digest (CI checks).
-- The verifier's inputs live under `tests/` (copied in after the agent finishes); `instruction.md` never
-  references `/tests/`.
+- **The verifier runs in its own sandbox, never in the container the agent controlled.** `task.toml` sets
+  `[verifier] environment_mode = "separate"` and `tests/Dockerfile` builds the verifier image (same simulator base
+  image, the verifier's own copies of the tooling and the frozen instance baked into `/tests/`; `tests/docker-compose.yaml`
+  for a GPU reservation if replay needs one). Harbor uploads only the declared artifacts (`/app/output/`) into it.
+  Reason, measured 2026-09-23: in Harbor's default *shared* mode the tests run inside the agent's container after
+  `/tests/` is copied in, so an agent that is root there can patch the task's `check_success` (or the interpreter) —
+  a do-nothing trajectory then scores 1. The same cheat scores 0 under the separate sandbox. `ci_checks/check-verifier-isolation.sh`
+  enforces this. `instruction.md` never references `/tests/`.
+- **Agent egress is a per-run choice, default open.** Harbor's default is `public`; the reference solutions we scrub
+  from the agent image are public upstream (RoboTwin's `play_once` on GitHub, this repo's `solution/`), so a run that
+  must rule out "the agent fetched the answer" flips every task to model-APIs-only with
+  `scripts/set_agent_egress.py allowlist` (and back with `public`). Measured 2026-09-24: under that allowlist Codex
+  (ChatGPT login) still reaches its model while GitHub and PyPI return nothing, and the limited-mode sidecar stays
+  reachable; an empty allowlist breaks the agent. CI only checks that an allowlist, when set, lists hosts. The
+  HumanoidBench and KinDER generators fix that allowlist in their `task.toml` instead (below): what their agent image
+  hides is more than a reference solution.
 - `solution/solve.sh` (oracle) must score 1 and the `nop` agent must score 0.
 - **Reference solutions live only under `solution/`** (Harbor mounts it at `/solution/` for the oracle agent only).
   Nothing the agent can reach — the task image, base images, tooling, docs inside the container — may contain
@@ -63,9 +77,10 @@ unsolved, after 23–46 of 60 min).
   terms combine, order-of-magnitude targets, what ends the episode — with no tolerance parameters, exact
   weights, per-step scale, or what any particular policy scores.
 - **Deleting an answer key only counts if the agent cannot fetch another copy**: the network, an earlier
-  Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. The HumanoidBench tasks let the agent
-  reach the model APIs and nothing else (`[agent] network_mode = "allowlist"`, the hosts in
-  `scripts/humanoidbench/subset.toml`), and grade in a container of their own with no network
+  Docker layer, `.git`, stale `__pycache__`, a sibling task's `tests/`. The HumanoidBench and KinDER tasks let the
+  agent reach the model APIs and nothing else (`[agent] network_mode = "allowlist"`, the hosts in
+  `scripts/<sim>/subset.toml`: HumanoidBench's reward, and the simulator a KinDER limited-mode agent is not given, are
+  public upstream), and grade in a container of their own with no network
   (`[verifier] environment_mode = "separate"` built from `tests/Dockerfile`, `network_mode = "no-network"`).
   Method and checklist: [docs/LEAKAGE.md](LEAKAGE.md).
 

@@ -1,0 +1,8 @@
+{
+ "task": "scan_object",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "13d2012d36b9",
+ "text": "Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down).",
+ "n_active_joints": 16
+}

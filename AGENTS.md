@@ -37,7 +37,10 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract), `CONTRIBUTING.md` first.
 - Run anything that needs the simulator inside the image, not on the host:
   `docker run --rm -v $PWD:/repo -w /repo ghcr.io/jameskrw/rcb-humanoidbench:$(cat images/VERSION) ...`.
 - `images/<sim>/Dockerfile`: simulator base images, tagged from `images/VERSION`; `scripts/build_images.sh`.
-- `ci_checks/run_all.sh [task dirs]`: contract checks. New check = `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
+- `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"` + `tests/Dockerfile`). New check = `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
 - `tasks/dataset.toml`: task manifest; refresh with `cd tasks && harbor add --scan .`.
-- Local docker sandbox has no `[environment].gpus`; unlimited tasks don't need a GPU, limited ones reserve it on
-  the sidecar in `environment/docker-compose.yaml` (images are rendered there).
+- Local docker sandbox has no `[environment].gpus`. robosuite, HumanoidBench and KinDER tasks run without a GPU
+  (KinDER's MuJoCo tasks have an optional `environment/gpu.docker-compose.yaml` for faster images); RoboTwin tasks
+  pass one through with `environment/docker-compose.yaml` (service `main`, nvidia device reservation) — copy it from
+  `tasks/robotwin_2_0_stack_blocks_two/`. HumanoidBench's and KinDER's limited twins reserve it on the `sim` sidecar
+  instead (images are rendered there; KinDER's PyBullet twins draw on the CPU and reserve none).

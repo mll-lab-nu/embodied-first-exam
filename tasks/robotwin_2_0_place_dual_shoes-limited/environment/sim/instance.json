@@ -1,0 +1,8 @@
+{
+ "task": "place_dual_shoes",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "31129cc7d6ef",
+ "text": "Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.",
+ "n_active_joints": 16
+}
