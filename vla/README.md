@@ -2,125 +2,109 @@
 
 在 TopoGym 上用各模型的官方 checkpoint 做零样本评测（不微调）。计划与设计见 [`docs/IMPL_PLAN.md`](docs/IMPL_PLAN.md)、[`docs/DESIGN.md`](docs/DESIGN.md)。
 
-两个进程、两个 Python 环境，本机 TCP 一对一连接：
+评测和模型各用一个进程、一个 conda 环境，通过本机 TCP 一对一连接：
 
 ```text
-评测进程（.venv-gs121-nyx）                                  模型进程（vla/.envs/<model>）
+评测进程（conda env topogym）                         模型进程（conda env vla-<model>）
 run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─ BaseVLA 子类 ─ 官方推理代码
 ```
 
-评测进程负责 reset、seed、step、录像和打分；模型进程只回答"观测 → 动作块"，同一时间只接一个连接。
+评测进程负责 reset、seed、step、录像和打分；模型进程只回答"观测 → 动作块"，同一时间只服务一个连接。
 
-| 路径 | 运行环境 | 内容 |
-|---|---|---|
-| `protocol.py` | 两侧 | `PolicySpec` / `Observation` / `ActionChunk`，线协议编解码（标准库 + numpy） |
-| `gym/adapter.py` | TopoGym | TopoGym 观测 / 动作 ⇄ 标准向量（由 `action_spec` 驱动） |
-| `gym/agent.py` | TopoGym | `VLAAgent`：每 `execute_steps` 步推理一次，检查动作块形状与有限性 |
-| `gym/client.py` | TopoGym | `RemoteClient`、`LocalClient`、`PolicyError` |
-| `gym/run_eval.py` | TopoGym | 评测入口 |
-| `models/serve.py` | 模型环境 | 服务入口：按 `class_path` 加载模型 |
-| `models/<model>/model.py` | 模型环境 | 每个模型一个 `BaseVLA` 子类；docstring 写明官方入口、输入输出与单位 |
-| `configs/models/*.yaml` | — | 一个 checkpoint 一个文件：`class_path`、`checkpoint`、`port`、`spec`、`model` |
-| `configs/eval/*.yaml` | — | 一次评测一个文件：`policy`、`task`、`run`、`env` |
-| `configs/instructions.yaml` | — | 每个任务的英文指令（带版本号） |
-| `setup.sh` | — | 建模型环境：`bash vla/setup.sh <pi05\|groot\|molmoact2\|xvla>` |
+## 1. 安装（每台机器一次）
 
-## 1. 环境
-
-TopoGym 环境（仓库根目录执行一次；Nyx 渲染资源放 `.external/nyx-assets`）：
+需要 conda 和 uv（`pip install uv`）。在仓库根目录执行：
 
 ```bash
-CUDA_TAG=cu126 INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx OPTIONAL_GROUPS="video test" bash env_setup_gs121.sh
-TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets" .venv-gs121-nyx/bin/python scripts/prepare_nyx_studio.py
+bash vla/setup.sh topogym      # 评测环境：TopoGym + Nyx（仓库的 env_setup_gs121.sh），并准备 .external/nyx-assets
+bash vla/setup.sh pi05         # 模型环境 vla-pi05；其余同理：groot、molmoact2、xvla
 ```
 
-模型环境（每个模型一次）：克隆官方仓库到 `vla/third_party/<model>` 并检出固定 commit，用 uv 建 `vla/.envs/<model>`，按官方说明安装，下载 checkpoint 到官方默认缓存（openpi：`~/.cache/openpi`；其余：`~/.cache/huggingface`），最后做导入检查。
+模型环境会把官方仓库克隆到 `vla/third_party/<model>` 并检出固定 commit，按官方说明安装，再把 checkpoint 下载到官方默认缓存。GR00T 需要先在 Hugging Face 上获得 [`nvidia/Cosmos-Reason2-2B`](https://huggingface.co/nvidia/Cosmos-Reason2-2B) 的访问权限。所有 GR00T checkpoint 都以它作为视觉语言主干。
+
+## 2. 运行
+
+两个终端，都在仓库根目录：
 
 ```bash
-bash vla/setup.sh pi05        # openpi 215abfb；pi05_droid_jointpos + pi05_base，各 12.4 GB
-bash vla/setup.sh molmoact2   # molmoact2 66b87e6；MolmoAct2-DROID 21.8 GB（bf16 运行约 10 GiB 显存）
-bash vla/setup.sh xvla        # X-VLA 6bc2513；X-VLA-RoboTwin2 3.5 GB
-bash vla/setup.sh groot       # Isaac-GR00T 51d4c89；GR00T-N1.7-DROID 6.9 GB，backbone 需要 HF 权限（见第 6 节）
+# 终端 1：模型服务。看到 "Serving ..." 后再启动评测
+conda activate vla-pi05
+python -m vla.models.serve --config vla/configs/models/panda_robotiq/pi05_droid_jointpos.yaml   # 默认端口 8000
+
+# 终端 2：评测；等号形式的参数覆盖配置中的任意键
+conda activate topogym
+python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seeds=[0] task.sim_seconds=10
 ```
 
-每次运行前：
+- 端口在运行时指定，模型配置里没有端口。同时跑两个模型时，第二个服务加 `--port 8001`，对应的评测加 `policy.address=localhost:8001`。
+- 不启动模型服务、只检查评测链路：加 `policy.local=vla/configs/models/aloha/hold_aloha.yaml`。`HoldVLA` 会把当前状态重复成动作块。
+- 渲染用到的环境变量由 `run_eval` 自动补上，不需要 export：`TOPOGYM_VISUAL_ASSET_ROOT` 默认为 `.external/nyx-assets`；只要装了 NVIDIA 的 Vulkan 驱动，`VK_ICD_FILENAMES` 就只加载它。已经手动设置的值不会被覆盖。
 
-```bash
-export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"
-# 机器上有多个 Vulkan 设备（如 AMD 核显 + NVIDIA）时必须只加载 NVIDIA ICD，否则 Nyx 在建场景时 abort：
-export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
-```
+## 3. 模型（按机器人）
 
-## 2. 快速上手
+`控制频率 → decimation`：模型训练数据的频率换算成每个动作保持的物理步数，`decimation = round(1 / (频率 × 0.0025 s))`；实际频率为 `1 / (decimation × 0.0025 s)`。`块长 / 执行`：每次推理预测的动作数，以及执行其中前几个后再推理。
 
-两个命令都在仓库根目录运行。先起模型服务，看到 `Serving <name> on (...)` 后再跑评测：
+**Panda + Robotiq**（如 `buzz_wire_3d`）：三个都是 DROID 训练的 checkpoint，输入关节状态，输出绝对关节目标，15 Hz → 27（实际 14.8 Hz）。
 
-```bash
-vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_droid_jointpos.yaml
-.venv-gs121-nyx/bin/python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml \
-    task.seeds=[0] task.sim_seconds=10          # OmegaConf 命令行覆盖
-```
+| 模型配置 `configs/models/panda_robotiq/` | conda env | TopoGym 相机 → 模型图像输入 | 块长 / 执行 |
+|---|---|---|---|
+| `pi05_droid_jointpos` | `vla-pi05` | agentview → 外部相机，wrist → 腕部相机 | 15 / 8 |
+| `groot_n17_droid` | `vla-groot` | 同上；末端位姿输入由关节正运动学算出 | 40 / 8 |
+| `molmoact2_droid` | `vla-molmoact2` | agentview、front_oblique → 两个外部相机，wrist → 腕部相机 | 15 / 15 |
 
-换模型只改 `policy.address`（每个模型配置有自己的端口），例如 MolmoAct2：
+**ALOHA**（如 `cast_coil`）：两条 vx300s 手臂，相机为 cam_high、cam_left_wrist、cam_right_wrist（俯视、左腕、右腕）。
 
-```bash
-vla/.envs/molmoact2/bin/python -m vla.models.serve --config vla/configs/models/molmoact2_droid.yaml
-.venv-gs121-nyx/bin/python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml policy.address=localhost:8003
-```
+| 模型配置 `configs/models/aloha/` | conda env | 状态 → 动作 | 控制频率 → decimation | 块长 / 执行 |
+|---|---|---|---|---|
+| `pi05_base_trossen` | `vla-pi05` | 关节 → 绝对关节 | 50 Hz → 8 | 50 / 25 |
+| `xvla_robotwin2` | `vla-xvla` | 末端位姿 → 绝对末端位姿（TopoGym 用 IK 求关节） | 16.7 Hz → 24 | 30 / 30 |
 
-不连服务、在评测进程内跑占位策略（`HoldVLA` 把当前状态重复成动作块，用于检查链路）：
-
-```bash
-.venv-gs121-nyx/bin/python -m vla.gym.run_eval --config vla/configs/eval/smoke_hold_cast_coil.yaml
-```
-
-## 3. 模型
-
-| 模型配置 | 端口 | 机器人 | 相机 → 模型槽位 | 状态 / 动作 | 频率 → decimation | 块长 / 执行 |
-|---|---|---|---|---|---|---|
-| `pi05_droid_jointpos` | 8000 | Panda | agentview → exterior_1，wrist → wrist | 关节 / 绝对关节 | 15 Hz → 27 | 15 / 8 |
-| `pi05_base_trossen` | 8001 | ALOHA | cam_high、cam_left_wrist、cam_right_wrist | 关节 / 绝对关节 | 50 Hz → 8 | 50 / 25 |
-| `groot_n17_droid` | 8002 | Panda | agentview → exterior_1，wrist → wrist | 关节（eef_9d 由正运动学算）/ 绝对关节 | 15 Hz → 27 | 40 / 8 |
-| `molmoact2_droid` | 8003 | Panda | agentview、front_oblique、wrist → exterior_1、exterior_2、wrist | 关节 / 绝对关节 | 15 Hz → 27 | 15 / 15 |
-| `xvla_robotwin2` | 8004 | ALOHA | cam_high、cam_left_wrist、cam_right_wrist → head、左腕、右腕 | 末端 / 绝对末端（`ee_abs`） | 16.7 Hz → 24 | 30 / 30 |
-
-- 块长、执行步数、夹爪阈值都取各模型官方示例或评测客户端的值；执行步数可在评测配置 `run.execute_steps` 覆盖。
-- 夹爪：π0.5 DROID 与 GR00T 按官方客户端在 0.5 处二值化；X-VLA 在 0.7 处二值化；MolmoAct2 与 π0.5 ALOHA 保持连续值。
-- X-VLA 的末端位姿按"每臂相对自身基座"映射到 RoboTwin 世界系，并复现其训练时的四元数读取约定（`models/xvla/frames.py`）。
+块长、执行步数和夹爪阈值都取自各模型的官方推理示例或评测客户端。执行步数可以用 `run.execute_steps` 覆盖。每个包装层的 docstring 写明了官方入口、输入输出和单位。
 
 ## 4. 配置
 
-评测配置（`configs/eval/*.yaml`）：
+```text
+configs/eval/base.yaml                 评测默认值；configs/eval/<task>.yaml 继承它，只写 task.id
+configs/models/<robot>/base.yaml       同一机器人的共同部分（embodiment、相机等）
+configs/models/<robot>/<name>.yaml     一个 checkpoint 一个文件：class_path、checkpoint、spec、model
+gym/instructions.py                    每个任务的英文指令与 VERSION（改动任何文本都要递增）
+```
 
-| 键 | 含义 |
+- 继承：`_base_: base.yaml`，也可以写成列表，路径相对当前文件。先按顺序合并各 base，再合并本文件。映射按键合并，其余值（包括列表）整体替换。
+- 引用：OmegaConf 插值，例如 `${task.id}`，在合并后解析。
+- 命令行：`run_eval` 之后的 `key=value` 最后生效。键名必须已存在，拼错会报错；只有 `env.*` 可以新增，这些键原样传给 `topogym.make`。
+
+| 评测键 | 含义 |
 |---|---|
-| `policy.address` | 模型服务 `host:port` |
-| `policy.local` | 模型配置路径；非 null 时在评测进程内用 `LocalClient` 运行（只用于 `HoldVLA`） |
+| `policy.address` / `policy.local` | 模型服务 `host:port`（默认 `localhost:8000`），或在评测进程内运行的模型配置（仅 `HoldVLA`） |
 | `task.id` / `variation` / `seeds` / `sim_seconds` | 任务、变体、seed 列表、每个 episode 的仿真时长 |
-| `run.execute_steps` | null 表示用 `PolicySpec.execute_steps` |
-| `run.record` | 每个 episode 每路相机录一个 MP4 |
-| `run.output` | null 表示 `runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>`；目录必须尚不存在 |
-| `env` | 透传给 `topogym.make`；辅助抓持默认关闭 |
-
-`control_mode`、`observation_mode`、`control_decimation = round(1 / (control_hz × 0.0025))` 与 `max_physics_steps` 由 `PolicySpec` 和 `sim_seconds` 推出。
+| `run.execute_steps` / `record` / `output` | 执行步数（null 表示用模型的值）、是否录像、输出目录（null 表示 `runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>`，目录必须尚不存在） |
+| `env` | 原样传给 `topogym.make`；辅助抓持默认关闭 |
 
 ## 5. 输出
 
-- `results.jsonl`：每个 episode 一行，字段为 `task`、`variation`、`seed`、`model`、`instruction_version`、`outcome`、`task_success`、`failure_code`、`sim_time_s`、`control_steps`、`inference_calls`、`tracking_error_mean`、`tracking_error_max`、`clipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`、`execute_steps`、`control_decimation`、`control_hz_actual`。
-- `outcome`：`success`、`task_failure`、`time_limit`、`unevaluated`、`unfinished`、`invalid_action`（IK 失败等，物理未推进）、`policy_error`（模型出错、动作块形状不对或含 NaN、超时 600 s、断开）、`env_error`。
-- 跟踪误差：每步取各臂"发出的臂目标 − 下一次观测"的 L2 范数的最大值（关节 rad 或 TCP 位置 m，不含夹爪）。
-- `clipped_actions`：关节超限或开度超出 [0, 1] 而被截断的动作行数。
-- `summary.json`：成功率、各类结果计数、`PolicySpec`、指令与版本、完整配置快照、`git rev-parse HEAD`。
-- 录像：`seed_<seed>/videos/<相机>.mp4`（30 fps）、`frame_map.jsonl`、`recording_manifest.json`。
+每次评测（一个模型 × 一个任务）写一个目录：
 
-## 6. 已知问题
+```text
+results.jsonl              每个 episode 一行：outcome、仿真时长、控制步、推理次数、跟踪误差、截断行数、墙钟等
+summary.json               成功率、各类结果计数、PolicySpec、指令与版本、完整配置、git commit
+report.md                  一行 Markdown 汇总
+seed_<seed>/videos/*.mp4   每路相机一个 MP4（30 fps），另有 frame_map.jsonl、recording_manifest.json
+```
 
-- **GR00T**：所有 GR00T checkpoint 都要加载 gated 的 `nvidia/Cosmos-Reason2-2B`；当前 HF 账号返回 403。在该模型页面申请权限后重跑 `bash vla/setup.sh groot` 即可。
-- **ALOHA 夹爪初值**：TopoGym ALOHA 的 home 夹爪开度约 0.18（接近闭合）；openpi 的 ALOHA 变换会把它编码成训练中没有的状态 token。按官方变换原样保留。
-- **仿真速度**：实测每控制步墙钟见 `docs/IMPL_PLAN.md` 第 13 节。
+多次评测的对比表：`python -m vla.gym.report runs/test_results/<目录> ...`。
 
-## 7. 测试
+- `outcome` 取值：`success`、`task_failure`、`time_limit`（到时限，任务判定未成功）、`unevaluated`（到时限，任务无法判定）、`unfinished`、`invalid_action`（如末端目标超出 IK 容差，物理未推进）、`policy_error`（模型出错、动作块形状不对或含 NaN、连接断开）、`env_error`。
+- 跟踪误差：每一步取"发出的手臂目标 − 下一次测量"的 L2 范数，多条手臂取最大值，不含夹爪。单位由 `tracking_error_unit` 给出：关节动作为 rad，末端动作为 m。
+- `clipped_actions`：关节超出限位、或夹爪开度超出 [0, 1] 而被截断的动作行数。
+
+## 6. 测试
 
 ```bash
-.venv-gs121-nyx/bin/python -m pytest vla/tests -q     # 不需要 GPU
+conda activate topogym && python -m pytest vla/tests -q     # 不需要 GPU
 ```
+
+## 7. 已知问题
+
+- ALOHA 夹爪初值：TopoGym ALOHA 的 home 夹爪开度约 0.18（接近闭合），openpi 的 ALOHA 变换会把它编码成训练中没有的状态 token。这里按官方变换原样保留。
+- 仿真速度：每控制步的墙钟时间见 `docs/IMPL_PLAN.md` 第 13 节。

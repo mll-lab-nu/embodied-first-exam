@@ -17,9 +17,9 @@
 
 1. `git branch --show-current` 必须是 `dev/pingyue`。
 2. 读仓库根的 `CLAUDE.md` 和 `AGENTS.md`，照做：先读后写、最小改动、不过度抽象、用测试验证。
-3. **TopoGym 环境**：`.venv-gs121-nyx`（Genesis 1.2.1 + Nyx，Python 3.11），渲染资源在 `.external/nyx-assets`，运行前执行 `export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"`。
-   - 2026-09-30 已在本机新建：`CUDA_TAG=cu126 INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx OPTIONAL_GROUPS="video test" bash env_setup_gs121.sh`；nyx-assets 用 `scripts/prepare_nyx_studio.py` 下载。
-   - 本机 Vulkan 可见 AMD 核显、llvmpipe 和 RTX 4090，运行前还要 `export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json`，否则 Nyx 建场景时 abort。
+3. **TopoGym 环境**：conda env `topogym`（Genesis 1.2.1 + Nyx，Python 3.11），由 `bash vla/setup.sh topogym` 建立：仓库的 `env_setup_gs121.sh` 装进该 conda 环境，渲染资源放 `.external/nyx-assets`。
+   - 2026-09-30 最初按 tests/README 建的是 `.venv-gs121-nyx`；同日按用户要求改为 conda（第 13 节）。
+   - 本机 Vulkan 可见 AMD 核显、llvmpipe 和 RTX 4090，只加载 NVIDIA ICD 时 Nyx 才能建场景。`run_eval` 启动时自动补上 `VK_ICD_FILENAMES`（装了 NVIDIA Vulkan 驱动时）和 `TOPOGYM_VISUAL_ASSET_ROOT`，已设置的值不覆盖。
    - P0 的适配器测试需要 `import topogym` 并构建 `action_spec`，不需要 GPU；CPU 版 `.venv-gs121`（`bash env_setup_gs121.sh`）就够。协议、agent、服务的测试只依赖 numpy。
 4. **硬件**：本机 1 张 RTX 4090（24 GB）。刚体任务的仿真约占 2–3 GB 显存，模型与仿真同卡。显存不够时不要启动，把命令交给用户。
 
@@ -34,7 +34,7 @@
    - 代码风格跟 `topogym/` 一致：短 docstring、dataclass、直接的函数。
 4. **依赖隔离**：
    - TopoGym 环境不装任何新包，传输只用标准库。
-   - 每个模型一个独立环境，放在 `vla/.envs/<model>/`。
+   - 每个模型一个独立 conda 环境 `vla-<model>`；所有 conda 环境设 `PYTHONNOUSERSITE=1`，不读 `~/.local` 里的包。
    - 不装 `openpi-client`：它要求 `numpy<2`，TopoGym 是 `numpy==2.4.4`。
 5. **证据**：
    - 真实运行的产物放 `runs/test_results/<YYYYMMDD>_vla_<名称>/`（`runs/` 已被 git 忽略）。
@@ -43,7 +43,7 @@
 
 ## 2. 完成标准
 
-- 换模型只改评测配置里的 `policy.address`。
+- 换模型只需起另一个模型服务；端口在运行时指定（`serve --port`，评测侧 `policy.address`），不写在模型配置里。
 - 每个 episode 在 `results.jsonl` 里写一行（字段见第 6 节）；开录像时，每路相机一个 MP4。
 - `pytest vla/tests -q` 全部通过。
 - 首批矩阵（第 9 节）跑完并出对比表。零样本成功率预期接近 0，结论只写测到的数字。
@@ -53,7 +53,7 @@
 两个进程、两个 Python 环境，用本机 TCP 一对一连接：
 
 ```text
-评测进程 · TopoGym 环境（.venv-gs121-nyx）                   模型进程 · 模型环境（vla/.envs/<model>）
+评测进程 · conda env topogym                              模型进程 · conda env vla-<model>
 run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─ BaseVLA 子类 ─ 官方推理代码
 ```
 
@@ -66,36 +66,38 @@ run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─
 ```text
 vla/
 ├── README.md              快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
-├── setup.sh               建模型环境：bash vla/setup.sh <pi05|groot|molmoact2|xvla>
-├── .gitignore             .envs/  third_party/
+├── setup.sh               建 conda 环境：bash vla/setup.sh <topogym|pi05|groot|molmoact2|xvla>
+├── .gitignore             third_party/
 ├── __init__.py
 ├── protocol.py            PolicySpec / Observation / ActionChunk、encode / decode（标准库 + numpy）
+├── config.py              load_yaml：YAML 配置 + _base_ 继承（两侧共用，只依赖 OmegaConf）
 ├── gym/                   只在 TopoGym 环境运行；可 import topogym
 │   ├── adapter.py         Adapter：TopoGym 观测 / 动作 ⇄ 标准向量
 │   ├── agent.py           VLAAgent：动作块队列
 │   ├── client.py          RemoteClient、LocalClient、PolicyError
-│   └── run_eval.py        入口：读配置 → 评测 → results.jsonl / summary.json / MP4
+│   ├── instructions.py    每个任务的英文指令与 VERSION
+│   ├── report.py          输出目录 → Markdown 汇总表
+│   └── run_eval.py        入口：读配置 → 评测 → results.jsonl / summary.json / report.md / MP4
 ├── models/                只在模型环境运行；不 import topogym
 │   ├── base.py            BaseVLA
 │   ├── serve.py           入口：读模型配置 → 加载 → TCP 服务
 │   ├── dummy.py           HoldVLA：把当前 state 重复成动作块，用于测试链路
 │   └── pi05/ groot/ molmoact2/ xvla/      每个目录一个 model.py
 ├── configs/
-│   ├── models/*.yaml      一个 checkpoint 一个文件（第 7 节）
-│   ├── eval/*.yaml        一次评测一个文件（第 7 节）
-│   └── instructions.yaml  每个任务的英文指令，带版本号
+│   ├── models/<robot>/    base.yaml + 一个 checkpoint 一个文件（第 7 节）
+│   └── eval/              base.yaml + 一个任务一个文件（第 7 节）
 ├── tests/                 不需要 GPU
 └── docs/                  本文件、DESIGN.md、index.html + img/
 ```
 
-**`setup.sh`** 只给模型建环境，TopoGym 环境不动。每个模型走同样的步骤：
+**`setup.sh`** 每个目标建一个 conda 环境（已存在则复用）。`topogym`：用仓库的 `env_setup_gs121.sh` 装进 conda 环境，再准备 nyx-assets。模型走同样的步骤：
 1. 把官方仓库克隆到 `vla/third_party/<model>`，检出固定 commit；
-2. 用 uv 建 `vla/.envs/<model>`；
-3. 按官方 README 安装，再装 `omegaconf`；
+2. 建 conda 环境 `vla-<model>`（设 `PYTHONNOUSERSITE=1`）；
+3. 按官方 README 安装（有 lock 文件时 `uv sync` 装进该 conda 环境），再装 `omegaconf`；
 4. 下载 checkpoint 到官方默认缓存目录；
 5. 做一次 import 冒烟检查。
 
-每个模型在 `case` 分支里只写 5 项：仓库、commit、Python 版本、安装命令、checkpoint。
+每个目标在 `case` 分支里只写：环境名、仓库、commit、Python 版本、安装命令、checkpoint。
 
 ## 5. 接口
 
@@ -174,7 +176,7 @@ RemoteClient(address) / LocalClient(model)            # 都有 .spec、.reset(se
 | 客户端 → 服务端 | `infer` → 回 `chunk` | Observation 字段 → `actions` |
 | 服务端 → 客户端 | `error` | `message`（traceback 文本）；客户端抛 `PolicyError` |
 
-客户端每次等待回复的超时写成常量 600 s，首次推理有 JIT 编译。超时或断开都抛 `PolicyError`。
+客户端等待回复不设时限（2026-09-30 用户决定）：服务端退出时连接断开，立即抛 `PolicyError`；服务端忙于另一个客户端时，排队等它断开。
 
 ## 6. 评测循环
 
@@ -194,7 +196,7 @@ with topogym.make(cfg.task.id, **make_args) as env:
         actor = env.interaction()
         # 先检查 actor.action_spec["robot_id"] == spec.embodiment，不一致就停
         agent = VLAAgent(client, Adapter(actor.action_spec, spec), execute_steps)
-        agent.reset(seed, instruction)
+        agent.reset(seed, instruction, obs["state"]["episode_id"])    # episode id 用 Env 的
         # 录像：RecordingSession(out / f"seed_{seed}", fps=30, metadata=...) 进入后 append(env.sensor_frame())，
         #       再 stop = env.add_frame_sink(rec.append)
         obs = actor.observe()
@@ -214,53 +216,63 @@ with topogym.make(cfg.task.id, **make_args) as env:
   - 任务：`task`、`variation`、`seed`、`model`（spec.name）、`instruction_version`；
   - 结果：`outcome`、`task_success`、`failure_code`、`sim_time_s`；
   - 控制：`control_steps`、`inference_calls`、`execute_steps`、`control_decimation`、`control_hz_actual`；
-  - 诊断：`tracking_error_mean`、`tracking_error_max`、`clipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`。
+  - 诊断：`tracking_error_mean`、`tracking_error_max`、`tracking_error_unit`（rad / m）、`clipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`。
 - **`outcome` 取值**：`success`、`task_failure`、`time_limit`、`unevaluated`、`unfinished`、`invalid_action`、`policy_error`、`env_error`。
 - **`summary.json`**：成功率、各类结果计数、完整配置快照、`git rev-parse HEAD`。
+- **`report.md`**：一行 Markdown 汇总；`python -m vla.gym.report <目录>...` 把多个输出目录汇成对比表。
 
 ## 7. 配置
 
+配置文件可以用 `_base_` 继承（路径相对本文件，按顺序合并，映射按键合并、其余值整体替换），用 `${a.b}` 引用，`run_eval` 的命令行 `key=value` 最后生效（键名必须存在，`env.*` 除外）。端口不写在模型配置里。
+
 ```yaml
-# vla/configs/models/pi05_droid_jointpos.yaml（数值在 P3 按官方代码核对）
-class_path: vla.models.pi05.model.Pi05      # serve.py 用 importlib 按此加载，不设注册表
-checkpoint: <官方 checkpoint 路径或 ID>
-port: 8000
+# vla/configs/models/panda_robotiq/base.yaml：同一机器人的共同部分
 spec:
-  name: pi05_droid_jointpos
   embodiment: panda_robotiq
   cameras: [agentview, wrist]
   state_keys: [joint]
   action_space: joint_abs
   control_hz: 15
-  chunk_size: 15
-  execute_steps: 8
-model: {}                                   # 子类专属参数，如归一化统计量名
 ```
 
 ```yaml
-# vla/configs/eval/pi05_droid_buzz_wire.yaml
+# vla/configs/models/panda_robotiq/pi05_droid_jointpos.yaml
+_base_: base.yaml
+class_path: vla.models.pi05.model.Pi05      # serve.py 用 importlib 按此加载，不设注册表
+checkpoint: gs://openpi-assets/checkpoints/pi05_droid_jointpos
+spec:
+  name: pi05_droid_jointpos
+  chunk_size: 15
+  execute_steps: 8
+model:                                      # 子类专属参数
+  train_config: pi05_droid_jointpos_polaris
+```
+
+```yaml
+# vla/configs/eval/base.yaml（节选）；vla/configs/eval/<task>.yaml 只写 _base_ 和 task.id
 policy:
-  address: localhost:8000        # 换模型只改这里
+  address: localhost:8000        # 模型服务的端口在运行时指定
 task:
-  id: buzz_wire_3d
+  id: ???
   variation: base
   seeds: [0, 1, 2]
   sim_seconds: 60
 run:
   execute_steps: null            # null = 用 PolicySpec.execute_steps
   record: true
-  output: runs/test_results/20261001_vla_pi05_buzz_wire
+  output: null                   # null = runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>
 env: {}                          # 透传给 topogym.make；辅助抓持默认关闭，这里不设
 ```
 
 ```bash
 bash vla/setup.sh pi05                                                          # 一次性
-vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_droid_jointpos.yaml
-.venv-gs121-nyx/bin/python -m vla.gym.run_eval --config vla/configs/eval/pi05_droid_buzz_wire.yaml \
-    task.seeds=[0] run.record=false                                             # OmegaConf 命令行覆盖
+conda activate vla-pi05
+python -m vla.models.serve --config vla/configs/models/panda_robotiq/pi05_droid_jointpos.yaml   # --port 默认 8000
+conda activate topogym
+python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seeds=[0] run.record=false
 ```
 
-两个命令都从仓库根运行，所以两边都能 `import vla`。
+两个命令都从仓库根运行，所以两边都能 `import vla`。指令在 `vla/gym/instructions.py`（`INSTRUCTIONS`、`VERSION`），不放 YAML。
 
 ## 8. 复用（2026-09-30 已在代码中核对）
 
