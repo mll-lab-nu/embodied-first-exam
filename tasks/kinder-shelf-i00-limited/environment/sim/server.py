@@ -284,6 +284,7 @@ class Kinova(_Robot):
     NEAR_M, FAR_M = 0.01, 100.0
     ROOM_FOVY = 60.0                            # KinDER's render() (pybullet_helpers' capture_image)
     FINGERS_CLOSED = 0.8                        # finger_state at the gripper's closed limit (0: open)
+    STILL = 1e-9                                # m or rad: less is no move (KinDER's undo can leave round-off on the yaw)
     h = math.sqrt(0.5)                          # TidyBot++'s cameras: position, axes (as MuJoCo's), vertical field of view
     BASE_CAM = (np.array([0.2525, 0.0, 0.335]), np.array([[0, h, -h], [-1, 0, 0], [0, h, h]]), 52.2338)   # base frame
     # on bracelet_link; 3 cm further along its view than tidybot.xml's, because this model's gripper carries its own
@@ -301,14 +302,15 @@ class Kinova(_Robot):
     def apply(self, typ: str, a: np.ndarray) -> tuple[bool, bool, dict]:
         """As the base's, and whether KinDER refused the move: the pose it was sent to differs from the one it was in
         (from the action KinDER receives, in its dtype; the arm's targets clipped to its limits, as KinDER does), yet
-        the robot did not move at all."""
+        the robot did not move (by more than STILL)."""
         self._frames = {}
         q0, arm = self._pose(), self.env.robot.arm
         w = self._world(a).astype(self.s.action_space.dtype).astype(np.float64)
         target = np.concatenate([q0[:3] + w[:3], np.clip(q0[3:] + w[3:10], arm.joint_lower_limits[:7],
                                                            arm.joint_upper_limits[:7])])
         done, success, _ = super().apply(typ, a)
-        return done, success, {"blocked": bool(np.any(target != q0) and np.array_equal(self._pose(), q0))}
+        asked, moved = np.abs(target - q0) > self.STILL, np.abs(self._pose() - q0) > self.STILL
+        return done, success, {"blocked": bool(asked.any() and not moved.any())}
 
     def _pose(self) -> np.ndarray:
         """The base's (x, y, yaw) and the arm's 7 joint angles, as the simulator holds them."""
