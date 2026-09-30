@@ -1,7 +1,11 @@
 """X-VLA RoboTwin2 <-> standard ee vectors: quaternion misread, per-arm base mapping, TCP offset, gripper."""
+from pathlib import Path
+
 import numpy as np
+import pytest
 from scipy.spatial.transform import Rotation
 
+from vla.config import load_yaml
 from vla.models.xvla.frames import base_transform, from_xvla, to_xvla
 
 TOPOGYM = {"left": [-0.6, -0.02, 0.94, 0.0], "right": [0.33, -0.02, 0.94, 180.0]}
@@ -55,3 +59,12 @@ def test_gripper_closes_above_the_official_threshold():
     actions[:, [9, 19]] = [[0.69, 0.71], [0.71, 0.69]]
     openings = from_xvla(actions, TRANSFORMS, OFFSET)[:, [9, 19]]
     np.testing.assert_array_equal(openings, [[1.0, 0.0], [0.0, 1.0]])
+
+
+def test_config_keeps_heights_above_the_table():
+    """TopoGym's ALOHA bases stand on the table top (z 0.9196429, world_tabletop_v1.yaml); RoboTwin's stand 4.2 cm
+    above its table (z 0.74, envs/_base_task.py). A point on one table top maps onto the other."""
+    options = load_yaml(Path(__file__).resolve().parents[1] / "configs/models/aloha/xvla_robotwin2.yaml").model
+    for arm in ("left", "right"):
+        A, a = base_transform(options.topogym_bases[arm], options.robotwin_bases[arm])
+        assert (A @ np.array([0.1, -0.2, 0.9196429]) + a)[2] == pytest.approx(0.74)

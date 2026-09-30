@@ -6,8 +6,8 @@ X-VLA RoboTwin2, per arm, left first: [xyz, v6, g] (X-VLA models/action_hub.py E
        RoboTwin's scalar-first quaternion as scalar-last. Training and the official client both do this
        (X-VLA issue #93), so the misread is reproduced here.
   g    1 - RoboTwin gripper, 1 = closed; the official client closes when g > 0.7.
-Each arm keeps its TCP pose relative to its own base: TopoGym base frame -> RoboTwin base frame. Tool axes
-match (x approach, z up at the neutral pose) for the ViperX gripper link and RoboTwin link6.
+Each arm keeps its TCP pose relative to its own base frame (TopoGym -> RoboTwin), with the frames given in the
+model config. Tool axes match (x approach, z up at the neutral pose) for the ViperX gripper link and RoboTwin link6.
 """
 import numpy as np
 from scipy.spatial.transform import Rotation
