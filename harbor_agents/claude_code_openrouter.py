@@ -4,8 +4,9 @@ Harbor's Claude Code adapter talks to Anthropic: it sends the key as ``ANTHROPIC
 ``x-api-key`` header) and, without an explicit base URL, to api.anthropic.com. OpenRouter's
 Anthropic-compatible endpoint wants ``ANTHROPIC_BASE_URL=https://openrouter.ai/api``, the key as
 ``ANTHROPIC_AUTH_TOKEN`` (a bearer token), and its own model ids (``anthropic/claude-opus-5.5``).
-This adapter reads ``OPENROUTER_API_KEY`` and makes that translation, so the key is not duplicated
-in ``.env``. Model names are ``openrouter/<provider>/<model>``, as for ``CodexOpenRouter``.
+This adapter reads ``OPENROUTER_API_KEY`` and hands it to the model gateway (``gateway.py``), which
+forwards to that endpoint; Claude Code gets the gateway's URL and a placeholder token, so no credential
+sits in the agent's container. Model names are ``openrouter/<provider>/<model>``, as for ``CodexOpenRouter``.
 """
 
 from __future__ import annotations
@@ -15,9 +16,8 @@ from typing import Any
 from harbor.agents.installed.claude_code import ClaudeCode
 from harbor.agents.model_connection import ModelConnectionSpec
 
+from harbor_agents.gateway import PLACEHOLDER_KEY, URL, start_gateway
 from harbor_agents.limited import end_trial
-
-OPENROUTER_ANTHROPIC_URL = "https://openrouter.ai/api"  # Claude Code appends /v1/messages
 
 
 class ClaudeCodeOpenRouter(ClaudeCode):
@@ -39,6 +39,7 @@ class ClaudeCodeOpenRouter(ClaudeCode):
             )
 
     async def run(self, instruction, environment, context) -> None:
+        await start_gateway(self, environment, self.model_connection.api_key, self._resolved_model_name())
         try:
             await super().run(instruction, environment, context)
         finally:
@@ -48,8 +49,6 @@ class ClaudeCodeOpenRouter(ClaudeCode):
         return self.model_name.removeprefix("openrouter/") if self.model_name else None
 
     def _resolve_auth_env(self) -> dict[str, str]:
-        key = self.model_connection.api_key
-        if not key:
-            raise ValueError("ClaudeCodeOpenRouter needs OPENROUTER_API_KEY")
-        # No ANTHROPIC_API_KEY: OpenRouter authenticates the bearer token only.
-        return {"ANTHROPIC_BASE_URL": OPENROUTER_ANTHROPIC_URL, "ANTHROPIC_AUTH_TOKEN": key}
+        # The gateway forwards /v1/messages to OpenRouter's Anthropic endpoint with the real key as a bearer token;
+        # no ANTHROPIC_API_KEY, which OpenRouter would not read.
+        return {"ANTHROPIC_BASE_URL": URL, "ANTHROPIC_AUTH_TOKEN": PLACEHOLDER_KEY}

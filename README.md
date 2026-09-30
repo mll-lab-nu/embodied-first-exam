@@ -43,9 +43,11 @@ PYTHONPATH=. harbor run -p <task> -a harbor_agents.claude_code_openrouter:Claude
   -m openrouter/anthropic/claude-opus-5.5 --env-file .env --allow-agent-host openrouter.ai        # Claude Code
 ```
 
-The adapters in `harbor_agents/` map the OpenRouter key, endpoint and nested model ID to what each harness
-expects, and switch off the harness's own web tools: the provider runs those, past the task's network
-allowlist (`docs/LEAKAGE.md`). In limited mode they also end the trial when the agent's session ends
+The adapters in `harbor_agents/` map the OpenRouter endpoint and nested model ID to what each harness
+expects, keep the key in a model gateway beside the harness (`gateway.py`: the harness gets a placeholder, the
+gateway pins the model and logs every exchange to `agent/gateway.jsonl`), and switch off the harness's own web
+tools: the provider runs those, past the task's network allowlist (`docs/LEAKAGE.md`). The run script pins the
+Codex CLI (`RCB_CODEX_VERSION`, 0.159.2). In limited mode they also end the trial when the agent's session ends
 (`docs/LIMITED_MODE_1_1.md`). `--ak` (`--agent-kwarg`) passes an agent option, e.g. `--ak web_search=live` or
 `--ak reasoning_effort=medium`. The standard configs and their commands are in `results/<benchmark>/README.md`.
 

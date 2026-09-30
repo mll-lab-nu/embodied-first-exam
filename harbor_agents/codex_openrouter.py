@@ -6,9 +6,9 @@ themselves contain a slash (for example ``deepseek/deepseek-v4.1-flash``), so
 this adapter preserves everything after Harbor's ``openrouter/`` prefix.
 
 The parent adapter expects OpenAI-style runtime variables.  Selecting the
-OpenRouter model connection here lets Harbor read ``OPENROUTER_API_KEY`` and
-then safely translate it for the Codex subprocess without duplicating the key
-in ``.env``.
+OpenRouter model connection here lets Harbor read ``OPENROUTER_API_KEY``; the key
+then goes to the model gateway (``gateway.py``), and Codex talks to the gateway
+with a placeholder key, so no credential sits in the agent's container.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from typing import Any
 from harbor.agents.installed.codex import Codex
 from harbor.agents.model_connection import ModelConnectionSpec, ResolvedModelConnection
 
+from harbor_agents.gateway import PLACEHOLDER_KEY, URL, start_gateway
 from harbor_agents.limited import end_trial
 
 
@@ -44,10 +45,13 @@ class CodexOpenRouter(Codex):
         # found hidden reward constants (docs/LEAKAGE.md). `--ak web_search=live` turns it back on.
         kwargs.setdefault("web_search", "disabled")
         super().__init__(*args, **kwargs)
+        self._gateway_up = False
 
     @property
     def model_connection(self) -> ResolvedModelConnection:
         connection = super().model_connection
+        if self._gateway_up:   # Codex itself only ever sees the gateway and a placeholder key
+            return replace(connection, api_key=PLACEHOLDER_KEY, configured_base_url=f"{URL}/v1")
         # Harbor's Codex adapter applies only an explicitly configured URL, while
         # the shared resolver represents OpenRouter's standard URL as a default.
         # Promote that default so the generated custom provider receives it.
@@ -76,6 +80,10 @@ class CodexOpenRouter(Codex):
         }
         return config
 
+    def _resolve_auth_json_path(self):
+        """Never upload a Codex login file (CODEX_AUTH_JSON_PATH, CODEX_FORCE_AUTH_JSON): it is a credential too."""
+        return None
+
     async def run(self, instruction, environment, context) -> None:
         if not self.model_name or not self.model_name.startswith("openrouter/"):
             raise ValueError(
@@ -83,6 +91,9 @@ class CodexOpenRouter(Codex):
                 "for example openrouter/deepseek/deepseek-v4.1-flash"
             )
 
+        await start_gateway(self, environment, super().model_connection.api_key,
+                            self.model_name.removeprefix("openrouter/"))
+        self._gateway_up = True
         original_model_name = self.model_name
         self.model_name = _OpenRouterModelName(original_model_name)
         try:
