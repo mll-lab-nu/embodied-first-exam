@@ -1,0 +1,8 @@
+{
+ "task": "place_burger_fries",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "c539c61f4672",
+ "text": "Use dual arm to pick the hamburg and frenchfries and put them onto the tray.",
+ "n_active_joints": 16
+}

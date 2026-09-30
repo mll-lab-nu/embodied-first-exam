@@ -156,7 +156,7 @@ network_mode = "no-network"
 
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 400); do grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]

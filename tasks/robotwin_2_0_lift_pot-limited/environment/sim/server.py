@@ -25,13 +25,18 @@ MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "frames": [], "error": None}
 
+# SIGUSR1 (the collect hook's "episode over") may arrive before the service is ready, e.g. during a resume replay; its
+# default action would kill the process. Until the real handler is installed, only remember it.
+_USR1 = {"pending": False}
+signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
+
 # Startup watchdog: a scene build that hangs (seen under GPU memory pressure: no crash, so compose never restarted it)
 # exits the process, so compose's restart (on-failure) retries. Only before the service is ready: an episode that has
 # not started cannot be reset by this; after "ready" the watchdog stops.
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "300"))
 def _startup_watchdog():
     time.sleep(STARTUP_TIMEOUT_S)
-    if not E.get("ready"):
+    if not E.get("built") and not E.get("ready"):
         print(f"startup watchdog: not ready after {STARTUP_TIMEOUT_S:g} s; exiting for a restart", flush=True); os._exit(3)
 threading.Thread(target=_startup_watchdog, daemon=True).start()
 
@@ -118,6 +123,7 @@ def finish(reason: str) -> None:
 # ---------------------------------------------------------------- scene
 from rcb_traj import Session  # noqa: E402
 S = Session(TASK, instance=INSTANCE, enable_render=True)
+E["built"] = True    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 ENV = S.env; ROBOT = ENV.robot
 ENV.step_lim = None; ENV.eval_video_path = None; ENV.take_action_cnt = 0; ENV.eval_success = False; ENV.now_obs = {}
 L_ARM = [j.get_name() for j in ROBOT.left_arm_joints]; R_ARM = [j.get_name() for j in ROBOT.right_arm_joints]
@@ -515,7 +521,6 @@ def _end_from_signal():
 
 def on_usr1(*_):
     threading.Thread(target=_end_from_signal, daemon=True).start()
-signal.signal(signal.SIGUSR1, on_usr1)
 
 def _resume_or_start() -> None:
     """Fresh start, or (after a crash: compose restarts the container) resume the SAME episode, never a reset. The
@@ -558,8 +563,10 @@ def _resume_or_start() -> None:
 
 
 _resume_or_start()
+signal.signal(signal.SIGUSR1, on_usr1)
+if _USR1["pending"]: on_usr1()
 E["ready"] = True
 LIVE = rcb_live.LiveRecorder(S, DATA, t0=E["t0"]); LIVE.open()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
-print("rcb-limited/2.0 sim ready", flush=True)
+print(f"{PROTOCOL} sim ready", flush=True)
 HTTPServer(("0.0.0.0", 8000), H).serve_forever()

@@ -1,0 +1,8 @@
+{
+ "task": "turn_switch",
+ "seed": 91573,
+ "embodiment": "aloha-agilex",
+ "state_sha": "5e14258896cd",
+ "text": "Use the robotic arm to click the switch.",
+ "n_active_joints": 16
+}

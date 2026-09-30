@@ -1,0 +1,8 @@
+{
+ "task": "move_stapler_pad",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "39cde44feebb",
+ "text": "Use appropriate arm to move the stapler to a colored mat.",
+ "n_active_joints": 16
+}
