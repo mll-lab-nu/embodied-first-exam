@@ -44,7 +44,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 
 `控制频率 → decimation`：模型训练数据的频率换算成每个动作保持的物理步数，`decimation = round(1 / (频率 × 0.0025 s))`；实际频率为 `1 / (decimation × 0.0025 s)`。`块长 / 执行`：每次推理预测的动作数，以及执行其中前几个后再推理。
 
-**Panda + Robotiq**（如 `buzz_wire_3d`）：三个都是 DROID 训练的 checkpoint，输入关节状态，输出绝对关节目标，15 Hz → 27（实际 14.8 Hz）。
+**Panda + Robotiq**（如 `buzz_wire_3d`）：三个都是 DROID 训练的 checkpoint，输入关节状态，输出绝对关节目标，15 Hz → 27（实际 14.8 Hz）。TopoGym 把 Robotiq 装在 Franka hand 坐标系上，比 DROID 的安装多转了 45°，所以关节 7 按 DROID 约定换算：`q7_DROID = q7_TopoGym − π/4`（`models/droid.py`）。
 
 | 模型配置 `configs/models/panda_robotiq/` | conda env | TopoGym 相机 → 模型图像输入 | 块长 / 执行 |
 |---|---|---|---|
@@ -59,7 +59,9 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | `pi05_base_trossen` | `vla-pi05` | 关节 → 绝对关节 | 50 Hz → 8 | 50 / 25 |
 | `xvla_robotwin2` | `vla-xvla` | 末端位姿 → 绝对末端位姿（TopoGym 用 IK 求关节） | 16.7 Hz → 24 | 30 / 30 |
 
-块长、执行步数和夹爪阈值都取自各模型的官方推理示例或评测客户端。执行步数可以用 `run.execute_steps` 覆盖。每个包装层的 docstring 写明了官方入口、输入输出和单位。
+X-VLA 的末端位姿按每条手臂分别换算：水平方向和朝向保持相对各自基座不变，高度保持相对桌面不变（RoboTwin 的基座比桌面高 4.2 cm，TopoGym 的基座就在桌面上）。
+
+块长、执行步数和夹爪阈值都取自各模型的官方推理示例或评测客户端。执行步数可以用 `run.execute_steps` 覆盖。每个包装层的 docstring 写明了官方入口、输入输出和单位。四个模型的调用方式已逐项对照官方代码核对，结论见 `runs/test_results/20260930_vla_round2_audit/audit.md`。
 
 ## 4. 配置
 
@@ -106,5 +108,6 @@ conda activate topogym && python -m pytest vla/tests -q     # 不需要 GPU
 
 ## 7. 已知问题
 
-- ALOHA 夹爪初值：TopoGym ALOHA 的 home 夹爪开度约 0.18（接近闭合），openpi 的 ALOHA 变换会把它编码成训练中没有的状态 token。这里按官方变换原样保留。
+- π0.5 ALOHA 夹爪：openpi 的官方换算把模型的"全闭"映射到 ALOHA 归一化关节值 0.553，在 TopoGym 手指导轨上对应每指 21 mm，因此夹不住薄零件。另外，home 夹爪开度约 0.18（接近闭合），会被编码成训练中没有的状态 token。目前按官方变换原样保留。
+- 起始姿态：各任务从 TopoGym 的 home 姿态开始，与各模型训练数据的复位姿态不同。
 - 仿真速度：每控制步的墙钟时间见 `docs/IMPL_PLAN.md` 第 13 节。
