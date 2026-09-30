@@ -118,7 +118,7 @@ def test_joint_action_clips_joints_and_opening():
     np.testing.assert_allclose(command["joint_position_rad"], limits[:, 1], atol=1e-6)
     assert command["gripper_position_rad"] == 0.0 and adapter.clipped == 1
     adapter.action(np.r_[limits.mean(axis=1), 0.5].astype(np.float32))
-    assert adapter.clipped == 1
+    assert adapter.clipped == 1 and type(adapter.clipped) is int  # written to results.jsonl
 
 
 @pytest.mark.parametrize("robot", ["aloha", "panda_robotiq"])

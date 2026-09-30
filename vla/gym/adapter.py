@@ -75,7 +75,7 @@ class Adapter:
             else:
                 command = {"position_world_m": pose[:3].tolist(), "orientation_wxyz": rot6d_to_wxyz(pose[3:]).tolist()}
             g = float(np.clip(opening, 0.0, 1.0))
-            clipped |= g != opening
+            clipped |= bool(g != opening)
             command[group["gripper_field"]] = self.closed + g * (self.open - self.closed)
             action[arm] = command
         self.clipped += clipped

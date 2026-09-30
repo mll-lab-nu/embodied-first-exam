@@ -13,6 +13,16 @@ PY="$ENV_DIR/bin/python"
 
 # Each branch sets REPO, COMMIT, PYTHON and defines install() and download().
 case "$MODEL" in
+    pi05)
+        REPO=https://github.com/Physical-Intelligence/openpi
+        COMMIT=215abfb217dbac7d5f1273282331b9b1866c0479
+        PYTHON=3.11
+        install() { (cd "$REPO_DIR" && GIT_LFS_SKIP_SMUDGE=1 UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --frozen --no-dev); }
+        download() {  # into ~/.cache/openpi (OPENPI_DATA_HOME)
+            "$PY" -c "from openpi.shared.download import maybe_download
+for name in ('pi05_droid_jointpos', 'pi05_base'): print(maybe_download(f'gs://openpi-assets/checkpoints/{name}'))"
+        }
+        ;;
     *) echo "usage: bash vla/setup.sh <pi05|groot|molmoact2|xvla>" >&2; exit 1 ;;
 esac
 
