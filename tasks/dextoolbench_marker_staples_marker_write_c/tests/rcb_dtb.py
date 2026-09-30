@@ -42,7 +42,9 @@ ROOT = Path(os.environ.get("RCB_MJ_ROOT", "/opt/rcb_mj"))
 SIM_DT = 1.0 / 600.0
 CONTROL_DT = 1.0 / 60.0
 SUBSTEPS = int(round(CONTROL_DT / SIM_DT))          # 10
-GOAL_TIMEOUT_STEPS = 600                              # 10 s per goal (DexToolBench eval: per-goal timeout)
+# 10 s per goal (DexToolBench eval: per-goal timeout). RCB_DTB_GOAL_TIMEOUT_S overrides it; 0 = no per-goal limit
+# (the limited-mode service: one episode, no reset; owner 2026-09-29). The default keeps the benchmark's rule.
+GOAL_TIMEOUT_STEPS = int(round(float(os.environ.get("RCB_DTB_GOAL_TIMEOUT_S", "10")) / (1.0 / 60.0)))
 SUCCESS_TOL_M = 0.01 * 1.5                            # eval_success_tolerance * keypoint_scale
 KEYPOINT_HALF = 0.5 * 1.5 * np.array([0.141, 0.03025, 0.0271])
 CORNERS = np.array([[sx, sy, sz] for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)], dtype=np.float64) * KEYPOINT_HALF
@@ -223,7 +225,7 @@ class Session:
             if self.goal_distance() < SUCCESS_TOL_M:
                 self.goal_index += 1; self.steps_on_goal = 0
                 if self.goal_index < len(self.goals): self._set_goal_marker(self.goals[self.goal_index]); self.mj.mj_forward(self.model, self.data)
-            elif self.steps_on_goal >= GOAL_TIMEOUT_STEPS:
+            elif GOAL_TIMEOUT_STEPS and self.steps_on_goal >= GOAL_TIMEOUT_STEPS:
                 self.failed = True
         return self.progress()
 
@@ -234,7 +236,7 @@ class Session:
     def progress(self) -> dict[str, Any]:
         n = len(self.goals); done = self.goal_index >= n
         return {"reached": self.goal_index, "n_goals": n, "progress": self.goal_index / n, "done": done, "failed": self.failed,
-                "steps_on_goal": self.steps_on_goal, "steps_left_on_goal": None if done or self.failed else GOAL_TIMEOUT_STEPS - self.steps_on_goal,
+                "steps_on_goal": self.steps_on_goal, "steps_left_on_goal": None if done or self.failed or not GOAL_TIMEOUT_STEPS else GOAL_TIMEOUT_STEPS - self.steps_on_goal,
                 "goal_distance_m": None if done else round(self.goal_distance(), 5)}
 
     # ---- state (privileged in unlimited mode)

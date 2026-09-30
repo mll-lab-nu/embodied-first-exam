@@ -20,7 +20,7 @@ client and one episode.
 ## Scoring
 The current goal counts as reached when all 8 corners of the tool's grasp box (0.141 × 0.030 × 0.027 m, scaled by
 1.5, in the tool's frame) are within **1.5 cm** of the same corners at the goal pose; then the next goal becomes
-current. Each goal has **10 s (600 control steps)**; if it is not reached in time the attempt ends there.
+current. In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). The episode ends when every goal is reached, or after **36,000 control steps (10 min of robot time)**.
 **reward = goals reached / 36** (partial credit). Full success = all 36.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.1`)
@@ -43,4 +43,5 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   limits in the spec. A chunk covers at most 10 s.
 - `meta["task"]` = the current goal (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`, `steps_left_on_goal`
 (the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every
-goal is reached or a goal times out; after that the service answers 409.
+goal is reached or at the step limit (`spec["max_control_steps"]`); after that the service answers 409.
+`steps_left_on_goal` is null: no goal has a time limit here.
