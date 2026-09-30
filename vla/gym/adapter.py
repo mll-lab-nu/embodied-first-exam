@@ -14,8 +14,12 @@ from scipy.spatial.transform import Rotation
 
 from vla.protocol import Observation
 
-# Native gripper coordinates (fully open, fully closed), as in docs/vla_doc/vla_eval_demo.py.
+# Native gripper coordinates (fully open, fully closed) of commands, as in docs/vla_doc/vla_eval_demo.py.
 GRIPPER_OPEN_CLOSED = {"aloha": (0.037, 0.002), "panda_robotiq": (0.0, 0.8)}
+# Native value read as opening 0: where an empty gripper stops when commanded closed. The ALOHA fingers touch at
+# 8.2 mm (runs/test_results/20260930_vla_round3_gripper), so a closed ALOHA gripper reads 0 as in ALOHA's own
+# calibration, while close commands keep the 2 mm end of the rail and squeeze.
+GRIPPER_STATE_CLOSED = {"aloha": 0.0082, "panda_robotiq": 0.8}
 
 
 def rot6d(wxyz):
@@ -39,6 +43,7 @@ class Adapter:
         self.arms = tuple(action_spec["arms"])
         self.groups = action_spec["groups"]
         self.open, self.closed = GRIPPER_OPEN_CLOSED[spec.embodiment]
+        self.state_closed = GRIPPER_STATE_CLOSED[spec.embodiment]
         self.pose_sizes = [len(self.groups[arm]["arm_joint_names"]) if spec.action_space == "joint_abs" else 9
                            for arm in self.arms]
         self.action_dim = sum(self.pose_sizes) + len(self.arms)
@@ -59,7 +64,7 @@ class Adapter:
             else:
                 parts += [measured["tcp_position_world_m"], rot6d(measured["tcp_orientation_wxyz"])]
             fingers = next(value for name, value in measured.items() if name.startswith("finger_position_"))
-            parts.append([np.clip((fingers[0] - self.closed) / (self.open - self.closed), 0.0, 1.0)])
+            parts.append([np.clip((fingers[0] - self.state_closed) / (self.open - self.state_closed), 0.0, 1.0)])
         return np.concatenate(parts).astype(np.float32)
 
     def reached(self, row, robot, tolerance):

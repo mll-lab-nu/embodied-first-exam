@@ -35,7 +35,7 @@ def measured_robot(spec, fingers):
 
 
 @pytest.mark.parametrize("robot, fingers, openings", [
-    ("aloha", [0.037, 0.0195], [1.0, 0.5]),
+    ("aloha", [0.037, 0.0226], [1.0, 0.5]),  # the ALOHA fingers touch at 8.2 mm: opening 0
     ("aloha", [0.002, 0.05], [0.0, 1.0]),
     ("panda_robotiq", [0.4], [0.5]),
     ("panda_robotiq", [-0.1], [1.0]),
@@ -103,11 +103,19 @@ def test_joint_action_inverts_joint_state(robot):
     adapter = Adapter(spec, policy_spec(robot))
     action = adapter.action(adapter.observation({}, measured, "go", "e", 0).state["joint"])
     for arm, command in action.items():
-        field = spec["groups"][arm]["gripper_field"]
-        native = next(v for k, v in measured[arm].items() if k.startswith("finger_position_"))[0]
         np.testing.assert_allclose(command["joint_position_rad"], measured[arm]["joint_position_rad"], atol=1e-6)
-        assert np.isclose(command[field], native, atol=1e-6)
+    if robot == "panda_robotiq":
+        assert np.isclose(action["arm"]["gripper_position_rad"], 0.3, atol=1e-6)
     assert adapter.clipped == 0
+
+
+def test_aloha_openings_read_the_touching_fingers_as_closed_and_close_commands_squeeze():
+    spec = action_spec("aloha", "joint_abs")
+    adapter = Adapter(spec, policy_spec("aloha"))
+    state = adapter.observation({}, measured_robot(spec, [0.0082, 0.037]), "go", "e", 0).state["joint"]
+    assert (state[6], state[13]) == (0.0, 1.0)
+    action = adapter.action(state)
+    assert (action["left"]["gripper_position_m"], action["right"]["gripper_position_m"]) == (0.002, 0.037)
 
 
 def test_joint_action_clips_joints_and_opening():
