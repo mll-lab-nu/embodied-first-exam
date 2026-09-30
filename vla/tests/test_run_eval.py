@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 from omegaconf import OmegaConf
 
-from vla.gym.run_eval import classify, load_config, make_args, output_dir, tracking_error
+from vla.gym import run_eval
+from vla.gym.run_eval import ROOT, classify, load_config, make_args, output_dir, set_render_defaults, tracking_error
 from vla.protocol import PolicySpec
 
 
@@ -59,12 +60,30 @@ def test_output_defaults_to_date_model_and_task():
     assert output_dir(cfg, spec()) == Path("runs/test_results/mine")
 
 
-def test_config_overrides_must_name_existing_keys(tmp_path):
-    path = tmp_path / "eval.yaml"
-    path.write_text("policy: {address: localhost:8000, local: null}\n"
-                    "task: {id: cast_coil, variation: base, seeds: [0], sim_seconds: 2}\n"
-                    "run: {execute_steps: null, record: false, output: null}\nenv: {}\n")
-    cfg = load_config(path, ["task.seeds=[1,2]", "env.enable_depth=true"])
-    assert list(cfg.task.seeds) == [1, 2] and cfg.env.enable_depth is True and cfg.policy.get("local") is None
+def test_config_overrides_apply_after_the_base_and_must_name_existing_keys(tmp_path):
+    (tmp_path / "base.yaml").write_text("policy: {address: localhost:8000, local: null}\n"
+                                        "task: {id: '???', variation: base, seeds: [0], sim_seconds: 2}\n"
+                                        "run: {execute_steps: null, record: false, output: null}\nenv: {}\n")
+    path = tmp_path / "cast_coil.yaml"
+    path.write_text("_base_: base.yaml\ntask: {id: cast_coil}\n")
+    cfg = load_config(path, ["task.seeds=[1,2]", "env.enable_depth=true", "policy.address=localhost:8001"])
+    assert cfg.task.id == "cast_coil" and list(cfg.task.seeds) == [1, 2] and cfg.env.enable_depth is True
+    assert cfg.policy.address == "localhost:8001" and cfg.policy.local is None
     with pytest.raises(Exception, match="seed"):
         load_config(path, ["task.seed=[0]"])
+
+
+def test_render_defaults_fill_only_unset_variables(tmp_path, monkeypatch):
+    icd = tmp_path / "nvidia_icd.json"
+    icd.write_text("{}")
+    monkeypatch.setattr(run_eval, "NVIDIA_ICD", icd)
+    environ = {}
+    set_render_defaults(environ)
+    assert environ == {"TOPOGYM_VISUAL_ASSET_ROOT": str(ROOT / ".external/nyx-assets"), "VK_ICD_FILENAMES": str(icd)}
+    environ = {"TOPOGYM_VISUAL_ASSET_ROOT": "assets", "VK_ICD_FILENAMES": "mine.json"}
+    set_render_defaults(environ)
+    assert environ == {"TOPOGYM_VISUAL_ASSET_ROOT": "assets", "VK_ICD_FILENAMES": "mine.json"}
+    monkeypatch.setattr(run_eval, "NVIDIA_ICD", tmp_path / "missing.json")
+    environ = {}
+    set_render_defaults(environ)
+    assert "VK_ICD_FILENAMES" not in environ

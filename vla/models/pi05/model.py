@@ -42,16 +42,15 @@ class Pi05(BaseVLA):
         self.rng = np.random.default_rng(seed)
 
     def infer(self, obs):
-        joint = obs.state["joint"]
+        joint, images = obs.state["joint"], self.camera_images(obs)
         if self.spec.embodiment == "panda_robotiq":
-            exterior, wrist = self.spec.cameras
-            inputs = {"observation/exterior_image_1_left": obs.images[exterior],
-                      "observation/wrist_image_left": obs.images[wrist],
+            exterior, wrist = images
+            inputs = {"observation/exterior_image_1_left": exterior, "observation/wrist_image_left": wrist,
                       "observation/joint_position": joint[:7], "observation/gripper_position": 1.0 - joint[7:]}
         else:
             slots = ("cam_high", "cam_left_wrist", "cam_right_wrist")
-            inputs = {"images": {slot: obs.images[camera].transpose(2, 0, 1)
-                                 for slot, camera in zip(slots, self.spec.cameras)}, "state": joint}
+            inputs = {"images": {slot: image.transpose(2, 0, 1) for slot, image in zip(slots, images)},
+                      "state": joint}
         noise = self.rng.standard_normal((self.spec.chunk_size, ACTION_DIM)).astype(np.float32)
         actions = np.asarray(self.policy.infer({**inputs, "prompt": obs.instruction}, noise=noise)["actions"])
         if self.spec.embodiment == "panda_robotiq":

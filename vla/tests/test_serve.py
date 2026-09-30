@@ -9,12 +9,13 @@ import numpy as np
 import pytest
 from omegaconf import OmegaConf
 
+from vla.config import load_yaml
 from vla.gym.client import LocalClient, PolicyError, RemoteClient
 from vla.models.dummy import HoldVLA
 from vla.protocol import ActionChunk, Observation
 
 ROOT = Path(__file__).resolve().parents[2]
-CONFIG = ROOT / "vla/configs/models/hold_panda.yaml"
+CONFIG = ROOT / "vla/configs/models/panda_robotiq/hold_panda.yaml"
 
 
 class ScalarVLA(HoldVLA):
@@ -59,7 +60,7 @@ def observation(step=0, joint=None):
 
 
 def test_remote_chunks_equal_local_chunks_bitwise(address):
-    local = LocalClient(HoldVLA(OmegaConf.load(CONFIG)))
+    local = LocalClient(HoldVLA(load_yaml(CONFIG)))
     remote = connect(address)
     assert remote.spec == local.spec
     remote.reset(0)
@@ -93,7 +94,7 @@ def test_requests_after_close_raise_policy_error(address):
 
 
 def test_unencodable_reply_is_answered_as_an_error(tmp_path):
-    config = OmegaConf.load(CONFIG)
+    config = load_yaml(CONFIG)
     config.class_path = "vla.tests.test_serve.ScalarVLA"
     OmegaConf.save(config, tmp_path / "scalar.yaml")
     port = free_port()

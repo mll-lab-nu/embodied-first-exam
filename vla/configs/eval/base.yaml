@@ -1,0 +1,15 @@
+# Defaults of every evaluation. A task file inherits them (_base_) and sets task.id; any key can be overridden on
+# the command line, e.g. policy.address=localhost:8001 task.seeds=[0] task.sim_seconds=10.
+policy:
+  address: localhost:8000       # model server host:port, as started with `python -m vla.models.serve --port`
+  local: null                   # or a model config path, run in process via LocalClient (HoldVLA only)
+task:
+  id: ???                       # set by the task file
+  variation: base
+  seeds: [0, 1, 2]
+  sim_seconds: 60               # simulated time per episode
+run:
+  execute_steps: null           # null = PolicySpec.execute_steps
+  record: true                  # one MP4 per camera and episode
+  output: null                  # null = runs/test_results/<YYYYMMDD>_vla_<model>_<task>
+env: {}                         # passed to topogym.make; grasp assist stays off (default)

@@ -11,7 +11,6 @@ inference_action_mode="continuous", ...)`` as in examples/droid/host_server_droi
           gripper command, 1 = closed; the official client clips it to [0, 1] and executes all 15 steps at 15 Hz.
 Weights run in bf16 (about 10 GiB). Sampling noise comes from a CUDA generator seeded in reset().
 """
-import cv2
 from huggingface_hub import snapshot_download
 import numpy as np
 import torch
@@ -29,7 +28,6 @@ class MolmoAct2(BaseVLA):
         self.processor = AutoProcessor.from_pretrained(path, trust_remote_code=True, extra_special_tokens={})
         self.model = AutoModelForImageTextToText.from_pretrained(
             path, trust_remote_code=True, dtype=torch.bfloat16).to("cuda").eval()
-        self.height, self.width = options["image_hw"]
         self.generator = torch.Generator("cuda").manual_seed(0)
 
     def reset(self, seed):
@@ -40,7 +38,7 @@ class MolmoAct2(BaseVLA):
         with torch.inference_mode():
             out = self.model.predict_action(
                 processor=self.processor, task=obs.instruction,
-                images=[cv2.resize(obs.images[camera], (self.width, self.height)) for camera in self.spec.cameras],
+                images=self.camera_images(obs),
                 state=np.r_[joint[:7], 1.0 - joint[7]].astype(np.float32), norm_tag="franka_droid",
                 inference_action_mode="continuous", enable_depth_reasoning=False, num_steps=10,
                 generator=self.generator, normalize_language=True, enable_cuda_graph=False)

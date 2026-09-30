@@ -2,9 +2,9 @@
 
     python -m vla.gym.run_eval --config vla/configs/eval/<name>.yaml [dotted.key=value ...]
 
-Writes <run.output>/results.jsonl (one row per episode) and summary.json, and with run.record one MP4 per
-camera under seed_<seed>/videos/. The output directory must not exist yet; a null run.output means
-runs/test_results/<YYYYMMDD>_vla_<model>_<task>, so switching models changes only policy.address.
+Writes into run.output: results.jsonl (one row per episode), summary.json, report.md and, with run.record, one
+MP4 per camera under seed_<seed>/videos/. The output directory must not exist yet; a null run.output means
+runs/test_results/<YYYYMMDD>_vla_<model>_<task>. The model is whichever server listens at policy.address.
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import date
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -22,12 +23,17 @@ from omegaconf import OmegaConf
 
 import topogym
 from topogym.recording import RecordingSession
+from vla.config import load_yaml
+from vla.gym import instructions
 from vla.gym.adapter import Adapter
 from vla.gym.agent import VLAAgent
 from vla.gym.client import LocalClient, PolicyError, RemoteClient
+from vla.gym.report import table
 from vla.models.base import load_model
 
 VLA_DIR = Path(__file__).resolve().parents[1]
+ROOT = VLA_DIR.parent
+NVIDIA_ICD = Path("/usr/share/vulkan/icd.d/nvidia_icd.json")
 CONTROL_MODES = {"joint_abs": "JOINT_ABS", "ee_abs": "EE_ABS"}
 OUTCOMES = ("success", "task_failure", "time_limit", "unevaluated", "unfinished",
             "invalid_action", "policy_error", "env_error")
@@ -96,7 +102,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
     metadata = dict(episode=env.episode_metadata, model=spec.name, instruction=instruction)
     with recording(env, video_dir, metadata) as session:
         try:
-            agent.reset(seed, instruction)
+            agent.reset(seed, instruction, obs["state"]["episode_id"])
             while True:
                 robot = env.tick_record()["robot"] if joint_and_ee else obs["robot"]
                 action = agent.act(obs["rgb"], robot)
@@ -115,7 +121,9 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                    sim_time_s=float(obs["state"]["sim_time_s"]), control_steps=len(errors),
                    inference_calls=agent.inference_calls,
                    tracking_error_mean=float(np.mean(errors)) if errors else None,
-                   tracking_error_max=max(errors, default=None), clipped_actions=agent.adapter.clipped,
+                   tracking_error_max=max(errors, default=None),
+                   tracking_error_unit="rad" if spec.action_space == "joint_abs" else "m",
+                   clipped_actions=agent.adapter.clipped,
                    reset_wall_s=round(reset_wall_s, 2),
                    rollout_wall_s=round(time.monotonic() - start - reset_wall_s, 2), error=error)
         if session is not None and not session.failed:  # a failed recording closes as incomplete
@@ -126,12 +134,11 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
 
 
 def evaluate(cfg, client):
-    """Run every seed with one Env; write results.jsonl and summary.json into cfg.run.output."""
+    """Run every seed with one Env; write results.jsonl, summary.json and report.md into the output directory."""
     spec = client.spec
     output = output_dir(cfg, spec)
     output.mkdir(parents=True)  # never overwrite earlier results
-    instructions = OmegaConf.load(VLA_DIR / "configs/instructions.yaml")
-    instruction = instructions.tasks[cfg.task.id]
+    instruction = instructions.INSTRUCTIONS[cfg.task.id]
     execute_steps = spec.execute_steps if cfg.run.execute_steps is None else cfg.run.execute_steps
     args = make_args(cfg, spec)
     control_hz = 1 / (args["control_decimation"] * args.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s))
@@ -141,7 +148,7 @@ def evaluate(cfg, client):
             video_dir = output / f"seed_{seed}" if cfg.run.record else None
             episode = run_episode(env, client, spec, seed, instruction, execute_steps, video_dir)
             row = dict(task=cfg.task.id, variation=cfg.task.variation, seed=seed, model=spec.name,
-                       instruction_version=instructions.version, **episode, execute_steps=execute_steps,
+                       instruction_version=instructions.VERSION, **episode, execute_steps=execute_steps,
                        control_decimation=args["control_decimation"], control_hz_actual=round(control_hz, 3))
             rows.append(row)
             with open(output / "results.jsonl", "a") as file:
@@ -152,15 +159,17 @@ def evaluate(cfg, client):
     summary = dict(model=spec.name, task=cfg.task.id, variation=cfg.task.variation, episodes=len(rows),
                    success_rate=outcomes.count("success") / len(rows),
                    outcomes={name: outcomes.count(name) for name in OUTCOMES}, spec=asdict(spec),
-                   instruction=instruction, instruction_version=instructions.version,
+                   instruction=instruction, instruction_version=instructions.VERSION,
                    config=OmegaConf.to_container(cfg), git_commit=commit.strip())
     (output / "summary.json").write_text(json.dumps(summary, indent=2))
+    (output / "report.md").write_text(table([output]) + "\n")
     return rows
 
 
 def load_config(path, overrides):
-    """The eval config plus dotlist overrides; a misspelled key raises instead of being added (env stays open)."""
-    cfg = OmegaConf.load(path)
+    """The eval config (with its _base_ files) plus dotlist overrides; a misspelled key raises instead of being
+    added (env stays open for topogym.make arguments)."""
+    cfg = load_yaml(path)
     OmegaConf.set_struct(cfg, True)
     OmegaConf.set_struct(cfg.env, False)
     return OmegaConf.merge(cfg, OmegaConf.from_dotlist(overrides))
@@ -169,15 +178,26 @@ def load_config(path, overrides):
 def connect(policy):
     """The model server at ``policy.address``, or ``policy.local`` (a model config) in process for HoldVLA."""
     if policy.get("local"):
-        return LocalClient(load_model(OmegaConf.load(policy.local)))
+        return LocalClient(load_model(load_yaml(policy.local)))
     return RemoteClient(policy.address)
+
+
+def set_render_defaults(environ):
+    """Let a fresh checkout render without exports; variables set by the user win. Nyx assets: the repo's
+    .external/nyx-assets, as scripts/*.py pass it. Vulkan: only the NVIDIA driver when it is installed, since Nyx
+    aborts at scene build ("vkGetDeviceQueue: Invalid device") when Vulkan also lists other devices, such as an
+    integrated GPU or llvmpipe."""
+    environ.setdefault("TOPOGYM_VISUAL_ASSET_ROOT", str(ROOT / ".external/nyx-assets"))
+    if NVIDIA_ICD.is_file():
+        environ.setdefault("VK_ICD_FILENAMES", str(NVIDIA_ICD))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", required=True, help="evaluation config (vla/configs/eval/*.yaml)")
+    parser.add_argument("--config", required=True, help="evaluation config (vla/configs/eval/<task>.yaml)")
     parser.add_argument("overrides", nargs="*", help="OmegaConf dotlist, e.g. task.seeds=[0] run.record=false")
     args = parser.parse_args()
+    set_render_defaults(os.environ)
     cfg = load_config(args.config, args.overrides)
     client = connect(cfg.policy)
     try:

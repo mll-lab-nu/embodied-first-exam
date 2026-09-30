@@ -5,15 +5,16 @@ from multiprocessing.connection import Client
 
 from vla.protocol import ActionChunk, PolicySpec, decode, encode
 
-TIMEOUT_S = 600  # per reply; the first inference includes JIT compilation
-
 
 class PolicyError(RuntimeError):
-    """The policy failed, returned a malformed chunk, timed out or disconnected; not a task failure."""
+    """The policy failed, returned a malformed chunk or disconnected; not a task failure."""
 
 
 class RemoteClient:
-    """One connection to ``python -m vla.models.serve`` at "host:port"; the server sends its PolicySpec first."""
+    """One connection to ``python -m vla.models.serve`` at "host:port"; the server sends its PolicySpec first.
+
+    Replies are awaited without a time limit: a server that dies closes the connection (PolicyError at once), and
+    a server busy with another client answers once that client disconnects."""
 
     def __init__(self, address):
         host, port = address.rsplit(":", 1)
@@ -43,9 +44,6 @@ class RemoteClient:
 
     def _receive(self):
         try:
-            if not self.conn.poll(TIMEOUT_S):
-                self.conn.close()  # a late reply would answer the next request
-                raise PolicyError(f"No reply from the model server within {TIMEOUT_S} s")
             return decode(self.conn.recv_bytes())
         except (EOFError, OSError) as error:
             raise PolicyError(f"Model server connection lost: {error}") from error

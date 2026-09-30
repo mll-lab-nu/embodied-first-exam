@@ -1,11 +1,9 @@
 # X-VLA-0.9B RoboTwin2 checkpoint (AgileX/ARX arms in RoboTwin 2.0) on the TopoGym ALOHA, end-effector space.
+_base_: base.yaml                     # cameras -> head, left wrist, right wrist views
 class_path: vla.models.xvla.model.XVLA
 checkpoint: 2toINF/X-VLA-RoboTwin2    # cached under ~/.cache/huggingface
-port: 8004
 spec:
   name: xvla_robotwin2
-  embodiment: aloha
-  cameras: [cam_high, cam_left_wrist, cam_right_wrist]   # -> head, left wrist, right wrist views
   state_keys: [ee]
   action_space: ee_abs
   control_hz: 16.667                # one action per saved RoboTwin frame: 15 steps of 1/250 s; "30 Hz" is a label

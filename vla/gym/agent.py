@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections import deque
-from uuid import uuid4
 
 import numpy as np
 
@@ -18,10 +17,11 @@ class VLAAgent:
         self.instruction = self.episode_id = None
         self.step = self.inference_calls = 0
 
-    def reset(self, seed, instruction):
+    def reset(self, seed, instruction, episode_id):
+        """Start an episode; ``episode_id`` is the Env's (obs["state"]["episode_id"])."""
         self.client.reset(seed)
         self.queue.clear()
-        self.instruction, self.episode_id = instruction, uuid4().hex
+        self.instruction, self.episode_id = instruction, episode_id
         self.step = self.inference_calls = 0
 
     def act(self, rgb, robot):

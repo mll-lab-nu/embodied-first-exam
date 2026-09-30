@@ -1,16 +1,13 @@
-# MolmoAct2 DROID checkpoint on the TopoGym Panda (same hardware as DROID).
+# MolmoAct2 DROID checkpoint.
+_base_: base.yaml
 class_path: vla.models.molmoact2.model.MolmoAct2
 checkpoint: allenai/MolmoAct2-DROID     # cached under ~/.cache/huggingface
-port: 8003
 spec:
   name: molmoact2_droid
-  embodiment: panda_robotiq
   cameras: [agentview, front_oblique, wrist]   # -> exterior 1, exterior 2, wrist slots
-  state_keys: [joint]
-  action_space: joint_abs
-  control_hz: 15
   chunk_size: 15
   execute_steps: 15                 # the official DROID client executes the whole chunk
 model:
   revision: d8c1abd8a27d8e859455bbe514df2bcc617db0fb
   image_hw: [180, 320]              # DROID training frames; the official DROID client resizes to this size
+  image_interpolation: linear       # cv2.resize default, as the official DROID client

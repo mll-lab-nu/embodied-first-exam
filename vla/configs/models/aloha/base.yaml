@@ -1,0 +1,4 @@
+# TopoGym ALOHA: two vx300s arms and the three cameras of the ALOHA rig (top view, left and right wrist).
+spec:
+  embodiment: aloha
+  cameras: [cam_high, cam_left_wrist, cam_right_wrist]

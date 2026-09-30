@@ -27,13 +27,14 @@ class Recorder(HoldVLA):
 
     def __init__(self, config, actions=None):
         super().__init__(config)
-        self.actions, self.seeds, self.steps = actions, [], []
+        self.actions, self.seeds, self.steps, self.episode_ids = actions, [], [], []
 
     def reset(self, seed):
         self.seeds.append(seed)
 
     def infer(self, obs):
         self.steps.append(obs.step)
+        self.episode_ids.append(obs.episode_id)
         return super().infer(obs) if self.actions is None else ActionChunk(self.actions)
 
 
@@ -50,7 +51,7 @@ def inputs(action_spec):
 def test_h15_k8_infers_three_times_in_twenty_acts(action_spec):
     model = Recorder(config(15, 8))
     agent = agent_for(model, action_spec, 8)
-    agent.reset(0, "go")
+    agent.reset(0, "go", "e")
     rgb, robot = inputs(action_spec)
     actions = [agent.act(rgb, robot) for _ in range(20)]
     assert agent.inference_calls == 3 and model.steps == [0, 8, 16]
@@ -58,24 +59,23 @@ def test_h15_k8_infers_three_times_in_twenty_acts(action_spec):
                                atol=1e-6)
 
 
-def test_reset_clears_the_queue_and_seeds_the_policy(action_spec):
+def test_reset_clears_the_queue_seeds_the_policy_and_keeps_the_env_episode_id(action_spec):
     model = Recorder(config(15, 8))
     agent = agent_for(model, action_spec, 8)
     rgb, robot = inputs(action_spec)
-    agent.reset(4, "go")
+    agent.reset(4, "go", "episode-a")
     agent.act(rgb, robot)
-    first = agent.episode_id
-    agent.reset(5, "go")
+    agent.reset(5, "go", "episode-b")
     agent.act(rgb, robot)
     assert model.seeds == [4, 5] and model.steps == [0, 0] and agent.inference_calls == 1
-    assert agent.episode_id != first
+    assert model.episode_ids == ["episode-a", "episode-b"]
 
 
 @pytest.mark.parametrize("actions", [np.zeros((14, 8), np.float32), np.zeros((15, 7), np.float32),
                                      np.full((15, 8), np.nan, np.float32)])
 def test_malformed_chunks_raise_policy_error(action_spec, actions):
     agent = agent_for(Recorder(config(15, 8), actions), action_spec, 8)
-    agent.reset(0, "go")
+    agent.reset(0, "go", "e")
     with pytest.raises(PolicyError):
         agent.act(*inputs(action_spec))
 

@@ -35,7 +35,8 @@ class FaultingEnv:
     def observe(self):
         limits = np.asarray(self.action_spec["groups"]["arm"]["joint_limits_rad"])
         robot = {"arm": {"joint_position_rad": limits.mean(axis=1), "finger_position_rad": np.zeros(2)}}
-        return {"rgb": {"agentview": np.zeros((16, 16, 3), np.uint8)}, "robot": robot, "state": {"sim_time_s": 0.0}}
+        return {"rgb": {"agentview": np.zeros((16, 16, 3), np.uint8)}, "robot": robot,
+                "state": {"episode_id": "e", "sim_time_s": 0.0}}
 
     def sensor_frame(self):
         return SensorFrame("e", 0, 0, 0, 0.0, {"agentview": np.zeros((16, 16, 3), np.uint8)}, {})
@@ -61,7 +62,7 @@ def episode(env, video_dir=None):
 
 def test_env_error_row_keeps_the_fault_cause(action_spec):
     row = episode(FaultingEnv(action_spec))
-    assert row["outcome"] == "env_error" and row["control_steps"] == 0
+    assert row["outcome"] == "env_error" and row["control_steps"] == 0 and row["tracking_error_unit"] == "rad"
     assert "physics" in row["error"] and "FloatingPointError: nan in qpos" in row["error"]
 
 

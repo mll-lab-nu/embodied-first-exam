@@ -35,6 +35,18 @@ def test_hold_repeats_the_matching_state(action_space, key):
     np.testing.assert_array_equal(chunk.actions, np.tile(obs.state[key], (4, 1)))
 
 
+def test_camera_images_follow_the_slot_order_and_resize_as_configured():
+    images = {"agentview": np.full((480, 848, 3), 1, np.uint8), "wrist": np.full((480, 848, 3), 2, np.uint8)}
+    obs = Observation(images, {}, "go", "e", 0)
+    cfg = config()
+    cfg["spec"]["cameras"] = ["wrist", "agentview"]
+    native = HoldVLA(cfg).camera_images(obs)
+    assert [image.shape for image in native] == [(480, 848, 3)] * 2 and [image[0, 0, 0] for image in native] == [2, 1]
+    cfg["model"] = dict(image_hw=[180, 320], image_interpolation="area")
+    resized = HoldVLA(cfg).camera_images(obs)
+    assert [image.shape for image in resized] == [(180, 320, 3)] * 2 and [image[0, 0, 0] for image in resized] == [2, 1]
+
+
 def test_load_model_instantiates_class_path_and_spec():
     model = load_model(config(chunk_size=6))
     assert isinstance(model, HoldVLA) and model.spec.chunk_size == 6 and model.spec.cameras == ("agentview",)

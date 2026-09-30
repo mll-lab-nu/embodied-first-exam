@@ -1,9 +1,10 @@
-"""Model server, from the repository root in the model environment:
+"""Model server, from the repository root with the model's conda environment active:
 
-    vla/.envs/<model>/bin/python -m vla.models.serve --config vla/configs/models/<name>.yaml
+    python -m vla.models.serve --config vla/configs/models/<robot>/<name>.yaml [--port 8000]
 
 Loads ``class_path`` and serves one evaluation client at a time over TCP. A model error is sent back as an
-``error`` message and the server keeps running; after a client disconnects it waits for the next one.
+``error`` message and the server keeps running; after a client disconnects it waits for the next one. The port is
+chosen here, not in the model config; run_eval connects to it through policy.address.
 """
 from __future__ import annotations
 
@@ -12,8 +13,7 @@ from dataclasses import asdict
 from multiprocessing.connection import Listener
 import traceback
 
-from omegaconf import OmegaConf
-
+from vla.config import load_yaml
 from vla.models.base import load_model
 from vla.protocol import Observation, decode, encode
 
@@ -49,12 +49,11 @@ def serve(model, address):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", required=True, help="model config (vla/configs/models/*.yaml)")
+    parser.add_argument("--config", required=True, help="model config (vla/configs/models/<robot>/<name>.yaml)")
     parser.add_argument("--host", default="localhost")
-    parser.add_argument("--port", type=int, help="defaults to the config's port")
+    parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
-    config = OmegaConf.load(args.config)
-    serve(load_model(config), (args.host, args.port or config.port))
+    serve(load_model(load_yaml(args.config)), (args.host, args.port))
 
 
 if __name__ == "__main__":

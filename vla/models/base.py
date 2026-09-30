@@ -4,7 +4,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import importlib
 
+import cv2
+
 from vla.protocol import ActionChunk, Observation, PolicySpec
+
+INTERPOLATIONS = {"area": cv2.INTER_AREA, "linear": cv2.INTER_LINEAR}
 
 
 class BaseVLA(ABC):
@@ -12,7 +16,7 @@ class BaseVLA(ABC):
     and its outputs back to absolute targets (relative/absolute, gripper direction, frames)."""
 
     def __init__(self, config):
-        self.config = config  # the model config: class_path, checkpoint, port, spec, model
+        self.config = config  # the model config: class_path, checkpoint, spec, model
         self.spec = PolicySpec(**config["spec"])
 
     @abstractmethod
@@ -25,6 +29,17 @@ class BaseVLA(ABC):
 
     def reset(self, seed: int) -> None:
         """Start an episode: clear history frames and seed sampling."""
+
+    def camera_images(self, obs: Observation) -> list:
+        """The frames of ``spec.cameras`` in the order of the model's image slots. With ``model.image_hw`` set they
+        are resized to it first, with ``model.image_interpolation``, as the model's official client does."""
+        images = [obs.images[camera] for camera in self.spec.cameras]
+        options = self.config.get("model") or {}
+        if "image_hw" not in options:
+            return images
+        height, width = options["image_hw"]
+        flag = INTERPOLATIONS[options["image_interpolation"]]
+        return [cv2.resize(image, (width, height), interpolation=flag) for image in images]
 
 
 def load_model(config) -> BaseVLA:

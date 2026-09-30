@@ -1,0 +1,42 @@
+"""English instruction per task, sent to every model. Bump VERSION on any text change; results record it.
+
+Sources: the Task.instruction attribute (buzz_wire_3d, rope_threading, lock_picking, fiber_bundling,
+knot_untying) and obs["task"]["instruction"] of the base variation (the six placement tasks). cast_coil and
+blanket_flatten have no instruction in code: their texts are drafts awaiting confirmation.
+"""
+VERSION = 1
+
+INSTRUCTIONS = {
+    "buzz_wire_3d": ("Guide the metal loop along the entire wire without touching it, then release the tool on the "
+                     "finish support and let it settle."),
+    "rope_threading": ("Thread the rope through all rings in the prescribed order and direction, then keep the whole "
+                       "rope still."),
+    "lock_picking": ("Insert the key through the lock until its leading tab clears the final plate. The rotor pins "
+                     "must remain constrained by their physical slots."),
+    "fiber_bundling": ("Manipulate only the thick sheath. Pass every fiber tip first through the copper ring in "
+                       "material order, without sharp bends, until the roots and front sheath have passed. Any "
+                       "gripper contact with a fine strand fails the task; keep the rear terminal anchored."),
+    "knot_untying": ("Untangle the rope and leave it still on the table with no projected crossings or overlapping "
+                     "segments."),
+    "orbits": ("Place the entire cord and wooden handle (cord, handle) inside the green dashed area and hold it still "
+               "briefly. Keep the remaining puzzle components outside on the system side. Holding the target with the "
+               "gripper is allowed."),
+    "hedgehog_in_cage": ("Place the hedgehog ball including every spike (hedgehog_ball) inside the green dashed area "
+                         "and hold it still briefly. Keep the remaining puzzle components outside on the system side. "
+                         "Holding the target with the gripper is allowed."),
+    "horseshoe_ring": ("Place the entire removable ring (target_ring) inside the green dashed area and hold it still "
+                       "briefly. Keep the remaining puzzle components outside on the system side. Holding the target "
+                       "with the gripper is allowed."),
+    "cast_keyhole": ("Place the entire silver keyhole piece (keyhole_silver) inside the green dashed area and hold it "
+                     "still briefly. Keep the remaining puzzle components outside on the system side. Holding the "
+                     "target with the gripper is allowed."),
+    "slotted_post_ring": ("Place the entire removable metal ring (target_ring) inside the green dashed area and hold "
+                          "it still briefly. Keep the remaining puzzle components outside on the system side. Holding "
+                          "the target with the gripper is allowed."),
+    "interlocked_claws": ("Place the entire brown claw piece (claw_0) inside the green dashed area and hold it still "
+                          "briefly. Keep the remaining puzzle components outside on the system side. Holding the "
+                          "target with the gripper is allowed."),
+    "cast_coil": ("Assemble the gold and silver metal pieces into the alternating four-layer coil, then release both "
+                  "pieces."),
+    "blanket_flatten": "Flatten the crumpled blanket so that it lies fully spread out on the table, then release it.",
+}

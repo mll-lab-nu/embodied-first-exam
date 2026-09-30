@@ -13,7 +13,6 @@ Entry point: ``Gr00tPolicy(embodiment_tag, model_path, device=...)`` and
 The RoboLab sim run executes 8 of 40 steps at 15 Hz. The backbone nvidia/Cosmos-Reason2-2B is a gated
 Hugging Face repository. Sampling noise uses the global torch RNG, seeded in reset().
 """
-import cv2
 from gr00t.data.state_action.droid_frame import compute_eef_9d
 from gr00t.policy import Gr00tPolicy
 from huggingface_hub import snapshot_download
@@ -30,15 +29,14 @@ class Groot(BaseVLA):
         options = self.config["model"]
         path = snapshot_download(self.config["checkpoint"], revision=options["revision"])
         self.policy = Gr00tPolicy(embodiment_tag=options["embodiment_tag"], model_path=path, device="cuda:0")
-        self.height, self.width = options["image_hw"]
 
     def reset(self, seed):
         torch.manual_seed(seed)
 
     def infer(self, obs):
         joint = obs.state["joint"]
-        video = {key: cv2.resize(obs.images[camera], (self.width, self.height), interpolation=cv2.INTER_AREA)[None, None]
-                 for key, camera in zip(("exterior_image_1_left", "wrist_image_left"), self.spec.cameras)}
+        video = {key: image[None, None]
+                 for key, image in zip(("exterior_image_1_left", "wrist_image_left"), self.camera_images(obs))}
         state = {"eef_9d": compute_eef_9d(droid_cartesian(joint[:7])).astype(np.float32)[None, None],
                  "gripper_position": np.float32([[[1.0 - joint[7]]]]), "joint_position": joint[None, None, :7]}
         language = {"annotation.language.language_instruction": [[obs.instruction]]}

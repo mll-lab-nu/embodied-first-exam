@@ -1,40 +1,44 @@
-"""Config files: instructions cover every task and match code; model and eval configs are well formed."""
+"""Config loading (_base_ inheritance, interpolation) and the config files: one model config per checkpoint in its
+robot's directory, one eval config per task."""
 from pathlib import Path
 
 import pytest
 from omegaconf import OmegaConf
 
 import topogym
-from topogym.config.registry import task_definition, variation_registration
+from vla.config import load_yaml
 from vla.protocol import PolicySpec
 
 CONFIGS = Path(__file__).resolve().parents[1] / "configs"
+MODEL_CONFIGS = sorted(path for path in (CONFIGS / "models").glob("*/*.yaml") if path.name != "base.yaml")
+EVAL_CONFIGS = sorted(path for path in (CONFIGS / "eval").glob("*.yaml") if path.name != "base.yaml")
 
 
-def test_instructions_cover_every_task():
-    instructions = OmegaConf.load(CONFIGS / "instructions.yaml")
-    assert isinstance(instructions.version, int)
-    assert set(instructions.tasks) == set(topogym.env_list())
+def test_base_files_merge_in_order_and_the_child_wins(tmp_path):
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "a.yaml").write_text("x: {keep: 1, items: [1, 2], name: a}\nz: 0\n")
+    (tmp_path / "sub/b.yaml").write_text("_base_: ../a.yaml\nx: {name: b}\ny: ${x.keep}\n")
+    (tmp_path / "c.yaml").write_text("_base_: [a.yaml, sub/b.yaml]\nx: {items: [3]}\nz: 2\n")
+    cfg = load_yaml(tmp_path / "c.yaml")
+    assert OmegaConf.to_container(cfg, resolve=True) == {"x": {"keep": 1, "items": [3], "name": "b"}, "z": 2, "y": 1}
 
 
-@pytest.mark.parametrize("task_id", ["buzz_wire_3d", "rope_threading", "lock_picking", "fiber_bundling",
-                                     "knot_untying"])
-def test_instructions_match_task_attributes(task_id):
-    task = task_definition(task_id, variation_registration(task_id, "base", 0)["variation_id"])
-    assert OmegaConf.load(CONFIGS / "instructions.yaml").tasks[task_id] == task.instruction
+def test_model_and_eval_configs_exist():
+    assert len(MODEL_CONFIGS) >= 7 and len(EVAL_CONFIGS) >= 2
 
 
-@pytest.mark.parametrize("path", sorted((CONFIGS / "models").glob("*.yaml")), ids=lambda p: p.stem)
-def test_model_configs_define_a_policy_spec(path):
-    config = OmegaConf.load(path)
+@pytest.mark.parametrize("path", MODEL_CONFIGS, ids=lambda path: path.stem)
+def test_model_configs_define_a_policy_spec_for_their_robot(path):
+    config = load_yaml(path)
     spec = PolicySpec(**config.spec)
+    assert set(config) == {"class_path", "checkpoint", "spec", "model"}  # the port is chosen when serving
     assert config.class_path.startswith("vla.models.") and spec.name == path.stem
-    assert 1 <= spec.execute_steps <= spec.chunk_size
+    assert spec.embodiment == path.parent.name and 1 <= spec.execute_steps <= spec.chunk_size
 
 
-@pytest.mark.parametrize("path", sorted((CONFIGS / "eval").glob("*.yaml")), ids=lambda p: p.stem)
-def test_eval_configs_name_a_task_and_a_policy(path):
-    cfg = OmegaConf.load(path)
+@pytest.mark.parametrize("path", EVAL_CONFIGS, ids=lambda path: path.stem)
+def test_eval_configs_name_their_task_and_a_policy_address(path):
+    cfg = load_yaml(path)
+    assert set(cfg) == {"policy", "task", "run", "env"} and cfg.task.id == path.stem
     assert cfg.task.id in topogym.env_list() and cfg.task.seeds and cfg.task.sim_seconds > 0
-    assert cfg.policy.address or (CONFIGS.parent.parent / cfg.policy.local).is_file()
-    assert set(cfg) == {"policy", "task", "run", "env"}
+    assert cfg.policy.address and cfg.policy.local is None

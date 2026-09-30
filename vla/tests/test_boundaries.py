@@ -21,8 +21,8 @@ def offenders(paths, forbidden):
     return {name: roots for name, roots in found.items() if roots}
 
 
-def test_protocol_and_models_do_not_import_topogym():
-    assert offenders([VLA / "protocol.py", *(VLA / "models").rglob("*.py")], {"topogym"}) == {}
+def test_shared_and_model_code_do_not_import_topogym():
+    assert offenders([VLA / "protocol.py", VLA / "config.py", *(VLA / "models").rglob("*.py")], {"topogym"}) == {}
 
 
 def test_gym_does_not_import_model_libraries():

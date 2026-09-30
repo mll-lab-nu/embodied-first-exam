@@ -1,15 +1,4 @@
-# First-batch Panda evaluation with DROID checkpoints. Switch models with policy.address only:
-# pi05_droid_jointpos localhost:8000, groot_n17_droid localhost:8002, molmoact2_droid localhost:8003.
-policy:
-  address: localhost:8000
-  local: null                   # or a model config path, run in process via LocalClient (HoldVLA)
+# Panda task: models in configs/models/panda_robotiq/.
+_base_: base.yaml
 task:
   id: buzz_wire_3d
-  variation: base
-  seeds: [0, 1, 2]
-  sim_seconds: 60
-run:
-  execute_steps: null           # null = PolicySpec.execute_steps
-  record: true
-  output: null                  # null = runs/test_results/<YYYYMMDD>_vla_<model>_<task>
-env: {}                         # passed to topogym.make; grasp assist stays off (default)

@@ -36,8 +36,7 @@ class XVLA(BaseVLA):
         torch.manual_seed(seed)
 
     def infer(self, obs):
-        inputs = self.processor([Image.fromarray(obs.images[camera]) for camera in self.spec.cameras],
-                                obs.instruction)
+        inputs = self.processor([Image.fromarray(image) for image in self.camera_images(obs)], obs.instruction)
         proprio = to_xvla(obs.state["ee"], self.transforms, self.tcp_offset)
         batch = {name: value.to("cuda") for name, value in inputs.items()}
         actions = self.model.generate_actions(**batch, domain_id=self.domain_id,
