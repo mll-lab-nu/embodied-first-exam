@@ -1,10 +1,11 @@
-# The standard limited configuration, as a compose override on the sim sidecar of any limited KinDER task: one
-# episode, no reset, as on the real robot (HumanoidBench's 50 are for falls, which end its episodes and which a humanoid
-# cannot get up from; here nothing does, and a reset would restore the scene bit for bit, which no lab can); the real
-# TidyBot++'s own cameras only, with depth from the RGB-D wrist camera. room_camera (RCB_OBS_ROOM_CAMERA=1) and a
-# reset budget (RCB_RESET_BUDGET=50) stay knobs for control runs.
+# The standard limited configuration, as a compose override on the sim sidecar of any limited KinDER task: 50 resets,
+# as HumanoidBench's. KinDER's episode (1000 steps, 100 s of robot time; PyBullet 3000 steps) is the time to carry the
+# task out with the whole state known; finding things and calibrating were never part of it, so they get earlier
+# episodes and the graded one is the execution (each reset restores the scene bit for bit, which no lab can). The real
+# TidyBot++'s own cameras only, with depth from the RGB-D wrist camera. room_camera (RCB_OBS_ROOM_CAMERA=1) and the
+# budget (RCB_RESET_BUDGET=0: one episode) stay knobs for control runs.
 services:
   sim:
     environment:
-      RCB_RESET_BUDGET: "0"
-      RCB_OBS_DEPTH: "1"
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-50}"
+      RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-1}"

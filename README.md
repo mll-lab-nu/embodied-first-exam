@@ -9,8 +9,8 @@ numeric diagnostics, no learned judge.
 
 The repo is deliberately minimal: it adds a thin **contract** ([docs/PROTOCOL.md](docs/PROTOCOL.md)) on top of
 the plain Harbor task format, and every task is **self-contained** — no shared runtime package, so each task
-dir carries its own tooling and verifier. For HumanoidBench those copies are *generated* from one manifest
-(`scripts/humanoidbench/`) and CI rejects any that drift; `tasks/robosuite-cube-stack-i00/` predates that and
+dir carries its own tooling and verifier. For HumanoidBench and KinDER those copies are *generated* from one
+manifest each (`scripts/<sim>/`) and CI rejects any that drift; `tasks/robosuite-cube-stack-i00/` predates that and
 is still hand-maintained.
 
 ## Run
@@ -104,6 +104,22 @@ Two properties worth knowing before you read a task:
   expression — comparable with the paper and with FastTD3 — while the agent works from the task statement
   and the physical state. The agent reaches the model APIs and nothing else, because upstream is a public
   pinned commit. See [`docs/LEAKAGE.md`](docs/LEAKAGE.md) and `docs/PROTOCOL.md` §4.
+
+### KinDER tasks
+10 scored tasks + the `dynamo` fixture for a TidyBot++ mobile manipulator: six MuJoCo tasks where physics decides the
+outcome (tossing, balancing, sweeping, scooping), and the five a screening of all 31 KinDER families found hard in
+limited mode (two of them in PyBullet, kinematic). Pass = KinDER's own goal check within its episode. Which tasks and why:
+[`docs/benchmarks/kinder.md`](docs/benchmarks/kinder.md), in full `scripts/kinder/subset.toml`.
+
+### HumanoidBench and KinDER: settings and decisions
+| | setting | why |
+|---|---|---|
+| modes | **full**: the simulator and its whole state in the agent's container, any number of attempts, one trajectory handed in; **limited**: the robot as a service ([`docs/LIMITED_MODE_1_1.md`](docs/LIMITED_MODE_1_1.md)) | with and without privileged state, same task and grader |
+| limited: what the agent gets | what a real robot reports: its cameras (depth only where it has RGB-D; HumanoidBench adds a fixed room camera), joint encoders, HumanoidBench's IMU, KinDER's odometry from the start pose; in `spec()` the robot's documented facts (joint axes, positions and limits, link masses, KinDER's grasp point, camera poses); no object pose, reward or goal check until an episode ends | a real robot knows its body, not the scene |
+| limited: resets | 50, each back to the bit-exact start; the first success passes | HumanoidBench: a fallen humanoid cannot get up; KinDER: its episode is the time to *carry out* the task, so exploring gets earlier episodes |
+| upstream | reward, success check, physics and episode length are upstream's (KinDER's PyBullet tasks set no length: its baselines' 3000 steps) | scores stay comparable with the papers |
+| leaks | HumanoidBench's reward scrubbed from the image; grading in a separate container; agent egress to the model APIs only; the API key in a model gateway; the harness's web tools off | [`docs/LEAKAGE.md`](docs/LEAKAGE.md) |
+| runs | Codex (now pinned to 0.159.2) or Claude Code over OpenRouter, reasoning effort medium, 60 min a mode; GPT-6 Luna on every task, GPT-6 Sol and Claude Opus 5.5 on five HumanoidBench tasks | `results/<benchmark>/README.md` |
 
 ## The example task (`robosuite-cube-stack-i00`)
 Franka Panda in robosuite/MuJoCo via [cap-x](https://github.com/capgym/cap-x) primitives

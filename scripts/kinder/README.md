@@ -12,7 +12,7 @@ Every `tasks/kinder-*` directory is generated from this one; nothing in them is 
 | `shared/limited/server.py` | the limited-mode adapters behind `scripts/limited/rcb_service.py`, one per robot (TidyBot++ in MuJoCo, the kinematic PyBullet one): its sensors, the odometry frame |
 | `shared/limited/rcb_client.py` | the agent's client: the shared client code with KinDER's docstring (its API reference) |
 | `templates/`, `templates/limited/` | everything the tasks have in common, with `{{placeholders}}` |
-| `configs/limited.yaml`, `limited.compose.yaml` | the standard limited run: one episode (no reset), the robot's own cameras with wrist depth |
+| `configs/limited.yaml`, `limited.compose.yaml` | the standard limited run: 50 resets, the robot's own cameras with wrist depth |
 | `replay.py` | re-plays a limited run's episodes (each reset's) for the results pages, in the image |
 
 ```bash

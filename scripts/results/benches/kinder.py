@@ -12,7 +12,7 @@ from common import esc
 
 class Kinder(Bench):
     name, title, short = "kinder", "KinDER", "kinder"
-    standard = {"limited": {"budget_min": "60", "resets": "0", "obs": "cams+proprio+depth", "effort": "medium"},
+    standard = {"limited": {"budget_min": "60", "resets": "50", "obs": "cams+proprio+depth", "effort": "medium"},
                 "full": {"budget_min": "60", "resets": "", "obs": "state", "effort": "medium"}}
     cameras = {"robot_base": ("底座相机", "left"), "robot_wrist": ("腕部相机", "right"), "room_camera": ("外部相机", "room")}
     camera_files = (("room_camera", r"room|task_view"), ("robot_base", r"robot[_-]?base|base[_-]?cam"),
@@ -40,7 +40,7 @@ class Kinder(Bench):
         return (f'<p class="sub">coding agent 在 {len(tasks)} 个选定的 KinDER 任务上的表现（TidyBot++ 移动机械臂，MuJoCo 动力学仿真；'
                 "其中两个是 PyBullet 运动学仿真；" f"{len(tasks) - n_fix} 个计分" + (f" + {n_fix} 个夹具" if n_fix else "")
                 + "）。两种模式：limited 模拟真机，只给机器人自己的"
-                "传感器（见下面的表），只有一局、不能 reset；full 里它有仿真器和完整状态，reset 不限，交一条轨迹由验证端回放。判定只看 KinDER 自己的目标检查，"
+                "传感器（见下面的表），reset 最多 50 次；full 里它有仿真器和完整状态，reset 不限，交一条轨迹由验证端回放。判定只看 KinDER 自己的目标检查，"
                 "没有回报和部分分。</p>")
 
     def limited_info(self, cam) -> tuple[list[tuple], str]:
@@ -63,7 +63,7 @@ class Kinder(Bench):
             ("不给", "物体和目标区域的位置；世界坐标（里程计从起点算）；结束前的成功判定；质量、摩擦；仿真器本身", "真机上没有", "只能从相机、本体推"),
         ]
         return rows, ("能做的只有 <code>step</code>（一步：底盘、臂关节的增量和夹爪命令，可以批量）和 <code>reset</code>"
-                      "（标准配置不给：只有一局，和真机一样；对照实验给 50 次，回到逐位相同的起始状态）。这一局成功就通过，否则失败；墙钟 60 分钟，请求之间仿真时间不走。")
+                      "（50 次，回到逐位相同的起始状态：找东西、标定放在前面几局，被评分的一局只做执行；对照实验不给 reset）。任一局成功就通过，否则失败；墙钟 60 分钟，请求之间仿真时间不走。")
 
 
 BENCH = Kinder()

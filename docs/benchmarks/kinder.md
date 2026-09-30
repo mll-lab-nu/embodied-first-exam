@@ -30,15 +30,15 @@ Kinematic families are near-solved upstream; on the dynamic ones the paper's bes
 |---|---|---|---|---|
 | Tossing3D (2) | dynamic | ✅ o1 | get a cube from the floor into a bin beyond a low wall that spans the room | ✅ · ❌ |
 | BalanceBeam3D (1) | tool, dynamic | ✅ o3 | put three cubes on a seesaw's marked region and leave it within 5° of level | ✅ · ❌ |
-| Dynamo3D (3) | nonprehensile | ✅ o3 | drive into a floor square that three chairs block (fixture, the pipeline check) | ✅ · ❌ |
+| Dynamo3D (3) | nonprehensile | ✅ o3 | drive into a floor square that three chairs block (fixture, the pipeline check) | ✅ · ✅ |
 | SweepIntoDrawer3D (1) | nonprehensile, tool, dynamic | ✅ o5 | open a drawer, then get five small cubes from the counter into it (a wiper is there) | ❌ · ❌ |
 | ScoopPour3D (6) | nonprehensile, tool, dynamic | ✅ o30 | move 30 small cubes from one bin to another (a scoop is there) | ❌ · ❌ |
 | Shelf3D (6) | spatial, geometric | ✅ o2 | put two cubes from the floor in a cramped cupboard's top compartment | ✅ · ❌ |
 | ConstrainedCupboard3D (6) | geometric | ✅ o6 | put six identical rods into six narrow cupboards, each rod into the one it is owed (limited names them by distance and place in the row) | ✅ · ❌ |
-| SweepSimple3D (6) | nonprehensile, tool | ✅ o10 | get ten small cubes on the floor into a box marked at the kitchen island's end (a wiper is there) | ❌ · ❌ |
-| SortClutteredBlocks3D (4) | spatial | ✅ o4 bins | sort four clustered cubes into the four bins of their colours | ✅ · ❌ |
+| SweepSimple3D (6) | nonprehensile, tool | ✅ o10 | get ten small cubes on the floor into a box marked at the kitchen island's end (a wiper is there) | ❌ · ✅ |
+| SortClutteredBlocks3D (4) | spatial | ✅ o4 bins | sort four clustered cubes into the four bins of their colours | ✅ · ✅ |
 | Obstruction3D (5), PyBullet | geometric | ✅ o4 | clear three blocks off a pad, then place a block on it | ✅ · ❌ |
-| Packing3D (3), PyBullet | geometric | ✅ p3 | pack three flat parts into a tray, flat and without overlap | ✅ · ❌ |
+| Packing3D (3), PyBullet | geometric | ✅ p3 | pack three flat parts into a tray, flat and without overlap | ✅ · ✅ |
 | Rearrange3D (10) | spatial | ⬜ | o2: passes both modes | ✅ · ✅ |
 | PickPlace3D (1), FrankaPickPlace3D (1) | — | ⬜ | plain pick-and-place: passes both modes | ✅, ✅ · ✅, ✅ |
 | LimbRepositioning3D (16) | — | ⬜ | an arm welded to a human limb, torque control: another robot interface; its IKFast cannot build in our image | not run |
@@ -61,7 +61,7 @@ Source: `scripts/kinder/subset.toml`; analyses: `results/kinder/analysis/`.
 
 | mode | the agent gets | resets | delivers |
 |---|---|---|---|
-| limited | the robot's own sensors, below; no goal check | 0: one episode, as on the real robot | the episode itself |
+| limited | the robot's own sensors, below; no goal check | 50: explore in earlier episodes, the graded one executes | the graded episode itself |
 | full | the simulator with state access (`get_state`/`set_state`) and the goal check, offline | unlimited | one replayable trajectory |
 
 Limited mode, what the agent can and cannot access:
@@ -82,7 +82,7 @@ controller stops its queue.
 
 ```bash
 sg docker -c 'RCB_MODEL=openrouter/openai/gpt-6-luna scripts/run_deepseek_openrouter.sh tasks/kinder-tossing-i00-limited \
-  -c scripts/kinder/configs/limited.yaml --ak reasoning_effort=medium'   # one episode, wrist depth
+  -c scripts/kinder/configs/limited.yaml --ak reasoning_effort=medium'   # 50 resets, wrist depth
 sg docker -c 'RCB_MODEL=openrouter/openai/gpt-6-luna scripts/run_deepseek_openrouter.sh tasks/kinder-tossing-i00 \
   --ak reasoning_effort=medium'
 python3 scripts/results/build.py --add jobs/<job>     # log the run, rebuild the results pages
@@ -90,15 +90,17 @@ python3 scripts/results/build.py --add jobs/<job>     # log the run, rebuild the
 
 ## Latest results (GPT-6 Luna, 09-30; pass / scored tasks)
 
-| limited (no reset) | full | limited with 50 resets (control) |
+| limited (50 resets) | full | limited without resets (control) |
 |---|---|---|
-| 0/10 | 7/10 | 3/10 (sweep-simple, sort-blocks, packing-3d) |
+| 3/10 (sweep-simple, sort-blocks, packing-3d) | 7/10 | 0/10 |
 
-- Limited has one episode: every test move, test grasp and mistake is spent from its 1000 steps (PyBullet: 3000).
-  The nine MuJoCo runs, the fixture dynamo among them, all ran out of steps, after 6–46 min; the two PyBullet ones ran
-  out of time with 163 and 764 of their 3000 steps.
-- With 50 bit-exact resets the agents calibrate in early episodes and replay a script; that is how two of the control's
-  three passes came about. A real robot cannot restore its scene exactly, hence no resets in the standard config.
+- Why 50 resets: KinDER's episode (1000 steps, 100 s of robot time; PyBullet 3000) is the time to carry the task out
+  with the whole state known. Limited mode has to find things and calibrate first, which gets earlier episodes; the
+  graded one is the execution. Without resets both share one episode, and the nine MuJoCo runs ran out of its 1000 steps
+  after 6–46 min (the full-mode passes alone take 574–1000).
+- The limited passes calibrated over earlier episodes and then replayed a script (sweep-simple, sort-blocks) or packed
+  the tray live in its first episode (packing-3d). A reset restores the scene bit for bit, which a lab cannot; that
+  makes replaying a calibrated script possible, as in HumanoidBench.
 - Full mode passes by reading the state and the goal check and planning offline; it fails on the two multi-step contact
   tasks (sweep-into-drawer, scoop-pour) and on sweep-simple.
 
