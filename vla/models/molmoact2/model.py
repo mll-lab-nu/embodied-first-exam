@@ -5,7 +5,8 @@ Entry point: ``AutoModelForImageTextToText.from_pretrained(path, trust_remote_co
 inference_action_mode="continuous", ...)`` as in examples/droid/host_server_droid.py.
   images  exterior 1, exterior 2, wrist: HWC uint8 RGB, the three slots of the checkpoint (norm_stats
           camera_keys); resized to the DROID training size first, as the official DROID client does.
-  state   (8,) [q1..q7 rad, gripper closure in [0, 1], 1 = closed]; normalized and tokenized inside.
+  state   (8,) [q1..q7 rad in the DROID convention (droid.py), gripper closure in [0, 1], 1 = closed];
+          normalized and tokenized inside.
   task    the instruction; lowercased and stripped inside (normalize_language=True).
   output  (1, 15, 8): absolute joint positions (rad, clipped inside to the DROID 1-99 % range) and a continuous
           gripper command, 1 = closed; the official client clips it to [0, 1] and executes all 15 steps at 15 Hz.
@@ -17,6 +18,7 @@ import torch
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
 from vla.models.base import BaseVLA
+from vla.models.droid import from_droid_joints, to_droid_joints
 from vla.protocol import ActionChunk
 
 
@@ -39,8 +41,9 @@ class MolmoAct2(BaseVLA):
             out = self.model.predict_action(
                 processor=self.processor, task=obs.instruction,
                 images=self.camera_images(obs),
-                state=np.r_[joint[:7], 1.0 - joint[7]].astype(np.float32), norm_tag="franka_droid",
+                state=np.r_[to_droid_joints(joint), 1.0 - joint[7]].astype(np.float32), norm_tag="franka_droid",
                 inference_action_mode="continuous", enable_depth_reasoning=False, num_steps=10,
                 generator=self.generator, normalize_language=True, enable_cuda_graph=False)
         actions = out.actions[0].float().cpu().numpy()
-        return ActionChunk(np.c_[actions[:, :7], 1.0 - np.clip(actions[:, 7], 0.0, 1.0)].astype(np.float32))
+        return ActionChunk(np.c_[from_droid_joints(actions[:, :7]), 1.0 - np.clip(actions[:, 7], 0.0, 1.0)]
+                           .astype(np.float32))

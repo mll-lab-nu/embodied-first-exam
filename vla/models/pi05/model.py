@@ -6,7 +6,8 @@ letterboxes them to 224 x 224 itself (ResizeImages).
 
 DROID: train config pi05_droid_jointpos_polaris + checkpoint pi05_droid_jointpos (policies/droid_policy.py).
   in   observation/exterior_image_1_left, observation/wrist_image_left: HWC uint8 RGB;
-       observation/joint_position (7,) rad; observation/gripper_position (1,) in [0, 1], 1 = closed; prompt.
+       observation/joint_position (7,) rad in the DROID convention (droid.py); observation/gripper_position (1,)
+       in [0, 1], 1 = closed; prompt.
   out  (15, 8): absolute joint positions in rad (the policy adds the state back to its deltas) and the gripper
        position, 1 = closed. The official clients execute 8 steps at 15 Hz and binarize the gripper at 0.5
        (examples/droid/main.py), as done here.
@@ -27,6 +28,7 @@ from openpi.policies import policy_config
 from openpi.training import config as openpi_config
 
 from vla.models.base import BaseVLA
+from vla.models.droid import from_droid_joints, to_droid_joints
 from vla.protocol import ActionChunk
 
 ACTION_DIM = 32  # model action width before the output transforms slice it
@@ -46,7 +48,8 @@ class Pi05(BaseVLA):
         if self.spec.embodiment == "panda_robotiq":
             exterior, wrist = images
             inputs = {"observation/exterior_image_1_left": exterior, "observation/wrist_image_left": wrist,
-                      "observation/joint_position": joint[:7], "observation/gripper_position": 1.0 - joint[7:]}
+                      "observation/joint_position": to_droid_joints(joint),
+                      "observation/gripper_position": 1.0 - joint[7:]}
         else:
             slots = ("cam_high", "cam_left_wrist", "cam_right_wrist")
             inputs = {"images": {slot: image.transpose(2, 0, 1) for slot, image in zip(slots, images)},
@@ -54,5 +57,5 @@ class Pi05(BaseVLA):
         noise = self.rng.standard_normal((self.spec.chunk_size, ACTION_DIM)).astype(np.float32)
         actions = np.asarray(self.policy.infer({**inputs, "prompt": obs.instruction}, noise=noise)["actions"])
         if self.spec.embodiment == "panda_robotiq":
-            actions = np.c_[actions[:, :7], actions[:, 7] <= 0.5]  # opening = not closed
+            actions = np.c_[from_droid_joints(actions[:, :7]), actions[:, 7] <= 0.5]  # opening = not closed
         return ActionChunk(actions.astype(np.float32))
