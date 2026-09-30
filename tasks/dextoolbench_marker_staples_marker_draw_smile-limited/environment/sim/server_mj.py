@@ -38,6 +38,16 @@ MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
 
+# Startup watchdog: a scene build that hangs (seen under GPU memory pressure: no crash, so compose never restarted it)
+# exits the process, so compose's restart (on-failure) retries. Only before the service is ready: an episode that has
+# not started cannot be reset by this; after "ready" the watchdog stops.
+STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "300"))
+def _startup_watchdog():
+    time.sleep(STARTUP_TIMEOUT_S)
+    if not E.get("ready"):
+        print(f"startup watchdog: not ready after {STARTUP_TIMEOUT_S:g} s; exiting for a restart", flush=True); os._exit(3)
+threading.Thread(target=_startup_watchdog, daemon=True).start()
+
 
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 REC_PATH = os.path.join(DATA, "record.f64")      # journal: every executed control step's targets, float64 (N,) rows
