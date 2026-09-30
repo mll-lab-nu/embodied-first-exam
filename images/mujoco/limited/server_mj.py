@@ -32,31 +32,35 @@ MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = floa
 # Episode cap in control steps (0 = none). Set where nothing else ends the episode, e.g. DexToolBench without its per-goal
 # time limit (the limited twins: RCB_DTB_GOAL_TIMEOUT_S=0, RCB_MAX_CONTROL_STEPS=360000 = 100 min of robot time).
 MAX_CONTROL_STEPS = int(os.environ.get("RCB_MAX_CONTROL_STEPS", "0"))
+MAX_VIDEO_FPS = 30; MAX_FRAMES_PER_CALL = 3000   # frames x cameras per response: bounds the service's memory
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
 
 
-def _refuse_restart_after_start() -> None:
-    """No reset, ever (as the RoboTwin service): if an episode already started in this trial (the container crashed and
-    compose restarted it), do not build a new one. Mark the episode as failed (infra: sim_crashed), keep the PID file for
-    the collect hook, and idle."""
-    ep = os.path.join(DATA, "episode.jsonl")
-    try: started = any('"ev": "start"' in l for l in open(ep))
-    except OSError: return
-    if not started: return
-    with open(ep, "a") as f: f.write(json.dumps({"ts": time.time(), "ev": "restart_refused", "reason": "sim_crashed"}) + "\n")
+MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
+REC_PATH = os.path.join(DATA, "record.f64")      # journal: every executed control step's targets, float64 (N,) rows
+
+
+def _events() -> list:
+    try: return [json.loads(l) for l in open(os.path.join(DATA, "episode.jsonl")) if l.strip()]
+    except OSError: return []
+
+
+def _give_up(reason: str, infra: bool) -> None:
+    """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle."""
+    log({"ev": "restart_refused", "reason": reason})
     try: prev = json.load(open(os.path.join(DATA, "final.json")))
     except Exception: prev = {}  # noqa
-    prev.update({"success": False, "done": True, "reason": "sim_crashed", "finalized": True, "infra_error": 1, "protocol": PROTOCOL})
-    json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
+    if not (prev.get("finalized") and "deterministic" in prev):     # a verdict already on disk is kept as it is
+        prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL, **({"infra_error": 1} if infra else {})})
+        json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
-    signal.signal(signal.SIGUSR1, lambda *_: None); print("episode already started once; restart refused", flush=True)
+    signal.signal(signal.SIGUSR1, lambda *_: None); print(f"restart refused: {reason}", flush=True)
     while True: time.sleep(3600)
 
 
-_refuse_restart_after_start()
 with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
 
 S = TOOL.Session(INSTANCE, enable_render=True)
@@ -150,6 +154,10 @@ def task_info() -> dict:
 PROPRIO_LAYOUT = [f"{n}_pos" for n in NAMES] + [f"{n}_vel" for n in NAMES] + [f"{n}_target" for n in NAMES]
 SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("text", ""), "control_dt": CTRL_DT,
         "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_control_steps": MAX_CONTROL_STEPS or None,
+        "max_video_fps": MAX_VIDEO_FPS, "max_frames_per_call": MAX_FRAMES_PER_CALL,
+        "on_service_error": ("if a call fails with a connection error or 5xx, the service may have crashed and resumed the same "
+                             "episode (never a reset): the state is the one after the last call that completed on the service, "
+                             "which you may not have received; check GET /status (control_steps) before continuing"),
         "cameras": {c: {"rgb": True, "depth": True, "size": [W, H]} for c in CAMS},
         "action_types": {"joint_position": {"dim": N, "layout": NAMES, "lower": S.lower.tolist(), "upper": S.upper.tolist(),
                                             "semantics": "rows `dt` apart (a multiple of control_dt, >= control_dt); each row's targets held "
@@ -217,13 +225,28 @@ class Recorder:
 
 def _ctrl_step(tg, rec) -> bool:
     """One control step with targets `tg`; returns True if the episode ended (DexToolBench goal rule)."""
-    S.step(tg); RECORD.append(np.asarray(S.targets, float).copy()); rec.tick()
+    S.step(tg); row = np.asarray(S.targets, float).copy(); RECORD.append(row); RECF.write(row.tobytes()); rec.tick()
     if KIND == "dtb":
         p = S.progress()
         if p["done"]: finish("all goals reached"); return True
         if p["failed"]: finish("goal timeout"); return True
     if MAX_CONTROL_STEPS and len(RECORD) >= MAX_CONTROL_STEPS: finish("step limit"); return True
     return False
+
+
+
+
+def _fps(meta: dict) -> int:
+    try: fps = int(meta.get("video_fps", 10))
+    except (TypeError, ValueError): raise ValueError("video_fps must be an integer")
+    if not 1 <= fps <= MAX_VIDEO_FPS: raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
+    return fps
+
+
+def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
+    n = (int(seconds * fps) + 2) * len(cams) * (2 if depth else 1)
+    if n > MAX_FRAMES_PER_CALL: raise ValueError(f"this call would return {n} frames (cameras x fps x seconds, depth counts double); "
+                                                 f"the limit is {MAX_FRAMES_PER_CALL}: use fewer cameras, a lower video_fps or a shorter chunk")
 
 
 def do_submit(meta: dict, A: np.ndarray):
@@ -236,7 +259,8 @@ def do_submit(meta: dict, A: np.ndarray):
     interp = meta.get("interpolate", "linear")
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     cams = [c for c in (meta.get("cameras") or list(CAMS)[:1]) if c in CAMS] or list(CAMS)[:1]
-    fps = int(meta.get("video_fps", 10)); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
+    fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
+    _frame_budget(cams, fps, A.shape[0] * dt, depth)
     rec = Recorder(cams, fps, depth); rec.tick(force=True); prev = np.asarray(S.targets, float).copy(); n_clip = 0; done = False
     for row in A.astype(np.float64):
         tgt = np.clip(row, S.lower, S.upper); n_clip += int(np.any(tgt != row))
@@ -245,26 +269,29 @@ def do_submit(meta: dict, A: np.ndarray):
             if _ctrl_step(tg, rec): done = True; break
         prev = tgt
         if done: break
-    rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0])
+    rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0]); RECF.flush()
     out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": (meta.get("note") or "")[:500], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info()})
+         "note": (meta.get("note") or "")[:500], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
+         "rows_total": E["rows"], "state_sha": S.state_sha()})
     d = os.path.join(DATA, "calls", f"{E['calls']:06d}"); os.makedirs(d, exist_ok=True); np.save(os.path.join(d, "actions.npy"), A.astype(np.float32))
     return out, rec.parts(video, fps)
 
 
 def do_observe(meta: dict):
     cams = [c for c in (meta.get("cameras") or list(CAMS)) if c in CAMS] or list(CAMS)
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 10)); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
+    seconds = float(meta.get("seconds", 0)); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    _frame_budget(cams, fps, seconds, depth)
     rec = Recorder(cams, fps, depth); rec.tick(force=True)
     if seconds > 0 and not E["done"]:
         hold = np.asarray(S.targets, float).copy()
         for _ in range(int(round(seconds / CTRL_DT))):
             if _ctrl_step(hold, rec): break
         rec.tick(force=True)
-    E["calls"] += 1
-    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": len(RECORD)})
+    E["calls"] += 1; RECF.flush()
+    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": len(RECORD),
+         "rows_total": E["rows"], "state_sha": S.state_sha()})
     return {**meta_common(), "obs_id": E["calls"], "seconds": seconds, "ok": True}, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
@@ -327,21 +354,29 @@ class Hd(BaseHTTPRequestHandler):
         return self._json(404, {"error": "no such endpoint"})
     def do_POST(self):
         if self.path not in ("/submit", "/observe"): return self._json(404, {"error": "no such endpoint"})
-        try: meta, parts = self._body()
+        try: self._req = self._body()
         except Exception as exc: return self._json(400, {"error": str(exc)[:200]})
         with LOCK:
+            log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try:
-                if self.path == "/submit":
-                    if E["done"]: return self._json(409, {"error": "episode finished", "reason": E["reason"]})
-                    A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
-                    out, blobs = do_submit(meta, A)
-                else:
-                    out, blobs = do_observe(meta)
-            except ValueError as exc:
-                return self._json(400, {"error": str(exc)})
-            except Exception as exc:  # noqa
-                traceback.print_exc(); log({"ev": "error", "error": repr(exc)})
-                return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
+                return self._serve()
+            finally:
+                log({"ev": "call_end", "path": self.path})
+
+    def _serve(self):
+        meta, parts = self._req
+        try:
+            if self.path == "/submit":
+                if E["done"]: return self._json(409, {"error": "episode finished", "reason": E["reason"]})
+                A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
+                out, blobs = do_submit(meta, A)
+            else:
+                out, blobs = do_observe(meta)
+        except ValueError as exc:
+            return self._json(400, {"error": str(exc)})
+        except Exception as exc:  # noqa
+            traceback.print_exc(); log({"ev": "error", "error": repr(exc)})
+            return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 
 
@@ -353,8 +388,51 @@ def _end_from_signal():
 
 signal.signal(signal.SIGUSR1, lambda *_: threading.Thread(target=_end_from_signal, daemon=True).start())
 CALIB = calib()
-log({"ev": "start", "tool": TOOL.__name__, "state_sha": S.state_sha(), "protocol": PROTOCOL}); write_final()
-E["ready"] = True; E["t0"] = time.time()
+
+
+def _resume_or_start() -> None:
+    """Fresh start, or (after a crash: compose restarts the container) resume the SAME episode. The journal holds every
+    executed control step; the log holds, per completed call, the step count and the state hash. Replaying the journal up
+    to the last completed call rebuilds that exact state (MuJoCo on the CPU is bit-exact) and the hash is checked. A call
+    in flight when the service died is lost as a whole; its caller got an error, not a result, so nothing is gained. No
+    reset: the episode never goes back to its start. More than MAX_RESUMES crashes end it; if every crash happened while
+    serving a call, it counts as the agent's (sim_crashed_on_call), else as infrastructure (sim_crashed)."""
+    ev = _events(); starts = [e for e in ev if e.get("ev") == "start"]
+    if not starts:
+        try: os.remove(REC_PATH)
+        except OSError: pass
+        log({"ev": "start", "tool": TOOL.__name__, "state_sha": S.state_sha(), "protocol": PROTOCOL}); write_final()
+        E["t0"] = time.time(); return
+    try: fin = json.load(open(os.path.join(DATA, "final.json")))
+    except Exception: fin = {}  # noqa
+    if fin.get("finalized") and "deterministic" in fin: _give_up("restarted after finalize", infra=False)
+    resumes = [e for e in ev if e.get("ev") == "resumed"]
+    in_call = bool(ev) and ev[-1].get("ev") == "call_begin"
+    crashes_in_calls = sum(1 for e in resumes if e.get("crashed_in_call")) + int(in_call)
+    if len(resumes) >= MAX_RESUMES:
+        _give_up("sim_crashed_on_call" if crashes_in_calls == len(resumes) + 1 else "sim_crashed", infra=crashes_in_calls != len(resumes) + 1)
+    done = [e for e in ev if e.get("ev") in ("submit", "observe") and "state_sha" in e]
+    last = done[-1] if done else starts[0]
+    n = int(last.get("control_steps", 0))
+    try: R = np.fromfile(REC_PATH, dtype=np.float64)
+    except OSError: R = np.zeros(0)
+    if R.size < n * N: _give_up("resume_failed: journal shorter than the log", infra=True)
+    R = R[: n * N].reshape(n, N)
+    for row in R:
+        S.step(row); RECORD.append(row.copy())
+    if S.state_sha() != last["state_sha"]: _give_up("resume_failed: replayed state differs from the logged one", infra=True)
+    R.tofile(REC_PATH)                                   # drop the steps of the call that was in flight
+    E["calls"] = int(last.get("call", 0)); E["rows"] = int(last.get("rows_total", 0)); E["t0"] = float(starts[0]["ts"])
+    ended = [e for e in ev if e.get("ev") == "end"]
+    if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"])
+    log({"ev": "resumed", "control_steps": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call,
+         "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})
+    write_final()
+
+
+_resume_or_start()
+RECF = open(REC_PATH, "ab")
+E["ready"] = True
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} MuJoCo sim ready ({TOOL.__name__})", flush=True)
 HTTPServer(("0.0.0.0", 8000), Hd).serve_forever()
