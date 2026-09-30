@@ -78,6 +78,11 @@ def _give_up(reason: str, infra: bool) -> None:
 
 with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
 
+# Back off before rebuilding after a failed start (e.g. a GPU out-of-memory crash while other trials hold the GPU): compose
+# restarts immediately, so without a pause every retry meets the same full GPU (seen: 4 starts in 75 s, all failed).
+_n_starts = sum(1 for _ in open(os.path.join(DATA, "startups.jsonl")))
+if _n_starts > 1 and not os.path.exists(os.path.join(DATA, "episode.jsonl")): time.sleep(min(120, 20 * (_n_starts - 1)))
+
 S = TOOL.Session(INSTANCE, enable_render=True)
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 KIND = "dtb" if TOOL.__name__ == "rcb_dtb" else "pg"
