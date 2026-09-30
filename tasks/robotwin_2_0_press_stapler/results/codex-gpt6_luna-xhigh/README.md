@@ -7,7 +7,7 @@ Run: Harbor job `rt-gpt6luna-xhigh-unlimited`, trial `robotwin_2_0_press_stapler
 
 | | |
 |---|---|
-| result | **0** |
+| result | **1** (regraded offline; see above) |
 | agent time | 293 s |
 | actions / physics steps | — / — |
 | tokens in / out | 601138 / 5789 |

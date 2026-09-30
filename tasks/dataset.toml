@@ -193,7 +193,7 @@ digest = "sha256:6d4b9544efd8fc7b26006dae749be215cb6a72adfb4cde76140187e0b313d18
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_down"
-digest = "sha256:f079eeaaed034d14cf956a8406ae5c291f09163f14c38e3f2021ad5b99be466b"
+digest = "sha256:c98c915a9a5205ab749c8ba6c754aa4666283788c768836efc8b6b1cc8d066db"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion"
@@ -201,83 +201,83 @@ digest = "sha256:9f80324f70a61d91b5c301e6de43a33c7ee5d81ae6a09e2317c823cbb042f23
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_blue_brush_sweep_forward"
-digest = "sha256:7dd4cf1bc4464844f4829b68bcebe7af7f5268006d1acc4d8038f7a900754117"
+digest = "sha256:dc4dc25a7fb8925ed7b25a01373168e9ede147d46c507e83f4d5f99e2f71e141"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_red_brush_sweep_forward"
-digest = "sha256:08ae226ce858ca56900735551ad58ce180d7c5efd1a7648f336dfe0eaaaa9249"
+digest = "sha256:5164fca1860b861e31ac13978d4d93a0efacac8e2974328ecb6d4b2c51de047c"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_red_brush_sweep_right"
-digest = "sha256:6db37fe57efc395f41ca8ab8c108d0cfac876365c6efed9d5c7db17dcb56a9bb"
+digest = "sha256:63d9e22618ac28ccf9ae6d850ad9e25584e8e6079b7170cecf0e69972b37a12f"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_eraser_handle_eraser_wipe_c"
-digest = "sha256:fb5d421472d82d3c16c218ebf3e03c505bbd210811fb9767cd69013f74bd8c9b"
+digest = "sha256:4582689583f0798d53b3e3c969f50d5d3188796bf1a370c6079c69e86afc19f8"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_eraser_handle_eraser_wipe_smile"
-digest = "sha256:27b2faed09697c67c697273c58e89af81810f5e9f268ba0c5a02fab5f528b78d"
+digest = "sha256:4d4de5e43ebf3d5f6e6e1f534eb78b5da8fef5211ddb3361696158fc48b00358"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_side"
-digest = "sha256:cfc1a64b83983c0af4ae01bb5f5ad41090fbf372292d436cd5ac8c9ed1f836aa"
+digest = "sha256:d160484b194b0e0735625b5eae90e268025631d0a4dcc9dbf345b932d70f5a04"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_mallet_hammer_swing_down"
-digest = "sha256:2a531b9ad768b6e58306555019a602313d70481eae13dc28e8d51a7eed57a55d"
+digest = "sha256:41021deedbf053ebd7b5227d92e73d41757e4cb6f4a1572bedc8789f392b3fbf"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_mallet_hammer_swing_side"
-digest = "sha256:5764478193bb7c187bb0a8077c9ad4b1db0d677b5c79c5e0e4c63aa0d791039c"
+digest = "sha256:a098ca75f638c8603186057530a741e245e37fae9ab3d9cd782fcd502b546cd7"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_sharpie_marker_draw_smile"
-digest = "sha256:b23e3096d40373cd625a6917ce5b467bcb5e94d2738ed3fba8944d5f73af1a7a"
+digest = "sha256:2dcea063b34b292082ebeec16454297af721f6746c4e6a05472a2abc70c89624"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_sharpie_marker_write_c"
-digest = "sha256:1b2672cf9bc446f042fcb3a549a59f0778d45eff5e9aca79666720c56b1eccf5"
+digest = "sha256:c4d4e74c797eb98761de81ebbef629f803dcf55bbea1b1f3fbdea4044f43a554"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_staples_marker_draw_smile"
-digest = "sha256:f48c282583fa23397c4a8db2221682feba51b3acfd232f070334985aaedfc930"
+digest = "sha256:7bc25faaa05bac0c354c5c7e3bf0b47df0937cbdf279848c449728516994f04e"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_staples_marker_write_c"
-digest = "sha256:201b5e33b9cda72c6e173e50136b22d9c5dc6b38eb3f2887a4b0bf879b6d1125"
+digest = "sha256:f6236a7d0244d36ed5fccef91ec5f5e45d0ef33c3e2c0bf56fc0ff47ebf2b2e3"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_horizontal"
-digest = "sha256:14ef7b8e2b64ad6bec778df61ebeaf9afea40233f2f118b00d6b6fdc5fee19c1"
+digest = "sha256:b7b42fa5e97b43dc5694fc7fc359ceb1045853a33b69d50df3d390e45c5dff40"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_vertical"
-digest = "sha256:98b54e1046a3336e2164da264d4650f42507f142c1eb1229b49a3fc79a2248ff"
+digest = "sha256:c3bec664f0ea2ada568d8f3e945b80d85bc75ff9c79fccdf921e3bfaad8d94d6"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_short_screwdriver_spin_horizontal"
-digest = "sha256:5750338ef805b14e5c7ff1c247a8834bc53780fe8cca9f71380002b5c77c65b2"
+digest = "sha256:d1011187378aad1827377d62c60006a95b2ad2a5c995372228b08a3c0cb87b82"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_short_screwdriver_spin_vertical"
-digest = "sha256:b8fac19c4ea1762e825cb18b8bd593fd57f45d33581229b767bbd3ea7ea43879"
+digest = "sha256:4fb219eb59f23d9100227d9526a05ab1e6a6027934fb1772807ea66c8cf52e79"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_flat_spatula_flip_over"
-digest = "sha256:21ce4224348080af0801025aabde71c30afd8c8e4bcce07eb859ccd8cdfe306e"
+digest = "sha256:3ea27b11686f8122ba3a6bfa8dc8f09eeaed9f03f9aebb54b72e4e5222ddfaed"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_flat_spatula_serve_plate"
-digest = "sha256:7d7bbe6435a24a399f7b7a7231bc2d42ccd929b29a408b4f2b9ba56da530974a"
+digest = "sha256:ff6dc9835183b8356fb801af4cb16ff20dc9d5ce16de1759f130096a555a3fc2"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_spoon_spatula_flip_over"
-digest = "sha256:d83a98faf198b9783c8b3cf10c6ae306ee7df9734b1ab764e2646426bd4c2a1f"
+digest = "sha256:1d348200f4d8af87ce9ca59a38e6442ec8998d227a906ea3b6b811e43dcee58a"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_spoon_spatula_serve_plate"
-digest = "sha256:c615e6bd130ee4d48db927bce544f56125334843dc34e69f11ec87f7c85dcced"
+digest = "sha256:7bf5a4e07a5553deb7dd3e17ed5f27bf590ce423b4a97bf97fe78435b0e31a60"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_hand_over"
@@ -293,101 +293,101 @@ digest = "sha256:7fff3cc4953de3e91bf038198c5873395dd418bd1a823767aa45082b981125f
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_blue_brush_sweep_forward-limited"
-digest = "sha256:37d85e7b890d1384a37955b7acaa4ed5cad09d1e6619a89bc42899646198a4fb"
+digest = "sha256:730aedc9785519b0adc22b67fcee0b6784888fa46ad16882a1fdce3a761051d8"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_red_brush_sweep_forward-limited"
-digest = "sha256:d2afbb7cb35e808b328f5777057c9a0c6e480ac495375b9a917a2711c8784629"
+digest = "sha256:f8d4d872a633fc1193aad2eea8b96402ba79aea4b72e819defd844ab1de6ead1"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_red_brush_sweep_right-limited"
-digest = "sha256:31262b83f0f2d9a44046c97ac45697db229381aeab5a927d753a80e76b7899a5"
+digest = "sha256:807f25f9e5da37c2c65674b8dd58300465330680eebbc0b5c7df90e2293db88e"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_eraser_handle_eraser_wipe_c-limited"
-digest = "sha256:0d8ce1b582505a60e2f01464a01cf6eabcd17e2b67ac83425acbf9fc8e81de54"
+digest = "sha256:db4784df2b3a5af222907d38aabc9401ec1ccc60add57a80da320f88b2a3f78b"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_eraser_handle_eraser_wipe_smile-limited"
-digest = "sha256:fa8ec682671b437286e782e33b46a2101db5cd710b10511c6dc9ce0c281341f5"
+digest = "sha256:c1b1a1778db13f7b2791b1b08203fd0c714e1866aa65272200623b2760036375"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_down-limited"
-digest = "sha256:760c71db6e0a7255669d4ab83fa58e7808cc9fd9fc3231b4ef1c5969919bb61b"
+digest = "sha256:5718dba57902fe8ad61b0cec7da582cd44d03b400954710cb778ccec06cce97f"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_claw_hammer_swing_side-limited"
-digest = "sha256:eb2461f733321a5369aadc4b6bf7358cf4b68f34187e718b4c266111adf11f20"
+digest = "sha256:f6cf8a064e6eb4cdf0b794d0b21d5a6bd8ad4eeda52e7a5412b609cec39937bb"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_mallet_hammer_swing_down-limited"
-digest = "sha256:a8695729d02caeb54277166251b4765a88d3601141b3931ff20d1e1e74dc04f5"
+digest = "sha256:fc78fcdb5509dcea5627c8e465fd7be819e10479d8d93992896efd4047bdc618"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_hammer_mallet_hammer_swing_side-limited"
-digest = "sha256:ae6c41b5990c7a3ed06b158c8bb26e749e7033d80b9a7288602cc6b1644736b4"
+digest = "sha256:6b1ecd8f9c70186eb2494ab8dd420bcd07d99b179303762833e78fc9efb8a0e4"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_sharpie_marker_draw_smile-limited"
-digest = "sha256:a9d8440b95978ab030b10adb700994b38b060fe8a8f08c71c03fe76022e451f2"
+digest = "sha256:e08771d5f2a1486f4399ff06cd9f466cb9a5f7717af4e966d5e272d1174e6fe6"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_sharpie_marker_write_c-limited"
-digest = "sha256:8cb366b2863b0b1f2ee84a471b45b4654ffd5cb8c492eff9d7afdd0093fad745"
+digest = "sha256:f7b26a7c891153646da4fded679e38ff05e1c5633643b1edee5fddae64f37e8d"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_staples_marker_draw_smile-limited"
-digest = "sha256:d06482429cd85411d744a3220c3e40274d4b96d148fe9e7d561ed716fe405b55"
+digest = "sha256:18ca7290be65172dd6c6f01fa07c964354e64f4d145cb6822f7cf8bffe3d7a06"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_marker_staples_marker_write_c-limited"
-digest = "sha256:d40d1725b0fd979e9628ca43c61fc1627b57a006bb5d790343e9acfeec65bdb6"
+digest = "sha256:1f069ee2a6be60bd3031bc4b036bfa3fecbc25c82de72bb95a5dbd1c5624e5a3"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_horizontal-limited"
-digest = "sha256:43dc7be07e6105ad598d48436ad4ce297ac9479c3c2180b8b33df47f73887625"
+digest = "sha256:4bc44f08057380f52c195cb089d72892ff6d9c0795a24b01f89b3f6b4f18170a"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_vertical-limited"
-digest = "sha256:af2892a5c2bd4f2f021689b5a591a899c0691a78bbae30e68a693cde355e0bf7"
+digest = "sha256:4b00206be5485d5a5d49160d7bbc7808cd78793702f28b650ce081613ebb7638"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_short_screwdriver_spin_horizontal-limited"
-digest = "sha256:1ca81a0fc1efba8b4f3fce52b29f25b266b10469a0bf74131da72e342469e960"
+digest = "sha256:f7320b3a525f597c1a4a1d66f3e992a8426f0123fd4ae2c591f2c84dc3757617"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_screwdriver_short_screwdriver_spin_vertical-limited"
-digest = "sha256:48a6b4c72584acf75ffd06996c38f9203d628f6a640cdfec6086eedd87395fac"
+digest = "sha256:41006db73af7f7c918a4e9ea58b9113472981b837072b51ffeb8c123c895ed35"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_flat_spatula_flip_over-limited"
-digest = "sha256:edb7413679733ff430abc9e88fbee8111e59e7225655dcc39717f83b3644b6d3"
+digest = "sha256:9b89389f12a6580295b7c19b7e1c98d145627daf1ac0de9fa7af65324f758577"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_flat_spatula_serve_plate-limited"
-digest = "sha256:c53a4358c5e9b49cb32999502a04d96b789001dd01ad835bac8886e302668070"
+digest = "sha256:23613ff8e930fbe88c11dfea1dbef6346c519d493c43a5a1856a68d275ccba2c"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_spoon_spatula_flip_over-limited"
-digest = "sha256:551f0f87509b721cbd5f1075f634f48be4db026bf375b0df6c503d840a352c79"
+digest = "sha256:75407f8e9818aae1cb23ebe10639301f8dcc7c059df4fd3b17278d5beb2dd47c"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_spatula_spoon_spatula_serve_plate-limited"
-digest = "sha256:2f38a35ad6e7cc09dc9e8f70c2c706f1f3d1519fd865042301578d5dba56ddf2"
+digest = "sha256:32393993ffa395bb159c07611a79c5832a0d0fc16ea5ffa587dbc33847ec20d7"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_hand_over-limited"
-digest = "sha256:118b1b29ff4411668f72b2e97def679883fa5f003fd0ac008b47d096d2457fc1"
+digest = "sha256:cea77c00bda381ab96e99e0b6bdd3997287b7611e5cfc312abe96bffbe2e686b"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion-limited"
-digest = "sha256:4e74d176145693efbbd8dc866ba398343e97f7fe7ad9f45f5f838ee58f1ef50f"
+digest = "sha256:32fc5735a4ad285c9ccee441a6cef35a7e1c2455dbeb9035c640db291e8291a1"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_panda_open_cabinet-limited"
-digest = "sha256:76b81617cc6d9646bf6206f7399add181bf817d459b89adbbdc9e91b4f043a19"
+digest = "sha256:4b8a749f5b8e84274a3ed1c661a827497fec484cc03902eb3337d18efe2f12af"
 
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_panda_pick_cube_orientation-limited"
-digest = "sha256:9c7b62c675b39c79c720418dd7395bc311b988ca1aa4c6c4e29a6a80ad6f8252"
+digest = "sha256:8c142add430908009b795412090a8533220a92afefc833d954d1720889791642"
 

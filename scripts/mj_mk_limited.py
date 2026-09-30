@@ -23,7 +23,10 @@ def tool_of(src: pathlib.Path) -> str:
 def make(src: pathlib.Path) -> pathlib.Path:
     name = src.name; dst = ROOT / "tasks" / f"{name}-limited"; tool = tool_of(src); dtb = tool == "rcb_dtb"
     inst = json.load(open(src / "environment/instance.json"))
-    if dst.exists(): shutil.rmtree(dst)
+    # regenerate everything except results/ (agent results committed per run)
+    if dst.exists():
+        for c in dst.iterdir():
+            if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()
     for d in ("environment/sim", "tests", "solution"): (dst / d).mkdir(parents=True)
     # agent container: python + the client
     (dst / "environment/Dockerfile").write_text("# Limited mode: the agent container has NO simulator and no task code — only Python and the client.\n"
@@ -36,6 +39,9 @@ def make(src: pathlib.Path) -> pathlib.Path:
     # sidecar: the server, the codec, the task's tooling and instance
     shutil.copy(SERVER, dst / "environment/sim/server_mj.py"); shutil.copy(RT / "environment/sim/rcb1.py", dst / "environment/sim/rcb1.py")
     shutil.copy(src / "environment" / f"{tool}.py", dst / "environment/sim" / f"{tool}.py"); shutil.copy(src / "environment/instance.json", dst / "environment/sim/instance.json")
+    # DexToolBench: no per-goal time limit in limited mode (owner 2026-09-29: one episode, no reset, so the benchmark's 10 s
+    # per goal ended every agent's episode at step 600); the episode is capped at 10 min of robot time instead.
+    dtb_env = ('\n      RCB_DTB_GOAL_TIMEOUT_S: "0"\n      RCB_MAX_CONTROL_STEPS: "36000"' if tool == "rcb_dtb" else "")
     (dst / "environment/docker-compose.yaml").write_text(f"""# Limited mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 services:
@@ -50,7 +56,7 @@ services:
     restart: on-failure:3
     environment:
       RCB_TOOL: {tool}
-      RCB_INSTANCE: /srv/instance.json
+      RCB_INSTANCE: /srv/instance.json{dtb_env}
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
     shm_size: "4gb"
@@ -176,9 +182,15 @@ def instruction(src, inst, tool) -> str:
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
     score_txt = score.group(2).replace("`s.check()` computes exactly this.", "The service applies exactly this rule.").strip() if score else ""
     if tool == "rcb_dtb":
+        score_txt = re.sub(r"Each goal has \*\*10 s \(600 control steps\)\*\*; if it is not reached in time the attempt ends there\.",
+                           "In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). "
+                           "The episode ends when every goal is reached, or after **36,000 control steps (10 min of robot time)**.", score_txt)
+        assert "no time limit" in score_txt, "DexToolBench scoring text changed; update the limited wording"
+    if tool == "rcb_dtb":
         task_obs = ('`meta["task"]` = the current goal (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`, `steps_left_on_goal`\n'
                     "(the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every\n"
-                    "goal is reached or a goal times out; after that the service answers 409.")
+                    "goal is reached or at the step limit (`spec[\"max_control_steps\"]`); after that the service answers 409.\n"
+                    "`steps_left_on_goal` is null: no goal has a time limit here.")
         dims = "29: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in `spec[\"action_types\"][\"joint_position\"][\"layout\"]`)"
     else:
         task_obs = ('`meta["task"]` = the task\'s target (`target_pos`, and `target_quat_wxyz` where it has one). The episode runs until your\n'
