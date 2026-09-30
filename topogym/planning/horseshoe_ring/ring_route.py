@@ -215,8 +215,9 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
     bodies remain fully dynamic and collision-active in the simulator. Their
     measured poses participate in every new robot collision check.
     """
-    checker=HeldRingPath(planner,observation,
-        passive_contact_names=('horseshoe_left','chain_upper_1','chain_lower_1'))
+    parameters=getattr(planner,'withdrawal_parameters',{})
+    passive=parameters.get('passive_contact_names',('horseshoe_left','chain_upper_1','chain_lower_1'))
+    checker=HeldRingPath(planner,observation,passive_contact_names=passive)
     measured=checker.bodies.copy();hp,hr=measured['horseshoe_right']
     guide=[]
     for frame in reference:
@@ -265,7 +266,7 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
         write_json_atomic(destination,dict(result,initial=initial))
         raise ValueError('Measured ring state failed stage-entry checks')
     escape=checker.contact_escape();path=list(escape);release_edges=len(path)-1
-    budget=.012;travel=0.;failure=None
+    budget=float(parameters.get('stage_motion_m',.012));travel=0.;failure=None
     index=state['index']
     while index<len(guide) and travel<budget-1e-7:
         target=guide[index];motion=checker.motion(path[-1],target)
@@ -317,7 +318,8 @@ def plan_joint_withdrawal(planner, observation, reference):
             if float(((r.apply(planner.task.placement_vertices['target_ring'])+p)@direction).min())>=boundary:
                 goals.append((p,r))
     result=plan_free_ring_transport(planner,observation,goals,
-        passive_contact_names=('horseshoe_left','chain_upper_1','chain_lower_1'))
+        passive_contact_names=getattr(planner,'withdrawal_parameters',{}).get(
+            'passive_contact_names',('horseshoe_left','chain_upper_1','chain_lower_1')))
     result.update(observed_bodies={n:pose_dict(p) for n,p in bodies.items()},
                   method='joint_search_with_passive_contact_then_dense_cartesian_replay')
     write_json_atomic(planner.directory/'joint_withdrawal_plan.json',result)

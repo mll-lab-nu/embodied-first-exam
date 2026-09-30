@@ -20,7 +20,7 @@
 
 未接入的 subgoal、waypoint、grasp_sites 及旧 Horseshoe/Lock 运动工具已删除。本目录只产生参考运动或低层动作。实际物理推进由 simulator 的管理方 runner 完成；参考路径本身不代表任务成功。
 
-`horseshoe_ring/`（2026-09-30）为当前三档复核物体参考路径，并为 easy 提供只读双臂联合 IK、观测反馈控制和独立逐 tick 审计。`scripts/run_horseshoe_policy.py` 冻结输入与源码，分开记录几何、IK 和物理诊断，监控资源并在 90% 停止本次进程。三档物体路径及 easy 从默认 home 到折合、支撑交接和抓环已有证据；取环和固定区域放置尚未完成。`ring_route.py` 的短段接触候选、`joint_route.py` 的自由圆环搬运搜索均需另行物理验收；详见[任务说明](../../docs/develop/tasks/horseshoe_ring_zh.md)。
+`horseshoe_ring/`（2026-09-30）为当前三档复核物体参考路径，并为 easy 提供只读双臂联合 IK、观测反馈控制和独立逐 tick 审计。`scripts/run_horseshoe_policy.py` 冻结输入与源码，分开记录几何、IK 和物理诊断，监控资源，仅内存达到 90% 时停止本次进程，CPU 只记录。三档物体路径及 easy 从默认 home 到折合、支撑交接和抓环已有证据；取环和固定区域放置尚未完成。`ring_route.py` 的短段接触候选、`joint_route.py` 的自由圆环搬运搜索均需另行物理验收；详见[任务说明](../../docs/develop/tasks/horseshoe_ring_zh.md)。
 
 `cast_coil/baseline.py` 提供基础装配被动策略：从 ALOHA home 接近，双指接触取得自动 assist，以实测物体位姿补偿负载偏差，执行原型路线的逆向装配、落桌、释放和沿手爪轴线撤离。入口为 `scripts/run_cast_coil_policy.py`，只通过 `SegmentRunner.run_policy` 执行。seed 0 的一次 Nyx 完整运行已经通过当前 Task terminal 及独立释放/桌面支承复核，视频与失败尝试见[运行报告](../../task_rollouts/cast_coil_assist_20260927/README.md)。该次运行显式采用 10 Hz 控制 / 160 子步，不能当作默认 tick、半时间步、多 seed 或纯摩擦抓取资格。
 

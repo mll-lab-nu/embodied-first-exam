@@ -18,7 +18,7 @@ from topogym.planning.rigid_reference.geometry import freeze_scene
 from topogym.utils.io import write_json_atomic
 
 
-def audit_run(root):
+def audit_run(root, *, prefix=False):
     root=Path(root).resolve()
     report=json.loads((root/'run_report.json').read_text())
     config=report['config']
@@ -36,7 +36,11 @@ def audit_run(root):
     artifact=root/'private/horseshoe_monitor.jsonl'
     digest=hashlib.sha256()
     with artifact.open('rb') as stream:
+        # A live run may append more records during the audit. Bind this
+        # diagnostic to the complete lines already present at entry.
+        limit=artifact.stat().st_size if prefix else None
         for line in stream:
+            if limit is not None and (stream.tell()>limit or not line.endswith(b'\n')):break
             digest.update(line);row=json.loads(line)
             state,world=row['state'],row['world'];count+=1
             if birth is None:birth=state
@@ -98,7 +102,7 @@ def audit_run(root):
             if row['task']['result']['reason'] not in (None,'Goal stable'):
                 failures.append(dict(tick=tick,reason='native_task_failure',detail=row['task']['result']['reason']))
     if last is None:raise ValueError('Empty physical evidence')
-    if count!=report['physics_steps']+1:failures.append(dict(reason='missing_physics_ticks'))
+    if not prefix and count!=report['physics_steps']+1:failures.append(dict(reason='missing_physics_ticks'))
     # Check actual first action evidence against the declared ALOHA home.
     steps=root/'segments/segment_1/steps.jsonl'
     with steps.open() as stream:first=json.loads(next(stream))
@@ -112,6 +116,7 @@ def audit_run(root):
     with steps.open() as stream:
         for line in stream:
             row=json.loads(line)
+            if prefix and row['state']['physics_step']>last['state']['physics_step']:break
             for side,state in row.get('robot',{}).items():
                 q=np.asarray(state['joint_position_rad'])
                 residue=float(np.maximum(limits[:,0]-q,q-limits[:,1]).max())
@@ -121,8 +126,10 @@ def audit_run(root):
                                          side=side,violation_rad=residue))
     native=bool(report['task_success'])
     raw=best_stable+1e-12>=float(task.config['stable_duration_s'])
-    qualified=source_valid and home_ok and not failures and not lost and raw and acquisition_valid and bool(acquired)
+    qualified=not prefix and source_valid and home_ok and not failures and not lost and raw and acquisition_valid and bool(acquired)
     result=dict(schema_version=1,source_snapshot_valid=source_valid,from_default_home=home_ok,
+        diagnostic_prefix=prefix,last_audited_state=last['state'],
+        auditor_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         physical_evidence_sha256=digest.hexdigest(),identity=identity,physics_ticks=count,
         continuous_from_birth=not any(f.get('reason')=='noncontinuous_history' for f in failures),
         maximum_task_contact_penetration_m=max_depth,chain_connections_intact=not any(f.get('reason')=='chain_connection_lost' for f in failures),
@@ -138,11 +145,15 @@ def audit_run(root):
         eligible_for_terminal_qualification=qualified,native_task_success=native,
         accepted_proof=bool(qualified and native),
         scope='finite recorded instance; World-tick numerical audit; contact-triggered assisted grasp; no continuous-time or pure-friction claim')
-    write_json_atomic(root/'independent_audit.json',result)
+    write_json_atomic(root/('prefix_audit.json' if prefix else 'independent_audit.json'),result)
     return result
 
 
 if __name__=='__main__':
-    import sys
-    result=audit_run(sys.argv[1])
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('run',type=Path)
+    parser.add_argument('--prefix',action='store_true',help='Audit a bounded live prefix; cannot grant qualification')
+    args=parser.parse_args()
+    result=audit_run(args.run,prefix=args.prefix)
     print(json.dumps({k:v for k,v in result.items() if k not in ('identity','grasp_acquisitions','phases')},indent=2))

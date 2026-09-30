@@ -7,7 +7,7 @@ from topogym.planning.rigid_reference.geometry import interpolate
 
 
 class HorseshoePolicy:
-    def __init__(self, grasps, *, part='pickup', fold=None, support=None, planner=None, settle_tilt_deg=0., settle_axis='y', settle_secondary_y_deg=0., settle_translation=(0.,0.,0.), fold_tracking_m=.001, withdrawal_mode='full'):
+    def __init__(self, grasps, *, part='pickup', fold=None, support=None, planner=None, settle_tilt_deg=0., settle_axis='y', settle_secondary_y_deg=0., settle_translation=(0.,0.,0.), fold_tracking_m=.001, withdrawal_mode='full', withdrawal_parameters=None):
         self.grasps, self.part, self.fold = grasps, part, fold
         self.support=support
         self.planner=planner
@@ -17,6 +17,17 @@ class HorseshoePolicy:
         self.settle_translation=np.asarray(settle_translation,dtype=float)
         self.fold_tracking_m=float(fold_tracking_m)
         self.withdrawal_mode=withdrawal_mode
+        self.withdrawal_parameters=dict(speed_m_s=.004,tracking_m=.0015,stage_motion_m=.012,
+            maximum_stages=200,passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
+        if withdrawal_parameters:
+            unknown=set(withdrawal_parameters)-self.withdrawal_parameters.keys()
+            if unknown:raise ValueError(f'Unknown withdrawal parameters: {unknown}')
+            self.withdrawal_parameters.update(withdrawal_parameters)
+        for key in ('speed_m_s','tracking_m','stage_motion_m'):
+            value=float(self.withdrawal_parameters[key])
+            if not np.isfinite(value) or value<=0:raise ValueError(f'Invalid {key}')
+        if not 1<=int(self.withdrawal_parameters['maximum_stages'])<=1000:
+            raise ValueError('Withdrawal stage count must be between 1 and 1000')
         self.phase = 'created'
         self.diagnostics = {}
 
@@ -219,7 +230,9 @@ class HorseshoePolicy:
         support=self.bodies()['right']
         self.offsets['right']=relative_pose(support,self.tcp()['right'])
         self.bias['right'][:]=0.;self.angle_bias['right'][:]=0.
-        for stage in range(100):
+        params=self.withdrawal_parameters
+        self.planner.withdrawal_parameters=params
+        for stage in range(int(params['maximum_stages'])):
             self.phase=f'plan_ring_stage_{stage}'
             plan=self.planner.withdrawal_stage(self.obs)
             if plan.get('separated'):
@@ -229,19 +242,25 @@ class HorseshoePolicy:
             for index,row in enumerate(plan['poses'][1:]):
                 target=body_pose(row);current=self.bodies()['left']
                 motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
-                yield from self.follow_bodies({'left':target,'right':support},max(.5,float(motion/.004)),
-                    f'withdraw_ring_stage_{stage}_{index}',tracking_m=.0015)
+                yield from self.follow_bodies({'left':target,'right':support},max(.5,float(motion/params['speed_m_s'])),
+                    f'withdraw_ring_stage_{stage}_{index}',tracking_m=params['tracking_m'])
             yield from self.follow_bodies({'left':target,'right':support},.25,
-                f'settle_ring_stage_{stage}',tracking_m=.0015)
-        raise RuntimeError('Ring withdrawal exhausted 100 measured-state stages')
+                f'settle_ring_stage_{stage}',tracking_m=params['tracking_m'])
+        raise RuntimeError('Ring withdrawal exhausted its measured-state stage budget')
 
     def place_in_goal(self):
+        yield from self.place_ring()
+        yield from self.place_remainder()
+        yield from self.verify_goal()
+
+    def place_ring(self):
         self.phase='plan_ring_placement'
         ring=self.planner.place_ring(self.obs)
         for index,row in enumerate(ring['poses'][1:]):
             target=body_pose(row);current=self.bodies()['left']
             motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
             yield from self.follow_bodies({'left':target},max(.3,float(motion/.015)),f'place_ring_{index}')
+    def place_remainder(self):
         self.phase='plan_remainder_placement'
         remainder=self.planner.place_remainder(self.obs)
         self.bias['right'][:]=0.;self.angle_bias['right'][:]=0.
@@ -249,6 +268,7 @@ class HorseshoePolicy:
             target=body_pose(row);current=self.bodies()['right']
             motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
             yield from self.follow_bodies({'right':target},max(.3,float(motion/.012)),f'place_remainder_{index}')
+    def verify_goal(self):
         self.phase='verify_raw_goal';start=self.time();stable=0.
         while stable<float(self.planner.task.config['stable_duration_s'])+self.dt:
             reached,failure,metrics=self.planner.measure_goal(self.obs)

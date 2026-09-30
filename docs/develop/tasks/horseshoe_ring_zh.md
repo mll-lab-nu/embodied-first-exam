@@ -34,7 +34,7 @@
 
 接触前缀的[独立审计](../../../runs/test_results/horseshoe_oracle_20260930/staged_solve_02/independent_audit.json)与[实际物体姿态示意](../../../runs/test_results/horseshoe_oracle_20260930/staged_solve_02/geometry_snapshots/contact_progress.png)已保存，示意图不属于相机 RGB 或完整成功视频。`--withdrawal-mode joint-staged` 将[完整关节空间候选](../../../runs/test_results/horseshoe_oracle_20260930/joint_withdrawal_probe_02/free_ring_transport_plan.json)用作短段引导；放置端另有 2074 样本的绕行候选，均等待实际执行。`joint_staged_solve_01` 在折合中触发 CPU 99.4% 的资源停止，内存当时为 21.4%；[中断记录](../../../runs/test_results/horseshoe_oracle_20260930/joint_staged_solve_01/interruption.json)明确保留未完成状态，不拼接续跑。
 
-`joint_staged_solve_02` 在 16290 tick / 407.25 s 被旧版 CPU 资源守护中断（CPU 99.7%，内存 24.5%），未完成取环；保留[中断说明](../../../runs/test_results/horseshoe_oracle_20260930/joint_staged_solve_02/interruption.json)。实测右手持有的下件随接触载荷偏移约 2 cm，导致随下件更新的引导路径反复移动。当前候选在取环中同时反馈保持右手支撑物，并在短段末反馈停稳；新的 `joint_staged_solve_03` 从 home 执行验证。另有[反向右手抓持的 909 点 IK 检查](../../../runs/test_results/horseshoe_oracle_20260930/opposite_right_grasp_probe_01/audit.json)通过，右腕旋转关节最小余量约 1.36 rad，尚未物理验证。
+`joint_staged_solve_02` 在 16290 tick / 407.25 s 被旧版 CPU 资源守护中断（CPU 99.7%，内存 24.5%），未完成取环；保留[中断说明](../../../runs/test_results/horseshoe_oracle_20260930/joint_staged_solve_02/interruption.json)。实测右手持有的下件随接触载荷偏移约 2 cm，导致随下件更新的引导路径反复移动。当前候选在取环中同时反馈保持右手支撑物，并在短段末反馈停稳；`joint_staged_solve_03` 在首段接触脱离中因 0.7 mm 跟踪门槛超时，6064 tick 的[独立审计](../../../runs/test_results/horseshoe_oracle_20260930/joint_staged_solve_03/independent_audit.json)仍通过全部连接、接触和抓持检查。当前 `joint_staged_solve_04` 使用 1.5 mm 取环跟踪门槛和反向右手抓持，从 home 重新执行；审计门槛不变。另有[反向右手抓持的 909 点 IK 检查](../../../runs/test_results/horseshoe_oracle_20260930/opposite_right_grasp_probe_01/audit.json)通过，右腕旋转关节最小余量约 1.36 rad，尚未物理验证。
 
 实现位于 [`topogym/planning/horseshoe_ring/`](../../../topogym/planning/horseshoe_ring/)；当前入口为 [`scripts/run_horseshoe_policy.py`](../../../scripts/run_horseshoe_policy.py)。`--part geometry --reference .../body_poses.json` 复核物体路径；`--part plan --reference .../body_poses.json` 搜索完整折合所需抓点和联合 IK；`--part pickup` / `--part fold` 执行诊断。运行会冻结源码和输入，每秒记录资源用量；按最新资源规则，仅内存达到 90% 时停止本次工作进程，CPU 只监控记录。无 RGB 的 CPU 运行使用 25 ms World tick / 40 子步、JOINT_ABS，IK 只读查询后输出普通关节动作。局部通过不计入 `solvability_proof/`。
 
@@ -50,20 +50,19 @@
 
 ## 任务与实现
 
-双马蹄通过独立链环连接，ALOHA 在重力下翻转、折合、交接、抓环、取出并释放到桌面。使用预抓持及接触确认后的辅助抓持。
+双马蹄通过两个独立链环连接。当前任务要求整个目标环进入固定区域、剩余组件留在分隔面系统侧，并短暂停稳；允许保持抓持。当前 oracle 从 ALOHA 默认 home 开始，通过真实双指接触取得单物体辅助抓持，依次尝试翻转、折合、交接、抓环和取出。
 
-源码：[geometry.py](../../../topogym/tasks/horseshoe_ring/geometry.py) · [scene.py](../../../topogym/tasks/horseshoe_ring/scene.py) · [physical_demo.py](../../../topogym/tasks/horseshoe_ring/physical_demo.py) · [gravity_demo.py](../../../topogym/tasks/horseshoe_ring/gravity_demo.py) · [variant_generator.py](../../../topogym/tasks/horseshoe_ring/variant_generator.py) · [variant_pipeline.py](../../../topogym/tasks/horseshoe_ring/variant_pipeline.py) · [agent_adapter.py](../../../topogym/tasks/horseshoe_ring/agent_adapter.py)。
-参数入口：[任务卡](../../../configs/task_cards/horseshoe_ring.yaml)；场景入口：`python -m demos.environment_bootstrap.horseshoe_ring`（仓库根目录的 `.venv-gs121-nyx/bin/python`）。
+活动源码：[任务定义](../../../topogym/tasks/horseshoe_ring/common.py) · [几何生成](../../../topogym/assets/geometry/horseshoe_ring.py) · [oracle 与规划](../../../topogym/planning/horseshoe_ring/) · [执行 CLI](../../../scripts/run_horseshoe_policy.py)。三档配置位于 `topogym/tasks/horseshoe_ring/horseshoe_ring_{easy,medium,hard}.py`。
 
 ## 历史 demo 状态与边界
 
 基础版五视角 113.7 秒；同代码 2 ms / 1 ms 独立完整执行通过。F1 上方接近、F2 外侧接近、F3 后方接近均已补齐完整五视角，分别 129.7 / 125.8 / 119.7 秒；它们来自原成功物理状态重渲染，仅保留原 2 ms 验收范围。
 
-## 变体与下一步
+## 历史变体记录
 
 三个接近路线家族，围绕已成功中心做小范围条件采样。variant_generator 产生实例，variant_pipeline 做生成、重载、完整物理验收及拒绝重试。三族各有条件域随机实例通过 2 ms，新随机实例仍缺 1 ms 复验；非圆环形状池尚未开放。
 
-## 当前证据
+## 历史视频证据
 
 正式目录：`demos/horseshoe_ring/varaition_baseline/<camera>/`、`varaition_f1/<camera>/`、`varaition_f2/<camera>/`、`varaition_f3/<camera>/`，共 20 份独立 MP4。[全部视角与证据](../../../runs/demo_metadata/horseshoe_ring/2026-09-21_variation_restore_v1/README.md)。F1/F2/F3 低位相机统一移到桌面上方，改善遮挡及落桌画面的可见性；五路使用同一次执行的相同帧与时间戳。
 
@@ -74,7 +73,7 @@
 
 运行报告记录有限实例的实际结果；几何、IK、短程协议、完整任务和物理资格分开判定。正在执行的任务以运行目录中的最终报告为准。
 
-## 生成入口
+## 历史生成入口（已归档）
 
 输出必须使用新目录；接受目录以结果文件为准，不能假定总是 `attempt_00`。
 
