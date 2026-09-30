@@ -107,7 +107,6 @@ cast_coil 实测每控制步 6–10 s 墙钟（GPU 与其他进程共用），�
 | 关节或夹爪越界时 `step` 抛 `ValueError` | 适配器必须截断 |
 | 夹爪是原生关节坐标 | 适配器负责归一化与反归一化 |
 | 13 个任务中 5 个有英文 `instruction` | 需要版本化的 instruction 文件 |
-| `SegmentRunner.run_policy` 已定义 `initialize(context)` / `act(obs)` | VLAAgent 实现这个协议 |
 | 架构测试禁止 `topogym.policies`；`docs/vla_doc` 要求不改 `simulator/`、`tasks/` | VLA 代码放在仓库根 `vla/` |
 
 ---
@@ -226,8 +225,8 @@ EvalRunner        Env/actor        VLAAgent          PolicyClient        VLA 服
 
 | 形态 | 做法 | 谁驱动循环 | 结论 |
 |---|---|---|---|
-| A. 进程内 | Genesis 进程里直接 import 模型 | 评测进程 | 依赖冲突（Genesis 1.2.1 + Nyx 的 Python 3.12 环境 vs 各模型的 JAX / torch / flash-attn 版本）；每个仿真进程各加载一份模型。只用于单测与占位策略（`LocalClient`） |
-| **B. 模型做服务端** | 每个模型在自己的环境起 websocket 服务，评测进程作为客户端 | 评测进程 | **选用**。reset、seed、超时、录像、打分都在评测进程；N 个仿真进程可以共享 1 个模型服务（仿真慢、推理快）；openpi、vla-eval、XPolicyLab、RoboArena 都用此形态 |
+| A. 进程内 | Genesis 进程里直接 import 模型 | 评测进程 | 依赖冲突（Genesis 1.2.1 + Nyx 的 Python 3.11 环境 vs 各模型的 JAX / torch / flash-attn 版本）；每个仿真进程各加载一份模型。只用于单测与占位策略（`LocalClient`） |
+| **B. 模型做服务端** | 每个模型在自己的环境起 websocket 服务，评测进程作为客户端 | 评测进程 | **选用**。reset、seed、超时、录像、打分都在评测进程；当前一对一使用，需要时可让多个仿真进程共用 1 个模型服务；openpi、vla-eval、XPolicyLab、RoboArena 都用此形态 |
 | C. 环境做服务端（Harbor limited 式） | 仿真作为 HTTP 服务，策略进程调用 `get_obs` / `submit` | 策略进程 | reset / 录像 / 打分要放进服务内部；这种形态为 coding agent 的隔离与防作弊设计，VLA 只看到适配器给的输入，不需要这层隔离 |
 
 **Client–Server 的代价**。延迟不是主要问题：
@@ -258,7 +257,7 @@ EvalRunner        Env/actor        VLAAgent          PolicyClient        VLA 服
 | 方案 | 谁在用 | 优点 | 缺点 | 结论 |
 |---|---|---|---|---|
 | HTTP + JSON（FastAPI） | OpenVLA-OFT、X-VLA、MolmoAct2、DM0.5 自带服务 | 简单，curl 可调试 | 数组要 base64 / JSON 编码；无连接状态，握手和 reset 要另外约定 | 不选 |
-| **WebSocket + msgpack** | openpi、vla-eval、XPolicyLab | 长连接，连接时下发 `PolicySpec`；二进制数组；`openpi-client` 很小，可装进 Genesis 环境 | 消息类型需要自己约定（只有 3 种） | **选用** |
+| **WebSocket + msgpack** | openpi、vla-eval、XPolicyLab | 长连接，连接时下发 `PolicySpec`；二进制数组；Gym 侧只需 `msgpack` + `websockets`（不装 `openpi-client`，它要求 `numpy<2`） | 消息类型需要自己约定（只有 3 种） | **选用** |
 | gRPC | LeRobot async inference | 强类型 schema | 需要 protobuf 代码生成，两侧依赖更重 | 不选 |
 | ZMQ REQ/REP | Isaac-GR00T 官方服务 | 延迟低 | 无握手 / 健康检查约定 | 不选 |
 
@@ -269,7 +268,6 @@ EvalRunner        Env/actor        VLAAgent          PolicyClient        VLA 服
 | 方式 | 输出 | 额外开销 | 用途 |
 |---|---|---|---|
 | `RecordingSession` + `env.add_frame_sink` | 每个相机一个 MP4、帧索引、清单 | 只有视频编码；复用观测时已渲染的同一帧 | 默认：每个 episode 录像 |
-| `SegmentRunner.run_policy(policy=VLAAgent)` | 各相机 MP4 + 拼接视频 + 逐 tick 日志 + 完整状态 | 大：cast_coil 仿真 1 s 约 280 MB 日志，单步 8.9 s（普通循环 6.5 s） | 抽少量 episode 做诊断 |
 
 ```python
 # episode_recorder 的实现（示意，未运行）：Env 每次 step 结束时把 SensorFrame 推给 sink
@@ -282,8 +280,6 @@ with RecordingSession(out / f"seed_{seed}", fps=30, metadata=dict(env.episode_me
     stop()
     rec.finish({"outcome": outcome})           # 视频完成不代表任务成功，结果单独写入
 ```
-
-`VLAAgent` 实现了 `initialize` / `act`，可以原样交给 `SegmentRunner.run_policy`；`mode="limited"` 时策略拿不到任务真值。
 
 ### 3.5 标准协议：3 个数据类
 
@@ -372,6 +368,7 @@ class BaseVLA(ABC):
 ```text
 vla/                              只改这个目录
 ├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
+├── setup.sh                      唯一安装入口：setup.sh gym | pi05 | groot | molmoact2 | xvla
 ├── protocol.py                   PolicySpec / Observation / ActionChunk + msgpack 编解码（两侧共用）
 ├── gym/                          只在 Gym 环境使用
 │   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
@@ -379,15 +376,14 @@ vla/                              只改这个目录
 │   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
 ├── models/                       只在各模型环境使用
 │   ├── base.py  serve.py  dummy.py
-│   └── pi05/ groot/ molmoact2/ xvla/     每个目录：model.py + setup.sh（建环境、下载 checkpoint）
+│   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
 ├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
-├── scripts/setup_gym.sh
 └── tests/
 ```
 
 | 扩展操作 | 需要改的地方 |
 |---|---|
-| 加一个 VLA | `vla/models/<name>/`：一个 `BaseVLA` 子类 + 依赖文件；`REGISTRY` 加一行 |
+| 加一个 VLA | `vla/models/<name>/`：一个 `BaseVLA` 子类；`setup.sh` 加一个分支；`REGISTRY` 加一行 |
 | 加一个机器人 | `vla/gym/adapter.py` 的常量表加一行（夹爪开 / 合值、默认相机）；标准排列表加一行 |
 | 加一个任务 | `configs/instructions.yaml` 加一条 |
 | 换评测模型 | `--policy ws://host:port` |

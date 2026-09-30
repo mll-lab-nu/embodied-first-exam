@@ -347,7 +347,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <text class="sm" x="590" y="143" text-anchor="middle">step · observe，无 reset</text>
   <rect class="gbox" x="696" y="100" width="174" height="56" rx="6"/>
   <text class="ttl" x="783" y="123" text-anchor="middle">frame sink / 录像</text>
-  <text class="sm" x="783" y="143" text-anchor="middle">RecordingSession · SegmentRunner</text>
+  <text class="sm" x="783" y="143" text-anchor="middle">RecordingSession</text>
   <line class="ln" x1="206" y1="60" x2="206" y2="98" marker-end="url(#a1)"/>
   <line class="ln" x1="398" y1="60" x2="398" y2="98" marker-end="url(#a1)"/>
   <text class="sm" x="406" y="84">reset(seed)</text>
@@ -458,7 +458,6 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
 <tr><td>关节或夹爪越界时 <code>step</code> 抛 <code>ValueError</code>，不自动截断</td><td>适配器必须截断</td></tr>
 <tr><td>夹爪是原生关节坐标（米 / 弧度），不是开口宽度</td><td>适配器负责归一化与反归一化</td></tr>
 <tr><td>13 个任务中只有 5 个有英文 <code>instruction</code></td><td>需要一份版本化的 instruction 文件</td></tr>
-<tr><td><code>SegmentRunner.run_policy</code> 已定义策略协议 <code>initialize(context)</code> / <code>act(obs)</code></td><td>VLAAgent 实现这个协议，普通循环与完整证据录制都能用</td></tr>
 <tr><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 <code>simulator/</code>、<code>tasks/</code></td><td>VLA 代码放在仓库根 <code>vla/</code>，不放进 <code>topogym/</code> 包</td></tr>
 </tbody></table></div>
 </section>
@@ -628,7 +627,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
   <rect class="box dash" x="12" y="34" width="264" height="150" rx="8"/>
   <text class="sm" x="22" y="52">一个 Python 进程 / 一张 GPU</text>
   <rect class="gbox" x="28" y="66" width="104" height="52" rx="6"/>
-  <text class="lbl" x="80" y="88" text-anchor="middle">Genesis</text><text class="sm" x="80" y="105" text-anchor="middle">Py3.12 · Nyx</text>
+  <text class="lbl" x="80" y="88" text-anchor="middle">Genesis</text><text class="sm" x="80" y="105" text-anchor="middle">Py3.11 · Nyx</text>
   <rect class="bbox" x="156" y="66" width="104" height="52" rx="6"/>
   <text class="lbl" x="208" y="88" text-anchor="middle">VLA 模型</text><text class="sm" x="208" y="105" text-anchor="middle">JAX / torch 版本</text>
   <line class="ln-b" x1="132" y1="92" x2="156" y2="92"/>
@@ -645,7 +644,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
   <line class="ln-v" x1="430" y1="108" x2="476" y2="108" marker-end="url(#a6v)"/>
   <line class="ln-v" x1="430" y1="160" x2="476" y2="136" marker-end="url(#a6v)"/>
   <text class="sm" x="306" y="210">评测进程驱动循环：reset、seed、录像、打分都在 Gym 侧</text>
-  <text class="sm" x="306" y="226">N 个仿真进程共享 1 个模型服务</text>
+  <text class="sm" x="306" y="226">当前一对一；需要时可多个仿真进程共用</text>
   <text class="sm" x="306" y="242">openpi、vla-eval、XPolicyLab、RoboArena 均用此形态</text>
   <text class="ttl" x="630" y="20">C. 环境做服务端（Harbor limited 式）</text>
   <rect class="box" x="630" y="36" width="112" height="144" rx="8"/>
@@ -689,7 +688,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <thead><tr><th>方案</th><th>谁在用</th><th>优点</th><th>缺点</th><th>结论</th></tr></thead>
 <tbody>
 <tr><td>HTTP + JSON（FastAPI）</td><td>OpenVLA-OFT、X-VLA、MolmoAct2 自带服务</td><td>简单，curl 可调试</td><td>数组要 base64 或 JSON 编码，体积和耗时增加；无连接状态，握手和 reset 需额外约定</td><td>不选</td></tr>
-<tr><td><b>WebSocket + msgpack</b></td><td>openpi、vla-eval、XPolicyLab</td><td>长连接，连接时下发 <code>PolicySpec</code>；二进制数组；<code>openpi-client</code> 很小，可装进 Genesis 环境</td><td>消息类型需要自己约定（本方案只有 3 种）</td><td><b>选用</b></td></tr>
+<tr><td><b>WebSocket + msgpack</b></td><td>openpi、vla-eval、XPolicyLab</td><td>长连接，连接时下发 <code>PolicySpec</code>；二进制数组；Gym 侧只需 <code>msgpack</code> + <code>websockets</code>（不装 <code>openpi-client</code>，它要求 <code>numpy&lt;2</code>）</td><td>消息类型需要自己约定（本方案只有 3 种）</td><td><b>选用</b></td></tr>
 <tr><td>gRPC</td><td>LeRobot async inference</td><td>强类型 schema</td><td>需要 protobuf 代码生成，两侧依赖更重</td><td>不选</td></tr>
 <tr><td>ZMQ REQ/REP</td><td>Isaac-GR00T 官方服务</td><td>延迟低</td><td>无握手 / 健康检查约定</td><td>不选；GR00T 子类内部可直接调用其策略对象</td></tr>
 </tbody></table></div>
@@ -701,7 +700,6 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <thead><tr><th>方式</th><th>输出</th><th>额外开销</th><th>用途</th></tr></thead>
 <tbody>
 <tr><td><code>RecordingSession</code> + <code>env.add_frame_sink</code></td><td>每个相机一个 MP4、帧索引、清单</td><td>只有视频编码；复用观测时已渲染的同一帧，不额外渲染</td><td>默认：每个 episode 录像</td></tr>
-<tr><td><code>SegmentRunner.run_policy(policy=VLAAgent)</code></td><td>各相机 MP4 + 拼接视频 + 逐 tick 日志 + 完整状态</td><td>大：cast_coil 仿真 1 s 约 280 MB 日志，单步 8.9 s（普通循环 6.5 s）</td><td>抽少量 episode 做诊断</td></tr>
 </tbody></table></div>
 <pre><span class="c"># episode_recorder 的实现（示意，未运行）：Env 每次 step 结束时把 SensorFrame 推给 sink</span>
 <span class="kw">from</span> topogym.recording.session <span class="kw">import</span> RecordingSession
@@ -712,7 +710,6 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
     outcome = run_episode(actor, agent)        <span class="c"># 评测循环不变</span>
     stop()
     rec.finish({<span class="s">"outcome"</span>: outcome})         <span class="c"># 视频完成不代表任务成功，结果单独写入</span></pre>
-<p class="note"><code>VLAAgent</code> 实现了 <code>initialize</code> / <code>act</code>，可以原样交给 <code>SegmentRunner.run_policy</code>；<code>mode="limited"</code> 时策略拿不到任务真值（<code>task</code> 字段被去掉）。</p>
 
 <h3 id="s3-proto">标准协议：3 个数据类</h3>
 <pre><span class="c"># vla/protocol.py —— Gym 与 VLA 两侧共享，只依赖 numpy + msgpack</span>
@@ -895,6 +892,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
         ...</pre>
 <pre>vla/                              只改这个目录
 ├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
+├── setup.sh                      唯一安装入口：setup.sh gym | pi05 | groot | molmoact2 | xvla
 ├── protocol.py                   PolicySpec / Observation / ActionChunk + msgpack 编解码（两侧共用）
 ├── gym/                          只在 Gym 环境使用
 │   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
@@ -902,9 +900,8 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 │   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
 ├── models/                       只在各模型环境使用
 │   ├── base.py  serve.py  dummy.py
-│   └── pi05/ groot/ molmoact2/ xvla/     每个目录：model.py + setup.sh（建环境、下载 checkpoint）
+│   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
 ├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
-├── scripts/setup_gym.sh
 └── tests/</pre>
 
 <h3>训练数据与评测同构</h3>
