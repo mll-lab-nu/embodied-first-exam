@@ -67,7 +67,7 @@ run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─
 vla/
 ├── README.md              快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
 ├── setup.sh               建 conda 环境：bash vla/setup.sh <topogym|pi05|groot|molmoact2|xvla>
-├── .gitignore             third_party/  .envs/（旧 uv 环境，删除前保留）
+├── .gitignore             third_party/
 ├── __init__.py
 ├── protocol.py            PolicySpec / Observation / ActionChunk、encode / decode（标准库 + numpy）
 ├── config.py              load_yaml：YAML 配置 + _base_ 继承（两侧共用，只依赖 OmegaConf）
