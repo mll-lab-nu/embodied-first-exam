@@ -31,14 +31,14 @@ _USR1 = {"pending": False}
 signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 
 # Startup watchdog: a scene build that hangs (seen under GPU memory pressure: no crash, so compose never restarted it)
-# exits the process, so compose's restart (on-failure) retries. Only before the service is ready: an episode that has
-# not started cannot be reset by this; after "ready" the watchdog stops.
+# must end the process so compose's restart (on-failure) retries. Neither a Python thread (it needs the GIL, which a hang
+# inside native SAPIEN/Vulkan init may hold) nor SIGALRM's default action (the service is PID 1 in its container, and
+# PID 1 ignores default-action signals) can do it; faulthandler's C watchdog thread can: it dumps every thread's
+# traceback to stderr (the container log: where it hung) and _exit(1)s. Cancelled as soon as the scene exists (a resume
+# replay may take minutes). Before the scene exists no episode exists, so the retry is not a reset.
+import faulthandler  # noqa: E402
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "300"))
-def _startup_watchdog():
-    time.sleep(STARTUP_TIMEOUT_S)
-    if not E.get("built") and not E.get("ready"):
-        print(f"startup watchdog: not ready after {STARTUP_TIMEOUT_S:g} s; exiting for a restart", flush=True); os._exit(3)
-threading.Thread(target=_startup_watchdog, daemon=True).start()
+faulthandler.dump_traceback_later(STARTUP_TIMEOUT_S, exit=True)
 
 
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
@@ -123,7 +123,7 @@ def finish(reason: str) -> None:
 # ---------------------------------------------------------------- scene
 from rcb_traj import Session  # noqa: E402
 S = Session(TASK, instance=INSTANCE, enable_render=True)
-E["built"] = True    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
+E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 ENV = S.env; ROBOT = ENV.robot
 ENV.step_lim = None; ENV.eval_video_path = None; ENV.take_action_cnt = 0; ENV.eval_success = False; ENV.now_obs = {}
 L_ARM = [j.get_name() for j in ROBOT.left_arm_joints]; R_ARM = [j.get_name() for j in ROBOT.right_arm_joints]
