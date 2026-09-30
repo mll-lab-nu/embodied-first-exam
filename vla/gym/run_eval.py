@@ -22,7 +22,7 @@ import topogym
 from topogym.recording import RecordingSession
 from vla.gym.adapter import Adapter
 from vla.gym.agent import VLAAgent
-from vla.gym.client import LocalClient, PolicyError
+from vla.gym.client import LocalClient, PolicyError, RemoteClient
 from vla.models.base import load_model
 
 VLA_DIR = Path(__file__).resolve().parents[1]
@@ -151,8 +151,10 @@ def evaluate(cfg, client):
 
 
 def connect(policy):
-    """In-process LocalClient for ``policy.local`` (a model config path; tests and HoldVLA)."""
-    return LocalClient(load_model(OmegaConf.load(policy.local)))
+    """The model server at ``policy.address``, or ``policy.local`` (a model config) in process for HoldVLA."""
+    if policy.get("local"):
+        return LocalClient(load_model(OmegaConf.load(policy.local)))
+    return RemoteClient(policy.address)
 
 
 def main():
