@@ -8,8 +8,9 @@ positions, velocities and current targets, and the task's definition (DexToolBen
 as SimToolReal's deployment gives its policy; Playground: the target). Never the object's pose.
 
 Actions: `joint_position` rows (the tooling's N actuator targets), each held for `dt` (a multiple of the control step,
-hold or linear interpolation per control step). DexToolBench episodes end when all goals are reached or a goal times
-out (the benchmark's rule); Playground episodes run until the agent phase ends and the final state is graded.
+hold or linear interpolation per control step). DexToolBench episodes end when all goals are reached, when a goal times
+out (only if RCB_DTB_GOAL_TIMEOUT_S > 0; the limited twins set 0), at RCB_MAX_CONTROL_STEPS, or when the agent's time is
+up; Playground episodes run until the agent phase ends and the final state is graded.
 
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
 ((T, N) per control step), a fresh replay's verdict (deterministic = same final state hash), replay.mp4 and final.json.
@@ -35,6 +36,28 @@ WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_BODY = 64 * 1024 * 1024; MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
+
+
+def _refuse_restart_after_start() -> None:
+    """No reset, ever (as the RoboTwin service): if an episode already started in this trial (the container crashed and
+    compose restarted it), do not build a new one. Mark the episode as failed (infra: sim_crashed), keep the PID file for
+    the collect hook, and idle."""
+    ep = os.path.join(DATA, "episode.jsonl")
+    try: started = any('"ev": "start"' in l for l in open(ep))
+    except OSError: return
+    if not started: return
+    with open(ep, "a") as f: f.write(json.dumps({"ts": time.time(), "ev": "restart_refused", "reason": "sim_crashed"}) + "\n")
+    try: prev = json.load(open(os.path.join(DATA, "final.json")))
+    except Exception: prev = {}  # noqa
+    prev.update({"success": False, "done": True, "reason": "sim_crashed", "finalized": True, "infra_error": 1, "protocol": PROTOCOL})
+    json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
+    open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
+    signal.signal(signal.SIGUSR1, lambda *_: None); print("episode already started once; restart refused", flush=True)
+    while True: time.sleep(3600)
+
+
+_refuse_restart_after_start()
+with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
 
 S = TOOL.Session(INSTANCE, enable_render=True)
 KIND = "dtb" if TOOL.__name__ == "rcb_dtb" else "pg"
@@ -134,7 +157,8 @@ SPEC = {"protocol": PROTOCOL, "simulator": "mujoco", "task_text": S.inst.get("te
                                                          "clipped to [lower, upper]"},
                          "not_yet": ["ee_pose", "joint_delta"]},
         "proprio_layout": PROPRIO_LAYOUT, "budget": {"reset": 0, "wall_clock_s": WALL_CLOCK_S},
-        "episode": ("ends when every goal is reached or a goal times out (DexToolBench's rule); the recorded trajectory is scored"
+        "episode": (("ends when every goal is reached" + (f", when a goal is not reached within {TOOL.GOAL_TIMEOUT_STEPS * CTRL_DT:g} s" if TOOL.GOAL_TIMEOUT_STEPS else "")
+                     + (f", after {MAX_CONTROL_STEPS} control steps" if MAX_CONTROL_STEPS else "") + ", or when your time is up; the recorded trajectory is scored")
                     if KIND == "dtb" else "runs until the agent phase ends; the final state is graded")}
 
 
@@ -249,6 +273,9 @@ def finalize() -> None:
         try:
             A = np.asarray(RECORD, float).reshape(-1, N); live_sha = S.state_sha(); live = S.progress() if KIND == "dtb" else S.check()
             np.savez(os.path.join(DATA, "trajectory.npz"), actions=A, tool=TOOL.__name__, meta=json.dumps({"source": "limited-mode episode", "reason": E["reason"]}))
+            # the tooling's MAX_STEPS is the unlimited mode's hand-in cap (Playground: 3000); the service's episode is bounded
+            # by RCB_MAX_CONTROL_STEPS and the agent's time instead, so the verification replay must accept the whole episode
+            if hasattr(TOOL, "MAX_STEPS"): TOOL.MAX_STEPS = max(int(TOOL.MAX_STEPS), len(A))
             ver = TOOL.Session(INSTANCE, enable_render=True); r1 = ver.replay(A); det = r1["state_sha"] == live_sha
             v = {"deterministic": bool(det), "live_state_sha": live_sha}
             if KIND == "dtb":
