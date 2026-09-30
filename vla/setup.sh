@@ -23,6 +23,39 @@ case "$MODEL" in
 for name in ('pi05_droid_jointpos', 'pi05_base'): print(maybe_download(f'gs://openpi-assets/checkpoints/{name}'))"
         }
         ;;
+    groot)
+        REPO=https://github.com/NVIDIA/Isaac-GR00T
+        COMMIT=51d4c89f72fda44cbf77285c6a8114b52676b8a1
+        PYTHON=3.12
+        install() { (cd "$REPO_DIR" && UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --python "$PYTHON" --frozen); }
+        download() {  # into ~/.cache/huggingface; the Cosmos-Reason2-2B backbone is gated: request access first
+            "$PY" -c "from huggingface_hub import snapshot_download
+for repo in ('nvidia/GR00T-N1.7-DROID', 'nvidia/Cosmos-Reason2-2B'): print(snapshot_download(repo))"
+        }
+        ;;
+    molmoact2)
+        REPO=https://github.com/allenai/molmoact2
+        COMMIT=66b87e64efd99dfd103241418113955cf64dfa9c
+        PYTHON=3.12
+        install() { (cd "$REPO_DIR" && UV_PROJECT_ENVIRONMENT="$ENV_DIR" uv sync --python "$PYTHON"); }
+        download() {  # into ~/.cache/huggingface (21.8 GB)
+            "$PY" -c "from huggingface_hub import snapshot_download
+print(snapshot_download('allenai/MolmoAct2-DROID', revision='d8c1abd8a27d8e859455bbe514df2bcc617db0fb'))"
+        }
+        ;;
+    xvla)
+        REPO=https://github.com/2toinf/X-VLA
+        COMMIT=6bc2513f5f1cbec715cc668b414392a6cae5c671
+        PYTHON=3.10
+        install() {  # requirements.txt leaves torch unpinned; 2.6.0+cu124 runs the model code on this GPU
+            uv pip install --python "$PY" torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+            uv pip install --python "$PY" -r "$REPO_DIR/requirements.txt"
+        }
+        download() {  # into ~/.cache/huggingface (3.5 GB)
+            "$PY" -c "from huggingface_hub import snapshot_download
+print(snapshot_download('2toINF/X-VLA-RoboTwin2', revision='a157c580cfe6f9f445614490f3bec1b2f9ef9f18'))"
+        }
+        ;;
     *) echo "usage: bash vla/setup.sh <pi05|groot|molmoact2|xvla>" >&2; exit 1 ;;
 esac
 
