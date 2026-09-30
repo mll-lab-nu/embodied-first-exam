@@ -99,6 +99,15 @@ def pin(body: bytes, rec: dict) -> bytes:
         d["provider"] = CFG["provider"]
     if CFG.get("reasoning") and "thinking" not in d and "reasoning" not in d:
         d["reasoning"] = CFG["reasoning"]
+    # No server-side web access, whoever sends the request: the agent can reach this gateway too, and a search run by
+    # the provider goes past the task's egress allowlist (OpenRouter's web plugin, a hosted web_search/web_fetch tool).
+    dropped = [k for k in ("plugins", "web_search_options") if d.pop(k, None) is not None]
+    if isinstance(d.get("tools"), list):
+        web = [t for t in d["tools"] if isinstance(t, dict) and "web_" in str(t.get("type", ""))]
+        d["tools"] = [t for t in d["tools"] if t not in web]
+        dropped += [t["type"] for t in web]
+    if dropped:
+        rec["dropped"] = dropped
     msgs = d.get("messages") or (d.get("input") if isinstance(d.get("input"), list) else [])
     rec.update(model=d.get("model"), provider=d.get("provider"), stream=d.get("stream"), n_messages=len(msgs),
                n_tools=len(d.get("tools") or []), max_tokens=d.get("max_tokens"), thinking=d.get("thinking"),

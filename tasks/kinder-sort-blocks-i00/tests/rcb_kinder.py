@@ -265,15 +265,19 @@ class Session:
         import imageio.v2 as imageio
         acts, camera = self.check_trajectory(actions), camera or self.view
         every = every or max(2, -(-min(len(acts), self.max_steps) // 500))
-        self.reset()
-        frames = [self.images([camera])[camera]]
-        success = False
-        for a in acts[: self.max_steps]:
-            _, success, _ = self.step(a)
-            if self.t % every == 0 or success:
-                frames.append(self.images([camera])[camera])
-            if success:
-                break
+        rec, self._rec = self._rec, None   # a replay, not the agent's own steps: never recorded, as in replay()
+        try:
+            self.reset()
+            frames = [self.images([camera])[camera]]
+            success = False
+            for a in acts[: self.max_steps]:
+                _, success, _ = self.step(a)
+                if self.t % every == 0 or success:
+                    frames.append(self.images([camera])[camera])
+                if success:
+                    break
+        finally:
+            self._rec = rec
         h, w = (n // 2 * 2 for n in frames[0].shape[:2])    # H.264 wants even sides
         imageio.mimwrite(path, [f[:h, :w] for f in frames], fps=fps, macro_block_size=1)
         imageio.imwrite(str(Path(path).with_suffix(".last.png")), frames[-1])

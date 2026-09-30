@@ -75,8 +75,9 @@ def restore(spec: dict | str | Path = None) -> list[str]:
     return done
 
 
-# How far a multi-stage task got: upstream's own bookkeeping, which only the scoring code advances (so it stays
-# frozen in the agent's container). Read after a replay, for the diagnostics; it never enters the verdict.
+# How far a multi-stage task got: upstream's own bookkeeping, which the scoring code advances (in the agent's container,
+# rcb_hb's _unscored_bookkeeping advances maze_stage; the rest stays frozen there). Read after a replay, for the
+# diagnostics; it never enters the verdict.
 PROGRESS = ("current_subtask", "task_index", "maze_stage", "stage", "tasks_to_complete", "packages_on_table")
 
 

@@ -2,6 +2,7 @@
 between benchmarks)."""
 from __future__ import annotations
 
+import decimal
 import hashlib
 import html
 import json
@@ -48,7 +49,8 @@ esc = html.escape
 def num(v, nd=2) -> str:
     if v is None:
         return "—"
-    s = f"{float(v):,.{nd}f}"
+    # half up on the decimal value, as a person (and the README) rounds: 49.15 -> 49.2, not binary float's 49.1
+    s = f"{decimal.Decimal(str(float(v))).quantize(decimal.Decimal(1).scaleb(-nd), decimal.ROUND_HALF_UP):,f}"
     return s[1:] if s.startswith("-") and not any(c in s for c in "123456789") else s.replace("-", "−")
 
 

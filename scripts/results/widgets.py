@@ -13,7 +13,8 @@ def md(src: str) -> str:
         s = esc(s)
         s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
         s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
-        return re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', s)
+        # links only to the web, a relative file or an anchor: notes.md is written from what an agent wrote
+        return re.sub(r"\[([^\]]+)\]\(((?:https?://|\.{0,2}/|#)[^)\s]*)\)", r'<a href="\2">\1</a>', s)
     out, L, i = [], src.splitlines(), 0
     item = re.compile(r"\s*([-*]|\d+\.)\s+")
     while i < len(L):

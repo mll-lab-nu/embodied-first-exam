@@ -19,9 +19,10 @@ WHAT IS TAKEN
 
       module_globals  constants the scrub finds to be write-only once the reward methods are gone --
                       `_STAND_HEIGHT = 1.65` under the comment "Height of head above which stand reward
-                      is 1". Constants that surviving code still reads (`_WALK_SPEED`, via
-                      `_move_speed = _WALK_SPEED`; kitchen's goal table, via get_obs) are NOT taken:
-                      they stay in the image because they describe the task rather than grade it.
+                      is 1". Constants the scrub sees read elsewhere are NOT taken: kitchen's goal table
+                      (`_get_task_goal()`), and `_WALK_SPEED`/`_RUN_SPEED`, which class bodies assign to
+                      `_move_speed` -- though only get_reward read that, so the move term's bound and
+                      margin stay in the image (an open gap: docs/LEAKAGE.md).
       params          scoring weights assigned to a reward-shaped attribute. One case upstream:
                       `Push.__init__` sets `self.reward_dict = {"hand_dist": 0.1, "target_dist": 1,
                       "success": 1000, "terminate": True}`. `get_terminated` reads `["terminate"]`, so
@@ -40,7 +41,8 @@ WHAT IS TAKEN
 
 RUN
     Needs an image whose rewards are NOT yet scrubbed, which no current tag is -- build one by commenting
-    the scrub step out of images/humanoidbench/Dockerfile, or check out an image from before 0.1.3.
+    out the scrub step and the `scrub_oracles.py verify` step after it in images/humanoidbench/Dockerfile,
+    or check out an image from before 0.1.3.
     Mount the REPO ROOT, because this imports images/humanoidbench/scrub_oracles.py:
 
     docker run --rm -v "$PWD:/repo" -w /repo <unscrubbed-image> \

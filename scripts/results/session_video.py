@@ -254,7 +254,7 @@ def main(report: str) -> None:
             clip_ = imageio.get_reader(os.path.join(report, e["video"]), format="FFMPEG")
             n = clip_.count_frames()   # frame by frame: a whole clip of 640x480 frames can take a GB
             for j, frame in enumerate(clip_):
-                step = e["steps"] if j == n - 1 else j * e.get("video_every", B.video_every)
+                step = e["steps"] if j == n - 1 else j * (e.get("video_every") or B.video_every)
                 at = (e["ep"], step, float("inf"))
                 if (v := seen(at)) is not shown[0]:
                     shown = (v, k)

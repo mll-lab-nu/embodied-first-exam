@@ -80,7 +80,7 @@ class HumanoidBench(Bench):
                        f'<p class="mut" style="font-size:12.5px;margin:2px 0 0;max-width:760px">{esc(t["camera_note"])}</p>')
 
     def intro(self, tasks: list) -> str:
-        return ('<p class="sub">coding agent 在 24 个选出来的 HumanoidBench 任务上的表现（23 个计分 + sit_simple 夹具）。'
+        return (f'<p class="sub">coding agent 在 {len(tasks)} 个选出来的 HumanoidBench 任务上的表现（{len(tasks) - 1} 个计分 + sit_simple 夹具）。'
                 "两种模式：limited 模拟真机，只给真机本来就有的信息（见下面的表），reset 有上限；full 里它有完整的物理状态，reset 不限，"
                 "交一条轨迹由验证端回放打分。两种都没有 reward。</p>")
 

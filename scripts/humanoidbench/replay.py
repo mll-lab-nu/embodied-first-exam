@@ -21,10 +21,10 @@ import numpy as np
 trial, simdir, out = sys.argv[1:4]
 render = "--no-render" not in sys.argv[4:]
 sys.path.insert(0, simdir)
+from rcb_hb import Session  # noqa: E402  (first: it picks MuJoCo's GL backend, as grade.py and server.py do)
 from rcb_rewards import progress, restore  # noqa: E402
 
 restore(os.path.join(simdir, "rewards.json"))
-from rcb_hb import Session  # noqa: E402
 
 eps, ends, cur = [], [], []
 for line in open(f"{trial}/artifacts/data/episode.jsonl"):

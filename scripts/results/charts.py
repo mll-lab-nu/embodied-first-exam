@@ -177,7 +177,8 @@ def agent_timeline(s: dict) -> str:
         for k in kinds[i]:
             if k == "view" and views.get(i):
                 for j, v in enumerate(views[i]):   # the images this call showed, each in its camera's colour
-                    vt = tip(f"看图 #{v['n']} · {B.cam_label(v['camera'])}", f"ep{v['ep']} 第 {v['step']} 步 · {(v['t'] - a0) / 60:.2f} min",
+                    at = "" if v["ep"] is None else f"ep{v['ep']} 第 {v['step']} 步 · "   # None: full mode
+                    vt = tip(f"看图 #{v['n']} · {B.cam_label(v['camera'])}", f"{at}{(v['t'] - a0) / 60:.2f} min",
                              os.path.basename(v["path"] or ""), "点击看这次调用")
                     svg.append(f'<rect x="{x0 + 3 * j:.2f}" y="{top[k]}" width="3" height="{RH}" rx="1" class="cam-{B.cam_color(v["camera"])}" data-call="{i}" data-tip="{vt}"/>')
                 continue

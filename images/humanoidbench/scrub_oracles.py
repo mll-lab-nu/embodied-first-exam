@@ -23,7 +23,8 @@ WHAT GOES
 
 WHAT STAYS
   `get_terminated` (an agent discovers it in one rollout -- dynamics, not scoring), `get_obs`,
-  `success_bar`, and anything surviving code still reads, such as `_WALK_SPEED` via `_move_speed`.
+  `success_bar`, and any constant a class body still assigns: `_WALK_SPEED`/`_RUN_SPEED` via `_move_speed`, which
+  only get_reward read -- the move term's bound and margin, an open gap (docs/LEAKAGE.md).
 
 THE FORMULA IS NOT LOST
   scripts/humanoidbench/rewards.json holds it -- built by running THIS script against a copy and diffing,
@@ -254,8 +255,9 @@ def drop_dead_globals(path: pathlib.Path, formula_read: set[str], live: set[str]
     its only reader was get_reward, and it says where the stand term saturates. Unreachable is not
     unreadable -- the same argument as assets/kitchen. `global _STAND_HEIGHT; _STAND_HEIGHT = 1.28` in a
     robot-specific branch is a Store, so it neither keeps the constant alive nor breaks once the
-    module-level line is gone. `_WALK_SPEED` fails the second test (`_move_speed = _WALK_SPEED` reads it)
-    and stays: it is the task's target speed, not a tolerance.
+    module-level line is gone. `_WALK_SPEED` fails the second test as applied here (a class body's
+    `_move_speed = _WALK_SPEED` reads it, although only get_reward read `_move_speed`) and stays: the target speed
+    the instruction gives in words, but also the move term's bound and margin (an open gap: docs/LEAKAGE.md).
 
     extract_rewards.py runs this very function against a copy so rewards.json carries whatever it removes,
     and rcb_rewards.restore() puts them back into the module namespace before the methods compile.

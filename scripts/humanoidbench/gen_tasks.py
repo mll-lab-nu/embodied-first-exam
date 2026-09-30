@@ -266,8 +266,9 @@ def write_templates(out: Path, templates: Path, pairs: list[tuple[str, str]], ct
 
 
 def write_rewards(family: str, path: Path) -> None:
-    """This task's scoring formula, and only this task's: one family per file means no task ever ships another
-    task's formula (check-no-cross-task-leak.sh)."""
+    """This task's scoring formula (its methods, plus the module-level constants the scrub took from its module,
+    which other families of that module may share): one family per file means no task ever ships another task's
+    methods (check-no-cross-task-leak.sh)."""
     path.write_text(json.dumps(load_rewards()[family], indent=1, sort_keys=True) + "\n")
 
 
@@ -342,7 +343,7 @@ def compose_line(name: str, value: str, comment: str) -> str:
     """One sim env line with its comment in the file's comment column (empty value: no line at all)."""
     if not value:
         return ""
-    lines = textwrap.wrap(" ".join(comment.split()), 54)
+    lines = textwrap.wrap(" ".join(comment.split()), 54) or [""]
     first = f"      {name}: {yaml_str(value)}"
     col = max(55, len(first) + 2)                     # a long value pushes the comment out, never into it
     first = first.ljust(col)

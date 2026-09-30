@@ -16,7 +16,9 @@ try:
            "deterministic": int(bool(d.get("deterministic"))), "finalized": int(bool(d.get("finalized"))),
            "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("n_actions") or 0),
            "steps": int(d.get("steps") or 0), "resets": int(d.get("resets") or 0),
-           "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
+           "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))),
+           # the finalize never ran or raised: the service's failure, not the agent's
+           "grader_error": int(not d.get("finalized") or "replay_success" not in d)}
 except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's
     traceback.print_exc(); write(False, {"success": 0, "missing_log": 0, "grader_error": 1}); raise SystemExit
 for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):   # evidence for humans: never the verdict

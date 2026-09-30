@@ -28,7 +28,7 @@ Python API
   from rcb_hb import Session
   s = Session(instance="/app/instance.npz")   # which task and env this is comes from the instance
   s.reset()                                  # back to the frozen state (unlimited)
-  obs = s.obs()                              # state vector: qpos + qvel
+  obs = s.obs()                              # state vector (its layout: instruction.md)
   with s.recording() as rec:                 # [HB] context manager, not record_start/record_stop
       for _ in range(s.max_steps):
           obs, r, done = s.step(my_controller(obs))
@@ -43,8 +43,8 @@ Scoring is not visible from here
 dense and hand-tuned, so reading one turns a control problem into an algebra problem -- the formula is
 therefore removed from the image and restored only inside the verifier, after the agent is finished.
 
-What you have instead is the full physical state: `s.obs()` is qpos + qvel (plus this task's goal, where
-the task has one), and the MuJoCo model is right there in `s.model`. Everything the reward could tell you
+What you have instead is the full physical state: `s.obs()` (its layout is in instruction.md: qpos and, for most
+tasks, qvel, plus this task's goal where it has one), and the MuJoCo model is right there in `s.model`. Everything the reward could tell you
 -- how fast the centre of mass is moving, how upright the torso is, how far the hand is from the target
 -- is computable from that, and `instruction.md` says which of those things the task is judged on. Define
 the measure you think the task calls for, and optimise against it.

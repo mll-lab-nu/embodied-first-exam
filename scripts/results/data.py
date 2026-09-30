@@ -86,7 +86,8 @@ def notes_of(s) -> tuple[str | None, str | None, list]:
 
 
 def derive(r: dict, task: dict | None) -> dict:
-    """The numbers a run is shown with: measured where the trial is still here, runs.csv's where it is not."""
+    """The numbers a run is shown with: measured where the trial is still here, runs.csv's where it is not (pass and the
+    reset budget are always runs.csv's; a trial that disagrees is reported)."""
     f = lambda k, cast=float: cast(r[k]) if r.get(k) not in (None, "") else None
     d = {"score": f("score"), "bar": f("bar"), "pass": r["result"] == "pass", "cost": f("cost_usd"), "agent_min": f("agent_min"),
          "resets_used": f("resets_used", int), "resets": f("resets", int), "budget_min": f("budget_min"), "requests": f("requests", int)}
@@ -101,6 +102,11 @@ def derive(r: dict, task: dict | None) -> dict:
                  tool_s=sum(max(0, c["t1"] - c["t0"]) for c in s["calls"]), agent_s=s["a1"] - s["a0"], views=len(s["views"]),
                  episodes=len(s["episodes"]))
         d["tokens"] = d["tok_in"] + d["tok_out"]
+        if bool(res["success"]) != d["pass"] or (s["mode"] == "limited" and s["spec"].get("reset_budget") != d["resets"]):
+            print(f"warning: runs.csv row {r['i'] + 2} ({r['task']}, {r['model_name']}) says {r['result']}, reset budget "
+                  f"{d['resets']}; the trial says success {res['success']}, reset budget {s['spec'].get('reset_budget')}")
+        if 0 < s["billed"]["found"] < len(rq):
+            print(f"warning: {r['job']}: OpenRouter billed {s['billed']['found']} of its {len(rq)} requests; the cost is a floor")
         for k, v in (("score", f("score")), ("cost_usd", f("cost_usd"))):
             if v is not None and (d["score" if k == "score" else "cost"] or 0) and abs(v - d["score" if k == "score" else "cost"]) > (0.02 if k == "score" else 0.002):
                 print(f"warning: runs.csv row {r['i'] + 2} ({r['task']}, {r['model_name']}) has {k} {v}, the trial says "
@@ -142,7 +148,7 @@ def check_readme(tasks: list, cols: list) -> None:
     half_up = lambda v, q: str(decimal.Decimal(str(v)).quantize(decimal.Decimal(q), decimal.ROUND_HALF_UP))
     for t in tasks:
         for col in cols:
-            mine = [r for r in t["runs"] if r["standard"] and r["col"] == col]
+            mine = [r for r in t["runs"] if r["standard"] and r["col"] == col and r["s"]]   # as build.py's main run
             cell = t["readme"].get(" · ".join(col), "")
             if not mine:
                 if cell:
@@ -151,7 +157,7 @@ def check_readme(tasks: list, cols: list) -> None:
             # a cell is the latest standard-config run's score and cost (as the pages' main run), rounded half up,
             # with the table's minus sign
             r = mine[-1]
-            score = half_up(r["score"], "0.1").replace("-", "−") if r["score"] else "—"
+            score = half_up(r["d"]["score"], "0.1").replace("-", "−") if r["d"]["score"] is not None else "—"
             want = f"{'✅' if r['result'] == 'pass' else '❌'}{' ' + score if B.scored else ''} · ${half_up(r['cost_usd'] or 0, '0.01')}"
             if cell != want:
                 print(f"README: {t['task']} / {' · '.join(col)} says {cell!r}, runs.csv gives {want!r}")

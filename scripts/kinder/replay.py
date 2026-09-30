@@ -44,13 +44,13 @@ for i, acts in enumerate(eps):
                 break
         row["exact"], row["success"] = sim.state_sha() == ends[i], bool(success)
         if render:
-            every = 1 if sim.s.mujoco else None      # MuJoCo: every step, real time; PyBullet (slow to draw): ~500 frames
+            every = 1 if sim.s.mujoco else None      # MuJoCo: every step, real time; PyBullet (slow to draw): at most ~500 frames
             v = sim.s.render_video(sim.actions(), f"{out}/episodes/ep{i}.mp4", every=every, fps=10)
             with imageio.get_reader(f"{out}/episodes/ep{i}.mp4", format="FFMPEG") as r:   # poster: late, before the end
                 imageio.imwrite(f"{out}/episodes/ep{i}.jpg", r.get_data(int(0.6 * (r.count_frames() - 1))))
             row["video"], row["poster"], row["video_every"] = f"episodes/ep{i}.mp4", f"episodes/ep{i}.jpg", v["every"]
         elif (b := before.get(i, {})).get("video") and os.path.exists(f"{out}/{b['video']}"):
-            row["video"], row["poster"] = b["video"], b.get("poster")
+            row["video"], row["poster"], row["video_every"] = b["video"], b.get("poster"), b.get("video_every")
     rows.append(row)
     print(json.dumps(row), flush=True)
 json.dump(rows, open(f"{out}/episodes.json", "w"), indent=1)

@@ -284,8 +284,8 @@ def probe_limited(inst: Path, work: Path, images: Path) -> dict:
     data = work / "data"
     env = {**os.environ, "RCB_INSTANCE": str(sim / "instance.json"), "RCB_DATA": str(data), "RCB_RESET_BUDGET": "2",
            "RCB_OBS_ROOM_CAMERA": "1", "RCB_OBS_DEPTH": "1", "RCB_TASK_TEXT": "probe"}
-    proc = subprocess.Popen([sys.executable, str(sim / "server.py")], env=env, stdout=subprocess.DEVNULL,
-                            stderr=open(work / "server.log", "w"))
+    log = open(work / "server.log", "w")
+    proc = subprocess.Popen([sys.executable, str(sim / "server.py")], env=env, stdout=subprocess.DEVNULL, stderr=log)
     try:
         sys.path.insert(0, str(SHARED / "limited"))
         from rcb_client import Robot
@@ -353,6 +353,8 @@ def probe_limited(inst: Path, work: Path, images: Path) -> dict:
         return out
     finally:
         proc.kill()
+        proc.wait()
+        log.close()
 
 
 def stated_bound(v, side: int) -> float | None:

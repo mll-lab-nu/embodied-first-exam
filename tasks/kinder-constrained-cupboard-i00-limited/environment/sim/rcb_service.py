@@ -11,10 +11,10 @@ What 1.1 adds to 1.0 -- each optional, a 1.0 client never notices (docs/LIMITED_
   blocked       a batch stops at a step the robot could not carry out (the adapter's info["blocked"], in the answer)
 
 Evidence, where the agent cannot reach it: /data/episode.jsonl (one line per event; every action exact, so any
-episode replays from it), /data/final.json (kept current; "finalized": true once the collect hook's SIGUSR1 has been
-handled), /data/trajectory.npz and /data/replay.mp4 (the graded episode, replayed from the frozen instance). The
-replay and the video wait for SIGUSR1, when the agent is gone: made earlier, they would hold the one thread for
-minutes while the agent is still asking.
+episode replays from it), /data/final.json (kept current; "finalized": true once SIGUSR1 has been handled), and
+/data/trajectory.npz and /data/replay.mp4 (the graded episode, replayed from the frozen instance). SIGUSR1 means the
+agent is gone: its adapter sends it as the session ends, the verifier's collect hook again. The replay and the video
+wait for it: made earlier, they would hold the one thread for minutes while the agent is still asking.
 """
 from __future__ import annotations
 
@@ -164,7 +164,7 @@ class Service:
 
     def do_reset(self, body: dict) -> tuple[int, dict]:
         cams = self.cameras(body.get("images"))
-        if self.over:
+        if self.over or self.stopping:   # a reset queued behind SIGUSR1 must not start an empty graded episode
             return 409, {"error": "trial finished", "reason": self.reason}
         if self.resets >= self.reset_budget:
             return 429, {"error": "reset budget exhausted", "budget": self.reset_budget}
@@ -213,8 +213,8 @@ class Service:
         self.result = {**r, "finalized": True}; self.write_final()
 
     def on_sigusr1(self, *_) -> None:
-        """The [[verifier.collect]] hook: the agent is gone. Only a flag -- the handler can fire in the middle
-        of a request, so the wrap-up waits for between_requests()."""
+        """The agent is gone (its adapter as the session ends, then the [[verifier.collect]] hook). Only a flag -- the
+        handler can fire in the middle of a request, so the wrap-up waits for between_requests()."""
         self.stopping = True
 
     def between_requests(self) -> None:
@@ -255,7 +255,7 @@ class Service:
                 if url.path == "/status":
                     return self._send(200, svc.status())
                 if url.path == "/observe":
-                    return self._route(svc.do_observe, _query_images(parse_qs(url.query)))
+                    return self._route(svc.do_observe, _query_images(parse_qs(url.query, keep_blank_values=True)))
                 self._send(404, {"error": "no such endpoint"})
 
             def do_POST(self):
@@ -286,7 +286,7 @@ class Service:
 
 
 def _query_images(q: dict):
-    """?images= on /observe: absent, 1, true, all -> every camera; 0, false, none -> none; a,b -> those."""
+    """?images= on /observe: absent, 1, true, all -> every camera; empty, 0, false, none -> none; a,b -> those."""
     v = q.get("images", [None])[0]
     if v is None or v.lower() in ("1", "true", "all"):
         return None

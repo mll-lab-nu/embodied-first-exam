@@ -1,8 +1,9 @@
 """Keep the OpenRouter key out of the agent's reach: a model gateway beside the harness holds it.
 
-`start_gateway` uploads `llm_gateway.py` (the team's model gateway, as on dev/qineng) into the task container and starts
-it on 127.0.0.1. It reads the key from a file and deletes it at start, pins the model on every request, and logs every
-exchange to the trial's agent/gateway.jsonl. The harness is given the gateway's URL and `PLACEHOLDER_KEY`, so neither
+`start_gateway` uploads `llm_gateway.py` (the team's model gateway from dev/qineng, plus one change: it drops server-side
+web tools from every request, since the agent can call it too) into the task container and starts it on 127.0.0.1. It
+reads the key from a file and deletes it at start, pins the model on every request, and logs every exchange to the
+trial's agent/gateway.jsonl. The harness is given the gateway's URL and `PLACEHOLDER_KEY`, so neither
 its environment nor its auth file holds a credential the agent could use for anything else.
 """
 from __future__ import annotations

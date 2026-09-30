@@ -129,7 +129,7 @@ def call_label(code: str) -> str:
 def codex_session(trial: str):
     """codex's session log: per-request usage, the agent's messages, its tool calls (with when their output came
     back), and the images it viewed."""
-    reqs, msgs, timeline, views, calls, pending, open_calls = [], [], [], [], collections.Counter(), {}, {}
+    reqs, msgs, timeline, views, pending, open_calls = [], [], [], [], {}, {}
     for f in sorted(glob.glob(f"{trial}/agent/sessions/**/*.jsonl", recursive=True)):
         for line in open(f):
             e = json.loads(line); p = e.get("payload") or {}; t = ts(e["timestamp"]); typ = p.get("type")
@@ -144,7 +144,6 @@ def codex_session(trial: str):
             elif typ in ("custom_tool_call", "function_call"):
                 code = p.get("input") or p.get("arguments") or ""
                 used = re.findall(TOOL, code)   # codex's code mode: one call can run several tools
-                calls.update(used or [p.get("name") or "other"])
                 paths, sure = viewed(code)
                 if paths:
                     pending[p.get("call_id")] = (paths, sure)
@@ -166,7 +165,7 @@ def codex_session(trial: str):
                     c["exit"] = [int(x) for x in re.findall(r'"exit_code":\s*(-?\d+)', text)]
                     c["out"] = text[:600]
                 timeline.append({"t": t, "kind": "out", "text": text + (f"\n[{len(imgs)} image(s)]" if imgs else "")})
-    return reqs, msgs, timeline, views, calls
+    return reqs, msgs, timeline, views
 
 
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
@@ -176,7 +175,7 @@ def claude_session(trial: str):
     """Claude Code's session log, in codex_session's shape: one request per assistant message (the log repeats a
     message once per content block), its text, its tool calls (a shell command, a file written or read, an image
     read), and the images it read. Tool names are mapped onto codex's where calls.py classifies by them."""
-    reqs, msgs, timeline, views, calls, open_calls, seen = [], [], [], [], collections.Counter(), {}, set()
+    reqs, msgs, timeline, views, open_calls, seen = [], [], [], [], {}, set()
     files = sorted(glob.glob(f"{trial}/agent/sessions/projects/**/*.jsonl", recursive=True))
     for f in files:
         for line in open(f):
@@ -211,7 +210,7 @@ def claude_session(trial: str):
                                    for e in (inp.get("edits") or [inp])] if name in ("Edit", "MultiEdit") else []) if path else []
                         entry = {"t": t, "kind": "call", "text": cmd or json.dumps(inp)[:4000], "cmds": cmds, "tools": tools,
                                  "done": t, "label": label, "path": path, "writes": writes}
-                        calls.update([name]); open_calls[c.get("id")] = entry; timeline.append(entry)
+                        open_calls[c.get("id")] = entry; timeline.append(entry)
             else:
                 for c in m["content"]:
                     if c.get("type") != "tool_result":
@@ -230,7 +229,7 @@ def claude_session(trial: str):
                             entry["tools"] = ["view_image"]
                     timeline.append({"t": t, "kind": "out", "text": text + (f"\n[{len(imgs)} image(s)]" if imgs else "")})
     timeline.sort(key=lambda x: x["t"])
-    return reqs, msgs, timeline, views, calls
+    return reqs, msgs, timeline, views
 
 
 def openrouter_key() -> str | None:
@@ -255,9 +254,9 @@ def get_json(url: str, key: str | None = None, tries: int = 5):
     return None
 
 
-def billing(reqs: list, model: str, cache: str) -> dict:
-    """OpenRouter's billed cost per generation, and the model's list prices; cached in report/billing.json."""
-    got = jload(cache, {"generations": {}, "pricing": None})
+def billing(reqs: list, cache: str) -> dict:
+    """OpenRouter's billed cost and timing per generation; cached in report/billing.json."""
+    got = jload(cache, {"generations": {}})
     key = openrouter_key()
     if key:
         for r in reqs:
@@ -265,12 +264,8 @@ def billing(reqs: list, model: str, cache: str) -> dict:
                 g = get_json(f"https://openrouter.ai/api/v1/generation?id={r['id']}", key)
                 if g and g.get("data"):
                     d = g["data"]
-                    got["generations"][r["id"]] = {k: d.get(k) for k in ("usage", "generation_time", "latency", "provider_name")}
+                    got["generations"][r["id"]] = {k: d.get(k) for k in ("usage", "generation_time", "latency")}
                 time.sleep(0.15)
-        if not got["pricing"]:
-            models = get_json("https://openrouter.ai/api/v1/models") or {"data": []}
-            mid = model.split("openrouter/", 1)[-1]
-            got["pricing"] = next((m.get("pricing") for m in models["data"] if m["id"] == mid), None)
     json.dump(got, open(cache, "w"), indent=1)
     return got
 
@@ -371,8 +366,8 @@ def collect(trial: str, args) -> dict:
     reward = jload(f"{trial}/verifier/reward.json", {})
     diag = jload(f"{trial}/verifier/diagnostics.json", {})
     claude = bool(glob.glob(f"{trial}/agent/sessions/projects/**/*.jsonl", recursive=True))
-    reqs, msgs, timeline, views, calls = (claude_session if claude else codex_session)(trial)
-    bill = billing(reqs, model, f"{out}/billing.json") if not args.no_billing else jload(f"{out}/billing.json", {"generations": {}, "pricing": None})
+    reqs, msgs, timeline, views = (claude_session if claude else codex_session)(trial)
+    bill = billing(reqs, f"{out}/billing.json") if not args.no_billing else jload(f"{out}/billing.json", {"generations": {}})
     if not limited:
         replayed, replay_err = [], None
     elif args.no_replay:
@@ -408,21 +403,10 @@ def collect(trial: str, args) -> dict:
 
     gens = [bill["generations"].get(r["id"]) for r in reqs]
     requests = [{"t": r["t"], "in": r.get("input_tokens") or 0, "cached": r.get("cached_input_tokens") or 0,
-                 "write": r.get("cache_write_input_tokens") or 0, "out": r.get("output_tokens") or 0,
+                 "out": r.get("output_tokens") or 0,
                  "reason": r.get("reasoning_output_tokens") or 0, "cost": (g or {}).get("usage"),
-                 "gen_s": ((g or {}).get("generation_time") or 0) / 1000 or None, "lat_s": ((g or {}).get("latency") or 0) / 1000 or None,
-                 "provider": (g or {}).get("provider_name")} for r, g in zip(reqs, gens)]
-    price = bill.get("pricing") or {}
-
-    def listed(r, k):   # a request's list price per token, with the long-context tier where the model has one
-        tier = [o for o in price.get("overrides") or [] if (r.get("input_tokens") or 0) >= o.get("min_prompt_tokens", 1e18)]
-        return float((tier[-1] if tier else price).get(k) or price.get(k) or 0)
-    kinds = [("output", "completion", lambda r: r.get("output_tokens") or 0),
-             ("cache read", "input_cache_read", lambda r: r.get("cached_input_tokens") or 0),
-             ("cache write", "input_cache_write", lambda r: r.get("cache_write_input_tokens") or 0),
-             ("uncached input", "prompt", lambda r: (r.get("input_tokens") or 0) - (r.get("cached_input_tokens") or 0) - (r.get("cache_write_input_tokens") or 0))]
-    parts = [{"name": name, "usd": sum(n(r) * listed(r, k) for r in reqs), "per_m": float(price.get(k) or 0) * 1e6} for name, k, n in kinds] if price else []
-    long_ctx = sum(any((r.get("input_tokens") or 0) >= o.get("min_prompt_tokens", 1e18) for o in price.get("overrides") or []) for r in reqs)
+                 "gen_s": ((g or {}).get("generation_time") or 0) / 1000 or None, "lat_s": ((g or {}).get("latency") or 0) / 1000 or None}
+                for r, g in zip(reqs, gens)]
 
     success = bool(reward.get("success"))
     exc = (res.get("exception_info") or {}).get("exception_type")
@@ -433,13 +417,14 @@ def collect(trial: str, args) -> dict:
         n_resets = sum(e["ev"] == "reset" for e in events)
         graded = eps[-1]; g_rep = by_ep.get(graded["ep"], {})
         best = max((r for r in replayed if r.get("return") is not None), key=lambda r: r["return"], default={})
+        ended = graded["end"] and not (graded["t_end"] and graded["t_end"] > a1)   # an end after the session is the wrap-up's
         if graded["end"] == "success":
             why = "success"
         elif timed_out:
             why = "timeout"
-        elif budget_r is not None and n_resets >= budget_r and graded["end"]:
+        elif budget_r is not None and n_resets >= budget_r and ended:
             why = "resets_used_up"
-        elif graded["end"] and not (graded["t_end"] and graded["t_end"] > a1):   # an end after the session is the wrap-up's
+        elif ended:
             why = "quit_after_end"
         else:
             why = "quit_mid_episode"
@@ -485,12 +470,11 @@ def collect(trial: str, args) -> dict:
         "result": result, "video": video if os.path.exists(f"{trial}/{video}") else None,
         "episodes": episodes, "replay_error": replay_err,
         "requests": requests, "billed": {"usd": sum(r["cost"] or 0 for r in requests), "found": sum(g is not None for g in gens),
-                                         "harbor_usd": (res.get("agent_result") or {}).get("cost_usd"), "parts": parts, "long_context": long_ctx},
+                                         "harbor_usd": (res.get("agent_result") or {}).get("cost_usd")},
         "calls": [{"t0": x["t"], "t1": x["done"], "tools": x["tools"], "label": (x.get("label") or call_label(x["text"]))[:300],
                    "cmds": [c[:800] for c in x["cmds"]], "exit": x.get("exit", []), "out": x.get("out", ""), "robot": r,
                    **({"attempt": a} if a else {})}
                   for x, r, a in zip(call_list, robots, attempts.describe(call_list, robots))],
-        "tool_counts": dict(calls.most_common()),
         "msgs": [[t, txt, ep_at(t), step_at(t)] for t, txt in msgs],
         "thinking": [[x["t"], x["text"], ep_at(x["t"]), step_at(x["t"])] for x in timeline if x["kind"] == "think"],   # Claude Code only; codex's is encrypted
         "views": views, "spikes": spikes, "leaks": leaks,
@@ -546,7 +530,7 @@ def trials_under(paths: list[str]) -> list[str]:
     trials = []
     for p in (os.path.abspath(x.rstrip("/")) for x in paths):
         trials += [p] if os.path.isdir(f"{p}/agent") else sorted(d.rstrip("/") for d in glob.glob(f"{p}/*/") if os.path.isdir(f"{d}/agent"))
-    return trials
+    return [t for t in trials if os.path.isfile(f"{t}/result.json")]   # one still running has none yet
 
 
 def main():

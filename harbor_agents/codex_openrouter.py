@@ -52,18 +52,12 @@ class CodexOpenRouter(Codex):
         connection = super().model_connection
         if self._gateway_up:   # Codex itself only ever sees the gateway and a placeholder key
             return replace(connection, api_key=PLACEHOLDER_KEY, configured_base_url=f"{URL}/v1")
-        # Harbor's Codex adapter applies only an explicitly configured URL, while
-        # the shared resolver represents OpenRouter's standard URL as a default.
-        # Promote that default so the generated custom provider receives it.
-        return replace(
-            connection,
-            configured_base_url=connection.configured_base_url or connection.base_url,
-        )
+        return connection
 
     def _build_effective_config(
         self, openai_base_url: str | None = None
     ) -> dict[str, Any]:
-        """Register OpenRouter explicitly so Codex stays on HTTPS Responses."""
+        """Register OpenRouter as a Responses-API provider at `openai_base_url`: the gateway, which `run` starts first."""
         config = super()._build_effective_config()
         config.pop("openai_base_url", None)
         config["model_provider"] = "openrouter"
@@ -73,7 +67,7 @@ class CodexOpenRouter(Codex):
             raise ValueError("Codex config model_providers must be a TOML table")
         providers["openrouter"] = {
             "name": "OpenRouter",
-            "base_url": openai_base_url or "https://openrouter.ai/api/v1",
+            "base_url": openai_base_url,
             "env_key": "OPENAI_API_KEY",
             "wire_api": "responses",
             "supports_websockets": False,

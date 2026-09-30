@@ -150,7 +150,7 @@ def video_panel(s: dict, page_dir: str) -> str:
     src = lambda e: esc(url(s, os.path.join(base, e["video"]), page_dir))
     graded = next((e for e in eps if e["ep"] == s["result"]["graded_ep"]), eps[-1])
     picks, seen = [], set()
-    top = [(e, f"回报第 {k} 高") for k, e in enumerate(sorted(eps, key=lambda e: -(e.get("return") or -1e18))[:3], 1)] if B.scored else []
+    top = [(e, f"回报第 {k} 高") for k, e in enumerate(sorted(eps, key=lambda e: -(-1e18 if e.get("return") is None else e["return"]))[:3], 1)] if B.scored else []
     for e, why in [(graded, "被评分段")] + top + [(max(eps, key=lambda e: e["steps"]), "撑得最久")]:
         if e["ep"] not in seen and len(picks) < 5:
             picks.append((e, why)); seen.add(e["ep"])
@@ -168,7 +168,7 @@ def video_panel(s: dict, page_dir: str) -> str:
             f"<p class='mut' style='font-size:12.5px'>每段都是验证端事后回放重渲染的（{B.video_note}）"
             + ("；这个精简版只带被评分段，其他段和整段录像在本地站点。" if SITE["bundle"] and len(eps) < len(s["episodes"]) else "；点时间轴或柱状图里的任一段也会在这里播放。")
             + f"{k}/{len(eps)} 段与现场 bit-exact（重放的终态与 sidecar 记下的一致）"
-            + ("" if k == len(eps) else "；其余与现场的终态对不上，是近似回放（旧版 sidecar 的日志里动作只留 5 位小数，必然如此）") + "。</p>"
+            + ("" if k == len(eps) else "；其余与现场的终态对不上，是近似回放") + "。</p>"
             f'<div class="picks">{cards}</div></div></div>')
 
 
@@ -177,7 +177,7 @@ def views_gallery(s: dict, page_dir: str) -> str:
         return "<p class='mut'>模型一张图都没看。</p>"
     base = os.path.join(s["trial_dir"], "report")
     a0 = s["a0"]
-    where = lambda v: "" if v["ep"] is None else f" · ep{v['ep']} 第 {v['step']} 步"   # noqa: E731  (None: before any step)
+    where = lambda v: "" if v["ep"] is None else f" · ep{v['ep']} 第 {v['step']} 步"   # noqa: E731  (None: full mode)
     return '<div class="gal">' + "".join(
         f'<figure><a href="{esc(url(s, os.path.join(base, v["file"]), page_dir))}"><img loading="lazy" src="{esc(url(s, os.path.join(base, v["file"]), page_dir))}" alt=""></a>'
         f'<figcaption><span class="dot" style="background:var(--cam-{B.cam_color(v["camera"])})"></span>'
@@ -649,7 +649,7 @@ def main_table(tasks: list, per: dict, mode: str) -> str:
         time_c = pcell(d["agent_min"] / d["budget_min"], f"{d['agent_min']:.1f} min")
         rows.append(f"<tr>{head}<td data-v=\"{1 if d['pass'] else 0}\">{status_chip(r)}</td>{prog_c}"
                     f'{reset_c}<td data-v="{d["agent_min"]}">{time_c}</td>'
-                    f'<td data-v="{d["cost"]}">{pcell(d["cost"] / top_cost, usd(d["cost"]), "na")}</td>'
+                    f'<td data-v="{d["cost"]}">{pcell(None if d["cost"] is None else d["cost"] / top_cost, usd(d["cost"]), "na")}</td>'
                     f'<td data-v="{d.get("tokens") or ""}">{tok_stack(d, top_tok)}</td>'
                     f'<td class="sess">{mini_timeline(s, d["budget_min"] * 60) if s else ""}</td></tr>')
     if limited:
