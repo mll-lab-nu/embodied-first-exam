@@ -335,7 +335,7 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 - [x] π0.5 · ALOHA `pi05_base` + trossen 统计量（增量由 openpi 自身的 `AbsoluteActions` 加回 state）。证据：`runs/test_results/20260930_vla_smoke_pi05_base_cast_coil`（`time_limit`、500 步、20 次推理、跟踪误差均值 0.46 rad、475 行截断）
 - [ ] GR00T N1.7 · Panda `GR00T-N1.7-DROID`：代码、配置、环境、checkpoint 已就绪；DROID checkpoint 只用当前帧（无 1 s 历史帧），`state_keys: [joint]`，eef_9d 由 Franka 正运动学计算。**阻塞**：backbone `nvidia/Cosmos-Reason2-2B` 为 gated 仓库，当前 HF 账号 403，未冒烟
 - [x] MolmoAct2 · Panda `MolmoAct2-DROID`（3 路相机：agentview、front_oblique、wrist）。证据：`runs/test_results/20260930_vla_smoke_molmoact2_buzz_wire`（`time_limit`、149 步、10 次推理、跟踪误差均值 0.018 rad）
-- [x] X-VLA · ALOHA `X-VLA-RoboTwin2`（`ee_abs`；坐标系换算见第 11 节第 4 条）。证据：`runs/test_results/20260930_vla_smoke_xvla_cast_coil`（`time_limit`、167 步、6 次推理、TCP 跟踪误差均值 9.5 mm、无 IK 失败）；单次推理 0.15 s、显存峰值 3.46 GiB
+- [x] X-VLA · ALOHA `X-VLA-RoboTwin2`（`ee_abs`；坐标系换算见第 11 节第 4 条）。证据：`runs/test_results/20260930_vla_smoke_xvla_cast_coil`（`time_limit`、167 步、6 次推理、TCP 跟踪误差均值 9.5 mm、无 IK 失败；该次运行时基座高度仍为修正前的 0.9396）；单次推理 0.15 s、显存峰值 3.46 GiB
 
 **P4 约定核对**（每条写明结论和证据；影响零样本结果）
 - [x] 第 11 节第 1–5 条：结论写在第 11 节各条后。证据：`runs/test_results/20260930_vla_p4_checks`
@@ -394,3 +394,4 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 | 2026-09-30 | GR00T：DROID checkpoint 只用当前帧（`delta_indices=[0]`），去掉 1 s 历史帧；`state_keys` 改为 `[joint]`，eef_9d 由 Franka 正运动学计算（与 TopoGym 手爪位姿的相对变换在 4 个构型下恒定）；执行步数取 RoboLab 仿真验证值 8 |
 | 2026-09-30 | 评测配置按任务各一份（`buzz_wire_3d.yaml`、`cast_coil.yaml`），`run.output: null` 时自动取 `runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>`，各模型配置用不同端口（8000–8004），换模型只改 `policy.address` |
 | 2026-09-30 | P5 首批：用户未确认预算，先按每模型 3 seed × 30 s 顺序运行 π0.5 DROID、MolmoAct2（buzz_wire_3d）与 X-VLA、π0.5 ALOHA（cast_coil），结果见 `runs/test_results/20260930_vla_batch1_*` |
+| 2026-09-30 | 独立审查（969eee7..e9b6ca6）：无 Critical；修复 4 项（`env_error` 记录故障原因；录像失败不再中止后续 seed；命令行覆盖项拼错时报错；服务端回复编码失败时回 `error` 而不退出），commit c8f06ce，`pytest vla/tests -q` 80 项通过；其余 Minor 记入实施总结 |
