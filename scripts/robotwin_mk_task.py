@@ -19,8 +19,11 @@ cs = ast.get_source_segment(up, [f for f in cls.body if isinstance(f, ast.Functi
 attrs = sorted(set(re.findall(r"self\.(\w+)\s*=\s*(?:create_|rand_create|self\.get_cluttered|\[)", la)) | set(re.findall(r"self\.(\w+)\s*=", la)) - {"prohibited_area", "size_dict"})
 step_lim = __import__("yaml").safe_load(open(root / "third_party/RoboTwin/env_cfg/task_config/_eval_step_limit.yml")).get(task, "?")
 
-if dst.exists(): shutil.rmtree(dst)
-shutil.copytree(src_dir, dst, ignore=shutil.ignore_patterns("__pycache__", "instance.json"))
+# regenerate everything except results/ (agent results committed per run); never copy the template's results/
+if dst.exists():
+    for c in dst.iterdir():
+        if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()
+shutil.copytree(src_dir, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "results", "instance.json"))
 (dst / "solution/oracle_stack_blocks_two.py").unlink()
 
 def sub(path, pairs):

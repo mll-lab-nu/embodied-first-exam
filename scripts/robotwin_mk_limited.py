@@ -11,8 +11,11 @@ K = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] != "--vel" else 25   #
 VEL = "--vel" in sys.argv   # also ship the expert's velocity feed-forward (K=1 + --vel = exact replay; needed by e.g. scan_object)
 src = root / "tasks/robotwin_2_0_stack_blocks_two-limited"; unl = root / f"tasks/robotwin_2_0_{task}"; dst = root / f"tasks/robotwin_2_0_{task}-limited"
 assert unl.is_dir(), unl
-if dst.exists(): shutil.rmtree(dst)
-shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__"))
+# regenerate everything except results/ (agent results committed per run); never copy the template's results/
+if dst.exists():
+    for c in dst.iterdir():
+        if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()
+shutil.copytree(src, dst, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "results"))
 # sim sidecar gets this task's instance + the unlimited task's tooling copy
 shutil.copy(unl / "environment/instance.json", dst / "environment/sim/instance.json")
 shutil.copy(unl / "environment/rcb_traj.py", dst / "environment/sim/rcb_traj.py")
