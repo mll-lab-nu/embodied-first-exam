@@ -6,15 +6,14 @@ Entry point: ``Gr00tPolicy(embodiment_tag, model_path, device=...)`` and
             current frame only (processor_config video delta_indices [0]). Frames are resized to the DROID
             training size first, as the validated RoboLab sim client does (cv2 INTER_AREA).
   state     joint_position (1, 1, 7) rad in the DROID convention (droid.py); gripper_position (1, 1, 1) closure
-            in [0, 1], 1 = closed; eef_9d (1, 1, 9) from the repo's compute_eef_9d of the Franka flange pose of
-            those joints (franka.py).
+            in [0, 1], 1 = closed; eef_9d (1, 1, 9) of the Franka flange pose of those joints, built from the
+            flange rotation itself rather than the repo's Euler-angle reading (franka.py).
   language  annotation.language.language_instruction: [[text]], lowercased without punctuation inside.
   action    joint_position (1, 40, 7) absolute rad (the processor adds the input state back to its deltas);
             gripper_position (1, 40, 1) closure; both official clients binarize it at 0.5, as done here.
 The RoboLab sim run executes 8 of 40 steps at 15 Hz. The backbone nvidia/Cosmos-Reason2-2B is a gated
 Hugging Face repository. Sampling noise uses the global torch RNG, seeded in reset().
 """
-from gr00t.data.state_action.droid_frame import compute_eef_9d
 from gr00t.policy import Gr00tPolicy
 from huggingface_hub import snapshot_download
 import numpy as np
@@ -22,7 +21,7 @@ import torch
 
 from vla.models.base import BaseVLA
 from vla.models.droid import from_droid_joints, to_droid_joints
-from vla.models.groot.franka import droid_cartesian
+from vla.models.groot.franka import eef_9d
 from vla.protocol import ActionChunk
 
 
@@ -40,7 +39,7 @@ class Groot(BaseVLA):
         droid = to_droid_joints(joint)
         video = {key: image[None, None]
                  for key, image in zip(("exterior_image_1_left", "wrist_image_left"), self.camera_images(obs))}
-        state = {"eef_9d": compute_eef_9d(droid_cartesian(droid)).astype(np.float32)[None, None],
+        state = {"eef_9d": eef_9d(droid).astype(np.float32)[None, None],
                  "gripper_position": np.float32([[[1.0 - joint[7]]]]), "joint_position": droid[None, None]}
         language = {"annotation.language.language_instruction": [[obs.instruction]]}
         action, _ = self.policy.get_action({"video": video, "state": state, "language": language})
