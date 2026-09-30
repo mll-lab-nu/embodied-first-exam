@@ -1,0 +1,15 @@
+# pi0.5 DROID joint-position checkpoint on the TopoGym Panda (same hardware as DROID).
+class_path: vla.models.pi05.model.Pi05
+checkpoint: gs://openpi-assets/checkpoints/pi05_droid_jointpos   # cached under ~/.cache/openpi
+port: 8000
+spec:
+  name: pi05_droid_jointpos
+  embodiment: panda_robotiq
+  cameras: [agentview, wrist]       # -> exterior_image_1_left, wrist_image_left
+  state_keys: [joint]
+  action_space: joint_abs
+  control_hz: 15
+  chunk_size: 15
+  execute_steps: 8                  # examples/droid/main.py open_loop_horizon
+model:
+  train_config: pi05_droid_jointpos_polaris   # openpi config paired with this checkpoint (same norm stats)
