@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from omegaconf import OmegaConf
 
-from vla.gym.run_eval import classify, make_args, output_dir, tracking_error
+from vla.gym.run_eval import classify, load_config, make_args, output_dir, tracking_error
 from vla.protocol import PolicySpec
 
 
@@ -57,3 +57,14 @@ def test_output_defaults_to_date_model_and_task():
     assert output_dir(cfg, spec()) == Path(f"runs/test_results/{date.today():%Y%m%d}_vla_m_buzz_wire_3d")
     cfg.run.output = "runs/test_results/mine"
     assert output_dir(cfg, spec()) == Path("runs/test_results/mine")
+
+
+def test_config_overrides_must_name_existing_keys(tmp_path):
+    path = tmp_path / "eval.yaml"
+    path.write_text("policy: {address: localhost:8000, local: null}\n"
+                    "task: {id: cast_coil, variation: base, seeds: [0], sim_seconds: 2}\n"
+                    "run: {execute_steps: null, record: false, output: null}\nenv: {}\n")
+    cfg = load_config(path, ["task.seeds=[1,2]", "env.enable_depth=true"])
+    assert list(cfg.task.seeds) == [1, 2] and cfg.env.enable_depth is True and cfg.policy.get("local") is None
+    with pytest.raises(Exception, match="seed"):
+        load_config(path, ["task.seed=[0]"])

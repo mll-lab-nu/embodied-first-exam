@@ -19,17 +19,18 @@ from vla.protocol import Observation, decode, encode
 
 
 def reply(model, data):
+    """The encoded answer to one request; any failure, including an unencodable result, becomes an error."""
     try:
         msg = decode(data)
         kind = msg.pop("type")
         if kind == "reset":
             model.reset(msg["seed"])
-            return {"type": "ok"}
+            return encode({"type": "ok"})
         if kind == "infer":
-            return {"type": "chunk", "actions": model.infer(Observation(**msg)).actions}
+            return encode({"type": "chunk", "actions": model.infer(Observation(**msg)).actions})
         raise ValueError(f"Unknown message type: {kind}")
     except Exception:
-        return {"type": "error", "message": traceback.format_exc()}
+        return encode({"type": "error", "message": traceback.format_exc()})
 
 
 def serve(model, address):
@@ -41,7 +42,7 @@ def serve(model, address):
                 try:
                     conn.send_bytes(encode({"type": "spec", **asdict(model.spec)}))
                     while True:
-                        conn.send_bytes(encode(reply(model, conn.recv_bytes())))
+                        conn.send_bytes(reply(model, conn.recv_bytes()))
                 except (EOFError, OSError):
                     print("Client disconnected", flush=True)
 

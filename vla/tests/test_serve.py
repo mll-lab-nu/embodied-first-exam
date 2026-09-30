@@ -11,10 +11,17 @@ from omegaconf import OmegaConf
 
 from vla.gym.client import LocalClient, PolicyError, RemoteClient
 from vla.models.dummy import HoldVLA
-from vla.protocol import Observation
+from vla.protocol import ActionChunk, Observation
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "vla/configs/models/hold_panda.yaml"
+
+
+class ScalarVLA(HoldVLA):
+    """Returns a NumPy scalar instead of an array, which the wire format cannot encode."""
+
+    def infer(self, obs):
+        return ActionChunk(np.float32(0.0))
 
 
 def free_port():
@@ -83,3 +90,21 @@ def test_requests_after_close_raise_policy_error(address):
     remote.close()
     with pytest.raises(PolicyError):
         remote.reset(0)
+
+
+def test_unencodable_reply_is_answered_as_an_error(tmp_path):
+    config = OmegaConf.load(CONFIG)
+    config.class_path = "vla.tests.test_serve.ScalarVLA"
+    OmegaConf.save(config, tmp_path / "scalar.yaml")
+    port = free_port()
+    server = subprocess.Popen([sys.executable, "-m", "vla.models.serve", "--config", str(tmp_path / "scalar.yaml"),
+                               "--port", str(port)], cwd=ROOT)
+    try:
+        remote = connect(f"localhost:{port}")
+        with pytest.raises(PolicyError, match="TypeError"):
+            remote.infer(observation())
+        remote.reset(0)  # the server is still answering
+        remote.close()
+    finally:
+        server.terminate()
+        server.wait(timeout=30)

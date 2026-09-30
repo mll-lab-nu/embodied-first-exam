@@ -109,8 +109,8 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
             outcome, error = "policy_error", str(exc)
         except ValueError as exc:  # invalid action: physics did not advance
             outcome, error = "invalid_action", str(exc)
-        except RuntimeError as exc:  # the Env faulted; only reset is possible
-            outcome, error = "env_error", str(exc)
+        except RuntimeError as exc:  # the Env faulted; its owner-side detail names the cause (as SegmentRunner)
+            outcome, error = "env_error", f"{exc}: {env._fault_detail}"
         row = dict(outcome=outcome, task_success=info.get("task_success"), failure_code=info.get("failure_code"),
                    sim_time_s=float(obs["state"]["sim_time_s"]), control_steps=len(errors),
                    inference_calls=agent.inference_calls,
@@ -118,7 +118,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                    tracking_error_max=max(errors, default=None), clipped_actions=agent.adapter.clipped,
                    reset_wall_s=round(reset_wall_s, 2),
                    rollout_wall_s=round(time.monotonic() - start - reset_wall_s, 2), error=error)
-        if session is not None:
+        if session is not None and not session.failed:  # a failed recording closes as incomplete
             if outcome != "env_error":
                 session.append_final(env.sensor_frame())
             session.finish(row)
@@ -158,6 +158,14 @@ def evaluate(cfg, client):
     return rows
 
 
+def load_config(path, overrides):
+    """The eval config plus dotlist overrides; a misspelled key raises instead of being added (env stays open)."""
+    cfg = OmegaConf.load(path)
+    OmegaConf.set_struct(cfg, True)
+    OmegaConf.set_struct(cfg.env, False)
+    return OmegaConf.merge(cfg, OmegaConf.from_dotlist(overrides))
+
+
 def connect(policy):
     """The model server at ``policy.address``, or ``policy.local`` (a model config) in process for HoldVLA."""
     if policy.get("local"):
@@ -170,7 +178,7 @@ def main():
     parser.add_argument("--config", required=True, help="evaluation config (vla/configs/eval/*.yaml)")
     parser.add_argument("overrides", nargs="*", help="OmegaConf dotlist, e.g. task.seeds=[0] run.record=false")
     args = parser.parse_args()
-    cfg = OmegaConf.merge(OmegaConf.load(args.config), OmegaConf.from_dotlist(args.overrides))
+    cfg = load_config(args.config, args.overrides)
     client = connect(cfg.policy)
     try:
         evaluate(cfg, client)
