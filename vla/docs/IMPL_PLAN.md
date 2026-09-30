@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 状态 | P0–P4 已完成（GR00T 等待 HF 权限，D3 待确认）；P5 首批（3 seed × 30 s）进行中，见第 13 节 |
+| 状态 | P0–P4 已完成；P5 首批（每模型 3 seed × 30 s）已跑完，四个可运行模型成功率均为 0/3；GR00T 等待 HF 权限，D3 与完整预算待确认 |
 | 目标 | 只评测（零样本）：用各模型官方 checkpoint，不微调 |
 | 分支 | `dev/pingyue`；不提交 `main`；不 push（除非用户要求） |
 | 范围 | 只改仓库根 `vla/` |
@@ -342,7 +342,7 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 
 **P5 首批评测**
 - [ ] 按 P1 实测的吞吐算预算，与用户确认 seed 数和 `sim_seconds`：用户未确认；先按 3 seed × 30 s 跑首批（第 13 节）
-- [ ] 跑第 9 节矩阵，出对比表（附 `execute_steps`、实际控制频率、指令版本）
+- [ ] 跑第 9 节矩阵，出对比表（附 `execute_steps`、实际控制频率、指令版本）：首批已跑除 GR00T 外的 4 行，对比表见 `runs/test_results/20260930_vla_batch1_logs/comparison.md` 与第 13 节；GR00T 与完整预算待定
 
 **之后（等用户决定）**
 - 过程指标。
@@ -395,3 +395,5 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 | 2026-09-30 | 评测配置按任务各一份（`buzz_wire_3d.yaml`、`cast_coil.yaml`），`run.output: null` 时自动取 `runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>`，各模型配置用不同端口（8000–8004），换模型只改 `policy.address` |
 | 2026-09-30 | P5 首批：用户未确认预算，先按每模型 3 seed × 30 s 顺序运行 π0.5 DROID、MolmoAct2（buzz_wire_3d）与 X-VLA、π0.5 ALOHA（cast_coil），结果见 `runs/test_results/20260930_vla_batch1_*` |
 | 2026-09-30 | 独立审查（969eee7..e9b6ca6）：无 Critical；修复 4 项（`env_error` 记录故障原因；录像失败不再中止后续 seed；命令行覆盖项拼错时报错；服务端回复编码失败时回 `error` 而不退出），commit c8f06ce，`pytest vla/tests -q` 80 项通过；其余 Minor 记入实施总结 |
+| 2026-09-30 | P5 首批（每模型 3 seed × 30 s，commit 061a9ef 起）：π0.5 DROID 与 MolmoAct2（buzz_wire_3d）均 0/3（`time_limit` 1、`unevaluated` 2，seed 1、2 在超时时判据不可用）；X-VLA（cast_coil）0/3（`time_limit` 2、`invalid_action` 1：IK 残差 0.26 mm 超出容差）；π0.5 ALOHA（cast_coil）0/3（`time_limit` 3）。跟踪误差均值 0.049 rad / 0.015 rad / 9.8 mm / 0.59 rad。π0.5 ALOHA 每个 episode 平均 1475/1500 行截断，150 步诊断中全部来自关节限位（shoulder、elbow、wrist_angle），开度未越界。cast_coil 使用 D3 草稿指令，结果暂定 |
+| 2026-09-30 | 推理延迟（首次调用含 JIT / 之后每次）：π0.5 DROID 10.2 s / 0.078 s，π0.5 ALOHA 10.7 s / 0.080 s，进程显存 11.3 GB；MolmoAct2 0.45 s / 0.31 s，12.5 GB；X-VLA 0.78 s / 0.15 s，3.5 GiB。证据：`runs/test_results/20260930_vla_p3_latency` |
