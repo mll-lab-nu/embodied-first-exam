@@ -1,0 +1,8 @@
+{
+ "task": "handover_block",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "f24950c7927a",
+ "text": "Use the left arm to grasp the red block on the table, handover it to the right arm and place it on the blue pad.",
+ "n_active_joints": 16
+}

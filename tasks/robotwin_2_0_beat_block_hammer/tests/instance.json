@@ -1,0 +1,8 @@
+{
+ "task": "beat_block_hammer",
+ "seed": 28831,
+ "embodiment": "aloha-agilex",
+ "state_sha": "d70fa03c6265",
+ "text": "There is a hammer and a block on the table, use the arm to grab the hammer and beat the block.",
+ "n_active_joints": 16
+}
