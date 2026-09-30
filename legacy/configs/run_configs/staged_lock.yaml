@@ -1,9 +1,0 @@
-defaults: [default, _self_]
-output: runs/staged_lock_task/default
-inspect_only: false
-oracle_mode: oracle
-record_dataset: null
-record_cameras: [front, side_oblique, wrist, lock_detail]
-exterior_cameras: [front, side_oblique]
-# Optional recorded frames.json for still-image calibration; never a rollout.
-camera_audit_source: null

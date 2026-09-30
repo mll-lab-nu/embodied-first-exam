@@ -1,9 +1,0 @@
-# untangle_continuous_fem_demo 的主配置。
-#
-# 与 untangle_continuous_pinch.yaml 共用同一份 task 配置；
-# env 用 world_tabletop_fem_v1（substeps=1）。
-
-defaults:
-  - config
-  - override run_configs@run: untangle_continuous_fem
-  - _self_

@@ -1,7 +1,0 @@
-# rope_winding_physical_handle_demo 的主配置（任务书 §2.4 绳绕柱 0 -> 2 圈）。
-
-defaults:
-  - config
-  - override task_configs@task: rope_winding_topogym_tabletop_v1
-  - override run_configs@run: rope_winding
-  - _self_

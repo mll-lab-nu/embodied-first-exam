@@ -1,6 +1,0 @@
-# Deployment settings. Experiment/task semantics live in experiments/.
-schema_version: 1
-experiment_config: experiments/cube_pick_place_rollout.yaml
-image: topogym-rollout:opencode-v1
-opencode_version: 1.18.33
-gpus: 1
