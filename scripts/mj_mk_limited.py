@@ -183,7 +183,7 @@ def instruction(src, inst, tool) -> str:
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
     score_txt = score.group(2).replace("`s.check()` computes exactly this.", "The service applies exactly this rule.").strip() if score else ""
     if tool == "rcb_dtb":
-        score_txt = re.sub(r"Each goal has \*\*60 s \(3,600 control steps\)\*\*;.*?at most 360,000 control steps\.",
+        score_txt = re.sub(r"Each goal has \*\*30 s \(1,800 control steps\)\*\*;.*?at most 360,000 control steps\.",
                            "In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). "
                            "The episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**.", score_txt, flags=re.S)
         assert "no time limit" in score_txt, "DexToolBench scoring text changed; update the limited wording"
