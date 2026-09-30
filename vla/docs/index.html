@@ -507,7 +507,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <text class="sm" x="668" y="176" text-anchor="middle">在线，每个 episode 重复</text>
 </svg>
 </div>
-<figcaption><b>图 3。</b>蓝色步骤在 Gym 环境（<code>.venv-gs121-nyx</code>）中运行，绿色步骤在模型各自的环境中运行。第 5 步两者都参与：评测进程驱动循环，每隔 <code>execute_steps</code> 个控制步向模型服务请求一次动作块。</figcaption>
+<figcaption><b>图 3。</b>蓝色步骤在 Gym 环境（conda env <code>topogym</code>）中运行，绿色步骤在模型各自的环境中运行。第 5 步两者都参与：评测进程驱动循环，每隔 <code>execute_steps</code> 个控制步向模型服务请求一次动作块。</figcaption>
 </figure>
 
 <h3 id="s2-code">评测主循环（伪代码）</h3>
@@ -683,7 +683,7 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
 <thead><tr><th>代价</th><th>处理</th></tr></thead>
 <tbody>
 <tr><td>多一个进程要启动和管理</td><td><code>run_eval</code> 连接成功并收到 <code>spec</code> 即视为服务就绪；服务日志单独保存</td></tr>
-<tr><td>服务崩溃或超时</td><td><code>infer</code> 设超时；失败记为 <code>policy_error</code>，不计为任务失败，可重连后重跑该 seed</td></tr>
+<tr><td>服务崩溃</td><td>连接断开时 <code>infer</code> 立即抛 <code>PolicyError</code>（不设超时）；记为 <code>policy_error</code>，不计为任务失败，可重连后重跑该 seed</td></tr>
 <tr><td>两侧协议版本不一致</td><td><code>PolicySpec</code> 带 <code>protocol_version</code>，握手时校验</td></tr>
 <tr><td>跨进程调试不便</td><td>同一个 <code>BaseVLA</code> 子类可经 <code>LocalClient</code> 在同进程运行（依赖允许时）；服务端可加回放模式，按数据集动作回放来检查 Gym 侧</td></tr>
 <tr><td>模型采样有随机性（flow matching 噪声）</td><td><code>reset</code> 消息带 seed，服务端设随机种子，保证可复现</td></tr>
@@ -777,7 +777,7 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
     <marker id="a7g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah-g"/></marker>
     <marker id="a7p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="ah-p"/></marker>
   </defs>
-  <text class="layer" x="10" y="16">GYM 进程 · .venv-gs121-nyx</text>
+  <text class="layer" x="10" y="16">GYM 进程 · conda env topogym</text>
   <rect class="box dash" x="10" y="24" width="390" height="366" rx="10"/>
   <rect class="box2" x="28" y="40" width="354" height="44" rx="6"/>
   <text class="ttl" x="44" y="60">EvalRunner（管理方）</text>
@@ -840,7 +840,7 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
 <td><code>rgb</code>：4 × (480, 848, 3) uint8<br><code>robot.left / right</code>：<code>joint_position_rad</code> (6,)、<code>joint_velocity_rad_s</code> (6,)、<code>finger_position_m</code> (2,)<br><code>state</code>：episode_id、physics_step、sim_time_s …<br><code>task</code>：任务测量量（<b>不传给 VLA</b>）</td>
 <td><code>rgb</code>：3 × (480, 848, 3) uint8<br><code>robot.arm</code>：<code>joint_position_rad</code> (7,)、<code>joint_velocity_rad_s</code> (7,)、<code>finger_position_rad</code> (2,)<br><code>state</code>、<code>task</code> 同左</td></tr>
 <tr><td><span class="hop">2</span> Adapter<br><span class="muted">→ 标准 Observation</span></td>
-<td><code>images</code>：<code>cam_high</code>、<code>cam_left_wrist</code>、<code>cam_right_wrist</code> 缩放到 <code>spec.image_size</code><br><code>state</code> (14,) float32：<code>[左 6 关节, 左开度, 右 6 关节, 右开度]</code>；开度 = (finger₀ − 0.002) / 0.035<br><code>instruction</code>：来自 <code>instructions.yaml</code></td>
+<td><code>images</code>：<code>cam_high</code>、<code>cam_left_wrist</code>、<code>cam_right_wrist</code> 缩放到 <code>spec.image_size</code><br><code>state</code> (14,) float32：<code>[左 6 关节, 左开度, 右 6 关节, 右开度]</code>；开度 = (finger₀ − 0.002) / 0.035<br><code>instruction</code>：来自 <code>vla/gym/instructions.py</code></td>
 <td><code>images</code>：<code>agentview</code>、<code>wrist</code><br><code>state</code> (8,) float32：<code>[7 关节, 开度]</code>；开度 = 1 − finger₀ / 0.8<br><code>instruction</code> 同左</td></tr>
 <tr><td><span class="hop">3</span> 传输</td><td colspan="2">JSON 头 <code>{"type": "infer", ...}</code> + 数组原始字节，约 0.45 MB（3 张 224×224）；每 <code>execute_steps</code> 个控制步一次</td></tr>
 <tr><td><span class="hop">4</span> 子类内部</td><td colspan="2">模型专属：图像预处理、state 归一化或补零、prompt 格式、前向（flow matching 去噪 / 自回归解码）、反归一化、相对量 → 绝对量。见上方面板与<a href="#s4-io">第 4 节</a></td></tr>
@@ -899,16 +899,18 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
         ...</pre>
 <pre>vla/                              只改这个目录
 ├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
-├── setup.sh                      唯一安装入口：setup.sh pi05 | groot | molmoact2 | xvla（只建模型环境）
+├── setup.sh                      唯一安装入口：setup.sh topogym | pi05 | groot | molmoact2 | xvla（各建一个 conda 环境）
 ├── protocol.py                   PolicySpec / Observation / ActionChunk + 编解码（两侧共用，只用标准库 + numpy）
+├── config.py                     YAML 配置加载，支持 _base_ 继承（两侧共用）
 ├── gym/                          只在 TopoGym 环境使用
 │   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
 │   ├── agent.py  client.py       VLAAgent；RemoteClient / LocalClient
-│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
+│   ├── instructions.py  report.py 每个任务的指令与版本；输出目录 → Markdown 汇总表
+│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / report.md / MP4
 ├── models/                       只在各模型环境使用
-│   ├── base.py  serve.py  dummy.py
+│   ├── base.py  serve.py  dummy.py  droid.py（DROID 关节 7 约定）
 │   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
-├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
+├── configs/  eval/{base,&lt;task&gt;}.yaml  models/&lt;robot&gt;/{base,&lt;checkpoint&gt;}.yaml
 ├── tests/
 └── docs/                         DESIGN.md · index.html · IMPL_PLAN.md（设计文档与实施计划）</pre>
 

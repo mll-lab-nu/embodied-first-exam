@@ -67,7 +67,7 @@ run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─
 vla/
 ├── README.md              快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
 ├── setup.sh               建 conda 环境：bash vla/setup.sh <topogym|pi05|groot|molmoact2|xvla>
-├── .gitignore             third_party/
+├── .gitignore             third_party/  .envs/（旧 uv 环境，删除前保留）
 ├── __init__.py
 ├── protocol.py            PolicySpec / Observation / ActionChunk、encode / decode（标准库 + numpy）
 ├── config.py              load_yaml：YAML 配置 + _base_ 继承（两侧共用，只依赖 OmegaConf）
@@ -145,7 +145,7 @@ Adapter(action_spec, spec)
     .observation(rgb, robot, instruction, episode_id, step) -> Observation
     .action(row) -> dict                              # 一行标准向量 → TopoGym 动作字典（先截断）
 VLAAgent(client, adapter, execute_steps)
-    .reset(seed, instruction)                         # 调 client.reset(seed)，清空队列
+    .reset(seed, instruction, episode_id)             # 调 client.reset(seed)，清空队列；episode_id 用 Env 的
     .act(rgb, robot) -> dict                          # 队列为空时推理一次；检查块形状 (H, D) 且全部有限
 RemoteClient(address) / LocalClient(model)            # 都有 .spec、.reset(seed)、.infer(obs)、.close()
 ```
@@ -266,8 +266,12 @@ env: {}                          # 透传给 topogym.make；辅助抓持默认�
 
 ```bash
 bash vla/setup.sh pi05                                                          # 一次性
+
+# 终端 1
 conda activate vla-pi05
 python -m vla.models.serve --config vla/configs/models/panda_robotiq/pi05_droid_jointpos.yaml   # --port 默认 8000
+
+# 终端 2
 conda activate topogym
 python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seeds=[0] run.record=false
 ```
@@ -297,7 +301,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 | ALOHA · `cast_coil` | π0.5 `pi05_base` + trossen 归一化统计量 | 50 Hz → 8（50 Hz） |
 | ALOHA · `cast_coil` | X-VLA `X-VLA-RoboTwin2`（`ee_abs`） | 16.7 Hz → 24（16.67 Hz）；原写 30 Hz → 13，见第 13 节 |
 
-`control_decimation = round(1 / (control_hz × 0.0025))`。各模型的输入输出细节见 `DESIGN.md` 4.5；P3 按官方代码核对后的最终数值以 `vla/configs/models/*.yaml` 和 `vla/README.md` 第 3 节为准（GR00T 执行 8 步、只用当前帧；X-VLA 执行 30 步）。
+`control_decimation = round(1 / (control_hz × 0.0025))`。各模型的输入输出细节见 `DESIGN.md` 4.5；P3 按官方代码核对后的最终数值以 `vla/configs/models/<robot>/*.yaml` 和 `vla/README.md` 第 3 节为准（GR00T 执行 8 步、只用当前帧；X-VLA 执行 30 步）。
 
 ## 10. TODO
 
@@ -340,7 +344,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 **P3 模型**（按下列顺序，每个模型一项）
 - 每项的步骤：
   1. 先读官方推理示例，把入口函数、输入键、输出含义和单位写进 `model.py` 的 docstring；
-  2. 加 `setup.sh` 分支和 `configs/models/*.yaml`；
+  2. 加 `setup.sh` 分支和 `configs/models/<robot>/<checkpoint>.yaml`；
   3. 跑 1 个 seed 的冒烟（`sim_seconds: 10`）；
   4. 检查输出形状和数值范围，记录推理延迟和显存。
 - [x] π0.5 · Panda `pi05_droid_jointpos`。证据：`runs/test_results/20260930_vla_smoke_pi05_droid_buzz_wire`（`time_limit`、149 步、19 次推理、跟踪误差均值 0.043 rad，服务显存 12.4 GB）
@@ -372,7 +376,7 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 3. **相机**：TopoGym 的 agentview / wrist 与 DROID 真机相机的位置和视角差异。零样本对此敏感，只记录，不调整。
    - 记录：TopoGym 各相机 848×480（16:9）。DROID 训练图像 320×180（16:9），GR00T、MolmoAct2 的官方客户端先缩放到该尺寸，子类照做；π0.5 由自身流程加黑边缩到 224。RoboTwin 训练图像 320×240（4:3），X-VLA 处理器直接压缩成 224×224。相机位置与视角未调整。
 4. **X-VLA 坐标系**：标准 `ee` 用 TopoGym 世界系，X-VLA 训练数据用什么坐标系要核对。若需要各臂基座在世界系的位姿，`action_spec` 里没有，需找来源；若需要改 `vla/` 以外的代码，先问用户。
-   - 结论：X-VLA 用 RoboTwin 世界系中 URDF link6 原点的位姿（RoboTwin TCP 在其 x 方向 0.12 m 处），rot6d 为 X-VLA 约定且训练和官方客户端都把 wxyz 四元数按 xyzw 读取。TopoGym 两臂相对放置，RoboTwin 两臂并排，所以每臂按自身基座映射（`vla/models/xvla/frames.py`）。TopoGym 基座位姿在仿真中实测：左 (−0.6047, −0.019, 0.9196)、偏航 0°，右 (0.3333, −0.019, 0.9196)、偏航 180°，写入 `xvla_robotwin2.yaml`；手爪坐标轴（x 前向、y 基座左、z 上）与 link6 一致。未改 `vla/` 以外的代码。
+   - 结论：X-VLA 用 RoboTwin 世界系中 URDF link6 原点的位姿（RoboTwin TCP 在其 x 方向 0.12 m 处），rot6d 为 X-VLA 约定且训练和官方客户端都把 wxyz 四元数按 xyzw 读取。TopoGym 两臂相对放置，RoboTwin 两臂并排，所以每臂按自身基座映射（`vla/models/xvla/frames.py`；第二轮起高度改为相对桌面，见第 13 节）。TopoGym 基座位姿在仿真中实测：左 (−0.6047, −0.019, 0.9196)、偏航 0°，右 (0.3333, −0.019, 0.9196)、偏航 180°，写入 `xvla_robotwin2.yaml`；手爪坐标轴（x 前向、y 基座左、z 上）与 link6 一致。未改 `vla/` 以外的代码。
 5. **跟踪特性**：P1 / P3 测到的"目标 − 实测"与真机数据集中的量级对比。ALOHA 用源 MJCF 的位置执行器增益；Panda 的增益与 DROID 真机控制器是否一致尚未核对。
    - 实测（每步各臂 L2 范数的最大值，均值）：HoldVLA 约 1e-8；π0.5 DROID 0.043 rad；MolmoAct2 0.018 rad；π0.5 ALOHA 0.46 rad；X-VLA 9.5 mm。DROID 数据中 `action.joint_position[t]` 与 `state[t+1]` 的逐关节平均绝对差为 0.012–0.043 rad（GR00T 调研，DROID 样例）。两者口径不同，只能比较量级。Panda 增益与 DROID 控制器的对应关系未核对。
 6. **仿真速度**：已知控制步墙钟为秒级。episode 时长和 seed 数由 P1 实测决定。

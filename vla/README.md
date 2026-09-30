@@ -37,8 +37,8 @@ python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seed
 ```
 
 - 端口在运行时指定，模型配置里没有端口。同时跑两个模型时，第二个服务加 `--port 8001`，对应的评测加 `policy.address=localhost:8001`。
-- 不启动模型服务、只检查评测链路：加 `policy.local=vla/configs/models/aloha/hold_aloha.yaml`。`HoldVLA` 会把当前状态重复成动作块。
-- 渲染用到的环境变量由 `run_eval` 自动补上，不需要 export：`TOPOGYM_VISUAL_ASSET_ROOT` 默认为 `.external/nyx-assets`；只要装了 NVIDIA 的 Vulkan 驱动，`VK_ICD_FILENAMES` 就只加载它。已经手动设置的值不会被覆盖。
+- 不启动模型服务、只检查评测链路：Panda 任务加 `policy.local=vla/configs/models/panda_robotiq/hold_panda.yaml`，ALOHA 任务加 `policy.local=vla/configs/models/aloha/hold_aloha.yaml`。`HoldVLA` 会把当前状态重复成动作块。
+- 渲染用到的环境变量由 `run_eval` 自动补上，不需要 export：`.external/nyx-assets` 存在时，`TOPOGYM_VISUAL_ASSET_ROOT` 指向它，否则用 TopoGym 自己的默认目录；装了 NVIDIA 的 Vulkan 驱动时，`VK_ICD_FILENAMES` 只加载它。已经手动设置的值不会被覆盖。
 
 ## 3. 模型（按机器人）
 

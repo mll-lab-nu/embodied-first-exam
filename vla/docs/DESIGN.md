@@ -255,7 +255,7 @@ EvalRunner        Env/actor        VLAAgent          PolicyClient        VLA 服
 | 代价 | 处理 |
 |---|---|
 | 多一个进程要启动和管理 | `run_eval` 连接成功并收到 `spec` 即视为服务就绪；服务日志单独保存 |
-| 服务崩溃或超时 | `infer` 设超时；失败记为 `policy_error`，不计为任务失败，可重连后重跑该 seed |
+| 服务崩溃 | 连接断开时 `infer` 立即抛 `PolicyError`（不设超时）；记为 `policy_error`，不计为任务失败，可重连后重跑该 seed |
 | 两侧协议版本不一致 | `PolicySpec` 带 `protocol_version`，握手时校验 |
 | 跨进程调试不便 | 同一个 `BaseVLA` 子类可经 `LocalClient` 在同进程运行（依赖允许时）；服务端可加回放模式检查 Gym 侧 |
 | 模型采样随机性（flow matching 噪声） | `reset` 消息带 seed，服务端设随机种子 |
