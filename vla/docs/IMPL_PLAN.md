@@ -2,12 +2,12 @@
 
 | 项 | 值 |
 |---|---|
-| 状态 | 计划定稿，P0 未开始 |
+| 状态 | P0–P4 已完成（GR00T 等待 HF 权限，D3 待确认）；P5 首批（3 seed × 30 s）进行中，见第 13 节 |
 | 目标 | 只评测（零样本）：用各模型官方 checkpoint，不微调 |
 | 分支 | `dev/pingyue`；不提交 `main`；不 push（除非用户要求） |
 | 范围 | 只改仓库根 `vla/` |
 | 背景 | [`DESIGN.md`](DESIGN.md)：设计背景与模型调研（各模型输入输出见 4.5）；[`index.html`](index.html)：可视化版本 |
-| 更新 | 2026-09-30 |
+| 更新 | 2026-09-30（实施） |
 
 **给实现者**：新 session 从本文件开始。本文件是实现的唯一依据，与 `DESIGN.md` 不一致时以本文件为准。先读第 0–8 节，再按第 10 节做。每完成一项就勾选，并在该项后写 `证据：<路径 / 命令 / commit>`，没有证据不勾。改计划时在第 13 节追加记录。标"待确认"的事项先问用户。
 
@@ -18,7 +18,8 @@
 1. `git branch --show-current` 必须是 `dev/pingyue`。
 2. 读仓库根的 `CLAUDE.md` 和 `AGENTS.md`，照做：先读后写、最小改动、不过度抽象、用测试验证。
 3. **TopoGym 环境**：`.venv-gs121-nyx`（Genesis 1.2.1 + Nyx，Python 3.11），渲染资源在 `.external/nyx-assets`，运行前执行 `export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"`。
-   - 2026-09-30 检查时，本机两样都没有。**先问用户**：用哪台机器，是否用 `CUDA_TAG=<cu 标签> INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx bash env_setup_gs121.sh` 新建，nyx-assets 从哪里取。
+   - 2026-09-30 已在本机新建：`CUDA_TAG=cu126 INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx OPTIONAL_GROUPS="video test" bash env_setup_gs121.sh`；nyx-assets 用 `scripts/prepare_nyx_studio.py` 下载。
+   - 本机 Vulkan 可见 AMD 核显、llvmpipe 和 RTX 4090，运行前还要 `export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json`，否则 Nyx 建场景时 abort。
    - P0 的适配器测试需要 `import topogym` 并构建 `action_spec`，不需要 GPU；CPU 版 `.venv-gs121`（`bash env_setup_gs121.sh`）就够。协议、agent、服务的测试只依赖 numpy。
 4. **硬件**：本机 1 张 RTX 4090（24 GB）。刚体任务的仿真约占 2–3 GB 显存，模型与仿真同卡。显存不够时不要启动，把命令交给用户。
 
@@ -282,47 +283,47 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 |---|---|---|
 | Panda · `buzz_wire_3d` | π0.5 `pi05_droid_jointpos`；GR00T `GR00T-N1.7-DROID`；MolmoAct2 `MolmoAct2-DROID` | 15 Hz → 27（14.81 Hz） |
 | ALOHA · `cast_coil` | π0.5 `pi05_base` + trossen 归一化统计量 | 50 Hz → 8（50 Hz） |
-| ALOHA · `cast_coil` | X-VLA `X-VLA-RoboTwin2`（`ee_abs`） | 30 Hz → 13（30.77 Hz） |
+| ALOHA · `cast_coil` | X-VLA `X-VLA-RoboTwin2`（`ee_abs`） | 16.7 Hz → 24（16.67 Hz）；原写 30 Hz → 13，见第 13 节 |
 
-`control_decimation = round(1 / (control_hz × 0.0025))`。各模型的输入输出细节见 `DESIGN.md` 4.5，数值在 P3 按官方代码核对。
+`control_decimation = round(1 / (control_hz × 0.0025))`。各模型的输入输出细节见 `DESIGN.md` 4.5；P3 按官方代码核对后的最终数值以 `vla/configs/models/*.yaml` 和 `vla/README.md` 第 3 节为准（GR00T 执行 8 步、只用当前帧；X-VLA 执行 30 步）。
 
 ## 10. TODO
 
 **P0 骨架（无 GPU）** — 验收：在 TopoGym 环境里 `pytest vla/tests -q` 全部通过
-- [ ] 包结构、`vla/.gitignore`
-- [ ] `protocol.py` + 测试：
+- [x] 包结构、`vla/.gitignore`。证据：commit 43c2422
+- [x] `protocol.py` + 测试（`vla/tests/test_protocol.py`，5 项）。证据：commit 43c2422
   - 嵌套 dict 中的 uint8、float32、float64 数组编解码往返逐位相等；
   - 协议版本不一致时报错。
-- [ ] `gym/adapter.py` + 测试：
+- [x] `gym/adapter.py` + 测试（`vla/tests/test_adapter.py`，20 项）。证据：commit fe5f00e、9c10d9f
   - 用 `topogym.make("cast_coil")` 和 `topogym.make("buzz_wire_3d")` 的真实 `action_spec`；
   - 检查 state 排列、开度换算、截断，以及 rot6d ↔ 四元数往返；
   - 检查动作字典的键与 `action_spec` 的 `fields` 一致。
-- [ ] `gym/agent.py` + 测试：
+- [x] `gym/agent.py` + 测试（`vla/tests/test_agent.py`）。证据：commit bb34e51
   - H=15、k=8 时，20 次 `act` 只推理 3 次；
   - `reset` 清空队列；
   - 块的形状不对或含 NaN 时抛 `PolicyError`。
-- [ ] `models/base.py`、`models/dummy.py`（HoldVLA）、`gym/client.py` 中的 `LocalClient`
-- [ ] `tests/test_boundaries.py`：用 AST 检查
+- [x] `models/base.py`、`models/dummy.py`（HoldVLA）、`gym/client.py` 中的 `LocalClient`。证据：`vla/tests/test_models.py`，commit 61cea7d
+- [x] `tests/test_boundaries.py`：用 AST 检查（放入临时违规文件时两项均失败）。证据：commit 7bd29f0
   - `protocol.py` 和 `models/**` 不 import `topogym`；
   - `gym/**` 不 import `torch`、`jax`、`transformers`、`openpi`、`gr00t`。
-- [ ] `setup.sh` 公共部分、`README.md` 初版
+- [x] `setup.sh` 公共部分、`README.md` 初版。证据：commit 9869142；完整版 e9b6ca6
 
 **P1 评测循环（GPU，TopoGym 环境）**
-- [ ] `configs/instructions.yaml` v1：从代码取 11 个任务的现有指令，起草 cast_coil、blanket_flatten 两条，交用户确认（D3）
-- [ ] `gym/run_eval.py`：按第 6 节实现
-- [ ] 冒烟：HoldVLA（LocalClient）在 `cast_coil`、`buzz_wire_3d` 上各跑 seed 0，`sim_seconds: 2`。
+- [x] `configs/instructions.yaml` v1：从代码取 11 个任务的现有指令，起草 cast_coil、blanket_flatten 两条，交用户确认（D3）。证据：`vla/tests/test_configs.py` 核对 13 个任务和 5 条类属性；6 条 placement 指令由各任务 base 变体的 `declare` 生成；两条草稿待确认
+- [x] `gym/run_eval.py`：按第 6 节实现。证据：commit 0119d59、010b66b；`vla/tests/test_run_eval.py`
+- [x] 冒烟：HoldVLA（LocalClient）在 `cast_coil`、`buzz_wire_3d` 上各跑 seed 0，`sim_seconds: 2`。证据：`runs/test_results/20260930_vla_smoke_hold_{cast_coil,buzz_wire}`（`time_limit`、80 步、8 次推理、跟踪误差 < 1e-7、每路相机一个 61 帧 MP4）；对照 `runs/test_results/20260930_vla_smoke_demo_{cast_coil,buzz_wire}`（`time_limit`、80 步）
   - 预期：`outcome=time_limit`，结果字段齐全，每路相机一个 MP4，跟踪误差已记录。
   - 同一 decimation 和步数下，与 `vla_eval_demo.py` 的 `outcome`、`control_steps` 一致。
-- [ ] 实测并写入第 13 节：
+- [x] 实测并写入第 13 节。证据：`runs/test_results/20260930_vla_p1_timing`
   - decimation 为 8 / 13 / 27 时每个控制步的墙钟时间；
   - 显存峰值；
   - `tick_record()` 的开销。
 
 **P2 服务**
-- [ ] `models/serve.py`：按 `class_path` 加载 → `load()` → 监听；一次只接一个连接；`infer` 出错时回 `error`，服务不退出
-- [ ] `gym/client.py` 中的 `RemoteClient`：版本校验、超时、`PolicyError`
-- [ ] 测试（无 GPU）：在子进程里用 serve 起 HoldVLA，`RemoteClient` 拿到的动作块与 `LocalClient` 逐位相等
-- [ ] 冒烟（GPU）：P1 的冒烟改用 `RemoteClient`，结果不变
+- [x] `models/serve.py`：按 `class_path` 加载 → `load()` → 监听；一次只接一个连接；`infer` 出错时回 `error`，服务不退出。证据：commit c35e51c
+- [x] `gym/client.py` 中的 `RemoteClient`：版本校验、超时、`PolicyError`。证据：commit c35e51c
+- [x] 测试（无 GPU）：在子进程里用 serve 起 HoldVLA，`RemoteClient` 拿到的动作块与 `LocalClient` 逐位相等。证据：`vla/tests/test_serve.py`
+- [x] 冒烟（GPU）：P1 的冒烟改用 `RemoteClient`，结果不变。证据：`runs/test_results/20260930_vla_smoke_remote_hold_{cast_coil,buzz_wire}`（outcome、步数、推理次数相同，跟踪误差前 15 位有效数字相同）
 
 **P3 模型**（按下列顺序，每个模型一项）
 - 每项的步骤：
@@ -330,17 +331,17 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
   2. 加 `setup.sh` 分支和 `configs/models/*.yaml`；
   3. 跑 1 个 seed 的冒烟（`sim_seconds: 10`）；
   4. 检查输出形状和数值范围，记录推理延迟和显存。
-- [ ] π0.5 · Panda `pi05_droid_jointpos`
-- [ ] π0.5 · ALOHA `pi05_base` + trossen 统计量（臂关节输出是相对推理时刻 state 的增量，子类加回 state）
-- [ ] GR00T N1.7 · Panda `GR00T-N1.7-DROID`（`state_keys: [joint, ee]`；服务端保存当前帧和 1 s 前的历史帧）
-- [ ] MolmoAct2 · Panda `MolmoAct2-DROID`（3 路相机：agentview、front_oblique、wrist）
-- [ ] X-VLA · ALOHA `X-VLA-RoboTwin2`（`ee_abs`；坐标系换算见第 11 节第 4 条）
+- [x] π0.5 · Panda `pi05_droid_jointpos`。证据：`runs/test_results/20260930_vla_smoke_pi05_droid_buzz_wire`（`time_limit`、149 步、19 次推理、跟踪误差均值 0.043 rad，服务显存 12.4 GB）
+- [x] π0.5 · ALOHA `pi05_base` + trossen 统计量（增量由 openpi 自身的 `AbsoluteActions` 加回 state）。证据：`runs/test_results/20260930_vla_smoke_pi05_base_cast_coil`（`time_limit`、500 步、20 次推理、跟踪误差均值 0.46 rad、475 行截断）
+- [ ] GR00T N1.7 · Panda `GR00T-N1.7-DROID`：代码、配置、环境、checkpoint 已就绪；DROID checkpoint 只用当前帧（无 1 s 历史帧），`state_keys: [joint]`，eef_9d 由 Franka 正运动学计算。**阻塞**：backbone `nvidia/Cosmos-Reason2-2B` 为 gated 仓库，当前 HF 账号 403，未冒烟
+- [x] MolmoAct2 · Panda `MolmoAct2-DROID`（3 路相机：agentview、front_oblique、wrist）。证据：`runs/test_results/20260930_vla_smoke_molmoact2_buzz_wire`（`time_limit`、149 步、10 次推理、跟踪误差均值 0.018 rad）
+- [x] X-VLA · ALOHA `X-VLA-RoboTwin2`（`ee_abs`；坐标系换算见第 11 节第 4 条）。证据：`runs/test_results/20260930_vla_smoke_xvla_cast_coil`（`time_limit`、167 步、6 次推理、TCP 跟踪误差均值 9.5 mm、无 IK 失败）；单次推理 0.15 s、显存峰值 3.46 GiB
 
 **P4 约定核对**（每条写明结论和证据；影响零样本结果）
-- [ ] 第 11 节第 1–5 条
+- [x] 第 11 节第 1–5 条：结论写在第 11 节各条后。证据：`runs/test_results/20260930_vla_p4_checks`
 
 **P5 首批评测**
-- [ ] 按 P1 实测的吞吐算预算，与用户确认 seed 数和 `sim_seconds`
+- [ ] 按 P1 实测的吞吐算预算，与用户确认 seed 数和 `sim_seconds`：用户未确认；先按 3 seed × 30 s 跑首批（第 13 节）
 - [ ] 跑第 9 节矩阵，出对比表（附 `execute_steps`、实际控制频率、指令版本）
 
 **之后（等用户决定）**
@@ -351,11 +352,19 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 ## 11. 风险与待核对
 
 1. **ALOHA 关节约定**：TopoGym ALOHA 的关节零位、正方向与 openpi 的 ALOHA 约定是否一致（openpi 用 `adapt_to_pi` 做转换）。
+   - 结论：一致。TopoGym ALOHA 取自 mujoco_menagerie `aloha.xml`（rev 8161bba），关节轴（waist z；shoulder、elbow、wrist_angle y；两个 roll x）、连杆偏移和限位与 Interbotix vx300s 相同，home 等于 ACT 的 START_ARM_POSE `[0, -0.96, 1.16, 0, -0.3, 0]`，属于标准 ALOHA 约定，`adapt_to_pi=True` 与之匹配。
+   - 另：home 夹爪开度约 0.18（接近闭合），openpi 的变换会把它编码成训练中没有的状态 token（-1）；按官方变换保留，未截断。
 2. **夹爪**：各数据集夹爪值的范围和方向（DROID、X-VLA 是 1 = 闭合）。
+   - 结论：π0.5 DROID、GR00T、MolmoAct2 的输入输出都是闭合度 [0, 1]（1 = 闭合），子类用 `1 − 开度`；π0.5 DROID 与 GR00T 按官方客户端在 0.5 处二值化，MolmoAct2 截到 [0, 1] 后保持连续。π0.5 ALOHA 用归一化手指位置（1 = 全开），与标准开度同义，输出实际范围约 0.55–1.03，由适配器截到 [0, 1]。X-VLA 输出 g（1 = 闭合），按官方客户端 g > 0.7 为闭合。
+   - TopoGym Robotiq 的开度按驱动关节角换算（0 rad 全开、0.8 rad 全闭），DROID 按开口宽度换算，两者只近似线性。
 3. **相机**：TopoGym 的 agentview / wrist 与 DROID 真机相机的位置和视角差异。零样本对此敏感，只记录，不调整。
+   - 记录：TopoGym 各相机 848×480（16:9）。DROID 训练图像 320×180（16:9），GR00T、MolmoAct2 的官方客户端先缩放到该尺寸，子类照做；π0.5 由自身流程加黑边缩到 224。RoboTwin 训练图像 320×240（4:3），X-VLA 处理器直接压缩成 224×224。相机位置与视角未调整。
 4. **X-VLA 坐标系**：标准 `ee` 用 TopoGym 世界系，X-VLA 训练数据用什么坐标系要核对。若需要各臂基座在世界系的位姿，`action_spec` 里没有，需找来源；若需要改 `vla/` 以外的代码，先问用户。
+   - 结论：X-VLA 用 RoboTwin 世界系中 URDF link6 原点的位姿（RoboTwin TCP 在其 x 方向 0.12 m 处），rot6d 为 X-VLA 约定且训练和官方客户端都把 wxyz 四元数按 xyzw 读取。TopoGym 两臂相对放置，RoboTwin 两臂并排，所以每臂按自身基座映射（`vla/models/xvla/frames.py`）。TopoGym 基座位姿在仿真中实测：左 (−0.6047, −0.019, 0.9196)、偏航 0°，右 (0.3333, −0.019, 0.9196)、偏航 180°，写入 `xvla_robotwin2.yaml`；手爪坐标轴（x 前向、y 基座左、z 上）与 link6 一致。未改 `vla/` 以外的代码。
 5. **跟踪特性**：P1 / P3 测到的"目标 − 实测"与真机数据集中的量级对比。ALOHA 用源 MJCF 的位置执行器增益；Panda 的增益与 DROID 真机控制器是否一致尚未核对。
+   - 实测（每步各臂 L2 范数的最大值，均值）：HoldVLA 约 1e-8；π0.5 DROID 0.043 rad；MolmoAct2 0.018 rad；π0.5 ALOHA 0.46 rad；X-VLA 9.5 mm。DROID 数据中 `action.joint_position[t]` 与 `state[t+1]` 的逐关节平均绝对差为 0.012–0.043 rad（GR00T 调研，DROID 样例）。两者口径不同，只能比较量级。Panda 增益与 DROID 控制器的对应关系未核对。
 6. **仿真速度**：已知控制步墙钟为秒级。episode 时长和 seed 数由 P1 实测决定。
+   - 实测见第 13 节：cast_coil 每物理 tick 约 0.042 s，buzz_wire_3d 约 0.077 s（独占 GPU）。
 
 ## 12. 决定
 
@@ -379,3 +388,9 @@ vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_d
 | 2026-09-29 | 去掉 SegmentRunner；一对一连接；安装合并为 `vla/setup.sh`；记录跟踪误差 |
 | 2026-09-29 | 传输改为标准库 TCP；文档移入 `vla/docs/`；D1、D2、D4、D5 定稿 |
 | 2026-09-30 | 定稿：所有复用接口已在代码中核对；补充开始前检查（TopoGym 环境本机缺失）；接口签名、线协议格式、评测循环、结果字段、配置格式写全；指令来源更正为 5 个类属性 + 6 个 placement 任务；PolicySpec 改为 `state_keys`、去掉 `image_size`（D7、D8） |
+| 2026-09-30 | 实施 P0–P4（commit 43c2422 至 e9b6ca6，`pytest vla/tests -q` 76 项通过）。GR00T 因 gated backbone 未冒烟 |
+| 2026-09-30 | P1 实测（独占 GPU，保持动作，20 步均值）：cast_coil decimation 8 / 13 / 24 每控制步 0.35 / 0.57 / 1.00 s；buzz_wire_3d decimation 27 为 2.07 s、10 为 0.76 s；reset 17 s（cast_coil）、40 s（buzz_wire_3d）；`tick_record()` 0.03–0.08 s；仿真显存 cast_coil 2.0 GB、buzz_wire_3d 4.5 GB。模型：π0.5 服务 12.4 GB（`XLA_PYTHON_CLIENT_MEM_FRACTION=0.5`），MolmoAct2 约 9.4 GB，X-VLA 3.5 GB、单次推理 0.15 s |
+| 2026-09-30 | X-VLA 频率改为 16.7 Hz（decimation 24）、执行 30 步：RoboTwin 每 15 个 1/250 s 仿真步存一帧，官方客户端执行整个动作块；"30 Hz" 只是标签 |
+| 2026-09-30 | GR00T：DROID checkpoint 只用当前帧（`delta_indices=[0]`），去掉 1 s 历史帧；`state_keys` 改为 `[joint]`，eef_9d 由 Franka 正运动学计算（与 TopoGym 手爪位姿的相对变换在 4 个构型下恒定）；执行步数取 RoboLab 仿真验证值 8 |
+| 2026-09-30 | 评测配置按任务各一份（`buzz_wire_3d.yaml`、`cast_coil.yaml`），`run.output: null` 时自动取 `runs/test_results/<YYYYMMDD>_vla_<模型>_<任务>`，各模型配置用不同端口（8000–8004），换模型只改 `policy.address` |
+| 2026-09-30 | P5 首批：用户未确认预算，先按每模型 3 seed × 30 s 顺序运行 π0.5 DROID、MolmoAct2（buzz_wire_3d）与 X-VLA、π0.5 ALOHA（cast_coil），结果见 `runs/test_results/20260930_vla_batch1_*` |
