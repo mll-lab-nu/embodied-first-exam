@@ -89,6 +89,9 @@ for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
 det = bool(d.get("deterministic")); ok = bool(d.get("success")) and det
 out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.get("finalized"))), "control_steps": int(d.get("control_steps") or 0),
        "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
+# no verdict on the agent: the service crashed (restart refused) or its verification replay failed
+if d.get("infra_error") or d.get("finalize_error"):
+    out.update(infra_error=1, grader_error=int(bool(d.get("finalize_error"))), reason=str(d.get("reason") or ""), finalize_error=str(d.get("finalize_error") or "")[:300])
 if "progress" in d:
     out.update(progress=float(d.get("progress") or 0.0) if det else 0.0, goals_reached=int(d.get("goals_reached") or 0), n_goals=int(d.get("n_goals") or 0),
                failed_on_timeout=int(bool(d.get("failed_on_timeout"))))
