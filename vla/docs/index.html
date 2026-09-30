@@ -458,7 +458,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
 <tr><td>一个进程只能有一个活跃 <code>Env</code>（Genesis 全局状态）</td><td>多任务评测逐个 <code>with make()</code>，或开多个仿真进程</td></tr>
 <tr><td>关节或夹爪越界时 <code>step</code> 抛 <code>ValueError</code>，不自动截断</td><td>适配器必须截断</td></tr>
 <tr><td>夹爪是原生关节坐标（米 / 弧度），不是开口宽度</td><td>适配器负责归一化与反归一化</td></tr>
-<tr><td>13 个任务中只有 5 个有英文 <code>instruction</code></td><td>需要一份版本化的 instruction 文件</td></tr>
+<tr><td>13 个任务中 11 个有英文指令：5 个是 <code>instruction</code> 类属性，6 个 placement 任务经 <code>obs["task"]["instruction"]</code> 公开；cast_coil、blanket_flatten 没有</td><td>需要一份版本化的 instruction 文件，补 2 条</td></tr>
 <tr><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 <code>simulator/</code>、<code>tasks/</code></td><td>VLA 代码放在仓库根 <code>vla/</code>，不放进 <code>topogym/</code> 包</td></tr>
 </tbody></table></div>
 </section>
@@ -932,7 +932,7 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
 <tr><td>控制频率</td><td>已定：<code>control_decimation = round(400 / 数据频率)</code>，结果记录实际频率（DROID 15 Hz → 27，即 14.81 Hz）</td><td>与数据频率误差 ≤ 2.6%；不写时间重采样代码</td></tr>
 <tr><td>辅助抓持</td><td>已定：零样本评测关闭</td><td>开与不开的成绩不能比较；真机数据没有辅助抓持</td></tr>
 <tr><td>传输</td><td>已定：标准库 TCP（<code>multiprocessing.connection</code>）</td><td>TopoGym 环境不装新包</td></tr>
-<tr><td>instruction</td><td>待确认：新建 <code>vla/configs/instructions.yaml</code>，补齐 8 个任务</td><td>13 个任务中只有 5 个有 <code>instruction</code></td></tr>
+<tr><td>instruction</td><td>待确认：新建 <code>vla/configs/instructions.yaml</code>，起草 cast_coil、blanket_flatten 两条</td><td>其余 11 个任务的指令可从代码取</td></tr>
 <tr><td>首批任务</td><td>cast_coil、cast_keyhole（ALOHA）；buzz_wire_3d（Panda）</td><td>刚体、有参考解；FEM 任务显存与耗时更高且无可解证据</td></tr>
 </tbody></table></div>
 </section>
@@ -1138,7 +1138,7 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
 <!-- ============ 5 ============ -->
 <section id="s5">
 <h2><span class="num">05</span>落地顺序与评测成本</h2>
-<p>当前阶段只评测。完整任务清单（含验收标准与 TODO）在 <code>vla/docs/IMPL_PLAN.md</code>，供 coding agent 使用。</p>
+<p>当前阶段只评测。完整任务清单（含验收标准与 TODO）在 <code>vla/docs/IMPL_PLAN.md</code>，供 coding agent 使用；实现细节与本页不一致时以它为准。</p>
 <div class="phases">
   <div class="phase"><span class="p">P0</span><span class="t">协议 + 适配</span><span>protocol、wire、EmbodimentAdapter、VLAAgent、LocalClient、占位模型、单测</span><span class="done">单测通过，不依赖 GPU</span></div>
   <div class="phase"><span class="p">P1</span><span class="t">评测循环 + 录像</span><span>run_eval、instructions.yaml、recorder</span><span class="done">cast_coil 与 buzz_wire_3d 冒烟有结果与 MP4</span></div>
@@ -1183,16 +1183,16 @@ listener = Listener((<span class="s">"localhost"</span>, args.port))            
   // ---- tasks ----
   var TASKS=[
     ["cast_coil","双件交替四层装配","aloha","rigid",1,0],
-    ["cast_keyhole","钥匙孔解锁分离","aloha","rigid",1,0],
-    ["horseshoe_ring","马蹄环取环","aloha","rigid",0,0],
-    ["interlocked_claws","双爪互锁分离","aloha","rigid",0,0],
+    ["cast_keyhole","钥匙孔解锁分离","aloha","rigid",1,1],
+    ["horseshoe_ring","马蹄环取环","aloha","rigid",0,1],
+    ["interlocked_claws","双爪互锁分离","aloha","rigid",0,1],
     ["blanket_flatten","被子展平","aloha","soft",0,0],
     ["rope_threading","绳穿环","aloha","soft",0,1],
     ["knot_untying","解绳结","aloha","soft",0,1],
-    ["orbits","阶梯解绳","aloha","soft",0,0],
-    ["slotted_post_ring","长孔立柱解环","aloha","soft",0,0],
+    ["orbits","阶梯解绳","aloha","soft",0,1],
+    ["slotted_post_ring","长孔立柱解环","aloha","soft",0,1],
     ["buzz_wire_3d","立体电流棒","panda","rigid",0,1],
-    ["hedgehog_in_cage","刺球出笼","panda","rigid",0,0],
+    ["hedgehog_in_cage","刺球出笼","panda","rigid",0,1],
     ["lock_picking","开锁","panda","rigid",0,1],
     ["fiber_bundling","光纤收束","panda","rigid",0,1]
   ];

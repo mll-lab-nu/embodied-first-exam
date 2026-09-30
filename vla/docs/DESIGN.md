@@ -2,6 +2,8 @@
 
 日期：2026-09-29（第 2 版）。可视化版本见同目录 [`index.html`](index.html)，截图在 [`img/`](img/)。
 
+> 本文是设计背景与调研。实现以 [`IMPL_PLAN.md`](IMPL_PLAN.md) 为准，两者不一致时（如接口字段、图像缩放位置）以实施计划为准。
+
 ---
 
 ## 0. 结论速览
@@ -107,7 +109,7 @@ cast_coil 实测每控制步 6–10 s 墙钟（GPU 与其他进程共用），�
 | 一个进程只能有一个活跃 `Env` | 多任务逐个 `with make()`，或开多个仿真进程 |
 | 关节或夹爪越界时 `step` 抛 `ValueError` | 适配器必须截断 |
 | 夹爪是原生关节坐标 | 适配器负责归一化与反归一化 |
-| 13 个任务中 5 个有英文 `instruction` | 需要版本化的 instruction 文件 |
+| 13 个任务中 11 个有英文指令：5 个是 `instruction` 类属性，6 个 placement 任务经 `obs["task"]["instruction"]` 公开；cast_coil、blanket_flatten 没有 | 需要版本化的 instruction 文件，补 2 条 |
 | 架构测试禁止 `topogym.policies`；`docs/vla_doc` 要求不改 `simulator/`、`tasks/` | VLA 代码放在仓库根 `vla/` |
 
 ---
@@ -417,7 +419,7 @@ vla/                              只改这个目录
 | 控制频率 | 已定：`control_decimation = round(400 / 数据频率)`，结果记录实际频率（DROID 15 Hz → 27，即 14.81 Hz） | 与数据频率误差 ≤ 2.6%；不写时间重采样代码 |
 | 辅助抓持 | 已定：零样本评测关闭 | 开与不开的成绩不能比较；真机数据没有辅助抓持 |
 | 传输 | 已定：标准库 TCP（`multiprocessing.connection`） | TopoGym 环境不装新包 |
-| instruction | 待确认：新建 `vla/configs/instructions.yaml`，补齐 8 个任务 | 13 个任务中只有 5 个有 |
+| instruction | 待确认：新建 `vla/configs/instructions.yaml`，起草 cast_coil、blanket_flatten 两条 | 其余 11 个任务的指令可从代码取 |
 | 首批任务 | cast_coil、cast_keyhole（ALOHA）；buzz_wire_3d（Panda） | 刚体、有参考解；FEM 任务显存与耗时更高 |
 
 ---

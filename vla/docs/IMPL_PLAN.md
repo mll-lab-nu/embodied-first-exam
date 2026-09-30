@@ -2,182 +2,380 @@
 
 | 项 | 值 |
 |---|---|
-| 状态 | P0 未开始 |
+| 状态 | 计划定稿，P0 未开始 |
 | 目标 | 只评测（零样本）：用各模型官方 checkpoint，不微调 |
-| 分支 | `dev/pingyue`；不提交 `main`，不 push（除非用户要求） |
-| 设计文档 | [`DESIGN.md`](DESIGN.md)、[`index.html`](index.html)（同目录 `vla/docs/`） |
-| 更新 | 2026-09-29 |
+| 分支 | `dev/pingyue`；不提交 `main`；不 push（除非用户要求） |
+| 范围 | 只改仓库根 `vla/` |
+| 背景 | [`DESIGN.md`](DESIGN.md)：设计背景与模型调研（各模型输入输出见 4.5）；[`index.html`](index.html)：可视化版本 |
+| 更新 | 2026-09-30 |
 
-**用法**：开始前读第 1–5 节。完成一项就勾选，并在该项后写 `证据：<路径 / 命令 / commit>`；没有证据不勾。改计划时在第 10 节追加记录。"待确认"的事项先问用户。
+**给实现者**：新 session 从本文件开始。本文件是实现的唯一依据，与 `DESIGN.md` 不一致时以本文件为准。先读第 0–8 节，再按第 10 节做。每完成一项就勾选，并在该项后写 `证据：<路径 / 命令 / commit>`，没有证据不勾。改计划时在第 13 节追加记录。标"待确认"的事项先问用户。
 
 ---
 
+## 0. 开始前
+
+1. `git branch --show-current` 必须是 `dev/pingyue`。
+2. 读仓库根的 `CLAUDE.md` 和 `AGENTS.md`，照做：先读后写、最小改动、不过度抽象、用测试验证。
+3. **TopoGym 环境**：`.venv-gs121-nyx`（Genesis 1.2.1 + Nyx，Python 3.11），渲染资源在 `.external/nyx-assets`，运行前执行 `export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"`。
+   - 2026-09-30 检查时，本机两样都没有。**先问用户**：用哪台机器，是否用 `CUDA_TAG=<cu 标签> INSTALL_NYX=1 VENV_DIR=.venv-gs121-nyx bash env_setup_gs121.sh` 新建，nyx-assets 从哪里取。
+   - P0 的适配器测试需要 `import topogym` 并构建 `action_spec`，不需要 GPU；CPU 版 `.venv-gs121`（`bash env_setup_gs121.sh`）就够。协议、agent、服务的测试只依赖 numpy。
+4. **硬件**：本机 1 张 RTX 4090（24 GB）。刚体任务的仿真约占 2–3 GB 显存，模型与仿真同卡。显存不够时不要启动，把命令交给用户。
+
 ## 1. 原则
 
-1. **只改 `vla/`**。不改仓库其他目录（`topogym/`、`tasks/`、`tests/`、`configs/`、`scripts/` 等）。确需改动时停下来，列出文件和原因，问用户。
-2. **复用已有代码**（第 3 节）。仿真器已有的功能（环境循环、动作校验、观测、录像）不重写。
-3. **Simple**：协议 3 个数据类；Gym 侧一个通用适配器；每个模型一个子类；不加插件框架和用不到的配置项。
-4. **依赖隔离**：模型不装进 TopoGym 环境（`env_setup_gs121.sh` 建的 `.venv-gs121`），每个模型一个独立环境。TopoGym 环境不装任何新包：传输只用 Python 标准库（第 5 节）。不装 `openpi-client`，它要求 `numpy<2`，与 TopoGym 的 `numpy==2.4.4` 冲突。
-5. **证据**：真实运行的产物放 `runs/test_results/<日期>_vla_<名称>/`。静态检查和单测不能当作"模型能跑 / 成功"的证据。显存不够时不要启动，给用户 CLI。CPU 或内存到 90% 时停止本轮启动的进程。
+1. **只改 `vla/`**。仓库其他目录（`topogym/`、`tasks/`、`tests/`、`configs/`、`scripts/`、`docs/` 等）一律不改。确需改动时停下来，列出文件和原因，问用户。
+2. **复用已有代码**（第 8 节）：环境循环、动作校验、观测、录像都不重写。
+3. **Simple**：
+   - 协议只有 3 个数据类；Gym 侧一个通用适配器；每个模型一个子类。
+   - 事实写在配置里，逻辑写在代码里。
+   - 没有注册表、插件框架或用不到的配置项。
+   - 代码风格跟 `topogym/` 一致：短 docstring、dataclass、直接的函数。
+4. **依赖隔离**：
+   - TopoGym 环境不装任何新包，传输只用标准库。
+   - 每个模型一个独立环境，放在 `vla/.envs/<model>/`。
+   - 不装 `openpi-client`：它要求 `numpy<2`，TopoGym 是 `numpy==2.4.4`。
+5. **证据**：
+   - 真实运行的产物放 `runs/test_results/<YYYYMMDD>_vla_<名称>/`（`runs/` 已被 git 忽略）。
+   - 单测和静态检查不能作为"模型能跑 / 评测成功"的证据。
+   - CPU 或内存到 90% 时，停止本轮启动的进程。
 
 ## 2. 完成标准
 
 - 换模型只改评测配置里的 `policy.address`。
-- 每个 episode 在 `results.jsonl` 里有一行、每路相机一个 MP4。结果分为 `success / task_failure / time_limit / unevaluated / invalid_action / policy_error / env_error`。
-- 首批矩阵（第 7 节）跑完，出对比表。零样本成功率预期接近 0，结论只写测得的数字。
+- 每个 episode 在 `results.jsonl` 里写一行（字段见第 6 节）；开录像时，每路相机一个 MP4。
+- `pytest vla/tests -q` 全部通过。
+- 首批矩阵（第 9 节）跑完并出对比表。零样本成功率预期接近 0，结论只写测到的数字。
 
-## 3. 复用什么
+## 3. 架构
 
-| 已有代码 | 用法 |
-|---|---|
-| `topogym.make` / `Env` / `env.interaction()` | 直接用：管理方 reset，策略只拿操作句柄 |
-| `actor.action_spec`（臂顺序、关节名、限位、夹爪字段和范围） | 驱动通用适配器，不另写机器人描述 |
-| `docs/vla_doc/vla_eval_demo.py`：`VLAPolicy`、`classify`、`run_episode`、`GRIPPER_OPEN_CLOSED` | 拆成 adapter / agent / run_eval，字段约定保持一致 |
-| `topogym.recording.session.RecordingSession` + `env.add_frame_sink` | 录像，不写视频代码 |
-| `env.tick_record()["robot"]`（即 `robot.observe()`） | 完整本体感知：关节 + TCP 位姿（GR00T 需要，先实测开销）；`joint_position_target_rad`（算跟踪误差） |
-| 任务类的 `instruction` 属性 | 5 个任务的指令来源 |
-| OmegaConf（hydra-core 已是项目依赖） | 读评测配置和命令行覆盖 |
-
-## 4. 结构
+两个进程、两个 Python 环境，用本机 TCP 一对一连接：
 
 ```text
-Gym 进程（TopoGym 环境）= 客户端                     模型进程（每个模型独立环境）= 服务端
-run_eval ─ Env ─ VLAAgent ─ Adapter ─ Client ⇄ TCP ⇄ serve ─ BaseVLA 子类 ─ 官方推理代码
+评测进程 · TopoGym 环境（.venv-gs121-nyx）                   模型进程 · 模型环境（vla/.envs/<model>）
+run_eval ─ Env ─ VLAAgent ─ Adapter ─ RemoteClient ⇄ TCP ⇄ serve ─ BaseVLA 子类 ─ 官方推理代码
 ```
+
+- **评测进程是客户端**，驱动循环：reset、seed、step、录像、打分都在这里。
+- **模型进程是服务端**，只回答"观测 → 动作块"。它同一时间只接受一个连接；评测进程断开后，等待下一个连接。
+- `LocalClient` 在评测进程内直接调用 `BaseVLA`，只用于测试和 `HoldVLA`。
+
+## 4. 目录
 
 ```text
 vla/
-├── README.md                 快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
-├── setup.sh                  唯一安装入口：setup.sh pi05 | groot | molmoact2 | xvla
-├── protocol.py               PolicySpec / Observation / ActionChunk + 编解码（两侧共用，只用标准库 + numpy）
-├── gym/                      只在 TopoGym 环境使用
-│   ├── adapter.py            通用适配器：TopoGym obs ⇄ 标准向量（由 action_spec 驱动）
-│   ├── agent.py              VLAAgent：initialize / act + 动作块队列
-│   ├── client.py             RemoteClient（TCP）、LocalClient（同进程，单测用）
-│   └── run_eval.py           读配置 → 评测 → results.jsonl / summary.json / MP4
-├── models/                   只在各模型环境使用
-│   ├── base.py  serve.py     BaseVLA；TCP 服务
-│   ├── dummy.py              HoldVLA（重复当前 state，用于测试链路）
-│   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
+├── README.md              快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
+├── setup.sh               建模型环境：bash vla/setup.sh <pi05|groot|molmoact2|xvla>
+├── .gitignore             .envs/  third_party/
+├── __init__.py
+├── protocol.py            PolicySpec / Observation / ActionChunk、encode / decode（标准库 + numpy）
+├── gym/                   只在 TopoGym 环境运行；可 import topogym
+│   ├── adapter.py         Adapter：TopoGym 观测 / 动作 ⇄ 标准向量
+│   ├── agent.py           VLAAgent：动作块队列
+│   ├── client.py          RemoteClient、LocalClient、PolicyError
+│   └── run_eval.py        入口：读配置 → 评测 → results.jsonl / summary.json / MP4
+├── models/                只在模型环境运行；不 import topogym
+│   ├── base.py            BaseVLA
+│   ├── serve.py           入口：读模型配置 → 加载 → TCP 服务
+│   ├── dummy.py           HoldVLA：把当前 state 重复成动作块，用于测试链路
+│   └── pi05/ groot/ molmoact2/ xvla/      每个目录一个 model.py
 ├── configs/
-│   ├── eval/*.yaml           评测配置
-│   ├── models/*.yaml         服务配置（模型、checkpoint、端口）
-│   └── instructions.yaml     每个任务的英文指令（带版本号）
-├── tests/                    不需要 GPU 的单测
-└── docs/                     DESIGN.md（设计）· index.html + img/（artifact 源文件）· IMPL_PLAN.md（本文件）
+│   ├── models/*.yaml      一个 checkpoint 一个文件（第 7 节）
+│   ├── eval/*.yaml        一次评测一个文件（第 7 节）
+│   └── instructions.yaml  每个任务的英文指令，带版本号
+├── tests/                 不需要 GPU
+└── docs/                  本文件、DESIGN.md、index.html + img/
 ```
 
-**`setup.sh`**：只给模型建环境，TopoGym 环境不用动。每个模型走同样 4 步：克隆官方仓库到固定 commit → 建 `vla/.envs/<model>/` → 按官方 README 安装，再装 `omegaconf`（读服务配置）→ 下载 checkpoint。每个模型在 `case` 里只写 4 项：仓库、commit、安装命令、checkpoint。`vla/.gitignore` 忽略 `.envs/` 和克隆的仓库。
+**`setup.sh`** 只给模型建环境，TopoGym 环境不动。每个模型走同样的步骤：
+1. 把官方仓库克隆到 `vla/third_party/<model>`，检出固定 commit；
+2. 用 uv 建 `vla/.envs/<model>`；
+3. 按官方 README 安装，再装 `omegaconf`；
+4. 下载 checkpoint 到官方默认缓存目录；
+5. 做一次 import 冒烟检查。
 
-## 5. 接口要点
+每个模型在 `case` 分支里只写 5 项：仓库、commit、Python 版本、安装命令、checkpoint。
 
-**术语**：policy 指任意"观测 → 动作"的映射，VLA 是其中一种。接口层按 policy 命名（`PolicySpec`、`policy.address`、`policy_error`），模型层按 VLA 命名（`BaseVLA`、`HoldVLA`）。
+## 5. 接口
 
-**数据类**（`vla/protocol.py`）：
+```python
+# vla/protocol.py —— 两侧共用
+PROTOCOL_VERSION = 1
 
-| 类 | 字段 |
-|---|---|
-| `PolicySpec`（服务端连接时发送） | `protocol_version`、`name`、`embodiment`（aloha / panda_robotiq）、`cameras`、`image_size`、`action_space`（joint_abs / ee_abs）、`control_hz`、`chunk_size`、`execute_steps` |
-| `Observation` | `images`（相机名 → HWC uint8）、`state`（当前实测本体感知，扁平向量）、`instruction`、`episode_id`、`step` |
-| `ActionChunk` | `actions`（H × D，绝对目标） |
+@dataclass(frozen=True)
+class PolicySpec:              # 服务端连接后第一条消息；内容来自模型配置的 spec 段
+    name: str                  # checkpoint 名，如 "pi05_droid_jointpos"
+    embodiment: str            # TopoGym robot_id："aloha" | "panda_robotiq"
+    cameras: tuple[str, ...]   # 需要的 TopoGym 相机名，顺序对应子类里官方图像键的顺序
+    state_keys: tuple[str, ...]  # ("joint",) | ("ee",) | ("joint", "ee")
+    action_space: str          # "joint_abs" | "ee_abs"
+    control_hz: float          # 训练数据的控制频率
+    chunk_size: int            # H：每次推理预测的控制步数
+    execute_steps: int         # k：执行前 k 步后重新推理，其余丢弃；取官方示例值
+    protocol_version: int = PROTOCOL_VERSION
 
-`chunk_size` = 每次推理预测的控制步数 H；`execute_steps` = 执行其中前 k 步后重新推理，其余 H − k 步丢弃。
+@dataclass(frozen=True)
+class Observation:
+    images: dict[str, np.ndarray]   # 相机名 → (480, 848, 3) uint8，原始分辨率；缩放等预处理在模型子类里用官方代码做
+    state: dict[str, np.ndarray]    # state_keys 中每个键 → 标准向量（float32，当前实测值）
+    instruction: str
+    episode_id: str
+    step: int                       # 控制步序号，从 0 开始
 
-**标准向量**：ALOHA `joint_abs` 14 维 `[左 6, 左开度, 右 6, 右开度]`；Panda 8 维 `[7, 开度]`。`ee_abs` 每臂 `[xyz, rot6d, 开度]`（ALOHA 20 维，Panda 10 维）。开度 ∈ [0, 1]，1 = 全开。相对量在模型子类里换算成绝对值。
+@dataclass(frozen=True)
+class ActionChunk:
+    actions: np.ndarray             # (H, D) float32，绝对目标，按 action_space 的标准向量排列
+```
 
-**适配器**：一个类，两种机器人共用。臂顺序、关节名、限位、夹爪字段都从 `action_spec` 读取。每种机器人只有一行常量：夹爪开 / 合值（沿用 `GRIPPER_OPEN_CLOSED`）和默认相机。越界先截断再交给 `step`。
+```python
+# vla/models/base.py
+class BaseVLA(ABC):
+    def __init__(self, config): ...                   # 模型配置（第 7 节）；self.spec = PolicySpec(**config.spec)
+    @abstractmethod
+    def load(self) -> None: ...                       # 加载 checkpoint 到 GPU
+    @abstractmethod
+    def infer(self, obs: Observation) -> ActionChunk: ...
+    def reset(self, seed: int) -> None: ...           # 清空历史帧，设随机种子
 
-**消息**（TCP，标准库 `multiprocessing.connection`）：每条消息 = JSON 头 + 数组原始字节，dtype 和 shape 写在头里；只用 `send_bytes` / `recv_bytes`，不用 pickle。服务端先发 `spec`；客户端发 `reset(seed)` → `ok`；`infer(obs)` → `chunk(actions)`；出错回 `error`，客户端记为 `policy_error`。一对一：一个评测进程连一个模型服务，服务端同一时间只接受一个连接；`reset` 清空模型内部状态（历史帧、随机种子）。
+# vla/gym/*
+Adapter(action_spec, spec)
+    .observation(rgb, robot, instruction, episode_id, step) -> Observation
+    .action(row) -> dict                              # 一行标准向量 → TopoGym 动作字典（先截断）
+VLAAgent(client, adapter, execute_steps)
+    .reset(seed, instruction)                         # 调 client.reset(seed)，清空队列
+    .act(rgb, robot) -> dict                          # 队列为空时推理一次；检查块形状 (H, D) 且全部有限
+RemoteClient(address) / LocalClient(model)            # 都有 .spec、.reset(seed)、.infer(obs)、.close()
+```
 
-**PolicySpec → `topogym.make`**：`embodiment → robot_id`；`action_space → control_mode`（`JOINT_ABS` / `EE_ABS`）与 `observation_mode`；`control_hz → control_decimation = 400 / control_hz`（非整数时见 D2）。
+**标准向量**：臂的顺序取 `action_spec["arms"]`（ALOHA 为 `left, right`）。
 
-## 6. 评测配置
+| 键 / action_space | 每臂布局 | ALOHA | Panda |
+|---|---|---|---|
+| `joint` / `joint_abs` | `[q₁ … qₙ, 开度]`，单位 rad | 14 | 8 |
+| `ee` / `ee_abs` | `[x, y, z, r₁ … r₆, 开度]`，TopoGym 世界系，单位 m | 20 | 10 |
+
+- `r₁…r₆`：旋转矩阵前两列按列展开，即 `[R11, R21, R31, R12, R22, R32]`。转回时先 Gram–Schmidt 正交化，再转成 `orientation_wxyz`。
+- **开度** ∈ [0, 1]，1 = 全开。计算方法：`clip((原生值 − 全闭) / (全开 − 全闭), 0, 1)`。
+  - 观测的原生值取 `finger_position_*[0]`。
+  - 全开 / 全闭沿用 `vla_eval_demo.py` 的 `GRIPPER_OPEN_CLOSED`：aloha `(0.037, 0.002)` m，panda_robotiq `(0.0, 0.8)` rad。
+- **动作截断**：关节截断到 `joint_limits_rad`，开度截断到 [0, 1]；`ee` 不截断，IK 失败会记为 `invalid_action`。截断次数写进结果。
+- 模型自己的约定由模型子类换算，包括相对 / 绝对、夹爪方向、坐标系。
+
+**线协议**（标准库 `multiprocessing.connection`，`Listener` / `Client`，不设 authkey，默认只监听 localhost）：
+- 每条消息用一次 `send_bytes` 发送，格式为 `[4 字节大端 header 长度][header：UTF-8 JSON][数组 1 原始字节][数组 2]…`。
+- header 为 `{"msg": <消息，数组位置换成 {"__array__": i}>, "arrays": [{"dtype": "uint8", "shape": [480, 848, 3]}, …]}`。
+- 数组先转成 C 连续。只收发字节，不用 `send` / `recv`（它们走 pickle）。
+
+| 方向 | `type` | 内容 |
+|---|---|---|
+| 服务端 → 客户端 | `spec` | PolicySpec 字段；客户端校验 `protocol_version` |
+| 客户端 → 服务端 | `reset` → 回 `ok` | `seed` |
+| 客户端 → 服务端 | `infer` → 回 `chunk` | Observation 字段 → `actions` |
+| 服务端 → 客户端 | `error` | `message`（traceback 文本）；客户端抛 `PolicyError` |
+
+客户端每次等待回复的超时写成常量 600 s，首次推理有 JIT 编译。超时或断开都抛 `PolicyError`。
+
+## 6. 评测循环
+
+```python
+# vla/gym/run_eval.py（示意）
+client = RemoteClient(cfg.policy.address)             # 测试时换成 LocalClient(HoldVLA(config))
+spec = client.spec
+dt = SimulatorConfig.physics_dt_s                     # 0.0025 s
+make_args = dict(variation_id=cfg.task.variation,
+                 control_mode={"joint_abs": "JOINT_ABS", "ee_abs": "EE_ABS"}[spec.action_space],
+                 observation_mode="EE" if spec.state_keys == ("ee",) else "JOINT",
+                 control_decimation=round(1 / (spec.control_hz * dt)),
+                 max_physics_steps=round(cfg.task.sim_seconds / dt), **cfg.env)
+with topogym.make(cfg.task.id, **make_args) as env:
+    for seed in cfg.task.seeds:
+        env.reset(seed=seed)
+        actor = env.interaction()
+        # 先检查 actor.action_spec["robot_id"] == spec.embodiment，不一致就停
+        agent = VLAAgent(client, Adapter(actor.action_spec, spec), execute_steps)
+        agent.reset(seed, instruction)
+        # 录像：RecordingSession(out / f"seed_{seed}", fps=30, metadata=...) 进入后 append(env.sensor_frame())，
+        #       再 stop = env.add_frame_sink(rec.append)
+        obs = actor.observe()
+        while True:
+            robot = env.tick_record()["robot"] if needs_joint_and_ee else obs["robot"]
+            action = agent.act(obs["rgb"], robot)              # PolicyError → policy_error
+            obs, _, terminated, truncated, info = actor.step(action)
+                                                               # ValueError → invalid_action；RuntimeError → env_error
+            # 跟踪误差：发出的臂目标 − 下一次观测的实测值（关节 rad 或 TCP 位置 m），不含夹爪
+            if terminated or truncated:
+                outcome = classify(info); break                # classify 照搬 vla_eval_demo.py
+        # 录像：stop()；若 Env 未故障则 append_final(env.sensor_frame())；finish(row)；以 commit=True 关闭
+```
+
+- **输出目录**：必须尚不存在，不覆盖旧结果。
+- **`results.jsonl` 每行字段**：
+  - 任务：`task`、`variation`、`seed`、`model`（spec.name）、`instruction_version`；
+  - 结果：`outcome`、`task_success`、`failure_code`、`sim_time_s`；
+  - 控制：`control_steps`、`inference_calls`、`execute_steps`、`control_decimation`、`control_hz_actual`；
+  - 诊断：`tracking_error_mean`、`tracking_error_max`、`clipped_actions`、`reset_wall_s`、`rollout_wall_s`、`error`。
+- **`outcome` 取值**：`success`、`task_failure`、`time_limit`、`unevaluated`、`unfinished`、`invalid_action`、`policy_error`、`env_error`。
+- **`summary.json`**：成功率、各类结果计数、完整配置快照、`git rev-parse HEAD`。
+
+## 7. 配置
+
+```yaml
+# vla/configs/models/pi05_droid_jointpos.yaml（数值在 P3 按官方代码核对）
+class_path: vla.models.pi05.model.Pi05      # serve.py 用 importlib 按此加载，不设注册表
+checkpoint: <官方 checkpoint 路径或 ID>
+port: 8000
+spec:
+  name: pi05_droid_jointpos
+  embodiment: panda_robotiq
+  cameras: [agentview, wrist]
+  state_keys: [joint]
+  action_space: joint_abs
+  control_hz: 15
+  chunk_size: 15
+  execute_steps: 8
+model: {}                                   # 子类专属参数，如归一化统计量名
+```
 
 ```yaml
 # vla/configs/eval/pi05_droid_buzz_wire.yaml
 policy:
-  address: localhost:8000          # 换模型只改这里
+  address: localhost:8000        # 换模型只改这里
 task:
   id: buzz_wire_3d
   variation: base
   seeds: [0, 1, 2]
   sim_seconds: 60
 run:
-  execute_steps: null               # null = 用 PolicySpec 默认值
+  execute_steps: null            # null = 用 PolicySpec.execute_steps
   record: true
   output: runs/test_results/20261001_vla_pi05_buzz_wire
-env: {}                             # 额外透传给 topogym.make 的参数（如 grasp_assist）
+env: {}                          # 透传给 topogym.make；辅助抓持默认关闭，这里不设
 ```
 
 ```bash
-bash vla/setup.sh pi05                                                                 # 一次性
+bash vla/setup.sh pi05                                                          # 一次性
 vla/.envs/pi05/bin/python -m vla.models.serve --config vla/configs/models/pi05_droid_jointpos.yaml
-python -m vla.gym.run_eval --config vla/configs/eval/pi05_droid_buzz_wire.yaml \
-    task.seeds=[0] run.record=false                                                  # TopoGym 环境，命令行覆盖
+.venv-gs121-nyx/bin/python -m vla.gym.run_eval --config vla/configs/eval/pi05_droid_buzz_wire.yaml \
+    task.seeds=[0] run.record=false                                             # OmegaConf 命令行覆盖
 ```
 
-## 7. 首批矩阵（零样本）
+两个命令都从仓库根运行，所以两边都能 `import vla`。
 
-| 机器人 · 任务 | 模型 · checkpoint | 数据频率 → `control_decimation`（实际频率） |
+## 8. 复用（2026-09-30 已在代码中核对）
+
+| 已有代码 | 用法 |
+|---|---|
+| `topogym.make(task_id, **SimulatorConfig 字段)`，`with` 管理生命周期 | 参数：`variation_id`、`control_mode`、`observation_mode`、`control_decimation`、`max_physics_steps`、`grasp_assist`（默认关闭） |
+| `env.reset(seed=)`、`env.interaction()` → `actor.step / observe / action_spec` | 评测进程是管理方，只把观测交给 agent；`actor.step` 返回公开 info |
+| `actor.action_spec`：`robot_id`、`arms`、`groups[arm]`（`arm_joint_names`、`joint_limits_rad`、`gripper_field`、`gripper_limits`、`fields`） | 驱动 Adapter，不另写机器人描述 |
+| 观测 `obs["rgb"][相机]`（480×848×3 uint8）、`obs["robot"][arm]` | JOINT 模式有 `joint_position_rad`、`joint_velocity_rad_s`、`finger_position_*`；EE 模式有 `tcp_position_world_m`、`tcp_orientation_wxyz`、`finger_position_*` |
+| `env.tick_record()["robot"]` | 同时需要关节和 TCP 时使用（GR00T）；它会读取整个世界状态，P1 实测开销 |
+| `docs/vla_doc/vla_eval_demo.py`：`GRIPPER_OPEN_CLOSED`、`CAMERAS`、`classify`、`run_episode`、`VLAPolicy.state / to_action` | 移植到 adapter / agent / run_eval，字段约定保持一致（不 import docs 下的文件） |
+| `RecordingSession(output, fps=30, metadata=)` + `env.add_frame_sink` + `env.sensor_frame()`；用法参考 `topogym/recording/segment.py` 的 `SegmentMedia` | 录像；Env 每个控制步把帧推给 sink |
+| 指令：5 个任务有 `instruction` 类属性（buzz_wire_3d、rope_threading、lock_picking、fiber_bundling、knot_untying）；6 个 placement 任务在 reset 后从 `obs["task"]["instruction"]` 读（orbits、hedgehog_in_cage、horseshoe_ring、cast_keyhole、slotted_post_ring、interlocked_claws） | 生成 `instructions.yaml` 的初始内容；cast_coil、blanket_flatten 没有指令，需要起草（D3） |
+| 相机：aloha `cam_high`、`cam_low`、`cam_left_wrist`、`cam_right_wrist`；panda_robotiq `agentview`、`front_oblique`、`wrist` | 供 `spec.cameras` 选用 |
+| OmegaConf（TopoGym 依赖中已有 `omegaconf==2.3.0`） | 读配置、命令行覆盖 |
+
+## 9. 首批矩阵（零样本）
+
+| 机器人 · 任务 | checkpoint | 数据频率 → `control_decimation`（实际频率） |
 |---|---|---|
-| Panda · `buzz_wire_3d` | π0.5 `pi05_droid_jointpos`；GR00T `GR00T-N1.7-DROID`；MolmoAct2 `MolmoAct2-DROID` | DROID 15 Hz → 27（14.81 Hz） |
-| ALOHA · `cast_coil` | π0.5 `pi05_base`（trossen 统计量） | ALOHA 50 Hz → 8（50 Hz） |
-| ALOHA · `cast_coil` | X-VLA `X-VLA-RoboTwin2`（`ee_abs`） | 30 Hz → 13（30.77 Hz）；频率在 P3 按官方代码核对 |
+| Panda · `buzz_wire_3d` | π0.5 `pi05_droid_jointpos`；GR00T `GR00T-N1.7-DROID`；MolmoAct2 `MolmoAct2-DROID` | 15 Hz → 27（14.81 Hz） |
+| ALOHA · `cast_coil` | π0.5 `pi05_base` + trossen 归一化统计量 | 50 Hz → 8（50 Hz） |
+| ALOHA · `cast_coil` | X-VLA `X-VLA-RoboTwin2`（`ee_abs`） | 30 Hz → 13（30.77 Hz） |
 
-`control_decimation = round(400 / 数据频率)`（物理步长 2.5 ms）。实际频率写进结果。
+`control_decimation = round(1 / (control_hz × 0.0025))`。各模型的输入输出细节见 `DESIGN.md` 4.5，数值在 P3 按官方代码核对。
 
-## 8. TODO
+## 10. TODO
 
-**P0 骨架（无 GPU）**
-- [ ] `protocol.py` + 单测：编解码往返逐位相等（含 uint8 图像、float32 向量）
-- [ ] `gym/adapter.py` + 单测：两种机器人的 state 排列、开度换算、截断、动作字典
-- [ ] `gym/agent.py` + 单测：H=50、execute=10 时，25 次 `act` 只推理 3 次
-- [ ] `gym/client.py`（LocalClient）、`models/base.py`、`models/dummy.py`
-- [ ] `setup.sh` 公共步骤、`README.md` 初版
+**P0 骨架（无 GPU）** — 验收：在 TopoGym 环境里 `pytest vla/tests -q` 全部通过
+- [ ] 包结构、`vla/.gitignore`
+- [ ] `protocol.py` + 测试：
+  - 嵌套 dict 中的 uint8、float32、float64 数组编解码往返逐位相等；
+  - 协议版本不一致时报错。
+- [ ] `gym/adapter.py` + 测试：
+  - 用 `topogym.make("cast_coil")` 和 `topogym.make("buzz_wire_3d")` 的真实 `action_spec`；
+  - 检查 state 排列、开度换算、截断，以及 rot6d ↔ 四元数往返；
+  - 检查动作字典的键与 `action_spec` 的 `fields` 一致。
+- [ ] `gym/agent.py` + 测试：
+  - H=15、k=8 时，20 次 `act` 只推理 3 次；
+  - `reset` 清空队列；
+  - 块的形状不对或含 NaN 时抛 `PolicyError`。
+- [ ] `models/base.py`、`models/dummy.py`（HoldVLA）、`gym/client.py` 中的 `LocalClient`
+- [ ] `tests/test_boundaries.py`：用 AST 检查
+  - `protocol.py` 和 `models/**` 不 import `topogym`；
+  - `gym/**` 不 import `torch`、`jax`、`transformers`、`openpi`、`gr00t`。
+- [ ] `setup.sh` 公共部分、`README.md` 初版
 
-**P1 评测循环（GPU）**
-- [ ] `configs/instructions.yaml`：5 条取自任务类，8 条新写（交用户确认）
-- [ ] `gym/run_eval.py`：OmegaConf 读配置，逐 seed 写结果，可选录像；每个控制步记录跟踪误差（关节目标 − 实测），`summary.json` 写均值和最大值
-- [ ] 冒烟：HoldVLA 跑 `cast_coil`、`buzz_wire_3d` 各 1 seed，结果与 `vla_eval_demo.py` 一致
-- [ ] 实测并记录：每步墙钟、显存峰值、`tick_record()` 开销
+**P1 评测循环（GPU，TopoGym 环境）**
+- [ ] `configs/instructions.yaml` v1：从代码取 11 个任务的现有指令，起草 cast_coil、blanket_flatten 两条，交用户确认（D3）
+- [ ] `gym/run_eval.py`：按第 6 节实现
+- [ ] 冒烟：HoldVLA（LocalClient）在 `cast_coil`、`buzz_wire_3d` 上各跑 seed 0，`sim_seconds: 2`。
+  - 预期：`outcome=time_limit`，结果字段齐全，每路相机一个 MP4，跟踪误差已记录。
+  - 同一 decimation 和步数下，与 `vla_eval_demo.py` 的 `outcome`、`control_steps` 一致。
+- [ ] 实测并写入第 13 节：
+  - decimation 为 8 / 13 / 27 时每个控制步的墙钟时间；
+  - 显存峰值；
+  - `tick_record()` 的开销。
 
 **P2 服务**
-- [ ] `models/serve.py`、`gym/client.py` 的 RemoteClient（版本校验、超时、错误）
-- [ ] 冒烟：同一配置改走 RemoteClient，结果与 LocalClient 一致
+- [ ] `models/serve.py`：按 `class_path` 加载 → `load()` → 监听；一次只接一个连接；`infer` 出错时回 `error`，服务不退出
+- [ ] `gym/client.py` 中的 `RemoteClient`：版本校验、超时、`PolicyError`
+- [ ] 测试（无 GPU）：在子进程里用 serve 起 HoldVLA，`RemoteClient` 拿到的动作块与 `LocalClient` 逐位相等
+- [ ] 冒烟（GPU）：P1 的冒烟改用 `RemoteClient`，结果不变
 
-**P3 模型**（每项：`setup.sh` 里一个分支 + `model.py` + 1 seed 冒烟）
-- [ ] π0.5：Panda `pi05_droid_jointpos`；ALOHA `pi05_base`
-- [ ] GR00T N1.7：Panda `GR00T-N1.7-DROID`（需要关节 + TCP，见第 3 节 `tick_record`）
-- [ ] MolmoAct2：Panda `MolmoAct2-DROID`
-- [ ] X-VLA：ALOHA `X-VLA-RoboTwin2`（同时实现适配器的 `ee_abs` 分支）
+**P3 模型**（按下列顺序，每个模型一项）
+- 每项的步骤：
+  1. 先读官方推理示例，把入口函数、输入键、输出含义和单位写进 `model.py` 的 docstring；
+  2. 加 `setup.sh` 分支和 `configs/models/*.yaml`；
+  3. 跑 1 个 seed 的冒烟（`sim_seconds: 10`）；
+  4. 检查输出形状和数值范围，记录推理延迟和显存。
+- [ ] π0.5 · Panda `pi05_droid_jointpos`
+- [ ] π0.5 · ALOHA `pi05_base` + trossen 统计量（臂关节输出是相对推理时刻 state 的增量，子类加回 state）
+- [ ] GR00T N1.7 · Panda `GR00T-N1.7-DROID`（`state_keys: [joint, ee]`；服务端保存当前帧和 1 s 前的历史帧）
+- [ ] MolmoAct2 · Panda `MolmoAct2-DROID`（3 路相机：agentview、front_oblique、wrist）
+- [ ] X-VLA · ALOHA `X-VLA-RoboTwin2`（`ee_abs`；坐标系换算见第 11 节第 4 条）
 
-**P4 约定核对**（影响零样本结果）
-- [ ] ALOHA 关节零位与正方向 vs openpi 约定 → 决定 `adapt_to_pi`
-- [ ] 夹爪范围、相机位置（vs DROID）、末端坐标系（vs GR00T / X-VLA）
-- [ ] 跟踪误差：冒烟中的"目标 − 实测"与真机数据集中的量级对比（Panda 增益与 DROID 真机控制器是否一致未核对）
+**P4 约定核对**（每条写明结论和证据；影响零样本结果）
+- [ ] 第 11 节第 1–5 条
 
 **P5 首批评测**
-- [ ] 按 P1 实测吞吐算预算，与用户确认 seed 数和时长
-- [ ] 跑第 7 节矩阵，出对比表（附 `execute_steps`、实际控制频率、指令版本）
+- [ ] 按 P1 实测的吞吐算预算，与用户确认 seed 数和 `sim_seconds`
+- [ ] 跑第 9 节矩阵，出对比表（附 `execute_steps`、实际控制频率、指令版本）
 
-**之后（等用户决定）**：过程指标；微调。微调的设计见 [`DESIGN.md`](DESIGN.md) 3.8：演示经同一个适配器导出为 LeRobot 数据集，用各模型官方训练脚本训练。接口不变：模型侧只换 checkpoint 路径，Gym 侧加一个导出脚本。
+**之后（等用户决定）**
+- 过程指标。
+- 微调：设计见 `DESIGN.md` 3.8，接口不变。
+- 多个仿真进程共用一个模型服务：只需修改 `serve.py`。
 
-## 9. 决定
+## 11. 风险与待核对
 
-| # | 问题 | 状态 |
+1. **ALOHA 关节约定**：TopoGym ALOHA 的关节零位、正方向与 openpi 的 ALOHA 约定是否一致（openpi 用 `adapt_to_pi` 做转换）。
+2. **夹爪**：各数据集夹爪值的范围和方向（DROID、X-VLA 是 1 = 闭合）。
+3. **相机**：TopoGym 的 agentview / wrist 与 DROID 真机相机的位置和视角差异。零样本对此敏感，只记录，不调整。
+4. **X-VLA 坐标系**：标准 `ee` 用 TopoGym 世界系，X-VLA 训练数据用什么坐标系要核对。若需要各臂基座在世界系的位姿，`action_spec` 里没有，需找来源；若需要改 `vla/` 以外的代码，先问用户。
+5. **跟踪特性**：P1 / P3 测到的"目标 − 实测"与真机数据集中的量级对比。ALOHA 用源 MJCF 的位置执行器增益；Panda 的增益与 DROID 真机控制器是否一致尚未核对。
+6. **仿真速度**：已知控制步墙钟为秒级。episode 时长和 seed 数由 P1 实测决定。
+
+## 12. 决定
+
+| # | 问题 | 结论 |
 |---|---|---|
-| D1 | 评测时是否开辅助抓持 | 已定：关闭，整批统一 |
-| D2 | 数据频率不能整除 400 Hz 时怎么办 | 已定：`control_decimation` 取整（第 7 节），不做时间重采样 |
-| D3 | 8 个任务的英文指令 | 待确认：P1 起草，交用户确认 |
-| D4 | `execute_steps` | 已定：用各模型官方示例值，写进 `configs/models/*.yaml` |
-| D5 | 设计文档放哪 | 已定：移入 `vla/docs/` |
-| D6 | 传输 | 已定：标准库 TCP，TopoGym 环境不装新包 |
+| D1 | 辅助抓持 | 关闭（`SimulatorConfig` 默认即关闭），整批统一 |
+| D2 | 数据频率不能整除 400 Hz 时怎么办 | `control_decimation` 取整（第 9 节），不做时间重采样；结果记录实际频率 |
+| D3 | cast_coil、blanket_flatten 的英文指令 | **待确认**：P1 起草，交用户确认 |
+| D4 | `execute_steps` | 用各模型官方示例值，写进模型配置；评测配置可以覆盖 |
+| D5 | 设计文档放哪 | `vla/docs/` |
+| D6 | 传输 | 标准库 TCP，一对一；TopoGym 环境不装新包 |
+| D7 | 图像预处理放哪 | 发原始分辨率，缩放等预处理由模型子类用官方代码做；本机传输约 3.7 MB / 次 |
+| D8 | PolicySpec 的来源 | 模型配置的 `spec` 段，子类不硬编码 |
 
-## 10. 变更记录
+## 13. 变更记录
 
 | 日期 | 变更 |
 |---|---|
 | 2026-09-29 | 创建；阶段目标为只评测 |
-| 2026-09-29 | 精简为高层计划；限定只改 `vla/`；适配器改为一个通用类；`run_eval` 改为配置驱动；增加 `vla/README.md` 与各模型 `setup.sh`；`protocol` 合并为一个文件 |
-| 2026-09-29 | 去掉 SegmentRunner；连接限定一对一；安装合并为 `vla/setup.sh`；P1 记录跟踪误差；补充术语和微调扩展方式 |
-| 2026-09-29 | 传输改为标准库 TCP（TopoGym 环境不装新包，去掉 `setup.sh gym`）；设计文档移入 `vla/docs/`；D1、D2、D4、D5 定稿；首批矩阵加控制频率 |
+| 2026-09-29 | 精简为高层计划；只改 `vla/`；一个通用适配器；`run_eval` 配置驱动；`vla/README.md` 与 `setup.sh` |
+| 2026-09-29 | 去掉 SegmentRunner；一对一连接；安装合并为 `vla/setup.sh`；记录跟踪误差 |
+| 2026-09-29 | 传输改为标准库 TCP；文档移入 `vla/docs/`；D1、D2、D4、D5 定稿 |
+| 2026-09-30 | 定稿：所有复用接口已在代码中核对；补充开始前检查（TopoGym 环境本机缺失）；接口签名、线协议格式、评测循环、结果字段、配置格式写全；指令来源更正为 5 个类属性 + 6 个 placement 任务；PolicySpec 改为 `state_keys`、去掉 `image_size`（D7、D8） |
