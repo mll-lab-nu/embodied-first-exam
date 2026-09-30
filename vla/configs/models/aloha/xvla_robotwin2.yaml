@@ -9,6 +9,8 @@ spec:
   control_hz: 16.667                # one action per saved RoboTwin frame: 15 steps of 1/250 s; "30 Hz" is a label
   chunk_size: 30
   execute_steps: 30                 # the official RoboTwin client executes the whole chunk
+  reach_tolerance_m: 0.005          # RoboTwin executes each target to completion; TopoGym's ALOHA TCP settles within
+                                    # 1.6-4.5 mm of a held target (runs/test_results/20260930_vla_round2_reach)
 model:
   revision: a157c580cfe6f9f445614490f3bec1b2f9ef9f18
   domain_id: 6                      # robotwin2 (datasets/domain_config.py)

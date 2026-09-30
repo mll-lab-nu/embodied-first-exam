@@ -55,8 +55,29 @@ class FaultingEnv:
         raise RuntimeError("Environment execution failed; consult owner evidence")
 
 
-def episode(env, video_dir=None):
-    model = HoldVLA(CONFIG)
+class RejectingEnv(FaultingEnv):
+    """An Env whose first action is rejected as invalid (physics does not advance); later steps run to the limit."""
+
+    def __init__(self, action_spec):
+        super().__init__(action_spec)
+        self.actions = []
+
+    def observe(self):
+        obs = super().observe()
+        obs["robot"]["arm"].update(tcp_position_world_m=np.array([0.5, 0.0, 1.2]),
+                                   tcp_orientation_wxyz=np.array([1.0, 0.0, 0.0, 0.0]))
+        return obs
+
+    def step(self, action):
+        self.actions.append(action)
+        if len(self.actions) == 1:
+            raise ValueError("Unreachable EE pose: position residual=0.00026 m, orientation=0.0007 rad")
+        info = dict(task_outcome="ongoing", termination_reason="time_limit", evaluation_status="available")
+        return self.observe(), 0.0, False, len(self.actions) == 3, info
+
+
+def episode(env, video_dir=None, config=CONFIG):
+    model = HoldVLA(config)
     return run_episode(env, LocalClient(model), model.spec, 0, "go", 4, video_dir)
 
 
@@ -71,3 +92,17 @@ def test_recording_fault_still_returns_the_row(action_spec, tmp_path):
     assert row["outcome"] == "env_error" and "ValueError" in row["error"]
     manifest = json.loads((tmp_path / "seed_0" / "recording_manifest.json").read_text())
     assert manifest["recording_status"] == "incomplete"
+
+
+
+def test_an_unreachable_ee_target_is_skipped_and_counted(action_spec):
+    env = RejectingEnv(action_spec)
+    spec = dict(CONFIG["spec"], state_keys=["ee"], action_space="ee_abs", reach_tolerance_m=0.005)
+    row = episode(env, config=dict(spec=spec))
+    assert row["outcome"] == "time_limit" and row["skipped_actions"] == 1 and row["control_steps"] == 2
+    np.testing.assert_allclose(env.actions[1]["arm"]["position_world_m"], [0.5, 0.0, 1.2], atol=1e-6)  # held
+
+
+def test_a_rejected_joint_action_ends_the_episode_as_invalid(action_spec):
+    row = episode(RejectingEnv(action_spec))
+    assert row["outcome"] == "invalid_action" and "Unreachable" in row["error"]

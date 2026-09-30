@@ -106,7 +106,13 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
             while True:
                 robot = env.tick_record()["robot"] if joint_and_ee else obs["robot"]
                 action = agent.act(obs["rgb"], robot)
-                obs, _, terminated, truncated, info = actor.step(action)
+                try:
+                    obs, _, terminated, truncated, info = actor.step(action)
+                except ValueError:  # rejected before physics; an ee target beyond IK tolerance is skipped
+                    if spec.action_space != "ee_abs":
+                        raise
+                    action = agent.skip(robot)
+                    obs, _, terminated, truncated, info = actor.step(action)
                 errors.append(tracking_error(action, obs["robot"], spec.action_space))
                 if terminated or truncated:
                     outcome = classify(info)
@@ -123,7 +129,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                    tracking_error_mean=float(np.mean(errors)) if errors else None,
                    tracking_error_max=max(errors, default=None),
                    tracking_error_unit="rad" if spec.action_space == "joint_abs" else "m",
-                   clipped_actions=agent.adapter.clipped,
+                   clipped_actions=agent.adapter.clipped, skipped_actions=agent.skipped,
                    reset_wall_s=round(reset_wall_s, 2),
                    rollout_wall_s=round(time.monotonic() - start - reset_wall_s, 2), error=error)
         if session is not None and not session.failed:  # a failed recording closes as incomplete

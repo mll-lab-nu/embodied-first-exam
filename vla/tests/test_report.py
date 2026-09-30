@@ -12,7 +12,8 @@ def write_run(path, rows):
 def row(model, outcome, steps, error, unit, clipped=0):
     return dict(task="cast_coil", model=model, instruction_version=1, outcome=outcome, control_steps=steps,
                 inference_calls=steps // 10, tracking_error_mean=error, tracking_error_unit=unit,
-                clipped_actions=clipped, rollout_wall_s=60.0, execute_steps=25, control_hz_actual=50.0)
+                clipped_actions=clipped, skipped_actions=clipped // 10, rollout_wall_s=60.0, execute_steps=25,
+                control_hz_actual=50.0)
 
 
 def test_one_row_per_run_with_outcome_counts_and_episode_means(tmp_path):
@@ -22,12 +23,12 @@ def test_one_row_per_run_with_outcome_counts_and_episode_means(tmp_path):
     lines = table([tmp_path / "a", tmp_path / "b"]).splitlines()
     assert len(lines) == 4 and lines[0].startswith("| model | task | success |")
     assert lines[2] == ("| pi05_base_trossen | cast_coil | 1/2 | success 1, time_limit 1 | 50 | 25 | v1 | 80 | 8 "
-                        "| 0.4 rad | 50 | 1.0 |")
-    assert lines[3] == "| xvla_robotwin2 | cast_coil | 0/1 | invalid_action 1 | 50 | 25 | v1 | 0 | 0 | - | 0 | 1.0 |"
+                        "| 0.4 rad | 50 | 5 | 1.0 |")
+    assert lines[3] == "| xvla_robotwin2 | cast_coil | 0/1 | invalid_action 1 | 50 | 25 | v1 | 0 | 0 | - | 0 | 0 | 1.0 |"
 
 
 def test_rows_written_before_tracking_error_unit_are_reported_without_a_unit(tmp_path):
     old = row("pi05_droid_jointpos", "time_limit", 445, 0.049, None)
-    del old["tracking_error_unit"]
+    del old["tracking_error_unit"], old["skipped_actions"]
     write_run(tmp_path / "old", [old])
-    assert "| 0.049 |" in table([tmp_path / "old"]).splitlines()[2]
+    assert "| 0.049 | 0 | 0 |" in table([tmp_path / "old"]).splitlines()[2]

@@ -17,7 +17,7 @@ import struct
 
 import numpy as np
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ class PolicySpec:
     control_hz: float             # control frequency of the training data
     chunk_size: int               # H: control steps predicted per inference
     execute_steps: int            # k: steps executed before the next inference
+    reach_tolerance_m: float = 0.0  # ee_abs: hold each target until every TCP is this close (0 = one step each)
     protocol_version: int = PROTOCOL_VERSION
 
     def __post_init__(self):

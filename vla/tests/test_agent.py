@@ -4,7 +4,7 @@ import pytest
 
 import topogym
 from vla.gym.adapter import Adapter
-from vla.gym.agent import VLAAgent
+from vla.gym.agent import MAX_HOLD_STEPS, VLAAgent
 from vla.gym.client import LocalClient, PolicyError
 from vla.models.dummy import HoldVLA
 from vla.protocol import ActionChunk
@@ -16,10 +16,11 @@ def action_spec():
         return env.action_spec
 
 
-def config(chunk_size, execute_steps):
-    return dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"], state_keys=["joint"],
-                          action_space="joint_abs", control_hz=15, chunk_size=chunk_size,
-                          execute_steps=execute_steps))
+def config(chunk_size, execute_steps, action_space="joint_abs", reach_tolerance_m=0.0):
+    state_keys = ["joint"] if action_space == "joint_abs" else ["ee"]
+    return dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"], state_keys=state_keys,
+                          action_space=action_space, control_hz=15, chunk_size=chunk_size,
+                          execute_steps=execute_steps, reach_tolerance_m=reach_tolerance_m))
 
 
 class Recorder(HoldVLA):
@@ -84,3 +85,37 @@ def test_malformed_chunks_raise_policy_error(action_spec, actions):
 def test_execute_steps_must_fit_the_chunk(action_spec, execute_steps):
     with pytest.raises(ValueError):
         agent_for(Recorder(config(15, 8)), action_spec, execute_steps)
+
+
+
+def ee_chunk():
+    """Two EE targets 10 cm apart with identity orientation and different gripper openings."""
+    return np.array([[0.5, 0.0, 1.2, 1, 0, 0, 0, 1, 0, 1.0], [0.6, 0.0, 1.2, 1, 0, 0, 0, 1, 0, 0.0]], np.float32)
+
+
+def ee_robot(position):
+    return {"arm": {"tcp_position_world_m": np.array(position), "tcp_orientation_wxyz": np.array([1.0, 0, 0, 0]),
+                    "finger_position_rad": np.array([0.4, 0.4])}}
+
+
+def test_an_ee_target_is_held_until_reached_or_for_at_most_max_hold_steps(action_spec):
+    agent = agent_for(Recorder(config(2, 2, "ee_abs", 0.005), ee_chunk()), action_spec, 2)
+    agent.reset(0, "go", "e")
+    rgb = {"agentview": np.zeros((480, 848, 3), np.uint8)}
+    far = [agent.act(rgb, ee_robot([0.0, 0.0, 1.0]))["arm"]["position_world_m"] for _ in range(MAX_HOLD_STEPS + 2)]
+    np.testing.assert_allclose(far, [[0.5, 0.0, 1.2]] * (MAX_HOLD_STEPS + 1) + [[0.6, 0.0, 1.2]], atol=1e-6)
+    agent.reset(0, "go", "e")
+    first = agent.act(rgb, ee_robot([0.0, 0.0, 1.0]))["arm"]["position_world_m"]
+    reached = agent.act(rgb, ee_robot([0.502, 0.0, 1.2]))["arm"]["position_world_m"]
+    np.testing.assert_allclose([first, reached], [[0.5, 0.0, 1.2], [0.6, 0.0, 1.2]], atol=1e-6)
+
+
+def test_a_skipped_ee_target_holds_the_measured_pose_with_its_gripper_and_moves_on(action_spec):
+    agent = agent_for(Recorder(config(2, 2, "ee_abs", 0.005), ee_chunk()), action_spec, 2)
+    agent.reset(0, "go", "e")
+    rgb, robot = {"agentview": np.zeros((480, 848, 3), np.uint8)}, ee_robot([0.0, 0.0, 1.0])
+    agent.act(rgb, robot)
+    hold = agent.skip(robot)
+    np.testing.assert_allclose(hold["arm"]["position_world_m"], [0.0, 0.0, 1.0], atol=1e-6)
+    assert hold["arm"]["gripper_position_rad"] == 0.0 and agent.skipped == 1
+    np.testing.assert_allclose(agent.act(rgb, robot)["arm"]["position_world_m"], [0.6, 0.0, 1.2], atol=1e-6)

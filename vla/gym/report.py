@@ -12,7 +12,7 @@ from pathlib import Path
 
 COLUMNS = ("model", "task", "success", "outcomes", "control Hz", "execute steps", "instruction",
            "control steps / episode", "inferences / episode", "tracking error", "clipped rows / episode",
-           "wall min / episode")
+           "skipped targets / episode", "wall min / episode")
 
 
 def markdown_row(cells):
@@ -21,7 +21,7 @@ def markdown_row(cells):
 
 def summary_row(rows):
     """Outcome counts and per-episode means of one output; run-level fields come from its first row. Rows written
-    before tracking_error_unit existed are shown without a unit."""
+    before tracking_error_unit and skipped_actions existed show no unit and 0 skipped targets."""
     first, outcomes = rows[0], Counter(row["outcome"] for row in rows)
     errors = [row["tracking_error_mean"] for row in rows if row["tracking_error_mean"] is not None]
 
@@ -37,7 +37,8 @@ def summary_row(rows):
         f'{first["control_hz_actual"]:g}', first["execute_steps"], f'v{first["instruction_version"]}',
         f'{episode_mean("control_steps"):.0f}', f'{episode_mean("inference_calls"):.0f}',
         f'{mean(errors):.3g} {first.get("tracking_error_unit", "")}'.strip() if errors else "-",
-        f'{episode_mean("clipped_actions"):.0f}', f'{episode_mean("rollout_wall_s") / 60:.1f}'])
+        f'{episode_mean("clipped_actions"):.0f}', f'{mean([row.get("skipped_actions", 0) for row in rows]):.0f}',
+        f'{episode_mean("rollout_wall_s") / 60:.1f}'])
 
 
 def table(run_dirs):

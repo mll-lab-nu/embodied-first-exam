@@ -42,6 +42,7 @@ class Adapter:
         self.pose_sizes = [len(self.groups[arm]["arm_joint_names"]) if spec.action_space == "joint_abs" else 9
                            for arm in self.arms]
         self.action_dim = sum(self.pose_sizes) + len(self.arms)
+        self.openings = np.cumsum([size + 1 for size in self.pose_sizes]) - 1  # opening index of each arm
         self.clipped = 0  # action rows changed by clipping
 
     def observation(self, rgb, robot, instruction, episode_id, step):
@@ -60,6 +61,18 @@ class Adapter:
             fingers = next(value for name, value in measured.items() if name.startswith("finger_position_"))
             parts.append([np.clip((fingers[0] - self.closed) / (self.open - self.closed), 0.0, 1.0)])
         return np.concatenate(parts).astype(np.float32)
+
+    def reached(self, row, robot, tolerance):
+        """Whether every measured TCP is within ``tolerance`` m of its position target in an ee row."""
+        starts = self.openings - np.asarray(self.pose_sizes)
+        return all(np.linalg.norm(row[start:start + 3] - robot[arm]["tcp_position_world_m"]) <= tolerance
+                   for arm, start in zip(self.arms, starts))
+
+    def hold(self, row, robot):
+        """An ee action that keeps every arm at its measured pose, with the gripper openings of ``row``."""
+        held = self.state("ee", robot)
+        held[self.openings] = row[self.openings]
+        return self.action(held)
 
     def action(self, row):
         action, start, clipped = {}, 0, False
