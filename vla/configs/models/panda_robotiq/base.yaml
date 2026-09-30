@@ -3,6 +3,5 @@
 spec:
   embodiment: panda_robotiq
   cameras: [agentview, wrist]       # -> exterior_image_1_left, wrist_image_left
-  state_keys: [joint]
   action_space: joint_abs
   control_hz: 15

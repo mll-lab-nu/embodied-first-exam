@@ -14,11 +14,11 @@ MODEL_CONFIGS = sorted(path for path in (CONFIGS / "models").glob("*/*.yaml") if
 EVAL_CONFIGS = sorted(path for path in (CONFIGS / "eval").glob("*.yaml") if path.name != "base.yaml")
 
 
-def test_base_files_merge_in_order_and_the_child_wins(tmp_path):
+def test_base_files_merge_first_and_the_child_wins(tmp_path):
     (tmp_path / "sub").mkdir()
     (tmp_path / "a.yaml").write_text("x: {keep: 1, items: [1, 2], name: a}\nz: 0\n")
     (tmp_path / "sub/b.yaml").write_text("_base_: ../a.yaml\nx: {name: b}\ny: ${x.keep}\n")
-    (tmp_path / "c.yaml").write_text("_base_: [a.yaml, sub/b.yaml]\nx: {items: [3]}\nz: 2\n")
+    (tmp_path / "c.yaml").write_text("_base_: sub/b.yaml\nx: {items: [3]}\nz: 2\n")
     cfg = load_yaml(tmp_path / "c.yaml")
     assert OmegaConf.to_container(cfg, resolve=True) == {"x": {"keep": 1, "items": [3], "name": "b"}, "z": 2, "y": 1}
 

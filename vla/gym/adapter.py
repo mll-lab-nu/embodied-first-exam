@@ -12,13 +12,14 @@ from __future__ import annotations
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from vla.protocol import Observation
+from vla.protocol import STATE_KEY, Observation
 
 # Native gripper coordinates (fully open, fully closed) of commands, as in docs/vla_doc/vla_eval_demo.py.
 GRIPPER_OPEN_CLOSED = {"aloha": (0.037, 0.002), "panda_robotiq": (0.0, 0.8)}
-# Native value read as opening 0: where an empty gripper stops when commanded closed. The ALOHA fingers touch at
+# Native value of opening 0: where an empty gripper stops when commanded closed. The ALOHA fingers touch at
 # 8.2 mm (runs/test_results/20260930_vla_round3_gripper), so a closed ALOHA gripper reads 0 as in ALOHA's own
-# calibration, while close commands keep the 2 mm end of the rail and squeeze.
+# calibration. Openings map linearly between this value and fully open both ways, so a partly open gripper
+# keeps its opening; only opening 0 is commanded to the fully closed end of the rail (2 mm) and squeezes.
 GRIPPER_STATE_CLOSED = {"aloha": 0.0082, "panda_robotiq": 0.8}
 
 
@@ -46,14 +47,13 @@ class Adapter:
         self.state_closed = GRIPPER_STATE_CLOSED[spec.embodiment]
         self.pose_sizes = [len(self.groups[arm]["arm_joint_names"]) if spec.action_space == "joint_abs" else 9
                            for arm in self.arms]
+        self.starts = np.cumsum([0] + [size + 1 for size in self.pose_sizes])[:-1]  # row index of each arm
         self.action_dim = sum(self.pose_sizes) + len(self.arms)
-        self.openings = np.cumsum([size + 1 for size in self.pose_sizes]) - 1  # opening index of each arm
-        self.clipped = 0  # action rows changed by clipping
 
     def observation(self, rgb, robot, instruction, episode_id, step):
         images = {camera: rgb[camera] for camera in self.spec.cameras}
-        state = {key: self.state(key, robot) for key in self.spec.state_keys}
-        return Observation(images, state, instruction, episode_id, step)
+        key = STATE_KEY[self.spec.action_space]
+        return Observation(images, {key: self.state(key, robot)}, instruction, episode_id, step)
 
     def state(self, key, robot):
         parts = []
@@ -69,24 +69,23 @@ class Adapter:
 
     def reached(self, row, robot, tolerance):
         """Whether every measured TCP is within ``tolerance`` m of its position target in an ee row."""
-        starts = self.openings - np.asarray(self.pose_sizes)
         return all(np.linalg.norm(row[start:start + 3] - robot[arm]["tcp_position_world_m"]) <= tolerance
-                   for arm, start in zip(self.arms, starts))
+                   for arm, start in zip(self.arms, self.starts))
 
     def hold(self, row, robot, arms):
         """The ee ``row`` with the pose targets of ``arms`` replaced by their measured poses; openings stay."""
         held, measured = np.array(row), self.state("ee", robot)
-        for arm, opening, size in zip(self.arms, self.openings, self.pose_sizes):
+        for arm, start, size in zip(self.arms, self.starts, self.pose_sizes):
             if arm in arms:
-                held[opening - size:opening] = measured[opening - size:opening]
+                held[start:start + size] = measured[start:start + size]
         return held
 
     def action(self, row):
-        action, start, clipped = {}, 0, False
-        for arm, size in zip(self.arms, self.pose_sizes):
+        """The TopoGym action dict of one standard row, and whether clipping changed the row."""
+        action, clipped = {}, False
+        for arm, start, size in zip(self.arms, self.starts, self.pose_sizes):
             group = self.groups[arm]
             pose, opening = row[start:start + size], row[start + size]
-            start += size + 1
             if self.spec.action_space == "joint_abs":
                 limits = np.asarray(group["joint_limits_rad"])
                 q = np.clip(pose, limits[:, 0], limits[:, 1])
@@ -96,7 +95,7 @@ class Adapter:
                 command = {"position_world_m": pose[:3].tolist(), "orientation_wxyz": rot6d_to_wxyz(pose[3:]).tolist()}
             g = float(np.clip(opening, 0.0, 1.0))
             clipped |= bool(g != opening)
-            command[group["gripper_field"]] = self.closed + g * (self.open - self.closed)
+            command[group["gripper_field"]] = (self.closed if g == 0.0 else
+                                               self.state_closed + g * (self.open - self.state_closed))
             action[arm] = command
-        self.clipped += clipped
-        return action
+        return action, clipped

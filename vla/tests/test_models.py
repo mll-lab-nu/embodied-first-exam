@@ -10,7 +10,7 @@ from vla.protocol import ActionChunk, Observation
 
 def config(action_space="joint_abs", chunk_size=4, class_path="vla.models.dummy.HoldVLA"):
     return dict(class_path=class_path, spec=dict(
-        name="hold", embodiment="panda_robotiq", cameras=["agentview"], state_keys=["joint", "ee"],
+        name="hold", embodiment="panda_robotiq", cameras=["agentview"],
         action_space=action_space, control_hz=15, chunk_size=chunk_size, execute_steps=2))
 
 

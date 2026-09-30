@@ -17,8 +17,7 @@ def action_spec():
 
 
 def config(chunk_size, execute_steps, action_space="joint_abs", reach_tolerance_m=0.0):
-    state_keys = ["joint"] if action_space == "joint_abs" else ["ee"]
-    return dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"], state_keys=state_keys,
+    return dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"],
                           action_space=action_space, control_hz=15, chunk_size=chunk_size,
                           execute_steps=execute_steps, reach_tolerance_m=reach_tolerance_m))
 
@@ -81,6 +80,19 @@ def test_malformed_chunks_raise_policy_error(action_spec, actions):
         agent.act(*inputs(action_spec))
 
 
+def test_clipped_rows_are_counted_once_per_row_and_reset_per_episode(action_spec):
+    limits = np.asarray(action_spec["groups"]["arm"]["joint_limits_rad"])
+    inside = np.r_[limits.mean(axis=1), 0.5]
+    actions = np.stack([np.r_[limits[:, 1] + 1.0, 0.5], inside, np.r_[limits.mean(axis=1), 1.5], inside])
+    agent = agent_for(Recorder(config(4, 4), actions.astype(np.float32)), action_spec, 4)
+    agent.reset(0, "go", "e")
+    for _ in range(4):
+        agent.act(*inputs(action_spec))
+    assert agent.clipped == 2 and type(agent.clipped) is int  # written to results.jsonl
+    agent.reset(1, "go", "e")
+    assert agent.clipped == 0
+
+
 @pytest.mark.parametrize("execute_steps", [0, 16])
 def test_execute_steps_must_fit_the_chunk(action_spec, execute_steps):
     with pytest.raises(ValueError):
@@ -94,7 +106,7 @@ def aloha_spec():
 
 
 def aloha_config():
-    return dict(spec=dict(name="hold", embodiment="aloha", cameras=["cam_high"], state_keys=["ee"],
+    return dict(spec=dict(name="hold", embodiment="aloha", cameras=["cam_high"],
                           action_space="ee_abs", control_hz=16.667, chunk_size=2, execute_steps=2,
                           reach_tolerance_m=0.005))
 

@@ -5,11 +5,10 @@ from scipy.spatial.transform import Rotation
 
 import topogym
 from vla.gym.adapter import Adapter, rot6d, rot6d_to_wxyz
-from vla.protocol import PolicySpec
+from vla.protocol import STATE_KEY, PolicySpec
 
 TASKS = {"aloha": "cast_coil", "panda_robotiq": "buzz_wire_3d"}
 MODES = {"joint_abs": "JOINT_ABS", "ee_abs": "EE_ABS"}
-STATE_KEY = {"joint_abs": "joint", "ee_abs": "ee"}
 
 
 def action_spec(robot, action_space):
@@ -17,8 +16,8 @@ def action_spec(robot, action_space):
         return env.action_spec
 
 
-def policy_spec(robot, action_space="joint_abs", state_keys=("joint",), cameras=()):
-    return PolicySpec(name="test", embodiment=robot, cameras=cameras, state_keys=state_keys,
+def policy_spec(robot, action_space="joint_abs", cameras=()):
+    return PolicySpec(name="test", embodiment=robot, cameras=cameras,
                       action_space=action_space, control_hz=50, chunk_size=10, execute_steps=5)
 
 
@@ -53,9 +52,9 @@ def test_joint_state_is_arm_ordered_with_openings(robot, fingers, openings):
 def test_ee_state_layout_uses_tcp_pose():
     spec = action_spec("aloha", "ee_abs")
     measured = measured_robot(spec, [0.037, 0.002])
-    obs = Adapter(spec, policy_spec("aloha", "ee_abs", ("joint", "ee"))).observation({}, measured, "go", "e", 0)
+    obs = Adapter(spec, policy_spec("aloha", "ee_abs")).observation({}, measured, "go", "e", 0)
     ee = obs.state["ee"]
-    assert ee.shape == (20,) and obs.state["joint"].shape == (14,)
+    assert ee.shape == (20,) and list(obs.state) == ["ee"]
     right = measured["right"]
     np.testing.assert_allclose(ee[10:13], right["tcp_position_world_m"], atol=1e-6)
     np.testing.assert_allclose(ee[13:19], rot6d(right["tcp_orientation_wxyz"]), atol=1e-6)
@@ -87,26 +86,27 @@ def test_images_follow_spec_camera_order():
 def test_action_keys_match_action_spec_fields(robot, action_space):
     spec = action_spec(robot, action_space)
     key = STATE_KEY[action_space]
-    adapter = Adapter(spec, policy_spec(robot, action_space, (key,)))
+    adapter = Adapter(spec, policy_spec(robot, action_space))
     row = adapter.observation({}, measured_robot(spec, [0.01, 0.01]), "go", "e", 0).state[key]
     assert row.shape == (adapter.action_dim,)
-    action = adapter.action(row)
+    action, _ = adapter.action(row)
     assert list(action) == spec["arms"]
     for arm, command in action.items():
         assert set(command) == set(spec["groups"][arm]["fields"])
 
 
 @pytest.mark.parametrize("robot", ["aloha", "panda_robotiq"])
-def test_joint_action_inverts_joint_state(robot):
+def test_joint_action_inverts_joint_state_including_partly_open_grippers(robot):
     spec = action_spec(robot, "joint_abs")
-    measured = measured_robot(spec, [0.01, 0.02] if robot == "aloha" else [0.3])
+    fingers = [0.01, 0.02] if robot == "aloha" else [0.3]
+    measured = measured_robot(spec, fingers)
     adapter = Adapter(spec, policy_spec(robot))
-    action = adapter.action(adapter.observation({}, measured, "go", "e", 0).state["joint"])
+    action, clipped = adapter.action(adapter.observation({}, measured, "go", "e", 0).state["joint"])
     for arm, command in action.items():
         np.testing.assert_allclose(command["joint_position_rad"], measured[arm]["joint_position_rad"], atol=1e-6)
-    if robot == "panda_robotiq":
-        assert np.isclose(action["arm"]["gripper_position_rad"], 0.3, atol=1e-6)
-    assert adapter.clipped == 0
+    grippers = [command[spec["groups"][arm]["gripper_field"]] for arm, command in action.items()]
+    np.testing.assert_allclose(grippers, fingers, atol=1e-6)  # a partly open gripper keeps its opening
+    assert clipped is False
 
 
 def test_aloha_openings_read_the_touching_fingers_as_closed_and_close_commands_squeeze():
@@ -114,7 +114,7 @@ def test_aloha_openings_read_the_touching_fingers_as_closed_and_close_commands_s
     adapter = Adapter(spec, policy_spec("aloha"))
     state = adapter.observation({}, measured_robot(spec, [0.0082, 0.037]), "go", "e", 0).state["joint"]
     assert (state[6], state[13]) == (0.0, 1.0)
-    action = adapter.action(state)
+    action, _ = adapter.action(state)
     assert (action["left"]["gripper_position_m"], action["right"]["gripper_position_m"]) == (0.002, 0.037)
 
 
@@ -122,11 +122,10 @@ def test_joint_action_clips_joints_and_opening():
     spec = action_spec("panda_robotiq", "joint_abs")
     limits = np.asarray(spec["groups"]["arm"]["joint_limits_rad"])
     adapter = Adapter(spec, policy_spec("panda_robotiq"))
-    command = adapter.action(np.r_[limits[:, 1] + 1.0, 1.5].astype(np.float32))["arm"]
-    np.testing.assert_allclose(command["joint_position_rad"], limits[:, 1], atol=1e-6)
-    assert command["gripper_position_rad"] == 0.0 and adapter.clipped == 1
-    adapter.action(np.r_[limits.mean(axis=1), 0.5].astype(np.float32))
-    assert adapter.clipped == 1 and type(adapter.clipped) is int  # written to results.jsonl
+    action, clipped = adapter.action(np.r_[limits[:, 1] + 1.0, 1.5].astype(np.float32))
+    np.testing.assert_allclose(action["arm"]["joint_position_rad"], limits[:, 1], atol=1e-6)
+    assert action["arm"]["gripper_position_rad"] == 0.0 and clipped is True
+    assert adapter.action(np.r_[limits.mean(axis=1), 0.5].astype(np.float32))[1] is False
 
 
 @pytest.mark.parametrize("robot", ["aloha", "panda_robotiq"])
@@ -136,19 +135,20 @@ def test_gripper_extremes_stay_within_native_limits(robot, opening):
     adapter = Adapter(spec, policy_spec(robot))
     row = np.concatenate([np.r_[np.mean(spec["groups"][arm]["joint_limits_rad"], axis=1), opening]
                           for arm in spec["arms"]]).astype(np.float32)
-    for arm, command in adapter.action(row).items():
+    for arm, command in adapter.action(row)[0].items():
         low, high = spec["groups"][arm]["gripper_limits"]
         assert low <= command[spec["groups"][arm]["gripper_field"]] <= high
 
 
 def test_ee_action_is_not_clipped():
     spec = action_spec("panda_robotiq", "ee_abs")
-    adapter = Adapter(spec, policy_spec("panda_robotiq", "ee_abs", ("ee",)))
+    adapter = Adapter(spec, policy_spec("panda_robotiq", "ee_abs"))
     wxyz = Rotation.from_euler("xyz", [3.0, 0.1, -0.4]).as_quat()[[3, 0, 1, 2]]
-    command = adapter.action(np.r_[5.0, -5.0, 5.0, rot6d(wxyz), 0.25].astype(np.float32))["arm"]
+    action, clipped = adapter.action(np.r_[5.0, -5.0, 5.0, rot6d(wxyz), 0.25].astype(np.float32))
+    command = action["arm"]
     assert command["position_world_m"] == [5.0, -5.0, 5.0]
     assert np.isclose(abs(np.asarray(command["orientation_wxyz"]) @ wxyz), 1.0, atol=1e-6)
-    assert np.isclose(command["gripper_position_rad"], 0.6) and adapter.clipped == 0
+    assert np.isclose(command["gripper_position_rad"], 0.6) and clipped is False
 
 
 def test_embodiment_mismatch_is_rejected():

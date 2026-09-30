@@ -1,8 +1,8 @@
 """pi0.5 through openpi's own policy (openpi 215abfb).
 
 Entry point: ``openpi.policies.policy_config.create_trained_policy(train_config, checkpoint_dir)`` and
-``Policy.infer(inputs, noise=...) -> {"actions": ...}``. Images are passed at native resolution; the policy
-letterboxes them to 224 x 224 itself (ResizeImages).
+``Policy.infer(inputs, noise=...) -> {"actions": ...}``. Images are passed as ``camera_images`` gives them (ALOHA
+frames center-cropped to 4:3); the policy letterboxes them to 224 x 224 itself (ResizeImages).
 
 DROID: train config pi05_droid_jointpos_polaris + checkpoint pi05_droid_jointpos (policies/droid_policy.py).
   in   observation/exterior_image_1_left, observation/wrist_image_left: HWC uint8 RGB;

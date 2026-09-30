@@ -6,8 +6,8 @@ import pytest
 
 from vla.protocol import PROTOCOL_VERSION, PolicySpec, decode, encode
 
-SPEC = dict(name="hold", embodiment="aloha", cameras=["cam_high", "cam_left_wrist"], state_keys=["joint"],
-            action_space="joint_abs", control_hz=50, chunk_size=10, execute_steps=5)
+SPEC = dict(name="hold", embodiment="aloha", cameras=["cam_high", "cam_left_wrist"], action_space="joint_abs",
+            control_hz=50, chunk_size=10, execute_steps=5)
 
 
 def assert_bitwise_equal(a, b):
@@ -51,7 +51,6 @@ def test_spec_rejects_other_protocol_version():
         PolicySpec(**SPEC, protocol_version=PROTOCOL_VERSION + 1)
 
 
-@pytest.mark.parametrize("changes", [dict(reach_tolerance_m=0.005), dict(action_space="ee_abs")])
-def test_spec_rejects_settings_that_need_the_ee_state_without_it(changes):
-    with pytest.raises(ValueError, match="ee"):
-        PolicySpec(**dict(SPEC, **changes))
+def test_spec_rejects_a_reach_tolerance_for_joint_targets():
+    with pytest.raises(ValueError, match="ee_abs"):
+        PolicySpec(**dict(SPEC, reach_tolerance_m=0.005))

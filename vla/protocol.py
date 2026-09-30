@@ -17,7 +17,8 @@ import struct
 
 import numpy as np
 
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
+STATE_KEY = {"joint_abs": "joint", "ee_abs": "ee"}  # the measured state sent with each action space
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,6 @@ class PolicySpec:
     name: str                     # checkpoint name, e.g. "pi05_droid_jointpos"
     embodiment: str               # TopoGym robot_id: "aloha" | "panda_robotiq"
     cameras: tuple[str, ...]      # TopoGym camera names, in the order of the model's image slots
-    state_keys: tuple[str, ...]   # ("joint",) | ("ee",) | ("joint", "ee")
     action_space: str             # "joint_abs" | "ee_abs"
     control_hz: float             # control frequency of the training data
     chunk_size: int               # H: targets predicted per inference
@@ -36,9 +36,8 @@ class PolicySpec:
 
     def __post_init__(self):
         object.__setattr__(self, "cameras", tuple(self.cameras))
-        object.__setattr__(self, "state_keys", tuple(self.state_keys))
-        if (self.reach_tolerance_m or self.action_space == "ee_abs") and "ee" not in self.state_keys:
-            raise ValueError(f"{self.name}: ee_abs and reach_tolerance_m need the ee state (state_keys)")
+        if self.reach_tolerance_m and self.action_space != "ee_abs":
+            raise ValueError(f"{self.name}: reach_tolerance_m needs ee_abs targets")
         if self.protocol_version != PROTOCOL_VERSION:
             raise ValueError(f"Model server speaks protocol version {self.protocol_version}, "
                              f"this side speaks {PROTOCOL_VERSION}")
@@ -46,8 +45,8 @@ class PolicySpec:
 
 @dataclass(frozen=True)
 class Observation:
-    images: dict[str, np.ndarray]   # camera -> (480, 848, 3) uint8 at native resolution
-    state: dict[str, np.ndarray]    # state key -> standard float32 vector (measured values)
+    images: dict[str, np.ndarray]   # camera -> (480, 848, 3) uint8 as rendered; models crop and resize
+    state: dict[str, np.ndarray]    # {STATE_KEY[action_space]: standard float32 vector of measured values}
     instruction: str
     episode_id: str
     step: int                       # control step index, from 0

@@ -4,7 +4,6 @@ class_path: vla.models.xvla.model.XVLA
 checkpoint: 2toINF/X-VLA-RoboTwin2    # cached under ~/.cache/huggingface
 spec:
   name: xvla_robotwin2
-  state_keys: [ee]
   action_space: ee_abs
   control_hz: 16.667                # one action per saved RoboTwin frame: 15 steps of 1/250 s; "30 Hz" is a label
   chunk_size: 30

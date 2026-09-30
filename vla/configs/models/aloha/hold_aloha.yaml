@@ -4,9 +4,7 @@ class_path: vla.models.dummy.HoldVLA
 checkpoint: null
 spec:
   name: hold_aloha
-  state_keys: [joint]
   action_space: joint_abs
   control_hz: 40                    # decimation 10, as in docs/vla_doc/vla_eval_demo.py
   chunk_size: 10
   execute_steps: 10
-model: {}

@@ -50,10 +50,9 @@ def serve(model, address):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", required=True, help="model config (vla/configs/models/<robot>/<name>.yaml)")
-    parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
-    serve(load_model(load_yaml(args.config)), (args.host, args.port))
+    serve(load_model(load_yaml(args.config)), ("localhost", args.port))
 
 
 if __name__ == "__main__":

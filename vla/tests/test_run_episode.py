@@ -10,7 +10,7 @@ from vla.gym.client import LocalClient
 from vla.gym.run_eval import run_episode
 from vla.models.dummy import HoldVLA
 
-CONFIG = dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"], state_keys=["joint"],
+CONFIG = dict(spec=dict(name="hold", embodiment="panda_robotiq", cameras=["agentview"],
                         action_space="joint_abs", control_hz=40, chunk_size=4, execute_steps=4))
 
 
@@ -118,7 +118,7 @@ class FarTargetEnv(RejectingEnv):
 
 def test_an_unreachable_ee_target_is_skipped_by_holding_the_arm(action_spec):
     env = FarTargetEnv(action_spec)
-    spec = dict(CONFIG["spec"], state_keys=["ee"], action_space="ee_abs", reach_tolerance_m=0.005)
+    spec = dict(CONFIG["spec"], action_space="ee_abs", reach_tolerance_m=0.005)
     model = FarVLA(dict(spec=spec))
     row = run_episode(env, LocalClient(model), model.spec, 0, "go", 4, None)
     assert row["outcome"] == "time_limit" and row["skipped_actions"] == 3 and row["control_steps"] == 3

@@ -2,7 +2,7 @@
 import numpy as np
 
 from vla.models.base import BaseVLA
-from vla.protocol import ActionChunk
+from vla.protocol import STATE_KEY, ActionChunk
 
 
 class HoldVLA(BaseVLA):
@@ -10,5 +10,5 @@ class HoldVLA(BaseVLA):
         pass
 
     def infer(self, obs):
-        state = obs.state["joint" if self.spec.action_space == "joint_abs" else "ee"]
+        state = obs.state[STATE_KEY[self.spec.action_space]]
         return ActionChunk(np.tile(state, (self.spec.chunk_size, 1)))

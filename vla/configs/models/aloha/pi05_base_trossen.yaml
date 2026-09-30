@@ -4,7 +4,6 @@ class_path: vla.models.pi05.model.Pi05
 checkpoint: gs://openpi-assets/checkpoints/pi05_base   # cached under ~/.cache/openpi
 spec:
   name: pi05_base_trossen
-  state_keys: [joint]
   action_space: joint_abs
   control_hz: 50
   chunk_size: 50

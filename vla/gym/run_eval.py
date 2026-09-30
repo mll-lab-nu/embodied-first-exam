@@ -53,10 +53,10 @@ def classify(info):
 def make_args(cfg, spec):
     """topogym.make arguments: control/observation modes, decimation and time limit follow the policy spec."""
     env = OmegaConf.to_container(cfg.env, resolve=True)
-    dt = env.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s)
+    dt = env.pop("physics_dt_s", topogym.SimulatorConfig.physics_dt_s)
     return dict(variation_id=cfg.task.variation, control_mode=CONTROL_MODES[spec.action_space],
-                observation_mode="EE" if spec.state_keys == ("ee",) else "JOINT",
-                control_decimation=round(1 / (spec.control_hz * dt)),
+                observation_mode="EE" if spec.action_space == "ee_abs" else "JOINT",
+                physics_dt_s=dt, control_decimation=round(1 / (spec.control_hz * dt)),
                 max_physics_steps=round(cfg.task.sim_seconds / dt), **env)
 
 
@@ -97,14 +97,13 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
     reset_wall_s = time.monotonic() - start
     actor = env.interaction()
     agent = VLAAgent(client, Adapter(actor.action_spec, spec), execute_steps)
-    joint_and_ee = set(spec.state_keys) == {"joint", "ee"}  # JOINT observations carry no TCP pose
     obs, info, errors, error = actor.observe(), {}, [], None
     metadata = dict(episode=env.episode_metadata, model=spec.name, instruction=instruction)
     with recording(env, video_dir, metadata) as session:
         try:
             agent.reset(seed, instruction, obs["state"]["episode_id"])
             while True:
-                robot = env.tick_record()["robot"] if joint_and_ee else obs["robot"]
+                robot = obs["robot"]
                 action = agent.act(obs["rgb"], robot)
                 try:
                     obs, _, terminated, truncated, info = actor.step(action)
@@ -128,7 +127,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                    tracking_error_mean=float(np.mean(errors)) if errors else None,
                    tracking_error_max=max(errors, default=None),
                    tracking_error_unit="rad" if spec.action_space == "joint_abs" else "m",
-                   clipped_actions=agent.adapter.clipped, skipped_actions=agent.skipped,
+                   clipped_actions=agent.clipped, skipped_actions=agent.skipped,
                    reset_wall_s=round(reset_wall_s, 2),
                    rollout_wall_s=round(time.monotonic() - start - reset_wall_s, 2), error=error)
         if session is not None and not session.failed:  # a failed recording closes as incomplete
@@ -146,7 +145,7 @@ def evaluate(cfg, client):
     instruction = instructions.INSTRUCTIONS[cfg.task.id]
     execute_steps = spec.execute_steps if cfg.run.execute_steps is None else cfg.run.execute_steps
     args = make_args(cfg, spec)
-    control_hz = 1 / (args["control_decimation"] * args.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s))
+    control_hz = 1 / (args["control_decimation"] * args["physics_dt_s"])
     rows = []
     with topogym.make(cfg.task.id, **args) as env:
         for seed in cfg.task.seeds:
@@ -168,7 +167,6 @@ def evaluate(cfg, client):
                    config=OmegaConf.to_container(cfg, resolve=True), git_commit=commit.strip())
     (output / "summary.json").write_text(json.dumps(summary, indent=2))
     (output / "report.md").write_text(table([output]) + "\n")
-    return rows
 
 
 def load_config(path, overrides):

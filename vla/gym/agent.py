@@ -19,16 +19,18 @@ class VLAAgent:
         if not 1 <= execute_steps <= client.spec.chunk_size:
             raise ValueError(f"execute_steps must be in [1, {client.spec.chunk_size}], got {execute_steps}")
         self.client, self.adapter, self.execute_steps = client, adapter, execute_steps
-        self.queue = deque()
-        self.instruction = self.episode_id = self.row = self.action = None
-        self.step = self.inference_calls = self.holds = self.skipped = 0
+        self._start(None, None)
 
     def reset(self, seed, instruction, episode_id):
         """Start an episode; ``episode_id`` is the Env's (obs["state"]["episode_id"])."""
         self.client.reset(seed)
-        self.queue.clear()
+        self._start(instruction, episode_id)
+
+    def _start(self, instruction, episode_id):
+        self.queue = deque()
         self.instruction, self.episode_id, self.row, self.action = instruction, episode_id, None, None
-        self.step = self.inference_calls = self.holds = self.skipped = 0
+        # clipped counts the action rows that clipping changed
+        self.step = self.inference_calls = self.holds = self.skipped = self.clipped = 0
 
     def act(self, rgb, robot):
         """Return the TopoGym action dict for this control step."""
@@ -46,7 +48,9 @@ class VLAAgent:
                     raise PolicyError(f"Expected a finite {expected} action chunk, got {actions.shape}")
                 self.queue.extend(actions[:self.execute_steps])
             self.row = self.queue.popleft()
-            self.action, self.holds = self.adapter.action(self.row), 0
+            self.action, clipped = self.adapter.action(self.row)
+            self.clipped += clipped
+            self.holds = 0
         self.step += 1
         return self.action
 
@@ -56,17 +60,15 @@ class VLAAgent:
         gripper commands stay) until ``step`` accepts the action, which then stays the current target. Returns the
         accepted action and ``step``'s result."""
         self.skipped += 1
-        clipped = self.adapter.clipped  # candidates change only ee poses, which are never clipped
         arms = list(self.adapter.arms)
         for held in [[arm] for arm in arms] + ([arms] if len(arms) > 1 else []):
             row = self.adapter.hold(self.row, robot, held)
-            action = self.adapter.action(row)
+            action, _ = self.adapter.action(row)  # the row's opening was counted when it was taken
             try:
                 result = step(action)
             except ValueError as error:
                 rejected = error
                 continue
-            self.adapter.clipped = clipped
             self.row, self.action, self.holds = row, action, 0
             return action, result
         raise rejected

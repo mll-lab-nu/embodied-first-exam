@@ -5,7 +5,9 @@ Entry point: ``AutoModel.from_pretrained(checkpoint, trust_remote_code=True)`` a
 with inputs prepared as the official server does (modeling_xvla.py ``act``): the processor squashes each
 view to 224 x 224 (bicubic, ImageNet normalization) and tokenizes the instruction (BART, 50 tokens).
   views    head, left wrist, right wrist, in this order (the first view is fused with the text).
-  proprio  (20,) current pose of both arms in the action layout (frames.py); gripper dims are zeroed inside.
+  proprio  (20,) measured pose of both arms in the action layout (frames.py); gripper dims are zeroed inside.
+           From the second chunk on, the official RoboTwin client sends its last commanded target instead; the
+           two differ by at most reach_tolerance_m whenever that target was reached.
   output   (30, 20) absolute link6 poses in the RoboTwin world and g in (0, 1), 1 = closed (after sigmoid).
 One action per saved RoboTwin frame, 15 steps of 1/250 s (16.7 Hz); the official RoboTwin client executes
 all 30 actions before the next inference. Sampling noise uses the global torch RNG, seeded in reset().

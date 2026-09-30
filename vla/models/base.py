@@ -29,7 +29,7 @@ class BaseVLA(ABC):
         ...
 
     def reset(self, seed: int) -> None:
-        """Start an episode: clear history frames and seed sampling."""
+        """Start an episode, e.g. seed the sampling noise."""
 
     def camera_images(self, obs: Observation) -> list:
         """The frames of ``spec.cameras`` in the order of the model's image slots. With ``model.image_aspect``
