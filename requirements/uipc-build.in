@@ -1,0 +1,11 @@
+# Python-side build tools; native dependencies use the original vcpkg baselines.
+build==1.3.0
+scikit-build-core==0.11.6
+setuptools-scm==9.2.2
+cmake==3.31.10
+ninja==1.13.0
+auditwheel==6.5.0
+patchelf==0.17.2.4
+numpy==2.3.5
+pybind11==3.1.0
+pybind11-stubgen==3.0.0

@@ -143,9 +143,10 @@ docs/rcb/                          # CLI guide, protocol, limited protocol, taxo
 topogym/                           # simulator: config, Env, world, robot, tasks, sensors
 assets/                            # robot models and authored task assets
 tests/                             # shared fixtures for local rollouts; independent suites are archived
-solvability_proof/ demos/            # proof catalogs and recorded demonstrations
+solvability_proof/                  # proof catalogs
+demos/                             # local recorded demonstrations (gitignored)
 jobs/ runs/ task_rollouts/          # local execution evidence (gitignored)
-legacy/                            # archived implementations; outside active runtime
+legacy/                            # local archived implementations (gitignored); outside active runtime
 ```
 
 ## The example task (`topogym-cube-pick-place-i00`)
@@ -275,11 +276,15 @@ not establish a benchmark success rate. FEM tasks remain substantially slower th
 
 For simulator development, start with the [module map](docs/develop/modules/README.md),
 [local rollout entrypoints and fixtures](tests/README.md), [current progress](docs/progress/current_zh.md),
-[solvability proofs](solvability_proof/README.md), [demo catalog](demos/README.md) and
+[solvability proofs](solvability_proof/README.md) and
 [development rules](AGENTS.md). The management `Env` is separate from episode-bound interaction
 handles; Harbor's unlimited `Session` supplies its own reset wrapper. Default
 `history_storage="segment"` checkpoints the initial state and segment boundaries; use `"memory"`
 when full per-tick rewind is required.
+
+`legacy/` and `demos/` are retained locally and excluded from new commits. Fresh checkouts of
+the updated branch do not include these directories; Docker difficulty evaluation does not require them.
+Removing them from the current file tree does not remove their contents from earlier Git commits.
 
 Publishing this checkout to GitHub `main` according to `.gitignore`:
 [Git 操作指令](docs/maintenance/publish_main_zh.md).

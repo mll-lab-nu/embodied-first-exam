@@ -52,20 +52,9 @@ tetgen-tmpfile*
 # Weekly report decks (per-week folders with copied demo videos; shared by zip, not git)
 topogym_weekly_report/
 
-# Archived deliverables remain local; source/config/docs in legacy are versioned.
-/legacy/runs/
-/legacy/reports/
-/legacy/harbor_tasks/
-# Outputs preserved by the 2026-09-29 cleanup; archived source/docs stay versionable.
-/legacy/cleanup_20260929/harbor_tasks/
-/legacy/cleanup_20260929/reports/
-/legacy/cleanup_20260929/outputs/
-/legacy/cleanup_20260929/MUJOCO_LOG.TXT
-# Full local hash inventory; the small archive manifest remains versionable.
-/legacy/cleanup_20260929/files.jsonl
-
-# Published demos, task results, source/config/docs remain versionable.
-!/demos/**/*.mp4
+# Archived implementations and demos stay on the local machine, outside Git.
+/legacy/
+/demos/
 
 # Harbor runs (robot_coding_bench layout): job outputs and local credentials stay out of git
 /jobs/

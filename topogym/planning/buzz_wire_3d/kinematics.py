@@ -211,7 +211,7 @@ class BuzzIK:
         r = rotation(np.asarray(poses["orientation_wxyz"]).reshape(-1, 4)[index])
         return p+r.apply(self.group.tcp_position_in_hand_m), r
 
-    def plan_free_tcp(self, target, *, seed=None, random_seed=0, iterations=12000):
+    def plan_free_tcp(self, target, *, seed=None, random_seed=0, iterations=12000, goal_seed=None):
         """Bidirectional joint-space search for an empty, opened hand.
 
         Returned dense FK targets are executed through the ordinary EE compiler.
@@ -236,9 +236,11 @@ class BuzzIK:
             count = max(1, int(np.ceil(np.linalg.norm(b-a)/.035)))
             return all(valid(a+u*(b-a)) for u in np.linspace(0,1,count+1)[1:])
         goals = []
-        for attempt in range(96):
+        for attempt in range(1 if goal_seed is not None else 96):
             initial = start.copy()
-            if attempt == 1:
+            if goal_seed is not None:
+                initial[indices] = np.asarray(goal_seed)[indices]
+            elif attempt == 1:
                 initial[indices] = np.asarray(self.group.home[:7])
             elif 1 < attempt < 24:
                 initial[indices] = np.clip(np.asarray(self.group.home[:7])+rng.normal(0,.6,7),limits[:,0]+.12,limits[:,1]-.12)

@@ -22,6 +22,24 @@ class HedgehogInCageTask(PlacementGoalMixin, RigidTaskDefinition):
 
     asset_resource = None
 
+    @property
+    def goal_complete(self):
+        from .qualification import placement_qualification
+        return placement_qualification(self) is not None
+
+    @property
+    def terminal_revision(self):
+        return "hedgehog_placement_v2" if self.goal_complete else "placement_region_v1"
+
+    def terminal_metadata(self):
+        from .qualification import placement_qualification
+        metadata = super().terminal_metadata()
+        qualification = placement_qualification(self)
+        if qualification is not None:
+            metadata.update(thresholds_calibrated=True, reachability_qualified=True,
+                            qualification=dict(qualification))
+        return metadata
+
     def build_assets(self, folder):
         if not self.asset_resource:
             layout, report = generate_assets(folder, float(self.config["scale"]), finish=self.config["finish"])
@@ -95,4 +113,5 @@ class HedgehogInCageTask(PlacementGoalMixin, RigidTaskDefinition):
         return region.observation(self.placement_targets, self.placement_remainder)
 
     def evaluate_state(self, state):
-        return self.evaluate_placement(state)
+        reached, failure, metrics = self.evaluate_placement(state)
+        return reached, failure, dict(metrics, thresholds_calibrated=self.goal_complete)

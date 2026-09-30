@@ -141,10 +141,20 @@ class ResultTests(unittest.TestCase):
 
 
 class CommandTests(unittest.TestCase):
+    def test_high_cpu_does_not_stop_work(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp)
+            commands = evaluation.Commands(dict(os.environ), run)
+            with patch('psutil.cpu_percent', return_value=100), patch('psutil.virtual_memory', return_value=SimpleNamespace(percent=89)):
+                code, _ = commands.run_command([sys.executable, '-c', 'import time; time.sleep(2)'], monitor=True)
+            self.assertEqual(code, 0)
+            self.assertFalse((run/'resource-stop.json').exists())
+            self.assertEqual(json.loads((run/'resource-usage.json').read_text()), dict(cpu_percent=100, memory_percent=89))
+
     def test_resource_limit_stops_owned_process_only(self):
         unrelated = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(120)'], start_new_session=True)
         try:
-            for cpu, memory in ((90, 10), (10, 90)):
+            for cpu, memory in ((99, 90), (10, 90)):
                 with self.subTest(cpu=cpu, memory=memory), tempfile.TemporaryDirectory() as tmp:
                     run = Path(tmp)
                     commands = evaluation.Commands(dict(os.environ), run)

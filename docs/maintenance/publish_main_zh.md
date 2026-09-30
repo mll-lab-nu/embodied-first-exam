@@ -79,9 +79,11 @@ git push origin "$TOPOGYM_MAIN_BACKUP:$TOPOGYM_MAIN_BACKUP"
 ## 3. 当前忽略范围与文档验证
 
 当前 `.gitignore` 排除虚拟环境、缓存、`.env` / `.secrets/`、`jobs/`、`exps/`、`runs/`、
-`task_rollouts/`、旧生成任务和完整证明 evidence 等产物；保留 `.env.example`、当前 `tasks/`、
-`demos/**/*.mp4`、源码/配置/文档及 `legacy/` 中未被单独忽略的归档源码。
-因此这次发布也会包含正式 demo 视频与归档源码。
+`task_rollouts/`、旧生成任务和完整证明 evidence 等产物，以及根目录下的整个 `legacy/` 和 `demos/`；
+保留 `.env.example`、当前 `tasks/` 及其他未被忽略的源码/配置/文档。
+`legacy/` 和 `demos/` 的本地文件保留，新的提交文件树不包含它们；Docker difficulty eval 不依赖这两个目录。
+本页方案仍会保留历史提交中的内容；如果目标是连同 Git 历史一起排除，必须另行准备无这些路径历史的发布分支，
+不能把 `.gitignore` 或 `git rm --cached` 当作历史清理。
 
 2026-09-29 文档修改前的只读盘点：约 6,403 个可发布文件，合计 1.55 GB，最大文件约 52.92 MiB，
 没有超过 100 MiB 的当前文件。这里没有计算旧提交历史中的 blob；实际上传体积还取决于远端已有对象与压缩。

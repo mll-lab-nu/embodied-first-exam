@@ -47,7 +47,8 @@ def runtime_files(files):
         (p.startswith("topogym/") and not set(Path(p).parts) & omitted and not p.endswith(".md"))
         or p.startswith("assets/robots/") or p.startswith("images/topogym/")
         or p in (".dockerignore", "scripts/prepare_nyx_studio.py", "requirements/uv-topogym-gs121.txt",
-                 "requirements/uv-topogym-gs121-nyx.txt", "requirements/difficulty-eval-runtime.lock"))}
+                 "requirements/uv-topogym-gs121-nyx.txt", "requirements/difficulty-eval-runtime.lock",
+                 "requirements/uipc-build.lock", "requirements/difficulty-eval-runtime-cu130.lock"))}
 
 
 def build_info(root, bootstrap_sha=""):

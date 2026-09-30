@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "archived_at_utc": "2026-09-28T21:58:18.193182+00:00",
+  "archived_at_utc": "2026-09-30T12:38:54.356324+00:00",
   "scope": "Accepted finite-instance Task success proofs in the unified Env; original source/config identities retained",
-  "accepted_proofs": 6,
+  "accepted_proofs": 7,
   "tasks": [
     {
       "task": "cast_keyhole",
@@ -14,7 +14,22 @@
       "validation": "cast_keyhole/2026-09-28/archive_validation.json",
       "manifest_sha256": "27ddf654424c5e6cb5470ca65808d3a32ca89587574da61c4b0c6aa2d310c39c",
       "evidence_files": 8170,
-      "evidence_bytes": 10976057141
+      "evidence_bytes": 10976057141,
+      "scope": {
+        "seed": 0,
+        "robot": "aloha",
+        "action": "EE_ABS",
+        "backend": "cpu",
+        "precision": "64",
+        "physics_dt_s": 0.025,
+        "solver_substeps": 40,
+        "control_decimation": 1,
+        "task_checks_hz": 40,
+        "integration_substep_s": 0.000625,
+        "assistance": "contact_weld_v1",
+        "rgb": false,
+        "video": false
+      }
     },
     {
       "task": "cast_coil",
@@ -26,24 +41,51 @@
       "validation": "cast_coil/2026-09-28/archive_validation.json",
       "manifest_sha256": "df3c20769782d18192fc1700b9e1844b3e9bfe11e657f90e4670e5694ec9e50f",
       "evidence_files": 22452,
-      "evidence_bytes": 2919218662
+      "evidence_bytes": 2919218662,
+      "scope": {
+        "seed": 0,
+        "robot": "aloha",
+        "action": "EE_ABS",
+        "backend": "cpu",
+        "precision": "64",
+        "physics_dt_s": 0.025,
+        "solver_substeps": 40,
+        "control_decimation": 1,
+        "task_checks_hz": 40,
+        "integration_substep_s": 0.000625,
+        "assistance": "contact_weld_v1",
+        "rgb": false,
+        "video": false
+      }
+    },
+    {
+      "task": "hedgehog_in_cage",
+      "batch": "2026-09-30",
+      "accepted_proofs": 1,
+      "readme": "hedgehog_in_cage/2026-09-30/README.md",
+      "summary": "hedgehog_in_cage/2026-09-30/summary.json",
+      "manifest": "hedgehog_in_cage/2026-09-30/archive_manifest.json",
+      "validation": "hedgehog_in_cage/2026-09-30/archive_validation.json",
+      "manifest_sha256": "7937a3085e8a301d1e64046cf1f07d5c223cb8117d522bc36dc7e4418a335087",
+      "evidence_files": 5475,
+      "evidence_bytes": 1085203585,
+      "scope": {
+        "seed": 0,
+        "robot": "panda_robotiq",
+        "action": "JOINT_ABS",
+        "backend": "cpu",
+        "precision": "64",
+        "physics_dt_s": 0.025,
+        "solver_substeps": 40,
+        "control_decimation": 1,
+        "task_checks_hz": 40,
+        "integration_substep_s": 0.000625,
+        "assistance": "contact_weld_v1",
+        "rgb": false,
+        "video": false
+      }
     }
   ],
-  "shared_scope": {
-    "seed": 0,
-    "robot": "aloha",
-    "action": "EE_ABS",
-    "backend": "cpu",
-    "precision": "64",
-    "physics_dt_s": 0.025,
-    "solver_substeps": 40,
-    "control_decimation": 1,
-    "task_checks_hz": 40,
-    "integration_substep_s": 0.000625,
-    "assistance": "contact_weld_v1",
-    "rgb": false,
-    "video": false
-  },
   "limitations": [
     "One default-parameter seed per variant, not a parameter-domain guarantee",
     "Contact-triggered assisted grasp, not friction-only",

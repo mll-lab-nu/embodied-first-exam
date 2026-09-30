@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task": "hedgehog_in_cage",
+  "batch": "2026-09-30",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "medium",
+      "model_revision": "waisted4_dark_wood_v1",
+      "seed": 0,
+      "run": "native_success_01",
+      "path": "evidence/runs/native_success_01",
+      "role": "accepted_success",
+      "report": "evidence/runs/native_success_01/oracle_report.json",
+      "audit": "evidence/runs/native_audit_01/execution_audit.json",
+      "source_manifest": "evidence/runs/native_success_01/source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "0086b5e6cd02b2ab7e00118a91cd0c6a39b6cef06e3f01172cc6a69a997972d4",
+      "report_sha256": "2ccb29dc4cb185e02d4e36808d39b5f935086535141838fcb5f7e00e4dc03ba8",
+      "audit_sha256": "9ea5002c0a95645dc00f4b45e04401c018bddefd0995b0608f6d9b3632c99af7",
+      "simulation_time_s": 56.5,
+      "states": 2261
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "panda_robotiq",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false
+  },
+  "qualification_prerequisites": [
+    {
+      "path": "evidence/qualification/frozen_diagnostic_01",
+      "audit": "evidence/qualification/diagnostic_audit_02/execution_audit.json",
+      "task_success": false
+    }
+  ],
+  "object_witness": "evidence/supporting/object_final_01/object_witness.json",
+  "object_audit": "evidence/supporting/object_final_audit_01/object_audit.json",
+  "boundary_checks": "evidence/supporting/boundary_checks_01/checks.json",
+  "limitations": [
+    "Finite seed/default-parameter instance",
+    "Contact-triggered assisted grasp; not friction-only",
+    "Tick-end evidence; no continuous-time/all-substep qualification",
+    "No RGB/video qualification",
+    "Robot mounting link0 contact with table is excluded"
+  ],
+  "note": "Original bytes and source paths retained; use these archive-relative paths for access."
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "builder_image": "sameli/manylinux_2_34_x86_64_cuda_13.0@sha256:1d8f405b2a6565dd94ecca575f44396af62b1d2ad0c85e4b8666e0617d685c8e",
+  "repository": "https://github.com/spiriMirror/libuipc.git",
+  "source_commit": "292c98c3fec2dfbe9ae2c2407572f2f446a4a738",
+  "vcpkg_commit": "dd3097e305afa53f7b4312371f62058d2e665320",
+  "version": "0.0.25+topogym.cuda130",
+  "architectures": "89-real;120-real;120-virtual",
+  "required_sass": [
+    "sm_89",
+    "sm_120"
+  ],
+  "cmake_before_sha256": "2b9b33aaf3157b757274a441b9070805f610624623bceec0370ae5b4baa6047e",
+  "material_sha256": {
+    "src/backends/cuda/finite_element/constitutions/detail/stable_neo_hookean_3d.inl": "b12e941f5b00423515615687ade5c69873d6674a622ea3b2b6775cda28692180",
+    "src/constitution/stable_neo_hookean.cpp": "1d8c12150c24216ef346bcd5ea2f88c5a436c42600d14c0cfb6d0491f43fe68d"
+  },
+  "tinygltf": {
+    "commit": "26422192e2908a562b641175dde18489824e609e",
+    "archive_sha512": "ff80b49c01c4b1ad636e5c5651c5bd04ee3058cc068f0858ebe401c113aeeadb3db43bac7f987b6a2073d8cbe5de65da28e909fb5041839127695ddcd960295d",
+    "original_sha512": "89397dc2c8884a54ea0c370251449459a200057b5e470210c4468f43c4623947500630b1a67ff6319e0998e648487367398f134711bc7d2c42ebdbd7097770b3"
+  },
+  "build_policy": {
+    "link_optimization": "upstream-default",
+    "compile_jobs": 3,
+    "stop_memory_percent": 90,
+    "stop_on_cpu": false
+  },
+  "wheel_platform": "manylinux_2_35_x86_64"
+}

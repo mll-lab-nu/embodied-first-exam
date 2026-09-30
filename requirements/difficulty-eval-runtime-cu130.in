@@ -1,0 +1,20 @@
+# Python 3.11 / CUDA 13.0. The Docker build substitutes the audited 0.0.25
+# multi-architecture wheel; this pin retains its exact transitive dependency closure.
+torch==2.11.0
+torchvision==0.26.0
+genesis-world==1.2.1
+gs-nyx-plugin==0.1.4
+gs-nyx==0.1.3
+numpy==2.3.5
+scipy==1.17.1
+hydra-core==1.3.2
+omegaconf==2.3.0
+Pillow==11.3.0
+trimesh==5.1.0
+python-fcl==0.7.0.11
+shapely==2.1.2
+mapbox-earcut==2.1.0
+manifold3d==3.5.3
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+pyuipc==0.0.25

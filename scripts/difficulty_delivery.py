@@ -63,7 +63,11 @@ def decorate_compose(document, labels, gpu_uuid, *, uid=None, gid=None):
 
 
 class Delivery:
-    def __init__(self, work, commands, *, gpu_device='0', run_id='check', release_lock=None):
+    def __init__(self, work, commands, *, gpu_device='0', run_id='check', release_lock=None, cuda_flavor='cu128'):
+        from cuda_profiles import PROFILES
+        if cuda_flavor not in PROFILES:
+            raise DeliveryError('invalid CUDA profile')
+        self.cuda_flavor = cuda_flavor
         self.work, self.commands, self.run_id = Path(work), commands, run_id
         self.info = load_build_info(ROOT)
         if self.info is None:
@@ -87,6 +91,8 @@ class Delivery:
                 raise DeliveryError('invalid published release.lock schema') from None
             if self.release_lock.get('release_id') != self.release_id:
                 raise DeliveryError('release.lock does not match controller source')
+            if self.release_lock.get('cuda_flavor', 'cu128') != self.cuda_flavor:
+                raise DeliveryError('release.lock CUDA profile differs from --cuda-flavor')
             declared = self.inspect(self.release_lock['images']['controller'], 'image')
             if declared is None or declared['Id'] != self.inspect(self.owner)['Image']:
                 raise DeliveryError('release.lock controller digest does not match this container')
@@ -211,11 +217,20 @@ class Delivery:
         return reference
 
     def ensure_images(self, source=ROOT):
+        from cuda_profiles import build_args, check_driver
         files = source_files(source)
         runtime_inputs = runtime_files(files)
         if digest(runtime_inputs) != self.info['runtime_inputs_sha256']:
             raise DeliveryError('runtime build inputs differ from this controller release')
-        runtime = self.ensure_image('runtime', source, inputs=runtime_inputs, dockerfile='images/topogym/Dockerfile')
+        if self.cuda_flavor == 'cu130':
+            _, versions = self.command(['nvidia-smi', '--query-gpu=driver_version', '--format=csv,noheader'],
+                                       capture=True, check=True, timeout=30)
+            for version in versions.splitlines():
+                check_driver(self.cuda_flavor, version.strip())
+        arguments = build_args(source, self.cuda_flavor)
+        runtime_inputs = dict(runtime_inputs, cuda_flavor=self.cuda_flavor, build_args=arguments)
+        runtime = self.ensure_image('runtime', source, inputs=runtime_inputs, dockerfile='images/topogym/Dockerfile',
+                                    build_args=arguments)
         client_inputs = {p: h for p, h in files.items() if p in (
             'images/difficulty-eval/client.Dockerfile', 'images/difficulty-eval/client.Dockerfile.dockerignore',
             'requirements/difficulty-eval-client.lock')}
@@ -268,7 +283,7 @@ class Delivery:
                       *label_args(self.labels()), runtime,
                       'python', '-c', GPU_CHECK], log=log, monitor=True, check=True, timeout=180)
         record = dict(passed=True, scope='container_gpu_paths_assets', physical_scenes_qualified=False,
-                      release_id=self.release_id, gpu_uuid=self.gpu_uuid, images=self.images,
+                      release_id=self.release_id, cuda_flavor=self.cuda_flavor, gpu_uuid=self.gpu_uuid, images=self.images,
                       work_dir=str(self.work), log=str(log), checked_at=time.time())
         atomic_json(self.work / 'check.json', record)
         progress(f'Environment check passed | {self.work / "check.json"}')
@@ -278,9 +293,8 @@ class Delivery:
 GPU_CHECK = r'''
 import hashlib, importlib.metadata as m, json, os
 from pathlib import Path
-import torch
-assert torch.cuda.is_available(), 'CUDA unavailable'
-x = torch.zeros(1, device='cuda'); torch.cuda.synchronize()
+import runpy
+runpy.run_path('/opt/check_gpu_stack.py', run_name='__main__')
 for name in ('genesis-world', 'gs-nyx-plugin', 'gs-nyx', 'pyuipc'):
     print(name, m.version(name), flush=True)
 assert Path('/opt/topogym/SOURCE.json').is_file()
@@ -352,12 +366,14 @@ def main(argv=None):
         parser.add_argument('--work-dir', type=Path)
         parser.add_argument('--gpu-device', default='0')
         parser.add_argument('--release-lock', type=Path)
+        parser.add_argument('--cuda-flavor', choices=('cu128', 'cu130'), default='cu128')
         args = parser.parse_args(argv[1:])
         work = safe_work_dir(args.work_dir)
         work.mkdir(parents=True, exist_ok=True)
         configure_host_metrics()
         commands = Commands(dict(os.environ), work)
-        delivery = Delivery(work, commands, gpu_device=args.gpu_device, release_lock=args.release_lock)
+        delivery = Delivery(work, commands, gpu_device=args.gpu_device, release_lock=args.release_lock,
+                            cuda_flavor=args.cuda_flavor)
         for sig in (signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, on_signal)
         with delivery.gpu_lock():

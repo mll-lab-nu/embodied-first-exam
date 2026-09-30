@@ -4,12 +4,19 @@
 !requirements/uv-topogym-gs121.txt
 !requirements/uv-topogym-gs121-nyx.txt
 !requirements/difficulty-eval-runtime.lock
+!requirements/difficulty-eval-runtime-cu130.lock
+!requirements/uipc-build.lock
 !assets/
 !assets/robots/
 !assets/robots/**
 !scripts/
 !scripts/prepare_nyx_studio.py
 !images/topogym/prune.py
+!images/topogym/build_uipc.sh
+!images/topogym/verify_uipc_wheel.py
+!images/topogym/uipc-build.json
+!images/topogym/uipc-build-cu130.json
+!images/topogym/check_gpu_stack.py
 !topogym/
 !topogym/**
 # no solutions in any image (images/topogym/prune.py removes them again after COPY)

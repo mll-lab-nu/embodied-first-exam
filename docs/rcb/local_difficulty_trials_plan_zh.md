@@ -168,7 +168,7 @@ python scripts/sample_difficulty_instances.py \
 | `scripts/write_task_results.py`（按需扩展） | 若使用现有逐任务 README 输出，增加生成任务的根目录参数；当前硬编码 `root/tasks` 会跳过 run 私有任务 |
 | `harbor_templates/topogym/common/rcb_topogym.py`（迁移维护源） | 公共 `make-instance`/Session 支持 seeded 与 scene seed、完整有效参数，保留显式档位和旧 eval-index 兼容；统一配置校验后真实建场冻结 |
 | 现有资产准备/场景验收脚本和公共工具 selftest | Python 调度器调用这些入口准备 Blanket 初态及执行预检，缺少的检查补在对应现有入口，不另建 preflight 调度框架 |
-| `scripts/mem_guard.py`（扩展） | 增加本 run 的精确进程/容器归属及 CPU/内存 90% 阈值模式；新入口不使用原全局匹配行为 |
+| `scripts/mem_guard.py`（扩展） | 增加本 run 的精确进程/容器归属及 系统内存 90% 阈值模式（CPU 仅记录）；新入口不使用原全局匹配行为 |
 | `ci_checks/` | 支持独立 dataset 根目录、6 小时预算、实例双模式一致性和任务副本一致性 |
 
 **公共模板目录方案（待迁移）：**
@@ -390,7 +390,7 @@ runs/test_results/difficulty_trials/<run_id>/...
 - resume 先验证快照、实例、包、预算与模型配置，再对账活跃进程/容器。已完成且证据完整的 trial 跳过；只有顶层 result.json 不算完成。未知 running 状态先调查，不重复启动。
 - 本批 `--resume` 默认只继续未启动项，保留中断项待处理。不要直接对所有旧目录重放 `harbor run` 或 `harbor jobs resume`：本机 Harbor 会在恢复时删除部分缺 result 的 trial 目录，resume 还默认筛除 `CancelledError` 项。恢复单项前先保存原始产物；需要重新模型执行时采用下面的显式新 attempt 规则，不假定能续接旧 limited episode。
 - 每模式一次正式 trial，不因失败或低分自动重跑。基础设施故障保留 attempt；需要恢复执行时显式标为新 attempt，并固定有效结果选择规则，不能选择最高分。verifier 故障优先重判原轨迹。
-- 整批并发默认 1；GPU 空闲显存门槛按实际家族峰值设置，FEM 不沿用轻量 cube 的需求。资源等待有界，超限标记资源阻塞。持续监控 CPU、宿主和容器内存；达到项目要求的 90% 阈值停止本 run 相关工作，保留产物，不终止其他实验。
+- 整批并发默认 1；GPU 空闲显存门槛按实际家族峰值设置，FEM 不沿用轻量 cube 的需求。资源等待有界，超限标记资源阻塞。持续监控 CPU、宿主和容器内存；按 2026-09-30 更新，仅系统内存达到 90% 阈值停止本 run 相关工作，保留产物，不终止其他实验。
 - 捕获 INT/TERM：停止发新 job，记录当前状态并仅清理已登记的本 run 进程组、容器和 Compose project。不使用全局 `pkill`、容器名宽泛匹配或 Docker prune。中断清理与正常 collect 分开，不无限等待十余小时的评分预算。
 - 每项记录 agent/初始化/仿真/collect/verifier 耗时、实际动作步数、峰值资源、token、可得费用、错误原因和证据路径。未知费用记 null，禁止填 0。认证或模型配置错误暂停对应队列，避免重复空跑。
 - 汇总按 manifest 列出 expected=`6TN`（默认 78）、launched、completed、evaluable、solved、blocked、infra_error；完整成绩应有所选 task/difficulty/sample 的双模式一对结果。报告显式列出所选和未选任务，不能将未选项计为失败。一次样本不代表难度分布，也不声称完整可解性。

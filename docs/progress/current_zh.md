@@ -1,5 +1,7 @@
 # 当前开发进度（2026-09-21）
 
+> 2026-09-30 Hedgehog：当前四腰窗 medium、默认参数、seed 0 已通过物体通路、机械臂 IK、从默认 home 连续执行及独立审计，56.5 s 原生 Task success。使用接触触发辅助抓持、CPU，无新增视频；见[正式证明](../../solvability_proof/hedgehog_in_cage/README.md)。其他实例与纯摩擦资格未扩大。
+
 > 2026-09-29 Slotted Post Ring：Easy / Medium / Hard 三档场景已接入（环内径 108 / 105 / 102 mm，均为 28 mm 槽），几何、资产复现与相关回归通过。当前 Genesis FEM/IPC 的 10 s 静置及半步长验收被 CUDA OOM / InvalidDevice 阻塞，未标通过；Easy/Medium 仅有失败尝试的短程 Nyx 诊断片段。详见[当前任务页](../develop/tasks/slotted_post_ring_zh.md)与[证据](../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。
 
 > 2026-09-29 Orbits 更新：Easy／Medium／Hard 两／三／四环场景入口已补齐，统一 0.85 比例及 0.8 m 绳长；完整资产、同 seed 重建和 Hard 41 个资产哈希回归通过。已补固定源码、逐 tick 静置指标与四路共享录制的验收入口；当前真实运行受共享 GPU 显存／原生 CUDA 初始化错误阻塞，三档均未取得物理稳定资格。见 [Orbits 当前状态](../develop/tasks/orbits_zh.md)。
@@ -53,7 +55,8 @@
 
 - Blanket：Easy / Medium / Hard 的统一聚褶场景及 seed=0 冻结资源已补齐，构形目标 0° / 135° / 270°；三档标准 Env 零推进恢复、关节动作和精确回溯通过，46 项相关回归通过。按用户要求粒子静稳资格暂缓，机器人展平及难度排序待验；实际初态会在放桌后松弛。四视角预览和范围见[三档证据](../../runs/test_results/blanket_three_tiers_20260929_01/README.md)。
 
-- Hedgehog / Claws 新 medium：反馈执行器、几何搜索与 Claws 三档 2 s 摩擦持件诊断已实施；完整通路和抓持资格仍未通过，Task 终态未开启。失败记录、回归结果和 Nyx 诊断视频见[本轮证据](../../runs/test_results/hedgehog_claws_policy_20260927/README.md)。
+- **2026-09-30 Hedgehog：** 当前四腰窗 medium、默认参数、seed 0 已取得原生 Task success 与独立审计通过；从默认 home 执行 56.5 s，接触触发辅助抓持，CPU 无 RGB。见[正式证明](../../solvability_proof/hedgehog_in_cage/README.md)。其他 seed/参数、easy/hard、纯摩擦资格未扩大。
+- 2026-09-27 历史批次，Hedgehog / Claws 新 medium：反馈执行器、几何搜索与 Claws 三档 2 s 摩擦持件诊断已实施；完整通路和抓持资格仍未通过，Task 终态未开启。失败记录、回归结果和 Nyx 诊断视频见[本轮证据](../../runs/test_results/hedgehog_claws_policy_20260927/README.md)。
 
 - Rollout：RGB / simulator 工具模式、固定初态 reset、跨 episode 预算和 Bash workflow 已接通；独立模型服务未实现，付费模型成功响应及自主装配仍待验证。见[实用手册](../../legacy/cleanup_20260929/docs/develop/modules/agent_rollout_usage_zh.md)。
 - Rope Threading：连续反馈执行已修正接绳/换手自碰，以[当前运行](../../runs/environment-solvability/rope_threading/current_recording.json)为准。

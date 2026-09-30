@@ -14,7 +14,9 @@
 ## 本地 Rollout
 
 - `run_buzz_wire_policy.py`、`run_cast_coil_policy.py`、`run_cast_keyhole_policy.py`、`run_lock_picking_policy.py`：冻结源码并执行各任务策略。
+- `run_horseshoe_policy.py`：当前三档物体路径复核、easy 双臂抓点/联合 IK 规划与物理诊断；每秒资源监控，90% 停止本次进程。局部诊断不授予完整可解资格。
 - `run_hedgehog_policy.py`、`run_interlocked_claws_policy.py`、`run_rigid_reference_policy.py`：几何准备及已开放的反馈策略流程。
+- `plan_hedgehog_object_oracle.py`、`run_hedgehog_oracle.py`、`audit_hedgehog_oracle.py`：当前四腰窗 medium 的物体证书、从 home 连续执行的辅助抓持 oracle，以及独立逐 tick 审计；冻结源码并监控 90% 资源阈值。[已验收范围与复现命令](../solvability_proof/hedgehog_in_cage/README.md)。
 - `run_solvability_workflow.py`：按阶段执行候选策略与可解性研究；独立审计工具已归档，原有证据保留。
 - `test_scripted_policy_rollout.py`：`act(obs)` 样板执行入口，输出至 `task_rollouts/`。
 - `test_policy_cube_transfer.py`：低层方块执行与控制模式矩阵入口；其 `snapshot()` 被多个 rollout 管理脚本复用。

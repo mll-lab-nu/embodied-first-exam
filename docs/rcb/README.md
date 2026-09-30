@@ -503,7 +503,7 @@ topogym/                                   仓库根目录
 ├── images/
 │   ├── VERSION                            0.1.0
 │   └── topogym/
-│       ├── Dockerfile                     基础镜像：CUDA 12.6 torch + Genesis 1.2.1 + Nyx + 机器人资源 + topogym 包
+│       ├── Dockerfile                     基础镜像：torch 2.11 / cu128（可选 cu130）+ Genesis 1.2.1 + Nyx + 机器人资源 + topogym 包
 │       └── prune.py                       构建时删掉 agents / planning / data 等目录和 cast_coil 的 synthesize，写源码哈希
 ├── harbor_agents/                         自定义 agent（原样）：codex_openrouter.py、codex_chatgpt.py、llm_gateway.py
 ├── scripts/
@@ -664,6 +664,8 @@ bash bash_scripts/run_difficulty_trials.sh --phase plan --run-id difficulty-eval
 
 入口现默认启动 Docker 控制器；新用户见 [Docker 启动说明](docker_quickstart_zh.md)。以下难度评测命令使用 Docker；复用旧宿主环境与历史 run 时加 `--backend local`，或直接调用 Python；交付范围及分级验收见 [Docker 交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
 
+CUDA 配置默认 `cu128`；面向 R580+ 驱动的新机器可显式使用 `--cuda-flavor cu130`。两套固定 torch 2.11 和原始 pyuipc 0.0.25 材料源码，采用独立依赖锁与镜像身份；Blackwell 构建目标和实机验收状态分开记录，见 [双 CUDA 配置实施](cuda_blackwell_delivery_plan_zh.md#10-双-cuda-配置实施)。同一个 run ID 不能切换 CUDA 配置。
+
 订阅方式延续此前 Luna 的 agent/model 配置；实际模型访问资格由账户决定：
 
 ```bash
@@ -700,7 +702,7 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 - `--concurrency` 首版只接受 1；运行目录及 GPU 调度各有锁。默认等待 GPU 0 最多 600 秒、要求空闲显存至少 12000 MiB 且 GPU 利用率低于 10%；可用 `--gpu-wait-s` / `--gpu-min-free-mb` 调整。
 - 每次 run 先做独立认证/工具/图像 canary，不计入 78 次正式试验。该检查要求模型查看已记录相机图、通过工具写出确认；不是机器人任务成功证明。canary 或基础设施失败会暂停后续队列。
 - `--resume` 只启动从未开始的 job，不重用中断的 limited episode。显式 `--resume --rerun-incomplete` 才给中断/基础设施错误创建新 attempt，旧 job 保留。
-- SIGINT/SIGTERM 和 CPU/内存 90% 保护只清理本次拥有的进程组及带本次标签的容器，不终止其他任务。
+- SIGINT/SIGTERM 和系统内存 90% 保护（CPU 仅记录）只清理本次拥有的进程组及带本次标签的容器，不终止其他任务。
 
 每个 run 的实际源码和机器人资源复制到 `runs/difficulty_trials/<run-id>/source/`，按哈希构建独立镜像。
 真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。

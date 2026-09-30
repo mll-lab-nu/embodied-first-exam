@@ -2,7 +2,13 @@
 
 入口默认使用 Docker。宿主不需要安装 Python、Harbor、Codex、Node 或项目虚拟环境。需要 Linux x86_64、可访问的本机 Docker Engine/CLI（含 Buildx）、NVIDIA 驱动与已配置的 NVIDIA Container Toolkit，以及可访问依赖源/模型服务的网络。首版不支持远程 daemon、rootless 或 Docker Desktop。
 
+运行配方提供 `cu128`（默认）和 `cu130` 两套配置，均使用 torch 2.11 / torchvision 0.26，并补编译原始 pyuipc 0.0.25，包含 `sm_89` / `sm_120` 内核。`cu130` 面向采用 R580+ 驱动的 Blackwell 等新机器；`cu128` 同样以 Blackwell 为编译目标。两套构建与实机验收状态见 [Blackwell 工程计划](cuda_blackwell_delivery_plan_zh.md#10-双-cuda-配置实施)。配置存在不等于 RTX PRO 6000 实机已验收。
+
 在仓库根目录运行；源码归档不需要 `.git`。默认在**启动命令时的当前目录**创建 `topogym-work`。所有实验数据保存在该目录，脚本会打印绝对路径；用 `--work-dir /data/topogym-work` 可覆盖。
+
+下列默认命令使用 `cu128`。RTX PRO 6000 Blackwell 的 `cu130` 候选配置：检查时用 `check --cuda-flavor cu130`，实验命令中也加 `--cuda-flavor cu130`，并使用新的 run ID（例如 `luna-all-tasks-cu130`）。订阅登录共用，不需要重复。选择会同时决定编译镜像、IPC wheel 和运行依赖锁；不能对同一个 run ID 切换 CUDA 配置。宿主驱动低于 R580 时会停止；脚本不自动升级宿主驱动。
+
+首次使用需要从源码编译 IPC，预计每套约 30–90 分钟；网络或无依赖缓存时可能更长。后续相同配方复用本机镜像缓存，选用另一套配置会另建镜像。
 
 ```bash
 # 可选：检查 Docker、共享路径、权限、CUDA/Vulkan、机器人与视觉资产；不调用模型。
@@ -81,3 +87,5 @@ docker run --rm --init --stop-timeout 180 \
 维护方使用 `python scripts/difficulty_release.py bundle --output /path/topogym-source.tar.gz` 生成带固定配方和依赖锁的源码发行包。解压后运行根目录 `run_difficulty_trials.sh`，参数与仓库版相同。此命令不推送镜像；Nyx 镜像的现有发布限制保留。公开镜像还需要维护方明确分发条件、推送后记录真实 digest；当前本地镜像不代表已对外发布。有固定控制镜像时，最小启动包只需 `run_difficulty_trials.sh` 和一行镜像引用的 `controller-image.txt`；可另附 `release.lock.json` 固定全部已发布运行镜像。没有 release.lock 时，控制镜像携带配方并自动构建运行镜像。
 
 环境 `check`、CPU 测试和两个任务的试跑覆盖不同范围。全任务物理预检、真实订阅/API 工具调用与轨迹评分，以及独立新机器的冷启动结果，须分别有证据才能宣称验收完成；参见 [交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
+
+资源保护按系统内存占用执行：达到 90% 时停止本次工作并保留证据；CPU 即使超过 90% 也继续运行，只记录使用情况。

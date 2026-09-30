@@ -2,6 +2,8 @@
 
 更新：2026-09-30。状态：已按计划补充 Docker 交付实现，并完成本机分级验证；独立新机器、真实模型和全部场景的验收仍单列待办。实现与证据见第 11 节，操作入口见 [Docker 启动说明](docker_quickstart_zh.md)。
 
+RTX PRO 6000 Blackwell 上的 CUDA 兼容反馈单列为 [CUDA / Blackwell 工程计划](cuda_blackwell_delivery_plan_zh.md)。当前 cu126 栈不具备该卡的完整验收证据；新计划覆盖 PyTorch wheel 选择、IPC 多架构构建、后端检查与 GPU 使用窗口管理，尚未实施。
+
 目标：没有 TopoGym、Python、Harbor、Codex 或本项目虚拟环境的新用户，在已具备 Docker 与 GPU 运行条件的主机上，拉取本仓库的受支持版本后，直接运行 `bash bash_scripts/run_difficulty_trials.sh ...`，即可自动准备所需镜像与容器，完成抽样、场景准备、预检、订阅/API 认证、双模式 trial、恢复和结果汇总。另保留不含源码 checkout 的发行启动包。
 
 本计划更新原 Docker sweep 交付文档，以当前 `difficulty_eval.py` 为实现基础。旧稿中的每模式三次重复、234 trials、多模型队列、cube 接入前置和自动发布结果，不属于本次容器化的必需范围；后续扩展见第 10 节。本次不另写一套 sweep 调度器。
@@ -211,7 +213,7 @@ API 路径：
 
 控制器只需要 GPU 的监控能力，可使用 NVIDIA `utility` 支持 nvidia-smi/NVML；物理/渲染容器保留 CUDA 与 Nyx 所需的 graphics 能力。具体设备和驱动能力由每个容器独立声明。[NVIDIA GPU 与 driver capabilities](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html)
 
-CPU/内存 90% 保护必须继续反映宿主状态，不能因为搬进容器而变成控制器自身的 cgroup 读数。实现时验证宿主 `/proc` 只读采样或等价数据源，并与宿主读数对照；无法获得正确读数时明确失败。容器自身限额与宿主保护分别记录，只处理本 run 的工作。
+系统内存 90% 保护必须继续反映宿主状态（2026-09-30 更新：CPU 仅记录，不因超过 90% 停止），不能因为搬进容器而变成控制器自身的 cgroup 读数。实现时验证宿主 `/proc` 只读采样或等价数据源，并与宿主读数对照；无法获得正确读数时明确失败。容器自身限额与宿主保护分别记录，只处理本 run 的工作。
 
 测量基础镜像体积、构建峰值、刚体与 FEM/IPC/Blanket 的显存/内存、录像和缓存增长，发布实际需求范围。首版不提高并发，也不承诺 432 秒包含镜像构建、初始化、准备和评分时间。
 

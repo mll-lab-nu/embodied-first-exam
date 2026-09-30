@@ -4,6 +4,8 @@
 
 核对日期：2026-09-28。范围为当前 13 个正式 Task，另列 Cube 等机制样板。检查现有报告、冻结源码、当前变体/终态与 policy 入口；本次未运行新仿真，未修改成功判据，也未增加已验收数量。[机器记录与所读证据哈希](run_candidates.json)。
 
+2026-09-30 补充：Hedgehog 当前四腰窗 medium 已完成新的物理执行与独立审计，并已收录[正式证明](hedgehog_in_cage/README.md)。下表更新该行；`run_candidates.json` 和下方 09-28 扫描结论仍保留原历史范围，当前数量以 [catalog.json](catalog.json) 为准。
+
 **除已归档的 Keyhole / Coil 六个实例，本轮未找到可以直接按当前正式 Task 的 success 标准追加的其他任务。** 最有复用价值的是 **Lock medium、Fiber 三档、Buzz Wire 三档、Horseshoe 三档**。它们距离新证明的缺口不同；建议首先处理 Lock medium 的终态诊断，再从 Fiber easy 开始迁移。
 
 ## 当前任务盘点
@@ -16,7 +18,7 @@
 | **Fiber Bundling** | 4/8/16 芯历史完整穿环、机器人命令及 IK | 当前 terminal 已启用，缺当前 Env 的成功执行 | 迁移护套抓取/穿环 policy，接入当前子步禁碰，先跑 4 芯 |
 | **Buzz Wire** | F1/F2/F3 历史 home→拾取→全路线→放回，4/2 ms 复验均通过 | 历史证据完整；当前三档整体抬高 40 mm | 重算当前布局 IK、迁移反馈控制、补终态资格并重跑 |
 | **Horseshoe** | 当前三形状有完整对象几何路径；旧 F1/F2/F3 有机器人成功 | 当前形状证书明确未验证机器人/动力学 | 优先 `waist_mild`，补抓取/交接/IK 和固定目标区搬运 |
-| Hedgehog | CLASSIC / GEN 等旧完整流程；新 medium 有几何搜索报告 | 新 medium 未找到完整路径；其他旧实例未取得当前目标区证明 | easy/hard 可另做旧路线适配；medium 先解决通路，再验证抓持与入区 |
+| Hedgehog | 当前四腰窗 medium 已完成物体通路、IK 和辅助抓持完整执行 | medium 默认参数 seed 0 已正式收录；easy/hard 及随机实例未覆盖 | [medium 证明](hedgehog_in_cage/README.md)；其他实例另行验证 |
 | Interlocked Claws | 旧同形螺旋爪等完整辅助预抓持路线 | 当前 medium 通路未通过；当前三档摩擦保持诊断均失败 | 分开解决各档抓持和路线，不能把旧分离终点当当前目标区成功 |
 | Blanket Flatten | 旧简单折叠单臂展平成功；当前 PBD 抓放夹具通过 | 旧流程关闭 robot-soft coupling；当前复杂初态仅局部执行 | 可先迁移 easy，验证当前初态、抓区、耦合、释放后展平 |
 | Knot Untying | 旧 Trefoil 75 s 解结、释放及静置 | 不是默认 home 连续起步；完整物理/通用抓持资格未齐 | 当前 Trefoil 对应 medium；适配当前 FEM/抓持与 home 接近，再做终态资格 |
@@ -80,7 +82,7 @@ F1 三拱、F2、F3 的归档均有 home 连续接近、实际摩擦抓取、全
 
 ## 其余任务的具体阻挡证据
 
-- **Hedgehog / Claws：**[当前两种 medium 搜索与三档 Claws 抓持报告](../runs/test_results/hedgehog_claws_policy_20260927/README.md)。两种 medium 有反馈执行器和 CLI，但 `--part solve` 尚未取得 P1/T2 资格，不能直接启动为已知解。Hedgehog easy/hard 和 Claws 旧原型的历史流程仍有参考价值，需单独核对当前模型和目标区。
+- **Hedgehog / Claws 的 09-27 历史批次：**[当前两种 medium 搜索与三档 Claws 抓持报告](../runs/test_results/hedgehog_claws_policy_20260927/README.md)。两种 medium 有反馈执行器和 CLI，但 `--part solve` 尚未取得 P1/T2 资格，不能直接启动为已知解。Hedgehog easy/hard 和 Claws 旧原型的历史流程仍有参考价值，需单独核对当前模型和目标区。
 - **Blanket：**[旧简单折叠报告](../runs/demo_metadata/blanket_flatten/2026-09-18_single_arm_clear_home_v1/report.json) 为 `success=True`、`full_robot_task_verified=True`，同时明确 `robot_soft_coupling=False`。[当前 PBD 抓放夹具](../runs/test_results/soft_grasp_20260927_pbd_robot_09_rgb/README.md) 已从 home 完整抓放，但不是 Blanket Task 展平。复杂初态的无臂成功不能增加机器人成功数。
 - **Knot：**[Trefoil v9 报告](../runs/demo_metadata/knot_untying/2026-09-17_bounded_spread_trefoil_v9/report.json) 为 `untying_verified=True`，但 `complete_physics_suite_passed=False`、`robot_grasp_qualified=False`、`neutral_to_hover_motion_recorded=False`。当前 Trefoil 在 medium，不能按旧 easy 标签收录。
 - **Rope：**[66.115 s 尝试](../runs/environment-solvability/rope_threading/full_ik_v3_20260921_attempt_1/report.json) 为 `passed=False`，右手目标 IK 不可达；后续反馈重跑的两个报告分别在 1.855 / 1.620 s 主动停止，不能从较新的目录名推断已补齐成功。

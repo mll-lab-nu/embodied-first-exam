@@ -1,6 +1,7 @@
-# Simulator lock for Python 3.11 / CUDA 12.6, resolved with uv --torch-backend cu126.
-torch==2.12.0
-torchvision==0.27.0
+# Python 3.11 / CUDA 12.8. The Docker build substitutes the audited 0.0.25
+# multi-architecture wheel; this pin retains its exact transitive dependency closure.
+torch==2.11.0
+torchvision==0.26.0
 genesis-world==1.2.1
 gs-nyx-plugin==0.1.4
 gs-nyx==0.1.3

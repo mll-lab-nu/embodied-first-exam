@@ -23,6 +23,7 @@
       "type": "object",
       "required": ["schema_version", "release_id", "images"],
       "properties": {
+        "cuda_flavor": {"enum": ["cu128", "cu130"]},
         "schema_version": {"const": 1},
         "release_id": {"$ref": "#/$defs/hash"},
         "images": {

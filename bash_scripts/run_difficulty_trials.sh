@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Docker bootstrap only. Experiment stages remain in scripts/difficulty_eval.py.
+# --cuda-flavor cu128|cu130 is forwarded to Python (cu128 by default).
 set +x
 set -euo pipefail
 umask 077
@@ -68,7 +69,7 @@ fail() { printf 'ERROR: %s\n' "$*" >&2; exit 2; }
 log() { printf '[%(%F %T%z)T] === bootstrap: %s ===\n' -1 "$*"; }
 guarded_build() {
   local logfile="$1"; shift
-  local child previous_total=0 previous_idle=0 total idle_delta delta memory
+  local child previous_total=0 previous_idle=0 total idle_delta delta memory cpu=0 peak_cpu=0 peak_memory=0
   "$@" > >(tee "$logfile") 2>&1 & child=$!
   trap 'kill -TERM "$child" 2>/dev/null || true; wait "$child" || true; exit 130' INT TERM
   while kill -0 "$child" 2>/dev/null; do
@@ -76,15 +77,20 @@ guarded_build() {
     total=$((usr+nice+sys+idle+iowait+irq+softirq+steal))
     delta=$((total-previous_total)); idle_delta=$((idle+iowait-previous_idle))
     memory="$(awk '/MemTotal:/{t=$2} /MemAvailable:/{a=$2} END{if(t>0)print int(100*(t-a)/t);else print 100}' /proc/meminfo)"
-    if ((memory>=90 || (previous_total>0 && delta>0 && 100*(delta-idle_delta)/delta>=90))); then
+    if ((previous_total>0 && delta>0)); then cpu=$((100*(delta-idle_delta)/delta)); fi
+    if ((cpu>peak_cpu)); then peak_cpu=$cpu; fi
+    if ((memory>peak_memory)); then peak_memory=$memory; fi
+    if ((memory>=90)); then
       kill -TERM "$child" 2>/dev/null || true; wait "$child" || true
-      fail 'CPU or memory reached 90%; owned image build stopped'
+      printf '{"cpu_percent":%s,"memory_percent":%s}\n' "$peak_cpu" "$peak_memory" > "$logfile.resources.json"
+      fail 'Memory reached 90%; owned image build stopped'
     fi
     previous_total=$total; previous_idle=$((idle+iowait))
     sleep 2
   done
   local result=0
   wait "$child" || result=$?
+  printf '{"cpu_percent":%s,"memory_percent":%s}\n' "$peak_cpu" "$peak_memory" > "$logfile.resources.json"
   trap - INT TERM
   return "$result"
 }

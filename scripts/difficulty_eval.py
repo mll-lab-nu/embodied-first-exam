@@ -64,6 +64,8 @@ def parse_args(argv=None):
     parser.add_argument("--list-tasks", action="store_true")
     parser.add_argument("--work-dir", type=Path, help="Docker default: launcher cwd/topogym-work; direct Python default: repository")
     parser.add_argument("--gpu-device", default="0", help="host GPU index or UUID")
+    parser.add_argument("--cuda-flavor", choices=("cu128", "cu130"), default="cu128",
+                        help="runtime CUDA profile; cu130 requires host NVIDIA driver R580+")
     parser.add_argument("--release-lock", type=Path, help="published image digest manifest; otherwise build from fixed recipes")
     sampling.add_sampling_arguments(parser)
     parser.add_argument("--rerun-incomplete", action="store_true", help="with --resume, create a new attempt for interrupted/infra jobs")
@@ -222,6 +224,7 @@ class Commands:
     """Own subprocess groups and enforce the existing host resource guard."""
     def __init__(self, env, run):
         self.env, self.run, self.child = env, run, None
+        self.resource_peaks = dict(cpu_percent=0.0, memory_percent=0.0)
 
     def stop(self):
         child = self.child
@@ -240,10 +243,12 @@ class Commands:
     def check_resources(self):
         import psutil
         cpu, memory = psutil.cpu_percent(), psutil.virtual_memory().percent
-        if cpu >= 90 or memory >= 90:
+        self.resource_peaks['cpu_percent'] = max(self.resource_peaks['cpu_percent'], cpu)
+        self.resource_peaks['memory_percent'] = max(self.resource_peaks['memory_percent'], memory)
+        if memory >= 90:
             sampling.atomic_json(self.run / "resource-stop.json", dict(cpu_percent=cpu, memory_percent=memory,
                 pid=self.child.pid if self.child else None))
-            raise EvaluationError("CPU or memory reached 90%; owned work stopped; see resource-stop.json")
+            raise EvaluationError("Memory reached 90%; owned work stopped; see resource-stop.json")
 
     def run_command(self, argv, *, log=None, append=False, capture=False, env=None, input_text=None,
                     monitor=False, timeout=None, check=False):
@@ -276,6 +281,8 @@ class Commands:
             finally:
                 if self.child is not None:
                     self.stop()
+                if monitor:
+                    sampling.atomic_json(self.run / 'resource-usage.json', self.resource_peaks)
 
 
 LIMITED_SMOKE = """from rcb_client import Robot
@@ -328,7 +335,7 @@ class DifficultyEvaluation:
             from difficulty_delivery import Delivery, configure_host_metrics
             configure_host_metrics()
             self.delivery = Delivery(self.work, self.commands, gpu_device=args.gpu_device,
-                                     run_id=args.run_id, release_lock=args.release_lock)
+                                     run_id=args.run_id, release_lock=args.release_lock, cuda_flavor=args.cuda_flavor)
             if not any(arg.startswith("version=") for arg in args.agent_arg):
                 args.agent_arg.append("version=" + self.delivery.info["codex_version"])
 
@@ -352,11 +359,17 @@ class DifficultyEvaluation:
         self.run.mkdir(parents=True, exist_ok=True)
         with lock(self.run / ".lock", "another invocation owns this run-id"):
             stage("plan")
-            progress(f"Run: {self.args.run_id} | requested phase: {self.args.phase}")
+            progress(f"Run: {self.args.run_id} | requested phase: {self.args.phase} | CUDA: {self.args.cuda_flavor}")
             progress("Validating frozen manifest/source" if self.manifest_path.exists() else "Sampling instances and freezing source")
             options = {name: getattr(self.args, name) for name in ("setting", "tasks", "sampling_seed", "samples_per_difficulty",
                        "agent_wall_clock_s", "concurrency", "resume")}
             self.manifest = sampling.prepare_manifest(self.run, **options)
+            profile_path = self.run / "cuda-profile.json"
+            profile = dict(cuda_flavor=self.args.cuda_flavor)
+            if profile_path.exists() and read_json(profile_path) != profile:
+                raise EvaluationError("CUDA profile changed; use a new run-id")
+            if not profile_path.exists():
+                sampling.atomic_json(profile_path, profile)
             if self.delivery:
                 source_identity = read_json(self.run / "source_identity.json")
                 if source_identity.get("release_id") != self.delivery.release_id:
@@ -370,7 +383,7 @@ class DifficultyEvaluation:
                 return self.collect(announce=True)
             self.budget = self.manifest["settings"]["agent_wall_clock_s"]
             self.source_sha = self.manifest["source_sha256"]
-            self.image = "topogym-local/rcb-topogym-difficulty:" + self.source_sha[:20]
+            self.image = "topogym-local/rcb-topogym-difficulty:" + self.source_sha[:20] + "-" + self.args.cuda_flavor
             self.commands.env.update(TOPOGYM_TOOL_IMAGE=self.image, TOPOGYM_RUN_ROOT=str(self.run), TOPOGYM_RUN_ID=self.args.run_id)
             previous = self.run / "resource-stop.json"
             if previous.exists():
@@ -533,9 +546,16 @@ class DifficultyEvaluation:
                 source_sha256=self.source_sha, release_id=self.delivery.release_id,
                 gpu_uuid=self.gpu_device, images=self.delivery.images))
         elif not (self.run / "image.json").exists():
+            from cuda_profiles import build_args, check_driver
+            if self.args.cuda_flavor == 'cu130':
+                _, version = self.commands.run_command(['nvidia-smi', '-i', self.gpu_device,
+                    '--query-gpu=driver_version', '--format=csv,noheader'], capture=True, check=True, timeout=30)
+                check_driver(self.args.cuda_flavor, version.strip())
+            arguments = [arg for key, value in build_args(self.source, self.args.cuda_flavor).items()
+                         for arg in ('--build-arg', f'{key}={value}')]
             progress(f"Building frozen source image: {self.image} | log: {self.run / 'image-build.log'}")
             self.commands.run_command(["docker", "build", "--label", "topogym.source=" + self.source_sha, "-t", self.image,
-                "-f", self.source / "images/topogym/Dockerfile", self.source], log=self.run / "image-build.log", monitor=True, check=True)
+                *arguments, "-f", self.source / "images/topogym/Dockerfile", self.source], log=self.run / "image-build.log", monitor=True, check=True)
             sampling.atomic_json(self.run / "image.json", dict(image=self.image, id=self.image_info()["Id"], source_sha256=self.source_sha))
         self.verify_image()
         self.verify_packages()
