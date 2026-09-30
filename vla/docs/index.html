@@ -241,7 +241,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <a class="sub" href="#s3-rec">录像</a>
   <a class="sub" href="#s3-proto">标准协议</a>
   <a class="sub" href="#s3-arch">总体架构与 I/O</a>
-  <a class="sub" href="#s3-dec">待确认决策</a>
+  <a class="sub" href="#s3-dec">决策</a>
   <a href="#s4">4 VLA 选型</a>
   <a class="sub" href="#s4-eval">只评测推荐</a>
   <a class="sub" href="#s4-io">输入输出</a>
@@ -255,7 +255,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <p class="lede">TopoGym 仿真器概览，VLA 从哪里接入、接口怎么设计，以及首批评测哪几个 VLA。左边是 Gym，右边是 VLA，中间只有一个三类数据结构的协议。</p>
   <div class="summary">
     <div class="card"><span class="k gym">代码库</span><p>Genesis 1.2.1 上的机器人拓扑操作仿真器，13 类任务。9 个任务用 ALOHA 双臂，4 个用 Panda 单臂。VLA 在评测循环的 <code>agent.act(obs)</code> 处接入。</p></div>
-    <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧一个通用适配器（每种机器人只有一行常量），VLA 侧按模型写子类。录像在 Gym 侧完成，不需要 Harbor。</p></div>
+    <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做服务端（TCP，Python 标准库），评测进程驱动循环。Gym 侧一个通用适配器（每种机器人只有一行常量），VLA 侧按模型写子类。录像在 Gym 侧完成，不需要 Harbor。</p></div>
     <div class="card"><span class="k vla">选型</span><p id="summary-pick">每个系列选一个：π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5。只评测阶段按 checkpoint 匹配：Panda 用 π0.5 / GR00T / MolmoAct2 的 DROID 版，ALOHA 用 π0.5-base 与 X-VLA-RoboTwin2。π0.7 等更新的模型未开放权重。</p></div>
   </div>
 </header>
@@ -407,7 +407,8 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
 ├── <span class="d">tests/</span>                    <span class="n">106 个 test_*.py：contracts / integration / unit / architecture</span>
 ├── <span class="d">scripts/</span>                  <span class="n">50 个脚本</span>
 ├── <span class="d">solvability_proof/</span> <span class="d">demos/</span>  <span class="n">可解证据 · 正式演示 MP4</span>
-├── <span class="d">docs/</span>                     <span class="n">develop/ · progress/ · vla_doc/（现有 VLA 调用手册）· vla_integration/（本文）</span>
+├── <span class="d">docs/</span>                     <span class="n">develop/ · progress/ · vla_doc/（现有 VLA 调用手册）</span>
+├── <span class="d">vla/</span>                      <span class="n">VLA 接入（本文在 vla/docs/；代码待实现）</span>
 ├── <span class="d">tasks/</span> <span class="d">images/</span> <span class="d">harbor_agents/</span> <span class="d">ci_checks/</span>   <span class="n">Harbor 层（coding agent 评测，与本文并行）</span>
 └── <span class="d">legacy/</span>                   <span class="n">归档实现，活动代码不导入</span></pre>
 </div>
@@ -512,7 +513,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
 <h3 id="s2-code">评测主循环（伪代码）</h3>
 <p>下面三段是完整链路。绿色高亮是 VLA 介入的位置，其余都是 TopoGym 已有接口。</p>
 <pre><span class="c"># ── ① Gym 环境：vla/gym/run_eval.py（管理方） ──</span>
-client = WebsocketClient(args.policy)                  <span class="c"># 连接 VLA 服务</span>
+client = RemoteClient(args.policy)                     <span class="c"># 连接 VLA 服务</span>
 spec   = client.spec                                   <span class="hl">← 握手：服务端发来 PolicySpec</span>
 cfg = dict(robot_id=spec.embodiment,                   <span class="c"># aloha / panda_robotiq</span>
            control_mode=MODE[spec.action_space],       <span class="c"># joint_abs → JOINT_ABS，ee_abs → EE_ABS</span>
@@ -543,13 +544,18 @@ agent = VLAAgent(client, instruction=INSTRUCTIONS[args.task])
 
 <span class="c"># ── ③ VLA 环境：vla/models/serve.py ──</span>
 vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"cuda"</span>)
-<span class="kw">async def</span> handler(ws):
-    <span class="kw">await</span> ws.send(pack(vla.spec))                              <span class="c"># 握手</span>
-    <span class="kw">async for</span> msg <span class="kw">in</span> ws:
-        req = unpack(msg)
-        <span class="kw">if</span> req[<span class="s">"type"</span>] == <span class="s">"reset"</span>: vla.reset(seed=req[<span class="s">"seed"</span>]); <span class="kw">await</span> ws.send(pack({<span class="s">"ok"</span>: True})); <span class="kw">continue</span>
-        chunk = vla.infer(Observation(**req[<span class="s">"obs"</span>]))         <span class="hl">← 模型专属预处理 → 前向 → 后处理</span>
-        <span class="kw">await</span> ws.send(pack({<span class="s">"actions"</span>: chunk.actions}))</pre>
+listener = Listener((<span class="s">"localhost"</span>, args.port))                <span class="c"># 标准库 multiprocessing.connection</span>
+<span class="kw">while</span> True:
+    conn = listener.accept()                                   <span class="c"># 一对一：一次只接一个评测进程</span>
+    conn.send_bytes(encode(vla.spec))                          <span class="c"># 握手</span>
+    <span class="kw">try</span>:
+        <span class="kw">while</span> True:
+            req = decode(conn.recv_bytes())                    <span class="c"># JSON 头 + 数组原始字节</span>
+            <span class="kw">if</span> req[<span class="s">"type"</span>] == <span class="s">"reset"</span>: vla.reset(seed=req[<span class="s">"seed"</span>]); conn.send_bytes(encode({<span class="s">"ok"</span>: True})); <span class="kw">continue</span>
+            chunk = vla.infer(Observation(**req[<span class="s">"obs"</span>]))     <span class="hl">← 模型专属预处理 → 前向 → 后处理</span>
+            conn.send_bytes(encode({<span class="s">"actions"</span>: chunk.actions}))
+    <span class="kw">except</span> EOFError:                                           <span class="c"># 评测进程断开，等下一个</span>
+        conn.close()</pre>
 
 <h3 id="s2-seq">一个 episode 的时序</h3>
 <figure>
@@ -574,7 +580,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <tbody>
 <tr><td>Modular</td><td>Gym 侧代码不 import 任何模型库；VLA 侧代码不 import Genesis / topogym</td></tr>
 <tr><td>Scalable</td><td>加一个 VLA = 1 个子类 + 1 个依赖环境；加一个机器人 = 1 个适配器；加一个任务 = 1 条 instruction</td></tr>
-<tr><td>可切换</td><td>同一评测命令只改 <code>--policy ws://host:port</code></td></tr>
+<tr><td>可切换</td><td>只改评测配置的 <code>policy.address</code></td></tr>
 <tr><td>训练 / 评测一致</td><td>数据导出与在线评测共用同一个适配器</td></tr>
 <tr><td>Simple</td><td>协议 3 个数据类；不引入插件框架</td></tr>
 </tbody></table></div>
@@ -665,7 +671,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <div class="tbl"><table>
 <thead><tr><th>环节</th><th>耗时</th><th>发生频率</th><th>来源</th></tr></thead>
 <tbody>
-<tr><td>msgpack 序列化（3 张 224×224 图 + state，约 0.45 MB）</td><td class="num">约 1 ms</td><td>每次推理</td><td>估算</td></tr>
+<tr><td>序列化（JSON 头 + 数组原始字节；3 张 224×224 图 + state，约 0.45 MB）</td><td class="num">&lt; 1 ms</td><td>每次推理</td><td>估算</td></tr>
 <tr><td>传输：同机 localhost</td><td class="num">&lt; 1 ms</td><td>每次推理</td><td>估算</td></tr>
 <tr><td>传输：同机房 1 GbE</td><td class="num">约 4 ms</td><td>每次推理</td><td>估算（0.45 MB ÷ 125 MB/s）</td></tr>
 <tr><td>传输：跨地域（RTT 30 ms）</td><td class="num">约 40 ms</td><td>每次推理</td><td>估算</td></tr>
@@ -676,19 +682,20 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <div class="tbl"><table>
 <thead><tr><th>代价</th><th>处理</th></tr></thead>
 <tbody>
-<tr><td>多一个进程要启动和管理</td><td><code>run_eval</code> 启动时等服务 <code>/healthz</code> 就绪；服务日志单独保存</td></tr>
+<tr><td>多一个进程要启动和管理</td><td><code>run_eval</code> 连接成功并收到 <code>spec</code> 即视为服务就绪；服务日志单独保存</td></tr>
 <tr><td>服务崩溃或超时</td><td><code>infer</code> 设超时；失败记为 <code>policy_error</code>，不计为任务失败，可重连后重跑该 seed</td></tr>
 <tr><td>两侧协议版本不一致</td><td><code>PolicySpec</code> 带 <code>protocol_version</code>，握手时校验</td></tr>
 <tr><td>跨进程调试不便</td><td>同一个 <code>BaseVLA</code> 子类可经 <code>LocalClient</code> 在同进程运行（依赖允许时）；服务端可加回放模式，按数据集动作回放来检查 Gym 侧</td></tr>
 <tr><td>模型采样有随机性（flow matching 噪声）</td><td><code>reset</code> 消息带 seed，服务端设随机种子，保证可复现</td></tr>
 </tbody></table></div>
 
-<p><b>传输协议。</b>选 WebSocket + msgpack。</p>
+<p><b>传输协议。</b>选 Python 标准库的 TCP 连接（<code>multiprocessing.connection</code>），消息是 JSON 头 + 数组原始字节。TopoGym 环境不需要装任何包。</p>
 <div class="tbl"><table>
 <thead><tr><th>方案</th><th>谁在用</th><th>优点</th><th>缺点</th><th>结论</th></tr></thead>
 <tbody>
 <tr><td>HTTP + JSON（FastAPI）</td><td>OpenVLA-OFT、X-VLA、MolmoAct2 自带服务</td><td>简单，curl 可调试</td><td>数组要 base64 或 JSON 编码，体积和耗时增加；无连接状态，握手和 reset 需额外约定</td><td>不选</td></tr>
-<tr><td><b>WebSocket + msgpack</b></td><td>openpi、vla-eval、XPolicyLab</td><td>长连接，连接时下发 <code>PolicySpec</code>；二进制数组；Gym 侧只需 <code>msgpack</code> + <code>websockets</code>（不装 <code>openpi-client</code>，它要求 <code>numpy&lt;2</code>）</td><td>消息类型需要自己约定（本方案只有 3 种）</td><td><b>选用</b></td></tr>
+<tr><td>WebSocket + msgpack</td><td>openpi、vla-eval、XPolicyLab</td><td>长连接；二进制数组</td><td>TopoGym 环境要多装 <code>msgpack</code>、<code>websockets</code>；一对一本机连接用不到它的多客户端与浏览器支持</td><td>不选</td></tr>
+<tr><td><b>TCP（标准库 <code>multiprocessing.connection</code>）+ JSON 头 + 数组原始字节</b></td><td>Python 标准库</td><td>两侧都不需要装包；自带消息分帧；长连接，连接时下发 <code>PolicySpec</code></td><td>编解码自己写（约 30 行）；只用 <code>send_bytes</code> / <code>recv_bytes</code>，不用 pickle（跨环境版本兼容和安全都无法保证）</td><td><b>选用</b></td></tr>
 <tr><td>gRPC</td><td>LeRobot async inference</td><td>强类型 schema</td><td>需要 protobuf 代码生成，两侧依赖更重</td><td>不选</td></tr>
 <tr><td>ZMQ REQ/REP</td><td>Isaac-GR00T 官方服务</td><td>延迟低</td><td>无握手 / 健康检查约定</td><td>不选；GR00T 子类内部可直接调用其策略对象</td></tr>
 </tbody></table></div>
@@ -712,7 +719,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
     rec.finish({<span class="s">"outcome"</span>: outcome})         <span class="c"># 视频完成不代表任务成功，结果单独写入</span></pre>
 
 <h3 id="s3-proto">标准协议：3 个数据类</h3>
-<pre><span class="c"># vla/protocol.py —— Gym 与 VLA 两侧共享，只依赖 numpy + msgpack</span>
+<pre><span class="c"># vla/protocol.py —— Gym 与 VLA 两侧共享，只依赖 numpy + 标准库</span>
 <span class="kw">@dataclass</span>(frozen=True)
 <span class="kw">class</span> <span class="h">PolicySpec</span>:                    <span class="c"># 服务端在连接建立时发给客户端</span>
     protocol_version: int              <span class="c"># 握手时校验</span>
@@ -794,7 +801,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
   <text class="sm" x="271" y="272" text-anchor="middle">取前 execute_steps 步</text>
   <rect class="pbox" x="176" y="300" width="190" height="56" rx="6"/>
   <text class="lbl" x="271" y="322" text-anchor="middle">PolicyClient</text>
-  <text class="sm" x="271" y="340" text-anchor="middle">Websocket / Local</text>
+  <text class="sm" x="271" y="340" text-anchor="middle">Remote / Local</text>
   <!-- flows -->
   <line class="ln-g" x1="140" y1="176" x2="174" y2="176" marker-end="url(#a7g)"/>
   <line class="ln-g" x1="176" y1="206" x2="142" y2="206" marker-end="url(#a7g)"/>
@@ -835,7 +842,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <tr><td><span class="hop">2</span> Adapter<br><span class="muted">→ 标准 Observation</span></td>
 <td><code>images</code>：<code>cam_high</code>、<code>cam_left_wrist</code>、<code>cam_right_wrist</code> 缩放到 <code>spec.image_size</code><br><code>state</code> (14,) float32：<code>[左 6 关节, 左开度, 右 6 关节, 右开度]</code>；开度 = (finger₀ − 0.002) / 0.035<br><code>instruction</code>：来自 <code>instructions.yaml</code></td>
 <td><code>images</code>：<code>agentview</code>、<code>wrist</code><br><code>state</code> (8,) float32：<code>[7 关节, 开度]</code>；开度 = 1 − finger₀ / 0.8<br><code>instruction</code> 同左</td></tr>
-<tr><td><span class="hop">3</span> 传输</td><td colspan="2">msgpack 二进制，<code>{"type": "infer", "obs": {...}}</code>，约 0.45 MB（3 张 224×224）；每 <code>execute_steps</code> 个控制步一次</td></tr>
+<tr><td><span class="hop">3</span> 传输</td><td colspan="2">JSON 头 <code>{"type": "infer", ...}</code> + 数组原始字节，约 0.45 MB（3 张 224×224）；每 <code>execute_steps</code> 个控制步一次</td></tr>
 <tr><td><span class="hop">4</span> 子类内部</td><td colspan="2">模型专属：图像预处理、state 归一化或补零、prompt 格式、前向（flow matching 去噪 / 自回归解码）、反归一化、相对量 → 绝对量。见上方面板与<a href="#s4-io">第 4 节</a></td></tr>
 <tr><td><span class="hop">5</span> 返回</td><td><code>ActionChunk.actions</code> (H, 14) float32：绝对关节目标 + 开度；<code>ee_abs</code> 时为 (H, 20)</td><td>(H, 8)；<code>ee_abs</code> 时为 (H, 10)</td></tr>
 <tr><td><span class="hop">6</span> Agent → Env<br><span class="muted">TopoGym 动作字典</span></td>
@@ -892,17 +899,18 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
         ...</pre>
 <pre>vla/                              只改这个目录
 ├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
-├── setup.sh                      唯一安装入口：setup.sh gym | pi05 | groot | molmoact2 | xvla
-├── protocol.py                   PolicySpec / Observation / ActionChunk + msgpack 编解码（两侧共用）
-├── gym/                          只在 Gym 环境使用
+├── setup.sh                      唯一安装入口：setup.sh pi05 | groot | molmoact2 | xvla（只建模型环境）
+├── protocol.py                   PolicySpec / Observation / ActionChunk + 编解码（两侧共用，只用标准库 + numpy）
+├── gym/                          只在 TopoGym 环境使用
 │   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
-│   ├── agent.py  client.py       VLAAgent；WebsocketClient / LocalClient
+│   ├── agent.py  client.py       VLAAgent；RemoteClient / LocalClient
 │   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
 ├── models/                       只在各模型环境使用
 │   ├── base.py  serve.py  dummy.py
 │   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
 ├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
-└── tests/</pre>
+├── tests/
+└── docs/                         DESIGN.md · index.html · IMPL_PLAN.md（设计文档与实施计划）</pre>
 
 <h3>训练数据与评测同构</h3>
 <p>VLA 在 TopoGym 上零样本基本不可用，需要用 TopoGym 自己的演示微调。<code>export_lerobot.py</code> 读取 Env 的 <code>Transition</code>，经<b>同一个</b> <code>EmbodimentAdapter</code> 转成 LeRobot 数据集；state 排列、夹爪归一化、相机名、图像尺寸、控制频率只在一处定义。导出时同时写关节目标和 TCP 位姿两列（TCP 由 FK 计算），关节空间模型和末端空间模型共用同一批演示。</p>
@@ -916,14 +924,15 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 </tbody></table></div>
 <div class="callout bad">演示来源是 <code>topogym/planning/</code> 中 7 类任务的脚本化参考解，需要在与评测相同的配置（CUDA、RGB、<code>control_decimation</code>、辅助抓持设置）下重新执行并渲染。现有 <code>solvability_proof/</code> 是 CPU、无 RGB、25 ms tick，不能直接当训练数据。</div>
 
-<h3 id="s3-dec">待确认决策</h3>
+<h3 id="s3-dec">决策</h3>
 <div class="tbl"><table>
-<thead><tr><th>决策</th><th>建议</th><th>原因</th></tr></thead>
+<thead><tr><th>决策</th><th>结论</th><th>原因</th></tr></thead>
 <tbody>
-<tr><td>VLA 代码位置</td><td>仓库根 <code>vla/</code></td><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 simulator / tasks</td></tr>
-<tr><td>控制频率</td><td>ALOHA 50 Hz（<code>control_decimation=8</code>）或保持 40 Hz</td><td><code>400 / control_hz</code> 必须为整数；仿真墙钟主要由仿真时长决定</td></tr>
-<tr><td>辅助抓持</td><td>数据生成与评测统一开或统一关</td><td>开与不开的成绩不能比较；现有可解证据均开启</td></tr>
-<tr><td>instruction</td><td>新建 <code>vla/configs/instructions.yaml</code>，补齐 8 个任务</td><td>13 个任务中只有 5 个有 <code>instruction</code></td></tr>
+<tr><td>VLA 代码位置</td><td>已定：仓库根 <code>vla/</code>，设计文档在 <code>vla/docs/</code></td><td>架构测试禁止 <code>topogym.policies</code>；<code>docs/vla_doc</code> 要求不改 simulator / tasks</td></tr>
+<tr><td>控制频率</td><td>已定：<code>control_decimation = round(400 / 数据频率)</code>，结果记录实际频率（DROID 15 Hz → 27，即 14.81 Hz）</td><td>与数据频率误差 ≤ 2.6%；不写时间重采样代码</td></tr>
+<tr><td>辅助抓持</td><td>已定：零样本评测关闭</td><td>开与不开的成绩不能比较；真机数据没有辅助抓持</td></tr>
+<tr><td>传输</td><td>已定：标准库 TCP（<code>multiprocessing.connection</code>）</td><td>TopoGym 环境不装新包</td></tr>
+<tr><td>instruction</td><td>待确认：新建 <code>vla/configs/instructions.yaml</code>，补齐 8 个任务</td><td>13 个任务中只有 5 个有 <code>instruction</code></td></tr>
 <tr><td>首批任务</td><td>cast_coil、cast_keyhole（ALOHA）；buzz_wire_3d（Panda）</td><td>刚体、有参考解；FEM 任务显存与耗时更高且无可解证据</td></tr>
 </tbody></table></div>
 </section>
@@ -994,7 +1003,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <tr><td>X-VLA</td><td>仅 0.9B</td><td>Pt、RoboTwin2、SoftFold、Libero、Calvin 等</td><td>去噪步数（默认 10）</td><td>权重 3.5 GB（fp32）；运行显存未公布</td></tr>
 <tr><td>DM0.5</td><td>仅 1 个，5.8B</td><td>base、robotwin2、Table30v2-ALOHA、libero 等</td><td>去噪步数（默认 10）、执行步数</td><td>权重约 11.7 GB（bf16）；官方称单张 4090 可推理</td></tr>
 </tbody></table></div>
-<p class="note">仿真本身还要占显存：刚体任务约 2–3 GB，FEM 任务最高约 10 GB。本机只有 1 张 RTX 4090（24 GB），模型与仿真同卡时两者相加；GR00T 与 FEM 任务同卡会超出。首批只选刚体任务（Panda：buzz_wire_3d；ALOHA：cast_coil）。实施清单见 <code>docs/vla_integration/IMPL_PLAN.md</code>。</p>
+<p class="note">仿真本身还要占显存：刚体任务约 2–3 GB，FEM 任务最高约 10 GB。本机只有 1 张 RTX 4090（24 GB），模型与仿真同卡时两者相加；GR00T 与 FEM 任务同卡会超出。首批只选刚体任务（Panda：buzz_wire_3d；ALOHA：cast_coil）。实施清单见 <code>vla/docs/IMPL_PLAN.md</code>。</p>
 
 <h3>最新最强、但无法使用的模型</h3>
 <div class="tbl"><table>
@@ -1053,7 +1062,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <tr><td>官方服务</td><td>WebSocket + msgpack，:8000</td><td>ZMQ，:5555</td><td>FastAPI <code>POST /act</code></td><td>HTTP <code>POST /v1/infer</code></td></tr>
 <tr><td>训练数据格式</td><td>LeRobot v2.x（openpi 固定的旧版）</td><td>GR00T 版 LeRobot v2 + <code>meta/modality.json</code></td><td>自定义 handler（仓库有 LeRobot v2.1 handler）</td><td>OpenDM JSONL（每 episode 一个文件）</td></tr>
 </tbody></table></div>
-<div class="callout">四个模型的官方服务协议各不相同（WebSocket、ZMQ、两种 HTTP）。本方案不直接连它们的服务：每个子类在模型自己的环境里 import 官方推理对象，统一由 <code>serve.py</code> 以 WebSocket + msgpack 对外提供。Gym 侧因此只需要一种客户端。</div>
+<div class="callout">四个模型的官方服务协议各不相同（WebSocket、ZMQ、两种 HTTP）。本方案不直接连它们的服务：每个子类在模型自己的环境里 import 官方推理对象，统一由 <code>serve.py</code> 以同一种 TCP 协议对外提供。Gym 侧因此只需要一种客户端。</div>
 
 <h3>发布时间线</h3>
 <figure>
@@ -1129,11 +1138,11 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <!-- ============ 5 ============ -->
 <section id="s5">
 <h2><span class="num">05</span>落地顺序与评测成本</h2>
-<p>当前阶段只评测。完整任务清单（含验收标准与 TODO）在 <code>docs/vla_integration/IMPL_PLAN.md</code>，供 coding agent 使用。</p>
+<p>当前阶段只评测。完整任务清单（含验收标准与 TODO）在 <code>vla/docs/IMPL_PLAN.md</code>，供 coding agent 使用。</p>
 <div class="phases">
   <div class="phase"><span class="p">P0</span><span class="t">协议 + 适配</span><span>protocol、wire、EmbodimentAdapter、VLAAgent、LocalClient、占位模型、单测</span><span class="done">单测通过，不依赖 GPU</span></div>
   <div class="phase"><span class="p">P1</span><span class="t">评测循环 + 录像</span><span>run_eval、instructions.yaml、recorder</span><span class="done">cast_coil 与 buzz_wire_3d 冒烟有结果与 MP4</span></div>
-  <div class="phase"><span class="p">P2</span><span class="t">服务</span><span>serve.py、WebsocketClient、超时与版本校验</span><span class="done">远程与本地结果逐位一致</span></div>
+  <div class="phase"><span class="p">P2</span><span class="t">服务</span><span>serve.py、RemoteClient、超时与版本校验</span><span class="done">远程与本地结果逐位一致</span></div>
   <div class="phase"><span class="p">P3</span><span class="t">模型子类</span><span>π0.5、GR00T、MolmoAct2、X-VLA 的零样本 checkpoint</span><span class="done">每个模型 1 seed 冒烟</span></div>
   <div class="phase"><span class="p">P4</span><span class="t">约定对齐</span><span>关节符号与零位、夹爪、相机、末端坐标系</span><span class="done">每项有数值或截图对比</span></div>
   <div class="phase"><span class="p">P5</span><span class="t">首批评测</span><span>按矩阵跑正式 seed</span><span class="done">对比表与证据目录</span></div>
@@ -1161,7 +1170,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 </section>
 
 <footer>
-  源文件：<code>docs/vla_integration/index.html</code>、<code>README.md</code>（分支 <code>dev/pingyue</code>）。仓库事实核对自 <code>topogym/simulator/</code>、<code>topogym/robot/control.py</code>、<code>topogym/sensors/observation.py</code>、<code>topogym/recording/session.py</code>、<code>topogym/simulator/rollout_simulation/policy.py</code>、<code>docs/vla_doc/README.md</code>（2026-09-29）。
+  源文件：<code>vla/docs/index.html</code>、<code>DESIGN.md</code>（分支 <code>dev/pingyue</code>）。仓库事实核对自 <code>topogym/simulator/</code>、<code>topogym/robot/control.py</code>、<code>topogym/sensors/observation.py</code>、<code>topogym/recording/session.py</code>、<code>topogym/simulator/rollout_simulation/policy.py</code>、<code>docs/vla_doc/README.md</code>（2026-09-29）。
 </footer>
 </main>
 </div>
@@ -1230,13 +1239,13 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
     sq.appendChild(el("text",{"class":"sm",x:L[0],y:42,"text-anchor":"middle"},L[2]));
   });
   var MSG=[
-    ["C","S",76,"ws 连接","v"],["S","C",98,"PolicySpec","vr"],
+    ["C","S",76,"TCP 连接","v"],["S","C",98,"PolicySpec","vr"],
     ["R","E",130,"make(task, **cfg)","c"],
     ["R","E",160,"reset(seed)","c"],["E","R",180,"obs₀","r"],
     ["R","A",210,"initialize(action_spec)","c"],["A","C",230,"reset(seed)","v"],["C","S",248,"reset","v"],
     ["R","A",296,"act(obs)","c"],
     ["A","A",330,"adapter.observation(obs)","self"],
-    ["A","C",358,"infer(Observation)","v"],["C","S",374,"msgpack ≈ 0.45 MB","v"],
+    ["A","C",358,"infer(Observation)","v"],["C","S",374,"TCP ≈ 0.45 MB","v"],
     ["S","S",386,"④ 模型前向","selfv"],
     ["S","C",410,"ActionChunk (H, D)","vr"],["C","A",424,"动作块 → 队列","vr"],
     ["A","R",446,"action 字典","r"],
