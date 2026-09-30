@@ -24,3 +24,10 @@ def test_one_row_per_run_with_outcome_counts_and_episode_means(tmp_path):
     assert lines[2] == ("| pi05_base_trossen | cast_coil | 1/2 | success 1, time_limit 1 | 50 | 25 | v1 | 80 | 8 "
                         "| 0.4 rad | 50 | 1.0 |")
     assert lines[3] == "| xvla_robotwin2 | cast_coil | 0/1 | invalid_action 1 | 50 | 25 | v1 | 0 | 0 | - | 0 | 1.0 |"
+
+
+def test_rows_written_before_tracking_error_unit_are_reported_without_a_unit(tmp_path):
+    old = row("pi05_droid_jointpos", "time_limit", 445, 0.049, None)
+    del old["tracking_error_unit"]
+    write_run(tmp_path / "old", [old])
+    assert "| 0.049 |" in table([tmp_path / "old"]).splitlines()[2]

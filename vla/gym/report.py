@@ -20,7 +20,8 @@ def markdown_row(cells):
 
 
 def summary_row(rows):
-    """Outcome counts and per-episode means of one output; run-level fields come from its first row."""
+    """Outcome counts and per-episode means of one output; run-level fields come from its first row. Rows written
+    before tracking_error_unit existed are shown without a unit."""
     first, outcomes = rows[0], Counter(row["outcome"] for row in rows)
     errors = [row["tracking_error_mean"] for row in rows if row["tracking_error_mean"] is not None]
 
@@ -35,7 +36,7 @@ def summary_row(rows):
         ", ".join(f"{name} {count}" for name, count in sorted(outcomes.items())),
         f'{first["control_hz_actual"]:g}', first["execute_steps"], f'v{first["instruction_version"]}',
         f'{episode_mean("control_steps"):.0f}', f'{episode_mean("inference_calls"):.0f}',
-        f'{mean(errors):.3g} {first["tracking_error_unit"]}' if errors else "-",
+        f'{mean(errors):.3g} {first.get("tracking_error_unit", "")}'.strip() if errors else "-",
         f'{episode_mean("clipped_actions"):.0f}', f'{episode_mean("rollout_wall_s") / 60:.1f}'])
 
 
