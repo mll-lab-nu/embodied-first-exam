@@ -18,10 +18,28 @@ client and one episode. **Task:** Untie the knot and spread the rope on the tabl
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
+## Startup and long-running commands
+
+- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
+  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
+- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
+  When a command is still running, retain its process/session identifier and continue waiting for that same command.
+  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
+  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
+  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
+  Use the corresponding wait/status operation if another command tool is provided.
+- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
+  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
+- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
+- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 600 seconds,
+  still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
+- Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
+  running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)
+r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)
 spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
 
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (480,848,3)

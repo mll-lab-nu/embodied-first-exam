@@ -116,9 +116,11 @@ AXES = {
     ),
     "knot_untying": (
         # The knot sits at world x = 0, 13.6 cm right of the table centre: shift leans -x.
-        dict(path="origin_xy_m", kind="offset", range=[[-.06, .02], [-.04, .04]]),
+        # Its tails point -y, away from the arm line (y = -0.019): -y and a positive turn
+        # push them out of reach (reach proxy), so both bounds are asymmetric.
+        dict(path="origin_xy_m", kind="offset", range=[[-.06, .02], [-.01, .04]]),
         # Success counts projected crossings, invariant under a turn about z.
-        dict(path="yaw_deg", kind="offset", range=[-30., 30.]),
+        dict(path="yaw_deg", kind="offset", range=[-30., 15.]),
         dict(path="rope_finish", kind="choice", values=["hemp", "orange_rope", "golden_rope"], visual=True),
     ),
 }

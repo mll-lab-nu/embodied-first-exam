@@ -22,6 +22,41 @@ IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text
 BUDGET_S = 5400
 
 
+def startup_instruction(fam: str, *, limited: bool = False) -> str:
+    """Shared startup guidance, embedded in each self-contained task instruction."""
+    timing = (
+        "Recent Cast Coil starts on the benchmark host took about 120 seconds; this is an observation, not a deadline."
+        if fam == "cast_coil" else
+        "Scene initialization and kernel compilation can take minutes."
+    )
+    common = f"""## Startup and long-running commands
+
+- {timing} Actual time depends on the task, hardware, and load.
+  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
+- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
+  When a command is still running, retain its process/session identifier and continue waiting for that same command.
+  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
+  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
+  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
+  Use the corresponding wait/status operation if another command tool is provided.
+- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
+  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
+- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
+"""
+    if limited:
+        return common + """- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 600 seconds,
+  still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
+- Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
+  running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
+"""
+    return common + """- Keep at most one live simulator process in this trial at a time. A new Python process calling `Session(...)`
+  creates another scene and consumes more GPU memory; separate replay/render CLI commands also create scenes.
+- Reuse the initialized Session for observations, actions, reset, and replay. Avoid separate initialization-only probes:
+  put the first useful actions and trajectory save in the same script that initializes the simulator.
+- Initialization consumes the agent budget. Save a real trajectory as soon as practical and keep saving progress.
+"""
+
+
 def run_tool(python, *args) -> dict:
     env = dict(os.environ, RCB_SESSION_LOG="", PYTHONPATH=str(TEMPLATE / "environment"))
     p = subprocess.run([python, str(TEMPLATE / "environment/rcb_topogym.py"), *map(str, args)], env=env, capture_output=True, text=True)
@@ -100,6 +135,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
 completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+
+{startup_instruction(fam).rstrip()}
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

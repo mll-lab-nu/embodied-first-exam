@@ -13,6 +13,8 @@ import argparse, json, pathlib, re, shutil, sys
 import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
+from topogym_mk_task import startup_instruction
+
 root = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = root / "tasks/topogym-cube-pick-place-i00-limited"
 SHARED = ["environment/Dockerfile", "environment/rcb_client.py", "environment/rcb1.py", "environment/sim/rcb1.py",
@@ -97,10 +99,12 @@ client and one episode. **Task:** {goal}
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
+{startup_instruction(fam, limited=True).rstrip()}
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)
+r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)
 spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
 
 obs = r.get_obs()                             # current frames from {len(cams)} cameras: obs.last[cam] -> uint8 ({H},{W},3)

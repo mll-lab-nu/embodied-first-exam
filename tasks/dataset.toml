@@ -13,113 +13,113 @@ name = "jianwen"
 
 [[tasks]]
 name = "topogym/topogym-blanket-flatten-i00"
-digest = "sha256:cf89eb1605ebb743658d02b138ca7d7f86ec11d139ec2672d6c038a0a17f0640"
+digest = "sha256:001c1cfc78a87dfb39a1820122e2f3a2300afd7e796d3ed7485fd1273188ac14"
 
 [[tasks]]
 name = "topogym/topogym-buzz-wire-3d-i00"
-digest = "sha256:3319c37adf7bfe421205e63b26196c2ee28f327bef6e9f11ea5f5ed2ce8ac938"
+digest = "sha256:797a43ca2e821a3e5c091a3b2167f00b8fcc6201485eca84b5302796addf7a2a"
 
 [[tasks]]
 name = "topogym/topogym-cast-coil-i00"
-digest = "sha256:985efa10eb047392f17631c6a65b9af4cbc5b74ae64c7675cf1723ea31bc98fb"
+digest = "sha256:675e304acb30a0443e9e6a021966ca61f19af0300061125e0ff9979e0d7516c3"
 
 [[tasks]]
 name = "topogym/topogym-cast-keyhole-i00"
-digest = "sha256:05959e825a1bd68a6f81a51f8ac740c8e9ba85d3bf1bd7b64edf2d346d861c87"
+digest = "sha256:54c8c3b920e4657de8c24e01b2155aec15158425529303564917c48f6cb726a6"
 
 [[tasks]]
 name = "topogym/topogym-cube-pick-place-i00"
-digest = "sha256:829dd7c05b55073eb27d0f10168fd7fdcd39620c5ada1828b61a269c09f0b869"
+digest = "sha256:3a20a34859e5b6e143b2287aba9fabe24d5fc7bc4b3e63a983ca7a77bc4d7f50"
 
 [[tasks]]
 name = "topogym/topogym-cube-pick-place-i00-limited"
-digest = "sha256:1c036767a72b85e13e0430a36136ea5664cf23b96b1120a3be23ffd84b748c26"
+digest = "sha256:dee1f3f2c74477dc3c46bc7ec1d66589bf7c0776875e751f0adad21ae47f8fd0"
 
 [[tasks]]
 name = "topogym/topogym-fiber-bundling-i00"
-digest = "sha256:266a303a2d2a9467c063dced768be4504ae9a5dd5f15341f0c19f1ddbb2066c6"
+digest = "sha256:c7dbedc799aa90ef7db8af8aebe93f50f34a9bac618fa6fd04bf77bd5b999c70"
 
 [[tasks]]
 name = "topogym/topogym-blanket-flatten-i00-limited"
-digest = "sha256:70e40eac54f63f273e49dd1de98a92fa50221aeb448f4c84a408783f49067ea8"
+digest = "sha256:a6d6f02f3566294e54e6d60b616ef2e415fd86fb37096be83701988f961e15cb"
 
 [[tasks]]
 name = "topogym/topogym-buzz-wire-3d-i00-limited"
-digest = "sha256:1ac1e48dc1c49bd8575307d1ecb15dcdff62445f5f1d7740b6d8d66ea70b73bc"
+digest = "sha256:c14fac517132031a378e4e029e14e58e16616b25575f867d22d2af1c41b4a5cc"
 
 [[tasks]]
 name = "topogym/topogym-cast-coil-i00-limited"
-digest = "sha256:1758ed0b89d38a79730fa21225a1e07ece81c76699f6134c67ad9414d7e77c91"
+digest = "sha256:e5b0eb76c44abfe14ce4e41d68ce928ce36106dd74922c4e35d608b2f33fab8b"
 
 [[tasks]]
 name = "topogym/topogym-cast-keyhole-i00-limited"
-digest = "sha256:cc49b3a6f2d1ac3eb1a1e22fae68dd6b5d511aa9b66ff30521a34df03c000195"
+digest = "sha256:f5435416e55088bf64ba9349579f9a325aeb7761e35b18e131da51ab62b8be9a"
 
 [[tasks]]
 name = "topogym/topogym-fiber-bundling-i00-limited"
-digest = "sha256:f84cc025bc1f15cc979fac3b9aaf23e7a8b1d73c8ff7542e7860d3c01b13b5e0"
+digest = "sha256:51992c0697543260f452310b13715c836a397f12c83c15596803a3361684d3d6"
 
 [[tasks]]
 name = "topogym/topogym-hedgehog-in-cage-i00"
-digest = "sha256:106c4adbd02a1d2ba4f00abb7e10e564062d1dafc4fa1e71d149bb3b5920eba3"
+digest = "sha256:c3722b465d4a295856d49bc3caad859fd701b7dbd7465ccda6f6efacba9ca359"
 
 [[tasks]]
 name = "topogym/topogym-hedgehog-in-cage-i00-limited"
-digest = "sha256:895ae3a34903cd90da1187b06bbdd3de39ab30bc73c764d73808b414eb77feac"
+digest = "sha256:ba428521227515662ffec78c6d42701130a8891529a799095e80895bd39e90eb"
 
 [[tasks]]
 name = "topogym/topogym-horseshoe-ring-i00"
-digest = "sha256:fd2c80cb6e66fdc7deb431cd3197b30c55b8c7d923ef7960c72b9f7e3695c227"
+digest = "sha256:964e5d5c78a843a04b9b13eaffc23575beef50c81f7fc889e6b713ec21bfe882"
 
 [[tasks]]
 name = "topogym/topogym-horseshoe-ring-i00-limited"
-digest = "sha256:4de81902eb65c5e356494ca216aa8220cc1bb62fc1a920f4bc2a70679f4239e2"
+digest = "sha256:c82525ff217fe2767e67ad979a2ce35d3ad1a3bee3e419ea8581af3c37be1049"
 
 [[tasks]]
 name = "topogym/topogym-interlocked-claws-i00"
-digest = "sha256:dcb5b086eb66c90d867885e673cf94a6e2578d9b63bbaf202b70c0b8292d09c5"
+digest = "sha256:80d9c1c3c6cfa078d372a742b640c01eaaed0e502d496f1187980d8f44c1382a"
 
 [[tasks]]
 name = "topogym/topogym-interlocked-claws-i00-limited"
-digest = "sha256:035e1abbe22a3f047a46a71b770dd12bc95176add9b5788ac65bd70d0bc4e077"
+digest = "sha256:cab742ada43e95889a389f5f69537e12d26532d27f1cc2d7c5010b8b9b9c4f2b"
 
 [[tasks]]
 name = "topogym/topogym-knot-untying-i00"
-digest = "sha256:2a01bae7ec4ddce61bebd3d72d5c548a7a0ccf43cd567ed7edf0f2cc6269befc"
+digest = "sha256:b249fb8fe55186fa6db576f6f98f825ce5d3982f426c8359c8fba9c026e1c93f"
 
 [[tasks]]
 name = "topogym/topogym-knot-untying-i00-limited"
-digest = "sha256:3372558d54b2fdf10a057fdd407f6955ed053e5073eab44c69615552db01a317"
+digest = "sha256:ec292fd5f95f12a529d7cd20cd7486bd62ce935359f14d1820cd4e198cdca1db"
 
 [[tasks]]
 name = "topogym/topogym-lock-picking-i00"
-digest = "sha256:6016323eece6ec18b06b22f43ed276bec130413399c7e93b6d4f13a068dafa34"
+digest = "sha256:758dd9d6d22e262db0ba06d0a5a0efd46f74b24d90e00cef1f3b0ae5e5dc0ecd"
 
 [[tasks]]
 name = "topogym/topogym-lock-picking-i00-limited"
-digest = "sha256:334f46d9ba51cbd217f02e88b99ed994b4d3b7fced4dd017910ab25897e068e1"
+digest = "sha256:06a8862fab29fc49a265a9bf0fdd6ccfd2170b8eb89021c0aa8d65d373d2260c"
 
 [[tasks]]
 name = "topogym/topogym-orbits-i00"
-digest = "sha256:a36ec9a793bce342120714b3ca5682d58bdb020e4aaf8da8a2713afd27753618"
+digest = "sha256:7bca16138a9fc08d6270b479ca4cdcbbdbde0b620c23cd160fb10056bd297c2e"
 
 [[tasks]]
 name = "topogym/topogym-orbits-i00-limited"
-digest = "sha256:c6daac25be7e8fee692b1b4d5c7f23c427c21a910e1e5e2b6da028260bb9e4ef"
+digest = "sha256:329cf88b48bf39806e79c1bd4e5ab037418d42525a0320f706b528daad185d4c"
 
 [[tasks]]
 name = "topogym/topogym-rope-threading-i00"
-digest = "sha256:cdd43dfa4296a32734f42f0a06e30ca0437c571f9bd850459b9e85148d264a59"
+digest = "sha256:afafd45e278c9ebe08a6f6f77a10bd36632dc6a16f24f78636ef717949053229"
 
 [[tasks]]
 name = "topogym/topogym-rope-threading-i00-limited"
-digest = "sha256:619dc26d2f1ffa46f40fb3b10fcac06ec6c71b1cc43baed4ed51c1b1c072f4e5"
+digest = "sha256:316b233d65e14f1f2d6a015f74e1c6508fea126531c7d2330f9b0d0cf669ce9e"
 
 [[tasks]]
 name = "topogym/topogym-slotted-post-ring-i00"
-digest = "sha256:c5dd2d61256147ce411647af5c82aa950754c184ab7a4234f204d3914fca1cf5"
+digest = "sha256:bf88858ba65a93ca98b4d936366b948c3ab9fb3b1bf1be34f36bd2bc29015f87"
 
 [[tasks]]
 name = "topogym/topogym-slotted-post-ring-i00-limited"
-digest = "sha256:0ff97a708637e8c0b5e347b305959dd3bf317d5dcf885f927dc479eeeb1a42ea"
+digest = "sha256:f3baa4673ba5e5e23b77abdbeb3cfb957071827c39e6d817348fb987cf06099a"
 

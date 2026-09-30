@@ -22,6 +22,110 @@ Harbor 层已经按参考仓库重建完成，运行方式与参考仓库相同�
 - **基础镜像已重建**：镜像里的模拟器是构建时复制进去的，改完模拟器后用 `scripts/build_images.sh topogym` 重建了 `ghcr.io/luigivamper/rcb-topogym:0.1.0`（仍只在本机）。
 - **28 个任务已在新模式下重新生成**：同时带上了 09-29 interlocked_claws 和 horseshoe_ring 的场景修改。interlocked_claws 按任务推荐开启辅助抓持，hard 变体开局时已夹住部件。
 
+### 0.1 两种模式的执行流程与旧执行层边界
+
+2026-09-29 流程整理：以参考仓库 `fa59c1a6` 的两种 trajectory 任务作为正式 Harbor 接口。
+TopoGym 提供场景、物理、相机、机器人控制和任务判定；Harbor 管容器、agent 预算、产物收集及独立评分。
+参考协议允许每个模拟器实现自己的薄适配器，因此 `rcb_topogym.Session` 和 TopoGym 的 sim 服务仍需保留，
+它们连接 RCB 接口与 TopoGym `Env`。当前这两条路径都不调用 `SegmentRunner`。
+
+| 阶段 | Unlimited：产出一条可重放轨迹 | Limited：在同一局里在线控制 |
+| --- | --- | --- |
+| 任务入口 | `tasks/topogym-cast-coil-i00` | `tasks/topogym-cast-coil-i00-limited` |
+| 模拟器位置 | agent 容器内 | 独立 `sim` 容器，agent 容器只装客户端 |
+| 初始化责任 | agent 的 Python 调用 `Session(...)` | `sim/server.py` 启动时创建一个 `Session`；`Robot()` 等待服务就绪 |
+| 观测 | 图像、深度、自身状态、物体位姿等特权信息 | 图像、可选深度、自身状态、标定和机器人模型；不提供物体真值与判定源码 |
+| 操作入口 | `s.step`、`s.primitives()`、渲染、记录与回放 | `r.get_obs`、`r.submit`、`r.fk/ik` |
+| 试错 | 可 reset 到冻结初态，多次探索后选择最终轨迹 | 无 reset；后续请求继续当前场景，一次 trial 对应一局 |
+| agent 代码 | 在 agent 容器运行的 Python，可逐段决策或自动循环 | 同样在 agent 容器运行；HTTP 请求发送动作数组，不上传 policy 源码 |
+| 轨迹责任 | agent 保存 `/app/output/trajectory.npz`；`gen.py` 记录生成过程 | sim 服务自动记录实际执行动作；`gen.py` 只作过程记录 |
+| 评分 | 独立 verifier 用自己的实例与工具重放提交轨迹 | sim 收尾、回放核验并导出记录；独立 verifier 读取服务端证据 |
+| 分段视频 | 代码显式调用 `start_video/stop_video`，或对轨迹 `render_video` | 每次动作请求可返回多相机视频；`result.save(...)` 保存该段 |
+
+**Unlimited 的完整过程：**
+
+```mermaid
+flowchart TD
+    H[Harbor 启动 agent 容器] --> A[Agent 写并运行 Python]
+    A --> S[rcb_topogym.Session 初始化 TopoGym Env]
+    S --> O[读取状态或图像]
+    O --> D[Agent 决策并生成动作]
+    D --> E[step 或 primitives 执行动作]
+    E --> O
+    E --> R[可 reset 回冻结初态后继续试错]
+    R --> O
+    E --> T[保存选定轨迹 trajectory.npz 和 gen.py]
+    T --> C[Agent 阶段结束，Harbor 收集文件并停止容器]
+    C --> V[独立 verifier 重放轨迹、评分并生成视频]
+```
+
+保存文件本身不会结束 agent 阶段。超时后 Harbor 只能收集已经写出的产物，因此需要尽早保存可重放的版本。
+最终评分输入是选定的动作轨迹，评分器不依赖重新执行 agent 的生成脚本。探索过程可以是看图后继续写代码，
+也可以在同一个 Python 程序里反复观察与控制；RCB 没有要求把策略交给 Env 编译。
+
+`Session(...)` 同步建场景。命令工具的 `yield_time_ms` 是本次等待时长，不是模拟器的运行上限：
+命令还在运行时应保留完整返回值和 `session_id`，继续等待同一进程。RCB 的 RoboWits unlimited 也采用这套
+直接调用模式，没有跨进程单例锁；重新启动 Python 并调用 `Session` 会创建另一个场景。
+
+针对重复初始化，全部 28 个任务的固定 `instruction.md` 已加入 `Startup and long-running commands`：说明初始化
+可能持续数分钟（Cast Coil 近期约 120 秒）、保留完整命令状态并等待原进程。Unlimited 另有避免并发建场景与
+复用 Session 的要求；limited 说明连接重试和避免重复提交动作。两个任务生成器共用
+`scripts/topogym_mk_task.py::startup_instruction`，以后生成任务也会带上这些规则。
+正常启动无需再加 `--extra-instruction-path`；现有 `--extra-instruction` 的 540 秒预算仍可保留。
+[旧的附加指令文件](simulator_startup.instruction.md)仅为兼容已有命令保留。这是提示词层的修正，尚未通过新一轮
+模型运行验证效果。
+
+**Limited 的完整过程：**
+
+```mermaid
+flowchart TD
+    H[Harbor 启动 main 和 sim 容器] --> S[sim/server.py 初始化并持有一个 TopoGym Env]
+    H --> A[Agent 在 main 中运行 Python 客户端]
+    S --> C[Robot 连接已有服务并等待就绪]
+    A --> C
+    C --> O[get_obs 获取图像、深度和自身状态]
+    O --> D[Agent 决策，生成一段动作数组]
+    D --> E[submit 在当前场景执行并记录动作]
+    E --> F[返回该段视频、末帧、状态和诊断]
+    F --> O
+    E --> Q[成功或错误时收尾]
+    F --> X[Agent 阶段结束后 Harbor collect 触发收尾]
+    X --> Q
+    Q --> T[sim 保存整局轨迹、回放核验和视频]
+    T --> V[独立 verifier 读取服务记录并评分]
+```
+
+同一个 trial 内重新运行客户端只会连接已有场景；不会 reset，也不会再建一个模拟器。
+`Robot()` 默认给连接重试预留 600 秒。Compose 的 `depends_on` 只保证启动顺序，场景就绪由客户端连接重试处理。
+模型可逐次看图、修改下一段，也可写一个自动观察与控制的客户端循环；两者都通过同一套动作协议。
+服务不执行 agent 上传的任意 Python 源码。
+
+一次 `submit` 可以包含多个动作目标：`joint_position` 按 `dt` 插值执行多个关节目标（每块至多 10 秒模拟时长）；
+`ee_pose` 一次至多 50 行末端位姿与夹爪目标，每行做 IK 后再执行多个关节控制步。模型通常在整段返回后作下一次
+决策，因此需要视觉确认的节点可以分成不同请求。`get_obs()` 默认只取当前帧，`get_obs(seconds=...)` 则保持当前
+指令并推进物理。该实现没有在模型思考时自行推进物理的后台循环，墙钟预算仍会消耗。
+
+图像与视频不会自动进入模型上下文：客户端代码必须保存并通过 agent 的看图工具查看，或自行处理数组。
+用 `result.save('/app/output/segments/001')` 保存单段可让 Harbor 自动收集到
+`jobs/<job>/<trial>/artifacts/app/output/segments/001/`。这些观察片段与 sim 收尾生成的整局 `replay.mp4` 用途不同。
+
+Limited 的服务端轨迹是整局实际执行历史，不由 agent 挑选或替换。TopoGym 的 CUDA 评分要求 live 与 replay
+都成功，状态哈希一致性作为诊断；RCB RoboWits 的 CPU 任务还要求哈希一致。这里只整理当前实现，不把未做的新运行
+宣称为已验收。
+
+**旧流程的归档范围：**
+
+后续归档对象是 `topogym/simulator/rollout_simulation/` 的 `SegmentRunner`、`run_policy` / `policy.act(obs)`
+管理循环及其专属观测、产物和历史包装，以及直接依赖它们的旧执行入口、专属测试与文档。
+当前 `scripts/run_*_policy.py`、部分参考解/可解性流程仍在调用它；实际移动时需同步整理
+`topogym.simulator` 的导出和这些调用点，不能只移动一个类。这里记录归档边界，本次没有移动运行代码。
+
+保留的部分包括：TopoGym `Env`、场景与资产、Genesis/Nyx、机器人控制与 IK、任务终止/成功判定、公共录制能力、
+冻结初态与回放，以及 RCB 的 `Session`、limited 客户端/服务和 verifier。`Env.step` 中的 `compile_action` 是
+底层动作转换，Genesis 的编译是物理内核初始化，都不属于待退役的 policy 执行层。
+`history_storage="segment"` 是检查点存储策略，现有 RCB reset/replay 仍依赖初态检查点；名称包含 segment
+不代表它应随 `SegmentRunner` 删除。参考解算法和历史视频也不因旧 runner 退役而丢弃。
+
 ## 1. 怎样用 harbor run 实测一个任务
 
 ### 1.1 准备（每台机器一次）

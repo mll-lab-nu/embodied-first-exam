@@ -18,7 +18,8 @@ finalized on CPU, then compared with the nominal scene:
 
 Corners are test-only and never feed the seed -> variant mapping.
 
-Usage: PYTHONPATH=. python tests/check_scene_variation.py [task ...] [--seeds 50] [--jobs 8] [--out DIR]
+Usage: PYTHONPATH=. taskset -c 28-31 python tests/check_scene_variation.py [task ...] [--seeds 50] [--jobs 4] [--out DIR]
+(taskset caps the whole run at 4 cores on the shared host.)
 """
 from __future__ import annotations
 
@@ -26,12 +27,19 @@ import argparse
 from concurrent.futures import ProcessPoolExecutor
 from itertools import product
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import traceback
 
-import numpy as np
+# One BLAS/OpenMP thread per worker: by default each process opens a pool sized to every core
+# (63 threads after import on the 32-core host), so 4 workers alone saturated the machine and
+# tripped the shared CPU guard on 2026-09-29. Must be set before numpy is imported.
+for _name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+    os.environ.setdefault(_name, "1")
+
+import numpy as np  # noqa: E402
 
 TABLE_MARGIN_M = .02
 REACH_GROWTH_M = .02
@@ -153,7 +161,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("tasks", nargs="*")
     parser.add_argument("--seeds", type=int, default=50, help="seeded draws per tier")
-    parser.add_argument("--jobs", type=int, default=8)
+    parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
     from topogym.config.registry import TIER_ORDER, task_definition, variation_catalog

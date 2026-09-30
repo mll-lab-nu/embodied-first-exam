@@ -11,6 +11,21 @@ easy 的本次证据为
 228.775 s / 792.100 s，未取得最终成功。数值日志不能当作可恢复的物理 checkpoint；
 它们的 `interruption_status.json` 记录这一范围，不能称为仍在后台运行。
 
+## 关键姿态与夹持证据复核（2026-09-29 后续）
+
+按最新验证范围，复用已有物理执行，只补当前场景的少量关键姿态检查，不生成视频。
+结果见 [`buzz_fast_feasibility_20260929_01`](../../../runs/test_results/buzz_fast_feasibility_20260929_01/README.md)：
+
+- easy / medium / hard 各 14 个 route point 的完整位置＋朝向 IK、关节限位和采样碰撞间隙均通过，共 **42/42**；本轮零新增物理 tick。
+- 旧记录中分别核对到 **4 / 2 / 5 次**双指接触建立、随后释放的 `contact_weld_v1` 辅助夹持；medium 的回溯不重复计数。两份 easy 成功审计及全部 17126 个数组块哈希匹配。
+- medium 已有无回溯走线前缀及后续成功释放分支，最后偏离目标 **8.8 mm / 42.3°**，终点修正抓取未通过。hard 最后位置误差 **0.051 mm**，朝向仍偏 **25.4°**。两档完整 Task success 仍未取得。
+- 当前碰撞资产与旧执行匹配，源码差异单列；旧物理证据不改标为当前源码的新完整执行。关键点检查不覆盖点间路径、自碰撞和释放动力学，不扩大到其他 seed。
+
+后续局部执行使用 **`history_storage="segment"`**：episode 起点与分段起点保存完整 checkpoint，其他 tick 保留轻量记录。
+旧 staged 输入显式写了 `memory`，不要直接沿用；本次另存了
+[`continuation_configs/`](../../../runs/test_results/buzz_fast_feasibility_20260929_01/continuation_configs/)
+三份 segment 配置，原执行配置保持其历史身份。资源监控每秒采样，达到 90% 暂停本轮工作进程；本轮内存峰值 28.8%，CPU 触发暂停后已恢复并完成。
+
 ## 分段可解性验证（2026-09-29）
 
 `stages.py` 把一局 Buzz 拆成若干段，交给通用的分段流程 `topogym/planning/solvability.py` 执行（流程说明见上级 `planning/README.md`）。每段只包装现有的 `BuzzWirePolicy` part 或 `recipes.py` 函数，并在该段的实际起点重新规划。
@@ -50,7 +65,7 @@ easy 的本次证据为
 
 ```bash
 .venv-gs121/bin/python scripts/run_solvability_workflow.py --mode diagnostic \
-  --config runs/test_results/buzz_staged_inputs_20260929/easy.json \
+  --config runs/test_results/buzz_fast_feasibility_20260929_01/continuation_configs/easy.json \
   --stage-factory topogym.planning.buzz_wire_3d.stages:stages \
   --output runs/test_results/<new_run>
 .venv-gs121/bin/python scripts/audit_buzz_wire_policy.py runs/test_results/<new_run>

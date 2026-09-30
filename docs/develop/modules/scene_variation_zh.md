@@ -30,7 +30,11 @@ env.episode_metadata["scene_variation"]
 
 ## 3. 每个任务的变量
 
-Δ 是相对该档标称值的偏移（cm），yaw 单位是度。范围的来源：离线几何闸门（第 5 节）在全部包络顶点上都通过。
+Δ 是相对该档标称值的偏移（cm），yaw 单位是度。范围按离线几何闸门（第 5 节）收窄；各任务的闸门状态（2026-09-29）：
+
+- 顶点 + seed 全部通过、首抽拒绝率 0：horseshoe、keyhole、orbits、slotted、buzz、coil、lock、fiber、hedgehog、rope、knot（每档 20–50 个 seed）。
+- 不需要此闸门：claws（只改颜色）；blanket 的平移待准备存档时验证。
+- 闸门只检查几何必要条件（在桌上、目标区一侧、离臂基座不比标称远 2 cm 以上、在画面内），**不证明机器人能执行解法**：机器人没动，路径上每个抓取点要重新解 IK；目标区不随谜题平移；coil（银件偏移不随 yaw 转）、blanket（聚褶重新准备）、fiber（原有丝形随机）不是纯刚体搬移。很多任务连标称场景都还没有完整机器人解。
 
 | 任务 | 变量 | 为什么不影响可解 |
 |---|---|---|
@@ -42,7 +46,7 @@ env.episode_metadata["scene_variation"]
 | orbits | yaw 90±5；底座中心 Δx ±3、Δy ±2；绳色 {hemp, orange_rope, golden_rope} | 目标区固定 −y（原来两侧完全平局，+y 侧已有把手） |
 | rope_threading | 平移 Δx −1…+2、Δy −1…0；yaw ±2；绳色三选一 | 标称场景已占 cam_high/cam_low 画面 95–96%，1.1 m 绳尾转 5° 会扫过约 5 cm，所以包络小；环色不动（指令按青→绿→紫指定顺序） |
 | slotted_post_ring | 中心 Δx ±5、Δy −2…+5；绳色三选一 | FEM 体网格不能旋转，只平移 |
-| knot_untying | 原点 Δx −6…+2、Δy ±4；yaw ±30；绳色三选一 | 判据是俯视无交叉，对平面刚体变换不变；yaw 烘焙进 FEM 体网格和 `rope_posed.obj` |
+| knot_untying | 原点 Δx −6…+2、Δy −1…+4；yaw −30…+15；绳色三选一 | 判据是俯视无交叉，对平面刚体变换不变；yaw 烘焙进 FEM 体网格和 `rope_posed.obj`；绳尾朝 −y，−y 平移和正向转会把它推出可达范围 |
 | buzz_wire_3d | 中心 Δx −1.5…0、Δy 0…+1.5；木色系数 0.8–1；导线 {copper, brass} | 判据相对夹具原点；−y 会让终点侧 IK 超容差 |
 | fiber_bundling | 中心 Δx −2…0、Δy ±2；另有原本就按 seed 抽的丝形（扇角/弯曲/卷曲） | 送线时抓点距 Panda 基座约 0.8 m，不往 +x |
 | interlocked_claws | 棕色目标件明度 ±15%；另一件颜色 {teal, 蓝, 绿, 灰} | 初态是双手预抓，位姿绑定关节角和焊接点，所以不动位置 |

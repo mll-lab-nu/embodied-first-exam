@@ -214,3 +214,9 @@ def stages(env, context):
         yield Step(f"comb_{index:02d}", COMBS, lambda parameters, name=f"comb_{index:02d}": comb(name, parameters))
     yield Step("verify_combed", (dict(hold_s=1.),), verify)
     yield Step("feed", (FEED,), feed)
+
+
+def pickup_only(env, context):
+    """Grasp check alone (the first step of stages): approach, close on the
+    sheath, register the contact weld and settle the fingers."""
+    yield next(iter(stages(env, context)))
