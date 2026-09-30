@@ -40,8 +40,9 @@ def make(src: pathlib.Path) -> pathlib.Path:
     shutil.copy(SERVER, dst / "environment/sim/server_mj.py"); shutil.copy(RT / "environment/sim/rcb1.py", dst / "environment/sim/rcb1.py")
     shutil.copy(src / "environment" / f"{tool}.py", dst / "environment/sim" / f"{tool}.py"); shutil.copy(src / "environment/instance.json", dst / "environment/sim/instance.json")
     # DexToolBench: no per-goal time limit in limited mode (owner 2026-09-29: one episode, no reset, so the benchmark's 10 s
-    # per goal ended every agent's episode at step 600); the episode is capped at 10 min of robot time instead.
-    dtb_env = ('\n      RCB_DTB_GOAL_TIMEOUT_S: "0"\n      RCB_MAX_CONTROL_STEPS: "36000"' if tool == "rcb_dtb" else "")
+    # per goal ended every agent's episode at step 600). Only Harbor's timeouts bound it; the 360,000-step cap (100 min of
+    # robot time) just keeps the finalize replay (~2.5 min) inside the collect hook's timeout.
+    dtb_env = ('\n      RCB_DTB_GOAL_TIMEOUT_S: "0"\n      RCB_MAX_CONTROL_STEPS: "360000"' if tool == "rcb_dtb" else "")
     (dst / "environment/docker-compose.yaml").write_text(f"""# Limited mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 services:
@@ -182,9 +183,9 @@ def instruction(src, inst, tool) -> str:
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
     score_txt = score.group(2).replace("`s.check()` computes exactly this.", "The service applies exactly this rule.").strip() if score else ""
     if tool == "rcb_dtb":
-        score_txt = re.sub(r"Each goal has \*\*10 s \(600 control steps\)\*\*; if it is not reached in time the attempt ends there\.",
+        score_txt = re.sub(r"Each goal has \*\*60 s \(3,600 control steps\)\*\*;.*?at most 360,000 control steps\.",
                            "In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). "
-                           "The episode ends when every goal is reached, or after **36,000 control steps (10 min of robot time)**.", score_txt)
+                           "The episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**.", score_txt, flags=re.S)
         assert "no time limit" in score_txt, "DexToolBench scoring text changed; update the limited wording"
     if tool == "rcb_dtb":
         task_obs = ('`meta["task"]` = the current goal (`goal`, x y z qx qy qz qw), `goal_index`, `n_goals`, `goals_reached`, `steps_left_on_goal`\n'
