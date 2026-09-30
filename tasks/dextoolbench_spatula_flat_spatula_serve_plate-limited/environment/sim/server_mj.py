@@ -44,14 +44,14 @@ _USR1 = {"pending": False}
 signal.signal(signal.SIGUSR1, lambda *_: _USR1.__setitem__("pending", True))
 
 # Startup watchdog: a scene build that hangs (seen under GPU memory pressure: no crash, so compose never restarted it)
-# exits the process, so compose's restart (on-failure) retries. Only before the service is ready: an episode that has
-# not started cannot be reset by this; after "ready" the watchdog stops.
+# must end the process so compose's restart (on-failure) retries. Neither a Python thread (it needs the GIL, which a hang
+# inside native SAPIEN/Vulkan init may hold) nor SIGALRM's default action (the service is PID 1 in its container, and
+# PID 1 ignores default-action signals) can do it; faulthandler's C watchdog thread can: it dumps every thread's
+# traceback to stderr (the container log: where it hung) and _exit(1)s. Cancelled as soon as the scene exists (a resume
+# replay may take minutes). Before the scene exists no episode exists, so the retry is not a reset.
+import faulthandler  # noqa: E402
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "300"))
-def _startup_watchdog():
-    time.sleep(STARTUP_TIMEOUT_S)
-    if not E.get("built") and not E.get("ready"):
-        print(f"startup watchdog: not ready after {STARTUP_TIMEOUT_S:g} s; exiting for a restart", flush=True); os._exit(3)
-threading.Thread(target=_startup_watchdog, daemon=True).start()
+faulthandler.dump_traceback_later(STARTUP_TIMEOUT_S, exit=True)
 
 
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
@@ -79,7 +79,7 @@ def _give_up(reason: str, infra: bool) -> None:
 with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
 
 S = TOOL.Session(INSTANCE, enable_render=True)
-E["built"] = True    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
+E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 KIND = "dtb" if TOOL.__name__ == "rcb_dtb" else "pg"
 CTRL_DT = float(TOOL.CONTROL_DT); N = int(TOOL.N)
 NAMES = list(getattr(TOOL, "JOINT_NAMES", None) or getattr(TOOL, "ACTUATOR_NAMES"))
