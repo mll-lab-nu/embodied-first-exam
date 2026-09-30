@@ -377,26 +377,28 @@ class BaseVLA(ABC):
 ```text
 vla/                              只改这个目录
 ├── README.md                     快速上手：装环境 → 下 checkpoint → 起服务 → 跑评测
-├── setup.sh                      唯一安装入口：setup.sh pi05 | groot | molmoact2 | xvla（只建模型环境）
+├── setup.sh                      唯一安装入口：setup.sh topogym | pi05 | groot | molmoact2 | xvla（各建一个 conda 环境）
 ├── protocol.py                   PolicySpec / Observation / ActionChunk + 编解码（两侧共用，只用标准库 + numpy）
+├── config.py                     YAML 配置加载，支持 _base_ 继承（两侧共用）
 ├── gym/                          只在 TopoGym 环境使用
 │   ├── adapter.py                通用适配器（由 action_spec 驱动，两种机器人共用）
 │   ├── agent.py  client.py       VLAAgent；RemoteClient / LocalClient
-│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / MP4
+│   ├── instructions.py  report.py 每个任务的指令与版本；输出目录 → Markdown 汇总表
+│   └── run_eval.py               读 YAML 配置 → results.jsonl / summary.json / report.md / MP4
 ├── models/                       只在各模型环境使用
-│   ├── base.py  serve.py  dummy.py
+│   ├── base.py  serve.py  dummy.py  droid.py（DROID 关节 7 约定）
 │   └── pi05/ groot/ molmoact2/ xvla/     每个目录一个 model.py
-├── configs/  eval/*.yaml  models/*.yaml  instructions.yaml
+├── configs/  eval/{base,<task>}.yaml  models/<robot>/{base,<checkpoint>}.yaml
 ├── tests/
 └── docs/                         DESIGN.md · index.html · IMPL_PLAN.md（设计文档与实施计划）
 ```
 
 | 扩展操作 | 需要改的地方 |
 |---|---|
-| 加一个 VLA | `vla/models/<name>/`：一个 `BaseVLA` 子类；`setup.sh` 加一个分支；`REGISTRY` 加一行 |
+| 加一个 VLA | `vla/models/<name>/`：一个 `BaseVLA` 子类；`setup.sh` 加一个分支；`configs/models/<robot>/<checkpoint>.yaml`（`class_path` 指向子类） |
 | 加一个机器人 | `vla/gym/adapter.py` 的常量表加一行（夹爪开 / 合值、默认相机）；标准排列表加一行 |
-| 加一个任务 | `configs/instructions.yaml` 加一条 |
-| 换评测模型 | 评测配置的 `policy.address` |
+| 加一个任务 | `gym/instructions.py` 加一条；`configs/eval/<task>.yaml` 继承 `base.yaml` |
+| 换评测模型 | 起另一个模型服务；端口在运行时指定（`serve --port`，评测侧 `policy.address`） |
 
 ### 3.8 训练数据与评测同构
 
