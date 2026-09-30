@@ -64,11 +64,16 @@ def run_tool(python, *args) -> dict:
     cmd = [python, str(TOOL), *map(str, args)]
     if os.environ.get("TOPOGYM_TOOL_IMAGE"):
         mount = os.environ["TOPOGYM_RUN_ROOT"]
-        cmd = ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", "all",
+        cmd = ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", "device=" + os.environ.get("TOPOGYM_GPU_UUID", "0"),
                "--label", "topogym.difficulty-run=" + os.environ["TOPOGYM_RUN_ID"],
                "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
+               "-e", "NVIDIA_VISIBLE_DEVICES=" + os.environ.get("TOPOGYM_GPU_UUID", "0"),
                "-v", f"{mount}:{mount}", "-w", mount, os.environ["TOPOGYM_TOOL_IMAGE"],
                "python", str(TOOL), *map(str, args)]
+        if os.environ.get("TOPOGYM_RESOURCE_LABELS"):
+            from difficulty_delivery import label_args
+            cmd[2:2] = label_args(json.loads(os.environ["TOPOGYM_RESOURCE_LABELS"])) + [
+                "--user", os.environ["TOPOGYM_HOST_UID"] + ":" + os.environ["TOPOGYM_HOST_GID"], "-e", "HOME=/tmp"]
     p = subprocess.run(cmd, env=env, capture_output=True, text=True)
     lines = [l for l in p.stdout.splitlines() if l.startswith("{")]
     if p.returncode or not lines:
@@ -296,7 +301,8 @@ def main() -> None:
     shutil.copy(TOOL, dst / "environment/rcb_topogym.py")
     for rel in ("environment/Dockerfile", "tests/Dockerfile"):
         p = dst / rel
-        p.write_text(re.sub(r"^FROM .*", f"FROM {IMAGE}", p.read_text(), flags=re.M))
+        base = os.environ.get("TOPOGYM_AGENT_IMAGE", IMAGE) if rel.startswith("environment/") else IMAGE
+        p.write_text(re.sub(r"^FROM .*", f"FROM {base}", p.read_text(), flags=re.M))
     shutil.copy(dst / "environment/rcb_topogym.py", dst / "tests/rcb_topogym.py")
     inst_path = dst / "environment/instance.json"
     if a.instance:

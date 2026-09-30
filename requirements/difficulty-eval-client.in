@@ -1,0 +1,5 @@
+# Python 3.12; deliberately contains no simulator or TopoGym package.
+requests==2.34.2
+numpy==2.3.5
+scipy==1.17.1
+Pillow==11.3.0

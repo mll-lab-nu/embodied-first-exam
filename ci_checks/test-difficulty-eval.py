@@ -226,7 +226,7 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
         p=self.bin/name; p.write_text('#!'+sys.executable+'\n'+body+'\n'); p.chmod(0o755)
 
     def call(self,*args,env=None):
-        return subprocess.run(['bash',str(self.script),'--run-id','check',*args],env=env or self.env,capture_output=True,text=True,timeout=45)
+        return subprocess.run(['bash',str(self.script),'--backend','local','--run-id','check',*args],env=env or self.env,capture_output=True,text=True,timeout=45)
 
     def test_python_entry_defaults_and_bash_compatibility(self):
         entry = [sys.executable, str(self.root / 'scripts/difficulty_eval.py')]
@@ -365,7 +365,7 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
 
     def test_signal_keeps_attempt_and_explicit_retry_creates_new_one(self):
         env=dict(self.env,FAKE_HARBOR_MODE='interrupt')
-        args=['bash',str(self.script),'--run-id','check','--phase','run','--resume','--model','contract-model','--api-key',self.key]
+        args=['bash',str(self.script),'--backend','local','--run-id','check','--phase','run','--resume','--model','contract-model','--api-key',self.key]
         proc=subprocess.Popen(args,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
         try:
             deadline=time.monotonic()+30

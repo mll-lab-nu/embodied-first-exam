@@ -70,3 +70,4 @@ topogym_weekly_report/
 # Harbor runs (robot_coding_bench layout): job outputs and local credentials stay out of git
 /jobs/
 /exps/
+/topogym-work/

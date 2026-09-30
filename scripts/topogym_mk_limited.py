@@ -9,7 +9,7 @@ usage: scripts/topogym_mk_limited.py <family> <oracle_traj.npz | -> ["<goal in w
                      things are: no positions, no table height). Default: the task's object names
 The limited oracle replays the unlimited oracle's joint targets (every K control steps, default 1 = exact) as
 `joint_position` actions. Reads runs/task_build/<unlimited slug>/describe.json (written by topogym_mk_task.py)."""
-import argparse, json, pathlib, re, shutil, sys
+import argparse, json, os, pathlib, re, shutil, sys
 import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
@@ -54,6 +54,13 @@ def main() -> None:
         for f in dst.glob("solution/*"):
             f.unlink()
     (dst / "tests/test.sh").chmod(0o755)
+    if os.environ.get("TOPOGYM_CLIENT_IMAGE"):
+        for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+            path = dst / rel
+            text = re.sub(r"^FROM .*", "FROM " + os.environ["TOPOGYM_CLIENT_IMAGE"], path.read_text(), flags=re.M)
+            # The pinned client base contains these dependencies already.
+            text = re.sub(r"^RUN pip install .*\n", "", text, flags=re.M)
+            path.write_text(text)
     # sim sidecar gets this task's instance + the unlimited task's tooling copy
     shutil.copy(unl / "environment/instance.json", dst / "environment/sim/instance.json")
     assets = unl / "environment/instance_assets"
@@ -63,7 +70,7 @@ def main() -> None:
     if tomllib.loads((unl / "task.toml").read_text())["agent"]["timeout_sec"] != BUDGET_S:
         raise ValueError("limited/unlimited wall-clock budgets must match")
     shutil.copy(unl / "environment/rcb_topogym.py", dst / "environment/sim/rcb_topogym.py")
-    img = re.search(r"^FROM\s+(\S+)", (unl / "environment/Dockerfile").read_text(), re.M).group(1)   # same base image as the twin
+    img = os.environ.get("TOPOGYM_TOOL_IMAGE") or re.search(r"^FROM\s+(\S+)", (unl / "tests/Dockerfile").read_text(), re.M).group(1)
     compose = (TEMPLATE / "environment/docker-compose.yaml").read_text()
     compose = re.sub(r"RCB_TASK: \S+", f"RCB_TASK: {fam}", compose)
     compose = re.sub(r"image: \S+", f"image: {img}", compose)

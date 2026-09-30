@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TopoGym Docker release identities",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["schema_version", "release_id", "source_sha256", "files", "runtime_inputs_sha256", "platform"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "release_id": {"$ref": "#/$defs/hash"},
+        "source_sha256": {"$ref": "#/$defs/hash"},
+        "runtime_inputs_sha256": {"$ref": "#/$defs/hash"},
+        "platform": {"const": "linux/amd64"},
+        "files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/hash"}}
+      }
+    },
+    {"$ref": "#/$defs/published"}
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "image": {"type": "string", "pattern": "^[A-Za-z0-9./:_-]+@sha256:[a-f0-9]{64}$"},
+    "published": {
+      "type": "object",
+      "required": ["schema_version", "release_id", "images"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "release_id": {"$ref": "#/$defs/hash"},
+        "images": {
+          "type": "object",
+          "required": ["controller", "runtime", "agent", "client"],
+          "properties": {
+            "controller": {"$ref": "#/$defs/image"},
+            "runtime": {"$ref": "#/$defs/image"},
+            "agent": {"$ref": "#/$defs/image"},
+            "client": {"$ref": "#/$defs/image"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -3,6 +3,7 @@
 !requirements/
 !requirements/uv-topogym-gs121.txt
 !requirements/uv-topogym-gs121-nyx.txt
+!requirements/difficulty-eval-runtime.lock
 !assets/
 !assets/robots/
 !assets/robots/**

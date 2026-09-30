@@ -108,31 +108,32 @@ def sample_instances(settings, source=ROOT):
     return rows
 
 
-def snapshot_source(output):
+def snapshot_source(output, root=None):
     """Copy current dirty source, not HEAD. Never copy credentials or old run data."""
-    folders = ("topogym", "assets/robots", "configs", "requirements", "images", "scripts", "bash_scripts",
-               "harbor_templates", "harbor_agents", "ci_checks")
-    files = {}
-    for folder in folders:
-        for path in sorted((ROOT / folder).rglob("*")):
-            rel = path.relative_to(ROOT)
-            if not path.is_file() or "__pycache__" in rel.parts or path.suffix == ".pyc":
-                continue
-            if path.is_symlink():
-                raise ValueError(f"source snapshot requires real files: {rel}")
-            files[str(rel)] = file_hash(path)
-    files[".dockerignore"] = file_hash(ROOT / ".dockerignore")
+    from difficulty_release import load_build_info, source_files
+    root = Path(root or ROOT)
+    files = source_files(root)
+    release = load_build_info(root)
+    if release and files != release["files"]:
+        raise ValueError("release source differs from build-info")
     dest = output / "source"
     if dest.exists():
         raise ValueError("partial source snapshot exists; preserve it and use a new run-id")
     for rel, sha in files.items():
         target = dest / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / rel, target)
+        shutil.copy2(root / rel, target)
         if file_hash(target) != sha:
             raise ValueError(f"source changed while freezing {rel}; use a new run-id")
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
-    return dict(git_head=head, files=files, sha256=digest(files), snapshot=str(dest))
+    head = None
+    if not release and (root / ".git").exists() and shutil.which("git"):
+        result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
+        if result.returncode == 0:
+            head = result.stdout.strip()
+    identity = dict(git_head=head, files=files, sha256=digest(files), snapshot=str(dest))
+    if release:
+        identity["release_id"] = release["release_id"]
+    return identity
 
 
 def verify_source(output):
@@ -157,17 +158,19 @@ def add_sampling_arguments(parser):
 
 
 def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
-                     samples_per_difficulty=None, agent_wall_clock_s=None, concurrency=None, resume=False):
+                     samples_per_difficulty=None, agent_wall_clock_s=None, concurrency=None, resume=False,
+                     source_root=None):
     """Create or validate a run and return its manifest, without starting a simulator."""
     import yaml
     output = Path(output).resolve()
+    source_root = Path(source_root or ROOT)
     old = None
     lock = output / "manifest.lock.json"
     if lock.exists():
         if not resume:
             raise ValueError("run already exists; use --resume or a new run-id")
         old = json.loads(lock.read_text())
-    setting = setting or (None if old else ROOT / "configs/sweeps/difficulty_eval.yaml")
+    setting = setting or (None if old else source_root / "configs/sweeps/difficulty_eval.yaml")
     cfg = yaml.safe_load(Path(setting).read_text()) if setting else dict(old["settings"])
     if not isinstance(cfg, dict):
         raise ValueError("setting must be a mapping")
@@ -197,11 +200,11 @@ def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
         manifest = old
     else:
         output.mkdir(parents=True, exist_ok=True)
-        source = snapshot_source(output)
+        source = snapshot_source(output, source_root)
         rows = sample_instances(cfg, output / "source")
         # Sampling and freezing must refer to the same source bytes.
         for rel, sha in source["files"].items():
-            if file_hash(ROOT / rel) != sha:
+            if file_hash(source_root / rel) != sha:
                 raise ValueError("source changed during plan; use a new run-id")
         atomic_json(output / "source_identity.json", source)
         manifest = dict(schema_version=1, task_mapping_version=TASK_MAPPING_VERSION,

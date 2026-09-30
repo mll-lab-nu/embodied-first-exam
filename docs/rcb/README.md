@@ -646,28 +646,32 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 ## 8. 难度评测入口
 
-主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 是 7 行兼容启动入口，只选择解释器并透传参数。配置在
+主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 默认负责 Docker 镜像准备与控制器启动，实验阶段由 Python 调度器执行。配置在
 [`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。
 `--samples-per-difficulty 3` 或 `5` 可扩展样本；三档和双模式固定，每个实例/模式只跑一次。
 
 先只抽样和冻结当前源码，不启动 GPU 或模型：
 
 ```bash
-cd /home/jianwen/topogym
+# 在仓库根目录运行。
 bash bash_scripts/run_difficulty_trials.sh --list-tasks
 bash bash_scripts/run_difficulty_trials.sh --phase plan --run-id difficulty-eval-20260929
 ```
 
 也可直接使用 `.venv-gs121-nyx/bin/python scripts/difficulty_eval.py`，后面的参数完全相同。
-Bash 默认使用 `.venv-gs121-nyx/bin/python`，可通过 `TOPOGYM_EVAL_PYTHON` 指定解释器。
+显式 `--backend local` 时默认使用 `.venv-gs121-nyx/bin/python`，可通过 `TOPOGYM_EVAL_PYTHON` 指定解释器；默认 Docker 入口使用镜像内 Python。
 抽样与 manifest 仍由 `sample_difficulty_instances.py` 负责，Python 调度器直接调用其共享函数；任务生成和结果分类继续复用现有工具。
+
+入口现默认启动 Docker 控制器；新用户见 [Docker 启动说明](docker_quickstart_zh.md)。以下难度评测命令使用 Docker；复用旧宿主环境与历史 run 时加 `--backend local`，或直接调用 Python；交付范围及分级验收见 [Docker 交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
 
 订阅方式延续此前 Luna 的 agent/model 配置；实际模型访问资格由账户决定：
 
 ```bash
 bash bash_scripts/run_difficulty_trials.sh \
-  --phase all --run-id difficulty-eval-20260929 --resume \
-  --auth subscription --model openai/gpt-6-luna \
+  --phase all --run-id luna-all-tasks \
+  --tasks 1-13 --samples-per-difficulty 1 \
+  --agent-wall-clock-s 21600 \
+  --auth subscription --agent codex --model openai/gpt-6-luna \
   --agent-arg version=0.157.0 --agent-arg reasoning_effort=max
 ```
 
@@ -675,15 +679,16 @@ API 方式无需手工 `export OPENAI_API_KEY`。`--api-key` 不带值时从当�
 
 ```bash
 bash bash_scripts/run_difficulty_trials.sh \
-  --phase all --run-id difficulty-api-20260929 \
-  --tasks 8-9 --samples-per-difficulty 3 \
-  --model 'openai/<model-id>' --api-key
+  --phase all --run-id api-all-tasks \
+  --tasks 1-13 --samples-per-difficulty 1 \
+  --agent-wall-clock-s 21600 \
+  --agent codex --model 'openai/<model-id>' --api-key
 ```
 
 也支持 `--api-key='实际 key'`，但这种形式可能进入调用方 shell 历史及进程参数；脚本不会把它写入 manifest、Harbor 参数或配置。
 凭据优先级为显式/隐藏输入 > `--env-file` 所选值 > `--api-key-env` 所指环境变量；显式空值失败。
 `--api-key` 自动选择 API 模式；不使用它时需明确 `--auth subscription|api-key`。
-订阅默认读取 `${CODEX_HOME:-$HOME/.codex}/auth.json`，也可指定 `--auth-json`；不会修改宿主登录。
+Docker 订阅先运行 `bash bash_scripts/run_difficulty_trials.sh auth login --device-auth`，凭据保存在工具的私有目录；`--auth-json` 可只读导入已有登录。本地后端仍默认读取 `${CODEX_HOME:-$HOME/.codex}/auth.json`。
 OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`，脚本选择现有 CodexOpenRouter 适配器并映射 `OPENROUTER_API_KEY`。
 `--agent-arg` 首版开放 `version`、`reasoning_effort`，拒绝通过该参数旁路认证或预算。
 
@@ -701,7 +706,7 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。
 `tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本仍与公共模板同步。
 
-`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
+Docker 模式下，以下目录都位于 `topogym-work/`（可用 `--work-dir` 覆盖）；本地后端仍位于仓库根目录。`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
 汇总保留所有 attempt，按每个计划 trial 的最后一次 attempt 判断批次完成。缺轨迹为 `invalid_submission`，基础设施错误为 `infra_failed`，判据未完成为 `not_evaluable`，三者均不进入已有效评分场景的 solved/unsolved 比率。
 
 开发验证命令：
@@ -714,4 +719,4 @@ PATH="$PWD/.venv-gs121-nyx/bin:$PATH" bash ci_checks/run_all.sh
 这套 CPU 合同测试覆盖双入口兼容、默认值、抽样稳定性、预算、任务包、运行锁、资源停止，以及模拟 Harbor 进程下的认证/中断/恢复，不调用真实模型、不证明物理正确。
 Python 调度器拆分后的 14 项测试全部通过，日志在 `runs/test_results/difficulty_eval_refactor_20260929/contracts.final.log`。
 加入全批准备/预检守卫后，17 项测试全部通过，覆盖部分准备失败、部分预检失败时零模型启动，以及补齐预检后恢复；日志在 `runs/test_results/difficulty_eval_guard_20260929/contracts.log`。
-本轮只确认默认清单确实是 39 个实例、78 trials；GPU 只读检查时已有其他进程占用约 21.5/24.6 GB，因此未启动本批真实物理检查或付费模型 trial。
+2026-09-29 的验证只确认默认清单为 39 个实例、78 trials，当时 GPU 忙碌，未启动本批真实物理或模型 trial。后续 Docker 交付验证记录见 [交付计划](difficulty_sweep_delivery_plan_zh.md)。

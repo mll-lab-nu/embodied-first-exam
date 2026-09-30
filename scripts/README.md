@@ -26,7 +26,9 @@
 
 - `sample_difficulty_instances.py`：13 项编号选择器、每难度随机抽样、源码快照及冻结 manifest；默认全任务、每档 1 个样本。
 - `difficulty_eval.py`：难度评测调度；解析参数、准备任务、物理 preflight、认证 canary、逐次 `harbor run`、中断处理和恢复；默认 agent 预算 21600 秒，使用公共 `harbor_templates/topogym/`。
-- `../bash_scripts/run_difficulty_trials.sh`：兼容启动入口，仅选择 Python 解释器并透传参数给 `difficulty_eval.py`；原有命令保持可用。
+- `../bash_scripts/run_difficulty_trials.sh`：默认自动准备并启动 Docker 控制器；`check`、容器内 `auth login` 与实验共用入口，默认工作目录为启动目录的 `topogym-work`；`--backend local` 显式保留宿主环境。
+- `difficulty_delivery.py`：Docker 交付适配，管理固定镜像、共享路径检查、GPU UUID、daemon 内锁和所属容器清理，不复制实验阶段逻辑。
+- `difficulty_release.py`：无 Git 源码身份、build-info 与 Docker 源码发行包；使用方法见 [Docker 启动说明](../docs/rcb/docker_quickstart_zh.md)。
 - `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
 - `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。

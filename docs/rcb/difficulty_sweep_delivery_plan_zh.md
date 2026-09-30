@@ -1,225 +1,358 @@
-# 难度 Sweep 的 Docker 交付与结果发布计划
+# Difficulty Eval 的 Docker 交付实施计划
 
-2026-09-29。状态：实现计划，尚未实现、发起模型请求、运行 sweep 或发布远端内容。
+更新：2026-09-30。状态：已按计划补充 Docker 交付实现，并完成本机分级验证；独立新机器、真实模型和全部场景的验收仍单列待办。实现与证据见第 11 节，操作入口见 [Docker 启动说明](docker_quickstart_zh.md)。
 
-目标：由我们交付固定版本的镜像和实验 setting，对方提供模型连接信息及凭据，在 GPU 机器上通过一个 Docker 入口运行；系统自动执行、断点恢复、整理结果，并提交到 [topogym_eval_and_sweep_results](https://github.com/LUIGIVAMPER/topogym_eval_and_sweep_results)。
+目标：没有 TopoGym、Python、Harbor、Codex 或本项目虚拟环境的新用户，在已具备 Docker 与 GPU 运行条件的主机上，拉取本仓库的受支持版本后，直接运行 `bash bash_scripts/run_difficulty_trials.sh ...`，即可自动准备所需镜像与容器，完成抽样、场景准备、预检、订阅/API 认证、双模式 trial、恢复和结果汇总。另保留不含源码 checkout 的发行启动包。
 
-**1. 已确认的实验范围**
+本计划更新原 Docker sweep 交付文档，以当前 `difficulty_eval.py` 为实现基础。旧稿中的每模式三次重复、234 trials、多模型队列、cube 接入前置和自动发布结果，不属于本次容器化的必需范围；后续扩展见第 10 节。本次不另写一套 sweep 调度器。
 
-- 13 个正式 task，每个 task 的 easy / medium / hard 每档抽 1 个实例。
-- 每个实例同时运行 limited 和 unlimited；每种模式独立跑 3 次 trial。
-- 每个模型共 `13 × 3 × 1 × 2 × 3 = 234` 次正式 trial；M 个模型共 `234 × M` 次。
-- `cube_pick_place` 单独用于交付和模型接入检查，不计入正式成绩。
-- 同一 task / difficulty 抽出的实例，在全部模型、两种模式及 3 次 trial 中保持一致。每次 trial 新建 agent 会话与模拟器环境，不继承前次模型上下文或探索产物。
-- 本轮衡量一个固定实例上的重复执行表现；3 次 trial 不等于 3 个独立场景样本，不能据此宣称覆盖该难度的完整场景分布。
+## 1. 交付合同与首版范围
 
-当前 tier 目录为每个 task 提供一个 easy、medium、hard 具名变体，因此首版“抽样”的主要随机量是变体内的 scene seed。将来同档有多个候选时，再由相同 manifest 机制记录候选池及选择结果。抽样不按模型能否解开来筛选；场景初始化不合格需留存原因，不能静默换 seed。
+### 用户需要准备什么
 
-**2. 已有基础与需要补齐的部分**
+- Linux x86_64 主机、受支持的 NVIDIA GPU、宿主 NVIDIA 驱动、Docker Engine/CLI，以及已配置好的 NVIDIA Container Toolkit。
+- 可写的结果目录、足够的磁盘/内存/显存，以及访问镜像仓库和模型服务的网络条件。
+- 自己的订阅登录，或 API key 与 model name。模型访问资格由其账户决定。
+- 使用 Bash 入口时，需要系统自带的 Bash 和基础文件工具；选择 clone/pull 仓库方式时，Git 仅用于获取代码，下载源码归档或发行包可不安装 Git。Docker 安装须包含本地构建所需的 BuildKit/Buildx 能力。Docker Compose 插件、Python、Harbor、Codex、Node/npm、仿真与渲染依赖由镜像提供。
 
-核对基线：源码 HEAD `f8f10e02a4de1bf1865089c7aee3b274a1447ca9`；工作区另有进行中的修改，因此正式交付必须使用单独冻结的发布快照，不能仅以该 HEAD 表示当前全部文件。
+宿主驱动与 NVIDIA 容器运行时仍需部署；应用镜像不能替用户安装并启用宿主 GPU 驱动。[NVIDIA 官方安装要求](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
-| 已有实现 | 本计划如何使用 / 补齐 |
+首版限定本机 Docker daemon，不把远程 Docker、Docker Desktop、rootless、Windows/macOS、ARM 或跨主机分片列为已支持。具体发行版、驱动下限、Docker/Toolkit 版本、显存和磁盘需求由交付演练确定并记录，不根据开发机配置猜测。
+
+### 实验语义保持不变
+
+| 项目 | 交付版本要求 |
 | --- | --- |
-| `docs/rcb/README.md`、`tasks/` 的 Harbor 两种模式及独立 verifier | 继续沿用正式执行链路 |
-| `images/topogym/Dockerfile` | 复用 Genesis / Nyx / 资产镜像，按 digest 固定并发布可拉取版本 |
-| `topogym/config/variation_records.py` | 读取正式 tier 候选；integrated 不代表真实运行或成功判据已验收 |
-| `rcb_topogym.py` 的实例注册与 make-instance | 当前实例列表主要是固定变体、seed 0；补显式 variation / seed 输入和冻结实例生成 |
-| `scripts/topogym_mk_task.py`、`scripts/topogym_mk_limited.py` | 增加独立输出目录及参数化预算；生成 39 个场景、78 个模式任务包，不覆盖现有任务目录 |
-| `scripts/collect_batch_results.py`、`scripts/write_task_results.py` | 当前按 task / mode 等路径写结果，会覆盖多个 trial；改为每个 trial、每次 attempt 独立保存 |
-| `scripts/run_agent_batch.sh`、`scripts/mem_guard.py` | 复用经验，替换全局容器名和宽泛匹配；新调度器只管理自己的 run |
-| `harbor_agents/codex_openrouter.py`、Harbor 内置 agent | 建立明确的模型连接 profile 和接入检查 |
+| 任务 | 固定 1–13 映射，默认全部，支持编号/区间/名称选择 |
+| 难度与模式 | 每个任务固定 easy / medium / hard × unlimited / limited |
+| 抽样 | `--samples-per-difficulty` 默认 1，可覆盖为 3、5 等；同 seed 保持样本前缀稳定 |
+| Trial 数 | 每实例/模式一次，默认 `13 × 3 × 1 × 2 = 78`；tasks 8,9 为 12 次 |
+| 预算 | agent 默认 21600 秒；432 / 1080 秒短预算继续支持，同步到 sim、collection 和 verifier |
+| 并发 | 首版保持 1 |
+| 认证 | 订阅和 API key 两条路径；保留已有 OpenAI/OpenRouter 接入边界 |
+| 启动门槛 | 全部所选实例完成 prepare 和 preflight 才能启动模型 canary/正式 trial；单独 run 也检查 |
+| 恢复 | 完成项跳过；中断/基础设施失败仅在显式 `--rerun-incomplete` 时创建新 attempt |
+| 日志 | 保留五阶段标题、任务/难度/sample/mode/attempt、GPU 等待提示、逐 job 日志和汇总 |
+| 判分 | 保留 not_evaluable、基础设施失败、非法提交的独立分类；容器化不改变成功判据 |
 
-本计划不重新引入旧 `SegmentRunner` / `run_policy` 调度链。评测继续通过现有 Harbor → agent / sim → verifier 完成。`--difficulty` 在当前任务生成器中是说明文字参数，不能靠改这一项来切换物理难度。
+模型名称和推理参数仍由用户明确给出，不把 Luna 固定成唯一可用模型，也不在失败时替换模型。认证 canary 独立于上述正式 trial 数。
 
-目标结果仓库本次未能读取，尚未核实默认分支、已有内容、分支保护与访问权限。实施时先做只读探测，再在不覆盖已有内容的前提下初始化结果结构。
+## 2. 实施前基线与本次改造
 
-**3. 模型接入：多模型配置，按适配能力开放**
+以下记录实施前的代码核对及改造动机；实施结果见第 11 节，不代表全部真实场景或模型已验收。
 
-对方提供 model-name 和 api-key 的方式可行，但“任意厂商的任意模型只填这两项”不能保证成立。需要区分：agent harness（例如 Codex）、model（推理模型）、provider（API 服务）以及协议。Harbor 能解析 provider 凭据，不代表当前 agent 自动兼容该 provider 下的所有模型。
-
-| 接入范围 | 对方提供什么 | 首版处理 |
+| 当前实现 | 直接搬进 Docker 会遇到的问题 | 本次改造 |
 | --- | --- | --- |
-| 固定 Codex + 已支持的 OpenAI API 模型 | model-name、API key | 首版交付主路径；每个实际模型需完成接入检查 |
-| Codex + 第三方兼容服务 | model-name、API key，通常还需 base URL / provider | 显式 profile；验证 Responses、工具调用、流式响应和图像后开放 |
-| 项目现有 CodexOpenRouter | 完整嵌套模型名、OpenRouter key，可选路由约束 | 保留现有适配器；不能因此声明全部 OpenRouter 模型都可用 |
-| Claude Code + 对应 API 模型 | model-name、对应 key / provider | 后续扩展，单独验收；报告必须区分 harness |
-| 仅 Chat Completions、无所需工具或图像能力的模型 | 上述信息仍不足 | 明确列为不支持；首版不开发通用协议翻译层 |
+| [Bash 入口](../../bash_scripts/run_difficulty_trials.sh) 默认执行 `.venv-gs121-nyx/bin/python` | 外部用户没有该虚拟环境 | 发布版入口启动控制镜像，实验参数透传 |
+| [difficulty_eval.py](../../scripts/difficulty_eval.py) 使用脚本位置推导 ROOT，默认读取 `.venv-harbor/bin/harbor` | 镜像只读代码、用户数据与宿主路径混在一起 | 分离 release/source root 与 work root；使用镜像内固定 Harbor 路径 |
+| [抽样器](../../scripts/sample_difficulty_instances.py) 复制 dirty 源码并运行 `git rev-parse HEAD` | 控制镜像及发行包不能假设存在 `.git`，即使用户从仓库启动 | 构建/发布元数据替代容器运行时 Git 探测；保留本地开发快照模式 |
+| [模拟器镜像](../../images/topogym/Dockerfile) 已包含 Genesis/Nyx/机器人/视觉资产 | 尚不含调度器与 Harbor；不能直接替代控制镜像 | 复用模拟器镜像，新增控制镜像 |
+| 本机 Harbor 0.23.0 元数据要求 Python >=3.12；模拟器镜像使用 Python 3.11.15 | 直接在现有模拟器 Python 中安装 Harbor 不满足其版本要求 | 控制器使用独立 Python 3.12 环境，仿真镜像保留已验证的 3.11 环境 |
+| [根 .dockerignore](../../.dockerignore) 只放行仿真镜像需要的文件 | 调度器、模板、配置及 Markdown 指令不会完整进入新控制镜像 | 新控制镜像使用独立构建白名单 |
+| limited agent / verifier 模板使用浮动 `python:3.12-slim`，agent 构建时未锁定 Python 依赖 | 只固定主镜像不足以复现整个任务环境 | 锁定所有执行镜像及依赖；把稳定依赖提前构建 |
+| prepare 每个 run 按源码哈希重建基础镜像 | 用户运行时重复安装大依赖，且不能直接复用已发布镜像 | 发布模式读取固定 runtime digest；仅构建实例相关的轻量任务层 |
+| 各处直接使用 GPU 0、`--gpus all` 或 Compose `count: 1` | 控制器与实际 sim/agent/verifier 可能选到不同设备 | 统一 GPU 选择并映射为宿主 GPU UUID，传播至所有子容器 |
+| run/GPU 锁、进程组清理在宿主进程语义下工作 | 杀掉控制容器不会自然清理兄弟容器；不同工作目录的 GPU 锁互不相见 | 增加持久化控制器身份、daemon 内 GPU 锁及容器对账 |
+| [push_images.sh](../../scripts/push_images.sh) 明确阻止推送 topogym | 仓库记录的原因是 Nyx 再分发条件尚未确认 | 将发布条件列为交付依赖，同时提供仅用 Docker 的本地构建路径 |
 
-Codex 的自定义 provider 配置包含 `base_url`、`env_key`，当前文档中的 `wire_api` 为 `responses`。因此“OpenAI-compatible”标签本身不足以证明可接入 Codex。[官方配置说明](https://learn.chatgpt.com/docs/config-file/config-reference)
+## 3. 推荐架构：一个用户入口，多个职责明确的镜像
 
-实现原则：
-
-1. 外部统一使用 `models.yaml`，支持模型列表；默认 profile 为 `codex_openai`，该路径只需 model-name 和对应 key 文件。
-2. 非默认服务要求填写 provider / base URL / adapter。未知 profile 提前失败，不猜测供应商，也不按失败情况偷偷切换模型。
-3. 设置 `model_id`（用户原始名称）、实际传给 provider 的名称、adapter、harness 版本、推理参数、endpoint 身份和配置哈希。记录返回的模型身份（若服务提供）。
-4. 接入检查必须由实际 agent 完成至少一次命令工具调用、读取图像，并通过 cube 的 limited / unlimited 短流程，产出轨迹、评分及录像。连通性检查通过不要求模型解题成功，但必须有真实执行证据。
-5. 冻结支持列表后才开始正式 sweep。未通过接入检查的模型记录为 `unsupported` 或 `preflight_failed`，不能把未运行的 234 项伪记为模型失败。
-6. 首版限定 Codex harness；多模型可以是同一已支持 provider 下的多个模型。其他 harness 后续单列结果，避免把 harness 差异当成纯模型差异。
-
-拟议配置示例（不是已经存在的 CLI / schema）：
-
-```yaml
-models:
-  - id: model_a
-    profile: codex_openai
-    model_name: "<对方提供的模型名称>"
-    api_key_file: /run/secrets/model_a_key
-    agent_args: {}  # 推理强度等按该模型支持范围显式固定
-```
-
-密钥只由对方在本机填写；不写入 setting、镜像、manifest 或 Git。GitHub 发布凭据另行配置，只交给发布组件，不传入 agent / sim / verifier。模型 key 按 provider 定向传递，不能把全部模型及 GitHub 凭据作为公共 env-file 灌入每个 trial。
-
-**4. 固定实验包与身份**
-
-我们在发布阶段完成抽样和 GPU 场景准备，交付时对方执行已经冻结的场景，避免每台机器重新抽样。
-
-拟新增 `configs/sweeps/difficulty_v1.yaml`，定义：正式 task 清单、三档难度、每档 1 个样本、3 次 trial、两种模式、抽样 seed、预算、录制与资源策略。模型列表是独立输入。
-
-生成 `sweep.lock.json`，固定以下内容：
-
-- sweep schema / setting 版本、正式 task 与候选池快照、sampling seed。
-- 39 个选中实例的 task_id、difficulty、variation_id、scene seed、完整 simulator 配置、资产与 instance 文件哈希、辅助抓持设定。
-- 78 个任务包的哈希，以及 unlimited 环境、verifier、limited sim 所用 instance 的一致性。
-- 模拟器源码快照哈希、Git commit、依赖锁、镜像 digest、Harbor 与 agent CLI 版本。
-- 每个模型的有效非敏感配置、提示词与工具版本、agent / verifier / sim 各阶段预算。
-
-抽样使用排序后的候选集合和固定算法。不能用进程随机化的 Python `hash()` 推导 seed。trial 编号仅表示重复次数，不自动修改 scene seed；模型随机 seed 仅在供应商支持时传入，并记录是否生效，不承诺云端模型输出可逐字复现。
-
-每个实例需要做初始化、Nyx 观测、基本动作、终止判据接口和重放检查；未满足交付条件的场景明确列为阻塞，不能用 integrated 或静态解析代替运行验收。不同 GPU 的动力学差异按当前 GPU verifier 规则报告，不强加逐位状态哈希相等；配置、资产和实例文件身份必须一致。
-
-**5. Docker 交付架构**
-
-交付一个 `topogym-sweep` 控制镜像，内含固定版本 Harbor、Docker CLI / Compose、任务包、调度器、整理器和发布器；同时发布其依赖的模拟器及任务运行镜像。尽量预构建任务运行镜像，减少对方首次运行时的安装与构建。
+“整个项目 Docker 化”指整条实验链路所需软件都由镜像提供。保持 Harbor 当前的 agent、sim 和 verifier 隔离，不把所有角色塞到一个容器里。
 
 ```mermaid
-flowchart LR
-    A[对方模型配置与密钥] --> B[Docker sweep 控制容器]
-    C[冻结的 setting 与 39 个实例] --> B
-    B --> D[宿主 Docker / Harbor]
-    D --> E[Unlimited agent / 独立 verifier]
-    D --> F[Limited agent / sim / 独立 verifier]
-    E --> G[宿主持久化结果目录]
-    F --> G
-    G --> H[逐 trial 整理 / 脱敏 / 校验 / 打包]
-    H --> I[Git 结果提交 + 同仓库 Release 附件]
+flowchart TD
+    U[用户：启动包、参数、凭据] --> L[Bash 启动入口]
+    L --> C[控制容器：difficulty_eval + Harbor + Docker CLI/Compose]
+    C --> D[宿主 Docker daemon]
+    D --> P[场景准备与物理预检容器]
+    D --> A[Unlimited agent 或 Limited agent + sim]
+    D --> V[独立 verifier]
+    C <--> W[宿主工作目录：manifest、任务包、jobs、日志、结果]
+    P <--> W
+    A --> W
+    V --> W
 ```
 
-首版使用 Linux + NVIDIA GPU + NVIDIA Container Toolkit + 本机 Docker daemon。控制容器挂载 Docker socket，由 Harbor 在宿主 daemon 创建兄弟容器，保持现有两种模式与评分隔离。Docker socket 只给控制器；agent 不能获得它。交付说明需明确控制器具有宿主 Docker 管理权限。
+图中的工作目录表示数据汇集位置，不表示 agent 可以挂载整个工作目录；实际挂载范围继续由任务包与 Harbor 限定。
 
-必须解决以下容器化细节：
+### 3.1 控制镜像
 
-- **路径**：Harbor 要挂载的任务、sim 文件和 job 目录都必须存在于宿主共享工作目录；控制容器使用与宿主相同的绝对路径。镜像入口先将冻结实验包解包到该目录并校验。仅存在于控制容器 `/opt/...` 的文件不能直接当宿主 bind source。[Docker bind mount 规则](https://docs.docker.com/engine/storage/bind-mounts/)
-- **GPU**：按 GPU UUID / 设备 ID 给实际 agent、sim、verifier 容器分配设备；只给控制容器加 `--gpus` 不会完成此事。
-- **CPU / 内存**：资源限制落实到各执行容器，不只约束控制器；初始并发设为 1，测量刚体和 FEM 峰值后增加。Docker 默认不会自动限制全部资源。[Docker 资源限制说明](https://docs.docker.com/engine/containers/resource_constraints/)
-- **生命周期**：所有自建资源标记 run_id；Harbor 子资源通过 labels 或明确的容器 ID 记录归属。SIGTERM 时停止新任务、等待或终止本 run 的活动任务、整理已完成结果；SIGKILL 后由 resume 对账。
-- **持久化**：jobs、状态数据库、整理结果和上传状态放宿主 volume；缓存可丢弃，正式结果不能随 `--rm` 消失。
-- **资源保护**：监测 CPU / 内存，达到项目规定的 90% 阈值时停止本 run 的相关工作并保存状态；不沿用现有 mem_guard 的跨项目宽泛匹配，不终止其他实验。
+新增 `images/difficulty-eval/Dockerfile`，镜像名称建议 `topogym-difficulty-eval`。包含：
 
-交付给对方的目标操作形式如下；镜像、digest、入口及参数是待实现接口，不可直接运行：
+- Python 3.12、固定版本 Harbor、Docker CLI/Compose、必要基础工具。
+- 当前调度器、抽样器、任务生成器、结果整理器、检查工具及 Harbor adapters。
+- 抽样/配置加载需要的 TopoGym CPU 依赖；通过镜像内 `plan` 实测确认，不假定只装 Harbor 就够了。
+- 固定版本 Codex CLI 及其运行依赖，用于容器内订阅登录；版本与正式 agent 的选择记录一致。
+- 版本化 release bundle：评测源码、模板、配置、资产清单及构建信息。
 
-```bash
-SWEEP_ROOT="$PWD/topogym-sweep-work"
-mkdir -p "$SWEEP_ROOT"
-# 先把 models.yaml 放入工作目录；secrets 目录存模型 key 和 GitHub token。
-docker run --rm --init \
-  --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
-  --mount type=bind,src="$SWEEP_ROOT",dst="$SWEEP_ROOT" \
-  --mount type=bind,src="$PWD/secrets",dst=/run/secrets,readonly \
-  -w "$SWEEP_ROOT" \
-  ghcr.io/luigivamper/topogym-sweep@sha256:<release-digest> \
-  run --setting difficulty-v1 --models models.yaml \
-  --work-dir "$SWEEP_ROOT" --run-id <唯一批次ID> --resume --publish
-```
+控制镜像不运行 Genesis 物理。首版在其中验证 Python 3.12 下的抽样结果与发布基线一致；如果数值配置依赖需要独立环境，环境也安装在镜像里，不转移给宿主。
 
-首版不要求对方安装 Python / Harbor 或克隆开发仓库，但仍需准备 GPU 驱动、Docker 环境、镜像拉取权限、模型和结果仓库凭据。镜像发布验收需在无本地构建缓存的新机器完成。
+### 3.2 仿真及任务镜像
 
-**6. 调度、预算与恢复**
+继续使用 `images/topogym/Dockerfile` 构建 runtime，保留 Python 3.11、CUDA/Torch、Genesis/Nyx、FEM/IPC、机器人与视觉资产。按实际角色补齐并固定：
 
-独立调度器维护固定 trial 清单，逻辑 trial 身份为：`setting_hash / model_config_hash / task / difficulty / sample / mode / trial_index`。每个 attempt 映射到实际 Harbor job / trial，不能依赖被截断的目录名推断身份。
+- unlimited agent 基础层：仿真依赖 + 已支持 agent CLI；
+- unlimited verifier / limited sim：仿真运行环境；
+- limited agent：客户端依赖 + agent CLI，不装模拟器源码；
+- limited verifier：评分依赖。
 
-首版建议每个逻辑 trial 调用一次 Harbor（`-k 1`），由调度器展开 3 次重复，便于准确恢复与配额控制；以后需要批处理时也必须保留显式映射。各模型、各模式共用同一 GPU 调度池，避免 unlimited、sim 与 verifier 相互抢占。
+共享依赖层可以复用同一基础镜像，不要求为每个 task 发布一个巨大镜像。任意 sampling seed / N 对应的 instance、说明和评分工具在用户机器上生成，再由 Harbor 构建轻量任务层；改变样本数无需重新发布仿真基础镜像。
 
-状态包括 pending、running、completed、infra_error、interrupted、blocked；任务 outcome 另记 solved / unsolved / agent_invalid，基础设施状态与任务结果分开。
+完整评测源码仅供可信控制器使用。agent 能见到的镜像继续遵守现有模板与 [prune.py](../../images/topogym/prune.py) 的内容边界，不打入参考策略、历史轨迹、旧 runs、legacy 或开发机凭据。
 
-- 按配置设定有限的 API 退避与基础设施重试；认证失败、模型不存在或协议不支持立即阻断对应模型队列。
-- 已正常结束但未解开、agent 未交轨迹或交出非法轨迹按评测规则保留为失败；不能靠自动重跑直到成功改变样本。
-- verifier 故障优先对同一条轨迹重判，不重新调用模型；保存原判分、每次重判证据和最终采用的版本。
-- 必须重启模型时另建 attempt，保留原始记录和所有耗时 / token / 费用。预先固定有效 attempt 的选择规则，不按最高分选择。
-- resume 先核对 manifest、模型配置和文件哈希，再检查已存结果与活跃容器；不盲目重启仍在运行的 trial。完成且证据完整的 trial 跳过，状态冲突停止并报告。
-- 配置、模型或预算改变时创建新 run。首版一个控制器管理一个 run，以锁防止两个实例重复调度；跨机器分片作为后续扩展。
+### 3.3 使用宿主 daemon，避免额外嵌套 daemon
 
-预算暂沿用现有每 trial agent 5400 秒，最终放入 setting 并同步生成到任务、sim 和 verifier 配置。仅 agent 上限为 `234 × 1.5 = 351 小时 / 模型`；这是全部用满预算时的串行 agent 时间，不包含初始化外开销、独立重放、录像和重试。先以小批量分别测刚体 / FEM / 两模式的时间、显存和磁盘量，再给对方总时长与并发建议。模型价格未知时费用记 null，不能填 0；API 返回用量和本地价格估算分开。
+控制器通过挂载 Docker socket 调用宿主 daemon；Harbor 创建的是与控制器并列的容器。控制器不启动另一个 Docker daemon，agent / sim / verifier 不获得 Docker socket。
 
-**7. 结果结构与统计口径**
+这使控制器具备宿主 Docker 管理能力，必须在启动说明中明确，但不要求给所有容器加 `--privileged`。只有可信发布代码负责调度与清理。[Docker daemon 权限说明](https://docs.docker.com/engine/security/)
 
-结果仓库拟采用：
+## 4. 必须完成的工程改造
+
+### 4.1 依赖锁、构建上下文与发行身份
+
+1. 新增控制器依赖输入与锁文件，记录 Python、Harbor、Docker CLI/Compose、Codex 和关键 Python 库版本；运行镜像补齐 `trimesh`、limited 客户端等当前未固定的依赖与基础镜像 digest。
+2. 核实安装的 Harbor 是否存在本地改动。版本号相同不足以证明代码相同；如确有修改，交付可重建的 fork/补丁或带哈希的 wheel，而非复制开发机整个 venv。
+3. 新增 `images/difficulty-eval/Dockerfile.dockerignore`。现有根白名单继续保护模拟器构建；控制器明确包含任务模板中的 Markdown、shell 与 Python 文件。Docker 支持每个 Dockerfile 使用独立 ignore 文件。[Docker 构建上下文说明](https://docs.docker.com/build/concepts/context/)
+4. 在维护方干净的发布快照上构建。开发中的 dirty 文件若进入发布，记录实际逐文件哈希；不能仅用 commit 号冒充完整源码身份。
+5. 镜像内记录 `build-info.json`：release ID、源文件清单、配置/抽样版本、依赖锁和 runtime 来源（已发布 digest 或本地构建配方哈希）。发行镜像构建并推送后再生成外部 `release.lock.json`，绑定 controller/runtime/辅助镜像 digest，避免自身 digest 循环写入镜像；本地构建另记实际 image ID，不要求先推送镜像。
+6. 核对 robot meshes、task templates、HDRI/纹理、Blanket 初态准备所需数据等是否完整。保留资产来源和哈希；不得依赖开发机的 `~/.cache`、绝对 URDF 路径或未导出的外部文件。
+7. 首版允许发布/构建时联网；运行时仅保留明确需要的模型与镜像访问。预装固定 agent CLI，避免每个 trial 无提示地安装 `latest`。用户覆盖 agent 版本时须明确其下载行为并锁入 execution 配置。
+
+### 4.2 拆分源码根目录与可写工作目录
+
+给 `difficulty_eval.py` 增加 `--work-dir`，发布模式从镜像携带的 release bundle 获取源码，工作目录只承载本次实例、构建上下文和结果。示例结构：
+
+Docker Bash 入口未指定 `--work-dir` 时，默认使用**启动命令时宿主当前目录下的 `topogym-work`**（`$PWD/topogym-work`）。启动器在任何切换目录或进入容器之前确定该路径，自动创建目录并打印解析后的绝对路径；用户无需先设置 `EVAL_WORK_DIR` 变量。显式 `--work-dir` 优先，传入相对路径时也相对于同一个宿主启动目录解析。`check` 和实验入口共用该规则，容器内 Python 接收已解析的绝对路径，不按容器的工作目录重新推导。
 
 ```text
-runs/<run_id>/
-  README.md
-  manifest.json
-  setting.yaml
-  models.redacted.yaml
-  instances/index.json
-  trials.jsonl
-  summary.csv
-  summary.md
-  artifacts.json
-  checksums.sha256
-  trials/<model>/<task>/<difficulty>/<mode>/trial_01/
-    result.json
-    attempts/attempt_01/
-      result.json
-      reward.json
-      evidence.json
+<work-dir>/
+  releases/<release-id>/        # 校验后解包的公共工具/配置
+  runs/difficulty_trials/<run-id>/
+    source/                    # 该 run 使用的冻结输入
+    manifest.lock.json
+    source_identity.json
+    image.json
+    build/ tasks/ instances/
+    trials.jsonl summary.csv summary.md
+  jobs/difficulty_trials/<run-id>/
+  cache/                       # 可丢弃缓存，与正式证据分开
 ```
 
-每个 trial 记录：身份、状态、成功与否、诊断码、agent / verifier 用时、token、费用来源、动作与仿真步数、reset 次数、实际模型和 harness、实例哈希、attempt / regrade 链，以及原始产物位置。三次重复全部保留，禁止只取 latest / best。
+改造要点：
 
-完整附件包含脱敏后的 Harbor 原始日志、agent 对话与脚本、轨迹、verifier 证据与 replay 视频、冻结实例与复现清单。引用公共录制模块和当前 Harbor 录像产物，不另写一套视频采集循环；模型辅助抓持、失败、局部执行等按实际情况标注。
+- 发行模式读取 build-info，不要求镜像或宿主有 `.git`；本地开发模式仍支持当前 dirty 快照流程。
+- 区分 release bundle 哈希、实际模拟器源码哈希和 Docker image digest，不继续把所有调度脚本变化等同于仿真镜像变化。
+- `prepare` 验证指定 runtime 来源：已发布镜像核对 digest，本地构建核对配方/源码哈希及对应 image ID；记录架构和源码身份，拒绝 tag 漂移或源码/镜像不匹配。
+- 控制器启动、缓存命中和 resume 不重新抽取旧实例，不重写已有 manifest、预算或已完成 trial。
+- 保持旧本地 run 的读取和本地运行能力。首版 Docker 新 run 使用新的路径身份；跨机器搬迁旧 run 是显式迁移工作，不默默改写旧文件中的绝对路径。
 
-汇总按 model × harness × mode × task × difficulty 输出：
+### 4.3 宿主路径映射、文件权限与临时目录
 
-- expected / completed / evaluable / infra_error / missing 数量。
-- 成功次数与 `successes / 3`，并同时显示有效评测数；不足 3 次有效评测的单元格标记 incomplete，不能呈现为完整成功率。
-- `successes / evaluable` 作为有效评测成功率；总体同时报告完成率和基础设施错误率，不隐藏失效样本。
-- 3 次中至少成功一次可单独列出，但不得替代逐 trial 成功率；本轮不额外引入有统计假设的 pass@k 估计。
-- 用时、token、费用统计包含所有重试开销，并与正式计分 trial 的统计分开。
+控制容器内可见文件不等于宿主 daemon 能把它 bind mount 给子容器。Docker 的 bind source 由 daemon 所在主机解析。[Docker bind mount 规则](https://docs.docker.com/engine/storage/bind-mounts/)
 
-**8. 自动打包、commit 与发布**
+采用一个明确规则：启动器将 work-dir 解析成宿主绝对路径，控制器按相同绝对路径挂载它；子容器所需的 source、task package、limited sim、jobs 和 verifier 目录先落在该共享目录。
 
-建议小型 JSON / CSV / Markdown 元数据直接提交 Git；视频、轨迹和压缩后的完整日志上传到**同一个结果仓库的 GitHub Release**，Git 内的 `artifacts.json` 保存下载位置、大小、SHA-256 和 trial 对应关系。这样 clone 结果仓库即可分析，按需下载完整证据。
+- 不能将仅存在于控制镜像 `/opt/...` 的路径，直接作为兄弟容器的 bind source。
+- 核对 Harbor 生成的 Compose 配置、相对路径、临时文件和 verifier 环境；将需要被 daemon 读取的临时目录放入共享 work-dir，而不是控制器私有 `/tmp`。
+- 全流程使用参数数组和正确引用，支持用户目录名含空格；对 Docker mount 语法不能支持的路径字符提前给出明确错误。
+- 控制器以调用方 UID/GID 写结果，并适配 Docker socket 的组权限；Harbor 子容器生成的文件也必须验收可读、可恢复、可清理，不能依赖事后对整个磁盘递归 chown。
+- 凭据使用独立私有目录，不放进 source、task package、jobs 或结果压缩包。
 
-普通 Git 在 GitHub 上阻止超过 100 MiB 的单文件，持续把录像压缩包塞进 Git 历史也会增加克隆成本。[GitHub 大文件说明](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github)
+### 4.4 入口、预检与用户体验
 
-附件按 task / model 等稳定边界打包，超大包分片；建议单片不超过 1 GiB，并在发布前检查实际平台限制。GitHub 当前 Release 文档列出每文件小于 2 GiB、每个 release 最多 1000 个附件。[GitHub Release 限制](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
+仓库版保留 `bash_scripts/run_difficulty_trials.sh`，独立发行包使用根目录的 `run_difficulty_trials.sh`，两者来自同一入口实现。默认自动准备并启动控制镜像；Bash 仅处理镜像准备/挂载/TTY/信号等启动事务。任务选择、阶段执行、守卫、认证策略和恢复仍由 Python 统一处理，不复制到 Bash。
 
-发布流程：
+- 当前 `--phase`、`--tasks`、`--samples-per-difficulty`、`--sampling-seed`、`--agent-wall-clock-s`、`--auth`、`--model`、`--agent-arg`、`--resume` 等参数继续可用。
+- 拟增加 `--work-dir`、`--gpu-device` 和发行镜像选择配置；已发布镜像绑定 release.lock 中的 digest，本地构建绑定源码与配方哈希，不默认追踪浮动 latest。
+- 开发者仍可直接运行 Python；若在同一个 Bash 入口保留 local 后端，必须显式选择，不能发现 Docker 出错就静默退回宿主 venv。
+- 同一入口拟增加 `check` 和 `auth login` 子命令，分别负责无模型调用的环境检查和容器内登录；普通 `--phase ...` 调用仍默认进入 difficulty eval。
+- `check` 在容器内检查 Docker/Compose 兼容性、共享目录探针、权限、GPU/CUDA/Nyx 能力、必要资产和磁盘空间；失败给出修复点。它与逐场景 preflight 分工明确。`check` 不调用模型，但空缓存时可能需要先拉取或构建检查所用镜像。
+- `all` 自动包含必要的环境检查，不要求用户先手工执行 `check`。实验阶段保持 planning → preparing → preflight → running → collecting；镜像首次准备显示独立的 bootstrap 日志。全部实例过关前不能启动 canary；阶段/任务日志实时输出，同时保存控制器总日志，已有逐实例/job 日志继续保留。
+- CPU 合同检查在构建/发布 CI 中执行；用户运行不必每次先跑开发测试套件。
 
-1. 结果先在本地完成；失败或中断的 trial 也生成记录，统一校验是否对齐预期矩阵。
-2. 生成独立的发布 staging 副本；按白名单收集文件、排除凭据、扫描并脱敏日志，再计算发布版本哈希。保留本地原始证据，不就地修改原件。
-3. 在独立 checkout 创建 `runs/<run_id>` 分支，提交 metadata 与文件清单并 push；不把开发源码仓库当结果工作树，不 force push。
-4. 创建唯一 Release tag / draft，分片上传并核对大小与哈希；记录每个附件完成状态。发布重试按 run_id + checksum 去重，同名不同内容报冲突。
-5. 上传全部成功后补交最终 `artifacts.json` 和发布状态；将唯一最终 tag 指向包含完整清单的提交，再公开该 Release。Git 和 Release 操作不是单个事务，需有可恢复的发布状态机。
-6. 默认结果直接 commit 到专用 run 分支。需要汇入默认分支时可选自动 PR；无需 PR 就能访问分支结果和 Release。默认分支保护、PR 权限与汇总索引策略在仓库探测后确定。
-7. 上传失败标记 `publish_pending`，结果仍在宿主目录；提供独立 `publish --run-id ...` 重试入口，不重跑 rollout。批量运行中定期更新小型进度元数据，大附件按已完成分组增量发布。
+### 4.4.1 `--phase all` 自动准备环境的明确合同
 
-GitHub 凭据使用仅限结果仓库的细粒度 token（contents 写入；启用 PR 时再给相应权限）或仓库安装的 GitHub App。模型 API key 与发布凭据分开。若对方无仓库写权限，仍能执行和生成同样的结果包，但自动 push 必须由持有发布凭据的一方补做。
+用户获取仓库后，不需要另跑 `docker build`、`docker pull`、`pip install`、`uv`、Harbor 安装或手工创建虚拟环境。统一入口承担以下步骤：
 
-**9. 实施顺序与交付验收**
+1. **最小宿主检查**：检查 Docker daemon 可访问、工作目录可写及必要 Docker 构建能力。缺 Docker、驱动或 Toolkit 时给出明确安装指引，不自动以管理员权限修改系统。
+2. **准备控制镜像**：已有匹配镜像则校验后复用；声明为已发布的版本按 digest 拉取；声明为本地构建的版本使用仓库内固定配方构建。构建不调用宿主 Python，依赖安装都发生在 Docker build 内。
+3. **启动控制器**：自动创建/挂载共享工作目录与私有认证目录，传递参数、TTY 和信号。
+4. **准备运行镜像和检查环境**：控制器按同一规则获取或构建 runtime/agent/client/verifier 所需基础层，并执行 `check` 的适用检查。源码冻结后生成任务包，Harbor 自动构建实例相关轻量层并管理运行容器。
+5. **执行实验**：真实 preflight 全部通过后执行 canary、正式 trial 和汇总。镜像准备失败时停止，不启动模型。
 
-| 阶段 | 主要改动 | 验收条件 |
+本地构建顺序不能循环依赖：仓库提供固定源码/依赖构建配方，先形成控制镜像；其中携带 runtime 构建配方，运行镜像构建完成后将实际 image ID 与输入哈希写入本机缓存及 run 身份记录。本地尚未推送的镜像不伪造 registry digest；公开发行时再形成完整的 digest 清单。
+
+相同输入复用校验过的缓存；换任务子集或 sample 数不重装基础依赖。源码或依赖变化时重新构建受影响镜像，镜像构建按身份加锁，避免并发启动重复构建。发生仓库权限、校验或网络错误时明确失败，不把任意 pull 错误悄悄当成使用另一份源码的理由。
+
+`auth login` 只准备登录所需的控制镜像；`plan`、`--help`、`--list-tasks` 不要求先构建仿真镜像或通过 GPU 检查。入口按调用需要准备环境，不让 CPU 操作意外变成完整 GPU 实验。
+
+首次下载镜像、编译依赖及仿真内核可能耗时较长，输出构建进度与日志位置；“一条命令开始”表示无需人工安装项目依赖，不承诺空缓存机器几秒启动。后续执行复用缓存。
+
+### 4.5 订阅与 API key 都不依赖宿主 Codex
+
+订阅路径：
+
+1. 控制镜像内提供与发布版本配套的 Codex CLI，`auth login` 在容器内执行设备登录；登录本身不需要 Docker socket。
+2. 工具管理的 auth 目录持久化于用户私有目录，供后续 trial 使用；验证重启控制器后仍可读取、凭据过期/刷新能正确处理。
+3. 已有登录文件可通过 `--auth-json` 只读导入。不擅自修改用户默认 `~/.codex`，也不把宿主 auth 文件路径原样传到不可见的容器路径。
+4. 复用当前 subscription/API 隔离和模型 canary。已有 Luna 配置可以作为验收配置，但不是每个用户都自动获得该模型访问权限。
+
+API 路径：
+
+- 保留 `--api-key` 隐藏输入、显式值、`--env-file` 和 `--api-key-env` 的语义与优先级。
+- Bash/Docker 边界不得把显式 key 再写进持久化的 Docker `Config.Cmd` 或控制器 `Config.Env`；拟通过 stdin 启动消息或独立只读凭据文件传入，再由控制器按需传给 Harbor。
+- `--env-file` 继续按数据解析，不能 shell source；只向对应 agent 传入所选 provider 的 key。宿主未选中的登录/API 环境不得自动注入全部容器。
+- TTY 隐藏输入与 CI 非交互模式分别验收；直接在命令行填写 key 仍可能进入用户 shell 历史，不能宣称对此完全隐藏。
+- 核对日志、镜像历史、Docker inspect、发布清单和压缩结果中是否存在意外凭据副本；模型运行所需的容器内凭据由明确的认证路径管理。
+
+### 4.6 GPU、宿主资源保护和容量
+
+新增 GPU 选择后，先解析为宿主 GPU UUID，再传到 prepare、preflight、unlimited agent/verifier、limited sim 和监控。不能只给控制容器加 `--gpus`，也不能混用容器内重新编号的 0 与宿主索引。
+
+控制器只需要 GPU 的监控能力，可使用 NVIDIA `utility` 支持 nvidia-smi/NVML；物理/渲染容器保留 CUDA 与 Nyx 所需的 graphics 能力。具体设备和驱动能力由每个容器独立声明。[NVIDIA GPU 与 driver capabilities](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html)
+
+CPU/内存 90% 保护必须继续反映宿主状态，不能因为搬进容器而变成控制器自身的 cgroup 读数。实现时验证宿主 `/proc` 只读采样或等价数据源，并与宿主读数对照；无法获得正确读数时明确失败。容器自身限额与宿主保护分别记录，只处理本 run 的工作。
+
+测量基础镜像体积、构建峰值、刚体与 FEM/IPC/Blanket 的显存/内存、录像和缓存增长，发布实际需求范围。首版不提高并发，也不承诺 432 秒包含镜像构建、初始化、准备和评分时间。
+
+### 4.7 容器生命周期、锁与恢复
+
+当前 Python 进程组停止逻辑需要延伸到真实 Docker 资源：
+
+- controller、prepare、preflight、Harbor agent/sim/verifier、网络分别标记角色、release、workspace identity、run-id 和 attempt。清理匹配组合身份，不只依赖容易重名的 run-id。
+- 控制器角色必须从工作容器清理集合排除，避免 `cleanup_containers()` 在每个 trial 后把自己删掉；清理结束前锁仍由控制器持有。
+- 增加 daemon 内按 GPU UUID 的互斥机制，例如通过唯一名称的锁容器原子占位；记录 owner，并在控制器存在且活跃时拒绝抢占。当前 work-dir 内文件锁不能防止两个不同 work-dir 同时运行。
+- 采用 exec 入口和 Docker init，转发 SIGINT/SIGTERM；停止超时应覆盖既有进程组/容器/日志收尾预算，实测确定，不能让外层 Docker 提前强杀收尾。
+- 持续更新控制器身份与活动 job。SIGKILL/主机重启后，resume 先对账残留容器和 Harbor 状态；活跃旧 owner 不自动重跑，过期资源仅按确认归属处理。
+- 不复用中断的 limited episode；显式重试创建新 attempt，保存旧轨迹、日志和统计。
+- 控制器退出或删除后，run/jobs/汇总留在宿主；旧 release 的 run 必须使用匹配版本恢复，不自动升级其工具、判分器或镜像。
+
+## 5. 构建、镜像分发与已有发布阻塞
+
+这里区分“用户无 Python/Harbor 依赖”和“用户无需构建镜像”。前者必须实现；后者需要镜像具备可分发条件。
+
+**首选镜像来源：维护方预构建并提供镜像。** 仓库入口和独立发行启动包都能自动拉取固定镜像；启动包另带 release.lock、说明和校验信息，可供不需要源码的用户使用。公开仓库或带权限仓库均可，但需给出清楚的访问方式。
+
+**本地构建来源：用户获取本仓库或冻结源码归档。** 所需 Dockerfile、依赖锁、构建配方与资产获取逻辑随代码交付；统一入口在缺少匹配镜像时自动构建，用户不需要另跑构建脚本。Python/Harbor/仿真依赖安装均在 build 内完成。源码归档方式不要求宿主 Git；首次下载和构建成本明确说明。
+
+当前 `push_images.sh` 对 `topogym` 存在显式阻止分支，注释原因是 Nyx 再分发条件未确认。这是当前仓库的实际交付依赖，不是本计划对许可证作出的法律结论。实施顺序：
+
+1. 核实 Nyx 及需要随镜像分发的资产/依赖条件，记录可分发范围。
+2. 在条件明确前，保留现有 push 阻止逻辑，不把本机已有 tag 描述为外部用户可拉取镜像。
+3. 若只能用户自行构建，确认其直接获取依赖的方式可用，再交付 Docker 构建包；不把私有镜像仓库当作自动绕过该问题的办法。
+4. 可发布后，维护方构建、冷缓存验证、推送镜像、回填真实 digest，再发启动包；镜像发布仍作为独立交付步骤；本次开发没有推送镜像。
+
+## 6. 预计涉及的文件
+
+下列新增入口、镜像配方和依赖锁已落地；交付辅助逻辑放入 `scripts/difficulty_delivery.py` 与 `scripts/difficulty_release.py`，实验阶段继续复用原调度器。
+
+| 文件/目录 | 计划职责 |
+| --- | --- |
+| `images/difficulty-eval/Dockerfile`、`Dockerfile.dockerignore`、`entrypoint.sh`（新增） | 控制环境、精确构建内容、exec 启动；复杂逻辑仍留在 Python |
+| `requirements/difficulty-eval-controller.in` / `.lock`（新增） | 控制器、Harbor 与 CPU 抽样依赖锁 |
+| `requirements/` 的 runtime/client 锁与相关 Dockerfiles | 完整固定仿真、limited 客户端/评分和 agent CLI 依赖 |
+| `images/difficulty-eval/release.schema.json`（新增） | build-info / release.lock 的身份、镜像映射与兼容信息 |
+| `bash_scripts/run_difficulty_trials.sh` | 仓库/发行包共同入口，自动准备控制镜像、Docker 启动、挂载、TTY 和退出码透传 |
+| `scripts/difficulty_eval.py` | work-dir、发行模式镜像、check、资源/生命周期适配，继续管理全部实验阶段 |
+| `scripts/sample_difficulty_instances.py` | release 元数据来源、无 Git 运行、显式 source root，保留抽样稳定性 |
+| `scripts/topogym_mk_task.py`、`topogym_mk_limited.py`、`harbor_templates/` | 按角色使用固定镜像、GPU UUID、共享路径和资源身份 |
+| `scripts/build_images.sh`、`push_images.sh` | 可由统一入口复用的固定构建配方，以及维护方分发流程；用户不必手工调用；保留当前 runtime 发布条件 |
+| `ci_checks/` 和现有 CI workflow | 控制镜像合同检查、真实 Docker 连接检查、单独 GPU 交付任务 |
+| `docs/rcb/README.md`、本计划、发行包使用说明 | 本地/发行模式、首次登录、运行、恢复、错误与资源要求 |
+
+如果 check、release 打包或 auth 路由使调度器明显膨胀，再提取职责单一的共享模块；不新增另一套 prepare/run/collect 流水线。
+
+## 7. 用户最终操作形式
+
+下面的 Docker 接口已实现；当前默认使用本地自动构建，未发布可供外部用户直接拉取的项目镜像。主要使用方式是拉取本仓库的受支持版本后，从仓库根目录执行。控制器/运行镜像的获取、构建、检查和容器启动由入口自动完成。独立发行包也支持相同参数，只需把 `bash_scripts/run_difficulty_trials.sh` 换为包内的 `run_difficulty_trials.sh`。
+
+```bash
+# 在已 clone/pull 到本地的 TopoGym 仓库根目录运行。
+# 默认自动创建当前目录下的 topogym-work，无需设置环境变量。
+
+# 可选：只检查容器/GPU/路径/资产，不调用模型。all 已自动包含必要检查。
+bash bash_scripts/run_difficulty_trials.sh check
+
+# 首次使用订阅时在容器内登录，不要求宿主安装 Codex。
+bash bash_scripts/run_difficulty_trials.sh auth login --device-auth
+
+# 自动准备镜像与容器，运行全部 13 个任务，共 78 个正式 trials。
+# 每个 trial 的 agent 阶段最多 6 小时。
+bash bash_scripts/run_difficulty_trials.sh \
+  --phase all --run-id luna-all-tasks \
+  --tasks 1-13 --samples-per-difficulty 1 \
+  --agent-wall-clock-s 21600 \
+  --auth subscription --agent codex --model openai/gpt-6-luna \
+  --agent-arg version=0.157.0 --agent-arg reasoning_effort=max
+```
+
+已完成订阅登录后，只运行最后一条 `--phase all` 命令即可，无需每次再次 `check` 或登录。首次订阅登录仍需用户按提示授权账户；脚本不能替代该交互。
+
+示例显式写出全部任务、每难度一个样本和 21600 秒预算；省略这三个选项时默认值相同。6 小时限制单个 trial 的 agent 阶段，整个实验的准备、预检、评分及其他 trials 另计。短试跑可改为 `--tasks 8,9 --agent-wall-clock-s 432`，共 12 个正式 trials。
+
+需要把结果放到其他磁盘时，在 `check` 或实验命令中加 `--work-dir /path/to/topogym-work` 即可覆盖默认值。恢复默认目录中的实验时，从相同宿主目录启动；如果换了启动目录，则显式传入原来的工作目录绝对路径。
+
+API 方式可跳过 `auth login`，保留同一实验参数，使用不同 run-id，把认证部分改为 `--model '<model-id>' --api-key`，终端隐藏输入。认证来源或模型变化不能复用已锁定 execution 配置的 run-id。
+
+恢复时使用同一 work-dir、run-id 和 release，再加 `--resume`；只有希望给中断/基础设施失败另开 attempt 时才加 `--rerun-incomplete`。查看结果直接打开 work-dir 下的 summary 和 jobs，不需要在宿主安装 Harbor。
+
+文档同时提供等价的原生 `docker run` 命令，明确共享目录和凭据挂载；Bash 只是便捷入口，不能成为另一套实验实现。
+
+## 8. 实施顺序和逐阶段验收
+
+| 阶段 | 工程交付 | 通过条件 |
 | --- | --- | --- |
-| P0 固定实验定义 | setting / lock schema，显式 variation + seed，生成器输出目录与预算参数 | 39 个实例、78 个模式任务包，每模型恰好 234 个唯一逻辑 trial；同场景双模式一致 |
-| P1 Docker 可移交 | 新增 `images/sweep/Dockerfile`、入口，锁依赖、发布镜像；处理宿主路径和 GPU | 无源码 checkout 的新 GPU 主机可拉取镜像，cube 两模式完成真实执行与独立评分 |
-| P2 模型接入 | `models.yaml`、Codex profile、模型预检与版本锁 | model-name + key 主路径可用；工具 / 图像 / 两模式通过，错误 key 和不兼容协议明确失败 |
-| P3 Sweep 调度 | 新增 `scripts/run_sweep.py`，trial 状态库、资源归属、resume、有限重试 | 同一实例连续 3 次不覆盖；中断恢复不重复计分；只清理本 run 资源 |
-| P4 整理与发布 | 新增 `scripts/collect_sweep_results.py`、`scripts/publish_sweep_results.py`，调整旧整理器共用逻辑 | 可从原始 jobs 重建汇总；证据和哈希可追溯；断网后只补上传；凭据不进入提交 / 附件 |
-| P5 交付演练 | 最小使用说明、启动命令、恢复 / 发布命令、支持列表与预估资源 | 外部机器完整完成一个 task 三档 × 两模式 × 三次 = 18 次；再验证 FEM 场景与负载，确认全量场景资格 |
+| P0 发布基线与内容审计 | 冻结当前代码、依赖和资产；确定镜像角色、来源身份和可分发路径 | controller/runtime 所需文件可列举，无隐式宿主路径；版本与发行限制有记录 |
+| P1 控制镜像及统一启动 | Python 3.12 + Harbor/CLI，自动拉取/构建的 Docker 启动器、独立 ignore、无 Git plan | 没有宿主 Python/Harbor 的环境能 `--help`、`--list-tasks`、plan；默认 39 实例/78 trials，2 tasks 为 6/12，N=3/5 前缀稳定 |
+| P2 工作目录与运行镜像 | 共享路径、runtime 获取/构建、轻量任务层、UID/GID、GPU 传播 | 未指定 work-dir 时在宿主启动目录自动创建 topogym-work，显式绝对/相对路径覆盖正确；直接 all 且无预先 check/build/pull 时也能自动准备并检查环境；缓存复用和失败退出可验证；兄弟容器路径正确 |
+| P3 容器内认证 | 首次订阅登录、外部 auth 导入、API key 传输、固定 agent CLI | 无宿主 Codex 可登录；两类认证分别通过真实 canary；失效凭据不会启动正式队列，日志不泄漏 key |
+| P4 生命周期和守卫 | 全批预检门槛、跨 work-dir GPU 锁、准确清理、退出/恢复 | 一个实例预检失败时零模型启动；Ctrl-C、docker stop、强杀恢复不重复计分、不清理无关资源、不误删控制器 |
+| P5 冷机器端到端演练 | 发行包、真实 GPU/Nyx、两模式评测和证据、资源实测 | 在独立新主机完成下面的分级验收；结果可在控制器删除后读取并重建汇总 |
+| P6 可交付发行 | 可拉取镜像或 Docker 构建包、真实 digest、最小用户手册 | 外部人员按手册运行，无需开发机协助安装项目软件；版本和支持边界可追溯 |
 
-测试覆盖固定抽样、试次展开、实例一致性、结果聚合不覆盖、agent 失败与基础设施失败分类、attempt 选择、发布幂等和密钥排除。实际 GPU / 模型验收单列；静态测试不代替真运行。
+P1–P4 继续复用已有 CPU 工作流测试，增加真实 Docker 边界检查；完整物理与模型证据单列，不以 stub 测试作为外部交付通过依据。
 
-发布器先用本地 Git / 模拟上传失败做恢复测试，再在专用测试 run 分支及 Release 完成一次真实上传、下载校验，不混入正式成绩。故意断网、停止控制器、缺失录像、错误 key、部分 trial 失败均应留下可解释状态。
+## 9. 端到端验收矩阵
 
-实施时还需填入实际 model-name、provider、预算参数，以及结果仓库和镜像仓库权限；这些是交付配置，不影响上述架构。首版先完成 Codex 一条可交付链路，再逐个认证其他模型 / provider，无需把通用多模型兼容层作为 Docker sweep 交付前置条件。
+1. **无开发环境验收**：独立 Linux GPU 主机或干净系统实例，不安装宿主 Python/Harbor/Codex。仅获取本仓库的发布代码或发行包，不复用开发机的 venv/cache/旧构建产物。分别验证已发布镜像与自动本地构建两种来源：空缓存、未手工执行 check/build/pull，直接运行 all 能完成环境准备；再次运行应复用匹配缓存。
+2. **最小试跑**：Cast Coil + Cast Keyhole，三档 × 双模式 × 每档一个样本，共 12 trials，先使用 432 秒预算验证时限、状态与收尾。短预算耗尽不等于解题失败或容器化失败；若未产出有效轨迹，另用足额预算补齐真实双模式链路证据。
+3. **模型与评分证据**：订阅/API 各至少验证真实工具调用、图像查看、仿真动作、轨迹、独立评分与录像。canary 通过不代替这些证据，正常 0 分与基础设施错误分别记录。
+4. **全任务部署资格**：全部 13 tasks × 3 档默认样本真实建场并通过物理 preflight；N=3/5 的 CPU 抽样与包生成覆盖，额外选取刚体、FEM/IPC 和 Blanket 非默认 seed 做容器重载。不能从两个刚体任务推断全部任务已验收。
+5. **故障矩阵**：缺 GPU/图形库、显存不足、目录无权限、镜像不存在、错 key、账号额度耗尽、网络中断、磁盘不足、prepare/preflight 部分失败、SIGTERM/SIGKILL、陈旧锁、同名 run 跨工作目录、旧 release 恢复。均需有可解释的日志与状态。
+6. **结果与配置完整性**：实例在双模式间一致；预算全链路一致；所有 attempt 保留；未具备成功计分资格的任务保持 not_evaluable；汇总不能丢掉失败/未运行位置。
+7. **发布边界**：镜像与发行包不含凭据、历史解题轨迹或未声明的本机路径。发布许可未确认时，验收报告明确实际使用了本地构建，不能标记为公开镜像交付。
+
+每次真实验收记录 release/digest、宿主 GPU/驱动、配置、起止时间、资源峰值、实际 trial/result 和录像位置。记录与视频沿用已有公共模块，不新增录像实现。
+
+## 10. 本次不作为 Docker 交付前置的后续工作
+
+- 多模型列表、其他 agent harness、每模式多次 replication：可在现有 manifest/attempt 机制上扩展，不能在容器化时悄悄改变当前每模式一次的实验定义。
+- 结果自动提交到 `topogym_eval_and_sweep_results`：保留为独立发布阶段。先形成可校验的本地结果包，再按文件白名单、脱敏和哈希生成发布副本；Git 存元数据，大附件分开管理，上传状态独立恢复，失败不能重跑模型。发布凭据只给发布组件。
+- 无外网全离线、跨机器调度、异构平台和更高并发：另行定范围及验收，不加入本次最小交付承诺。
+
+实施前需要落实的外部条件是：可用的镜像/构建包分发渠道、Nyx 等依赖的实际分发条件、独立 GPU 验收机器，以及用于真实接入检查的模型账户。其余目录结构、代码复用和工程顺序已可按本计划推进。
+
+## 11. 2026-09-30 实施结果与验收边界
+
+已实现默认 Docker 入口和显式 local 后端，默认工作目录、无 Git 抽样/发行包、控制器与 runtime/client/agent 三个角色镜像、带哈希的 Python 依赖锁、GPU UUID 传播、无模型 check、订阅登录/导入与 API key 传输、守卫、daemon GPU 锁、所属容器/网络清理，以及持久化日志和结果。构建阶段实际生成全部 39 个实例的计划，以发现缺失的 CPU 几何依赖。
+
+控制器在 Harbor 0.23.0 的已核对源码上应用两项小补丁：Codex 临时凭据清理前，将刷新后的 token 原子保存到工具的私有 auth 目录；Harbor 自建的 egress helper 加入相同 owner 标签，便于中断后清理。补丁应用前校验原始文件 SHA；宿主 Harbor 不变。limited verifier 的生成包也补充归属标签，避免只清理 agent/sim。
+
+本机证据统一位于 `runs/test_results/docker_delivery_20260930/`；失败的早期构建/检查日志保留，后续成功记录使用新目录，不覆盖原证据。
+
+| 验证 | 已取得的证据 | 范围 |
+| --- | --- | --- |
+| 原工作流回归 | `final-cpu-workflow/`：17 项通过 | 抽样、预算、守卫、认证隔离、中断与恢复；Harbor 为 stub |
+| 交付合同 | `startup-contracts/`：10 项通过（含无源码启动包） | 启动参数与 key 边界、默认/覆盖路径、镜像身份、GPU 选择、锁与私有凭据刷新 |
+| 当前任务静态检查 | `task-static/` 全部通过 | 28 个历史任务目录的公共工具与协议一致性 |
+| 真实控制容器抽样 | `container-plan-04/`：39 实例 / 78 trials | Python 3.12 控制器运行，不依赖宿主 venv 或 Git |
+| Python 版本间抽样一致性 | `sampling-parity/`：全部 39 个实例逐项相同 | 本机 Python 3.11 与容器 Python 3.12 |
+| 真实环境检查 | `final-container-check/` 和 `work/check.json` 通过；缓存复用检查约 8 秒 | 镜像自动构建、同路径 bind mount、调用用户写权限、CUDA、NVIDIA Vulkan、机器人/视觉资产 |
+| 真实 Harbor 容器边界 | `harbor-lifecycle/` 与 `work/harbor-boundary-1790750078034886207/report.json` 通过 | nop agent + 合成 sidecar，真实产物收集与独立 verifier；零模型调用，无任务物理 |
+| 真实 daemon 锁与强杀恢复 | 同一 `harbor-lifecycle/` 报告中的 lifecycle 字段通过 | 使用合成 GPU UUID 测试全局互斥；阻止不同 work-dir 的活跃 owner 抢锁，强杀测试 owner 后回收它的工作容器，保留其他测试容器；不占用真实 GPU |
+| 无宿主项目工具的源码包 | `archive-no-host-plan/`：18 实例 / 36 trials | 无 `.git`，宿主 Python/Harbor/Codex/Node/npm/uv 替换为报错程序；默认 work-dir，2 tasks、N=3 |
+| 无源码最小启动包 | `minimal-startup-plan/`：6 实例 / 12 trials | 仅 Bash + 本机固定控制镜像 ID，无源码目录，宿主项目工具同样禁用 |
+
+验证中修复了容器内普通用户无法读取原始 0600 资产、CPU 几何依赖缺失，以及机器人资产检查错误假设存在现成 URDF 的问题。机器人源资产实际为 XML 与 mesh，运行时按项目方式生成所需模型。构建/检查使用 90% CPU/内存保护，未停止无关作业。
+
+尚未据此验收的项目：真实订阅/API 模型交互及账户 token 轮换；全部 13 × 3 场景的物理预检；双模式真实动作、轨迹、评分和录像；独立新机器空缓存演练；公开镜像分发。当前 GPU 上已有其他作业，本轮未启动会占用大显存的任务物理实验。`check` 通过与合成 Harbor trial 通过均不能代替这些证据。现有 runtime 镜像发布阻止逻辑保留。

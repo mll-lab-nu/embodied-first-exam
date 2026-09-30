@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prepare and run difficulty evaluations through the existing Harbor CLI.
 
-The Bash entry point only launches this module. Sampling and result classification
+The Bash entry point bootstraps Docker (or explicit local mode). Sampling and result classification
 remain in their dedicated modules; each sample/mode still gets one Harbor job.
 """
 from __future__ import annotations
@@ -56,10 +56,15 @@ class ApiKeyAction(argparse.Action):
 
 def parse_args(argv=None):
     parser = ArgumentParser(description=__doc__, allow_abbrev=False,
-        epilog="Direct keys may enter shell history/process argv. Use --api-key without a value for hidden TTY input.")
+        epilog="Docker launcher options: --backend docker|local (default docker), --controller-image <digest or local image ID>. "
+               "Docker subcommands: check, auth login --device-auth, auth status. "
+               "Direct keys may enter shell history/process argv. Use --api-key without a value for hidden TTY input.")
     parser.add_argument("--run-id")
     parser.add_argument("--phase", choices=("plan", "prepare", "preflight", "run", "collect", "all"), default="all")
     parser.add_argument("--list-tasks", action="store_true")
+    parser.add_argument("--work-dir", type=Path, help="Docker default: launcher cwd/topogym-work; direct Python default: repository")
+    parser.add_argument("--gpu-device", default="0", help="host GPU index or UUID")
+    parser.add_argument("--release-lock", type=Path, help="published image digest manifest; otherwise build from fixed recipes")
     sampling.add_sampling_arguments(parser)
     parser.add_argument("--rerun-incomplete", action="store_true", help="with --resume, create a new attempt for interrupted/infra jobs")
     parser.add_argument("--auth", choices=("subscription", "api-key"))
@@ -76,6 +81,8 @@ def parse_args(argv=None):
     args = parser.parse_args(argv)
     if args.list_tasks:
         return args
+    if not re.fullmatch(r"(?:[0-9]+|GPU-[A-Za-z0-9-]+)", args.gpu_device):
+        raise EvaluationError("invalid --gpu-device")
     if not args.run_id or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}", args.run_id):
         raise EvaluationError("--run-id must contain 1..80 letters/digits/_/-")
     if args.gpu_wait_s < 0 or args.gpu_min_free_mb < 0:
@@ -149,6 +156,8 @@ def authentication(args, base_env):
         except (OSError, ValueError, TypeError, AttributeError):
             raise EvaluationError("subscription auth.json is unreadable or contains no ChatGPT token") from None
         env.update(CODEX_FORCE_AUTH_JSON="1", CODEX_AUTH_JSON_PATH=str(args.auth_json))
+        if os.environ.get("TOPOGYM_CONTAINER") == "1":
+            env["TOPOGYM_PERSIST_AUTH"] = "1"
     else:
         variable = args.api_key_env or ("OPENAI_API_KEY" if args.provider == "openai" else "OPENROUTER_API_KEY")
         if not re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_]*", variable):
@@ -162,10 +171,11 @@ def authentication(args, base_env):
         elif args.env_file:
             key = dotenv_key(args.env_file, variable)
         else:
-            key = os.environ.get(variable, "")
+            key = os.environ.get("TOPOGYM_LAUNCH_KEY", os.environ.get(variable, ""))
         if not key or "\n" in key or "\r" in key:
             raise EvaluationError("API key missing/empty or contains newline")
         env["OPENAI_API_KEY" if args.provider == "openai" else "OPENROUTER_API_KEY"] = key
+    os.environ.pop("TOPOGYM_LAUNCH_KEY", None)
     args.api_key = None
     identity = dict(auth=args.auth, provider=args.provider, agent=args.agent, model=args.model, agent_args=args.agent_arg)
     return env, identity
@@ -297,8 +307,9 @@ CHECK
 class DifficultyEvaluation:
     def __init__(self, args):
         self.args = args
-        self.run = ROOT / "runs/difficulty_trials" / args.run_id
-        self.jobs = ROOT / "jobs/difficulty_trials" / args.run_id
+        self.work = (args.work_dir or ROOT).resolve()
+        self.run = self.work / "runs/difficulty_trials" / args.run_id
+        self.jobs = self.work / "jobs/difficulty_trials" / args.run_id
         self.source = self.run / "source"
         self.manifest_path = self.run / "manifest.lock.json"
         self.manifest = self.collector = self.auth_env = None
@@ -306,11 +317,20 @@ class DifficultyEvaluation:
         self.python = sys.executable
         self.harbor = os.environ.get("TOPOGYM_HARBOR", str(ROOT / ".venv-harbor/bin/harbor"))
         env = dict(os.environ)
-        for name in (*AUTH_VARIABLES, args.api_key_env):
+        for name in (*AUTH_VARIABLES, args.api_key_env, "TOPOGYM_LAUNCH_KEY"):
             if name:
                 env.pop(name, None)
         env.update(PYTHONPATH=str(self.source), PATH=str(Path(self.python).parent) + os.pathsep + env.get("PATH", ""))
         self.commands = Commands(env, self.run)
+        self.delivery = None
+        self.gpu_device = args.gpu_device
+        if os.environ.get("TOPOGYM_CONTAINER") == "1":
+            from difficulty_delivery import Delivery, configure_host_metrics
+            configure_host_metrics()
+            self.delivery = Delivery(self.work, self.commands, gpu_device=args.gpu_device,
+                                     run_id=args.run_id, release_lock=args.release_lock)
+            if not any(arg.startswith("version=") for arg in args.agent_arg):
+                args.agent_arg.append("version=" + self.delivery.info["codex_version"])
 
     def load_collector(self):
         # Load the run's frozen implementation; old manifests keep their original semantics.
@@ -337,6 +357,10 @@ class DifficultyEvaluation:
             options = {name: getattr(self.args, name) for name in ("setting", "tasks", "sampling_seed", "samples_per_difficulty",
                        "agent_wall_clock_s", "concurrency", "resume")}
             self.manifest = sampling.prepare_manifest(self.run, **options)
+            if self.delivery:
+                source_identity = read_json(self.run / "source_identity.json")
+                if source_identity.get("release_id") != self.delivery.release_id:
+                    raise EvaluationError("run belongs to a different release; resume with its original controller")
             progress(f"Planning complete: {self.manifest['instance_count']} instances, {self.manifest['trial_count']} trials, "
                      f"agent budget {self.manifest['settings']['agent_wall_clock_s']}s | {self.manifest_path}")
             if self.args.phase == "plan":
@@ -360,7 +384,22 @@ class DifficultyEvaluation:
                     sampling.atomic_json(path, identity)
             if self.commands.run_command(["docker", "info"])[0]:
                 raise EvaluationError("Docker daemon is not accessible")
-            with lock(self.run.parent / ".gpu.lock", "another difficulty run owns the GPU execution lock"):
+            with ExitStack() as resources:
+                resources.enter_context(lock(self.run.parent / ".gpu.lock", "another difficulty run owns the GPU execution lock"))
+                if self.delivery:
+                    resources.enter_context(self.delivery.gpu_lock())
+                    self.gpu_device = self.delivery.gpu_uuid
+                    self.gpu_ready()
+                    self.image = self.delivery.ensure_images(self.source)
+                    self.delivery.environment_check(self.source)
+                    self.commands.env.update(TOPOGYM_TOOL_IMAGE=self.image)
+                    if self.auth_env:
+                        for key, value in self.commands.env.items():
+                            if key.startswith("TOPOGYM_") or key == "TMPDIR":
+                                self.auth_env[key] = value
+                    sampling.atomic_json(self.run / "controller.json", dict(owner=self.delivery.owner,
+                        workspace=self.delivery.workspace, release_id=self.delivery.release_id, gpu_uuid=self.gpu_device,
+                        image_id=self.delivery.inspect(self.delivery.owner)["Image"]))
                 self.owns_gpu_lock = True
                 try:
                     for phase in (("prepare", "preflight", "run") if self.args.phase == "all" else (self.args.phase,)):
@@ -401,6 +440,9 @@ class DifficultyEvaluation:
     def cleanup_containers(self):
         if not self.owns_gpu_lock:
             return
+        if self.delivery:
+            self.delivery.cleanup()
+            return
         with suppress(OSError, EvaluationError):
             _, output = self.commands.run_command(["docker", "ps", "-aq", "--filter", "label=topogym.difficulty-run=" + self.args.run_id], capture=True, timeout=15)
             ids = [line for line in output.splitlines() if re.fullmatch(r"[a-f0-9]{12,64}", line)]
@@ -411,29 +453,38 @@ class DifficultyEvaluation:
         if self.auth_env is None:
             return
         args = ["--process-env", "--var", "OPENAI_API_KEY", "--var", "OPENROUTER_API_KEY", "--redact"]
-        if self.args.auth == "subscription":
-            args += ["--codex-auth", str(self.args.auth_json)]
         targets = ([self.jobs] if self.jobs.is_dir() else []) + list(self.run.glob("d*-a*.log")) + list(self.run.glob("canary-a*.log"))
-        for path in targets:
-            self.commands.run_command([self.python, self.source / "scripts/scan_secrets.py", path, *args], env=self.auth_env, check=True)
+        auths = [None]
+        backups = []
+        if self.args.auth == "subscription":
+            if self.delivery:
+                backups = list(self.args.auth_json.parent.glob(".scan-auth-*.json"))
+            auths = [self.args.auth_json, *backups]
+        # Scan pre-refresh and current tokens separately; no credential archive in jobs.
+        for auth in auths:
+            auth_args = ["--codex-auth", str(auth)] if auth else []
+            for path in targets:
+                self.commands.run_command([self.python, self.source / "scripts/scan_secrets.py", path, *args, *auth_args], env=self.auth_env, check=True)
+        for path in backups:
+            path.unlink()
 
     def gpu_ready(self):
         deadline = time.monotonic() + self.args.gpu_wait_s
         next_notice = 0
         while True:
-            code, output = self.commands.run_command(["nvidia-smi", "-i", "0", "--query-gpu=memory.free,utilization.gpu",
+            code, output = self.commands.run_command(["nvidia-smi", "-i", self.gpu_device, "--query-gpu=memory.free,utilization.gpu",
                                                       "--format=csv,noheader,nounits"], capture=True, timeout=15)
             if code:
                 raise EvaluationError("GPU unavailable: nvidia-smi failed")
             free, utilization = map(int, output.strip().split(","))
             if free >= self.args.gpu_min_free_mb and utilization < 10:
                 if next_notice:
-                    progress("GPU 0 ready; continuing")
+                    progress(f"GPU {self.gpu_device} ready; continuing")
                 return
             if time.monotonic() >= deadline:
                 raise EvaluationError("GPU busy; bounded wait expired, no other process was stopped")
             if time.monotonic() >= next_notice:
-                progress(f"Waiting for GPU 0: {free} MiB free, {utilization}% utilization; "
+                progress(f"Waiting for GPU {self.gpu_device}: {free} MiB free, {utilization}% utilization; "
                          f"up to {max(0, int(deadline - time.monotonic()))}s remaining")
                 next_notice = time.monotonic() + 30
             time.sleep(2)
@@ -447,6 +498,13 @@ class DifficultyEvaluation:
         if not path.exists():
             raise EvaluationError("prepare phase has not built an image")
         expected, actual = read_json(path), self.image_info()
+        if self.delivery:
+            self.delivery.verify_images()
+            if (expected.get("release_id") != self.delivery.release_id or expected["source_sha256"] != self.source_sha
+                    or expected.get("gpu_uuid") != self.gpu_device or expected["id"] != actual["Id"]
+                    or expected.get("images") != self.delivery.images):
+                raise EvaluationError("frozen release/image/GPU identity changed")
+            return
         if (expected["id"] != actual["Id"] or expected["source_sha256"] != self.source_sha
                 or (actual["Config"].get("Labels") or {}).get("topogym.source") != self.source_sha):
             raise EvaluationError("frozen image identity changed")
@@ -460,13 +518,21 @@ class DifficultyEvaluation:
                         raise EvaluationError("prepared package changed: " + name)
 
     def docker_sim(self, *args):
-        return ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", "device=0", "--label",
-                "topogym.difficulty-run=" + self.args.run_id, "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
+        from difficulty_delivery import label_args
+        labels = self.delivery.labels() if self.delivery else {"topogym.difficulty-run": self.args.run_id}
+        user = ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"] if self.delivery else []
+        return ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", *label_args(labels),
+                *user, "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
+                "-e", "NVIDIA_VISIBLE_DEVICES=" + self.gpu_device,
                 "-v", f"{self.run}:{self.run}", "-w", self.run, self.image, *args]
 
     def prepare(self):
         self.gpu_ready()
-        if not (self.run / "image.json").exists():
+        if self.delivery and not (self.run / "image.json").exists():
+            sampling.atomic_json(self.run / "image.json", dict(image=self.image, id=self.image_info()["Id"],
+                source_sha256=self.source_sha, release_id=self.delivery.release_id,
+                gpu_uuid=self.gpu_device, images=self.delivery.images))
+        elif not (self.run / "image.json").exists():
             progress(f"Building frozen source image: {self.image} | log: {self.run / 'image-build.log'}")
             self.commands.run_command(["docker", "build", "--label", "topogym.source=" + self.source_sha, "-t", self.image,
                 "-f", self.source / "images/topogym/Dockerfile", self.source], log=self.run / "image-build.log", monitor=True, check=True)
@@ -539,10 +605,15 @@ class DifficultyEvaluation:
         files = {}
         for mode in sampling.MODES:
             folder = self.task_dir(row, mode)
+            if self.delivery and not (folder / "tests/docker-compose.yaml").exists():
+                (folder / "tests/docker-compose.yaml").write_text("services:\n  main: {}\n")
             for path in folder.rglob("docker-compose.yaml"):
                 data = yaml.safe_load(path.read_text())
                 for service in data["services"].values():
                     service.setdefault("labels", {})["topogym.difficulty-run"] = self.args.run_id
+                if self.delivery:
+                    from difficulty_delivery import decorate_compose
+                    decorate_compose(data, self.delivery.labels(), self.gpu_device, uid=os.getuid(), gid=os.getgid())
                 path.write_text(yaml.safe_dump(data, sort_keys=False))
             files.update({str(path.relative_to(self.run)): sampling.file_hash(path) for path in sorted(folder.rglob("*")) if path.is_file()})
         out = self.run / "instances" / row["task_id"] / row["difficulty"] / row["sample_id"]
@@ -593,10 +664,15 @@ class DifficultyEvaluation:
     def limited_preflight(self, row):
         build, task = self.build_dir(row), self.task_dir(row, "limited")
         (build / "limited").mkdir(parents=True)
-        container = f"tg-check-{self.source_sha[:12]}-{row['slug'].removeprefix('topogym-')}"
-        cmd = ["docker", "run", "-d", "--name", container, "--runtime", "nvidia", "--gpus", "device=0", "--network", "none",
+        owner = self.delivery.workspace[:12] if self.delivery else self.source_sha[:12]
+        container = f"tg-check-{owner}-{row['slug'].removeprefix('topogym-')}"
+        cmd = ["docker", "run", "-d", "--name", container, "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
                "--label", "topogym.difficulty-run=" + self.args.run_id]
+        if self.delivery:
+            from difficulty_delivery import label_args
+            cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         for value in ("NVIDIA_DRIVER_CAPABILITIES=all", "RCB_TASK=" + row["task_id"], "RCB_INSTANCE=/srv/instance.json",
+                      "NVIDIA_VISIBLE_DEVICES=" + self.gpu_device,
                       "RCB_WALL_CLOCK_S=30", "RCB_DATA=/data", "PYTHONPATH=/srv:/check:/opt/topogym"):
             cmd += ["-e", value]
         cmd += ["-v", f"{task}/environment/sim:/srv:ro", "-v", f"{task}/environment:/check:ro", "-v", f"{build}/limited:/data",
@@ -623,6 +699,11 @@ class DifficultyEvaluation:
             self.commands.run_command(["docker", "rm", "-f", container], timeout=30)
 
     def launch_job(self, task, job):
+        if self.delivery:
+            sampling.atomic_json(self.run / "active-job.json", dict(owner=self.delivery.owner, job=job, started_at=time.time()))
+            if self.args.auth == "subscription":
+                backup = self.args.auth_json.parent / f".scan-auth-{time.time_ns()}.json"
+                backup.write_bytes(self.args.auth_json.read_bytes())
         cmd = [self.harbor, "run", "-p", task, "-a", self.args.agent, "-m", self.args.model, "-n", "1", "-k", "1",
                "--max-retries", "0", "-o", self.jobs, "--job-name", job]
         for arg in self.args.agent_arg:
@@ -656,16 +737,25 @@ class DifficultyEvaluation:
         if not valid:
             raise EvaluationError("no sample has passed preflight")
         folder = self.run / "canary/tasks/topogym-auth-canary"
-        if folder.exists():
+        if (folder / "prepared.json").is_file():
             return folder
+        if folder.exists():
+            folder.rename(folder.with_name(folder.name + f".incomplete.{time.time_ns()}"))
         for sub in ("environment", "tests", "solution"):
             (folder / sub).mkdir(parents=True)
         images = list((valid[0] / "smoke/initial_rgb").glob("*.png"))
         if not images:
             raise EvaluationError("preflight camera image missing")
         shutil.copy(images[0], folder / "environment/camera.png")
-        (folder / "environment/Dockerfile").write_text(f"FROM {self.image}\nCOPY camera.png /app/camera.png\nRUN mkdir -p /app/output\nWORKDIR /app\n")
+        image = self.delivery.images["client"]["image"] if self.delivery else self.image
+        (folder / "environment/Dockerfile").write_text(f"FROM {image}\nCOPY camera.png /app/camera.png\nRUN mkdir -p /app/output\nWORKDIR /app\n")
         (folder / "environment/docker-compose.yaml").write_text("services:\n  main:\n    labels:\n      topogym.difficulty-run: " + json.dumps(self.args.run_id) + "\n")
+        if self.delivery:
+            import yaml
+            from difficulty_delivery import decorate_compose
+            path = folder / "environment/docker-compose.yaml"
+            path.write_text(yaml.safe_dump(decorate_compose(yaml.safe_load(path.read_text()),
+                self.delivery.labels(), self.gpu_device), sort_keys=False))
         (folder / "instruction.md").write_text('Authentication/tool canary. Use a shell command to inspect /app/camera.png, then use your image viewing tool to view it. '
             'Write /app/output/canary.json containing {"ready": true, "image_description": "a short description of what you see"}. Do not start a simulator. This check is separate from task scoring.\n')
         (folder / "README.md").write_text("Short authentication, shell and image canary; not a task-solving trial.\n")
@@ -675,6 +765,7 @@ class DifficultyEvaluation:
         (folder / "solution/solve.sh").chmod(0o755)
         (folder / "task.toml").write_text('schema_version = "1.3"\nartifacts = ["/app/output/"]\n[task]\nname = "topogym/topogym-auth-canary"\n'
             f'[agent]\ntimeout_sec = {min(600, self.budget)}\n[verifier]\ntimeout_sec = 120\n[environment]\nbuild_timeout_sec = 1800\n')
+        sampling.atomic_json(folder / "prepared.json", dict(complete=True))
         return folder
 
     def canary(self):
@@ -738,16 +829,33 @@ def on_signal(signum, frame):
 
 def main(argv=None):
     os.umask(0o077)
-    os.chdir(ROOT)
     try:
         args = parse_args(argv)
+        if args.work_dir:
+            from difficulty_delivery import safe_work_dir
+            args.work_dir = safe_work_dir(args.work_dir)
+        if args.setting:
+            args.setting = args.setting.resolve()
+        os.chdir(ROOT)
         if args.list_tasks:
             for number, task in enumerate(sampling.TASK_IDS, 1):
                 print(f"{number:2d}\t{task}")
             return 0
         handlers = {sig: signal.signal(sig, on_signal) for sig in (signal.SIGINT, signal.SIGTERM)}
         try:
-            return DifficultyEvaluation(args).execute()
+            with ExitStack() as session:
+                if os.environ.get("TOPOGYM_CONTAINER") == "1" and args.auth == "subscription":
+                    auth_home = Path(os.environ["CODEX_HOME"])
+                    session.enter_context(lock(auth_home / ".auth.lock", "another operation is using this login"))
+                    if args.auth_json:
+                        data = args.auth_json.read_bytes()
+                        import hashlib
+                        imported = auth_home / "imports" / hashlib.sha256(data).hexdigest() / "auth.json"
+                        if not imported.exists():
+                            imported.parent.mkdir(parents=True, exist_ok=True)
+                            imported.write_bytes(data)
+                        args.auth_json = imported
+                return DifficultyEvaluation(args).execute()
         finally:
             for sig, handler in handlers.items():
                 signal.signal(sig, handler)
