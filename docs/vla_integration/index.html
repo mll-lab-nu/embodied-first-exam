@@ -152,7 +152,7 @@ svg .model:not(.on) text{fill:var(--muted)}
 .vcard dt{color:var(--muted)} .vcard dd{margin:0}
 .vcard p{font-size:13px;margin:4px 0 0}
 /* phases + calc */
-.phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
 .phase{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:4px}
 .phase .p{font-family:var(--mono);font-size:12px;color:var(--proto);font-weight:500}
 .phase .t{font-weight:600;font-size:14px}
@@ -243,6 +243,8 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <a class="sub" href="#s3-arch">总体架构与 I/O</a>
   <a class="sub" href="#s3-dec">待确认决策</a>
   <a href="#s4">4 VLA 选型</a>
+  <a class="sub" href="#s4-eval">只评测推荐</a>
+  <a class="sub" href="#s4-io">输入输出</a>
   <a href="#s5">5 落地与成本</a>
 </nav>
 
@@ -254,7 +256,7 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
   <div class="summary">
     <div class="card"><span class="k gym">代码库</span><p>Genesis 1.2.1 上的机器人拓扑操作仿真器，13 类任务。9 个任务用 ALOHA 双臂，4 个用 Panda 单臂。VLA 在评测循环的 <code>agent.act(obs)</code> 处接入。</p></div>
     <div class="card"><span class="k proto">接口</span><p>模型与环境分进程：模型做 websocket 服务，评测进程驱动循环。Gym 侧按机器人写 2 个适配器，VLA 侧按模型写子类（2 + N）。录像在 Gym 侧完成，不需要 Harbor。</p></div>
-    <div class="card"><span class="k vla">选型</span><p id="summary-pick">每个系列选一个：π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5；备选 MolmoAct2、G0.5。π0.7、π*0.6、Gemini Robotics 2 更新，但未开放权重，无法微调评测。</p></div>
+    <div class="card"><span class="k vla">选型</span><p id="summary-pick">每个系列选一个：π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5。只评测阶段按 checkpoint 匹配：Panda 用 π0.5 / GR00T / MolmoAct2 的 DROID 版，ALOHA 用 π0.5-base 与 X-VLA-RoboTwin2。π0.7 等更新的模型未开放权重。</p></div>
   </div>
 </header>
 
@@ -972,6 +974,32 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
   </div>
 </div>
 
+<h3 id="s4-eval">只评测（零样本）阶段：按机器人推荐</h3>
+<p>只评测时，关键在于有没有与 TopoGym 机器人匹配的官方 checkpoint，所以推荐与上面的通用首选不完全相同。TopoGym 的 Panda + Robotiq 2F-85 与 DROID 数据集硬件相同，多个模型有专门用于新场景零样本部署的 DROID checkpoint。ALOHA 任务没有同型号臂（ViperX）的任务级 checkpoint，预期成绩更低。</p>
+<div class="tbl"><table>
+<thead><tr><th>机器人</th><th>顺序</th><th>模型 · checkpoint</th><th>动作</th><th>相机</th><th>频率 / H</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td rowspan="4"><span class="chip panda">Panda · 4 任务</span></td><td>1</td><td><b>π0.5</b> · <code>pi05_droid_jointpos</code></td><td>8 维绝对关节</td><td>agentview、wrist</td><td>15 Hz / 15</td><td>热度与第三方成绩最好</td></tr>
+<tr><td>2</td><td><b>GR00T N1.7</b> · <code>GR00T-N1.7-DROID</code></td><td>执行其关节输出（8 维）</td><td>agentview、wrist，各 2 帧</td><td>15 Hz / 40</td><td>state 需要末端位姿 + 关节</td></tr>
+<tr><td>3</td><td><b>MolmoAct2</b> · <code>MolmoAct2-DROID</code></td><td>8 维绝对关节</td><td>agentview、front_oblique、wrist</td><td>15 Hz / 15</td><td>全开源</td></tr>
+<tr><td>–</td><td class="muted">X-VLA、DM0.5</td><td colspan="4" class="muted">没有真机 DROID checkpoint，不进首批；G0.5 有 <code>g05-droid</code>，但需申请、非商用</td></tr>
+<tr><td rowspan="4"><span class="chip aloha">ALOHA · 9 任务</span></td><td>1</td><td><b>π0.5</b> · <code>pi05_base</code> + trossen 统计量</td><td>14 维（臂关节增量 + 夹爪）</td><td>cam_high、两腕</td><td>50 Hz / 50</td><td>唯一见过同型号臂（ViperX）的；但 base 未针对具体任务训练</td></tr>
+<tr><td>2</td><td><b>X-VLA</b> · <code>X-VLA-RoboTwin2</code></td><td>20 维绝对末端位姿 → <code>EE_ABS</code></td><td>cam_high、两腕</td><td>30 Hz / 30</td><td>末端空间受臂型差异影响较小；叠布任务可用 SoftFold</td></tr>
+<tr><td>3</td><td><b>DM0.5</b> · <code>DM05-robotwin2</code> / <code>Table30v2-ALOHA</code></td><td>14 维关节</td><td>cam_high、两腕</td><td>20 Hz / 50</td><td>AgileX 平台的臂，关节空间直接迁移风险高</td></tr>
+<tr><td>–</td><td class="muted">GR00T、MolmoAct2</td><td colspan="4" class="muted">GR00T 没有 ALOHA 类预训练，新本体投影层未训练，不能零样本；MolmoAct2 只有 YAM 双臂 checkpoint（I2RT 的臂，运动学不同）</td></tr>
+</tbody></table></div>
+<p><b>模型尺寸与显存</b>（评测只需推理）：</p>
+<div class="tbl"><table>
+<thead><tr><th>模型</th><th>开源尺寸</th><th>可选 checkpoint</th><th>可调推理参数</th><th>推理显存（仅模型）</th></tr></thead>
+<tbody>
+<tr><td>π0.5</td><td>仅 1 个，约 3.3B</td><td>base、droid、droid_jointpos、libero</td><td>去噪步数（默认 10）、执行步数</td><td>&gt; 8 GB（官方，4090）</td></tr>
+<tr><td>GR00T N1.7</td><td>仅 3B</td><td>base、DROID、LIBERO、SimplerEnv ×2</td><td>去噪步数（默认 4）、历史帧、执行步数</td><td>≥ 16 GB（官方）</td></tr>
+<tr><td>MolmoAct2</td><td>1 个，约 5B（另有同尺寸 Think 变体）</td><td>base、DROID、BimanualYAM、LIBERO、SO100</td><td>去噪步数（默认 10）；连续 / 离散动作头</td><td>bf16 &lt; 16 GB（H100 实测 12.1 GiB）；fp32 24–26 GB</td></tr>
+<tr><td>X-VLA</td><td>仅 0.9B</td><td>Pt、RoboTwin2、SoftFold、Libero、Calvin 等</td><td>去噪步数（默认 10）</td><td>权重 3.5 GB（fp32）；运行显存未公布</td></tr>
+<tr><td>DM0.5</td><td>仅 1 个，5.8B</td><td>base、robotwin2、Table30v2-ALOHA、libero 等</td><td>去噪步数（默认 10）、执行步数</td><td>权重约 11.7 GB（bf16）；官方称单张 4090 可推理</td></tr>
+</tbody></table></div>
+<p class="note">仿真本身还要占显存：刚体任务约 2–3 GB，FEM 任务最高约 10 GB。本机只有 1 张 RTX 4090（24 GB），模型与仿真同卡时两者相加；GR00T 与 FEM 任务同卡会超出。首批只选刚体任务（Panda：buzz_wire_3d；ALOHA：cast_coil）。实施清单见 <code>docs/vla_integration/IMPL_PLAN.md</code>。</p>
+
 <h3>最新最强、但无法使用的模型</h3>
 <div class="tbl"><table>
 <thead><tr><th>模型</th><th>时间</th><th>状态（2026-09-29）</th></tr></thead>
@@ -1017,6 +1045,7 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <tr><td>相机</td><td>固定 3 槽：base、left_wrist、right_wrist。ALOHA 用 <code>cam_high</code> + 两腕，<code>cam_low</code> 丢弃；Panda：agentview → base，wrist → left_wrist，右槽补零</td><td>任意路数，可带历史帧（DROID：2 路 × 2 帧）</td><td>最多 3 路；第 1 路与文本一起进 VLM，其余只过视觉编码器</td><td>任意路数，按名字标注（默认 Head / Left wrist / Right wrist）</td></tr>
 <tr><td>图像预处理</td><td>保持比例缩放 + 黑边到 224×224，像素到 [-1, 1]</td><td>保持比例，短边 256，裁剪 95%</td><td>直接缩放到 224×224，ImageNet 均值方差</td><td>补成正方形后缩放到 448×448，像素到 [-1, 1]</td></tr>
 <tr><td>state 输入</td><td>分位数归一化 → 256 档离散 → 以文本写进 prompt</td><td>分位数归一化，连续值补零到 132 维，经本体专属 MLP</td><td>20 维绝对末端位姿（每臂 xyz + rot6d + 夹爪），原始单位，不归一化</td><td>分位数归一化 → 256 档离散 → 写进 prompt</td></tr>
+<tr><td>历史输入</td><td>无，只看当前帧</td><td>可选历史帧（DROID：当前 + 1 s 前）</td><td>无</td><td>无（DM05-MEM 变体最多 32 张历史图）</td></tr>
 <tr><td>语言</td><td><code>Task: {指令}, State: {…};\nAction:</code></td><td>小写、去标点，放进 Qwen3-VL 对话模板</td><td>BART 分词，≤ 50 token</td><td><code>Robot: Aloha / Control mode: joint / Overall speed / Task: …</code></td></tr>
 <tr><td>输出 H × D</td><td>50 × 32，ALOHA 取前 14</td><td>≤ 40 × 132，按本体切片</td><td>30 × 20</td><td>50 × 32，ALOHA 取前 14</td></tr>
 <tr><td>动作表示</td><td>12 个臂关节为相对推理时刻 state 的增量，夹爪绝对</td><td>按键配置：相对 / 绝对 × 末端（xyz + rot6d）/ 关节；ALOHA 建议臂关节相对、夹爪绝对</td><td>绝对末端位姿；夹爪二值，1 = 闭合</td><td>相对关节（Table30v2-ALOHA）或绝对关节（robotwin2）</td></tr>
@@ -1104,12 +1133,14 @@ vla = REGISTRY[args.model](); vla.load(args.checkpoint, device=<span class="s">"
 <!-- ============ 5 ============ -->
 <section id="s5">
 <h2><span class="num">05</span>落地顺序与评测成本</h2>
+<p>当前阶段只评测。完整任务清单（含验收标准与 TODO）在 <code>docs/vla_integration/IMPL_PLAN.md</code>，供 coding agent 使用。</p>
 <div class="phases">
-  <div class="phase"><span class="p">P0</span><span class="t">协议 + 适配</span><span>protocol、EmbodimentAdapter、VLAAgent、LocalClient、单测</span><span class="done">占位策略跑通 cast_coil 40 步，结果与 vla_eval_demo.py 一致</span></div>
-  <div class="phase"><span class="p">P1</span><span class="t">服务 + 录像</span><span>serve.py、WebsocketClient、episode_recorder、第一个子类</span><span class="done">远程往返；ActionChunk 形状与数值检查；每 episode 有 MP4</span></div>
-  <div class="phase"><span class="p">P2</span><span class="t">数据</span><span>参考解在评测配置下生成 RGB 演示，导出 LeRobot</span><span class="done">首批任务各档演示数达到目标</span></div>
-  <div class="phase"><span class="p">P3</span><span class="t">首个模型</span><span>微调 + 评测</span><span class="done">成功率与结果分布</span></div>
-  <div class="phase"><span class="p">P4</span><span class="t">扩展</span><span>其余模型各一个子类，同数据同矩阵</span><span class="done">模型间对比表</span></div>
+  <div class="phase"><span class="p">P0</span><span class="t">协议 + 适配</span><span>protocol、wire、EmbodimentAdapter、VLAAgent、LocalClient、占位模型、单测</span><span class="done">单测通过，不依赖 GPU</span></div>
+  <div class="phase"><span class="p">P1</span><span class="t">评测循环 + 录像</span><span>run_eval、instructions.yaml、recorder</span><span class="done">cast_coil 与 buzz_wire_3d 冒烟有结果与 MP4</span></div>
+  <div class="phase"><span class="p">P2</span><span class="t">服务</span><span>serve.py、WebsocketClient、超时与版本校验</span><span class="done">远程与本地结果逐位一致</span></div>
+  <div class="phase"><span class="p">P3</span><span class="t">模型子类</span><span>π0.5、GR00T、MolmoAct2、X-VLA 的零样本 checkpoint</span><span class="done">每个模型 1 seed 冒烟</span></div>
+  <div class="phase"><span class="p">P4</span><span class="t">约定对齐</span><span>关节符号与零位、夹爪、相机、末端坐标系</span><span class="done">每项有数值或截图对比</span></div>
+  <div class="phase"><span class="p">P5</span><span class="t">首批评测</span><span>按矩阵跑正式 seed</span><span class="done">对比表与证据目录</span></div>
 </div>
 <h3>评测成本估算</h3>
 <p>仿真是瓶颈。按 <code>docs/vla_doc</code> 的实测（6–10 s/控制步，GPU 共用），估算一个评测矩阵需要的 GPU·h。独占 GPU 时的吞吐需要重新实测。</p>

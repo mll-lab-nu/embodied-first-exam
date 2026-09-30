@@ -16,6 +16,8 @@
 | 传输协议 | WebSocket + msgpack（与 openpi 相同） |
 | 录像 | 在 Gym 侧用 `RecordingSession` + `env.add_frame_sink` 完成，不需要 Harbor |
 | VLA 选型 | 每个系列一个：**π0.5、GR00T N1.7、X-VLA-0.9B、DM0.5**；备选 MolmoAct2、G0.5。π0.7、π*0.6、Gemini Robotics 2 更新，但未开放权重 |
+| 只评测阶段 | 按 checkpoint 匹配选：Panda 用 π0.5 / GR00T / MolmoAct2 的 DROID 版（TopoGym Panda 与 DROID 硬件相同），ALOHA 用 π0.5-base 与 X-VLA-RoboTwin2（见 4.2） |
+| 实施清单 | [`IMPL_PLAN.md`](IMPL_PLAN.md)（给 coding agent，含 TODO） |
 | 最大风险 | 训练数据：现有可解证据只覆盖 cast_coil / cast_keyhole，且为 CPU、无 RGB 配置，需要在评测配置下重新生成带 RGB 的演示 |
 
 ---
@@ -433,7 +435,34 @@ vla/                              新顶层目录，不放进 topogym/ 包
 
 相对第 1 版移除：π0-FAST（与 π0.5 同系列）、SmolVLA（第三方 RoboDojo 1.8%，不满足"最强"）。
 
-### 4.2 最新最强、但无法使用的模型
+### 4.2 只评测（零样本）阶段：按机器人推荐
+
+只评测时，关键在于有没有与 TopoGym 机器人匹配的官方 checkpoint。TopoGym 的 Panda + Robotiq 2F-85 与 DROID 数据集硬件相同；ALOHA 任务没有同型号臂（ViperX）的任务级 checkpoint，预期成绩更低。
+
+| 机器人 | 顺序 | 模型 · checkpoint | 动作 | 相机 | 频率 / H | 说明 |
+|---|---|---|---|---|---|---|
+| Panda | 1 | **π0.5** · `pi05_droid_jointpos` | 8 维绝对关节 | agentview、wrist | 15 Hz / 15 | 热度与第三方成绩最好 |
+| Panda | 2 | **GR00T N1.7** · `GR00T-N1.7-DROID` | 执行其关节输出（8 维） | agentview、wrist，各 2 帧 | 15 Hz / 40 | state 需要末端位姿 + 关节 |
+| Panda | 3 | **MolmoAct2** · `MolmoAct2-DROID` | 8 维绝对关节 | agentview、front_oblique、wrist | 15 Hz / 15 | 全开源 |
+| Panda | – | X-VLA、DM0.5 | | | | 无真机 DROID checkpoint；G0.5 有 `g05-droid`，但需申请、非商用 |
+| ALOHA | 1 | **π0.5** · `pi05_base` + trossen 统计量 | 14 维（臂关节增量 + 夹爪） | cam_high、两腕 | 50 Hz / 50 | 唯一见过同型号臂（ViperX）的；base 未针对具体任务训练 |
+| ALOHA | 2 | **X-VLA** · `X-VLA-RoboTwin2` | 20 维绝对末端位姿 → `EE_ABS` | cam_high、两腕 | 30 Hz / 30 | 末端空间受臂型差异影响较小；叠布可用 SoftFold |
+| ALOHA | 3 | **DM0.5** · `DM05-robotwin2` / `Table30v2-ALOHA` | 14 维关节 | cam_high、两腕 | 20 Hz / 50 | AgileX 平台的臂，关节空间直接迁移风险高 |
+| ALOHA | – | GR00T、MolmoAct2 | | | | GR00T 无 ALOHA 类预训练，新本体投影层未训练；MolmoAct2 只有 YAM 双臂（I2RT 的臂） |
+
+模型尺寸与显存（评测只需推理）：
+
+| 模型 | 开源尺寸 | 可选 checkpoint | 可调推理参数 | 推理显存（仅模型） |
+|---|---|---|---|---|
+| π0.5 | 仅 1 个，约 3.3B | base、droid、droid_jointpos、libero | 去噪步数（默认 10）、执行步数 | > 8 GB（官方，4090） |
+| GR00T N1.7 | 仅 3B | base、DROID、LIBERO、SimplerEnv ×2 | 去噪步数（默认 4）、历史帧、执行步数 | ≥ 16 GB（官方） |
+| MolmoAct2 | 1 个，约 5B（另有同尺寸 Think 变体） | base、DROID、BimanualYAM、LIBERO、SO100 | 去噪步数（默认 10）；连续 / 离散动作头 | bf16 < 16 GB（H100 实测 12.1 GiB）；fp32 24–26 GB |
+| X-VLA | 仅 0.9B | Pt、RoboTwin2、SoftFold、Libero、Calvin 等 | 去噪步数（默认 10） | 权重 3.5 GB（fp32）；运行显存未公布 |
+| DM0.5 | 仅 1 个，5.8B | base、robotwin2、Table30v2-ALOHA、libero 等 | 去噪步数（默认 10）、执行步数 | 权重约 11.7 GB（bf16）；官方称单张 4090 可推理 |
+
+仿真本身还要占显存：刚体约 2–3 GB，FEM 最高约 10 GB。本机只有 1 张 RTX 4090（24 GB），模型与仿真同卡时两者相加。
+
+### 4.2b 最新最强、但无法使用的模型
 
 | 模型 | 时间 | 状态（2026-09-29） |
 |---|---|---|
@@ -475,6 +504,7 @@ vla/                              新顶层目录，不放进 topogym/ 包
 | 相机 | 固定 3 槽 base / left_wrist / right_wrist；ALOHA 丢弃 `cam_low`；Panda 右槽补零 | 任意路数，可带历史帧 | 最多 3 路；第 1 路与文本一起进 VLM | 任意路数，按名字标注 |
 | 图像预处理 | 保持比例 + 黑边到 224×224，[-1, 1] | 保持比例，短边 256，裁剪 95% | 直接缩放 224×224，ImageNet 均值方差 | 补成正方形 → 448×448，[-1, 1] |
 | state 输入 | 分位数归一化 → 256 档 → 以文本写进 prompt | 分位数归一化，连续值补零到 132，本体专属 MLP | 20 维绝对末端位姿，原始单位 | 分位数归一化 → 256 档 → 写进 prompt |
+| 历史输入 | 无，只看当前帧 | 可选历史帧（DROID：当前 + 1 s 前） | 无 | 无（DM05-MEM 变体最多 32 张历史图） |
 | 语言 | `Task: {指令}, State: {…};\nAction:` | 小写、去标点，Qwen3-VL 对话模板 | BART 分词，≤ 50 token | `Robot: Aloha / Control mode: joint / Overall speed / Task: …` |
 | 输出 H × D | 50 × 32，ALOHA 取前 14 | ≤ 40 × 132，按本体切片 | 30 × 20 | 50 × 32，ALOHA 取前 14 |
 | 动作表示 | 臂关节为相对推理时刻 state 的增量，夹爪绝对 | 按键配置：相对 / 绝对 × 末端 / 关节 | 绝对末端位姿；夹爪二值，1 = 闭合 | 相对关节（Table30v2-ALOHA）或绝对关节（robotwin2） |
@@ -512,6 +542,8 @@ X-VLA 的显存需求；DM0.5 的显存与 ALOHA checkpoint 的图像分辨率�
 ---
 
 ## 5. 落地顺序与评测成本
+
+当前阶段只评测。完整任务清单（含验收标准与 TODO）见 [`IMPL_PLAN.md`](IMPL_PLAN.md)。下表是早期的整体顺序，以 IMPL_PLAN 为准。
 
 | 阶段 | 内容 | 完成标准 |
 |---|---|---|
