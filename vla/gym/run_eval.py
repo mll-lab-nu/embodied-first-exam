@@ -32,7 +32,7 @@ from vla.gym.report import table
 from vla.models.base import load_model
 
 VLA_DIR = Path(__file__).resolve().parents[1]
-ROOT = VLA_DIR.parent
+NYX_ASSETS = VLA_DIR.parent / ".external/nyx-assets"
 NVIDIA_ICD = Path("/usr/share/vulkan/icd.d/nvidia_icd.json")
 CONTROL_MODES = {"joint_abs": "JOINT_ABS", "ee_abs": "EE_ABS"}
 OUTCOMES = ("success", "task_failure", "time_limit", "unevaluated", "unfinished",
@@ -52,7 +52,7 @@ def classify(info):
 
 def make_args(cfg, spec):
     """topogym.make arguments: control/observation modes, decimation and time limit follow the policy spec."""
-    env = OmegaConf.to_container(cfg.env)
+    env = OmegaConf.to_container(cfg.env, resolve=True)
     dt = env.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s)
     return dict(variation_id=cfg.task.variation, control_mode=CONTROL_MODES[spec.action_space],
                 observation_mode="EE" if spec.state_keys == ("ee",) else "JOINT",
@@ -111,7 +111,7 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
                 if terminated or truncated:
                     outcome = classify(info)
                     break
-        except PolicyError as exc:  # model error, malformed chunk, timeout or disconnect
+        except PolicyError as exc:  # model error, malformed chunk or disconnect
             outcome, error = "policy_error", str(exc)
         except ValueError as exc:  # invalid action: physics did not advance
             outcome, error = "invalid_action", str(exc)
@@ -160,7 +160,7 @@ def evaluate(cfg, client):
                    success_rate=outcomes.count("success") / len(rows),
                    outcomes={name: outcomes.count(name) for name in OUTCOMES}, spec=asdict(spec),
                    instruction=instruction, instruction_version=instructions.VERSION,
-                   config=OmegaConf.to_container(cfg), git_commit=commit.strip())
+                   config=OmegaConf.to_container(cfg, resolve=True), git_commit=commit.strip())
     (output / "summary.json").write_text(json.dumps(summary, indent=2))
     (output / "report.md").write_text(table([output]) + "\n")
     return rows
@@ -179,15 +179,17 @@ def connect(policy):
     """The model server at ``policy.address``, or ``policy.local`` (a model config) in process for HoldVLA."""
     if policy.get("local"):
         return LocalClient(load_model(load_yaml(policy.local)))
+    print(f"Connecting to the model server at {policy.address}; it serves one evaluation at a time", flush=True)
     return RemoteClient(policy.address)
 
 
 def set_render_defaults(environ):
-    """Let a fresh checkout render without exports; variables set by the user win. Nyx assets: the repo's
-    .external/nyx-assets, as scripts/*.py pass it. Vulkan: only the NVIDIA driver when it is installed, since Nyx
-    aborts at scene build ("vkGetDeviceQueue: Invalid device") when Vulkan also lists other devices, such as an
-    integrated GPU or llvmpipe."""
-    environ.setdefault("TOPOGYM_VISUAL_ASSET_ROOT", str(ROOT / ".external/nyx-assets"))
+    """Let a fresh checkout render without exports; variables set by the user win, and a default is set only when
+    its path exists. Nyx assets: the repo's .external/nyx-assets, as scripts/*.py pass it (otherwise TopoGym's own
+    default applies). Vulkan: only the NVIDIA driver, since Nyx aborts at scene build when Vulkan also lists other
+    devices, such as an integrated GPU or llvmpipe."""
+    if NYX_ASSETS.is_dir():
+        environ.setdefault("TOPOGYM_VISUAL_ASSET_ROOT", str(NYX_ASSETS))
     if NVIDIA_ICD.is_file():
         environ.setdefault("VK_ICD_FILENAMES", str(NVIDIA_ICD))
 

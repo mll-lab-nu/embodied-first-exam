@@ -36,7 +36,7 @@ class RemoteClient:
         try:
             self.conn.send_bytes(encode(msg))
         except OSError as error:
-            raise PolicyError(f"Model server connection lost: {error}") from error
+            raise PolicyError(f"Model server connection lost: {error!r}") from error
         reply = self._receive()
         if reply["type"] != expected:
             raise PolicyError(reply.get("message", f"Expected a {expected} reply, got {reply['type']}"))
@@ -46,7 +46,7 @@ class RemoteClient:
         try:
             return decode(self.conn.recv_bytes())
         except (EOFError, OSError) as error:
-            raise PolicyError(f"Model server connection lost: {error}") from error
+            raise PolicyError(f"Model server connection lost: {error!r}") from error
 
 
 class LocalClient:

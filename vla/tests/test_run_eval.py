@@ -6,7 +6,7 @@ import pytest
 from omegaconf import OmegaConf
 
 from vla.gym import run_eval
-from vla.gym.run_eval import ROOT, classify, load_config, make_args, output_dir, set_render_defaults, tracking_error
+from vla.gym.run_eval import classify, load_config, make_args, output_dir, set_render_defaults, tracking_error
 from vla.protocol import PolicySpec
 
 
@@ -43,6 +43,11 @@ def test_make_args_pass_env_overrides_through():
     assert (args["control_decimation"], args["max_physics_steps"], args["enable_depth"]) == (4, 400, True)
 
 
+def test_make_args_resolve_references():
+    cfg = OmegaConf.create(dict(task=dict(id="cast_coil", variation="base", sim_seconds=2), env=dict(note="${task.id}")))
+    assert make_args(cfg, spec(control_hz=50))["note"] == "cast_coil"
+
+
 def test_tracking_error_is_the_worst_arm_distance_without_gripper():
     action = {"left": {"joint_position_rad": [0.0, 0.3, 0.0], "gripper_position_m": 0.037},
               "right": {"joint_position_rad": [0.0, 0.0, 0.1], "gripper_position_m": 0.002}}
@@ -73,17 +78,20 @@ def test_config_overrides_apply_after_the_base_and_must_name_existing_keys(tmp_p
         load_config(path, ["task.seed=[0]"])
 
 
-def test_render_defaults_fill_only_unset_variables(tmp_path, monkeypatch):
-    icd = tmp_path / "nvidia_icd.json"
+def test_render_defaults_fill_only_unset_variables_with_existing_paths(tmp_path, monkeypatch):
+    icd, assets = tmp_path / "nvidia_icd.json", tmp_path / "nyx-assets"
     icd.write_text("{}")
+    assets.mkdir()
     monkeypatch.setattr(run_eval, "NVIDIA_ICD", icd)
+    monkeypatch.setattr(run_eval, "NYX_ASSETS", assets)
     environ = {}
     set_render_defaults(environ)
-    assert environ == {"TOPOGYM_VISUAL_ASSET_ROOT": str(ROOT / ".external/nyx-assets"), "VK_ICD_FILENAMES": str(icd)}
+    assert environ == {"TOPOGYM_VISUAL_ASSET_ROOT": str(assets), "VK_ICD_FILENAMES": str(icd)}
     environ = {"TOPOGYM_VISUAL_ASSET_ROOT": "assets", "VK_ICD_FILENAMES": "mine.json"}
     set_render_defaults(environ)
     assert environ == {"TOPOGYM_VISUAL_ASSET_ROOT": "assets", "VK_ICD_FILENAMES": "mine.json"}
     monkeypatch.setattr(run_eval, "NVIDIA_ICD", tmp_path / "missing.json")
+    monkeypatch.setattr(run_eval, "NYX_ASSETS", tmp_path / "missing")
     environ = {}
     set_render_defaults(environ)
-    assert "VK_ICD_FILENAMES" not in environ
+    assert environ == {}  # TopoGym's own asset default (~/.cache/topogym/visuals/nyx) applies

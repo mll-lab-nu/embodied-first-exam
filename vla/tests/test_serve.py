@@ -3,6 +3,7 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+import threading
 import time
 
 import numpy as np
@@ -91,6 +92,28 @@ def test_requests_after_close_raise_policy_error(address):
     remote.close()
     with pytest.raises(PolicyError):
         remote.reset(0)
+
+
+def test_a_killed_server_raises_a_readable_policy_error_at_once():
+    port = free_port()
+    server = subprocess.Popen([sys.executable, "-m", "vla.models.serve", "--config", str(CONFIG), "--port", str(port)],
+                              cwd=ROOT)
+    remote = connect(f"localhost:{port}")
+    server.kill()
+    server.wait(timeout=30)
+    errors = []
+
+    def infer():
+        try:
+            remote.infer(observation())
+        except PolicyError as error:
+            errors.append(str(error))
+
+    thread = threading.Thread(target=infer, daemon=True)
+    thread.start()
+    thread.join(10)  # the client has no reply timeout, so a hang shows up here
+    assert errors and errors[0].split(": ", 1)[1].split("(")[0] in {"EOFError", "BrokenPipeError",
+                                                                    "ConnectionResetError"}
 
 
 def test_unencodable_reply_is_answered_as_an_error(tmp_path):

@@ -27,9 +27,8 @@ case "$TARGET" in
             (cd "$ROOT" && VENV_DIR="$PREFIX" CUDA_TAG=cu126 INSTALL_NYX=1 OPTIONAL_GROUPS="video test" \
                 bash env_setup_gs121.sh)
         }
-        download() {
-            [[ -d "$ROOT/.external/nyx-assets" ]] || (cd "$ROOT" && \
-                TOPOGYM_VISUAL_ASSET_ROOT="$ROOT/.external/nyx-assets" "$PY" scripts/prepare_nyx_studio.py)
+        download() {  # checksummed: fetches only missing or damaged files
+            (cd "$ROOT" && TOPOGYM_VISUAL_ASSET_ROOT="$ROOT/.external/nyx-assets" "$PY" scripts/prepare_nyx_studio.py)
         }
         ;;
     pi05)

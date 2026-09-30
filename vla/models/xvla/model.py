@@ -10,7 +10,6 @@ view to 224 x 224 (bicubic, ImageNet normalization) and tokenizes the instructio
 One action per saved RoboTwin frame, 15 steps of 1/250 s (16.7 Hz); the official RoboTwin client executes
 all 30 actions before the next inference. Sampling noise uses the global torch RNG, seeded in reset().
 """
-import numpy as np
 from PIL import Image
 import torch
 from transformers import AutoModel, AutoProcessor
