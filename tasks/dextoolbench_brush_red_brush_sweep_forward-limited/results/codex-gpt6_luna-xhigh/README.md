@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_brush_red_brush_sweep_forward-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_brush_red_brush_sweep_forward-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_brush_red_brush_swe__tAdcdRs`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_brush_red_brush_swe__74BHJPA`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 1003 s |
+| agent time | 3545 s |
 | actions / physics steps | — / — |
-| tokens in / out | 2284725 / 50669 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 24, "elapsed_s": 817.2, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 38, "failed_on_timeout": 1}` |
+| tokens in / out | 25843023 / 159344 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 10410, "calls": 237, "elapsed_s": 3624.0, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 38, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_brush_red_brush_swe__t
 
 ## Agent's last messages
 
-- The overhead view shows the hand is offset from the brush along the table, even though the side view made them look aligned. I’m correcting that lateral offset while lowering, then closing and lifting in the remaining time for the first goal.
-- The episode timed out on goal 0 after the final correction, so the service has recorded a zero-goal attempt and will reject further actions. I’m saving the one-shot controller source in `/app/output/gen.py` as requested; I can’t replay or validate it against this consumed episode.
-- The episode timed out on goal 0, so the recorded score is **0/38**. The service has ended the episode; it can’t be reset or replayed.  I saved the standalone controller record at [gen.py](/app/output/gen.py). It was written after the episode ended and wasn’t replayed against the service.
+- The side pinch still hasn’t lifted the object. I’m saving the controller and camera based localization code to `/app/output/gen.py` now, then I’ll use the remaining episode time for one last adjusted grasp attempt and check whether any goal advances.
+- The camera views now indicate the fingers were reaching beside the tool rather than around it. I’m using the remaining service time for one short sequence that re-centers the hand, closes it, and lifts; then I’ll report the final goal count and leave the controller file in place.
+- The episode finished with **0 of 38 goals reached**. I couldn’t secure the brush despite several camera-guided grasp attempts; the service reported `time_left_s = 0.0` on the final sequence.  The controller record is at [gen.py](/app/output/gen.py).

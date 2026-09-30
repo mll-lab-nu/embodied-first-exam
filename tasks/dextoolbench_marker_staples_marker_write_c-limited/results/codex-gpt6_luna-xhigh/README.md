@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_marker_staples_marker_write_c-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_marker_staples_marker_write_c-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_staples_mark__fMCtkJ2`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_marker_staples_mark__AwNH8He`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 1193 s |
+| agent time | 3412 s |
 | actions / physics steps | — / — |
-| tokens in / out | 2155117 / 45410 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 24, "elapsed_s": 1196.0, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 29, "failed_on_timeout": 1}` |
+| tokens in / out | 21681168 / 118222 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 10434, "calls": 214, "elapsed_s": 3491.5, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 29, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_staples_mark__f
 
 ## Agent's last messages
 
-- The service is live and still at step 0. The arm starts positioned over the table with its hand open, and the first goal is already provided as a world pose. I’m using the RGBD views to estimate the marker’s pose and the hand’s starting position before committing the first movement.
-- The initial RGBD geometry puts the marker center near \((-0.03, 0.03, 0.53)\) m and the hand’s visible center near \((0.03, 0.05, 0.73)\) m. I’ve estimated the arm’s local motion mapping with small joint changes; next I’m moving to a position just above the marker, then I’ll close and verify visually that it lifts.
-- The episode ended at goal 0’s 600-step timeout with **0/29 goals reached**. RGBD checks showed the marker remained on the table during the lift attempts.  I saved the camera-and-proprioception controller at [gen.py](/app/output/gen.py) and the final observation and episode status at [meta.json](/app/output/calls/022/meta.json).
+- I’ve used the remaining live attempts to check overhead and side pinches. The marker kept resting on the table during each lift, so no pose goal has registered yet. I’m saving the camera/proprioception controller and the episode artifacts at the requested path.
+- The service reports 10,206 control steps and 0/29 goals reached, with about 224 seconds left in its wall-clock budget. I’m making one last short grasp/lift attempt, then I’ll leave the controller and latest observation saved.
+- The marker never stayed in the hand during a lift, so **no goals were reached**.  The last service status was **0/29 goals**, 10,434 control steps, `done: false`, with about 165 seconds left. The episode trajectory remains in the service.  I saved the controller at [gen.py](/app/output/gen.py), the status at [episode_summary.json](/app/output/episode_summary.json), and the latest camera observation at [final_state](/app/output/final_state/meta.json).

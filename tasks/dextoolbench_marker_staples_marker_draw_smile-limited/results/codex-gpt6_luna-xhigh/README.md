@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_marker_staples_marker_draw_smile-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_marker_staples_marker_draw_smile-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_staples_mark__vUtN6Df`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh-rerun`, trial `dextoolbench_marker_staples_mark__sySnbAp`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 782 s |
+| agent time | 3602 s |
 | actions / physics steps | — / — |
-| tokens in / out | 1404850 / 27327 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 36, "elapsed_s": 722.8, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 49, "failed_on_timeout": 1}` |
+| tokens in / out | 20397991 / 123961 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 11391, "calls": 363, "elapsed_s": 3826.5, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 49, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_staples_mark__v
 
 ## Agent's last messages
 
-- The marker stayed on the table during that lift, so the first close missed. I’m resetting just the hand posture (without resetting the scene): open above the marker, lower with the fingers spread, then close around it. The goal clock is still running, with about 7 seconds remaining for this pose.
-- The pen remains on the tabletop through the lift, so the grasp attempt failed. Only three control steps remain on goal 0; I’ll let the episode record its timeout, then save the attempted controller and its action sequence in `/app/output/gen.py`.
-- The episode ended at the goal 0 timeout with **0/49 goals reached**. The marker stayed on the table during the lift attempts, so the grasp failed.  I saved the attempted controller at [gen.py](/app/output/gen.py) and the final episode record at [meta.json](/app/output/episode_end/meta.json). The service used all 600 control steps.
+- The RGBD measurements point to the remaining mismatch: at table height the wrist is a few centimeters off the marker even though the front view overlaps. I’m returning the arm to its initial safe posture and will remeasure from the front camera before the next placement.
+- I have a camera based local movement estimate now. It says the hand needs a coordinated shoulder and elbow change to land near the marker in x, y, and height; I’ll move to that measured pose with the hand open and recheck contact before closing.
+- I found the key visual ambiguity: the large dark patch is the hand’s shadow; the marker is the thin diagonal shaft. Depth places the marker about 8 cm farther along the table than my earlier estimate. I’m steering from the shaft’s depth points now and will make another measured approach.

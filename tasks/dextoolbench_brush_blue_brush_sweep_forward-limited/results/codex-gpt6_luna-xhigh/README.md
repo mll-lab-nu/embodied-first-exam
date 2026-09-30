@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_brush_blue_brush_sweep_forward-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_brush_blue_brush_sweep_forward-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_brush_blue_brush_sw__ekZi8jS`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_brush_blue_brush_sw__WT9Yv3A`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 1181 s |
+| agent time | 3207 s |
 | actions / physics steps | — / — |
-| tokens in / out | 2572483 / 34927 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 35, "elapsed_s": 1154.4, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 34, "failed_on_timeout": 1}` |
+| tokens in / out | 25326721 / 135673 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 36000, "calls": 192, "elapsed_s": 3347.1, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 34, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_brush_blue_brush_sw__e
 
 ## Agent's last messages
 
-- The brush stayed on the table during the lift probe, so the first closure missed it. The top view shows the hand is horizontally over the handle; I’m lowering farther while keeping the grasp closed, then I’ll verify contact before lifting again.
-- The hand has not lifted the brush yet. I’ve repositioned it over the handle and am making one final low, closed contact attempt within the remaining steps on goal 0. The episode’s 10 second per goal limit is nearly reached, so I’ll save the controller and trajectory outcome right after this.
-- The live episode ended at goal 0 after 600 control steps: **0/34 goals reached** (`goal timeout`).  I saved the action sequence in [gen.py](/app/output/gen.py), the outcome in [episode_outcome.json](/app/output/episode_outcome.json), and camera snapshots in [/app/output/debug](/app/output/debug).
+- The brush has not moved with the gripper, and the task remains at goal 0. I’m going to hold the measured joint positions through the remaining episode steps so the service can finalize and grade the recorded trajectory; the final score will reflect the goals actually reached.
+- The service finalized at the 36,000-step limit with 0 of 34 goals reached. I’ve stopped sending robot commands and am preserving the controller file while removing the temporary camera dumps.
+- The episode finalized at the 36,000-step limit with **0 of 34 goals reached**. The brush fell below the table during the grasp attempts, and I couldn’t recover it.  I saved the RGB-D perception and grasp-control helpers, with the outcome recorded, in [gen.py](/app/output/gen.py).

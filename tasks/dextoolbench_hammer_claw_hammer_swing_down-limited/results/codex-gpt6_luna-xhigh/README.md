@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_hammer_claw_hammer_swing_down-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_hammer_claw_hammer_swing_down-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_hammer_claw_hammer__WAUmrY4`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_hammer_claw_hammer__z3GhDE5`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 908 s |
+| agent time | 3602 s |
 | actions / physics steps | — / — |
-| tokens in / out | 2019401 / 43102 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 39, "elapsed_s": 941.3, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 37, "failed_on_timeout": 1}` |
+| tokens in / out | 26062129 / 123960 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 8436, "calls": 165, "elapsed_s": 3765.8, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 37, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_hammer_claw_hammer__WA
 
 ## Agent's last messages
 
-- The lowered hand now lines up over the hammer in the front view, with the fingertips approaching the shaft. I’m closing the fingers while lowering a little more, then I’ll check whether the hammer lifts with the hand before committing to the swing path.
-- The episode timed out on goal 0 after 600 steps; none of the attempted closures lifted the hammer, so the service ended the run at 0/37. I’m saving the exact joint command sequence and observation-only client logic in `/app/output/gen.py` for the record.
-- The episode ended on **goal 0 timeout**: 0/37 goals reached. The hammer did not lift with the hand.  I saved the observation-only controller and attempted joint sequence in [gen.py](/app/output/gen.py). The service recorded the trajectory.
+- The hand is now hovering over the hammer handle in the front and side views. I’m closing the thumb and four fingers around it with the arm held still, then I’ll check whether the hammer follows before lifting.
+- The first closure did not lift the hammer; it stayed on the table during the lift check. I’m repositioning slightly lower and will retry with a tighter thumb opposition and finger curl, using the side and front views to confirm contact.
+- The depth geometry shows why the earlier lifts missed: the fingers were contacting the tabletop beside the handle. I’m correcting the grasp point slightly toward the hammer and raising the fingertips off the table before closing again.
