@@ -1,0 +1,172 @@
+"""Evaluate one policy on one task variation over several seeds, from the repository root:
+
+    python -m vla.gym.run_eval --config vla/configs/eval/<name>.yaml [dotted.key=value ...]
+
+Writes <run.output>/results.jsonl (one row per episode) and summary.json, and with run.record one MP4 per
+camera under seed_<seed>/videos/. The output directory must not exist yet.
+"""
+from __future__ import annotations
+
+import argparse
+from contextlib import contextmanager
+from dataclasses import asdict
+import json
+from pathlib import Path
+import subprocess
+import time
+
+import numpy as np
+from omegaconf import OmegaConf
+
+import topogym
+from topogym.recording import RecordingSession
+from vla.gym.adapter import Adapter
+from vla.gym.agent import VLAAgent
+from vla.gym.client import LocalClient, PolicyError
+from vla.models.base import load_model
+
+VLA_DIR = Path(__file__).resolve().parents[1]
+CONTROL_MODES = {"joint_abs": "JOINT_ABS", "ee_abs": "EE_ABS"}
+OUTCOMES = ("success", "task_failure", "time_limit", "unevaluated", "unfinished",
+            "invalid_action", "policy_error", "env_error")
+
+
+def classify(info):
+    """Outcome of a finished episode from the public step info, as in docs/vla_doc/vla_eval_demo.py."""
+    if info["task_outcome"] == "success":
+        return "success"
+    if info["task_outcome"] == "failure":
+        return "task_failure"
+    if info["termination_reason"] == "time_limit":
+        return "time_limit" if info["evaluation_status"] == "available" else "unevaluated"
+    return "unfinished"
+
+
+def make_args(cfg, spec):
+    """topogym.make arguments: control/observation modes, decimation and time limit follow the policy spec."""
+    env = OmegaConf.to_container(cfg.env)
+    dt = env.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s)
+    return dict(variation_id=cfg.task.variation, control_mode=CONTROL_MODES[spec.action_space],
+                observation_mode="EE" if spec.state_keys == ("ee",) else "JOINT",
+                control_decimation=round(1 / (spec.control_hz * dt)),
+                max_physics_steps=round(cfg.task.sim_seconds / dt), **env)
+
+
+def tracking_error(action, robot, action_space):
+    """Largest per-arm distance between the commanded arm target and the next measurement, gripper excluded:
+    joint positions in rad (joint_abs) or the TCP position in m (ee_abs)."""
+    target, measured = (("joint_position_rad", "joint_position_rad") if action_space == "joint_abs"
+                        else ("position_world_m", "tcp_position_world_m"))
+    return max(float(np.linalg.norm(np.subtract(command[target], robot[arm][measured])))
+               for arm, command in action.items())
+
+
+@contextmanager
+def recording(env, video_dir, metadata):
+    """One MP4 per camera from the frames the Env renders for observations; yields None when off."""
+    if video_dir is None:
+        yield None
+        return
+    with RecordingSession(video_dir, fps=30, metadata=metadata) as session:
+        session.append(env.sensor_frame())
+        stop = env.add_frame_sink(session.append)
+        try:
+            yield session
+        finally:
+            stop()
+
+
+def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
+    """Reset, then act and step until the episode ends; returns the outcome, control and diagnostic fields."""
+    start = time.monotonic()
+    env.reset(seed=seed)
+    reset_wall_s = time.monotonic() - start
+    actor = env.interaction()
+    agent = VLAAgent(client, Adapter(actor.action_spec, spec), execute_steps)
+    joint_and_ee = set(spec.state_keys) == {"joint", "ee"}  # JOINT observations carry no TCP pose
+    obs, info, errors, error = actor.observe(), {}, [], None
+    metadata = dict(episode=env.episode_metadata, model=spec.name, instruction=instruction)
+    with recording(env, video_dir, metadata) as session:
+        try:
+            agent.reset(seed, instruction)
+            while True:
+                robot = env.tick_record()["robot"] if joint_and_ee else obs["robot"]
+                action = agent.act(obs["rgb"], robot)
+                obs, _, terminated, truncated, info = actor.step(action)
+                errors.append(tracking_error(action, obs["robot"], spec.action_space))
+                if terminated or truncated:
+                    outcome = classify(info)
+                    break
+        except PolicyError as exc:  # model error, malformed chunk, timeout or disconnect
+            outcome, error = "policy_error", str(exc)
+        except ValueError as exc:  # invalid action: physics did not advance
+            outcome, error = "invalid_action", str(exc)
+        except RuntimeError as exc:  # the Env faulted; only reset is possible
+            outcome, error = "env_error", str(exc)
+        row = dict(outcome=outcome, task_success=info.get("task_success"), failure_code=info.get("failure_code"),
+                   sim_time_s=float(obs["state"]["sim_time_s"]), control_steps=len(errors),
+                   inference_calls=agent.inference_calls,
+                   tracking_error_mean=float(np.mean(errors)) if errors else None,
+                   tracking_error_max=max(errors, default=None), clipped_actions=agent.adapter.clipped,
+                   reset_wall_s=round(reset_wall_s, 2),
+                   rollout_wall_s=round(time.monotonic() - start - reset_wall_s, 2), error=error)
+        if session is not None:
+            if outcome != "env_error":
+                session.append_final(env.sensor_frame())
+            session.finish(row)
+    return row
+
+
+def evaluate(cfg, client):
+    """Run every seed with one Env; write results.jsonl and summary.json into cfg.run.output."""
+    spec = client.spec
+    output = Path(cfg.run.output)
+    output.mkdir(parents=True)  # never overwrite earlier results
+    instructions = OmegaConf.load(VLA_DIR / "configs/instructions.yaml")
+    instruction = instructions.tasks[cfg.task.id]
+    execute_steps = spec.execute_steps if cfg.run.execute_steps is None else cfg.run.execute_steps
+    args = make_args(cfg, spec)
+    control_hz = 1 / (args["control_decimation"] * args.get("physics_dt_s", topogym.SimulatorConfig.physics_dt_s))
+    rows = []
+    with topogym.make(cfg.task.id, **args) as env:
+        for seed in cfg.task.seeds:
+            video_dir = output / f"seed_{seed}" if cfg.run.record else None
+            episode = run_episode(env, client, spec, seed, instruction, execute_steps, video_dir)
+            row = dict(task=cfg.task.id, variation=cfg.task.variation, seed=seed, model=spec.name,
+                       instruction_version=instructions.version, **episode, execute_steps=execute_steps,
+                       control_decimation=args["control_decimation"], control_hz_actual=round(control_hz, 3))
+            rows.append(row)
+            with open(output / "results.jsonl", "a") as file:
+                file.write(json.dumps(row) + "\n")
+            print(json.dumps(row), flush=True)
+    outcomes = [row["outcome"] for row in rows]
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=VLA_DIR, capture_output=True, text=True).stdout
+    summary = dict(model=spec.name, task=cfg.task.id, variation=cfg.task.variation, episodes=len(rows),
+                   success_rate=outcomes.count("success") / len(rows),
+                   outcomes={name: outcomes.count(name) for name in OUTCOMES}, spec=asdict(spec),
+                   instruction=instruction, instruction_version=instructions.version,
+                   config=OmegaConf.to_container(cfg), git_commit=commit.strip())
+    (output / "summary.json").write_text(json.dumps(summary, indent=2))
+    return rows
+
+
+def connect(policy):
+    """In-process LocalClient for ``policy.local`` (a model config path; tests and HoldVLA)."""
+    return LocalClient(load_model(OmegaConf.load(policy.local)))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--config", required=True, help="evaluation config (vla/configs/eval/*.yaml)")
+    parser.add_argument("overrides", nargs="*", help="OmegaConf dotlist, e.g. task.seeds=[0] run.record=false")
+    args = parser.parse_args()
+    cfg = OmegaConf.merge(OmegaConf.load(args.config), OmegaConf.from_dotlist(args.overrides))
+    client = connect(cfg.policy)
+    try:
+        evaluate(cfg, client)
+    finally:
+        client.close()
+
+
+if __name__ == "__main__":
+    main()

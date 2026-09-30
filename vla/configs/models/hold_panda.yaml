@@ -1,0 +1,14 @@
+# HoldVLA: repeats the measured joint state, to test the pipeline without a model or checkpoint.
+class_path: vla.models.dummy.HoldVLA
+checkpoint: null
+port: 8000
+spec:
+  name: hold_panda
+  embodiment: panda_robotiq
+  cameras: [agentview, wrist]
+  state_keys: [joint]
+  action_space: joint_abs
+  control_hz: 40            # decimation 10, as in docs/vla_doc/vla_eval_demo.py
+  chunk_size: 10
+  execute_steps: 10
+model: {}
