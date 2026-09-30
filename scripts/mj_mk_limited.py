@@ -54,7 +54,7 @@ services:
       - ./sim:/srv:ro
     working_dir: /srv
     command: python /srv/server_mj.py
-    restart: on-failure:3
+    restart: on-failure:6
     environment:
       RCB_TOOL: {tool}
       RCB_INSTANCE: /srv/instance.json{dtb_env}

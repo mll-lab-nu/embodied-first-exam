@@ -64,6 +64,11 @@ def _give_up(reason: str, infra: bool) -> None:
     signal.signal(signal.SIGUSR1, lambda *_: None); print(f"restart refused: {reason}", flush=True)
     while True: time.sleep(3600)
 with open(os.path.join(DATA, "startups.jsonl"), "a") as _f: _f.write(json.dumps({"ts": time.time(), "pid": os.getpid()}) + "\n")
+
+# Back off before rebuilding after a failed start (e.g. a GPU out-of-memory crash while other trials hold the GPU): compose
+# restarts immediately, so without a pause every retry meets the same full GPU (seen: 4 starts in 75 s, all failed).
+_n_starts = sum(1 for _ in open(os.path.join(DATA, "startups.jsonl")))
+if _n_starts > 1 and not os.path.exists(os.path.join(DATA, "episode.jsonl")): time.sleep(min(120, 20 * (_n_starts - 1)))
 if os.environ.get("RCB_TEST_CRASH_ONCE") and sum(1 for _ in open(os.path.join(DATA, "startups.jsonl"))) == 1:
     sys.exit("RCB_TEST_CRASH_ONCE: simulated startup crash")   # test hook for the restart path (never set in tasks)
 
