@@ -1,14 +1,14 @@
-# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min — dextoolbench_marker_sharpie_marker_write_c-limited
+# Codex + GPT-6 Luna, reasoning effort xhigh, reasoning summaries on, 60 min, no per-goal time limit — dextoolbench_marker_sharpie_marker_write_c-limited
 
-Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__Qs57JjE`, 2026-09-29. Mode: **limited (robot as a service)**.
+Run: Harbor job `dtbl-nt-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__Gg2CWwY`, 2026-09-29. Mode: **limited (robot as a service)**.
 
 | | |
 |---|---|
 | result | **0** |
-| agent time | 1346 s |
+| agent time | 3603 s |
 | actions / physics steps | — / — |
-| tokens in / out | 2744490 / 47297 |
-| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 600, "calls": 24, "elapsed_s": 1325.5, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 25, "failed_on_timeout": 1}` |
+| tokens in / out | 22570698 / 172513 |
+| verifier | `{"success": 0, "deterministic": 1, "finalized": 1, "control_steps": 14082, "calls": 278, "elapsed_s": 3687.9, "video_rendered": 1, "grader_error": 0, "progress": 0.0, "goals_reached": 0, "n_goals": 25, "failed_on_timeout": 0}` |
 | verifier sandbox | separate |
 
 ## Replay (verifier's six-camera video)
@@ -19,6 +19,6 @@ Run: Harbor job `mjl-gpt6luna-xhigh`, trial `dextoolbench_marker_sharpie_mark__Q
 
 ## Agent's last messages
 
-- The marker is about 10 cm below and slightly forward of the hand’s fingertips. Small joint probes show joint 4 lowers the hand, while joint 2 can partly offset the sideways drift. I’m starting a slow lowering reach and will remeasure before closing the fingers.
-- The hand reached the tabletop, but the marker stayed on the table through the lift attempts. The episode has now timed out at goal 0 (0/25). I’m saving the controller and its action sequence to `/app/output/gen.py` as requested.
-- The episode timed out on goal 0, so the recorded score is **0/25**. The hand reached the tabletop, but the marker remained there during the lift attempts.  I saved the action script at [gen.py](/app/output/gen.py) and the final episode result at [meta.json](/app/output/final_attempt/meta.json).
+- The last approach pushed the arm away from the table and the pen is still lying there. I’m retracting to the known starting joint pose to clear the obstruction, then I’ll make a gentler, finger-first approach from the side.
+- I’ve confirmed the pen is still on the tabletop. The wrist can reach over the table, but the hand remains a few centimeters above the pen even when curled. I’m resetting only the arm posture through the clear route, then I’ll lower along the near vertical joint direction and check the depth gap before closing.
+- The arm has reached the pen’s area, but the marker has remained on the table through the lift checks. I’m saving the image and proprioception based controller in `/app/output/gen.py` now, including the safe route around the divider and the grasp attempt sequence used in this episode.
