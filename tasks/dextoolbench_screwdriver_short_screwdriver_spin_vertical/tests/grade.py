@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 # Videos come after the verdict and must end well inside the verifier timeout, even on software rendering (~1.3 s a
 # frame): the replay video has at most MAX_FRAMES frames, agent-rollout videos start only while under the budget.
+MAX_TRAJ_STEPS = 360_000   # 100 min of robot time at 60 Hz (replayed twice in ~5 min)
 T0 = time.time(); RENDER_BUDGET_S = float(os.environ.get("RCB_RENDER_BUDGET_S", "600")); MAX_FRAMES = 400
 
 
@@ -39,7 +40,7 @@ def main() -> int:
     try:
         import rcb_dtb
         d = np.load(traj, allow_pickle=False); A = np.asarray(d["actions"], dtype=np.float64)
-        if A.ndim != 2 or A.shape[1] != rcb_dtb.N or A.shape[0] > 100_000 or not np.all(np.isfinite(A)):
+        if A.ndim != 2 or A.shape[1] != rcb_dtb.N or A.shape[0] > MAX_TRAJ_STEPS or not np.all(np.isfinite(A)):
             write(0.0, {"success": 0, "progress": 0.0, "bad_trajectory": 1, "grader_error": 0, **c}); return 0
         s = rcb_dtb.Session("/tests/instance.json", enable_render=True)
         r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"] and r1["reached"] == r2["reached"]
@@ -56,7 +57,7 @@ def main() -> int:
             for f in files:
                 try:
                     t = np.load(f, allow_pickle=False)["actions"]
-                    if t.ndim == 2 and t.shape[1] == rcb_dtb.N and len(t) <= 100_000 and np.all(np.isfinite(t)): idx.append((f, len(t)))
+                    if t.ndim == 2 and t.shape[1] == rcb_dtb.N and len(t) <= MAX_TRAJ_STEPS and np.all(np.isfinite(t)): idx.append((f, len(t)))
                 except Exception: continue
             out["agent_traces"] = len(idx); out["agent_trace_videos"] = 0
             if idx:

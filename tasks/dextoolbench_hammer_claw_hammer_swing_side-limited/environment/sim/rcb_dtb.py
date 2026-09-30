@@ -42,9 +42,10 @@ ROOT = Path(os.environ.get("RCB_MJ_ROOT", "/opt/rcb_mj"))
 SIM_DT = 1.0 / 600.0
 CONTROL_DT = 1.0 / 60.0
 SUBSTEPS = int(round(CONTROL_DT / SIM_DT))          # 10
-# 10 s per goal (DexToolBench eval: per-goal timeout). RCB_DTB_GOAL_TIMEOUT_S overrides it; 0 = no per-goal limit
-# (the limited-mode service: one episode, no reset; owner 2026-09-29). The default keeps the benchmark's rule.
-GOAL_TIMEOUT_STEPS = int(round(float(os.environ.get("RCB_DTB_GOAL_TIMEOUT_S", "10")) / (1.0 / 60.0)))
+# Per-goal time limit. DexToolBench's own eval gives each goal 10 s; ours (owner 2026-09-29): 60 s in unlimited mode (the
+# default here: the trajectory is replayed offline and the agent can reset freely), none in limited mode (the service
+# sets RCB_DTB_GOAL_TIMEOUT_S=0: one episode, no reset). 0 = no per-goal limit.
+GOAL_TIMEOUT_STEPS = int(round(float(os.environ.get("RCB_DTB_GOAL_TIMEOUT_S", "60")) / (1.0 / 60.0)))
 SUCCESS_TOL_M = 0.01 * 1.5                            # eval_success_tolerance * keypoint_scale
 KEYPOINT_HALF = 0.5 * 1.5 * np.array([0.141, 0.03025, 0.0271])
 CORNERS = np.array([[sx, sy, sz] for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)], dtype=np.float64) * KEYPOINT_HALF
