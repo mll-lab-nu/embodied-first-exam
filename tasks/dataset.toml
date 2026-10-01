@@ -2158,194 +2158,194 @@ name = "robot-coding-bench/robowits-stand-pages-i00-standard"
 digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd624521446764"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-i00"
-digest = "sha256:67b6b85a74b891bffaa45aeb423ba9cd339ec11a161b383b34b618f932c579d7"
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-i00-privileged"
+digest = "sha256:7beb0cb5194f6cf2d9bce291cd4fd870894f868bf3bda4a9c9436a131d170669"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-i00-standard"
-digest = "sha256:dc1c369133738bc6d39277832b3b833aecf6a28e30136b37a572377ac80cdace"
+digest = "sha256:8a0117fd6ed058c7df4713a552902634304358ed74528490b21009dcce5bd3f7"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-can-to-drawer-close-i00"
-digest = "sha256:ad75a713bf434bdee4f14e5f37d1726c1befc2200aaf96ce9ec8fe6f183ef204"
+name = "robot-coding-bench/robocasa-gr1-can-to-drawer-close-i00-privileged"
+digest = "sha256:1287ab9115ff0cac0993500019143b88f34082565bd5fdb5b1aec1d31c2ea416"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-can-to-drawer-close-i00-standard"
-digest = "sha256:6409e4fd547ef8cb9051f54a6ade99b5bcb09d77459f4d15fda532df5dfa9fe6"
+digest = "sha256:9e8ba010c80c20429100cc31094469d660c05331121cfbfb0c0f2d2d004f2639"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-i00"
-digest = "sha256:44d5dfe5600a5ce523a4b2cd064dbe5a1b63665225ca0503c777d2363ee0c25c"
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-i00-privileged"
+digest = "sha256:95c3e63f29551a2e026cd71a3e1643f6d01ec3d6d4ded876aa05138b5f9e75ee"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-i00-standard"
-digest = "sha256:b2e7bb25b6b53b7c42fae578145ed3a4d59333574357df601e6ef32b4678f1ae"
+digest = "sha256:6d36c4516d4b92f08889231e60f8736bee1573e8aeaf2a83939b63fcfb31f0fa"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-basket-i00"
-digest = "sha256:9f87e5c4d705f0d6dda44437aeafca046aea1a33c37cca07959c4fbc0f71c9d1"
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-basket-i00-privileged"
+digest = "sha256:ccb70c7742a7e5c5296dafc42fc734cafc69553a5ba8302bc88176e613ae4c6c"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-basket-i00-standard"
-digest = "sha256:9ab6f04c680de2446dad196eab922d67c42846ce8d4c29886bc4323b63a7c123"
+digest = "sha256:e284c03eef572e06ed48aca18207c639518babbc66b05ea7094a231c81367389"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-cardboardbox-i00"
-digest = "sha256:c91b0230ad08d4bfde8557705950f50a06089ea7b843d14cc34441c90348a060"
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-cardboardbox-i00-privileged"
+digest = "sha256:808e8a25d3d51e401d8e76417d28ba3b6dd3249fe72862bf206212bd03310e98"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-cardboardbox-i00-standard"
-digest = "sha256:4407bd2b93e8e06498c8da37c2263b63916845e20cf85427afc4f02f33e1498b"
+digest = "sha256:cb2524991e436d092a62666344746aa09606baf1116d57d40480eefd8b19ba57"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pan-i00"
-digest = "sha256:6ee8bf959f20e848f844c71547815f0c8ebd2ed8ce2641c8cd10d073c50b0afa"
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pan-i00-privileged"
+digest = "sha256:a2b57b7dfcfd9efb6e04aa491d927a5b3dfe1acd7d2c8a02e6c273a807e61840"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pan-i00-standard"
-digest = "sha256:05a3f69ca426255aa8479d2b7831c301a2121b41ab70715274f218528b91aab9"
+digest = "sha256:2dd0b7249abbb0034fc53ed700b04437c6c3050ec2af472dfa030295d8c46b2a"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pot-i00"
-digest = "sha256:6459174a0c93908163abbdf836c59604ca60ff75c37a910854cb02aaf771b1f8"
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pot-i00-privileged"
+digest = "sha256:8f2f193db06206f76a5255a873a90c10f950f747b2ae06d4fee06dc236a7ab39"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pot-i00-standard"
-digest = "sha256:ba22187127f3f67ddccbdeed6d7614a553e175d83b5c92e81c4daf9d836f244d"
+digest = "sha256:de1adfd3cc0f00b274230245e23ed44bbf22f0f84a90ffc015d4c48ac4df763b"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00"
-digest = "sha256:baabf70eaf0224cae9feb7544efc8f5df10350f4329d438c019afa535d5e7aed"
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00-privileged"
+digest = "sha256:c964b5442f16fcc700c8d688cc93b127aeda32d0053ff90fadc9b8ee8c263504"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00-standard"
-digest = "sha256:fe6d1c16e57ca105af3e5128ff2bf734b0b1ef5ba6c8fd2b6ce88b35380c20d9"
+digest = "sha256:53cedb1db0d7cac640af96da86a320940ea1757d000472368bebef965a81120d"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-milk-to-microwave-close-i00"
-digest = "sha256:ce819437b9d0fef3ec2a7171a1bf80a63b72a8acf3aed8e40283d78a117cda6a"
+name = "robot-coding-bench/robocasa-gr1-milk-to-microwave-close-i00-privileged"
+digest = "sha256:84a27b7b546b84ee6083bd177eeb159d2b259ad6164c10dd80645bd656d36223"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-milk-to-microwave-close-i00-standard"
-digest = "sha256:c02b9ac86b4021a8296f57b7b78828940d990951812a3d33521a1c588f0ae43a"
+digest = "sha256:32d7caf65587f55c0a808f94084e64d3eff65a2c33b799b6a2bccdb6c818a996"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-placemat-to-basket-i00"
-digest = "sha256:3cb2ca5b324ecf5223a171be7bf41a0f02a6c2c7ed5db315cad52d46bb73e854"
+name = "robot-coding-bench/robocasa-gr1-placemat-to-basket-i00-privileged"
+digest = "sha256:0d3aeab1f3edaaad8520bf447eca525c961f2dde1634ba4e6e36ca08764d0742"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-placemat-to-basket-i00-standard"
-digest = "sha256:21deb78170e8328caf0c4c08824a3c6273d9e0c750e7de7334e64c9df6110d5d"
+digest = "sha256:a4a1d9f7e4da4cb319c95bb7fe079821b0c46f98c18266ffde19fc153816da7d"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-placemat-to-bowl-i00"
-digest = "sha256:278ee2350b8297f9be269311ad9b85af31961dab57a891fd0df38eec21998c1a"
+name = "robot-coding-bench/robocasa-gr1-placemat-to-bowl-i00-privileged"
+digest = "sha256:697da2a76ab4b949404c8733a6214074cd0f54acc21e213f728a6ddc34591d34"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-placemat-to-bowl-i00-standard"
-digest = "sha256:697a10dc3a649ea33e295cd259c5daca50ca72fe0bb458a1780039dcc93cf492"
+digest = "sha256:805caff9a3104cabaf79ae942877319106601b935334fd9d8ecd5d80105699f5"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-placemat-to-plate-i00"
-digest = "sha256:0f62875a13bc3ac73e8e089d6bbbcc8d28ef2de2db993a928a3a7a86f75a05ad"
+name = "robot-coding-bench/robocasa-gr1-placemat-to-plate-i00-privileged"
+digest = "sha256:7b8d2138394cb046059b8a428dd2a41ddee3a45b089a642942a834ea1d287c69"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-placemat-to-plate-i00-standard"
-digest = "sha256:7318e0576d397716987a452c931d962efeb31e0dd3953e803b803d4525db4c4d"
+digest = "sha256:36829099f7c90805865f98754d0f59efcacf34f2dd9bd037b31b08bd45ba06a6"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-placemat-to-tieredshelf-i00"
-digest = "sha256:b7f89c9696ee59af6401ea4aa57bfc5574828d1cfb930dc23581d944bc777178"
+name = "robot-coding-bench/robocasa-gr1-placemat-to-tieredshelf-i00-privileged"
+digest = "sha256:7b5a6a33c6462251e5a1ce5da641f6726ef2a729193e5cb72fe495d7d2377d92"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-placemat-to-tieredshelf-i00-standard"
-digest = "sha256:f618e1cd9e2337e574becdda81acf303e79febeddf86550b9d001d148f183bf0"
+digest = "sha256:d534b22d4d47c557f83a26b6675bb5a474e80603e9200324e005018be43af869"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-plate-to-bowl-i00"
-digest = "sha256:8845d85bf218f6e498cc90cdd2e2be34d85e805c7fd86403306f5e030d9eae06"
+name = "robot-coding-bench/robocasa-gr1-plate-to-bowl-i00-privileged"
+digest = "sha256:21b62ecafecee6a01161afd4658dac9c5328b5637e1e8bbc72e0c2d5cdc46abd"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-plate-to-bowl-i00-standard"
-digest = "sha256:f6a5dbb534dc682c15e725549e54fcac96fb252331095857a0df537cde9da1fa"
+digest = "sha256:b6e180c262f4b0e8e287b97be1d2b0f4fd0ea3e706670667882af60fe43ec434"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-plate-to-cardboardbox-i00"
-digest = "sha256:835853e525433de9fecd279710d80bdf4b02e45d98610b0732ae23d3cedee100"
+name = "robot-coding-bench/robocasa-gr1-plate-to-cardboardbox-i00-privileged"
+digest = "sha256:e79a470cd75db13efdf9e61ccf471acc1fd73c2d33f4e9a524f9966c5ca4b7a8"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-plate-to-cardboardbox-i00-standard"
-digest = "sha256:1d57a4a861196af28e315648eeb369ed0e98c680553d88512b616d8c2600a5a2"
+digest = "sha256:20001858f00f285d4c9fb5b92fd7477bc9a17ebbfac86d564f406cc383d0a959"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-plate-to-pan-i00"
-digest = "sha256:4a4e47f0f077e509a26c9d3436205d059fbfcb3ae91d04abdbb7f7ce0a23aec2"
+name = "robot-coding-bench/robocasa-gr1-plate-to-pan-i00-privileged"
+digest = "sha256:073a88ef7e43f6263d1d615819d4b8b8c36609d1862623d423dac202e19e4198"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-plate-to-pan-i00-standard"
-digest = "sha256:4a6b5aa624754574fb4cfa217d814c915a81eadbbe064076ee6ba60842be859d"
+digest = "sha256:2fa73471fd12940f142b0d73270d513ffbd97556a2e617db6ab6b7c9ac103d5c"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-plate-to-plate-i00"
-digest = "sha256:ebb4496a1c7721c673ed8c6fb38d11ec5bc03dcdcdc103a74884870b38a86312"
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-i00-privileged"
+digest = "sha256:d6a41e62dfed528df15d4bd36bdcd0145d70c30ff685e6f0705c14d2f1deec1f"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-plate-to-plate-i00-standard"
-digest = "sha256:4847c84fae419f3dff6b267961de8652347cd5636b4fdbdec35d4285338a69ac"
+digest = "sha256:c09a9329ce333e6894aa4a50e3f1936dc08358a754867bee1ca57df4e3841ae5"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-potato-to-microwave-close-i00"
-digest = "sha256:79c31d7376eb5fe3c432c7e2e09ecd4e376334ccc8d50e1769e181fd6f60a6c0"
+name = "robot-coding-bench/robocasa-gr1-potato-to-microwave-close-i00-privileged"
+digest = "sha256:6f2edb1603a30342682251bbbb05a0e1730dc33ea9f4c602d0f04addb3ac0070"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-potato-to-microwave-close-i00-standard"
-digest = "sha256:92b313f1b2dd08b3e80569990820f17e83e01e9526cd097d7f02a6e2b43b10a8"
+digest = "sha256:892b395b39f2ff96982ccc0f02334018b16fea553243aeadd64e3777a07cd19c"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-tray-to-cardboardbox-i00"
-digest = "sha256:4930b9f9375c147f0c5cc49a7575657c2635342e82ecafcd5142dc9e7ad9fc6b"
+name = "robot-coding-bench/robocasa-gr1-tray-to-cardboardbox-i00-privileged"
+digest = "sha256:c379b5727555c773452a49eedcddad70a2ccc0762d3855c151575d724428fc70"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-tray-to-cardboardbox-i00-standard"
-digest = "sha256:3ee18c79dcf8b4758e90ebda782fd6acbd948dd6c8fe43de410e141eeb62c688"
+digest = "sha256:f875cd67142cf72a070e8e4ac509fdea768e129c101b149295a8ad8866c78b51"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-tray-to-plate-i00"
-digest = "sha256:65f5826766a63c49ef416642497908708dd12a5af3d82c2dea170e259fff37fd"
+name = "robot-coding-bench/robocasa-gr1-tray-to-plate-i00-privileged"
+digest = "sha256:507859f80e5b49f0ea974e0fd116a1c385c4cee7eba723a8d29b9dce7be1082f"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-tray-to-plate-i00-standard"
-digest = "sha256:efe963ed06bc900a433dd3b88b8c4cec240c6ca979a35ce8c390050415230b8e"
+digest = "sha256:6c99a36ec70ae9d0e3f484c2e773e47416cceb5a545e1719f4af54bd5133d1e4"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00"
-digest = "sha256:5a17528350b3ecaed0911260f1149f0f74f5faf4670b0e04dd8cb26c8d44e318"
+name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00-privileged"
+digest = "sha256:3076c6d5378bf4ac41446a77c17f1ffdcc596044faffab92c14ed9ff4079cdf4"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00-standard"
-digest = "sha256:f9e274c44d8fda0d6d22fdf97f6fa5b354efeb84c6edb56b4df837a73ff5e15a"
+digest = "sha256:0178ff3d13394518a662a768b665249ce0f4559bc268373bcc069a924434b7d1"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-tray-to-tieredbasket-i00"
-digest = "sha256:3247d38a3f23eba87b0adadf3b781df54ebe2fda64bc9dc6c89da741cc98e528"
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredbasket-i00-privileged"
+digest = "sha256:a32a236b8e5f74d9c01d6cfc7d8390d9f5f0c618a61fed5ecacb73dc26ba393b"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-tray-to-tieredbasket-i00-standard"
-digest = "sha256:6c310d1ad08fbbf3bf638e5c82f2f328dfe3eff520b222ad2f1624460624a567"
+digest = "sha256:d75a8391983f965cb676028895d828cb72c3cd546db635ebdd9a1c7d01cb776a"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-tray-to-tieredshelf-i00"
-digest = "sha256:522462390a1c0aab35d9c33cffb6edccdf2da8649529cfa27729939fb49295bc"
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredshelf-i00-privileged"
+digest = "sha256:044f3f100b26a2e17c983dc9080bafe3d9c408ba90a7bab26829050fb08b065d"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-tray-to-tieredshelf-i00-standard"
-digest = "sha256:523cb7b709c07dd784ab8dc357597f13e0195e0f2750bd5739f29b1dee30ea2b"
+digest = "sha256:1c19e039c5f0ea963ec8daa1d1f83b5e156eb361ddf49f48d9c8b26a33e754cb"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-gr1-wine-to-cabinet-close-i00"
-digest = "sha256:56b5a91e4c726f82f8c30e1c1b6145c795bceedc670e7db6a1767cc6a8db9340"
+name = "robot-coding-bench/robocasa-gr1-wine-to-cabinet-close-i00-privileged"
+digest = "sha256:bca67dbf85f3ee2c0800c25949e46515d4aa5babadba2ce8f5e73501b0d47cee"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-gr1-wine-to-cabinet-close-i00-standard"
-digest = "sha256:b6e34a2e8288ea4983ffec049c5662f4cdd6e05f7d67cb8f0b696b9098a75903"
+digest = "sha256:54fbb4ef3768314c2ffdc3652d4b412acda09b8c86fcbd3611945a89e9984707"
 
