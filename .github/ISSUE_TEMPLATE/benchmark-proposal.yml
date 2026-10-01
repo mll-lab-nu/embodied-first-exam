@@ -1,0 +1,35 @@
+name: Benchmark proposal
+description: Propose a new benchmark (simulator + task families) before opening a pull request.
+title: "[proposal] <benchmark>"
+labels: ["proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: "Read docs/PROTOCOL.md and CONTRIBUTING.md first. A maintainer approves the proposal (label `proposal-approved`) before the pull request."
+  - type: input
+    id: upstream
+    attributes: {label: Upstream benchmark and version, placeholder: "name, URL, commit or release"}
+    validations: {required: true}
+  - type: textarea
+    id: scope
+    attributes: {label: Scope, description: "Simulator, robot, task families, number of instances, modes (privileged / standard)."}
+    validations: {required: true}
+  - type: textarea
+    id: oracle
+    attributes: {label: Oracle, description: "Source (upstream expert, planner, policy, none) and expected level: full / partial / none."}
+    validations: {required: true}
+  - type: textarea
+    id: verification
+    attributes: {label: Verification and determinism, description: "Success predicate, how it is replayed in a fresh process, and the hardware determinism was checked on."}
+    validations: {required: true}
+  - type: textarea
+    id: difficulty
+    attributes: {label: Why it is hard, description: "Why strong coding agents fail today; a trial run if you have one."}
+    validations: {required: true}
+  - type: textarea
+    id: images
+    attributes: {label: Images and resources, description: "Base image size, GPU / VRAM, whether the image can be published (licences, data), expected wall time of an oracle run."}
+    validations: {required: true}
+  - type: input
+    id: size
+    attributes: {label: Expected pull request size, placeholder: "number of task directories, MB"}
