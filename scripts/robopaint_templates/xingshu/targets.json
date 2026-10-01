@@ -1,0 +1,94 @@
+{
+ "_doc": "RoboPaint xingshu (行书 臨帖) targets. singles: [slug, character, structure (single | left-right | top-bottom | enclosure)] (difficulty hard); works: [slug, characters] (difficulty extreme; no repeated character; the kaishu layout: two columns read right to left, top to bottom, one 96 mm box per character, 12 mm gaps). Each task's exemplar is its own graphics.txt-format file (--graphics <slug>.graphics.txt: one JSON line per character, \"strokes\" = the regions of its ink, Make Me a Hanzi em coordinates); the contact limit is --max-strokes (default: the number of regions). sources: the README's SOURCES text per slug (\"*\" = the default for every slug without its own entry); it is checked by checks/check-robopaint-leak.sh like every README sentence (e.g. write 'hand copy', not 'tracing copy').",
+ "sources": {
+  "*": "Wikimedia Commons, File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wiki/File:%E7%A5%9E%E9%BE%8D%E8%98%AD%E4%BA%AD%E5%BA%8F%E5%85%A8.JPG): the Shenlong hand copy (馮承素, attributed, Tang, c. 627-650, ink on paper, Palace Museum, Beijing) of Wang Xizhi's 蘭亭序 (running script, c. 353). Licence on the file page: {{PD-Art|PD-old-100-1923|deathyear=672}} (public domain). The characters were cropped from this scan (downloaded unmodified on 2026-09-28), binarised and placed on the sheet; the scroll writes 脩 for 修."
+ },
+ "singles": [
+  [
+   "yong",
+   "永",
+   "single"
+  ],
+  [
+   "he",
+   "和",
+   "left-right"
+  ],
+  [
+   "chun",
+   "春",
+   "top-bottom"
+  ],
+  [
+   "zhi",
+   "之",
+   "single"
+  ],
+  [
+   "feng",
+   "風",
+   "enclosure"
+  ],
+  [
+   "nian",
+   "年",
+   "single"
+  ],
+  [
+   "shan",
+   "山",
+   "single"
+  ],
+  [
+   "ren",
+   "人",
+   "single"
+  ],
+  [
+   "xin",
+   "信",
+   "left-right"
+  ],
+  [
+   "xian",
+   "賢",
+   "top-bottom"
+  ],
+  [
+   "yu",
+   "宇",
+   "top-bottom"
+  ],
+  [
+   "tong",
+   "同",
+   "enclosure"
+  ],
+  [
+   "jian",
+   "閒",
+   "enclosure"
+  ]
+ ],
+ "works": [
+  [
+   "tianlangqiqing",
+   "天朗氣清"
+  ],
+  [
+   "huifenghechang",
+   "惠風和暢"
+  ],
+  [
+   "maolinxiuzhu",
+   "茂林脩竹"
+  ]
+ ],
+ "licence": {
+  "source": "Wikimedia Commons File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wiki/File:%E7%A5%9E%E9%BE%8D%E8%98%AD%E4%BA%AD%E5%BA%8F%E5%85%A8.JPG): the Shenlong hand copy (馮承素, attributed, Tang, c. 627-650) of Wang Xizhi's 蘭亭序",
+  "license": "Public domain ({{PD-Art|PD-old-100-1923|deathyear=672}} on the Commons file page)",
+  "notice": "The exemplar's ink regions were made by robot-coding-bench (RoboPaint) on 2026-09-28 from a public-domain scan (Wikimedia Commons, File:神龍蘭亭序全.JPG, PD-Art): the characters were cropped, binarised, divided into regions and placed on the sheet; the picture (target.png) is a rendering of those regions.",
+  "picture": "This picture renders running-script characters from a public-domain historical work (Wang Xizhi's 蘭亭序, Shenlong copy, Wikimedia Commons, PD-Art); rendered by robot-coding-bench (RoboPaint), 2026-09-28.",
+  "_doc": "the exemplar record the generator writes into the graders truth (source / license / notice) and target.png PNG comment (picture), replacing the calligraphy default (Make Me a Hanzi / Arphic); = agent K kaishu/work/k/xs_licence_fix.py"
+ }
+}
