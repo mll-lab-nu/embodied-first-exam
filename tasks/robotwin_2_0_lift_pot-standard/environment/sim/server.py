@@ -182,6 +182,7 @@ SPEC = {
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": PROPRIO_GROUPS,
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
+    "episode": "one episode, no reset: it ends at the first success (RoboTwin's check_success), when your time is up, or on a simulator error",
 }
 
 
@@ -489,7 +490,7 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ("/submit", "/observe"): return self._json(404, {"error": "no such endpoint"})
         try: meta, parts = self._body()
-        except Exception as exc: return self._json(400, {"error": str(exc)[:200]})
+        except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try: return self._serve(meta, parts)
@@ -514,7 +515,8 @@ class H(BaseHTTPRequestHandler):
                 except ValueError as exc:
                     return self._json(400, {"error": str(exc)})
                 except Exception as exc:  # noqa
-                    traceback.print_exc(); return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
+                    traceback.print_exc(); E["error"] = repr(exc); log({"ev": "error", "error": repr(exc)}); finish("error")
+                    return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 
 
