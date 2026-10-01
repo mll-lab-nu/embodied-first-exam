@@ -21,7 +21,7 @@ client and one episode.
 The current goal counts as reached when all 8 corners of the tool's grasp box (0.141 × 0.030 × 0.027 m, scaled by
 1.5, in the tool's frame) are within **1.5 cm** of the same corners at the goal pose; then the next goal becomes
 current. In this mode goals have **no time limit** (the benchmark gives each goal 10 s; here you get one episode and no reset). The episode ends when every goal is reached, when your time is up, or after **360,000 control steps (100 min of robot time)**.
-**reward = goals reached / 40** (partial credit). Full success = all 40.
+**Score: 1 if all 40 goals are reached (and the replay is deterministic), else 0.** Goals reached / 40 is reported as `progress`; there is no partial credit.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python

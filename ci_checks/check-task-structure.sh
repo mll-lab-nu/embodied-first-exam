@@ -19,7 +19,7 @@ import re, sys, pathlib
 t = pathlib.Path(sys.argv[1]); s = (t / "README.md").read_text() if (t / "README.md").is_file() else ""
 bad = []
 if not s.startswith(f"# {t.name}\n"): bad.append(f"first line must be '# {t.name}'")
-for k in ("Benchmark", "Mode", "Oracle", "Agent time budget", "Base image"):
+for k in ("Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget", "Base image"):
     if not re.search(rf"^\| {re.escape(k)} \| ", s, re.M): bad.append(f"key table row '{k}' missing")
 pos = [s.find(f"\n## {h}\n") for h in ("Task", "Difficulty", "Reference solution", "Verification")]
 if -1 in pos or pos != sorted(pos): bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification (in this order) required")

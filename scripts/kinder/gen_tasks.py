@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gen_tasks.py -- every tasks/kinder-* directory, rendered from subset.toml, facts.json, templates/, shared/ and oracles/.
 
-  ./gen_tasks.py render  [family ...]   rewrite both modes' task dirs (keeps their results/; no simulator needed)
+  ./gen_tasks.py render  [family ...]   rewrite both modes' task dirs (no simulator needed)
   ./gen_tasks.py check                  fail unless tasks/ is exactly what render writes, and no task names another
   ./gen_tasks.py measure [family ...]   pin, check and time each instance -> facts.json (in the image, with a GPU)
   ./gen_tasks.py verify  [family ...]   measure again; fail on drift, a passing nop, a non-deterministic replay

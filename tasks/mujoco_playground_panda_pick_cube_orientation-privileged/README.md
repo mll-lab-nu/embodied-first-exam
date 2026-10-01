@@ -9,19 +9,19 @@
 | Family / instance | `mujoco_playground/PandaPickCubeOrientation` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.1` |
+| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
 
 ## Task
 MuJoCo Playground's `PandaPickCubeOrientation` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
 
 ## Difficulty
-MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (Playground has only a shaped RL reward (position 0.9 + rotation 0.1); defined here: box within 2 cm and 15° of the target at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
+MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (box within 2 cm and 15° of the target at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
 
 ## Reference solution
 `solution/oracle_ik.py`: top-down grasp, lift, move the held box onto the target pose with corrections (3 mm, 0.9°, 427 control steps)
 
 ## Verification
-**success**: Playground has only a shaped RL reward (position 0.9 + rotation 0.1); defined here: box within 2 cm and 15° of the target at the end
+Playground has only a shaped RL reward (position 0.9 + rotation 0.1); defined here: box within 2 cm and 15° of the target at the end
 
 ## Details
 | | |

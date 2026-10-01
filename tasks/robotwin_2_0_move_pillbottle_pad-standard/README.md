@@ -26,7 +26,7 @@ Same scene, instance and success rule as `robotwin_2_0_move_pillbottle_pad-privi
 `solution/`: streams the privileged-mode expert's joint targets (every 25 physics steps, dt = 0.1 s, linear interpolation) as `joint_position` chunks
 
 ## Verification
-**verification**: `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
+`success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
 
 ## Details
 | | |

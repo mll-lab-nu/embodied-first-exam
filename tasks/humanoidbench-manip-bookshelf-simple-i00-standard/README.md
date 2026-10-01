@@ -12,19 +12,19 @@
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-bookshelf-simple-i00-privileged`: the same
-frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
-episode, records it, replays it in a fresh simulator and renders the replay video; the verifier grades the
-sidecar's record in a container of its own (`tests/Dockerfile`, no network).
+Standard mode (robot as a service, `eai-standard/2.1`) of
+`humanoidbench-manip-bookshelf-simple-i00-privileged`: the same frozen instance and the same success rule.
+HumanoidBench runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for rendering),
+which holds the reward, judges the episode, records it, replays it in a fresh simulator and renders the replay
+video; the verifier grades the sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 
 Note: the head cameras see the inside of one shelf. `room_camera` looks at the shelves from behind the robot's
 right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it
 and the robot.
 
 ## Difficulty
-See `humanoidbench-manip-bookshelf-simple-i00-privileged`'s README; here the agent also has no state, no reward, no
-resets and no simulator of its own.
+See `humanoidbench-manip-bookshelf-simple-i00-privileged`'s README; here the agent also has no state, no
+reward, no resets and no simulator of its own.
 
 ## Reference solution
 None. Requiring one would cap the benchmark at what we can already solve, which systematically removes the

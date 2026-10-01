@@ -399,6 +399,14 @@ def _fps(meta: dict) -> int:
     return fps
 
 
+def _num(meta: dict, key: str, default: float) -> float:
+    """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
+    try:
+        return float(meta.get(key, default))
+    except (TypeError, ValueError):
+        raise ValueError(f"{key} must be a number") from None
+
+
 def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
     n = (int(seconds * fps) + 2) * len(cams) * (2 if depth else 1)
     if n > MAX_FRAMES_PER_CALL: raise ValueError(f"this call would return {n} frames (cameras x fps x seconds, depth counts double); "
@@ -406,7 +414,7 @@ def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 0.02)); interp = meta.get("interpolate", "linear")
+    typ = meta.get("type"); dt = _num(meta, "dt", 0.02); interp = meta.get("interpolate", "linear")
     cams = [c for c in (meta.get("cameras") or ["head_camera"]) if c in ALL_CAMS] or ["head_camera"]
     fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
@@ -421,7 +429,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = Recorder(cams, fps, depth); clipped: list = []; plan: list = []
-    note = (meta.get("note") or "").replace("\n", " ")[:40]
+    note = str(meta.get("note") or "").replace("\n", " ")[:40]
     LIVE.set_label(E["calls"] + 1, f"submit {typ} x{A.shape[0]}" + (f" dt={dt:g}" if typ == "joint_position" else "") + (f"  [{note}]" if note else ""))
     before = int(S._sim_steps); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
@@ -444,7 +452,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = [c for c in (meta.get("cameras") or ALL_CAMS[:4]) if c in ALL_CAMS] or ["head_camera"]
-    seconds = float(meta.get("seconds", 0)); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
+    seconds = _num(meta, "seconds", 0); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     _frame_budget(cams, fps, seconds, depth)
     rec = Recorder(cams, fps, depth); before = int(S._sim_steps); rec.tick(force=True)
@@ -500,8 +508,8 @@ class H(BaseHTTPRequestHandler):
         if True:
             if self.path == "/submit":
                 if E["done"]: return self._json(409, {"error": "episode finished", "reason": E["reason"]})
-                if "actions" in parts: A = np.asarray(parts["actions"]["data"], dtype=np.float64)
-                else: A = np.asarray(meta.get("actions", []), dtype=np.float64)
+                try: A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
+                except (TypeError, ValueError, KeyError) as exc: return self._json(400, {"error": f"actions: {exc}"[:200]})
                 try:
                     out, blobs = do_submit(meta, A)
                 except ValueError as exc:
