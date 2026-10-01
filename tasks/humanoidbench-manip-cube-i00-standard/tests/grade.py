@@ -4,7 +4,7 @@
 success = live_success AND replay_success AND deterministic (the replay ends in the live run's final state).
 Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies the evidence (replay video, last
 frame, trajectory, event log) next to them for humans; the evidence never decides the verdict.
-infra_error = 1: no verdict on the agent (the service crashed past its restarts, never finished, or its finalize failed).
+infra_error = 1: no verdict on the agent (the service crashed past its restarts, never finished, or failed to finalize).
 """
 import json
 import os
