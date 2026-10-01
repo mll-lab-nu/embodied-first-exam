@@ -92,7 +92,7 @@ ROBOT_BASE = (-0.615, 0.0, 0.0)
 REST_QPOS = (0.0, math.pi / 8, 0.0, -math.pi * 5 / 8, 0.0, math.pi * 3 / 4, math.pi / 4)   # PandaStick "rest" keyframe
 PLATE_CENTER = (-0.10, 0.150)        # the ink / paint plate on the robot's left (+y), as in the line-drawing tasks
 PLATE_HALF = (0.100, 0.022, 0.003)   # 200 x 44 x 6 mm, top z = 0.026, with collision
-MAX_TIP_SPEED = 0.25                 # m/s, limited-mode ee_pose rows
+MAX_TIP_SPEED = 0.25                 # m/s, standard-mode ee_pose rows
 TOL_MM = 1.0                         # boundary tolerance of the score
 ENV_ID = "RCB-BrushCanvas-v1"
 VIDEO_CAMERAS = ("canvas_cam", "practice_cam", "scene_cam", "side_cam")
@@ -306,7 +306,7 @@ AGENT_METRICS_PAINT = ("success", "final_reward", "de_mean", "de_p90", "de_bad_f
                        "paint_area_mm2", "n_strokes", "n_practice_strokes", "n_dry_strokes", "max_strokes", "stroke_count_ok",
                        "de_mean_coarse", "ssim_L_fine", "edge_corr", "region_cov_min", "region_cov_mean",
                        "de_mean_unregistered") + AGENT_METRICS_REGISTER
-SCORER_URLS = ("http://scorer:8001", "http://localhost:8001")              # the unlimited mode's scoring service (compose `scorer`)
+SCORER_URLS = ("http://scorer:8001", "http://localhost:8001")              # the privileged mode's scoring service (compose `scorer`)
 
 
 def agent_metrics(m: dict) -> dict:
@@ -1433,7 +1433,7 @@ class Session:
         return out
 
     def kinematics_spec(self) -> dict:
-        """What kinematics() (and the limited mode's /kinematics) answers: the q layout, the frames, the IK solver and its defaults."""
+        """What kinematics() (and the standard mode's /kinematics) answers: the q layout, the frames, the IK solver and its defaults."""
         return {"endpoint": "/kinematics", "joint_names": list(JOINT_NAMES), "frame": "world", "quaternion_order": "wxyz",
                 "links": [n for n in self._links if n != "panda_hand_tcp"] + [TOOL_FRAME],
                 "tcp_frames": [TOOL_FRAME], "ee_frames": [TOOL_FRAME], "ik_targets": [TOOL_FRAME],
@@ -1446,7 +1446,7 @@ class Session:
                         f"'{TOOL_FRAME}' = the tool point (robot_spec.tcp), the other frames are the Panda's links"}
 
     def robot_spec(self) -> dict:
-        """The robot's spec sheet (the limited mode's /spec robot_spec): joints and their limits as the simulator applies them, the
+        """The robot's spec sheet (the standard mode's /spec robot_spec): joints and their limits as the simulator applies them, the
         drives' gains, the rates and the tool frame. Robot facts only (no gripper: the tool is fixed to the hand)."""
         import re
         rated = {}
