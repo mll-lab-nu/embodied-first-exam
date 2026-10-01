@@ -108,16 +108,15 @@ scripts/               task generators, image build/push, egress switch, results
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
 docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
-                       RUNNING.md (batches, logs, recordings), results/ (historical batch reports)
+                       RUNNING.md (batches, logs, recordings)
 third_party/           upstream sources used by the base images (cap-x, RoboTwin)
 ```
 
 ## Results
 
-Agent results are not stored with the tasks: they are published on the results site and the Hugging Face dataset,
-keyed by run id `<harness>-<model>-<effort>` (for example `codex-gpt6_luna-xhigh`) (PROTOCOL §5). The batch reports in
-`docs/results/` are historical. How to run a batch and
-read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
+Agent results are not stored in this repository: per-task results and batch reports are published on the results
+site and the Hugging Face dataset, keyed by run id `<harness>-<model>-<effort>` (for example `codex-gpt6_luna-xhigh`)
+(PROTOCOL §5). How to run a batch and read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
 
 ## Contributing
 
