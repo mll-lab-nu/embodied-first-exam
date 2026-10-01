@@ -98,5 +98,7 @@ repository root).
 ## Results
 
 Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
-replay's last frame, a passing trajectory). Runs recorded before protocol v1.0 say so in their README (the standard
-ones, with 50 resets, in `prev_rcb_limited_1_1_reset50/`). Cross-task tables are generated for the site (PROTOCOL D3).
+replay's last frame, a passing trajectory). A standard task's folder holds the standard configuration (no reset) and,
+in `reset50/`, a run with the optional capability of 50 resets, reported separately (PROTOCOL D1). Runs recorded
+before protocol v1.0 say so in their README (the standard ones, with 50 resets, in `prev_rcb_limited_1_1_reset50/`).
+Cross-task tables are generated for the site (PROTOCOL D3).
