@@ -91,7 +91,7 @@ gym/instructions.py                    每个任务的英文指令与 VERSION（
 
 ```text
 results.jsonl              每个 episode 一行：outcome、仿真时长、控制步、推理次数、跟踪误差、截断行数、墙钟等
-summary.json               成功率、各类结果计数、PolicySpec、指令与版本、完整配置、git commit
+summary.json               成功率、各类结果计数、PolicySpec、指令与版本、完整配置，以及开始运行时的 git commit 和是否有未提交改动（git_dirty）
 report.md                  一行 Markdown 汇总
 seed_<seed>/videos/*.mp4   每路相机一个 MP4（30 fps），另有 frame_map.jsonl、recording_manifest.json
 ```

@@ -38,9 +38,6 @@ class PolicySpec:
         object.__setattr__(self, "cameras", tuple(self.cameras))
         if self.reach_tolerance_m and self.action_space != "ee_abs":
             raise ValueError(f"{self.name}: reach_tolerance_m needs ee_abs targets")
-        if self.protocol_version != PROTOCOL_VERSION:
-            raise ValueError(f"Model server speaks protocol version {self.protocol_version}, "
-                             f"this side speaks {PROTOCOL_VERSION}")
 
 
 @dataclass(frozen=True)

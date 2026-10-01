@@ -4,6 +4,7 @@ import socket
 import subprocess
 import sys
 import threading
+from multiprocessing.connection import Listener
 import time
 
 import numpy as np
@@ -13,7 +14,7 @@ from omegaconf import OmegaConf
 from vla.config import load_yaml
 from vla.gym.client import LocalClient, PolicyError, RemoteClient
 from vla.models.dummy import HoldVLA
-from vla.protocol import ActionChunk, Observation
+from vla.protocol import ActionChunk, Observation, encode
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "vla/configs/models/panda_robotiq/hold_panda.yaml"
@@ -132,3 +133,15 @@ def test_unencodable_reply_is_answered_as_an_error(tmp_path):
     finally:
         server.terminate()
         server.wait(timeout=30)
+
+
+def test_a_server_of_another_protocol_version_is_named_as_such():
+    old = dict(type="spec", name="old", embodiment="aloha", cameras=["cam_high"], state_keys=["joint"],
+               action_space="joint_abs", control_hz=50, chunk_size=10, execute_steps=5, protocol_version=2)
+    port = free_port()
+    with Listener(("localhost", port)) as listener:
+        thread = threading.Thread(target=lambda: listener.accept().send_bytes(encode(old)), daemon=True)
+        thread.start()
+        with pytest.raises(ValueError, match="protocol version 2"):
+            RemoteClient(f"localhost:{port}")
+        thread.join(5)

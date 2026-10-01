@@ -137,8 +137,17 @@ def run_episode(env, client, spec, seed, instruction, execute_steps, video_dir):
     return row
 
 
+def git_state():
+    """The commit being evaluated and whether tracked files differ from it."""
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=VLA_DIR, capture_output=True, text=True).stdout.strip()
+    return dict(git_commit=git("rev-parse", "HEAD"),
+                git_dirty=bool(git("status", "--porcelain", "--untracked-files=no")))
+
+
 def evaluate(cfg, client):
     """Run every seed with one Env; write results.jsonl, summary.json and report.md into the output directory."""
+    code = git_state()  # before the run: the working tree may change during a long evaluation
     spec = client.spec
     output = output_dir(cfg, spec)
     output.mkdir(parents=True)  # never overwrite earlier results
@@ -159,12 +168,11 @@ def evaluate(cfg, client):
                 file.write(json.dumps(row) + "\n")
             print(json.dumps(row), flush=True)
     outcomes = [row["outcome"] for row in rows]
-    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=VLA_DIR, capture_output=True, text=True).stdout
     summary = dict(model=spec.name, task=cfg.task.id, variation=cfg.task.variation, episodes=len(rows),
                    success_rate=outcomes.count("success") / len(rows),
                    outcomes={name: outcomes.count(name) for name in OUTCOMES}, spec=asdict(spec),
                    instruction=instruction, instruction_version=instructions.VERSION,
-                   config=OmegaConf.to_container(cfg, resolve=True), git_commit=commit.strip())
+                   config=OmegaConf.to_container(cfg, resolve=True), **code)
     (output / "summary.json").write_text(json.dumps(summary, indent=2))
     (output / "report.md").write_text(table([output]) + "\n")
 

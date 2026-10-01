@@ -78,7 +78,7 @@ vla/
 
 - `topogym.make` 的参数由 spec 决定：控制模式、观测模式、`control_decimation = round(1 / (control_hz × physics_dt_s))`、`max_physics_steps = sim_seconds / physics_dt_s`；辅助抓持保持默认关闭；`env.*` 原样透传。
 - 每个 seed：`env.reset(seed)`；`VLAAgent.reset` 用 Env 的 episode id；每个控制步 `agent.act` → `actor.step`；跟踪误差为"发出的臂目标 − 下一次实测"（关节 rad 或 TCP 位置 m）的各臂最大值；结束后按 `docs/vla_doc/vla_eval_demo.py` 的规则分类。
-- 输出目录必须尚不存在。`results.jsonl` 每个 episode 一行；`summary.json` 含成功率、结果计数、PolicySpec、指令与版本、完整配置和 git commit；`report.md` 一行汇总；开录像时每路相机一个 MP4。字段含义见 README 第 5 节。
+- 输出目录必须尚不存在。`results.jsonl` 每个 episode 一行；`summary.json` 含成功率、结果计数、PolicySpec、指令与版本、完整配置，以及开始运行时的 git commit 和是否有未提交改动（`git_dirty`）；`report.md` 一行汇总；开录像时每路相机一个 MP4。字段含义见 README 第 5 节。
 - `outcome`：`success`、`task_failure`、`time_limit`、`unevaluated`、`unfinished`、`invalid_action`、`policy_error`、`env_error`。
 
 ## 5. 配置
@@ -148,3 +148,4 @@ vla/
 | 2026-09-30 | 第二轮：环境改为 conda；端口改为运行时参数；配置按机器人分目录并用 `_base_` 继承；指令移到 `gym/instructions.py`；新增 `report.md` 与 `vla.gym.report`；对照官方代码复查四个模型的调用 |
 | 2026-09-30 | 第三轮：DROID 关节 7 按 45° 安装差换算；X-VLA 高度相对桌面、目标到位再换、IK 达不到时逐臂跳过；π0.5 ALOHA 夹爪按 openpi 连杆换算；ALOHA 两指碰到读作闭合；GR00T eef_9d 改用法兰旋转；删除旧的 uv 环境 |
 | 2026-09-30 | 收尾：ALOHA 模型画面先居中裁成 4:3（commit 707ecd5）；最终审查修复（commit 7c00ed5）：状态由动作空间决定（协议版本 3），去掉未使用的关节 + 末端双状态路径；ALOHA 夹爪部分张开时保持原开度；截断由 agent 按行计数；`_base_` 只指向一个父文件；`serve` 固定监听 localhost；边界测试按完整模块名检查。删除实施前的设计文档 `DESIGN.md`，`index.html` 改为交接报告 |
+| 2026-09-30 | 客户端先检查协议版本再读 spec 字段（旧版服务端报版本不一致，不再报字段错误）；`summary.json` 的 git commit 改为开始运行时读取，并记录 `git_dirty`。此前的 summary 在运行结束时读取 commit，运行期间有提交时会记成之后的 commit |

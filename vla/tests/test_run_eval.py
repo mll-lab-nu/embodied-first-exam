@@ -1,6 +1,8 @@
 """run_eval pieces that need no GPU: outcome classes, make arguments, output path and tracking error."""
 from datetime import date
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from omegaconf import OmegaConf
@@ -96,3 +98,33 @@ def test_render_defaults_fill_only_unset_variables_with_existing_paths(tmp_path,
     environ = {}
     set_render_defaults(environ)
     assert environ == {}  # TopoGym's own asset default (~/.cache/topogym/visuals/nyx) applies
+
+
+class FakeEnv:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def test_the_summary_records_the_code_the_run_started_with(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(run_eval, "git_state", lambda: calls.append("git") or dict(git_commit="abc", git_dirty=True),
+                        raising=False)
+    monkeypatch.setattr(run_eval.topogym, "make", lambda task_id, **args: FakeEnv())
+
+    def episode(env, client, spec, seed, instruction, execute_steps, video_dir):
+        calls.append("episode")
+        return dict(outcome="time_limit", task_success=False, failure_code=None, sim_time_s=1.0, control_steps=2,
+                    inference_calls=1, tracking_error_mean=0.0, tracking_error_max=0.0, tracking_error_unit="rad",
+                    clipped_actions=0, skipped_actions=0, reset_wall_s=0.0, rollout_wall_s=1.0, error=None)
+
+    monkeypatch.setattr(run_eval, "run_episode", episode)
+    cfg = OmegaConf.create(dict(policy=dict(address="localhost:1", local=None), env={},
+                                task=dict(id="buzz_wire_3d", variation="base", seeds=[0, 1], sim_seconds=1),
+                                run=dict(execute_steps=None, record=False, output=str(tmp_path / "out"))))
+    run_eval.evaluate(cfg, SimpleNamespace(spec=spec()))
+    summary = json.loads((tmp_path / "out/summary.json").read_text())
+    assert calls == ["git", "episode", "episode"]  # read before the code can change under a long run
+    assert (summary["git_commit"], summary["git_dirty"]) == ("abc", True)

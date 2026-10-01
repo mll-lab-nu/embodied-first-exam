@@ -46,11 +46,6 @@ def test_spec_survives_the_wire():
     assert PolicySpec(**decode(encode(asdict(spec)))) == spec
 
 
-def test_spec_rejects_other_protocol_version():
-    with pytest.raises(ValueError, match="protocol"):
-        PolicySpec(**SPEC, protocol_version=PROTOCOL_VERSION + 1)
-
-
 def test_spec_rejects_a_reach_tolerance_for_joint_targets():
     with pytest.raises(ValueError, match="ee_abs"):
         PolicySpec(**dict(SPEC, reach_tolerance_m=0.005))

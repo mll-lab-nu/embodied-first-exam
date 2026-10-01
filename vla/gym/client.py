@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from multiprocessing.connection import Client
 
-from vla.protocol import ActionChunk, PolicySpec, decode, encode
+from vla.protocol import PROTOCOL_VERSION, ActionChunk, PolicySpec, decode, encode
 
 
 class PolicyError(RuntimeError):
@@ -20,8 +20,11 @@ class RemoteClient:
         host, port = address.rsplit(":", 1)
         self.conn = Client((host, int(port)))
         msg = self._receive()
+        if msg.get("protocol_version") != PROTOCOL_VERSION:  # before the fields, which differ between versions
+            raise ValueError(f"Model server speaks protocol version {msg.get('protocol_version')}, "
+                             f"this side speaks {PROTOCOL_VERSION}")
         msg.pop("type")
-        self.spec = PolicySpec(**msg)  # raises ValueError on a protocol version mismatch
+        self.spec = PolicySpec(**msg)
 
     def reset(self, seed):
         self._request({"type": "reset", "seed": seed}, "ok")
