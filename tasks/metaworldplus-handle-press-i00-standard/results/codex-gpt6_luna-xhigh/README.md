@@ -8,7 +8,7 @@ Run: Harbor job `codex-gpt6_luna-xhigh-sample`, trial `metaworldplus-handle-pres
 | agent time | 821 s |
 | actions / sim steps | 343 / 343 |
 | tokens in / out (cached in) | 1817913 / 27054 (1729408) |
-| token budget | 10M in / 10M out per trial: within (`over_token_budget = 0`) |
+| token budget | 100M in / 10M out per trial (PROTOCOL §5 default): within (`over_token_budget = 0`) |
 | verifier | `{"success": 1, "deterministic": 1, "replay_success": 1, "live_success": 1, "finalized": 1, "control_steps": 343, "sim_steps": 343, "calls": 41, "elapsed_s": 1088.8, "final_reward": 10.0, "video_rendered": 1, "sim_error": 0, "infra_error": 0, "grader_error": 0}` |
 | verifier sandbox | separate, no network |
 | setup | Harbor 0.23.0 `-a codex` (Codex CLI ?), model `openai/gpt-6-luna`, `reasoning_effort=xhigh`, no reasoning summaries; ChatGPT subscription login (`CODEX_FORCE_AUTH_JSON=1`); agent egress allowlisted to the model APIs |
