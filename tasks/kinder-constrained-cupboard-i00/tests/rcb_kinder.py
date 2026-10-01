@@ -1,7 +1,5 @@
 """rcb_kinder.py -- task-local tooling for KinDER: the frozen instance, recording, deterministic replay.
 
-Mirrors scripts/humanoidbench/shared/rcb_hb.py, so an agent works the same way across simulators.
-
 Concepts
 --------
 instance    instance.json: which KinDER environment, the seed its procedural generator builds the scene from, the

@@ -141,6 +141,7 @@ class Base(unittest.TestCase):
         self.tmp.cleanup()
 
     def service(self, sim=None, reset_budget: int = 0, **kw) -> Service:
+        rcb_service.count_start(self.data)                   # a process start, as main() counts it
         svc = Service(sim or FakeSim(), data=self.data, reset_budget=reset_budget, wall_clock_s=3600.0, **kw)
         svc.start()
         return svc
@@ -235,6 +236,18 @@ class Submit(Base):
         code, body, _ = call(svc, "POST", "/submit", raw=b"{not json")
         self.assertEqual(code, 400)
         self.assertEqual((svc.sim.t, svc.sim.x), (0, 0.0))
+
+    def test_malformed_fields_are_400_and_keep_the_episode(self):
+        svc = self.service()
+        for meta in ({"type": ["move"]}, {"type": {"move": 1}}, {"dt": [0.1]}, {"dt": float("inf")}, {"dt": 1e308},
+                     {"video_fps": float("inf")}, {"video_fps": [10]}):
+            code, body, _ = self.submit(svc, [[0.1]], **meta)
+            self.assertEqual(code, 400, (meta, body))
+        for meta in ({"video_fps": float("inf")}, {"seconds": [1]}):
+            code, body, _ = call(svc, "POST", "/observe", meta)
+            self.assertEqual(code, 400, (meta, body))
+        code, st, _ = call(svc, "GET", "/status")
+        self.assertEqual((st["done"], st["reason"], st["control_steps"]), (False, None, 0))
 
     def test_too_many_frames_is_400(self):
         svc = self.service(max_frames_per_call=50)
@@ -396,9 +409,8 @@ class CrashRecovery(Base):
         self.assertEqual((svc2.sim.state_sha(), svc2.sim.x), (sha, x))
         code, st, _ = call(svc2, "GET", "/status")
         self.assertEqual((st["calls"], st["rows"], st["control_steps"], st["done"]), (2, 4, 6, False))
-        resumed = [e for e in events(self.data) if e["ev"] == "resumed"]
-        self.assertEqual(len(resumed), 1)
-        self.assertFalse(resumed[0]["crashed_in_call"])
+        self.assertEqual(len([e for e in events(self.data) if e["ev"] == "resumed"]), 1)
+        self.assertFalse([e for e in events(self.data) if e["ev"] == "resuming"][0]["crashed_in_call"])
         code, meta, _ = self.submit(svc2, [[0.5]])
         self.assertEqual(meta["control_steps"], 7)
 
@@ -413,7 +425,7 @@ class CrashRecovery(Base):
         svc2 = self.service(FakeSim(goal=99))
         self.assertEqual(svc2.sim.state_sha(), sha)
         self.assertEqual(os.path.getsize(os.path.join(self.data, "trajectory_live.f64")), 2 * 8)
-        self.assertTrue([e for e in events(self.data) if e["ev"] == "resumed"][0]["crashed_in_call"])
+        self.assertTrue([e for e in events(self.data) if e["ev"] == "resuming"][0]["crashed_in_call"])
 
     def test_a_journal_that_does_not_reach_the_log_refuses_to_resume(self):
         svc = self.service(FakeSim(goal=99))
@@ -434,6 +446,28 @@ class CrashRecovery(Base):
             self.service(FakeSim(goal=99))
         f = final(self.data)
         self.assertEqual((f["reason"], f["infra_error"], f["finalized"], f["success"]), ("sim_crashed", 1, True, False))
+
+    def test_crashes_while_resuming_count_too(self):
+        def crash(_):
+            raise Crash()
+        svc = self.service(FakeSim(goal=99))
+        self.submit(svc, [[0.5]] * 2)
+        for _ in range(2):
+            with self.assertRaises(Crash):
+                self.service(FakeSim(goal=99, on_step=crash))   # dies replaying the journal
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99))
+        f = final(self.data)
+        self.assertEqual((f["reason"], f["infra_error"], f["finalized"], f["success"]), ("sim_crashed", 1, True, False))
+
+    def test_a_restart_that_died_building_the_scene_counts_too(self):
+        svc = self.service(FakeSim(goal=99))
+        self.submit(svc, [[0.5]])
+        rcb_service.count_start(self.data)                   # this one never got as far as the episode
+        self.service(FakeSim(goal=99))
+        with self.assertRaises(GiveUp):
+            self.service(FakeSim(goal=99))
+        self.assertEqual(final(self.data)["reason"], "sim_crashed")
 
     def test_crashes_that_all_happen_inside_calls_are_the_agents(self):
         svc = self.service(FakeSim(goal=99))
@@ -458,6 +492,33 @@ class CrashRecovery(Base):
             self.service()
         after = final(self.data)
         self.assertEqual({k: after[k] for k in before}, before)
+
+    def test_a_restart_after_a_failed_finalize_keeps_it(self):
+        svc = self.service(FakeSim(verify_raises=RuntimeError("replay broke")))
+        self.submit(svc, [[1.0]] * 3)
+        svc.on_sigusr1()
+        svc.poll()
+        before = final(self.data)
+        with self.assertRaises(GiveUp):
+            self.service()
+        self.assertEqual(final(self.data), before)
+
+    def test_a_crash_while_rendering_the_video_keeps_the_verdict(self):
+        def crash(*_):
+            raise Crash()
+        sim = FakeSim()
+        sim.render_video = crash
+        svc = self.service(sim)
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        with self.assertRaises(Crash):
+            svc.poll()
+        with self.assertRaises(GiveUp):
+            self.service()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["live_success"], f["replay_success"], f["deterministic"],
+                          f["video"]), (True, True, True, True, True, False))
+        self.assertNotIn("infra_error", f)
 
     def test_a_timeout_survives_a_crash_during_finalize(self):
         svc = self.service(FakeSim(goal=99, verify_raises=Crash()))
@@ -564,9 +625,14 @@ class Grade(Base):
         txt, r = self.grade({"finalized": True, "finalize_error": "boom", "live_success": True})
         self.assertEqual((r["success"], r["grader_error"], r["infra_error"]), (0, 1, 1))
 
-    def test_an_unfinalized_log_is_a_grader_error(self):
+    def test_an_unfinalized_log_is_infrastructure(self):
         txt, r = self.grade({"finalized": False, "live_success": True})
-        self.assertEqual((r["success"], r["grader_error"]), (0, 1))
+        self.assertEqual((r["success"], r["infra_error"], r["grader_error"]), (0, 1, 0))
+
+    def test_reward_counts_every_control_step_and_the_reset_budget(self):
+        txt, r = self.grade({"finalized": True, "live_success": False, "replay_success": False, "deterministic": True,
+                             "n_actions": 10, "control_steps_total": 34, "resets": 2, "reset_budget": 50})
+        self.assertEqual((r["n_actions"], r["sim_steps"], r["resets"], r["reset_budget"]), (10, 34, 2, 50))
 
 
 class Client(Base):
@@ -597,10 +663,54 @@ class Client(Base):
             srv.server_close()
 
 
+    def test_client_errors_are_value_errors_and_keep_the_episode(self):
+        import rcb_client
+        svc = self.service()
+        srv = svc.http_server(("127.0.0.1", 0))
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            r = rcb_client.Robot(f"http://127.0.0.1:{srv.server_address[1]}", timeout=10)
+            with self.assertRaises(ValueError):
+                r.submit("move", [[0.1]], dt=float("inf"))
+            with self.assertRaises(ValueError):
+                r.submit(["move"], [[0.1]])
+            with self.assertRaises(ValueError):                  # over the protocol's 64 MB: refused before sending
+                r.submit("move", np.zeros((rcb_service.MAX_BODY // 8 + 1, 1)), video="none")
+            self.assertEqual((r.status()["done"], r.status()["calls"]), (False, 0))
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
+
 class Boot(Base):
     def test_the_pid_file_appears_when_the_service_is_ready(self):
         self.service()
         self.assertEqual(Path(self.data, "server.pid").read_text(), str(os.getpid()))
+
+    def test_a_busy_port_is_waited_for_and_the_trial_can_still_end(self):
+        import socket
+        holder = socket.socket()
+        holder.bind(("0.0.0.0", 0))
+        holder.listen()
+        port = holder.getsockname()[1]
+        svc = self.service()
+        self.submit(svc, [[0.1]])
+        got = {}
+        t = threading.Thread(target=lambda: got.update(srv=svc.bind(port)), daemon=True)
+        t.start()
+        t.join(1.5)
+        self.assertTrue(t.is_alive())
+        self.assertIn("port_busy", [e["ev"] for e in events(self.data)])
+        svc.on_sigusr1()                                      # the trial ends meanwhile: it is still graded
+        for _ in range(50):
+            if final(self.data)["finalized"]:
+                break
+            t.join(0.1)
+        self.assertEqual((final(self.data)["finalized"], final(self.data)["reason"]), (True, "timeout"))
+        holder.close()
+        t.join(5)
+        self.assertFalse(t.is_alive())
+        got["srv"].server_close()
 
     def test_every_start_is_counted(self):
         rcb_service.count_start(self.data)

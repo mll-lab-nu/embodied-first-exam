@@ -24,8 +24,8 @@ RUN python -c "import kinder.utils as u; u.download_mimiclabs_assets(non_interac
 RUN d=$(python -c "import kinder, pathlib; print(pathlib.Path(kinder.__file__).parent / 'envs/dynamic3d/models/assets/.tmp')") && \
     mkdir -p "$d" && chmod 1777 "$d"
 
-# See images/humanoidbench/Dockerfile: the NVIDIA runtime mounts libEGL_nvidia.so.0 but some hosts do not inject this
-# manifest, and without it libglvnd cannot find the driver. Inert without a GPU.
+# The NVIDIA runtime mounts libEGL_nvidia.so.0 but some hosts do not inject this manifest, and without it libglvnd
+# cannot find the driver. Inert without a GPU.
 RUN mkdir -p /usr/share/glvnd/egl_vendor.d && printf \
     '{"file_format_version":"1.0.0","ICD":{"library_path":"libEGL_nvidia.so.0"}}\n' \
     > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
