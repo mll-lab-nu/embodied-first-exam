@@ -1,0 +1,40 @@
+(define (problem tidying_bathroom-0)
+    (:domain behavior-1k)
+
+    (:objects
+        bar_soap.n.01_1 - bar_soap.n.01
+        soap_dish.n.01_1 - soap_dish.n.01
+        tissue_dispenser.n.01_1 - tissue_dispenser.n.01
+        cork.n.04_1 - cork.n.04
+        toilet_tissue.n.01_1 - toilet_tissue.n.01
+        ashcan.n.01_1 - ashcan.n.01
+        sink.n.01_1 - sink.n.01
+        toilet.n.02_1 - toilet.n.02
+        shelf.n.01_1 - shelf.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop bar_soap.n.01_1 sink.n.01_1)
+        (ontop soap_dish.n.01_1 sink.n.01_1)
+        (ontop tissue_dispenser.n.01_1 floor.n.01_1)
+        (ontop cork.n.04_1 sink.n.01_1)
+        (ontop toilet_tissue.n.01_1 floor.n.01_1)
+        (ontop ashcan.n.01_1 floor.n.01_1)
+        (inroom sink.n.01_1 bathroom)
+        (inroom toilet.n.02_1 bathroom)
+        (inroom shelf.n.01_1 bathroom)
+        (inroom floor.n.01_1 bathroom)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?bar_soap.n.01_1 ?soap_dish.n.01_1)
+            (ontop ?tissue_dispenser.n.01_1 ?sink.n.01_1)
+            (ontop ?toilet_tissue.n.01_1 ?toilet.n.02_1)
+            (inside ?cork.n.04_1 ?ashcan.n.01_1)
+        )
+    )
+)

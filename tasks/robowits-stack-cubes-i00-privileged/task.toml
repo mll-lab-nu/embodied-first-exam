@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robowits-stack-cubes-i00-privileged"
+description = "RoboWits stack_cubes (bimanual Marvin, Genesis): produce one replayable trajectory. Build a stable two-layer stack so the red cube's center is above the green colored dot. Frozen scene instance (RoboWits evaluation scene 0 of task 14)."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "stack_cubes"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "robowits"            # RoboWits @ 9cc30ae on Genesis 0.4.7 (CPU physics backend, EGL rendering)
+robot = "marvin-bimanual"
+family = "stack_cubes"
+mode = "privileged"
+oracle = "partial"
+oracle_evidence = "Reference solution solution/oracle_stack_cubes.py with its skills in solution/ref_primitives.py (written for this instance; RoboWits ships no expert). It scored 1 under Harbor -a oracle on an earlier version of this task: job robowits-stack-cubes-i00-oracle-thin-0925-000706, trial robowits-stack-cubes-i00__2rVdsVe, 2026-09-25 (laptop, Intel; success=1, deterministic=1, instance_exact=1; an uncommitted tree just before dev/qineng f15dbdb7). Same since then: the frozen instance (state hash 41c4d7e7d7193b0d) and the oracle script (byte-identical to that run's /app/output/gen.py; ref_primitives.py unchanged since f15dbdb7). Changed since then, so the label is partial: the grader tests/grade.py (dev/qineng 82d76c61 added the GPU-backend exception; this PR writes the verdict before the video) and the tooling rcb_robowits.py (dev/qineng 5aa848bd, bddfc520, adce3fef, 8f0ebd55, 82d76c61, 6c0b439e, fe5fb9e6, 1515ea4e). Not re-run on this version (static validation only, 2026-10-01)."
+instance_seed = 0                 # scene = environment/instance.json (entry 0 of RoboWits' eval_dataset_50/14.json + expected state hash); identity = dataset.toml digest
+expert_time_estimate_hours = 1.0
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 5400.0             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

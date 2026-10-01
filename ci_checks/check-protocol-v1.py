@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal/eai-"
-PROTOCOLS = {"eai-standard/2.1"}
+PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2"}
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
