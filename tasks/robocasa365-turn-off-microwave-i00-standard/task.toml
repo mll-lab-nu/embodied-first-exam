@@ -1,0 +1,60 @@
+schema_version = "1.3"
+artifacts = [
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/robocasa365-turn-off-microwave-i00-standard"
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa365 (TurnOffMicrowave, a Franka Panda arm on an Omron mobile base (with a torso lift)): Press the stop button on the microwave. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+authors = [{ name = "Changhe Chen" }]
+keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]
+
+[metadata]
+author_name = "Changhe Chen"
+author_org = "MLL Lab"
+task_type = "trajectory"
+simulator = "robosuite"
+robot = "franka-panda-omron"
+family = "robocasa365/TurnOffMicrowave"
+mode = "standard"
+protocol = "eai-standard/2.1"
+oracle = "full"
+expert_time_estimate_hours = 4.0
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# The agent's time is up: stop whatever it left running in its container, so nothing drives the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
+timeout_sec = 1500
+
+[agent]
+timeout_sec = 3600.0
+# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to the model APIs.
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §2.7
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 600.0
