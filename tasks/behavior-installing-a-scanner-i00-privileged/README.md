@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | BEHAVIOR-1K |
 | Mode | privileged |
 | Twin | `behavior-installing-a-scanner-i00-standard` |
 | Simulator / robot | `behavior` / `r1pro` |
