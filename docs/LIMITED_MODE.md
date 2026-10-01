@@ -1,3 +1,5 @@
+> **Historical design note.** Superseded by [PROTOCOL.md](PROTOCOL.md) (v1.0) and [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`); kept for the record. Limited mode is now called standard mode.
+
 # Two evaluation modes: unlimited vs limited ("robot as a service")
 
 Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/2.1: `submit` action chunks + `observe`, binary RCB1 responses, 82-column proprioception, crash resume; 1.0's `/step` is retired). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1

@@ -1,3 +1,5 @@
+> **历史设计文档**：已由 [PROTOCOL.md](PROTOCOL.md)（v1.0）和 [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md)（`eai-standard/2.1`）取代，仅作留档。limited 模式现称 standard 模式。
+
 # Limited 模式（"机器人即服务"）是怎么做的
 
 英文设计与协议：`LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`（协议版本 `rcb-limited/2.0`，v2 设计见 `LIMITED_MODE_V2_DESIGN.zh.md`）。
