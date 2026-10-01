@@ -20,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
 
 ## Difficulty
-Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard passed with 50 resets and failed with none.
+Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes.
 
 ## Reference solution
 `solution/oracle_replay.py` sends the privileged oracle's 101 moves, turned into the odometry frame (`solution/oracle_actions.npy`), through the client: success at step 101, no privileged information at run time.

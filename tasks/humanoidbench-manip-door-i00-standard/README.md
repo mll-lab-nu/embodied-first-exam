@@ -7,13 +7,13 @@
 | Twin | `humanoidbench-manip-door-i00-privileged` |
 | Simulator / robot | `humanoidbench` / `unitree-h1` |
 | Family / instance | `door` / seed 0 |
-| Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), kept in tasks/humanoidbench-manip-door-i00-privileged/results/claude_code-claude_opus_5_5-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9 |
+| Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-door-i00-privileged`: the same frozen
-instance and the same success rule. HumanoidBench runs in the `sim` sidecar
+Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-door-i00-privileged`: the same
+frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
 episode, records it, replays it in a fresh simulator and renders the replay video; the verifier grades the
 sidecar's record in a container of its own (`tests/Dockerfile`, no network).
@@ -23,8 +23,8 @@ side (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the door and the f
 from x = -0.5 to 4 m.
 
 ## Difficulty
-See `humanoidbench-manip-door-i00-privileged`'s README; here the agent also has no state, no reward, no resets and no
-simulator of its own.
+See `humanoidbench-manip-door-i00-privileged`'s README; here the agent also has no state, no reward, no resets
+and no simulator of its own.
 
 ## Reference solution
 None. Requiring one would cap the benchmark at what we can already solve, which systematically removes the

@@ -20,7 +20,7 @@ cs = ast.get_source_segment(up, [f for f in cls.body if isinstance(f, ast.Functi
 attrs = sorted(set(re.findall(r"self\.(\w+)\s*=\s*(?:create_|rand_create|self\.get_cluttered|\[)", la)) | set(re.findall(r"self\.(\w+)\s*=", la)) - {"prohibited_area", "size_dict"})
 step_lim = __import__("yaml").safe_load(open(root / "third_party/RoboTwin/env_cfg/task_config/_eval_step_limit.yml")).get(task, "?")
 
-# regenerate everything except results/ (agent results committed per run); never copy the template's results/
+# regenerate everything; results/ does not belong in the repository (PROTOCOL D3) and normalize() removes it
 if dst.exists():
     for c in dst.iterdir():
         if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()

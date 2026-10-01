@@ -34,8 +34,9 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
     subs = [("hammer / claw_hammer / swing_down", f"{cat} / {obj} / {task}"), ("claw_hammer / swing_down", f"{obj} / {task}"),
             ("dextoolbench_hammer_claw_hammer_swing_down-privileged", name), ("dextoolbench/hammer/claw_hammer/swing_down", f"dextoolbench/{cat}/{obj}/{task}"),
             ("the 37 demonstrated goal poses", f"the {n} demonstrated goal poses"), ("**37 goal poses in order**", f"**{n} goal poses in order**"),
-            ("reward = goals reached / 37", f"reward = goals reached / {n}"), ("Full success = all 37.", f"Full success = all {n}."),
-            ("all 37 goal poses", f"all {n} goal poses"), ("carries the hammer", f"carries the {human}"), ("37 goals", f"{n} goals"), ("goals / 37", f"goals / {n}")]
+            ("if all 37 goals are reached", f"if all {n} goals are reached"), ("Goals reached / 37", f"Goals reached / {n}"),
+            ("all 37 goal poses", f"all {n} goal poses"), ("carries the hammer", f"carries the {human}"), ("goals / 37", f"goals / {n}")]
+    t = dst / "task.toml"; t.write_text(re.sub(r"(?m)^oracle(_evidence)? = .*\n", "", t.read_text()))   # set from the measured oracle, not the template's
     for f in ("instruction.md", "task.toml", "README.md", "solution/solve.sh"):
         p = dst / f; s = p.read_text()
         for a, b in subs: s = s.replace(a, b)
@@ -52,7 +53,10 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
         s = s.replace(a, b)
     ins.write_text(s)
     rd = dst / "README.md"; r = rd.read_text()
-    r = re.sub(r"\| oracle \|.*\|\n", "| oracle | `solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed |\n", r)
+    # the oracle result is measured later (scripts/dtb_mk_oracle.py): no goal count and no oracle level until then
+    r = re.sub(r"(## Reference solution\n).*?(?=\n## )", r"\1`solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed; "
+               r"goals reached: to be measured with scripts/dtb_mk_oracle.py\n", r, count=1, flags=re.S)
+    r = re.sub(r" SimToolReal's pretrained policy reaches \d+/\d+ goals here\.", "", r)
     r = re.sub(r"\| port check \|.*\|\n", "", r); rd.write_text(r)
     normalize(dst)   # protocol v1.0 conventions (scripts/task_conventions.py)
     return dst

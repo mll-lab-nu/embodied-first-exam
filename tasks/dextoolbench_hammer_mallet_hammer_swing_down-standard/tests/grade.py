@@ -15,6 +15,7 @@ det = bool(d.get("deterministic")); ok = bool(d.get("success")) and det
 out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.get("finalized"))), "control_steps": int(d.get("control_steps") or 0),
        "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
 # no verdict on the agent: the service crashed (restart refused) or its verification replay failed
+out["sim_error"] = int(d.get("reason") == "error")   # the simulator failed during a call (the episode ended there)
 if d.get("infra_error") or d.get("finalize_error"):
     out.update(infra_error=1, grader_error=int(bool(d.get("finalize_error"))))   # reward.json: numbers only
     json.dump({"reason": str(d.get("reason") or ""), "finalize_error": str(d.get("finalize_error") or "")[:300]},

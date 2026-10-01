@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "none"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00-privileged/results/codex-gpt6_luna-medium/, and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0) and Claude Opus 5.5 (750.22), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), run `codex-gpt6_luna-medium` on the results site, and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0) and Claude Opus 5.5 (750.22), run `codex-gpt6_luna-medium` (standard) and the other models' runs on the results site; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0

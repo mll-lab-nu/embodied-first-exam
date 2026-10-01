@@ -21,4 +21,4 @@ Same scene, instance and success rule as `dextoolbench_screwdriver_long_screwdri
 `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step)
 
 ## Verification
-**grading**: the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode
+the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode
