@@ -3,14 +3,15 @@
 
     python3 scripts/dtb_mk_task.py <category> <object> <task> [...]      # or: --all
 
-Copies tasks/dextoolbench_hammer_claw_hammer_swing_down/ (tooling, verifier, compose files, solve.sh) to
+Copies tasks/dextoolbench_hammer_claw_hammer_swing_down-privileged/ (tooling, verifier, compose files, solve.sh) to
 tasks/dextoolbench_<category>_<object>_<task>/, writes that task's instance.json from the SimToolReal trajectory
 (images/mujoco/rcb_mj/simtoolreal/dextoolbench/trajectories/...), and rewrites the texts. The oracle
 (solution/oracle_targets.npy) is generated separately with scripts/dtb_mk_oracle.py; results/ is not copied."""
 import json, pathlib, re, shutil, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-TPL = ROOT / "tasks/dextoolbench_hammer_claw_hammer_swing_down"
+TPL = ROOT / "tasks/dextoolbench_hammer_claw_hammer_swing_down-privileged"
 TRAJ = ROOT / "images/mujoco/rcb_mj/simtoolreal/dextoolbench/trajectories"
 MOTION = {"swing_down": "a downward hammer swing", "swing_side": "a sideways hammer swing", "draw_smile": "drawing a smiley face",
           "write_c": "writing the letter C", "wipe_smile": "wiping a smiley face", "wipe_c": "wiping the letter C",
@@ -20,7 +21,7 @@ MOTION = {"swing_down": "a downward hammer swing", "swing_side": "a sideways ham
 
 def make(cat: str, obj: str, task: str) -> pathlib.Path:
     src = TRAJ / cat / obj / f"{task}.json"; t = json.load(open(src)); n = len(t["goals"])
-    name = f"dextoolbench_{cat}_{obj}_{task}"; dst = ROOT / "tasks" / name
+    name = f"dextoolbench_{cat}_{obj}_{task}-privileged"; dst = ROOT / "tasks" / name
     if dst != TPL:
         if dst.exists(): shutil.rmtree(dst)
         shutil.copytree(TPL, dst, ignore=shutil.ignore_patterns("results", "__pycache__", "oracle_targets.npy"))
@@ -31,10 +32,11 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
     for d in ("environment", "tests"): json.dump(inst, open(dst / d / "instance.json", "w"), indent=1)
     if dst == TPL: return dst
     subs = [("hammer / claw_hammer / swing_down", f"{cat} / {obj} / {task}"), ("claw_hammer / swing_down", f"{obj} / {task}"),
-            ("dextoolbench_hammer_claw_hammer_swing_down", name), ("dextoolbench/hammer/claw_hammer/swing_down", f"dextoolbench/{cat}/{obj}/{task}"),
+            ("dextoolbench_hammer_claw_hammer_swing_down-privileged", name), ("dextoolbench/hammer/claw_hammer/swing_down", f"dextoolbench/{cat}/{obj}/{task}"),
             ("the 37 demonstrated goal poses", f"the {n} demonstrated goal poses"), ("**37 goal poses in order**", f"**{n} goal poses in order**"),
-            ("reward = goals reached / 37", f"reward = goals reached / {n}"), ("Full success = all 37.", f"Full success = all {n}."),
-            ("all 37 goal poses", f"all {n} goal poses"), ("carries the hammer", f"carries the {human}"), ("37 goals", f"{n} goals"), ("goals / 37", f"goals / {n}")]
+            ("if all 37 goals are reached", f"if all {n} goals are reached"), ("Goals reached / 37", f"Goals reached / {n}"),
+            ("all 37 goal poses", f"all {n} goal poses"), ("carries the hammer", f"carries the {human}"), ("goals / 37", f"goals / {n}")]
+    t = dst / "task.toml"; t.write_text(re.sub(r"(?m)^oracle(_evidence)? = .*\n", "", t.read_text()))   # set from the measured oracle, not the template's
     for f in ("instruction.md", "task.toml", "README.md", "solution/solve.sh"):
         p = dst / f; s = p.read_text()
         for a, b in subs: s = s.replace(a, b)
@@ -51,8 +53,12 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
         s = s.replace(a, b)
     ins.write_text(s)
     rd = dst / "README.md"; r = rd.read_text()
-    r = re.sub(r"\| oracle \|.*\|\n", "| oracle | `solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed |\n", r)
+    # the oracle result is measured later (scripts/dtb_mk_oracle.py): no goal count and no oracle level until then
+    r = re.sub(r"(## Reference solution\n).*?(?=\n## )", r"\1`solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed; "
+               r"goals reached: to be measured with scripts/dtb_mk_oracle.py\n", r, count=1, flags=re.S)
+    r = re.sub(r" SimToolReal's pretrained policy reaches \d+/\d+ goals here\.", "", r)
     r = re.sub(r"\| port check \|.*\|\n", "", r); rd.write_text(r)
+    normalize(dst)   # protocol v1.0 conventions (scripts/task_conventions.py)
     return dst
 
 

@@ -2,7 +2,7 @@
 
 > Formerly `rcb-limited/2.1` (limited mode). Protocol v1.0 ([PROTOCOL.md](PROTOCOL.md)) renamed it; the content is
 > unchanged, and 2.1 includes the crash recovery described below (added 2026-09-29 without a version bump). Services
-> and tasks still report `rcb-limited/2.1` until the migration (PROTOCOL §7), which also updates the client to accept both spellings.
+> and tasks report `eai-standard/2.1`; the shipped client also accepts the former `rcb-limited/2.x` spelling.
 > Which parts of this document are required is listed in PROTOCOL §4.
 
 The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit** (except a technical episode cap where a
@@ -21,7 +21,8 @@ connections are refused and the client retries.
 | GET | `/status` | — | JSON: `{step, calls, physics_steps, done, reason, elapsed_s}` |
 | POST | `/observe` | RCB1 or JSON `{cameras, seconds, video_fps, include_depth, video}` | RCB1 |
 | POST | `/submit` | RCB1: header `{type, dt, interpolate, cameras, video_fps, video, include_depth, note}` + part `actions` float32 (T, dim) | RCB1 |
-Anything else (including `/reset`, `/state`, `/success`) returns **404**.
+Anything else (`/state`, `/success`, …) returns **404**; so does `/reset` unless the run enables the optional reset
+capability (below).
 
 ## RCB1 frame
 ```
@@ -30,7 +31,8 @@ header = {"v": 1, "meta": {...}, "parts": [{"name","kind","len", ...}, ...]}    
 kinds: "mp4" (fps, n) · "array" (dtype, shape; C-order raw bytes) · "jpeg" · "json" · "bytes"
 ```
 Response parts: `video/<cam>` (mp4), `frames/<cam>` (uint8 [N,H,W,3]), `last/<cam>` (uint8 [H,W,3], always), `depth/<cam>`
-(float16 [N,H,W], if requested), `proprio` (float32 [N, len(proprio layout)], one row per video frame: 82 columns on RoboTwin, 3 x actuators on MuJoCo). Requests over 64 MB → 413/400; a
+(float16 [N,H,W], if requested), `proprio` (float32 [N, len(proprio layout)], one row per video frame: 82 columns on RoboTwin, 3 x actuators on MuJoCo). Requests over 64 MB → 413 (the client refuses
+to send one); a
 response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `rcb1.py` (encode/decode, `python -m rcb1
 unpack f dir`) is shipped with the client.
 
@@ -66,8 +68,8 @@ the wall clock; the simulated time is recorded as cost.
 |---|---|
 | 400 | wrong type/dim, NaN/inf, `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more than 3000 frames in one response (cameras × fps × seconds, depth counts double), malformed body |
 | 409 | episode already finished (`done`); the trial is over |
-| 413 | body over 64 MB |
-| 500 | simulator error; the episode ends with `reason = "error"` |
+| 413 | body over 64 MB (`rcb_client.py` raises before sending such a body) |
+| 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
 
 ## Episode semantics
 The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
@@ -135,12 +137,28 @@ is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or 
 Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
 `meta.task` carries the task definition (DexToolBench: current goal pose and index; Playground: the target) and
 `meta.cameras` each camera's intrinsics and camera-to-world pose. DexToolBench's own eval gives each goal 10 s; here the
-limited twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
-robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the unlimited tasks give each goal 30 s
+standard twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
+robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the privileged tasks give each goal 30 s
 (replayed offline, free resets). DexToolBench episodes end when all goals are reached, at the cap, or when the agent's
 time is up; Playground episodes run to the end of the agent phase and the final state is graded. The MuJoCo service
 journals and resumes exactly as above (journal `record.f64`).
 The service replays the recorded episode in a fresh simulator at the end (`deterministic`: same final state hash).
 
+## KinDER and HumanoidBench tasks
+Same endpoints, RCB1 frames and crash recovery, served by one shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`,
+identical in both) with a per-benchmark simulator adapter (`server.py`). Actions are delta or joint-position rows at the
+task's control rate (KinDER 10 Hz, PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk;
+HumanoidBench 50 Hz); the step counters are `rows` and `control_steps`. No world coordinates are given (odometry and
+camera poses are in the robot's starting frame); see [docs/benchmarks/](benchmarks/) for the per-benchmark observation
+tables. A request body over 64 MB gets 413 before it is decoded.
+
+## Optional reset capability
+Off by default (`budget.reset = 0`): one trial is one episode. A run may set `RCB_RESET_BUDGET=N` on the service
+(implemented by the KinDER and HumanoidBench services). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
+`POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
+same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
+success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
+episode is graded. Results with `N > 0` are reported separately and never ranked with `N = 0` (PROTOCOL D1, §4.5).
+
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version (and, after the migration, both spellings). Accepted, pending: `eai-standard/2.2` (PROTOCOL §6).
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6).

@@ -1,0 +1,16 @@
+# Genesis renders camera images through EGL on the GPU (the physics runs on its bit-deterministic CPU backend). Harbor's
+# local docker sandbox rejects [environment].gpus, but merging this onto the main service passes the device through.
+# The BlenderKit models this task loads may not be redistributed, so they are not in the image: they come read-only
+# from the host's folder $RCB_ROBOWITS_BLENDERKIT (images/robowits/NOTICE).
+services:
+  main:
+    shm_size: "2gb"
+    volumes:
+      - ${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}:/opt/robowits/assets/blender_kit:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

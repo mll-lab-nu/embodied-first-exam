@@ -1,0 +1,32 @@
+(define (problem bringing_paper_to_recycling-0)
+    (:domain behavior-1k)
+
+    (:objects
+        sack.n.01_1 - sack.n.01
+        newspaper.n.03_1 - newspaper.n.03
+        recycling_bin.n.01_1 - recycling_bin.n.01
+        countertop.n.01_1 - countertop.n.01
+        floor.n.01_1 floor.n.01_2 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop sack.n.01_1 floor.n.01_1)
+        (ontop newspaper.n.03_1 countertop.n.01_1)
+        (ontop recycling_bin.n.01_1 floor.n.01_2)
+        (inroom countertop.n.01_1 kitchen)
+        (inroom floor.n.01_1 kitchen)
+        (inroom floor.n.01_2 garden)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+       	    (inside sack.n.01_1 ?recycling_bin.n.01_1)
+       	    (inside newspaper.n.03_1 ?recycling_bin.n.01_1)
+            (not
+                (open ?recycling_bin.n.01_1)
+            )
+        )
+    )
+)
