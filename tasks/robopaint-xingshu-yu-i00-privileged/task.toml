@@ -1,0 +1,42 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robopaint-xingshu-yu-i00-privileged"
+description = "RoboPaint 行书 臨帖 (Chinese brush calligraphy, running script): embodied robotic calligraphy (ManiSkill 3.0.1 Franka Panda with a Chinese writing brush; the mark is the dynamic virtual brush of Wang et al., IROS 2020, re-implemented): produce one replayable trajectory that copies the exemplar character 宇 in running script, shown in the picture target.png, onto the main sheet with brush and ink, in at most 7 strokes. Scored against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff IoU >= 0.80, boundary F within 1 mm >= 0.75, every region of the exemplar's ink covered >= 0.80, stray ink <= 0.04 of its inked area and at most 7 strokes (continuous brush contacts); the IoU is the continuous score). s.score() is served by a separate scoring container."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robopaint", "maniskill", "sapien", "calligraphy", "chinese-calligraphy", "xingshu", "running-script", "brush", "franka", "code-as-policy", "trajectory", "robopaint_xingshu_yu"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the Wang et al. 2020 dynamic brush (rcb_brush.py, CPU)
+robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handle + 30 mm collision-free tuft, TCP = the tuft's tip
+family = "robopaint_xingshu_yu"
+mode = "privileged"               # privileged (exact sheets, brush state, reset, scoring service) | standard (RGB only: the -standard twin)
+oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
+oracle_evidence = "Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: xingshu-u-oracle-final0928, xingshu-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (a67040a8: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on tianlangqiqing and zhi), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only)."
+instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)
+expert_time_estimate_hours = 4.0
+difficulty = "hard"             # RoboPaint tiers: line easy; xingshu singles hard, works extreme
+medium = "calligraphy"            # the brush model: calligraphy (Wang et al. 2020) | broad_nib | mypaint
+stroke_count = 7                  # difficulty axes: strokes (= the stroke cap), structure, characters
+structure = "top-bottom"              # single (独体) | left-right (左右) | top-bottom (上下) | enclosure (包围) | work (several characters)
+characters = 1
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

@@ -14,7 +14,7 @@ for mode, job in (("unlimited", ju), ("limited", jl)):
     for trial in sorted((jobs/job).glob("robotwin_2_0_*")):
         if not trial.is_dir(): continue
         r=json.load(open(trial/"result.json")) if (trial/"result.json").exists() else {}
-        name=(r.get("task_name") or trial.name.split("__")[0]).split("/")[-1].replace("robotwin_2_0_","").replace("-limited","")  # dir names are truncated
+        name=(r.get("task_name") or trial.name.split("__")[0]).split("/")[-1].replace("robotwin_2_0_","").removesuffix("-privileged").removesuffix("-standard").removesuffix("-limited")  # dir names are truncated; -limited: pre-v1.0 jobs
         rw=json.load(open(trial/"verifier/reward.json")) if (trial/"verifier/reward.json").exists() else {}
         ar=r.get("agent_result") or {}
         d=out/name/mode; d.mkdir(parents=True, exist_ok=True)
