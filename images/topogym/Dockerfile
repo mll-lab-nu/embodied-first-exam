@@ -31,8 +31,10 @@ ENV TOPOGYM_CUDA_FLAVOR=${CUDA_FLAVOR}
 ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
     TOPOGYM_VISUAL_ASSET_ROOT=/opt/topogym-visuals TOPOGYM_ASSET_ROOT=/opt/topogym-assets \
     NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all
+# libopengl0: pymeshlab's filter plugins need libOpenGL.so.0; without it Genesis's PBD remesh (blanket_flatten) fails with
+# "MeshSet has no attribute meshing_isotropic_explicit_remeshing" (found 2026-09-30).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl ca-certificates git build-essential ffmpeg libegl1 libgl1 libglib2.0-0 \
+    bash curl ca-certificates git build-essential ffmpeg libegl1 libgl1 libopengl0 libglib2.0-0 \
     libx11-6 libxext6 libxrender1 libvulkan1 vulkan-tools libgomp1 ripgrep \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir uv==0.11.30
