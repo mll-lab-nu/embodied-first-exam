@@ -1,0 +1,20 @@
+{
+ "success": 1,
+ "live_success": 1,
+ "replay_success": 1,
+ "deterministic": 1,
+ "finalized": 1,
+ "missing_log": 0,
+ "infra_error": 0,
+ "grader_error": 0,
+ "sim_crashed_on_call": 0,
+ "n_actions": 100,
+ "sim_steps": 1900,
+ "calls": 83,
+ "rows": 1900,
+ "resets": 10,
+ "reset_budget": 50,
+ "sim_startups": 1,
+ "elapsed_s": 1330.6,
+ "video_rendered": 1
+}
