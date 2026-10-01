@@ -1,31 +1,45 @@
 #!/usr/bin/env python3
-"""Generate the VLABench tasks: tasks/vlabench-<task>-i00 (privileged) and tasks/vlabench-<task>-i00-standard.
+"""Generate the VLABench tasks: tasks/vlabench-<task>-i00-privileged and tasks/vlabench-<task>-i00-standard.
 
     python3 scripts/vlabench/generate.py            # every task freeze.sh verified (frozen/report.json)
     python3 scripts/vlabench/generate.py select_fruit
+    python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: tasks.json, frozen/<task>/{instance.json,oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
-templates in templates/ and the shared sources in shared/ (copied byte for byte). Everything in a task directory except
-results/ is rewritten; re-running reproduces the tasks exactly.
+templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
+pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
+finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is
+removed. Re-running reproduces the tasks exactly.
 """
 
+import filecmp
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+
+TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
 FROZEN = HERE / "frozen"
 VERSION = (ROOT / "images/vlabench/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:{VERSION}"
-# Standard-mode client image (agent container and verifier), as main's HumanoidBench standard tasks pin it.
-CLIENT_IMAGE = (
-    "docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f"
+# Standard-mode client image (agent container and verifier): the one digest-pinned base and the exact pip pins of
+# scripts/eai_standard/ (PROTOCOL §2.4; ci_checks/check-standard-client.sh).
+_EAI = ROOT / "scripts/eai_standard"
+_ENV = dict(ln.split("=", 1) for ln in (_EAI / "client.env").read_text().splitlines() if "=" in ln and ln[0] != "#")
+CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
+CLIENT_PIP = " ".join(
+    ln.split("#", 1)[0].strip()
+    for ln in (_EAI / _ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()).read_text().splitlines()
+    if ln.split("#", 1)[0].strip()
 )
-CLIENT_PIP = "requests==2.34.2 numpy==2.5.3 pillow==12.3.0 scipy==1.18.1"
 AUTHOR, ORG = "Changhe Chen", "MLL Lab"
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
@@ -118,12 +132,10 @@ def render(template: str, values: dict) -> str:
 
 
 def reset_dir(d: Path) -> None:
-    """Remove everything except results/ (committed agent results)."""
+    """A task directory is written from scratch: what is not rendered here does not belong (no results/, PROTOCOL D3)."""
     if d.exists():
-        for c in d.iterdir():
-            if c.name != "results":
-                shutil.rmtree(c) if c.is_dir() else c.unlink()
-    d.mkdir(parents=True, exist_ok=True)
+        shutil.rmtree(d)
+    d.mkdir(parents=True)
 
 
 def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
@@ -135,7 +147,7 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
     path.chmod(mode)
 
 
-def make(task: str, rec: dict, source: str) -> None:
+def make(task: str, rec: dict, source: str, out: Path) -> tuple[Path, Path]:
     fz = FROZEN / task
     dash = task.replace("_", "-")
     episode = (
@@ -164,7 +176,7 @@ def make(task: str, rec: dict, source: str) -> None:
         "ms_frame": MS_FRAME,
     }
 
-    p = ROOT / "tasks" / f"vlabench-{dash}-i00"
+    p = out / f"vlabench-{dash}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", render("task.toml", values))
     put(p / "instruction.md", render("instruction.md", values))
@@ -181,7 +193,7 @@ def make(task: str, rec: dict, source: str) -> None:
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
     put(p / "solution/oracle.npy", src=fz / "oracle.npy")
 
-    s = ROOT / "tasks" / f"vlabench-{dash}-i00-standard"
+    s = out / f"vlabench-{dash}-i00-standard"
     reset_dir(s)
     put(s / "task.toml", render("standard/task.toml", values))
     put(s / "instruction.md", render("standard/instruction.md", values))
@@ -200,18 +212,60 @@ def make(task: str, rec: dict, source: str) -> None:
     put(s / "solution/solve.sh", src=SHARED / "standard/solve.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "standard/oracle_replay.py")
     put(s / "solution/oracle.npy", src=fz / "oracle.npy")
+    normalize(p)
+    normalize(s)
+    return p, s
 
 
-def main(tasks: list[str]) -> None:
+def render_all(out: Path, only: list[str]) -> list[str]:
+    """Write the task directories of `only` (default: every verified task) into `out`; returns their names."""
     report = json.loads((FROZEN / "report.json").read_text())
     sel = json.loads((HERE / "tasks.json").read_text())
     verified = [t for t in sel["candidates"] if report.get(t, {}).get("verified")]
-    for task in tasks or verified:
+    names = []
+    for task in only or verified:
         if task not in verified:
             raise SystemExit(f"{task}: not verified by freeze.sh (frozen/report.json)")
-        make(task, report[task], sel["oracle_source"][task])
-    print(f"generated {2 * len(tasks or verified)} task directories")
+        names += [d.name for d in make(task, report[task], sel["oracle_source"][task], out)]
+    return names
+
+
+def check() -> int:
+    """tasks/ must be exactly what render_all writes, with no other vlabench-* directory."""
+    with tempfile.TemporaryDirectory() as tmp:
+        names = set(render_all(Path(tmp), []))
+        have = {d.name for d in TASKS_DIR.glob("vlabench-*") if d.is_dir()}
+        bad = sorted(have ^ names)
+        for name in sorted(names & have):
+            cmp = filecmp.dircmp(TASKS_DIR / name, Path(tmp) / name, ignore=["__pycache__"])
+            stack = [cmp]
+            while stack:
+                c = stack.pop()
+                if c.left_only or c.right_only or c.diff_files or c.funny_files:
+                    bad.append(name)
+                    break
+                diff = filecmp.cmpfiles(c.left, c.right, c.common_files, shallow=False)[1]
+                if diff:
+                    bad.append(name)
+                    break
+                stack += list(c.subdirs.values())
+    for name in sorted(set(bad)):
+        print(f"FAIL tasks/{name}: differs from scripts/vlabench/generate.py (re-run it)")
+    return 1 if bad else 0
+
+
+def main(args: list[str]) -> int:
+    if args == ["--check"]:
+        return check()
+    names = render_all(TASKS_DIR, args)
+    if not args:  # a full run owns every vlabench-* directory
+        for d in sorted(TASKS_DIR.glob("vlabench-*")):
+            if d.is_dir() and d.name not in names:
+                shutil.rmtree(d)
+                print(f"removed stale {d.relative_to(ROOT)}")
+    print(f"generated {len(names)} task directories")
+    return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main(sys.argv[1:]))
