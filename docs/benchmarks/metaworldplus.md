@@ -6,10 +6,10 @@ each on one frozen instance, in both modes: 100 tasks.
 | | |
 |---|---|
 | upstream | Meta-World @ `59fc34d7768af9785e4688c3e1db671424f4a6c3` (MIT), MuJoCo 3.3.0, gymnasium 1.1.1 |
-| tasks | `tasks/metaworldplus-<env>-i00` (privileged) and `tasks/metaworldplus-<env>-i00-standard` (standard) |
+| tasks | `tasks/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus-<env>-i00-standard` (twins share the instance) |
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` (`images/metaworld/`), CPU only |
-| standard client | `python:3.12-slim` pinned by digest, pinned pip versions; `rcb_client.py` / `rcb1.py` as in the MuJoCo standard tasks |
+| standard client | the one client base and pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
 | generator | `scripts/metaworldplus/` (`freeze.sh` → `frozen/`, `generate.py` → `tasks/`) |
 
 ## Task definition
@@ -44,12 +44,15 @@ evidence, verdict before video). Differences:
 2. Watching (`/observe` with `seconds > 0`) holds the hand still (`S.hold_targets()`), since actions are deltas.
 3. Cameras and proprioception come from the tool module (`CAMERA_VIEWS`, `PROPRIO_LAYOUT`); `meta.task` is the target.
 4. DexToolBench's goal logic is gone.
-5. The [new] items the MuJoCo service gets in the migration (PROTOCOL §7): a simulator error (500) ends the episode with
-   `reason = "error"`, a body over 64 MB gets 413, `final.json` carries `replay_success` / `live_success` and the
-   grader writes numeric fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
+5. As in the MuJoCo service after the migration (PROTOCOL §7): a simulator error (500) ends the episode with
+   `reason = "error"`, a body over 64 MB gets 413, non-numeric `dt` / `seconds` are a 400; `final.json` carries
+   `replay_success` / `live_success` and the grader writes numeric fields only; `/status` and `meta` also carry
+   `sim_steps`, submit responses `clipped`.
 
-The protocol string stays `rcb-limited/2.1` (`/spec`, `task.toml`): the shipped client checks that spelling, and the
-migration switches all services at once. This is the only `check-protocol-v1.py` warning on these tasks.
+Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). `generate.py` finishes every task with
+`scripts/task_conventions.py` `normalize` (README layout, no `results/`), and `--check` is clean on all 100.
+
+Agent results are not in the repository (PROTOCOL D3): they are published on the results site.
 
 ## Egress
 Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to
