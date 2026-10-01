@@ -8,7 +8,7 @@ Run: Harbor job `codex-gpt6_luna-xhigh-sample`, trial `metaworldplus-door-open-i
 | agent time | 3603 s |
 | actions / sim steps | 1123 / 1123 |
 | tokens in / out (cached in) | 13786303 / 142239 (13370496) |
-| token budget | 10M in / 10M out per trial: **over** (`over_token_budget = 1`, scored 0) |
+| token budget | 100M in / 10M out per trial (PROTOCOL §5 default): within (`over_token_budget = 0`; 13.8M input) |
 | verifier | `{"success": 0, "deterministic": 1, "replay_success": 0, "live_success": 0, "finalized": 1, "control_steps": 1123, "sim_steps": 1123, "calls": 102, "elapsed_s": 3868.9, "final_reward": 5.376322185419836, "video_rendered": 1, "sim_error": 0, "infra_error": 0, "grader_error": 0}` |
 | verifier sandbox | separate, no network |
 | setup | Harbor 0.23.0 `-a codex` (Codex CLI ?), model `openai/gpt-6-luna`, `reasoning_effort=xhigh`, no reasoning summaries; ChatGPT subscription login (`CODEX_FORCE_AUTH_JSON=1`); agent egress allowlisted to the model APIs |
@@ -21,4 +21,4 @@ Run: Harbor job `codex-gpt6_luna-xhigh-sample`, trial `metaworldplus-door-open-i
 
 ## Failure analysis
 
-The agent first pushed on the wrong side of the handle, then switched to short pushes with settling holds that were rotating the door when the 60-minute limit ended the run (`AgentTimeoutError`). It also used 13.8M input tokens, over the 10M budget, so the trial scores 0 either way.
+The agent first pushed on the wrong side of the handle, then switched to short pushes with settling holds that were rotating the door when the 60-minute limit ended the run (`AgentTimeoutError`), so the trial scores 0. It used 13.8M input tokens, within the default budget.
