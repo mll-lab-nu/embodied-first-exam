@@ -7,7 +7,7 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 | | |
 |---|---|
 | upstream | robocasa/robocasa-gr1-tabletop-tasks @ `4840e671596f93ca03651524b9f72ffb1aadfeff` (MIT), robosuite @ `51cc017` (1.5.1) with its whole-body mink IK controller (mink 0.0.5), MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa-gr1-<task>-i00` (privileged) and `tasks/robocasa-gr1-<task>-i00-standard` (standard), 24 each |
+| tasks | `tasks/robocasa-gr1-<task>-i00-privileged` and `tasks/robocasa-gr1-<task>-i00-standard`, 24 each |
 | metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"` (to be added to TAXONOMY), `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
@@ -65,7 +65,7 @@ confirm publishing, otherwise `BUILD_ONLY`).
 ```bash
 docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa-gr1:$(cat images/robocasa-gr1/VERSION) images/robocasa-gr1
 bash scripts/robocasa-gr1/import_references.sh <PR #4 checkout>
-python3 scripts/robocasa-gr1/generate.py
+python3 scripts/robocasa-gr1/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/robocasa-gr1-*
 ```
@@ -75,3 +75,5 @@ bash ci_checks/run_all.sh tasks/robocasa-gr1-*
 reference (123–393 actions) succeeds on its final state without truncation; two fresh-process replays end
 in the live state's hash and succeed; the success survives 10 more still steps. Same hashes with and without
 MuJoCo's mesh cache.
+
+Agent results are not kept in the repository (PROTOCOL D3).
