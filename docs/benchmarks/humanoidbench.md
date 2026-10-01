@@ -8,7 +8,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | simulator | MuJoCo 3.1.6 + dm_control, CPU |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 24 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00` (privileged) and `-standard` (`eai-standard/2.1`) |
+| tasks | 24 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, both modes; the 23 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
@@ -97,8 +97,7 @@ repository root).
 
 ## Results
 
-Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
-replay's last frame, a passing trajectory). A standard task's folder holds the standard configuration (no reset) and,
-in `reset50/`, a run with the optional capability of 50 resets, reported separately (PROTOCOL D1). Runs recorded
-before protocol v1.0 say so in their README (the standard ones, with 50 resets, in `prev_rcb_limited_1_1_reset50/`).
-Cross-task tables are generated for the site (PROTOCOL D3).
+Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
+`reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
+runs with the optional reset capability (50 resets) are reported separately from the standard configuration (no
+reset, PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.
