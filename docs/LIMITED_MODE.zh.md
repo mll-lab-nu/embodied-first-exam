@@ -3,7 +3,7 @@
 # Limited 模式（"机器人即服务"）是怎么做的
 
 英文设计与协议：`LIMITED_MODE.md`、`LIMITED_MODE_PROTOCOL.md`（协议版本 `rcb-limited/2.0`，v2 设计见 `LIMITED_MODE_V2_DESIGN.zh.md`）。
-第一个实例：`tasks/robotwin_2_0_stack_blocks_two-limited/`，与 unlimited 版共用同一个冻结实例（seed 60417）。
+第一个实例：`tasks/robotwin_2_0_stack_blocks_two-standard/`，与 unlimited 版共用同一个冻结实例（seed 60417）。
 
 ## 1. 两种模式的区别
 | | unlimited（现有任务） | limited |

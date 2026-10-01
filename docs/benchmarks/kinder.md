@@ -60,7 +60,7 @@ back `blocked` and stops the chunk there.
 
 ```bash
 harbor run -c scripts/kinder/configs/codex-openrouter.yaml --env-file .env -p tasks/kinder-tossing-i00-standard
-harbor run -p tasks/kinder-dynamo-i00 -a oracle      # or -a nop: scores 0
+harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are

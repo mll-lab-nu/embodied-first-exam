@@ -1,13 +1,13 @@
 # Robot Coding Bench — Task Protocol v1.0
 
-Status: **final** (2026-09-30). This document is the contract every new task follows; tasks already in the repository
-are brought in line by the migration in §7. The wire format of standard mode is specified in
+Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
+task README). Every task in the repository follows it; what is still open is listed in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`).
 
-> **Transition.** v1.0 renames the two modes (unlimited → **privileged**, limited → **standard**), the standard-mode
-> protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**) and the image registry (→ `eai-<sim>` under the Embodied Agent
-> Interface (EAI) organization). Tasks already in the repository still use the old names until the migration PR (§7) lands; CI accepts
-> both during the transition and reports the old names as warnings.
+> **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
+> protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. The move of
+> the base images to `eai-<sim>` under the Embodied Agent Interface (EAI) organization is still open (§7); CI reports the
+> old registry as a `legacy:` warning until then.
 
 ## 0. Conventions
 
@@ -43,7 +43,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 |---|---|---|
 | D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
-| D3 | Results | `tasks/<task>/results/<run_id>/`, small files only (≤ 2 MB each); videos and full trials on Hugging Face; cross-task tables are generated for the site, not committed. |
+| D3 | Results | Not with the tasks: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
 | D5 | Images | One registry (EAI organization), images named `eai-<sim>`, versioned per simulator in `images/<sim>/VERSION`; share images where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
@@ -52,7 +52,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no custom LLM gateways or agent adapters. |
-| D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed. |
+| D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. |
 
 ## 1. Checklist (every task)
 
@@ -68,8 +68,10 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
 11. `nop` scores 0; with an oracle, the oracle scores 1; without one, human review (§2.7). [new]
 12. A published task's `environment/` and `tests/` inputs never change; a change is a new task. [current]
-13. Runs with Harbor's native agents; no custom runner, gateway or adapter. [new]
-14. Standard-mode tasks also satisfy every MUST in §4.
+13. The directory name ends in `-privileged` or `-standard`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
+14. `README.md` in the standard layout (§2.1). [CI]
+15. Runs with Harbor's native agents; no custom runner, gateway or adapter. [new]
+16. Standard-mode tasks also satisfy every MUST in §4.
 
 ## 2. Task contract
 
@@ -83,13 +85,13 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | At run time, importing repository code from outside the task directory (packages under `scripts/`, a package at the repository root, a `PYTHONPATH` into the repository). Pinned third-party pip packages are fine. | MUST NOT | [current] — a task's identity is its directory digest, and Harbor builds from the task directory alone |
 | Shared sources under `scripts/<bench>/shared/`, copied into each task by the generator; copies byte-identical within a benchmark | MAY (if used, identical) | [new] |
 | Generated tasks come with their generator (under `scripts/<bench>/` for new benchmarks; existing generators are in `scripts/`); re-running it reproduces the committed tasks (`git diff` is empty) | SHOULD | [current] / [new] |
-| `README.md` sections: Difficulty, Reference solution, Verification | SHOULD | [new] (about a third of existing tasks have them) |
+| `README.md` in the standard layout: `# <directory name>`; a key table with Benchmark, Mode, Twin, Simulator / robot, Family / instance, Oracle, Agent time budget, Base image; then `## Task`, `## Difficulty`, `## Reference solution`, `## Verification`, and `## Details` for anything else (extra rows, notes, provenance). No results in the README | MUST | [CI] |
 
 ### 2.2 Naming
 | Item | Level | Basis |
 |---|---|---|
-| Privileged tasks: `<simulator>-<family>-i<NN>`, no suffix; upstream names may be kept (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | SHOULD | [current] |
-| Standard tasks: the privileged task's name + **`-standard`**, sharing its frozen instance and `instance_seed` | MUST (when a privileged twin exists) | [new] (was `-limited`) |
+| Privileged tasks: `<base>-privileged`, where `<base>` is `<simulator>-<family>-i<NN>` or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | [CI] |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | [CI] |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -328,7 +330,7 @@ affecting the verdict.
 | **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] |
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
-| Results in `tasks/<task>/results/<run_id>/`, files ≤ 2 MB; videos on Hugging Face; no top-level `results/` | MUST | [new] |
+| Results are not committed with the tasks: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory (the batch reports in `docs/results/` are historical and move to the site) | MUST | [CI] |
 | Privileged and standard results reported separately; standard results state the protocol version and reset budget | MUST | [new] |
 
 Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
@@ -350,23 +352,28 @@ capabilities. Merged once its services implement crash recovery.
 
 **Not accepted:** step caps; single-control `step()` calls.
 
-## 7. Migration from the current repository
+## 7. Migration status
 
-Done by the maintainers in a dedicated migration PR after this protocol is merged:
-1. Modes: `-limited` → `-standard`; `mode = "privileged" | "standard"`; `tier` removed; `rcb-limited/2.1` → `eai-standard/2.1` in `task.toml`, `/spec` and the docs, with `rcb_client.py` accepting both spellings.
-2. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public; per-simulator `VERSION` only.
-3. `/logs/verifier` cleared at the start of every `test.sh`.
-4. `oracle` / `oracle_evidence` on every task (DexToolBench's 15 partial oracles go through human review).
-5. The results pipeline applies the token budget (`over_token_budget` in the results metadata).
-6. DexToolBench graders write `success` to `reward.txt` and keep `progress` in `reward.json`; the MuJoCo standard grader
-   drops its string fields; services end the episode with `reason = "error"` on a 500 and answer oversized bodies with 413;
-   RoboTwin services state the end condition in `/spec`.
-7. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
-8. The MuJoCo privileged tasks move from `rcb-mujoco:0.1.1` to the same tag as their standard twins (same physics and
-   state hashes; 0.1.2 adds GPU EGL rendering).
+Done (2026-10-01):
+1. Modes and names: every task ends in `-privileged` or `-standard`; `mode` set, `tier` removed;
+   `rcb-limited/2.1` → `eai-standard/2.1` in `task.toml`, the services' `/spec` and the instructions; `rcb_client.py`
+   accepts both spellings.
+2. `oracle` / `oracle_evidence` on every task (DexToolBench: full on 6, partial on 15 — these need human review).
+3. `/logs/verifier` cleared at the start of every `tests/test.sh`.
+4. `reward.txt` is `success` (1/0) for DexToolBench and the MuJoCo standard tasks, with `progress` in `reward.json`; the
+   MuJoCo standard grader writes no string fields.
+5. The MuJoCo privileged tasks use the same image tag as their standard twins (`rcb-mujoco:0.1.2`: same physics and state
+   hashes as 0.1.1, plus GPU EGL rendering).
+6. No `results/` in the repository; every task README in the standard layout.
 
-Renames and new image tags change task digests: after migration every benchmark and mode is re-validated (oracle and
-`nop` on a sample); existing results keep their original run records and are marked as pre-migration in their metadata.
-`ci_checks/check-protocol-v1.py` reports the remaining gaps as warnings and becomes blocking once migration is done.
-Until then, new tasks may carry only the warnings marked `legacy:` (old names and registry), because their services and
-clients are copied from tasks that still use them.
+These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
+
+Open:
+1. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public;
+   per-simulator `VERSION` only (`legacy:` warning in CI until then).
+2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
+3. Services end the episode with `reason = "error"` on a 500 and answer oversized bodies with 413; RoboTwin services
+   state the end condition in `/spec`.
+4. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
+   results site.
+5. Generators (`scripts/`) emit the v1.0 names and README layout, so that re-generating reproduces the committed tasks.
