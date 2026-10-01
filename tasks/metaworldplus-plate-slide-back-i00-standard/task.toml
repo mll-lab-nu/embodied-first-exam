@@ -11,7 +11,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/metaworldplus-plate-slide-back-i00-standard"
-description = "STANDARD MODE (robot as a service, rcb-limited/2.1): MetaWorld+ (Meta-World v3 plate-slide-back, Sawyer arm): Slide the plate back out to the target position. The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): MetaWorld+ (Meta-World v3 plate-slide-back, Sawyer arm): Slide the plate back out to the target position. The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -23,7 +23,7 @@ simulator = "mujoco"
 robot = "sawyer"
 family = "metaworld/plate-slide-back"
 mode = "standard"
-protocol = "rcb-limited/2.1"      # = eai-standard/2.1; the shipped client checks this spelling until the migration
+protocol = "eai-standard/2.1"
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 1.0

@@ -1,5 +1,4 @@
-"""Standard-mode sim service for the MetaWorld+ tasks (wire protocol rcb-limited/2.1 = eai-standard/2.1): robot as a
-service.
+"""Standard-mode sim service for the MetaWorld+ tasks (wire protocol eai-standard/2.1): robot as a service.
 
 Derived from the MuJoCo service (images/mujoco/limited/server_mj.py) and identical to it in protocol and lifecycle:
 GET /spec, GET /status, POST /observe, POST /submit, binary RCB1 responses, no reset, crash recovery (journal +
@@ -9,8 +8,8 @@ episode, /data evidence. Differences, all from Meta-World:
   Meta-World's Sawyer has no arm actuators (the hand is driven by a mocap weld), so there is no `joint_position`;
 - watching (/observe with seconds > 0) holds the hand still (S.hold_targets()), since actions are deltas;
 - cameras and proprioception come from the tool module (mw_tool.CAMERA_VIEWS, mw_tool.PROPRIO_LAYOUT);
-- protocol v1.0 items the MuJoCo service gets in the migration (docs/PROTOCOL.md §7): a simulator error (500) ends the
-  episode with reason "error", an oversized body is answered with 413, final.json carries no string verdict fields.
+- like the MuJoCo service since the migration (docs/PROTOCOL.md §7): a simulator error (500) ends the episode with
+  reason "error", an oversized body is answered with 413, non-numeric `dt` / `seconds` are a 400.
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own state (hand position, gripper
 opening, mocap target, arm and finger joints, last command) and the task's target point. Never an object's pose.
@@ -40,7 +39,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb1  # noqa: E402
 
-PROTOCOL = "rcb-limited/2.1"  # = eai-standard/2.1; the shipped client checks this spelling until the migration (§7)
+PROTOCOL = "eai-standard/2.1"
 DATA = "/data"
 os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "mw_tool"))
@@ -364,6 +363,14 @@ def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
         )
 
 
+def _num(meta: dict, key: str, default: float) -> float:
+    """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
+    try:
+        return float(meta.get(key, default))
+    except (TypeError, ValueError):
+        raise ValueError(f"{key} must be a number") from None
+
+
 def do_submit(meta: dict, A: np.ndarray):
     if meta.get("type", ACTION_NAME) != ACTION_NAME:
         raise ValueError(f"type must be {ACTION_NAME} (see /spec action_types)")
@@ -371,7 +378,7 @@ def do_submit(meta: dict, A: np.ndarray):
         raise ValueError(f"{ACTION_NAME} actions must be (T, {N}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
-    dt = float(meta.get("dt", CTRL_DT))
+    dt = _num(meta, "dt", CTRL_DT)
     k = int(round(dt / CTRL_DT))
     if k < 1 or abs(k * CTRL_DT - dt) > 1e-6:
         raise ValueError(f"dt must be a positive multiple of control_dt={CTRL_DT}")
@@ -423,7 +430,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "dt": dt,
             "interpolate": interp,
             "cameras": cams,
-            "note": (meta.get("note") or "")[:500],
+            "note": str(meta.get("note") or "")[:500],
             "control_steps": len(RECORD),
             "n_clipped_rows": n_clip,
             "task": task_info(),
@@ -439,7 +446,7 @@ def do_submit(meta: dict, A: np.ndarray):
 
 def do_observe(meta: dict):
     cams = [c for c in (meta.get("cameras") or list(CAMS)) if c in CAMS] or list(CAMS)
-    seconds = float(meta.get("seconds", 0))
+    seconds = _num(meta, "seconds", 0)
     fps = _fps(meta)
     video = meta.get("video", "frames")
     depth = bool(meta.get("include_depth", False))
