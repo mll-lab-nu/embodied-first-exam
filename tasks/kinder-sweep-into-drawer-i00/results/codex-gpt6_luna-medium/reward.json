@@ -1,0 +1,11 @@
+{
+ "success": 0,
+ "all_success": 0,
+ "deterministic": 1,
+ "n_actions": 949,
+ "sim_steps": 949,
+ "missing_trajectory": 0,
+ "invalid_trajectory": 0,
+ "grader_error": 0,
+ "video_rendered": 1
+}
