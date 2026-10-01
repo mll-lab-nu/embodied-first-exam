@@ -183,7 +183,7 @@ digest = "sha256:99a7ef3480a7b22acf87bafffb431525991913213eb169fdf11ebdf7c61ce68
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00-standard"
-digest = "sha256:87a9ca264dce5f1f540c31f3a1899861a60dd6abdec269ed5bb36806574c0abc"
+digest = "sha256:31a02896c454a048df845ab3aa7896f7c08bc711f553c33ca8e69a9b3ebf35ab"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-simple-i00-privileged"
@@ -191,7 +191,7 @@ digest = "sha256:508aec8f5019b76c37c58c29cdc5a68d5cc4c15c01d874cc4e77be5941bdfdd
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-simple-i00-standard"
-digest = "sha256:306327f5922e2f6694f8809b568b1c0b53be55d66792d67bf131213e7669068c"
+digest = "sha256:ef5a99116671cd35fd2a3b75aa5e36fbf871f1a7fd088131ca3543bd922cccbe"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-privileged"
@@ -199,7 +199,7 @@ digest = "sha256:e40e45e7f9d279883ceeda0be118d2c1050fc9b12d0e02eae4da7bc3cd9469b
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard"
-digest = "sha256:b500805ccf931ea18811e4cfa99723a74629659ae79b2cc6a0d2e2f2d2573e5b"
+digest = "sha256:82f7ab786343150636c144fd8cc11f7acafb65ecf3087df31e6fba63717ccade"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-maze-i00-privileged"
@@ -207,7 +207,7 @@ digest = "sha256:1394292898d1107883a6060b732679fb24a31443871932e083e7e3b8037ecb8
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-maze-i00-standard"
-digest = "sha256:2c16f4c5d5fa11fd369545ec77be85b207be3c3341167a081198473f27017484"
+digest = "sha256:da255f9c386d26182a453b2b0a1be6f0d530c1d8bbfc7b73e2b88e81cb2e257f"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-reach-i00-privileged"
@@ -215,7 +215,7 @@ digest = "sha256:62830bbe0fd947031c100bd0bc50ffaec2b7f362765238836787c7bdc612b6a
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-reach-i00-standard"
-digest = "sha256:be841cbda578c9ffa35a111c5394c62750ae2d56f6ab6e27e0afeba6b7888c81"
+digest = "sha256:7076885a7829c30bce4de1c9c4b60b33da28066c70492676f686fe78eeeecd2b"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-hard-i00-privileged"
@@ -223,7 +223,7 @@ digest = "sha256:efeea5f873d10fc72a4bf3364c9119a577226442e1e2b3443063de4dc5cb222
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-hard-i00-standard"
-digest = "sha256:49369daa00b061fdbf1ea15750a5ccf055c7c3263501408fb81154caff5bdb5d"
+digest = "sha256:3e9eb56ff2c3b5c41e57c8ff6d813dd7b7d277622b4fbf02fe00766604e6ff31"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-privileged"
@@ -231,7 +231,7 @@ digest = "sha256:eec1908a0967c8ea25aa91813a1b76be36f955d5c17e830efad24aa21841f84
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-standard"
-digest = "sha256:0825f49e99ee8b52ee08248804f86c9a07fe534982dc6e51aad0c8b35c9d3235"
+digest = "sha256:5782376ed82e4a6ed7f4a105d6fdaf8cbd26cce52821d6f84353478ae64885af"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-stair-i00-privileged"
@@ -239,7 +239,7 @@ digest = "sha256:94155b8d3d39206242f2656f77e8600ce0a4f54cd6d889c59c40665b5ed36a5
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-stair-i00-standard"
-digest = "sha256:10980a12e6fc20cc013879945f96b680d3969828dc3407547c8ad149396d95a4"
+digest = "sha256:4bd624f3eb58f4da0d053806564cfe3cbf4583c0e4f61494b2acdbc71312595b"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-walk-i00-privileged"
@@ -247,7 +247,7 @@ digest = "sha256:79f01d6812612d04c89c6dcfa408d1ee7a8f1310ebf16913c5bd0497dca482a
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-walk-i00-standard"
-digest = "sha256:1fbfdadc2cf6a0b9aa806f03bf1a416f348f23a3baf2f20590519d830dfd26bf"
+digest = "sha256:6d15d7827dc1057818c6a093e283fedd0be367b77b4d96eb519032754878c6a7"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-basketball-i00-privileged"
@@ -255,7 +255,7 @@ digest = "sha256:2096e5648f8f5e1d8bf165bee07dbd8ea234808f9c6b680a7107d516357cafe
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-basketball-i00-standard"
-digest = "sha256:f7a0102a890f5d7f12692578c23612ddd246a19c0e66a5426b0495eecf407d9e"
+digest = "sha256:5a75e6f66c5865273f779d7d88309049fb781906eff3002e30b8bc20fa0174cb"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-bookshelf-simple-i00-privileged"
@@ -263,7 +263,7 @@ digest = "sha256:fdb1bce486c4f0e2304764db82e5eec4b4bb3859aa0f4f1008910308dd8e3a8
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-bookshelf-simple-i00-standard"
-digest = "sha256:1ad746a811a5a70a36e9fe2c99bcf438b244f971bd8176d453a46772972cc766"
+digest = "sha256:82e9cab340896892af877e53a5f9db40d8b71d1756dd78eb9d3472982f7598a1"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-cabinet-i00-privileged"
@@ -271,7 +271,7 @@ digest = "sha256:81e77eba2859911c4d6e5627c886c1915f4578034245b61ff9272ac3b2682f4
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-cabinet-i00-standard"
-digest = "sha256:4cceefdd71225a5c6587ab1c1b3bd7d5c2148c5257de5f637bfc80abf033788d"
+digest = "sha256:781ebd2f9808721c50d052c4fa2d1efd333877898af985b63782f30493f17b3a"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-cube-i00-privileged"
@@ -279,7 +279,7 @@ digest = "sha256:1b1019107fb52888b5856e422a1a08bad9738673bd5a75df0cfc789f2ec5724
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-cube-i00-standard"
-digest = "sha256:67b17793359dc27031145a3beda2fdde00baba33648e79a8f00098eb1c6e57ef"
+digest = "sha256:0c49e46136010b829e5f37b1057cdf188aaaec1a60686ae4dca034fbcc2c6a34"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-door-i00-privileged"
@@ -287,7 +287,7 @@ digest = "sha256:b92aedf8770b290c3042fd74477ae73c37fa43c2ab703f691b20b0569e039f8
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-door-i00-standard"
-digest = "sha256:df02768955c71c663fc34fce78fb6182b2ec379cb4fbf7528572ba23042a70e1"
+digest = "sha256:4f9a33a239cb4bb52563bec4aaa72bb570c44ba59242af346a201f43be45c618"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-highbar-simple-i00-privileged"
@@ -295,7 +295,7 @@ digest = "sha256:8bb43c3220ade76d60939b5e1f0dbffe073de5b1f53e2cfd862ff62ca8cf16c
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-highbar-simple-i00-standard"
-digest = "sha256:32e17264402ec629ae33dadcc880d04185c9f41d3613447af119200b23b3203d"
+digest = "sha256:177fbf938986573f23470066c94583fa55fed087926f1d3d13d77cdcb3e78900"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-insert-normal-i00-privileged"
@@ -303,7 +303,7 @@ digest = "sha256:39c3f6e04fcea49e02a07e4e1e530106bbc31db0a91f6d1bed4adcec1f25f24
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-insert-normal-i00-standard"
-digest = "sha256:e1674032ef6816fe3dd0a9aa34a598aeaa9b69f2dc4cce2cc9cb57de0c124190"
+digest = "sha256:0763abac97f82e90d70e61db1a88194bbf8cc6aa350fb07db40de5c743519339"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-kitchen-i00-privileged"
@@ -311,7 +311,7 @@ digest = "sha256:0adcafd78261c865fbd6b1d83b7100138560af0069c15ec8f5c41a93eb1d4f0
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-kitchen-i00-standard"
-digest = "sha256:85da2b4d4a62a8ba4c19b33d2037e54663486e1a0aae319f1e656aa8a9a23afb"
+digest = "sha256:19dabf01388cee28981a3e88acb0c3c48b0dd2a43553f47cb620144e2f38f152"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-package-i00-privileged"
@@ -319,7 +319,7 @@ digest = "sha256:cb0d905a2187ace70eee84f8b03f25a24813c4928bbbfeaee1155135c5935b5
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-package-i00-standard"
-digest = "sha256:1d7e59dad1a1de94f6437d38b173ce26bd4ed8dba8abb1680fa7f908db8801c1"
+digest = "sha256:105d5f5c6472f9df34ea85ebb888bc1dbf50121fbad4387a6a98380d8297ab05"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-powerlift-i00-privileged"
@@ -327,7 +327,7 @@ digest = "sha256:6ea3825c0177819965731d4417612b233dec56149916d5c600fc0b420613d4a
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-powerlift-i00-standard"
-digest = "sha256:440f81da90b14add260c3c411508346e115557eca5d715e10ee7add0b32c9ed2"
+digest = "sha256:7b44363cfb00b9f04a04b788c2b9539d83df011c66b22d89f70f7e2c35c02d34"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-push-i00-privileged"
@@ -335,7 +335,7 @@ digest = "sha256:995f0ed8a5d04fc16cb94f55233449218d12d38cee92f7d71caa9e31dd64941
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-push-i00-standard"
-digest = "sha256:9452b9d33d76da335253a8ecf4cf9a84920ebd4825bfb785303f2f10a63a19eb"
+digest = "sha256:f14f0f329ffbde9d25c15e19279f10a53a146b1d8d88ae4f143d8792a49f2b85"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-room-i00-privileged"
@@ -343,7 +343,7 @@ digest = "sha256:d47b3b8aa86c749bb921c71254691d629f8fd803a9da0802dddae68ce7b8b28
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-room-i00-standard"
-digest = "sha256:fcc576cb94b43c214a2dc5a52e84ba746f6084f156be6a8135fb3640de9ef267"
+digest = "sha256:c09287bfcde411afae8b30cc522ef9d0b439a8924d7e6c09b0607a43838277dc"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-spoon-i00-privileged"
@@ -351,7 +351,7 @@ digest = "sha256:8b4bc228370863259b2ab64597c0e30e485038b86aaa50199b841bb8dbd082d
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-spoon-i00-standard"
-digest = "sha256:c5480004e7b105adc26fbca98867afebe85109f765b451392ab72411d0d22a2b"
+digest = "sha256:ef19cc337a1603318c96c3b285ddbc8ac76cee2bca7d9a16dd62078de9d650da"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-truck-i00-privileged"
@@ -359,7 +359,7 @@ digest = "sha256:41094f3a4d2e0e6181c7799dc9f2e1654c370682ea78fe2abdc787e9df29169
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-truck-i00-standard"
-digest = "sha256:5ac7c90f753169afa5c5f4a31061f4c0329215470bb3e072a6fd4660a2f8e4ba"
+digest = "sha256:7262415ff970e752c4949723f32cff113db005b8a985f47479aa2ed3d1ee4883"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-window-i00-privileged"
@@ -367,7 +367,7 @@ digest = "sha256:07012f0d2aa1013c1a17a011e9f7fe53ad5dfe4c271fb7398cfd34b67bf269d
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-window-i00-standard"
-digest = "sha256:c4082ea7cdbc77f44ec9523d50d4301341451eabb6d8539cf5127dac1f24d5f6"
+digest = "sha256:3ffcae8ed7a0b0397ab45550340684c6bf01fcc1ed1778eed3b022b2d7c67fce"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-balance-beam-i00-privileged"
