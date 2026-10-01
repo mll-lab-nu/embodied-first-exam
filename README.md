@@ -26,20 +26,21 @@ Privileged mode measures whether an agent can program a robot when it has full a
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
 [docs/LIMITED_MODE_PROTOCOL.md](docs/LIMITED_MODE_PROTOCOL.md).
 
-> **Naming transition.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard*, and renamed
-> `rcb-limited/2.1` to `eai-standard/2.1`. Task directories and images in this release still use the earlier names
-> (`<task>-limited`, `ghcr.io/jameskrw/rcb-<sim>`) until the migration described in PROTOCOL §7 is complete.
+> **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
+> `eai-standard/2.1`. Every task directory ends in `-privileged` or `-standard`. The base images still live under
+> `ghcr.io/jameskrw/rcb-<sim>` until the registry move described in PROTOCOL §7.
 
 ## Benchmarks
 
 | Benchmark | Simulator / robot | Tasks (per mode) | Oracle |
 |---|---|---|---|
-| robosuite example (`robosuite-cube-stack-i00`) | robosuite (MuJoCo) · Franka Panda | 1 (privileged) | full |
+| robosuite example (`robosuite-cube-stack-i00-privileged`) | robosuite (MuJoCo) · Franka Panda | 1 (privileged) | full |
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
 | DexToolBench (`dextoolbench_<cat>_<obj>_<task>`) | MuJoCo 3.3.7 · KUKA iiwa14 + Sharpa HA4 hand | 21 of 24 | full on 6, partial on 15 |
 | MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda | 4 | full (scripted IK) |
 
-Each task directory carries a README describing its scene, success predicate, reference solution and verification.
+Each task directory carries a README in one layout: a key table (benchmark, mode, twin, simulator and robot, family and
+instance, oracle, budget, image), then Task, Difficulty, Reference solution, Verification and Details.
 
 **Excluded tasks:**
 - **RoboTwin:** `click_bell` is excluded because its success is a transient contact that a replay does not reproduce. `click_alarmclock` and `put_object_cabinet` are excluded because the upstream expert failed on every seed we swept.
@@ -62,12 +63,12 @@ docker tag ghcr.io/jameskrw/rcb-mujoco:0.1.2 ghcr.io/jameskrw/rcb-mujoco:0.1.1  
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
 
 # one task, locally
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two -a codex -m openai/gpt-6-luna
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two-limited -a claude-code -m anthropic/claude-fable-5-1
+harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a codex -m openai/gpt-6-luna
+harbor run -p tasks -i robotwin_2_0_stack_blocks_two-standard -a claude-code -m anthropic/claude-fable-5-1
 
 # reference checks: the oracle scores 1, the nop agent scores 0
-harbor run -p tasks -i robosuite-cube-stack-i00 -a oracle
-harbor run -p tasks -i robosuite-cube-stack-i00 -a nop
+harbor run -p tasks -i robosuite-cube-stack-i00-privileged -a oracle
+harbor run -p tasks -i robosuite-cube-stack-i00-privileged -a nop
 harbor view jobs
 ```
 
@@ -107,17 +108,15 @@ scripts/               task generators, image build/push, egress switch, results
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
 docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
-                       RUNNING.md (batches, logs, recordings), results/
+                       RUNNING.md (batches, logs, recordings)
 third_party/           upstream sources used by the base images (cap-x, RoboTwin)
 ```
 
 ## Results
 
-Per-task results live in `tasks/<task>/results/<run_id>/`. The run id has the form `<harness>-<model>-<effort>`, for
-example `codex-gpt6_luna-xhigh`. Each results folder contains a README with the verdict, cost and failure analysis.
-Replay videos are currently stored next to each result; under protocol v1.0 they move to a Hugging Face dataset
-(PROTOCOL §5). Batch reports are in `docs/results/`; how to run a batch and
-read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
+Agent results are not stored in this repository: per-task results and batch reports are published on the results
+site and the Hugging Face dataset, keyed by run id `<harness>-<model>-<effort>` (for example `codex-gpt6_luna-xhigh`)
+(PROTOCOL §5). How to run a batch and read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
 
 ## Contributing
 
