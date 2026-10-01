@@ -43,7 +43,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 |---|---|---|
 | D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
-| D3 | Results | Not with the tasks: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
+| D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
 | D5 | Images | One registry (EAI organization), images named `eai-<sim>`, versioned per simulator in `images/<sim>/VERSION`; share images where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
@@ -330,7 +330,7 @@ affecting the verdict.
 | **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] |
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
-| Results are not committed with the tasks: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory (the batch reports in `docs/results/` are historical and move to the site) | MUST | [CI] |
+| Results are not committed to the repository: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory, no batch reports under `docs/` | MUST | [CI] for task directories |
 | Privileged and standard results reported separately; standard results state the protocol version and reset budget | MUST | [new] |
 
 Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
@@ -364,7 +364,8 @@ Done (2026-10-01):
    MuJoCo standard grader writes no string fields.
 5. The MuJoCo privileged tasks use the same image tag as their standard twins (`rcb-mujoco:0.1.2`: same physics and state
    hashes as 0.1.1, plus GPU EGL rendering).
-6. No `results/` in the repository; every task README in the standard layout.
+6. No `results/` in any task and no batch reports under `docs/` (results live on the results site); every task README in
+   the standard layout.
 
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
 
