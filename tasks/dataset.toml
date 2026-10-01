@@ -5,7 +5,7 @@
 [dataset]
 name = "robot-coding-bench/robot-coding-bench"
 version = "0.1.0"
-description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance (cap-x robosuite)."
+description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance, in privileged and standard mode (robosuite, RoboTwin 2.0, DexToolBench, MuJoCo Playground)."
 keywords = [ "robotics", "manipulation", "code-as-policy", "robosuite", "harbor",]
 [[dataset.authors]]
 name = "MLL Lab"

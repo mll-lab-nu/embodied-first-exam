@@ -1,4 +1,9 @@
-# Limited-mode protocol `rcb-limited/2.1` (robot as a service)
+# Standard-mode protocol `eai-standard/2.1` (robot as a service)
+
+> Formerly `rcb-limited/2.1` (limited mode). Protocol v1.0 ([PROTOCOL.md](PROTOCOL.md)) renamed it; the content is
+> unchanged, and 2.1 includes the crash recovery described below (added 2026-09-29 without a version bump). Services
+> and tasks still report `rcb-limited/2.1` until the migration (PROTOCOL §7), which also updates the client to accept both spellings.
+> Which parts of this document are required is listed in PROTOCOL §4.
 
 The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit** (except a technical episode cap where a
 task states one, e.g. DexToolBench's 360,000 control steps); the agent's wall-clock budget is the real limit; actions and simulated time are reported as cost. Nothing the agent can
@@ -70,7 +75,7 @@ when the agent phase ends (`timeout`) or on an error. The predicate is evaluated
 
 **Service crashes (no reset, no lost episode).** Every executed physics step is journaled (`trajectory_live.f64`) and every
 completed call logs a checkpoint (step count + state hash) in `episode.jsonl`. If the service dies mid-episode, compose
-restarts it (`restart: on-failure:3`) and it **resumes the same episode**: it replays the journal up to the last checkpoint,
+restarts it (`restart: on-failure:6`) and it **resumes the same episode**: it replays the journal up to the last checkpoint,
 checks the state hash, and continues. The call that was in flight is lost as a whole (its caller got a connection error or
 5xx, not a result, so nothing is learned); `spec.on_service_error` tells the agent to check `GET /status` before continuing.
 More than 2 crashes end the episode: `reason = sim_crashed_on_call` if every crash happened while serving a call (counted as
@@ -83,7 +88,7 @@ the service is ready is a plain restart; a scene build that hangs is killed by a
 `/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (T, 34), a fresh replay
 (`replay_success`, `deterministic`), `replay.mp4` (six-view), `final.json`. The collect hook signals the service by PID
 after the agent container is stopped; a separate verifier grades `final.json`: `success = live ∧ replay ∧ deterministic`,
-reward fields as in PROTOCOL §3.
+reward fields as in PROTOCOL §2.6 and §4.8.
 
 ## Live recording (sidecar only; the agent sees none of it)
 - `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each
@@ -138,4 +143,4 @@ journals and resumes exactly as above (journal `record.f64`).
 The service replays the recorded episode in a fresh simulator at the end (`deterministic`: same final state hash).
 
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise; the 2.x client accepts both.
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version (and, after the migration, both spellings). Accepted, pending: `eai-standard/2.2` (PROTOCOL §6).

@@ -1,0 +1,12 @@
+# Shared files need a maintainer's review (enforced with branch protection on main).
+/docs/PROTOCOL.md               @JamesKrW
+/docs/LIMITED_MODE_PROTOCOL.md  @JamesKrW
+/docs/TAXONOMY.md               @JamesKrW
+/docs/REVIEWING.md              @JamesKrW
+/ci_checks/                     @JamesKrW
+/.github/                       @JamesKrW
+/scripts/build_images.sh        @JamesKrW
+/scripts/push_images.sh         @JamesKrW
+/images/VERSION                 @JamesKrW
+/README.md                      @JamesKrW
+/CONTRIBUTING.md                @JamesKrW

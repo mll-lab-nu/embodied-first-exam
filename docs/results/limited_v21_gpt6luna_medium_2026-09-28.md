@@ -1,6 +1,6 @@
 # Limited v2.1 (measured proprioception) vs v2.0: GPT-6 Luna medium, 22 tasks, 60 min — 2026-09-28
 
-Job `v21-gpt6luna-medium-limited`. Chinese report with live videos: `private/reports/260928/README.md` (outside this repo); per task: `results/codex-gpt6_luna-medium/`.
+Job `v21-gpt6luna-medium-limited`. Per task: `results/codex-gpt6_luna-medium/`.
 
 **2.1 medium 3/22** (open_laptop, open_microwave, place_object_stand) vs 2.0 medium 4/22 vs 2.0 xhigh 8/22. The measured proprioception did not help at medium effort; the difference is within single-trial noise.
 
