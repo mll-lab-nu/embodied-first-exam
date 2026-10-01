@@ -42,7 +42,7 @@ ROOT = Path(os.environ.get("RCB_MJ_ROOT", "/opt/rcb_mj"))
 SIM_DT = 1.0 / 600.0
 CONTROL_DT = 1.0 / 60.0
 SUBSTEPS = int(round(CONTROL_DT / SIM_DT))          # 10
-# Per-goal time limit. DexToolBench's own eval gives each goal 10 s; ours (owner 2026-09-29): 30 s in unstandard mode (the
+# Per-goal time limit. DexToolBench's own eval gives each goal 10 s; ours (owner 2026-09-29): 30 s in privileged mode (the
 # default here: the trajectory is replayed offline and the agent can reset freely), none in standard mode (the service
 # sets RCB_DTB_GOAL_TIMEOUT_S=0: one episode, no reset). 0 = no per-goal limit.
 GOAL_TIMEOUT_STEPS = int(round(float(os.environ.get("RCB_DTB_GOAL_TIMEOUT_S", "30")) / (1.0 / 60.0)))
@@ -173,7 +173,7 @@ def build_model(category: str, obj: str, start_p7, goal_p7):
 
 
 class Session:
-    """One DexToolBench episode in MuJoCo. Unstandard mode: the agent may read and even modify s.model / s.data while
+    """One DexToolBench episode in MuJoCo. Privileged mode: the agent may read and even modify s.model / s.data while
     debugging, but only the recorded joint targets are handed in and they are replayed from the frozen start."""
 
     def __init__(self, instance: str | Path = "/app/instance.json", enable_render: bool = False):
@@ -240,7 +240,7 @@ class Session:
                 "steps_on_goal": self.steps_on_goal, "steps_left_on_goal": None if done or self.failed or not GOAL_TIMEOUT_STEPS else GOAL_TIMEOUT_STEPS - self.steps_on_goal,
                 "goal_distance_m": None if done else round(self.goal_distance(), 5)}
 
-    # ---- state (privileged in unstandard mode)
+    # ---- state (privileged-mode state)
     def state(self) -> dict[str, Any]:
         d = self.data
         return {"q": d.qpos[self._jq].copy(), "qd": d.qvel[self._jv].copy(), "targets": self.targets.copy(),
