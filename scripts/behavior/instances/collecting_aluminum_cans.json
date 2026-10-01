@@ -1,0 +1,141 @@
+{
+ "task": "collecting_aluminum_cans",
+ "challenge_task": "collecting_aluminum_cans",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Collect the six soda cans in the bedroom, three lying on the bed and three on the floor, into the bucket that stands on the bedroom floor.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "9459c06ba3347e37",
+ "action_dim": 25,
+ "challenge_max_steps": 15304,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.0118,
+    -1.7363,
+    -0.1401
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "bed.n.01_1": {
+   "category": "bed",
+   "position": [
+    -1.2495,
+    -0.2894,
+    0.1796
+   ],
+   "orientation_xyzw": [
+    -0.003,
+    -0.0022,
+    -0.0,
+    1.0
+   ]
+  },
+  "can__of__soda.n.01_4": {
+   "category": "can_of_soda",
+   "position": [
+    1.1284,
+    -0.6983,
+    0.0661
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.3727,
+    0.928
+   ]
+  },
+  "bucket.n.01_1": {
+   "category": "ice_bucket",
+   "position": [
+    1.3384,
+    -0.5926,
+    0.1856
+   ],
+   "orientation_xyzw": [
+    0.0002,
+    -0.0001,
+    0.9518,
+    0.3067
+   ]
+  },
+  "can__of__soda.n.01_2": {
+   "category": "can_of_soda",
+   "position": [
+    -1.7402,
+    0.3694,
+    0.5561
+   ],
+   "orientation_xyzw": [
+    0.0008,
+    0.0,
+    0.476,
+    0.8794
+   ]
+  },
+  "can__of__soda.n.01_1": {
+   "category": "can_of_soda",
+   "position": [
+    -0.4599,
+    0.3813,
+    0.5681
+   ],
+   "orientation_xyzw": [
+    -0.0037,
+    -0.0021,
+    -0.5992,
+    0.8006
+   ]
+  },
+  "can__of__soda.n.01_5": {
+   "category": "can_of_soda",
+   "position": [
+    0.4394,
+    -3.6422,
+    0.059
+   ],
+   "orientation_xyzw": [
+    0.0002,
+    0.0,
+    0.8882,
+    0.4595
+   ]
+  },
+  "can__of__soda.n.01_6": {
+   "category": "can_of_soda",
+   "position": [
+    -1.9968,
+    -4.3776,
+    0.0571
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0002,
+    0.7668,
+    0.6419
+   ]
+  },
+  "can__of__soda.n.01_3": {
+   "category": "can_of_soda",
+   "position": [
+    -1.5887,
+    0.1599,
+    0.5703
+   ],
+   "orientation_xyzw": [
+    0.0003,
+    -0.0002,
+    0.55,
+    0.8351
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

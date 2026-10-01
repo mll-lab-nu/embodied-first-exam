@@ -1,0 +1,69 @@
+# RoboLab · reorient_red_mug — STANDARD MODE (robot as a service, eai-standard/2.2)
+
+You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
+hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Put the red mug upright so that the opening is facing upwards. Success: The red mug must stand upright (its own up axis within 0.1 rad, about 6 deg, of vertical), and the gripper must no longer touch it.
+
+## Rules (real-robot rules)
+- **No reset.** The episode starts when the service comes up and ends on success (at the first control step where the
+  success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over.
+- **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own
+  proprioception (joints, gripper, end-effector pose, velocities, drive efforts). No object poses, no success predicate.
+- Steps are unlimited; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+  are reported as cost.
+- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
+  at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
+  has succeeded.
+- **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
+  (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
+  until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
+  check `r.status()["control_steps"]` before you continue (`spec["on_service_error"]`).
+- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
+  what you look at and where you store it is your code's decision.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects (waits while Isaac Sim starts and builds the scene, ~2 min)
+spec = r.spec()                               # action types, dims, joint limits, cameras, budget, robot spec
+
+obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (H,W,3)
+obs.meta["proprio"]                           # {"layout": [...32 names], "now": [...]}: joints, gripper, end-effector pose, ...
+obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl at the LAST frame
+obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+
+res = r.submit("joint_position", A, dt=0.2)   # A: (T, 8) rows dt seconds apart; streamed at 15 Hz with linear interpolation
+res = r.submit("ee_pose", P)                  # P: (T, 8) fingertip-centre targets; differential IK per row
+res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res.meta["control_steps_chunk"]
+res.video["wrist_cam"]                        # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
+res.frames["wrist_cam"]                       # uint8 (N,H,W,3) at video_fps if requested
+res.last["egocentric_mirrored_camera"]; res.proprio   # last frame per camera; float32 (N, 32) proprio at each video frame
+res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
+```
+Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table, 864×480), `over_shoulder_left_camera`
+(static, over the robot's left shoulder, 1280×720) and `wrist_cam` (on the gripper, 1280×720; it moves:
+`res.extrinsic_cv["wrist_cam"]` has its pose at every frame).
+
+### Optional inputs (eai-standard/2.2; ask only for what you need)
+- Depth: `r.get_obs(depth=True)` -> `obs.last_depth[cam]` float32 (H,W) z-depth in metres, 0 = no reading, pixel-aligned
+  with `obs.last[cam]`; `r.submit(..., depth="frames")` -> also `res.depth[cam]` (N,H,W), one map per frame (1 mm steps).
+- Per frame: `res.frame_step` (control step), `res.frame_time_s`, `res.extrinsic_cv[cam]` (N,3,4 world -> camera, OpenCV
+  axes). `spec["cameras"][cam]`: `intrinsic_cv` and `mount` (static pose, or `wrist_cam` on link `base_link` with a fixed
+  `link_T_cam_cv`).
+- `spec["robot_spec"]` (joints and their limits, gripper, controller gains, tool frames), `spec["world"]` (frame, units,
+  wxyz), `spec["proprio_groups"]` + `res.group("joint_vel")` (joint_pos, joint_vel, tcp_pose, gripper_opening, joint_effort).
+- `r.fk(q7)` -> poses of `spec["kinematics"]["links"]`; `r.ik({"tcp": pose7}, seed=q7)` -> `{"ok", "q", "error"}`: a
+  stateless model of the arm (no physics, no simulated time).
+
+### Action types
+- `joint_position` (8): `panda_joint1..7, gripper`; radians, and the gripper command is binary (0 = open, 1 = closed; it
+  switches at the row, never interpolated). Absolute targets tracked by PD controllers. Rows are `dt` apart
+  (`1/15 ≤ dt ≤ 0.5` s, a multiple of the 15 Hz control period: 1/15, 2/15, ...; any other `dt` is rejected, never
+  rounded); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the
+  spec). Use `obs.meta["proprio"]["now"][:7]` for the current joints to move smoothly.
+- `ee_pose` (8): `x y z qw qx qy qz gripper` in the env-local frame (the robot's root frame: Franka base at the origin, x
+  forward towards the table, z up); quaternions wxyz. Each row is driven to by differential IK in closed loop (at most
+  0.25 m/s); a row that does not converge within 6 mm is reported in `meta["plan"]`. The pose is the **fingertip-centre
+  tool frame**: the gripper flange moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads
+  extend ~5.7 cm back from there). At the reset pose the gripper points straight down. At most 50 rows per submit.
+
+Objects here: a bowl, a ceramic mug, a red mug, a measuring cup, a cordless drill and two white mugs. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
