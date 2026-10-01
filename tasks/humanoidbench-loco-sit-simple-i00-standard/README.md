@@ -12,8 +12,8 @@
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-sit-simple-i00-privileged`: the same frozen
-instance and the same success rule. HumanoidBench runs in the `sim` sidecar
+Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-sit-simple-i00-privileged`: the
+same frozen instance and the same success rule. HumanoidBench runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for rendering), which holds the reward, judges the
 episode, records it, replays it in a fresh simulator and renders the replay video; the verifier grades the
 sidecar's record in a container of its own (`tests/Dockerfile`, no network).
@@ -22,8 +22,8 @@ Note: the chair is behind the robot and never enters the head cameras' view (flo
 `room_camera` (the recording camera frozen at its starting pose) sees both.
 
 ## Difficulty
-See `humanoidbench-loco-sit-simple-i00-privileged`'s README; here the agent also has no state, no reward, no resets and
-no simulator of its own.
+See `humanoidbench-loco-sit-simple-i00-privileged`'s README; here the agent also has no state, no reward, no
+resets and no simulator of its own.
 
 ## Reference solution
 `solution/oracle_replay.py` sends the same 999 rows (`solution/sit_simple_actions.npy`) through the client,
