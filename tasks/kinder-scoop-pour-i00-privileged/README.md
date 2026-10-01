@@ -18,7 +18,7 @@ hands in one trajectory, replayed open-loop in a fresh process. Its standard-mod
 Task: move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 ## Difficulty
-Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well inside the target bin. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): failed both modes.
+Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well inside the target bin.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

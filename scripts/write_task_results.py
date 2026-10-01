@@ -3,6 +3,7 @@
 (+ replay.mp4, replay.last.png). One folder per agent+model; the privileged and standard twins each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <make_two_mode_report_zh.py>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import canonical  # noqa: E402
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 root = pathlib.Path(__file__).resolve().parents[1]
 if "--out" not in sys.argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (PROTOCOL D3)")
@@ -25,7 +26,7 @@ def last_msgs(trial, k=3):
 n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
-    r = json.load(open(trial / "result.json")); task = r["task_name"].split("/")[-1]
+    r = json.load(open(trial / "result.json")); task = canonical(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
     tdir = root / "tasks" / task
     if not tdir.is_dir(): continue
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}

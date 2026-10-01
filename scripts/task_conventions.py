@@ -39,7 +39,6 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
     ("Limited-mode", "Standard-mode"), ("limited-mode", "standard-mode"), ("Limited mode", "Standard mode"),
     ("limited mode", "standard mode"), ("limited twin", "standard twin"), ("unlimited task", "privileged task"),
     ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
-    ("Limited-mode verifier", "Standard-mode verifier"),
 ]
 BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
@@ -79,14 +78,14 @@ def bench_of(task: Path) -> str:
 
 def read_text(p: Path) -> str | None:
     try:
-        return p.read_text()
+        return p.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError):
         return None
 
 
 def write_if_changed(p: Path, s: str) -> None:
     if read_text(p) != s:
-        p.write_text(s)
+        p.write_text(s, encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -181,7 +180,7 @@ def normalize_test_sh(task: Path) -> None:
             and not re.match(r"(set\s|mkdir\s+-p\s+/logs/verifier\s*$)", ln.strip())]
     if cmds and re.match(r"rm\s+-[rRf]+\s+/logs/verifier/\*", cmds[0]):
         return
-    i = next(k for k, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#"))
+    i = next((k for k, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")), len(lines))
     lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)\n")
     write_if_changed(p, "".join(lines))
 
@@ -259,7 +258,7 @@ def default_difficulty(task: Path, rows: dict[str, str]) -> str:
                 f"and success needs every goal.{ref}")
     if task.name.startswith("mujoco_playground_"):
         return ("MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it "
-                f"({rows.get('success', 'see Verification')}), so a trajectory has to actually finish the manipulation "
+                f"({re.sub(r'^Playground has only a shaped RL reward(?: [(][^)]*[)])?; defined here[^:]*: ', '', rows.get('success', 'see Verification'))}), so a trajectory has to actually finish the manipulation "
                 "rather than collect partial reward.")
     return "Not documented yet."
 
@@ -279,8 +278,7 @@ def render_readme(task: Path) -> str:
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", f"{mode} (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else mode)]
-    if task.with_name(twin).is_dir():
-        head.append(("Twin", f"`{twin}`"))
+    head.append(("Twin", f"`{twin}`" if task.with_name(twin).is_dir() else "— (privileged only)" if mode == "privileged" else "—"))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
@@ -295,9 +293,9 @@ def render_readme(task: Path) -> str:
         used.add("oracle")
     ver = secd.get("Verification")
     if not ver:
-        parts = [f"**{k}**: {rowd[k]}" for k in ("verification", "grading", "metric", "success") if k in rowd]
+        parts = [rowd[k] for k in ("verification", "grading", "metric", "success") if k in rowd]
         ver = "\n\n".join(parts)
-        used.update({"verification", "grading", "metric"})
+        used.update({"verification", "grading", "metric", "success"})
     ref = ref or "See `solution/`."
     ver = ver or "See `tests/grade.py`."
     extra_rows = [(k, v) for k, v in rows if k.lower() not in used]
@@ -318,6 +316,17 @@ def render_readme(task: Path) -> str:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+def assert_converted(task: Path) -> None:
+    """Exact-match rewrites (graders, client) must not silently miss: a surviving pre-v1.0 form is an error."""
+    for f in task.rglob("grade.py"):
+        if 'reward.txt", "w").write(f"{reward:.4f}' in (read_text(f) or ""):
+            raise RuntimeError(f"{f}: grader still writes progress to reward.txt (update normalize_grader)")
+    for f in task.rglob("rcb_client.py"):
+        t = read_text(f) or ""
+        if 'startswith("rcb-limited/2.")' in t and "eai-standard/2." not in t:
+            raise RuntimeError(f"{f}: client accepts only rcb-limited/2.x (update CLIENT_ASSERT_OLD)")
+
+
 def normalize(task: Path) -> None:
     task = Path(task)
     mode_of(task)
@@ -327,6 +336,7 @@ def normalize(task: Path) -> None:
     normalize_text_files(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))
+    assert_converted(task)
 
 
 def snapshot(task: Path) -> dict[str, bytes]:
@@ -335,7 +345,7 @@ def snapshot(task: Path) -> dict[str, bytes]:
 
 def main(argv: list[str]) -> int:
     check = "--check" in argv
-    dirs = [Path(a) for a in argv if a != "--check"]
+    dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]
     bad = 0
     for d in dirs:
         if check:

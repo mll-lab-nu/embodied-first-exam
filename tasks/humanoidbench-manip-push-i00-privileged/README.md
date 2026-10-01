@@ -7,7 +7,7 @@
 | Twin | `humanoidbench-manip-push-i00-standard` |
 | Simulator / robot | `humanoidbench` / `unitree-h1` |
 | Family / instance | `push` / seed 0 |
-| Oracle | `none` — GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, kept in tasks/humanoidbench-manip-push-i00-privileged/results/codex-gpt6_luna-medium/; 997.80 before it, in its prev_harbor_agents/), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, run `codex-gpt6_luna-medium` on the results site; 997.80 before it), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, run `codex-gpt6_luna-medium` (standard) and the other models' runs on the results site; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
 
