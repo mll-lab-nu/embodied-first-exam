@@ -1,0 +1,47 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robopaint-acrylic-suddenshower-i00-privileged"
+description = "RoboPaint acrylic stroke copy: embodied robotic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; the paint is libmypaint 1.6.1 with the mypaint-brushes preset tanda/acrylic-03-paint, an opaque paint whose mark width follows the pressure): produce one replayable trajectory that copies the painting shown in the picture target.png (a small acrylic painting after Utagawa Hiroshige's woodblock print Sudden Shower over Shin-Ohashi Bridge and Atake, 1857) onto the main sheet with 10 premixed paints, in at most 380 strokes. Scored at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 380 strokes; 1 - mean ΔE / 20 is the continuous score). s.score() is served by a separate scoring container."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robopaint", "maniskill", "sapien", "painting", "acrylic-painting", "mypaint", "brush", "stroke-copy", "franka", "code-as-policy", "trajectory", "robopaint_acrylic_suddenshower"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + libmypaint 1.6.1 (rcb_brush.py MyPaintPainter, CPU)
+robot = "franka-panda"            # PandaStick with a paint brush: rigid handle + 15 mm collision-free tuft, TCP = the tuft's tip
+family = "robopaint_acrylic_suddenshower"
+mode = "privileged"               # privileged (exact sheets, score, brush state) | standard (RGB only: the -standard twin)
+oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
+oracle_evidence = "Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: acrylic-u-oracle-final0928, acrylic-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (8bc4fc0c: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on applesoranges and redfuji), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only)."
+instance_seed = 0                 # scene = environment/instance.json (sheets, brush preset, paint wells, start joints, instance_sha; the exemplar is target.png)
+expert_time_estimate_hours = 4.0
+difficulty = "hard"             # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
+medium = "mypaint"                # the brush model: calligraphy (Wang et al. 2020) | broad_nib | mypaint
+stroke_count = 292                # difficulty axes: the exemplar program's strokes (hidden), the stroke budget, paints, brush sizes, layers
+stroke_budget = 380
+palette_size = 10
+brush_sizes_mm = [16.2, 9.4, 5.2, 3.0]
+layers = 4
+colour_regions = 55                # the exemplar's palette-colour areas >= 30 mm² (graders' regions)
+source_image = "File:Hiroshige, Sudden shower over Shin-Ōhashi bridge and Atake, 1857.jpg"
+source_license = "Public domain"
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

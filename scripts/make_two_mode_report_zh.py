@@ -3,6 +3,7 @@
 usage: make_two_mode_report_zh.py <jobs_dir> <unlimited_job> <limited_job> <report_dir> [<batch_plan.json>]
 The task-list state file (difficulty) is read from RCB_TASKLIST_STATE if set."""
 import json, pathlib, shutil, subprocess, sys, datetime as dt, glob
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import canonical  # noqa: E402
 jobs, ju, jl, rep = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib.Path(sys.argv[4])
 PLAN = sys.argv[5] if len(sys.argv) > 5 else str(pathlib.Path(jobs).parent / "batch_plan_2026-09-23.json")
 plan = json.load(open(PLAN))
@@ -55,10 +56,10 @@ def last_msg(trial):
     except Exception: return ""
 def trial_for(job, task, limited):
     """Map by result.json task_name (Harbor truncates long trial directory names)."""
-    want = f"robotwin_2_0_{task}" + ("-limited" if limited else "")
+    want = f"robotwin_2_0_{task}" + ("-standard" if limited else "-privileged")
     for t in sorted((jobs / job).glob("robotwin_2_0_*")):
         if not t.is_dir() or not (t / "result.json").exists(): continue
-        try: name = json.load(open(t / "result.json")).get("task_name", "").split("/")[-1]
+        try: name = canonical(json.load(open(t / "result.json")).get("task_name", "").split("/")[-1])   # also pre-v1.0 jobs
         except Exception: continue
         if name == want: return t
     return None

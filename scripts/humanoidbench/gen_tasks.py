@@ -42,6 +42,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent                       # repo root
 TASKS_DIR = ROOT / "tasks"
+sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 SUBSET = HERE / "subset.toml"
 FACTS = HERE / "facts.json"
 REWARDS = HERE / "rewards.json"   # the scoring formulas, kept out of the image (see shared/rcb_rewards.py)
@@ -125,6 +126,10 @@ def copy_oracle(t: dict, mode: str, out: Path) -> None:
 
 
 def task_dir_name(t: dict, instance_tag: str) -> str:
+    return base_dir_name(t, instance_tag) + "-privileged"
+
+
+def base_dir_name(t: dict, instance_tag: str) -> str:
     return f"humanoidbench-{t['paper_category']}-{t['family'].replace('_', '-')}-i{instance_tag}"
 
 
@@ -336,6 +341,7 @@ def render(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASKS_DIR) ->
     # The verifier's image copies all of tests/ (the instance there comes from `instance`, not from here).
     ctx["tests_files"] = " ".join(sorted(p.name for p in (out / "tests").iterdir() if p.name != "Dockerfile"))
     write_templates(out, HERE / "templates", [("tests.Dockerfile", "tests/Dockerfile")], ctx)
+    normalize(out)
     return out
 
 
@@ -348,7 +354,7 @@ STANDARD = HERE / "shared" / "standard"            # the sidecar's service and a
 
 
 def standard_dir_name(t: dict, instance_tag: str) -> str:
-    return task_dir_name(t, instance_tag) + "-standard"
+    return base_dir_name(t, instance_tag) + "-standard"
 
 
 def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
@@ -440,6 +446,7 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
                      ("grade.py", "tests/grade.py")]:
         shutil.copyfile(STANDARD / src, out / rel)
     copy_oracle(t, "standard", out)
+    normalize(out)
     return out
 
 

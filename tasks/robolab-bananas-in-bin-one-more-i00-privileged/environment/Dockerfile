@@ -1,0 +1,8 @@
+# Base image = RoboLab v0.3.1 + Isaac Lab 2.3.2 / Isaac Sim 5.1 + RoboLab's asset library (see images/robolab/).
+# Everything task-specific is copied here.
+FROM ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1
+COPY instance.json /app/instance.json
+COPY rcb_robolab.py /opt/tools/rcb_robolab.py
+ENV PYTHONPATH=/opt/tools
+RUN mkdir -p /app/output
+WORKDIR /app

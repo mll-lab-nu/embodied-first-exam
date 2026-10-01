@@ -1,0 +1,6 @@
+{
+ "env_id": "kinder/Packing3D-p3-v0",
+ "seed": 0,
+ "max_steps": 3000,
+ "scene_sha": "cb3b6618c0d8b1df"
+}

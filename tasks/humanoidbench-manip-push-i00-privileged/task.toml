@@ -1,0 +1,53 @@
+# Generated from scripts/humanoidbench/templates/task.toml -- edit subset.toml or the template, not this.
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/humanoidbench-manip-push-i00-privileged"
+description = "HumanoidBench push: produce one replayable trajectory that pushes a box to a target with the Unitree H1, frozen scene instance 00."
+authors = [{ name = "pingyue" }]
+keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "manipulation", "push"]
+
+[metadata]
+author_name = "pingyue"
+# trajectory | policy (see docs/PROTOCOL.md)
+task_type = "trajectory"
+simulator = "humanoidbench"
+robot = "unitree-h1"
+# HumanoidBench env h1-push-v0; paper category manipulation; C6 · standing bimanual manipulation
+family = "push"
+mode = "privileged"
+# scene = environment/instance.npz (frozen MuJoCo state); identity = the dataset.toml digest
+instance_seed = 0
+expert_time_estimate_hours = 3.0
+oracle = "none"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, run `codex-gpt6_luna-medium` on the results site; 997.80 before it), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, run `codex-gpt6_luna-medium` (standard) and the other models' runs on the results site; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9"
+
+[verifier]
+timeout_sec = 900.0
+# grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,
+# where it was root, is gone by then, and only /app/output/ crosses over. It replays locally and the reward
+# formula is live in it, so it gets no network either.
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 8192
+
+[agent]
+timeout_sec = 3600.0
+# Deleting get_reward() from the image (images/humanoidbench/scrub_oracles.py) buys nothing if the agent
+# can fetch it back -- upstream is pinned at a public commit, so one `curl raw.githubusercontent.com/...`
+# or `pip download humanoid-bench` restores the whole answer key. Measured: with the default `public`
+# baseline an agent-phase curl pulled basic_locomotion_envs.py and found 5 `def get_reward`.
+# So the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+
+[environment]
+build_timeout_sec = 1800.0
+# the deliverable is reachable by search; one episode is ~0.15 s of one core
+cpus = 16
+memory_mb = 16384

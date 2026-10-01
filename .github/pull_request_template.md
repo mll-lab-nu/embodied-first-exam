@@ -4,7 +4,6 @@
 - [ ] Tasks for an existing benchmark
 - [ ] Task fix
 - [ ] Shared files / protocol (protocol-change issue: #___)
-- [ ] Results
 
 ## What and why
 <!-- Written by you. For a fix: which agent behaviour it closes, with before/after runs. -->
@@ -22,6 +21,7 @@
 - [ ] New simulator or family: two fresh replays give the same state hash
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §2.7)
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
+- [ ] Names `<base>-privileged` / `<base>-standard`; README in the standard layout; no `results/`
 - [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
 
 ## Evidence

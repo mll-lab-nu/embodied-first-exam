@@ -1,0 +1,6 @@
+{
+ "env_id": "kinder/Obstruction3D-o4-v0",
+ "seed": 0,
+ "max_steps": 3000,
+ "scene_sha": "c3bea64d9bc7f5a7"
+}

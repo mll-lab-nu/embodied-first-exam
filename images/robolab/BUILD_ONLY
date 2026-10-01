@@ -1,0 +1,49 @@
+BUILD_ONLY: ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:<images/robolab/VERSION> is never pushed to a
+registry (docs/PROTOCOL.md §2.4, D5). Every evaluation host builds it locally; the RoboLab tasks reference that tag and
+Harbor finds it in the local Docker image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 pip wheels (installed from
+  pypi.nvidia.com). NVIDIA licenses them for use, not for redistribution, so the built image may not be published.
+  RoboLab itself (github.com/NVlabs/RoboLab v0.3.1, code and its ~6 GB LFS asset library) is Apache-2.0.
+
+What the builder accepts
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and
+    every container that runs it accepts it again at launch);
+  - NVIDIA's terms for the isaacsim / isaaclab wheels on pypi.nvidia.com;
+  - RoboLab's Apache-2.0 licence (its assets are baked in, as RoboLab's own docker/Dockerfile does).
+  No account, key or token is needed: everything is downloaded anonymously.
+
+Data
+  None beyond the image: the RoboLab asset library is baked in; nothing is mounted at run time. The frozen task
+  instances live in the task directories.
+
+Host
+  Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports
+  (Isaac renders with RTX even headless; PhysX runs on the CPU). Checked on RTX 4090 (laptop and desktop) and RTX PRO
+  6000. Build: ~40 GB of free disk, network access to github.com (+ its LFS), astral.sh, pypi.org and pypi.nvidia.com,
+  about 45-60 min. Run: one Isaac simulator per 32 GB of host RAM (the standard sidecar and its replays run one at a time).
+
+Build (from the repository root)
+  docker build -f images/robolab/Dockerfile -t ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:$(cat images/robolab/VERSION) .
+  (scripts/build_images.sh builds every images/<sim>/ with its own naming; until it names images eai-<sim>, use the
+  command above.) The build context is the repository root: the Dockerfile copies images/robolab/uv.lock, which pins
+  every Python package (torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0, isaaclab 2.3.2.post1).
+
+Check a build
+  The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of a reference trajectory
+  must end in its recorded hash. With a task directory at hand:
+    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab-banana-in-bowl-i00-privileged:/t \
+      ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:$(cat images/robolab/VERSION) bash -c \
+      "cd /tmp && python /t/environment/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
+         --code /t/solution/oracle_banana_in_bowl.py --out /tmp/t.npz && \
+       python /t/environment/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
+  expects instance_exact true (instance sha 7c211bc3fe6d80cd), success true, and the same final state_sha from both
+  commands. Compare the two commands, not hosts: the final hash can differ between hosts (two values seen on ours,
+  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab-banana-in-bowl-i00-privileged -a oracle`.
+
+On a CI machine (maintainers)
+  A self-hosted runner with such a GPU builds the image with the command above when images/robolab/ or VERSION changes,
+  runs the check, and keeps the image in its local Docker store (or in a registry the organization keeps private), never
+  on a public registry. Hosts of the same organization may copy a built image among themselves
+  (docker save ... | zstd, docker load); a new VERSION means a rebuild on every host.
