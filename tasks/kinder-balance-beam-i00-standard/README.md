@@ -1,6 +1,18 @@
 # kinder-balance-beam-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-balance-beam-i00`: the same KinDER instance (`kinder/BalanceBeam3D-o3-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-balance-beam-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `balance-beam` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-balance-beam-i00-privileged`: the same KinDER instance (`kinder/BalanceBeam3D-o3-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: put the two small green cubes and the larger dark-red cube on the seesaw so that it balances. The task succeeds the moment all three cubes' centres are inside the translucent green region marked on the seesaw's beam and the beam is within 5° of level.
 
 ## Difficulty
-Tool use and dynamics: three cubes of two weights must sit inside the marked region of a seesaw and leave it within 5° of level, so where each goes has to balance the others. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard failed, with 50 resets and with none.
+Tool use and dynamics: three cubes of two weights must sit inside the marked region of a seesaw and leave it within 5° of level, so where each goes has to balance the others.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

@@ -1,8 +1,8 @@
 # Running evaluations
 
 Operational notes for running batches and reading results. The contract is [PROTOCOL.md](PROTOCOL.md); the
-standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Directory names below use the
-pre-migration spelling (`-limited` = standard mode).
+standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Task directories end in `-privileged` or
+`-standard`.
 
 ## Agent logs and timelines
 Harbor keeps, per trial, `agent/codex.txt` (every message, command and output), `agent/trajectory.json` and the raw
@@ -25,13 +25,13 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 
 ## Running a two-mode batch (privileged + standard)
 ```bash
-harbor run -p tasks -i robotwin_2_0_<t1> -i robotwin_2_0_<t2> -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-u>
-harbor run -p tasks -i robotwin_2_0_<t1>-limited ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-l>
-scripts/regrade_trials.sh exps/jobs/<job-u>            # re-run the same grader for trials with a grader error / missing video
-scripts/collect_batch_results.py exps/jobs <job-u> <job-l> <out_dir>   # videos, rewards, cost, summary.md
-scripts/make_two_mode_report_zh.py exps/jobs <job-u> <job-l> <report_dir> [batch_plan.json]   # 中文报告，GIF 预览 + mp4
+harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
+harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
+scripts/regrade_trials.sh exps/jobs/<job-priv>          # re-run the same grader for trials with a grader error / missing video
+scripts/collect_batch_results.py exps/jobs <job-priv> <job-std> <out_dir>   # videos, rewards, cost, summary.md
+scripts/make_two_mode_report_zh.py exps/jobs <job-priv> <job-std> <report_dir> [batch_plan.json]   # internal report (Chinese), GIF previews + mp4
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
-separate verifiers. Results so far: `docs/results/`; each RoboTwin task also carries `results/<run id>/README.md` (replay video, last frame, reward fields, cost, failure analysis) written by `scripts/write_task_results.py`. Folder names are run ids, `<harness>-<model>-<effort>` (e.g. `codex-gpt6_luna-xhigh`); a run's earlier protocol versions and side experiments sit in subfolders (`prev_rcb_limited_2_0/`, `ablation_persist/`, ...).
+separate verifiers. Results (per-task and batch reports) go to the results site and the Hugging Face dataset (PROTOCOL §5), not into the repository.
 
