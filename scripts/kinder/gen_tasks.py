@@ -36,6 +36,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 TASKS_DIR = ROOT / "tasks"
+sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
@@ -208,7 +209,7 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
 def context(t: dict, d: dict, f: dict) -> dict:
     """The privileged task's placeholders; standard_context() adds its twin's."""
     stmt = one_line(t["task_statement"])
-    full = f"kinder-{t['family']}-{d['instance_tag']}"
+    base = f"kinder-{t['family']}-{d['instance_tag']}"; full = base + "-privileged"
     std = f["standard"]
     ms = std["step_ms"]
     k, n = kind(f["entry_point"]), max_steps(t, d)
@@ -226,7 +227,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
                            "`s.env.unwrapped.set_state()` restores KinDER's\nobject-centric state only approximately, so a "
                            "rollout continued from it can drift from the same actions replayed from\nthe start: check the "
                            "final trajectory with `s.replay`."),
-        "twin": f"{full}-standard", "sim_gpu": SIM_GPU if mujoco else "",
+        "twin": f"{base}-standard", "sim_gpu": SIM_GPU if mujoco else "",
         "robot_seconds": f"{n / 10:g}", "task_statement": stmt, "difficulty": one_line(t["difficulty"]),
         "task_dir": full, "twin_dir": full, "image": IMAGE, "client_image": CLIENT_IMAGE,
         "allowed_hosts": ", ".join(f'"{h}"' for h in agent_hosts()),
@@ -285,7 +286,7 @@ def render(t: dict, d: dict, f: dict, tasks_dir: Path = TASKS_DIR) -> list[Path]
     ctx = context(t, d, f)
     inst = json.dumps(instance(t, d, f["scene_sha"]), indent=1) + "\n"
     full = tasks_dir / ctx["task_dir"]
-    std = full.with_name(full.name + "-standard")
+    std = full.with_name(full.name.removesuffix("-privileged") + "-standard")
     for out in (full, std):
         clear(out)
 
@@ -318,6 +319,7 @@ def render(t: dict, d: dict, f: dict, tasks_dir: Path = TASKS_DIR) -> list[Path]
         shutil.copyfile(src, dst)
     copy_oracle(t, "standard", std)
     _check_instruction(std, ctx_std, t, d)
+    normalize(full); normalize(std)
     return [full, std]
 
 
