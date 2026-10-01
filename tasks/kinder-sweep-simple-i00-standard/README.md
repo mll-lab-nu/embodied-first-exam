@@ -1,6 +1,18 @@
 # kinder-sweep-simple-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i00`: the same KinDER instance (`kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-sweep-simple-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `sweep-simple` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i00-privileged`: the same KinDER instance (`kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box.
 
 ## Difficulty
-Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a wiper at hand. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged failed; standard passed with 50 resets (calibrated over earlier episodes, then replayed a script) and failed with none.
+Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a wiper at hand.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

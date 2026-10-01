@@ -1,6 +1,18 @@
 # kinder-sort-blocks-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sort-blocks-i00`: the same KinDER instance (`kinder/SortClutteredBlocks3D-o4-sort_the_cluttered_blocks_into_bins-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-sort-blocks-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `sort-blocks` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (both modes) on the results site; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sort-blocks-i00-privileged`: the same KinDER instance (`kinder/SortClutteredBlocks3D-o4-sort_the_cluttered_blocks_into_bins-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: sort the four small cubes clustered in the middle of the white table into the four open bins on it by colour: the dark-red cube into the red bin, the dark-green one into the green bin, the dark-blue one into the blue bin and the yellow one into the yellow bin. The task succeeds the moment every cube's centre is inside the bin of its own colour, at least 1 cm from each of its inner walls, at least 1 cm below its rim and at least 0.5 cm above its floor.
 
 ## Difficulty
-Spatial: four clustered cubes, each into the bin of its colour. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard passed with 50 resets and failed with none.
+Spatial: four clustered cubes, each into the bin of its colour.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

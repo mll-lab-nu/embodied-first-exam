@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ["RCB_SESSION_LOG"] = ""; os.environ["RCB_AGENT_TRACE_DIR"] = ""
 import rcb1  # noqa: E402
 
-PROTOCOL = "rcb-limited/2.1"
+PROTOCOL = "eai-standard/2.1"
 DATA = "/data"; os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "rcb_dtb"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
@@ -264,6 +264,14 @@ def _fps(meta: dict) -> int:
     return fps
 
 
+def _num(meta: dict, key: str, default: float) -> float:
+    """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
+    try:
+        return float(meta.get(key, default))
+    except (TypeError, ValueError):
+        raise ValueError(f"{key} must be a number") from None
+
+
 def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
     n = (int(seconds * fps) + 2) * len(cams) * (2 if depth else 1)
     if n > MAX_FRAMES_PER_CALL: raise ValueError(f"this call would return {n} frames (cameras x fps x seconds, depth counts double); "
@@ -274,7 +282,7 @@ def do_submit(meta: dict, A: np.ndarray):
     if meta.get("type", "joint_position") != "joint_position": raise ValueError(f"type must be joint_position (not yet: {SPEC['action_types']['not_yet']})")
     if A.ndim != 2 or A.shape[1] != N: raise ValueError(f"joint_position actions must be (T, {N}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    dt = float(meta.get("dt", CTRL_DT)); k = int(round(dt / CTRL_DT))
+    dt = _num(meta, "dt", CTRL_DT); k = int(round(dt / CTRL_DT))
     if k < 1 or abs(k * CTRL_DT - dt) > 1e-6: raise ValueError(f"dt must be a positive multiple of control_dt={CTRL_DT}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}")
     interp = meta.get("interpolate", "linear")
@@ -293,7 +301,7 @@ def do_submit(meta: dict, A: np.ndarray):
     rec.tick(force=True); E["calls"] += 1; E["rows"] += int(A.shape[0]); RECF.flush()
     out = {**meta_common(), "chunk_id": E["calls"], "type": "joint_position", "executed_rows": int(A.shape[0]), "n_clipped_rows": n_clip, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": "joint_position", "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": (meta.get("note") or "")[:500], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
+         "note": str(meta.get("note") or "")[:500], "control_steps": len(RECORD), "n_clipped_rows": n_clip, "task": task_info(),
          "rows_total": E["rows"], "state_sha": S.state_sha()})
     d = os.path.join(DATA, "calls", f"{E['calls']:06d}"); os.makedirs(d, exist_ok=True); np.save(os.path.join(d, "actions.npy"), A.astype(np.float32))
     return out, rec.parts(video, fps)
@@ -301,7 +309,7 @@ def do_submit(meta: dict, A: np.ndarray):
 
 def do_observe(meta: dict):
     cams = [c for c in (meta.get("cameras") or list(CAMS)) if c in CAMS] or list(CAMS)
-    seconds = float(meta.get("seconds", 0)); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
+    seconds = _num(meta, "seconds", 0); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     _frame_budget(cams, fps, seconds, depth)
     rec = Recorder(cams, fps, depth); rec.tick(force=True)
@@ -376,7 +384,7 @@ class Hd(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ("/submit", "/observe"): return self._json(404, {"error": "no such endpoint"})
         try: self._req = self._body()
-        except Exception as exc: return self._json(400, {"error": str(exc)[:200]})
+        except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try:
@@ -396,7 +404,7 @@ class Hd(BaseHTTPRequestHandler):
         except ValueError as exc:
             return self._json(400, {"error": str(exc)})
         except Exception as exc:  # noqa
-            traceback.print_exc(); log({"ev": "error", "error": repr(exc)})
+            traceback.print_exc(); log({"ev": "error", "error": repr(exc)}); finish("error")   # PROTOCOL §4.6: a 500 ends the episode
             return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 
