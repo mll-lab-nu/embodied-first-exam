@@ -23,12 +23,12 @@ instance_seed = 0                 # scene = environment/instance.json (variation
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 23400.0
+timeout_sec = 45000.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
 
 [agent]
-timeout_sec = 10800.0             # Agent wall-clock budget; verifier has its own budget
+timeout_sec = 21600.0             # Agent wall-clock budget; verifier has its own budget
 # egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
 
 [environment]

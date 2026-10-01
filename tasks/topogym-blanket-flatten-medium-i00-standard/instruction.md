@@ -29,7 +29,7 @@ client and one episode. **Task:** Unfold and spread the blanket flat on the tabl
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
-- **Your wall-clock budget is 180 min (10800 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
+- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about 2.8 s of wall clock on an unloaded GPU, and up to about 13.4 s when other simulations share the GPU; the call metadata reports the time.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.

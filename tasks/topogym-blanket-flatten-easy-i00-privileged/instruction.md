@@ -134,7 +134,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 180 min (10800 s). One control step takes about 2.8 s of wall clock on an unloaded GPU, and up to about 4.9 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 2.8 s of wall clock on an unloaded GPU, and up to about 4.9 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

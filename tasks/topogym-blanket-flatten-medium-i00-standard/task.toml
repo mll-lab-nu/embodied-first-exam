@@ -45,10 +45,10 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, one fresh-process replay with the video, write final.json
-timeout_sec = 16200              # the end (a resume replay included) <= 1 h, the replay <= the agent's budget
+timeout_sec = 27000              # the end (a resume replay included) <= 1 h, the replay <= the agent's budget
 
 [agent]
-timeout_sec = 10800.0             # Agent wall-clock budget
+timeout_sec = 21600.0             # Agent wall-clock budget
 # egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
 
 [environment]

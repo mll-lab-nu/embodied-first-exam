@@ -23,7 +23,7 @@ SHARED = ["environment/Dockerfile", "environment/client-requirements.txt", "envi
           "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "environment/sim/run.sh", "environment/sim/server.py",
           "environment/sim/finalize.sh", "environment/sim/replay.py", "tests/Dockerfile", "tests/grade.py", "tests/test.sh"]
 ORACLE_FILES = ["solution/solve.sh", "solution/oracle_replay.py"]
-BUDGET_S = 10800                      # user 2026-10-01: a 3 h agent budget for every family
+BUDGET_S = 21600                      # user 2026-10-01: a 6 h agent budget for every family (see topogym_mk_task.py)
 
 
 def main() -> None:

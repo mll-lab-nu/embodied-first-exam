@@ -12,7 +12,7 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
 Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
 The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
 change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh).
-Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 10800, at most 36000).
+Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
 [task].name = "robot-coding-bench/<slug>-privileged" and [metadata].difficulty = the variation record's tier
 (docs/rcb/TAXONOMY.md). The last step is scripts/task_conventions.py's normalize (protocol v1.0 fields and README layout)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
@@ -37,7 +37,7 @@ TOOL_FOR = {"interlocked_claws": root / "harbor_templates/topogym/common/rcb_top
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
-BUDGET_S = 10800                      # user 2026-10-01: a 3 h agent budget for every family
+BUDGET_S = 21600                      # user 2026-10-01: a 6 h agent budget for every family (above protocol v1.0's 4 h cap: a TopoGym exception)
 MAX_BUDGET_S = 36000
 
 
