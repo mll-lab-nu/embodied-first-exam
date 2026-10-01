@@ -62,3 +62,16 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 `scripts/scan_secrets.py` (the key scan; it loads secrets inside its own process and never prints them),
 `scripts/account_failure_check.py` (structured evidence only: Codex's rate limits and last event, Claude Code's result
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
+
+## Base images until the migration
+`scripts/build_images.sh` and `scripts/push_images.sh` still name every image `<registry>/rcb-<sim>`; the migration
+(PROTOCOL §7) renames them. A benchmark already on the v1.0 names (`eai-<sim>`, D5) builds and tags its image directly,
+with the version from `images/<sim>/VERSION`:
+```bash
+REG=ghcr.io/embodied-agent-interface-v2-internal
+docker build -f images/<sim>/Dockerfile -t $REG/eai-<sim>:$(cat images/<sim>/VERSION) .   # context: the repository root
+docker tag $REG/rcb-<sim>:<ver> $REG/eai-<sim>:<ver>        # a host that already has the same build under the old name
+docker push $REG/eai-<sim>:$(cat images/<sim>/VERSION)      # public images only
+```
+An image with `images/<sim>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never pushed: `push_images.sh` skips
+it and prints why, and every host builds it locally (the marker file says how, and what licences and data it needs).
