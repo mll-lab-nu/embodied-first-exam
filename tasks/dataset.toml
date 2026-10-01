@@ -783,3 +783,315 @@ digest = "sha256:6d0cf93a4fe9422b228055c05fc3eb417037d81f635206b6dd47d46b2a84026
 name = "robot-coding-bench/humanoidbench-manip-window-i00-standard"
 digest = "sha256:15e10088fcae35f7ad09afac9fdb57f6fc6037bd1c396f65e65f0a95c5f17199"
 
+[[tasks]]
+name = "robot-coding-bench/vlabench-add-condiment-i00"
+digest = "sha256:9354f1b60ecbd9911b1ad5745f3599d16b544c28aa6bbc87b17dc5aa7001c71d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-add-condiment-i00-standard"
+digest = "sha256:a163126f07a1b7cc1b49993f9109219efad049eb6933b2af0e41bf2d1130b30d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-book-rearrange-i00"
+digest = "sha256:f5e684b01f1449c1a92d05e445651def29f893ca9ba7f4dcbc5a77e83448660d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-book-rearrange-i00-standard"
+digest = "sha256:65dfe21c7fc8ebd6aae39164b02c5d26b788679a04c58e13ac44d5ecaf9de6a8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-find-unseen-object-i00"
+digest = "sha256:08075570e1b88419197a0d308845f7a029c5da7b6ce0fd3acb5f91e6afa9799f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-find-unseen-object-i00-standard"
+digest = "sha256:ad4417a1600d9071eef0e0f627eb19596458a1ec0aa838963d6bffa0d16e2a8b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-friction-qa-i00"
+digest = "sha256:24ca59ffc91522c73937b43658a31a676568a65e524d7a280906ab4c975a9e95"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-friction-qa-i00-standard"
+digest = "sha256:ab4878d55fc9c8b64379dec05898149021044323d20f6f6d468917fec71a57b9"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-hammer-nail-and-hang-picture-i00"
+digest = "sha256:0af0c6443994378ad85d0860841cb3724e4615058e130ae213d961ff257509df"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-hammer-nail-and-hang-picture-i00-standard"
+digest = "sha256:13d2269dba4cefaae37c80c63262f78a3384dc2742d1be8c511774b333567902"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-heat-food-i00"
+digest = "sha256:fa644069d107037be7c5ddf15a59a7eebdd45897956fc0d0afcf551d7b3a812f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-heat-food-i00-standard"
+digest = "sha256:dc68f389d4e955ab815753594153a895341a8d58a4fff892cd09b341e8865ec9"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-bloom-flower-i00"
+digest = "sha256:6d8554ef6b5b6f0e277e8359d947c023efa62d3765dc3735654fde19ba4c1478"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-bloom-flower-i00-standard"
+digest = "sha256:f0ad7be05152f3e54dd7460b24d918fae6686730741585fd5a7e586f6f24df71"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-flower-i00"
+digest = "sha256:00fc31463dae2374fb8c837246d1cd79af5dc093716b0997e5c6fdf8f142515d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-flower-i00-standard"
+digest = "sha256:cb4247dde25f130a1025e8f0927c3cef451e9cea71b6a856a803ef167746800c"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-magnetism-qa-i00"
+digest = "sha256:0b01ab2edebd3e7f538bcfa49e396dd63138565d654b7838b2c8a5ff54a0527d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-magnetism-qa-i00-standard"
+digest = "sha256:8216b44334a4eb216cc27368b9b5b3d4c0d3ee915e066dae91d4aee8a2d8cae6"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-play-math-game-i00"
+digest = "sha256:d3ba9ab07116283a5548040d7ef8e20bd58f0e4182814cbe9af22aa35a5937d1"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-play-math-game-i00-standard"
+digest = "sha256:8002c48e13501760210fd302d869c298431099e00a0b8c1b2a12368c052d39d1"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-put-box-on-painting-i00"
+digest = "sha256:c57d989f4f6267c0b3b82cdf8a94599a2ebe67139c5caa7b9ba9799b50cacb40"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-put-box-on-painting-i00-standard"
+digest = "sha256:860c3055edde56b9d2f9f33851fa19e8c8a4de62550714d433e501925fcd8270"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-reflection-qa-i00"
+digest = "sha256:dae9765dca42016628e340d74bac52d0e079d64ef8a3ef115b6559ef067b9985"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-reflection-qa-i00-standard"
+digest = "sha256:c6c89b49dc0f83a9ca8bbe2123227b4e061c0bf6585e2f710485fe1a9c61c013"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-common-sense-i00"
+digest = "sha256:848de8c3644aabcf38f39553243786b3295975a3bf46c2abfb048a4a1a3bd9ea"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-common-sense-i00-standard"
+digest = "sha256:b4c6b85e136ee907ccfb6a27a1875615589861983480074fd007cc56f43af86c"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-i00"
+digest = "sha256:0eed1b04778162b4090260449875cbfdd195b274395050af8fcb69f773b2b50f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-i00-standard"
+digest = "sha256:eb938ecc3d2108f104af871618a5d8b90b2ecf6a93fe563e344b3be1c303079d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-spatial-i00"
+digest = "sha256:2c4141307834e3f00c073630cf041e25911cf5134c9f85f80123ad6686435f0b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-spatial-i00-standard"
+digest = "sha256:797c4b34a53d5446f97b04fd86c823b3b82c794cad275452f17776b89f78a2ea"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-semantic-i00"
+digest = "sha256:3a4b8a31dc9de7871d5b16b52f13793b9a39f22c8a9973bfaf6691e47657344e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-semantic-i00-standard"
+digest = "sha256:b94a086156ffad235bc495086a59581140b57d9d4055d875b4d1fd3a58ce9605"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-spatial-i00"
+digest = "sha256:02599e0dc44c1e49fe8824fd09c2106101da9d05a37c60df26b287417bc7234f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-spatial-i00-standard"
+digest = "sha256:47791dd02f49b7f5a56c0e9ecb3c70954151901674616bd9a1fe8dbace4d32f0"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-common-sense-i00"
+digest = "sha256:abebc3b1d270a37f743a1019e07de6ee10404e00a28aaed0817c36964e0703ef"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-common-sense-i00-standard"
+digest = "sha256:9f19ba2917c186034a3c3614e219d5e9316b26b2776219cf145a90bd285c1100"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-i00"
+digest = "sha256:89cb8e614737baaa06cceacd53678d809f5c16b233620a3a0a110e79ab939a37"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-i00-standard"
+digest = "sha256:3ec8760264404db2795edde2d1d31bd7b11bafedd4d0d1f265f0f918e1c14e8f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-semantic-i00"
+digest = "sha256:84d6b23679c0207f534d17e1e2a41159ec8ccfd7220dc6bcbc92b88fd7d39d57"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-semantic-i00-standard"
+digest = "sha256:5c8a2b5b0d3e0659c8231ee86e0f30e735be095ebaab9df14fdf4c6126e085ee"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-spatial-i00"
+digest = "sha256:45e50980f4f4d4ca1cb42f13dfcfc0ef8cf76b07f6bd41197039e764bfade6e8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-spatial-i00-standard"
+digest = "sha256:58cf2bcd29d58450f577733673b4fecb98684dfa411d93fff014180690244e8e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-drink-i00"
+digest = "sha256:5870f9ac8d67affc8fb859e4206adb6504514a33fc3e9f85548252caace28c89"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-drink-i00-standard"
+digest = "sha256:faa4b34aca882cb3c5babd9f15e871a077657a513941956c61b9e234b4064b34"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-common-sense-i00"
+digest = "sha256:352c46c6e4f808520c2c2b018d6c7f1dd76b94bce53bbdc6619f2a9636438173"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-common-sense-i00-standard"
+digest = "sha256:0938fc8f8f5cacbe716bd5caf4db144c16eae93e160ee7bb026f10a3f4bb4672"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-i00"
+digest = "sha256:569e6f18ead3ff50f62a9f340fd4d289f2f3425976cec2381dcbbb2a560b891e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-i00-standard"
+digest = "sha256:9e9dbcb6c789d5b902b321bff4010cfeab8a71d5057598e10c79484843b4a637"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-semantic-i00"
+digest = "sha256:250a77f55f86bc7d9168ab9200dd2e555dc36842aaa7ce5d8a72b0b9614478dc"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-semantic-i00-standard"
+digest = "sha256:30e501b9face2aa5ec99ad25c1ce8fad8e6f8f8a32bd73f4999c53ac160b797b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-i00"
+digest = "sha256:223e1de26fb4e7e69d83c1cb6d42b78f50765a3209c2749404fe3530d6e03cc1"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-i00-standard"
+digest = "sha256:6a45bb7cd6b2804e20062b5b2f4ba13c957eeb1ce27e64f84206361fa975367e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-semantic-i00"
+digest = "sha256:f9e14990ed4bd176fa544a27f411ff6a91d87b31182b0da803e6edd61a0aec5a"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-semantic-i00-standard"
+digest = "sha256:6c3d003188a4e8198db9af2681d5a36f9a761eb277a00e81b2e9f90e84b5b106"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-spatial-i00"
+digest = "sha256:d6c5aa076fef98a493821e73beaaa297e7137992db3630a2057f414316cfb595"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-spatial-i00-standard"
+digest = "sha256:d5e3cf891591f74f4598d295b09bd4822048171b6ae43eec1c9fcae333ef591e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-nth-largest-poker-i00"
+digest = "sha256:d9208f73733dba46e03348912522ed607d8c2351a8bf4e22dbefc87ea97b2c18"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-nth-largest-poker-i00-standard"
+digest = "sha256:d5f2969df4d74f1f247219d0a9422dbf58e20e8d71810819ac45d6a6d99b26d8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-painting-i00"
+digest = "sha256:9df84cb5c31cac8d664352458e6e427f4e6abc8682692a332a7e97cd68673697"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-painting-i00-standard"
+digest = "sha256:af337c23f3545ab0a6a623b47ebd35a6545a75bc108055777d28ecab6fce8d5a"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-i00"
+digest = "sha256:acd7c5039ae1ab3713fd66b26b3435383bc0db42f6e78e2df97891b45696f2e4"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-i00-standard"
+digest = "sha256:6238dd22ea063fdf810d5c12849dc4f4a34e1bd8825ea1e130c2e168e657d100"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-semantic-i00"
+digest = "sha256:d4b89413257160dc13fc7943f8b75bd1aaff7b810807eb2f2fabf230c50c8b54"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-semantic-i00-standard"
+digest = "sha256:ab905fdac19516b0c7114771c02605112129f74884918730c855300606d9bb44"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-spatial-i00"
+digest = "sha256:2acdf2b266fb304e2adfb65c3f70ee7f003592cc67d2294cebf32bae6e847c89"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-spatial-i00-standard"
+digest = "sha256:f7464cdab24462bb8a878663a79ea4d4af6fb431fbe3ed3b26bb686aeab0c3d2"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-specific-type-book-i00"
+digest = "sha256:ddebf4c3d80d43d4bd80db45dc323d775bc8aeae6084d3a74438a102e1d3dada"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-specific-type-book-i00-standard"
+digest = "sha256:56b587d003a82ccc2eaa0394b36f00c527e0178cdc76e313e63d1a2e8601fc21"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-toy-i00"
+digest = "sha256:a09fbe05ef113bfa89d65f606eb1d8059fe0ceec87af540ac5cbb6b5a5165081"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-toy-i00-standard"
+digest = "sha256:944778026a945b9542d57a7fef850d279c12bdd77628eadc302f73ae3cdec04f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-unique-type-mahjong-i00"
+digest = "sha256:c0b8c2949003d9f0c082e8aa709cb17cb0229bc76c89d87d78c792eff48b4e61"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-unique-type-mahjong-i00-standard"
+digest = "sha256:002caae7051c628b7154156b70001c56fb982edd856901e809a1a3c7e0761a85"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-set-study-table-i00"
+digest = "sha256:366f6630f54212078b73f7e43688a354ca8f0ea965f6b27822f45cf0a9bfe49e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-set-study-table-i00-standard"
+digest = "sha256:e7835b67f2f09f671fd407ef1c17591075068a877f2af9159c5f7417d54986a8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-take-out-cool-drink-i00"
+digest = "sha256:2d1a8ea9af64b17bbc92e4500ead67765ab21e49cd473a168555bf6dee49a7ea"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-take-out-cool-drink-i00-standard"
+digest = "sha256:e3d44145a098de0acef327999695e6f00232f6e7e4610d16194a7c0d35e0ce63"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-texas-holdem-i00"
+digest = "sha256:3452da1f3d37161546c6d339aff43c30c034dc756a9df6a81c083e07b52c7b4f"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-texas-holdem-i00-standard"
+digest = "sha256:1480038f1f29923830637188cafb8f9de04cadf148395fd3f3ee112257deb968"
+
