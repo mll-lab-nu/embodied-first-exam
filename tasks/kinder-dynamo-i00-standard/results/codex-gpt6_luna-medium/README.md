@@ -1,6 +1,6 @@
 # Codex + GPT-6 Luna, effort medium — kinder-dynamo-i00-standard
 
-Recorded 2026-10-01 under protocol v1.0 (Harbor job `k-luna-dynamo-std`, trial `kinder-dynamo-i00-standard__YGGmkra`).
+Recorded 2026-10-01 under protocol v1.0 (Harbor job `k-luna-dynamo-std`, trial `kinder-dynamo-i00-standard__YGGmkra`). Since then the instruction has had one small fix (`"error"` added to the reasons an episode can end with); the task is otherwise unchanged.
 
 | | |
 |---|---|

@@ -4,7 +4,7 @@
 success = live_success AND replay_success AND deterministic (the replay ends in the live run's final state).
 Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies the evidence (replay video, last
 frame, trajectory, event log) next to them for humans; the evidence never decides the verdict.
-infra_error = 1: no verdict on the agent (the service crashed past its restarts, or its finalize failed).
+infra_error = 1: no verdict on the agent (the service crashed past its restarts, never finished, or its finalize failed).
 """
 import json
 import os
@@ -34,15 +34,16 @@ def main() -> None:
             d = json.load(f)
         live, replay, det = (bool(d.get(k)) for k in ("live_success", "replay_success", "deterministic"))
         failed_finalize = bool(d.get("finalize_error"))
-        infra = bool(d.get("infra_error")) or failed_finalize
         unfinished = not d.get("finalized")
-        ok = live and replay and det and not (infra or unfinished)
+        infra = bool(d.get("infra_error")) or failed_finalize or unfinished
+        ok = live and replay and det and not infra
         out = {"success": int(ok), "live_success": int(live), "replay_success": int(replay), "deterministic": int(det),
                "finalized": int(not unfinished), "missing_log": 0, "infra_error": int(infra),
-               "grader_error": int(unfinished or failed_finalize),
+               "grader_error": int(failed_finalize),
                "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
-               "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("n_actions") or 0),
+               "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps_total") or 0),
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0), "resets": int(d.get("resets") or 0),
+               "reset_budget": int(d.get("reset_budget") or 0),
                "sim_startups": int(d.get("sim_startups") or 0), "elapsed_s": float(d.get("elapsed_s") or 0.0),
                "video_rendered": int(bool(d.get("video")))}
     except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's

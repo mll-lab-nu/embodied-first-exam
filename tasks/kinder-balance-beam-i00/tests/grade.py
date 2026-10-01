@@ -1,4 +1,4 @@
-"""Verifier (full mode): replay /app/output/trajectory.npz from the frozen instance and write Harbor's rewards.
+"""Verifier (privileged mode): replay /app/output/trajectory.npz from the frozen instance and write Harbor's rewards.
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2
 
@@ -60,13 +60,14 @@ def main() -> int:
                "invalid_trajectory": 0, "grader_error": 0, "video_rendered": 0}
         diagnostics = {"success_step": outs[0]["success_step"], "max_steps": s.max_steps, "state_sha": sorted({o["state_sha"] for o in outs}),
                        "gl_backend": GL_BACKEND, "replay_seconds": round(replay_s, 2)}
-        if not a.no_video:   # for humans; never part of the verdict
+        write(ok, out, diagnostics)   # the verdict first: the video is for humans and may fail or run out of time
+        if not a.no_video:
             try:
                 s.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"))
                 out["video_rendered"] = 1
+                write(ok, out, diagnostics)
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
-        write(ok, out, diagnostics)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         write(False, {"success": 0, "missing_trajectory": 0, "invalid_trajectory": 0, "grader_error": 1})

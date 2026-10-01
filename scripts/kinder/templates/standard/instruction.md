@@ -14,9 +14,9 @@ and you reach it only through a client. **Task:** {{task_statement}}
   `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You get the robot's own sensors: {{sensors}}. Not where anything else is, not
   the goal check: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
-  `meta["reason"]`: `"success"`, or `"failed"` when its control steps ran out). `spec()` gives the robot's own facts,
-  as its documentation would: each arm joint's axis, position and limits, the gripper's grasp point, each camera's
-  field of view and pose.
+  `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
+  `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
+  gripper's grasp point, each camera's field of view and pose.
 - There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: {{agent_timeout_hours}} h. It ends without warning, and ending your session earlier ends the run
