@@ -1,0 +1,23 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# GPU on sim, MuJoCo tasks only: KinDER's physics is CPU either way, but every image the agent asks for is rendered
+# here (egl ~1 ms a frame, CPU osmesa ~50 ms); `graphics` is the capability that mounts the EGL driver. PyBullet draws
+# its images on the CPU, so its tasks reserve none.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py
+    restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TASK_TEXT: "Put the three flat green parts on the grey table, a square and two right triangles, each with a small red peg on top, into the purple tray in the middle of the table."
+      RCB_WALL_CLOCK_S: "3600.0"
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
+      # configuration; results under other settings are reported separately (scripts/kinder/configs/).
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, no reset; N > 0: the optional reset capability
+      RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-1}"              # 1: depth (m) with robot_wrist, the Gen3's RGB-D camera
+      RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room, never overhead
