@@ -1,0 +1,45 @@
+# behavior-picking-up-trash-i00-standard
+
+| | |
+|---|---|
+| Benchmark | BEHAVIOR-1K |
+| Mode | standard (`eai-standard/2.2`) |
+| Twin | `behavior-picking-up-trash-i00-privileged` |
+| Simulator / robot | `behavior` / `r1pro` |
+| Family / instance | `picking_up_trash` / seed 301 |
+| Oracle | `partial` — solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 5115 rows) through the client. Recorded Harbor oracle runs: 3 of 3 scored 1 on ws3 (job v22-ws3-oracle-picking-up-trash-1741, best behavior-picking-up-trash-i00-li__eg8GdNj) on the dev/qineng 9eb18edf version of this task (rcb-limited/2.2, no crash recovery); 2026-09-25 behavior-picking-up-trash-i00-li__fyYUXt4 (laptop, an older version) scored 1 with live_matches_replay 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). |
+| Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` |
+
+## Task
+Standard-mode twin of `behavior-picking-up-trash-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the three cans of soda from the living room inside the trash can in the kitchen.
+
+## Difficulty
+Same scene, frozen instance and success rule as `behavior-picking-up-trash-i00-privileged` (see its Difficulty). In standard mode the agent has no reset, no privileged state and no planning primitives: it sees the robot's cameras (RGB, depth on request) and its proprioception only, acts through the client, and gets one episode.
+
+## Reference solution
+`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks through the client; it uses no privileged information at run time, and after a service crash it waits for the resumed episode and continues from the control step it reached (`on_service_error`).
+
+## Verification
+`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar;
+`live_matches_replay` is reported separately, and so are the crash-recovery fields (`sim_startups`, `resumes`,
+`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`.
+
+Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) and was not re-run on this one; the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it.
+
+## Details
+| | |
+|---|---|
+| Protocol | `eai-standard/2.2`: RGB-D + proprioception through the client; no reset, no object poses, no success predicate |
+| Action space | `submit` chunks of `joint_position` (25, streamed at the 30 Hz control rate with the agent's `dt`; base entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` frames or a watch window; binary RCB1 responses |
+| Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/STANDARD_MODE_2_2.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
+| Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
+| Budget | 14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md) |
+
+### Sidecar and grading
+The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar
+(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own
+record in `/out`), which owns the scene and records the episode as a (T, 25) trajectory. The collect hook
+(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes
+(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes
+`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
