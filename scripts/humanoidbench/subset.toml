@@ -561,7 +561,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "110%"
 evidence = "FastTD3 770, bar 700; the paper's often-quoted 37 is a PPO curve upstream's logs reuse across 17 tasks"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, kept in tasks/humanoidbench-manip-push-i00/results/codex-gpt6_luna-medium/; 997.80 before it, in its prev_harbor_agents/), and GPT-6 Sol's and Claude Opus 5.5's graded standard-mode episodes (50 resets), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, kept in tasks/humanoidbench-manip-push-i00/results/codex-gpt6_luna-medium/; 997.80 before it, in its prev_harbor_agents/), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
 one_liner = "pushes a box to a target with the Unitree H1"
 task_statement = "push the box on the table to the target position marked in the observation."
 scene_note = '''the box's starting position, the target position and the robot's initial pose never change
@@ -860,7 +860,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "108%"
 evidence = "paper TD-MPC2 811, FastTD3 726, bar 750"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00/results/codex-gpt6_luna-medium/, and Claude Opus 5.5's graded standard-mode episode (750.22, 50 resets), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00/results/codex-gpt6_luna-medium/, and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0) and Claude Opus 5.5 (750.22), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
 one_liner = "walks the Unitree H1 to the chair and sits it down"
 task_statement = '''the robot starts a short walk in front of the chair, its heading turned by a random angle
 of up to about 100° from facing straight away from it. Get to the chair, sit down on it, and stay seated
