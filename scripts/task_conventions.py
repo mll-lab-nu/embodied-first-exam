@@ -44,6 +44,8 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
     ("robosuite-", "robosuite (example task)"), ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
+    ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
+    ("behavior-", "BEHAVIOR-1K"),
 ]
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
@@ -139,9 +141,19 @@ def normalize_toml(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def _shared_sources() -> set[bytes]:
+    """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, D9): their copies
+    must stay byte-identical to the source (check-tooling-identity.sh), so normalize never rewrites them."""
+    src = Path(__file__).resolve().parent / "eai_standard"
+    return {p.read_bytes() for p in src.glob("*") if p.is_file()} if src.is_dir() else set()
+
+
 def normalize_text_files(task: Path) -> None:
+    shared = _shared_sources()
     for f in sorted(task.rglob("*")):
         if not f.is_file() or f.suffix not in TEXT_SUFFIXES or f.name in ("task.toml", "README.md") or f.stat().st_size > 2_000_000:
+            continue
+        if f.read_bytes() in shared:
             continue
         s = read_text(f)
         if s is None:
