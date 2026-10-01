@@ -20,7 +20,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory, kept in tasks/kinder-balance-beam-i00/results/codex-gpt6_luna-medium/, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in this benchmark's pull request"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory, kept in tasks/kinder-balance-beam-i00/results/codex-gpt6_luna-medium/, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8"
 
 [verifier]
 timeout_sec = 900.0

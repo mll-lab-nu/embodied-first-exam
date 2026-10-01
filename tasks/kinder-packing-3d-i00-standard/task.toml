@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), kept in the results/codex-gpt6_luna-medium/ folders of tasks/kinder-packing-3d-i00 and its standard twin; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in this benchmark's pull request"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), kept in the results/codex-gpt6_luna-medium/ folders of tasks/kinder-packing-3d-i00 and its standard twin; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in PR #8"
 
 [verifier]
 timeout_sec = 900.0

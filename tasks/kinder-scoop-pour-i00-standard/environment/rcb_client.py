@@ -45,8 +45,9 @@ Result (what get_obs / submit / reset return):
     res.save(dir)            meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, depth_<cam>.npy, proprio.npy
 
 Errors: ValueError -- refused, nothing ran (400: wrong type or shape, NaN, a bad dt, too many frames, an unknown
-camera; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode, or the trial, is over (409); RuntimeError -- the service failed (5xx: see
-spec()["on_service_error"]) or the endpoint does not exist in this run (404).
+camera; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode, or the trial, is over (409);
+RuntimeError -- the service failed (5xx: see spec()["on_service_error"]) or the endpoint does not exist in this run
+(404).
 """
 from __future__ import annotations
 
@@ -166,7 +167,7 @@ class Robot:
     def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
         body = rcb1.encode(meta, parts)
         if len(body) > MAX_BODY:                     # the service would close the connection on it unread
-            raise ValueError(f"{path}: the request is {len(body)} bytes, over the protocol's {MAX_BODY}: send fewer rows")
+            raise ValueError(f"{path}: {len(body)} bytes, over the protocol's {MAX_BODY}: send fewer rows")
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"},
                           timeout=(5, timeout))
         if r.headers.get("Content-Type", "").startswith("application/x-rcb1") and r.status_code == 200:

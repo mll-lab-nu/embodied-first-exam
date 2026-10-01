@@ -20,7 +20,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most 0.14, its best method), with no rollout of this instance; human review in this benchmark's pull request"
+oracle_evidence = "none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most 0.14, its best method), with no rollout of this instance; human review in PR #8"
 
 [verifier]
 timeout_sec = 900.0
