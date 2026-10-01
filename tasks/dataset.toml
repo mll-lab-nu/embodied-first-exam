@@ -2038,6 +2038,430 @@ name = "robot-coding-bench/robopaint-xingshu-zhi-i00-standard"
 digest = "sha256:f85feb1ee7125815b81b9579c06eb6b47c21ee8412dfcf819e4de45220469a8f"
 
 [[tasks]]
+name = "robot-coding-bench/robolab-apple-and-yogurt-in-bowl-i00-privileged"
+digest = "sha256:671222af8ee2372aba4dc538867ce9223d590e7abf4c7675cb133eb91fbc6878"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-apple-and-yogurt-in-bowl-i00-standard"
+digest = "sha256:680cf4147e2f57830f160bdb6aaf7ba6961db920ad052083814ecfd046a5eb07"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-banana-in-bowl-i00-privileged"
+digest = "sha256:e85faf9a43e2f90cdbe386f076014a801cd7f257a9a03a231bac72b3bbeb8f15"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-banana-in-bowl-i00-standard"
+digest = "sha256:27b29bb3e301416ccd6ef2be6c5bfffd84b73ed7cfd6e17be96e4bf1887e0404"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-banana-then-rubiks-cube-i00-privileged"
+digest = "sha256:ff17ab4ff32e6b706e2adf0039392eebef97c9bdead4b326c4497cd38567d582"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-banana-then-rubiks-cube-i00-standard"
+digest = "sha256:aa2bb9ddb16699d3c92024e05d8aa640bf3a31006319e6677bf609f1ca7e19de"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-in-bin-one-more-i00-privileged"
+digest = "sha256:cb5c45a5e2bc8cec88446436ca95edf923417375c6ab0d37d580ffc0234ea69d"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-in-bin-one-more-i00-standard"
+digest = "sha256:a7cfccaf4498f768304f1dab0f75be01b4796ab7b5ea78103d7526633abe0ed7"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-in-bin-three-total-i00-privileged"
+digest = "sha256:cff45de833297b8bea939322199462887752dff8a790e76113bed69de8339160"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-in-bin-three-total-i00-standard"
+digest = "sha256:434936f246190cb55bd26616ba1358d4cfbc6253e9a026151fec116c4624369c"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-out-of-bin-i00-privileged"
+digest = "sha256:c681982fb8fb47ffc9c7a31919e6808c45a4f0c423a82258eea1c0d9d9ebafcb"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bananas-out-of-bin-i00-standard"
+digest = "sha256:7c1bf469a12e5f74bbc838359ec2245079f083cd99dba5a9d1e1ad8f44237f0f"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bbq-sauce-in-bin-i00-privileged"
+digest = "sha256:519a21f6f3a5539412ed7d78e4c0700b0574f0fede36232094731e8bf4e3702e"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-bbq-sauce-in-bin-i00-standard"
+digest = "sha256:5d6a0b2101b6ecc60a91cac0390135ca1e2b78eafc84375219fe507198878a12"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-block-stacking-order-agnostic-i00-privileged"
+digest = "sha256:70eb5b90f268da6510946d59a55b57a4cafcac1ff2ba1217978aa96ae7a508da"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-block-stacking-order-agnostic-i00-standard"
+digest = "sha256:0450a3be5cc52ca56cda54257d84d08217513e5ea0718b03d5ca844ca169ed26"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-block-stacking-specified-order-i00-privileged"
+digest = "sha256:22f9c739baaeee199e1221196d6f168a1a0ea821b5c77acdfce707d7f8c56f10"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-block-stacking-specified-order-i00-standard"
+digest = "sha256:d6210664d13e763210eb85b5e613b53ee0f3e61def6067ddfae8d239b5c89454"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-blocks-in-bin-i00-privileged"
+digest = "sha256:d8d8c2024ce4d9dde4aaec01465d39a40cd821c5d1ef98cdc078d97d3950788d"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-blocks-in-bin-i00-standard"
+digest = "sha256:ad958282d082544dfa7992c2393dcc815c3e8e793ed960584483623cdff666f1"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-butter-above-raisin-i00-privileged"
+digest = "sha256:8a638d01dcaede9ef94cf539daa9ea0898aba5eef197b3b9fd58475f81ea2416"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-butter-above-raisin-i00-standard"
+digest = "sha256:4860e850fefa0af36a82b28580f1792aaa65f430817a70390624fa58dbcc13c9"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-clutter-plastic-i00-privileged"
+digest = "sha256:f4ab2b4ac8e7cd72b4ac4725dec90740ae3359e9f94ba9872b929deeeba7965a"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-clutter-plastic-i00-standard"
+digest = "sha256:effcea759fde9ed2c76f3c19eed46ce299f29a98cfa171f1ce594ed6e441f233"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-clutter-pumpkin-i00-privileged"
+digest = "sha256:3290b45d0834ecda3abaf5ed5f10ba21e59525ff4d5164bde6ed546340098879"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-clutter-pumpkin-i00-standard"
+digest = "sha256:52d91bd8372032a3e3f56539cd59ea47256c26f685e8cff8c79290fe67b22ddc"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-condiments-in-bin-i00-privileged"
+digest = "sha256:c67e28f97ae05586d88c25601953fa239fcb2a3793da7fb3932c95ded808eb49"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-condiments-in-bin-i00-standard"
+digest = "sha256:82a283a1a0ae4dd9bf0773234ddb6fff00dbf3d428cb32719a69f238e7882294"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-cooking-clear-plate-i00-privileged"
+digest = "sha256:fe5c3788549a273db44137ff1d803b4eabdff22764d43c6557e9a21aefeba1ae"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-cooking-clear-plate-i00-standard"
+digest = "sha256:a1398c9c741a21a730e0cb6e35d61c6dd728e2a1e4a74c529fcb70407363d2f8"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-cubes-and-blocks-in-bin-i00-privileged"
+digest = "sha256:330d33b2d8d728044f4a5db210885ff51250a5b3ba7cebc9bac9dd96951bd393"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-cubes-and-blocks-in-bin-i00-standard"
+digest = "sha256:2e7df918e425c71d2f18bacaa0585f2de8e0bc5590c80afb4bdf77efe7b78655"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-food-packing2-cans-i00-privileged"
+digest = "sha256:e17fee64126e7c29056d5f243cbc74557ba70523b874ef081108c24cbd3f1fbf"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-food-packing2-cans-i00-standard"
+digest = "sha256:a24c2bcbd79d67ea8392ab0876809a60b9b19ad417f6f34b9c426ca706ddd838"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-food-packing3-cans-i00-privileged"
+digest = "sha256:711e9f48d9388248e72fe1847a8ef097a2542ead86adea24fc7fdf1fb871c4da"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-food-packing3-cans-i00-standard"
+digest = "sha256:3ccd5dc35b1729b95a2a69b5c52f2358fc07fa0311f2d97a93054dba091d67fa"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-fruits-green-limes-on-plate-i00-privileged"
+digest = "sha256:15c23a9e150af47af83ad46cc463a58901460cb2b42318d4db03d17d2838756c"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-fruits-green-limes-on-plate-i00-standard"
+digest = "sha256:9421aa10f5f1f1c88856eeda8ef047602e7127ce3326fcb9078d0bee0237da16"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-fruits-on-plate3-i00-privileged"
+digest = "sha256:6e6a290c9f0736696acfca2c96f58540b6f50867b79e817c5e100ce1ae6d2de4"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-fruits-on-plate3-i00-standard"
+digest = "sha256:41b9a5dd1383424caf063d494fe427dc114fdb56df52df51c66745bf73749ced"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-keyboard-out-of-bin-i00-privileged"
+digest = "sha256:611901040f779da9222bca241b01d63a43e175d39a1d41cef6f959127b61e20a"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-keyboard-out-of-bin-i00-standard"
+digest = "sha256:d1c96b701570debf25d5155bcfb0645bba0f431b3c137c94284ebddd075163bc"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-larger-object-raisin-box-in-bin-i00-privileged"
+digest = "sha256:1df54d0444f4d73f0ff0261bc301d3952c5f47e12af43c7ae3b669394e00dd31"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-larger-object-raisin-box-in-bin-i00-standard"
+digest = "sha256:5be169917943e7f6bea0c2c5ec46174c66468e72c4ac754060a26b7c24246ecf"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-marker-in-mug-i00-privileged"
+digest = "sha256:5be9dd1809d0d0ee7b2f4096f83a9aa80851b13a426abfa27911ae99ecf4d50f"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-marker-in-mug-i00-standard"
+digest = "sha256:0369dc532a7831c547e4e5d17a7df63df2f3aed4935a875aca4d44baa0c21d89"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-above-raisin-i00-privileged"
+digest = "sha256:2bf0b76819a2640ab1c2e8a64c4020cf0a5e82ee5ca50e6e890841a6c3e3abca"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-above-raisin-i00-standard"
+digest = "sha256:7b0c2dd2bbfd932d85fba546aa7ba81fe5b16268e74e91c0a977977f03d0d1f3"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-in-left-bin-i00-privileged"
+digest = "sha256:5e792942d2db70dfab6f21b310cf27a67826a6d23ea2e5a9a999629a03eb804b"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-in-left-bin-i00-standard"
+digest = "sha256:95bbfc6a0f4a8b35a03e4034f87056cad60f4027cc224fc4c17657b6956caddc"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-in-right-bin-i00-privileged"
+digest = "sha256:e6f1848d49972ed61a5849217edc639ee53c995eb943277b6755907b3b54af8a"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-mustard-in-right-bin-i00-standard"
+digest = "sha256:771f87cfce976dc2e18b32601d3a81582f2dc35d79140be00aece370c198d8b3"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-glasses-i00-privileged"
+digest = "sha256:e3ac0232853a3b3c24f8201ff8afb3113eb5b724a8db86281fd5ba6db384ca92"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-glasses-i00-standard"
+digest = "sha256:5535dcb0ba2f9a2c9fcec3bd1038e8516411f24ed40928a186045b8b53286fa0"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-orange-object-i00-privileged"
+digest = "sha256:c1f1f7ead3aa7f02d31c98932977a164665392ebbc9a68fce3f26bba1afb6e8a"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-orange-object-i00-standard"
+digest = "sha256:6b2bb797f04a4770cd46992d760135c22a21cbc45abac9f1e9d79c1c32b9c802"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-up-blue-pitcher-i00-privileged"
+digest = "sha256:d47bb01ef10fca47612de99351937370f48a87603934035c2667f98dad99670f"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-pick-up-blue-pitcher-i00-standard"
+digest = "sha256:903baa24281c2122ab79287c418b5825f3d750da5cd4e9ca47629e21151d9734"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-plastic-bottles-in-square-pail-i00-privileged"
+digest = "sha256:e9fbea3ba5bd126bf014c268d7403a8190f4c8ab8af081d4a1f92994845f8064"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-plastic-bottles-in-square-pail-i00-standard"
+digest = "sha256:b554458f19218307008e37889668958bc367c13808b5106dd8e36a1448ee0cde"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-put-two-mugs-on-shelf-i00-privileged"
+digest = "sha256:bd72c00a7d3262d40792d45624dc0d37be693aaee73870a093daf22d895c16d8"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-put-two-mugs-on-shelf-i00-standard"
+digest = "sha256:b25d2dc5636871439c41adc20445bc4a14836641e309da7644e21440ad223fab"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-recycle-carton-i00-privileged"
+digest = "sha256:19d1a0f2e20bb30d1f442c7d951499fc7fd143f42bf02468308896bc3fb2fa37"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-recycle-carton-i00-standard"
+digest = "sha256:1f633143cc96e10ed06780dffd5621a19e84d64d8dcee42b06bc989a9b23fe6b"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-recycle-cartons-vertical-crate-i00-privileged"
+digest = "sha256:04d5c36613d64f62173707bb82eed5223fb6d31ee49444caf94025f4cdf3c03b"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-recycle-cartons-vertical-crate-i00-standard"
+digest = "sha256:253fccca23cd6b25bf25430d884afd851389ad1c448cd951e27952f699ac1e0e"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-red-dishes-in-bin-i00-privileged"
+digest = "sha256:bebbbc55557cda7095a610e77dc6ddc3032fd8d6bb27c8147bb56b76fa12e44f"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-red-dishes-in-bin-i00-standard"
+digest = "sha256:8310d308323b3bf39932a0e59d85350ff04e422af2ee6bf1893b542e816edb79"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-reorient-red-mug-i00-privileged"
+digest = "sha256:3dbe385658a62b84345cff6f7ef7f925ceb0958ad9e6da6f70b114d1e9e33576"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-reorient-red-mug-i00-standard"
+digest = "sha256:01d23940d9b644ff01101d1831024a2a4b2204e7531483635564edfb5b33db00"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-and-banana-i00-privileged"
+digest = "sha256:22da9eb862675dfa9ea4a86df76a90b5509ae06a1c4189d55289136a79bcb027"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-and-banana-i00-standard"
+digest = "sha256:e816ba15a948e5bb685541f217666302634d93933b7a9608497bed44b9018424"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-behind-bowl-i00-privileged"
+digest = "sha256:be4c8cfcdef4670981e9d238477b2fab50201bbaa7b6ac5a1ca747de871d5210"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-behind-bowl-i00-standard"
+digest = "sha256:59fb8ccc4980854607c8e4ce4c54d398bce8c2fa6d9049dcbf00c0f8fa71efb8"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-in-front-of-bowl-i00-privileged"
+digest = "sha256:b6a7bd54a4eec179ecd41ef1257729ef4f6d1cfad5ef884fd7bbcd69867aa25b"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-in-front-of-bowl-i00-standard"
+digest = "sha256:c1dcd90dbbf7704ac97ce0c8468aa98d6c3c9e3f000f2ea5c699f3484b7d4c1d"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-left-of-bowl-i00-privileged"
+digest = "sha256:30c0f2f252d426c918ae2edb0b30dabc9f32215f9fdbbdfc8f111005fd862569"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-left-of-bowl-i00-standard"
+digest = "sha256:9c59e70dbf59643d21594db584dd38adec862577d9ef984e4a0dd364ef6bb5c9"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-right-of-bowl-i00-privileged"
+digest = "sha256:63f3670c012b73702975538c69d898900bafd3daa437f0947d24a1ce7c96d5b4"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-right-of-bowl-i00-standard"
+digest = "sha256:fc24ebd8c9b4562ba3997f1dd9748149d20da0ef21f54405ba1ec484a63b7e85"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-then-banana-i00-privileged"
+digest = "sha256:3b734f53e3c62c08aa72977144015640fc1e4b7622bee35f8909165150316b46"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cube-then-banana-i00-standard"
+digest = "sha256:00c24e7d89fbe764890c2a15437b19497461259a2600f70f58bed598aa8208fd"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cubes-in-bin-i00-privileged"
+digest = "sha256:e6bc2cf08498b1376d52a7f3b806651f7d5e35bdccdc030223d6b55993e5f06e"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-rubiks-cubes-in-bin-i00-standard"
+digest = "sha256:b9eec7d3966421da547b2c38396ec7fcbbaff9923c162a528db278728b068bef"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-spoon-in-mug-i00-privileged"
+digest = "sha256:68cffb3a8164f9413141dbd43a29825b4c25a9097081c38f5e3d9b6e8e2b6e4c"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-spoon-in-mug-i00-standard"
+digest = "sha256:dfa02af1cc0c5e579f8cb5e3438f657e969ec58ed409eb22811c42b9ac021c7a"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-stack-yellow-on-red-i00-privileged"
+digest = "sha256:836feddf5c6ad23309aa1e94bde2775cc4c14e2bdae1d0ca60f09d4ab91787d3"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-stack-yellow-on-red-i00-standard"
+digest = "sha256:1935b02e8d575197195600ee3993385938dc2986570206f730e424d9b44cf051"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-stack3-rubiks-cube-i00-privileged"
+digest = "sha256:573d030c086c9e0106caee4bfa76aaae751c1a89f2b836d489eaab58d47b5b00"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-stack3-rubiks-cube-i00-standard"
+digest = "sha256:121bd24663b5d4820067e1dfdc404d4ce2d8fd8b2f27ee516ab702b87a157135"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-measuring-spoon-out-i00-privileged"
+digest = "sha256:2a4620b15cfee4626a6afd0fd707a7aa7395498bf9275212ecadf26b3986087b"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-measuring-spoon-out-i00-standard"
+digest = "sha256:8e390fc3ff071aa8f4d440fdc36bd18a97d6958850a45cdd01c60a4b12ba4fd8"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-mugs-off-of-shelf-i00-privileged"
+digest = "sha256:d3386222e3eb70cf3bf40ec7cc864c75ef6ae28b7b3bac4dfc9d1fdafa9b2523"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-mugs-off-of-shelf-i00-standard"
+digest = "sha256:4ee514249bb09d18af102b318711e1b334a522616f28469ca2f52b5e7deff657"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-spatula-off-shelf-i00-privileged"
+digest = "sha256:72f45f206c4d8e051a501697dcd08f6b60d53e7084adf1e6106f80d73ac642d3"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-take-spatula-off-shelf-i00-standard"
+digest = "sha256:2b7d433a80985bb06c10c521a5d567fc0146c8290fba519655accfbbfa7f419e"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-throw-away-snacks-i00-privileged"
+digest = "sha256:af82eca07a77b9bc2d9d85b5f5d9312877cea422fb6f2c0131e7099227553577"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-throw-away-snacks-i00-standard"
+digest = "sha256:7d2eab7ed5b5c0e753e1a3d64a91038bbf5c0c7f7df0a52f76093a70be496358"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-tools-picking-drill-i00-privileged"
+digest = "sha256:3481dad9eb0c061f3dd4c02a82ab96fa2fabe3daa7b030e20bdf721b39256e43"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-tools-picking-drill-i00-standard"
+digest = "sha256:5f35d4e14c8e06be5495da199de4a4bed0828684d58c411372795e11bb47e053"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-unstack-rubiks-cube-i00-privileged"
+digest = "sha256:f1fac1d33c704b3c47fd2ef7e328767079b8aa873df1b0e4af3171352af06524"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-unstack-rubiks-cube-i00-standard"
+digest = "sha256:b9c9f6581d107c1cb08f8868a22208d45e5f34fa59a2870399ea366d7301d078"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-utensils-in-mug-i00-privileged"
+digest = "sha256:494fa456d82a80b42b4c0e6ad96b2c55dbcc8542a661e4359d5882fb2616d5aa"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-utensils-in-mug-i00-standard"
+digest = "sha256:1d1739a2d8a20054402b6215a49b8dfb31191d0e9eb6b8ab66d59ce8e3d73ab7"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-white-mug-in-center-of-table-i00-privileged"
+digest = "sha256:3efe0cc46aa1c1936a3e1d360fb2c95e23c269541a6ba07a66e7a81f0d60c298"
+
+[[tasks]]
+name = "robot-coding-bench/robolab-white-mug-in-center-of-table-i00-standard"
+digest = "sha256:fd4ada2f5b09f5b4258a139e20b69e3edbf67154c3968056aabb0597180421c3"
+
+[[tasks]]
 name = "robot-coding-bench/robopaint-acrylic-applesoranges-i00-privileged"
 digest = "sha256:7e264334170703a67f94b18c3b0ebe94aef211e64b10ec4b326a21cf4c01c2f8"
 

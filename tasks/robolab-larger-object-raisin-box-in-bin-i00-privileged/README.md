@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | privileged |
 | Twin | `robolab-larger-object-raisin-box-in-bin-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |

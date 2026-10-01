@@ -44,12 +44,12 @@ import numpy as np
 import rcb1
 
 PROTOCOL = "eai-standard/2.2"
-COMPAT = ["eai-standard/2.1", "eai-standard/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
+COMPAT = ["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
 DEPTH_MAX_M = 65.535                                        # uint16 millimetres; a farther surface reads 0 (no reading)
-DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as eai-standard/2.1)
+DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as rcb-limited/2.1)
 _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
 PROPRIO_GROUPS_REQUIRED = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_effort")
 PART_PREFIXES = ("video/", "frames/", "last/", "last_depth/", "depth_frames/", "depth/", "extrinsic_cv/")
