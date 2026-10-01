@@ -278,7 +278,8 @@ def render_readme(task: Path) -> str:
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", f"{mode} (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else mode)]
-    head.append(("Twin", f"`{twin}`" if task.with_name(twin).is_dir() else "— (privileged only)" if mode == "privileged" else "—"))
+    # a standard task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
+    head.append(("Twin", f"`{twin}`" if mode == "standard" or task.with_name(twin).is_dir() else "— (privileged only)"))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
