@@ -1,0 +1,11 @@
+# The verifier replays in the simulator, which needs the GPU for Genesis' EGL cameras (the replay video).
+services:
+  main:
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

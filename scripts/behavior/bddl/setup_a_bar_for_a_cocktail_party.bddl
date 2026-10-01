@@ -1,0 +1,74 @@
+(define (problem setup_a_bar_for_a_cocktail_party-0)
+    (:domain behavior-1k)
+
+    (:objects
+        electric_refrigerator.n.01_1 - electric_refrigerator.n.01
+        wine_bottle.n.01_1 - wine_bottle.n.01
+        countertop.n.01_1 - countertop.n.01
+        cabinet.n.01_1 - cabinet.n.01
+        can__of__soda.n.01_1 can__of__soda.n.01_2 can__of__soda.n.01_3 - can__of__soda.n.01
+        ice_cube.n.01_1 ice_cube.n.01_2 ice_cube.n.01_3 ice_cube.n.01_4 ice_cube.n.01_5 ice_cube.n.01_6 - ice_cube.n.01
+        wineglass.n.01_1 wineglass.n.01_2 - wineglass.n.01
+        bucket.n.01_1 - bucket.n.01
+        corkscrew.n.01_1 - corkscrew.n.01
+        tray.n.01_1 - tray.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop can__of__soda.n.01_1 cabinet.n.01_1)
+        (ontop can__of__soda.n.01_2 cabinet.n.01_1)
+        (ontop can__of__soda.n.01_3 cabinet.n.01_1)
+        (ontop ice_cube.n.01_1 tray.n.01_1)
+        (ontop ice_cube.n.01_2 tray.n.01_1)
+        (ontop ice_cube.n.01_3 tray.n.01_1)
+        (ontop ice_cube.n.01_4 tray.n.01_1)
+        (ontop ice_cube.n.01_5 tray.n.01_1)
+        (ontop ice_cube.n.01_6 tray.n.01_1)
+        (ontop tray.n.01_1 cabinet.n.01_1)
+        (ontop bucket.n.01_1 cabinet.n.01_1)
+        (ontop corkscrew.n.01_1 cabinet.n.01_1)
+        (ontop wine_bottle.n.01_1 cabinet.n.01_1)
+        (ontop wineglass.n.01_1 cabinet.n.01_1)
+        (ontop wineglass.n.01_2 cabinet.n.01_1)
+        (inroom cabinet.n.01_1 bar)
+        (inroom countertop.n.01_1 bar)
+        (inroom electric_refrigerator.n.01_1 bar)
+        (inroom floor.n.01_1 bar)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (ontop ?wine_bottle.n.01_1 ?countertop.n.01_1)
+            (forall
+                (?can__of__soda.n.01 - can__of__soda.n.01)
+                (and
+                    (or
+                        (nextto ?can__of__soda.n.01 ?can__of__soda.n.01_1)
+                        (nextto ?can__of__soda.n.01 ?can__of__soda.n.01_2)
+                        (nextto ?can__of__soda.n.01 ?can__of__soda.n.01_3)
+                    )
+                    (ontop ?can__of__soda.n.01 ?countertop.n.01_1)
+                )
+            )
+            (forall
+                (?ice_cube.n.01 - ice_cube.n.01)
+                (inside ?ice_cube.n.01 ?bucket.n.01_1)
+            )
+            (ontop ?bucket.n.01_1 ?countertop.n.01_1)
+            (forall
+                (?wineglass.n.01 - wineglass.n.01)
+                (ontop ?wineglass.n.01 ?countertop.n.01_1)
+            )
+            (exists
+                (?wineglass.n.01 - wineglass.n.01)
+                (nextto ?wineglass.n.01 ?wine_bottle.n.01_1)
+            )
+            (nextto ?wineglass.n.01_1 ?wineglass.n.01_2)
+            (ontop ?corkscrew.n.01_1 ?countertop.n.01_1)
+            (nextto ?corkscrew.n.01_1 ?wine_bottle.n.01_1)
+        )
+    )
+)
