@@ -321,7 +321,7 @@ def finalize() -> None:
         try:
             A = np.asarray(RECORD, float).reshape(-1, N); live_sha = S.state_sha(); live = S.progress() if KIND == "dtb" else S.check()
             np.savez(os.path.join(DATA, "trajectory.npz"), actions=A, tool=TOOL.__name__, meta=json.dumps({"source": "standard-mode episode", "reason": E["reason"]}))
-            # the tooling's MAX_STEPS is the unstandard mode's hand-in cap (Playground: 3000); the service's episode is bounded
+            # the tooling's MAX_STEPS is the privileged mode's hand-in cap (Playground: 3000); the service's episode is bounded
             # by RCB_MAX_CONTROL_STEPS and the agent's time instead, so the verification replay must accept the whole episode
             if hasattr(TOOL, "MAX_STEPS"): TOOL.MAX_STEPS = max(int(TOOL.MAX_STEPS), len(A))
             ver = TOOL.Session(INSTANCE, enable_render=True); r1 = ver.replay(A); det = r1["state_sha"] == live_sha
