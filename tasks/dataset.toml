@@ -419,3 +419,19 @@ digest = "sha256:dc6b540f34e9fb31936a3424d4b5c60cd789258883dd4a734323ac951bba63d
 name = "robot-coding-bench/topogym-blanket-flatten-hard-i00-limited"
 digest = "sha256:46d16df5cee671df3b94e225ed06246a6b99ab7fb8bbc4e2d21403a91b473f36"
 
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-easy-i00"
+digest = "sha256:7baa1e93a842c0fa7f441ed3ddcd799444819d05de0f09eb0f6c4f4d440e44bb"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-easy-i00-limited"
+digest = "sha256:47cd37132a7e5c796852311942b232ff0b1edeac5f5b4c756084e34622b45a8b"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-hard-i00"
+digest = "sha256:7198c2eb47b354e64e21e09c9a7fcd2fe61fa5f9deaef0a1f23b5210e9caed77"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-hard-i00-limited"
+digest = "sha256:dc4abf5ab5229a9e52c2ebdaf16888d2040563cf834644aafb9833463030a5b2"
+
