@@ -1,0 +1,14 @@
+{
+ "success": 0,
+ "live_success": 0,
+ "replay_success": 0,
+ "deterministic": 1,
+ "finalized": 1,
+ "n_actions": 500,
+ "sim_steps": 6458,
+ "steps": 6458,
+ "resets": 43,
+ "elapsed_s": 3594.3,
+ "video_rendered": 1,
+ "grader_error": 0
+}

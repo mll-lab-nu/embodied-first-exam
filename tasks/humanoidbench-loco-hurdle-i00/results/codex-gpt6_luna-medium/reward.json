@@ -1,0 +1,10 @@
+{
+ "success": 0,
+ "all_success": 0,
+ "deterministic": 1,
+ "n_actions": 266,
+ "final_reward": 1.224483688822332e-10,
+ "sim_steps": 266,
+ "grader_error": 0,
+ "video_rendered": 1
+}
