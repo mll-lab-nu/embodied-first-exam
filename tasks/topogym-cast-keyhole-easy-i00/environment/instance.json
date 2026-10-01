@@ -1,0 +1,267 @@
+{
+ "task": "cast_keyhole",
+ "topogym_task": "cast_keyhole",
+ "variation_id": "cast_keyhole_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 244.54 mm above the tabletop.\n- Keep the gold piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "simulator": {
+  "task_id": "cast_keyhole",
+  "robot_id": "aloha",
+  "variation_id": "cast_keyhole_easy",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "keyhole_gold",
+     "link": "keyhole_gold",
+     "center_m": [
+      2.0941369250241476e-17,
+      0.0005340359664473817,
+      -0.09390383692222051
+     ],
+     "radius_m": 0.05
+    },
+    {
+     "entity": "keyhole_silver",
+     "link": "keyhole_silver",
+     "center_m": [
+      -0.011362976443367916,
+      1.8578934611658267e-17,
+      0.08382619412242653
+     ],
+     "radius_m": 0.04
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "96815941e2d1c7cc",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "keyhole_gold": {
+   "position": [
+    -0.20377,
+    0.04962,
+    0.95052
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "euler_xyz": [
+    1.5708,
+    0.7854,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.30968,
+     0.01924,
+     0.92014
+    ],
+    [
+     -0.10268,
+     0.08076,
+     0.98166
+    ]
+   ],
+   "size": [
+    0.207,
+    0.06152,
+    0.06152
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "keyhole_silver": {
+   "position": [
+    -0.06245,
+    0.04955,
+    0.95135
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "euler_xyz": [
+    1.5708,
+    0.7854,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.16868,
+     0.01924,
+     0.92014
+    ],
+    [
+     0.03832,
+     0.08076,
+     0.98166
+    ]
+   ],
+   "size": [
+    0.207,
+    0.06152,
+    0.06152
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26395,
+     0.11476,
+     0.91984
+    ],
+    [
+     -0.00741,
+     0.3713,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.25654,
+    0.25654,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "cast_keyhole_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "scale": 3.0,
+  "center_xy_m": [
+   -0.1356786,
+   0.05
+  ],
+  "yaw_deg": 0.0,
+  "initial_floor_clearance_m": 0.0005,
+  "stable_duration_s": 0.5,
+  "minimum_separation_m": 0.02,
+  "piece_tint": {
+   "gold": 1.0,
+   "silver": 1.0
+  }
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "cast_keyhole",
+  "variation_id": "cast_keyhole_easy",
+  "seed": 0,
+  "terminal_revision": "cast_keyhole_placement_v4_grasp_contact_2mm",
+  "summary": "Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 244.54 mm above the tabletop.",
+   "Keep the gold piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required."
+  ],
+  "failure_conditions": [
+   "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: default task parameters, seed 0, ALOHA EE_ABS, CPU, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1); this instance runs CUDA 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover"
+}

@@ -1,0 +1,905 @@
+{
+ "task": "lock_picking",
+ "topogym_task": "lock_picking",
+ "variation_id": "lock_picking_medium",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops.\n\n## Success requirements\n\n- Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.\n- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.\n- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.\n- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.\n- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).\n- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.\n- The key falling more than 100 mm below the tabletop ends the episode in failure.",
+ "simulator": {
+  "task_id": "lock_picking",
+  "robot_id": "panda_robotiq",
+  "variation_id": "lock_picking_medium",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "lock_key",
+     "link": "key",
+     "center_m": [
+      -0.495,
+      0.0,
+      0.0
+     ],
+     "radius_m": 0.032
+    }
+   ],
+   "stable_time_s": 0.05,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "597699a15bfb818d",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "lock_base": {
+   "position": [
+    -0.0725,
+    -0.26,
+    0.93364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.665,
+     -0.365,
+     0.91964
+    ],
+    [
+     0.52,
+     -0.155,
+     0.94764
+    ]
+   ],
+   "size": [
+    1.185,
+    0.21,
+    0.028
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_disc_0": {
+   "position": [
+    0.0,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.018,
+     -0.34,
+     1.02464
+    ],
+    [
+     0.01,
+     -0.18,
+     1.19293
+    ]
+   ],
+   "size": [
+    0.028,
+    0.16,
+    0.16829
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_frame_0": {
+   "position": [
+    0.0,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.018,
+     -0.374,
+     0.94664
+    ],
+    [
+     0.018,
+     -0.146,
+     1.21664
+    ]
+   ],
+   "size": [
+    0.036,
+    0.228,
+    0.27
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_disc_1": {
+   "position": [
+    0.15,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.132,
+     -0.34,
+     1.02464
+    ],
+    [
+     0.16,
+     -0.18,
+     1.19293
+    ]
+   ],
+   "size": [
+    0.028,
+    0.16,
+    0.16829
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_frame_1": {
+   "position": [
+    0.15,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.132,
+     -0.374,
+     0.94664
+    ],
+    [
+     0.168,
+     -0.146,
+     1.21664
+    ]
+   ],
+   "size": [
+    0.036,
+    0.228,
+    0.27
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_disc_2": {
+   "position": [
+    0.3,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.282,
+     -0.34,
+     1.02464
+    ],
+    [
+     0.31,
+     -0.18,
+     1.19293
+    ]
+   ],
+   "size": [
+    0.028,
+    0.16,
+    0.16829
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_frame_2": {
+   "position": [
+    0.3,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.284,
+     -0.374,
+     0.94664
+    ],
+    [
+     0.344,
+     -0.146,
+     1.21664
+    ]
+   ],
+   "size": [
+    0.06,
+    0.228,
+    0.27
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_tray": {
+   "position": [
+    -0.325,
+    -0.26,
+    0.99864
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.6,
+     -0.295,
+     0.99264
+    ],
+    [
+     -0.05,
+     -0.225,
+     1.00464
+    ]
+   ],
+   "size": [
+    0.55,
+    0.07,
+    0.012
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_tray_post_0": {
+   "position": [
+    -0.58,
+    -0.26,
+    0.97014
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.591,
+     -0.285,
+     0.94764
+    ],
+    [
+     -0.569,
+     -0.235,
+     0.99264
+    ]
+   ],
+   "size": [
+    0.022,
+    0.05,
+    0.045
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_cradle_0_0": {
+   "position": [
+    -0.58,
+    -0.26,
+    1.00464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.588,
+     -0.278,
+     1.00464
+    ],
+    [
+     -0.572,
+     -0.26,
+     1.02264
+    ]
+   ],
+   "size": [
+    0.016,
+    0.018,
+    0.018
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_cradle_0_1": {
+   "position": [
+    -0.58,
+    -0.26,
+    1.00464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.588,
+     -0.26,
+     1.00464
+    ],
+    [
+     -0.572,
+     -0.242,
+     1.02264
+    ]
+   ],
+   "size": [
+    0.016,
+    0.018,
+    0.018
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_tray_post_1": {
+   "position": [
+    -0.185,
+    -0.26,
+    0.97014
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.196,
+     -0.285,
+     0.94764
+    ],
+    [
+     -0.174,
+     -0.235,
+     0.99264
+    ]
+   ],
+   "size": [
+    0.022,
+    0.05,
+    0.045
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_cradle_1_0": {
+   "position": [
+    -0.185,
+    -0.26,
+    1.00464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.193,
+     -0.278,
+     1.00464
+    ],
+    [
+     -0.177,
+     -0.26,
+     1.02264
+    ]
+   ],
+   "size": [
+    0.016,
+    0.018,
+    0.018
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "key_cradle_1_1": {
+   "position": [
+    -0.185,
+    -0.26,
+    1.00464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.193,
+     -0.26,
+     1.00464
+    ],
+    [
+     -0.177,
+     -0.242,
+     1.02264
+    ]
+   ],
+   "size": [
+    0.016,
+    0.018,
+    0.018
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_goal_post": {
+   "position": [
+    0.45,
+    -0.26,
+    0.98614
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.4325,
+     -0.3,
+     0.94764
+    ],
+    [
+     0.4675,
+     -0.22,
+     1.02464
+    ]
+   ],
+   "size": [
+    0.035,
+    0.08,
+    0.077
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_goal": {
+   "position": [
+    0.45,
+    -0.26,
+    1.10464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.445,
+     -0.34,
+     1.02464
+    ],
+    [
+     0.455,
+     -0.18,
+     1.18464
+    ]
+   ],
+   "size": [
+    0.01,
+    0.16,
+    0.16
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "lock_key": {
+   "position": [
+    -0.15,
+    -0.26,
+    1.01394
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.665,
+     -0.278,
+     0.99594
+    ],
+    [
+     -0.135,
+     -0.242,
+     1.04985
+    ]
+   ],
+   "size": [
+    0.53,
+    0.036,
+    0.05391
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "lock_picking_medium",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "geometry": {
+   "first_x": 0.0,
+   "center_y": -0.26,
+   "pitch": 0.15,
+   "grip_offset": 0.495,
+   "bore_radius": 0.0075,
+   "slot_half_deg": 8.0,
+   "slots": [
+    [
+     -60.0,
+     -30.0,
+     0.0
+    ],
+    [
+     -60.0
+    ],
+    [
+     0.0
+    ]
+   ],
+   "initial_disc_deg": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "initial_key_deg": 0.0,
+   "endpoint_deg": 0.0
+  },
+  "stable_duration_s": 0.5,
+  "physics": {
+   "disc_mass": 0.12,
+   "key_mass": 0.12,
+   "disc_damping": 0.03,
+   "friction": 0.01,
+   "passive_armature": 0.0,
+   "contact_timeconst": 0.0025
+  },
+  "terminal": {
+   "rotor_tolerance_deg": 0.5,
+   "insertion_margin_m": 0.001,
+   "shaft_contact_tolerance_m": 1e-05
+  },
+  "disc_colors": [
+   [
+    0.46,
+    0.28,
+    0.66
+   ],
+   [
+    0.2,
+    0.43,
+    0.6
+   ],
+   [
+    0.72,
+    0.34,
+    0.22
+   ]
+  ],
+  "base_finish": "coated_metal",
+  "aperture_outline": {
+   "enabled": true,
+   "width_m": 0.0008,
+   "color_rgb": [
+    1.0,
+    0.95,
+    0.0
+   ]
+  },
+  "rotor_stops": [
+   {
+    "style": "single_ring",
+    "bounds_deg": [
+     -15.0,
+     15.0
+    ],
+    "ear_phase_deg": -35.0
+   },
+   {
+    "style": "single_ring",
+    "bounds_deg": [
+     -10.0,
+     75.0
+    ],
+    "ear_phase_deg": -35.0
+   },
+   {
+    "style": "single_ring",
+    "bounds_deg": [
+     -180.0,
+     180.0
+    ],
+    "ear_phase_deg": -35.0
+   }
+  ],
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "lock_picking",
+  "variation_id": "lock_picking_medium",
+  "seed": 0,
+  "terminal_revision": "terminal_v4_bore_contact_default_success",
+  "summary": "Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.",
+   "The rear edge of the leading tab must clear the outer face of END by at least 1 mm.",
+   "Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.",
+   "Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.",
+   "Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).",
+   "You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation."
+  ],
+  "failure_conditions": [
+   "A limited-travel rotor exceeding its allowed bounds ends the episode in failure.",
+   "The key falling more than 100 mm below the tabletop ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision terminal_v4_bore_contact_default_success)"
+}

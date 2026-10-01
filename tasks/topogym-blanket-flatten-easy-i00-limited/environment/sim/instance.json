@@ -1,0 +1,223 @@
+{
+ "task": "blanket_flatten",
+ "topogym_task": "blanket_flatten",
+ "variation_id": "blanket_flatten_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.\n\n## Success requirements\n\n- Cover at least 90% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.\n- Keep every cloth point at most 30 mm above the tabletop and no more than 8 mm below it.\n- No material edge may stretch beyond 1.15 times its original length. Raised corners or pulling the blanket taut in the air do not count.\n- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.\n- During confirmation, every target point or rigid body's linear speed must be at most 30 mm/s and its displacement from the start of confirmation at most 3 mm.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Any cloth point falling more than 100 mm below the tabletop ends the episode in failure.",
+ "simulator": {
+  "task_id": "blanket_flatten",
+  "robot_id": "aloha",
+  "variation_id": "blanket_flatten_easy",
+  "task_parameters": {
+   "initial_state_path": "instance_assets/initial_state/manifest.json",
+   "initial_state_resource": null,
+   "initial_state_sha256": "6068fc7abe329ef517daf0cf2a4470b9e6e7c703ec9bce66cc8af28aeb6fff79"
+  },
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "none",
+   "targets": [],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "3bcf2dace157a618",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "blanket": {
+   "material": "particle",
+   "position": [
+    -0.13609,
+    0.14939,
+    0.92846
+   ],
+   "bounds": [
+    [
+     -0.43531,
+     -0.02152,
+     0.92364
+    ],
+    [
+     0.16246,
+     0.30748,
+     0.95672
+    ]
+   ],
+   "velocity": [
+    2e-05,
+    0.00015,
+    -0.0003
+   ],
+   "n_points": 8181
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "blanket_flatten_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "length_m": 0.6,
+  "width_m": 0.48,
+  "mesh_spacing_m": 0.012,
+  "particle_size_m": 0.008,
+  "birth_gap_particle_ratio": 4.0,
+  "fold_count": 5,
+  "fold_angle_deg": 105.0,
+  "fold_angle_jitter_deg": 10.0,
+  "crease_slant": 0.1,
+  "drop_clearance_m": 0.1,
+  "tilt_deg": 40.0,
+  "yaw_deg": 18.0,
+  "max_attempts": 64,
+  "roll_fold_count": 0,
+  "roll_angle_deg": 54.0,
+  "roll_angle_jitter_deg": 12.0,
+  "roll_direction": -1,
+  "panel_width_jitter": 0.35,
+  "pitch_deg": 0.0,
+  "center_xy_m": [
+   -0.1356786,
+   0.15
+  ],
+  "stable_duration_s": 0.5,
+  "minimum_coverage_ratio": 0.9,
+  "maximum_stretch_ratio": 1.15,
+  "maximum_height_m": 0.03,
+  "maximum_speed_m_s": 0.03,
+  "maximum_drift_m": 0.003,
+  "material": {
+   "rho": 4.0,
+   "stretch_compliance": 1e-07,
+   "bending_compliance": 1e-05,
+   "bending_relaxation": 0.0,
+   "air_resistance": 0.05
+  },
+  "color": [
+   0.22,
+   0.46,
+   0.7
+  ],
+  "texture": {
+   "pattern": "grid",
+   "accent_color": [
+    0.76,
+    0.84,
+    0.87
+   ],
+   "stripe_pitch_m": 0.06,
+   "thread_pitch_m": 0.002
+  },
+  "initialization_mode": "frozen",
+  "initial_state_path": "instance_assets/initial_state/manifest.json",
+  "initial_state_resource": null,
+  "initial_state_sha256": "6068fc7abe329ef517daf0cf2a4470b9e6e7c703ec9bce66cc8af28aeb6fff79",
+  "table_friction": {
+   "static_mu": 0.5,
+   "kinetic_mu": 0.4,
+   "contact_tolerance_m": 0.001
+  },
+  "gathered_profile": {
+   "panel_fractions": [
+    0.1,
+    0.14,
+    0.11,
+    0.16,
+    0.12,
+    0.09,
+    0.14,
+    0.14
+   ],
+   "crease_band_m": 0.012,
+   "pleat_angle_deg": 72.0,
+   "end_opening_deg": 10.0,
+   "flare_fraction": 0.15,
+   "twist_angle_deg": 0.0,
+   "axial_scale": 0.92,
+   "centerline_sway_m": 0.006,
+   "placement_roll_deg": 0.0
+  },
+  "initial_state_acceptance": "scene_layout"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "blanket_flatten",
+  "variation_id": "blanket_flatten_easy",
+  "seed": 0,
+  "terminal_revision": "release_settling_v1",
+  "summary": "Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Cover at least 90% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.",
+   "Keep every cloth point at most 30 mm above the tabletop and no more than 8 mm below it.",
+   "No material edge may stretch beyond 1.15 times its original length. Raised corners or pulling the blanket taut in the air do not count.",
+   "Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.",
+   "During confirmation, every target point or rigid body's linear speed must be at most 30 mm/s and its displacement from the start of confirmation at most 3 mm."
+  ],
+  "failure_conditions": [
+   "Any cloth point falling more than 100 mm below the tabletop ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision release_settling_v1)",
+ "initial_state_provenance": "re-prepared in rcb-topogym 0.2.3 with his scripts/prepare_blanket_initial_states.py (--tier, seed 0, --acceptance scene_layout); his archived gathered_scene_v1 states do not restore in 0.2.3 (backend identity: world_sha256 of topogym/world/genesis_world.py, changed by his seed fix in 76583213; underneath, the RigidSolver layout mismatch of 0.2.1 / 0.2.2: collision verts 13876 archive vs 14008 live)"
+}

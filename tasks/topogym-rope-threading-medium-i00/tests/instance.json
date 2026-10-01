@@ -1,0 +1,520 @@
+{
+ "task": "rope_threading",
+ "topogym_task": "rope_threading",
+ "variation_id": "rope_threading_medium",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.\n\n## Success requirements\n\n- Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross toward the side containing the purple ring (R3); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.\n- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.\n- Keep every rope point at or below 1 mm/s. Holding is allowed; release is not required.\n- Keep the rope intact; collapsed or inverted rope volume is not accepted.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Invalid rope volume ends the episode in failure.",
+ "simulator": {
+  "task_id": "rope_threading",
+  "robot_id": "aloha",
+  "variation_id": "rope_threading_medium",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "none",
+   "targets": [],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "b236c1e7921852ec",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "rope": {
+   "material": "fem",
+   "position": [
+    0.04649,
+    -0.0341,
+    0.92453
+   ],
+   "bounds": [
+    [
+     -0.26078,
+     -0.33067,
+     0.92054
+    ],
+    [
+     0.18494,
+     0.36554,
+     0.92854
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 33031
+  },
+  "R1": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.15636,
+     0.07212,
+     1.17114
+    ],
+    [
+     0.00053,
+     0.12294,
+     1.33314
+    ]
+   ],
+   "size": [
+    0.15689,
+    0.05082,
+    0.162
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.01043,
+     0.07316,
+     0.92514
+    ],
+    [
+     -0.00051,
+     0.08307,
+     1.25714
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.332
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.05058,
+     0.04361,
+     0.92024
+    ],
+    [
+     0.03964,
+     0.11262,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.35286,
+     0.04976,
+     1.15014
+    ],
+    [
+     -0.20174,
+     0.11755,
+     1.31214
+    ]
+   ],
+   "size": [
+    0.15112,
+    0.06779,
+    0.162
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.21265,
+     0.10664,
+     0.92514
+    ],
+    [
+     -0.20274,
+     0.11655,
+     1.23614
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.311
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2528,
+     0.0771,
+     0.92024
+    ],
+    [
+     -0.16259,
+     0.1461,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.44837,
+     0.12853,
+     1.124
+    ],
+    [
+     -0.34493,
+     0.26839,
+     1.27828
+    ]
+   ],
+   "size": [
+    0.10345,
+    0.13987,
+    0.15428
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_stand": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.36028,
+     0.25609,
+     0.92514
+    ],
+    [
+     -0.35037,
+     0.26601,
+     1.20614
+    ]
+   ],
+   "size": [
+    0.00991,
+    0.00991,
+    0.281
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_base": {
+   "position": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.40043,
+     0.22655,
+     0.92024
+    ],
+    [
+     -0.31022,
+     0.29555,
+     0.92824
+    ]
+   ],
+   "size": [
+    0.09022,
+    0.069,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "rope_threading_medium",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "geometry": {
+   "translation_m": [
+    -0.1156786,
+    0.03,
+    0.0015
+   ],
+   "yaw_deg": 75.0
+  },
+  "stable_duration_s": 0.5,
+  "rope_finish": "hemp",
+  "terminal": {
+   "maximum_speed_m_s": 0.001,
+   "aperture_margin_m": 0.0001
+  },
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "rope_threading",
+  "variation_id": "rope_threading_medium",
+  "seed": 0,
+  "terminal_revision": "terminal_v3_default_success",
+  "summary": "Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross toward the side containing the purple ring (R3); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.",
+   "Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.",
+   "Keep every rope point at or below 1 mm/s. Holding is allowed; release is not required.",
+   "Keep the rope intact; collapsed or inverted rope volume is not accepted."
+  ],
+  "failure_conditions": [
+   "Invalid rope volume ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision terminal_v3_default_success)"
+}

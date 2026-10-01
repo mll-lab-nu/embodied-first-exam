@@ -1,0 +1,155 @@
+{
+ "task": "knot_untying",
+ "topogym_task": "knot_untying",
+ "variation_id": "knot_untying_hard",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.\n\n## Success requirements\n\n- Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.\n- Keep the entire rope close to the tabletop: no point more than 1 mm below it, and no point higher than one rope diameter plus 3 mm above it.\n- Keep the rope volume intact; do not invert or collapse it to bypass the knot.\n- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.\n- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Invalid rope volume ends the episode in failure.",
+ "simulator": {
+  "task_id": "knot_untying",
+  "robot_id": "aloha",
+  "variation_id": "knot_untying_hard",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "none",
+   "targets": [],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "441373494d5b4bd4",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "rope": {
+   "material": "fem",
+   "position": [
+    0.00011,
+    -0.005,
+    0.93258
+   ],
+   "bounds": [
+    [
+     -0.21409,
+     -0.11197,
+     0.92046
+    ],
+    [
+     0.21172,
+     0.10148,
+     0.94864
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 40769
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "knot_untying_hard",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "geometry": {
+   "family": "figure_eight",
+   "planar_scale_m": 0.0325,
+   "crossing_height_m": 0.01
+  },
+  "stable_duration_s": 0.5,
+  "origin_xy_m": [
+   0.0,
+   0.0
+  ],
+  "yaw_deg": 0.0,
+  "rope_finish": "orange_rope",
+  "terminal": {
+   "maximum_speed_m_s": 0.001,
+   "table_clearance_m": 0.003,
+   "penetration_tolerance_m": 0.001
+  },
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "knot_untying",
+  "variation_id": "knot_untying_hard",
+  "seed": 0,
+  "terminal_revision": "terminal_v4_release_settling_default_success",
+  "summary": "Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.",
+   "Keep the entire rope close to the tabletop: no point more than 1 mm below it, and no point higher than one rope diameter plus 3 mm above it.",
+   "Keep the rope volume intact; do not invert or collapse it to bypass the knot.",
+   "Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.",
+   "During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm."
+  ],
+  "failure_conditions": [
+   "Invalid rope volume ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision terminal_v4_release_settling_default_success)"
+}

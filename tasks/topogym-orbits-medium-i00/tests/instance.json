@@ -1,0 +1,608 @@
+{
+ "task": "orbits",
+ "topogym_task": "orbits",
+ "variation_id": "orbits_medium",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire cord and wooden handle together inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 150 mm above the tabletop.\n- Keep the rings, posts and fixed assembly, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Every point of the target cord must also move at most 1 mm/s. Holding the target with the gripper is allowed; release is not required.\n- Keep the cord intact and attached to both handle attachment points; each attachment residual must be at most 2 mm. No inverted or collapsed cord volume is accepted.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Broken attachments or invalid cord volume end the episode in failure.",
+ "simulator": {
+  "task_id": "orbits",
+  "robot_id": "aloha",
+  "variation_id": "orbits_medium",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "none",
+   "targets": [],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "b25ad54434ed5527",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "base": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.21218,
+     -0.19975,
+     0.91964
+    ],
+    [
+     -0.05918,
+     0.19975,
+     0.94004
+    ]
+   ],
+   "size": [
+    0.153,
+    0.3995,
+    0.0204
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_1": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.15385,
+     1.13554
+    ],
+    [
+     -0.07278,
+     -0.02805,
+     1.14914
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_2": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.08415,
+     1.07774
+    ],
+    [
+     -0.07278,
+     0.04165,
+     1.09134
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_3": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.19858,
+     -0.01445,
+     1.01994
+    ],
+    [
+     -0.07278,
+     0.11135,
+     1.03354
+    ]
+   ],
+   "size": [
+    0.1258,
+    0.1258,
+    0.0136
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_1": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     -0.10863,
+     0.93919
+    ],
+    [
+     -0.1316,
+     -0.10047,
+     1.18739
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.2482
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_2": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     -0.03893,
+     0.93919
+    ],
+    [
+     -0.1316,
+     -0.03077,
+     1.14234
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.20315
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_3": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     0.03077,
+     0.93919
+    ],
+    [
+     -0.1316,
+     0.03893,
+     1.08454
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.14535
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "post_4": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.13976,
+     0.10047,
+     0.93919
+    ],
+    [
+     -0.1316,
+     0.10863,
+     1.02674
+    ]
+   ],
+   "size": [
+    0.00816,
+    0.00816,
+    0.08755
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "stopper_ball": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.15608,
+     -0.12495,
+     1.16699
+    ],
+    [
+     -0.11528,
+     -0.08415,
+     1.20779
+    ]
+   ],
+   "size": [
+    0.0408,
+    0.0408,
+    0.0408
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "handle": {
+   "position": [
+    -0.13568,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.1514,
+     0.38195,
+     0.92117
+    ],
+    [
+     -0.11995,
+     0.43805,
+     0.93307
+    ]
+   ],
+   "size": [
+    0.03145,
+    0.0561,
+    0.0119
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "cord": {
+   "material": "fem",
+   "position": [
+    -0.13523,
+    0.24342,
+    0.94114
+   ],
+   "bounds": [
+    [
+     -0.22167,
+     0.07889,
+     0.92118
+    ],
+    [
+     -0.04968,
+     0.39487,
+     0.95891
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "n_points": 24833
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.33668,
+     -0.63575,
+     0.91984
+    ],
+    [
+     0.06532,
+     -0.23375,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.402,
+    0.402,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "orbits_medium",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "geometry": {
+   "ring_count": 3,
+   "bight_radius_m": 0.028,
+   "handle_bend_radius_m": 0.02
+  },
+  "stable_duration_s": 0.5,
+  "cord_profile": "compact_external_handle_v1",
+  "cord_finish": "golden_rope",
+  "linear_scale": 0.85,
+  "yaw_deg": 90.0,
+  "placement_anchor": "base_center",
+  "base_center_xy_m": [
+   -0.1356786,
+   0.0
+  ],
+  "center_xy_m": [
+   -0.1356786,
+   -0.24
+  ],
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "orbits",
+  "variation_id": "orbits_medium",
+  "seed": 0,
+  "terminal_revision": "placement_region_v2_default_success",
+  "summary": "Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Put every part of the entire cord and wooden handle together inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 150 mm above the tabletop.",
+   "Keep the rings, posts and fixed assembly, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Every point of the target cord must also move at most 1 mm/s. Holding the target with the gripper is allowed; release is not required.",
+   "Keep the cord intact and attached to both handle attachment points; each attachment residual must be at most 2 mm. No inverted or collapsed cord volume is accepted."
+  ],
+  "failure_conditions": [
+   "Broken attachments or invalid cord volume end the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision placement_region_v2_default_success)"
+}

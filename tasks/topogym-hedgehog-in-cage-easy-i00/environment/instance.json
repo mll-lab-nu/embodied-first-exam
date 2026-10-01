@@ -1,0 +1,286 @@
+{
+ "task": "hedgehog_in_cage",
+ "topogym_task": "hedgehog_in_cage",
+ "variation_id": "hedgehog_in_cage_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the whole hedgehog ball, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 236.877 mm above the tabletop.\n- Keep all cage components, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep all final conditions satisfied together for at least 2 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "simulator": {
+  "task_id": "hedgehog_in_cage",
+  "robot_id": "panda_robotiq",
+  "variation_id": "hedgehog_in_cage_easy",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "hedgehog_ball",
+     "link": "hedgehog",
+     "center_m": [
+      -0.004500000000000004,
+      0.0,
+      -0.0075
+     ],
+     "radius_m": 0.08930427035447107
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.11930427035447107,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "1cfc041a4ca816fc",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "hedgehog_mount": {
+   "position": [
+    -0.13568,
+    0.05,
+    0.93964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26068,
+     -0.075,
+     0.91964
+    ],
+    [
+     -0.01068,
+     0.175,
+     0.95964
+    ]
+   ],
+   "size": [
+    0.25,
+    0.25,
+    0.04
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "hedgehog_cage": {
+   "position": [
+    -0.13568,
+    0.05,
+    1.07964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.20318,
+     -0.0175,
+     0.95964
+    ],
+    [
+     -0.06818,
+     0.1175,
+     1.19964
+    ]
+   ],
+   "size": [
+    0.135,
+    0.135,
+    0.24
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "hedgehog_ball": {
+   "position": [
+    -0.13568,
+    0.05,
+    1.05039
+   ],
+   "orientation_wxyz": [
+    0.542672,
+    0.659521,
+    -0.52013,
+    -0.001975
+   ],
+   "euler_xyz": [
+    2.09078,
+    -0.5967,
+    -0.98268
+   ],
+   "bounds": [
+    [
+     -0.19346,
+     0.00339,
+     0.9928
+    ],
+    [
+     -0.05687,
+     0.10731,
+     1.12539
+    ]
+   ],
+   "size": [
+    0.13659,
+    0.10392,
+    0.13259
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26012,
+     -0.35788,
+     0.91984
+    ],
+    [
+     -0.01124,
+     -0.109,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.24888,
+    0.24888,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "hedgehog_in_cage_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "scale": 3.0,
+  "center_xy_m": [
+   -0.1356786,
+   0.05
+  ],
+  "yaw_deg": 0.0,
+  "mount_height_m": 0.04,
+  "mount_width_m": 0.25,
+  "stable_duration_s": 2.0,
+  "minimum_separation_m": 0.01,
+  "wood_tint": 1.0,
+  "finish": "wood",
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "hedgehog_in_cage",
+  "variation_id": "hedgehog_in_cage_easy",
+  "seed": 0,
+  "terminal_revision": "hedgehog_placement_v4_grasp_contact_2mm",
+  "summary": "Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.",
+  "stable_duration_s": 2.0,
+  "success_conditions": [
+   "Put every part of the whole hedgehog ball, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 236.877 mm above the tabletop.",
+   "Keep all cage components, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required."
+  ],
+  "failure_conditions": [
+   "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision hedgehog_placement_v4_grasp_contact_2mm)"
+}

@@ -13,113 +13,409 @@ name = "jianwen"
 
 [[tasks]]
 name = "topogym/topogym-blanket-flatten-i00"
-digest = "sha256:001c1cfc78a87dfb39a1820122e2f3a2300afd7e796d3ed7485fd1273188ac14"
+digest = "sha256:476db391d75de2fca72dba86d9628df6e2d0ab38f2e211f31d0edba9560aaad6"
 
 [[tasks]]
 name = "topogym/topogym-buzz-wire-3d-i00"
-digest = "sha256:797a43ca2e821a3e5c091a3b2167f00b8fcc6201485eca84b5302796addf7a2a"
+digest = "sha256:ab80a8b869c7a5144172654fce617399ad3b1f307f13e5f8a40eaad95eeb8874"
 
 [[tasks]]
 name = "topogym/topogym-cast-coil-i00"
-digest = "sha256:675e304acb30a0443e9e6a021966ca61f19af0300061125e0ff9979e0d7516c3"
+digest = "sha256:7dc87b0a4c1a6c83b691fdf40527171ab179176616d87e039c66aff0f6867b10"
 
 [[tasks]]
 name = "topogym/topogym-cast-keyhole-i00"
-digest = "sha256:54c8c3b920e4657de8c24e01b2155aec15158425529303564917c48f6cb726a6"
+digest = "sha256:9c5e2c616ba6d60528ad9ec213eba35626f779149e7259aee539f06437a18112"
 
 [[tasks]]
 name = "topogym/topogym-cube-pick-place-i00"
-digest = "sha256:3a20a34859e5b6e143b2287aba9fabe24d5fc7bc4b3e63a983ca7a77bc4d7f50"
+digest = "sha256:87bb76ded2c7341f8f4567b80fe35b703316da336c308dde1ac097a5cf624bba"
 
 [[tasks]]
 name = "topogym/topogym-cube-pick-place-i00-limited"
-digest = "sha256:dee1f3f2c74477dc3c46bc7ec1d66589bf7c0776875e751f0adad21ae47f8fd0"
+digest = "sha256:3386a62c3466a1c4dc240d7383f239241241f83452778b8d54bd32634ec135ee"
 
 [[tasks]]
 name = "topogym/topogym-fiber-bundling-i00"
-digest = "sha256:c7dbedc799aa90ef7db8af8aebe93f50f34a9bac618fa6fd04bf77bd5b999c70"
+digest = "sha256:4051b20e48d51b84ce83080a0100540b06a3345e67124224adfbb31c66aa8a33"
 
 [[tasks]]
 name = "topogym/topogym-blanket-flatten-i00-limited"
-digest = "sha256:a6d6f02f3566294e54e6d60b616ef2e415fd86fb37096be83701988f961e15cb"
+digest = "sha256:21ef9cd3c1e139969b5f2bffb4f8c88f8ff351ca66b305341d5c35cafbe4d116"
 
 [[tasks]]
 name = "topogym/topogym-buzz-wire-3d-i00-limited"
-digest = "sha256:c14fac517132031a378e4e029e14e58e16616b25575f867d22d2af1c41b4a5cc"
+digest = "sha256:06a44e5d8d29c9b29e6c14025fdc5b3a22b29be6770a55b1a0e238b2409e304e"
 
 [[tasks]]
 name = "topogym/topogym-cast-coil-i00-limited"
-digest = "sha256:e5b0eb76c44abfe14ce4e41d68ce928ce36106dd74922c4e35d608b2f33fab8b"
+digest = "sha256:46c8cf56df042d362a27e7a691a81d20079026c44517488842f6c56fc8ae7269"
 
 [[tasks]]
 name = "topogym/topogym-cast-keyhole-i00-limited"
-digest = "sha256:f5435416e55088bf64ba9349579f9a325aeb7761e35b18e131da51ab62b8be9a"
+digest = "sha256:c8701193b7a883b20515ed8be416d41b14e083c7859b5d26de2cccb835a72171"
 
 [[tasks]]
 name = "topogym/topogym-fiber-bundling-i00-limited"
-digest = "sha256:51992c0697543260f452310b13715c836a397f12c83c15596803a3361684d3d6"
+digest = "sha256:b57ce1bf116ead605d412afcae9ec14bf385f6070c196349f9a9eb59df7f9151"
 
 [[tasks]]
 name = "topogym/topogym-hedgehog-in-cage-i00"
-digest = "sha256:c3722b465d4a295856d49bc3caad859fd701b7dbd7465ccda6f6efacba9ca359"
+digest = "sha256:184210bc42792305d469148aa1c5f391eacb70a73a65811d437ef0885a86148d"
 
 [[tasks]]
 name = "topogym/topogym-hedgehog-in-cage-i00-limited"
-digest = "sha256:ba428521227515662ffec78c6d42701130a8891529a799095e80895bd39e90eb"
+digest = "sha256:07126a13366a81ca75dc966361b601a8e881ca8ed7bbe20b4dc5b78bf8065265"
 
 [[tasks]]
 name = "topogym/topogym-horseshoe-ring-i00"
-digest = "sha256:964e5d5c78a843a04b9b13eaffc23575beef50c81f7fc889e6b713ec21bfe882"
+digest = "sha256:7832d3c21c605a71a48a77698b58b2346f4f65c8153827f2273a92da18400d75"
 
 [[tasks]]
 name = "topogym/topogym-horseshoe-ring-i00-limited"
-digest = "sha256:c82525ff217fe2767e67ad979a2ce35d3ad1a3bee3e419ea8581af3c37be1049"
+digest = "sha256:1cf0dd2e335361c91601ba8cce10adb826379e3f1a472f76ddc24620e315abc5"
 
 [[tasks]]
 name = "topogym/topogym-interlocked-claws-i00"
-digest = "sha256:80d9c1c3c6cfa078d372a742b640c01eaaed0e502d496f1187980d8f44c1382a"
+digest = "sha256:023bc9386a08002c0870aa4cb5158a1d7f1f3fa3e683e67989f859f1862d4155"
 
 [[tasks]]
 name = "topogym/topogym-interlocked-claws-i00-limited"
-digest = "sha256:cab742ada43e95889a389f5f69537e12d26532d27f1cc2d7c5010b8b9b9c4f2b"
+digest = "sha256:f72a7a0a8af09d1c5dc443c1b9bb32ffd763791931c1f875e66698d69fc78294"
 
 [[tasks]]
 name = "topogym/topogym-knot-untying-i00"
-digest = "sha256:b249fb8fe55186fa6db576f6f98f825ce5d3982f426c8359c8fba9c026e1c93f"
+digest = "sha256:cb45ec2ec0194c02ed910a72a289062750f694467d44e2da288ab608843b3331"
 
 [[tasks]]
 name = "topogym/topogym-knot-untying-i00-limited"
-digest = "sha256:ec292fd5f95f12a529d7cd20cd7486bd62ce935359f14d1820cd4e198cdca1db"
+digest = "sha256:35061ed6ce1cc888cad9a4e471329ef865099a8c8d2e740f7285a8b65c124ead"
 
 [[tasks]]
 name = "topogym/topogym-lock-picking-i00"
-digest = "sha256:758dd9d6d22e262db0ba06d0a5a0efd46f74b24d90e00cef1f3b0ae5e5dc0ecd"
+digest = "sha256:1e5911e3eb1ec38530f4031d4e4ad7bc898fab9bb0b8014c7fc1dc65dff42cd1"
 
 [[tasks]]
 name = "topogym/topogym-lock-picking-i00-limited"
-digest = "sha256:06a8862fab29fc49a265a9bf0fdd6ccfd2170b8eb89021c0aa8d65d373d2260c"
+digest = "sha256:1b20cd89c34a0c27f377b9946a0e7a119e4709d7767cda2c34f9f3cdf134456a"
 
 [[tasks]]
 name = "topogym/topogym-orbits-i00"
-digest = "sha256:7bca16138a9fc08d6270b479ca4cdcbbdbde0b620c23cd160fb10056bd297c2e"
+digest = "sha256:c1b21eb51f2718227c23477620c4a21316e1afa16046dfb9681352a9654672d1"
 
 [[tasks]]
 name = "topogym/topogym-orbits-i00-limited"
-digest = "sha256:329cf88b48bf39806e79c1bd4e5ab037418d42525a0320f706b528daad185d4c"
+digest = "sha256:61d2c1af1ada0adb56de3ed6f1de2cb0607a7691196068004fa2c613a3cb4393"
 
 [[tasks]]
 name = "topogym/topogym-rope-threading-i00"
-digest = "sha256:afafd45e278c9ebe08a6f6f77a10bd36632dc6a16f24f78636ef717949053229"
+digest = "sha256:bb5a1f7f84deb609330f2ea07659b83e36606b061eb44cddc637ee24f2accbf4"
 
 [[tasks]]
 name = "topogym/topogym-rope-threading-i00-limited"
-digest = "sha256:316b233d65e14f1f2d6a015f74e1c6508fea126531c7d2330f9b0d0cf669ce9e"
+digest = "sha256:2d24a653e986df1c52dfe1040d2c541b0f9203eab0fe5a1dd92e7e74d42b4b31"
 
 [[tasks]]
 name = "topogym/topogym-slotted-post-ring-i00"
-digest = "sha256:bf88858ba65a93ca98b4d936366b948c3ab9fb3b1bf1be34f36bd2bc29015f87"
+digest = "sha256:0d30e8169b9c00c39fd14a2506d1e19091c709bf351d998c34099319e075c361"
 
 [[tasks]]
 name = "topogym/topogym-slotted-post-ring-i00-limited"
-digest = "sha256:f3baa4673ba5e5e23b77abdbeb3cfb957071827c39e6d817348fb987cf06099a"
+digest = "sha256:d351aca7f2357500090ce32365c27d3af7698d553936a1153d37a9b24a33823e"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-easy-i00"
+digest = "sha256:37b077b9724ca478f9b6b30b74d741337cb0aa745296d4bfc12ec6279982d771"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-easy-i00-limited"
+digest = "sha256:5bf5e68abd5b32927bcb5ca547c81bfce676855a80446edc8f3dc8c9e4c33391"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-medium-i00"
+digest = "sha256:fdcb39798f49d31b97dae59f1e3f0f68e30d4aea051ece9ea4669dc3ce29089c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-medium-i00-limited"
+digest = "sha256:07bd391c82c8ece59de9bc3d6c00865e1045ce595121e0c1b7005a9f7c0c8d2f"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-easy-i00"
+digest = "sha256:b8682f78cbd72400f623b113d245ea09e3b1c61d2981790d4248ee07846fce3a"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-easy-i00-limited"
+digest = "sha256:7b6ac46709e3ab47bb702573bd892ccacc9cbfce7633b5fcd82c94321533b5d5"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-easy-i00"
+digest = "sha256:7a4265f0e8aa68f64c53d2501bc6cb3648c891ce256a59a68ee2c5ab746d4193"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-easy-i00-limited"
+digest = "sha256:6a093fe00055ffeae0c7ac22e710137b7ceccea6fdbbe6d8aca619b2bf6c01f0"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-medium-i00"
+digest = "sha256:9e28ea3ca106d3183672870b3fa0b56149fa7cd6f6b12e455127b4dad28b5bf0"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-medium-i00-limited"
+digest = "sha256:84713f4c8c2c28f3f1fdcad99160668431894de0345394e1a72eebea4c57b6bb"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-easy-i00"
+digest = "sha256:cc138c10a5b3c6462e13f0f4b9ed7a7cd6cd86c47bd9539c5e9180c7eaf9af9c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-easy-i00-limited"
+digest = "sha256:a1485d795603012587b534d4c261d8978115566c91535c2315150948bfd13b95"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-easy-i00"
+digest = "sha256:e61df2eced714bec925774c6bb46a20aca64e8e7af4f1798f4c2fe62c7523aaf"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-easy-i00-limited"
+digest = "sha256:f1c838f9bfe58ae1e232e59075bf2db9fa5333b30ec1024352771f11a91f78de"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-medium-i00"
+digest = "sha256:8874f08b1f4df3f38f7891ce750e2a7509167ff7673415ab38cd1fd9d6363ca0"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-medium-i00-limited"
+digest = "sha256:1cd71e927f0ab2ff355e7cfaf9ad8d2670d0c0f607f5188c3e1ac8f0de7b05b2"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-hard-i00"
+digest = "sha256:d7464c78f5568101d1be68367c9315c90511cd9e5d448208b30404ede3e93679"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-knot-untying-hard-i00-limited"
+digest = "sha256:f0bde10ce8d0087f19028da57545822d219c357c5d56bfc8a6e2c6e20a3d4b2c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-easy-i00"
+digest = "sha256:7cd1e522c3d9ec7ec5d2ea56583aeb545a86f7b39afe9dec37add33c404b8203"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-easy-i00-limited"
+digest = "sha256:2d6f903e67b9ffd9ffacbf5cf9a602195342120e51cee5d6933f4f71c8674af7"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-easy-i00"
+digest = "sha256:c1ef9779a7d4c45055b1c48b6cdb116a5da0b94c944fc701f4ce71bf72a9ebfb"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-easy-i00-limited"
+digest = "sha256:b6e5b04eb15af5dc6de39a5b2ca3c1e4fbfecf15c4d012c08439623f3182a192"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-hard-i00"
+digest = "sha256:34373ec20f6b3c5142d3571b34106ddefa721e0a74246fb35be7643e302163c1"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-hard-i00-limited"
+digest = "sha256:f042a3b922e626d3ddc011a71fda0b0eab0b8dc01f00a011c6cae8b2ad17d0ad"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-hard-i00"
+digest = "sha256:9a094e5234abd463fe3217190a455466b7e7b568159f9dea9f3fde9075d9fc2a"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-horseshoe-ring-hard-i00-limited"
+digest = "sha256:fcc7b3fc27ebdf100221512bc223519f8403671675fc9c4a18b29efc212c072b"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-medium-i00"
+digest = "sha256:4f0dad9e6d12a49bdc7dd348b6c659c462b99b7830bed3b9d9833de1d7cdca48"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-medium-i00-limited"
+digest = "sha256:2c9dec18556046f22fe88655aefc275d0f6e02cbf19052fdfb989ba0df6e9ec4"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-medium-i00"
+digest = "sha256:210a6b17834ba5a1ba1e2941342e7e5beeec9d6706bb4afe45d5ec1aeef43a6b"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-medium-i00-limited"
+digest = "sha256:c4ea337c756f226274914f4a8887628ed848052ce212cf4907ae688ebea5b371"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-easy-i00"
+digest = "sha256:9c145111e1b61f7ec00e7cce1818d0c18fe7e1a155b348ec95ceacda9b8e63aa"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-easy-i00-limited"
+digest = "sha256:38484779380a2829fd270f793263fbc343344de69c053531f6984118c8c8ab5f"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-medium-i00"
+digest = "sha256:c1989f3f49fa7a37535101956ec3fceb960c57ac3c1807234c8ec945f24ce48d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-medium-i00-limited"
+digest = "sha256:3a6e11ab08924764327fd05ec95781b0057f7caaf410d6d55d9c42251fad857d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-hard-i00"
+digest = "sha256:733092943462f9c0c20bbd9e53d7d76b1efe5af62009d2fc254d7089357e499d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-coil-hard-i00-limited"
+digest = "sha256:a6244f8a05cc4eefb92aa0dd357e3aad18f435c32653e9a50587af18dadce9c3"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-hard-i00"
+digest = "sha256:0e709ab2c976e8b0fbb1dc71112c157ab8bce4c9abb0ae5ce0f9d2e322bbc007"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-hard-i00-limited"
+digest = "sha256:c204c8aba371e6c8933321f280dc92733bf180deb85113d1c8a5666e57b592e7"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-hard-i00"
+digest = "sha256:b95a68ab40e0dfae1b4867691e3442d8c48c4504301ac567a176810dcc36828e"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-hedgehog-in-cage-hard-i00-limited"
+digest = "sha256:f792c15f8247a98cbf435c41a3a8dc9e409ee773285b2ff1a3fd7481034aae70"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-medium-i00"
+digest = "sha256:909aafee3367b0bc4d019d92b1c42ed2ce1575043c600f458006b40bc08bde15"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-medium-i00-limited"
+digest = "sha256:53197f81f56ce4ebbb25324db9609c894a3fc04d2175f4fcf2b5029a827a38e7"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-hard-i00"
+digest = "sha256:2ea2a251395ee944a8363f15ce23c7b05602df9759bd6aaf8eae345887584f1d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-hard-i00-limited"
+digest = "sha256:bcc6f257de27b6182ab9bdb11c733f539fbc5d93c8a51bb745349c88171a7a51"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-easy-i00"
+digest = "sha256:6513f819299ef1c5a2e9a9e77b96c209a5f31fb8ca4e899d84d9ad67ca8239e8"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-easy-i00-limited"
+digest = "sha256:f9c97a98dfbbc87486cb51541121eb7eec0ca81dbd99ca058bb9737e1be6755a"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-medium-i00"
+digest = "sha256:a43949edb93f4da5f560f6f0afecd92a6925d2f6d0497b3ff8d6d326c78e106a"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-medium-i00-limited"
+digest = "sha256:dd63e57627b3f87eb43a35b9b036f98ddb2fe00a41c88c64f9fcb886ce3c4df6"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-easy-i00"
+digest = "sha256:85c42a63b54abb88edfef03064d2004a22ccab73dcbe5ded6ed45bad0f03b7a1"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-easy-i00-limited"
+digest = "sha256:7982e51e4ed405a40bd34f2f50338941b4f00d95fb7357505c7bd804371a9342"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-medium-i00"
+digest = "sha256:689886f1874d3838424a5c6fbbdea118c620c595cfb322ee2d4d43a53af4ae12"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-medium-i00-limited"
+digest = "sha256:cf79c70ebb6f476cadcdaee20f5316ab198fc247bd4376144711cf5d726d6c64"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-hard-i00"
+digest = "sha256:f666cc433174c852f0225c373db594bca566b50085ccead2208e13d3001c1051"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-hard-i00-limited"
+digest = "sha256:93dc6506c27573838cf5b77c7646422bcdb1d9389f1ce0b7d0b00ffd8532d1ab"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-medium-i00"
+digest = "sha256:d3c6b232793ccb09f65c53d20aa9c508cef99108d6d81a07b150d74f403292e6"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-medium-i00-limited"
+digest = "sha256:4b8291f07e141f1397f34abd2ece967d6f558d9866ff239ba282febf2668ba41"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-hard-i00"
+digest = "sha256:828f9d7075a61bcdcdb306cc719a2aadccff12cbef823c8f689e9cef28110b35"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-rope-threading-hard-i00-limited"
+digest = "sha256:5bd7fb4dc0480093b357ac2d4afec46173ad0a0f3e9cf31287b6fb3c7cd6c318"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-easy-i00"
+digest = "sha256:48c8210f9e849a60eee0adb52285fb3c2c17dc72ee850f35498c5edbe26b58d1"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-easy-i00-limited"
+digest = "sha256:735c3cb67e613e3558506c7b60828b99a989153ba30c4fc5ced723e004f4c09f"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-medium-i00"
+digest = "sha256:dc06de095bbfa497ad85fb08436c2dea05a980bc476c770a1b083f9b871afda8"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-medium-i00-limited"
+digest = "sha256:ca1112597d799b363974ddf5d94e1eb61f31134b6e47abf8801afb8a333c34c9"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-hard-i00"
+digest = "sha256:1d145856750101a54faedf9d9dc379409fa162720a03eca0b8087a99adfa9be7"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-orbits-hard-i00-limited"
+digest = "sha256:3a99264b2048ce615b0739eb661edcd13b1243a7b6c108a3e077f156f52edd03"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-medium-i00"
+digest = "sha256:5b5688c62b0ab63958678ab1e7bd1f60b7aef07760a672e54055cdeb8a0a43c0"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-medium-i00-limited"
+digest = "sha256:69afd54999f15c88f1ba4b0bf1a234b4d4590f2a3cc04ffb6e196d7cec0977d2"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-hard-i00"
+digest = "sha256:d3485b319cda7cce612b6bf1384ab3d90ef08ebec79c5658b150eb5c7b0b49a8"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-slotted-post-ring-hard-i00-limited"
+digest = "sha256:5b57f7645276232d5efb694c17075932355bdd07f89a90ff314b93a3d276e6f6"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-easy-i00"
+digest = "sha256:a41c3a7e66897cc0ef85a1193340c2ebc75ec4efb191b4bfc63fc14c142b3e25"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-easy-i00-limited"
+digest = "sha256:b5e9aa87e5e0419cf7681464f30ddaab17c722c55cc2ec9735c63a371e0b1b3c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-medium-i00"
+digest = "sha256:8c02d594c4b94b0d2d458510d77765c6573522a51648fd373d5f92f5f091bc4d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-medium-i00-limited"
+digest = "sha256:d87e77f9ea3f938f2d2613b397536842339049370282ab9b265db3e8b7ad136b"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-hard-i00"
+digest = "sha256:dc6b540f34e9fb31936a3424d4b5c60cd789258883dd4a734323ac951bba63d1"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-blanket-flatten-hard-i00-limited"
+digest = "sha256:46d16df5cee671df3b94e225ed06246a6b99ab7fb8bbc4e2d21403a91b473f36"
 

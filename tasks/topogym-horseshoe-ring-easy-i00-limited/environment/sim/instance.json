@@ -1,0 +1,400 @@
+{
+ "task": "horseshoe_ring",
+ "topogym_task": "horseshoe_ring",
+ "variation_id": "horseshoe_ring_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire removable ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 223.443 mm above the tabletop.\n- Keep the horseshoes and chains, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep every permanent chain/eye interlock intact; free only the removable target ring.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Losing any permanent chain/eye connection ends the episode in failure.\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "simulator": {
+  "task_id": "horseshoe_ring",
+  "robot_id": "aloha",
+  "variation_id": "horseshoe_ring_easy",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "horseshoe_left",
+     "link": "horseshoe_left",
+     "center_m": [
+      0.012781859274390302,
+      -2.7755575615628914e-17,
+      0.0
+     ],
+     "radius_m": 0.09055211523025057
+    },
+    {
+     "entity": "horseshoe_right",
+     "link": "horseshoe_right",
+     "center_m": [
+      -0.01278185927439026,
+      2.7755575615628914e-17,
+      0.0
+     ],
+     "radius_m": 0.09055211523025057
+    },
+    {
+     "entity": "target_ring",
+     "link": "target_ring",
+     "center_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "radius_m": 0.07790120932666852
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.12055211523025057,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "36408bfbd16b5510",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "horseshoe_left": {
+   "position": [
+    -0.24345,
+    0.05001,
+    0.92757
+   ],
+   "orientation_wxyz": [
+    0.99958,
+    -0.0,
+    -0.028996,
+    -5e-06
+   ],
+   "euler_xyz": [
+    -0.0,
+    -0.058,
+    -1e-05
+   ],
+   "bounds": [
+    [
+     -0.31283,
+     -0.01889,
+     0.91964
+    ],
+    [
+     -0.14869,
+     0.1189,
+     0.94445
+    ]
+   ],
+   "size": [
+    0.16414,
+    0.13779,
+    0.0248
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "horseshoe_right": {
+   "position": [
+    -0.02789,
+    0.05018,
+    0.92757
+   ],
+   "orientation_wxyz": [
+    0.999579,
+    2.8e-05,
+    0.028996,
+    -0.000949
+   ],
+   "euler_xyz": [
+    0.0,
+    0.058,
+    -0.0019
+   ],
+   "bounds": [
+    [
+     -0.12269,
+     -0.01872,
+     0.91964
+    ],
+    [
+     0.04149,
+     0.11908,
+     0.94445
+    ]
+   ],
+   "size": [
+    0.16419,
+    0.13779,
+    0.0248
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "chain_upper_1": {
+   "position": [
+    -0.12831,
+    0.07054,
+    0.92696
+   ],
+   "orientation_wxyz": [
+    0.996557,
+    0.017504,
+    0.004587,
+    -0.080916
+   ],
+   "euler_xyz": [
+    0.03415,
+    0.01197,
+    -0.16183
+   ],
+   "bounds": [
+    [
+     -0.16523,
+     0.05772,
+     0.92501
+    ],
+    [
+     -0.09139,
+     0.08336,
+     0.92891
+    ]
+   ],
+   "size": [
+    0.07384,
+    0.02564,
+    0.0039
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "chain_lower_1": {
+   "position": [
+    -0.12973,
+    0.02988,
+    0.92797
+   ],
+   "orientation_wxyz": [
+    0.995374,
+    -0.036004,
+    -0.014967,
+    0.087803
+   ],
+   "euler_xyz": [
+    -0.07439,
+    -0.02348,
+    0.17684
+   ],
+   "bounds": [
+    [
+     -0.16655,
+     0.01681,
+     0.92545
+    ],
+    [
+     -0.0929,
+     0.04294,
+     0.93049
+    ]
+   ],
+   "size": [
+    0.07364,
+    0.02613,
+    0.00504
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "target_ring": {
+   "position": [
+    -0.06353,
+    0.05286,
+    0.93378
+   ],
+   "orientation_wxyz": [
+    0.760993,
+    -0.034262,
+    0.647682,
+    0.014942
+   ],
+   "euler_xyz": [
+    -0.2038,
+    1.40806,
+    -0.13397
+   ],
+   "bounds": [
+    [
+     -0.13547,
+     -0.01669,
+     0.91964
+    ],
+    [
+     0.0084,
+     0.1224,
+     0.94791
+    ]
+   ],
+   "size": [
+    0.14387,
+    0.13909,
+    0.02827
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.2534,
+     -0.37744,
+     0.91984
+    ],
+    [
+     -0.01796,
+     -0.142,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.23544,
+    0.23544,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "horseshoe_ring_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "scale": 2.0,
+  "center_xy_m": [
+   -0.1356786,
+   0.05
+  ],
+  "yaw_deg": 0.0,
+  "initial_floor_clearance_m": 0.001,
+  "stable_duration_s": 0.5,
+  "minimum_separation_m": 0.02,
+  "target_ring_finish": "copper",
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "horseshoe_ring",
+  "variation_id": "horseshoe_ring_easy",
+  "seed": 0,
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "summary": "Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Put every part of the entire removable ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 223.443 mm above the tabletop.",
+   "Keep the horseshoes and chains, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.",
+   "Keep every permanent chain/eye interlock intact; free only the removable target ring."
+  ],
+  "failure_conditions": [
+   "Losing any permanent chain/eye connection ends the episode in failure.",
+   "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision placement_region_v3_grasp_contact_2mm)"
+}

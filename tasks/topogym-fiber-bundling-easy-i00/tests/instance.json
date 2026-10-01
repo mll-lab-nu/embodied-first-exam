@@ -1,0 +1,482 @@
+{
+ "task": "fiber_bundling",
+ "topogym_task": "fiber_bundling",
+ "variation_id": "fiber_bundling_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.\n\n## Success requirements\n\n- Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.\n- All fiber points must finish beyond the exit side of the ring tube, allowing for fiber thickness. The branching face of the front sheath must also pass through and clear the tube with its full thickness. The fixed rear terminal must remain anchored and does not pass through.\n- Keep the angle between every pair of adjacent fiber segments at most 60 degrees in the final configuration.\n- Touch and grasp only the thick sheath with the gripper. Keep the completed passage valid through confirmation; holding is allowed, with no separate release or speed threshold.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- Any gripper touch of a fine fiber at any time ends the episode in failure, including a brief or zero-force touch.\n- A fiber link falling more than 100 mm below the tabletop ends the episode in failure.",
+ "simulator": {
+  "task_id": "fiber_bundling",
+  "robot_id": "panda_robotiq",
+  "variation_id": "fiber_bundling_easy",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "none",
+   "targets": [],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "49f4da33a476ce80",
+ "action_dim": 8,
+ "action_layout": [
+  "joint1",
+  "joint2",
+  "joint3",
+  "joint4",
+  "joint5",
+  "joint6",
+  "joint7",
+  "arm_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  0.392699,
+  0.0,
+  -1.963495,
+  0.0,
+  2.356194,
+  -0.785398,
+  0.0854
+ ],
+ "objects": {
+  "fiber_bundle": {
+   "position": [
+    -0.1,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.645,
+     -0.52195,
+     0.91964
+    ],
+    [
+     0.21778,
+     -0.21767,
+     1.22164
+    ]
+   ],
+   "size": [
+    0.86278,
+    0.30428,
+    0.302
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "bundling_ring": {
+   "position": [
+    0.25,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    0.707107,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    1.5708,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.246,
+     -0.2715,
+     1.13814
+    ],
+    [
+     0.254,
+     -0.2285,
+     1.18114
+    ]
+   ],
+   "size": [
+    0.008,
+    0.043,
+    0.043
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_base": {
+   "position": [
+    -0.08,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.155,
+     -0.305,
+     0.91964
+    ],
+    [
+     -0.005,
+     -0.195,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.15,
+    0.11,
+    0.012
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_post": {
+   "position": [
+    -0.08,
+    -0.25,
+    1.03364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.092,
+     -0.263,
+     0.93164
+    ],
+    [
+     -0.068,
+     -0.237,
+     1.13564
+    ]
+   ],
+   "size": [
+    0.024,
+    0.026,
+    0.204
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_pad": {
+   "position": [
+    -0.08,
+    -0.25,
+    1.14364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.271,
+     1.13964
+    ],
+    [
+     -0.015,
+     -0.229,
+     1.14764
+    ]
+   ],
+   "size": [
+    0.13,
+    0.042,
+    0.008
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_left": {
+   "position": [
+    -0.08,
+    -0.271,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.276,
+     1.13564
+    ],
+    [
+     -0.015,
+     -0.266,
+     1.17364
+    ]
+   ],
+   "size": [
+    0.13,
+    0.01,
+    0.038
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_right": {
+   "position": [
+    -0.08,
+    -0.229,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.145,
+     -0.234,
+     1.13564
+    ],
+    [
+     -0.015,
+     -0.224,
+     1.17364
+    ]
+   ],
+   "size": [
+    0.13,
+    0.01,
+    0.038
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_base": {
+   "position": [
+    0.25,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.2,
+     -0.315,
+     0.91964
+    ],
+    [
+     0.3,
+     -0.185,
+     0.93164
+    ]
+   ],
+   "size": [
+    0.1,
+    0.13,
+    0.012
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_post": {
+   "position": [
+    0.25,
+    -0.25,
+    1.03489
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.244,
+     -0.258,
+     0.93164
+    ],
+    [
+     0.256,
+     -0.242,
+     1.13814
+    ]
+   ],
+   "size": [
+    0.012,
+    0.016,
+    0.2065
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
+  "files": 272
+ },
+ "resolved_variation_id": "fiber_bundling_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "geometry": {
+   "fiber_count": 4,
+   "ring_inner_radius_m": 0.0135
+  },
+  "anchor": {},
+  "center_xy_m": [
+   -0.1,
+   -0.25
+  ],
+  "stable_duration_s": 0.5,
+  "terminal": {
+   "maximum_bend_deg": 60.0
+  },
+  "scene_preset_id": "lab_tasks_v1"
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "fiber_bundling",
+  "variation_id": "fiber_bundling_easy",
+  "seed": 0,
+  "terminal_revision": "terminal_v4_fiber_ring_plane",
+  "summary": "Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.",
+   "All fiber points must finish beyond the exit side of the ring tube, allowing for fiber thickness. The branching face of the front sheath must also pass through and clear the tube with its full thickness. The fixed rear terminal must remain anchored and does not pass through.",
+   "Keep the angle between every pair of adjacent fiber segments at most 60 degrees in the final configuration.",
+   "Touch and grasp only the thick sheath with the gripper. Keep the completed passage valid through confirmation; holding is allowed, with no separate release or speed threshold."
+  ],
+  "failure_conditions": [
+   "Any gripper touch of a fine fiber at any time ends the episode in failure, including a brief or zero-force touch.",
+   "A fiber link falling more than 100 mm below the tabletop ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision terminal_v4_fiber_ring_plane)"
+}

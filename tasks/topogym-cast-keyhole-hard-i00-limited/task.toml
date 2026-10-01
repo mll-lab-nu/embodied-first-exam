@@ -1,0 +1,49 @@
+schema_version = "1.3"
+artifacts = [
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/topogym-cast-keyhole-hard-i00-limited"
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym cast_keyhole on the same frozen instance as the unlimited task. Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+authors = [{ name = "jianwen" }]
+keywords = ["robotics", "topogym", "genesis", "aloha", "limited-mode", "trajectory", "cast_keyhole"]
+
+[metadata]
+author_name = "jianwen"
+task_type = "trajectory"
+simulator = "topogym"
+robot = "aloha"
+family = "cast_keyhole"
+tier = "perception"                # RGB + proprioception only; no object poses, no success predicate, no reset
+difficulty = "hard"
+grasp = "assisted (his contact_weld_v1 grasp regions on keyhole_gold, keyhole_silver)"
+success_rule = "his default success (goal_complete True; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: default task parameters, seed 0, ALOHA EE_ABS, CPU, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1); this instance runs CUDA 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover"
+mode = "limited"
+protocol = "rcb-limited/2.2"
+instance_seed = 0
+expert_time_estimate_hours = 3
+
+[verifier]
+timeout_sec = 1200.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 300); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 11100); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; sleep 2; done; for i in $(seq 1 11100); do grep -q '\"video_done\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json"
+timeout_sec = 45000                # service up (<= 10 min), replay (grading record), then the video: each at most one episode
+
+[agent]
+timeout_sec = 21600.0             # Agent wall-clock budget
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
