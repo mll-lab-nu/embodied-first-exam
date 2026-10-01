@@ -1,8 +1,8 @@
 """Append-only mirror of every agent trial's log directory (<src>/<job>/<trial>/agent/ -> <mirror>/<same path>).
 
 The agent runs as root in its container and /logs/agent is a writable bind mount, so it could delete or rewrite its own
-record (the harness's stream and session files, the model gateway's log of every raw API exchange). This process runs
-outside every trial container and keeps a copy that is only ever added to:
+record (the harness's stream, its session files, its trajectory). This process runs outside every trial container and
+keeps a copy that is only ever added to (a runner-side tool, not task code):
   * append-type logs (.jsonl .txt .log .err): each new byte is appended to the mirror as it is written; if the source
     shrinks, is replaced (new inode) or has its already-mirrored tail rewritten, everything mirrored so far stays and the
     file continues in a new segment (<name>.seg1, ...);

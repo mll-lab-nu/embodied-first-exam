@@ -1,4 +1,5 @@
-"""rcb-limited/2.2 client — the only thing a limited-mode agent gets (installed at /opt/tools/rcb_client.py).
+"""eai-standard/2.2 client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at
+/opt/tools/rcb_client.py).
 
     from rcb_client import Robot
     r = Robot()                                  # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -16,16 +17,23 @@
     r.ik({frame: pose}, seed=q)                  # {"ok", "q", "error": {frame: {"pos_m", "rot_rad"}}}: inverse kinematics
     res.save("/app/runs/003")                    # meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, proprio.npy, depth, frame_meta.npz
     obs = r.get_obs(seconds=3, video="both")     # hold the last command, let physics run 3 s, return the video
+    r.status()                                   # calls, control steps, done, reason, elapsed time
 
 Nothing is put into your context automatically: what you look at, and where you store it, is your code's decision.
+
+If a call fails with a connection error or a 5xx, the service may have crashed; it restarts and resumes the SAME episode
+(never a reset) in the state after the last call it completed, which you may not have received. r.wait_ready() waits
+until it answers again (resuming replays the episode so far: long episodes can take minutes); then check r.status()
+before you continue (spec()["on_service_error"]).
 """
 from __future__ import annotations
-import json, os, pathlib, time, zlib
+import json, os, pathlib, sys, time, zlib
 import numpy as np
 import requests
 import rcb1
 
-PROTOCOL = "rcb-limited/2.2"          # also talks to 2.0 / 2.1 services (they ignore depth and send no frame metadata)
+PROTOCOL = "eai-standard/2.2"         # also talks to 2.0 / 2.1 services (they ignore depth and send no frame metadata)
+ACCEPTED = ("eai-standard/2.", "rcb-limited/2.")   # every 2.x service, under the protocol's current and former name
 
 
 class EpisodeOver(RuntimeError):
@@ -41,9 +49,11 @@ class Result:
     """Decoded RCB1 response: meta (dict), video (cam -> mp4 bytes), frames (cam -> uint8 (N,H,W,3)), last (cam -> uint8
     (H,W,3)), last_depth (cam -> float32 (H,W) m), depth (cam -> float32 (N,H,W) m, one per frame), proprio (float32 (N,D)),
     frame_step (int64 (N,)), frame_time_s (float64 (N,)), extrinsic_cv (cam -> float64 (N,3,4)). save(dir) writes it out;
-    show(cam, k) returns one frame; group(name) the proprio columns of one spec()["proprio_groups"] group."""
+    show(cam, k) returns one frame; group(name) the proprio columns of one spec()["proprio_groups"] group. stopped: None,
+    or why the service stopped the call early ("max_call_wall_s": it ran longer than spec()["max_call_wall_s"]); then
+    meta["executed_rows"] < the rows sent, and meta["proprio"]["now"] is where the robot is."""
     def __init__(self, meta: dict, parts: dict, spec: dict | None = None):
-        self.meta = meta; self.raw = parts; self._spec = spec or {}
+        self.meta = meta; self.raw = parts; self._spec = spec or {}; self.stopped = meta.get("stopped")
         self.video, self.frames, self.last, self.last_depth, self.depth, self.extrinsic_cv = {}, {}, {}, {}, {}, {}
         self.proprio = None; self.frame_step = None; self.frame_time_s = None
         for name, p in parts.items():
@@ -105,7 +115,8 @@ class Robot:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
                     r.raise_for_status(); self.base = b; self._spec = r.json()
-                    assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")
+                    if not str(self._spec.get("protocol", "")).startswith(ACCEPTED):
+                        raise RuntimeError(f"not a 2.x service: protocol {self._spec.get('protocol')!r}")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e
@@ -142,17 +153,37 @@ class Robot:
         if dt is None and self._spec.get("control_hz"): dt = 1.0 / float(self._spec["control_hz"])
         meta = {"type": action_type, "interpolate": interpolate, "video": video, "note": note,
                 **({} if dt is None else {"dt": float(dt)}), **self._common(cameras, video_fps, depth, include_depth)}
-        return self._post("/submit", meta, [rcb1.array_part("actions", a)], timeout=1800)
+        res = self._post("/submit", meta, [rcb1.array_part("actions", a)], timeout=1800)
+        if res.stopped:
+            print(f"[rcb_client] the service stopped this call early ({res.stopped}): {res.meta.get('executed_rows')} of {len(a)} rows "
+                  "executed; meta['proprio']['now'] is where the robot is", file=sys.stderr)
+        return res
 
     def get_obs(self, cameras=None, seconds: float = 0.0, video_fps: int | None = None, depth=None, include_depth: bool = False,
                 video: str = "frames") -> Result:
         """Current frames (seconds=0, free) or hold the last command and watch for `seconds` (returns the video).
         depth: None | True (= "last": the last frame's depth) | "frames" (one depth map per frame)."""
         meta = {"seconds": float(seconds), "video": video, **self._common(cameras, video_fps, depth, include_depth)}
-        return self._post("/observe", meta, [], timeout=600)
+        res = self._post("/observe", meta, [], timeout=600)
+        if res.stopped:
+            print(f"[rcb_client] the service stopped this watch early ({res.stopped}) after {res.meta.get('control_steps_watch')} control "
+                  "steps", file=sys.stderr)
+        return res
 
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()
+
+    def wait_ready(self, timeout: float = 3600.0) -> dict:
+        """After a connection error: wait until the service answers GET /status again (it resumes the same episode after a
+        crash), then return the status. Raises RuntimeError after `timeout` seconds."""
+        t0 = time.time(); last = None
+        while time.time() - t0 < timeout:
+            try:
+                return self.status()
+            except requests.exceptions.RequestException as e:
+                last = e
+            time.sleep(5)
+        raise RuntimeError(f"sim service did not come back within {timeout:.0f} s: {last}")
 
     def kinematics(self, body: dict) -> dict:
         """POST /kinematics (stateless: never moves the robot, never advances time). Raises ValueError on a bad request."""

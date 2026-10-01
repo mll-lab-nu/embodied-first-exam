@@ -1,5 +1,5 @@
 #!/bin/bash
-# Oracle (limited mode): replays the unlimited oracle's joint targets, one row per control step, as `joint_position`
+# Oracle (standard mode): replays the privileged oracle's joint targets, one row per control step, as `joint_position`
 # chunks through the client. Uses no privileged information at run time (only the pre-recorded targets).
 set -e
 mkdir -p /app/output
