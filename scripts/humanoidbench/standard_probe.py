@@ -11,8 +11,8 @@ In process, through rcb_service.Service.handle (the HTTP surface without the soc
   nop         an all-zero episode, sent in chunks, ends where facts.json says and returns facts.json's nop_return: the
               formula in the sidecar is upstream's
   reset       (the optional capability) back to the frozen start, every camera's image included; a chunk is
-              bit-identical to the same rows sent one at a time; the servo targets are the rows mapped linearly onto
-              spec()'s ranges
+              bit-identical to the same rows sent one at a time (one row a control step, and rows two control steps
+              apart, interpolated linearly); the servo targets are the rows mapped linearly onto spec()'s ranges
   success     with the pass mark lowered in this process only, the episode ends as a success and the finalize replays
               it in a fresh simulator (success, deterministic) and renders a video that is not black
 Then through the real HTTP service and the shipped client: a crash (SIGKILL) and restart that must resume the same
@@ -124,6 +124,14 @@ check("range", np.allclose(sim.s.data.ctrl[:nu], lo + (A[-1].astype(np.float32) 
 call(svc, "/reset", {"video": "none"})
 run(svc, A)
 check("reset", ok_start and not any(drift.values()) and sim.state_sha() == one_by_one, steps=len(A), pixels_changed=drift)
+B, lin = A[:min(20, (facts["nop_steps"] - 1) // 2)], {"dt": 2 * sim.control_dt, "interpolate": "linear"}
+call(svc, "/reset", {"video": "none"})
+for b in B:
+    run(svc, b[None], **lin)
+one_by_one = sim.state_sha()
+call(svc, "/reset", {"video": "none"})
+run(svc, B, **lin)
+check("chunk = rows, linear", sim.state_sha() == one_by_one, rows=len(B), dt=lin["dt"])
 
 call(svc, "/reset", {"video": "none"})
 bar = type(sim.s.low.task).success_bar                     # lowered for the live episode and the fresh replay alike

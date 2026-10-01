@@ -14,8 +14,7 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: the head cameras see floor and horizon only; the dumbbell at the feet is out of their view.
-`room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the
-dumbbell.
+`room_camera` (the recording camera frozen at its starting pose) sees the robot and the dumbbell.
 
 ## Difficulty
 See `humanoidbench-manip-powerlift-i00`'s README; here the agent also has no state, no reward, no resets and

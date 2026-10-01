@@ -109,7 +109,7 @@ status = "verified"
 expert_hours = 2.0
 completion_rate = "133%"
 evidence = "paper SAC 854, FastTD3 928, bar 700"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), kept in tasks/humanoidbench-loco-walk-i00/results/claude_code-claude_opus_5_5-medium/; published RL passes as well (SAC 854, FastTD3 928)"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), kept in tasks/humanoidbench-loco-walk-i00/results/claude_code-claude_opus_5_5-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; published RL passes as well (SAC 854, FastTD3 928)"
 one_liner = "walks the Unitree H1 forward and keeps it walking"
 task_statement = "walk the robot forward and keep walking, without falling."
 scene_note = "flat ground, and the robot's initial pose never changes between resets."
@@ -148,7 +148,7 @@ first.'''
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is in the room, not how fast it is moving"
 tier = "no root pose, no base velocity"
-camera_note = "the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+camera_note = "the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
 room_camera_pose = "4,0,0.11,10,0,-26"
 room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
 
@@ -192,7 +192,7 @@ difficulty = '''- **A gait plus a terrain constraint.** Everything that makes `w
 ends = "when the robot falls (its torso tips close to horizontal)"
 hidden = "where the robot is in the room, not the stairs' geometry"
 tier = "no root pose, no stair geometry"
-camera_note = "the head cameras see the first flight of stairs straight ahead. `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+camera_note = "the head cameras see the first flight of stairs straight ahead. `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
 room_camera_pose = "4,0,0.11,10,0,-26"
 room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
 
@@ -235,7 +235,7 @@ difficulty = '''- **A multiplicative gate, not a penalty.** Contact with the sid
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is on the track, not where the hurdles and walls are"
 tier = "no root pose, no hurdle or wall positions"
-camera_note = "the head cameras see the walled track and the line of hurdles ahead. `room_camera` (off by default) stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+camera_note = "the head cameras see the walled track and the line of hurdles ahead. `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
 room_camera_pose = "4,0,0.11,10,0,-26"
 room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
 
@@ -277,7 +277,7 @@ difficulty = '''- **A survival problem, not a scoring problem.** Per-step reward
 ends = "when the robot falls, when anything but the fulcrum under the board touches the ground (see Scoring)"
 hidden = "where the robot is in the room, not the board's pose"
 tier = "no root pose, no board pose"
-camera_note = "the head cameras see floor and horizon only; the board under the feet never enters their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot from outside."
+camera_note = "the head cameras see floor and horizon only; the board under the feet never enters their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot from outside."
 
 [[task]]
 family = "balance_hard"
@@ -316,7 +316,7 @@ difficulty = '''- **Same reward function as `balance_simple`, three times the ga
 ends = "when the robot falls, when anything but the roller under the board touches the ground (see Scoring)"
 hidden = "where the robot is in the room, not the board's or the roller's pose"
 tier = "no root pose, no board or roller pose"
-camera_note = "the head cameras see floor and horizon only; the board and the roller under the feet never enter their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot on the board from outside."
+camera_note = "the head cameras see floor and horizon only; the board and the roller under the feet never enter their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot on the board from outside."
 
 # =====================================================================================================
 # C4 · navigation and passage
@@ -332,7 +332,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "55%"
 evidence = "paper 285, FastTD3 332, bar 600"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), kept in tasks/humanoidbench-loco-door-i00/results/claude_code-claude_opus_5_5-medium/"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), kept in tasks/humanoidbench-manip-door-i00/results/claude_code-claude_opus_5_5-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"
 one_liner = "walks the Unitree H1 through a closed door"
 task_statement = "walk to the door, press the handle, pull the door open towards the robot, and walk through it."
 scene_note = "the door and the robot's initial pose never change between resets."
@@ -356,7 +356,7 @@ difficulty = '''- **Runs on the 19-DoF `h1`.** The door has 2 DoF and no dextero
 ends = "when the robot falls (its pelvis drops too low)"
 hidden = "where the robot is in the room, not the door's or the handle's angle"
 tier = "no root pose, no door or handle state"
-camera_note = "the head cameras see the door right in front of the robot. `room_camera` (off by default) looks at the doorway from the side (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the door and the floor beyond it stay in frame from x = -0.5 to 4 m."
+camera_note = "the head cameras see the door right in front of the robot. `room_camera` looks at the doorway from the side (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the door and the floor beyond it stay in frame from x = -0.5 to 4 m."
 room_camera_pose = "1.8,0,0.9,7,105,-25"
 room_camera_comment = "room_camera beside the doorway: the robot, the door and the floor beyond it stay in frame from x=-0.5 to 4 m"
 
@@ -403,7 +403,7 @@ task_statement = "walk the robot along the maze's corridors from checkpoint to c
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is in the maze, not where the checkpoints are"
 tier = "no root pose, no checkpoint positions"
-camera_note = "the head cameras see the corridor ahead. `room_camera` (off by default) looks straight down on the whole maze (`RCB_ROOM_CAMERA_POSE` in the compose file): every corridor and the robot are in frame."
+camera_note = "the head cameras see the corridor ahead. `room_camera` looks straight down on the whole maze (`RCB_ROOM_CAMERA_POSE` in the compose file): every corridor and the robot are in frame."
 room_camera_pose = "3,3,0,15,0,-89"
 room_camera_comment = "room_camera straight above the maze: every corridor and the robot are in frame"
 
@@ -458,7 +458,7 @@ generate; that is upstream behaviour, not a defect in the instance.'''
 ends = "when the robot's head drops too low (an inverted hang under the bar can do that)"
 hidden = "the robot's position or heading in the room"
 tier = "no root pose"
-camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot hanging from the bar."
+camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose) sees the robot hanging from the bar."
 
 [[task]]
 family = "basketball"
@@ -505,7 +505,7 @@ difficulty = '''- **All-or-nothing.** The +1000 for sinking the ball is most of 
 ends = "when the ball goes through the hoop, when the ball drops low, when the robot falls"
 hidden = "where the robot is in the room, not where the ball or the hoop is"
 tier = "no root pose, no ball state"
-camera_note = "the head cameras see the hoop ahead. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot, the incoming ball and the hoop."
+camera_note = "the head cameras see the hoop ahead. `room_camera` (the recording camera frozen at its starting pose) sees the robot, the incoming ball and the hoop."
 
 [[task]]
 family = "powerlift"
@@ -545,7 +545,7 @@ difficulty = '''- **🚩 Kept although RL does poorly on it.** Upstream shapes t
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is in the room, not the dumbbell's pose"
 tier = "no root pose, no dumbbell pose"
-camera_note = "the head cameras see floor and horizon only; the dumbbell at the feet is out of their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the dumbbell."
+camera_note = "the head cameras see floor and horizon only; the dumbbell at the feet is out of their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot and the dumbbell."
 
 # =====================================================================================================
 # C6 · standing bimanual manipulation
@@ -561,7 +561,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "110%"
 evidence = "FastTD3 770, bar 700; the paper's often-quoted 37 is a PPO curve upstream's logs reuse across 17 tasks"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (997.80 / 700), kept in tasks/humanoidbench-manip-push-i00/results/codex-gpt6_luna-medium/; GPT-6 Sol and Claude Opus 5.5 also passed the standard twin (with 50 resets)"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, kept in tasks/humanoidbench-manip-push-i00/results/codex-gpt6_luna-medium/; 997.80 before it, in its prev_harbor_agents/), and GPT-6 Sol's and Claude Opus 5.5's graded standard-mode episodes (50 resets), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
 one_liner = "pushes a box to a target with the Unitree H1"
 task_statement = "push the box on the table to the target position marked in the observation."
 scene_note = '''the box's starting position, the target position and the robot's initial pose never change
@@ -592,7 +592,7 @@ task_statement = "push the box on the table to the target position, marked in th
 ends = "when the box reaches the target"
 hidden = "where the robot is in the room, not where the hand or the box is, not the target's coordinates"
 tier = "no root pose, no hand, box or target position"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the table from its far side, facing the robot (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the table from its far side, facing the robot (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
 room_camera_pose = "0.55,0.1,1.0,3,180,-45"
 room_camera_comment = "room_camera across the table, facing the robot: the box and the target on the tabletop, the robot behind them"
 
@@ -633,7 +633,7 @@ difficulty = '''- **Tool use with sustained contact.** With `spoon`, one of the 
 ends = "when the robot falls (its pelvis drops too low), when the tool drops"
 hidden = "where the robot is in the room, not the tool's pose"
 tier = "no root pose, no tool pose"
-camera_note = "the head cameras see the window. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the window, the wiping tool and the robot."
+camera_note = "the head cameras see the window. `room_camera` (the recording camera frozen at its starting pose) sees the window, the wiping tool and the robot."
 
 [[task]]
 family = "spoon"
@@ -689,7 +689,7 @@ difficulty = '''- **Periodic end-effector tracking — the only instance of it i
 ends = "when the robot falls (its pelvis drops too low)"
 hidden = "where the robot is in the room, not the spoon's pose, not the moving target point"
 tier = "no root pose, no spoon pose, no target point"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the cup, the spoon and both hands; the robot below its chest is out of frame. The stirring target point is not drawn: it would sit inside the cup."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the cup, the spoon and both hands; the robot below its chest is out of frame. The stirring target point is not drawn: it would sit inside the cup."
 room_camera_pose = "0.75,0.05,0.9,1.3,-135,-45"
 room_camera_comment = "room_camera close over the tabletop: the cup, the spoon and both hands"
 
@@ -737,7 +737,7 @@ difficulty = '''- **Millimetre clearance.** Each socket's opening is 4 cm across
 ends = "when the robot falls (its pelvis drops too low), when the bar or either socket drops"
 hidden = "where the robot is in the room, not the poses of the bar and the sockets"
 tier = "no root pose, no bar or socket poses"
-camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` (off by default) looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bar, both sockets and both hands; the robot below its chest is out of frame."
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bar, both sockets and both hands; the robot below its chest is out of frame."
 room_camera_pose = "0.71,0.01,0.96,1.3,-129,-45"
 room_camera_comment = "room_camera close over the tabletop: the bar, both sockets and both hands"
 
@@ -788,7 +788,7 @@ task_statement = "a cube starts just above and in front of each palm. Rotate bot
 ends = "when the robot falls (its pelvis drops too low), when either cube drops"
 hidden = "where the robot is in the room, not the cubes' orientations, not the goal orientation"
 tier = "no root pose, no cube poses, no goal orientation"
-camera_note = "the head cameras see the cube above one palm. `room_camera` (off by default) looks at the hands close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`); the legs are out of frame."
+camera_note = "the head cameras see the cube above one palm. `room_camera` looks at the hands close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`); the legs are out of frame."
 room_camera_pose = "0.47,0,1.25,0.9,-129,-25"
 room_camera_comment = "room_camera close on the hands: both cubes and the floating goal orientation"
 image_hw = 512
@@ -808,7 +808,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "69%"
 evidence = "paper 8280, FastTD3 8147, bar 12000"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), kept in tasks/humanoidbench-loco-reach-i00/results/codex-gpt6_luna-medium/"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), kept in tasks/humanoidbench-loco-reach-i00/results/codex-gpt6_luna-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"
 one_liner = "brings the Unitree H1's left hand to a target point and holds it there"
 task_statement = '''bring the robot's left hand to the target point and keep it there for as much of the
 episode as possible.'''
@@ -845,7 +845,7 @@ instance_note = "the target sits 0.704 m from the left hand at the frozen pose"
 task_statement = "bring the robot's left hand to the target point, marked in the scene by a small red cube, and keep it there for as much of the episode as possible."
 hidden = "where the robot is in the room, not where its hand is, not the target's coordinates"
 tier = "no root pose, no hand or target position"
-camera_note = "the head cameras see floor and horizon only. `room_camera` (off by default) stands in front of the robot, facing it (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+camera_note = "the head cameras see floor and horizon only. `room_camera` stands in front of the robot, facing it (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
 room_camera_pose = "0.15,0.35,1.0,2.8,180,-12"
 room_camera_comment = "room_camera in front of the robot, facing it: the target cube is beside its left arm"
 
@@ -860,7 +860,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "108%"
 evidence = "paper TD-MPC2 811, FastTD3 726, bar 750"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00/results/codex-gpt6_luna-medium/; Claude Opus 5.5 also passed the standard twin (750.22, with 50 resets)"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00/results/codex-gpt6_luna-medium/, and Claude Opus 5.5's graded standard-mode episode (750.22, 50 resets), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
 one_liner = "walks the Unitree H1 to the chair and sits it down"
 task_statement = '''the robot starts a short walk in front of the chair, its heading turned by a random angle
 of up to about 100° from facing straight away from it. Get to the chair, sit down on it, and stay seated
@@ -896,7 +896,7 @@ difficulty = '''- **🚩 The task where completion rate lies hardest.** Publishe
 ends = "when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated)"
 hidden = "where the robot is in the room, not the chair's pose"
 tier = "no root pose, no chair pose"
-camera_note = "the head cameras see floor and horizon only; the chair is out of their view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot and the chair."
+camera_note = "the head cameras see floor and horizon only; the chair is out of their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot and the chair."
 
 [[task]]
 family = "package"
@@ -948,7 +948,7 @@ task_statement = "walk to the package, pick it up, carry it to the destination, 
 ends = "when the package reaches the destination"
 hidden = "where the robot is in the room, not where the package or the destination is"
 tier = "no root pose, no package or destination position"
-camera_note = "the head cameras see floor and horizon only. `room_camera` (off by default) stands straight in front of the robot, facing it, and looks down on it (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the package and the destination (the cyan ball, part of the upstream scene) are all in frame."
+camera_note = "the head cameras see floor and horizon only. `room_camera` stands straight in front of the robot, facing it, and looks down on it (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the package and the destination (the cyan ball, part of the upstream scene) are all in frame."
 room_camera_pose = "0.1,0.35,0.6,3.0,180,-60"
 room_camera_comment = "room_camera straight in front of the robot, looking down on it: the robot, the package and the cyan destination"
 
@@ -991,7 +991,7 @@ difficulty = '''- **The only task in the benchmark whose objective is a statisti
 ends = "when the robot falls (its pelvis drops near the ground)"
 hidden = "where the robot is in the room, not where the objects are"
 tier = "no root pose, no object positions"
-camera_note = "the head cameras see a bookshelf and a table. `room_camera` (off by default) looks down on the whole room (`RCB_ROOM_CAMERA_POSE` in the compose file): all six objects and the robot are in frame."
+camera_note = "the head cameras see a bookshelf and a table. `room_camera` looks down on the whole room (`RCB_ROOM_CAMERA_POSE` in the compose file): all six objects and the robot are in frame."
 room_camera_pose = "0.3,0,0,11,0,-70"
 room_camera_comment = "room_camera above the room: all six objects and the robot are in frame"
 
@@ -1045,7 +1045,7 @@ difficulty = '''- **A state machine, not a controller.** The code that solves th
 ends = "when the last compartment is done"
 hidden = "where the robot is in the room, not the cabinet's or the cubes' state"
 tier = "no root pose, no cabinet or cube state"
-camera_note = "the head cameras see the top of the cabinet close up. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the cabinet and the robot."
+camera_note = "the head cameras see the top of the cabinet close up. `room_camera` (the recording camera frozen at its starting pose) sees the cabinet and the robot."
 
 [[task]]
 family = "truck"
@@ -1093,7 +1093,7 @@ difficulty = '''- **🔑 The only long-horizon task in the subset that runs on t
 ends = "when the last package is on the table"
 hidden = "where the robot is in the room, not where the packages are"
 tier = "no root pose, no package positions"
-camera_note = "the head cameras see the packages stacked in the truck. `room_camera` (off by default) looks into the truck through its open side (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the truck's bed, its ramp, the table and the robot."
+camera_note = "the head cameras see the packages stacked in the truck. `room_camera` looks into the truck through its open side (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the truck's bed, its ramp, the table and the robot."
 room_camera_pose = "4.5,-0.6,1.2,9,-25,-22"
 room_camera_comment = "room_camera looking into the truck through its open side: the bed, the ramp, the table and the robot"
 
@@ -1146,7 +1146,7 @@ difficulty = '''- **🔑 The only task in the benchmark with a genuinely sparse 
 task_statement = "complete the four kitchen tasks, in order: open the microwave door, move the kettle from its burner to the one behind it, turn the bottom burner's knob (the lower-left of the four knobs above the stove), and flip the light switch."
 hidden = "where the robot is in the room, not the appliances' joint positions"
 tier = "no root pose, no appliance state"
-camera_note = "the head cameras see the stove, the microwave and the wall cabinets. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the kitchen and the robot."
+camera_note = "the head cameras see the stove, the microwave and the wall cabinets. `room_camera` (the recording camera frozen at its starting pose) sees the kitchen and the robot."
 
 [[task]]
 family = "bookshelf_simple"
@@ -1199,7 +1199,7 @@ task_statement = "put each of the five red-tinted objects (the other seven are g
 ends = "when the robot falls (its pelvis drops too low), when the object being placed goes below about half a metre, once all five are placed"
 hidden = "where the robot is in the room, not where the objects or their places are"
 tier = "no root pose, no object positions"
-camera_note = "the head cameras see the inside of one shelf. `room_camera` (off by default) looks at the shelves from behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it and the robot."
+camera_note = "the head cameras see the inside of one shelf. `room_camera` looks at the shelves from behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it and the robot."
 room_camera_pose = "0.85,-0.1,0.9,3.2,35,-20"
 room_camera_comment = "room_camera behind the robot's right shoulder: every shelf, and the places the objects go, in view"
 
