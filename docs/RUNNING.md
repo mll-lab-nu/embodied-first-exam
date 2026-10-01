@@ -33,5 +33,5 @@ scripts/make_two_mode_report_zh.py exps/jobs <job-u> <job-l> <report_dir> [batch
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
-separate verifiers. Batch reports from before protocol v1.0 are in `docs/results/`; per-task results go to the results site (PROTOCOL §5), not into `tasks/`.
+separate verifiers. Results (per-task and batch reports) go to the results site and the Hugging Face dataset (PROTOCOL §5), not into the repository.
 
