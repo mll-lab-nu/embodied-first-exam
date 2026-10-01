@@ -1,0 +1,14 @@
+{
+ "methods": [
+  {
+   "cls": "Spoon",
+   "module": "humanoid_bench.envs.spoon",
+   "name": "get_reward",
+   "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    left_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.geom_xpos[\"spoon_handle\"]\n    )\n    right_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.geom_xpos[\"spoon_handle\"]\n    )\n    hand_tool_proximity_reward = rewards.tolerance(\n        min(left_hand_tool_distance, right_hand_tool_distance),\n        bounds=(0, 0.2),\n        margin=0.5,\n    )\n\n    current_spin_angle = self.step_counter * (2 * np.pi / 40)\n    spoon_target_pos = np.array([0.75, -0.1, 0.95]) + np.array(\n        [np.cos(current_spin_angle) * 0.06, np.sin(current_spin_angle) * 0.06, 0]\n    )\n    self._env.named.data.site_xpos[\"goal\"] = spoon_target_pos\n    # spoon_velocity = self._env.named.data.sensordata[\"spoon_gyro\"][2]\n    spoon_plate_pos = self._env.named.data.geom_xpos[\"spoon_plate\"]\n    cup_pos = self._env.named.data.xpos[\"cup\"]\n    spoon_spinning_reward = rewards.tolerance(\n        np.linalg.norm(spoon_plate_pos - spoon_target_pos),\n        margin=0.15,\n    )\n\n    spoon_in_cup_x = abs(spoon_plate_pos[0] - cup_pos[0]) < 0.1\n    spoon_in_cup_y = abs(spoon_plate_pos[1] - cup_pos[1]) < 0.1\n    spoon_in_cup_z = abs(spoon_plate_pos[2] - (cup_pos[2] + 0.1)) < 0.1\n    reward_spoon_in_cup = (\n        int(spoon_in_cup_x) + int(spoon_in_cup_y) + int(spoon_in_cup_z)\n    ) // 3\n\n    self.step_counter += 1\n\n    reward = (\n        0.15 * (stand_reward * small_control)\n        + 0.25 * hand_tool_proximity_reward\n        + 0.25 * reward_spoon_in_cup\n        + 0.35 * spoon_spinning_reward\n    )\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"hand_tool_proximity_reward\": hand_tool_proximity_reward,\n        \"reward_spoon_in_cup\": reward_spoon_in_cup,\n        \"spoon_spinning_reward\": spoon_spinning_reward,\n    }"
+  }
+ ],
+ "module_globals": {
+  "humanoid_bench.envs.spoon": "_STAND_HEIGHT = 1.65"
+ },
+ "task_class": "humanoid_bench.envs.spoon.Spoon"
+}

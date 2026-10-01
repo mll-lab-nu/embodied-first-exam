@@ -1,0 +1,698 @@
+{
+ "balance-beam": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 6.3,
+  "nop_success": false,
+  "obs_dim": 86,
+  "scene_sha": "5c735e4b67ebf792",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 7.5,
+    "images": 19.0,
+    "single": 12.7
+   }
+  }
+ },
+ "constrained-cupboard": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 9.2,
+  "nop_success": false,
+  "obs_dim": 195,
+  "scene_sha": "e6d140c0e59ca1af",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 10.0,
+    "images": 19.4,
+    "single": 14.2
+   }
+  }
+ },
+ "dynamo": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 6.8,
+  "nop_success": false,
+  "obs_dim": 70,
+  "scene_sha": "56eb0ac29841eb83",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 7.6,
+    "images": 18.1,
+    "single": 13.2
+   }
+  }
+ },
+ "obstruction-3d": {
+  "action_dim": 11,
+  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
+  "action_high": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   1.0
+  ],
+  "action_low": [
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -1.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.kinematic3d.obstruction3d:Obstruction3DEnv",
+  "episode_seconds": 45.9,
+  "nop_success": false,
+  "obs_dim": 91,
+  "scene_sha": "c3bea64d9bc7f5a7",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 19.9,
+    "images": 439.7,
+    "single": 178.9
+   }
+  }
+ },
+ "packing-3d": {
+  "action_dim": 11,
+  "action_doc": "An action space for mobile manipulation with a 7 DOF robot that can open and close its gripper.\n\nActions are bounded relative base position, rotation, and joint positions, and open / close.\n\n| **Index** | **Description** |\n| --- | --- |\n| 0 | delta base x |\n| 1 | delta base y |\n| 2 | delta base rotation |\n| 3 | delta joint 1 |\n| 4 | delta joint 2 |\n| 5 | delta joint 3 |\n| 6 | delta joint 4 |\n| 7 | delta joint 5 |\n| 8 | delta joint 6 |\n| 9 | delta joint 7 |\n| 10 | gripper open/close |\n\nThe open / close logic is: <-0.5 is close, >0.5 is open, and otherwise no change.\n",
+  "action_high": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   1.0
+  ],
+  "action_low": [
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -0.2,
+   -1.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.kinematic3d.packing3d:Packing3DEnv",
+  "episode_seconds": 47.9,
+  "nop_success": false,
+  "obs_dim": 67,
+  "scene_sha": "cb3b6618c0d8b1df",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 21.8,
+    "images": 473.3,
+    "single": 193.6
+   }
+  }
+ },
+ "scoop-pour": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 45.7,
+  "nop_success": false,
+  "obs_dim": 595,
+  "scene_sha": "aecb25aa39cdc284",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 49.1,
+    "images": 62.9,
+    "single": 58.4
+   }
+  }
+ },
+ "shelf": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 5.2,
+  "nop_success": false,
+  "obs_dim": 61,
+  "scene_sha": "405f0ffee7e26445",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 5.6,
+    "images": 16.6,
+    "single": 10.4
+   }
+  }
+ },
+ "sort-blocks": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 11.7,
+  "nop_success": false,
+  "obs_dim": 157,
+  "scene_sha": "7a08c148b6764152",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 11.5,
+    "images": 22.1,
+    "single": 15.3
+   }
+  }
+ },
+ "sweep-into-drawer": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 17.6,
+  "nop_success": false,
+  "obs_dim": 163,
+  "scene_sha": "f42622948e663ec5",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 18.6,
+    "images": 31.0,
+    "single": 29.8
+   }
+  }
+ },
+ "sweep-simple": {
+  "action_dim": 11,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1)",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.envs:TidyBot3DEnv",
+  "episode_seconds": 22.1,
+  "nop_success": false,
+  "obs_dim": 243,
+  "scene_sha": "17b695b0565fb8df",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 19.4,
+    "images": 32.4,
+    "single": 25.5
+   }
+  }
+ },
+ "tossing": {
+  "action_dim": 18,
+  "action_doc": "Actions: base pos and yaw (3), arm joints (7), gripper pos (1), and arm joint velocity targets (7, rad/s).",
+  "action_high": [
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   1.0,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "action_low": [
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   -0.1,
+   0.0,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "deterministic": true,
+  "entry_point": "kinder.envs.dynamic3d.task_families:Tossing3DEnv",
+  "episode_seconds": 6.0,
+  "nop_success": false,
+  "obs_dim": 61,
+  "scene_sha": "7120e0dcae528199",
+  "standard": {
+   "cameras": [
+    "robot_base",
+    "robot_wrist",
+    "room_camera"
+   ],
+   "clips_out_of_range_action": true,
+   "depth_rendered": true,
+   "finalize_deterministic": true,
+   "finalize_video": true,
+   "image_hw": [
+    480,
+    640
+   ],
+   "images_rendered": true,
+   "protocol": "eai-standard/2.1",
+   "repeat_images_identical": true,
+   "reset_images_identical": true,
+   "reset_proprio_identical": true,
+   "resumes_same_episode": true,
+   "step_ms": {
+    "batch": 7.3,
+    "images": 16.3,
+    "single": 13.2
+   }
+  }
+ }
+}
