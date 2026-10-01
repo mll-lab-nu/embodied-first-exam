@@ -1,0 +1,372 @@
+{
+ "task": "block_stacking_specified_order",
+ "robolab_task": "BlockStackingSpecifiedOrderTask",
+ "env_name": "BlockStackingSpecifiedOrderTask",
+ "seed": 0,
+ "instruction": "Stack the blocks in the order from bottom to top: red, blue, green, yellow",
+ "text": "Stack the blocks in the order from bottom to top: red, blue, green, yellow.",
+ "initial_state": {
+  "articulation": {
+   "robot": {
+    "joint_position": [
+     0.0,
+     -0.6283185482025146,
+     0.0,
+     -2.5132741928100586,
+     0.0,
+     1.884955644607544,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "deformable_object": {},
+  "gripper": {},
+  "rigid_object": {
+   "blue_block": {
+    "root_pose": [
+     0.4601268470287323,
+     1.1039082892239094e-07,
+     0.026294255629181862,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "green_block": {
+    "root_pose": [
+     0.36935505270957947,
+     0.18831472098827362,
+     0.02629413641989231,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "red_block": {
+    "root_pose": [
+     0.371458500623703,
+     -0.1741129755973816,
+     0.02629457786679268,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "table": {
+    "root_pose": [
+     0.5471952557563782,
+     -5.710670302505605e-05,
+     -0.3470016121864319,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "yellow_block": {
+    "root_pose": [
+     0.4753357470035553,
+     0.11556775867938995,
+     0.02629409171640873,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "state_sha": "ebbbaa8f117ea2c3",
+ "action_dim": 8,
+ "control_hz": 15.0,
+ "sim_dt": 0.008333333333333333,
+ "decimation": 8,
+ "physics": {
+  "device": "cpu",
+  "enhanced_determinism": false
+ },
+ "robot_joint_positions": [
+  0.0,
+  -0.628319,
+  0.0,
+  -2.513274,
+  0.0,
+  1.884956,
+  0.0
+ ],
+ "arm_joint_names": [
+  "panda_joint1",
+  "panda_joint2",
+  "panda_joint3",
+  "panda_joint4",
+  "panda_joint5",
+  "panda_joint6",
+  "panda_joint7"
+ ],
+ "objects": {
+  "table": {
+   "position": [
+    0.5472,
+    -6e-05,
+    -0.347
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.1972,
+     -0.50006,
+     -0.697
+    ],
+    [
+     0.8972,
+     0.49994,
+     0.003
+    ]
+   ],
+   "size": [
+    0.7,
+    1.0,
+    0.7
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "blue_block": {
+   "position": [
+    0.46013,
+    0.0,
+    0.02629
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.43662,
+     -0.0235,
+     0.00279
+    ],
+    [
+     0.48363,
+     0.0235,
+     0.0498
+    ]
+   ],
+   "size": [
+    0.047,
+    0.047,
+    0.047
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "green_block": {
+   "position": [
+    0.36936,
+    0.18831,
+    0.02629
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.34585,
+     0.16481,
+     0.00279
+    ],
+    [
+     0.39286,
+     0.21182,
+     0.0498
+    ]
+   ],
+   "size": [
+    0.047,
+    0.047,
+    0.047
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "red_block": {
+   "position": [
+    0.37146,
+    -0.17411,
+    0.02629
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.34796,
+     -0.19762,
+     0.00279
+    ],
+    [
+     0.39496,
+     -0.15061,
+     0.0498
+    ]
+   ],
+   "size": [
+    0.047,
+    0.047,
+    0.047
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "yellow_block": {
+   "position": [
+    0.47534,
+    0.11557,
+    0.02629
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.45183,
+     0.09207,
+     0.00279
+    ],
+    [
+     0.49884,
+     0.13907,
+     0.0498
+    ]
+   ],
+   "size": [
+    0.047,
+    0.047,
+    0.047
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "table_top_z": 0.0029983818531036377,
+ "versions": {
+  "robolab": "0.1.0",
+  "isaaclab": "",
+  "isaacsim": "",
+  "torch": "2.7.0+cu128",
+  "robolab_commit": "9db0aaf09d9f"
+ }
+}

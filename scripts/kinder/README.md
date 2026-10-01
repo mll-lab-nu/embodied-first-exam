@@ -1,6 +1,6 @@
 # scripts/kinder — where the KinDER tasks come from
 
-Every `tasks/kinder-*` directory is generated from this one; nothing in them is edited by hand (their `results/` aside).
+Every `tasks/kinder-*` directory is generated from this one; nothing in them is edited by hand. Agent results are published on the results site, not kept here (PROTOCOL D3).
 What they are and why: `docs/benchmarks/kinder.md`.
 
 | file | what it is |

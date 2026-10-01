@@ -1,4 +1,4 @@
-# Standard-mode twin of humanoidbench-loco-reach-i00. Generated from scripts/humanoidbench/templates/standard/task.toml -- edit
+# Standard-mode twin of humanoidbench-loco-reach-i00-privileged. Generated from scripts/humanoidbench/templates/standard/task.toml -- edit
 # subset.toml or the template, not this.
 schema_version = "1.3"
 artifacts = [
@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/humanoidbench-loco-reach-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench reach on the same frozen instance as humanoidbench-loco-reach-i00. The agent only gets a client: /observe and /submit (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). One episode, no reset, no privileged state, no reward; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench reach on the same frozen instance as humanoidbench-loco-reach-i00-privileged. The agent only gets a client: /observe and /submit (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). One episode, no reset, no privileged state, no reward; the sim service records the episode, replays it in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-mode", "trajectory", "reach"]
 
@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "none"
-oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), kept in tasks/humanoidbench-loco-reach-i00/results/codex-gpt6_luna-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0

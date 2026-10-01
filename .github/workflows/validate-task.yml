@@ -1,26 +1,50 @@
 name: validate-task
-# Oracle must score 1 and the nop agent must score 0 for the given tasks. Pulls the ~20 GB base image,
-# so this runs on demand (workflow_dispatch) or on a self-hosted runner; not on every PR push yet.
+# Manual runtime validation on a self-hosted GPU runner: oracle scores 1 on every task whose task.toml says
+# oracle = "full", and the nop agent scores 0 on every task. Tasks with a partial or no oracle are human-reviewed
+# (docs/PROTOCOL.md §1.6) and only get the nop check.
 on:
   workflow_dispatch:
     inputs:
-      tasks: { description: "space-separated task dirs (default: all)", required: false, default: "" }
+      tasks:
+        description: "space-separated task dirs, e.g. tasks/foo-privileged (default: all)"
+        required: false
+        default: ""
+permissions:
+  contents: read
 jobs:
   validate:
     runs-on: [self-hosted, docker]
+    env:
+      TASKS: ${{ inputs.tasks }}
+      HARBOR_VERSION: "0.23.0"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv tool install harbor
-      - name: oracle == 1
+      - run: uv tool install "harbor==$HARBOR_VERSION"
+      - name: Resolve task list
         run: |
-          set -e; for t in ${{ inputs.tasks || 'tasks/*/' }}; do
-            harbor run -p "$t" -a oracle -o jobs/validate --job-name "oracle-$(basename $t)"
-            grep -qx 1 jobs/validate/oracle-$(basename $t)/*/verifier/reward.txt || { echo "oracle failed on $t"; exit 1; }
+          set -eu
+          list=${TASKS:-$(ls -d tasks/*/)}
+          for t in $list; do
+            [[ "$t" =~ ^tasks/[A-Za-z0-9_.-]+/?$ ]] || { echo "bad task dir: $t"; exit 1; }
+            [ -f "${t%/}/task.toml" ] || { echo "not a task: $t"; exit 1; }
+          done
+          echo "TASK_LIST=$(echo $list)" >> "$GITHUB_ENV"
+          echo "JOBS=jobs/validate-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+      - name: oracle == 1 (tasks with oracle = "full")
+        run: |
+          set -eu
+          for t in $TASK_LIST; do
+            n=$(basename "$t")
+            grep -Eq '^oracle *= *"full"' "${t%/}/task.toml" || { echo "skip $n (oracle is not full)"; continue; }
+            harbor run -p "$t" -a oracle -o "$JOBS" --job-name "oracle-$n"
+            grep -qx 1 "$JOBS/oracle-$n"/*/verifier/reward.txt || { echo "oracle failed on $t"; exit 1; }
           done
       - name: nop == 0
         run: |
-          set -e; for t in ${{ inputs.tasks || 'tasks/*/' }}; do
-            harbor run -p "$t" -a nop -o jobs/validate --job-name "nop-$(basename $t)"
-            grep -qx 0 jobs/validate/nop-$(basename $t)/*/verifier/reward.txt || { echo "nop passed on $t (verifier too weak)"; exit 1; }
+          set -eu
+          for t in $TASK_LIST; do
+            n=$(basename "$t")
+            harbor run -p "$t" -a nop -o "$JOBS" --job-name "nop-$n"
+            grep -qx 0 "$JOBS/nop-$n"/*/verifier/reward.txt || { echo "nop passed on $t"; exit 1; }
           done
