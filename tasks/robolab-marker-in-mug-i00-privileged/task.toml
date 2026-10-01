@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robolab-marker-in-mug-i00-privileged"
+description = "NVIDIA RoboLab marker_in_mug (Franka + Robotiq 2F-85, Isaac Lab 2.3 / Isaac Sim 5.1): produce one replayable trajectory. Put the whiteboard marker in the mug. Frozen scene instance (the state after RoboLab's canonical seed-0 reset)."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-policy", "trajectory", "marker_in_mug"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "robolab"             # NVIDIA RoboLab v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the CPU, RTX rendering)
+robot = "franka-robotiq-2f85"
+family = "marker_in_mug"
+mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/PROTOCOL.md §3)
+oracle = "none"
+oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-marker-in-mug-i00__2vRfTHm (robolab-marker-in-mug-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/marker_in_mug/unlimited/); robolab-marker-in-mug-i00-limite__qHzxixK (robolab-marker-in-mug-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/marker_in_mug/limited/). Human review per family (PROTOCOL §2.7)."
+instance_seed = 0                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest
+expert_time_estimate_hours = 1.0
+
+[verifier]
+timeout_sec = 2400.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 8
+memory_mb = 24576
+
+[verifier.environment]
+build_timeout_sec = 1800.0

@@ -1,0 +1,38 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# Isaac Sim needs an RTX-class GPU even headless (PhysX itself runs on the CPU). The sidecar is TRUSTED: its Kit cache is
+# the trusted volume, never mounted where agent code runs (Isaac keeps generated Python there that Kit imports); it has no
+# fixed name, so every trial's compose project gets its own (Harbor's teardown deletes it).
+# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes and compose restarts the
+# same container (its /data kept); the service resumes the episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup
+# watchdog, at least twice the slowest measured scene build (99-217 s, docs/benchmarks/robolab.md).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1
+    volumes:
+      - ./sim:/srv:ro
+      - rcb_robolab_cache_trusted:/cache
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6
+    environment:
+      RCB_TASK: take_mugs_off_of_shelf
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL: /srv/rcb_robolab.py
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "5400"
+      RCB_STARTUP_TIMEOUT_S: "900"
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_robolab_cache_trusted:

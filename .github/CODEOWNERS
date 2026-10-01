@@ -1,12 +1,18 @@
-# Shared files need a maintainer's review (enforced with branch protection on main).
-/docs/PROTOCOL.md               @JamesKrW
-/docs/LIMITED_MODE_PROTOCOL.md  @JamesKrW
-/docs/TAXONOMY.md               @JamesKrW
-/docs/REVIEWING.md              @JamesKrW
-/ci_checks/                     @JamesKrW
-/.github/                       @JamesKrW
-/scripts/build_images.sh        @JamesKrW
-/scripts/push_images.sh         @JamesKrW
-/images/VERSION                 @JamesKrW
-/README.md                      @JamesKrW
-/CONTRIBUTING.md                @JamesKrW
+# Shared files need a review from one of these maintainers (enforced by branch protection on main).
+/docs/PROTOCOL.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/LIMITED_MODE_PROTOCOL.md  @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/TAXONOMY.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/REVIEWING.md              @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/ci_checks/                     @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/.github/                       @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/build_images.sh        @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/push_images.sh         @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/images/VERSION                 @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/README.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/CONTRIBUTING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/AGENTS.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/RUNNING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/benchmarks/               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/task_conventions.py    @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/task_names.py          @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/tasks/dataset.toml             @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0

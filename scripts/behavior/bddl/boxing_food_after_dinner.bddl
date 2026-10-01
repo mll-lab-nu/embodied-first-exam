@@ -1,0 +1,44 @@
+(define (problem boxing_food_after_dinner-0)
+    (:domain behavior-1k)
+
+    (:objects
+        countertop.n.01_1 - countertop.n.01
+        sink.n.01_1 - sink.n.01
+        cabinet.n.01_1 - cabinet.n.01
+        electric_refrigerator.n.01_1 - electric_refrigerator.n.01
+        taco.n.02_1 taco.n.02_2 - taco.n.02
+        plate.n.04_1 plate.n.04_2 - plate.n.04
+        tupperware.n.01_1 - tupperware.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop taco.n.02_1 plate.n.04_1)
+        (ontop taco.n.02_2 plate.n.04_2)
+        (ontop plate.n.04_1 countertop.n.01_1)
+        (ontop plate.n.04_2 countertop.n.01_1)
+        (inroom countertop.n.01_1 kitchen)
+        (inside tupperware.n.01_1 cabinet.n.01_1)
+        (inroom cabinet.n.01_1 kitchen)
+        (inroom sink.n.01_1 kitchen)
+        (inroom electric_refrigerator.n.01_1 kitchen)
+        (inroom floor.n.01_1 kitchen)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (forall
+                (?taco.n.02 - taco.n.02)
+                (inside ?taco.n.02 ?tupperware.n.01_1)
+            )
+	    (ontop ?plate.n.04_1 sink.n.01_1)
+	    (ontop ?plate.n.04_2 sink.n.01_1)
+            (inside ?tupperware.n.01_1 ?electric_refrigerator.n.01_1)
+            (not
+                (open ?electric_refrigerator.n.01_1)
+            )
+        )
+    )
+)
