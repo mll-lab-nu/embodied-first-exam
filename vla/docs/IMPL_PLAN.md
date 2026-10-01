@@ -103,7 +103,7 @@ vla/
 1. **ALOHA 关节**：TopoGym ALOHA 取自 mujoco_menagerie `aloha.xml`，关节轴、连杆、限位与 vx300s 相同，起始姿态为 ACT 的 START_ARM_POSE，属于标准 ALOHA 约定。
 2. **DROID 关节 7**：TopoGym 把 Robotiq 装在 Franka hand 坐标系上（相对法兰 −45°），DROID 装在法兰上，`q7_DROID = q7_TopoGym − π/4`（`models/droid.py`）。
 3. **夹爪**：DROID 系三个模型用闭合度（1 = 闭合），π0.5 DROID 与 GR00T 在 0.5 处二值化；π0.5 ALOHA 的模型值是 Interbotix 连杆的电机角，按 openpi 的连杆模型换算（`models/pi05/gripper.py`）；X-VLA 在 g > 0.7 时闭合。
-4. **GR00T eef_9d**：官方 `compute_eef_9d` 的欧拉角读法与训练数据不一致（在 TopoGym 起始姿态处相差 180°），改用法兰旋转矩阵；DROID 真实数据开环对比，执行的 8 步误差中位数低 20%（p = 0.004）。
+4. **GR00T eef_9d**：官方 `compute_eef_9d` 的欧拉角读法与训练数据不一致（在 TopoGym 起始姿态处相差 180°），改用法兰旋转矩阵；DROID 真实数据开环对比，执行的 8 步误差中位数低 20%（p = 0.004）。仿真中官方读法让每个 episode 37–53% 的动作行被关节限位截断，改用法兰旋转后 buzz_wire_3d seed 0 从 366 行降到 2 行（`runs/test_results/20260930_vla_groot_clipping_seed0`）。
 5. **X-VLA 坐标**：输出 RoboTwin 世界系中 link6 的位姿（TCP 在其 x 方向 0.12 m），四元数按训练时的方式误读；TopoGym 两臂面对面、RoboTwin 两臂并排，所以每臂按自身底座换算，高度相对桌面（RoboTwin 底座高出桌面 4.2 cm）。proprio 用实测位姿（官方客户端从第二块起用上一步目标，到位时两者相差不超过 5 mm）。
 6. **相机**：TopoGym 各相机 848×480（16:9）。DROID 训练画面 320×180，GR00T、MolmoAct2 按官方客户端缩到该尺寸，π0.5 自己加黑边缩到 224；ALOHA 训练画面为 4:3，两个 ALOHA 模型先居中裁成 640×480。相机位置和视角未调整。
 7. **吞吐**（独占 GPU）：每控制步墙钟 cast_coil decimation 8 为 0.35 s、24 为 1.0 s，buzz_wire_3d decimation 27 为 2.1 s；reset 17 s / 40 s；仿真显存 2.0 / 4.5 GB。模型显存 π0.5 约 12 GB、MolmoAct2 约 10 GB（bf16）、X-VLA 3.5 GB（GR00T 未单独测）。
@@ -149,3 +149,4 @@ vla/
 | 2026-09-30 | 第三轮：DROID 关节 7 按 45° 安装差换算；X-VLA 高度相对桌面、目标到位再换、IK 达不到时逐臂跳过；π0.5 ALOHA 夹爪按 openpi 连杆换算；ALOHA 两指碰到读作闭合；GR00T eef_9d 改用法兰旋转；删除旧的 uv 环境 |
 | 2026-09-30 | 收尾：ALOHA 模型画面先居中裁成 4:3（commit 707ecd5）；最终审查修复（commit 7c00ed5）：状态由动作空间决定（协议版本 3），去掉未使用的关节 + 末端双状态路径；ALOHA 夹爪部分张开时保持原开度；截断由 agent 按行计数；`_base_` 只指向一个父文件；`serve` 固定监听 localhost；边界测试按完整模块名检查。删除实施前的设计文档 `DESIGN.md`，`index.html` 改为交接报告 |
 | 2026-09-30 | 客户端先检查协议版本再读 spec 字段（旧版服务端报版本不一致，不再报字段错误）；`summary.json` 的 git commit 改为开始运行时读取，并记录 `git_dirty`。此前的 summary 在运行结束时读取 commit，运行期间有提交时会记成之后的 commit |
+| 2026-09-30 | GR00T 截断查明：官方 eef_9d 读法下 37–53% 的动作行被关节限位截断；法兰旋转下 seed 0 只剩 2 行（关节 7 超出 0.036 rad，属于 45° 安装差留下的行程余量） |

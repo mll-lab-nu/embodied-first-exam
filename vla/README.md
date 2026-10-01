@@ -111,5 +111,4 @@ conda activate topogym && python -m pytest vla/tests -q     # 不需要 GPU
 ## 7. 已知问题
 
 - 起始姿态和相机位置与各模型的训练设置不同。起始姿态可以由 TopoGym 按模型设置（或在 `vla/` 里开场先移动过去），相机位置只能改 TopoGym；完整列表见 `docs/index.html` 第 2、3 节。
-- GR00T 第二批评测中 37–53% 的动作行被关节限位截断，原因未查明。
 - 仿真速度：每控制步墙钟 0.35–2.1 s（`docs/IMPL_PLAN.md` 第 7 节）。
