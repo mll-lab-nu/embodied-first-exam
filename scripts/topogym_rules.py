@@ -209,8 +209,31 @@ def details_section(fam, inst, *, limited):
             + "\n".join(f"- {x}" for x in lines) + "\n")
 
 
-def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe_timeout_s=600, max_chunk_s=10.0, safety=2.0):
-    """Client-side timeouts (rcb_client.py: submit 1800 s, get_obs 600 s) against this instance's measured speed."""
+def step_seconds(d: dict) -> float:
+    """The per-control-step wall time the texts quote: the measured arm-motion value where the build measured one
+    (describe.json sec_per_step_motion: FEM / IPC families, 2026-10-01: motion steps on an unloaded GPU, the slower of our
+    GPU types), else describe's sec_per_step."""
+    return float(d.get("sec_per_step_motion") or d["sec_per_step"])
+
+
+def step_time_words(d: dict) -> str:
+    """'One control step takes about ...' for the instruction texts (no claim about checkpoints: the simulator keeps a
+    complete checkpoint only at the episode start). With describe.json `sec_per_step_unloaded` (a hold step measured on an
+    unloaded GPU), the texts give both ends: the unloaded time and the measured time on a shared GPU, which the chunk advice
+    keeps using (the safe end)."""
+    if d.get("sec_per_step_motion"):
+        return (f"One control step with the arms moving takes about {step_seconds(d):.0f} s of wall clock here (measured on an "
+                f"unloaded GPU, the slower of our GPU types; holding still is faster)")
+    if d.get("sec_per_step_unloaded"):
+        return (f"One control step takes about {float(d['sec_per_step_unloaded']):.1f} s of wall clock on an unloaded GPU, and "
+                f"up to about {step_seconds(d):.1f} s when other simulations share the GPU; the call metadata reports the time")
+    return f"One control step takes about {step_seconds(d):.1f} s of wall clock here"
+
+
+def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe_timeout_s=600, max_chunk_s=10.0, safety=2.0,
+                   motion=False, unloaded=None):
+    """Client-side timeouts (rcb_client.py: submit 1800 s, get_obs 600 s) against this instance's measured speed (motion:
+    the measured arm-motion step time, describe.json sec_per_step_motion)."""
     per = max(float(sec_per_step), 1e-3)
     chunk_steps = int(submit_timeout_s / (safety * per)); watch_steps = int(observe_timeout_s / (safety * per))
     chunk_line = (f"keep each `submit` to at most {chunk_steps} control steps ({chunk_steps / control_hz:.2f} s of simulated "
@@ -219,7 +242,11 @@ def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe
     watch_line = (f"keep each `get_obs(seconds=...)` watch to at most {watch_steps} control steps "
                   f"({watch_steps / control_hz:.2f} s)" if watch_steps < 30 * control_hz else "any watch up to 30 s fits")
     return ("## Time per call\n"
-            f"- One control step takes about {per:.1f} s of wall clock here. A request returns only when all of its steps "
+            + (f"- One control step with the arms moving takes about {per:.0f} s of wall clock here (holding still is faster). "
+               if motion else f"- One control step takes about {float(unloaded):.1f} s of wall clock on an unloaded GPU and up to about "
+               f"{per:.1f} s when other simulations share it; the advice below assumes the slower figure. "
+               if unloaded else f"- One control step takes about {per:.1f} s of wall clock here. ")
+            + "A request returns only when all of its steps "
             f"have run, and the client gives up waiting after {submit_timeout_s} s for `submit` and {observe_timeout_s} s "
             f"for `get_obs`: {chunk_line}; {watch_line} (both with a 2x margin).\n"
             "- If a request times out in the client anyway, the service still runs it to the end: do NOT send it again "

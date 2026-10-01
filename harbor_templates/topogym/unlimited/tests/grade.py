@@ -4,11 +4,11 @@ Adapted from robot_coding_bench's RoboWits grader (fa59c1a6: tasks/robowits-stac
     python /tests/grade.py --family cube_pick_place --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
-human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png.
-Replays `--repeat` times in this fresh process. TopoGym's physics runs on the GPU, whose contact solver is not
-bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete the task; the final-state hashes
-(`deterministic`) and the rebuilt frozen scene (`instance_ok`: exact state hash, or every object / joint pose within
-tolerance) are reported and not required.
+human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the last of
+the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
+the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete
+the task; the final-state hashes (`deterministic`) and the rebuilt frozen scene (`instance_ok`: exact state hash, or
+every object / joint pose within tolerance) are reported and not required.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
@@ -66,7 +66,24 @@ def main() -> int:
             write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost}); return 0
         s = Session(a.family, instance=a.instance)
         t0 = time.time()
-        outs = [s.replay(acts) for _ in range(a.repeat)]
+        # `--repeat` replays (2) in this fresh process; the human-viewable video is rendered DURING the last one, so the
+        # grading takes two passes, not a third for the video. A failed video never costs the verdict: that replay then
+        # runs again without it.
+        outs, video, video_error = [], False, None
+        while len(outs) < a.repeat:
+            if len(outs) == a.repeat - 1 and not a.no_video and not video_error:
+                try:
+                    s.start_video(os.path.join(LOG_DIR, "replay.mp4"), fps=a.video_fps)
+                    outs.append(s.replay(acts)); s.stop_video()
+                    video = os.path.isfile(os.path.join(LOG_DIR, "replay.mp4"))
+                except Exception as exc:  # noqa: BLE001
+                    traceback.print_exc(file=sys.stderr); video_error = repr(exc)[:200]
+                    try:
+                        s.stop_video()
+                    except Exception:  # noqa: BLE001
+                        pass
+                continue
+            outs.append(s.replay(acts))
         all_success = all(o["success"] for o in outs)
         deterministic = len({o["state_sha"] for o in outs}) == 1
         instance_ok = bool(s.instance_matches)
@@ -75,14 +92,7 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": int(gpu),
                "instance_ok": int(instance_ok), "instance_exact": int(bool(s.instance_exact)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0]["sim_steps"]), "final_reward": float(outs[-1].get("progress") or 0.0),
-               "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
-        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
-        if not a.no_video:
-            try:
-                s.start_video(os.path.join(LOG_DIR, "replay.mp4"), fps=a.video_fps); s.replay(acts); s.stop_video()
-                out["video_rendered"] = int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4")))
-            except Exception:  # noqa: BLE001
-                traceback.print_exc(file=sys.stderr)
+               "replay_wall_s": round(time.time() - t0, 1), "replays": len(outs), "grader_error": 0, "video_rendered": int(bool(video)), **cost}
         write(ok, out)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)

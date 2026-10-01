@@ -1,22 +1,32 @@
-"""rcb-limited/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; see docs/rcb/LIMITED_MODE_PROTOCOL.md).
-Adapted from robot_coding_bench's RoboWits service (fa59c1a6: tasks/robowits-stack-cubes-i00-limited/environment/sim/
-server.py); the HTTP surface is the shared layer rcb_limited.py, byte-identical to robot_coding_bench's: GET /spec,
-GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's
-own model). Logs every call to /data/episode.jsonl, keeps /data/final.json current, and on episode end exports the
-recorded trajectory, replays it for success (+ the state-hash comparison) and renders /data/replay.mp4. Nothing about
-objects ever leaves this process.
+"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/rcb/STANDARD_MODE_2_2.md): the TopoGym
+adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
+robot_coding_bench's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
+(RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
+/data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Differences from the RoboWits service, all from the simulator: the physics runs on the GPU, whose contact solver is not
-bit-deterministic, so `deterministic` (live and replay state hashes equal) is reported and not required; rows are
-streamed at the task's control rate (control_hz, physics_substeps physics steps each); the joint action is per arm the arm
-joint targets plus the gripper opening width; `ee_pose` is solved by bounded least squares over the robot's Genesis
-forward kinematics; a task whose own failure predicate fires (e.g. touching the buzz wire) ends the episode with reason
-"task_failed" (the simulator cannot continue it); a family may enable passive grasp assistance (the gripper `command` text
-of /spec says the rule). Genesis' CUDA context belongs to the thread that built the scene, so every simulator call runs on
-the main thread: the HTTP layer serves from a thread and hands submit / observe / kinematics to the main thread's job queue,
-and the episode's finalization (replay, video) is queued there too instead of running in a thread of its own."""
+Crash recovery (rcb_limited.Episode, STANDARD_MODE_2_2.md section 13, resume class `approx`: Genesis' GPU contact solver is
+not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
+Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
+compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal
+up to the last checkpoint and continues the SAME episode, never a reset; a hash mismatch is recorded, not fatal, unless a
+TCP is more than RCB_RESUME_MAX_DEV_M from its checkpoint.
+
+Episode end and grading (two passes: the live episode, then one fresh replay that also records the video): when the
+episode ends (success, the task's failure predicate, the wall clock, an error) the service writes /data/trajectory.npz and
+/data/episode.json (the live result and final-state hash, `live_rows`: the rows the live episode executed). The collect
+hook's SIGUSR1 makes it exit, releasing the GPU; environment/sim/finalize.sh then replays the trajectory once in a fresh
+process, rendering /data/replay.mp4 during that replay, and completes /data/final.json.
+
+Differences from the RoboWits service, all from the simulator: the physics runs on the GPU, so `deterministic` (live and
+replay state hashes equal) is reported and not required; rows are streamed at the task's control rate (control_hz,
+physics_substeps physics steps each); the joint action is per arm the arm joint targets plus the gripper opening width;
+`ee_pose` is solved by bounded least squares over the robot's Genesis forward kinematics; a task whose own failure
+predicate fires (e.g. touching the buzz wire) ends the episode with reason "task_failed"; a family may enable passive grasp
+assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA context belongs to the thread that built the
+scene, so every simulator call runs on the main thread: the HTTP layer serves from a thread and hands submit / observe /
+kinematics, the per-call checkpoint's state hash and proprio row, and the episode end to the main thread's job queue."""
 from __future__ import annotations
-import json, math, os, queue, signal, sys, threading, time, traceback
+import json, math, os, queue, sys, threading, time, traceback
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +40,12 @@ MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = floa
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 JOBS: queue.Queue = queue.Queue()      # simulator work, executed in order by the main thread
+PID_FILE = os.path.join(DATA, "server.pid")
+# Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog); the journal row
+# is the action row (its width from the frozen instance: the scene does not exist yet)
+EP = L.Episode(DATA, dim=int(json.load(open(INSTANCE))["action_dim"]), resume="approx")
+EP.startup()
+log = EP.log
 
 
 def on_main(fn, *a):
@@ -51,55 +67,40 @@ def on_main(fn, *a):
     return box["r"]
 
 
-def log(ev: dict) -> None:
-    with open(os.path.join(DATA, "episode.jsonl"), "a") as f:
-        f.write(json.dumps({"ts": time.time(), **ev}) + "\n")
-
-
 def ctrl_steps() -> int:
     return int(S.n_steps) if E["ready"] else 0
 
 
 def write_final() -> None:
+    if L.final_verdict(DATA):           # finalize.sh's verdict, or a give-up after crashes: never overwritten
+        return
     n = int(E.get("episode_control_steps") or ctrl_steps())
-    json.dump({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-               "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-               "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "replay_success": E.get("replay_success"),
-               "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
-               "video_done": bool(E.get("video_done"))},
-              open(os.path.join(DATA, "final.json.tmp"), "w"))
-    os.replace(os.path.join(DATA, "final.json.tmp"), os.path.join(DATA, "final.json"))
+    L._write_json(os.path.join(DATA, "final.json"), {
+        "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
+        "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
+        "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
+        "live_sha": E.get("live_sha"), **EP.final_fields()})
 
 
-def finalize() -> None:
-    """Runs on the main thread between queued jobs, so no submit / observe can run meanwhile."""
+def dump() -> None:
+    """The episode is over: save the recorded trajectory and the live result for the collect hook (main thread). Rows
+    recorded after the live end (the rest of the chunk that ended it, watch holds) were never commanded live: `live_rows`
+    tells the replay where the live episode stopped."""
+    if E.get("dumped"): return
+    E["dumped"] = True
     try:
-        acts = S.record_stop(); live_sha = S.state_sha()
-        # Replay what the live episode executed: the rows up to its recorded end. Rows recorded after it (the rest of the
-        # chunk that ended it, watch holds) were never commanded live, so a GPU replay that ends later must not run them.
-        n_live = E.get("end_row")
-        live = acts if n_live is None else acts[:int(n_live)]
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "limited-mode episode (v2)", "steps": E["step"], "reason": E["reason"],
-                                                                            "live_rows": int(len(live))})
-        E["n_actions"] = int(len(acts)); E["live_rows"] = int(len(live)); E["live_sha"] = live_sha
-        rep = S.replay(live); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha"]; E["deterministic"] = rep["state_sha"] == live_sha
-        log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
+        acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
+        n_live = E.get("end_row"); E["live_rows"] = int(len(acts) if n_live is None else min(int(n_live), len(acts)))
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+                                                                            "reason": E["reason"], "live_rows": E["live_rows"], "resumes": EP.resumes})
     except Exception as exc:  # noqa
-        traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
-        acts = None
-    # the grading record is complete before the video, whose rendering grows with the episode
-    E["finalized"] = True; write_final()
-    if acts is not None and len(live):
-        try:
-            S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(live); S.stop_video(); E["video"] = True   # + replay.last.png
-        except Exception:  # noqa
-            traceback.print_exc()
-    E["video_done"] = True; write_final()
-
-
-def start_finalize() -> None:
-    if E.get("finalizing"): return
-    E["finalizing"] = True; JOBS.put(finalize)
+        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
+    n = int(E.get("episode_control_steps") or 0)
+    L._write_json(os.path.join(DATA, "episode.json"), {
+        "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
+        "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
+        "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+    write_final()
 
 
 def finish(reason: str) -> None:
@@ -110,12 +111,14 @@ def finish(reason: str) -> None:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
-    write_final(); start_finalize()
+    dump()
 
 
 # ---------------------------------------------------------------- scene
 import rcb_topogym as M  # noqa: E402
 S = M.Session(TASK, instance=INSTANCE, strict=True)
+EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
+E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 CTRL_HZ = float(S.control_hz); SUBSTEPS = int(S.physics_substeps)
 CAMS = list(S.VIDEO_CAMERAS)
 CAM_INFO = S.camera_info(CAMS)
@@ -169,11 +172,14 @@ SPEC = {
         "not_yet": ["joint_delta", "joint_velocity", "ee_delta", "joint_torque"]},
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": PROPRIO_GROUPS,
-    "static": {},                       # nothing about where things are (limited mode); the task text names the objects
+    "static": {},                       # nothing about where things are (standard mode); the task text names the objects
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "21600"))},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
+                "simulator error; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -243,16 +249,18 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 
 
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
-    """One recorded control step. True when the episode must stop (runaway guard, or the task's own failure predicate)."""
+    """One recorded control step. True when the call must stop here: the episode is over (runaway guard, the task's own
+    failure predicate, the wall clock), or the call ran past max_call_wall_s / its client hung up (EP.journal)."""
     if deadline_reached():
         finish("timeout")
         return True
-    guard = S.step(a); rec.tick()
+    row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
+    guard = S.step(row); stop = EP.journal(row); rec.tick()
     if S.episode_end is not None and "end_row" not in E and S._recording is not None:
         E["end_row"] = len(S._recording)      # the row at which the live episode ended (success or a failure predicate)
     if guard: finish("step_guard")
     elif S.episode_end not in (None, "success"): finish("task_failed")
-    return E["done"]
+    return E["done"] or stop
 
 
 def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, clipped: list) -> None:
@@ -355,29 +363,50 @@ def status() -> dict:
             "elapsed_s": round(time.time() - E["t0"], 1)}
 
 
-def _end_from_signal():
-    if not E["done"]: finish("timeout")
-    else: start_finalize()
-
-
 def deadline_reached():
     return E["ready"] and not E["done"] and time.monotonic() >= E["deadline"]
 
 
-def on_usr1(*_):
-    JOBS.put(_end_from_signal)              # handled by the main thread between simulator jobs
-signal.signal(signal.SIGUSR1, on_usr1)
+def end_from_signal() -> None:
+    """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): the main thread ends the episode, dumps it
+    and exits 0 (_end_and_exit), so the GPU is free for finalize.sh's fresh-process replay."""
+    JOBS.put(_end_and_exit)
 
-log({"ev": "start", "task": TASK, "eval_index": S.eval_index, "state_sha": S.state_sha(), "protocol": PROTOCOL}); write_final()
-S.record_start()
-E["ready"] = True; E["t0"] = time.time()
-E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"]
-open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
-print(f"{PROTOCOL} sim ready", flush=True)
-L.check_spec(SPEC)
+
+def _end_and_exit() -> None:
+    """Main thread, between simulator jobs. No svc.lock here: an HTTP call holds it while it waits for the main thread."""
+    E["exiting"] = True                     # the HTTP layer answers 409 from now on
+    if not E["done"]: finish("timeout")
+    else: dump()
+    log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the GPU for the fresh-process replay"})
+    if not os.path.exists(PID_FILE):        # a SIGUSR1 that came in during a resume: the hook must still see this process end
+        open(PID_FILE, "w").write(str(os.getpid()))
+    sys.stdout.flush(); sys.stderr.flush()
+    os._exit(0)
+
+
+def replay_row(row) -> None:
+    """One journaled row during a resume (main thread, no rendering asked for). As live: after the task's own episode end
+    Session.step records the row without moving the scene, and the row of that end is remembered (`live_rows`)."""
+    if not S.episode_done:
+        S.step(np.asarray(row, dtype=np.float32))
+        if S.episode_end is not None and "end_row" not in E and S._recording is not None:
+            E["end_row"] = len(S._recording)
+
+
+# ---------------------------------------------------------------- start, or resume after a crash
+E["deadline"] = float("inf")
+S.record_start()                        # before begin(): a resume replay of the journal is recorded too
+EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
+         start_event={"task": TASK, "eval_index": S.eval_index})
+E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"])   # the wall clock runs from the first start
+write_final()
+open(PID_FILE, "w").write(str(os.getpid()))
+print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
 threading.Thread(target=L.serve, daemon=True, args=(L.Service(
     spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
-    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log),)).start()
+    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log,
+    episode=EP, state_sha=lambda: on_main(S.state_sha), proprio=lambda: on_main(proprio_row)),)).start()
 while True:                                 # the main thread: simulator jobs in order; signals are handled between them
     if deadline_reached():
         finish("timeout")

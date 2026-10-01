@@ -3,7 +3,8 @@
 Adapted from robot_coding_bench's scripts/robowits_mk_task.py (fa59c1a6).
 usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded --scene-seed N | --instance <instance.json>]
                                   [--difficulty "<paragraph>"] [--python <simulator python>]
-  <family>      a key of rcb_topogym.TASKS (the folder slug becomes topogym-<family-with-dashes>-i<NN>)
+  <family>      a key of rcb_topogym.TASKS (the slug becomes topogym-<family-with-dashes>-i<NN>, the privileged-mode task dir
+                <slug>-privileged: protocol v1.0 names, docs/rcb/PROTOCOL.md)
   --oracle      the human-written reference solution; copied to solution/oracle_<family>.py and recorded by solution/solve.sh.
                 Without it solve.sh says there is none and the oracle agent scores 0
   --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
@@ -11,27 +12,33 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
 Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
 The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
 change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh).
-Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
-[task].name = "robot-coding-bench/<slug>" and [metadata].difficulty = the variation record's tier (docs/rcb/TAXONOMY.md)."""
+Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 10800, at most 36000).
+[task].name = "robot-coding-bench/<slug>-privileged" and [metadata].difficulty = the variation record's tier
+(docs/rcb/TAXONOMY.md). The last step is scripts/task_conventions.py's normalize (protocol v1.0 fields and README layout)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
-from topogym_rules import details_section
+from topogym_rules import details_section, step_time_words
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
 # interlocked_claws only (user decision 2026-10-01, option i): the template + the pre-weld gripper fix. A row that keeps the
 # gripper width keeps its native target: the width table drops the closed-end plateau, so the birth target closed_qpos
 # (0.002) round-trips to 0.00747 (closing fraction 0.844) and his grasp manager reads that as an opening intent, which ends
 # the pre-weld at the first step. No other family has an off-table gripper target, so their commands would be unchanged.
-TOOL_FOR = {"interlocked_claws": root / "harbor_templates/topogym/common/rcb_topogym_interlocked.py"}
+# The FEM / IPC rope families (2026-10-01): the template + the FEM checkpoint fix (Session drops Genesis 1.2.1's per-substep
+# FEMSolver.save_ckpt store, which leaked ~120 MiB of GPU memory per control step on knot hard and ran a 16 GB GPU out of
+# memory; physics unchanged). The rigid and PBD families have no FEM solver, so the override would be a no-op there.
+IPC_TOOL = root / "harbor_templates/topogym/common/rcb_topogym_ipc.py"
+TOOL_FOR = {"interlocked_claws": root / "harbor_templates/topogym/common/rcb_topogym_interlocked.py",
+            **{f: IPC_TOOL for f in ("knot_untying", "rope_threading", "orbits", "slotted_post_ring")}}
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
-BUDGET_S = 21600
-MAX_BUDGET_S = 36000                  # knot_untying's budget (10 h); every other family 21600
+BUDGET_S = 10800                      # user 2026-10-01: a 3 h agent budget for every family
+MAX_BUDGET_S = 36000
 
 
 def tier_of(inst: dict):
@@ -135,8 +142,7 @@ def conventions(d: dict, fam: str) -> str:
 - Action ({len(d['action_layout'])}): {layout_words(d)}; absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at {d['control_hz']:g} Hz ({d['physics_substeps']} physics step(s) per control step). There is no step budget; your
-  wall-clock budget is {BUDGET_S // 60} min ({BUDGET_S} s). One control step takes about {d['sec_per_step']:.1f} s of wall clock here (the
-  simulator keeps a full checkpoint of every physics step), so budget your experiments.
+  wall-clock budget is {BUDGET_S // 60} min ({BUDGET_S} s). {step_time_words(d)}, so budget your experiments.
 - Grippers: {d['grasp_rules']}.
 - Tool frame (TCP, the ee pose and IK frame): {tcp['definition'].split(': ', 1)[1] if ': ' in tcp['definition'] else tcp['definition']}
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
@@ -264,15 +270,15 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
     text, requirements = goal_words(fam, text, d)
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
-           "None yet: `solution/solve.sh` says so and exits 1 (the oracle agent scores 0). A reference solution must be\n"
-           "written for this instance (assisted grasping, if the family enables it, is the same for the oracle and the agent).")
-    return f"""# {slug}
+           "None yet (`oracle = \"none\"`, no `solution/`). A reference solution must be written for this instance (assisted\n"
+           "grasping, if the family enables it, is the same for the oracle and the agent).")
+    return f"""# {slug}-privileged
 
 | | |
 |---|---|
 | Simulator / robot | TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB) / {d['robot_spec']['name']} ({robot_words(d)}) |
 | Family / instance | `{fam}` / variation `{variation}`, seed {seed} (eval index {ei}), frozen in `environment/instance.json` |
-| Task type / tier | trajectory / privileged |
+| Task type / mode | trajectory / privileged |
 | Base image | `{IMAGE}` (built locally with `scripts/build_images.sh topogym`; needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
 | Grasping | {d['grasp_rules'].split(':')[0]} |
 | Success rule | {success_rule} |
@@ -291,17 +297,35 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
-task's predicate holds after every replay (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. The physics runs on the
-GPU, which is not bit-deterministic: the final-state hashes (`deterministic`) and the rebuilt frozen scene
-(`instance_ok`) are reported, not required (robot_coding_bench's GPU-backend rule).
+task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
+replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
+final-state hashes (`deterministic`) and the rebuilt frozen scene (`instance_ok`) are reported, not required
+(robot_coding_bench's GPU-backend rule).
 """
+
+
+# Model trials the separate verifier scored 1 (sweep topogym-lunamax-assist-1001, earlier versions of these tier tasks:
+# the same frozen instances and predicates, before the two-pass grading and protocol v1.0).
+POSITIVES = {("topogym-interlocked-claws-easy-i00", "privileged"): "topogym-interlocked-claws-easy-i__pi2X7Xe",
+             ("topogym-interlocked-claws-easy-i00", "standard"): "topogym-interlocked-claws-easy-i__bcNb8Ve"}
+
+
+def oracle_evidence(slug: str, mode: str) -> str:
+    """[metadata].oracle_evidence: TopoGym ships no reference solution for the tier instances (protocol §2.7: human review)."""
+    pos = POSITIVES.get((slug, mode))
+    return ("No reference solution (no solution/). The frozen instance was validated by the build: it "
+            "builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay "
+            "grades without a grader error. "
+            + (f"Solvable: model trial {pos} was graded success=1 by the separate verifier, on an earlier version of this task "
+               "(the same frozen instance and predicate). " if pos else "No graded positive yet. ")
+            + "Human review per family (protocol §2.7).")
 
 
 def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, hours: float, level=None,
               inst: dict | None = None) -> str:
-    # The verifier replays the trajectory 3 times (2 checks + the video) at the simulator's speed: at most the agent's
-    # budget each, since the agent's own run took at least that long.
-    vt = 3 * BUDGET_S + 900
+    # The verifier replays the trajectory twice (the second one renders the video) at the simulator's speed: at most the
+    # agent's budget each, since the agent's own run took at least that long.
+    vt = 2 * BUDGET_S + 1800
     level = f'difficulty = "{level}"               # the variation\'s tier (docs/rcb/TAXONOMY.md)\n' if level else ""
     if inst is not None:   # provenance of the grasp mode, the success rule and a re-prepared initial state (instance.json)
         level += (f"grasp = {json.dumps(grasp_words(inst))}\n"
@@ -312,7 +336,7 @@ def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, 
 artifacts = ["/app/output/"]
 
 [task]
-name = "robot-coding-bench/{slug}"
+name = "robot-coding-bench/{slug}-privileged"
 description = {json.dumps(f"TopoGym {fam} ({d['robot_spec']['name']}, Genesis): produce one replayable trajectory. {text} Frozen scene instance (variation {variation}, seed {seed}).")}
 authors = [{{ name = "jianwen" }}]
 keywords = ["robotics", "topogym", "genesis", "{d['robot_spec']['name']}", "code-as-policy", "trajectory", "{fam}"]
@@ -323,13 +347,16 @@ task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
 robot = "{d['robot_spec']['name']}"
 family = "{fam}"
-tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
+mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
+oracle = "none"
+oracle_evidence = {json.dumps(oracle_evidence(slug, "privileged"))}
 {level}instance_seed = {seed}                 # scene = environment/instance.json (variation {variation}, eval index {ei}); identity = dataset.toml digest
 expert_time_estimate_hours = {hours}
 
 [verifier]
 timeout_sec = {float(vt)}
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"
 
 [agent]
 timeout_sec = {float(BUDGET_S)}             # Agent wall-clock budget; verifier has its own budget
@@ -374,8 +401,8 @@ def main() -> None:
     import re
     if not re.fullmatch(r"topogym-[a-z0-9-]+", slug):
         ap.error("invalid task slug")
-    dst = a.tasks_root.resolve() / slug
-    for d in ("environment", "tests", "solution"):
+    dst = a.tasks_root.resolve() / f"{slug}-privileged"
+    for d in ("environment", "tests") + (("solution",) if a.oracle else ()):   # no reference solution: no solution/ (oracle = "none")
         (dst / d).mkdir(parents=True, exist_ok=True)
     if dst != TEMPLATE:
         for f in SHARED:
@@ -423,15 +450,13 @@ def main() -> None:
                  "set -e\nmkdir -p /app/output\n"
                  f"python /opt/tools/rcb_topogym.py run-oracle --task {fam} --instance /app/instance.json --code /solution/oracle_{fam}.py --out /app/output/trajectory.npz\n"
                  f"cp /solution/oracle_{fam}.py /app/output/gen.py\n")
-    else:   # no reference solution: the oracle agent says so and scores 0
-        solve = (f"#!/bin/bash\n# No reference solution for this family yet: the oracle agent scores 0.\necho 'no reference solution for {fam}' >&2\nexit 1\n")
-    (dst / "solution/solve.sh").write_text(solve); (dst / "solution/solve.sh").chmod(0o755)
+        (dst / "solution/solve.sh").write_text(solve); (dst / "solution/solve.sh").chmod(0o755)
     (dst / "tests/test.sh").write_text(
         "#!/bin/bash\n# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.\n"
-        "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/rcb/PROTOCOL.md).\nmkdir -p /logs/verifier\n"
+        "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/rcb/PROTOCOL.md).\n"
         "# Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent\n"
         "# left there (a planted reward, a symlink) can count. rm never follows symlinks.\n"
-        "find /logs/verifier -mindepth 1 -maxdepth 1 ! -name test-stdout.txt -exec rm -rf {} +\n"
+        "rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb/PROTOCOL.md §2.6)\nmkdir -p /logs/verifier\n"
         f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
         "  2> /logs/verifier/grade.log\n")
     (dst / "tests/test.sh").chmod(0o755)
@@ -444,7 +469,9 @@ def main() -> None:
     (dst / "README.md").write_text(readme(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle),
                                           success_rule_of(inst), inst))
     (dst / "task.toml").write_text(task_toml(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], hours, tier_of(inst), inst))
-    print("generated", slug, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
+    from task_conventions import normalize
+    normalize(dst)                        # protocol v1.0: fields, protocol spelling, test.sh, graders, README layout
+    print("generated", dst.name, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
 
 
 if __name__ == "__main__":
