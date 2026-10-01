@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write per-task agent results into the task directory: tasks/<task>/results/<agent-slug>/README.md (+ replay.mp4,
+"""Write per-task agent results into the task directory: tasks/<task>/results/<run id>/README.md (+ replay.mp4,
 replay.last.png). One folder per agent+model; unlimited and limited twins each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <agent-slug> "<agent label>" [--analysis <make_two_mode_report_zh.py>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast

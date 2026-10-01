@@ -1,0 +1,8 @@
+{
+ "task": "place_cans_plasticbox",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "77382360a103",
+ "text": "Use dual arm to pick and place cans into plasticbox.",
+ "n_active_joints": 16
+}

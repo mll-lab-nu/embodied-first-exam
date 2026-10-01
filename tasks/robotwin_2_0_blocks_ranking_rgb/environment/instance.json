@@ -1,0 +1,8 @@
+{
+ "task": "blocks_ranking_rgb",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "6765cfe55645",
+ "text": "Place the red block, green block, and blue block in the order of red, green, and blue from left to right, placing in a row.",
+ "n_active_joints": 16
+}
