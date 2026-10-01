@@ -17,22 +17,24 @@ multi-object manipulation, geometric and dynamic constraints.
 
 | family | challenge | the robot must | positive example |
 |---|---|---|---|
-| tossing | dynamic | get a cube over a wall that spans the room, into a bin | Luna, privileged |
-| balance-beam | tool, dynamic | put three cubes on a seesaw's marked region, level within 5° | Luna, privileged |
-| dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes |
+| tossing | dynamic | get a cube over a wall that spans the room, into a bin | Luna, privileged only |
+| balance-beam | tool, dynamic | put three cubes on a seesaw's marked region, level within 5° | Luna, privileged only |
+| dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes; Luna, both |
 | sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | none known |
 | scoop-pour | nonprehensile, tool, dynamic | move 30 cubes between bins with a scoop | none known |
-| shelf | spatial, geometric | two cubes into a cramped cupboard's top compartment | Luna, privileged |
-| constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged |
-| sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, standard (50 resets) |
-| sort-blocks | spatial | four cubes into the bins of their colours | Luna, privileged |
-| obstruction-3d (PyBullet) | geometric | clear a pad of three blocks, place a block on it | Luna, privileged |
-| packing-3d (PyBullet) | geometric | pack three flat parts into a tray | Luna, privileged |
+| shelf | spatial, geometric | two cubes into a cramped cupboard's top compartment | Luna, privileged only |
+| constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
+| sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, standard (50 resets): both |
+| sort-blocks | spatial | four cubes into the bins of their colours | Luna, both |
+| obstruction-3d (PyBullet) | geometric | clear a pad of three blocks, place a block on it | Luna, privileged: both |
+| packing-3d (PyBullet) | geometric | pack three flat parts into a tray | Luna, both |
 
 Why these: the first six are the Dynamic3D tasks where physics decides the outcome and a camera can see the goal or a
 sentence can name it; the other five are what a screening of every other family (09-29, GPT-6 Luna once per mode) left
-unsolved in standard mode. Per-task reasoning: `scripts/kinder/subset.toml`. A positive example is kept in the task's
-`results/` and scores 1 under the current verifiers (privileged replay, and sent through the standard client).
+unsolved in standard mode. Per-task reasoning: `scripts/kinder/subset.toml`. Positive examples are kept in the tasks'
+`results/`; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
+standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
+mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).
 
 ## Modes
 
@@ -71,6 +73,8 @@ ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:$(cat images/kinder/VERS
 |---|---|---|
 | 7/10 | 0/10 | 3/10 (sweep-simple, sort-blocks, packing-3d) |
 
-Scored tasks only (dynamo is the fixture). Per run: `tasks/<task>/results/codex-gpt6_luna-medium/`. Without resets the
-nine MuJoCo runs used up the 1000 control steps after 6–46 min while still finding things; with resets, the passes
-calibrated over earlier episodes and then replayed a script (or packed the tray in their first episode).
+Scored tasks only (dynamo is the fixture). Per run: `tasks/<task>/results/codex-gpt6_luna-medium/` (standard runs
+before v1.0 under `prev_rcb_limited_1_1*/`). Without resets the nine MuJoCo runs used up the 1000 control steps after
+6–46 min while still finding things; with resets, the passes calibrated over earlier episodes and then replayed a script
+(or packed the tray in their first episode). Under protocol v1.0 (Harbor's own Codex agent) only the fixture has run so
+far: dynamo passed in both modes, the standard one in its only episode, through a sidecar crash and resume.

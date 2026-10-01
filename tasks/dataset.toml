@@ -593,19 +593,19 @@ digest = "sha256:3f264f6de85f83cf201f5618728d2a613144b9bfca1456bbd3842dc3be2ed51
 
 [[tasks]]
 name = "robot-coding-bench/kinder-balance-beam-i00"
-digest = "sha256:7b021f694f065194d274c3e24ec1c46f06c0785291b5f6b0f1a493a7f0a7bc68"
+digest = "sha256:61a4d734cfee0ad38e75978d5298ca27d432030ff6983bb7b479910dc1fc8632"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-balance-beam-i00-standard"
-digest = "sha256:fce52fe1ed9cf07dfde3f2b5991115e1f399e5e2b9bc51865f37692eccc470b5"
+digest = "sha256:32f18d60e6fc828dec464c74e457229e1f30f02efaee3ffbbe7530e839b20812"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-constrained-cupboard-i00"
-digest = "sha256:b0e3f8244009d80f7851bb245076740711567bf551f0beae6c7d962a7f19c7ad"
+digest = "sha256:2e0bf965eef8673d657660730d5320cb9317349743ac028bb5b05e67f548983b"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-constrained-cupboard-i00-standard"
-digest = "sha256:9f7310b9f42d73cb8fd6d8f3dc5edbfc9192adff87e548284fdf7809ba16adf0"
+digest = "sha256:a02b1fa15f033edb7bf59a1d3c4485f0ab4f1d6221082bda7f33304f6dc13d82"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-dynamo-i00"
@@ -617,19 +617,19 @@ digest = "sha256:2d9a267261162f907415ace6c3ceab772f111a656c322422e505eb1b2427e5a
 
 [[tasks]]
 name = "robot-coding-bench/kinder-obstruction-3d-i00"
-digest = "sha256:385da1d9f4bafc85b1cd3a182642f20597c4ce9b9346bec9fcb0c56583ef4d6a"
+digest = "sha256:bc8793ac4bc5fcf0e924563ab76177a4575a33f204b6175d03a5c1c4ecad75ef"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-obstruction-3d-i00-standard"
-digest = "sha256:726896d6534ee2c25eaa9d5641cf272ee9957b26a59950bd2a5b25b0a884f1b4"
+digest = "sha256:706878ec3f4b0d592f0b8c50ffcce8706521550c55dec32e140012ef43b00a03"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-packing-3d-i00"
-digest = "sha256:a0b257b79fac0207e51e72a00bfcac6fdf673f243c4173366190e23be39c4b10"
+digest = "sha256:28841f1dc76c5755f4f1fd341831efd986d5e1382811ce517d6c316d968ab146"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-packing-3d-i00-standard"
-digest = "sha256:c5329f10cfb17a31f4e8d4b0b8674f14657051cabb154b87ccbb185ca55df523"
+digest = "sha256:1049d2f4e6a9b7867e82e2713461d9d37596aa5ca7cc894f9bc5cb5ab6574aef"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-scoop-pour-i00"
@@ -641,19 +641,19 @@ digest = "sha256:8638966de1b76abf8f5781698dbd05de64d945d9b5f48d062567895e962e25d
 
 [[tasks]]
 name = "robot-coding-bench/kinder-shelf-i00"
-digest = "sha256:febf857273d250ed90a92667702ba3353444a3ac14848b3977997bc7ee584152"
+digest = "sha256:f5de6b3ac8dd768b1e0a29e6b29b78e16a7332ab7c8164be8f41bcb50b543261"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-shelf-i00-standard"
-digest = "sha256:2cce07ebc807b872225d8e52c21e2d4c50cc7a1c50cc40b09464bb0b0ba6df29"
+digest = "sha256:634f0695fa4fd5a7ef7b913bfb6ea9684786fb98c8d2f3861be343c6b7c86bd7"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sort-blocks-i00"
-digest = "sha256:d9622613dda4081c5fc8caa90042b26be07fcfe7a1d9868de4d5f85893eba185"
+digest = "sha256:6554a1374d040dbeaf92db1fc9ffe4b63e4e353c5aea590a3a44c62b1f153248"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sort-blocks-i00-standard"
-digest = "sha256:2f3ab37cfdebe2601287443ff807f3e4a426696ce5091c2d81d62a9cebb510d2"
+digest = "sha256:4d056947d9f3d069c68bcf1e3ac1b067b6e5206342a9f7fc9ad823409a7b4f51"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-into-drawer-i00"
@@ -665,17 +665,17 @@ digest = "sha256:f5693bd18eb6d1046cd05c2b11e87d3112415369b4a6c883b08d1f7f70f2c5b
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00"
-digest = "sha256:11af24cc7a7f51f7f5acccfed031b9772a027c9b06e7dd15e54af1161f2f4030"
+digest = "sha256:c3327b46580d58668c7d4cc52f6a49e1594d8fb561841b916b6c2a939c34755a"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00-standard"
-digest = "sha256:5a722d120bd84e77c3edc81148c224b372659b94a4aee65a18348ee2ef68feeb"
+digest = "sha256:3ede53db46cd5322bee0369a5eac72512e6a600730ce8c1e2364cb1c066a1585"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-tossing-i00"
-digest = "sha256:c882eacbb3d6634b39e32e7f69bc138b07331ecab8bdcabdb6d8e4fd45a9be8d"
+digest = "sha256:02a1b1acc2865c919018b25381cc56307ec3f1cdbe9eacd4e7a7f0cf9192fe45"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-tossing-i00-standard"
-digest = "sha256:cf706e81395449ba05b53ae231e446c91cec0aa47138a8a3fdeb1285c22c9ec6"
+digest = "sha256:ced8b16385b1053b3286af0e44afa12de7dfc850824b0177fd2b41447168df0c"
 
