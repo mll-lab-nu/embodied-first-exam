@@ -1,0 +1,12 @@
+# MuJoCo physics is CPU-only; the GPU is only for EGL rendering (camera frames, videos). Harbor's local docker
+# sandbox rejects [environment].gpus, so the device is passed through by merging this onto the main service.
+services:
+  main:
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

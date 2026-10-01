@@ -12,6 +12,52 @@ import argparse, json, os, sys, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
+TRACE_DIR = "/app/output/rcb_trace"
+os.environ["RCB_AGENT_TRACE_DIR"] = ""  # the verifier's own sessions must not be traced
+
+
+def render_agent_traces(family: str, instance: str, max_videos: int = 6, budget_s: float = 420.0, sv=None) -> dict:
+    """Reconstruct videos of the agent's own rollouts from its self-reported traces (never affects the verdict).
+    Writes /logs/verifier/agent_sessions/index.json (every trace) and NN_<name>.mp4 for the last `max_videos`
+    rollouts (kind == rollout, >= 50 steps). A trace replays exactly only if the agent drove the robot through the
+    physics-step hook; objects teleported via exec_code will not match."""
+    import glob, time as _t
+    out = {"agent_traces": 0, "agent_trace_steps": 0, "agent_trace_videos": 0}
+    files = sorted(glob.glob(os.path.join(TRACE_DIR, "*.npz")), key=lambda f: os.path.getmtime(f))[:2000]
+    if not files: return out
+    od = os.path.join(LOG_DIR, "agent_sessions"); os.makedirs(od, exist_ok=True)
+    idx = []
+    for f in files:
+        try:
+            d = np.load(f, allow_pickle=False); A = d["actions"]
+            if A.ndim != 2 or A.shape[0] > 400_000 or not np.all(np.isfinite(A)): continue
+            idx.append({"file": os.path.basename(f), "task": str(d["task"]), "seed": int(d["seed"]), "kind": str(d["kind"]), "steps": int(A.shape[0]),
+                        "t_start": float(d["t_start"]), "t_end": float(d["t_end"]), "success": bool(d["success"])})
+        except Exception:  # noqa: BLE001
+            continue
+    out["agent_traces"] = len(idx); out["agent_trace_steps"] = int(sum(e["steps"] for e in idx))
+    t_first = min((e["t_start"] for e in idx), default=0.0)
+    pick = [e for e in idx if e["kind"] == "rollout" and e["task"] == family and e["steps"] >= 50][-max_videos:]
+    t0 = _t.time()
+    try:
+        from rcb_traj import Session
+        inst = json.load(open(instance))
+        if sv is None: sv = Session(family, instance=instance, enable_render=True)   # reuse the replay-video session: one simulator per process (GPU memory)
+        for k, e in enumerate(pick):
+            if _t.time() - t0 > budget_s: break
+            A = np.load(os.path.join(TRACE_DIR, e["file"]), allow_pickle=False)["actions"].astype(np.float64)
+            sv.seed = e["seed"]; sv.expected_sha = inst.get("state_sha") if e["seed"] == int(inst["seed"]) else None
+            name = f"{k:02d}_{os.path.splitext(e['file'])[0]}.mp4"
+            try:
+                st = sv.render_video(A, os.path.join(od, name), every=max(10, len(A) // 200), fps=25,
+                                     cameras=("observer_camera", "head_camera", "front_camera"), cols=3)
+                e.update(video=name, t_rel_s=round(e["t_start"] - t_first, 1), replay_success=bool(st["success"])); out["agent_trace_videos"] += 1
+            except Exception as exc:  # noqa: BLE001
+                e.update(video=None, error=repr(exc)[:200])
+    except Exception:  # noqa: BLE001
+        traceback.print_exc(file=sys.stderr)
+    json.dump({"self_reported": True, "traces": idx}, open(os.path.join(od, "index.json"), "w"), indent=1)
+    return out
 
 
 def write(ok: bool, out: dict) -> None:
@@ -65,16 +111,23 @@ def main() -> int:
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
-        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
+        write(ok, out)   # the verdict is on disk before any video: a render that hangs past the verifier timeout cannot cost the score
+        # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png, at most ~1500 frames
+        render_sv = None
         if not a.no_video:
             try:
                 s.close()
-                sv = Session(a.family, instance=a.instance, enable_render=True)
-                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=a.video_every, fps=a.video_fps)  # 6-view grid
-                out["video_rendered"] = 1
+                sv = Session(a.family, instance=a.instance, enable_render=True); render_sv = sv
+                every = max(a.video_every, -(-len(acts) // 1500))
+                sv.render_video(acts, os.path.join(LOG_DIR, "replay.mp4"), every=every, fps=a.video_fps)  # 6-view grid
+                out["video_rendered"] = 1; write(ok, out)
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
-        write(ok, out)
+        if not a.no_video:  # after the verdict is on disk: reconstruct the agent's own rollouts (self-reported, may be slow)
+            try:
+                out.update(render_agent_traces(a.family, a.instance, sv=render_sv)); write(ok, out)
+            except Exception:  # noqa: BLE001
+                traceback.print_exc(file=sys.stderr)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         write(False, {"success": 0, "grader_error": 1})

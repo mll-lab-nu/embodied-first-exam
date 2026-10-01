@@ -5,12 +5,18 @@ artifacts = [
   { source = "/data/trajectory.npz", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/live.mp4", service = "sim" },
+  { source = "/data/live_timeline.jsonl", service = "sim" },
+  { source = "/data/live_segments.jsonl", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/robotwin_2_0_place_object_basket-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/1.0): RoboTwin 2.0 place_object_basket on the same frozen instance as the unlimited task (seed 60417). Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away. The agent only gets a client: observe (RGB + proprioception), step (qpos or ee action). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.1): RoboTwin 2.0 place_object_basket on the same frozen instance as the unlimited task (seed 60417). Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "limited-mode", "trajectory", "place_object_basket"]
 
@@ -22,7 +28,7 @@ robot = "aloha-agilex"
 family = "place_object_basket"
 tier = "perception"                # RGB + proprioception only; no object poses, no check_success, no reset
 mode = "limited"
-protocol = "rcb-limited/1.0"
+protocol = "rcb-limited/2.1"
 instance_seed = 60417
 expert_time_estimate_hours = 2.0
 
@@ -33,7 +39,7 @@ network_mode = "no-network"
 
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 280); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; sleep 2; done; cat /data/final.json"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]

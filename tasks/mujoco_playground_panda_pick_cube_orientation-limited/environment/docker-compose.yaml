@@ -1,0 +1,25 @@
+# Limited mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/jameskrw/rcb-mujoco:0.1.2
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /srv
+    command: python /srv/server_mj.py
+    restart: on-failure:6
+    environment:
+      RCB_TOOL: rcb_panda
+      RCB_INSTANCE: /srv/instance.json
+      PYTHONPATH: /srv
+      RCB_MJ_ROOT: /opt/rcb_mj
+    shm_size: "4gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
