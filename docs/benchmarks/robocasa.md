@@ -6,7 +6,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | | |
 |---|---|
 | upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa-<task>-i00` (privileged) and `tasks/robocasa-<task>-i00-standard` (standard), 29 each |
+| tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"` (to be added to TAXONOMY), `family = "robocasa/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
@@ -82,7 +82,7 @@ RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its as
 ```bash
 docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:$(cat images/robocasa/VERSION) images/robocasa
 bash scripts/robocasa/import_references.sh <PR #4 checkout>   # instances + references -> scripts/robocasa/frozen/
-python3 scripts/robocasa/generate.py                            # -> tasks/robocasa-* ; re-running reproduces them
+python3 scripts/robocasa/generate.py                            # -> tasks/robocasa-* (ends with scripts/task_conventions.py normalize); re-running reproduces them
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/robocasa-*
 ```
@@ -94,3 +94,8 @@ demonstration's initial state, execute its actions with the native controller, v
 `scripts/robocasa/frozen/report.json`, for all 29: not solved at the start; `reset()` bit-exact; the reference
 (87–1007 actions) succeeds on its final state without truncation; two replays in fresh processes end in the live
 state's hash and succeed; the success survives 10 more still steps.
+
+Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a oracle` 29/29 privileged and 6/6 standard
+score 1; `-a nop` scores 0 on four tasks per mode; on the final task digests (protocol v1.0.1 names and READMEs) oracle
+and nop again on a sample. Scripted cheat attempts and two Codex red-team trials score 0. Agent results are not kept in
+the repository (PROTOCOL D3).

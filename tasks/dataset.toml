@@ -2158,234 +2158,234 @@ name = "robot-coding-bench/robowits-stand-pages-i00-standard"
 digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd624521446764"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-arrange-vegetables-i00"
-digest = "sha256:c8a5ebad65651ee7214f0c1bfb7f7f9564e8703001b6e5f76acb4f0a1d8924fb"
+name = "robot-coding-bench/robocasa-arrange-vegetables-i00-privileged"
+digest = "sha256:d9217b0c0d186cf583086a220a93774d5228f9e79159285097028a28baf0b261"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-arrange-vegetables-i00-standard"
-digest = "sha256:3b4b2acb52e7aaff8546acfd2ef5caa3610e29cf1a386144eb8d617b63f0bfa4"
+digest = "sha256:1b8f3afdf8c717d6b965a4975e5695e6c9f4d993b2fd6c7482a03b83bb7dc602"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-close-double-door-i00"
-digest = "sha256:ece440b767cbcdcddd8d4302d6cc317b0f5f6a68d7a7bed7a65ff68d5ccbeca1"
+name = "robot-coding-bench/robocasa-close-double-door-i00-privileged"
+digest = "sha256:3afbd6a819d36bc03c383a8cc0bc0d9539d878bedfd6c92c657244ea4599c01f"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-close-double-door-i00-standard"
-digest = "sha256:a06f4d48e8a9b2bf97d7a6db2b48e2d1af76effed1309eff8e35aa0d4034b545"
+digest = "sha256:fc9cc60926ca48f2a98695ff78e46353d4a1f2cb004f516320f1d58610ad65e2"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-close-drawer-i00"
-digest = "sha256:107a53211e6e4bf4d1da16162303c860bee813a8bc1a3ad67cf1cabe7f846a25"
+name = "robot-coding-bench/robocasa-close-drawer-i00-privileged"
+digest = "sha256:7db82788c1f679ec43d2da958954038e5f898b4f11f0347d11debab64e67f229"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-close-drawer-i00-standard"
-digest = "sha256:65017b00d42d2865afc5552d486b1f15ecfb5a2dc6e7b0f4eef6b9165d72a6dc"
+digest = "sha256:b681e9ff864a4efb091616a97b3c0cf5a3b909c3d4e442e829d4fa5291febdaf"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-close-single-door-i00"
-digest = "sha256:f10c032466504bcf830bc89b8e3d7dbcb8dcf8a19d3e51aeb1c83744bb77907b"
+name = "robot-coding-bench/robocasa-close-single-door-i00-privileged"
+digest = "sha256:adb9d186cc29186e5c2c6d9601c43b47247c98ab631132416fe899f158a4b5c5"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-close-single-door-i00-standard"
-digest = "sha256:a30269b74a56499ed4cc7e798e729114a629ccbeb0660658900afb756514f487"
+digest = "sha256:9d828d3dc6c9662459975b654384e45bf9fc0cfc62cd50c52bc8fd4b32668ce5"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-coffee-press-button-i00"
-digest = "sha256:0369380fb96cf0f83d12e39c143901748f9e62d317123c3917d8fa035267bb1f"
+name = "robot-coding-bench/robocasa-coffee-press-button-i00-privileged"
+digest = "sha256:cd2b979ebbd82bd7bf6e971b749ff1ce08256ab26f461d79eefb7ee1ecd3f48a"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-coffee-press-button-i00-standard"
-digest = "sha256:3b94c9be404888df92c3a7e02988433636c0f0035a5555b6131aa02f49d17b27"
+digest = "sha256:fd9acb5999472d513b0b9e5c6c705a5d8ab942e362f2641860d37191af3c1e9a"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-coffee-serve-mug-i00"
-digest = "sha256:0604f0730491163b2ea94f8185758b597948e810cc8a1e4331f778fd0af70dff"
+name = "robot-coding-bench/robocasa-coffee-serve-mug-i00-privileged"
+digest = "sha256:57c1ff6bd3bd7d9a1398d24fa095b43a86058db3e736aa0470ed55dcc7e0be55"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-coffee-serve-mug-i00-standard"
-digest = "sha256:290f23a031a1c5414bf381c90099c8b05cb59d3748aeea604d798042d709585e"
+digest = "sha256:0d3b06959161f9757814d21163a2ada0539de53b4048265af1d2d7f0a76fea43"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-coffee-setup-mug-i00"
-digest = "sha256:be4e0764f63236e80cc4b7a955bdfd89f61633a36a31d72b6cf3be7680d7d2df"
+name = "robot-coding-bench/robocasa-coffee-setup-mug-i00-privileged"
+digest = "sha256:5b3a0e9c019ee6d5bc147620befa306de155607d1cd5166fababa648fc270ad0"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-coffee-setup-mug-i00-standard"
-digest = "sha256:67c0ae9df1b81a1cb0407073b4494347cdb105bb4567b967f9c34f04adc67eac"
+digest = "sha256:7dc54ced8ae83e747176df4f2e9390cc4aec56ca649fffa0bd3c5a3136f1fbb4"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-microwave-thawing-i00"
-digest = "sha256:bc3ce716eba286b55512a70ca2dfbb30b7cc0fd3a85c517e0f20265a546fb324"
+name = "robot-coding-bench/robocasa-microwave-thawing-i00-privileged"
+digest = "sha256:3963af6818e6f39f6b167053d9ce6113cdeb33cee678724a311910231883bfa9"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-microwave-thawing-i00-standard"
-digest = "sha256:02906d9bfc5acb4b9fe553ed0e32b344b4b75324dd347f0d6309f9538a3b2af5"
+digest = "sha256:fdfaacbf4706ba08c748bf64358123f4b319ff6f2c144f6e1c7206423be641a8"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-open-double-door-i00"
-digest = "sha256:1313719acff2e8ecdd2cad86901069c9c3248fafa867323107a12f2ba6577f23"
+name = "robot-coding-bench/robocasa-open-double-door-i00-privileged"
+digest = "sha256:1e95962263fa342a07353de75971b7d1852336dda927760863fb2c201742c1fd"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-open-double-door-i00-standard"
-digest = "sha256:6af83c5570e3df1dfdaf063bac0f3a7b4e3c04a39b5656aed9ad3190a2d64e74"
+digest = "sha256:fc9d58820b0cc2b209dc8f47cdf639e07eeafe9a915e1cff34d80d97e35b3fb8"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-open-drawer-i00"
-digest = "sha256:8b4bc3bc152f4f3143d9e01288d88b96fabc90804165239e0753c6e83ae44c63"
+name = "robot-coding-bench/robocasa-open-drawer-i00-privileged"
+digest = "sha256:8ecce8a173f163c6beeeb8e168da551c675964cb32ca62ada8d63c8f20355f77"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-open-drawer-i00-standard"
-digest = "sha256:548aaf8b68bb2ac5c32ca020b39f117a62575c1235c2c6fd2de362061595de49"
+digest = "sha256:4a40ebefce1723495af343424b94bcfc553387870aa6dd07d97ea8f2630dbc6f"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-open-single-door-i00"
-digest = "sha256:23ea163f6ed6096856a1437c56a998367d025641e67ca4775d8e1e81a2a2235e"
+name = "robot-coding-bench/robocasa-open-single-door-i00-privileged"
+digest = "sha256:3dee243d4f88af47870d8694534f638edb62df21a3a8807c8979a32c63094514"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-open-single-door-i00-standard"
-digest = "sha256:fe375be183e2c646759c748838365a0b8fe4da0e1faab8a92f2f4fde55e572cf"
+digest = "sha256:3d4bbde97cb41c348f8ce1a78773e502d1685e5e716714907193e4e7ae6c2291"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-cab-to-counter-i00"
-digest = "sha256:6ed579f68c350728d2db0e5cb0234189245a58ca25f317b5a221e0475770dd7c"
+name = "robot-coding-bench/robocasa-pnp-cab-to-counter-i00-privileged"
+digest = "sha256:12dc22aee62e7f74a964aae26589db0648058515e5da74e4c7b0da7535b21f21"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-cab-to-counter-i00-standard"
-digest = "sha256:92f51a5d08d9852ced1016c74950dd34ad732e7ebda98bd28cddf349268e0298"
+digest = "sha256:f60789437df1af2f1577bf1b0197f52217e4f4967082082bbb4fe351ff6d6a15"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-counter-to-cab-i00"
-digest = "sha256:aaf17ca8200b7258d700ca56e175274c7f36799a1b6d4be49ee8857d79186a75"
+name = "robot-coding-bench/robocasa-pnp-counter-to-cab-i00-privileged"
+digest = "sha256:3fb6b03f4ab73e33c4bbbcd85f9a5b889f07943c654d0f4f849b9c4cabe7491d"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-counter-to-cab-i00-standard"
-digest = "sha256:ead252a6cc0063a317410f969344e5672c621a0f18f74501ead67502286dafa5"
+digest = "sha256:498a14d3b194e9c3ba4ca2cbf7e8557a092aca035bc96fb9346c9028dd1b2617"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-counter-to-microwave-i00"
-digest = "sha256:f08885fecaa89d261e2da84ec0930d3d569c8921b0a2532f04675c705681c981"
+name = "robot-coding-bench/robocasa-pnp-counter-to-microwave-i00-privileged"
+digest = "sha256:d80f97dd39e998cd55005e756884df0a6814694a8ec5fc43b65517522ff6b4a0"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-counter-to-microwave-i00-standard"
-digest = "sha256:d3a45a28e27ffbf9e15d9fdb004661454e9df1adb8504c9589574217b7cadf44"
+digest = "sha256:8124b3b6e30f7ac9b229f1da42e635e224267a6273c7fa6651752bd79b0236ea"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-counter-to-sink-i00"
-digest = "sha256:413960de0d0779eb12a539ca3a83df9e3e28a0e224b68194c6b95729544e1c48"
+name = "robot-coding-bench/robocasa-pnp-counter-to-sink-i00-privileged"
+digest = "sha256:667032e5af14e54af99b8f15abaab2392e8b88c6267cfbee962a11425712d615"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-counter-to-sink-i00-standard"
-digest = "sha256:33a428c4ac00e529294dce9de31ac7969224381adf3c2bf5576a5879a193afe4"
+digest = "sha256:5b04d8e160bd5e4fd6cc1a9c1d8a72bc84dc32beb6b94b5e06e820244df1b8c4"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-counter-to-stove-i00"
-digest = "sha256:015c040acfb30f8845cfc96c9e64fa1399be86119b921b6b86a08faa63763d53"
+name = "robot-coding-bench/robocasa-pnp-counter-to-stove-i00-privileged"
+digest = "sha256:c271c74a8b7169416789499d738262e57dadf4221b2a34b78f75199f89a82b53"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-counter-to-stove-i00-standard"
-digest = "sha256:0d988ef15b5bd383c9505710cca02d2d15c67fc95eefae0786ec7a1ee8b697b4"
+digest = "sha256:4961b282b43c2a012b54066e9f6f10857c99a405f22bb4998eb51eaa2fc7a5a7"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-microwave-to-counter-i00"
-digest = "sha256:58b92c69b07455dc5d75e59856cf823ee815f1392b12a0635218ad0fed46661f"
+name = "robot-coding-bench/robocasa-pnp-microwave-to-counter-i00-privileged"
+digest = "sha256:37039324ff8393ffe35c08e55d46c5b2612345ab59a6dd18cac47a970d11c7c9"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-microwave-to-counter-i00-standard"
-digest = "sha256:34d5375867d81cd14216b83b5f9b20078c394373ecc78be65b6dfc11119b235c"
+digest = "sha256:4b92e46c11a7d5589f01576a4c50b5d307af3a45a40b8f31d847445129f751d0"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00"
-digest = "sha256:d064d538494641bb10b1d850e4e67bb2ff083556e9571a63028fa78e7dd0a93a"
+name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00-privileged"
+digest = "sha256:97430b02d44eae036ff624869434e0c4101199f0c4d99ec7a61a1c13c1badcbf"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00-standard"
-digest = "sha256:e34ac7d9f1a061a79a59c9ba2e987b53fe4cf5135e1261ec00abd7f741880251"
+digest = "sha256:2471a8cd965b990150617f1494d53cd728583e6d8438109322d4477d8ae035fa"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pnp-stove-to-counter-i00"
-digest = "sha256:2db41333d7f8a9aaa2840a8c838fe58ec3fc0ee7c4fa57321389fc6e7fbdc015"
+name = "robot-coding-bench/robocasa-pnp-stove-to-counter-i00-privileged"
+digest = "sha256:12b3590f6c4739e6c4ff20c98d0c0f99ebf7526f099ea8fa29a5cda7f1024d59"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pnp-stove-to-counter-i00-standard"
-digest = "sha256:e4e18e2bf3739189dd2a7a43d694239d04401293fa2a118add6247a9fa850f9e"
+digest = "sha256:41c46ac93be0cde8bb562e246807fe2a0d913d7be25f685b2b3f4aef6b5e3e1f"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-pre-soak-pan-i00"
-digest = "sha256:1cfbab1671f4c38486c4999e104d457c386a80e336f119f64b53756cb16900b3"
+name = "robot-coding-bench/robocasa-pre-soak-pan-i00-privileged"
+digest = "sha256:8a3067b211780ae2a2f2f60d52a38180d6bac84f5715277ed3bfdd9294fb4a03"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-pre-soak-pan-i00-standard"
-digest = "sha256:4deef40104195472f95da5af29781c858921594b60a650faad548ca607481af0"
+digest = "sha256:601ef5fc072df8a3ef390cb26c19dc8fb778c9d580072d5155fb81df21bc55c1"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-prepare-coffee-i00"
-digest = "sha256:01a97fd52cf65fdc7b8842b5f22ab8dc52fcbae5be7ee13a2b8294ba833d8664"
+name = "robot-coding-bench/robocasa-prepare-coffee-i00-privileged"
+digest = "sha256:467fc94e5f393ffbc047299136972ee75abdaf7104d28a8375a5414e90ed4798"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-prepare-coffee-i00-standard"
-digest = "sha256:45041cbd8c199067dede9f5db4cbfb2eba512900ae333998d7bb3f08eb17290a"
+digest = "sha256:824ab674652d18c8819dfc3cfbad8f8cf9f313907c11b568325149a780ab878e"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-restock-pantry-i00"
-digest = "sha256:d1cf99b1615ffd784e3e8786b81e87a23487634d213562c79a1bddcfa5b4a45d"
+name = "robot-coding-bench/robocasa-restock-pantry-i00-privileged"
+digest = "sha256:13402110a1e952ec614c9f94e36f343b9832aafa254e20fd8c6410ba7ba9c25e"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-restock-pantry-i00-standard"
-digest = "sha256:7e3e28a13108a05315b8da4f6c96c4421b732c77de5382e89a7e5f01009a61f0"
+digest = "sha256:43f216b51589206c61cf0ebbb57d553607da027ed106c7941c8c8601bdc1795e"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-off-microwave-i00"
-digest = "sha256:7613cb71d39bffaa04d75c35fa37ff556847d848bb90287f763bea32db8cc951"
+name = "robot-coding-bench/robocasa-turn-off-microwave-i00-privileged"
+digest = "sha256:d44d21998c9b28af013b92cb3005ef91cf59c0f4206a5e98bb36ef98f06f6023"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-off-microwave-i00-standard"
-digest = "sha256:a5b5c4debc6f4b0bcca2d9f5843efd4a46ad602beae96eda22430b540cb72b7b"
+digest = "sha256:15af84b3e50a747267e8295f31bf94e2ca293a0d2a5a369f787cd849b038ad69"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-off-sink-faucet-i00"
-digest = "sha256:6a03545365c1cfa0b72ccdf44cb86194919f9316c1b57a04c2ab5201a60293d0"
+name = "robot-coding-bench/robocasa-turn-off-sink-faucet-i00-privileged"
+digest = "sha256:b0759f1a68f63cb7bb2207fbecaeb70bcd6888ad908aec702de983b2d6e3cf18"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-off-sink-faucet-i00-standard"
-digest = "sha256:7d8c099ec24a7e53ea881299c676653fe3614a3d59cafc40538cd6854fdd028d"
+digest = "sha256:d7cb5cf02adac78b47cb550a420d7b81c27c96f009d7ed4aed0c4cd3926718de"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-off-stove-i00"
-digest = "sha256:7248762e0fccd901d0af4fc37168c6df7bb7fbe15bc3924486f4a6d7324ed4c4"
+name = "robot-coding-bench/robocasa-turn-off-stove-i00-privileged"
+digest = "sha256:525b5b64e4774270c60a22cd2d603da96adc09f2638ccfe02de025fd72575b73"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-off-stove-i00-standard"
-digest = "sha256:321cf604e30587d984795b2e0cd9ccdfac8e26ef8d0b2d0a82c9a8410068dacd"
+digest = "sha256:b554ce2c778b71bbf49b955ec247614376c00de34f8594d2b8c4c40785cf17aa"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-on-microwave-i00"
-digest = "sha256:36d1e9c2ed73522c8eabd8f61f024a97d221371cd213adc88dfb03a4a668560b"
+name = "robot-coding-bench/robocasa-turn-on-microwave-i00-privileged"
+digest = "sha256:7bb76826994faca1c292f3751572f601c9ec9224dbe00559b4fa7eea83b514e1"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-on-microwave-i00-standard"
-digest = "sha256:15ee8234ceaa28b6dea0b8f6b519206b0e22d7232804bd3a84c062fe80994105"
+digest = "sha256:08a9f2b822b8b55e1b2e646626c482153c56ccf2989ef6611f152077e024fcfa"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-on-sink-faucet-i00"
-digest = "sha256:75be720ae7eede5b3dbc6ccbb89fbfdaee793f88b2d06e2bb5166a5668a40249"
+name = "robot-coding-bench/robocasa-turn-on-sink-faucet-i00-privileged"
+digest = "sha256:48b9fdbf49b391be18b23cc6ca6cc90fa16b057144250fa2eba6f16a41924986"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-on-sink-faucet-i00-standard"
-digest = "sha256:53d0e56333dc50c33c7a7b6ca3c0d9967a506625722b0b0a82cba3e717724ebe"
+digest = "sha256:46034e73f41a1a7fc481d931a5c506b48911180dbb0eaf95aec055dc041bfadf"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-on-stove-i00"
-digest = "sha256:2e8728de2a533093d010237ab3b1b63d32e1a8e86a33006067bd870ebddc788f"
+name = "robot-coding-bench/robocasa-turn-on-stove-i00-privileged"
+digest = "sha256:c25c8177fa0560e3bd8d7164b9b22792cb7704f2c8d59957156846435d5f051e"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-on-stove-i00-standard"
-digest = "sha256:e73fccbfe637da78371ab14efec1c6f692e8404b172fd60bac0ed6d7dfc9776d"
+digest = "sha256:60acc2ccbf3cc8e161b0010235e2748c4e14525560a2687643454966ee55b0ed"
 
 [[tasks]]
-name = "robot-coding-bench/robocasa-turn-sink-spout-i00"
-digest = "sha256:452bcb8a22200c0c90650b7f35621da1d89b222489b21e0d37cb4bf9f8bfe652"
+name = "robot-coding-bench/robocasa-turn-sink-spout-i00-privileged"
+digest = "sha256:12030b33e2e768a14c773023e884d25535e8704400c461e1c59ffdfe3b22e5fa"
 
 [[tasks]]
 name = "robot-coding-bench/robocasa-turn-sink-spout-i00-standard"
-digest = "sha256:240e3a76d1996309250d1effc719b9cf3b70bf408af43eb87e9371779b01f72f"
+digest = "sha256:b169bb91cd8175baf21088aedb0a7afc7544337db25007984c84f124e0aa8850"
 
