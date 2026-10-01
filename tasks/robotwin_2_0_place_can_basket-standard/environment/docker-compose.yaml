@@ -1,0 +1,25 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/jameskrw/rcb-robotwin:0.1.1
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /opt/RoboTwin
+    command: python /srv/server.py
+    restart: on-failure:6          # a crash retries; mid-episode the service resumes the same episode from its journal (never a reset; server.py)
+    environment:
+      RCB_TASK: place_can_basket
+      RCB_INSTANCE: /srv/instance.json
+      PYTHONPATH: /srv:/opt/RoboTwin
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

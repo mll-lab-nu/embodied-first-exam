@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the limited-mode twin (<task>-limited) of a MuJoCo task (dextoolbench_*, mujoco_playground_*).
+"""Generate the standard-mode twin (<task>-standard) of a MuJoCo task (<task>-privileged: (dextoolbench_*, mujoco_playground_*).
 
     python3 scripts/mj_mk_limited.py tasks/<unlimited task> [...]     # or: --all
 
@@ -8,9 +8,10 @@ the simulator runs in a `sim` sidecar (rcb-mujoco image) serving images/mujoco/l
 own tooling and frozen instance. The oracle replays the unlimited oracle's targets through the client; the verifier
 grades the sidecar's final.json (a fresh replay of the recorded episode)."""
 import json, pathlib, re, shutil, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-limited"
+RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
 SERVER = ROOT / "images/mujoco/limited/server_mj.py"
 IMAGE = "ghcr.io/jameskrw/rcb-mujoco:0.1.2"
 ALLOW = 'network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
@@ -21,9 +22,9 @@ def tool_of(src: pathlib.Path) -> str:
 
 
 def make(src: pathlib.Path) -> pathlib.Path:
-    name = src.name; dst = ROOT / "tasks" / f"{name}-limited"; tool = tool_of(src); dtb = tool == "rcb_dtb"
+    name = src.name; base = name.removesuffix("-privileged"); dst = ROOT / "tasks" / f"{base}-standard"; tool = tool_of(src); dtb = tool == "rcb_dtb"
     inst = json.load(open(src / "environment/instance.json"))
-    # regenerate everything except results/ (agent results committed per run)
+    # regenerate everything; results/ does not belong in the repository (PROTOCOL D3) and normalize() removes it
     if dst.exists():
         for c in dst.iterdir():
             if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()
@@ -90,6 +91,7 @@ det = bool(d.get("deterministic")); ok = bool(d.get("success")) and det
 out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.get("finalized"))), "control_steps": int(d.get("control_steps") or 0),
        "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
 # no verdict on the agent: the service crashed (restart refused) or its verification replay failed
+out["sim_error"] = int(d.get("reason") == "error")   # the simulator failed during a call (the episode ended there)
 if d.get("infra_error") or d.get("finalize_error"):
     out.update(infra_error=1, grader_error=int(bool(d.get("finalize_error"))), reason=str(d.get("reason") or ""), finalize_error=str(d.get("finalize_error") or "")[:300])
 if "progress" in d:
@@ -123,9 +125,9 @@ print("status:", r.status())
     # task.toml
     u = (src / "task.toml").read_text()
     desc = re.search(r'^description = "(.*)"$', u, re.M).group(1)
-    kw = re.search(r"^keywords = (\[.*\])$", u, re.M).group(1).replace("]", ', "limited-mode"]')
+    kw = re.search(r"^keywords = (\[.*\])$", u, re.M).group(1).replace("]", ', "standard-mode"]')
     meta = re.search(r"\[metadata\]\n(.*?)\n\n", u, re.S).group(1)
-    meta = re.sub(r'^tier = .*$', 'tier = "perception"                # camera RGB-D + proprioception; no object poses, no reset', meta, flags=re.M)
+    meta = re.sub(r'(?m)^(tier|mode|protocol|oracle|oracle_evidence) = .*\n?', '', meta).rstrip('\n')   # normalize() re-derives oracle
     agent_net = ALLOW if dtb else '# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.'
     (dst / "task.toml").write_text(f'''schema_version = "1.3"
 artifacts = [
@@ -139,15 +141,15 @@ artifacts = [
 ]
 
 [task]
-name = "robot-coding-bench/{name}-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.1): {desc} The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+name = "robot-coding-bench/{base}-standard"
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): {desc} The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
 authors = [{{ name = "kangrui" }}]
 keywords = {kw}
 
 [metadata]
 {meta}
-mode = "limited"
-protocol = "rcb-limited/2.1"
+mode = "standard"
+protocol = "eai-standard/2.1"
 
 [verifier]
 timeout_sec = 1200.0
@@ -172,10 +174,11 @@ memory_mb = 16384
 build_timeout_sec = 600.0
 ''')
     (dst / "instruction.md").write_text(instruction(src, inst, tool))
-    (dst / "README.md").write_text(f"# {name}-limited\n\nLimited-mode twin of `{name}` (see its README): the same scene, instance and scoring, served as a robot service "
-                                   f"(`images/mujoco/limited/server_mj.py`, protocol rcb-limited/2.1, tooling `{tool}`). The agent sees camera RGB-D and proprioception only.\n\n"
-                                   "| | |\n|---|---|\n| oracle | `solution/`: the unlimited oracle's recorded targets submitted through the client (one row per control step) |\n"
+    (dst / "README.md").write_text(f"# {base}-standard\n\nStandard-mode twin of `{name}` (see its README): the same scene, instance and scoring, served as a robot service "
+                                   f"(`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `{tool}`). The agent sees camera RGB-D and proprioception only.\n\n"
+                                   "| | |\n|---|---|\n| oracle | `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step) |\n"
                                    "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n")
+    normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 
 
@@ -243,5 +246,5 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    srcs = [p for p in sorted((ROOT / "tasks").glob("*")) if (p.name.startswith("dextoolbench_") or p.name.startswith("mujoco_playground_")) and not p.name.endswith("-limited")] if args == ["--all"] else [pathlib.Path(a) for a in args]
+    srcs = [p for p in sorted((ROOT / "tasks").glob("*")) if (p.name.startswith("dextoolbench_") or p.name.startswith("mujoco_playground_")) and p.name.endswith("-privileged")] if args == ["--all"] else [pathlib.Path(a) for a in args]
     for s in srcs: print(make(s).name)

@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robowits-ball-into-bottle-i00-privileged"
+description = "RoboWits ball_into_bottle (bimanual Marvin, Genesis): produce one replayable trajectory. Transfer the ball from the blue container into the red bottle. Frozen scene instance (RoboWits evaluation scene 0 of task 12)."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "code-as-policy", "trajectory", "ball_into_bottle"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "robowits"            # RoboWits @ 9cc30ae on Genesis 0.4.7 (CPU physics backend, EGL rendering)
+robot = "marvin-bimanual"
+family = "ball_into_bottle"
+mode = "privileged"
+oracle = "none"
+oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-ball-into-bottle-i00__aUXXC4E (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7)."
+instance_seed = 0                 # scene = environment/instance.json (entry 0 of RoboWits' eval_dataset_50/12.json + expected state hash); identity = dataset.toml digest
+expert_time_estimate_hours = 1.0
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 5400.0             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0
