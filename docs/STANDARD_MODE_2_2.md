@@ -248,7 +248,7 @@ their evaluation hosts.
 | RoboWits, particle families | separate_marbles_and_sand, stabilize_bottle | 39–56 min on the CPU backend; ~140 s on the GPU backend | they run on the GPU backend; a CPU-backend build needs `RCB_STARTUP_TIMEOUT_S` ≥ 7200 |
 | RoboLab | 13 (20) | 98–217 s | default enough |
 | BEHAVIOR-1K | 6 (12) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |
-| RoboPaint | 3 (6) | a few seconds after environment setup | default enough |
+| RoboPaint | brush families, 285 standard trials on ws, ws3 and lab (up to 50 at once) | episode start at most 126 s after Harbor's environment setup began (median ~30 s); the Session build alone at most 106 s | `RCB_STARTUP_TIMEOUT_S` = 600 (≥ 4× the slowest start) |
 
 ### 13.5 Cost and tests
 One state hash per call (not per step). A resume replays the episode so far without rendering: RoboWits ~700 steps/s
