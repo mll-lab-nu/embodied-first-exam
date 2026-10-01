@@ -24,3 +24,13 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
 - Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no custom gateways or adapters.
+  Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
+  docs/RUNNING.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
+  are not task code.
+- `eai-standard/2.2` (docs/STANDARD_MODE_2_2.md), served by the BEHAVIOR-1K, RoboLab, RoboWits and RoboPaint standard
+  tasks: its layer (`rcb_limited.py` with crash recovery, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
+  `scripts/eai_standard/` (D9), copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
+  only its adapter `environment/sim/server.py` (`scripts/eai_standard/toy_server.py` is the smallest one).
+  `python3 scripts/eai_standard/selftest.py` tests the crash recovery on the CPU in about two minutes.
+- Benchmark-level rules (templates, generators, budgets, tooling file names, the world-frame and tooling declarations):
+  `docs/benchmarks/<bench>.md`.

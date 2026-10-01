@@ -1,0 +1,174 @@
+{
+ "about": "The recorded oracle runs behind each pair's oracle label (PROTOCOL §2.7; docs/benchmarks/robopaint.md, Oracle evidence). A task is oracle = full only if a recorded oracle run scored 1 on byte-identical grader, frozen instance, tooling and oracle code (lead, 2026-10-01). No recorded run matches the current files, so every pair is partial. The generator writes oracle_evidence from these records.",
+ "label": "partial",
+ "review": "PR #3",
+ "release": {
+  "host": "ws3",
+  "date": "2026-09-28",
+  "jobs": "{family}-{side}-oracle-final0928",
+  "nop_jobs": "{family}-{side}-nop-final0928"
+ },
+ "families": {
+  "kaishu": {
+   "release_commit": "2984b847",
+   "v2": "aaffb039",
+   "v2_pairs": [
+    "tiandaochouqin",
+    "yong"
+   ],
+   "snapshot23": "ccb213d0",
+   "targets": [
+    "ai",
+    "chun",
+    "da",
+    "dao",
+    "de",
+    "feng",
+    "fu",
+    "guo",
+    "he",
+    "houdezaiwu",
+    "hua",
+    "jia",
+    "jiang",
+    "jing",
+    "kou",
+    "le",
+    "lin",
+    "long",
+    "ma",
+    "ming",
+    "ningjingzhiyuan",
+    "qing",
+    "ran",
+    "ren",
+    "shan",
+    "shu",
+    "shui",
+    "tian",
+    "tiandaochouqin",
+    "xin",
+    "yong",
+    "yongzibafa",
+    "yue",
+    "zhong",
+    "zi"
+   ]
+  },
+  "xingshu": {
+   "release_commit": "bfb0246d",
+   "v2": "a67040a8",
+   "v2_pairs": [
+    "tianlangqiqing",
+    "zhi"
+   ],
+   "snapshot23": "ccb213d0",
+   "targets": [
+    "chun",
+    "feng",
+    "he",
+    "huifenghechang",
+    "jian",
+    "maolinxiuzhu",
+    "nian",
+    "ren",
+    "shan",
+    "tianlangqiqing",
+    "tong",
+    "xian",
+    "xin",
+    "yong",
+    "yu",
+    "zhi"
+   ]
+  },
+  "lettering": {
+   "release_commit": "91ab5177",
+   "v2": "0c61185b",
+   "v2_pairs": [
+    "minim",
+    "nun"
+   ],
+   "snapshot23": "ccb213d0",
+   "targets": [
+    "donum",
+    "inunum",
+    "minim",
+    "minimum",
+    "minium",
+    "moon",
+    "nimium",
+    "nun",
+    "omnium",
+    "unpin"
+   ]
+  },
+  "acrylic": {
+   "release_commit": "a1643285",
+   "v2": "8bc4fc0c",
+   "v2_pairs": [
+    "applesoranges",
+    "redfuji"
+   ],
+   "snapshot23": "ccb213d0",
+   "targets": [
+    "applesoranges",
+    "bedroom",
+    "bluehorses",
+    "greatwave",
+    "kajikazawa",
+    "plumpark",
+    "redfuji",
+    "suddenshower",
+    "sunflowers",
+    "vision"
+   ]
+  },
+  "oil": {
+   "release_commit": "99b07cde",
+   "v2": "cc866ac9",
+   "v2_pairs": [
+    "irises",
+    "pearlearring"
+   ],
+   "snapshot23": "cc866ac9",
+   "targets": [
+    "bathers",
+    "cafeterrace",
+    "cypresses",
+    "irises",
+    "milkmaid",
+    "monalisa",
+    "pearlearring",
+    "saintevictoire",
+    "starrynight",
+    "temeraire",
+    "wanderer"
+   ]
+  }
+ },
+ "later_tooling": "the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only",
+ "standard_change": "protocol v1.0 gave the standard service, collect hook, grader and oracle client crash recovery",
+ "p22": {
+  "targets": [
+   "kaishu-ai",
+   "acrylic-applesoranges",
+   "oil-cypresses"
+  ],
+  "host": "ws3",
+  "date": "2026-09-28",
+  "jobs": "p22-{name}-oracle",
+  "nop_jobs": "p22-{name}-nop",
+  "when": "after the 2.2 inputs, before the rated limits"
+ },
+ "v22": {
+  "kaishu-yong": {
+   "mode": "standard",
+   "jobs": "v22-ws3-oracle-kaishu-yong-0418",
+   "nop_jobs": "v22-ws3-nop-kaishu-yong-0419",
+   "host": "ws3 and ws",
+   "date": "2026-09-29",
+   "when": "on files identical to 9eb18edf, before crash recovery"
+  }
+ }
+}

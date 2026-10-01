@@ -1,0 +1,99 @@
+{
+ "task": "putting_shoes_on_rack",
+ "challenge_task": "putting_shoes_on_rack",
+ "instance_id": 301,
+ "mode": "public_test",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "3e19d04d4e1d39e3",
+ "action_dim": 25,
+ "objects": {
+  "sandal.n.01_1": {
+   "category": "sandal",
+   "position": [
+    -0.1224,
+    4.7921,
+    0.0382
+   ],
+   "orientation_xyzw": [
+    -0.0067,
+    -0.0006,
+    0.9835,
+    -0.1806
+   ]
+  },
+  "gym_shoe.n.01_2": {
+   "category": "gym_shoe",
+   "position": [
+    0.4925,
+    4.0214,
+    0.05
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.6182,
+    0.786
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.2027,
+    3.3603,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "hallstand.n.01_1": {
+   "category": "hall_tree",
+   "position": [
+    -1.1915,
+    -0.208,
+    0.9663
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "sandal.n.01_2": {
+   "category": "sandal",
+   "position": [
+    0.6241,
+    3.2343,
+    0.0382
+   ],
+   "orientation_xyzw": [
+    -0.0057,
+    0.0034,
+    0.958,
+    0.2868
+   ]
+  },
+  "gym_shoe.n.01_1": {
+   "category": "gym_shoe",
+   "position": [
+    0.291,
+    3.5143,
+    0.0484
+   ],
+   "orientation_xyzw": [
+    -0.0015,
+    -0.0032,
+    0.1894,
+    0.9819
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2",
+ "challenge_max_steps": 11589,
+ "text": "Put both pairs of shoes on the hall tree in the corridor."
+}
