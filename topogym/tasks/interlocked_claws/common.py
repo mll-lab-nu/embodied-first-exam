@@ -11,6 +11,7 @@ from topogym.tasks.base import EntitySpec, RigidTaskDefinition, TaskSpec
 
 
 class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
+    terminal_revision = "placement_region_v3_grasp_contact_2mm"
     task_id = "interlocked_claws"
     placement_description = 'the entire brown claw piece'
     goal_side = (1, 1)  # +y, the nominal scene's side; pose variation cannot flip it

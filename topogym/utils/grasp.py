@@ -9,6 +9,10 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 
+TASK_CONTACT_PENETRATION_M = .001
+GRASP_CONTACT_PENETRATION_M = .002
+
+
 @dataclass(frozen=True)
 class GraspTarget:
     """Owner-declared spherical grasp region in an authored rigid link frame."""
@@ -77,7 +81,7 @@ class GraspAssistConfig:
     targets: tuple[GraspTarget | SoftGraspTarget, ...] = ()
     stable_time_s: float = .02
     max_tcp_distance_m: float = .06
-    max_penetration_m: float = .002
+    max_penetration_m: float = GRASP_CONTACT_PENETRATION_M
     max_translation_error_m: float = .01
     max_rotation_error_rad: float = .15
     max_finger_opening_fraction: float = .15
@@ -164,6 +168,36 @@ def bilateral_contact_rows(contacts, fingers, target_link, *, center_m, radius_m
             return ()
         rows.extend(indices.tolist())
     return tuple(sorted(set(rows)))
+
+
+def held_finger_contact_mask(contacts, fingers_by_hand, movable_links, grasp=None):
+    """Identify grasp contacts in one snapshot, with or without assistance.
+
+    Physical holding requires both declared fingers of the same hand touching
+    the same movable task link. A live rigid-assist binding also identifies that
+    hand's held link when its weld carries the load and one finger loses contact.
+    No force threshold: zero-force contacts count, speculative separation does not.
+    This does not grant the held object's other contacts a larger tolerance.
+    """
+    a, b = (np.asarray(contacts[k]) for k in ("link_a", "link_b"))
+    depth = np.asarray(contacts["penetration"])
+    touching = np.isfinite(depth) & (depth >= 0)
+    held = np.zeros(depth.shape, dtype=bool)
+    hands = (grasp or {}).get("hands", {})
+    for hand, fingers in fingers_by_hand.items():
+        targets = []
+        for finger in fingers:
+            targets.append(set(b[touching & (a == finger)]) | set(a[touching & (b == finger)]))
+        selected = targets[0] & targets[1] & movable_links
+        state = hands.get(hand, {})
+        binding = state.get("binding")
+        if state.get("phase") in {"registered", "holding"} and binding is not None:
+            links = binding.get("links", ())
+            if binding.get("hand") == hand and len(links) == 2 and links[1] in movable_links:
+                selected.add(links[1])
+        held |= touching & ((np.isin(a, fingers) & np.isin(b, list(selected))) |
+                            (np.isin(b, fingers) & np.isin(a, list(selected))))
+    return held
 
 
 def material_patch(positions, material_coordinates, center_index, *, spatial_radius_m, material_radius_m):

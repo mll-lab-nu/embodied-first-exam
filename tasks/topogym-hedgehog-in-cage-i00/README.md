@@ -23,7 +23,7 @@ Separate and place the whole hedgehog ball, including every spike inside the gre
 
 ## Task failure conditions
 
-- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 2 s. Grasping: physical grasping only (no assisted grasping).

@@ -13,7 +13,7 @@ You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 p
 
 ## Task failure conditions
 
-- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
 
 The scene objects are the task's entities (`s.objects()`: `hedgehog_mount` (fixed), `hedgehog_cage` (fixed), `hedgehog_ball`, `goal_region` (fixed)).
 Implementation reference: `HedgehogInCageEasyTask.evaluate_state` (module `topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_easy`).

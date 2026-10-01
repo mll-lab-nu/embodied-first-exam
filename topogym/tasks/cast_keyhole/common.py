@@ -20,7 +20,7 @@ class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
 
     geometry_resource = None
 
-    terminal_revision = "cast_keyhole_placement_v3_default_success"
+    terminal_revision = "cast_keyhole_placement_v4_grasp_contact_2mm"
 
     def terminal_metadata(self):
         from .qualification import placement_qualification

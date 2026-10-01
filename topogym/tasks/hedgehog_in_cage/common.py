@@ -22,7 +22,7 @@ class HedgehogInCageTask(PlacementGoalMixin, RigidTaskDefinition):
 
     asset_resource = None
 
-    terminal_revision = "hedgehog_placement_v3_default_success"
+    terminal_revision = "hedgehog_placement_v4_grasp_contact_2mm"
 
     def terminal_metadata(self):
         from .qualification import placement_qualification

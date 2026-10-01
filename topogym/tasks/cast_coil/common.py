@@ -11,7 +11,7 @@ from topogym.evaluation.terminal import SettlingSpec
 
 class CastCoilTask(RigidTaskDefinition):
     task_id = "cast_coil"
-    terminal_revision = "release_settling_v1"
+    terminal_revision = "release_settling_v2_grasp_contact_2mm"
     defaults = dict(scale=3., center_xy_m=[-.1356786, .05], yaw_deg=90.,
                     initial_floor_clearance_m=.0005, objective="assemble",
                     initial_xy_offset_m=[-.12, .18], stable_duration_s=.5,

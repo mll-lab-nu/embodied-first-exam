@@ -22,9 +22,11 @@ def phase_role(name):
     if name == "initial-observation":
         return "initial"
     match = re.fullmatch(r"(?:regrasp_[0-9]+_)?(partial_close|home_to_pregrasp|transfer_to_pregrasp|approach|close|test_lift|"
-                         r"release_for_regrasp|pickup_departure|extract|stable_goal|intermediate_hold)", name)
+                         r"release_for_regrasp|retreat_after_release|pickup_departure|extract|stable_goal|intermediate_hold)", name)
     if match is None:
         raise ValueError("Unknown Hedgehog audit phase: "+str(name))
+    if match[1] == "retreat_after_release":
+        return "released_transfer"
     return "clear_transport" if match[1] in {"pickup_departure", "extract", "stable_goal", "intermediate_hold"} else "acquisition_or_support"
 
 
@@ -206,6 +208,8 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
                 if home_error > 1e-6 or world["assist_active"]:
                     fail("initial_settling_used_arm_motion_or_binding", tick)
             transport = roles[row["segment_id"]] == "clear_transport"
+            if roles[row["segment_id"]] == "released_transfer" and world["assist_active"]:
+                fail("binding_active_during_release_retreat", tick)
             contacts = world["contacts"]
             a, b = np.asarray(contacts["link_a"]).reshape(-1), np.asarray(contacts["link_b"]).reshape(-1)
             forces = np.asarray(contacts["force"], float).reshape(-1, 3)

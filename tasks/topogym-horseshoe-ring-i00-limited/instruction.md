@@ -15,7 +15,7 @@ client and one episode. **Task:** Separate and place the entire removable ring i
 ## Task failure conditions
 
 - Losing any permanent chain/eye connection ends the episode in failure.
-- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for

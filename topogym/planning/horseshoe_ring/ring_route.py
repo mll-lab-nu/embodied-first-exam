@@ -243,6 +243,19 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
             scope='measured whole-geometry separating plane; subsequent motion still requires physical validation')
         write_json_atomic(planner.directory/f"ring_stage_{state['stage']:03d}.json",result)
         return result
+    if parameters.get('exit_goal_mode')=='reference_pivot':
+        goals,metadata=reference_pivot_goals(planner,measured,reference)
+        errors=[checker.motion(checker.start,goal) for goal in goals]
+        closest=int(np.argmin(errors))
+        if errors[closest]<.003:
+            # This is only an intermediate planning milestone. Separation
+            # and the native placement goal retain their independent tests.
+            result=dict(passed=True,separated=False,pivot_reached=True,
+                pivot_material_error_m=errors[closest],pivot_goal=metadata[closest],
+                observed_bodies={n:pose_dict(v) for n,v in measured.items()},
+                scope='measured reference pivot reached; extraction remains unverified')
+            write_json_atomic(planner.directory/'reference_pivot_reached.json',result)
+            return result
     guide=[]
     for frame in reference:
         p,r=relative_pose(frame['horseshoe_right'],frame['target_ring'])
@@ -315,10 +328,41 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
     return result
 
 
+def reference_pivot_goals(planner, bodies, reference):
+    """Reach the reference turn around the eyes before requesting separation."""
+    hp,hr=bodies['horseshoe_right']
+    loop=planner.task.assembly.loops['target_ring']
+    center=loop.center-planner.task.body_origins['target_ring']
+    symmetries=[Rotation.identity()]+[
+        loop.rotation*Rotation.from_rotvec(np.pi*axis)*loop.rotation.inv() for axis in np.eye(3)]
+    goals=[];metadata=[]
+    for offset in (80,40):
+        index=min(len(reference)-1,planner.fold_end_index+offset)
+        rp,rr=relative_pose(reference[index]['horseshoe_right'],reference[index]['target_ring'])
+        p,r=hp+hr.apply(rp),hr*rr
+        for symmetry_index,symmetry in enumerate(symmetries):
+            goal=(p+r.apply(center-symmetry.apply(center)),r*symmetry)
+            goals.append(goal)
+            metadata.append(dict(reference_index=index,symmetry_index=symmetry_index,pose=pose_dict(goal)))
+    return goals,metadata
+
+
 def plan_joint_withdrawal(planner, observation, reference):
     """Find reachable exit attitudes without prescribing a wrist branch."""
     from .joint_route import plan_free_ring_transport
     bodies,_=planner.observed(observation);hp,hr=bodies['horseshoe_right']
+    parameters=getattr(planner,'withdrawal_parameters',{})
+    mode=parameters.get('exit_goal_mode','all_axes')
+    if mode=='reference_pivot':
+        goals,metadata=reference_pivot_goals(planner,bodies,reference)
+        result=plan_free_ring_transport(planner,observation,goals,contact_release=True,
+            passive_contact_names=parameters.get('passive_contact_names',
+                ('horseshoe_left','chain_upper_1','chain_lower_1')))
+        result.update(observed_bodies={n:pose_dict(p) for n,p in bodies.items()},
+            exit_goal_mode=mode,pivot_goals=metadata,
+            method='native_joint_route_to_reference_pivot; no separation claim')
+        write_json_atomic(planner.directory/'joint_withdrawal_plan.json',result)
+        return result
     rp,rr=relative_pose(reference[-1]['horseshoe_right'],reference[-1]['target_ring'])
     direction=(hr*reference[-1]['horseshoe_right'][1].inv()).apply([-1.,0.,0.])
     end=hp+hr.apply(rp)
@@ -334,7 +378,6 @@ def plan_joint_withdrawal(planner, observation, reference):
     rotations=[reference_rotation*symmetry for symmetry in symmetries]
     rotations += [rotation]+[Rotation.from_euler(axis,angle,degrees=True)*rotation
                             for axis in ('x','y','z') for angle in (-90.,-45.,45.,90.)]
-    mode=getattr(planner,'withdrawal_parameters',{}).get('exit_goal_mode','all_axes')
     if mode not in ('all_axes','reference'):raise ValueError('Unsupported exit goal mode')
     goals=[]
     for r in rotations:

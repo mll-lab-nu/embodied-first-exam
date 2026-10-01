@@ -25,6 +25,17 @@ def mm(value):
     return f"{float(value)*1000:.6g} mm"
 
 
+def _rigid_contact_failure():
+    from topogym.utils.grasp import TASK_CONTACT_PENETRATION_M, GRASP_CONTACT_PENETRATION_M
+    return (
+        "A task piece falling more than 100 mm below the tabletop ends the episode in failure. "
+        f"Finger contact with a held movable piece may penetrate at most {mm(GRASP_CONTACT_PENETRATION_M)}; "
+        "holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. "
+        f"All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most {mm(TASK_CONTACT_PENETRATION_M)}. "
+        "Exceeding either limit ends the episode in failure."
+    )
+
+
 def render_goal(description, *, include_summary=False):
     if description["schema_version"] != 1:
         raise ValueError("Unsupported public goal description")
@@ -102,7 +113,7 @@ def describe_goal(task):
                          "No inverted or collapsed cord volume is accepted.")
             failures.append("Broken attachments or invalid cord volume end the episode in failure.")
         else:
-            failures.append("A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.")
+            failures.append(_rigid_contact_failure())
     elif name == "rope_threading":
         order, directions = _threading(task)
         summary = f"Thread the rope through the {order}, in that order along the rope from material start to material end."
@@ -164,7 +175,7 @@ def describe_goal(task):
             "Neither piece may extend more than 1 mm below it, and each piece must overlap the tabletop horizontally.",
             "Keep both pieces' linear speeds below 1 mm/s and angular speeds below 0.02 rad/s. Merely touching or gripping them is not completion.",
         ]
-        failures.append("A piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.")
+        failures.append(_rigid_contact_failure())
     elif name == "buzz_wire_3d":
         summary = "Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support."
         rules += [

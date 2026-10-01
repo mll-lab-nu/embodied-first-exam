@@ -56,6 +56,10 @@ hard / `fixed_v2` 按用户最新授权保留默认初态，继续验证原仿�
 
 oracle 增加可选 `pickup_departure_hints`：先实际抬离支撑 0.1–1 mm，再从新实测抓持状态重新验证侧移/转动/上抬路径。新 `pickup_departure` 阶段使用运输保护，并由独立审计归为 `clear_transport`，不能把整段操作隐藏在离开支撑的接触例外内。默认仍竖直抬升 12 mm；[30 项边界检查](../../../runs/hedgehog_three_20260930/hard_departure_boundaries_01/checks.json)和 [medium 回归审计](../../../runs/hedgehog_three_20260930/medium_audit_regression_05/execution_audit.json)通过。新分支尚待实际运行验证，不构成 hard 完整成功。
 
+松手后的实际空夹爪距笼体约 0.928 mm，低于空手转移规划器的 1 mm 起点要求。[只读转移诊断](../../../runs/hedgehog_three_20260930/hard_side_retreat_ik_01/ik_report.json)表明，先沿手轴退出 8 mm、选用 15 mm 预抓取距离，可使五个侧抓候选通过转移和接近 IK；这不等于实际换抓。oracle 新增可选 `release_retreat_m`，从释放后的实时状态重算并检查 IK；独立审计将其作为 `released_transfer`，要求全程无绑定且保留机械臂碰撞检查。[13 项边界检查](../../../runs/hedgehog_three_20260930/hard_retreat_boundaries_01/checks.json)和 [medium 回归审计](../../../runs/hedgehog_three_20260930/medium_audit_regression_06/execution_audit.json)通过，新退开动作尚待原生试验验证。
+
+[六个可达顶口姿态的独立释放诊断](../../../runs/hedgehog_three_20260930/hard_reachable_release_diagnostic_01/report.json)均落回笼内；不能只凭两刺投影越过圆口就推断松手后能挂住。另一条研究分支筛选更倾斜的 S1 抓法，[225 个候选](../../../runs/hedgehog_three_20260930/hard_steep_exit_screen_01/report.json)通过顶口附近至出笼、原目标区的连续刚体几何检查，但笼底到顶口的连接仍在搜索。其中三个候选通过[空手转移及接近 IK](../../../runs/hedgehog_three_20260930/hard_steep_s1_pickup_ik_01/ik_report.json)，当前启动原初态连续换抓试验；正式证明仍为 easy / medium 两变体，hard 未完成。
+
 旧[替代初态提案](../../../runs/hedgehog_three_20260930/hard_initial_proposal_01/proposal.json)及补丁保留为历史候选，尚未应用，也不是继续原任务验证的必要前提。[局部初态检查](../../../runs/hedgehog_three_20260930/hard_initial_local_review_01/review.json)另发现保持高度和朝向、向内平移 3 mm 即可消除相交，但这是另一初态的端点检查，没有转移为当前任务资格。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。

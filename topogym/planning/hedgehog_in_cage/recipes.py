@@ -65,6 +65,17 @@ def _departure_settings(pickup):
     return hints, separation
 
 
+def _release_retreat_settings(pickup):
+    """Explicit empty-hand retreat after the recorded support release."""
+    profile = pickup or {}
+    distance = float(profile.get("release_retreat_m", 0.))
+    if not np.isfinite(distance) or not 0. <= distance <= .03:
+        raise ValueError("Release retreat must be finite and between 0 and 30 mm")
+    if distance and not profile.get("release_for_regrasp", False):
+        raise ValueError("Release retreat requires an explicit support release")
+    return distance
+
+
 def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=30000):
     output = Path(output)
     variation = env._task.variation_id.removeprefix("hedgehog_in_cage_")
@@ -78,6 +89,7 @@ def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=300
     profiles = [pickup, *((pickup or {}).get("regrasps") or [])]
     settings = [_pickup_settings(profile) for profile in profiles]
     departures = [_departure_settings(profile) for profile in profiles]
+    release_retreats = [_release_retreat_settings(profile) for profile in profiles]
     if any(intermediate is None or not release for _, _, intermediate, release in settings[:-1]):
         raise ValueError("Each stage before a regrasp must end at an explicit intermediate release")
     approach_margin, pregrasp_distance, intermediate, release_for_regrasp = settings[0]
@@ -256,6 +268,23 @@ def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=300
                 run("intermediate_hold", hold(1.), transport=True)
                 if release_for_regrasp:
                     run("release_for_regrasp", [{"arm": {"gripper_position_rad": .6}}]+hold(5.)[:-1])
+                    if release_retreats[stage_index]:
+                        if env._world.read_state()["assist_active"]:
+                            raise RuntimeError("Release retreat requires an unbound hand")
+                        kin = HedgehogIK(env)
+                        p, r = kin.tcp_pose(kin.seed)
+                        q, retreat = kin.seed.copy(), []
+                        for u in np.linspace(0., 1., 61)[1:]:
+                            q = kin.solve((p-r.apply([0., 0., release_retreats[stage_index]*u]), r), q)
+                            if kin.clearance(q) < approach_margin:
+                                raise RuntimeError("Empty-hand release retreat is obstructed")
+                            retreat.append(q.tolist())
+                        write_json_atomic(output/f"{phase_prefix}release_retreat_plan.json",
+                                          dict(distance_m=release_retreats[stage_index], qpos=retreat,
+                                               minimum_required_clearance_m=approach_margin))
+                        retreated = run("retreat_after_release", joint_actions(retreat, speed=.1))
+                        if retreated["world"]["assist_active"]:
+                            raise RuntimeError("Unexpected binding during release retreat")
                 if stage_index+1 < len(profiles):
                     continue
                 reached, failure, metrics = env._task.evaluate_goal_region(env._world.read_state(), env._task.goal_region)

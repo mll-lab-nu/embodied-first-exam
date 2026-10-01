@@ -444,3 +444,15 @@ def damped_full_reposition_stages(env, context):
         withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
             **feedback,exit_goal_mode='reference',search_seed=924,
             passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def pivot_reference_stages(env, context):
+    """Try the reference eye-turn milestone before requesting a free ring."""
+    candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+                     hold_s=8.,sample_duration_s=.1,restore=False),)
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=candidates,lower_reposition=True,
+        reposition_parameters=dict(fraction=1.,lower_tracking_m=.002,position_bias_limit_m=.05),
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            position_bias_limit_m=.06,exit_goal_mode='reference_pivot',search_seed=950,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))

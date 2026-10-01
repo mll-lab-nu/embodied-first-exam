@@ -14,7 +14,7 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 ## Task failure conditions
 
-- A piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
 
 The scene objects are the task's entities (`s.objects()`: `coil_gold`, `coil_silver`).
 Implementation reference: `CastCoilEasyTask.evaluate_state` (module `topogym.tasks.cast_coil.cast_coil_easy`).

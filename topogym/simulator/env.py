@@ -366,6 +366,7 @@ class Env:
                 # applies preload. Actual joint positions are not teleported.
                 self._robot.apply_action(spec.initial_robot_targets)
             self._task.bind(self._world.entities)
+            self._task.bind_robot(self._robot.description)
             if spec.initial_state is not None:
                 from topogym.world.initial_state import scene_identity, restore_declared_initial_state
                 self._initial_state_report = restore_declared_initial_state(

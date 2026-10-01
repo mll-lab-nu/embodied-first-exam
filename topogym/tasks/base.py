@@ -186,6 +186,9 @@ class TaskDefinition:
     def bind(self, entities: Mapping[str, Any]) -> None:
         self.entities = dict(entities)
 
+    def bind_robot(self, description) -> None:
+        """Bind explicit robot contact roles after entities, before evaluation."""
+
     def finalize_spec(self, spec, *, asset_dir, scene_config):
         """Finalize an instance using the actual scene before asset hashing/build."""
         return spec
@@ -395,6 +398,25 @@ class RigidTaskDefinition(TaskDefinition):
         }
         robot = entities.get("robot")
         self._robot_link_indices = set() if robot is None else {int(link.idx) for link in robot.links}
+        self._movable_task_link_indices = {
+            int(link.idx) for name in self.local_vertices for link in entities[name].links
+            if not link.is_fixed
+        }
+        self._finger_links_by_hand = {}
+
+    def bind_robot(self, description) -> None:
+        robot = self.entities.get("robot")
+        self._finger_links_by_hand = {} if robot is None else {
+            group.name: tuple(int(robot.get_link(name).idx) for name in group.grasp.finger_links)
+            for group in description.groups if group.grasp is not None
+        }
+
+    def terminal_metadata(self) -> dict:
+        from topogym.utils.grasp import TASK_CONTACT_PENETRATION_M, GRASP_CONTACT_PENETRATION_M
+        return super().terminal_metadata() | dict(contact_penetration=dict(
+            other_contacts_m=TASK_CONTACT_PENETRATION_M,
+            held_finger_contacts_m=GRASP_CONTACT_PENETRATION_M,
+            holding_evidence="same_hand_bilateral_contact_or_live_rigid_assist_binding"))
 
     def rigid_measurements(self, state: Mapping[str, Any]):
         from scipy.spatial.transform import Rotation
@@ -417,11 +439,18 @@ class RigidTaskDefinition(TaskDefinition):
             quiet = quiet and np.linalg.norm(velocity) < .001 and np.linalg.norm(angular) < .02
         contacts = state.get("contacts")
         if contacts is not None:
+            from topogym.utils.grasp import (
+                TASK_CONTACT_PENETRATION_M, GRASP_CONTACT_PENETRATION_M, held_finger_contact_mask,
+            )
             a, b = np.asarray(contacts["link_a"]), np.asarray(contacts["link_b"])
             involved = np.isin(a, list(self._task_link_indices)) | np.isin(b, list(self._task_link_indices))
             penetration = np.asarray(contacts["penetration"])
-            if penetration[involved].max(initial=0.) > .001:
+            held = held_finger_contact_mask(contacts, self._finger_links_by_hand,
+                                          self._movable_task_link_indices, state.get("grasp"))
+            if penetration[involved & ~held].max(initial=0.) > TASK_CONTACT_PENETRATION_M:
                 return poses, bounds, False, "Task contact penetration exceeded 1 mm"
+            if penetration[involved & held].max(initial=0.) > GRASP_CONTACT_PENETRATION_M:
+                return poses, bounds, False, "Held finger contact penetration exceeded 2 mm"
         return poses, bounds, bool(quiet), None
 
     def released(self, state: Mapping[str, Any], names=None) -> bool:

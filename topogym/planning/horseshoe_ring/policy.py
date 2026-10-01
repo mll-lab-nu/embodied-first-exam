@@ -39,8 +39,8 @@ class HorseshoePolicy:
             raise ValueError('Support rebasing option must be boolean')
         if not isinstance(self.withdrawal_parameters['gate_support_tracking'],bool):
             raise ValueError('Support tracking gate option must be boolean')
-        if self.withdrawal_parameters['exit_goal_mode'] not in ('all_axes','reference'):
-            raise ValueError('Exit goal mode must be all_axes or reference')
+        if self.withdrawal_parameters['exit_goal_mode'] not in ('all_axes','reference','reference_pivot'):
+            raise ValueError('Exit goal mode must be all_axes, reference or reference_pivot')
         support_tracking=self.withdrawal_parameters['support_tracking_m']
         if support_tracking is not None and (not np.isfinite(float(support_tracking))
                 or not .00005<=float(support_tracking)<=.005):
@@ -431,6 +431,13 @@ class HorseshoePolicy:
         self.planner.withdrawal_use_joint=self.withdrawal_mode=='joint-staged'
         self.phase=f'plan_ring_stage_{stage}'
         plan=self.planner.withdrawal_stage(self.obs)
+        if plan.get('pivot_reached'):
+            params['exit_goal_mode']='reference'
+            self.planner.withdrawal_stage_state=None
+            self.phase='reference_pivot_complete'
+            self.diagnostics=plan
+            yield from self.hold(.25)
+            return False
         if plan.get('separated'):
             self.phase='ring_withdrawal_settle';yield from self.hold(2.)
             self.phase='ring_withdrawal_complete'

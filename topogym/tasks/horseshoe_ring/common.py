@@ -14,6 +14,7 @@ from ..scene_presets import defaults, record_preset
 
 class HorseshoeRingTask(PlacementGoalMixin, RigidTaskDefinition):
     task_id = "horseshoe_ring"
+    terminal_revision = "placement_region_v3_grasp_contact_2mm"
     placement_description = 'the entire removable ring'
     goal_side = (1, -1)  # -y, the nominal scene's side; pose variation cannot flip it
     defaults = defaults(task_id, scale=2., center_xy_m=[-.1356786, .05], yaw_deg=0.,
