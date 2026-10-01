@@ -1,4 +1,4 @@
-# RoboTwin 2.0 · hanging_mug — LIMITED MODE (robot as a service, rcb-limited/2.0)
+# RoboTwin 2.0 · hanging_mug — LIMITED MODE (robot as a service, rcb-limited/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
 cannot open. You get one client and one episode. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack.
@@ -15,14 +15,14 @@ cannot open. You get one client and one episode. **Task:** Use left arm to pick 
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.0`)
+## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.1`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service warms up, ~1 min)
 spec = r.spec()                               # action types, dims, joint limits, cameras, budgets
 
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (240,320,3)
-obs.meta["proprio"]                           # {"layout": [...30 names], "now": [...]}: joints, grippers, end-effector poses
+obs.meta["proprio"]                           # {"layout": [...82 names], "now": [...]}: see "Proprioception" below
 obs.meta.get("cameras")                       # per-camera intrinsic_cv / cam2world_gl (RoboTwin's own calibration)
 obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
 
@@ -31,11 +31,25 @@ res = r.submit("ee_pose", P)                  # P: (T, 16) end-effector targets;
 res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res.meta["physics_steps_chunk"]
 res.video["head_camera"]                      # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
 res.frames["head_camera"]                     # uint8 (N,240,320,3) at video_fps if requested
-res.last["left_camera"]; res.proprio          # last frame per camera; float32 (N, 30) proprio at each video frame
+res.last["left_camera"]; res.proprio          # last frame per camera; float32 (N, 82) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
 Cameras: `head_camera` (static, above the table), `front_camera` (static, facing the robot), `left_camera` /
 `right_camera` (wrists), plus `observer_camera` and `world_camera1` (free third-person views). Resolution 320×240.
+
+### Proprioception (what a real arm reports; `spec["proprio_groups"]` gives each group's columns)
+| columns | group | meaning |
+|---|---|---|
+| 0–13 | `joint_cmd` | commanded joint targets + gripper command (same layout as `joint_position`) |
+| 14–27 | `ee_pose` | measured end-effector frame per arm (xyz + wxyz), 0.12 m behind the gripper centre; a valid `ee_pose` target |
+| 28–29 | `gripper_cmd` | commanded gripper value per arm |
+| 30–43 | `joint_pos` | **measured** joint positions + **measured gripper opening** (command units): a gripper closed on an object stays above 0 |
+| 44–55 | `joint_vel` | measured arm joint velocities (rad/s) |
+| 56–69 | `tcp_pose` | measured **gripper-centre (TCP)** pose per arm: where the fingers are |
+| 70–81 | `joint_effort` | drive-effort estimate per arm joint; rises when the arm pushes against something |
+
+Depth: pass `include_depth=True` for the head, front and wrist cameras (float16; with the calibration in
+`meta["cameras"]` you can back-project to a point cloud).
 
 ### Action types
 - `joint_position` (14): `fl_joint1..6, left_gripper, fr_joint1..6, right_gripper`; radians, gripper 0 = closed, 1 = open.

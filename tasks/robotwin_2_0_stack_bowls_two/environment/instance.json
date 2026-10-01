@@ -1,0 +1,8 @@
+{
+ "task": "stack_bowls_two",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "3a1d387bc9b6",
+ "text": "Stack the two bowls on top of each other.",
+ "n_active_joints": 16
+}

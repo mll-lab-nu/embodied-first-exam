@@ -9,6 +9,7 @@ services:
       - ./sim:/srv:ro
     working_dir: /opt/RoboTwin
     command: python /srv/server.py
+    restart: on-failure:6          # a crash retries; mid-episode the service resumes the same episode from its journal (never a reset; server.py)
     environment:
       RCB_TASK: pick_dual_bottles
       RCB_INSTANCE: /srv/instance.json

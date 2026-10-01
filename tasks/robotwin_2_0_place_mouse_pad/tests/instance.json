@@ -1,0 +1,8 @@
+{
+ "task": "place_mouse_pad",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "c2f9f796bf4f",
+ "text": "Grab the mouse and place it on a colored mat.",
+ "n_active_joints": 16
+}

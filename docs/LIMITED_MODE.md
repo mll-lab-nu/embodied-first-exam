@@ -1,7 +1,7 @@
 # Two evaluation modes: unlimited vs limited ("robot as a service")
 
-Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/2.0: `submit` action chunks + `observe`, binary RCB1 responses; 1.0's `/step` is retired). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1
-in both `public` and `no-network` agent policies). 22 RoboTwin tasks have limited twins (`tasks/robotwin_2_0_*-limited`).
+Wire protocol: `LIMITED_MODE_PROTOCOL.md` (rcb-limited/2.1: `submit` action chunks + `observe`, binary RCB1 responses, 82-column proprioception, crash resume; 1.0's `/step` is retired). Status 2026-09-22: design + verified Harbor plumbing (PoC under `docs/limited_mode/gym-sidecar-poc/`, oracle scores 1
+in both `public` and `no-network` agent policies). 47 RoboTwin tasks, 21 DexToolBench and 4 MuJoCo Playground tasks have limited twins (`tasks/*-limited`).
 
 ## Mode 1 — unlimited (what every current task is)
 Agent and simulator live in the same container. The agent may reset without limit, read privileged state
