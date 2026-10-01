@@ -1,6 +1,18 @@
 # kinder-tossing-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-tossing-i00`: the same KinDER instance (`kinder/Tossing3D-o1-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-tossing-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `tossing` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-tossing-i00-privileged`: the same KinDER instance (`kinder/Tossing3D-o1-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: get the green cube lying on the floor into the yellow bin on the far side of the low wall that runs across the room. The task succeeds the moment the cube's centre is inside the bin's goal region, the translucent green box marked in the bin.
 
 ## Difficulty
-Dynamic: the cube has to get over a low wall that spans the room, into a bin on the far side. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard failed, with 50 resets and with none.
+Dynamic: the cube has to get over a low wall that spans the room, into a bin on the far side.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

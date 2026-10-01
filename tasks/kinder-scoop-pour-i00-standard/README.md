@@ -1,6 +1,18 @@
 # kinder-scoop-pour-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i00`: the same KinDER instance (`kinder/ScoopPour3D-o30-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-scoop-pour-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `scoop-pour` / seed 0 |
+| Oracle | `none` — none known: GPT-6 Luna failed both modes, and no rollout of this instance is published; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i00-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o30-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 ## Difficulty
-Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well inside the target bin. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): failed both modes.
+Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well inside the target bin.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

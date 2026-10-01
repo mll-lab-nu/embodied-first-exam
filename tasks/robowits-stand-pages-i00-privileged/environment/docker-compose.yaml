@@ -1,0 +1,12 @@
+# Genesis renders camera images through EGL on the GPU (the physics runs on its bit-deterministic CPU backend). Harbor's
+# local docker sandbox rejects [environment].gpus, but merging this onto the main service passes the device through.
+services:
+  main:
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

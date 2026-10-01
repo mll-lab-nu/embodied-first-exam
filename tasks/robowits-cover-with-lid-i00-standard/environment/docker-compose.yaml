@@ -1,0 +1,35 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# Genesis runs physics on the CPU (bit-deterministic) and needs the GPU only for EGL camera rendering.
+# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# container (same container, same /data) and the service replays its journal into the same episode, never a reset.
+# The BlenderKit models this task loads may not be redistributed, so they are not in the image: they come read-only
+# from the host's folder $RCB_ROBOWITS_BLENDERKIT (images/robowits/NOTICE).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:0.1.1
+    volumes:
+      - ./sim:/srv:ro
+      - ${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}:/opt/robowits/assets/blender_kit:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode
+    environment:
+      RCB_TASK: cover_with_lid
+      RCB_INSTANCE: /srv/instance.json
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "5400"
+      RCB_STARTUP_TIMEOUT_S: "900"   # >= 2 x the slowest measured scene build (docs/benchmarks/robowits.md)
+      PYTHONPATH: /srv
+      QD_OFFLINE_CACHE: "0"
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

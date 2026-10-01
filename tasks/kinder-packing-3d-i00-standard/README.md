@@ -1,6 +1,18 @@
 # kinder-packing-3d-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-packing-3d-i00`: the same KinDER instance (`kinder/Packing3D-p3-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-packing-3d-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `packing-3d` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (both modes) on the results site; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-packing-3d-i00-privileged`: the same KinDER instance (`kinder/Packing3D-p3-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.
@@ -8,7 +20,7 @@ never the scene's state or the goal check. One episode, no reset.
 Task: put the three flat green parts on the grey table, a square and two right triangles, each with a small red peg on top, into the purple tray in the middle of the table. The task succeeds the moment the robot holds nothing and every part rests in the tray: its flat body (peg excluded) lies within the tray's inner outline, its underside is within 5 mm of the tray floor's height and its top is no more than 5 mm above the tray's rim, it is within 5 mm of the tray without penetrating it, and no two parts (pegs included) overlap.
 
 ## Difficulty
-Geometric, kinematic (PyBullet): pack three flat parts into a tray, flat and without overlap. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard passed with 50 resets (in its first episode) and failed with none.
+Geometric, kinematic (PyBullet): pack three flat parts into a tray, flat and without overlap.
 
 ## Reference solution
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/PROTOCOL.md §2.7).

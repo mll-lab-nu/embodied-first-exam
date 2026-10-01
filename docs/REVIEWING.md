@@ -28,7 +28,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   results are reported separately), crash recovery, `success = replay_success ∧ deterministic`.
 - Does the task run with Harbor's native agents, without custom adapters, runners or gateways?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
-- Results: run id format, files ≤ 2 MB, no top-level `results/`.
+- Names end in `-privileged` / `-standard`; README in the standard layout; no `results/` in task directories.
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:
@@ -40,4 +40,4 @@ Review per family (same generator and predicate), at least two instances per fam
 5. **Record** — post a review comment listing the instances and evidence you checked, check that the task README's
    Verification section says "no oracle; human review in PR #N", then approve and remove the `needs-human-review` label.
 
-The reviewer is never the pull request's author. For pull requests by the code owner, another maintainer reviews.
+The reviewer is never the pull request's author. For pull requests by a code owner, another code owner reviews.

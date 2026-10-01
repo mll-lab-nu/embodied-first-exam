@@ -9,7 +9,7 @@ multi-object manipulation, geometric and dynamic constraints.
 | simulator | MuJoCo 3.3 (Dynamic3D) in KinDER's MimicLabs lab, CPU physics; two tasks in PyBullet (Kinematic3D: no dynamics, a colliding move is refused) |
 | robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
 | score | pass = KinDER's own goal check within the episode (1000 control steps; PyBullet 3000) |
-| tasks | 11 families × 2 modes: `tasks/kinder-<family>-i00` (privileged) and `-standard` (`eai-standard/2.1`) |
+| tasks | 11 families × 2 modes: `tasks/kinder-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
 | oracle | `dynamo` (the fixture): full, both modes; the other ten: none, human review (positive examples below) |
 
@@ -31,8 +31,8 @@ multi-object manipulation, geometric and dynamic constraints.
 
 Why these: the first six are the Dynamic3D tasks where physics decides the outcome and a camera can see the goal or a
 sentence can name it; the other five are what a screening of every other family (09-29, GPT-6 Luna once per mode) left
-unsolved in standard mode. Per-task reasoning: `scripts/kinder/subset.toml`. Positive examples are kept in the tasks'
-`results/`; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
+unsolved in standard mode. Per-task reasoning: `scripts/kinder/subset.toml`. Positive examples are runs published on the results
+site; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
 standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
 mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).
 
@@ -60,7 +60,7 @@ back `blocked` and stops the chunk there.
 
 ```bash
 harbor run -c scripts/kinder/configs/codex-openrouter.yaml --env-file .env -p tasks/kinder-tossing-i00-standard
-harbor run -p tasks/kinder-dynamo-i00 -a oracle      # or -a nop: scores 0
+harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
@@ -69,8 +69,7 @@ ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:$(cat images/kinder/VERS
 
 ## Results
 
-Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
-replay's last frame, a passing trajectory). A standard task's folder holds the standard configuration (no reset) and,
-in `reset50/`, a run with the optional capability of 50 resets, reported separately (PROTOCOL D1). Runs recorded
-before protocol v1.0 say so in their README (`prev_rcb_limited_1_1/` without reset, `prev_rcb_limited_1_1_reset50/`
-with 50). Cross-task tables are generated for the site (PROTOCOL D3).
+Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
+`reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
+runs with the optional reset capability (50 resets) are reported separately from the standard configuration (no
+reset, PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.
