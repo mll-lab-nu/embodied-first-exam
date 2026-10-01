@@ -13,7 +13,8 @@ import argparse, json, os, pathlib, re, shutil, sys
 import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
-from topogym_mk_task import startup_instruction, goal_words, validate_goal_instance
+from topogym_mk_task import MAX_BUDGET_S, startup_instruction, goal_words, validate_goal_instance
+from topogym_rules import details_section, limited_timing
 
 root = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = root / "harbor_templates/topogym/limited"
@@ -35,8 +36,8 @@ def main() -> None:
     a = ap.parse_args()
     fam = a.family
     slug = f"topogym-{fam.replace('_', '-')}-i{a.eval_index:02d}"
-    if not 0 < a.agent_wall_clock_s <= 21600:
-        ap.error("--agent-wall-clock-s must be in 1..21600")
+    if not 0 < a.agent_wall_clock_s <= MAX_BUDGET_S:
+        ap.error(f"--agent-wall-clock-s must be in 1..{MAX_BUDGET_S}")
     BUDGET_S = a.agent_wall_clock_s
     unl = a.unlimited_task.resolve() if a.unlimited_task else a.tasks_root.resolve() / slug
     slug = unl.name
@@ -93,6 +94,7 @@ def main() -> None:
         (dst / "solution/solve.sh").write_text(f"#!/bin/bash\n# No reference solution for this family yet: the oracle agent scores 0.\n"
                                                f"echo 'no reference solution for {fam}' >&2\nexit 1\n")
         (dst / "solution/solve.sh").chmod(0o755)
+    inst = json.loads((unl / "environment/instance.json").read_text())
     cams = list(d["cameras"]); cam0 = cams[0]; W, H = d["cameras"][cam0]["image_size"]
     arms = d["arms"]; dim = len(d["action_layout"]); tcp0 = d["kinematics"]["tcp_frames"][0]; nq = len(d["kinematics"]["joint_names"])
     nprop = 4 * dim + 8 * len(arms)
@@ -111,7 +113,7 @@ You control a robot (**{robot}**) **as if it were real hardware**: the simulator
 client and one episode. **Task:** {goal}
 
 {requirements}
-
+{details_section(fam, inst, limited=True)}
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   {d['stable_duration_s']:g} s), when your time is up, on a simulator error, {fail_words}. Knocked-over objects stay
@@ -129,6 +131,8 @@ client and one episode. **Task:** {goal}
   what you look at and where you store it is your code's decision.
 
 {startup_instruction(fam, limited=True).rstrip()}
+
+{limited_timing(d['sec_per_step'], d['control_hz']).rstrip()}
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.2`)
 ```python
@@ -194,7 +198,7 @@ unlimited task to measure the cost of losing resets, privileged state and the to
 {goal}
 
 {requirements}
-
+{details_section(fam, inst, limited=True)}
 | | |
 |---|---|
 | tier / mode | perception / limited (RGB, optional depth, proprioception, calibrated cameras, no reset) |
@@ -204,6 +208,10 @@ unlimited task to measure the cost of losing resets, privileged state and the to
 """)
     unl_toml = (unl / "task.toml").read_text()
     hours = float(re.search(r"expert_time_estimate_hours = ([0-9.]+)", unl_toml).group(1)) * 1.5
+    level = tomllib.loads(unl_toml)["metadata"].get("difficulty")   # the unlimited twin's tier (docs/rcb/TAXONOMY.md)
+    level = f'difficulty = "{level}"\n' if level else ""
+    um = tomllib.loads(unl_toml)["metadata"]       # the unlimited twin's grasp mode and success-rule provenance
+    level += "".join(f"{k} = {json.dumps(um[k])}\n" for k in ("grasp", "success_rule", "initial_state") if k in um)
     # collect: the service replays the episode once for the grading record, then once more for the video; each replay takes
     # at most as long as the agent's own episode (the budget), so wait up to that long for each.
     polls = (BUDGET_S + 601) // 2
@@ -226,7 +234,7 @@ artifacts = [
 ]
 
 [task]
-name = "topogym/{slug}-limited"
+name = "robot-coding-bench/{slug}-limited"
 description = {json.dumps(desc)}
 authors = [{{ name = "jianwen" }}]
 keywords = ["robotics", "topogym", "genesis", "{rs['name']}", "limited-mode", "trajectory", "{fam}"]
@@ -238,7 +246,7 @@ simulator = "topogym"
 robot = "{rs['name']}"
 family = "{fam}"
 tier = "perception"                # RGB + proprioception only; no object poses, no success predicate, no reset
-mode = "limited"
+{level}mode = "limited"
 protocol = "rcb-limited/2.2"
 instance_seed = {seed}
 expert_time_estimate_hours = {hours:g}

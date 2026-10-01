@@ -11,19 +11,37 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
 Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
 The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
 change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh).
-Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600)."""
+Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
+[task].name = "robot-coding-bench/<slug>" and [metadata].difficulty = the variation record's tier (docs/rcb/TAXONOMY.md)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
+from topogym_rules import details_section
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
+# interlocked_claws only (user decision 2026-10-01, option i): the template + the pre-weld gripper fix. A row that keeps the
+# gripper width keeps its native target: the width table drops the closed-end plateau, so the birth target closed_qpos
+# (0.002) round-trips to 0.00747 (closing fraction 0.844) and his grasp manager reads that as an opening intent, which ends
+# the pre-weld at the first step. No other family has an off-table gripper target, so their commands would be unchanged.
+TOOL_FOR = {"interlocked_claws": root / "harbor_templates/topogym/common/rcb_topogym_interlocked.py"}
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
 BUDGET_S = 21600
+MAX_BUDGET_S = 36000                  # knot_untying's budget (10 h); every other family 21600
+
+
+def tier_of(inst: dict):
+    """[metadata].difficulty (docs/rcb/TAXONOMY.md): the tier of the instance's variation record, None if it has none."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("variation_records", root / "topogym/config/variation_records.py")
+    records = importlib.util.module_from_spec(spec); spec.loader.exec_module(records)
+    vid = inst.get("resolved_variation_id") or inst["variation_id"]
+    return next((r["difficulty"] for r in records.RECORDS if r["task_id"] == inst["topogym_task"]
+                 and vid in (r["variation_id"], *r["aliases"])), None)
 
 
 def startup_instruction(fam: str, *, limited: bool = False) -> str:
@@ -158,7 +176,26 @@ def validate_goal_instance(fam: str, d: dict, instance: dict) -> None:
             raise ValueError("Public goal requirements differ from the frozen instance; regenerate the instance and describe.json together")
 
 
-def instruction(fam: str, text: str, d: dict) -> str:
+def success_rule_of(inst: dict) -> str:
+    """The instance's success-rule provenance (rcb_topogym make-instance); older instances only record evaluability."""
+    if inst.get("success_rule"):
+        return inst["success_rule"]
+    return "his (goal_complete)" if inst.get("evaluable_for_task_success", True) else "not evaluable (goal_complete False)"
+
+
+def grasp_words(inst: dict) -> str:
+    """[metadata].grasp: how this instance grasps, from its frozen simulator.grasp_assist (his configuration: the family's
+    recommended_grasp_assist() or the tooling's explicit TASKS entry). Names the parts only, never a region centre."""
+    ga = (inst.get("simulator") or {}).get("grasp_assist") or {}
+    if ga.get("model", "none") == "none":
+        return "physical (no assisted grasping)"
+    parts = ", ".join(sorted({t["entity"] for t in ga.get("targets", [])}))
+    if ga.get("initial_intent") == "close":
+        return f"assisted (his {ga['model']} pre-weld: the grippers start closed on {parts})"
+    return f"assisted (his {ga['model']} grasp regions on {parts})"
+
+
+def instruction(fam: str, text: str, d: dict, inst: dict | None = None) -> str:
     arm, cam = d["arms"][0], list(d["cameras"])[0]
     W, H = d["cameras"][cam]["image_size"]
     pred = d["predicate"] or "# (source not available)"
@@ -169,7 +206,7 @@ You control a simulated robot (**{robot_words(d)}**; TopoGym on Genesis 1.2.1 ph
 **Task:** {text}
 
 {requirements}
-
+{details_section(fam, inst, limited=False) if inst is not None else ""}
 The scene objects are the task's entities (`s.objects()`: {objects_words(d)}).
 Implementation reference: `{d['task_class']}.evaluate_state` (module `{d['task_module']}`).
 This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
@@ -222,7 +259,8 @@ CLI equivalent of the grader:
 {conventions(d, fam)}"""
 
 
-def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, difficulty: str, oracle: bool) -> str:
+def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, difficulty: str, oracle: bool,
+           success_rule: str = "", inst: dict | None = None) -> str:
     text, requirements = goal_words(fam, text, d)
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
@@ -237,13 +275,14 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 | Task type / tier | trajectory / privileged |
 | Base image | `{IMAGE}` (built locally with `scripts/build_images.sh topogym`; needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
 | Grasping | {d['grasp_rules'].split(':')[0]} |
+| Success rule | {success_rule} |
 | Agent budget | {BUDGET_S} s |
 
 ## Goal
 {text}
 
 {requirements}
-
+{details_section(fam, inst, limited=False) if inst is not None else ""}
 ## Difficulty
 {difficulty}
 
@@ -258,15 +297,22 @@ GPU, which is not bit-deterministic: the final-state hashes (`deterministic`) an
 """
 
 
-def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, hours: float) -> str:
+def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, hours: float, level=None,
+              inst: dict | None = None) -> str:
     # The verifier replays the trajectory 3 times (2 checks + the video) at the simulator's speed: at most the agent's
     # budget each, since the agent's own run took at least that long.
     vt = 3 * BUDGET_S + 900
+    level = f'difficulty = "{level}"               # the variation\'s tier (docs/rcb/TAXONOMY.md)\n' if level else ""
+    if inst is not None:   # provenance of the grasp mode, the success rule and a re-prepared initial state (instance.json)
+        level += (f"grasp = {json.dumps(grasp_words(inst))}\n"
+                  f"success_rule = {json.dumps(success_rule_of(inst))}\n")
+        if inst.get("initial_state_provenance"):
+            level += f"initial_state = {json.dumps(inst['initial_state_provenance'])}\n"
     return f"""schema_version = "1.3"
 artifacts = ["/app/output/"]
 
 [task]
-name = "topogym/{slug}"
+name = "robot-coding-bench/{slug}"
 description = {json.dumps(f"TopoGym {fam} ({d['robot_spec']['name']}, Genesis): produce one replayable trajectory. {text} Frozen scene instance (variation {variation}, seed {seed}).")}
 authors = [{{ name = "jianwen" }}]
 keywords = ["robotics", "topogym", "genesis", "{d['robot_spec']['name']}", "code-as-policy", "trajectory", "{fam}"]
@@ -278,7 +324,7 @@ simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx 
 robot = "{d['robot_spec']['name']}"
 family = "{fam}"
 tier = "privileged"               # privileged (state-based perception) | perception (RGB-D models)
-instance_seed = {seed}                 # scene = environment/instance.json (variation {variation}, eval index {ei}); identity = dataset.toml digest
+{level}instance_seed = {seed}                 # scene = environment/instance.json (variation {variation}, eval index {ei}); identity = dataset.toml digest
 expert_time_estimate_hours = {hours}
 
 [verifier]
@@ -313,8 +359,8 @@ def main() -> None:
     ap.add_argument("--python", default=str(root / ".venv-gs121-nyx/bin/python"))
     ap.add_argument("--reuse-describe", action="store_true", help="re-render the texts from runs/task_build/<slug>/describe.json (no GPU)")
     a = ap.parse_args()
-    if not 0 < a.agent_wall_clock_s <= 21600:
-        ap.error("--agent-wall-clock-s must be in 1..21600")
+    if not 0 < a.agent_wall_clock_s <= MAX_BUDGET_S:
+        ap.error(f"--agent-wall-clock-s must be in 1..{MAX_BUDGET_S}")
     if a.variation is not None or a.scene_seed is not None:
         if a.variation is None or a.scene_seed is None or a.eval_index is not None or a.instance:
             ap.error("--variation and --scene-seed must be paired, without --eval-index/--instance")
@@ -336,7 +382,7 @@ def main() -> None:
             shutil.copy(TEMPLATE / f, dst / f)
         for f in dst.glob("solution/oracle_*.py"):
             f.unlink()
-    shutil.copy(TOOL, dst / "environment/rcb_topogym.py")
+    shutil.copy(TOOL_FOR.get(fam, TOOL), dst / "environment/rcb_topogym.py")
     for rel in ("environment/Dockerfile", "tests/Dockerfile"):
         p = dst / rel
         base = os.environ.get("TOPOGYM_AGENT_IMAGE", IMAGE) if rel.startswith("environment/") else IMAGE
@@ -356,6 +402,7 @@ def main() -> None:
         run_tool(a.python, "make-instance", "--task", fam, *selection, "--out", inst_path)
     assets = dst / "environment/instance_assets"
     assets.mkdir(exist_ok=True)
+    (assets / ".gitkeep").touch()   # git keeps no empty directory, and both Dockerfiles COPY instance_assets/
     shutil.copytree(assets, dst / "tests/instance_assets", dirs_exist_ok=True)
     shutil.copy(inst_path, dst / "tests/instance.json")
     inst = json.loads(inst_path.read_text())
@@ -393,9 +440,10 @@ def main() -> None:
                                   f"{d['grasp_rules'].split(':')[0]}.")
     hours = a.hours if a.hours is not None else (0.5 if spec.get("fixture") else 2.0)
     goal_text, _ = goal_words(fam, spec["text"], d)
-    (dst / "instruction.md").write_text(instruction(fam, goal_text, d))
-    (dst / "README.md").write_text(readme(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle)))
-    (dst / "task.toml").write_text(task_toml(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], hours))
+    (dst / "instruction.md").write_text(instruction(fam, goal_text, d, inst))
+    (dst / "README.md").write_text(readme(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle),
+                                          success_rule_of(inst), inst))
+    (dst / "task.toml").write_text(task_toml(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], hours, tier_of(inst), inst))
     print("generated", slug, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
 
 
