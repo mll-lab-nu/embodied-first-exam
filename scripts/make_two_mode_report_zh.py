@@ -55,7 +55,7 @@ def last_msg(trial):
     except Exception: return ""
 def trial_for(job, task, limited):
     """Map by result.json task_name (Harbor truncates long trial directory names)."""
-    want = f"robotwin_2_0_{task}" + ("-limited" if limited else "")
+    want = f"robotwin_2_0_{task}" + ("-standard" if limited else "-privileged")
     for t in sorted((jobs / job).glob("robotwin_2_0_*")):
         if not t.is_dir() or not (t / "result.json").exists(): continue
         try: name = json.load(open(t / "result.json")).get("task_name", "").split("/")[-1]

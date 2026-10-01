@@ -8,6 +8,7 @@ tasks/dextoolbench_<category>_<object>_<task>/, writes that task's instance.json
 (images/mujoco/rcb_mj/simtoolreal/dextoolbench/trajectories/...), and rewrites the texts. The oracle
 (solution/oracle_targets.npy) is generated separately with scripts/dtb_mk_oracle.py; results/ is not copied."""
 import json, pathlib, re, shutil, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TPL = ROOT / "tasks/dextoolbench_hammer_claw_hammer_swing_down-privileged"
@@ -20,7 +21,7 @@ MOTION = {"swing_down": "a downward hammer swing", "swing_side": "a sideways ham
 
 def make(cat: str, obj: str, task: str) -> pathlib.Path:
     src = TRAJ / cat / obj / f"{task}.json"; t = json.load(open(src)); n = len(t["goals"])
-    name = f"dextoolbench_{cat}_{obj}_{task}"; dst = ROOT / "tasks" / name
+    name = f"dextoolbench_{cat}_{obj}_{task}-privileged"; dst = ROOT / "tasks" / name
     if dst != TPL:
         if dst.exists(): shutil.rmtree(dst)
         shutil.copytree(TPL, dst, ignore=shutil.ignore_patterns("results", "__pycache__", "oracle_targets.npy"))
@@ -53,6 +54,7 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
     rd = dst / "README.md"; r = rd.read_text()
     r = re.sub(r"\| oracle \|.*\|\n", "| oracle | `solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed |\n", r)
     r = re.sub(r"\| port check \|.*\|\n", "", r); rd.write_text(r)
+    normalize(dst)   # protocol v1.0 conventions (scripts/task_conventions.py)
     return dst
 
 
