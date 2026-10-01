@@ -481,8 +481,18 @@ class _Robot:
             self.width_table[name] = (widths[keep][::-1].copy(), cmds[keep][::-1].copy())    # increasing widths
             lo, hi = float(self.width_table[name][0][0]), float(self.width_table[name][0][-1])
             self.limits[self.grip_index[name]] = [round(max(0.0, lo), 6), round(hi, 6)]
-        # limits as float32 values: actions are float32 rows, and a row at a limit must not read as beyond it
-        self.limits = [[float(np.float32(l[0])), float(np.float32(l[1]))] for l in self.limits]
+        # limits as float32 values: actions are float32 rows, and a row at a limit must not read as beyond it. The model
+        # (topogym/robot/joint_position.py validate_action) checks the EXACT limits and raises beyond them, so where
+        # float32 rounds a limit outward (e.g. float32(3.14158) = 3.141580104827881) take the next float32 inside it
+        # (fix 2026-09-30: a row at a limit, and every clipped row, raised "Joint target outside model limits").
+        def inside(lo, hi):
+            a, b = np.float32(lo), np.float32(hi)
+            if float(a) < lo:
+                a = np.nextafter(a, np.float32(np.inf))
+            if float(b) > hi:
+                b = np.nextafter(b, np.float32(-np.inf))
+            return [float(a), float(b)]
+        self.limits = [inside(*l) for l in self.limits]
         self.lo = np.array([l[0] for l in self.limits]); self.hi = np.array([l[1] for l in self.limits])
         # tool-frame axes: approach = hand origin -> TCP; closing = between the two finger pads (both in the TCP frame)
         self.axes = {}
@@ -1358,6 +1368,40 @@ def _source() -> dict:
     return json.loads(p.read_text()) if p.is_file() else {}
 
 
+def success_enabled(task) -> bool:
+    """Whether the image judges success for this task: the task's goal_complete switch. Since Jianwen's 2ec4b8d6 it is
+    True by default in every family (an enable switch, not the episode's success state; topogym/tasks/base.py)."""
+    return bool(getattr(task, "goal_complete", True))
+
+
+def grasp_words(s: "Session") -> str:
+    """The instance's grasping, from its frozen SimulatorConfig: his recommended / explicit assistance or physical."""
+    ga = s.config.get("grasp_assist") or {}
+    if ga.get("model", "none") == "none":
+        return "physical grasping"
+    source = s.spec["grasp_assist"]
+    source = "his recommended" if source == "recommended" else "his explicit" if isinstance(source, dict) else "frozen"
+    return f"{source} {ga['model']} grasp assistance"
+
+
+def success_rule(s: "Session") -> str:
+    """Provenance of this instance's success rule, recorded in instance.json and task.toml: his default success with the
+    terminal revision, plus his qualification record where one matches this instance. Since 2ec4b8d6 a record is owner
+    metadata only (terminal_metadata()["qualification"]); it never enables or disables success."""
+    task = s.env._task
+    if not success_enabled(task):
+        return "not evaluable (goal_complete False)"
+    meta = task.terminal_metadata()
+    out = f"his default success (goal_complete True; terminal revision {meta.get('revision', task.terminal_revision)})"
+    record = meta.get("qualification")
+    if record:
+        out += (f"; his qualification record for this variation matches, as metadata only (record profile: "
+                f"{record.get('profile', 'not recorded')}{'; ' + record['scope'] if record.get('scope') else ''}); this "
+                f"instance runs CUDA {float(s.config['physics_dt_s']) * 1000:g} ms ticks x {int(s.config['solver_substeps'])} "
+                f"substeps with joint-position actions and {grasp_words(s)}, which the record does not cover")
+    return out
+
+
 def cmd_make_instance(a) -> None:
     params = json.loads(Path(a.task_parameters).read_text()) if a.task_parameters else None
     s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed, task_parameters=params)
@@ -1372,7 +1416,7 @@ def cmd_make_instance(a) -> None:
            "scene_variation": s.env._scene_variation,
            "effective_task_parameters": s.env._task.config,
            "public_goal": describe_goal(s.env._task) if s.env._task.task_id in TASK_IDS else None,
-           "evaluable_for_task_success": bool(getattr(s.env._task, "goal_complete", True))}
+           "evaluable_for_task_success": success_enabled(s.env._task), "success_rule": success_rule(s)}
     # Package numeric Blanket state alongside each instance, including its hashes.
     dependency = s.config.get("task_parameters", {}).get("initial_state_path")
     if dependency:

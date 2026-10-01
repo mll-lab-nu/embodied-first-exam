@@ -64,7 +64,7 @@ def write_final() -> None:
     n = int(E.get("episode_control_steps") or ctrl_steps())
     json.dump({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-               "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
+               "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "replay_success": E.get("replay_success"),
                "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
                "video_done": bool(E.get("video_done"))},
               open(os.path.join(DATA, "final.json.tmp"), "w"))
@@ -75,18 +75,23 @@ def finalize() -> None:
     """Runs on the main thread between queued jobs, so no submit / observe can run meanwhile."""
     try:
         acts = S.record_stop(); live_sha = S.state_sha()
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "limited-mode episode (v2)", "steps": E["step"], "reason": E["reason"]})
-        E["n_actions"] = int(len(acts)); E["live_sha"] = live_sha
-        rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha"]; E["deterministic"] = rep["state_sha"] == live_sha
+        # Replay what the live episode executed: the rows up to its recorded end. Rows recorded after it (the rest of the
+        # chunk that ended it, watch holds) were never commanded live, so a GPU replay that ends later must not run them.
+        n_live = E.get("end_row")
+        live = acts if n_live is None else acts[:int(n_live)]
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "limited-mode episode (v2)", "steps": E["step"], "reason": E["reason"],
+                                                                            "live_rows": int(len(live))})
+        E["n_actions"] = int(len(acts)); E["live_rows"] = int(len(live)); E["live_sha"] = live_sha
+        rep = S.replay(live); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha"]; E["deterministic"] = rep["state_sha"] == live_sha
         log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
         acts = None
     # the grading record is complete before the video, whose rendering grows with the episode
     E["finalized"] = True; write_final()
-    if acts is not None and len(acts):
+    if acts is not None and len(live):
         try:
-            S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(acts); S.stop_video(); E["video"] = True   # + replay.last.png
+            S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(live); S.stop_video(); E["video"] = True   # + replay.last.png
         except Exception:  # noqa
             traceback.print_exc()
     E["video_done"] = True; write_final()
@@ -100,6 +105,7 @@ def start_finalize() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
+    E.setdefault("end_row", len(S._recording) if S._recording is not None else None)   # timeout / error / guard ends
     if not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
@@ -242,6 +248,8 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
         finish("timeout")
         return True
     guard = S.step(a); rec.tick()
+    if S.episode_end is not None and "end_row" not in E and S._recording is not None:
+        E["end_row"] = len(S._recording)      # the row at which the live episode ended (success or a failure predicate)
     if guard: finish("step_guard")
     elif S.episode_end not in (None, "success"): finish("task_failed")
     return E["done"]
