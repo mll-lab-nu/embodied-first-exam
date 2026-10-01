@@ -1,3 +1,5 @@
+> **历史设计文档**：已由 [PROTOCOL.md](PROTOCOL.md)（v1.0）和 [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md)（`eai-standard/2.1`）取代，仅作留档。limited 模式现称 standard 模式。
+
 # Limited 模式 v2 设计文档：两个统一接口（submit / get_obs）驱动仿真器/真机
 
 状态：2026-09-24 **已实现**（`joint_position`、`ee_pose` 两种类型；`joint_delta/joint_velocity/ee_delta/joint_torque` 仍待做），协议 `rcb-limited/2.0`，见 `LIMITED_MODE_PROTOCOL.md`。原设计稿正文保留如下。

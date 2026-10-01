@@ -1,9 +1,11 @@
 name: static-checks
 on:
   pull_request:
-    paths: ["tasks/**", "ci_checks/**"]
   push:
     branches: [main]
+concurrency:
+  group: static-checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   checks:
     runs-on: ubuntu-latest

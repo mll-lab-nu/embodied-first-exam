@@ -1,14 +1,28 @@
-## What
-<!-- New instance(s) of an existing family / new family / new simulator adapter / task repair -->
+## Kind
+<!-- Pick one. A pull request that adds tasks and changes shared files will be split. -->
+- [ ] New benchmark (proposal: #___)
+- [ ] Tasks for an existing benchmark
+- [ ] Task fix
+- [ ] Shared files / protocol (protocol-change issue: #___)
+- [ ] Results
+
+## What and why
+<!-- Written by you. For a fix: which agent behaviour it closes, with before/after runs. -->
+
+## Contract
+- Mode(s): privileged / standard — protocol (standard only): `eai-standard/2.__`
+- Oracle: full / partial / none — evidence: ___
+- Base image(s): `eai-<sim>:<ver>` (published / BUILD_ONLY)
+- Agent time budget: ___ s (default 3600; reason if longer)
 
 ## Checklist
-- [ ] `bash ci_checks/run_all.sh tasks/<my-task>` passes locally.
-- [ ] `harbor run -p tasks/<my-task> -a oracle` gives reward 1 (paste the job summary below).
-- [ ] `harbor run -p tasks/<my-task> -a nop` gives reward 0.
-- [ ] Scene/verifier inputs under `environment/` and `tests/` are final (changing them later = new task).
-- [ ] `instruction.md` states the deliverable and every convention the agent cannot infer (frames, quaternion order, paths).
-- [ ] Fresh-process determinism evidence is included for a new simulator/family.
-- [ ] If this touches `images/`: `images/VERSION` was bumped and dependent task Dockerfiles re-pinned.
+- [ ] `bash ci_checks/run_all.sh <tasks>` passes; no protocol warnings other than `legacy:` ones
+- [ ] Generated tasks: re-running the generator leaves `git diff tasks/` empty
+- [ ] Oracle and `nop` on a sample (≥ 2 tasks per mode), table below
+- [ ] New simulator or family: two fresh replays give the same state hash
+- [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §2.7)
+- [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
+- [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
 
 ## Evidence
-<!-- oracle job summary; optional: one strong-model run and why it failed -->
+<!-- Oracle / nop table; optionally one strong-model run and why it failed. -->
