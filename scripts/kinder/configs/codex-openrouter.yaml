@@ -1,0 +1,14 @@
+# Harbor job config: Harbor's own Codex agent, served by OpenRouter -- the run id codex-gpt6_luna-medium. Needs
+# OPENROUTER_API_KEY in the environment (or `--env-file .env`). Paths are relative to the repository root:
+#   harbor run -c scripts/kinder/configs/codex-openrouter.yaml -p tasks/kinder-tossing-i00-standard
+#   RCB_RESET_BUDGET=50 harbor run -c ... -p tasks/<task>-standard   # the optional reset capability: report separately
+agents:
+  - name: codex
+    model_name: openai/gpt-6-luna
+    kwargs:
+      version: 0.159.2          # the Codex CLI the recorded runs used
+      reasoning_effort: medium
+      web_search: disabled      # Codex's live search runs at the model provider, past the task's egress allowlist
+    env:
+      OPENAI_BASE_URL: https://openrouter.ai/api/v1
+      OPENAI_API_KEY: ${OPENROUTER_API_KEY}
