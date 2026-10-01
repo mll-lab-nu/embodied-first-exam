@@ -1,5 +1,5 @@
 """RoboTwin expert seed sweep (run inside the rcb-robotwin container with the UNSCRUBBED upstream envs/ bind-mounted):
-  docker run --rm --gpus all -v $PWD/tasks/robotwin_2_0_stack_blocks_two:/task -v $PWD/scripts:/scripts \\
+  docker run --rm --gpus all -v $PWD/tasks/robotwin_2_0_stack_blocks_two-privileged:/task -v $PWD/scripts:/scripts \\
     -v $PWD/third_party/RoboTwin/envs:/opt/RoboTwin/envs:ro ghcr.io/jameskrw/rcb-robotwin:0.1.1 \\
     bash -c "cd /opt/RoboTwin && python /scripts/robotwin_expert_sweep.py task1,task2 60417,28831 /tmp/results.json"
 for each candidate task and seed, build the scene, run the upstream play_once through the

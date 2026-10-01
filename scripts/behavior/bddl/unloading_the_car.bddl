@@ -1,0 +1,34 @@
+(define (problem unloading_the_car-0)
+    (:domain behavior-1k)
+
+    (:objects
+        car.n.01_1 - car.n.01
+        floor.n.01_1 - floor.n.01
+        briefcase.n.01_1 - briefcase.n.01
+        satchel.n.01_1 - satchel.n.01
+        sofa.n.01_1 - sofa.n.01
+        agent.n.01_1 - agent.n.01
+    )
+    
+    (:init 
+        (inroom car.n.01_1 garage)
+        (inside briefcase.n.01_1 car.n.01_1) 
+        (inside satchel.n.01_1 car.n.01_1) 
+        (inroom sofa.n.01_1 living_room)
+        (inroom floor.n.01_1 garage) 
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+    
+    (:goal 
+        (and 
+            (forall 
+                (?briefcase.n.01 - briefcase.n.01)
+                (nextto ?briefcase.n.01 ?sofa.n.01_1)
+            )
+            (forall
+                (?satchel.n.01 - satchel.n.01)
+                (nextto ?satchel.n.01 ?sofa.n.01_1)
+            )
+        )
+    )
+)
