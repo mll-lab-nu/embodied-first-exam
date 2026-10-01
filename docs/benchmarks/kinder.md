@@ -62,19 +62,14 @@ back `blocked` and stops the chunk there.
 harbor run -c scripts/kinder/configs/codex-openrouter.yaml --env-file .env -p tasks/kinder-tossing-i00-standard
 harbor run -p tasks/kinder-dynamo-i00 -a oracle      # or -a nop: scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its OpenAI endpoint (run id
+`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
-## Results (GPT-6 Luna, Codex, effort medium, 60 min, before protocol v1.0)
+## Results
 
-| privileged | standard, no reset (rcb-limited/1.1) | standard, 50 resets (reported separately) |
-|---|---|---|
-| 7/10 | 0/10 | 3/10 (sweep-simple, sort-blocks, packing-3d) |
-
-Scored tasks only (dynamo is the fixture). Per run: `tasks/<task>/results/codex-gpt6_luna-medium/` (standard runs
-before v1.0 under `prev_rcb_limited_1_1*/`). Without resets the nine MuJoCo runs used up the 1000 control steps after
-6–46 min while still finding things; with resets, the passes calibrated over earlier episodes and then replayed a script
-(or packed the tray in their first episode). Under protocol v1.0 (Harbor's own Codex agent) only the fixture has run so
-far: dynamo passed in both modes, the standard one in its only episode, through a sidecar crash and resume.
+Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
+replay's last frame, a passing trajectory). Runs recorded before protocol v1.0 say so in their README (the standard
+ones in `prev_rcb_limited_1_1/`, without reset, and `prev_rcb_limited_1_1_reset50/`, with 50). Cross-task tables are
+generated for the site (PROTOCOL D3).

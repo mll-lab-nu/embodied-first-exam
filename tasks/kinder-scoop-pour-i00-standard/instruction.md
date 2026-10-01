@@ -15,9 +15,9 @@ and you reach it only through a client. **Task:** move all 30 small dark-red cub
   `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You get the robot's own sensors: its two cameras (RGB, 480×640: `robot_base` on the base, `robot_wrist` on the arm's last link, which also gives depth), its joint encoders (the arm's angles and velocities, the gripper) and the base's odometry (where it is relative to where it started). Not where anything else is, not
   the goal check: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
-  `meta["reason"]`: `"success"`, or `"failed"` when its control steps ran out). `spec()` gives the robot's own facts,
-  as its documentation would: each arm joint's axis, position and limits, the gripper's grasp point, each camera's
-  field of view and pose.
+  `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
+  `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
+  gripper's grasp point, each camera's field of view and pose.
 - There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run
