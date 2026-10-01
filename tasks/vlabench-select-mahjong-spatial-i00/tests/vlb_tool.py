@@ -72,7 +72,10 @@ def load_npz(path, max_bytes: int = 8 * 1024 * 1024) -> dict:
         infos = archive.infolist()
         if len(infos) > 16 or sum(i.file_size for i in infos) > 4 * max_bytes:
             raise ValueError("expanded archive too large")
-        if any(not i.filename.endswith(".npy") for i in infos):
+        names = [i.filename for i in infos]
+        if len(set(names)) != len(names):
+            raise ValueError("duplicate archive members")  # numpy would silently take the last one
+        if any(not n.endswith(".npy") for n in names):
             raise ValueError("expected .npy members only")
         for info in infos:
             with archive.open(info) as f:

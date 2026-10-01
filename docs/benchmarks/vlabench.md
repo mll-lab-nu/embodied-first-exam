@@ -34,6 +34,9 @@ in `scripts/vlabench/tasks.json` (`excluded`) and `scripts/vlabench/frozen/repor
   native episode ends the moment it holds, so a trajectory ends there and the graded state is its final state
   (PROTOCOL §3): the privileged verifier rejects a trajectory with actions after the termination
   (`invalid_trajectory`), and the standard service ends the episode with `reason = "success"`.
+- **Predicates are VLABench's.** They are graded as upstream defines them, including their looseness: e.g.
+  `select_fruit`'s containment checks the fruit's root point against the plate's footprint and a 0–0.1 m height band,
+  not that the fruit rests on the plate (found by the red-team trial). Changing them would make it another benchmark.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 4000 control steps (400 s of robot time; PR #4's bound). Standard
   episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the fresh replay
   that grades the episode (~40 ms a step) must fit the collect hook's 900 s.
@@ -106,3 +109,13 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 | heat_food | 0 | 793 | `0f7a3aea9581b8af…` |
 | friction_qa | 0 | 224 | `507033633967865c…` |
 | texas_holdem | 0 | 660 | `c77b7967d5b4788f…` |
+
+## Open questions
+- **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the grading replay inside the collect
+  hook's 900 s. In the sample model trial one standard episode (insert_flower) reached it after 53 minutes of the
+  agent's 60, so the cap, not the wall clock, ended it. Raising it needs a longer collect timeout (the replay costs
+  ~40 ms a step).
+- **Tasks without a reference.** The 57 tasks left out could come in later with `oracle = "none"` and human review
+  (PROTOCOL §2.7).
+- **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved
+  (sample trial 4/4; PR #4: 57/83); the standard twin carries the difficulty.
