@@ -10,9 +10,10 @@
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these four
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash
-recovery), the client `rcb_client.py` + `rcb1.py`, and the sidecar entrypoint `run.sh`. The generators copy them unchanged
+recovery), the client `rcb_client.py` + `rcb1.py`, the sidecar entrypoint `run.sh`, and the client image: `client.env`
+(the one client base, pinned by digest) and `client-requirements.txt` (exact pins). The generators copy the code unchanged
 into every 2.2 task (`environment/rcb_client.py`, `environment/rcb1.py`, `environment/sim/{rcb_limited.py,rcb1.py,run.sh}`);
-`ci_checks/check-tooling-identity.sh` checks the copies. Each benchmark writes only its adapter,
+`ci_checks/check-tooling-identity.sh` checks the copies, `ci_checks/check-standard-client.sh` the images. Each benchmark writes only its adapter,
 `environment/sim/server.py`: the robot, the cameras, the clock (`toy_server.py` is the smallest complete one).
 
 **Design principles.**
@@ -222,6 +223,11 @@ numeric ones into `reward.json` (MAY fields, PROTOCOL §2.6), with `infra_error`
   the watchdog loops through every restart to a give-up.
 - Optional: `RCB_MAX_RESUMES` (2), `RCB_MAX_CALL_WALL_S` (900), `RCB_RESUME_MAX_DEV_M` (0.05).
 - `artifacts`: also `journal.f64`, `startups.jsonl`, `server.log` from `service = "sim"`.
+- The agent container (`environment/Dockerfile`) and the verifier (`tests/Dockerfile`) `FROM` the `CLIENT_IMAGE` of
+  `scripts/eai_standard/client.env` (PROTOCOL §2.4), and any `pip install` installs `client-requirements.txt`: the full pin
+  list inline (`RUN pip install --no-cache-dir certifi==… … urllib3==…`), or `-r client-requirements.txt` with a
+  byte-identical copy in the build context. The agent containers of today need the whole list (numpy, pillow, scipy,
+  requests and its dependencies); the verifiers install nothing. A new package or version is a change to the pins.
 - The collect hook starts with `python3 /srv/rcb_limited.py end "$DATA"`: it waits through a resume (no PID file until the
   service is ready), signals only the process that wrote the newest `startups.jsonl` line, resends SIGUSR1 every 30 s, and
   exits 2 when `final.json` already holds the verdict (a give-up, or an in-process grade; `--wait-key video_done` for

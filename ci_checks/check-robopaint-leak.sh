@@ -16,7 +16,7 @@ python3 - "$t" <<'PY'
 import json, os, re, sys
 t = sys.argv[1]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_paint.py", "rcb_brush.py", "rcb_client.py", "rcb1.py",
-           "NOTICE-exemplar.md", "ARPHICPL.TXT"}
+           "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
