@@ -22,7 +22,7 @@ the live episode and in the replay. A success reached earlier and then lost does
 graded and stop submitting. The check measures the task's object (the hand, for reaching tasks) against
 `meta["task"]["target_pos"]`, with a tolerance of a few centimetres.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.1`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects (waits while the service starts)
