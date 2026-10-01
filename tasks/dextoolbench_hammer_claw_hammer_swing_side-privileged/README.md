@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/hammer/claw_hammer/swing_side` / seed 0 |
 | Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 13/40 goals (solution/; README of dextoolbench_hammer_claw_hammer_swing_side-privileged) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.1` |
+| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
 
 ## Task
 DexToolBench task `hammer / claw_hammer / swing_side` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.
@@ -21,7 +21,7 @@ Dexterous tool use: a KUKA iiwa 14 arm with a 22-DoF Sharpa HA4 hand (29 positio
 `solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed: **13/40 goals** in 1083 control steps (the policy's own sim2sim progress; a task's reference, not a ceiling); nop 0/40
 
 ## Verification
-**metric**: DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached (both replays agreeing); `progress` = goals / 40 in `reward.json`
+DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached (both replays agreeing); `progress` = goals / 40 in `reward.json`
 
 ## Details
 | | |

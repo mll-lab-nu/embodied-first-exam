@@ -4,6 +4,7 @@
 |---|---|
 | Benchmark | robosuite (example task) |
 | Mode | privileged |
+| Twin | — (privileged only) |
 | Simulator / robot | `robosuite` / `franka-panda` |
 | Family / instance | `cube_stack` / seed 0 |
 | Oracle | `full` |
@@ -14,7 +15,7 @@
 robosuite cube_stack: produce one replayable trajectory for frozen scene instance 00.
 
 ## Difficulty
-<!-- Why is this instance non-trivial for a coding agent? Which primitive interactions matter? -->
+The example task of the benchmark: stack the red cube on the green one with a Franka arm through cap-x primitives (`get_object_pose`, `goto_pose`, grippers) and leave it stacked. It is easy on purpose: it shows the task layout, the trajectory deliverable and the fresh-process replay verifier, and runs on CPU.
 
 ## Reference solution
 cap-x's human-written oracle for `cube_stack` (`solution/solve.sh` records it into a trajectory).

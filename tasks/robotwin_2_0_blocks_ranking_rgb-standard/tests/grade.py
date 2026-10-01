@@ -20,4 +20,4 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0),
            "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))),
            "live_video": int(bool(d.get("live_video"))), "live_frames": int(d.get("live_frames") or 0),
-           "infra_error": int(d.get("reason") == "sim_crashed"), "sim_startups": _startups(), "grader_error": 0})
+           "infra_error": int(d.get("reason") == "sim_crashed"), "sim_error": int(d.get("reason") == "error"), "sim_startups": _startups(), "grader_error": 0})

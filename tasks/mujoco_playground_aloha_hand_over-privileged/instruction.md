@@ -32,7 +32,7 @@ img = s.render("overhead_cam")                      # also teleoperator_pov, col
 Actuators `rcb_aloha.ACTUATOR_NAMES`: per arm (`left/`, `right/`) `waist, shoulder, elbow, forearm_roll, wrist_angle,
 wrist_rotate` (joint position targets, rad) and `gripper` (finger position, 0.002 = closed … 0.037 = open). Limits:
 `s.lower`, `s.upper`. The arms are position-controlled **without gravity compensation**: a joint settles where the
-actuator force kp·(target − q) balances gravity. Everything in `s.model` / `s.data` is readable (privileged tier),
+actuator force kp·(target − q) balances gravity. Everything in `s.model` / `s.data` is readable (privileged mode),
 e.g. for inverse kinematics with `mujoco.mj_jacSite` on the `left/gripper` / `right/gripper` sites.
 
 ## Rules

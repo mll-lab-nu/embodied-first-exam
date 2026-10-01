@@ -1,4 +1,4 @@
-"""rcb-limited/2.x client — the only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py).
+"""eai-standard/2.x client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py).
 
     from rcb_client import Robot
     r = Robot()                                   # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -87,9 +87,13 @@ class Robot:
 
     def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
         body = rcb1.encode(meta, parts)
+        if len(body) > 64 * 1024 * 1024:   # the service answers 413; refuse here so the reason is clear
+            raise ValueError(f"request is {len(body) / 2**20:.0f} MB, over the 64 MB limit: send fewer rows per call")
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
         if r.status_code == 409:
             raise EpisodeOver(r.json().get("reason") if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
+        if r.status_code == 500:   # a simulator error ends the episode (eai-standard/2.1 §4.6)
+            raise EpisodeOver("error")
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}

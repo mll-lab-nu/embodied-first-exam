@@ -24,7 +24,7 @@ def tool_of(src: pathlib.Path) -> str:
 def make(src: pathlib.Path) -> pathlib.Path:
     name = src.name; base = name.removesuffix("-privileged"); dst = ROOT / "tasks" / f"{base}-standard"; tool = tool_of(src); dtb = tool == "rcb_dtb"
     inst = json.load(open(src / "environment/instance.json"))
-    # regenerate everything except results/ (agent results committed per run)
+    # regenerate everything; results/ does not belong in the repository (PROTOCOL D3) and normalize() removes it
     if dst.exists():
         for c in dst.iterdir():
             if c.name != "results": shutil.rmtree(c) if c.is_dir() else c.unlink()
@@ -91,6 +91,7 @@ det = bool(d.get("deterministic")); ok = bool(d.get("success")) and det
 out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.get("finalized"))), "control_steps": int(d.get("control_steps") or 0),
        "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
 # no verdict on the agent: the service crashed (restart refused) or its verification replay failed
+out["sim_error"] = int(d.get("reason") == "error")   # the simulator failed during a call (the episode ended there)
 if d.get("infra_error") or d.get("finalize_error"):
     out.update(infra_error=1, grader_error=int(bool(d.get("finalize_error"))), reason=str(d.get("reason") or ""), finalize_error=str(d.get("finalize_error") or "")[:300])
 if "progress" in d:
@@ -126,7 +127,7 @@ print("status:", r.status())
     desc = re.search(r'^description = "(.*)"$', u, re.M).group(1)
     kw = re.search(r"^keywords = (\[.*\])$", u, re.M).group(1).replace("]", ', "standard-mode"]')
     meta = re.search(r"\[metadata\]\n(.*?)\n\n", u, re.S).group(1)
-    meta = re.sub(r'(?m)^(tier|mode|protocol) = .*\n?', '', meta).rstrip('\n')
+    meta = re.sub(r'(?m)^(tier|mode|protocol|oracle|oracle_evidence) = .*\n?', '', meta).rstrip('\n')   # normalize() re-derives oracle
     agent_net = ALLOW if dtb else '# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.'
     (dst / "task.toml").write_text(f'''schema_version = "1.3"
 artifacts = [
@@ -177,7 +178,7 @@ build_timeout_sec = 600.0
                                    f"(`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `{tool}`). The agent sees camera RGB-D and proprioception only.\n\n"
                                    "| | |\n|---|---|\n| oracle | `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step) |\n"
                                    "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n")
-    normalize(dst)   # protocol v1.0 conventions (scripts/task_conventions.py)
+    normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 
 
