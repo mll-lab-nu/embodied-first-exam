@@ -70,6 +70,7 @@ ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:$(cat images/kinder/VERS
 ## Results
 
 Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
-replay's last frame, a passing trajectory). Runs recorded before protocol v1.0 say so in their README (the standard
-ones in `prev_rcb_limited_1_1/`, without reset, and `prev_rcb_limited_1_1_reset50/`, with 50). Cross-task tables are
-generated for the site (PROTOCOL D3).
+replay's last frame, a passing trajectory). A standard task's folder holds the standard configuration (no reset) and,
+in `reset50/`, a run with the optional capability of 50 resets, reported separately (PROTOCOL D1). Runs recorded
+before protocol v1.0 say so in their README (`prev_rcb_limited_1_1/` without reset, `prev_rcb_limited_1_1_reset50/`
+with 50). Cross-task tables are generated for the site (PROTOCOL D3).
