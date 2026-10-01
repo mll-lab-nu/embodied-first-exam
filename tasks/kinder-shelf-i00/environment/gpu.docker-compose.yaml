@@ -1,0 +1,19 @@
+# Optional overlay: hand the host's NVIDIA GPU to the task container.
+#
+#   harbor run -p tasks/kinder-shelf-i00 ... --extra-docker-compose tasks/kinder-shelf-i00/environment/gpu.docker-compose.yaml
+#
+# Not named docker-compose.yaml on purpose: Harbor loads that name automatically, and a device reservation the host
+# cannot meet stops the container from starting. Passing or failing never depends on it: physics is CPU; the GPU only
+# speeds up images (s.images(), s.render_video()). `graphics` is the capability that mounts the EGL driver.
+services:
+  main:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
