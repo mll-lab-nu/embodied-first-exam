@@ -167,6 +167,7 @@ def exact_class_mismatch_gives_up():
         fin = c.final()
         expect(fin["gave_up"] and fin["infra_error"] == 1 and fin["reason"].startswith("resume_failed: replayed state differs"), f"final {fin}")
         expect(fin["success"] is False and fin["finalized"] is True, "no verdict but failure")
+        expect(fin["resumes"] == 1 and fin["resume_state_mismatch"] == 1 and fin["sim_startups"] == 2, f"give-up counters {fin}")
     finally:
         c.down()
 
@@ -200,6 +201,7 @@ def approx_class_gross_divergence_gives_up():
         expect(c.end(timeout=30) == 2, "give-up verdict kept")
         fin = c.final()
         expect(fin["gave_up"] and fin["infra_error"] == 1 and "TCP" in fin["reason"], f"final {fin}")
+        expect(fin["resumes"] == 1 and fin["resume_state_mismatch"] == 1 and fin["resume_max_tcp_dev_m"] > 0.05, f"give-up counters {fin}")
     finally:
         c.down()
 
@@ -217,6 +219,7 @@ def third_crash_ends_the_episode():
         time.sleep(2)
         fin = c.final()
         expect(fin["reason"] == "sim_crashed" and fin["infra_error"] == 1 and fin["gave_up"], f"final {fin}")
+        expect(fin["resumes"] == 2 and fin["sim_startups"] == 4, f"the give-up reports the earlier resumes {fin}")
         expect(c.end(timeout=30) == 2, "verdict kept")
     finally:
         c.down()
@@ -231,6 +234,25 @@ def third_crash_ends_the_episode():
         time.sleep(2)
         fin = c.final()
         expect(fin["reason"] == "sim_crashed_on_call" and "infra_error" not in fin and fin["gave_up"], f"final {fin}")
+        expect(fin["resumes"] == 2 and fin["sim_startups"] == 4, f"the give-up reports the earlier resumes {fin}")
+    finally:
+        c.down()
+
+
+@case
+def give_up_reports_earlier_resumes():
+    c = Compose("give_up_counts")
+    try:
+        r = c.robot()
+        r.submit("joint_position", chunk(4, 0.3), dt=0.05, video="none")
+        c.kill_service(); r.wait_ready(60)                # resume 1: exact
+        r.submit("joint_position", chunk(4, 0.35), dt=0.05, video="none")
+        with open(os.path.join(c.data, "journal.f64"), "r+b") as f:
+            f.truncate(8 * 3 * 2)                         # the journal loses rows the log counts
+        c.kill_service(); time.sleep(3)                   # resume 2 fails: journal shorter than the log
+        fin = c.final()
+        expect(fin["gave_up"] and fin["reason"] == "resume_failed: journal shorter than the log" and fin["infra_error"] == 1, f"final {fin}")
+        expect(fin["resumes"] == 2 and fin["sim_startups"] == 3 and fin["resume_state_mismatch"] == 0, f"counters {fin}")
     finally:
         c.down()
 

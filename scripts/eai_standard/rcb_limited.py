@@ -627,10 +627,14 @@ class Episode:
             state["t0"] = time.time()
             self._arm(on_end)
             return False
-        if final_verdict(self.data):
-            self.give_up("restarted after finalize", infra=False)
         tries = [e for e in ev if e.get("ev") == "resuming"]        # earlier resumes (a crash during one counts too)
         resumed = [e for e in ev if e.get("ev") == "resumed"]
+        self.resumes = len(tries)                    # the record so far, also for a give-up below (final_fields)
+        self.mismatches = sum(1 for e in resumed if e.get("exact") is False)
+        self.max_tcp_dev = max([float(e.get("tcp_dev_m") or 0) for e in resumed] + [0.0])
+        self.max_joint_dev = max([float(e.get("joint_dev") or 0) for e in resumed] + [0.0])
+        if final_verdict(self.data):
+            self.give_up("restarted after finalize", infra=False)
         k = max(i for i, e in enumerate(ev) if e.get("ev") in ("start", "resuming", "resumed"))
         tail = ev[k + 1:]
         in_call = bool({e.get("id") for e in tail if e.get("ev") == "call_begin"} - {e.get("id") for e in tail if e.get("ev") == "call_end"})
@@ -639,6 +643,7 @@ class Episode:
             self.give_up("sim_crashed_on_call" if agent else "sim_crashed", infra=not agent)
         self.log({"ev": "resuming", "attempt": len(tries) + 1, "crashed_in_call": in_call,
                   "downtime_s": round(time.time() - float(ev[-1].get("ts") or time.time()), 1)})
+        self.resumes = len(tries) + 1                # this attempt counts, whether or not it succeeds
         cps = [e for e in ev if e.get("ev") == "checkpoint"]
         last = cps[-1] if cps else {"call": 0, "step": 0, "control_steps": 0, "success": False, "state_sha": starts[0].get("state_sha")}
         n = int(last.get("control_steps") or 0)
@@ -658,18 +663,14 @@ class Episode:
         sha = state_sha(); want = last.get("state_sha")
         exact = None if want is None else sha == want
         dev = self._deviation(last.get("proprio"), proprio, spec)
-        self.resumes = len(tries) + 1
-        self.mismatches = sum(1 for e in resumed if e.get("exact") is False)
-        self.max_tcp_dev = max([float(e.get("tcp_dev_m") or 0) for e in resumed] + [0.0])
-        self.max_joint_dev = max([float(e.get("joint_dev") or 0) for e in resumed] + [0.0])
-        if exact is False:
+        if exact is False:                           # recorded first: a give-up below reports it too
+            self.mismatches += 1
+            self.max_tcp_dev = max(self.max_tcp_dev, dev.get("tcp_m") or 0.0)
+            self.max_joint_dev = max(self.max_joint_dev, dev.get("joint") or 0.0)
             if self.resume_class == "exact":
                 self.give_up("resume_failed: replayed state differs from the logged one", infra=True)
             if dev.get("tcp_m") is not None and dev["tcp_m"] > RESUME_MAX_DEV_M:
                 self.give_up(f"resume_failed: a replayed TCP is {dev['tcp_m']:.3f} m from its checkpoint (> {RESUME_MAX_DEV_M} m)", infra=True)
-            self.mismatches += 1
-            self.max_tcp_dev = max(self.max_tcp_dev, dev.get("tcp_m") or 0.0)
-            self.max_joint_dev = max(self.max_joint_dev, dev.get("joint") or 0.0)
         state["calls"] = int(last.get("call") or 0); state["step"] = int(last.get("step") or 0)
         if "success" in state:
             state["success"] = bool(last.get("success"))
