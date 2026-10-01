@@ -678,6 +678,8 @@ digest = "sha256:38b2b00e8137f7e6ca8c5ef011073f903c2600a8792d1f82fec54827b076207
 [[tasks]]
 name = "robot-coding-bench/kinder-tossing-i00-standard"
 digest = "sha256:779892b4c3f9c22d23b491431349174281a12bf709e316d31014d53ad0ef5a6f"
+
+[[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00"
 digest = "sha256:0992a5db32b0dd91df3c1ad643114997d3f35e7f00c2ae22e038c928683e2618"
 
