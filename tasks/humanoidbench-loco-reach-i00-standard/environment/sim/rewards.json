@@ -1,0 +1,11 @@
+{
+ "methods": [
+  {
+   "cls": "Reach",
+   "module": "humanoid_bench.envs.reach",
+   "name": "get_reward",
+   "source": "def get_reward(self):\n    hand_dist = np.sqrt(\n        np.square(self.robot.left_hand_position() - self.goal).sum()\n    )\n\n    healthy_reward = self._env.data.xmat[1, -1] * 5.0\n    motion_penalty = np.square(self._env.data.qvel[: self.robot.dof - 1]).sum()\n    reward_close = 5 if hand_dist < 1 else 0\n    reward_success = 10 if hand_dist < 0.05 else 0\n    reward = (\n        healthy_reward - 0.0001 * motion_penalty + reward_close + reward_success\n    )\n\n    info = {\n        \"hand_dist\": hand_dist,\n        \"healthy_reward\": healthy_reward,\n        \"motion_penalty\": motion_penalty,\n        \"reward_close\": reward_close,\n        \"reward_success\": reward_success,\n    }\n    return reward, info"
+  }
+ ],
+ "task_class": "humanoid_bench.envs.reach.Reach"
+}
