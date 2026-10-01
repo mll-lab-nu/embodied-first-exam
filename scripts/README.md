@@ -14,6 +14,7 @@
 ## 本地 Rollout
 
 - `run_buzz_wire_policy.py`、`run_cast_coil_policy.py`、`run_cast_keyhole_policy.py`、`run_lock_picking_policy.py`：冻结源码并执行各任务策略。
+- `plan_lock_picking_oracle.py`：冻结当前 Lock 三档物体路径与 1／2／3 次回退证书，`--ik` 加做从 home 起步的当前 Genesis 只读 IK，不推进物理。`run_lock_picking_policy.py --route-mode reindex --variation <variant> --audit-ik` 实际执行三档机器人完整流程并记录逐动作 IK（hard 使用 `--endpoint-depth 4.10`）；`audit_lock_picking_robot.py` 独立复核连续状态、关节、抓持和碰撞。冻结源码，CPU 仅监控，内存达到 90% 停止所属进程；辅助抓持流程通过不授予原生 success。见[完整证明与可复制命令](../solvability_proof/lock_picking/2026-09-30_robot_process/README.md)。
 - `run_horseshoe_policy.py`：当前三档物体路径复核、easy 双臂抓点/联合 IK 规划与物理诊断；每秒资源监控，90% 停止本次进程。局部诊断不授予完整可解资格。
 - `run_hedgehog_policy.py`、`run_interlocked_claws_policy.py`、`run_rigid_reference_policy.py`：几何准备及已开放的反馈策略流程。
 - `plan_hedgehog_object_oracle.py`、`run_hedgehog_oracle.py`、`audit_hedgehog_oracle.py`：当前四腰窗 medium 的物体证书、从 home 连续执行的辅助抓持 oracle，以及独立逐 tick 审计；冻结源码并监控 90% 资源阈值。[已验收范围与复现命令](../solvability_proof/hedgehog_in_cage/README.md)。

@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-fiber-bundling-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym fiber_bundling on the same frozen instance as the unlimited task. Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, tip first and in tip-to-root material order, until all roots and the front sheath have passed and cleared the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not completion. Keep the completed configuration stable. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym fiber_bundling on the same frozen instance as the unlimited task. Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "limited-mode", "trajectory", "fiber_bundling"]
 

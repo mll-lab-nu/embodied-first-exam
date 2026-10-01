@@ -1,0 +1,81 @@
+[
+  {
+    "variation": "easy",
+    "source": "runs/demo_metadata/lock_picking/2026-09-19_seed_generator_v1/previews/F1_M/front_oblique.mp4",
+    "archived": "evidence/references/easy_kinematic.mp4",
+    "original_report": "runs/demo_metadata/lock_picking/2026-09-19_seed_generator_v1/previews/F1_M/report.json",
+    "classification": "aligned_solving_kinematic_preview",
+    "counts_as_current_physical_proof": false,
+    "sha256": "f0a2967389979cc1d0bcf3086517281cca36f7de760718b9b6df4b444cefbb16",
+    "ffprobe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "nb_frames": "287"
+        }
+      ],
+      "format": {
+        "duration": "11.959000",
+        "size": "517689"
+      }
+    },
+    "full_decode_passed": true,
+    "original_video_sha256": "f0a2967389979cc1d0bcf3086517281cca36f7de760718b9b6df4b444cefbb16",
+    "matches_original_video_hash": true
+  },
+  {
+    "variation": "medium",
+    "source": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/full_solve.mp4",
+    "archived": "evidence/references/medium_historical_full.mp4",
+    "original_report": "task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/run_report.json",
+    "classification": "historical_physical_route_completed_native_success_false",
+    "counts_as_current_physical_proof": false,
+    "sha256": "ca8040b8d8c052515035f3a506c123308f677b1acce8cb390a27fb8314197920",
+    "ffprobe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 2544,
+          "height": 480,
+          "r_frame_rate": "30/1",
+          "nb_frames": "4694"
+        }
+      ],
+      "format": {
+        "duration": "156.467000",
+        "size": "16821450"
+      }
+    },
+    "full_decode_passed": true
+  },
+  {
+    "variation": "hard",
+    "source": "legacy/cleanup_20260929/reports/weekly/2026-09-22/presentation/media/lock_picking__f3_three_retreats__front_oblique.mp4",
+    "archived": "evidence/references/hard_kinematic_presentation.mp4",
+    "original_report": "runs/demo_metadata/lock_picking/2026-09-19_seed_generator_v1/previews/F3_M/report.json",
+    "classification": "historical_kinematic_presentation_copy_different_hash_from_original",
+    "counts_as_current_physical_proof": false,
+    "sha256": "89d6b63183d711688d040bf7b5ddf29fa937ac1efd1133edc0d5b508a9436982",
+    "ffprobe": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 540,
+          "r_frame_rate": "24/1",
+          "nb_frames": "522"
+        }
+      ],
+      "format": {
+        "duration": "21.750000",
+        "size": "134110"
+      }
+    },
+    "full_decode_passed": true,
+    "original_video_sha256": "c059ca2468e10b6706025e32c718a3906d56f37f00c7164c8f8e2dcd844324e7",
+    "matches_original_video_hash": false
+  }
+]

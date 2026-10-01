@@ -15,13 +15,16 @@ def main():
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--require-native-success", action="store_true")
+    parser.add_argument("--allow-hard-initial-settle", action="store_true",
+                        help="Explicit simulator-only scope for unmodified hard fixed_v2 initial penetration")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     args.run, args.output = args.run.resolve(), args.output.resolve()
     if args.worker:
         from topogym.planning.hedgehog_in_cage.audit import audit_execution
         from topogym.utils.io import write_json_atomic
-        report = audit_execution(args.run, args.output, require_native_success=args.require_native_success)
+        report = audit_execution(args.run, args.output, require_native_success=args.require_native_success,
+                                 allow_hard_initial_settle=args.allow_hard_initial_settle)
         write_json_atomic(args.output/"execution_audit.json", report)
         print(json.dumps(report, indent=2), flush=True)
         return 0 if report["passed"] else 2
@@ -33,6 +36,8 @@ def main():
                "--run", str(args.run), "--output", str(args.output)]
     if args.require_native_success:
         command.append("--require-native-success")
+    if args.allow_hard_initial_settle:
+        command.append("--allow-hard-initial-settle")
     (args.output/"invocation.json").write_text(json.dumps(dict(command=command), indent=2)+"\n")
     environment = dict(os.environ, PYTHONPATH=str(source), OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
                        OPENBLAS_NUM_THREADS="1", PYTHONUNBUFFERED="1")

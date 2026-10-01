@@ -1,5 +1,9 @@
 # 开锁
 
+2026-09-30 判据修正：v3 允许正常靠壁及几何上可穿孔的倾斜，取消额外 0.1 mm 空隙和独立 1° 倾角门槛，使用 10 μm 接触数值容差；同时要求有限钥匙杆仍贯穿全部四片板。前齿穿出 END 至少 1 mm、齿槽和转盘约束、连续 0.5 s 保留，不强制释放。三档共 4789 个已保存状态离线重算，释放后末态全部通过；没有新增物理执行。当前 `terminal_v4_bore_contact_default_success` 保留这些判据，并统一默认开启 `goal_complete=True`，不再受物理资格限制。详见[当前 success 条件](success_conditions_zh.md)和[重算结果](../../../runs/test_results/lock_contact_fix_20260930_01/replay.json)。历史报告与旧成绩不变；新实例使用新 terminal 参数，旧完整参数不能直接套用新修订。
+
+2026-09-30 可解性补充：[三档完整机械臂流程与 IK 证明](../../../solvability_proof/lock_picking/2026-09-30_robot_process/README.md)。默认参数、seed 0 的 easy／medium／hard 已从 home 实际完成抓取、1／2／3 次回退、支撑换抓、END 插入、松手撤离与静置，仿真时间 124.7／159.2／194.7 秒，逐动作 IK 查询 972／1,270／1,571 次，独立逐 tick 复核通过。使用 CPU float32 和 `contact_weld_v1` 辅助抓持，显式无 RGB；原生 `task_success=False`，不增加正式 benchmark 成功数量。[上一批物体路径与名义 IK](../../../solvability_proof/lock_picking/2026-09-30_object_ik/README.md)及历史视频参考保留。
+
 2026-09-29 相机：Panda 默认使用任务专属主机位，完整覆盖钥匙、三张圆盘与终点板；`front_oblique` 从机构另一侧放大圆盘孔槽区域。v2 两机位分别位于机构的 (+x, -y) 与 (-x, +y) 两侧。
 [相机配置](../../../topogym/config/profiles/camera_configs/lock_picking_observation.yaml) ·
 [最新两侧投影与检查](../../../runs/test_results/task_camera_study_20260929/opposite_sides_v2/README.md) ·
@@ -16,7 +20,7 @@ Panda + Robotiq 从承托架抓起钥匙，穿过被动锁片、执行必要回�
 
 当前源码：[common.py](../../../topogym/tasks/lock_picking/common.py) · [easy](../../../topogym/tasks/lock_picking/lock_picking_easy.py) · [medium](../../../topogym/tasks/lock_picking/lock_picking_medium.py) · [hard](../../../topogym/tasks/lock_picking/lock_picking_hard.py)。参数入口：[任务卡](../../../configs/task_cards/lock_picking.yaml)。旧 runner、planner、certificate、evaluator、variants、verify_variants、agent_adapter 模块及 `demos.environment_bootstrap.lock_picking` 入口已不在当前目录，不能沿用旧启动命令。
 
-本轮执行入口为 `scripts/run_lock_picking_policy.py --output task_rollouts/<experiment>/lock_picking/trail_1_medium --setting current --part solve --grasp-style side --grasp-roll-deg -45 --physics-dt .1 --solver-substeps 160 --control-decimation 1`。显式采用 100 ms World tick／160 子步，每个积分子步仍为历史 0.625 ms；不代表 simulator 默认时序已通过同一完整流程。策略位于 `topogym/planning/lock_picking/lock_picking_medium_planning.py`；物理推进、自动 assist、segment 和录像全部使用当前 simulator 公共模块。`--no-rgb` 仅用于有逐 tick 日志的物理诊断，不能作为录像验收。
+当前三档执行入口为 `scripts/run_lock_picking_policy.py --variation easy|medium|hard --route-mode reindex --part solve --grasp-style side --grasp-roll-deg -45 --physics-dt .1 --solver-substeps 160 --control-decimation 1 --compute-backend cpu --no-rgb --audit-ik --output <new_run>`；hard 另加 `--endpoint-depth 4.10`，其余两档默认 4.08。随后使用 `scripts/audit_lock_picking_robot.py --run <run> --output <new_audit>` 独立复核。[完整可复制命令](../../../solvability_proof/lock_picking/2026-09-30_robot_process/README.md#复现)。三档策略为 `topogym/planning/lock_picking/reindex_policy.py`，复用既有拾取／换抓动作；原 medium 路线保留在默认 `--route-mode historical`。显式采用 100 ms World tick／160 子步，积分子步为 0.625 ms；不代表 simulator 默认时序资格。物理推进、自动 assist、segment 和可选录像全部使用公共模块，`--no-rgb` 不作为录像验收。
 
 恢复后的 seed 0 已从默认 home 完成 CUDA／Nyx 连续执行，156.4 s，包含自动拾取、两次回退、支撑换抓、终点插入与释放静置：[完整视频](../../../task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/full_solve.mp4) · [状态与 assist 报告](../../../task_rollouts/lock_assist_20260927/lock_picking/trail_12_medium/README.md)。独立物理观测通过，正式 terminal 的资格门仍未完成，不宣告 benchmark success。
 

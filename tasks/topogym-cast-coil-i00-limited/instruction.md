@@ -1,15 +1,28 @@
 # TopoGym · cast_coil — LIMITED MODE (robot as a service, rcb-limited/2.2)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both pieces, withdraw the grippers and leave the assembled puzzle stable on the table.
+client and one episode. **Task:** Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both.
+
+## Success requirements
+
+- Align the pieces' matching assembly frames with relative position error below 1 mm and relative angular error below 0.02 rad.
+- The bottom of at least one piece must be within 3 mm of the tabletop. Neither piece may extend more than 1 mm below it, and each piece must overlap the tabletop horizontally.
+- Keep both pieces' linear speeds below 1 mm/s and angular speeds below 0.02 rad/s. Merely touching or gripping them is not completion.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and angular drift at most 0.02 rad.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success (the goal state held still for
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and there is no success predicate.
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed. The task requirements above still apply in full.
 - **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about 0.7 s of wall clock here (the simulator keeps
   a full checkpoint of every physics step).

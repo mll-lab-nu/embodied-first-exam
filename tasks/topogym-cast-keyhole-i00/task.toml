@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-cast-keyhole-i00"
-description = "TopoGym cast_keyhole (aloha, Genesis): produce one replayable trajectory. Separate the silver keyhole piece from the gold piece. Place the entire silver piece inside the green dashed goal area and hold it still briefly. Keep the gold piece outside the area on the puzzle/system side. Holding the target with the gripper is allowed. Frozen scene instance (variation cast_keyhole_easy, seed 0)."
+description = "TopoGym cast_keyhole (aloha, Genesis): produce one replayable trajectory. Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side. Frozen scene instance (variation cast_keyhole_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "cast_keyhole"]
 

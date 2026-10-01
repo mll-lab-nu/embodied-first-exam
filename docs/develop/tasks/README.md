@@ -31,4 +31,6 @@
 - [辅助抓持回收、外部 agent 环境做法与可解性证据调查](../../../legacy/cleanup_20260929/docs/develop/tasks/assist_grasp_recovery_and_agent_contract_review_20260925_zh.md)
 - [Assist 接入标准 simulator：工程评估、任务优先级与分步计划](assist_integration_engineering_plan_20260925_zh.md)
 - [七项任务 terminal 判断与分离任务目标区：工程计划、脚本清单与目录结构](terminal_judgement_engineering_plan_20260925_zh.md)
+- [任务成功判定启用依据与补足工程计划](terminal_enablement_plan_zh.md)
+- [当前 13 类任务的 success 条件、阈值与开关状态](success_conditions_zh.md)
 - [Task terminal 独立部分实施、测试与 segment 接入边界](../dev-logs/task_terminal_independent_implementation_20260925_zh.md)

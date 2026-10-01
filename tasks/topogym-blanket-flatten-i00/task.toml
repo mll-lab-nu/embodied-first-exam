@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-blanket-flatten-i00"
-description = "TopoGym blanket_flatten (aloha, Genesis): produce one replayable trajectory. Unfold and spread the blanket flat on the table. Remove folds, rolls and self-overlaps so the fabric covers its unfolded footprint without excessive stretching. Release the blanket, withdraw the grippers and let it settle flat and still on the tabletop. Frozen scene instance (variation blanket_flatten_easy, seed 0)."
+description = "TopoGym blanket_flatten (aloha, Genesis): produce one replayable trajectory. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. Frozen scene instance (variation blanket_flatten_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "blanket_flatten"]
 

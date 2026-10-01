@@ -42,13 +42,17 @@ class HeldPathChecker(RigidPathChecker):
 
 
 def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=.0005,
-                   measured_state=None, wrist_envelope=True, max_turn_deg=110., grip_point_in_ball=None):
+                   measured_state=None, wrist_envelope=True, max_turn_deg=110., grip_point_in_ball=None,
+                   object_path_hints=None, departure_clearance_m=.00005,
+                   intermediate_goal=None, preserve_waypoints=False, placement_goal=None):
     """No state mutation: a sampled robot path plus a continuous rigid envelope.
 
     The envelope freezes the measured passive fingers and object/tool relation.
     Actual execution must monitor both and reject drift or forbidden contacts.
     """
     variation = env._task.variation_id.removeprefix("hedgehog_in_cage_")
+    if not np.isfinite(departure_clearance_m) or not .00001 <= departure_clearance_m <= clearance_m:
+        raise ValueError("Departure clearance must be 10 micrometers or more and no larger than the route margin")
     task, ball, fixed, frame, _, report = frozen_problem(output, seed=env._task.seed, variation=variation)
     if task.instance_id != env._task.instance_id:
         raise ValueError("Planning geometry differs from the live instance")
@@ -91,16 +95,49 @@ def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=
     region = env._task.goal_region
     goal_world = np.r_[region.center_xy_m, region.table_height_m+region.placement_height_m/2]
     goal = (frame[1].inv().apply(goal_world-frame[0]), start[1])
+    if placement_goal is not None and intermediate_goal is not None:
+        raise ValueError("Choose either an intermediate pose or a pose inside the Task goal")
+    if intermediate_goal is not None:
+        goal = body_pose(intermediate_goal)
+        report["goal_scope"] = "intermediate pose; not the Task placement goal"
+    elif placement_goal is not None:
+        goal = body_pose(placement_goal)
+        vertices = frame[0]+frame[1].apply(goal[0]+goal[1].apply(ball.vertices))
+        if not region.contains(vertices):
+            raise ValueError("Requested placement pose does not contain every target vertex in the Task goal")
+        report["goal_scope"] = "Explicit pose inside the unchanged Task placement region"
+    elif object_path_hints:
+        # A tilted pickup orientation may put the tool through the table at
+        # the placement height. Reuse an object-route orientation only after
+        # checking the current complete tool and every payload vertex.
+        candidates = [("measured_start", start[1])]
+        candidates += [(f"object_hint_{i}", body_pose(object_path_hints[i])[1])
+                       for i in reversed(range(len(object_path_hints)))]
+        attempts = []
+        for label, orientation in candidates:
+            pose = (goal[0], orientation)
+            vertices = frame[0]+frame[1].apply(pose[0]+pose[1].apply(ball.vertices))
+            contained = bool(region.contains(vertices))
+            gap = checker.clearance(pose)
+            attempts.append(dict(source=label, all_target_vertices_in_goal=contained,
+                                 compound_clearance_m=gap))
+            if contained and gap > checker.margin+checker.error:
+                goal = pose
+                report["selected_goal_orientation"] = label
+                break
+        report["goal_orientation_candidates"] = attempts
     report.update(status="held_search", physical_execution_verified=False,
                   grasp=pose_dict(hand_in_ball), passive_qpos=kin.seed[7:].tolist(),
                   start=pose_dict(start), goal=pose_dict(goal),
                   wrist_envelope=wrist_envelope, max_turn_deg=max_turn_deg,
-                  offline_measured_state=measured_state is not None)
+                  offline_measured_state=measured_state is not None,
+                  requested_departure_clearance_m=departure_clearance_m,
+                  preserve_waypoints=bool(preserve_waypoints))
     departure = None
     if variation != "medium" and checker.clearance(start) <= max(clearance_m, .001 if variation == "easy" else 0.)+checker.error:
         # A just-acquired grasp can be close to a bar. Certify its departure
         # separately instead of silently dropping the transport clearance.
-        entry = make_checker(.00005)
+        entry = make_checker(departure_clearance_m)
         from .variant_oracle import initial_free
         if not initial_free(entry, start):
             report.update(status="held_endpoint_invalid", endpoint="start",
@@ -233,7 +270,18 @@ def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=
         return rng.uniform(lower, upper), turn*start[1]
     write_json_atomic(Path(output)/"search_setup.json", report)
     path, evidence = None, dict(connected=False, stages=[])
-    if variation == "easy" and hints:
+    if object_path_hints is not None:
+        from .guided_path import connect_object_hints
+        path, guided = connect_object_hints(checker, start, goal, object_path_hints,
+            rng=rng, iterations=iterations,
+            progress=lambda data: write_json_atomic(Path(output)/"search_progress.json", data))
+        report["object_hint_search"] = guided
+        write_json_atomic(Path(output)/"object_hint_search.json", guided)
+        if path is not None:
+            evidence = dict(connected=True, mode="verified_object_hints", stages=guided["stages"])
+    if path is not None:
+        pass
+    elif variation == "easy" and hints:
         ranked = sorted(hints, key=lambda pose: -checker.clearance(pose))
         # Each portal lies on the actual inner-wall throat. A whole-space
         # goal tree otherwise spends most of its nodes outside this passage.
@@ -278,7 +326,8 @@ def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=
     if path is None:
         report["status"] = "no_held_path_in_finite_search"
         return report
-    path = shorten(checker, path)
+    if not preserve_waypoints:
+        path = shorten(checker, path)
     certificate = check_path(checker, path)
     if departure is not None:
         path = [departure, *path]

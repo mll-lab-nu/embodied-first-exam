@@ -10,7 +10,23 @@
 | Agent budget | 5400 s |
 
 ## Goal
-Insert the tabbed key through the lock plates. Rotate and translate the key to negotiate the rotor slots until its leading tab clears the final plate and the shaft reaches the insertion goal. Keep the key aligned with the bores; the rotor pins must remain constrained by their physical slots. Do not force the key or tabs through solid plates. Hold the completed configuration still.
+
+Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops.
+
+## Success requirements
+
+- Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
+- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
+- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.
+- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.
+- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
+- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
+- The key falling more than 100 mm below the tabletop ends the episode in failure.
 
 ## Difficulty
 A 7-dof franka panda arm with a robotiq 2f-85 parallel gripper on a fixed base with a 8-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: physical grasping only (no assisted grasping).

@@ -1,11 +1,25 @@
 # TopoGym · fiber_bundling — frozen instance
 
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, tip first and in tip-to-root material order, until all roots and the front sheath have passed and cleared the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not completion. Keep the completed configuration stable.
+**Task:** Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.
 
-The scene objects are the task's entities (`s.objects()`: `fiber_bundle`, `bundling_ring` (fixed), `cable_cradle_base` (fixed), `cable_cradle_post` (fixed), `cable_cradle_pad` (fixed), `cable_cradle_left` (fixed), `cable_cradle_right` (fixed), `ring_mount_base` (fixed), `ring_mount_post` (fixed)). The success predicate is
-`FiberBundlingMediumTask.evaluate_state` (module `topogym.tasks.fiber_bundling.fiber_bundling_medium`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Pass every fiber tip first, then successive material points through to its root. The actual crossing history must be observed; placing fibers on the far side or passing only the tips is not completion.
+- All fiber points must finish beyond the exit side of the ring tube, allowing for fiber thickness. The branching face of the front sheath must also pass through and clear the tube with its full thickness. The fixed rear terminal must remain anchored and does not pass through.
+- Keep the angle between every pair of adjacent fiber segments at most 60 degrees in the final configuration.
+- Touch and grasp only the thick sheath with the gripper. Keep the completed passage valid through confirmation; holding is allowed, with no separate release or speed threshold.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Any gripper touch of a fine fiber at any time ends the episode in failure, including a brief or zero-force touch.
+- A fiber link falling more than 100 mm below the tabletop ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `fiber_bundle`, `bundling_ring` (fixed), `cable_cradle_base` (fixed), `cable_cradle_post` (fixed), `cable_cradle_pad` (fixed), `cable_cradle_left` (fixed), `cable_cradle_right` (fixed), `ring_mount_base` (fixed), `ring_mount_post` (fixed)).
+Implementation reference: `FiberBundlingMediumTask.evaluate_state` (module `topogym.tasks.fiber_bundling.fiber_bundling_medium`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         return self.evaluate_transition(state, self.task_state)[0:3]

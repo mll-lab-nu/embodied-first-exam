@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-horseshoe-ring-i00"
-description = "TopoGym horseshoe_ring (aloha, Genesis): produce one replayable trajectory. Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. Holding the target with the gripper is allowed. Frozen scene instance (variation horseshoe_ring_easy, seed 0)."
+description = "TopoGym horseshoe_ring (aloha, Genesis): produce one replayable trajectory. Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side. Frozen scene instance (variation horseshoe_ring_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "horseshoe_ring"]
 

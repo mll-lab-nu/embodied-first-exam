@@ -111,6 +111,8 @@ class TaskDefinition:
 
     task_id = "abstract"
     physics_model = "rigid"
+    # Success evaluation is enabled by default, independently of physical
+    # qualification. This is an enable switch, not the episode's success state.
     goal_complete = True
     defaults: Mapping[str, Any] = {}
     variation_id = "base"
@@ -229,6 +231,9 @@ class TaskDefinition:
 
     def public_instruction(self) -> str:
         """Static instruction explicitly selected for the policy profile."""
+        from .goal_description import TASK_IDS, describe_goal, render_goal
+        if self.task_id in TASK_IDS:
+            return render_goal(describe_goal(self), include_summary=True)
         return getattr(self, "instruction", "")
 
     def _evaluation_status(self, metrics, failure=None):

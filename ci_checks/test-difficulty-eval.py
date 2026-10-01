@@ -47,7 +47,7 @@ class SamplingTests(unittest.TestCase):
         self.assertEqual(subset, [r for r in all_rows if r["task_id"] == "cast_coil"])
         self.assertEqual(len(all_rows), 39)
         self.assertTrue(all(r["variation_id"] == "seeded" for r in all_rows))
-        self.assertFalse(next(r for r in all_rows if r["task_id"] == "orbits")["evaluable_for_task_success"])
+        self.assertTrue(all(r["evaluable_for_task_success"] for r in all_rows))
 
     def test_explicit_selection_and_old_eval_index(self):
         old = rcb_topogym.simulator_config("cast_coil", 0)
@@ -57,6 +57,19 @@ class SamplingTests(unittest.TestCase):
         for kwargs in (dict(variation_id="seeded"), dict(seed=2), dict(eval_index=0, variation_id="seeded", seed=0), dict(variation_id="seeded", seed=-1)):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 rcb_topogym.simulator_config("cast_coil", **kwargs)
+
+    def test_seeded_success_does_not_require_qualification(self):
+        # No historical match is needed, including Hedgehog's nonzero seeds.
+        with patch('topogym.tasks.hedgehog_in_cage.qualification.placement_qualification', return_value=None), \
+             patch('topogym.tasks.cast_keyhole.qualification.placement_qualification', return_value=None):
+            rows = sampler.sample_instances(dict(
+                task_ids=["hedgehog_in_cage", "cast_keyhole"],
+                sampling_seed=20260929, samples_per_difficulty=1))
+        self.assertEqual(len(rows), 6)
+        for row in rows:
+            with self.subTest(task=row["task_id"], difficulty=row["difficulty"]):
+                self.assertNotEqual(row["scene_seed"], 0)
+                self.assertIs(row["evaluable_for_task_success"], True)
 
     def test_server_deadline_on_owner_thread(self):
         # Execute the actual deadline/tick functions with fake clock/session, without importing Genesis.
@@ -128,7 +141,10 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(u['verifier']['timeout_sec'],65700)
             self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],45000)
             self.assertEqual((tasks/slug/'environment/instance.json').read_bytes(),(tasks/(slug+'-limited')/'environment/sim/instance.json').read_bytes())
+            from topogym.tasks.goal_description import render_goal
+            public_goal=json.loads((build/slug/'describe.json').read_text())['public_goal']
             for folder in (tasks/slug,tasks/(slug+'-limited')):
+                self.assertIn(render_goal(public_goal),(folder/'instruction.md').read_text())
                 harbor_python=ROOT/'.venv-harbor/bin/python'
                 if harbor_python.exists():
                     p=subprocess.run([str(harbor_python),'-c',

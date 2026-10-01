@@ -41,10 +41,6 @@ _ATTACH = SupportGap(
 )
 
 
-def _goal_gap(task, detail):
-    return SupportGap(f"topogym/tasks/{task}/common.py", "evaluate_state", ("solve",), detail)
-
-
 _RIGID_ATTACH = SupportGap(
     "topogym/world/genesis_world.py",
     "rigid_attachment_creation",
@@ -70,12 +66,11 @@ _TASKS = {
         _registration(
             "blanket_flatten", "BlanketFlattenTask", "pbd_cloth", gaps=(_ATTACH,)
         ),
-        _registration("horseshoe_ring", "HorseshoeRingTask", "rigid", gaps=(_goal_gap("horseshoe_ring", "Placement-region rules implemented; real placement and reachability qualification pending"),)),
+        _registration("horseshoe_ring", "HorseshoeRingTask", "rigid"),
         _registration(
             "hedgehog_in_cage", "HedgehogInCageTask", "rigid", "panda_robotiq",
-            gaps=(_goal_gap("hedgehog_in_cage", "Placement-region rules implemented; real placement and reachability qualification pending"),)
         ),
-        _registration("interlocked_claws", "InterlockedClawsTask", "rigid", gaps=(_goal_gap("interlocked_claws", "Placement-region rules implemented; real placement and reachability qualification pending"),)),
+        _registration("interlocked_claws", "InterlockedClawsTask", "rigid"),
         _registration(
             "buzz_wire_3d",
             "BuzzWireTask",
@@ -87,12 +82,6 @@ _TASKS = {
             "LockPickingTask",
             "rigid_articulated",
             "panda_robotiq",
-            (
-                _goal_gap(
-                    "lock_picking",
-                    "Insertion and rotor guards implemented; physical pin-slot torque qualification pending",
-                ),
-            ),
         ),
         _registration(
             "fiber_bundling",
@@ -104,49 +93,25 @@ _TASKS = {
             "rope_threading",
             "RopeThreadingTask",
             "fem_ipc",
-            gaps=(
-                _ATTACH,
-                _goal_gap(
-                    "rope_threading",
-                    "Material-ordered passage implemented; physical threading and settling qualification pending",
-                ),
-            ),
+            gaps=(_ATTACH,),
         ),
         _registration(
             "knot_untying",
             "KnotUntyingTask",
             "fem_ipc",
-            gaps=(
-                _ATTACH,
-                _goal_gap(
-                    "knot_untying",
-                    "Table-supported planar crossing rule implemented; physical untying and threshold calibration pending",
-                ),
-            ),
+            gaps=(_ATTACH,),
         ),
         _registration(
             "orbits",
             "OrbitsTask",
             "fem_ipc",
-            gaps=(
-                _ATTACH,
-                _goal_gap(
-                    "orbits",
-                    "Whole-target placement-region rule implemented; physical reachability and placement qualification pending",
-                ),
-            ),
+            gaps=(_ATTACH,),
         ),
         _registration(
             "slotted_post_ring",
             "SlottedPostRingTask",
             "fem_ipc",
-            gaps=(
-                _ATTACH,
-                _goal_gap(
-                    "slotted_post_ring",
-                    "Whole-ring placement-region rule implemented; physical reachability and placement qualification pending",
-                ),
-            ),
+            gaps=(_ATTACH,),
         ),
     )
 }

@@ -1,11 +1,24 @@
 # TopoGym · hedgehog_in_cage — frozen instance
 
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the green dashed goal area and hold it still briefly. Keep all cage components outside the area on the puzzle/system side. Holding the target with the gripper is allowed.
+**Task:** Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.
 
-The scene objects are the task's entities (`s.objects()`: `hedgehog_mount` (fixed), `hedgehog_cage` (fixed), `hedgehog_ball`, `goal_region` (fixed)). The success predicate is
-`HedgehogInCageEasyTask.evaluate_state` (module `topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_easy`); the task succeeds once it holds continuously for
-2 s:
+## Success requirements
+
+- Put every part of the whole hedgehog ball, including every spike inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.
+- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table.
+- Keep all cage components, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.
+- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.
+- Keep all final conditions satisfied together for at least 2 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `hedgehog_mount` (fixed), `hedgehog_cage` (fixed), `hedgehog_ball`, `goal_region` (fixed)).
+Implementation reference: `HedgehogInCageEasyTask.evaluate_state` (module `topogym.tasks.hedgehog_in_cage.hedgehog_in_cage_easy`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         return self.evaluate_placement(state)

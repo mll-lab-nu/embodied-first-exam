@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-blanket-flatten-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym blanket_flatten on the same frozen instance as the unlimited task. Unfold and spread the blanket flat on the table. Remove folds, rolls and self-overlaps so the fabric covers its unfolded footprint without excessive stretching. Release the blanket, withdraw the grippers and let it settle flat and still on the tabletop. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym blanket_flatten on the same frozen instance as the unlimited task. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "limited-mode", "trajectory", "blanket_flatten"]
 

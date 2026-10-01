@@ -95,14 +95,15 @@ def sample_instances(settings, source=ROOT):
                 reg = variation_registration(task, "seeded", seed)
                 cls = task_definition(task, "seeded", seed)
                 draws = draw(cls, seed)
+                instance = cls(draws, seed=seed)
                 cfg = simulator_config(task, variation_id="seeded", seed=seed, task_parameters=draws)
                 slug = f"topogym-{task.replace('_', '-')}-{difficulty}-s{index:02d}"
                 row = dict(task_id=task, task_number=TASK_IDS.index(task) + 1, difficulty=difficulty,
                            sample_id=f"s{index:02d}", slug=slug, variation_id="seeded", scene_seed=seed,
                            resolved_variation_id=reg["variation_id"], variant_rng_version=VARIANT_RNG_VERSION,
                            scene_variation_version=SCENE_VARIATION_VERSION, draws=draws, simulator=cfg,
-                           effective_task_parameters=to_jsonable(cls(draws, seed=seed).config),
-                           evaluable_for_task_success=bool(getattr(cls, "goal_complete", False)))
+                           effective_task_parameters=to_jsonable(instance.config),
+                           evaluable_for_task_success=bool(instance.goal_complete))
                 row["sample_sha256"] = digest(row)
                 rows.append(row)
     return rows

@@ -35,8 +35,25 @@ def main():
         torch.set_num_threads(1)
         pickup = json.loads(args.pickup.read_text()) if args.pickup else None
         center = pickup["grip_point_in_ball"] if pickup else [0., 0., -.06]
+        radius = .03
+        if pickup and pickup.get("regrasps"):
+            import numpy as np
+            points = np.asarray([center, *[p["grip_point_in_ball"] for p in pickup["regrasps"]]], float)
+            if points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all():
+                raise ValueError("Every grasp stage needs a finite local contact point")
+            # The public configuration declares each rigid link once. Use one
+            # explicit region containing the planned contact neighborhoods.
+            # Acquisition still requires current bilateral native contacts,
+            # the unchanged TCP-distance gate and a fresh closing intent.
+            center = points.mean(axis=0)
+            radius += float(np.linalg.norm(points-center, axis=1).max())
+            center = center.tolist()
+            (args.output/"grasp_region.json").write_text(json.dumps(dict(
+                construction="Sphere enclosing the 30 mm contact neighborhoods for all declared stages",
+                stage_contact_points_m=points.tolist(), center_m=center, radius_m=radius,
+                acquisition="Fresh closing intent and bilateral native contacts for each binding"), indent=2)+"\n")
         grasp = (dict(model="contact_weld_v1", targets=[dict(entity="hedgehog_ball", link="hedgehog",
-                   center_m=center, radius_m=.03)]) if args.assisted else dict(model="none"))
+                   center_m=center, radius_m=radius)]) if args.assisted else dict(model="none"))
         config = SimulatorConfig(task_id="hedgehog_in_cage", variation_id=args.variation, compute_backend="cpu",
             enable_rgb=False, enable_privileged=True, control_mode="JOINT_ABS", physics_dt_s=args.physics_dt,
             solver_substeps=args.substeps, control_decimation=args.control_decimation,

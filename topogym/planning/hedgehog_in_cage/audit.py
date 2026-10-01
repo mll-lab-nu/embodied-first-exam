@@ -1,6 +1,7 @@
 """Independent tick-evidence audit; never trusts the native success flag alone."""
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import fcl
@@ -16,7 +17,64 @@ from .kinematics import surface_object
 from .object_oracle import frozen_problem
 
 
-def audit_execution(run, output, *, require_native_success=False, robot_geometry=True):
+def phase_role(name):
+    """Known controller phases; unknown names cannot evade transport checks."""
+    if name == "initial-observation":
+        return "initial"
+    match = re.fullmatch(r"(?:regrasp_[0-9]+_)?(partial_close|home_to_pregrasp|transfer_to_pregrasp|approach|close|test_lift|"
+                         r"release_for_regrasp|pickup_departure|extract|stable_goal|intermediate_hold)", name)
+    if match is None:
+        raise ValueError("Unknown Hedgehog audit phase: "+str(name))
+    return "clear_transport" if match[1] in {"pickup_departure", "extract", "stable_goal", "intermediate_hold"} else "acquisition_or_support"
+
+
+def binding_acquisition_valid(binding, world, tick):
+    """Check each newly acquired binding, including acquisitions after release."""
+    evidence = binding["acquisition_evidence"]
+    bodies = world["bodies"]
+    ball_ids = set(bodies["hedgehog_ball"]["link_indices"])
+    link_map = dict(zip(world["articulations"]["robot"]["links"], bodies["robot"]["link_indices"], strict=True))
+    fingers = {link_map["left_finger"], link_map["right_finger"]}
+    if (binding["hand"] != "arm" or binding["target"] != ["hedgehog_ball", "hedgehog"]
+            or binding["links"][0] != link_map["hand"] or binding["links"][1] not in ball_ids
+            or evidence["source"] != "genesis_rigid_final_substep"
+            or not 0 < evidence["physics_step"] <= tick):
+        return False
+    hits = set()
+    for contact in evidence["rows"]:
+        force = np.asarray(contact["force_n"], float)
+        if force.shape != (3,) or not np.isfinite(force).all():
+            return False
+        if np.linalg.norm(force) > .01:
+            pair = {contact["link_a"], contact["link_b"]}
+            if pair & ball_ids:
+                hits |= pair & fingers
+    return hits == fingers
+
+
+def binding_matches_native_contacts(binding, world, tick):
+    """At first observation, corroborate acquisition with that tick's contacts."""
+    evidence = binding["acquisition_evidence"]
+    if evidence["physics_step"] != tick:
+        return False
+    contacts = world["contacts"]
+    a = np.asarray(contacts["link_a"]).reshape(-1)
+    b = np.asarray(contacts["link_b"]).reshape(-1)
+    forces = np.asarray(contacts["force"], float).reshape(-1, 3)
+    depths = np.asarray(contacts["penetration"], float).reshape(-1)
+    if not (len(a) == len(b) == len(forces) == len(depths)):
+        return False
+    for row in evidence["rows"]:
+        if not any(x == row["link_a"] and y == row["link_b"]
+                   and np.array_equal(force, np.asarray(row["force_n"], float))
+                   and depth == row["penetration_m"]
+                   for x, y, force, depth in zip(a, b, forces, depths)):
+            return False
+    return bool(evidence["rows"])
+
+
+def audit_execution(run, output, *, require_native_success=False, robot_geometry=True,
+                    allow_hard_initial_settle=False):
     run, output = Path(run), Path(output)
     trail = run/"trail"
     metadata = json.loads((trail/"private/static_model.json").read_text())
@@ -39,6 +97,7 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
     if any(a["end_state_ref"] != b["start_state_ref"] for a, b in zip(segments, segments[1:])):
         raise ValueError("Segment chain is discontinuous")
     names = {r["segment_id"]: r["request_id"] for r in segments}
+    roles = {segment: phase_role(name) for segment, name in names.items()}
     config = json.loads((trail/"config.json").read_text())
     if (config["grasp_assist"]["model"] != "contact_weld_v1" or
             episode["robot_id"] != "panda_robotiq" or episode["initial_state"] is not None):
@@ -46,8 +105,20 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
     dt = float(config["physics_dt_s"])
     checker = RigidPathChecker(fixed, ball)
     from .variant_oracle import initial_free
-    if not initial_free(checker, initial):
+    authored_initial_free = initial_free(checker, initial)
+    if allow_hard_initial_settle and (
+            task.variation_id != "hedgehog_in_cage_hard" or task.model_revision != "fixed_v2"
+            or episode["seed"] != 0 or to_jsonable(task.config) != to_jsonable(task.defaults)
+            or dt != .025 or config["solver_substeps"] != 40 or config["control_decimation"] != 1):
+        raise ValueError("Recorded initial settling is limited to default hard fixed_v2 seed 0, 25 ms / 40 substeps")
+    if not authored_initial_free and not allow_hard_initial_settle:
         raise ValueError("Authored initial geometry intersects: tick-end contact samples cannot qualify it")
+    settling_segment = None
+    if allow_hard_initial_settle:
+        physical_segments = [r for r in segments if r["physics_steps"]]
+        if not physical_segments or physical_segments[0]["request_id"] != "partial_close":
+            raise ValueError("The original hard episode must begin with recorded home settling")
+        settling_segment = physical_segments[0]["segment_id"]
     fixed_world = fixed.copy()
     fixed_world.apply_transform(matrix(*frame))
     fixed_manager = manager([surface_object(fixed_world.vertices, fixed_world.faces)])
@@ -79,8 +150,13 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
     acquired = False
     first_goal_tick = None
     last = None
-    binding = None
+    binding_key = None
+    acquisitions = []
+    seen_bindings = set()
     evidence_hash = hashlib.sha256()
+    settling = dict(ticks=0, stable_time_s=0., maximum_ball_speed_m_s=0.,
+                    maximum_center_radius_m=0., maximum_arm_home_error_rad=0.)
+    home = np.array([0., np.pi/8, 0., -5*np.pi/8, 0., 3*np.pi/4, -np.pi/4])
     def fail(reason, tick):
         if len(failures) < 30:
             failures.append(dict(reason=reason, tick=tick))
@@ -106,9 +182,30 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
                 if max(errors(observed, initial)) > 1e-10 or world["assist_active"]:
                     raise ValueError("Modified initial ball pose or pre-attached grasp")
                 q = np.asarray(row["robot"]["arm"]["joint_position_rad"])
-                if np.max(np.abs(q-np.array([0., np.pi/8, 0., -5*np.pi/8, 0., 3*np.pi/4, -np.pi/4]))) > 1e-8:
+                if np.max(np.abs(q-home)) > 1e-8:
                     raise ValueError("Proof did not start at default home")
-            transport = names.get(row["segment_id"]) in {"extract", "stable_goal"}
+            if settling_segment is not None and row["segment_id"] == settling_segment:
+                # This explicitly retains the solver's initial penetration
+                # resolution. It is a finite simulator execution scope, never
+                # a claim that the authored t=0 geometry is collision-free.
+                pose = relative_pose(frame, body_pose(bodies["hedgehog_ball"]))
+                speed = float(np.linalg.norm(bodies["hedgehog_ball"]["linear_velocity_m_s"]))
+                angular = float(np.linalg.norm(bodies["hedgehog_ball"]["angular_velocity_rad_s"]))
+                radius = float(np.linalg.norm(pose[0][:2]))
+                home_error = float(np.max(np.abs(np.asarray(row["robot"]["arm"]["joint_position_rad"])-home)))
+                settling["ticks"] += 1
+                settling["stable_time_s"] = settling["stable_time_s"]+dt if speed < .002 and angular < .05 else 0.
+                settling["maximum_ball_speed_m_s"] = max(settling["maximum_ball_speed_m_s"], speed)
+                settling["maximum_center_radius_m"] = max(settling["maximum_center_radius_m"], radius)
+                settling["maximum_arm_home_error_rad"] = max(settling["maximum_arm_home_error_rad"], home_error)
+                # A solver launch that exits the cage cannot substitute for
+                # extraction. This deliberately narrow settling window is
+                # checked at every retained tick of this default instance.
+                if radius > .04 or not -.09 <= pose[0][2] <= .02:
+                    fail("initial_settling_left_declared_cage_interior", tick)
+                if home_error > 1e-6 or world["assist_active"]:
+                    fail("initial_settling_used_arm_motion_or_binding", tick)
+            transport = roles[row["segment_id"]] == "clear_transport"
             contacts = world["contacts"]
             a, b = np.asarray(contacts["link_a"]).reshape(-1), np.asarray(contacts["link_b"]).reshape(-1)
             forces = np.asarray(contacts["force"], float).reshape(-1, 3)
@@ -140,24 +237,32 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
             grasp = world.get("grasp", {})
             current_binding = grasp.get("hands", {}).get("arm", {}).get("binding")
             if current_binding is not None:
-                if binding is None:
-                    binding = current_binding
-                    evidence = binding["acquisition_evidence"]
-                    link_map = dict(zip(world["articulations"]["robot"]["links"], bodies["robot"]["link_indices"], strict=True))
-                    fingers = {link_map["left_finger"], link_map["right_finger"]}
-                    hits = set()
-                    for contact in evidence["rows"]:
-                        if np.linalg.norm(contact["force_n"]) > .01:
-                            pair = {contact["link_a"], contact["link_b"]}
-                            if pair & ball_ids:
-                                hits |= pair & fingers
-                    acquired = hits == fingers and evidence["physics_step"] <= tick
+                current_key = hashlib.sha256(json.dumps(current_binding, sort_keys=True).encode()).hexdigest()
+                if current_key != binding_key:
+                    valid = binding_acquisition_valid(current_binding, world, tick)
+                    native_contacts_verified = binding_matches_native_contacts(current_binding, world, tick)
+                    if not native_contacts_verified:
+                        valid = False
+                        fail("acquisition_not_in_current_native_contacts", tick)
+                    if current_key in seen_bindings:
+                        valid = False
+                        fail("old_binding_reused_after_release", tick)
+                    if not valid:
+                        fail("invalid_bilateral_acquisition", tick)
+                    acquisitions.append(dict(first_observed_tick=tick,
+                        acquisition_tick=current_binding["acquisition_evidence"]["physics_step"], verified=valid,
+                        native_contacts_verified=native_contacts_verified))
+                    acquired = acquired or valid
+                    seen_bindings.add(current_key)
+                    binding_key = current_key
                 hand_pose = body_pose(world["articulations"]["robot"]["links"]["hand"])
                 actual = relative_pose(hand_pose, body_pose(bodies["hedgehog_ball"]))
                 translation, angle = errors(actual, body_pose(current_binding["relative_pose"]))
                 max_grasp_translation, max_grasp_angle = max(max_grasp_translation, translation), max(max_grasp_angle, angle)
                 if transport and (translation > .002 or angle > .05):
                     fail("grasp_drift", tick)
+            else:
+                binding_key = None
             if shapes:
                 for name, obj in shapes:
                     p, r = body_pose(world["articulations"]["robot"]["links"][name])
@@ -188,6 +293,8 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
         raise ValueError("The sealed episode end is missing")
     if max_penetration > .0002:
         fail("contact_penetration_exceeds_0.2mm", count-1)
+    if settling_segment is not None and (settling["ticks"]*dt < 3. or settling["stable_time_s"] < 1.-1e-10):
+        fail("initial_settling_not_recorded_and_stable", count-1)
     if not acquired:
         fail("no_bilateral_contact_acquisition", count-1)
     if stable < 2.-1e-10:
@@ -200,14 +307,25 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
         checked_states=count, physics_steps=count-1, physical_evidence_sha256=evidence_hash.hexdigest(),
         instance_id=episode["instance_id"], model_revision=episode["model_revision"], seed=episode["seed"],
         geometry_matched=True, goal_region_identity=task.goal_region_identity,
+        authored_initial_geometry_free=authored_initial_free,
+        initial_geometry_policy="recorded_hard_settle" if allow_hard_initial_settle else "strict",
+        initial_settling=settling if allow_hard_initial_settle else None,
+        proof_class=("simulator_execution_with_authored_initial_overlap" if not authored_initial_free
+                     else "simulator_execution_with_free_authored_initial"),
         first_goal_tick=first_goal_tick, raw_goal_stable_time_s=stable,
         maximum_contact_penetration_m=max_penetration, maximum_robot_fixture_force_n=max_robot_force,
         maximum_transport_fixture_force_n=max_transport_force,
-        minimum_transport_ball_clearance_m=min_ball_gap, minimum_robot_fixture_clearance_m=min_robot_gap if shapes else None,
+        minimum_transport_ball_clearance_m=min_ball_gap if np.isfinite(min_ball_gap) else None,
+        minimum_robot_fixture_clearance_m=min_robot_gap if shapes else None,
         minimum_nonadjacent_arm_self_clearance_m=min_self_gap if shapes else None,
         maximum_grasp_translation_m=max_grasp_translation, maximum_grasp_rotation_rad=max_grasp_angle,
-        bilateral_acquisition_verified=acquired, robot_surface_audit=bool(shapes),
+        bilateral_acquisition_verified=acquired and all(a["verified"] for a in acquisitions),
+        acquisitions=acquisitions, phase_roles={names[key]: value for key, value in roles.items()},
+        robot_surface_audit=bool(shapes),
         physical_dt_s=dt, solver_substeps=config["solver_substeps"], assistance="contact_weld_v1",
         limitations=["Finite seed/default-parameter instance", "Contact-triggered assisted grasp; not friction-only",
                      "Tick-end evidence; no continuous-time/all-substep qualification",
-                     "No RGB/video qualification", "Robot mounting link0 contact with table is excluded"])
+                     "No RGB/video qualification", "Robot mounting link0 contact with table is excluded"]
+                    + (["Authored t=0 penetration is retained; tick-end penetration statistics do not measure it",
+                        "Initial settling interior bounds are checked at saved ticks, not every solver substep"]
+                       if allow_hard_initial_settle else []))

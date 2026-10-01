@@ -1,11 +1,26 @@
 # TopoGym · horseshoe_ring — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. Holding the target with the gripper is allowed.
+**Task:** Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side.
 
-The scene objects are the task's entities (`s.objects()`: `horseshoe_left`, `horseshoe_right`, `chain_upper_1`, `chain_lower_1`, `target_ring`, `goal_region` (fixed)). The success predicate is
-`HorseshoeRingEasyTask.evaluate_state` (module `topogym.tasks.horseshoe_ring.horseshoe_ring_easy`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Put every part of the entire removable ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.
+- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table.
+- Keep the horseshoes and chains, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.
+- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.
+- Keep every permanent chain/eye interlock intact; free only the removable target ring.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Losing any permanent chain/eye connection ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `horseshoe_left`, `horseshoe_right`, `chain_upper_1`, `chain_lower_1`, `target_ring`, `goal_region` (fixed)).
+Implementation reference: `HorseshoeRingEasyTask.evaluate_state` (module `topogym.tasks.horseshoe_ring.horseshoe_ring_easy`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         return self.evaluate_placement(state)

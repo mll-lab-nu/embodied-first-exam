@@ -1,16 +1,18 @@
 # 可解性证明
 
-统一保存已完成的 policy、IK 规划与模拟器实际成功证据。目前收录 **3 项任务、7 个变体实例**，均从默认 home 连续执行到原 Task 的 `task_success=True`，并通过独立逐 tick 复核。
+统一保存已完成的 policy、IK 规划与模拟器实际成功证据。目前收录 **3 项任务、8 个变体实例**，均从默认 home 连续执行到原 Task 的 `task_success=True`，并通过独立逐 tick 复核。
 
 | 任务 | 已验收变体 | 证明与完整证据 |
 | --- | --- | --- |
 | Cast Keyhole | easy / F1、medium / F2、hard / F3，3/3 | [证明目录](cast_keyhole/README.md) |
 | Cast Coil | easy、medium、hard，3/3 | [证明目录](cast_coil/README.md) |
-| Hedgehog in Cage | medium 已验收，三档总体 1/3；easy/hard 待补齐 | [证明目录](hedgehog_in_cage/README.md) |
+| Hedgehog in Cage | easy、medium 已验收，三档总体 2/3；hard 待补齐 | [证明目录](hedgehog_in_cage/README.md) |
 
-[机器索引](catalog.json)记录批次、数量、清单及哈希。每个变体目前只覆盖默认参数、seed 0、CPU 双精度和接触触发的 `contact_weld_v1` 辅助抓持；Coil/Keyhole 使用 ALOHA + EE_ABS，Hedgehog 使用 Panda/Robotiq + JOINT_ABS。显式采用 25 ms World tick / 40 solver 子步，40 Hz action 与 Task/assist 检查，积分子步 0.625 ms；无 RGB 或视频。证明绑定各次冻结源码与配置，不扩大为整个随机参数域、默认 400 Hz 检查时序、纯摩擦抓持或连续时间无穿透资格。
+[机器索引](catalog.json)记录批次、数量、清单及哈希；多批次任务使用 `batches` 保留各独立归档。每个变体目前只覆盖默认参数、seed 0、CPU 双精度和接触触发的 `contact_weld_v1` 辅助抓持；Coil/Keyhole 使用 ALOHA + EE_ABS，Hedgehog 使用 Panda/Robotiq + JOINT_ABS。显式采用 25 ms World tick / 40 solver 子步，40 Hz action 与 Task/assist 检查，积分子步 0.625 ms；无 RGB 或视频。证明绑定各次冻结源码与配置，不扩大为整个随机参数域、默认 400 Hz 检查时序、纯摩擦抓持或连续时间无穿透资格。
 
 [现有 run 与下一批证明候选](run_candidates.md)逐项核对其余任务可复用的运行、当前缺口和执行顺序；候选与历史成功不计入上表的已验收数量。
+
+2026-09-30：[Lock Picking 三档分阶段证明](lock_picking/README.md)现已补齐默认 home 起步、抓取、1／2／3 次回退、支撑换抓、最终释放撤离的实际机器人流程，3,813 次运行中 IK 查询及 4,789 个保存状态通过独立复核。使用接触辅助抓持；原生 `task_success=False`，正式数量不增加。此前物体路径、5,466 点名义 IK 与历史视频另批保留；[本批证据与边界](lock_picking/2026-09-30_robot_process/README.md)。
 
 ## 目录约定
 

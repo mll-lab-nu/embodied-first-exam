@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-cast-coil-i00"
-description = "TopoGym cast_coil (aloha, Genesis): produce one replayable trajectory. Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both pieces, withdraw the grippers and leave the assembled puzzle stable on the table. Frozen scene instance (variation cast_coil_easy, seed 0)."
+description = "TopoGym cast_coil (aloha, Genesis): produce one replayable trajectory. Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both. Frozen scene instance (variation cast_coil_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "cast_coil"]
 

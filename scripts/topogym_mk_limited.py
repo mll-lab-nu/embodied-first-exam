@@ -13,7 +13,7 @@ import argparse, json, os, pathlib, re, shutil, sys
 import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
-from topogym_mk_task import startup_instruction
+from topogym_mk_task import startup_instruction, goal_words, validate_goal_instance
 
 root = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = root / "harbor_templates/topogym/limited"
@@ -45,7 +45,10 @@ def main() -> None:
     d = json.loads((a.build_root / slug / "describe.json").read_text())
     sys.path.insert(0, str(unl / "environment"))
     import rcb_topogym as M
-    goal = a.goal or M.TASKS[fam]["text"]
+    validate_goal_instance(fam, d, json.loads((unl/'environment/instance.json').read_text()))
+    goal, requirements = goal_words(fam, M.TASKS[fam]["text"], d)
+    if a.goal:
+        goal += " " + a.goal  # Additional context cannot replace the actual terminal requirements.
     for sub in ("environment/sim", "tests", "solution"):
         (dst / sub).mkdir(parents=True, exist_ok=True)
     if dst != TEMPLATE:
@@ -107,13 +110,16 @@ def main() -> None:
 You control a robot (**{robot}**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** {goal}
 
+{requirements}
+
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success (the goal state held still for
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   {d['stable_duration_s']:g} s), when your time is up, on a simulator error, {fail_words}. Knocked-over objects stay
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and there is no success predicate.
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
+  the task requirements above still apply in full.
 - **Your wall-clock budget is {BUDGET_S // 60} min ({BUDGET_S} s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about {d['sec_per_step']:.1f} s of wall clock here (the simulator keeps
   a full checkpoint of every physics step).
@@ -182,6 +188,12 @@ Limited-mode twin of `{slug}` (same frozen instance): the agent gets only the `r
 sidecar), which owns the scene, records the episode as a (T, {dim}) trajectory, replays it for success, and renders the
 video. The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the
 unlimited task to measure the cost of losing resets, privileged state and the tooling's primitives.
+
+## Goal
+
+{goal}
+
+{requirements}
 
 | | |
 |---|---|

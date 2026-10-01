@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checked_at_utc": "2026-09-30T20:08:03.148103+00:00",
+  "archive_manifest_sha256": "571edce825c65f9bea23cb4c8b86ea0d2a9d5c7ff41dafa1ff4b7b1efe9eeb4c",
+  "summary_sha256": "daa3cc55be5bb8ba42e31bf28a7740201365a9bf42a3c72d0b698e65165fde69",
+  "file_count": 16708,
+  "total_bytes": 3803778018,
+  "frozen_source_files_checked": 5214,
+  "accepted_success_and_audit": 1,
+  "qualification_prerequisites": 1,
+  "checks": [
+    "Every file SHA-256 and size equal original",
+    "Independent file inode; no links",
+    "Frozen sources match source manifests",
+    "Native success and independent full robot audit passed",
+    "Two independently verified fresh bilateral acquisitions, matched against same-tick native contacts",
+    "All three recorded physical evidence hashes match",
+    "Qualification run retained as native false",
+    "Authored-initial complete object proof and conditional continuation both independently audited",
+    "Finite qualification scope and invalid evidence rejected"
+  ],
+  "fresh_physics_executions": 0,
+  "fresh_task_reevaluations": 0
+}

@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
-  "archived_at_utc": "2026-09-30T12:38:54.356324+00:00",
+  "schema_version": 2,
+  "archived_at_utc": "2026-09-30T20:08:26.167470+00:00",
   "scope": "Accepted finite-instance Task success proofs in the unified Env; original source/config identities retained",
-  "accepted_proofs": 7,
+  "accepted_proofs": 8,
   "tasks": [
     {
       "task": "cast_keyhole",
@@ -60,30 +60,88 @@
     },
     {
       "task": "hedgehog_in_cage",
-      "batch": "2026-09-30",
-      "accepted_proofs": 1,
-      "readme": "hedgehog_in_cage/2026-09-30/README.md",
-      "summary": "hedgehog_in_cage/2026-09-30/summary.json",
-      "manifest": "hedgehog_in_cage/2026-09-30/archive_manifest.json",
-      "validation": "hedgehog_in_cage/2026-09-30/archive_validation.json",
-      "manifest_sha256": "7937a3085e8a301d1e64046cf1f07d5c223cb8117d522bc36dc7e4418a335087",
-      "evidence_files": 5475,
-      "evidence_bytes": 1085203585,
-      "scope": {
-        "seed": 0,
-        "robot": "panda_robotiq",
-        "action": "JOINT_ABS",
-        "backend": "cpu",
-        "precision": "64",
-        "physics_dt_s": 0.025,
-        "solver_substeps": 40,
-        "control_decimation": 1,
-        "task_checks_hz": 40,
-        "integration_substep_s": 0.000625,
-        "assistance": "contact_weld_v1",
-        "rgb": false,
-        "video": false
-      }
+      "accepted_proofs": 2,
+      "readme": "hedgehog_in_cage/README.md",
+      "summary": "hedgehog_in_cage/summary.json",
+      "summary_sha256": "9ba1b37e8a9a56c6ba719678a161cd6597fa8296cd35d0b69b6f3990c708ccfe",
+      "batches": [
+        {
+          "batch": "2026-09-30",
+          "accepted_proofs": 1,
+          "readme": "hedgehog_in_cage/2026-09-30/README.md",
+          "summary": "hedgehog_in_cage/2026-09-30/summary.json",
+          "manifest": "hedgehog_in_cage/2026-09-30/archive_manifest.json",
+          "validation": "hedgehog_in_cage/2026-09-30/archive_validation.json",
+          "manifest_sha256": "7937a3085e8a301d1e64046cf1f07d5c223cb8117d522bc36dc7e4418a335087",
+          "evidence_files": 5475,
+          "evidence_bytes": 1085203585,
+          "scope": {
+            "seed": 0,
+            "robot": "panda_robotiq",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "rgb": false,
+            "video": false
+          }
+        },
+        {
+          "batch": "2026-09-30_easy",
+          "accepted_proofs": 1,
+          "readme": "hedgehog_in_cage/2026-09-30_easy/README.md",
+          "summary": "hedgehog_in_cage/2026-09-30_easy/summary.json",
+          "manifest": "hedgehog_in_cage/2026-09-30_easy/archive_manifest.json",
+          "validation": "hedgehog_in_cage/2026-09-30_easy/archive_validation.json",
+          "manifest_sha256": "571edce825c65f9bea23cb4c8b86ea0d2a9d5c7ff41dafa1ff4b7b1efe9eeb4c",
+          "evidence_files": 16708,
+          "evidence_bytes": 3803778018,
+          "scope": {
+            "seed": 0,
+            "robot": "panda_robotiq",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "grasp_region": {
+              "construction": "Sphere enclosing the 30 mm contact neighborhoods for all declared stages",
+              "stage_contact_points_m": [
+                [
+                  0.0,
+                  -0.07188010851409932,
+                  -0.04150000000001576
+                ],
+                [
+                  0.0,
+                  0.0,
+                  -0.063
+                ]
+              ],
+              "center_m": [
+                0.0,
+                -0.03594005425704966,
+                -0.05225000000000788
+              ],
+              "radius_m": 0.06751333096379877,
+              "acquisition": "Fresh closing intent and bilateral native contacts for each binding"
+            },
+            "rgb": false,
+            "video": false
+          }
+        }
+      ],
+      "evidence_files": 22183,
+      "evidence_bytes": 4888981603
     }
   ],
   "limitations": [

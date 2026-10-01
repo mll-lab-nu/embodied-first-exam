@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "files_checked": 17256,
+  "bytes": 1751024913,
+  "source_files_checked": {
+    "easy_01": 441,
+    "easy_audit_01": 444,
+    "medium_01": 441,
+    "medium_audit_01": 444,
+    "hard_02": 444,
+    "hard_audit_02": 444
+  },
+  "independent_file_copies": true,
+  "original_reports_preserved": true,
+  "failed_hard_attempt_preserved": true,
+  "native_task_success_claimed": false
+}

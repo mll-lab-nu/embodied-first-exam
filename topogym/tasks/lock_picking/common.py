@@ -23,14 +23,13 @@ from topogym.assets.scene_visuals import surface, finish_generated_urdf, localiz
 class LockPickingTask(TaskDefinition):
     task_id = "lock_picking"
     instruction = 'Insert the key through the lock until its leading tab clears the final plate. The rotor pins must remain constrained by their physical slots.'
-    terminal_revision = "terminal_v2"
+    terminal_revision = "terminal_v4_bore_contact_default_success"
     physics_model = "rigid_articulated"
-    goal_complete = False
     defaults = defaults(task_id, geometry={}, stable_duration_s=0.5,
         physics=dict(disc_mass=.12, key_mass=.12, disc_damping=.03,
                      friction=.01, passive_armature=0., contact_timeconst=.0025),
-        terminal=dict(rotor_tolerance_deg=.5, maximum_tilt_deg=1., insertion_margin_m=.001,
-                      shaft_clearance_m=.0001),
+        terminal=dict(rotor_tolerance_deg=.5, insertion_margin_m=.001,
+                      shaft_contact_tolerance_m=.00001),
         disc_colors=[list(color) for color in DISC_COLORS], base_finish="coated_metal")
     hash_when_changed = ("disc_colors", "base_finish")
 
@@ -168,7 +167,7 @@ class LockPickingTask(TaskDefinition):
                 **preset, key_rest=rest, physical_rotor_frames=True,
                 aperture_outlines=outlines,
                 task_id=self.task_id,
-                goal_evaluation_complete=False,
+                goal_evaluation_complete=bool(self.goal_complete),
                 rotor_stops_complete=False,  # Full overload/withdrawal audit still missing.
             ),
         )
@@ -217,18 +216,35 @@ class LockPickingTask(TaskDefinition):
         radial = rotation.apply([0., 0, 1.])
         angle = float(np.degrees(np.arctan2(radial[1], radial[2])))
         depth = (p[0]-g.first_x)/g.pitch+1
-        aligned = tilt <= cfg["maximum_tilt_deg"]
+        # Tilt is constrained by passage through all four finite bores, not by
+        # an independent coaxiality angle. Backwards/transverse keys cannot pass.
+        aligned = axis[0] > 1e-8
         offsets = []
+        shaft_coordinates = []
         shaft_in_goal = False
+        shaft_through_all = False
+        bore_excess = None
         if aligned:
             for i in range(4):
                 x = g.disc_x(i)
                 for face in (x-g.disc_thickness/2, x+g.disc_thickness/2):
-                    at = p+axis*((face-p[0])/axis[0])
+                    coordinate = (face-p[0])/axis[0]
+                    shaft_coordinates.append(float(coordinate))
+                    at = p+axis*coordinate
                     offsets.append(float(np.linalg.norm(at[1:]-[g.center_y, g.axis_z])))
-            aligned &= max(offsets) + g.shaft_radius/axis[0] + cfg["shaft_clearance_m"] < g.bore_radius
-            goal_faces = [(g.disc_x(3)+side*g.disc_thickness/2-p[0])/axis[0] for side in (-1,1)]
-            shaft_in_goal = min(goal_faces) >= -g.grip_offset-.02 and max(goal_faces) <= .015
+            # A normal resting contact need not leave a positive air gap. The
+            # 10 um budget covers the 3--6 um residual in the three recorded
+            # released poses; it is not a general solver penetration allowance.
+            bore_excess = max(offsets) + g.shaft_radius/axis[0] - g.bore_radius
+            aligned &= bore_excess <= cfg["shaft_contact_tolerance_m"]
+            # write_key() authors the shaft over [-grip_offset-.02, .015].
+            # Account for the oblique section's axial extent at both end caps.
+            end_padding = g.shaft_radius*np.linalg.norm(axis[1:])/axis[0]
+            def spans(coordinates):
+                return (min(coordinates)-end_padding >= -g.grip_offset-.02
+                        and max(coordinates)+end_padding <= .015)
+            shaft_in_goal = spans(shaft_coordinates[-2:])
+            shaft_through_all = spans(shaft_coordinates)
         # Conservative x extent of the leading tab under small residual tilt.
         tab_back = p[0]-g.tab_thickness/2*abs(axis[0])-g.tab_radius*np.linalg.norm(rotation.as_matrix()[0, 1:])
         inserted = tab_back >= g.disc_x(3)+g.disc_thickness/2+cfg["insertion_margin_m"]
@@ -245,8 +261,13 @@ class LockPickingTask(TaskDefinition):
                               g.slot_half_deg-g.tab_half_deg-abs((angle-g.endpoint_deg+180)%360-180))
                     if margin < angular_allowance:
                         issues.append(f"tab{tab}/plate{i}/pose_clearance")
-        return bool(inserted and shaft_in_goal and aligned and not issues), None, dict(
+        return bool(inserted and shaft_through_all and aligned and not issues), None, dict(
             disc_angles_deg=angles, key_depth=depth, key_tilt_deg=tilt,
-            coaxial=bool(aligned), shaft_in_goal=bool(shaft_in_goal), leading_tab_inserted=bool(inserted), clearance_issues=issues,
+            coaxial=bool(aligned), shaft_bore_clear=bool(aligned),
+            shaft_bore_excess_m=bore_excess,
+            shaft_contact_tolerance_m=cfg["shaft_contact_tolerance_m"],
+            shaft_in_goal=bool(shaft_in_goal), shaft_through_all_plates=bool(shaft_through_all),
+            leading_tab_inserted=bool(inserted), clearance_issues=issues,
             physical_rotor_frames=True, rotor_mechanism_runtime_verified=False,
-            evaluation_status="available", thresholds_calibrated=False, goal_evaluation_complete=False)
+            evaluation_status="available", thresholds_calibrated=False,
+            goal_evaluation_complete=bool(self.goal_complete))

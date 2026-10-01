@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-buzz-wire-3d-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym buzz_wire_3d on the same frozen instance as the unlimited task. Guide the handheld metal loop along the entire wire from its starting end to the finish, keeping the wire inside the loop opening throughout traversal. Do not let the metal loop touch the wire. Reaching the finish by taking the loop off the route is not completion. Place the tool on the finish support, release it, withdraw the gripper and let it settle. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym buzz_wire_3d on the same frozen instance as the unlimited task. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "limited-mode", "trajectory", "buzz_wire_3d"]
 

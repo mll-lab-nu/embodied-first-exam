@@ -1,15 +1,29 @@
 # TopoGym · horseshoe_ring — LIMITED MODE (robot as a service, rcb-limited/2.2)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. Holding the target with the gripper is allowed.
+client and one episode. **Task:** Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side.
+
+## Success requirements
+
+- Put every part of the entire removable ring inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.
+- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table.
+- Keep the horseshoes and chains, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.
+- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.
+- Keep every permanent chain/eye interlock intact; free only the removable target ring.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Losing any permanent chain/eye connection ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success (the goal state held still for
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and there is no success predicate.
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed. The task requirements above still apply in full.
 - **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about 0.5 s of wall clock here (the simulator keeps
   a full checkpoint of every physics step).

@@ -17,9 +17,8 @@ from topogym.assets.scene_visuals import surface
 class RopeThreadingTask(TaskDefinition):
     task_id = "rope_threading"
     instruction = 'Thread the rope through all rings in the prescribed order and direction, then keep the whole rope still.'
-    terminal_revision = "terminal_v2"
+    terminal_revision = "terminal_v3_default_success"
     physics_model = "fem_ipc"
-    goal_complete = False
     defaults = defaults(task_id, geometry={}, stable_duration_s=0.5, rope_finish="hemp",
                         terminal=dict(maximum_speed_m_s=.001, aperture_margin_m=.0001))
     hash_when_changed = ("rope_finish",)

@@ -1,11 +1,27 @@
 # TopoGym · lock_picking — frozen instance
 
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Insert the tabbed key through the lock plates. Rotate and translate the key to negotiate the rotor slots until its leading tab clears the final plate and the shaft reaches the insertion goal. Keep the key aligned with the bores; the rotor pins must remain constrained by their physical slots. Do not force the key or tabs through solid plates. Hold the completed configuration still.
+**Task:** Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops.
 
-The scene objects are the task's entities (`s.objects()`: `lock_base` (fixed), `lock_disc_0` (fixed), `lock_frame_0` (fixed), `lock_disc_1` (fixed), `lock_frame_1` (fixed), `lock_disc_2` (fixed), `lock_frame_2` (fixed), `key_tray` (fixed), `key_tray_post_0` (fixed), `key_cradle_0_0` (fixed), `key_cradle_0_1` (fixed), `key_tray_post_1` (fixed), `key_cradle_1_0` (fixed), `key_cradle_1_1` (fixed), `lock_goal_post` (fixed), `lock_goal` (fixed), `lock_key`). The success predicate is
-`LockPickingMediumTask.evaluate_state` (module `topogym.tasks.lock_picking.lock_picking_medium`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
+- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
+- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.
+- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.
+- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
+- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
+- The key falling more than 100 mm below the tabletop ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `lock_base` (fixed), `lock_disc_0` (fixed), `lock_frame_0` (fixed), `lock_disc_1` (fixed), `lock_frame_1` (fixed), `lock_disc_2` (fixed), `lock_frame_2` (fixed), `key_tray` (fixed), `key_tray_post_0` (fixed), `key_cradle_0_0` (fixed), `key_cradle_0_1` (fixed), `key_tray_post_1` (fixed), `key_cradle_1_0` (fixed), `key_cradle_1_1` (fixed), `lock_goal_post` (fixed), `lock_goal` (fixed), `lock_key`).
+Implementation reference: `LockPickingMediumTask.evaluate_state` (module `topogym.tasks.lock_picking.lock_picking_medium`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         p = np.asarray(state["bodies"]["lock_key"]["position_m"])
@@ -33,18 +49,35 @@ The scene objects are the task's entities (`s.objects()`: `lock_base` (fixed), `
         radial = rotation.apply([0., 0, 1.])
         angle = float(np.degrees(np.arctan2(radial[1], radial[2])))
         depth = (p[0]-g.first_x)/g.pitch+1
-        aligned = tilt <= cfg["maximum_tilt_deg"]
+        # Tilt is constrained by passage through all four finite bores, not by
+        # an independent coaxiality angle. Backwards/transverse keys cannot pass.
+        aligned = axis[0] > 1e-8
         offsets = []
+        shaft_coordinates = []
         shaft_in_goal = False
+        shaft_through_all = False
+        bore_excess = None
         if aligned:
             for i in range(4):
                 x = g.disc_x(i)
                 for face in (x-g.disc_thickness/2, x+g.disc_thickness/2):
-                    at = p+axis*((face-p[0])/axis[0])
+                    coordinate = (face-p[0])/axis[0]
+                    shaft_coordinates.append(float(coordinate))
+                    at = p+axis*coordinate
                     offsets.append(float(np.linalg.norm(at[1:]-[g.center_y, g.axis_z])))
-            aligned &= max(offsets) + g.shaft_radius/axis[0] + cfg["shaft_clearance_m"] < g.bore_radius
-            goal_faces = [(g.disc_x(3)+side*g.disc_thickness/2-p[0])/axis[0] for side in (-1,1)]
-            shaft_in_goal = min(goal_faces) >= -g.grip_offset-.02 and max(goal_faces) <= .015
+            # A normal resting contact need not leave a positive air gap. The
+            # 10 um budget covers the 3--6 um residual in the three recorded
+            # released poses; it is not a general solver penetration allowance.
+            bore_excess = max(offsets) + g.shaft_radius/axis[0] - g.bore_radius
+            aligned &= bore_excess <= cfg["shaft_contact_tolerance_m"]
+            # write_key() authors the shaft over [-grip_offset-.02, .015].
+            # Account for the oblique section's axial extent at both end caps.
+            end_padding = g.shaft_radius*np.linalg.norm(axis[1:])/axis[0]
+            def spans(coordinates):
+                return (min(coordinates)-end_padding >= -g.grip_offset-.02
+                        and max(coordinates)+end_padding <= .015)
+            shaft_in_goal = spans(shaft_coordinates[-2:])
+            shaft_through_all = spans(shaft_coordinates)
         # Conservative x extent of the leading tab under small residual tilt.
         tab_back = p[0]-g.tab_thickness/2*abs(axis[0])-g.tab_radius*np.linalg.norm(rotation.as_matrix()[0, 1:])
         inserted = tab_back >= g.disc_x(3)+g.disc_thickness/2+cfg["insertion_margin_m"]
@@ -61,11 +94,16 @@ The scene objects are the task's entities (`s.objects()`: `lock_base` (fixed), `
                               g.slot_half_deg-g.tab_half_deg-abs((angle-g.endpoint_deg+180)%360-180))
                     if margin < angular_allowance:
                         issues.append(f"tab{tab}/plate{i}/pose_clearance")
-        return bool(inserted and shaft_in_goal and aligned and not issues), None, dict(
+        return bool(inserted and shaft_through_all and aligned and not issues), None, dict(
             disc_angles_deg=angles, key_depth=depth, key_tilt_deg=tilt,
-            coaxial=bool(aligned), shaft_in_goal=bool(shaft_in_goal), leading_tab_inserted=bool(inserted), clearance_issues=issues,
+            coaxial=bool(aligned), shaft_bore_clear=bool(aligned),
+            shaft_bore_excess_m=bore_excess,
+            shaft_contact_tolerance_m=cfg["shaft_contact_tolerance_m"],
+            shaft_in_goal=bool(shaft_in_goal), shaft_through_all_plates=bool(shaft_through_all),
+            leading_tab_inserted=bool(inserted), clearance_issues=issues,
             physical_rotor_frames=True, rotor_mechanism_runtime_verified=False,
-            evaluation_status="available", thresholds_calibrated=False, goal_evaluation_complete=False)
+            evaluation_status="available", thresholds_calibrated=False,
+            goal_evaluation_complete=bool(self.goal_complete))
 ```
 
 This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset

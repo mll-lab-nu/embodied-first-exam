@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-buzz-wire-3d-i00"
-description = "TopoGym buzz_wire_3d (panda_robotiq, Genesis): produce one replayable trajectory. Guide the handheld metal loop along the entire wire from its starting end to the finish, keeping the wire inside the loop opening throughout traversal. Do not let the metal loop touch the wire. Reaching the finish by taking the loop off the route is not completion. Place the tool on the finish support, release it, withdraw the gripper and let it settle. Frozen scene instance (variation buzz_wire_3d_easy, seed 0)."
+description = "TopoGym buzz_wire_3d (panda_robotiq, Genesis): produce one replayable trajectory. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Frozen scene instance (variation buzz_wire_3d_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "buzz_wire_3d"]
 

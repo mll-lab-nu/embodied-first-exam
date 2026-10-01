@@ -22,7 +22,6 @@ class OrbitsTask(PlacementGoalMixin, TaskDefinition):
     goal_side = (1, -1)  # -y, the nominal scene's side; pose variation cannot flip it
     placement_attachment_names = ('cord_handle_start', 'cord_handle_end')
     physics_model = "fem_ipc"
-    goal_complete = False
     defaults = defaults(task_id, geometry={}, stable_duration_s=0.5, cord_profile="reference",
                         cord_finish="golden_rope")
     hash_when_changed = ("cord_finish",)

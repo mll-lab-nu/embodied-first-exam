@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-orbits-i00"
-description = "TopoGym orbits (aloha, Genesis): produce one replayable trajectory. Free the complete cord and wooden handle from the fixed ring-and-post assembly. Place the entire cord and handle inside the green dashed goal area and hold them still briefly. Keep the rings, posts and other fixed components outside the area on the puzzle/system side. Holding the target is allowed; placing only the handle in the area is not completion. Frozen scene instance (variation orbits_reference85, seed 0)."
+description = "TopoGym orbits (aloha, Genesis): produce one replayable trajectory. Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side. Frozen scene instance (variation orbits_reference85, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "orbits"]
 

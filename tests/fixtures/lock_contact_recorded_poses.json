@@ -1,0 +1,275 @@
+[
+  {
+    "tier": "easy",
+    "source": "solvability_proof/lock_picking/2026-09-30_robot_process/evidence/runs/easy_01/private/physics_states.jsonl",
+    "source_sha256": "fcf732ff560b07ffc76c8f3d1bd3b9d6c67fd5ab11ad4f4bcd4345787a259e5e",
+    "source_scope": "Actual saved CPU float32 assisted-grasp run; pose excerpt only, no new dynamics",
+    "geometry": {
+      "first_x": 0.0,
+      "center_y": -0.26,
+      "axis_z": 1.1046429,
+      "pitch": 0.15,
+      "disc_radius": 0.08,
+      "disc_thickness": 0.01,
+      "bore_radius": 0.0075,
+      "slot_radius": 0.045,
+      "slot_half_deg": 8.0,
+      "tab_radius": 0.036,
+      "tab_half_deg": 4.0,
+      "tab_thickness": 0.005,
+      "shaft_radius": 0.0065,
+      "grip_offset": 0.495,
+      "handle_radius": 0.018,
+      "slots": [
+        [
+          -30.0,
+          0.0
+        ],
+        [
+          -30.0
+        ],
+        [
+          0.0
+        ]
+      ],
+      "initial_disc_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "initial_key_deg": 0.0,
+      "endpoint_deg": 0.0
+    },
+    "table_height_m": 0.9196429,
+    "world": {
+      "physics_step": 1247,
+      "bodies": {
+        "lock_key": {
+          "position_m": [
+            0.45883941650390625,
+            -0.2599261999130249,
+            1.1036427021026611
+          ],
+          "quaternion_wxyz": [
+            0.00578717328608036,
+            0.9999832510948181,
+            0.00016422290354967117,
+            1.2703821994364262e-08
+          ]
+        }
+      },
+      "articulations": {
+        "lock_disc_0": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.020315119996666908
+              ]
+            }
+          }
+        },
+        "lock_disc_1": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.5377107262611389
+              ]
+            }
+          }
+        },
+        "lock_disc_2": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.00804922915995121
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "tier": "medium",
+    "source": "solvability_proof/lock_picking/2026-09-30_robot_process/evidence/runs/medium_01/private/physics_states.jsonl",
+    "source_sha256": "8c927ce1bb4f61cece455deef7335c0f904b2b4da52e8a5c44f89657b468d42c",
+    "source_scope": "Actual saved CPU float32 assisted-grasp run; pose excerpt only, no new dynamics",
+    "geometry": {
+      "first_x": 0.0,
+      "center_y": -0.26,
+      "axis_z": 1.1046429,
+      "pitch": 0.15,
+      "disc_radius": 0.08,
+      "disc_thickness": 0.01,
+      "bore_radius": 0.0075,
+      "slot_radius": 0.045,
+      "slot_half_deg": 8.0,
+      "tab_radius": 0.036,
+      "tab_half_deg": 4.0,
+      "tab_thickness": 0.005,
+      "shaft_radius": 0.0065,
+      "grip_offset": 0.495,
+      "handle_radius": 0.018,
+      "slots": [
+        [
+          -60.0,
+          -30.0,
+          0.0
+        ],
+        [
+          -60.0
+        ],
+        [
+          0.0
+        ]
+      ],
+      "initial_disc_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "initial_key_deg": 0.0,
+      "endpoint_deg": 0.0
+    },
+    "table_height_m": 0.9196429,
+    "world": {
+      "physics_step": 1592,
+      "bodies": {
+        "lock_key": {
+          "position_m": [
+            0.4591138958930969,
+            -0.2599259316921234,
+            1.1036425828933716
+          ],
+          "quaternion_wxyz": [
+            0.00575372064486146,
+            0.9999834895133972,
+            0.0001732255332171917,
+            -2.9082002583891153e-07
+          ]
+        }
+      },
+      "articulations": {
+        "lock_disc_0": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.021269040182232857
+              ]
+            }
+          }
+        },
+        "lock_disc_1": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                1.0619052648544312
+              ]
+            }
+          }
+        },
+        "lock_disc_2": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.008068164810538292
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "tier": "hard",
+    "source": "solvability_proof/lock_picking/2026-09-30_robot_process/evidence/runs/hard_02/private/physics_states.jsonl",
+    "source_sha256": "c01690e3e0f57c968c0fa7b04380910a327fefdcc2ab33bc6cb675747ef4659a",
+    "source_scope": "Actual saved CPU float32 assisted-grasp run; pose excerpt only, no new dynamics",
+    "geometry": {
+      "first_x": 0.0,
+      "center_y": -0.26,
+      "axis_z": 1.1046429,
+      "pitch": 0.15,
+      "disc_radius": 0.08,
+      "disc_thickness": 0.01,
+      "bore_radius": 0.0075,
+      "slot_radius": 0.045,
+      "slot_half_deg": 8.0,
+      "tab_radius": 0.036,
+      "tab_half_deg": 4.0,
+      "tab_thickness": 0.005,
+      "shaft_radius": 0.0065,
+      "grip_offset": 0.495,
+      "handle_radius": 0.018,
+      "slots": [
+        [
+          -72.0,
+          -48.0,
+          -24.0,
+          0.0
+        ],
+        [
+          -72.0
+        ],
+        [
+          0.0
+        ]
+      ],
+      "initial_disc_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "initial_key_deg": 0.0,
+      "endpoint_deg": 0.0
+    },
+    "table_height_m": 0.9196429,
+    "world": {
+      "physics_step": 1947,
+      "bodies": {
+        "lock_key": {
+          "position_m": [
+            0.4588446021080017,
+            -0.25995901226997375,
+            1.103657841682434
+          ],
+          "quaternion_wxyz": [
+            0.02487901784479618,
+            0.9996904730796814,
+            7.206574082374573e-06,
+            2.2007388906786218e-05
+          ]
+        }
+      },
+      "articulations": {
+        "lock_disc_0": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.03471192717552185
+              ]
+            }
+          }
+        },
+        "lock_disc_1": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                1.2756463289260864
+              ]
+            }
+          }
+        },
+        "lock_disc_2": {
+          "joints": {
+            "disc_hinge": {
+              "position": [
+                0.00923074223101139
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+]

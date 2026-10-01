@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "task_id": "lock_picking",
+  "batch": "2026-09-30_robot_process",
+  "verified_robot_processes": 3,
+  "accepted_native_task_proofs": 0,
+  "variants": {
+    "easy": {
+      "run": "evidence/runs/easy_01",
+      "audit": "evidence/audits/easy_audit_01/robot_process_audit.json",
+      "run_report": "evidence/runs/easy_01/run_report.json",
+      "instance_id": "849cd8cc6831b1090e80443c95f8c675fce563bf8c86560ff4e340a4627b0ee8",
+      "full_robot_process_verified": true,
+      "physical_execution": true,
+      "native_task_success": false,
+      "simulation_time_s": 124.7,
+      "physics_ticks": 1247,
+      "saved_states": 1248,
+      "cartesian_ik_queries": 972,
+      "retreats": 1,
+      "endpoint_depth": 4.08,
+      "final_key_depth": 4.058929443359375,
+      "leading_tab_outside_end_m": 0.0013275925899476904,
+      "maximum_ik_position_error_m": 9.825977334553734e-06,
+      "maximum_ik_orientation_error_rad": 5.698216754296499e-05,
+      "maximum_ik_vs_executed_target_error_rad": 0.0,
+      "minimum_joint_limit_margin_rad": 0.05491877250671395,
+      "collision_gaps_m": {
+        "robot_fixture_m": 0.0073443417924078935,
+        "nonfinger_key_m": 0.0021841083155863636,
+        "finger_nonhandle_m": 0.011350208220471563,
+        "nonadjacent_arm_self_m": 0.06248641078710582
+      },
+      "grasp_events": [
+        {
+          "event": "acquired",
+          "physics_step": 131
+        },
+        {
+          "event": "released",
+          "physics_step": 845
+        },
+        {
+          "event": "acquired",
+          "physics_step": 988
+        },
+        {
+          "event": "released",
+          "physics_step": 1204
+        }
+      ]
+    },
+    "medium": {
+      "run": "evidence/runs/medium_01",
+      "audit": "evidence/audits/medium_audit_01/robot_process_audit.json",
+      "run_report": "evidence/runs/medium_01/run_report.json",
+      "instance_id": "017411a0da1e4097a18808517e073533ed4b4e5e5ff0b9c893e2e0153dd09798",
+      "full_robot_process_verified": true,
+      "physical_execution": true,
+      "native_task_success": false,
+      "simulation_time_s": 159.20000000000002,
+      "physics_ticks": 1592,
+      "saved_states": 1593,
+      "cartesian_ik_queries": 1270,
+      "retreats": 2,
+      "endpoint_depth": 4.08,
+      "final_key_depth": 4.0607593059539795,
+      "leading_tab_outside_end_m": 0.0016014237880682125,
+      "maximum_ik_position_error_m": 9.96478990900415e-06,
+      "maximum_ik_orientation_error_rad": 6.959591058365725e-05,
+      "maximum_ik_vs_executed_target_error_rad": 0.0,
+      "minimum_joint_limit_margin_rad": 0.022805697250366297,
+      "collision_gaps_m": {
+        "robot_fixture_m": 0.00735448588302319,
+        "nonfinger_key_m": 0.002200305469457548,
+        "finger_nonhandle_m": 0.01135075563828287,
+        "nonadjacent_arm_self_m": 0.04582812429075132
+      },
+      "grasp_events": [
+        {
+          "event": "acquired",
+          "physics_step": 131
+        },
+        {
+          "event": "released",
+          "physics_step": 1190
+        },
+        {
+          "event": "acquired",
+          "physics_step": 1333
+        },
+        {
+          "event": "released",
+          "physics_step": 1549
+        }
+      ]
+    },
+    "hard": {
+      "run": "evidence/runs/hard_02",
+      "audit": "evidence/audits/hard_audit_02/robot_process_audit.json",
+      "run_report": "evidence/runs/hard_02/run_report.json",
+      "instance_id": "c752bfbea426373efa79be4c3a1967e106e70c98b2ea28e8b352bdd6a9c81bd4",
+      "full_robot_process_verified": true,
+      "physical_execution": true,
+      "native_task_success": false,
+      "simulation_time_s": 194.70000000000002,
+      "physics_ticks": 1947,
+      "saved_states": 1948,
+      "cartesian_ik_queries": 1571,
+      "retreats": 3,
+      "endpoint_depth": 4.1,
+      "final_key_depth": 4.058964014053345,
+      "leading_tab_outside_end_m": 0.0013429347861299568,
+      "maximum_ik_position_error_m": 1.000329119212596e-05,
+      "maximum_ik_orientation_error_rad": 6.884423398539865e-05,
+      "maximum_ik_vs_executed_target_error_rad": 0.0,
+      "minimum_joint_limit_margin_rad": 0.018170840072631922,
+      "collision_gaps_m": {
+        "robot_fixture_m": 0.004331013774435961,
+        "nonfinger_key_m": 0.002197017758417021,
+        "finger_nonhandle_m": 0.01134915461668747,
+        "nonadjacent_arm_self_m": 0.04188136754748107
+      },
+      "grasp_events": [
+        {
+          "event": "acquired",
+          "physics_step": 131
+        },
+        {
+          "event": "released",
+          "physics_step": 1541
+        },
+        {
+          "event": "acquired",
+          "physics_step": 1684
+        },
+        {
+          "event": "released",
+          "physics_step": 1903
+        }
+      ]
+    }
+  },
+  "scope": {
+    "seed": 0,
+    "robot": "panda_robotiq",
+    "action": "EE_ABS",
+    "backend": "cpu",
+    "precision": "32",
+    "physics_dt_s": 0.1,
+    "solver_substeps": 160,
+    "control_decimation": 1,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false,
+    "from_home": true,
+    "rewinds": 0,
+    "collision_coverage": "all saved World tick poses; not every solver substep or continuous time"
+  },
+  "diagnosis": {
+    "failed_run": "evidence/failed/hard_01",
+    "failed_audit": "evidence/failed/hard_failed_audit_01",
+    "cause": "At depth 4.08, post-release backslip left only about 0.8 mm beyond END, below unchanged 1 mm requirement",
+    "correction": "Hard endpoint set to 4.10 (+3 mm), then new full episode from default home"
+  },
+  "total_cartesian_ik_queries": 3813,
+  "total_saved_states": 4789
+}

@@ -64,7 +64,10 @@ class CheckedJointPolicy:
 
 
 class HorseshoeIK:
-    def __init__(self, env):
+    def __init__(self, env, *, puzzle_clearance_m=.0005):
+        self.puzzle_clearance_m=float(puzzle_clearance_m)
+        if not np.isfinite(self.puzzle_clearance_m) or not .00005<=self.puzzle_clearance_m<=.0005:
+            raise ValueError('Robot/puzzle planning clearance must be between 0.05 and 0.5 mm')
         self.robot = env._robot
         self.seed = to_numpy(self.robot.entity.get_qpos()).reshape(-1).copy()
         self.ik = GenesisIKSolver(self.robot.entity)
@@ -150,7 +153,7 @@ class HorseshoeIK:
                 if isinstance(permitted,str):permitted=(permitted,)
                 checked = self.nonfinger[side] if name in permitted else arm
                 gap = distance(checked, puzzle)
-                if gap < .0005:
+                if gap < self.puzzle_clearance_m:
                     issues.append(side+'/'+name)
         for side, group in self.robot.groups.items():
             joints = q[self.robot._q_indices[side][:6]]

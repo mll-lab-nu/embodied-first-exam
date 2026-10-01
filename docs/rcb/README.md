@@ -664,6 +664,8 @@ bash bash_scripts/run_difficulty_trials.sh --phase plan --run-id difficulty-eval
 
 入口现默认启动 Docker 控制器；新用户见 [Docker 启动说明](docker_quickstart_zh.md)。以下难度评测命令使用 Docker；复用旧宿主环境与历史 run 时加 `--backend local`，或直接调用 Python；交付范围及分级验收见 [Docker 交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
 
+结果集中上传到 `LGVamper/toponym_evaluation_results` 的参数、目录、凭据与补传设计见 [HF 结果上传工程计划](difficulty_results_hf_plan_zh.md)。该功能目前待实施，现有入口尚不支持 `--results_to_hf`。
+
 CUDA 配置默认 `cu128`；面向 R580+ 驱动的新机器可显式使用 `--cuda-flavor cu130`。两套固定 torch 2.11 和原始 pyuipc 0.0.25 材料源码，采用独立依赖锁与镜像身份；Blackwell 构建目标和实机验收状态分开记录，见 [双 CUDA 配置实施](cuda_blackwell_delivery_plan_zh.md#10-双-cuda-配置实施)。同一个 run ID 不能切换 CUDA 配置。
 
 订阅方式延续此前 Luna 的 agent/model 配置；实际模型访问资格由账户决定：

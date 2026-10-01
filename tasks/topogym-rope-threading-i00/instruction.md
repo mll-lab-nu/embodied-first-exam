@@ -1,11 +1,24 @@
 # TopoGym · rope_threading — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Thread the rope through the cyan ring, then the green ring, then the purple ring, following the rope from its material start to material end. Pass fully through each aperture without extra crossings, intersecting ring material, or damaging the rope. Keep the threaded rope still.
+**Task:** Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
 
-The scene objects are the task's entities (`s.objects()`: `rope` (deformable, fem), `R1` (fixed), `R1_stand` (fixed), `R1_base` (fixed), `R2` (fixed), `R2_stand` (fixed), `R2_base` (fixed), `R3` (fixed), `R3_stand` (fixed), `R3_base` (fixed)). The success predicate is
-`RopeThreadingMediumTask.evaluate_state` (module `topogym.tasks.rope_threading.rope_threading_medium`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross toward the side containing the purple ring (R3); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.
+- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.
+- Keep every rope point at or below 1 mm/s. Holding is allowed; release is not required.
+- Keep the rope intact; collapsed or inverted rope volume is not accepted.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Invalid rope volume ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `rope` (deformable, fem), `R1` (fixed), `R1_stand` (fixed), `R1_base` (fixed), `R2` (fixed), `R2_stand` (fixed), `R2_base` (fixed), `R3` (fixed), `R3_stand` (fixed), `R3_base` (fixed)).
+Implementation reference: `RopeThreadingMediumTask.evaluate_state` (module `topogym.tasks.rope_threading.rope_threading_medium`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         soft = state["fem"]["rope"]

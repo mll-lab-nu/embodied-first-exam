@@ -20,22 +20,16 @@ class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
 
     geometry_resource = None
 
-    @property
-    def goal_complete(self):
-        from .qualification import placement_qualification
-        return placement_qualification(self) is not None
-
-    @property
-    def terminal_revision(self):
-        return "cast_keyhole_placement_v2" if self.goal_complete else "placement_region_v1"
+    terminal_revision = "cast_keyhole_placement_v3_default_success"
 
     def terminal_metadata(self):
         from .qualification import placement_qualification
         metadata = super().terminal_metadata()
         qualification = placement_qualification(self)
         if qualification is not None:
-            metadata.update(thresholds_calibrated=True, reachability_qualified=True,
-                            qualification=dict(qualification))
+            # A historical match describes evidence scope, not current-run
+            # calibration/reachability or permission to report success.
+            metadata.update(qualification=dict(qualification))
         return metadata
 
     def build_assets(self, folder):
@@ -96,5 +90,4 @@ class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
         return region.observation(self.placement_targets, self.placement_remainder)
 
     def evaluate_state(self, state):
-        reached, failure, metrics = self.evaluate_placement(state)
-        return reached, failure, dict(metrics, thresholds_calibrated=self.goal_complete)
+        return self.evaluate_placement(state)

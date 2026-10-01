@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-hedgehog-in-cage-i00"
-description = "TopoGym hedgehog_in_cage (panda_robotiq, Genesis): produce one replayable trajectory. Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the green dashed goal area and hold it still briefly. Keep all cage components outside the area on the puzzle/system side. Holding the target with the gripper is allowed. Frozen scene instance (variation hedgehog_in_cage_easy, seed 0)."
+description = "TopoGym hedgehog_in_cage (panda_robotiq, Genesis): produce one replayable trajectory. Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. Frozen scene instance (variation hedgehog_in_cage_easy, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "hedgehog_in_cage"]
 

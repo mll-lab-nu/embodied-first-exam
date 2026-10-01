@@ -10,7 +10,21 @@
 | Agent budget | 5400 s |
 
 ## Goal
-Untie the knot and spread the rope on the table so that nonadjacent rope segments have no crossings or overlaps when viewed from above. Do not stretch or damage the rope to bypass the knot. Release it, withdraw the grippers and leave the whole rope still on the tabletop.
+
+Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.
+
+## Success requirements
+
+- Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.
+- Keep the entire rope close to the tabletop: no point more than 1 mm below it, and no point higher than one rope diameter plus 3 mm above it.
+- Keep the rope volume intact; do not invert or collapse it to bypass the knot.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Invalid rope volume ends the episode in failure.
 
 ## Difficulty
 Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 14-D joint-target action space at 40 Hz; success needs the task's predicate (above) held for 0.5 s. Grasping: physical grasping only (no assisted grasping).

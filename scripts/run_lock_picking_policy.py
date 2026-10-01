@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Record a lock oracle through standard passive policy dispatch and Env.step.
 
-The current medium restores the historical two-retreat mechanism. All physics
+The historical medium route remains available. Reindex mode supports all three
+current families and can record IK/FK for every Cartesian action. All physics
 parameters and measured engine properties are recorded, including failed runs.
 """
 import argparse
@@ -10,7 +11,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import subprocess
 import sys
 import time
 import traceback
@@ -64,7 +64,8 @@ def pickup_preflight(env, geometry, style, roll):
     return dict(passed=True, samples=records, qualification="kinematics only; no physics, collision or grasp qualification")
 
 
-def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, solver_substeps, control_decimation, no_rgb, compute_backend):
+def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, solver_substeps, control_decimation, no_rgb, compute_backend,
+           variation="medium", route_mode="historical", audit_ik=False, precision="32", endpoint_depth=4.08):
     import numpy as np
     import torch
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
@@ -75,27 +76,32 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
     from topogym.simulator.rollout_simulation.segment_contract import fingerprint
     torch.set_num_threads(1)
     output = Path(output)
-    config = SimulatorConfig(task_id="lock_picking", variation_id="lock_picking_medium",
-        precision="32", compute_backend=compute_backend,
+    config = SimulatorConfig(task_id="lock_picking", variation_id=f"lock_picking_{variation}",
+        precision=precision, compute_backend=compute_backend,
         robot_id="panda_robotiq", control_mode="EE_ABS", observation_mode="JOINT",
         enable_privileged=True, task_parameters=parameters(setting),
         physics_dt_s=physics_dt, solver_substeps=solver_substeps, control_decimation=control_decimation,
-        max_physics_steps=round(240/physics_dt), enable_rgb=not no_rgb,
+        max_physics_steps=round((360 if route_mode == "reindex" else 240)/physics_dt), enable_rgb=not no_rgb,
         work_dir=output/"scene", grasp_assist=GraspAssistConfig("contact_weld_v1",
             (GraspTarget("lock_key", "key", center_m=(-.495, 0., 0.), radius_m=.032),),
             stable_time_s=max(.05, 2*physics_dt)))
-    report = dict(status="running", setting=setting, requested_part=part, config=to_jsonable(config),
-        policy_parameters=dict(grasp_style=grasp_style, grasp_roll_deg=grasp_roll_deg),
+    report = dict(status="running", setting=setting, variation=variation, route_mode=route_mode,
+        requested_part=part, config=to_jsonable(config), audit_ik=audit_ik,
+        policy_parameters=dict(grasp_style=grasp_style, grasp_roll_deg=grasp_roll_deg,
+                               endpoint_depth=endpoint_depth),
         timing_scope="explicit recorded World tick/substep configuration; simulator defaults unchanged",
         started=time.time(), events=[], segments=[],
         qualification="pending measured execution; Task success qualification remains unchanged",
         from_default_home=True, policy_access="unlimited world state; ordinary EE_ABS actions only",
         provenance=dict(commit="cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
             semantic_route="2026-09-18_standard_150mm_purple_trace_v1 commands.jsonl",
-            changes="Recovered mechanism physics and two-retreat slots; current Panda/Robotiq and lab placement; automatic grasp and regrasp through measured-pose EE actions"))
+            changes=("Current family slots and stops with repeated passive reindexing; "
+                     if route_mode == "reindex" else "Recovered mechanism physics and two-retreat slots; ")
+                    + "current Panda/Robotiq and lab placement; automatic grasp and regrasp through measured-pose EE actions"))
     write_json_atomic(output/"run_report.json", report)
     active = [None]
     monitor = None
+    ik_stream = None
     try:
         if compute_backend == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA/Nyx unavailable")
@@ -130,6 +136,8 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                 raise RuntimeError(f"Read-only pickup preflight failed: {preflight['phase']}: {preflight['error']}")
             with SegmentRunner(env, output, prepared_output=True) as runner:
                 monitor = (output/"private/lock_monitor.jsonl").open("x", buffering=1)
+                if audit_ik:
+                    ik_stream = (output/"private/robot_ik.jsonl").open("x", buffering=1)
                 def monitor_tick(row):
                     world = row["world"]
                     grasp = world["grasp"]
@@ -147,7 +155,8 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                     report["events"].extend(events)
                     progress = dict(state=row["state"], phase=getattr(active[0], "phase", "initial"),
                         key=world["bodies"]["lock_key"], grasp=grasp,
-                        task_result=env._task.result, contacts=interesting)
+                        task_result=env._task.result, contacts=interesting,
+                        robot_qpos=to_numpy(env._robot.entity.get_qpos()).reshape(-1).tolist())
                     monitor.write(json.dumps(to_jsonable(progress), allow_nan=False)+"\n")
                     write_json_atomic(output/"progress.json", progress)
                 env.add_state_sink(monitor_tick)
@@ -155,7 +164,17 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                 source = json.loads((output/"run_source_manifest.json").read_text())
                 for name in (("pickup", "solve") if part == "solve" else ("pickup",)):
                     kwargs = dict(geometry=geometry, part=name, grasp_roll_deg=grasp_roll_deg, grasp_style=grasp_style)
-                    policy = active[0] = LockPickingMediumPolicy(**kwargs)
+                    if route_mode == "reindex":
+                        from topogym.planning.lock_picking.reindex_policy import LockPickingReindexPolicy
+                        kwargs["rotor_stops"] = env._task.config["rotor_stops"]
+                        kwargs["endpoint_depth"] = endpoint_depth
+                        policy = LockPickingReindexPolicy(**kwargs)
+                    else:
+                        policy = LockPickingMediumPolicy(**kwargs)
+                    if audit_ik:
+                        from topogym.planning.lock_picking.recorded_ik import RecordedIKPolicy
+                        policy = RecordedIKPolicy(policy, env._robot, ik_stream)
+                    active[0] = policy
                     result = runner.run_policy(request_id=f"lock-{name}", policy=policy,
                         submission_hash=fingerprint(dict(source=source, parameters=kwargs)),
                         mode="unlimited", state_fields=("world", "task"))
@@ -206,6 +225,8 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
     finally:
         if monitor is not None:
             monitor.close()
+        if ik_stream is not None:
+            ik_stream.close()
         report["wall_time_s"] = time.time()-report["started"]
         write_json_atomic(output/"run_report.json", report)
 
@@ -222,13 +243,25 @@ def main():
     parser.add_argument("--control-decimation", type=int, default=5)
     parser.add_argument("--no-rgb", action="store_true", help="Explicit physics diagnostic; no video qualification")
     parser.add_argument("--compute-backend", choices=("cuda", "cpu"), default="cuda")
+    parser.add_argument("--variation", choices=("easy", "medium", "hard"), default="medium")
+    parser.add_argument("--route-mode", choices=("historical", "reindex"), default="historical")
+    parser.add_argument("--audit-ik", action="store_true", help="Record checked IK/FK for each robot action")
+    parser.add_argument("--precision", choices=("32", "64"), default="32")
+    parser.add_argument("--endpoint-depth", type=float, default=4.08,
+                        help="Final reindex-route insertion in pitches; record extra release-slip margin")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.variation != "medium" and (args.route_mode != "reindex" or args.setting != "current"):
+        parser.error("easy/hard require --route-mode reindex --setting current")
+    if not 4.06 <= args.endpoint_depth <= 4.12 or (args.route_mode != "reindex" and args.endpoint_depth != 4.08):
+        parser.error("Custom endpoint depth requires reindex mode and a value in [4.06,4.12]")
     output = args.output.resolve()
     if args.worker:
         worker(output, setting=args.setting, part=args.part, grasp_roll_deg=args.grasp_roll_deg, grasp_style=args.grasp_style,
                physics_dt=args.physics_dt, solver_substeps=args.solver_substeps,
-               control_decimation=args.control_decimation, no_rgb=args.no_rgb, compute_backend=args.compute_backend)
+               control_decimation=args.control_decimation, no_rgb=args.no_rgb, compute_backend=args.compute_backend,
+               variation=args.variation, route_mode=args.route_mode, audit_ik=args.audit_ik, precision=args.precision,
+               endpoint_depth=args.endpoint_depth)
         return
     output.mkdir(parents=True, exist_ok=False)
     from scripts.test_policy_cube_transfer import snapshot
@@ -238,7 +271,11 @@ def main():
         "--output", str(output), "--setting", args.setting, "--part", args.part,
         "--grasp-roll-deg", str(args.grasp_roll_deg), "--grasp-style", args.grasp_style,
         "--physics-dt", str(args.physics_dt), "--solver-substeps", str(args.solver_substeps),
-        "--control-decimation", str(args.control_decimation), "--compute-backend", args.compute_backend]
+        "--control-decimation", str(args.control_decimation), "--compute-backend", args.compute_backend,
+        "--variation", args.variation, "--route-mode", args.route_mode, "--precision", args.precision,
+        "--endpoint-depth", str(args.endpoint_depth)]
+    if args.audit_ik:
+        command.append("--audit-ik")
     if args.no_rgb:
         command.append("--no-rgb")
     from importlib.metadata import distribution, version
@@ -248,10 +285,10 @@ def main():
     (output/"invocation.json").write_text(json.dumps(identity, indent=2))
     env = dict(os.environ, PYTHONPATH=str(source), OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
         OPENBLAS_NUM_THREADS="1", QD_NUM_THREADS="1", TOPOGYM_VISUAL_ASSET_ROOT=str(ROOT/".external/nyx-assets"))
-    with (output/"runtime.log").open("x") as log:
-        result = subprocess.run(command, cwd=source, env=env, stdout=log, stderr=subprocess.STDOUT)
-    print(f"exit={result.returncode}; {output}", flush=True)
-    raise SystemExit(result.returncode)
+    from topogym.utils.process_limits import run_guarded
+    result = run_guarded(command, output, cwd=source, env=env)
+    print(f"exit={result}; {output}", flush=True)
+    raise SystemExit(result)
 
 
 if __name__ == "__main__":

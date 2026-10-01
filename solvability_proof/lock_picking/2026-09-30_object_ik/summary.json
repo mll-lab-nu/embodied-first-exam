@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "task_id": "lock_picking",
+  "batch": "2026-09-30_object_ik",
+  "scope": "Current default seed 0 coaxial quasi-static object proof and sampled home-to-END IK",
+  "accepted_physical_proofs": 0,
+  "object_proofs": 3,
+  "sampled_ik_proofs": 3,
+  "variants": {
+    "easy": {
+      "status": "object_and_ik_verified",
+      "instance_id": "849cd8cc6831b1090e80443c95f8c675fce563bf8c86560ff4e340a4627b0ee8",
+      "model_revision": "seed_families_v1",
+      "terminal_revision": "terminal_v2",
+      "object_witness": "evidence/run/easy/object_witness.json",
+      "object_certificate": {
+        "passed": true,
+        "checked_overlap_intervals": 38,
+        "driving_intervals": 6,
+        "minimum_slot_margin_deg": 0.0,
+        "minimum_rotor_stop_margin_deg": 1.0,
+        "conservative_shaft_clearance_m": 0.0009714602356880918,
+        "conservative_tab_radial_clearance_m": 0.008828761414128548,
+        "final_leading_tab_clearance_m": 0.004500000000000008,
+        "retreats": 1,
+        "retreat_count_is_minimal": true,
+        "lower_bound": {
+          "minimum_required_retreats": 1,
+          "branch_intervals_deg": [
+            [
+              -10.0,
+              23.0
+            ],
+            [
+              7.0,
+              45.0
+            ]
+          ],
+          "relative_bands_deg": [
+            [
+              -8.0,
+              8.0
+            ],
+            [
+              22.0,
+              38.0
+            ]
+          ],
+          "initial_branches": [
+            0
+          ],
+          "target_branches": [
+            1
+          ],
+          "graph": {
+            "0": [
+              1
+            ],
+            "1": [
+              0
+            ]
+          },
+          "shortest_sequences": [
+            [
+              0,
+              1
+            ]
+          ],
+          "scope": "Coaxial, quasi-static, key-sidewall actuation; no face clutching or impacts"
+        },
+        "passive_sidewall_coupling_verified": true,
+        "scope": "Exact affine coaxial aperture/stop and quasi-static sidewall model",
+        "full_scene_collision_verified": false,
+        "dynamics_verified": false,
+        "released_equilibrium_verified": false,
+        "native_task_success": false
+      },
+      "ik_report": "evidence/run/easy/ik_report.json",
+      "ik_samples": "evidence/run/easy/ik_samples.json",
+      "samples": 1563,
+      "full_physics_verified": false,
+      "native_task_success": false
+    },
+    "medium": {
+      "status": "object_and_ik_verified",
+      "instance_id": "017411a0da1e4097a18808517e073533ed4b4e5e5ff0b9c893e2e0153dd09798",
+      "model_revision": "historical_physics_v2",
+      "terminal_revision": "terminal_v2",
+      "object_witness": "evidence/run/medium/object_witness.json",
+      "object_certificate": {
+        "passed": true,
+        "checked_overlap_intervals": 52,
+        "driving_intervals": 10,
+        "minimum_slot_margin_deg": 0.0,
+        "minimum_rotor_stop_margin_deg": 1.0,
+        "conservative_shaft_clearance_m": 0.0009714602356880918,
+        "conservative_tab_radial_clearance_m": 0.008828761414128548,
+        "final_leading_tab_clearance_m": 0.004500000000000008,
+        "retreats": 2,
+        "retreat_count_is_minimal": true,
+        "lower_bound": {
+          "minimum_required_retreats": 2,
+          "branch_intervals_deg": [
+            [
+              -10.0,
+              23.0
+            ],
+            [
+              7.0,
+              53.0
+            ],
+            [
+              37.0,
+              75.0
+            ]
+          ],
+          "relative_bands_deg": [
+            [
+              -8.0,
+              8.0
+            ],
+            [
+              22.0,
+              38.0
+            ],
+            [
+              52.0,
+              68.0
+            ]
+          ],
+          "initial_branches": [
+            0
+          ],
+          "target_branches": [
+            2
+          ],
+          "graph": {
+            "0": [
+              1
+            ],
+            "1": [
+              0,
+              2
+            ],
+            "2": [
+              1
+            ]
+          },
+          "shortest_sequences": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "scope": "Coaxial, quasi-static, key-sidewall actuation; no face clutching or impacts"
+        },
+        "passive_sidewall_coupling_verified": true,
+        "scope": "Exact affine coaxial aperture/stop and quasi-static sidewall model",
+        "full_scene_collision_verified": false,
+        "dynamics_verified": false,
+        "released_equilibrium_verified": false,
+        "native_task_success": false
+      },
+      "ik_report": "evidence/run/medium/ik_report.json",
+      "ik_samples": "evidence/run/medium/ik_samples.json",
+      "samples": 1846,
+      "full_physics_verified": false,
+      "native_task_success": false
+    },
+    "hard": {
+      "status": "object_and_ik_verified",
+      "instance_id": "c752bfbea426373efa79be4c3a1967e106e70c98b2ea28e8b352bdd6a9c81bd4",
+      "model_revision": "seed_families_v1",
+      "terminal_revision": "terminal_v2",
+      "object_witness": "evidence/run/hard/object_witness.json",
+      "object_certificate": {
+        "passed": true,
+        "checked_overlap_intervals": 66,
+        "driving_intervals": 14,
+        "minimum_slot_margin_deg": 0.0,
+        "minimum_rotor_stop_margin_deg": 1.0,
+        "conservative_shaft_clearance_m": 0.0009714602356880918,
+        "conservative_tab_radial_clearance_m": 0.008828761414128548,
+        "final_leading_tab_clearance_m": 0.004500000000000008,
+        "retreats": 3,
+        "retreat_count_is_minimal": true,
+        "lower_bound": {
+          "minimum_required_retreats": 3,
+          "branch_intervals_deg": [
+            [
+              -10.0,
+              20.0
+            ],
+            [
+              4.0,
+              44.0
+            ],
+            [
+              28.0,
+              68.0
+            ],
+            [
+              52.0,
+              87.0
+            ]
+          ],
+          "relative_bands_deg": [
+            [
+              -8.0,
+              8.0
+            ],
+            [
+              16.0,
+              32.0
+            ],
+            [
+              40.0,
+              56.0
+            ],
+            [
+              64.0,
+              80.0
+            ]
+          ],
+          "initial_branches": [
+            0
+          ],
+          "target_branches": [
+            3
+          ],
+          "graph": {
+            "0": [
+              1
+            ],
+            "1": [
+              0,
+              2
+            ],
+            "2": [
+              1,
+              3
+            ],
+            "3": [
+              2
+            ]
+          },
+          "shortest_sequences": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "scope": "Coaxial, quasi-static, key-sidewall actuation; no face clutching or impacts"
+        },
+        "passive_sidewall_coupling_verified": true,
+        "scope": "Exact affine coaxial aperture/stop and quasi-static sidewall model",
+        "full_scene_collision_verified": false,
+        "dynamics_verified": false,
+        "released_equilibrium_verified": false,
+        "native_task_success": false
+      },
+      "ik_report": "evidence/run/hard/ik_report.json",
+      "ik_samples": "evidence/run/hard/ik_samples.json",
+      "samples": 2057,
+      "full_physics_verified": false,
+      "native_task_success": false
+    }
+  },
+  "references": "reference_videos.json",
+  "evidence_root": "evidence/run",
+  "physical_qualification_pending": [
+    "robot and full scene collisions",
+    "measured grasp",
+    "contact dynamics and rotor mechanism qualification",
+    "native terminal success"
+  ]
+}

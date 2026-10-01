@@ -136,13 +136,15 @@ class HeldRingPath:
                 previous=q;samples+=1
         return dict(passed=True,samples=samples,maximum_material_sample_step_m=.00075)
 
-    def contact_escape(self):
+    def contact_escape(self, *, minimal=True):
         """Linearize all nearby convex pairs, then check each small twist.
 
         Contact normals alone miss the opposite surface when its current
         clearance is only a few micrometres. Nearby positive distances are
         therefore constraints too. Each proposed step is independently
         checked; the linear programme itself is not an edge certificate.
+        A global search may request a larger checked prefix to start away
+        from the contact boundary. Measured short stages use minimal motion.
         """
         path=[self.start];rows=[]
         def signed_clearance(pose):
@@ -155,6 +157,7 @@ class HeldRingPath:
             if gap>.00006:
                 result=dict(passed=True,poses=[pose_dict(p) for p in path],iterations=rows,
                             final_clearance_m=gap,passive_contact_names=list(self.passive_contact_names),
+                            minimal_motion=bool(minimal),
                             scope='sampled contact-release twists against the fixed obstacles; passive-contact response requires physics')
                 write_json_atomic(self.planner.directory/'contact_escape_plan.json',result)
                 return path
@@ -188,23 +191,30 @@ class HeldRingPath:
             fit=linprog(np.r_[np.zeros(6),-1.],A_ub=np.c_[-np.asarray(constraints),np.ones(len(constraints))],
                 b_ub=np.asarray(clearances),bounds=[(-.002,.002)]*6+[(-.01,.01)],method='highs')
             if not fit.success:break
-            accepted=None
-            for fraction in (1.,.5,.25,.125,.0625):
+            # Use only as much of the maximizing twist as clearance needs.
+            # Executing the full LP extremum at every measured stage can
+            # move several millimetres away from the guide, exhausting the
+            # next short stage merely returning towards it.
+            accepted=None;fallback=None
+            fractions=(1/128,1/64,1/32,1/16,1/8,1/4,1/2,1.) if minimal else (1.,.5,.25,.125,.0625)
+            for fraction in fractions:
                 delta=fraction*fit.x[:6]
                 candidate=(p+delta[:3],Rotation.from_rotvec(delta[3:]/self.radius)*r)
                 new_gap=signed_clearance(candidate)
                 if new_gap<=gap+1e-7:continue
                 audit=self.ordered_audit([*path,candidate],release_prefix_edges=len(path))
                 if not audit['passed']:continue
-                accepted=candidate
-                rows.append(dict(iteration=iteration,constraints=len(constraints),predicted_clearance_m=float(fit.x[6]),
-                                 actual_clearance_m=new_gap,fraction=fraction,audit=audit))
-                gap=new_gap;break
+                row=dict(iteration=iteration,constraints=len(constraints),predicted_clearance_m=float(fit.x[6]),
+                         actual_clearance_m=new_gap,fraction=fraction,audit=audit)
+                if fallback is None or new_gap>fallback[1]:fallback=(candidate,new_gap,row)
+                if new_gap>.00006:
+                    accepted=(candidate,new_gap,row);break
+            if accepted is None:accepted=fallback
             if accepted is None:break
-            path.append(accepted)
+            candidate,gap,row=accepted;rows.append(row);path.append(candidate)
         write_json_atomic(self.planner.directory/'contact_escape_plan.json',
             dict(passed=False,poses=[pose_dict(p) for p in path],iterations=rows,final_clearance_m=gap,
-                 passive_contact_names=list(self.passive_contact_names)))
+                 passive_contact_names=list(self.passive_contact_names),minimal_motion=bool(minimal)))
         raise ValueError('Local contact-release search did not reach positive clearance')
 
 
@@ -219,6 +229,20 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
     passive=parameters.get('passive_contact_names',('horseshoe_left','chain_upper_1','chain_lower_1'))
     checker=HeldRingPath(planner,observation,passive_contact_names=passive)
     measured=checker.bodies.copy();hp,hr=measured['horseshoe_right']
+    direction=(hr*reference[-1]['horseshoe_right'][1].inv()).apply([-1.,0.,0.])
+    remainder=np.vstack([r.apply(planner.task.placement_vertices[n])+p for n,(p,r) in measured.items() if n!='target_ring'])
+    rp,rr=checker.start;ring=rr.apply(checker.vertices)+rp
+    directions=[direction,*np.eye(3),*-np.eye(3)]
+    gaps=[float((ring@axis).min()-(remainder@axis).max()) for axis in directions]
+    separating_index=int(np.argmax(gaps))
+    if gaps[separating_index]>=.005:
+        state=getattr(planner,'withdrawal_stage_state',None) or dict(stage=0,index=0)
+        result=dict(passed=True,separated=True,stage=state['stage'],reference_index=state['index'],
+            separating_direction=np.asarray(directions[separating_index]).tolist(),
+            separating_gap_m=gaps[separating_index],observed_bodies={n:pose_dict(v) for n,v in measured.items()},
+            scope='measured whole-geometry separating plane; subsequent motion still requires physical validation')
+        write_json_atomic(planner.directory/f"ring_stage_{state['stage']:03d}.json",result)
+        return result
     guide=[]
     for frame in reference:
         p,r=relative_pose(frame['horseshoe_right'],frame['target_ring'])
@@ -250,17 +274,10 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
         guide=[(hp+hr.apply(p),hr*r) for p,r in state['relative_guide']]
     else:
         guide=[(p+r.apply(center-state['symmetry'].apply(center)),r*state['symmetry']) for p,r in guide]
-    direction=(hr*reference[-1]['horseshoe_right'][1].inv()).apply([-1.,0.,0.])
-    remainder=np.vstack([r.apply(planner.task.placement_vertices[n])+p for n,(p,r) in measured.items() if n!='target_ring'])
-    boundary=float((remainder@direction).max())+.005
-    p,r=checker.start
-    separated=float(((r.apply(checker.vertices)+p)@direction).min())>=boundary
-    result=dict(passed=separated,separated=separated,stage=state['stage'],reference_index=state['index'],
+    result=dict(passed=False,separated=False,stage=state['stage'],reference_index=state['index'],
         observed_bodies={n:pose_dict(v) for n,v in measured.items()},
         scope='short sampled contact-policy candidate; physical execution and independent audit required')
     destination=planner.directory/f"ring_stage_{state['stage']:03d}.json"
-    if separated:
-        write_json_atomic(destination,result);return result
     initial=checker.check(checker.start)
     if not initial['passed']:
         write_json_atomic(destination,dict(result,initial=initial))
@@ -302,25 +319,40 @@ def plan_joint_withdrawal(planner, observation, reference):
     """Find reachable exit attitudes without prescribing a wrist branch."""
     from .joint_route import plan_free_ring_transport
     bodies,_=planner.observed(observation);hp,hr=bodies['horseshoe_right']
-    rp,_=relative_pose(reference[-1]['horseshoe_right'],reference[-1]['target_ring'])
+    rp,rr=relative_pose(reference[-1]['horseshoe_right'],reference[-1]['target_ring'])
     direction=(hr*reference[-1]['horseshoe_right'][1].inv()).apply([-1.,0.,0.])
     end=hp+hr.apply(rp)
     remainder=np.vstack([r.apply(planner.task.placement_vertices[n])+p
         for n,(p,r) in bodies.items() if n!='target_ring'])
     boundary=float((remainder@direction).max())+.005
     rotation=bodies['target_ring'][1]
-    rotations=[rotation]+[Rotation.from_euler(axis,angle,degrees=True)*rotation
-                          for axis in ('x','y','z') for angle in (-45.,45.)]
+    loop=planner.task.assembly.loops['target_ring']
+    center=loop.center-planner.task.body_origins['target_ring']
+    symmetries=[Rotation.identity()]+[
+        loop.rotation*Rotation.from_rotvec(np.pi*axis)*loop.rotation.inv() for axis in np.eye(3)]
+    reference_rotation=hr*rr
+    rotations=[reference_rotation*symmetry for symmetry in symmetries]
+    rotations += [rotation]+[Rotation.from_euler(axis,angle,degrees=True)*rotation
+                            for axis in ('x','y','z') for angle in (-90.,-45.,45.,90.)]
+    mode=getattr(planner,'withdrawal_parameters',{}).get('exit_goal_mode','all_axes')
+    if mode not in ('all_axes','reference'):raise ValueError('Unsupported exit goal mode')
     goals=[]
     for r in rotations:
         for retreat,dz in ((0.,0.),(.025,0.),(.025,-.04),(.05,-.08)):
-            p=end+retreat*direction+[0,0,dz]
-            if float(((r.apply(planner.task.placement_vertices['target_ring'])+p)@direction).min())>=boundary:
-                goals.append((p,r))
-    result=plan_free_ring_transport(planner,observation,goals,
+            p=end+reference_rotation.apply(center)-r.apply(center)+retreat*direction+[0,0,dz]
+            gap=boundary-float(((r.apply(planner.task.placement_vertices['target_ring'])+p)@direction).min())
+            goals.append((p+max(0.,gap)*direction,r))
+    for axis in ((*np.eye(3),*-np.eye(3)) if mode=='all_axes' else ()):
+        boundary=float((remainder@axis).max())+.008
+        for r in rotations:
+            p=bodies['target_ring'][0].copy()
+            gap=boundary-float(((r.apply(planner.task.placement_vertices['target_ring'])+p)@axis).min())
+            goals.append((p+max(0.,gap)*axis,r))
+    result=plan_free_ring_transport(planner,observation,goals,contact_release=True,
         passive_contact_names=getattr(planner,'withdrawal_parameters',{}).get(
             'passive_contact_names',('horseshoe_left','chain_upper_1','chain_lower_1')))
     result.update(observed_bodies={n:pose_dict(p) for n,p in bodies.items()},
+                  exit_goal_mode=mode,reference_final_attitudes_included=True,
                   method='joint_search_with_passive_contact_then_dense_cartesian_replay')
     write_json_atomic(planner.directory/'joint_withdrawal_plan.json',result)
     return result

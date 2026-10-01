@@ -62,9 +62,8 @@ def choose_region(clouds, targets, remainder, table_bounds, table_height, *, exc
 
 
 class PlacementGoalMixin:
-    terminal_revision = "placement_region_v1"
-    # New rule must not inherit the old separation-only physical qualification.
-    goal_complete = False
+    terminal_revision = "placement_region_v2_default_success"
+    # Inherit default success enablement; qualification is metadata only.
     # (axis, sign) of the side the nominal scene uses; None lets choose_region pick.
     goal_side = None
 
@@ -115,9 +114,7 @@ class PlacementGoalMixin:
         return metadata
 
     def public_instruction(self):
-        return (f"Place {self.placement_description} ({', '.join(self.placement_targets)}) inside the green dashed area "
-                "and hold it still briefly. Keep the remaining puzzle components outside on the system side. "
-                "Holding the target with the gripper is allowed.")
+        return super().public_instruction()
 
     def observe(self):
         return dict(instruction=self.public_instruction())

@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-lock-picking-i00"
-description = "TopoGym lock_picking (panda_robotiq, Genesis): produce one replayable trajectory. Insert the tabbed key through the lock plates. Rotate and translate the key to negotiate the rotor slots until its leading tab clears the final plate and the shaft reaches the insertion goal. Keep the key aligned with the bores; the rotor pins must remain constrained by their physical slots. Do not force the key or tabs through solid plates. Hold the completed configuration still. Frozen scene instance (variation lock_picking_medium, seed 0)."
+description = "TopoGym lock_picking (panda_robotiq, Genesis): produce one replayable trajectory. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. Frozen scene instance (variation lock_picking_medium, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "lock_picking"]
 

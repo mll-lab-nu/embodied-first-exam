@@ -6,6 +6,22 @@ sidecar), which owns the scene, records the episode as a (T, 14) trajectory, rep
 video. The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the
 unlimited task to measure the cost of losing resets, privileged state and the tooling's primitives.
 
+## Goal
+
+Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
+
+## Success requirements
+
+- Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross toward the side containing the purple ring (R3); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.
+- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.
+- Keep every rope point at or below 1 mm/s. Holding is allowed; release is not required.
+- Keep the rope intact; collapsed or inverted rope volume is not accepted.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Invalid rope volume ends the episode in failure.
+
 | | |
 |---|---|
 | tier / mode | perception / limited (RGB, optional depth, proprioception, calibrated cameras, no reset) |

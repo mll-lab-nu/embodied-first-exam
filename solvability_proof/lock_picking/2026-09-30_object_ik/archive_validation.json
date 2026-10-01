@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "files_checked": 10634,
+  "bytes": 195633760,
+  "source_files_checked": 438,
+  "object_asset_files_checked": {
+    "easy": 1694,
+    "medium": 1696,
+    "hard": 1695
+  },
+  "reference_videos_full_decode_passed": 3,
+  "evidence_is_independent_file_copies": true,
+  "original_reports_preserved": true,
+  "current_lock_sources_match_run": true,
+  "formal_task_success_claimed": false
+}

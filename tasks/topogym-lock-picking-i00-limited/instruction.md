@@ -1,15 +1,30 @@
 # TopoGym · lock_picking — LIMITED MODE (robot as a service, rcb-limited/2.2)
 
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Insert the tabbed key through the lock plates. Rotate and translate the key to negotiate the rotor slots until its leading tab clears the final plate and the shaft reaches the insertion goal. Keep the key aligned with the bores; the rotor pins must remain constrained by their physical slots. Do not force the key or tabs through solid plates. Hold the completed configuration still.
+client and one episode. **Task:** Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops.
+
+## Success requirements
+
+- Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
+- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
+- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.
+- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.
+- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
+- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
+- The key falling more than 100 mm below the tabletop ends the episode in failure.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success (the goal state held still for
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and there is no success predicate.
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed. The task requirements above still apply in full.
 - **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about 0.9 s of wall clock here (the simulator keeps
   a full checkpoint of every physics step).

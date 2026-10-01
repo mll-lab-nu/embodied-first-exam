@@ -6,6 +6,25 @@ sidecar), which owns the scene, records the episode as a (T, 8) trajectory, repl
 video. The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the
 unlimited task to measure the cost of losing resets, privileged state and the tooling's primitives.
 
+## Goal
+
+Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support.
+
+## Success requirements
+
+- Start within 10 mm along the wire from its starting end and traverse continuously until within 10 mm of its finishing end. Keep one unambiguous wire crossing inside the loop. Skipping branches or taking the loop off the route before completing traversal does not count; restart from the beginning if tracking is lost.
+- After completing traversal, lower the tool onto the finish support. The completed traversal remains valid when the loop leaves the wire to rest on the support.
+- Match the finish resting pose within 5 mm and 10 degrees. A half-turn about the handle axis is an equivalent orientation. The tool must actually contact the finish support.
+- Keep all metal parts of the tool clear of the metal wire throughout the episode. Wooden-handle contact is not a metal-wire failure. Remove all robot contact before final confirmation.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and angular drift at most 0.02 rad.
+- Keep all final conditions satisfied together for at least 1 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Any metal-tool touch of the metal wire ends the episode in failure, including brief or zero-force touches.
+- The tool falling more than 100 mm below the tabletop ends the episode in failure.
+
 | | |
 |---|---|
 | tier / mode | perception / limited (RGB, optional depth, proprioception, calibrated cameras, no reset) |

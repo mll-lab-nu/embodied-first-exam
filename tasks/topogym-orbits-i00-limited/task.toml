@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-orbits-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym orbits on the same frozen instance as the unlimited task. Free the complete cord and wooden handle from the fixed ring-and-post assembly. Place the entire cord and handle inside the green dashed goal area and hold them still briefly. Keep the rings, posts and other fixed components outside the area on the puzzle/system side. Holding the target is allowed; placing only the handle in the area is not completion. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym orbits on the same frozen instance as the unlimited task. Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "limited-mode", "trajectory", "orbits"]
 

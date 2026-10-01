@@ -1,11 +1,25 @@
 # TopoGym · blanket_flatten — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Unfold and spread the blanket flat on the table. Remove folds, rolls and self-overlaps so the fabric covers its unfolded footprint without excessive stretching. Release the blanket, withdraw the grippers and let it settle flat and still on the tabletop.
+**Task:** Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.
 
-The scene objects are the task's entities (`s.objects()`: `blanket` (deformable, particle)). The success predicate is
-`BlanketFlattenEasyTask.evaluate_state` (module `topogym.tasks.blanket_flatten.blanket_flatten_easy`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Cover at least 90% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.
+- Keep every cloth point at most 30 mm above the tabletop and no more than 8 mm below it.
+- No material edge may stretch beyond 1.15 times its original length. Raised corners or pulling the blanket taut in the air do not count.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 30 mm/s and its displacement from the start of confirmation at most 3 mm.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Any cloth point falling more than 100 mm below the tabletop ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `blanket` (deformable, particle)).
+Implementation reference: `BlanketFlattenEasyTask.evaluate_state` (module `topogym.tasks.blanket_flatten.blanket_flatten_easy`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         from topogym.evaluation.cloth_metrics import footprint_area

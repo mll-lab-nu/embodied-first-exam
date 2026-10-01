@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-slotted-post-ring-i00"
-description = "TopoGym slotted_post_ring (aloha, Genesis): produce one replayable trajectory. Free the removable metal ring from the slotted post and cord assembly. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the post, cord, beads, discs and other puzzle components outside the area on the puzzle/system side. Holding the target with the gripper is allowed. Frozen scene instance (variation slotted_post_ring_hard, seed 0)."
+description = "TopoGym slotted_post_ring (aloha, Genesis): produce one replayable trajectory. Separate and place the entire removable metal ring inside the green dashed goal region. Keep the post, cord, beads and end discs on the puzzle/system side. Frozen scene instance (variation slotted_post_ring_hard, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "slotted_post_ring"]
 

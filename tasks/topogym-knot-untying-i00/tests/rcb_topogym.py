@@ -166,10 +166,9 @@ TASKS: dict[str, dict] = {
         instances=[dict(variation_id="knot_untying_easy", seed=0)]),
     "lock_picking": dict(
         task_id="lock_picking", robot="panda_robotiq",
-        text="Insert the tabbed key through the lock plates. Rotate and translate the key to negotiate the rotor slots "
-             "until its leading tab clears the final plate and the shaft reaches the insertion goal. Keep the key aligned "
-             "with the bores; the rotor pins must remain constrained by their physical slots. Do not force the key or "
-             "tabs through solid plates. Hold the completed configuration still.",
+        text="Insert the tabbed key through all three rotor plates and END. Keep the finite shaft through all four "
+             "bores and the leading tab beyond END; normal wall contact and geometrically valid tilt are allowed. "
+             "Respect the tab slots and rotor stops. Holding is allowed; preserve the completed insertion during confirmation.",
         instances=[dict(variation_id="lock_picking_medium", seed=0)]),
     "orbits": dict(
         task_id="orbits", robot="aloha",
@@ -180,9 +179,9 @@ TASKS: dict[str, dict] = {
         instances=[dict(variation_id="orbits_reference85", seed=0)]),
     "rope_threading": dict(
         task_id="rope_threading", robot="aloha",
-        text="Thread the rope through the cyan ring, then the green ring, then the purple ring, following the rope from "
-             "its material start to material end. Pass fully through each aperture without extra crossings, intersecting "
-             "ring material, or damaging the rope. Keep the threaded rope still.",
+        text="Thread the rope through this instance's required rings in the specified material order and direction. "
+             "Pass fully through each aperture without extra crossings, intersecting ring material, or damaging the rope. "
+             "Keep the threaded rope still. The instance-specific success requirements specify the actual rings.",
         instances=[dict(variation_id="rope_threading_medium", seed=0)]),
     "slotted_post_ring": dict(
         task_id="slotted_post_ring", robot="aloha",
@@ -690,7 +689,7 @@ class Session:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         if backend != "cuda":
             raise ValueError("TopoGym's physics runs on CUDA only")
-        self.task, self.spec = task, TASKS[task]
+        self.task, self.spec = task, dict(TASKS[task])
         inst = None
         if instance is not None:
             if any(x is not None for x in (eval_index, variation_id, seed, task_parameters)):
@@ -716,6 +715,10 @@ class Session:
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
         self.env = Env(SimulatorConfig(**cfg))
         self.env.reset(seed=int(cfg["seed"]))
+        if not self.spec["fixture"]:
+            # The family catalog is only a short catalog label. Public goals
+            # come from the selected instance, for both Session and limited SPEC.
+            self.spec["text"] = self.env._task.public_instruction()
         self.robot = _Robot(self.env._robot, self.env.timing_spec)
         self.control_hz = 1.0 / float(self.env.timing_spec["control_dt_s"])
         self.physics_substeps = int(self.env.config.control_decimation)
@@ -1354,6 +1357,7 @@ def cmd_make_instance(a) -> None:
     params = json.loads(Path(a.task_parameters).read_text()) if a.task_parameters else None
     s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed, task_parameters=params)
     import genesis as gs
+    from topogym.tasks.goal_description import TASK_IDS, describe_goal
     out = {"task": a.task, "topogym_task": s.config["task_id"], "variation_id": s.config["variation_id"], "seed": s.config["seed"],
            "eval_index": s.eval_index, "text": s.spec["text"], "simulator": s.config, "state_sha": s.instance_sha,
            "action_dim": s.action_dim, "action_layout": s.action_layout, "control_hz": s.control_hz, "backend": s.backend,
@@ -1362,6 +1366,7 @@ def cmd_make_instance(a) -> None:
            "resolved_variation_id": s.env._variation["variation_id"],
            "scene_variation": s.env._scene_variation,
            "effective_task_parameters": s.env._task.config,
+           "public_goal": describe_goal(s.env._task) if s.env._task.task_id in TASK_IDS else None,
            "evaluable_for_task_success": bool(getattr(s.env._task, "goal_complete", True))}
     # Package numeric Blanket state alongside each instance, including its hashes.
     dependency = s.config.get("task_parameters", {}).get("initial_state_path")
@@ -1425,6 +1430,8 @@ def cmd_describe(a) -> None:
     import inspect
     s = Session(a.task, instance=a.instance)
     t = s.env._task
+    from topogym.tasks.goal_description import TASK_IDS, describe_goal
+    public_goal = describe_goal(t) if t.task_id in TASK_IDS else None
     try:
         predicate = inspect.getsource(type(t).evaluate_state)
     except (OSError, TypeError):
@@ -1438,7 +1445,8 @@ def cmd_describe(a) -> None:
            "action_layout": s.action_layout, "limits": s.robot.limits, "control_hz": s.control_hz, "physics_substeps": s.physics_substeps,
            "table_z": s.table_z(), "objects": s.objects(), "predicate": predicate, "task_class": type(t).__name__,
            "task_module": "rcb_topogym" if type(t).__module__ == "__main__" else type(t).__module__, "stable_duration_s": float(t.config.get("stable_duration_s", 0.5)),
-           "grasp_rules": s.grasp_rules(), "grasp_assist": s.config.get("grasp_assist")}
+           "grasp_rules": s.grasp_rules(), "grasp_assist": s.config.get("grasp_assist"),
+           "public_goal": public_goal}
     print(json.dumps(out), flush=True)
     s.close()
 

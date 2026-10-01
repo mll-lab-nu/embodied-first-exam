@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-rope-threading-i00"
-description = "TopoGym rope_threading (aloha, Genesis): produce one replayable trajectory. Thread the rope through the cyan ring, then the green ring, then the purple ring, following the rope from its material start to material end. Pass fully through each aperture without extra crossings, intersecting ring material, or damaging the rope. Keep the threaded rope still. Frozen scene instance (variation rope_threading_medium, seed 0)."
+description = "TopoGym rope_threading (aloha, Genesis): produce one replayable trajectory. Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end. Frozen scene instance (variation rope_threading_medium, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajectory", "rope_threading"]
 

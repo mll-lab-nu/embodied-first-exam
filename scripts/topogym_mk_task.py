@@ -16,6 +16,8 @@ import argparse, json, os, pathlib, shutil, subprocess, sys
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 root = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(root))
+from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
@@ -127,18 +129,46 @@ def conventions(d: dict, fam: str) -> str:
 """
 
 
+def goal_words(fam: str, fallback: str, d: dict) -> tuple[str, str]:
+    """Use the simulator's instance-specific goal; never guess from a family label."""
+    goal = d.get("public_goal")
+    if goal is None:
+        if fam in GOAL_TASKS:
+            raise ValueError("describe.json lacks public_goal; run describe with the updated simulator before generating instructions")
+        return fallback, f"Keep the goal satisfied continuously for {d['stable_duration_s']:g} s."
+    if goal["task_id"] != fam or goal["stable_duration_s"] != d["stable_duration_s"]:
+        raise ValueError("Public goal task or confirmation duration differs from describe.json")
+    return goal["summary"], render_goal(goal)
+
+
+def validate_goal_instance(fam: str, d: dict, instance: dict) -> None:
+    goal_words(fam, "", d)
+    if fam in GOAL_TASKS:
+        goal = d["public_goal"]
+        variation = instance.get("resolved_variation_id", instance["variation_id"])
+        if (goal["variation_id"], goal["seed"]) != (variation, instance["seed"]):
+            raise ValueError("Public goal describes a different variation/seed; regenerate describe.json for this instance")
+        frozen_goal = instance.get("public_goal")
+        if frozen_goal is not None and frozen_goal != goal:
+            raise ValueError("Public goal requirements differ from the frozen instance; regenerate the instance and describe.json together")
+
+
 def instruction(fam: str, text: str, d: dict) -> str:
     arm, cam = d["arms"][0], list(d["cameras"])[0]
     W, H = d["cameras"][cam]["image_size"]
     pred = d["predicate"] or "# (source not available)"
+    text, requirements = goal_words(fam, text, d)
     return f"""# TopoGym · {fam} — frozen instance
 
 You control a simulated robot (**{robot_words(d)}**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
 **Task:** {text}
 
-The scene objects are the task's entities (`s.objects()`: {objects_words(d)}). The success predicate is
-`{d['task_class']}.evaluate_state` (module `{d['task_module']}`); the task succeeds once it holds continuously for
-{d['stable_duration_s']:g} s:
+{requirements}
+
+The scene objects are the task's entities (`s.objects()`: {objects_words(d)}).
+Implementation reference: `{d['task_class']}.evaluate_state` (module `{d['task_module']}`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
 {pred.rstrip()}
 ```
@@ -188,6 +218,7 @@ CLI equivalent of the grader:
 
 
 def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, difficulty: str, oracle: bool) -> str:
+    text, requirements = goal_words(fam, text, d)
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
            "None yet: `solution/solve.sh` says so and exits 1 (the oracle agent scores 0). A reference solution must be\n"
@@ -205,6 +236,8 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 
 ## Goal
 {text}
+
+{requirements}
 
 ## Difficulty
 {difficulty}
@@ -330,6 +363,7 @@ def main() -> None:
     else:
         d = run_tool(a.python, "describe", "--task", fam, "--instance", inst_path)
         (build / "describe.json").write_text(json.dumps(d, indent=1))
+    validate_goal_instance(fam, d, inst)
     if a.oracle:
         if pathlib.Path(a.oracle).resolve() != (dst / f"solution/oracle_{fam}.py").resolve():
             shutil.copy(a.oracle, dst / f"solution/oracle_{fam}.py")
@@ -353,9 +387,10 @@ def main() -> None:
                                   f"success needs the task's predicate (above) held for {d['stable_duration_s']:g} s. Grasping: "
                                   f"{d['grasp_rules'].split(':')[0]}.")
     hours = a.hours if a.hours is not None else (0.5 if spec.get("fixture") else 2.0)
-    (dst / "instruction.md").write_text(instruction(fam, spec["text"], d))
-    (dst / "README.md").write_text(readme(slug, fam, spec["text"], d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle)))
-    (dst / "task.toml").write_text(task_toml(slug, fam, spec["text"], d, a.eval_index, inst["variation_id"], inst["seed"], hours))
+    goal_text, _ = goal_words(fam, spec["text"], d)
+    (dst / "instruction.md").write_text(instruction(fam, goal_text, d))
+    (dst / "README.md").write_text(readme(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], difficulty, bool(a.oracle)))
+    (dst / "task.toml").write_text(task_toml(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], hours))
     print("generated", slug, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
 
 

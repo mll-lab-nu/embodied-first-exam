@@ -5,13 +5,15 @@ from .geometry import interpolate, pose_dict
 
 
 def connect_search(checker, start, goal, sample, *, rng, iterations=1000, step_m=.008, progress=None,
-                   metric_radius_m=None, goal_candidates=None, local_sample=None):
+                   metric_radius_m=None, goal_candidates=None, local_sample=None, minimum_step_m=None):
     """Accepted edges bound rigid surface motion; finite failure is inconclusive."""
     # The search metric may emphasize the constrained payload rather than a
     # long attached tool. Edge certificates still use checker's full radius.
     metric_radius = checker.radius if metric_radius_m is None else float(metric_radius_m)
     if not np.isfinite(metric_radius) or metric_radius <= 0.:
         raise ValueError("The search metric radius must be finite and positive")
+    if minimum_step_m is not None and not 0 < minimum_step_m <= step_m:
+        raise ValueError("Minimum extension must be positive and at most the nominal step")
     goals = [goal] if goal_candidates is None else list(goal_candidates)
     if not goals:
         raise ValueError("At least one goal pose is required")
@@ -38,9 +40,14 @@ def connect_search(checker, start, goal, sample, *, rng, iterations=1000, step_m
         distance = np.linalg.norm(current[0]-target[0])+metric_radius*(current[1].inv()*target[1]).magnitude()
         if distance < 1e-10:
             return index, True
-        candidate = interpolate(current, target, min(1., step_m/distance))
-        if not checker.edge(current, candidate)["passed"]:
-            return None, False
+        length = min(step_m, distance)
+        while True:
+            candidate = interpolate(current, target, length/distance)
+            if checker.edge(current, candidate)["passed"]:
+                break
+            if minimum_step_m is None or length/2 < minimum_step_m:
+                return None, False
+            length /= 2
         count = len(tree)
         if count == len(positions[which]):
             positions[which] = np.concatenate([positions[which], np.empty_like(positions[which])])
@@ -48,7 +55,7 @@ def connect_search(checker, start, goal, sample, *, rng, iterations=1000, step_m
         positions[which][count], quats[which][count] = candidate[0], candidate[1].as_quat()
         tree.append((candidate, index))
         accepted[which] += 1
-        return len(tree)-1, distance <= step_m
+        return len(tree)-1, length >= distance
 
     def backtrace(which, index):
         path = []

@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "topogym/topogym-fiber-bundling-i00"
-description = "TopoGym fiber_bundling (panda_robotiq, Genesis): produce one replayable trajectory. Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, tip first and in tip-to-root material order, until all roots and the front sheath have passed and cleared the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not completion. Keep the completed configuration stable. Frozen scene instance (variation fiber_bundling_medium, seed 0)."
+description = "TopoGym fiber_bundling (panda_robotiq, Genesis): produce one replayable trajectory. Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. Frozen scene instance (variation fiber_bundling_medium, seed 0)."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy", "trajectory", "fiber_bundling"]
 

@@ -1,15 +1,27 @@
 # TopoGym · rope_threading — LIMITED MODE (robot as a service, rcb-limited/2.2)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Thread the rope through the cyan ring, then the green ring, then the purple ring, following the rope from its material start to material end. Pass fully through each aperture without extra crossings, intersecting ring material, or damaging the rope. Keep the threaded rope still.
+client and one episode. **Task:** Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
+
+## Success requirements
+
+- Required directions along that material order: cyan ring (R1): cross toward the side containing the green ring (R2); green ring (R2): cross toward the side containing the purple ring (R3); purple ring (R3): cross away from the side containing the green ring (R2). Do not reverse the crossing directions.
+- Pass fully through each required hole exactly once, with no extra crossings or ambiguous tangencies. Keep the full rope thickness clear of the rim, with an additional 0.1 mm radial margin; the passage must clear both sides of each ring's thickness, not just its middle plane.
+- Keep every rope point at or below 1 mm/s. Holding is allowed; release is not required.
+- Keep the rope intact; collapsed or inverted rope volume is not accepted.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Invalid rope volume ends the episode in failure.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success (the goal state held still for
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
   0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions), and there is no success predicate.
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed. The task requirements above still apply in full.
 - **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
   simulated time are reported as cost. One control step takes about 6.6 s of wall clock here (the simulator keeps
   a full checkpoint of every physics step).

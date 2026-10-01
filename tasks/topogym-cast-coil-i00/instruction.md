@@ -1,11 +1,25 @@
 # TopoGym · cast_coil — frozen instance
 
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; TopoGym on Genesis 1.2.1 physics, Nyx rendering) via Python.
-**Task:** Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both pieces, withdraw the grippers and leave the assembled puzzle stable on the table.
+**Task:** Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both.
 
-The scene objects are the task's entities (`s.objects()`: `coil_gold`, `coil_silver`). The success predicate is
-`CastCoilEasyTask.evaluate_state` (module `topogym.tasks.cast_coil.cast_coil_easy`); the task succeeds once it holds continuously for
-0.5 s:
+## Success requirements
+
+- Align the pieces' matching assembly frames with relative position error below 1 mm and relative angular error below 0.02 rad.
+- The bottom of at least one piece must be within 3 mm of the tabletop. Neither piece may extend more than 1 mm below it, and each piece must overlap the tabletop horizontally.
+- Keep both pieces' linear speeds below 1 mm/s and angular speeds below 0.02 rad/s. Merely touching or gripping them is not completion.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm. Each target rigid body's angular speed must be at most 0.02 rad/s and angular drift at most 0.02 rad.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A piece falling more than 100 mm below the tabletop, or task contact penetration exceeding 1 mm, ends the episode in failure.
+
+The scene objects are the task's entities (`s.objects()`: `coil_gold`, `coil_silver`).
+Implementation reference: `CastCoilEasyTask.evaluate_state` (module `topogym.tasks.cast_coil.cast_coil_easy`).
+This is a partial implementation excerpt; delegated helpers, passage history and the shared release/confirmation
+checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
         poses, bounds, quiet, failure = self.rigid_measurements(state)

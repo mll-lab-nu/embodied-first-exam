@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-cast-coil-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym cast_coil on the same frozen instance as the unlimited task. Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both pieces, withdraw the grippers and leave the assembled puzzle stable on the table. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym cast_coil on the same frozen instance as the unlimited task. Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "limited-mode", "trajectory", "cast_coil"]
 

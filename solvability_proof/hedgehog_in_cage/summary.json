@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "task": "hedgehog_in_cage",
+  "updated_utc": "2026-09-30T20:08:26.167470+00:00",
+  "requested_variants": [
+    "easy",
+    "medium",
+    "hard"
+  ],
+  "accepted_proofs": 2,
+  "accepted_variants": [
+    "easy",
+    "medium"
+  ],
+  "cases": [
+    {
+      "variation": "medium",
+      "model_revision": "waisted4_dark_wood_v1",
+      "seed": 0,
+      "run": "native_success_01",
+      "path": "2026-09-30/evidence/runs/native_success_01",
+      "role": "accepted_success",
+      "report": "2026-09-30/evidence/runs/native_success_01/oracle_report.json",
+      "audit": "2026-09-30/evidence/runs/native_audit_01/execution_audit.json",
+      "source_manifest": "2026-09-30/evidence/runs/native_success_01/source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "0086b5e6cd02b2ab7e00118a91cd0c6a39b6cef06e3f01172cc6a69a997972d4",
+      "report_sha256": "2ccb29dc4cb185e02d4e36808d39b5f935086535141838fcb5f7e00e4dc03ba8",
+      "audit_sha256": "9ea5002c0a95645dc00f4b45e04401c018bddefd0995b0608f6d9b3632c99af7",
+      "simulation_time_s": 56.5,
+      "states": 2261,
+      "batch": "2026-09-30"
+    },
+    {
+      "variation": "easy",
+      "model_revision": "simulator_v1",
+      "seed": 0,
+      "run": "easy_qualified_native_01",
+      "path": "2026-09-30_easy/evidence/runs/easy_qualified_native_01",
+      "role": "accepted_success",
+      "report": "2026-09-30_easy/evidence/runs/easy_qualified_native_01/oracle_report.json",
+      "audit": "2026-09-30_easy/evidence/runs/easy_qualified_audit_01/execution_audit.json",
+      "source_manifest": "2026-09-30_easy/evidence/runs/easy_qualified_native_01/source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "ca4864edaa678b726c9fbdad2c5815304bd1b04bb321c2b485464e58fe0ab7ff",
+      "report_sha256": "8a26479217c3c17459c20eed7a00f799300ccb94302b2f068e713f3a2e4e85b2",
+      "audit_sha256": "f81bab697eb789538b40967e4465f9b01026030317c50e6c34db02a78bd5ceb9",
+      "simulation_time_s": 238.875,
+      "states": 9556,
+      "batch": "2026-09-30_easy"
+    }
+  ],
+  "pending": [
+    {
+      "variation": "hard",
+      "model_revision": "fixed_v2",
+      "reason": "Authored initial ball/cage intersection; proposed initial-pose/model revision change remains unapplied pending scope decision"
+    }
+  ],
+  "batches": [
+    {
+      "batch": "2026-09-30",
+      "accepted_proofs": 1,
+      "readme": "hedgehog_in_cage/2026-09-30/README.md",
+      "summary": "hedgehog_in_cage/2026-09-30/summary.json",
+      "manifest": "hedgehog_in_cage/2026-09-30/archive_manifest.json",
+      "validation": "hedgehog_in_cage/2026-09-30/archive_validation.json",
+      "manifest_sha256": "7937a3085e8a301d1e64046cf1f07d5c223cb8117d522bc36dc7e4418a335087",
+      "evidence_files": 5475,
+      "evidence_bytes": 1085203585
+    },
+    {
+      "batch": "2026-09-30_easy",
+      "accepted_proofs": 1,
+      "readme": "hedgehog_in_cage/2026-09-30_easy/README.md",
+      "summary": "hedgehog_in_cage/2026-09-30_easy/summary.json",
+      "manifest": "hedgehog_in_cage/2026-09-30_easy/archive_manifest.json",
+      "validation": "hedgehog_in_cage/2026-09-30_easy/archive_validation.json",
+      "manifest_sha256": "571edce825c65f9bea23cb4c8b86ea0d2a9d5c7ff41dafa1ff4b7b1efe9eeb4c",
+      "evidence_files": 16708,
+      "evidence_bytes": 3803778018
+    }
+  ],
+  "scope": "Finite default-parameter seed 0 instances; contact-triggered assistance, CPU float64, 25 ms World tick / 40 substeps; no RGB or friction-only guarantee"
+}

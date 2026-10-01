@@ -58,28 +58,78 @@ class ManipulationPlanner:
             q[self.robot._q_indices[side][6:]]=state['finger_position_m']
         return bodies,q
 
-    def withdraw_left(self, observation):
+    def withdraw_left(self, observation, *, allow_release_contact=False):
         """Check a short free-hand retreat from the measured released stack."""
         bodies,seed=self.observed(observation)
         start=tcp_pose(observation['robot']['left'])
         outward=start[0]-bodies['horseshoe_left'][0];outward[2]=0.
         outward/=max(float(np.linalg.norm(outward)),1e-9)
         attempts=[]
-        for delta in (np.array([0.,0.,.03]),np.array([0.,0.,.02]),
-                      .04*outward+[0,0,.01],.03*outward+[0,0,.02]):
-            target=(start[0]+delta,start[1]);q=seed.copy();rows=[]
+        deltas=[np.array([0.,0.,.03]),np.array([0.,0.,.02]),
+                .04*outward+[0,0,.01],.03*outward+[0,0,.02]]
+        if allow_release_contact:
+            # The released shoe and supporting hand continue settling.
+            # Leave enough space for that motion before waiting for quiet.
+            deltas=[sign*length*axis for length in (.08,.06,.04,.03)
+                    for axis in np.eye(3) for sign in (1.,-1.)]+[
+                    -.08*start[1].apply([1.,0.,0.]),*deltas]
+        def depth():
+            import fcl
+            data=fcl.CollisionData(request=fcl.CollisionRequest(num_max_contacts=256,enable_contact=True))
+            self.checker.by_arm['left'].collide(self.checker.bodies['horseshoe_left'][1],data,fcl.defaultCollisionCallback)
+            return max((float(c.penetration_depth) for c in data.result.contacts),default=0.)
+        self.checker.check(seed,body_poses=bodies)
+        initial_depth=depth() if allow_release_contact else 0.
+        for delta in deltas:
+            target=(start[0]+delta,start[1]);q=seed.copy();rows=[];cleared=False;peak=initial_depth
             try:
                 for u in np.linspace(0,1,61):
                     previous=q.copy()
                     q=self.checker.solve('left',interpolate(start,target,u),q)
                     checked=self.checker.check(q,body_poses=bodies,
                         contacts={'right':('horseshoe_left','horseshoe_right')})
-                    if not checked['passed']:raise ValueError(str(checked))
+                    if not checked['passed']:
+                        permitted=allow_release_contact and not cleared and checked['issues']==['left/horseshoe_left'] and u<1.
+                        if not permitted:raise ValueError(str(checked))
+                        current_depth=depth();peak=max(peak,current_depth)
+                        if current_depth>max(.00001,initial_depth)+.000001:
+                            raise ValueError('Released-body penetration increased along retreat')
+                    else:cleared=True
                     if np.abs(q-previous).max()>.15:raise ValueError('Joint branch changed')
                     rows.append(q.tolist())
+                free_transit=None
+                if allow_release_contact:
+                    from .joint_transit import plan_transit
+                    home=q.copy()
+                    home[self.robot._q_indices['left'][:6]]=self.robot.groups['left'].home[:6]
+                    goals=[home]
+                    for waist in (-1.,1.,-1.5,1.5):
+                        candidate=home.copy();candidate[self.robot._q_indices['left'][0]]=waist
+                        goals.append(candidate)
+                    for delta in ([0.,-.16,.08],[0.,.16,.08],[.14,0.,.10],[-.12,0.,.10],[0.,0.,.18]):
+                        try:goals.append(self.checker.solve('left',(target[0]+delta,target[1]),q))
+                        except ValueError:continue
+                    transit_errors=[]
+                    for goal in goals:
+                        from topogym.planning.buzz_wire_3d.kinematics import distance
+                        checked=self.checker.check(goal,body_poses=bodies,
+                            contacts={'right':('horseshoe_left','horseshoe_right')})
+                        if not checked['passed']:continue
+                        clearance=min(distance(self.checker.by_arm['left'],manager)
+                                      for _,manager in self.checker.bodies.values())
+                        clearance=min(clearance,distance(self.checker.by_arm['left'],self.checker.by_arm['right']))
+                        if clearance<.05:continue
+                        try:free_transit=plan_transit(self,q,goal,bodies,seconds=10.)
+                        except ValueError as error:transit_errors.append(str(error));continue
+                        free_transit['endpoint_minimum_clearance_m']=clearance
+                        break
+                    if free_transit is None:raise ValueError(f'No further free retreat: {transit_errors}')
                 result=dict(passed=True,target_tcp=pose_dict(target),joint_samples=rows,
+                            free_transit=free_transit,
                             observed_bodies={n:pose_dict(v) for n,v in bodies.items()},attempts=attempts,
-                            scope='sampled free-hand retreat; supported shoe remains passive')
+                            release_contact=allow_release_contact,initial_release_penetration_m=initial_depth,
+                            maximum_release_penetration_m=peak,
+                            scope='sampled free-hand retreat; initial released-body contact may only decrease; physical validation required')
                 write_json_atomic(self.directory/'free_hand_plan.json',result)
                 return result
             except ValueError as error:attempts.append(dict(translation_m=delta.tolist(),error=str(error)))
@@ -121,7 +171,7 @@ class ManipulationPlanner:
         contacts={other:('horseshoe_left','horseshoe_right')}
         p,r=bodies['target_ring'];loop=self.task.assembly.loops['target_ring']
         center=loop.center-self.task.body_origins['target_ring']
-        hand=tcp_pose(observation['robot'][side]);candidates=[];attempts=[]
+        hand=tcp_pose(observation['robot'][side]);candidates=[];attempts=[];transit_searches=0
         for angle in np.arange(0.,360.,15.):
             a=np.deg2rad(angle)
             point=center+loop.rotation.apply([loop.radii[0]*np.cos(a),loop.radii[1]*np.sin(a),0.])
@@ -158,11 +208,12 @@ class ManipulationPlanner:
                     if not checked['passed']:raise ValueError('closing '+str(checked))
                 # Explicitly check the free arm's joint transit and its final
                 # straight approach. All puzzle bodies remain obstacles.
-                transit=[]
+                transit=[];transit_error=None
                 for u in np.linspace(0,1,61):
                     sample=q+u*(pre_q-q)
                     checked=self.checker.check(sample,contacts=contacts,body_poses=bodies)
-                    if not checked['passed']:raise ValueError('transit '+str(checked))
+                    if not checked['passed']:
+                        transit_error='transit '+str(checked);break
                     transit.append(sample.tolist())
                 q=pre_q.copy();descent=[]
                 for u in np.linspace(0,1,41)[1:]:
@@ -171,12 +222,20 @@ class ManipulationPlanner:
                     checked=self.checker.check(q,contacts=allowed,body_poses=bodies)
                     if not checked['passed']:raise ValueError('approach '+str(checked))
                     descent.append(q.tolist())
+                transit_plan=None
+                if transit_error:
+                    if transit_searches>=4:raise ValueError(transit_error)
+                    from .joint_transit import plan_transit
+                    transit_searches+=1
+                    initial=seed.copy();initial[self.robot._q_indices[side][6:]]=.018
+                    transit_plan=plan_transit(self,initial,pre_q,bodies,side=side,seconds=20.)
+                    transit=transit_plan['waypoints']
                 anchors=self.withdrawal_anchors(bodies,target,target_q)
                 result=dict(passed=True,side=side,**record,point_local_m=point.tolist(),
                             open_position_m=.018,pre_tcp=pose_dict(pre),target_tcp=pose_dict(target),
                             pre_joint_position_rad=pre_q[self.robot._q_indices[side][:6]].tolist(),
                             observed_bodies={n:pose_dict(v) for n,v in bodies.items()},
-                            joint_transit=transit,approach=descent,attempts=attempts,
+                            joint_transit=transit,transit_plan=transit_plan,approach=descent,attempts=attempts,
                             withdrawal_anchors=anchors,
                             scope='sampled native IK/collision plan; bilateral acquisition requires physical execution')
                 write_json_atomic(self.directory/'ring_grasp_plan.json',result)

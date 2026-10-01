@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "task": "hedgehog_in_cage",
+  "batch": "2026-09-30_easy",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "easy",
+      "model_revision": "simulator_v1",
+      "seed": 0,
+      "run": "easy_qualified_native_01",
+      "path": "evidence/runs/easy_qualified_native_01",
+      "role": "accepted_success",
+      "report": "evidence/runs/easy_qualified_native_01/oracle_report.json",
+      "audit": "evidence/runs/easy_qualified_audit_01/execution_audit.json",
+      "source_manifest": "evidence/runs/easy_qualified_native_01/source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "ca4864edaa678b726c9fbdad2c5815304bd1b04bb321c2b485464e58fe0ab7ff",
+      "report_sha256": "8a26479217c3c17459c20eed7a00f799300ccb94302b2f068e713f3a2e4e85b2",
+      "audit_sha256": "f81bab697eb789538b40967e4465f9b01026030317c50e6c34db02a78bd5ceb9",
+      "simulation_time_s": 238.875,
+      "states": 9556
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "panda_robotiq",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "grasp_region": {
+      "construction": "Sphere enclosing the 30 mm contact neighborhoods for all declared stages",
+      "stage_contact_points_m": [
+        [
+          0.0,
+          -0.07188010851409932,
+          -0.04150000000001576
+        ],
+        [
+          0.0,
+          0.0,
+          -0.063
+        ]
+      ],
+      "center_m": [
+        0.0,
+        -0.03594005425704966,
+        -0.05225000000000788
+      ],
+      "radius_m": 0.06751333096379877,
+      "acquisition": "Fresh closing intent and bilateral native contacts for each binding"
+    },
+    "rgb": false,
+    "video": false
+  },
+  "qualification_prerequisites": [
+    {
+      "path": "evidence/qualification/easy_two_grasp_native_01",
+      "audit": "evidence/qualification/easy_two_grasp_audit_01/execution_audit.json",
+      "strengthened_audit": "evidence/qualification/easy_two_grasp_audit_02/execution_audit.json",
+      "task_success": false
+    }
+  ],
+  "object_witness": "evidence/supporting/easy_object_frozen_01/object_witness.json",
+  "object_audit": "evidence/supporting/easy_object_audit_01/object_audit.json",
+  "conditional_object_audit": "evidence/supporting/easy_far_continuation_audit_01/object_audit.json",
+  "boundary_checks": "evidence/supporting/easy_boundary_checks_01/checks.json",
+  "limitations": [
+    "Finite seed/default-parameter instance",
+    "Contact-triggered assisted grasp; not friction-only",
+    "Tick-end evidence; no continuous-time/all-substep qualification",
+    "No RGB/video qualification",
+    "Robot mounting link0 contact with table is excluded"
+  ],
+  "note": "Original bytes and provenance paths retained; use archive-relative paths for access. The original medium archive is unchanged."
+}

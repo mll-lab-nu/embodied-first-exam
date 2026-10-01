@@ -11,7 +11,7 @@ from topogym.planning.rigid_reference.geometry import pose_dict
 from topogym.utils.io import write_json_atomic
 
 
-def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, passive_contact_names=()):
+def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, passive_contact_names=(), contact_release=None):
     """Search continuous arm configurations, then check dense Cartesian replay.
 
     Joint-space exploration avoids forcing one fixed world orientation across
@@ -21,18 +21,23 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
     ik=planner.checker;group=planner.robot.groups['left'];ids=planner.robot._q_indices['left'][:6]
     hand=planner.robot.entity.get_link(group.hand_link).idx_local
     limits=np.asarray(group.arm_limits_rad)
-    prefix=checker.contact_escape() if passive_contact_names else [checker.start]
+    if contact_release is None:contact_release=bool(passive_contact_names)
+    # Give the exploratory tree room to branch. Per-stage execution checks
+    # its own minimal release before following this persistent guide.
+    prefix=checker.contact_escape(minimal=False) if contact_release else [checker.start]
     start=checker.seed.copy()
     if len(prefix)>1:start=np.asarray(checker.check(prefix[-1])['qpos'])
     search_seed=int(getattr(planner,'withdrawal_parameters',{}).get('search_seed',922))
     rng=np.random.default_rng(search_seed);phase='search'
     op,orr=checker.offset;queries=0;cache={};began=time.monotonic()
     passive_loops={}
+    static_passive_topology=getattr(planner,'withdrawal_parameters',{}).get('check_static_passive_links',True)
+    if not isinstance(static_passive_topology,bool):raise ValueError('Static passive topology option must be boolean')
     ring_loop=planner.task.assembly.loops['target_ring']
     def world_loop(loop,p,r):
         return replace(loop,center=p+r.apply(loop.center-planner.task.body_origins[loop.body]),rotation=r*loop.rotation)
     for name,loop in planner.task.assembly.loops.items():
-        if loop.body in passive_contact_names:
+        if static_passive_topology and loop.body in passive_contact_names:
             passive_loops[name]=world_loop(loop,*checker.bodies[loop.body])
     initial_ring_loop=world_loop(ring_loop,*checker.start)
     initial_linkage={n:initial_ring_loop.linking(loop) for n,loop in passive_loops.items()}
@@ -59,7 +64,7 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
         if (r.apply(checker.vertices)+p)[:,2].min()<ik.table_height+.0005:
             cache[key]=False;return False
         checker.set_ring((p,r));ring=ik.bodies['target_ring'][1]
-        margin=.00005 if passive_contact_names else .0005
+        margin=.00005 if contact_release else .0005
         if min(distance(ring,m) for n,(_,m) in ik.bodies.items()
                if n!='target_ring' and n not in passive_contact_names)<margin:
             cache[key]=False;return False
@@ -72,10 +77,12 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
                 cache[key]=False;return False
         checked=ik.check(q,contacts={'left':'target_ring','right':('horseshoe_left','horseshoe_right')})
         cache[key]=checked['passed'];return cache[key]
-    def edge(a,b,step=.01):
+    def edge_samples(a,b,step=.01):
         pa,pb=pose(full(a)),pose(full(b))
         count=max(1,int(np.ceil(np.linalg.norm(b-a)/step)),int(np.ceil(checker.motion(pa,pb)/.00075)))
-        return all(valid(a+u*(b-a)) for u in np.linspace(0,1,count+1)[1:])
+        return (a+u*(b-a) for u in np.linspace(0,1,count+1)[1:])
+    def edge(a,b):
+        return all(valid(sample) for sample in edge_samples(a,b))
     roots=[]
     for goal in goals:
         checked=checker.check(goal)
@@ -87,9 +94,24 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
     def extend(tree,target):
         nodes,parents=tree;i=int(np.argmin(np.linalg.norm(np.asarray(nodes)-target,axis=1)))
         delta=target-nodes[i];length=np.linalg.norm(delta)
-        new=nodes[i]+delta*min(1.,.18/max(length,1e-12))
-        if not edge(nodes[i],new):return None,False
-        nodes.append(new);parents.append(i);return len(nodes)-1,length<=.18
+        if length<1e-10:return i,True
+        proposal=delta*min(1.,.18/length)
+        # Retain a checked prefix when a longer extension hits an obstacle.
+        # Requiring the entire 0.18 rad proposal to clear a narrow contact
+        # corridor discards useful short motion near its entrance.
+        reached=None
+        # A contact corridor can be narrower than even the first dense
+        # sample of a nominal extension. Try a shorter proposal when that
+        # first sample fails; every retained edge still uses valid().
+        for scale in (1.,.5,.25,.125,.0625,.03125,.015625,.0078125):
+            new=nodes[i]+scale*proposal
+            for sample in edge_samples(nodes[i],new):
+                if not valid(sample):break
+                reached=sample
+            if reached is not None:break
+        if reached is None or np.linalg.norm(reached-nodes[i])<1e-5:return None,False
+        nodes.append(reached);parents.append(i)
+        return len(nodes)-1,bool(np.linalg.norm(reached-target)<1e-10)
     def ancestry(tree,i):
         result=[]
         while i>=0:result.append(tree[0][i]);i=tree[1][i]
@@ -130,7 +152,10 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
     result=dict(passed=True,poses=[pose_dict(p) for p in poses],ordered_audit=audit,
         joint_knots=[full(a).tolist() for a in path],queries=queries,
         release_prefix_edges=len(prefix)-1,passive_contact_names=list(passive_contact_names),
-        static_passive_loop_linkages_preserved_at_joint_checks=True,static_passive_loop_linkages=initial_linkage,
+        contact_release=bool(contact_release),
+        static_passive_loop_linkages_preserved_at_joint_checks=static_passive_topology,
+        static_passive_loop_linkages=initial_linkage,
+        actual_passive_topology_requires_physical_audit=True,
         scope='sampled native joint search and Cartesian replay; allowed passive contact response requires physical execution')
     write_json_atomic(planner.directory/'free_ring_transport_plan.json',result)
     return result

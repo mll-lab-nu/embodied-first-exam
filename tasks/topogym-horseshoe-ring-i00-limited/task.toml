@@ -10,7 +10,7 @@ artifacts = [
 
 [task]
 name = "topogym/topogym-horseshoe-ring-i00-limited"
-description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym horseshoe_ring on the same frozen instance as the unlimited task. Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. Holding the target with the gripper is allowed. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "LIMITED MODE (robot as a service, rcb-limited/2.2): TopoGym horseshoe_ring on the same frozen instance as the unlimited task. Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "limited-mode", "trajectory", "horseshoe_ring"]
 

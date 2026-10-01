@@ -40,9 +40,77 @@
 
 [`stages.py`](../../../topogym/planning/horseshoe_ring/stages.py) 已接入现有 `run_solvability_workflow.py`。当前 `live_diagnostic_01` 将 home 到抓环、取环、放环、移动剩余组件、验证目标拆成独立阶段；失败诊断可在同一活环境中通过公开 rewind 重试，记录分支与候选。初始取环参数为 4 mm 短段、2 mm/s、1.5 mm 跟踪门槛及 0.8 mm 提前接触停止线，原生 1 mm 失败标准不改。发生回溯的记录不能取得完整证明资格；选定方案必须再次从 home 连续执行。`audit.py --prefix` 仅审计调用时已写入的完整 tick 前缀，始终不授予最终资格。
 
+逐短段版本 `live_diagnostic_02` 进一步把每个最多 4 mm 的取环动作拆成一个检查点，并在成功段之间保留控制补偿、固定支撑目标和引导索引。连续三个短段索引不推进时，从最新实测姿态重新搜索；段内失败仅回溯该短段。上一版 `live_diagnostic_01` 因自由链环移动后遮挡旧引导而停止诊断，三次公开回溯均保留；其记录不具备完整证明资格。从停滞实测状态出发的[172 位姿重新规划](../../../runs/test_results/horseshoe_oracle_20260930/joint_replan_probe_01/free_ring_transport_plan.json)已通过只读检查，仍需动力学验证。首次运行通过 `TOPOGYM_HORSESHOE_ORACLE_INPUTS` 指定绑定五项输入路径及哈希的 JSON；后续正式重跑可使用 workflow 生成的 `qualification/selection.json`。
+
+`live_diagnostic_02` 连续完成 34 个取环短段后仍未分离。进一步检查发现，局部脱离 LP 最大化间隙时会选择数毫米平移和约 0.03–0.04 rad 转动，使后续 4 mm 预算反复用于返回引导。当前 `ring_route.py` 从小到大检查该扭量的分数，只执行达到 60 µm 间隙的最小已检查分数；若无法一步达到，则保留通过检查且间隙改善最大的候选。在 tick 11832 的实测状态上，[局部只读检查](../../../runs/test_results/horseshoe_oracle_20260930/minimal_escape_probe_01/contact_escape_plan.json)将材料位移减至约 0.076 mm；旧引导仍被链环阻挡，未通过后续推进检查。`live_diagnostic_03` 使用修正后的冻结源码从 home 重新执行；尚不代表完整成功。旧诊断的公开停止与回溯记录保留，不拼接到新执行。
+
+最小脱离端点在上述停滞状态上的完整关节搜索于 600 s 超时；保持原搜索的大间隙引导、仅缩小逐段实际脱离时，[4 mm 衔接段的 9 个加密检查](../../../runs/test_results/horseshoe_oracle_20260930/minimal_escape_newguide_probe_01/ring_stage_000.json)通过。因此当前 `joint_route.py` 保留较大的已检查接触脱离前缀以供全局搜索，逐段 `ring_route.py` 使用最小脱离，再按剩余预算跟踪持久引导。`live_diagnostic_04` 从 home 验证这一组合；`live_diagnostic_03` 的冻结源码仍是全局与局部都最小脱离的版本，两个运行不可混用。
+
+`live_diagnostic_03` 的 [8266 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_03/prefix_audit.json)通过全部 19 对闭环连接与抓持检查，最大任务接触穿透 0.301 mm；仍未取出圆环。第 25 个短段的旧引导被链条阻挡，动作执行前拒绝后重新找到 174 位姿路线，保持零回溯。旧适配器会永久继承重试的 2 mm / 1 mm/s 设置，剩余路线接近 300 段上限。当前适配器在三个保守短段成功后重新尝试 4 mm / 2 mm/s，默认预算 600 段并实际执行 `maximum_stages` 限制；每个候选仍经过原有规划和物理检查。`live_diagnostic_05` 从 home 验证这一修改，尚无完整成功结论。
+
+`live_diagnostic_03` / `04` 后续出现跟踪停滞，重新搜索的剩余路线超过各自冻结的 300 段预算，已通过公开接口停止，最终各记录 5 次回溯（含操作方停止）；不能作为完整证明。第 51 段入口的圆环离下马蹄约 33 mm、离上马蹄仅约 0.006 mm。固定所有剩余部件的两次原生关节搜索各耗尽 600 s；[纯物体搜索](../../../runs/test_results/horseshoe_oracle_20260930/measured_object_stage50_probe_01/object_route.json)在 10000 次扩展内也未连接，均不是无解证明。当前关节搜索会保留长扩展中已检查通过的短前缀，且接触脱离与允许推动哪些部件已拆为独立选项。
+
+更早的实测偏差发生在交接前：tick 4584 / 114.6 s 的马蹄相对旋转误差仅 0.0086 rad，但自由圆环距物体参考位置已有 0.1044 m 偏差。[折合后共同倾斜检查](../../../runs/test_results/horseshoe_oracle_20260930/folded_tilt_probe_01/results.json)的 15° / 30° / 45° 候选通过，30° 为 62 个原生 IK / 碰撞样本；60° 以上未通过可达检查。`live_diagnostic_06` 使用 `stages:gravity_stages` 从 home 验证：两手分别持有马蹄时倾斜、保持、恢复，再按实测圆环沿出口方向的位置决定是否交接。实际前进到参考位置前 25 mm 内，或出现至少 5 mm 的整体分隔平面，才接受该局部阶段。圆环和链条始终自由，尚无完整成功结论。
+
 实现位于 [`topogym/planning/horseshoe_ring/`](../../../topogym/planning/horseshoe_ring/)；当前入口为 [`scripts/run_horseshoe_policy.py`](../../../scripts/run_horseshoe_policy.py)。`--part geometry --reference .../body_poses.json` 复核物体路径；`--part plan --reference .../body_poses.json` 搜索完整折合所需抓点和联合 IK；`--part pickup` / `--part fold` 执行诊断。运行会冻结源码和输入，每秒记录资源用量；按最新资源规则，仅内存达到 90% 时停止本次工作进程，CPU 只监控记录。无 RGB 的 CPU 运行使用 25 ms World tick / 40 子步、JOINT_ABS，IK 只读查询后输出普通关节动作。局部通过不计入 `solvability_proof/`。
 
 `--part plan --retarget-plan .../horizontal_oracle_frozen/fold_plan.json --grasps .../grasp_selection.json --reference .../body_poses.json` 复现上述余量规划；`--part support` / `--part grasp_ring` / `--part extract` 分别追加支撑交接、抓环和取环阶段，均须传入 `--grasps`、`--reference`、`--fold-plan`、`--support-plan`。这些阶段仍按诊断结果报告，尚无固定目标区的完整成功记录。
+
+`live_diagnostic_06` 的 15° / 30° / 45° 物理倾斜均未留下稳定的沿出口位移：30° / 45° 保持时约前移 20 mm，恢复水平后又回到原位置附近。60° 加前移 40 mm 的候选继续诊断。实测与参考的[几何对照](../../../runs/test_results/horseshoe_oracle_20260930/folded_comparison/comparison.png)显示，自由圆环仍悬在链环一侧，不能由马蹄相对姿态接近参考推断圆环已走完同一路线。图像仅为几何重建，不是相机 RGB。
+
+进一步的[工作区检查](../../../runs/test_results/horseshoe_oracle_20260930/folded_tilt_workspace_probe_02/results.json)找到先前移 100 mm、下移 40 mm 再倾斜 90° 的原生 IK / 机器人碰撞候选。`live_diagnostic_07` 使用独立冻结源码，从 home 验证该路线；每 0.5° / 1 mm 规划样本执行 0.1 s 并反馈保持两个马蹄，链环和圆环仍自由。尚无完整成功结论。实测折叠姿态的纯物体搜索同时进行；可选的缩短扩展仅保留重新通过连续间隙检查的边，不放宽几何门槛。
+
+最新诊断：60° 与 90° 保持时的圆环相对位置仍停在同一卡点附近。`live_diagnostic_07` 的 [4992 tick 连续前缀](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_07/prefix_audit.json)通过全部 19 对闭环连接、双指抓取与关节限位检查，最大接触穿透 0.27568 mm；尚未取环。`live_diagnostic_08` 测试 60° 倾斜后侧转 −60°。进一步的[朝向检查](../../../runs/test_results/horseshoe_oracle_20260930/folded_yaw_probe_01/results.json)找到整体绕竖直轴转 30° / 60° 时的 120° 倾斜路线，`live_diagnostic_09` 从 home 验证。两种路线均只约束双手分别持有的马蹄，未修改自由圆环、链环或原生判据。
+
+固定实测折叠姿态中所有剩余部件的两轮纯物体搜索分别耗尽 10000 次扩展和 600 s 预算，未找到出口；第二轮允许缩短扩展，但每条接受边仍经过同一连续间隙检查。结果仅表示有限搜索失败，不能推广成任务无解或机器人不可达。
+
+交接误差的进一步定位：左手放开上马蹄并抓环后，上件相对下件比参考低约 8.98 mm，转角误差约 0.0985 rad；交接前则只有约 1.06 mm 平移和 0.0086 rad 转角误差。405 条绕链连接处转环的物体候选最多推进 0.75° 就碰到固定上件，尚无几何出口。`live_diagnostic_10` 的 `stages:suspended_stages` 因而保留已经检查的 120° 倾斜和 30° 整体转向，在该姿态释放上件，让它沿原链环悬挂；待上件与圆环的实测速度持续低于局部门槛后，重新规划抓环。这里验收的是交接朝向，不要求或宣称圆环已经位移、分离或完成任务。每手最多一个辅助绑定、原生接触与最终成功判据均不变，物理结果仍待验证。
+
+`live_diagnostic_10` 已实际到达 120° 倾斜并释放上件；[6521 tick 的连续前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_10/prefix_audit.json)通过全部连接、接触、抓持与关节检查，最大接触穿透仍为 0.27568 mm。左手撤离的旧检查在起点拒绝了刚释放上件与夹爪的已有接触。[新的只读撤离候选](../../../runs/test_results/horseshoe_oracle_20260930/suspended_retreat_probe_01/free_hand_plan.json)沿世界 +X 退 30 mm，初始约 14.95 µm 穿透不增加，并在终点恢复完整避碰要求；只允许脱离这一已有接触，不能重新接触其他物体。`live_diagnostic_11` 使用新冻结源码从 home 验证，尚无完整任务成功。
+
+另对 5 s 静置后的真实出生姿态补查直接取环：抓环 IK 已找到，但竖直抬升的前 10 mm 会穿过固定链环，因此端点空闲不构成有效通路。包含桌面的纯物体接触脱离搜索停在约 18.31 µm 间隙，未达到检查门槛；没有将直接抬起写成可解证明。
+
+`live_diagnostic_11` 到 173.125 s 的 6926 tick 连续前缀通过独立审计，仍未抓到圆环。松手、撤 30 mm、静置之后的实测姿态缩小了两手间隙，原生 FCL 抓环规划起点拒绝接近。直接沿同一方向撤 40–80 mm 也会碰到下马蹄；新的[撤手候选](../../../runs/test_results/horseshoe_oracle_20260930/suspended_retreat_probe_04/free_hand_plan.json)先完成原 30 mm 接触脱离，再使用固定另一只手的关节空间绕行，1103 次查询通过，关节边采样不超过 0.015 rad。`live_diagnostic_13` 从默认 home 验证这一新候选；采样规划不代替运动中自由物体的真实响应。
+
+`live_diagnostic_12` 补做出生姿态直接抓环的真实接触抬升。抬升到 80 mm 仍未将圆环与完整余件分开，策略按预期报错退出；[3790 tick 审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_12/prefix_audit.json)保留全部 19 对闭环连接，最大接触穿透 0.26209 mm，无完整目标成功。有限失败不能推断任务无解。
+
+撤手的进一步筛选拒绝了先前绕行终点：它虽对释放瞬间的物体无碰撞，却与 `live11` 静置后的上件相交。因此 `live13` 在前缀阶段通过公开 abort/stop 停止，记录保留。新[撤手检查](../../../runs/test_results/horseshoe_oracle_20260930/suspended_retreat_probe_05/free_hand_plan.json)要求末端整只左臂与五个物体及右臂至少有 50 mm 间隙，找到 245.33 mm 的候选；[在此前静置几何中的假设抓环检查](../../../runs/test_results/horseshoe_oracle_20260930/retreat_to_grasp_probe_02/ring_grasp_plan.json)也通过。该假设状态只用于规划，不是物理记录或执行拼接。`live14` 从 home 验证 120° 交接。
+
+[实测相对姿态](../../../runs/test_results/horseshoe_oracle_20260930/suspended_relative_diagnosis.json)显示，120° 交接前两马蹄的相对角误差约 0.592°，静置后增至 19.707°，且相对位置明显变化。`live15` 的 `stages:vertical_stages` 因而验证 90° 竖直交接，假设重力可能减小张开角；尚未证实。静态纯物体和原生 IK 的搜索同时增加六个世界坐标方向的整体分离终点，仍执行原有碰撞与连接检查；未放宽任务判据。
+
+`live14` 已实际完成安全撤手、静置和双指抓环。[7779 tick 独立审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_14/prefix_audit_through_grasp.json)到 194.45 s 保持全部 19 对闭环连接，无抓持丢失或物理检查失败，最大接触穿透 0.275681 mm。圆环相对下马蹄的位置由早先悬挂观测的约 −45 mm 沿出口方向移到约 −17 mm，尚未分离；后续尝试见下文。先前 `live11` 静态物体搜索和假设抓取下的 IK 搜索失败不直接适用于该新实测状态。
+
+`live16` 的 90° 竖直路线加入了关节空间绕行接近，实际抓环成功；[7979 tick 抓环审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_16/prefix_audit_through_grasp.json)保持 19 对闭环连接，最大穿透 0.321537 mm，无检查失败，尚未取环。先前 `live15` 静置后的两马蹄相对角误差约 0.6125°，但相对位置仍偏离折合参考约 94.65 mm；不能将平行视为已经靠拢。
+
+[双臂配合候选](../../../runs/test_results/horseshoe_oracle_20260930/move_lower_integrated_probe_01/lower_reposition_plan.json)保持圆环不动，右手将下马蹄移向上件。起点先提出 0.1 mm 接触脱离；随后约 95 mm 的运动对实测上件、圆环和桌面具有 53.3744 µm 连续表面间隙下界，并通过 200 个原生 IK / 机器人碰撞样本。接触前缀与两条被动链的运动尚未证明。`alignment.py` / `stages:reposition_stages` 已接入，`live17` 从 home 做真实验证；逐 tick 同时检查全部 19 对闭环连接。
+
+`live14` 完成 8 个取环小阶段后，在 219.9 s 被机器人／上件间隙检查阻止。[实测 FCL 检查](../../../runs/test_results/horseshoe_oracle_20260930/live14_hand_gap_probe_01/result.json)给出左指与上件的正间隙 0.32930 mm、无穿透，低于原规划余量 0.5 mm。[下一段 4 mm 的复查](../../../runs/test_results/horseshoe_oracle_20260930/live14_narrow_stage_probe_01/ring_stage_008.json)在 0.1 mm 正规划余量下通过。`live18` 使用 `stages:close_clearance_stages` 从 home 验证；源路径作为带 SHA-256 的 `withdrawal_guide` 输入，只提供以所持下件为坐标系的引导，每段仍重查实测物体、IK 和碰撞。原生接触阈值、自碰撞、桌面及闭环检查未放宽，旧轨迹没有获得成功或连续执行信用。
+
+`live16` 随后连续完成 32 个取环小阶段；[11699 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_16/prefix_audit.json)到 292.45 s 保持全部 19 对闭环连接，无抓持丢失、关节越限或接触检查失败。第 33 段在 312.85 s 因右手支撑误差约 1.957 mm 超过 1.5 mm 推进门限而超时，诊断流程发生回溯，不能算完整连续证明。`live19` 从 home 使用该规划路径作为哈希绑定引导，单独设右手推进门限 3 mm，环仍为 1.5 mm；碰撞、物理穿透与拓扑验收标准不变，尚待执行验证。
+
+`live17` 的下件移动在约 69.5% 处持续停滞，右手误差约 2 mm，尚未达到候选终点。已通过公开 abort/stop 停止该试验并保留证据；正对实测中间状态做退环规划检查，不把预期上件位置当作真实位置。
+
+`live17` 的 [11753 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_17/prefix_audit.json)覆盖到 293.8 s，未发现拓扑、接触、抓持或关节失败。中间实测姿态的[退环候选](../../../runs/test_results/horseshoe_oracle_20260930/repositioned_exit_probe_01/joint_withdrawal_plan.json)为约 52.19 mm 平移，通过 110 个 IK／碰撞样本；但[完整静态物体复查](../../../runs/test_results/horseshoe_oracle_20260930/repositioned_exit_object_check_01/result.json)明确拒绝前约 9.5 mm，因此它仍需要被动接触执行，不能算无碰撞物体证书。`live20` 使用 `stages:partial_reposition_stages` 从 home 执行下件自由边的 65%，随后重测并重规划退环。
+
+`live18` 已通过第 9 个取环小阶段，但下一段再次被夹爪／上件间隙阻止，现已公开 stop。[8894 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_18/prefix_audit.json)未发现检查失败，19 对连接保持，最大穿透 0.275681 mm；没有完整取环或目标成功。
+
+`live20` 实际完成了 65% 下件移动，竖直位移约 −61.71 mm，末端下件误差 1.201 mm、圆环误差 0.535 mm；随后侧向退环把上件一起带走，在第 16 个阶段因支撑误差超过 3 mm 超时。`live19` 也在第 34 个阶段再次超时，两者均发生实际回溯，不能算完整连续证明，已请求公开 abort/stop。
+
+关节空间退环的目标集合补入了参考路径的最终环姿态及椭圆半转对称姿态，并增加 `exit_goal_mode=reference`，可只沿参考退出方向搜索。[实测下件移动后检查](../../../runs/test_results/horseshoe_oracle_20260930/reference_exit_probe_01/endpoints.json)找到两个有效终态，[候选路径](../../../runs/test_results/horseshoe_oracle_20260930/reference_exit_probe_01/joint_withdrawal_guide.json)含 128 个姿态、通过 621 个密集样本；主要向下移动并转平环，终点的完整环几何距桌面约 46.86 mm。被动上件／链条的实际响应仍未验证。`live21` 使用 `stages:reference_reposition_stages` 从 home 重做完整流程，哈希绑定引导明确标为下件移动后使用，每段仍重查实测状态；没有直接复用机器人或物体状态。
+
+[新目标集合的集成调用](../../../runs/test_results/horseshoe_oracle_20260930/reference_exit_integrated_probe_01/joint_withdrawal_plan.json)通过 625 个密集样本。`live22` 的 `stages:measured_support_reference_stages` 增加 `rebase_support_each_stage=True`：每个取环短段以实测下件姿态更新右手支撑目标，与该段规划冻结的几何一致；保留抓持标定与控制补偿，只通过普通机器人动作执行。它与 `live21` 的固定支撑作对照，尚无成功结论，原有物理和目标验收标准不变。
+
+`live21` 的 [11187 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_21/prefix_audit.json)无失败，但固定支撑在取环第 25 个阶段超时。`live22` 越过了这一位置，其 [12626 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_22/prefix_audit.json)同样无失败；随后在第 31 个阶段的静置中，环误差约 0.03 mm、右手支撑误差约 3.1 mm，触发控制超时与回溯。二者均非完整证明。`live23` 的 `stages:ring_tracking_reference_stages` 保留逐段支撑重测和右手笛卡尔反馈，设置 `gate_support_tracking=False`，退环进度只由左手环跟踪门限决定，右手误差仍记录；其固定姿态不是任务成功条件。原生接触、全部闭环、抓持、关节和最终放置规则不变，仍须真实执行和独立审计。
+
+`live23` 连续越过了上述两处超时，其 [13285 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_23/prefix_audit_through_stage33.json)通过；向下目标不可达后，通过公开 `control/next.json` 切换为 `all_axes` 重新规划，没有回溯。但侧向阶段测得环前进约 56 mm、两个马蹄也前进约 51–53 mm，说明逐段重设支撑目标会累积整体漂移，不能把这些短阶段的完成计作退环成功。`live24` 使用 `stages:fixed_support_ring_tracking_stages` 从默认 home 重新执行：保持初次退环时的右手支撑目标，`rebase_support_each_stage=False`、`gate_support_tracking=False`，其余几何、IK、物理和最终目标条件不变；结果待验证。同时从 `live23` 第 59 段入口的实测姿态进行固定其余全部物体的纯几何搜索，单独记录其接触释放和 IK 边界。
+
+`live23` 停止前的[扩展前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_23/prefix_audit.json)覆盖 18169 tick / 454.2 s，仍无失败；主动中止后的回溯不属于该审计范围。[固定全部其余物体的搜索](../../../runs/test_results/horseshoe_oracle_20260930/live23_stage59_fixed_object_probe_01/result.json)在约 65.10 μm 的局部释放端点之后耗尽 300 s，未找到完整路线，不能据此判定无解。`live25` 是另一个默认 home 对照：`stages:full_reposition_fixed_support_stages` 执行完整让位边，只把右手的推进门限从 1.5 mm 设为 3 mm，圆环门限仍为 1.5 mm，最后两件的实测到位检查仍为 3 mm；随后固定支撑目标退环。该运行不载入仅适用于 65% 让位后的参考引导，完整结果待验证。
+
+`live25` 实际越过原停滞位置，但在 73.12% 再次停滞，主要误差为横向位置约 5 mm，姿态误差很小，尚未完成让位。当前 `follow_bodies` 的位置积分补偿上限为 30 mm；右臂腰关节增益和命令差显示力矩上限仍有余量，因此 `live26` 的 `stages:compensated_full_reposition_stages` 测试 50 mm 补偿上限，并恢复完整让位时的 1.5 mm 推进门限。新增日志记录各手位置补偿量；默认行为仍为 30 mm，机器人增益、力矩限制、接触/拓扑/关节检查和最终目标均不改动。控制补偿假设仍需实际执行验证，不能据此授予任务资格。
+
+后续实测：`live24` 的[18884 tick 前缀审计](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_24/prefix_audit.json)通过，但第 66 段跟踪超时后回溯并停止。`live26` 的 50 mm 补偿使完整移动段首次完成，但 branch0 在末段停稳超时；通过公开参数重试的 branch1 以 3 mm 右手推进门限完成约 94 mm 移动，最终加权误差 3.29 mm，仍被原来的 3 mm 到位条件拒绝。branch2 使用 2 mm 推进门限，避免推进检查的 0.10 m 姿态权重与最终检查的 0.15 m 权重造成上述不一致；其[完整让位结果](../../../runs/test_results/horseshoe_oracle_20260930/live_diagnostic_26/planning/reposition_lower_005/lower_reposition_result.json)通过，实测下方误差 1.97 mm、环误差 0.95 mm，随后开始执行 83 姿态退环候选。这些回溯分支均无完整证明资格。[末段数值诊断](../../../runs/test_results/horseshoe_oracle_20260930/live26_terminal_tracking_diagnosis.json)记录到明显往复运动，位置控制力矩估计仅占配置上限约 10%–15%；[实际配对几何](../../../runs/test_results/horseshoe_oracle_20260930/live26_full_geometry_diagnosis/result.json)相对参考仍有约 14° 角度偏差，不能把单件移动到位称为两件完全对齐。该历史姿态的固定全障碍物搜索达到约 60.55 μm 局部释放间隙后耗尽 300 s，未形成完整路径。
+
+`live27` 从默认 home 开始测试 `stages:damped_full_reposition_stages`：完整让位、右手推进门限 2 mm、位置补偿上限 60 mm、积分增益 0.75/s、实测线速度反馈 0.25 s（目标偏移每轴最多 20 mm）；退环沿用同组反馈和固定支撑目标。默认反馈仍为 30 mm、2/s、无速度反馈。新增项只改变普通机器人目标生成，未改变原生机器人增益、力矩、物理或最终目标规则。完整运行及资格尚未完成。
 
 ### 证明结构与验收边界
 

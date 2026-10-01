@@ -1,7 +1,7 @@
-"""Placement-rule qualification from independently checked physical evidence.
+"""Historical placement evidence, exposed as owner metadata only.
 
-An old run's disabled Task success flag is never retroactively changed. These
-records permit new runs to report success using the same whole-geometry rule.
+Matches never enable or disable Task success, or certify a new physical run.
+Old runs retain their original results and qualification records.
 """
 import numpy as np
 

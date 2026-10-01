@@ -6,6 +6,23 @@ sidecar), which owns the scene, records the episode as a (T, 14) trajectory, rep
 video. The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the
 unlimited task to measure the cost of losing resets, privileged state and the tooling's primitives.
 
+## Goal
+
+Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw.
+
+## Success requirements
+
+- Cover at least 90% of the blanket's unfolded material area in top-down projection. Overlapping layers count only once, holes do not count, and a large outer bounding box is insufficient.
+- Keep every cloth point at most 30 mm above the tabletop and no more than 8 mm below it.
+- No material edge may stretch beyond 1.15 times its original length. Raised corners or pulling the blanket taut in the air do not count.
+- Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least 5 mm of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.
+- During confirmation, every target point or rigid body's linear speed must be at most 30 mm/s and its displacement from the start of confirmation at most 3 mm.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Any cloth point falling more than 100 mm below the tabletop ends the episode in failure.
+
 | | |
 |---|---|
 | tier / mode | perception / limited (RGB, optional depth, proprioception, calibrated cameras, no reset) |
