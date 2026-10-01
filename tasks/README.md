@@ -1,5 +1,5 @@
-# robot-coding-bench
+# Robot Coding Bench tasks
 
-Harbor tasks where a coding agent controls a simulated robot through Python primitives and must leave one
-replayable trajectory for a frozen scene instance. See the repo README for the one-line run and
-`docs/PROTOCOL.md` for scoring.
+Harbor tasks in which a coding agent controls a simulated robot and must deliver one replayable trajectory for a frozen
+scene instance, in privileged or standard mode. See the repository README for running them and `docs/PROTOCOL.md` for
+the contract and scoring.

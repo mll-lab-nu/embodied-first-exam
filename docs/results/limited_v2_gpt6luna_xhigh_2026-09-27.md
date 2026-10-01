@@ -1,6 +1,6 @@
 # Limited v2: GPT-6 Luna reasoning effort xhigh vs medium (Codex, 22 tasks, 60 min) — 2026-09-27
 
-Same tasks, instructions and budget as `limited_v2_gpt6luna_2026-09-25.md` (medium). Jobs `v2-gpt6luna-xhigh-limited` + `v2-gpt6luna-xhigh-limited-rerun` (three trials whose sim sidecar crashed at start were rerun). Chinese report with videos: `private/reports/260927/README.md` (outside this repo); per task: `results/codex-gpt6_luna-xhigh/`.
+Same tasks, instructions and budget as `limited_v2_gpt6luna_2026-09-25.md` (medium). Jobs `v2-gpt6luna-xhigh-limited` + `v2-gpt6luna-xhigh-limited-rerun` (three trials whose sim sidecar crashed at start were rerun). Per task: `results/codex-gpt6_luna-xhigh/`.
 
 **xhigh 8/22 vs medium 4/22.** Both: press_stapler, shake_bottle. xhigh only: dump_bin_bigbin, open_laptop, place_can_basket, place_object_stand, place_phone_stand, stack_blocks_two. medium only: move_can_pot, open_microwave.
 
