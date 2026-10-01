@@ -592,6 +592,94 @@ name = "robot-coding-bench/robotwin_2_0_turn_switch-limited"
 digest = "sha256:3f264f6de85f83cf201f5618728d2a613144b9bfca1456bbd3842dc3be2ed517"
 
 [[tasks]]
+name = "robot-coding-bench/kinder-balance-beam-i00"
+digest = "sha256:d62958ad3adb783e24ae1118b3ad11e9b4f20bfec5a27b7995a8283183d31edf"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-balance-beam-i00-standard"
+digest = "sha256:dd66d56b3dcfdb542ee3d4a9f529ec0d9ce4c9c7151fec482594196442beb77e"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-constrained-cupboard-i00"
+digest = "sha256:6223710b50f65dbe8127788cd52c9d5a16d4e0db6be79b6ac5008a4a2d43954d"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-constrained-cupboard-i00-standard"
+digest = "sha256:eb11d413d848d99f147417b5c6ab7b7912ec882c3a3f892e5210932fc7086f2a"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-dynamo-i00"
+digest = "sha256:d81bfe62ecdc6c2561537e8e543ffd03217fbb00b893abb1a67ae44769bd7351"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-dynamo-i00-standard"
+digest = "sha256:d8ee0e3895df39070a3063a9529818532da6f1464d9329ec630b66dc11644e02"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-obstruction-3d-i00"
+digest = "sha256:c5824eb0eaf91f8f1c47643394b0fb747ee75d17620e7e67852bc6c3e64e63a2"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-obstruction-3d-i00-standard"
+digest = "sha256:c527c2c28a4367d3b70eda60d2640b18dab333d2b5c2c7bbbe82273c474d31cf"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-packing-3d-i00"
+digest = "sha256:ee862e2a6b4d3c5acdd60ce4dcc5f63a57cfc78045efac6a157463479647c045"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-packing-3d-i00-standard"
+digest = "sha256:def9bf7065135efe3526e47a5f24db2ac1c2458a7b00c43c097e446a7133b753"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-scoop-pour-i00"
+digest = "sha256:d3415c503303989a977b164935d4c993cd52bc243ba0bad649d5c18ea33f7dcd"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-scoop-pour-i00-standard"
+digest = "sha256:e1be2c5cc98cef36a11554089498d463e91ea58323f003d1142493917a31d202"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-shelf-i00"
+digest = "sha256:694ec9191de2651fe09765fce4414531f6337613de922d46cd2163bb5eafe134"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-shelf-i00-standard"
+digest = "sha256:1896aec4d78191d209e266fefe278d203c0d814716b98013d7a8a7a24ffa1d89"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sort-blocks-i00"
+digest = "sha256:607558bd318a3fa270e7df686d91825364b2320db3fa18d3320d94bf982dbf28"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sort-blocks-i00-standard"
+digest = "sha256:7210487b7338be84ae71020e5b8f3dd217c48525ab9fd2062bcf7d5820ec4915"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sweep-into-drawer-i00"
+digest = "sha256:65202698e2ddd96c00449ada7a8b10df9d755924ed0bc3552b127505cb4d5aca"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sweep-into-drawer-i00-standard"
+digest = "sha256:b5ca9c86fa854e92691e052adeeb2870a1a5d896d2df82b5bfb4c289d7c203df"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sweep-simple-i00"
+digest = "sha256:d8510913c457ebb671de702699857935b409d01ff175a6c692132fa763ce369e"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-sweep-simple-i00-standard"
+digest = "sha256:99fb71c9dee84257f9228d079107570425f78f3a6423d8c008b162bf8df93de0"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-tossing-i00"
+digest = "sha256:38b2b00e8137f7e6ca8c5ef011073f903c2600a8792d1f82fec54827b0762073"
+
+[[tasks]]
+name = "robot-coding-bench/kinder-tossing-i00-standard"
+digest = "sha256:779892b4c3f9c22d23b491431349174281a12bf709e316d31014d53ad0ef5a6f"
+
+[[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00"
 digest = "sha256:0992a5db32b0dd91df3c1ad643114997d3f35e7f00c2ae22e038c928683e2618"
 
