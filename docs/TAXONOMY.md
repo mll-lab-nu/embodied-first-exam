@@ -8,7 +8,7 @@ Known values; a new value is added by pull request (CI validation of these vocab
 | `task_type` | `trajectory` · `policy` |
 | `mode` | `privileged` · `standard` (formerly `unlimited` / `limited`) |
 | `protocol` | standard mode only: `eai-standard/2.1` · `eai-standard/2.2` (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint; [STANDARD_MODE_2_2.md](STANDARD_MODE_2_2.md)) |
-| `simulator` | `robosuite` · `robotwin` (RoboTwin 2.0 = SAPIEN 3 + CuRobo) · `mujoco` · `kinder` (KinDER: MuJoCo and PyBullet) · `humanoidbench` (HumanoidBench: MuJoCo + dm_control) · `robowits` (RoboWits on Genesis) · `robolab` (NVIDIA RoboLab on Isaac Lab) · `behavior` (BEHAVIOR-1K: OmniGibson on Isaac Sim) · `maniskill` (ManiSkill 3 / SAPIEN: RoboPaint) |
+| `simulator` | `robosuite` · `robotwin` (RoboTwin 2.0 = SAPIEN 3 + CuRobo) · `mujoco` · `kinder` (KinDER: MuJoCo and PyBullet) · `humanoidbench` (HumanoidBench: MuJoCo + dm_control) · `robowits` (RoboWits on Genesis) · `robolab` (NVIDIA RoboLab on Isaac Lab) · `behavior` (BEHAVIOR-1K: OmniGibson on Isaac Sim) · `maniskill` (ManiSkill 3 / SAPIEN: RoboPaint) · `vlabench` (VLABench: MuJoCo + dm_control) |
 | `robot` | `franka-panda` · `aloha-agilex` · `aloha-2` · `kuka-iiwa14-sharpa-ha4` · `tidybot-plus-plus` · `unitree-h1` · `unitree-h1hand` (H1 with two Shadow hands) · `sawyer` (Rethink Robotics Sawyer, as in Meta-World) · `marvin-bimanual` (RoboWits) · `franka-robotiq-2f85` (RoboLab) · `r1pro` (BEHAVIOR-1K) |
 | `family` | free-form slug naming the scene/goal, shared by its instances (e.g. `cube_stack`, `dextoolbench/brush/blue_brush/sweep_forward`) |
 | `oracle` | `full` (oracle scores 1) · `partial` (oracle reaches part of the goal) · `none` — see PROTOCOL §2.7 |
