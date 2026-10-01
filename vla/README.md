@@ -111,4 +111,5 @@ conda activate topogym && python -m pytest vla/tests -q     # 不需要 GPU
 ## 7. 已知问题
 
 - 起始姿态和相机位置与各模型的训练设置不同。起始姿态可以由 TopoGym 按模型设置（或在 `vla/` 里开场先移动过去），相机位置只能改 TopoGym；完整列表见 `docs/index.html` 第 2、3 节。
+- π0.5 ALOHA（`pi05_base_trossen`）的零样本动作有系统偏差，会把手臂推到关节限位；在真实 ALOHA 数据上开环也一样，不建议零样本使用（`runs/test_results/20260930_vla_pi05_aloha_clipping/README.md`）。
 - 仿真速度：每控制步墙钟 0.35–2.1 s（`docs/IMPL_PLAN.md` 第 7 节）。

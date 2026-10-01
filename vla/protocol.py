@@ -4,7 +4,8 @@ Wire format of one message (sent with ``Connection.send_bytes``, never pickle):
 ``[4-byte big-endian header length][UTF-8 JSON header][raw bytes of array 0][array 1]...``.
 The header is ``{"msg": <message with each array replaced by {"__array__": i}>, "arrays": [{dtype, shape}, ...]}``.
 
-Message types: server -> client ``spec`` (PolicySpec fields) and ``error`` (``message``);
+Message types: server -> client ``spec`` (PolicySpec fields; the client checks ``protocol_version`` before the
+others, which differ between versions) and ``error`` (``message``);
 client -> server ``reset`` (``seed``, answered by ``ok``) and ``infer`` (Observation fields, answered by
 ``chunk`` with ``actions``).
 """
