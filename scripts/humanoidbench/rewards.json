@@ -1,0 +1,484 @@
+{
+ "balance_hard": {
+  "methods": [
+   {
+    "cls": "BalanceBase",
+    "module": "humanoid_bench.envs.balance",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT + 0.37, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n    dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n    return small_control * stand_reward * dont_move, {\n        \"small_control\": small_control,\n        \"stand_reward\": stand_reward,\n        \"dont_move\": dont_move,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.balance": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.balance.BalanceHard"
+ },
+ "balance_simple": {
+  "methods": [
+   {
+    "cls": "BalanceBase",
+    "module": "humanoid_bench.envs.balance",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT + 0.37, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n    dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n    return small_control * stand_reward * dont_move, {\n        \"small_control\": small_control,\n        \"stand_reward\": stand_reward,\n        \"dont_move\": dont_move,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.balance": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.balance.BalanceSimple"
+ },
+ "basketball": {
+  "methods": [
+   {
+    "cls": "Basketball",
+    "module": "humanoid_bench.envs.basketball",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    self.ball_collision_id = self._env.named.data.geom_xpos.axes.row.names.index(\n        \"basketball_collision\"\n    )\n\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    basketball_pos = self._env.named.data.xpos[\"basketball\"]\n    left_hand_distance = (\n        self._env.named.data.site_xpos[\"left_hand\"] - basketball_pos\n    )\n    right_hand_distance = (\n        self._env.named.data.site_xpos[\"right_hand\"] - basketball_pos\n    )\n    reward_hand_proximity = rewards.tolerance(\n        max(\n            [\n                np.linalg.norm(left_hand_distance),\n                np.linalg.norm(right_hand_distance),\n            ]\n        ),\n        bounds=(0, 0.2),\n        margin=1,\n    )\n    reward_ball_success = 0\n    ball_hoop_distance = np.linalg.norm(\n        basketball_pos - self._env.named.data.site_xpos[\"hoop_center\"]\n    )\n    reward_ball_success = rewards.tolerance(\n        ball_hoop_distance,\n        margin=7,\n        sigmoid=\"linear\",\n    )\n\n    if self.stage == \"catch\":\n        for pair in self._env.data.contact.geom:\n            if self.ball_collision_id in pair:\n                self.stage = \"throw\"\n                break\n    if self.stage == \"throw\":\n        reward = (\n            0.15 * (stand_reward * small_control)\n            + 0.05 * reward_hand_proximity\n            + 0.8 * reward_ball_success\n        )\n    elif self.stage == \"catch\":\n        reward = 0.5 * (stand_reward * small_control) + 0.5 * reward_hand_proximity\n\n    if ball_hoop_distance < 0.05:\n        reward += 1000\n\n    return reward, {\n        \"reward_hand_proximity\": reward_hand_proximity,\n        \"reward_ball_success\": reward_ball_success,\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"success_subtasks\": 1 if self.stage == \"throw\" else 0,\n        \"success\": ball_hoop_distance < 0.05,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basketball": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basketball.Basketball"
+ },
+ "bookshelf_hard": {
+  "methods": [
+   {
+    "cls": "BookshelfBase",
+    "module": "humanoid_bench.envs.bookshelf",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    curr_reach_obj_pos = self._env.named.data.xpos[\n        self.bookshelf_objects[self.task_index]\n    ]\n    curr_placement_goal = self.placement_goals[self.task_index]\n    obj_goal_dist = np.linalg.norm(curr_reach_obj_pos - curr_placement_goal)\n\n    reward_proximity = rewards.tolerance(\n        obj_goal_dist, bounds=(0, 0.15), margin=1, sigmoid=\"linear\"\n    )\n    left_hand_distance = (\n        self._env.named.data.site_xpos[\"left_hand\"] - curr_reach_obj_pos\n    )\n    righ_hand_distance = (\n        self._env.named.data.site_xpos[\"right_hand\"] - curr_reach_obj_pos\n    )\n    reward_hand_proximity = np.exp(\n        -min(\n            [np.linalg.norm(left_hand_distance), np.linalg.norm(righ_hand_distance)]\n        )\n    )\n\n    reward = (\n        0.2 * (stand_reward * small_control)\n        + 0.4 * reward_proximity\n        + 0.4 * reward_hand_proximity\n    )\n    if obj_goal_dist < 0.15:\n        self.task_index += 1\n        reward += 100 * self.task_index\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"reward_proximity\": reward_proximity,\n        \"reward_hand_proximity\": reward_hand_proximity,\n        \"obj_goal_dist\": obj_goal_dist,\n        \"success_subtasks\": self.task_index,\n        \"success\": self.task_index == 5,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.bookshelf": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.bookshelf.BookshelfHard"
+ },
+ "bookshelf_simple": {
+  "methods": [
+   {
+    "cls": "BookshelfBase",
+    "module": "humanoid_bench.envs.bookshelf",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    curr_reach_obj_pos = self._env.named.data.xpos[\n        self.bookshelf_objects[self.task_index]\n    ]\n    curr_placement_goal = self.placement_goals[self.task_index]\n    obj_goal_dist = np.linalg.norm(curr_reach_obj_pos - curr_placement_goal)\n\n    reward_proximity = rewards.tolerance(\n        obj_goal_dist, bounds=(0, 0.15), margin=1, sigmoid=\"linear\"\n    )\n    left_hand_distance = (\n        self._env.named.data.site_xpos[\"left_hand\"] - curr_reach_obj_pos\n    )\n    righ_hand_distance = (\n        self._env.named.data.site_xpos[\"right_hand\"] - curr_reach_obj_pos\n    )\n    reward_hand_proximity = np.exp(\n        -min(\n            [np.linalg.norm(left_hand_distance), np.linalg.norm(righ_hand_distance)]\n        )\n    )\n\n    reward = (\n        0.2 * (stand_reward * small_control)\n        + 0.4 * reward_proximity\n        + 0.4 * reward_hand_proximity\n    )\n    if obj_goal_dist < 0.15:\n        self.task_index += 1\n        reward += 100 * self.task_index\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"reward_proximity\": reward_proximity,\n        \"reward_hand_proximity\": reward_hand_proximity,\n        \"obj_goal_dist\": obj_goal_dist,\n        \"success_subtasks\": self.task_index,\n        \"success\": self.task_index == 5,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.bookshelf": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.bookshelf.BookshelfSimple"
+ },
+ "cabinet": {
+  "methods": [
+   {
+    "cls": "Cabinet",
+    "module": "humanoid_bench.envs.cabinet",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    stabilization_reward = stand_reward * small_control\n\n    subtask_get_reward = [\n        self.get_reward_subtask_one,\n        self.get_reward_subtask_two,\n        self.get_reward_subtask_three,\n        self.get_reward_subtask_four,\n        lambda: (1000, {}, False),\n    ]\n\n    reward, reward_info, subtask_complete = subtask_get_reward[\n        self.current_subtask - 1\n    ]()\n    if self.current_subtask < 5:\n        reward = 0.2 * stabilization_reward + 0.8 * reward\n\n    if subtask_complete:\n        print(\"Completed subtask\", self.current_subtask)\n        reward += 100 * (self.current_subtask)\n        self.current_subtask += 1\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"success_subtasks\": self.current_subtask\n        - 1,  # The first subtask is not automatically completed.\n        \"success\": self.current_subtask == 5,\n        **reward_info,\n    }"
+   },
+   {
+    "cls": "Cabinet",
+    "module": "humanoid_bench.envs.cabinet",
+    "name": "get_reward_subtask_four",
+    "source": "def get_reward_subtask_four(self):\n    pullup_drawer_cube_pos = self._env.named.data.xpos[\"lateral_cabinet_cube\"]\n    pullup_drawer_joint_pos = self._env.data.qpos[-(4 * 7) - 1]\n    door_openness_reward = min(1, abs(pullup_drawer_joint_pos))\n\n    normal_cabinet_left_joint_pos = self._env.data.qpos[-(4 * 7) - 4]\n    normal_cabinet_right_joint_pos = self._env.data.qpos[-(4 * 7) - 3]\n    left_door_openness_reward = min(1, abs(normal_cabinet_left_joint_pos))\n    right_door_openness_reward = min(1, abs(normal_cabinet_right_joint_pos))\n    secondary_door_openness_reward = max(\n        left_door_openness_reward, right_door_openness_reward\n    )\n\n    cube_proximity_horizontal = rewards.tolerance(\n        pullup_drawer_cube_pos[0] - 0.9,\n        bounds=(-0.3, 0.3),\n        margin=0.3,\n        sigmoid=\"linear\",\n    ) + rewards.tolerance(\n        pullup_drawer_cube_pos[1], bounds=(-0.6, 0.6), margin=0.3, sigmoid=\"linear\"\n    )\n    cube_proximity_vertical = rewards.tolerance(\n        pullup_drawer_cube_pos[2] - 1.54,\n        bounds=(-0.15, 0.15),\n        margin=0.3,\n        sigmoid=\"linear\",\n    )\n\n    in_cabinet_x = 0.9 - 0.3 <= pullup_drawer_cube_pos[0] <= 0.9 + 0.3\n    in_cabinet_y = 0 - 0.6 <= pullup_drawer_cube_pos[1] <= 0 + 0.6\n    in_cabinet_z = 1.54 - 0.15 <= pullup_drawer_cube_pos[2] <= 1.54 + 0.15\n    task_completed = in_cabinet_x and in_cabinet_y and in_cabinet_z\n\n    drawer_cube_proximity_reward = (\n        0.3 * cube_proximity_horizontal / 2 + 0.7 * cube_proximity_vertical\n    )\n    reward = 0.5 * (drawer_cube_proximity_reward) + 0.5 * door_openness_reward\n\n    return (\n        reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"secondary_door_openness_reward\": secondary_door_openness_reward,\n            \"drawer_cube_proximity_reward\": drawer_cube_proximity_reward,\n            \"subtask_complete\": task_completed,\n        },\n        task_completed,\n    )"
+   },
+   {
+    "cls": "Cabinet",
+    "module": "humanoid_bench.envs.cabinet",
+    "name": "get_reward_subtask_one",
+    "source": "def get_reward_subtask_one(self):\n    pulling_cabinet_joint_pos = self._env.data.qpos[-(4 * 7) - 2]\n    door_openness_reward = abs(pulling_cabinet_joint_pos / 0.4)\n    subtask_complete = door_openness_reward > 0.95\n    return (\n        door_openness_reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"subtask_complete\": subtask_complete,\n        },\n        subtask_complete,\n    )"
+   },
+   {
+    "cls": "Cabinet",
+    "module": "humanoid_bench.envs.cabinet",
+    "name": "get_reward_subtask_three",
+    "source": "def get_reward_subtask_three(self):\n    drawer_cube_pos = self._env.named.data.xpos[\"drawer_cube\"]\n    normal_cabinet_left_joint_pos = self._env.data.qpos[-(4 * 7) - 4]\n    normal_cabinet_right_joint_pos = self._env.data.qpos[-(4 * 7) - 3]\n    left_door_openness_reward = min(1, abs(normal_cabinet_left_joint_pos))\n    right_door_openness_reward = min(1, abs(normal_cabinet_right_joint_pos))\n    door_openness_reward = max(\n        left_door_openness_reward, right_door_openness_reward\n    )  # Any open door is sufficient\n\n    cube_proximity_horizontal = (\n        rewards.tolerance(\n            drawer_cube_pos[0] - 0.9,\n            bounds=(-0.3, 0.3),\n            margin=0.3,\n            sigmoid=\"linear\",\n        )\n        + rewards.tolerance(\n            drawer_cube_pos[1], bounds=(-0.6, 0.6), margin=0.3, sigmoid=\"linear\"\n        )\n    ) / 2\n    cube_proximity_vertical = rewards.tolerance(\n        drawer_cube_pos[2] - 0.94,\n        bounds=(-0.15, 0.15),\n        margin=0.3,\n        sigmoid=\"linear\",\n    )\n\n    in_cabinet_x = 0.9 - 0.3 <= drawer_cube_pos[0] <= 0.9 + 0.3\n    in_cabinet_y = 0 - 0.6 <= drawer_cube_pos[1] <= 0 + 0.6\n    in_cabinet_z = 0.94 - 0.15 <= drawer_cube_pos[2] <= 0.94 + 0.15\n    task_completed = in_cabinet_x and in_cabinet_y and in_cabinet_z\n\n    drawer_cube_proximity_reward = (\n        0.3 * cube_proximity_horizontal + 0.7 * cube_proximity_vertical\n    )\n    reward = 0.5 * (drawer_cube_proximity_reward) + 0.5 * door_openness_reward\n    return (\n        reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"drawer_cube_proximity_reward\": drawer_cube_proximity_reward,\n            \"subtask_complete\": task_completed,\n        },\n        task_completed,\n    )"
+   },
+   {
+    "cls": "Cabinet",
+    "module": "humanoid_bench.envs.cabinet",
+    "name": "get_reward_subtask_two",
+    "source": "def get_reward_subtask_two(self):\n    drawer_joint_pos = self._env.data.qpos[-(4 * 7) - 5]\n    door_openness_reward = abs(drawer_joint_pos / 0.45)\n    subtask_complete = door_openness_reward > 0.95\n    return (\n        door_openness_reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"subtask_complete\": subtask_complete,\n        },\n        subtask_complete,\n    )"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.cabinet": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.cabinet.Cabinet"
+ },
+ "crawl": {
+  "methods": [
+   {
+    "cls": "Crawl",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(1, float(\"inf\")),\n        margin=1,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n\n    crawling_head = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_CRAWL_HEIGHT - 0.2, _CRAWL_HEIGHT + 0.2),\n        margin=1,\n    )\n\n    crawling = rewards.tolerance(\n        self._env.named.data.site_xpos[\"imu\", \"z\"],\n        bounds=(_CRAWL_HEIGHT - 0.2, _CRAWL_HEIGHT + 0.2),\n        margin=1,\n    )\n\n    reward_xquat = rewards.tolerance(\n        np.linalg.norm(\n            self._env.data.body(\"pelvis\").xquat - np.array([0.75, 0, 0.65, 0])\n        ),\n        margin=1,\n    )\n\n    in_tunnel = rewards.tolerance(\n        self._env.named.data.site_xpos[\"imu\", \"y\"],\n        bounds=(-1, 1),\n        margin=0,\n    )\n\n    reward = (\n        0.1 * small_control\n        + 0.25 * min(crawling, crawling_head)\n        + 0.4 * move\n        + 0.25 * reward_xquat\n    ) * in_tunnel\n    return reward, {\n        \"crawling\": crawling,\n        \"crawling_head\": crawling_head,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"in_tunnel\": in_tunnel,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Crawl"
+ },
+ "cube": {
+  "methods": [
+   {
+    "cls": "Cube",
+    "module": "humanoid_bench.envs.cube",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n    dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n\n    left_cube_orientation = self._env.data.body(\"left_cube_to_rotate\").xquat\n    right_cube_orientation = self._env.data.body(\"right_cube_to_rotate\").xquat\n    target_cube_orientation = self._env.data.body(\"target_cube\").xquat\n\n    left_orientation_alignment_reward = rewards.tolerance(\n        np.linalg.norm(left_cube_orientation - target_cube_orientation), margin=0.3\n    )\n    right_orientation_alignment_reward = rewards.tolerance(\n        np.linalg.norm(right_cube_orientation - target_cube_orientation), margin=0.3\n    )\n    orientation_alignment_reward = (\n        left_orientation_alignment_reward + right_orientation_alignment_reward\n    ) / 2\n\n    left_hand_cube_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.xpos[\"left_cube_to_rotate\"]\n    )\n    right_hand_cube_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.xpos[\"right_cube_to_rotate\"]\n    )\n    left_hand_cube_proximity = rewards.tolerance(\n        left_hand_cube_distance, bounds=(0, 0.1), margin=0.5\n    )\n    right_hand_cube_proximity = rewards.tolerance(\n        right_hand_cube_distance, bounds=(0, 0.1), margin=0.5\n    )\n\n    cube_closeness_reward = (\n        left_hand_cube_proximity + right_hand_cube_proximity\n    ) / 2\n\n    reward = (\n        0.2 * (small_control * stand_reward * dont_move)\n        + 0.5 * orientation_alignment_reward\n        + 0.3 * cube_closeness_reward\n    )\n\n    return reward, {\n        \"small_control\": small_control,\n        \"stand_reward\": stand_reward,\n        \"dont_move\": dont_move,\n        \"standing\": standing,\n        \"upright\": upright,\n        \"orientation_alignment_reward\": orientation_alignment_reward,\n        \"cube_closeness_reward\": cube_closeness_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.cube": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.cube.Cube"
+ },
+ "door": {
+  "methods": [
+   {
+    "cls": "Door",
+    "module": "humanoid_bench.envs.door",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=0.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    door_openness_reward = min(\n        1, (self._env.data.qpos[-2] / 1) * abs(self._env.data.qpos[-2] / 1)\n    )\n    door_hatch_openness_reward = rewards.tolerance(\n        self._env.data.qpos[-1], bounds=(0.75, 2), margin=0.75, sigmoid=\"linear\"\n    )\n\n    left_hand_hatch_closeness = np.linalg.norm(\n        self._env.data.body(\"door_hatch\").xpos\n        - self._env.named.data.site_xpos[\"left_hand\"]\n    )\n    right_hand_hatch_closeness = np.linalg.norm(\n        self._env.data.body(\"door_hatch\").xpos\n        - self._env.named.data.site_xpos[\"right_hand\"]\n    )\n    hand_hatch_proximity_reward = rewards.tolerance(\n        min(right_hand_hatch_closeness, left_hand_hatch_closeness),\n        bounds=(0, 0.25),\n        margin=1,\n        sigmoid=\"linear\",\n    )\n\n    passage_reward = rewards.tolerance(\n        self._env.named.data.site_xpos[\"imu\", \"x\"],\n        bounds=(1.2, float(\"inf\")),\n        margin=1,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n\n    reward = (\n        0.1 * stand_reward * small_control\n        + 0.45 * door_openness_reward\n        + 0.05 * door_hatch_openness_reward\n        + 0.05 * hand_hatch_proximity_reward\n        + 0.35 * passage_reward\n    )\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"door_openness_reward\": door_openness_reward,\n        \"door_hatch_openness_reward\": door_hatch_openness_reward,\n        \"hand_hatch_proximity_reward\": hand_hatch_proximity_reward,\n        \"passage_reward\": passage_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.door": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.door.Door"
+ },
+ "highbar_hard": {
+  "methods": [
+   {
+    "cls": "HighBarBase",
+    "module": "humanoid_bench.envs.highbar",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    upright_reward = rewards.tolerance(\n        -self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n\n    feet_reward = rewards.tolerance(\n        (self.robot.left_foot_height() + self.robot.right_foot_height()) / 2,\n        bounds=(4.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=2.0,\n        value_at_margin=0,\n    )\n    feet_reward = (1 + feet_reward) / 2\n\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    reward = upright_reward * feet_reward * small_control\n\n    return reward, {\n        \"upright_reward\": upright_reward,\n        \"feet_reward\": feet_reward,\n        \"small_control\": small_control,\n    }"
+   }
+  ],
+  "task_class": "humanoid_bench.envs.highbar.HighBarHard"
+ },
+ "highbar_simple": {
+  "methods": [
+   {
+    "cls": "HighBarBase",
+    "module": "humanoid_bench.envs.highbar",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    upright_reward = rewards.tolerance(\n        -self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n\n    feet_reward = rewards.tolerance(\n        (self.robot.left_foot_height() + self.robot.right_foot_height()) / 2,\n        bounds=(4.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=2.0,\n        value_at_margin=0,\n    )\n    feet_reward = (1 + feet_reward) / 2\n\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    reward = upright_reward * feet_reward * small_control\n\n    return reward, {\n        \"upright_reward\": upright_reward,\n        \"feet_reward\": feet_reward,\n        \"small_control\": small_control,\n    }"
+   }
+  ],
+  "task_class": "humanoid_bench.envs.highbar.HighBarSimple"
+ },
+ "hurdle": {
+  "methods": [
+   {
+    "cls": "Hurdle",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    self.wall_collision_ids = [\n        self._env.named.data.geom_xpos.axes.row.names.index(wall_name)\n        for wall_name in [\n            \"left_barrier_collision\",\n            \"right_barrier_collision\",\n            \"behind_barrier_collision\",\n        ]\n    ]\n\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(self._move_speed, float(\"inf\")),\n        margin=self._move_speed,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n    wall_collision_discount = 1\n\n    for pair in self._env.data.contact.geom:\n        if any(\n            [\n                wall_collision_id in pair\n                for wall_collision_id in self.wall_collision_ids\n            ]\n        ):  # for no hand. if for hand, > 155\n            wall_collision_discount = 0.1\n            # print(pair)\n            break\n\n    reward = small_control * stand_reward * move * wall_collision_discount\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n        \"wall_collision_discount\": wall_collision_discount,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Hurdle"
+ },
+ "insert_normal": {
+  "methods": [
+   {
+    "cls": "Insert",
+    "module": "humanoid_bench.envs.insert",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    cube_targets = [\n        rewards.tolerance(\n            np.linalg.norm(\n                self._env.named.data.site_xpos[f\"block_peg_{ch}\"]\n                - self._env.named.data.site_xpos[f\"peg_{ch}\"]\n            ),\n            margin=0.5,\n            sigmoid=\"linear\",\n        )\n        for ch in [\"a\", \"b\"]\n    ]\n    cube_target_reward = np.mean(cube_targets)\n    peg_heights = [\n        rewards.tolerance(\n            self._env.named.data.site_xpos[f\"peg_{ch}\", \"z\"] - 1.1,\n            margin=0.15,\n            sigmoid=\"linear\",\n        )\n        for ch in [\"a\", \"b\"]\n    ]\n    peg_height_reward = np.mean(peg_heights)\n\n    left_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.site_xpos[\"peg_a\"]\n    )\n    right_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.site_xpos[\"peg_b\"]\n    )\n    hand_tool_proximity_reward = rewards.tolerance(\n        min(left_hand_tool_distance, right_hand_tool_distance),\n        bounds=(0, 0.2),\n        margin=0.5,\n    )\n\n    reward = (0.5 * (small_control * stand_reward) + 0.5 * cube_target_reward) * (\n        0.5 * peg_height_reward + 0.5 * hand_tool_proximity_reward\n    )\n\n    return reward, {\n        \"small_control\": small_control,\n        \"stand_reward\": stand_reward,\n        \"cube_target_reward\": cube_target_reward,\n        \"hand_tool_proximity_reward\": hand_tool_proximity_reward,\n        \"peg_height_reward\": peg_height_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.insert": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.insert.Insert"
+ },
+ "insert_small": {
+  "methods": [
+   {
+    "cls": "Insert",
+    "module": "humanoid_bench.envs.insert",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    cube_targets = [\n        rewards.tolerance(\n            np.linalg.norm(\n                self._env.named.data.site_xpos[f\"block_peg_{ch}\"]\n                - self._env.named.data.site_xpos[f\"peg_{ch}\"]\n            ),\n            margin=0.5,\n            sigmoid=\"linear\",\n        )\n        for ch in [\"a\", \"b\"]\n    ]\n    cube_target_reward = np.mean(cube_targets)\n    peg_heights = [\n        rewards.tolerance(\n            self._env.named.data.site_xpos[f\"peg_{ch}\", \"z\"] - 1.1,\n            margin=0.15,\n            sigmoid=\"linear\",\n        )\n        for ch in [\"a\", \"b\"]\n    ]\n    peg_height_reward = np.mean(peg_heights)\n\n    left_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.site_xpos[\"peg_a\"]\n    )\n    right_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.site_xpos[\"peg_b\"]\n    )\n    hand_tool_proximity_reward = rewards.tolerance(\n        min(left_hand_tool_distance, right_hand_tool_distance),\n        bounds=(0, 0.2),\n        margin=0.5,\n    )\n\n    reward = (0.5 * (small_control * stand_reward) + 0.5 * cube_target_reward) * (\n        0.5 * peg_height_reward + 0.5 * hand_tool_proximity_reward\n    )\n\n    return reward, {\n        \"small_control\": small_control,\n        \"stand_reward\": stand_reward,\n        \"cube_target_reward\": cube_target_reward,\n        \"hand_tool_proximity_reward\": hand_tool_proximity_reward,\n        \"peg_height_reward\": peg_height_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.insert": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.insert.Insert"
+ },
+ "kitchen": {
+  "methods": [
+   {
+    "cls": "Kitchen",
+    "module": "humanoid_bench.envs.kitchen",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    reward_dict = {}\n    next_obj_obs = self.obs_dict[\"obj_qp\"]\n    completions = []\n    all_completed_so_far = True\n    for i, element in enumerate(self.tasks_to_complete):\n        element_idx = OBS_ELEMENT_INDICES[element]\n        distance = np.linalg.norm(\n            next_obj_obs[..., element_idx] - self.goal[element_idx]\n        )\n        complete = distance < BONUS_THRESH\n        if complete and (all_completed_so_far or not self.ENFORCE_TASK_ORDER):\n            completions.append(element)\n        all_completed_so_far = all_completed_so_far and complete\n    if self.REMOVE_TASKS_WHEN_COMPLETE:\n        for element in completions:\n            del self.tasks_to_complete[element]\n        # [self.tasks_to_complete.remove(element) for element in completions]\n    bonus = float(len(completions))\n\n    reward_dict[\"success_subtasks\"] = len(self.TASK_ELEMENTS) - len(\n        self.tasks_to_complete\n    )\n    reward_dict[\"success\"] = 0\n    if len(self.tasks_to_complete) == 0:\n        reward_dict[\"success\"] = 1\n\n    return bonus, reward_dict"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.kitchen": "BONUS_THRESH = 0.3"
+  },
+  "task_class": "humanoid_bench.envs.kitchen.Kitchen"
+ },
+ "maze": {
+  "methods": [
+   {
+    "cls": "MazeBase",
+    "module": "humanoid_bench.envs.maze",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    self.begining_wall_id = self._env.named.data.geom_xpos.axes.row.names.index(\n        \"block_collision_00\"\n    )\n\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    wall_collision_discount = 1\n\n    for pair in self._env.data.contact.geom:\n        if pair[0] >= self.begining_wall_id or pair[1] >= self.begining_wall_id:\n            wall_collision_discount = 0.1\n            # print(pair)\n            break\n\n    stage_convert_reward = self.update_move_direction()\n\n    move = rewards.tolerance(\n        self.robot.center_of_mass_velocity()[0]\n        - self.move_direction[0] * _MOVE_SPEED,\n        margin=1,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    ) * rewards.tolerance(\n        self.robot.center_of_mass_velocity()[1]\n        - self.move_direction[1] * _MOVE_SPEED,\n        margin=1,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n\n    if self.maze_stage == len(self.checkpoints) - 1:\n        move = 1\n\n    move = (5 * move + 1) / 6\n\n    checkpoint_proximity = np.linalg.norm(\n        self.checkpoints[self.maze_stage][:2]\n        - self._env.named.data.site_xpos[\"imu\"][:2]\n    )\n\n    checkpoint_proximity_reward = rewards.tolerance(checkpoint_proximity, margin=1)\n\n    reward = (\n        0.2 * (stand_reward * small_control)\n        + 0.4 * move\n        + 0.4 * checkpoint_proximity_reward\n    ) * wall_collision_discount + stage_convert_reward\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"wall_collision_discount\": wall_collision_discount,\n        \"stage_convert_reward\": stage_convert_reward,\n        \"checkpoint_proximity_reward\": checkpoint_proximity_reward,\n        \"success_subtasks\": self.maze_stage,\n    }"
+   },
+   {
+    "cls": "Maze",
+    "module": "humanoid_bench.envs.maze",
+    "name": "update_move_direction",
+    "source": "def update_move_direction(self):\n    prev_maze_stage = self.maze_stage\n\n    if self.maze_stage == 0:\n        self._env.named.model.geom_rgba[\"intersection_a\"] = np.array([0, 1, 0, 1])\n\n    dist_cp = np.linalg.norm(\n        self._env.named.data.xpos[\"pelvis\"][:2]\n        - self.checkpoints[self.maze_stage][:2]\n    )\n    if dist_cp < 0.4:\n        if self.maze_stage == 0:\n            self.move_direction = np.array([1, 0, 0])\n            self._env.named.model.geom_rgba[\"intersection_a\"] = np.array(\n                [0, 1, 0, 1]\n            )\n            self._env.named.model.geom_rgba[\"intersection_b\"] = np.array(\n                [1, 0, 0, 1]\n            )\n        elif self.maze_stage == 1:\n            self.move_direction = np.array([0, 1, 0])\n            self._env.named.model.geom_rgba[\"intersection_b\"] = np.array(\n                [0, 1, 0, 1]\n            )\n            self._env.named.model.geom_rgba[\"intersection_c\"] = np.array(\n                [1, 0, 0, 1]\n            )\n        elif self.maze_stage == 2:\n            self.move_direction = np.array([1, 0, 0])\n            self._env.named.model.geom_rgba[\"intersection_c\"] = np.array(\n                [0, 1, 0, 1]\n            )\n            self._env.named.model.geom_rgba[\"intersection_d\"] = np.array(\n                [1, 0, 0, 1]\n            )\n        elif self.maze_stage == 3:\n            self.move_direction = np.array([0, 1, 0])\n            self._env.named.model.geom_rgba[\"intersection_d\"] = np.array(\n                [0, 1, 0, 1]\n            )\n\n        self.maze_stage += 1\n        self.maze_stage = min(self.maze_stage, 4)\n\n    if prev_maze_stage < self.maze_stage:\n        return self.maze_stage * 100\n\n    return 0"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.maze": "_MOVE_SPEED = 2.0\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.maze.Maze"
+ },
+ "package": {
+  "methods": [
+   {
+    "cls": "Package",
+    "module": "humanoid_bench.envs.package",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    package_destination = self._env.named.data.site_xpos[\"destination_loc\"]\n    package_location = self._env.named.data.qpos[\"free_package\"][:3]\n\n    dist_package_destination = np.linalg.norm(\n        package_location - package_destination\n    )\n    dist_hand_package_right = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"] - package_location\n    )\n    dist_hand_package_left = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"] - package_location\n    )\n    package_height = np.min((package_location[2], 1))\n\n    reward_success = dist_package_destination < 0.1\n\n    reward = (\n        stand_reward * small_control\n        - 3 * dist_package_destination * 1\n        - (dist_hand_package_left + dist_hand_package_right) * 0.1\n        + package_height\n        + reward_success * 1000\n    )\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"dist_package_destination\": dist_package_destination,\n        \"dist_hand_package_right\": dist_hand_package_right,\n        \"dist_hand_package_left\": dist_hand_package_left,\n        \"package_height\": package_height,\n        \"success\": reward_success > 0,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.package": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.package.Package"
+ },
+ "pole": {
+  "methods": [
+   {
+    "cls": "Pole",
+    "module": "humanoid_bench.envs.pole",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(self._move_speed, float(\"inf\")),\n        margin=self._move_speed,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n\n    all_geoms_id = self._env.named.data.geom_xpos.axes.row.names\n\n    collision_discount = 1\n    for pair in self._env.data.contact.geom:\n        if (\n            any([\"pole_r\" in all_geoms_id[p_val] for p_val in pair])\n            and 0 not in pair\n        ):  #\n            collision_discount = 0.1\n            break\n\n    reward = (\n        0.5 * (small_control * stand_reward) + 0.5 * move\n    ) * collision_discount\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n        \"collision_discount\": collision_discount,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.pole": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.pole.Pole"
+ },
+ "powerlift": {
+  "methods": [
+   {
+    "cls": "Powerlift",
+    "module": "humanoid_bench.envs.powerlift",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 3,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    dumbbell_height = self._env.named.data.xpos[\"dumbbell\", \"z\"]\n    reward_dumbbell_lifted = rewards.tolerance(\n        dumbbell_height, bounds=(1.9, 2.1), margin=2\n    )\n\n    reward = 0.2 * (small_control * stand_reward) + 0.8 * reward_dumbbell_lifted\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"reward_dumbbell_lifted\": reward_dumbbell_lifted,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.powerlift": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.powerlift.Powerlift"
+ },
+ "push": {
+  "methods": [
+   {
+    "cls": "Push",
+    "module": "humanoid_bench.envs.push",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    goal_dist = self.goal_dist()\n    penalty_dist = self.reward_dict[\"target_dist\"] * goal_dist\n    reward_success = self.reward_dict[\"success\"] if goal_dist < 0.05 else 0\n\n    left_hand = self.robot.left_hand_position()\n    # box = self._env.data.qpos.flat.copy()[-7:-4]\n    box = self._env.named.data.qpos[\"free_object\"][:3]\n\n    hand_dist = np.sqrt(np.square(left_hand - box).sum())\n    hand_penalty = self.reward_dict[\"hand_dist\"] * hand_dist\n\n    reward = -hand_penalty - penalty_dist + reward_success\n    info = {\n        \"target_dist\": goal_dist,\n        \"hand_dist\": hand_dist,\n        \"reward_success\": reward_success,\n        \"success\": reward_success > 0,\n    }\n    return reward, info"
+   }
+  ],
+  "params": {
+   "humanoid_bench.envs.push": [
+    {
+     "attr": "reward_dict",
+     "cls": "Push",
+     "values": {
+      "hand_dist": 0.1,
+      "success": 1000,
+      "target_dist": 1
+     }
+    }
+   ]
+  },
+  "task_class": "humanoid_bench.envs.push.Push"
+ },
+ "reach": {
+  "methods": [
+   {
+    "cls": "Reach",
+    "module": "humanoid_bench.envs.reach",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    hand_dist = np.sqrt(\n        np.square(self.robot.left_hand_position() - self.goal).sum()\n    )\n\n    healthy_reward = self._env.data.xmat[1, -1] * 5.0\n    motion_penalty = np.square(self._env.data.qvel[: self.robot.dof - 1]).sum()\n    reward_close = 5 if hand_dist < 1 else 0\n    reward_success = 10 if hand_dist < 0.05 else 0\n    reward = (\n        healthy_reward - 0.0001 * motion_penalty + reward_close + reward_success\n    )\n\n    info = {\n        \"hand_dist\": hand_dist,\n        \"healthy_reward\": healthy_reward,\n        \"motion_penalty\": motion_penalty,\n        \"reward_close\": reward_close,\n        \"reward_success\": reward_success,\n    }\n    return reward, info"
+   }
+  ],
+  "task_class": "humanoid_bench.envs.reach.Reach"
+ },
+ "room": {
+  "methods": [
+   {
+    "cls": "Room",
+    "module": "humanoid_bench.envs.room",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    room_object_positions = np.vstack(\n        [\n            self._env.named.data.xpos[obj_name]\n            for obj_name in [\n                \"chair\",\n                \"trophy\",\n                \"headphone\",\n                \"package_a\",\n                \"package_b\",\n                \"snow_globe\",\n            ]\n        ]\n    )\n    room_object_entropies = np.array(\n        [np.var(room_object_positions[:, col_id]) for col_id in range(2)]\n    )\n\n    room_object_organized = rewards.tolerance(\n        np.max(room_object_entropies),\n        margin=3,\n    )\n\n    reward = 0.2 * (small_control * stand_reward) + 0.8 * room_object_organized\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"standing\": standing,\n        \"upright\": upright,\n        \"room_object_organized\": room_object_organized,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.room": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.room.Room"
+ },
+ "run": {
+  "methods": [
+   {
+    "cls": "Walk",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    if self._move_speed == 0:\n        horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n        dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n        return small_control * stand_reward * dont_move, {\n            \"small_control\": small_control,\n            \"stand_reward\": stand_reward,\n            \"dont_move\": dont_move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }\n    else:\n        com_velocity = self.robot.center_of_mass_velocity()[0]\n        move = rewards.tolerance(\n            com_velocity,\n            bounds=(self._move_speed, float(\"inf\")),\n            margin=self._move_speed,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n        move = (5 * move + 1) / 6\n        reward = small_control * stand_reward * move\n        return reward, {\n            \"stand_reward\": stand_reward,\n            \"small_control\": small_control,\n            \"move\": move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Run"
+ },
+ "sit_hard": {
+  "methods": [
+   {
+    "cls": "Sit",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    sitting = rewards.tolerance(\n        self._env.data.qpos[2], bounds=(0.68, 0.72), margin=0.2\n    )\n    chair_location = self._env.named.data.xpos[\"chair\"]\n    on_chair = rewards.tolerance(\n        self._env.data.qpos[0] - chair_location[0], bounds=(-0.19, 0.19), margin=0.2\n    ) * rewards.tolerance(self._env.data.qpos[1] - chair_location[1], margin=0.1)\n    sitting_posture = rewards.tolerance(\n        self.robot.head_height() - self._env.named.data.site_xpos[\"imu\", \"z\"],\n        bounds=(0.35, 0.45),\n        margin=0.3,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.95, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=0.9,\n        value_at_margin=0,\n    )\n    sit_reward = (0.5 * sitting + 0.5 * on_chair) * upright * sitting_posture\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n    dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n    return small_control * sit_reward * dont_move, {\n        \"small_control\": small_control,\n        \"sit_reward\": sit_reward,\n        \"dont_move\": dont_move,\n        \"sitting\": sitting,\n        \"upright\": upright,\n        \"sitting_posture\": sitting_posture,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.SitHard"
+ },
+ "sit_simple": {
+  "methods": [
+   {
+    "cls": "Sit",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    sitting = rewards.tolerance(\n        self._env.data.qpos[2], bounds=(0.68, 0.72), margin=0.2\n    )\n    chair_location = self._env.named.data.xpos[\"chair\"]\n    on_chair = rewards.tolerance(\n        self._env.data.qpos[0] - chair_location[0], bounds=(-0.19, 0.19), margin=0.2\n    ) * rewards.tolerance(self._env.data.qpos[1] - chair_location[1], margin=0.1)\n    sitting_posture = rewards.tolerance(\n        self.robot.head_height() - self._env.named.data.site_xpos[\"imu\", \"z\"],\n        bounds=(0.35, 0.45),\n        margin=0.3,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.95, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=0.9,\n        value_at_margin=0,\n    )\n    sit_reward = (0.5 * sitting + 0.5 * on_chair) * upright * sitting_posture\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n    dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n    return small_control * sit_reward * dont_move, {\n        \"small_control\": small_control,\n        \"sit_reward\": sit_reward,\n        \"dont_move\": dont_move,\n        \"sitting\": sitting,\n        \"upright\": upright,\n        \"sitting_posture\": sitting_posture,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Sit"
+ },
+ "slide": {
+  "methods": [
+   {
+    "cls": "ClimbingUpwards",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height() - self.robot.left_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    ) * rewards.tolerance(\n        self.robot.head_height() - self.robot.right_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.5, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(_WALK_SPEED, float(\"inf\")),\n        margin=_WALK_SPEED,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n    return stand_reward * small_control * move, {  # small_control *\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Slide"
+ },
+ "spoon": {
+  "methods": [
+   {
+    "cls": "Spoon",
+    "module": "humanoid_bench.envs.spoon",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    left_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.geom_xpos[\"spoon_handle\"]\n    )\n    right_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.geom_xpos[\"spoon_handle\"]\n    )\n    hand_tool_proximity_reward = rewards.tolerance(\n        min(left_hand_tool_distance, right_hand_tool_distance),\n        bounds=(0, 0.2),\n        margin=0.5,\n    )\n\n    current_spin_angle = self.step_counter * (2 * np.pi / 40)\n    spoon_target_pos = np.array([0.75, -0.1, 0.95]) + np.array(\n        [np.cos(current_spin_angle) * 0.06, np.sin(current_spin_angle) * 0.06, 0]\n    )\n    self._env.named.data.site_xpos[\"goal\"] = spoon_target_pos\n    # spoon_velocity = self._env.named.data.sensordata[\"spoon_gyro\"][2]\n    spoon_plate_pos = self._env.named.data.geom_xpos[\"spoon_plate\"]\n    cup_pos = self._env.named.data.xpos[\"cup\"]\n    spoon_spinning_reward = rewards.tolerance(\n        np.linalg.norm(spoon_plate_pos - spoon_target_pos),\n        margin=0.15,\n    )\n\n    spoon_in_cup_x = abs(spoon_plate_pos[0] - cup_pos[0]) < 0.1\n    spoon_in_cup_y = abs(spoon_plate_pos[1] - cup_pos[1]) < 0.1\n    spoon_in_cup_z = abs(spoon_plate_pos[2] - (cup_pos[2] + 0.1)) < 0.1\n    reward_spoon_in_cup = (\n        int(spoon_in_cup_x) + int(spoon_in_cup_y) + int(spoon_in_cup_z)\n    ) // 3\n\n    self.step_counter += 1\n\n    reward = (\n        0.15 * (stand_reward * small_control)\n        + 0.25 * hand_tool_proximity_reward\n        + 0.25 * reward_spoon_in_cup\n        + 0.35 * spoon_spinning_reward\n    )\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"hand_tool_proximity_reward\": hand_tool_proximity_reward,\n        \"reward_spoon_in_cup\": reward_spoon_in_cup,\n        \"spoon_spinning_reward\": spoon_spinning_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.spoon": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.spoon.Spoon"
+ },
+ "stair": {
+  "methods": [
+   {
+    "cls": "ClimbingUpwards",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height() - self.robot.left_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    ) * rewards.tolerance(\n        self.robot.head_height() - self.robot.right_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.5, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(_WALK_SPEED, float(\"inf\")),\n        margin=_WALK_SPEED,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n    return stand_reward * small_control * move, {  # small_control *\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Stair"
+ },
+ "stand": {
+  "methods": [
+   {
+    "cls": "Walk",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    if self._move_speed == 0:\n        horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n        dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n        return small_control * stand_reward * dont_move, {\n            \"small_control\": small_control,\n            \"stand_reward\": stand_reward,\n            \"dont_move\": dont_move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }\n    else:\n        com_velocity = self.robot.center_of_mass_velocity()[0]\n        move = rewards.tolerance(\n            com_velocity,\n            bounds=(self._move_speed, float(\"inf\")),\n            margin=self._move_speed,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n        move = (5 * move + 1) / 6\n        reward = small_control * stand_reward * move\n        return reward, {\n            \"stand_reward\": stand_reward,\n            \"small_control\": small_control,\n            \"move\": move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Stand"
+ },
+ "truck": {
+  "methods": [
+   {
+    "cls": "Truck",
+    "module": "humanoid_bench.envs.truck",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    reward = 0\n\n    # Store initial z positions of packages\n    if self.initialized == False:\n        self.initialized = True\n        self.initial_zs = {}\n        for package in self.package_list:\n            self.initial_zs[package] = self._env.named.data.xpos[package][2]\n\n    # Check if packages have been picked up from truck\n    for package in self.packages_on_truck:\n        if self._env.named.data.xpos[package][2] > self.initial_zs[package] + 0.1:\n            self.packages_picked_up.append(package)\n            self.packages_on_truck.remove(package)\n            reward += 100\n\n    # Check if packages have been placed on table\n    for package in self.packages_picked_up:\n        # print('Package: ', package, self._env.named.data.xpos[package])\n        if self.upon_table(package):\n            self.packages_on_table.append(package)\n            self.packages_picked_up.remove(package)\n            reward += 100\n\n    # Check if packages are no longer on table\n    for package in self.packages_on_table:\n        if not self.upon_table(package):\n            self.packages_on_table.remove(package)\n            self.packages_picked_up.append(package)\n            reward -= 100\n\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n\n    # minimize distance between robot and packages on truck\n    reward_robot_package_truck = 0\n    if len(self.packages_on_truck) > 0:\n        dist_robot_package_truck = [\n            np.linalg.norm(\n                self._env.named.data.xpos[package]\n                - self._env.named.data.qpos[\"free_base\"][:3]\n            )\n            for package in self.packages_on_truck\n        ]\n        reward_robot_package_truck = rewards.tolerance(\n            np.min(dist_robot_package_truck),\n            bounds=(0, 0.2),\n            margin=4,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n\n    # minimize distance between robot and packages picked up\n    reward_robot_package_picked_up = 0\n    if len(self.packages_picked_up) > 0:\n        dist_robot_package_picked_up = [\n            np.linalg.norm(\n                self._env.named.data.xpos[package]\n                - self._env.named.data.qpos[\"free_base\"][:3]\n            )\n            for package in self.packages_picked_up\n        ]\n        reward_robot_package_picked_up = rewards.tolerance(\n            np.min(dist_robot_package_picked_up),\n            bounds=(0, 0.2),\n            margin=4,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n\n    # minimize distance between picked up packages and table\n    reward_package_table = 0\n    if len(self.packages_picked_up) > 0:\n        dist_package_table = [\n            np.linalg.norm(\n                self._env.named.data.xpos[package]\n                - self._env.named.data.xpos[\"table\"]\n            )\n            for package in self.packages_picked_up\n        ]\n        reward_package_table = rewards.tolerance(\n            np.min(dist_package_table),\n            bounds=(0, 0.2),\n            margin=4,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n\n    reward += upright * (\n        1\n        + reward_robot_package_truck\n        + reward_robot_package_picked_up\n        + reward_package_table\n    )\n\n    reward_dict = {\n        \"upright\": upright,\n        \"reward_robot_package_truck\": reward_robot_package_truck,\n        \"reward_robot_package_picked_up\": reward_robot_package_picked_up,\n        \"reward_package_table\": reward_package_table,\n        \"packages_on_truck\": len(self.packages_on_truck),\n        \"packages_picked_up\": len(self.packages_picked_up),\n        \"packages_on_table\": len(self.packages_on_table),\n        \"success\": 0,\n    }\n\n    reward_dict[\"success_subtasks\"] = len(self.packages_on_table)\n\n    if len(self.packages_on_table) == len(self.package_list):\n        reward_dict[\"success\"] = 1\n        reward += 1000\n\n    return reward, reward_dict"
+   },
+   {
+    "cls": "Truck",
+    "module": "humanoid_bench.envs.truck",
+    "name": "upon_table",
+    "source": "def upon_table(self, package):\n    return (\n        self._env.named.data.xpos[package][0] < 2.35\n        and self._env.named.data.xpos[package][1] < -1.35\n        and self._env.named.data.xpos[package][0] > 1.65\n        and self._env.named.data.xpos[package][1] > -2.05\n        and self._env.named.data.xpos[package][2] > 0.5\n    )"
+   }
+  ],
+  "task_class": "humanoid_bench.envs.truck.Truck"
+ },
+ "walk": {
+  "methods": [
+   {
+    "cls": "Walk",
+    "module": "humanoid_bench.envs.basic_locomotion_envs",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    if self._move_speed == 0:\n        horizontal_velocity = self.robot.center_of_mass_velocity()[[0, 1]]\n        dont_move = rewards.tolerance(horizontal_velocity, margin=2).mean()\n        return small_control * stand_reward * dont_move, {\n            \"small_control\": small_control,\n            \"stand_reward\": stand_reward,\n            \"dont_move\": dont_move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }\n    else:\n        com_velocity = self.robot.center_of_mass_velocity()[0]\n        move = rewards.tolerance(\n            com_velocity,\n            bounds=(self._move_speed, float(\"inf\")),\n            margin=self._move_speed,\n            value_at_margin=0,\n            sigmoid=\"linear\",\n        )\n        move = (5 * move + 1) / 6\n        reward = small_control * stand_reward * move\n        return reward, {\n            \"stand_reward\": stand_reward,\n            \"small_control\": small_control,\n            \"move\": move,\n            \"standing\": standing,\n            \"upright\": upright,\n        }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.basic_locomotion_envs.Walk"
+ },
+ "window": {
+  "methods": [
+   {
+    "cls": "Window",
+    "module": "humanoid_bench.envs.window",
+    "name": "get_reward",
+    "source": "def get_reward(self):\n    self.window_pane_id = self._env.named.data.geom_xpos.axes.row.names.index(\n        \"window_pane_collision\"\n    )\n\n    self.window_wipe_id = self._env.named.data.geom_xpos.axes.row.names.index(\n        \"window_wipe_collision\"\n    )\n\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    window_contact_reward = np.min(\n        [\n            rewards.tolerance(\n                self._env.named.data.site_xpos[site_name, \"x\"],\n                bounds=(0.92, 0.92),\n                margin=0.4,\n                sigmoid=\"linear\",\n            )\n            for site_name in [\n                \"wipe_contact_site_a\",\n                \"wipe_contact_site_b\",\n                \"wipe_contact_site_c\",\n                \"wipe_contact_site_d\",\n                \"wipe_contact_site_e\",\n            ]\n        ]\n    )\n    window_contact_filter = 0\n    for pair in self._env.data.contact.geom:\n        if (\n            self.window_pane_id in pair and self.window_wipe_id in pair\n        ):  # if has hand\n            window_contact_filter = 1\n            break\n\n    left_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"left_hand\"]\n        - self._env.named.data.xpos[\"window_wiping_tool\"]\n    )\n    right_hand_tool_distance = np.linalg.norm(\n        self._env.named.data.site_xpos[\"right_hand\"]\n        - self._env.named.data.xpos[\"window_wiping_tool\"]\n    )\n    hand_tool_proximity_reward = min(\n        [\n            rewards.tolerance(left_hand_tool_distance, bounds=(0, 0.2), margin=0.5),\n            rewards.tolerance(\n                right_hand_tool_distance, bounds=(0, 0.2), margin=0.5\n            ),\n        ]\n    )\n\n    moving_wipe_reward = rewards.tolerance(\n        abs(self._env.named.data.sensordata[\"window_wiping_tool_subtreelinvel\"][2]),\n        bounds=(0.5, 0.5),\n        margin=0.5,\n    )\n\n    head_window_distance_reward = rewards.tolerance(\n        np.linalg.norm(self._env.named.data.site_xpos[\"head\"] - self.head_pos0),\n        bounds=(0.4, 0.4),\n        margin=0.1,\n    )\n\n    manipulation_reward = (\n        0.2 * (stand_reward * small_control * head_window_distance_reward)\n        + 0.4 * moving_wipe_reward\n        + 0.4 * hand_tool_proximity_reward\n    )\n    window_contact_total_reward = window_contact_filter * window_contact_reward\n    reward = 0.5 * manipulation_reward + 0.5 * window_contact_total_reward\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"moving_wipe_reward\": moving_wipe_reward,\n        \"hand_tool_proximity_reward\": hand_tool_proximity_reward,\n        \"window_contact_reward\": window_contact_reward,\n        \"window_contact_filter\": window_contact_filter,\n        \"window_contact_total_reward\": window_contact_total_reward,\n    }"
+   }
+  ],
+  "module_globals": {
+   "humanoid_bench.envs.window": "_STAND_HEIGHT = 1.65"
+  },
+  "task_class": "humanoid_bench.envs.window.Window"
+ }
+}
