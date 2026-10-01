@@ -247,7 +247,7 @@ their evaluation hosts.
 | RoboWits, CPU backend | 29 (94) | 47–234 s (median ~60 s) | default 900 s is enough |
 | RoboWits, particle families | separate_marbles_and_sand, stabilize_bottle | 39–56 min on the CPU backend; ~140 s on the GPU backend | they run on the GPU backend; a CPU-backend build needs `RCB_STARTUP_TIMEOUT_S` ≥ 7200 |
 | RoboLab | 13 (20) | 98–217 s | default enough |
-| BEHAVIOR-1K | 6 (12) | 130–404 s (scene load) | 1200 s, more on loaded hosts |
+| BEHAVIOR-1K | 6 (12) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |
 | RoboPaint | 3 (6) | a few seconds after environment setup | default enough |
 
 ### 13.5 Cost and tests
