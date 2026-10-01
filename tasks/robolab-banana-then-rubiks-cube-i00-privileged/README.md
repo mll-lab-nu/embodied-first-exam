@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | privileged |
 | Twin | `robolab-banana-then-rubiks-cube-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robolab-take-measuring-spoon-out-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |

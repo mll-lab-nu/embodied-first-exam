@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | privileged |
 | Twin | `robolab-food-packing2-cans-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
