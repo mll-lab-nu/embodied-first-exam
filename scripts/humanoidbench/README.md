@@ -1,7 +1,7 @@
 # scripts/humanoidbench — where the HumanoidBench tasks come from
 
-Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in them is edited by hand (their
-`results/` aside).
+Every `tasks/humanoidbench-*` directory is generated from this one. Nothing in them is edited by hand. Agent
+results are published on the results site, not kept here (PROTOCOL D3).
 
 | file | what it is |
 |---|---|

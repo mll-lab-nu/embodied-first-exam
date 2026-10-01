@@ -18,7 +18,7 @@ hands in one trajectory, replayed open-loop in a fresh process. Its standard-mod
 Task: drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
 
 ## Difficulty
-Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes. GPT-6 Luna (Codex, effort medium, 60 min; standard mode before protocol v1.0, as rcb-limited/1.1): privileged passed; standard passed with 50 resets and failed with none.
+Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The benchmark's fixture: the pipeline check, with an oracle in both modes.
 
 ## Reference solution
 `solution/oracle.py` steers the base from the state around the chairs' north side (three waypoints, every move inside a 0.1 m disc) into the square: success at step 101.

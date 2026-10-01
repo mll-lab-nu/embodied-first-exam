@@ -31,7 +31,7 @@ img = s.render()                                    # RGB (240, 320, 3); s.rende
 Actuators: `actuator1..7` = joint position targets (rad) for `joint1..joint7`, `actuator8` = finger opening (0 = closed
 … 0.04 m = open). Limits: `s.lower`, `s.upper`. The site `gripper` sits between the fingertips; the hand approaches
 along the site's z axis and the fingers close along its y axis. Everything in `s.model` / `s.data` is readable
-(privileged tier), e.g. for inverse kinematics with `mujoco.mj_jacSite`.
+(privileged mode), e.g. for inverse kinematics with `mujoco.mj_jacSite`.
 
 ## Rules
 - Write your own controller; do not use trained policies from MuJoCo Playground or elsewhere.

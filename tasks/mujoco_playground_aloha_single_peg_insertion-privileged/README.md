@@ -9,19 +9,19 @@
 | Family / instance | `mujoco_playground/AlohaSinglePegInsertion` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.1` |
+| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
 
 ## Task
 MuJoCo Playground's `AlohaSinglePegInsertion` ported to plain MuJoCo (CPU, deterministic) for this benchmark.
 
 ## Difficulty
-MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (Playground has only a shaped RL reward; defined here from its insertion geometry: peg tip ≤ 5 mm from the socket axis and ≥ 25 % inside (axial t ≤ 0.75) at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
+MuJoCo Playground defines only a shaped RL reward; this task scores a binary success defined from it (peg tip ≤ 5 mm from the socket axis and ≥ 25 % inside (axial t ≤ 0.75) at the end), so a trajectory has to actually finish the manipulation rather than collect partial reward.
 
 ## Reference solution
 `solution/oracle_ik.py`: top-down grasps with DLS IK + gravity feedforward, lift, rate-limited visual servo of the peg tip onto the socket axis, push in (tip 1.8 mm from the axis, t = 0.44, 470 control steps)
 
 ## Verification
-**success**: Playground has only a shaped RL reward; defined here from its insertion geometry: peg tip ≤ 5 mm from the socket axis and ≥ 25 % inside (axial t ≤ 0.75) at the end
+Playground has only a shaped RL reward; defined here from its insertion geometry: peg tip ≤ 5 mm from the socket axis and ≥ 25 % inside (axial t ≤ 0.75) at the end
 
 ## Details
 | | |
