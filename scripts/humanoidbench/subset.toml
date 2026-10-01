@@ -1,0 +1,1289 @@
+# HumanoidBench subset — the single source of truth for every task under tasks/humanoidbench-*.
+#
+# WHY THIS FILE EXISTS
+#   HumanoidBench registers 32 tasks (31 classes). Keeping all of them would buy duplicates (`stair` and `slide`
+#   are the same reward function, byte for byte) and give-away scores (`pole` hands you 71% of its bar for
+#   standing to attention). The 32 fall into 9 capability classes (`capability_class`), and 23 are kept
+#   (docs/benchmarks/humanoidbench.md); this file is that decision in machine-readable form, and it drives
+#   the generator.
+#
+# WHAT IT DRIVES
+#   scripts/humanoidbench/gen_tasks.py turns each [[task]] here into a complete Harbor task directory
+#   under tasks/, using templates/ for the boilerplate and shared/ for the tooling. Everything the tasks
+#   have in common is written once, so `rcb_hb.py` and `grade.py` are byte-identical across all of them
+#   (`gen_tasks.py check` enforces it).
+#
+# HOW TO ADD A TASK
+#   Add a [[task]] block here (env_id lives here and nowhere else -- the shipped tooling reads it out of
+#   the instance file, so a task directory never learns that other tasks exist), then follow README.md
+#   "Adding a task": measure, instance, measure-standard, render, verify, check.
+#
+# ROLE
+#   scored     part of the benchmark
+#   fixture    kept for a reason other than scoring; `retire_when` says what ends that reason
+#
+# STATUS VALUES
+#   todo       nothing generated yet
+#   generated  files + instance exist; verified OUTSIDE the container (env builds, nop scores below the
+#              bar, replay is bit-exact across repeats). This is what gen_tasks.py verify checks.
+#   verified   additionally exercised INSIDE the task image: `harbor run -a nop` = 0, plus an all-zero
+#              trajectory pushed through the real tests/grade.py in the container, where the verifier's
+#              episode_return must equal facts.json's nop_return to the last digit. That equality is the
+#              thing being checked, not just the verdict -- since the image has no reward function, it is
+#              also the proof that tests/rewards.json restored upstream's exact formula. Tasks with an
+#              oracle also need oracle = 1 (sit_simple: 820.28/750 through the full Harbor pipeline).
+#
+# WHERE THE NUMBERS LIVE
+#   Nothing measurable is hand-written here. Success bars, action/observation dimensions, episode limits
+#   and the all-zero-trajectory floor are read out of the simulator by `gen_tasks.py measure` and land in
+#   facts.json beside this file; `gen_tasks.py verify` re-measures and fails on drift. This file holds
+#   only what a human decided: which tasks, why, and how to describe them. `hold_rate` used to be written
+#   here and is now derived from facts.json for the same reason -- it is the selection criterion, so it has
+#   to be the measurement and not a recollection of one.
+#
+# ==== HOW TO WRITE `scoring_note` =====================================================================
+#   This field is the ONLY thing that tells the agent what its episode is judged on: the image has every
+#   get_reward() deleted (images/humanoidbench/scrub_oracles.py), so there is no formula to read and
+#   s.step() hands back None where the reward used to be. That makes this field a spec, and it has a line
+#   it must not cross.
+#
+#   SAY      what the episode is judged on, in words -- which quantities, how they combine (a product
+#            gates, a weighted sum gives partial credit, a one-off bonus is all-or-nothing), the ORDER OF
+#            MAGNITUDE of a target ("about 1 m/s", "close to two metres"), what terminates the episode,
+#            and the episode length when it is not 1000.
+#   DO NOT   paste tolerance parameters (`bounds=`, `margin=`, `value_at_margin=`), the exact weight on
+#            each term, the reward's per-step scale ("a step is worth around 1"), or what a particular
+#            policy scores ("doing nothing earns essentially zero", "opening the door alone earns a
+#            substantial share"). Those are the answer key: with them the task is to invert an expression,
+#            without them it is to control a robot. Saying what the pass mark REQUIRES is fine ("the bar
+#            cannot be reached without opening the door").
+#
+#   The test to apply: could a competent engineer, told only this, build a sensible measure of their own
+#   and optimise it? If yes it is enough. Could they skip the robot and solve for the numbers? Then it is
+#   too much. `difficulty` has no such limit -- it renders into README.md, which never enters the image.
+#
+#   `ends_note` is the sentence on how the episode ends early. Privileged mode appends it to scoring_note;
+#   standard mode leaves it out, because its Rules already list `[task.standard] ends`.
+# ======================================================================================================
+
+# ==== [task.standard] =================================================================================
+#   Each task's standard-mode twin (tasks/*-standard/, docs/PROTOCOL.md §4, eai-standard/2.1): the same instance and
+#   success rule, but the agent sees only head-camera RGB, joint angles/velocities, a pelvis IMU and room_camera
+#   (the standard configuration; a run may turn them off or add depth), through a client. Its prose, per task:
+#     ends            how the episode can end early other than by success ("when the robot falls (...)");
+#                     leave it out if it cannot
+#     hidden          what the agent is not given, read after "Not ": "where the robot is in the room, not ..."
+#     tier            the same for README.md: "no root pose, no ..."
+#     camera_note     README.md: what the head cameras and room_camera see
+#     task_statement, scoring_note   only where the privileged wording leans on privileged state
+#     room_camera_pose, room_camera_comment   a fixed free camera ("lookat_x,y,z,distance,azimuth,elevation")
+#                     for tasks that leave the default one's view (the recording camera frozen at t=0)
+#   The SAY / DO NOT rule above applies to every one of them.
+#
+# Per task, for the human review of a task without an oracle (docs/PROTOCOL.md §2.7): `oracle_evidence`, the
+# positive example a reviewer checks, or why none is known. A task with oracles/<family>/<mode>/ has an oracle instead.
+# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs only), read by gen_tasks.py:
+# upstream is a public commit, so anything more lets the agent fetch back the reward the image deletes.
+# ======================================================================================================
+
+[defaults]
+seed = 0
+instance_tag = "00"
+agent_timeout = 3600.0
+verifier_timeout = 900.0
+keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory"]
+cpus = 16                   # the privileged-mode agent's container: searching is what it is for
+review_pr = 9               # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
+
+# =====================================================================================================
+# C1 · flat-ground periodic gait
+# =====================================================================================================
+[[task]]
+family = "walk"
+role = "scored"
+robot = "h1"
+env_id = "h1-walk-v0"
+paper_category = "loco"
+capability_class = "C1 · flat-ground periodic gait"
+status = "verified"
+expert_hours = 2.0
+completion_rate = "133%"
+evidence = "paper SAC 854, FastTD3 928, bar 700"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), kept in tasks/humanoidbench-loco-walk-i00/results/claude_code-claude_opus_5_5-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; published RL passes as well (SAC 854, FastTD3 928)"
+one_liner = "walks the Unitree H1 forward and keeps it walking"
+task_statement = "walk the robot forward and keep walking, without falling."
+scene_note = "flat ground, and the robot's initial pose never changes between resets."
+scoring_note = '''Each step is judged on three things at once — how fast the centre of mass is moving
+forward, how upright the robot is (head at standing height, torso vertical), and how little actuator
+force it is using — and they multiply. Not being upright is what makes a step worth nothing; heavy
+actuator force costs part of it. The
+forward-speed target is on the order of 1 m/s.'''
+ends_note = "The episode ends early if the pelvis drops near the ground."
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = ""
+difficulty = '''- **The reward is a three-way product**: `small_control × stand_reward × move`. The `move` term rises
+  linearly from 0 at standstill to 1 at 1 m/s of forward centre-of-mass speed, then is remapped to
+  `(5·move + 1)/6`. Standing still therefore caps the episode near 170/700 — staying upright earns
+  almost nothing by itself. Clearing the bar takes a *sustained* ~0.7 m/s.
+- **A gait is a limit cycle, and greedy search cannot find one.** Any first step out of a standing pose
+  is locally worse than not taking it: the centre of mass has to leave the support polygon before it
+  gains anything. A search that only accepts locally improving actions structurally never takes that
+  step. Planning with a horizon *can*, which is exactly what happened below.
+- **Nothing is given away**: the published random-policy baseline is 2.38/700, and holding the starting
+  pose scores 11.84 (1.7% of the bar).
+
+**Measured with a real agent** (`mini-swe-agent` + `claude-sonnet-5`, one attempt, full 1 h budget,
+~$6, 200 steps): **passed, 784.54 / 700**, deterministic replay. What it reported trying, in order:
+open-loop sine CPG (falls before step 100), CPG + LQR linearised at the initial state (survives all
+1000 steps but caps near 200), CMA-ES over the CPG/Fourier parameters (plateaus at 190-210 -- it
+concluded the parameterisation, not the search budget, was the limit), and finally receding-horizon
+CEM-MPC against the task's own reward, which cleared the bar.
+
+🚩 **That run had the reward function.** It is the reason the image no longer does: the winning approach
+was to optimise the formula directly, which measures reading comprehension of a dense reward rather than
+control. Re-run under the scrubbed image, the same approach needs the agent to *write* the objective
+first.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not how fast it is moving"
+tier = "no root pose, no base velocity"
+camera_note = "the head cameras see flat floor and the horizon (there is nothing else in the scene). `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
+
+# =====================================================================================================
+# C2 · constrained gait (terrain / obstacles)
+# =====================================================================================================
+[[task]]
+family = "stair"
+role = "scored"
+robot = "h1"
+env_id = "h1-stair-v0"
+paper_category = "loco"
+capability_class = "C2 · constrained gait"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "98.5%"
+evidence = "paper 134, FastTD3 690, bar 700"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 98.5% of the bar (paper 134, FastTD3 690, bar 700)"
+one_liner = "walks the Unitree H1 over a row of staircases"
+task_statement = "walk the robot forward over the stairs, up each flight and down the other side, without falling."
+scene_note = "the stairs and the robot's initial pose never change between resets."
+scoring_note = '''The same three multiplied requirements as walking on the flat — forward speed (the
+target is on the order of 1 m/s), staying upright, low actuator force — with one change that matters:
+the height part of "upright" is measured as the head's height *above the feet*, not above the ground,
+because the ground rises and falls under you and so cannot be the yardstick, and the torso tilt it
+accepts is looser than on the flat.'''
+ends_note = '''Termination is also different: the episode ends only when the torso tips close to
+horizontal, rather than when it drops to a fixed height.'''
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = ""
+difficulty = '''- **A gait plus a terrain constraint.** Everything that makes `walk` hard applies, and on top of it the
+  foot placement has to match the step geometry. The failure mode is different too: `walk` fails by
+  never starting, `stair` fails by losing footing part-way up.
+- **The uprightness termination is lenient.** `torso_upright < 0.1` ends the episode only once the torso
+  is close to horizontal (more than about 84° from vertical).
+- **One of the two tasks closest to their own bar.** The best published result misses it by 1.5%
+  (`balance_simple`: 1.4%), which makes it a clean test of whether an agent is a little better or a
+  little worse than the state of the art rather than hopelessly far from it.'''
+
+[task.standard]
+ends = "when the robot falls (its torso tips close to horizontal)"
+hidden = "where the robot is in the room, not the stairs' geometry"
+tier = "no root pose, no stair geometry"
+camera_note = "the head cameras see the first flight of stairs straight ahead. `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
+
+[[task]]
+family = "hurdle"
+role = "scored"
+robot = "h1"
+env_id = "h1-hurdle-v0"
+paper_category = "loco"
+capability_class = "C2 · constrained gait"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "127%"
+evidence = "paper 143, FastTD3 887, bar 700"
+oracle_evidence = "no rollout of this instance; published RL passes the bar (FastTD3 887 / 700)"
+one_liner = "runs the Unitree H1 over a line of hurdles"
+task_statement = "run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling."
+scene_note = "the hurdles and the robot's initial pose never change between resets."
+scoring_note = '''Forward speed, staying upright (head at standing height, torso vertical) and low
+actuator force, multiplied together — but the speed target is a sprint rather than a walk, on the order
+of 5 m/s. On top of that,
+touching any barrier's collision geometry multiplies that entire step down to a small fraction of its
+value: contact is a gate to be respected, not a penalty to be traded off. Only the walls that line the
+track on both sides and behind the start count as barriers here; the hurdles themselves carry no such
+penalty, but they are solid and have to be cleared.'''
+ends_note = "The episode ends early if the pelvis drops near the ground."
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = ""
+difficulty = '''- **A multiplicative gate, not a penalty.** Contact with the side or back walls discounts the whole step
+  by ×0.1 (the hurdles themselves are not gated).
+  Approaches that trade a little contact for a lot of speed do not work here; the gate has to be
+  respected exactly.
+- **Running, not walking.** The speed term is scaled to 5 m/s, so a comfortable walking gait leaves most
+  of the per-step reward on the table even when nothing is hit.
+- **The only task in the subset that requires leaving the ground.** Clearing a hurdle needs a ballistic
+  phase with the right take-off timing — a qualitatively different motion from the contact-scheduled
+  gaits of `walk` and `stair`, which is why both are kept.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is on the track, not where the hurdles and walls are"
+tier = "no root pose, no hurdle or wall positions"
+camera_note = "the head cameras see the walled track and the line of hurdles ahead. `room_camera` stands behind and above the start and looks down the course (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot stays in frame from x = 0 to 20 m."
+room_camera_pose = "4,0,0.11,10,0,-26"
+room_camera_comment = "room_camera behind and above the start, looking down the course: the robot stays in frame from x=0 to 20 m"
+
+# =====================================================================================================
+# C3 · quasi-static posture and stabilisation
+# =====================================================================================================
+[[task]]
+family = "balance_simple"
+role = "scored"
+robot = "h1"
+env_id = "h1-balance_simple-v0"
+paper_category = "loco"
+capability_class = "C3 · quasi-static stabilisation"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "98.6%"
+evidence = "paper 64, FastTD3 788, bar 800"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 98.6% of the bar (paper 64, FastTD3 788, bar 800)"
+one_liner = "keeps the Unitree H1 standing on a balance board"
+task_statement = "stand on the balance board and stay on it, upright and still, for the whole episode."
+scene_note = "the board, its fulcrum and the robot's initial pose never change between resets."
+scoring_note = '''A good step asks for only three things, multiplied together — low actuator force,
+staying upright (head at full standing height on the board, torso vertical), and near-zero horizontal
+velocity — so scoring well for one step is not the difficulty. The difficulty is
+that the episode ends the moment the pelvis drops too low, anything but the fulcrum sphere touches the
+ground — the board included — or the sphere touches anything other than the ground and the board, and
+every step after that is worth nothing.'''
+obs_layout = "qpos(33) + qvel(31), robot + board state"
+task_notes = ""
+difficulty = '''- **A survival problem, not a scoring problem.** Per-step reward is easy to collect; what is hard is
+  collecting it 1000 times in a row. An all-zero trajectory already scores 37 before terminating at
+  step 62, and holding the start pose lasts 78 steps, so the shape of a good step is not the obstacle.
+- **The support is unstable.** The board pivots on a sphere, so the contact geometry moves in response
+  to the robot's own actions — an open-loop plan that ignores the coupling diverges, while a feedback
+  controller recorded open-loop reproduces exactly (MuJoCo on CPU is bit-exact).
+'''
+
+[task.standard]
+ends = "when the robot falls, when anything but the fulcrum under the board touches the ground (see Scoring)"
+hidden = "where the robot is in the room, not the board's pose"
+tier = "no root pose, no board pose"
+camera_note = "the head cameras see floor and horizon only; the board under the feet never enters their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot from outside."
+
+[[task]]
+family = "balance_hard"
+role = "scored"
+robot = "h1"
+env_id = "h1-balance_hard-v0"
+paper_category = "loco"
+capability_class = "C3 · quasi-static stabilisation"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "31%"
+evidence = "paper 57, FastTD3 244, bar 800"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800)"
+one_liner = "keeps the Unitree H1 standing on a board balanced on a rolling sphere"
+task_statement = "stand on the balance board and stay on it, upright and still, for the whole episode."
+scene_note = "the board, the roller beneath it and the robot's initial pose never change between resets."
+scoring_note = '''A good step asks for only three things, multiplied together — low actuator force,
+staying upright (head at full standing height on the board, torso vertical), and near-zero horizontal
+velocity — so scoring well for one step is not the difficulty. The difficulty is
+that the episode ends the moment the pelvis drops too low, anything but the rolling sphere touches the
+ground — the board included — or the sphere touches anything other than the ground and the board, and
+every step after that is worth nothing.'''
+obs_layout = "qpos(40) + qvel(37), robot + board + roller state"
+task_notes = ""
+difficulty = '''- **Same reward function as `balance_simple`, three times the gap to the bar.** The published best goes
+  from 98.6% to 31% with no change to the scoring code — only the support changes, from a board on a
+  fixed pivot to a board on a free-rolling sphere (task DoF 7 → 14). That is the point of keeping
+  both: it isolates how much of a task's difficulty is the reward and how much is the physics, and it
+  is the one place where "same reward function" was not grounds for cutting the second task.
+- **The support drifts.** A rolling fulcrum integrates the robot's errors instead of merely reflecting
+  them, so a correction that works once stops working a second later; there is no fixed operating point
+  to stabilise around.
+- **An all-zero trajectory terminates at step 44**, earlier than on the simple board.'''
+
+[task.standard]
+ends = "when the robot falls, when anything but the roller under the board touches the ground (see Scoring)"
+hidden = "where the robot is in the room, not the board's or the roller's pose"
+tier = "no root pose, no board or roller pose"
+camera_note = "the head cameras see floor and horizon only; the board and the roller under the feet never enter their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot on the board from outside."
+
+# =====================================================================================================
+# C4 · navigation and passage
+# =====================================================================================================
+[[task]]
+family = "door"
+role = "scored"
+robot = "h1"
+env_id = "h1-door-v0"
+paper_category = "manip"
+capability_class = "C4 · navigation and passage"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "55%"
+evidence = "paper 285, FastTD3 332, bar 600"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), kept in tasks/humanoidbench-manip-door-i00/results/claude_code-claude_opus_5_5-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"
+one_liner = "walks the Unitree H1 through a closed door"
+task_statement = "walk to the door, press the handle, pull the door open towards the robot, and walk through it."
+scene_note = "the door and the robot's initial pose never change between resets."
+scoring_note = '''This one is a weighted sum rather than a product, so partial credit is real: getting
+the door open and getting the torso past the doorway are the two large terms, with reaching for the
+handle, moving the handle, and posture as small ones. The bar cannot be reached without opening the
+door.'''
+ends_note = "The episode ends early if the pelvis drops too low."
+obs_layout = "qpos(28) + qvel(27), robot + door + handle state"
+task_notes = ""
+difficulty = '''- **Runs on the 19-DoF `h1`.** The door has 2 DoF and no dexterous hands are involved, so the agent
+  works the handle and the door with its forearms.
+- **Two skills in sequence.** The door opens towards the robot, so it has to be pulled round while the
+  robot steps out of its way. Without opening it the other terms fall short of the bar, and the passage
+  term pays in full only once the torso is well past the doorway.
+- **Partial credit is real.** Opening the door without getting through already earns a large share of
+  each step, which is meant to distinguish an agent that gets *part* of a multi-stage problem right from
+  one that gets none of it.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the door's or the handle's angle"
+tier = "no root pose, no door or handle state"
+camera_note = "the head cameras see the door right in front of the robot. `room_camera` looks at the doorway from the side (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the door and the floor beyond it stay in frame from x = -0.5 to 4 m."
+room_camera_pose = "1.8,0,0.9,7,105,-25"
+room_camera_comment = "room_camera beside the doorway: the robot, the door and the floor beyond it stay in frame from x=-0.5 to 4 m"
+
+[[task]]
+family = "maze"
+role = "scored"
+robot = "h1"
+env_id = "h1-maze-v0"
+paper_category = "loco"
+capability_class = "C4 · navigation and passage"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "30%"
+evidence = "paper 290, FastTD3 359, bar 1200"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 30% of the bar (paper 290, FastTD3 359, bar 1200)"
+one_liner = "walks the Unitree H1 along a maze's corridors from checkpoint to checkpoint"
+task_statement = "walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls."
+scene_note = "the maze layout and the robot's initial pose never change between resets."
+scoring_note = '''Most of the bar is not accumulated, it is jumped to: reaching a checkpoint pays a
+one-off bonus, and the bonuses grow with how many you have already reached, so the later corners are
+worth far more than the first. Between checkpoints each step pays a small amount for posture, for moving
+in the current corridor's direction (the speed target is on the order of 2 m/s) and for nearing the next
+checkpoint; touching a wall multiplies that per-step amount down to a fraction (the bonuses are not
+reduced). Walking correctly but never reaching a checkpoint leaves the episode below the bar.'''
+ends_note = "The episode ends early if the pelvis drops near the ground."
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = '''The direction the robot should currently be heading, and which checkpoint it is working
+towards, are part of the task's internal state — they advance as checkpoints are reached and are frozen
+into this instance at their initial values, so every reset starts you at the first checkpoint, where the
+robot stands.
+'''
+difficulty = '''- **Discrete, step-function reward.** Checkpoint bonuses (n×100 for the n-th) dominate the 1200 bar, so
+  the return is nearly binary per corner: you either reach a checkpoint or you get none of its value.
+  There is no gradient leading to the first corner beyond a proximity term worth a fraction of a step.
+- **Two turns, so the gait has to be steerable.** Each needs the walking controller to change heading
+  and then re-stabilise — a stronger requirement than walking in a straight line.
+- **Wall contact is a ×0.1 gate**, so cutting corners is not a viable shortcut.
+- **Planning cannot see far enough.** A receding-horizon planner optimising the per-step return has no
+  signal pointing at a checkpoint bonus dozens of steps away, which is why this survives the approach
+  that solved `walk`.'''
+
+[task.standard]
+task_statement = "walk the robot along the maze's corridors from checkpoint to checkpoint, in order, turning at each corner, without hitting the walls. Each checkpoint is a small ball about 1 m up; from the first step on, the next one to reach is red and those already reached are green. The robot starts on the first checkpoint, so that ball is green from the first step, and every reset starts there again."
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the maze, not where the checkpoints are"
+tier = "no root pose, no checkpoint positions"
+camera_note = "the head cameras see the corridor ahead. `room_camera` looks straight down on the whole maze (`RCB_ROOM_CAMERA_POSE` in the compose file): every corridor and the robot are in frame."
+room_camera_pose = "3,3,0,15,0,-89"
+room_camera_comment = "room_camera straight above the maze: every corridor and the robot are in frame"
+
+# =====================================================================================================
+# C5 · whole-body power and momentum
+# =====================================================================================================
+[[task]]
+family = "highbar_simple"
+role = "scored"
+robot = "h1"
+env_id = "h1-highbar_simple-v0"
+paper_category = "manip"
+capability_class = "C5 · whole-body power and momentum"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "an unknown fraction"
+evidence = "neither upstream's curves (which cover only highbar_hard) nor FastTD3 (h1hand only) report this family"
+oracle_evidence = "none known: no run has passed it, and no published RL result covers it (neither upstream's curves (which cover only highbar_hard) nor FastTD3 (h1hand only) report this family)"
+one_liner = "swings the Unitree H1 up on a high bar"
+task_statement = '''the robot starts hanging from a high bar. Swing up: get inverted and drive the feet
+as high as you can.'''
+scene_note = "the bar, the grip and the robot's initial hanging pose never change between resets."
+scoring_note = '''Three multiplied requirements: how far the torso is towards *inverted*, how high the
+feet are, and low actuator force. Read the first one carefully — it rewards being upside down, so hanging
+the right way up scores nothing at all no matter how steady it is. The feet-height term saturates only
+when the feet are well above the bar. On
+this robot the forearms are fixed to the bar, so it cannot fall off.'''
+ends_note = "The episode still ends if the head drops too low, which an inverted hang under the bar can do."
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = ""
+difficulty = '''- **Energy injection, not stabilisation and not a gait.** Reaching an inverted pose from a hang takes
+  pumping: small oscillations amplified by applying torque at the right phase. The code an agent has to
+  write is a timed, large-amplitude joint trajectory — structurally unlike the feedback controllers of
+  C3 or the contact schedules of C1/C2.
+- **Hanging quietly scores zero.** Because the uprightness term is negated, the do-nothing basin is not
+  a local optimum worth defending — it is exactly 0 (measured: 0.08/750 over a full 1000 steps), so
+  there is no partial credit to coast on.
+- **A receding horizon does not contain the answer.** Pumping pays off only after several swing cycles,
+  so a planner optimising the next few dozen steps sees nothing but wasted effort. This is the clearest
+  structural reason the task survives the CEM-MPC approach that solved `walk`.
+- **This is the subset's ceiling, and it is kept on purpose.** A benchmark whose every task is solved
+  saturates the moment models improve. Note the evidence here is the thinnest of the subset: neither upstream's
+  curves (which cover only `highbar_hard`, whose best final return is 12 of 750) nor FastTD3 (h1hand only)
+  report this family, so "very hard" is a reasonable prior but not an established fact.
+- **Cleanest determinism in the subset**: 19 DoF, no objects, and upstream forces the reset noise to
+  zero for this family — see the caveat below.'''
+caveat = '''⚠️ **This family can only ever have one instance.** `HighBarBase.reset_model()` sets the
+environment's `randomness` to 0, so every reset produces the identical pose. There is no `i01`/`i02` to
+generate; that is upstream behaviour, not a defect in the instance.'''
+
+[task.standard]
+ends = "when the robot's head drops too low (an inverted hang under the bar can do that)"
+hidden = "the robot's position or heading in the room"
+tier = "no root pose"
+camera_note = "the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting pose) sees the robot hanging from the bar."
+
+[[task]]
+family = "basketball"
+role = "scored"
+robot = "h1"
+env_id = "h1-basketball-v0"
+paper_category = "manip"
+capability_class = "C5 · whole-body power and momentum"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "44%"
+evidence = "paper 122, FastTD3 529, bar 1200"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 44% of the bar (paper 122, FastTD3 529, bar 1200)"
+one_liner = "catches a thrown ball and puts it through the hoop with the Unitree H1"
+task_statement = '''a ball is thrown at the robot. Catch it, then throw it through the hoop.'''
+scene_note = '''the ball's incoming trajectory and the robot's initial pose never change between resets.
+The ball's state is part of the observation.'''
+scoring_note = '''Scoring runs in two stages and switches by itself the first time the robot contacts the
+ball. Before that it rewards standing steadily and getting both hands to the ball; after it, the dominant
+term is how close the ball is to the hoop. Sinking it pays a one-off bonus that covers most of the bar
+but not all of it, and ends the episode immediately, so the rest has to be earned per step before the
+ball goes in. That bonus is not optional: no amount of good positioning reaches the bar without it.'''
+ends_note = "The episode also ends if the ball drops low or the robot falls."
+obs_layout = "qpos(33) + qvel(31), robot + ball state"
+task_notes = '''Which stage the scoring is in — reaching for the ball, or putting it through the hoop —
+is part of the task's internal state, frozen into this instance before the catch. Only the scoring code
+advances it (on first contact with the ball), so in this container it stays in the first stage; the
+grader's replay advances it.
+'''
+difficulty = '''- **All-or-nothing.** The +1000 for sinking the ball is most of the 1200 bar; per-step reward caps
+  near 1 over 500 steps. An agent either scores the basket or lands
+  near zero, with no gradient in between beyond ball-to-hoop distance.
+- **A moving target with a deadline.** The ball arrives at 7.5 m/s. There is no "approach carefully"
+  phase — the catch either happens in the right handful of steps or the episode is over (holding the
+  start pose terminates at step 26).
+- **Two qualitatively different motions in one episode**: a reactive catch, then a ballistic throw with
+  the release timing that gets a parabola through a hoop. The stage switch means the objective the agent
+  is optimising changes underneath it partway through.
+- **Its own state machine.** Along with `cabinet`, `truck` and `bookshelf_simple` this is a task where
+  part of the environment's behaviour is a pointer that advances — frozen into the instance, restored on
+  every reset (`Session._restore_extra`).'''
+
+[task.standard]
+ends = "when the ball goes through the hoop, when the ball drops low, when the robot falls"
+hidden = "where the robot is in the room, not where the ball or the hoop is"
+tier = "no root pose, no ball state"
+camera_note = "the head cameras see the hoop ahead. `room_camera` (the recording camera frozen at its starting pose) sees the robot, the incoming ball and the hoop."
+
+[[task]]
+family = "powerlift"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-powerlift-v0"
+paper_category = "manip"
+capability_class = "C5 · whole-body power and momentum"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "41%"
+evidence = "paper 286, FastTD3 325, bar 800"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800)"
+one_liner = "lifts a dumbbell overhead with the Unitree H1"
+task_statement = '''lift the dumbbell from the floor to overhead — close to two metres up — and hold it
+there.'''
+scene_note = "the dumbbell, its weight and the robot's initial pose never change between resets."
+scoring_note = '''A weighted sum of two things: a small share for standing steadily, and the bulk for how
+high the dumbbell is, measured against a target band around two metres. Be warned that the height term is
+broad. Clearing the bar
+means lifting it high and keeping it there for most of the episode, not improving the height a little.'''
+ends_note = "The episode ends early if the pelvis drops near the ground."
+obs_layout = "qpos(83) + qvel(81), robot + dumbbell state"
+task_notes = ""
+difficulty = '''- **🚩 Kept although RL does poorly on it.** Upstream shapes the lift with
+  `tolerance(height, bounds=(1.9, 2.1), margin=2)`, a broad Gaussian: the dumbbell on the floor already
+  scores ~0.19 of the term, and at 1.5 m ~0.91. FastTD3 reaches 41% — **less than holding the starting
+  pose would score if the robot stayed standing** (about 0.35 a step). The hypothesis behind keeping it is
+  that an agent *told the goal in words* is not held back the way RL is.
+- **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
+  a mass against gravity through a long range of motion — the dumbbell weighs about 104 kg, twice the
+  robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
+  episode ends at step 378, when the pelvis sinks below the 0.2 m termination height.
+- **61 actuators**, because the dumbbell needs hands to grip.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not the dumbbell's pose"
+tier = "no root pose, no dumbbell pose"
+camera_note = "the head cameras see floor and horizon only; the dumbbell at the feet is out of their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot and the dumbbell."
+
+# =====================================================================================================
+# C6 · standing bimanual manipulation
+# =====================================================================================================
+[[task]]
+family = "push"
+role = "scored"
+robot = "h1"
+env_id = "h1-push-v0"
+paper_category = "manip"
+capability_class = "C6 · standing bimanual manipulation"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "110%"
+evidence = "FastTD3 770, bar 700; the paper's often-quoted 37 is a PPO curve upstream's logs reuse across 17 tasks"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, kept in tasks/humanoidbench-manip-push-i00/results/codex-gpt6_luna-medium/; 997.80 before it, in its prev_harbor_agents/), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
+one_liner = "pushes a box to a target with the Unitree H1"
+task_statement = "push the box on the table to the target position marked in the observation."
+scene_note = '''the box's starting position, the target position and the robot's initial pose never change
+between resets. The target is part of the observation — read it from `s.obs()`.'''
+scoring_note = '''Every step here is *negative*: it costs the box's distance to the target, plus a smaller
+charge for the left hand's distance to the box. The only positive term is a one-off bonus, paid when the
+box lands within a few centimetres of the target — and that
+also ends the episode. So the bar is not reached by scoring well for a long time; it is reached by
+finishing, and finishing *early*, because every extra step subtracts.'''
+obs_layout = "qpos(26) + qvel(25) + left-hand xyz(3) + target xyz(3) + box xyz(3) + box velocity(3)"
+task_notes = '''The target position is drawn at random and *frozen into this instance*: it is the same in
+your container and in the verifier's.
+'''
+difficulty = '''- **All-or-nothing reward with an actively hostile shape.** An all-zero trajectory scores −253.7,
+  holding the start pose −216.8, and the published random-policy baseline is −527. There is no way to
+  drift upwards: until the box is within 5 cm of the target the return only falls, so an agent must
+  commit to a full solution rather than climb a gradient.
+- **Manipulation on 19 DoF.** This is the only tabletop manipulation task in HumanoidBench that runs
+  without dexterous hands — the robot pushes with its forearm. It pairs with `window` (61 DoF, same
+  capability class) to separate "can it manipulate" from "can it manipulate with 61 actuators".
+- **Hidden task state, now frozen.** Upstream draws the target from the *global* `np.random`, which
+  `reset(seed=)` does not control, so the same seed gives a different target in every process. This
+  instance freezes it; without that the agent and the verifier would be solving different problems.'''
+instance_note = "the box starts 0.257 m from the target in this instance"
+
+[task.standard]
+task_statement = "push the box on the table to the target position, marked in the scene by a small red cube."
+ends = "when the box reaches the target"
+hidden = "where the robot is in the room, not where the hand or the box is, not the target's coordinates"
+tier = "no root pose, no hand, box or target position"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the table from its far side, facing the robot (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the table, the box, the robot and the target, marked by a small red cube: upstream's `Push.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+room_camera_pose = "0.55,0.1,1.0,3,180,-45"
+room_camera_comment = "room_camera across the table, facing the robot: the box and the target on the tabletop, the robot behind them"
+
+[[task]]
+family = "window"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-window-v0"
+paper_category = "manip"
+capability_class = "C6 · standing bimanual manipulation"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "94%"
+evidence = "paper 227, FastTD3 613, bar 650"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 94% of the bar (paper 227, FastTD3 613, bar 650)"
+one_liner = "wipes a window with a tool held by the Unitree H1"
+task_statement = "grasp the wiping tool — it starts in the air just in front of the hands and falls within the first second unless it is held — and wipe the window with it, moving steadily up and down."
+scene_note = "the window, the tool and the robot's initial pose never change between resets."
+scoring_note = '''A large share of each step is paid only while the tool is in contact with the glass —
+while it is not, that share is zero, so the bar cannot be reached without contact. The rest pays for
+moving the tool vertically at a target speed on the order of half a metre per second, for keeping both
+hands near the tool, and for standing with the head about 40 cm from where it started.'''
+ends_note = "The episode ends immediately if the pelvis drops or the tool falls, i.e. if it is dropped."
+obs_layout = "qpos(87) + qvel(84), robot + tool state (the tool's free joint and its wiper's ball joint)"
+task_notes = ""
+difficulty = '''- **Tool use with sustained contact.** With `spoon`, one of the two tool-use tasks in the subset, and
+  the one scored on the tool's contact with a surface. The tool is not the goal, it is the means: the
+  robot has to grasp it, then control the *tool's* contact with a surface while moving. Losing the grip
+  ends the episode.
+- **61 actuators.** Two Shadow hands take the action from 19 numbers to 61 — the same capability class
+  as `push` at triple the search dimension, which is exactly why both are kept.
+- **A zero-valued contact gate.** Wiping without touching the glass scores nothing for the contact half
+  of the reward.
+- **An all-zero trajectory terminates at step 17**, tied with `cube` for the fastest failure in the
+  subset: the tool is dropped almost immediately.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops too low), when the tool drops"
+hidden = "where the robot is in the room, not the tool's pose"
+tier = "no root pose, no tool pose"
+camera_note = "the head cameras see the window. `room_camera` (the recording camera frozen at its starting pose) sees the window, the wiping tool and the robot."
+
+[[task]]
+family = "spoon"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-spoon-v0"
+paper_category = "manip"
+capability_class = "C6 · standing bimanual manipulation"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "57%"
+evidence = "paper 322, FastTD3 369, bar 650"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 57% of the bar (paper 322, FastTD3 369, bar 650)"
+# The one task allowed past the 40% give-away limit `gen_tasks.py verify` enforces. Holding the start pose
+# pays for standing and for a hand near the handle; the spoon starts on the table beside the cup. The
+# exemption was granted on the argument that the remaining gap is periodic tracking, but a spoon held still
+# in the cup clears the bar (see `difficulty`), so it needs revisiting. Raise this only with a measurement,
+# never to make a task fit.
+hold_threshold = 0.60
+one_liner = "stirs a cup with a spoon held by the Unitree H1"
+task_statement = '''take hold of the spoon, put it in the cup and stir: move its head around a small
+circle, continuously, for the rest of the episode.'''
+scene_note = "the cup, the spoon and the robot's initial pose never change between resets."
+scoring_note = '''A weighted sum of four things: standing steadily, getting a hand to the spoon's handle,
+keeping the spoon's head inside the cup, and — the largest single term — keeping that head close to a
+target point that **travels around a small circle at a fixed rate, completing a revolution every 40
+steps** (centred in the cup just above its floor, counter-clockwise seen from above, starting on the
+side away from the robot). The spoon starts on the table beside the cup, so the last two terms pay
+nothing until it is in the cup.'''
+ends_note = "The episode ends if the pelvis drops too low."
+obs_layout = "qpos(83) + qvel(81) + the stirring target point xyz(3) -- it moves, read it every step"
+task_notes = '''**The target point is in your observation** (the last three numbers) and it moves every
+step, so you do not have to reconstruct the circle — read it and track it. Its phase is part of the
+task's internal state and starts from the same point on every reset.
+'''
+difficulty = '''- **Periodic end-effector tracking — the only instance of it in the subset.** `walk` needs a limit
+  cycle in the legs against ground contact; this needs one in the hands against a clock, with the phase
+  fixed by the environment rather than chosen by the agent. 40 steps per revolution at 50 Hz is 1.25
+  revolutions a second.
+- **🚩 The published best is *below* the give-away floor.** FastTD3 reaches 369/650; holding the starting
+  pose scores 375.45 — standing and a hand near the handle pay for it, although the spoon starts on the
+  table beside the cup. That is the sharpest illustration in the subset of why completion
+  rate alone is the wrong selection criterion.
+- **⚠️ The highest give-away in the scored subset: 57.8% of the bar.** It was kept on the argument that
+  the remaining 42% is periodic tracking, but by the formula it is not: the circling term's tolerance
+  (0.15 m) is wider than the circle's radius (0.06 m), so a spoon held still at the centre of the cup
+  scores about 0.84 a step against the 0.65 the bar needs. What remains is getting the spoon into the
+  cup, which makes this the first task to reconsider. The `verify` threshold carries an explicit
+  exemption for it, so this is recorded in code and not just in prose.
+- **61 actuators**, and the grip has to survive a sustained oscillation.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops too low)"
+hidden = "where the robot is in the room, not the spoon's pose, not the moving target point"
+tier = "no root pose, no spoon pose, no target point"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the cup, the spoon and both hands; the robot below its chest is out of frame. The stirring target point is not drawn: it would sit inside the cup."
+room_camera_pose = "0.75,0.05,0.9,1.3,-135,-45"
+room_camera_comment = "room_camera close over the tabletop: the cup, the spoon and both hands"
+
+# =====================================================================================================
+# C7 · in-hand precision
+# =====================================================================================================
+[[task]]
+family = "insert_normal"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-insert_normal-v0"
+paper_category = "manip"
+capability_class = "C7 · in-hand precision"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "55%"
+evidence = "paper 188, FastTD3 192, bar 350"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 55% of the bar (paper 188, FastTD3 192, bar 350)"
+one_liner = "fits a bar's two ends into two small sockets with the Unitree H1's hands"
+task_statement = '''a bar and two small open sockets lie on the table in front of the robot. Fit each
+end of the bar into the socket of the matching colour, then lift the assembly to about 1.1 m and hold it
+there, without dropping anything.'''
+scene_note = "the bar, the two sockets and the robot's initial pose never change between resets."
+scoring_note = '''The step is a product of two groups: one covering posture and how close each end of
+the bar is to its socket, the other covering how high the sockets are and whether a hand is at a socket
+(the left hand at the dark one, or the right hand at the light one). Because the groups multiply, doing
+one of them well is worth little while the other is near zero — both have to come along together.'''
+ends_note = '''The episode ends the moment the bar or either socket drops below a height, which a dropped
+part does immediately, or the pelvis does.'''
+obs_layout = "qpos(97) + qvel(93), robot + bar + both sockets state"
+task_notes = ""
+difficulty = '''- **Millimetre clearance.** Each socket's opening is 4 cm across and the bar is 3.6 cm thick, so an end
+  has 2 mm to spare on each side.
+- **Two sockets scored together.** Both are scored at the target height.
+- **⚠️ By the formula no insertion is needed.** Holding both sockets at 1.1 m directly above the bar's
+  ends (about 14 cm away), with the bar left on the table, scores about 0.83 a step against the 0.7 the
+  bar needs, because the ends-to-sockets term is a broad linear tolerance.
+- **The product structure scales partial solutions.** Progress on either group is multiplied by the
+  other, so fitting the bar with the sockets left low, or lifting the sockets without the bar in them,
+  earns only part of a step.
+- **Cleanest engineering of the 61-DoF tasks**: all of its state lives in `(qpos, qvel)`, so the frozen
+  instance needs no special handling.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops too low), when the bar or either socket drops"
+hidden = "where the robot is in the room, not the poses of the bar and the sockets"
+tier = "no root pose, no bar or socket poses"
+camera_note = "the head cameras look over the table and see floor and horizon only. `room_camera` looks down on the tabletop close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bar, both sockets and both hands; the robot below its chest is out of frame."
+room_camera_pose = "0.71,0.01,0.96,1.3,-129,-45"
+room_camera_comment = "room_camera close over the tabletop: the bar, both sockets and both hands"
+
+[[task]]
+family = "cube"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-cube-v0"
+paper_category = "manip"
+capability_class = "C7 · in-hand precision"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "60%"
+evidence = "paper 135, FastTD3 221, bar 370"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 60% of the bar (paper 135, FastTD3 221, bar 370)"
+one_liner = "reorients two cubes in the Unitree H1's hands"
+task_statement = '''a cube starts just above and in front of each palm. Rotate both cubes to the goal
+orientation without dropping them.'''
+scene_note = '''the cubes' starting orientations, the goal orientation and the robot's initial pose never
+change between resets.'''
+scoring_note = '''A weighted sum: the largest term is how closely each cube's orientation matches the
+goal, averaged over the two hands; then how close each hand is to its cube; then a small share for
+standing steadily without moving. The orientation term is sharp — it falls away quickly as the
+orientation drifts, so approximate alignment earns much less than it looks like it should — and it
+compares orientations as quaternions, sign included: of the two ways to turn a cube onto the goal, only
+one scores, because the other ends at the same orientation with the opposite sign, which counts as far
+off.'''
+ends_note = "The episode ends the moment either cube drops below a height, or the pelvis does."
+obs_layout = "qpos(90) + qvel(87) + the goal orientation as a quaternion(4)"
+task_notes = '''The goal orientation is not in `(qpos, qvel)` — upstream writes it into the MuJoCo model
+(`body_quat`), drawn from the global `np.random` at reset. It is frozen into this instance, so it is the
+same in your container and the verifier's, and it does not move between resets.
+'''
+difficulty = '''- **The only true in-hand reorientation in the benchmark.** Both hands work at once, and the object
+  has to be rotated *within* the grasp — fingers must release and re-grip without letting the cube fall,
+  which is a qualitatively different skill from `insert_normal`'s rigid-grip transport.
+- **A sharp objective with a cliff on both sides.** The orientation term decays fast, and dropping a
+  cube ends the episode; holding the start pose lasts only 84 steps.
+- **Goal state outside `(qpos, qvel)`.** Upstream puts the target orientation in `model.body_quat[-1]`,
+  drawn from the global `np.random` that `reset(seed=)` does not reach. The instance snapshot covers
+  `body_quat` for exactly this task; without it, agent and verifier would
+  be rotating towards different targets.
+- **One instance only**: `env.py` forces `randomness = 0` for this family, as it does for
+  `bookshelf_*` and `kitchen`.'''
+
+[task.standard]
+task_statement = "a cube starts just above and in front of each palm. Rotate both cubes, without dropping them, to the goal orientation: that of the translucent cube with the same faces floating above and between the hands."
+ends = "when the robot falls (its pelvis drops too low), when either cube drops"
+hidden = "where the robot is in the room, not the cubes' orientations, not the goal orientation"
+tier = "no root pose, no cube poses, no goal orientation"
+camera_note = "the head cameras see the cube above one palm. `room_camera` looks at the hands close up (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them, the goal orientation (upstream's `target_cube`); the legs are out of frame."
+room_camera_pose = "0.47,0,1.25,0.9,-129,-25"
+room_camera_comment = "room_camera close on the hands: both cubes and the floating goal orientation"
+image_hw = 512
+image_hw_comment = "every camera at 512×512, not upstream's 256: at 256 a cube in room_camera is 15-35 px across"
+
+# =====================================================================================================
+# C8 · mobile manipulation
+# =====================================================================================================
+[[task]]
+family = "reach"
+role = "scored"
+robot = "h1"
+env_id = "h1-reach-v0"
+paper_category = "loco"
+capability_class = "C8 · mobile manipulation"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "69%"
+evidence = "paper 8280, FastTD3 8147, bar 12000"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), kept in tasks/humanoidbench-loco-reach-i00/results/codex-gpt6_luna-medium/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"
+one_liner = "brings the Unitree H1's left hand to a target point and holds it there"
+task_statement = '''bring the robot's left hand to the target point and keep it there for as much of the
+episode as possible.'''
+scene_note = '''the target point and the robot's initial pose never change between resets. The target is
+part of the observation — read it from `s.obs()`.'''
+scoring_note = '''There are two tiers, both paid *per step* rather than once
+on arrival: a moderate amount while the hand is within about a metre of the target, and a considerably
+larger amount on top while it is within a few centimetres. Staying upright is paid every step as well,
+and fast joint motion costs a little.
+Reaching the loose tier and holding it for the whole episode falls short of the bar — a meaningful
+fraction of the episode has to be spent inside the tight one.'''
+obs_layout = "qpos(26) + qvel(25) + left-hand xyz(3) + target xyz(3)"
+task_notes = '''The target position is drawn at random and *frozen into this instance*: it is the same in
+your container and in the verifier's.
+'''
+difficulty = '''- **Two regimes in one reward, and only the second clears the bar.** Getting within 1 m is worth 5 a
+  step and is reachable by leaning; the last 5 cm is worth 10 more and needs precise, *held* placement.
+  An agent that stops at the easy plateau lands around 10000 against a bar of 12000 and fails.
+- **Holding is the hard part.** The bonus is paid per step inside the tolerance, not once on arrival, so
+  the deliverable is a posture that stays put for hundreds of steps, not a reaching motion.
+- **19 DoF makes this the cheap probe for its class**; the rest of C8 costs a walk across the room.
+- **Upstream shipped trained policies for exactly this task** (`data/reach_*`, the hierarchical
+  baseline's low level). They are deleted from the base image by
+  `images/humanoidbench/scrub_oracles.py`; without that they would be a ready-made submission.'''
+caveat = '''⚠️ **Instances of this family are not interchangeable.** The target is drawn uniformly from a
+±2 m box, so one seed can put it at the robot's feet and another 2.8 m away — a different task, not a
+different sample of the same task. In this instance it sits **0.704 m from the left hand's starting
+position** (0.88 m from the origin in the horizontal plane), i.e. reachable by leaning and a step rather
+than by crossing the room. Any `i01`/`i02` must be filtered to a comparable distance band and the band
+recorded here.'''
+instance_note = "the target sits 0.704 m from the left hand at the frozen pose"
+
+[task.standard]
+task_statement = "bring the robot's left hand to the target point, marked in the scene by a small red cube, and keep it there for as much of the episode as possible."
+hidden = "where the robot is in the room, not where its hand is, not the target's coordinates"
+tier = "no root pose, no hand or target position"
+camera_note = "the head cameras see floor and horizon only. `room_camera` stands in front of the robot, facing it (`RCB_ROOM_CAMERA_POSE` in the compose file), and sees the robot and the target point, marked by a small red cube: upstream's `Reach.render()` draws that marker, and the sidecar runs it for every camera (render only; physics and replay are untouched)."
+room_camera_pose = "0.15,0.35,1.0,2.8,180,-12"
+room_camera_comment = "room_camera in front of the robot, facing it: the target cube is beside its left arm"
+
+[[task]]
+family = "sit_hard"
+role = "scored"
+robot = "h1"
+env_id = "h1-sit_hard-v0"
+paper_category = "loco"
+capability_class = "C8 · mobile manipulation"
+status = "verified"
+expert_hours = 3.0
+completion_rate = "108%"
+evidence = "paper TD-MPC2 811, FastTD3 726, bar 750"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory (946.31 / 750), kept in tasks/humanoidbench-loco-sit-hard-i00/results/codex-gpt6_luna-medium/, and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0) and Claude Opus 5.5 (750.22), kept in the standard twin's results/; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client"
+one_liner = "walks the Unitree H1 to the chair and sits it down"
+task_statement = '''the robot starts a short walk in front of the chair, its heading turned by a random angle
+of up to about 100° from facing straight away from it. Get to the chair, sit down on it, and stay seated
+upright and still.'''
+scene_note = '''the chair, and the robot's starting position and heading, never change between resets.
+Read them out of `s.obs()`.'''
+scoring_note = '''A product: the average of two seat terms — how close the pelvis is to the height it has
+when seated, and whether the robot is over the seat rather than beside it — multiplied by staying
+upright, a seated posture (the head's height above the torso), not moving, and low actuator force. Every
+step spent not yet sitting forfeits the reward that step could have paid, so sitting *early* matters as
+much as sitting well.'''
+ends_note = '''The episode ends early if the pelvis drops below about half its standing height — not far
+below its height when seated.'''
+obs_layout = "qpos(33) + qvel(31), robot + chair state"
+task_notes = '''The robot's starting position and heading are drawn at random and frozen into this
+instance (they are part of `qpos`), so they are the same in your container and the verifier's.
+'''
+difficulty = '''- **🚩 The task where completion rate lies hardest.** Published RL reaches 108% of the bar, which reads
+  as "solved" — but holding the starting pose collapses at step 130 for 1.7% of the bar. Nothing is
+  given away here; the 108% says a solution exists, not that it is easy. Selecting on completion rate
+  alone would have cut this task.
+- **Locomotion and a terminal posture in one episode, with a turn first.** The start heading is drawn
+  from ±1.8 rad (up to ±103°), so the robot has to stabilise, turn, walk to the chair and then *stop
+  being a walker* and become a static pose. That transition — handing off from a limit cycle to a fixed
+  point — appears nowhere else in the subset.
+- **Partial credit with a deadline.** Because reward is paid per step for being seated, arriving late is
+  permanently expensive; the agent cannot amortise a slow approach.
+- **Shares its reward function with the `sit_simple` fixture**, and that is the second demonstration
+  after `balance_*` that the same formula can be two different problems: the fixture gives away 62.4% of
+  its bar, this gives away 1.7%.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated)"
+hidden = "where the robot is in the room, not the chair's pose"
+tier = "no root pose, no chair pose"
+camera_note = "the head cameras see floor and horizon only; the chair is out of their view. `room_camera` (the recording camera frozen at its starting pose) sees the robot and the chair."
+
+[[task]]
+family = "package"
+role = "scored"
+robot = "h1"
+env_id = "h1-package-v0"
+paper_category = "manip"
+capability_class = "C8 · mobile manipulation"
+status = "verified"
+expert_hours = 5.0
+completion_rate = "negative"
+evidence = "paper -6912, FastTD3 -7487, bar 1500"
+oracle_evidence = "none known: no run has passed it, and published RL stays below zero (paper -6912, FastTD3 -7487, bar 1500)"
+one_liner = "carries a package across the room to its destination with the Unitree H1"
+task_statement = '''walk to the package, pick it up, carry it to the destination marker and set it
+down there, standing upright.'''
+scene_note = '''the package's starting position, the destination and the robot's initial pose never
+change between resets. Both positions are part of the observation.'''
+scoring_note = '''Every step charges you for the distance from the package to its destination — the
+largest term by far — and a little for the distance from each hand to the package; against that you earn
+a share for standing steadily and a share for how high the package is off the ground. So the return is
+strongly negative while the package sits on the floor away from its destination, and improves as you
+close the distance with it lifted. Landing the package on the destination pays a one-off bonus and ends
+the episode, but the bonus alone is short of the bar: the rest has to come from the per-step terms before
+the landing, and those only turn positive once the package is close to the destination.'''
+obs_layout = "qpos(26) + qvel(25) + destination xyz(3) + package pose(7) + package velocity(6) + left-hand xyz(3) + right-hand xyz(3)"
+task_notes = '''The destination is not in `(qpos, qvel)` — upstream writes it into the MuJoCo model
+(`body_pos`), drawn at random. It is frozen into this instance, so it is the same in your container and
+the verifier's.
+'''
+difficulty = '''- **The hardest task in HumanoidBench by published result**: −7487 against a bar of 1500. Both
+  baselines are deeply negative, which is what a dense penalty does to a policy that cannot complete
+  the task at all.
+- **Doing nothing is expensive, not neutral.** An all-zero trajectory scores −2192 and holding the start
+  pose −2053: the distance penalty accrues every step whatever you do. This is the strongest
+  "blank paper is punished" signal in the subset, and it is the reason the task cannot be gamed by
+  submitting a safe do-nothing trajectory.
+- **Three skills in strict sequence**: walk to the package, lift it (which changes the robot's own
+  dynamics), carry it while balancing the load, place it. Failing any one caps the episode at the
+  previous stage's plateau.
+- **Goal state outside `(qpos, qvel)`.** `model.body_pos[-1]` holds the destination, drawn from the
+  global `np.random`; the instance snapshot covers it.'''
+caveat = '''⚠️ **Instances of this family are not interchangeable.** The package and the destination are
+each drawn uniformly from a ±2 m box, so the distance between them can be 0.2 m or 5.6 m. Any `i01`/`i02`
+must be filtered to a comparable distance band (2.0-3.0 m suggested) and the band recorded here.'''
+
+[task.standard]
+task_statement = "walk to the package, pick it up, carry it to the destination, marked in the scene by a translucent cyan ball, and set it down there, standing upright."
+ends = "when the package reaches the destination"
+hidden = "where the robot is in the room, not where the package or the destination is"
+tier = "no root pose, no package or destination position"
+camera_note = "the head cameras see floor and horizon only. `room_camera` stands straight in front of the robot, facing it, and looks down on it (`RCB_ROOM_CAMERA_POSE` in the compose file): the robot, the package and the destination (the cyan ball, part of the upstream scene) are all in frame."
+room_camera_pose = "0.1,0.35,0.6,3.0,180,-60"
+room_camera_comment = "room_camera straight in front of the robot, looking down on it: the robot, the package and the cyan destination"
+
+[[task]]
+family = "room"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-room-v0"
+paper_category = "manip"
+capability_class = "C8 · mobile manipulation"
+status = "verified"
+expert_hours = 5.0
+completion_rate = "44%"
+evidence = "paper 128, FastTD3 177, bar 400"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 44% of the bar (paper 128, FastTD3 177, bar 400)"
+one_liner = "tidies six objects scattered around a room with the Unitree H1"
+task_statement = '''six loose objects — a chair, a trophy, a pair of headphones, two packages and a snow
+globe — are scattered around the room (the table and the bookshelf are fixed). Tidy up: gather them
+together, so they end up close to one another rather than spread out.'''
+scene_note = "the objects' starting positions and the robot's initial pose never change between resets."
+scoring_note = '''Unusually, this task gives you no target positions at all. The dominant term measures
+how *spread out* the six objects are — the variance of their horizontal coordinates — and rewards making
+that small; a smaller term pays for standing steadily. Any arrangement that brings the objects close
+together scores, wherever in the room you do it.'''
+ends_note = "The episode ends if the pelvis drops near the ground."
+obs_layout = "qpos(118) + qvel(111), robot + all six objects"
+task_notes = ""
+difficulty = '''- **The only task in the benchmark whose objective is a statistic, not a pose.** Upstream scores
+  `tolerance(max(variance of the objects' x and y), margin=3)` — there is no destination to reach and no
+  per-object goal. The agent has to invent the placement, which is a planning problem the other 22 tasks
+  never pose. (This is also why the old "= `package` six times over" reading was wrong: `Room` is an
+  independent `Task` with an independent reward.)
+- **Six objects, 42 DoF of task state** — the widest scene in the subset — on top of 61 actuators.
+  Every object moved is a chance to knock another one away.
+- **Mobile manipulation without a script.** The robot must walk to each object, pick or push it, and
+  return; the order is the agent's to choose, and a bad order costs the whole episode.
+- **Holding the start pose lasts 123 steps** and earns 5% of the bar, so nothing is given away.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops near the ground)"
+hidden = "where the robot is in the room, not where the objects are"
+tier = "no root pose, no object positions"
+camera_note = "the head cameras see a bookshelf and a table. `room_camera` looks down on the whole room (`RCB_ROOM_CAMERA_POSE` in the compose file): all six objects and the robot are in frame."
+room_camera_pose = "0.3,0,0,11,0,-70"
+room_camera_comment = "room_camera above the room: all six objects and the robot are in frame"
+
+# =====================================================================================================
+# C9 · long-horizon multi-subtask
+# =====================================================================================================
+[[task]]
+family = "cabinet"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-cabinet-v0"
+paper_category = "manip"
+capability_class = "C9 · long-horizon multi-subtask"
+status = "verified"
+expert_hours = 4.0
+completion_rate = "9.7%"
+evidence = "paper 242, FastTD3 188, bar 2500"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 9.7% of the bar (paper 242, FastTD3 188, bar 2500)"
+one_liner = "opens a cabinet's four compartments in sequence with the Unitree H1"
+task_statement = '''open the cabinet's compartments in order: slide open the sliding door, then pull out
+the drawer, then open one of the double doors and lift the cube from the drawer into that compartment, then open
+the flip-up door and lift the cube that started behind the double doors (not the one you put there) up
+into it.'''
+scene_note = "the cabinet, the cubes and the robot's initial pose never change between resets."
+scoring_note = '''Only the compartment you are currently on is scored. Each step pays a small share for
+standing steadily and the bulk for progress on that one compartment; completing it pays a one-off bonus
+and moves the scoring on to the next. Those bonuses grow with how many you have finished, and together
+they are a large fraction of the bar — so stalling on the first compartment caps the episode well short
+of it, however cleanly that compartment is opened.'''
+ends_note = "The episode ends once the last compartment is done."
+obs_layout = "qpos(109) + qvel(104), robot + cabinet + four cubes state"
+task_notes = '''Which compartment is currently being scored is part of the task's internal state, frozen
+into this instance at the first one. Only the scoring code advances it, so in this container it stays on
+the first compartment and `done` does not fire after the last; the grader's replay advances it.
+'''
+difficulty = '''- **A state machine, not a controller.** The code that solves this maintains a pointer over subtasks
+  and switches strategy when one completes — a different shape of program from every other class in the
+  subset, which is the reason C9 exists as its own class.
+- **Staircase returns.** Because only the active subtask is scored, the return is cut into four plateaus
+  and no amount of polish on the first one reaches the bar. 1000 of the 2500 is the four bonuses alone.
+- **Four distinct manipulation motions on 61 actuators**, with the hardest one (opening double doors and
+  placing a cube inside) third in the chain, so it is only reached after two successes.
+- **The current state of the art reaches 9.7% of the bar** — with `highbar_simple` and `kitchen` this is
+  the subset's deliberate ceiling.
+- **⚠️ At cb11890 the bar cannot be reached.** Every stage's step pays at most 1 and the four stage bonuses
+  total 1000, so a 1000-step episode returns at most about 2000 of the 2500. The `lambda: 1000` fifth
+  stage is never scored, because `get_terminated()` ends the episode on the step the fourth stage
+  completes. No trajectory can pass this task as it is scored now.'''
+
+[task.standard]
+ends = "when the last compartment is done"
+hidden = "where the robot is in the room, not the cabinet's or the cubes' state"
+tier = "no root pose, no cabinet or cube state"
+camera_note = "the head cameras see the top of the cabinet close up. `room_camera` (the recording camera frozen at its starting pose) sees the cabinet and the robot."
+
+[[task]]
+family = "truck"
+role = "scored"
+robot = "h1"
+env_id = "h1-truck-v0"
+paper_category = "manip"
+capability_class = "C9 · long-horizon multi-subtask"
+status = "verified"
+expert_hours = 5.0
+completion_rate = "56%"
+evidence = "paper 1363, FastTD3 1686, bar 3000"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 56% of the bar (paper 1363, FastTD3 1686, bar 3000)"
+one_liner = "unloads packages from a truck onto a table with the Unitree H1"
+task_statement = '''unload the five loose packages from the truck (the wall of boxes behind them is
+fixed) and put them on the table — all of them.'''
+scene_note = "the truck, the packages, the table and the robot's initial pose never change between resets."
+scoring_note = '''Each step is your uprightness multiplied by a base amount plus three progress terms:
+how close the robot is to a package still on the truck, how close it is to a package it has picked up,
+and how close a picked-up package is to the table. On top of that, lifting a package off the truck and
+placing one on the table each pay a one-off bonus (taken back if a package comes off the table again),
+and delivering the last package pays a larger one and ends the episode. Uprightness is a *factor*, so
+lying down costs a large part of every step. The one-off bonuses are most of the bar but not all of it,
+so the rest has to come from the per-step terms before the last delivery.'''
+obs_layout = "qpos(61) + qvel(55), robot + packages state"
+task_notes = '''Which packages are still on the truck, carried, or delivered is part of the task's
+internal state, frozen into this instance at the start. Only the scoring code advances it, so in this
+container those lists never change and `done` does not fire when the last package lands on the table;
+the grader's replay does both.
+'''
+difficulty = '''- **🔑 The only long-horizon task in the subset that runs on the 19-DoF `h1`.** Before it, C9 was
+  `cabinet` alone at 61 actuators, which made the whole class expensive to attempt. This is the cheap
+  entry point to state-machine tasks, and that is the single biggest reason it was added.
+- **A high bar (3000) and a wide per-step range**, because the multiplier structure means a good step
+  is worth several times an ordinary one.
+- **Progress must be *held*, not just achieved.** The progress terms are paid per step, so the return
+  rewards an efficient pipeline — approach, lift, deliver, repeat — rather than one lucky delivery.
+- **18.9% give-away is the third highest in the scored subset** (after `spoon` and `insert_normal`),
+  because a base amount is paid for any step spent upright. It stays well inside the 40% threshold.
+- 📌 Upstream's `info["success"]` for this task is correct (0 until every package is delivered, then 1);
+  an earlier note in our docs claiming it was hard-coded to 0 was wrong. We score `episode_return`
+  regardless.'''
+
+[task.standard]
+ends = "when the last package is on the table"
+hidden = "where the robot is in the room, not where the packages are"
+tier = "no root pose, no package positions"
+camera_note = "the head cameras see the packages stacked in the truck. `room_camera` looks into the truck through its open side (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the truck's bed, its ramp, the table and the robot."
+room_camera_pose = "4.5,-0.6,1.2,9,-25,-22"
+room_camera_comment = "room_camera looking into the truck through its open side: the bed, the ramp, the table and the robot"
+
+[[task]]
+family = "kitchen"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-kitchen-v0"
+paper_category = "manip"
+capability_class = "C9 · long-horizon multi-subtask"
+status = "verified"
+expert_hours = 5.0
+completion_rate = "0%"
+evidence = "paper 0 of 4; FastTD3 never ran this family"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 0% of the bar (paper 0 of 4; FastTD3 never ran this family)"
+one_liner = "completes four kitchen chores in sequence with the Unitree H1"
+task_statement = '''complete the four kitchen tasks, in order: microwave, kettle, bottom burner, light
+switch. Their goal configurations are not part of the observation; they are defined in the task's source
+(`OBS_ELEMENT_GOALS` in `humanoid_bench/envs/kitchen.py`), which is in the image.'''
+scene_note = "the kitchen, the appliances and the robot's initial pose never change between resets."
+scoring_note = '''🚩 **This task has no partial credit whatsoever.** A step scores 1 for each subtask that
+*becomes* complete on it and nothing otherwise — there is no shaping, no distance term, no posture term.
+The bar is 4: all four subtasks, each worth exactly 1, once. Moving an appliance most of the way towards
+its goal configuration scores exactly zero, as does standing perfectly still; the only event that scores
+is a subtask crossing its completion threshold.'''
+obs_layout = "robot qpos(76) + appliance qpos(21) -- positions only, this task publishes no velocities"
+task_notes = '''⚠️ **This task's observation has no velocities** — it is the robot's joint positions plus
+the appliances' joint positions, and nothing else. If you need velocities, finite-difference the positions
+or read `s.low.data.qvel` directly.
+
+Which subtasks remain is part of the task's internal state, frozen into this instance with all four
+outstanding. Only the scoring code removes completed ones, so in this container the list never shrinks;
+the grader's replay removes each one as it completes.
+'''
+difficulty = '''- **🔑 The only task in the benchmark with a genuinely sparse reward.** Every other task, even the
+  all-or-nothing ones like `push` and `basketball`, has *some* continuous term pointing the way. Here the
+  return is an integer in 0..4 and nothing separates "nearly opened the microwave" from "did not move".
+  That makes it the one task where search against the task's own signal is useless — there is no signal
+  until the first success — and the strongest single answer to the concern that dense shaping makes
+  tasks planner-solvable.
+- **Nobody has scored a single point.** The paper reports 0/4 and the current state of the art never ran
+  this family. This is the subset's hardest deliberate ceiling; we expect it to stay at zero for a while
+  and that is the point.
+- **Different scale, same verdict.** `success_bar = 4` counts subtasks rather than summing a dense
+  reward. It does not affect grading — the verifier writes a binary `success` and per-task numbers go to
+  `diagnostics.json` — but do not compare 4 against another task's 700.
+- **One instance only**: `env.py` forces `randomness = 0` for this family.'''
+
+[task.standard]
+task_statement = "complete the four kitchen tasks, in order: open the microwave door, move the kettle from its burner to the one behind it, turn the bottom burner's knob (the lower-left of the four knobs above the stove), and flip the light switch."
+hidden = "where the robot is in the room, not the appliances' joint positions"
+tier = "no root pose, no appliance state"
+camera_note = "the head cameras see the stove, the microwave and the wall cabinets. `room_camera` (the recording camera frozen at its starting pose) sees the kitchen and the robot."
+
+[[task]]
+family = "bookshelf_simple"
+role = "scored"
+robot = "h1hand"
+env_id = "h1hand-bookshelf_simple-v0"
+paper_category = "manip"
+capability_class = "C9 · long-horizon multi-subtask"
+status = "verified"
+expert_hours = 5.0
+completion_rate = "41%"
+evidence = "paper 763, FastTD3 822, bar 2000"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 763, FastTD3 822, bar 2000)"
+one_liner = "puts five objects onto their assigned bookshelf slots with the Unitree H1"
+task_statement = '''put each of the five objects onto its assigned place on the bookshelf, one at a time,
+in order.'''
+scene_note = '''the objects, their assigned destinations and the robot's initial pose never change between
+resets. The five objects in play are tinted red, palest first and darkest last (the other seven are grey),
+and each one's destination is shown from the start as a translucent copy of it in the same colour.'''
+scoring_note = '''Only the object you are currently on is scored: each step pays for standing steadily,
+for a hand being near that object and for its progress towards its assigned slot. Placing it pays a
+one-off bonus that grows with how many you have placed — together the bonuses are most of the bar — and
+moves the scoring on to the next one. So the return is cut into five plateaus and stalling on the first
+caps the episode low.'''
+ends_note = '''The episode ends early if the pelvis drops too low or if the object currently being scored
+goes below about half a metre, and it ends once all five are placed.'''
+obs_layout = "qpos(160) + qvel(147) + the (negative) body index of the object currently being scored(1)"
+task_notes = '''Which object is currently being scored, and which five of the candidate objects are in
+play, are part of the task's internal state, frozen into this instance. Only the scoring code moves on to
+the next object, so in this container the observation's last entry never changes and `done` only ever
+checks the first object (placing all five does not end the episode here); the grader's replay moves on
+as each object is placed.
+'''
+difficulty = '''- **Five subtasks, the longest chain in the subset** (`cabinet` has four, `kitchen` four). Each one is
+  a pick-and-place at shelf height with a different target slot, so the state machine has five distinct
+  strategies rather than a repeated one.
+- **The widest scene state in the benchmark**: 84 DoF of objects (twelve candidates, five in play) on
+  top of 61 actuators.
+- **Dropping the active object ends the episode**, so the chain is fragile in a way `cabinet`'s hinges
+  and drawers are not — there is nothing to catch a mistake.
+- **`bookshelf_hard` is deliberately not in the subset.** It is the same class with `fixed = False`,
+  which permutes the five destinations; its completion rate (36% vs 41%) and its give-away (2.7% vs
+  2.6%) are both within noise of this one, so it would spend a slot on the same problem. The "hidden
+  state" objection to it is gone — the permutation lives in `vars(task)` and `body_pos`, both frozen —
+  so if a second instance of this class is ever wanted, `hard` is ready.
+- **One instance only**: `env.py` forces `randomness = 0` for this family.'''
+
+[task.standard]
+task_statement = "put each of the five red-tinted objects (the other seven are grey) onto its place on the bookshelf, shown as a translucent copy of it in the same colour, one at a time, palest first and darkest last."
+ends = "when the robot falls (its pelvis drops too low), when the object being placed goes below about half a metre, once all five are placed"
+hidden = "where the robot is in the room, not where the objects or their places are"
+tier = "no root pose, no object positions"
+camera_note = "the head cameras see the inside of one shelf. `room_camera` looks at the shelves from behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it and the robot."
+room_camera_pose = "0.85,-0.1,0.9,3.2,35,-20"
+room_camera_comment = "room_camera behind the robot's right shoulder: every shelf, and the places the objects go, in view"
+
+# =====================================================================================================
+# Template / CI fixture — deliberately easy, NOT part of the scored subset
+# =====================================================================================================
+[[task]]
+family = "sit_simple"
+role = "fixture"
+robot = "h1"
+env_id = "h1-sit_simple-v0"
+paper_category = "loco"
+capability_class = "fixture (C3 · quasi-static stabilisation, too easy to score)"
+status = "verified"
+expert_hours = 1.0
+completion_rate = "124%"
+evidence = "paper 861, FastTD3 929, bar 750"
+one_liner = "sits the Unitree H1 on the chair"
+task_statement = "sit the robot down on the chair and keep it seated, upright and still."
+scene_note = "the chair and the robot's initial pose never change between resets."
+scoring_note = '''A product: the average of two seat terms — how close the pelvis is to the height it has
+when seated, and whether the robot is over the seat rather than beside it — multiplied by staying upright,
+a seated posture (the head's height above the torso), not moving, and low actuator force. Every step spent
+not yet sitting forfeits the reward that step could have paid, so both *how fast* and *how steadily* the
+robot sits matter.'''
+ends_note = '''The episode ends early if the pelvis drops below about half its standing height — not far
+below its height when seated.'''
+obs_layout = "qpos(26) + qvel(25), robot state only"
+task_notes = ""
+difficulty = '''- **No pose to snap to.** Reaching the chair late still forfeits the reward of every step spent
+  standing, so the agent has to sit *early* and then stay still — a partial credit landscape, not a
+  goal test.
+- **Doing nothing already gets 85% of the bar.** An all-zero action commands the mid-point of every
+  actuator's range, which slumps the robot back against the chair's backrest with the pelvis just above
+  the seat, and it stays there for the full episode: **637.6 /
+  750**, measured. Holding the *starting* pose instead scores 468.12 (62.4%). That is the single clearest
+  reason this task is a fixture and not a scored task — the gap a solution has to close is small enough
+  that almost anything coherent closes it.
+- **19 coupled DoF under gravity.** The agent has to work out *which* joints put a humanoid on a chair
+  and how to get there without falling — from the raw state vector and the MuJoCo model, with no
+  primitives.
+
+**Measured difficulty** (`mini-swe-agent` + `meta/muse-spark-1.3`, first attempt): **solved, 979.03 /
+750** in 26 steps, 337 s of agent time and $0.36. It did not search — it read the model, picked a seated
+joint target by hand (hip −1.4, knee 1.7, ankle −0.35), cosine-blended into it over 30 steps and held,
+then self-checked with `Session.replay`. That beats this task's CEM-MPC oracle (820.28) and the
+published SAC baseline (861), which needs millions of environment steps.
+
+🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement that
+led to the reward function being removed from the image entirely
+(`images/humanoidbench/scrub_oracles.py`, `docs/benchmarks/humanoidbench.md`). The 979.03 is
+therefore a number from the old, reward-visible setup and is not reproducible as-is.
+
+So this instance is **easier than it looks**, and honestly so: `sit_simple` rewards a static seated pose,
+and a static pose is exactly what a competent agent can reason out. It earns its place as the first task
+in the family — it proves the whole pipeline end to end with a solvable target — but it is **not part of
+the scored subset**. It is kept as the template every other task is generated from and as the CI fixture
+that distinguishes "the agent is broken" from "the task is hard".'''
+retire_when = '''Delete this task once all 23 scored tasks are `verified` and at least two of them, from
+different capability classes, have been passed end to end by different agents.
+The original condition — "any scored task passed by a real agent" — was met by `walk` (784.54/700,
+`claude-sonnet-5`), but that was a single run by a single model under the old reward-visible setup, and
+the whole point of the fixture is to tell "the agent is broken" apart from "the task is hard". That
+distinction is worth most while 23 task directories are being generated for the first time, and this is
+the only task carrying an oracle, so it is also the only one where the oracle = 1 path can be
+exercised.'''
+reference_solution = '''`solution/sit_simple_actions.npy` — a 999-step action sequence that scores
+**820.28 / 750**, replayed by `solution/oracle_sit_simple.py`. HumanoidBench ships no reference solutions
+(its "solutions" are training curves), so this one was produced by training-free CEM-MPC against the
+simulator itself: `solution/cem_mpc.py` reruns that search in ~2.5 minutes on 32 cores (last run:
+817.7/750). It is a fresh search, not a replay, so it produces an equivalent passing trajectory rather
+than this exact file. `solve.sh` replays the recording instead of searching, so the oracle is
+deterministic and costs one episode.
+
+⚠️ The oracle searches against the reward function, which the task image no longer has. It runs with the
+verifier's restore path (`tests/rcb_rewards.py`) or outside the container; it is a development tool and a
+CI fixture, not something an agent could reproduce from inside.'''
+standard_reference_solution = '''`solution/oracle_replay.py` sends the same 999 rows (`solution/sit_simple_actions.npy`)
+through the client, one per control step (`dt` = 0.02 s, `interpolate="hold"`), as an agent would send them; the
+service ends the episode the moment the return reaches the pass mark. No privileged information at run time.'''
+
+[task.standard]
+ends = "when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated)"
+hidden = "where the robot is in the room, not the chair's pose"
+tier = "no root pose, no chair pose"
+camera_note = "the chair is behind the robot and never enters the head cameras' view (floor and horizon only); `room_camera` (the recording camera frozen at its starting pose) sees both."
+
