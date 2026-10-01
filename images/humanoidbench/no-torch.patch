@@ -1,0 +1,68 @@
+diff --git a/humanoid_bench/envs/package.py b/humanoid_bench/envs/package.py
+index 8223805..2a02079 100644
+--- a/humanoid_bench/envs/package.py
++++ b/humanoid_bench/envs/package.py
+@@ -3,7 +3,7 @@ import gymnasium as gym
+ from gymnasium.spaces import Box
+ from dm_control.utils import rewards
+ 
+-from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
++# [rcb patch] lazy: torch+jax only needed by the hierarchical-policy path
+ 
+ import mujoco
+ 
+diff --git a/humanoid_bench/envs/push.py b/humanoid_bench/envs/push.py
+index 25837bf..9bc4c77 100644
+--- a/humanoid_bench/envs/push.py
++++ b/humanoid_bench/envs/push.py
+@@ -6,7 +6,7 @@ import gymnasium as gym
+ from gymnasium.spaces import Box
+ 
+ from humanoid_bench.tasks import Task
+-from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
++# [rcb patch] lazy: torch+jax only needed by the hierarchical-policy path
+ 
+ 
+ class Push(Task):
+diff --git a/humanoid_bench/envs/reach.py b/humanoid_bench/envs/reach.py
+index f0b0473..a92f81a 100644
+--- a/humanoid_bench/envs/reach.py
++++ b/humanoid_bench/envs/reach.py
+@@ -6,7 +6,7 @@ import gymnasium as gym
+ from gymnasium.spaces import Box
+ 
+ from humanoid_bench.tasks import Task
+-from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
++# [rcb patch] lazy: torch+jax only needed by the hierarchical-policy path
+ 
+ 
+ class Reach(Task):
+diff --git a/humanoid_bench/wrappers.py b/humanoid_bench/wrappers.py
+index ac68034..7ffcd91 100644
+--- a/humanoid_bench/wrappers.py
++++ b/humanoid_bench/wrappers.py
+@@ -2,7 +2,7 @@ from gymnasium.spaces import Box, Dict
+ import numpy as np
+ import mujoco
+ 
+-from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
++# [rcb patch] lazy: torch+jax only needed by the hierarchical-policy wrappers
+ from humanoid_bench.tasks import Task
+ # from humanoid_bench.env import HumanoidEnv
+ 
+@@ -102,6 +102,7 @@ class SingleReachWrapper(BaseWrapper):
+ 
+         self.max_delta = max_delta
+ 
++        from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
+         reaching_model = TorchModel(55, 19)
+         self.reaching_policy = TorchPolicy(reaching_model)
+         self.reaching_policy.load(policy_path, mean=mean_path, var=var_path)
+@@ -228,6 +229,7 @@ class DoubleReachBaseWrapper(BaseWrapper):
+         self.max_delta = max_delta
+         self.max_delta_coords = max_delta_coords
+ 
++        from humanoid_bench.mjx.flax_to_torch import TorchModel, TorchPolicy
+         reaching_model = TorchModel(61, 19)
+         self.reaching_policy = TorchPolicy(reaching_model)
+         self.reaching_policy.load(policy_path, mean=mean_path, var=var_path)
