@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "none"
-oracle_evidence = "no rollout of this instance; published RL passes the bar (FastTD3 887 / 700); human review in this benchmark's pull request"
+oracle_evidence = "no rollout of this instance; published RL passes the bar (FastTD3 887 / 700); human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0
