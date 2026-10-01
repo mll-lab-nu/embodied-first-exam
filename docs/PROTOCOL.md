@@ -2,7 +2,8 @@
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
 task README). The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`).
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`); its 2.2 extension in
+[`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md).
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
 > protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. The move of
@@ -219,7 +220,8 @@ example → nop result → predicate summary*. The reviewer checks:
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
 
 Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md). This section lists what is required.
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (2.1) and [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) (2.2). This
+section lists what is required.
 
 ### 4.0 Versions
 | Version | Date | Content |
@@ -228,9 +230,9 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | rcb-limited/2.0 | 2026-09-24 | no reset; `/submit` action chunks, `/observe`; binary RCB1 responses |
 | rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
 | **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
-| eai-standard/2.2 | accepted, pending | additive extension (§6), merged once its services implement crash recovery |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits and RoboPaint |
 
-Services report `eai-standard/2.1`; the shipped client accepts the former `rcb-limited/2.x` spelling as well.
+Services report `eai-standard/2.1` or `eai-standard/2.2`; the shipped clients accept the former `rcb-limited/2.x` spelling as well.
 
 **Core rules.** The simulator runs in a sidecar the agent cannot open; four endpoints; RCB1 binary responses; no
 reset (unless the optional capability is enabled), no step limit, wall clock as the only hard budget; crash recovery
@@ -252,7 +254,7 @@ resumes the same episode; success is decided on a replay.
 | Item | Level | Basis |
 |---|---|---|
 | `GET /spec`, `GET /status`, `POST /observe`, `POST /submit` | MUST | [current] |
-| Everything else returns 404 (`/state`, `/success`, …); `/reset` exists only with the optional reset capability | MUST | [current] / [new] |
+| Everything else returns 404 (`/state`, `/success`, …), except endpoints a minor version adds (2.2: the stateless `POST /kinematics`); `/reset` exists only with the optional reset capability | MUST | [current] / [new] |
 | `/spec` has `protocol`, `action_types` (each with `dim`, `layout`, units or limits, `semantics`), `cameras`, the proprioception layout, `budget` (`reset`, `wall_clock_s`) | MUST | [current] |
 | `/spec` also has `task_text`, `max_chunk_s`, `max_watch_s`, `physics_hz` or `control_dt`, `on_service_error`, `max_frames_per_call` | SHOULD | [current] |
 | `/status` has `calls`, `done`, `reason`, `elapsed_s` and a step counter | MUST | [current] |
@@ -307,6 +309,7 @@ resumes the same episode; success is decided on a replay.
 | Crash recovery: every executed step journaled, a checkpoint (step count, state hash) per completed call; after a restart the journal is replayed, the hash checked and the same episode continues — never a reset | MUST | [current] |
 | At most 2 resumes (`RCB_MAX_RESUMES`); a third crash ends the episode with `sim_crashed_on_call` if every crash happened inside a call, else `sim_crashed` (`infra_error = 1`); a written verdict is never overwritten | SHOULD | [current] |
 | Startup watchdog and back-off before rebuilding | SHOULD | [current] |
+| Per-simulator resume rule: a simulator declared nondeterministic compares and records the hash, and a mismatch continues the same episode with `resume_state_mismatch` (unless the robot diverged grossly), as in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) §13.1; the verdict still comes from fresh replays of the whole recorded trajectory | MAY | [new] (2.2) |
 
 ### 4.8 Evidence and grading
 | Item | Level | Basis |
@@ -349,9 +352,11 @@ results metadata.
 | Removing a §4 MUST in a minor version | MUST NOT | [new] |
 | Protocol changes: a protocol-change issue, then a shared-files PR updating the document, the reference implementation, the CI allowlist and an example task together | MUST | [new] |
 
-**Accepted, pending: `eai-standard/2.2`.** Depth `last` / `frames` (uint16 millimetres, zlib), `frame_step`,
-`frame_time_s`, per-frame `extrinsic_cv`, `robot_spec`, `world`, a stateless `POST /kinematics` — all MAY
-capabilities. Merged once its services implement crash recovery.
+**`eai-standard/2.2`** ([`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md); formerly `rcb-limited/2.2`). Depth `last` /
+`frames` (uint16 millimetres, zlib), `frame_step`, `frame_time_s`, per-frame `extrinsic_cv`, camera intrinsics and
+mounting, `robot_spec`, `world`, a stateless `POST /kinematics`, and a per-call wall-clock bound (`max_call_wall_s`,
+`meta.stopped`; the episode's only budget stays the wall clock) — all MAY capabilities. Its services implement the crash
+recovery of §4.7 (with the per-simulator resume rule); the shared implementation is `scripts/eai_standard/`.
 
 **Not accepted:** step caps; single-control `step()` calls.
 

@@ -1,0 +1,30 @@
+(define (problem composting_waste-0)
+    (:domain behavior-1k)
+
+    (:objects
+        countertop.n.01_1 - countertop.n.01
+        half__banana.n.01_1 - half__banana.n.01
+        half__pomegranate.n.01_1 - half__pomegranate.n.01
+        ashcan.n.01_1 - ashcan.n.01
+        floor.n.01_1 floor.n.01_2 floor.n.01_3 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+    
+    (:init 
+        (ontop half__banana.n.01_1 countertop.n.01_1) 
+        (ontop half__pomegranate.n.01_1 countertop.n.01_1) 
+        (ontop ashcan.n.01_1 floor.n.01_1) 
+        (inroom countertop.n.01_1 kitchen) 
+        (inroom floor.n.01_1 kitchen) 
+        (inroom floor.n.01_2 living_room)
+        (inroom floor.n.01_3 entryway)
+        (ontop agent.n.01_1 floor.n.01_2)
+    )
+    
+    (:goal 
+        (and 
+            (inside ?half__banana.n.01_1 ?ashcan.n.01_1) 
+            (inside ?half__pomegranate.n.01_1 ?ashcan.n.01_1) 
+        )
+    )
+)

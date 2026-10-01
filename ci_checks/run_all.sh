@@ -8,8 +8,13 @@ for t in "${tasks[@]}"; do
   for c in check-task-structure check-task-fields check-dockerfile check-instruction check-verifier-isolation; do
     bash "$root/ci_checks/$c.sh" "$t" || rc=1
   done
+  bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)
+  bash "$root/ci_checks/check-limited-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint: no world coordinates
 done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
+bash "$root/ci_checks/check-robopaint-tooling.sh" || rc=1            # RoboPaint: tooling byte-identical within a family / stack
+bash "$root/ci_checks/check-tooling-identity.sh" || rc=1             # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
+bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard agent + verifier images: the pinned client base and pins
 # Protocol v1.0: `legacy:` rules (image move, docs/PROTOCOL.md §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol-v1.py" || rc=1; else python3 "$root/ci_checks/check-protocol-v1.py" "$@" || rc=1; fi
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc
