@@ -10,4 +10,4 @@ git -C "$ROOT/third_party/cap-x" submodule update --init --depth 1 \
   capx/third_party/robosuite capx/third_party/sam3 capx/third_party/contact_graspnet_pytorch \
   capx/third_party/curobo capx/third_party/LIBERO-PRO capx/third_party/verl capx/third_party/libero_dependencies/robosuite
 cd "$ROOT/third_party/cap-x" && uv python install 3.10 && uv venv -p 3.10 && uv sync --extra robosuite
-echo "OK. Selftest: cd third_party/cap-x && MUJOCO_GL=egl uv run --no-sync python $ROOT/tasks/robosuite-cube-stack-i00/environment/rcb_traj.py selftest --task cube_stack"
+echo "OK. Selftest: cd third_party/cap-x && MUJOCO_GL=egl uv run --no-sync python $ROOT/tasks/robosuite-cube-stack-i00-privileged/environment/rcb_traj.py selftest --task cube_stack"
