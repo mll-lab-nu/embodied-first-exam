@@ -1,4 +1,4 @@
-"""rcb-limited/2.0 client — the only thing a limited-mode agent gets (installed at /opt/tools/rcb_client.py).
+"""rcb-limited/2.x client — the only thing a limited-mode agent gets (installed at /opt/tools/rcb_client.py).
 
     from rcb_client import Robot
     r = Robot()                                   # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -75,7 +75,7 @@ class Robot:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
                     r.raise_for_status(); self.base = b; self._spec = r.json()
-                    assert self._spec.get("protocol") == PROTOCOL, self._spec.get("protocol")
+                    assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")
                     return
                 except requests.exceptions.RequestException as e:
                     last = e

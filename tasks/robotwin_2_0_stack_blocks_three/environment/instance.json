@@ -1,0 +1,8 @@
+{
+ "task": "stack_blocks_three",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "352b1140b862",
+ "text": "There are three blocks on the table, the color of the blocks is red, green and blue. Move the blocks to the center of the table, and stack the blue block on the green block, and the green block on the red block.",
+ "n_active_joints": 16
+}

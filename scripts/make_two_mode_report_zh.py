@@ -7,7 +7,7 @@ jobs, ju, jl, rep = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib
 PLAN = sys.argv[5] if len(sys.argv) > 5 else str(pathlib.Path(jobs).parent / "batch_plan_2026-09-23.json")
 plan = json.load(open(PLAN))
 import yaml
-STATE = pathlib.Path(__import__("os").environ.get("RCB_TASKLIST_STATE", "/home/user/data/projects/robot_os_world_all/robotic-code-agent-task-list/state/tasks/robotwin-2.yml"))
+STATE = pathlib.Path(__import__("os").environ.get("RCB_TASKLIST_STATE", "") or "/nonexistent")   # optional; difficulty "unrated" without it
 DIFF = {t: (b or {}).get("difficulty", "unrated") for t, b in (yaml.safe_load(open(STATE)) or {}).items()} if STATE.exists() else {}
 ZH_DIFF = {"easy": "易", "medium": "中", "hard": "难", "extreme": "极难", "unrated": "未评"}
 # 失败分析（人工阅读 agent transcript / verifier 输出后写的；U = unlimited，L = limited）

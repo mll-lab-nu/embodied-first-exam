@@ -1,3 +1,5 @@
+> **Historical design note.** Superseded by [PROTOCOL.md](PROTOCOL.md) (v1.0) and [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`); kept for the record. Limited mode is now called standard mode.
+
 # Limited mode v2 — two MCP tools (superseded 2026-09-24: decided NOT to use MCP; see LIMITED_MODE_V2_DESIGN.zh.md — plain client/service, media written to a read-only shared volume, the agent decides what to look at)
 
 Status 2026-09-24: plan only. Supersedes the HTTP client of `rcb-limited/1.0` for the agent-facing side; the

@@ -1,71 +1,372 @@
-# Protocol (the contract every task follows)
+# Robot Coding Bench — Task Protocol v1.0
 
-The benchmark imposes as little as possible beyond the Harbor task format. Anything not listed here is
-the task's own business: which simulator, how the scene is defined, what the agent's tool API looks like,
-how the verifier decides.
+Status: **final** (2026-09-30). This document is the contract every new task follows; tasks already in the repository
+are brought in line by the migration in §7. The wire format of standard mode is specified in
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`).
 
-## 1. Task = Harbor task directory
-`instruction.md`, `task.toml`, `README.md`, `environment/Dockerfile`, `tests/test.sh`, `solution/solve.sh`,
-plus whatever files those need. Tasks are **self-contained**: all task code (agent tooling, verifier) lives
-in the task directory and is `COPY`ed by its Dockerfile. Base images under `images/` are infrastructure only
-(simulator installs) and contain no benchmark code. A task's identity is its directory digest in
-`tasks/dataset.toml`; changing any file is a new task version.
+> **Transition.** v1.0 renames the two modes (unlimited → **privileged**, limited → **standard**), the standard-mode
+> protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**) and the image registry (→ `eai-<sim>` under the Embodied Agent
+> Interface (EAI) organization). Tasks already in the repository still use the old names until the migration PR (§7) lands; CI accepts
+> both during the transition and reports the old names as warnings.
 
-## 2. Deliverable
-The agent writes its result under `/app/output/` (declared as `artifacts = ["/app/output/"]` so Harbor
-collects it). The format is defined by the task's `instruction.md` and checked by its verifier.
+## 0. Conventions
 
-`task_type` (metadata) says what kind of deliverable it is:
-
-| `task_type` | deliverable | grading idea |
-|---|---|---|
-| `trajectory` | a replayable action sequence for **this** frozen scene instance | open-loop replay in a fresh process |
-| `policy` | code that solves held-out instances of the family | success rate over N instances |
-
-## 3. Verifier output
-`tests/test.sh` writes `/logs/verifier/reward.txt` (`1` or `0`) and `/logs/verifier/reward.json` with
-**numeric fields only** (Harbor rejects strings). Field names, so results are comparable across tasks:
-
-| field | meaning |
+| Level | Meaning |
 |---|---|
-| `success` | 1 iff the deliverable completes the task (required) |
-| `deterministic` | 1 iff repeated verification agreed (trajectory tasks) |
-| `n_actions`, `sim_steps` | length of the deliverable / simulation steps replayed |
-| `final_reward` | the simulator's own dense reward at the end, if any |
-| `missing_trajectory`, `grader_error` | 1 on those failure modes (so failures are diagnosable) |
-| `video_rendered` | 1 if the verifier also wrote a human-viewable `/logs/verifier/replay.mp4` (recommended; never affects the verdict) |
+| **MUST** / **MUST NOT** | Required / forbidden. A PR that violates it is not merged. |
+| **SHOULD** | Recommended. Deviations are explained in the PR or the task README. |
+| **MAY** | Optional; left to the task or benchmark. If adopted, it is implemented as specified here. |
 
-## 4. Reproducibility rules
-- The verifier must reach the same verdict in a **fresh process** on the same inputs; for physics
-  simulators that means restoring the exact initial state (for MuJoCo: `qpos`, `qvel`, `time`, and
-  `qacc_warmstart`, then re-anchor controllers and refresh cached observables). The example task
-  replays twice and requires identical final-state hashes.
-- `environment/Dockerfile` must `FROM` a registry image with a pinned tag or digest (CI checks).
-- **The verifier runs in its own sandbox, never in the container the agent controlled.** `task.toml` sets
-  `[verifier] environment_mode = "separate"` and `tests/Dockerfile` builds the verifier image (same simulator base
-  image, the verifier's own copies of the tooling and the frozen instance baked into `/tests/`; `tests/docker-compose.yaml`
-  for a GPU reservation if replay needs one). Harbor uploads only the declared artifacts (`/app/output/`) into it.
-  Reason, measured 2026-09-23: in Harbor's default *shared* mode the tests run inside the agent's container after
-  `/tests/` is copied in, so an agent that is root there can patch the task's `check_success` (or the interpreter) —
-  a do-nothing trajectory then scores 1. The same cheat scores 0 under the separate sandbox. `ci_checks/check-verifier-isolation.sh`
-  enforces this. `instruction.md` never references `/tests/`.
-- **Agent egress is a per-run choice, default open.** Harbor's default is `public`; the reference solutions we scrub
-  from the agent image are public upstream (RoboTwin's `play_once` on GitHub, this repo's `solution/`), so a run that
-  must rule out "the agent fetched the answer" flips every task to model-APIs-only with
-  `scripts/set_agent_egress.py allowlist` (and back with `public`). Measured 2026-09-24: under that allowlist Codex
-  (ChatGPT login) still reaches its model while GitHub and PyPI return nothing, and the limited-mode sidecar stays
-  reachable; an empty allowlist breaks the agent. CI only checks that an allowlist, when set, lists hosts.
-- `solution/solve.sh` (oracle) must score 1 and the `nop` agent must score 0.
-- **Reference solutions live only under `solution/`** (Harbor mounts it at `/solution/` for the oracle agent only).
-  Nothing the agent can reach — the task image, base images, tooling, docs inside the container — may contain
-  a solution or point to one. Lesson from the first agent run: it found cap-x's built-in `oracle_code` through
-  the tooling's `run-oracle` command and replayed it; base images now scrub those strings.
+Basis tags: **[CI]** enforced by `ci_checks/`; **[current]** what existing tasks already do (exceptions are named and
+listed in §7); **[new]** introduced by v1.0 — required for new work, partly reported by `ci_checks/check-protocol-v1.py`,
+and applied to existing tasks by the migration (§7).
 
-## 5. Budget reporting
-Report success **and** cost. Harbor records tokens, $, turns and wall-clock; tasks should additionally
-expose simulation cost (`sim_steps`, resets) through their tooling so agents can be compared under equal
-budgets (align `--ak reasoning_effort`, `max_turns`, budget caps and `[agent].timeout_sec` first).
+**Principle.** The benchmark adds as little as possible on top of the Harbor task format. Anything not specified here
+(which simulator, how a scene is defined, the shape of the privileged-mode tool API, how a verifier decides internally)
+is the task's own business.
 
-## 6. Metadata
-See `docs/TAXONOMY.md`: `simulator`, `robot`, `family`, `task_type`, `tier` (`privileged` = state-based
-perception allowed; `perception` = RGB-D only), `expert_time_estimate_hours`, author fields.
+### 0.1 Terms
+
+| Term | Meaning | Former name |
+|---|---|---|
+| **privileged mode** | Agent and simulator share a container; the agent may read privileged state, reset freely, call planning primitives. The deliverable is a trajectory. | unlimited |
+| **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset. | limited |
+| **`eai-standard/2.x`** | The standard-mode wire protocol (§4). | `rcb-limited/2.x` |
+| **`eai-<sim>`** | Simulator base image under `ghcr.io/embodied-agent-interface-v2-internal/` (§2.4). | `rcb-<sim>` under several registries |
+
+Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file names (`rcb_client.py`, `rcb1.py`,
+`rcb_traj.py`), the `RCB1` frame format and the `RCB_*` environment variables.
+
+### 0.2 Design decisions
+
+| # | Topic | Decision |
+|---|---|---|
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). No step caps. |
+| D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
+| D3 | Results | `tasks/<task>/results/<run_id>/`, small files only (≤ 2 MB each); videos and full trials on Hugging Face; cross-task tables are generated for the site, not committed. |
+| D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
+| D5 | Images | One registry (EAI organization), images named `eai-<sim>`, versioned per simulator in `images/<sim>/VERSION`; share images where the dependency set is identical. |
+| D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
+| D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
+| D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
+| D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
+| D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
+| D11 | Harness | Official results use Harbor's native agents only; no custom LLM gateways or agent adapters. |
+| D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed. |
+
+## 1. Checklist (every task)
+
+1. `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`. [CI] `solution/solve.sh` depending on the oracle level (§2.7). [new]
+2. `[task].name = "robot-coding-bench/<folder>"`; required metadata present and valid (§2.3). [CI]
+3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400. [CI]
+4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
+5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
+6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
+7. Listed in `tasks/dataset.toml`. [CI]
+8. The verifier writes `reward.txt` (1/0) and a numeric-only `reward.json` with at least `success` (and `deterministic` for trajectory tasks). [current; DexToolBench writes progress to `reward.txt`, see §7]
+9. Same verdict in a fresh process; the verifier does not need the network (standard-mode verifiers run with `no-network`). [current]
+10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
+11. `nop` scores 0; with an oracle, the oracle scores 1; without one, human review (§2.7). [new]
+12. A published task's `environment/` and `tests/` inputs never change; a change is a new task. [current]
+13. Runs with Harbor's native agents; no custom runner, gateway or adapter. [new]
+14. Standard-mode tasks also satisfy every MUST in §4.
+
+## 2. Task contract
+
+### 2.1 Layout and self-containment
+| Item | Level | Basis |
+|---|---|---|
+| `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile` | MUST | [CI] |
+| `solution/solve.sh` (executable): required for `oracle = "full"` or `"partial"`; may be absent for `"none"` (no `exit 1` placeholders) | MUST / MAY | [new] (Harbor itself does not require it) |
+| `environment/docker-compose.yaml` (GPU or sidecar) | MAY | [current] |
+| All task code (agent tooling, verifier) lives in the task directory and is copied in by its Dockerfiles; base images contain the simulator and its assets only | MUST | [current] |
+| At run time, importing repository code from outside the task directory (packages under `scripts/`, a package at the repository root, a `PYTHONPATH` into the repository). Pinned third-party pip packages are fine. | MUST NOT | [current] — a task's identity is its directory digest, and Harbor builds from the task directory alone |
+| Shared sources under `scripts/<bench>/shared/`, copied into each task by the generator; copies byte-identical within a benchmark | MAY (if used, identical) | [new] |
+| Generated tasks come with their generator (under `scripts/<bench>/` for new benchmarks; existing generators are in `scripts/`); re-running it reproduces the committed tasks (`git diff` is empty) | SHOULD | [current] / [new] |
+| `README.md` sections: Difficulty, Reference solution, Verification | SHOULD | [new] (about a third of existing tasks have them) |
+
+### 2.2 Naming
+| Item | Level | Basis |
+|---|---|---|
+| Privileged tasks: `<simulator>-<family>-i<NN>`, no suffix; upstream names may be kept (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | SHOULD | [current] |
+| Standard tasks: the privileged task's name + **`-standard`**, sharing its frozen instance and `instance_seed` | MUST (when a privileged twin exists) | [new] (was `-limited`) |
+| Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
+
+### 2.3 `task.toml`
+| Item | Level | Basis |
+|---|---|---|
+| `schema_version = "1.3"`; `[task].name = "robot-coding-bench/<folder>"` | MUST | [current]; name [CI] |
+| `[task].description`, `authors`, `keywords` | SHOULD | [current] |
+| `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard}`, `expert_time_estimate_hours` | MUST | [CI] (`mode`, or the legacy `tier` until §7) |
+| `tier` | MUST NOT | [new] (`privileged` → `mode = "privileged"`, `perception` → `mode = "standard"`) |
+| Standard tasks: `protocol = "eai-standard/2.<n>"`; privileged tasks: no `protocol` | MUST | [new] |
+| `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [new] |
+| `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
+| `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
+| Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
+| `[agent].timeout_sec` set, ≤ 14400; 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
+| `[verifier].environment_mode = "separate"` | MUST | [CI] |
+| `[verifier].timeout_sec`, `[environment]` `cpus` / `memory_mb` / `build_timeout_sec` | SHOULD | [current] |
+| `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
+
+### 2.4 Images, registry, GPU
+
+A simulator base image is defined by `images/<sim>/Dockerfile`, built by `scripts/build_images.sh` as
+`<registry>/eai-<sim>:<images/<sim>/VERSION>` and pushed by `scripts/push_images.sh`. Tasks reference it by tag:
+`environment/Dockerfile` and `tests/Dockerfile` `FROM` it, and the standard-mode `sim` service uses it as `image:`.
+Harbor builds the task images locally from the task directory on every run; only base images are pulled.
+
+| Item | Level | Basis |
+|---|---|---|
+| Base images at `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>:<ver>`, anonymously pullable | MUST | [new] |
+| Versions in `images/<sim>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
+| Images that cannot be published (e.g. licensed simulators): `images/<sim>/BUILD_ONLY` plus local build instructions (licences, data) | MUST | [new] |
+| Every `FROM` and `image:` pinned to a tag or `@sha256` digest | MUST | [CI] |
+| Sidecars built with `build:` | MUST NOT | [new] |
+| Dependencies pinned; no downloads during verification | MUST | no downloads: [current]; pinning: [new] (standard-mode client images and the MuJoCo image install unpinned pip packages today, §7) |
+| One base image and one version per simulator: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<sim>:<ver>` | MUST | [new] |
+| Standard-mode agent containers and verifiers share one client base image pinned by digest | MUST | [new] |
+| Merging different simulator stacks into one image only when their dependency versions are identical (frozen-instance hashes depend on them) | MUST | [new] |
+| GPU: an NVIDIA device reservation (`count: 1`) in compose on `main` (privileged) or `sim` (standard); in `tests/docker-compose.yaml` too if replay needs it | MUST | [current] |
+| `device_ids` pinning a specific GPU; fixed-name global volumes | MUST NOT | [new] |
+
+### 2.5 `instruction.md`
+| Item | Level | Basis |
+|---|---|---|
+| States the deliverable under `/app/output/` | MUST | [CI] |
+| Mentions `/tests/` | MUST NOT | [CI] |
+| States every convention the agent cannot infer: frames, quaternion order, units, action layout, tool or client usage | MUST | [current] |
+| States the time budget and tells the agent to save a deliverable early and not to stop early | SHOULD | [new] |
+| Gives the success predicate's exact parameters | MAY | [current] |
+| World-frame quantities (coordinates, table height): decided per benchmark, consistent within it, documented | MUST | [new] |
+| Written by a human | SHOULD | [current] |
+
+### 2.6 Verifier
+| Item | Level | Basis |
+|---|---|---|
+| Runs in its own sandbox (separate mode) with only the declared artifacts | MUST | [CI] |
+| `/logs/verifier/reward.txt` is `1` or `0` (partial progress goes to `reward.json` as `progress`); `/logs/verifier/reward.json` has numeric fields only | MUST | [current], except DexToolBench (progress in `reward.txt`) and the MuJoCo standard grader (string fields on infrastructure errors), fixed by §7 |
+| Same verdict in a fresh process on the same inputs | MUST | [current] |
+| The verifier needs network access | MUST NOT | [current] |
+| Standard-mode verifiers set `network_mode = "no-network"`; privileged-mode verifiers too | MUST / SHOULD | [current] / [new] |
+| Verdict written before videos are rendered; videos never affect it | SHOULD | [current] |
+| A human-viewable `replay.mp4` (`video_rendered = 1`) | SHOULD | [current] |
+| `test.sh` first clears `/logs/verifier` (`rm -rf /logs/verifier/*`); named volumes crossing the trust boundary are named `*_trusted` | MUST | [new] |
+
+`reward.json` field names (use these whenever the concept applies; no synonyms):
+
+| Field | Level | Meaning |
+|---|---|---|
+| `success` | MUST | 1 iff the deliverable completes the task |
+| `deterministic` | MUST (trajectory tasks) | repeated verification agreed |
+| `infra_error` | MUST (standard) / MAY | infrastructure failure, not the agent's |
+| `grader_error`, `missing_trajectory` / `missing_log` | SHOULD | diagnosable failure modes |
+| `n_actions`, `sim_steps` (or `control_steps`), `video_rendered` | SHOULD | size of the deliverable, simulation cost, video present |
+| `final_reward`, `progress`, `live_success`, `replay_success`, `live_video`, `live_frames`, `sim_startups`, `finalized`, `elapsed_s`, `agent_*` | MAY | when the concept exists |
+
+### 2.7 Reference solutions, oracle, nop
+| Item | Level | Basis |
+|---|---|---|
+| Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
+| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
+| Upstream experts scrubbed from images (e.g. cap-x `oracle_code`, RoboTwin `play_once`) | MUST | [current] |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench; RoboTwin (public upstream experts) is open by default and switched per run with `scripts/set_agent_egress.py` |
+| `nop` scores 0 | MUST | [current] |
+| `oracle = "full"`: the oracle scores 1 | MUST | [current] |
+| `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
+
+**Human review** (any task whose `oracle` is not `full`): the PR is labelled `needs-human-review` and needs an approval
+from a maintainer other than the author. Generated tasks are reviewed per family (same generator and predicate): at
+least two instances per family, at least one with a positive example. The author provides a table *family → positive
+example → nop result → predicate summary*. The reviewer checks:
+1. **Solvable** — a positive example (a successful model trial, an upstream policy or RL rollout, or a hand-built
+   trajectory or state) that the verifier scores 1.
+2. **Correct predicate** — the grader matches the instruction and cannot be satisfied trivially (true at the initial
+   state, or for any action).
+3. **Negative control** — `nop` scores 0; ideally a wrong trajectory scores 0 too.
+4. **Determinism** — the positive example replays to the same verdict twice in fresh processes.
+5. **Record** — reviewer, date, instances and evidence in the review comment; the task README's Verification section
+   says "no oracle; human review in PR #N".
+
+### 2.8 Identity and immutability
+| Item | Level | Basis |
+|---|---|---|
+| Listed in `tasks/dataset.toml` (re-run `harbor add --scan` after any change) | MUST | [CI] |
+| A published task's `environment/` and `tests/` inputs are immutable; a change is a new task | MUST | [current] |
+| Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
+
+## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
+
+| Item | Level | Basis |
+|---|---|---|
+| Deliverable `/app/output/trajectory.npz` (format defined by the task's instruction) | MUST | [current] |
+| The generating script at `/app/output/gen.py` | SHOULD | [current] |
+| Graded by open-loop replay from the frozen initial state in a fresh process | MUST | [current] |
+| ≥ 2 replays with matching final-state hashes, reported as `deterministic` | SHOULD (the field is MUST) | [current] |
+| Success judged on the state at the end of the replay ("success at any step" needs a stated reason) | SHOULD | [current] |
+| The frozen instance copied into both `environment/` and `tests/` with its expected initial-state hash, checked on rebuild | SHOULD | [current] |
+| A hash check before moving to new hardware. Reference hardware is an RTX 4090: `place_a2b_left`, `place_a2b_right`, `place_object_scale` and `place_object_stand` rebuild to a different state on an L40S, and grading there reports `grader_error` | SHOULD | [current] |
+| Unlimited resets, privileged state, planning primitives, self-replay | MAY | [current] |
+| Tool API shape | task-defined | [current] (recommended: `Session` with `reset` / `replay` / `status` / `save_trajectory`) |
+| Self-reported cost (resets, simulation steps) in `agent_*` fields | SHOULD | [current] |
+| `task_type = "policy"` | MAY | rules defined with the first such task |
+
+## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
+
+Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are in
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md). This section lists what is required.
+
+### 4.0 Versions
+| Version | Date | Content |
+|---|---|---|
+| rcb-limited/1.0 (retired) | 2026-09-22 | `POST /reset` with a budget, `POST /step` one action, base64 images |
+| rcb-limited/2.0 | 2026-09-24 | no reset; `/submit` action chunks, `/observe`; binary RCB1 responses |
+| rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
+| **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
+| eai-standard/2.2 | accepted, pending | additive extension (§6), merged once its services implement crash recovery |
+
+Until the migration (§7), services report `rcb-limited/2.1` and the shipped client checks for that prefix; the migration switches services to `eai-standard/2.1` and updates the client to accept both spellings.
+
+**Core rules.** The simulator runs in a sidecar the agent cannot open; four endpoints; RCB1 binary responses; no
+reset (unless the optional capability is enabled), no step limit, wall clock as the only hard budget; crash recovery
+resumes the same episode; success is decided on a replay.
+
+### 4.1 Topology
+| Item | Level | Basis |
+|---|---|---|
+| Simulator in a compose sidecar named `sim`; no simulator or simulation code in the agent container | MUST | [current] |
+| GPU reservation on `sim` only | MUST (if a GPU is needed) | [current] |
+| `ports:` / `expose:` on the sidecar | MUST NOT | [current] |
+| Service on `0.0.0.0:8000`; the client tries `http://sim:8000`, then `http://localhost:8000` | MUST | [current] |
+| The socket opens only when the scene is ready; the client retries | SHOULD | [current] |
+| `restart: on-failure:N`, N ≥ 3 | MUST | [current] |
+| The agent image ships `rcb_client.py` (`Robot.spec / status / submit / get_obs`) and `rcb1.py` | MUST | [current] |
+| The instruction documents client usage, action types and rules | MUST | [current] |
+
+### 4.2 Endpoints
+| Item | Level | Basis |
+|---|---|---|
+| `GET /spec`, `GET /status`, `POST /observe`, `POST /submit` | MUST | [current] |
+| Everything else returns 404 (`/state`, `/success`, …); `/reset` exists only with the optional reset capability | MUST | [current] / [new] |
+| `/spec` has `protocol`, `action_types` (each with `dim`, `layout`, units or limits, `semantics`), `cameras`, the proprioception layout, `budget` (`reset`, `wall_clock_s`) | MUST | [current] |
+| `/spec` also has `task_text`, `max_chunk_s`, `max_watch_s`, `physics_hz` or `control_dt`, `on_service_error`, `max_frames_per_call` | SHOULD | [current] |
+| `/status` has `calls`, `done`, `reason`, `elapsed_s` and a step counter | MUST | [current] |
+| Step counters named `rows` and `sim_steps` (old names kept alongside) | SHOULD | [new] (next minor version) |
+
+### 4.3 Encoding (RCB1)
+| Item | Level | Basis |
+|---|---|---|
+| Responses are RCB1 frames: `"RCB1"`, 4-byte little-endian header length, header JSON, blobs | MUST | [current] |
+| Images or video as base64 in JSON | MUST NOT | [current] |
+| Part kinds `mp4`, `array` (C-order raw bytes, dtype and shape in the header), `jpeg`, `json`, `bytes` | MUST | [current] |
+| `last/<cam>` in every response; `video/<cam>` / `frames/<cam>` on request | MUST | [current] |
+| `proprio` part: one row per frame, columns as in `meta.proprio.layout` | MUST | [current] |
+| Which proprioception columns | task-defined | [current] |
+| `depth/<cam>`, depth noise, `meta.cameras`, `meta.task` | MAY | [current] |
+| `meta` has `calls`, `sim_time_s`, `time_s`, `time_left_s`, `proprio{layout, now}`, `done`, `reason` and a step counter | MUST | [current] |
+| Limits: requests ≤ 64 MB (400 today; 413 [new]), ≤ 3000 frames per call (400), responses over 256 MB drop frames/depth and say so in `meta.degraded` | SHOULD | [current] |
+
+### 4.4 Actions
+| Item | Level | Basis |
+|---|---|---|
+| At least one action type, fully described in `/spec` | MUST | [current] |
+| `joint_position` | SHOULD | [current] |
+| `dt` a multiple of the physics or control step; otherwise 400, never rounded | MUST | [current] |
+| Out-of-limit values clipped and reported in `clipped`, not rejected | MUST | [current] |
+| `linear` / `hold` interpolation; chunks ≤ `max_chunk_s` | SHOULD | [current] |
+| Planner-executed actions such as `ee_pose`, with frame, quaternion order and end-effector reference in `/spec` | MAY | [current] |
+| Action dtype (float32 / float64) | task-defined, stated in `/spec` | [current] |
+
+### 4.5 Budget and privileged information
+| Item | Level | Basis |
+|---|---|---|
+| No reset by default: one trial is one episode | MUST | [current] |
+| Optional reset capability: `budget.reset = N` via `POST /reset`, default 0; results with N > 0 are reported separately, never ranked with N = 0 | MAY | [new] |
+| No step limit; wall clock is the only hard budget; simulation steps are reported as cost | MUST | [current] |
+| A technical episode cap stated in `spec.max_control_steps` | MAY | [current] |
+| Exposing object poses, scene files, seeds, the success predicate, segmentation, object contact forces | MUST NOT | [current] |
+| Robot proprioception, camera calibration, task text | MAY | [current] |
+
+### 4.6 Errors (no physics executed)
+`400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed or
+oversized body) — MUST [current]; `409` episode over — MUST [current]; `413` body over 64 MB — SHOULD [new];
+`500` simulator error — MUST [current], and the episode ends with `reason = "error"` — MUST [new] (today only RoboTwin
+`/submit` ends it; §7).
+
+### 4.7 Episode and crash recovery
+| Item | Level | Basis |
+|---|---|---|
+| The episode starts when the service is ready; the seed stays inside the service | MUST | [current] |
+| End condition defined by the task and stated in the instruction; also in `/spec` | MUST / SHOULD | [current] / [new] (MuJoCo services state it in `/spec`, RoboTwin does not yet) |
+| The predicate is evaluated once more at episode end | MUST | [current] |
+| Crash recovery: every executed step journaled, a checkpoint (step count, state hash) per completed call; after a restart the journal is replayed, the hash checked and the same episode continues — never a reset | MUST | [current] |
+| At most 2 resumes (`RCB_MAX_RESUMES`); a third crash ends the episode with `sim_crashed_on_call` if every crash happened inside a call, else `sim_crashed` (`infra_error = 1`); a written verdict is never overwritten | SHOULD | [current] |
+| Startup watchdog and back-off before rebuilding | SHOULD | [current] |
+
+### 4.8 Evidence and grading
+| Item | Level | Basis |
+|---|---|---|
+| The sidecar writes `/data/episode.jsonl`, `/data/trajectory.npz` and `/data/final.json` (with `finalized`) | MUST | [current] |
+| `/data/calls/NNNNNN/`, `replay.mp4`, `replay.last.png` | SHOULD | [current] |
+| `artifacts` declares the evidence from `service = "sim"` and keeps `"/app/output/"` | MUST | [current] |
+| `[[verifier.collect]]` waits for `server.pid`, sends SIGUSR1, waits for `finalized` | MUST | [current] |
+| Needing a custom agent adapter to finish an episode | MUST NOT | [new] |
+| A fresh replay decides: `success = replay_success ∧ deterministic` | MUST | [current] |
+| `∧ live_success` when a live predicate exists | SHOULD | [current] |
+| The verifier grades `final.json` only, without network access | MUST | [current] |
+
+### 4.9 Live recording (sidecar only)
+`live.mp4`, `live_timeline.jsonl`, `live_segments.jsonl`, `trajectory_live.f64`, `startups.jsonl` — SHOULD
+(implemented for RoboTwin). If recorded: rendered from the replay by default, frames stamped with the call, never
+affecting the verdict.
+
+## 5. Results, cost, token budget
+| Item | Level | Basis |
+|---|---|---|
+| Report success together with cost: tokens, money, turns, wall clock, simulation steps, calls | SHOULD | [current] |
+| Official results use Harbor's native agents (`-a codex`, `-a claude-code`, …), configured through environment variables (OpenRouter, Azure, subscriptions) | MUST | [new] |
+| **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] |
+| Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
+| Run id `<harness>-<model>-<effort>` | MUST | [new] |
+| Results in `tasks/<task>/results/<run_id>/`, files ≤ 2 MB; videos on Hugging Face; no top-level `results/` | MUST | [new] |
+| Privileged and standard results reported separately; standard results state the protocol version and reset budget | MUST | [new] |
+
+Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
+(`result.json`); the results pipeline marks trials over budget as failed and records `over_token_budget = 1` in the
+results metadata.
+
+## 6. Versioning and extensions
+| Item | Level | Basis |
+|---|---|---|
+| `/spec.protocol` equals `metadata.protocol` | MUST | [current] |
+| 1.x interfaces (single-action `/step`, base64, unbudgeted `/reset`) | MUST NOT | [current] |
+| 2.x minor versions only add (fields, endpoints, optional action types); existing clients keep working | MUST | [current] |
+| Removing a §4 MUST in a minor version | MUST NOT | [new] |
+| Protocol changes: a protocol-change issue, then a shared-files PR updating the document, the reference implementation, the CI allowlist and an example task together | MUST | [new] |
+
+**Accepted, pending: `eai-standard/2.2`.** Depth `last` / `frames` (uint16 millimetres, zlib), `frame_step`,
+`frame_time_s`, per-frame `extrinsic_cv`, `robot_spec`, `world`, a stateless `POST /kinematics` — all MAY
+capabilities. Merged once its services implement crash recovery.
+
+**Not accepted:** step caps; single-control `step()` calls.
+
+## 7. Migration from the current repository
+
+Done by the maintainers in a dedicated migration PR after this protocol is merged:
+1. Modes: `-limited` → `-standard`; `mode = "privileged" | "standard"`; `tier` removed; `rcb-limited/2.1` → `eai-standard/2.1` in `task.toml`, `/spec` and the docs, with `rcb_client.py` accepting both spellings.
+2. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public; per-simulator `VERSION` only.
+3. `/logs/verifier` cleared at the start of every `test.sh`.
+4. `oracle` / `oracle_evidence` on every task (DexToolBench's 15 partial oracles go through human review).
+5. The results pipeline applies the token budget (`over_token_budget` in the results metadata).
+6. DexToolBench graders write `success` to `reward.txt` and keep `progress` in `reward.json`; the MuJoCo standard grader
+   drops its string fields; services end the episode with `reason = "error"` on a 500 and answer oversized bodies with 413;
+   RoboTwin services state the end condition in `/spec`.
+7. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
+8. The MuJoCo privileged tasks move from `rcb-mujoco:0.1.1` to the same tag as their standard twins (same physics and
+   state hashes; 0.1.2 adds GPU EGL rendering).
+
+Renames and new image tags change task digests: after migration every benchmark and mode is re-validated (oracle and
+`nop` on a sample); existing results keep their original run records and are marked as pre-migration in their metadata.
+`ci_checks/check-protocol-v1.py` reports the remaining gaps as warnings and becomes blocking once migration is done.
+Until then, new tasks may carry only the warnings marked `legacy:` (old names and registry), because their services and
+clients are copied from tasks that still use them.
