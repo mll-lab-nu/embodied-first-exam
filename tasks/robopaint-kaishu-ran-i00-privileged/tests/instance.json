@@ -1,0 +1,154 @@
+{
+ "task": "robopaint_kaishu_ran",
+ "family": "robopaint_kaishu_ran",
+ "medium": "calligraphy",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "wang2020",
+  "width_cm": [
+   1.187,
+   -0.03
+  ],
+  "drag_cm": [
+   1.075,
+   0.138
+  ],
+  "offset_cm": [
+   -0.967,
+   2.109994,
+   -0.03600172699999993
+  ],
+  "z_max_cm": 1.5,
+  "k_w": 0.02,
+  "k_d": 0.02,
+  "theta_eps_m": 0.0001,
+  "theta_eps_contact_m": 0.001,
+  "bristle_m": 0.03,
+  "bristle_r": 0.0045,
+  "substep_m": 0.00025,
+  "substep_deg": 3.0
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.15
+  ],
+  "plate_half_size": [
+   0.1,
+   0.022,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "ink",
+    "hex": "#131214",
+    "rgb": [
+     0.07451,
+     0.070588,
+     0.078431
+    ],
+    "center_xy": [
+     -0.1,
+     0.15
+    ],
+    "radius_m": 0.02
+   }
+  ],
+  "rule": "a tip inside the ink stone's circle and below the ink surface loads ink and restores the brush (its hairs are gathered back to a point); the brush starts dry"
+ },
+ "target": {
+  "kind": "glyph",
+  "image": "target.png",
+  "success": {
+   "iou": 0.8,
+   "boundary_f": 0.75,
+   "min_stroke_coverage": 0.8,
+   "max_stray_frac": 0.04,
+   "register_mm": 5.0,
+   "max_strokes": 12
+  },
+  "truth_sha": "a97731acfb523dc0"
+ },
+ "truth": {
+  "character": "然",
+  "box_mm": [
+   38.59225000000001,
+   38.59225000000001,
+   150.0
+  ],
+  "strokes": [
+   "M 321 613 Q 343 644 368 683 Q 386 717 402 732 Q 411 742 406 755 Q 402 767 375 787 Q 350 803 332 803 Q 314 802 322 781 Q 343 742 268 616 Q 234 558 185 493 Q 176 483 174 477 Q 171 467 185 470 Q 218 476 312 600 L 321 613 Z",
+   "M 312 600 Q 322 588 353 592 Q 423 605 428 595 Q 434 582 416 530 Q 401 473 344 396 Q 290 314 196 232 Q 174 217 194 219 Q 221 222 267 253 Q 315 284 365 348 Q 426 427 472 528 Q 494 577 509 591 Q 521 601 515 612 Q 511 622 461 642 Q 449 646 429 636 Q 398 623 321 613 C 293 609 293 609 312 600 Z",
+   "M 287 519 Q 338 468 353 469 Q 363 468 368 483 Q 368 493 360 509 Q 342 534 289 540 Q 282 541 282 532 Q 281 525 287 519 Z",
+   "M 233 425 Q 275 371 283 369 Q 292 368 297 377 Q 303 387 301 411 Q 298 433 237 462 Q 225 468 220 466 Q 216 465 215 454 Q 216 445 233 425 Z",
+   "M 648 501 Q 723 519 793 529 Q 803 528 810 540 Q 811 550 790 559 Q 763 578 695 554 Q 680 553 652 542 L 606 530 Q 587 530 511 514 Q 486 510 506 495 Q 531 477 574 484 Q 584 487 601 490 L 648 501 Z",
+   "M 641 457 Q 644 479 648 501 L 652 542 Q 667 720 688 768 Q 695 781 684 793 Q 662 812 624 823 Q 600 830 591 824 Q 582 817 589 805 Q 611 768 613 722 Q 614 623 606 530 L 601 490 Q 588 384 523 318 Q 483 285 407 249 Q 394 243 393 239 Q 394 235 405 234 Q 420 230 456 240 Q 588 273 633 422 L 641 457 Z",
+   "M 633 422 Q 688 335 761 243 Q 777 225 803 226 Q 894 227 922 231 Q 931 232 932 237 Q 933 241 921 248 Q 786 311 736 361 Q 690 404 641 457 C 621 479 617 447 633 422 Z",
+   "M 759 673 Q 781 654 806 630 Q 819 618 834 619 Q 844 620 849 632 Q 853 647 844 675 Q 834 702 753 719 Q 738 722 732 719 Q 728 715 729 703 Q 733 693 759 673 Z",
+   "M 203 166 Q 172 114 131 70 Q 104 39 117 -4 Q 123 -25 148 -15 Q 211 18 223 98 Q 233 134 230 162 Q 226 172 219 175 Q 209 175 203 166 Z",
+   "M 356 135 Q 374 78 398 50 Q 408 43 420 50 Q 429 57 433 71 Q 433 116 380 159 L 379 160 Q 369 170 359 170 Q 355 171 352 161 Q 349 151 356 135 Z",
+   "M 555 131 Q 577 103 598 69 Q 608 54 623 52 Q 633 51 641 61 Q 648 74 646 104 Q 645 123 619 144 Q 556 186 540 183 Q 536 180 534 168 Q 535 156 555 131 Z",
+   "M 743 146 Q 786 97 837 25 Q 852 1 867 -5 Q 876 -6 885 3 Q 900 15 892 63 Q 886 106 817 144 Q 772 168 747 179 Q 738 186 735 172 Q 734 159 743 146 Z"
+  ],
+  "n_strokes": 12,
+  "source": "Make Me a Hanzi graphics.txt @ bddc96d (AR PL KaitiM GB / AR PL UKai)",
+  "license": "Arphic Public License",
+  "notice": "The exemplar's stroke outlines are Make Me a Hanzi's graphics.txt entry for this character (github.com/skishore/makemeahanzi @ bddc96d; graphics.txt is derived from the fonts AR PL KaitiM GB and AR PL UKai) and are distributed under the Arphic Public License (ARPHICPL.TXT next to this file). Modification notice (APL section 2a): 2026-09-28, robot-coding-bench (RoboPaint) copied the outlines unmodified and added only their placement on the paper (box_mm); the picture made from them (target.png) is a rendering of the same outlines.",
+  "tol_mm": 1.0,
+  "area_mm2": 3428.3
+ },
+ "instance_sha": "62c3163c7d4f0c68",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3",
+  "matplotlib": "3.10.5",
+  "svgpathtools": "?"
+ }
+}

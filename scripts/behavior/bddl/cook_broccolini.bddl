@@ -1,0 +1,51 @@
+(define (problem cook_broccolini-0)
+    (:domain behavior-1k)
+
+    (:objects
+    	broccolini.n.01_1 broccolini.n.01_2 broccolini.n.01_3 - broccolini.n.01
+    	frying_pan.n.01_1 - frying_pan.n.01
+    	clove.n.03_1 clove.n.03_2 - clove.n.03
+    	plate.n.04_1 - plate.n.04
+    	stove.n.01_1 - stove.n.01
+    	countertop.n.01_1 - countertop.n.01
+    	floor.n.01_1 - floor.n.01
+    	agent.n.01_1 - agent.n.01
+    )
+    
+    (:init 
+        (ontop broccolini.n.01_1 plate.n.04_1)
+        (ontop broccolini.n.01_2 plate.n.04_1) 
+        (ontop broccolini.n.01_3 plate.n.04_1) 
+        (ontop clove.n.03_1 plate.n.04_1)
+        (ontop clove.n.03_2 plate.n.04_1)
+        (ontop plate.n.04_1 countertop.n.01_1)
+        (ontop frying_pan.n.01_1 countertop.n.01_1) 
+        (not  
+            (cooked broccolini.n.01_1)
+        ) 
+        (inroom stove.n.01_1 kitchen) 
+        (inroom countertop.n.01_1 kitchen) 
+        (inroom floor.n.01_1 kitchen) 
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+    
+    (:goal 
+        (and
+            (forall
+                (?clove.n.03 - clove.n.03)
+                (and
+                    (ontop ?clove.n.03 ?frying_pan.n.01_1)
+                    (cooked ?clove.n.03)
+                )
+            )
+            (forall
+                (?broccolini.n.01 - broccolini.n.01)
+                (and
+                    (ontop ?broccolini.n.01 ?frying_pan.n.01_1)
+                    (cooked ?broccolini.n.01)
+                )
+            )
+            (ontop ?frying_pan.n.01_1 ?stove.n.01_1)
+        )
+    )
+)
