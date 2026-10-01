@@ -1,6 +1,6 @@
 """rcb_hb.py — task-local tooling for HumanoidBench: frozen instances, recording, deterministic replay.
 
-Mirrors tasks/robosuite-cube-stack-i00/environment/rcb_traj.py so the agent's experience is the same
+Mirrors tasks/robosuite-cube-stack-i00-privileged/environment/rcb_traj.py so the agent's experience is the same
 across simulators; the differences HumanoidBench forces are marked [HB].
 
 Concepts

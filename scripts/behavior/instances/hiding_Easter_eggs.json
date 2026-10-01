@@ -1,0 +1,449 @@
+{
+ "task": "hiding_Easter_eggs",
+ "challenge_task": "hiding_Easter_eggs",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay them on the lawn next to one tree (any tree in the garden, but the same tree for all three).",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "7bf04c5bdf1f5b3a",
+ "action_dim": 25,
+ "challenge_max_steps": 11429,
+ "objects": {
+  "tree.n.01_6": {
+   "category": "tree",
+   "position": [
+    4.6164,
+    13.1471,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.4617,
+    0.887
+   ]
+  },
+  "tree.n.01_14": {
+   "category": "tree",
+   "position": [
+    27.5565,
+    4.171,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_12": {
+   "category": "tree",
+   "position": [
+    15.8612,
+    0.7767,
+    3.7188
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_15": {
+   "category": "tree",
+   "position": [
+    27.2296,
+    11.7358,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.6088,
+    0.7934
+   ]
+  },
+  "tree.n.01_17": {
+   "category": "tree",
+   "position": [
+    -3.4779,
+    15.6276,
+    3.7822
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "wicker_basket.n.01_1": {
+   "category": "wicker_basket",
+   "position": [
+    17.0596,
+    -0.798,
+    0.1854
+   ],
+   "orientation_xyzw": [
+    -0.0009,
+    -0.0002,
+    -0.0239,
+    0.9997
+   ]
+  },
+  "tree.n.01_26": {
+   "category": "tree",
+   "position": [
+    25.8566,
+    8.246,
+    3.7188
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_19": {
+   "category": "tree",
+   "position": [
+    10.9677,
+    12.3278,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.6088,
+    0.7934
+   ]
+  },
+  "tree.n.01_22": {
+   "category": "tree",
+   "position": [
+    27.3027,
+    15.7618,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.4617,
+    0.887
+   ]
+  },
+  "tree.n.01_9": {
+   "category": "tree",
+   "position": [
+    12.3506,
+    7.4205,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.4617,
+    0.887
+   ]
+  },
+  "tree.n.01_5": {
+   "category": "tree",
+   "position": [
+    25.2649,
+    -3.1773,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_1": {
+   "category": "tree",
+   "position": [
+    17.1964,
+    -3.2711,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.342,
+    0.9397
+   ]
+  },
+  "tree.n.01_8": {
+   "category": "tree",
+   "position": [
+    21.3242,
+    16.0467,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.5736,
+    0.8192
+   ]
+  },
+  "tree.n.01_16": {
+   "category": "tree",
+   "position": [
+    -15.6315,
+    13.4954,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.3827,
+    0.9239
+   ]
+  },
+  "tree.n.01_25": {
+   "category": "tree",
+   "position": [
+    11.9831,
+    9.9855,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_24": {
+   "category": "tree",
+   "position": [
+    -10.0671,
+    13.1505,
+    3.7188
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_23": {
+   "category": "tree",
+   "position": [
+    -15.3407,
+    -3.8245,
+    4.9677
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.4226,
+    0.9063
+   ]
+  },
+  "tree.n.01_10": {
+   "category": "tree",
+   "position": [
+    22.2035,
+    -1.4958,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.3007,
+    0.9537
+   ]
+  },
+  "tree.n.01_3": {
+   "category": "tree",
+   "position": [
+    -5.1401,
+    -3.8487,
+    4.9677
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.1736,
+    0.9848
+   ]
+  },
+  "tree.n.01_18": {
+   "category": "tree",
+   "position": [
+    -7.8486,
+    -3.853,
+    4.9677
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_7": {
+   "category": "tree",
+   "position": [
+    24.9807,
+    -0.1717,
+    3.8583
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "easter_egg.n.01_3": {
+   "category": "easter_egg",
+   "position": [
+    17.0666,
+    -0.8677,
+    0.1998
+   ],
+   "orientation_xyzw": [
+    -0.2771,
+    0.3992,
+    -0.1039,
+    -0.8678
+   ]
+  },
+  "tree.n.01_11": {
+   "category": "tree",
+   "position": [
+    -14.0099,
+    15.8483,
+    3.7822
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7071,
+    -0.7071
+   ]
+  },
+  "tree.n.01_4": {
+   "category": "tree",
+   "position": [
+    -12.9471,
+    -3.6955,
+    4.9677
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.9659,
+    0.2588
+   ]
+  },
+  "easter_egg.n.01_2": {
+   "category": "easter_egg",
+   "position": [
+    17.1075,
+    -0.7975,
+    0.0927
+   ],
+   "orientation_xyzw": [
+    -0.0259,
+    0.0665,
+    -0.8772,
+    -0.4748
+   ]
+  },
+  "tree.n.01_13": {
+   "category": "tree",
+   "position": [
+    -10.2111,
+    -3.8487,
+    4.9677
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.1736,
+    0.9848
+   ]
+  },
+  "tree.n.01_20": {
+   "category": "tree",
+   "position": [
+    -15.0454,
+    10.9425,
+    3.7822
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_2": {
+   "category": "tree",
+   "position": [
+    -2.8427,
+    11.8201,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "lawn.n.01_1": {
+   "category": "lawn",
+   "position": [
+    11.1447,
+    7.9216,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tree.n.01_21": {
+   "category": "tree",
+   "position": [
+    26.9201,
+    0.1561,
+    2.2087
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.4617,
+    0.887
+   ]
+  },
+  "easter_egg.n.01_1": {
+   "category": "easter_egg",
+   "position": [
+    16.9811,
+    -0.7844,
+    0.1201
+   ],
+   "orientation_xyzw": [
+    0.5417,
+    -0.2878,
+    -0.7514,
+    0.2432
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}
