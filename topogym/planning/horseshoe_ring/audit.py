@@ -16,6 +16,7 @@ from topogym.evaluation.task_metrics import placement_candidate
 from topogym.planning.rigid_reference.feedback import body_pose
 from topogym.planning.rigid_reference.geometry import freeze_scene
 from topogym.utils.io import write_json_atomic
+from topogym.utils.grasp import held_finger_contact_mask
 
 
 def audit_run(root, *, prefix=False):
@@ -33,9 +34,17 @@ def audit_run(root, *, prefix=False):
         raise ValueError('Audit geometry/goal identity differs from the recorded execution')
     source=json.loads((root/'run_source_manifest.json').read_text())
     source_valid=all(hashlib.sha256((root/'source_snapshot'/name).read_bytes()).hexdigest()==digest for name,digest in source.items())
+    # New executions bind the task's contact policy explicitly. Historical
+    # records without it retain the old uniform 1 mm audit and force gate.
+    contact_policy=report.get('terminal',{}).get('contact_penetration')
+    if contact_policy is not None and contact_policy!=task.terminal_metadata()['contact_penetration']:
+        raise ValueError('Recorded contact policy differs from the auditor task')
+    other_limit=float(contact_policy['other_contacts_m']) if contact_policy else .001
+    held_limit=float(contact_policy['held_finger_contacts_m']) if contact_policy else .001
     dt=float(config['physics_dt_s']);failures=[];previous=None;active_before=False;stable=0.;best_stable=0.
     first_goal=None;count=0;max_depth=0.;acquired={};lost=[];phases={};birth=None;last=None
     max_robot_self_depth=0.;max_robot_table_depth=0.
+    max_other_depth=0.;max_held_depth=0.
     link_names=report.get('contact_link_names',{})
     initial_linkage=None;linkage=None
     acquisition_covered=bool(report.get('grasp_finger_links'));acquisition_valid=True
@@ -74,7 +83,20 @@ def audit_run(root, *, prefix=False):
             depth=max((float(d) for a,b,d in zip(contacts['link_a'],contacts['link_b'],contacts['penetration'])
                        if a in task_links or b in task_links),default=0.)
             max_depth=max(max_depth,depth)
-            if depth>.001:failures.append(dict(tick=tick,reason='task_penetration_above_1mm',depth_m=depth))
+            involved=(np.isin(contacts['link_a'],list(task_links)) |
+                      np.isin(contacts['link_b'],list(task_links)))
+            held=(held_finger_contact_mask(contacts,report.get('grasp_finger_links',{}),
+                                          task_links,world.get('grasp')) if contact_policy else
+                  np.zeros(len(contacts['penetration']),dtype=bool))
+            penetration=np.asarray(contacts['penetration'])
+            other_depth=float(penetration[involved & ~held].max(initial=0.))
+            held_depth=float(penetration[involved & held].max(initial=0.))
+            max_other_depth=max(max_other_depth,other_depth);max_held_depth=max(max_held_depth,held_depth)
+            if other_depth>other_limit:
+                failures.append(dict(tick=tick,reason='task_penetration_above_1mm',depth_m=other_depth))
+            if held_depth>held_limit:
+                failures.append(dict(tick=tick,reason='held_finger_penetration_above_task_limit',
+                                     depth_m=held_depth,limit_m=held_limit))
             for a,b,d in zip(contacts['link_a'],contacts['link_b'],contacts['penetration']):
                 na,nb=link_names.get(str(a),''),link_names.get(str(b),'')
                 if na.startswith('robot/') and nb.startswith('robot/'):
@@ -92,7 +114,8 @@ def audit_run(root, *, prefix=False):
                     target_link=binding['links'][1]
                     seen=set()
                     for a,b,d,f in zip(contacts['link_a'],contacts['link_b'],contacts['penetration'],contacts['force']):
-                        if target_link in (a,b) and d>=0 and np.linalg.norm(f)>0:
+                        force_ok=contact_policy is not None or np.linalg.norm(f)>0
+                        if target_link in (a,b) and 0<=d<=config['grasp_assist']['max_penetration_m'] and force_ok:
                             seen.add(b if a==target_link else a)
                     expected=set(report.get('grasp_finger_links',{}).get(event['hand'],()))
                     valid=(acquisition_covered and len(expected)==2 and expected<=seen
@@ -147,6 +170,10 @@ def audit_run(root, *, prefix=False):
         physical_evidence_sha256=digest.hexdigest(),identity=identity,physics_ticks=count,
         continuous_from_birth=not any(f.get('reason')=='noncontinuous_history' for f in failures),
         maximum_task_contact_penetration_m=max_depth,chain_connections_intact=not any(f.get('reason')=='chain_connection_lost' for f in failures),
+        contact_policy=contact_policy or dict(other_contacts_m=.001,held_finger_contacts_m=.001,
+                                             scope='historical uniform audit; original verdict not relaxed'),
+        maximum_other_task_contact_penetration_m=max_other_depth,
+        maximum_held_finger_contact_penetration_m=max_held_depth,
         maximum_robot_self_contact_penetration_m=max_robot_self_depth,
         maximum_robot_table_contact_penetration_m=max_robot_table_depth,
         maximum_observed_joint_limit_residue_rad=maximum_joint_limit_residue,

@@ -36,6 +36,22 @@ class GraspTarget:
         return (self.entity, self.link)
 
 
+def rigid_grasp_region(entity, link, vertices, *, margin_m=.005):
+    """Enclose authored link-local geometry for tasks allowing surface regrasp.
+
+    This only declares a region. The rigid backend still requires fresh closing
+    intent, simultaneous contacts from both fingers, and the usual health gates.
+    """
+    points = np.asarray(vertices, dtype=float)
+    if points.ndim != 2 or points.shape[1] != 3 or not len(points) or not np.isfinite(points).all():
+        raise ValueError("Grasp geometry must contain finite link-local vertices")
+    if not math.isfinite(margin_m) or margin_m <= 0:
+        raise ValueError("Grasp region margin must be finite and positive")
+    center = (points.min(axis=0) + points.max(axis=0)) / 2
+    radius = float(np.linalg.norm(points-center, axis=1).max()) + margin_m
+    return GraspTarget(entity, link, tuple(center), radius)
+
+
 @dataclass(frozen=True)
 class SoftGraspTarget:
     """Allowed material region; dynamic indices are chosen only near the hand.

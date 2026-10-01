@@ -211,12 +211,15 @@ class BuzzIK:
         r = rotation(np.asarray(poses["orientation_wxyz"]).reshape(-1, 4)[index])
         return p+r.apply(self.group.tcp_position_in_hand_m), r
 
-    def plan_free_tcp(self, target, *, seed=None, random_seed=0, iterations=12000, goal_seed=None):
+    def plan_free_tcp(self, target, *, seed=None, random_seed=0, iterations=12000, goal_seed=None,
+                      minimum_clearance=.001):
         """Bidirectional joint-space search for an empty, opened hand.
 
         Returned dense FK targets are executed through the ordinary EE compiler.
         No robot state is set by this search; actual motion needs its own audit.
         """
+        if not np.isfinite(minimum_clearance) or not .0001 <= minimum_clearance <= .01:
+            raise ValueError("Free-hand planning clearance must be between 0.1 and 10 mm")
         start = self.seed.copy() if seed is None else np.asarray(seed).copy()
         indices = self.arm_qindices
         limits = np.asarray(self.group.arm_limits_rad)
@@ -231,7 +234,7 @@ class BuzzIK:
             return q
         def valid(arm, minimum_margin=corridor_margin):
             margin = np.minimum(arm-limits[:,0],limits[:,1]-arm).min()
-            return margin >= minimum_margin and self.clearance(full(arm)) >= .001
+            return margin >= minimum_margin and self.clearance(full(arm)) >= minimum_clearance
         def edge(a, b):
             count = max(1, int(np.ceil(np.linalg.norm(b-a)/.035)))
             return all(valid(a+u*(b-a)) for u in np.linspace(0,1,count+1)[1:])

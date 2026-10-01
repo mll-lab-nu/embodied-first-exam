@@ -14,7 +14,7 @@ import sys
 import time
 import traceback
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT))
 
 
@@ -235,7 +235,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     source=snapshot(args.output)
     (args.output/'source_manifest.json').rename(args.output/'run_source_manifest.json')
-    command=[sys.executable,str(source/'scripts/run_horseshoe_policy.py'),'--worker','--output',str(args.output),
+    command=[sys.executable,str(source/'scripts/oracle_runners/run_horseshoe_policy.py'),'--worker','--output',str(args.output),
              '--variant',args.variant,'--seed',str(args.seed),'--part',args.part,'--settle-tilt-deg',str(args.settle_tilt_deg),
              '--settle-translation',*[str(v) for v in args.settle_translation],'--fold-tracking-m',str(args.fold_tracking_m),
              '--settle-axis',args.settle_axis,'--settle-secondary-y-deg',str(args.settle_secondary_y_deg),

@@ -23,6 +23,8 @@ class HorseshoePolicy:
             position_bias_limit_m=.03,
             position_integral_gain_s_inv=2.,
             position_velocity_gain_s=0.,
+            position_velocity_filter_s=0.,
+            tracking_stall_timeout_s=None,
             rebase_support_each_stage=False,
             gate_support_tracking=True,
             exit_goal_mode='all_axes',
@@ -48,9 +50,13 @@ class HorseshoePolicy:
         bias_limit=float(self.withdrawal_parameters['position_bias_limit_m'])
         if not np.isfinite(bias_limit) or not .001<=bias_limit<=.10:
             raise ValueError('Position feedback bias limit must be between 1 and 100 mm')
-        for key,high in (('position_integral_gain_s_inv',4.),('position_velocity_gain_s',1.)):
+        for key,high in (('position_integral_gain_s_inv',4.),('position_velocity_gain_s',1.),
+                         ('position_velocity_filter_s',2.)):
             value=float(self.withdrawal_parameters[key])
             if not np.isfinite(value) or not 0<=value<=high:raise ValueError(f'Invalid {key}')
+        stall=self.withdrawal_parameters['tracking_stall_timeout_s']
+        if stall is not None and (not np.isfinite(float(stall)) or not .1<=float(stall)<=30.):
+            raise ValueError('Tracking stall window must be between 0.1 and 30 seconds')
         clearance=float(self.withdrawal_parameters['robot_puzzle_clearance_m'])
         if not np.isfinite(clearance) or not .00005<=clearance<=.0005:
             raise ValueError('Invalid robot/puzzle planning clearance')
@@ -75,6 +81,7 @@ class HorseshoePolicy:
         self.angle_bias = {s:np.zeros(3) for s in self.grasps}
         self.held_entities={s:'horseshoe_'+s for s in self.grasps}
         self.nominal_tcp={}
+        self.velocity_feedback_state={}
 
     def act(self, observation):
         self.obs = observation
@@ -128,15 +135,39 @@ class HorseshoePolicy:
             if t>=1.:break
         yield from self.hold(.5)
 
+    def feedback_velocity(self, side, filter_s):
+        """Filter control-period displacement rather than substep-end jitter."""
+        name=self.held_entities[side]
+        body=self.obs['privileged']['world']['bodies'][name]
+        if filter_s<=0:return np.asarray(body['linear_velocity_m_s'])
+        now=self.time();position=np.asarray(body['position_m'])
+        previous=self.velocity_feedback_state.get(side)
+        if previous is None or previous['body']!=name or now<previous['time_s']:
+            previous=dict(body=name,time_s=now,position_m=position.copy(),velocity_m_s=np.zeros(3))
+            self.velocity_feedback_state[side]=previous
+        elif now>previous['time_s']:
+            elapsed=now-previous['time_s']
+            average=(position-previous['position_m'])/elapsed
+            alpha=-np.expm1(-elapsed/filter_s)
+            previous['velocity_m_s']+=alpha*(average-previous['velocity_m_s'])
+            previous.update(time_s=now,position_m=position.copy())
+        # Two adjacent stages may consume the same observation. Do not
+        # differentiate or decay it twice without an intervening physics tick.
+        return previous['velocity_m_s'].copy()
+
     def follow_bodies(self, target, seconds, phase, *, pose_at=None, tracking_m=.002, tracking_limits=None,
-                      progress_sides=None, position_bias_limit_m=.03,
-                      position_integral_gain_s_inv=2.,position_velocity_gain_s=0.):
-        self.phase=phase;start=self.time();initial=self.bodies();progress=0.
+                      progress_sides=None, fixed_sides=(), position_bias_limit_m=.03,
+                      position_integral_gain_s_inv=2.,position_velocity_gain_s=0.,
+                      position_velocity_filter_s=0.,tracking_stall_timeout_s=None):
+        self.phase=phase;start=self.time();initial=self.bodies();progress=0.;last_progress=start
         tracking_limits=tracking_limits or {}
         progress_sides=set(target if progress_sides is None else progress_sides)
         if not progress_sides or not progress_sides<=set(target):raise ValueError('Invalid tracking gate hands')
+        fixed_sides=set(fixed_sides)
+        if not fixed_sides<=set(target):raise ValueError('Invalid fixed target hands')
         while True:
             desired=pose_at(progress) if pose_at else {s:interpolate(initial[s],target[s],progress) for s in target}
+            for side in fixed_sides:desired[side]=target[side]
             actual=self.bodies();commands={};errors={};nominal={};damping={}
             for s,(p,r) in desired.items():
                 ep=p-actual[s][0];er=(r*actual[s][1].inv()).as_rotvec()
@@ -144,7 +175,7 @@ class HorseshoePolicy:
                                      -position_bias_limit_m,position_bias_limit_m)
                 self.angle_bias[s]=np.clip(self.angle_bias[s]+2*self.dt*er,-.15,.15)
                 cr=Rotation.from_rotvec(self.angle_bias[s]+.5*er)*r
-                velocity=(np.asarray(self.obs['privileged']['world']['bodies'][self.held_entities[s]]['linear_velocity_m_s'])
+                velocity=(self.feedback_velocity(s,position_velocity_filter_s)
                           if position_velocity_gain_s else np.zeros(3))
                 damping[s]=np.clip(position_velocity_gain_s*velocity,-.02,.02)
                 commands[s]=(p+self.bias[s]+.5*ep-damping[s]+cr.apply(self.offsets[s][0]),cr*self.offsets[s][1])
@@ -152,15 +183,25 @@ class HorseshoePolicy:
                 errors[s]=float(np.linalg.norm(ep)+.10*np.linalg.norm(er))
             self.diagnostics=dict(progress=progress,material_tracking_errors_m=errors,
                                   progress_gated_hands=sorted(progress_sides),
+                                  fixed_body_target_hands=sorted(fixed_sides),
                                   position_bias_m={s:self.bias[s].tolist() for s in desired},
                                   position_bias_limit_m=position_bias_limit_m,
                                   position_integral_gain_s_inv=position_integral_gain_s_inv,
                                   position_velocity_gain_s=position_velocity_gain_s,
+                                  position_velocity_filter_s=position_velocity_filter_s,
+                                  tracking_stall_timeout_s=tracking_stall_timeout_s,
                                   velocity_feedback_m={s:v.tolist() for s,v in damping.items()})
             if all(errors[side]<tracking_limits.get(side,tracking_m) for side in progress_sides):
                 if progress>=1.:break
                 progress=min(1.,progress+self.dt/seconds)
-            if self.time()-start>seconds*4+10:raise RuntimeError(f'Object tracking stalled: {self.diagnostics}')
+                last_progress=self.time()
+            if tracking_stall_timeout_s is None:
+                stalled=self.time()-start>seconds*4+10
+            else:
+                # The enclosing qualification stage still has its hard
+                # 50 s budget. Intermittent forward progress is not a stall.
+                stalled=self.time()-last_progress>tracking_stall_timeout_s
+            if stalled:raise RuntimeError(f'Object tracking stalled: {self.diagnostics}')
             yield self.command(commands,nominal=nominal)
 
     def turn_pair(self, angle_deg, seconds, phase, *, axis=None):
@@ -426,7 +467,9 @@ class HorseshoePolicy:
         tracking_limits=({'right':float(params['support_tracking_m'])}
                          if params.get('support_tracking_m') is not None else None)
         progress_sides=None if params['gate_support_tracking'] else ('left',)
-        feedback={k:params[k] for k in ('position_bias_limit_m','position_integral_gain_s_inv','position_velocity_gain_s')}
+        feedback={k:params[k] for k in ('position_bias_limit_m','position_integral_gain_s_inv',
+                                       'position_velocity_gain_s','position_velocity_filter_s',
+                                       'tracking_stall_timeout_s')}
         self.planner.withdrawal_parameters=params
         self.planner.withdrawal_use_joint=self.withdrawal_mode=='joint-staged'
         self.phase=f'plan_ring_stage_{stage}'
@@ -447,11 +490,11 @@ class HorseshoePolicy:
             motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
             yield from self.follow_bodies({'left':target,'right':self.support_hold},max(.5,float(motion/params['speed_m_s'])),
                 f'withdraw_ring_stage_{stage}_{index}',tracking_m=params['tracking_m'],
-                tracking_limits=tracking_limits,progress_sides=progress_sides,
+                tracking_limits=tracking_limits,progress_sides=progress_sides,fixed_sides=('right',),
                 **feedback)
         yield from self.follow_bodies({'left':target,'right':self.support_hold},.25,
             f'settle_ring_stage_{stage}',tracking_m=params['tracking_m'],
-            tracking_limits=tracking_limits,progress_sides=progress_sides,
+            tracking_limits=tracking_limits,progress_sides=progress_sides,fixed_sides=('right',),
             **feedback)
         return False
 

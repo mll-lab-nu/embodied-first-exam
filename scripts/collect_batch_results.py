@@ -14,6 +14,19 @@ def load_json(path):
         return {}
 
 
+def artifact_source(trial, mode, name):
+    """Use Harbor's submitted trajectory for unlimited, verifier evidence otherwise."""
+    relative = pathlib.Path("artifacts/app/output" if mode == "unlimited" and name == "trajectory.npz" else "verifier") / name
+    src = trial
+    if src.is_symlink():
+        return None
+    for part in relative.parts:
+        src = src / part
+        if src.is_symlink():
+            return None
+    return src if src.is_file() else None
+
+
 def classify_trial(job, row, mode):
     """Only a finished trial + verifier evidence counts as completion, not job/result.json."""
     results = sorted(job.glob("*/result.json"))
@@ -76,8 +89,8 @@ def collect_manifest(manifest_path, jobs):
                     target = run / "results" / sample["task_id"] / sample["difficulty"] / sample["sample_id"] / mode / "trial_01" / f"attempt_{row['attempt']:03d}"
                     target.mkdir(parents=True, exist_ok=True)
                     for name in ("reward.json", "replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
-                        src = trial / "verifier" / name
-                        if src.is_file() and not src.is_symlink():
+                        src = artifact_source(trial, mode, name)
+                        if src is not None:
                             dest = target / name
                             if not dest.exists() or src.stat().st_size != dest.stat().st_size or src.stat().st_mtime > dest.stat().st_mtime:
                                 shutil.copy2(src, dest)
@@ -122,7 +135,8 @@ def legacy_main():
             ar=r.get("agent_result") or {}
             d=out/name/mode; d.mkdir(parents=True, exist_ok=True)
             for f in ("replay.mp4","replay.last.png","reward.json","episode.jsonl","trajectory.npz"):
-                if (trial/"verifier"/f).exists(): shutil.copy(trial/"verifier"/f, d/f)
+                src = artifact_source(trial, mode, f)
+                if src is not None: shutil.copy(src, d/f)
             for f in ("gen.py",):
                 src=trial/"artifacts/app/output"/f
                 if src.exists(): shutil.copy(src, d/f)

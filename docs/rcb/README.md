@@ -456,7 +456,11 @@ scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作�
 3. **结束原因多一个 `task_failed`**：部分家族有失败判据，例如碰到蜂鸣线，模拟器会就此结束这一局。limited 下以 `reason="task_failed"` 结束，这个值参考仓库没有；unlimited 下 `status()["episode_end"]` 给出原因。
 4. **GPU 驱动能力**：compose 里多了 `runtime: nvidia` 和 `NVIDIA_DRIVER_CAPABILITIES: all`，因为 Nyx 用 Vulkan 渲染，需要图形驱动库。
 5. **sim 服务的线程结构**（2.2）。
-6. **辅助抓持**：参照 BEHAVIOR-1K，由实例的 `simulator.grasp_assist` 开启，规则写在 `/spec` 和 instruction 里。目前开启的有两个：cube；interlocked_claws，用任务自己推荐的配置，hard 变体开局时夹爪已闭合并夹住部件。
+6. **辅助抓持**：以实际生成的 `instance.json` 中 `simulator.grasp_assist` 为准，规则由同一实例生成到 `/spec` 和 instruction。当前新实例对七类纯刚体任务的 easy/medium/hard 统一启用 `contact_weld_v1`：lock_picking、interlocked_claws、buzz_wire_3d、cast_coil、cast_keyhole、hedgehog_in_cage、horseshoe_ring。cube 测试任务也开启。Fiber 按柔性线缆排除，与 blanket_flatten、knot_untying、rope_threading、orbits、slotted_post_ring 保持关闭。limited/unlimited 共用同一份冻结配置。已有实例不会被家族表的新默认值覆盖，缺少该字段的旧实例仍为 `none`；采用新设置须使用新源码／镜像重新生成实例、describe 和任务包。
+
+   Lock 保留钥匙柄区域与 0.05 s 接触准入；Claws 保留各档两件的推荐区域和闭合预抓意图，仍需双指接触满足准入后取得约束。Buzz、Coil、Keyhole 的任务模块提供与参考执行器相同的手柄／零件区域。Hedgehog 根据球体及尖刺的 link 局部几何生成抓持区域，Horseshoe 对两只马蹄和目标环分别生成区域，允许整个 episode 中的换抓；不依赖 oracle 输入文件或阶段。两者的 TCP 距离门限随区域尺寸确定。所有绑定仍需真实双指接触，张开夹爪即释放，保持原有穿透、相对位姿和单手占有约束。
+
+   terminal 与 success 默认启用适用于全部 13 类任务、39 个难度档；`goal_complete=True` 表示允许进行成功判定，不表示已经成功或已通过物理可解性验收。运行时证据缺失仍可能得到 `evaluation_status="unavailable"`。确认时长和是否需要释放取自所选任务的有效参数与 `public_goal`：默认 Buzz Wire 为 1 s、Hedgehog 为 2 s，其余为 0.5 s；Blanket、Buzz Wire、Cast Coil、Knot 要求释放及停稳。其他任务按各自的持握、速度与几何条件判定，不由 assist 开关替代成功条件。
 
 ## 4. 目录结构（Harbor 层）
 
@@ -563,7 +567,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 现有的回退用法都落在这两类 tick 上，不受影响：
 - `planning/solvability.py` 回到某个阶段开始前的 tick，这个阶段作为一个 segment 执行；
-- `scripts/run_rigid_reference_policy.py` 回到 `runner.initial`，即这局的第一个 tick。
+- `scripts/oracle_runners/run_rigid_reference_policy.py` 回到 `runner.initial`，即这局的第一个 tick。
 
 需要回退到任意 tick 的代码，显式设 `history_storage="memory"`。历史测试通过公共 conftest 选择 `"memory"`；该独立测试套件现已[归档](../../legacy/research_tools_20260929/tests/conftest.py)，当前 rollout 默认值不受其修改。
 
@@ -664,7 +668,7 @@ bash bash_scripts/run_difficulty_trials.sh --phase plan --run-id difficulty-eval
 
 入口现默认启动 Docker 控制器；新用户见 [Docker 启动说明](docker_quickstart_zh.md)。以下难度评测命令使用 Docker；复用旧宿主环境与历史 run 时加 `--backend local`，或直接调用 Python；交付范围及分级验收见 [Docker 交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
 
-结果集中上传到 `LGVamper/toponym_evaluation_results` 的参数、目录、凭据与补传设计见 [HF 结果上传工程计划](difficulty_results_hf_plan_zh.md)。该功能目前待实施，现有入口尚不支持 `--results_to_hf`。
+结果可通过 `--results_to_hf` 集中上传到私有 dataset `LGVamper/toponym_evaluation_results`，支持环境变量或 `--hf-token-file` 注入凭据、离线预览及 `--phase upload` 补传。具体命令见 [HF 上传用法](docker_quickstart_zh.md#上传结果到私有-hf-dataset)，设计与验收范围见 [HF 结果上传工程计划](difficulty_results_hf_plan_zh.md)。
 
 CUDA 配置默认 `cu128`；面向 R580+ 驱动的新机器可显式使用 `--cuda-flavor cu130`。两套固定 torch 2.11 和原始 pyuipc 0.0.25 材料源码，采用独立依赖锁与镜像身份；Blackwell 构建目标和实机验收状态分开记录，见 [双 CUDA 配置实施](cuda_blackwell_delivery_plan_zh.md#10-双-cuda-配置实施)。同一个 run ID 不能切换 CUDA 配置。
 

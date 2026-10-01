@@ -22,6 +22,7 @@ import sys
 import time
 
 import sample_difficulty_instances as sampling
+import difficulty_hf_auth as hf_auth
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
@@ -60,7 +61,7 @@ def parse_args(argv=None):
                "Docker subcommands: check, auth login --device-auth, auth status. "
                "Direct keys may enter shell history/process argv. Use --api-key without a value for hidden TTY input.")
     parser.add_argument("--run-id")
-    parser.add_argument("--phase", choices=("plan", "prepare", "preflight", "run", "collect", "all"), default="all")
+    parser.add_argument("--phase", choices=("plan", "prepare", "preflight", "run", "collect", "upload", "all"), default="all")
     parser.add_argument("--list-tasks", action="store_true")
     parser.add_argument("--work-dir", type=Path, help="Docker default: launcher cwd/topogym-work; direct Python default: repository")
     parser.add_argument("--gpu-device", default="0", help="host GPU index or UUID")
@@ -80,9 +81,11 @@ def parse_args(argv=None):
     parser.add_argument("--env-file", type=Path, help="parse the selected key as data, never shell-source")
     parser.add_argument("--gpu-wait-s", type=int, default=600)
     parser.add_argument("--gpu-min-free-mb", type=int, default=12000)
+    hf_auth.add_arguments(parser)
     args = parser.parse_args(argv)
     if args.list_tasks:
         return args
+    hf_auth.validate_arguments(args)
     if not re.fullmatch(r"(?:[0-9]+|GPU-[A-Za-z0-9-]+)", args.gpu_device):
         raise EvaluationError("invalid --gpu-device")
     if not args.run_id or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}", args.run_id):
@@ -323,7 +326,7 @@ class DifficultyEvaluation:
         self.owns_gpu_lock = False
         self.python = sys.executable
         self.harbor = os.environ.get("TOPOGYM_HARBOR", str(ROOT / ".venv-harbor/bin/harbor"))
-        env = dict(os.environ)
+        env = hf_auth.clean_environment(os.environ, args)
         for name in (*AUTH_VARIABLES, args.api_key_env, "TOPOGYM_LAUNCH_KEY"):
             if name:
                 env.pop(name, None)
@@ -334,10 +337,11 @@ class DifficultyEvaluation:
         if os.environ.get("TOPOGYM_CONTAINER") == "1":
             from difficulty_delivery import Delivery, configure_host_metrics
             configure_host_metrics()
-            self.delivery = Delivery(self.work, self.commands, gpu_device=args.gpu_device,
-                                     run_id=args.run_id, release_lock=args.release_lock, cuda_flavor=args.cuda_flavor)
-            if not any(arg.startswith("version=") for arg in args.agent_arg):
-                args.agent_arg.append("version=" + self.delivery.info["codex_version"])
+            if args.phase != "upload":
+                self.delivery = Delivery(self.work, self.commands, gpu_device=args.gpu_device,
+                                         run_id=args.run_id, release_lock=args.release_lock, cuda_flavor=args.cuda_flavor)
+                if not any(arg.startswith("version=") for arg in args.agent_arg):
+                    args.agent_arg.append("version=" + self.delivery.info["codex_version"])
 
     def load_collector(self):
         # Load the run's frozen implementation; old manifests keep their original semantics.
@@ -356,6 +360,57 @@ class DifficultyEvaluation:
         return result
 
     def execute(self):
+        if self.args.phase == "upload" and not self.manifest_path.is_file():
+            raise EvaluationError("phase upload requires an existing collected run; check --work-dir and --run-id")
+        if not hf_auth.active(self.args):
+            if self.args.results_to_hf:
+                progress("[hf-upload] Upload deferred: this phase does not publish results")
+            elif self.args.phase in ("all", "run", "collect"):
+                progress("[hf-upload] Upload disabled")
+            return self.execute_evaluation()
+        from difficulty_results_hf import UploadLog, Publisher, export_snapshot, publication_lock, recovery_command
+        self.run.mkdir(parents=True, exist_ok=True)
+        secrets = [os.environ.get(key) for key in ("OPENAI_API_KEY", "OPENROUTER_API_KEY", self.args.api_key_env) if key]
+        log = UploadLog(self.run, secrets)
+        publisher, result = None, None
+        try:
+            if not self.args.hf_dry_run:
+                token, source = hf_auth.resolve_token(self.args)
+                log.scrub.secrets += (token,)
+                publisher = Publisher(self.run, self.args, token, log, self.commands.check_resources)
+                publisher.preflight(source)
+            result = 0 if self.args.phase == "upload" else self.execute_evaluation()
+            if self.auth_env:
+                log.scrub.secrets += tuple(self.auth_env.get(key) for key in ("OPENAI_API_KEY", "OPENROUTER_API_KEY") if self.auth_env.get(key))
+            # Lock order: run then publisher. GPU lease has already been released.
+            with lock(self.run / ".lock", "another invocation owns this run-id"):
+                with publication_lock(self.run):
+                    staging, descriptor = export_snapshot(self.run, self.args, log, self.commands.check_resources)
+                    if self.args.hf_dry_run:
+                        log.emit("dry_run", f"Dry run: no upload performed | snapshot={staging} | prefix={descriptor['identity']['prefix']}")
+                    else:
+                        publisher.publish(staging, descriptor)
+            return result
+        except (Interrupted, KeyboardInterrupt):
+            log.emit("interrupted", "Upload interrupted; local results retained", "WARN")
+            log.emit("recovery", recovery_command(self.args, self.work))
+            raise
+        except (hf_auth.HFError, OSError, ValueError, KeyError, TypeError) as error:
+            code = error.code if isinstance(error, hf_auth.HFError) else "invalid_results"
+            log.emit("failed", f"Upload failed | reason={code} | evaluation_exit_code={result} | upload_status=failed", "ERROR", error_code=code)
+            if isinstance(error, hf_auth.HFError):
+                log.emit("failure_detail", str(error), "ERROR", error_code=code)
+            if publisher:
+                with suppress(OSError):
+                    publisher.state("failed", error_code=code, evaluation_exit_code=result)
+            log.emit("local_results", f"Local results retained: {self.run}")
+            if result is None and self.args.phase != "upload":
+                log.emit("not_started", "Evaluation did not complete; fix the error before resuming the requested evaluation phase")
+            else:
+                log.emit("recovery", "Restore credentials/network access if needed, then retry: " + recovery_command(self.args, self.work))
+            return result or (2 if code in {"invalid_results", "identity_conflict", "configuration"} else 3)
+
+    def execute_evaluation(self):
         self.run.mkdir(parents=True, exist_ok=True)
         with lock(self.run / ".lock", "another invocation owns this run-id"):
             stage("plan")
@@ -363,7 +418,11 @@ class DifficultyEvaluation:
             progress("Validating frozen manifest/source" if self.manifest_path.exists() else "Sampling instances and freezing source")
             options = {name: getattr(self.args, name) for name in ("setting", "tasks", "sampling_seed", "samples_per_difficulty",
                        "agent_wall_clock_s", "concurrency", "resume")}
+            new_manifest = not self.manifest_path.exists()
             self.manifest = sampling.prepare_manifest(self.run, **options)
+            if new_manifest and self.args.results_to_hf:
+                from difficulty_results_hf import utc
+                sampling.atomic_json(self.run / "run-created.json", dict(created_at=utc()))
             profile_path = self.run / "cuda-profile.json"
             profile = dict(cuda_flavor=self.args.cuda_flavor)
             if profile_path.exists() and read_json(profile_path) != profile:
@@ -856,6 +915,9 @@ def main(argv=None):
             args.work_dir = safe_work_dir(args.work_dir)
         if args.setting:
             args.setting = args.setting.resolve()
+        if args.hf_token_file is not None:
+            # Preserve invocation-relative host paths; read_token rejects symlinks.
+            args.hf_token_file = args.hf_token_file.expanduser().absolute()
         os.chdir(ROOT)
         if args.list_tasks:
             for number, task in enumerate(sampling.TASK_IDS, 1):
@@ -864,7 +926,7 @@ def main(argv=None):
         handlers = {sig: signal.signal(sig, on_signal) for sig in (signal.SIGINT, signal.SIGTERM)}
         try:
             with ExitStack() as session:
-                if os.environ.get("TOPOGYM_CONTAINER") == "1" and args.auth == "subscription":
+                if os.environ.get("TOPOGYM_CONTAINER") == "1" and args.auth == "subscription" and args.phase != "upload":
                     auth_home = Path(os.environ["CODEX_HOME"])
                     session.enter_context(lock(auth_home / ".auth.lock", "another operation is using this login"))
                     if args.auth_json:

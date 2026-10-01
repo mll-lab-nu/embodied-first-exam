@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -34,26 +34,18 @@ def main():
         from topogym.planning.hedgehog_in_cage.recipes import run_medium_oracle
         torch.set_num_threads(1)
         pickup = json.loads(args.pickup.read_text()) if args.pickup else None
-        center = pickup["grip_point_in_ball"] if pickup else [0., 0., -.06]
-        radius = .03
-        if pickup and pickup.get("regrasps"):
-            import numpy as np
-            points = np.asarray([center, *[p["grip_point_in_ball"] for p in pickup["regrasps"]]], float)
-            if points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all():
-                raise ValueError("Every grasp stage needs a finite local contact point")
-            # The public configuration declares each rigid link once. Use one
-            # explicit region containing the planned contact neighborhoods.
-            # Acquisition still requires current bilateral native contacts,
-            # the unchanged TCP-distance gate and a fresh closing intent.
-            center = points.mean(axis=0)
-            radius += float(np.linalg.norm(points-center, axis=1).max())
-            center = center.tolist()
+        grasp = dict(model="none")
+        if args.assisted:
+            from dataclasses import asdict
+            from topogym.tasks.hedgehog_in_cage.common import recommended_grasp_assist
+            # Use the same authored ball-surface region as public trials. A
+            # pickup file chooses motions, not the episode's permitted surface.
+            grasp = asdict(recommended_grasp_assist(args.variation, args.seed))
             (args.output/"grasp_region.json").write_text(json.dumps(dict(
-                construction="Sphere enclosing the 30 mm contact neighborhoods for all declared stages",
-                stage_contact_points_m=points.tolist(), center_m=center, radius_m=radius,
+                construction="Task recommended authored ball-surface region",
+                configuration_source="topogym.tasks.hedgehog_in_cage.common.recommended_grasp_assist",
+                grasp_assist=grasp,
                 acquisition="Fresh closing intent and bilateral native contacts for each binding"), indent=2)+"\n")
-        grasp = (dict(model="contact_weld_v1", targets=[dict(entity="hedgehog_ball", link="hedgehog",
-                   center_m=center, radius_m=radius)]) if args.assisted else dict(model="none"))
         config = SimulatorConfig(task_id="hedgehog_in_cage", variation_id=args.variation, compute_backend="cpu",
             enable_rgb=False, enable_privileged=True, control_mode="JOINT_ABS", physics_dt_s=args.physics_dt,
             solver_substeps=args.substeps, control_decimation=args.control_decimation,
@@ -74,7 +66,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     from topogym.utils.process_limits import run_guarded
     source = snapshot(args.output)
-    command = [sys.executable, str(source/"scripts/run_hedgehog_oracle.py"), "--worker",
+    command = [sys.executable, str(source/"scripts/oracle_runners/run_hedgehog_oracle.py"), "--worker",
                "--output", str(args.output), "--seed", str(args.seed),
                "--physics-dt", str(args.physics_dt), "--substeps", str(args.substeps),
                "--control-decimation", str(args.control_decimation),

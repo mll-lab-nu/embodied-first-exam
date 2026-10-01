@@ -32,6 +32,10 @@ bash bash_scripts/run_difficulty_trials.sh \
 
 首次构建需要下载依赖和资产，进度与日志位置会显示在终端。以后复用按输入哈希标识的镜像；更换任务子集、抽样 seed 或样本数不重新安装基础依赖。运行时全部所选实例通过 prepare/preflight 后才会启动模型。
 
+当前源码生成的新实验对七类纯刚体任务的 easy/medium/hard 统一启用接触辅助抓持 `contact_weld_v1`：Lock Picking、Interlocked Claws、Buzz Wire、Cast Coil、Cast Keyhole、Hedgehog、Horseshoe。Fiber 按柔性线缆处理，与 Blanket、Knot、Rope Threading、Orbits、Slotted Post Ring 一起保持 assist 关闭。此设置作用于模型评测的 limited/unlimited，两种模式共享 `instance.json` 中的 `simulator.grasp_assist`。辅助抓持仍要求真实双指接触；张开夹爪解除约束，任务的释放、碰撞和成功条件继续生效。
+
+采用此更新须使用新源码／控制镜像和新的 run ID，由 prepare 重新生成实例和任务说明。已冻结的实例、旧镜像和 `--resume` 实验保留原配置；不能只修改 instruction 或沿用旧 describe.json 来开启 assist。新配置的接入不表示所有难度均已获得完整解题成功证明。
+
 API 模式使用自己的 key 和模型名，不需要订阅登录，也不必配置环境变量：
 
 ```bash
@@ -89,3 +93,56 @@ docker run --rm --init --stop-timeout 180 \
 环境 `check`、CPU 测试和两个任务的试跑覆盖不同范围。全任务物理预检、真实订阅/API 工具调用与轨迹评分，以及独立新机器的冷启动结果，须分别有证据才能宣称验收完成；参见 [交付实施计划](difficulty_sweep_delivery_plan_zh.md)。
 
 资源保护按系统内存占用执行：达到 90% 时停止本次工作并保留证据；CPU 即使超过 90% 也继续运行，只记录使用情况。
+
+## 上传结果到私有 HF dataset
+
+在原评测命令后添加 `--results_to_hf`，默认提交到 `LGVamper/toponym_evaluation_results`。已支持的别名为 `--results-to-hf`。token 通过 `HF_TOKEN` 环境变量或 `--hf-token-file` 注入，不需要 HF CLI、登录或人工确认；账号必须对目标 dataset 有写权限。
+
+推荐使用仓库根目录的 `.secrets/hf-token`：文件中只放 token 本身一行，不写 `export`、变量名或引号，并执行 `chmod 600 .secrets/hf-token`。本次本机实施已准备该空文件；其他机器自行创建。也可将文件放在仓库外。不要将凭据文件放进 scripts 等源码目录：源码会被冻结和构建进镜像，入口会拒绝这类位置。`.secrets/` 已被 Git、源码发行清单和镜像构建白名单排除。
+
+运行示例沿用你选择的模型参数：
+
+```bash
+bash bash_scripts/run_difficulty_trials.sh \
+  --run-id difficulty-hf-20260930 \
+  --auth api-key --model '<model-id>' --api-key \
+  --results_to_hf --hf-token-file "$PWD/.secrets/hf-token"
+```
+
+这里 `--api-key` 是模型凭据，HF token 是另一份凭据。已有模型配置时只追加最后一行的两个选项即可。使用环境变量 HF_TOKEN 时省略 `--hf-token-file`；指定其他变量用 `--hf-token-env VARIABLE_NAME`。两个显式凭据来源参数互斥，指定来源无效时直接报错，不切换账号或提示登录。Docker 通过私有临时文件只读接收 token，退出清理临时副本，不将其放入容器 Config.Env 或传给 agent/sim/verifier。
+
+上传默认包含指标、评分、已收集的视频和轨迹；`--hf-artifacts metrics` 只传指标和评分。远端按 `日期/run-id--UUID/task/difficulty/seed_x/mode/trial_01/attempt_001/` 隔离；同一发布身份锁定仓库、日期和 artifact 模式。更换 token 不改变实验身份。
+
+对已有结果离线预览，无需 token、HF SDK 或 GPU：
+
+```bash
+bash bash_scripts/run_difficulty_trials.sh \
+  --phase upload --run-id '<已有 run-id>' --work-dir /data/topogym-work \
+  --results_to_hf --hf-dry-run
+```
+
+单独补传，无需模型凭据或重新运行实验：
+
+```bash
+bash bash_scripts/run_difficulty_trials.sh \
+  --phase upload --run-id '<已有 run-id>' --work-dir /data/topogym-work \
+  --results_to_hf --hf-token-file "$PWD/.secrets/hf-token"
+```
+
+历史 run 可以使用新控制器进行 upload；它验证保存的 manifest 与收集结果，不加载旧模拟器或要求原 release。若尚无 `trials.jsonl`，先在匹配的原环境执行 `--phase collect --resume`。local 后端使用相同参数和原工作目录，实际上传要求该 Python 环境安装 `huggingface-hub==1.33.0`；Docker 镜像已锁定此依赖。已存在的旧控制镜像不会自动获得新功能，需使用本次源码构建的新镜像。
+
+若历史 unlimited 结果漏收 `trajectory.npz`，在该 run 已停止后，从当前仓库直接运行新版收集器：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/collect_batch_results.py \
+  --manifest '/data/topogym-work/runs/difficulty_trials/<run-id>/manifest.lock.json' \
+  --jobs-dir '/data/topogym-work/jobs/difficulty_trials/<run-id>'
+```
+
+新版按模式取轨迹：unlimited 从 Harbor 的 `artifacts/app/output/trajectory.npz` 读取，limited 从 `verifier/trajectory.npz` 读取；奖励和回放视频仍取 verifier 产物。源文件或其目录是符号链接时不收集。只要原始 jobs 产物仍在，即可补齐本地 results 并供后续 HF standard 导出，无需重跑物理或模型。普通 `--phase collect` 加载 run 冻结的收集器，不会自动获得此修复；不要修改旧源码快照。此命令仅重新整理结果，不向 HF 写入，也不覆盖已发布的完成 attempt。
+
+终端使用 `[hf-upload]` 显示权限检查、快照文件数/大小、远端复用数、传输批次、commit、重试和完成链接；长操作每 15 秒显示状态。SDK 未提供可靠字节进度时明确标注速率和 ETA 不可用。`hf_upload/upload.log`、`events.jsonl`、`state.json` 与 staging 位于原 run 下；日志不上传。完成标记提交前不会报告 Upload complete，且 evaluation_complete 与 upload_status 分别显示。
+
+上传失败保留本地结果，打印补传命令；评测已正常完成而上传失败返回 3，评测自身已有非零码则保留其原码。pure upload 的成功只表示结果发布成功，不改变历史评测状态。补传先完成上次保留的上传快照；如本地结果又有更新，旧快照完成后再运行一次 upload 发布新版本。已发布完成 attempt 的证据不可覆盖。
+
+首次 run/all 会提前验证 HF 写权限，凭据或网络不通时不启动昂贵评测。若先运行本地实验，可省略上传开关，完成后再补传。plan/prepare/preflight 和 dry run 不读取 HF 凭据。交互 `auth hf`、PR 投稿与持续增量上传仍为后续可选功能，当前首版使用显式凭据注入。

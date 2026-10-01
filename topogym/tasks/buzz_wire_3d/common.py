@@ -12,6 +12,16 @@ from topogym.evaluation.terminal import SettlingSpec
 from topogym.utils.geometry.passage import aperture_crossings
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """The oracle's handle region, resolved from this instance's tool dimensions."""
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("buzz_wire_3d", variation_id, seed)(task_parameters, seed=seed)
+    layout = task.build_layout()
+    center = (layout.loop_radius_m + layout.stem_length_m + .55*layout.grip_length_m, 0., 0.)
+    return GraspAssistConfig("contact_weld_v1", (GraspTarget("wand", "wand", center, .025),))
+
+
 class BuzzWireTask(TaskDefinition):
     task_id = "buzz_wire_3d"
     instruction = 'Guide the metal loop along the entire wire without touching it, then release the tool on the finish support and let it settle.'

@@ -1,5 +1,7 @@
 # 双爪互锁
 
+2026-09-30：medium 与 easy/hard 统一声明 `pregrasp_weld=True`，新评测实例通过 `recommended_grasp_assist()` 启用 `contact_weld_v1`。两只手分别对各自零件取得辅助抓持，保持取得时零件相对 hand link 的位置与朝向；两件之间的相对运动和碰撞仍由物理求解器处理。闭合预抓初态使用 `initial_intent="close"`，仍需双指接触连续满足准入 0.02 s，张开夹爪即解除该手约束。实际启用以实例的 `simulator.grasp_assist` 为准，旧实例不会自动开启；此配置调整不新增完整物理成功记录。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 下一轮开发要求：[medium 锐角双窗 scripted policy 与全流程验收](hedgehog_claws_scripted_policy_plan_20260927_zh.md)。沿用原夹爪已持件且中央互锁的 segment0，验证两窗连续通路与两次定向机制；完整验收区分分离里程碑和当前目标区终态，尚未新增完整成功记录。

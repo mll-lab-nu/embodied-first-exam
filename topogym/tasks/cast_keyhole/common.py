@@ -9,6 +9,27 @@ from topogym.assets.geometry.cast_keyhole import generate_assets
 from topogym.tasks.base import EntitySpec, RigidTaskDefinition, TaskSpec
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Reuse the oracle's pickup/regrasp regions without importing a policy."""
+    import tempfile
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("cast_keyhole", variation_id, seed)(task_parameters, seed=seed)
+    with tempfile.TemporaryDirectory() as folder:
+        assembly, report = task.build_assets(Path(folder))
+    origins = {body["name"]: np.asarray(body["origin_m"]) for body in report["bodies"]}
+    rx = Rotation.from_euler("x", 90, degrees=True)
+    gold_rotation = Rotation.from_euler("z", 90, degrees=True)*rx
+    gold_shift = np.array([0., 0., assembly.template["gold_offset_z"]*assembly.unit])
+    # Midpoints of the oracle's two contact patches; coordinates are in the
+    # original plate frames. The runtime targets must use authored link frames.
+    gold = gold_shift + gold_rotation.apply([0., -.093, 0.]) - origins["keyhole_gold"]
+    silver = rx.apply([-.012, .08505, 0.]) - origins["keyhole_silver"]
+    return GraspAssistConfig("contact_weld_v1", (
+        GraspTarget("keyhole_gold", "keyhole_gold", tuple(gold), .05),
+        GraspTarget("keyhole_silver", "keyhole_silver", tuple(silver), .04)))
+
+
 class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
     task_id = "cast_keyhole"
     placement_description = 'the entire silver keyhole piece'

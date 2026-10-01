@@ -1,8 +1,10 @@
 # Difficulty trials 结果上传 Hugging Face 工程计划
 
-2026-09-30。状态：待实施。本次只核对现有代码并制定方案，未修改评测逻辑、运行实验或上传结果。
+2026-09-30。状态：首版已实现，凭据注入、结果导出、上传/补传、离线预览和上传日志已接入；实网写权限与真实 HF 提交仍待提供 token 后验证。本文保留设计与后续功能范围，实施记录见文末；实际使用见 [Docker quickstart](docker_quickstart_zh.md#上传结果到私有-hf-dataset)。
 
 可以为 `bash_scripts/run_difficulty_trials.sh` 增加 `--results_to_hf`，默认目标为用户提供的 dataset 仓库 `LGVamper/toponym_evaluation_results`。建议在现有结果收集之后增加独立导出和上传步骤，继续由 Python 调度；Bash 负责参数及凭据跨 Docker 边界的传递。
+
+认证以运行时注入维护方提供的 HF token 为主：通过 `HF_TOKEN` 环境变量或 `--hf-token-file` 指定凭据文件，控制器显式创建 `HfApi(token=token)`，自动将结果 commit 到目标 dataset。正常运行不要求执行 `hf auth login`、交互输入或保存登录；交互登录仅作为可选便利功能。
 
 首版交付自动上传、历史结果补传、离线预览、可恢复上传和多人目录隔离。实验结果先完整保存在本地，上传失败不重跑 trial。本文保留用户提供的仓库拼写 `toponym_evaluation_results`。用户已确认该仓库为 private；本次未认证浏览无法核验其内容和写权限，实施时通过有权限的身份调用 API 核对。私有状态不影响上传设计，也不需要改成公开仓库。
 
@@ -46,7 +48,8 @@
 | --- | --- |
 | `--results_to_hf` / `--results-to-hf` | 默认关闭；在本次调用中启用发布 |
 | `--hf-repo-id` | `LGVamper/toponym_evaluation_results`；固定 repo_type=dataset |
-| `--hf-token-env` | `HF_TOKEN`；可指定宿主环境变量名称；未提供凭据时进入下文的自动登录流程，不接受 token 字面值 |
+| `--hf-token-env` | 默认读取 `HF_TOKEN`；可指定其他宿主环境变量名称，不接受 token 字面值 |
+| `--hf-token-file` | 指定只包含 token 的宿主凭据文件；Docker 下通过私有临时副本只读传入控制器；与显式 `--hf-token-env` 互斥 |
 | `--hf-exp-date` | 新 run 使用首次创建的 UTC 日期；格式 YYYY-MM-DD，首次确定后持久化 |
 | `--hf-artifacts` | `standard`；另支持 `metrics`，内容见下文 |
 | `--hf-dry-run` | 只生成本地导出、清单和大小报告；不访问 HF，不需要 token |
@@ -57,13 +60,27 @@
 正常跑实验并上传，沿用现有模型认证参数：
 
 ```bash
-# 首次会隐藏提示输入 HF token，验证后保存；后续复用，也可预先提供 HF_TOKEN。
+# HF_TOKEN 由运行环境预先注入；脚本直接认证和上传，不提示登录。
 bash bash_scripts/run_difficulty_trials.sh \
   --run-id difficulty-eval-20260930 \
   --tasks 1-13 --samples-per-difficulty 1 \
   --auth api-key --model '<现有支持的模型 ID>' \
   --results_to_hf
 ```
+
+使用独立凭据文件运行，路径可由部署配置提供，token 内容不写入启动脚本：
+
+```bash
+# 凭据文件由维护方预先放置，并限制为仅当前用户可读。
+bash bash_scripts/run_difficulty_trials.sh \
+  --run-id difficulty-eval-20260930 \
+  --tasks 1-13 --samples-per-difficulty 1 \
+  --auth api-key --model '<现有支持的模型 ID>' \
+  --results_to_hf \
+  --hf-token-file /path/to/secrets/topogym-hf-token
+```
+
+以上两种认证方式二选一。文件方式也适用于下方 collect/upload 命令：每次调用附加同一个 `--hf-token-file` 路径；环境变量方式由各次运行环境持续注入。补传更换 token 不改变实验或发布身份。
 
 网络失败后，只补传已收集的结果：
 
@@ -163,7 +180,7 @@ LGVamper/toponym_evaluation_results/
 
 正常路径为：完成本地 collect → 生成发布快照 → 校验文件与身份 → 上传证据 → 最后发布完成标记和汇总。上传过程可以失败，本地结果及 trial 状态独立保存。
 
-1. **启动前检查**：run/all 开启上传时，在昂贵的模型运行和 GPU 锁获取之前完成自动登录，检查 SDK、token、目标 dataset 和写权限。权限或配置错误直接终止该次启动；网络错误有限重试后报错，明确本次实验尚未启动，可修复后重试或去掉上传开关先在本地运行。dry run 跳过全部 HF 调用。只验证身份登录成功不能代表仓库可写；选择锁定 SDK 支持的写权限检查接口。
+1. **启动前检查**：run/all 开启上传时，在昂贵的模型运行和 GPU 锁获取之前解析注入的凭据，检查 SDK、token、目标 dataset 和写权限，不执行交互登录。权限或配置错误直接终止该次启动；网络错误有限重试后报错，明确本次实验尚未启动，可修复后重试或去掉上传开关先在本地运行。dry run 跳过全部 HF 调用。只验证身份登录成功不能代表仓库可写；选择锁定 SDK 支持的写权限检查接口。
 2. **触发点**：run/all 正常结束和显式 collect 完成后上传，包括 collect 返回“存在失败或未完成项”的情况。首版按本次调用收尾发布，不逐 step 或逐帧推送。prepare/preflight 阶段失败与 Ctrl-C 优先保留本地证据并输出补传命令，不在信号清理中启动长网络任务。
 3. **锁与资源**：生成 staging 时持有原 run 锁，保证不会与 resume/collect 同时改结果；上传释放 GPU 锁后进行，并用发布锁防止同一 run 的两个 uploader 并发。保持资源监测，内存到 90% 时停止本轮拥有的上传工作并保存状态，CPU 仅记录。
 4. **本地状态**：`hf_upload/state.json` 保存 staging 哈希、已完成批次、目标前缀、错误类别、重试次数和远端 commit；不保存 token、请求头或原始异常响应。`hf_upload/staging/<snapshot_sha>/` 保留稳定待传快照。磁盘不足在准备阶段报错，不移动或删除原结果。
@@ -185,26 +202,93 @@ LGVamper/toponym_evaluation_results/
 | 非法参数、缺少已有结果、身份不一致 | 2 |
 | 用户中断 | 保留当前 130，输出恢复位置 |
 
+## 上传日志和进度提示
+
+首版包含独立的 `upload` 阶段提示，沿用现有带时间戳的终端日志风格，统一使用 `[hf-upload]` 前缀和 INFO/WARN/ERROR 级别。让运行方能判断当前是在整理文件、传输数据、等待 commit 还是重试，并始终分开报告评测结果与上传状态。
+
+| 时机 | 必须显示的内容 |
+| --- | --- |
+| 启动前权限检查 | `Checking Hugging Face access`、目标 dataset、凭据来源类型 env/file/cache、检查结果；此时不声称已经开始上传 |
+| 正式进入上传阶段 | `Uploading results to Hugging Face`、run-id、仓库、远端前缀、standard/metrics 模式 |
+| 导出与校验 | `Preparing upload snapshot`、当前步骤、已扫描文件数；完成后显示计划文件总数、总大小、缺失证据数量与本地清单位置 |
+| 对账与补传 | 已验证可复用的远端文件数、仍待处理的文件数；完整快照已经存在时显示 `Already uploaded` 并返回原 commit 链接 |
+| 传输中 | 当前批次/总批次、当前文件或相对目录、已用时间；SDK 提供可靠回调时显示本批传输字节、速率和预计剩余时间 |
+| 提交中 | `Committing batch` 与批次编号；传输结束后仍须显示等待提交的状态 |
+| 可重试故障 | WARN、经过筛选的错误类别、重试次数/上限、下次等待秒数；响应结果不明确时先显示 `Checking remote commit before retry` |
+| 发布完成 | `Upload complete`、文件数、快照逻辑大小、耗时、最终 commit SHA、固定到该 commit 的结果目录链接及本地收据位置 |
+| 上传失败或中断 | ERROR 或 WARN、简短原因、已确认提交的批次数、本地结果保留位置、补传命令；不把此前成功批次误报成全部失败 |
+| dry run 或未启用 | 分别显示 `Dry run: no upload performed` 或 `Upload disabled`；不打印 Upload complete，关闭时只提示一次 |
+
+进度统计区分“计划文件”“已传输但未提交”“已确认提交”和“远端已存在且校验可复用”。百分比若按文件数计算，必须标注 files；按字节计算必须有可靠数据来源，不能用文件数量推算字节进度。去重文件的逻辑大小不等于实际网络传输量，不把复用数据计算为上传带宽。SDK 没有细粒度回调时仅显示批次、状态和耗时，速率与 ETA 标为不可用，不模拟增长的进度条。
+
+长时间哈希、上传、等待提交或退避期间，每 15 秒输出一次状态心跳，避免用户误以为卡住；阶段切换和错误立即输出并 flush。交互终端可刷新同一行；重定向、Docker 日志及 CI 使用普通追加行，不输出终端控制字符。默认不逐文件刷屏，文件清单和详细事件保存在本地日志；心跳线程或回调必须随本次上传结束，不遗留后台任务。
+
+日志示例仅说明格式，以下数值不是实际上传记录：
+
+```text
+[2026-09-30T18:00:00Z] [hf-upload] INFO Uploading results to Hugging Face | run=difficulty-eval-20260930 | repo=LGVamper/toponym_evaluation_results | mode=standard
+[2026-09-30T18:00:02Z] [hf-upload] INFO Snapshot ready | files=126 | logical_size=88.0 MiB | missing_evidence=0
+[2026-09-30T18:00:03Z] [hf-upload] INFO Remote check complete | reusable=42 files | pending=84 files
+[2026-09-30T18:00:18Z] [hf-upload] INFO Uploading batch 1/3 | elapsed=15s | transfer_rate=unavailable | ETA=unavailable
+[2026-09-30T18:00:23Z] [hf-upload] WARN Network timeout | retry=1/3 | retry_in=5s
+[2026-09-30T18:00:40Z] [hf-upload] INFO Committing batch 1/3
+[2026-09-30T18:01:30Z] [hf-upload] INFO Publishing completion marker
+[2026-09-30T18:01:32Z] [hf-upload] INFO Upload complete | files=126 | logical_size=88.0 MiB | elapsed=92s | commit=<commit_sha>
+[2026-09-30T18:01:32Z] [hf-upload] INFO Results: https://huggingface.co/datasets/LGVamper/toponym_evaluation_results/tree/<commit_sha>/<exp_date>/<run_prefix>
+[2026-09-30T18:01:32Z] [hf-upload] INFO evaluation_complete=false | upload_status=complete | incomplete_trials=2
+```
+
+上述日志省略中间批次。只有确认完成标记提交成功或远端已存在完整标记后，才能输出 Upload complete。结果链接使用实际 SHA 和经过 URL 编码的相对目录，私有仓库链接仍要求查看者有访问权限。上传的是部分实验结果时，如实显示 `evaluation_complete=false`，不把上传完成解释为 trial 全部成功。
+
+失败时打印可直接复用的补传命令，保留原 backend、work-dir、run-id、repo-id、artifact 模式和凭据来源参数，正确引用含空格路径；使用环境变量时只提示所需变量名。示例同样为待实现行为：
+
+```text
+[hf-upload] ERROR Upload failed | reason=permission_denied | evaluation_exit_code=0 | upload_status=failed
+[hf-upload] INFO Local results retained: /data/topogym-work/runs/difficulty_trials/difficulty-eval-20260930
+[hf-upload] INFO Restore repository write access, then retry:
+bash bash_scripts/run_difficulty_trials.sh --backend docker --work-dir /data/topogym-work --phase upload --run-id difficulty-eval-20260930 --results_to_hf --hf-repo-id LGVamper/toponym_evaluation_results --hf-artifacts standard --hf-token-file /run/secrets/hf-token
+```
+
+本地追加保存 `hf_upload/upload.log` 和 `hf_upload/events.jsonl`，每次调用记录独立 invocation_id。事件字段至少包含 timestamp、level、event、run_id、stage、batch、file_count、logical_bytes、elapsed_s、retry_count 和 error_code；尚未知晓的计数使用 null。日志不作为恢复状态的唯一来源，恢复仍读取 `state.json` 并核验远端；这些日志不进入 dataset 上传白名单。
+
+token 值、Authorization 请求头、带签名的传输 URL、原始 HTTP 响应体和未经筛选的异常堆栈均不得输出。文件名、错误描述和其他外部字符串去除控制字符；SDK 默认进度与 debug 输出需要统一接管，避免绕过既有日志脱敏。日志落盘失败需明确提示并保留终端输出；不得因此将远端未知状态报告为成功。
+
 ## HF 凭据和外部参与者
 
-### 首次登录自动并入上传入口
+### 运行时注入 token 并自动提交
 
-按用户补充要求，首版直接包含自动登录。用户创建一次 token 后，首次运行带 `--results_to_hf` 的命令即可输入，不再要求另装宿主 HF CLI 或预先执行 `hf auth login`。本方案自动处理凭据验证、保存和复用；token 的创建及初次提供仍由用户完成。
+按用户澄清，主流程是由维护方配置一次 token 的供给方式，difficulty trials 每次运行直接使用该凭据，将结果提交到私有 dataset。环境变量或文件路径可放在运行配置中，token 本身不编入脚本、镜像或发行包。自动化包含读取、权限验证和 commit，不以执行 `hf auth login` 或持久化 SDK 登录为前置条件。
 
-解析优先级固定为：指定环境变量中的非空 token → TopoGym 已保存凭据 → 宿主 HF CLI 已保存的当前 token → 终端隐藏输入。显式指定非默认 `--hf-token-env` 却未设置该变量时直接报错，不暗中换身份。宿主已有登录按 `HF_TOKEN_PATH`、`HF_HOME` 及 HF 默认缓存位置解析，只读取当前 token 文件，不挂载整个用户缓存。SDK 的环境配置须在导入前确定。[HF 环境变量说明](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables)。
+凭据选择规则固定如下：
+
+1. 显式 `--hf-token-file` 和显式 `--hf-token-env` 互斥；同时提供时在运行前报错。
+2. 指定文件时只读取该文件，忽略默认 `HF_TOKEN` 和缓存；指定环境变量时只读取该变量。指定来源缺失、为空、不可读或验证失败均直接报错，不回退到其他身份。
+3. 未显式指定来源时先读取 `HF_TOKEN`；变量未设置时，可复用用户通过可选 `auth hf login` 明确保存的 TopoGym 凭据。已设置但为空或无效的 HF_TOKEN 视为配置错误，不回退缓存。
+4. 仍无凭据时立即报错，给出环境变量或文件注入方式；有无 TTY 都不自动弹出登录。默认不搜索或导入用户全局 HF CLI 缓存。
+
+文件使用单行 token，允许末尾换行；拒绝空文件、嵌入换行、异常大小、不可读文件和 symlink，检查仅当前用户可读的权限。local 模式读取指定文件后显式传给 SDK；Docker 模式按下文转换为只读临时凭据文件。文件路径是输入配置，不把宿主绝对路径写入上传元数据。
+
+```text
+HF_TOKEN 或 --hf-token-file
+    → Bash 私有凭据文件
+    → 只读挂载到控制容器
+    → HfApi(token=token)
+    → 校验目标 dataset 的权限
+    → 上传白名单结果并创建 commit
+```
 
 | 场景 | 目标行为 |
 | --- | --- |
-| 首次交互运行，无可用凭据 | 显示目标仓库，用隐藏输入读取一次 token；验证身份及仓库读写权限后保存并继续 |
-| 已有有效登录 | 自动复用；提示身份、凭据来源和目标仓库，不打印 token |
-| 环境变量提供 token | 验证后用于本次调用；默认不落盘，适合无人值守任务 |
-| 无 TTY 且无凭据 | 立即给出设置 HF_TOKEN 或提前登录的说明，不尝试 getpass 回显、不挂起等待 |
-| 已保存或导入的 token 认证失效 | 启动阶段有 TTY 时允许一次隐藏输入替换；新凭据验证成功后原子保存；无人值守时明确失败 |
-| 显式环境变量中的 token 无效 | 直接报错，不回退其他账号；仓库权限不足也不循环重试登录 |
+| 环境变量或文件提供 token | 直接验证并使用；不创建持久化登录、不需要宿主 HF CLI |
+| 无注入凭据，但已通过可选命令保存 TopoGym 登录 | 按上述规则复用；仅提示身份、来源和目标仓库 |
+| 无可用凭据，不论是否有 TTY | 立即报错，不调用 getpass、不等待人工输入 |
+| token 无效、过期或仓库权限不足 | 明确失败，不切换其他账号、不循环登录；修改注入来源后重试 |
 | 实验结束时 token 已失效或被撤销 | 保留结果与发布状态，返回上传错误和补传命令，不在收尾时等待新 token |
 | dry run、关闭上传、plan/prepare/preflight | 不提示登录、不校验 HF 权限、不读写凭据缓存 |
 
-增加以下可选维护命令，沿用同一个入口。它们不要求 run-id、模型凭据或 GPU；Docker 模式使用控制镜像中的 SDK，local 模式调用相同认证模块。既有 `auth login` 继续表示 Codex 登录，新增 `auth hf` 分支避免混淆。
+### 可选交互登录
+
+以下便利功能独立于首版凭据注入和上传的交付验收，不阻塞全自动运行。仅显式执行 `auth hf login` 才允许隐藏输入并保存凭据，普通 eval/collect/upload 不触发此流程。它们不要求 run-id、模型凭据或 GPU；Docker 模式使用控制镜像中的 SDK，local 模式调用相同认证模块。既有 `auth login` 继续表示 Codex 登录，新增 `auth hf` 分支避免混淆。
 
 ```bash
 # 以下为待实现命令；login 显式更新保存的 HF 登录。
@@ -213,41 +297,45 @@ bash bash_scripts/run_difficulty_trials.sh auth hf status
 bash bash_scripts/run_difficulty_trials.sh auth hf logout
 ```
 
-`login` 和 `status` 接受 `--hf-repo-id`、`--hf-token-env`，默认目标与上传一致；login 可从环境变量导入并保存，或终端隐藏输入。status 只检查并报告身份、来源及目标读写权限，不触发交互或保存。logout 只清除 TopoGym 的 HF 登录文件，不删除实验数据、不影响 Codex 登录或用户全局 HF 登录，也不会撤销服务器端 token。若环境变量或全局 HF 登录仍可提供凭据，logout 的输出需明确提示其仍然有效。
+`login` 和 `status` 接受 `--hf-repo-id`、`--hf-token-env`、`--hf-token-file`，来源互斥规则与上传一致；login 可从环境变量或文件导入并保存，没有提供来源时通过终端隐藏输入，无 TTY 则报错。status 只检查并报告身份、来源及目标读写权限，不触发交互或保存。logout 只清除 TopoGym 的 HF 登录文件，不删除外部注入文件、不修改环境变量、不影响 Codex 或用户全局 HF 登录，也不会撤销服务器端 token。输出需明确本次只清除项目缓存，外部注入的凭据仍由供给方管理。
 
 ### 保存位置和 Docker 传递
 
-独立认证模块拟放在 `scripts/difficulty_hf_auth.py`，由 uploader 和 `auth hf` 命令共用。隐藏输入后显式调用 SDK 验证和登录接口，禁用写入 Git credential helper；不要通过命令行拼接 `hf auth login --token ...`。程序化登录与保存是 SDK 已有能力，适配时验证项目锁定版本的接口。[HF 认证接口](https://huggingface.co/docs/huggingface_hub/package_reference/authentication)。
+独立认证模块拟放在 `scripts/difficulty_hf_auth.py`，负责凭据来源解析、文件校验、权限验证及向 uploader 提供 token。主流程显式构造 `HfApi(token=token)`，不调用 login、不写 Git credential helper。可选登录命令才使用 SDK 登录和保存接口；不要通过命令行拼接 `hf auth login --token ...`。[HF 认证接口](https://huggingface.co/docs/huggingface_hub/package_reference/authentication)。
 
-TopoGym 凭据默认保存在 `${XDG_CONFIG_HOME:-$HOME/.config}/topogym/huggingface/`，可通过 `TOPOGYM_HF_AUTH_DIR` 覆盖；目录 0700、文件 0600，使用独立认证锁和原子替换。Docker/local 共用这份宿主目录，不随控制器删除或 work-dir 切换丢失。SDK 的 token 与 stored_tokens 如均被使用，须纳入同一保存和清除范围；不假设单删一个 token 文件就退出全部登录。
+仅在用户选择可选持久化登录时，TopoGym 凭据保存到 `${XDG_CONFIG_HOME:-$HOME/.config}/topogym/huggingface/`，可通过 `TOPOGYM_HF_AUTH_DIR` 覆盖；目录 0700、文件 0600，使用独立认证锁和原子替换。Docker/local 共用这份宿主目录，不随控制器删除或 work-dir 切换丢失。SDK 的 token 与 stored_tokens 如均被使用，须纳入同一保存和清除范围；普通注入流程不创建这份缓存。
 
-HF token 与模型 API key 是两套独立凭据。Bash 仅在实际上传或 HF 登录操作时读取选定的宿主凭据，将环境或全局登录导入值放进现有私有临时目录的 0600 文件，通过 `/run/topogym-launch` 只读传入。项目认证目录仅挂载给可信控制器，输入和保存由认证模块负责；独立 HF 登录不需要 Docker socket、Codex 凭据目录或 GPU 挂载。status 使用只读凭据挂载；需要保存或清除凭据的调用使用可写挂载。拒绝跟随认证文件 symlink。
+HF token 与模型 API key 是两套独立凭据。Bash 仅在实际上传或显式 HF 认证操作时读取选定的宿主凭据，将环境变量值或指定文件的内容复制到现有 0700 临时目录内的 0600 文件，通过 `/run/topogym-launch` 只读传入控制器。`--hf-token-file` 要做宿主路径解析和容器路径转换，不能仅把宿主路径透传给 Python，也不需要挂载整个 secrets 目录。临时副本由退出清理负责删除，持有到本次上传结束；原注入文件不改动。该临时传递不等同于持久化登录。
+
+普通注入流程不挂载 HF 项目认证目录；只有读取可选登录缓存或执行 auth hf 管理操作时才按需挂载。status 和读取缓存使用只读挂载，显式保存或清除凭据使用可写挂载。独立 HF 登录不需要 Docker socket、Codex 凭据目录或 GPU 挂载。dry run、plan/prepare/preflight 和未启用上传时，不读取凭据文件、检查其是否存在或创建凭据挂载。
 
 不要使用 `docker -e HF_TOKEN=...`，token 不放入 argv、Docker Config.Env、运行配置、日志或发布清单。控制器仅向认证与上传模块提供 token；local 模式也在创建评测子进程前抽离 HF_TOKEN 和用户指定变量。HF token、认证目录以及可定位该目录的配置不传给 Harbor、agent、sim、verifier 或构建进程。认证/上传进程显式指定自己的 SDK 缓存，其他进程不能通过 SDK 默认搜索重新发现它；现有 AUTH_VARIABLES、环境净化和容器挂载必须共同覆盖这条路径。
 
-本次用途预期只有几天，不引入后台刷新、自动签发或固定天数清理任务。结束后可运行 `auth hf logout` 清除本机项目登录，并在 HF token 管理页面撤销该 token；本机退出和服务器端撤销是不同动作，不把“打算使用几天”当作自动到期设置。[HF token 管理说明](https://huggingface.co/docs/hub/security-tokens)。
+本次用途预期只有几天，不引入后台刷新、自动签发或固定天数清理任务。供给方结束使用后移除环境注入或独立凭据文件，并在 HF token 管理页面撤销该 token；使用了可选项目登录时另行 logout 清缓存。更新凭据后重新执行 upload 即可补传。移除本地副本和服务器端撤销是不同动作，不把“打算使用几天”当作自动到期设置。[HF token 管理说明](https://huggingface.co/docs/hub/security-tokens)。
 
 ### 外部参与者权限
 
 直传要求所用凭据对目标 dataset 有写权限。公开可读和 token 类型为 write，都不能单独证明对该仓库有写权限。建议维护方及受信执行环境使用仅限目标仓库的 fine-grained token，按用途分开签发；HF 权限通常以仓库为单位，本文目录隔离不能代替服务端逐参与者写入授权。[HF token 权限说明](https://huggingface.co/docs/hub/security-tokens)。
 
-首版直传适用于维护方机器或已经获得目标仓库写权限的运行方。面向外部参与者分发脚本时，不随启动包附带维护方 token；后续增加 `--hf-create-pr`，参与者用自己的身份提交，维护者合并。该目标为私有仓库，PR 也不能绕过访问权限；参与者须先获得相应访问授权。HF 提供通过上传创建 PR 的接口，但账号权限、大文件和断点恢复需要独立验收；恢复同一 PR 时记录并复用其 revision，不能每次重传创建新 PR。[HF 贡献接口](https://huggingface.co/docs/huggingface_hub/guides/community)。无法获得私有仓库访问权的参与者，首版可交回本地导出结果，由维护方统一补传。如需要无账号、无需人工合并的公开收集，再另建接收服务，超出首版上传开关的范围。
+首版支持维护方向受信运行方单独提供这枚限定仓库的 token，通过其机器上的环境变量或只读文件注入；运行方无需另建 HF 账号或执行登录，提交使用该 token 的授权。凭据与公开脚本、镜像和发行包分开分发，接收方持有的是 token 授予的仓库权限。共用 token 时不能用 HF 提交者身份区分实验参与者；记录 run_uuid 和运行元数据，并由维护方管理凭据分发与撤销。
+
+后续如希望参与者使用各自身份，可增加 `--hf-create-pr`，参与者提交后由维护者合并。该目标为私有仓库，PR 也不能绕过访问权限；参与者须先获得相应访问授权。HF 提供通过上传创建 PR 的接口，但账号权限、大文件和断点恢复需要独立验收；恢复同一 PR 时记录并复用其 revision，不能每次重传创建新 PR。[HF 贡献接口](https://huggingface.co/docs/huggingface_hub/guides/community)。没有可用凭据的参与者也可交回本地导出结果，由维护方统一补传。如需要无账号且不向运行方提供 HF token 的公开收集，再另建接收服务，超出首版上传开关的范围。
 
 ## 文件改动与实施顺序
 
 | 阶段 | 文件和工作 | 完成标准 |
 | --- | --- | --- |
 | 1 导出合同 | 新增 `scripts/difficulty_results_hf.py`；定义 sidecar、逐行 schema、路径映射、artifact 模式和 staging | 既有 fixture 可离线生成完整目录与清单；不重新判分 |
-| 2 认证和上传实现 | 新增 `scripts/difficulty_hf_auth.py` 管理自动登录；上传模块封装固定 SDK、权限检查、分批提交、哈希对账、收据和恢复 | mock Hub 下覆盖认证、故障与并发；真实测试仓库补传成功 |
+| 2 认证和上传实现 | 新增 `scripts/difficulty_hf_auth.py` 解析环境变量和凭据文件，显式初始化 SDK；上传模块封装权限检查、分批提交、哈希对账、收据、恢复和上传日志 | 无 CLI 登录、无交互、无持久化登录也可自动提交；阶段进度、心跳、重试及完成/失败提示齐全；mock Hub 下覆盖认证、故障与并发；真实测试仓库补传成功 |
 | 3 调度接入 | 修改 `scripts/difficulty_eval.py`，增加别名、upload 阶段、收尾调用和退出码合成 | 默认行为不变；纯补传不要求模型或 GPU；失败记录保留 |
-| 4 Docker 交付 | 修改 Bash 和 `scripts/difficulty_delivery.py`，增加 auth hf 分支、独立凭据挂载与环境隔离；控制器 `.in/.lock` 显式声明 SDK | 自动登录无需宿主 HF CLI；HF 凭据仅到认证和上传模块；upload 不申请 GPU；固定镜像能补传 |
+| 4 Docker 交付 | 修改 Bash 和 `scripts/difficulty_delivery.py`，增加 token 文件路径转换、只读挂载、临时文件清理与环境隔离；控制器 `.in/.lock` 显式声明 SDK | 无需宿主 HF CLI；HF 凭据仅到认证和上传模块；upload 不申请 GPU；固定镜像能补传 |
 | 5 文档与发行 | 更新 Docker quickstart、RCB README、脚本说明；构建新 controller 并记录 release 身份 | 外部用户能完成运行上传、预览、补传三条路径 |
 
 导出器可以复用收集后的 JSONL 和 results 文件；首版尽量保持 `collect_batch_results.py` 的判分和本地目录合同。新脚本、依赖锁和相关资源须核对已被 `difficulty_release.py`、控制器 Dockerignore 与 source_hash 纳入。现有白名单已包含 scripts/requirements，通常无需扩大到整个工作区。
 
 历史 run 的执行恢复继续遵守原 release/source 身份校验。新的 upload 分支只读取历史 manifest 与已收集结果，记录原实验身份和当前 exporter 身份，不要求历史 release 等于新 controller；不能为补传放宽正常 run 的源码校验。若历史结果缺失，先用匹配的旧执行环境 collect，再用新 uploader 发布。
 
-首版先完成自动登录、standard/metrics 两档、结束上传和补传。持续增量上传、PR 模式、全局 Parquet 索引及可视化统计作为后续独立增量，不阻塞受信运行方集中回传结果。
+首版先完成凭据注入、standard/metrics 两档、结束上传和补传。可选 `auth hf` 登录管理、持续增量上传、PR 模式、全局 Parquet 索引及可视化统计作为独立增量，不阻塞受信运行方集中回传结果。
 
 ## 验收计划
 
@@ -259,10 +347,51 @@ HF token 与模型 API key 是两套独立凭据。Bash 仅在实际上传或 HF
 - 缺 token、无写权限、404、限流、上传中断、响应丢失、父 commit 冲突、内容冲突、重复补传及最后标记失败。
 - 不带上传开关时无 HF 调用；dry run 不联网；upload 不启动 Harbor/模型、不获得 GPU 锁、不新建实验。
 - Docker 命令和容器 inspect 中不出现 token；评测子进程环境不继承 HF token；上传故障与实验退出码组合正确。
-- 自动登录覆盖首次隐藏输入、重复运行无提示、容器重建和 work-dir 切换后复用、既有 HF_HOME/HF_TOKEN_PATH 导入、环境变量优先及默认不落盘、无 TTY 立即失败；全程使用假 token 检查无回显和无日志泄漏。
-- 认证失败、仓库无权限、网络失败分别处理；替换失败保留原凭据，两个启动进程竞争认证锁时不损坏缓存；收尾阶段失效不挂起。auth hf status 无写入；logout 仅清项目凭据，既有 Codex auth 路由保持原语义。
+- 凭据注入覆盖默认 HF_TOKEN、自定义环境变量、token 文件、含空格路径、显式来源互斥、空值及不可读文件、文件权限和 symlink；指定来源失败不得回退全局登录或另一账号。
+- 在没有 HF CLI、没有登录缓存、没有 TTY 的环境下，环境变量和文件两条路径均能完整提交；普通运行不调用 login/getpass、不创建持久化凭据、不修改原 token 文件；全程用假 token 验证日志、argv、容器 inspect 和上传产物无泄漏。
+- Docker 路径正确转换、凭据挂载只读、临时副本退出后清理；dry run 不读取 token 文件。替换或撤销 token 后可用新凭据补传，不更换实验身份；认证失败、仓库无权限和网络失败分别报告，收尾阶段不等待输入。
 - 历史 frozen manifest 和新 exporter 能共存；正常 run 的原 release 校验仍有效。
+- 日志覆盖权限检查、导出、传输、提交、重试、Already uploaded、dry run、失败和中断；模拟时钟验证 15 秒心跳与节流，TTY/重定向输出均可读。缺少 SDK 字节回调时不产生虚构的百分比、速率或 ETA。
+- 完成标记失败或提交结果未知时不出现 Upload complete；实验未完成但结果成功发布时两个状态分别显示。重传跳过计数和传输量不混淆；最终链接固定到确认的 commit，补传命令保留原参数且无 token 值。
+- 使用假 token、签名 URL、异常响应及控制字符验证终端日志、upload.log、events.jsonl 均无泄漏或终端注入；模拟日志写入失败，确认终端提示与远端状态核验仍有效。
 
-修改后运行现有 difficulty eval/delivery/docker 的相关合同检查。实网先在指定测试 dataset 上传小型 fixture，断开后恢复并下载按 SHA-256 核对；随后对一份已有真实结果进行 standard 上传，确认浏览器目录和回放文件可访问。测试记录 repo、revision、文件数、总字节及验证结论；上传成功不表示场景、模型或任务成功已重新验收。
+可选 auth hf 功能实施时单独验收隐藏输入、无 TTY 失败、缓存跨容器复用、原子替换与认证锁；status 无写入，logout 仅清项目缓存，既有 Codex auth 路由保持原语义。这些检查不作为首版注入式上传的前置条件。
 
-当前完成范围是这份计划及 README 导航。实现、自动化测试、实网写权限核验和上传验收均待后续实施。
+修改后运行现有 difficulty eval/delivery/docker 的相关合同检查。实网先在指定测试 dataset 上传小型 fixture，分别验证环境变量和文件注入，再断开后恢复并下载按 SHA-256 核对；随后对一份已有真实结果进行 standard 上传，确认浏览器目录和回放文件可访问。测试记录 repo、revision、文件数、总字节及验证结论；上传成功不表示场景、模型或任务成功已重新验收。
+
+## 首版实施记录（2026-09-30）
+
+已接入 `--results_to_hf`（别名 `--results-to-hf`）、`--phase upload`、`--hf-dry-run`、standard/metrics 两档和环境变量/文件凭据。默认仓库为 `LGVamper/toponym_evaluation_results`。维护方提供限定该仓库写权限的 token，运行方无需 `hf auth login`。
+
+认证模块为 `scripts/difficulty_hf_auth.py`；导出、上传与日志模块为 `scripts/difficulty_results_hf.py`。Bash 负责私有临时文件、只读挂载和退出清理，调度器在收集后发布。现有 `difficulty_delivery.py` 的私有参数传输可直接复用，无需增加平行传输逻辑。控制器显式依赖已锁定的 `huggingface-hub==1.33.0`，未升级其他依赖。
+
+快照、发布身份、SHA-256 清单和恢复状态保存在 run 内；分批提交前核对远端文件，最终标记提交成功后才输出完成链接。已完成 attempt 不可覆盖；中断结果可以后续更新。若上传中断后本地结果发生变化，先补完保存的旧快照，再执行一次 upload 发布新快照。SDK 请求在独立子进程执行，响应超时、取消或内存保护会停止本次请求进程。
+
+日志覆盖权限校验、导出文件数/大小、上传批次、跳过已有文件、提交、重试、15 秒心跳、成功/失败和补传命令；同时写入 `hf_upload/upload.log` 与 `events.jsonl`。不把 SDK 缺失的字节进度伪造为百分比或 ETA，日志和结果中的凭据及私有路径执行过滤。
+
+本机已准备 `.secrets/hf-token` 空文件，权限为 0600。用户将 token 本身作为唯一一行填入后，在原运行命令后追加：
+
+```bash
+--results_to_hf --hf-token-file /home/jianwen/topogym/.secrets/hf-token
+```
+
+该文件不属于脚本、Git 追踪源码、源码快照或镜像内容。其他机器也可创建同样的独立文件，或注入 `HF_TOKEN`；不要求维护方修改并重新分发脚本。
+
+自动化验收记录在 `runs/test_results/difficulty_results_hf_20260930/`：
+
+- 新增 HF 合同测试 21 项通过：合成结果导出、凭据隔离、Docker 启动器模拟、空仓库、Git/LFS 哈希对账、并发冲突、响应丢失、幂等补传、终态保护、旧快照恢复、日志过滤、退出码及上传子进程取消。
+- 原有 difficulty eval 23 项和 delivery 10 项测试通过；本次未运行模型或物理仿真。
+- 已有 run `luna-two-tasks-20260929-234519` 的收集记录副本完成本地离线导出：12 条 trial 记录、19 个导出文件；副本未携带原始媒体，因此记录缺失 artifact，不将其当作完整媒体验收。
+- 最终冻结控制镜像构建成功，镜像内关闭网络运行同一套 21 项 HF 测试通过；真实 Bash/Docker 入口对上述副本执行 `--phase upload --hf-dry-run` 成功，不申请 GPU、不读取 token。证据在 `controller-build-final/build.log`、`container-contracts.log` 和 `docker-historical-dry-run.log`；本次构建/容器验证峰值 CPU 100%、系统内存 50.9%，未触发内存保护。
+
+本机已构建的冻结镜像身份如下，未推送外部镜像仓库；其验证只覆盖该快照，不表示并行会话的其他任务改动已通过：
+
+```text
+image_id:      sha256:eeddd1f8686fd7431fd5adcc49e180ab6820b7b3c194fedaaece94fd9de86ae7
+release_id:    6cf1d1031249d07858c2f6f84db8cd970db8e5d4a970819446ce20338f546b96
+bootstrap_sha: 8225d0f75acc4114fa85c158ce08959a87925f01d8c6edac44be3a34da945ac4
+```
+
+如需在本机固定使用此控制镜像，可加 `--controller-image sha256:eeddd1f8686fd7431fd5adcc49e180ab6820b7b3c194fedaaece94fd9de86ae7`。默认入口仍按当前源码哈希选择/构建镜像；旧 run 的正常实验恢复继续使用原执行镜像，纯 upload 可使用此新版。
+
+真实 HF 仓库尚未收到本轮上传；当前测试不证明该 private 仓库的实际访问权限、服务端文件一致性或视频浏览效果。提供 token 后按上方实网验收步骤核验。可选 `auth hf` 登录缓存、PR、持续增量上传与全局索引仍属于后续功能，首版不读取全局或项目登录缓存。

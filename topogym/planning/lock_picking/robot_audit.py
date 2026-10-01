@@ -18,9 +18,55 @@ def _rows(path):
             yield json.loads(line)
 
 
+def recompute_task_tick(task, world, recorded_result, physics_dt_s):
+    """Replay measured states through the Task, independently of reported success."""
+    errors = []
+    tick = world["physics_step"]
+    if tick == 0:
+        task.initialize(world)
+    else:
+        if task.result.terminated:
+            errors.append(f"Saved physics continued after Task termination at tick {tick}")
+        task.update(world, physics_dt_s)
+    for key in ("task_success", "terminated"):
+        if bool(recorded_result[key]) != bool(getattr(task.result, key)):
+            errors.append(f"Recorded {key} differs from recomputed Task result at tick {tick}")
+    return errors
+
+
+def completion_errors(report, phase_names, event_names, *, retreats, expected,
+                      released_completion, native_success):
+    """Keep historical released-route acceptance distinct from native success."""
+    errors = []
+    contract = report.get("completion_contract", "released_route")
+    required = {"close_and_wait_for_automatic_assist", "lift_to_lock_axis", "insert_third_disc",
+                "open_for_supported_regrasp", "close_for_automatic_regrasp", "insert_endpoint"}
+    if contract == "task_success":
+        if (not native_success or not report["task_result"]["task_success"]
+                or report["status"] != "task_success"):
+            errors.append("Native Task success was not independently reproduced")
+        if event_names not in (["acquired", "released", "acquired"],
+                               ["acquired", "released", "acquired", "released"]):
+            errors.append("Unexpected grasp event sequence: "+str(event_names))
+    elif contract == "released_route":
+        required |= {"release_at_goal", "withdraw_gripper", "verify_stable_insertion"}
+        if event_names != ["acquired", "released", "acquired", "released"]:
+            errors.append("Unexpected grasp event sequence: "+str(event_names))
+        if not released_completion or report["status"] != "route_completed":
+            errors.append("Incomplete released stable insertion")
+    else:
+        errors.append("Unknown completion contract: "+str(contract))
+    if not required <= set(phase_names):
+        errors.append("Missing robot phases: "+str(sorted(required-set(phase_names))))
+    if retreats != expected:
+        errors.append("Incomplete reindex sequence")
+    return errors
+
+
 def audit_robot_process(env, run, output):
     run, output = Path(run), Path(output)
     report = json.loads((run/"run_report.json").read_text())
+    native_contract = report.get("completion_contract") == "task_success"
     ledger = json.loads((run/"report.json").read_text())
     if ledger["status"] != "complete":
         raise ValueError("Episode evidence is not sealed")
@@ -138,6 +184,8 @@ def audit_robot_process(env, run, output):
             native_reached_ticks += int(reached)
             if failure:
                 errors.append(f"Task failure at tick {index}: {failure}")
+            if native_contract:
+                errors.extend(recompute_task_tick(env._task, world, monitor["task_result"], env.config.physics_dt_s))
             depth = metrics.get("key_depth", 0.)
             if binding is not None:
                 if depth >= 1.9:
@@ -176,12 +224,14 @@ def audit_robot_process(env, run, output):
                       and not metrics.get("clearance_issues") and radial_ok and not failure and quiet)
     completed_controls = [r for r in _rows(run/"private/control_steps.jsonl") if r["kind"]=="completed"]
     queries = list(_rows(run/"private/robot_ik.jsonl"))
-    if len(queries) != len(completed_controls) or len(queries) != index:
-        errors.append("IK/actions/ticks do not have one-to-one coverage")
+    if len(queries) != len(completed_controls):
+        errors.append("IK queries do not cover every completed action")
+    if sum(r["info"]["physics_steps"] for r in completed_controls) != index:
+        errors.append("Completed actions do not cover every saved physics tick")
     max_compile_difference = 0.
     ik_rows = []
     for query, control in zip(queries, completed_controls):
-        if query["state"]["physics_step"]+1 != control["info"]["physics_step"]:
+        if query["state"]["physics_step"]+control["info"]["physics_steps"] != control["info"]["physics_step"]:
             errors.append("IK query does not precede its executed action")
         if query["ik_requested"]:
             executed = control["info"]["executed_joint_targets"]["arm"]["joint_position_rad"]
@@ -190,17 +240,10 @@ def audit_robot_process(env, run, output):
             ik_rows.append(query)
     if min_joint_margin < -1e-6 or max_actual_fk_error > 1e-5 or max_compile_difference > 1e-6:
         errors.append("Joint limit or independent FK/compiled target mismatch")
-    required = {"close_and_wait_for_automatic_assist", "lift_to_lock_axis", "insert_third_disc",
-                "open_for_supported_regrasp", "close_for_automatic_regrasp", "insert_endpoint",
-                "release_at_goal", "withdraw_gripper", "verify_stable_insertion"}
     phase_names = {r["phase"] for r in phases}
-    if not required <= phase_names:
-        errors.append("Missing robot phases: "+str(sorted(required-phase_names)))
     event_names = [r["event"] for r in events]
-    if event_names != ["acquired", "released", "acquired", "released"]:
-        errors.append("Unexpected grasp event sequence: "+str(event_names))
-    if retreats != expected or not quiet or not completion or report["status"] != "route_completed":
-        errors.append("Incomplete reindex / released stable insertion")
+    errors.extend(completion_errors(report, phase_names, event_names, retreats=retreats, expected=expected,
+        released_completion=completion, native_success=env._task.result.task_success))
     result = dict(passed=not errors and not geometry_violations and not contact_violations,
         errors=errors, instance_id=env._task.instance_id, variation=report["variation"],
         ticks=index, saved_states=index+1, physical_time_s=last_state["state"]["sim_time_s"],
@@ -223,6 +266,9 @@ def audit_robot_process(env, run, output):
         contact_coverage="last solver substep at every saved World tick; not every substep",
         native_instantaneous_goal_reached_ticks=native_reached_ticks,
         native_task_success=report["task_result"]["task_success"],
-        classification="Full assisted robot process with recorded IK; separate from formal benchmark qualification")
+        completion_contract=report.get("completion_contract", "released_route"),
+        recomputed_task_success=bool(env._task.result.task_success) if native_contract else None,
+        classification=("Assisted robot process through native Task success; final release is optional"
+                        if native_contract else "Historical full assisted robot process through released insertion"))
     write_json_atomic(output/"robot_process_audit.json", result)
     return result

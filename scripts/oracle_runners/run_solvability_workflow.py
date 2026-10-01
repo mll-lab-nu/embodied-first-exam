@@ -22,7 +22,7 @@ import time
 import traceback
 from types import SimpleNamespace
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -35,7 +35,7 @@ def worker(args):
     torch.set_num_threads(1)
     if args.smoke:
         from topogym.config.registry import task_definition
-        # Same weld target as scripts/run_buzz_wire_policy.py; without an assist
+        # Same weld target as run_buzz_wire_policy.py; without an assist
         # model the world state has no "grasp" record for the entry check.
         layout = task_definition("buzz_wire_3d", "easy")().build_layout()
         grip = layout.loop_radius_m+layout.stem_length_m+layout.grip_length_m*.55
@@ -197,7 +197,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(args.output)
     (args.output / "source_manifest.json").rename(args.output / "run_source_manifest.json")
-    command = [sys.executable, str(source / "scripts/run_solvability_workflow.py"), *extra, "--worker"]
+    command = [sys.executable, str(source / "scripts/oracle_runners/run_solvability_workflow.py"), *extra, "--worker"]
     (args.output / "invocation.json").write_text(json.dumps(dict(command=command), indent=2))
     with (args.output / "runtime.log").open("x") as log:
         process = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,

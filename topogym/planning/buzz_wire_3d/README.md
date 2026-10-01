@@ -72,7 +72,7 @@ easy 的本次证据为
 运行方式（每次用新的输出目录）：
 
 ```bash
-.venv-gs121/bin/python scripts/run_solvability_workflow.py --mode diagnostic \
+.venv-gs121/bin/python scripts/oracle_runners/run_solvability_workflow.py --mode diagnostic \
   --config runs/test_results/buzz_fast_feasibility_20260929_01/continuation_configs/easy.json \
   --stage-factory topogym.planning.buzz_wire_3d.stages:stages \
   --output runs/test_results/<new_run>
@@ -128,7 +128,7 @@ unlimited 世界状态，不持有 Env，不覆盖物体／机器人状态，也
 
 ```bash
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv-gs121/bin/python \
-  scripts/run_buzz_wire_policy.py --variant easy \
+  scripts/oracle_runners/run_buzz_wire_policy.py --variant easy \
   --output runs/test_results/buzz_easy_new
 
 .venv-gs121/bin/python scripts/audit_buzz_wire_policy.py \

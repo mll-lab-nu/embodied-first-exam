@@ -76,6 +76,13 @@ def _release_retreat_settings(pickup):
     return distance
 
 
+def _transfer_settings(pickup):
+    margin = float((pickup or {}).get("minimum_transfer_clearance_m", .001))
+    if not np.isfinite(margin) or not .0001 <= margin <= .005:
+        raise ValueError("Free-hand transfer clearance must be between 0.1 and 5 mm")
+    return margin
+
+
 def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=30000):
     output = Path(output)
     variation = env._task.variation_id.removeprefix("hedgehog_in_cage_")
@@ -90,6 +97,7 @@ def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=300
     settings = [_pickup_settings(profile) for profile in profiles]
     departures = [_departure_settings(profile) for profile in profiles]
     release_retreats = [_release_retreat_settings(profile) for profile in profiles]
+    transfer_margins = [_transfer_settings(profile) for profile in profiles]
     if any(intermediate is None or not release for _, _, intermediate, release in settings[:-1]):
         raise ValueError("Each stage before a regrasp must end at an explicit intermediate release")
     approach_margin, pregrasp_distance, intermediate, release_for_regrasp = settings[0]
@@ -187,7 +195,7 @@ def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=300
                         raise RuntimeError("Checked pickup branch has a blocked approach")
                 goal_seed = q
             home_route = kin.plan_free_tcp((prehand+tcp_offset, handr), random_seed=0, iterations=6000,
-                                          goal_seed=goal_seed)
+                                          goal_seed=goal_seed, minimum_clearance=transfer_margins[stage_index])
             q, approach = np.asarray(home_route[-1]["qpos"]), []
             for u in np.linspace(0., 1., 46)[1:]:
                 q = kin.solve((prehand+u*(handp-prehand)+tcp_offset, handr), q)
@@ -197,6 +205,7 @@ def run_medium_oracle(env, runner, output, *, pickup=None, search_iterations=300
                     raise RuntimeError("Measured fingers/robot cannot execute the pickup approach")
                 approach.append(q.tolist())
             write_json_atomic(output/f"{phase_prefix}pickup_plan.json", dict(home_route=home_route, approach_qpos=approach,
+                minimum_transfer_clearance_m=transfer_margins[stage_index],
                 hand_in_ball=dict(position_m=relp.tolist(), quaternion_wxyz=relr.as_quat()[[3, 0, 1, 2]].tolist())))
             run("home_to_pregrasp" if stage_index == 0 else "transfer_to_pregrasp", joint_actions([row["qpos"] for row in home_route]))
             run("approach", joint_actions(approach, speed=.15))

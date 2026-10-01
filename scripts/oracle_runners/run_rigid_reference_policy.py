@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -168,7 +168,7 @@ def main(task_id=None):
         route = args.route.read_bytes()
         args.route = args.output/"submitted_route.json"
         args.route.write_bytes(route)
-    command = [sys.executable, str(source/"scripts/run_rigid_reference_policy.py"), "--worker",
+    command = [sys.executable, str(source/"scripts/oracle_runners/run_rigid_reference_policy.py"), "--worker",
         "--task", args.task, "--variant", args.variant, "--part", args.part, "--seed", str(args.seed),
         "--output", str(args.output), "--samples", str(args.samples), "--episode-seconds", str(args.episode_seconds),
         "--rrt-iterations", str(args.rrt_iterations),

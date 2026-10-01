@@ -16,13 +16,14 @@ from scipy.spatial.transform import Rotation
 from topogym.planning.solvability import Stage, Step
 from topogym.planning.rigid_reference.feedback import body_pose, relative_pose
 from topogym.utils.io import sha256_file, to_jsonable, write_json_atomic
+from topogym.utils.grasp import held_finger_contact_mask
 from .kinematics import HorseshoeIK, CheckedJointPolicy
 from .manipulation import ManipulationPlanner
 from .oracle import load_reference, expand_coupled_plan
 from .policy import HorseshoePolicy
 
 
-TRACKER_FIELDS=('grip','bias','angle_bias','held_entities','offsets','support_hold')
+TRACKER_FIELDS=('grip','bias','angle_bias','held_entities','offsets','support_hold','velocity_feedback_state')
 
 
 class ContinuationPolicy(HorseshoePolicy):
@@ -54,12 +55,13 @@ class BirthRingPolicy(HorseshoePolicy):
 
 def stages(env, context, *, folded_settling=False, suspended_handoff=False, direct_birth=False,
            handoff_candidates=None, lower_reposition=False, withdrawal_defaults=None,
-           reposition_parameters=None):
+           reposition_parameters=None, require_prefix_replay=False):
     """Bind the five prefix inputs and any optional withdrawal guide by hash."""
     out=context.output;holder=[None];shared={};attempt=[0]
     monitor=(out/'private/horseshoe_monitor.jsonl').open('x',buffering=1)
     identity=dict(config=to_jsonable(env.config),seed=context.identity['seed'],
         instance_id=env._task.instance_id,from_default_home=True,
+        terminal=env._task.terminal_metadata(),
         contact_link_names={str(link.idx):f'{name}/{link.name}' for name,entity in env._world.entities.items()
                             for link in getattr(entity,'links',())},
         grasp_finger_links={s:[int(env._robot.entity.get_link(n).idx) for n in g.grasp.finger_links]
@@ -95,11 +97,17 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         world=row['world'];task_links={i for name in env._task.placement_vertices
                                        for i in world['bodies'][name]['link_indices']}
         contacts=world['contacts']
-        depth=max((float(d) for a,b,d in zip(contacts['link_a'],contacts['link_b'],contacts['penetration'])
-                   if a in task_links or b in task_links),default=0.)
+        involved=(np.isin(contacts['link_a'],list(task_links)) |
+                  np.isin(contacts['link_b'],list(task_links)))
+        held=held_finger_contact_mask(contacts,identity['grasp_finger_links'],task_links,world.get('grasp'))
+        penetration=np.asarray(contacts['penetration'])
+        depth=float(penetration[involved & ~held].max(initial=0.))
+        held_depth=float(penetration[involved & held].max(initial=0.))
+        held_limit=float(identity['terminal']['contact_penetration']['held_finger_contacts_m'])
         result=row['task']['result']
         return dict(task_not_failed=not (result['terminated'] and not result['task_success']),
                     task_contact_within_stage_limit=depth<=limit,
+                    held_finger_contact_within_task_limit=held_depth<=held_limit,
                     all_closed_loop_linkages_preserved=loop_linkages(world)==initial_linkages)
 
     def holding(row):
@@ -125,6 +133,8 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         names=('grasps','reference','fold','support','approach')
         if 'withdrawal_guide' in parameters:
             names+=('withdrawal_guide',)
+        if 'prefix_replay' in parameters:names+=('prefix_replay',)
+        elif require_prefix_replay:raise ValueError('This recipe requires a hash-bound action prefix')
         for name in names:
             item=parameters[name];source=Path(item['path'])
             if sha256_file(source)!=item['sha256']:raise ValueError(f'Changed {name} input')
@@ -147,6 +157,16 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
             if not checked['passed']:raise ValueError(f'Approach recheck: {checked}')
         planner=ManipulationPlanner(env,out/'planning/prefix',checker,reference=reference,fold_end_index=meta['fold_end_index'])
         policy=HorseshoePolicy(grasps,part='fold' if folded_settling else 'grasp_ring',fold=fold,support=support,planner=planner,fold_tracking_m=.002)
+        replayed='prefix_replay' in paths
+        if replayed:
+            if direct_birth:raise ValueError('Action prefix and direct birth are separate recipes')
+            from .prefix_replay import ReplayPrefixPolicy,validate_replay
+            replay=json.loads(paths['prefix_replay'].read_text())
+            validate_replay(replay,env.config,context.identity['seed'])
+            if set(replay['expected_end']['bodies'])!=set(env._task.placement_vertices):
+                raise ValueError('Replay endpoint must cover every puzzle body')
+            policy=ReplayPrefixPolicy(grasps,replay=replay,planner=planner)
+            shared['replayed_prefix']=True
         if direct_birth:
             planner.reference=None
             policy=BirthRingPolicy(grasps,planner=planner)
@@ -166,9 +186,13 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                 application_stage='after_reposition_lower' if lower_reposition else 'after_ring_grasp',
                 scope='hash-bound planning hint relative to held lower shoe; every short stage rechecks measured poses, IK and collisions; no replay or proof credit'))
         holder[0]=policy
+        def prefix_exit(row):
+            checks=holding_shoes(row) if folded_settling and not replayed else holding(row)
+            if replayed:checks['replay_endpoint_matched']=getattr(policy,'replay_result',{}).get('passed',False)
+            return checks
         return Stage('prefix','grasp',dict(parameters=parameters),lambda row:CheckedJointPolicy(policy,env._robot),
                      lambda row:dict(default_home=row['state']['physics_step']==0),common,
-                     holding_shoes if folded_settling else holding,200.)
+                     prefix_exit,max(200.,len(replay['controls'])*env.config.physics_dt_s+1.) if replayed else 200.)
 
     def continuation(operation, budget, *, stage_index=None):
         def build(parameters):
@@ -226,7 +250,12 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                 if operation=='gravity_settle_folded':
                     key='ring_relocated' if values.get('restore',True) else 'handoff_orientation_reached'
                     result[key]=getattr(policy,'gravity_result',{}).get('passed',False)
-                if operation=='withdraw_one':result['short_stage_completed']=policy.withdrawal_finished is not None
+                if operation=='withdraw_one':
+                    # The default-enabled native goal may terminate an
+                    # extraction segment before its local generator finishes.
+                    # Invariants and grasp checks still apply to every tick.
+                    result['short_stage_completed']=(policy.withdrawal_finished is not None
+                        or row['task']['result']['task_success'])
                 if operation=='reposition_lower':result['lower_target_reached']=getattr(policy,'lower_reposition_result',{}).get('passed',False)
                 if operation=='verify_goal':result['raw_goal_stable']=policy.phase=='raw_goal_complete' or row['task']['result']['task_success']
                 return result
@@ -244,7 +273,7 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
             shared['previous']=holder[0]
             yield Step('verify_goal',({},),continuation('verify_goal',15.))
             return
-        if folded_settling:
+        if folded_settling and not shared.get('replayed_prefix'):
             gravity_candidates=tuple(dict(angle_deg=120.,yaw_deg=yaw,translation_m=[0.,.08,0.],
                                           hold_s=8.,sample_duration_s=.1) for yaw in (30.,60.))
             if suspended_handoff:
@@ -455,4 +484,49 @@ def pivot_reference_stages(env, context):
         reposition_parameters=dict(fraction=1.,lower_tracking_m=.002,position_bias_limit_m=.05),
         withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
             position_bias_limit_m=.06,exit_goal_mode='reference_pivot',search_seed=950,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def filtered_pivot_reference_stages(env, context, *, tracking_stall_timeout_s=None):
+    """Damp the pivot using filtered measured control-period body velocity."""
+    candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+                     hold_s=8.,sample_duration_s=.1,restore=False),)
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=candidates,lower_reposition=True,
+        reposition_parameters=dict(fraction=1.,lower_tracking_m=.002,position_bias_limit_m=.05),
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            position_bias_limit_m=.06,position_integral_gain_s_inv=2.,
+            position_velocity_gain_s=.25,position_velocity_filter_s=.1,
+            tracking_stall_timeout_s=tracking_stall_timeout_s,
+            maximum_stages=1000,exit_goal_mode='reference_pivot',search_seed=950,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def patient_pivot_reference_stages(env, context):
+    """Use a no-progress watchdog inside the unchanged 50 s stage budget."""
+    return filtered_pivot_reference_stages(env,context,tracking_stall_timeout_s=10.)
+
+
+def patient_direct_exit_stages(env, context):
+    """Use the measured feedback grasp and attempt its exit without repositioning."""
+    candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+                     hold_s=8.,sample_duration_s=.1,restore=False),)
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=candidates,
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            position_bias_limit_m=.06,position_integral_gain_s_inv=2.,
+            position_velocity_gain_s=.25,position_velocity_filter_s=.1,
+            tracking_stall_timeout_s=10.,maximum_stages=1000,
+            exit_goal_mode='all_axes',search_seed=970,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def replayed_grasp_stages(env, context):
+    """Reproduce a checked grasp with ordinary controls, then plan its exit."""
+    return stages(env,context,require_prefix_replay=True,
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            position_bias_limit_m=.06,position_integral_gain_s_inv=2.,
+            position_velocity_gain_s=.25,position_velocity_filter_s=.1,
+            tracking_stall_timeout_s=10.,maximum_stages=1000,
+            exit_goal_mode='all_axes',search_seed=970,
             passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))

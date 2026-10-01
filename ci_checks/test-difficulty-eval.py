@@ -71,6 +71,111 @@ class SamplingTests(unittest.TestCase):
                 self.assertNotEqual(row["scene_seed"], 0)
                 self.assertIs(row["evaluable_for_task_success"], True)
 
+    def test_lock_assist_is_selected_for_eval_index_and_every_seeded_tier(self):
+        from topogym.config.registry import task_definition
+        from topogym.simulator.config import SimulatorConfig
+        configs = [rcb_topogym.simulator_config("lock_picking", 0)]
+        configs += [rcb_topogym.simulator_config("lock_picking", variation_id="seeded", seed=seed)
+                    for seed in (0, 1, 2, 39, 40, 41)]
+        for cfg in configs:
+            with self.subTest(variation=cfg["variation_id"], seed=cfg["seed"]):
+                # Exercise the JSON boundary used by make-instance and Session.
+                frozen = SimulatorConfig(**json.loads(json.dumps(cfg)))
+                assist = frozen.grasp_assist
+                task = task_definition("lock_picking", frozen.variation_id, frozen.seed)(seed=frozen.seed)
+                self.assertEqual(assist.model, "contact_weld_v1")
+                self.assertEqual(len(assist.targets), 1)
+                target = assist.targets[0]
+                self.assertEqual(target.key, ("lock_key", "key"))
+                self.assertEqual(target.center_m, (-task.config["geometry"]["grip_offset"], 0., 0.))
+                self.assertEqual(target.radius_m, .032)
+                self.assertEqual(assist.stable_time_s, .05)
+                self.assertTrue(task.goal_complete)
+
+    def test_claws_assist_all_tiers_and_medium_grasp_frames(self):
+        import numpy as np
+        from scipy.spatial.transform import Rotation
+        import xml.etree.ElementTree as ET
+        from topogym.config.registry import task_definition
+        from topogym.assets.geometry.interlocked_claws import load_reference, tcp_frames
+        from topogym.simulator.config import SimulatorConfig
+
+        configs = {}
+        for tier, seed in (("easy", 0), ("medium", 1), ("hard", 2)):
+            for variation in (f"interlocked_claws_{tier}", "seeded"):
+                with self.subTest(tier=tier, variation=variation):
+                    raw = rcb_topogym.simulator_config("interlocked_claws", variation_id=variation, seed=seed)
+                    cfg = SimulatorConfig(**json.loads(json.dumps(raw)))
+                    assist = cfg.grasp_assist
+                    self.assertEqual(assist.model, "contact_weld_v1")
+                    self.assertEqual(assist.initial_intent, "close")
+                    self.assertEqual(len({t.key for t in assist.targets}), 2)
+                    self.assertEqual(len({t.entity for t in assist.targets}), 2)
+                    configs[tier, variation] = cfg
+            self.assertEqual(configs[tier, f"interlocked_claws_{tier}"].grasp_assist,
+                             configs[tier, "seeded"].grasp_assist)
+
+        # Verify medium's generated link-local regions against the actual authored
+        # pregrasp TCP frames. This is geometry/config evidence, not contact physics.
+        task = task_definition("interlocked_claws", "medium")(seed=1)
+        with tempfile.TemporaryDirectory() as folder:
+            spec = task.declare(Path(folder), 0.)
+            entities = {entity.name: entity for entity in spec.entities}
+            frames = tcp_frames(load_reference(), task.initial_robot_q)
+            assist = configs["medium", "seeded"].grasp_assist
+            for target, tcp in zip(assist.targets, frames, strict=True):
+                entity = entities[target.entity]
+                links = {link.get("name") for link in ET.parse(entity.asset_path).getroot().findall("link")}
+                self.assertIn(target.link, links)
+                q = np.asarray(entity.quaternion_wxyz)
+                rotation = Rotation.from_quat(q[[1, 2, 3, 0]])
+                center = np.asarray(entity.position_m) + rotation.apply(target.center_m)
+                np.testing.assert_allclose(center, tcp[:3, 3], atol=1e-8, rtol=0.)
+                distance = np.linalg.norm(task.local_vertices[target.entity] - target.center_m, axis=1).min()
+                self.assertLess(distance, target.radius_m)
+            self.assertTrue(task.goal_complete)
+
+    def test_session_uses_frozen_assist_without_reapplying_family_defaults(self):
+        class ConfigCaptured(Exception):
+            pass
+
+        captured = []
+        def capture_env(config):
+            captured.append(config)
+            raise ConfigCaptured
+
+        for task in ("lock_picking", "interlocked_claws", "buzz_wire_3d", "cast_coil", "cast_keyhole",
+                     "hedgehog_in_cage", "horseshoe_ring"):
+            cfg = rcb_topogym.simulator_config(task, 0)
+            for model in ("contact_weld_v1", "none", "legacy_missing"):
+                frozen = json.loads(json.dumps(cfg))
+                if model == "none":
+                    frozen["grasp_assist"] = {"model": "none"}
+                elif model == "legacy_missing":
+                    frozen.pop("grasp_assist")
+                with self.subTest(task=task, model=model), tempfile.TemporaryDirectory() as folder:
+                    path = Path(folder)/"instance.json"
+                    path.write_text(json.dumps(dict(task=task, eval_index=0, simulator=frozen)))
+                    with patch.object(rcb_topogym, "simulator_config", side_effect=AssertionError("must use frozen config")), \
+                         patch("topogym.simulator.env.Env", side_effect=capture_env), \
+                         self.assertRaises(ConfigCaptured):
+                        rcb_topogym.Session(task, instance=path)
+                    self.assertEqual(captured[-1].grasp_assist.model, "none" if model == "legacy_missing" else model)
+
+    def test_assist_matrix_for_all_seeded_difficulties(self):
+        rigid = {"lock_picking", "interlocked_claws", "buzz_wire_3d", "cast_coil", "cast_keyhole",
+                 "hedgehog_in_cage", "horseshoe_ring"}
+        cfg = dict(task_ids=list(sampler.TASK_IDS), sampling_seed=20260929, samples_per_difficulty=1)
+        rows = sampler.sample_instances(cfg)
+        self.assertEqual(len(rows), 39)
+        for row in rows:
+            with self.subTest(task=row["task_id"], tier=row["difficulty"]):
+                assist = row["simulator"]["grasp_assist"]
+                expected = "contact_weld_v1" if row["task_id"] in rigid else "none"
+                self.assertEqual(assist["model"], expected)
+                self.assertEqual(bool(assist["targets"]), expected != "none")
+                self.assertIs(row["evaluable_for_task_success"], True)
+
     def test_server_deadline_on_owner_thread(self):
         # Execute the actual deadline/tick functions with fake clock/session, without importing Genesis.
         tree = ast.parse((ROOT / "harbor_templates/topogym/limited/environment/sim/server.py").read_text())
@@ -105,6 +210,79 @@ class SamplingTests(unittest.TestCase):
 
 
 class ResultTests(unittest.TestCase):
+    def collection_fixture(self, root):
+        sample = dict(task_id="cast_coil", task_number=8, difficulty="easy", sample_id="s00",
+                      scene_seed=123, slug="topogym-cast-coil-easy-s00", evaluable_for_task_success=True)
+        manifest = root / "manifest.lock.json"
+        manifest.write_text(json.dumps(dict(instances=[sample], trial_count=2)))
+        trials = {}
+        for mode in ("unlimited", "limited"):
+            trial = root / "jobs" / f"d08-easy-s00-{mode}-a001" / "topogym-cast-coil__id"
+            (trial / "verifier").mkdir(parents=True)
+            (trial / "artifacts/app/output").mkdir(parents=True)
+            result = dict(task_name=sample["slug"] + ("-limited" if mode == "limited" else ""),
+                          finished_at="2026-09-30T00:00:00Z", verifier_result=dict(rewards=dict(success=1)))
+            (trial / "result.json").write_text(json.dumps(result))
+            (trial / "verifier/reward.json").write_text('{"success":1,"finalized":true}')
+            (trial / "verifier/trajectory.npz").write_bytes(b"verifier trajectory")
+            (trial / "artifacts/app/output/trajectory.npz").write_bytes(b"submitted trajectory")
+            (trial / "artifacts/app/output/reward.json").write_text('{"success":0}')
+            trials[mode] = trial
+        return manifest, trials
+
+    def test_collect_trajectories_by_mode_and_recollect_existing_jobs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest, trials = self.collection_fixture(root)
+            submitted = trials["unlimited"] / "artifacts/app/output/trajectory.npz"
+            payload = submitted.read_bytes()
+            submitted.unlink()
+            self.assertEqual(collect_manifest(manifest, root / "jobs"), 0)
+            results = root / "results/cast_coil/easy/s00"
+            unlimited = results / "unlimited/trial_01/attempt_001/trajectory.npz"
+            self.assertFalse(unlimited.exists())  # Never substitute a verifier trajectory.
+            before = (root / "trials.jsonl").read_bytes()
+            submitted.write_bytes(payload)
+            for _ in range(2):
+                self.assertEqual(collect_manifest(manifest, root / "jobs"), 0)
+                self.assertEqual(unlimited.read_bytes(), payload)
+                self.assertEqual((results / "limited/trial_01/attempt_001/trajectory.npz").read_bytes(), b"verifier trajectory")
+                self.assertEqual((root / "trials.jsonl").read_bytes(), before)
+                for mode in trials:
+                    reward = results / mode / "trial_01/attempt_001/reward.json"
+                    self.assertEqual(json.loads(reward.read_text())["success"], 1)
+
+    def test_collect_rejects_symlinked_trajectory_and_parent_directory(self):
+        for linked_part in ("trajectory.npz", "output", "verifier"):
+            with self.subTest(linked_part=linked_part), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                manifest, trials = self.collection_fixture(root)
+                for mode, trial in trials.items():
+                    if linked_part == "verifier":
+                        path = trial / "verifier"
+                    else:
+                        path = trial / "artifacts/app/output"
+                        if linked_part == "trajectory.npz":
+                            path /= "trajectory.npz"
+                    moved = root / f"outside-{mode}"
+                    path.rename(moved)
+                    path.symlink_to(moved, target_is_directory=moved.is_dir())
+                collect_manifest(manifest, root / "jobs")
+                mode = "limited" if linked_part == "verifier" else "unlimited"
+                self.assertFalse((root / f"results/cast_coil/easy/s00/{mode}/trial_01/attempt_001/trajectory.npz").exists())
+
+    def test_legacy_collector_uses_mode_specific_trajectory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.collection_fixture(root)
+            output = root / "legacy-results"
+            result = subprocess.run([sys.executable, str(ROOT / "scripts/collect_batch_results.py"),
+                str(root / "jobs"), "d08-easy-s00-unlimited-a001", "d08-easy-s00-limited-a001", str(output)],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for mode, expected in (("unlimited", b"submitted trajectory"), ("limited", b"verifier trajectory")):
+                self.assertEqual((output / "cast-coil-easy-s00" / mode / "trajectory.npz").read_bytes(), expected)
+
     def test_completion_is_not_job_file_existence(self):
         row = dict(slug="topogym-cast-coil-easy-s00", evaluable_for_task_success=True)
         with tempfile.TemporaryDirectory() as tmp:

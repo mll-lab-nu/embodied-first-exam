@@ -119,19 +119,19 @@ TASKS: dict[str, dict] = {
              "inside the loop opening throughout traversal. Do not let the metal loop touch the wire. Reaching the finish "
              "by taking the loop off the route is not completion. Place the tool on the finish support, release it, "
              "withdraw the gripper and let it settle.",
-        instances=[dict(variation_id="buzz_wire_3d_easy", seed=0)]),
+        instances=[dict(variation_id="buzz_wire_3d_easy", seed=0)], grasp_assist="recommended"),
     "cast_coil": dict(
         task_id="cast_coil", robot="aloha",
         text="Assemble the separated gold and silver Cast Coil pieces into their interlocking, alternating four-layer "
              "target configuration. Align both pieces fully; contact or grasping alone is not completion. Release both "
              "pieces, withdraw the grippers and leave the assembled puzzle stable on the table.",
-        instances=[dict(variation_id="cast_coil_easy", seed=0)]),
+        instances=[dict(variation_id="cast_coil_easy", seed=0)], grasp_assist="recommended"),
     "cast_keyhole": dict(
         task_id="cast_keyhole", robot="aloha",
         text="Separate the silver keyhole piece from the gold piece. Place the entire silver piece inside the green dashed "
              "goal area and hold it still briefly. Keep the gold piece outside the area on the puzzle/system side. "
              "Holding the target with the gripper is allowed.",
-        instances=[dict(variation_id="cast_keyhole_easy", seed=0)]),
+        instances=[dict(variation_id="cast_keyhole_easy", seed=0)], grasp_assist="recommended"),
     "fiber_bundling": dict(
         task_id="fiber_bundling", robot="panda_robotiq",
         text="Manipulate the thick sheath with the robot gripper to pass every fine fiber through the fixed copper ring, "
@@ -145,13 +145,13 @@ TASKS: dict[str, dict] = {
         text="Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the "
              "green dashed goal area and hold it still briefly. Keep all cage components outside the area on the "
              "puzzle/system side. Holding the target with the gripper is allowed.",
-        instances=[dict(variation_id="hedgehog_in_cage_easy", seed=0)]),
+        instances=[dict(variation_id="hedgehog_in_cage_easy", seed=0)], grasp_assist="recommended"),
     "horseshoe_ring": dict(
         task_id="horseshoe_ring", robot="aloha",
         text="Free the removable ring from the horseshoes and chains. Place the entire ring inside the green dashed goal "
              "area and hold it still briefly. Keep the horseshoes and chains outside the area on the puzzle/system side. "
              "Holding the target with the gripper is allowed.",
-        instances=[dict(variation_id="horseshoe_ring_easy", seed=0)]),
+        instances=[dict(variation_id="horseshoe_ring_easy", seed=0)], grasp_assist="recommended"),
     "interlocked_claws": dict(
         task_id="interlocked_claws", robot="aloha",
         text="Separate the brown claw piece from the other claw. Place the entire brown piece inside the green dashed goal "
@@ -169,7 +169,11 @@ TASKS: dict[str, dict] = {
         text="Insert the tabbed key through all three rotor plates and END. Keep the finite shaft through all four "
              "bores and the leading tab beyond END; normal wall contact and geometrically valid tilt are allowed. "
              "Respect the tab slots and rotor stops. Holding is allowed; preserve the completed insertion during confirmation.",
-        instances=[dict(variation_id="lock_picking_medium", seed=0)]),
+        instances=[dict(variation_id="lock_picking_medium", seed=0)],
+        # Match the reference policy's handle grasp for all three current tiers.
+        # Frozen instances retain their own simulator config, including legacy none.
+        grasp_assist=dict(model="contact_weld_v1", stable_time_s=0.05,
+            targets=[dict(entity="lock_key", link="key", center_m=(-0.495, 0., 0.), radius_m=0.032)])),
     "orbits": dict(
         task_id="orbits", robot="aloha",
         text="Free the complete cord and wooden handle from the fixed ring-and-post assembly. Place the entire cord and "
@@ -217,7 +221,8 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
     if assist == "recommended":
         from dataclasses import asdict
         from importlib import import_module
-        found = import_module(f"topogym.tasks.{spec['task_id']}.common").recommended_grasp_assist(resolved["variation_id"], int(inst["seed"]))
+        found = import_module(f"topogym.tasks.{spec['task_id']}.common").recommended_grasp_assist(
+            resolved["variation_id"], int(inst["seed"]), task_parameters=task_parameters)
         assist = None if found is None else json.loads(json.dumps(asdict(found)))
     if assist:
         cfg["grasp_assist"] = assist
@@ -1157,7 +1162,7 @@ class Session:
             return ("physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's "
                     "PD force; friction holds it")
         parts = ", ".join(sorted({t.entity for t in ga.targets}))
-        held = ("; the grippers start the episode closed on their parts and already hold them from the first tick"
+        held = ("; the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command"
                 if getattr(ga, "initial_intent", "open") == "close" else "")
         return (f"assisted grasping ({ga.model}): a gripper whose command moves towards closed takes hold of a graspable "
                 f"part ({parts}) once both fingers touch the same part inside its grasp region, the tool frame within "

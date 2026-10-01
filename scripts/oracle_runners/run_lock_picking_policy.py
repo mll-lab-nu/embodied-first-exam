@@ -4,6 +4,7 @@
 The historical medium route remains available. Reindex mode supports all three
 current families and can record IK/FK for every Cartesian action. All physics
 parameters and measured engine properties are recorded, including failed runs.
+Solve runs end at native Task success, which may occur while still grasping.
 """
 import argparse
 from dataclasses import asdict
@@ -15,7 +16,7 @@ import sys
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -24,6 +25,54 @@ def parameters(setting):
         return {}
     from topogym.tasks.lock_picking.lock_picking_medium import LockPickingMediumTask
     return LockPickingMediumTask.variant_parameters
+
+
+def run_segments(runner, *, part, policy_factory, report, save_report):
+    """Stop on native success; a finished policy alone is not a solved task."""
+    from topogym.utils.io import to_jsonable
+    env = runner.env
+    for name in (("pickup", "solve") if part == "solve" else ("pickup",)):
+        policy, submission_hash = policy_factory(name)
+        result = runner.run_policy(request_id=f"lock-{name}", policy=policy,
+            submission_hash=submission_hash, mode="unlimited", state_fields=("world", "task"))
+        task_result = env._task.result
+        report["segments"].append(to_jsonable(result))
+        report.update(last_phase=policy.phase, physics_steps=env._world.physics_step,
+                      policy_completed=policy.completed, task_result=to_jsonable(task_result),
+                      task_success=bool(task_result.task_success), stop_reason=result["reason"])
+        save_report()
+        if not result["evidence_complete"] or not result["physics_tick_complete"]:
+            raise RuntimeError("Oracle segment evidence is incomplete; see private/policies")
+        if result["reason"] not in {"policy_done", "env_terminal"}:
+            raise RuntimeError(f"Policy stopped in {policy.phase}: {result['reason']}; see private/policies")
+        if task_result.terminated and task_result.task_success:
+            return  # No release action or next segment is allowed after Env termination.
+        if result["reason"] == "env_terminal" or task_result.terminated:
+            raise RuntimeError(f"Task stopped without success in {policy.phase}: {task_result.reason}")
+
+
+def finish_run(task, world, *, part, report):
+    """Record release as a diagnostic; success comes from the Task state machine."""
+    import numpy as np
+    from topogym.utils.io import to_jsonable
+    native_success = bool(task.result.terminated and task.result.task_success)
+    report.update(final_world=to_jsonable(world), task_result=to_jsonable(task.result),
+                  task_success=native_success, released_at_end=not bool(world["assist_active"]))
+    if part == "pickup":
+        report["status"] = "task_success" if native_success else "pickup_passed"
+        return
+    reached, failure, metrics = task.evaluate_state(world)
+    key = world["bodies"]["lock_key"]
+    report["independent_goal_check"] = dict(
+        scope="Read-only Task predicate; full robot process audit is separate",
+        reached=bool(reached), failure=failure, metrics=to_jsonable(metrics),
+        formal_success=native_success, goal_complete=bool(task.goal_complete),
+        resting_insertion_observed=bool(reached and failure is None and report["released_at_end"]
+            and np.linalg.norm(key["linear_velocity_m_s"]) < .01
+            and np.linalg.norm(key["angular_velocity_rad_s"]) < .1))
+    if not native_success or not reached or failure is not None:
+        raise RuntimeError("Solve ended without confirmed Task success")
+    report["status"] = "task_success"
 
 
 def pickup_preflight(env, geometry, style, roll):
@@ -91,7 +140,9 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                                endpoint_depth=endpoint_depth),
         timing_scope="explicit recorded World tick/substep configuration; simulator defaults unchanged",
         started=time.time(), events=[], segments=[],
-        qualification="pending measured execution; Task success qualification remains unchanged",
+        completion_contract="task_success" if part == "solve" else "pickup",
+        task_success=False,
+        qualification="Native Task success is recorded; independent physical process audit remains separate",
         from_default_home=True, policy_access="unlimited world state; ordinary EE_ABS actions only",
         provenance=dict(commit="cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
             semantic_route="2026-09-18_standard_150mm_purple_trace_v1 commands.jsonl",
@@ -162,7 +213,7 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                 env.add_state_sink(monitor_tick)
                 monitor_tick(env.tick_record())
                 source = json.loads((output/"run_source_manifest.json").read_text())
-                for name in (("pickup", "solve") if part == "solve" else ("pickup",)):
+                def policy_factory(name):
                     kwargs = dict(geometry=geometry, part=name, grasp_roll_deg=grasp_roll_deg, grasp_style=grasp_style)
                     if route_mode == "reindex":
                         from topogym.planning.lock_picking.reindex_policy import LockPickingReindexPolicy
@@ -175,50 +226,10 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                         from topogym.planning.lock_picking.recorded_ik import RecordedIKPolicy
                         policy = RecordedIKPolicy(policy, env._robot, ik_stream)
                     active[0] = policy
-                    result = runner.run_policy(request_id=f"lock-{name}", policy=policy,
-                        submission_hash=fingerprint(dict(source=source, parameters=kwargs)),
-                        mode="unlimited", state_fields=("world", "task"))
-                    report["segments"].append(to_jsonable(result))
-                    report.update(last_phase=policy.phase, physics_steps=env._world.physics_step,
-                                  policy_completed=policy.completed, task_result=to_jsonable(env._task.result))
-                    write_json_atomic(output/"run_report.json", report)
-                    if result["reason"] != "policy_done":
-                        raise RuntimeError(f"Policy stopped in {policy.phase}: {result['reason']}; see private/policies")
-                report.update(status="pickup_passed" if part == "pickup" else "route_completed",
-                    final_world=to_jsonable(env._world.read_state()))
-                if part == "solve":
-                    reached, failure, metrics = env._task.evaluate_state(env._world.read_state())
-                    report["independent_goal_check"] = dict(reached=reached, failure=failure, metrics=metrics,
-                        formal_success=env._task.result.task_success, goal_complete=env._task.goal_complete)
-                    # A released shaft normally rests against a bore. Preserve
-                    # the Task's strict positive-clearance result independently
-                    # of observing insertion, release and a stable resting key.
-                    key = env._world.read_state()["bodies"]["lock_key"]
-                    from scipy.spatial.transform import Rotation
-                    q = np.asarray(key["quaternion_wxyz"])
-                    axis = Rotation.from_quat(q[[1, 2, 3, 0]]).apply([1., 0., 0.])
-                    tip = np.asarray(key["position_m"])
-                    radial_offsets = []
-                    if axis[0] > .99:
-                        for plate in range(4):
-                            for side in (-1., 1.):
-                                x = geometry["first_x"]+plate*geometry["pitch"]+side*geometry["disc_thickness"]/2
-                                at = tip+axis*((x-tip[0])/axis[0])
-                                radial_offsets.append(float(np.linalg.norm(at[1:]-[geometry["center_y"], geometry["axis_z"]])))
-                    # Allow only 0.2 mm of measured contact compliance, not a
-                    # lateral bypass. The Task's positive-clearance test stays intact.
-                    radial_ok = bool(radial_offsets and max(radial_offsets)+geometry["shaft_radius"]/axis[0]
-                                     <= geometry["bore_radius"]+.0002)
-                    resting_insertion = (bool(metrics.get("leading_tab_inserted")) and
-                        bool(metrics.get("shaft_in_goal")) and radial_ok and failure is None and
-                        np.linalg.norm(key["linear_velocity_m_s"]) < .01 and
-                        np.linalg.norm(key["angular_velocity_rad_s"]) < .1 and
-                        not env._world.read_state()["assist_active"])
-                    report["independent_goal_check"]["resting_insertion_observed"] = bool(resting_insertion)
-                    report["independent_goal_check"].update(radial_offsets_m=radial_offsets,
-                        shaft_within_bores_with_contact_tolerance=radial_ok, contact_tolerance_m=.0002)
-                    if not resting_insertion:
-                        raise RuntimeError("Route finished without a released, stable insertion")
+                    return policy, fingerprint(dict(source=source, parameters=kwargs))
+                run_segments(runner, part=part, policy_factory=policy_factory, report=report,
+                             save_report=lambda: write_json_atomic(output/"run_report.json", report))
+                finish_run(env._task, env._world.read_state(), part=part, report=report)
     except BaseException:
         report.update(status="failed", error=traceback.format_exc())
         raise
@@ -267,7 +278,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(output)
     (output/"source_manifest.json").rename(output/"run_source_manifest.json")
-    command = [sys.executable, str(source/"scripts/run_lock_picking_policy.py"), "--worker",
+    command = [sys.executable, str(source/"scripts/oracle_runners/run_lock_picking_policy.py"), "--worker",
         "--output", str(output), "--setting", args.setting, "--part", args.part,
         "--grasp-roll-deg", str(args.grasp_roll_deg), "--grasp-style", args.grasp_style,
         "--physics-dt", str(args.physics_dt), "--solver-substeps", str(args.solver_substeps),

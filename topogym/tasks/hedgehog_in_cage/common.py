@@ -11,6 +11,28 @@ from ..scene_presets import defaults, record_preset
 from topogym.assets.scene_visuals import surface
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Allow ball-surface regrasp without an oracle pickup file or cage binding."""
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, rigid_grasp_region
+    task = task_definition("hedgehog_in_cage", variation_id, seed)(task_parameters, seed=seed)
+    if task.asset_resource:
+        import io
+        import zipfile
+        import trimesh
+        from topogym.assets.library import resource_path
+        with zipfile.ZipFile(resource_path(task.asset_resource)) as bundle:
+            ball = trimesh.load(io.BytesIO(bundle.read("hedgehog.obj")), file_type="obj", process=False)
+    else:
+        from topogym.assets.geometry.hedgehog_in_cage import HedgehogLayout, load_template
+        ball, _ = hedgehog_meshes(HedgehogLayout(load_template(), scale=float(task.config["scale"])))
+    target = rigid_grasp_region("hedgehog_ball", "hedgehog", ball.vertices)
+    # A surface contact may lie far from the ball's origin (at a spike). Keep
+    # the TCP gate consistent with the region plus the finger-to-TCP offset.
+    return GraspAssistConfig("contact_weld_v1", (target,),
+                            max_tcp_distance_m=max(.06, target.radius_m+.03))
+
+
 class HedgehogInCageTask(PlacementGoalMixin, RigidTaskDefinition):
     task_id = "hedgehog_in_cage"
     placement_description = 'the hedgehog ball including every spike'

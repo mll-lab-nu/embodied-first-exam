@@ -55,9 +55,12 @@ class GenesisWorld:
         if cls._engine_configuration is not None and cls._engine_configuration != configuration:
             raise RuntimeError("Genesis device/precision is fixed for this process")
         if not getattr(gs, "_initialized", False):
-            gs.init(backend=getattr(gs, compute_backend), precision=str(precision), seed=int(seed),
+            # Quadrants CompileConfig.random_seed requires a signed int32.
+            engine_seed = int(seed) & 0x7FFFFFFF
+            gs.init(backend=getattr(gs, compute_backend), precision=str(precision), seed=engine_seed,
                     logging_level="warning")
-        gs.set_random_seed(seed)
+        # Preserve the full uint32 scene seed for Python, NumPy and Torch RNGs.
+        gs.set_random_seed(int(seed))
         # The cached declaration cannot detect an external destroy/re-init.
         # Verify the actual runtime for every construction, including ours.
         actual_precision = str(np.dtype(gs.np_float).itemsize * 8)

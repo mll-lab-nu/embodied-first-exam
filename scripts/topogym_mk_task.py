@@ -142,6 +142,11 @@ def goal_words(fam: str, fallback: str, d: dict) -> tuple[str, str]:
 
 
 def validate_goal_instance(fam: str, d: dict, instance: dict) -> None:
+    from topogym.simulator.config import SimulatorConfig
+    frozen_assist = SimulatorConfig(grasp_assist=instance.get("simulator", {}).get("grasp_assist", {"model": "none"})).grasp_assist
+    described_assist = SimulatorConfig(grasp_assist=d.get("grasp_assist") or {"model": "none"}).grasp_assist
+    if described_assist != frozen_assist:
+        raise ValueError("Grasp assistance differs from the frozen instance; regenerate describe.json for this instance")
     goal_words(fam, "", d)
     if fam in GOAL_TASKS:
         goal = d["public_goal"]

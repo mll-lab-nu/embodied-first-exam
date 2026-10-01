@@ -12,6 +12,24 @@ from topogym.tasks.base import EntitySpec, RigidTaskDefinition, TaskSpec
 from ..scene_presets import defaults, record_preset
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Both shoes and the ring remain graspable throughout a trials episode."""
+    from topogym.assets.geometry.horseshoe_ring import HorseshoeAssembly
+    from topogym.assets.variation_resources import read_json
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, rigid_grasp_region
+    task = task_definition("horseshoe_ring", variation_id, seed)(task_parameters, seed=seed)
+    template = read_json(task.template_resource) if task.template_resource else None
+    assembly = HorseshoeAssembly(template=template, scale=float(task.config["scale"]))
+    names = {"horseshoe_left", "horseshoe_right", "target_ring"}
+    targets = tuple(rigid_grasp_region(body.name, body.name,
+        body.visual.vertices-body.visual.center_mass) for body in assembly.bodies if body.name in names)
+    if {target.entity for target in targets} != names:
+        raise ValueError("Horseshoe grasp geometry is incomplete")
+    return GraspAssistConfig("contact_weld_v1", targets,
+                            max_tcp_distance_m=max(.09, max(t.radius_m for t in targets)+.03))
+
+
 class HorseshoeRingTask(PlacementGoalMixin, RigidTaskDefinition):
     task_id = "horseshoe_ring"
     terminal_revision = "placement_region_v3_grasp_contact_2mm"

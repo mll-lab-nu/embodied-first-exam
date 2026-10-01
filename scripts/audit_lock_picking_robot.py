@@ -50,7 +50,9 @@ def main():
         return worker(args)
     if not args.geometry_probe:
         report = json.loads((args.run/"run_report.json").read_text())
-        if report["status"] != "route_completed" and not (args.allow_failed and report["status"] == "failed"):
+        complete = (report["status"] == "route_completed" or
+                    (report["status"] == "task_success" and report.get("completion_contract") == "task_success"))
+        if not complete and not (args.allow_failed and report["status"] == "failed"):
             parser.error("Only audit a sealed, completed robot route")
     args.output.mkdir(parents=True, exist_ok=False)
     from scripts.test_policy_cube_transfer import snapshot

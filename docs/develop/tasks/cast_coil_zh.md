@@ -8,7 +8,7 @@
 
 按 [action / IK 计划](task_variant_solutions_action_ik_zh.md#coil)，本轮验收要求是具名变体的 policy 经 `SegmentRunner → Env.step → Genesis IK → 物理执行` 达到真实 `task_success`。关闭 RGB 和视频，保留全部当前配置 tick 的状态、动作、冻结源码和资产哈希。使用 unlimited 对象状态及自动 `contact_weld_v1` 抓持，不能称为纯摩擦抓持证明。
 
-当前入口：[CastCoilPolicy](../../../topogym/planning/cast_coil/policy.py)、[执行 CLI](../../../scripts/run_cast_coil_policy.py)、[独立复核 CLI](../../../legacy/research_tools_20260929/scripts/audit_cast_coil_policy.py)。从默认 home 接近桌面自由零件，双指接触后取得自动抓持；以实测对象/TCP 关系执行装配，放桌、解除辅助、撤手，等待原 Task 的释放与稳定判据。
+当前入口：[CastCoilPolicy](../../../topogym/planning/cast_coil/policy.py)、[执行 CLI](../../../scripts/oracle_runners/run_cast_coil_policy.py)、[独立复核 CLI](../../../legacy/research_tools_20260929/scripts/audit_cast_coil_policy.py)。从默认 home 接近桌面自由零件，双指接触后取得自动抓持；以实测对象/TCP 关系执行装配，放桌、解除辅助、撤手，等待原 Task 的释放与稳定判据。
 
 | 注册入口 | 几何／反向装配路线 |
 |---|---|
@@ -24,7 +24,7 @@ medium/hard 的放置目标使用**抓取前实测的桌面稳定姿态**。抓�
 
 ```bash
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 QD_NUM_THREADS=1 \
-  .venv-gs121-nyx/bin/python scripts/run_cast_coil_policy.py \
+  .venv-gs121-nyx/bin/python scripts/oracle_runners/run_cast_coil_policy.py \
   --variant medium --seed 0 --no-rgb --compute-backend cpu \
   --physics-dt .025 --control-decimation 1 --solver-substeps 40 \
   --output runs/test_results/cast_coil_medium_new_run

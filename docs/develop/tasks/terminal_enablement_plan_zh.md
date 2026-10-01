@@ -220,7 +220,7 @@ CPU 合同测试用于穷举小规模几何/数值边界、缺失读数、重复
 
 拟新增活动入口为 `scripts/validate_terminal_enablement.py`，只管理当前范围的合同、记录重算和原生验收；任务适配代码放 `topogym/evaluation/terminal/validation/`，不引入第二套 Env 或物理循环。持久回归放 `ci_checks/test-terminal-enablement.py`，复用现有 `ci_checks/test-difficulty-eval.py` 覆盖汇总链路。以上路径是计划新增，当前不可当已存在命令执行。
 
-现有机器人 policy / oracle 入口按需复用，尤其是 `scripts/run_lock_picking_policy.py`、`scripts/run_cast_keyhole_policy.py`、`scripts/run_hedgehog_oracle.py`。不恢复归档测试目录为运行依赖；需要的历史测试应审查后整理成当前验收适配器，保留原来源与哈希。其他会话正在修改的 planner、qualification 和场景文件在实施前检查差异，不能用快照整份覆盖。
+现有机器人 policy / oracle 入口按需复用，尤其是 `scripts/oracle_runners/run_lock_picking_policy.py`、`scripts/oracle_runners/run_cast_keyhole_policy.py`、`scripts/oracle_runners/run_hedgehog_oracle.py`。不恢复归档测试目录为运行依赖；需要的历史测试应审查后整理成当前验收适配器，保留原来源与哈希。其他会话正在修改的 planner、qualification 和场景文件在实施前检查差异，不能用快照整份覆盖。
 
 ## 7 difficulty 交付要补的检查
 

@@ -13,12 +13,9 @@
 
 ## 本地 Rollout
 
-- `run_buzz_wire_policy.py`、`run_cast_coil_policy.py`、`run_cast_keyhole_policy.py`、`run_lock_picking_policy.py`：冻结源码并执行各任务策略。
-- `plan_lock_picking_oracle.py`：冻结当前 Lock 三档物体路径与 1／2／3 次回退证书，`--ik` 加做从 home 起步的当前 Genesis 只读 IK，不推进物理。`run_lock_picking_policy.py --route-mode reindex --variation <variant> --audit-ik` 实际执行三档机器人完整流程并记录逐动作 IK（hard 使用 `--endpoint-depth 4.10`）；`audit_lock_picking_robot.py` 独立复核连续状态、关节、抓持和碰撞。冻结源码，CPU 仅监控，内存达到 90% 停止所属进程；辅助抓持流程通过不授予原生 success。见[完整证明与可复制命令](../solvability_proof/lock_picking/2026-09-30_robot_process/README.md)。
-- `run_horseshoe_policy.py`：当前三档物体路径复核、easy 双臂抓点/联合 IK 规划与物理诊断；每秒资源监控，90% 停止本次进程。局部诊断不授予完整可解资格。
-- `run_hedgehog_policy.py`、`run_interlocked_claws_policy.py`、`run_rigid_reference_policy.py`：几何准备及已开放的反馈策略流程。
-- `plan_hedgehog_object_oracle.py`、`run_hedgehog_oracle.py`、`audit_hedgehog_oracle.py`：当前四腰窗 medium 的物体证书、从 home 连续执行的辅助抓持 oracle，以及独立逐 tick 审计；冻结源码并监控 90% 资源阈值。[已验收范围与复现命令](../solvability_proof/hedgehog_in_cage/README.md)。
-- `run_solvability_workflow.py`：按阶段执行候选策略与可解性研究；独立审计工具已归档，原有证据保留。
+- 10 个 oracle／参考策略执行入口已集中在 [oracle_runners/](oracle_runners/README.md)，包括 Buzz、Coil、Keyhole、Lock、Hedgehog、Horseshoe、Claws、共享刚体 runner 和分阶段 workflow；命令改为 `python scripts/oracle_runners/<脚本名>.py ...`。源码快照内的 worker 入口同步迁移。
+- `plan_lock_picking_oracle.py`：冻结当前 Lock 三档物体路径与 1／2／3 次回退证书，`--ik` 加做从 home 起步的当前 Genesis 只读 IK，不推进物理。`oracle_runners/run_lock_picking_policy.py --route-mode reindex --variation <variant> --audit-ik --part solve` 实际执行，原生 Task 成功即正常结束，允许仍抓持；`audit_lock_picking_robot.py` 独立复核连续状态、关节、抓持、碰撞及 success 时间窗口。历史完整释放流程及原证据不改写。
+- `plan_hedgehog_object_oracle.py`、`audit_hedgehog_oracle.py`：物体证书与独立逐 tick 审计工具仍在本目录；执行入口为 `oracle_runners/run_hedgehog_oracle.py`。[已验收范围](../solvability_proof/hedgehog_in_cage/README.md)。
 - `test_scripted_policy_rollout.py`：`act(obs)` 样板执行入口，输出至 `task_rollouts/`。
 - `test_policy_cube_transfer.py`：低层方块执行与控制模式矩阵入口；其 `snapshot()` 被多个 rollout 管理脚本复用。
 
@@ -31,6 +28,8 @@
 - `difficulty_eval.py`：难度评测调度；解析参数、准备任务、物理 preflight、认证 canary、逐次 `harbor run`、中断处理和恢复；默认 agent 预算 21600 秒，使用公共 `harbor_templates/topogym/`。
 - `../bash_scripts/run_difficulty_trials.sh`：默认自动准备并启动 Docker 控制器；`check`、容器内 `auth login` 与实验共用入口，默认工作目录为启动目录的 `topogym-work`；`--backend local` 显式保留宿主环境。
 - `difficulty_delivery.py`：Docker 交付适配，管理固定镜像、共享路径检查、GPU UUID、daemon 内锁和所属容器清理，不复制实验阶段逻辑。
+- `difficulty_hf_auth.py`：显式读取 HF_TOKEN 或私有 token 文件，不交互登录；校验参数并隔离评测子进程环境。
+- `difficulty_results_hf.py`：白名单结果导出、快照身份、HF 分批 commit、恢复对账和上传日志；通过 difficulty_eval 的 `--results_to_hf` / `--phase upload` 使用，见 [HF 上传用法](../docs/rcb/docker_quickstart_zh.md#上传结果到私有-hf-dataset)。
 - `difficulty_release.py`：无 Git 源码身份、build-info 与 Docker 源码发行包；使用方法见 [Docker 启动说明](../docs/rcb/docker_quickstart_zh.md)。
 - `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。

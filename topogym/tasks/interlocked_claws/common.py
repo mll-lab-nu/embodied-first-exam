@@ -25,8 +25,9 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
     geometry_family = None
     gate_extra_m = (0., 0.)
     claw_scale = 1.
-    # Pure-friction pregrasp holds slip (release probe 2026-09-29); these tiers
-    # start with contact_weld_v1 on both hands, see recommended_grasp_assist().
+    # Pure-friction pregrasp holds slip (release probe 2026-09-29). All three
+    # shipped tiers request contact_weld_v1 through recommended_grasp_assist();
+    # the owner's SimulatorConfig still decides whether assistance is enabled.
     pregrasp_weld = False
 
     def build_assets(self, folder):
@@ -214,15 +215,16 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
         return colors
 
 
-def recommended_grasp_assist(variation_id, seed=0):
-    """contact_weld_v1 config a welded-pregrasp tier needs, or None for friction tiers.
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Recommended contact_weld_v1 config, or None for a non-assisted definition.
 
-    initial_intent="close" lets the already-closed hands acquire at episode birth.
+    All three shipped tiers opt in. initial_intent="close" lets the already-closed
+    hands acquire after bilateral-contact qualification, without another close command.
     """
     import tempfile
     from topogym.config.registry import task_definition
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
-    task = task_definition("interlocked_claws", variation_id, seed)(seed=seed)
+    task = task_definition("interlocked_claws", variation_id, seed)(task_parameters, seed=seed)
     if not task.pregrasp_weld:
         return None
     with tempfile.TemporaryDirectory() as folder:

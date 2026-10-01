@@ -9,7 +9,7 @@ import sys
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -245,7 +245,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(output)
     (output/"source_manifest.json").rename(output/"run_source_manifest.json")
-    command = [sys.executable, str(source/"scripts/run_cast_keyhole_policy.py"), "--worker",
+    command = [sys.executable, str(source/"scripts/oracle_runners/run_cast_keyhole_policy.py"), "--worker",
         "--output", str(output), "--variation", args.variation, "--part", args.part,
         "--backend", args.backend, "--seed", str(args.seed), "--horizon", str(args.horizon), "--speed", str(args.speed),
         "--tick", str(args.tick)]

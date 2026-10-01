@@ -175,7 +175,7 @@ H2–H4 可以由多段平滑参考轨迹实现；阶段名称不要求机械地
 | `topogym/planning/hedgehog_in_cage/hedgehog_in_cage_medium_planning.py` | Hedgehog 阶段策略、授权输入校验、进展与抓持反馈 |
 | `topogym/planning/interlocked_claws/interlocked_claws_medium_planning.py` | Claws 相对位姿路线、双臂动作、两窗通过阶段 |
 | 上述任务 planning 包内的路线模块（按需要拆分） | 完整刚体路线搜索/加载、坐标变换、轨迹插值；不持有物理引擎 |
-| `scripts/run_hedgehog_policy.py`、`scripts/run_interlocked_claws_policy.py` | 管理方 CLI：创建 Env、冻结身份、配置授权、调用 SegmentRunner、报告与录像 |
+| `scripts/oracle_runners/run_hedgehog_policy.py`、`scripts/oracle_runners/run_interlocked_claws_policy.py` | 管理方 CLI：创建 Env、冻结身份、配置授权、调用 SegmentRunner、报告与录像 |
 | `tests/unit/` 中对应 policy / 路线测试 | 实测反馈转阶段、坐标变换、碰撞/通过事件反例、超时与字段缺失 |
 | `tests/integration/` 中对应真实运行测试 | segment0、真实抓持、完整执行、终态、复现、时间步和回溯 |
 | 现有 Task / evaluation / registry | 补必要测量与逐变体终态资格；不把任务成功判据藏在 policy 内 |

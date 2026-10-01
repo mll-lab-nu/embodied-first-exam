@@ -9,7 +9,7 @@ import sys
 import time
 import traceback
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
@@ -160,7 +160,7 @@ def main():
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(output)
     (output/"source_manifest.json").rename(output/"run_source_manifest.json")
-    command = [sys.executable, str(source/"scripts/run_cast_coil_policy.py"), "--worker", "--output", str(output), "--part", args.part]
+    command = [sys.executable, str(source/"scripts/oracle_runners/run_cast_coil_policy.py"), "--worker", "--output", str(output), "--part", args.part]
     command += ["--physics-dt", str(args.physics_dt), "--control-decimation", str(args.control_decimation), "--solver-substeps", str(args.solver_substeps)]
     command += ["--variant", args.variant, "--seed", str(args.seed), "--compute-backend", args.compute_backend,
                 "--episode-seconds", str(args.episode_seconds), "--policy", args.policy]

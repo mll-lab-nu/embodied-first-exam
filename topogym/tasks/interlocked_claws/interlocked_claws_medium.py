@@ -8,6 +8,8 @@ class InterlockedClawsMediumTask(InterlockedClawsTask):
     family_id = 'acute_windows_opposed'
     model_revision = 'opposed_pregrasp_wide2_v1'
     difficulty = 'medium'
+    # Preserve each piece's acquired pose relative to its pregrasped hand.
+    pregrasp_weld = True
 
     geometry_family = 'acute_windows_opposed'
     # Both gates +2 mm per side: the unwidened and gate-A-only versions had no

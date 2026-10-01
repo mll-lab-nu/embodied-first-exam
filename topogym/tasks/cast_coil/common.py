@@ -9,6 +9,22 @@ from topogym.tasks.base import EntitySpec, RigidTaskDefinition, TaskSpec
 from topogym.evaluation.terminal import SettlingSpec
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Reuse the oracle's two grasp patches in the generated URDF COM frames."""
+    from topogym.assets.geometry.cast_coil import CoilAssembly
+    from topogym.assets.variation_resources import read_json
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("cast_coil", variation_id, seed)(task_parameters, seed=seed)
+    template = read_json(task.template_resource) if task.template_resource else None
+    assembly = CoilAssembly(template=template, scale=float(task.config["scale"]))
+    points = {"coil_silver": np.array([.022, .032, .0405]),
+              "coil_gold": np.array([-.022, -.032, .0405])}
+    return GraspAssistConfig("contact_weld_v1", tuple(
+        GraspTarget(body.name, body.name, tuple(points[body.name]-body.visual.center_mass), .025)
+        for body in assembly.bodies))
+
+
 class CastCoilTask(RigidTaskDefinition):
     task_id = "cast_coil"
     terminal_revision = "release_settling_v2_grasp_contact_2mm"

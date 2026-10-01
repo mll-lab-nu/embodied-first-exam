@@ -336,7 +336,7 @@ def reference_pivot_goals(planner, bodies, reference):
     symmetries=[Rotation.identity()]+[
         loop.rotation*Rotation.from_rotvec(np.pi*axis)*loop.rotation.inv() for axis in np.eye(3)]
     goals=[];metadata=[]
-    for offset in (80,40):
+    for offset in (80,):
         index=min(len(reference)-1,planner.fold_end_index+offset)
         rp,rr=relative_pose(reference[index]['horseshoe_right'],reference[index]['target_ring'])
         p,r=hp+hr.apply(rp),hr*rr

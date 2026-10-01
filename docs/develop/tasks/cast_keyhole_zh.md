@@ -6,7 +6,7 @@
 
 开口金叉与封闭银色阶梯孔的双刚体谜题。当前标准场景从桌面物体与 ALOHA 默认 home 开始；目标为整件银色零件进入实例固定的绿色区域，金色件留在分界另一侧并持稳，允许保留抓持。
 
-源码：[当前 Task](../../../topogym/tasks/cast_keyhole/common.py) · [policy 与验证说明](../../../topogym/planning/cast_keyhole/README.md) · [双臂 IK 规划](../../../topogym/planning/cast_keyhole/kinematics.py) · [运行入口](../../../scripts/run_cast_keyhole_policy.py)。运行使用标准 `Env` / `SegmentRunner`，不再使用旧场景或 variant runner 入口。
+源码：[当前 Task](../../../topogym/tasks/cast_keyhole/common.py) · [policy 与验证说明](../../../topogym/planning/cast_keyhole/README.md) · [双臂 IK 规划](../../../topogym/planning/cast_keyhole/kinematics.py) · [运行入口](../../../scripts/oracle_runners/run_cast_keyhole_policy.py)。运行使用标准 `Env` / `SegmentRunner`，不再使用旧场景或 variant runner 入口。
 
 ## 当前状态与边界
 
@@ -44,7 +44,7 @@
 输出必须使用新目录。把 `easy` 替换为 `medium` / `hard` 可分别运行。
 
 ```bash
-.venv-gs121-nyx/bin/python scripts/run_cast_keyhole_policy.py \
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_cast_keyhole_policy.py \
   --variation easy --backend cpu --tick .025 --speed .6 --horizon 900 \
   --output runs/test_results/keyhole_easy_new
 ```

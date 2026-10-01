@@ -21,11 +21,23 @@ route=eval
 provider=openai
 api_var=
 run_id=
+hf_enabled=0
+hf_dry_run=0
+hf_token_file=
+hf_token_env=
+hf_file_set=0
+hf_env_set=0
 args=()
 files=()
 # Parse only launcher concerns and host paths. Python validates experiment options.
 while (($#)); do
   case "$1" in
+    --results_to_hf|--results-to-hf) hf_enabled=1; args+=("$1"); shift ;;
+    --hf-dry-run) hf_dry_run=1; args+=("$1"); shift ;;
+    --hf-token-file) hf_token_file="${2:?--hf-token-file needs a path}"; hf_file_set=1; shift 2 ;;
+    --hf-token-file=*) hf_token_file="${1#*=}"; hf_file_set=1; shift ;;
+    --hf-token-env) hf_token_env="${2:?--hf-token-env needs a variable name}"; hf_env_set=1; shift 2 ;;
+    --hf-token-env=*) hf_token_env="${1#*=}"; hf_env_set=1; shift ;;
     --backend) backend="${2:?--backend needs a value}"; shift 2 ;;
     --backend=*) backend="${1#*=}"; shift ;;
     --controller-image) controller_image="${2:?--controller-image needs a digest}"; shift 2 ;;
@@ -54,6 +66,10 @@ while (($#)); do
     *) args+=("$1"); shift ;;
   esac
 done
+if ((hf_file_set && hf_env_set)); then printf 'ERROR: --hf-token-file and --hf-token-env are mutually exclusive\n' >&2; exit 2; fi
+if ((hf_env_set)) && [[ ! "$hf_token_env" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+  printf 'ERROR: invalid HF token environment variable name\n' >&2; exit 2
+fi
 if [[ "$backend" == local ]]; then
   # Explicit compatibility mode preserves the old repository-relative run layout.
   for ((i=0; i<${#files[@]}; i++)); do
@@ -63,9 +79,31 @@ if [[ "$backend" == local ]]; then
   done
   PY="${TOPOGYM_EVAL_PYTHON:-$ROOT/.venv-gs121-nyx/bin/python}"
   [[ "$work_dir_set" == 0 ]] || args+=(--work-dir "$work_dir")
+  ((hf_file_set == 0)) || args+=(--hf-token-file "$hf_token_file")
+  ((hf_env_set == 0)) || args+=(--hf-token-env "$hf_token_env")
   exec "$PY" "$ROOT/scripts/difficulty_eval.py" "${args[@]}"
 fi
+hf_active=0
+hf_value=
+if [[ "$hf_enabled" == 1 && "$hf_dry_run" == 0 && "$help_only" == 0 && "$route" == eval && "$phase" =~ ^(all|run|collect|upload)$ ]]; then
+  hf_active=1
+  if ((hf_file_set == 0)); then
+    hf_selected_env="${hf_token_env:-HF_TOKEN}"
+    hf_value="${!hf_selected_env-}"
+  fi
+fi
+# Do not expose injected HF credentials to Docker/build subprocess environments.
+unset HF_TOKEN HUGGING_FACE_HUB_TOKEN HF_TOKEN_PATH HF_HOME TOPOGYM_HF_AUTH_DIR
+[[ -z "$hf_token_env" ]] || unset "$hf_token_env"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 2; }
+if ((hf_file_set)); then
+  hf_credential_abs="$(realpath -m -- "$hf_token_file")"
+  case "$hf_credential_abs" in
+    "$ROOT/.secrets/"*) ;;
+    "$ROOT/"*) fail 'put HF token outside the source repository or in its root .secrets directory' ;;
+  esac
+  [[ "$hf_token_file" != *$'\n'* && "$hf_token_file" != *$'\r'* ]] || fail 'HF token path cannot contain newline'
+fi
 log() { printf '[%(%F %T%z)T] === bootstrap: %s ===\n' -1 "$*"; }
 guarded_build() {
   local logfile="$1"; shift
@@ -153,6 +191,29 @@ cleanup() {
 trap cleanup EXIT
 stop() { trap '' INT TERM; docker stop -t 180 "$controller" >/dev/null 2>&1 || true; exit 130; }
 trap stop INT TERM
+if [[ "$hf_active" == 1 ]]; then
+  if ((hf_file_set)); then
+    [[ -f "$hf_token_file" && -r "$hf_token_file" && ! -L "$hf_token_file" ]] || fail 'HF token file must be a readable regular file, not a symlink'
+    hf_mode="$(stat -c %a -- "$hf_token_file")"
+    [[ "$(stat -c %u -- "$hf_token_file")" == "$(id -u)" ]] || fail 'HF token file must be owned by the current user'
+    (( (8#$hf_mode & 077) == 0 )) || fail 'HF token file must have mode 0600 or 0400'
+    [[ "$(stat -c %s -- "$hf_token_file")" -le 4096 ]] || fail 'HF token file is too large'
+    cp --no-dereference -- "$hf_token_file" "$launch_dir/hf-token"
+    chmod 600 "$launch_dir/hf-token"
+    realpath -- "$hf_token_file" | tr -d '\n' > "$launch_dir/hf-host-token-file"
+  else
+    [[ -n "$hf_value" ]] || fail 'provide HF_TOKEN, --hf-token-env or --hf-token-file; no interactive HF login'
+    printf '%s' "$hf_value" > "$launch_dir/hf-token"
+    unset hf_value
+    printf '%s' "$hf_selected_env" > "$launch_dir/hf-host-token-env"
+  fi
+  printf '%s' "$SCRIPT_DIR/run_difficulty_trials.sh" > "$launch_dir/hf-host-launcher"
+  args+=(--hf-token-file /run/topogym-launch/hf-token)
+else
+  # Validate options in Python, but never read credentials for offline phases.
+  ((hf_file_set == 0)) || args+=(--hf-token-file "$hf_token_file")
+  ((hf_env_set == 0)) || args+=(--hf-token-env "$hf_token_env")
+fi
 printf '%s\0' "${args[@]}" > "$launch_dir/args"
 printf '%s' "$work_dir" > "$launch_dir/work-dir"
 if [[ -f "$ROOT/release.lock.json" ]]; then cp -- "$ROOT/release.lock.json" "$launch_dir/release.lock.json"; fi
@@ -163,21 +224,27 @@ done
 if [[ -z "$api_var" ]]; then
   api_var=OPENAI_API_KEY; [[ "$provider" != openrouter ]] || api_var=OPENROUTER_API_KEY
 fi
-printf '%s' "${!api_var-}" > "$launch_dir/api-key"
+if [[ "$phase" == upload ]]; then
+  : > "$launch_dir/api-key"
+else
+  printf '%s' "${!api_var-}" > "$launch_dir/api-key"
+fi
 # Auth is independent of work-dir, so logging in once serves later experiments.
 auth_dir="${TOPOGYM_AUTH_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/topogym/codex}"
-mkdir -p -- "$auth_dir"
-chmod 700 "$auth_dir"
-auth_dir="$(realpath -- "$auth_dir")"
 workspace="$(printf '%s' "$work_dir" | sha256sum)"; workspace="${workspace%% *}"
 mounts=(--mount "type=bind,src=$work_dir,dst=$work_dir" \
-  --mount "type=bind,src=$launch_dir,dst=/run/topogym-launch,readonly" \
-  --mount "type=bind,src=$auth_dir,dst=/var/lib/topogym/codex")
+  --mount "type=bind,src=$launch_dir,dst=/run/topogym-launch,readonly")
+if [[ "$phase" != upload ]]; then
+  mkdir -p -- "$auth_dir"
+  chmod 700 "$auth_dir"
+  auth_dir="$(realpath -- "$auth_dir")"
+  mounts+=(--mount "type=bind,src=$auth_dir,dst=/var/lib/topogym/codex")
+fi
 if [[ "$route" != auth ]]; then
   mounts+=(--mount "type=bind,src=$socket,dst=/var/run/docker.sock" --group-add "$(stat -c %g "$socket")" \
     --mount 'type=bind,src=/proc,dst=/host/proc,readonly')
 fi
-if [[ "$help_only" == 0 && ( "$route" == check || ( "$route" == eval && "$phase" != plan && "$phase" != collect ) ) ]]; then
+if [[ "$help_only" == 0 && ( "$route" == check || ( "$route" == eval && "$phase" != plan && "$phase" != collect && "$phase" != upload ) ) ]]; then
   [[ "$(docker info --format '{{json .Runtimes}}')" == *nvidia* ]] || fail 'NVIDIA Container Toolkit is not configured for this Docker daemon'
   mounts+=(--gpus "device=$gpu_device" -e NVIDIA_DRIVER_CAPABILITIES=utility)
 fi

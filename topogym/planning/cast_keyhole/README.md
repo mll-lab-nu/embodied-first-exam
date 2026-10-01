@@ -108,7 +108,7 @@ policy 用实测物体误差及有界积分补偿推进路线。桌面初态存�
 运行入口：
 
 ```bash
-.venv-gs121-nyx/bin/python scripts/run_cast_keyhole_policy.py \
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_cast_keyhole_policy.py \
   --variation easy --backend cpu --tick .025 --speed .6 --horizon 900 \
   --output runs/test_results/cast_keyhole_policy_20260928/example_easy
 ```

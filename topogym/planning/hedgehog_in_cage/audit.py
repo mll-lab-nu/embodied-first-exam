@@ -75,6 +75,31 @@ def binding_matches_native_contacts(binding, world, tick):
     return bool(evidence["rows"])
 
 
+def contact_penetration_groups(world):
+    """Classify raw contacts using the Task's held-finger contact definition.
+
+    Native acquisitions are corroborated separately below. The larger grasp
+    tolerance never applies to the ball/cage pair or the gripper housing.
+    """
+    from topogym.utils.grasp import held_finger_contact_mask
+    bodies, contacts = world["bodies"], world["contacts"]
+    ball_ids = set(bodies["hedgehog_ball"]["link_indices"])
+    task_ids = ball_ids | set(bodies["hedgehog_cage"]["link_indices"])
+    links = dict(zip(world["articulations"]["robot"]["links"],
+                     bodies["robot"]["link_indices"], strict=True))
+    fingers = {"arm": (links["left_finger"], links["right_finger"])}
+    a, b, depths = (np.asarray(contacts[k]).reshape(-1)
+                    for k in ("link_a", "link_b", "penetration"))
+    if not (len(a) == len(b) == len(depths)) or not np.isfinite(depths).all():
+        raise ValueError("Invalid contact penetration data")
+    flat = dict(contacts, link_a=a, link_b=b, penetration=depths)
+    involved = np.isin(a, list(task_ids)) | np.isin(b, list(task_ids))
+    held = held_finger_contact_mask(flat, fingers, ball_ids, world.get("grasp"))
+    return dict(held_finger_contacts_m=float(depths[involved & held].max(initial=0.)),
+                other_contacts_m=float(depths[involved & ~held].max(initial=0.)),
+                non_task_contacts_m=float(depths[~involved].max(initial=0.)))
+
+
 def audit_execution(run, output, *, require_native_success=False, robot_geometry=True,
                     allow_hard_initial_settle=False):
     run, output = Path(run), Path(output)
@@ -83,6 +108,8 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
     episode = metadata["episode"]
     task, ball, fixed, frame, initial, frozen = frozen_problem(
         output, seed=episode["seed"], variation=episode["canonical_variation_id"])
+    if episode["instance_id"] != task.instance_id:
+        raise ValueError("Recorded task instance differs from the audit version; use the run's frozen source")
     assets = json.loads((trail/"asset_manifest.json").read_text())
     if assets != frozen["asset_sha256"]:
         raise ValueError("Recorded assets do not match the independently rebuilt geometry")
@@ -90,6 +117,14 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
         raise ValueError("Wrong task/model revision")
     if episode["terminal"]["goal_region"] != to_jsonable(frozen["goal_region"]):
         raise ValueError("Goal region changed")
+    contact_limits = task.terminal_metadata()["contact_penetration"]
+    if episode["terminal"].get("contact_penetration") != contact_limits:
+        raise ValueError("Recorded contact limits differ from the audit Task")
+    # Keep the historical diagnostic guard on unrelated contacts. Task contacts
+    # follow their declared 1 mm / held-finger 2 mm limits, not a global 0.2 mm.
+    penetration_limits = {key: float(contact_limits[key])
+                          for key in ("held_finger_contacts_m", "other_contacts_m")}
+    penetration_limits["non_task_contacts_m"] = .0002
     ledger = json.loads((trail/"report.json").read_text())
     if ledger["status"] != "complete":
         raise ValueError("Episode evidence is not sealed")
@@ -146,6 +181,7 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
                 self_pairs.append((first, second))
     failures, stable, active, count = [], 0., False, 0
     max_penetration = max_robot_force = max_transport_force = 0.
+    penetration_maxima = dict.fromkeys(penetration_limits, 0.)
     min_ball_gap = min_robot_gap = float("inf")
     min_self_gap = float("inf")
     max_grasp_translation = max_grasp_angle = 0.
@@ -217,6 +253,10 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
             if not (len(a) == len(b) == len(forces) == len(depths)) or not np.isfinite(np.r_[forces.ravel(), depths]).all():
                 raise ValueError("Invalid contact data")
             max_penetration = max(max_penetration, float(depths.max(initial=0.)))
+            for group, depth in contact_penetration_groups(world).items():
+                penetration_maxima[group] = max(penetration_maxima[group], depth)
+                if depth > penetration_limits[group]:
+                    fail("contact_penetration_limit:"+group, tick)
             for x, y, force in zip(a, b, forces):
                 value = float(np.linalg.norm(force))
                 forbidden = ((x in robot_ids and y in fixed_ids) or (y in robot_ids and x in fixed_ids)
@@ -295,8 +335,6 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
         raise ValueError("Recorded tick count differs from the sealed segment ledger")
     if last["state"]["state_id"] != segments[-1]["end_state_ref"]["state_id"]:
         raise ValueError("The sealed episode end is missing")
-    if max_penetration > .0002:
-        fail("contact_penetration_exceeds_0.2mm", count-1)
     if settling_segment is not None and (settling["ticks"]*dt < 3. or settling["stable_time_s"] < 1.-1e-10):
         fail("initial_settling_not_recorded_and_stable", count-1)
     if not acquired:
@@ -318,6 +356,9 @@ def audit_execution(run, output, *, require_native_success=False, robot_geometry
                      else "simulator_execution_with_free_authored_initial"),
         first_goal_tick=first_goal_tick, raw_goal_stable_time_s=stable,
         maximum_contact_penetration_m=max_penetration, maximum_robot_fixture_force_n=max_robot_force,
+        contact_penetration_policy="task_contact_limits_v1_with_non_task_0.2mm_guard",
+        contact_penetration_limits_m=penetration_limits,
+        maximum_contact_penetration_by_group_m=penetration_maxima,
         maximum_transport_fixture_force_n=max_transport_force,
         minimum_transport_ball_clearance_m=min_ball_gap if np.isfinite(min_ball_gap) else None,
         minimum_robot_fixture_clearance_m=min_robot_gap if shapes else None,

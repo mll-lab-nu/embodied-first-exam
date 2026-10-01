@@ -242,7 +242,7 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 **2026-09-28 执行中：已验收证明仍为 0/3。easy 的有回溯开发 episode 已取得实际完整
 Task success；无回溯重跑与独立审计尚未完成。** 已实现
 [观测驱动 policy 与 IK／避障规划](../../../topogym/planning/buzz_wire_3d/README.md)、
-[无视频执行入口](../../../scripts/run_buzz_wire_policy.py)和
+[无视频执行入口](../../../scripts/oracle_runners/run_buzz_wire_policy.py)和
 [逐 tick 独立审计](../../../legacy/research_tools_20260929/scripts/audit_buzz_wire_policy.py)。当前使用 Panda Robotiq、
 默认参数 seed 0、CPU 双精度、25 ms tick／40 子步、接触后辅助抓持。
 easy 已实测完成走线、多次换抓、释放与静止，开发末态位置误差 3.61 mm、角度误差 4.71°。
