@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robolab-put-two-mugs-on-shelf-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |

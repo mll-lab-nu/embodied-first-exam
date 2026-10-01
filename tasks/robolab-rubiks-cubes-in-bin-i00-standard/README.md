@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboLab |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robolab-rubiks-cubes-in-bin-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
