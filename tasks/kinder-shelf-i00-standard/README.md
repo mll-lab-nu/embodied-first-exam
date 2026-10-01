@@ -1,6 +1,18 @@
 # kinder-shelf-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-shelf-i00`: the same KinDER instance (`kinder/Shelf3D-o2-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-shelf-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `shelf` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory, kept in tasks/kinder-shelf-i00-privileged/results/codex-gpt6_luna-medium/, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-shelf-i00-privileged`: the same KinDER instance (`kinder/Shelf3D-o2-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.

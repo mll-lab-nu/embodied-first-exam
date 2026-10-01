@@ -3,14 +3,14 @@
 
     python3 scripts/dtb_mk_task.py <category> <object> <task> [...]      # or: --all
 
-Copies tasks/dextoolbench_hammer_claw_hammer_swing_down/ (tooling, verifier, compose files, solve.sh) to
+Copies tasks/dextoolbench_hammer_claw_hammer_swing_down-privileged/ (tooling, verifier, compose files, solve.sh) to
 tasks/dextoolbench_<category>_<object>_<task>/, writes that task's instance.json from the SimToolReal trajectory
 (images/mujoco/rcb_mj/simtoolreal/dextoolbench/trajectories/...), and rewrites the texts. The oracle
 (solution/oracle_targets.npy) is generated separately with scripts/dtb_mk_oracle.py; results/ is not copied."""
 import json, pathlib, re, shutil, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-TPL = ROOT / "tasks/dextoolbench_hammer_claw_hammer_swing_down"
+TPL = ROOT / "tasks/dextoolbench_hammer_claw_hammer_swing_down-privileged"
 TRAJ = ROOT / "images/mujoco/rcb_mj/simtoolreal/dextoolbench/trajectories"
 MOTION = {"swing_down": "a downward hammer swing", "swing_side": "a sideways hammer swing", "draw_smile": "drawing a smiley face",
           "write_c": "writing the letter C", "wipe_smile": "wiping a smiley face", "wipe_c": "wiping the letter C",
@@ -31,7 +31,7 @@ def make(cat: str, obj: str, task: str) -> pathlib.Path:
     for d in ("environment", "tests"): json.dump(inst, open(dst / d / "instance.json", "w"), indent=1)
     if dst == TPL: return dst
     subs = [("hammer / claw_hammer / swing_down", f"{cat} / {obj} / {task}"), ("claw_hammer / swing_down", f"{obj} / {task}"),
-            ("dextoolbench_hammer_claw_hammer_swing_down", name), ("dextoolbench/hammer/claw_hammer/swing_down", f"dextoolbench/{cat}/{obj}/{task}"),
+            ("dextoolbench_hammer_claw_hammer_swing_down-privileged", name), ("dextoolbench/hammer/claw_hammer/swing_down", f"dextoolbench/{cat}/{obj}/{task}"),
             ("the 37 demonstrated goal poses", f"the {n} demonstrated goal poses"), ("**37 goal poses in order**", f"**{n} goal poses in order**"),
             ("reward = goals reached / 37", f"reward = goals reached / {n}"), ("Full success = all 37.", f"Full success = all {n}."),
             ("all 37 goal poses", f"all {n} goal poses"), ("carries the hammer", f"carries the {human}"), ("37 goals", f"{n} goals"), ("goals / 37", f"goals / {n}")]
