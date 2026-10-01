@@ -36,21 +36,22 @@ Limited mode is the real robot's view: the MimicLabs lab scene, the base and wri
 room camera, 50 resets. The first six full runs had the earlier white floor, which changes only their images.
 Rows 7–11 were kept from a screening of every KinDER family (09-29) because GPT-6 Luna failed them in limited mode.
 
-| # | task | upstream env | role | GPT-6 Luna · limited | GPT-6 Luna · full |
-|---|---|---|---|---|---|
-| 1 | dynamo | Dynamo3D-o3 | fixture | ✅ · $0.05 | ✅ · $0.01 |
-| 2 | tossing | Tossing3D-o1 | scored | ❌ · $0.61 | ✅ · $0.30 |
-| 3 | balance-beam | BalanceBeam3D-o3 | scored | ❌ · $0.59 | ✅ · $0.03 |
-| 4 | sweep-into-drawer | SweepIntoDrawer3D-o5 | scored | ❌ · $0.66 | ❌ · $0.35 |
-| 5 | scoop-pour | ScoopPour3D-o30 | scored | ❌ · $0.69 | ❌ · $0.31 |
-| 6 | shelf | Shelf3D-o2 | scored | ❌ · $0.53 | ✅ · $0.16 |
-| 7 | constrained-cupboard | ConstrainedCupboard3D-o6 | scored | ❌ · $0.68 | ✅ · $0.31 |
-| 8 | sweep-simple | SweepSimple3D-o10 (island, left) | scored | ✅ · $0.59 | ❌ · $0.34 |
-| 9 | sort-blocks | SortClutteredBlocks3D-o4 (bins) | scored | ✅ · $0.41 | ✅ · $0.20 |
-| 10 | obstruction-3d | Obstruction3D-o4 (PyBullet) | scored | ❌ · $0.70 | ✅ · $0.06 |
-| 11 | packing-3d | Packing3D-p3 (PyBullet) | scored | ✅ · $0.76 | ✅ · $0.05 |
+| # | task | upstream env | role | GPT-6.1 Sol · limited | GPT-6.1 Sol · full | GPT-6 Luna · limited | GPT-6 Luna · full |
+|---|---|---|---|---|---|---|---|
+| 1 | dynamo | Dynamo3D-o3 | fixture | ✅ · $0.21 | ✅ · $0.10 | ✅ · $0.05 | ✅ · $0.01 |
+| 2 | tossing | Tossing3D-o1 | scored | ✅ · $0.47 | ✅ · $0.30 | ❌ · $0.61 | ✅ · $0.30 |
+| 3 | balance-beam | BalanceBeam3D-o3 | scored | ✅ · $0.21 | ✅ · $0.22 | ❌ · $0.59 | ✅ · $0.03 |
+| 4 | sweep-into-drawer | SweepIntoDrawer3D-o5 | scored | ✅ · $0.53 | ✅ · $0.70 | ❌ · $0.66 | ❌ · $0.35 |
+| 5 | scoop-pour | ScoopPour3D-o30 | scored | ✅ · $0.77 | ✅ · $2.27 | ❌ · $0.69 | ❌ · $0.31 |
+| 6 | shelf | Shelf3D-o2 | scored | ✅ · $0.62 | ✅ · $0.32 | ❌ · $0.53 | ✅ · $0.16 |
+| 7 | constrained-cupboard | ConstrainedCupboard3D-o6 | scored | ✅ · $1.86 | ✅ · $0.47 | ❌ · $0.68 | ✅ · $0.31 |
+| 8 | sweep-simple | SweepSimple3D-o10 (island, left) | scored | ✅ · $0.80 | ✅ · $1.35 | ✅ · $0.59 | ❌ · $0.34 |
+| 9 | sort-blocks | SortClutteredBlocks3D-o4 (bins) | scored | ✅ · $0.48 | ✅ · $0.38 | ✅ · $0.41 | ✅ · $0.20 |
+| 10 | obstruction-3d | Obstruction3D-o4 (PyBullet) | scored | ✅ · $0.27 | ✅ · $0.22 | ❌ · $0.70 | ✅ · $0.06 |
+| 11 | packing-3d | Packing3D-p3 (PyBullet) | scored | ✅ · $0.25 | ✅ · $0.27 | ✅ · $0.76 | ✅ · $0.05 |
 
-Scored tasks: limited 3/10 (sweep-simple, sort-blocks, packing-3d), full 7/10. The control, the same limited twins with
+Scored tasks: GPT-6.1 Sol (the main result, one attempt per task and mode, 2026-09-30 and 10-01) limited 10/10,
+full 10/10; GPT-6 Luna limited 3/10 (sweep-simple, sort-blocks, packing-3d), full 7/10. The control, the same limited twins with
 no reset: 0/10, the fixture included; the nine MuJoCo runs used up their one episode's 1000 steps in 6–46 min.
 
 ## Earlier versions

@@ -1,4 +1,4 @@
-**一句话**：basketball 要接住迎面约 7.5 m/s 飞来的球再投进篮筐，进球奖励够不到 1200，其余要在进球前逐步挣。GPT-6 Luna 两种模式都没过：limited 12.95（球从没接近篮筐，被评分一局 31 步、最长一局 52 步），full 1091.75（球第 125 步进筐，进球前那部分约 90.8，差 108.25）。
+**一句话**：basketball 要接住迎面约 7.5 m/s 飞来的球再投进篮筐，进球奖励够不到 1200，其余要在进球前逐步挣。GPT-6 Luna 两种模式都没过：limited 12.95（球从没接近篮筐，被评分一局 31 步、最长一局 52 步），full 1091.75（球第 125 步进筐，进球前那部分约 90.8，差 108.25）；GPT-6.1 Sol limited 80.17（接住球跳投没进，被评分一局第 177 步倒地）、full 1239.38 过线（抱球站到第 380 步出手，第 500 步进筐）。
 
 ## GPT-6 Luna
 ### limited
@@ -13,6 +13,20 @@
 ### 两种模式
 - **有坐标才投得进**：full 读球的状态和篮筐中心 site 坐标、离线搜索，把球送进了筐；limited 只有像素，拦球和推送都没朝篮筐方向瞄。
 - **limited 先用完的是 reset**：9.4 min 用完 50 次（其中 45 次花在同样四版的循环上）；full 用满 60 min，超时时还在改进。
+
+## GPT-6.1 Sol
+### limited
+- **用 spec 定位球、做 IK**：用相机位姿把房间图里的球反投影成三维轨迹、多帧拟合，手臂 IK 用 `position_m`、`axis`；ep15（12.99 min）第一次 "held the ball for over three seconds"，20.03 min 能托着球举到出手高度。
+- **出手调不准**：26.94 min "The releases are sending the ball upward or backward"，35.42 min 改手位后 "produced a forward throw"；46.61 min 加跳投 "the ball is still falling short"，`flightfit.py` 拟合的最高点 1.94–3.15 m。
+- **被评分的是最后一记跳投**：ep50 起跳出手后翻倒，第 177 步 `failed`（head_h −1.31 m），球在篮架旁没进，80.17，是 51 局最高；GPT-6 Luna 这里只有 12.95，球从没接近篮筐。
+- **每局慢**：一局 150 步左右要约 1–2 min，57.9 min 才用完 50 次 reset，看了 144 张图，$2.6665。
+### full
+- **10 min 就投进**：前臂把来球夹在胸前、踝髋重心反馈站稳，2.68 min "catches and holds the ball for all 500 steps"；第 380 步起两段臂姿加短促蹬腿出手，9.85 min 第 447 步离篮筐中心 0.0415 m 进筐。
+- **把进球推到最后一步**：它读了上游 `get_terminated`（球到 `hoop_center` 小于 0.05 m 即结束），9.47 min 写下 "The hold accumulates per-step performance before the one-off basket bonus"；之后拉长持球、换更高更省力的站姿、让球碰筐圈后再落，38.27 min 存下第 500 步进筐的版本，回放 1239.38，`progress` `{"stage": "throw"}`。
+- **更早出手的变体都没换上**：第 330 步出手、在筐边停约 1.3 s 的候选要么滚出去，要么落点 "just outside the required centre region"，留着已存版本到超时。
+- **用时**：60.0 min（超时）、$2.8713、157 次工具调用，看了 3 张图；`pip install cma` 被断网挡下，自写 CMA。
+### 两种模式
+- **坐标换来进球**：full 读得到球和 `hoop_center` 坐标，离线并行搜出投篮，还把进球时刻推到最后一步，1239.38 过线；limited 靠相机反投影也练成了接球推射，但射程和方向没调准，被评分的跳投倒地、没进，80.17。花费相近（$2.8713 对 $2.6665）。
 
 ## 改进意见
 - **说明和设置没发现问题**：说明写明进球奖励不够、其余要在进球前挣，full 按此把球送进了筐；limited 失败在只按像素拦球、四版循环烧光 reset。

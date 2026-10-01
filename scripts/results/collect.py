@@ -46,7 +46,7 @@ from common import HERE, REPO
 VERSION = 7   # of summary.json; build.py re-collects a trial whose summary is older
 # words that should not show up in what the agent wrote or ran: the network, and (Bench.leak_words) the benchmark's
 # own code and answer key
-NET_WORDS = r"\bcurl\s+(?:-|\S*[:/])|wget |pip (install|download)|github|raw\.githubusercontent"
+NET_WORDS = r"\bcurl\s+(?:-|\S*[:/])|wget |pip3?(?:\s+-\S+)*\s+(?:install|download)|github|raw\.githubusercontent"
 GENERATED_BY = "scripts/results/collect.py"
 TOOL = r"(?<![\w.])tools\.(\w+)\("   # a codex tool in code mode (not itertools.product)
 

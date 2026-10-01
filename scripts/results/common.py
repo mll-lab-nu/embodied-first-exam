@@ -15,7 +15,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 # where the pages go: bench.use() points it at jobs/results/<bench>, build.py --bundle at another directory (and names
 # the only trial files the pages take)
 SITE = {"out": None, "bundle": False, "media": set()}
-MODELS = {"openai/gpt-6-luna": "GPT-6 Luna", "openai/gpt-6-sol": "GPT-6 Sol", "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash",
+MODELS = {"openai/gpt-6-luna": "GPT-6 Luna", "openai/gpt-6-sol": "GPT-6 Sol", "openai/gpt-6.1-sol": "GPT-6.1 Sol",
+          "deepseek/deepseek-v4.1-flash": "DeepSeek V4.1 Flash",
           "anthropic/claude-opus-5.5": "Claude Opus 5.5"}
 SENSORS = {   # a limited run's optional sensors: runs.csv obs part -> (label, label when off, shell variable, job-name tag)
     "imu": ("IMU", "无 IMU", "RCB_OBS_IMU=1", "imu"), "room": ("外部相机", "无外部相机", "RCB_OBS_ROOM_CAMERA=1", "roomcam"),

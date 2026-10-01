@@ -1,11 +1,32 @@
 ## 总体结论
-- **过线**：GPT-6 Luna 在 23 个计分任务上 limited 0 个、full 3 个（push、reach、sit_hard）。GPT-6 Sol 和 Claude Opus 5.5 各跑 5 个任务（walk、door、push、cube、sit_hard）：Opus limited 过 2 个（push、sit_hard）、full 过 4 个（cube 以外都过）；Sol limited 过 1 个（push），full 只跑了 walk 和 sit_hard，过了 sit_hard。
-- **limited 卡在站稳，不在信息**：几乎每个 limited 失败的底层都是站不住或一迈步就倒；没有一个运行做出能正常前进的步态，Opus 在 walk 里站满全程也只有约 0.27 m/s。Luna limited 离及格线的中位数只有 0.02，full 是 0.35。加信息也没解开：第 5 版里 reset 加到 100、打开头部深度，只多过了 push 一个任务；第 7 版补上连杆质量和质心后，也只有 Opus 的 door 真用它算了质心。
-- **新给的机器人数据多半只打印**：34 个 limited 运行里，只有 5 个把关节位置用进了代码（Opus 的 walk、door、push，Sol 的 door，Luna 的 push），其余的最多只在开头打印过一次。唯一算了质心的 Opus door，此后一局没再倒。
-- **Luna limited 的 reset 用得快、押得险**：21/23 个任务用完 50 次 reset，用时中位数 20.9 min，剩下近 40 min 没用上；13 个任务被评分的最后一局是没整段跑过的新脚本；hurdle、powerlift、door、bookshelf、basketball 都有一条命令里的自动循环一口气烧掉 14–45 次 reset（door 的 31 次只用了 3.9 s）。
-- **full 输在自拟的目标上**：Luna 在 21/23 个任务上 full 高于 limited（cabinet、kitchen 除外），靠的是完整状态和无限重来；但它们看不到 reward，自拟的代理分常有偏差：walk 的代理分给原地站立也打分，cube 用线性点积代替说明写的 sharp 朝向项，balance 两个任务只按活了多少步来挑。
-- **Opus 快、准，但常提前收工**：full 的 4 个过线分别用 3.9–48.8 min；在 walk、sit_hard、door 上它凭记忆重建了上游的 reward，walk 自算的 834.8027 和评分一模一样。另一面，cube 的 limited（5.8 min）、door 的 limited（14.3 min）和 cube 的 full（17.3 min）都在预算还剩一大半时就停了。
-- **防泄漏守住了**：full 的 agent 读到的上游源码里 `get_reward` 已经删掉，`pip`、HuggingFace、GitHub 的请求都被网络白名单挡下；拦不住的只有模型记忆。
+- **主结果是 GPT-6.1 Sol（每个任务每种模式各跑一次）**：23 个计分任务 limited 过 3 个（push、reach、sit_hard），full 过 9 个（walk、balance_simple、push、cube、maze、basketball、reach、sit_hard、kitchen）；夹具 sit_simple 两种模式都过。对照：GPT-6 Luna 同样 24 个任务 limited 0、full 3（push、reach、sit_hard）；GPT-6 Sol 和 Claude Opus 5.5 只跑了 5 个任务（walk、door、push、cube、sit_hard），Opus limited 2、full 4，Sol limited 1、full 1/2。
+- **有几个是贴线过的**：limited 的 reach 12008.39（线 12000）、sit_hard 750.77（线 750），full 的 basketball 1239.38（线 1200）；只有一次运行，重跑可能翻转。
+- **limited 卡在站稳和最后一局**：GPT-6.1 Sol 把 `spec()` 的连杆质量、质心和关节位置用进了代码，truck、room 能原地站满 1000 步，但 23 个任务里仍没有一个做出能前进的步态；评的是最后一局，11 个任务 60 min 超时时被评分的那局还没跑完，11 个任务被评分一局不到自己最好一局的一半。得分/及格线的中位数只有 0.067（Luna 0.061）。
+- **full 靠整机控制加搜索**：GPT-6.1 Sol 多用逆动力学整机控制、站姿反馈，再用自写 CMA-ES、进化搜索调参；23 个任务 full 都高于自己的 limited，21 个高于 Luna 的 full（door、package 除外），得分/及格线中位数 0.637（Luna 0.397）。没过的多卡在抓取和多阶段（cabinet、truck、insert_normal、powerlift）以及步态（stair、hurdle）；window 618.02 只差 31.98。
+- **full 的分数部分来自模型记忆**：上游 `get_reward` 已删，但 GPT-6.1 Sol 凭记忆写出的代理分和评分几乎一样（walk 920.11 对 917.19、hurdle 350.97 对 349.62、stair 159.843 对 159.84），kitchen 的 0.3 完成半径、balance 的 1.65 m 站高也是记出来的；Opus 在 walk 上也这样（834.8027 一模一样）。这拦不住，读 full 的分数时要考虑。
+- **规则之内的取巧**：push 的前臂第 7 步以 5.5 m/s 把箱子扫过 5 cm 目标点（上游碰到即算成功，Luna 也是 8 步交卷）；basketball 故意抱球到第 380 步、第 500 步才投进，多挣每步分；kitchen 的水壶和旋钮越过目标就算完成，之后又被碰开。都是物理上真实的动作，说明里也写了这些规则。
+- **防泄漏守住了**：审计了 GPT-6.1 Sol full 的 7 个过线运行：镜像里的 `.pyc` 和删过的源码一致，评分容器只读动作，`pip`、GitHub、Hugging Face 的请求都被网络白名单挡下，模型请求里没有服务端工具。
+
+## GPT-6.1 Sol
+主结果。24 个任务两种模式各跑一次，第 7 版说明（`com_m` 修正后重新生成的任务）。下面的数字只算 23 个计分任务；夹具 sit_simple 两种模式都过（limited 第一局就过，750.08；full 989.76）。
+### limited
+- **3/23**：push（951.64，15 次 reset）、reach（12008.39，线 12000，29 次 reset）、sit_hard（750.77，11 次 reset）；三个都在 16 min 内过线，花费 $0.42–$1.13。
+- **新数据用进了代码**：walk、stair、maze、reach、cube、door、truck、room、window 等都用 `links` 的质量、质心或关节位置算重心、做正运动学，再配相机位姿定位；truck、room 靠重心反馈原地站满 1000 步，cube ep11 之后不再倒。
+- **被评分的那一局常不是最好的那一局**：11 个任务 60 min 超时（walk、stair、cube、powerlift、package、bookshelf_simple、highbar_simple、insert_normal、spoon、cabinet、kitchen），被评分的是超时时还在跑的最后一局；11 个任务被评分一局不到自己最好一局的一半，如 bookshelf_simple 75.82 对 767.48、truck 673.05 对 1287.41、walk 171.06 对 366.99。
+- **和 Luna 比**：得分/及格线的中位数 0.067 对 0.061，只有 13/23 个任务被评分一局高于 Luna；用时中位数 59.9 对 20.9 min，花费 $59.20 对 $5.18。
+- **想找外援**：walk、hurdle、stair、maze、room、truck 向 GitHub、Hugging Face 要 H1 策略，balance_hard、cube、door、kitchen、reach 试 `pip install opencv`，全部被网络白名单挡下。
+### full
+- **9/23**：walk 917.19、balance_simple 918.75、push 998.17、cube 478.13、maze 1386.71、basketball 1239.38、reach 19929.58、sit_hard 976.10、kitchen 4.00；balance_simple、maze、basketball、kitchen 是所有模型第一次在 full 上过（cube 第 4 版时 GPT-6 Sol 过过）。
+- **整机控制加自写搜索**：walk、maze、reach、door、room、truck 用逆动力学整机控制，cube 用质心踝反馈加四元数雅可比转腕，balance 用质心与板的状态反馈；参数靠自写 CMA-ES 或进化搜索（`pip install cma` 都被挡下）。
+- **没过的**：stair 交的是原地站立（159.84），hurdle 跑满 1000 步但只有约 1.4 m/s（349.62），door 把手开锁后前臂打滑、门最多开 26.5°（171.94），cabinet、truck、powerlift、insert_normal 卡在抓取和多阶段；window 618.02、spoon 507.43 离线最近。
+- **用时和花费**：24 个运行都用满约 60 min，交卷时多数还在搜；23 个计分任务 $62.40（Luna $8.86）。push、door、hurdle 的 `gen.py` 只是回放存好的动作，不是生成它们的代码。
+### 两种模式
+- **full 23/23 高于 limited**：差在能不能站住、能不能离线试错；limited 用 `spec()` 算重心也只够原地站，full 用仿真状态做整机控制能走起来（walk 约 1.0 m/s、maze 走完全部检查点）。
+- **两边都过的只有 push、reach、sit_hard**：其余 limited 失败的，full 多靠整机控制和搜索补上；limited 被评分的常是超时时还没跑完的那一局。
+### 和 GPT-6 Sol 比（同样 5 个任务）
+- **2/5 对 1/5**：push 都过；sit_hard 6.1 用髋偏航转向椅子后入座过线（750.77 对 383.12）；cube 338.91 对 96.06（线 370），walk 171.06 对 52.65，door 164.48 对 164.16。
+- **full 4/5**：walk、push、cube、sit_hard 过，door 没过；6 Sol full 只跑了 walk、sit_hard（过 sit_hard），Opus full 也是 4/5（cube 没过）。
+- **花法不同**：6 Sol 一条命令扫多个参数点，4 个任务 9.6–35.5 min 用完 50 次 reset；6.1 在 walk、cube 上跑满 60 min，5 个任务共 $10.60 对 $6.55。
 
 ## GPT-6 Luna
 24 个任务两种模式都跑了，都是第 7 版说明。下面的数字只算 23 个计分任务；夹具 sit_simple 两种模式都过了（limited 第 978 步到线，750.57）。

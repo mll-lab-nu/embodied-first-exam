@@ -37,35 +37,36 @@ The analysis on a task page is `<trial>/report/notes.md`, written after reading 
 A cell is the latest standard-config run: ✅ or ❌ with the graded return (limited: the last episode; full: the
 submitted trajectory, replayed) and the model cost. Empty: not run yet. "All-zero" is what the all-zero action
 scores on the same instance. Run ids, as on the team site and the Hugging Face dataset
-(`<harness>-<model>-<effort>`): GPT-6 Luna `codex-gpt6_luna-medium`, GPT-6 Sol `codex-gpt6_sol-medium`, Claude Opus 5.5
+(`<harness>-<model>-<effort>`): GPT-6 Luna `codex-gpt6_luna-medium`, GPT-6 Sol `codex-gpt6_sol-medium`, GPT-6.1 Sol
+`codex-gpt6_1_sol-medium`, Claude Opus 5.5
 `claude_code-claude_opus5_5-medium`.
 
-| # | task | robot | class | bar | all-zero | GPT-6 Luna · limited | GPT-6 Luna · full | GPT-6 Sol · limited | GPT-6 Sol · full | Claude Opus 5.5 · limited | Claude Opus 5.5 · full |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.6 · $0.02 | ✅ 980.7 · $0.41 |  |  |  |  |
-| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 11.3 · $0.12 | ❌ 128.5 · $0.43 | ❌ 52.7 · $1.26 | ❌ 546.6 · $4.74 | ❌ 369.2 · $2.40 | ✅ 834.8 · $0.47 |
-| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 22.4 · $0.05 | ❌ 50.2 · $0.37 |  |  |  |  |
-| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 51.9 · $0.09 | ❌ 146.3 · $0.33 |  |  |  |  |
-| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 9.1 · $0.12 | ❌ 199.9 · $0.44 | ❌ 164.2 · $2.60 |  | ❌ 132.8 · $2.40 | ✅ 676.0 · $2.71 |
-| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 49.2 · $0.14 | ❌ 296.9 · $0.40 |  |  |  |  |
-| 7 | push | h1 | C6 | 700 | −253.7 | ❌ −224.1 · $0.42 | ✅ 997.8 · $0.42 | ✅ 969.3 · $1.41 |  | ✅ 913.2 · $2.26 | ✅ 967.0 · $0.63 |
-| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 29.3 · $0.19 | ❌ 325.1 · $0.46 | ❌ 96.1 · $0.67 |  | ❌ 87.9 · $0.88 | ❌ 247.5 · $0.96 |
-| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −1916.1 · $0.13 | ❌ 805.6 · $0.34 |  |  |  |  |
-| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 641.2 · $0.35 | ❌ 793.2 · $0.41 |  |  |  |  |
-| 11 | stair | h1 | C2 | 700 | 8.6 | ❌ 17.2 · $0.07 | ❌ 69.7 · $0.34 |  |  |  |  |
-| 12 | balance_hard | h1 | C3 | 800 | 29.0 | ❌ 45.4 · $0.11 | ❌ 48.0 · $0.38 |  |  |  |  |
-| 13 | maze | h1 | C4 | 1200 | 120.6 | ❌ 131.0 · $0.25 | ❌ 393.1 · $0.45 |  |  |  |  |
-| 14 | highbar_simple | h1 | C5 | 750 | 0.1 | ❌ 81.1 · $0.12 | ❌ 126.3 · $0.33 |  |  |  |  |
-| 15 | basketball | h1 | C5 | 1200 | 10.8 | ❌ 13.0 · $0.06 | ❌ 1091.8 · $0.42 |  |  |  |  |
-| 16 | reach | h1 | C8 | 12000 | 275.2 | ❌ 875.3 · $0.08 | ✅ 19184.1 · $0.37 |  |  |  |  |
-| 17 | sit_hard | h1 | C8 | 750 | 13.6 | ❌ 13.0 · $0.35 | ✅ 946.3 · $0.23 | ❌ 383.1 · $0.62 | ✅ 963.9 · $4.82 | ✅ 750.2 · $0.96 | ✅ 951.0 · $0.59 |
-| 18 | truck | h1 | C9 | 3000 | 544.4 | ❌ 598.0 · $0.15 | ❌ 1332.2 · $0.38 |  |  |  |  |
-| 19 | window | h1hand | C6 | 650 | 1.6 | ❌ 303.9 · $0.25 | ❌ 420.4 · $0.51 |  |  |  |  |
-| 20 | spoon | h1hand | C6 | 650 | 7.5 | ❌ 341.0 · $0.37 | ❌ 406.6 · $0.41 |  |  |  |  |
-| 21 | insert_normal | h1hand | C7 | 350 | 2.5 | ❌ 95.6 · $0.47 | ❌ 194.9 · $0.48 |  |  |  |  |
-| 22 | room | h1hand | C8 | 400 | 8.8 | ❌ 7.8 · $0.08 | ❌ 195.3 · $0.26 |  |  |  |  |
-| 23 | cabinet | h1hand | C9 | 2500 | 10.4 | ❌ 547.1 · $0.62 | ❌ 467.3 · $0.33 |  |  |  |  |
-| 24 | kitchen | h1hand | C9 | 4 | 0.0 | ❌ 0.0 · $0.61 | ❌ 0.0 · $0.40 |  |  |  |  |
+| # | task | robot | class | bar | all-zero | GPT-6.1 Sol · limited | GPT-6.1 Sol · full | GPT-6 Luna · limited | GPT-6 Luna · full | GPT-6 Sol · limited | GPT-6 Sol · full | Claude Opus 5.5 · limited | Claude Opus 5.5 · full |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | sit_simple | h1 | fixture | 750 | 637.6 | ✅ 750.1 · $0.10 | ✅ 989.8 · $2.35 | ✅ 750.6 · $0.02 | ✅ 980.7 · $0.41 |  |  |  |  |
+| 2 | walk | h1 | C1 | 700 | 6.6 | ❌ 171.1 · $2.40 | ✅ 917.2 · $2.39 | ❌ 11.3 · $0.12 | ❌ 128.5 · $0.43 | ❌ 52.7 · $1.26 | ❌ 546.6 · $4.74 | ❌ 369.2 · $2.40 | ✅ 834.8 · $0.47 |
+| 3 | hurdle | h1 | C2 | 700 | 17.9 | ❌ 18.6 · $1.52 | ❌ 349.6 · $2.23 | ❌ 22.4 · $0.05 | ❌ 50.2 · $0.37 |  |  |  |  |
+| 4 | balance_simple | h1 | C3 | 800 | 37.1 | ❌ 37.8 · $2.36 | ✅ 918.8 · $2.06 | ❌ 51.9 · $0.09 | ❌ 146.3 · $0.33 |  |  |  |  |
+| 5 | door | h1 | C4 | 600 | 30.9 | ❌ 164.5 · $3.63 | ❌ 171.9 · $3.21 | ❌ 9.1 · $0.12 | ❌ 199.9 · $0.44 | ❌ 164.2 · $2.60 |  | ❌ 132.8 · $2.40 | ✅ 676.0 · $2.71 |
+| 6 | powerlift | h1hand | C5 | 800 | 20.4 | ❌ 44.1 · $3.77 | ❌ 348.0 · $2.99 | ❌ 49.2 · $0.14 | ❌ 296.9 · $0.40 |  |  |  |  |
+| 7 | push | h1 | C6 | 700 | −253.7 | ✅ 951.6 · $0.67 | ✅ 998.2 · $2.22 | ❌ −224.1 · $0.42 | ✅ 997.8 · $0.42 | ✅ 969.3 · $1.41 |  | ✅ 913.2 · $2.26 | ✅ 967.0 · $0.63 |
+| 8 | cube | h1hand | C7 | 370 | 5.0 | ❌ 338.9 · $3.48 | ✅ 478.1 · $2.41 | ❌ 29.3 · $0.19 | ❌ 325.1 · $0.46 | ❌ 96.1 · $0.67 |  | ❌ 87.9 · $0.88 | ❌ 247.5 · $0.96 |
+| 9 | package | h1 | C8 | 1500 | −2192.0 | ❌ −373.3 · $3.10 | ❌ 523.1 · $2.95 | ❌ −1916.1 · $0.13 | ❌ 805.6 · $0.34 |  |  |  |  |
+| 10 | bookshelf_simple | h1hand | C9 | 2000 | 30.5 | ❌ 75.8 · $3.26 | ❌ 882.8 · $3.16 | ❌ 641.2 · $0.35 | ❌ 793.2 · $0.41 |  |  |  |  |
+| 11 | stair | h1 | C2 | 700 | 8.6 | ❌ 21.6 · $2.39 | ❌ 159.8 · $2.92 | ❌ 17.2 · $0.07 | ❌ 69.7 · $0.34 |  |  |  |  |
+| 12 | balance_hard | h1 | C3 | 800 | 29.0 | ❌ 48.2 · $2.58 | ❌ 221.5 · $3.01 | ❌ 45.4 · $0.11 | ❌ 48.0 · $0.38 |  |  |  |  |
+| 13 | maze | h1 | C4 | 1200 | 120.6 | ❌ 137.4 · $2.48 | ✅ 1386.7 · $2.44 | ❌ 131.0 · $0.25 | ❌ 393.1 · $0.45 |  |  |  |  |
+| 14 | highbar_simple | h1 | C5 | 750 | 0.1 | ❌ 46.6 · $3.93 | ❌ 477.8 · $2.47 | ❌ 81.1 · $0.12 | ❌ 126.3 · $0.33 |  |  |  |  |
+| 15 | basketball | h1 | C5 | 1200 | 10.8 | ❌ 80.2 · $2.67 | ✅ 1239.4 · $2.87 | ❌ 13.0 · $0.06 | ❌ 1091.8 · $0.42 |  |  |  |  |
+| 16 | reach | h1 | C8 | 12000 | 275.2 | ✅ 12008.4 · $1.13 | ✅ 19929.6 · $2.55 | ❌ 875.3 · $0.08 | ✅ 19184.1 · $0.37 |  |  |  |  |
+| 17 | sit_hard | h1 | C8 | 750 | 13.6 | ✅ 750.8 · $0.42 | ✅ 976.1 · $2.00 | ❌ 13.0 · $0.35 | ✅ 946.3 · $0.23 | ❌ 383.1 · $0.62 | ✅ 963.9 · $4.82 | ✅ 750.2 · $0.96 | ✅ 951.0 · $0.59 |
+| 18 | truck | h1 | C9 | 3000 | 544.4 | ❌ 673.1 · $3.12 | ❌ 1450.9 · $2.85 | ❌ 598.0 · $0.15 | ❌ 1332.2 · $0.38 |  |  |  |  |
+| 19 | window | h1hand | C6 | 650 | 1.6 | ❌ 151.9 · $2.41 | ❌ 618.0 · $3.06 | ❌ 303.9 · $0.25 | ❌ 420.4 · $0.51 |  |  |  |  |
+| 20 | spoon | h1hand | C6 | 650 | 7.5 | ❌ 44.6 · $3.05 | ❌ 507.4 · $2.98 | ❌ 341.0 · $0.37 | ❌ 406.6 · $0.41 |  |  |  |  |
+| 21 | insert_normal | h1hand | C7 | 350 | 2.5 | ❌ 3.7 · $2.80 | ❌ 217.0 · $3.09 | ❌ 95.6 · $0.47 | ❌ 194.9 · $0.48 |  |  |  |  |
+| 22 | room | h1hand | C8 | 400 | 8.8 | ❌ 194.5 · $2.53 | ❌ 196.5 · $2.61 | ❌ 7.8 · $0.08 | ❌ 195.3 · $0.26 |  |  |  |  |
+| 23 | cabinet | h1hand | C9 | 2500 | 10.4 | ❌ 65.8 · $2.79 | ❌ 806.6 · $3.09 | ❌ 547.1 · $0.62 | ❌ 467.3 · $0.33 |  |  |  |  |
+| 24 | kitchen | h1hand | C9 | 4 | 0.0 | ❌ 0.0 · $2.73 | ✅ 4.0 · $2.85 | ❌ 0.0 · $0.61 | ❌ 0.0 · $0.40 |  |  |  |  |
 
 Classes (`scripts/humanoidbench/subset.toml`): C1 flat gait · C2 constrained gait · C3 stabilisation · C4 navigation ·
 C5 whole-body power · C6 bimanual manipulation · C7 in-hand precision · C8 mobile manipulation · C9 long-horizon.
@@ -75,7 +76,8 @@ Order: rows 1–10 are the first round, one task per class plus the fixture; the
 and by class. GPT-6 Luna ran all 24. GPT-6 Sol and Claude Opus 5.5 ran five, one per class, in both modes: walk,
 door, push, cube, sit_hard (Luna had passed push and sit_hard on earlier texts, not the other three). Opus runs
 through Claude Code (`harbor_agents/claude_code_openrouter.py`, 2.1.283, effort medium). Sol's full runs on door,
-push and cube were not made: the OpenRouter credit ran out.
+push and cube were not made: the OpenRouter credit ran out. GPT-6.1 Sol ran all 24 in both modes (2026-09-30); its
+runs are the main result, one attempt per task and mode.
 
 ## Earlier versions
 
