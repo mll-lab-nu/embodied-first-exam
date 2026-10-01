@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "none known: no run has passed it, and no published RL result covers it (neither upstream's curves (which cover only highbar_hard) nor FastTD3 (h1hand only) report this family); human review in this benchmark's pull request"
+oracle_evidence = "none known: no run has passed it, and no published RL result covers it (neither upstream's curves (which cover only highbar_hard) nor FastTD3 (h1hand only) report this family); human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0

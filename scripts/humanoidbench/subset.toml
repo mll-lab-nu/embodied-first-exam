@@ -93,7 +93,7 @@ agent_timeout = 3600.0
 verifier_timeout = 900.0
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory"]
 cpus = 16                   # the privileged-mode agent's container: searching is what it is for
-review_pr = 0               # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
+review_pr = 9               # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
 
 # =====================================================================================================
 # C1 · flat-ground periodic gait
