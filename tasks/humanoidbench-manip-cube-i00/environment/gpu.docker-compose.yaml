@@ -1,0 +1,25 @@
+# Optional overlay: hand the host's NVIDIA GPU to the task container.
+#
+#   harbor run -p tasks/humanoidbench-manip-cube-i00 -a oracle \
+#     --extra-docker-compose tasks/humanoidbench-manip-cube-i00/environment/gpu.docker-compose.yaml
+#
+# It is NOT named docker-compose.yaml on purpose: Harbor auto-loads that name, and a device reservation
+# the host cannot satisfy makes the container fail to start. Opt in only on a machine with a GPU.
+# Nothing about passing or failing the task depends on this — the GPU only accelerates the agent's own video
+# rendering (osmesa ~130 ms/frame on CPU, egl ~0.4 ms on GPU); MuJoCo physics is CPU-only either way. It reaches
+# the agent's container only: the verifier's (tests/Dockerfile) renders its replay video on the CPU.
+services:
+  main:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      # `graphics` is the one people leave out. Without it the runtime mounts CUDA but not the EGL vendor
+      # ICD, so the container has /dev/nvidiactl yet MUJOCO_GL=egl still dies with
+      # "an OpenGL platform library has not been loaded". rcb_hb.py tries an EGL context, not just the device.
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

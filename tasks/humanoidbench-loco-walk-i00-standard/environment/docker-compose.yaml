@@ -1,0 +1,36 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# GPU on sim: MuJoCo physics is CPU either way, but every image the agent asks for is rendered here, and EGL on the
+# GPU takes ~0.5 ms a frame against ~130 ms for CPU osmesa. `graphics` is the capability that mounts the EGL ICD.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py
+    restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
+    environment:
+      RCB_TASK: walk
+      RCB_INSTANCE: /srv/instance.npz
+      RCB_TASK_TEXT: "Walk the robot forward and keep walking, without falling."
+      RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops near the ground), after 1000 control steps, when your time is up (timeout), or on a simulator error."
+      RCB_WALL_CLOCK_S: "3600.0"
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
+      # configuration; results under other settings are reported separately.
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode, no reset; N > 0: the optional reset capability
+      RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: + joint angles/velocities; 0: images only
+      RCB_OBS_IMU: "${RCB_OBS_IMU:-1}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
+      RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-1}"  # 1: + room_camera, fixed in the room
+      RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-0}"              # 1: + depth (m) from both head cameras, as from the H1's head RGB-D camera
+      RCB_ROOM_CAMERA_POSE: "4,0,0.11,10,0,-26"        # room_camera behind and above the start, looking down
+                                                       # the course: the robot stays in frame from x=0 to 20 m
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
