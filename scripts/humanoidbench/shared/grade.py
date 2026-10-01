@@ -91,7 +91,7 @@ def main() -> int:
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         write(False, {"success": 0, "grader_error": 1}); return 0
-    # Everything below is for humans and never touches the verdict.
+    write(ok, out, diagnostics)            # the verdict first: everything below is for humans and may fail
     try:
         if prog := progress(s.low.task):   # where the last replay left a multi-stage task (cabinet, kitchen, maze, ...)
             diagnostics["progress"] = prog
@@ -104,7 +104,7 @@ def main() -> int:
             out["video_rendered"] = 1
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-    write(ok, out, diagnostics)
+    write(ok, out, diagnostics)                # again, with the video and the progress
     return 0
 
 

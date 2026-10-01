@@ -14,6 +14,9 @@ the episode's control steps ran out), on a simulator error ("error"), or at SIGU
 the agent's container is gone). With a reset budget, POST /reset abandons the running episode and starts another from
 the frozen instance; only the last episode is graded, and a success ends the trial.
 
+A request is checked in full before anything runs: whatever is wrong with it is a 400 and nothing ran. Once it runs,
+any failure is the simulator's: a 500, and the episode ends ("error").
+
 Evidence under DATA, never visible to the agent:
   episode.jsonl        one line per event; every state the service may resume from is a checkpoint (it carries
                        state_sha and journal_rows)
@@ -25,12 +28,16 @@ Evidence under DATA, never visible to the agent:
 
 Crash recovery: compose restarts a crashed service (restart: on-failure). It replays the journal up to the last
 checkpoint, checks the state hash, and continues the SAME episode -- never a reset. A call in flight is lost as a
-whole (its caller got an error, not a result, so nothing was learned). More than RCB_MAX_RESUMES crashes end the
+whole (its caller got an error, not a result, so nothing was learned). More than RCB_MAX_RESUMES restarts since the
+episode began (every process start counts, also one that died building the scene or replaying the journal) end the
 trial: sim_crashed_on_call if every crash happened while serving a call (the agent's failure), else sim_crashed
-(infrastructure, infra_error = 1). A verdict already on disk is never overwritten.
+(infrastructure, infra_error = 1). A verdict already on disk is never overwritten; a crash while rendering the video
+loses only the video.
 """
 from __future__ import annotations
 
+import contextlib
+import errno
 import faulthandler
 import json
 import os
@@ -76,7 +83,8 @@ class Sim:
     def proprio(self) -> np.ndarray: ...              # float32, one value per proprio_layout column
     def clip(self, type: str, rows: np.ndarray) -> tuple[np.ndarray, list]: ...   # into the limits; [{row, index, reason}]
     def to_sim(self, type: str, row: np.ndarray) -> np.ndarray: ...               # an agent row -> a sim row
-    def command(self, type: str) -> np.ndarray: ...   # the current command in the agent's terms (linear interpolation)
+    def command(self, type: str) -> np.ndarray: ...   # the last row executed, exactly as clip() returned it: a chunk
+                                                      # interpolates from it, so a chunk equals its rows sent one by one
     def hold(self) -> tuple[str, np.ndarray]: ...      # the row that holds the last command (/observe with seconds > 0)
     def step(self, row: np.ndarray) -> tuple[bool, bool, dict]: ...   # one control step -> (done, success, info)
     def reset(self) -> None: ...                       # back to the frozen instance
@@ -90,16 +98,23 @@ class GiveUp(Exception):
     """The service will not run this trial's episode again; final.json says why."""
 
 
-class SimError(Exception):
-    """The simulator failed while executing (whatever it raised): a 500, and the episode ends."""
-
-
 class Refused(Exception):
     """A request the service turns down with `code` and the JSON `body`; nothing was executed."""
 
     def __init__(self, code: int, body: dict):
         super().__init__(body.get("error"))
         self.code, self.body = code, body
+
+
+@contextlib.contextmanager
+def bad_request():
+    """Checking a request, before anything runs: whatever goes wrong here is the request's fault (400)."""
+    try:
+        yield
+    except Refused:
+        raise
+    except Exception as exc:  # noqa: BLE001 -- a wrong type, value or shape of any field
+        raise Refused(400, {"error": str(exc)[:300] or type(exc).__name__}) from None
 
 
 def count_start(data: str) -> int:
@@ -314,28 +329,34 @@ class Service:
         ev = self._events()
         if not any(e["ev"] == "start" for e in ev):
             open(self.journal_path, "wb").close()
-            self._checkpoint("start", protocol=PROTOCOL, spec=self.spec)
+            self._checkpoint("start", protocol=PROTOCOL, spec=self.spec, startup=self.starts)
         else:
             self._resume(ev)
         with open(os.path.join(self.data, "server.pid"), "w") as f:
             f.write(str(os.getpid()))
 
     def _resume(self, ev: list[dict]) -> None:
+        path = os.path.join(self.data, "final.json")
         try:
-            with open(os.path.join(self.data, "final.json")) as f:
+            with open(path) as f:
                 fin = json.load(f)
         except (OSError, ValueError):
             fin = {}
-        if fin.get("finalized") and "deterministic" in fin:
+        if fin.get("finalized") or "deterministic" in fin:
+            # Graded already. A verdict that is not finalized: the process died rendering the video, all it lost.
+            if not fin.get("finalized"):
+                write_json_atomic(path, {**fin, "finalized": True, "video": False})
             self._give_up("restarted after finalize", infra=False)
-        resumes = [e for e in ev if e["ev"] == "resumed"]
-        in_call = False
-        for e in ev:
+        restarts = self.starts - int(next(e for e in ev if e["ev"] == "start")["startup"])
+        last = max(i for i, e in enumerate(ev) if e["ev"] in ("start", "resuming"))
+        in_call = False                              # did the process that died do so while serving a call?
+        for e in ev[last:]:
             in_call = {"call_begin": True, "call_end": False}.get(e["ev"], in_call)
-        in_calls = sum(bool(e.get("crashed_in_call")) for e in resumes) + int(in_call)
-        if len(resumes) >= self.max_resumes:
-            agent = in_calls == len(resumes) + 1
+        in_calls = sum(bool(e["crashed_in_call"]) for e in ev if e["ev"] == "resuming") + int(in_call)
+        if restarts > self.max_resumes:
+            agent = in_calls == restarts             # every crash happened inside a call: the agent's commands did it
             self._give_up("sim_crashed_on_call" if agent else "sim_crashed", infra=not agent)
+        self.log("resuming", crashed_in_call=in_call, restart=restarts)
         cp = [e for e in ev if "state_sha" in e and "journal_rows" in e][-1]
         n, dim = int(cp["journal_rows"]), int(self.sim.raw_dim)
         rows = np.fromfile(self.journal_path, dtype=np.float64) if os.path.exists(self.journal_path) else np.zeros(0)
@@ -354,10 +375,10 @@ class Service:
         self.t0 = next((e["t0"] for e in ev if e["ev"] == "first_request"), None)
         if self.done:
             self.t_end = next((e["ts"] for e in reversed(ev) if e["ev"] == "end"), cp["ts"])
-        self._checkpoint("resumed", crashed_in_call=in_call, downtime_s=round(time.time() - float(ev[-1]["ts"]), 1))
+        self._checkpoint("resumed", downtime_s=round(time.time() - float(ev[-1]["ts"]), 1))
 
     def _give_up(self, reason: str, infra: bool) -> None:
-        """End the trial without running its episode again: mark it failed (a verdict on disk is kept as it is),
+        """End the trial without running its episode again: mark it failed (a finalized final.json is kept as it is),
         leave the PID file for the collect hook, and stop."""
         self.log("restart_refused", reason=reason)
         path = os.path.join(self.data, "final.json")
@@ -366,7 +387,7 @@ class Service:
                 fin = json.load(f)
         except (OSError, ValueError):
             fin = {}
-        if not (fin.get("finalized") and "deterministic" in fin):
+        if not fin.get("finalized"):
             fin.update({"protocol": PROTOCOL, "success": False, "done": True, "reason": reason, "finalized": True,
                         **({"infra_error": 1} if infra else {})})
             write_json_atomic(path, fin)
@@ -400,11 +421,9 @@ class Service:
         self.log("call_begin", path=path, call=self.calls + 1)
         try:
             out, blobs = routes[path](meta, parts)
-        except Refused as exc:
+        except Refused as exc:                       # 400 (bad_request), 409: nothing ran
             return self._reply_json(exc.code, exc.body)
-        except ValueError as exc:                    # raised before anything ran (see _step for what runs)
-            return self._reply_json(400, {"error": str(exc)})
-        except Exception as exc:  # noqa: BLE001 -- the simulator failed: the episode ends, as on hardware
+        except Exception as exc:  # noqa: BLE001 -- it ran and failed: the episode ends, as on hardware
             traceback.print_exc()
             self.log("error", path=path, error=repr(exc)[:500])
             self._end("error")
@@ -445,7 +464,7 @@ class Service:
                              f"the cameras are {list(self.sim.cameras)}")
         try:
             fps = int(meta.get("video_fps", 10))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             raise ValueError("video_fps must be an integer") from None
         if not 1 <= fps <= MAX_VIDEO_FPS:
             raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
@@ -473,11 +492,8 @@ class Service:
 
     def _step(self, typ: str, row: np.ndarray) -> dict:
         """One control step: execute, journal, and end the episode if it is over."""
-        try:
-            sim_row = np.asarray(self.sim.to_sim(typ, row), dtype=np.float64)
-            done, success, info = self.sim.step(sim_row)
-        except Exception as exc:  # noqa: BLE001 -- once stepping, nothing is the request's fault any more
-            raise SimError(repr(exc)) from exc
+        sim_row = np.asarray(self.sim.to_sim(typ, row), dtype=np.float64)
+        done, success, info = self.sim.step(sim_row)
         self._unwritten.append(sim_row)
         self.journal_rows += 1
         self.episode.append(sim_row)
@@ -501,33 +517,37 @@ class Service:
     def _submit(self, meta: dict, parts: dict) -> tuple[dict, list]:
         if self.done or self.stopping:
             raise self._conflict()
-        typ = meta.get("type")
-        if typ not in self.types:
-            raise ValueError(f"type must be one of {sorted(self.types)}")
-        try:
-            A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions"), dtype=np.float64)
-        except (TypeError, ValueError, KeyError):
-            raise ValueError("send the actions as an RCB1 array part `actions` or a JSON list of rows") from None
-        dim = int(self.types[typ]["dim"])
-        if A.ndim != 2 or A.shape[0] < 1 or A.shape[1] != dim:
-            raise ValueError(f"{typ} actions must be (T, {dim}) with T >= 1, got {list(A.shape)}")
-        if not np.all(np.isfinite(A)):
-            raise ValueError("actions contain NaN or inf")
-        cdt = self.sim.control_dt
-        dt = cdt if meta.get("dt") is None else float(meta["dt"])
-        k = int(round(dt / cdt))
-        if k < 1 or abs(k * cdt - dt) > 1e-9:
-            raise ValueError(f"dt must be a positive whole multiple of control_dt = {cdt} s (never rounded)")
-        if k > 1 and not self.sim.interpolable(typ):
-            raise ValueError(f"{typ}: one row is one control step, so dt must be control_dt = {cdt} s")
-        if len(A) * k * cdt > self.max_chunk_s + 1e-9:
-            raise ValueError(f"the chunk covers {len(A) * k * cdt:g} s: more than max_chunk_s = {self.max_chunk_s:g}")
-        interp = meta.get("interpolate", "linear")
-        if interp not in ("linear", "hold"):
-            raise ValueError("interpolate must be linear or hold")
-        cams, fps, video, depth = self._view(meta, "mp4")
-        rec = Recorder(self.sim, cams, fps, depth, video)
-        self._frame_budget(rec, len(A) * k)
+        with bad_request():
+            typ = meta.get("type")
+            if not isinstance(typ, str) or typ not in self.types:
+                raise ValueError(f"type must be one of {sorted(self.types)}")
+            try:
+                A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions"), dtype=np.float64)
+            except (TypeError, ValueError, KeyError):
+                raise ValueError("send the actions as an RCB1 array part `actions` or a JSON list of rows") from None
+            dim = int(self.types[typ]["dim"])
+            if A.ndim != 2 or A.shape[0] < 1 or A.shape[1] != dim:
+                raise ValueError(f"{typ} actions must be (T, {dim}) with T >= 1, got {list(A.shape)}")
+            if not np.all(np.isfinite(A)):
+                raise ValueError("actions contain NaN or inf")
+            cdt = self.sim.control_dt
+            try:
+                dt = cdt if meta.get("dt") is None else float(meta["dt"])
+            except (TypeError, ValueError):
+                raise ValueError("dt must be a number of seconds") from None
+            k = round(dt / cdt) if np.isfinite(dt / cdt) else 0
+            if k < 1 or abs(k * cdt - dt) > 1e-9:
+                raise ValueError(f"dt must be a positive whole multiple of control_dt = {cdt} s (never rounded)")
+            if k > 1 and not self.sim.interpolable(typ):
+                raise ValueError(f"{typ}: one row is one control step, so dt must be control_dt = {cdt} s")
+            if len(A) * k * cdt > self.max_chunk_s + 1e-9:
+                raise ValueError(f"the chunk covers {len(A) * k * cdt:g} s: more than max_chunk_s = {self.max_chunk_s:g}")
+            interp = meta.get("interpolate", "linear")
+            if interp not in ("linear", "hold"):
+                raise ValueError("interpolate must be linear or hold")
+            cams, fps, video, depth = self._view(meta, "mp4")
+            rec = Recorder(self.sim, cams, fps, depth, video)
+            self._frame_budget(rec, len(A) * k)
         rows, clipped = self.sim.clip(typ, A)
         before, info, executed, stop = len(self.episode), {}, 0, False
         prev = np.asarray(self.sim.command(typ), dtype=np.float64)
@@ -554,16 +574,17 @@ class Service:
         return out, rec.parts()
 
     def _observe(self, meta: dict, parts: dict) -> tuple[dict, list]:
-        try:
-            seconds = float(meta.get("seconds") or 0.0)
-        except (TypeError, ValueError):
-            raise ValueError("seconds must be a number") from None
-        if not 0.0 <= seconds <= self.max_watch_s:
-            raise ValueError(f"seconds must be in [0, {self.max_watch_s:g}]")
-        cams, fps, video, depth = self._view(meta, "frames")
-        n = int(round(seconds / self.sim.control_dt)) if not (self.done or self.stopping) else 0
-        rec = Recorder(self.sim, cams, fps, depth, video if n or video != "mp4" else "frames")   # no time: no video
-        self._frame_budget(rec, n)
+        with bad_request():
+            try:
+                seconds = float(meta.get("seconds") or 0.0)
+            except (TypeError, ValueError):
+                raise ValueError("seconds must be a number") from None
+            if not 0.0 <= seconds <= self.max_watch_s:
+                raise ValueError(f"seconds must be in [0, {self.max_watch_s:g}]")
+            cams, fps, video, depth = self._view(meta, "frames")
+            n = int(round(seconds / self.sim.control_dt)) if not (self.done or self.stopping) else 0
+            rec = Recorder(self.sim, cams, fps, depth, video if n or video != "mp4" else "frames")   # no time: no video
+            self._frame_budget(rec, n)
         before = len(self.episode)
         rec.start()
         if n:
@@ -588,7 +609,8 @@ class Service:
                                 "reason": self.reason})
         if self.resets >= self.reset_budget:
             raise Refused(409, {"error": "reset budget exhausted", "budget": self.reset_budget})
-        cams, fps, video, depth = self._view(meta, "frames")
+        with bad_request():
+            cams, fps, video, depth = self._view(meta, "frames")
         if not self.done:
             self._end("reset")                       # the running episode is abandoned
         self.sim.reset()
@@ -679,10 +701,28 @@ class Service:
 
         return Server(address, Handler)
 
+    def bind(self, port: int) -> HTTPServer:
+        """The HTTP server on `port`. Something else may hold the port -- in the network namespace it shares with the
+        agent's container, an agent's process can take it while this service (re)starts -- so wait, not die (a death
+        here would count as a crash); the trial can still end meanwhile (SIGUSR1)."""
+        busy = False
+        while True:
+            try:
+                return self.http_server(("0.0.0.0", port))
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE:
+                    raise
+            if not busy:
+                busy = True
+                self.log("port_busy", port=port)
+            self.poll()
+            time.sleep(1.0)
+
     def serve(self, port: int = 8000) -> None:
         signal.signal(signal.SIGUSR1, self.on_sigusr1)
+        srv = self.bind(port)
         print(f"{PROTOCOL} sim service ready on :{port}", flush=True)
-        self.http_server(("0.0.0.0", port)).serve_forever()
+        srv.serve_forever()
 
 
 def main(build: Callable[[], Sim], port: int = 8000) -> None:

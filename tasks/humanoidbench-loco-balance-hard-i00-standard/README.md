@@ -14,8 +14,8 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: the head cameras see floor and horizon only; the board and the roller under the feet never enter their
-view. `room_camera` (the recording camera frozen at its starting pose; off by default) sees the robot on the
-board from outside.
+view. `room_camera` (the recording camera frozen at its starting pose) sees the robot on the board from
+outside.
 
 ## Difficulty
 See `humanoidbench-loco-balance-hard-i00`'s README; here the agent also has no state, no reward, no resets and

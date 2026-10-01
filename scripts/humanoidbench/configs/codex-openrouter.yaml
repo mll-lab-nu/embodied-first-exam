@@ -9,6 +9,16 @@ agents:
       version: 0.159.2          # the Codex CLI the recorded runs used
       reasoning_effort: medium
       web_search: disabled      # Codex's live search runs at the model provider, past the task's egress allowlist
+      # Codex's config.toml: OpenRouter as a provider of its own. As "OpenAI", Codex compacts a full context through
+      # an endpoint OpenRouter does not serve, and the run stops there ("Error running remote compact task").
+      config:
+        model_provider: openrouter
+        model_providers:
+          openrouter:
+            name: OpenRouter
+            base_url: https://openrouter.ai/api/v1
+            env_key: OPENAI_API_KEY
+            wire_api: responses
+            supports_websockets: false
     env:
-      OPENAI_BASE_URL: https://openrouter.ai/api/v1
       OPENAI_API_KEY: ${OPENROUTER_API_KEY}

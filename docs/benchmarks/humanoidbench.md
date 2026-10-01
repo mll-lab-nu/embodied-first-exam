@@ -68,7 +68,7 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | the task text: goal, what ends an episode, pass mark, the reward's terms in words (no formula) | the reward and the return |
 | two head cameras, RGB 256×256 (cube 512); `room_camera`; depth (`RCB_OBS_DEPTH=1`, off) | the robot's position in the room |
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
-| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, 1000 steps, budget | contact forces, the simulator itself |
+| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for basketball, cube, insert_normal, kitchen, push), budget | contact forces, the simulator itself |
 
 ## Answer-key leakage
 
@@ -89,23 +89,14 @@ its model-API key in its container, so it could call a search-enabled model thro
 harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-standard
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its OpenAI endpoint (run id
+`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
 ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).
 
-## Results (task text 7, 09-28, before protocol v1.0; pass / scored tasks run)
+## Results
 
-| model (Codex or Claude Code, effort medium, 60 min) | privileged | standard, 50 resets (rcb-limited/1.1, reported separately) |
-|---|---|---|
-| GPT-6 Luna | 3/23 (push, reach, sit_hard) | 0/23 |
-| GPT-6 Sol | 1/2 (sit_hard; only walk and sit_hard run) | 1/5 (push) |
-| Claude Opus 5.5 | 4/5 (all but cube) | 2/5 (push, sit_hard) |
-
-- Standard mode was stuck at standing, not at information: no run produced a forward gait; more resets or the link
-  masses did not change that. There are no runs yet in the standard configuration (one episode, no reset).
-- Privileged mode wins on state and unlimited retries; Luna's self-made proxy scores mislead it, Opus plans on the full
-  model.
-
-Per run: `tasks/<task>/results/<run id>/` (standard runs under `prev_rcb_limited_1_1_reset50/`).
+Per run: `tasks/<task>/results/<run id>/` (a README with the verdict, cost and what happened, `reward.json`, the
+replay's last frame, a passing trajectory). Runs recorded before protocol v1.0 say so in their README (the standard
+ones, with 50 resets, in `prev_rcb_limited_1_1_reset50/`). Cross-task tables are generated for the site (PROTOCOL D3).

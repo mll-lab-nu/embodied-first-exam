@@ -14,7 +14,7 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: the head cameras see floor and horizon only. `room_camera` (the recording camera frozen at its starting
-pose; off by default) sees the robot hanging from the bar.
+pose) sees the robot hanging from the bar.
 
 ## Difficulty
 See `humanoidbench-manip-highbar-simple-i00`'s README; here the agent also has no state, no reward, no resets
