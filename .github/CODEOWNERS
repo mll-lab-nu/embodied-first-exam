@@ -10,3 +10,9 @@
 /images/VERSION                 @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /README.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /CONTRIBUTING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/AGENTS.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/RUNNING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/benchmarks/               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/task_conventions.py    @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/task_names.py          @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/tasks/dataset.toml             @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0

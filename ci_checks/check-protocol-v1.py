@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Protocol v1.0 conformance report (docs/PROTOCOL.md). Warn-only during the migration (§7): prints one summary line per
-rule with a count and a few examples and exits 0. Set RCB_PROTOCOL_STRICT=1 to exit 1 when any rule is violated.
+"""Protocol v1.0 conformance report (docs/PROTOCOL.md). Prints one summary line per rule with a count and
+a few examples. Rules tagged `legacy:` (the base-image registry move, §7) are warnings; every other rule fails the check.
+Set RCB_PROTOCOL_STRICT=1 to fail on `legacy:` too.
 
 Rules tagged "legacy" are the ones expected until the migration lands (old names, old registry); every other rule must
 be clean for new tasks.
@@ -19,9 +20,6 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal/eai-"
 PROTOCOLS = {"eai-standard/2.1"}
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
-EFFORTS = "none|minimal|low|medium|high|xhigh|max|default"
-RUN_ID = re.compile(rf"^[a-z0-9_]+-[a-z0-9_]+-({EFFORTS})$")
-MAX_RESULT_BYTES = 2_000_000
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
 # `test.sh` must clear the verifier log directory before anything else (first non-comment command after `set`/`mkdir`).
@@ -59,15 +57,15 @@ def check_task(task: Path) -> None:
     meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     mode = meta.get("mode")
     if name.endswith("-limited") or mode == "limited":
-        warn("legacy: mode name `limited` / `-limited` (use `standard` / `-standard`)", name)
+        warn("mode name `limited` / `-limited` (use `standard` / `-standard`)", name)
     if mode is None:
-        warn("legacy: missing `mode` (privileged | standard)", name)
+        warn("missing `mode` (privileged | standard)", name)
     if "tier" in meta:
-        warn("legacy: deprecated `tier` field (use `mode`)", name)
+        warn("deprecated `tier` field (use `mode`)", name)
     standard = mode in ("standard", "limited") or name.endswith(("-limited", "-standard"))
     proto = meta.get("protocol")
     if standard and proto in LEGACY_PROTOCOLS:
-        warn("legacy: protocol spelled `rcb-limited/2.1` (use `eai-standard/2.1`)", name)
+        warn("protocol spelled `rcb-limited/2.1` (use `eai-standard/2.1`)", name)
     elif standard and proto not in PROTOCOLS:
         warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
     if not standard and proto is not None:
@@ -75,7 +73,7 @@ def check_task(task: Path) -> None:
 
     oracle = meta.get("oracle")
     if oracle is None:
-        warn("legacy: missing `oracle` (full | partial | none)", name)
+        warn("missing `oracle` (full | partial | none)", name)
     elif oracle not in ("full", "partial", "none"):
         warn("`oracle` must be full | partial | none", name)
     if oracle in ("partial", "none") and not meta.get("oracle_evidence"):
@@ -96,21 +94,15 @@ def check_task(task: Path) -> None:
         if not cmds or not CLEAR_LOGS.match(cmds[0]):
             warn("`tests/test.sh` does not clear /logs/verifier first (`rm -rf /logs/verifier/*`)", name)
 
-    results = task / "results"
-    if results.is_dir():
-        for run in sorted(p for p in results.iterdir() if p.is_dir()):
-            if not RUN_ID.match(run.name):
-                warn("results folder is not a run id `<harness>-<model>-<effort>`", f"{name}/results/{run.name}")
-        for f in results.rglob("*"):
-            if f.is_file() and f.stat().st_size > MAX_RESULT_BYTES:
-                warn("result file over 2 MB (videos go to Hugging Face)", f"{rel(f)} ({f.stat().st_size / 1e6:.1f} MB)")
+    if (task / "results").exists():
+        warn("results/ in a task directory (results are published on the results site, PROTOCOL D3)", name)
 
 
 def check_repository() -> None:
     if (ROOT / "results").is_dir():
-        warn("top-level results/ directory (results live in tasks/<task>/results/<run_id>/)", "results/")
+        warn("top-level results/ directory (results are published on the results site, PROTOCOL D3)", "results/")
     try:
-        files = subprocess.run(["git", "-C", str(ROOT), "ls-files"], capture_output=True, text=True, check=True).stdout.split()
+        files = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], capture_output=True, text=True, check=True).stdout.split("\0")
     except (OSError, subprocess.CalledProcessError):
         files = [rel(p) for p in ROOT.rglob("*") if p.is_file() and ".git" not in p.parts]
     for f in files:
@@ -135,11 +127,13 @@ def main() -> int:
         print(f"protocol v1.0: {len(tasks)} task(s) conform")
         return 0
     strict = os.environ.get("RCB_PROTOCOL_STRICT") == "1"
-    print(f"protocol v1.0 {'violations' if strict else 'warnings (migration pending, docs/PROTOCOL.md §7)'}:")
+    hard = {r: w for r, w in hits.items() if not r.startswith("legacy")}
+    print(f"protocol v1.0: {'violations' if hard or strict else 'warnings'} "
+          "(`legacy:` rules are accepted until the image move, docs/PROTOCOL.md §7; all others fail):")
     for rule, where in sorted(hits.items(), key=lambda kv: (not kv[0].startswith("legacy"), -len(kv[1]))):
         examples = ", ".join(where[:3]) + (", ..." if len(where) > 3 else "")
-        print(f"  WARN {len(where):4d}  {rule}: {examples}")
-    return 1 if strict else 0
+        print(f"  {'WARN' if rule.startswith('legacy') else 'FAIL'} {len(where):4d}  {rule}: {examples}")
+    return 1 if hard or strict else 0
 
 
 if __name__ == "__main__":

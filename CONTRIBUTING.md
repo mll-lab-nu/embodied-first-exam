@@ -17,7 +17,8 @@ One benchmark per pull request. A pull request that adds tasks **and** changes s
 ## Proposal (new benchmarks)
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
-- **solvable** — an oracle, an upstream expert or policy, or a convincing argument;
+- **solvable** — a positive example the verifier scores 1: an oracle, an upstream expert or policy, a successful
+  model trial, or a hand-built trajectory (tasks without one are human-reviewed and reported separately, PROTOCOL §7);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — bit-exact replay of a frozen scene instance, and the hardware it was checked on;
 - **isolatable** — the verifier can recompute the result in its own sandbox from the declared artifacts;
@@ -39,8 +40,11 @@ the expected size of the pull request.
 
 ## Before opening the pull request
 ```bash
-bash ci_checks/run_all.sh tasks/<your tasks>      # must pass; only `legacy:` protocol warnings are accepted (until §7)
-python scripts/<bench>/<generator> && git diff --exit-code tasks/   # generated tasks: re-running reproduces them
+bash ci_checks/run_all.sh tasks/<your tasks>      # must pass; only `legacy:` (image registry) warnings are accepted (§7)
+python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the v1.0 layout
+python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
+#   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
+#   and check that `git diff --exit-code tasks/` is empty
 harbor run -p tasks/<task> -a oracle               # on a sample: >= 2 tasks per mode
 harbor run -p tasks/<task> -a nop                  # must score 0
 cd tasks && harbor add --scan . && cd ..           # refresh tasks/dataset.toml

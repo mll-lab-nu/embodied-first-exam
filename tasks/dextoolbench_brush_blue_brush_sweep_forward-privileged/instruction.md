@@ -15,7 +15,7 @@ at `/app/output/gen.py`.
 The current goal counts as reached when all 8 corners of the tool's grasp box (0.141 × 0.030 × 0.027 m, scaled by
 1.5, in the tool's frame) are within **1.5 cm** of the same corners at the goal pose; then the next goal becomes
 current. Each goal has **30 s (1,800 control steps)**; if it is not reached in time the attempt ends there (DexToolBench's own rule is 10 s; relaxed here because your trajectory is replayed offline and you can reset as often as you like). The trajectory may be at most 360,000 control steps.
-**reward = goals reached / 34** (partial credit). Full success = all 34.
+**Score: 1 if all 34 goals are reached (and the replay is deterministic), else 0.** Goals reached / 34 is reported as `progress`; there is no partial credit.
 
 ## Tooling (`/opt/tools/rcb_dtb.py`, importable as `rcb_dtb`)
 ```python

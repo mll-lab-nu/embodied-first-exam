@@ -26,7 +26,7 @@ Known values; a new value is added by pull request (CI validation of these vocab
 - No versions or durations in names; a task's version is its digest in `tasks/dataset.toml`.
 
 ## Run ids
-`<harness>-<model>-<effort>`, for example `codex-gpt6_luna-xhigh` or `claude_code-fable_5_1-max`.
+`<harness>-<model>-<effort>`, for example `codex-gpt6_luna-xhigh` or `claude_code-claude_fable_5_1-max`.
 - `harness`: the Harbor agent name with `-` replaced by `_` (`codex`, `claude_code`).
 - `model`: lower case, vendor prefix dropped, characters other than letters and digits replaced by `_`. Reuse the token
   already used for a model in existing results (`gpt6_luna`, `gpt6_astra`, `fable_5_1`).

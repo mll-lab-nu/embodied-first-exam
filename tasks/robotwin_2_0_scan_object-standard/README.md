@@ -26,18 +26,9 @@ Same scene, instance and success rule as `robotwin_2_0_scan_object-privileged` (
 `solution/`: streams the privileged-mode expert's joint targets (every K physics steps, dt = K/250 s, linear interpolation) as `joint_position` chunks
 
 ## Verification
-**verification**: `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
+`success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
 
 ## Details
 | | |
 |---|---|
 | action space | `eai-standard/2.1`: `submit` chunks of `joint_position` (14, streamed at 250 Hz with the agent's `dt`) or `ee_pose` (16, CuRobo-planned); `observe` frames or a watch window; binary RCB1 responses |
-
-### Oracle status: unverified in standard mode
-The limited oracle replays the privileged-mode expert's joint targets as `qpos` actions. For this task that does **not**
-reproduce success at any sampling we tried (every 25, 8 or 3 physics steps; live `check_success` false at the end,
-replay deterministic). The predicate needs the scanner's axis to point at the held box within 2.5 cm / 7 cm with both
-grippers closed; re-timing the expert's motion through the `qpos` interpolator (each action is a time-optimal segment,
-and very short segments fall back to a fixed 50-step hold) shifts the grasps enough to miss it. The service, the
-verifier and the nop gate (0) are validated; the task is kept as an evaluation target without an oracle, like the
-LIBERO plate task. A hand-written `ee`-mode reference solution is the obvious follow-up.
