@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | BEHAVIOR-1K |
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `behavior-putting-shoes-on-rack-i00-privileged` |
 | Simulator / robot | `behavior` / `r1pro` |

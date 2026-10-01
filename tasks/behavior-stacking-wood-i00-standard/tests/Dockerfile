@@ -1,6 +1,6 @@
 # Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but python (the shared eai-standard
 # client base, scripts/eai_standard/client.env; it installs nothing).
-FROM docker.io/library/python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh
 COPY grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
