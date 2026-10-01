@@ -14,7 +14,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/vlabench-select-fruit-semantic-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_fruit_semantic (Franka Panda) on the same frozen instance as vlabench-select-fruit-semantic-i00: tell some specifics of pear between ['pear', 'peach', 'mango', 'orange'] The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench select_fruit_semantic (Franka Panda) on the same frozen instance as vlabench-select-fruit-semantic-i00-privileged: tell some specifics of pear between ['pear', 'peach', 'mango', 'orange'] The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode, replays it in a fresh simulator and grades it."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "standard-mode"]
 
