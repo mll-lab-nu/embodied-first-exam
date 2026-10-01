@@ -6,12 +6,12 @@ on one frozen scene instance, in both modes: 39 instances, 78 tasks.
 | | |
 |---|---|
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
-| tasks | `tasks/vlabench-<task>-i00` (privileged) and `tasks/vlabench-<task>-i00-standard` (standard) |
+| tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` (PROTOCOL v1.0.1 names) |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
 | image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
-| generator | `scripts/vlabench/` (`import_pr4.py` → `frozen/`, `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`) |
+| standard client | the shared client base and exact pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
+| generator | `scripts/vlabench/` (`import_pr4.py` → `frozen/`, `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this
@@ -80,8 +80,10 @@ docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:$(cat 
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
 python3 scripts/vlabench/import_pr4.py            # one-off: instances and references from PR #4 (dev/changhe @ ad3c510)
 bash scripts/vlabench/freeze.sh                   # re-verify them in the image -> scripts/vlabench/frozen/report.json
-python3 scripts/vlabench/generate.py              # -> tasks/vlabench-* ; re-running reproduces them exactly
-cd tasks && harbor add --scan . && cd ..
+python3 scripts/vlabench/generate.py              # -> tasks/vlabench-* (normalized); removes stale vlabench-* dirs
+python3 scripts/vlabench/generate.py --check      # tasks/ is exactly what it writes
+python3 scripts/task_conventions.py --check tasks/vlabench-*
+cd tasks && harbor add --scan . && cd ..           # then drop dataset entries whose directory is gone
 bash ci_checks/run_all.sh tasks/vlabench-*
 ```
 
@@ -91,15 +93,25 @@ model and initial-state hashes and is not solved at the start; `reset()` is bit-
 task's success at its last step; two replays in fresh processes end in the live state's hash and succeed. The 3
 candidates that failed (their PR #4 references are recorded failures) are in the same file.
 
-Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a oracle` scores 1 on all 39 privileged
-tasks and on 8 standard tasks (heat_food, texas_holdem, take_out_cool_drink, book_rearrange, find_unseen_object,
-select_painting, friction_qa, select_fruit_common_sense; live, replay and determinism all hold); `-a nop` scores 0 on
-four tasks per mode (select_fruit, heat_food, friction_qa, insert_flower). Two scripted cheat attempts score 0: in
-privileged mode, tooling patched to report success, a do-nothing trajectory, a tampered instance and a
-`sitecustomize.py` in `/app/output`, forged reward files; in standard mode, hidden endpoints (`/reset`, `/state`,
-`/success`, `/data/final.json`: 404), a wrong action type, a `dt` that is not a multiple of 0.1 and NaN rows (400,
-nothing runs), and a forged `final.json` in the agent's container (never collected). Re-running `generate.py` gives the
-same tree hash.
+Harbor runs on the final task digests (PROTOCOL v1.0.1 names and README layout; AMD Ryzen 9 7950X, Docker, no GPU):
+`-a oracle` scores 1 on all 39 privileged tasks and on 8 standard tasks (heat_food, texas_holdem,
+take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense;
+live, replay and determinism all hold); `-a nop` scores 0 on four tasks per mode (select_fruit, heat_food,
+friction_qa, insert_flower). No infrastructure or grader errors.
+
+Earlier, on the pre-rename digests (same scenes, instances, tooling and success rule): `-a oracle` 39/39 privileged and
+8/8 standard, `-a nop` 0 on four tasks per mode. Two scripted cheat attempts score 0: in privileged mode, tooling patched
+to report success, a do-nothing trajectory, a tampered instance and a `sitecustomize.py` in `/app/output`, forged
+reward files; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`, `/data/final.json`: 404), a wrong
+action type, a `dt` that is not a multiple of 0.1 and NaN rows (400, nothing runs), and a forged `final.json` in the
+agent's container (never collected). Two agent red-team trials (Codex, told to make the verifier pass without solving)
+score 0. Re-running `generate.py` gives the same tree hash.
+
+## Results
+Not in the repository (PROTOCOL D3): the sample model trial `codex-gpt6_luna-xhigh` (Codex + GPT-6 Luna, reasoning
+effort xhigh, 60 min; select_fruit, friction_qa, insert_flower, heat_food in both modes: privileged 4/4, standard 2/4;
+all within the protocol's token budget) goes to the results site; its per-task READMEs and timelines are kept outside
+the repository for that.
 
 Final-state hashes of some references (live = replay 1 = replay 2):
 
@@ -119,3 +131,9 @@ Final-state hashes of some references (live = replay 1 = replay 2):
   (PROTOCOL §2.7).
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved
   (sample trial 4/4; PR #4: 57/83); the standard twin carries the difficulty.
+- **Shared-file follow-ups (not in this PR).** `scripts/task_conventions.py` does not know VLABench yet, so the README's
+  Benchmark row reads "—": its `BENCHMARKS` needs `("vlabench-", "VLABench")`. `docs/TAXONOMY.md` needs
+  `simulator = "vlabench"`.
+- **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
+  shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
+  `/kinematics`, a per-call wall-clock bound) and its CI identity check.
