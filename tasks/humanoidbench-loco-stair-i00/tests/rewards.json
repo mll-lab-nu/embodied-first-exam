@@ -1,0 +1,14 @@
+{
+ "methods": [
+  {
+   "cls": "ClimbingUpwards",
+   "module": "humanoid_bench.envs.basic_locomotion_envs",
+   "name": "get_reward",
+   "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height() - self.robot.left_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    ) * rewards.tolerance(\n        self.robot.head_height() - self.robot.right_foot_height(),\n        bounds=(1.2, float(\"inf\")),\n        margin=0.45,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.5, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(_WALK_SPEED, float(\"inf\")),\n        margin=_WALK_SPEED,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n    return stand_reward * small_control * move, {  # small_control *\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n    }"
+  }
+ ],
+ "module_globals": {
+  "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+ },
+ "task_class": "humanoid_bench.envs.basic_locomotion_envs.Stair"
+}

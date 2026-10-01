@@ -1,0 +1,38 @@
+{
+ "methods": [
+  {
+   "cls": "Cabinet",
+   "module": "humanoid_bench.envs.cabinet",
+   "name": "get_reward",
+   "source": "def get_reward(self):\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.9, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    stabilization_reward = stand_reward * small_control\n\n    subtask_get_reward = [\n        self.get_reward_subtask_one,\n        self.get_reward_subtask_two,\n        self.get_reward_subtask_three,\n        self.get_reward_subtask_four,\n        lambda: (1000, {}, False),\n    ]\n\n    reward, reward_info, subtask_complete = subtask_get_reward[\n        self.current_subtask - 1\n    ]()\n    if self.current_subtask < 5:\n        reward = 0.2 * stabilization_reward + 0.8 * reward\n\n    if subtask_complete:\n        print(\"Completed subtask\", self.current_subtask)\n        reward += 100 * (self.current_subtask)\n        self.current_subtask += 1\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"success_subtasks\": self.current_subtask\n        - 1,  # The first subtask is not automatically completed.\n        \"success\": self.current_subtask == 5,\n        **reward_info,\n    }"
+  },
+  {
+   "cls": "Cabinet",
+   "module": "humanoid_bench.envs.cabinet",
+   "name": "get_reward_subtask_four",
+   "source": "def get_reward_subtask_four(self):\n    pullup_drawer_cube_pos = self._env.named.data.xpos[\"lateral_cabinet_cube\"]\n    pullup_drawer_joint_pos = self._env.data.qpos[-(4 * 7) - 1]\n    door_openness_reward = min(1, abs(pullup_drawer_joint_pos))\n\n    normal_cabinet_left_joint_pos = self._env.data.qpos[-(4 * 7) - 4]\n    normal_cabinet_right_joint_pos = self._env.data.qpos[-(4 * 7) - 3]\n    left_door_openness_reward = min(1, abs(normal_cabinet_left_joint_pos))\n    right_door_openness_reward = min(1, abs(normal_cabinet_right_joint_pos))\n    secondary_door_openness_reward = max(\n        left_door_openness_reward, right_door_openness_reward\n    )\n\n    cube_proximity_horizontal = rewards.tolerance(\n        pullup_drawer_cube_pos[0] - 0.9,\n        bounds=(-0.3, 0.3),\n        margin=0.3,\n        sigmoid=\"linear\",\n    ) + rewards.tolerance(\n        pullup_drawer_cube_pos[1], bounds=(-0.6, 0.6), margin=0.3, sigmoid=\"linear\"\n    )\n    cube_proximity_vertical = rewards.tolerance(\n        pullup_drawer_cube_pos[2] - 1.54,\n        bounds=(-0.15, 0.15),\n        margin=0.3,\n        sigmoid=\"linear\",\n    )\n\n    in_cabinet_x = 0.9 - 0.3 <= pullup_drawer_cube_pos[0] <= 0.9 + 0.3\n    in_cabinet_y = 0 - 0.6 <= pullup_drawer_cube_pos[1] <= 0 + 0.6\n    in_cabinet_z = 1.54 - 0.15 <= pullup_drawer_cube_pos[2] <= 1.54 + 0.15\n    task_completed = in_cabinet_x and in_cabinet_y and in_cabinet_z\n\n    drawer_cube_proximity_reward = (\n        0.3 * cube_proximity_horizontal / 2 + 0.7 * cube_proximity_vertical\n    )\n    reward = 0.5 * (drawer_cube_proximity_reward) + 0.5 * door_openness_reward\n\n    return (\n        reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"secondary_door_openness_reward\": secondary_door_openness_reward,\n            \"drawer_cube_proximity_reward\": drawer_cube_proximity_reward,\n            \"subtask_complete\": task_completed,\n        },\n        task_completed,\n    )"
+  },
+  {
+   "cls": "Cabinet",
+   "module": "humanoid_bench.envs.cabinet",
+   "name": "get_reward_subtask_one",
+   "source": "def get_reward_subtask_one(self):\n    pulling_cabinet_joint_pos = self._env.data.qpos[-(4 * 7) - 2]\n    door_openness_reward = abs(pulling_cabinet_joint_pos / 0.4)\n    subtask_complete = door_openness_reward > 0.95\n    return (\n        door_openness_reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"subtask_complete\": subtask_complete,\n        },\n        subtask_complete,\n    )"
+  },
+  {
+   "cls": "Cabinet",
+   "module": "humanoid_bench.envs.cabinet",
+   "name": "get_reward_subtask_three",
+   "source": "def get_reward_subtask_three(self):\n    drawer_cube_pos = self._env.named.data.xpos[\"drawer_cube\"]\n    normal_cabinet_left_joint_pos = self._env.data.qpos[-(4 * 7) - 4]\n    normal_cabinet_right_joint_pos = self._env.data.qpos[-(4 * 7) - 3]\n    left_door_openness_reward = min(1, abs(normal_cabinet_left_joint_pos))\n    right_door_openness_reward = min(1, abs(normal_cabinet_right_joint_pos))\n    door_openness_reward = max(\n        left_door_openness_reward, right_door_openness_reward\n    )  # Any open door is sufficient\n\n    cube_proximity_horizontal = (\n        rewards.tolerance(\n            drawer_cube_pos[0] - 0.9,\n            bounds=(-0.3, 0.3),\n            margin=0.3,\n            sigmoid=\"linear\",\n        )\n        + rewards.tolerance(\n            drawer_cube_pos[1], bounds=(-0.6, 0.6), margin=0.3, sigmoid=\"linear\"\n        )\n    ) / 2\n    cube_proximity_vertical = rewards.tolerance(\n        drawer_cube_pos[2] - 0.94,\n        bounds=(-0.15, 0.15),\n        margin=0.3,\n        sigmoid=\"linear\",\n    )\n\n    in_cabinet_x = 0.9 - 0.3 <= drawer_cube_pos[0] <= 0.9 + 0.3\n    in_cabinet_y = 0 - 0.6 <= drawer_cube_pos[1] <= 0 + 0.6\n    in_cabinet_z = 0.94 - 0.15 <= drawer_cube_pos[2] <= 0.94 + 0.15\n    task_completed = in_cabinet_x and in_cabinet_y and in_cabinet_z\n\n    drawer_cube_proximity_reward = (\n        0.3 * cube_proximity_horizontal + 0.7 * cube_proximity_vertical\n    )\n    reward = 0.5 * (drawer_cube_proximity_reward) + 0.5 * door_openness_reward\n    return (\n        reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"drawer_cube_proximity_reward\": drawer_cube_proximity_reward,\n            \"subtask_complete\": task_completed,\n        },\n        task_completed,\n    )"
+  },
+  {
+   "cls": "Cabinet",
+   "module": "humanoid_bench.envs.cabinet",
+   "name": "get_reward_subtask_two",
+   "source": "def get_reward_subtask_two(self):\n    drawer_joint_pos = self._env.data.qpos[-(4 * 7) - 5]\n    door_openness_reward = abs(drawer_joint_pos / 0.45)\n    subtask_complete = door_openness_reward > 0.95\n    return (\n        door_openness_reward,\n        {\n            \"door_openness_reward\": door_openness_reward,\n            \"subtask_complete\": subtask_complete,\n        },\n        subtask_complete,\n    )"
+  }
+ ],
+ "module_globals": {
+  "humanoid_bench.envs.cabinet": "_STAND_HEIGHT = 1.65"
+ },
+ "task_class": "humanoid_bench.envs.cabinet.Cabinet"
+}
