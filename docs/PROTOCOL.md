@@ -266,7 +266,7 @@ resumes the same episode; success is decided on a replay.
 | Which proprioception columns | task-defined | [current] |
 | `depth/<cam>`, depth noise, `meta.cameras`, `meta.task` | MAY | [current] |
 | `meta` has `calls`, `sim_time_s`, `time_s`, `time_left_s`, `proprio{layout, now}`, `done`, `reason` and a step counter | MUST | [current] |
-| Limits: requests ≤ 64 MB (400 today; 413 [new]), ≤ 3000 frames per call (400), responses over 256 MB drop frames/depth and say so in `meta.degraded` | SHOULD | [current] |
+| Limits: requests ≤ 64 MB (413), ≤ 3000 frames per call (400), responses over 256 MB drop frames/depth and say so in `meta.degraded` | SHOULD | [current] |
 
 ### 4.4 Actions
 | Item | Level | Basis |
@@ -290,16 +290,15 @@ resumes the same episode; success is decided on a replay.
 | Robot proprioception, camera calibration, task text | MAY | [current] |
 
 ### 4.6 Errors (no physics executed)
-`400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed or
-oversized body) — MUST [current]; `409` episode over — MUST [current]; `413` body over 64 MB — SHOULD [new];
-`500` simulator error — MUST [current], and the episode ends with `reason = "error"` — MUST [new] (today only RoboTwin
-`/submit` ends it; §7).
+`400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
+— MUST; `409` episode over — MUST; `413` body over 64 MB — SHOULD; `500` simulator error, and the episode ends with
+`reason = "error"` — MUST. [current]
 
 ### 4.7 Episode and crash recovery
 | Item | Level | Basis |
 |---|---|---|
 | The episode starts when the service is ready; the seed stays inside the service | MUST | [current] |
-| End condition defined by the task and stated in the instruction; also in `/spec` | MUST / SHOULD | [current] / [new] (MuJoCo services state it in `/spec`, RoboTwin does not yet) |
+| End condition defined by the task and stated in the instruction and in `/spec` (`episode`) | MUST | [current] |
 | The predicate is evaluated once more at episode end | MUST | [current] |
 | Crash recovery: every executed step journaled, a checkpoint (step count, state hash) per completed call; after a restart the journal is replayed, the hash checked and the same episode continues — never a reset | MUST | [current] |
 | At most 2 resumes (`RCB_MAX_RESUMES`); a third crash ends the episode with `sim_crashed_on_call` if every crash happened inside a call, else `sim_crashed` (`infra_error = 1`); a written verdict is never overwritten | SHOULD | [current] |
@@ -366,6 +365,12 @@ Done (2026-10-01):
    hashes as 0.1.1, plus GPU EGL rendering).
 6. No `results/` in any task and no batch reports under `docs/` (results live on the results site); every task README in
    the standard layout.
+7. Services: a 500 ends the episode (`reason = "error"`), bodies over 64 MB get 413, RoboTwin's `/spec` states the end
+   condition (`episode`).
+8. Generators (`scripts/robotwin_mk_*.py`, `dtb_mk_task.py`, `mj_mk_limited.py`, `scripts/{kinder,humanoidbench}/gen_tasks.py`)
+   emit the v1.0 names and finish with `scripts/task_conventions.py` (`normalize`), which applies the conventions above
+   (fields, protocol spelling, test.sh, graders, README layout, no `results/`); `--check` reports a task it would change.
+   Results tooling writes outside the repository (`write_task_results.py --out`).
 
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
 
@@ -373,8 +378,5 @@ Open:
 1. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public;
    per-simulator `VERSION` only (`legacy:` warning in CI until then).
 2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
-3. Services end the episode with `reason = "error"` on a 500 and answer oversized bodies with 413; RoboTwin services
-   state the end condition in `/spec`.
-4. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
+3. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
    results site.
-5. Generators (`scripts/`) emit the v1.0 names and README layout, so that re-generating reproduces the committed tasks.

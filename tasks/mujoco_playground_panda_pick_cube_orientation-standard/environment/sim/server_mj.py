@@ -376,7 +376,7 @@ class Hd(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ("/submit", "/observe"): return self._json(404, {"error": "no such endpoint"})
         try: self._req = self._body()
-        except Exception as exc: return self._json(400, {"error": str(exc)[:200]})
+        except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try:
@@ -396,7 +396,7 @@ class Hd(BaseHTTPRequestHandler):
         except ValueError as exc:
             return self._json(400, {"error": str(exc)})
         except Exception as exc:  # noqa
-            traceback.print_exc(); log({"ev": "error", "error": repr(exc)})
+            traceback.print_exc(); log({"ev": "error", "error": repr(exc)}); finish("error")   # PROTOCOL §4.6: a 500 ends the episode
             return self._json(500, {"error": "simulator error", "detail": repr(exc)[:200]})
         return self._rcb1(out, blobs)
 
