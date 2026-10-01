@@ -1,6 +1,18 @@
 # kinder-packing-3d-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-packing-3d-i00`: the same KinDER instance (`kinder/Packing3D-p3-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-packing-3d-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `packing-3d` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), kept in the results/codex-gpt6_luna-medium/ folders of tasks/kinder-packing-3d-i00-privileged and its standard twin; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-packing-3d-i00-privileged`: the same KinDER instance (`kinder/Packing3D-p3-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.

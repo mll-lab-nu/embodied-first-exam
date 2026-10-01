@@ -9,7 +9,7 @@ copied verbatim from third_party/RoboTwin/envs/<task>.py and bound onto `env` at
 import ast, json, pathlib, re, shutil, sys, textwrap
 root = pathlib.Path(__file__).resolve().parents[1]
 task, seed, goal, difficulty = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
-src_dir = root / "tasks/robotwin_2_0_stack_blocks_two"; dst = root / f"tasks/robotwin_2_0_{task}"
+src_dir = root / "tasks/robotwin_2_0_stack_blocks_two-privileged"; dst = root / f"tasks/robotwin_2_0_{task}"
 up = (root / f"third_party/RoboTwin/envs/{task}.py").read_text(); tree = ast.parse(up)
 cls = [n for n in tree.body if isinstance(n, ast.ClassDef)][0]
 keep = {"setup_demo", "load_actors", "check_success"}
@@ -61,7 +61,7 @@ for f in ("environment/rcb_traj.py", "tests/rcb_traj.py"):
              f'    "stack_blocks_two": dict(\n        text="Stack the green block on top of the red block (either arm may be used), then open both grippers.",\n    ),\n    {task!r}: dict(text={goal!r}),\n')])
     sub(f, [('q = sub.add_parser("selftest"); q.add_argument("--task", default="stack_blocks_two")', f'q = sub.add_parser("selftest"); q.add_argument("--task", default={task!r})')])
 sub("task.toml", [
-    ('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two"', f'name = "robot-coding-bench/robotwin_2_0_{task}"'),
+    ('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-privileged"', f'name = "robot-coding-bench/robotwin_2_0_{task}"'),
     ('description = "RoboTwin 2.0 stack_blocks_two (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory that stacks the green block on the red block, frozen scene instance (RoboTwin seed 60417)."',
      f'description = "RoboTwin 2.0 {task} (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. {goal} Frozen scene instance (RoboTwin seed {seed})."'),
     ('"trajectory", "stack_blocks_two"]', f'"trajectory", "{task}"]'),

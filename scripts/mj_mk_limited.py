@@ -10,7 +10,7 @@ grades the sidecar's final.json (a fresh replay of the recorded episode)."""
 import json, pathlib, re, shutil, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-limited"
+RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
 SERVER = ROOT / "images/mujoco/limited/server_mj.py"
 IMAGE = "ghcr.io/jameskrw/rcb-mujoco:0.1.2"
 ALLOW = 'network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'

@@ -1,6 +1,18 @@
 # kinder-sweep-simple-i00-standard
 
-Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i00`: the same KinDER instance (`kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0`, seed
+| | |
+|---|---|
+| Benchmark | KinDER |
+| Mode | standard (`eai-standard/2.1`) |
+| Twin | `kinder-sweep-simple-i00-privileged` |
+| Simulator / robot | `kinder` / `tidybot-plus-plus` |
+| Family / instance | `sweep-simple` / seed 0 |
+| Oracle | `none` — GPT-6 Luna's graded standard-mode episode (50 resets), kept in tasks/kinder-sweep-simple-i00-standard/results/codex-gpt6_luna-medium/prev_rcb_limited_1_1_reset50/; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #8 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+
+## Task
+Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i00-privileged`: the same KinDER instance (`kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
 never the scene's state or the goal check. One episode, no reset.

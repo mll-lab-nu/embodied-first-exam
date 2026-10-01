@@ -9,7 +9,7 @@ root = pathlib.Path(__file__).resolve().parents[1]
 task, traj = sys.argv[1], sys.argv[2]
 K = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] != "--vel" else 25   # physics steps per qpos action; finer for timing-sensitive tasks
 VEL = "--vel" in sys.argv   # also ship the expert's velocity feed-forward (K=1 + --vel = exact replay; needed by e.g. scan_object)
-src = root / "tasks/robotwin_2_0_stack_blocks_two-limited"; unl = root / f"tasks/robotwin_2_0_{task}"; dst = root / f"tasks/robotwin_2_0_{task}-limited"
+src = root / "tasks/robotwin_2_0_stack_blocks_two-standard"; unl = root / f"tasks/robotwin_2_0_{task}"; dst = root / f"tasks/robotwin_2_0_{task}-limited"
 assert unl.is_dir(), unl
 # regenerate everything except results/ (agent results committed per run); never copy the template's results/
 if dst.exists():
@@ -27,7 +27,7 @@ def sub(path, pairs):
     p.write_text(s)
 sub("environment/docker-compose.yaml", [("RCB_TASK: stack_blocks_two", f"RCB_TASK: {task}")])
 tt = (dst / "task.toml").read_text()
-tt = tt.replace('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-limited"', f'name = "robot-coding-bench/robotwin_2_0_{task}-limited"')
+tt = tt.replace('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-standard"', f'name = "robot-coding-bench/robotwin_2_0_{task}-limited"')
 tt = re.sub(r'description = ".*"', f'description = "LIMITED MODE (robot as a service, rcb-limited/2.1): RoboTwin 2.0 {task} on the same frozen instance as the unlimited task (seed {seed}). {goal} The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."', tt)
 tt = tt.replace('"stack_blocks_two"]', f'"{task}"]').replace('family = "stack_blocks_two"', f'family = "{task}"').replace("instance_seed = 60417", f"instance_seed = {seed}")
 (dst / "task.toml").write_text(tt)
@@ -38,7 +38,7 @@ assert n_title == 1, "template title drifted: update the title substitution"
 ins = re.sub(r"\*\*Task:\*\* .*?\n\n", f"**Task:** {goal}\n\n", ins, count=1, flags=re.S)
 ins = ins.replace("Objects here: two 5 cm cubes (red, green). Table top at z ≈ 0.74 m.", "Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.")
 (dst / "instruction.md").write_text(ins)
-rd = (dst / "README.md").read_text().replace("robotwin_2_0_stack_blocks_two-limited", f"robotwin_2_0_{task}-limited").replace("`robotwin_2_0_stack_blocks_two`", f"`robotwin_2_0_{task}`").replace("RoboTwin seed 60417", f"RoboTwin seed {seed}")
+rd = (dst / "README.md").read_text().replace("robotwin_2_0_stack_blocks_two-standard", f"robotwin_2_0_{task}-limited").replace("`robotwin_2_0_stack_blocks_two-privileged`", f"`robotwin_2_0_{task}`").replace("RoboTwin seed 60417", f"RoboTwin seed {seed}")
 (dst / "README.md").write_text(rd)
 # oracle: subsample the unlimited oracle trajectory (T,34) -> (N,14) qpos actions
 A = np.load(traj)["actions"]; idx = list(range(K - 1, len(A), K))
