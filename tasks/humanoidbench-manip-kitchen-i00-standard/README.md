@@ -14,7 +14,7 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: the head cameras see the stove, the microwave and the wall cabinets. `room_camera` (the recording camera
-frozen at its starting pose; off by default) sees the kitchen and the robot.
+frozen at its starting pose) sees the kitchen and the robot.
 
 ## Difficulty
 See `humanoidbench-manip-kitchen-i00`'s README; here the agent also has no state, no reward, no resets and no

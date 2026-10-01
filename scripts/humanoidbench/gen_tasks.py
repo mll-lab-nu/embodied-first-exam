@@ -368,14 +368,14 @@ def write_sim_dir(t: dict, defaults: dict, dest: Path) -> Path:
 def standard_actuator_layout(names: list[str], joints: list[str]) -> str:
     """The actuator order, plus where the agent reads it and the servo ranges, and how the proprioception lines up
     with it: on h1 the joints are the actuators; on h1hand some finger actuators drive two coupled joints."""
-    where = '`spec()["action_types"]["joint_position"]`'
+    where = 'spec()["action_types"]["joint_position"]'
     if joints == names:
-        ref = f" ({where}[\"layout\"]; the proprioception measures the same joints in the same order)."
+        ref = f' (`{where}["layout"]`; the proprioception measures the same joints in the same order).'
     else:
-        ref = (f" ({where}[\"layout\"]). The proprioception measures joints, not actuators: {len(joints)} of them, "
+        ref = (f' (`{where}["layout"]`). The proprioception measures joints, not actuators: {len(joints)} of them, '
                'in `spec()["proprio"]["joints"]` order.')
-    scale = (" A target of −1 or +1 commands one end of that servo's range, " + where + '["range_rad"] in radians, and '
-             "the scale is linear, so 0 is mid-range, not 0 rad.")
+    scale = (f" A target of −1 or +1 commands one end of that servo's range, `{where}[\"range_rad\"]` in radians, "
+             "and the scale is linear, so 0 is mid-range, not 0 rad.")
     return actuator_order(names).rstrip(".") + ref + scale + " " + CONSTANT_ACTION
 
 

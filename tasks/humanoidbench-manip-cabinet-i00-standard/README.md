@@ -14,7 +14,7 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: the head cameras see the top of the cabinet close up. `room_camera` (the recording camera frozen at its
-starting pose; off by default) sees the cabinet and the robot.
+starting pose) sees the cabinet and the robot.
 
 ## Difficulty
 See `humanoidbench-manip-cabinet-i00`'s README; here the agent also has no state, no reward, no resets and no

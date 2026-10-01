@@ -236,7 +236,10 @@ class HumanoidBench:
 
     def clip(self, typ: str, rows: np.ndarray) -> tuple[np.ndarray, list]:
         out = np.clip(rows, -1.0, 1.0)
-        return out, [{"row": int(i), "index": int(j), "reason": "outside [-1, 1]"} for i, j in np.argwhere(out != rows)]
+        report = [{"row": int(i), "index": int(j), "reason": "outside [-1, 1]"} for i, j in np.argwhere(out != rows)]
+        # At the precision the simulator applies (to_sim), which is also what command() gives back: a chunk then
+        # interpolates from exactly the targets the same rows sent one by one would start from.
+        return out.astype(np.float32).astype(np.float64), report
 
     def to_sim(self, typ: str, row: np.ndarray) -> np.ndarray:
         return np.asarray(row, dtype=np.float32).astype(np.float64)   # what Session.step applies

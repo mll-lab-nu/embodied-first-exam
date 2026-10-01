@@ -20,10 +20,10 @@ end up close to one another rather than spread out.
 - **No privileged state, no score.** You see what the robot's two head cameras see (RGB, 256×256), its own
   joint angles and joint velocities, a pelvis IMU and `room_camera`, a camera fixed in the room. Not where the
   robot is in the room, not where the objects are, not the reward: the service judges the episode and only
-  tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, or `"failed"` when it ended
-  without success). `spec()` gives the robot's own facts, as its URDF would: each actuator's range, each
-  joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame,
-  each camera's field of view and pose.
+  tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after a simulator
+  error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's range,
+  each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the IMU's
+  frame, each camera's field of view and pose.
 - There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the
   script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way,
@@ -74,8 +74,8 @@ The 61 actuators are position servos. The first 21 are the body, in this order: 
 `right_shoulder_yaw`, `right_elbow`, `right_wrist_yaw`. The remaining 40 are the two Shadow hands, 20 each —
 `lh_A_*` then `rh_A_*`; each hand's first 2 are its wrist (`*_A_WRJ2`, `*_A_WRJ1`) and the other 18 its
 fingers, where each of the 4 `*J0` ones (`*_A_FFJ0`, `*_A_MFJ0`, `*_A_RFJ0`, `*_A_LFJ0`) drives a tendon that
-moves two finger joints together (`spec()["action_types"]["joint_position"]`["layout"]). The proprioception
+moves two finger joints together (`spec()["action_types"]["joint_position"]["layout"]`). The proprioception
 measures joints, not actuators: 69 of them, in `spec()["proprio"]["joints"]` order. A target of −1 or +1
-commands one end of that servo's range, `spec()["action_types"]["joint_position"]`["range_rad"] in radians,
+commands one end of that servo's range, `spec()["action_types"]["joint_position"]["range_rad"]` in radians,
 and the scale is linear, so 0 is mid-range, not 0 rad. A constant action commands joint *targets*, not a pose:
 whether the robot stays there depends on whether that pose is stable under gravity and contact.

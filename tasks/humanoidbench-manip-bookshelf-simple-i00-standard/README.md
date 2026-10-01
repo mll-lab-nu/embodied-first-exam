@@ -13,9 +13,9 @@ sidecar's record in a container of its own (`tests/Dockerfile`, no network).
 | knobs (compose env) | `RCB_RESET_BUDGET` (0), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=50 harbor run ...`) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
 
-Note: the head cameras see the inside of one shelf. `room_camera` (off by default) looks at the shelves from
-behind the robot's right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the
-objects' places on it and the robot.
+Note: the head cameras see the inside of one shelf. `room_camera` looks at the shelves from behind the robot's
+right shoulder (`RCB_ROOM_CAMERA_POSE` in the compose file) and sees the bookshelf, the objects' places on it
+and the robot.
 
 ## Difficulty
 See `humanoidbench-manip-bookshelf-simple-i00`'s README; here the agent also has no state, no reward, no

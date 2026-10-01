@@ -45,7 +45,7 @@ Result (what get_obs / submit / reset return):
     res.save(dir)            meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, depth_<cam>.npy, proprio.npy
 
 Errors: ValueError -- refused, nothing ran (400: wrong type or shape, NaN, a bad dt, too many frames, an unknown
-camera); EpisodeOver -- the episode, or the trial, is over (409); RuntimeError -- the service failed (5xx: see
+camera; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode, or the trial, is over (409); RuntimeError -- the service failed (5xx: see
 spec()["on_service_error"]) or the endpoint does not exist in this run (404).
 """
 from __future__ import annotations
@@ -61,6 +61,7 @@ import requests
 import rcb1
 
 PROTOCOLS = ("eai-standard/2.", "rcb-limited/2.")   # any 2.x service, under either name (rcb-limited is the old one)
+MAX_BODY = 64 * 1024 * 1024                          # the protocol's request limit: a larger request is refused
 
 
 class EpisodeOver(RuntimeError):
@@ -163,8 +164,11 @@ class Robot:
         return self._post("/reset", {"cameras": _names(cameras), "include_depth": bool(include_depth)}, [], timeout=900)
 
     def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
-        r = requests.post(self.base + path, data=rcb1.encode(meta, parts),
-                          headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
+        body = rcb1.encode(meta, parts)
+        if len(body) > MAX_BODY:                     # the service would close the connection on it unread
+            raise ValueError(f"{path}: the request is {len(body)} bytes, over the protocol's {MAX_BODY}: send fewer rows")
+        r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"},
+                          timeout=(5, timeout))
         if r.headers.get("Content-Type", "").startswith("application/x-rcb1") and r.status_code == 200:
             return Result(*rcb1.decode(r.content))
         try:

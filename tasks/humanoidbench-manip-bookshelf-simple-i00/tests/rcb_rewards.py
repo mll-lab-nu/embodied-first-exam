@@ -1,8 +1,8 @@
-"""Put this task's scoring formula back, where the scoring happens: the full-mode verifier (tests/) and the
-limited-mode sim sidecar (environment/sim/).
+"""Put this task's scoring formula back, where the scoring happens: the privileged verifier (tests/) and the
+standard-mode sim sidecar (environment/sim/).
 
 This file and the rewards.json beside it are the only copies of the formula a task carries, and the agent can
-read neither place: the full-mode verifier runs in its own container once the agent's is gone, and the agent
+read neither place: the privileged verifier runs in its own container once the agent's is gone, and the agent
 cannot open the sidecar. The image itself has the formula deleted; see images/humanoidbench/scrub_oracles.py.
 
 Patching it back, rather than keeping a private reimplementation, is what keeps our scores comparable with
