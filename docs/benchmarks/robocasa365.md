@@ -37,12 +37,15 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 - **Success.** The environment's own `_check_success` on the state after the last action (PROTOCOL §3), and not
   already at the start. PR #4 graded RoboCasa365 by "success at any step"; here every reference succeeds on its final
   state (none had to be cut). The check runs twice per control step and once at reset everywhere. In
-  1 task (PlateSteakMeal) the success does not survive 10 more still steps; the task READMEs say so.
+  1 task (PlateSteakMeal) the success does not survive 10 more still steps; its instructions (both modes) and README
+  say so. Both instructions also state, per task, what `_check_success` requires beyond the task's sentence
+  (`envs.SUCCESS`: releasing and moving the gripper away, distance thresholds, timers, joint thresholds), since the
+  standard-mode agent cannot read the source.
 - **Determinism.** CPU physics, bit-exact, with MuJoCo's process-wide mesh cache turned off in `casa_tool`: with the
   cache on, a scene built a second time in one process stepped differently in 14 of 61 candidates here (a mesh served
   from the cache differs in `mesh_polynormal` from a freshly compiled one), which would have broken the agent's own
   `reset()` and the service's verification replay. With the cache off every build is the cold build a fresh process
-  makes.
+  makes. If the pinned MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 85–2189.
   Standard episodes have no step limit (D1).
 - **Standard-mode observations.** The robot's four cameras (`robot0_agentview_center/left/right`,

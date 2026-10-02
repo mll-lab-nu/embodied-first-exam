@@ -16,6 +16,8 @@ CPU is bit-exact) and applies the environment's own success check for `TurnOnSto
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+The check for `TurnOnStove` requires that the rear left burner's knob is on: its angle from off, in absolute value, is between 0.35 rad and 2π − 0.35 rad.
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool

@@ -16,6 +16,8 @@ CPU is bit-exact) and applies the environment's own success check for `CloseStan
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+The check for `CloseStandMixerHead` requires that the mixer head is closed: less than 1% open (normalised: 0 closed, 1 fully open).
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool

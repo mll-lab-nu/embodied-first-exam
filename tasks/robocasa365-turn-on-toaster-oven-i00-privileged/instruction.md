@@ -16,6 +16,8 @@ CPU is bit-exact) and applies the environment's own success check for `TurnOnToa
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+The check for `TurnOnToasterOven` requires that the timer knob is at 0.1 or more of its range (normalised) at the end; a set timer slowly runs down.
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool

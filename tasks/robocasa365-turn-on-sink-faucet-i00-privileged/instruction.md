@@ -16,6 +16,8 @@ CPU is bit-exact) and applies the environment's own success check for `TurnOnSin
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+The check for `TurnOnSinkFaucet` requires that the faucet handle is in its water-on range (handle joint between 0.40 rad and π rad).
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool
