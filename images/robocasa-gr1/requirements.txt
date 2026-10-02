@@ -1,3 +1,7 @@
+# mink is not listed here: the Dockerfile installs mink==0.0.5 (--no-deps), the version the tasks were validated with
+# (the PR #4 build installed 0.0.13 from this list and then replaced it with 0.0.5: PR #4's scripts/robot24/upstream-lock.json
+# "mink_runtime" / "mink_final"). Its dependencies (mujoco, qpsolvers, quadprog, daqp, numpy, typing_extensions)
+# are pinned below.
 absl-py==2.5.0
 daqp==0.9.1
 etils==1.13.0
@@ -13,7 +17,6 @@ importlib_resources==7.1.0
 iniconfig==2.3.0
 llvmlite==0.44.0
 lxml==5.3.1
-mink==0.0.13
 mujoco==3.2.6
 numba==0.61.2
 numpy==1.26.4

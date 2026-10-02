@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA` task (robosuite, MuJoCo).
-**Task: pick the sweet potato from the cutting board and place it in the tiered basket**
+**Task: pick the sweet potato from the cutting board and place it in the tiered basket.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
@@ -15,6 +15,13 @@ The verifier replays your actions from the frozen start in a separate sandbox (t
 CPU is bit-exact) and applies the environment's own success check for `PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA` (`_check_success`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
+
+All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):
+- the sweet potato is in the tiered basket: at least two of its bounding-box keypoints inside the tiered basket's top tier (its highest spawn region);
+- the sweet potato does not touch the counter;
+- the tiered basket is upright (its z axis has a world-z component above 0.8);
+- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the sweet potato's origin and more than 0.25 m from the tiered basket's origin (`any_gripper_obj_far`, th = 0.25) -- release the sweet potato and move both hands away before the end;
+- the distractor object that starts on the cutting board with the sweet potato is not in the tiered basket.
 
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
@@ -34,6 +41,7 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
   verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
   state of the run you are recording; use `s.check()`.
 - World frame: metres, z up; `s.state()["bodies"]` gives every body's position and orientation (quaternions w x y z).
+  The action's pose targets are in the robot's base frame. The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.68478, -2.15993, 0.88819) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Rules

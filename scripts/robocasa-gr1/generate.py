@@ -3,15 +3,23 @@
 
     python3 scripts/<bench>/generate.py            # every verified environment in frozen/report.json
     python3 scripts/<bench>/generate.py PreSoakPan
+    python3 scripts/<bench>/generate.py --check    # write nothing; exit 1 if tasks/ differs from a fresh render
 
 Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
 in shared/ and the standard-mode service images/<bench>/standard/server_casa.py. Every task directory is rewritten;
 shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 """
 
+import ast
 import json
+import math
+import re
 import shutil
+import struct
 import sys
+import tempfile
+import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -46,6 +54,7 @@ DIFFICULTY_STANDARD = (
 
 SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
+TASKS = ROOT / "tasks"  # --check renders into a temporary directory instead
 SERVER = ROOT / f"images/{BENCH}/standard/server_casa.py"
 VERSION = (ROOT / f"images/{BENCH}/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-{BENCH}:{VERSION}"
@@ -71,6 +80,105 @@ network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py);
 allowed_hosts = {ALLOWED_HOSTS}
 """
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
+
+# Upstream success checks (robocasa-gr1-tabletop-tasks @ 4840e67, robocasa/environments/tabletop/): the
+# PosttrainPnPNovel* tasks use tabletop_24dc.py `_check_success`; PnP*Close use tabletop_{cabinet,drawer,microwave}_pnp.py.
+# Posttrain source/target pairs whose distractor config includes "distractor_obj" (tabletop_24dc.py
+# distractor_config_for_posttrain): a second object starts on the source container and must not end in the target.
+DISTRACTOR_OBJ = {
+    "placemat-to-plate", "plate-to-cardboardbox", "plate-to-pan", "placemat-to-bowl", "plate-to-bowl",
+    "cuttingboard-to-tieredbasket", "cuttingboard-to-cardboardbox", "tray-to-tieredshelf", "placemat-to-tieredshelf",
+}
+TIERED = ("tiered basket", "tiered shelf")  # the only containers with spawn regions upstream (the top tier counts)
+
+
+def sentence(rec: dict) -> str:
+    """The task instruction as a sentence (the upstream language annotation has no full stop)."""
+    t = rec["instruction"].strip()
+    return t if t.endswith(".") else t + "."
+
+
+def success_text(rec: dict) -> str:
+    """What the upstream `_check_success` requires, in words (both instructions)."""
+    t = rec["instruction"].strip().rstrip(".")
+    m = re.fullmatch(r"pick the (.+) from the (.+) and place it in the (.+)", t)
+    if m:
+        obj, src, tgt = m.groups()
+        if tgt in TIERED:
+            inside = f"at least two of its bounding-box keypoints inside the {tgt}'s top tier (its highest spawn region)"
+        else:
+            inside = (
+                f"touching the {tgt}, with its centre horizontally within 0.7 x the {tgt}'s horizontal radius of the "
+                f"{tgt}'s centre"
+            )
+        lines = [
+            f"- the {obj} is in the {tgt}: {inside};",
+            f"- the {obj} does not touch the counter;",
+            f"- the {tgt} is upright (its z axis has a world-z component above 0.8);",
+            f"- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the {obj}'s origin and "
+            f"more than 0.25 m from the {tgt}'s origin (`any_gripper_obj_far`, th = 0.25) -- release the {obj} and move "
+            "both hands away before the end;",
+        ]
+        if rec["slug"] in DISTRACTOR_OBJ:
+            lines.append(f"- the distractor object that starts on the {src} with the {obj} is not in the {tgt};")
+        lines[-1] = lines[-1].rstrip(";") + "."
+        return "All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):\n" + "\n".join(lines)
+    m = re.fullmatch(r"pick up the (.+), place it into the (\w+) and close the \w+", t)
+    if not m:
+        raise SystemExit(f"{rec['env']}: no success text for instruction {t!r}")
+    obj, fix = m.groups()
+    door = "door" if fix != "drawer" else "drawer"
+    return (
+        f"Both of these hold on the graded state (upstream `_check_success`, `tabletop_{fix}_pnp.py`):\n"
+        f"- the {obj}'s centre (its body origin) is inside the {fix}'s interior;\n"
+        f"- the {door} is shut: upstream's opening fraction is at most 0.005 (0 = shut, 1 = fully open).\n\n"
+        "Where the hands end up is not checked."
+    )
+
+
+def _npy(zf: zipfile.ZipFile, name: str) -> tuple[dict, bytes]:
+    """One array of an .npz without NumPy: (header, raw data)."""
+    b = zf.read(name)
+    if b[:6] != b"\x93NUMPY":
+        raise ValueError(f"{name}: not an .npy file")
+    n, off = (struct.unpack("<H", b[8:10])[0], 10) if b[6] == 1 else (struct.unpack("<I", b[8:12])[0], 12)
+    return ast.literal_eval(b[off : off + n].decode("latin1")), b[off + n :]
+
+
+def base_pose(rec: dict) -> tuple[list[float], list[float]]:
+    """World pose (position, quaternion w x y z) of the robot's base body `robot0_base` in the frozen instance: the
+    instance's model_body_pos / model_body_quat (what a reset wrote), indexed in the frozen XML's body order."""
+    with zipfile.ZipFile(FROZEN / rec["slug"] / "instance.npz") as zf:
+        hx, bx = _npy(zf, "xml.npy")
+        xml = bx.decode("utf-32-le" if hx["descr"].startswith("<U") else "utf-8").rstrip("\x00")
+        order = ["world"] + [b.get("name") for b in ET.fromstring(xml).find("worldbody").iter("body")]
+        top = [b.get("name") for b in ET.fromstring(xml).find("worldbody").findall("body")]
+        if "robot0_base" not in top:
+            raise SystemExit(f"{rec['env']}: robot0_base is not fixed to the world")
+        i = order.index("robot0_base")
+        out = []
+        for key, k in (("model_body_pos.npy", 3), ("model_body_quat.npy", 4)):
+            h, b = _npy(zf, key)
+            if h["descr"] != "<f8" or h["fortran_order"] or tuple(h["shape"]) != (len(order), k):
+                raise SystemExit(f"{rec['env']}: unexpected {key} {h}")
+            out.append(list(struct.unpack_from(f"<{k}d", b, 8 * k * i)))
+    return out[0], out[1]
+
+
+def frame_text(rec: dict) -> str:
+    """The base frame's pose in the world (fixed: the GR1 has no mobile base)."""
+    (x, y, z), (qw, qx, qy, qz) = base_pose(rec)
+    if abs(qx) > 1e-6 or abs(qy) > 1e-6:
+        raise SystemExit(f"{rec['env']}: the base is tilted; describe its full rotation")
+    yaw = math.degrees(2 * math.atan2(qz, qw))
+    c, s_ = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    r = [[c, -s_, 0.0], [s_, c, 0.0], [0.0, 0.0, 1.0]]
+    rt = "[" + ", ".join("[" + ", ".join(f"{v:g}" for v in (round(e, 4) + 0.0 for e in row)) + "]" for row in r) + "]"
+    return (
+        f"The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world "
+        f"({x:.5f}, {y:.5f}, {z:.5f}) m and is turned {yaw:+.1f} deg about z (quaternion w x y z "
+        f"({qw:.5f}, {qx:g}, {qy:g}, {qz:.5f})): `p_world = R @ p_base + t` with R = {rt}."
+    )
 
 
 def action_text(dim: int) -> str:
@@ -113,7 +221,7 @@ def privileged_instruction(rec: dict) -> str:
     return f"""# {TITLE} · {env}
 
 {ROBOT_TEXT[0].upper() + ROBOT_TEXT[1:]} {SCENE}: {ENV_DOC.format(env=env)} (robosuite, MuJoCo).
-**Task: {rec["instruction"]}**
+**Task: {sentence(rec)}**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
@@ -127,6 +235,8 @@ The verifier replays your actions from the frozen start in a separate sandbox (t
 CPU is bit-exact) and applies the environment's own success check for `{env}` (`_check_success`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
+
+{success_text(rec)}
 
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
@@ -146,6 +256,7 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
   verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
   state of the run you are recording; use `s.check()`.
 - World frame: metres, z up; `s.state()["bodies"]` gives every body's position and orientation (quaternions w x y z).
+  The action's pose targets are in the robot's base frame. {frame_text(rec)}
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Rules
@@ -161,7 +272,7 @@ def standard_instruction(rec: dict) -> str:
     return f"""# {TITLE} · {env} — STANDARD MODE (robot as a service)
 
 {ROBOT_TEXT[0].upper() + ROBOT_TEXT[1:]} {SCENE}: {ENV_DOC.format(env=env)} (robosuite, MuJoCo).
-**Task: {rec["instruction"]}**
+**Task: {sentence(rec)}**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -182,6 +293,8 @@ the environment's own success check for `{env}` to the state **after the last ex
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+{success_text(rec)}
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -199,10 +312,14 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 - Action `{ACTION_TYPE[dim]}`: the robot's native controller command, applied once per control step (`control_dt` =
   0.05 s; float64). {action_text(dim)} Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
-- `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
-  for `s` seconds; those control steps are part of the episode.
+- `get_obs(seconds=s)` keeps applying the last command (before the first one: both grip sites' current poses and the
+  current hand commands) while physics runs for `s` seconds; those control steps are part of the episode. Every
+  channel is an absolute target, so the grip sites stay within about a millimetre, but the IK's posture term can still
+  move the waist and elbows by a few hundredths of a radian while you watch.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
-- World frame: metres, z up.
+- World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
+  frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
+  {frame_text(rec)}
 """
 
 
@@ -240,7 +357,7 @@ def privileged_readme(rec: dict) -> str:
     demo = rec.get("demonstration") or {}
     cut = " (cut at its first success)" if rec["truncated"] else ""
     task = (
-        f"{ENV_DOC.format(env=env)} with {ROBOT_TEXT.replace('**', '')}: {rec['instruction']} Produce one replayable "
+        f"{ENV_DOC.format(env=env)} with {ROBOT_TEXT.replace('**', '')}: {sentence(rec)} Produce one replayable "
         "trajectory of the robot's native controller commands on one frozen instance; graded on the state after the "
         f"last action. Generated by `scripts/{BENCH}/generate.py`; benchmark notes in `docs/benchmarks/{BENCH}.md`."
     )
@@ -304,7 +421,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-privileged"
-description = "{TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "{TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {sentence(rec)} Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "privileged"]
 
@@ -357,7 +474,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {sentence(rec)} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "standard-mode"]
 
@@ -469,7 +586,7 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
 
 def make(rec: dict) -> None:
     fz = FROZEN / rec["slug"]
-    p = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-privileged"
+    p = TASKS / f"{BENCH}-{rec['slug']}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", privileged_toml(rec))
     put(p / "instruction.md", privileged_instruction(rec))
@@ -486,7 +603,7 @@ def make(rec: dict) -> None:
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
     put(p / "solution/oracle.npz", src=fz / "oracle.npz")
 
-    s = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-standard"
+    s = TASKS / f"{BENCH}-{rec['slug']}-i00-standard"
     reset_dir(s)
     put(s / "task.toml", standard_toml(rec))
     put(s / "instruction.md", standard_instruction(rec))
@@ -528,6 +645,32 @@ def main(envs: list[str]) -> None:
     print(f"generated {2 * n} task directories")
 
 
+def snapshot(d: Path) -> dict[str, tuple[bytes, int]]:
+    return {str(f.relative_to(d)): (f.read_bytes(), f.stat().st_mode & 0o777) for f in sorted(d.rglob("*")) if f.is_file()}
+
+
+def check() -> int:
+    """Render every task into a temporary directory and compare with tasks/ (no simulator needed)."""
+    global TASKS
+    real = TASKS
+    with tempfile.TemporaryDirectory() as td:
+        TASKS = Path(td)
+        main(ALL)
+        TASKS = real
+        fresh = {d.name for d in Path(td).iterdir()}
+        have = {d.name for d in real.glob(f"{BENCH}-*") if (d / "task.toml").is_file()}
+        bad = sorted(have - fresh)
+        for name in sorted(fresh):
+            if name not in have or snapshot(Path(td) / name) != snapshot(real / name):
+                bad.append(name)
+    for name in bad:
+        print(f"FAIL tasks/{name}: differs from the generator's output (run scripts/{BENCH}/generate.py)")
+    print(f"{len(fresh) - len(bad)}/{len(fresh)} task directories match" if not bad else f"{len(bad)} mismatched")
+    return 1 if bad else 0
+
+
 ALL = sorted(SOURCES)
 if __name__ == "__main__":
+    if "--check" in sys.argv[1:]:
+        sys.exit(check())
     main(sys.argv[1:] or ALL)

@@ -30,10 +30,17 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   MAY); a `joint_position` type is not offered (SHOULD): the references are whole-body IK commands, and the GR1's
   29 arm, waist and finger joints are driven through that controller.
 - **Success.** The environment's own `_check_success` on the state after the last action (PROTOCOL §3), and not
-  already at the start; the check runs twice per control step and once at reset everywhere (the pattern the references
+  already at the start. Both instructions state what it requires, from the upstream source: for the 18
+  `PosttrainPnPNovel*` tasks (`tabletop_24dc.py`) the object in the target container (top tier for the tiered basket
+  and shelf), not touching the counter, the container upright, both grip sites more than 0.25 m from the object and
+  from the container (`any_gripper_obj_far`), and, where the scene has one, the distractor object not in the
+  container; for the 6 `PnP*Close` tasks the object's centre inside the cabinet / drawer / microwave and its door
+  shut (opening fraction ≤ 0.005). The instructions also give the base frame's world pose (read from the frozen
+  instance): the proprio's grip-site positions are in the world frame, the commands in the base frame; the check runs twice per control step and once at reset everywhere (the pattern the references
   were validated with). Every reference's success also holds for 10 more still steps.
-- **Determinism.** CPU physics, bit-exact; MuJoCo's process-wide mesh cache is turned off in `casa_tool` (see
-  `docs/benchmarks/robocasa.md`), so every build is a cold build.
+- **Determinism.** CPU physics, bit-exact; MuJoCo's process-wide mesh cache is turned off in `casa_tool` (a mesh
+  served from the cache can differ from a cold compile of the same file, which breaks bit-exact replay across
+  processes), so every build is a cold build.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 123–393.
   Standard episodes have no step limit (D1).
 - **Standard-mode observations.** The humanoid's six cameras (`robot0_agentview_center/left/right`, `egoview`,
@@ -44,8 +51,8 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   elbows by a few hundredths of a radian.
 
 ## Standard-mode service
-`images/robocasa-gr1/standard/server_casa.py`, the same service as RoboCasa's (`docs/benchmarks/robocasa.md`):
-derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks.
+`images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
+yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs. The image
@@ -66,6 +73,7 @@ confirm publishing, otherwise `BUILD_ONLY`).
 docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa-gr1:$(cat images/robocasa-gr1/VERSION) images/robocasa-gr1
 bash scripts/robocasa-gr1/import_references.sh <PR #4 checkout>
 python3 scripts/robocasa-gr1/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
+python3 scripts/robocasa-gr1/generate.py --check   # writes nothing; exit 1 if tasks/ differs from a fresh render
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/robocasa-gr1-*
 ```
