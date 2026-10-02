@@ -15,7 +15,16 @@ FROM docker.io/library/python:3.10.16-slim-bookworm@sha256:f9fd9a142c9e3bc54d906
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa
 RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates ffmpeg libosmesa6 libgl1 libglib2.0-0 libx11-6 build-essential linux-libc-dev && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir numpy==1.23.3 numba==0.56.4 scipy==1.10.1 mujoco==3.2.6 robosuite==1.5.1 pygame==2.6.1 Pillow==11.1.0 opencv-python==4.10.0.84 pyyaml==6.0.2 pynput==1.7.7 tqdm==4.67.1 termcolor==2.5.0 imageio==2.37.0 imageio-ffmpeg==0.6.0 h5py==3.12.1 lxml==5.3.1 hidapi==0.14.0.post4
-RUN git clone https://github.com/robocasa/robocasa.git /opt/robocasa && cd /opt/robocasa && git checkout 756598a5be52e052339bb2d957426e39015c2afb && pip install --no-deps -e .
+# PROTOCOL §2.7, in the same layer as the clone: no pointer to the demonstrations (the tasks' references) in the image.
+# Drop RoboCasa's dataset downloader and blank the demonstration links in its dataset registry (nothing the tasks
+# import uses either: only robocasa/demos, robocasa/scripts and utils/{env,eval}_utils import the registry), and drop
+# the git history, which would still hold them. The assertions fail the build if a link or the downloader survives.
+RUN git clone https://github.com/robocasa/robocasa.git /opt/robocasa && cd /opt/robocasa && git checkout 756598a5be52e052339bb2d957426e39015c2afb && pip install --no-deps -e . \
+ && rm -rf .git robocasa/scripts/download_datasets.py \
+ && sed -i -E 's#"https://utexas\.box\.com/shared/static/[A-Za-z0-9]+\.hdf5"#""#g' robocasa/utils/dataset_registry.py \
+ && test ! -e robocasa/scripts/download_datasets.py && test ! -e .git \
+ && ! grep -rIqE 'https?://[^"]*\.hdf5' /opt/robocasa \
+ && grep -q 'download_links=dict' robocasa/utils/dataset_registry.py
 RUN curl -fL --retry 3 https://huggingface.co/datasets/robocasa/robocasa-assets/resolve/1b92c3d02ca4354984fec961357db0bff7b32166/fixtures.zip -o /tmp/fixtures.zip && echo 'e7bb86e9e0ef130de78200a0a7465dfb0161ed3956c65d8b3f36bdff3746c7a8  /tmp/fixtures.zip' | sha256sum -c - && python -m zipfile -e /tmp/fixtures.zip /opt/robocasa/robocasa/models/assets && rm /tmp/fixtures.zip
 RUN curl -fL --retry 3 https://huggingface.co/datasets/robocasa/robocasa-assets/resolve/1b92c3d02ca4354984fec961357db0bff7b32166/textures.zip -o /tmp/textures.zip && echo 'ba3a4dcef96e199cbd601c7cdb7eb46077fb6672611b7ac74c25a191bf0be392  /tmp/textures.zip' | sha256sum -c - && python -m zipfile -e /tmp/textures.zip /opt/robocasa/robocasa/models/assets && rm /tmp/textures.zip
 # NavigateKitchen-era v0.2 fixtures and appliance meshes (the original UT Box URL is dead; this is a mirror).

@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/robocasa-coffee-press-button-i00-privileged"
-description = "RoboCasa (CoffeePressButton, a Franka Panda arm on an Omron mobile base (with a torso lift)): press the button on the coffee machine to serve coffee Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "RoboCasa (CoffeePressButton, a Franka Panda arm on an Omron mobile base (with a torso lift)): Press the button on the coffee machine to serve coffee. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
 

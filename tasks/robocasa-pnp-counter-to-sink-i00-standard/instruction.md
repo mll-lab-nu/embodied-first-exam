@@ -1,7 +1,7 @@
 # RoboCasa · PnPCounterToSink — STANDARD MODE (robot as a service)
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `PnPCounterToSink` kitchen task (robosuite, MuJoCo).
-**Task: pick the apple from the counter and place it in the sink**
+**Task: Pick the apple from the counter and place it in the sink.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -22,6 +22,11 @@ the environment's own success check for `PnPCounterToSink` to the state **after 
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+What `PnPCounterToSink`'s check requires (RoboCasa @ 756598a), all on that final state:
+- The object's centre is inside the sink basin.
+- The gripper's grip site (between the fingertips) is more than 25 cm from the object's centre: let go and move the hand away.
+A "centre" is a body's origin; "touches" means a MuJoCo contact.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -37,7 +42,7 @@ res.meta["done"], res.meta["reason"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
 ```
 - Action `ee_delta`: the robot's native controller command, applied once per control step (`control_dt` =
-  0.05 s; float64). 12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion per control step in the robot's base frame, scaled by the controller (1.0 = 5 cm and 0.5 rad per step); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame; `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; <= 0: arm mode, the default -1). Every channel is clipped to [-1, 1]. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
+  0.05 s; float64). 12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion per control step in the robot's base frame, scaled by the controller (1.0 = 5 cm and 0.5 rad per step); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's target velocities in its own frame (1.0 = 1 m/s for `base_x` / `base_y` and 1.5 rad/s for `base_yaw`; force-limited velocity servos, so the base may lag the target); `torso` -- the torso lift, a joint-position controller with delta input (each step sets the lift's height target to its current height + 0.05 m × the value, so 1.0 = 5 cm per step; lift range 0–0.34 m); `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; <= 0: arm mode, the default -1). Every channel is clipped to [-1, 1]. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
 - `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
   for `s` seconds; those control steps are part of the episode.

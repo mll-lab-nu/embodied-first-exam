@@ -75,3 +75,26 @@ docker push $REG/eai-<sim>:$(cat images/<sim>/VERSION)      # public images only
 ```
 An image with `images/<sim>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never pushed: `push_images.sh` skips
 it and prints why, and every host builds it locally (the marker file says how, and what licences and data it needs).
+
+## Usage gateway (token usage per request, optional)
+Off by default: the agent calls its API directly, as Harbor runs it. With `GATEWAY=1`, `scripts/run_agent_batch.sh` starts `scripts/usage_gateway/gateway.py` on the docker bridge (`GATEWAY_BIND`, 172.17.0.1)
+and points the agent's base URL at it (`--ae ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`; a copy of `AGENT_CONFIG` with its
+provider `base_url`s rewritten and `supports_websockets = false`). The agent is still Harbor's own `codex` /
+`claude-code` with its own credentials: the gateway forwards every request unchanged to the same API, never stores a key,
+and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
+allowlist. Under an allowlist the runner adds `--allow-agent-host 172.17.0.1`.
+
+Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
+```
+<trial>/gateway/usage.jsonl     one line per request: time, duration, host, path, status, model, input / cached / output tokens
+<trial>/gateway/totals.json     running totals, rewritten after every request
+<trial>/gateway/raw/            GATEWAY_RAW=1 only: every request and response body, gzipped JSON (headers without credentials)
+```
+Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
+included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
+summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
+gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
+before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Switches: `GATEWAY=1` (record usage), `GATEWAY_RAW=1` (raw bodies; private, they hold the
+whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
+attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
+reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.

@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa (PnPSinkToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): pick the tomato from the sink and place it on the plate located on the counter The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa (PnPSinkToCounter, a Franka Panda arm on an Omron mobile base (with a torso lift)): Pick the tomato from the sink and place it on the plate located on the counter. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]
 
