@@ -261,6 +261,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._reply(405, {"error": "usage gateway: no WebSocket; use HTTPS (supports_websockets = false)"})
         host, path = m.group(1), m.group(2) or "/"
         t0 = time.time()
+        ip = self.client_address[0]
+        trial = TRIALS.lookup(ip)                  # now: a request that outlives its trial (a timeout) still counts for it
         body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
         hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         hdrs["Host"] = host
@@ -297,8 +299,7 @@ class Handler(BaseHTTPRequestHandler):
                 client_gone = True
         resp = b"".join(chunks)
         parse_body(resp, acc)
-        ip = self.client_address[0]
-        trial = TRIALS.lookup(ip)
+        trial = trial or TRIALS.lookup(ip)
         rec = {"ts": round(t0, 3), "dur_s": round(time.time() - t0, 2), "client_ip": ip, "host": host,
                "method": self.command, "path": path.split("?")[0], "status": r.status, "model": acc.get("model"),
                "usage": normalize(acc.get("raw") or {}), "usage_raw": acc.get("raw") or {},
