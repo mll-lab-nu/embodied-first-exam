@@ -41,6 +41,7 @@
 #   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
 #                (<trial>/gateway/raw/, gzipped; private: it holds the whole conversation); 0 = token usage only
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
+#   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
 #                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
@@ -112,7 +113,7 @@ fi
 # transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
 if [ "$GATEWAY" = 1 ]; then
   mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
-  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
   for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
