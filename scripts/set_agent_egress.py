@@ -12,7 +12,8 @@ what was measured to keep Codex (ChatGPT login), Claude Code and OpenRouter work
 import pathlib, re, sys, tomllib
 
 HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com",
-         "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+         "api.anthropic.com", "*.anthropic.com", "openrouter.ai",
+         "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 root = pathlib.Path(__file__).resolve().parents[1]
 mode = sys.argv[1] if len(sys.argv) > 1 else ""
 if mode not in ("public", "allowlist"):

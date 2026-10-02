@@ -1,5 +1,7 @@
 # Harbor 评分链与终态可达性审查
 
+**合并后的当前状态以[问题复核报告](run_trials_post_merge_audit_20261001_zh.md)为准。** 下文保留原冻结版本的审查证据；0.2.5-cu128 已包含 IPC 修正，Knot 和 standard 流程也有后续改动。
+
 记录日期：2026-10-01。范围：`tasks/` 下 106 个 Harbor 任务目录（13 个正式任务各有 1 个不分档实例和 easy、medium、hard 三个分档实例，外加 Cube 样板；每个实例分 unlimited 和 limited 两种模式），以及它们共用的评分脚本与 `topogym/tasks/` 成功判据。
 
 **范围补充（同日旧镜像使用核查）：** 本文的旧镜像问题只针对冻结任务包/固定镜像入口，不计入当前新 `run_difficulty_trials.sh` 的 bug 数。新入口按源码身份构建独立镜像；旧包仍保留依赖，因此本轮没有删除镜像。当前问题清单以[全链路审查报告](run_trials_full_audit_20261001_zh.md)为准，使用与保留依据见[镜像核查记录](../../runs/test_results/run_trials_audit_20261001/image_usage_followup/README.md)。本文其余部分保留原检查证据，不作为新 runtime 已验证或存在同一缺陷的结论。

@@ -25,7 +25,14 @@
 | E 的 seed 分布 | 重新运行当前默认抽样函数，39 个样本中 17 个 seed 不小于 `2³¹` |
 | 对方物理结果 | A 的 40 步测试、F 的跟随误差、穿透深度和 IK 残差来自用户提供的 builder 报告；本轮未在 GPU 上独立重跑 |
 
-工作区另有 Horseshoe、Knot、Hedgehog 等开发改动。实施时记录实际源码与资产哈希，使用独立快照或隔离工作目录，保留已有未提交修改；不把不同源码身份的证据合并成一次验收。当前静态 CI 有意区分新三档、interlocked 专用和旧 i00 工具身份，见 [工具身份检查](../../ci_checks/check-tooling-identity.sh)。
+工作区另有 Horseshoe、Knot、Hedgehog 等开发改动。实施时记录实际源码与资产哈希，使用独立快照或隔离工作目录，保留已有未提交修改；不把不同源码身份的证据合并成一次验收。原修复阶段的静态 CI 区分三档、interlocked 专用和旧 i00 工具身份。
+
+后续与远端 `8ad74b46` 合并时，公共工具升级为 v4，纳入远端 FEM checkpoint 限制和 Knot 判据向量化；
+生成器采用 privileged/standard 协议流程，保留本地已实现的 builder 修复与 IPC 修正；F1 等验证缺口仍保留。
+镜像升级为 `0.2.5-<cu128|cu130>`，
+历史包按固定哈希保留，**不会自动获得 v4 修复**。实际合并与验证记录见
+[合并验证](../../runs/test_results/merge_local_remote_20261001/README.md)，当前规则见
+[公共模板说明](../../harbor_templates/topogym/README.md) 和 [工具身份检查](../../ci_checks/check-tooling-identity.sh)。
 
 ## 2 问题清单与处理决策
 

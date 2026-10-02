@@ -705,6 +705,94 @@ def _plain(v):
     return v
 
 
+def _drop_fem_gradient_checkpoints(env) -> bool:
+    """Active FEM solvers only (tooling v4): bound Genesis 1.2.1's per-substep FEM checkpoint store.
+
+    Simulator.save_ckpt runs after every substep when requires_grad is False (substeps_local = 1), and FEMSolver.save_ckpt
+    (genesis/engine/solvers/fem_solver.py:1058), unlike RigidSolver's, has no requires_grad guard: each call stores the FEM
+    state in three new CUDA tensors (pos, vel, active) under a new name and never frees them. With 40 substeps per control
+    step that is ~120 MiB per control step for knot hard's rope: a 16 GB GPU runs out of memory after ~72 control steps
+    (limited trial tWKp7yB, 2026-10-01; libuipc then aborts) and shared lab GPUs fill up. The override runs Genesis' own
+    save_ckpt unchanged (the same kernels, the same forward frame roll) and then deletes every older checkpoint, so memory
+    stays at one checkpoint. Nothing reads the older ones: FEMSolver.load_ckpt (the backward pass, requires_grad only) is
+    their only reader, and TopoGym's state graph skips _ckpt. Returns True when installed; a no-op without an active FEM
+    solver or with gradients enabled."""
+    sim = env._world.scene.sim
+    fem = getattr(sim, "fem_solver", None)
+    if fem is None or not fem.is_active or sim.requires_grad:
+        return False
+    if getattr(fem.save_ckpt, "_topogym_bounded", False):
+        return True
+    upstream = fem.save_ckpt
+
+    def save_ckpt(ckpt_name, _fem=fem, _upstream=upstream):
+        _upstream(ckpt_name)
+        for key in [k for k in _fem._ckpt if k != ckpt_name]:
+            del _fem._ckpt[key]
+    save_ckpt._topogym_bounded = True
+    fem.save_ckpt = save_ckpt
+    return True
+
+
+def _vectorized_planar_clearance(points, material_s, diameter):
+    """knot_untying's per-tick predicate topogym.utils.geometry.passage.planar_clearance (Jianwen's 76583213), vectorized:
+    the same validation (passage.points3), degenerate checks, pair set (segments i < j-1), intersection test, point-segment
+    distances, early 'an intersection anywhere -> (False, minimum 0.0)' and non-local filter s[j] - s[i+1] >= 2 * diameter.
+    The original loops over ~93k segment pairs in Python (~3.4 s per tick on knot, ~2/3 of a hold step); this returns the
+    same bool and the same minimum (IPC-perf agent 2026-10-01: 40 / 40 test curves bit-identical; build78: checked against
+    the original on live knot states)."""
+    from topogym.utils.geometry import passage
+    p = passage.points3(points)
+    s = np.asarray(material_s, float)
+    if len(p) < 2 or s.shape != (len(p),) or not np.isfinite(s).all() or np.any(np.diff(s) <= 0) or not np.isfinite(diameter) or diameter <= 0:
+        raise ValueError("Invalid planar rope/material coordinates")
+    if np.any(np.linalg.norm(np.diff(p[:, :2], axis=0), axis=1) < 1e-9):
+        return False, dict(projected_degenerate=True, minimum_nonlocal_distance_m=None)
+    edges = np.diff(p[:, :2], axis=0)
+    a, b = edges[:-1], edges[1:]
+    cross = a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
+    fold = (np.abs(cross) <= 1e-12 * np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1)) & (np.einsum("ij,ij->i", a, b) < 0)
+    if np.any(fold):
+        return False, dict(projected_degenerate=True, minimum_nonlocal_distance_m=0.)
+    m = len(p) - 1
+    I, J = np.triu_indices(m, k=2)
+    if not len(I):
+        return True, dict(projected_degenerate=False, minimum_nonlocal_distance_m=None)
+    q = p[:, :2]
+    A, B, C, D = q[I], q[I + 1], q[J], q[J + 1]
+    U, V = B - A, D - C
+
+    def cr(x, y):
+        return x[:, 0] * y[:, 1] - x[:, 1] * y[:, 0]
+    den = cr(U, V)
+    CA = C - A
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t = cr(CA, V) / den
+        u = cr(CA, U) / den
+    hit = (np.abs(den) > 1e-15) & (t >= 0) & (t <= 1) & (u >= 0) & (u <= 1)
+
+    def point_segment(P, X, Y):
+        E = Y - X
+        tt = np.clip(np.einsum("ij,ij->i", P - X, E) / np.maximum(np.einsum("ij,ij->i", E, E), 1e-30), 0, 1)
+        return np.linalg.norm(P - (X + tt[:, None] * E), axis=1)
+    dist = np.minimum.reduce([point_segment(A, C, D), point_segment(B, C, D), point_segment(C, A, B), point_segment(D, A, B)])
+    dist = np.where(hit, 0., dist)
+    if np.any(dist < 1e-10):
+        return False, dict(projected_degenerate=False, minimum_nonlocal_distance_m=0.)
+    nonlocal_ = (s[J] - s[I + 1]) >= 2 * diameter
+    minimum = float(dist[nonlocal_].min()) if np.any(nonlocal_) else None
+    return minimum is None or minimum >= diameter, dict(projected_degenerate=False, minimum_nonlocal_distance_m=minimum)
+
+
+def _speed_up_knot_predicate(task_id: str) -> bool:
+    """knot_untying only: its task module calls the vectorized planar_clearance (same results, ~100x faster)."""
+    if task_id != "knot_untying":
+        return False
+    import topogym.tasks.knot_untying.common as knot
+    knot.planar_clearance = _vectorized_planar_clearance
+    return True
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -739,6 +827,8 @@ class Session:
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
         self.env = Env(SimulatorConfig(**cfg))
         self.env.reset(seed=int(cfg["seed"]))
+        self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
+        self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.

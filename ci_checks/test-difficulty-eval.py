@@ -311,24 +311,24 @@ class ResultTests(unittest.TestCase):
             p=subprocess.run([sys.executable,str(ROOT/'scripts/topogym_mk_task.py'),'cast_coil','--instance',str(ROOT/'tasks/topogym-cast-coil-i00/environment/instance.json'),
                 '--slug',slug,'--tasks-root',str(tasks),'--build-root',str(build),'--reuse-describe','--agent-wall-clock-s','21600'],capture_output=True,text=True)
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-            p=subprocess.run([sys.executable,str(ROOT/'scripts/topogym_mk_limited.py'),'cast_coil','-','--unlimited-task',str(tasks/slug),'--tasks-root',str(tasks),
+            p=subprocess.run([sys.executable,str(ROOT/'scripts/topogym_mk_limited.py'),'cast_coil','-','--unlimited-task',str(tasks/(slug+'-privileged')),'--tasks-root',str(tasks),
                 '--build-root',str(build),'--agent-wall-clock-s','21600'],capture_output=True,text=True)
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-            u=tomllib.loads((tasks/slug/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-limited')/'task.toml').read_text())
+            u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
-            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('3','3'))
-            tools=[tasks/slug/'environment/rcb_topogym.py',tasks/slug/'tests/rcb_topogym.py',
-                   tasks/(slug+'-limited')/'environment/sim/rcb_topogym.py']
+            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('4','4'))
+            tools=[tasks/(slug+'-privileged')/'environment/rcb_topogym.py',tasks/(slug+'-privileged')/'tests/rcb_topogym.py',
+                   tasks/(slug+'-standard')/'environment/sim/rcb_topogym.py']
             self.assertTrue(all(p.read_bytes()==(ROOT/'harbor_templates/topogym/common/rcb_topogym.py').read_bytes() for p in tools))
             identity=subprocess.run(['bash',str(ROOT/'ci_checks/check-tooling-identity.sh'),str(tasks)],capture_output=True,text=True,
                 env=dict(os.environ,PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH']))
             self.assertEqual(identity.returncode,0,identity.stdout+identity.stderr)
-            self.assertEqual(u['verifier']['timeout_sec'],65700)
-            self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],45000)
-            self.assertEqual((tasks/slug/'environment/instance.json').read_bytes(),(tasks/(slug+'-limited')/'environment/sim/instance.json').read_bytes())
+            self.assertEqual(u['verifier']['timeout_sec'],45000)
+            self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],27000)
+            self.assertEqual((tasks/(slug+'-privileged')/'environment/instance.json').read_bytes(),(tasks/(slug+'-standard')/'environment/sim/instance.json').read_bytes())
             from topogym.tasks.goal_description import render_goal
             public_goal=json.loads((build/slug/'describe.json').read_text())['public_goal']
-            for folder in (tasks/slug,tasks/(slug+'-limited')):
+            for folder in (tasks/(slug+'-privileged'),tasks/(slug+'-standard')):
                 self.assertIn(render_goal(public_goal),(folder/'instruction.md').read_text())
                 harbor_python=ROOT/'.venv-harbor/bin/python'
                 if harbor_python.exists():
@@ -410,7 +410,7 @@ proof={'model':arg('-m'),'agent':arg('-a'),'key_hash':hashlib.sha256(os.environ.
 if os.environ.get('FAKE_HARBOR_MODE')=='interrupt' and not job.name.startswith('canary'):
     (job/'started.marker').write_text(str(os.getpid())); time.sleep(120)
 trial=job/'deliberately-truncated__abc'; (trial/'verifier').mkdir(parents=True)
-limited=task.name.endswith('-limited'); reward={'success':1 if 'canary' in task.name else 0,'grader_error':0}
+limited=task.name.endswith(('-limited','-standard')); reward={'success':1 if 'canary' in task.name else 0,'grader_error':0}
 if limited: reward['finalized']=1
 (trial/'verifier/reward.json').write_text(json.dumps(reward))
 (trial/'result.json').write_text(json.dumps({'task_name':'topogym/'+task.name,'task_id':{'path':str(task)},'finished_at':'2026-09-29T00:00:00Z','verifier_result':{'rewards':reward}}))
@@ -425,16 +425,16 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
             # Canary only copies this file in the stub test, no physical image is implied.
             (build/'smoke/initial_rgb/camera.png').write_bytes(b'synthetic test image')
             (build/'prepared.json').write_text('{"files":{}}')
-            for suffix in ('','-limited'):
+            for suffix in ('-privileged','-standard'):
                 path=self.run/'tasks'/(row['slug']+suffix); path.mkdir(parents=True)
-            tool = self.run/'tasks'/row['slug']/'environment/rcb_topogym.py'
+            tool = self.run/'tasks'/(row['slug']+'-privileged')/'environment/rcb_topogym.py'
             tool.parent.mkdir(); tool.write_text('# synthetic tool, never physics\n')
             from difficulty_eval import DifficultyEvaluation
             from types import SimpleNamespace
             fixture = SimpleNamespace(run=self.run, source=self.root, gpu_device='0',
                 commands=SimpleNamespace(run_command=lambda *a, **kw: (0, '24000, 0\n')),
                 build_dir=lambda r: self.run/'build'/r['slug'],
-                task_dir=lambda r: self.run/'tasks'/r['slug'])
+                task_dir=lambda r: self.run/'tasks'/(r['slug']+'-privileged'))
             evidence = DifficultyEvaluation.preflight_identity(fixture, row)
             (build/'preflight.ok.json').write_text(json.dumps(dict(passed=True, synthetic_test_only=True, evidence_identity=evidence)))
         self.key='contract-test-'+os.urandom(24).hex()

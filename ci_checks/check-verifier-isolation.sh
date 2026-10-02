@@ -3,10 +3,14 @@
 # task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists, FROMs a pinned registry image and ships
 # /tests/test.sh; any compose sidecar image is pinned. Agent egress is a run-time choice (scripts/set_agent_egress.py):
 # public is allowed; if an allowlist is set it must list hosts (an empty allowlist breaks the agent's model API).
-# Two more rules, because Harbor mounts /logs/verifier read-write into the agent's container and some simulators keep a
-# cache of generated code: tests/test.sh empties /logs/verifier before grading (a planted reward.json must not survive a
-# grader crash), and no writable volume crosses the trust boundary — named volumes mounted by a trusted container (the
-# verifier, a limited task's sim sidecar) are *_trusted and never mounted by the agent's container.
+# PROTOCOL §2.6 adds two rules, because Harbor mounts /logs/verifier read-write into the agent's container and some
+# simulators keep a cache of generated code:
+# - tests/test.sh empties /logs/verifier before anything else (a planted reward.json must not survive a grader crash):
+#   `rm -rf /logs/verifier/*`, or `find /logs/verifier -mindepth 1 ... -exec rm ...` (the form that keeps Harbor's
+#   test-stdout.txt). A hard failure for tasks on protocol v1.0 (they declare `oracle` and no `tier`); tasks from before
+#   the migration (PROTOCOL §7) get the same rule as a warning from check-protocol-v1.py.
+# - no writable volume crosses the trust boundary: named volumes mounted by a trusted container (the verifier, a
+#   standard task's sim sidecar) are *_trusted and never mounted by the agent's container. Every task.
 t="$1"; python3 - "$t" <<'PY'
 import sys, tomllib, pathlib, re
 t = pathlib.Path(sys.argv[1]); rc = 0
@@ -26,9 +30,17 @@ cf = t / "environment/docker-compose.yaml"
 if cf.is_file():
     for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
         if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", img) and not img.endswith(":latest")): fail(f"compose sidecar image {img!r} must be pinned")
+
+# test.sh clears /logs/verifier first (the same rule as check-protocol-v1.py)
+meta = d.get("metadata") or {}
+v1 = "oracle" in meta and "tier" not in meta
+CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")
 sh = t / "tests/test.sh"
-if not sh.is_file() or "find /logs/verifier -mindepth 1 -maxdepth 1 ! -name test-stdout.txt -exec rm -rf {} +" not in sh.read_text():
-    fail("tests/test.sh must empty /logs/verifier (all but test-stdout.txt) before grading")
+if v1 and sh.is_file():
+    cmds = [ln.strip() for ln in sh.read_text().splitlines() if ln.strip() and not ln.strip().startswith("#")]
+    cmds = [c for c in cmds if not re.match(r"(set\s|mkdir\s+-p\s+/logs/verifier\s*$)", c)]
+    if not cmds or not CLEAR_LOGS.match(cmds[0]):
+        fail("tests/test.sh must empty /logs/verifier before anything else (`rm -rf /logs/verifier/*`, or find ... -exec rm keeping test-stdout.txt)")
 
 
 def named_volumes(compose: pathlib.Path) -> dict:

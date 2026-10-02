@@ -229,8 +229,11 @@ def stages(env, context, comb_mode="single", target=COMB_TARGET_M):
             # A press that gains several strands may push a combed one on the far
             # side back out a little (hard_guided_01 sector_03: -38 mm, +2.5 mm),
             # so progress is the summed excess beyond target, not a strand count.
+            # Near the end the remaining excess is small (hard_guided_02 sector_08:
+            # 7.6 -> 3.4 mm), so half of it also counts as progress.
             after = measures(tick["world"])
-            return dict(holding(tick), excess_reduced_5mm=excess(after, target) <= before-SECTOR_PROGRESS_M,
+            required = min(SECTOR_PROGRESS_M, .5*before)
+            return dict(holding(tick), excess_reduced=excess(after, target) <= before-required,
                         bends_within_limit=max(row["max_bend_deg"] for row in after) <= MAXIMUM_BEND_DEG)
         kwargs = dict(part="references", plans=[first["refs"], second["refs"]], pauses=[1., .5],
                       progress_error_m=.001, arrival_error_m=.001)

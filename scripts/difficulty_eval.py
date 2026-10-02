@@ -518,7 +518,8 @@ class DifficultyEvaluation:
                     raise EvaluationError("preflight evidence is stale; rerun preflight: " + row["slug"])
 
     def task_dir(self, row, mode="unlimited"):
-        return self.run / "tasks" / (row["slug"] + ("-limited" if mode == "limited" else ""))
+        suffix = {"unlimited": "-privileged", "limited": "-standard"}[mode]
+        return self.run / "tasks" / (row["slug"] + suffix)
 
     def cleanup_containers(self):
         if not self.owns_gpu_lock:
@@ -723,7 +724,7 @@ class DifficultyEvaluation:
             _, current = self.commands.run_command(["docker", "image", "inspect", "--format", "{{.Id}}", client["image"]],
                                                   capture=True, check=True, timeout=15)
             client = dict(client, id=current.strip())
-        return dict(probe_version=3, prepared_sha256=sampling.file_hash(self.build_dir(row)/"prepared.json"),
+        return dict(probe_version=4, prepared_sha256=sampling.file_hash(self.build_dir(row)/"prepared.json"),
                     tool_sha256=sampling.file_hash(self.task_dir(row)/"environment/rcb_topogym.py"),
                     image=read_json(self.run/"image.json"), gpu_device=self.gpu_device, gpu_profile=gpu.strip(),
                     client_image=client, probe_sha256=sampling.file_hash(self.source/"scripts/difficulty_eval.py"))
@@ -777,13 +778,11 @@ class DifficultyEvaluation:
         (build / "limited").mkdir(parents=True)
         owner = self.delivery.workspace[:12] if self.delivery else self.source_sha[:12]
         container = f"tg-check-{owner}-{row['slug'].removeprefix('topogym-')}"
-        client_image = (self.delivery.images["client"]["image"] if self.delivery
-                        else self.commands.env.get("TOPOGYM_CLIENT_IMAGE"))
-        if not client_image:
-            # Local mode uses the generated client's Dockerfile and dependencies.
-            client_image = f"topogym-local/preflight-client:{self.source_sha[:12]}"
-            self.commands.run_command(["docker", "build", "-t", client_image, task/"environment"],
-                                      log=build/"client-build.log", monitor=True, check=True)
+        # Probe the generated standard client's pinned recipe, including in Docker delivery.
+        # The controller/canary image is a different role and cannot stand in for this image.
+        client_image = f"topogym-local/preflight-client:{self.source_sha[:12]}"
+        self.commands.run_command(["docker", "build", "-t", client_image, task/"environment"],
+                                  log=build/"client-build.log", monitor=True, check=True)
         _, client_id = self.commands.run_command(["docker", "image", "inspect", "--format", "{{.Id}}", client_image],
                                                 capture=True, check=True, timeout=15)
         sampling.atomic_json(build/"limited-client-image.json", dict(image=client_image, id=client_id.strip()))
@@ -795,7 +794,7 @@ class DifficultyEvaluation:
             from difficulty_delivery import label_args
             client_cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         client_cmd += [client_image, "python", "-"]
-        cmd = ["docker", "run", "-d", "--name", container, "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
+        cmd = ["docker", "run", "-d", "--name", container, "--restart", "on-failure:6", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
                "--label", "topogym.difficulty-run=" + self.args.run_id, "-w", "/tmp"]
         if self.delivery:
             from difficulty_delivery import label_args
@@ -805,7 +804,7 @@ class DifficultyEvaluation:
                       "RCB_WALL_CLOCK_S=30", "RCB_DATA=/data", "PYTHONPATH=/srv:/check:/opt/topogym"):
             cmd += ["-e", value]
         cmd += ["-v", f"{task}/environment/sim:/srv:ro", "-v", f"{task}/environment:/check:ro", "-v", f"{build}/limited:/data",
-                self.image, "python", "/srv/server.py"]
+                self.image, "sh", "/srv/run.sh"]
         try:
             if self.commands.run_command(cmd, log=build / "preflight.log", append=True)[0]:
                 return False
@@ -816,8 +815,18 @@ class DifficultyEvaluation:
             while time.monotonic() < deadline:
                 self.commands.check_resources()
                 data = self.collector.load_json(build / "limited/final.json")
-                if data.get("video_done"):
-                    passed = bool(data.get("finalized")) and data.get("replay_success") is not None and data.get("reason") in ("timeout", "success")
+                if data.get("done") or data.get("finalized"):
+                    # The live service dumps and exits; run.sh keeps the container alive
+                    # while the same collect hook as Harbor performs a fresh replay.
+                    code, _ = self.commands.run_command(
+                        ["docker", "exec", "-e", "RCB_COLLECT_END_TIMEOUT_S=900", container, "sh", "/srv/finalize.sh"],
+                        log=build/"preflight.log", append=True, monitor=True, timeout=1800)
+                    data = self.collector.load_json(build / "limited/final.json")
+                    passed = (code == 0 and data.get("finalized") is True
+                              and isinstance(data.get("replay_success"), bool)
+                              and data.get("video") is True and (build/"limited/replay.mp4").is_file()
+                              and not any(data.get(key) for key in ("infra_error", "gpu_lost", "error"))
+                              and data.get("reason") in ("timeout", "success"))
                     with (build / "preflight.log").open("a") as stream:
                         stream.write("limited deadline and finalization " + ("passed\n" if passed else "failed\n"))
                     return passed

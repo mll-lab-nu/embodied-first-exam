@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""rcb-limited/2.2 conformance test, run against a LIVE sim service (docs/LIMITED_MODE_PROTOCOL.md).
+"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/STANDARD_MODE_2_2.md).
 
-    check-limited-protocol.py --url http://127.0.0.1:8000 [--task tasks/<t>-limited] [--out DIR] [--watch 0.5]
-    check-limited-protocol.py --launch tasks/<t>-limited [--port 18000] [--out DIR]    # compose up the task's sidecar, test, down
+    check-limited-protocol.py --url http://127.0.0.1:8000 [--task tasks/<t>-standard] [--out DIR] [--watch 0.5]
+    check-limited-protocol.py --launch tasks/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
 
 It drives the service through the task's own shipped client (environment/rcb_client.py) where the protocol allows, and
 through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed bodies). Checked:
@@ -22,7 +22,7 @@ through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed
 A watch of --watch seconds (default 0.5) advances physics while holding the last command, as /observe does for an agent.
 Exit 1 on any FAIL. Needs numpy + requests (+ pyyaml for --launch, Pillow for the overlays)."""
 from __future__ import annotations
-import argparse, json, math, os, re, subprocess, sys, tempfile, time, zlib
+import argparse, json, math, os, re, subprocess, sys, tempfile, time
 from pathlib import Path
 
 import numpy as np
@@ -31,7 +31,7 @@ import requests
 SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "max_chunk_s", "max_watch_s",
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
-SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz"}
+SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s"}   # + crash recovery
 CAM_KEYS_REQ = {"rgb", "depth", "mounted", "resolution", "intrinsic_cv", "mount"}
 CAM_KEYS_OK = CAM_KEYS_REQ | {"calibration_in_obs", "depth_range_m"}
 ROBOT_KEYS_REQ = {"name", "base", "joints", "grippers", "controller", "tcp"}
@@ -42,7 +42,7 @@ KIN_KEYS_REQ = {"endpoint", "joint_names", "frame", "quaternion_order", "links",
 KIN_KEYS_OK = KIN_KEYS_REQ | {"base_pose_proprio", "ik", "stateless", "note"}
 WORLD_KEYS_REQ = {"frame", "up", "units", "quaternion_order", "camera_axes"}
 GROUPS_REQ = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_effort")
-META_KEYS_OK = {"step", "calls", "control_steps", "physics_steps", "sim_time_s", "time_s", "time_left_s", "proprio", "cameras",
+META_KEYS_OK = {"stopped", "step", "calls", "control_steps", "physics_steps", "sim_time_s", "time_s", "time_left_s", "proprio", "cameras",
                 "done", "reason", "degraded", "chunk_id", "type", "executed_rows", "control_steps_chunk", "physics_steps_chunk",
                 "clipped", "n_clipped", "plan", "rejected", "ok", "obs_id", "seconds", "control_steps_watch", "physics_steps_watch"}
 META_CAM_KEYS_OK = {"intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size"}
@@ -179,7 +179,12 @@ def ext_to_T_world_cam(E) -> np.ndarray:
 
 # ---------------------------------------------------------------- the checks
 def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
-    rep.ok(spec.get("protocol") == "rcb-limited/2.2", "spec.protocol", str(spec.get("protocol")))
+    if spec.get("protocol") == "rcb-limited/2.2":          # the pre-v1.0 spelling of the same protocol
+        rep.add("WARN", "spec.protocol", "legacy name rcb-limited/2.2 (use eai-standard/2.2)")
+    else:
+        rep.ok(spec.get("protocol") == "eai-standard/2.2", "spec.protocol", str(spec.get("protocol")))
+    for k in ("on_service_error", "max_call_wall_s"):     # crash recovery and the per-call bound (rcb_limited.serve adds both)
+        rep.ok(k in spec, f"spec.{k}", str(spec.get(k))[:120])
     rep.ok(set(spec.get("protocol_compat") or []) >= {"rcb-limited/2.0", "rcb-limited/2.1"}, "spec.protocol_compat", str(spec.get("protocol_compat")))
     rep.ok(SPEC_KEYS_REQ <= set(spec), "spec.required_keys", f"missing {sorted(SPEC_KEYS_REQ - set(spec))}")
     rep.ok(set(spec) <= SPEC_KEYS_OK, "spec.no_unknown_keys", f"unknown {sorted(set(spec) - SPEC_KEYS_OK)}")
@@ -564,7 +569,7 @@ def teardown(base: list[str], proj: str, out: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url"); ap.add_argument("--task", type=Path); ap.add_argument("--client", type=Path)
-    ap.add_argument("--launch", type=Path, help="a -limited task dir: start its sim sidecar with docker compose, test it, stop it")
+    ap.add_argument("--launch", type=Path, help="a standard task dir: start its sim sidecar with docker compose, test it, stop it")
     ap.add_argument("--port", type=int, default=18000); ap.add_argument("--out", type=Path)
     ap.add_argument("--watch", type=float, default=0.5); ap.add_argument("--keep", action="store_true", help="leave the launched sidecar running")
     a = ap.parse_args()
@@ -592,7 +597,7 @@ def main() -> int:
     (out / "report.json").write_text(json.dumps({"url": a.url, "task": str(task) if task else None, "elapsed_s": round(time.time() - t0, 1),
                                                  "failed": rep.failed, "rows": rep.rows}, indent=1))
     n = {k: sum(r["level"] == k for r in rep.rows) for k in ("PASS", "FAIL", "WARN", "INFO")}
-    print(f"{'FAIL' if rep.failed else 'ok'} limited protocol 2.2: {n} (report {out / 'report.json'})")
+    print(f"{'FAIL' if rep.failed else 'ok'} eai-standard/2.2 conformance: {n} (report {out / 'report.json'})")
     return 1 if rep.failed else 0
 
 

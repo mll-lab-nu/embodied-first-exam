@@ -12,6 +12,12 @@ diagnostics and replay videos. There are **28 Harbor tasks: 13 manipulation fami
 example, each in two modes**. See the [protocol](docs/rcb/PROTOCOL.md),
 [task manifest](tasks/dataset.toml) and [中文 CLI 手册与验收记录](docs/rcb/README.md).
 
+**Protocol v1.0 tier tasks.** 39 further frozen instances (13 families × easy / medium / hard) follow robot_coding_bench's
+protocol v1.0 in both modes, privileged and standard (`eai-standard/2.2` with crash recovery):
+`tasks/topogym-<family>-<tier>-i00-{privileged,standard}`, 3 h budget, grading in two passes (the video is rendered
+during the second); see [docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md). The 28 tasks described below
+are the original pre-v1.0 set.
+
 ## Run
 
 The host needs an NVIDIA GPU, a compatible driver, Docker with Compose, and NVIDIA Container Toolkit
@@ -240,7 +246,9 @@ With the subscription setup above, keep its auth variables and add
 cases and uses the GPU again.
 
 For unattended batches, [scripts/run_agent_batch.sh](scripts/run_agent_batch.sh) runs each task and its
-limited twin sequentially by default (`SEQ=1`). Set `AGENT`, `MODEL`, `AK` and `ENV_FILE` explicitly;
+limited twin sequentially by default (`SEQ=1`). Since protocol v1.0 (robot_coding_bench ad9f251e) it takes a tier task's
+base name (`topogym-<family>-<tier>-i00`) and runs its `-privileged` and `-standard` dirs; run the original i00 dirs with
+`harbor run` as above. Set `AGENT`, `MODEL`, `AK` and `ENV_FILE` explicitly;
 its default agent is the OpenRouter adapter. It starts a log-mirror container and memory guard that
 remain running after the batch. Output naming and details are in the [CLI guide](docs/rcb/README.md).
 

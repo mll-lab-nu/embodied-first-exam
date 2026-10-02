@@ -88,33 +88,41 @@ class FeedbackTests(unittest.TestCase):
         with patch.dict(sys.modules, {'rcb_client':SimpleNamespace(Robot=Robot)}):
             exec(LIMITED_SMOKE, {})
 
-    def test_limited_finalization_replays_only_rows_executed_live(self):
+    def test_standard_replay_only_executes_live_rows(self):
         from unittest.mock import Mock
-        path=ROOT/'harbor_templates/topogym/limited/environment/sim/server.py'
-        tree=ast.parse(path.read_text())
-        node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='finalize')
+        from contextlib import redirect_stdout
+        import io
+        path=ROOT/'harbor_templates/topogym/limited/environment/sim/replay.py'
+        spec=importlib.util.spec_from_file_location('standard_replay_test', path)
+        replay=importlib.util.module_from_spec(spec); spec.loader.exec_module(replay)
         actions=np.arange(24,dtype=np.float32).reshape(6,4)
-        session=SimpleNamespace(record_stop=lambda:actions,state_sha=lambda:'live',
-            save_trajectory=Mock(),replay=Mock(return_value={'success':False,'state_sha':'replay'}),
-            start_video=Mock(),stop_video=Mock())
-        state=dict(end_row=3,step=3,reason='timeout')
-        namespace=dict(S=session,E=state,DATA='/unused-test-output',os=os,log=Mock(),write_final=Mock())
-        exec(compile(ast.Module(body=[node],type_ignores=[]),str(path),'exec'),namespace)
-        namespace['finalize']()
-        self.assertEqual(session.save_trajectory.call_args.kwargs['meta']['live_rows'],3)
-        self.assertEqual(session.replay.call_count,2)
-        for call in session.replay.call_args_list:
-            np.testing.assert_array_equal(call.args[0],actions[:3])
-        self.assertTrue(state['finalized'])
-        self.assertTrue(state['video_done'])
+        session=SimpleNamespace(replay=Mock(return_value={'success':False,'state_sha':'replay'}),
+            start_video=Mock(),stop_video=Mock(),close=Mock(),instance_sha='fixture',
+            instance_exact=True,instance_matches=True)
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            (root/'episode.json').write_text(json.dumps(dict(live_rows=3)))
+            np.savez(root/'trajectory.npz',actions=actions,task='fixture',instance_sha='fixture')
+            argv=['replay.py','--task','fixture','--instance','fixture.json','--data',d]
+            with patch.dict(sys.modules, {'rcb_topogym':SimpleNamespace(Session=lambda *a,**kw:session)}), \
+                 patch.object(sys,'argv',argv), patch.object(sys,'path',list(sys.path)), redirect_stdout(io.StringIO()):
+                self.assertEqual(replay.main(),0)
+        session.replay.assert_called_once()
+        np.testing.assert_array_equal(session.replay.call_args.args[0],actions[:3])
+        session.close.assert_called_once()
 
     def test_limited_preflight_runs_real_client_in_its_own_image(self):
         import difficulty_eval as evaluation
-        for delivered in (True, False):
-            with self.subTest(delivered=delivered), tempfile.TemporaryDirectory() as tmp:
+        from itertools import product
+        failures = ({}, {'infra_error':1}, {'gpu_lost':1}, {'error':'replay failed'},
+                    {'video':False}, {'replay_success':None}, {'finalized':False})
+        for delivered, failure in product((True, False), failures):
+            with self.subTest(delivered=delivered, failure=failure), tempfile.TemporaryDirectory() as tmp:
                 root=Path(tmp); calls=[]
                 def command(argv, **kwargs):
                     calls.append((list(map(str,argv)),kwargs))
+                    if '/srv/finalize.sh' in argv:
+                        (root/'build/limited/replay.mp4').write_bytes(b'synthetic contract fixture')
                     return 0, 'sha256:client\n'
                 runner=evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
                 runner.args=SimpleNamespace(run_id='client-dependency-contract')
@@ -122,11 +130,12 @@ class FeedbackTests(unittest.TestCase):
                 runner.delivery=(SimpleNamespace(workspace='fixture',images={'client':{'image':'client-only:test'}},
                     labels=lambda:{'test':'client-boundary'}) if delivered else None)
                 runner.commands=SimpleNamespace(env={},run_command=command,check_resources=lambda:None)
-                runner.collector=SimpleNamespace(load_json=lambda _:dict(video_done=True,finalized=True,
-                                                                          replay_success=False,reason='timeout'))
+                final = dict(done=True,video=True,finalized=True,replay_success=False,reason='timeout')
+                final.update(failure)
+                runner.collector=SimpleNamespace(load_json=lambda _:final)
                 runner.build_dir=lambda _:root/'build'
                 runner.task_dir=lambda _,mode:root/'task'
-                self.assertTrue(runner.limited_preflight({'slug':'topogym-test-i00','task_id':'interlocked_claws'}))
+                self.assertEqual(runner.limited_preflight({'slug':'topogym-test-i00','task_id':'interlocked_claws'}), not failure)
                 client, _=next((a,k) for a,k in calls if k.get('input_text')==evaluation.LIMITED_SMOKE)
                 self.assertEqual(client[:2],['docker','run'])
                 self.assertNotIn(runner.image,client)
@@ -135,8 +144,9 @@ class FeedbackTests(unittest.TestCase):
                 self.assertFalse(any('/sim:' in part for part in client))
                 self.assertTrue(any('/rcb_client.py:/check/rcb_client.py:ro' in part for part in client))
                 self.assertEqual(json.loads((root/'build/limited-client-image.json').read_text())['id'],'sha256:client')
-                if not delivered:
-                    self.assertTrue(any(a[:2]==['docker','build'] and a[-1]==str(root/'task/environment') for a,_ in calls))
+                self.assertTrue(any(a[:2]==['docker','build'] and a[-1]==str(root/'task/environment') for a,_ in calls))
+                self.assertTrue(any(a[-2:]==['sh','/srv/finalize.sh'] for a,_ in calls))
+                self.assertTrue(any(a[-2:]==['sh','/srv/run.sh'] for a,_ in calls))
 
     def test_explicit_public_mode_survives_replacement_and_umask(self):
         with tempfile.TemporaryDirectory() as d:
@@ -196,8 +206,8 @@ class FeedbackTests(unittest.TestCase):
 
     def test_profile_image_tags(self):
         with patch.dict(os.environ, {'RCB_IMAGE_REGISTRY': 'local/test'}):
-            self.assertEqual(image_tag(ROOT, 'cu128'), 'local/test/rcb-topogym:0.2.4-cu128')
-            self.assertTrue(image_tag(ROOT, 'cu130').endswith(':0.2.4-cu130'))
+            self.assertEqual(image_tag(ROOT, 'cu128'), 'local/test/rcb-topogym:0.2.5-cu128')
+            self.assertTrue(image_tag(ROOT, 'cu130').endswith(':0.2.5-cu130'))
             with self.assertRaises(ValueError):
                 image_tag(ROOT, 'auto')
 

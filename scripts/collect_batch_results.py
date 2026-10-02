@@ -36,8 +36,9 @@ def classify_trial(job, row, mode):
         return "invalid_job", {}, {}, None
     result = load_json(results[0])
     trial = results[0].parent
-    expected = row["slug"] + ("-limited" if mode == "limited" else "")
-    if (result.get("task_name") or "").split("/")[-1] != expected:
+    expected = {row["slug"] + ("-limited" if mode == "limited" else ""),
+                row["slug"] + ("-standard" if mode == "limited" else "-privileged")}
+    if (result.get("task_name") or "").split("/")[-1] not in expected:
         return "identity_mismatch", result, {}, trial
     reward = load_json(trial / "verifier/reward.json")
     from account_failure_check import check as account_failure
@@ -51,7 +52,8 @@ def classify_trial(job, row, mode):
     verifier = result.get("verifier_result") or {}
     if not verifier.get("rewards") or reward.get("success") not in (0, 1):
         return "infra_failed", result, reward, trial
-    if reward.get("grader_error") or reward.get("missing_log") or (mode == "limited" and not reward.get("finalized")):
+    if (any(reward.get(key) for key in ("grader_error", "missing_log", "infra_error", "gpu_lost"))
+            or (mode == "limited" and not reward.get("finalized"))):
         return "infra_failed", result, reward, trial
     if any(reward.get(key) for key in ("missing_trajectory", "bad_trajectory", "wrong_family")):
         return "invalid_submission", result, reward, trial

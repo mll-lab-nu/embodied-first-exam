@@ -6,7 +6,7 @@
 #  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths);
 #  3. environment/instance.json (the agent's copy) has only scene / rule keys: no truth, no target geometry, masks or counts;
 #  4. the agent-visible tooling (environment/rcb_*.py) carries no grader code (target parsing, scoring);
-#  5. instruction.md, README.md, the task.toml description and the limited service's spec texts use none of the words that
+#  5. instruction.md, README.md, the task.toml description and the standard service's spec texts use none of the words that
 #     describe the target as anything but a picture (vector, SVG, centre line, skeleton, outline, median, stroke order, ...).
 # Usage: check-robopaint-leak.sh tasks/<task-dir>
 set -uo pipefail
@@ -16,7 +16,7 @@ python3 - "$t" <<'PY'
 import json, os, re, sys
 t = sys.argv[1]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_paint.py", "rcb_brush.py", "rcb_client.py", "rcb1.py",
-           "NOTICE-exemplar.md", "ARPHICPL.TXT"}
+           "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
@@ -62,8 +62,8 @@ if os.path.exists(ip):
     for w in ("svg", "<path", "medians", "outline", "strokes\": [", "points_mm", "center_k", "truth"):
         if w in txt:
             bad.append(f"environment/instance.json contains {w!r}")
-elif "-limited" not in name:
-    bad.append("environment/instance.json missing (unlimited twin)")
+elif not name.endswith(("-standard", "-limited")):
+    bad.append("environment/instance.json missing (privileged twin)")
 # 4. agent-visible tooling: simulation only
 for f in ("rcb_paint.py", "rcb_brush.py"):
     p = os.path.join(env, f)
