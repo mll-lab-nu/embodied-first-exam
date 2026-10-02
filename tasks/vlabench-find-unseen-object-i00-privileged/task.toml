@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-find-unseen-object-i00-privileged"
-description = "VLABench find_unseen_object (Franka Panda): find the apple for me Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench find_unseen_object (Franka Panda): Find the apple for me and take it out of cabinet_seen. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

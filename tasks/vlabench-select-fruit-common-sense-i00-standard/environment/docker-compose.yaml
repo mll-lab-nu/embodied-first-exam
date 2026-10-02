@@ -12,7 +12,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']"
+      RCB_TASK_TEXT: "Put the pear on plate_seen (the fruits on the table are pear, peach, mango and orange)."
       RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
       RCB_WALL_CLOCK_S: "3600.0"
       RCB_MAX_CONTROL_STEPS: "9000"

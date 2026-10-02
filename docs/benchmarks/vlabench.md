@@ -1,7 +1,7 @@
 # VLABench
 
 [VLABench](https://github.com/OpenMOSS/VLABench)'s native manipulation tasks (Franka Panda, MuJoCo + dm_control), each
-on one frozen scene instance, in both modes: 39 instances, 78 tasks.
+on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 
 | | |
 |---|---|
@@ -15,11 +15,15 @@ on one frozen scene instance, in both modes: 39 instances, 78 tasks.
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this
-benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`): 39 tasks. Left out, with the reason per task
-in `scripts/vlabench/tasks.json` (`excluded`) and `scripts/vlabench/frozen/report.json`:
+benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and whose instruction identifies the task:
+36 tasks. Left out, with the reason per task in `scripts/vlabench/tasks.json` (`excluded`, `dropped`) and
+`scripts/vlabench/frozen/report.json`:
 - 41 with no reference: VLABench's own expert sequence does not reach the task's success on the frozen instance;
 - 13 that could not be frozen (the scene does not build or does not reset bit-exactly);
 - 3 whose PR #4 "reference" is a recorded failure (complex_seesaw_use, hammer_loose_nail, set_dining_table);
+- 3 that verify but were dropped in review (`dropped`): select_fruit_semantic duplicates select_fruit_common_sense
+  (same scene hashes, reference, instruction and check), and select_book_semantic and set_study_table carry VLABench's
+  unfilled instruction template (a literal "..." where the target book's description belongs);
 - PR #4's `*-sensor-only` variants, which are an access mode, not VLABench tasks.
 
 ## Task definition
@@ -37,11 +41,21 @@ in `scripts/vlabench/tasks.json` (`excluded`) and `scripts/vlabench/frozen/repor
 - **Predicates are VLABench's.** They are graded as upstream defines them, including their looseness: e.g.
   `select_fruit`'s containment checks the fruit's root point against the plate's footprint and a 0–0.1 m height band,
   not that the fruit rests on the plate (found by the red-team trial). Changing them would make it another benchmark.
+- **Instructions say what is graded.** Where VLABench's instruction does not say what its check requires, the task
+  states it instead (`tasks.json` `instructions`: the text and why; the README's Details row quotes VLABench's own
+  wording, which also stays in the instance and in privileged mode in `s.state()["instruction"]`). 24 tasks: e.g. the
+  `*_qa` and `select_painting` answers are button presses; `heat_food` needs the food in the microwave, the door closed
+  and the start button pressed; `hammer_nail_and_hang_picture` needs the nail driven in and the painting brought to it;
+  `select_billiards*` count only VLABench's target pocket (its position is given); `texas_holdem` checks the five
+  cards VLABench's own ranking picks, which are named; `select_mahjong*` and `select_fruit_common_sense` name the
+  placemat or plate; `select_poker*` say grasp and lift. The checks themselves are unchanged.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 4000 control steps (400 s of robot time; PR #4's bound). Standard
   episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the fresh replay
   that grades the episode (~40 ms a step) must fit the collect hook's 900 s.
-- **World frame.** Metres; the robot's base at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across the
-  table), z up; quaternions w x y z. Stated in both instructions and in `/spec` (`frames`).
+- **World frame.** Metres; the robot's base at (0, -0.4, 0.78) facing +y (VLABench's default; (0, -0.4, 0.6) for
+  `select_billiards*` and (0, -0.7, 0.7) for `find_unseen_object`, from VLABench's per-series robot configuration): x
+  to the robot's right, y forward (across the table), z up; quaternions w x y z. Stated in both instructions and in
+  `/spec` (`frames`).
 - **Privileged mode.** `vlb_tool.Session`: every entity's pose, grasp keypoints and place points, the robot's state,
   VLABench's general skills (pick, place, pull, press, …) as planning primitives, inverse kinematics, unlimited resets,
   self-replay. VLABench's per-task experts are removed from the image.
@@ -78,7 +92,8 @@ client and the verifier (`grade.py`: `success = live_success ∧ replay_success 
 ```bash
 docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
-python3 scripts/vlabench/import_pr4.py            # one-off: instances and references from PR #4 (dev/changhe @ ad3c510)
+git fetch origin refs/pull/4/head                 # PR #4 was closed without merging; GitHub keeps its head ad3c510
+python3 scripts/vlabench/import_pr4.py            # one-off: instances and references from PR #4 @ ad3c510
 bash scripts/vlabench/freeze.sh                   # re-verify them in the image -> scripts/vlabench/frozen/report.json
 python3 scripts/vlabench/generate.py              # -> tasks/vlabench-* (normalized); removes stale vlabench-* dirs
 python3 scripts/vlabench/generate.py --check      # tasks/ is exactly what it writes
@@ -88,13 +103,16 @@ bash ci_checks/run_all.sh tasks/vlabench-*
 ```
 
 ## Evidence
-`scripts/vlabench/frozen/report.json` (written by `freeze.sh`), for all 39 tasks: the instance rebuilds with matching
+`scripts/vlabench/frozen/report.json` (written by `freeze.sh`), for all 39 verified candidates (the 36 tasks and the 3
+dropped in review): the instance rebuilds with matching
 model and initial-state hashes and is not solved at the start; `reset()` is bit-exact; the reference ends with the
 task's success at its last step; two replays in fresh processes end in the live state's hash and succeed. The 3
 candidates that failed (their PR #4 references are recorded failures) are in the same file.
 
-Harbor runs on the final task digests (PROTOCOL v1.0.1 names and README layout; AMD Ryzen 9 7950X, Docker, no GPU):
-`-a oracle` scores 1 on all 39 privileged tasks and on 8 standard tasks (heat_food, texas_holdem,
+Harbor runs on the digests before the review fixes (PROTOCOL v1.0.1 names and README layout; AMD Ryzen 9 7950X,
+Docker, no GPU; the fixes since change only the instruction text, the READMEs, the `task.toml` descriptions, the
+standard `RCB_TASK_TEXT` and the robot base in `/spec`'s frame string, and drop three tasks): `-a oracle` scores 1 on
+all 39 privileged tasks then (36 of them kept) and on 8 standard tasks (heat_food, texas_holdem,
 take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense;
 live, replay and determinism all hold); `-a nop` scores 0 on four tasks per mode (select_fruit, heat_food,
 friction_qa, insert_flower). No infrastructure or grader errors.
@@ -131,9 +149,6 @@ Final-state hashes of some references (live = replay 1 = replay 2):
   (PROTOCOL §2.7).
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved
   (sample trial 4/4; PR #4: 57/83); the standard twin carries the difficulty.
-- **Shared-file follow-ups (not in this PR).** `scripts/task_conventions.py` does not know VLABench yet, so the README's
-  Benchmark row reads "—": its `BENCHMARKS` needs `("vlabench-", "VLABench")`. `docs/TAXONOMY.md` needs
-  `simulator = "vlabench"`.
 - **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
   shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.

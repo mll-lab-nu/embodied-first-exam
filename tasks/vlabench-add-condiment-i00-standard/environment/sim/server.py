@@ -25,10 +25,17 @@ import vlb_tool  # noqa: E402
 from rcb_service import main  # noqa: E402
 
 CAMERAS = ("forward", "left", "right", "wrist")
-FRAME = (
-    "world frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward "
-    "(away from the base, across the table), z up; quaternions w x y z"
-)
+ROBOT_BASE = (0, -0.4, 0.78)  # VLABench's franka base; a task series may override it (the instance's episode.robot)
+
+
+def frame(spec: dict) -> str:
+    base = ", ".join(f"{float(v):g}" for v in spec["episode"].get("robot", {}).get("position", ROBOT_BASE))
+    return (
+        f"world frame: metres; the robot's base is at ({base}) facing +y: x to the robot's right, y forward "
+        "(away from the base, across the table), z up; quaternions w x y z"
+    )
+
+
 # The Panda's documented joint limits (rad). VLABench's model sets none (its arm actuators accept any angle), so they
 # are given as facts, not enforced.
 PANDA_LIMITS = [[-2.8973, 2.8973], [-1.7628, 1.7628], [-2.8973, 2.8973], [-3.0718, -0.0698], [-2.8973, 2.8973],
@@ -72,7 +79,7 @@ class VLABench:
             "robot": "Franka Emika Panda (7 arm joints, 2-finger gripper)",
             "task_text": self.task_text,
             "episode": self.episode,
-            "frames": FRAME,
+            "frames": frame(self.s.spec),
             "action_types": {
                 "joint_position": {
                     "dim": vlb_tool.N,

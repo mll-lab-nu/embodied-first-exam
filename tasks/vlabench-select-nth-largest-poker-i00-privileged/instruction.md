@@ -1,6 +1,8 @@
 # VLABench · select_nth_largest_poker — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick the the smallest poker**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the smallest poker card and hold it up (grasped, lifted to z >= 0.9 m).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please pick the the smallest poker".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_nth_largest_poker`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

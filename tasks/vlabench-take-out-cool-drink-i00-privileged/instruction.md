@@ -1,6 +1,8 @@
 # VLABench · take_out_cool_drink — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: I am so thirsty after sport, I want to drink something healthy cool**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: I am so thirsty after sport, I want to drink something healthy cool: take it out of the small fridge and close the fridge door.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "I am so thirsty after sport, I want to drink something healthy cool".
 
 This is a *fixed scene instance*: VLABench's own scene for `take_out_cool_drink`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | VLABench |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `vlabench-select-fruit-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |

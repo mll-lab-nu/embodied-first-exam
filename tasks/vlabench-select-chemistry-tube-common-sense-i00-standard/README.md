@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | VLABench |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `vlabench-select-chemistry-tube-common-sense-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
@@ -13,14 +13,14 @@
 
 ## Task
 VLABench's `select_chemistry_tube_common_sense` as a robot service: a Franka Panda arm at a table, instructed **"Take out the KMnO4 solution"**
-(a common-sense riddle that names the target only indirectly), on the same frozen instance as `vlabench-select-chemistry-tube-common-sense-i00-privileged`. The simulator runs in the
+(a direct command: VLABench's common-sense variant names the target directly here), on the same frozen instance as `vlabench-select-chemistry-tube-common-sense-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
 no object poses; nothing to hand in.
 
 ## Difficulty
 The agent has to find the objects in the images, close the loop through the cameras with joint-position targets, and
-finish in one episode without a reset, on top of the task's own reasoning (a common-sense riddle that names the target only indirectly).
+finish in one episode without a reset, on top of the task's own reasoning (a direct command: VLABench's common-sense variant names the target directly here).
 
 ## Reference solution
 `solution/`: the privileged oracle's 66 control steps (recorded offline; see the twin's README) submitted

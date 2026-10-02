@@ -12,7 +12,7 @@ services:
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TASK_TEXT: "Please pick the 4th poker from left to right"
+      RCB_TASK_TEXT: "Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up (grasped, lifted to z >= 0.9 m)."
       RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
       RCB_WALL_CLOCK_S: "3600.0"
       RCB_MAX_CONTROL_STEPS: "9000"

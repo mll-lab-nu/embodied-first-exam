@@ -1,6 +1,8 @@
 # VLABench · select_poker_semantic — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick the poker 6 of spades in the interaction**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please pick up the poker 6 of spades and hold it up (grasped, lifted to z >= 0.9 m).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please pick the poker 6 of spades in the interaction".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_poker_semantic`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

@@ -1,6 +1,8 @@
 # VLABench · select_painting — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please select the painting of style ukiyo-e.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please select the painting of style ukiyo-e: press the button in front of it.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please select the painting of style ukiyo-e.".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_painting`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

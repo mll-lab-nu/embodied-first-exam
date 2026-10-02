@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | VLABench |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `vlabench-find-unseen-object-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
 
 ## Task
-VLABench's `find_unseen_object` as a robot service: a Franka Panda arm at a table, instructed **"find the apple for me"**
+VLABench's `find_unseen_object` as a robot service: a Franka Panda arm at a table, instructed **"Find the apple for me and take it out of cabinet_seen."**
 (a direct command), on the same frozen instance as `vlabench-find-unseen-object-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
@@ -37,3 +37,4 @@ time is up, or on a simulator error), replays the recorded episode in a fresh si
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "find the apple for me" (graded: the apple, which starts inside cabinet_seen, is no longer inside it (not_contain)) |

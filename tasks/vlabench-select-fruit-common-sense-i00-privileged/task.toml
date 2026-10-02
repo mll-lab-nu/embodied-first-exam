@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-select-fruit-common-sense-i00-privileged"
-description = "VLABench select_fruit_common_sense (Franka Panda): tell some specifics of pear between ['pear', 'peach', 'mango', 'orange'] Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench select_fruit_common_sense (Franka Panda): Put the pear on plate_seen (the fruits on the table are pear, peach, mango and orange). Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

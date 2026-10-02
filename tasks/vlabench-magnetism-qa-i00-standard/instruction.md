@@ -1,7 +1,7 @@
 # VLABench · magnetism_qa — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic.**
+a service you cannot open, and you reach it only through a client. **Task: We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic: press the button in front of it.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
