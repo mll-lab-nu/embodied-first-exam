@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/screwdriver/long_screwdriver/spin_horizontal` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.2` |
 
 ## Task
 Standard-mode twin of `dextoolbench_screwdriver_long_screwdriver_spin_horizontal-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.

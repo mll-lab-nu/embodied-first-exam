@@ -63,18 +63,14 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 `scripts/account_failure_check.py` (structured evidence only: Codex's rate limits and last event, Claude Code's result
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 
-## Base images until the migration
-`scripts/build_images.sh` and `scripts/push_images.sh` still name every image `<registry>/rcb-<sim>`; the migration
-(PROTOCOL §7) renames them. A benchmark already on the v1.0 names (`eai-<sim>`, D5) builds and tags its image directly,
-with the version from `images/<sim>/VERSION`:
-```bash
-REG=ghcr.io/embodied-agent-interface-v2-internal
-docker build -f images/<sim>/Dockerfile -t $REG/eai-<sim>:$(cat images/<sim>/VERSION) .   # context: the repository root
-docker tag $REG/rcb-<sim>:<ver> $REG/eai-<sim>:<ver>        # a host that already has the same build under the old name
-docker push $REG/eai-<sim>:$(cat images/<sim>/VERSION)      # public images only
-```
-An image with `images/<sim>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never pushed: `push_images.sh` skips
-it and prints why, and every host builds it locally (the marker file says how, and what licences and data it needs).
+## Base images
+Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §2.4, D5): `scripts/build_images.sh`
+builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
+that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
+settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
+a private package for org members. Before 2026-10-02 the images were `rcb-<sim>` (several registries) or `eai-<name>`
+under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker tag` it to the new name.
 
 ## Web search (off by default)
 `scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets

@@ -9,7 +9,7 @@
 | Family / instance | `grab_roller` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 grab_roller (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use both arms to grab the roller on the table. Frozen scene instance (RoboTwin seed 60417).

@@ -54,10 +54,10 @@ region; the instructions state the rule in both modes.
 
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
-  in), tagged `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:<images/robolab/VERSION>` (0.1.1, the same build as
+  in), tagged `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>` (0.1.1, the same build as
   the former `rcb-robolab:0.1.1`). It contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
   `images/robolab/BUILD_ONLY` has the licences, the build command
-  (`docker build -f images/robolab/Dockerfile -t ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:$(cat images/robolab/VERSION) .`),
+  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it. A host that has the old tag only needs `docker tag`.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and

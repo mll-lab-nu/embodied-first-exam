@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/find_unseen_object` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `find_unseen_object` as a robot service: a Franka Panda arm at a table, instructed **"Find the apple for me and take it out of cabinet_seen."**

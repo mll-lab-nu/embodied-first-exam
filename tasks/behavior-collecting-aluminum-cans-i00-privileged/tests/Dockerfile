@@ -2,7 +2,7 @@
 # tooling, the robot config and the frozen instance baked in. Nothing the agent did in its container reaches this
 # one — Harbor uploads only the declared artifacts (/app/output/), so a patched success check or a swapped
 # interpreter in the agent container cannot influence the verdict.
-FROM ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1
+FROM ghcr.io/mll-lab-nu/eai-behavior:0.1.1
 COPY grade.py instance.json rcb_behavior.py r1pro_primitives_eval.yaml test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests

@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/play_math_game` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `play_math_game` as a robot service: a Franka Panda arm at a table, instructed **"Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue? Put the number cubes that spell the answer on placemat_seen, side by side, read from left to right as seen from the robot."**

@@ -43,7 +43,7 @@ results are published on the results site, not kept here (PROTOCOL D3).
 Everything except `status` and `render` needs a simulator, and the simulator lives in the image, so run them there:
 
 ```bash
-docker run --rm -v $PWD:/repo -w /repo ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:$(cat images/humanoidbench/VERSION) \
+docker run --rm -v $PWD:/repo -w /repo ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) \
   python scripts/humanoidbench/gen_tasks.py verify
 ```
 
