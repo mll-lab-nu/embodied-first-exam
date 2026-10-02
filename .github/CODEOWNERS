@@ -16,3 +16,5 @@
 /scripts/task_conventions.py    @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /scripts/task_names.py          @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /tasks/dataset.toml             @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/usage_gateway/         @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/scripts/run_agent_batch.sh     @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
