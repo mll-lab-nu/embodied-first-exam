@@ -39,6 +39,7 @@ class GenesisWorld:
         self._pbd_table_friction = None
         self._contact_specs = []
         self._contact_collector = None
+        self.terminal_contract_version = 1
         self._robot_description = None
         self._grasp_manager = None
         self._material_maps = []
@@ -209,7 +210,7 @@ class GenesisWorld:
             # Match authored frames before Genesis re-expresses free-body geoms
             # around the COM at build. Geometry IDs survive that alignment.
             roles, complete = {}, True
-            if self._contact_specs:
+            if self._contact_specs or self.terminal_contract_version == 2:
                 from .physics.rigid_contacts import resolve_roles, resolve_robot_parts, RigidContactCollector
                 for spec in self._contact_specs:
                     mapping, covered = resolve_roles(self.entities[spec.name], spec)
@@ -231,7 +232,7 @@ class GenesisWorld:
                     if len(joint.dofs_idx_local) != 1 or not np.isfinite(value):
                         raise ValueError('Initial scalar joint position requires one finite coordinate')
                     entity.set_dofs_position([float(value)], joint.dofs_idx_local, zero_velocity=True)
-            if self._contact_specs:
+            if self._contact_specs or self.terminal_contract_version == 2:
                 imported_ids = {int(g.idx) for spec in self._contact_specs
                     for link in self.entities[spec.name].links for g in link.geoms}
                 complete &= imported_ids == set(roles)
@@ -240,7 +241,9 @@ class GenesisWorld:
                     roles.update({int(g.idx): "robot" for link in robot.links for g in link.geoms})
                 parts, robot_complete = resolve_robot_parts(robot, self._robot_description)
                 self._contact_collector = RigidContactCollector(self.scene, roles, geometry_complete=complete,
-                    robot_parts=parts, robot_geometry_complete=robot_complete)
+                    robot_parts=parts, robot_geometry_complete=robot_complete,
+                    collect_snapshots=self.terminal_contract_version == 2,
+                    grasp=lambda: self._grasp_manager.read() if self._grasp_manager is not None else {})
         except BaseException:
             self._faulted = True
             self.close()
@@ -391,6 +394,7 @@ class GenesisWorld:
             result["release_geometry"] = self._release_geometry.read()
         if self._contact_collector is not None:
             result["contact_events"] = self._contact_collector.read()
+        result["terminal_contract_version"] = self.terminal_contract_version
         try:
             require_finite_state(result)
         except FloatingPointError:

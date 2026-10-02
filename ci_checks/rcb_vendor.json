@@ -3,18 +3,13 @@
  "repo": "git@github.com:JamesKrW/robot_coding_bench.git",
  "commit": "ad9f251e97b1c9a9ad0491a7fcee2e8ec743274e",
  "verbatim": {
-  "scripts/eai_standard/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
-  "scripts/eai_standard/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "scripts/eai_standard/rcb1.py": "scripts/eai_standard/rcb1.py",
   "scripts/eai_standard/run.sh": "scripts/eai_standard/run.sh",
   "scripts/eai_standard/client.env": "scripts/eai_standard/client.env",
   "scripts/eai_standard/client-requirements.txt": "scripts/eai_standard/client-requirements.txt",
-  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
   "scripts/eai_standard/toy_server.py": "scripts/eai_standard/toy_server.py",
-  "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
   "harbor_templates/topogym/limited/environment/sim/rcb1.py": "scripts/eai_standard/rcb1.py",
   "harbor_templates/topogym/limited/environment/sim/run.sh": "scripts/eai_standard/run.sh",
-  "harbor_templates/topogym/limited/environment/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "harbor_templates/topogym/limited/environment/rcb1.py": "scripts/eai_standard/rcb1.py",
   "harbor_templates/topogym/limited/environment/client-requirements.txt": "scripts/eai_standard/client-requirements.txt",
   "harbor_templates/topogym/limited/tests/test.sh": "tasks/robowits-stack-cubes-i00-standard/tests/test.sh",
@@ -32,8 +27,6 @@
   "ci_checks/check-dataset-manifest.sh": "ci_checks/check-dataset-manifest.sh",
   "ci_checks/check-robopaint-leak.sh": "ci_checks/check-robopaint-leak.sh",
   "ci_checks/check-robopaint-tooling.sh": "ci_checks/check-robopaint-tooling.sh",
-  "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
-  "ci_checks/check-protocol-v1.py": "ci_checks/check-protocol-v1.py",
   "ci_checks/check-standard-client.sh": "ci_checks/check-standard-client.sh",
   ".github/workflows/static-checks.yml": ".github/workflows/static-checks.yml",
   ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml",
@@ -58,7 +51,14 @@
   "scripts/make_two_mode_report_zh.py": "scripts/make_two_mode_report_zh.py",
   "scripts/scan_secrets.py": "scripts/scan_secrets.py",
   "scripts/task_conventions.py": "scripts/task_conventions.py",
-  "ci_checks/check-task-structure.sh": "ci_checks/check-task-structure.sh"
+  "ci_checks/check-task-structure.sh": "ci_checks/check-task-structure.sh",
+  "scripts/eai_standard/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
+  "scripts/eai_standard/rcb_client.py": "scripts/eai_standard/rcb_client.py",
+  "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
+  "harbor_templates/topogym/limited/environment/rcb_client.py": "scripts/eai_standard/rcb_client.py",
+  "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
+  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
+  "ci_checks/check-protocol-v1.py": "ci_checks/check-protocol-v1.py"
  },
  "blobs": {
   "scripts/eai_standard/rcb_limited.py": "1ce117178770929994c35602cf78dbe8f8028a40",
@@ -114,5 +114,42 @@
   "scripts/make_two_mode_report_zh.py": "844092b9d3957f9c1e9afc5091468ea468892e7c",
   "scripts/scan_secrets.py": "f1d49083596b47938b1144e1cc90bc276dc7ded5",
   "scripts/task_conventions.py": "7b08e1c26c9190a852024f3aa7d45fce75a878d2"
+ },
+ "local_adaptations": {
+  "scripts/eai_standard/rcb_limited.py": {
+   "upstream_path": "scripts/eai_standard/rcb_limited.py",
+   "upstream_blob": "1ce117178770929994c35602cf78dbe8f8028a40",
+   "reason": "post-merge repair: eai-standard/2.3 actual tick journal, request deadline and operation admission"
+  },
+  "scripts/eai_standard/rcb_client.py": {
+   "upstream_path": "scripts/eai_standard/rcb_client.py",
+   "upstream_blob": "aa25b0e0508a8781d2942b6d483c6471694f69a3",
+   "reason": "post-merge repair: eai-standard/2.3 actual tick journal, request deadline and operation admission"
+  },
+  "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": {
+   "upstream_path": "scripts/eai_standard/rcb_limited.py",
+   "upstream_blob": "1ce117178770929994c35602cf78dbe8f8028a40",
+   "reason": "post-merge repair: eai-standard/2.3 actual tick journal, request deadline and operation admission"
+  },
+  "harbor_templates/topogym/limited/environment/rcb_client.py": {
+   "upstream_path": "scripts/eai_standard/rcb_client.py",
+   "upstream_blob": "aa25b0e0508a8781d2942b6d483c6471694f69a3",
+   "reason": "post-merge repair: eai-standard/2.3 actual tick journal, request deadline and operation admission"
+  },
+  "ci_checks/check-limited-protocol.py": {
+   "upstream_path": "ci_checks/check-limited-protocol.py",
+   "upstream_blob": "d810d7a3a782e55bc4b1fc2bb7c69da7cf59921e",
+   "reason": "accept explicit compatible eai-standard/2.3"
+  },
+  "scripts/eai_standard/selftest.py": {
+   "upstream_path": "scripts/eai_standard/selftest.py",
+   "upstream_blob": "45111994de2f6bf074f2efc7cd679512333c851f",
+   "reason": "assert the shared protocol version after the explicit 2.3 upgrade"
+  },
+  "ci_checks/check-protocol-v1.py": {
+   "upstream_path": "ci_checks/check-protocol-v1.py",
+   "upstream_blob": "4e0fa8ea44c269ad111cb17897389b7a530ba8c2",
+   "reason": "recognize the versioned 2.3 standard contract"
+  }
  }
 }

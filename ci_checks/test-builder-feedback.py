@@ -103,8 +103,9 @@ class FeedbackTests(unittest.TestCase):
             root=Path(d)
             (root/'episode.json').write_text(json.dumps(dict(live_rows=3)))
             np.savez(root/'trajectory.npz',actions=actions,task='fixture',instance_sha='fixture')
-            argv=['replay.py','--task','fixture','--instance','fixture.json','--data',d]
-            with patch.dict(sys.modules, {'rcb_topogym':SimpleNamespace(Session=lambda *a,**kw:session)}), \
+            (root/'instance.json').write_text(json.dumps(dict(action_dim=4)))
+            argv=['replay.py','--task','fixture','--instance',str(root/'instance.json'),'--data',d]
+            with patch.dict(sys.modules, {'rcb_topogym':SimpleNamespace(Session=lambda *a,**kw:session, load_trajectory=tool.load_trajectory, atomic_json=tool.atomic_json, InstanceMismatch=tool.InstanceMismatch)}), \
                  patch.object(sys,'argv',argv), patch.object(sys,'path',list(sys.path)), redirect_stdout(io.StringIO()):
                 self.assertEqual(replay.main(),0)
         session.replay.assert_called_once()
@@ -126,9 +127,10 @@ class FeedbackTests(unittest.TestCase):
                     return 0, 'sha256:client\n'
                 runner=evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
                 runner.args=SimpleNamespace(run_id='client-dependency-contract')
+                runner.work=root; runner.run=root/'run'
                 runner.source_sha='abc123';runner.gpu_device='0';runner.image='physics-only:test'
                 runner.delivery=(SimpleNamespace(workspace='fixture',images={'client':{'image':'client-only:test'}},
-                    labels=lambda:{'test':'client-boundary'}) if delivered else None)
+                    labels=lambda:{'test':'client-boundary','topogym.owner':'fixture-controller'}) if delivered else None)
                 runner.commands=SimpleNamespace(env={},run_command=command,check_resources=lambda:None)
                 final = dict(done=True,video=True,finalized=True,replay_success=False,reason='timeout')
                 final.update(failure)
@@ -206,8 +208,8 @@ class FeedbackTests(unittest.TestCase):
 
     def test_profile_image_tags(self):
         with patch.dict(os.environ, {'RCB_IMAGE_REGISTRY': 'local/test'}):
-            self.assertEqual(image_tag(ROOT, 'cu128'), 'local/test/rcb-topogym:0.2.5-cu128')
-            self.assertTrue(image_tag(ROOT, 'cu130').endswith(':0.2.5-cu130'))
+            self.assertEqual(image_tag(ROOT, 'cu128'), 'local/test/rcb-topogym:0.2.6-cu128')
+            self.assertTrue(image_tag(ROOT, 'cu130').endswith(':0.2.6-cu130'))
             with self.assertRaises(ValueError):
                 image_tag(ROOT, 'auto')
 

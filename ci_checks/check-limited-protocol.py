@@ -182,7 +182,7 @@ def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
     if spec.get("protocol") == "rcb-limited/2.2":          # the pre-v1.0 spelling of the same protocol
         rep.add("WARN", "spec.protocol", "legacy name rcb-limited/2.2 (use eai-standard/2.2)")
     else:
-        rep.ok(spec.get("protocol") == "eai-standard/2.2", "spec.protocol", str(spec.get("protocol")))
+        rep.ok(spec.get("protocol") in {"eai-standard/2.2", "eai-standard/2.3"}, "spec.protocol", str(spec.get("protocol")))
     for k in ("on_service_error", "max_call_wall_s"):     # crash recovery and the per-call bound (rcb_limited.serve adds both)
         rep.ok(k in spec, f"spec.{k}", str(spec.get(k))[:120])
     rep.ok(set(spec.get("protocol_compat") or []) >= {"rcb-limited/2.0", "rcb-limited/2.1"}, "spec.protocol_compat", str(spec.get("protocol_compat")))

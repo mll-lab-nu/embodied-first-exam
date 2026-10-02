@@ -26,7 +26,7 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "4"
+TOOLING_VERSION = "5"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)
@@ -140,7 +140,7 @@ def conventions(d: dict, fam: str) -> str:
 - Tool frame (TCP, the ee pose and IK frame): {tcp['definition'].split(': ', 1)[1] if ': ' in tcp['definition'] else tcp['definition']}
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
 - The task succeeds once its predicate has held continuously for {d['stable_duration_s']:g} s; that, or one of its failure predicates,
-  ends the simulated episode: later steps are recorded but no longer move the scene (`s.status()["episode_end"]`), and
+  ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
   `s.reset()` starts over.
 - One `Session` per process (Genesis initialises once). Do not call `s.close()` before writing every output.
 """
@@ -292,7 +292,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) and the rebuilt frozen scene (`instance_ok`) are reported, not required
+final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 """
 
@@ -455,7 +455,9 @@ def main() -> None:
         "# left there (a planted reward, a symlink) can count. rm never follows symlinks.\n"
         "rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb/PROTOCOL.md §2.6)\nmkdir -p /logs/verifier\n"
         f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
-        "  2> /logs/verifier/grade.log\n")
+        "  2> /logs/verifier/grade.log\n"
+        "# Recover compatibility rewards if the replay process died after committing its verdict.\n"
+        "python -c \"import sys; sys.path.insert(0, '/tests'); from rcb_topogym import recover_reward; recover_reward('/logs/verifier')\"\n")
     (dst / "tests/test.sh").chmod(0o755)
     difficulty = a.difficulty or (f"{robot_words(d).capitalize()} with a {len(d['action_layout'])}-D joint-target action space at {d['control_hz']:g} Hz; "
                                   f"success needs the task's predicate (above) held for {d['stable_duration_s']:g} s. Grasping: "

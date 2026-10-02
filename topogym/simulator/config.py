@@ -28,6 +28,7 @@ class SimulatorConfig:
     precision: str = "64"
     physics_dt_s: float = .0025
     solver_substeps: int = 4
+    terminal_contract_version: int = 1
     control_decimation: int = 10
     max_physics_steps: int | None = 10000
     history_storage: str = field(default_factory=lambda: DEFAULT_HISTORY_STORAGE)
@@ -44,6 +45,11 @@ class SimulatorConfig:
     grasp_assist: GraspAssistConfig = field(default_factory=GraspAssistConfig)
 
     def __post_init__(self):
+        if type(self.terminal_contract_version) is not int or self.terminal_contract_version not in (1, 2):
+            raise ValueError("terminal_contract_version must be 1 (tick) or 2 (rigid substeps)")
+        if self.terminal_contract_version == 2 and self.task_id not in {
+                "cast_coil", "cast_keyhole", "hedgehog_in_cage", "horseshoe_ring", "interlocked_claws"}:
+            raise ValueError("terminal contract 2 is not qualified for this task/backend")
         if self.history_storage not in HISTORY_STORAGES:
             raise ValueError("history_storage must be segment, memory or disk")
         if isinstance(self.grasp_assist, Mapping):

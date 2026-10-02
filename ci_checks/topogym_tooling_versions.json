@@ -300,5 +300,24 @@
       "tests/grade.py": "3e8f49637224dd2a2491db298c445181830f46f176ec7bb31e44896d007baafd",
       "tests/rcb_topogym.py": "ea64a281c0aceb1deca912d8b6124ff25112faf9238a17b2d8b844d1f945712e"
     }
+  },
+  "v4": {
+    "unlimited": {
+      "tests/grade.py": "74776023710d04d825ff3a87d6d83bdb5cb2dea4f8dcbfc5fc2f2c20ed5a4b68",
+      "environment/rcb_topogym.py": "8ee42ea2a44869fc6132ff51f325a24f1a33fb2ceb1fb4700d4e32b39c2846d4",
+      "tests/rcb_topogym.py": "8ee42ea2a44869fc6132ff51f325a24f1a33fb2ceb1fb4700d4e32b39c2846d4"
+    },
+    "limited": {
+      "environment/rcb_client.py": "a14d7ff8264041fe729a72aeb51b9f99810fcc0a5a2f9b12b0bad8438359aa89",
+      "environment/rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
+      "environment/sim/server.py": "a805c9ee91f9944a11d31d5b223ddf4008b8e6c35a91c3e99252d1d20bd33526",
+      "environment/sim/finalize.sh": "e0fa38eda2625fab5d11a201c4d75f7cd9e990abe06432b223fbcc4b4f6eb062",
+      "environment/sim/run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
+      "environment/sim/rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
+      "environment/sim/rcb_limited.py": "66e5753fdf115d61bd4a4ac30cae78f7d879a7af0524d7f0f530b1a847119b15",
+      "environment/sim/replay.py": "81b752c4b09b67fb9323ed4dd10c27f9bf15b4ba773a268a46c991e3b58141ca",
+      "tests/grade.py": "ef51e5fbe376b92fefacd7b31b146bd724658e643f54d963f0711e19a0b78ec9",
+      "environment/sim/rcb_topogym.py": "8ee42ea2a44869fc6132ff51f325a24f1a33fb2ceb1fb4700d4e32b39c2846d4"
+    }
   }
 }

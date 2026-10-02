@@ -102,7 +102,7 @@ def exact_resume_between_calls():
     c = Compose("exact_between")
     try:
         r = c.robot()
-        expect(r.spec()["protocol"] == "eai-standard/2.2", "spec.protocol")
+        expect(r.spec()["protocol"] == L.PROTOCOL, "spec.protocol")
         expect("on_service_error" in r.spec() and r.spec().get("max_call_wall_s") == 900.0, "spec crash-recovery fields")
         for i, x in enumerate((0.2, 0.3, 0.4)):
             res = r.submit("joint_position", chunk(5, x), dt=0.05, video="none", note=f"c{i}")
@@ -360,6 +360,39 @@ def simulator_error_ends_the_episode():
 def client_accepts_both_names():
     for p, ok in (("eai-standard/2.2", True), ("eai-standard/2.1", True), ("rcb-limited/2.1", True), ("rcb-limited/1.0", False), ("x/2.2", False)):
         expect(p.startswith(rcb_client.ACCEPTED) == ok, p)
+
+
+@case
+def operation_id_is_not_executed_twice():
+    c = Compose("operation_id")
+    try:
+        r = c.robot()
+        before = r.status()["control_steps"]
+        meta = dict(type="joint_position", actions=chunk(2, .2).tolist(), dt=.05,
+                    video="none", operation_id="repeat-this-operation")
+        first = requests.post(c.url + "/submit", json=meta, timeout=30)
+        expect(first.status_code == 200, first.text[:200])
+        second = requests.post(c.url + "/submit", json=meta, timeout=30)
+        expect(second.status_code == 409, second.text[:200])
+        expect(r.status()["control_steps"] == before + 2, "duplicate operation stepped physics")
+        operation = r.operation_status("repeat-this-operation")
+        expect(operation["status"] == "completed" and operation["committed_rows"] == before + 2, str(operation))
+    finally:
+        c.down()
+
+
+@case
+def expired_request_never_executes():
+    c = Compose("expired_request")
+    try:
+        r = c.robot()
+        before = r.status()["control_steps"]
+        result = requests.post(c.url + "/submit", json=dict(type="joint_position", actions=chunk(2, .2).tolist(),
+            dt=.05, video="none", operation_id="expired", request_deadline_unix_s=time.time() - 1), timeout=30)
+        expect(result.status_code == 408, result.text[:200])
+        expect(r.status()["control_steps"] == before, "expired request changed state")
+    finally:
+        c.down()
 
 
 def main() -> int:

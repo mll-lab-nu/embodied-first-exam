@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal/eai-"
-PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2"}
+PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.3"}
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 EFFORTS = "none|minimal|low|medium|high|xhigh|max|default"
 RUN_ID = re.compile(rf"^[a-z0-9_]+-[a-z0-9_]+-({EFFORTS})$")

@@ -4,6 +4,8 @@
 
 **结论：合并修复了镜像交付、Knot 判据热点和 standard 生命周期中的多项问题，但上一轮动作、评分、时间统计及录像输出问题没有全部消失。** 本轮重新执行了 CPU 回归和针对性复现，没有仅根据合并说明判断。
 
+后续修复的修改范围、依赖顺序、合同与验收标准见[修复工程计划](../rcb/run_trials_post_merge_repair_plan_zh.md)。计划制定时合并已提交到 `6a7c755`，相关 97 个源码文件与本次审查基线一致；下文保留审查当时的状态与证据，不代表修复已完成。
+
 当前 Git 仍是合并待提交状态：HEAD 为 `c8d1f8ff7d8d161197a8be588b801ecaa74713f7`，MERGE_HEAD 为 `8ad74b46f1b4960ef91bd7476a7c90dca0f7977b`，未解决冲突为空。本报告的源码身份以[本轮基线](../../runs/test_results/run_trials_post_merge_audit_20261001/baseline.json)为准。本轮没有修改生产代码、任务包或 Git 暂存区，也没有 commit/push。
 
 ## 1. 本轮实际验证

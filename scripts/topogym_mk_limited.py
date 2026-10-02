@@ -101,7 +101,7 @@ def main() -> None:
     names = [n for n in d["objects"]]
     objects = a.objects or ("Objects here: " + ", ".join(f"`{n}`" for n in names) + "." if names else "")
     fail_words = "or when the task's own failure predicate fires (then `meta[\"reason\"]` is `task_failed`)"
-    ins = f"""# TopoGym · {fam} — STANDARD MODE (robot as a service, eai-standard/2.2)
+    ins = f"""# TopoGym · {fam} — STANDARD MODE (robot as a service, eai-standard/2.3)
 
 You control a robot (**{robot}**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** {goal}
@@ -127,7 +127,7 @@ client and one episode. **Task:** {goal}
 
 {limited_timing(step_seconds(d), d['control_hz'], motion=bool(d.get('sec_per_step_motion')), unloaded=d.get('sec_per_step_unloaded')).rstrip()}
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)
@@ -180,7 +180,7 @@ Grasping: {d['grasp_rules']}.
            if oracle else "none yet (`oracle = \"none\"`, no `solution/`)")
     (dst / "README.md").write_text(f"""# {slug}-standard
 
-Standard-mode twin of `{slug}-privileged` (same frozen instance): the agent gets only the `eai-standard/2.2` client
+Standard-mode twin of `{slug}-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
 (docs/rcb/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, {dim}) trajectory; its collect hook
 (`environment/sim/finalize.sh`) replays the trajectory once in a fresh process for success, rendering the video during
@@ -196,10 +196,10 @@ the privileged task to measure the cost of losing resets, privileged state and t
 | | |
 |---|---|
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
-| action space | `eai-standard/2.2`: `submit` chunks of `joint_position` ({dim}, streamed at the {d['control_hz']:g} Hz control rate with the agent's `dt`) or `ee_pose` ({8 * len(arms)}, IK per row); `observe` frames or a watch window; binary RCB1 responses |
+| action space | `eai-standard/2.3`: `submit` chunks of `joint_position` ({dim}, streamed at the {d['control_hz']:g} Hz control rate with the agent's `dt`) or `ee_pose` ({8 * len(arms)}, IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | oracle | {ref} |
 | verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; GPU physics: the state hashes are reported, not required; `/logs/verifier/replay.mp4` is rendered during that replay |
-| crash recovery | `eai-standard/2.2` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
+| crash recovery | `eai-standard/2.3` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 """)
     unl_toml = (unl / "task.toml").read_text()
     hours = float(re.search(r"expert_time_estimate_hours = ([0-9.]+)", unl_toml).group(1)) * 1.5
@@ -211,7 +211,7 @@ the privileged task to measure the cost of losing resets, privileged state and t
     # episode so far first), then ONE fresh-process replay of the live rows, which also renders the video: at most as long
     # as the agent's own episode (the budget).
     collect_timeout = 3600 + BUDGET_S + 1800
-    desc = (f"STANDARD MODE (robot as a service, eai-standard/2.2): TopoGym {fam} on the same frozen instance as the privileged task. "
+    desc = (f"STANDARD MODE (robot as a service, eai-standard/2.3): TopoGym {fam} on the same frozen instance as the privileged task. "
             f"{goal} The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit "
             "(joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the "
             "episode as a trajectory and grades it.")
@@ -227,6 +227,9 @@ artifacts = [
   {{ source = "/data/server.log", service = "sim" }},               # the service's own output (Harbor keeps none)
   {{ source = "/data/journal.f64", service = "sim" }},              # crash recovery: every executed control step (float64 rows)
   {{ source = "/data/startups.jsonl", service = "sim" }},           # crash recovery: one line per service start
+  {{ source = "/data/replay.verdict.json", service = "sim" }},
+  {{ source = "/data/replay.frame_map.jsonl", service = "sim" }},
+  {{ source = "/data/replay.recording_manifest.json", service = "sim" }},
   {{ source = "/data/replay.json", service = "sim" }},              # the collect hook's fresh-process replay
   {{ source = "/data/replay.log", service = "sim" }},
   "/app/output/",
@@ -245,7 +248,7 @@ simulator = "topogym"
 robot = "{rs['name']}"
 family = "{fam}"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/2.3"
 oracle = "none"
 oracle_evidence = {json.dumps(oracle_evidence(slug, "standard"))}
 {level}instance_seed = {seed}

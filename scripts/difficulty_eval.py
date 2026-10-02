@@ -10,6 +10,7 @@ import argparse
 from contextlib import ExitStack, contextmanager, suppress
 import fcntl
 import getpass
+import hashlib
 import importlib.util
 import json
 import os
@@ -521,17 +522,40 @@ class DifficultyEvaluation:
         suffix = {"unlimited": "-privileged", "limited": "-standard"}[mode]
         return self.run / "tasks" / (row["slug"] + suffix)
 
+    def resource_labels(self):
+        if self.delivery:
+            return self.delivery.labels()
+        workspace = hashlib.sha256(str(self.work.resolve()).encode()).hexdigest()
+        owner = hashlib.sha256(str(self.run.resolve()).encode()).hexdigest()
+        return {"topogym.workspace": workspace, "topogym.difficulty-run": self.args.run_id,
+                "topogym.owner": "local-" + owner, "topogym.role": "work"}
+
     def cleanup_containers(self):
         if not self.owns_gpu_lock:
             return
         if self.delivery:
             self.delivery.cleanup()
             return
+        labels = self.resource_labels()
+        filters = [part for key, value in labels.items() for part in ("--filter", f"label={key}={value}")]
         with suppress(OSError, EvaluationError):
-            _, output = self.commands.run_command(["docker", "ps", "-aq", "--filter", "label=topogym.difficulty-run=" + self.args.run_id], capture=True, timeout=15)
-            ids = [line for line in output.splitlines() if re.fullmatch(r"[a-f0-9]{12,64}", line)]
-            if ids:
-                self.commands.run_command(["docker", "rm", "-f", *ids], timeout=30)
+            _, output = self.commands.run_command(["docker", "ps", "-aq", *filters], capture=True, timeout=15)
+            for ident in output.splitlines():
+                if not re.fullmatch(r"[a-f0-9]{12,64}", ident):
+                    continue
+                self.remove_owned_container(ident)
+
+    def remove_owned_container(self, ident):
+        code, detail = self.commands.run_command(["docker", "inspect", ident], capture=True, timeout=15)
+        if code:
+            return
+        try:
+            container = json.loads(detail)[0]
+            actual = container["Config"].get("Labels") or {}
+            if all(actual.get(k) == v for k, v in self.resource_labels().items()):
+                self.commands.run_command(["docker", "rm", "-f", container["Id"]], timeout=30)
+        except (ValueError, KeyError, IndexError, TypeError):
+            return  # fail closed on incomplete ownership evidence
 
     def redact_outputs(self):
         if self.auth_env is None:
@@ -603,12 +627,61 @@ class DifficultyEvaluation:
 
     def docker_sim(self, *args):
         from difficulty_delivery import label_args
-        labels = self.delivery.labels() if self.delivery else {"topogym.difficulty-run": self.args.run_id}
+        labels = self.resource_labels()
         user = ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"] if self.delivery else []
         return ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", *label_args(labels),
                 *user, "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
                 "-e", "NVIDIA_VISIBLE_DEVICES=" + self.gpu_device,
                 "-v", f"{self.run}:{self.run}", "-w", self.run, self.image, *args]
+
+    @staticmethod
+    def valid_blanket_state(state):
+        try:
+            manifest = read_json(state)
+            arrays = manifest["arrays"]
+            payload = state.parent / arrays["path"]
+            return (payload.resolve().is_relative_to(state.parent.resolve())
+                    and sampling.file_hash(payload) == arrays["sha256"]
+                    and state.stat().st_mode & 0o044 == 0o044
+                    and payload.stat().st_mode & 0o044 == 0o044)
+        except (OSError, ValueError, KeyError, TypeError):
+            return False
+
+    def prepare_blanket(self, row, build):
+        """Publish only complete assets; keep interrupted attempts for diagnosis."""
+        with lock(build / ".blanket.lock", "another preparation owns this instance"):
+            pointer = build / "blanket.prepared.json"
+            if pointer.exists():
+                try:
+                    record = read_json(pointer)
+                    state = Path(record["state"])
+                except (OSError, ValueError, KeyError, TypeError):
+                    record, state = {}, build / "missing-preparation-manifest"
+                if (record.get("seed") == row["scene_seed"] and record.get("source") == self.source_sha
+                        and self.valid_blanket_state(state) and sampling.file_hash(state) == record["sha256"]):
+                    return state
+            legacy = build / "blanket/state/manifest.json"
+            if not pointer.exists() and self.valid_blanket_state(legacy):
+                return legacy
+            attempts = sorted(build.glob("blanket-attempt-[0-9][0-9][0-9]"))
+            if len(attempts) >= 3:
+                progress(f"Blanket preparation exhausted 3 attempts; preserved logs: {build}", error=True)
+                return None
+            number = max([int(p.name.rsplit('-', 1)[1]) for p in attempts] + [0]) + 1
+            attempt = build / f"blanket-attempt-{number:03d}"
+            # The preparation CLI owns creation of this directory. A failed CLI
+            # is still counted, even if it exited before creating its output.
+            code, _ = self.commands.run_command(self.docker_sim("python", self.source / "scripts/prepare_blanket_initial_states.py",
+                "--seeded", "--seed", row["scene_seed"], "--acceptance", "scene_layout", "--output", attempt),
+                log=build / f"blanket-attempt-{number:03d}.log", monitor=True)
+            attempt.mkdir(exist_ok=True)
+            state = attempt / "state/manifest.json"
+            if code or not self.valid_blanket_state(state):
+                progress(f"Blanket preparation incomplete; preserved {attempt}", error=True)
+                return None
+            sampling.atomic_json(pointer, dict(state=str(state), sha256=sampling.file_hash(state),
+                                               seed=row["scene_seed"], source=self.source_sha))
+            return state
 
     def prepare(self):
         self.gpu_ready()
@@ -641,17 +714,9 @@ class DifficultyEvaluation:
             self.gpu_ready()
             params = []
             if row["task_id"] == "blanket_flatten":
-                state = build / "blanket/state/manifest.json"
-                if not state.exists():
-                    if (build / "blanket").exists():
-                        progress(f"Preserving incomplete Blanket preparation: {build / 'blanket'}", error=True)
-                        continue
-                    code, _ = self.commands.run_command(self.docker_sim("python", self.source / "scripts/prepare_blanket_initial_states.py",
-                        "--seeded", "--seed", row["scene_seed"], "--acceptance", "scene_layout", "--output", build / "blanket"),
-                        log=build / "blanket.log", monitor=True)
-                    if code:
-                        progress(f"Blanket preparation failed; see {build / 'blanket.log'}", error=True)
-                        continue
+                state = self.prepare_blanket(row, build)
+                if state is None:
+                    continue
                 sampling.atomic_json(build / "parameters.json", dict(initial_state_path=str(state), initial_state_resource=None,
                                                                     initial_state_sha256=sampling.file_hash(state)))
                 params = ["--task-parameters", build / "parameters.json"]
@@ -696,12 +761,12 @@ class DifficultyEvaluation:
         files = {}
         for mode in sampling.MODES:
             folder = self.task_dir(row, mode)
-            if self.delivery and not (folder / "tests/docker-compose.yaml").exists():
+            if not (folder / "tests/docker-compose.yaml").exists():
                 (folder / "tests/docker-compose.yaml").write_text("services:\n  main: {}\n")
             for path in folder.rglob("docker-compose.yaml"):
                 data = yaml.safe_load(path.read_text())
                 for service in data["services"].values():
-                    service.setdefault("labels", {})["topogym.difficulty-run"] = self.args.run_id
+                    service.setdefault("labels", {}).update(self.resource_labels())
                 if self.delivery:
                     from difficulty_delivery import decorate_compose
                     decorate_compose(data, self.delivery.labels(), self.gpu_device, uid=os.getuid(), gid=os.getgid())
@@ -724,7 +789,7 @@ class DifficultyEvaluation:
             _, current = self.commands.run_command(["docker", "image", "inspect", "--format", "{{.Id}}", client["image"]],
                                                   capture=True, check=True, timeout=15)
             client = dict(client, id=current.strip())
-        return dict(probe_version=4, prepared_sha256=sampling.file_hash(self.build_dir(row)/"prepared.json"),
+        return dict(probe_version=5, prepared_sha256=sampling.file_hash(self.build_dir(row)/"prepared.json"),
                     tool_sha256=sampling.file_hash(self.task_dir(row)/"environment/rcb_topogym.py"),
                     image=read_json(self.run/"image.json"), gpu_device=self.gpu_device, gpu_profile=gpu.strip(),
                     client_image=client, probe_sha256=sampling.file_hash(self.source/"scripts/difficulty_eval.py"))
@@ -776,7 +841,7 @@ class DifficultyEvaluation:
     def limited_preflight(self, row):
         build, task = self.build_dir(row), self.task_dir(row, "limited")
         (build / "limited").mkdir(parents=True)
-        owner = self.delivery.workspace[:12] if self.delivery else self.source_sha[:12]
+        owner = self.resource_labels()["topogym.owner"][-12:]
         container = f"tg-check-{owner}-{row['slug'].removeprefix('topogym-')}"
         # Probe the generated standard client's pinned recipe, including in Docker delivery.
         # The controller/canary image is a different role and cannot stand in for this image.
@@ -790,12 +855,13 @@ class DifficultyEvaluation:
                       "-i", "-w", "/tmp", "-e", "PYTHONPATH=/check"]
         for name in ("rcb_client.py", "rcb1.py"):
             client_cmd += ["-v", f"{task}/environment/{name}:/check/{name}:ro"]
+        from difficulty_delivery import label_args
+        client_cmd += label_args(self.resource_labels())
         if self.delivery:
-            from difficulty_delivery import label_args
-            client_cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
+            client_cmd += ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         client_cmd += [client_image, "python", "-"]
         cmd = ["docker", "run", "-d", "--name", container, "--restart", "on-failure:6", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
-               "--label", "topogym.difficulty-run=" + self.args.run_id, "-w", "/tmp"]
+               *label_args(self.resource_labels()), "-w", "/tmp"]
         if self.delivery:
             from difficulty_delivery import label_args
             cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
@@ -834,8 +900,8 @@ class DifficultyEvaluation:
             return False
         finally:
             self.commands.run_command(["docker", "logs", container], log=build / "limited/server.log", timeout=15)
-            self.commands.run_command(["docker", "rm", "-f", container+"-client"], timeout=30)
-            self.commands.run_command(["docker", "rm", "-f", container], timeout=30)
+            self.remove_owned_container(container+"-client")
+            self.remove_owned_container(container)
 
     def launch_job(self, task, job):
         if self.delivery:
@@ -888,7 +954,7 @@ class DifficultyEvaluation:
         shutil.copy(images[0], folder / "environment/camera.png")
         image = self.delivery.images["client"]["image"] if self.delivery else self.image
         (folder / "environment/Dockerfile").write_text(f"FROM {image}\nCOPY camera.png /app/camera.png\nRUN mkdir -p /app/output\nWORKDIR /app\n")
-        (folder / "environment/docker-compose.yaml").write_text("services:\n  main:\n    labels:\n      topogym.difficulty-run: " + json.dumps(self.args.run_id) + "\n")
+        (folder / "environment/docker-compose.yaml").write_text("services:\n  main:\n    labels: " + json.dumps(self.resource_labels()) + "\n")
         if self.delivery:
             import yaml
             from difficulty_delivery import decorate_compose

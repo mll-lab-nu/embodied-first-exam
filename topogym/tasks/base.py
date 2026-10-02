@@ -437,8 +437,16 @@ class RigidTaskDefinition(TaskDefinition):
             poses[name] = (position, rotation)
             bounds[name] = (points.min(axis=0), points.max(axis=0))
             quiet = quiet and np.linalg.norm(velocity) < .001 and np.linalg.norm(angular) < .02
-        contacts = state.get("contacts")
-        if contacts is not None:
+        contact_states = [dict(contacts=state.get("contacts"), grasp=state.get("grasp"))]
+        if state.get("terminal_contract_version", 1) == 2:
+            events = state.get("contact_events") or {}
+            if not events.get("substeps_complete") or not events.get("contact_snapshots"):
+                raise RuntimeError("terminal contract 2 requires complete rigid substep contact coverage")
+            contact_states = events["contact_snapshots"]
+        for sample in contact_states:
+            contacts = sample["contacts"]
+            if contacts is None:
+                continue
             from topogym.utils.grasp import (
                 TASK_CONTACT_PENETRATION_M, GRASP_CONTACT_PENETRATION_M, held_finger_contact_mask,
             )
@@ -446,7 +454,7 @@ class RigidTaskDefinition(TaskDefinition):
             involved = np.isin(a, list(self._task_link_indices)) | np.isin(b, list(self._task_link_indices))
             penetration = np.asarray(contacts["penetration"])
             held = held_finger_contact_mask(contacts, self._finger_links_by_hand,
-                                          self._movable_task_link_indices, state.get("grasp"))
+                                          self._movable_task_link_indices, sample.get("grasp"))
             if penetration[involved & ~held].max(initial=0.) > TASK_CONTACT_PENETRATION_M:
                 return poses, bounds, False, "Task contact penetration exceeded 1 mm"
             if penetration[involved & held].max(initial=0.) > GRASP_CONTACT_PENETRATION_M:

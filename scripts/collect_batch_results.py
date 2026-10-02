@@ -57,7 +57,7 @@ def classify_trial(job, row, mode):
         return "infra_failed", result, reward, trial
     if any(reward.get(key) for key in ("missing_trajectory", "bad_trajectory", "wrong_family")):
         return "invalid_submission", result, reward, trial
-    if not row["evaluable_for_task_success"]:
+    if reward.get("instance_mismatch") or not row["evaluable_for_task_success"]:
         return "not_evaluable", result, reward, trial
     return ("solved" if reward["success"] == 1 else "unsolved"), result, reward, trial
 

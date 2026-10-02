@@ -1,5 +1,7 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
+2026-10-01 合并后修复：新生成包使用 tooling v5 / standard 2.3，候选运行镜像为 0.2.6-cu128。已实现的修复、实际验收和未关闭范围见[实施报告](../debug_logs/run_trials_post_merge_repair_20261001_zh.md)；历史冻结包及下文历史结果不追溯修改。
+
 2026-10-01：本次 pull 的 39 个三档实例与双模式交付，以及 builder 反馈 A 至 F 的逐项解释、修补顺序和验收标准，见 [RCB builder 反馈修补工程计划](builder_feedback_repair_plan_zh.md)。计划同时覆盖预检工具和镜像标签不一致；下文带日期的历史验收记录保留原有范围。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
@@ -651,6 +653,10 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 5. GPU 由多个会话共用，几个 Genesis 进程同时跑会显存不足：验收作业改为按顺序执行，并请其他会话暂缓 GPU 任务。
 
 ## 8. 难度评测入口
+
+当前修复候选使用 tooling v5 / standard 2.3；新旧轨迹、评分和恢复差异见 [2.3 合同](STANDARD_MODE_2_3.md)。镜像构建通过与逐任务物理资格分别报告。
+
+合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 
 主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 默认负责 Docker 镜像准备与控制器启动，实验阶段由 Python 调度器执行。配置在
 [`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。

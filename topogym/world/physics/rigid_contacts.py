@@ -219,11 +219,13 @@ class RigidContactCollector:
     mixed-solver path. IPC owns different contacts and is deliberately rejected.
     """
     def __init__(self, scene, roles, *, geometry_complete, robot_parts=None,
-                 robot_geometry_complete=False):
+                 robot_geometry_complete=False, collect_snapshots=False, grasp=None):
         self.scene, self.solver = scene, scene.sim.rigid_solver
         self.roles, self.geometry_complete = dict(roles), bool(geometry_complete)
         self.robot_parts = dict(robot_parts or {})
         self.robot_geometry_complete = bool(robot_geometry_complete)
+        self.collect_snapshots = bool(collect_snapshots)
+        self.grasp = grasp or (lambda: {})
         if not self.solver.is_active or hasattr(scene.sim.coupler, "checkpoint_store"):
             raise ValueError("Rigid contact collector does not cover IPC")
         self.expected = int(scene.sim.substeps)
@@ -238,7 +240,8 @@ class RigidContactCollector:
             substeps_complete=False, geometry_roles_complete=self.geometry_complete,
             robot_geometry_complete=self.robot_geometry_complete,
             expected_substeps=self.expected, sampled_substeps=0, events=[],
-            ipc_contact_coverage=False, continuous_time_coverage=False)
+            ipc_contact_coverage=False, continuous_time_coverage=False,
+            contact_snapshots=[] if self.collect_snapshots else None)
 
     def begin(self, tick):
         self.summary = self._empty(tick)
@@ -254,6 +257,12 @@ class RigidContactCollector:
     def _sample(self, substep):
         self.solver.collider._contact_data_cache.clear()
         values = {k: to_numpy(v) for k, v in self.solver.collider.get_contacts().items()}
+        if self.collect_snapshots:
+            if len(self.summary["contact_snapshots"]) >= max(1, self.expected):
+                raise RuntimeError("more contact samples than configured solver substeps")
+            self.summary["contact_snapshots"].append(dict(substep=int(substep),
+                contacts={k: values[k].copy() for k in ("link_a", "link_b", "penetration", "force")},
+                grasp=deepcopy(self.grasp())))
         for i, (a, b, penetration) in enumerate(zip(values["geom_a"], values["geom_b"], values["penetration"], strict=True)):
             # Narrowphase can include separated speculative candidates.
             if float(penetration) < 0:

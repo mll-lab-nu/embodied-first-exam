@@ -358,6 +358,7 @@ class Env:
                 self._world.add_attachments(spec.attachments)
             if self.config.grasp_assist.model in {"ipc_soft_band_v1", "pbd_local_patch_v1"}:
                 self._world.prepare_grasp(self.config.grasp_assist)
+            self._world.terminal_contract_version = self.config.terminal_contract_version
             self._world.build()
             self._robot = make_robot(self._world.entities["robot"], cfg.robot_control)
             self._robot.reset_home()
@@ -400,8 +401,13 @@ class Env:
             raise
 
     @_mutation
-    def step(self, action):
+    def step(self, action, *, _physics_steps=None):
         self._require_ready()
+        # Owner replay may cap a previously interrupted control period. Operator
+        # interaction does not expose this keyword; it never extends a period.
+        ticks = self.config.control_decimation if _physics_steps is None else _physics_steps
+        if type(ticks) is not int or not 1 <= ticks <= self.config.control_decimation:
+            raise ValueError("replay tick count must be within one control period")
         if self._terminated or self._truncated:
             raise RuntimeError(
                 "Episode has ended; use privileged rewind or ask the owner to reset"
@@ -424,7 +430,7 @@ class Env:
             self._stage = "command"
             self._robot.apply_action(command)
             self._control_step += 1
-            for _ in range(self.config.control_decimation):
+            for _ in range(ticks):
                 self._stage = "physics"
                 self._world.advance()
                 self._stage = "task"

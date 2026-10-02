@@ -53,7 +53,7 @@ seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchm
 dirs = collections.Counter()
 for t in sorted(os.listdir(tasks)):
     bench = t.split("-")[0]
-    if bench in LAYER_BENCH and t.endswith("-standard") and os.path.isfile(os.path.join(tasks, t, "task.toml")):
+    if bench in LAYER_BENCH and bench != "topogym" and t.endswith("-standard") and os.path.isfile(os.path.join(tasks, t, "task.toml")):
         n_v1 += 1
         for rel, f in sorted(EAI.items()):
             p = os.path.join(tasks, t, rel)
