@@ -5,6 +5,7 @@ The first run builds hedgehog easy (~25 s); later runs read the cache.
 """
 import subprocess
 import sys
+import threading
 import time
 
 import mujoco
@@ -421,3 +422,75 @@ def test_pulling_the_gripper_by_an_edge_translates_without_swinging_it():
     turned = np.zeros(3)
     mujoco.mju_subQuat(turned, data.xquat[base], quat)
     assert np.degrees(np.linalg.norm(turned)) < 5
+
+
+# --- final review fixes --------------------------------------------------------
+
+def test_release_all_keeps_the_gripper_floating():
+    session = view.Session("hedgehog_in_cage_medium")
+    wrist = session.model.body("wrist").id
+    session.command("release")
+    z = session.data.xpos[wrist, 2]
+    _run(session.model, session.data, 1.)
+    assert abs(session.data.xpos[wrist, 2]-z) < 1e-3
+
+
+def test_a_selection_from_the_previous_model_is_ignored():
+    model = mjcf.build(scenes.build("horseshoe_ring_easy"))
+    assert view.selected_body(model, model.nbody+5) == ""
+    assert view.selected_body(model, model.body("target_ring").id) == "target_ring"
+
+
+def test_the_gripper_counts_in_a_check_only_while_it_grips_the_ball():
+    scene = scenes.build("hedgehog_in_cage_medium")
+    model = mjcf.build(scene, gripper=True)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    assert exit_check.held_gripper(model, data) is None
+    mjcf.place_gripper(model, data, data.xpos[model.body("ball").id], standoff=.02)
+    mjcf.hold(model, data, "ball", "grip")
+    assert exit_check.held_gripper(model, data) is not None
+
+
+def test_bad_check_input_is_reported_at_once():
+    session = view.Session("hedgehog_in_cage_easy", gripper=False)
+    assert "could not convert" in session.command("check abc")
+
+
+def test_a_check_finishing_after_a_scene_change_is_dropped(monkeypatch):
+    go, real = threading.Event(), exit_check.check
+
+    def late_check(*args, **kwargs):  # finish only after the scene has changed
+        go.wait(30)
+        return real(*args, **kwargs)
+    monkeypatch.setattr(exit_check, "check", late_check)
+    session = view.Session("hedgehog_in_cage_easy", {"window_widths": 24}, gripper=False)
+    session.command("check")
+    session.command("load horseshoe_ring_easy")
+    go.set()
+    session.checking.join(timeout=60)
+    assert session.arrow is None and "dropped" in session.message
+
+
+def test_cache_key_covers_the_shared_geometry_helpers():
+    task = scenes._task("hedgehog_in_cage_easy")
+    assert "rigid_geometry.py" in {p.name for p in scenes._sources(task)}
+
+
+def test_a_truncated_cache_file_is_rebuilt():
+    path = scenes.cache_path("horseshoe_ring_medium")
+    scenes.build("horseshoe_ring_medium")
+    path.write_bytes(path.read_bytes()[:100])
+    assert scenes.build("horseshoe_ring_medium").name == "horseshoe_ring_medium"
+
+
+def test_pose_names_stay_inside_the_pose_folder(tmp_path):
+    session = view.Session("horseshoe_ring_easy", poses=tmp_path/"poses")
+    session.command("save ../../escape")
+    assert not (tmp_path/"escape.json").exists()
+    assert (tmp_path/"poses"/"horseshoe_ring_easy"/"escape.json").exists()
+
+
+def test_unknown_turn_axes_are_rejected():
+    with pytest.raises(ValueError):
+        exit_check.check(_slit_box_with_rod(), axes=["approach"])

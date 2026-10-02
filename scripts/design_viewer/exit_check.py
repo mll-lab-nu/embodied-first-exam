@@ -120,6 +120,9 @@ def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0., axes=N
     lift: raise the start pose first (m), e.g. the small pick-up before a pull.
     axes: turn only about these axis names (approach / fingers / palm, or x / y / z without a gripper)."""
     start = time.perf_counter()
+    names = gripper[1] if gripper else dict(zip("xyz", np.eye(3)))
+    if axes is not None and set(axes)-set(names):
+        raise ValueError(f"unknown turn axes {sorted(set(axes)-set(names))}; choose from {sorted(names)}")
     if pos is None:
         pos, quat = ball_pose_from_scene(scene)
     pos, rot = np.asarray(pos, float)+[0, 0, lift], Rotation.from_quat(np.asarray(quat, float)[[1, 2, 3, 0]])
@@ -137,8 +140,7 @@ def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0., axes=N
         if free:
             result["label"] = "very_easy"
         elif rotate:
-            axes = {k: v for k, v in (gripper[1] if gripper else dict(zip("xyz", np.eye(3)))).items()
-                    if axes is None or k in axes}
+            axes = {k: v for k, v in names.items() if axes is None or k in axes}
             turns = sweep.turns(pos, rot, axes)
             result["turns_deg"] = turns
             if turns:
@@ -186,7 +188,7 @@ def spike_table(scene):
     """One line per spike at the scene's start pose: world azimuth / elevation and tip beyond the cage."""
     pos, quat = ball_pose_from_scene(scene)
     rot, cage = Rotation.from_quat(quat[[1, 2, 3, 0]]), scene.body("cage")
-    outer = max(np.linalg.norm(p.vertices[:, :2]+cage.pos[:2]-cage.pos[:2], axis=1).max() for p in cage.collision)
+    outer = max(np.linalg.norm(p.vertices[:, :2], axis=1).max() for p in cage.collision)
     lines = []
     for i, s in enumerate(spikes(scene)):
         d = rot.apply(s["direction"])
@@ -233,6 +235,11 @@ def ball_pose(model, data):
     return data.xpos[ball].copy(), data.xquat[ball].copy()
 
 
+def held_gripper(model, data):
+    """Gripper geometry when it grips the ball (it then moves with the ball), else None."""
+    return gripper_geometry(model, data) if "grip_ball" in mjcf.holds(model, data) else None
+
+
 def gripper_geometry(model, data):
     """2F-85 collision geoms (convex hulls, current finger opening) in the ball frame, plus its axes in the world."""
     ball = model.body("ball").id
@@ -277,8 +284,8 @@ def main():
     lift = args.lift_mm/1e3
     if args.pose:
         scene, model, data = mjcf.load_pose(args.pose)
-        gripper = gripper_geometry(model, data) if mjcf.has_gripper(model) else None
-        result = check(scene, *ball_pose(model, data), gripper=gripper, rotate=not args.no_rotate, lift=lift)
+        result = check(scene, *ball_pose(model, data), gripper=held_gripper(model, data), rotate=not args.no_rotate,
+                       lift=lift, axes=args.axes)
     elif args.grasp is not None or args.spike is not None:
         scene = scenes.build(args.scene, scenes.parse_sets(args.set))
         if args.spike is not None:

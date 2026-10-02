@@ -59,3 +59,4 @@ python -m pytest scripts/design_viewer -q                            # 行为测
 - 「TopoGym design」面板与终端使用同一套命令（终端输入 `help`）：切换场景、开关 2F-85 夹爪、放置夹爪（方位角、roll）、开合手指、夹持（grip）或固定（pin）选中物体、刺球出笼检查（结果方向显示为绿色箭头）、保存/读取位姿。
 - `--set key=value` 覆盖 Hedgehog 模板（如 `window_widths=24`）、Horseshoe 模板或 Slotted 几何参数，不修改生成器。
 - 产物：`runs/design_viewer/`（缓存、位姿、检查报告）。
+- 服务只绑定 127.0.0.1，但本机其他用户也能连上这个端口并操作面板；不用时请关闭查看器。

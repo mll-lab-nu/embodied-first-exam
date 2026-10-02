@@ -15,6 +15,7 @@ import copy
 from dataclasses import asdict, dataclass, field
 import hashlib
 import json
+import os
 from pathlib import Path
 import pickle
 import tempfile
@@ -77,13 +78,18 @@ def build(name, overrides=None):
     task = _task(name)
     path = cache_path(name, overrides)
     if path.exists():
-        return pickle.loads(path.read_bytes())
+        try:
+            return pickle.loads(path.read_bytes())
+        except (EOFError, pickle.UnpicklingError):  # interrupted write: rebuild
+            pass
     builder = {"hedgehog_in_cage": _hedgehog, "horseshoe_ring": _horseshoe, "slotted_post_ring": _slotted}[task.task_id]
     with tempfile.TemporaryDirectory() as folder:
         scene = builder(name, task, overrides, Path(folder))
     scene.extras["overrides"] = overrides
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(pickle.dumps(scene))
+    partial = path.with_suffix(f".{os.getpid()}.tmp")
+    partial.write_bytes(pickle.dumps(scene))
+    os.replace(partial, path)  # a reader never sees half a file
     return scene
 
 
@@ -96,13 +102,18 @@ def _task(name):
 
 def cache_path(name, overrides=None):
     """Keyed by variation, overrides, config and every generator source / packaged resource hash."""
-    task, package = _task(name), Path(topogym.__file__).parent
+    task = _task(name)
     digest = hashlib.sha256(json.dumps([name, dict(overrides or {}), task.config], sort_keys=True, default=str).encode())
-    for source in (*sorted((package/"tasks"/task.task_id).glob("*.py")),
-                   *sorted((package/"assets"/"geometry").glob("*.py")),
-                   package/"assets"/"resources"/"catalog.json", Path(__file__)):
+    for source in _sources(task):
         digest.update(source.read_bytes())
     return RUNS/"cache"/name/f"{digest.hexdigest()[:16]}.pkl"
+
+
+def _sources(task):
+    package = Path(topogym.__file__).parent
+    return (*sorted((package/"tasks"/task.task_id).glob("*.py")), *sorted((package/"assets"/"geometry").glob("*.py")),
+            *sorted((package/"utils"/"geometry").glob("*.py")), package/"assets"/"resources"/"catalog.json",
+            Path(__file__))
 
 
 def _apply(fields, overrides):

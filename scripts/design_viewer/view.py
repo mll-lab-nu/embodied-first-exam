@@ -165,28 +165,37 @@ class Session:
             raise ValueError("hedgehog scenes only")
         if self.checking and self.checking.is_alive():
             return "a check is already running"
-        pose = exit_check.ball_pose(self.model, self.data)
-        held = "grip_ball" in mjcf.holds(self.model, self.data)
-        gripper = exit_check.gripper_geometry(self.model, self.data) if held else None
+        lift, scene, model = float(lift_mm)/1e3, self.scene, self.model
+        pose, gripper = exit_check.ball_pose(model, self.data), exit_check.held_gripper(model, self.data)
 
         def run():
-            result = exit_check.check(self.scene, *pose, gripper=gripper, lift=float(lift_mm)/1e3)
-            best = (result.get("min_rotation") or {}).get("best_direction") or result.get("best_direction")
-            self.arrow = (pose[0], np.asarray(best)) if best else None
-            self.message = f"{exit_check.summary(result)}\nreport: {exit_check.save(result)}"
-            print(self.message, flush=True)
+            try:
+                result = exit_check.check(scene, *pose, gripper=gripper, lift=lift)
+                message = f"{exit_check.summary(result)}\nreport: {exit_check.save(result)}"
+            except Exception as error:  # a background failure must reach the panel, not just stderr
+                result, message = {}, f"check failed: {error!r}"
+            if model is not self.model:
+                message = f"check of {scene.name} dropped: the scene changed while it ran"
+            else:
+                best = (result.get("min_rotation") or {}).get("best_direction") or result.get("best_direction")
+                self.arrow = (pose[0], np.asarray(best)) if best else None
+            self.message = message
+            print(message, flush=True)
 
-        self.message = f"checking the current ball pose{' with the gripper' if held else ''} ..."
+        self.message = f"checking the current ball pose{' with the gripper' if gripper else ''} ..."
         self.checking = threading.Thread(target=run, daemon=True)
         self.checking.start()
 
+    def _pose_path(self, name):
+        return self.poses/self.scene.name/f"{Path(name).name}.json"  # names only, no paths
+
     def _do_save(self, name):
-        path = self.poses/self.scene.name/f"{name}.json"
+        path = self._pose_path(name)
         mjcf.save_pose(path, self.scene, self.gripper, self.model, self.data)
         return f"saved {path}"
 
     def _do_open(self, name):
-        path = self.poses/self.scene.name/f"{name}.json"
+        path = self._pose_path(name)
         self.scene, model, data = mjcf.load_pose(path)
         self.gripper = mjcf.has_gripper(model)
         self._rebuild(model, data)
@@ -222,7 +231,7 @@ class Panel:
             changed, on = imgui.Checkbox("Robotiq 2F-85 gripper", s.gripper)
             if changed:
                 send(f"gripper {'on' if on else 'off'}")
-            selected = self.viewer.model.body(self.viewer.perturb.select).name if self.viewer.perturb.select > 0 else ""
+            selected = selected_body(self.viewer.model, self.viewer.perturb.select)
             free = selected in {b.name for b in s.scene.bodies if b.free}
             imgui.Text(f"selected: {selected or '- (double-click a body)'}")
             if imgui.Button("Pin selected") and free:
@@ -258,8 +267,14 @@ class Panel:
             imgui.TextWrapped(s.message)
             imgui.TextWrapped("Design aid only: not physics evidence.")
         imgui.End()
-        self.viewer.extra_geoms[:] = [_arrow(*s.arrow)] if s.arrow is not None else []
+        arrow = s.arrow  # read once: the check thread may clear it
+        self.viewer.extra_geoms[:] = [_arrow(*arrow)] if arrow is not None else []
         return False
+
+
+def selected_body(model, select):
+    """Name of the double-clicked body; '' if none or if the index belongs to the previous model."""
+    return model.body(select).name if 0 < select < model.nbody else ""
 
 
 def _arrow(start, direction, length=.2):

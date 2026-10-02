@@ -212,7 +212,8 @@ def release(model, data, body=None):
             b = model.eq_obj2id[eq]
             held = (model.geom_bodyid == b) & (model.geom_contype == HELD)
             model.geom_contype[held], model.geom_conaffinity[held] = OBJECT, STATIC | OBJECT | GRIPPER
-            model.body_gravcomp[b] = 0
+            if name.startswith("grip_"):  # only a grip turned it on; the wrist floats on its own gravcomp
+                model.body_gravcomp[b] = 0
 
 
 def holds(model, data):
