@@ -92,7 +92,9 @@ Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts
 ```
 Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
 included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
-summary shows side by side. Switches: `GATEWAY=0` (direct API calls), `GATEWAY_RAW=1` (raw bodies; private, they hold the
+summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
+gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
+before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Switches: `GATEWAY=0` (direct API calls), `GATEWAY_RAW=1` (raw bodies; private, they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
 attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
 reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
