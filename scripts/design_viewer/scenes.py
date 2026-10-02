@@ -74,14 +74,11 @@ def parse_sets(items):
 
 def build(name, overrides=None):
     overrides = dict(overrides or {})
-    task_id = next((t for t in TASKS if name.startswith(t)), None)
-    if task_id is None:
-        raise ValueError(f"{name}: not a variation of {TASKS}")
-    task = task_definition(task_id, name)(None, seed=0)
-    path = RUNS/"cache"/name/f"{_key(name, overrides, task)}.pkl"
+    task = _task(name)
+    path = cache_path(name, overrides)
     if path.exists():
         return pickle.loads(path.read_bytes())
-    builder = {"hedgehog_in_cage": _hedgehog, "horseshoe_ring": _horseshoe, "slotted_post_ring": _slotted}[task_id]
+    builder = {"hedgehog_in_cage": _hedgehog, "horseshoe_ring": _horseshoe, "slotted_post_ring": _slotted}[task.task_id]
     with tempfile.TemporaryDirectory() as folder:
         scene = builder(name, task, overrides, Path(folder))
     scene.extras["overrides"] = overrides
@@ -90,15 +87,22 @@ def build(name, overrides=None):
     return scene
 
 
-def _key(name, overrides, task):
-    """Variation, overrides, config and every generator source / packaged resource hash."""
-    package = Path(topogym.__file__).parent
-    digest = hashlib.sha256(json.dumps([name, overrides, task.config], sort_keys=True, default=str).encode())
+def _task(name):
+    task_id = next((t for t in TASKS if name.startswith(t)), None)
+    if task_id is None:
+        raise ValueError(f"{name}: not a variation of {TASKS}")
+    return task_definition(task_id, name)(None, seed=0)
+
+
+def cache_path(name, overrides=None):
+    """Keyed by variation, overrides, config and every generator source / packaged resource hash."""
+    task, package = _task(name), Path(topogym.__file__).parent
+    digest = hashlib.sha256(json.dumps([name, dict(overrides or {}), task.config], sort_keys=True, default=str).encode())
     for source in (*sorted((package/"tasks"/task.task_id).glob("*.py")),
                    *sorted((package/"assets"/"geometry").glob("*.py")),
                    package/"assets"/"resources"/"catalog.json", Path(__file__)):
         digest.update(source.read_bytes())
-    return digest.hexdigest()[:16]
+    return RUNS/"cache"/name/f"{digest.hexdigest()[:16]}.pkl"
 
 
 def _apply(fields, overrides):
@@ -261,4 +265,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Run the imported module so cached pickles name scripts.design_viewer.scenes.Scene, not __main__.Scene.
+    from scripts.design_viewer.scenes import main as module_main
+    module_main()
