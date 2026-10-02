@@ -57,6 +57,9 @@ tasks, each with one online event, in both modes: 48 cases, 96 tasks.
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
 ## Licence-dependent parts
+_Status 2026-10-02: the LIBERO-MAX authors indicated to our PI that this use is fine, but there is no written
+permission yet; until there is, this branch assumes none._
+
 LIBERO-MAX has no licence file. Two parts depend on it: (1) the event parameters and case choice (`cases.json`, and the
 instances made from it), (2) LIBERO-MAX's event runtime in the image (`src/libero_max`, about 1,800 lines used:
 `substrate.py`, `pro_runtime.py`, `cosmos_integration.py`, `libero_backend.py`, `runtime.py`, `scenario.py`,
