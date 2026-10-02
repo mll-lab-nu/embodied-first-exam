@@ -333,16 +333,18 @@ affecting the verdict.
 |---|---|---|
 | Report success together with cost: tokens, money, turns, wall clock, simulation steps, calls | SHOULD | [current] |
 | Official results use Harbor's native agents (`-a codex`, `-a claude-code`, …), configured through environment variables (OpenRouter, Azure, subscriptions) | MUST | [new] |
-| **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] (not applied yet, §7 Open 3) |
+| **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] (enforced while the usage gateway runs; without it, the after-run check is not implemented yet, §7 Open 3) |
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
 | Results are not committed to the repository: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory, no batch reports under `docs/` | MUST | [CI] for task directories |
 | Privileged and standard results reported separately; standard results state the protocol version and reset budget | MUST | [new] |
 
-Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
-(`result.json`); the results pipeline marks trials over budget as failed and records `over_token_budget = 1` in the
-results metadata. That check is not implemented yet (§7 Open 3). The optional usage gateway (`scripts/usage_gateway/`,
-D11) records each trial's tokens per request while it runs; it does not enforce the budget.
+Harbor 0.23 has no token cap. **With the usage gateway on** (`GATEWAY=1` in `scripts/run_agent_batch.sh`, D11), the
+budget is enforced during the run: once a trial's recorded input or output reaches its budget, the gateway refuses every
+further model request of that trial (HTTP 400, "token budget exceeded"; the request in flight completes), the agent
+stops, and `<trial>/gateway/totals.json` records `over_token_budget = 1`; the results tooling counts such a trial as
+failed. Budgets: `TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`, default 100M / 10M. **Without the gateway**, the budget would be
+applied after the run to Harbor's counts (`result.json`); that check is not implemented yet (§7 Open 3).
 
 ## 6. Versioning and extensions
 | Item | Level | Basis |
@@ -391,23 +393,22 @@ Open:
 1. ~~Images~~ done 2026-10-02: every base image is `ghcr.io/mll-lab-nu/eai-<name>`; public unless `BUILD_ONLY`
    (RoboLab, BEHAVIOR-1K: private packages); RoboCasa365 and VLABench stay private until their asset licences are checked.
 2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
-3. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
-   results site.
+3. The results pipeline publishes to the results site, and applies the token budget after the run for runs without the
+   usage gateway (with it, the budget is enforced during the run, §5).
 4. Solvability: tasks whose `oracle_evidence` is "none known" (38 privileged/standard directories) and the 15
    DexToolBench `partial` pairs (whose reference policy reaches only part of the goals, so it scores 0) have no verified
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
-5. Agent egress (owner, 2026-10-02: to be decided after a probe): which hosts an allowlist needs beyond the model APIs.
-   Findings so far: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
+5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
+   Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
    harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
 
-Decided, not yet implemented (owner, 2026-10-02; plan in the maintainers' design notes):
-1. Success is the final state, held: the predicate holds at the end and still holds after the last command is held for
-   1 s of simulated time, in both modes. Changes graders, services and instructions; affected oracles are re-verified.
-2. Standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its own sandbox; the
-   sidecar's verdict stays authoritative, and a verifier replay that disagrees is reported as a warning
+Decided (owner, 2026-10-02):
+1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
+   episode return, goal count), stated in its instructions and `docs/benchmarks/<bench>.md`; the protocol does not impose
+   one rule across benchmarks.
+2. Not yet implemented — standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its
+   own sandbox; the sidecar's verdict stays authoritative, and a verifier replay that disagrees is reported as a warning
    (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
    image (§2.4) and to read the trajectory (§4.8).
-3. For simple tasks (a reference model passes them reliably and quickly in privileged mode), the agent gets no reward
-   function and no success check before it submits: the goal stays in words, the predicate code leaves the agent
-   image and lives in `tests/` only (the HumanoidBench pattern).
-4. Deferred: one global seed per release that picks each task's instance from a pool of pre-validated instances.
+3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
+   privileged mode (no hiding of reward or success checks).
