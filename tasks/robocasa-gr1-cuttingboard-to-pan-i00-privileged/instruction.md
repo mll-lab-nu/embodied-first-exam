@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromCuttingboardToPanSplitA
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromCuttingboardToPanSplitA` task (robosuite, MuJoCo).
-**Task: pick the bell pepper from the cutting board and place it in the pan**
+**Task: pick the bell pepper from the cutting board and place it in the pan.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
@@ -15,6 +15,12 @@ The verifier replays your actions from the frozen start in a separate sandbox (t
 CPU is bit-exact) and applies the environment's own success check for `PosttrainPnPNovelFromCuttingboardToPanSplitA` (`_check_success`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
+
+All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):
+- the bell pepper is in the pan: touching the pan, with its centre horizontally within 0.7 x the pan's horizontal radius of the pan's centre;
+- the bell pepper does not touch the counter;
+- the pan is upright (its z axis has a world-z component above 0.8);
+- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the bell pepper's origin and more than 0.25 m from the pan's origin (`any_gripper_obj_far`, th = 0.25) -- release the bell pepper and move both hands away before the end.
 
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
@@ -34,6 +40,7 @@ img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.came
   verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
   state of the run you are recording; use `s.check()`.
 - World frame: metres, z up; `s.state()["bodies"]` gives every body's position and orientation (quaternions w x y z).
+  The action's pose targets are in the robot's base frame. The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.69788, -2.14277, 0.90223) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
 - Everything in `s.env`, `s.model` and `s.data` is readable (privileged mode).
 
 ## Rules
