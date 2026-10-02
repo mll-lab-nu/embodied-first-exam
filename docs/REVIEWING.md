@@ -26,7 +26,8 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 - Is the predicate checked at the end of the replay, and can it be true without doing the task?
 - Standard mode: four endpoints only, RCB1 responses, no reset (unless the optional capability is declared and its
   results are reported separately), crash recovery, `success = replay_success ∧ deterministic`.
-- Does the task run with Harbor's native agents, without custom adapters, runners or gateways?
+- Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
+  the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in `-privileged` / `-standard`; README in the standard layout; no `results/` in task directories.
 
