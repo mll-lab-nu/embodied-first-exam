@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa365 |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `robocasa365-close-stand-mixer-head-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |
