@@ -56,6 +56,13 @@ results site with `scripts/write_task_results.py --out` outside the repository (
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
+To watch a batch live: `scripts/live_board.py --jobs <JOBS>` (repeatable; stdlib only) serves a page on 127.0.0.1 that
+refreshes every 5 s. It shows every trial as pending, setup, running (agent time against the task's limit), verifying,
+success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
+output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
+another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
+addresses.
+
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
 `scripts/mem_guard.py` (keeps 2 GiB of host memory available by killing the largest benchmark container first),
