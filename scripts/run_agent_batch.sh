@@ -3,7 +3,7 @@
 # started in the background (inside `sg docker -c` if docker needs the group):
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
 # Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
-# records. Env (defaults):
+# records and is off by default. Env (defaults):
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak web_search=disabled --ak reasoning_summary=detailed"
@@ -31,9 +31,10 @@
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
-#   GATEWAY      1 (default) = route the agent's model API calls through scripts/usage_gateway/gateway.py, which forwards
+#   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
+#                calls through scripts/usage_gateway/gateway.py, which forwards
 #                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
-#                <trial>/gateway/ (usage.jsonl, totals.json); 0 = the agent calls its API directly
+#                <trial>/gateway/ (usage.jsonl, totals.json)
 #   GATEWAY_RAW  0 (default); 1 = the gateway also keeps every request and response body (<trial>/gateway/raw/;
 #                private: it holds the whole conversation)
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
@@ -51,7 +52,7 @@ AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
-GATEWAY="${GATEWAY:-1}"; GATEWAY_RAW="${GATEWAY_RAW:-0}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
+GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-0}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
 # (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
@@ -101,7 +102,7 @@ if [ "$GATEWAY" = 1 ]; then
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
   for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
-  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); GATEWAY=0 runs without it"; exit 2; }
+  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"
   # the upstream each base URL would have used: this environment, else the env file, else the API's default
   upstream() {  # <VAR> <default>
