@@ -1,7 +1,7 @@
 # RoboCasa · CoffeePressButton
 
 A **Franka Panda arm on an Omron mobile base** (with a torso lift) works in a kitchen: RoboCasa's `CoffeePressButton` kitchen task (robosuite, MuJoCo).
-**Task: press the button on the coffee machine to serve coffee**
+**Task: Press the button on the coffee machine to serve coffee.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
@@ -16,6 +16,11 @@ CPU is bit-exact) and applies the environment's own success check for `CoffeePre
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+What `CoffeePressButton`'s check requires (RoboCasa @ 756598a), all on that final state:
+- The coffee machine is on: it switches on the first time the gripper touches its start button and then stays on.
+- The gripper's grip site is more than 15 cm from the start button: move the hand away after pressing.
+A "centre" is a body's origin; "touches" means a MuJoCo contact.
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool
@@ -29,7 +34,7 @@ s.replay(A)          # reset, then replay A (what the verifier does) -> {"succes
 s.reset()            # back to the frozen start, as often as you like (it takes a few seconds)
 img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views; s.render_grid()
 ```
-- Actions: 12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion per control step in the robot's base frame, scaled by the controller (1.0 = 5 cm and 0.5 rad per step); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame; `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; <= 0: arm mode, the default -1). Every channel is clipped to [-1, 1].
+- Actions: 12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion per control step in the robot's base frame, scaled by the controller (1.0 = 5 cm and 0.5 rad per step); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's target velocities in its own frame (1.0 = 1 m/s for `base_x` / `base_y` and 1.5 rad/s for `base_yaw`; force-limited velocity servos, so the base may lag the target); `torso` -- the torso lift, a joint-position controller with delta input (each step sets the lift's height target to its current height + 0.05 m × the value, so 1.0 = 5 cm per step; lift range 0–0.34 m); `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; <= 0: arm mode, the default -1). Every channel is clipped to [-1, 1].
 - The success check runs twice after every control step and once at reset, in your session exactly as in the
   verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
   state of the run you are recording; use `s.check()`.

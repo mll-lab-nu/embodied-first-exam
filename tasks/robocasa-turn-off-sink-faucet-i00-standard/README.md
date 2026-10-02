@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `robocasa-turn-off-sink-faucet-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |

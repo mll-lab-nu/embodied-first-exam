@@ -3,6 +3,7 @@
 
     python3 scripts/<bench>/generate.py            # every verified environment in frozen/report.json
     python3 scripts/<bench>/generate.py PreSoakPan
+    python3 scripts/<bench>/generate.py --check    # render into a temporary directory and compare with tasks/
 
 Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
 in shared/ and the standard-mode service images/<bench>/standard/server_casa.py. Every task directory is rewritten;
@@ -12,13 +13,14 @@ shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(1, str(ROOT / "scripts"))
-from envs import SOURCES, slug  # noqa: E402
+from envs import SOURCES, SUCCESS, slug  # noqa: E402
 from task_conventions import normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
 
 # -- benchmark configuration -----------------------------------------------------------------------------------
@@ -75,8 +77,11 @@ def action_text(dim: int) -> str:
         return (
             "12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion "
             "per control step in the robot's base frame, scaled by the controller (1.0 = 5 cm and 0.5 rad per step); "
-            "`grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame; "
-            "`torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; "
+            "`grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's target velocities in its own "
+            "frame (1.0 = 1 m/s for `base_x` / `base_y` and 1.5 rad/s for `base_yaw`; force-limited velocity servos, so "
+            "the base may lag the target); `torso` -- the torso lift, a joint-position controller with delta input "
+            "(each step sets the lift's height target to its current height + 0.05 m × the value, so 1.0 = 5 cm per "
+            "step; lift range 0–0.34 m); `hybrid_mode` (> 0: base mode, the arm's goal moves with the base; "
             "<= 0: arm mode, the default -1). Every channel is clipped to [-1, 1]."
         )
     if dim == 13:
@@ -95,6 +100,23 @@ def action_text(dim: int) -> str:
     )
 
 
+def sentence(text: str) -> str:
+    """The upstream instruction as a sentence: capital first letter, full stop (RoboCasa's single-stage texts have neither)."""
+    text = text.strip()
+    text = text[:1].upper() + text[1:]
+    return text if text.endswith((".", "!", "?")) else text + "."
+
+
+def success_text(rec: dict) -> str:
+    """What the environment's success check requires, as a list (envs.SUCCESS, from the upstream predicate)."""
+    conds = SUCCESS[rec["env"]]
+    items = "\n".join(f"- {c[:1].upper() + c[1:]}." for c in conds)
+    note = ""
+    if any("centre" in c or "touches" in c for c in conds):
+        note = 'A "centre" is a body\'s origin; "touches" means a MuJoCo contact.\n'
+    return f"What `{rec['env']}`'s check requires (RoboCasa @ 756598a), all on that final state:\n{items}\n{note}"
+
+
 def hold_note(rec: dict) -> str:
     if rec["success_after_hold"]:
         return ""
@@ -109,7 +131,7 @@ def privileged_instruction(rec: dict) -> str:
     return f"""# {TITLE} · {env}
 
 {ROBOT_TEXT[0].upper() + ROBOT_TEXT[1:]} {SCENE}: {ENV_DOC.format(env=env)} (robosuite, MuJoCo).
-**Task: {rec["instruction"]}**
+**Task: {sentence(rec["instruction"])}**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations (kitchen
 layout, style, fixtures, objects and their poses).
 
@@ -124,6 +146,7 @@ CPU is bit-exact) and applies the environment's own success check for `{env}` (`
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+{success_text(rec)}
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool
@@ -157,7 +180,7 @@ def standard_instruction(rec: dict) -> str:
     return f"""# {TITLE} · {env} — STANDARD MODE (robot as a service)
 
 {ROBOT_TEXT[0].upper() + ROBOT_TEXT[1:]} {SCENE}: {ENV_DOC.format(env=env)} (robosuite, MuJoCo).
-**Task: {rec["instruction"]}**
+**Task: {sentence(rec["instruction"])}**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -178,6 +201,7 @@ the environment's own success check for `{env}` to the state **after the last ex
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+{success_text(rec)}
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -236,7 +260,7 @@ def privileged_readme(rec: dict) -> str:
     demo = rec.get("demonstration") or {}
     cut = " (cut at its first success)" if rec["truncated"] else ""
     task = (
-        f"{ENV_DOC.format(env=env)} with {ROBOT_TEXT.replace('**', '')}: {rec['instruction']} Produce one replayable "
+        f"{ENV_DOC.format(env=env)} with {ROBOT_TEXT.replace('**', '')}: {sentence(rec['instruction'])} Produce one replayable "
         "trajectory of the robot's native controller commands on one frozen instance; graded on the state after the "
         f"last action. Generated by `scripts/{BENCH}/generate.py`; benchmark notes in `docs/benchmarks/{BENCH}.md`."
     )
@@ -300,7 +324,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-privileged"
-description = "{TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+description = "{TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {sentence(rec["instruction"])} Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "privileged"]
 
@@ -353,7 +377,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {sentence(rec["instruction"])} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "standard-mode"]
 
@@ -463,9 +487,9 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
     path.chmod(mode)
 
 
-def make(rec: dict) -> None:
+def make(rec: dict, out: Path = ROOT / "tasks") -> None:
     fz = FROZEN / rec["slug"]
-    p = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-privileged"
+    p = out / f"{BENCH}-{rec['slug']}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", privileged_toml(rec))
     put(p / "instruction.md", privileged_instruction(rec))
@@ -482,7 +506,7 @@ def make(rec: dict) -> None:
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
     put(p / "solution/oracle.npz", src=fz / "oracle.npz")
 
-    s = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-standard"
+    s = out / f"{BENCH}-{rec['slug']}-i00-standard"
     reset_dir(s)
     put(s / "task.toml", standard_toml(rec))
     put(s / "instruction.md", standard_instruction(rec))
@@ -510,8 +534,13 @@ def verified(rec: dict) -> bool:
     return all(rec.get(k) for k in keys) and not rec.get("initial_success")
 
 
-def main(envs: list[str]) -> None:
+def files(d: Path) -> dict[str, tuple[bytes, int]]:
+    return {str(f.relative_to(d)): (f.read_bytes(), f.stat().st_mode & 0o777) for f in sorted(d.rglob("*")) if f.is_file()}
+
+
+def main(envs: list[str], check: bool = False) -> None:
     report = json.loads((FROZEN / "report.json").read_text())
+    out = Path(tempfile.mkdtemp(prefix=f"{BENCH}-check-")) if check else ROOT / "tasks"
     n = 0
     for env in envs:
         rec = report.get(slug(env))
@@ -519,11 +548,30 @@ def main(envs: list[str]) -> None:
             if envs is not ALL:
                 raise SystemExit(f"{env}: frozen instance or reference not verified (re-run import_references.sh)")
             continue
-        make(rec)
+        make(rec, out)
         n += 1
-    print(f"generated {2 * n} task directories")
+    if not check:
+        print(f"generated {2 * n} task directories")
+        return
+    bad = []
+    for d in sorted(out.iterdir()):
+        mine = ROOT / "tasks" / d.name
+        if not mine.is_dir() or files(d) != files(mine):
+            bad.append(d.name)
+    if envs is ALL:  # a task directory of this benchmark that the generator no longer writes (RoboCasa-GR1 is another one)
+        ours = {d.name for d in out.iterdir()}
+        bad += sorted(
+            d.name
+            for d in (ROOT / "tasks").glob(f"{BENCH}-*")
+            if d.is_dir() and not d.name.startswith(f"{BENCH}-gr1-") and d.name not in ours
+        )
+    shutil.rmtree(out)
+    if bad:
+        raise SystemExit("differs from a fresh render (re-run generate.py): " + ", ".join(bad))
+    print(f"ok: {2 * n} task directories match a fresh render")
 
 
 ALL = sorted(SOURCES)
 if __name__ == "__main__":
-    main(sys.argv[1:] or ALL)
+    args = [a for a in sys.argv[1:] if a != "--check"]
+    main(args or ALL, check="--check" in sys.argv[1:])

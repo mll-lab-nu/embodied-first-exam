@@ -1,0 +1,17 @@
+metaworld @ git+https://github.com/Farama-Foundation/Metaworld.git@59fc34d7768af9785e4688c3e1db671424f4a6c3
+mujoco==3.3.0
+numpy==1.26.4
+gymnasium==1.1.1
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+pillow==11.2.1
+absl-py==2.5.0
+cloudpickle==3.1.2
+etils==1.14.0
+farama-notifications==0.0.6
+fsspec==2026.9.0
+glfw==2.10.2
+pyopengl==3.1.10
+scipy==1.17.1
+typing-extensions==4.16.0
+zipp==4.1.0
