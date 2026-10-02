@@ -23,7 +23,9 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md
 - Local docker sandbox has no `[environment].gpus`. robosuite tasks don't need a GPU; RoboTwin and MuJoCo tasks pass one through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
-- Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no custom gateways or adapters.
+- Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no adapters, and no gateway that holds
+  credentials or changes requests. The optional usage gateway (`scripts/usage_gateway/`, `GATEWAY=1` in
+  `run_agent_batch.sh`, off by default) only forwards and records token usage (PROTOCOL D11, docs/RUNNING.md).
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
   docs/RUNNING.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.
