@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/disassemble` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-disassemble-i00-privileged`: the same instance and success check (Lift the nut off the peg.), served

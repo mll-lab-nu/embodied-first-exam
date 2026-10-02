@@ -5,7 +5,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0
+    image: ghcr.io/mll-lab-nu/eai-vlabench:0.1.0
     volumes:
       - ./sim:/srv:ro
     command: python /srv/server.py

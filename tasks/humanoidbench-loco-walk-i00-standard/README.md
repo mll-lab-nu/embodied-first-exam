@@ -9,7 +9,7 @@
 | Family / instance | `walk` / seed 0 |
 | Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; published RL passes as well (SAC 854, FastTD3 928); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-walk-i00-privileged`: the same

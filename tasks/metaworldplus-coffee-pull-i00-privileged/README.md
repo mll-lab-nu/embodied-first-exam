@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/coffee-pull` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `coffee-pull-v3` (reward v2) on one frozen instance: Pull the mug away from the coffee machine to the target. The agent writes a

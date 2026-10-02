@@ -7,7 +7,7 @@ public_test instance 301. The generator knows 38 more challenge tasks; they stay
 solution or a positive example (below).
 
 ## Prerequisites (every BEHAVIOR run)
-- **The image**, built on the host: `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:<images/behavior/VERSION>`
+- **The image**, built on the host: `ghcr.io/mll-lab-nu/eai-behavior:<images/behavior/VERSION>`
   is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
   Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
   never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.

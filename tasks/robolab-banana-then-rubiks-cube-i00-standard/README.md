@@ -9,7 +9,7 @@
 | Family / instance | `banana_then_rubiks_cube` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-banana-then-rubiks-cube__QRpikDi (robolab-banana-then-rubiks-cube-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/banana_then_rubiks_cube/unlimited/); robolab-banana-then-rubiks-cube__HwFn4uZ (robolab-banana-then-rubiks-cube-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/banana_then_rubiks_cube/limited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Standard-mode twin of `robolab-banana-then-rubiks-cube-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

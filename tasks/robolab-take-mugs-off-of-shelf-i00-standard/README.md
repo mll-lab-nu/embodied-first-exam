@@ -9,7 +9,7 @@
 | Family / instance | `take_mugs_off_of_shelf` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-take-mugs-off-of-shelf-i__5HNdr8K (robolab-take-mugs-off-of-shelf-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_mugs_off_of_shelf/unlimited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Standard-mode twin of `robolab-take-mugs-off-of-shelf-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

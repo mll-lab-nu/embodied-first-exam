@@ -9,7 +9,7 @@
 | Family / instance | `hiding_Easter_eggs` / seed 301 |
 | Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-hiding-Easter-eggs-i00__QL9YpHL (behavior-lunaxh-t8-0927, the privileged twin behavior-hiding-Easter-eggs-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 20a382a8; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/hiding_Easter_eggs/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/hiding_Easter_eggs/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
 Standard-mode twin of `behavior-hiding-Easter-eggs-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Hide the Easter eggs in the garden. The three eggs are inside the wicker basket on the lawn; take all three out and lay them on the lawn next to one tree (any tree in the garden, but the same tree for all three).

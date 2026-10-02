@@ -9,7 +9,7 @@
 | Family / instance | `dynamo` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 KinDER `kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and

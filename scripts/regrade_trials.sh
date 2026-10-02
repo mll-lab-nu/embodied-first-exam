@@ -17,7 +17,7 @@ for tr in "$JOB"/robotwin_2_0_*/; do
   echo "re-grading $task (grader_error=$ge video_rendered=$vr)"
   cp -n "$rj" "$tr/verifier/reward.orig.json"
   docker run --rm --gpus all --shm-size 8g -v "$R/tasks/$task/tests:/tests:ro" -v "$tr/artifacts/app/output:/app/output:ro" -v "$tr/verifier:/logs/verifier" \
-    -e PYTHONPATH=/tests:/opt/RoboTwin -w /opt/RoboTwin ghcr.io/jameskrw/rcb-robotwin:0.1.1 \
+    -e PYTHONPATH=/tests:/opt/RoboTwin -w /opt/RoboTwin ghcr.io/mll-lab-nu/eai-robotwin:0.1.1 \
     bash -c "python /tests/grade.py --family $fam --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 2>/logs/verifier/grade.regrade.log; find /logs/verifier -user root -exec chown 1013:1014 {} +" 2>&1 | grep -v -E "NVIDIA|CUDA|====|icense|copy of|^$"
   echo "  -> $(cat "$rj")"
 done

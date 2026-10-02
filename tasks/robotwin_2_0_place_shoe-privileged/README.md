@@ -9,7 +9,7 @@
 | Family / instance | `place_shoe` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 place_shoe (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to grab the shoe from the table and place it on the mat. Frozen scene instance (RoboTwin seed 28831).

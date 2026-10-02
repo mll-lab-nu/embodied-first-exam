@@ -9,7 +9,7 @@
 | Family / instance | `stamp_seal` / seed 91573 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 stamp_seal (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Grab the stamp and stamp onto the specific color mat. Frozen scene instance (RoboTwin seed 91573).

@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/sweep` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `sweep-v3` (reward v2) on one frozen instance: Sweep the object to the target position. The agent writes a

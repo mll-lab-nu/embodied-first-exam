@@ -1,6 +1,6 @@
 """Generate tasks/robotwin_2_0_<task>-privileged/ from the stack_blocks_two template (RoboTwin 2.0 tasks only).
 usage: scripts/robotwin_mk_task.py <task> <seed> "<goal text>" "<difficulty paragraph>"
-Then, in the GPU container (docker run --gpus all -v $PWD/tasks:/tasks ghcr.io/jameskrw/rcb-robotwin:0.1.1):
+Then, in the GPU container (docker run --gpus all -v $PWD/tasks:/tasks ghcr.io/mll-lab-nu/eai-robotwin:0.1.1):
   make-instance --task <task> --seed <seed> --out /tasks/robotwin_2_0_<task>-privileged/environment/instance.json (copy to tests/),
   run-oracle + replay, then harbor run -a oracle / -a nop, then cd tasks && harbor add --scan .
 Pick the seed with scripts/robotwin_expert_sweep.py (expert must pass on it; avoid the public dataset seeds).
@@ -126,7 +126,7 @@ readme = f'''# robotwin_2_0_{task}-privileged
 | Simulator / robot | RoboTwin 2.0 (SAPIEN 3 / PhysX + CuRobo) / aloha-agilex (dual arm) |
 | Family / instance | `{task}` / RoboTwin seed {seed} (deliberately not one of the seeds used by the public RoboTwin dataset) |
 | Task type / tier | trajectory / privileged |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` (needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` (needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
 | Agent budget | 3600 s |
 | RoboTwin eval step limit | {step_lim} (policy-eval budget upstream; indicative of task length) |
 
