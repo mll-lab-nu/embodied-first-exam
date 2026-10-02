@@ -48,7 +48,8 @@
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
-# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log.
+# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; in a browser, every trial's
+# state (pending / running / done) with scripts/live_board.py --jobs $JOBS.
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
@@ -94,6 +95,18 @@ LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
 log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES, web search $WEB_SEARCH"
+# the batch's plan, for scripts/live_board.py: every job this command runs, "pending" there until it starts
+mkdir -p "$JOBS/.plan"
+python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
+import json, os, pathlib, sys
+repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
+name = lambda m, t: f"{t}-standard" if m in ("standard", "limited") else f"{t}-privileged"
+jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
+        for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
+tmp = pathlib.Path(f"{out}.{os.getpid()}")
+tmp.write_text(json.dumps({"batch": batch, "run_id": run_id, "jobs": jobs}, indent=1))
+tmp.replace(out)
+PY
 
 # append-only mirror of every trial's agent/ directory, out of every trial container's reach
 if [ "$LOG_MIRROR" = 1 ] && ! docker ps --format '{{.Names}}' | grep -qx rcb-log-mirror; then
