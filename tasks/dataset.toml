@@ -546,6 +546,406 @@ name = "robot-coding-bench/kinder-tossing-i00-standard"
 digest = "sha256:78d9074aaa4d7dddbab34c2ac5619abd488f123b5e9e8286c8143b56d1d6dfbf"
 
 [[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-i00-privileged"
+digest = "sha256:0beffd02b0b1a28fb32c1cff3b8020bce92a3beb17541b8d4269a54da8f3f0f2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-i00-standard"
+digest = "sha256:423bf937c7c4974ed263b0e1b966ada6808f2bf60f7da75644ff4aa03d48a1e9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-i00-privileged"
+digest = "sha256:70937da0a51e36bf3ddee66d1e676c30b4cb04782215ed7cdf1730a835d02114"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-i00-standard"
+digest = "sha256:ed1a6b7afa2208eb2df95dc5e85e082e250f057fb04f4819f1e800aa5d979490"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-i00-privileged"
+digest = "sha256:16d1a6f368bc203953f975de6361f126dfc9bce734d499e3325326e70ef9abe7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-i00-standard"
+digest = "sha256:f702dc58da8b6c55c94dd7cfc619af5c5498dadddbd80a542e0220d34444b55a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-i00-privileged"
+digest = "sha256:300f15f352eb3f1d55696840377c8230706c71c8c0ff5e6b5942499269c695f0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-i00-standard"
+digest = "sha256:d601913fadff695eced70dec5f4cf2d59637ba71857ca4ffc8627c801ee3c993"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-i00-privileged"
+digest = "sha256:e2f7e533baaf101ee3a9153befaf31d3f8ba219437552f51a8ec0213c25eed83"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-i00-standard"
+digest = "sha256:2d7713449ae74bd5402a6ee777bb0d76a04d718e600e31fa2f1e60389c6b98d7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-i00-privileged"
+digest = "sha256:f94c65b568862defdd00516c4607aa2daeb00adbfb1d652ba0f4195bc3845285"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-i00-standard"
+digest = "sha256:e32df2dc289f1233c224cf06580e57b23243f4b7da8bbe83446ba64f854011bc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-i00-privileged"
+digest = "sha256:3df7f418094e95079b5226d8b967e37de1969b602646933fada157258487eeb1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-i00-standard"
+digest = "sha256:6df582ec7515ee490c23c7836e75e89e311af6e655e2ef9686f131adef6cb2af"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-i00-privileged"
+digest = "sha256:f54595ac92e2648880d950ea792cc0530c03df548bc4738ab9cdb0a37724dd7b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-i00-standard"
+digest = "sha256:e3b720e7c474ba3262c6cff4cef33b23dfd30cab70b11afef81e6f68ee7f9dd2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-i00-privileged"
+digest = "sha256:6d9fa5306a1c817987e55e41420229d7718ca46c9f17ed5311581efef07851eb"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-i00-standard"
+digest = "sha256:23eafc10874767ffaa1c00b181bb37ab40d6f1a36bc52a0dd7acd49e1a56fe11"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-i00-privileged"
+digest = "sha256:061d2733e93336eeaf47bf86e398e4f4ad482359ecac1c5d33ab318018aff856"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-i00-standard"
+digest = "sha256:f57939da7f23d9b5a69a0000a2484c1e070effc20fdf482d99f8cfc7aad7247e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-i00-privileged"
+digest = "sha256:294847c80f7a5c5e93644b9089d5fc14fca2a1ca0da5d239c23a8c0007886754"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-i00-standard"
+digest = "sha256:b9cde0bc36b2271e511e05c19194e2179a3faa48b5ad9ca62a7f4952bd3bdb33"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-i00-privileged"
+digest = "sha256:f7d1641330b3b0cf4cf72465e52b8c6e906e1fd72fd0f395c3eee0a743da1216"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-i00-standard"
+digest = "sha256:b9957c4ab902c1c36bc5b431202a7736a0d56e20a6e60c09b085802f11f740e0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-i00-privileged"
+digest = "sha256:308330d363311a1132b9e6c40f7de5297980c43b415fe53280340a253f4d3a6f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-i00-standard"
+digest = "sha256:c0486656bc4b4c61fb13aaf0fdd10b27dd70d08616ab0a3f7e22b04e62ac71be"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-i00-privileged"
+digest = "sha256:d4e4da34baec12f31c093ded95b9c48ccf837e50ff4f181b9f63c8f562a81db6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-i00-standard"
+digest = "sha256:833bcf9fa6505a0a09f682e9dcf058c32f922ff260b4e27785f55bfec55e096d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-i00-privileged"
+digest = "sha256:18b8cd26f62657694cdede8526d91a34ff3bdad5da2413c5520362eb58495d65"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-i00-standard"
+digest = "sha256:2a8202d6f7644fcaff0edbb6a7be42766a1612cd9e56f278a58dcef5676216a2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-i00-privileged"
+digest = "sha256:949f60af1fd04b2b5704aae8b274eaaafb6f0e62966af73420116d669733449c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-i00-standard"
+digest = "sha256:8b55ac1217e0f29dffd08be62c8d2faf4e0f991bb596f2435aba93169b3b8864"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-i00-privileged"
+digest = "sha256:14f174f31e7c0ae65ae7fdcb4dcd7f755db9c422f33f2373fe2c48851df0f9b9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-i00-standard"
+digest = "sha256:dd5885dc75a8b1f9c336fb0d29e09ba2bbe044df6c22288b9aadcbe9bdce1f4d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-i00-privileged"
+digest = "sha256:f8991c9be222cd091ea9e4e375a652e88326a30bad4063239975eadd837b0a77"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-i00-standard"
+digest = "sha256:66adea2ae90ae9e7fc2e3a3726f291e2f93ed4c96ab09bb398957758fa1fdeed"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-i00-privileged"
+digest = "sha256:8aa3dc993168d651681194c49e1aee2180f046e19d6b6356c983b61d78eb7c58"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-i00-standard"
+digest = "sha256:3b10fb5cc73327e8168f51dce74d5fc45f76a4f51e6e59777cabd38b47f9b823"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-i00-privileged"
+digest = "sha256:f56687d4b7f25106623a398c5b6964b6ceda2d918f43877ab4ea9e505c06ab77"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-i00-standard"
+digest = "sha256:8d0379e657ed29130bd38c3f0ac9818dc1107499d6fd9e0df994ff9d6cc57fc6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-i00-privileged"
+digest = "sha256:216303b56810001e9490be395a6cf2ae6dbc87bf306be268c1d0694e90ad224b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-i00-standard"
+digest = "sha256:edad1e235545f6766d9a3112f7f27792badcbdaf390fc2845c8afbfb8d70a1fd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-i00-privileged"
+digest = "sha256:d6611b5e5a9dc520a296ff4b4e9b54b06747cbd7ca26b5207c304060543fcfec"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-i00-standard"
+digest = "sha256:3dd58a07ae80bf0f2aa1b88e212b09c591eaf9e0d72b4f78f2d2eab12263c8b3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-i00-privileged"
+digest = "sha256:438202e5a72a03d8cedf2d21d9f3eb2625719021cb63620d78d0816fe3c3f799"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-i00-standard"
+digest = "sha256:fc77e289c4a4b0717be7b7902257f1bc34bb9e2755ec9931c5ff9657d8f27514"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-i00-privileged"
+digest = "sha256:408359b0987990675fec525abefdf1a668ad1d97f90279825b124532301401bc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-i00-standard"
+digest = "sha256:485722e1bdbe50bcfa18d8ab8b5c97af7f93362648ebbe8d18340c4bc7d72f6f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-i00-privileged"
+digest = "sha256:8aa878964ed2295fdeee3ba7df39da16a62b9dedaecbe92bd51851a7df6f03fd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-i00-standard"
+digest = "sha256:0e43686b0ef462d49f70110594de5c11697c1c5619fe21044d21f215c89e8746"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-i00-privileged"
+digest = "sha256:132ccb1a086270ecbf728a639159e1b05f699e77cb3fcb9b228037d8c68419e2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-i00-standard"
+digest = "sha256:f2110338d63d3c8fbd429e7a8e4288f74e7f85f23fcfe0ef33df076acd6d3dee"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-i00-privileged"
+digest = "sha256:d4b102ab7d854e6b096f6f3d0473020862344974fe413d1a9374f8bc7c502a92"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-i00-standard"
+digest = "sha256:8f5ce1ff097fd457e5da019bd2bc9229138a080ff35d8618ce946b3b48992a9d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-i00-privileged"
+digest = "sha256:ce7eb9e61055212a2d7e39d82df4e9d7a4eb444ae1445b15459d6b05e601c19e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-i00-standard"
+digest = "sha256:1354c3b5d137779d5f02e582651297e7fc6653663e191d1e1bc5e5670ad9268e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-i00-privileged"
+digest = "sha256:9141884fcec1765699273ae46aab2ecbaffa837292f8484e2368e0cc7df0e5c8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-i00-standard"
+digest = "sha256:fe6832910ee8dcf6ffca07dd6f44a0c1ede6165207c751dff1ec09aa8ebf43cd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-i00-privileged"
+digest = "sha256:6f46a8f87a5f21acf2b24d54e853df773591947099bad173640d82c8bc2d925a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-i00-standard"
+digest = "sha256:dd6133ab327165ed32869c3acfa2675c5e37ed84149bac73b5fd88254cd97d91"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-i00-privileged"
+digest = "sha256:f30c5ae3381f892d47ed8a3aa6801dc6577862339ef430a51feaad93b7d69503"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-i00-standard"
+digest = "sha256:aa7b88c003376cafcba9f46406ba34fb75d719608c60dc3aaab1363260e9cae6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-i00-privileged"
+digest = "sha256:db1a189efd58758ca2d89d88d7584e0bdf98ffd9563a82f2a404398c1369d219"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-i00-standard"
+digest = "sha256:134fc13f2cd11f9525e39cc8d0ecfca2092a15a14584df3aaacf96b0223ba7b1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-i00-privileged"
+digest = "sha256:bec79e61c59ea104a945c3f6c5a317a59ee67dab2c2c0e83fbd6fa5f73ae629f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-i00-standard"
+digest = "sha256:62aca6d8d0c711a6e30f20f22797ad2bb2af59c2cb48cc7c309a0599443f1969"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-i00-privileged"
+digest = "sha256:f2b3c670297515252ea58942249dc8c83b7b2edcc84217f1d435b69a601d19c7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-i00-standard"
+digest = "sha256:2f02655df5bf7df00558deb3693819c97b77efdd5fd45cd3278755e76082c120"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-i00-privileged"
+digest = "sha256:c774eb261aec577e77dd63af75d3f3c007fb915493bf4b1906be891c5622d9b8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-i00-standard"
+digest = "sha256:2bf0644755d002afabaa46ffae3845aa2d1fc2eaa581cb1139f67e8787a61ca1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-i00-privileged"
+digest = "sha256:886630ae0cd895d23e2b829453b3a147001ae3f1e5ff5f5313a5c6c1e340e148"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-i00-standard"
+digest = "sha256:bd70abaea4a9cd96529579a3d5c8969c372bbfc161dd9bf70fecdefcea5d1bfc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-i00-privileged"
+digest = "sha256:7fb8c2a849a2d2729ef6378fa00296ea5efe3cd64c8902a97a638cfe9f67fd0a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-i00-standard"
+digest = "sha256:6d27669ca870e84e71a43975be9391d43ebb90316289f5a6a039df56b23c747e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-i00-privileged"
+digest = "sha256:16674ae812fad2f1919b6bd37fa7f6946a1b186097750c9249fc47e9081caf31"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-i00-standard"
+digest = "sha256:21696a39b85e2d1a6452088ddf4b381f09c258545a23d6e2a37e160a6b21b7b7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-i00-privileged"
+digest = "sha256:b4f5199ba7e877b56e3f32159dd06820b7cf94e85c20d8404043715977ddb85c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-i00-standard"
+digest = "sha256:84299334fdd2e9c39c5b72b78b02515354a7e120d1530d4306eff90b80cfd93c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-i00-privileged"
+digest = "sha256:2b745b9373404f062f73c1a9095c5363c324d328dd40d5248af0c6f4e5053c79"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-i00-standard"
+digest = "sha256:d53fbde9d82f1cbe85b8c0709075770a56542eb6e305ada4631e5a5cbae32821"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-i00-privileged"
+digest = "sha256:fb50b92309f6672a11518b25ae1f4d73c37eb767b507a7f90c914dfc82cef428"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-i00-standard"
+digest = "sha256:15c03461414dda0bd1fddeae178361aee3fcc0cb57f5695b6f79b5d73fe1eeac"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-i00-privileged"
+digest = "sha256:73ab3995172b6cf72ff5da1d52691d0c7ff25ad6061c45f8ff636293a110eb22"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-i00-standard"
+digest = "sha256:c117b1d9c0404a370bef7e2c1a87d5565e65a3e94947a8b4e39a2d0b50ae9855"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-i00-privileged"
+digest = "sha256:eb7c62a30e8520c849085075f4c524fec113b7819d7d62a5b5315c5e43cfc8d3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-i00-standard"
+digest = "sha256:fa159a76716a2a43ac552dd208ed86f0f2df55847f3f1115412a0b5f2d0a10c0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-i00-privileged"
+digest = "sha256:8559ff51411bd36b5157c7a75388fa38b89f66b74376dd2fb32b7a58c6ab1d18"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-i00-standard"
+digest = "sha256:8ab3419056fd2ebb483b095643f43986312ef33747a091fd9d96fa85ca4059d1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-i00-privileged"
+digest = "sha256:09a67ca0f73fb41ee9c370e7d9b2061a9f37b0c8b69241693a6f4ee92dc92812"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-i00-standard"
+digest = "sha256:6584d1f670bb265daf935d19845491f58fc80c25e5599233f91cb500cc892906"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-i00-privileged"
+digest = "sha256:006e9f3a4a56de06f81751bbd3ec7b85b2f9f1a7e40281496458a3c4e518b63e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-i00-standard"
+digest = "sha256:1d18ddc00ee1cb78e72fc4691631bfd0a719d6a95b70ee23e13c96baa8fa01e6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-i00-privileged"
+digest = "sha256:1b44676039b2a156f375dbf47e18750c8427c67df9082bfdfd4198807c43256b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-i00-standard"
+digest = "sha256:fbac2a23c47ceb2be587f5c32f270b7544205a80bcdc93a303abd84863ba9667"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-i00-privileged"
+digest = "sha256:7a79c949337679a90ce3f175bb81b47f4f4a94ee4ba2f56eab2a41e6750914f1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-i00-standard"
+digest = "sha256:791391fbe90710dfa799bfa9573d8e87c068785a1ecd6b20dec99a29008037cd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-i00-privileged"
+digest = "sha256:942700cee26d1703592fb622527a66db44dc976c982202187b341b40517e5bb8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-i00-standard"
+digest = "sha256:2c67790eaf7ec7c8a5f0421739ff2e1969fc4e016eb521a83768e3d40064f4f7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-i00-privileged"
+digest = "sha256:070c8ccf7882fe3a470b4ebbbc02173df45e70626c23277446a8649c24c12ed1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-i00-standard"
+digest = "sha256:04091bcf027cdaf195a216df7c087560d6892d297bbdc112d06839399594c490"
+
+[[tasks]]
 name = "robot-coding-bench/mujoco_playground_aloha_hand_over-privileged"
 digest = "sha256:7aa2ff83d02d5afbfc2d6630cd0e66b5fd38f15b65eff67633d50f52a80e6720"
 
@@ -576,6 +976,830 @@ digest = "sha256:a5237981a39ce25b4bfa525e1801cb5f4c49dfc3d80f06cc2d4551f4473a3b9
 [[tasks]]
 name = "robot-coding-bench/mujoco_playground_panda_pick_cube_orientation-standard"
 digest = "sha256:98f4af5d0550e81cfa395dbd020c0d63cf1fec905a9c64f13da1d466651ae6e3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-arrange-vegetables-i00-privileged"
+digest = "sha256:27c56948f533de856d0719388d47136e68596a40e0f3d453272a5a1b16795cb0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-arrange-vegetables-i00-standard"
+digest = "sha256:6e37d5a7cd3ccb051ab68414b2d9b5c86fada051da5c75090d285ce75bd86b63"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-double-door-i00-privileged"
+digest = "sha256:555a7b51c7fe40ea079a3c403f4a387a2210eeb532ebc14707225bb7c9f662fc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-double-door-i00-standard"
+digest = "sha256:2acd07ba94cbfe9fd5a32b82a0981897d46b2796a02e2fed4f21f61bb2b7cc47"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-drawer-i00-privileged"
+digest = "sha256:f0ebf551ae5b9bf6635aaf1293b227f06027715d7a841d7512eb36bdc04bf6cb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-drawer-i00-standard"
+digest = "sha256:fa85e799f65c23c7663fa56bdbf2f0855eb0a9b4f76978913fb0b1b423e00d25"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-single-door-i00-privileged"
+digest = "sha256:87cc9f742aaa574bb058ee8b0eb5c74a9594877fbf7f45665dda51bb4d6b97bc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-close-single-door-i00-standard"
+digest = "sha256:14463b0b130b4e260f444bc44b91fef84c65b4b3328567865e4cae63bde4565e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-press-button-i00-privileged"
+digest = "sha256:9b680bbe28847e8592f6a37d33924f6a87cdcffea5d0681dce2140f039f5e1a4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-press-button-i00-standard"
+digest = "sha256:0148a60e6d79158a31b9def9eb4cdfb20cefb634054686d540039c2877996f0a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-serve-mug-i00-privileged"
+digest = "sha256:60095b61e3058e998c0b58aa7430e79504e67f0b647f35ba1c3791e208757d00"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-serve-mug-i00-standard"
+digest = "sha256:93ef26ee03542a889c8f15ec0627fc9ed345dc0cbf8600b1bfb30b40080de792"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-setup-mug-i00-privileged"
+digest = "sha256:0f09a37203a4a681c304b9dedaed70234402ec5f60013d0ed5b420a8579e4582"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-coffee-setup-mug-i00-standard"
+digest = "sha256:5627994420cec418dd7c0a7bbe8bf212711c7004b25c08980a869953e10c299c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-i00-privileged"
+digest = "sha256:7e41dba81adc71e23df8d9e2edfe1858b974ee9a5db56de1be9b34ed33dcdd9e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-bottle-to-cabinet-close-i00-standard"
+digest = "sha256:ca834cd623797b14110f6e78f7188c10edcad1faeb23e5ffc70e6143c5bcc269"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-can-to-drawer-close-i00-privileged"
+digest = "sha256:66bc46d871a5732a316eb9f5ad2c4871b2cf88d875dd8f2b70f3841bb6d39915"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-can-to-drawer-close-i00-standard"
+digest = "sha256:4851dc73bf775aa054019f124e3ae57a9e838ad8d7aee4dec29d4b1368e60bd2"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-i00-privileged"
+digest = "sha256:51a1722d166b1cb4677c44bfd31bfc9d8edd4dc1d749014f3d6ed178c3b6f4bb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cup-to-drawer-close-i00-standard"
+digest = "sha256:f10620c0514c2c85654f9f1f678561045f2dafcb82ecc570fcb7f25e9ce46c58"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-basket-i00-privileged"
+digest = "sha256:bd3be1abca57cbe60232ced89e4895fd4b38286924d08c97e504a9a7cf55effa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-basket-i00-standard"
+digest = "sha256:1910ac57e76f5ef2ec963be892097f172430e3b2e2a597c3bf6f35e1693a41d5"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-cardboardbox-i00-privileged"
+digest = "sha256:5ae5733800666e269a71884875d580259868610fbabc8a4f63cde636ad7d7045"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-cardboardbox-i00-standard"
+digest = "sha256:4f852ded48f987319a6abc98a063202d03ac2443feb325d21881216d502124d9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pan-i00-privileged"
+digest = "sha256:fb4ab3eb6e39be374035106b18d0c07149825220d62ab31dd9d6e21424ec4c99"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pan-i00-standard"
+digest = "sha256:2a1bcb0f62f2bbccc8241f100e6e967ac8594b93e05b3ff9a3d578994d69e860"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pot-i00-privileged"
+digest = "sha256:52a0b6267df060d981da2f3f7679a88a302118098b508f35f406dbd110d41e3e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-pot-i00-standard"
+digest = "sha256:a1733281a3484e417ee80f6d119fc0eb0cdcfd3df9c1d4343336774df73aa26b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00-privileged"
+digest = "sha256:6019d3992c67c7a36324ffa4932b219ae21eab493c4f2bfe49dbf33156fcae32"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00-standard"
+digest = "sha256:620590f1f970c4f6cc40a151d081e77a5c15bc7b785d5941f2948bed13a07d59"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-milk-to-microwave-close-i00-privileged"
+digest = "sha256:04a5186f34dc3fa72b7fb14e3b2c74b6472f8aeb19052b2d714d77f616de641b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-milk-to-microwave-close-i00-standard"
+digest = "sha256:6f391474eacf56e4b70f8a9a1826a7702828b7d0e72dd8bd1cf648475c8a64f9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-basket-i00-privileged"
+digest = "sha256:231b3e5e20269628856f0b2cccfc9a96354d916fd0d32ef0fb0d91ed7d0c952b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-basket-i00-standard"
+digest = "sha256:cbe1b57f5a0a14e78d5c5ced99129e6f3a14ca491dc7130e6bc13abb3a57814e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-bowl-i00-privileged"
+digest = "sha256:5655c9e4c8b69fe4a6e381c312f594221280a1bc57db431a08c92ecf0cd9cb57"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-bowl-i00-standard"
+digest = "sha256:280764ffd6553a345c3b0ffcfea450a18d923c930992ac1cfc8bab8a7ee3adab"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-plate-i00-privileged"
+digest = "sha256:a5cbe931973da80bad381cfcc7d8eedad766d4a04193855323ccbc6641442b3e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-plate-i00-standard"
+digest = "sha256:3e50393c284613a53a1ab2bd507984f089a6a346467f717d5ef069cf82e6c3de"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-tieredshelf-i00-privileged"
+digest = "sha256:c556caaa2bd2ddc5ca2d7a705c9fc4a1e07371a47ccc0eb6e5b82a0ab71ec81a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-placemat-to-tieredshelf-i00-standard"
+digest = "sha256:a4f294c29171dc359b0f82b2700c758dedfecff0270f3a18e5067828b1411f28"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-bowl-i00-privileged"
+digest = "sha256:b50c137121a0b56d06bafce88be203d05067a4cb7dbff02e5b13e28c8434ce5c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-bowl-i00-standard"
+digest = "sha256:61af9d1f069b8bddb8093165980f16f341f6744673a34dd87754679f012a119c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-cardboardbox-i00-privileged"
+digest = "sha256:9e7ff6a1332e392742438391b083c5b92eaf89a73e261ec33ccd792db591b42f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-cardboardbox-i00-standard"
+digest = "sha256:236ef5358c01a4a1fe81a94a5117af902ffa500ecfb2d5e638a1839026bf8903"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-pan-i00-privileged"
+digest = "sha256:b1e313c8bdc92fecb20a0608f8a46fded58edb9684a33012fc6439121cf2d16b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-pan-i00-standard"
+digest = "sha256:f8691d66b4dc405e218048be9e49b099a4cf28b01deda4bd7cd8032585a6269a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-i00-privileged"
+digest = "sha256:26b0dabe5ce96afa56bf2bd8fe355e3f51dab8f8eb2a0462f7d955795b7f1bbe"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-plate-to-plate-i00-standard"
+digest = "sha256:9a6a854fbc59262a30255bf139526524d16afbce7ba8715815c4578ecc7ee7ad"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-potato-to-microwave-close-i00-privileged"
+digest = "sha256:68cdcdf62beaa0cdbbe85fa32afd2e0a102f5586aa9d40ba0a916ad6a3418c24"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-potato-to-microwave-close-i00-standard"
+digest = "sha256:36ce99ab129590f8283d56a2c0ca1428161742d7e011416d797cd07c930e3b8a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-cardboardbox-i00-privileged"
+digest = "sha256:f03be00cfdb550669bdf67857b9463fbb8e5dd3a46c2f21b2d23d66aecfff25c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-cardboardbox-i00-standard"
+digest = "sha256:1451377048db54515f9020b85c0b7f4e1d83d39d070e2dc4f9d6f14bab3bc086"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-plate-i00-privileged"
+digest = "sha256:a8434445320846c3c87d3029843447da28868d82f78c500592b00c8865289f2e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-plate-i00-standard"
+digest = "sha256:f3f8c2aabf13c81da76496d96aa8203b170578c666a558c52fab6bd640815059"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00-privileged"
+digest = "sha256:f1bacd85bca1012ad667a531ee44600ed0df45c5e2739f3937e4dfea22c39662"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00-standard"
+digest = "sha256:6b5e7d4e5380c437e640b7378d7bf1e9c759f5ea7684094f58ccf05114f5a042"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredbasket-i00-privileged"
+digest = "sha256:b7d84078d9f852b33ab1a43f29d4f64ad310f093aad31990b0cc25fddf65b7c3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredbasket-i00-standard"
+digest = "sha256:02d527fb580e2b57273f3ad21eb928925bd516424a9dbfe955b1639746e3daa3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredshelf-i00-privileged"
+digest = "sha256:a606467fe87044e82c9773c5a6f972e3ab2cecbdab87385a6a2aa41ebd8f0c0e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-tray-to-tieredshelf-i00-standard"
+digest = "sha256:9eadd54cdffdaced9128b65f436c77fc83ecb6600576127c590577a5c1ed93b8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-wine-to-cabinet-close-i00-privileged"
+digest = "sha256:65b1e7c1e0672582e8f347c98292f3bf7ad84e69c26e244182d15791fea3a768"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-gr1-wine-to-cabinet-close-i00-standard"
+digest = "sha256:cd825c7cf0ccb34ef88c0a5a243820c7ae9737847d6ab5e74f26dd66e6335631"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-microwave-thawing-i00-privileged"
+digest = "sha256:24143a63beee1d8205230ae92ec6529ff8655b49f0f0f835f6c35e23cd19dca8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-microwave-thawing-i00-standard"
+digest = "sha256:b03aeb576b51671f5d163cee6405c5c4e7923764da3f127acff6dd8c3226252b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-double-door-i00-privileged"
+digest = "sha256:74817c98087e507cb3cd450a02ca926975d641ef2f16c4a0c4ada2502fc1dce0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-double-door-i00-standard"
+digest = "sha256:5e8cd93e5da4344a98bc3bf082939457f5a06b5fe12e2d0b4f5a14acb142aa5c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-drawer-i00-privileged"
+digest = "sha256:50b2d1d94616ba753af97710293b64bd695df5198c75d795caa70f4b30bf22df"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-drawer-i00-standard"
+digest = "sha256:41cfae22169ac3ac7ae04adb1278a1a6b21e42c6a8ce195a91dcc47d4fed94e8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-single-door-i00-privileged"
+digest = "sha256:c4aeec5d3197649c434158513fecbd99c5e572b862f25a8d9baa0e5562da4123"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-open-single-door-i00-standard"
+digest = "sha256:8fb6be94c073acc293eca2a1a1af7458a0c7ac72d5538180ba65266085971e6f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-cab-to-counter-i00-privileged"
+digest = "sha256:848846a0674366c6da79c049ba24413f1873f047dce3f77af44947ba442ba6fe"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-cab-to-counter-i00-standard"
+digest = "sha256:1203d277ad1c13a5e86dc742fc85bba57d3d1776a7f79a79b99089c59fc177fd"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-cab-i00-privileged"
+digest = "sha256:142b4aceb6bee9a7dcdfa1f4c51208173b3ad57760858c8162e0d89e7a13913d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-cab-i00-standard"
+digest = "sha256:00ad60db3e93ee070b0b5442c59ab128b8d9763dd1419b21de2c40c2d9c9b84f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-microwave-i00-privileged"
+digest = "sha256:a81c300b1541d3519e0d569e2d09eab9c662dfdbf9f9e9a2a35c222cf0705f70"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-microwave-i00-standard"
+digest = "sha256:6c6d764417744fa038ce09bdefa536f1e7b97848ef5f548216b9a08d0fb9737d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-sink-i00-privileged"
+digest = "sha256:2400a7fe7e16af8689ba805ee4e1be2c4038144f22da151b5478262b53b5e0b7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-sink-i00-standard"
+digest = "sha256:fed5629536ecd416412a492ca829fb859cda25f6cea271f0bd53587888e2716e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-stove-i00-privileged"
+digest = "sha256:b47c5d2fd04c27bf2d7e2073cbd15529d507706e039c9aa479f02110f16d8bc7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-counter-to-stove-i00-standard"
+digest = "sha256:b0be2593bffbf49be470af3ec00d14b813e207e51cf144be38531b6ab1477a0a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-microwave-to-counter-i00-privileged"
+digest = "sha256:7f9a356dd991a60c96a6a5f60e17cc7543612439912b37841ccbb1cf86491385"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-microwave-to-counter-i00-standard"
+digest = "sha256:f71cec0b10cd4f208387e90c78230af6ab6d2c5f05e5bd27261637a0d8a82820"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00-privileged"
+digest = "sha256:00be42ac8d4be45b4087db921a13cbaf8501a673c4b6e2cc11403a2a71f7615c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-sink-to-counter-i00-standard"
+digest = "sha256:71ce4ae4b174968363034b5a532a1fa033a2b4428375b82812341a2680d94e24"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-stove-to-counter-i00-privileged"
+digest = "sha256:d4657b6f9ebf6acd545520fb9fd4d4a46a3c97a3c7342091959330839180d671"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pnp-stove-to-counter-i00-standard"
+digest = "sha256:102cff335cb608cb5a8bf502a6c7cd2370cae45e0bbdd7f89dfde6688dfd0d07"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pre-soak-pan-i00-privileged"
+digest = "sha256:930f16f57ccef8c02d4eb644e1ef5b881c8f353f52423becf57ba95b43e00427"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-pre-soak-pan-i00-standard"
+digest = "sha256:21437e250155ef205e535f6545be1f1fdbf0daf8a23e13ae107702f859322ffb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-prepare-coffee-i00-privileged"
+digest = "sha256:9b88468d509359a2b5a8b040058e6a4d5870c1c81385305772169279f53e0e08"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-prepare-coffee-i00-standard"
+digest = "sha256:b724d4ce1637cc8dbaf3174a3c4364002698910ba1e7a7bcdb583f2e5ea3f461"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-restock-pantry-i00-privileged"
+digest = "sha256:9ea48be35a9c1ec331c4bdef76f542ac3affc4927891aa3dffdd8986e6a98479"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-restock-pantry-i00-standard"
+digest = "sha256:a540f56c939b8a9a149e26a13936b92d7f72c2ff3efd391c846ea84cd758285f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-microwave-i00-privileged"
+digest = "sha256:4a14f919a6535f3c4450ff8fe9005fb518e94aa9bd3bad0d47cdcb07b8ce8578"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-microwave-i00-standard"
+digest = "sha256:c5561db92da6b0d6a32ddfcef3ec0c93aa5b7e0b334c214fcb61093cab117f56"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-sink-faucet-i00-privileged"
+digest = "sha256:082c05be4f11b68b2ae7855d4fbbe1362973823bf8cf60e2f87bd6049ea36698"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-sink-faucet-i00-standard"
+digest = "sha256:824891135e4961348ac542ac803da34d3b51402926c4aa5a976192613159215a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-stove-i00-privileged"
+digest = "sha256:f8a2145856199ecb1939e8060ea07352ea7947ff3cfcc3cd8352b5ad44e241f3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-off-stove-i00-standard"
+digest = "sha256:a5ad8400463ab469ca509d4283ac07b5928ffd10d5706805266808fd518ee9a8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-microwave-i00-privileged"
+digest = "sha256:f037f431af260ddc8654d0455fa3f9a59b92d754ccc8672644e082ca35f60406"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-microwave-i00-standard"
+digest = "sha256:0c72d8ea20aca8aa12944929664e8edbd4d3b81c36dee89d4fc28bca9fc89d36"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-sink-faucet-i00-privileged"
+digest = "sha256:74507bdae5af175362c7a9a2215687365fa374100cb973da81d7c2712af557fc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-sink-faucet-i00-standard"
+digest = "sha256:14dc9c9c138230abc129b190ea1d0555ed5eeb0edfa8554decc5fb9f1f379c5e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-stove-i00-privileged"
+digest = "sha256:ac58c56007568abbb66ba03c1f4dd5c73c46033e0c0c991f2aadaa27159aa2b8"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-on-stove-i00-standard"
+digest = "sha256:440ea9267ccf4c27daa91e6d434db64cb57361e8fa2fa7042762716aadd63426"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-sink-spout-i00-privileged"
+digest = "sha256:c4f58d8fc7187e1d7f64eec1d1ffd82f65c48937f1b45f1e179837e9e30e7c51"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa-turn-sink-spout-i00-standard"
+digest = "sha256:a4ece9ba4299307043f3dc2c5d67b3c3daf9da2a6f184e80ef6d3acfb8b24e6f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-lemon-to-fish-i00-privileged"
+digest = "sha256:8184ba9032ab45aa6c45fc00870b059d0ee1e33742d450ef50a096033c3cc5b9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-add-lemon-to-fish-i00-standard"
+digest = "sha256:647ff5578e7e08ea11088c49eb3fea4c44409bde55911df67e48ee87e799e045"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-assemble-cooking-array-i00-privileged"
+digest = "sha256:f3a1ca8cd5857c2564f45e91148d27e5895e28174f2b4976798d6fc0885a98b6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-assemble-cooking-array-i00-standard"
+digest = "sha256:32ccc6485dc684e70dcbcc342508302c147e311ca7f4896833c07d5451e61c8f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-beverage-sorting-i00-privileged"
+digest = "sha256:06d01724191168fa04e9e66f486fd71e8e02db2d0a6467b9ae2908505c2c2cbb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-beverage-sorting-i00-standard"
+digest = "sha256:408beadf9e8fd8210058bf44f26253529e70f0e4935f8c64a520c4ade12da4ec"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bread-and-cheese-i00-privileged"
+digest = "sha256:397a2782f307501f9c7055978a9fa912a52a55741ed72da717ca89c2b9224745"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-bread-and-cheese-i00-standard"
+digest = "sha256:6bf7fab185d50ebd127bd61fd2bd5d9ca745255d1e2b4d9c7e54224da52cb301"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-candle-cleanup-i00-privileged"
+digest = "sha256:9359a195322952736edb9294afdbcae37c89a6aeb0a4c824aa2a2485b19cb155"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-candle-cleanup-i00-standard"
+digest = "sha256:b3105c96dd97e0464d6f5cb98faebf4cb5b2eeadc1a76e167cf04069aac1f7df"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cereal-and-bowl-i00-privileged"
+digest = "sha256:7bee140cb2558de374a6d4a0e963532db780e04a23648e69b41e4932f16cfc0a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cereal-and-bowl-i00-standard"
+digest = "sha256:f95ac48e3b91d87a48886170039ffe0bf5d2669f909c0887140d15cf83ef8b64"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-choose-measuring-cup-i00-privileged"
+digest = "sha256:1ba459508d882f42decf27a2d64fd25b266b3324eb113759696855a0183fd085"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-choose-measuring-cup-i00-standard"
+digest = "sha256:cfe5110c57b37e251667f54330da508ae7a30035c8447edd9bc80cadc3b7b84f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-food-waste-i00-privileged"
+digest = "sha256:f81894aa983a8e570e4356d57fe198e36a42ec00b6247478128b833770d9cc1c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-food-waste-i00-standard"
+digest = "sha256:40283a21e0f17c765af26c11060115f048c4ba569a97da01aabeedb6ffb5312a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-sink-i00-privileged"
+digest = "sha256:29261892bbbc06eaa916f8651544028b91aceaf34403e25c09825d988da25e16"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-clear-sink-i00-standard"
+digest = "sha256:8a077b3155cba284b0924e183d3620c3db2106b6c1a282ed31a5e348051610ee"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-drawer-i00-privileged"
+digest = "sha256:b4ce116f8a76cf7d557a37c68587b8dfe3b3cd573da4b5cd554a60c1ed2bbbca"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-drawer-i00-standard"
+digest = "sha256:5eb823700d95a30a651cb3c92849635a6bd7609dca5002c6466bdc7599cde176"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-oven-i00-privileged"
+digest = "sha256:d495d2fb5ccd6dccbafcf2e12f1bbc04712b032e2e327cf608479c0d4d088663"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-oven-i00-standard"
+digest = "sha256:0c0d87561ecf0ef1c0ab9bc561e1bf667aaff34e239aa9a7d39e4cb8df96789e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-stand-mixer-head-i00-privileged"
+digest = "sha256:649da5074f4319db28107c998e42aa7af4c027c25ff6c2d3942bc261d2e187a3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-close-stand-mixer-head-i00-standard"
+digest = "sha256:3014b673683f6edfd20c3714935ba024f5754e3e9a535b3f14f63d3afef6d754"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cookie-dough-prep-i00-privileged"
+digest = "sha256:eeefdd263ca11e327963ee429f484be9276a86a5865419d4cdc1f8e87b0a861f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-cookie-dough-prep-i00-standard"
+digest = "sha256:ccfb94736df3503930744f585b5c003cdf0191dd2787731f3f1a2f15d4a5205e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-deliver-brewed-coffee-i00-privileged"
+digest = "sha256:22cda8c7c5a0b61cddde9e35bae51ccb96e55d2e41d785646e965d85c1cce775"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-deliver-brewed-coffee-i00-standard"
+digest = "sha256:2a42bcb1240fa2b4f2abe03c8711e92db17dd1987d68c1e78f35052f28000306"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dessert-upgrade-i00-privileged"
+digest = "sha256:8518c1aa42ac9d1c9c9f46d142e0853dd94dee83828ea65c9163765f0e1ebcd7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-dessert-upgrade-i00-standard"
+digest = "sha256:8491176802ba89cf887bb8355ed6c685ce38a44321a254998069565c9fc1579d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-display-meat-variety-i00-privileged"
+digest = "sha256:74a25c1158cc1583e8e59437b3e281e05045b15a8baa244f4a87d3077a4926f6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-display-meat-variety-i00-standard"
+digest = "sha256:fd39ed45cf3762124eab5231173a2e1b6348594e1779ef697fbb09d23126d138"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-divide-basins-i00-privileged"
+digest = "sha256:ea86b70bc932e15c64218ed55cffa2f1165258043755c79f9ea3d2fc487de8a0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-divide-basins-i00-standard"
+digest = "sha256:483c322434f1318b3596fddcdda6edd62d8fcf42b84d99874723e99589fd54f0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drain-veggies-i00-privileged"
+digest = "sha256:d5bb19963636c2a382d1461aecdad92f6ade758914a6cbb3cffd603125174f90"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drain-veggies-i00-standard"
+digest = "sha256:6fc471ac876c8e7ba8cdcf7f4c2b8133867e5f7d35f9a3d85c683e9c0071901c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drinkware-consolidation-i00-privileged"
+digest = "sha256:175aa69e4b2437f275fb66598ed5c3a322399587fff986401d836b816017d6ff"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-drinkware-consolidation-i00-standard"
+digest = "sha256:e415f88f61cd6fd77583e623d3795289707c283bc1667c6a411142b8b14e02b3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-ice-lemonade-i00-privileged"
+digest = "sha256:c6772f6f0ca42ef630bd186618d65a13bb3656e68d0d83b29b9ffd8005f39b7d"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-ice-lemonade-i00-standard"
+digest = "sha256:0e7a892a75bc0cb5d2323d902874c20cd5ecb7395fcbf839920e6c42c6907546"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-loaded-potato-i00-privileged"
+digest = "sha256:188dbaabfe7291c6a22020a111bc3f057b493cb202ec80153895f4eb3f2688a6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-make-loaded-potato-i00-standard"
+digest = "sha256:7a09a1417fb8d51caffbc27722d6295c69f23625a8794d9059d3ad5d92ac24fc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-meal-prep-staging-i00-privileged"
+digest = "sha256:c3d309bed7fc24bbacd75176338efabaa1a6725b1fbf51c323a5db599dc6c368"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-meal-prep-staging-i00-standard"
+digest = "sha256:5a7484cdf256543c8d66b0ef0356dc3818047f8a96572db70347b5ca0d68c404"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-microwave-defrost-meat-i00-privileged"
+digest = "sha256:917422963f20a01831c8ac5b5105027aec8c058eb53d3d40c77f97ce72dfdda3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-microwave-defrost-meat-i00-standard"
+digest = "sha256:83ebf7d6254e2d5686458abd5e676457d778accc04996fdc710d30a696336fb1"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-dishwasher-i00-privileged"
+digest = "sha256:79baf411d10b65720b1eca492eb8fe356b907f9307f8598d710f02cd65ba0957"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-open-dishwasher-i00-standard"
+digest = "sha256:203aac41743f0511669d3b8ca1c23cda7dbb76662ee9b823cbdc0e17b0f08a1c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-coffee-condiments-i00-privileged"
+digest = "sha256:c118f74abf7d813c193f21e4b32ce8f0a759fe52277192c1bd2d350a3f4b5c50"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-organize-coffee-condiments-i00-standard"
+digest = "sha256:2bd2b5371a4a0389e5eed04f2e8e5b808a2f3e4ff942d35c3d43833b924840da"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-oven-broil-fish-i00-privileged"
+digest = "sha256:290774b786c7c96d3eca898b757190f0bf2deeb4dcbaf22aacb1d4434f6f2152"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-oven-broil-fish-i00-standard"
+digest = "sha256:e705af7b688dfc9fea33b9c244b63e7660c6093b61314198b9990d045a508c1f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pack-dessert-i00-privileged"
+digest = "sha256:72dff76934f2779a05473c94edb89c6e956575247739ae648b59a415fcc95de7"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pack-dessert-i00-standard"
+digest = "sha256:b192e6a173b9a568c0db1785487b2942c7aef2c81eb6c95fa6b765af91399f1b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-cabinet-to-counter-i00-privileged"
+digest = "sha256:c74bbb590ed17826d245d32430e1b44782260b07684b20eaa0fbf230dade0f3c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-cabinet-to-counter-i00-standard"
+digest = "sha256:5539ab177302b6ab7d48d8afcaf9c64c1007d129d996373eb0dcc413e0a0be2a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-sink-to-counter-i00-privileged"
+digest = "sha256:839e105bea1a30a50284db1e69b7657101a33b74cadb2dab2d87515ae2dc3200"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pick-place-sink-to-counter-i00-standard"
+digest = "sha256:efcb7467c38f5c4a4375f1ecde317936f6deeaa636e55058a30d12f864fd7148"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-plate-steak-meal-i00-privileged"
+digest = "sha256:158d099ee76ff02e9c82d41a566e73020d83725877a3534bf25a3847d6c147c0"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-plate-steak-meal-i00-standard"
+digest = "sha256:1544aa861a02445402319934b77b15704196e1d2b9d4468a754484726d092d16"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-portion-in-tupperware-i00-privileged"
+digest = "sha256:5550bf4773fe0c983d9779545daf1fc846aed9f7a6b4a7b4313140e6464feb5f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-portion-in-tupperware-i00-standard"
+digest = "sha256:8dc52777a7f9a84319f2183f75fea984b86777ec61e0ad63f0b2a5df1cb96891"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pre-rinse-station-i00-privileged"
+digest = "sha256:646dbce8d1676dfc6406be80a7c175804bc06c5b541374bc0abd40485a35411c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-pre-rinse-station-i00-standard"
+digest = "sha256:cf14f5c04df88cb33ccecdde3c21512f7835624f731d3f0f5e9c99204a8618c3"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-for-sanitizing-i00-privileged"
+digest = "sha256:7570ee06c60e6b30cd4dd21844cf139088dcda3dfc7249a6614e95691779f5af"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-for-sanitizing-i00-standard"
+digest = "sha256:7d2a40aa1239f25ceca197e1f5bf5728e7ed6dcfc99344b67ebad1376e45ea70"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-marinating-meat-i00-privileged"
+digest = "sha256:17d40e41d1c199bc16f25488eccaf82174e83a0d0d1d409d085b941b6878c7bf"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-prep-marinating-meat-i00-standard"
+digest = "sha256:46d00957f0ab3d11746ab3afb205e3ba5ad7485d8d4e00041cf040ca479a063c"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-reheat-meal-i00-privileged"
+digest = "sha256:57670526edd0858574512c5c501a5fedb31ca4e7a37096f08ab56067a4bfb4aa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-reheat-meal-i00-standard"
+digest = "sha256:17f4d9d2e50ee9704139fb60dc0057ddcb589c83344fb0ba4d22e28961c4e480"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-retrieve-meat-i00-privileged"
+digest = "sha256:5ceb4e7e5397b17b0ca1b2ad8cd68c74bf13273162f9e322608918083e9777f6"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-retrieve-meat-i00-standard"
+digest = "sha256:fa0dcb2133b0373be441b490d4887cf752ace9bc5232fedb71faaf185e437563"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sanitize-prep-cutting-board-i00-privileged"
+digest = "sha256:a9297a5a2f7a45ee08cd0fb6e36c143a802185138fec28c1d9eae9503cf7217b"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sanitize-prep-cutting-board-i00-standard"
+digest = "sha256:6bf1fe8a6c0da42b15b854423568c5fccaf1f20c45f85acef16bbea91fdf0b79"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-scrub-bowl-i00-privileged"
+digest = "sha256:72985b7e2b0378dcf31557e7bd9b8ce2e3abbb04bbf5f48f82b3abf1a406523f"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-scrub-bowl-i00-standard"
+digest = "sha256:9a7756384ac3e306ad2e52d85b8f8ac7e1f01454a44dff78fe18ee8ae1efb390"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-searing-meat-i00-privileged"
+digest = "sha256:b4dd2bb36e59648cf6f333f046c1fce5ef4f3afa36e8f3e348019d1d08b7fa69"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-searing-meat-i00-standard"
+digest = "sha256:537b67d5c0a708ef0440fbbb4d577d55d0aed4938ed1c3d344d5d11577f44799"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-seasoning-spice-setup-i00-privileged"
+digest = "sha256:99d87d1694cdca61ce9b7df8bcddefc029fc0c1c04ec2cc8efd53f43423b868e"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-seasoning-spice-setup-i00-standard"
+digest = "sha256:459e60e207425858d799627955c0312e8afe5dfb111d87de5c4e1460dac1a911"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-set-up-cutting-station-i00-privileged"
+digest = "sha256:a90ac9f219885df4302dc5b3307f5ec5d8d996de887ed2959197cb3894b94cb9"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-set-up-cutting-station-i00-standard"
+digest = "sha256:e70d6ffa3c1b2c625cb3e8f2450a59bdf81a721be4f92e6ddffcfb418f5d5588"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-stocking-breakfast-foods-i00-privileged"
+digest = "sha256:ea2e0cb5cb5d5baf8157267e24ddcce4aeee620ae222378878b3147e266f8307"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-stocking-breakfast-foods-i00-standard"
+digest = "sha256:b65ede3719c4bdafadf482744a79190c36a24925229e55c6336bf1030801ec26"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sweeten-coffee-i00-privileged"
+digest = "sha256:b1fe2e776cd90e584ef8bba96285364c5199aaec112b72bd0f6ba93592a37a1a"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-sweeten-coffee-i00-standard"
+digest = "sha256:4bb6ebd648ea9fc39012259dfc9a63411475f1f0125c2ce1c0ec52de3e787efc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-thaw-in-sink-i00-privileged"
+digest = "sha256:7aadd3a2411701a62388ebf63d290867b17282a89e581c15a2cfef82bab5ff21"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-thaw-in-sink-i00-standard"
+digest = "sha256:65cdcaae4434d8ba8e0e6990cad2ef7df1f09c224085a8449e45d4a401ce0835"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-tong-buffet-setup-i00-privileged"
+digest = "sha256:07044a8d532e3aee6b02a56deb7a1e81a051b576e814c91316d991775270fd18"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-tong-buffet-setup-i00-standard"
+digest = "sha256:b9b3cf2677100774ee949966da450e502a0c11c94bd00e44b4d014a410cf14fe"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-microwave-i00-privileged"
+digest = "sha256:54deb0b663d3860482a4a9877f2db68f3c7a3c6b08df18100a5ac67925e90dbc"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-off-microwave-i00-standard"
+digest = "sha256:72aa1c3ead01857df7abe5e41567d9347edf3a3bc6a482ad0ca88bf327c6a661"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-microwave-i00-privileged"
+digest = "sha256:c28397690013b4bc1dbebbf6de0facad48fff01b3e949216b1f8ad3e3e648774"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-microwave-i00-standard"
+digest = "sha256:71400720d9613028061ecfc75752a4e3f3bbe52d4e3bd6d1f098e9c33e64d908"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-sink-faucet-i00-privileged"
+digest = "sha256:188bbfbf4f76b10dc7103c1819fcd430ee8198688d92fcb4fe7c3cfbe0a725fa"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-sink-faucet-i00-standard"
+digest = "sha256:509cef964db2eba093550d903aa99b6e7182baf926785e87e94db6c47d0cb2eb"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-stove-i00-privileged"
+digest = "sha256:ba1d302792dc8aec6b02f11a8be7e1dced34646b4e52b79f05c855f5d31c36db"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-stove-i00-standard"
+digest = "sha256:c854c791462c5b04176dd0f26d2ac91c3e18c024eccd9818d07546eb7dbe7e12"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-toaster-oven-i00-privileged"
+digest = "sha256:da39ac8dc1b47d1ebee704a3be307237a49ba5c4a1b09d1da760f0224ded77a4"
+
+[[tasks]]
+name = "robot-coding-bench/robocasa365-turn-on-toaster-oven-i00-standard"
+digest = "sha256:39841327b13ba9267986c1533724a7cd60df430963c45afb93450e1659f4e359"
 
 [[tasks]]
 name = "robot-coding-bench/robolab-apple-and-yogurt-in-bowl-i00-privileged"
@@ -2156,4 +3380,292 @@ digest = "sha256:d32d50c30108ec23fee7840b5671feb34d94082e0784ce77706ce58cfc118d6
 [[tasks]]
 name = "robot-coding-bench/robowits-stand-pages-i00-standard"
 digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd624521446764"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-add-condiment-i00-privileged"
+digest = "sha256:ca9036ff7bea40ea790c0bb562fedffe17729f3c7c8ba171e7bb4f2d937e365b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-add-condiment-i00-standard"
+digest = "sha256:e8e02e8d24aebb7cd40b83ec7d501881f475b8bb4da60159990e3431fd1a689d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-book-rearrange-i00-privileged"
+digest = "sha256:fea205753413b2ad37cecfeef2f46a82dc9d8e3b6098bec4f0c19541f54b7552"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-book-rearrange-i00-standard"
+digest = "sha256:93b3ed4f7ce5cfabddc9b3ff784151e924cbf4040d33233b4f17ba790fb8647b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-find-unseen-object-i00-privileged"
+digest = "sha256:11a8c56619e3e01c249f4db43e40dcde7e38b0e8adc2cbd020e87e03c8010168"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-find-unseen-object-i00-standard"
+digest = "sha256:b075846fa2ce6fe8f5d87785abf60aea8a8d4d5ec2976140d8667391f72b66e8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-friction-qa-i00-privileged"
+digest = "sha256:a15be04ff392079678cc0645a0c7d399477eea7a5df07b57d4efbc3d1248f09a"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-friction-qa-i00-standard"
+digest = "sha256:b77670482d06139a8b50b1a69ee845f73d23077aed0db86300e592fd6bfea638"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-hammer-nail-and-hang-picture-i00-privileged"
+digest = "sha256:cd891bcbb286c3fc4aef0af1bb18ea9075fcd9c7abbee04184e4382715ea5447"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-hammer-nail-and-hang-picture-i00-standard"
+digest = "sha256:2c5c884c06c6814e0baa6113203a2bed68c494ff0b8295090ebbb09d4bfafc08"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-heat-food-i00-privileged"
+digest = "sha256:fb68cc44ef80270685f64a70140356b00318b0cd4f05e8c852a39e5a79528d88"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-heat-food-i00-standard"
+digest = "sha256:4b683d8a50ae401d095f9cc99112c27a63d261839a9e82c2a502c4185bde44fc"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-bloom-flower-i00-privileged"
+digest = "sha256:ca0754aa39410349b44e2ac4405472bfd7cfa622ac90870553cefbaedf65778e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-bloom-flower-i00-standard"
+digest = "sha256:89d3cdb1c242ee890294236b2512abc027d7e658e849d461806bb952f0c76b61"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-flower-i00-privileged"
+digest = "sha256:25c2e5a1f3774ce1bee22e72e2d4bc7c525ee857214b780842b8e48257e13540"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-insert-flower-i00-standard"
+digest = "sha256:486810bd5f092aeb5265c1703772210a6172501da3e20ccfc17f211b2d8b1785"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-magnetism-qa-i00-privileged"
+digest = "sha256:38a80f3d3a083d63964c8699748e739b3a9c251b10da5cb08864e51425d9776a"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-magnetism-qa-i00-standard"
+digest = "sha256:af48a442ca23fbdcdaf5e3c6c553d00cf13fd601ba29f9ba53d5ad2dc69c7a63"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-play-math-game-i00-privileged"
+digest = "sha256:56cdd28ad2dd477465c0d2a78d7dcb773e85bf12edb9f7804d8b2079489e101d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-play-math-game-i00-standard"
+digest = "sha256:072df5805afab0c95ef1c97f70195782c2af8af13e1095d082e0b92b83f1a6ed"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-put-box-on-painting-i00-privileged"
+digest = "sha256:01bba9a9e546597b14adf1929b1f6cf9e9d0da00574e6c09d30bff3a675379e8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-put-box-on-painting-i00-standard"
+digest = "sha256:9841d04994ddbdcbf580b060e8562300408b129d9bcb86add48a65b265d067c7"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-reflection-qa-i00-privileged"
+digest = "sha256:e67e88c91074b41e155b2896623d8571b21bbd44e758036211e668ae795eb8af"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-reflection-qa-i00-standard"
+digest = "sha256:069cdbf39b5578de67ca903153c8142ea686f38db39d912c74c5370bdf28fd42"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-common-sense-i00-privileged"
+digest = "sha256:057c1928a35b1361d2fa2d3c34bbe2dbd9ac45f0319925ee97349f9737970adf"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-common-sense-i00-standard"
+digest = "sha256:5de8a403d4c96e7c8bfd3901eadad879b35fdf4d1bce0a9582859ab5c211816b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-i00-privileged"
+digest = "sha256:ae3be4af2fca0ac77ba6126887590ac444ec98e4a13a508595c95f50e71ef044"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-i00-standard"
+digest = "sha256:a25d9404aeaf0ffddb8618415ff464fbfa056c25d381932f2f1cc3434c025147"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-spatial-i00-privileged"
+digest = "sha256:dccd1564110d6cbd59623af97ddc0b0719a66fe1322a56a3444a06a321a71d85"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-billiards-spatial-i00-standard"
+digest = "sha256:398743d69e80428bfd5679d3b49accbe3392ed89f1328e8411a9d58407695afe"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-spatial-i00-privileged"
+digest = "sha256:d849506c85233b218cc65f62f6e247bbd46eb92700aebf5796a4fd742fa16ea9"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-book-spatial-i00-standard"
+digest = "sha256:b89b27e73aab21fdc2bda4feec23e6b6786a1796333fb65cee4533dd79f159b8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-common-sense-i00-privileged"
+digest = "sha256:2dce1ec8e6225a03c610c087da7bff519da57b7b7cf4993fdc1d242be54409a1"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-common-sense-i00-standard"
+digest = "sha256:3366984b48b09baee14259833a21248ded0fb7ed1b1f803f74b1171dd3b33e92"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-i00-privileged"
+digest = "sha256:0faa5c506dc5726dee831a99d3e6b02baa760d65aebd5144a7c09c55fa725d61"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-i00-standard"
+digest = "sha256:772da9f2afaed50146c7a5d0d38477039c1beead9fe28341f688b20f19ca1294"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-semantic-i00-privileged"
+digest = "sha256:c9f56af3bb9b81c5e114a55b75043a8788023d409cc5d88f52446fe893ead50e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-semantic-i00-standard"
+digest = "sha256:8a18ecac6e5d9eeaee06b46a5bcb66d8098426c5f8c1160ea0823359dff9107d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-spatial-i00-privileged"
+digest = "sha256:c5683a8706fe3fe80de1665a30d47f7e881cdfbf46f913d12b7491e2c54fd696"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-chemistry-tube-spatial-i00-standard"
+digest = "sha256:38b439f7812e829293ddf68e5f5719a79934822b912e36d4b9e669dd725e9062"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-drink-i00-privileged"
+digest = "sha256:ca90ab67a61fc4528843024f17a4bb14347e097aa1b04612d2cd5753c228a1a3"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-drink-i00-standard"
+digest = "sha256:3231c01d47e96f8c6558307661fd3b750b5b7965111ff02e98028fa4fc1bd9ea"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-common-sense-i00-privileged"
+digest = "sha256:eff1c58fe0309873d18ac68b9078e1366488a139bfdff0d26660fab281630ebe"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-common-sense-i00-standard"
+digest = "sha256:91cc24c0fde545eea5f2b96312ece2509d8c44e237961ec77e3cdac4e72154ca"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-i00-privileged"
+digest = "sha256:5516dbebdb027bdcdd5bb45e9e54eeb676b106f554cba65a4bbc7d1940f2f6ac"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-fruit-i00-standard"
+digest = "sha256:e64fa21f799461063e04f186cea76d8617c6fbd9e4eceb0327a5ac9aa844f6a2"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-i00-privileged"
+digest = "sha256:290d2c92481294b8890eee04b2ad3f4166b70d550df30832f80b596ab1edfaf7"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-i00-standard"
+digest = "sha256:8249e598aec6196d4ebaf876d9e33aff283d16c0474b17bfad64b094ecd904c7"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-semantic-i00-privileged"
+digest = "sha256:ed9ae099960d94d4096304dca5c27caa3927292a9db3e76b2a7c546b04bf96bb"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-semantic-i00-standard"
+digest = "sha256:e2ff27fe4985e5aa979df9d5cfa105fb479d0869f97e941cbd95919e0f3e6f4c"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-spatial-i00-privileged"
+digest = "sha256:c2a7668c5de62d0facb6a600943a4dd024f7ad33a5a4d43c15bf5ab2459d0c5c"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-mahjong-spatial-i00-standard"
+digest = "sha256:2614d4a46277e3129e9302df6501825d5251bc51f390bbc8bfe517b86df207fe"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-nth-largest-poker-i00-privileged"
+digest = "sha256:c384030edf3c0feb8588eda64c10cdf1b488948211f146d00aa1078744ee322b"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-nth-largest-poker-i00-standard"
+digest = "sha256:701eb4ba814c0fc87f00289989d3ba6d74a8839c73f70f398836b6feaf146331"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-painting-i00-privileged"
+digest = "sha256:72053d08c34ac0940626ebf3f9d195a6d567e0ce0a49fda4cf9126760764180d"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-painting-i00-standard"
+digest = "sha256:2fbc57e4fe5f2e0d9a759f86b1536ec819f222f3216deabdd90e732c61bf4b90"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-i00-privileged"
+digest = "sha256:195422816d7106738e388a79d5ee24fb753d198ef70203571be1d9ee15afceab"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-i00-standard"
+digest = "sha256:5ca5aa8eeb1aad37baa9dd30c046cf55a2791eedaa7f4402f5ca83ea756fe310"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-semantic-i00-privileged"
+digest = "sha256:fada3f2b502fca63ee33986784f249cef3280c9f76c9435a79d13d1e45a6b397"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-semantic-i00-standard"
+digest = "sha256:26ae6a50208b87d72134afb6cd4eb17c7fc48bad3312d9aee193297e5876ecaf"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-spatial-i00-privileged"
+digest = "sha256:5cda821fb09e773b329bea208debac9782659cb387ef06e92a1ac3c3bc5f2fbd"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-poker-spatial-i00-standard"
+digest = "sha256:bf667c0920a1289e450a767c8126b84d3c25b53fe366c693c30be983c4751b1e"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-specific-type-book-i00-privileged"
+digest = "sha256:677bde3833b6322fcf1ad93f7b8c484f6bba13e96fff54501d45395702797462"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-specific-type-book-i00-standard"
+digest = "sha256:0234a6ebfb86ee1ea8f1a34d9cfcdb5dfaf71ceb439d8045db4b275fc65e3462"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-toy-i00-privileged"
+digest = "sha256:c44cf0bbfe0d8f6ac67f4c29c0ad1f2e734436904d5421ab1ff85425491db4c8"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-toy-i00-standard"
+digest = "sha256:fc0b823be69a722176e39ceba811c3c387266f1b3659e2668ff883daddfe30bc"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-unique-type-mahjong-i00-privileged"
+digest = "sha256:b875b19249ac435a6a253a65826698c141acc624a03c37bc61945adaebc13e69"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-select-unique-type-mahjong-i00-standard"
+digest = "sha256:90a1223773201e34cef34579f2dd2f6366ab0d2010a605d4488f4ac3fb5ec550"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-take-out-cool-drink-i00-privileged"
+digest = "sha256:e7e7b2b5f501a3b176c2146734e888f7a6341d561f7fe424d94895fcef209fe2"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-take-out-cool-drink-i00-standard"
+digest = "sha256:fd429950ea34b0b047084ca3064eb5be21e1a7ac4610a3dbda1d8b70b0392f83"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-texas-holdem-i00-privileged"
+digest = "sha256:430cdbe57c0bf13dda8a311d1f19e7b8d1049489e8ab7cfb14c4e73a71759505"
+
+[[tasks]]
+name = "robot-coding-bench/vlabench-texas-holdem-i00-standard"
+digest = "sha256:3979fd3c62f9477815a5bfe676ed0ae4d09b41fb7526b1feb3a45c929c21099f"
 
