@@ -1,12 +1,12 @@
 """Below-easy Hedgehog: the CLASSIC ball in a cage whose window toward the robot is widened.
 
-Two knobs set the difficulty: ``cage`` (window layout and collar height) and ``ball_pose``,
-the ball's gravity-settled pose in the cage frame. The ball is the easy tier's ball,
-unchanged. In both settings a long spike points at the robot and reaches outside the cage,
-so the gripper can hold it from outside. very_easy rests where a translation-only exit
-exists; easier rests where one wrist roll about that spike is needed first. See
-topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design targets, not
-robot qualifications.
+The ball is the easy tier's ball, resting in the same gravity-settled pose in both settings:
+a 60 mm spike points at the robot and reaches about 19 mm outside the cage wall, so the
+gripper can hold it from outside. The width of the window toward the robot sets the
+difficulty: at 116 mm (very_easy) the held ball leaves by translation alone; at 106 mm
+(easier) it leaves only after one wrist roll about the held spike. Knobs: ``cage`` and
+``ball_pose``. See topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design
+targets, not robot qualifications.
 """
 from copy import deepcopy
 import json
@@ -24,18 +24,26 @@ from topogym.tasks.base import merge_parameters
 from .common import HedgehogInCageTask
 
 
+def cage(exit_window_mm):
+    """CLASSIC windows with the 144/216 deg pair merged into one window toward the robot (180 deg).
+
+    Windows are [centre_deg, chord width at the inner wall in mm]; collars drop from 30 to 18 mm.
+    """
+    return {"windows": [[0., 60.], [72., 55.5], [180., float(exit_window_mm)], [288., 55.5]],
+            "collar_height_mm": 18.}
+
+
 class HedgehogBelowEasyTask(HedgehogInCageTask):
-    """Shared construction; very_easy / easier fix ``cage`` and ``ball_pose``."""
+    """Shared construction; very_easy / easier set only the exit window width."""
 
     model_revision = "below_easy_v1"
     family_id = "below_easy_wide_window"
-    # Windows are [centre_deg, chord width at the inner wall in mm]. The 144/216 deg pair of the
-    # CLASSIC cage becomes one 106 mm window facing the robot (180 deg); collars 30 -> 18 mm.
-    # Both settings share this cage, so the resting pose alone sets the difficulty.
+    # Gravity-settled on CPU (Genesis, 25 ms tick / 40 substeps, 5 s) in the 106 mm cage and
+    # lifted 0.2 mm out of contact; re-settling it in either cage moves the ball 0.3 mm.
     defaults = merge_parameters(HedgehogInCageTask.defaults, {
-        "cage": {"windows": [[0., 60.], [72., 55.5], [180., 106.], [288., 55.5]],
-                 "collar_height_mm": 18.},
-        "ball_pose": {"position_m": [0., 0., 0.], "quaternion_wxyz": [1., 0., 0., 0.]},
+        "cage": cage(106.),
+        "ball_pose": {"position_m": [0., 0., -0.058757],
+                      "quaternion_wxyz": [0.419726, 0.426712, 0.800963, -0.014313]},
     })
     fixed_parameters = ("scale", "cage", "ball_pose")
 

@@ -192,16 +192,16 @@ v2 支持固定/参数模式、尺寸、位置、朝向、木质外观与保存/
 
 依据 [两档计划](../../tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md)。说明页与图片见 [below_easy_variants_zh.html](../../tasks_simplifications/below_easy_variants_zh.html)。
 
-两档共用同一个笼子，只有刺球的初始位姿不同；刺球与 easy 完全相同。CLASSIC 笼中 144°/216° 两个窗口合并为一个朝向机器人（180°）、宽 106 mm 的窗口，上下环箍由 30 mm 降到 18 mm。初始位姿是在 Genesis（CPU、25 ms tick、40 子步）中落稳 5 s 后的结果，再沿 z 抬离接触 0.2 mm 写入变体参数。
+两档的刺球和初始位姿相同，笼子只差朝向机器人（180°）的那个窗口宽度：very_easy 116 mm，easier 106 mm。刺球与 easy 完全相同；CLASSIC 笼中 144°/216° 两个窗口合并为这一个窗口，上下环箍由 30 mm 降到 18 mm。初始位姿是在 106 mm 笼中用 Genesis（CPU、25 ms tick、40 子步）落稳 5 s 的结果，再沿 z 抬离接触 0.2 mm；在两种笼中从该位姿再落稳 3 s，刺球都只移动 0.30 mm。
 
-抓法按夹爪设计：两档都有一根 60 mm 长刺朝向机器人、伸出笼壁约 19 mm，夹爪在笼外夹住它；easier 的转动是绕这根刺的轴转手腕。只按刺球设计、夹爪伸进笼里夹球心的第一版，经 2F-85 网格检查不可行（夹爪碰笼或转动时扫到环箍），已替换。
+抓法按夹爪设计：一根 60 mm 长刺朝向机器人、伸出笼壁约 19.5 mm，夹爪在笼外夹住它；easier 的转动是绕这根刺的轴转手腕。两个更早的版本已替换：第一版只按刺球设计，夹爪伸进笼里夹球心，经 2F-85 网格检查不可行；第二版两档共用 106 mm 窗口，very_easy 加夹爪后只剩 1/160 个直拉方向，余量过窄。
 
 | 入口 | 别名 | 设计意图 | 物体层面检查（只算刺球） | 加 2F-85 夹住该刺（`scripts/design_viewer/exit_check.py`） |
 | --- | --- | --- | --- | --- |
-| `hedgehog_in_cage_very_easy` | `very_easy` | 保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 10 mm，朝 172° 直拉 | 直拉出口 2/160（手指竖向或侧向开合都成立） |
-| `hedgehog_in_cage_easier` | `easier` | 初始朝向下不能平移出笼；绕所夹刺的轴转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 15 mm，绕刺轴转 75°，朝 174° 直拉 | 直拉出口 0/160；绕接近轴转 70° 后出现出口 |
+| `hedgehog_in_cage_very_easy` | `very_easy` | 窗口 116 mm；保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 5 mm，朝 172° 直拉 | 直拉出口 10–11/160（手指竖向或侧向开合，抬起 0 或 5 mm） |
+| `hedgehog_in_cage_easier` | `easier` | 窗口 106 mm；平移出不去，绕所夹刺的轴转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 15 mm，绕刺轴转 75°，朝 174° 直拉 | 直拉 0/160；抬起 15 mm 后绕接近轴转 70° 出现出口（抬 20 mm、转 75° 时 4/160） |
 
-认证路径的表面余量下界为 1 mm。初始位姿加 ±1 mm、±2° 扰动的 20 个样本中，very_easy 全部仍可平移出笼，easier 全部仍不可（零余量与 0.5 mm 余量均如此）。从写入的位姿再落稳 3 s，刺球移动 0.30 mm、转动小于 0.01°。
+认证路径的表面余量下界为 1 mm。初始位姿加 ±1 mm、±2° 扰动的 20 个样本中，very_easy 全部仍可平移出笼，easier 全部仍不可（零余量与 0.5 mm 余量均如此）。
 
 代码：[below_easy.py](../../../topogym/tasks/hedgehog_in_cage/below_easy.py)（共享构造，难度旋钮为 `cage` 与 `ball_pose`）、[hedgehog_in_cage_very_easy.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_very_easy.py)、[hedgehog_in_cage_easier.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easier.py)；检查：[below_easy_witness.py](../../../topogym/planning/hedgehog_in_cage/below_easy_witness.py)、[test-hedgehog-below-easy.py](../../../ci_checks/test-hedgehog-below-easy.py)。登记在 `variation_records.py`，`pool='below_easy'`，seeded 仍只抽 easy/medium/hard。
 

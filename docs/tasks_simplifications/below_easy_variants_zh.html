@@ -263,7 +263,7 @@ footer ul { padding-left: 1.2em; }
 <section id="hedgehog">
   <div class="head">
     <div class="eyebrow">hedgehog_in_cage · Panda + Robotiq · 刚体</div>
-    <h2>刺球：同一个笼子，只换刺球的初始位姿</h2>
+    <h2>刺球：同一个刺球位姿，只换朝向机器人的窗口宽度</h2>
   </div>
   <div class="box decided prose">
     <h3>两档的定义 <span class="tag user">你的决定，2026-10-02</span></h3>
@@ -276,9 +276,9 @@ footer ul { padding-left: 1.2em; }
     <p><span class="tag mine">我的实现</span></p>
     <ul>
       <li><b>刺球不变</b>：沿用 easy 的 CLASSIC 刺球（10 根刺，球核直径 54 mm）。</li>
-      <li><b>笼子</b>：把 CLASSIC 笼 144° 和 216° 的两个窗口合并成一个朝向机器人（180°）的 106 mm 宽窗，上下环箍从 30 mm 降到 18 mm。两档共用这个笼子。</li>
-      <li><b>难度只由刺球的初始位姿决定</b>：very_easy 的刺球落在“保持朝向就能平移出笼”的位姿上；easier 的刺球落在“必须先转一下”的位姿上。</li>
-      <li><b>按夹爪设计抓法</b>：两档都有一根 60 mm 长刺朝向机器人、伸出笼壁约 19 mm（图中青绿色一段）。夹爪在笼外夹住它，不伸进笼子；easier 的“转一下”就是绕这根刺的轴转手腕。</li>
+      <li><b>笼子</b>：把 CLASSIC 笼 144° 和 216° 的两个窗口合并成一个朝向机器人（180°）的宽窗，上下环箍从 30 mm 降到 18 mm。</li>
+      <li><b>难度只由这个窗口的宽度决定</b>：very_easy 116 mm，easier 106 mm。两档的刺球和它的初始位姿完全相同。</li>
+      <li><b>按夹爪设计抓法</b>：一根 60 mm 长刺朝向机器人、伸出笼壁约 19.5 mm（图中青绿色一段）。夹爪在笼外夹住它，不伸进笼子；easier 的“转一下”就是绕这根刺的轴转手腕。</li>
       <li><b>初始位姿是真实落稳的结果</b>：在 Genesis（CPU）里落稳 5 s，再沿 z 抬离接触 0.2 mm，写进变体参数。按“平面上的静置姿态”直接摆放并不可靠，刺球在重力下会再转 10–15°，足以改变分类。</li>
     </ul>
   </div>
@@ -295,7 +295,7 @@ footer ul { padding-left: 1.2em; }
       <div class="card"><img src="figures/hedgehog_easier_step3.jpg" alt="easier 拉出途中" loading="lazy" width="720" height="540"></div>
       <div class="card"><img src="figures/hedgehog_easier_step4.jpg" alt="easier 出笼" loading="lazy" width="720" height="540"></div>
     </div>
-    <figcaption>上排 very_easy，下排 easier。视角在机器人一侧，宽窗正对镜头；橙色是刺球，青绿色是夹爪要夹的那段刺。每帧都是证明过的路径上的实际位姿：very_easy 抬起 10 mm 后朝 172° 直拉；easier 抬起 15 mm、绕所夹的刺转 75° 后朝 174° 直拉。图由仓库生成器输出的网格在 CPU 上渲染，不含机器人。</figcaption>
+    <figcaption>上排 very_easy（窗口 116 mm），下排 easier（106 mm）。两行的起始位姿相同。视角在机器人一侧，宽窗正对镜头；橙色是刺球，青绿色是夹爪要夹的那段刺。每帧都是证明过的路径上的实际位姿：very_easy 抬起 5 mm 后朝 172° 直拉；easier 抬起 15 mm、绕所夹的刺转 75° 后朝 174° 直拉。图由仓库生成器输出的网格在 CPU 上渲染，不含机器人。</figcaption>
   </figure>
 
   <h3>验证结果</h3>
@@ -304,12 +304,12 @@ footer ul { padding-left: 1.2em; }
       <thead><tr><th>检查</th><th>very_easy</th><th>easier</th><th>方法</th></tr></thead>
       <tbody>
         <tr><td>初始位姿与笼、底座、桌面不相交</td><td class="ok">是</td><td class="ok">是</td><td>精确网格，闭合碰撞件做包含检查</td></tr>
-        <tr><td>朝向机器人的刺伸出笼壁</td><td>19.4 mm</td><td>19.5 mm</td><td>要求 ≥ 15 mm，夹爪只夹笼外这一段</td></tr>
+        <tr><td>朝向机器人的刺伸出笼壁</td><td>19.5 mm</td><td>19.5 mm</td><td>要求 ≥ 15 mm，夹爪只夹笼外这一段</td></tr>
         <tr><td>保持初始朝向能否平移出笼</td><td class="ok">能</td><td class="no">不能</td><td>2 mm 平移网格上的广度优先搜索</td></tr>
-        <tr><td>证明过的路径（只算刺球）</td><td>抬 10 mm → 朝 172° 直拉</td><td>抬 15 mm → 绕刺轴转 75° → 朝 174° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
-        <tr><td>加 2F-85 夹住该刺</td><td>直拉出口 2/160</td><td>直拉 0/160；绕接近轴转 70° 后有出口</td><td><code>scripts/design_viewer/exit_check.py --spike 7</code>，手指竖向和侧向开合结果相同</td></tr>
+        <tr><td>证明过的路径（只算刺球）</td><td>抬 5 mm → 朝 172° 直拉</td><td>抬 15 mm → 绕刺轴转 75° → 朝 174° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
+        <tr><td>加 2F-85 夹住该刺</td><td>直拉出口 10–11/160</td><td>直拉 0/160；先抬 15 mm，再绕接近轴转 70° 后有出口（抬 20 mm、转 75° 时 4/160）</td><td><code>scripts/design_viewer/exit_check.py --spike 7</code>，手指竖向和侧向开合结果相同</td></tr>
         <tr><td>扰动稳健性（位置 ±1 mm、姿态 ±2°，20 个样本）</td><td>20/20 仍能平移出笼</td><td>20/20 仍出不去（零余量和 0.5 mm 余量都是）</td><td>同上平移搜索</td></tr>
-        <tr><td>从写入的位姿再落稳 3 s</td><td>移动 0.30 mm，转 0.00°</td><td>移动 0.30 mm，转 0.00°</td><td>Genesis CPU，25 ms tick / 40 子步，机器人保持 home</td></tr>
+        <tr><td>从写入的位姿再落稳 3 s</td><td>移动 0.30 mm，转 0.00°</td><td>移动 0.30 mm，转 0.00°</td><td>Genesis CPU，25 ms tick / 40 子步，机器人保持 home（位姿是在 106 mm 笼中落稳得到的）</td></tr>
       </tbody>
     </table>
   </div>
@@ -327,8 +327,8 @@ footer ul { padding-left: 1.2em; }
       </tbody>
     </table>
   </div>
-  <p class="note prose">106 mm 是两类朝向都有的宽度，所以两档能共用一个笼子。加上“有一根刺朝向机器人、伸出笼壁 ≥ 18 mm”的条件后（偏航角步长 2°），106 mm 下还剩 26 个 very_easy 型、5 个 easier 型、33 个都不行；候选再经过落稳和重新判定，选出现在的两个位姿。</p>
-  <p class="note prose"><span class="tag mine">设计过程记录</span> 第一版只按刺球设计（转轴是笼的 x 轴），另一个 session 用 2F-85 网格检查后发现：夹爪伸进笼里夹球心时，very_easy 只有正对窗口中心才行，easier 转动时手指扫到环箍。现在的第二版改为夹笼外的刺、绕刺轴转，并用同一工具复核通过。</p>
+  <p class="note prose">加上“有一根刺朝向机器人、伸出笼壁 ≥ 18 mm”的条件后（偏航角步长 2°），能满足的朝向里 very_easy 型 / easier 型的数量：102 mm 17 / 3，106 mm 26 / 5，110 mm 38 / 8，116 mm 60 / 8。现在的位姿在 106 mm 下是 easier 型，在 116 mm 下是 very_easy 型，所以两档只差窗口宽度。</p>
+  <p class="note prose"><span class="tag mine">设计过程记录</span> 第一版只按刺球设计（转轴是笼的 x 轴），2F-85 检查发现夹爪伸进笼里夹球心时 very_easy 只有正对窗口中心才行、easier 转动时手指扫到环箍。第二版改为夹笼外的刺、绕刺轴转，两档共用 106 mm 窗口，但 very_easy 加夹爪后只剩 1/160 个直拉方向。现在的第三版把 very_easy 的窗口放宽到 116 mm，可行方向增加到 10–11/160。夹爪检查由另一个 session 的 <code>scripts/design_viewer/exit_check.py --spike</code> 完成。</p>
   <p class="note prose">边界：夹爪检查只含 2F-85，不含 Panda 手腕、IK 和动力学；机器人完整执行和 Harbor 任务包是下一步。</p>
 </section>
 
@@ -338,9 +338,9 @@ footer ul { padding-left: 1.2em; }
     <h2>代码结构</h2>
   </div>
 <pre>topogym/tasks/hedgehog_in_cage/
-  below_easy.py                    <span class="cm"># 共享构造：改窗模板 → 写资产 → 检查初始位姿；旋钮 cage、ball_pose</span>
-  hedgehog_in_cage_very_easy.py    <span class="cm"># 只固定 ball_pose</span>
-  hedgehog_in_cage_easier.py       <span class="cm"># 只固定 ball_pose</span>
+  below_easy.py                    <span class="cm"># 共享构造与共享的落稳位姿；cage(exit_window_mm) 生成窗口表</span>
+  hedgehog_in_cage_very_easy.py    <span class="cm"># 只有一行：cage(116.)</span>
+  hedgehog_in_cage_easier.py       <span class="cm"># 只有一行：cage(106.)</span>
 topogym/config/variation_records.py <span class="cm"># 两条登记：别名 very_easy / easier，pool='below_easy'</span>
 topogym/planning/hedgehog_in_cage/
   below_easy_witness.py            <span class="cm"># 平移可达性、证明路径、CPU 落稳检查（可命令行运行）</span>
@@ -353,7 +353,7 @@ docs/develop/tasks/hedgehog_in_cage_zh.md <span class="cm"># 新增一节</span>
 <pre>import topogym
 env = topogym.make("hedgehog_in_cage", variation_id="very_easy")   <span class="cm"># 或 "easier"、"easy"、"medium"、"hard"</span></pre>
   <div class="prose" style="display:grid;gap:10px">
-    <p><b>新建一档</b>：继承 <code>HedgehogBelowEasyTask</code>，在 <code>variant_parameters</code> 里给出 <code>cage</code>（窗口列表 <code>[中心角°, 宽 mm]</code> 与环箍高度）和 <code>ball_pose</code>（笼坐标系下的落稳位姿），再登记一条记录。两个旋钮都锁在 <code>fixed_parameters</code> 里，具名入口不能被覆盖。</p>
+    <p><b>新建一档</b>：继承 <code>HedgehogBelowEasyTask</code>，在 <code>variant_parameters</code> 里给出 <code>cage(窗宽 mm)</code>；如需换刺球位姿，再给出 <code>ball_pose</code>（笼坐标系下的落稳位姿），然后登记一条记录。两个旋钮都锁在 <code>fixed_parameters</code> 里，具名入口不能被覆盖。</p>
     <p><b>运行检查</b>：</p>
   </div>
 <pre>python -m topogym.planning.hedgehog_in_cage.below_easy_witness --variant easier --output runs/below_easy/easier --settle-seconds 3
@@ -486,6 +486,7 @@ python ci_checks/test-hedgehog-below-easy.py     <span class="cm"># 约 40 s，�
   <div><b>维护记录</b></div>
   <ul>
     <li>2026-10-02 第 1–4 版：任务说明、来源标注、定式解法、长孔立柱评估、3D 工具计划。</li>
+    <li>2026-10-02 第 7 版：两档改为同一刺球位姿、只差窗口宽度（116 / 106 mm）；very_easy 加夹爪后的可行方向从 1/160 增加到 10–11/160。</li>
     <li>2026-10-02 第 6 版：刺球两档改为按夹爪设计（夹笼外的刺、绕刺轴转），2F-85 复核通过。</li>
     <li>2026-10-02 第 5 版：改为实现跟踪页；刺球两档实现完成并附验证；分水岭评估；马蹄环方案调整；长孔立柱在“不加部件”约束下重新评估。旧的说明性内容已精简。</li>
   </ul>

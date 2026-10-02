@@ -28,10 +28,12 @@ class Registration(unittest.TestCase):
         drawn = {seeded_variation("hedgehog_in_cage", seed)["difficulty"] for seed in range(12)}
         self.assertEqual(drawn, {"easy", "medium", "hard"})
 
-    def test_settings_share_the_cage_and_differ_only_in_ball_pose(self):
+    def test_settings_differ_only_in_the_exit_window(self):
         very_easy, easier = (task_definition("hedgehog_in_cage", n)() for n in ("very_easy", "easier"))
-        self.assertEqual(very_easy.config["cage"], easier.config["cage"])
-        self.assertNotEqual(very_easy.config["ball_pose"], easier.config["ball_pose"])
+        self.assertEqual(very_easy.config["ball_pose"], easier.config["ball_pose"])
+        wide, narrow = very_easy.config["cage"]["windows"], easier.config["cage"]["windows"]
+        changed = [(a, b) for a, b in zip(wide, narrow) if a != b]
+        self.assertEqual(changed, [([180., 116.], [180., 106.])])
         easy = task_definition("hedgehog_in_cage", "easy")()
         self.assertEqual(len({easy.instance_id, very_easy.instance_id, easier.instance_id}), 3)
 
