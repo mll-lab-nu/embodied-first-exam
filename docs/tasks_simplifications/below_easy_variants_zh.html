@@ -793,14 +793,19 @@ footer ul { padding-left: 1.2em; }
   <div><b>依据</b></div>
   <ul>
     <li>计划：robot_coding_bench dev/jianwen <code>docs/tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md</code>；相关：<code>docs/rcb/run_trials_post_merge_repair_plan_zh.md</code>、<code>docs/develop/tasks/variation_deployment_implementation_20260925_zh.md</code>。</li>
-    <li>当前几何：topogym main <code>e3a8ec7</code> 的 <code>topogym/tasks/{hedgehog_in_cage,horseshoe_ring,slotted_post_ring}/</code> 与 <code>topogym/assets/geometry/</code>。三档图由这些生成器输出的网格在 CPU 上光栅化，未经 Genesis，不含机器人与实验室场景。</li>
-    <li>过程帧：<code>demos/</code> 下的正式视频；各图注写明变体、日期与执行方式。实物照片：<code>assets/tasks/hedgehog_in_cage/classic_3star/references/classic_solution.jpg</code>。</li>
+    <li>当前几何：dev/jianwen <code>cef2797</code>（与 topogym main <code>e3a8ec7</code> 相同）的 <code>topogym/tasks/{hedgehog_in_cage,horseshoe_ring,slotted_post_ring}/</code> 与 <code>topogym/assets/geometry/</code>。三档图由这些生成器输出的网格在 CPU 上光栅化，未经 Genesis，不含机器人与实验室场景；渲染脚本 <code>/home/pingyue/work/topogym_design_viewer/prototypes_20261002/render_tiers.py</code>（仓库外）。</li>
+    <li>过程帧：topogym main 的 <code>demos/</code> 正式视频；各图注写明变体、日期与执行方式。实物照片：<code>assets/tasks/hedgehog_in_cage/classic_3star/references/classic_solution.jpg</code>。</li>
+  </ul>
+  <div><b>相关文件</b></div>
+  <ul>
+    <li>交互 3D 工具实施计划：<code>docs/tasks_simplifications/interactive_3d_impl_plan_zh.md</code>（待实现；推荐 MuJoCo Web Viewer + python-fcl 运动学检查，结果只作设计参考，不作可解性证据）。</li>
   </ul>
   <div><b>维护记录</b></div>
   <ul>
     <li>2026-10-02：初版。六个入口均为未开始。</li>
     <li>2026-10-02：第 2 版。按来源标注（计划原文 / 仓库现状 / 我的解读与建议）；补充“只平移”和“转一次”的含义；更正 hedgehog 现状（dev/jianwen 上 easy、medium 已完成正式证明）；重写马蹄环取环说明并换成折合过程帧；马蹄环 easier 建议改为椭圆环平面内转动；新增“已知解法与验证状态”。</li>
     <li>2026-10-02：第 3 版。迁到 dev/pingyue-topo（基于 dev/jianwen）；记录你对刺球两档的决定；马蹄环换成初态—折合—叠合—退出四帧，并说明示意图对应的状态；新增网上定式解法和 Fisherman's Folly 穿孔序列；长孔立柱改为你的方案加我的评估。</li>
+    <li>2026-10-02：第 4 版。链接交互 3D 工具实施计划；注明渲染脚本位置。</li>
   </ul>
 </footer>
 
