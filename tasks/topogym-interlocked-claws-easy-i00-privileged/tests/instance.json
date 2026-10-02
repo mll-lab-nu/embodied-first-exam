@@ -11,9 +11,10 @@
   "variation_id": "interlocked_claws_easy",
   "task_parameters": {},
   "compute_backend": "cuda",
-  "precision": "64",
+  "precision": "32",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
@@ -61,7 +62,7 @@
    "initial_intent": "close"
   }
  },
- "state_sha": "22e51186d83a36c1",
+ "state_sha": "62bf9cde609195d7",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -84,14 +85,14 @@
  "reset_joint_targets": [
   0.0,
   -0.669441,
-  1.048328,
+  1.048329,
   0.0,
   -0.378888,
   0.0,
   0.017766,
   0.0,
   -0.669441,
-  1.048328,
+  1.048329,
   0.0,
   -0.378888,
   0.0,
@@ -105,13 +106,13 @@
     1.20493
    ],
    "orientation_wxyz": [
-    0.707107,
+    -0.707107,
     0.0,
-    0.707107,
+    -0.707107,
     0.0
    ],
    "euler_xyz": [
-    -0.0,
+    0.0,
     1.5708,
     0.0
    ],
@@ -147,7 +148,7 @@
    ],
    "orientation_wxyz": [
     0.707107,
-    -0.0,
+    0.0,
     -0.707107,
     0.0
    ],
@@ -222,10 +223,20 @@
    "fixed": true
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "family/model.json": "7eaaf8264d70300945fc1330bb41a79ca91437f754143dfac2fd9a5942acddbe",
+  "family/piece_0.obj": "489f4855849433008f5d5f24c775503b45290d0a17d26ce105db203e65bd3ba2",
+  "family/piece_0.urdf": "b71df524a7d29db48d2c56a3da813c55508cda8dc5df6f2f5998fedfed7b524b",
+  "family/piece_1.obj": "489f4855849433008f5d5f24c775503b45290d0a17d26ce105db203e65bd3ba2",
+  "family/piece_1.urdf": "94cb5918fbdc6998c8eebca18c4ee2bc30db6eaf36577afa25dd404a22e035b4",
+  "goal_region.obj": "1e3049090dcf6eb4e44d283c90742a1645f933635743c2a9c3b2defcdedc697e"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "b96cecf46db72c1bf3e8e74cc16ce4a345e31243e72d03af030807b2accca3d5",
+  "files": 279
  },
  "resolved_variation_id": "interlocked_claws_easy",
  "scene_variation": null,

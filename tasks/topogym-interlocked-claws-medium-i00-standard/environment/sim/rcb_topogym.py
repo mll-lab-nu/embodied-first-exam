@@ -284,6 +284,12 @@ TASKS: dict[str, dict] = {
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)
     _t.update(simulator_name="topogym", image="topogym")
+# Tooling v6 (2026-10-02 precision / speed study, robot_coding_bench jobs/journal/2026-10-02/sim_tradeoff/REPORT.md): the rigid
+# families simulate in float32 (1.4-2.5x faster control steps; real-trajectory replays kept their outcomes, the per-substep
+# contact penetration and the replay behaviour, frames identical). The soft-body families stay float64.
+for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring",
+              "interlocked_claws", "lock_picking"):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "precision": "32"}
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,

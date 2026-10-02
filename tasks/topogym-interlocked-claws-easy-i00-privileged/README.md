@@ -9,7 +9,7 @@
 | Family / instance | `interlocked_claws` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. Solvable: model trial topogym-interlocked-claws-easy-i__pi2X7Xe was graded success=1 by the separate verifier, on an earlier version of this task (the same frozen instance and predicate). Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128` |
 
 ## Task
 TopoGym interlocked_claws (aloha, Genesis): produce one replayable trajectory. Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side. Frozen scene instance (variation interlocked_claws_easy, seed 0).

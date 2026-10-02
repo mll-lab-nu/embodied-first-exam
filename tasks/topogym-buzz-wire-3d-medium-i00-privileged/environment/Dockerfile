@@ -1,5 +1,5 @@
 # Base image = TopoGym's simulator (see images/topogym/). Everything task-specific is copied here.
-FROM ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128
+FROM ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128
 COPY instance.json /app/instance.json
 COPY instance_assets/ /app/instance_assets/
 COPY rcb_topogym.py /opt/tools/rcb_topogym.py

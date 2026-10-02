@@ -36,7 +36,7 @@ oracle_evidence = "No reference solution (no solution/). The frozen instance was
 difficulty = "easy"
 grasp = "assisted (his contact_weld_v1 grasp regions on horseshoe_left, horseshoe_right, target_ring)"
 success_rule = "his default success (goal_complete True; terminal revision placement_region_v3_grasp_contact_2mm)"
-tooling_version = "5"
+tooling_version = "6"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

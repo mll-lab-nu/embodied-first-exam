@@ -11,9 +11,10 @@
   "variation_id": "buzz_wire_3d_hard",
   "task_parameters": {},
   "compute_backend": "cuda",
-  "precision": "64",
+  "precision": "32",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
@@ -51,7 +52,7 @@
    "initial_intent": "open"
   }
  },
- "state_sha": "c7fe7b0c024757b5",
+ "state_sha": "baf559601568b3fa",
  "action_dim": 8,
  "action_layout": [
   "joint1",
@@ -171,7 +172,7 @@
     0.21045
    ],
    "euler_xyz": [
-    0.0,
+    -0.0,
     -0.04784,
     0.42419
    ],
@@ -200,10 +201,34 @@
    "fixed": false
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "base.urdf": "6e2d4abde8a0fbbc8392575924f6e857abef69161e11ccd16e19669136896152",
+  "base_collision_0.obj": "763ee9282eac0d679665c4634550e4665578b86aed4dfea75f6c4ebf11569971",
+  "base_collision_1.obj": "98168deeee2ed7e945f81d49f1739fe2cdc9a8ca3f0c15887087d36454f0d387",
+  "base_collision_2.obj": "3a31d25b3fcecc98d5214021a8e01bd865a01cd98f963043addb4bd703163b3b",
+  "base_collision_3.obj": "4e20062d59eec2156d585cdb54c02ccc7ec8cdd4bc350984fb8727b39c523df5",
+  "base_collision_4.obj": "3cd1808171e7ff8b5e005d59b7cd856a13b4f99e942324fab70d9f35da4899c2",
+  "base_collision_5.obj": "d47d29ae77a16a9d734bd28f167c75c250015e241bd839288f908f99c63b6d6c",
+  "base_wood.glb": "e40f2fbaaa236d83e1f15fd595ec24642c2b361e8eb42c9251f07e23cd7c7828",
+  "geometry_report.json": "1b6ed47aafdf4b1346e1c7329be10007be526f24bbeb1b74a8eb7cb1b10cbc30",
+  "handle_wood.glb": "101334fdac4aa9831ade40d30056c6a8ddc8790881d26ab1c9ec05767b437b8a",
+  "posts_wood.glb": "6351918c61b4291e45a59ba6db0d84df1e4a66c284420354d5fe7b5074d8c0b6",
+  "rail_metal.glb": "b2667a56bd4f95fe69662a38e2a905b276610a4bb2302f4641c2ebfb4499e48b",
+  "reference_path.npz": "e22ba1317649d566ae5714850c41786e017e59f8ab925170bbf2d2e4d17d35b5",
+  "ring_steel.glb": "017bc754da78ae77fbbb6e660bc46efe8748c60aaffbcbe36d1abb90da8337c9",
+  "scene_preset.json": "a9d7f27fa743afdfc0ceb7b875fc589a198cbf117c5396d8fbe5b1bce416d040",
+  "sha256.json": "cd3ad9cf27b1dd96ffd3fdbe568a7b23d750e95cf1db3429069d6df6610587ec",
+  "wand.urdf": "77a69f12037306f8d9eeacb1ddba365299811cc2a0dbf4661f23af14fda7fc5a",
+  "wand_visual.glb": "240b854c4417d6a2ab2f3c3e74f76920dde056cb54aa87c4a1ad5c3451390b36",
+  "wire.urdf": "f4c2d1951621f860604262f33e863b7885f0826ab24be92d266bd1ecea481693",
+  "wire_visual.glb": "512fd1e7ad37345e5328e01d22743fdf16066696d9729eb0e8ea01d3c524c35e"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "b96cecf46db72c1bf3e8e74cc16ce4a345e31243e72d03af030807b2accca3d5",
+  "files": 279
  },
  "resolved_variation_id": "buzz_wire_3d_hard",
  "scene_variation": null,

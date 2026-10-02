@@ -230,9 +230,6 @@ class BlanketFlattenTask(TaskDefinition):
         if heights.min() < -0.1:
             return False, "Cloth fell below the table", {}
         cfg = self.config
-        coverage = footprint_area(positions, self.particle_faces) / (
-            self.layout.length_m * self.layout.width_m
-        )
         stretch = (
             np.linalg.norm(
                 positions[self.particle_edges[:, 1]]
@@ -242,19 +239,27 @@ class BlanketFlattenTask(TaskDefinition):
             / self.rest_lengths
         )
         speed = float(np.linalg.norm(velocity, axis=1).max())
-        gates = dict(
-            covered=coverage >= cfg["minimum_coverage_ratio"],
+        cheap = dict(
             flat=float(heights.max()) <= cfg["maximum_height_m"],
             above_table=float(heights.min()) >= -self.layout.particle_size_m,
             material_intact=float(stretch.max()) <= cfg["maximum_stretch_ratio"],
             settled=speed <= cfg["maximum_speed_m_s"],
         )
+        # The footprint union is ~88 % of a control step at every 2.5 ms tick. It only decides the goal when every cheap
+        # gate holds, so it is computed then, and on each control step's last tick (complete_metrics, set by Env.step) so the
+        # metrics a step reports stay complete; on the other ticks the goal is false either way (identical predicate).
+        coverage = None
+        if all(cheap.values()) or getattr(self, "complete_metrics", True):
+            coverage = footprint_area(positions, self.particle_faces) / (
+                self.layout.length_m * self.layout.width_m
+            )
+        gates = dict(covered=coverage is not None and coverage >= cfg["minimum_coverage_ratio"], **cheap)
         return (
             all(gates.values()),
             None,
             dict(
                 gates=gates,
-                coverage_ratio=float(coverage),
+                coverage_ratio=None if coverage is None else float(coverage),
                 maximum_height_m=float(heights.max()),
                 maximum_speed_m_s=speed,
                 maximum_stretch_ratio=float(stretch.max()),

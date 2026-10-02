@@ -125,313 +125,313 @@ digest = "sha256:bc04e58e5ee608c2641e10b506f5beec9b42d8fda6bf39970935a67dbade0f1
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-easy-i00-privileged"
-digest = "sha256:c91d31752e36ecfcbb3caa17609b9d3aea670221b75b738e36f78a9b62f3d382"
+digest = "sha256:a63d5d1d3ee00b749f95a17846e1a0792775bc1fe27f7f4e2ceab64db6f3b663"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-easy-i00-standard"
-digest = "sha256:b341b0f03ab6acad556907c15c5239cee527cb6d31efb54c8751c33218d2d8d5"
+digest = "sha256:a29393e68fe682b924d28cb8e5bd778e3dcb703bf991b5e04f2340ff36edb871"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-hard-i00-privileged"
-digest = "sha256:e0929f7c3d798aa6973a4f4364a6931b8868f495e42f824059b98feb5cef964b"
+digest = "sha256:33343f08db691ea6cadf80d6cc2ff7e390f2b30bf9c95d7d0b536b29e62aae06"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-hard-i00-standard"
-digest = "sha256:a8a34f77120292aa560c61723408db719842e95c5516b7c1fe7481b3cf1950b7"
+digest = "sha256:2e633b11363e64a3ff666a31cdbd339497d645a7c058a572ae3fd3413bf1aff1"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-medium-i00-privileged"
-digest = "sha256:4c79c9b3f1b0dbd89ce54e3db6bf39923f5480427cbe5ea741e7143bd10f5441"
+digest = "sha256:8c55d0fc0379f8516574581d013f23fa3d9da7771efcc0c8bca352d10475d28c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-blanket-flatten-medium-i00-standard"
-digest = "sha256:d53fde67801c6554d7c9e27ab6a6e2057d0b11502824c5f519a89ae6f986d24e"
+digest = "sha256:759a3aca4c6c10c29cbb9ccd4f49832255e31df1536475fa6fa9e0b615276221"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-easy-i00-privileged"
-digest = "sha256:38d9d343154d8d55311bb87084fa01a28c48833d16fcccad7a4b9a1b3a6d9081"
+digest = "sha256:dd611d2391974b32336b27a7aaf0aeaf4bf5cf2d38d1041793609134d1512642"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-easy-i00-standard"
-digest = "sha256:64c9782083db80d8bba78475f6d68e43ef1846f7b15ef3444becfb2739832726"
+digest = "sha256:547140036b5ebce32617b138c5d40b1ecc425182a1bfb1ca23038c437e1f73b9"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-hard-i00-privileged"
-digest = "sha256:e195276f0d35987265d1e729c6ae8b53269601f585845edce5122dd0db6ca620"
+digest = "sha256:9b9492eb27a610f50d38e3da94ac006d45da4459244667c709cb80c4b2415d3a"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-hard-i00-standard"
-digest = "sha256:ed2ef98368e33fa93f1bf89b4e91129b189b607df541fc4dedcc32b3b99f943b"
+digest = "sha256:c0ada284c85947ddc7c6a6797a720b6ad39951a2462de0443367f1999fffe20f"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-medium-i00-privileged"
-digest = "sha256:43e341183ad0ddc8cdb6daeabfa5e233670ab6c7092fb4a002813211dc09ff75"
+digest = "sha256:d3106731c9409cac5c9f456409b8c64528a0daa79f21c95bbbdf24ba9b849afa"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-buzz-wire-3d-medium-i00-standard"
-digest = "sha256:274621e86e4c25c6aabf4d04ed51d64b3ad7f0813d5d7a0e5dee56f7334b6642"
+digest = "sha256:be667df31867560b49850b7c3aea87db99188a189efd8965c05fabcb6fb9306a"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-easy-i00-privileged"
-digest = "sha256:3b264a6ad7c0d597770302aaca7afba8b700aef400ee052e5d6867791fbe5d26"
+digest = "sha256:c9a26b00079fb0c590e9f0397b08f6ab59b7fd746e7ff52fbb4e47ec5f333cd0"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-easy-i00-standard"
-digest = "sha256:5f71e2214878a5cad4c6fdb79175dca6fc9a765c5b842c88a986af41e9bb2730"
+digest = "sha256:7fccaf34cadfb5d62ce77b7152093c10ff29219282981c5524dc1cf99655489c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-hard-i00-privileged"
-digest = "sha256:6cb91bcacefb373e865cd0bcaad88c6bc2cd4acfb22a2742ce66e89b2de5c3d8"
+digest = "sha256:d615b410c0ee379f355a42d231d0b2a1257a4063c4b561b973e8884aeaff8b9d"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-hard-i00-standard"
-digest = "sha256:8b3245d7146f900f39a284d8b9483d165791f0843856310fd391f8315086e321"
+digest = "sha256:89100a2f5a63404a6e24bf933eccb838f4afa12cb36f4e8561a1e3e69f68000e"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-medium-i00-privileged"
-digest = "sha256:a089c8f1e4ded5b544616a9a873e90389b3f6cfbf5c752a614463dad8af76c94"
+digest = "sha256:451c1684a465cf834b849f255e1fdc9a411bad8e1a316d133ed8600ede758432"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-coil-medium-i00-standard"
-digest = "sha256:7e51a971b14a154bf00c3e37182478e3db32cca31ca0164c4a9211f541502071"
+digest = "sha256:11fde72c956a25b64187f28b1135b0b21b6dbfbfeb487c4bb61c1b6305532701"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-easy-i00-privileged"
-digest = "sha256:b3b318636ade69d7493cbee888222d953a70d3b4035d232b3ffa2d2b3bfff0b7"
+digest = "sha256:c94fea276d32c32dfefd4682ccd8958f4040f4f00af8c2d7a63b3ae07554ad91"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-easy-i00-standard"
-digest = "sha256:3d0cd9db8a1bd9531cbc5c170e6e848b5b4bcc47d7117a78e0d976c46eecdffd"
+digest = "sha256:7b1024143d0194daf9c4cbc32528b6c179737d9658aec3eb1ea65e5a627eae5f"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-hard-i00-privileged"
-digest = "sha256:2e5acbbb0813f2305cb62b17f88356ad1f037901e08ef28770a5037b92b0d730"
+digest = "sha256:908eff2677d02652e50ee87a9b1daacdc8d56b30c80e39c9e167067cd9421025"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-hard-i00-standard"
-digest = "sha256:09d0d5810a8b20647d4a012ddd202d0108913875cad901c038b107dbdaf2266f"
+digest = "sha256:0bfb84e2341bbb7d844b7a48ca514596718b8549b680154099bdff6524463c8c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-medium-i00-privileged"
-digest = "sha256:ce6fbd4795b12a895d1f1c6c4fb60447f4fc0963f6d2f0d0f2a7809c409d72f0"
+digest = "sha256:5ac06285fdb34fa2386f99eaa5d7c02158a8c309820e96489f7e9aa6910b5b8b"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-cast-keyhole-medium-i00-standard"
-digest = "sha256:636d1bac06b0b11699bde714e9f87e3d8dab45ffe1a0b4d105fe42faefd6e40a"
+digest = "sha256:cccbb0490f0593cdad36ba5801eb28dc6cc2ff0864e7bcaddd6aa04babfb2f1c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-easy-i00-privileged"
-digest = "sha256:52096c0370a8a87c5627e7f43442cba4c1b9b93205b0155782ff51c1e67b7012"
+digest = "sha256:bb77404f7f32b9c9654e0ac5443685c3cee8274afd121978cade68ddcd361433"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-easy-i00-standard"
-digest = "sha256:cfa522f18231a6a6f86bccf0c83283040269cf86345e23d637d71b4f33cfcedc"
+digest = "sha256:605573b85ed4fb75ef161b2eb9ab74a50223d6109b52c0c0b56628c26e75038d"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-hard-i00-privileged"
-digest = "sha256:ea27bd8e148c3817812251a05bb96429c79772f38f2166ac472b01e6bdc12923"
+digest = "sha256:de85640090ec5597bd73042650d9c07208a2e2d8688420e47c25fc9d3b36a561"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-hard-i00-standard"
-digest = "sha256:ea8de1373af98bb2865d334ff334ec86dcfdd37f216989468f8e63b25c35f9b2"
+digest = "sha256:394f4afc27cc4aa22f4d81f64198b7e58a0db2d1fe5412f2d80a9b376565644a"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-medium-i00-privileged"
-digest = "sha256:eafb65dcc5ef58ce85ba59f64b0e736dba6b70f0bbbb5d2e135947889b86885a"
+digest = "sha256:26038602bd6064d475c6e42e5c7a4b5ff8039122bffbb5fb1ebcca9b9053111c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-fiber-bundling-medium-i00-standard"
-digest = "sha256:6d74b3eadbe9d8f7940fa772b5a7fd79cb9108d2ede35c9183feb05656d71089"
+digest = "sha256:59003984f1780484ec7d0f43515259cce6acd864cb725c02390c12c41f506b6e"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-easy-i00-privileged"
-digest = "sha256:ddddd397c09da0e2c3ba617305fbafaa17f10424f655088819456ad493f5ec7a"
+digest = "sha256:94caa66794ede8b4bc9ebcfe130eafe2291696aa6657ad16da8b0c35a6fd41d0"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-easy-i00-standard"
-digest = "sha256:5f6ed44d835c3729b52c7133b66b5ffa15abaddb29f7fbea2a9cfc8417a7e733"
+digest = "sha256:699987c49135674558b521fa92065025713906625c7776d08923f338f19dc23e"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-hard-i00-privileged"
-digest = "sha256:10b7da0f262242d8281625d796a0296d110532f775f9e80ee73867767d56b2ab"
+digest = "sha256:a0c50bf2f1cef72ecee6481361708c75b914b2ab3dbb90bb50b09e0284eb8fb7"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-hard-i00-standard"
-digest = "sha256:c43eb13233e7dc89dbb4187d8efb3419c33dac41776e4fbc9c619136f599f82f"
+digest = "sha256:227c2b57b647b58905e3d5a7988cddcf87681f8d0e06f38159bcf5429854142a"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-medium-i00-privileged"
-digest = "sha256:46f011092e88c025996fe4ad56e9fe1eb39c0c44135975b1884547e4c974c55f"
+digest = "sha256:2cd9faccfb4aa01fd68b2e4a5408b18966258640608382dde9158dc90117dd58"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-hedgehog-in-cage-medium-i00-standard"
-digest = "sha256:0ba7cfff0087379f8540c6cba8c888786edc26f64bdef7737eb491887dc8d114"
+digest = "sha256:4543555bb416e70ed0e01453fcbe0b14516a2f861b2870b7d435f159dd6bb229"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-easy-i00-privileged"
-digest = "sha256:9bfe3123a823e53a55c7cddc68861fc91caad4232d8a1c0331ec9da114e629a0"
+digest = "sha256:f6f036cbe72efe878487a9e23e11bc4c32fdfdd07a7287829648630cad9c00ab"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-easy-i00-standard"
-digest = "sha256:a323b108c1c2a2d512c0cecd9398426d1840b1a8dc4083fa53eb47b665ed0acf"
+digest = "sha256:6be8627c2376cb725b2d56e0ac581040b09057d297b6e915b91e4606bac9f4c3"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-hard-i00-privileged"
-digest = "sha256:668bb983df9abb0cc2a669bea23d25e03c06f8ba7ac9c0de1d1c5b1898648f5d"
+digest = "sha256:3fbe9de36180b9962985d1731649020d58790b963427c18c65d28d6e9aa3f89f"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-hard-i00-standard"
-digest = "sha256:16bee0075cd741ae0b9269bcea37eb4460f3e65b26dca2f2163137dadc51bca4"
+digest = "sha256:5e19bf4cabb670137df99e64e9edcf3068d44eaaec9542d0a4d63e45cf7038d2"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-medium-i00-privileged"
-digest = "sha256:5f1303427900c9ed3de8c6761abc90fca109f1500d95d42bee35e2af5694065f"
+digest = "sha256:0e5de0524f67006382b9d0129af89ea4a20959dbe2a33325c6771d8752d5f709"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-horseshoe-ring-medium-i00-standard"
-digest = "sha256:b197b7316545f97323dd05777a2695dd977e6e5211c24fd0f975088771ec38f9"
+digest = "sha256:32f340d6648d2ca4a1c9268487f83e83e21c64f38b49622cae16341f3abd5a7d"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-easy-i00-privileged"
-digest = "sha256:25744bc9ec8bdd7545babaad9940d2388c375cc01bcc6b7ae6f864aea6014cc1"
+digest = "sha256:66aa9a853cd253bb618a9bed342bbe5f969e83c9ec0e418165085947eb96b193"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-easy-i00-standard"
-digest = "sha256:134ecdec0679b12b9b1668bb0abbfe2d03b3c33b8402ce7f691af6ec0a63440d"
+digest = "sha256:3abacc2eb0b825f10f8c3130de36833494e2e8258b0156e9ae5c97b56d7a9f45"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-hard-i00-privileged"
-digest = "sha256:c54c6fb5592ef09e44ec01eb3d1bf4f503e5538cd1f7054f7b40f5c40bebbe4f"
+digest = "sha256:2b000366ff1d0848ca07b83ffeda01400396e234e914d8b984b32ed091d1718b"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-hard-i00-standard"
-digest = "sha256:9f26e01c027c3a4c22e72e18a39e2abad197cb2840ee73d4e02e9a4e04411428"
+digest = "sha256:6d7bd10c331e4d21ea406250c6515bdf677e1c48cbfb7058bd4cac66c0613722"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-medium-i00-privileged"
-digest = "sha256:c6209eb45785e3f623efc01d2937f8b20f1a99f8af0050eb2a2706c3a9f84c26"
+digest = "sha256:13d1b2fed9c830d0b243ff5f4c9e87d0c7540ce4d20feca264983bef306a1733"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-interlocked-claws-medium-i00-standard"
-digest = "sha256:46e4a8a8f52cb08b1d85a8d9f10f7f4f5610cc9eed31917cb41fe5cca58b115d"
+digest = "sha256:99c4a4ed67170a41f76b6e2a9c9b2b01094625ab4eed257427a2d849ad8206b1"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-easy-i00-privileged"
-digest = "sha256:3cc54f06b26c388be5ccc570e9f9ea702520e301ae9b2af2e4fba93269fdf708"
+digest = "sha256:b26bd76f5c4e21ddb678bd17c856ba7c8c9030c6acb2f86d67400479b15a0f41"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-easy-i00-standard"
-digest = "sha256:956c6cb242977b26bf1b68ec3956f44d98a754f523803b346d57afcc1e06cfe6"
+digest = "sha256:8f8d8de2a92a3304191b5500e6a33ed39f433e070fe0968ae0989371bf09b44b"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-hard-i00-privileged"
-digest = "sha256:2efa317ef07878cc8b7f29a0f249dbdc370229c22b0f00b1b13cee0773b5f712"
+digest = "sha256:3e2a7bd5aa0f2446b06457a0fbfed5b0f7728e1c2fda3926785d309c767ec099"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-hard-i00-standard"
-digest = "sha256:9a0ce0d30f60c98c66ab99cd3fcb72f10fe58ace81a18be6d83722eb7287921d"
+digest = "sha256:458b1b38e19f451d88437351992c5f95b17d0e568cb1482eba52443c4d979132"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-medium-i00-privileged"
-digest = "sha256:fb20b31807fb7688551c051b6d39155c5298ef3f163e5d9b0af8a6998418a476"
+digest = "sha256:58bf313700ba2378b9ae89da8a8ff890831c2f1733ce175b3ba096d913d03d29"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-knot-untying-medium-i00-standard"
-digest = "sha256:2b304839dec54add51d9bb7a7e3c8e3ea1b81df6903788e10b308b86f842ad74"
+digest = "sha256:320d14c74fb957d050e98605d6155931fa6a440d582b579bc386288bc49b2bc3"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-easy-i00-privileged"
-digest = "sha256:7d32c4b9fe6708c212da1e8f44c938d78ef9a4df9501c3f5a79e1904b363ef6e"
+digest = "sha256:e7a85431be3a685d9df7ec4bc3631e1854eb618d277e78db40925ad9b3e84369"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-easy-i00-standard"
-digest = "sha256:512e707e1f132cee7c879b9ae85d8f95128c48e7e4afcefb9193c291d71229e7"
+digest = "sha256:0723e4391f0f4c7bcd9be0a8ab4c2785bf1293d2ca30413db6046c589325a451"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-hard-i00-privileged"
-digest = "sha256:7d4fe927515e7f14c64dd185a557b8ae76261ff0abfa8205579858596943dd80"
+digest = "sha256:62e504378cd2e530e2c73406ffe49975e52b789e06bfc1e515413c31a4c38b9d"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-hard-i00-standard"
-digest = "sha256:86b2a9e87a6a5ba3037af9170d422b2ede189fd7f84c9180e8afa5d800497f52"
+digest = "sha256:44267449f253edc489b49d6da09b1c0c02e71133610c412015520dfeb081827d"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-medium-i00-privileged"
-digest = "sha256:f4dcdbc07732c91b90d359b680a20dd767013be2927567ee97da08eb5d5af9ca"
+digest = "sha256:90e06ef327f9ea171270dec9c2ca18219efadef1c3f21c0198fc59889fd507b2"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-lock-picking-medium-i00-standard"
-digest = "sha256:8221e271db58bc5e646beefb2f701f9da8fb2e105f3fad5494709bcb9e14c6b6"
+digest = "sha256:9e964758bcc276a57024b559d1981278f5758dd6851634a223e23dd374cad2b1"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-easy-i00-privileged"
-digest = "sha256:37434e6cb92e6c4905530c8835ee66422c95eecc41f3b647f5797d776591328a"
+digest = "sha256:9f3f15a3c42c09b05bcdd0d873c5d177600b4c62c2be2fbc6eaf6478ac197e91"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-easy-i00-standard"
-digest = "sha256:cd64143a9bd4b0ed54c828889e75e881d597ec9b95299430fb7fb595370e75d9"
+digest = "sha256:701e94762a734834b4afb845e9a4686f8d01e3df846a59be31e36acaa44f01dc"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-hard-i00-privileged"
-digest = "sha256:af6152e64c2f272225b6889535378def759e1fdffbfdf3fccc34d4753873db1a"
+digest = "sha256:8137be1ed1da0b029d6e7e011da9a6e365dda56d10e4f2c1f1e41fad632bb075"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-hard-i00-standard"
-digest = "sha256:63eb5b20672eb78aa311162dd6c5a57cc2f144467ffc6affbde31be648018298"
+digest = "sha256:4aab0a12b2ac378d0cb2d4269d0b4334852ee0fd417181c0f4f2b026f8dbffae"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-medium-i00-privileged"
-digest = "sha256:c5949d5e7c22e23509b8f09d0e7da6f3e5b321aebc52f6ebdddffd365d640e17"
+digest = "sha256:7f65ba92c013424defefb975442d5189f45b509ef2144951b5e64026f3abdb93"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-orbits-medium-i00-standard"
-digest = "sha256:983c984e6966ed9ae680cc5c43a343688fc630ae9115c0ca882d4bcbdb53c3be"
+digest = "sha256:e060d94c46f77bf2dd84ade37dc99af24e70da6a509177748b85bce3d663040a"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-easy-i00-privileged"
-digest = "sha256:466eeb2098bb69354a4a9ae66792cd694ecf3d5780eba54083ddd1555f7c6281"
+digest = "sha256:6fb53705ac679a39a35dbdaf799dd46e6b79f09d344888724b98e362c1edbe33"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-easy-i00-standard"
-digest = "sha256:7195199cde77bbad64fc7d12a0dd4da66c6ed7579d9d530edc145cb627187456"
+digest = "sha256:b647c80441ac4ae106be009295a19d2a51d86c2c18e2eabc04796709116d9bf1"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-hard-i00-privileged"
-digest = "sha256:deceb8a30ca768f435ff8582eb877d33db9c22d2e1f56179623adfebe5f61351"
+digest = "sha256:7807d2b7cbdafe42ce83c321f11b42b640d94e43393c72b0643077346a60a4f5"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-hard-i00-standard"
-digest = "sha256:fe9f06a6f3ce4672b566d59b867736aebb2c1bfb4d54e76e3d6598fd7e3e55cb"
+digest = "sha256:57ad2dce2feca75d31c64367a233842807a95dba1ab0458abba7160d4b2b3aa8"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-medium-i00-privileged"
-digest = "sha256:14f1065141e5ddb5fe30afd14de34790b1590fcd7a97209bee53eedc3aa73a10"
+digest = "sha256:51832a5fa93644e0cd31a3fcc6f2d5ab0d8c92a30eb1aa02e5e801d59776190c"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-rope-threading-medium-i00-standard"
-digest = "sha256:840e59fee5ddcf6b11eb58afba8f54744dd5f43ca2e39a141a46e0196d4beddd"
+digest = "sha256:b4288ccab6543ef209f999dd1d5774711827819623c866042d62d3bd82d83d20"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-easy-i00-privileged"
-digest = "sha256:40a336dcb1bdb7d244bbda355e2131c43622a623682b73845b46849ad3594c4c"
+digest = "sha256:65f67a2bb07068375091794a7a2e15c0ef0fb224acdbdd113bca8bf4b63cdf74"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-easy-i00-standard"
-digest = "sha256:8d7b3f75dc0b7f5c4c90b136e65ce2dcfd335bbe7e97da36543d8eabe6f49f4f"
+digest = "sha256:7d16c90d2fa3300a718f1b753e13100a79f3e533785700a152e486da29c24223"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-hard-i00-privileged"
-digest = "sha256:61f1e87532d15ed4b02f8ca8c09befb65c6714ff41d2dfd0cbae23ad86213c3c"
+digest = "sha256:fd75988f59672b47603253903723db0474d146e8411371b58b2f536dc2ce1a41"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-hard-i00-standard"
-digest = "sha256:7c4f8e5c9a4ea7362c9141be6312835f78a7445eab5cb49577437afc36ffb256"
+digest = "sha256:0cc40be233b900dd2d9fd207ef9422c0dd1485b330d7f34d4c430f6cda10990e"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-medium-i00-privileged"
-digest = "sha256:7438a18c5874861a6f6b094e87c0a13031be82f7fe2d50c8b2ffbe2949e97eac"
+digest = "sha256:e5b47986ddad5faeec9340643c7aadf33749ee9b4b0ceb569b6cc1373d7e20ee"
 
 [[tasks]]
 name = "robot-coding-bench/topogym-slotted-post-ring-medium-i00-standard"
-digest = "sha256:ed99295dab8848f0164c77f3e6c3b538e88a37cf848acbeb692732afcec811ec"
+digest = "sha256:173cb9350867fc1a4a07a7e68b8d9e40872bef9c58fcedfd54ddced0ffd6ada8"
 

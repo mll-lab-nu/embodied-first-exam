@@ -11,9 +11,10 @@
   "variation_id": "cast_coil_easy",
   "task_parameters": {},
   "compute_backend": "cuda",
-  "precision": "64",
+  "precision": "32",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
@@ -61,7 +62,7 @@
    "initial_intent": "open"
   }
  },
- "state_sha": "04342f6dc99d946c",
+ "state_sha": "1934e22b114342d7",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -181,10 +182,22 @@
    "fixed": false
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "99117bba0982603b472a9ee3a055df338929b0ad175c26aa13f4891b4ff7ad57",
+  "coil_gold/coil_gold.glb": "0a05f794eba5f572af378a4b96a35834853b75661ad5c1c0eb88208d124cd677",
+  "coil_gold/coil_gold.urdf": "825ce66d852f2b6cd37327acf66be7bf39ef13184364a9803c357ba26b48d30f",
+  "coil_silver/coil_silver.glb": "f91a9f86f3fe8bed8a7e39b7e4cfb617b5cc7c973af4138fd8dcd72b039fb0a1",
+  "coil_silver/coil_silver.urdf": "281a47a7c3ea47e9a4e3bf333ffafc1d2f8afb672cecf4e5f5e31f9ea78ff1dc",
+  "geometry_report.json": "9ac6603f5221411190aab749102004193423e51fda65682db31f37ad0df8978b",
+  "separated_inspection.glb": "135f71ca3a0a36ee94870e7154bd564434ab7b2247981fd605cbb1ac1f2fe440",
+  "template.json": "fb77c37cf377401821a3efdea294afac6fc5e44a8f4192ad328456a68ca769d1"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "b96cecf46db72c1bf3e8e74cc16ce4a345e31243e72d03af030807b2accca3d5",
+  "files": 279
  },
  "resolved_variation_id": "cast_coil_easy",
  "scene_variation": null,

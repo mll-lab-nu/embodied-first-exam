@@ -430,12 +430,17 @@ class Env:
             self._stage = "command"
             self._robot.apply_action(command)
             self._control_step += 1
-            for _ in range(ticks):
+            for tick in range(ticks):
                 self._stage = "physics"
                 self._world.advance()
                 self._stage = "task"
                 world_state = self._world.read_state()
-                result = self._task.update(world_state, self.config.physics_dt_s)
+                # A task may skip a measurement that cannot change its result on a period's inner ticks (blanket coverage).
+                self._task.complete_metrics = tick == ticks - 1
+                try:
+                    result = self._task.update(world_state, self.config.physics_dt_s)
+                finally:
+                    self._task.complete_metrics = True
                 self._terminated = bool(result.terminated)
                 self._truncated = bool(
                     not self._terminated

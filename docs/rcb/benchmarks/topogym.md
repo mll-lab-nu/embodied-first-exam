@@ -7,7 +7,10 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v5, `eai-standard/2.3`, `rcb-topogym:0.2.7-cu128`.
+All 78 dirs: tooling v6, `eai-standard/2.3`, `rcb-topogym:0.2.8-cu128`.
+- v6 = v5 + float32 physics for the 8 rigid families (`TASKS` in `harbor_templates/topogym/common/rcb_topogym.py`; their 24
+  instances made again on lab with v6). 0.2.8 = 0.2.7 + blanket's coverage skip + the exact cheaper IPC diagnostics. Evidence:
+  robot_coding_bench `jobs/journal/2026-10-02/sim_tradeoff/REPORT.md` (precision / speed study) and the check scripts below.
 - v5 / 2.3 = Jianwen's post-merge repairs B04–B13 (`docs/rcb/STANDARD_MODE_2_3.md`,
   `docs/debug_logs/run_trials_post_merge_repair_20261001_zh.md`): invalid submissions graded as such, scores persisted
   before the video, only executed actions recorded with their actual ticks, non-integer `dt` refused, instance mismatch
@@ -31,7 +34,7 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. One source, tooling v5 (`[metadata].tooling_version = "5"`, Jianwen's repairs on top of v4):
+rendering; no task-level skills. One source, tooling v6 (`[metadata].tooling_version = "6"`: v5 = Jianwen's repairs on top of v4, v6 = v5 + float32 for the rigid families):
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -66,6 +69,24 @@ Since 0.2.7 `GenesisWorld.read_state` reads the rigid solver once per field (`_R
 On lab with 0.2.7 (one sim alone, GPU 4): buzz_wire_3d easy 0.26 s per control step (readback 0.055), cast_keyhole hard
 0.25 (readback 0.046): 4x and 2.3x faster. At that speed one reference-length solution (Jianwen's solvability proofs: cast_coil
 6.5-7.3k control steps, cast_keyhole 18-21k, hedgehog_in_cage 2.3-9.6k) executes in about 0.5 h, 1.4 h and 0.2-0.7 h.
+
+### Precision / speed study (2026-10-02)
+Each candidate passed only if both layers passed: metrics (per-substep contact penetration, fresh-process replay, the task
+outcome of replayed agent trajectories, deviation against the baseline's own 1e-4 rad sensitivity run) and frames.
+- **Rigid families: float32** (tooling v6): 1.4-1.6x faster control steps (hedgehog_in_cage 2.5x); in 7 replays of real agent
+  trajectories (interlocked_claws easy / medium, buzz_wire_3d easy, cast_coil easy / hard, cast_keyhole hard,
+  hedgehog_in_cage medium) every outcome was kept (interlocked easy success 5/5), the per-substep penetration peak unchanged
+  (0.589 vs 0.583 mm), frames identical. Rejected: solver_substeps 2 / 1 (Genesis bounds the contact time constant below by
+  2 x the substep, so contacts got 4-16x softer and the tasks' 1 mm penetration predicate fired), 5 ms and 25 ms ticks.
+- **blanket_flatten: coverage skip** (0.2.8): the footprint union (~88 % of a step) is computed only when every cheap gate
+  holds and on each control step's last tick (`Env.step` sets `Task.complete_metrics`); the goal decision is the same at every
+  tick (`scripts/check_blanket_coverage_skip.py`).
+- **IPC: exact cheaper diagnostics** (0.2.8): cached rest volumes, closed-form determinants, one vertex read per entity
+  (`scripts/check_ipc_diagnostics.py`); read_state 0.9 -> 0.19 s per control step.
+- **IPC solver_substeps (pending)**: 2 = 3.2-3.7x, 1 = 6-10x faster, but knot_untying, slotted_post_ring and orbits instances
+  are not at rest at t = 0 (cords move 2-5 cm in 0.1 s without contact), which dominates the measured deviation (the settled
+  rope_threading: 0.05 mm at substeps 1). Next: settle before freezing (`SimulatorConfig.reset_physics_steps`), then measure
+  again. The IPC jobs wait for it.
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
@@ -105,7 +126,7 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).

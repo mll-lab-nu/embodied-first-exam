@@ -522,27 +522,39 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                 raise RuntimeError("IPC/Genesis FEM vertex ordering mismatch")
 
         def diagnostics(self):
+            # Every tick: vertices read once per entity, rest determinants cached (material coordinates are constant),
+            # current determinants by the closed-form triple product (equal to np.linalg.det within 5e-15 relative;
+            # 2026-10-02 study: read_state 0.9 -> 0.19 s per IPC control step).
+            from .fem import read_vertices
+
+            positions = {}
+
+            def vertices(entity):
+                if id(entity) not in positions:
+                    positions[id(entity)] = np.asarray(read_vertices(entity)["position_m"])
+                return positions[id(entity)]
+
             residuals = {}
             for name, entity, indices, slot, local in self.attachment_pairs:
                 matrix = np.asarray(
                     slot.geometry().instances().find("transform").view()
                 ).reshape(-1, 4, 4)[0]
                 targets = local @ matrix[:3, :3].T + matrix[:3, 3]
-                from .fem import read_vertices
-
-                actual = read_vertices(entity)["position_m"][indices]
+                actual = vertices(entity)[indices]
                 residuals[name] = float(
                     np.max(np.linalg.norm(actual - targets, axis=1))
                 )
             volume_ratios = {}
-            from .fem import read_vertices
-
+            cache = self.__dict__.setdefault("_rest_volume_cache", {})
             for entity in self.fem_solver.entities:
-                p = read_vertices(entity)["position_m"][entity.elems]
-                r = entity.material_coordinates[entity.elems]
-                jacobian = np.linalg.det(p[:, 1:] - p[:, :1]) / np.linalg.det(
-                    r[:, 1:] - r[:, :1]
-                )
+                elems = np.asarray(entity.elems)
+                if id(entity) not in cache:
+                    r = np.asarray(entity.material_coordinates)
+                    ra, rb, rc = (r[elems[:, k]] - r[elems[:, 0]] for k in (1, 2, 3))
+                    cache[id(entity)] = np.einsum("ij,ij->i", ra, np.cross(rb, rc))
+                p = vertices(entity)
+                a, b, c = (p[elems[:, k]] - p[elems[:, 0]] for k in (1, 2, 3))
+                jacobian = np.einsum("ij,ij->i", a, np.cross(b, c)) / cache[id(entity)]
                 volume_ratios[entity.name] = dict(
                     minimum=float(jacobian.min()), maximum=float(jacobian.max())
                 )
