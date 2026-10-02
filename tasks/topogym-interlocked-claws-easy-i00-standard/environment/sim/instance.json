@@ -10,8 +10,8 @@
   "robot_id": "aloha",
   "variation_id": "interlocked_claws_easy",
   "task_parameters": {},
-  "compute_backend": "cuda",
-  "precision": "32",
+  "compute_backend": "cpu",
+  "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
   "terminal_contract_version": 1,
@@ -19,6 +19,9 @@
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -62,7 +65,7 @@
    "initial_intent": "close"
   }
  },
- "state_sha": "62bf9cde609195d7",
+ "state_sha": "6b5fecd0d0464f93",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -85,14 +88,14 @@
  "reset_joint_targets": [
   0.0,
   -0.669441,
-  1.048329,
+  1.048328,
   0.0,
   -0.378888,
   0.0,
   0.017766,
   0.0,
   -0.669441,
-  1.048329,
+  1.048328,
   0.0,
   -0.378888,
   0.0,
@@ -106,13 +109,13 @@
     1.20493
    ],
    "orientation_wxyz": [
-    -0.707107,
+    0.707107,
     0.0,
-    -0.707107,
+    0.707107,
     0.0
    ],
    "euler_xyz": [
-    0.0,
+    -0.0,
     1.5708,
     0.0
    ],
@@ -148,7 +151,7 @@
    ],
    "orientation_wxyz": [
     0.707107,
-    0.0,
+    -0.0,
     -0.707107,
     0.0
    ],
@@ -235,8 +238,8 @@
  },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "b96cecf46db72c1bf3e8e74cc16ce4a345e31243e72d03af030807b2accca3d5",
-  "files": 279
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "interlocked_claws_easy",
  "scene_variation": null,

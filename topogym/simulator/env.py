@@ -338,6 +338,10 @@ class Env:
             physics_options = deepcopy(dict(spec.physics_options))
             if self.config.rigid_options:
                 physics_options["rigid"] = {**dict(physics_options.get("rigid", {})), **self.config.rigid_options}
+            if self.config.ipc_options:
+                if "ipc" not in physics_options:
+                    raise ValueError("ipc_options require an IPC scene")
+                physics_options["ipc"] = {**dict(physics_options["ipc"]), **self.config.ipc_options}
             if self.config.grasp_assist.model == "contact_weld_v1":
                 if "ipc" in physics_options:
                     raise ValueError("contact_weld_v1 does not support IPC scenes")

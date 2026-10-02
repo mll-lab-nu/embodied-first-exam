@@ -7,7 +7,15 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v8, `eai-standard/2.3`, `rcb-topogym:0.2.9-cu128`.
+All 78 dirs: tooling v9, `eai-standard/2.3`, `rcb-topogym:0.2.10-cu128`.
+- v9 = v8 + rope_threading and slotted_post_ring with one IPC solver substep per 2.5 ms tick (was four), Newton / PCG
+  tolerances 1e-3 / 1e-5 (`SimulatorConfig.ipc_options`, was 1e-4 / 1e-6), libuipc's linear_bvh broad phase, and a scene
+  settled for 300 / 800 ticks before the instance is frozen (`reset_physics_steps`; the v5 instances were not at rest at
+  t = 0); their 6 instances made again. knot_untying's predicate uses an exact k-d tree clearance
+  (`scripts/check_knot_clearance.py`); its simulator settings and orbits' stay v5 until their study is done (knot medium:
+  the larger IPC dt avoids a near-threshold tet inversion the reference shows). interlocked_claws is back on the CPU in
+  float64: the branch that made v8 move it is float64 physics (the GPU in float64 takes it for the same noise seeds).
+  0.2.10 = 0.2.9 + `ipc_options` (Newton / PCG tolerances, broad phase).
 - v8 = v7 with interlocked_claws back on v6's GPU float32 and its v6 instances: on the CPU, 5 of 16 noise runs of
   claws medium lose the teal piece in the friction-held phase after the right hand releases (3 end on the 1 mm
   penetration predicate), GPU 0 of 16 (Fisher p 0.04); claws easy passed. Six rigid families stay on the CPU.
@@ -114,10 +122,18 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   tick (`scripts/check_blanket_coverage_skip.py`).
 - **IPC: exact cheaper diagnostics** (0.2.8): cached rest volumes, closed-form determinants, one vertex read per entity
   (`scripts/check_ipc_diagnostics.py`); read_state 0.9 -> 0.19 s per control step.
-- **IPC solver_substeps (pending)**: 2 = 3.2-3.7x, 1 = 6-10x faster, but knot_untying, slotted_post_ring and orbits instances
-  are not at rest at t = 0 (cords move 2-5 cm in 0.1 s without contact), which dominates the measured deviation (the settled
-  rope_threading: 0.05 mm at substeps 1). Next: settle before freezing (`SimulatorConfig.reset_physics_steps`), then measure
-  again. The IPC jobs wait for it.
+- **IPC: one solver substep + looser tolerances from a settled scene** (tooling v9 for rope_threading and slotted_post_ring;
+  jobs/journal/2026-10-02/ipc_fast/): every
+  run starts from the same settled state (a transplant of libuipc's native state, exact to 60 nm), the reference at four
+  substeps. Settling: N = first capture after which the 25 ms peak speed stays < 5 mm/s and the 0.25 s drift < 1 mm (knot
+  60, rope_threading 30, slotted 80 control steps); the ropes then creep quasi-statically (IPC's smoothed friction), the
+  same at every dt (hold-only tests: 0.013-0.13 mm). A closed-loop pinch-lift-release (Jianwen's validated pinch), per
+  control step: knot_untying 5.9x (IPC alone 9.5x; lift / slip / drop within 0.1 mm of the reference, centerline 0.44 mm
+  at the end, worst 1.47 mm at the release, the same minimum tet volume ratio), rope_threading 8.1x (end 0.81 mm),
+  slotted_post_ring 9.2x (end 0.30 mm; the reference inverts a cord tet at step 58 and this setting at step 61 on its own
+  instance: a threshold); frames indistinguishable. Rejected: AL-IPC (crashes), MAS (slower). Settled instances are not
+  hash-exact in fresh builds (GPU nondeterminism over the settle ticks; positions agree to 0.03-0.26 um), so `instance_exact`
+  is 0 and `instance_matches` decides.
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
@@ -157,7 +173,7 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).

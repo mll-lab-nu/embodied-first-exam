@@ -24,8 +24,8 @@ grasping, if the family enables it, is the same for the oracle and the agent).
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
-replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
+replay (two passes, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes
+(`deterministic`) are still diagnostic, as for the GPU families; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 
 ## Details
