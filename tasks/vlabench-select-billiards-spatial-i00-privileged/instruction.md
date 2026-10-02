@@ -1,6 +1,8 @@
 # VLABench · select_billiards_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the striped_14 in the right bottom pocket.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please put the striped_14 in the right bottom pocket (the corner pocket near x = 0.52, y = -0.99).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please put the striped_14 in the right bottom pocket.".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_billiards_spatial`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.
@@ -45,7 +47,7 @@ o = s.observe("forward") # rgb, depth_m, intrinsic_cv, cam2world_gl; cameras for
 - An action is 9 absolute position targets for VLABench's own actuators: the 7 arm joints (rad) and the 2 fingers
   (m, 0 closed … 0.04 open), held for one control step (0.1 s, 100 physics steps). The model sets no arm joint
   limits; the Panda's own are [-2.90, 2.90], [-1.76, 1.76], [-2.90, 2.90], [-3.07, -0.07], [-2.90, 2.90], [-0.02, 3.75], [-2.90, 2.90] rad.
-- World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across
+- World frame: metres; the robot's base is at (0, -0.4, 0.6) facing +y: x to the robot's right, y forward (across
   the table), z up; quaternions are w x y z.
 - Everything in `s.env` and `s.physics` is readable (privileged mode). VLABench's expert solutions for its tasks are not
   in this image.

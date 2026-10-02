@@ -25,4 +25,4 @@ time is up, or on a simulator error), replays the recorded episode in a fresh si
 |---|---|
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | {{max_steps}} control steps ({{robot_seconds}} s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |{{instruction_row}}

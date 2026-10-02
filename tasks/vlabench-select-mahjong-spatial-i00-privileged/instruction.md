@@ -1,6 +1,8 @@
 # VLABench · select_mahjong_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the 7th mahjong from left to right on the placemat**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the 7th mahjong from left to right (as seen from the robot) on the placemat.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Put the 7th mahjong from left to right on the placemat".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_mahjong_spatial`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

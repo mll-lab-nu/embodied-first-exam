@@ -1,7 +1,7 @@
 # VLABench · texas_holdem — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: We're playing Texas hodl'em game! What's your largest cards? Show me on the placemat**
+a service you cannot open, and you reach it only through a client. **Task: We're playing Texas hold'em! Show me your hand on the placemat: put the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades on the placemat.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

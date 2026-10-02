@@ -1,6 +1,8 @@
 # VLABench · hammer_nail_and_hang_picture — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please hang the 本所立川 on the wall safely and steadily.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please hang the 本所立川 on the wall safely and steadily: drive the nail into the wall with the hammer (VLABench checks that the nail's joint position is between 0.05 and 0.08) and bring the 本所立川 painting to the nail (its grasp point within 5 cm of the nail's).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please hang the 本所立川 on the wall safely and steadily.".
 
 This is a *fixed scene instance*: VLABench's own scene for `hammer_nail_and_hang_picture`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

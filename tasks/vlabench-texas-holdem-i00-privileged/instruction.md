@@ -1,6 +1,8 @@
 # VLABench · texas_holdem — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We're playing Texas hodl'em game! What's your largest cards? Show me on the placemat**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: We're playing Texas hold'em! Show me your hand on the placemat: put the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades on the placemat.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "We're playing Texas hodl'em game! What's your largest cards? Show me on the placemat".
 
 This is a *fixed scene instance*: VLABench's own scene for `texas_holdem`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

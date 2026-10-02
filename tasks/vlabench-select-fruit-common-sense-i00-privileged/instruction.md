@@ -1,6 +1,8 @@
 # VLABench · select_fruit_common_sense — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the pear on plate_seen (the fruits on the table are pear, peach, mango and orange).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_fruit_common_sense`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

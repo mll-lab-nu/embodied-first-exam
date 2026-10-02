@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | VLABench |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `vlabench-select-fruit-common-sense-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
@@ -12,15 +12,15 @@
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
 
 ## Task
-VLABench's `select_fruit_common_sense` as a robot service: a Franka Panda arm at a table, instructed **"tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']"**
-(a common-sense riddle that names the target only indirectly), on the same frozen instance as `vlabench-select-fruit-common-sense-i00-privileged`. The simulator runs in the
+VLABench's `select_fruit_common_sense` as a robot service: a Franka Panda arm at a table, instructed **"Put the pear on plate_seen (the fruits on the table are pear, peach, mango and orange)."**
+(a direct command), on the same frozen instance as `vlabench-select-fruit-common-sense-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
 no object poses; nothing to hand in.
 
 ## Difficulty
 The agent has to find the objects in the images, close the loop through the cameras with joint-position targets, and
-finish in one episode without a reset, on top of the task's own reasoning (a common-sense riddle that names the target only indirectly).
+finish in one episode without a reset, on top of the task's own reasoning (a direct command).
 
 ## Reference solution
 `solution/`: the privileged oracle's 145 control steps (recorded offline; see the twin's README) submitted
@@ -37,3 +37,4 @@ time is up, or on a simulator error), replays the recorded episode in a fresh si
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']" (graded: the pear inside plate_seen (contain); VLABench's text ("tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']") does not mention the plate) |

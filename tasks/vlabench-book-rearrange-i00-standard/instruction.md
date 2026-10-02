@@ -1,7 +1,7 @@
 # VLABench · book_rearrange — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Rearrange the books in the bookshelf.**
+a service you cannot open, and you reach it only through a client. **Task: Put the three books from the table into the bookshelf, side by side, in order of publication from left to right as seen from the robot (oldest on the left).**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

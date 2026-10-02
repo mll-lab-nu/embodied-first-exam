@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-book-rearrange-i00-privileged"
-description = "VLABench book_rearrange (Franka Panda): Rearrange the books in the bookshelf. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench book_rearrange (Franka Panda): Put the three books from the table into the bookshelf, side by side, in order of publication from left to right as seen from the robot (oldest on the left). Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

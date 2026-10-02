@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | VLABench |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `vlabench-select-billiards-common-sense-i00-privileged` |
 | Simulator / robot | `vlabench` / `franka-panda` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
 
 ## Task
-VLABench's `select_billiards_common_sense` as a robot service: a Franka Panda arm at a table, instructed **"Please put the ball worth 7 score in hole"**
+VLABench's `select_billiards_common_sense` as a robot service: a Franka Panda arm at a table, instructed **"Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02."**
 (a common-sense riddle that names the target only indirectly), on the same frozen instance as `vlabench-select-billiards-common-sense-i00-privileged`. The simulator runs in the
 `sim` sidecar (`environment/sim/server.py` on main's `rcb_service.py`); the agent only has the client: four cameras
 (RGB 320×320, depth on request, calibrated), the robot's own state, and joint-position chunks. One episode, no reset,
@@ -37,3 +37,4 @@ time is up, or on a simulator error), replays the recorded episode in a fresh si
 | Actions | `joint_position` (9, float64): absolute targets for the 7 arm joints (rad) and the 2 fingers (m), 0.1 s per control step |
 | Episode cap | 9000 control steps (900 s of robot time; `spec.max_control_steps`, PROTOCOL §4.5 MAY) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Instruction | restated; VLABench's own: "Please put the ball worth 7 score in hole" (graded: only VLABench's target hole counts (default container_mid_1, as in select_billiards); upstream says "in hole") |
