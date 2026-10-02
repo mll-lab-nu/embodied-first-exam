@@ -52,7 +52,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
-| D11 | Harness | Official results use Harbor's native agents only; no custom LLM gateways or agent adapters. |
+| D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
 | D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. |
 
 ## 1. Checklist (every task)
@@ -71,7 +71,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 12. A published task's `environment/` and `tests/` inputs never change; a change is a new task. [current]
 13. The directory name ends in `-privileged` or `-standard`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
-15. Runs with Harbor's native agents; no custom runner, gateway or adapter. [new]
+15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
 16. Standard-mode tasks also satisfy every MUST in §4.
 
 ## 2. Task contract
@@ -341,7 +341,8 @@ affecting the verdict.
 
 Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
 (`result.json`); the results pipeline marks trials over budget as failed and records `over_token_budget = 1` in the
-results metadata.
+results metadata. That check is not implemented yet (§7 Open 3). The optional usage gateway (`scripts/usage_gateway/`,
+D11) records each trial's tokens per request while it runs; it does not enforce the budget.
 
 ## 6. Versioning and extensions
 | Item | Level | Basis |
