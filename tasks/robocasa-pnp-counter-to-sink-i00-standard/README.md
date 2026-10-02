@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `robocasa-pnp-counter-to-sink-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |

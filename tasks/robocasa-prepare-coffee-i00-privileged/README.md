@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa |
 | Mode | privileged |
 | Twin | `robocasa-prepare-coffee-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |

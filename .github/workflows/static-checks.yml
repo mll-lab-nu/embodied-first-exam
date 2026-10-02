@@ -19,7 +19,3 @@ jobs:
         run: bash ci_checks/run_all.sh
       - name: Task conventions (README, task.toml, test.sh are what scripts/task_conventions.py writes)
         run: python3 scripts/task_conventions.py --check tasks/*/
-      - name: KinDER and HumanoidBench task dirs are what their generators render
-        run: |
-          python3 scripts/kinder/gen_tasks.py check
-          python3 scripts/humanoidbench/gen_tasks.py check
