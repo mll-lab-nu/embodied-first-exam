@@ -10,7 +10,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1
+    image: ghcr.io/mll-lab-nu/eai-robolab:0.1.1
     volumes:
       - ./sim:/srv:ro
       - rcb_robolab_cache_trusted:/cache

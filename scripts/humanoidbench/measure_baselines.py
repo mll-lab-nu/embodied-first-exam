@@ -22,7 +22,7 @@ The image has no reward function (images/humanoidbench/scrub_oracles.py), so thi
 rewards.json first -- the same table and the same code path the verifier uses, so the floors reported here
 are the floors the verifier would produce.
 
-    docker run --rm -v "$PWD:/out" -w /out ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:$(cat ../../images/humanoidbench/VERSION) \
+    docker run --rm -v "$PWD:/out" -w /out ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat ../../images/humanoidbench/VERSION) \
         python /out/measure_baselines.py --out /out/baselines.json
 """
 from __future__ import annotations

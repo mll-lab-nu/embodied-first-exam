@@ -9,7 +9,7 @@
 | Family / instance | `door` / seed 0 |
 | Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench door: produce one replayable trajectory that walks the Unitree H1 through a closed door, frozen scene instance 00.

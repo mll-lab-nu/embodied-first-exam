@@ -9,7 +9,7 @@
 | Family / instance | `installing_a_scanner` / seed 301 |
 | Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-installing-a-scanner-i0__pytvepD (behavior-lunaxh-t8-0927, the privileged twin behavior-installing-a-scanner-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/installing_a_scanner/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/installing_a_scanner/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
 Standard-mode twin of `behavior-installing-a-scanner-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): On the table in the private office stand a scanner (switched off) and a laptop; stand the scanner next to the laptop and switch the scanner on.

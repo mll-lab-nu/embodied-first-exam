@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/screwdriver/short_screwdriver/spin_vertical` / seed 0 |
 | Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 36/76 goals (solution/; README of dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.2` |
 
 ## Task
 DexToolBench task `screwdriver / short_screwdriver / spin_vertical` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.

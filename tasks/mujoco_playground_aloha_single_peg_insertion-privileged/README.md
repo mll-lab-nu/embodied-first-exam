@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/AlohaSinglePegInsertion` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.2` |
 
 ## Task
 MuJoCo Playground's `AlohaSinglePegInsertion` ported to plain MuJoCo (CPU, deterministic) for this benchmark.

@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_billiards_spatial` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `select_billiards_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Please put the striped_14 in the right bottom pocket (the corner pocket near x = 0.52, y = -0.99)."**

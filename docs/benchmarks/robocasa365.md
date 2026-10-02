@@ -8,7 +8,7 @@
 | upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
 | tasks | `tasks/robocasa365-<task>-i00-privileged` and `tasks/robocasa365-<task>-i00-standard`, 50 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"` (to be added to TAXONOMY), `family = "robocasa365/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
+| image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
 | generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
@@ -71,7 +71,7 @@ confirm publishing, otherwise `BUILD_ONLY`).
 
 ## Rebuilding the tasks
 ```bash
-docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa365:$(cat images/robocasa365/VERSION) images/robocasa365
+docker build -t ghcr.io/mll-lab-nu/eai-robocasa365:$(cat images/robocasa365/VERSION) images/robocasa365
 bash scripts/robocasa365/import_references.sh <PR #4 checkout>
 python3 scripts/robocasa365/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
 cd tasks && harbor add --scan . && cd ..
