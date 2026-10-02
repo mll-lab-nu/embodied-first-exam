@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-visual-noise-glare-object-t08-i07-distractor_burst-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 7,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/visual_noise_glare/libero_object/task_8",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "ketchup_1",
+      "offset_m": [
+       0.10287223,
+       -0.05012123,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "orange_juice_1",
+      "offset_m": [
+       0.08250249,
+       0.08550491,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "alphabet_soup_1",
+      "offset_m": [
+       -0.06361017,
+       0.11951349,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "bbq_sauce_1",
+      "offset_m": [
+       -0.1313515,
+       -0.0232171,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "salad_dressing_1",
+      "offset_m": [
+       -0.0132033,
+       -0.09423046,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 2188197405
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-visual-noise-glare-object-t08-i07-distractor_burst-d1",
+   "seed": 2188197405,
+   "setup": [
+    {
+     "object": "ketchup_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "orange_juice_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "alphabet_soup_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "bbq_sauce_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "salad_dressing_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "chocolate_pudding_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/visual_noise_glare",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "01_visual_noise_glare/bddl/libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "visual_noise_glare",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the chocolate pudding and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "e098842c60316733996f4853caa61c55f886aaaaf6683ae81550d1b2922793cc",
+ "instance_sha": "24ea28848d6691829a0e6fc7a661a5d1b7fda5d0fdb8ead412ee54a07a70e55a",
+ "schema": "eai-libero-max-instance/1"
+}

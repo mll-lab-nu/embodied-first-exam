@@ -1,0 +1,107 @@
+{
+ "case_id": "pro-initial-pose-position-angle-object-t06-i02-distractor_burst-d1-p195",
+ "event": "distractor_burst",
+ "suite": "libero_object",
+ "language": "Pick the butter and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "butter_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "021b7de4557daa690e4d0f08ab146ead1b0caaf8707223ba06632b9d179b232c",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "butter_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "butter_1:lower"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 154,
+  "event_fired": true,
+  "event_step": 18,
+  "steps_left": 126,
+  "state_sha": "d638a64498fa4e2391cea467711fb5d415653fdb70bd51aa003e1cb02d8a653f",
+  "initial_state_sha": "021b7de4557daa690e4d0f08ab146ead1b0caaf8707223ba06632b9d179b232c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 154,
+   "event_fired": true,
+   "event_step": 18,
+   "steps_left": 126,
+   "state_sha": "d638a64498fa4e2391cea467711fb5d415653fdb70bd51aa003e1cb02d8a653f",
+   "initial_state_sha": "021b7de4557daa690e4d0f08ab146ead1b0caaf8707223ba06632b9d179b232c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 154,
+   "event_fired": true,
+   "event_step": 18,
+   "steps_left": 126,
+   "state_sha": "d638a64498fa4e2391cea467711fb5d415653fdb70bd51aa003e1cb02d8a653f",
+   "initial_state_sha": "021b7de4557daa690e4d0f08ab146ead1b0caaf8707223ba06632b9d179b232c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

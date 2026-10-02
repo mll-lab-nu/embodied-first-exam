@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-visual-noise-glare-object-t08-i08-illumination_switch-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 8,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/visual_noise_glare/libero_object/task_8",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 0.2
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1229714128
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-visual-noise-glare-object-t08-i08-illumination_switch-d0",
+   "seed": 1229714128,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "chocolate_pudding_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/visual_noise_glare",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "01_visual_noise_glare/bddl/libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "visual_noise_glare",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the chocolate pudding and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "2edc51ed2ce738a30b5be6bdeccbca7888f47e334340684bc0f7103dc3d1d553",
+ "instance_sha": "eb6edd382df612dcbeea8945925a6788479ba86d27f7dd3c5ea2ee918d5149f5",
+ "schema": "eai-libero-max-instance/1"
+}

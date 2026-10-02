@@ -1,0 +1,107 @@
+{
+ "case_id": "pro-object-texture-goal-t09-i00-obstacle_insertion-d0-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_goal",
+ "language": "Put the wine bottle on the rack",
+ "goal": [
+  [
+   "on",
+   "wine_bottle_1",
+   "wine_rack_1_top_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "ead869cb123f0948fb8a5cc8c922d40717e8f8f9f1d65a5745f897400baa85be",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "wine_bottle_1",
+    "wine_rack_1_top_region"
+   ]
+  ],
+  "phase": "wine_bottle_1:placed"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 132,
+  "event_fired": true,
+  "event_step": 36,
+  "steps_left": 168,
+  "state_sha": "0472a19b0eee1ef1f02a3f5ee6b0115dfcfae2d4103f554ee589f18bbf47ac2a",
+  "initial_state_sha": "ead869cb123f0948fb8a5cc8c922d40717e8f8f9f1d65a5745f897400baa85be"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 132,
+   "event_fired": true,
+   "event_step": 36,
+   "steps_left": 168,
+   "state_sha": "0472a19b0eee1ef1f02a3f5ee6b0115dfcfae2d4103f554ee589f18bbf47ac2a",
+   "initial_state_sha": "ead869cb123f0948fb8a5cc8c922d40717e8f8f9f1d65a5745f897400baa85be"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 132,
+   "event_fired": true,
+   "event_step": 36,
+   "steps_left": 168,
+   "state_sha": "0472a19b0eee1ef1f02a3f5ee6b0115dfcfae2d4103f554ee589f18bbf47ac2a",
+   "initial_state_sha": "ead869cb123f0948fb8a5cc8c922d40717e8f8f9f1d65a5745f897400baa85be"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -1,0 +1,74 @@
+{
+ "case": {
+  "case_id": "pro-view-occlusion-goal-t04-i09-obstacle_insertion-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 9,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/view_occlusion/libero_goal/task_4",
+   "change": {
+    "object": "cream_cheese_1",
+    "offset_m": [
+     0.14,
+     0.0,
+     0.0
+    ],
+    "operation": "insert_obstacle",
+    "placement_rule": "target_support_approach_ring",
+    "preserve_initial_z": true,
+    "relative_to": "akita_black_bowl_1",
+    "support_entity": "main_table"
+   },
+   "change_family": "OBSTACLE",
+   "change_type": "obstacle_insertion",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3337087185
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-view-occlusion-goal-t04-i09-obstacle_insertion-d0",
+   "seed": 3337087185,
+   "setup": [
+    {
+     "object": "cream_cheese_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/view_occlusion",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "05_view_occlusion/bddl/libero_goal/put_the_bowl_on_top_of_the_cabinet.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "view_occlusion",
+   "init_reference_bddl_file": "libero_goal_lan/put_the_bowl_on_top_of_the_cabinet.bddl",
+   "init_states_file": "libero_goal/put_the_bowl_on_top_of_the_cabinet.pruned_init",
+   "language": "Put the bowl on the top of the drawer",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 4,
+  "task_name": "put_the_bowl_on_top_of_the_cabinet",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "33da45ee9b57c1667e40f2694100752461f8f423ee8d6d750b74d6b56b05b25c",
+ "instance_sha": "ba201878a9efe3ea4475225080a40196d0687447f5eeaf6b9fc07e05d574d0d9",
+ "schema": "eai-libero-max-instance/1"
+}

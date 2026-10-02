@@ -1,0 +1,107 @@
+{
+ "case_id": "pro-camera-view-angle-object-t00-i01-receptacle_relocation-d0-p195",
+ "event": "receptacle_relocation",
+ "suite": "libero_object",
+ "language": "Pick the alphabet soup and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "alphabet_soup_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "46afedbea33033108ac4a9d894cac9f6b572ad8d6a2fdc6d7c95dbdd7b4b0c78",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "alphabet_soup_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "alphabet_soup_1:placed"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 166,
+  "event_fired": true,
+  "event_step": 16,
+  "steps_left": 114,
+  "state_sha": "1684210133020f0ef66762f230d5f4f7af17e3cbe1f1b705e290a286666e03d5",
+  "initial_state_sha": "46afedbea33033108ac4a9d894cac9f6b572ad8d6a2fdc6d7c95dbdd7b4b0c78"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 166,
+   "event_fired": true,
+   "event_step": 16,
+   "steps_left": 114,
+   "state_sha": "1684210133020f0ef66762f230d5f4f7af17e3cbe1f1b705e290a286666e03d5",
+   "initial_state_sha": "46afedbea33033108ac4a9d894cac9f6b572ad8d6a2fdc6d7c95dbdd7b4b0c78"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 166,
+   "event_fired": true,
+   "event_step": 16,
+   "steps_left": 114,
+   "state_sha": "1684210133020f0ef66762f230d5f4f7af17e3cbe1f1b705e290a286666e03d5",
+   "initial_state_sha": "46afedbea33033108ac4a9d894cac9f6b572ad8d6a2fdc6d7c95dbdd7b4b0c78"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -3669,3 +3669,387 @@ digest = "sha256:5d36cac4f15401e33f3884ae54496edca3e6cf0443638ffeef29a9630a92392
 name = "robot-coding-bench/vlabench-texas-holdem-i00-standard"
 digest = "sha256:f8471c97dbee0a2ba501198a62b3893f4c74302f1d795084514de9caa7587066"
 
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-flat-stove-cook-target-relocation-i00-privileged"
+digest = "sha256:0b0f8b29c6775ef4193e49b5ffb8fc8e816c73cc836cdf7a44d04cb624e604b6"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-flat-stove-cook-target-relocation-i00-standard"
+digest = "sha256:f7a8d483d6100d36989120a56851206c274eb3d3e24125ae654458a800ae042e"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-plate-receptacle-relocation-i00-privileged"
+digest = "sha256:1085eaa974361163d2c460e6f895e934b7b729b7d1879d8ce1423c456aa6380b"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-plate-receptacle-relocation-i00-standard"
+digest = "sha256:ed8b4c64a10f24d07f9631282b8a6cba11f10c6242d76f796e66cb824c6414ba"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00-privileged"
+digest = "sha256:56b9e543eef4f521cb0cf30d37b005287567f95ae2bc54f749e23e6156d2e38a"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00-standard"
+digest = "sha256:4cc739e7a91768c0015a45fd590e3b3d35433734cf93b5132646a5bb73bb3370"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i01-privileged"
+digest = "sha256:1e81ca51dd0222de13c0723dabc4d2fe1aa3f3b4f617129b66131f2d836c772a"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i01-standard"
+digest = "sha256:f30b9eeeda67616aaf72bab256f6aed68ad04924da27f84d370c774336e7ffe1"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-cream-cheese-on-akita-black-bowl-obstacle-insertion-i00-privileged"
+digest = "sha256:3c9a3b202c3772be96cfca94efe20f5593e8d2277c59ebf41901471b40845382"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-cream-cheese-on-akita-black-bowl-obstacle-insertion-i00-standard"
+digest = "sha256:48aef51b896a5d2cdeea56321665536528d6cdd9f127e0b5a70014a6cb88d4b0"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-red-cream-cheese-on-bigger-akita-black-bowl-illumination-switch-i00-privileged"
+digest = "sha256:e6aae27744bb68c3f048b884dfb53558ec320e9ff72434a91a76606e9cc1d9d1"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-red-cream-cheese-on-bigger-akita-black-bowl-illumination-switch-i00-standard"
+digest = "sha256:d548077360cb7b0d2f8ee002142bce26f6c004c9611148d21a8842e75150f9b1"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00-privileged"
+digest = "sha256:0a1020c0f33f48fdc34ee5410c1703186e9ac610bbca36472ee5da9fb644e117"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00-standard"
+digest = "sha256:20315c3763c8e9983ff36ef6279c7eaf076dd832d81f03c70ae044d9b6e906d3"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i00-privileged"
+digest = "sha256:4477f51d83a9f3df87d7c4b756349a81cbac3aad292f7126a1030f993e472332"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i00-standard"
+digest = "sha256:31e3fade04658789421f7e374173acf3ddef94e5593792867cb1a1a60956bd8b"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i01-privileged"
+digest = "sha256:050de7191ca7efcdc25460623291b8853ebb7b796984139500fb401da4698eaf"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-obstacle-insertion-i01-standard"
+digest = "sha256:3ae12da2f61a403948d5a254a8df12f29009ddce9484c4357f7aac242b22032d"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-privileged"
+digest = "sha256:defb418b2fa280e6204f4042a810a4ca8a7107765dd3a013a6d350e8adcfbeb0"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-standard"
+digest = "sha256:d8e19aff11d48fecc7e843d61f537595cebd4baeaec4b8491ebfd194456dccc4"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wooden-cabinet-top-sensor-noise-onset-i00-privileged"
+digest = "sha256:e0798e37c598daac7abdf843999481acd7fc21c478a669d9877c9a44bab4a2d9"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-goal-wine-bottle-on-wooden-cabinet-top-sensor-noise-onset-i00-standard"
+digest = "sha256:e3eddde5d4954aeeadf9181ec62e2113e993c01f8427b6b069a42f204d94c610"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-privileged"
+digest = "sha256:3f998ada6f8804a8c06fbfdf5cacfe14308147e783e938d6418e12bc90f15802"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-standard"
+digest = "sha256:21295a773f606d39417a6090a4babed9da5cd255893697ceab29735fafc98d4c"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00-privileged"
+digest = "sha256:6bac0aee7c60bcdb22860403b0aecaeb2e33e4df44ca078598a4034c3ffe1187"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-receptacle-relocation-i00-standard"
+digest = "sha256:d7b6a81f6f726a23a5b08dc2d269bd489779933962720e34ae4484c98e49fdf5"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-black-book-in-desk-caddy-back-obstacle-insertion-i00-privileged"
+digest = "sha256:843f9adf532411818686daf96f3c2390078286705d13eb468e0c02e3bcfb0549"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-long-black-book-in-desk-caddy-back-obstacle-insertion-i00-standard"
+digest = "sha256:bd4bb2bcd07fb2688f8b61d022db5fa372a847edbd2a29a95c0685609c57666f"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00-privileged"
+digest = "sha256:8d8a4c0848038c0a51545efad5bc49508d2f0ab0117b0480efad34aafc1a82dd"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i00-standard"
+digest = "sha256:5b3ddaa8a28e60c610da55d9e622e3422f81f040b41ac1b87c7b93dd795b6f81"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i01-privileged"
+digest = "sha256:bebd50d1709720d73240fee27debdfe13470f291931826443b2ef8cda1f24b82"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-receptacle-relocation-i01-standard"
+digest = "sha256:2cd57f1ef950c9d8cdb2d0c8166bab12ce27be8b40c3a49e776e7dd8593e45a6"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-sensor-noise-onset-i00-privileged"
+digest = "sha256:fde3f6caea6fd720b74141dd6db449a0a519fea4f2b2e0f7d42c71bd7f0e402f"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-sensor-noise-onset-i00-standard"
+digest = "sha256:a68ad544a0a3e6b2667d4f51c45e4b2a055338e06311429ce3dd146870edcd59"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-target-relocation-i00-privileged"
+digest = "sha256:27aa2edf42d22fbb6400b7e0e5e042df21343049ce497fae6de578ced3980611"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-target-relocation-i00-standard"
+digest = "sha256:4de2b14be70c0758546f7edd0b7e7fcb2e1cba10d236d99bfec7767bbfde09b6"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-target-relocation-i01-privileged"
+digest = "sha256:74acba4912f41e08179f4b93c0f56b22ea1ec3569efdde7fae9eacf74e03b267"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-target-relocation-i01-standard"
+digest = "sha256:6564d9fc594010b9704c64731bec37f409f92a74d15e9754cc7f16e4f87c41db"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-visual-theme-switch-i00-privileged"
+digest = "sha256:d3a41cc8b1838a5d8ffdd55bb10edafc9d6a2e685d9240c9a0c6c2e273735d10"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-alphabet-soup-in-basket-visual-theme-switch-i00-standard"
+digest = "sha256:ee12b37d6f4b58787b9b3dddb07e35b6df1e8d991faf46f96eabbf2f99a9bb75"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-butter-in-basket-distractor-burst-i00-privileged"
+digest = "sha256:c625aa08d4d33f5db3ee6bd1360a3e9c5822472b5197eb60e653554f2d833235"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-butter-in-basket-distractor-burst-i00-standard"
+digest = "sha256:d4f78c3e63cc67d18aaa5f09aab037ae446037ee2263dd416971d32664b308a4"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-butter-in-basket-receptacle-relocation-i00-privileged"
+digest = "sha256:fb6c9174f39427e737d5e775144c4d929ac8c4bc391973743c026b72200ed0b5"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-butter-in-basket-receptacle-relocation-i00-standard"
+digest = "sha256:d74ccc1de3787071e5bb38ecb2b43af05c5cdcad17e5728faf0d59786fd99f03"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-distractor-burst-i00-privileged"
+digest = "sha256:07f660802dd43bc86544e50e685cd59bc7e451548e180fe0413b4f27ee44f555"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-distractor-burst-i00-standard"
+digest = "sha256:ebabef5fb60f31535d6166e8aa77e95bbbf88fdd9eacac5518a1013b2956927a"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-illumination-switch-i00-privileged"
+digest = "sha256:9ae311c01b6c5771dc84ba604fed33a7ed4697ff8ace6e531775dfbf45645959"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-illumination-switch-i00-standard"
+digest = "sha256:46f331500629f49c3f2fb4198f59d33fc749e9b48966b714b564144349fe471c"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00-privileged"
+digest = "sha256:0957878bc1ff5bab9998a755fa38f944750b3e1be82b62c43c4b4a69baae2044"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00-standard"
+digest = "sha256:584e68c25d781d5fa792aae6e9f9819b4acf14c8a5be8aff6479278a0f9eb26b"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-green-bbq-sauce-in-red-basket-distractor-burst-i00-privileged"
+digest = "sha256:f98b86c4486c5aec486fe706237fdcabf9c601df9493ac2e45d178aa555daa31"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-green-bbq-sauce-in-red-basket-distractor-burst-i00-standard"
+digest = "sha256:3838a3cc5bd50ebebfdfc84a79e73f372dc3c40dd6b100c5e41bdf31e70c726e"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00-privileged"
+digest = "sha256:ee92e40242237b6a1dd4a353f466e0d387aa4158952a9b9d90eee4cb613cff00"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00-standard"
+digest = "sha256:3cbd5f94b3a176b7dfddf695c6d5c1183ba55ff58765cdb774200c20dcabee85"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-ketchup-in-basket-distractor-burst-i00-privileged"
+digest = "sha256:fdf94c501f8a7e6ba3be0fd764f6257df94d7717d1a074c553723465cb064784"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-ketchup-in-basket-distractor-burst-i00-standard"
+digest = "sha256:8a42a5718f0b783500368e974b5ff2c1dcd6ce01490e5d34daffbd15ae5f6d09"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-camera-shift-i00-privileged"
+digest = "sha256:67d7e2623661755a160b672ce5c8698fabf471351e6eb9c24afd7a9b46b65394"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-camera-shift-i00-standard"
+digest = "sha256:dfc07fd6c97b3b78598deaba07ccc772e1d6186e50160dc1077cedc368789431"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-distractor-burst-i00-privileged"
+digest = "sha256:f5bcb25abe38492f05f36ff04e9065bf11b2ba6bf0628795bc9137c5c9f7c460"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-distractor-burst-i00-standard"
+digest = "sha256:6cd62cef3843ab233c8bfeed15522ddb79be93a5bd06c7f8230e4f34c263e800"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-illumination-switch-i00-privileged"
+digest = "sha256:2d2cdccdc8d6d9cd7383377df8cca292c48e3870d00391497066953bd4270899"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-illumination-switch-i00-standard"
+digest = "sha256:ee9938b1b3dd3fbd2346362daceea0d52584ce697ef2d509b89c255454f63a2d"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-target-relocation-i00-privileged"
+digest = "sha256:3f0897a9f355a86d33b96ddf068d1086b8e2170e37234fe464544dbeef9ea09e"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-milk-in-basket-target-relocation-i00-standard"
+digest = "sha256:8a694eecacb99de98a0c4c7f712cfbb8418477eff4508eb14f980299ce513d8f"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-orange-juice-in-basket-distractor-burst-i00-privileged"
+digest = "sha256:3aadc52032786c1fedec0f08d70f5cefd14e7e385f8f3987ed21c06be15a7c9c"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-orange-juice-in-basket-distractor-burst-i00-standard"
+digest = "sha256:fe4801c087a8ca9da3d56ec556f2fb4feef8ab02f2097cf2d22a2e480fded891"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-orange-juice-in-basket-illumination-switch-i00-privileged"
+digest = "sha256:e7aa4224e06338d6a7b8720c91a633f67ca94b3b226124de2a8cd9a0503ee672"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-orange-juice-in-basket-illumination-switch-i00-standard"
+digest = "sha256:b97c7c677f8d132980daf8c6c89402721f9e536fc7d39e83deb9129d909fe1ea"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00-privileged"
+digest = "sha256:1b9dae27a0653e7d3c120f135e3781f8df6c2afc724659c0e069aff69f8e9412"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00-standard"
+digest = "sha256:0de4e8a411673413491cda1966c2e9e0b404f802e98c42f6fc6af72b6a96e07c"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00-privileged"
+digest = "sha256:4aa0042cbfce66be1adb0694725705d3f1adc5f090c8af8c1c36269117ab03ca"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00-standard"
+digest = "sha256:2a4fb0f5c0ac7afaa6deee425f3d55bad8772ec928af942cdca8997c23c67226"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i01-privileged"
+digest = "sha256:662bfcf49a0bb015746672a34d974f6df760f3ba03f4d6933fb1de4c9a35dcf9"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i01-standard"
+digest = "sha256:83a61b8ba71ca672cf3c2befd51b2fe614e4f72b30890f26609ffd5dd472e487"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i02-privileged"
+digest = "sha256:cdb5544d5b4728368627dbf019ff8cea602b08996af8279158da5caa6cfa983d"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i02-standard"
+digest = "sha256:4f19ff67c47401282226e3db3f03c7db6929d269cbcf37d1b290abe382340c82"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00-privileged"
+digest = "sha256:ec1eefc0b277abaf91564b11c2b9cd0f7bd761f49b0d3f1571e414f6b016458e"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00-standard"
+digest = "sha256:2122436b56d2e11ace1e5c82a6f0fa09c3468eacea2e82c3319046af0b4b2052"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01-privileged"
+digest = "sha256:fbb9ace3204eb81983ff12afa2f5c87124df68692213221921ed2a7830223ce5"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01-standard"
+digest = "sha256:3d3e55d8ea3976666c2aebf280cebcd3ee5b738650ccc430fba81ae227ce8dd8"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00-privileged"
+digest = "sha256:2e0140e4299be4ffa60c400e72ab5641ce8d3cfff4e0b4f7011701f8d47a8122"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00-standard"
+digest = "sha256:530403eb458a16afed521247993bbc5894f19bfec4c10934ea8a8889f7e232d6"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00-privileged"
+digest = "sha256:7b0d7aefe82d3bdb3379933b0123f3f053032d8df75677be23cee181fa1f04db"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00-standard"
+digest = "sha256:957c4cf97e3f6fe1645440471887be383e446a6cdb4cb3c54733449e49eb90f0"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01-privileged"
+digest = "sha256:3ba7ed55d3b0578a1107952c418ee890bc6b54310cd02a6195ca709469f0b06f"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01-standard"
+digest = "sha256:93b12a76c0b3e44db7428f9f9aa4f9a09648c07603378fae2ce0ab130dd4cefa"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i00-privileged"
+digest = "sha256:7ad8c2271e973761a0e5d7042bd69e6038c03f51b157c9193fe9585a5ce21ff8"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-target-relocation-i00-standard"
+digest = "sha256:371a3d3cf2a33203e69374f532802bbf3db1e012d17a9c32f338ffe08b420954"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i00-privileged"
+digest = "sha256:532e4da7c70a89668b031e78096e661ec1ea8c9cfe40fb7e66a026f1b040d894"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i00-standard"
+digest = "sha256:84411abf83a12b377ee958907b5c3036a673ba7747cb836a88be1a7ab5e44389"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i01-privileged"
+digest = "sha256:3f87ed4c7672a254bb026f677b88a75046884083214aae67f0a3a47c1fa1b09a"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i01-standard"
+digest = "sha256:854b4e60421af2b8bee6aa5980e3d9dba06074c4a1fcb9506a1c2164c4714429"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i02-privileged"
+digest = "sha256:c064b4ab85e13ad589a01980dc797d14217e8ada7f1dff0d429357052f28f94f"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i02-standard"
+digest = "sha256:f756d1e97e30e2e9cc8c34a10df4f22337bc17665a0a6dfbd62b36382d1c6c52"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-black-bowl-on-yellow-plate-visual-theme-switch-i00-privileged"
+digest = "sha256:c04ede2ff0a59bc4fcf150e8e59ff808efe1dd1fd67ddfa881d3d4e6a97c160c"
+
+[[tasks]]
+name = "robot-coding-bench/libero-max-spatial-black-bowl-on-yellow-plate-visual-theme-switch-i00-standard"
+digest = "sha256:01cda06cd8b48956321c33323372c859ad897e0c19020e2858fca04b85aa0170"
+

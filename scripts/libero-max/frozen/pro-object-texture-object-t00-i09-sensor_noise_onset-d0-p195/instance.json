@@ -1,0 +1,56 @@
+{
+ "case": {
+  "case_id": "pro-object-texture-object-t00-i09-sensor_noise_onset-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 9,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object_texture/libero_object/task_0",
+   "change": {
+    "noise_std": 24.0,
+    "occlusion_fraction": 0.08,
+    "operation": "set_sensor_corruption",
+    "seed": 3140946692
+   },
+   "change_family": "OBS",
+   "change_type": "sensor_noise_onset",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3140946692
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-texture-object-t00-i09-sensor_noise_onset-d0",
+   "seed": 3140946692,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "alphabet_soup_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object_texture",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "04_object_texture/bddl/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object_texture",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the alphabet soup and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 0,
+  "task_name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "3c65a96c72fdcea4e45909488b5943206e1d24bade659e2e5ba55e40d227e3a4",
+ "instance_sha": "a38aecebccc1c78ad444859bfee413beea665f231848653ae272424c28c1a0d8",
+ "schema": "eai-libero-max-instance/1"
+}

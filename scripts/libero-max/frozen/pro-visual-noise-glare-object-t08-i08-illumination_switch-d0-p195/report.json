@@ -1,0 +1,107 @@
+{
+ "case_id": "pro-visual-noise-glare-object-t08-i08-illumination_switch-d0-p195",
+ "event": "illumination_switch",
+ "suite": "libero_object",
+ "language": "Pick the chocolate pudding and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "chocolate_pudding_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "2edc51ed2ce738a30b5be6bdeccbca7888f47e334340684bc0f7103dc3d1d553",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "chocolate_pudding_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "chocolate_pudding_1:lower"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 140,
+  "event_fired": true,
+  "event_step": 12,
+  "steps_left": 140,
+  "state_sha": "da34915f1ea8cfb08b64babc482e6baabe447a6c7ba544dca70de80701484fc1",
+  "initial_state_sha": "2edc51ed2ce738a30b5be6bdeccbca7888f47e334340684bc0f7103dc3d1d553"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 140,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 140,
+   "state_sha": "da34915f1ea8cfb08b64babc482e6baabe447a6c7ba544dca70de80701484fc1",
+   "initial_state_sha": "2edc51ed2ce738a30b5be6bdeccbca7888f47e334340684bc0f7103dc3d1d553"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 140,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 140,
+   "state_sha": "da34915f1ea8cfb08b64babc482e6baabe447a6c7ba544dca70de80701484fc1",
+   "initial_state_sha": "2edc51ed2ce738a30b5be6bdeccbca7888f47e334340684bc0f7103dc3d1d553"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -1,0 +1,107 @@
+{
+ "case_id": "pro-view-occlusion-goal-t04-i09-obstacle_insertion-d0-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_goal",
+ "language": "Put the bowl on the top of the drawer",
+ "goal": [
+  [
+   "on",
+   "akita_black_bowl_1",
+   "wooden_cabinet_1_top_side"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "33da45ee9b57c1667e40f2694100752461f8f423ee8d6d750b74d6b56b05b25c",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "akita_black_bowl_1",
+    "wooden_cabinet_1_top_side"
+   ]
+  ],
+  "phase": "akita_black_bowl_1:placed"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 139,
+  "event_fired": true,
+  "event_step": 11,
+  "steps_left": 161,
+  "state_sha": "b9583e8b25dda421b1e78b8e94c63f167a751c7dc4a1aa06d31c2053be366a48",
+  "initial_state_sha": "33da45ee9b57c1667e40f2694100752461f8f423ee8d6d750b74d6b56b05b25c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 139,
+   "event_fired": true,
+   "event_step": 11,
+   "steps_left": 161,
+   "state_sha": "b9583e8b25dda421b1e78b8e94c63f167a751c7dc4a1aa06d31c2053be366a48",
+   "initial_state_sha": "33da45ee9b57c1667e40f2694100752461f8f423ee8d6d750b74d6b56b05b25c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 139,
+   "event_fired": true,
+   "event_step": 11,
+   "steps_left": 161,
+   "state_sha": "b9583e8b25dda421b1e78b8e94c63f167a751c7dc4a1aa06d31c2053be366a48",
+   "initial_state_sha": "33da45ee9b57c1667e40f2694100752461f8f423ee8d6d750b74d6b56b05b25c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}
