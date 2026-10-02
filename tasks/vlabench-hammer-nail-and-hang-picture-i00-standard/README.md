@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/hammer_nail_and_hang_picture` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `hammer_nail_and_hang_picture` as a robot service: a Franka Panda arm at a table, instructed **"Please hang the 本所立川 on the wall safely and steadily: drive the nail into the wall with the hammer (VLABench checks that the nail's joint position is between 0.05 and 0.08) and bring the 本所立川 painting to the nail (its grasp point within 5 cm of the nail's)."**

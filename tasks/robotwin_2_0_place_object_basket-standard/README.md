@@ -9,7 +9,7 @@
 | Family / instance | `place_object_basket` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 Standard-mode twin of `robotwin_2_0_place_object_basket-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets

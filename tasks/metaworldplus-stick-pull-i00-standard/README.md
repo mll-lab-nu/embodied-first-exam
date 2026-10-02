@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/stick-pull` / seed 1 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-stick-pull-i00-privileged`: the same instance and success check (Use the stick to pull the target object.), served

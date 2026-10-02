@@ -9,7 +9,7 @@
 | Family / instance | `rubiks_cube_left_of_bowl` / seed 0 |
 | Oracle | `full` — The oracle scored 1 (deterministic, instance_exact) in Harbor runs robolab-rubiks-cube-left-of-bowl__onMcaQH (laptop, job tpl11-0927-1823-oracle-robolab-rubiks-cube-left-of-bowl-i00, at eaf2aff0) and robolab-rubiks-cube-left-of-bowl__tRHn5hq (ws3, job tpl19-0927-0430-oracle-robolab-rubiks-cube-left-of-bowl-i00, at fe045825), on a byte-identical tests/grade.py, frozen instance and oracle code (tests/test.sh differs only in the command that empties /logs/verifier before grading: rm -rf, the protocol v1.0 convention); the tooling (rcb_robolab.py) changed since only off the oracle and replay path: eaf2aff0 adds other families' registry entries; b3c7ca89 adds fail-safe 2.2 helpers and was re-checked through the same tooling path (the banana_in_bowl oracle trajectory ends in the same final state sha 61afa384566be3a5 with the old and the new CLI); cde31660 flips the depth default, which run-oracle and replay pass explicitly (depth=False); one docstring line now says standard mode. |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Put the rubiks cube to the left of the bowl.

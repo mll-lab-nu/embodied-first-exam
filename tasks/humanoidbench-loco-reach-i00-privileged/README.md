@@ -9,7 +9,7 @@
 | Family / instance | `reach` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's privileged-mode trajectory (19184.07 / 12000), run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench reach: produce one replayable trajectory that brings the Unitree H1's left hand to a target point and holds it there, frozen scene instance 00.

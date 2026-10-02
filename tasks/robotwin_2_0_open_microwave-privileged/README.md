@@ -9,7 +9,7 @@
 | Family / instance | `open_microwave` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 open_microwave (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range. Frozen scene instance (RoboTwin seed 28831).

@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/book_rearrange` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `book_rearrange` as a robot service: a Franka Panda arm at a table, instructed **"Put the three books from the table into the bookshelf, side by side, in order of publication from left to right as seen from the robot (oldest on the left)."**

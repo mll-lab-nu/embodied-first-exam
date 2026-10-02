@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/hammer` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `hammer-v3` (reward v2) on one frozen instance: Use the hammer to drive the nail into the block. The agent writes a

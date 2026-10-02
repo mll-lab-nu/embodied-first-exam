@@ -9,7 +9,7 @@
 | Family / instance | `put_bottles_dustbin` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 put_bottles_dustbin (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Put all three bottles into the dustbin that stands on the floor at the robot's left (x = -0.45). Only the left arm can reach the dustbin, so bottles on the right half of the table must be handed over from the right arm to the left arm in the air. Frozen scene instance (RoboTwin seed 28831).

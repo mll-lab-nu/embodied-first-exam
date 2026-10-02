@@ -5,7 +5,7 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
-image="ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:$(cat "$root/images/metaworld/VERSION")"
+image="ghcr.io/mll-lab-nu/eai-metaworld:$(cat "$root/images/metaworld/VERSION")"
 commit=59fc34d7768af9785e4688c3e1db671424f4a6c3
 src="${MW_SRC:-${XDG_CACHE_HOME:-$HOME/.cache}/eai-metaworld/Metaworld-$commit}"
 if [ ! -d "$src/metaworld/policies" ]; then

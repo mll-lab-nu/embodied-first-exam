@@ -5,7 +5,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa365:0.1.0
+    image: ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0
     volumes:
       - ./sim:/srv:ro
     working_dir: /srv

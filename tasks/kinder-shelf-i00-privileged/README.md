@@ -9,7 +9,7 @@
 | Family / instance | `shelf` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 KinDER `kinder/Shelf3D-o2-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and

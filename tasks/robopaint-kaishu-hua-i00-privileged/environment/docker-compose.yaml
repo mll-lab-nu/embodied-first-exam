@@ -13,7 +13,7 @@ services:
               count: 1
               capabilities: [gpu]
   scorer:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:0.2.0
+    image: ghcr.io/mll-lab-nu/eai-robopaint:0.2.0
     volumes:
       - ./scorer:/srv:ro
     working_dir: /tmp

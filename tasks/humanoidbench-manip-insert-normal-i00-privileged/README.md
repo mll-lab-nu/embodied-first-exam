@@ -9,7 +9,7 @@
 | Family / instance | `insert_normal` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 55% of the bar (paper 188, FastTD3 192, bar 350); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench insert_normal: produce one replayable trajectory that fits a bar's two ends into two small sockets with the Unitree H1's hands, frozen scene instance 00.
