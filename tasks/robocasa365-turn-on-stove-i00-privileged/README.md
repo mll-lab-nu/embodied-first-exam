@@ -18,7 +18,7 @@ RoboCasa365's `TurnOnStove` kitchen task with a Franka Panda arm on an Omron mob
 Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.
 
 ## Reference solution
-The demonstration's own actions (None: 241 actions), executed from the frozen scene by the robot's own controller: 241 actions in `solution/oracle.npz`. The demonstration is a reference solution: it is not in the image and the agent cannot reach it.
+PR #4's reference for this frozen instance (an official demonstration's initial state; PR #4's authoring record for this task names neither the demonstration episode nor the retargeting method). Executed from the frozen scene by the robot's own controller: 241 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them.
 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `e83ba997d65f…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
@@ -27,6 +27,6 @@ The demonstration's own actions (None: 241 actions), executed from the frozen sc
 | | |
 |---|---|
 | Source | [RoboCasa365](https://github.com/robocasa/robocasa) @ 4f8a298 (robocasa 1.0.1; MIT), robosuite @ 5ce6643 (1.5.2), MuJoCo 3.3.1; [environment source](None) |
-| Instance | the initial state of official demonstration episode None (`None`, None); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `a52a0718df3e…`, checked on load) |
+| Instance | the initial state of an official demonstration episode (which one is not in PR #4's authoring record); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `a52a0718df3e…`, checked on load) |
 | Deliverable | `(T, 13)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action |
+| Success | the environment's own check (`_check_success`) on the state after the last action: the rear left burner's knob is on: its angle from off, in absolute value, is between 0.35 rad and 2π − 0.35 rad. |

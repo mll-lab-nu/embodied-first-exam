@@ -3,6 +3,7 @@
 
     python3 scripts/<bench>/generate.py            # every verified environment in frozen/report.json
     python3 scripts/<bench>/generate.py PreSoakPan
+    python3 scripts/<bench>/generate.py --check    # render into a temporary directory and compare with tasks/
 
 Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
 in shared/ and the standard-mode service images/<bench>/standard/server_casa.py. Every task directory is rewritten;
@@ -12,13 +13,14 @@ shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(1, str(ROOT / "scripts"))
-from envs import SOURCES, slug  # noqa: E402
+from envs import SOURCES, SUCCESS, slug  # noqa: E402
 from task_conventions import normalize  # noqa: E402  (protocol v1.0 conventions, as main's generators)
 
 # -- benchmark configuration -----------------------------------------------------------------------------------
@@ -44,6 +46,7 @@ DIFFICULTY_STANDARD = (
 )
 # -----------------------------------------------------------------------------------------------------------------
 
+TASKS = ROOT / "tasks"  # check mode renders into a temporary directory instead
 SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
 SERVER = ROOT / f"images/{BENCH}/standard/server_casa.py"
@@ -73,8 +76,15 @@ allowed_hosts = {ALLOWED_HOSTS}
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 
 
-def action_text(dim: int) -> str:
-    """The native controller's channels, as both instructions state them."""
+LIMITS = {
+    "privileged": "`s.action_spec`",
+    "standard": '`spec["action_types"]["{type}"]` (`lower` / `upper`, from `r.spec()`)',
+}
+
+
+def action_text(dim: int, mode: str) -> str:
+    """The native controller's channels, as both instructions state them; `mode` names where the limits are."""
+    limits = LIMITS[mode].format(type=ACTION_TYPE[dim])
     if dim == 12:
         return (
             "12 channels, in order: `arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz` -- the end effector's motion "
@@ -86,7 +96,7 @@ def action_text(dim: int) -> str:
     if dim == 13:
         return (
             "13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the "
-            "joint limits in `s.action_spec`); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile "
+            "joint limits in " + limits + "); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile "
             "base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; "
             "`hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the limits."
         )
@@ -100,12 +110,47 @@ def action_text(dim: int) -> str:
 
 
 def hold_note(rec: dict) -> str:
+    """For the README: the reference's success does not survive holding still (import_references.py, HOLD_STEPS)."""
     if rec["success_after_hold"]:
         return ""
     return (
         "\nIn this environment the success state does not persist on its own: after the reference's last action, "
         "holding still for 10 control steps loses it. Graded on the final state, a trajectory must end at that moment.\n"
     )
+
+
+def hold_instruction(rec: dict, mode: str) -> str:
+    """The same fact for the agent (both modes): end while the success holds."""
+    if rec["success_after_hold"]:
+        return ""
+    end = (
+        "end the trajectory on a step where `s.check()` reports success"
+        if mode == "privileged"
+        else "make the last chunk you submit end in that state, then stop submitting and do not call "
+        "`get_obs(seconds=...)` (holding still runs control steps that are part of the episode)"
+    )
+    return (
+        "\n**This task's success does not persist on its own**: the reference solution's success state is lost "
+        f"within 10 control steps of holding still after its last action. Since only the final state counts, {end}.\n"
+    )
+
+
+SUCCESS_TERMS = """How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
+- *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds
+  d. Opening the fingers is not enough: release, then move the hand away.
+- *X is on / in Y* for an object Y (plate, tray, board, pan, pot, colander, tupperware, glass): X touches Y and their
+  centres are within 0.7 × Y's horizontal radius of each other horizontally, unless a distance is given.
+- *X touches* a counter, the dining counter or the stove: contact between X and that fixture.
+- *X is inside* a fixture (a cabinet, the sink or one of its basins, the microwave): all eight corners of X's bounding
+  box are within the fixture's interior region (5 cm tolerance).
+"""
+
+
+def success_text(rec: dict) -> str:
+    """What the environment's `_check_success` requires (envs.SUCCESS), with the terms it uses."""
+    text = SUCCESS[rec["env"]]
+    terms = any(w in text for w in ("gripper ends", "touch", "inside", " on the ", " in the "))
+    return f"The check for `{rec['env']}` requires that {text}\n" + (f"\n{SUCCESS_TERMS}" if terms else "")
 
 
 def privileged_instruction(rec: dict) -> str:
@@ -128,6 +173,7 @@ CPU is bit-exact) and applies the environment's own success check for `{env}` (`
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+{success_text(rec)}{hold_instruction(rec, "privileged")}
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool
@@ -141,7 +187,7 @@ s.replay(A)          # reset, then replay A (what the verifier does) -> {{"succe
 s.reset()            # back to the frozen start, as often as you like (it takes a few seconds)
 img = s.render("robot0_agentview_center")   # RGB (240, 320, 3); views in s.camera_views; s.render_grid()
 ```
-- Actions: {action_text(dim)}
+- Actions: {action_text(dim, "privileged")}
 - The success check runs twice after every control step and once at reset, in your session exactly as in the
   verifier. Some checks count consecutive successful steps, so calling `s.env._check_success()` yourself changes the
   state of the run you are recording; use `s.check()`.
@@ -182,6 +228,7 @@ the environment's own success check for `{env}` to the state **after the last ex
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+{success_text(rec)}{hold_instruction(rec, "standard")}
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -197,7 +244,7 @@ res.meta["done"], res.meta["reason"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
 ```
 - Action `{ACTION_TYPE[dim]}`: the robot's native controller command, applied once per control step (`control_dt` =
-  0.05 s; float64). {action_text(dim)} Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
+  0.05 s; float64). {action_text(dim, "standard")} Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
 - `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
   for `s` seconds; those control steps are part of the episode.
@@ -235,9 +282,42 @@ def readme(head: list[str], task: str, difficulty: str, reference: str, verifica
     return "\n".join(out) + "\n"
 
 
+METHOD = {
+    "joint": "it follows the demonstration's recorded arm joint positions as this controller's absolute joint targets "
+    "(PR #4 method `demo_joint`)",
+    "feedback": "it follows the demonstration's recorded arm joint positions as this controller's absolute joint "
+    "targets, with the base and torso commands corrected by feedback (PR #4 method `demo_feedback`)",
+}
+
+
+def reference_source(rec: dict) -> str:
+    """Where the reference comes from, as far as PR #4's authoring record says (import_references.provenance)."""
+    demo = rec.get("demonstration") or {}
+    method = rec.get("reference_method")
+    if demo.get("episode") is None or method not in METHOD:
+        return (
+            "PR #4's reference for this frozen instance (an official demonstration's initial state; PR #4's authoring "
+            "record for this task names neither the demonstration episode nor the retargeting method)"
+        )
+    return (
+        f"Retargeted by PR #4 from official demonstration episode {demo['episode']} (`{demo.get('demo')}`, "
+        f"{demo.get('n_actions')} recorded actions; RoboCasa365's demonstrations use a different arm controller): "
+        f"{METHOD[method]}"
+    )
+
+
+def instance_source(rec: dict) -> str:
+    demo = rec.get("demonstration") or {}
+    if demo.get("episode") is None:
+        return "the initial state of an official demonstration episode (which one is not in PR #4's authoring record)"
+    path = rec.get("demonstration_path")
+    return f"the initial state of official demonstration episode {demo['episode']} (`{demo.get('demo')}`" + (
+        f", `{path}`)" if path else ")"
+    )
+
+
 def privileged_readme(rec: dict) -> str:
     env = rec["env"]
-    demo = rec.get("demonstration") or {}
     cut = " (cut at its first success)" if rec["truncated"] else ""
     task = (
         f"{ENV_DOC.format(env=env)} with {ROBOT_TEXT.replace('**', '')}: {rec['instruction']} Produce one replayable "
@@ -245,9 +325,9 @@ def privileged_readme(rec: dict) -> str:
         f"last action. Generated by `scripts/{BENCH}/generate.py`; benchmark notes in `docs/benchmarks/{BENCH}.md`."
     )
     reference = (
-        f"The demonstration's own actions ({rec.get('reference_method')}: {rec['reference_actions']} actions), executed "
-        f"from the frozen scene by the robot's own controller: {rec['n_actions']} actions{cut} in `solution/oracle.npz`. "
-        "The demonstration is a reference solution: it is not in the image and the agent cannot reach it."
+        f"{reference_source(rec)}. Executed from the frozen scene by the robot's own controller: {rec['n_actions']} "
+        f"actions{cut} in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent "
+        "cannot reach them."
         + hold_note(rec).replace("\n", " ").rstrip()
     )
     verification = (
@@ -260,12 +340,12 @@ def privileged_readme(rec: dict) -> str:
         ("Source", f"{UPSTREAM}; [environment source]({rec.get('environment_source')})"),
         (
             "Instance",
-            f"the initial state of official demonstration episode {demo.get('episode')} (`{demo.get('demo')}`, "
-            f"{rec.get('demonstration_path')}); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` "
+            f"{instance_source(rec)}; MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` "
             f"(SHA-256 `{rec['instance_sha'][:12]}…`, checked on load)",
         ),
         ("Deliverable", f"`(T, {rec['action_dim']})` native controller commands, 1 ≤ T ≤ {MAX_STEPS}, 20 Hz"),
-        ("Success", "the environment's own check (`_check_success`) on the state after the last action"),
+        ("Success", f"the environment's own check (`_check_success`) on the state after the last action: "
+         f"{SUCCESS[env]}"),
     ]
     return readme(
         readme_head(rec, "privileged"), task, DIFFICULTY_PRIVILEGED.replace("\n", " "), reference, verification, details
@@ -469,7 +549,7 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
 
 def make(rec: dict) -> None:
     fz = FROZEN / rec["slug"]
-    p = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-privileged"
+    p = TASKS / f"{BENCH}-{rec['slug']}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", privileged_toml(rec))
     put(p / "instruction.md", privileged_instruction(rec))
@@ -486,7 +566,7 @@ def make(rec: dict) -> None:
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
     put(p / "solution/oracle.npz", src=fz / "oracle.npz")
 
-    s = ROOT / "tasks" / f"{BENCH}-{rec['slug']}-i00-standard"
+    s = TASKS / f"{BENCH}-{rec['slug']}-i00-standard"
     reset_dir(s)
     put(s / "task.toml", standard_toml(rec))
     put(s / "instruction.md", standard_instruction(rec))
@@ -528,6 +608,28 @@ def main(envs: list[str]) -> None:
     print(f"generated {2 * n} task directories")
 
 
+def tree(d: Path) -> dict:
+    return {str(f.relative_to(d)): (f.read_bytes(), f.stat().st_mode & 0o777) for f in sorted(d.rglob("*")) if f.is_file()}
+
+
+def check() -> int:
+    """Render every task into a temporary directory and compare it (contents and file modes) with tasks/."""
+    global TASKS
+    with tempfile.TemporaryDirectory() as td:
+        TASKS = Path(td)
+        main(ALL)
+        fresh = sorted(d.name for d in TASKS.iterdir())
+        have = sorted(d.name for d in (ROOT / "tasks").glob(f"{BENCH}-*") if d.is_dir())
+        bad = sorted(set(fresh) ^ set(have))
+        bad += [n for n in fresh if n in have and tree(TASKS / n) != tree(ROOT / "tasks" / n)]
+    for n in bad:
+        print(f"FAIL tasks/{n}: differs from a fresh render (run scripts/{BENCH}/generate.py)")
+    print(f"{len(fresh) - len(bad)}/{len(fresh)} task directories match a fresh render")
+    return 1 if bad else 0
+
+
 ALL = sorted(SOURCES)
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--check"]:
+        sys.exit(check())
     main(sys.argv[1:] or ALL)

@@ -18,7 +18,7 @@ RoboCasa365's `PrepForSanitizing` kitchen task with a Franka Panda arm on an Omr
 Full privileged state, unlimited resets and self-replay; a mobile manipulator in one of RoboCasa365's large, cluttered kitchens, long-horizon contact-rich manipulation with a 20 Hz controller. The standard twin removes the privileged state.
 
 ## Reference solution
-The demonstration's own actions (joint: 1584 actions), executed from the frozen scene by the robot's own controller: 1584 actions in `solution/oracle.npz`. The demonstration is a reference solution: it is not in the image and the agent cannot reach it.
+Retargeted by PR #4 from official demonstration episode 2 (`demo_0`, 1584 recorded actions; RoboCasa365's demonstrations use a different arm controller): it follows the demonstration's recorded arm joint positions as this controller's absolute joint targets (PR #4 method `demo_joint`). Executed from the frozen scene by the robot's own controller: 1584 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them.
 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `1b1a899a67ec…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
@@ -27,6 +27,6 @@ The demonstration's own actions (joint: 1584 actions), executed from the frozen 
 | | |
 |---|---|
 | Source | [RoboCasa365](https://github.com/robocasa/robocasa) @ 4f8a298 (robocasa 1.0.1; MIT), robosuite @ 5ce6643 (1.5.2), MuJoCo 3.3.1; [environment source](https://github.com/robocasa/robocasa/blob/4f8a2980def75a55dff96b990745b83540425f09/robocasa/environments/kitchen/composite/sanitizing_surface/prep_for_sanitizing.py#L4) |
-| Instance | the initial state of official demonstration episode 2 (`demo_0`, None); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `da8352070d31…`, checked on load) |
+| Instance | the initial state of official demonstration episode 2 (`demo_0`); MuJoCo state, model arrays, task state and RNG frozen in `instance.npz` (SHA-256 `da8352070d31…`, checked on load) |
 | Deliverable | `(T, 13)` native controller commands, 1 ≤ T ≤ 3000, 20 Hz |
-| Success | the environment's own check (`_check_success`) on the state after the last action |
+| Success | the environment's own check (`_check_success`) on the state after the last action: the bar soap and the dish brush both touch the counter nearest the cabinet, and the gripper ends more than 0.25 m from both. |

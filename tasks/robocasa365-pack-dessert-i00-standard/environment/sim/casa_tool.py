@@ -41,12 +41,21 @@ def _disable_mesh_cache() -> None:
     """MuJoCo keeps a process-wide cache of compiled meshes (mj_globalCache). A mesh served from it can differ from a
     freshly compiled one (mesh_polynormal), so a scene built twice in one process could step differently from a scene
     built once, depending on what the process loaded before. With the cache off, every build compiles its meshes
-    afresh, exactly as the first build in a fresh process does: one behaviour for the agent, verifier and service."""
-    lib = ctypes.CDLL(glob.glob(os.path.join(os.path.dirname(mujoco.__file__), "libmujoco.so*"))[0])
-    if hasattr(lib, "mj_globalCache"):
-        lib.mj_globalCache.restype = ctypes.c_void_p
-        lib.mj_setCacheSize.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
-        lib.mj_setCacheSize(lib.mj_globalCache(), 0)
+    afresh, exactly as the first build in a fresh process does: one behaviour for the agent, verifier and service.
+    Determinism depends on it, so a MuJoCo build without these symbols is an error, never a silent no-op."""
+    libs = glob.glob(os.path.join(os.path.dirname(mujoco.__file__), "libmujoco.so*"))
+    if not libs:
+        raise RuntimeError(f"casa_tool: no libmujoco.so next to {mujoco.__file__}; cannot turn off the mesh cache")
+    lib = ctypes.CDLL(libs[0])
+    missing = [s for s in ("mj_globalCache", "mj_setCacheSize") if not hasattr(lib, s)]
+    if missing:
+        raise RuntimeError(
+            f"casa_tool: {libs[0]} (MuJoCo {mujoco.__version__}) has no {', '.join(missing)}; the mesh cache cannot be "
+            "turned off and replays would not be deterministic (this tooling is pinned to MuJoCo 3.3.1)"
+        )
+    lib.mj_globalCache.restype = ctypes.c_void_p
+    lib.mj_setCacheSize.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+    lib.mj_setCacheSize(lib.mj_globalCache(), 0)
 
 
 _disable_mesh_cache()

@@ -22,6 +22,17 @@ the environment's own success check for `PickPlaceSinkToCounter` to the state **
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+The check for `PickPlaceSinkToCounter` requires that the egg is on the plate, the plate touches the counter next to the sink, and the gripper ends more than 0.25 m from the egg.
+
+How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
+- *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds
+  d. Opening the fingers is not enough: release, then move the hand away.
+- *X is on / in Y* for an object Y (plate, tray, board, pan, pot, colander, tupperware, glass): X touches Y and their
+  centres are within 0.7 × Y's horizontal radius of each other horizontally, unless a distance is given.
+- *X touches* a counter, the dining counter or the stove: contact between X and that fixture.
+- *X is inside* a fixture (a cabinet, the sink or one of its basins, the microwave): all eight corners of X's bounding
+  box are within the fixture's interior region (5 cm tolerance).
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -37,7 +48,7 @@ res.meta["done"], res.meta["reason"], res.meta["control_steps"]
 res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs/003")
 ```
 - Action `joint_position`: the robot's native controller command, applied once per control step (`control_dt` =
-  0.05 s; float64). 13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in `s.action_spec`); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the limits. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
+  0.05 s; float64). 13 channels, in order: `arm_joint1 .. arm_joint7` -- absolute joint position targets (rad, within the joint limits in `spec["action_types"]["joint_position"]` (`lower` / `upper`, from `r.spec()`)); `grip` (+1 closes, -1 opens); `base_x, base_y, base_yaw` -- the mobile base's velocities in its own frame (normalised, [-1, 1]); `torso` -- the torso lift's velocity; `hybrid_mode` (> 0: base mode; <= 0: arm mode, the default -1). Values are clipped to the limits. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
 - `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
   for `s` seconds; those control steps are part of the episode.
