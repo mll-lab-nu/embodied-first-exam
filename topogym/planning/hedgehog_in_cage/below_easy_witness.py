@@ -1,8 +1,11 @@
 """Object-level checks for the below-easy Hedgehog settings (very_easy, easier).
 
+The robot is meant to hold the spike that points at it through the wide window, with the gripper
+outside the cage: that spike must reach at least GRIP_LENGTH_M beyond the cage wall.
+
 very_easy: held at its resting orientation, the ball leaves the cage by translation alone.
-easier:    no translation-only exit exists at the resting orientation; after a lift, one in-place
-           roll about the exit axis (cage x) opens a straight exit.
+easier:    no translation-only exit exists at rest; after a lift, one roll about the held spike's
+           axis (a wrist roll) opens a straight exit.
 
 Geometry is the frozen task scene (every visual and collision surface, mount and table) in the
 cage frame. Two separate questions are answered:
@@ -13,7 +16,9 @@ cage frame. Two separate questions are answered:
 2. A concrete route, certified edge by edge with RigidPathChecker at a stated surface margin:
    lift, (easier only) roll, then a straight horizontal pull toward the robot.
 
-No robot, gripper, IK or physics is involved.
+The gripper itself is not modelled: it holds only the part of the spike outside the cage, which
+stays outside during the lift, the roll about that spike and the outward pull. No robot, IK or
+physics is involved.
 """
 from collections import deque
 from pathlib import Path
@@ -22,12 +27,14 @@ import fcl
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from topogym.assets.geometry.hedgehog_in_cage import HedgehogLayout
 from topogym.planning.rigid_reference.geometry import RigidPathChecker, matrix, pose_dict
 from .object_oracle import frozen_problem
 from .variant_oracle import initial_free
 
 GRID_STEP_M = .002
-LIFT_MARGIN_M = .0002       # the ball starts 0.5 mm above its support
+GRIP_LENGTH_M = .015        # held spike length that must lie outside the cage wall
+LIFT_MARGIN_M = .0002       # the ball starts 0.2 mm above its support
 MARGIN_M = .001             # certified clearance while rolling and pulling
 LIFTS_M = tuple(np.arange(0., .0601, .005))
 PULL_AZIMUTHS_DEG = tuple(range(150, 211, 2))   # 180 deg = toward the robot (cage frame -x)
@@ -40,6 +47,24 @@ def _collides(checker, pose):
     t = matrix(*pose)
     moving.setTransform(fcl.Transform(t[:3, :3], t[:3, 3]))
     return fcl.collide(fixed, moving, fcl.CollisionRequest(), fcl.CollisionResult()) > 0
+
+
+def held_spike(task, pose, outer_radius_m):
+    """The spike pointing at the robot (within 30 deg of azimuth 180, below 30 deg elevation) whose
+    tip lies farthest outside the cage wall: index, unit axis in the cage frame, length outside."""
+    layout = HedgehogLayout(task.template(), float(task.config["scale"]))
+    position, rotation = pose
+    best = None
+    for index, (root, tip) in enumerate(layout.spike_segments()):
+        axis = rotation.apply(tip - root)
+        axis /= np.linalg.norm(axis)
+        if axis[0] > -np.cos(np.radians(30)) * np.hypot(axis[0], axis[1]) or abs(axis[2]) > .5:
+            continue
+        end = position + rotation.apply(tip)
+        outside = float(np.hypot(end[0], end[1]) - outer_radius_m)
+        if best is None or outside > best["outside_m"]:
+            best = dict(index=index, axis=axis, outside_m=outside)
+    return best
 
 
 def translation_reachable(checker, start, outside_radius_m, *, step=GRID_STEP_M, height_m=.12):
@@ -84,17 +109,23 @@ def straight_pull(lift, pull, start, outside_radius_m):
 def check_variant(variation, output, *, seed=0):
     """Design report for one below-easy setting: 'very_easy', 'easier', or why neither."""
     task, ball, fixed, frame, initial, report = frozen_problem(output, seed=seed, variation=variation)
-    outside = report["asset_report"]["cage_geometry"]["outer_radius_m"] + float(
-        np.linalg.norm(ball.vertices, axis=1).max()) + .005
+    outer = report["asset_report"]["cage_geometry"]["outer_radius_m"]
+    outside = outer + float(np.linalg.norm(ball.vertices, axis=1).max()) + .005
     entry = RigidPathChecker(fixed, ball)
     lift = RigidPathChecker(fixed, ball, margin_m=LIFT_MARGIN_M)
     pull = RigidPathChecker(fixed, ball, margin_m=MARGIN_M)
+    spike = held_spike(task, initial, outer)
     result = dict(variation_id=task.variation_id, instance_id=task.instance_id, seed=seed,
                   frame="hedgehog_cage", initial_pose=pose_dict(initial),
                   initial_free=bool(initial_free(entry, initial)), grid_step_m=GRID_STEP_M,
-                  margin_m=MARGIN_M, scope="ball-only object geometry; no robot, gripper, IK or physics")
+                  margin_m=MARGIN_M, grip_length_m=GRIP_LENGTH_M,
+                  held_spike=spike and dict(spike, axis=spike["axis"].tolist()),
+                  scope="ball-only object geometry; the gripper holds the spike outside the cage; "
+                        "no robot, IK or physics")
     if not result["initial_free"]:
         return dict(result, design="invalid_initial_pose")
+    if spike is None or spike["outside_m"] < GRIP_LENGTH_M:
+        return dict(result, design="no_graspable_spike")
     result["translation_exit_at_rest"] = translation_reachable(entry, initial, outside)
     if result["translation_exit_at_rest"]:
         route = straight_pull(lift, pull, initial, outside)
@@ -106,7 +137,7 @@ def check_variant(variation, output, *, seed=0):
         if not lift.edge(initial, raised)["passed"]:
             break
         for angle in ROLLS_DEG:
-            turned = (raised[0], Rotation.from_rotvec(np.radians(angle) * np.array([1., 0., 0.])) * r0)
+            turned = (raised[0], Rotation.from_rotvec(np.radians(angle) * spike["axis"]) * r0)
             rolled = pull.edge(raised, turned)
             if not rolled["passed"]:
                 continue

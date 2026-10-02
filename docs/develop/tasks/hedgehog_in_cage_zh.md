@@ -194,10 +194,14 @@ v2 支持固定/参数模式、尺寸、位置、朝向、木质外观与保存/
 
 两档共用同一个笼子，只有刺球的初始位姿不同；刺球与 easy 完全相同。CLASSIC 笼中 144°/216° 两个窗口合并为一个朝向机器人（180°）、宽 106 mm 的窗口，上下环箍由 30 mm 降到 18 mm。初始位姿是在 Genesis（CPU、25 ms tick、40 子步）中落稳 5 s 后的结果，再沿 z 抬离接触 0.2 mm 写入变体参数。
 
-| 入口 | 别名 | 设计意图 | 物体层面检查 |
-| --- | --- | --- | --- |
-| `hedgehog_in_cage_very_easy` | `very_easy` | 保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 5 mm，朝 182° 直拉，余量下界 1.07 mm |
-| `hedgehog_in_cage_easier` | `easier` | 初始朝向下不能平移出笼；一次抓持内转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 15 mm，绕出口轴转 80°，朝 172° 直拉，余量下界 1.0 mm |
+抓法按夹爪设计：两档都有一根 60 mm 长刺朝向机器人、伸出笼壁约 19 mm，夹爪在笼外夹住它；easier 的转动是绕这根刺的轴转手腕。只按刺球设计、夹爪伸进笼里夹球心的第一版，经 2F-85 网格检查不可行（夹爪碰笼或转动时扫到环箍），已替换。
+
+| 入口 | 别名 | 设计意图 | 物体层面检查（只算刺球） | 加 2F-85 夹住该刺（`scripts/design_viewer/exit_check.py`） |
+| --- | --- | --- | --- | --- |
+| `hedgehog_in_cage_very_easy` | `very_easy` | 保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 10 mm，朝 172° 直拉 | 直拉出口 2/160（手指竖向或侧向开合都成立） |
+| `hedgehog_in_cage_easier` | `easier` | 初始朝向下不能平移出笼；绕所夹刺的轴转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 15 mm，绕刺轴转 75°，朝 174° 直拉 | 直拉出口 0/160；绕接近轴转 70° 后出现出口 |
+
+认证路径的表面余量下界为 1 mm。初始位姿加 ±1 mm、±2° 扰动的 20 个样本中，very_easy 全部仍可平移出笼，easier 全部仍不可（零余量与 0.5 mm 余量均如此）。从写入的位姿再落稳 3 s，刺球移动 0.30 mm、转动小于 0.01°。
 
 代码：[below_easy.py](../../../topogym/tasks/hedgehog_in_cage/below_easy.py)（共享构造，难度旋钮为 `cage` 与 `ball_pose`）、[hedgehog_in_cage_very_easy.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_very_easy.py)、[hedgehog_in_cage_easier.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easier.py)；检查：[below_easy_witness.py](../../../topogym/planning/hedgehog_in_cage/below_easy_witness.py)、[test-hedgehog-below-easy.py](../../../ci_checks/test-hedgehog-below-easy.py)。登记在 `variation_records.py`，`pool='below_easy'`，seeded 仍只抽 easy/medium/hard。
 
@@ -206,4 +210,4 @@ python -m topogym.planning.hedgehog_in_cage.below_easy_witness --variant easier 
 python ci_checks/test-hedgehog-below-easy.py
 ```
 
-边界：物体层面检查只含刺球与笼、底座、桌面的几何，不含机械臂、夹爪、IK 与动力学；“平移不可达”以 2 mm 网格为准，不是不可能性证明。机器人完整执行与 Harbor 任务包尚未做。
+边界：物体层面检查只含刺球与笼、底座、桌面的几何；夹爪检查只含 2F-85，不含 Panda 手腕、IK 与动力学；“平移不可达”以 2 mm 网格为准，不是不可能性证明。机器人完整执行与 Harbor 任务包尚未做。

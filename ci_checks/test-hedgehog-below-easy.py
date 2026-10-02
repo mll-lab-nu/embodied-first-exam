@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from topogym.config.registry import seeded_variation, task_definition
-from topogym.planning.hedgehog_in_cage.below_easy_witness import check_variant
+from topogym.planning.hedgehog_in_cage.below_easy_witness import GRIP_LENGTH_M, check_variant
 from topogym.tasks.hedgehog_in_cage.below_easy import HedgehogBelowEasyTask
 
 
@@ -49,12 +49,14 @@ class Registration(unittest.TestCase):
 
 
 class DesignIntent(unittest.TestCase):
-    """very_easy exits by translation; easier is blocked until one roll about the exit axis."""
+    """A spike points at the robot from outside the cage; very_easy exits by translation,
+    easier only after one roll about that spike's axis."""
 
     def test_very_easy_exits_by_translation(self):
         with tempfile.TemporaryDirectory() as folder:
             report = check_variant("very_easy", Path(folder))
         self.assertTrue(report["initial_free"])
+        self.assertGreaterEqual(report["held_spike"]["outside_m"], GRIP_LENGTH_M)
         self.assertTrue(report["translation_exit_at_rest"])
         self.assertEqual(report["design"], "very_easy")
 
@@ -62,6 +64,7 @@ class DesignIntent(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             report = check_variant("easier", Path(folder))
         self.assertTrue(report["initial_free"])
+        self.assertGreaterEqual(report["held_spike"]["outside_m"], GRIP_LENGTH_M)
         self.assertFalse(report["translation_exit_at_rest"])
         self.assertEqual(report["design"], "easier")
         self.assertGreaterEqual(abs(report["roll_deg"]), 30)

@@ -2,9 +2,11 @@
 
 Two knobs set the difficulty: ``cage`` (window layout and collar height) and ``ball_pose``,
 the ball's gravity-settled pose in the cage frame. The ball is the easy tier's ball,
-unchanged. very_easy rests where a translation-only exit exists; easier rests where one
-in-grasp roll is needed first. See topogym/planning/hedgehog_in_cage/below_easy_witness.py.
-These are design targets, not robot qualifications.
+unchanged. In both settings a long spike points at the robot and reaches outside the cage,
+so the gripper can hold it from outside. very_easy rests where a translation-only exit
+exists; easier rests where one wrist roll about that spike is needed first. See
+topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design targets, not
+robot qualifications.
 """
 from copy import deepcopy
 import json

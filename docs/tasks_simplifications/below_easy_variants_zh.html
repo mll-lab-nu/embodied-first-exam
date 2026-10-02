@@ -248,8 +248,8 @@ footer ul { padding-left: 1.2em; }
     <table>
       <thead><tr><th>入口</th><th>场景实现</th><th>物体层面检查</th><th>CPU 落稳</th><th>机器人执行</th><th>Harbor 任务包</th></tr></thead>
       <tbody>
-        <tr><td><code>hedgehog_in_cage_very_easy</code></td><td><span class="pill done">已完成</span></td><td><span class="pill done">已完成</span> 可平移出笼</td><td><span class="pill done">已完成</span> 3 s 移动 0.45 mm</td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
-        <tr><td><code>hedgehog_in_cage_easier</code></td><td><span class="pill done">已完成</span></td><td><span class="pill done">已完成</span> 需转 80°</td><td><span class="pill done">已完成</span> 3 s 移动 0.30 mm</td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
+        <tr><td><code>hedgehog_in_cage_very_easy</code></td><td><span class="pill done">已完成</span></td><td><span class="pill done">已完成</span> 可平移出笼；加夹爪也成立</td><td><span class="pill done">已完成</span> 3 s 移动 0.30 mm</td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
+        <tr><td><code>hedgehog_in_cage_easier</code></td><td><span class="pill done">已完成</span></td><td><span class="pill done">已完成</span> 需绕所夹的刺转 75°；加夹爪也成立</td><td><span class="pill done">已完成</span> 3 s 移动 0.30 mm</td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
         <tr><td><code>horseshoe_ring_very_easy</code></td><td><span class="pill doing">方案待确认</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
         <tr><td><code>horseshoe_ring_easier</code></td><td><span class="pill doing">方案待确认</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
         <tr><td><code>slotted_post_ring_very_easy</code></td><td><span class="pill doing">方案待确认</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill fail">需 GPU</span></td><td><span class="pill todo">未开始</span></td><td><span class="pill todo">未开始</span></td></tr>
@@ -278,6 +278,7 @@ footer ul { padding-left: 1.2em; }
       <li><b>刺球不变</b>：沿用 easy 的 CLASSIC 刺球（10 根刺，球核直径 54 mm）。</li>
       <li><b>笼子</b>：把 CLASSIC 笼 144° 和 216° 的两个窗口合并成一个朝向机器人（180°）的 106 mm 宽窗，上下环箍从 30 mm 降到 18 mm。两档共用这个笼子。</li>
       <li><b>难度只由刺球的初始位姿决定</b>：very_easy 的刺球落在“保持朝向就能平移出笼”的位姿上；easier 的刺球落在“必须先转一下”的位姿上。</li>
+      <li><b>按夹爪设计抓法</b>：两档都有一根 60 mm 长刺朝向机器人、伸出笼壁约 19 mm（图中青绿色一段）。夹爪在笼外夹住它，不伸进笼子；easier 的“转一下”就是绕这根刺的轴转手腕。</li>
       <li><b>初始位姿是真实落稳的结果</b>：在 Genesis（CPU）里落稳 5 s，再沿 z 抬离接触 0.2 mm，写进变体参数。按“平面上的静置姿态”直接摆放并不可靠，刺球在重力下会再转 10–15°，足以改变分类。</li>
     </ul>
   </div>
@@ -294,7 +295,7 @@ footer ul { padding-left: 1.2em; }
       <div class="card"><img src="figures/hedgehog_easier_step3.jpg" alt="easier 拉出途中" loading="lazy" width="720" height="540"></div>
       <div class="card"><img src="figures/hedgehog_easier_step4.jpg" alt="easier 出笼" loading="lazy" width="720" height="540"></div>
     </div>
-    <figcaption>上排 very_easy，下排 easier。视角在机器人一侧，宽窗正对镜头；橙色是刺球。每帧都是证明过的路径上的实际位姿：very_easy 抬起 5 mm 后朝 182° 直拉；easier 抬起 15 mm、绕出口轴（笼坐标 x）转 80° 后朝 172° 直拉。图由仓库生成器输出的网格在 CPU 上渲染，不含机器人。</figcaption>
+    <figcaption>上排 very_easy，下排 easier。视角在机器人一侧，宽窗正对镜头；橙色是刺球，青绿色是夹爪要夹的那段刺。每帧都是证明过的路径上的实际位姿：very_easy 抬起 10 mm 后朝 172° 直拉；easier 抬起 15 mm、绕所夹的刺转 75° 后朝 174° 直拉。图由仓库生成器输出的网格在 CPU 上渲染，不含机器人。</figcaption>
   </figure>
 
   <h3>验证结果</h3>
@@ -303,10 +304,12 @@ footer ul { padding-left: 1.2em; }
       <thead><tr><th>检查</th><th>very_easy</th><th>easier</th><th>方法</th></tr></thead>
       <tbody>
         <tr><td>初始位姿与笼、底座、桌面不相交</td><td class="ok">是</td><td class="ok">是</td><td>精确网格，闭合碰撞件做包含检查</td></tr>
+        <tr><td>朝向机器人的刺伸出笼壁</td><td>19.4 mm</td><td>19.5 mm</td><td>要求 ≥ 15 mm，夹爪只夹笼外这一段</td></tr>
         <tr><td>保持初始朝向能否平移出笼</td><td class="ok">能</td><td class="no">不能</td><td>2 mm 平移网格上的广度优先搜索</td></tr>
-        <tr><td>证明过的路径</td><td>抬 5 mm → 朝 182° 直拉</td><td>抬 15 mm → 转 80° → 朝 172° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
-        <tr><td>扰动稳健性（位置 ±1 mm、姿态 ±2°，20 个样本）</td><td>20/20 仍能平移出笼</td><td>零余量：18/20 仍出不去，2 个样本有窄于 0.5 mm 的缝；要求 0.5 mm 间隙：20/20 出不去</td><td>同上平移搜索</td></tr>
-        <tr><td>从写入的位姿再落稳 3 s</td><td>移动 0.45 mm，转 0.20°</td><td>移动 0.30 mm，转 0.00°</td><td>Genesis CPU，25 ms tick / 40 子步，机器人保持 home</td></tr>
+        <tr><td>证明过的路径（只算刺球）</td><td>抬 10 mm → 朝 172° 直拉</td><td>抬 15 mm → 绕刺轴转 75° → 朝 174° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
+        <tr><td>加 2F-85 夹住该刺</td><td>直拉出口 2/160</td><td>直拉 0/160；绕接近轴转 70° 后有出口</td><td><code>scripts/design_viewer/exit_check.py --spike 7</code>，手指竖向和侧向开合结果相同</td></tr>
+        <tr><td>扰动稳健性（位置 ±1 mm、姿态 ±2°，20 个样本）</td><td>20/20 仍能平移出笼</td><td>20/20 仍出不去（零余量和 0.5 mm 余量都是）</td><td>同上平移搜索</td></tr>
+        <tr><td>从写入的位姿再落稳 3 s</td><td>移动 0.30 mm，转 0.00°</td><td>移动 0.30 mm，转 0.00°</td><td>Genesis CPU，25 ms tick / 40 子步，机器人保持 home</td></tr>
       </tbody>
     </table>
   </div>
@@ -324,8 +327,9 @@ footer ul { padding-left: 1.2em; }
       </tbody>
     </table>
   </div>
-  <p class="note prose">106 mm 是两类朝向都有的宽度，所以两档能共用一个笼子。落稳后再判定：8 个 very_easy 候选全部保持 very_easy；8 个 easier 候选只有 2 个保持（其余变成能直拉或完全卡死），选了需要转 80° 的那个。100 mm 笼的 8 个 easier 候选落稳后也没有一个保持 easier。</p>
-  <p class="note prose">边界：检查只含刺球，夹爪体积（默认 2F-85）由另一个 session 正在做的交互工具 <code>scripts/design_viewer/</code> 检查；机器人完整执行和 Harbor 任务包是下一步。</p>
+  <p class="note prose">106 mm 是两类朝向都有的宽度，所以两档能共用一个笼子。加上“有一根刺朝向机器人、伸出笼壁 ≥ 18 mm”的条件后（偏航角步长 2°），106 mm 下还剩 26 个 very_easy 型、5 个 easier 型、33 个都不行；候选再经过落稳和重新判定，选出现在的两个位姿。</p>
+  <p class="note prose"><span class="tag mine">设计过程记录</span> 第一版只按刺球设计（转轴是笼的 x 轴），另一个 session 用 2F-85 网格检查后发现：夹爪伸进笼里夹球心时，very_easy 只有正对窗口中心才行，easier 转动时手指扫到环箍。现在的第二版改为夹笼外的刺、绕刺轴转，并用同一工具复核通过。</p>
+  <p class="note prose">边界：夹爪检查只含 2F-85，不含 Panda 手腕、IK 和动力学；机器人完整执行和 Harbor 任务包是下一步。</p>
 </section>
 
 <section id="code">
@@ -482,6 +486,7 @@ python ci_checks/test-hedgehog-below-easy.py     <span class="cm"># 约 40 s，�
   <div><b>维护记录</b></div>
   <ul>
     <li>2026-10-02 第 1–4 版：任务说明、来源标注、定式解法、长孔立柱评估、3D 工具计划。</li>
+    <li>2026-10-02 第 6 版：刺球两档改为按夹爪设计（夹笼外的刺、绕刺轴转），2F-85 复核通过。</li>
     <li>2026-10-02 第 5 版：改为实现跟踪页；刺球两档实现完成并附验证；分水岭评估；马蹄环方案调整；长孔立柱在“不加部件”约束下重新评估。旧的说明性内容已精简。</li>
   </ul>
 </footer>
