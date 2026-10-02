@@ -76,6 +76,12 @@ docker push $REG/eai-<sim>:$(cat images/<sim>/VERSION)      # public images only
 An image with `images/<sim>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never pushed: `push_images.sh` skips
 it and prints why, and every host builds it locally (the marker file says how, and what licences and data it needs).
 
+## Web search (off by default)
+`scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets
+`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL §5). For a bare
+`harbor run`, pass the same option yourself. Codex with ChatGPT login searches by default; an API key can still request
+search directly, which the usage gateway's raw log shows (docs/LEAKAGE.md).
+
 ## Usage gateway (token usage per request, optional)
 Off by default: the agent calls its API directly, as Harbor runs it. With `GATEWAY=1`, `scripts/run_agent_batch.sh` starts `scripts/usage_gateway/gateway.py` on the docker bridge (`GATEWAY_BIND`, 172.17.0.1)
 and points the agent's base URL at it (`--ae ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`; a copy of `AGENT_CONFIG` with its

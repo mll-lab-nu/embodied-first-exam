@@ -5,7 +5,7 @@
 [dataset]
 name = "robot-coding-bench/robot-coding-bench"
 version = "0.1.0"
-description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance, in privileged and standard mode (robosuite, RoboTwin 2.0, DexToolBench, MuJoCo Playground, KinDER, HumanoidBench)."
+description = "Coding agents controlling simulated robots via Python primitives; one replayable trajectory per frozen scene instance, in privileged and standard mode (robosuite, RoboTwin 2.0, DexToolBench, MuJoCo Playground, KinDER, HumanoidBench, MetaWorld+, RoboWits, RoboPaint, RoboLab, BEHAVIOR-1K, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1)."
 authors = []
 keywords = [ "robotics", "manipulation", "humanoid", "code-as-policy", "harbor",]
 
