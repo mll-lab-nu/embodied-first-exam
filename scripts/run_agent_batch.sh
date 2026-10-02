@@ -39,7 +39,8 @@
 #                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
 #                <trial>/gateway/ (usage.jsonl, totals.json)
 #   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
-#                (<trial>/gateway/raw/, gzipped; private: it holds the whole conversation); 0 = token usage only
+#                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
+#                whole conversation); 0 = token usage only
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 #   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
@@ -159,8 +160,9 @@ wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   done
 }
 
-finish_job() {  # <job>: no key in any saved file (+redact); the task results (D3)
+finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+redact); the task results (D3)
   [ -d "$JOBS/$1" ] || return 0
+  [ "$GATEWAY" = 1 ] && [ "$GATEWAY_RAW" = 1 ] && python3 "$R/scripts/usage_gateway/rawlog.py" compact "$JOBS/$1" 2>&1 | sed "s/^/[$1] /" | tee -a "$LOG"
   python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
   [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
 }
