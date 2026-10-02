@@ -7,8 +7,9 @@ Loads the secrets INSIDE this process and never prints them: the named variables
 agents read, VARS below) from the .env files (default: the repo's ../.env) or, where a file does not set one, from this
 process's environment, and, with --codex-auth, the tokens of a Codex ChatGPT login (auth.json). Values shorter than 16
 characters are not treated as secrets. It reports only which files contain one (and how many times). With --redact every
-occurrence is replaced with [REDACTED-<NAME>] in place. Binary files (videos, npz) are scanned too, as bytes."""
-import argparse, json, os, pathlib, sys
+occurrence is replaced with [REDACTED-<NAME>] in place. Binary files (videos, npz) are scanned too, as bytes; .gz and .xz
+files (the usage gateway's raw logs) decompressed."""
+import argparse, gzip, json, lzma, os, pathlib, sys
 
 VARS = ["OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
         "AZURE_API_KEY", "AZURE_OPENAI_API_KEY"]
@@ -55,10 +56,16 @@ for p in pathlib.Path(a.dir).rglob("*"):
     if not p.is_file() or p.is_symlink():
         continue
     scanned += 1
+    codec = {".gz": gzip, ".xz": lzma}.get(p.suffix)
     try:
         data = p.read_bytes()
-    except OSError:
-        continue
+        data = codec.decompress(data) if codec else data
+    except (OSError, EOFError, lzma.LZMAError):
+        codec = None                                  # truncated or not really compressed: scan it as bytes
+        try:
+            data = p.read_bytes()
+        except OSError:
+            continue
     found = {n: data.count(s) for n, s in secrets.items() if s in data}
     if found:
         hits += 1
@@ -66,6 +73,6 @@ for p in pathlib.Path(a.dir).rglob("*"):
         if a.redact:
             for n in found:
                 data = data.replace(secrets[n], f"[REDACTED-{n}]".encode())
-            p.write_bytes(data)
+            p.write_bytes(lzma.compress(data, preset=9) if codec is lzma else gzip.compress(data) if codec else data)
             print("  redacted")
 print(f"scanned {scanned} files under {a.dir} for {len(secrets)} secret(s) ({', '.join(sorted(secrets))}): {hits} contain one")
