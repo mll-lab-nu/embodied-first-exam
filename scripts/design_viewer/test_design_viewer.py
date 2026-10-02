@@ -8,11 +8,12 @@ import sys
 import time
 
 import mujoco
+from mujoco.experimental.studio import messages
 import numpy as np
 import pytest
 import trimesh
 
-from scripts.design_viewer import exit_check, mjcf, scenes
+from scripts.design_viewer import exit_check, mjcf, scenes, status, view
 from topogym.config.registry import variation_catalog
 
 
@@ -285,3 +286,91 @@ def test_attached_gripper_removes_exit_directions():
     held = exit_check.check(scene, *pose, gripper=exit_check.gripper_geometry(model, data), rotate=False)
     assert held["label"] != "start in collision"
     assert held["straight_exits"] < bare["straight_exits"]
+
+
+# --- status.py / view.Session ------------------------------------------------
+
+def _move(model, data, body, offset):
+    adr = model.joint(f"{body}_free").qposadr[0]
+    data.qpos[adr:adr+3] += offset
+    mujoco.mj_forward(model, data)
+
+
+def test_hedgehog_status_tracks_the_ball_leaving_the_cage():
+    scene = scenes.build("hedgehog_in_cage_medium")
+    model, data = _model("hedgehog_in_cage_medium")
+    line = status.Status(scene, model)
+    assert line(data).startswith("ball inside")
+    _move(model, data, "ball", [.09, 0, 0])  # straddles the wall
+    assert line(data).startswith("ball ") and "% out" in line(data).split("|")[0]
+    _move(model, data, "ball", [.3, 0, 0])
+    assert line(data).startswith("ball OUT")
+
+
+def test_horseshoe_status_reports_chain_and_ring():
+    scene = scenes.build("horseshoe_ring_easy")
+    model, data = _model("horseshoe_ring_easy")
+    line = status.Status(scene, model)
+    # The settled ring has slid onto the right shoe; it is still on the assembly.
+    assert "chain intact" in line(data) and "through ring: horseshoe_right" in line(data)
+    _move(model, data, "target_ring", [0, .3, 0])
+    assert "ring off" in line(data)
+
+
+def test_slotted_status_reports_post_and_cord_through_ring():
+    scene = scenes.build("slotted_post_ring_easy")
+    model, data = _model("slotted_post_ring_easy")
+    line = status.Status(scene, model)
+    assert "through ring: post" in line(data)
+    _move(model, data, "target_ring", [0, .4, 0])
+    assert "ring off" in line(data)
+
+
+def test_session_commands_drive_the_model(tmp_path):
+    session = view.Session("hedgehog_in_cage_medium", poses=tmp_path)
+    assert session.gripper  # hedgehog scenes start with the 2F-85
+    assert "too far" in session.command("grip ball")
+    ball = session.model.body("ball").id
+    mjcf.place_gripper(session.model, session.data, session.data.xpos[ball], standoff=.02)
+    assert "grip_ball" in session.command("grip ball")
+    assert session.command("save p1").endswith("p1.json")
+    session.command("release")
+    assert mjcf.holds(session.model, session.data) == []
+    session.command("open p1")
+    assert mjcf.holds(session.model, session.data) == ["grip_ball"]
+    session.changed = False
+    session.command("load horseshoe_ring_easy")
+    assert session.changed and not session.gripper and session.scene.name == "horseshoe_ring_easy"
+    assert "pin_target_ring" in session.command("pin target_ring")
+    assert "unknown" in session.command("frobnicate")
+
+
+def test_session_check_runs_in_the_background():
+    session = view.Session("hedgehog_in_cage_easy", gripper=False)
+    session.command("check")
+    session.checking.join(timeout=60)
+    assert "straight exits 0/160" in session.message
+    assert session.arrow is None  # no exit, nothing to point at
+
+
+def test_pulling_the_gripper_by_an_edge_translates_without_swinging_it():
+    session = view.Session("hedgehog_in_cage_easy")
+    model, data = session.model, session.data
+    base = model.body("g_base").id
+    pert, camera, scene = mujoco.MjvPerturb(), mujoco.MjvCamera(), mujoco.MjvScene(model, 20000)
+    mujoco.mjv_defaultFreeCamera(model, camera)
+    mujoco.mjv_updateScene(model, data, mujoco.MjvOption(), None, camera, mujoco.mjtCatBit.mjCAT_ALL, scene)
+    pert.select, pert.active = base, mujoco.mjtPertBit.mjPERT_TRANSLATE
+    pert.localpos[:] = [.04, .04, 0]  # grabbed off-centre, as a double-click on the housing edge does
+    mujoco.mjv_initPerturb(model, data, scene, pert)
+    start, quat = data.xpos[base].copy(), data.xquat[base].copy()
+    pert.refselpos[:] = pert.refselpos+[0, .05, 0]
+    for _ in range(int(1./model.opt.timestep)):
+        data.xfrc_applied[:] = 0
+        mujoco.mjv_applyPerturbForce(model, data, pert)
+        session._on_step(messages.StepEvent(model=model, data=data))
+        mujoco.mj_step(model, data)
+    assert data.xpos[base, 1]-start[1] > .04
+    turned = np.zeros(3)
+    mujoco.mju_subQuat(turned, data.xquat[base], quat)
+    assert np.degrees(np.linalg.norm(turned)) < 5

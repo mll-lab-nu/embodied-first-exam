@@ -53,7 +53,10 @@ def build(scene, gripper=False):
         wrist = spec.worldbody.add_body(name="wrist", gravcomp=1)
         wrist.add_freejoint(name="wrist_free")
         wrist.add_geom(type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[.005, 0, 0], contype=0, conaffinity=0, mass=.05, group=3)
-        wrist.add_frame().attach_body(mujoco.MjSpec.from_file(str(GRIPPER_XML)).worldbody.first_body(), "g_", "")
+        # Wrist origin at the gripper's centre of mass: the free joint's damping then acts there
+        # and a pulled gripper translates without swinging.
+        wrist.add_frame(pos=-_gripper_com()).attach_body(mujoco.MjSpec.from_file(str(GRIPPER_XML)).worldbody.first_body(),
+                                                       "g_", "")
         for body in spec.bodies:
             if body.name.startswith("g_"):
                 body.gravcomp = 1
@@ -78,6 +81,13 @@ def build(scene, gripper=False):
     return model
 
 
+def _gripper_com():
+    model = mujoco.MjModel.from_xml_path(str(GRIPPER_XML))
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    return data.subtree_com[1].copy()
+
+
 def _base_xml(scene, gripper):
     cable, equality = "", ""
     if "cord" in scene.extras:
@@ -86,12 +96,15 @@ def _base_xml(scene, gripper):
               f'cone="{"pyramidal" if cable else "elliptic"}"' + (' impratio="10"' if gripper else ""))
     return f"""<mujoco model="{scene.name}">
   <option {option}/>
-  <statistic center="0 0 .1" extent=".5"/>
+  <statistic center="0 0 .12" extent=".45"/>
+  <!-- Mouse pull spring, per kg of the grabbed body; MuJoCo's 100 cannot lift a 0.13 kg ring
+       that carries the 1 kg horseshoe assembly (1000: +69 mm of a 100 mm pull, 1.7 mm penetration). -->
+  <visual><map stiffness="1000"/></visual>
   {'<extension><plugin plugin="mujoco.elasticity.cable"/></extension>' if cable else ''}
   <default><geom friction=".3" condim="3" solref=".004 1"/></default>
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
-    <geom name="floor" type="plane" size=".6 .6 .01" rgba=".82 .82 .8 1" contype="{STATIC}" conaffinity="{OBJECT | GRIPPER}"/>
+    <geom name="floor" type="plane" size=".4 .4 .01" rgba=".82 .82 .8 1" contype="{STATIC}" conaffinity="{OBJECT | GRIPPER}"/>
     {cable}
   </worldbody>
   {equality}
@@ -193,6 +206,14 @@ def release(model, data, body=None):
 def holds(model, data):
     return [model.equality(eq).name for eq in range(model.neq) if data.eq_active[eq]
             and model.equality(eq).name.startswith(("pin_", "grip_"))]
+
+
+def finger_gap(model, data, body):
+    """Smallest distance from the 2F-85 finger pads to the body's collision geoms (capped at 0.1 m)."""
+    pads = [model.geom(f"g_{side}_pad{i}").id for side in ("left", "right") for i in (1, 2)]
+    targets = np.flatnonzero((model.geom_bodyid == model.body(body).id) & (model.geom_contype > 0))
+    fromto = np.zeros(6)
+    return min(mujoco.mj_geomDistance(model, data, p, t, .1, fromto) for p in pads for t in targets)
 
 
 def has_gripper(model):
