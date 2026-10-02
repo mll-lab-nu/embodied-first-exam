@@ -1,4 +1,5 @@
-"""One-off import of the frozen instances and recorded expert controls from PR #4 (branch dev/changhe @ ad3c5109).
+"""One-off import of the frozen instances and recorded expert controls from PR #4 (commit ad3c5109 on its branch
+dev/changhe; the PR was closed without merging and GitHub keeps the commit as refs/pull/4/head).
 
 PR #4 froze each VLABench task's episode configuration (instance.json: VLABench's episode config, seed, and the hashes
 of the compiled model and of the initial state) and recorded VLABench's own expert (`get_expert_skill_sequence`, run
@@ -6,6 +7,7 @@ in an image that still had it) as control steps (solution/oracle.npz). This copi
 tasks.json, the instance byte for byte and the oracle's `actions` array into frozen/<task>/; freeze.py then
 re-verifies both in the current image. Reads through git, so the source is exactly the commit:
 
+    git fetch origin refs/pull/4/head    # PR #4 (closed without merging) keeps the commit
     python3 scripts/vlabench/import_pr4.py [--ref ad3c5109]
 """
 

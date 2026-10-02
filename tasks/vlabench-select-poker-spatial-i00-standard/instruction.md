@@ -1,7 +1,7 @@
 # VLABench · select_poker_spatial — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: Please pick the 4th poker from left to right**
+a service you cannot open, and you reach it only through a client. **Task: Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up (grasped, lifted to z >= 0.9 m).**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

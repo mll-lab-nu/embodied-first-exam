@@ -1,7 +1,7 @@
 # VLABench · friction_qa — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp.**
+a service you cannot open, and you reach it only through a client. **Task: We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp: press the button in front of it.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after

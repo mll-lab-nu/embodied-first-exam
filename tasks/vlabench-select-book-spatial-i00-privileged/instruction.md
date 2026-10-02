@@ -1,6 +1,8 @@
 # VLABench · select_book_spatial — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please take the second book on the top layer**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please take the second book from the left (as seen from the robot) on the top layer out of the bookshelf.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please take the second book on the top layer".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_book_spatial`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

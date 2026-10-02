@@ -1,6 +1,8 @@
 # VLABench · heat_food — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please heat cooked_food from tray_seen.**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please heat cooked_food from tray_seen: put it into microwave_seen, close the microwave's door and press its start button (heating itself is not simulated).**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please heat cooked_food from tray_seen.".
 
 This is a *fixed scene instance*: VLABench's own scene for `heat_food`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

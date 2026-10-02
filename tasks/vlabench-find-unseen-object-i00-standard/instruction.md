@@ -1,7 +1,7 @@
 # VLABench · find_unseen_object — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
-a service you cannot open, and you reach it only through a client. **Task: find the apple for me**
+a service you cannot open, and you reach it only through a client. **Task: Find the apple for me and take it out of cabinet_seen.**
 
 ## Rules (real-robot rules)
 - **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
@@ -51,7 +51,7 @@ res = r.submit("joint_position", A, dt=0.1, cameras=["forward"], video="none")  
   ["panda_joint_limits_rad"]`.
 - Proprioception (`spec()["proprio_layout"]`): `joint1..7_pos` (rad), `joint1..7_vel` (rad/s), `finger1_pos`,
   `finger2_pos` (m), `tcp_x/y/z` (m) and `tcp_qw/qx/qy/qz` (the hand's pose), `cmd_*` (the last command).
-- World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across the
+- World frame: metres; the robot's base is at (0, -0.7, 0.7) facing +y: x to the robot's right, y forward (across the
   table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along
   its -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels.
 - Measured cost here: about 40 ms of simulation per control step, plus about 15 ms per camera image.

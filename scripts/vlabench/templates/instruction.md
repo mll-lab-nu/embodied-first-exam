@@ -1,6 +1,6 @@
 # VLABench · {{task}} — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: {{instruction}}**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: {{instruction}}**{{instruction_note}}
 
 This is a *fixed scene instance*: VLABench's own scene for `{{task}}`, frozen (seed {{seed}}). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.
@@ -45,7 +45,7 @@ o = s.observe("forward") # rgb, depth_m, intrinsic_cv, cam2world_gl; cameras for
 - An action is 9 absolute position targets for VLABench's own actuators: the 7 arm joints (rad) and the 2 fingers
   (m, 0 closed … 0.04 open), held for one control step (0.1 s, 100 physics steps). The model sets no arm joint
   limits; the Panda's own are {{panda_limits}} rad.
-- World frame: metres; the robot's base is at (0, -0.4, 0.78) facing +y: x to the robot's right, y forward (across
+- World frame: metres; the robot's base is at {{robot_base}} facing +y: x to the robot's right, y forward (across
   the table), z up; quaternions are w x y z.
 - Everything in `s.env` and `s.physics` is readable (privileged mode). VLABench's expert solutions for its tasks are not
   in this image.

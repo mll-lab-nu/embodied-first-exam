@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-add-condiment-i00-privileged"
-description = "VLABench add_condiment (Franka Panda): Add bbq_sauce to the dish Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench add_condiment (Franka Panda): Add bbq_sauce to the dish: hold the bbq_sauce bottle over pan_seen and tip it past horizontal, so that its top is lower than its bottom (pouring itself is not simulated). Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

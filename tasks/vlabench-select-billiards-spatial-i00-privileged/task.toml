@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-select-billiards-spatial-i00-privileged"
-description = "VLABench select_billiards_spatial (Franka Panda): Please put the striped_14 in the right bottom pocket. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench select_billiards_spatial (Franka Panda): Please put the striped_14 in the right bottom pocket (the corner pocket near x = 0.52, y = -0.99). Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

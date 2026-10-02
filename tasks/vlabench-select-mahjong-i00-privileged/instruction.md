@@ -1,6 +1,8 @@
 # VLABench · select_mahjong — instance i00
 
-You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Pick up the mahjong of 6 sou**
+You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Put the mahjong of 6 sou on the placemat.**
+
+This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Pick up the mahjong of 6 sou".
 
 This is a *fixed scene instance*: VLABench's own scene for `select_mahjong`, frozen (seed 0). You may reset and retry
 as often as you like. Your deliverable is **one replayable trajectory** of control steps, not a general policy.

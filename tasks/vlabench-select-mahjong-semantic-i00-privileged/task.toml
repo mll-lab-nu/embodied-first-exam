@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/vlabench-select-mahjong-semantic-i00-privileged"
-description = "VLABench select_mahjong_semantic (Franka Panda): You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
+description = "VLABench select_mahjong_semantic (Franka Panda): You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now: put that tile on the placemat. Produce one replayable trajectory of joint-position control steps on a frozen scene instance; graded by VLABench's own success check at the trajectory's end."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "privileged"]
 

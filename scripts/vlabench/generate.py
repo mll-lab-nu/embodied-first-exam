@@ -5,7 +5,8 @@
     python3 scripts/vlabench/generate.py select_fruit
     python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
-Inputs: tasks.json, frozen/<task>/{instance.json,oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
+Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), frozen/<task>/{instance.json,
+oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
 templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
 pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
 finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is
@@ -52,6 +53,9 @@ PANDA_LIMITS = (
     "[-2.90, 2.90], [-1.76, 1.76], [-2.90, 2.90], [-3.07, -0.07], [-2.90, 2.90], [-0.02, 3.75], [-2.90, 2.90]"
 )
 PATH_ENV = "/opt/VLABench:/opt/rrt-algorithms"
+# VLABench's franka base (configs/robot_config.json); a task series may override it (configs/task_config.json), and the
+# frozen episode configuration then carries it (episode.robot.position).
+ROBOT_BASE = (0, -0.4, 0.78)
 
 PRIV_ENV_DOCKERFILE = f"""# VLABench privileged task: the VLABench image, the task's tooling and its frozen instance.
 FROM {IMAGE}
@@ -118,7 +122,7 @@ def instruction_kind(task: str) -> str:
     if task.endswith("_spatial"):
         return "a description of where the target is"
     if task.endswith("_qa"):
-        return "a physics question, answered by moving the right object"
+        return "a physics question, answered by pressing the button in front of the right object"
     return "a direct command"
 
 
@@ -147,9 +151,27 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
     path.chmod(mode)
 
 
-def make(task: str, rec: dict, source: str, out: Path) -> tuple[Path, Path]:
+def robot_base(instance: Path) -> str:
+    """The robot's base position in the frozen episode, e.g. "(0, -0.4, 0.78)"."""
+    spec = json.loads(instance.read_text())
+    pos = spec["episode"].get("robot", {}).get("position", ROBOT_BASE)
+    return "(" + ", ".join(f"{float(v):g}" for v in pos) + ")"
+
+
+def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[Path, Path]:
+    """restated: tasks.json's `instructions` entry for the task ({} if none): `text` (what the task states instead of
+    VLABench's instruction, which stays in the instance) and `why`; `kind` overrides instruction_kind()."""
     fz = FROZEN / task
     dash = task.replace("_", "-")
+    instruction = restated.get("text", rec["instruction"])
+    note = row = ""
+    if "text" in restated:
+        upstream = rec["instruction"]
+        note = (
+            "\n\nThis states exactly what VLABench's success check requires; VLABench's own wording (also in "
+            f"`s.state()[\"instruction\"]`) is: \"{upstream}\"."
+        )
+        row = f"\n| Instruction | restated; VLABench's own: \"{upstream}\" ({restated['why']}) |"
     episode = (
         f'Ends when the task succeeds (reason "success"), after {MAX_CONTROL_STEPS} control steps ("failed"), when '
         'your time is up ("timeout"), or on a simulator error ("error").'
@@ -157,9 +179,12 @@ def make(task: str, rec: dict, source: str, out: Path) -> tuple[Path, Path]:
     values = {
         "task": task,
         "dash": dash,
-        "instruction": rec["instruction"],
-        "instruction_toml": json.dumps(rec["instruction"])[1:-1],
-        "instruction_kind": instruction_kind(task),
+        "instruction": instruction,
+        "instruction_toml": json.dumps(instruction)[1:-1],
+        "instruction_kind": restated.get("kind", instruction_kind(task)),
+        "instruction_note": note,
+        "instruction_row": row,
+        "robot_base": robot_base(fz / "instance.json"),
         "seed": rec["seed"],
         "image": IMAGE,
         "author": AUTHOR,
@@ -199,7 +224,7 @@ def make(task: str, rec: dict, source: str, out: Path) -> tuple[Path, Path]:
     put(s / "instruction.md", render("standard/instruction.md", values))
     put(s / "README.md", render("standard/README.md", values))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
-    put(s / "environment/docker-compose.yaml", compose(rec["instruction"], episode))
+    put(s / "environment/docker-compose.yaml", compose(instruction, episode))
     put(s / "environment/rcb_client.py", src=SHARED / "standard/rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "standard/rcb1.py")
     for f in ("server.py", "rcb_service.py", "rcb1.py"):
@@ -218,15 +243,19 @@ def make(task: str, rec: dict, source: str, out: Path) -> tuple[Path, Path]:
 
 
 def render_all(out: Path, only: list[str]) -> list[str]:
-    """Write the task directories of `only` (default: every verified task) into `out`; returns their names."""
+    """Write the task directories of `only` (default: every verified task not dropped in tasks.json) into `out`;
+    returns their names."""
     report = json.loads((FROZEN / "report.json").read_text())
     sel = json.loads((HERE / "tasks.json").read_text())
     verified = [t for t in sel["candidates"] if report.get(t, {}).get("verified")]
     names = []
-    for task in only or verified:
+    for task in only or [t for t in verified if t not in sel["dropped"]]:
         if task not in verified:
             raise SystemExit(f"{task}: not verified by freeze.sh (frozen/report.json)")
-        names += [d.name for d in make(task, report[task], sel["oracle_source"][task], out)]
+        if task in sel["dropped"]:
+            raise SystemExit(f"{task}: dropped in tasks.json ({sel['dropped'][task]})")
+        restated = sel["instructions"].get(task, {})
+        names += [d.name for d in make(task, report[task], sel["oracle_source"][task], restated, out)]
     return names
 
 
