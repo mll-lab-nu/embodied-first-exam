@@ -1,6 +1,6 @@
 # eai-libero-max: LIBERO-PRO (Zxy-MLlab/LIBERO-PRO @ 2b910b5, MIT: its LIBERO package and object assets) with the
 # LIBERO-PRO task data (zhouxueyang/LIBERO-Pro @ c86fc3b, CC-BY-4.0: BDDL and initial-state files only) and LIBERO-MAX's
-# event runtime (liberomax/LIBERO-MAX @ a1e3cef: src/libero_max and its source overlay only; no licence file upstream, used with its authors' permission (docs/benchmarks/libero-max.md),
+# event runtime (liberomax/LIBERO-MAX @ a1e3cef: src/libero_max and its source overlay only; no licence file upstream,
 # see docs/benchmarks/libero-max.md); robosuite 1.4.0 / MuJoCo 3.2.6; CPU physics (bit-exact replay) and CPU rendering
 # (OSMesa): no GPU. One image for the LIBERO-MAX privileged tasks' environment and verifier and the standard sim service.
 # Deliberately NOT included: demonstrations and LIBERO's dataset download utilities, LIBERO-MAX's policy runners,
