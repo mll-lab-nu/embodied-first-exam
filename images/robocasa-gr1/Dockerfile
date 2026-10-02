@@ -23,6 +23,7 @@ COPY fetch_assets.sh /tmp/fetch_assets.sh
 RUN sh /tmp/fetch_assets.sh /opt/robocasa/robocasa/models/assets && rm /tmp/fetch_assets.sh
 # The robosuite wheel omits its optional third-party controller examples; the GR1 tasks use the whole-body mink IK one.
 RUN mkdir -p /usr/local/lib/python3.10/site-packages/robosuite/examples/third_party_controller && curl -fL https://raw.githubusercontent.com/ARISE-Initiative/robosuite/51cc01785bab80ffeed20da15e67d7dd4140e76a/robosuite/examples/third_party_controller/mink_controller.py -o /usr/local/lib/python3.10/site-packages/robosuite/examples/third_party_controller/mink_controller.py
+# The only mink in the image: 0.0.5, the version the evidence image ran (requirements.txt does not list mink).
 RUN pip install --no-deps mink==0.0.5
 RUN python -c "from robosuite.examples.third_party_controller.mink_controller import WholeBodyMinkIK"
 WORKDIR /app

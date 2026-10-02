@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa-GR1 |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `robocasa-gr1-tray-to-pot-i00-privileged` |
 | Simulator / robot | `robosuite` / `fourier-gr1` |

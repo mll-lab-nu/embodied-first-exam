@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PnPCanToDrawerClose — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PnPCanToDrawerClose` task (robosuite, MuJoCo).
-**Task: pick up the can, place it into the drawer and close the drawer**
+**Task: pick up the can, place it into the drawer and close the drawer.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -22,6 +22,12 @@ the environment's own success check for `PnPCanToDrawerClose` to the state **aft
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+Both of these hold on the graded state (upstream `_check_success`, `tabletop_drawer_pnp.py`):
+- the can's centre (its body origin) is inside the drawer's interior;
+- the drawer is shut: upstream's opening fraction is at most 0.005 (0 = shut, 1 = fully open).
+
+Where the hands end up is not checked.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -39,7 +45,11 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 - Action `ee_pose`: the robot's native controller command, applied once per control step (`control_dt` =
   0.05 s; float64). 24 channels, in order: the right then the left hand's grip-site pose target `x, y, z, rx, ry, rz` -- absolute, in the robot's base frame (metres, axis-angle radians), reached by the whole-body inverse-kinematics controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a binary grip. The GR1 has no mobile base. Values are clipped to the limits. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
-- `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
-  for `s` seconds; those control steps are part of the episode.
+- `get_obs(seconds=s)` keeps applying the last command (before the first one: both grip sites' current poses and the
+  current hand commands) while physics runs for `s` seconds; those control steps are part of the episode. Every
+  channel is an absolute target, so the grip sites stay within about a millimetre, but the IK's posture term can still
+  move the waist and elbows by a few hundredths of a radian while you watch.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
-- World frame: metres, z up.
+- World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
+  frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
+  The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.65000, -2.17500, 0.97000) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].

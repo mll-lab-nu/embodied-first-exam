@@ -1,7 +1,7 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromPlacematToPlateSplitA — STANDARD MODE (robot as a service)
 
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlacematToPlateSplitA` task (robosuite, MuJoCo).
-**Task: pick the tomato from the placemat and place it in the plate**
+**Task: pick the tomato from the placemat and place it in the plate.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
 
 You control the robot **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
@@ -22,6 +22,13 @@ the environment's own success check for `PosttrainPnPNovelFromPlacematToPlateSpl
 in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
 want graded and stop submitting.
 
+All of these hold on the graded state (upstream `_check_success`, `tabletop_24dc.py`):
+- the tomato is in the plate: touching the plate, with its centre horizontally within 0.7 x the plate's horizontal radius of the plate's centre;
+- the tomato does not touch the counter;
+- the plate is upright (its z axis has a world-z component above 0.8);
+- **both hands are clear**: each grip site (left and right) is more than 0.25 m from the tomato's origin and more than 0.25 m from the plate's origin (`any_gripper_obj_far`, th = 0.25) -- release the tomato and move both hands away before the end;
+- the distractor object that starts on the placemat with the tomato is not in the plate.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
@@ -39,7 +46,11 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 - Action `ee_pose`: the robot's native controller command, applied once per control step (`control_dt` =
   0.05 s; float64). 24 channels, in order: the right then the left hand's grip-site pose target `x, y, z, rx, ry, rz` -- absolute, in the robot's base frame (metres, axis-angle radians), reached by the whole-body inverse-kinematics controller (mink), limits [-10, 10]; then six commands per hand (right, then left) in the finger order `little, ring, middle, index, thumb_flexion, thumb_rotation` -- unscaled Fourier hand commands in [-3, 3], not a binary grip. The GR1 has no mobile base. Values are clipped to the limits. Rows are `dt` apart (default and minimum: `control_dt`; a chunk covers at
   most 10 s).
-- `get_obs(seconds=s)` holds the robot still (delta channels zero, targets, grip and mode kept) while physics runs
-  for `s` seconds; those control steps are part of the episode.
+- `get_obs(seconds=s)` keeps applying the last command (before the first one: both grip sites' current poses and the
+  current hand commands) while physics runs for `s` seconds; those control steps are part of the episode. Every
+  channel is an absolute target, so the grip sites stay within about a millimetre, but the IK's posture term can still
+  move the waist and elbows by a few hundredths of a radian while you watch.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
-- World frame: metres, z up.
+- World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
+  frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
+  The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.65289, -2.16654, 0.90010) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
