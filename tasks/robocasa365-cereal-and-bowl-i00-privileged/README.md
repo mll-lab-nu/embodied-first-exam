@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa365 |
 | Mode | privileged |
 | Twin | `robocasa365-cereal-and-bowl-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |

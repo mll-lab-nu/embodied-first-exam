@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | RoboCasa365 |
 | Mode | privileged |
 | Twin | `robocasa365-turn-on-toaster-oven-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda-omron` |
