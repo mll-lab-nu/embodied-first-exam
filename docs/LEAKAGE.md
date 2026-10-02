@@ -43,7 +43,7 @@ with `cached` or `live`, none with `disabled`; `gpt-6-luna` gets none in any mod
   separate them) and quoted `play_once`; with `-c web_search=disabled` it had no search and made no such call.
 - **Azure API key** (a custom Responses provider): Codex offered no search in either setting. But a request that
   carries `tools: [{"type": "web_search"}]` (or `web_search_preview`) is served with real searches, so an agent
-  holding the key can still search by writing its own request. The usage gateway's raw log (`GATEWAY=1 GATEWAY_RAW=1`)
+  holding the key can still search by writing its own request. The usage gateway's raw log (`GATEWAY=1`, raw bodies on by default)
   shows the tool list of every request: flag any `web_search` tool or `alpha/search` path.
 
 ## 2. Deciding what to remove
