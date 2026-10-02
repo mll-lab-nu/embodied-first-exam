@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+from pathlib import Path
 import pickle
 import time
 
@@ -191,6 +193,36 @@ def release(model, data, body=None):
 def holds(model, data):
     return [model.equality(eq).name for eq in range(model.neq) if data.eq_active[eq]
             and model.equality(eq).name.startswith(("pin_", "grip_"))]
+
+
+def has_gripper(model):
+    return mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "wrist") >= 0
+
+
+def save_pose(path, scene, gripper, model, data):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(dict(scene=scene.name, overrides=scene.extras.get("overrides", {}), gripper=gripper,
+                                    qpos=data.qpos.tolist(), ctrl=data.ctrl.tolist(), holds=holds(model, data)))+"\n")
+
+
+def load_pose(path):
+    """Rebuild the saved scene and restore qpos, controls and holds; returns (scene, model, data)."""
+    pose = json.loads(Path(path).read_text())
+    scene = scenes.build(pose["scene"], pose["overrides"])
+    model = build(scene, pose["gripper"])
+    data = mujoco.MjData(model)
+    apply_pose(model, data, pose)
+    return scene, model, data
+
+
+def apply_pose(model, data, pose):
+    release(model, data)
+    data.qpos[:], data.qvel[:], data.ctrl[:] = pose["qpos"], 0, pose["ctrl"]
+    mujoco.mj_forward(model, data)
+    for name in pose["holds"]:
+        how, body = name.split("_", 1)
+        hold(model, data, body, how)
 
 
 def penetration(model, data):

@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 import trimesh
 
-from scripts.design_viewer import mjcf, scenes
+from scripts.design_viewer import exit_check, mjcf, scenes
 from topogym.config.registry import variation_catalog
 
 
@@ -195,6 +195,21 @@ def test_mouse_perturbation_drives_the_gripper_and_it_stops_on_release():
     assert np.linalg.norm(data.xpos[base]-moving) < 2e-3
 
 
+def test_saved_pose_restores_state_and_holds(tmp_path):
+    scene = scenes.build("hedgehog_in_cage_medium")
+    model = mjcf.build(scene, gripper=True)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    mjcf.place_gripper(model, data, data.xpos[model.body("ball").id], azimuth_deg=30)
+    mjcf.hold(model, data, "ball", "grip")
+    _run(model, data, .2)
+    mjcf.save_pose(tmp_path/"p.json", scene, True, model, data)
+    _, model2, data2 = mjcf.load_pose(tmp_path/"p.json")
+    assert np.abs(data2.qpos-data.qpos).max() < 1e-9
+    assert mjcf.holds(model2, data2) == ["grip_ball"]
+    assert model2.geom_contype[model2.geom_bodyid == model2.body("ball").id].max() == mjcf.HELD
+
+
 def test_slotted_cord_settles_through_the_slot_once():
     model, data = _model("slotted_post_ring_easy")
     layout = scenes.build("slotted_post_ring_easy").extras["layout"]
@@ -205,3 +220,68 @@ def test_slotted_cord_settles_through_the_slot_once():
     xs = [pts[i, 0]+(pts[i+1, 0]-pts[i, 0])*(-pts[i, 1])/(pts[i+1, 1]-pts[i, 1]) for i in crossing]
     assert sum(abs(x) < layout.slot_width_m/2 for x in xs) == 1
     assert sum(x > layout.post_width_m/2 for x in xs) == 1
+
+
+# --- exit_check.py -----------------------------------------------------------
+
+def _check(name, overrides=None, **kwargs):
+    scene = scenes.build(name, overrides)
+    return exit_check.check(scene, **kwargs)
+
+
+def test_easy_start_pose_has_no_straight_exit():
+    result = _check("hedgehog_in_cage_easy", rotate=False)
+    assert result["straight_exits"] == 0 and result["label"] != "very_easy"
+
+
+def test_wider_easy_windows_give_the_plan_positive_control():
+    scene = scenes.build("hedgehog_in_cage_easy", {"window_widths": 28})
+    pos, quat = exit_check.ball_pose_from_scene(scene)
+    result = exit_check.check(scene, rotate=False)
+    assert result["straight_exits"] == 45 and result["label"] == "very_easy"
+    # The plan's 43/160 started 2 mm above the generator pose.
+    assert exit_check.check(scene, pos+[0, 0, .002], quat, rotate=False)["straight_exits"] == 43
+
+
+def test_hard_start_pose_is_reported_in_collision():
+    result = _check("hedgehog_in_cage_hard")
+    assert result["label"] == "start in collision"
+    assert 2e-3 < result["start_collision_m"] < 4e-3
+
+
+def _slit_box_with_rod():
+    """0.2 m closed box, one 20 x 150 mm vertical slit in its +x wall; a 100 mm rod lies across it (along y)."""
+    def slab(lo, hi):
+        lo, hi = np.asarray(lo, float), np.asarray(hi, float)
+        return trimesh.creation.box(extents=hi-lo, transform=trimesh.transformations.translation_matrix((lo+hi)/2))
+    walls = [slab([-.1, -.1, -.1], [-.09, .1, .1]), slab([-.1, -.1, -.1], [.1, -.09, .1]),
+             slab([-.1, .09, -.1], [.1, .1, .1]), slab([-.1, -.1, -.1], [.1, .1, -.09]),
+             slab([-.1, -.1, .09], [.1, .1, .1]), slab([.09, -.1, -.1], [.1, -.01, .1]),
+             slab([.09, .01, -.1], [.1, .1, .1]), slab([.09, -.01, -.1], [.1, .01, -.075]),
+             slab([.09, -.01, .075], [.1, .01, .1])]
+    rod = trimesh.creation.box(extents=[.01, .1, .01])
+    identity = np.array([1., 0, 0, 0])
+    return scenes.Scene("slit_box", "hedgehog_in_cage", [
+        scenes.Body("cage", trimesh.util.concatenate(walls), walls, np.array([0, 0, .2]), identity, (1, 1, 1, 1), False),
+        scenes.Body("ball", rod, [rod], np.array([0, 0, .2]), identity, (1, 1, 1, 1))])
+
+
+def test_one_turn_that_lines_a_rod_up_with_a_slit_is_found():
+    result = exit_check.check(_slit_box_with_rod())
+    assert result["straight_exits"] == 0 and result["label"] == "easier"
+    # Turning about the rod's own axis (y) never helps; about x or z it fits past ~84 deg.
+    assert set(result["turns_deg"]) == {"x+", "x-", "z+", "z-"}
+    assert all(80 <= abs(t) <= 90 for t in result["turns_deg"].values())
+    assert result["min_rotation"]["straight_exits"] > 0
+
+
+def test_attached_gripper_removes_exit_directions():
+    scene = scenes.build("hedgehog_in_cage_easy", {"window_widths": 28})
+    model = mjcf.build(scene, gripper=True)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    pose = exit_check.ball_pose(model, data)
+    bare = exit_check.check(scene, *pose, rotate=False)
+    held = exit_check.check(scene, *pose, gripper=exit_check.gripper_geometry(model, data), rotate=False)
+    assert held["label"] != "start in collision"
+    assert held["straight_exits"] < bare["straight_exits"]
