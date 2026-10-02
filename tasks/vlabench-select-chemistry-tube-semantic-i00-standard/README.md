@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_chemistry_tube_semantic` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `select_chemistry_tube_semantic` as a robot service: a Franka Panda arm at a table, instructed **"Take out the KMnO4 solution in a conversation"**

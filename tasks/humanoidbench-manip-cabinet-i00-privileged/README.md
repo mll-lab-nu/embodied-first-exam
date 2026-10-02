@@ -9,7 +9,7 @@
 | Family / instance | `cabinet` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 9.7% of the bar (paper 242, FastTD3 188, bar 2500); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench cabinet: produce one replayable trajectory that opens a cabinet's four compartments in sequence with the Unitree H1, frozen scene instance 00.

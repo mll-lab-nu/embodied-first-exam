@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_acrylic_applesoranges` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: acrylic-u-oracle-final0928, acrylic-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (8bc4fc0c: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on applesoranges and redfuji, this pair included), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. This pair: oracle 1 and nop 0 again after the 2.2 inputs, before the rated limits (ws3, 2026-09-28: p22-acrylic-applesoranges-i00-oracle, p22-acrylic-applesoranges-i00-nop). Not re-run on this version (static validation only). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
 The instance: copy the painting in `environment/target.png` (a small acrylic painting after Paul Cezanne's Still Life with Apples and Oranges, c. 1899; the exemplar = this robot's painting of a hidden program of 300 strokes in 4 layers made by our stroke-based painting optimiser from the public-domain source) onto the 227 mm main sheet in at most 390 strokes, with 10 premixed paints on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json` (the brush preset's text included).

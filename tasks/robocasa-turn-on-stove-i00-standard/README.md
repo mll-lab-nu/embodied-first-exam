@@ -9,7 +9,7 @@
 | Family / instance | `robocasa/TurnOnStove` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa-turn-on-stove-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`images/robocasa/standard/server_casa.py`, tool module `casa_tool`), which records the episode, replays it in a fresh simulator and judges it; the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.

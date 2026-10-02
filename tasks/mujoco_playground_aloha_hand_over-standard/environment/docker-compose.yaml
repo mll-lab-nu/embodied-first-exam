@@ -4,7 +4,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/jameskrw/rcb-mujoco:0.1.2
+    image: ghcr.io/mll-lab-nu/eai-mujoco:0.1.2
     volumes:
       - ./sim:/srv:ro
     working_dir: /srv

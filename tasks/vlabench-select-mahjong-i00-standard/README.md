@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_mahjong` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `select_mahjong` as a robot service: a Franka Panda arm at a table, instructed **"Put the mahjong of 6 sou on the placemat."**

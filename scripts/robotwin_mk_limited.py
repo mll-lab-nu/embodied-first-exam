@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate tasks/robotwin_2_0_<task>-standard/ from an existing privileged task + the stack_blocks_two-standard template.
 usage: scripts/robotwin_mk_limited.py <task> <oracle_traj.npz> [K=25] [--vel]   (needs numpy: run inside the rcb-robotwin image, e.g.
-       docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/jameskrw/rcb-robotwin:0.1.1 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
+       docker run --rm -v $PWD:/repo -v <traj dir>:/out ghcr.io/mll-lab-nu/eai-robotwin:0.1.1 python /repo/scripts/robotwin_mk_limited.py <task> /out/oracle_<task>.npz)
 The standard-mode oracle replays the privileged oracle's joint targets (every K physics steps, default 25) as `qpos` actions.
 The rcb-robotwin image has Python 3.10 (no tomllib): there the v1.0 conventions are skipped with a note; run
 `python3 scripts/task_conventions.py tasks/robotwin_2_0_<task>-standard tasks/robotwin_2_0_<task>-privileged` on the host."""

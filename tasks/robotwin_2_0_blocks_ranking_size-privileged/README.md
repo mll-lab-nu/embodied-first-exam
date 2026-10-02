@@ -9,7 +9,7 @@
 | Family / instance | `blocks_ranking_size` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 blocks_ranking_size (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. There are three blocks on the table, the color of the blocks is random, move the blocks to the center of the table, and arrange them from largest to smallest, from left to right. Frozen scene instance (RoboTwin seed 60417).

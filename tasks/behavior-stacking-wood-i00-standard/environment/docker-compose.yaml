@@ -10,7 +10,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1
+    image: ghcr.io/mll-lab-nu/eai-behavior:0.1.1
     volumes:
       - ./sim:/srv:ro
       - ${RCB_BEHAVIOR_DATA:?set RCB_BEHAVIOR_DATA to the directory holding your licensed BEHAVIOR dataset (docs/benchmarks/behavior.md)}:/data:ro
