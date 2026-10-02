@@ -7,7 +7,7 @@ task README). The tasks in the repository follow it except for the open items in
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
 > protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. The move of
-> the robosuite, RoboTwin and MuJoCo base images to `eai-<sim>` under the Embodied Agent Interface (EAI) organization is
+> the robosuite, RoboTwin and MuJoCo base images to `eai-<name>` under the Embodied Agent Interface (EAI) organization is
 > still open (§7; KinDER and HumanoidBench already use it); CI reports the old registry as a `legacy:` warning until then.
 
 ## 0. Conventions
@@ -33,7 +33,7 @@ is the task's own business.
 | **privileged mode** | Agent and simulator share a container; the agent may read privileged state, reset freely, call planning primitives. The deliverable is a trajectory. | unlimited |
 | **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset. | limited |
 | **`eai-standard/2.x`** | The standard-mode wire protocol (§4). | `rcb-limited/2.x` |
-| **`eai-<sim>`** | Simulator base image under `ghcr.io/embodied-agent-interface-v2-internal/` (§2.4). | `rcb-<sim>` under several registries |
+| **`eai-<name>`** | Base image (a simulator stack, usually one per benchmark) under `ghcr.io/embodied-agent-interface-v2-internal/` (§2.4). | `rcb-<sim>` under several registries |
 
 Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file names (`rcb_client.py`, `rcb1.py`,
 `rcb_traj.py`), the `RCB1` frame format and the `RCB_*` environment variables.
@@ -46,7 +46,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
-| D5 | Images | One registry (EAI organization), images named `eai-<sim>`, versioned per simulator in `images/<sim>/VERSION`; share images where the dependency set is identical. |
+| D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. robosuite, RoboCasa, RoboCasa365), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
 | D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
@@ -114,8 +114,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 ### 2.4 Images, registry, GPU
 
-A simulator base image is defined by `images/<sim>/Dockerfile` and tagged
-`<registry>/eai-<sim>:<images/<sim>/VERSION>`. Today `scripts/build_images.sh` and `scripts/push_images.sh` still build
+A base image is defined by `images/<name>/Dockerfile` and tagged `<registry>/eai-<name>:<images/<name>/VERSION>`; `<name>` is
+usually the benchmark (`eai-robocasa365`) or the simulator stack several benchmarks share (`eai-mujoco`). Today `scripts/build_images.sh` and `scripts/push_images.sh` still build
 and push the `rcb-<sim>` names, and the KinDER and HumanoidBench images are built with the `docker build` commands in
 [`docs/benchmarks/`](benchmarks/); both are switched by the registry move (§7). Tasks reference it by tag:
 `environment/Dockerfile` and `tests/Dockerfile` `FROM` it, and the standard-mode `sim` service uses it as `image:`.
@@ -123,13 +123,14 @@ Harbor builds the task images locally from the task directory on every run; only
 
 | Item | Level | Basis |
 |---|---|---|
-| Base images at `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>:<ver>`, anonymously pullable | MUST | [new] (registry: `legacy:` warning in CI; KinDER and HumanoidBench already there, not yet public) |
-| Versions in `images/<sim>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
-| Images that cannot be published (e.g. licensed simulators): `images/<sim>/BUILD_ONLY` plus local build instructions (licences, data) | MUST | [new] |
+| Base images at `ghcr.io/embodied-agent-interface-v2-internal/eai-<name>:<ver>`, anonymously pullable, unless `BUILD_ONLY` | MUST | [new] (registry: `legacy:` warning in CI) |
+| Versions in `images/<name>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
+| Images that cannot be published (e.g. licensed simulators): `images/<name>/BUILD_ONLY` plus local build instructions (licences, data) | MUST | [new] |
 | Every `FROM` and `image:` pinned to a tag or `@sha256` digest | MUST | [CI] |
 | Sidecars built with `build:` | MUST NOT | [new] |
 | Dependencies pinned; no downloads during verification | MUST | no downloads: [current]; pinning: [new] (standard-mode client images and the MuJoCo image install unpinned pip packages today, §7) |
-| One base image and one version per simulator: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<sim>:<ver>` | MUST | [new] |
+| Within a benchmark, one base image and one version: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<name>:<ver>` | MUST | [new] |
+| Different benchmarks on the same simulator (same `simulator` value) using different images or versions | MAY | [new] (D5; e.g. `robosuite` for robosuite, RoboCasa, RoboCasa365) |
 | Standard-mode agent containers and verifiers share one client base image pinned by digest | MUST | [new] |
 | Merging different simulator stacks into one image only when their dependency versions are identical (frozen-instance hashes depend on them) | MUST | [new] |
 | GPU: an NVIDIA device reservation (`count: 1`) in compose on `main` (privileged) or `sim` (standard); in `tests/docker-compose.yaml` too if replay needs it | MUST | [current] |
@@ -277,7 +278,7 @@ resumes the same episode; success is decided on a replay.
 | Item | Level | Basis |
 |---|---|---|
 | At least one action type, fully described in `/spec` | MUST | [current] |
-| `joint_position` | SHOULD | [current] |
+| Which action types (`joint_position`, `ee_delta`, `ee_pose`, whole-body IK, …) | task- or benchmark-defined, consistent within a benchmark | [current] |
 | `dt` a multiple of the physics or control step; otherwise 400, never rounded | MUST | [current] |
 | Out-of-limit values clipped and reported in `clipped`, not rejected | MUST | [current] |
 | `linear` / `hold` interpolation; chunks ≤ `max_chunk_s` | SHOULD | [current] |
@@ -388,7 +389,7 @@ Done (2026-10-01):
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
 
 Open:
-1. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public;
+1. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<name>`, public unless `BUILD_ONLY`;
    per-simulator `VERSION` only (`legacy:` warning in CI until then).
 2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
 3. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
