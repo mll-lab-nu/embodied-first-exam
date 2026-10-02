@@ -53,6 +53,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
+| The harness's web search is off in official runs: Codex `web_search = "disabled"` (Harbor `--ak web_search=disabled`), Claude Code `WebSearch` and `WebFetch` disallowed (`--ak disallowed_tools=WebSearch,WebFetch`). The search runs at the model provider, so no egress allowlist stops it; `scripts/run_agent_batch.sh` sets both by default (`WEB_SEARCH=disabled`) | MUST | [new] (2026-10-02: tested with Codex 0.159.2 and gpt-6-luna — with ChatGPT login the default searches GitHub and quotes upstream experts, `disabled` stops it; with an Azure API key Codex offers no search, but the API runs one for a request that carries the `web_search` tool, which only the usage gateway's raw log can reveal) |
 | D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. |
 
 ## 1. Checklist (every task)
@@ -177,7 +178,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
 | A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
 | Upstream experts scrubbed from images (e.g. cap-x `oracle_code`, RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER and HumanoidBench; RoboTwin, MuJoCo Playground and robosuite (public upstream experts) are open by default and switched per run with `scripts/set_agent_egress.py` |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365 and RoboCasa-GR1; RoboTwin, MuJoCo Playground, robosuite, RoboWits, RoboLab and BEHAVIOR-1K are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
@@ -397,3 +398,18 @@ Open:
 4. Solvability: tasks whose `oracle_evidence` is "none known" (38 privileged/standard directories) and the 15
    DexToolBench `partial` pairs (whose reference policy reaches only part of the goals, so it scores 0) have no verified
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
+5. Agent egress (owner, 2026-10-02: to be decided after a probe): which hosts an allowlist needs beyond the model APIs.
+   Findings so far: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
+   harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
+
+Decided, not yet implemented (owner, 2026-10-02; plan in the maintainers' design notes):
+1. Success is the final state, held: the predicate holds at the end and still holds after the last command is held for
+   1 s of simulated time, in both modes. Changes graders, services and instructions; affected oracles are re-verified.
+2. Standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its own sandbox; the
+   sidecar's verdict stays authoritative, and a verifier replay that disagrees is reported as a warning
+   (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
+   image (§2.4) and to read the trajectory (§4.8).
+3. For simple tasks (a reference model passes them reliably and quickly in privileged mode), the agent gets no reward
+   function and no success check before it submits: the goal stays in words, the predicate code leaves the agent
+   image and lives in `tests/` only (the HumanoidBench pattern).
+4. Deferred: one global seed per release that picks each task's instance from a pool of pre-validated instances.
