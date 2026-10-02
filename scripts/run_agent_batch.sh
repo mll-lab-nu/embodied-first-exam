@@ -2,7 +2,8 @@
 # Run one Harbor-native agent over tasks in both modes (<base>-privileged and <base>-standard), unattended; meant to be
 # started in the background (inside `sg docker -c` if docker needs the group):
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
-# Official runs use Harbor's native agents only (PROTOCOL D11): no gateway, no adapter. Env (defaults):
+# Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
+# records and is off by default. Env (defaults):
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak web_search=disabled --ak reasoning_summary=detailed"
@@ -30,6 +31,13 @@
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
+#   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
+#                calls through scripts/usage_gateway/gateway.py, which forwards
+#                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
+#                <trial>/gateway/ (usage.jsonl, totals.json)
+#   GATEWAY_RAW  0 (default); 1 = the gateway also keeps every request and response body (<trial>/gateway/raw/;
+#                private: it holds the whole conversation)
+#   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
@@ -44,6 +52,7 @@ AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
+GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-0}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
 # (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
@@ -86,6 +95,45 @@ if [ "$MEM_GUARD" = 1 ] && ! grep -qs mem_guard.py "/proc/${pid:-0}/cmdline"; th
   log "started mem_guard (2 GiB red line; log jobs/journal/mem_guard.log)"
 fi
 
+# transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
+if [ "$GATEWAY" = 1 ]; then
+  mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
+  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready"); [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
+  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
+  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
+  GW="http://$GATEWAY_BIND:$(cat "$ready")"
+  # the upstream each base URL would have used: this environment, else the env file, else the API's default
+  upstream() {  # <VAR> <default>
+    local v="${!1:-}"
+    [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | tr -d "\"'")
+    printf '%s' "${v:-$2}"
+  }
+  via_gw() { sed -E "s#^https://([^/]+)#$GW/u/\1#" <<< "$1"; }   # https://host/path -> $GW/u/host/path
+  if [ "$AGENT" = claude-code ]; then
+    AGENT_ARGS+=(--ae "ANTHROPIC_BASE_URL=$(via_gw "$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com)")")
+  else
+    case "${CODEX_FORCE_AUTH_JSON:-}" in
+      1|true|TRUE|yes) AGENT_ARGS+=(--ae "OPENAI_BASE_URL=$(via_gw https://chatgpt.com/backend-api/codex)") ;;
+      *) AGENT_ARGS+=(--ae "OPENAI_BASE_URL=$(via_gw "$(upstream OPENAI_BASE_URL https://api.openai.com/v1)")") ;;
+    esac
+  fi
+  # a native config with its own provider URLs (Codex config.toml, Claude Code settings): a copy that points at the gateway
+  if [ -n "$AGENT_CONFIG" ]; then
+    cfg="$JOBS/.gateway/$(basename "$AGENT_CONFIG").$$"
+    sed -E -e "s#^([[:space:]]*base_url[[:space:]]*=[[:space:]]*\")https://([^/\"]+)#\1$GW/u/\2#" \
+           -e "s#(\"(ANTHROPIC|OPENAI)_BASE_URL\"[[:space:]]*:[[:space:]]*\")https://([^/\"]+)#\1$GW/u/\3#" "$AGENT_CONFIG" > "$cfg"
+    # Codex reaches a provider by WebSocket first; the gateway speaks HTTPS only
+    grep -q '^[[:space:]]*base_url[[:space:]]*=' "$cfg" && ! grep -q supports_websockets "$cfg" \
+      && sed -i -E "s#^([[:space:]]*)(base_url[[:space:]]*=.*)#\1\2\n\1supports_websockets = false#" "$cfg"
+    for i in "${!AGENT_ARGS[@]}"; do [ "${AGENT_ARGS[$i]}" = "config=$AGENT_CONFIG" ] && AGENT_ARGS[$i]="config=$cfg"; done
+  fi
+  # an egress allowlist must let the agent reach the gateway (ignored where egress is public)
+  AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
+  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW); per-trial records in <trial>/gateway/"
+fi
+
 wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   local w
   for w in $WAIT_FOR; do
@@ -106,8 +154,8 @@ summary() {  # one table over every job of this batch, rewritten after each job 
   python3 - "$JOBS" "$batch" > "$JOBS/$batch.summary.md.$$" <<'PY'
 import json, pathlib, sys, datetime as dt
 jobs, batch = pathlib.Path(sys.argv[1]), sys.argv[2]
-print(f"# {batch}\n\n| task | mode | success | reward fields | actions | agent wall s | input tok | cached | output tok | cost $ | exception |")
-print("|---|---|---|---|---|---|---|---|---|---|---|")
+print(f"# {batch}\n\n| task | mode | success | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |")
+print("|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 rows = []
 for trial in jobs.glob(f"{batch}-*/*__*"):
@@ -117,6 +165,8 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     rw = json.loads((trial / "verifier/reward.json").read_text()) if (trial / "verifier/reward.json").exists() else {}
     ar = r.get("agent_result") or {}; ex = (r.get("exception_info") or {}).get("exception_type") or ""
     ae = r.get("agent_execution") or {}
+    gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
+    gw_cell = f"{gw['input']} / {gw['output']}" if gw else "-"
     try:
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
     except Exception:
@@ -127,7 +177,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                                "infra_error", "resumes") if k in rw}
     rows.append((r.get("started_at") or "~", f"| {task} | {mode} | {rw.get('success', '-')} | {json.dumps(keys)} | "
                  f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
-                 f"{ar.get('n_output_tokens', '-')} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |"))
+                 f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |"))
 for _, row in sorted(rows):
     print(row)
 PY
