@@ -7,9 +7,12 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v7, `eai-standard/2.3`, `rcb-topogym:0.2.9-cu128`.
+All 78 dirs: tooling v8, `eai-standard/2.3`, `rcb-topogym:0.2.9-cu128`.
+- v8 = v7 with interlocked_claws back on v6's GPU float32 and its v6 instances: on the CPU, 5 of 16 noise runs of
+  claws medium lose the teal piece in the friction-held phase after the right hand releases (3 end on the 1 mm
+  penetration predicate), GPU 0 of 16 (Fisher p 0.04); claws easy passed. Six rigid families stay on the CPU.
 - v7 = v6 + seven rigid families (buzz_wire_3d, cast_coil, cast_keyhole, fiber_bundling, hedgehog_in_cage, horseshoe_ring,
-  interlocked_claws) on the CPU in float64 with one global constraint solve (`rigid_options = {use_contact_island: false}`;
+  interlocked_claws until v8) on the CPU in float64 with one global constraint solve (`rigid_options = {use_contact_island: false}`;
   Nyx still renders on the GPU; their 21 instances made again on lab) + frames rendered on demand (`Env.defer_rgb`: the
   per-step observation skips the camera pass; `render_frame` / `render_grid` / `render_depth` / videos render the current
   state when asked). lock_picking keeps v6's GPU float32 (slower on the CPU); the soft-body families keep their instances.
@@ -87,7 +90,7 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   hedgehog_in_cage medium) every outcome was kept (interlocked easy success 5/5), the per-substep penetration peak unchanged
   (0.589 vs 0.583 mm), frames identical. Rejected: solver_substeps 2 / 1 (Genesis bounds the contact time constant below by
   2 x the substep, so contacts got 4-16x softer and the tasks' 1 mm penetration predicate fired), 5 ms and 25 ms ticks.
-- **Rigid families: CPU float64** (tooling v7; jobs/journal/2026-10-02/rigid_fast/): seven families run their physics on
+- **Rigid families: CPU float64** (tooling v7, six families since v8; jobs/journal/2026-10-02/rigid_fast/): seven families run their physics on
   the CPU in float64 with one global constraint solve (`use_contact_island` off: the island machinery was most of the CPU
   constraint time); Nyx still renders on the GPU. Lab s/step, CPU vs v6's GPU float32: interlocked_claws easy 0.058-0.072
   vs 0.164, horseshoe_ring 0.092 vs 0.195, cast_coil easy 0.080-0.088 vs 0.146 (laptop GPU), buzz_wire_3d 0.11 vs ~0.17,
@@ -95,7 +98,9 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   builds halve (63-107 s vs 181-289 s). Accuracy: per-substep contact penetration, trajectory deviation and outcomes of
   replayed agent trajectories inside the GPU float32 noise envelope (interlocked_claws easy: 7 CPU vs 11 GPU runs, MWU p
   0.93 / 0.79 / 0.32; hedgehog_in_cage medium is a 1 mm threshold case on both backends), frames identical. Replays are
-  bit-deterministic on one host (fresh processes, in-process rewinds). lock_picking stays GPU float32 (0.151 vs 0.132).
+  bit-deterministic on one host (fresh processes, in-process rewinds). lock_picking stays GPU float32 (0.151 vs 0.132);
+  interlocked_claws went back to it in v8 (claws medium: the CPU loses the teal piece in 5 of 16 noise runs, GPU 0 of 16;
+  the same on CPU float32, so the backend, not the precision).
   Rejected on the CPU: GS_ENABLE_NDARRAY=0 (+30-48 s per build for ~13 ms/step), more threads (nothing with islands off),
   fewer substeps with a lower time-constant floor (1.0-1.6 mm penetrations).
 - **Exact per-tick fast paths** (0.2.9): `Env.defer_rgb` (1.48x on CPU physics, render 0.043 -> 0.0006 s/step), the finiteness

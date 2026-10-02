@@ -13,9 +13,9 @@ instance   : one TopoGym scene = a task family's variation built from a fixed se
 trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one row per control step: per arm (the order
              of ACTION_LAYOUT) the arm joint targets (rad) and the gripper opening width (m, 0 = closed .. open width).
              The physics runs where the instance's `simulator.compute_backend` says: the GPU (CUDA) for the soft-body
-             families and lock_picking, whose contact solver is not bit-deterministic (repeated replays agree to ~1e-11
-             in the state but not bit for bit), and the CPU for the other rigid families, whose replays are
-             bit-deterministic on one host. Either way `deterministic` (state hashes equal) is reported and not
+             families, interlocked_claws and lock_picking, whose contact solver is not bit-deterministic (repeated
+             replays agree to ~1e-11 in the state but not bit for bit), and the CPU for the other rigid families, whose
+             replays are bit-deterministic on one host. Either way `deterministic` (state hashes equal) is reported and not
              required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend). Nyx
              renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
@@ -291,12 +291,14 @@ for _name, _t in TASKS.items():
 # on the CPU in float64 with one global constraint solve (use_contact_island False); Nyx still renders on the GPU. Against
 # v6's GPU float32: 2-3x faster control steps, sims on one host do not slow each other, replays bit-deterministic on one
 # host, outcomes / per-substep contact penetration / trajectory deviation inside the GPU's own noise envelope, frames
-# identical. lock_picking (slower on the CPU) keeps v6's GPU float32; the soft-body families stay GPU float64.
-for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring",
-              "interlocked_claws"):
+# identical. The soft-body families stay GPU float64.
+for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring"):
     TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "compute_backend": "cpu", "precision": "64",
                                  "rigid_options": {"use_contact_island": False}}
-TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "precision": "32"}
+# GPU float32 (v6): lock_picking is slower on the CPU; interlocked_claws (back from the CPU in v8) loses the teal piece in
+# medium's friction-held phase on the CPU in 5 of 16 noise runs (3 end on the 1 mm penetration predicate), GPU 0 of 16.
+for _name in ("interlocked_claws", "lock_picking"):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "precision": "32"}
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
