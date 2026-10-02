@@ -144,7 +144,10 @@ def sanitize(name: str) -> str:
 
 
 class Trials:
-    """Source IP -> trial directory, from docker's compose labels; cached, refreshed on a miss."""
+    """Source IP -> trial directory, from docker's compose labels. Docker reuses subnets and addresses once a trial's
+    network is gone, so a mapping is trusted for TTL seconds only and every scan replaces the whole table; a new trial
+    needs far longer than that (image build, agent install) before its first model call."""
+    TTL = 5.0
 
     def __init__(self, jobs: pathlib.Path):
         self.jobs, self.by_ip, self.last_scan = jobs, {}, 0.0
@@ -153,6 +156,7 @@ class Trials:
     def _scan(self) -> None:
         ids = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True, timeout=30).stdout.split()
         if not ids:
+            self.by_ip = {}
             return
         fmt = '{{index .Config.Labels "com.docker.compose.project"}}{{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}'
         out = subprocess.run(["docker", "inspect", "-f", fmt, *ids], capture_output=True, text=True, timeout=30).stdout
@@ -168,18 +172,17 @@ class Trials:
                 for trial in job.iterdir():
                     if trial.is_dir() and "__" in trial.name:
                         dirs[sanitize(trial.name)] = trial
-        for ip, proj in projects.items():
-            if proj in dirs:
-                self.by_ip[ip] = dirs[proj]
+        self.by_ip = {ip: dirs[proj] for ip, proj in projects.items() if proj in dirs}
 
     def lookup(self, ip: str) -> pathlib.Path | None:
         with self.lock:
-            if ip not in self.by_ip and time.time() - self.last_scan > 2:
+            if time.time() - self.last_scan > self.TTL or (ip not in self.by_ip and time.time() - self.last_scan > 1):
                 self.last_scan = time.time()
                 try:
                     self._scan()
                 except Exception as exc:  # noqa: BLE001 -- attribution failure must not break the agent's request
                     log(f"docker scan failed: {exc}")
+                    self.by_ip = {}
             return self.by_ip.get(ip)
 
 
