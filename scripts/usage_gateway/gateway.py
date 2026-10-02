@@ -19,6 +19,12 @@ own agent/ and verifier/ (not inside agent/, which the agent's container mounts 
     raw/NNNNNN.json.gz with --raw: the request body and the response body (SSE text) as sent and received;
                        credentials, cookies and account ids are removed from the recorded headers
 
+Token budget (PROTOCOL §5, D10; on by default when the gateway runs): once a trial's totals reach --budget-input input
+or --budget-output output tokens, totals.json gets over_token_budget = 1 and every further model request of that trial
+is refused with HTTP 400 and a "token budget exceeded" error in the provider's format, without being forwarded, so the
+agent stops; the request in flight when the budget is crossed completes. 0 disables a limit. The refusal avoids 429 and
+"usage limit" wording on purpose: scripts/account_failure_check.py would read those as an account failure.
+
 Token counts are normalized the way Harbor counts them: input = everything the model read (Anthropic: input +
 cache_read + cache_creation; OpenAI: input_tokens, which include cached ones), output = output_tokens (reasoning
 included). Requests from an address no trial owns go to <jobs>/.gateway/unattributed.jsonl.
@@ -51,7 +57,7 @@ def _model_hosts() -> list[str]:
     return ast.literal_eval(m.group(1)) if m else []
 
 
-MODEL_HOSTS = _model_hosts()
+MODEL_HOSTS = _model_hosts()   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
 HOP = {"connection", "keep-alive", "proxy-connection", "te", "trailers", "transfer-encoding", "upgrade", "host",
        "content-length", "accept-encoding"}
 SECRET = {"authorization", "x-api-key", "api-key", "cookie", "set-cookie", "chatgpt-account-id", "openai-organization",
@@ -218,17 +224,47 @@ def record(trial: pathlib.Path | None, rec: dict, raw: dict | None) -> None:
         tp = d / "totals.json"
         tot = json.loads(tp.read_text()) if tp.exists() else {"requests": 0, "input": 0, "cached": 0, "output": 0,
                                                                "no_usage": 0}
-        tot["requests"] += 1
         u = rec.get("usage") or {}
-        if u:
-            for k in ("input", "cached", "output"):
-                tot[k] += u.get(k, 0)
+        if rec.get("refused"):
+            tot["refused"] = tot.get("refused", 0) + 1
         else:
-            tot["no_usage"] += 1
+            tot["requests"] += 1
+            if u:
+                for k in ("input", "cached", "output"):
+                    tot[k] += u.get(k, 0)
+            else:
+                tot["no_usage"] += 1
         tot["updated"] = rec["ts"]
+        tot["budget"] = {"input": ARGS.budget_input, "output": ARGS.budget_output}
+        if over_budget(tot):
+            tot["over_token_budget"] = 1
         tmp = tp.with_suffix(".tmp")
         tmp.write_text(json.dumps(tot, indent=1))
         tmp.replace(tp)
+
+
+def over_budget(tot: dict) -> bool:
+    return bool((ARGS.budget_input and tot.get("input", 0) >= ARGS.budget_input)
+                or (ARGS.budget_output and tot.get("output", 0) >= ARGS.budget_output))
+
+
+def trial_totals(trial: pathlib.Path | None) -> dict:
+    tp = trial / "gateway" / "totals.json" if trial else None
+    if not tp or not tp.exists():
+        return {}
+    with LOCK:
+        try:
+            return json.loads(tp.read_text())
+        except ValueError:
+            return {}
+
+
+def budget_error(host: str, tot: dict) -> dict:
+    msg = (f"token budget exceeded for this trial: input {tot.get('input', 0)} / {ARGS.budget_input}, output "
+           f"{tot.get('output', 0)} / {ARGS.budget_output} (PROTOCOL §5); the run is over")
+    if "anthropic" in host:
+        return {"type": "error", "error": {"type": "invalid_request_error", "message": msg}}
+    return {"error": {"message": msg, "type": "invalid_request_error", "code": "token_budget_exceeded", "param": None}}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -264,6 +300,13 @@ class Handler(BaseHTTPRequestHandler):
         ip = self.client_address[0]
         trial = TRIALS.lookup(ip)                  # now: a request that outlives its trial (a timeout) still counts for it
         body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+        tot = trial_totals(trial)
+        if trial is not None and over_budget(tot):           # refuse, never forward: the trial has spent its budget
+            record(trial, {"ts": round(t0, 3), "dur_s": 0.0, "client_ip": ip, "host": host, "method": self.command,
+                           "path": path.split("?")[0], "status": 400, "model": None, "usage": {}, "usage_raw": {},
+                           "request_bytes": len(body), "response_bytes": 0, "client_gone": False,
+                           "refused": "over_token_budget"}, None)
+            return self._reply(400, budget_error(host, tot))
         hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         hdrs["Host"] = host
         if body:
@@ -326,8 +369,12 @@ def main() -> int:
     p.add_argument("--raw", action="store_true", help="also record request and response bodies (raw/)")
     p.add_argument("--ready-file", type=pathlib.Path, help="written with the port once the gateway listens")
     p.add_argument("--timeout", type=float, default=900.0, help="upstream socket timeout, seconds")
+    p.add_argument("--extra-host", action="append", default=[], help="another model API host pattern to forward to (repeatable)")
+    p.add_argument("--budget-input", type=int, default=100_000_000, help="per-trial input tokens; 0 = no limit (D10)")
+    p.add_argument("--budget-output", type=int, default=10_000_000, help="per-trial output tokens; 0 = no limit (D10)")
     ARGS = p.parse_args()
     ARGS.jobs = ARGS.jobs.resolve()
+    MODEL_HOSTS.extend(h.lower() for h in ARGS.extra_host)
     (ARGS.jobs / ".gateway").mkdir(parents=True, exist_ok=True)
     TRIALS = Trials(ARGS.jobs)
     srv = ThreadingHTTPServer((ARGS.bind, ARGS.port), Handler)

@@ -57,7 +57,7 @@ FROZEN = HERE / "frozen"
 TASKS = ROOT / "tasks"  # --check renders into a temporary directory instead
 SERVER = ROOT / f"images/{BENCH}/standard/server_casa.py"
 VERSION = (ROOT / f"images/{BENCH}/VERSION").read_text().strip()
-IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-{BENCH}:{VERSION}"
+IMAGE = f"ghcr.io/mll-lab-nu/eai-{BENCH}:{VERSION}"
 # Standard-mode client image (agent container and verifier): pinned by digest, pinned pip versions.
 CLIENT_BASE = (
     "docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f"

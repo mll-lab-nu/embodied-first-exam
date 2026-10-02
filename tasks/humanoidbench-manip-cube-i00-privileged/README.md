@@ -9,7 +9,7 @@
 | Family / instance | `cube` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 60% of the bar (paper 135, FastTD3 221, bar 370); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench cube: produce one replayable trajectory that reorients two cubes in the Unitree H1's hands, frozen scene instance 00.

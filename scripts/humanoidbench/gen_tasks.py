@@ -47,7 +47,7 @@ SUBSET = HERE / "subset.toml"
 FACTS = HERE / "facts.json"
 REWARDS = HERE / "rewards.json"   # the scoring formulas, kept out of the image (see shared/rcb_rewards.py)
 ORACLES = HERE / "oracles"
-IMAGE = ("ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:"
+IMAGE = ("ghcr.io/mll-lab-nu/eai-humanoidbench:"
          + (ROOT / "images/humanoidbench/VERSION").read_text().strip())
 # The agent container and the verifier of every standard-mode task: Python and the client only, pinned by digest.
 CLIENT_IMAGE = ("docker.io/library/python:3.12.14-slim"

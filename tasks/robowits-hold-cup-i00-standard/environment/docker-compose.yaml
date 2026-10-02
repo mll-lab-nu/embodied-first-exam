@@ -9,7 +9,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:0.1.1
+    image: ghcr.io/mll-lab-nu/eai-robowits:0.1.1
     volumes:
       - ./sim:/srv:ro
       - ${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}:/opt/robowits/assets/blender_kit:ro

@@ -4,8 +4,7 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md
 
 - Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
   wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`). Task directories end in `-privileged` or `-standard`;
-  robosuite/RoboTwin/MuJoCo base images are still `ghcr.io/jameskrw/rcb-<sim>` until the registry move (PROTOCOL §7);
-  KinDER and HumanoidBench use `eai-<sim>`. No `results/` in task dirs.
+  base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL D5; formerly `rcb-<sim>`). No `results/` in task dirs.
 - Generators under `scripts/` end with `scripts/task_conventions.py` (`normalize`): fields, protocol spelling, test.sh, graders,
   README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.
 - Tasks are self-contained Harbor task dirs under `tasks/`. Nothing at run time imports repository code outside the task
@@ -25,7 +24,8 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
 - Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no adapters, and no gateway that holds
   credentials or changes requests. The optional usage gateway (`scripts/usage_gateway/`, `GATEWAY=1` in
-  `run_agent_batch.sh`, off by default) only forwards and records token usage (PROTOCOL D11, docs/RUNNING.md).
+  `run_agent_batch.sh`, off by default) only forwards and records token usage (PROTOCOL D11, docs/RUNNING.md). The
+  harness's web search is off in official runs (PROTOCOL §5; `run_agent_batch.sh` default `WEB_SEARCH=disabled`).
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
   docs/RUNNING.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.

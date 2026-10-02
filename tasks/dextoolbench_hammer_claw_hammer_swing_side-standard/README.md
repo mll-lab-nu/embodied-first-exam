@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/hammer/claw_hammer/swing_side` / seed 0 |
 | Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 13/40 goals (solution/; README of dextoolbench_hammer_claw_hammer_swing_side-privileged) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.2` |
 
 ## Task
 Standard-mode twin of `dextoolbench_hammer_claw_hammer_swing_side-privileged` (see its README): the same scene, instance and scoring, served as a robot service (`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `rcb_dtb`). The agent sees camera RGB-D and proprioception only.

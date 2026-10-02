@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/hammer/mallet_hammer/swing_down` / seed 0 |
 | Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 12/36 goals (solution/; README of dextoolbench_hammer_mallet_hammer_swing_down-privileged) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.2` |
 
 ## Task
 DexToolBench task `hammer / mallet_hammer / swing_down` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.

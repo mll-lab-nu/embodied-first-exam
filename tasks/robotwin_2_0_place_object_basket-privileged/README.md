@@ -9,7 +9,7 @@
 | Family / instance | `place_object_basket` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 place_object_basket (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away. Frozen scene instance (RoboTwin seed 60417).

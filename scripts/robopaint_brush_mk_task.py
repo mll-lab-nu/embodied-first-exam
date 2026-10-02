@@ -45,7 +45,7 @@ sys.dont_write_bytecode = True                 # the solution modules imported f
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DEFAULT = ROOT / "scripts" / "robopaint_templates"
 TPL = {"dir": TEMPLATES_DEFAULT}                              # set from --templates-dir
-IMAGE = "ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:" + (ROOT / "images" / "robopaint" / "VERSION").read_text().strip()
+IMAGE = "ghcr.io/mll-lab-nu/eai-robopaint:" + (ROOT / "images" / "robopaint" / "VERSION").read_text().strip()
 SHEET_MM = 227.1845
 IDENTICAL = ("instance.json", "rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb1.py", "server.py", "rcb_client.py", "ARPHICPL.TXT")
 FAMILIES = {"kaishu": {"medium": "calligraphy", "template": "yong"}, "lettering": {"medium": "broad_nib", "template": "minim"},
@@ -537,7 +537,7 @@ def set_image(d: Path) -> None:
     for f in [d / "environment" / "Dockerfile", d / "tests" / "Dockerfile", d / "environment" / "docker-compose.yaml"]:
         if f.is_file():
             s = f.read_text()
-            s2 = re.sub(r"ghcr\.io/embodied-agent-interface-v2-internal/(?:rcb|eai)-robopaint:[\w.-]+", IMAGE, s)
+            s2 = re.sub(r"ghcr\.io/(?:embodied-agent-interface-v2-internal|mll-lab-nu)/(?:rcb|eai)-robopaint:[\w.-]+", IMAGE, s)
             if s2 != s:
                 f.write_text(s2)
 

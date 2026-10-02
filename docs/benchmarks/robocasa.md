@@ -8,7 +8,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
 | tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
+| image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
 | generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
@@ -93,7 +93,7 @@ RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its as
 
 ## Rebuilding the tasks
 ```bash
-docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:$(cat images/robocasa/VERSION) images/robocasa
+docker build -t ghcr.io/mll-lab-nu/eai-robocasa:$(cat images/robocasa/VERSION) images/robocasa
 bash scripts/robocasa/import_references.sh <PR #4 checkout>   # instances + references -> scripts/robocasa/frozen/
 python3 scripts/robocasa/generate.py                            # -> tasks/robocasa-* (ends with scripts/task_conventions.py normalize); re-running reproduces them
 python3 scripts/robocasa/generate.py --check                    # tasks/ equals a fresh render (no simulator needed)

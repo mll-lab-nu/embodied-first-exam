@@ -6,9 +6,8 @@ task README). The tasks in the repository follow it except for the open items in
 [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md).
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
-> protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. The move of
-> the robosuite, RoboTwin and MuJoCo base images to `eai-<sim>` under the Embodied Agent Interface (EAI) organization is
-> still open (§7; KinDER and HumanoidBench already use it); CI reports the old registry as a `legacy:` warning until then.
+> protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. Base images
+> moved to `ghcr.io/mll-lab-nu/eai-<name>` on 2026-10-02 (§7).
 
 ## 0. Conventions
 
@@ -33,7 +32,7 @@ is the task's own business.
 | **privileged mode** | Agent and simulator share a container; the agent may read privileged state, reset freely, call planning primitives. The deliverable is a trajectory. | unlimited |
 | **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset. | limited |
 | **`eai-standard/2.x`** | The standard-mode wire protocol (§4). | `rcb-limited/2.x` |
-| **`eai-<sim>`** | Simulator base image under `ghcr.io/embodied-agent-interface-v2-internal/` (§2.4). | `rcb-<sim>` under several registries |
+| **`eai-<name>`** | Base image (a simulator stack, usually one per benchmark) under `ghcr.io/mll-lab-nu/` (§2.4). | `rcb-<sim>` under several registries; `eai-<name>` under `embodied-agent-interface-v2-internal` until 2026-10-02 |
 
 Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file names (`rcb_client.py`, `rcb1.py`,
 `rcb_traj.py`), the `RCB1` frame format and the `RCB_*` environment variables.
@@ -46,13 +45,14 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
-| D5 | Images | One registry (EAI organization), images named `eai-<sim>`, versioned per simulator in `images/<sim>/VERSION`; share images where the dependency set is identical. |
+| D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. robosuite, RoboCasa, RoboCasa365), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
 | D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
+| The harness's web search is off in official runs: Codex `web_search = "disabled"` (Harbor `--ak web_search=disabled`), Claude Code `WebSearch` and `WebFetch` disallowed (`--ak disallowed_tools=WebSearch,WebFetch`). The search runs at the model provider, so no egress allowlist stops it; `scripts/run_agent_batch.sh` sets both by default (`WEB_SEARCH=disabled`) | MUST | [new] (2026-10-02: tested with Codex 0.159.2 and gpt-6-luna — with ChatGPT login the default searches GitHub and quotes upstream experts, `disabled` stops it; with an Azure API key Codex offers no search, but the API runs one for a request that carries the `web_search` tool, which only the usage gateway's raw log can reveal) |
 | D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. |
 
 ## 1. Checklist (every task)
@@ -114,22 +114,22 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 ### 2.4 Images, registry, GPU
 
-A simulator base image is defined by `images/<sim>/Dockerfile` and tagged
-`<registry>/eai-<sim>:<images/<sim>/VERSION>`. Today `scripts/build_images.sh` and `scripts/push_images.sh` still build
-and push the `rcb-<sim>` names, and the KinDER and HumanoidBench images are built with the `docker build` commands in
-[`docs/benchmarks/`](benchmarks/); both are switched by the registry move (§7). Tasks reference it by tag:
+A base image is defined by `images/<name>/Dockerfile` and tagged `<registry>/eai-<name>:<images/<name>/VERSION>`; `<name>` is
+usually the benchmark (`eai-robocasa365`) or the simulator stack several benchmarks share (`eai-mujoco`). `scripts/build_images.sh` builds every image as
+`ghcr.io/mll-lab-nu/eai-<name>` and `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones. Tasks reference it by tag:
 `environment/Dockerfile` and `tests/Dockerfile` `FROM` it, and the standard-mode `sim` service uses it as `image:`.
 Harbor builds the task images locally from the task directory on every run; only base images are pulled.
 
 | Item | Level | Basis |
 |---|---|---|
-| Base images at `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>:<ver>`, anonymously pullable | MUST | [new] (registry: `legacy:` warning in CI; KinDER and HumanoidBench already there, not yet public) |
-| Versions in `images/<sim>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
-| Images that cannot be published (e.g. licensed simulators): `images/<sim>/BUILD_ONLY` plus local build instructions (licences, data) | MUST | [new] |
+| Base images at `ghcr.io/mll-lab-nu/eai-<name>:<ver>`, anonymously pullable, unless `BUILD_ONLY` | MUST | [new] (registry: `legacy:` warning in CI) |
+| Versions in `images/<name>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
+| Images that cannot be published (e.g. licensed simulators): `images/<name>/BUILD_ONLY` plus local build instructions (licences, data); never public, though maintainers may keep a private package for org members | MUST | [new] |
 | Every `FROM` and `image:` pinned to a tag or `@sha256` digest | MUST | [CI] |
 | Sidecars built with `build:` | MUST NOT | [new] |
 | Dependencies pinned; no downloads during verification | MUST | no downloads: [current]; pinning: [new] (standard-mode client images and the MuJoCo image install unpinned pip packages today, §7) |
-| One base image and one version per simulator: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<sim>:<ver>` | MUST | [new] |
+| Within a benchmark, one base image and one version: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<name>:<ver>` | MUST | [new] |
+| Different benchmarks on the same simulator (same `simulator` value) using different images or versions | MAY | [new] (D5; e.g. `robosuite` for robosuite, RoboCasa, RoboCasa365) |
 | Standard-mode agent containers and verifiers share one client base image pinned by digest | MUST | [new] |
 | Merging different simulator stacks into one image only when their dependency versions are identical (frozen-instance hashes depend on them) | MUST | [new] |
 | GPU: an NVIDIA device reservation (`count: 1`) in compose on `main` (privileged) or `sim` (standard); in `tests/docker-compose.yaml` too if replay needs it | MUST | [current] |
@@ -176,7 +176,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
 | A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
 | Upstream experts scrubbed from images (e.g. cap-x `oracle_code`, RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER and HumanoidBench; RoboTwin, MuJoCo Playground and robosuite (public upstream experts) are open by default and switched per run with `scripts/set_agent_egress.py` |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365 and RoboCasa-GR1; RoboTwin, MuJoCo Playground, robosuite, RoboWits, RoboLab and BEHAVIOR-1K are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
@@ -277,7 +277,7 @@ resumes the same episode; success is decided on a replay.
 | Item | Level | Basis |
 |---|---|---|
 | At least one action type, fully described in `/spec` | MUST | [current] |
-| `joint_position` | SHOULD | [current] |
+| Which action types (`joint_position`, `ee_delta`, `ee_pose`, whole-body IK, …) | task- or benchmark-defined, consistent within a benchmark | [current] |
 | `dt` a multiple of the physics or control step; otherwise 400, never rounded | MUST | [current] |
 | Out-of-limit values clipped and reported in `clipped`, not rejected | MUST | [current] |
 | `linear` / `hold` interpolation; chunks ≤ `max_chunk_s` | SHOULD | [current] |
@@ -333,16 +333,18 @@ affecting the verdict.
 |---|---|---|
 | Report success together with cost: tokens, money, turns, wall clock, simulation steps, calls | SHOULD | [current] |
 | Official results use Harbor's native agents (`-a codex`, `-a claude-code`, …), configured through environment variables (OpenRouter, Azure, subscriptions) | MUST | [new] |
-| **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] (not applied yet, §7 Open 3) |
+| **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] (enforced while the usage gateway runs; without it, the after-run check is not implemented yet, §7 Open 3) |
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
 | Results are not committed to the repository: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory, no batch reports under `docs/` | MUST | [CI] for task directories |
 | Privileged and standard results reported separately; standard results state the protocol version and reset budget | MUST | [new] |
 
-Harbor 0.23 has no token cap, so the budget is applied after the run to the counts Harbor records for each trial
-(`result.json`); the results pipeline marks trials over budget as failed and records `over_token_budget = 1` in the
-results metadata. That check is not implemented yet (§7 Open 3). The optional usage gateway (`scripts/usage_gateway/`,
-D11) records each trial's tokens per request while it runs; it does not enforce the budget.
+Harbor 0.23 has no token cap. **With the usage gateway on** (`GATEWAY=1` in `scripts/run_agent_batch.sh`, D11), the
+budget is enforced during the run: once a trial's recorded input or output reaches its budget, the gateway refuses every
+further model request of that trial (HTTP 400, "token budget exceeded"; the request in flight completes), the agent
+stops, and `<trial>/gateway/totals.json` records `over_token_budget = 1`; the results tooling counts such a trial as
+failed. Budgets: `TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`, default 100M / 10M. **Without the gateway**, the budget would be
+applied after the run to Harbor's counts (`result.json`); that check is not implemented yet (§7 Open 3).
 
 ## 6. Versioning and extensions
 | Item | Level | Basis |
@@ -388,11 +390,25 @@ Done (2026-10-01):
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
 
 Open:
-1. Images: `ghcr.io/jameskrw/rcb-<sim>` → `ghcr.io/embodied-agent-interface-v2-internal/eai-<sim>`, public;
-   per-simulator `VERSION` only (`legacy:` warning in CI until then).
+1. ~~Images~~ done 2026-10-02: every base image is `ghcr.io/mll-lab-nu/eai-<name>`; public unless `BUILD_ONLY`
+   (RoboLab, BEHAVIOR-1K: private packages); RoboCasa365 and VLABench stay private until their asset licences are checked.
 2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
-3. The results pipeline applies the token budget (`over_token_budget` in the results metadata) and publishes to the
-   results site.
+3. The results pipeline publishes to the results site, and applies the token budget after the run for runs without the
+   usage gateway (with it, the budget is enforced during the run, §5).
 4. Solvability: tasks whose `oracle_evidence` is "none known" (38 privileged/standard directories) and the 15
    DexToolBench `partial` pairs (whose reference policy reaches only part of the goals, so it scores 0) have no verified
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
+5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
+   Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
+   harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
+
+Decided (owner, 2026-10-02):
+1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
+   episode return, goal count), stated in its instructions and `docs/benchmarks/<bench>.md`; the protocol does not impose
+   one rule across benchmarks.
+2. Not yet implemented — standard-mode double check: the verifier replays the recorded `trajectory.npz` once more in its
+   own sandbox; the sidecar's verdict stays authoritative, and a verifier replay that disagrees is reported as a warning
+   (`replay_mismatch` in `reward.json`, a `WARNING` line in the log). Needs the standard verifier to use the simulator
+   image (§2.4) and to read the trajectory (§4.8).
+3. Kept as they are: one frozen instance per task (no per-run seeds), and what each benchmark exposes to the agent in
+   privileged mode (no hiding of reward or success checks).

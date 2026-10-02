@@ -9,7 +9,7 @@
 | Family / instance | `tools_picking_drill` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-tools-picking-drill-i00__8ghAF4z (robolab-tools-picking-drill-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Standard-mode twin of `robolab-tools-picking-drill-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

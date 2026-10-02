@@ -9,7 +9,7 @@
 | Family / instance | `sweep-simple` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 KinDER `kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode: the agent has the simulator and its state and

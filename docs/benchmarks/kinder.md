@@ -10,7 +10,7 @@ multi-object manipulation, geometric and dynamic constraints.
 | robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
 | score | pass = KinDER's own goal check within the episode (1000 control steps; PyBullet 3000) |
 | tasks | 11 families × 2 modes: `tasks/kinder-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
-| image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
+| image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
 | oracle | `dynamo` (the fixture): full, both modes; the other ten: none, human review (positive examples below) |
 
 ## Tasks (one variant each, seed 0)
@@ -65,7 +65,7 @@ harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: sco
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
-ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
+ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
 ## Results
 

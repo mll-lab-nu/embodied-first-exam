@@ -19,7 +19,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 | Earlier Docker layers | a layer is an immutable tarball; a later `rm` does not unwrite it | download and remove in the **same `RUN`**; verify with `docker save` |
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |
 | The network | upstream is public and pinned, one `curl` away | `[agent] network_mode = "allowlist"` of the model-API hosts (`scripts/set_agent_egress.py`): DexToolBench, KinDER, HumanoidBench and RoboPaint set it; the other benchmarks are public by default and switched per run (PROTOCOL §2.7) |
-| The model API | the harness's web search runs on the provider, reached through an allowed model-API host: Codex's `web_search` and Claude Code's `WebSearch` | **open** outside two Codex configs: `web_search: disabled` in `scripts/{kinder,humanoidbench}/configs/codex-openrouter.yaml` (Harbor 0.23.0 passes `-c web_search=disabled`; audit below). `scripts/run_agent_batch.sh` sets it only through `AK`; nothing on `main` turns Claude Code's `WebSearch` off (`--ak disallowed_tools=WebSearch` would) |
+| The model API | the harness's web search runs on the provider, reached through an allowed model-API host: Codex's `web_search` and Claude Code's `WebSearch` | **closed by default since 2026-10-02**: `scripts/run_agent_batch.sh` passes Codex `--ak web_search=disabled` and Claude Code `--ak disallowed_tools=WebSearch,WebFetch` unless `WEB_SEARCH=allowed` (PROTOCOL §5). Before that it was open outside two Codex configs: `web_search: disabled` in `scripts/{kinder,humanoidbench}/configs/codex-openrouter.yaml` (Harbor 0.23.0 passes `-c web_search=disabled`; audit below). `scripts/run_agent_batch.sh` sets it only through `AK`; nothing on `main` turns Claude Code's `WebSearch` off (`--ak disallowed_tools=WebSearch` would) |
 | The model-API key | Harbor's native agents put it in the agent's container. Codex: `OPENAI_API_KEY` in its environment and in `/tmp/codex-secrets/auth.json` (linked from `$CODEX_HOME/auth.json`), removed only after the run; Claude Code: `ANTHROPIC_API_KEY` (or its OAuth token) in its environment. With the model API allowed, the agent can spend it on any model, a search-enabled one included, which undoes the row above | **open**: the one fix measured so far, a model gateway beside the harness that holds the key, is ruled out by D11. Meanwhile one key per batch with a spending cap (`docs/RUNNING.md`), and read the transcript for direct API calls |
 | The model's memory | the benchmark's source is public, so it is in pretraining data: Opus 5.5 recalled H1's 19 actuator ranges exactly and the sit reward's seat-height band, with no tool | nothing in the harness removes it; report it with the result |
 | Package metadata | `*.egg-info/SOURCES.txt` lists files you deleted | generate metadata after the removal |
@@ -36,6 +36,15 @@ sends them in an `additional_tools` input item, not in `tools`). 2026-10-01, Cod
 OpenRouter provider: the tool set follows the model. `gpt-5` and `gpt-5.5` get a `web_search` tool by default and
 with `cached` or `live`, none with `disabled`; `gpt-6-luna` gets none in any mode. Where the key goes: Harbor 0.23.0,
 `agents/installed/codex.py` (`run()`) and `claude_code.py` (`_resolve_auth_env()`).
+
+2026-10-02, real calls, Codex 0.159.2 and `gpt-6-luna`, asked to find RoboTwin's `play_once` on GitHub:
+- **ChatGPT login** (`chatgpt.com/backend-api/codex`): by default Codex searched twice (its client calls
+  `/backend-api/codex/alpha/search` on `chatgpt.com`, the same host as the model calls, so an egress allowlist cannot
+  separate them) and quoted `play_once`; with `-c web_search=disabled` it had no search and made no such call.
+- **Azure API key** (a custom Responses provider): Codex offered no search in either setting. But a request that
+  carries `tools: [{"type": "web_search"}]` (or `web_search_preview`) is served with real searches, so an agent
+  holding the key can still search by writing its own request. The usage gateway's raw log (`GATEWAY=1`, raw bodies on by default)
+  shows the tool list of every request: flag any `web_search` tool or `alpha/search` path.
 
 ## 2. Deciding what to remove
 

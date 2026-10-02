@@ -27,7 +27,7 @@ SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
 SERVER = ROOT / "images/metaworld/standard/server_mw.py"
 VERSION = (ROOT / "images/metaworld/VERSION").read_text().strip()
-IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-metaworld:{VERSION}"
+IMAGE = f"ghcr.io/mll-lab-nu/eai-metaworld:{VERSION}"
 # Standard-mode client image (agent container and verifier): the one client base of every standard task, pinned by
 # digest, and its pinned pip versions (scripts/eai_standard/client.env, client-requirements.txt; PROTOCOL §2.4).
 EAI = ROOT / "scripts/eai_standard"

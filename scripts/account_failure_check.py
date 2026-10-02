@@ -27,6 +27,12 @@ def mask(s: str) -> str:
 
 def check(t: str) -> dict:
     why = []
+    gw = os.path.join(t, "gateway", "totals.json")             # the usage gateway refused it: the trial's own budget, not
+    try:                                                        # the account (PROTOCOL §5); never stop the lane for it
+        if json.load(open(gw)).get("over_token_budget"):
+            return {"trial": os.path.basename(t.rstrip("/")), "stop": False, "why": ["over its token budget (gateway)"]}
+    except (OSError, ValueError):
+        pass
     for f in sorted(glob.glob(os.path.join(t, "agent", "sessions", "**", "rollout-*.jsonl"), recursive=True),
                     key=os.path.getmtime)[-1:]:
         last = None
