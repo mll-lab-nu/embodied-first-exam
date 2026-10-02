@@ -16,6 +16,17 @@ CPU is bit-exact) and applies the environment's own success check for `DrainVegg
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.
 
+The check for `DrainVeggies` requires that the lettuce has been washed: inside the sink with the water on for more than 10 consecutive checks (the check runs twice per control step: at least 6 control steps; once washed it stays washed); at the end the lettuce is in the pot and the water is off.
+
+How RoboCasa365's checks compute these terms (`robocasa/utils/object_utils.py`):
+- *the gripper ends more than d m from X*: the distance from the robot's end-effector grip site to X's origin exceeds
+  d. Opening the fingers is not enough: release, then move the hand away.
+- *X is on / in Y* for an object Y (plate, tray, board, pan, pot, colander, tupperware, glass): X touches Y and their
+  centres are within 0.7 × Y's horizontal radius of each other horizontally, unless a distance is given.
+- *X touches* a counter, the dining counter or the stove: contact between X and that fixture.
+- *X is inside* a fixture (a cabinet, the sink or one of its basins, the microwave): all eight corners of X's bounding
+  box are within the fixture's interior region (5 cm tolerance).
+
 ## Tooling (`/opt/tools/casa_tool.py`, importable as `casa_tool`)
 ```python
 import numpy as np, casa_tool
