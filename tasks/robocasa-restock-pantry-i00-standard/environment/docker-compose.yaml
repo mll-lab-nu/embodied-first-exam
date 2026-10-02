@@ -1,0 +1,18 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# CPU only (MuJoCo physics, OSMesa rendering): no GPU reservation.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa:0.1.0
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /srv
+    command: python /srv/server_casa.py
+    restart: on-failure:6
+    environment:
+      RCB_TOOL: casa_tool
+      RCB_INSTANCE: /srv/instance.npz
+      RCB_STARTUP_TIMEOUT_S: "600"
+      PYTHONPATH: /srv
