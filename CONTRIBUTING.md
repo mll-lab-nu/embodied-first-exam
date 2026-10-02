@@ -36,7 +36,8 @@ the expected size of the pull request.
 3. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.
-4. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No custom gateways or adapters.
+4. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
+   holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (PROTOCOL D11).
 
 ## Before opening the pull request
 ```bash
