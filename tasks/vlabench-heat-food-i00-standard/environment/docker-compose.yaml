@@ -1,0 +1,22 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# CPU only: MuJoCo physics and OSMesa rendering (~15 ms per 320x320 image); no GPU reservation.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/server.py
+    restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TASK_TEXT: "Please heat cooked_food from tray_seen: put it into microwave_seen, close the microwave's door and press its start button (heating itself is not simulated)."
+      RCB_EPISODE: "Ends when the task succeeds (reason \"success\"), after 9000 control steps (\"failed\"), when your time is up (\"timeout\"), or on a simulator error (\"error\")."
+      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_MAX_CONTROL_STEPS: "9000"
+      RCB_IMAGE_HW: "320"
+      # The default is the standard configuration (one episode, no reset); results with resets are reported separately.
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"
+      PYTHONPATH: /srv:/opt/VLABench:/opt/rrt-algorithms
