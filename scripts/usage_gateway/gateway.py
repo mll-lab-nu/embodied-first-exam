@@ -57,7 +57,7 @@ def _model_hosts() -> list[str]:
     return ast.literal_eval(m.group(1)) if m else []
 
 
-MODEL_HOSTS = _model_hosts()
+MODEL_HOSTS = _model_hosts()   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
 HOP = {"connection", "keep-alive", "proxy-connection", "te", "trailers", "transfer-encoding", "upgrade", "host",
        "content-length", "accept-encoding"}
 SECRET = {"authorization", "x-api-key", "api-key", "cookie", "set-cookie", "chatgpt-account-id", "openai-organization",
@@ -369,10 +369,12 @@ def main() -> int:
     p.add_argument("--raw", action="store_true", help="also record request and response bodies (raw/)")
     p.add_argument("--ready-file", type=pathlib.Path, help="written with the port once the gateway listens")
     p.add_argument("--timeout", type=float, default=900.0, help="upstream socket timeout, seconds")
+    p.add_argument("--extra-host", action="append", default=[], help="another model API host pattern to forward to (repeatable)")
     p.add_argument("--budget-input", type=int, default=100_000_000, help="per-trial input tokens; 0 = no limit (D10)")
     p.add_argument("--budget-output", type=int, default=10_000_000, help="per-trial output tokens; 0 = no limit (D10)")
     ARGS = p.parse_args()
     ARGS.jobs = ARGS.jobs.resolve()
+    MODEL_HOSTS.extend(h.lower() for h in ARGS.extra_host)
     (ARGS.jobs / ".gateway").mkdir(parents=True, exist_ok=True)
     TRIALS = Trials(ARGS.jobs)
     srv = ThreadingHTTPServer((ARGS.bind, ARGS.port), Handler)
