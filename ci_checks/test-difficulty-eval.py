@@ -317,6 +317,7 @@ class ResultTests(unittest.TestCase):
             u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
             self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('5','5'))
+            self.assertEqual(l['metadata']['protocol'], 'eai-standard/2.3')
             tools=[tasks/(slug+'-privileged')/'environment/rcb_topogym.py',tasks/(slug+'-privileged')/'tests/rcb_topogym.py',
                    tasks/(slug+'-standard')/'environment/sim/rcb_topogym.py']
             self.assertTrue(all(p.read_bytes()==(ROOT/'harbor_templates/topogym/common/rcb_topogym.py').read_bytes() for p in tools))
@@ -329,6 +330,9 @@ class ResultTests(unittest.TestCase):
             from topogym.tasks.goal_description import render_goal
             public_goal=json.loads((build/slug/'describe.json').read_text())['public_goal']
             for folder in (tasks/(slug+'-privileged'),tasks/(slug+'-standard')):
+                protocol = subprocess.run([sys.executable, str(ROOT/'ci_checks/check-protocol-v1.py'), str(folder)],
+                                          capture_output=True, text=True)
+                self.assertEqual(protocol.returncode, 0, protocol.stdout + protocol.stderr)
                 self.assertIn(render_goal(public_goal),(folder/'instruction.md').read_text())
                 harbor_python=ROOT/'.venv-harbor/bin/python'
                 if harbor_python.exists():

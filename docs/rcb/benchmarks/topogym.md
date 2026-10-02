@@ -15,13 +15,18 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. One source per variant, byte-identical in every copy (`ci_checks/check-tooling-identity.sh`):
+rendering; no task-level skills. One source, tooling v4 (`[metadata].tooling_version = "4"`):
+`harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
+by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folds the two family variants of the previous render into it:
+- a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
+  plateau): interlocked_claws' contact-weld pre-weld then survives the first step; no other family has an off-table
+  gripper target, so their commands are unchanged;
+- Genesis 1.2.1's per-substep FEM checkpoint store is bounded to one checkpoint (active FEM solvers only: knot_untying,
+  rope_threading, orbits, slotted_post_ring; it leaked ~120 MiB of GPU memory per control step);
+- knot's planar-clearance predicate is vectorized (same results).
 
-| variant | families | difference from `common/rcb_topogym.py` |
-|---|---|---|
-| `common/rcb_topogym.py` | the rigid and PBD families | — |
-| `common/rcb_topogym_interlocked.py` | interlocked_claws | the contact-weld pre-weld survives the first step (the gripper width table drops the closed end) |
-| `common/rcb_topogym_ipc.py` | knot_untying, rope_threading, orbits, slotted_post_ring | Genesis 1.2.1's per-substep FEM checkpoint store is bounded to one checkpoint (it leaked ~120 MiB of GPU memory per control step); knot's planar-clearance predicate vectorized (same results) |
+`common/rcb_topogym_interlocked.py` and `rcb_topogym_ipc.py` are kept for the historical packages
+(`ci_checks/topogym_tooling_versions.json`); the generators no longer pick them.
 
 The FEM fix was checked on knot hard (laptop, 14 control steps): free GPU memory −0.9 MiB per step (unpatched −121.7),
 the rope's vertex positions within the GPU's run-to-run noise (max 1.2e-7 m vs 9.4e-8 m between two unpatched runs), the
@@ -64,12 +69,15 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.3-cu128` (outside the `eai-<sim>` registry: a legacy warning).
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.5-cu128` (`images/topogym/VERSION` + the CUDA profile of
+  `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy warning). It carries Jianwen's simulator fixes of
+  6a7c755b (IPC, PBD initial states) and is not on GHCR: build it on the host with
+  `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym`.
 - blanket_flatten's archived PBD states restore only on the GPU model they were prepared on (RTX PRO 6000): run blanket
   on lab.
 
 ## Legacy: the original frozen instances
 Jianwen's first frozen instances `tasks/topogym-<family>-i00[-limited]` (seed 0) keep their pre-v1.0 names, layer and
-READMEs; the tier dirs supersede them and our sweeps do not run them. CI checks them against their 76583213 template and
-exempts them from the v1.0 naming and README layout (`ci_checks/check-task-fields.sh`, `check-task-structure.sh`, both
-adapted). Their agent and verifier containers use the shared client image (a v1.0 MUST for every 2.2 task).
+READMEs; the tier dirs supersede them and our sweeps do not run them. CI checks their tooling against its frozen inventory
+(`ci_checks/topogym_tooling_versions.json`) and exempts them from the v1.0 naming and README layout
+(`ci_checks/check-task-fields.sh`, `check-task-structure.sh`, both adapted). Their agent and verifier containers use the shared client image (a v1.0 MUST for every 2.2 task).

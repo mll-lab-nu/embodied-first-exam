@@ -1,7 +1,7 @@
 {
- "about": "Files taken from robot_coding_bench. `verbatim` copies are byte-identical to the reference blob (check-rcb-vendor.sh); `adapted` files started from the reference file and were changed for TopoGym (the reason is in each file's header). Refresh with scripts/vendor_rcb.py.",
+ "about": "Files taken from robot_coding_bench. `verbatim` copies are byte-identical to the reference blob (ci_checks/check-tooling-identity.sh); `adapted` files started from the reference file and were changed for TopoGym (see file headers and local_adaptations for reasons). Refresh with scripts/vendor_rcb.py.",
  "repo": "git@github.com:JamesKrW/robot_coding_bench.git",
- "commit": "ad9f251e97b1c9a9ad0491a7fcee2e8ec743274e",
+ "commit": "78f1bf65db85ed775b5a625e68c5c114de065773",
  "verbatim": {
   "scripts/eai_standard/rcb1.py": "scripts/eai_standard/rcb1.py",
   "scripts/eai_standard/run.sh": "scripts/eai_standard/run.sh",
@@ -36,7 +36,8 @@
   "docs/rcb/TAXONOMY.md": "docs/TAXONOMY.md",
   "docs/rcb/LIMITED_MODE_PROTOCOL.md": "docs/LIMITED_MODE_PROTOCOL.md",
   "docs/rcb/STANDARD_MODE_2_2.md": "docs/STANDARD_MODE_2_2.md",
-  "docs/rcb/RUNNING.md": "docs/RUNNING.md"
+  "docs/rcb/RUNNING.md": "docs/RUNNING.md",
+  "scripts/usage_gateway/gateway.py": "scripts/usage_gateway/gateway.py"
  },
  "adapted": {
   "ci_checks/check-task-fields.sh": "ci_checks/check-task-fields.sh",
@@ -52,13 +53,13 @@
   "scripts/scan_secrets.py": "scripts/scan_secrets.py",
   "scripts/task_conventions.py": "scripts/task_conventions.py",
   "ci_checks/check-task-structure.sh": "ci_checks/check-task-structure.sh",
+  "ci_checks/check-protocol-v1.py": "ci_checks/check-protocol-v1.py",
   "scripts/eai_standard/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
   "scripts/eai_standard/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
   "harbor_templates/topogym/limited/environment/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
-  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
-  "ci_checks/check-protocol-v1.py": "ci_checks/check-protocol-v1.py"
+  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py"
  },
  "blobs": {
   "scripts/eai_standard/rcb_limited.py": "1ce117178770929994c35602cf78dbe8f8028a40",
@@ -79,11 +80,11 @@
   "harbor_templates/topogym/limited/tests/Dockerfile": "dce6a2322a6c49b230948269a5e84b7a9fdf11ef",
   "harbor_templates/topogym/limited/solution/oracle_replay.py": "b0dc378be9fe7ef37dd78b86f42f188d7c68eae4",
   "harbor_templates/topogym/limited/solution/solve.sh": "724ea158924b332ee8c19b71cbaad1afd8cfd37d",
-  "scripts/run_agent_batch.sh": "c5dcd4d5e35b19c1c5526e0fa7d2726d7584c16f",
+  "scripts/run_agent_batch.sh": "a74bf7cc16e35b3b86ae23595c3e0b63d6bff102",
   "scripts/log_mirror.py": "6eca30c3c21ff575973f1d4f2d666fbdc2267b17",
   "scripts/account_failure_check.py": "30f655eb8d7da5b63876c8b60596695ff7ab14ff",
   "scripts/set_agent_egress.py": "9bb127e2b02ed4aa873196e529eeb616df6f57f0",
-  "ci_checks/run_all.sh": "09db7175df1a14a5b4cbfd26cf35c6217b6bc2a2",
+  "ci_checks/run_all.sh": "c9303f9421cb80d08510b971103312f4b63a434d",
   "ci_checks/check-dockerfile.sh": "c647d360e119e7c017f4acdc6b5bedddfaf9b90c",
   "ci_checks/check-instruction.sh": "101e957cd5ef96c758aec4cb36a3c6385a166f1f",
   "ci_checks/check-verifier-isolation.sh": "68af76c3baa6d9695f8412e07a886c6f2afea594",
@@ -91,29 +92,31 @@
   "ci_checks/check-robopaint-leak.sh": "0f6d65236b3a7f42bb3a273cbd16232d671f7478",
   "ci_checks/check-robopaint-tooling.sh": "cda419091280c44889c740fe1e862f698d1967af",
   "ci_checks/check-limited-protocol.py": "d810d7a3a782e55bc4b1fc2bb7c69da7cf59921e",
-  "ci_checks/check-protocol-v1.py": "4e0fa8ea44c269ad111cb17897389b7a530ba8c2",
+  "ci_checks/check-protocol-v1.py": "0a376947bcd6bed2f5dc398a9ef67daf67b011b1",
   "ci_checks/check-standard-client.sh": "c86c6441307c290f3ae68cb939f8c4cbd6e32e41",
-  ".github/workflows/static-checks.yml": "1cc08eec68e488ef1f7a6f85f0cb84d80f451312",
-  ".github/workflows/validate-task.yml": "66170cd84ba3c7f63c94b85a93e2f829ba254ff4",
+  ".github/workflows/static-checks.yml": "8d77fdc6c240c9b440e759383293bdd9a9dc9ad3",
+  ".github/workflows/validate-task.yml": "77aae1fa655588a9a7b62a5560e010762b4d62e6",
   ".github/pull_request_template.md": "923cd7a32fbe94723ebe857d2b22c6408adc3d46",
-  ".env.example": "8c55c2f5f56a20a96c484276b539fa51a90b8361",
-  "docs/rcb/PROTOCOL.md": "130bbc27ff92fde1ff7c0bad5b52155489a822a3",
-  "docs/rcb/TAXONOMY.md": "76e3ab6ad50754abc4c64f3a3fb0df5416dafa17",
-  "docs/rcb/LIMITED_MODE_PROTOCOL.md": "00f5a740516a4436220fce1b9556169bec805edc",
+  ".env.example": "9cd768eafdd6d5a36f42753e32d671da4b1e3b67",
+  "docs/rcb/PROTOCOL.md": "cd92615ca0ef74e47c46787eb9069a9bc3c0a9cf",
+  "docs/rcb/TAXONOMY.md": "1aa7067f8a955c404032944daf5d6132a4c3a534",
+  "docs/rcb/LIMITED_MODE_PROTOCOL.md": "55eedebf9972b64a21150615f9e6ac772727cbde",
   "docs/rcb/STANDARD_MODE_2_2.md": "dc1a2eb9c6b7591816844587d63a8fcc4693aeff",
-  "docs/rcb/RUNNING.md": "d1cef80cc6cca848f26163701ea127e871a205f6",
+  "docs/rcb/RUNNING.md": "0e1d198d9527f7d42bbeec5911e999f97c289b11",
+  "scripts/usage_gateway/gateway.py": "00a18c48a87e620220338435874e30e8ab7d4ba9",
   "ci_checks/check-task-fields.sh": "9a3813b2e715e360e5b21df3305a239f364a82d8",
   "ci_checks/check-tooling-identity.sh": "7660822e001427d6055487aff8e0fc3311cb4d65",
   "ci_checks/check-limited-texts.sh": "f96e2eac74bcb97c1e7a6942df414a497f42d7f4",
   "scripts/build_images.sh": "579442e811000a79c27d6b913a7df735787a8ffe",
   "scripts/push_images.sh": "da88c6bd99c1e33e0be8fda7889f1ae07ccd7d71",
   "scripts/mem_guard.py": "8a7d754d8b28f01309d4bb804c2c6434a00e19fe",
-  "scripts/write_task_results.py": "3bc73db601375c719c1edd678640d3f361e70239",
-  "scripts/regrade_trials.sh": "cba2ef018bc637e1564045c29aadb294ec53d53b",
-  "scripts/collect_batch_results.py": "ebdbcd11a3980673e47b07e10ea82a2edaab851c",
-  "scripts/make_two_mode_report_zh.py": "844092b9d3957f9c1e9afc5091468ea468892e7c",
+  "scripts/write_task_results.py": "1d7f1b863918cab96e8a5c64bba831e320377707",
+  "scripts/regrade_trials.sh": "86b69778a6a9197ceff96449015b09f00ae3af88",
+  "scripts/collect_batch_results.py": "7b43917fa2100a041ea34e299bad2ce53f5f66de",
+  "scripts/make_two_mode_report_zh.py": "9c8807c2d753a3e00471eb106d06d09c3b33fa8e",
   "scripts/scan_secrets.py": "f1d49083596b47938b1144e1cc90bc276dc7ded5",
-  "scripts/task_conventions.py": "7b08e1c26c9190a852024f3aa7d45fce75a878d2"
+  "scripts/task_conventions.py": "d17d1f3ed3cf02bf7bc392fca57ce6f1200b69af",
+  "ci_checks/check-task-structure.sh": "fe6ab3da45de14c96dfcb91a442db954a8554eb3"
  },
  "local_adaptations": {
   "scripts/eai_standard/rcb_limited.py": {
@@ -148,8 +151,8 @@
   },
   "ci_checks/check-protocol-v1.py": {
    "upstream_path": "ci_checks/check-protocol-v1.py",
-   "upstream_blob": "4e0fa8ea44c269ad111cb17897389b7a530ba8c2",
-   "reason": "recognize the versioned 2.3 standard contract"
+   "upstream_blob": "0a376947bcd6bed2f5dc398a9ef67daf67b011b1",
+   "reason": "recognize the versioned eai-standard/2.3 contract while retaining upstream hard failures, TopoGym frozen-instance exceptions and research-tree provenance warnings"
   }
  }
 }

@@ -9,7 +9,7 @@
 | Family / instance | `interlocked_claws` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.3-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.5-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-interlocked-claws-hard-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.2` client

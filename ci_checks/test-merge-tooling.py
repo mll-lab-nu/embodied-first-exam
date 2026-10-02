@@ -2,8 +2,10 @@
 """CPU regressions for the combined public tool; no physics success is implied."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -19,6 +21,51 @@ from collect_batch_results import classify_trial
 
 
 class MergeTests(unittest.TestCase):
+    def protocol_check(self, task, *, strict=False):
+        env = dict(os.environ)
+        env.pop('RCB_PROTOCOL_STRICT', None)
+        if strict:
+            env['RCB_PROTOCOL_STRICT'] = '1'
+        return subprocess.run(
+            [sys.executable, str(ROOT/'ci_checks/check-protocol-v1.py'), str(task)],
+            env=env, capture_output=True, text=True, timeout=20)
+
+    def test_protocol_accepts_23_but_rejects_unknown_versions(self):
+        with tempfile.TemporaryDirectory() as folder:
+            task = Path(folder)/'topogym-fixture-easy-i00-standard'
+            task.mkdir()
+            meta = task/'task.toml'
+            for version, expected in (('2.2', 0), ('2.3', 0), ('99.0', 1)):
+                with self.subTest(version=version):
+                    meta.write_text('[metadata]\nmode = "standard"\noracle = "full"\n'
+                                    f'protocol = "eai-standard/{version}"\n')
+                    result = self.protocol_check(task)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_protocol_23_keeps_upstream_hard_failures(self):
+        with tempfile.TemporaryDirectory() as folder:
+            task = Path(folder)/'topogym-fixture-easy-i00-standard'
+            task.mkdir()
+            meta = task/'task.toml'
+            valid = '[metadata]\nmode = "standard"\nprotocol = "eai-standard/2.3"\noracle = "full"\n'
+            meta.write_text(valid.replace('oracle = "full"\n', ''))
+            result = self.protocol_check(task)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn('missing `oracle`', result.stdout)
+            meta.write_text(valid)
+            (task/'results').mkdir()
+            result = self.protocol_check(task)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn('results/ in a task directory', result.stdout)
+
+    def test_protocol_frozen_instance_warns_but_strict_mode_fails(self):
+        task = ROOT/'tasks/topogym-interlocked-claws-i00-limited'
+        result = self.protocol_check(task)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('legacy: TopoGym pre-v1.0 frozen instance', result.stdout)
+        result = self.protocol_check(task, strict=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+
     def test_checkpoint_bound_preserves_upstream_call_and_gradient_mode(self):
         saved = []
         fem = SimpleNamespace(is_active=True, _ckpt={})
@@ -105,7 +152,7 @@ class MergeTests(unittest.TestCase):
     def test_frozen_inventory_detects_missing_and_tampered_tooling(self):
         spec = importlib.util.spec_from_file_location('tooling_check', ROOT/'ci_checks/check-topogym-tooling.py')
         checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
-        name = 'topogym-interlocked-claws-hard-i00-standard'
+        name = 'topogym-interlocked-claws-i00-limited'   # unversioned: the tier dirs are tooling v4 since their re-render
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/name
             shutil.copytree(ROOT/'tasks'/name, target)

@@ -556,10 +556,19 @@ class _Robot:
 
     def command(self, row) -> dict:
         row = np.asarray(row, dtype=np.float64)
+        # Width is not injective at the closed-end plateau. A hold must keep
+        # the accepted native target, including after reset/rewind and without
+        # requiring targets() to have been called first. Do not cache proposals:
+        # validate_action can reject them without changing the robot.
+        targets = self.robot.capture_state().targets
         out = {}
         for name, g in self.groups.items():
+            width = float(row[self.grip_index[name]])
+            current = float(targets[name][g.gripper_field])
+            native = (current if abs(width - self.native_to_width(name, current)) <= 1e-7
+                      else self.width_to_native(name, width))
             out[name] = {"joint_position_rad": row[self.arm_slice[name]].tolist(),
-                         g.gripper_field: self.width_to_native(name, row[self.grip_index[name]])}
+                         g.gripper_field: native}
         return self.robot.validate_action(out)
 
     def targets(self) -> np.ndarray:
@@ -697,7 +706,7 @@ def _plain(v):
 
 
 def _drop_fem_gradient_checkpoints(env) -> bool:
-    """IPC families only (rcb_topogym_ipc.py, 2026-10-01): bound Genesis 1.2.1's per-substep FEM checkpoint store.
+    """Active FEM solvers only (tooling v4): bound Genesis 1.2.1's per-substep FEM checkpoint store.
 
     Simulator.save_ckpt runs after every substep when requires_grad is False (substeps_local = 1), and FEMSolver.save_ckpt
     (genesis/engine/solvers/fem_solver.py:1058), unlike RigidSolver's, has no requires_grad guard: each call stores the FEM
@@ -712,12 +721,15 @@ def _drop_fem_gradient_checkpoints(env) -> bool:
     fem = getattr(sim, "fem_solver", None)
     if fem is None or not fem.is_active or sim.requires_grad:
         return False
+    if getattr(fem.save_ckpt, "_topogym_bounded", False):
+        return True
     upstream = fem.save_ckpt
 
     def save_ckpt(ckpt_name, _fem=fem, _upstream=upstream):
         _upstream(ckpt_name)
         for key in [k for k in _fem._ckpt if k != ckpt_name]:
             del _fem._ckpt[key]
+    save_ckpt._topogym_bounded = True
     fem.save_ckpt = save_ckpt
     return True
 
@@ -815,8 +827,8 @@ class Session:
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
         self.env = Env(SimulatorConfig(**cfg))
         self.env.reset(seed=int(cfg["seed"]))
-        self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)   # IPC families: no per-substep leak
-        self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])        # knot_untying: same results, faster
+        self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
+        self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.

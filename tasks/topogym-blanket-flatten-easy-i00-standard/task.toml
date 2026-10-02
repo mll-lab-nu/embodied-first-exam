@@ -34,6 +34,7 @@ difficulty = "easy"
 grasp = "physical (no assisted grasping)"
 success_rule = "his default success (goal_complete True; terminal revision release_settling_v1)"
 initial_state = "re-prepared in rcb-topogym 0.2.3 with his scripts/prepare_blanket_initial_states.py (--tier, seed 0, --acceptance scene_layout); his archived gathered_scene_v1 states do not restore in 0.2.3 (backend identity: world_sha256 of topogym/world/genesis_world.py, changed by his seed fix in 76583213; underneath, the RigidSolver layout mismatch of 0.2.1 / 0.2.2: collision verts 13876 archive vs 14008 live)"
+tooling_version = "4"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

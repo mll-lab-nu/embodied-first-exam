@@ -9,7 +9,7 @@
 | Family / instance | `buzz_wire_3d` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.3-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.5-cu128` |
 
 ## Task
 TopoGym buzz_wire_3d (panda_robotiq, Genesis): produce one replayable trajectory. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Frozen scene instance (variation buzz_wire_3d_medium, seed 0).
