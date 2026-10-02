@@ -56,14 +56,16 @@ tasks, each with one online event, in both modes: 48 cases, 96 tasks.
   finger positions, joint positions and velocities, last command. The agent is told that the scene may change once
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
-## Licence-dependent parts
-LIBERO-MAX has no licence file. Two parts depend on it: (1) the event parameters and case choice (`cases.json`, and the
-instances made from it), (2) LIBERO-MAX's event runtime in the image (`src/libero_max`, about 1,800 lines used:
-`substrate.py`, `pro_runtime.py`, `cosmos_integration.py`, `libero_backend.py`, `runtime.py`, `scenario.py`,
-`env_factory.py`). If LIBERO-MAX's authors do not grant redistribution: replace (1) with independently drawn parameters of
-the same eight change types (`cases.json` is the only input that carries them; the generator and tools are unchanged),
-and (2) with an own implementation of the same operations in `lmx_tool.py`; until then the image can be `BUILD_ONLY`.
-LIBERO-PRO (MIT / CC-BY-4.0) and LIBERO (MIT) need nothing beyond attribution.
+## Licence
+LIBERO-MAX has no licence file upstream. Its authors have given permission to use its event parameters and its event
+runtime in this benchmark, with attribution (confirmed with them by our PI, 2026-10-02). Two parts come from it: (1) the
+event parameters and case choice (`cases.json`, and the instances made from it), (2) LIBERO-MAX's event runtime in the
+image (`src/libero_max`, about 1,800 lines used: `substrate.py`, `pro_runtime.py`, `cosmos_integration.py`,
+`libero_backend.py`, `runtime.py`, `scenario.py`, `env_factory.py`). Both stay isolated: `cases.json` is the only input
+that carries the parameters, so either part could be replaced by an own implementation of the same eight change types
+without touching the generator or the tools. A licence file upstream would make the permission public; we have asked for
+one. LIBERO-PRO (MIT / CC-BY-4.0) and LIBERO (MIT) need nothing beyond attribution. LIBERO-plus (no licence file,
+third-party TurboSquid assets) is a separate project and stays out of scope.
 
 ## Rebuilding
 ```bash
