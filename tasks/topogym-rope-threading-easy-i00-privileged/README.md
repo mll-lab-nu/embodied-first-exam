@@ -9,7 +9,7 @@
 | Family / instance | `rope_threading` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128` |
 
 ## Task
 TopoGym rope_threading (aloha, Genesis): produce one replayable trajectory. Thread the rope through the cyan ring (R1) then green ring (R2), in that order along the rope from material start to material end. Frozen scene instance (variation rope_threading_easy, seed 0).

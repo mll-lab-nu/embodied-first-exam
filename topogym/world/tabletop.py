@@ -391,8 +391,6 @@ class StandardTabletopSceneBuilder:
             raise ValueError("Simulator RGB requires env.renderer.type=nyx")
         if n_envs != 0:
             raise ValueError("The shared simulator currently requires env.sim.n_envs=0")
-        if self.env_cfg.get("cameras") and gs.backend != gs.cuda:
-            raise ValueError("Nyx RGB requires CUDA; disable RGB for CPU physics")
         return None  # Nyx sensors are registered in finalize(), before build().
 
     def _validate_geometry(self, frames: TabletopFrames) -> RobotFootprintCheck:

@@ -26,6 +26,22 @@ def current_files(mode):
     return expected
 
 
+def frozen_state_identity(task):
+    """A packaged blanket PBD initial state restores only while the topogym sources in its backend identity are unchanged
+    (topogym/world/physics/pbd_initial_state.py); an edit there needs new states, not a silent refusal at run time."""
+    errors = []
+    for manifest in sorted(task.glob("**/instance_assets/**/manifest.json")):
+        backend = json.loads(manifest.read_text()).get("metadata", {}).get("backend", {})
+        wanted = {"state_codec_sha256": "topogym/world/state.py",
+                  "table_friction_sha256": "topogym/world/physics/pbd_table_friction.py"}
+        if backend.get("codec") == "rigid_pbd_numeric_v1":
+            wanted["world_sha256"] = "topogym/world/genesis_world.py"
+        for key, rel in wanted.items():
+            if key in backend and backend[key] != sha(ROOT / rel):
+                errors.append(f"{task.name}/{manifest.relative_to(task)}: {key} != sha256({rel}); the frozen state would not restore")
+    return errors
+
+
 def check(tasks):
     frozen = json.loads((ROOT / "ci_checks/topogym_tooling_versions.json").read_text())
     errors, count = [], 0
@@ -36,11 +52,11 @@ def check(tasks):
         meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
         version = meta.get("tooling_version")
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
-        if version == "6":
+        if version == "7":
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v6 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v7 requires protocol v1.0 task names")
             expected = current_files(mode)
-        elif version in ("3", "4", "5"):
+        elif version in ("3", "4", "5", "6"):
             expected = frozen["v" + version][mode]
         elif "tooling_version" in meta:
             errors.append(f"{task.name}: unknown tooling_version {version!r}")
@@ -50,6 +66,8 @@ def check(tasks):
         else:
             errors.append(f"{task.name}: unversioned package has no frozen inventory")
             continue
+        if version is not None:
+            errors.extend(frozen_state_identity(task))
         for rel, wanted in expected.items():
             path = task / rel
             if not path.is_file() or sha(path) != wanted:
@@ -67,5 +85,5 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v6 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v7 checked")
     raise SystemExit(bool(errors))

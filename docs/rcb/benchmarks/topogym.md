@@ -7,7 +7,16 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v6, `eai-standard/2.3`, `rcb-topogym:0.2.8-cu128`.
+All 78 dirs: tooling v7, `eai-standard/2.3`, `rcb-topogym:0.2.9-cu128`.
+- v7 = v6 + seven rigid families (buzz_wire_3d, cast_coil, cast_keyhole, fiber_bundling, hedgehog_in_cage, horseshoe_ring,
+  interlocked_claws) on the CPU in float64 with one global constraint solve (`rigid_options = {use_contact_island: false}`;
+  Nyx still renders on the GPU; their 21 instances made again on lab) + frames rendered on demand (`Env.defer_rgb`: the
+  per-step observation skips the camera pass; `render_frame` / `render_grid` / `render_depth` / videos render the current
+  state when asked). lock_picking keeps v6's GPU float32 (slower on the CPU); the soft-body families keep their instances.
+  0.2.9 = 0.2.8 + `SimulatorConfig.rigid_options`, CPU physics with Nyx RGB, `Env.defer_rgb` and exact per-tick fast paths:
+  the finiteness check as one iterative walk with a bulk check of the rigid readout (`topogym/world/finite.py`), cached
+  readout layouts, cached weld pairs (`grasp_rigid.RigidGraspBackend.pairs`). `topogym/world/state.py` stays byte-identical:
+  its hash is part of the blanket frozen states' identity (`ci_checks/check-topogym-tooling.py` checks it).
 - v6 = v5 + float32 physics for the 8 rigid families (`TASKS` in `harbor_templates/topogym/common/rcb_topogym.py`; their 24
   instances made again on lab with v6). 0.2.8 = 0.2.7 + blanket's coverage skip + the exact cheaper IPC diagnostics. Evidence:
   robot_coding_bench `jobs/journal/2026-10-02/sim_tradeoff/REPORT.md` (precision / speed study) and the check scripts below.
@@ -34,7 +43,7 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. One source, tooling v6 (`[metadata].tooling_version = "6"`: v5 = Jianwen's repairs on top of v4, v6 = v5 + float32 for the rigid families):
+rendering; no task-level skills. One source, tooling v7 (`[metadata].tooling_version = "7"`: v5 = Jianwen's repairs on top of v4, v6 = v5 + float32 for the rigid families, v7 = v6 + frames rendered on demand):
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -78,6 +87,23 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   hedgehog_in_cage medium) every outcome was kept (interlocked easy success 5/5), the per-substep penetration peak unchanged
   (0.589 vs 0.583 mm), frames identical. Rejected: solver_substeps 2 / 1 (Genesis bounds the contact time constant below by
   2 x the substep, so contacts got 4-16x softer and the tasks' 1 mm penetration predicate fired), 5 ms and 25 ms ticks.
+- **Rigid families: CPU float64** (tooling v7; jobs/journal/2026-10-02/rigid_fast/): seven families run their physics on
+  the CPU in float64 with one global constraint solve (`use_contact_island` off: the island machinery was most of the CPU
+  constraint time); Nyx still renders on the GPU. Lab s/step, CPU vs v6's GPU float32: interlocked_claws easy 0.058-0.072
+  vs 0.164, horseshoe_ring 0.092 vs 0.195, cast_coil easy 0.080-0.088 vs 0.146 (laptop GPU), buzz_wire_3d 0.11 vs ~0.17,
+  fiber_bundling medium 3.3x; 8 CPU sims on one host run as fast as one (GPU throughput is flat with sims per GPU); cold
+  builds halve (63-107 s vs 181-289 s). Accuracy: per-substep contact penetration, trajectory deviation and outcomes of
+  replayed agent trajectories inside the GPU float32 noise envelope (interlocked_claws easy: 7 CPU vs 11 GPU runs, MWU p
+  0.93 / 0.79 / 0.32; hedgehog_in_cage medium is a 1 mm threshold case on both backends), frames identical. Replays are
+  bit-deterministic on one host (fresh processes, in-process rewinds). lock_picking stays GPU float32 (0.151 vs 0.132).
+  Rejected on the CPU: GS_ENABLE_NDARRAY=0 (+30-48 s per build for ~13 ms/step), more threads (nothing with islands off),
+  fewer substeps with a lower time-constant floor (1.0-1.6 mm penetrations).
+- **Exact per-tick fast paths** (0.2.9): `Env.defer_rgb` (1.48x on CPU physics, render 0.043 -> 0.0006 s/step), the finiteness
+  check as one iterative walk with a bulk check of the rigid readout, cached readout layouts and weld pairs (claws easy CPU
+  0.069 -> 0.058 s/step). Checks: bit-identical replays on the CPU (final state_sha of claws easy, hedgehog medium, cast_coil
+  easy equal to the study's runs), `scripts/check_fast_paths.py`, `scripts/check_read_state_batch.py`; on the GPU, which is
+  not bit-deterministic, 0.2.9 vs 0.2.8 stays inside 0.2.8's own run-to-run spread (claws 7e-6, blanket 0.44 mm, IPC 1e-9)
+  with the same frames up to renderer noise.
 - **blanket_flatten: coverage skip** (0.2.8): the footprint union (~88 % of a step) is computed only when every cheap gate
   holds and on each control step's last tick (`Env.step` sets `Task.complete_metrics`); the goal decision is the same at every
   tick (`scripts/check_blanket_coverage_skip.py`).
@@ -126,7 +152,7 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).

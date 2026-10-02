@@ -10,8 +10,8 @@
   "robot_id": "aloha",
   "variation_id": "cast_keyhole_medium",
   "task_parameters": {},
-  "compute_backend": "cuda",
-  "precision": "32",
+  "compute_backend": "cpu",
+  "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
   "terminal_contract_version": 1,
@@ -19,6 +19,9 @@
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -62,7 +65,7 @@
    "initial_intent": "open"
   }
  },
- "state_sha": "450e52bf05adf1e7",
+ "state_sha": "cee8bb68f6bb814f",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -108,7 +111,7 @@
    "orientation_wxyz": [
     0.653281,
     0.270598,
-    0.653282,
+    0.653281,
     0.270598
    ],
    "euler_xyz": [
@@ -149,7 +152,7 @@
    "orientation_wxyz": [
     0.653281,
     0.270598,
-    0.653282,
+    0.653281,
     0.270598
    ],
    "euler_xyz": [
@@ -372,8 +375,8 @@
  },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "b96cecf46db72c1bf3e8e74cc16ce4a345e31243e72d03af030807b2accca3d5",
-  "files": 279
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "cast_keyhole_medium",
  "scene_variation": null,

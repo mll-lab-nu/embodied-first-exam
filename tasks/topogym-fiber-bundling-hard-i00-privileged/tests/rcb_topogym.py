@@ -12,9 +12,12 @@ instance   : one TopoGym scene = a task family's variation built from a fixed se
              `instance_matches` = hash equality or every object / joint pose within tolerance.
 trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one row per control step: per arm (the order
              of ACTION_LAYOUT) the arm joint targets (rad) and the gripper opening width (m, 0 = closed .. open width).
-             The physics runs on the GPU (CUDA). Its contact solver is not bit-deterministic: repeated replays agree to
-             ~1e-11 in the state but not bit for bit, so `deterministic` (state hashes equal) is reported and not
-             required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend).
+             The physics runs where the instance's `simulator.compute_backend` says: the GPU (CUDA) for the soft-body
+             families and lock_picking, whose contact solver is not bit-deterministic (repeated replays agree to ~1e-11
+             in the state but not bit for bit), and the CPU for the other rigid families, whose replays are
+             bit-deterministic on one host. Either way `deterministic` (state hashes equal) is reported and not
+             required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend). Nyx
+             renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
              why. reset() starts again from the frozen state.
@@ -174,7 +177,7 @@ def _slog(ev: str, **kw) -> None:
             pass
 
 
-DEFAULT_BACKEND = "cuda"          # TopoGym's physics runs on the GPU; there is no CPU backend
+DEFAULT_BACKEND = "cuda"          # robot_coding_bench's GPU-backend rule (determinism reported, not required); the physics device is the instance's
 MAX_STEPS = int(os.environ.get("RCB_MAX_STEPS", "200000"))   # runaway guard on a trajectory's length, not a budget
 
 # --------------------------------------------------------------------------- task family registry
@@ -284,12 +287,16 @@ TASKS: dict[str, dict] = {
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)
     _t.update(simulator_name="topogym", image="topogym")
-# Tooling v6 (2026-10-02 precision / speed study, robot_coding_bench jobs/journal/2026-10-02/sim_tradeoff/REPORT.md): the rigid
-# families simulate in float32 (1.4-2.5x faster control steps; real-trajectory replays kept their outcomes, the per-substep
-# contact penetration and the replay behaviour, frames identical). The soft-body families stay float64.
+# Tooling v7 (2026-10-02 speed study, robot_coding_bench jobs/journal/2026-10-02/rigid_fast/): these rigid families simulate
+# on the CPU in float64 with one global constraint solve (use_contact_island False); Nyx still renders on the GPU. Against
+# v6's GPU float32: 2-3x faster control steps, sims on one host do not slow each other, replays bit-deterministic on one
+# host, outcomes / per-substep contact penetration / trajectory deviation inside the GPU's own noise envelope, frames
+# identical. lock_picking (slower on the CPU) keeps v6's GPU float32; the soft-body families stay GPU float64.
 for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring",
-              "interlocked_claws", "lock_picking"):
-    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "precision": "32"}
+              "interlocked_claws"):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "compute_backend": "cpu", "precision": "64",
+                                 "rigid_options": {"use_contact_island": False}}
+TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "precision": "32"}
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
@@ -893,7 +900,7 @@ class Session:
         if task not in TASKS:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         if backend != "cuda":
-            raise ValueError("TopoGym's physics runs on CUDA only")
+            raise ValueError("TopoGym sessions follow the GPU-backend rule; the physics device comes from the instance")
         self.task, self.spec = task, dict(TASKS[task])
         inst = None
         if instance is not None:
@@ -918,7 +925,15 @@ class Session:
         from topogym.simulator.env import Env
         t0 = time.time()
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
+        if cfg.get("compute_backend") == "cpu":
+            # Genesis' CPU getters are torch CPU ops, and torch sizes its pool to the host (256 threads on lab), which spins
+            # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
+            import torch
+            torch.set_num_threads(4)
         self.env = Env(SimulatorConfig(**cfg))
+        # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
+        # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
+        self.env.defer_rgb = True
         self.env.reset(seed=int(cfg["seed"]))
         self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
@@ -1699,7 +1714,8 @@ def success_rule(s: "Session") -> str:
     if record:
         out += (f"; his qualification record for this variation matches, as metadata only (record profile: "
                 f"{record.get('profile', 'not recorded')}{'; ' + record['scope'] if record.get('scope') else ''}); this "
-                f"instance runs CUDA {float(s.config['physics_dt_s']) * 1000:g} ms ticks x {int(s.config['solver_substeps'])} "
+                f"instance runs {'CPU' if s.config.get('compute_backend') == 'cpu' else 'CUDA'} "
+                f"{float(s.config['physics_dt_s']) * 1000:g} ms ticks x {int(s.config['solver_substeps'])} "
                 f"substeps with joint-position actions and {grasp_words(s)}, which the record does not cover")
     return out
 

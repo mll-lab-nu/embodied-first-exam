@@ -32,9 +32,11 @@ class SensorSuite:
         self._observation = None
         self._frame = None
         self._proprioception = None
+        self._rendered = False
 
     def invalidate(self):
         self._key = self._observation = self._frame = self._proprioception = None
+        self._rendered = False
 
     def proprioception(self):
         """Owner-only same-sample robot measurements, before policy filtering."""
@@ -66,12 +68,15 @@ class SensorSuite:
         self._frame = replace(self._frame, depth=freeze(depths))
         return self._frame
 
-    def sample(self, *, episode_id, branch_id, state_id, task):
+    def sample(self, *, episode_id, branch_id, state_id, task, rgb=True):
+        """``rgb=False`` skips the camera pass (the sample then has no RGB); a later ``rgb=True`` sample of the same state
+        renders it, re-reading the same robot and task measurements."""
         key = (episode_id, branch_id, state_id)
-        if self._key == key:
+        render = bool(rgb) and self.enable_rgb
+        if self._key == key and (self._rendered or not render):
             return self._observation, self._frame
         rgb, calibration = {}, {}
-        if self.enable_rgb:
+        if render:
             # Nyx caches by engine tick; our identity also includes the branch.
             # Invalidate the whole rig before its first read (one shared pass).
             for camera in self.world.cameras.values():
@@ -107,7 +112,7 @@ class SensorSuite:
             state=dict(episode_id=episode_id, branch_id=branch_id, state_id=state_id,
                        physics_step=self.world.physics_step, sim_time_s=self.world.sim_time_s),
             robot=robot, task=task.observe(), rgb=rgb, cameras=calibration))
-        self._key = key
+        self._key, self._rendered = key, render
         return self._observation, self._frame
 
 

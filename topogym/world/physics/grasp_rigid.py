@@ -51,6 +51,7 @@ class RigidGraspBackend:
     def __init__(self, world, robot, config):
         self.world, self.robot, self.config = world, robot, config
         self.solver = world.scene.sim.rigid_solver
+        self._pairs = None
         if hasattr(world.scene.sim.coupler, "checkpoint_store"):
             raise ValueError("contact_weld_v1 does not support IPC scenes")
         self.hands = {}
@@ -132,16 +133,22 @@ class RigidGraspBackend:
         return sorted(result)
 
     def pairs(self):
-        values = self.solver.get_weld_constraints(as_tensor=True, to_torch=True)
-        return [(int(a), int(b)) for a, b in zip(to_numpy(values["link_a"]).ravel(),
-                    to_numpy(values["link_b"]).ravel()) if a >= 0 and b >= 0]
+        # The solver's welds change only in acquire / release and in a world restore, which ends in verify_bindings; those
+        # three drop this cache, so exists() (every tick per held hand) reuses one solver read between them.
+        if self._pairs is None:
+            values = self.solver.get_weld_constraints(as_tensor=True, to_torch=True)
+            self._pairs = [(int(a), int(b)) for a, b in zip(to_numpy(values["link_a"]).ravel(),
+                           to_numpy(values["link_b"]).ravel()) if a >= 0 and b >= 0]
+        return list(self._pairs)
 
     def acquire(self, hand, target):
         a, b = self.hands[hand][0].idx, self.targets[tuple(target)][1].idx
         reference = self.relative_pose(hand, target)
+        self._pairs = None
         before = self.pairs()
         if (a, b) in before or (b, a) in before:
             raise RuntimeError("Grasp pair already constrained")
+        self._pairs = None
         self.solver.add_weld_constraint(a, b)
         if sorted(self.pairs()) != sorted([*before, (a, b)]):
             raise RuntimeError("Weld acquisition did not create the expected real constraint")
@@ -154,13 +161,16 @@ class RigidGraspBackend:
 
     def release(self, binding):
         pair = tuple(binding["links"])
+        self._pairs = None
         expected = self.pairs()
         expected.remove(pair)
+        self._pairs = None
         delete_weld_preserving_others(self.solver, *pair)
         if sorted(self.pairs()) != sorted(expected):
             raise RuntimeError("Grasp release changed unrelated constraints")
 
     def verify_bindings(self, bindings):
+        self._pairs = None
         expected = sorted(tuple(b["links"]) for b in bindings)
         hands = {h.idx for h, _ in self.hands.values()}
         actual = sorted(pair for pair in self.pairs() if pair[0] in hands or pair[1] in hands)

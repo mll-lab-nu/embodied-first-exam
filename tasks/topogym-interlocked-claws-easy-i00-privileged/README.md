@@ -9,7 +9,7 @@
 | Family / instance | `interlocked_claws` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. Solvable: model trial topogym-interlocked-claws-easy-i__pi2X7Xe was graded success=1 by the separate verifier, on an earlier version of this task (the same frozen instance and predicate). Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.8-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128` |
 
 ## Task
 TopoGym interlocked_claws (aloha, Genesis): produce one replayable trajectory. Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side. Frozen scene instance (variation interlocked_claws_easy, seed 0).
@@ -24,8 +24,8 @@ grasping, if the family enables it, is the same for the oracle and the agent).
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
-replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
+replay (two passes, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes
+(`deterministic`) are still diagnostic, as for the GPU families; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 
 ## Details
