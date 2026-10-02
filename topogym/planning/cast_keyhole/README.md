@@ -1,5 +1,7 @@
 # Cast Keyhole 三档 policy 与实际可解性验证
 
+2026-10-02 最新修订：`very_easy`／`easier` 的 v4 场景使用原三档的标准尺寸及初始装配和默认摆位，无额外支撑。`simplified_policy.py` 的旧完整路线假设银环已经横向对齐，不能直接从恢复后的初态开始，`--part all` 因而明确报错；需后续补充并验证转姿连接段。`--part pickup` 和 `--check-grasp` 仅保留为待验证候选，v3 的接近通过结论不转移。通道网格测试从独立指定的横向对齐姿态开始，不能代替从初态完整取出的验证。当前静置结果与截图见[摆位修正报告](../../../runs/test_results/cast_keyhole_original_layout_20261002_01/README.md)。下方三档成功结果只适用于 F1／F2／F3。[修订说明](../../../docs/tasks_simplifications/cast_keyhole_very_easy_easier_revision_plan_zh.md)。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 本目录实现当前 `cast_keyhole_easy / medium / hard` 的被动状态反馈 policy。

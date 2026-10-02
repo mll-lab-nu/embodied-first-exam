@@ -2,6 +2,8 @@
 
 日期：2026-10-01。本文供任务开发成员参考，说明大概目标和代码边界，具体场景由实现者设计。
 
+本轮 pipeline 修复对实例冻结、动作计时、判据版本及验收的具体影响，见[场景调整与低难度变体开发注意事项](post_fix_scene_variant_guidelines_zh.md)。
+
 ## 1. 要做什么
 
 先从 **Hedgehog、Horseshoe、Slotted Post Ring** 开始，每个任务新增两个比当前 easy 更简单的变体，保留原 easy / medium / hard。

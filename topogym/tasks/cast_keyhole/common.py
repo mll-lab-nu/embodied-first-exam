@@ -21,6 +21,23 @@ def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
     rx = Rotation.from_euler("x", 90, degrees=True)
     gold_rotation = Rotation.from_euler("z", 90, degrees=True)*rx
     gold_shift = np.array([0., 0., assembly.template["gold_offset_z"]*assembly.unit])
+    if task.geometry_resource:
+        from topogym.assets.variation_resources import read_json
+        record = read_json(task.geometry_resource)
+        regions = record.get("grasp_regions")
+        if regions is not None:
+            from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
+            transforms = plate_assembly_transforms(record)
+            targets = []
+            for name in ("gold", "silver"):
+                transform = transforms[name]
+                turn, shift = Rotation.from_matrix(transform[:3, :3]), transform[:3, 3]
+                region = regions[name]
+                center = np.asarray(region["center_plate_mm"], dtype=float)*assembly.unit
+                center = shift + turn.apply(center) - origins[f"keyhole_{name}"]
+                targets.append(GraspTarget(f"keyhole_{name}", f"keyhole_{name}",
+                    tuple(center), float(region["radius_m"])))
+            return GraspAssistConfig("contact_weld_v1", tuple(targets))
     # Midpoints of the oracle's two contact patches; coordinates are in the
     # original plate frames. The runtime targets must use authored link frames.
     gold = gold_shift + gold_rotation.apply([0., -.093, 0.]) - origins["keyhole_gold"]
@@ -40,6 +57,7 @@ class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
     hash_when_changed = ("piece_tint",)
 
     geometry_resource = None
+    assembly_roll_deg = 45.
 
     terminal_revision = "cast_keyhole_placement_v4_grasp_contact_2mm"
 
@@ -78,7 +96,7 @@ class CastKeyholeTask(PlacementGoalMixin, RigidTaskDefinition):
             raise ValueError("minimum_separation_m must be finite and positive")
         rotation = (Rotation.from_euler("z", float(cfg["yaw_deg"]), degrees=True)
                     * Rotation.from_euler("y", 90, degrees=True)
-                    * Rotation.from_euler("z", 45, degrees=True))
+                    * Rotation.from_euler("z", self.assembly_roll_deg, degrees=True))
         vertices = np.concatenate([rotation.apply(b.visual.vertices) for b in assembly.bodies])
         midpoint = (vertices.min(0)+vertices.max(0))/2
         origin = np.r_[xy-midpoint[:2], self.table_height_m-vertices[:, 2].min()+clearance]

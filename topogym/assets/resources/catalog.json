@@ -432,6 +432,18 @@
       "sha256": "e56be350823f4df0ebbe32e87b90550b61c5180d0f83928ffe1d0d55652f860c",
       "source": "prepared gathered_scene_v1 hard, seed 0; scope=scene_layout",
       "license": null
+    },
+    "variations/cast_keyhole/very_easy/geometry.json": {
+      "path": "variations/cast_keyhole/very_easy/geometry.json",
+      "sha256": "5582cca7d34c94f563eadf2885b8385b5066e44fa9071a45515fc7fd91ac3016",
+      "source": "topogym/assets/geometry/cast_keyhole_simplified.py",
+      "license": null
+    },
+    "variations/cast_keyhole/easier/geometry.json": {
+      "path": "variations/cast_keyhole/easier/geometry.json",
+      "sha256": "d627d674b6908819b3e0e23f70b652cd2063f502b2828d7f7fa733a3029f8224",
+      "source": "topogym/assets/geometry/cast_keyhole_simplified.py",
+      "license": null
     }
   }
 }

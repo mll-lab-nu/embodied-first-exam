@@ -13,7 +13,8 @@ from topogym.utils.arrays import to_numpy
 from .policy import PARTS, ASSEMBLY_ROTATIONS, rotation
 
 
-def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, check_piece_separation=False):
+def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, check_piece_separation=False,
+                       assembly_transforms=None, check_own_piece=False):
     """Sample native collision geometry, including both cameras and fingers."""
     import trimesh
     from .policy import canonical_offsets
@@ -21,6 +22,13 @@ def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, che
     fk = GenesisFKSolver(robot.entity)
     seed = to_numpy(robot.entity.get_qpos()).reshape(-1).copy()
     origins = canonical_offsets(body_origins)
+    assembly_rotations = ASSEMBLY_ROTATIONS
+    if assembly_transforms is not None:
+        assembly_rotations = {s: Rotation.from_matrix(assembly_transforms[n][:3, :3])
+                              for s, n in (("left", "gold"), ("right", "silver"))}
+        origins = {s: assembly_rotations[s].inv().apply(
+            np.asarray(body_origins[PARTS[s]])-assembly_transforms[n][:3, 3])
+            for s, n in (("left", "gold"), ("right", "silver"))}
     managers = {name: trimesh.collision.CollisionManager() for name in [*PARTS, *PARTS.values()]}
     geometry = []
     for side in PARTS:
@@ -46,6 +54,8 @@ def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, che
         q = seed.copy()
         for side in PARTS:
             q[robot._q_indices[side][:6]] = frame["joint_position_rad"][side]
+            if "finger_position_m" in frame:
+                q[robot._q_indices[side][6:]] = frame["finger_position_m"][side]
         pose = fk.solve(q)
         pp = np.asarray(pose["position_world_m"]).reshape(-1, 3)
         rr = np.asarray(pose["orientation_wxyz"]).reshape(-1, 4)
@@ -60,11 +70,14 @@ def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, che
             body = frame["bodies"][side]
             r = rotation(body["quaternion_wxyz"])
             transform = matrix(np.asarray(body["position_m"])+r.apply(origins[side]),
-                               r*ASSEMBLY_ROTATIONS[side].inv())
+                               r*assembly_rotations[side].inv())
             for object_name in managers[name]._objs:
                 managers[name].set_transform(object_name, transform)
         hits = {}
-        for a, b in (("left", "right"), ("left", PARTS["right"]), ("right", PARTS["left"])):
+        pairs_to_check = [("left", "right"), ("left", PARTS["right"]), ("right", PARTS["left"])]
+        if check_own_piece:
+            pairs_to_check.extend((s, PARTS[s]) for s in PARTS)
+        for a, b in pairs_to_check:
             collided, pairs = managers[a].in_collision_other(managers[b], return_names=True)
             if collided:
                 hits[a+"__"+b] = sorted(pairs)
@@ -76,6 +89,56 @@ def audit_coupled_plan(robot, entities, body_origins, plan, table_height, *, che
             issues.append(dict(frame=index, stage=frame["stage"], table_clearance_m=gap, collisions=hits))
     return dict(passed=not issues, scope="sampled native collision meshes; no physical or continuous-path success claim",
                 frames=len(plan["frames"]), minimum_table_clearance_m=minimum, issues=issues)
+
+
+def preflight_simplified_pickup(robot, entities, body_origins, geometry, policy, table_height):
+    """Read-only IK/FK for home orientation, approach and open-finger descent.
+
+    No candidate joints are installed. Actual acquisition and later extraction
+    remain separate physical tests. Own-piece collisions are included here.
+    """
+    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
+    ik = GenesisIKSolver(robot.entity)
+    q = to_numpy(robot.entity.get_qpos()).reshape(-1).copy()
+    for side in PARTS:
+        q[robot._q_indices[side][6:]] = .027
+    initial, bodies = policy.tcp(), policy.bodies()
+    targets = policy.pickup_waypoints()
+    frames, failure, minimum_margin = [], None, float("inf")
+    try:
+        for stage, _, target in targets:
+            turns = {s: Slerp([0, 1], Rotation.from_quat([initial[s][1].as_quat(), r.as_quat()]))
+                     for s, (_, r) in target.items()}
+            for u in np.linspace(0., 1., 41):
+                for side, (p, _) in target.items():
+                    group = robot.groups[side]
+                    tcp_p = initial[side][0]+u*(p-initial[side][0])
+                    hand_r = turns[side](u)*rotation(group.tcp_orientation_in_hand_wxyz).inv()
+                    q = ik.solve_checked(link_name=group.hand_link,
+                        position_world_m=tcp_p-hand_r.apply(group.tcp_position_in_hand_m),
+                        orientation_wxyz=hand_r.as_quat()[[3, 0, 1, 2]], initial_qpos=q,
+                        joint_dof_indices=robot._indices[side][:6])
+                    joints = q[robot._q_indices[side][:6]]
+                    limits = np.asarray(group.arm_limits_rad)
+                    margin = float(min(np.min(joints-limits[:, 0]), np.min(limits[:, 1]-joints)))
+                    minimum_margin = min(minimum_margin, margin)
+                    if margin < .01:
+                        raise ValueError("Pickup candidate has less than 0.01 rad joint margin")
+                frames.append(dict(stage=stage, fraction=float(u),
+                    bodies={s: dict(position_m=p.tolist(), quaternion_wxyz=r.as_quat()[[3, 0, 1, 2]].tolist())
+                            for s, (p, r) in bodies.items()},
+                    joint_position_rad={s: q[robot._q_indices[s][:6]].tolist() for s in PARTS},
+                    finger_position_m={s: q[robot._q_indices[s][6:]].tolist() for s in PARTS}))
+            initial = target
+    except ValueError as error:
+        failure = dict(stage=stage, side=side, fraction=float(u), error=str(error))
+    audit = audit_coupled_plan(robot, entities, body_origins, dict(frames=frames), table_height,
+        assembly_transforms=plate_assembly_transforms(geometry), check_own_piece=True) if frames else None
+    return dict(passed=failure is None and audit is not None and audit["passed"],
+        scope="sampled native IK and full meshes through open-finger approach; no physical grasp or solve claim",
+        physics_steps=0, failure=failure, collision_audit=audit,
+        minimum_joint_margin_rad=minimum_margin if np.isfinite(minimum_margin) else None, frames=frames)
 
 
 def plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets, policy, table_height):

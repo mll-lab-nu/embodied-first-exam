@@ -82,9 +82,9 @@ class CastKeyholePolicy:
     def __init__(self, *, variation, body_origins, goal_region, mount_position,
                  canonical_vertices, part="pickup", speed=1., route_clearance_m=.0004, plan=None,
                  regrasp_rotation=None, regrasp_approach=None, regrasp_transit=None,
-                 park_target=None, supported_raise_m=.20):
-        self.reference = load_reference(variation)
-        self.origins = canonical_offsets(body_origins)
+                 park_target=None, supported_raise_m=.20, reference=None, gold_offset_m=-.141):
+        self.reference = load_reference(variation) if reference is None else reference
+        self.origins = canonical_offsets(body_origins, gold_offset_m=gold_offset_m)
         self.region = dict(goal_region)
         self.mount = np.asarray(mount_position, dtype=float)
         self.vertices = {s: np.asarray(v, dtype=float) for s, v in canonical_vertices.items()}

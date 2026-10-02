@@ -1,6 +1,6 @@
 # Cast Keyhole
 
-更新：2026-09-28。全项目进度见[当前进度](../../progress/current_zh.md)，历史正式视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-10-02。全项目进度见[当前进度](../../progress/current_zh.md)，历史正式视频直链见[Demo 目录](../../../demos/README.md)。
 
 ## 任务与实现
 
@@ -10,7 +10,11 @@
 
 ## 当前状态与边界
 
-本轮可解性证明已正式完成 **3/3**：F1 / easy、F2 / medium、F3 / hard 均从当前默认 home 与桌面初态连续执行至 `task_success=True`，独立逐 tick 复核分别覆盖 19,547、18,385、21,492 个状态并通过。全部动作、数值状态、接触抓持、源码与配置身份均已保存，无 RGB/视频。见 [实际成功报告与复现命令](../../../solvability_proof/cast_keyhole/2026-09-28/README.md)、[机器可读证据汇总](../../../solvability_proof/cast_keyhole/2026-09-28/summary.json) 和 [policy 说明](../../../topogym/planning/cast_keyhole/README.md)。
+新增具名 experimental 入口 `cast_keyhole_very_easy`（别名 `very_easy`，十字直通含短支槽）和 `cast_keyhole_easier`（别名 `easier`，两处错位）。当前 revision 为 `simplified_original_layout_v4`，金、银两片均为 **207 × 78 × 9 mm**，两片相对姿态和桌面默认摆放均与原三档一致，没有额外支撑。保留原简化通道，仅补回圆头内与原装配衔接的入口。完整机器人求解与 Harbor 验收尚未验证，不能继承下方原三档资格。`base` 和 `seeded` 仍选原三档。见[修订实施](../../tasks_simplifications/cast_keyhole_very_easy_easier_revision_plan_zh.md)、[当前验收与截图](../../../runs/test_results/cast_keyhole_original_layout_20261002_01/README.md)。
+
+10 项几何／布局回归通过。当前两档的 3 步静置均未通过，最大位移分别为 13.513／12.703 mm，保留用户要求的原始摆位；旧交叉直立 v3 的 100 步静置和 164 姿态接近通过结论不适用于 v4。原 easy 对照此前也未通过同一静置阈值。完整候选取出策略需要补充从原装配到通道对齐姿态的连接段，当前明确拒绝直接运行旧完整路线；原三档完整求解未在本轮重跑。
+
+2026-09-28 可解性证明已正式完成 **3/3**：F1 / easy、F2 / medium、F3 / hard 均从当时默认 home 与桌面初态连续执行至 `task_success=True`，独立逐 tick 复核分别覆盖 19,547、18,385、21,492 个状态并通过。全部动作、数值状态、接触抓持、源码与配置身份均已保存，无 RGB/视频。见 [实际成功报告与复现命令](../../../solvability_proof/cast_keyhole/2026-09-28/README.md)、[机器可读证据汇总](../../../solvability_proof/cast_keyhole/2026-09-28/summary.json) 和 [policy 说明](../../../topogym/planning/cast_keyhole/README.md)。
 
 本轮范围为默认参数、seed 0、ALOHA、CPU 双精度、显式 25 ms World tick / 40 子步，以及实际双指接触触发的 `contact_weld_v1` 辅助抓持。资格绑定几何和目标区身份，不扩大为随机参数域、其他时序或纯摩擦抓持证明。
 

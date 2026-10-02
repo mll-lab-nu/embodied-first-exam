@@ -242,6 +242,24 @@ def generate_assets(output, *, template=None, scale=3.0):
     return assembly, report
 
 
+def plate_assembly_transforms(record):
+    """Plate-local to authored assembly transforms, shared by assets and grasps."""
+    rx = Rotation.from_euler("x", 90, degrees=True).as_matrix()
+    rz = Rotation.from_euler("z", 90, degrees=True).as_matrix()
+    result = {name: np.eye(4) for name in ("gold", "silver")}
+    result["gold"][:3, :3] = rz @ rx
+    result["gold"][2, 3] = record.get("gold_offset_z_mm", load_template()["gold_offset_z"])*(record["scale"]/1000.)
+    result["silver"][:3, :3] = rx
+    if "silver_pose" in record:
+        pose = record["silver_pose"]
+        angles, position = np.asarray(pose["rotation_xyz_deg"]), np.asarray(pose["position_mm"])
+        if angles.shape != (3,) or position.shape != (3,) or not np.isfinite(np.r_[angles, position]).all():
+            raise ValueError("Invalid silver plate assembly pose")
+        result["silver"][:3, :3] = Rotation.from_euler("xyz", angles, degrees=True).as_matrix()
+        result["silver"][:3, 3] = position*record["scale"]/1000.
+    return result
+
+
 def generate_variant_assets(output, geometry_resource):
     """Rebuild frozen F1/F2/F3 slabs; old motion certificates are not transferred.
 
@@ -255,9 +273,15 @@ def generate_variant_assets(output, geometry_resource):
     assembly.template = deepcopy(assembly.template)
     assembly.template.update(template_id=record["id"],
                              geometry_status="frozen_inverse_geometry_simulator_rebuild")
+    if "gold_offset_z_mm" in record:
+        offset = float(record["gold_offset_z_mm"])
+        if not np.isfinite(offset):
+            raise ValueError("Invalid gold_offset_z_mm")
+        assembly.template["gold_offset_z"] = offset
+    if "geometry_status" in record:
+        assembly.template["geometry_status"] = record["geometry_status"]
     assembly.bodies = []
-    rx = Rotation.from_euler("x", 90, degrees=True).as_matrix()
-    rz = Rotation.from_euler("z", 90, degrees=True).as_matrix()
+    transforms = plate_assembly_transforms(record)
     for name in ("gold", "silver"):
         layers = record.get("layers", {}).get(name, [dict(
             z_min_mm=-record["thickness_mm"]/2, z_max_mm=record["thickness_mm"]/2,
@@ -274,10 +298,7 @@ def generate_variant_assets(output, geometry_resource):
             cells.extend(parts)
         mesh = (layer_meshes[0] if len(layer_meshes) == 1 else
                 trimesh.boolean.union(layer_meshes, engine="manifold"))
-        transform = np.eye(4)
-        transform[:3, :3] = rz @ rx if name == "gold" else rx
-        if name == "gold":
-            transform[2, 3] = assembly.template["gold_offset_z"] * assembly.unit
+        transform = transforms[name]
         for part in [mesh, *cells]:
             part.apply_transform(transform)
         material = record.get("visual_material", {})

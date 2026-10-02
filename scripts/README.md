@@ -34,6 +34,7 @@
 - `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
 - `check_builder_feedback.py`：Builder 反馈的持续回归入口，记录 seed 冷启动、夹爪保持／回放、IK 端点和 Lock 支架取件诊断；输出报告、逐 tick 记录与共享录制 MP4，不授予完整任务成功资格。见[修补计划](../docs/rcb/builder_feedback_repair_plan_zh.md)。
 - `check_run_trials_repairs.py`：run-trials 修复的持续 GPU 回归入口，核对拒绝动作、实际 tick、终态后调用、可信轨迹回放和共享录制；须显式提供工具路径、任务和新的输出目录。短 hold 前缀不作为完整求解证据，见[实施报告](../docs/debug_logs/run_trials_post_merge_repair_20261001_zh.md)。
+- `check_cast_keyhole_simplifications.py`：Cast Keyhole 五档的静置诊断，默认 3 个控制步，可用 `--steps 100` 检查 2.5 s；新两档支持 `--check-grasp` 进行只读 IK／完整网格接近检查。冻结源码并保存 Nyx 初始帧、共享录像和漂移报告，实际抓持与完整求解另行验证；CPU 只监控，系统内存达到 90% 停止本次子进程。见[修订文档](../docs/tasks_simplifications/cast_keyhole_very_easy_easier_revision_plan_zh.md)。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
 - `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。
 - `account_failure_check.py`、`log_mirror.py`、`mem_guard.py`、`scan_secrets.py`：账号异常检测、日志镜像、资源监控与产物密钥检查。

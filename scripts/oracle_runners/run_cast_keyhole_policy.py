@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT))
 
 
 def worker(args, output):
+    if args.variation in {"very_easy", "easier"}:
+        return simplified_worker(args, output)
     import numpy as np
     import torch
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
@@ -222,10 +224,69 @@ def worker(args, output):
         write_json_atomic(output/"run_report.json", report)
 
 
+def simplified_worker(args, output):
+    """New reference candidate through the same Env and SegmentRunner contract."""
+    import numpy as np
+    import torch
+    from topogym.config.registry import task_definition
+    from topogym.assets.variation_resources import read_json
+    from topogym.tasks.cast_keyhole.common import recommended_grasp_assist
+    from topogym.planning.cast_keyhole.simplified_policy import SimplifiedKeyholePolicy
+    from topogym.planning.cast_keyhole.policy import PARTS
+    from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
+    from scipy.spatial.transform import Rotation
+    from topogym.simulator import Env, SimulatorConfig, SegmentRunner
+    from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+    from topogym.utils.io import to_jsonable, write_json_atomic
+    torch.set_num_threads(1)
+    task = task_definition("cast_keyhole", args.variation)(seed=args.seed)
+    record = read_json(task.geometry_resource)
+    assembly, geometry = task.build_assets(output/"planning_assets")
+    origins = {b["name"]: np.asarray(b["origin_m"]) for b in geometry["bodies"]}
+    transforms = plate_assembly_transforms(record)
+    vertices = {s: Rotation.from_matrix(transforms[metal][:3, :3]).inv().apply(
+        next(b for b in assembly.bodies if b.name == PARTS[s]).visual.vertices-transforms[metal][:3, 3])
+        for s, metal in (("left", "gold"), ("right", "silver"))}
+    config = SimulatorConfig(task_id="cast_keyhole", variation_id=task.variation_id,
+        robot_id="aloha", control_mode="EE_ABS", enable_privileged=True, enable_rgb=args.rgb,
+        compute_backend=args.backend, physics_dt_s=args.tick, solver_substeps=round(args.tick/.000625),
+        control_decimation=round(.025/args.tick), max_physics_steps=round(args.horizon/args.tick),
+        work_dir=output/"scene", grasp_assist=recommended_grasp_assist(args.variation, args.seed))
+    report = dict(status="running", config=to_jsonable(config), reference_status="candidate",
+                  variation=task.variation_id, part=args.part, started=time.time())
+    write_json_atomic(output/"run_report.json", report)
+    try:
+        with Env(config) as env:
+            env.reset(seed=args.seed)
+            report.update(instance_id=env._task.instance_id, asset_sha256=env._asset_build.sha256,
+                          terminal=env._task.terminal_metadata())
+            policy = SimplifiedKeyholePolicy(geometry=record, variation=task.variation_id,
+                body_origins=origins, goal_region=report["terminal"]["goal_region"],
+                mount_position=[0., 0., 0.], canonical_vertices=vertices,
+                part=args.part, speed=args.speed)
+            with SegmentRunner(env, output, prepared_output=True) as runner:
+                result = runner.run_policy(request_id="keyhole-"+args.variation,
+                    policy=policy, mode="unlimited", state_fields=("world",),
+                    submission_hash=fingerprint(dict(geometry=record, config=to_jsonable(config))))
+            success = bool(env.is_solved())
+            pickup = args.part == "pickup" and result["reason"] == "policy_done"
+            report.update(status="passed" if success else "pickup_passed" if pickup else "failed",
+                          task_success=success, segment=to_jsonable(result), last_phase=policy.phase,
+                          task_result=to_jsonable(env._task.result))
+            if not (success or pickup):
+                raise RuntimeError("Reference candidate did not complete the requested task")
+    except BaseException:
+        report.update(status="failed", error=traceback.format_exc())
+        raise
+    finally:
+        report["wall_time_s"] = time.time()-report["started"]
+        write_json_atomic(output/"run_report.json", report)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--variation", choices=["easy", "medium", "hard"], required=True)
+    parser.add_argument("--variation", choices=["very_easy", "easier", "easy", "medium", "hard"], required=True)
     parser.add_argument("--part", choices=["pickup", "all"], default="all")
     parser.add_argument("--backend", choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--rgb", action="store_true", help="Optional Nyx video; disabled by default")
