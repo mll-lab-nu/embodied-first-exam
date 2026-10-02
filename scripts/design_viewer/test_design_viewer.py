@@ -11,6 +11,7 @@ import mujoco
 from mujoco.experimental.studio import messages
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
 import trimesh
 
 from scripts.design_viewer import exit_check, mjcf, scenes, status, view
@@ -291,7 +292,7 @@ def test_grasp_closes_the_fingers_on_the_ball_from_the_given_side():
     assert "pin_ball" in mjcf.holds(model, data)
     assert data.xpos[ball, 2] == pytest.approx(scene.body("ball").pos[2]+.02, abs=1e-3)
     approach = data.xmat[wrist].reshape(3, 3)[:, 2]
-    assert approach == pytest.approx([0, 1, 0], abs=.1)  # from -y, fingers pointing +y
+    assert approach == pytest.approx([0, 1, 0], abs=.03)  # from -y, fingers pointing +y
     assert data.qpos[model.joint("g_right_driver_joint").qposadr[0]] > .1  # closed from 0
 
 
@@ -300,9 +301,26 @@ def test_roll_turns_the_finger_axis_about_the_approach(roll, fingers):
     scene = scenes.build("hedgehog_in_cage_medium")
     model, data = exit_check.grasp(scene, azimuth_deg=-90, lift=.02, roll_deg=roll)
     axes = exit_check.gripper_geometry(model, data)[1]
-    # The held hand yields a few degrees while the fingers settle on the spikes.
-    assert np.abs(axes["fingers"]) == pytest.approx(fingers, abs=.1)  # 0: fingers open up/down
-    assert np.abs(axes["approach"]) == pytest.approx([0, 1, 0], abs=.1)
+    assert np.abs(axes["fingers"]) == pytest.approx(fingers, abs=.03)  # 0: fingers open up/down
+    assert np.abs(axes["approach"]) == pytest.approx([0, 1, 0], abs=.03)
+
+
+def test_spike_grasp_pinches_the_spike_8_mm_from_its_tip():
+    scene = scenes.build("hedgehog_in_cage_medium")
+    spikes = exit_check.spikes(scene)
+    assert len(spikes) == 10
+    model, data = exit_check.grasp(scene, spike=3)
+    pos, quat = exit_check.ball_pose(model, data)
+    rot = Rotation.from_quat(quat[[1, 2, 3, 0]])
+    d = rot.apply(spikes[3]["direction"])
+    assert data.site("g_pinch").xpos == pytest.approx(pos+d*(spikes[3]["tip_m"]-.008), abs=3e-3)
+    approach = data.xmat[model.body("wrist").id].reshape(3, 3)[:, 2]
+    assert approach@-d > np.cos(np.radians(2))  # from outside, along the spike toward the core
+
+
+def test_turns_can_be_limited_to_named_axes():
+    result = exit_check.check(_slit_box_with_rod(), axes=["x"])
+    assert set(result["turns_deg"]) == {"x+", "x-"}
 
 
 def test_attached_gripper_removes_exit_directions():

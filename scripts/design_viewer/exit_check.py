@@ -8,6 +8,7 @@ A gripper, when given, moves rigidly with the ball and must not touch the cage e
 
 python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_easy --set window_widths=24
 python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_very_easy --grasp 180 --roll 90 --lift-mm 5
+python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_easier --spike 4 --lift-mm 15 --axes approach
 python -m scripts.design_viewer.exit_check --pose runs/design_viewer/poses/<scene>/<name>.json
 """
 from __future__ import annotations
@@ -29,6 +30,7 @@ from scripts.design_viewer import mjcf, scenes
 STEP = .0015  # m, below the thinnest feature (spike 10.8 mm, wall 8-9 mm); continuousCollide misses BVH hits
 LIFT = .003  # m; a ball resting in the viewer sinks up to ~3 mm into soft contact
 ANGLE_STEP = 5  # deg between candidate turns; the turn itself is checked every degree
+SPIKE_PINCH = .008  # m from the spike tip to the pinch point in a spike grasp
 
 
 def directions(n=160):
@@ -113,9 +115,10 @@ def _central(dirs):
     return dirs[np.argmax(dirs@mean)].round(3).tolist()
 
 
-def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0.):
+def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0., axes=None):
     """gripper: (mesh in the ball frame, {axis name: world unit vector}) from gripper_geometry().
-    lift: raise the start pose first (m), e.g. the small pick-up before a pull."""
+    lift: raise the start pose first (m), e.g. the small pick-up before a pull.
+    axes: turn only about these axis names (approach / fingers / palm, or x / y / z without a gripper)."""
     start = time.perf_counter()
     if pos is None:
         pos, quat = ball_pose_from_scene(scene)
@@ -134,7 +137,8 @@ def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0.):
         if free:
             result["label"] = "very_easy"
         elif rotate:
-            axes = gripper[1] if gripper else dict(zip("xyz", np.eye(3)))
+            axes = {k: v for k, v in (gripper[1] if gripper else dict(zip("xyz", np.eye(3)))).items()
+                    if axes is None or k in axes}
             turns = sweep.turns(pos, rot, axes)
             result["turns_deg"] = turns
             if turns:
@@ -167,21 +171,60 @@ def ball_pose_from_scene(scene):
     return np.asarray(ball.pos, float), np.asarray(ball.quat, float)
 
 
-def grasp(scene, azimuth_deg, lift=0., roll_deg=0.):
-    """2F-85 approaching horizontally from `azimuth_deg` (roll as in mjcf.place_gripper), pinch point
-    on the ball centre (lifted by `lift`), fingers closed for 0.5 s on the pinned ball. Returns (model, data)."""
+def spikes(scene):
+    """Off-centre ball collision pieces: spike direction and tip distance, in the ball frame."""
+    found = []
+    for piece in scene.body("ball").collision:
+        centre = piece.centroid
+        if np.linalg.norm(centre) > .005:  # the core sits on the origin
+            d = centre/np.linalg.norm(centre)
+            found.append(dict(direction=d, tip_m=float((piece.vertices@d).max())))
+    return found
+
+
+def spike_table(scene):
+    """One line per spike at the scene's start pose: world azimuth / elevation and tip beyond the cage."""
+    pos, quat = ball_pose_from_scene(scene)
+    rot, cage = Rotation.from_quat(quat[[1, 2, 3, 0]]), scene.body("cage")
+    outer = max(np.linalg.norm(p.vertices[:, :2]+cage.pos[:2]-cage.pos[:2], axis=1).max() for p in cage.collision)
+    lines = []
+    for i, s in enumerate(spikes(scene)):
+        d = rot.apply(s["direction"])
+        tip = pos+d*s["tip_m"]
+        lines.append(f"spike {i}: azimuth {np.degrees(np.arctan2(d[1], d[0])):6.1f} deg, elevation "
+                     f"{np.degrees(np.arcsin(d[2])):5.1f} deg, tip {(np.linalg.norm(tip[:2]-cage.pos[:2])-outer)*1e3:+5.1f} mm "
+                     "beyond the cage's outer radius")
+    return "\n".join(lines)
+
+
+def grasp(scene, azimuth_deg=0., lift=0., roll_deg=0., spike=None):
+    """2F-85 pinch on the ball (lifted by `lift`), fingers closed for 0.5 s on the pinned ball.
+    Without `spike`: level approach from `azimuth_deg`, pinch on the ball centre. With `spike` (index
+    into spikes()): approach along that spike from outside, pinch SPIKE_PINCH from its tip.
+    roll as in mjcf.aim_gripper. Returns (model, data)."""
     model = mjcf.build(scene, gripper=True)
     data = mujoco.MjData(model)
     data.qpos[model.joint("ball_free").qposadr[0]+2] += lift
     mujoco.mj_forward(model, data)
-    mjcf.place_gripper(model, data, data.xpos[model.body("ball").id], azimuth_deg, standoff=0, roll_deg=roll_deg)
-    # Ball and wrist both held: the fingers close until they touch the ball, and neither the ball
-    # nor the cage can shove the gripper; check() judges any gripper-cage overlap afterwards.
+    ball = model.body("ball").id
+    if spike is None:
+        mjcf.place_gripper(model, data, data.xpos[ball], azimuth_deg, standoff=0, roll_deg=roll_deg)
+    else:
+        s = spikes(scene)[spike]
+        d = data.xmat[ball].reshape(3, 3)@s["direction"]
+        mjcf.aim_gripper(model, data, data.xpos[ball]+d*(s["tip_m"]-SPIKE_PINCH), -d, roll_deg)
+    # Ball and wrist held, cage contacts off: the fingers close until they touch the ball and nothing
+    # shoves the gripper; check() judges any gripper-cage overlap afterwards.
     mjcf.hold(model, data, "ball", "pin")
     mjcf.hold(model, data, "wrist", "pin")
+    static, hand = model.geom_contype == mjcf.STATIC, model.geom_contype == mjcf.GRIPPER
+    model.geom_conaffinity[static] &= ~mjcf.GRIPPER  # a pair collides if either side accepts the other
+    model.geom_conaffinity[hand] &= ~mjcf.STATIC
     data.ctrl[model.actuator("g_fingers_actuator").id] = 255
     for _ in range(int(.5/model.opt.timestep)):
         mujoco.mj_step(model, data)
+    model.geom_conaffinity[static] |= mjcf.GRIPPER
+    model.geom_conaffinity[hand] |= mjcf.STATIC
     return model, data
 
 
@@ -224,7 +267,10 @@ def main():
     parser.add_argument("--pose", type=Path, help="pose file saved by the viewer (ball and gripper as saved)")
     parser.add_argument("--grasp", type=float, metavar="AZIMUTH_DEG",
                         help="hold the ball with the 2F-85 from this azimuth (fingers closed on the ball centre)")
-    parser.add_argument("--roll", type=float, default=0., help="with --grasp: 0 fingers open up/down, 90 sideways")
+    parser.add_argument("--spike", type=int, help=f"grasp this spike {SPIKE_PINCH*1e3:.0f} mm from its tip, "
+                        "approaching along it (prints the spike table)")
+    parser.add_argument("--roll", type=float, default=0., help="with --grasp/--spike: 0 fingers open in the vertical plane")
+    parser.add_argument("--axes", nargs="*", help="turn only about these axes, e.g. approach")
     parser.add_argument("--lift-mm", type=float, default=0., help="raise the ball this much before the checks")
     parser.add_argument("--no-rotate", action="store_true")
     args = parser.parse_args()
@@ -233,13 +279,17 @@ def main():
         scene, model, data = mjcf.load_pose(args.pose)
         gripper = gripper_geometry(model, data) if mjcf.has_gripper(model) else None
         result = check(scene, *ball_pose(model, data), gripper=gripper, rotate=not args.no_rotate, lift=lift)
-    elif args.grasp is not None:
+    elif args.grasp is not None or args.spike is not None:
         scene = scenes.build(args.scene, scenes.parse_sets(args.set))
-        model, data = grasp(scene, args.grasp, lift, args.roll)
-        result = check(scene, *ball_pose(model, data), gripper=gripper_geometry(model, data), rotate=not args.no_rotate)
-        result.update(grasp_azimuth_deg=args.grasp, grasp_roll_deg=args.roll, start_lift_m=lift)
+        if args.spike is not None:
+            print(spike_table(scene))
+        model, data = grasp(scene, args.grasp or 0., lift, args.roll, args.spike)
+        result = check(scene, *ball_pose(model, data), gripper=gripper_geometry(model, data),
+                       rotate=not args.no_rotate, axes=args.axes)
+        result.update(grasp_azimuth_deg=args.grasp, grasp_spike=args.spike, grasp_roll_deg=args.roll, start_lift_m=lift)
     else:
-        result = check(scenes.build(args.scene, scenes.parse_sets(args.set)), rotate=not args.no_rotate, lift=lift)
+        result = check(scenes.build(args.scene, scenes.parse_sets(args.set)), rotate=not args.no_rotate, lift=lift,
+                       axes=args.axes)
     print(summary(result))
     print(f"report: {save(result)}")
 

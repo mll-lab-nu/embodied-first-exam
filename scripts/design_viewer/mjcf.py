@@ -160,16 +160,25 @@ def grip_target(scene):
 
 
 def place_gripper(model, data, target, azimuth_deg=0., standoff=STANDOFF, roll_deg=0.):
-    """Horizontal approach: fingers point at `target`, pinch point `standoff` away along the azimuth.
-    roll_deg turns the gripper about its approach axis: 0 opens the fingers up/down, 90 sideways."""
+    """Horizontal approach: fingers point at `target`, pinch point `standoff` away along the azimuth."""
     a = np.radians(azimuth_deg)
-    rotation = (Rotation.from_euler("z", azimuth_deg, degrees=True)*Rotation.from_euler("y", -90, degrees=True)
-                * Rotation.from_euler("z", roll_deg, degrees=True))
+    radial = np.array([np.cos(a), np.sin(a), 0.])
+    aim_gripper(model, data, np.asarray(target)+standoff*radial, -radial, roll_deg)
+
+
+def aim_gripper(model, data, pinch, approach, roll_deg=0.):
+    """Pinch point at `pinch`, fingers pointing along `approach`. roll_deg turns the gripper about
+    that axis: 0 opens the fingers in the plane containing the vertical (up/down for a level approach)."""
+    z = np.asarray(approach, float)/np.linalg.norm(approach)
+    up = np.array([0., 0, 1]) if abs(z[2]) < .99 else np.array([1., 0, 0])
+    x = up-(up@z)*z
+    x /= np.linalg.norm(x)
+    # The 2F-85 base is turned 90 deg about z in its MJCF: its fingers open along this x.
+    rotation = Rotation.from_matrix(np.c_[x, np.cross(z, x), z])*Rotation.from_euler("z", roll_deg, degrees=True)
     q, v = model.joint("wrist_free").qposadr[0], model.joint("wrist_free").dofadr[0]
     data.qpos[q:q+3], data.qpos[q+3:q+7] = 0, rotation.as_quat()[[3, 0, 1, 2]]
     mujoco.mj_kinematics(model, data)
-    pinch = data.site("g_pinch").xpos-data.xpos[model.body("wrist").id]
-    data.qpos[q:q+3] = np.asarray(target)+standoff*np.array([np.cos(a), np.sin(a), 0])-pinch
+    data.qpos[q:q+3] = np.asarray(pinch)-(data.site("g_pinch").xpos-data.xpos[model.body("wrist").id])
     data.qvel[v:v+6] = 0
     mujoco.mj_forward(model, data)
 
