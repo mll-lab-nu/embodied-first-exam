@@ -34,12 +34,14 @@ for trial in sorted((jobs / job).glob("*__*")):
     out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
-    ok = rw.get("success") == 1
+    gw = json.load(open(trial / "gateway/totals.json")) if (trial / "gateway/totals.json").exists() else {}
+    over = bool(gw.get("over_token_budget"))               # PROTOCOL §5: over the token budget = failed
+    ok = rw.get("success") == 1 and not over
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
              f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{'standard (robot as a service)' if limited else 'privileged'}**.\n",
              "| | |", "|---|---|",
-             f"| result | {'**1 (success)**' if ok else '**0**' + (' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
+             f"| result | {'**1 (success)**' if ok else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",
              f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",
              f"| tokens in / out | {ar.get('n_input_tokens')} / {ar.get('n_output_tokens')} |",

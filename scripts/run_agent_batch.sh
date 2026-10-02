@@ -41,6 +41,8 @@
 #   GATEWAY_RAW  0 (default); 1 = the gateway also keeps every request and response body (<trial>/gateway/raw/;
 #                private: it holds the whole conversation)
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
+#   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
+#                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
@@ -57,6 +59,7 @@ MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
 GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-0}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
+TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
 # (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
@@ -109,7 +112,7 @@ fi
 # transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
 if [ "$GATEWAY" = 1 ]; then
   mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
-  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready"); [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
   for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
@@ -142,7 +145,7 @@ if [ "$GATEWAY" = 1 ]; then
   fi
   # an egress allowlist must let the agent reach the gateway (ignored where egress is public)
   AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
-  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW); per-trial records in <trial>/gateway/"
+  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out); per-trial records in <trial>/gateway/"
 fi
 
 wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
@@ -177,7 +180,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     ar = r.get("agent_result") or {}; ex = (r.get("exception_info") or {}).get("exception_type") or ""
     ae = r.get("agent_execution") or {}
     gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
-    gw_cell = f"{gw['input']} / {gw['output']}" if gw else "-"
+    gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
     try:
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
     except Exception:
