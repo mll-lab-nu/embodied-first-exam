@@ -1,0 +1,40 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robocasa365-assemble-cooking-array-i00-privileged"
+description = "RoboCasa365 (AssembleCookingArray, a Franka Panda arm on an Omron mobile base (with a torso lift)): Move the shrimp onto the pan on the stove. Then move the syrup bottle and broccoli from the cabinet to the counter where the plate is. Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
+authors = [{ name = "Changhe Chen" }]
+keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
+
+[metadata]
+author_name = "Changhe Chen"
+author_org = "MLL Lab"
+task_type = "trajectory"
+simulator = "robosuite"
+robot = "franka-panda-omron"
+family = "robocasa365/AssembleCookingArray"
+mode = "privileged"
+oracle = "full"
+expert_time_estimate_hours = 2.0
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[agent]
+timeout_sec = 3600.0
+# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to the model APIs.
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §2.7
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 16384
