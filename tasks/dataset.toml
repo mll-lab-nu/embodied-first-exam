@@ -2157,3 +2157,403 @@ digest = "sha256:d32d50c30108ec23fee7840b5671feb34d94082e0784ce77706ce58cfc118d6
 name = "robot-coding-bench/robowits-stand-pages-i00-standard"
 digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd624521446764"
 
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-i00-standard"
+digest = "sha256:423bf937c7c4974ed263b0e1b966ada6808f2bf60f7da75644ff4aa03d48a1e9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-i00-standard"
+digest = "sha256:ed1a6b7afa2208eb2df95dc5e85e082e250f057fb04f4819f1e800aa5d979490"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-i00-standard"
+digest = "sha256:f702dc58da8b6c55c94dd7cfc619af5c5498dadddbd80a542e0220d34444b55a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-i00-standard"
+digest = "sha256:d601913fadff695eced70dec5f4cf2d59637ba71857ca4ffc8627c801ee3c993"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-i00-standard"
+digest = "sha256:2d7713449ae74bd5402a6ee777bb0d76a04d718e600e31fa2f1e60389c6b98d7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-i00-standard"
+digest = "sha256:e32df2dc289f1233c224cf06580e57b23243f4b7da8bbe83446ba64f854011bc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-i00-standard"
+digest = "sha256:6df582ec7515ee490c23c7836e75e89e311af6e655e2ef9686f131adef6cb2af"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-i00-standard"
+digest = "sha256:e3b720e7c474ba3262c6cff4cef33b23dfd30cab70b11afef81e6f68ee7f9dd2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-i00-standard"
+digest = "sha256:23eafc10874767ffaa1c00b181bb37ab40d6f1a36bc52a0dd7acd49e1a56fe11"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-i00-standard"
+digest = "sha256:f57939da7f23d9b5a69a0000a2484c1e070effc20fdf482d99f8cfc7aad7247e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-i00-standard"
+digest = "sha256:b9cde0bc36b2271e511e05c19194e2179a3faa48b5ad9ca62a7f4952bd3bdb33"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-i00-standard"
+digest = "sha256:b9957c4ab902c1c36bc5b431202a7736a0d56e20a6e60c09b085802f11f740e0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-i00-standard"
+digest = "sha256:c0486656bc4b4c61fb13aaf0fdd10b27dd70d08616ab0a3f7e22b04e62ac71be"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-i00-standard"
+digest = "sha256:833bcf9fa6505a0a09f682e9dcf058c32f922ff260b4e27785f55bfec55e096d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-i00-standard"
+digest = "sha256:2a8202d6f7644fcaff0edbb6a7be42766a1612cd9e56f278a58dcef5676216a2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-i00-standard"
+digest = "sha256:8b55ac1217e0f29dffd08be62c8d2faf4e0f991bb596f2435aba93169b3b8864"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-i00-standard"
+digest = "sha256:dd5885dc75a8b1f9c336fb0d29e09ba2bbe044df6c22288b9aadcbe9bdce1f4d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-i00-standard"
+digest = "sha256:66adea2ae90ae9e7fc2e3a3726f291e2f93ed4c96ab09bb398957758fa1fdeed"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-i00-standard"
+digest = "sha256:3b10fb5cc73327e8168f51dce74d5fc45f76a4f51e6e59777cabd38b47f9b823"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-i00-standard"
+digest = "sha256:8d0379e657ed29130bd38c3f0ac9818dc1107499d6fd9e0df994ff9d6cc57fc6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-i00-standard"
+digest = "sha256:edad1e235545f6766d9a3112f7f27792badcbdaf390fc2845c8afbfb8d70a1fd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-i00-standard"
+digest = "sha256:3dd58a07ae80bf0f2aa1b88e212b09c591eaf9e0d72b4f78f2d2eab12263c8b3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-i00-standard"
+digest = "sha256:fc77e289c4a4b0717be7b7902257f1bc34bb9e2755ec9931c5ff9657d8f27514"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-i00-standard"
+digest = "sha256:485722e1bdbe50bcfa18d8ab8b5c97af7f93362648ebbe8d18340c4bc7d72f6f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-i00-standard"
+digest = "sha256:0e43686b0ef462d49f70110594de5c11697c1c5619fe21044d21f215c89e8746"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-i00-standard"
+digest = "sha256:f2110338d63d3c8fbd429e7a8e4288f74e7f85f23fcfe0ef33df076acd6d3dee"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-i00-standard"
+digest = "sha256:8f5ce1ff097fd457e5da019bd2bc9229138a080ff35d8618ce946b3b48992a9d"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-i00-standard"
+digest = "sha256:1354c3b5d137779d5f02e582651297e7fc6653663e191d1e1bc5e5670ad9268e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-i00-standard"
+digest = "sha256:fe6832910ee8dcf6ffca07dd6f44a0c1ede6165207c751dff1ec09aa8ebf43cd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-i00-standard"
+digest = "sha256:dd6133ab327165ed32869c3acfa2675c5e37ed84149bac73b5fd88254cd97d91"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-i00-standard"
+digest = "sha256:aa7b88c003376cafcba9f46406ba34fb75d719608c60dc3aaab1363260e9cae6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-i00-standard"
+digest = "sha256:134fc13f2cd11f9525e39cc8d0ecfca2092a15a14584df3aaacf96b0223ba7b1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-i00-standard"
+digest = "sha256:62aca6d8d0c711a6e30f20f22797ad2bb2af59c2cb48cc7c309a0599443f1969"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-i00-standard"
+digest = "sha256:2f02655df5bf7df00558deb3693819c97b77efdd5fd45cd3278755e76082c120"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-i00-standard"
+digest = "sha256:2bf0644755d002afabaa46ffae3845aa2d1fc2eaa581cb1139f67e8787a61ca1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-i00-standard"
+digest = "sha256:bd70abaea4a9cd96529579a3d5c8969c372bbfc161dd9bf70fecdefcea5d1bfc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-i00-standard"
+digest = "sha256:6d27669ca870e84e71a43975be9391d43ebb90316289f5a6a039df56b23c747e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-i00-standard"
+digest = "sha256:21696a39b85e2d1a6452088ddf4b381f09c258545a23d6e2a37e160a6b21b7b7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-i00-standard"
+digest = "sha256:84299334fdd2e9c39c5b72b78b02515354a7e120d1530d4306eff90b80cfd93c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-i00-standard"
+digest = "sha256:d53fbde9d82f1cbe85b8c0709075770a56542eb6e305ada4631e5a5cbae32821"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-i00-standard"
+digest = "sha256:15c03461414dda0bd1fddeae178361aee3fcc0cb57f5695b6f79b5d73fe1eeac"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-i00-standard"
+digest = "sha256:c117b1d9c0404a370bef7e2c1a87d5565e65a3e94947a8b4e39a2d0b50ae9855"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-i00-standard"
+digest = "sha256:fa159a76716a2a43ac552dd208ed86f0f2df55847f3f1115412a0b5f2d0a10c0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-i00-standard"
+digest = "sha256:8ab3419056fd2ebb483b095643f43986312ef33747a091fd9d96fa85ca4059d1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-i00-standard"
+digest = "sha256:6584d1f670bb265daf935d19845491f58fc80c25e5599233f91cb500cc892906"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-i00-standard"
+digest = "sha256:1d18ddc00ee1cb78e72fc4691631bfd0a719d6a95b70ee23e13c96baa8fa01e6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-i00-standard"
+digest = "sha256:fbac2a23c47ceb2be587f5c32f270b7544205a80bcdc93a303abd84863ba9667"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-i00-standard"
+digest = "sha256:791391fbe90710dfa799bfa9573d8e87c068785a1ecd6b20dec99a29008037cd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-i00-standard"
+digest = "sha256:2c67790eaf7ec7c8a5f0421739ff2e1969fc4e016eb521a83768e3d40064f4f7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-i00-standard"
+digest = "sha256:04091bcf027cdaf195a216df7c087560d6892d297bbdc112d06839399594c490"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-assembly-i00-privileged"
+digest = "sha256:0beffd02b0b1a28fb32c1cff3b8020bce92a3beb17541b8d4269a54da8f3f0f2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-basketball-i00-privileged"
+digest = "sha256:70937da0a51e36bf3ddee66d1e676c30b4cb04782215ed7cdf1730a835d02114"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-bin-picking-i00-privileged"
+digest = "sha256:16d1a6f368bc203953f975de6361f126dfc9bce734d499e3325326e70ef9abe7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-box-close-i00-privileged"
+digest = "sha256:300f15f352eb3f1d55696840377c8230706c71c8c0ff5e6b5942499269c695f0"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-i00-privileged"
+digest = "sha256:e2f7e533baaf101ee3a9153befaf31d3f8ba219437552f51a8ec0213c25eed83"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-i00-privileged"
+digest = "sha256:f94c65b568862defdd00516c4607aa2daeb00adbfb1d652ba0f4195bc3845285"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-topdown-wall-i00-privileged"
+digest = "sha256:3df7f418094e95079b5226d8b967e37de1969b602646933fada157258487eeb1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-button-press-wall-i00-privileged"
+digest = "sha256:f54595ac92e2648880d950ea792cc0530c03df548bc4738ab9cdb0a37724dd7b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-button-i00-privileged"
+digest = "sha256:6d9fa5306a1c817987e55e41420229d7718ca46c9f17ed5311581efef07851eb"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-pull-i00-privileged"
+digest = "sha256:061d2733e93336eeaf47bf86e398e4f4ad482359ecac1c5d33ab318018aff856"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-coffee-push-i00-privileged"
+digest = "sha256:294847c80f7a5c5e93644b9089d5fc14fca2a1ca0da5d239c23a8c0007886754"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-dial-turn-i00-privileged"
+digest = "sha256:f7d1641330b3b0cf4cf72465e52b8c6e906e1fd72fd0f395c3eee0a743da1216"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-disassemble-i00-privileged"
+digest = "sha256:308330d363311a1132b9e6c40f7de5297980c43b415fe53280340a253f4d3a6f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-close-i00-privileged"
+digest = "sha256:d4e4da34baec12f31c093ded95b9c48ccf837e50ff4f181b9f63c8f562a81db6"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-lock-i00-privileged"
+digest = "sha256:18b8cd26f62657694cdede8526d91a34ff3bdad5da2413c5520362eb58495d65"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-open-i00-privileged"
+digest = "sha256:949f60af1fd04b2b5704aae8b274eaaafb6f0e62966af73420116d669733449c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-door-unlock-i00-privileged"
+digest = "sha256:14f174f31e7c0ae65ae7fdcb4dcd7f755db9c422f33f2373fe2c48851df0f9b9"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-close-i00-privileged"
+digest = "sha256:f8991c9be222cd091ea9e4e375a652e88326a30bad4063239975eadd837b0a77"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-drawer-open-i00-privileged"
+digest = "sha256:8aa3dc993168d651681194c49e1aee2180f046e19d6b6356c983b61d78eb7c58"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-close-i00-privileged"
+digest = "sha256:f56687d4b7f25106623a398c5b6964b6ceda2d918f43877ab4ea9e505c06ab77"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-faucet-open-i00-privileged"
+digest = "sha256:216303b56810001e9490be395a6cf2ae6dbc87bf306be268c1d0694e90ad224b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hammer-i00-privileged"
+digest = "sha256:d6611b5e5a9dc520a296ff4b4e9b54b06747cbd7ca26b5207c304060543fcfec"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-hand-insert-i00-privileged"
+digest = "sha256:438202e5a72a03d8cedf2d21d9f3eb2625719021cb63620d78d0816fe3c3f799"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-i00-privileged"
+digest = "sha256:408359b0987990675fec525abefdf1a668ad1d97f90279825b124532301401bc"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-press-side-i00-privileged"
+digest = "sha256:8aa878964ed2295fdeee3ba7df39da16a62b9dedaecbe92bd51851a7df6f03fd"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-i00-privileged"
+digest = "sha256:132ccb1a086270ecbf728a639159e1b05f699e77cb3fcb9b228037d8c68419e2"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-handle-pull-side-i00-privileged"
+digest = "sha256:d4b102ab7d854e6b096f6f3d0473020862344974fe413d1a9374f8bc7c502a92"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-lever-pull-i00-privileged"
+digest = "sha256:ce7eb9e61055212a2d7e39d82df4e9d7a4eb444ae1445b15459d6b05e601c19e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-insert-side-i00-privileged"
+digest = "sha256:9141884fcec1765699273ae46aab2ecbaffa837292f8484e2368e0cc7df0e5c8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-peg-unplug-side-i00-privileged"
+digest = "sha256:6f46a8f87a5f21acf2b24d54e853df773591947099bad173640d82c8bc2d925a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-out-of-hole-i00-privileged"
+digest = "sha256:f30c5ae3381f892d47ed8a3aa6801dc6577862339ef430a51feaad93b7d69503"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-i00-privileged"
+digest = "sha256:db1a189efd58758ca2d89d88d7584e0bdf98ffd9563a82f2a404398c1369d219"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-pick-place-wall-i00-privileged"
+digest = "sha256:bec79e61c59ea104a945c3f6c5a317a59ee67dab2c2c0e83fbd6fa5f73ae629f"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-i00-privileged"
+digest = "sha256:f2b3c670297515252ea58942249dc8c83b7b2edcc84217f1d435b69a601d19c7"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-back-side-i00-privileged"
+digest = "sha256:c774eb261aec577e77dd63af75d3f3c007fb915493bf4b1906be891c5622d9b8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-i00-privileged"
+digest = "sha256:886630ae0cd895d23e2b829453b3a147001ae3f1e5ff5f5313a5c6c1e340e148"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-plate-slide-side-i00-privileged"
+digest = "sha256:7fb8c2a849a2d2729ef6378fa00296ea5efe3cd64c8902a97a638cfe9f67fd0a"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-back-i00-privileged"
+digest = "sha256:16674ae812fad2f1919b6bd37fa7f6946a1b186097750c9249fc47e9081caf31"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-i00-privileged"
+digest = "sha256:b4f5199ba7e877b56e3f32159dd06820b7cf94e85c20d8404043715977ddb85c"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-push-wall-i00-privileged"
+digest = "sha256:2b745b9373404f062f73c1a9095c5363c324d328dd40d5248af0c6f4e5053c79"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-i00-privileged"
+digest = "sha256:fb50b92309f6672a11518b25ae1f4d73c37eb767b507a7f90c914dfc82cef428"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-reach-wall-i00-privileged"
+digest = "sha256:73ab3995172b6cf72ff5da1d52691d0c7ff25ad6061c45f8ff636293a110eb22"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-shelf-place-i00-privileged"
+digest = "sha256:eb7c62a30e8520c849085075f4c524fec113b7819d7d62a5b5315c5e43cfc8d3"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-soccer-i00-privileged"
+digest = "sha256:8559ff51411bd36b5157c7a75388fa38b89f66b74376dd2fb32b7a58c6ab1d18"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-pull-i00-privileged"
+digest = "sha256:09a67ca0f73fb41ee9c370e7d9b2061a9f37b0c8b69241693a6f4ee92dc92812"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-stick-push-i00-privileged"
+digest = "sha256:006e9f3a4a56de06f81751bbd3ec7b85b2f9f1a7e40281496458a3c4e518b63e"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-i00-privileged"
+digest = "sha256:1b44676039b2a156f375dbf47e18750c8427c67df9082bfdfd4198807c43256b"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-sweep-into-i00-privileged"
+digest = "sha256:7a79c949337679a90ce3f175bb81b47f4f4a94ee4ba2f56eab2a41e6750914f1"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-close-i00-privileged"
+digest = "sha256:942700cee26d1703592fb622527a66db44dc976c982202187b341b40517e5bb8"
+
+[[tasks]]
+name = "robot-coding-bench/metaworldplus-window-open-i00-privileged"
+digest = "sha256:070c8ccf7882fe3a470b4ebbbc02173df45e70626c23277446a8649c24c12ed1"
+
