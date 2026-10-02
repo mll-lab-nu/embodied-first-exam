@@ -276,6 +276,35 @@ def test_one_turn_that_lines_a_rod_up_with_a_slit_is_found():
     assert result["min_rotation"]["straight_exits"] > 0
 
 
+def test_lift_moves_the_start_pose_up_before_the_checks():
+    scene = _slit_box_with_rod()
+    rod = scene.body("ball")
+    rod.pos = rod.pos+[0, 0, -.09]  # half sunk into the box floor: 5 mm deep, beyond the automatic 3 mm
+    assert exit_check.check(scene, rotate=False)["label"] == "start in collision"
+    assert exit_check.check(scene, rotate=False, lift=.01)["label"] != "start in collision"
+
+
+def test_grasp_closes_the_fingers_on_the_ball_from_the_given_side():
+    scene = scenes.build("hedgehog_in_cage_medium")
+    model, data = exit_check.grasp(scene, azimuth_deg=-90, lift=.02)
+    ball, wrist = model.body("ball").id, model.body("wrist").id
+    assert "pin_ball" in mjcf.holds(model, data)
+    assert data.xpos[ball, 2] == pytest.approx(scene.body("ball").pos[2]+.02, abs=1e-3)
+    approach = data.xmat[wrist].reshape(3, 3)[:, 2]
+    assert approach == pytest.approx([0, 1, 0], abs=.1)  # from -y, fingers pointing +y
+    assert data.qpos[model.joint("g_right_driver_joint").qposadr[0]] > .1  # closed from 0
+
+
+@pytest.mark.parametrize("roll, fingers", [(0, [0, 0, 1]), (90, [1, 0, 0])])
+def test_roll_turns_the_finger_axis_about_the_approach(roll, fingers):
+    scene = scenes.build("hedgehog_in_cage_medium")
+    model, data = exit_check.grasp(scene, azimuth_deg=-90, lift=.02, roll_deg=roll)
+    axes = exit_check.gripper_geometry(model, data)[1]
+    # The held hand yields a few degrees while the fingers settle on the spikes.
+    assert np.abs(axes["fingers"]) == pytest.approx(fingers, abs=.1)  # 0: fingers open up/down
+    assert np.abs(axes["approach"]) == pytest.approx([0, 1, 0], abs=.1)
+
+
 def test_attached_gripper_removes_exit_directions():
     scene = scenes.build("hedgehog_in_cage_easy", {"window_widths": 28})
     model = mjcf.build(scene, gripper=True)

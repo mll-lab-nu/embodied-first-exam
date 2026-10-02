@@ -34,12 +34,12 @@ HELP = """commands (the panel buttons send the same text):
   scenes                          list registered scenes
   load <scene> [key=value ...]    switch scene, e.g. load hedgehog_in_cage_easy window_widths=28
   gripper on|off                  rebuild with / without the Robotiq 2F-85 (restarts the scene)
-  place <azimuth_deg>             gripper outside, fingers pointing at the ball / ring
+  place <azimuth_deg> [roll_deg]  gripper outside pointing at the ball / ring; roll 0 = fingers open up/down, 90 = sideways
   fingers <0-255>                 open (0) .. closed (255)
   grip <body>                     weld to the gripper as it is now (finger pads within 20 mm)
   pin <body>                      weld to the world as it is now (a second hand)
   release [body]                  drop welds (all when no body is given)
-  check                           hedgehog: FCL straight / one-turn exit check of the current pose
+  check [lift_mm]                 hedgehog: FCL straight / one-turn exit check of the current pose
   save <name> | open <name>       pose files in runs/design_viewer/poses/<scene>/
   reset | help | quit"""
 
@@ -122,14 +122,15 @@ class Session:
         if not self.gripper:
             raise ValueError("no gripper in this scene (gripper on)")
 
-    def _do_place(self, azimuth="0"):
+    def _do_place(self, azimuth="0", roll="0"):
         self._need_gripper()
         target = next(b.name for b in self.scene.bodies if b.name in ("ball", "target_ring"))
         for name in mjcf.holds(self.model, self.data):
             if name.startswith("grip_"):
                 mjcf.release(self.model, self.data, name[5:])
-        mjcf.place_gripper(self.model, self.data, self.data.xpos[self.model.body(target).id], float(azimuth))
-        return f"gripper placed at azimuth {float(azimuth):.0f} deg, pointing at {target}"
+        mjcf.place_gripper(self.model, self.data, self.data.xpos[self.model.body(target).id], float(azimuth),
+                           roll_deg=float(roll))
+        return f"gripper placed at azimuth {float(azimuth):.0f} deg, roll {float(roll):.0f} deg, pointing at {target}"
 
     def _do_fingers(self, value):
         self._need_gripper()
@@ -159,7 +160,7 @@ class Session:
         self.arrow = None
         return "scene reset"
 
-    def _do_check(self):
+    def _do_check(self, lift_mm="0"):
         if self.scene.task_id != "hedgehog_in_cage":
             raise ValueError("hedgehog scenes only")
         if self.checking and self.checking.is_alive():
@@ -169,7 +170,7 @@ class Session:
         gripper = exit_check.gripper_geometry(self.model, self.data) if held else None
 
         def run():
-            result = exit_check.check(self.scene, *pose, gripper=gripper)
+            result = exit_check.check(self.scene, *pose, gripper=gripper, lift=float(lift_mm)/1e3)
             best = (result.get("min_rotation") or {}).get("best_direction") or result.get("best_direction")
             self.arrow = (pose[0], np.asarray(best)) if best else None
             self.message = f"{exit_check.summary(result)}\nreport: {exit_check.save(result)}"
@@ -201,7 +202,7 @@ class Panel:
 
     def __init__(self, session, commands):
         self.session, self.commands, self.viewer = session, commands, None
-        self.names, self.azimuth, self.pose_name = scenes.list_scenes(), 0., "p1"
+        self.names, self.azimuth, self.roll, self.pose_name = scenes.list_scenes(), 0., 0., "p1"
 
     @messages.handler
     def _on_init(self, event: viewer_protocol.ViewerInitEvent) -> bool:
@@ -235,8 +236,9 @@ class Panel:
                 send("release")
             if s.gripper:
                 _, self.azimuth = imgui.SliderFloat("azimuth", self.azimuth, -180, 180, "%.0f deg")
+                _, self.roll = imgui.SliderFloat("roll", self.roll, -90, 90, "%.0f deg")
                 if imgui.Button("Place gripper"):
-                    send(f"place {self.azimuth:.0f}")
+                    send(f"place {self.azimuth:.0f} {self.roll:.0f}")
                 imgui.SameLine()
                 if imgui.Button("Close fingers"):
                     send("fingers 255")

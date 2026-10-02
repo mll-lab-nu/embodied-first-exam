@@ -3,7 +3,8 @@
 Visual meshes are drawn in group 2 and never collide; collision geoms sit in the
 hidden group 3 (tick it in the browser's Visibility Groups to inspect them).
 Concave collision pieces are split with CoACD (cached). Every free body gets two
-inactive welds: pin_<body> (to the world) and, with the gripper, grip_<body>.
+inactive welds: pin_<body> (to the world) and, with the gripper, grip_<body>; the gripper
+itself has pin_wrist.
 
 python -m scripts.design_viewer.mjcf --scene hedgehog_in_cage_medium --gripper --seconds 1
 """
@@ -60,13 +61,13 @@ def build(scene, gripper=False):
         for body in spec.bodies:
             if body.name.startswith("g_"):
                 body.gravcomp = 1
-    for b in scene.bodies:
-        for how, other in (("pin", "world"), ("grip", "wrist"))[:2 if gripper else 1]:
-            if b.free:
-                # MjSpec's default weld data is all zeros (torquescale 0 = no weld); set it explicitly.
-                spec.add_equality(type=mujoco.mjtEq.mjEQ_WELD, name=f"{how}_{b.name}", name1=other, name2=b.name,
-                                  objtype=mujoco.mjtObj.mjOBJ_BODY, active=False, solref=[.02, 1],
-                                  data=[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1])
+    welds = [(how, other, b.name) for b in scene.bodies if b.free
+             for how, other in (("pin", "world"), ("grip", "wrist"))[:2 if gripper else 1]]
+    for how, other, name in welds+([("pin", "world", "wrist")] if gripper else []):
+        # MjSpec's default weld data is all zeros (torquescale 0 = no weld); set it explicitly.
+        spec.add_equality(type=mujoco.mjtEq.mjEQ_WELD, name=f"{how}_{name}", name1=other, name2=name,
+                          objtype=mujoco.mjtObj.mjOBJ_BODY, active=False, solref=[.02, 1],
+                          data=[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1])
     model = spec.compile()
     if gripper:
         g = np.array([model.body(i).name.startswith("g_") for i in model.geom_bodyid])
@@ -158,10 +159,12 @@ def grip_target(scene):
     return next(b.pos for b in scene.bodies if b.name in ("ball", "target_ring"))
 
 
-def place_gripper(model, data, target, azimuth_deg=0., standoff=STANDOFF):
-    """Horizontal approach: fingers point at `target`, pinch point `standoff` away along the azimuth."""
+def place_gripper(model, data, target, azimuth_deg=0., standoff=STANDOFF, roll_deg=0.):
+    """Horizontal approach: fingers point at `target`, pinch point `standoff` away along the azimuth.
+    roll_deg turns the gripper about its approach axis: 0 opens the fingers up/down, 90 sideways."""
     a = np.radians(azimuth_deg)
-    rotation = Rotation.from_euler("z", azimuth_deg, degrees=True)*Rotation.from_euler("y", -90, degrees=True)
+    rotation = (Rotation.from_euler("z", azimuth_deg, degrees=True)*Rotation.from_euler("y", -90, degrees=True)
+                * Rotation.from_euler("z", roll_deg, degrees=True))
     q, v = model.joint("wrist_free").qposadr[0], model.joint("wrist_free").dofadr[0]
     data.qpos[q:q+3], data.qpos[q+3:q+7] = 0, rotation.as_quat()[[3, 0, 1, 2]]
     mujoco.mj_kinematics(model, data)

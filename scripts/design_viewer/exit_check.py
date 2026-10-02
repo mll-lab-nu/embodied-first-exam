@@ -6,7 +6,8 @@ easier:    one turn about a single axis through the ball centre (gripper approac
            +-180 deg and collision-free along the way, then a straight pull.
 A gripper, when given, moves rigidly with the ball and must not touch the cage either.
 
-python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_easy --set window_widths=28
+python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_easy --set window_widths=24
+python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_very_easy --grasp 180 --roll 90 --lift-mm 5
 python -m scripts.design_viewer.exit_check --pose runs/design_viewer/poses/<scene>/<name>.json
 """
 from __future__ import annotations
@@ -112,15 +113,16 @@ def _central(dirs):
     return dirs[np.argmax(dirs@mean)].round(3).tolist()
 
 
-def check(scene, pos=None, quat=None, gripper=None, rotate=True):
-    """gripper: (mesh in the ball frame, {axis name: world unit vector}) from gripper_geometry()."""
+def check(scene, pos=None, quat=None, gripper=None, rotate=True, lift=0.):
+    """gripper: (mesh in the ball frame, {axis name: world unit vector}) from gripper_geometry().
+    lift: raise the start pose first (m), e.g. the small pick-up before a pull."""
     start = time.perf_counter()
     if pos is None:
         pos, quat = ball_pose_from_scene(scene)
-    pos, rot = np.asarray(pos, float), Rotation.from_quat(np.asarray(quat, float)[[1, 2, 3, 0]])
+    pos, rot = np.asarray(pos, float)+[0, 0, lift], Rotation.from_quat(np.asarray(quat, float)[[1, 2, 3, 0]])
     sweep = _Sweep(scene, gripper)
     result = dict(scene=scene.name, overrides=scene.extras.get("overrides", {}), gripper=gripper is not None,
-                  directions=len(sweep.dirs), position_m=pos.round(5).tolist(),
+                  directions=len(sweep.dirs), start_lift_m=lift, position_m=pos.round(5).tolist(),
                   quaternion_wxyz=np.asarray(quat, float).round(6).tolist())
     lift = next((h for h in np.arange(0, LIFT+1e-9, 5e-4) if not sweep.hit(pos+[0, 0, h], rot)), None)
     if lift is None:
@@ -165,6 +167,24 @@ def ball_pose_from_scene(scene):
     return np.asarray(ball.pos, float), np.asarray(ball.quat, float)
 
 
+def grasp(scene, azimuth_deg, lift=0., roll_deg=0.):
+    """2F-85 approaching horizontally from `azimuth_deg` (roll as in mjcf.place_gripper), pinch point
+    on the ball centre (lifted by `lift`), fingers closed for 0.5 s on the pinned ball. Returns (model, data)."""
+    model = mjcf.build(scene, gripper=True)
+    data = mujoco.MjData(model)
+    data.qpos[model.joint("ball_free").qposadr[0]+2] += lift
+    mujoco.mj_forward(model, data)
+    mjcf.place_gripper(model, data, data.xpos[model.body("ball").id], azimuth_deg, standoff=0, roll_deg=roll_deg)
+    # Ball and wrist both held: the fingers close until they touch the ball, and neither the ball
+    # nor the cage can shove the gripper; check() judges any gripper-cage overlap afterwards.
+    mjcf.hold(model, data, "ball", "pin")
+    mjcf.hold(model, data, "wrist", "pin")
+    data.ctrl[model.actuator("g_fingers_actuator").id] = 255
+    for _ in range(int(.5/model.opt.timestep)):
+        mujoco.mj_step(model, data)
+    return model, data
+
+
 def ball_pose(model, data):
     ball = model.body("ball").id
     return data.xpos[ball].copy(), data.xquat[ball].copy()
@@ -186,7 +206,8 @@ def gripper_geometry(model, data):
         world = data.geom_xpos[g]+local@data.geom_xmat[g].reshape(3, 3).T
         parts.append(trimesh.convex.convex_hull((world-data.xpos[ball])@to_ball))
     wrist = data.xmat[model.body("wrist").id].reshape(3, 3)
-    return trimesh.util.concatenate(parts), dict(approach=wrist[:, 2], fingers=wrist[:, 1], palm=wrist[:, 0])
+    # The 2F-85 base is turned 90 deg about z in its MJCF: the fingers open along the root x axis.
+    return trimesh.util.concatenate(parts), dict(approach=wrist[:, 2], fingers=wrist[:, 0], palm=wrist[:, 1])
 
 
 def save(result):
@@ -201,14 +222,24 @@ def main():
     parser.add_argument("--scene", default="hedgehog_in_cage_easy")
     parser.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE")
     parser.add_argument("--pose", type=Path, help="pose file saved by the viewer (ball and gripper as saved)")
+    parser.add_argument("--grasp", type=float, metavar="AZIMUTH_DEG",
+                        help="hold the ball with the 2F-85 from this azimuth (fingers closed on the ball centre)")
+    parser.add_argument("--roll", type=float, default=0., help="with --grasp: 0 fingers open up/down, 90 sideways")
+    parser.add_argument("--lift-mm", type=float, default=0., help="raise the ball this much before the checks")
     parser.add_argument("--no-rotate", action="store_true")
     args = parser.parse_args()
+    lift = args.lift_mm/1e3
     if args.pose:
         scene, model, data = mjcf.load_pose(args.pose)
         gripper = gripper_geometry(model, data) if mjcf.has_gripper(model) else None
-        result = check(scene, *ball_pose(model, data), gripper=gripper, rotate=not args.no_rotate)
+        result = check(scene, *ball_pose(model, data), gripper=gripper, rotate=not args.no_rotate, lift=lift)
+    elif args.grasp is not None:
+        scene = scenes.build(args.scene, scenes.parse_sets(args.set))
+        model, data = grasp(scene, args.grasp, lift, args.roll)
+        result = check(scene, *ball_pose(model, data), gripper=gripper_geometry(model, data), rotate=not args.no_rotate)
+        result.update(grasp_azimuth_deg=args.grasp, grasp_roll_deg=args.roll, start_lift_m=lift)
     else:
-        result = check(scenes.build(args.scene, scenes.parse_sets(args.set)), rotate=not args.no_rotate)
+        result = check(scenes.build(args.scene, scenes.parse_sets(args.set)), rotate=not args.no_rotate, lift=lift)
     print(summary(result))
     print(f"report: {save(result)}")
 
