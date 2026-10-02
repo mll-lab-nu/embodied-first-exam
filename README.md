@@ -115,7 +115,8 @@ scripts/               task generators, image build/push, egress switch, results
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
 docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
-                       RUNNING.md (batches, logs, recordings), benchmarks/ (per-benchmark notes)
+                       RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
+                       benchmarks/ (per-benchmark notes)
 third_party/           upstream sources used by the base images (cap-x, RoboTwin)
 ```
 
