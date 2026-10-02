@@ -97,7 +97,7 @@ def _base_xml(scene, gripper):
               f'cone="{"pyramidal" if cable else "elliptic"}"' + (' impratio="10"' if gripper else ""))
     return f"""<mujoco model="{scene.name}">
   <option {option}/>
-  <statistic center="0 0 .12" extent=".45"/>
+  <statistic center="0 0 .12" extent=".35"/>
   <!-- Mouse pull spring, per kg of the grabbed body; MuJoCo's 100 cannot lift a 0.13 kg ring
        that carries the 1 kg horseshoe assembly (1000: +69 mm of a 100 mm pull, 1.7 mm penetration). -->
   <visual><map stiffness="1000"/></visual>

@@ -246,7 +246,7 @@ with launch_passive.launch_passive(vp.ViewerConfig(gfx="web", http_port=port),
 
 ## 冒烟记录（执行 4.0 后填写）
 
-- 日期 / 浏览器 / 本地操作系统：
-- 加载、旋转、选中、Ctrl+拖动、旋转扰动、暂停、关重力：
-- 延迟和 CPU：
-- 结论（继续 A / 改用 B）：
+- 日期 / 浏览器 / 本地操作系统：2026-10-02；本机 Firefox 156（snap），运行在私有 Xvfb :87 上，WebGL2 用 llvmpipe 软件渲染，由 geckodriver（W3C WebDriver）驱动。headless 模式下拿不到 WebGL。用户本地浏览器经 VS Code 端口转发、以及 macOS 上 Ctrl+点击的情况，尚未测试。
+- 加载、旋转、选中、Ctrl+拖动、旋转扰动、暂停、关重力：页面、模型和 TopoGym 面板能加载；面板按钮、场景下拉切换（页面自动重载）、双击选中（面板显示 `selected: g_base` / `target_ring`）、Ctrl+右键拖动夹爪和马蹄环都有效；FCL 结果在浏览器中显示为绿色箭头。WebDriver 测试时要先移动鼠标、再原地双击，否则这次移动会被当成拖动、改变视角。暂停和关重力未单独测试。
+- 延迟和 CPU：hedgehog medium 空闲时 0.07 核（OpenBLAS 限为 1 个线程；不限时 11 个线程空转，共 1.35 核）。slotted 连上浏览器后约 1.0 核（cable 按实时速度计算）。`/model` 大小：hedgehog 15–17 MB，horseshoe 7 MB，slotted 10 MB。
+- 结论（继续 A / 改用 B）：继续 A。实现见 `scripts/design_viewer/`，入口登记在 `scripts/README.md` 的“设计辅助”一节。
